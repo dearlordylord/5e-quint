@@ -1,87 +1,107 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
-// Spell invocation reference projections extracted from spells-holes-fills.ts.
+// Outer presentation projection: this is the sole reducer-adjacent boundary
+// allowed to join authored spell identity to a mechanical invocation reference.
 
-import { spellId } from "../identity.ts";
-import type { SpellInvocationRef } from "../battle-subjects.ts";
 import {
-  isPreparedDamageSpellSource,
-  type SupportedSpellInvocation,
-} from "../battle-reducer.ts";
-import { spellProcedureProfileFor } from "./spell-procedure-profiles/registry.ts";
+  armorOfShadowsSpellInvocationRef,
+  cantripSpellInvocationRef,
+  classFeatureFreeCastSpellInvocationRef,
+  spellEffectInvocationRef,
+  spellSlotInvocationRef,
+  type SpellInvocationRef,
+} from "../battle-subjects.ts";
+import type { SupportedSpellInvocation } from "../battle-reducer.ts";
+import { Match } from "effect";
 
 export function supportedSpellInvocationRef(
   invocation: SupportedSpellInvocation,
 ): SpellInvocationRef {
-  const profile = spellProcedureProfileFor(invocation.procedure);
-  // Registry lookup preserves the procedure/invocation pairing, but the
-  // heterogeneous profile methods erase to a union at this call site.
-  return profile.invocationRef(invocation as never);
-}
-
-export function damageSpellInvocationRef(
-  invocation: Extract<
-    SupportedSpellInvocation,
-    {
-      readonly procedure:
-        | "heldLightHurl"
-        | "spellAttackSequence"
-        | "spellAttackDamage"
-        | "saveGatedDamage";
-    }
-  >,
-): SpellInvocationRef {
-  if (
-    invocation.procedure !== "heldLightHurl" &&
-    isPreparedDamageSpellSource(invocation)
-  ) {
-    return {
-      tag: "spellSlot",
-      spellId: spellId(invocation.spell.id),
-      slotLevel: invocation.resource.slotLevel,
-      procedure: invocation.procedure,
-    };
-  }
-  return {
-    tag: "cantrip",
-    spellId: spellId(invocation.spell.id),
-    procedure: invocation.procedure,
-  };
-}
-
-export function sameSpellInvocationRef(
-  left: SpellInvocationRef,
-  right: SpellInvocationRef,
-): boolean {
-  if (
-    left.tag !== right.tag ||
-    left.spellId !== right.spellId ||
-    left.procedure !== right.procedure
-  ) {
-    return false;
-  }
-  if (left.tag === "cantrip" && right.tag === "cantrip") {
-    return true;
-  }
-  if (left.tag === "spellEffect" && right.tag === "spellEffect") {
-    return left.sourceCombatantId === right.sourceCombatantId;
-  }
-  if (
-    left.tag === "classFeatureFreeCast" &&
-    right.tag === "classFeatureFreeCast"
-  ) {
-    return left.resourceUnitId === right.resourceUnitId;
-  }
-  if (left.tag === "armorOfShadows" && right.tag === "armorOfShadows") {
-    return true;
-  }
-  return left.tag === "spellSlot" && right.tag === "spellSlot"
-    ? left.slotLevel === right.slotLevel
-    : false;
-}
-
-export function supportedSpellInvocationMatchesRef(
-  invocation: SupportedSpellInvocation,
-  ref: SpellInvocationRef,
-): boolean {
-  return sameSpellInvocationRef(supportedSpellInvocationRef(invocation), ref);
+  return Match.value(invocation).pipe(
+    Match.when({ resource: { tag: "spellSlot" } }, (value) =>
+      spellSlotInvocationRef(
+        value.spell.id,
+        value.resource.slotLevel,
+        value.procedure,
+      ),
+    ),
+    Match.when(
+      {
+        resource: { tag: "classFeatureFreeCast" },
+      },
+      (value) =>
+        classFeatureFreeCastSpellInvocationRef(
+          value.spell.id,
+          value.resource.resourcePoolRef,
+          value.procedure,
+        ),
+    ),
+    Match.when(
+      { access: { tag: "classCantrip" }, resource: { tag: "none" } },
+      (value) => cantripSpellInvocationRef(value.spell.id, value.procedure),
+    ),
+    Match.when({ access: { tag: "armorOfShadows" } }, (value) =>
+      armorOfShadowsSpellInvocationRef(value.spell.id),
+    ),
+    Match.when(
+      {
+        access: { tag: "spellEffect" },
+        procedure: "markedDamageRider",
+      },
+      (value) =>
+        spellEffectInvocationRef(
+          value.spell.id,
+          value.access.sourceCombatantId,
+          "markedDamageRiderTransfer",
+        ),
+    ),
+    Match.when(
+      {
+        access: { tag: "spellEffect" },
+        procedure: "objectContactDamageRepeat",
+      },
+      (value) =>
+        spellEffectInvocationRef(
+          value.spell.id,
+          value.access.sourceCombatantId,
+          value.procedure,
+        ),
+    ),
+    Match.when(
+      {
+        access: { tag: "spellEffect" },
+        procedure: "spiritualWeaponRepeatAttack",
+      },
+      (value) =>
+        spellEffectInvocationRef(
+          value.spell.id,
+          value.access.sourceCombatantId,
+          value.procedure,
+        ),
+    ),
+    Match.when(
+      {
+        access: { tag: "spellEffect" },
+        procedure: "spellCreatedHeldObjectAttack",
+      },
+      (value) =>
+        spellEffectInvocationRef(
+          value.spell.id,
+          value.access.sourceCombatantId,
+          value.procedure,
+        ),
+    ),
+    Match.when(
+      {
+        access: { tag: "spellEffect" },
+        procedure: "spellCreatedHeldObjectReEvoke",
+      },
+      (value) =>
+        spellEffectInvocationRef(
+          value.spell.id,
+          value.access.sourceCombatantId,
+          value.procedure,
+        ),
+    ),
+    Match.exhaustive,
+  );
 }

@@ -4,7 +4,7 @@ import {
   attackRollFill,
   battleId,
   battleObjectId,
-  battleProcedureExecutionRefForTest,
+  battleProcedureExecutionRefForSpellHoleForTest,
   characterSeed,
   damageAmount,
   damageRollFillWithGroups,
@@ -20,14 +20,14 @@ import {
   skeletonCreatureInit,
   skeletonId,
   spellRecord,
-  startBattleRight,
+  startBattleSessionRight,
   wizardId,
   wizardSpellcasting,
 } from "./battle-runtime-test-support.ts";
 
 describe("battle runtime: Fire Bolt object targets", () => {
   test("Fire Bolt object target requires ignition facts before resolving the object attack", () => {
-    const state = startBattleRight({
+    const state = startBattleSessionRight({
       battleId: battleId("battle-fire-bolt-object-missing-ignition"),
       combatants: [
         characterSeed({
@@ -44,19 +44,18 @@ describe("battle runtime: Fire Bolt object targets", () => {
         skeletonCreatureInit({ initiative: 10 }),
       ],
     });
-    const subject = magicSubject("fire_bolt");
+    const subject = findAct(state, magicSubject("fire_bolt")).subject;
     const objectTarget = findHole(
       findAct(state, subject).initialHoles,
       "objectTargetChoice",
     );
 
     const result = resolveBattleSubject({
-      state,
+      state: state.state,
       subject,
       fills: [
         objectTargetFill({
           hole: objectTarget,
-          spellId: "fire_bolt",
           rangeFeet: movementFeet(120),
         }),
       ],
@@ -71,7 +70,7 @@ describe("battle runtime: Fire Bolt object targets", () => {
   });
 
   test("Fire Bolt applies cantrip-scaled Fire damage and ignites unattended flammable object hits", () => {
-    const state = startBattleRight({
+    const state = startBattleSessionRight({
       battleId: battleId("battle-fire-bolt-object-hit"),
       combatants: [
         characterSeed({
@@ -88,7 +87,7 @@ describe("battle runtime: Fire Bolt object targets", () => {
         skeletonCreatureInit({ initiative: 10 }),
       ],
     });
-    const subject = magicSubject("fire_bolt");
+    const subject = findAct(state, magicSubject("fire_bolt")).subject;
     const objectTarget = findHole(
       findAct(state, subject).initialHoles,
       "objectTargetChoice",
@@ -97,7 +96,6 @@ describe("battle runtime: Fire Bolt object targets", () => {
     const targetFillForObject = objectTargetFill({
       hole: objectTarget,
       objectId,
-      spellId: "fire_bolt",
       rangeFeet: movementFeet(120),
       damageDisposition: { kind: "hitPoints", hitPoints: Hp(8) },
       spatialFacts: [
@@ -105,9 +103,8 @@ describe("battle runtime: Fire Bolt object targets", () => {
           kind: "spellObjectTarget",
           casterId: wizardId,
           objectId,
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String("fire_bolt"),
-          ),
+          sourceProcedureRef:
+            battleProcedureExecutionRefForSpellHoleForTest(objectTarget),
           rangeFeet: movementFeet(120),
           armorClass: armorClass(13),
           damageDisposition: { kind: "hitPoints", hitPoints: Hp(8) },
@@ -116,16 +113,15 @@ describe("battle runtime: Fire Bolt object targets", () => {
           kind: "spellObjectIgnition",
           casterId: wizardId,
           objectId,
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String("fire_bolt"),
-          ),
+          sourceProcedureRef:
+            battleProcedureExecutionRefForSpellHoleForTest(objectTarget),
           disposition: { kind: "flammableUnattended" },
         },
       ],
     });
     const attackRoll = requireHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject,
         fills: [targetFillForObject],
       }),
@@ -133,7 +129,7 @@ describe("battle runtime: Fire Bolt object targets", () => {
     );
     const damage = requireHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject,
         fills: [
           targetFillForObject,
@@ -144,11 +140,11 @@ describe("battle runtime: Fire Bolt object targets", () => {
     );
 
     expect(damage).toMatchObject({
-      label: "Fire Bolt damage (2d10-fire)",
+      label: "Spell damage (2d10-fire)",
     });
 
     const result = resolveBattleSubject({
-      state,
+      state: state.state,
       subject,
       fills: [
         targetFillForObject,
@@ -190,7 +186,7 @@ describe("battle runtime: Fire Bolt object targets", () => {
   });
 
   test("Fire Bolt object miss and non-igniting object hit do not emit object ignition outcomes", () => {
-    const state = startBattleRight({
+    const state = startBattleSessionRight({
       battleId: battleId("battle-fire-bolt-object-no-ignition"),
       combatants: [
         characterSeed({
@@ -206,7 +202,7 @@ describe("battle runtime: Fire Bolt object targets", () => {
         skeletonCreatureInit({ initiative: 10 }),
       ],
     });
-    const subject = magicSubject("fire_bolt");
+    const subject = findAct(state, magicSubject("fire_bolt")).subject;
     const objectTarget = findHole(
       findAct(state, subject).initialHoles,
       "objectTargetChoice",
@@ -215,7 +211,6 @@ describe("battle runtime: Fire Bolt object targets", () => {
     const targetFillForObject = objectTargetFill({
       hole: objectTarget,
       objectId,
-      spellId: "fire_bolt",
       rangeFeet: movementFeet(120),
       damageDisposition: { kind: "tableResolved" },
       spatialFacts: [
@@ -223,9 +218,8 @@ describe("battle runtime: Fire Bolt object targets", () => {
           kind: "spellObjectTarget",
           casterId: wizardId,
           objectId,
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String("fire_bolt"),
-          ),
+          sourceProcedureRef:
+            battleProcedureExecutionRefForSpellHoleForTest(objectTarget),
           rangeFeet: movementFeet(120),
           armorClass: armorClass(13),
           damageDisposition: { kind: "tableResolved" },
@@ -234,16 +228,15 @@ describe("battle runtime: Fire Bolt object targets", () => {
           kind: "spellObjectIgnition",
           casterId: wizardId,
           objectId,
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String("fire_bolt"),
-          ),
+          sourceProcedureRef:
+            battleProcedureExecutionRefForSpellHoleForTest(objectTarget),
           disposition: { kind: "wornOrCarried" },
         },
       ],
     });
     const attackRoll = requireHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject,
         fills: [targetFillForObject],
       }),
@@ -251,7 +244,7 @@ describe("battle runtime: Fire Bolt object targets", () => {
     );
 
     const miss = resolveBattleSubject({
-      state,
+      state: state.state,
       subject,
       fills: [
         targetFillForObject,
@@ -265,7 +258,7 @@ describe("battle runtime: Fire Bolt object targets", () => {
 
     const damage = requireHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject,
         fills: [
           targetFillForObject,
@@ -275,7 +268,7 @@ describe("battle runtime: Fire Bolt object targets", () => {
       "rolledDice",
     );
     const hit = resolveBattleSubject({
-      state,
+      state: state.state,
       subject,
       fills: [
         targetFillForObject,

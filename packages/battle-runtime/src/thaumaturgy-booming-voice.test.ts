@@ -29,7 +29,7 @@ import {
   requireNeedsHoles,
   requireResolved,
   resolveBattleSubject,
-  startBattleRight,
+  startBattleSessionRight,
   statBlockCreatureInit,
   wizardSpellcasting,
 } from "./battle-runtime-test-support.ts";
@@ -41,6 +41,7 @@ import {
   type BattleActiveEffect,
   type BattleFill,
   type BattleHole,
+  type BattleRuntimeSession,
   type BattleState,
 } from "./index.ts";
 
@@ -81,7 +82,7 @@ describe("Thaumaturgy Booming Voice", () => {
       expect.arrayContaining([
         expect.objectContaining({
           kind: "thaumaturgyActiveOneMinuteEffectCount",
-          label: "Thaumaturgy total active 1-minute effects",
+          label: "Spell total active 1-minute effects",
           maximumActiveOneMinuteEffects: 3,
           requiresTableSpellEffectCount: true,
         }),
@@ -93,17 +94,18 @@ describe("Thaumaturgy Booming Voice", () => {
 
   test("requires the cap witness and rejects casts when three 1-minute effects are already active", () => {
     const state = battleWithThaumaturgy();
+    const act = findAct(state, thaumaturgySubject);
     const missing = requireNeedsHoles(
       resolveBattleSubject({
-        state,
-        subject: thaumaturgySubject,
+        state: state.state,
+        subject: act.subject,
         fills: [],
       }),
     );
     const countHole = findThaumaturgyCountHole(missing.holes);
     const rejected = resolveBattleSubject({
-      state,
-      subject: thaumaturgySubject,
+      state: state.state,
+      subject: act.subject,
       fills: [thaumaturgyCountFill(countHole, 3)],
     });
 
@@ -120,10 +122,10 @@ describe("Thaumaturgy Booming Voice", () => {
 
     expect(thaumaturgyBoomingVoiceEffectCount(first)).toBe(1);
     expect(thaumaturgyBoomingVoiceEffectCount(refreshed)).toBe(1);
-    expect(refreshed.currentTurnResources.actionResources).toEqual([]);
+    expect(refreshed.state.currentTurnResources.actionResources).toEqual([]);
     expect(
       thaumaturgyBoomingVoiceInfluenceAbilityCheckHole(
-        refreshed,
+        refreshed.state,
         fighterId,
         difficultyClass(13),
       ),
@@ -142,8 +144,8 @@ describe("Thaumaturgy Booming Voice", () => {
     const act = findAct(first, thaumaturgySubject);
     const countHole = findThaumaturgyCountHole(act.initialHoles);
     const rejected = resolveBattleSubject({
-      state: first,
-      subject: thaumaturgySubject,
+      state: first.state,
+      subject: act.subject,
       fills: [thaumaturgyCountFill(countHole, 0)],
     });
 
@@ -157,7 +159,7 @@ describe("Thaumaturgy Booming Voice", () => {
   test("casts Booming Voice, spends the Magic action, and projects Charisma Intimidation Advantage", () => {
     const state = battleWithThaumaturgy();
     const resolved = castThaumaturgy(state, 2);
-    const caster = resolved.combatants.get(fighterId);
+    const caster = resolved.state.combatants.get(fighterId);
 
     expect(caster?.activeEffects).toContainEqual(
       expect.objectContaining({
@@ -170,13 +172,15 @@ describe("Thaumaturgy Booming Voice", () => {
         },
       }),
     );
-    expect(resolved.currentTurnResources.actionResources).toEqual([]);
-    expect(resolved.currentTurnResources.spellSlotUsesThisTurn).toEqual([]);
+    expect(resolved.state.currentTurnResources.actionResources).toEqual([]);
+    expect(resolved.state.currentTurnResources.spellSlotUsesThisTurn).toEqual(
+      [],
+    );
     expect(caster?.concentration).toBeNull();
 
     expect(
       thaumaturgyBoomingVoiceInfluenceAbilityCheckHole(
-        resolved,
+        resolved.state,
         fighterId,
         difficultyClass(13),
       ),
@@ -187,12 +191,12 @@ describe("Thaumaturgy Booming Voice", () => {
       rollMode: "advantage",
     });
     expect(
-      requiredAbilityCheckRollMode(resolved, fighterId, "wis", {
+      requiredAbilityCheckRollMode(resolved.state, fighterId, "wis", {
         skill: "intimidation",
       }),
     ).toBeUndefined();
     expect(
-      requiredAbilityCheckRollMode(resolved, fighterId, "cha", {
+      requiredAbilityCheckRollMode(resolved.state, fighterId, "cha", {
         skill: "perception",
       }),
     ).toBeUndefined();
@@ -200,7 +204,7 @@ describe("Thaumaturgy Booming Voice", () => {
 
   test("cancels against Hex Disadvantage on Charisma checks", () => {
     const resolved = castThaumaturgy(battleWithThaumaturgy(), 0);
-    const cancelled = withHexCharismaDisadvantage(resolved);
+    const cancelled = withHexCharismaDisadvantage(resolved.state);
 
     expect(
       thaumaturgyBoomingVoiceInfluenceAbilityCheckHole(
@@ -212,8 +216,8 @@ describe("Thaumaturgy Booming Voice", () => {
   });
 });
 
-function battleWithThaumaturgy(): BattleState {
-  return startBattleRight({
+function battleWithThaumaturgy(): BattleRuntimeSession {
+  return startBattleSessionRight({
     battleId: battleId("battle-thaumaturgy-booming-voice"),
     combatants: [
       characterSeed({
@@ -242,33 +246,41 @@ function requireThaumaturgySpell(): SpellRecord {
 }
 
 function castThaumaturgy(
-  state: BattleState,
+  session: BattleRuntimeSession,
   activeOneMinuteEffectCount: number,
-): BattleState {
-  const act = findAct(state, thaumaturgySubject);
+): BattleRuntimeSession {
+  const act = findAct(session, thaumaturgySubject);
   const countHole = findThaumaturgyCountHole(act.initialHoles);
-  return requireResolved(
+  const resolved = requireResolved(
     resolveBattleSubject({
-      state,
-      subject: thaumaturgySubject,
+      state: session.state,
+      subject: act.subject,
       fills: [thaumaturgyCountFill(countHole, activeOneMinuteEffectCount)],
     }),
-  ).state;
+  );
+  return { ...session, state: resolved.state };
 }
 
-function withFreshMagicAction(state: BattleState): BattleState {
+function withFreshMagicAction(
+  session: BattleRuntimeSession,
+): BattleRuntimeSession {
   return {
-    ...state,
-    currentTurnResources: {
-      ...state.currentTurnResources,
-      actionResources: [{ kind: "action", source: "turn" }],
+    ...session,
+    state: {
+      ...session.state,
+      currentTurnResources: {
+        ...session.state.currentTurnResources,
+        actionResources: [{ kind: "action", source: "turn" }],
+      },
     },
   };
 }
 
-function thaumaturgyBoomingVoiceEffectCount(state: BattleState): number {
+function thaumaturgyBoomingVoiceEffectCount(
+  session: BattleRuntimeSession,
+): number {
   return (
-    state.combatants
+    session.state.combatants
       .get(fighterId)
       ?.activeEffects.filter(
         (effect) => effect.kind === "thaumaturgyBoomingVoice",

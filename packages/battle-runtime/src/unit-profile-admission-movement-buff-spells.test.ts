@@ -42,9 +42,9 @@ import {
 describe("SRDINV49 deterministic Expeditious Retreat admission", () => {
   test("expeditious_retreat casts as a Bonus Action Dash spell", () => {
     const spell = spellRecord(expeditiousRetreatUnitId);
-    const state = spellBattle({ preparedSpells: [spell] });
+    const session = spellBattle({ preparedSpells: [spell] });
     const act = bonusActionDashSpellAct({
-      state,
+      session,
       spellId: expeditiousRetreatUnitId,
     });
 
@@ -64,13 +64,13 @@ describe("SRDINV49 deterministic Expeditious Retreat admission", () => {
 
   test("expeditious_retreat immediately Dashes and stores a Concentration-owned Bonus Action Dash permission", () => {
     const spell = spellRecord(expeditiousRetreatUnitId);
-    const state = spellBattle({ preparedSpells: [spell] });
+    const session = spellBattle({ preparedSpells: [spell] });
     const act = bonusActionDashSpellAct({
-      state,
+      session,
       spellId: expeditiousRetreatUnitId,
     });
     const resolved = resolveBattleSubject({
-      state,
+      state: session.state,
       subject: act.subject,
       fills: [],
     });
@@ -120,13 +120,13 @@ describe("SRDINV49 deterministic Expeditious Retreat admission", () => {
 
   test("expeditious_retreat grants later Bonus Action Dash until Concentration ends", () => {
     const spell = spellRecord(expeditiousRetreatUnitId);
-    const state = spellBattle({ preparedSpells: [spell] });
+    const session = spellBattle({ preparedSpells: [spell] });
     const castAct = bonusActionDashSpellAct({
-      state,
+      session,
       spellId: expeditiousRetreatUnitId,
     });
     const cast = resolveBattleSubject({
-      state,
+      state: session.state,
       subject: castAct.subject,
       fills: [],
     });
@@ -147,7 +147,10 @@ describe("SRDINV49 deterministic Expeditious Retreat admission", () => {
     if (nextCasterTurn.tag !== "resolved") {
       throw new Error("Expected Expeditious Retreat target end turn.");
     }
-    const laterDashAct = discoverBattleActs(nextCasterTurn.state).find(
+    const laterDashAct = discoverBattleActs({
+      state: nextCasterTurn.state,
+      context: session.context,
+    }).find(
       (candidate) =>
         candidate.subject.tag === "bonusActionStandardAction" &&
         battleActSpellPresentation(candidate)?.invocation.spellId ===
@@ -214,7 +217,12 @@ describe("SRDINV49 deterministic Expeditious Retreat admission", () => {
     if (afterBrokenCasterTurn.tag !== "resolved") {
       throw new Error("Expected broken Expeditious Retreat target end turn.");
     }
-    expect(discoverBattleActs(afterBrokenCasterTurn.state)).not.toEqual(
+    expect(
+      discoverBattleActs({
+        state: afterBrokenCasterTurn.state,
+        context: session.context,
+      }),
+    ).not.toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           subject: expect.objectContaining({
@@ -232,7 +240,7 @@ describe("SRDINV53 deterministic Jump movement replacement admission", () => {
   test("jump casts as a touched willing target-list Bonus Action spell with slot-scaled targets", () => {
     const spell = spellRecord(jumpUnitId);
     const extraTargetId = combatantId("unit-profile-jump-target-2");
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [
         { spellLevel: 1, count: 1 },
@@ -240,7 +248,7 @@ describe("SRDINV53 deterministic Jump movement replacement admission", () => {
       ],
       extraTargetIds: [extraTargetId],
     });
-    const jumpActs = discoverBattleActs(state).filter(
+    const jumpActs = discoverBattleActs(session).filter(
       (candidate): candidate is BonusActionSpellAct =>
         candidate.subject.tag === "bonusActionSpell" &&
         battleActSpellPresentation(candidate)?.invocation.spellId ===
@@ -274,11 +282,11 @@ describe("SRDINV53 deterministic Jump movement replacement admission", () => {
 
   test("jump installs a one-minute per-target movement replacement and spends 10 Movement for up to 30 feet", () => {
     const spell = spellRecord(jumpUnitId);
-    const state = spellBattle({ preparedSpells: [spell] });
-    const castAct = bonusSpellAct({ state, spellId: jumpUnitId });
+    const session = spellBattle({ preparedSpells: [spell] });
+    const castAct = bonusSpellAct({ session, spellId: jumpUnitId });
     const targetHole = requireHole(castAct.initialHoles, "spellTargetList");
     const cast = resolveBattleSubject({
-      state,
+      state: session.state,
       subject: castAct.subject,
       fills: [
         jumpSpellTargetListFill(targetHole, spellCasterId, jumpUnitId, [
@@ -376,13 +384,13 @@ describe("SRDINV53 deterministic Jump movement replacement admission", () => {
 
   test("jump rejects non-willing target facts and malformed movement replacement fills", () => {
     const spell = spellRecord(jumpUnitId);
-    const state = spellBattle({ preparedSpells: [spell] });
-    const castAct = bonusSpellAct({ state, spellId: jumpUnitId });
+    const session = spellBattle({ preparedSpells: [spell] });
+    const castAct = bonusSpellAct({ session, spellId: jumpUnitId });
     const targetHole = requireHole(castAct.initialHoles, "spellTargetList");
 
     expect(
       resolveBattleSubject({
-        state,
+        state: session.state,
         subject: castAct.subject,
         fills: [
           spellTargetListFill(targetHole, spellCasterId, jumpUnitId, [
@@ -396,7 +404,7 @@ describe("SRDINV53 deterministic Jump movement replacement admission", () => {
     });
 
     const cast = resolveBattleSubject({
-      state,
+      state: session.state,
       subject: castAct.subject,
       fills: [
         jumpSpellTargetListFill(targetHole, spellCasterId, jumpUnitId, [

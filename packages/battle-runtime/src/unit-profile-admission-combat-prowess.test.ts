@@ -1,7 +1,10 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT56 feat_boon_of_combat_prowess
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-roll-miss-to-hit-replacement
 import { describe, expect, test } from "vitest";
-import { characterAttackSubjectForTest } from "./battle-runtime-test-support.ts";
+import {
+  characterAttackSubjectForTest,
+  requireCharacterUnitProcedureRefForTest,
+} from "./battle-runtime-test-support.ts";
 import {
   boonOfCombatProwessUnitId,
   combatProwessSupportProfile,
@@ -37,6 +40,16 @@ import {
 } from "./unit-profile-admission-test-support.ts";
 import type { UnitRecord } from "./unit-profile-admission-test-support.ts";
 
+function combatProwessProcedureRef(
+  state: Parameters<typeof requireCharacterUnitProcedureRefForTest>[0],
+) {
+  return requireCharacterUnitProcedureRefForTest(
+    state,
+    spellCasterId,
+    boonOfCombatProwessUnitId,
+  );
+}
+
 describe("QMBT56 deterministic Combat Prowess profile slice", () => {
   test("boon of combat prowess is admitted as an attack-roll miss-to-hit replacement", () => {
     const unit = unitLibrary.requireUnit(boonOfCombatProwessUnitId);
@@ -65,12 +78,12 @@ describe("QMBT56 deterministic Combat Prowess profile slice", () => {
     });
     const subject = weaponAttackSubject(state, "Longsword");
     const target = requireResultHole(
-      resolveBattleSubject({ state, subject, fills: [] }),
+      resolveBattleSubject({ state: state.state, subject, fills: [] }),
       "targetChoice",
     );
     const roll = requireResultHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject,
         fills: [
           attackTargetFill(target, spellCasterId, spellTargetId, "Longsword"),
@@ -81,19 +94,19 @@ describe("QMBT56 deterministic Combat Prowess profile slice", () => {
 
     expect(roll).toMatchObject({
       missToHitReplacements: [
-        { unitId: boonOfCombatProwessUnitId, label: boonOfCombatProwessUnitId },
+        { procedureRef: combatProwessProcedureRef(state) },
       ],
     });
 
     const awaitingDamage = resolveBattleSubject({
-      state,
+      state: state.state,
       subject,
       fills: [
         attackTargetFill(target, spellCasterId, spellTargetId, "Longsword"),
         attackRollFill(roll, {
           total: 1,
           naturalD20: 2,
-          missToHitReplacementUnitId: boonOfCombatProwessUnitId,
+          missToHitReplacementProcedureRef: combatProwessProcedureRef(state),
         }),
       ],
     });
@@ -109,7 +122,7 @@ describe("QMBT56 deterministic Combat Prowess profile slice", () => {
         attackRollFill(roll, {
           total: 1,
           naturalD20: 2,
-          missToHitReplacementUnitId: boonOfCombatProwessUnitId,
+          missToHitReplacementProcedureRef: combatProwessProcedureRef(state),
         }),
         damageRollFillWithGroups(damage, [[4]]),
       ],
@@ -123,9 +136,15 @@ describe("QMBT56 deterministic Combat Prowess profile slice", () => {
       resolved.state.combatants
         .get(spellCasterId)
         ?.attackRollMissToHitReplacementsUsedSinceTurnStart.map(
-          (usage) => usage.unitId,
+          (usage) => usage.procedureRef,
         ),
-    ).toEqual([boonOfCombatProwessUnitId]);
+    ).toEqual([
+      requireCharacterUnitProcedureRefForTest(
+        state,
+        spellCasterId,
+        boonOfCombatProwessUnitId,
+      ),
+    ]);
   });
 
   test("peerless aim survives attack-hit reaction replay before damage", () => {
@@ -135,12 +154,12 @@ describe("QMBT56 deterministic Combat Prowess profile slice", () => {
     });
     const subject = weaponAttackSubject(state, "Longsword");
     const target = requireResultHole(
-      resolveBattleSubject({ state, subject, fills: [] }),
+      resolveBattleSubject({ state: state.state, subject, fills: [] }),
       "targetChoice",
     );
     const roll = requireResultHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject,
         fills: [
           attackTargetFill(target, spellCasterId, spellTargetId, "Longsword"),
@@ -149,14 +168,14 @@ describe("QMBT56 deterministic Combat Prowess profile slice", () => {
       "attackRoll",
     );
     const awaitingReaction = resolveBattleSubject({
-      state,
+      state: state.state,
       subject,
       fills: [
         attackTargetFill(target, spellCasterId, spellTargetId, "Longsword"),
         attackRollFill(roll, {
           total: 1,
           naturalD20: 2,
-          missToHitReplacementUnitId: boonOfCombatProwessUnitId,
+          missToHitReplacementProcedureRef: combatProwessProcedureRef(state),
         }),
       ],
     });
@@ -211,7 +230,7 @@ describe("QMBT56 deterministic Combat Prowess profile slice", () => {
         attackRollFill(roll, {
           total: 1,
           naturalD20: 2,
-          missToHitReplacementUnitId: boonOfCombatProwessUnitId,
+          missToHitReplacementProcedureRef: combatProwessProcedureRef(state),
         }),
         damageRollFillWithGroups(damage, [[4]]),
       ],
@@ -225,9 +244,15 @@ describe("QMBT56 deterministic Combat Prowess profile slice", () => {
       resolved.state.combatants
         .get(spellCasterId)
         ?.attackRollMissToHitReplacementsUsedSinceTurnStart.map(
-          (usage) => usage.unitId,
+          (usage) => usage.procedureRef,
         ),
-    ).toEqual([boonOfCombatProwessUnitId]);
+    ).toEqual([
+      requireCharacterUnitProcedureRefForTest(
+        state,
+        spellCasterId,
+        boonOfCombatProwessUnitId,
+      ),
+    ]);
   });
 
   test("pending peerless aim replay cannot authorize a different attack roll", () => {
@@ -238,12 +263,12 @@ describe("QMBT56 deterministic Combat Prowess profile slice", () => {
     });
     const subject = weaponAttackSubject(state, "Longsword");
     const target = requireResultHole(
-      resolveBattleSubject({ state, subject, fills: [] }),
+      resolveBattleSubject({ state: state.state, subject, fills: [] }),
       "targetChoice",
     );
     const roll = requireResultHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject,
         fills: [
           attackTargetFill(target, spellCasterId, spellTargetId, "Longsword"),
@@ -252,14 +277,14 @@ describe("QMBT56 deterministic Combat Prowess profile slice", () => {
       "attackRoll",
     );
     const awaitingDamage = resolveBattleSubject({
-      state,
+      state: state.state,
       subject,
       fills: [
         attackTargetFill(target, spellCasterId, spellTargetId, "Longsword"),
         attackRollFill(roll, {
           total: 1,
           naturalD20: 2,
-          missToHitReplacementUnitId: boonOfCombatProwessUnitId,
+          missToHitReplacementProcedureRef: combatProwessProcedureRef(state),
         }),
       ],
     });
@@ -269,7 +294,7 @@ describe("QMBT56 deterministic Combat Prowess profile slice", () => {
     }
 
     const act = spellAct({
-      state: awaitingDamage.state,
+      session: { state: awaitingDamage.state, context: state.context },
       spellId: rayOfFrostUnitId,
     });
     const spellTarget = requireResultHole(
@@ -311,7 +336,10 @@ describe("QMBT56 deterministic Combat Prowess profile slice", () => {
           attackRollFill(spellRoll, {
             total: 1,
             naturalD20: 2,
-            missToHitReplacementUnitId: boonOfCombatProwessUnitId,
+            missToHitReplacementProcedureRef: combatProwessProcedureRef({
+              state: awaitingDamage.state,
+              context: state.context,
+            }),
           }),
         ],
       }),
@@ -327,12 +355,12 @@ describe("QMBT56 deterministic Combat Prowess profile slice", () => {
     });
     const subject = weaponAttackSubject(state, "Longsword");
     const target = requireResultHole(
-      resolveBattleSubject({ state, subject, fills: [] }),
+      resolveBattleSubject({ state: state.state, subject, fills: [] }),
       "targetChoice",
     );
     const roll = requireResultHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject,
         fills: [
           attackTargetFill(target, spellCasterId, spellTargetId, "Longsword"),
@@ -343,7 +371,7 @@ describe("QMBT56 deterministic Combat Prowess profile slice", () => {
 
     expect(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject,
         fills: [
           attackTargetFill(target, spellCasterId, spellTargetId, "Longsword"),
@@ -356,13 +384,13 @@ describe("QMBT56 deterministic Combat Prowess profile slice", () => {
   test("peerless aim applies to Unarmed Strike and spell attack misses", () => {
     const unarmedState = combatProwessBattle({ attack: null });
     const unarmedSubject = characterAttackSubjectForTest(
-      unarmedState,
+      unarmedState.state,
       spellCasterId,
       "Unarmed Strike",
     );
     const unarmedTarget = requireResultHole(
       resolveBattleSubject({
-        state: unarmedState,
+        state: unarmedState.state,
         subject: unarmedSubject,
         fills: [],
       }),
@@ -370,7 +398,7 @@ describe("QMBT56 deterministic Combat Prowess profile slice", () => {
     );
     const unarmedRoll = requireResultHole(
       resolveBattleSubject({
-        state: unarmedState,
+        state: unarmedState.state,
         subject: unarmedSubject,
         fills: [attackTargetFill(unarmedTarget, spellCasterId, spellTargetId)],
       }),
@@ -378,14 +406,15 @@ describe("QMBT56 deterministic Combat Prowess profile slice", () => {
     );
     expect(
       resolveBattleSubject({
-        state: unarmedState,
+        state: unarmedState.state,
         subject: unarmedSubject,
         fills: [
           attackTargetFill(unarmedTarget, spellCasterId, spellTargetId),
           attackRollFill(unarmedRoll, {
             total: 1,
             naturalD20: 1,
-            missToHitReplacementUnitId: boonOfCombatProwessUnitId,
+            missToHitReplacementProcedureRef:
+              combatProwessProcedureRef(unarmedState),
           }),
         ],
       }),
@@ -396,10 +425,10 @@ describe("QMBT56 deterministic Combat Prowess profile slice", () => {
       attack: null,
       cantrips: [spell],
     });
-    const act = spellAct({ state: spellState, spellId: rayOfFrostUnitId });
+    const act = spellAct({ session: spellState, spellId: rayOfFrostUnitId });
     const spellTarget = requireResultHole(
       resolveBattleSubject({
-        state: spellState,
+        state: spellState.state,
         subject: act.subject,
         fills: [],
       }),
@@ -407,7 +436,7 @@ describe("QMBT56 deterministic Combat Prowess profile slice", () => {
     );
     const spellRoll = requireResultHole(
       resolveBattleSubject({
-        state: spellState,
+        state: spellState.state,
         subject: act.subject,
         fills: [
           spellTargetFill(
@@ -421,7 +450,7 @@ describe("QMBT56 deterministic Combat Prowess profile slice", () => {
       "attackRoll",
     );
     const spellDamage = resolveBattleSubject({
-      state: spellState,
+      state: spellState.state,
       subject: act.subject,
       fills: [
         spellTargetFill(
@@ -433,7 +462,8 @@ describe("QMBT56 deterministic Combat Prowess profile slice", () => {
         attackRollFill(spellRoll, {
           total: 1,
           naturalD20: 2,
-          missToHitReplacementUnitId: boonOfCombatProwessUnitId,
+          missToHitReplacementProcedureRef:
+            combatProwessProcedureRef(spellState),
         }),
       ],
     });
@@ -458,7 +488,10 @@ describe("QMBT56 deterministic Combat Prowess profile slice", () => {
           attackRollFill(spellRoll, {
             total: 1,
             naturalD20: 2,
-            missToHitReplacementUnitId: boonOfCombatProwessUnitId,
+            missToHitReplacementProcedureRef: combatProwessProcedureRef({
+              state: spellDamage.state,
+              context: spellState.context,
+            }),
           }),
           damageRollFillWithGroups(
             requireHole(spellDamage.holes, "rolledDice"),
@@ -475,12 +508,12 @@ describe("QMBT56 deterministic Combat Prowess profile slice", () => {
     });
     const subject = weaponAttackSubject(state, "Longsword");
     const target = requireResultHole(
-      resolveBattleSubject({ state, subject, fills: [] }),
+      resolveBattleSubject({ state: state.state, subject, fills: [] }),
       "targetChoice",
     );
     const roll = requireResultHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject,
         fills: [
           attackTargetFill(target, spellCasterId, spellTargetId, "Longsword"),
@@ -490,28 +523,28 @@ describe("QMBT56 deterministic Combat Prowess profile slice", () => {
     );
     const damage = requireResultHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject,
         fills: [
           attackTargetFill(target, spellCasterId, spellTargetId, "Longsword"),
           attackRollFill(roll, {
             total: 1,
             naturalD20: 2,
-            missToHitReplacementUnitId: boonOfCombatProwessUnitId,
+            missToHitReplacementProcedureRef: combatProwessProcedureRef(state),
           }),
         ],
       }),
       "rolledDice",
     );
     const used = resolveBattleSubject({
-      state,
+      state: state.state,
       subject,
       fills: [
         attackTargetFill(target, spellCasterId, spellTargetId, "Longsword"),
         attackRollFill(roll, {
           total: 1,
           naturalD20: 2,
-          missToHitReplacementUnitId: boonOfCombatProwessUnitId,
+          missToHitReplacementProcedureRef: combatProwessProcedureRef(state),
         }),
         damageRollFillWithGroups(damage, [[4]]),
       ],
@@ -525,9 +558,15 @@ describe("QMBT56 deterministic Combat Prowess profile slice", () => {
       used.state.combatants
         .get(spellCasterId)
         ?.attackRollMissToHitReplacementsUsedSinceTurnStart.map(
-          (usage) => usage.unitId,
+          (usage) => usage.procedureRef,
         ),
-    ).toEqual([boonOfCombatProwessUnitId]);
+    ).toEqual([
+      requireCharacterUnitProcedureRefForTest(
+        { state: used.state, context: state.context },
+        spellCasterId,
+        boonOfCombatProwessUnitId,
+      ),
+    ]);
 
     const afterTargetTurn = resolveBattleSubject({
       state: used.state,
@@ -562,14 +601,19 @@ describe("QMBT56 deterministic Combat Prowess profile slice", () => {
     ).toEqual([]);
     expect(
       weaponAttackRollHole({
-        state: reset.state,
+        session: { state: reset.state, context: state.context },
         attackName: "Longsword",
         actorId: spellCasterId,
         targetId: spellTargetId,
       }),
     ).toMatchObject({
       missToHitReplacements: [
-        { unitId: boonOfCombatProwessUnitId, label: boonOfCombatProwessUnitId },
+        {
+          procedureRef: combatProwessProcedureRef({
+            state: reset.state,
+            context: state.context,
+          }),
+        },
       ],
     });
   });

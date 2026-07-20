@@ -197,7 +197,7 @@ export function applyDirectConditionSpellEffects(
       sameDirectConditionSpellEffect(
         effect,
         actorId,
-        invocation.spell.id,
+        invocation.sourceProcedureRef,
         invocation.activeEffect.condition,
       ),
     );
@@ -313,7 +313,7 @@ function directConditionWithDurationTick(
 function sameDirectConditionSpellEffect(
   effect: BattleActiveEffect,
   sourceCombatantId: CombatantId,
-  sourceProcedureRef: DirectConditionSpellInvocation["spell"]["id"],
+  sourceProcedureRef: DirectConditionSpellInvocation["sourceProcedureRef"],
   condition: DirectConditionSpellInvocation["activeEffect"]["condition"],
 ): boolean {
   return (

@@ -151,7 +151,7 @@ export function resolveSpellAttackSequenceAct(input: {
     return invalidResult(
       input.input.state,
       "invalidFill",
-      `${input.invocation.spell.name} spell attack sequence must use indexed target, attack-roll, and damage fills.`,
+      `Spell spell attack sequence must use indexed target, attack-roll, and damage fills.`,
     );
   }
 
@@ -311,7 +311,7 @@ function resolveSpellAttackSequencePart(input: {
     return invalidResult(
       input.input.state,
       "invalidFill",
-      `${input.invocation.spell.name} ${partName} target was not filled.`,
+      `Spell ${partName} target was not filled.`,
     );
   }
   if (target.kind === "combatant") {
@@ -355,7 +355,7 @@ function resolveSpellAttackSequenceCreaturePart(input: {
     return invalidResult(
       input.input.state,
       "invalidFill",
-      `${input.invocation.spell.name} ${partName} target must be a combatant within the selected spell's supported range.`,
+      `Spell ${partName} target must be a combatant within the selected spell's supported range.`,
     );
   }
   const requiredRollMode = requiredSpellAttackRollMode(
@@ -424,7 +424,7 @@ function resolveSpellAttackSequenceCreaturePart(input: {
       return invalidResult(
         input.input.state,
         "invalidFill",
-        `Sanctuary replacement ${input.invocation.spell.name} ${partName} target must be legal for the selected spell.`,
+        `Sanctuary replacement Spell ${partName} target must be legal for the selected spell.`,
       );
     }
     const originalTargetFill = input.input.fills.find(
@@ -437,7 +437,7 @@ function resolveSpellAttackSequenceCreaturePart(input: {
       return invalidResult(
         input.input.state,
         "invalidFill",
-        `Sanctuary replacement requires the original ${input.invocation.spell.name} ${partName} target fill.`,
+        `Sanctuary replacement requires the original Spell ${partName} target fill.`,
       );
     }
     const fills = input.input.fills
@@ -542,7 +542,7 @@ function resolveSpellAttackSequenceCreaturePart(input: {
     ordinaryHit,
   });
   if (
-    input.partFill.attackRoll.missToHitReplacementUnitId !== undefined &&
+    input.partFill.attackRoll.missToHitReplacementProcedureRef !== undefined &&
     missToHitReplacement === null
   ) {
     return invalidResult(
@@ -580,7 +580,7 @@ function resolveSpellAttackSequenceCreaturePart(input: {
     return invalidResult(
       input.input.state,
       "invalidFill",
-      `${input.invocation.spell.name} ${partName} Mirror Image duplicate roll is only valid after an attack-roll hit.`,
+      `Spell ${partName} Mirror Image duplicate roll is only valid after an attack-roll hit.`,
     );
   }
   if (hit) {
@@ -684,7 +684,7 @@ function resolveSpellAttackSequenceCreaturePart(input: {
     return invalidResult(
       input.input.state,
       "invalidFill",
-      `${input.invocation.spell.name} ${partName} damage can only be filled after a hit.`,
+      `Spell ${partName} damage can only be filled after a hit.`,
     );
   }
   if (!hit) {
@@ -1074,7 +1074,7 @@ function resolveSpellAttackSequenceObjectPart(input: {
     return invalidResult(
       input.input.state,
       "invalidFill",
-      `${input.invocation.spell.name} object ${partName} must include a matching table-supplied range and object Armor Class fact.`,
+      `Spell object ${partName} must include a matching table-supplied range and object Armor Class fact.`,
     );
   }
   const sightFact = spellObjectTargetSightFact(
@@ -1098,7 +1098,7 @@ function resolveSpellAttackSequenceObjectPart(input: {
     return invalidResult(
       input.input.state,
       "invalidFill",
-      `${input.invocation.spell.name} object ${partName} must include a matching table-supplied object sight fact.`,
+      `Spell object ${partName} must include a matching table-supplied object sight fact.`,
     );
   }
   const requiredRollMode = requiredSpellObjectTargetAttackRollMode(
@@ -1161,8 +1161,8 @@ function resolveSpellAttackSequenceObjectPart(input: {
     );
   }
   if (
-    input.partFill.attackRoll.activatedOngoingFeatureUnitId !== undefined ||
-    input.partFill.attackRoll.missToHitReplacementUnitId !== undefined
+    input.partFill.attackRoll.activatedOngoingFeatureProcedureRef !== undefined ||
+    input.partFill.attackRoll.missToHitReplacementProcedureRef !== undefined
   ) {
     return invalidResult(
       input.input.state,
@@ -1326,7 +1326,7 @@ function spellAttackSequencePartDamageReductionRollHole(
     ...base,
     holeId: holeId(protocolId),
     holeInstanceKey: holeInstanceKey(protocolId),
-    label: `${invocation.spell.name} ${partName} ${partIndex + 1} damage reduction`,
+    label: `Spell ${partName} ${partIndex + 1} damage reduction`,
   };
 }
 
@@ -1349,7 +1349,7 @@ function spellAttackSequencePartConcentrationSavingThrowHole(
     ...base,
     holeId: holeId(protocolId),
     holeInstanceKey: holeInstanceKey(protocolId),
-    label: `${invocation.spell.name} ${partName} ${partIndex + 1} Concentration Constitution Saving Throw`,
+    label: `Spell ${partName} ${partIndex + 1} Concentration Constitution Saving Throw`,
   };
 }
 
@@ -1371,6 +1371,6 @@ function spellAttackSequencePartDamageDispositionHoleKey(
   return {
     holeId: holeId(protocolId),
     holeInstanceKey: holeInstanceKey(protocolId),
-    label: `${invocation.spell.name} ${partName} ${partIndex + 1} damage disposition`,
+    label: `Spell ${partName} ${partIndex + 1} damage disposition`,
   };
 }

@@ -7,7 +7,8 @@ import type {
   CharacterBattleCreatureState,
   OngoingFeatureSourceKey,
 } from "../battle-reducer.ts";
-import type { SupportedUnitFeatureProfile } from "../unit-feature-support.ts";
+import type { UnitFeatureProcedureExecution } from "../character-execution.ts";
+import { ongoingFeatureProfileForSourceKey } from "./creature-state.ts";
 
 const RAGE_RESISTANCE_DAMAGE_TYPES = [
   "bludgeoning",
@@ -16,7 +17,7 @@ const RAGE_RESISTANCE_DAMAGE_TYPES = [
 ] as const satisfies ReadonlyArray<DamageType>;
 
 type OngoingFeatureProfile = Extract<
-  SupportedUnitFeatureProfile,
+  UnitFeatureProcedureExecution,
   { readonly kind: "ongoingFeature" }
 >;
 
@@ -57,7 +58,7 @@ export function activeRageSourceKeysForFrenzy(
   attacker: CharacterBattleCreatureState,
 ): readonly OngoingFeatureSourceKey[] {
   return [...attacker.activeOngoingFeatureOccurrences.keys()].filter((key) => {
-    const profile = attacker.origin.ongoingFeatureProfiles.get(key);
+    const profile = ongoingFeatureProfileForSourceKey(attacker, key);
     return (
       profile?.kind === "ongoingFeature" &&
       ongoingFeatureProfileIsRageForFrenzy(profile)
@@ -71,7 +72,7 @@ export function activeRageDamageBonusForFrenzy(
 ): ActiveRageDamageBonusForFrenzy | null {
   const bonuses = activeRageSourceKeysForFrenzy(attacker).flatMap(
     (key): readonly ActiveRageDamageBonusForFrenzy[] => {
-      const profile = attacker.origin.ongoingFeatureProfiles.get(key);
+      const profile = ongoingFeatureProfileForSourceKey(attacker, key);
       if (
         profile?.kind !== "ongoingFeature" ||
         !ongoingFeatureProfileIsRageForFrenzy(profile)

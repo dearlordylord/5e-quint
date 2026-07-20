@@ -1,8 +1,4 @@
 import { requireCharacterUnitProcedureRefForTest } from "./battle-runtime-test-support.ts";
-import {
-  battleActSpellPresentation,
-  battleActUnitPresentation,
-} from "./battle-act-composition.ts";
 // RAW-COVERAGE: runtime-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-action-area-save-damage-replacement
@@ -21,6 +17,7 @@ import type {
   BattleReducerRouteHole,
   BattleReducerRouteOwnerGroup,
   BattleResolutionResult,
+  BattleRuntimeSession,
   BattleState,
   CombatantId,
 } from "./index.ts";
@@ -42,7 +39,7 @@ import {
   battleUnitRefWithSupportProfiles,
   classLevel,
   combatantId,
-  discoverBattleActs,
+  discoverBattleActCandidates,
   resolveBattleSubject,
   startBattle,
 } from "./unit-profile-admission-test-support.ts";
@@ -116,7 +113,7 @@ defineSelectedIdentityReplayAndQntReplay({
           discover: () =>
             projectBattleState(
               recordResolvedState(
-                resolveBreathWeapon(breathWeaponBattle(), {
+                resolveBreathWeapon(breathWeaponBattle().state, {
                   outcomes: [
                     { targetId: spellTargetId, succeeded: false },
                     { targetId: secondTargetId, succeeded: true },
@@ -133,11 +130,14 @@ defineSelectedIdentityReplayAndQntReplay({
           discover: () =>
             projectBattleState(
               recordResolvedState(
-                resolveBreathWeapon(breathWeaponBattle({ extraAttack: true }), {
-                  outcomes: [{ targetId: spellTargetId, succeeded: false }],
-                  areaTargetIds: [spellTargetId],
-                  damageRolls: [5, 5],
-                }),
+                resolveBreathWeapon(
+                  breathWeaponBattle({ extraAttack: true }).state,
+                  {
+                    outcomes: [{ targetId: spellTargetId, succeeded: false }],
+                    areaTargetIds: [spellTargetId],
+                    damageRolls: [5, 5],
+                  },
+                ),
               ),
               "openedExtraAttack",
             ),
@@ -145,11 +145,12 @@ defineSelectedIdentityReplayAndQntReplay({
         {
           actionName: "doRejectMissingResource",
           discover: () => {
-            const state = breathWeaponBattle({ usesRemaining: 0 });
+            const session = breathWeaponBattle({ usesRemaining: 0 });
+            const state = session.state;
             recordInvalidResult(
               resolveBattleSubject({
                 state,
-                subject: breathWeaponSubject(),
+                subject: breathWeaponSubjectForSession(session),
                 fills: [],
               }),
             );
@@ -159,7 +160,7 @@ defineSelectedIdentityReplayAndQntReplay({
         {
           actionName: "doRejectMismatchedArea",
           discover: () => {
-            const state = breathWeaponBattle();
+            const state = breathWeaponBattle().state;
             recordInvalidResult(
               resolveBreathWeaponSave(state, {
                 outcomes: [{ targetId: spellTargetId, succeeded: false }],
@@ -172,7 +173,7 @@ defineSelectedIdentityReplayAndQntReplay({
         {
           actionName: "doRejectInvalidDamageRoll",
           discover: () => {
-            const state = breathWeaponBattle();
+            const state = breathWeaponBattle().state;
             recordInvalidResult(
               resolveBreathWeapon(state, {
                 outcomes: [{ targetId: spellTargetId, succeeded: false }],
@@ -190,14 +191,17 @@ defineSelectedIdentityReplayAndQntReplay({
 
 describe("Dragonborn Breath Weapon runtime", () => {
   test("observes copied qRoute through public reducer entrypoints", () => {
-    const resolved = resolvedBreathWeaponPublicRoute(breathWeaponBattle(), {
-      outcomes: [
-        { targetId: spellTargetId, succeeded: false },
-        { targetId: secondTargetId, succeeded: true },
-      ],
-      areaTargetIds: [spellTargetId, secondTargetId],
-      damageRolls: [6, 4],
-    });
+    const resolved = resolvedBreathWeaponPublicRoute(
+      breathWeaponBattle().state,
+      {
+        outcomes: [
+          { targetId: spellTargetId, succeeded: false },
+          { targetId: secondTargetId, succeeded: true },
+        ],
+        areaTargetIds: [spellTargetId, secondTargetId],
+        damageRolls: [6, 4],
+      },
+    );
     expect(resolved).toEqual([
       battleReducerStartRouteEvent(),
       attackActionAreaSaveDamageReplacementDiscoverRoute([
@@ -236,7 +240,7 @@ describe("Dragonborn Breath Weapon runtime", () => {
     ]);
 
     const openedExtraAttack = resolvedBreathWeaponPublicRoute(
-      breathWeaponBattle({ extraAttack: true }),
+      breathWeaponBattle({ extraAttack: true }).state,
       {
         outcomes: [{ targetId: spellTargetId, succeeded: false }],
         areaTargetIds: [spellTargetId],
@@ -282,9 +286,13 @@ describe("Dragonborn Breath Weapon runtime", () => {
       },
     ]);
 
+    const missingResourceSession = breathWeaponBattle({
+      usesRemaining: 0,
+    });
+    const missingResourceState = missingResourceSession.state;
     const missingResource = resolveBattleSubject({
-      state: breathWeaponBattle({ usesRemaining: 0 }),
-      subject: breathWeaponSubject(),
+      state: missingResourceState,
+      subject: breathWeaponSubjectForSession(missingResourceSession),
       fills: [],
     });
     recordInvalidResult(missingResource);
@@ -299,7 +307,7 @@ describe("Dragonborn Breath Weapon runtime", () => {
       ),
     ]);
 
-    const mismatchedAreaState = breathWeaponBattle();
+    const mismatchedAreaState = breathWeaponBattle().state;
     const mismatchedAreaAct = breathWeaponAct(mismatchedAreaState);
     const mismatchedArea = resolveBreathWeaponSave(mismatchedAreaState, {
       outcomes: [{ targetId: spellTargetId, succeeded: false }],
@@ -323,7 +331,7 @@ describe("Dragonborn Breath Weapon runtime", () => {
     ]);
 
     const invalidDamageRoll = invalidDamageRollPublicRoute(
-      breathWeaponBattle(),
+      breathWeaponBattle().state,
       {
         outcomes: [{ targetId: spellTargetId, succeeded: false }],
         areaTargetIds: [spellTargetId],
@@ -357,17 +365,15 @@ describe("Dragonborn Breath Weapon runtime", () => {
   });
 
   test("discovers Breath Weapon from selected Draconic Ancestry source facts", () => {
-    const state = breathWeaponBattle();
+    const session = breathWeaponBattle();
+    const state = session.state;
     const act = breathWeaponAct(state);
 
-    expect({
-      ...act.subject,
-      invocation: battleActSpellPresentation(act)?.invocation,
-    }).toMatchObject({
+    expect(act.subject).toMatchObject({
       tag: "unitFeature",
       actorId: spellCasterId,
       procedureRef: requireCharacterUnitProcedureRefForTest(
-        state,
+        session,
         spellCasterId,
         speciesDragonbornBreathWeaponUnitId,
       ),
@@ -384,7 +390,7 @@ describe("Dragonborn Breath Weapon runtime", () => {
   });
 
   test("resolves Dexterity saves, rolls selected ancestry damage, and spends one use", () => {
-    const state = breathWeaponBattle();
+    const state = breathWeaponBattle().state;
     const pendingDamage = resolveBreathWeaponSave(state, {
       outcomes: [
         { targetId: spellTargetId, succeeded: false },
@@ -409,7 +415,7 @@ describe("Dragonborn Breath Weapon runtime", () => {
     const resolved = recordResolvedState(
       resolveBattleSubject({
         state,
-        subject: breathWeaponSubject(),
+        subject: breathWeaponSubject(state),
         fills: [
           breathWeaponSavingThrowFill(
             requireHole(
@@ -434,7 +440,7 @@ describe("Dragonborn Breath Weapon runtime", () => {
   });
 
   test("opens the remaining Extra Attack slot after replacing the first attack", () => {
-    const state = breathWeaponBattle({ extraAttack: true });
+    const state = breathWeaponBattle({ extraAttack: true }).state;
     const resolved = recordResolvedState(
       resolveBreathWeapon(state, {
         outcomes: [{ targetId: spellTargetId, succeeded: false }],
@@ -452,7 +458,7 @@ describe("Dragonborn Breath Weapon runtime", () => {
   });
 
   test("rejects Saving Throw outcomes that do not match the table area", () => {
-    const state = breathWeaponBattle();
+    const state = breathWeaponBattle().state;
     const result = resolveBreathWeaponSave(state, {
       outcomes: [{ targetId: spellTargetId, succeeded: false }],
       areaTargetIds: [spellTargetId, secondTargetId],
@@ -472,7 +478,7 @@ function breathWeaponBattle(
     readonly extraAttack?: boolean;
     readonly usesRemaining?: number;
   } = {},
-): BattleState {
+): BattleRuntimeSession {
   const result = startBattle({
     battleId: battleId("dragonborn-breath-weapon-runtime"),
     combatants: [
@@ -543,12 +549,10 @@ function projectBattleState(
 }
 
 function breathWeaponAct(state: BattleState) {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActCandidates(state).find(
     (candidate) =>
       candidate.subject.tag === "unitFeature" &&
-      candidate.subject.actorId === spellCasterId &&
-      battleActUnitPresentation(candidate)?.unitId ===
-        speciesDragonbornBreathWeaponUnitId,
+      candidate.subject.actorId === spellCasterId,
   );
   if (act === undefined) {
     throw new Error("Expected Breath Weapon act.");
@@ -556,11 +560,19 @@ function breathWeaponAct(state: BattleState) {
   return act;
 }
 
-function breathWeaponSubject() {
+function breathWeaponSubject(state: BattleState) {
+  return breathWeaponAct(state).subject;
+}
+
+function breathWeaponSubjectForSession(session: BattleRuntimeSession) {
   return {
     tag: "unitFeature" as const,
     actorId: spellCasterId,
-    unitId: speciesDragonbornBreathWeaponUnitId,
+    procedureRef: requireCharacterUnitProcedureRefForTest(
+      session,
+      spellCasterId,
+      speciesDragonbornBreathWeaponUnitId,
+    ),
   };
 }
 
@@ -581,7 +593,7 @@ function resolveBreathWeapon(
   );
   const pendingDamage = resolveBattleSubject({
     state,
-    subject: breathWeaponSubject(),
+    subject: breathWeaponSubject(state),
     fills: [
       breathWeaponSavingThrowFill(save, input.outcomes, input.areaTargetIds),
     ],
@@ -592,7 +604,7 @@ function resolveBreathWeapon(
   const damage = requireHole(pendingDamage.holes, "rolledDice");
   return resolveBattleSubject({
     state,
-    subject: breathWeaponSubject(),
+    subject: breathWeaponSubject(state),
     fills: [
       breathWeaponSavingThrowFill(save, input.outcomes, input.areaTargetIds),
       rolledDiceFill(damage, input.damageRolls),
@@ -620,7 +632,7 @@ function resolvedBreathWeaponPublicRoute(
   );
   const pendingDamage = resolveBattleSubject({
     state,
-    subject: breathWeaponSubject(),
+    subject: breathWeaponSubject(state),
     fills: [savingThrowFill],
   });
   if (pendingDamage.tag !== "needsHoles") {
@@ -629,7 +641,7 @@ function resolvedBreathWeaponPublicRoute(
   const damage = requireHole(pendingDamage.holes, "rolledDice");
   const resolved = resolveBattleSubject({
     state,
-    subject: breathWeaponSubject(),
+    subject: breathWeaponSubject(state),
     fills: [savingThrowFill, rolledDiceFill(damage, input.damageRolls)],
   });
   recordResolvedState(resolved);
@@ -661,7 +673,7 @@ function invalidDamageRollPublicRoute(
   );
   const pendingDamage = resolveBattleSubject({
     state,
-    subject: breathWeaponSubject(),
+    subject: breathWeaponSubject(state),
     fills: [savingThrowFill],
   });
   if (pendingDamage.tag !== "needsHoles") {
@@ -670,7 +682,7 @@ function invalidDamageRollPublicRoute(
   const damage = requireHole(pendingDamage.holes, "rolledDice");
   const invalid = resolveBattleSubject({
     state,
-    subject: breathWeaponSubject(),
+    subject: breathWeaponSubject(state),
     fills: [savingThrowFill, rolledDiceFill(damage, input.damageRolls)],
   });
   recordInvalidResult(invalid);
@@ -731,7 +743,7 @@ function resolveBreathWeaponSave(
 ): BattleResolutionResult {
   return resolveBattleSubject({
     state,
-    subject: breathWeaponSubject(),
+    subject: breathWeaponSubject(state),
     fills: [
       breathWeaponSavingThrowFill(
         requireHole(breathWeaponAct(state).initialHoles, "savingThrowOutcome"),
@@ -833,8 +845,23 @@ function breathWeaponUsesRemaining(state: BattleState): number {
   if (actor?.origin.kind !== "character") {
     throw new Error("Expected Dragonborn actor.");
   }
+  const binding = actor.origin.execution.procedureBindings.find(
+    (candidate) =>
+      candidate.procedure.kind === "unitFeature" &&
+      candidate.procedure.source.kind === "resourcePool" &&
+      candidate.procedure.execution.kind ===
+        "attackActionAreaSaveDamageReplacement",
+  );
+  if (
+    binding === undefined ||
+    binding.procedure.kind !== "unitFeature" ||
+    binding.procedure.source.kind !== "resourcePool"
+  ) {
+    throw new Error("Expected Breath Weapon mechanical procedure.");
+  }
+  const resourcePoolRef = binding.procedure.source.resourcePoolRef;
   const resource = actor.origin.resources.find(
-    (candidate) => candidate.unit.id === speciesDragonbornBreathWeaponUnitId,
+    (candidate) => candidate.resourcePoolRef === resourcePoolRef,
   );
   if (resource === undefined || !("usesRemaining" in resource)) {
     throw new Error("Expected Breath Weapon use-count resource.");

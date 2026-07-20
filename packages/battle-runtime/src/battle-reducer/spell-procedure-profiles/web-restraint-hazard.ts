@@ -1,4 +1,5 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard
+import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE
 //
 // The Web Spell Procedure Profile: action-time Spell Slot casting creates a
@@ -30,7 +31,6 @@ import { movementFeet } from "@dnd/shared/types";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
-import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
@@ -38,7 +38,7 @@ import {
   type BattleState,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
-import { spellId, type CombatantId } from "../../identity.ts";
+import { type CombatantId } from "../../identity.ts";
 import { spellAreaChoiceHole } from "../spells-holes-fills.ts";
 import { resolveWebRestraintHazardSpellAct } from "../spells-resolve-area-effects.ts";
 import type {
@@ -47,9 +47,8 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
-import { spellProcedureInvocationSchema } from "./profile.ts";
+import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
 import {
-  BattleRuntimeObjectSchema,
   DcSourceSchema,
   MovementFeet,
   PreparedSpellAccessSchema,
@@ -249,29 +248,11 @@ function discoverWebRestraintHazardCastAct(
         tag: "actionSpell",
         actorId,
         procedureRef: invocation.sourceProcedureRef,
-        invocation: webRestraintHazardInvocationRef(invocation),
         mode: { tag: "cast" },
       },
       initialHoles: [spellAreaChoiceHole(invocation)],
     },
   ];
-}
-
-function webRestraintHazardInvocationRef(
-  invocation: WebRestraintHazardSpellInvocation,
-): SpellInvocationRef {
-  return {
-    tag: "spellSlot",
-    spellId: spellId(invocation.spell.id),
-    slotLevel: invocation.resource.slotLevel,
-    procedure: "webRestraintHazard",
-  };
-}
-
-function webRestraintHazardCastSummary(
-  invocation: WebRestraintHazardSpellInvocation,
-): string {
-  return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
 }
 
 function resolveWebRestraintHazard(
@@ -285,38 +266,30 @@ function resolveWebRestraintHazard(
   });
 }
 
-const WebRestraintHazardInvocationSchema = spellProcedureInvocationSchema<
-  Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "webRestraintHazard" }
-  >
->(
+const WebRestraintHazardInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
     resource: SpellSlotInvocationResourceSchema,
     procedure: Schema.Literal("webRestraintHazard"),
-    spell: BattleRuntimeObjectSchema,
+    spellRuleFacts: SpellRuleExecutionFactsSchema,
     ability: Schema.Literal("dex"),
     dc: DcSourceSchema,
     targeting: Schema.Struct({
       kind: Schema.Literal("pointOriginCube"),
       sideFeet: MovementFeet,
     }),
-    durationTicks: Schema.Number,
+    durationTicks: ElapsedTimeTicksSchema,
     rangeFeet: MovementFeet,
   }),
 );
 export const webRestraintHazardProfile = {
   procedure: "webRestraintHazard",
-  invocationSchema: WebRestraintHazardInvocationSchema,
+  executionSchema: WebRestraintHazardInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: [],
   admit: admitWebRestraintHazard,
   discoverCastAct: discoverWebRestraintHazardCastAct,
-  castSummary: webRestraintHazardCastSummary,
-  invocationRef: webRestraintHazardInvocationRef,
   resolve: resolveWebRestraintHazard,
 } satisfies SpellProcedureProfile<
   "webRestraintHazard",

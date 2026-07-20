@@ -35,7 +35,7 @@ describe("QMBT25 deterministic Spell Unit admission re-triage", () => {
     const spell = spellRecord(healingWordUnitId);
     const state = spellBattle({ preparedSpells: [spell] });
     const act = bonusSpellAct({
-      state,
+      session: state,
       spellId: healingWordUnitId,
     });
 
@@ -60,7 +60,7 @@ describe("QMBT25 deterministic Spell Unit admission re-triage", () => {
     ]);
     const targetHole = requireHole(act.initialHoles, "targetChoice");
     const awaitingHealingRoll = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [
         spellTargetFill(
@@ -95,7 +95,7 @@ describe("QMBT32 deterministic direct Hit Point restoration spell admission", ()
     const spell = spellRecord(cureWoundsUnitId);
     const state = spellBattle({ preparedSpells: [spell] });
     const act = spellAct({
-      state,
+      session: state,
       spellId: cureWoundsUnitId,
     });
 
@@ -114,7 +114,7 @@ describe("QMBT32 deterministic direct Hit Point restoration spell admission", ()
     });
     const targetHole = requireHole(act.initialHoles, "targetChoice");
     const awaitingHealingRoll = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [
         spellTargetFill(
@@ -152,7 +152,7 @@ describe("QMBT32 deterministic direct Hit Point restoration spell admission", ()
       extraTargetIds: massHealingTargetIds.slice(1),
     });
     const act = bonusSpellAct({
-      state,
+      session: state,
       spellId: massHealingWordUnitId,
     });
 
@@ -194,7 +194,7 @@ describe("QMBT32 deterministic direct Hit Point restoration spell admission", ()
 
     expect(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject: act.subject,
         fills: [
           spellTargetListFill(
@@ -208,7 +208,7 @@ describe("QMBT32 deterministic direct Hit Point restoration spell admission", ()
     ).toMatchObject({ tag: "invalid" });
     expect(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject: act.subject,
         fills: [
           spellTargetListFill(
@@ -230,7 +230,7 @@ describe("QMBT32 deterministic direct Hit Point restoration spell admission", ()
       extraTargetIds: massHealingTargetIds.slice(1),
     });
     const act = spellAct({
-      state,
+      session: state,
       spellId: massCureWoundsUnitId,
     });
 
@@ -286,7 +286,7 @@ describe("QMBT32 deterministic direct Hit Point restoration spell admission", ()
       extraTargetIds: massHealingTargetIds.slice(1),
     });
     const act = spellAct({
-      state,
+      session: state,
       spellId: massCureWoundsUnitId,
     });
     const targetListHole = requireHole(act.initialHoles, "spellTargetList");
@@ -294,7 +294,7 @@ describe("QMBT32 deterministic direct Hit Point restoration spell admission", ()
 
     expect(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject: act.subject,
         fills: [
           {
@@ -336,13 +336,13 @@ describe("QMBT32 deterministic direct Hit Point restoration spell admission", ()
       spellSlots: [{ spellLevel: 6, count: 1 }],
     });
     const act = spellAct({
-      state,
+      session: state,
       spellId: massCureWoundsUnitId,
       slotLevel: 6,
     });
     const targetListHole = requireHole(act.initialHoles, "spellTargetList");
     const awaitingHealingRoll = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [
         spellTargetListFill(

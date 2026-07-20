@@ -15,7 +15,6 @@
 //     Checks, Saving Throws, and Attack Rolls; Concentration can end sustained
 //     spell effects.
 
-import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
@@ -25,7 +24,8 @@ import {
   type BattleState,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
-import { spellId, type CombatantId } from "../../identity.ts";
+import { CombatantId } from "../../identity.ts";
+import { ElapsedTimeTicksSchema } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { readiedSpellAct } from "../spells-discovery.ts";
 import { supportedPreparedAbilityD20TestRollModeSaveGateProfile } from "./_save-gate-helpers.ts";
 import { resolveAbilityD20TestRollModeSaveGateSpellAct } from "../spells-resolve-save-gates.ts";
@@ -35,9 +35,8 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
-import { spellProcedureInvocationSchema } from "./profile.ts";
+import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
 import {
-  BattleRuntimeObjectSchema,
   DcSourceSchema,
   MovementFeet,
   PreparedSpellAccessSchema,
@@ -121,29 +120,12 @@ function abilityD20TestRollModeSaveGateCastAct(
       tag: "actionSpell",
       actorId,
       procedureRef: invocation.sourceProcedureRef,
-      invocation: abilityD20TestRollModeSaveGateInvocationRef(invocation),
       mode: { tag: "cast" },
     },
     initialHoles,
   };
 }
 
-function abilityD20TestRollModeSaveGateInvocationRef(
-  invocation: AbilityD20TestRollModeSaveGateSpellInvocation,
-): SpellInvocationRef {
-  return {
-    tag: "spellSlot",
-    spellId: spellId(invocation.spell.id),
-    slotLevel: invocation.resource.slotLevel,
-    procedure: "abilityD20TestRollModeSaveGate",
-  };
-}
-
-function abilityD20TestRollModeSaveGateCastSummary(
-  invocation: AbilityD20TestRollModeSaveGateSpellInvocation,
-): string {
-  return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
-}
 
 function resolveAbilityD20TestRollModeSaveGate(
   input: AbilityD20TestRollModeSaveGateResolveInput,
@@ -157,17 +139,12 @@ function resolveAbilityD20TestRollModeSaveGate(
 }
 
 const AbilityD20TestRollModeSaveGateInvocationSchema =
-  spellProcedureInvocationSchema<
-    Extract<
-      SupportedSpellInvocation,
-      { readonly procedure: "abilityD20TestRollModeSaveGate" }
-    >
-  >(
+  spellProcedureExecutionSchema(
     Schema.Struct({
       access: PreparedSpellAccessSchema,
       resource: SpellSlotInvocationResourceSchema,
       procedure: Schema.Literal("abilityD20TestRollModeSaveGate"),
-      spell: BattleRuntimeObjectSchema,
+      spellRuleFacts: SpellRuleExecutionFactsSchema,
       actionCost: Schema.Literal("magicAction"),
       ability: Schema.Literal("con"),
       dc: DcSourceSchema,
@@ -177,21 +154,53 @@ const AbilityD20TestRollModeSaveGateInvocationSchema =
         maxTargets: Schema.Literal(1),
       }),
       rangeFeet: MovementFeet,
-      successEffect: BattleRuntimeObjectSchema,
-      failedSaveEffect: BattleRuntimeObjectSchema,
+      successEffect: Schema.Struct({
+        kind: Schema.Literal("nextAttackRollBySelf"),
+        sourceCombatantId: CombatantId,
+        mode: Schema.Literal("disadvantage"),
+        expiresAt: Schema.Struct({
+          kind: Schema.Literal("startOfTurn"),
+          combatantId: CombatantId,
+        }),
+      }),
+      failedSaveEffect: Schema.Struct({
+        kind: Schema.Literal("abilityD20TestRollModeEndTurnSave"),
+        sourceCombatantId: CombatantId,
+        ability: Schema.Literal("str"),
+        mode: Schema.Literal("disadvantage"),
+        save: Schema.Struct({
+          ability: Schema.Literal("con"),
+          dc: Schema.Struct({ kind: Schema.Literal("caster_spell_save_dc") }),
+        }),
+        expiresAt: Schema.Struct({
+          kind: Schema.Literal("concentration"),
+          combatantId: CombatantId,
+          durationTicks: ElapsedTimeTicksSchema,
+        }),
+      }),
+      failedSaveDamagePenaltyEffect: Schema.Struct({
+        kind: Schema.Literal("sourceDamageRollPenalty"),
+        sourceCombatantId: CombatantId,
+        amount: Schema.Struct({
+          dice: Schema.Literal(1),
+          dieSize: Schema.Literal(8),
+        }),
+        expiresAt: Schema.Struct({
+          kind: Schema.Literal("concentration"),
+          combatantId: CombatantId,
+          durationTicks: ElapsedTimeTicksSchema,
+        }),
+      }),
     }),
   );
 export const abilityD20TestRollModeSaveGateProfile = {
   procedure: "abilityD20TestRollModeSaveGate",
-  invocationSchema: AbilityD20TestRollModeSaveGateInvocationSchema,
+  executionSchema: AbilityD20TestRollModeSaveGateInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   targetListInvocation: { kind: "always" },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: [],
   admit: admitAbilityD20TestRollModeSaveGate,
   discoverCastAct: discoverAbilityD20TestRollModeSaveGateCastAct,
-  castSummary: abilityD20TestRollModeSaveGateCastSummary,
-  invocationRef: abilityD20TestRollModeSaveGateInvocationRef,
   resolve: resolveAbilityD20TestRollModeSaveGate,
 } satisfies SpellProcedureProfile<
   "abilityD20TestRollModeSaveGate",

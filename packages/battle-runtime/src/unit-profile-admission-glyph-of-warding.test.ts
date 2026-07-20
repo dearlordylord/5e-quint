@@ -30,7 +30,6 @@
 // UNIT-IDENTITY-REPLAY: L3-FOLLOWUP-GLYPH-STORED-SELF-TRANSFORMATION-CONCENTRATION glyph_of_warding doReplayGlyphStoredSelfTransformationConcentration
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-glyph-durable-occurrence spell.invocation-glyph-explosive-rune-release spell.invocation-glyph-stored-spell-release spell.invocation-glyph-stored-concentration-full-duration spell.invocation-glyph-stored-summon-object-placement
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.GLYPH_DURABLE_OCCURRENCE_LIFECYCLE BATTLE.SPELL.GLYPH_EXPLOSIVE_RUNE_RELEASE BATTLE.SPELL.GLYPH_STORED_SPELL_RELEASE BATTLE.SPELL.GLYPH_STORED_CONCENTRATION_FULL_DURATION
-import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { abilityModifier } from "@dnd/shared-algebras/armor-class-algebra";
 import type { RolledDiceGroup } from "@dnd/shared-algebras/runtime-hole-algebra";
@@ -48,10 +47,13 @@ import type {
 } from "@dnd/surface/surface/types";
 import { describe, expect, test } from "vitest";
 import {
+  bindSelectedSpellInvocation,
   characterExecutionWithSpellInvocations,
   characterSpellProcedure,
   characterSpellProcedureRef,
+  characterSpellProcedureRefs,
   characterStoredSpellProcedureRef,
+  spellProcedureExecution,
 } from "./character-execution.ts";
 import {
   addGlyphDurableOccurrence,
@@ -77,7 +79,6 @@ import {
   SPELL_CAST_REACTION_FACTS_HOLE_ID,
   type BattleSpellCastReactionFact,
   type GlyphStoredSpellInvocationCandidate,
-  type ReadiedSpellInvocation,
 } from "./battle-reducer.ts";
 import {
   GLYPH_STORED_SINGLE_CREATURE_ACTIVE_EFFECT_PROCEDURES,
@@ -143,19 +144,19 @@ import {
   thunderwaveArea,
   webAreaFill,
 } from "./unit-profile-admission-spell-fill-support.ts";
-import { admittedSpellActs } from "./battle-reducer/spells-profiles.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 import {
   battleAreaId,
   battleObjectId,
   battleTablePositionId,
   battleD20TestNaturalOneRerollSupportForUnit,
-  discoverBattleActs,
+  discoverBattleActCandidates,
   endTurn,
   type BattleActiveEffect,
   type BattleFill,
   type BattleHole,
   type BattleObjectIgnitionDisposition,
+  type BattleRuntimeSession,
   type BattleSpellAreaOriginAnchor,
   type BattleState,
   type BattleTargetSpatialFact,
@@ -167,6 +168,7 @@ import {
   snapshotBattle,
   spellSaveDcForCaster,
 } from "./unit-profile-admission-test-support.ts";
+import type { BattleSelectedSpellInvocation } from "./battle-reducer.ts";
 import {
   battleSpellEffectOccurrenceId,
   type BattleProcedureExecutionRef,
@@ -174,6 +176,8 @@ import {
 import {
   battleProcedureExecutionRefForSpellHoleForTest,
   battleProcedureExecutionRefForTest,
+  characterBattleFeatureInitForTest,
+  requireCharacterUnitProcedureRefForTest,
 } from "./battle-runtime-test-support.ts";
 
 type GlyphDurableOccurrenceEffect = Extract<
@@ -763,7 +767,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     if (created.tag !== "created") return;
     expect(created.effect.release).toEqual({
       kind: "spellGlyph",
-      storedInvocation,
+      storedProcedure: spellProcedureExecution(storedInvocation),
     });
     const added = addGlyphDurableOccurrence({ state, effect: created.effect });
 
@@ -801,12 +805,67 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     ]);
     const restoredRef = characterSpellProcedureRef(reappeared, invocation);
     expect(restoredRef).toBe(originalRef);
-    expect(characterSpellProcedure(reappeared, originalRef)).toMatchObject(
-      invocation,
-    );
+    expect(characterSpellProcedure(reappeared, originalRef)).toMatchObject({
+      procedure: invocation.procedure,
+    });
     expect(characterStoredSpellProcedureRef(reappeared, invocation)).toBe(
       originalRef,
     );
+  });
+
+  test("preserves distinct refs for mechanically identical spell occurrences", () => {
+    const firstInvocation = storedSpellInvocation(guidingBoltUnitId, 1);
+    const secondInvocation = firstInvocation;
+    const state = glyphBattle({
+      preparedSpells: [spellRecord(guidingBoltUnitId)],
+      spellSlots: [{ spellLevel: 1, count: 1 }],
+    });
+    const caster = requireCombatant(state, spellCasterId);
+    if (caster.origin.kind !== "character") {
+      throw new Error("Expected character spell caster.");
+    }
+    const duplicated = characterExecutionWithSpellInvocations(
+      caster.origin.execution,
+      [firstInvocation, secondInvocation],
+    );
+    const originalRefs = characterSpellProcedureRefs(duplicated, [
+      firstInvocation,
+      secondInvocation,
+    ]).filter((ref) => ref !== undefined);
+    const storedBindings = JSON.stringify(duplicated.procedureBindings);
+    expect(storedBindings).not.toContain(firstInvocation.spell.id);
+    expect(originalRefs).toHaveLength(2);
+    expect(new Set(originalRefs).size).toBe(2);
+    const [firstRef, secondRef] = originalRefs;
+    if (firstRef === undefined || secondRef === undefined) {
+      throw new Error("Expected two distinct spell procedure refs.");
+    }
+
+    const selectedFirst = bindSelectedSpellInvocation(
+      firstInvocation,
+      firstRef,
+    );
+    const selectedSecond = bindSelectedSpellInvocation(
+      secondInvocation,
+      secondRef,
+    );
+    const oneRemaining = characterExecutionWithSpellInvocations(duplicated, [
+      selectedSecond,
+    ]);
+    expect(
+      characterSpellProcedureRefs(oneRemaining, [secondInvocation]),
+    ).toEqual([secondRef]);
+
+    const restored = characterExecutionWithSpellInvocations(oneRemaining, [
+      selectedFirst,
+      selectedSecond,
+    ]);
+    expect(
+      characterSpellProcedureRefs(restored, [
+        firstInvocation,
+        secondInvocation,
+      ]),
+    ).toEqual(originalRefs);
   });
 
   test("rejects a completed inscription witness below the admitted minimum spell level", () => {
@@ -865,7 +924,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
 
     expect(
       maybeSpellAct({
-        state,
+        session: state,
         spellId: glyphOfWardingUnitId,
         slotLevel: 3,
       }),
@@ -1051,24 +1110,26 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
 
   test("stored Concentration release lasts for full duration without spell Concentration ownership", () => {
     const storedInvocation = storedSpellInvocation(holdPersonUnitId, 2);
-    const state = stateWithUnrelatedReadiedSpell(
-      stateWithGlyphEffect(
+    const session = glyphBattleSession({
+      preparedSpells: [
+        spellRecord(holdPersonUnitId),
+        spellRecord(guidingBoltUnitId),
+      ],
+      spellSlots: [
+        { spellLevel: 1, count: 1 },
+        { spellLevel: 2, count: 1 },
+      ],
+    });
+    const state = stateWithUnrelatedReadiedSpell({
+      state: stateWithGlyphEffect(
         requireCompletedGlyphEffect({
           anchor: { kind: "surface", areaId: glyphSurfaceAnchorAreaId },
           release: { kind: "spellGlyph", storedInvocation },
         }),
-        glyphBattle({
-          preparedSpells: [
-            spellRecord(holdPersonUnitId),
-            spellRecord(guidingBoltUnitId),
-          ],
-          spellSlots: [
-            { spellLevel: 1, count: 1 },
-            { spellLevel: 2, count: 1 },
-          ],
-        }),
+        session.state,
       ),
-    );
+      context: session.context,
+    }).state;
     const readiedBefore = state.readiedSpells.get(spellCasterId);
     const readiedConcentration = {
       sourceProcedureRef: readiedBefore?.procedureRef ?? glyphProcedureRef,
@@ -1151,29 +1212,31 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     expect(storedInvocation.spell.mechanics.duration.kind).toBe(
       "concentration",
     );
-    const state = stateWithUnrelatedReadiedSpell(
-      stateWithPriorCasterSpellSlotUse(
+    const session = glyphBattleSession({
+      preparedSpells: [
+        spellRecord(guidingBoltUnitId),
+        spellRecord(mindSpikeUnitId),
+      ],
+      spellSlots: [
+        { spellLevel: 1, count: 1 },
+        { spellLevel: 2, count: 2 },
+      ],
+      targetHp: 30,
+      targetMaxHp: 30,
+    });
+    const state = stateWithUnrelatedReadiedSpell({
+      state: stateWithPriorCasterSpellSlotUse(
         stateWithGlyphEffect(
           requireCompletedGlyphEffect({
             anchor: { kind: "surface", areaId: glyphSurfaceAnchorAreaId },
             release: { kind: "spellGlyph", storedInvocation },
           }),
-          glyphBattle({
-            preparedSpells: [
-              spellRecord(guidingBoltUnitId),
-              spellRecord(mindSpikeUnitId),
-            ],
-            spellSlots: [
-              { spellLevel: 1, count: 1 },
-              { spellLevel: 2, count: 2 },
-            ],
-            targetHp: 30,
-            targetMaxHp: 30,
-          }),
+          session.state,
         ),
         2,
       ),
-    );
+      context: session.context,
+    }).state;
     const readiedBefore = state.readiedSpells.get(spellCasterId);
     const readiedConcentration = {
       sourceProcedureRef: readiedBefore?.procedureRef ?? glyphProcedureRef,
@@ -1452,19 +1515,27 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       expect(storedInvocation.spell.mechanics.duration.kind).toBe(
         "concentration",
       );
+      const session = sessionWithGlyphEffect(
+        requireCompletedGlyphEffect({
+          anchor: { kind: "surface", areaId: glyphSurfaceAnchorAreaId },
+          release: { kind: "spellGlyph", storedInvocation },
+        }),
+        {
+          preparedSpells: [
+            spellRecord(guidingBoltUnitId),
+            spellRecord(releaseCase.spellId),
+          ],
+          spellSlots:
+            releaseCase.slotLevel === 1
+              ? [{ spellLevel: 1, count: 3 }]
+              : [
+                  { spellLevel: 1, count: 1 },
+                  { spellLevel: releaseCase.slotLevel, count: 2 },
+                ],
+        },
+      );
       const state = stateWithPriorCasterSpellSlotUse(
-        stateWithUnrelatedReadiedSpell(
-          stateWithGlyphEffect(
-            requireCompletedGlyphEffect({
-              anchor: { kind: "surface", areaId: glyphSurfaceAnchorAreaId },
-              release: { kind: "spellGlyph", storedInvocation },
-            }),
-            glyphBattle({
-              preparedSpells: [spellRecord(releaseCase.spellId)],
-              spellSlots: [{ spellLevel: releaseCase.slotLevel, count: 2 }],
-            }),
-          ),
-        ),
+        stateWithUnrelatedReadiedSpell(session).state,
         releaseCase.slotLevel,
       );
       const targetFacts = releaseCase.targetFacts(
@@ -1561,19 +1632,24 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     expect(storedInvocation.spell.mechanics.duration.kind).toBe(
       "concentration",
     );
+    const session = sessionWithGlyphEffect(
+      requireCompletedGlyphEffect({
+        anchor: { kind: "surface", areaId: glyphSurfaceAnchorAreaId },
+        release: { kind: "spellGlyph", storedInvocation },
+      }),
+      {
+        preparedSpells: [
+          spellRecord(guidingBoltUnitId),
+          spellRecord(alterSelfUnitId),
+        ],
+        spellSlots: [
+          { spellLevel: 1, count: 1 },
+          { spellLevel: 2, count: 2 },
+        ],
+      },
+    );
     const state = stateWithPriorCasterSpellSlotUse(
-      stateWithUnrelatedReadiedSpell(
-        stateWithGlyphEffect(
-          requireCompletedGlyphEffect({
-            anchor: { kind: "surface", areaId: glyphSurfaceAnchorAreaId },
-            release: { kind: "spellGlyph", storedInvocation },
-          }),
-          glyphBattle({
-            preparedSpells: [spellRecord(alterSelfUnitId)],
-            spellSlots: [{ spellLevel: 2, count: 2 }],
-          }),
-        ),
-      ),
+      stateWithUnrelatedReadiedSpell(session).state,
       2,
     );
     const priorTurnSpellSlotUses =
@@ -1649,7 +1725,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     expect(targetTurn.tag).toBe("resolved");
     if (targetTurn.tag !== "resolved") return;
     expect(
-      discoverBattleActs(targetTurn.state).some(
+      discoverBattleActCandidates(targetTurn.state).some(
         (candidate) =>
           candidate.subject.tag === "runtimeCommand" &&
           candidate.subject.command === "replaceSelfTransformationMode",
@@ -1764,19 +1840,27 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       if (!("durationTicks" in storedInvocation)) {
         throw new Error("Expected stored area ongoing duration ticks.");
       }
+      const session = sessionWithGlyphEffect(
+        requireCompletedGlyphEffect({
+          anchor: { kind: "surface", areaId: glyphSurfaceAnchorAreaId },
+          release: { kind: "spellGlyph", storedInvocation },
+        }),
+        {
+          preparedSpells: [
+            spellRecord(guidingBoltUnitId),
+            spellRecord(releaseCase.spellId),
+          ],
+          spellSlots:
+            releaseCase.slotLevel === 1
+              ? [{ spellLevel: 1, count: 2 }]
+              : [
+                  { spellLevel: 1, count: 1 },
+                  { spellLevel: releaseCase.slotLevel, count: 1 },
+                ],
+        },
+      );
       const state = stateWithPriorCasterSpellSlotUse(
-        stateWithUnrelatedReadiedSpell(
-          stateWithGlyphEffect(
-            requireCompletedGlyphEffect({
-              anchor: { kind: "surface", areaId: glyphSurfaceAnchorAreaId },
-              release: { kind: "spellGlyph", storedInvocation },
-            }),
-            glyphBattle({
-              preparedSpells: [spellRecord(releaseCase.spellId)],
-              spellSlots: [{ spellLevel: releaseCase.slotLevel, count: 1 }],
-            }),
-          ),
-        ),
+        stateWithUnrelatedReadiedSpell(session).state,
         releaseCase.slotLevel,
       );
       const priorTurnSpellSlotUses =
@@ -1931,25 +2015,24 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       tag: "storedSpellProcedureUnsupported",
       storedInvocation: nonConcentrationStoredInvocation,
     });
+    const session = sessionWithGlyphEffect(
+      requireCompletedGlyphEffect({
+        anchor: { kind: "surface", areaId: glyphSurfaceAnchorAreaId },
+        release: { kind: "spellGlyph", storedInvocation },
+      }),
+      {
+        preparedSpells: [
+          spellRecord(guidingBoltUnitId),
+          spellRecord(hypnoticPatternUnitId),
+        ],
+        spellSlots: [
+          { spellLevel: 1, count: 1 },
+          { spellLevel: 3, count: 2 },
+        ],
+      },
+    );
     const state = stateWithPriorCasterSpellSlotUse(
-      stateWithUnrelatedReadiedSpell(
-        stateWithGlyphEffect(
-          requireCompletedGlyphEffect({
-            anchor: { kind: "surface", areaId: glyphSurfaceAnchorAreaId },
-            release: { kind: "spellGlyph", storedInvocation },
-          }),
-          glyphBattle({
-            preparedSpells: [
-              spellRecord(guidingBoltUnitId),
-              spellRecord(hypnoticPatternUnitId),
-            ],
-            spellSlots: [
-              { spellLevel: 1, count: 1 },
-              { spellLevel: 3, count: 2 },
-            ],
-          }),
-        ),
-      ),
+      stateWithUnrelatedReadiedSpell(session).state,
       3,
     );
     const priorTurnSpellSlotUses =
@@ -2090,26 +2173,24 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
   test("stored area control Concentration release preserves glyph replay across save-failed interrupts", () => {
     const storedInvocation = storedSpellInvocation(hypnoticPatternUnitId, 3);
     expect(storedInvocation.procedure).toBe("hypnoticPattern");
+    const session = sessionWithGlyphEffect(
+      requireCompletedGlyphEffect({
+        anchor: { kind: "surface", areaId: glyphSurfaceAnchorAreaId },
+        release: { kind: "spellGlyph", storedInvocation },
+      }),
+      {
+        preparedSpells: [
+          spellRecord(guidingBoltUnitId),
+          spellRecord(hypnoticPatternUnitId),
+        ],
+        spellSlots: [
+          { spellLevel: 1, count: 1 },
+          { spellLevel: 3, count: 2 },
+        ],
+      },
+    );
     const state = stateWithPriorCasterSpellSlotUse(
-      stateWithUnrelatedReadiedSpell(
-        stateWithGlyphEffect(
-          requireCompletedGlyphEffect({
-            anchor: { kind: "surface", areaId: glyphSurfaceAnchorAreaId },
-            release: { kind: "spellGlyph", storedInvocation },
-          }),
-          glyphBattle({
-            preparedSpells: [
-              spellRecord(guidingBoltUnitId),
-              spellRecord(hypnoticPatternUnitId),
-            ],
-            spellSlots: [
-              { spellLevel: 1, count: 1 },
-              { spellLevel: 3, count: 2 },
-            ],
-          }),
-        ),
-        "saveFailed",
-      ),
+      stateWithUnrelatedReadiedSpell(session, "saveFailed").state,
       3,
     );
     const priorTurnSpellSlotUses =
@@ -2542,29 +2623,28 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     expect(storedInvocation.spell.mechanics.duration.kind).toBe(
       "concentration",
     );
-    const state = stateWithUnrelatedReadiedSpell(
-      stateWithPriorCasterSpellSlotUse(
-        stateWithGlyphEffect(
-          requireCompletedGlyphEffect({
-            anchor: { kind: "surface", areaId: glyphSurfaceAnchorAreaId },
-            release: { kind: "spellGlyph", storedInvocation },
-          }),
-          glyphBattle({
-            preparedSpells: [
-              spellRecord(guidingBoltUnitId),
-              spellRecord(spiritualWeaponUnitId),
-            ],
-            spellSlots: [
-              { spellLevel: 1, count: 1 },
-              { spellLevel: 2, count: 2 },
-            ],
-            targetHp: 20,
-            targetMaxHp: 20,
-          }),
-        ),
-        2,
-      ),
+    const session = sessionWithGlyphEffect(
+      requireCompletedGlyphEffect({
+        anchor: { kind: "surface", areaId: glyphSurfaceAnchorAreaId },
+        release: { kind: "spellGlyph", storedInvocation },
+      }),
+      {
+        preparedSpells: [
+          spellRecord(guidingBoltUnitId),
+          spellRecord(spiritualWeaponUnitId),
+        ],
+        spellSlots: [
+          { spellLevel: 1, count: 1 },
+          { spellLevel: 2, count: 2 },
+        ],
+        targetHp: 20,
+        targetMaxHp: 20,
+      },
     );
+    const state = stateWithUnrelatedReadiedSpell({
+      state: stateWithPriorCasterSpellSlotUse(session.state, 2),
+      context: session.context,
+    }).state;
     expect(casterSpellSlotExpended(state, 2)).toBe(1);
     const priorTurnSpellSlotUses =
       state.currentTurnResources.spellSlotUsesThisTurn;
@@ -2774,13 +2854,13 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     });
     expect(casterTurn.tag).toBe("resolved");
     if (casterTurn.tag !== "resolved") return;
-    const repeatAct = discoverBattleActs(casterTurn.state).find(
+    const repeatAct = discoverBattleActCandidates(casterTurn.state).find(
       (candidate) =>
         candidate.subject.tag === "bonusActionSpell" &&
-        battleActSpellPresentation(candidate)?.invocation.spellId ===
-          spiritualWeaponUnitId &&
-        battleActSpellPresentation(candidate)?.invocation.procedure ===
-          "spiritualWeaponRepeatAttack",
+        characterSpellProcedureForSubject(
+          casterTurn.state,
+          candidate.subject.procedureRef,
+        )?.procedure === "spiritualWeaponRepeatAttack",
     );
     expect(repeatAct).toBeDefined();
     if (repeatAct === undefined) return;
@@ -3283,7 +3363,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
             supportProfiles: [luckSupport],
           },
         ],
-        targetUnitFeatures: [{ unit: luckUnit }],
+        targetUnitFeatures: [characterBattleFeatureInitForTest(luckUnit)],
       }),
     );
     const luckEffect = glyphEffects(luckState)[0];
@@ -3480,21 +3560,24 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     const targetResource = unitLibrary.requireUnit(
       orcRelentlessEnduranceUnitId,
     );
+    const baseSession = spellBattle({
+      preparedSpells: [],
+      spellSlots: [],
+      targetHp: 10,
+      targetMaxHp: 50,
+      targetResources: [{ unit: targetResource }],
+      targetUnitRefs: [
+        {
+          unit: unitLibrary.requireUnit(orcRelentlessEnduranceUnitId),
+          supportProfiles: [ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE],
+        },
+      ],
+    });
     const baseState = stateWithGlyphEffect(
       requireCompletedGlyphEffect({
         anchor: { kind: "surface", areaId: glyphSurfaceAnchorAreaId },
       }),
-      glyphBattle({
-        targetHp: 10,
-        targetMaxHp: 50,
-        targetResources: [{ unit: targetResource }],
-        targetUnitRefs: [
-          {
-            unit: unitLibrary.requireUnit(orcRelentlessEnduranceUnitId),
-            supportProfiles: [ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE],
-          },
-        ],
-      }),
+      baseSession.state,
     );
     const effect = glyphEffects(baseState)[0];
     expect(effect).toBeDefined();
@@ -3546,13 +3629,21 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     expect(disposition.targetId).toBe(spellTargetId);
     expect(disposition.choices).toContainEqual({
       kind: "zeroHitPointReplacement",
-      unitId: orcRelentlessEnduranceUnitId,
+      procedureRef: requireCharacterUnitProcedureRefForTest(
+        { state: baseState, context: baseSession.context },
+        spellTargetId,
+        orcRelentlessEnduranceUnitId,
+      ),
     });
     const replacementDispositionFill = attackDamageDispositionFill(
       disposition,
       {
         kind: "zeroHitPointReplacement",
-        unitId: orcRelentlessEnduranceUnitId,
+        procedureRef: requireCharacterUnitProcedureRefForTest(
+          { state: baseState, context: baseSession.context },
+          spellTargetId,
+          orcRelentlessEnduranceUnitId,
+        ),
       },
     );
 
@@ -3768,25 +3859,26 @@ function storedSpellInvocation(
   slotLevel: TestSpellSlotLevel,
   expectedProcedure?: GlyphStoredSpellInvocationCandidate["procedure"],
 ): GlyphStoredSpellInvocationCandidate {
-  const state = spellBattle({
+  const session = spellBattle({
     preparedSpells: [spellRecord(storedSpellId)],
     spellSlots: [{ spellLevel: slotLevel, count: 1 }],
   });
-  const actor = state.combatants.get(spellCasterId);
-  if (actor === undefined) {
-    throw new Error("Expected spell caster in stored spell battle.");
-  }
-  const invocation = admittedSpellActs(actor, state).find(
-    (candidate): candidate is GlyphStoredSpellInvocationCandidate =>
-      candidate.spell.id === storedSpellId &&
-      candidate.access.tag === "prepared" &&
-      candidate.resource.tag === "spellSlot" &&
-      Number(candidate.resource.slotLevel) === slotLevel &&
-      ("targeting" in candidate ||
-        candidate.procedure === "selfTransformationMode") &&
-      (expectedProcedure === undefined ||
-        candidate.procedure === expectedProcedure),
-  );
+  const invocation = session.context.characters
+    .get(spellCasterId)
+    ?.spellPresentationSources.map((source) => source.invocation)
+    .find(
+      (
+        candidate,
+      ): candidate is BattleSelectedSpellInvocation<GlyphStoredSpellInvocationCandidate> =>
+        candidate.spell.id === storedSpellId &&
+        candidate.access.tag === "prepared" &&
+        candidate.resource.tag === "spellSlot" &&
+        Number(candidate.resource.slotLevel) === slotLevel &&
+        ("targeting" in candidate ||
+          candidate.procedure === "selfTransformationMode") &&
+        (expectedProcedure === undefined ||
+          candidate.procedure === expectedProcedure),
+    );
   if (invocation === undefined) {
     throw new Error(
       `Expected prepared spell-slot invocation for ${storedSpellId}.`,
@@ -3811,6 +3903,16 @@ function storedSpellProcedureRefInState(
     throw new Error("Expected stored spell procedure binding.");
   }
   return procedureRef;
+}
+
+function characterSpellProcedureForSubject(
+  state: BattleState,
+  procedureRef: BattleProcedureExecutionRef,
+) {
+  const caster = requireCombatant(state, spellCasterId);
+  return caster.origin.kind === "character"
+    ? characterSpellProcedure(caster.origin.execution, procedureRef, caster)
+    : undefined;
 }
 
 function storedSingleCreatureReleaseWitness(
@@ -3887,49 +3989,50 @@ function storedSpiritualWeaponTargetFacts(
 }
 
 function stateWithUnrelatedReadiedSpell(
-  state: BattleState,
+  session: BattleRuntimeSession,
   trigger: "spellCast" | "saveFailed" = "spellCast",
-): BattleState {
+): BattleRuntimeSession {
+  const state = session.state;
   const caster = requireCombatant(state, spellCasterId);
-  const readiedInvocation = requireReadiedSpellInvocation(
-    storedSpellInvocation(guidingBoltUnitId, 1),
-  );
   if (caster.origin.kind !== "character") {
     throw new Error("Expected character spell caster.");
   }
-  const registeredInvocations =
-    caster.origin.execution.procedureBindings.flatMap((binding) =>
-      binding.procedure.kind === "spellInvocation"
-        ? [binding.procedure.invocation]
-        : [],
-    );
-  const execution = characterExecutionWithSpellInvocations(
-    caster.origin.execution,
-    [...registeredInvocations, readiedInvocation],
-  );
-  const procedureRef = characterSpellProcedureRef(execution, readiedInvocation);
-  if (procedureRef === undefined) {
-    throw new Error("Expected bound readied spell procedure.");
+  const characterContext = session.context.characters.get(spellCasterId);
+  if (characterContext === undefined) {
+    throw new Error("Expected spell caster runtime context.");
   }
+  const readiedProcedureSource = characterContext.spellPresentationSources.find(
+    (source) =>
+      source.invocation.spell.id === guidingBoltUnitId &&
+      source.invocation.procedure === "spellAttackDamage" &&
+      source.invocation.resource.tag === "spellSlot" &&
+      Number(source.invocation.resource.slotLevel) === 1,
+  );
+  if (readiedProcedureSource === undefined) {
+    throw new Error("Expected prepared Guiding Bolt readied-spell invocation.");
+  }
+  const procedureRef = readiedProcedureSource.procedureRef;
   return {
-    ...state,
-    combatants: new Map(state.combatants).set(spellCasterId, {
-      ...caster,
-      origin: { ...caster.origin, execution },
-      concentration: {
-        sourceProcedureRef: procedureRef,
-        effectKind: "readiedSpell",
-      },
-    }),
-    readiedSpells: new Map(state.readiedSpells).set(spellCasterId, {
-      procedureRef,
-      trigger,
-      expiresAt: {
-        kind: "endOfTurn",
-        combatantId: spellCasterId,
-        round: Round(1),
-      },
-    }),
+    context: session.context,
+    state: {
+      ...state,
+      combatants: new Map(state.combatants).set(spellCasterId, {
+        ...caster,
+        concentration: {
+          sourceProcedureRef: procedureRef,
+          effectKind: "readiedSpell",
+        },
+      }),
+      readiedSpells: new Map(state.readiedSpells).set(spellCasterId, {
+        procedureRef,
+        trigger,
+        expiresAt: {
+          kind: "endOfTurn",
+          combatantId: spellCasterId,
+          round: Round(1),
+        },
+      }),
+    },
   };
 }
 
@@ -3971,20 +4074,6 @@ function stateWithOrdinaryMindSpikeConcentration(
       activeEffects: [...caster.activeEffects, durationEffect],
     }),
   };
-}
-
-function requireReadiedSpellInvocation(
-  invocation: GlyphStoredSpellInvocationCandidate,
-): ReadiedSpellInvocation {
-  if (
-    invocation.procedure === "spellAttackDamage" ||
-    invocation.procedure === "saveGatedDamage" ||
-    invocation.procedure === "attackBurstSaveDamage" ||
-    invocation.procedure === "chainedSpellAttackDamage"
-  ) {
-    return invocation;
-  }
-  throw new Error("Expected a Readied Spell-compatible invocation.");
 }
 
 function counterspellSpellcasting() {
@@ -4253,6 +4342,12 @@ function glyphTriggerOccurrenceWitness() {
 function glyphBattle(
   input: Parameters<typeof spellBattle>[0] = {},
 ): BattleState {
+  return glyphBattleSession(input).state;
+}
+
+function glyphBattleSession(
+  input: Parameters<typeof spellBattle>[0] = {},
+): BattleRuntimeSession {
   return spellBattle({ preparedSpells: [], spellSlots: [], ...input });
 }
 
@@ -4265,6 +4360,17 @@ function stateWithGlyphEffect(
     throw new Error("Expected Glyph occurrence to be added.");
   }
   return added.state;
+}
+
+function sessionWithGlyphEffect(
+  effect: GlyphDurableOccurrenceEffect,
+  input: Parameters<typeof spellBattle>[0] = {},
+): BattleRuntimeSession {
+  const session = glyphBattleSession(input);
+  return {
+    state: stateWithGlyphEffect(effect, session.state),
+    context: session.context,
+  };
 }
 
 function stateWithPriorCasterSpellSlotUse(

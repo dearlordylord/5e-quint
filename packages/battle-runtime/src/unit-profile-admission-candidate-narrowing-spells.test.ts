@@ -31,6 +31,7 @@ import {
   spellTargetFill,
 } from "./unit-profile-admission-spell-fill-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+import { spellProcedureExecution } from "./character-execution.ts";
 import {
   battleObjectId,
   cantripSpellInvocationRef,
@@ -62,7 +63,7 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
     expect(spell.mechanics.level).toBe(0);
     const state = spellBattle({ cantrips: [spell] });
     const act = spellAct({
-      state,
+      session: state,
       spellId: fireBoltUnitId,
     });
 
@@ -91,7 +92,7 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
     ]);
     const attackRoll = requireResultHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject: act.subject,
         fills: [
           spellTargetFill(
@@ -134,7 +135,7 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
     expect(spell.mechanics.level).toBe(0);
     const state = spellBattle({ cantrips: [spell] });
     const act = spellAct({
-      state,
+      session: state,
       spellId: spell.id,
     });
 
@@ -163,7 +164,7 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
     ]);
     const attackRoll = requireResultHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject: act.subject,
         fills: [
           spellTargetFill(
@@ -211,7 +212,7 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
       targetHp: 30,
       targetMaxHp: 30,
     });
-    const act = spellAct({ state, spellId: sorcerousBurstUnitId });
+    const act = spellAct({ session: state, spellId: sorcerousBurstUnitId });
     const readiedSorcerousBurstActs = discoverBattleActs(state).filter(
       (candidate) =>
         candidate.subject.tag === "actionSpell" &&
@@ -254,7 +255,7 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
     );
     const attack = requireResultHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject: act.subject,
         fills: [damageTypeFill, targetFill],
       }),
@@ -262,7 +263,7 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
     );
     const damage = requireResultHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject: act.subject,
         fills: [
           damageTypeFill,
@@ -273,7 +274,7 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
       "rolledDice",
     );
     expect(damage).toMatchObject({
-      label: "Sorcerous Burst damage (2d8-thunder)",
+      label: "Spell damage (2d8-thunder)",
       sourceProcedureRef: act.subject.procedureRef,
     });
     const unselectedSorcerousBurstInvocation = spellHoleInvocation(state, [
@@ -286,9 +287,8 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
     ) {
       throw new Error("Expected Sorcerous Burst spell attack damage choice.");
     }
-    const selectedSorcerousBurstInvocation = {
+    const selectedSorcerousBurstSource = {
       ...unselectedSorcerousBurstInvocation,
-      sourceProcedureRef: act.subject.procedureRef,
       damage: {
         kind: "selectedSorcerousBurstDamage" as const,
         expr: unselectedSorcerousBurstInvocation.damage.expr,
@@ -297,11 +297,17 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
           unselectedSorcerousBurstInvocation.damage.maxDieAdditionalDiceLimit,
       },
     };
-    expect(
-      isSelectedSorcerousBurstDamageInvocation(
+    const selectedSorcerousBurstInvocation = {
+      ...spellProcedureExecution(selectedSorcerousBurstSource),
+      sourceProcedureRef: act.subject.procedureRef,
+    };
+    if (
+      !isSelectedSorcerousBurstDamageInvocation(
         selectedSorcerousBurstInvocation,
-      ),
-    ).toBe(true);
+      )
+    ) {
+      throw new Error("Expected selected Sorcerous Burst damage facts.");
+    }
     const markedDamageRider = {
       kind: "spellMarkedDamageRider" as const,
       effectRef: battleActiveEffectExecutionRefForTest("candidate-mark"),
@@ -342,7 +348,9 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
           undefined,
           undefined,
           {
-            unitId: "synthetic_attack_damage_ability_modifier_choice_unit",
+            procedureRef: battleProcedureExecutionRefForTest(
+              "synthetic-attack-damage-ability-modifier-choice",
+            ),
             selection: "apply",
           },
         ),
@@ -355,7 +363,7 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
     );
 
     const resolved = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [
         damageTypeFill,
@@ -375,7 +383,7 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
     });
 
     const invalidExplodingDamage = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [
         damageTypeFill,
@@ -391,7 +399,7 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
     });
 
     const invalidSelfAuthorizingExplodingDamage = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [
         damageTypeFill,
@@ -413,7 +421,7 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
       cantrips: [spell],
       casterClassLevels: [{ className: "sorcerer", level: classLevel(5) }],
     });
-    const act = spellAct({ state, spellId: sorcerousBurstUnitId });
+    const act = spellAct({ session: state, spellId: sorcerousBurstUnitId });
     const damageType = requireHole(act.initialHoles, "damageTypeChoice");
     const immuneDamageTypes = ["poison", "psychic"] as const;
 
@@ -436,7 +444,7 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
       });
       const attack = requireResultHole(
         resolveBattleSubject({
-          state,
+          state: state.state,
           subject: act.subject,
           fills: [damageTypeFill, objectFill],
         }),
@@ -444,7 +452,7 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
       );
       const damage = requireResultHole(
         resolveBattleSubject({
-          state,
+          state: state.state,
           subject: act.subject,
           fills: [
             damageTypeFill,
@@ -456,7 +464,7 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
       );
 
       const resolved = resolveBattleSubject({
-        state,
+        state: state.state,
         subject: act.subject,
         fills: [
           damageTypeFill,
@@ -489,7 +497,7 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
     if (spell.kind !== "spell") return;
 
     const state = spellBattle({ cantrips: [spell] });
-    const act = spellAct({ state, spellId: spell.id });
+    const act = spellAct({ session: state, spellId: spell.id });
     const objectId = battleObjectId("unit-profile-starry-wisp-object");
     const objectFill = spellObjectTargetFill({
       hole: requireHole(act.initialHoles, "objectTargetChoice"),
@@ -500,7 +508,7 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
     });
     const attackRoll = requireResultHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject: act.subject,
         fills: [objectFill],
       }),
@@ -508,7 +516,7 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
     );
     const damage = requireResultHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject: act.subject,
         fills: [
           objectFill,
@@ -518,7 +526,7 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
       "rolledDice",
     );
     const resolved = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [
         objectFill,
@@ -603,7 +611,7 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
     expect(spell.mechanics.level).toBe(1);
     expect(
       maybeSpellAct({
-        state: spellBattle({ preparedSpells: [spell] }),
+        session: spellBattle({ preparedSpells: [spell] }),
         spellId: shieldUnitId,
       }),
     ).toBeUndefined();
@@ -637,7 +645,7 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
     ]);
     expect(
       maybeSpellAct({
-        state: spellBattle({
+        session: spellBattle({
           preparedSpells: [spell],
           spellSlots: [{ spellLevel: 3, count: 1 }],
         }),

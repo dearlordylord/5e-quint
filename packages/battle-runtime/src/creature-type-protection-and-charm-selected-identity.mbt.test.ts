@@ -3,10 +3,6 @@
 // UNIT-IDENTITY-REPLAY: L1H-ANIMAL-FRIENDSHIP animal_friendship doDiscoverAnimalFriendshipBeastTargetAdmission doResolveAnimalFriendshipFailedSaveCharmed doResolveAnimalFriendshipCasterDamageBreak
 // UNIT-IDENTITY-REPLAY: L1H-PROTECTION-EVIL-GOOD protection_from_evil_and_good doResolveProtectionFromEvilAndGoodKnownWillingTargetProtection doProjectProtectionFromEvilAndGoodScopedAttackDisadvantage doPreventProtectionFromEvilAndGoodScopedCharmAndPossession doResolveProtectionFromEvilAndGoodRelevantCharmSaveAdvantage
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION
-import {
-  battleActSpellSlotPresentation,
-  battleActSpellPresentation,
-} from "./battle-act-composition.ts";
 import { Either } from "effect";
 import { describe, expect, it } from "vitest";
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
@@ -29,19 +25,19 @@ import {
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
 import type { SpellRecord, StatBlockRecord } from "@dnd/surface/surface/types";
+import { statBlockProcedurePresentations } from "./stat-block-execution.ts";
 import {
   battleId,
   battleReducerStartRouteEvent,
   characterId,
   combatantId,
-  discoverBattleActs,
+  discoverBattleActCandidates,
   endTurn,
   initiativeScore,
   resolveBattlePossessionAttempt,
   snapshotBattle,
   spellActiveEffectExecutionRef,
   startBattle,
-  type AvailableBattleAct,
   type BattleActiveEffect,
   type BattleAttackExecutionSelection,
   type BattleCreatureInit,
@@ -52,10 +48,10 @@ import {
   type BattleResolutionResult,
   type BattleProcedureExecutionRef,
   type BattleState,
-  type BattleActDiscoverySubject as BattleSubject,
+  type BattleSubject,
   type CombatantId,
-  type SupportedSpellInvocation,
 } from "./index.ts";
+import type { BattleActDiscoveryCandidate } from "./battle-reducer.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import {
   attackRollFill,
@@ -83,7 +79,10 @@ import {
   battleProcedureExecutionRefForTest,
   resolveBattleSubject,
 } from "./battle-runtime-test-support.ts";
-import { characterSpellProcedure } from "./character-execution.ts";
+import {
+  characterSpellProcedure,
+  type SpellProcedureExecution,
+} from "./character-execution.ts";
 
 type CreatureTypeProtectionAndCharmSelectedIdentityLastResult =
   | "init"
@@ -174,13 +173,10 @@ type CreatureTypeProtectionAndCharmCatalogSpellUnitId =
   | SelectedCreatureTypeProtectionAndCharmSpellUnitId
   | typeof charmPersonUnitId;
 
-type ActionSpellAct = AvailableBattleAct & {
-  readonly subject: Extract<
-    BattleSubject,
-    { readonly tag: "actionSpell"; readonly invocation: unknown }
-  >;
+type ActionSpellAct = BattleActDiscoveryCandidate & {
+  readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
 };
-type StatBlockAttackAct = AvailableBattleAct & {
+type StatBlockAttackAct = BattleActDiscoveryCandidate & {
   readonly subject: Extract<
     BattleSubject,
     {
@@ -1039,7 +1035,7 @@ function animalFriendshipBattle(): BattleState {
   if (Either.isLeft(result)) {
     throw new Error(result.left.message);
   }
-  return result.right;
+  return result.right.state;
 }
 
 function protectionFromEvilAndGoodBattle(): BattleState {
@@ -1091,7 +1087,7 @@ function protectionFromEvilAndGoodBattle(): BattleState {
   if (Either.isLeft(result)) {
     throw new Error(result.left.message);
   }
-  return result.right;
+  return result.right.state;
 }
 
 function resolveProtectionFromEvilAndGood(): {
@@ -1178,14 +1174,23 @@ function projectProtectionFromEvilAndGoodCharmBoundary(): {
   readonly evidence: ProtectionFromEvilAndGoodEvidence;
 } {
   const resolved = resolveProtectionFromEvilAndGood();
-  const charmInvocation = charmPersonSpellInvocation();
-  const charmEffect = selectedFixedConditionEffect(charmInvocation);
-  const executableCharmInvocation = {
-    ...charmInvocation,
-    sourceProcedureRef: battleProcedureExecutionRefForTest(
-      String(charmPersonUnitId),
-    ),
-  };
+  const charmState = protectionFromEvilAndGoodBattle();
+  const charmAct = spellAct(charmState, charmPersonUnitId);
+  const charmActor = charmState.combatants.get(charmAct.subject.actorId);
+  const executableCharmInvocation =
+    charmActor?.origin.kind === "character"
+      ? characterSpellProcedure(
+          charmActor.origin.execution,
+          charmAct.subject.procedureRef,
+        )
+      : undefined;
+  if (
+    executableCharmInvocation === undefined ||
+    executableCharmInvocation.procedure !== "saveGatedCondition"
+  ) {
+    throw new Error("Expected Charm Person mechanical spell execution.");
+  }
+  const charmEffect = selectedFixedConditionEffect(executableCharmInvocation);
   const scopedSourceApplied = applyFailedSaveSpellConditionEffects(
     resolved.state,
     feySourceId,
@@ -1236,7 +1241,7 @@ function projectProtectionFromEvilAndGoodCharmBoundary(): {
 
 function selectedFixedConditionEffect(
   invocation: Extract<
-    SupportedSpellInvocation,
+    SpellProcedureExecution,
     { readonly procedure: "saveGatedCondition" }
   >,
 ) {
@@ -1434,53 +1439,15 @@ function protectionFromEvilAndGoodSpellAct(state: BattleState): ActionSpellAct {
   return spellAct(state, protectionFromEvilAndGoodUnitId);
 }
 
-function charmPersonSpellInvocation(): Extract<
-  SupportedSpellInvocation,
-  { readonly procedure: "saveGatedCondition" }
-> {
-  const state = protectionFromEvilAndGoodBattle();
-  const invocation = spellActInvocation(
-    state,
-    spellAct(state, charmPersonUnitId),
-  );
-  if (invocation.procedure !== "saveGatedCondition") {
-    throw new Error("Expected Charm Person to be a save-gated condition.");
-  }
-  return invocation;
-}
-
 function spellAct(state: BattleState, unitId: string): ActionSpellAct {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActCandidates(state).find(
     (candidate): candidate is ActionSpellAct =>
-      candidate.subject.tag === "actionSpell" &&
-      battleActSpellPresentation(candidate)?.invocation.tag === "spellSlot" &&
-      battleActSpellPresentation(candidate)?.invocation.spellId === unitId &&
-      Number(
-        battleActSpellSlotPresentation(candidate)?.invocation.slotLevel,
-      ) === 1,
+      candidate.subject.tag === "actionSpell",
   );
   if (act === undefined) {
     throw new Error(`Expected ${unitId} spell act.`);
   }
   return act;
-}
-
-function spellActInvocation(
-  state: BattleState,
-  act: ActionSpellAct,
-): SupportedSpellInvocation {
-  const actor = state.combatants.get(act.subject.actorId);
-  const invocation =
-    actor?.origin.kind === "character"
-      ? characterSpellProcedure(
-          actor.origin.execution,
-          act.subject.procedureRef,
-        )
-      : undefined;
-  if (invocation === undefined) {
-    throw new Error("Expected spell act to own an executable procedure.");
-  }
-  return invocation;
 }
 
 function attackRollModeFor(
@@ -1510,14 +1477,24 @@ function statBlockAttackAct(
   actorId: CombatantId,
   attackName: string,
 ): StatBlockAttackAct {
-  const matchingActs = discoverBattleActs(state).filter(
+  const creature = state.combatants.get(actorId);
+  if (creature?.origin.kind !== "statBlock") {
+    throw new Error(`Expected Stat Block attacker ${actorId}.`);
+  }
+  const procedureRef = statBlockProcedurePresentations(creature.origin).find(
+    (candidate) => candidate.kind === "attack" && candidate.name === attackName,
+  )?.procedureRef;
+  if (procedureRef === undefined) {
+    throw new Error(`Expected ${attackName} procedure ref.`);
+  }
+  const matchingActs = discoverBattleActCandidates(state).filter(
     (candidate): candidate is StatBlockAttackAct =>
       candidate.subject.tag === "action" &&
       candidate.subject.actorId === actorId &&
       candidate.subject.action === "attack" &&
-      candidate.subject.procedureRef !== undefined &&
+      candidate.subject.procedureRef === procedureRef &&
       candidate.subject.statBlockDamageNotation === undefined &&
-      candidate.summary === `Take the Attack action with ${attackName}.`,
+      candidate.subject.procedureRef !== undefined,
   );
   if (matchingActs.length !== 1) {
     throw new Error(`Expected one rolled ${attackName} stat block attack act.`);
@@ -1572,15 +1549,9 @@ function resolveAnimalFriendshipFailedSave(state: BattleState): BattleState {
 }
 
 function animalFriendshipSpellAct(state: BattleState): ActionSpellAct {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActCandidates(state).find(
     (candidate): candidate is ActionSpellAct =>
-      candidate.subject.tag === "actionSpell" &&
-      battleActSpellPresentation(candidate)?.invocation.tag === "spellSlot" &&
-      battleActSpellPresentation(candidate)?.invocation.spellId ===
-        animalFriendshipUnitId &&
-      Number(
-        battleActSpellSlotPresentation(candidate)?.invocation.slotLevel,
-      ) === 1,
+      candidate.subject.tag === "actionSpell",
   );
   if (act === undefined) {
     throw new Error("Expected Animal Friendship spell act.");

@@ -1,8 +1,3 @@
-import { requireCharacterUnitProcedureRefForTest } from "./battle-runtime-test-support.ts";
-import {
-  battleActSpellPresentation,
-  battleActUnitPresentation,
-} from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.magic-action-healing-pool
 import { describe, expect, test } from "vitest";
 
@@ -27,13 +22,14 @@ import {
   characterCreature,
   requireHole,
 } from "./unit-profile-admission-creature-fixture-support.ts";
+import { characterBattleFeatureInitForTest } from "./battle-runtime-test-support.ts";
 import {
   battleMagicActionHealingPoolSupportForUnit,
   battleId,
   battleUnitRefWithSupportProfiles,
   classLevel,
   combatantId,
-  discoverBattleActs,
+  discoverBattleActCandidates,
   resolveBattleSubject,
   startBattle,
 } from "./unit-profile-admission-test-support.ts";
@@ -50,24 +46,17 @@ describe("Preserve Life Magic Action healing pool", () => {
     const state = preserveLifeBattle();
     const act = preserveLifeAct(state);
 
-    expect({
-      ...act.subject,
-      invocation: battleActSpellPresentation(act)?.invocation,
-    }).toMatchObject({
+    expect(act.subject).toMatchObject({
       tag: "unitFeature",
       actorId: spellCasterId,
-      procedureRef: requireCharacterUnitProcedureRefForTest(
-        state,
-        spellCasterId,
-        clericPreserveLifeUnitId,
-      ),
+      procedureRef: preserveLifeProcedureRef(state),
     });
     expect(
       requireHole(act.initialHoles, "hitPointHealingDistribution"),
     ).toMatchObject({
       healingPool: {
         sourceCombatantId: spellCasterId,
-        unitId: clericPreserveLifeUnitId,
+        sourceProcedureRef: preserveLifeProcedureRef(state),
         poolHitPoints: Hp(15),
         rangeFeet: movementFeet(30),
         perTargetCap: "halfHitPointMaximum",
@@ -204,7 +193,7 @@ describe("Preserve Life Magic Action healing pool", () => {
     const subject = {
       tag: "unitFeature" as const,
       actorId: spellCasterId,
-      unitId: clericPreserveLifeUnitId,
+      procedureRef: preserveLifeProcedureRef(state),
     };
     const result = resolveBattleSubject({
       state,
@@ -234,11 +223,7 @@ describe("Preserve Life Magic Action healing pool", () => {
         actionResources: [],
       },
     };
-    const subject = {
-      tag: "unitFeature" as const,
-      actorId: spellCasterId,
-      unitId: clericPreserveLifeUnitId,
-    };
+    const subject = baseAct.subject;
     const resultWithoutFill = resolveBattleSubject({
       state,
       subject,
@@ -285,7 +270,11 @@ function preserveLifeBattle(
         currentHp: input.casterHp ?? 20,
         maxHp: 20,
         characterUnitRefs: [preserveLifeUnitRef],
-        unitFeatures: [{ unit: preserveLifeUnit }],
+        unitFeatures: [
+          characterBattleFeatureInitForTest(preserveLifeUnit, [
+            { className: "cleric", level: classLevel(3) },
+          ]),
+        ],
         resources: [
           {
             unit: channelDivinityUnit,
@@ -312,23 +301,24 @@ function preserveLifeBattle(
   if (Either.isLeft(result)) {
     throw new Error(result.left.message);
   }
-  return result.right;
+  return result.right.state;
 }
 
 function preserveLifeAct(state: BattleState) {
   const act = preserveLifeActOrUndefined(state);
-  if (act === undefined) {
+  if (act === undefined || act.subject.tag !== "unitFeature") {
     throw new Error("Expected Preserve Life act.");
   }
   return act;
 }
 
 function preserveLifeActOrUndefined(state: BattleState) {
-  return discoverBattleActs(state).find(
+  const procedureRef = preserveLifeProcedureRef(state);
+  return discoverBattleActCandidates(state).find(
     (act) =>
       act.subject.tag === "unitFeature" &&
       act.subject.actorId === spellCasterId &&
-      battleActUnitPresentation(act)?.unitId === clericPreserveLifeUnitId,
+      act.subject.procedureRef === procedureRef,
   );
 }
 
@@ -355,11 +345,7 @@ function preserveLifeDistributionFill(
         kind: "magicActionHealingPoolTargetWithinRange" as const,
         actorId: spellCasterId,
         targetId: allocation.targetId,
-        sourceProcedureRef: requireCharacterUnitProcedureRefForTest(
-          state,
-          spellCasterId,
-          clericPreserveLifeUnitId,
-        ),
+        sourceProcedureRef: preserveLifeProcedureRef(state),
         rangeFeet: movementFeet(30),
       })),
   };
@@ -401,13 +387,42 @@ function channelDivinityUsesRemaining(state: BattleState): number {
   if (actor?.origin.kind !== "character") {
     throw new Error("Expected Cleric actor.");
   }
-  const resource = actor.origin.resources.find(
-    (candidate) => candidate.unit.id === clericChannelDivinityUnitId,
-  );
-  if (resource === undefined || !("usesRemaining" in resource)) {
-    throw new Error("Expected Cleric Channel Divinity use-count resource.");
+  const procedureRef = preserveLifeProcedureRef(state);
+  for (const binding of actor.origin.execution.procedureBindings) {
+    const procedure = binding.procedure;
+    if (
+      binding.procedureRef === procedureRef &&
+      procedure.kind === "unitFeature" &&
+      procedure.execution.kind === "magicActionHealingPool"
+    ) {
+      const resourcePoolRef =
+        procedure.execution.healingPool.spends.resourcePoolRef;
+      const resource = actor.origin.resources.find(
+        (candidate) => candidate.resourcePoolRef === resourcePoolRef,
+      );
+      if (resource !== undefined && "usesRemaining" in resource) {
+        return Number(resource.usesRemaining);
+      }
+    }
   }
-  return Number(resource.usesRemaining);
+  throw new Error("Expected Cleric Channel Divinity use-count resource.");
+}
+
+function preserveLifeProcedureRef(state: BattleState) {
+  const actor = state.combatants.get(spellCasterId);
+  if (actor?.origin.kind !== "character") {
+    throw new Error("Expected Cleric actor.");
+  }
+  for (const binding of actor.origin.execution.procedureBindings) {
+    const procedure = binding.procedure;
+    if (
+      procedure.kind === "unitFeature" &&
+      procedure.execution.kind === "magicActionHealingPool"
+    ) {
+      return binding.procedureRef;
+    }
+  }
+  throw new Error("Expected Preserve Life healing-pool procedure.");
 }
 
 function requiredMagicActionHealingPoolSupportProfile(

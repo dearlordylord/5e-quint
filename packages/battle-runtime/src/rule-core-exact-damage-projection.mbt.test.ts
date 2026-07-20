@@ -263,7 +263,10 @@ function normalizeQuintState(raw: unknown): Projection {
     scenario: scenarioField(state["qScenario"]),
     damageType: damageTypeField(state["qDamageType"]),
     damageAmount: numberFromQuintInt(state["qDamageAmount"], "qDamageAmount"),
-    instanceCount: numberFromQuintInt(state["qInstanceCount"], "qInstanceCount"),
+    instanceCount: numberFromQuintInt(
+      state["qInstanceCount"],
+      "qInstanceCount",
+    ),
     damagePerInstance: numberFromQuintInt(
       state["qDamagePerInstance"],
       "qDamagePerInstance",

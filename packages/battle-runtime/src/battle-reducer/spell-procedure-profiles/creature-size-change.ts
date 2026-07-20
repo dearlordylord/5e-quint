@@ -15,6 +15,7 @@
 
 import {
   elapsedTimeTicksFromTimeSpanDuration,
+  ElapsedTimeTicksSchema,
   type ElapsedTimeTicks,
 } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
@@ -24,7 +25,6 @@ import type {
   SpellRecord,
 } from "@dnd/surface/surface/types";
 import { Either } from "effect";
-import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   snapshotBattle,
   type ActionSpellBattleResolutionInput,
@@ -35,7 +35,11 @@ import {
   type BattleState,
   type CreatureSizeChangeSpellInvocation,
 } from "../../battle-reducer.ts";
-import { spellId, type CombatantId } from "../../identity.ts";
+import { CombatantId } from "../../identity.ts";
+import type {
+  CreatureSizeDecreaseSpellProcedureExecution,
+  CreatureSizeIncreaseSpellProcedureExecution,
+} from "../../character-execution.ts";
 import {
   activeEffectsWithCreatureSizeChangeReplaced,
   CREATURE_SIZE_CHANGE_DAMAGE_DICE,
@@ -68,10 +72,8 @@ import type {
   SpellProcedureStoredGlyphReleaseOptions,
 } from "./profile.ts";
 import { Schema } from "effect";
-import { spellProcedureInvocationSchema } from "./profile.ts";
-import type { SupportedSpellInvocation } from "../../battle-reducer.ts";
+import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
 import {
-  BattleRuntimeObjectSchema,
   DcSourceSchema,
   MovementFeet,
   PreparedSpellAccessSchema,
@@ -84,11 +86,20 @@ import {
 } from "../metamagic-support.ts";
 
 type CreatureSizeChangeInvocation = CreatureSizeChangeSpellInvocation;
+type CreatureSizeIncreaseInvocation = CreatureSizeChangeInvocation & {
+  readonly procedure: "creatureSizeIncrease";
+};
+type CreatureSizeDecreaseInvocation = CreatureSizeChangeInvocation & {
+  readonly procedure: "creatureSizeDecrease";
+};
+type CreatureSizeChangeExecution =
+  | CreatureSizeIncreaseSpellProcedureExecution
+  | CreatureSizeDecreaseSpellProcedureExecution;
 
 function admitCreatureSizeChange(
   spell: SpellRecord,
   ctx: SpellAdmissionContext,
-): readonly CreatureSizeChangeInvocation[] {
+): readonly CreatureSizeIncreaseInvocation[] {
   return admitCreatureSizeChangeForProcedure(
     spell,
     ctx,
@@ -99,7 +110,7 @@ function admitCreatureSizeChange(
 function admitCreatureSizeDecrease(
   spell: SpellRecord,
   ctx: SpellAdmissionContext,
-): readonly CreatureSizeChangeInvocation[] {
+): readonly CreatureSizeDecreaseInvocation[] {
   return admitCreatureSizeChangeForProcedure(
     spell,
     ctx,
@@ -107,11 +118,15 @@ function admitCreatureSizeDecrease(
   );
 }
 
-function admitCreatureSizeChangeForProcedure(
+function admitCreatureSizeChangeForProcedure<
+  Procedure extends CreatureSizeChangeInvocation["procedure"],
+>(
   spell: SpellRecord,
   ctx: SpellAdmissionContext,
-  procedure: CreatureSizeChangeInvocation["procedure"],
-): readonly CreatureSizeChangeInvocation[] {
+  procedure: Procedure,
+): readonly (CreatureSizeChangeInvocation & {
+  readonly procedure: Procedure;
+})[] {
   const projections = creatureSizeChangeSpellProjection(
     ctx.actor.combatantId,
     spell,
@@ -120,11 +135,17 @@ function admitCreatureSizeChangeForProcedure(
     return [];
   }
   return ctx.actor.origin.spellcasting.spellSlots.flatMap(
-    (slot): readonly CreatureSizeChangeInvocation[] =>
+    (slot) =>
       Number(slot.spellLevel) < spell.mechanics.level
         ? []
         : projections
-            .filter((projection) => projection.procedure === procedure)
+            .filter(
+              (
+                projection,
+              ): projection is typeof projection & {
+                readonly procedure: Procedure;
+              } => projection.procedure === procedure,
+            )
             .map((projection) => ({
               access: { tag: "prepared" },
               resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
@@ -314,7 +335,7 @@ function creatureSizeChangeActiveEffect(
 function discoverCreatureSizeChangeCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: BattleExecutableSpellInvocation<CreatureSizeChangeInvocation>,
+  invocation: BattleExecutableSpellInvocation<CreatureSizeChangeExecution>,
 ): readonly BattleActDiscoveryCandidate[] {
   const targetHole = spellTargetHole(state, actorId, invocation);
   if (targetHole.choices.length === 0) {
@@ -325,7 +346,6 @@ function discoverCreatureSizeChangeCastAct(
       tag: "actionSpell" as const,
       actorId,
       procedureRef: invocation.sourceProcedureRef,
-      invocation: creatureSizeChangeInvocationRef(invocation),
       mode: { tag: "cast" as const },
     },
     initialHoles: [targetHole],
@@ -339,7 +359,6 @@ function discoverCreatureSizeChangeCastAct(
         tag: "actionSpell" as const,
         actorId,
         procedureRef: invocation.sourceProcedureRef,
-        invocation: creatureSizeChangeInvocationRef(invocation),
         mode: { tag: "cast" as const },
         metamagic,
       },
@@ -347,31 +366,6 @@ function discoverCreatureSizeChangeCastAct(
     };
   });
   return [castAct, ...metamagicCastActs];
-}
-
-function creatureSizeChangeInvocationRef(
-  invocation: CreatureSizeChangeInvocation,
-): SpellInvocationRef {
-  return {
-    tag: "spellSlot",
-    spellId: spellId(invocation.spell.id),
-    slotLevel: invocation.resource.slotLevel,
-    procedure: invocation.procedure,
-  };
-}
-
-function creatureSizeChangeLabel(
-  invocation: CreatureSizeChangeInvocation,
-): string {
-  return invocation.procedure === "creatureSizeIncrease"
-    ? "increase size"
-    : "decrease size";
-}
-
-function creatureSizeChangeCastSummary(
-  invocation: CreatureSizeChangeInvocation,
-): string {
-  return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot to ${creatureSizeChangeLabel(invocation)}.`;
 }
 
 function resolveCreatureSizeChange(
@@ -581,7 +575,7 @@ function applyCreatureSizeChangeEffect(
   state: BattleState,
   actorId: CombatantId,
   targetIds: readonly CombatantId[],
-  invocation: BattleExecutableSpellInvocation<CreatureSizeChangeInvocation>,
+  invocation: BattleExecutableSpellInvocation<CreatureSizeChangeExecution>,
   metamagicApplications:
     | readonly SpellMetamagicApplicationFact[]
     | undefined = undefined,
@@ -687,53 +681,66 @@ function creatureSizeChangeConcentrationWithMetamagic(
   };
 }
 
-const CreatureSizeIncreaseInvocationSchema = spellProcedureInvocationSchema<
-  Extract<
-    SupportedSpellInvocation,
-    {
-      readonly procedure: "creatureSizeIncrease" | "creatureSizeDecrease";
-    }
-  >
->(
-  Schema.Struct({
-    access: PreparedSpellAccessSchema,
-    resource: SpellSlotInvocationResourceSchema,
-    procedure: Schema.Literal("creatureSizeIncrease", "creatureSizeDecrease"),
-    spell: BattleRuntimeObjectSchema,
-    actionCost: Schema.Literal("magicAction"),
-    ability: Schema.Literal("con"),
-    dc: DcSourceSchema,
-    targeting: Schema.Struct({
-      kind: Schema.Literal("targetList"),
-      minTargets: Schema.Literal(1),
-      maxTargets: Schema.Literal(1),
+const CreatureSizeChangeExecutionSchemaFields = {
+  access: PreparedSpellAccessSchema,
+  resource: SpellSlotInvocationResourceSchema,
+  spellRuleFacts: SpellRuleExecutionFactsSchema,
+  actionCost: Schema.Literal("magicAction"),
+  ability: Schema.Literal("con"),
+  dc: DcSourceSchema,
+  targeting: Schema.Struct({
+    kind: Schema.Literal("targetList"),
+    minTargets: Schema.Literal(1),
+    maxTargets: Schema.Literal(1),
+  }),
+  activeEffect: Schema.Struct({
+    kind: Schema.Literal("spellCreatureSizeChange"),
+    sourceCombatantId: CombatantId,
+    direction: Schema.Literal("increase", "decrease"),
+    expiresAt: Schema.Struct({
+      kind: Schema.Literal("concentration"),
+      combatantId: CombatantId,
+      durationTicks: ElapsedTimeTicksSchema,
     }),
-    activeEffect: BattleRuntimeObjectSchema,
-    rangeFeet: MovementFeet,
+  }),
+  rangeFeet: MovementFeet,
+} as const;
+const CreatureSizeIncreaseInvocationSchema = spellProcedureExecutionSchema(
+  Schema.Struct({
+    ...CreatureSizeChangeExecutionSchemaFields,
+    procedure: Schema.Literal("creatureSizeIncrease"),
+  }),
+);
+const CreatureSizeDecreaseInvocationSchema = spellProcedureExecutionSchema(
+  Schema.Struct({
+    ...CreatureSizeChangeExecutionSchemaFields,
+    procedure: Schema.Literal("creatureSizeDecrease"),
   }),
 );
 export const creatureSizeChangeProfile: SpellProcedureProfile<
   "creatureSizeIncrease",
-  CreatureSizeChangeInvocation
+  CreatureSizeIncreaseInvocation
 > = {
   procedure: "creatureSizeIncrease",
-  invocationSchema: CreatureSizeIncreaseInvocationSchema,
+  executionSchema: CreatureSizeIncreaseInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   targetListInvocation: { kind: "always" },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: [],
   admit: admitCreatureSizeChange,
   discoverCastAct: discoverCreatureSizeChangeCastAct,
-  castSummary: creatureSizeChangeCastSummary,
-  invocationRef: creatureSizeChangeInvocationRef,
   resolve: resolveCreatureSizeChange,
 };
 
 export const creatureSizeDecreaseProfile: SpellProcedureProfile<
   "creatureSizeDecrease",
-  CreatureSizeChangeInvocation
+  CreatureSizeDecreaseInvocation
 > = {
-  ...creatureSizeChangeProfile,
   procedure: "creatureSizeDecrease",
+  executionSchema: CreatureSizeDecreaseInvocationSchema,
+  metamagicCompatibility: "actionSpellResolverNotRewritten",
+  targetListInvocation: { kind: "always" },
+  isReadiedSpellCompatible: false,
   admit: admitCreatureSizeDecrease,
+  discoverCastAct: discoverCreatureSizeChangeCastAct,
+  resolve: resolveCreatureSizeChange,
 };

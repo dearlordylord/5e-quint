@@ -18,7 +18,7 @@
 //   - UBIQUITOUS_LANGUAGE.md: Bonus Action, Attack Roll, Ability Check, Damage
 //     Roll, Concentration, Spell Slot, Spell Invocation, and Spell Effect.
 //
-// What lives here: admit, discoverCastAct, castSummary, invocationRef, resolve,
+// What lives here: admit, discoverCastAct, castSummary, resolve,
 // and applyEffect helpers.
 //
 import { spendActivationResource } from "@dnd/shared-algebras/action-economy-algebra";
@@ -38,12 +38,14 @@ import type {
 } from "@dnd/surface/surface/types";
 import { Either, Match } from "effect";
 import { allocateBattleActiveEffectRef } from "../../active-effect/execution-ref.ts";
-import { characterSpellProcedureRefsForAdmissionContent } from "../../character-execution.ts";
 import {
-  classFeatureFreeCastSpellInvocationRef,
-  spellEffectInvocationRef,
-  type SpellInvocationRef,
-} from "../../battle-subjects.ts";
+  BattleActiveEffectExpirationSchema,
+} from "../../active-effect/codecs.ts";
+import {
+  characterExecutionWithMarkedDamageRiderTransfer,
+  characterSpellProcedureRefsForProcedure,
+  type MarkedDamageRiderTransferSpellProcedureExecution,
+} from "../../character-execution.ts";
 import {
   snapshotBattle,
   type BattleActDiscoveryCandidate,
@@ -59,7 +61,11 @@ import {
   type SpellMarkedDamageRider,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
-import { spellId, type CombatantId } from "../../identity.ts";
+import {
+  BattleActiveEffectExecutionRef,
+  BattleProcedureExecutionRef,
+  type CombatantId,
+} from "../../identity.ts";
 import {
   characterResourceIsFavoredEnemyFreeCast,
   resourceHasUsesRemaining,
@@ -92,19 +98,22 @@ import type {
 import { Schema } from "effect";
 import {
   AbilitySchema,
-  BattleRuntimeObjectSchema,
-  ClassFeatureFreeCastInvocationResourceSchema,
-  NoSpellInvocationResourceSchema,
+  ClassFeatureFreeCastExecutionResourceSchema,
   PreparedSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
+import {
+  DamageTypeSchema,
+  DiceExprSchema,
+} from "@dnd/surface/surface/schema";
 import {
   sameStringSet,
   supportedDamageAmountExpr,
 } from "../spells-profile-shared.ts";
 import {
   spellAdmissionBattleTurn,
-  spellProcedureInvocationSchema,
+  SpellRuleExecutionFactsSchema,
+  spellProcedureExecutionSchema,
 } from "./profile.ts";
 
 type MarkedDamageRiderInvocation = Extract<
@@ -131,9 +140,9 @@ function admitMarkedDamageRider(
   const { abilityCheckBehavior, damageType, expr, rangeFeet, retargetTiming } =
     projection;
   const selectedExecutionRefs = new Set(
-    characterSpellProcedureRefsForAdmissionContent(
+    characterSpellProcedureRefsForProcedure(
       ctx.actor.origin.execution,
-      spell,
+      new Set(["markedDamageRider"]),
     ),
   );
   const activeMark =
@@ -153,25 +162,32 @@ function admitMarkedDamageRider(
     )
       ? [
           {
-            access: { tag: "prepared" },
+            access: {
+              tag: "spellEffect",
+              sourceCombatantId: activeMark.sourceCombatantId,
+            },
             resource: { tag: "none" },
             procedure: "markedDamageRider",
             action: "transfer",
             spell,
             actionCost: "bonusAction",
             targeting: { kind: "singleCombatant" },
-            damage: { expr, damageType },
             rangeFeet,
             activeEffect: activeMark,
           },
         ]
       : [];
   }
-  const favoredEnemyResource = ctx.actor.origin.resources.find(
-    (resource) =>
-      characterResourceIsFavoredEnemyFreeCast(resource) &&
-      resourceHasUsesRemaining(resource),
-  );
+  const favoredEnemyResource = ctx.resourceOwnership.flatMap((owner) => {
+    const resource = ctx.actor.origin.resources.find(
+      (candidate) => candidate.resourcePoolRef === owner.resourcePoolRef,
+    );
+    return resource !== undefined &&
+      characterResourceIsFavoredEnemyFreeCast(owner) &&
+      resourceHasUsesRemaining(resource)
+      ? [resource]
+      : [];
+  })[0];
   const favoredEnemyExpiresAt = markedDamageRiderConcentrationExpirationForSlot(
     ctx.actor.combatantId,
     spell,
@@ -185,7 +201,7 @@ function admitMarkedDamageRider(
             access: { tag: "prepared" },
             resource: {
               tag: "classFeatureFreeCast",
-              resourceUnitId: favoredEnemyResource.unit.id,
+              resourcePoolRef: favoredEnemyResource.resourcePoolRef,
             },
             procedure: "markedDamageRider",
             action: "cast",
@@ -443,6 +459,21 @@ function discoverMarkedDamageRiderCastAct(
   actorId: CombatantId,
   invocation: BattleExecutableSpellInvocation<MarkedDamageRiderInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
+  const actor = state.combatants.get(actorId);
+  if (
+    invocation.action === "cast" &&
+    actor?.activeEffects.some(
+      (effect) => effect.kind === "spellMarkedDamageRider",
+    ) === true
+  ) {
+    return [];
+  }
+  if (
+    invocation.action === "transfer" &&
+    !markedDamageRiderTransferIsAvailable(state, invocation.activeEffect)
+  ) {
+    return [];
+  }
   const targetHole = spellTargetHole(state, actorId, invocation);
   const initialHoles =
     invocation.action === "cast" &&
@@ -457,7 +488,6 @@ function discoverMarkedDamageRiderCastAct(
             tag: "bonusActionSpell" as const,
             actorId,
             procedureRef: invocation.sourceProcedureRef,
-            invocation: markedDamageRiderInvocationRef(invocation),
             mode: { tag: "cast" as const },
           },
           initialHoles,
@@ -465,39 +495,6 @@ function discoverMarkedDamageRiderCastAct(
       ];
 }
 
-function markedDamageRiderInvocationRef(
-  invocation: BattleExecutableSpellInvocation<MarkedDamageRiderInvocation>,
-): SpellInvocationRef {
-  return invocation.action === "transfer"
-    ? spellEffectInvocationRef(
-        invocation.spell.id,
-        invocation.activeEffect.sourceCombatantId,
-        "markedDamageRiderTransfer",
-      )
-    : invocation.resource.tag === "classFeatureFreeCast"
-      ? classFeatureFreeCastSpellInvocationRef(
-          invocation.spell.id,
-          invocation.resource.resourceUnitId,
-          "markedDamageRider",
-        )
-      : {
-          tag: "spellSlot" as const,
-          spellId: spellId(invocation.spell.id),
-          slotLevel: invocation.resource.slotLevel,
-          procedure: "markedDamageRider" as const,
-        };
-}
-
-function markedDamageRiderCastSummary(
-  invocation: MarkedDamageRiderInvocation,
-): string {
-  if (invocation.action === "transfer") {
-    return `Move ${invocation.spell.name} to a new target.`;
-  }
-  return invocation.resource.tag === "classFeatureFreeCast"
-    ? `Cast ${invocation.spell.name} using Favored Enemy.`
-    : `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
-}
 
 function resolveMarkedDamageRider(
   input: MarkedDamageRiderResolveInput,
@@ -645,7 +642,7 @@ function resolveMarkedDamageRider(
             currentTurnResources: turnResources,
           },
           input.actorId,
-          input.invocation.resource.resourceUnitId,
+          input.invocation.resource.resourcePoolRef,
           input.invocation,
           input.input.state,
         )
@@ -768,6 +765,29 @@ function applyMarkedDamageRiderSpellEffect(
         ? invocation.activeEffect.transfer.retargetTiming
         : invocation.retargetTiming,
   };
+  const activeEffect = {
+    kind: "spellMarkedDamageRider" as const,
+    effectRef: occurrence.effectRef,
+    sourceProcedureRef:
+      invocation.action === "transfer"
+        ? invocation.activeEffect.sourceProcedureRef
+        : invocation.sourceProcedureRef,
+    sourceCombatantId: actorId,
+    targetCombatantId: targetId,
+    transfer,
+    abilityCheckBehavior:
+      invocation.action === "transfer"
+        ? invocation.activeEffect.abilityCheckBehavior
+        : markedDamageRiderActiveAbilityCheckBehavior(
+            invocation.abilityCheckBehavior,
+            selectedAbility,
+          ),
+    damage:
+      invocation.action === "transfer"
+        ? invocation.activeEffect.damage
+        : invocation.damage,
+    expiresAt: existingExpiresAt,
+  } satisfies SpellMarkedDamageRider;
   const activeEffects = [
     ...caster.activeEffects.filter(
       (effect) =>
@@ -779,32 +799,28 @@ function applyMarkedDamageRiderSpellEffect(
           effect.sourceCombatantId === actorId
         ),
     ),
-    {
-      kind: "spellMarkedDamageRider" as const,
-      effectRef: occurrence.effectRef,
-      sourceProcedureRef:
-        invocation.action === "transfer"
-          ? invocation.activeEffect.sourceProcedureRef
-          : invocation.sourceProcedureRef,
-      sourceCombatantId: actorId,
-      targetCombatantId: targetId,
-      transfer,
-      abilityCheckBehavior:
-        invocation.action === "transfer"
-          ? invocation.activeEffect.abilityCheckBehavior
-          : markedDamageRiderActiveAbilityCheckBehavior(
-              invocation.abilityCheckBehavior,
-              selectedAbility,
-            ),
-      damage: invocation.damage,
-      expiresAt: existingExpiresAt,
-    },
+    activeEffect,
   ];
+  const owner = occurrence.owner;
+  if (owner.origin.kind !== "character") return state;
+  const transferExecution = {
+    procedure: "markedDamageRider" as const,
+    action: "transfer" as const,
+    activeEffectRef: activeEffect.effectRef,
+    activeEffectSourceProcedureRef: activeEffect.sourceProcedureRef,
+  } satisfies MarkedDamageRiderTransferSpellProcedureExecution;
   return {
     ...occurrence.state,
     combatants: new Map(occurrence.state.combatants).set(actorId, {
-      ...occurrence.owner,
+      ...owner,
       activeEffects,
+      origin: {
+        ...owner.origin,
+        execution: characterExecutionWithMarkedDamageRiderTransfer(
+          owner.origin.execution,
+          transferExecution,
+        ),
+      },
     }),
   };
 }
@@ -832,22 +848,23 @@ function markedDamageRiderActiveAbilityCheckBehavior(
   );
 }
 
-const MarkedDamageRiderInvocationSchema = spellProcedureInvocationSchema<
-  Extract<SupportedSpellInvocation, { readonly procedure: "markedDamageRider" }>
->(
+const MarkedDamageRiderInvocationSchema = spellProcedureExecutionSchema(
   Schema.Union(
     Schema.Struct({
       access: PreparedSpellAccessSchema,
       resource: Schema.Union(
         SpellSlotInvocationResourceSchema,
-        ClassFeatureFreeCastInvocationResourceSchema,
+        ClassFeatureFreeCastExecutionResourceSchema,
       ),
       procedure: Schema.Literal("markedDamageRider"),
       action: Schema.Literal("cast"),
-      spell: BattleRuntimeObjectSchema,
+      spellRuleFacts: SpellRuleExecutionFactsSchema,
       actionCost: Schema.Literal("bonusAction"),
       targeting: Schema.Struct({ kind: Schema.Literal("singleCombatant") }),
-      damage: BattleRuntimeObjectSchema,
+      damage: Schema.Struct({
+        expr: DiceExprSchema,
+        damageType: DamageTypeSchema,
+      }),
       abilityCheckBehavior: Schema.Union(
         Schema.Struct({ kind: Schema.Literal("none") }),
         Schema.Struct({
@@ -863,20 +880,16 @@ const MarkedDamageRiderInvocationSchema = spellProcedureInvocationSchema<
           ),
         }),
       ),
+      retargetTiming: Schema.Literal("sameTurn", "laterTurn"),
       rangeFeet: MovementFeet,
-      expiresAt: BattleRuntimeObjectSchema,
+      expiresAt: BattleActiveEffectExpirationSchema,
     }),
     Schema.Struct({
-      access: PreparedSpellAccessSchema,
-      resource: NoSpellInvocationResourceSchema,
       procedure: Schema.Literal("markedDamageRider"),
       action: Schema.Literal("transfer"),
-      spell: BattleRuntimeObjectSchema,
-      actionCost: Schema.Literal("bonusAction"),
-      targeting: Schema.Struct({ kind: Schema.Literal("singleCombatant") }),
-      damage: BattleRuntimeObjectSchema,
-      rangeFeet: MovementFeet,
-      activeEffect: BattleRuntimeObjectSchema,
+      spellRuleFacts: Schema.optionalWith(Schema.Never, { exact: true }),
+      activeEffectRef: BattleActiveEffectExecutionRef,
+      activeEffectSourceProcedureRef: BattleProcedureExecutionRef,
     }),
   ),
 );
@@ -886,14 +899,11 @@ export const markedDamageRiderProfile: SpellProcedureProfile<
   BonusActionSpellBattleResolutionInput
 > = {
   procedure: "markedDamageRider",
-  invocationSchema: MarkedDamageRiderInvocationSchema,
+  executionSchema: MarkedDamageRiderInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
   targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: [],
   admit: admitMarkedDamageRider,
   discoverCastAct: discoverMarkedDamageRiderCastAct,
-  castSummary: markedDamageRiderCastSummary,
-  invocationRef: markedDamageRiderInvocationRef,
   resolve: resolveMarkedDamageRider,
 };

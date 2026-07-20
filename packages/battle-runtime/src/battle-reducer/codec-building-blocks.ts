@@ -15,6 +15,7 @@ import {
   CreatureNamedAttackRollSchema,
   DamageTypeSchema,
   DcSourceSchema,
+  DiceExprSchema,
   SizeSchema,
   WeaponRecordSchema,
 } from "@dnd/surface/surface/schema";
@@ -23,13 +24,14 @@ import { Schema } from "effect";
 import {
   BattleAttackProcedureExecutionRef,
   BattleProcedureExecutionRef,
+  BattleResourcePoolExecutionRef,
   BattleStatBlockProcedureExecutionRef,
   CombatantId,
 } from "../identity.ts";
 import {
   STAT_BLOCK_ATTACK_ROLL_ADVANTAGE_PREDICATES,
-  STAT_BLOCK_DAMAGE_NOTATIONS,
-  type StatBlockAttackActionOption,
+  type SupportedCreatureAttackRollMechanics,
+  type SupportedStaticDamageCreatureAttackRollMechanics,
 } from "../battle-action-options.ts";
 import { creatureAttackRollMechanicsAreSupported } from "../statblock-action-support.ts";
 import {
@@ -52,6 +54,7 @@ export {
   DamageDieSizeSchema,
   DamageTypeSchema,
   DcSourceSchema,
+  DiceExprSchema,
   DifficultyClass,
   MovementDeltaFeet,
   MovementFeet,
@@ -62,10 +65,12 @@ export {
 export const BATTLE_SURFACE_SKILLS = SURFACE_SKILLS;
 export const BATTLE_SURFACE_ABILITIES = ABILITIES;
 
-export const BattleRuntimeObjectSchema = Schema.Record({
-  key: Schema.String,
-  value: Schema.Any,
+export const SpellDamageSchema = Schema.Struct({
+  expr: DiceExprSchema,
+  damageType: DamageTypeSchema,
 });
+
+export const BattleConditionSchema = Schema.Literal(...ALL_CONDITIONS);
 
 export const BattleThunderwaveAudibleBoomSchema = Schema.Struct({
   sound: Schema.Literal("thunderous boom"),
@@ -128,7 +133,7 @@ export const SpellPostDamageRiderSchema = Schema.Union(
   }),
   Schema.Struct({
     kind: Schema.Literal("condition"),
-    condition: Schema.Literal(...ALL_CONDITIONS),
+    condition: BattleConditionSchema,
     expiresAt: Schema.Literal("endOfCasterNextTurn"),
   }),
   Schema.Struct({
@@ -159,7 +164,8 @@ export const SpellPostDamageRiderSchema = Schema.Union(
 );
 
 const AttackDamageAbilityModifierChoiceSchema = Schema.Struct({
-  unitIds: Schema.NonEmptyArray(Schema.String),
+  procedureRefs: Schema.NonEmptyArray(BattleProcedureExecutionRef),
+  unitIds: Schema.optionalWith(Schema.Never, { exact: true }),
   appliedDamageAbilityModifier: AbilityModifier,
   declinedDamageAbilityModifier: AbilityModifier,
 });
@@ -232,35 +238,49 @@ const SupportedCreatureAttackRollMechanicsSchema =
     }),
   );
 
-// Cast evidence: the attack mechanics pass the executable support refinement,
-// and the notation refinement below proves the static branch's stronger damage
-// fact.
-const StatBlockAttackActionOptionSchema = Schema.Struct({
-  kind: Schema.Literal("statBlockAttack"),
-  procedureRef: BattleStatBlockProcedureExecutionRef,
-  attack: SupportedCreatureAttackRollMechanicsSchema,
-  damageNotation: Schema.Literal(...STAT_BLOCK_DAMAGE_NOTATIONS),
-  traitAttackRollModes: Schema.optionalWith(
-    Schema.NonEmptyArray(
-      Schema.Struct({
-        mode: Schema.Literal("advantage"),
-        predicate: Schema.Literal(
-          ...STAT_BLOCK_ATTACK_ROLL_ADVANTAGE_PREDICATES,
+const SupportedStaticDamageCreatureAttackRollMechanicsSchema =
+  SupportedCreatureAttackRollMechanicsSchema.pipe(
+    Schema.filter(
+      (
+        attack: SupportedCreatureAttackRollMechanics,
+      ): attack is SupportedStaticDamageCreatureAttackRollMechanics =>
+        statBlockAttackDamageSupportsStaticNotation(
+          supportedStatBlockAttackDamage(attack),
         ),
-      }),
+      {
+        message: () =>
+          "Static Stat Block damage requires static damage facts.",
+      },
     ),
-    { exact: true },
-  ),
-}).pipe(
-  Schema.filter(
-    (option) =>
-      option.damageNotation === "rolled" ||
-      statBlockAttackDamageSupportsStaticNotation(
-        supportedStatBlockAttackDamage(option.attack),
-      ),
-    { message: () => "Static Stat Block damage requires static damage facts." },
-  ),
-) as unknown as Schema.Schema<StatBlockAttackActionOption>;
+  );
+
+const StatBlockTraitAttackRollModeSchema = Schema.Struct({
+  mode: Schema.Literal("advantage"),
+  predicate: Schema.Literal(...STAT_BLOCK_ATTACK_ROLL_ADVANTAGE_PREDICATES),
+});
+
+const StatBlockAttackActionOptionSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("statBlockAttack"),
+    procedureRef: BattleStatBlockProcedureExecutionRef,
+    attack: SupportedCreatureAttackRollMechanicsSchema,
+    damageNotation: Schema.Literal("rolled"),
+    traitAttackRollModes: Schema.optionalWith(
+      Schema.NonEmptyArray(StatBlockTraitAttackRollModeSchema),
+      { exact: true },
+    ),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("statBlockAttack"),
+    procedureRef: BattleStatBlockProcedureExecutionRef,
+    attack: SupportedStaticDamageCreatureAttackRollMechanicsSchema,
+    damageNotation: Schema.Literal("static"),
+    traitAttackRollModes: Schema.optionalWith(
+      Schema.NonEmptyArray(StatBlockTraitAttackRollModeSchema),
+      { exact: true },
+    ),
+  }),
+);
 
 export const SupportedAttackActionOptionSchema = Schema.Union(
   CharacterWeaponAttackActionOptionSchema,
@@ -275,8 +295,7 @@ export const SupportedAttackActionOptionSchema = Schema.Union(
           flat: Schema.Literal(1),
         }),
         Schema.Struct({
-          kind: Schema.Literal("authoredReplacement"),
-          sourceUnitId: Schema.String,
+          kind: Schema.Literal("mechanicalReplacement"),
           dice: Schema.Literal(1),
           dieSize: DamageDieSizeSchema,
           damageType: DamageTypeSchema,
@@ -327,7 +346,12 @@ export const NoSpellInvocationResourceSchema = Schema.Struct({
 
 export const ClassFeatureFreeCastInvocationResourceSchema = Schema.Struct({
   tag: Schema.Literal("classFeatureFreeCast"),
-  resourceUnitId: Schema.String,
+  resourcePoolRef: BattleResourcePoolExecutionRef,
+});
+
+export const ClassFeatureFreeCastExecutionResourceSchema = Schema.Struct({
+  tag: Schema.Literal("classFeatureFreeCast"),
+  resourcePoolRef: BattleResourcePoolExecutionRef,
 });
 
 export const SingleCreatureOrObjectSpellTargetingSchema = Schema.Struct({
@@ -364,12 +388,12 @@ export const PreparedSpellAttackSequenceTargetingSchema = Schema.Struct({
 export const SpellAttackDamagePayloadSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("fixedSpellAttackDamage"),
-    expr: BattleRuntimeObjectSchema,
+    expr: DiceExprSchema,
     damageType: DamageTypeSchema,
   }),
   Schema.Struct({
     kind: Schema.Literal("sorcerousBurstDamageTypeChoice"),
-    expr: BattleRuntimeObjectSchema,
+    expr: DiceExprSchema,
     damageTypeChoices: Schema.NonEmptyArray(DamageTypeSchema),
     maxDieAdditionalDiceLimit: Schema.Number.pipe(
       Schema.int(),
@@ -378,7 +402,7 @@ export const SpellAttackDamagePayloadSchema = Schema.Union(
   }),
   Schema.Struct({
     kind: Schema.Literal("selectedSorcerousBurstDamage"),
-    expr: BattleRuntimeObjectSchema,
+    expr: DiceExprSchema,
     damageType: DamageTypeSchema,
     maxDieAdditionalDiceLimit: Schema.Number.pipe(
       Schema.int(),
@@ -433,15 +457,15 @@ export const SpellConditionCountedRepeatSaveSchema = Schema.Struct({
 const SpellFailedSaveFixedConditionEffectSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("fixed"),
-    condition: Schema.Literal(...ALL_CONDITIONS),
+    condition: BattleConditionSchema,
     expiresAt: SpellFailedSaveConditionExpirationSchema,
     escape: Schema.NullOr(SpellConditionEscapeSchema),
-    turnStartDamage: Schema.NullOr(BattleRuntimeObjectSchema),
+    turnStartDamage: Schema.NullOr(SpellDamageSchema),
     repeatSave: Schema.Null,
   }),
   Schema.Struct({
     kind: Schema.Literal("fixed"),
-    condition: Schema.Literal(...ALL_CONDITIONS),
+    condition: BattleConditionSchema,
     expiresAt: SpellFailedSaveConditionExpirationSchema,
     escape: Schema.Null,
     turnStartDamage: Schema.Null,
@@ -455,15 +479,15 @@ const SpellFailedSaveFixedConditionEffectSchema = Schema.Union(
 const SpellFailedSaveConditionChoiceEffectSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("choice"),
-    choices: Schema.NonEmptyArray(Schema.Literal(...ALL_CONDITIONS)),
+    choices: Schema.NonEmptyArray(BattleConditionSchema),
     expiresAt: SpellFailedSaveConditionExpirationSchema,
     escape: Schema.NullOr(SpellConditionEscapeSchema),
-    turnStartDamage: Schema.NullOr(BattleRuntimeObjectSchema),
+    turnStartDamage: Schema.NullOr(SpellDamageSchema),
     repeatSave: Schema.Null,
   }),
   Schema.Struct({
     kind: Schema.Literal("choice"),
-    choices: Schema.NonEmptyArray(Schema.Literal(...ALL_CONDITIONS)),
+    choices: Schema.NonEmptyArray(BattleConditionSchema),
     expiresAt: SpellFailedSaveConditionExpirationSchema,
     escape: Schema.Null,
     turnStartDamage: Schema.Null,
@@ -484,11 +508,13 @@ export const RollModifierSpellTargetingSchema = Schema.Union(
     kind: Schema.Literal("targetList"),
     minTargets: Schema.Literal(1),
     maxTargets: Schema.Number,
+    requiredTargetDisposition: Schema.Literal("unrestricted", "willing"),
   }),
   Schema.Struct({
     kind: Schema.Literal("targetList"),
     minTargets: Schema.Literal(1),
     maxTargets: Schema.Literal("allLegalTargets"),
+    requiredTargetDisposition: Schema.Literal("unrestricted", "willing"),
   }),
   Schema.Struct({
     kind: Schema.Literal("selfAndChosenLegalTargets"),
@@ -502,49 +528,3 @@ export const RollModifierSpellSaveGateSchema = Schema.NullOr(
     dc: DcSourceSchema,
   }),
 );
-
-export const RollModifierSpellInvocationBaseSchemaFields = {
-  access: Schema.Union(
-    PreparedSpellAccessSchema,
-    ClassCantripSpellAccessSchema,
-  ),
-  resource: Schema.Union(
-    SpellSlotInvocationResourceSchema,
-    NoSpellInvocationResourceSchema,
-  ),
-  procedure: Schema.Literal("rollModifier"),
-  spell: BattleRuntimeObjectSchema,
-  actionCost: Schema.Literal("magicAction"),
-  targeting: RollModifierSpellTargetingSchema,
-  effect: BattleRuntimeObjectSchema,
-  rangeFeet: MovementFeet,
-  saveGate: RollModifierSpellSaveGateSchema,
-} as const;
-
-export const SupportedHealingSpellInvocationSchema = Schema.Struct({
-  access: PreparedSpellAccessSchema,
-  resource: SpellSlotInvocationResourceSchema,
-  procedure: Schema.Literal("directHitPointRestoration"),
-  spell: BattleRuntimeObjectSchema,
-  actionCost: Schema.Literal("magicAction", "bonusAction"),
-  targeting: Schema.Union(
-    Schema.Struct({
-      kind: Schema.Literal("targetList"),
-      minTargets: Schema.Literal(1),
-      maxTargets: Schema.Number,
-    }),
-    Schema.Struct({
-      kind: Schema.Literal("pointOriginSphereTargetList"),
-      minTargets: Schema.Literal(1),
-      maxTargets: Schema.Number,
-      area: Schema.Struct({
-        kind: Schema.Literal("pointOriginSphere"),
-        radiusFeet: MovementFeet,
-      }),
-    }),
-  ),
-  healing: Schema.Struct({
-    expr: BattleRuntimeObjectSchema,
-  }),
-  rangeFeet: MovementFeet,
-});

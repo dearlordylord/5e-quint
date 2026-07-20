@@ -32,8 +32,9 @@ import {
   type BattleFill,
   type BattleHole,
   type BattleState,
-  type BattleActDiscoverySubject as BattleSubject,
+  type BattleSubject,
 } from "./battle-runtime-test-support.ts";
+import type { BattleProcedureExecutionRef } from "./index.ts";
 import { difficultyClass } from "@dnd/shared/types";
 
 type CunningStrikeLastResult =
@@ -54,7 +55,6 @@ type CunningStrikeProjection = {
 type CunningStrikeOptionId = "poison" | "trip" | "withdraw";
 
 const cunningStrikeUnitId = "rogue_cunning_strike";
-const sneakAttackUnitId = "rogue_sneak_attack";
 
 defineSelectedIdentityReplayAndQntReplay({
   describeLabel: "Cunning Strike selected identity replay",
@@ -252,6 +252,14 @@ function cunningStrikeDamageWindow(
   optionId: CunningStrikeOptionId,
 ): CunningStrikeDamageWindow {
   const state = cunningStrikeBattle();
+  const cunningStrikeProcedureRef = unitSupportProcedureRef(
+    state,
+    "cunningStrike",
+  );
+  const sourceDamageRiderProcedureRef = unitSupportProcedureRef(
+    state,
+    "attackDamageRider",
+  );
   const subject = fighterAttackSubject(state, "Dagger");
   const target = attackInitialTargetHole(state, subject);
   const roll = attackRollHoleAfterTarget(state, target, subject);
@@ -267,16 +275,21 @@ function cunningStrikeDamageWindow(
     attackRoll,
     subject,
   );
-  const boundary = selectedCunningStrikeBoundary(damage, optionId);
+  const boundary = selectedCunningStrikeBoundary(
+    damage,
+    optionId,
+    cunningStrikeProcedureRef,
+    sourceDamageRiderProcedureRef,
+  );
   const throughDamageRoll = [
     targetFill(target, goblinId),
     attackRollFill(roll, attackRoll),
     damageRollFillWithGroups(
       damage,
       [[4], [6, 5]],
-      [sneakAttackUnitId],
+      [sourceDamageRiderProcedureRef],
       undefined,
-      { unitId: cunningStrikeUnitId, optionId },
+      { procedureRef: cunningStrikeProcedureRef, optionId },
     ),
   ];
   const afterDamageRoll = resolveBattleSubject({
@@ -310,6 +323,8 @@ function cunningStrikeDamageWindow(
 function selectedCunningStrikeBoundary(
   damage: BattleHole,
   optionId: CunningStrikeOptionId,
+  cunningStrikeProcedureRef: BattleProcedureExecutionRef,
+  sourceDamageRiderProcedureRef: BattleProcedureExecutionRef,
 ): {
   readonly cunningStrikeUnitBound: boolean;
   readonly sourceDamageRiderUnitBound: boolean;
@@ -321,18 +336,40 @@ function selectedCunningStrikeBoundary(
     "cunningStrikeOptions" in damage ? (damage.cunningStrikeOptions ?? []) : [];
   const selected = options.find(
     (option) =>
-      option.unitId === cunningStrikeUnitId && option.optionId === optionId,
+      option.procedureRef === cunningStrikeProcedureRef &&
+      option.optionId === optionId,
   );
   const sourceDamageRiderUnitBound =
     "attackDamageRiders" in damage &&
     (damage.attackDamageRiders ?? []).some(
-      (rider) => rider.unitId === sneakAttackUnitId,
+      (rider) => rider.procedureRef === sourceDamageRiderProcedureRef,
     ) &&
-    selected?.sourceDamageRiderUnitId === sneakAttackUnitId;
+    selected?.sourceDamageRiderProcedureRef === sourceDamageRiderProcedureRef;
   return {
-    cunningStrikeUnitBound: selected?.unitId === cunningStrikeUnitId,
+    cunningStrikeUnitBound:
+      selected?.procedureRef === cunningStrikeProcedureRef,
     sourceDamageRiderUnitBound,
   };
+}
+
+function unitSupportProcedureRef(
+  state: BattleState,
+  executionKind: "attackDamageRider" | "cunningStrike",
+): BattleProcedureExecutionRef {
+  const actor = state.combatants.get(fighterId);
+  if (actor?.origin.kind !== "character") {
+    throw new Error("Expected Cunning Strike character actor.");
+  }
+  const binding = actor.origin.execution.procedureBindings.find(
+    (candidate) =>
+      candidate.procedure.kind === "unitSupportProfile" &&
+      typeof candidate.procedure.execution !== "string" &&
+      candidate.procedure.execution.kind === executionKind,
+  );
+  if (binding === undefined) {
+    throw new Error(`Expected ${executionKind} mechanical procedure.`);
+  }
+  return binding.procedureRef;
 }
 
 function cunningStrikeBattle(): BattleState {
@@ -344,7 +381,10 @@ function cunningStrikeBattle(): BattleState {
         initiative: 20,
         classLevels: [{ className: "rogue", level: 5 }],
         d20Statistics: testCharacterD20Statistics({ dex: 16 }),
-        unitFeatures: [sneakAttackFeature(), cunningStrikeFeature()],
+        unitFeatures: [
+          sneakAttackFeature({ classLevel: 5 }),
+          cunningStrikeFeature(),
+        ],
         characterUnitRefs: cunningStrikeUnitRefs(),
         attack: testDaggerAttack(),
       }),

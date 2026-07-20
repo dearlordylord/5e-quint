@@ -1,9 +1,12 @@
 import {
   battleTablePositionId,
+  battleSnapshotProjection,
+  battleAdmittedSpellPresentations,
+  discoverBattleActs,
   battleCreatureInitFromStatBlock,
-  snapshotBattle,
   startBattle,
   type BattleCreatureInit,
+  type BattleRuntimeSession,
   type BattleState,
   type CombatantId,
 } from "@dnd/battle-runtime";
@@ -54,11 +57,11 @@ export function handleStartBattleToolCall(
   root: McpCompositionRoot,
   input: StartBattleToolInput,
 ) {
-  const activeBattle = root.sessionStore.battleState;
+  const activeBattle = root.sessionStore.battleSession;
   if (activeBattle !== null) {
     return errorContent("A battle session is already active.", {
       code: "BATTLE_SESSION_ALREADY_ACTIVE",
-      battleId: activeBattle.battleId,
+      battleId: activeBattle.state.battleId,
     });
   }
 
@@ -75,26 +78,30 @@ export function handleStartBattleToolCall(
   });
   if (Either.isLeft(combatants)) return combatants.left;
 
-  const state = startBattle({
+  const session = startBattle({
     battleId: input.battleId,
     combatants: combatants.right.creatureInits,
   });
-  if (Either.isLeft(state)) {
+  if (Either.isLeft(session)) {
     return errorContent("Battle session start failed.", {
       code: "BATTLE_START_FAILED",
-      message: state.left.message,
+      message: session.left.message,
     });
   }
   const admittedState = admitCompanionAdmissions({
     root,
-    state: state.right,
+    state: session.right.state,
     admissions: input.companionAdmissions,
     characterSessions: combatants.right.characterSessions,
     initialCombatantOrder,
   });
   if (Either.isLeft(admittedState)) return admittedState.left;
 
-  root.sessionStore.battleState = admittedState.right;
+  const admittedSession: BattleRuntimeSession = {
+    state: admittedState.right,
+    context: session.right.context,
+  };
+  root.sessionStore.battleSession = admittedSession;
   root.sessionStore.pendingBattleFills = null;
   for (const { session } of combatants.right.characterSessions) {
     root.sessionStore.characters.set({
@@ -105,8 +112,13 @@ export function handleStartBattleToolCall(
   }
   publishAdminProjectionBestEffort(root);
 
+  const projection = battleSnapshotProjection(admittedSession.state);
   return schemaJsonContent(StartBattleOutputSchema, {
-    snapshot: snapshotBattle(admittedState.right),
+    snapshot: projection.snapshot,
+    availableActs: discoverBattleActs(admittedSession),
+    admittedSpellPresentations:
+      battleAdmittedSpellPresentations(admittedSession),
+    presentedInterruptChoices: [],
     session: mcpSessionSummary(root.sessionStore.snapshot()),
   });
 }

@@ -7,11 +7,7 @@ import {
 } from "@dnd/shared-algebras/companion-protocol-algebra";
 import { Hp, type SpellSlotLevel } from "@dnd/shared/types";
 import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
-import type {
-  SpellRecord,
-  StatBlockRecord,
-  UnitRecord,
-} from "@dnd/surface/surface/types";
+import type { StatBlockRecord } from "@dnd/surface/surface/types";
 import * as Either from "effect/Either";
 import * as Option from "effect/Option";
 
@@ -25,6 +21,10 @@ import {
   resourceHasUsesRemaining,
   spendCharacterResourceUse,
 } from "./character-battle-resources.ts";
+import {
+  characterUnitProcedureBindings,
+  type CharacterExecutionState,
+} from "./character-execution.ts";
 import { currentActorId } from "./battle-reducer/creature-state-leaves.ts";
 import { snapshotBattle } from "./battle-reducer/dispatcher.ts";
 import {
@@ -37,7 +37,11 @@ import {
   removeBattleCombatants,
 } from "./battle-reducer/api-lifecycle.ts";
 import { battleStateInitIssue } from "./battle-reducer/domain-helpers.ts";
-import type { CombatantId, InitiativeScore } from "./identity.ts";
+import type {
+  BattleResourcePoolExecutionRef,
+  CombatantId,
+  InitiativeScore,
+} from "./identity.ts";
 import { findPresentFamiliarById } from "./find-familiar-state.ts";
 import {
   companionEntries,
@@ -66,10 +70,7 @@ import type {
   FindFamiliarFormSelection,
   PactOfTheChainFindFamiliarFormEligibility,
 } from "@dnd/surface/surface/find-familiar-forms";
-import {
-  findFamiliarFormEligibilityForSpell,
-  resolveFindFamiliarForm,
-} from "@dnd/surface/surface/find-familiar-forms";
+import { resolveFindFamiliarForm } from "@dnd/surface/surface/find-familiar-forms";
 import { expendSpellSlot } from "./battle-reducer/spell-effects.ts";
 import { markSpellSlotExpendedThisTurn } from "./battle-reducer/spell-turn-resources.ts";
 import { DRUID_WILD_COMPANION_SPELL_CAST_SUPPORT_PROFILE } from "./unit-feature-support.ts";
@@ -106,14 +107,21 @@ export type WildCompanionSpend =
   | { readonly kind: "spellSlot"; readonly spellLevel: SpellSlotLevel }
   | {
       readonly kind: "wildShapeUse";
-      readonly resourceUnitId: "druid_wild_shape";
+      readonly resourcePoolRef: BattleResourcePoolExecutionRef;
     };
 
-export type WildCompanionCastInput = Omit<
-  FindFamiliarCastInput,
-  "creatureTypeOverrideChoiceId" | "eligibility"
-> & {
-  readonly findFamiliarSpell: SpellRecord;
+export type WildCompanionCastInput = {
+  readonly state: BattleState;
+  readonly casterId: CombatantId;
+  readonly familiarId: CombatantId;
+  readonly catalog: StatBlockCatalog;
+  readonly eligibility: FindFamiliarFormEligibility;
+  readonly selection: FindFamiliarFormSelection;
+  readonly initiative: InitiativeScore;
+  readonly placement: Extract<
+    BattleCompanionPlacement,
+    { readonly kind: "unoccupiedSpaceWithinSpellRange" }
+  >;
   readonly spend: WildCompanionSpend;
 };
 
@@ -287,16 +295,6 @@ export function castFindFamiliar(
 export function castWildCompanion(
   input: WildCompanionCastInput,
 ): BattleResolutionResult {
-  const eligibility = findFamiliarFormEligibilityForSpell(
-    input.findFamiliarSpell,
-  );
-  if (eligibility === null) {
-    return invalidFindFamiliarResult(
-      input.state,
-      "invalidFill",
-      "Wild Companion requires Find Familiar form eligibility.",
-    );
-  }
   const owner = input.state.combatants.get(input.casterId);
   if (owner?.origin.kind !== "character") {
     return invalidFindFamiliarResult(
@@ -305,7 +303,7 @@ export function castWildCompanion(
       "Wild Companion caster is not a character in this battle.",
     );
   }
-  if (!characterHasWildCompanionFeature(owner.origin.characterUnitRefs)) {
+  if (!characterHasWildCompanionFeature(owner.origin.execution)) {
     return invalidFindFamiliarResult(
       input.state,
       "invalidFill",
@@ -322,7 +320,7 @@ export function castWildCompanion(
   }
   const resolvedForm = resolveFindFamiliarForm({
     catalog: input.catalog,
-    eligibility,
+    eligibility: input.eligibility,
     selection: input.selection,
     creatureTypeOverrideChoiceId: "fey",
   });
@@ -1343,7 +1341,7 @@ function spendWildCompanionCost(input: {
     };
   }
   const resource = actor.origin.resources.find(
-    (candidate) => candidate.unit.id === spend.resourceUnitId,
+    (candidate) => candidate.resourcePoolRef === spend.resourcePoolRef,
   );
   if (resource === undefined || !resourceHasUsesRemaining(resource)) {
     return invalidFindFamiliarResult(
@@ -1357,7 +1355,7 @@ function spendWildCompanionCost(input: {
     origin: {
       ...actor.origin,
       resources: actor.origin.resources.map((candidate) =>
-        candidate.unit.id === spend.resourceUnitId
+        candidate.resourcePoolRef === spend.resourcePoolRef
           ? spendCharacterResourceUse(resource)
           : candidate,
       ),
@@ -1376,15 +1374,12 @@ function spendWildCompanionCost(input: {
 }
 
 function characterHasWildCompanionFeature(
-  characterUnitRefs: readonly {
-    readonly unit: { readonly id: UnitRecord["id"] };
-    readonly supportProfiles: readonly unknown[];
-  }[],
+  execution: CharacterExecutionState,
 ): boolean {
-  return characterUnitRefs.some((unitRef) =>
-    unitRef.supportProfiles.some(
-      (profile) => profile === DRUID_WILD_COMPANION_SPELL_CAST_SUPPORT_PROFILE,
-    ),
+  return characterUnitProcedureBindings(execution).some(
+    ({ procedure }) =>
+      procedure.kind === "unitSupportProfile" &&
+      procedure.execution === DRUID_WILD_COMPANION_SPELL_CAST_SUPPORT_PROFILE,
   );
 }
 

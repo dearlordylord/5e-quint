@@ -26,6 +26,7 @@ import {
   findHole,
   goblinId,
   requireHole,
+  requireCharacterUnitProcedureRefForTest,
   requireResolved,
   resolveBattleSubject,
   skeletonId,
@@ -33,6 +34,7 @@ import {
   sneakAttackUnitRefs,
   spellRecord,
   startBattleRight,
+  startBattleSessionRight,
   statBlockCreatureInit,
   testDaggerAttack,
   targetFill,
@@ -42,7 +44,11 @@ import {
   wizardId,
   wizardSpellcasting,
 } from "./battle-runtime-test-support.ts";
-import type { BattleState, BattleUnitRef } from "./index.ts";
+import type {
+  BattleRuntimeSession,
+  BattleState,
+  BattleUnitRef,
+} from "./index.ts";
 
 function huntersPreyUnitRef(
   optionId: "colossusSlayer" | "hordeBreaker",
@@ -84,6 +90,14 @@ function huntersPreyUnitRef(
       },
     ],
   };
+}
+
+function huntersPreyProcedureRef(session: BattleRuntimeSession) {
+  return requireCharacterUnitProcedureRefForTest(
+    session,
+    fighterId,
+    "ranger_hunters_prey",
+  );
 }
 
 function extraAttackUnitRef(): BattleUnitRef {
@@ -196,7 +210,7 @@ function resolveHordeBreakerUse(
 
 describe("battle runtime: Hunter's Prey", () => {
   test("Colossus Slayer can be skipped on one wounded hit and used on a later hit that turn", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-hunters-prey-colossus-slayer"),
       combatants: [
         characterSeed({
@@ -216,6 +230,7 @@ describe("battle runtime: Hunter's Prey", () => {
         }),
       ],
     });
+    const state = session.state;
     const subject = fighterAttackSubject(state, "Longsword");
     const target = attackInitialTargetHole(state, subject);
     const roll = attackRollHoleAfterTarget(state, target, subject, goblinId);
@@ -232,8 +247,7 @@ describe("battle runtime: Hunter's Prey", () => {
       attackDamageRiders: [
         {
           attackerId: fighterId,
-          unitId: "ranger_hunters_prey",
-          label: "Colossus Slayer",
+          procedureRef: huntersPreyProcedureRef(session),
           optional: true,
           damage: { dice: 1, dieSize: 8, damageType: "slashing" },
         },
@@ -281,7 +295,13 @@ describe("battle runtime: Hunter's Prey", () => {
         damageRollFillWithGroups(
           secondDamage,
           [[1], [1]],
-          ["ranger_hunters_prey"],
+          [
+            requireCharacterUnitProcedureRefForTest(
+              session,
+              fighterId,
+              "ranger_hunters_prey",
+            ),
+          ],
         ),
       ],
     });
@@ -290,7 +310,9 @@ describe("battle runtime: Hunter's Prey", () => {
     expect(resolved.state.combatants.get(skeletonId)?.hp).toBe(1);
     expect(
       resolved.state.currentTurnResources.attackDamageRidersUsedThisTurn,
-    ).toEqual([{ attackerId: fighterId, unitId: "ranger_hunters_prey" }]);
+    ).toEqual([
+      { attackerId: fighterId, procedureRef: huntersPreyProcedureRef(session) },
+    ]);
   });
 
   test("Hunter's Prey battle admission rejects a missing retained selection", () => {
@@ -308,7 +330,7 @@ describe("battle runtime: Hunter's Prey", () => {
   });
 
   test("Horde Breaker grants a same-weapon attack against a caller-eligible different target once per turn", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-hunters-prey-horde-breaker"),
       combatants: [
         characterSeed({
@@ -324,6 +346,7 @@ describe("battle runtime: Hunter's Prey", () => {
         }),
       ],
     });
+    const state = session.state;
     const subject = fighterAttackSubject(state, "Longsword");
     const primaryTarget = attackInitialTargetHole(state, subject);
     const primaryRoll = attackRollHoleAfterTarget(
@@ -356,7 +379,6 @@ describe("battle runtime: Hunter's Prey", () => {
     );
     expect(decision).toMatchObject({
       label: "Use Horde Breaker",
-      unitFeature: { unitId: "ranger_hunters_prey", label: "Horde Breaker" },
       choices: ["use", "decline"],
     });
 
@@ -424,11 +446,13 @@ describe("battle runtime: Hunter's Prey", () => {
     expect(resolved.state.combatants.get(skeletonId)?.hp).toBe(6);
     expect(
       resolved.state.currentTurnResources.huntersPreyHordeBreakerUsedThisTurn,
-    ).toEqual([{ attackerId: fighterId, unitId: "ranger_hunters_prey" }]);
+    ).toEqual([
+      { attackerId: fighterId, procedureRef: huntersPreyProcedureRef(session) },
+    ]);
   });
 
   test("Horde Breaker resets on the Ranger's next turn", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-hunters-prey-horde-breaker-next-turn"),
       combatants: [
         characterSeed({
@@ -444,11 +468,14 @@ describe("battle runtime: Hunter's Prey", () => {
         }),
       ],
     });
+    const state = session.state;
     const subject = fighterAttackSubject(state, "Longsword");
     const firstUse = resolveHordeBreakerUse(state, subject);
     expect(
       firstUse.currentTurnResources.huntersPreyHordeBreakerUsedThisTurn,
-    ).toEqual([{ attackerId: fighterId, unitId: "ranger_hunters_prey" }]);
+    ).toEqual([
+      { attackerId: fighterId, procedureRef: huntersPreyProcedureRef(session) },
+    ]);
 
     const goblinTurn = requireResolved(
       endTurn({ state: firstUse, actorId: fighterId }),
@@ -466,11 +493,16 @@ describe("battle runtime: Hunter's Prey", () => {
     const secondUse = resolveHordeBreakerUse(nextRangerTurn, subject);
     expect(
       secondUse.currentTurnResources.huntersPreyHordeBreakerUsedThisTurn,
-    ).toEqual([{ attackerId: fighterId, unitId: "ranger_hunters_prey" }]);
+    ).toEqual([
+      {
+        attackerId: fighterId,
+        procedureRef: huntersPreyProcedureRef(session),
+      },
+    ]);
   });
 
   test("Horde Breaker can be used after the original weapon attack misses", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-hunters-prey-horde-breaker-after-miss"),
       combatants: [
         characterSeed({
@@ -486,6 +518,7 @@ describe("battle runtime: Hunter's Prey", () => {
         }),
       ],
     });
+    const state = session.state;
     const subject = fighterAttackSubject(state, "Longsword");
     const primaryTarget = attackInitialTargetHole(state, subject);
     const primaryRoll = attackRollHoleAfterTarget(
@@ -573,11 +606,13 @@ describe("battle runtime: Hunter's Prey", () => {
     expect(resolved.state.combatants.get(skeletonId)?.hp).toBe(6);
     expect(
       resolved.state.currentTurnResources.huntersPreyHordeBreakerUsedThisTurn,
-    ).toEqual([{ attackerId: fighterId, unitId: "ranger_hunters_prey" }]);
+    ).toEqual([
+      { attackerId: fighterId, procedureRef: huntersPreyProcedureRef(session) },
+    ]);
   });
 
   test("Horde Breaker target choices include a different non-enemy creature", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-hunters-prey-horde-breaker-friendly-target"),
       combatants: [
         characterSeed({
@@ -594,6 +629,7 @@ describe("battle runtime: Hunter's Prey", () => {
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
+    const state = session.state;
     const subject = fighterAttackSubject(state, "Longsword");
     const primaryTarget = attackInitialTargetHole(state, subject);
     const primaryRoll = attackRollHoleAfterTarget(
@@ -631,7 +667,7 @@ describe("battle runtime: Hunter's Prey", () => {
 
   test("Horde Breaker same-weapon damage includes attack damage riders on the second target", () => {
     const allyId = wizardId;
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-hunters-prey-horde-breaker-attack-rider"),
       combatants: [
         characterSeed({
@@ -658,6 +694,7 @@ describe("battle runtime: Hunter's Prey", () => {
         }),
       ],
     });
+    const state = session.state;
     const subject = fighterAttackSubject(state, "Dagger");
     const primaryTarget = attackInitialTargetHole(state, subject);
     const primaryRoll = attackRollHoleAfterTarget(
@@ -737,8 +774,11 @@ describe("battle runtime: Hunter's Prey", () => {
       attackDamageRiders: [
         {
           attackerId: fighterId,
-          unitId: "rogue_sneak_attack",
-          label: "Sneak Attack",
+          procedureRef: requireCharacterUnitProcedureRefForTest(
+            session,
+            fighterId,
+            "rogue_sneak_attack",
+          ),
           optional: true,
         },
       ],
@@ -756,7 +796,13 @@ describe("battle runtime: Hunter's Prey", () => {
           damageRollFillWithGroups(
             hordeDamage,
             [[1], [1]],
-            ["rogue_sneak_attack"],
+            [
+              requireCharacterUnitProcedureRefForTest(
+                session,
+                fighterId,
+                "rogue_sneak_attack",
+              ),
+            ],
           ),
         ],
       }),
@@ -765,7 +811,16 @@ describe("battle runtime: Hunter's Prey", () => {
     expect(resolved.state.combatants.get(skeletonId)?.hp).toBe(5);
     expect(
       resolved.state.currentTurnResources.attackDamageRidersUsedThisTurn,
-    ).toEqual([{ attackerId: fighterId, unitId: "rogue_sneak_attack" }]);
+    ).toEqual([
+      {
+        attackerId: fighterId,
+        procedureRef: requireCharacterUnitProcedureRefForTest(
+          session,
+          fighterId,
+          "rogue_sneak_attack",
+        ),
+      },
+    ]);
   });
 
   test("Horde Breaker rejects invalid second-target fills after the original weapon attack misses", () => {
@@ -847,7 +902,7 @@ describe("battle runtime: Hunter's Prey", () => {
   });
 
   test("Horde Breaker same-weapon damage includes marked damage riders on the second target", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-hunters-prey-horde-breaker-marked-target"),
       combatants: [
         characterSeed({
@@ -869,7 +924,7 @@ describe("battle runtime: Hunter's Prey", () => {
         }),
       ],
     });
-    const markAct = discoverBattleActs(state).find(
+    const markAct = discoverBattleActs(session).find(
       (candidate) =>
         candidate.subject.tag === "bonusActionSpell" &&
         battleActSpellPresentation(candidate)?.invocation.spellId ===
@@ -881,7 +936,7 @@ describe("battle runtime: Hunter's Prey", () => {
     const markTarget = findHole(markAct.initialHoles, "targetChoice");
     const marked = requireResolved(
       resolveBattleSubject({
-        state,
+        state: session.state,
         subject: markAct.subject,
         fills: [
           targetFill(markTarget, skeletonId, [
@@ -897,7 +952,7 @@ describe("battle runtime: Hunter's Prey", () => {
       }),
     );
 
-    const subject = fighterAttackSubject(state, "Longsword");
+    const subject = fighterAttackSubject(session.state, "Longsword");
     const primaryTarget = attackInitialTargetHole(marked.state, subject);
     const primaryRoll = attackRollHoleAfterTarget(
       marked.state,

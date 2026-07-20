@@ -2,9 +2,10 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.enemy-zero-hit-point-temporary-hit-points
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3PUTB-02 warlock_dark_ones_blessing
 // UNIT-IDENTITY-REPLAY: L3PUTB-02 warlock_dark_ones_blessing doSelfKill doNearbyOtherKill doRejectOutOfRangeOtherKill doRejectNonEnemyKill doMinimumTemporaryHitPoints doTemporaryHitPointReplacement
-import { Hp, movementFeet } from "@dnd/shared/types";
+import { classLevel, Hp, movementFeet } from "@dnd/shared/types";
 
 import {
+  characterBattleFeatureInitForTest,
   applyBattleHitPointDamage,
   battleId,
   characterSeed,
@@ -22,9 +23,9 @@ import type {
 } from "./battle-reducer.ts";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
-import { characterUnitProcedureRef } from "./character-execution.ts";
+import { enemyZeroHitPointTemporaryHitPointsProcedures } from "./battle-reducer/enemy-zero-hit-point-temporary-hit-points.ts";
+import { isCharacterBattleCreatureState } from "./battle-reducer/creature-state.ts";
 import { battleEnemyZeroHitPointTemporaryHitPointsSupportForUnit } from "./unit-feature-support.ts";
-import { ENEMY_ZERO_HIT_POINT_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE } from "./unit-feature-support.ts";
 
 type DarkOnesBlessingSupportProfile = Exclude<
   ReturnType<typeof battleEnemyZeroHitPointTemporaryHitPointsSupportForUnit>,
@@ -267,7 +268,11 @@ function darkOnesBlessingBattle(input: {
             supportProfiles: [supportProfile],
           },
         ],
-        unitFeatures: [{ unit }],
+        unitFeatures: [
+          characterBattleFeatureInitForTest(unit, [
+            { className: "warlock", level: classLevel(input.warlockLevel) },
+          ]),
+        ],
         knownLanguages: ["Common"],
         d20Statistics: testCharacterD20Statistics({ cha: input.warlockCha }),
         tempHp: input.warlockTempHp ?? 0,
@@ -322,23 +327,15 @@ function darkOnesBlessingEnemyDecision(
 
 function darkOnesBlessingProcedureRef(state: BattleState) {
   const beneficiary = state.combatants.get(warlockId);
-  if (beneficiary?.origin.kind !== "character") {
+  if (!isCharacterBattleCreatureState(beneficiary)) {
     throw new Error("Dark One's Blessing beneficiary must be a character.");
   }
-  const procedureRef = characterUnitProcedureRef(
-    beneficiary.origin.execution,
-    unit.id,
-    {
-      kind: "unitSupportProfile",
-      supportKinds: new Set([
-        ENEMY_ZERO_HIT_POINT_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE,
-      ]),
-    },
-  );
-  if (procedureRef === undefined) {
+  const procedure =
+    enemyZeroHitPointTemporaryHitPointsProcedures(beneficiary)[0];
+  if (procedure === undefined) {
     throw new Error("Dark One's Blessing execution binding must exist.");
   }
-  return procedureRef;
+  return procedure.procedureRef;
 }
 
 function requireDarkOnesBlessingSupportProfile(): DarkOnesBlessingSupportProfile {

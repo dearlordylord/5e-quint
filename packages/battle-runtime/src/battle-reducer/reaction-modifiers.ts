@@ -14,7 +14,7 @@ import {
 
 import { rolledDiceTotal } from "@dnd/shared-algebras/runtime-dice-algebra";
 
-import type { DamageType, UnitRecord } from "@dnd/surface/surface/types";
+import type { DamageType } from "@dnd/surface/surface/types";
 
 import { Match } from "effect";
 
@@ -24,13 +24,6 @@ import {
 } from "../character-battle-resources.ts";
 
 import { CombatantId } from "../identity.ts";
-
-import {
-  type ReactionReductionResourceDie,
-  type ReactionReductionResourceSpend,
-  type ReactionRollOrDamageReductionProfile,
-  type SupportedUnitFeatureProfile,
-} from "../unit-feature-support.ts";
 
 import { combatantCanSee } from "./creature-state-leaves.ts";
 
@@ -43,8 +36,9 @@ import { combatantProficiencyBonus } from "./movement-speed.ts";
 import { battleAttackHostParticipantId } from "./attack-damage-events.ts";
 import {
   CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
-  characterUnitProcedureId,
-  characterUnitProcedureRef,
+  characterUnitProcedure,
+  type CharacterUnitProcedureSource,
+  type UnitFeatureProcedureExecution,
 } from "../character-execution.ts";
 import type { BattleProcedureExecutionRef } from "../identity.ts";
 
@@ -65,10 +59,22 @@ import {
   REACTION_MODIFIER_ROLL_HOLE_INSTANCE,
   validateRolledDiceFillForDiceExpr,
 } from "../battle-reducer.ts";
+
+type ReactionRollOrDamageReductionExecution = Extract<
+  UnitFeatureProcedureExecution,
+  { readonly kind: "reactionRollOrDamageReduction" }
+>;
+type ReactionRollOrDamageReductionModifier =
+  ReactionRollOrDamageReductionExecution["modifiers"][number];
+type ReactionReductionDiceFacts = {
+  readonly dice: number;
+  readonly dieSize: DamageDieSize;
+  readonly flatModifier: number;
+};
 export function spendReactionModifierResource(
   state: BattleState,
   reactorId: CombatantId,
-  sourceUnitId: UnitRecord["id"],
+  source: CharacterUnitProcedureSource,
   choice: BattleReactionModifierChoice,
 ): BattleState {
   const reactor = state.combatants.get(reactorId);
@@ -86,8 +92,12 @@ export function spendReactionModifierResource(
       origin: {
         ...reactor.origin,
         resources: reactor.origin.resources.map((resource) =>
-          resource.unit.id ===
-            reactionModifierResourceUnitId(sourceUnitId, choice) &&
+          (choice.reduction.kind === "rolled" &&
+          "spends" in choice.reduction
+            ? resource.resourcePoolRef ===
+              choice.reduction.spends.resourcePoolRef
+            : source.kind === "resourcePool" &&
+              resource.resourcePoolRef === source.resourcePoolRef) &&
           resourceHasUsesRemaining(resource)
             ? spendCharacterResourceUse(resource)
             : resource,
@@ -97,33 +107,27 @@ export function spendReactionModifierResource(
   };
 }
 
-export function reactionModifierResourceUnitId(
-  sourceUnitId: UnitRecord["id"],
-  choice: BattleReactionModifierChoice,
-): UnitRecord["id"] {
-  return choice.reduction.kind === "rolled" && "spends" in choice.reduction
-    ? choice.reduction.spends.resourceUnitId
-    : sourceUnitId;
-}
-
 export function reactionModifierProcedureSource(
   state: BattleState,
   reactorId: CombatantId,
   procedureRef: BattleProcedureExecutionRef,
-): { readonly unitId: UnitRecord["id"]; readonly label: string } | undefined {
+):
+  | {
+      readonly source: CharacterUnitProcedureSource;
+      readonly execution: ReactionRollOrDamageReductionExecution;
+    }
+  | undefined {
   const reactor = state.combatants.get(reactorId);
   if (!isCharacterBattleCreatureState(reactor)) return undefined;
-  const unitId = characterUnitProcedureId(
+  const procedure = characterUnitProcedure(
     reactor.origin.execution,
     procedureRef,
     CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
   );
-  if (unitId === undefined) return undefined;
-  const profile =
-    reactor.origin.reactionRollOrDamageReductionProfiles.get(unitId);
-  return profile === undefined
-    ? undefined
-    : { unitId, label: profile.unit.name };
+  return procedure?.kind === "unitFeature" &&
+    procedure.execution.kind === "reactionRollOrDamageReduction"
+    ? { source: procedure.source, execution: procedure.execution }
+    : undefined;
 }
 
 export function rolledDiceFillTotal(
@@ -224,10 +228,7 @@ export function reactionModifierReductionTotal(
 }
 
 export function reactionReductionResourceDieRollTotal(input: {
-  readonly reduction: Pick<
-    ReactionReductionResourceDie,
-    "dice" | "dieSize" | "flatModifier"
-  >;
+  readonly reduction: ReactionReductionDiceFacts;
   readonly rollTotal: number;
 }):
   | { readonly tag: "ok"; readonly value: number }
@@ -251,10 +252,7 @@ export function reactionReductionResourceDieRollTotal(input: {
 }
 
 export function reactionReductionResourceDieLabel(
-  reduction: Pick<
-    ReactionReductionResourceDie,
-    "dice" | "dieSize" | "flatModifier"
-  >,
+  reduction: ReactionReductionDiceFacts,
 ): string {
   return `${reduction.dice}d${reduction.dieSize}${signedModifier(reduction.flatModifier)}`;
 }
@@ -283,26 +281,26 @@ export function reactionRollOrDamageReductionChoices(
     ) {
       return [];
     }
-    return [
-      ...reactor.origin.reactionRollOrDamageReductionProfiles.values(),
-    ].flatMap((profile) => {
-      const procedureRef = characterUnitProcedureRef(
-        reactor.origin.execution,
-        profile.unit.id,
-        CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
+    return reactor.origin.execution.procedureBindings.flatMap((binding) => {
+      const procedure = binding.procedure;
+      if (
+        procedure.kind !== "unitFeature" ||
+        procedure.execution.kind !== "reactionRollOrDamageReduction"
+      ) {
+        return [];
+      }
+      const execution = procedure.execution;
+      return execution.modifiers.flatMap((modifier) =>
+        reactionRollOrDamageReductionChoiceForProfile(
+          state,
+          frame,
+          reactorId,
+          binding.procedureRef,
+          procedure.source,
+          execution,
+          modifier,
+        ),
       );
-      return procedureRef === undefined
-        ? []
-        : profile.modifiers.flatMap((modifier) =>
-            reactionRollOrDamageReductionChoiceForProfile(
-              state,
-              frame,
-              reactorId,
-              procedureRef,
-              profile,
-              modifier,
-            ),
-          );
     });
   });
 }
@@ -312,13 +310,11 @@ export function reactionRollOrDamageReductionChoiceForProfile(
   frame: BattleInterruptCheckpointInput,
   reactorId: CombatantId,
   procedureRef: BattleProcedureExecutionRef,
-  profile: Extract<
-    SupportedUnitFeatureProfile,
-    { readonly kind: "reactionRollOrDamageReduction" }
-  >,
-  modifier: ReactionRollOrDamageReductionProfile,
+  source: CharacterUnitProcedureSource,
+  execution: ReactionRollOrDamageReductionExecution,
+  modifier: ReactionRollOrDamageReductionModifier,
 ): readonly BattleInterruptProcedureChoice[] {
-  if (!reactionModifierResourceAvailable(state, reactorId, profile, modifier)) {
+  if (!reactionModifierResourceAvailable(state, reactorId, source, modifier)) {
     return [];
   }
   if (
@@ -336,18 +332,13 @@ export function reactionRollOrDamageReductionChoiceForProfile(
   ) {
     if (modifier.kind === "attackDamageReduction") {
       const reactor = state.combatants.get(reactorId);
-      if (
-        reactor?.origin.kind !== "character" ||
-        profile.unit.kind !== "class_feature"
-      ) {
+      if (!isCharacterBattleCreatureState(reactor)) {
         return [];
       }
-      const characterReactor = reactor as BattleCreatureState & {
-        readonly origin: Extract<
-          BattleCreatureState["origin"],
-          { readonly kind: "character" }
-        >;
-      };
+      const zeroDamageRedirect =
+        "zeroDamageRedirect" in modifier
+          ? modifier.zeroDamageRedirect
+          : undefined;
       return [
         {
           kind: "reactionRollOrDamageReduction",
@@ -355,7 +346,6 @@ export function reactionRollOrDamageReductionChoiceForProfile(
           choice: {
             kind: "attackDamageReduction",
             procedureRef,
-            label: profile.unit.name,
             reduction:
               modifier.reduction.kind === "halfDamage"
                 ? { kind: "halfDamage" }
@@ -363,30 +353,30 @@ export function reactionRollOrDamageReductionChoiceForProfile(
                     kind: "rolled",
                     flatModifier:
                       Number(
-                        characterAbilityModifier(characterReactor, "dex"),
-                      ) + Number(profile.classLevel),
+                        characterAbilityModifier(reactor, "dex"),
+                      ) + Number(execution.classLevel),
                     dieSize: modifier.reduction.dieSize,
                   },
-            ...(modifier.zeroDamageRedirect === undefined
+            ...(zeroDamageRedirect === undefined
               ? {}
               : {
                   zeroDamageRedirect: {
-                    spends: modifier.zeroDamageRedirect.spends,
-                    saveAbility: modifier.zeroDamageRedirect.save.ability,
+                    spends: zeroDamageRedirect.spends,
+                    saveAbility: zeroDamageRedirect.save.ability,
                     saveDc: abilityProficiencyDifficultyClass(
-                      characterReactor,
-                      modifier.zeroDamageRedirect.save.dc,
+                      reactor,
+                      zeroDamageRedirect.save.dc,
                     ),
-                    damageDice: modifier.zeroDamageRedirect.damage.dice,
+                    damageDice: zeroDamageRedirect.damage.dice,
                     damageAbilityModifier: characterAbilityModifier(
-                      characterReactor,
-                      modifier.zeroDamageRedirect.damage.ability,
+                      reactor,
+                      zeroDamageRedirect.damage.ability,
                     ),
                     attackKind: frame.attackKind,
-                    targetGate: modifier.zeroDamageRedirect.targetGate,
+                    targetGate: zeroDamageRedirect.targetGate,
                     originalDamageType: attackDamageReductionOriginalDamageType(
                       frame.damageTypes,
-                      modifier.zeroDamageRedirect.damage.damageType,
+                      zeroDamageRedirect.damage.damageType,
                     ),
                   },
                 }),
@@ -394,7 +384,7 @@ export function reactionRollOrDamageReductionChoiceForProfile(
           initialHoles:
             modifier.reduction.kind === "halfDamage"
               ? []
-              : [reactionModifierRollHole(profile, "attackDamageReduction")],
+              : [reactionModifierRollHole("attackDamageReduction")],
         },
       ];
     }
@@ -405,7 +395,6 @@ export function reactionRollOrDamageReductionChoiceForProfile(
         choice: {
           kind: "attackRollReduction",
           procedureRef,
-          label: profile.unit.name,
           reduction: {
             kind: "rolled",
             dice: modifier.reduction.dice,
@@ -415,7 +404,7 @@ export function reactionRollOrDamageReductionChoiceForProfile(
           },
         },
         initialHoles: [
-          reactionModifierRollHole(profile, "attackRollReduction"),
+          reactionModifierRollHole("attackRollReduction"),
         ],
       },
     ];
@@ -425,7 +414,8 @@ export function reactionRollOrDamageReductionChoiceForProfile(
       return reactionRollOrDamageReductionFallChoiceForProfile(
         frame,
         reactorId,
-        profile,
+        source,
+        execution,
         procedureRef,
         modifier,
       );
@@ -448,7 +438,6 @@ export function reactionRollOrDamageReductionChoiceForProfile(
         choice: {
           kind: "damageRollReduction",
           procedureRef,
-          label: profile.unit.name,
           reduction: {
             kind: "rolled",
             dice: modifier.reduction.dice,
@@ -458,7 +447,7 @@ export function reactionRollOrDamageReductionChoiceForProfile(
           },
         },
         initialHoles: [
-          reactionModifierRollHole(profile, "damageRollReduction"),
+          reactionModifierRollHole("damageRollReduction"),
         ],
       },
     ];
@@ -472,12 +461,10 @@ function reactionRollOrDamageReductionFallChoiceForProfile(
     { readonly trigger: "creatureFalls" }
   >,
   reactorId: CombatantId,
-  profile: Extract<
-    SupportedUnitFeatureProfile,
-    { readonly kind: "reactionRollOrDamageReduction" }
-  >,
+  _source: CharacterUnitProcedureSource,
+  execution: ReactionRollOrDamageReductionExecution,
   procedureRef: BattleProcedureExecutionRef,
-  modifier: ReactionRollOrDamageReductionProfile,
+  modifier: ReactionRollOrDamageReductionModifier,
 ): readonly BattleInterruptProcedureChoice[] {
   if (
     modifier.kind !== "fallDamageReduction" ||
@@ -492,11 +479,10 @@ function reactionRollOrDamageReductionFallChoiceForProfile(
       choice: {
         kind: "fallDamageReduction",
         procedureRef,
-        label: profile.unit.name,
         reduction: {
           kind: "flat",
           amount: toDamageAmount(
-            Number(profile.classLevel) * modifier.reduction.multiplier,
+            Number(execution.classLevel) * modifier.reduction.multiplier,
           ),
         },
       },
@@ -506,17 +492,13 @@ function reactionRollOrDamageReductionFallChoiceForProfile(
 }
 
 export function reactionModifierRollHole(
-  profile: Extract<
-    SupportedUnitFeatureProfile,
-    { readonly kind: "reactionRollOrDamageReduction" }
-  >,
   _modifierKind: BattleReactionModifierChoice["kind"],
 ): BattleHole {
   return {
     kind: "rolledDice",
     holeId: REACTION_MODIFIER_ROLL_HOLE_ID,
     holeInstanceKey: REACTION_MODIFIER_ROLL_HOLE_INSTANCE,
-    label: `${profile.unit.name} reduction roll`,
+    label: "Reaction modifier reduction roll",
   };
 }
 
@@ -573,14 +555,12 @@ export function attackDamageReductionOriginalDamageType(
 export function reactionModifierResourceAvailable(
   state: BattleState,
   reactorId: CombatantId,
-  profile: Extract<
-    SupportedUnitFeatureProfile,
-    { readonly kind: "reactionRollOrDamageReduction" }
-  >,
-  modifier: ReactionRollOrDamageReductionProfile,
+  source: CharacterUnitProcedureSource,
+  modifier: ReactionRollOrDamageReductionModifier,
 ): boolean {
   if (
     modifier.kind === "attackDamageReduction" &&
+    "zeroDamageRedirect" in modifier &&
     modifier.zeroDamageRedirect !== undefined
   ) {
     return true;
@@ -590,18 +570,26 @@ export function reactionModifierResourceAvailable(
   const resourceSpend = reactionModifierResourceSpend(modifier);
   if (resourceSpend !== null) {
     const resource = reactor.origin.resources.find(
-      (candidate) => candidate.unit.id === resourceSpend.resourceUnitId,
+      (candidate) =>
+        candidate.resourcePoolRef === resourceSpend.resourcePoolRef,
     );
     return resource !== undefined && resourceHasUsesRemaining(resource);
   }
-  const resource = reactor.origin.resources.find(
-    (candidate) => candidate.unit.id === profile.unit.id,
-  );
+  const resource =
+    source.kind === "resourcePool"
+      ? reactor.origin.resources.find(
+          (candidate) =>
+            candidate.resourcePoolRef === source.resourcePoolRef,
+        )
+      : undefined;
   return resource === undefined || resourceHasUsesRemaining(resource);
 }
 
 export function reactionModifierResourceSpend(
-  modifier: ReactionRollOrDamageReductionProfile,
-): ReactionReductionResourceSpend | null {
+  modifier: ReactionRollOrDamageReductionModifier,
+): Extract<
+  ReactionRollOrDamageReductionModifier["reduction"],
+  { readonly spends: unknown }
+>["spends"] | null {
   return "spends" in modifier.reduction ? modifier.reduction.spends : null;
 }

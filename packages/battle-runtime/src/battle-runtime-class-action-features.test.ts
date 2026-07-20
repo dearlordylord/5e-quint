@@ -3,8 +3,8 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L19D-01-BRUTAL-STRIKE-RECKLESS-DAMAGE barbarian_brutal_strike
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L19D-02-BRUTAL-STRIKE-FORCEFUL-BLOW barbarian_brutal_strike
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L19D-03-BRUTAL-STRIKE-HAMSTRING barbarian_brutal_strike
+import { classLevel } from "@dnd/shared/types";
 import {
-  admitCharacterProcedureSelectionSubject,
   battleActUnitPresentation,
   battleActSpellPresentation,
 } from "./battle-act-composition.ts";
@@ -13,6 +13,7 @@ import {
   testBattleCreatureStateWithConditions,
   requireResolved,
   fighterAttackSubject,
+  attackExecutionSelectionForSubjectForTest,
   goblinAttackSubject,
   attackInitialTargetHole,
   attackRollHoleAfterTarget,
@@ -52,7 +53,9 @@ import {
   battleId,
   cantripSpellInvocationRef,
   characterBattleResourceUsage,
+  characterBattleFeatureInitForTest,
   difficultyClass,
+  discoverBattleActCandidates,
   discoverBattleActs,
   endTurn,
   movementFeet,
@@ -63,13 +66,14 @@ import {
   resourceCount,
   spellSaveDcForCaster,
   startBattle,
+  startBattleSessionRight,
 } from "./battle-runtime-test-support.ts";
 import { BRUTAL_STRIKE_SUPPORT_PROFILE } from "./unit-feature-support.ts";
 import type {
-  BattleActDiscoverySubject,
   BattleState,
-  BattleActDiscoverySubject as BattleSubject,
+  BattleSubject,
 } from "./battle-runtime-test-support.ts";
+import type { BattleRuntimeSession } from "./index.ts";
 import { describe, expect, test } from "vitest";
 import {
   battleProcedureExecutionRefForTest,
@@ -77,19 +81,75 @@ import {
   requireCharacterUnitProcedureRefForTest,
 } from "./battle-runtime-test-support.ts";
 
+function requireRecklessAttackProcedureRef(state: BattleState) {
+  const actor = state.combatants.get(fighterId);
+  if (actor?.origin.kind !== "character") {
+    throw new Error("Expected the fighter fixture to be a character.");
+  }
+  const binding = actor.origin.execution.procedureBindings.find(
+    (candidate) =>
+      candidate.procedure.kind === "unitFeature" &&
+      candidate.procedure.execution.kind === "ongoingFeature" &&
+      candidate.procedure.execution.activationTrigger === "firstAttackRoll" &&
+      candidate.procedure.execution.spendsUse === false &&
+      candidate.procedure.execution.rollModifiers.some(
+        (modifier) =>
+          modifier.mode === "advantage" &&
+          modifier.affects === "selfRoll" &&
+          modifier.on === "attackRoll" &&
+          modifier.abilityFilter?.length === 1 &&
+          modifier.abilityFilter[0] === "str",
+      ) &&
+      candidate.procedure.execution.rollModifiers.some(
+        (modifier) =>
+          modifier.mode === "advantage" &&
+          modifier.affects === "rollsAgainstSelf" &&
+          modifier.on === "attackRoll",
+      ),
+  );
+  if (binding === undefined) {
+    throw new Error("Expected the Reckless Attack mechanical procedure.");
+  }
+  return binding.procedureRef;
+}
+
+function requireOwnedCharacterResource(
+  session: BattleRuntimeSession,
+  unitId: string,
+) {
+  const ownership = session.context.characters
+    .get(fighterId)
+    ?.resourceOwnership.find((candidate) => candidate.unit.id === unitId);
+  if (ownership === undefined) {
+    throw new Error(`Expected resource ownership for ${unitId}.`);
+  }
+  const actor = session.state.combatants.get(fighterId);
+  if (actor?.origin.kind !== "character") {
+    throw new Error("Expected the fighter fixture to be a character.");
+  }
+  const resource = actor.origin.resources.find(
+    (candidate) => candidate.resourcePoolRef === ownership.resourcePoolRef,
+  );
+  if (resource === undefined) {
+    throw new Error(`Expected runtime resource pool for ${unitId}.`);
+  }
+  return resource;
+}
+
 describe("battle runtime: class action features", () => {
   test("Action Surge grants one additional non-Magic action and cannot be used twice in one turn", () => {
+    const session = startBattleSessionRight({
+      battleId: battleId("battle-action-surge"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          resources: [actionSurgeResource()],
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
     const state = {
-      ...startBattleRight({
-        battleId: battleId("battle-action-surge"),
-        combatants: [
-          characterSeed({
-            initiative: 20,
-            resources: [actionSurgeResource()],
-          }),
-          statBlockCreatureInit({ initiative: 10 }),
-        ],
-      }),
+      ...session.state,
       currentTurnResources: {
         actionResources: [],
         currentHasBonusAction: true,
@@ -114,12 +174,14 @@ describe("battle runtime: class action features", () => {
       },
     } satisfies BattleState;
 
-    expect(discoverBattleActs(state).map((act) => act.subject)).toEqual([
+    expect(
+      discoverBattleActCandidates(state).map((act) => act.subject),
+    ).toEqual([
       expect.objectContaining({
         tag: "unitFeature",
         actorId: fighterId,
         procedureRef: requireCharacterUnitProcedureRefForTest(
-          state,
+          session,
           fighterId,
           "fighter_action_surge",
         ),
@@ -134,7 +196,7 @@ describe("battle runtime: class action features", () => {
         tag: "unitFeature",
         actorId: fighterId,
         procedureRef: requireCharacterUnitProcedureRefForTest(
-          state,
+          session,
           fighterId,
           "fighter_action_surge",
         ),
@@ -152,7 +214,7 @@ describe("battle runtime: class action features", () => {
               source: "unit",
               sourceOwnerId: fighterId,
               sourceProcedureRef: requireCharacterUnitProcedureRefForTest(
-                state,
+                session,
                 fighterId,
                 "fighter_action_surge",
               ),
@@ -198,7 +260,7 @@ describe("battle runtime: class action features", () => {
           tag: "unitFeature",
           actorId: fighterId,
           procedureRef: requireCharacterUnitProcedureRefForTest(
-            state,
+            session,
             fighterId,
             "fighter_action_surge",
           ),
@@ -210,29 +272,36 @@ describe("battle runtime: class action features", () => {
     const afterFighter = requireResolved(
       endTurn({ state: surged.state, actorId: fighterId }),
     );
-    expect(afterFighter.state.combatants.get(fighterId)?.origin).toMatchObject({
-      resources: [expect.objectContaining({ usedThisTurn: true })],
-    });
+    expect(
+      requireOwnedCharacterResource(
+        { ...session, state: afterFighter.state },
+        "fighter_action_surge",
+      ),
+    ).toEqual(expect.objectContaining({ usedThisTurn: true }));
 
     const afterGoblin = requireResolved(
       endTurn({ state: afterFighter.state, actorId: goblinId }),
     );
-    expect(afterGoblin.state.combatants.get(fighterId)?.origin).toMatchObject({
-      resources: [expect.objectContaining({ usedThisTurn: false })],
-    });
+    expect(
+      requireOwnedCharacterResource(
+        { ...session, state: afterGoblin.state },
+        "fighter_action_surge",
+      ),
+    ).toEqual(expect.objectContaining({ usedThisTurn: false }));
 
+    const zeroHpActorSession = startBattleSessionRight({
+      battleId: battleId("battle-action-surge-atZeroHitPoints-actor"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          currentHp: 0,
+          resources: [actionSurgeResource()],
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
     const zeroHpActorState = {
-      ...startBattleRight({
-        battleId: battleId("battle-action-surge-atZeroHitPoints-actor"),
-        combatants: [
-          characterSeed({
-            initiative: 20,
-            currentHp: 0,
-            resources: [actionSurgeResource()],
-          }),
-          statBlockCreatureInit({ initiative: 10 }),
-        ],
-      }),
+      ...zeroHpActorSession.state,
       currentTurnResources: {
         actionResources: [],
         currentHasBonusAction: true,
@@ -263,7 +332,7 @@ describe("battle runtime: class action features", () => {
           tag: "unitFeature",
           actorId: fighterId,
           procedureRef: requireCharacterUnitProcedureRefForTest(
-            zeroHpActorState,
+            zeroHpActorSession,
             fighterId,
             "fighter_action_surge",
           ),
@@ -313,21 +382,21 @@ describe("battle runtime: class action features", () => {
       },
     } satisfies BattleState;
 
-    expect(discoverBattleActs(state).map((act) => act.subject)).toEqual([
+    expect(
+      discoverBattleActCandidates(state).map((act) => act.subject),
+    ).toEqual([
       { tag: "runtimeCommand", actorId: fighterId, command: "move" },
       { tag: "runtimeCommand", actorId: fighterId, command: "endTurn" },
     ]);
     expect(
-      admitCharacterProcedureSelectionSubject(state, {
-        tag: "unitFeature",
-        actorId: fighterId,
-        unitId: "fighter_action_surge",
-      }),
-    ).toBeUndefined();
+      discoverBattleActCandidates(state).some(
+        (act) => act.subject.tag === "unitFeature",
+      ),
+    ).toBe(false);
   });
 
   test("Second Wind spends a Bonus Action and feature use to heal through the HP boundary", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-second-wind"),
       combatants: [
         characterSeed({
@@ -340,7 +409,7 @@ describe("battle runtime: class action features", () => {
       ],
     });
 
-    const secondWindAct = discoverBattleActs(state).find(
+    const secondWindAct = discoverBattleActs(session).find(
       (act) =>
         act.subject.tag === "unitFeature" &&
         battleActUnitPresentation(act)?.unitId === "fighter_second_wind",
@@ -350,22 +419,20 @@ describe("battle runtime: class action features", () => {
         tag: "unitFeature",
         actorId: fighterId,
         procedureRef: requireCharacterUnitProcedureRefForTest(
-          state,
+          session,
           fighterId,
           "fighter_second_wind",
         ),
       },
       label: "Second Wind",
-      initialHoles: [
-        { kind: "rolledDice", label: "Second Wind healing (1d10)" },
-      ],
+      initialHoles: [{ kind: "rolledDice", label: "Self-healing (1d10)" }],
     });
 
     if (secondWindAct === undefined) {
       throw new Error("Expected Second Wind act.");
     }
     const result = resolveBattleSubject({
-      state,
+      state: session.state,
       subject: secondWindAct.subject,
       fills: [
         damageRollFill(findHole(secondWindAct.initialHoles, "rolledDice"), 8),
@@ -390,16 +457,14 @@ describe("battle runtime: class action features", () => {
     if (result.tag !== "resolved") {
       throw new Error(`Expected resolved Second Wind, got ${result.tag}.`);
     }
-    expect(result.state.combatants.get(fighterId)?.origin).toMatchObject({
-      resources: [
-        expect.objectContaining({
-          unit: expect.objectContaining({ id: "fighter_second_wind" }),
-          usesRemaining: 1,
-        }),
-      ],
-    });
     expect(
-      discoverBattleActs(result.state).some(
+      requireOwnedCharacterResource(
+        { ...session, state: result.state },
+        "fighter_second_wind",
+      ),
+    ).toEqual(expect.objectContaining({ usesRemaining: 1 }));
+    expect(
+      discoverBattleActs({ ...session, state: result.state }).some(
         (act) =>
           act.subject.tag === "unitFeature" &&
           battleActUnitPresentation(act)?.unitId === "fighter_second_wind",
@@ -408,18 +473,19 @@ describe("battle runtime: class action features", () => {
   });
 
   test("Second Wind is rejected without action capacity, resource uses, or the supported Unit shape", () => {
+    const noBonusActionSession = startBattleSessionRight({
+      battleId: battleId("battle-second-wind-no-bonus-action"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          currentHp: 4,
+          resources: [resource()],
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
     const noBonusActionState = {
-      ...startBattleRight({
-        battleId: battleId("battle-second-wind-no-bonus-action"),
-        combatants: [
-          characterSeed({
-            initiative: 20,
-            currentHp: 4,
-            resources: [resource()],
-          }),
-          statBlockCreatureInit({ initiative: 10 }),
-        ],
-      }),
+      ...noBonusActionSession.state,
       currentTurnResources: {
         actionResources: [{ kind: "action", source: "turn" }],
         currentHasBonusAction: false,
@@ -450,7 +516,7 @@ describe("battle runtime: class action features", () => {
           tag: "unitFeature",
           actorId: fighterId,
           procedureRef: requireCharacterUnitProcedureRefForTest(
-            noBonusActionState,
+            noBonusActionSession,
             fighterId,
             "fighter_second_wind",
           ),
@@ -470,7 +536,9 @@ describe("battle runtime: class action features", () => {
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
-    expect(discoverBattleActs(depletedState).map((act) => act.subject)).toEqual(
+    expect(
+      discoverBattleActCandidates(depletedState).map((act) => act.subject),
+    ).toEqual(
       expect.arrayContaining([
         fighterAttackSubject(depletedState, "Longsword"),
         { tag: "action", actorId: fighterId, action: "grapple" },
@@ -495,14 +563,12 @@ describe("battle runtime: class action features", () => {
       ],
     });
     expect(
-      admitCharacterProcedureSelectionSubject(unsupportedState, {
-        tag: "unitFeature",
-        actorId: fighterId,
-        unitId: "fighter_second_wind",
-      }),
-    ).toBeUndefined();
+      discoverBattleActCandidates(unsupportedState).some(
+        (act) => act.subject.tag === "unitFeature",
+      ),
+    ).toBe(false);
 
-    const zeroHpActorState = startBattleRight({
+    const zeroHpActorSession = startBattleSessionRight({
       battleId: battleId("battle-second-wind-atZeroHitPoints-actor"),
       combatants: [
         characterSeed({
@@ -513,6 +579,7 @@ describe("battle runtime: class action features", () => {
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
+    const zeroHpActorState = zeroHpActorSession.state;
     expect(
       resolveBattleSubject({
         state: zeroHpActorState,
@@ -520,7 +587,7 @@ describe("battle runtime: class action features", () => {
           tag: "unitFeature",
           actorId: fighterId,
           procedureRef: requireCharacterUnitProcedureRefForTest(
-            zeroHpActorState,
+            zeroHpActorSession,
             fighterId,
             "fighter_second_wind",
           ),
@@ -535,20 +602,25 @@ describe("battle runtime: class action features", () => {
     if (steadyAimUnit.kind !== "class_feature") {
       throw new Error("Expected Steady Aim class feature Unit.");
     }
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-rogue-steady-aim"),
       combatants: [
         characterSeed({
           initiative: 20,
           classLevels: [{ className: "rogue", level: 3 }],
-          unitFeatures: [{ unit: steadyAimUnit }],
+          unitFeatures: [
+            characterBattleFeatureInitForTest(steadyAimUnit, [
+              { className: "rogue", level: classLevel(3) },
+            ]),
+          ],
           characterUnitRefs: [supportedBattleUnitRef(steadyAimUnit)],
         }),
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
 
-    const act = discoverBattleActs(state).find(
+    const state = session.state;
+    const act = discoverBattleActs(session).find(
       (candidate) =>
         candidate.subject.tag === "unitFeature" &&
         battleActUnitPresentation(candidate)?.unitId === "rogue_steady_aim",
@@ -558,7 +630,7 @@ describe("battle runtime: class action features", () => {
         tag: "unitFeature",
         actorId: fighterId,
         procedureRef: requireCharacterUnitProcedureRefForTest(
-          state,
+          session,
           fighterId,
           "rogue_steady_aim",
         ),
@@ -570,7 +642,7 @@ describe("battle runtime: class action features", () => {
       throw new Error("Expected Steady Aim act.");
     }
     const steadyAimProcedureRef = requireCharacterUnitProcedureRefForTest(
-      state,
+      session,
       fighterId,
       "rogue_steady_aim",
     );
@@ -670,23 +742,28 @@ describe("battle runtime: class action features", () => {
     if (steadyAimUnit.kind !== "class_feature") {
       throw new Error("Expected Steady Aim class feature Unit.");
     }
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-rogue-steady-aim-reject"),
       combatants: [
         characterSeed({
           initiative: 20,
           classLevels: [{ className: "rogue", level: 3 }],
-          unitFeatures: [{ unit: steadyAimUnit }],
+          unitFeatures: [
+            characterBattleFeatureInitForTest(steadyAimUnit, [
+              { className: "rogue", level: classLevel(3) },
+            ]),
+          ],
           characterUnitRefs: [supportedBattleUnitRef(steadyAimUnit)],
         }),
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
+    const state = session.state;
     const subject: BattleSubject = {
       tag: "unitFeature",
       actorId: fighterId,
       procedureRef: requireCharacterUnitProcedureRefForTest(
-        state,
+        session,
         fighterId,
         "rogue_steady_aim",
       ),
@@ -703,7 +780,7 @@ describe("battle runtime: class action features", () => {
       }),
     } satisfies BattleState;
     expect(
-      discoverBattleActs(movedState).some(
+      discoverBattleActs({ ...session, state: movedState }).some(
         (candidate) =>
           candidate.subject.tag === "unitFeature" &&
           battleActUnitPresentation(candidate)?.unitId === "rogue_steady_aim",
@@ -735,7 +812,7 @@ describe("battle runtime: class action features", () => {
   });
 
   test("Rage enters a reusable ongoing feature and applies damage and Resistance riders", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-rage-ongoing-feature"),
       combatants: [
         characterSeed({
@@ -746,18 +823,19 @@ describe("battle runtime: class action features", () => {
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
+    const state = session.state;
     const rageSubject: BattleSubject = {
       tag: "unitFeature",
       actorId: fighterId,
       procedureRef: requireCharacterUnitProcedureRefForTest(
-        state,
+        session,
         fighterId,
         "barbarian_rage",
       ),
     };
-    expect(discoverBattleActs(state).map((act) => act.subject)).toEqual(
-      expect.arrayContaining([expect.objectContaining(rageSubject)]),
-    );
+    expect(
+      discoverBattleActCandidates(state).map((act) => act.subject),
+    ).toEqual(expect.arrayContaining([expect.objectContaining(rageSubject)]));
 
     const raging = resolveBattleSubject({
       state,
@@ -778,7 +856,10 @@ describe("battle runtime: class action features", () => {
         .activeOngoingFeatureOccurrences,
     ]).toEqual(
       expect.arrayContaining([
-        ["barbarian_rage", expect.objectContaining({ kind: "roundExtended" })],
+        [
+          rageSubject.procedureRef,
+          expect.objectContaining({ kind: "roundExtended" }),
+        ],
       ]),
     );
 
@@ -849,7 +930,7 @@ describe("battle runtime: class action features", () => {
   });
 
   test("Rage breaks Concentration and prevents spellcasting", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-rage-spellcasting-restriction"),
       combatants: [
         characterSeed({
@@ -864,6 +945,7 @@ describe("battle runtime: class action features", () => {
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
+    const state = session.state;
     const concentratingActor = state.combatants.get(fighterId);
     if (concentratingActor === undefined) {
       throw new Error("Expected barbarian caster.");
@@ -881,7 +963,7 @@ describe("battle runtime: class action features", () => {
       }),
     };
     const rayOfFrostProcedureRef = requireCharacterSpellProcedureRefForTest(
-      concentratingState,
+      { ...session, state: concentratingState },
       fighterId,
       cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
     );
@@ -889,7 +971,7 @@ describe("battle runtime: class action features", () => {
       tag: "unitFeature",
       actorId: fighterId,
       procedureRef: requireCharacterUnitProcedureRefForTest(
-        concentratingState,
+        { ...session, state: concentratingState },
         fighterId,
         "barbarian_rage",
       ),
@@ -903,7 +985,7 @@ describe("battle runtime: class action features", () => {
     );
     expect(raging.state.combatants.get(fighterId)?.concentration).toBeNull();
     expect(
-      discoverBattleActs(raging.state).map((act) => act.subject),
+      discoverBattleActCandidates(raging.state).map((act) => act.subject),
     ).not.toEqual(
       expect.arrayContaining([
         {
@@ -929,7 +1011,7 @@ describe("battle runtime: class action features", () => {
   });
 
   test("Rage breaking Concentration dissipates a held readied spell", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-rage-readied-spell-cleanup"),
       combatants: [
         characterSeed({
@@ -944,6 +1026,7 @@ describe("battle runtime: class action features", () => {
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
+    const state = session.state;
     const readied = requireResolved(
       resolveBattleSubject({
         state,
@@ -951,7 +1034,7 @@ describe("battle runtime: class action features", () => {
           tag: "actionSpell",
           actorId: fighterId,
           procedureRef: requireCharacterSpellProcedureRefForTest(
-            state,
+            session,
             fighterId,
             cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
           ),
@@ -968,7 +1051,7 @@ describe("battle runtime: class action features", () => {
           tag: "unitFeature",
           actorId: fighterId,
           procedureRef: requireCharacterUnitProcedureRefForTest(
-            state,
+            session,
             fighterId,
             "barbarian_rage",
           ),
@@ -981,7 +1064,7 @@ describe("battle runtime: class action features", () => {
   });
 
   test("Reckless Attack is unavailable after any earlier attack roll that turn", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-reckless-after-spell-attack"),
       combatants: [
         characterSeed({
@@ -998,17 +1081,18 @@ describe("battle runtime: class action features", () => {
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
+    const state = session.state;
     const spellSubject: BattleSubject = {
       tag: "actionSpell",
       actorId: fighterId,
       procedureRef: requireCharacterSpellProcedureRefForTest(
-        state,
+        session,
         fighterId,
         cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
       ),
       mode: { tag: "cast" },
     };
-    const spellAct = discoverBattleActs(state).find(
+    const spellAct = discoverBattleActs(session).find(
       (act) =>
         act.subject.tag === "actionSpell" &&
         act.subject.actorId === fighterId &&
@@ -1051,7 +1135,7 @@ describe("battle runtime: class action features", () => {
           tag: "unitFeature",
           actorId: fighterId,
           procedureRef: requireCharacterUnitProcedureRefForTest(
-            state,
+            session,
             fighterId,
             "fighter_action_surge",
           ),
@@ -1076,7 +1160,7 @@ describe("battle runtime: class action features", () => {
   });
 
   test("Rage Damage scales by Barbarian level", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-rage-damage-scaling"),
       combatants: [
         characterSeed({
@@ -1087,6 +1171,7 @@ describe("battle runtime: class action features", () => {
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
+    const state = session.state;
     const raging = requireResolved(
       resolveBattleSubject({
         state,
@@ -1094,7 +1179,7 @@ describe("battle runtime: class action features", () => {
           tag: "unitFeature",
           actorId: fighterId,
           procedureRef: requireCharacterUnitProcedureRefForTest(
-            state,
+            session,
             fighterId,
             "barbarian_rage",
           ),
@@ -1144,23 +1229,32 @@ describe("battle runtime: class action features", () => {
 
   test("Tactical Mind spends Second Wind only when a failed ability check becomes successful", () => {
     const tacticalMindUnit = unitLibrary.requireUnit("fighter_tactical_mind");
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-tactical-mind-converted-success"),
       combatants: [
         characterSeed({
           initiative: 20,
           classLevel: 2,
           resources: [resource({ usesRemaining: 2 })],
-          unitFeatures: [{ unit: tacticalMindUnit }],
+          unitFeatures: [
+            characterBattleFeatureInitForTest(tacticalMindUnit, [
+              { className: "fighter", level: classLevel(2) },
+            ]),
+          ],
           characterUnitRefs: [supportedBattleUnitRef(tacticalMindUnit)],
         }),
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
+    const tacticalMindProcedureRef = requireCharacterUnitProcedureRefForTest(
+      session,
+      fighterId,
+      tacticalMindUnit.id,
+    );
 
     const converted = resolveFailedAbilityCheckResourceBoost({
-      state,
-      unitId: tacticalMindUnit.id,
+      state: session.state,
+      procedureRef: tacticalMindProcedureRef,
       abilityCheck: {
         actorId: fighterId,
         ability: "int",
@@ -1186,18 +1280,16 @@ describe("battle runtime: class action features", () => {
     if (converted.tag !== "resolved") {
       throw new Error(`Expected resolved Tactical Mind, got ${converted.tag}.`);
     }
-    expect(converted.state.combatants.get(fighterId)?.origin).toMatchObject({
-      resources: [
-        expect.objectContaining({
-          unit: expect.objectContaining({ id: "fighter_second_wind" }),
-          usesRemaining: 1,
-        }),
-      ],
-    });
+    expect(
+      requireOwnedCharacterResource(
+        { ...session, state: converted.state },
+        "fighter_second_wind",
+      ),
+    ).toEqual(expect.objectContaining({ usesRemaining: 1 }));
 
     const stillFailed = resolveFailedAbilityCheckResourceBoost({
-      state,
-      unitId: tacticalMindUnit.id,
+      state: session.state,
+      procedureRef: tacticalMindProcedureRef,
       abilityCheck: {
         actorId: fighterId,
         ability: "wis",
@@ -1219,35 +1311,43 @@ describe("battle runtime: class action features", () => {
         `Expected resolved Tactical Mind, got ${stillFailed.tag}.`,
       );
     }
-    expect(stillFailed.state.combatants.get(fighterId)?.origin).toMatchObject({
-      resources: [
-        expect.objectContaining({
-          unit: expect.objectContaining({ id: "fighter_second_wind" }),
-          usesRemaining: 2,
-        }),
-      ],
-    });
+    expect(
+      requireOwnedCharacterResource(
+        { ...session, state: stillFailed.state },
+        "fighter_second_wind",
+      ),
+    ).toEqual(expect.objectContaining({ usesRemaining: 2 }));
   });
 
   test("Tactical Mind rejects successful checks, depleted Second Wind, and unsupported Unit projection", () => {
     const tacticalMindUnit = unitLibrary.requireUnit("fighter_tactical_mind");
-    const baseState = startBattleRight({
+    const baseSession = startBattleSessionRight({
       battleId: battleId("battle-tactical-mind-invalid"),
       combatants: [
         characterSeed({
           initiative: 20,
           classLevel: 2,
           resources: [resource({ usesRemaining: 1 })],
-          unitFeatures: [{ unit: tacticalMindUnit }],
+          unitFeatures: [
+            characterBattleFeatureInitForTest(tacticalMindUnit, [
+              { className: "fighter", level: classLevel(2) },
+            ]),
+          ],
           characterUnitRefs: [supportedBattleUnitRef(tacticalMindUnit)],
         }),
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
+    const baseState = baseSession.state;
+    const tacticalMindProcedureRef = requireCharacterUnitProcedureRefForTest(
+      baseSession,
+      fighterId,
+      tacticalMindUnit.id,
+    );
     expect(
       resolveFailedAbilityCheckResourceBoost({
         state: baseState,
-        unitId: tacticalMindUnit.id,
+        procedureRef: tacticalMindProcedureRef,
         abilityCheck: {
           actorId: fighterId,
           ability: "str",
@@ -1258,23 +1358,32 @@ describe("battle runtime: class action features", () => {
       }),
     ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
 
-    const depletedState = startBattleRight({
+    const depletedSession = startBattleSessionRight({
       battleId: battleId("battle-tactical-mind-depleted"),
       combatants: [
         characterSeed({
           initiative: 20,
           classLevel: 2,
           resources: [resource({ usesRemaining: 0 })],
-          unitFeatures: [{ unit: tacticalMindUnit }],
+          unitFeatures: [
+            characterBattleFeatureInitForTest(tacticalMindUnit, [
+              { className: "fighter", level: classLevel(2) },
+            ]),
+          ],
           characterUnitRefs: [supportedBattleUnitRef(tacticalMindUnit)],
         }),
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
+    const depletedState = depletedSession.state;
     expect(
       resolveFailedAbilityCheckResourceBoost({
         state: depletedState,
-        unitId: tacticalMindUnit.id,
+        procedureRef: requireCharacterUnitProcedureRefForTest(
+          depletedSession,
+          fighterId,
+          tacticalMindUnit.id,
+        ),
         abilityCheck: {
           actorId: fighterId,
           ability: "dex",
@@ -1292,7 +1401,11 @@ describe("battle runtime: class action features", () => {
           initiative: 20,
           classLevel: 2,
           resources: [resource({ usesRemaining: 1 })],
-          unitFeatures: [{ unit: tacticalMindUnit }],
+          unitFeatures: [
+            characterBattleFeatureInitForTest(tacticalMindUnit, [
+              { className: "fighter", level: classLevel(2) },
+            ]),
+          ],
           characterUnitRefs: [],
         }),
         statBlockCreatureInit({ initiative: 10 }),
@@ -1301,7 +1414,7 @@ describe("battle runtime: class action features", () => {
     expect(
       resolveFailedAbilityCheckResourceBoost({
         state: unsupportedState,
-        unitId: tacticalMindUnit.id,
+        procedureRef: tacticalMindProcedureRef,
         abilityCheck: {
           actorId: fighterId,
           ability: "cha",
@@ -1314,7 +1427,7 @@ describe("battle runtime: class action features", () => {
   });
 
   test("Rage is unavailable in Heavy armor", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-rage-heavy-armor-gated"),
       combatants: [
         characterSeed({
@@ -1337,13 +1450,16 @@ describe("battle runtime: class action features", () => {
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
-    expect(discoverBattleActs(state).map((act) => act.subject)).not.toEqual(
+    const state = session.state;
+    expect(
+      discoverBattleActCandidates(state).map((act) => act.subject),
+    ).not.toEqual(
       expect.arrayContaining([
         {
           tag: "unitFeature",
           actorId: fighterId,
           procedureRef: requireCharacterUnitProcedureRefForTest(
-            state,
+            session,
             fighterId,
             "barbarian_rage",
           ),
@@ -1353,7 +1469,7 @@ describe("battle runtime: class action features", () => {
   });
 
   test("Rage extension spends a Bonus Action without spending another use", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-rage-bonus-action-extension"),
       combatants: [
         characterSeed({
@@ -1364,11 +1480,12 @@ describe("battle runtime: class action features", () => {
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
+    const state = session.state;
     const rageSubject: BattleSubject = {
       tag: "unitFeature",
       actorId: fighterId,
       procedureRef: requireCharacterUnitProcedureRefForTest(
-        state,
+        session,
         fighterId,
         "barbarian_rage",
       ),
@@ -1384,9 +1501,9 @@ describe("battle runtime: class action features", () => {
         actorId: goblinId,
       }),
     ).state;
-    expect(discoverBattleActs(nextRound).map((act) => act.subject)).toEqual(
-      expect.arrayContaining([expect.objectContaining(rageSubject)]),
-    );
+    expect(
+      discoverBattleActCandidates(nextRound).map((act) => act.subject),
+    ).toEqual(expect.arrayContaining([expect.objectContaining(rageSubject)]));
     const extended = requireResolved(
       resolveBattleSubject({
         state: nextRound,
@@ -1394,12 +1511,10 @@ describe("battle runtime: class action features", () => {
         fills: [],
       }),
     );
-    const barbarian = extended.state.combatants.get(fighterId);
-    expect(barbarian?.origin.kind).toBe("character");
-    if (barbarian?.origin.kind !== "character") {
-      throw new Error("Expected barbarian character.");
-    }
-    const rageState = barbarian.origin.resources[0];
+    const rageState = requireOwnedCharacterResource(
+      { ...session, state: extended.state },
+      "barbarian_rage",
+    );
     if (
       rageState === undefined ||
       characterBattleResourceUsage(rageState) !== "limited" ||
@@ -1412,7 +1527,7 @@ describe("battle runtime: class action features", () => {
   });
 
   test("Rage extends when Grapple forces an enemy saving throw", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-rage-grapple-saving-throw-extension"),
       combatants: [
         characterSeed({
@@ -1423,6 +1538,7 @@ describe("battle runtime: class action features", () => {
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
+    const state = session.state;
     const raging = requireResolved(
       resolveBattleSubject({
         state,
@@ -1430,7 +1546,7 @@ describe("battle runtime: class action features", () => {
           tag: "unitFeature",
           actorId: fighterId,
           procedureRef: requireCharacterUnitProcedureRefForTest(
-            state,
+            session,
             fighterId,
             "barbarian_rage",
           ),
@@ -1451,7 +1567,7 @@ describe("battle runtime: class action features", () => {
       actorId: fighterId,
       action: "grapple",
     };
-    const grappleAct = discoverBattleActs(nextFighterTurn).find(
+    const grappleAct = discoverBattleActCandidates(nextFighterTurn).find(
       (act) =>
         act.subject.tag === "action" &&
         act.subject.actorId === fighterId &&
@@ -1513,7 +1629,7 @@ describe("battle runtime: class action features", () => {
   });
 
   test("Rage attack-roll extension consumes the procedure enemy fact", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-rage-attack-roll-relationship-fact"),
       combatants: [
         characterSeed({
@@ -1524,13 +1640,18 @@ describe("battle runtime: class action features", () => {
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
+    const state = session.state;
     const raging = requireResolved(
       resolveBattleSubject({
         state,
         subject: {
           tag: "unitFeature",
           actorId: fighterId,
-          unitId: "barbarian_rage",
+          procedureRef: requireCharacterUnitProcedureRefForTest(
+            session,
+            fighterId,
+            "barbarian_rage",
+          ),
         },
         fills: [],
       }),
@@ -1612,7 +1733,7 @@ describe("battle runtime: class action features", () => {
   });
 
   test("Incapacitated combatants cannot activate or extend Rage", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-rage-incapacitated-action-gate"),
       combatants: [
         characterSeed({
@@ -1623,6 +1744,7 @@ describe("battle runtime: class action features", () => {
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
+    const state = session.state;
     const barbarian = state.combatants.get(fighterId);
     if (barbarian === undefined) {
       throw new Error("Expected barbarian combatant.");
@@ -1641,13 +1763,13 @@ describe("battle runtime: class action features", () => {
       tag: "unitFeature",
       actorId: fighterId,
       procedureRef: requireCharacterUnitProcedureRefForTest(
-        incapacitatedState,
+        { ...session, state: incapacitatedState },
         fighterId,
         "barbarian_rage",
       ),
     };
     expect(
-      discoverBattleActs(incapacitatedState).map((act) => act.subject),
+      discoverBattleActCandidates(incapacitatedState).map((act) => act.subject),
     ).not.toEqual(expect.arrayContaining([rageSubject]));
     expect(
       resolveBattleSubject({
@@ -1659,7 +1781,7 @@ describe("battle runtime: class action features", () => {
   });
 
   test("Persistent Rage uses ten-minute duration and Unconscious early end", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-persistent-rage"),
       combatants: [
         characterSeed({
@@ -1670,6 +1792,7 @@ describe("battle runtime: class action features", () => {
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
+    const state = session.state;
     const raging = requireResolved(
       resolveBattleSubject({
         state,
@@ -1677,7 +1800,7 @@ describe("battle runtime: class action features", () => {
           tag: "unitFeature",
           actorId: fighterId,
           procedureRef: requireCharacterUnitProcedureRefForTest(
-            state,
+            session,
             fighterId,
             "barbarian_rage",
           ),
@@ -1736,7 +1859,7 @@ describe("battle runtime: class action features", () => {
   });
 
   test("Innate Sorcery activation spends a Bonus Action and one Long Rest use for one minute", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-innate-sorcery"),
       combatants: [
         characterSeed({
@@ -1747,35 +1870,36 @@ describe("battle runtime: class action features", () => {
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
+    const state = session.state;
     const subject: BattleSubject = {
       tag: "unitFeature",
       actorId: fighterId,
       procedureRef: requireCharacterUnitProcedureRefForTest(
-        state,
+        session,
         fighterId,
         "sorcerer_innate_sorcery",
       ),
     };
 
-    expect(discoverBattleActs(state).map((act) => act.subject)).toEqual(
-      expect.arrayContaining([expect.objectContaining(subject)]),
-    );
+    expect(
+      discoverBattleActCandidates(state).map((act) => act.subject),
+    ).toEqual(expect.arrayContaining([expect.objectContaining(subject)]));
 
     const result = requireResolved(
       resolveBattleSubject({ state, subject, fills: [] }),
     );
     const sorcerer = result.state.combatants.get(fighterId);
-    const resource =
-      sorcerer?.origin.kind === "character"
-        ? sorcerer.origin.resources[0]
-        : undefined;
+    const resource = requireOwnedCharacterResource(
+      { ...session, state: result.state },
+      "sorcerer_innate_sorcery",
+    );
 
     expect(result.state.currentTurnResources.currentHasBonusAction).toBe(false);
     expect(resource).toMatchObject({ usesRemaining: resourceCount(1) });
     expect(sorcerer?.activeOngoingFeatureOccurrences).toEqual(
       new Map([
         [
-          "sorcerer_innate_sorcery",
+          subject.procedureRef,
           {
             kind: "fixedDuration",
             expiresAt: {
@@ -1790,12 +1914,7 @@ describe("battle runtime: class action features", () => {
   });
 
   test("Innate Sorcery rejects exhausted uses and non-Sorcerer ownership", () => {
-    const subject: BattleActDiscoverySubject = {
-      tag: "unitFeature",
-      actorId: fighterId,
-      unitId: "sorcerer_innate_sorcery",
-    };
-    const exhausted = startBattleRight({
+    const exhaustedSession = startBattleSessionRight({
       battleId: battleId("battle-innate-sorcery-exhausted"),
       combatants: [
         characterSeed({
@@ -1806,9 +1925,19 @@ describe("battle runtime: class action features", () => {
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
-    expect(discoverBattleActs(exhausted).map((act) => act.subject)).not.toEqual(
-      expect.arrayContaining([subject]),
-    );
+    const exhausted = exhaustedSession.state;
+    const subject: BattleSubject = {
+      tag: "unitFeature",
+      actorId: fighterId,
+      procedureRef: requireCharacterUnitProcedureRefForTest(
+        exhaustedSession,
+        fighterId,
+        "sorcerer_innate_sorcery",
+      ),
+    };
+    expect(
+      discoverBattleActCandidates(exhausted).map((act) => act.subject),
+    ).not.toEqual(expect.arrayContaining([subject]));
     expect(
       resolveBattleSubject({ state: exhausted, subject, fills: [] }),
     ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
@@ -1829,7 +1958,7 @@ describe("battle runtime: class action features", () => {
   });
 
   test("Innate Sorcery expires after its one-minute active duration", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-innate-sorcery-expiry"),
       combatants: [
         characterSeed({
@@ -1840,11 +1969,12 @@ describe("battle runtime: class action features", () => {
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
+    const state = session.state;
     const subject: BattleSubject = {
       tag: "unitFeature",
       actorId: fighterId,
       procedureRef: requireCharacterUnitProcedureRefForTest(
-        state,
+        session,
         fighterId,
         "sorcerer_innate_sorcery",
       ),
@@ -1871,7 +2001,7 @@ describe("battle runtime: class action features", () => {
   });
 
   test("Innate Sorcery projects +1 DC and spell attack Advantage for Sorcerer spells while active", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-innate-sorcery-spell-projection"),
       combatants: [
         characterSeed({
@@ -1892,6 +2022,7 @@ describe("battle runtime: class action features", () => {
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
+    const state = session.state;
     const activated = requireResolved(
       resolveBattleSubject({
         state,
@@ -1899,7 +2030,7 @@ describe("battle runtime: class action features", () => {
           tag: "unitFeature",
           actorId: fighterId,
           procedureRef: requireCharacterUnitProcedureRefForTest(
-            state,
+            session,
             fighterId,
             "sorcerer_innate_sorcery",
           ),
@@ -1914,7 +2045,7 @@ describe("battle runtime: class action features", () => {
       tag: "actionSpell",
       actorId: fighterId,
       procedureRef: requireCharacterSpellProcedureRefForTest(
-        state,
+        session,
         fighterId,
         cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
       ),
@@ -1969,7 +2100,7 @@ describe("battle runtime: class action features", () => {
   });
 
   test("Innate Sorcery does not project onto non-Sorcerer spell sources and stops after expiration", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-innate-sorcery-spell-source-gate"),
       combatants: [
         characterSeed({
@@ -1990,6 +2121,7 @@ describe("battle runtime: class action features", () => {
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
+    const state = session.state;
     const activated = requireResolved(
       resolveBattleSubject({
         state,
@@ -1997,7 +2129,7 @@ describe("battle runtime: class action features", () => {
           tag: "unitFeature",
           actorId: fighterId,
           procedureRef: requireCharacterUnitProcedureRefForTest(
-            state,
+            session,
             fighterId,
             "sorcerer_innate_sorcery",
           ),
@@ -2012,7 +2144,7 @@ describe("battle runtime: class action features", () => {
       tag: "actionSpell",
       actorId: fighterId,
       procedureRef: requireCharacterSpellProcedureRefForTest(
-        state,
+        session,
         fighterId,
         cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
       ),
@@ -2050,7 +2182,7 @@ describe("battle runtime: class action features", () => {
   });
 
   test("Rage early-end conditions remove the ongoing feature instead of hiding it", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-rage-early-end-removal"),
       combatants: [
         characterSeed({
@@ -2061,11 +2193,12 @@ describe("battle runtime: class action features", () => {
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
+    const state = session.state;
     const rageSubject: BattleSubject = {
       tag: "unitFeature",
       actorId: fighterId,
       procedureRef: requireCharacterUnitProcedureRefForTest(
-        state,
+        session,
         fighterId,
         "barbarian_rage",
       ),
@@ -2108,16 +2241,14 @@ describe("battle runtime: class action features", () => {
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
-    expect(discoverBattleActs(state).map((act) => act.subject)).not.toEqual(
+    expect(
+      discoverBattleActCandidates(state).map((act) => act.subject),
+    ).not.toEqual(
       expect.arrayContaining([
         {
           tag: "unitFeature",
           actorId: fighterId,
-          procedureRef: requireCharacterUnitProcedureRefForTest(
-            state,
-            fighterId,
-            "barbarian_reckless_attack",
-          ),
+          procedureRef: requireRecklessAttackProcedureRef(state),
         },
       ]),
     );
@@ -2128,7 +2259,7 @@ describe("battle runtime: class action features", () => {
     expect(roll).toMatchObject({
       ongoingFeatureActivations: [
         expect.objectContaining({
-          unitId: "barbarian_reckless_attack",
+          procedureRef: requireRecklessAttackProcedureRef(state),
           rollMode: "advantage",
         }),
       ],
@@ -2142,7 +2273,8 @@ describe("battle runtime: class action features", () => {
           total: 15,
           naturalD20: 10,
           rollMode: "advantage",
-          activatedOngoingFeatureUnitId: "barbarian_reckless_attack",
+          activatedOngoingFeatureProcedureRef:
+            requireRecklessAttackProcedureRef(state),
         }),
       ],
     });
@@ -2155,7 +2287,7 @@ describe("battle runtime: class action features", () => {
     ]).toEqual(
       expect.arrayContaining([
         [
-          "barbarian_reckless_attack",
+          requireRecklessAttackProcedureRef(state),
           expect.objectContaining({ kind: "turnBoundary" }),
         ],
       ]),
@@ -2170,13 +2302,14 @@ describe("battle runtime: class action features", () => {
             target,
             attackSubject.actorId,
             goblinId,
-            attackSubject.attackName,
+            attackExecutionSelectionForSubjectForTest(attackSubject),
           ),
           attackRollFill(roll, {
             total: 15,
             naturalD20: 10,
             rollMode: "advantage",
-            activatedOngoingFeatureUnitId: "barbarian_reckless_attack",
+            activatedOngoingFeatureProcedureRef:
+              requireRecklessAttackProcedureRef(state),
           }),
           damageRollFill(damage, 4),
         ],
@@ -2206,25 +2339,31 @@ describe("battle runtime: class action features", () => {
 
   test("Frenzy applies mandatory Rage Damage dice to the first Reckless Strength hit", () => {
     const frenzyUnit = unitLibrary.requireUnit("barbarian_frenzy");
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-barbarian-frenzy"),
       combatants: [
         characterSeed({
           initiative: 20,
           classLevels: [{ className: "barbarian", level: 3 }],
           resources: [rageResource()],
-          unitFeatures: [{ unit: frenzyUnit }, recklessAttackFeature()],
+          unitFeatures: [
+            characterBattleFeatureInitForTest(frenzyUnit, [
+              { className: "barbarian", level: classLevel(3) },
+            ]),
+            recklessAttackFeature(),
+          ],
           characterUnitRefs: [supportedBattleUnitRef(frenzyUnit)],
           unarmedStrike: testUnarmedStrikeDamageAttack(),
         }),
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
+    const state = session.state;
     const rageSubject: BattleSubject = {
       tag: "unitFeature",
       actorId: fighterId,
       procedureRef: requireCharacterUnitProcedureRefForTest(
-        state,
+        session,
         fighterId,
         "barbarian_rage",
       ),
@@ -2245,7 +2384,8 @@ describe("battle runtime: class action features", () => {
           total: 15,
           naturalD20: 10,
           rollMode: "advantage",
-          activatedOngoingFeatureUnitId: "barbarian_reckless_attack",
+          activatedOngoingFeatureProcedureRef:
+            requireRecklessAttackProcedureRef(state),
         }),
       ],
     });
@@ -2256,7 +2396,11 @@ describe("battle runtime: class action features", () => {
     expect(damage).toMatchObject({
       attackDamageRiders: [
         {
-          unitId: "barbarian_frenzy",
+          procedureRef: requireCharacterUnitProcedureRefForTest(
+            { ...session, state: raging },
+            fighterId,
+            frenzyUnit.id,
+          ),
           optional: false,
           damage: { dice: 2, dieSize: 6, damageType: "bludgeoning" },
         },
@@ -2272,7 +2416,8 @@ describe("battle runtime: class action features", () => {
           total: 15,
           naturalD20: 10,
           rollMode: "advantage",
-          activatedOngoingFeatureUnitId: "barbarian_reckless_attack",
+          activatedOngoingFeatureProcedureRef:
+            requireRecklessAttackProcedureRef(state),
         }),
         damageFill,
       ],
@@ -2288,7 +2433,8 @@ describe("battle runtime: class action features", () => {
             total: 15,
             naturalD20: 10,
             rollMode: "advantage",
-            activatedOngoingFeatureUnitId: "barbarian_reckless_attack",
+            activatedOngoingFeatureProcedureRef:
+              requireRecklessAttackProcedureRef(state),
           }),
           damageFill,
           attackDamageDispositionFill(disposition, { kind: "ordinaryDamage" }),
@@ -2297,13 +2443,22 @@ describe("battle runtime: class action features", () => {
     );
     expect(
       hit.state.currentTurnResources.attackDamageRidersUsedThisTurn,
-    ).toEqual([{ attackerId: fighterId, unitId: "barbarian_frenzy" }]);
+    ).toEqual([
+      {
+        attackerId: fighterId,
+        procedureRef: requireCharacterUnitProcedureRefForTest(
+          { ...session, state: raging },
+          fighterId,
+          frenzyUnit.id,
+        ),
+      },
+    ]);
   });
 
   test("Frenzy does not apply when Reckless Attack was used before Rage was active", () => {
     const frenzyUnit = unitLibrary.requireUnit("barbarian_frenzy");
     const extraAttackUnit = unitLibrary.requireUnit("fighter_extra_attack");
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-barbarian-frenzy-reckless-before-rage"),
       combatants: [
         characterSeed({
@@ -2313,7 +2468,13 @@ describe("battle runtime: class action features", () => {
             { className: "fighter", level: 5 },
           ],
           resources: [rageResource()],
-          unitFeatures: [{ unit: frenzyUnit }, recklessAttackFeature()],
+          unitFeatures: [
+            characterBattleFeatureInitForTest(frenzyUnit, [
+              { className: "barbarian", level: classLevel(3) },
+              { className: "fighter", level: classLevel(5) },
+            ]),
+            recklessAttackFeature(),
+          ],
           characterUnitRefs: [
             supportedBattleUnitRef(frenzyUnit),
             supportedBattleUnitRef(extraAttackUnit),
@@ -2323,6 +2484,7 @@ describe("battle runtime: class action features", () => {
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
+    const state = session.state;
 
     const attackSubject = fighterAttackSubject(state, "Unarmed Strike");
     const firstTarget = attackInitialTargetHole(state, attackSubject);
@@ -2341,7 +2503,8 @@ describe("battle runtime: class action features", () => {
             total: 1,
             naturalD20: 1,
             rollMode: "advantage",
-            activatedOngoingFeatureUnitId: "barbarian_reckless_attack",
+            activatedOngoingFeatureProcedureRef:
+              requireRecklessAttackProcedureRef(state),
           }),
         ],
       }),
@@ -2355,7 +2518,7 @@ describe("battle runtime: class action features", () => {
       tag: "unitFeature",
       actorId: fighterId,
       procedureRef: requireCharacterUnitProcedureRefForTest(
-        state,
+        session,
         fighterId,
         "barbarian_rage",
       ),
@@ -2395,7 +2558,13 @@ describe("battle runtime: class action features", () => {
     const damage = findHole(afterSecondHit.holes, "rolledDice");
     expect(damage).not.toMatchObject({
       attackDamageRiders: [
-        expect.objectContaining({ unitId: "barbarian_frenzy" }),
+        expect.objectContaining({
+          procedureRef: requireCharacterUnitProcedureRefForTest(
+            { ...session, state: ragingAfterRecklessMiss },
+            fighterId,
+            frenzyUnit.id,
+          ),
+        }),
       ],
     });
   });
@@ -2419,7 +2588,7 @@ describe("battle runtime: class action features", () => {
 
   test("Brutal Strike forgoes Reckless Advantage and adds same-type damage on a Strength hit", () => {
     const brutalStrikeUnit = unitLibrary.requireUnit("barbarian_brutal_strike");
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-barbarian-brutal-strike-damage"),
       combatants: [
         characterSeed({
@@ -2431,6 +2600,7 @@ describe("battle runtime: class action features", () => {
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
+    const state = session.state;
 
     const attackSubject = fighterAttackSubject(state);
     const target = attackInitialTargetHole(state, attackSubject);
@@ -2459,7 +2629,9 @@ describe("battle runtime: class action features", () => {
     );
     expect(roll).toMatchObject({
       ongoingFeatureActivations: [
-        expect.objectContaining({ unitId: "barbarian_reckless_attack" }),
+        expect.objectContaining({
+          procedureRef: requireRecklessAttackProcedureRef(state),
+        }),
       ],
     });
     expect(roll).not.toHaveProperty("rollMode");
@@ -2473,7 +2645,8 @@ describe("battle runtime: class action features", () => {
         attackRollFill(roll, {
           total: 15,
           naturalD20: 10,
-          activatedOngoingFeatureUnitId: "barbarian_reckless_attack",
+          activatedOngoingFeatureProcedureRef:
+            requireRecklessAttackProcedureRef(state),
         }),
       ],
     });
@@ -2484,7 +2657,11 @@ describe("battle runtime: class action features", () => {
     expect(damage).toMatchObject({
       attackDamageRiders: [
         {
-          unitId: "barbarian_brutal_strike",
+          procedureRef: requireCharacterUnitProcedureRefForTest(
+            session,
+            fighterId,
+            brutalStrikeUnit.id,
+          ),
           optional: false,
           damage: { dice: 1, dieSize: 10, damageType: "slashing" },
         },
@@ -2495,7 +2672,7 @@ describe("battle runtime: class action features", () => {
   test("Brutal Strike can forgo Reckless Advantage after Reckless Attack is already active", () => {
     const brutalStrikeUnit = unitLibrary.requireUnit("barbarian_brutal_strike");
     const extraAttackUnit = unitLibrary.requireUnit("barbarian_extra_attack");
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-barbarian-brutal-strike-active-reckless"),
       combatants: [
         characterSeed({
@@ -2510,6 +2687,7 @@ describe("battle runtime: class action features", () => {
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
+    const state = session.state;
 
     const attackSubject = fighterAttackSubject(state);
     const firstTarget = attackInitialTargetHole(state, attackSubject);
@@ -2543,7 +2721,8 @@ describe("battle runtime: class action features", () => {
             total: 1,
             naturalD20: 1,
             rollMode: "advantage",
-            activatedOngoingFeatureUnitId: "barbarian_reckless_attack",
+            activatedOngoingFeatureProcedureRef:
+              requireRecklessAttackProcedureRef(state),
           }),
         ],
       }),
@@ -2593,7 +2772,11 @@ describe("battle runtime: class action features", () => {
     expect(damage).toMatchObject({
       attackDamageRiders: [
         {
-          unitId: "barbarian_brutal_strike",
+          procedureRef: requireCharacterUnitProcedureRefForTest(
+            { ...session, state: afterRecklessMiss },
+            fighterId,
+            brutalStrikeUnit.id,
+          ),
           optional: false,
           damage: { dice: 1, dieSize: 10, damageType: "slashing" },
         },
@@ -2645,7 +2828,8 @@ describe("battle runtime: class action features", () => {
         attackRollFill(roll, {
           total: 15,
           naturalD20: 10,
-          activatedOngoingFeatureUnitId: "barbarian_reckless_attack",
+          activatedOngoingFeatureProcedureRef:
+            requireRecklessAttackProcedureRef(state),
         }),
       ],
     });
@@ -2663,7 +2847,8 @@ describe("battle runtime: class action features", () => {
           attackRollFill(roll, {
             total: 15,
             naturalD20: 10,
-            activatedOngoingFeatureUnitId: "barbarian_reckless_attack",
+            activatedOngoingFeatureProcedureRef:
+              requireRecklessAttackProcedureRef(state),
           }),
           damageRollFillWithGroups(damage, [[1], [1]]),
         ],
@@ -2687,7 +2872,7 @@ describe("battle runtime: class action features", () => {
 
   test("Brutal Strike Hamstring Blow reduces Speed until the Barbarian's next turn", () => {
     const brutalStrikeUnit = unitLibrary.requireUnit("barbarian_brutal_strike");
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-barbarian-brutal-strike-hamstring-blow"),
       combatants: [
         characterSeed({
@@ -2699,6 +2884,7 @@ describe("battle runtime: class action features", () => {
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
+    const state = session.state;
     const attackSubject = fighterAttackSubject(state);
     const target = attackInitialTargetHole(state, attackSubject);
     const decision = requireHole(
@@ -2729,7 +2915,8 @@ describe("battle runtime: class action features", () => {
         attackRollFill(roll, {
           total: 15,
           naturalD20: 10,
-          activatedOngoingFeatureUnitId: "barbarian_reckless_attack",
+          activatedOngoingFeatureProcedureRef:
+            requireRecklessAttackProcedureRef(state),
         }),
       ],
     });
@@ -2747,7 +2934,8 @@ describe("battle runtime: class action features", () => {
           attackRollFill(roll, {
             total: 15,
             naturalD20: 10,
-            activatedOngoingFeatureUnitId: "barbarian_reckless_attack",
+            activatedOngoingFeatureProcedureRef:
+              requireRecklessAttackProcedureRef(state),
           }),
           damageRollFillWithGroups(damage, [[1], [1]]),
         ],
@@ -2759,7 +2947,7 @@ describe("battle runtime: class action features", () => {
     ).toContainEqual({
       kind: "unitFeatureSpeedDelta",
       sourceProcedureRef: requireCharacterUnitProcedureRefForTest(
-        state,
+        session,
         fighterId,
         "barbarian_brutal_strike",
       ),
@@ -2787,11 +2975,7 @@ describe("battle runtime: class action features", () => {
         subject: {
           tag: "unitFeature",
           actorId: fighterId,
-          procedureRef: requireCharacterUnitProcedureRefForTest(
-            state,
-            fighterId,
-            "barbarian_reckless_attack",
-          ),
+          procedureRef: requireRecklessAttackProcedureRef(state),
         },
         fills: [],
       }),
@@ -2846,7 +3030,8 @@ describe("battle runtime: class action features", () => {
         attackRollFill(roll, {
           total: 15,
           naturalD20: 10,
-          activatedOngoingFeatureUnitId: "barbarian_reckless_attack",
+          activatedOngoingFeatureProcedureRef:
+            requireRecklessAttackProcedureRef(state),
         }),
       ],
     });
@@ -2863,12 +3048,13 @@ describe("battle runtime: class action features", () => {
             target,
             attackSubject.actorId,
             goblinId,
-            attackSubject.attackName,
+            attackExecutionSelectionForSubjectForTest(attackSubject),
           ),
           attackRollFill(roll, {
             total: 15,
             naturalD20: 10,
-            activatedOngoingFeatureUnitId: "barbarian_reckless_attack",
+            activatedOngoingFeatureProcedureRef:
+              requireRecklessAttackProcedureRef(state),
           }),
           damageRollFill(damage, 4),
         ],
@@ -2918,7 +3104,8 @@ describe("battle runtime: class action features", () => {
           total: 15,
           naturalD20: 10,
           rollMode: "advantage",
-          activatedOngoingFeatureUnitId: "barbarian_reckless_attack",
+          activatedOngoingFeatureProcedureRef:
+            requireRecklessAttackProcedureRef(state),
         }),
       ],
     });

@@ -8,7 +8,7 @@ import { HEIGHTENED_METAMAGIC_EFFECT_KIND } from "./battle-reducer/metamagic.ts"
 import {
   battleId,
   characterSeed,
-  startBattleRight,
+  startBattleSessionRight,
   statBlockCreatureInit,
   wizardSpellcasting,
 } from "./battle-runtime-test-support.ts";
@@ -26,8 +26,9 @@ import {
 } from "./unit-profile-admission-creature-fixture-support.ts";
 import {
   type AvailableBattleAct,
+  type BattleRuntimeSession,
   type BattleState,
-  discoverBattleActs,
+  discoverBattleActCandidates,
 } from "./index.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
@@ -58,12 +59,12 @@ type ActionSpellAct = AvailableBattleAct & {
 describe("QMBT14 deterministic Grease ground hazard admission", () => {
   test("grease is admitted as a one-minute point-origin Cube ground hazard", () => {
     const spell = spellRecord(greaseUnitId);
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 1, count: 1 }],
     });
     const act = spellAct({
-      state,
+      session,
       spellId: greaseUnitId,
       slotLevel: 1,
     });
@@ -80,12 +81,12 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
     const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
     expect(savingThrow).toEqual(
       expect.objectContaining({
-        label: "Grease point-origin Cube Saving Throw outcomes",
+        label: "Spell point-origin Cube Saving Throw outcomes",
         ability: "dex",
         dc: { kind: "caster_spell_save_dc" },
       }),
     );
-    expect(spellHoleInvocation(state, [savingThrow])).toEqual(
+    expect(spellHoleInvocation(session, [savingThrow])).toEqual(
       expect.objectContaining({
         procedure: "greaseGroundHazard",
         spell,
@@ -105,11 +106,16 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
   });
   test("grease cast records the ground hazard and applies Prone on failed appearance saves", () => {
     const spell = spellRecord(greaseUnitId);
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 1, count: 1 }],
     });
-    const act = spellAct({ state, spellId: greaseUnitId, slotLevel: 1 });
+    const act = spellAct({
+      session,
+      spellId: greaseUnitId,
+      slotLevel: 1,
+    });
+    const state = session.state;
     const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
 
     const resolved = resolveBattleSubject({
@@ -155,7 +161,7 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
     const cast = castHeightenedGreaseWithSelectedTarget();
 
     const greaseEffect = requireCombatant(
-      cast,
+      cast.state,
       spellCasterId,
     ).activeEffects.find((effect) => effect.kind === "greaseGroundHazard");
 
@@ -172,11 +178,16 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
   });
   test("grease saving throw resolution rejects non-ground-area facts", () => {
     const spell = spellRecord(greaseUnitId);
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 1, count: 1 }],
     });
-    const act = spellAct({ state, spellId: greaseUnitId, slotLevel: 1 });
+    const act = spellAct({
+      session,
+      spellId: greaseUnitId,
+      slotLevel: 1,
+    });
+    const state = session.state;
     const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
 
     expect(
@@ -204,11 +215,16 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
   });
   test("grease entry saves are table-triggered through the active ground hazard", () => {
     const spell = spellRecord(greaseUnitId);
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 1, count: 1 }],
     });
-    const act = spellAct({ state, spellId: greaseUnitId, slotLevel: 1 });
+    const act = spellAct({
+      session,
+      spellId: greaseUnitId,
+      slotLevel: 1,
+    });
+    const state = session.state;
     const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
     const cast = resolveBattleSubject({
       state,
@@ -227,7 +243,7 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
     }
 
     const entryAct = greaseGroundHazardSaveAct(
-      targetTurn.state,
+      { state: targetTurn.state, context: session.context },
       spellTargetId,
       "entersArea",
     );
@@ -257,7 +273,8 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
     );
   });
   test("Heightened Grease entry saves project Disadvantage for the selected target", () => {
-    const cast = castHeightenedGreaseWithSelectedTarget();
+    const session = castHeightenedGreaseWithSelectedTarget();
+    const cast = session.state;
     const targetTurn = endTurn({
       state: cast,
       actorId: spellCasterId,
@@ -266,7 +283,7 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
       throw new Error("Expected Grease caster end turn to resolve.");
     }
     const selectedEntryAct = greaseGroundHazardSaveAct(
-      targetTurn.state,
+      { state: targetTurn.state, context: session.context },
       spellTargetId,
       "entersArea",
     );
@@ -306,11 +323,16 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
   });
   test("grease end-turn saves resolve at the End Turn boundary", () => {
     const spell = spellRecord(greaseUnitId);
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 1, count: 1 }],
     });
-    const act = spellAct({ state, spellId: greaseUnitId, slotLevel: 1 });
+    const act = spellAct({
+      session,
+      spellId: greaseUnitId,
+      slotLevel: 1,
+    });
+    const state = session.state;
     const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
     const cast = resolveBattleSubject({
       state,
@@ -329,7 +351,7 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
     }
 
     const endTurnAct = greaseGroundHazardEndTurnAct(
-      targetTurn.state,
+      { state: targetTurn.state, context: session.context },
       spellTargetId,
     );
     const endTurnSave = requireHole(
@@ -359,7 +381,8 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
     });
   });
   test("Heightened Grease end-turn saves project Disadvantage only for the selected target", () => {
-    const cast = castHeightenedGreaseWithSelectedTarget();
+    const session = castHeightenedGreaseWithSelectedTarget();
+    const cast = session.state;
     const targetTurn = endTurn({
       state: cast,
       actorId: spellCasterId,
@@ -369,7 +392,7 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
     }
 
     const endTurnAct = greaseGroundHazardEndTurnAct(
-      targetTurn.state,
+      { state: targetTurn.state, context: session.context },
       spellTargetId,
     );
     const endTurnSave = requireHole(
@@ -394,7 +417,7 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
     }
 
     const nonSelectedEndTurnAct = greaseGroundHazardEndTurnAct(
-      selectedTurnDone.state,
+      { state: selectedTurnDone.state, context: session.context },
       thunderwaveSecondTargetId,
     );
     const nonSelectedEndTurnSave = requireHole(
@@ -430,11 +453,16 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
   });
   test("grease end-turn save asks for End Turn holes before advancing", () => {
     const spell = spellRecord(greaseUnitId);
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 1, count: 1 }],
     });
-    const act = spellAct({ state, spellId: greaseUnitId, slotLevel: 1 });
+    const act = spellAct({
+      session,
+      spellId: greaseUnitId,
+      slotLevel: 1,
+    });
+    const state = session.state;
     const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
     const cast = resolveBattleSubject({
       state,
@@ -462,7 +490,7 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
       }),
     };
     const endTurnAct = greaseGroundHazardEndTurnAct(
-      stateWithZeroHpCaster,
+      { state: stateWithZeroHpCaster, context: session.context },
       spellTargetId,
     );
     const endTurnSave = requireHole(
@@ -486,9 +514,9 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
   });
 });
 
-function castHeightenedGreaseWithSelectedTarget(): BattleState {
+function castHeightenedGreaseWithSelectedTarget(): BattleRuntimeSession {
   const spell = spellRecord(greaseUnitId);
-  const state = startBattleRight({
+  const session = startBattleSessionRight({
     battleId: battleId("heightened-grease-ground-hazard"),
     combatants: [
       characterSeed({
@@ -534,6 +562,7 @@ function castHeightenedGreaseWithSelectedTarget(): BattleState {
       }),
     ],
   });
+  const state = session.state;
   const act = heightenedGreaseAct(state);
   const heightenedTarget = requireHole(act.initialHoles, "targetChoice");
   const awaitingSave = resolveBattleSubject({
@@ -568,15 +597,13 @@ function castHeightenedGreaseWithSelectedTarget(): BattleState {
   if (resolved.tag !== "resolved") {
     throw new Error("Expected Heightened Grease to resolve.");
   }
-  return resolved.state;
+  return { state: resolved.state, context: session.context };
 }
 
 function heightenedGreaseAct(state: BattleState): ActionSpellAct {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActCandidates(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
-      battleActSpellPresentation(candidate)?.invocation.procedure ===
-        "greaseGroundHazard" &&
       candidate.subject.metamagic?.some(
         (selection) =>
           selection.effectKind === HEIGHTENED_METAMAGIC_EFFECT_KIND,

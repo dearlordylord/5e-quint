@@ -13,6 +13,7 @@ import { movementFeet } from "@dnd/shared/types";
 import type {
   CreatureSense,
   DamageType,
+  EffectAtom,
   Skill,
   SpellRecord,
 } from "@dnd/surface/surface/types";
@@ -20,6 +21,19 @@ import type {
 export const CRITICAL_HIT_THRESHOLDS = [19, 20] as const;
 export const BATTLE_ATTACK_RANGE_BANDS = ["normal", "long"] as const;
 export const BATTLE_D20_ROLL_MODIFIER_DIE_SIZES = [1, 4] as const;
+export const SPELL_CREATED_HELD_OBJECT_MELEE_REACH_FEET = movementFeet(5);
+export const BATTLE_D20_ROLL_MODIFIER_KINDS = [
+  "ability_check",
+  "attack_roll",
+  "saving_throw",
+] as const satisfies ReadonlyArray<
+  Extract<
+    Extract<EffectAtom, { readonly kind: "modify_roll_numeric" }>["on"][number],
+    "ability_check" | "attack_roll" | "saving_throw"
+  >
+>;
+export type BattleD20RollModifierKind =
+  (typeof BATTLE_D20_ROLL_MODIFIER_KINDS)[number];
 export type BattleD20RollModifierDieSize =
   (typeof BATTLE_D20_ROLL_MODIFIER_DIE_SIZES)[number];
 export const SPELL_CONDITION_ABILITY_CHECK_SUCCESS_ENDS = [

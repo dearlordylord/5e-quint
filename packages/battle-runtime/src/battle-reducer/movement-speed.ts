@@ -17,7 +17,6 @@ import {
   movementDeltaFeet,
   movementFeet,
   type DifficultyClass,
-  type MovementDeltaFeet,
   type MovementFeet,
 } from "@dnd/shared/types";
 import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
@@ -33,8 +32,10 @@ import type { BattleDruidWildShapeKnownForm } from "../battle-init.ts";
 import type { CombatantId } from "../identity.ts";
 import {
   BATTLE_MOVEMENT_SPEED_KINDS,
+  BATTLE_SPECIAL_SPEED_KINDS,
   type BattleInterruptAttackExecutionSelection,
   type BattleMovementSpeedKind,
+  type BattleSpecialSpeedKind,
 } from "../battle-subjects.ts";
 import {
   attackExecutionSelectionIdentitiesEqual,
@@ -43,16 +44,12 @@ import {
   type SupportedAttackActionOption,
 } from "../battle-action-options.ts";
 import {
-  PASSIVE_SPEED_BONUS_SUPPORT_PROFILE,
-  PASSIVE_SPEED_KIND_GRANTS_SUPPORT_PROFILE,
   PASSIVE_SPEED_KIND_GRANT_KINDS,
-  type PassiveSpeedBonusProfile,
   type PassiveSpeedBonusCondition,
   type PassiveSpeedKindGrantKind,
 } from "../unit-feature-support.ts";
 import {
   zeroHpLifecycleIsTerminal,
-  BATTLE_SPECIAL_SPEED_KINDS,
   type BattleAttackHitTriggerKind,
   type BattleAttackExecutionSelection,
   type BattleAttackKindForRedirect,
@@ -63,9 +60,7 @@ import {
   type BattleMovementHole,
   type BattleOpportunityAttackThreat,
   type BattleOpportunityAttackSelection,
-  type BattlePassiveSpeedProfile,
   type BattleResolvedMovement,
-  type BattleSpecialSpeedKind,
   type BattleState,
   type BattleTargetSpatialFact,
 } from "../battle-reducer.ts";
@@ -412,16 +407,19 @@ export function passiveSpeedKindGrantKinds(
     return [];
   }
   const kinds = new Set<PassiveSpeedKindGrantKind>();
-  for (const unitRef of combatant.origin.characterUnitRefs) {
-    for (const profile of unitRef.supportProfiles) {
-      if (
-        typeof profile === "object" &&
-        profile.kind === PASSIVE_SPEED_KIND_GRANTS_SUPPORT_PROFILE
-      ) {
-        for (const grant of profile.grants) {
-          kinds.add(grant.speedKind);
-        }
-      }
+  for (const binding of combatant.origin.execution.procedureBindings) {
+    const procedure = binding.procedure;
+    if (
+      (procedure.kind === "unitFeature" ||
+        procedure.kind === "unitSupportProfile") &&
+      typeof procedure.execution === "object" &&
+      procedure.execution.kind === "passiveSpeedKindGrants"
+    ) {
+      const facts =
+        procedure.kind === "unitFeature"
+          ? procedure.execution.speedKindGrants
+          : procedure.execution;
+      for (const grant of facts.grants) kinds.add(grant.speedKind);
     }
   }
   return PASSIVE_SPEED_KIND_GRANT_KINDS.filter((kind) => kinds.has(kind));
@@ -431,37 +429,34 @@ export function passiveSpeedBonusDelta(combatant: BattleCreatureState): number {
   if (combatant.origin.kind !== "character") {
     return 0;
   }
-  return combatant.origin.characterUnitRefs
-    .flatMap((unitRef) =>
-      unitRef.supportProfiles.flatMap((profile) =>
-        typeof profile === "object" &&
-        (profile.kind === PASSIVE_SPEED_BONUS_SUPPORT_PROFILE ||
-          profile.kind === PASSIVE_SPEED_KIND_GRANTS_SUPPORT_PROFILE)
-          ? speedBonusDeltaForProfile(combatant, profile)
-          : [],
-      ),
-    )
-    .reduce((total, delta) => total + delta, 0);
-}
-
-export function speedBonusDeltaForProfile(
-  combatant: BattleCreatureState,
-  profile: BattlePassiveSpeedProfile,
-): readonly number[] {
-  const speed = passiveSpeedBonusProfile(profile);
-  return speed !== null &&
-    passiveSpeedBonusConditionApplies(combatant, speed.condition)
-    ? [Number(speed.deltaFeet)]
-    : [];
-}
-
-function passiveSpeedBonusProfile(
-  profile: BattlePassiveSpeedProfile,
-): PassiveSpeedBonusProfile | null {
-  if (profile.kind === PASSIVE_SPEED_KIND_GRANTS_SUPPORT_PROFILE) {
-    return profile.speed ?? null;
+  let total = 0;
+  for (const binding of combatant.origin.execution.procedureBindings) {
+    const procedure = binding.procedure;
+    if (
+      (procedure.kind !== "unitFeature" &&
+        procedure.kind !== "unitSupportProfile") ||
+      typeof procedure.execution !== "object"
+    ) {
+      continue;
+    }
+    const speed =
+      procedure.execution.kind === "passiveSpeedBonus"
+        ? procedure.kind === "unitFeature"
+          ? procedure.execution.speed
+          : procedure.execution
+        : procedure.execution.kind === "passiveSpeedKindGrants"
+          ? procedure.kind === "unitFeature"
+            ? procedure.execution.speedKindGrants.speed
+            : procedure.execution.speed
+          : undefined;
+    if (
+      speed !== undefined &&
+      passiveSpeedBonusConditionApplies(combatant, speed.condition)
+    ) {
+      total += Number(speed.deltaFeet);
+    }
   }
-  return profile;
+  return total;
 }
 
 function passiveSpeedBonusConditionApplies(
@@ -484,12 +479,6 @@ function passiveSpeedBonusConditionApplies(
     ),
     Match.exhaustive,
   );
-}
-
-export function profileSpeedBonusDeltaFeet(
-  profile: BattlePassiveSpeedProfile,
-): MovementDeltaFeet | null {
-  return passiveSpeedBonusProfile(profile)?.deltaFeet ?? null;
 }
 
 export function combatantCanMoveInState(

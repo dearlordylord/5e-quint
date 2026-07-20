@@ -1,7 +1,16 @@
-import { battleId, characterId, combatantId } from "@dnd/battle-runtime";
-import { DieRollResult } from "@dnd/shared/types";
+import {
+  battleAttackExecutionScopeRef,
+  battleAttackProcedureExecutionRef,
+  battleCharacterExecutionScopeRef,
+  battleExecutionScopeOrdinal,
+  battleId,
+  battleProcedureExecutionRef,
+  characterId,
+  combatantId,
+} from "@dnd/battle-runtime";
+import { DieRollResult, NonNegativeInteger } from "@dnd/shared/types";
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
-import { Schema } from "effect";
+import { Either, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
 import { ListCharactersOutputSchema } from "./character-tool-output.ts";
@@ -81,7 +90,6 @@ describe("MCP session wire projections", () => {
         currentActorId: combatantId("combatant:projection-test"),
       },
       transientBattleFills: {
-        presentation: { kind: "intrinsic" },
         subject: {
           tag: "runtimeCommand",
           actorId: combatantId("combatant:projection-test"),
@@ -114,5 +122,126 @@ describe("MCP session wire projections", () => {
         },
       },
     });
+  });
+
+  test("rejects authored attack presentation in pending mechanical fills", () => {
+    const actorId = combatantId("combatant:presentation-correlation");
+    const scopeRef = battleAttackExecutionScopeRef(
+      battleId("battle:presentation-correlation"),
+      actorId,
+      battleExecutionScopeOrdinal(0),
+    );
+    const subjectProcedureRef = battleAttackProcedureExecutionRef(
+      scopeRef,
+      NonNegativeInteger(0),
+    );
+    const presentationProcedureRef = battleAttackProcedureExecutionRef(
+      scopeRef,
+      NonNegativeInteger(1),
+    );
+
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(McpSessionSnapshotSchema)({
+          draftIds: [],
+          characterIds: [],
+          selectedStatBlockId: null,
+          activeBattle: null,
+          transientBattleFills: {
+            subject: {
+              tag: "action",
+              action: "attack",
+              actorId,
+              procedureRef: subjectProcedureRef,
+              attackAbility: "dex",
+              attackDamageType: "force",
+            },
+            presentation: {
+              kind: "attack",
+              procedureRef: presentationProcedureRef,
+              name: "Synthetic Arc",
+            },
+            fills: [],
+          },
+        }),
+      ),
+    ).toBe(true);
+  });
+
+  test("rejects authored unit presentation in pending mechanical fills", () => {
+    const actorId = combatantId("combatant:spell-presentation-kind");
+    const procedureRef = battleProcedureExecutionRef(
+      battleCharacterExecutionScopeRef(
+        battleId("battle:spell-presentation-kind"),
+        actorId,
+        battleExecutionScopeOrdinal(0),
+      ),
+      NonNegativeInteger(0),
+    );
+
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(McpSessionSnapshotSchema)({
+          draftIds: [],
+          characterIds: [],
+          selectedStatBlockId: null,
+          activeBattle: null,
+          transientBattleFills: {
+            subject: {
+              tag: "actionSpell",
+              actorId,
+              procedureRef,
+              mode: { tag: "cast" },
+            },
+            presentation: {
+              kind: "unit",
+              procedureRef,
+              unitId: "synthetic_spell_mismatched_unit",
+            },
+            fills: [],
+          },
+        }),
+      ),
+    ).toBe(true);
+  });
+
+  test("rejects authored spell presentation in pending mechanical fills", () => {
+    const actorId = combatantId("combatant:unit-presentation-kind");
+    const procedureRef = battleProcedureExecutionRef(
+      battleCharacterExecutionScopeRef(
+        battleId("battle:unit-presentation-kind"),
+        actorId,
+        battleExecutionScopeOrdinal(0),
+      ),
+      NonNegativeInteger(0),
+    );
+
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(McpSessionSnapshotSchema)({
+          draftIds: [],
+          characterIds: [],
+          selectedStatBlockId: null,
+          activeBattle: null,
+          transientBattleFills: {
+            subject: {
+              tag: "unitFeature",
+              actorId,
+              procedureRef,
+            },
+            presentation: {
+              kind: "spell",
+              procedureRef,
+              invocation: {
+                tag: "cantrip",
+                spellId: "synthetic_unit_mismatched_spell",
+                procedure: "spellAttackDamage",
+              },
+            },
+            fills: [],
+          },
+        }),
+      ),
+    ).toBe(true);
   });
 });

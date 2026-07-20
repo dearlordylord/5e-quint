@@ -425,9 +425,7 @@ function damageTypeField(raw: unknown): ExactDamageBridgeDamageType {
   );
 }
 
-function successPolicyField(
-  raw: unknown,
-): ExactDamageBridgeSaveSuccessPolicy {
+function successPolicyField(raw: unknown): ExactDamageBridgeSaveSuccessPolicy {
   return quintVariantMappedValue(
     raw,
     "qSuccessPolicy",

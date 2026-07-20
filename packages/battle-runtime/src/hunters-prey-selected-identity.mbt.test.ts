@@ -186,7 +186,11 @@ function projectColossusSlayer(): HuntersPreyProjection {
       fills: [
         targetFill(target, goblinId),
         attackRollFill(roll, { total: 15, naturalD20: 10 }),
-        damageRollFillWithGroups(damage, [[1], [1]], ["ranger_hunters_prey"]),
+        damageRollFillWithGroups(
+          damage,
+          [[1], [1]],
+          [huntersPreyProcedureRef(state)],
+        ),
       ],
     }),
   );
@@ -195,7 +199,8 @@ function projectColossusSlayer(): HuntersPreyProjection {
     colossusTargetHp: resolved.state.combatants.get(goblinId)?.hp ?? 0,
     colossusUsed:
       resolved.state.currentTurnResources.attackDamageRidersUsedThisTurn.some(
-        (usage) => usage.unitId === "ranger_hunters_prey",
+        (usage) =>
+          usage.procedureRef === huntersPreyProcedureRef(resolved.state),
       ),
     lastResult: "colossusSlayer",
   });
@@ -283,7 +288,7 @@ function projectSkipThenUseColossusSlayer(): HuntersPreyProjection {
         damageRollFillWithGroups(
           secondDamage,
           [[1], [1]],
-          ["ranger_hunters_prey"],
+          [huntersPreyProcedureRef(skipped.state)],
         ),
       ],
     }),
@@ -292,7 +297,8 @@ function projectSkipThenUseColossusSlayer(): HuntersPreyProjection {
     colossusTargetHp: resolved.state.combatants.get(goblinId)?.hp ?? 0,
     colossusUsed:
       resolved.state.currentTurnResources.attackDamageRidersUsedThisTurn.some(
-        (usage) => usage.unitId === "ranger_hunters_prey",
+        (usage) =>
+          usage.procedureRef === huntersPreyProcedureRef(resolved.state),
       ),
     lastResult: "skipThenUseColossusSlayer",
   });
@@ -376,12 +382,13 @@ function projectRejectInvalidTargetPredicate(): HuntersPreyProjection {
 
 function projectSecondHordeBreakerUnavailable(): HuntersPreyProjection {
   const base = hordeBreakerBattle();
+  const procedureRef = huntersPreyProcedureRef(base);
   const state = {
     ...base,
     currentTurnResources: {
       ...base.currentTurnResources,
       huntersPreyHordeBreakerUsedThisTurn: [
-        { attackerId: fighterId, unitId: "ranger_hunters_prey" },
+        { attackerId: fighterId, procedureRef },
       ],
     },
   };
@@ -545,8 +552,25 @@ function hordeBreakerWasUsed(
   state: ReturnType<typeof startBattleRight>,
 ): boolean {
   return state.currentTurnResources.huntersPreyHordeBreakerUsedThisTurn.some(
-    (usage) => usage.unitId === "ranger_hunters_prey",
+    (usage) => usage.procedureRef === huntersPreyProcedureRef(state),
   );
+}
+
+function huntersPreyProcedureRef(state: ReturnType<typeof startBattleRight>) {
+  const actor = state.combatants.get(fighterId);
+  if (actor?.origin.kind !== "character") {
+    throw new Error("Expected Hunter's Prey character actor.");
+  }
+  const binding = actor.origin.execution.procedureBindings.find(
+    (candidate) =>
+      candidate.procedure.kind === "unitSupportProfile" &&
+      typeof candidate.procedure.execution !== "string" &&
+      candidate.procedure.execution.kind === "huntersPrey",
+  );
+  if (binding === undefined) {
+    throw new Error("Expected Hunter's Prey mechanical procedure.");
+  }
+  return binding.procedureRef;
 }
 
 function huntersPreyUnitRef(optionId: HuntersPreyOptionId): BattleUnitRef {

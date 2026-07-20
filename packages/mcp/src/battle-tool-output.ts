@@ -1,4 +1,8 @@
 import {
+  BattleActPresentationSchema,
+  BattleInterruptProcedureChoiceSchema,
+  BattleSpellPresentationSchema,
+  battleActPresentationMatchesSubject,
   BattleDroppedObjectOutcomeSchema,
   BattleHoleSchema,
   BattleObjectDamageOutcomeSchema,
@@ -7,7 +11,7 @@ import {
   BattleSnapshotSchema,
   BattleSubjectSchema,
 } from "@dnd/battle-runtime";
-import { Schema } from "effect";
+import { Match, Schema } from "effect";
 
 import {
   McpSessionSnapshotSchema,
@@ -55,6 +59,59 @@ const BattleResolutionResultSchema = Schema.Union(
   }),
 );
 
+const AvailableBattleActSchema = Schema.Struct({
+  subject: BattleSubjectSchema,
+  initialHoles: Schema.Array(BattleHoleSchema),
+  label: Schema.NonEmptyTrimmedString,
+  summary: Schema.NonEmptyTrimmedString,
+  presentation: BattleActPresentationSchema,
+}).pipe(
+  Schema.filter(
+    ({ subject, presentation }) =>
+      battleActPresentationMatchesSubject(subject, presentation),
+    {
+      message: () =>
+        "Battle act presentation must describe the same execution variant and procedure as its subject.",
+    },
+  ),
+);
+
+const PresentedBattleInterruptChoiceSchema = Schema.Struct({
+  choice: BattleInterruptProcedureChoiceSchema,
+  presentation: BattleActPresentationSchema,
+}).pipe(
+  Schema.filter(
+    ({ choice, presentation }) =>
+      Match.value(choice).pipe(
+        Match.discriminatorsExhaustive("kind")({
+          releaseReadiedSpell: (value) =>
+            battleActPresentationMatchesSubject(value.subject, presentation),
+          releaseReadiedMovement: (value) =>
+            battleActPresentationMatchesSubject(value.subject, presentation),
+          castTriggeredReactionSpell: (value) =>
+            battleActPresentationMatchesSubject(value.subject, presentation),
+          castAttackHitBonusActionSpell: (value) =>
+            battleActPresentationMatchesSubject(value.subject, presentation),
+          opportunityAttack: (value) =>
+            battleActPresentationMatchesSubject(value.subject, presentation),
+          retaliationAttack: (value) =>
+            battleActPresentationMatchesSubject(value.subject, presentation),
+          reactionRollOrDamageReduction: () => false,
+        }),
+      ),
+    {
+      message: () =>
+        "Interrupt presentation must describe the same execution choice and procedure.",
+    },
+  ),
+);
+
+const BattlePresentationProjectionFields = {
+  availableActs: Schema.Array(AvailableBattleActSchema),
+  admittedSpellPresentations: Schema.Array(BattleSpellPresentationSchema),
+  presentedInterruptChoices: Schema.Array(PresentedBattleInterruptChoiceSchema),
+};
+
 export const SelectStatBlockOutputSchema = Schema.Struct({
   selectedStatBlock: JsonObjectSchema,
   session: McpSessionSummarySchema,
@@ -62,17 +119,20 @@ export const SelectStatBlockOutputSchema = Schema.Struct({
 
 export const BattleSessionOutputSchema = Schema.Struct({
   snapshot: Schema.Union(BattleSnapshotSchema, Schema.Null),
+  ...BattlePresentationProjectionFields,
   session: McpSessionSnapshotSchema,
 });
 
 export const StartBattleOutputSchema = Schema.Struct({
   snapshot: BattleSnapshotSchema,
+  ...BattlePresentationProjectionFields,
   session: McpSessionSummarySchema,
 });
 
 export const BattleResolutionOutputSchema = Schema.Struct({
   result: BattleResolutionResultSchema,
   snapshot: BattleSnapshotSchema,
+  ...BattlePresentationProjectionFields,
   session: McpSessionSnapshotSchema,
 });
 

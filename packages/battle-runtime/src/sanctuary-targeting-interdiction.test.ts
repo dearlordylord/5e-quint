@@ -23,6 +23,7 @@ import {
   battleId,
   characterId,
   combatantId,
+  discoverBattleActCandidates,
   discoverBattleActs,
   initiativeScore,
   BattleHoleSchema,
@@ -33,7 +34,8 @@ import {
   type BattleFill,
   type BattleHole,
   type BattleState,
-  type BattleActDiscoverySubject as BattleSubject,
+  type BattleSubject,
+  type BattleRuntimeSession,
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
@@ -70,7 +72,7 @@ describe("Sanctuary targeting interdiction", () => {
     const state = battleWithSanctuary();
     const cast = castSanctuary(state, wardedId);
 
-    expect(combatant(cast, wardedId).activeEffects).toContainEqual(
+    expect(combatant(cast.state, wardedId).activeEffects).toContainEqual(
       expect.objectContaining({
         kind: "sanctuaryWard",
         sourceProcedureRef: expect.any(String),
@@ -103,7 +105,7 @@ describe("Sanctuary targeting interdiction", () => {
       kind: "spellTargetList",
     });
 
-    const snapshot = snapshotBattle(state);
+    const snapshot = snapshotBattle(state.state);
     const wrongOwner = snapshot.combatants.find(
       (combatant) => combatant.combatantId === wardedId,
     );
@@ -183,14 +185,14 @@ describe("Sanctuary targeting interdiction", () => {
     const warded = advanceToAttacker(
       castSanctuary(battleWithSanctuary(), wardedId),
     );
-    const attack = attackAct(warded);
+    const attack = attackAct(warded.state);
     const targetFill = attackTargetFill(
       requireHole(attack.initialHoles, "targetChoice"),
       wardedId,
       attack.subject,
     );
     const needsSanctuary = resolveBattleSubject({
-      state: warded,
+      state: warded.state,
       subject: attack.subject,
       fills: [targetFill],
     });
@@ -213,7 +215,7 @@ describe("Sanctuary targeting interdiction", () => {
     });
 
     const lost = resolveBattleSubject({
-      state: warded,
+      state: warded.state,
       subject: attack.subject,
       fills: [
         targetFill,
@@ -235,14 +237,14 @@ describe("Sanctuary targeting interdiction", () => {
     const warded = advanceToAttacker(
       castSanctuary(battleWithSanctuary(), wardedId),
     );
-    const attack = attackAct(warded);
+    const attack = attackAct(warded.state);
     const targetFill = attackTargetFill(
       requireHole(attack.initialHoles, "targetChoice"),
       wardedId,
       attack.subject,
     );
     const needsSanctuary = resolveBattleSubject({
-      state: warded,
+      state: warded.state,
       subject: attack.subject,
       fills: [targetFill],
     });
@@ -251,7 +253,7 @@ describe("Sanctuary targeting interdiction", () => {
     }
 
     const needsAttackRoll = resolveBattleSubject({
-      state: warded,
+      state: warded.state,
       subject: attack.subject,
       fills: [
         targetFill,
@@ -272,14 +274,14 @@ describe("Sanctuary targeting interdiction", () => {
     const warded = advanceToAttacker(
       castSanctuary(battleWithSanctuary(), wardedId),
     );
-    const attack = attackAct(warded);
+    const attack = attackAct(warded.state);
     const targetFill = attackTargetFill(
       requireHole(attack.initialHoles, "targetChoice"),
       wardedId,
       attack.subject,
     );
     const needsSanctuary = resolveBattleSubject({
-      state: warded,
+      state: warded.state,
       subject: attack.subject,
       fills: [targetFill],
     });
@@ -288,7 +290,7 @@ describe("Sanctuary targeting interdiction", () => {
     }
 
     const retargeted = resolveBattleSubject({
-      state: warded,
+      state: warded.state,
       subject: attack.subject,
       fills: [
         targetFill,
@@ -331,7 +333,7 @@ describe("Sanctuary targeting interdiction", () => {
       wardedId,
     );
     const needsSanctuary = resolveBattleSubject({
-      state: warded,
+      state: warded.state,
       subject: act.subject,
       fills: [targetFill],
     });
@@ -340,7 +342,7 @@ describe("Sanctuary targeting interdiction", () => {
     }
 
     const lost = resolveBattleSubject({
-      state: warded,
+      state: warded.state,
       subject: act.subject,
       fills: [
         targetFill,
@@ -376,7 +378,7 @@ describe("Sanctuary targeting interdiction", () => {
       wardedId,
     );
     const needsSanctuary = resolveBattleSubject({
-      state: warded,
+      state: warded.state,
       subject: act.subject,
       fills: [targetFill],
     });
@@ -385,7 +387,7 @@ describe("Sanctuary targeting interdiction", () => {
     }
 
     const lost = resolveBattleSubject({
-      state: warded,
+      state: warded.state,
       subject: act.subject,
       fills: [
         targetFill,
@@ -423,7 +425,7 @@ describe("Sanctuary targeting interdiction", () => {
       3,
     );
     const needsSanctuary = resolveBattleSubject({
-      state: warded,
+      state: warded.state,
       subject: act.subject,
       fills: [allocationFill],
     });
@@ -440,7 +442,7 @@ describe("Sanctuary targeting interdiction", () => {
     expect("relationshipFactRequest" in sanctuaryHole).toBe(false);
 
     const lost = resolveBattleSubject({
-      state: warded,
+      state: warded.state,
       subject: act.subject,
       fills: [
         allocationFill,
@@ -476,7 +478,7 @@ describe("Sanctuary targeting interdiction", () => {
       wardedId,
     );
     const needsSanctuary = resolveBattleSubject({
-      state: warded,
+      state: warded.state,
       subject: act.subject,
       fills: [targetFill],
     });
@@ -485,7 +487,7 @@ describe("Sanctuary targeting interdiction", () => {
     }
 
     const lost = resolveBattleSubject({
-      state: warded,
+      state: warded.state,
       subject: act.subject,
       fills: [
         targetFill,
@@ -526,7 +528,7 @@ describe("Sanctuary targeting interdiction", () => {
       spellTargetFill(hole, eldritchBlastUnitId, casterId, wardedId),
     );
     const needsFirstSanctuary = resolveBattleSubject({
-      state: warded,
+      state: warded.state,
       subject: act.subject,
       fills: targetFills,
     });
@@ -540,7 +542,7 @@ describe("Sanctuary targeting interdiction", () => {
     expect(firstSanctuaryHole).toMatchObject({ ability: "wis" });
 
     const needsFirstAttackRoll = resolveBattleSubject({
-      state: warded,
+      state: warded.state,
       subject: act.subject,
       fills: [
         ...targetFills,
@@ -556,7 +558,7 @@ describe("Sanctuary targeting interdiction", () => {
     );
 
     const needsSecondSanctuary = resolveBattleSubject({
-      state: warded,
+      state: warded.state,
       subject: act.subject,
       fills: [
         ...targetFills,
@@ -595,7 +597,7 @@ describe("Sanctuary targeting interdiction", () => {
       wardedId,
     );
     const needsSanctuary = resolveBattleSubject({
-      state: warded,
+      state: warded.state,
       subject: act.subject,
       fills: [targetFill],
     });
@@ -604,7 +606,7 @@ describe("Sanctuary targeting interdiction", () => {
     }
 
     const lost = resolveBattleSubject({
-      state: warded,
+      state: warded.state,
       subject: act.subject,
       fills: [
         targetFill,
@@ -640,7 +642,7 @@ describe("Sanctuary targeting interdiction", () => {
       "acid",
     );
     const needsTarget = resolveBattleSubject({
-      state: warded,
+      state: warded.state,
       subject: act.subject,
       fills: [damageTypeFill],
     });
@@ -654,7 +656,7 @@ describe("Sanctuary targeting interdiction", () => {
       wardedId,
     );
     const needsSanctuary = resolveBattleSubject({
-      state: warded,
+      state: warded.state,
       subject: act.subject,
       fills: [damageTypeFill, targetFill],
     });
@@ -663,7 +665,7 @@ describe("Sanctuary targeting interdiction", () => {
     }
 
     const lost = resolveBattleSubject({
-      state: warded,
+      state: warded.state,
       subject: act.subject,
       fills: [
         damageTypeFill,
@@ -700,7 +702,7 @@ describe("Sanctuary targeting interdiction", () => {
       "acid",
     );
     const needsPrimaryTarget = resolveBattleSubject({
-      state: warded,
+      state: warded.state,
       subject: act.subject,
       fills: [damageTypeFill],
     });
@@ -714,7 +716,7 @@ describe("Sanctuary targeting interdiction", () => {
       replacementId,
     );
     const needsAttack = resolveBattleSubject({
-      state: warded,
+      state: warded.state,
       subject: act.subject,
       fills: [damageTypeFill, primaryTargetFill],
     });
@@ -725,7 +727,7 @@ describe("Sanctuary targeting interdiction", () => {
       requireHole(needsAttack.holes, "attackRoll"),
     );
     const needsDamage = resolveBattleSubject({
-      state: warded,
+      state: warded.state,
       subject: act.subject,
       fills: [damageTypeFill, primaryTargetFill, attackFill],
     });
@@ -737,7 +739,7 @@ describe("Sanctuary targeting interdiction", () => {
       [4, 4, 1],
     );
     const needsLeapTarget = resolveBattleSubject({
-      state: warded,
+      state: warded.state,
       subject: act.subject,
       fills: [
         damageTypeFill,
@@ -755,7 +757,7 @@ describe("Sanctuary targeting interdiction", () => {
       wardedId,
     );
     const needsSanctuary = resolveBattleSubject({
-      state: warded,
+      state: warded.state,
       subject: act.subject,
       fills: [
         damageTypeFill,
@@ -770,7 +772,7 @@ describe("Sanctuary targeting interdiction", () => {
     }
 
     const lost = resolveBattleSubject({
-      state: warded,
+      state: warded.state,
       subject: act.subject,
       fills: [
         damageTypeFill,
@@ -808,7 +810,7 @@ describe("Sanctuary targeting interdiction", () => {
     const save = requireHole(act.initialHoles, "savingThrowOutcome");
 
     const needsDamage = resolveBattleSubject({
-      state: warded,
+      state: warded.state,
       subject: act.subject,
       fills: [
         savingThrowOutcomeFill(save, [
@@ -846,7 +848,7 @@ describe("Sanctuary targeting interdiction", () => {
     }
 
     const needsTarget = resolveBattleSubject({
-      state: selfWarded,
+      state: selfWarded.state,
       subject: act.subject,
       fills: [],
     });
@@ -882,7 +884,7 @@ describe("Sanctuary targeting interdiction", () => {
     }
 
     const resolved = resolveBattleSubject({
-      state: selfWarded,
+      state: selfWarded.state,
       subject: act.subject,
       fills: [
         spellTargetFill(
@@ -909,14 +911,14 @@ describe("Sanctuary targeting interdiction", () => {
     const selfWarded = advanceToAttacker(
       castSanctuary(battleWithSanctuary(), attackerId),
     );
-    const attack = attackAct(selfWarded, wardedId);
+    const attack = attackAct(selfWarded.state, wardedId);
     const targetFill = attackTargetFill(
       requireHole(attack.initialHoles, "targetChoice"),
       wardedId,
       attack.subject,
     );
     const needsAttackRoll = resolveBattleSubject({
-      state: selfWarded,
+      state: selfWarded.state,
       subject: attack.subject,
       fills: [targetFill],
     });
@@ -925,7 +927,7 @@ describe("Sanctuary targeting interdiction", () => {
     }
 
     const needsDamage = resolveBattleSubject({
-      state: selfWarded,
+      state: selfWarded.state,
       subject: attack.subject,
       fills: [
         targetFill,
@@ -945,7 +947,7 @@ describe("Sanctuary targeting interdiction", () => {
       castSanctuary(battleWithSanctuary(), casterId),
     );
     const afterSpellCast = castSanctuary(recast, wardedId);
-    expect(combatant(afterSpellCast, casterId).activeEffects).not.toEqual(
+    expect(combatant(afterSpellCast.state, casterId).activeEffects).not.toEqual(
       expect.arrayContaining([
         expect.objectContaining({ kind: "sanctuaryWard" }),
       ]),
@@ -955,8 +957,8 @@ describe("Sanctuary targeting interdiction", () => {
       castSanctuary(battleWithSanctuary(), attackerId),
     );
     const afterDamage = applyBattleHitPointDamage({
-      state: damageSourceWarded,
-      target: combatant(damageSourceWarded, wardedId),
+      state: damageSourceWarded.state,
+      target: combatant(damageSourceWarded.state, wardedId),
       damageAmount: 1,
       deathFailuresAtZeroHp: 1,
       damageSourceId: attackerId,
@@ -979,7 +981,7 @@ function srdSpellRecord(unitId: string): SpellRecord {
 
 function battleWithSanctuary(
   input: { readonly casterLevel?: number } = {},
-): BattleState {
+): BattleRuntimeSession {
   const result = startBattle({
     battleId: battleId("sanctuary-targeting-interdiction"),
     combatants: [
@@ -1024,8 +1026,11 @@ function battleWithSanctuary(
   return result.right;
 }
 
-function castSanctuary(state: BattleState, targetId: CombatantId): BattleState {
-  const act = discoverBattleActs(state).find(
+function castSanctuary(
+  session: BattleRuntimeSession,
+  targetId: CombatantId,
+): BattleRuntimeSession {
+  const act = discoverBattleActs(session).find(
     (candidate) =>
       candidate.subject.tag === "bonusActionSpell" &&
       battleActSpellPresentation(candidate)?.invocation.procedure ===
@@ -1036,44 +1041,51 @@ function castSanctuary(state: BattleState, targetId: CombatantId): BattleState {
   }
   const targetHole = requireHole(act.initialHoles, "spellTargetList");
   const resolved = resolveBattleSubject({
-    state,
+    state: session.state,
     subject: act.subject,
     fills: [sanctuaryTargetListFill(targetHole, targetId)],
   });
   if (resolved.tag !== "resolved") {
     throw new Error("Expected Sanctuary cast to resolve.");
   }
-  return resolved.state;
+  return { state: resolved.state, context: session.context };
 }
 
-function advanceToAttacker(state: BattleState): BattleState {
-  return endTurnFor(endTurnFor(state, casterId), wardedId);
+function advanceToAttacker(
+  session: BattleRuntimeSession,
+): BattleRuntimeSession {
+  return endTurnFor(endTurnFor(session, casterId), wardedId);
 }
 
-function advanceRoundToCaster(state: BattleState): BattleState {
+function advanceRoundToCaster(
+  session: BattleRuntimeSession,
+): BattleRuntimeSession {
   return endTurnFor(
-    endTurnFor(endTurnFor(endTurnFor(state, casterId), wardedId), attackerId),
+    endTurnFor(endTurnFor(endTurnFor(session, casterId), wardedId), attackerId),
     replacementId,
   );
 }
 
-function endTurnFor(state: BattleState, actorId: CombatantId): BattleState {
+function endTurnFor(
+  session: BattleRuntimeSession,
+  actorId: CombatantId,
+): BattleRuntimeSession {
   const resolved = resolveBattleSubject({
-    state,
+    state: session.state,
     subject: { tag: "runtimeCommand", actorId, command: "endTurn" },
     fills: [],
   });
   if (resolved.tag !== "resolved") {
     throw new Error(`Expected ${actorId} to end turn.`);
   }
-  return resolved.state;
+  return { state: resolved.state, context: session.context };
 }
 
 function attackAct(
   state: BattleState,
   targetId = wardedId,
 ): AvailableAttackAct {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActCandidates(state).find(
     (candidate) =>
       candidate.subject.tag === "action" &&
       candidate.subject.action === "attack" &&
@@ -1091,7 +1103,9 @@ function attackAct(
   return { ...act, subject: act.subject };
 }
 
-type AvailableAttackAct = ReturnType<typeof discoverBattleActs>[number] & {
+type AvailableAttackAct = ReturnType<
+  typeof discoverBattleActCandidates
+>[number] & {
   readonly subject: Extract<
     BattleSubject,
     { readonly tag: "action"; readonly action: "attack" }

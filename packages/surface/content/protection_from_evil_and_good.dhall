@@ -65,7 +65,11 @@ let protectionFromEvilAndGood =
                     , label = "target"
                     , value =
                         { kind = "target"
-                        , selection = { mode = "one" }
+                        , selection =
+                            { mode = "one"
+                            , disposition = "willing"
+                            , targetKinds = [ "creature" ]
+                            }
                         }
                     }
                 , effects =

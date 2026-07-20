@@ -15,7 +15,10 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE
 import { Match } from "effect";
-import { bindSpellProcedureExecutionFacts } from "../character-execution.ts";
+import {
+  bindStoredSpellProcedureExecutionFacts,
+  type SpellProcedureExecution,
+} from "../character-execution.ts";
 import type {
   ActionSpellBattleResolutionInput,
   BattleMagicalDarknessAreaChoice,
@@ -62,7 +65,7 @@ import type { CharacterBattleMetamagicOptionFact } from "../character-battle-res
 const byProcedure = Match.discriminator("procedure");
 
 type StoredGlyphAreaOngoingSpellInvocation = Extract<
-  SupportedSpellInvocation,
+  SpellProcedureExecution,
   { readonly procedure: GlyphStoredAreaOngoingProcedure }
 >;
 type StoredGlyphCenteredSpellAreaChoice = Extract<
@@ -89,7 +92,24 @@ type AreaOngoingSpellReleaseResource =
 
 export function isGlyphStoredAreaOngoingSpellInvocation(
   invocation: SupportedSpellInvocation,
-): invocation is StoredGlyphAreaOngoingSpellInvocation {
+): invocation is Extract<
+  SupportedSpellInvocation,
+  { readonly procedure: GlyphStoredAreaOngoingProcedure }
+>;
+export function isGlyphStoredAreaOngoingSpellInvocation(
+  invocation: SpellProcedureExecution,
+): invocation is StoredGlyphAreaOngoingSpellInvocation;
+export function isGlyphStoredAreaOngoingSpellInvocation(
+  invocation: SupportedSpellInvocation | SpellProcedureExecution,
+): invocation is
+  | Extract<
+      SupportedSpellInvocation,
+      { readonly procedure: GlyphStoredAreaOngoingProcedure }
+    >
+  | StoredGlyphAreaOngoingSpellInvocation;
+export function isGlyphStoredAreaOngoingSpellInvocation(
+  invocation: SupportedSpellInvocation | SpellProcedureExecution,
+): boolean {
   return GLYPH_STORED_AREA_ONGOING_PROCEDURES.some(
     (procedure) => procedure === invocation.procedure,
   );
@@ -163,7 +183,7 @@ export function resolveStoredGlyphAreaOngoingSpellRelease(input: {
     kind: "storedGlyphSpellRelease",
     selfOriginAreaAnchorId: input.selfOriginAreaAnchorId,
   } as const;
-  const invocation = bindSpellProcedureExecutionFacts(
+  const invocation = bindStoredSpellProcedureExecutionFacts(
     input.invocation,
     input.input.subject.procedureRef,
   );

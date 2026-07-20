@@ -1,8 +1,4 @@
 import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
-import {
-  battleActSpellSlotPresentation,
-  battleActSpellPresentation,
-} from "./battle-act-composition.ts";
 // RAW trace:
 // - .references/srd-5.2.1/Spells/Gaining-and-Casting.md#Casting-Time:
 //   Reaction casting time uses a spell-defined trigger.
@@ -36,10 +32,7 @@ import {
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import * as Either from "effect/Either";
 import { describe, expect, it } from "vitest";
-import {
-  resolveBattleSubject,
-  characterSpellInvocationRefForProcedureRefForTest,
-} from "./battle-runtime-test-support.ts";
+import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 
 import {
   MBT_TEST_TIMEOUT_MS,
@@ -63,13 +56,13 @@ import {
   battleReducerStartRouteEvent,
   characterId,
   combatantId,
-  discoverBattleActs,
+  characterProcedureBinding,
+  discoverBattleActCandidates,
   initiativeScore,
   resolveBattleInterrupt,
   snapshotBattle,
   SPELL_CAST_REACTION_FACTS_HOLE_ID,
   startBattle,
-  type AvailableBattleAct,
   type BattleCreatureInit,
   type BattleFill,
   type BattleHole,
@@ -77,7 +70,7 @@ import {
   type BattleReducerRouteEvent,
   type BattleResolutionResult,
   type BattleState,
-  type BattleActDiscoverySubject as BattleSubject,
+  type BattleSubject,
   type CombatantId,
 } from "./index.ts";
 
@@ -556,7 +549,7 @@ function reactionCastingTimeBattle(input: {
   if (Either.isLeft(result)) {
     throw new Error(result.left.message);
   }
-  return result.right;
+  return result.right.state;
 }
 
 function characterSpellcasting(input: {
@@ -698,19 +691,11 @@ function finishMagicMissile(input: {
 function resolveUnarmedStrikeAgainstReactor(
   state: BattleState,
 ): ReturnType<typeof resolveBattleSubject> {
-  const attackAct = discoverBattleActs(state).find(
-    (
-      act,
-    ): act is AvailableBattleAct & {
-      readonly subject: Extract<
-        BattleSubject,
-        { readonly tag: "action"; readonly action: "attack" }
-      >;
-    } =>
+  const attackAct = discoverBattleActCandidates(state).find(
+    (act) =>
       act.subject.tag === "action" &&
       act.subject.action === "attack" &&
-      act.subject.actorId === triggerCreatureId &&
-      act.summary === "Take the Attack action with Unarmed Strike.",
+      act.subject.actorId === triggerCreatureId,
   );
   if (attackAct === undefined) {
     throw new Error("Expected Unarmed Strike attack act.");
@@ -774,17 +759,28 @@ function magicMissileSubject(
   state: BattleState,
   slotLevel: number,
 ): BattleSubject {
-  const act = discoverBattleActs(state).find(
+  const actor = state.combatants.get(triggerCreatureId);
+  if (actor?.origin.kind !== "character") {
+    throw new Error("Expected Magic Missile character caster.");
+  }
+  const actorExecution = actor.origin.execution;
+  const act = discoverBattleActCandidates(state).find(
     (candidate) =>
       candidate.subject.tag === "actionSpell" &&
       candidate.subject.actorId === triggerCreatureId &&
-      battleActSpellPresentation(candidate)?.invocation.tag === "spellSlot" &&
-      battleActSpellPresentation(candidate)?.invocation.spellId ===
-        magicMissileUnitId &&
-      battleActSpellSlotPresentation(candidate)?.invocation.slotLevel ===
-        slotLevel &&
-      battleActSpellPresentation(candidate)?.invocation.procedure ===
-        "repeatedDamageAllocation",
+      (() => {
+        const binding = characterProcedureBinding(
+          actorExecution,
+          candidate.subject.procedureRef,
+        );
+        if (binding?.procedure.kind !== "spellInvocation") return false;
+        const execution = binding.procedure.execution;
+        if (execution.procedure !== "repeatedDamageAllocation") return false;
+        return (
+          execution.resource.tag === "spellSlot" &&
+          Number(execution.resource.slotLevel) === slotLevel
+        );
+      })(),
   );
   if (act === undefined) {
     throw new Error("Expected bound Magic Missile action spell.");
@@ -886,16 +882,19 @@ function requireTriggeredReactionSpellChoice(input: {
       ) {
         return false;
       }
-      const invocation = characterSpellInvocationRefForProcedureRefForTest(
-        input.result.state,
-        candidate.reactorId,
+      const reactor = input.result.state.combatants.get(candidate.reactorId);
+      if (reactor?.origin.kind !== "character") return false;
+      const binding = characterProcedureBinding(
+        reactor.origin.execution,
         candidate.subject.procedureRef,
       );
+      if (binding?.procedure.kind !== "spellInvocation") return false;
+      const execution = binding.procedure.execution;
       return (
-        invocation.tag === "spellSlot" &&
-        invocation.spellId === input.spellId &&
-        invocation.procedure === input.procedure &&
-        Number(invocation.slotLevel) === input.slotLevel
+        execution.procedure === input.procedure &&
+        "resource" in execution &&
+        execution.resource.tag === "spellSlot" &&
+        Number(execution.resource.slotLevel) === input.slotLevel
       );
     },
   );

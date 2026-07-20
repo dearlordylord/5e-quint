@@ -1,9 +1,7 @@
 import {
   type BattleState,
   type BattleExecutableSpellInvocation,
-  type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
-import { topLevelSpellCastingTime } from "@dnd/surface/surface/types";
 import type { CombatantId } from "../identity.ts";
 import { combatantCanTakeReactions } from "./creature-state.ts";
 import {
@@ -38,11 +36,15 @@ export function counterspellCapableReactors(
       ) {
         return [];
       }
-      const invocations = supportedSpellActs(combatant, state).filter(
-        (candidate): candidate is CounterspellInvocation =>
-          candidate.procedure === "counterspell" &&
-          spellHasAvailableSpend(combatant, candidate) &&
-          counterspellInvocationHasSpellCastTrigger(candidate),
+      const invocations = supportedSpellActs(combatant).flatMap(
+        (candidate): readonly CounterspellInvocation[] => {
+          if (candidate.procedure !== "counterspell") return [];
+          const execution = candidate;
+          return spellHasAvailableSpend(combatant, execution) &&
+            counterspellInvocationHasSpellCastTrigger(execution)
+            ? [execution]
+            : [];
+        },
       );
       return invocations.length === 0
         ? []
@@ -53,7 +55,7 @@ export function counterspellCapableReactors(
 
 export function spellCastCanTriggerCounterspell(input: {
   readonly casterId: CombatantId;
-  readonly invocation: SupportedSpellInvocation;
+  readonly invocation: BattleExecutableSpellInvocation;
   readonly reactors: readonly CounterspellCapableReactor[];
 }): boolean {
   const triggeringComponents = spellComponents(input.invocation);
@@ -63,16 +65,8 @@ export function spellCastCanTriggerCounterspell(input: {
       (reactor) =>
         reactor.combatantId !== input.casterId &&
         reactor.invocations.some((counterspell) => {
-          const castingTime = topLevelSpellCastingTime(
-            counterspell.spell.mechanics,
-          );
-          if (castingTime?.kind !== "reaction") return false;
-          const trigger = castingTime.trigger;
-          return (
-            trigger.kind === "creature_casts_spell" &&
-            triggeringComponents.some((component) =>
-              trigger.components.includes(component),
-            )
+          return triggeringComponents.some((component) =>
+            counterspell.triggerComponents.includes(component),
           );
         }),
     )
@@ -82,11 +76,5 @@ export function spellCastCanTriggerCounterspell(input: {
 function counterspellInvocationHasSpellCastTrigger(
   invocation: CounterspellInvocation,
 ): boolean {
-  const castingTime = topLevelSpellCastingTime(invocation.spell.mechanics);
-  return (
-    invocation.spell.mechanics.family === "triggered_reaction" &&
-    castingTime?.kind === "reaction" &&
-    castingTime.trigger.kind === "creature_casts_spell" &&
-    castingTime.trigger.components.length > 0
-  );
+  return invocation.triggerComponents.length > 0;
 }

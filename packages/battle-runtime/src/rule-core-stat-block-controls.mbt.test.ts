@@ -31,7 +31,7 @@ import { statBlockProcedurePresentations } from "./stat-block-execution.ts";
 import {
   battleId,
   combatantId,
-  discoverBattleActs,
+  discoverBattleActCandidates,
   initiativeScore,
   snapshotBattle,
   startBattle,
@@ -40,7 +40,7 @@ import {
   type BattleHole,
   type BattleResolutionResult,
   type BattleState,
-  type BattleActDiscoverySubject as BattleSubject,
+  type BattleSubject,
   type CombatantId,
 } from "./index.ts";
 
@@ -308,7 +308,7 @@ function startBattleRight(
   if (Either.isLeft(result)) {
     throw new Error(result.left.message);
   }
-  return result.right;
+  return result.right.state;
 }
 
 function statBlockCreature(input: {
@@ -337,7 +337,7 @@ function multiattackSubject(
   BattleSubject,
   { readonly tag: "action"; readonly action: "multiattack" }
 > {
-  const subject = discoverBattleActs(state).find(
+  const subject = discoverBattleActCandidates(state).find(
     (act) =>
       act.subject.tag === "action" && act.subject.action === "multiattack",
   )?.subject;
@@ -353,7 +353,7 @@ function statBlockBonusActionSubject(
   BattleSubject,
   { readonly tag: "bonusAction"; readonly action: "statBlockActionOption" }
 > {
-  const subject = discoverBattleActs(state).find(
+  const subject = discoverBattleActCandidates(state).find(
     (act) =>
       act.subject.tag === "bonusAction" &&
       act.subject.action === "statBlockActionOption" &&
@@ -375,17 +375,32 @@ function attackSubject(
   BattleSubject,
   { readonly tag: "action"; readonly action: "attack" }
 > {
-  const subject = discoverBattleActs(state).find(
+  const procedureRef = statBlockAttackProcedureRef(state, attackName);
+  const subject = discoverBattleActCandidates(state).find(
     (act) =>
       act.subject.tag === "action" &&
       act.subject.action === "attack" &&
-      act.summary.includes(attackName) &&
+      act.subject.procedureRef === procedureRef &&
       act.subject.statBlockDamageNotation === undefined,
   )?.subject;
   if (subject?.tag !== "action" || subject.action !== "attack") {
     throw new Error(`Expected admitted ${attackName} subject.`);
   }
   return subject;
+}
+
+function statBlockAttackProcedureRef(state: BattleState, attackName: string) {
+  const actor = state.combatants.get(actorId);
+  if (actor?.origin.kind !== "statBlock") {
+    throw new Error("Expected rule-core Stat Block actor execution state.");
+  }
+  const procedureRef = statBlockProcedurePresentations(actor.origin).find(
+    (candidate) => candidate.kind === "attack" && candidate.name === attackName,
+  )?.procedureRef;
+  if (procedureRef === undefined) {
+    throw new Error(`Missing ${attackName} binding.`);
+  }
+  return procedureRef;
 }
 
 function moveSubject(): Extract<

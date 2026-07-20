@@ -6,6 +6,7 @@
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import { requiredAbilityCheckRollMode } from "./battle-reducer/hole-helpers.ts";
+import { classLevel } from "@dnd/shared/types";
 import type { BattleHole } from "./index.ts";
 import {
   battleId,
@@ -24,7 +25,10 @@ import {
   unitLibrary,
 } from "./unit-profile-admission-test-support.ts";
 import { characterCreature } from "./unit-profile-admission-creature-fixture-support.ts";
-import { characterAttackSubjectForTest } from "./battle-runtime-test-support.ts";
+import {
+  characterAttackSubjectForTest,
+  characterBattleFeatureInitForTest,
+} from "./battle-runtime-test-support.ts";
 
 type RollMode = "normal" | "advantage" | "disadvantage";
 
@@ -130,14 +134,17 @@ function remarkableAthleteBattle(): BattleState {
         initiative: 18,
         characterUnitRefs: [unitRef.right],
         classLevels: [{ className: "fighter", level: 3 }],
-        unitFeatures: [{ unit }],
+        unitFeatures: [
+          characterBattleFeatureInitForTest(unit, [
+            { className: "fighter", level: classLevel(3) },
+          ]),
+        ],
       }),
       characterCreature({
         combatantId: unselectedActorId,
         displayName: "Remarkable Athlete MBT Unselected Actor",
         initiative: 14,
         classLevels: [{ className: "fighter", level: 3 }],
-        unitFeatures: [{ unit }],
       }),
       characterCreature({
         combatantId: targetId,
@@ -149,7 +156,7 @@ function remarkableAthleteBattle(): BattleState {
   if (Either.isLeft(state)) {
     throw new Error(state.left.message);
   }
-  return state.right;
+  return state.right.state;
 }
 
 function projectRemarkableAthleteRollModes(

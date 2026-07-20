@@ -32,6 +32,7 @@ import {
   unitLibrary,
 } from "./unit-profile-admission-test-support.ts";
 import { passiveSavingThrowRollModeRouteEvents } from "./index.ts";
+import { characterBattleFeatureInitForTest } from "./battle-runtime-test-support.ts";
 import type { BattleState } from "./unit-profile-admission-test-support.ts";
 
 const BARBARIAN_DANGER_SENSE_UNIT_ID = "barbarian_danger_sense";
@@ -153,7 +154,11 @@ function dangerSenseBattle(): BattleState {
         displayName: "Danger Sense Barbarian",
         initiative: 10,
         classLevels: [{ className: "barbarian", level: classLevel(2) }],
-        unitFeatures: [{ unit }],
+        unitFeatures: [
+          characterBattleFeatureInitForTest(unit, [
+            { className: "barbarian", level: classLevel(2) },
+          ]),
+        ],
         characterUnitRefs: [unitRef.right],
       }),
     ],
@@ -161,7 +166,7 @@ function dangerSenseBattle(): BattleState {
   if (Either.isLeft(result)) {
     throw new Error(result.left.message);
   }
-  return result.right;
+  return result.right.state;
 }
 
 function incapacitatedDangerSenseBattle(): BattleState {

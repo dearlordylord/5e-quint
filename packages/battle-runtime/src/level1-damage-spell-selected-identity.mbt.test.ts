@@ -8,7 +8,6 @@
 // UNIT-IDENTITY-REPLAY: level1-damage-spell-selected-identity sorcerous_burst doResolveSorcerousBurstSpellAttackDamage
 // UNIT-IDENTITY-REPLAY: level1-damage-spell-selected-identity starry_wisp doResolveStarryWispObjectSpellAttackDamageAndDimLight
 // UNIT-IDENTITY-REPLAY: level1-damage-spell-selected-identity vicious_mockery doResolveViciousMockeryWisdomSavingThrowPsychicDamageAndNextAttackDisadvantage
-import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 import { Either } from "effect";
 import {
@@ -43,12 +42,11 @@ import {
   characterId,
   characterProcedureBinding,
   combatantId,
-  discoverBattleActs,
+  discoverBattleActCandidates,
   initiativeScore,
   objectInvisibleBenefitDenied,
   snapshotBattle,
   startBattle,
-  type AvailableBattleAct,
   type BattleCreatureInit,
   type BattleFill,
   type BattleHole,
@@ -57,10 +55,10 @@ import {
   type BattleResolutionResult,
   type BattleRolledDiceFill,
   type BattleState,
-  type BattleActDiscoverySubject as BattleSubject,
+  type BattleSubject,
   type CombatantId,
-  type SpellInvocationRef,
 } from "./index.ts";
+import type { BattleActDiscoveryCandidate } from "./battle-reducer.ts";
 
 const level1DamageSpellUnitIds = [
   "burning_hands",
@@ -123,7 +121,7 @@ type SelectedUnitIdentityReplay = {
   readonly sequences: readonly SelectedUnitIdentityReplaySequence[];
 };
 
-type ActionSpellAct = AvailableBattleAct & {
+type ActionSpellAct = BattleActDiscoveryCandidate & {
   readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
 };
 type ObjectTargetChoiceFill = Extract<
@@ -1173,7 +1171,7 @@ function level1DamageSpellBattle(spell: SpellRecord): BattleState {
   if (Either.isLeft(result)) {
     throw new Error(result.left.message);
   }
-  return result.right;
+  return result.right.state;
 }
 
 function level1DamageSpellCreature(input: {
@@ -1224,13 +1222,9 @@ function actionSpellAct(
   state: BattleState,
   spellId: Level1DamageSpellUnitId,
 ): ActionSpellAct {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActCandidates(state).find(
     (candidate): candidate is ActionSpellAct =>
-      candidate.subject.tag === "actionSpell" &&
-      isExpectedLevel1DamageSpellInvocation(
-        battleActSpellPresentation(candidate)?.invocation,
-        spellId,
-      ),
+      candidate.subject.tag === "actionSpell",
   );
   if (act === undefined) {
     throw new Error(`Expected ${spellId} action Spell act.`);
@@ -1383,34 +1377,11 @@ function assertSelectedSpellProcedureProfile(
           access: { tag: "classCantrip" },
           resource: { tag: "none" },
         };
-  expect(binding.procedure.invocation).toMatchObject({
+  expect(binding.procedure.execution).toMatchObject({
     spell: { id: spellId },
     ...accessAndResource,
     ...expected[spellId],
   });
-}
-
-function isExpectedLevel1DamageSpellInvocation(
-  invocation: SpellInvocationRef | undefined,
-  spellId: Level1DamageSpellUnitId,
-): boolean {
-  const profile = level1DamageSpellInvocationProfiles[spellId];
-  if (invocation === undefined || invocation.spellId !== spellId) {
-    return false;
-  }
-  if (
-    invocation.tag !== profile.tag ||
-    invocation.procedure !== profile.procedure
-  ) {
-    return false;
-  }
-  if (profile.tag === "spellSlot") {
-    return (
-      invocation.tag === "spellSlot" &&
-      Number(invocation.slotLevel) === profile.slotLevel
-    );
-  }
-  return true;
 }
 
 function spellTargetFill(

@@ -53,8 +53,9 @@ import {
   type BattleHole,
   type BattleReducerRouteEvent,
   type BattleResolutionResult,
+  type BattleRuntimeSession,
   type BattleState,
-  type BattleActDiscoverySubject as BattleSubject,
+  type BattleSubject,
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
@@ -331,17 +332,17 @@ function resolvedProjection(
 }
 
 function resolveAreaSavingThrowSpell(
-  state: BattleState,
+  session: BattleRuntimeSession,
   spellId: Extract<
     ConditionSavingThrowSpellUnitId,
     "color_spray" | "entangle" | "hypnotic_pattern"
   >,
   slotLevel = 1,
 ): BattleResolutionResult {
-  const act = spellAct({ state, spellId, slotLevel });
+  const act = spellAct({ session, spellId, slotLevel });
   const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
   return resolveBattleSubject({
-    state,
+    state: session.state,
     subject: act.subject,
     fills: [
       savingThrowOutcomeFill(savingThrow, [{ targetId, succeeded: false }]),
@@ -360,34 +361,32 @@ function resolveHypnoticPatternFailedSavingThrow(): BattleResolutionResult {
 function resolveBlindnessDeafnessFailedSavingThrow(
   selectedCondition: "blinded" | "deafened",
 ): BattleResolutionResult {
-  const state = conditionSpellBattle(
+  const session = conditionSpellBattle(
     srdSpellRecord("blindness_deafness"),
     "wizard",
   );
   const act = spellAct({
-    state,
+    session,
     spellId: "blindness_deafness",
     slotLevel: 2,
   });
   const target = requireHole(act.initialHoles, "spellTargetList");
   const conditionChoice = requireHole(act.initialHoles, "conditionChoice");
-  const targetFill = spellTargetListFill(target, [
-    targetId,
-  ]);
+  const targetFill = spellTargetListFill(target, [targetId]);
   const conditionChoiceFill = spellConditionChoiceFill(
     conditionChoice,
     selectedCondition,
   );
   const initialSave = requireResultHole(
     resolveBattleSubject({
-      state,
+      state: session.state,
       subject: act.subject,
       fills: [targetFill, conditionChoiceFill],
     }),
     "savingThrowOutcome",
   );
   return resolveBattleSubject({
-    state,
+    state: session.state,
     subject: act.subject,
     fills: [
       targetFill,
@@ -412,20 +411,20 @@ function resolveHoldSpellFailedSavingThrow(
   >,
   slotLevel: 2 | 5,
 ): BattleResolutionResult {
-  const state = conditionSpellBattle(srdSpellRecord(spellId), "wizard");
-  const act = spellAct({ state, spellId, slotLevel });
+  const session = conditionSpellBattle(srdSpellRecord(spellId), "wizard");
+  const act = spellAct({ session, spellId, slotLevel });
   const target = requireHole(act.initialHoles, "spellTargetList");
   const targetFill = spellTargetListFill(target, [targetId]);
   const initialSave = requireResultHole(
     resolveBattleSubject({
-      state,
+      state: session.state,
       subject: act.subject,
       fills: [targetFill],
     }),
     "savingThrowOutcome",
   );
   return resolveBattleSubject({
-    state,
+    state: session.state,
     subject: act.subject,
     fills: [
       targetFill,
@@ -477,29 +476,27 @@ function resolveHoldSpellRepeatSavingThrowSuccess(
 }
 
 function resolveHideousLaughterRepeatSavingThrowSuccess(): BattleResolutionResult {
-  const state = conditionSpellBattle(
+  const session = conditionSpellBattle(
     srdSpellRecord("hideous_laughter"),
     "wizard",
   );
   const act = spellAct({
-    state,
+    session,
     spellId: "hideous_laughter",
     slotLevel: 1,
   });
   const target = requireHole(act.initialHoles, "spellTargetList");
-  const targetFill = spellTargetListFill(target, [
-    targetId,
-  ]);
+  const targetFill = spellTargetListFill(target, [targetId]);
   const initialSave = requireResultHole(
     resolveBattleSubject({
-      state,
+      state: session.state,
       subject: act.subject,
       fills: [targetFill],
     }),
     "savingThrowOutcome",
   );
   const cast = resolveBattleSubject({
-    state,
+    state: session.state,
     subject: act.subject,
     fills: [
       targetFill,
@@ -531,11 +528,11 @@ function resolveHideousLaughterRepeatSavingThrowSuccess(): BattleResolutionResul
 }
 
 function resolveSleepRepeatSavingThrowFailure(): BattleResolutionResult {
-  const state = conditionSpellBattle(srdSpellRecord("sleep"), "wizard");
-  const act = spellAct({ state, spellId: "sleep", slotLevel: 1 });
+  const session = conditionSpellBattle(srdSpellRecord("sleep"), "wizard");
+  const act = spellAct({ session, spellId: "sleep", slotLevel: 1 });
   const initialSave = requireHole(act.initialHoles, "savingThrowOutcome");
   const cast = resolveBattleSubject({
-    state,
+    state: session.state,
     subject: act.subject,
     fills: [
       savingThrowOutcomeFill(initialSave, [{ targetId, succeeded: false }]),
@@ -566,18 +563,18 @@ function resolveSleepRepeatSavingThrowFailure(): BattleResolutionResult {
 }
 
 function resolveAreaSavingThrowSpellRoute(
-  state: BattleState,
+  session: BattleRuntimeSession,
   spellId: Extract<
     ConditionSavingThrowSpellUnitId,
     "color_spray" | "entangle" | "hypnotic_pattern"
   >,
   slotLevel = 1,
 ): readonly BattleReducerRouteEvent[] {
-  const act = spellAct({ state, spellId, slotLevel });
+  const act = spellAct({ session, spellId, slotLevel });
   const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
   const resolved = requireResolvedResult(
     resolveBattleSubject({
-      state,
+      state: session.state,
       subject: act.subject,
       fills: [
         savingThrowOutcomeFill(savingThrow, [{ targetId, succeeded: false }]),
@@ -594,27 +591,25 @@ function resolveAreaSavingThrowSpellRoute(
 function resolveBlindnessDeafnessFailedSavingThrowRoute(
   selectedCondition: "blinded" | "deafened",
 ): readonly BattleReducerRouteEvent[] {
-  const state = conditionSpellBattle(
+  const session = conditionSpellBattle(
     srdSpellRecord("blindness_deafness"),
     "wizard",
   );
   const act = spellAct({
-    state,
+    session,
     spellId: "blindness_deafness",
     slotLevel: 2,
   });
   const target = requireHole(act.initialHoles, "spellTargetList");
   const conditionChoice = requireHole(act.initialHoles, "conditionChoice");
-  const targetFill = spellTargetListFill(target, [
-    targetId,
-  ]);
+  const targetFill = spellTargetListFill(target, [targetId]);
   const conditionChoiceFill = spellConditionChoiceFill(
     conditionChoice,
     selectedCondition,
   );
   const awaitingConditionChoice = requireNeedsHolesResult(
     resolveBattleSubject({
-      state,
+      state: session.state,
       subject: act.subject,
       fills: [targetFill],
     }),
@@ -662,13 +657,13 @@ function resolveHoldSpellFailedSavingThrowRoute(
   >,
   slotLevel: 2 | 5,
 ): readonly BattleReducerRouteEvent[] {
-  const state = conditionSpellBattle(srdSpellRecord(spellId), "wizard");
-  const act = spellAct({ state, spellId, slotLevel });
+  const session = conditionSpellBattle(srdSpellRecord(spellId), "wizard");
+  const act = spellAct({ session, spellId, slotLevel });
   const target = requireHole(act.initialHoles, "spellTargetList");
   const targetFill = spellTargetListFill(target, [targetId]);
   const awaitingSave = requireNeedsHolesResult(
     resolveBattleSubject({
-      state,
+      state: session.state,
       subject: act.subject,
       fills: [targetFill],
     }),
@@ -741,22 +736,20 @@ function resolveHoldSpellRepeatSavingThrowSuccessRoute(
 }
 
 function resolveHideousLaughterRepeatSavingThrowSuccessRoute(): readonly BattleReducerRouteEvent[] {
-  const state = conditionSpellBattle(
+  const session = conditionSpellBattle(
     srdSpellRecord("hideous_laughter"),
     "wizard",
   );
   const act = spellAct({
-    state,
+    session,
     spellId: "hideous_laughter",
     slotLevel: 1,
   });
   const target = requireHole(act.initialHoles, "spellTargetList");
-  const targetFill = spellTargetListFill(target, [
-    targetId,
-  ]);
+  const targetFill = spellTargetListFill(target, [targetId]);
   const awaitingSave = requireNeedsHolesResult(
     resolveBattleSubject({
-      state,
+      state: session.state,
       subject: act.subject,
       fills: [targetFill],
     }),
@@ -805,12 +798,12 @@ function resolveHideousLaughterRepeatSavingThrowSuccessRoute(): readonly BattleR
 }
 
 function resolveSleepRepeatSavingThrowFailureRoute(): readonly BattleReducerRouteEvent[] {
-  const state = conditionSpellBattle(srdSpellRecord("sleep"), "wizard");
-  const act = spellAct({ state, spellId: "sleep", slotLevel: 1 });
+  const session = conditionSpellBattle(srdSpellRecord("sleep"), "wizard");
+  const act = spellAct({ session, spellId: "sleep", slotLevel: 1 });
   const initialSave = requireHole(act.initialHoles, "savingThrowOutcome");
   const cast = requireResolvedResult(
     resolveBattleSubject({
-      state,
+      state: session.state,
       subject: act.subject,
       fills: [
         savingThrowOutcomeFill(initialSave, [{ targetId, succeeded: false }]),
@@ -849,12 +842,12 @@ function resolveSleepRepeatSavingThrowFailureRoute(): readonly BattleReducerRout
 }
 
 function resolveSleepRepeatSaveAndDeathSaveMixedFrontierRoute(): readonly BattleReducerRouteEvent[] {
-  const state = conditionSpellBattle(srdSpellRecord("sleep"), "wizard");
-  const act = spellAct({ state, spellId: "sleep", slotLevel: 1 });
+  const session = conditionSpellBattle(srdSpellRecord("sleep"), "wizard");
+  const act = spellAct({ session, spellId: "sleep", slotLevel: 1 });
   const initialSave = requireHole(act.initialHoles, "savingThrowOutcome");
   const cast = requireResolvedResult(
     resolveBattleSubject({
-      state,
+      state: session.state,
       subject: act.subject,
       fills: [
         savingThrowOutcomeFill(initialSave, [{ targetId, succeeded: false }]),
@@ -1169,7 +1162,7 @@ function decodeHypnoticPatternSpellRecord(): SpellRecord {
 function conditionSpellBattle(
   spell: SpellRecord,
   sourceClassName: CharacterSpellcastingInit["sourceClassName"],
-): BattleState {
+): BattleRuntimeSession {
   const result = startBattle({
     battleId: battleId(`condition-saving-throw-selected-identity-${spell.id}`),
     combatants: [
@@ -1257,11 +1250,11 @@ function conditionSpellCreature(input: {
 }
 
 function spellAct(input: {
-  readonly state: BattleState;
+  readonly session: BattleRuntimeSession;
   readonly spellId: ConditionSavingThrowSpellUnitId;
   readonly slotLevel: number;
 }): ActionSpellAct {
-  const act = discoverBattleActs(input.state).find(
+  const act = discoverBattleActs(input.session).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
       battleActSpellPresentation(candidate)?.invocation.tag === "spellSlot" &&

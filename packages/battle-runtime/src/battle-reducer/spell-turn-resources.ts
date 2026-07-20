@@ -12,14 +12,16 @@ import type {
   BattleCreatureState,
   BattleTurnResources,
   BattleTurnSpellSlotUse,
-  SupportedSpellInvocation,
 } from "../battle-reducer.ts";
 import { resourceHasUsesRemaining } from "../character-battle-resources.ts";
 import type { CombatantId } from "../identity.ts";
+import type { RuntimeSpellProcedureExecution } from "../character-execution.ts";
+
+type RuntimeSpellProcedure = RuntimeSpellProcedureExecution;
 
 export function spellHasAvailableSpend(
   actor: BattleCreatureState,
-  invocation: SupportedSpellInvocation,
+  invocation: RuntimeSpellProcedure,
 ): boolean {
   if (actor.origin.kind !== "character") {
     return false;
@@ -31,7 +33,7 @@ export function spellHasAvailableSpend(
   if (resource.tag === "classFeatureFreeCast") {
     return actor.origin.resources.some(
       (candidate) =>
-        candidate.unit.id === resource.resourceUnitId &&
+        candidate.resourcePoolRef === resource.resourcePoolRef &&
         resourceHasUsesRemaining(candidate),
     );
   }
@@ -46,7 +48,7 @@ export function spellHasAvailableSpend(
 export function spellActTurnResourceAvailable(
   resources: BattleTurnResources,
   actorId: CombatantId,
-  invocation: SupportedSpellInvocation,
+  invocation: RuntimeSpellProcedure,
   options?: {
     readonly actionCostOverride?: "magicAction" | "bonusAction";
   },
@@ -74,7 +76,7 @@ export function spellActTurnResourceAvailable(
 }
 
 export function spellInvocationSpendsMagicAction(
-  invocation: SupportedSpellInvocation,
+  invocation: RuntimeSpellProcedure,
   options?: {
     readonly actionCostOverride?: "magicAction" | "bonusAction";
   },
@@ -83,7 +85,7 @@ export function spellInvocationSpendsMagicAction(
 }
 
 function spellInvocationActionCost(
-  invocation: SupportedSpellInvocation,
+  invocation: RuntimeSpellProcedure,
   options?: {
     readonly actionCostOverride?: "magicAction" | "bonusAction";
   },
@@ -95,16 +97,18 @@ function spellInvocationActionCost(
 }
 
 export function spellInvocationIsLevelOnePlus(
-  invocation: SupportedSpellInvocation,
+  invocation: RuntimeSpellProcedure,
 ): boolean {
   return (
     spellInvocationIsSpellcasting(invocation) &&
-    invocation.spell.mechanics.level >= 1
+    invocation.spellRuleFacts.level >= 1
   );
 }
 
 export function spellInvocationIsSpellcasting(
-  invocation: SupportedSpellInvocation,
+  invocation: { readonly procedure: string } & {
+    readonly action?: string;
+  },
 ): boolean {
   return !(
     invocation.procedure === "spellCreatedHeldObjectAttack" ||
@@ -135,7 +139,7 @@ export function markLevelOnePlusSpellCastThisTurn(
 export function markInvocationLevelOnePlusSpellCastThisTurn(
   resources: BattleTurnResources,
   combatantId: CombatantId,
-  invocation: SupportedSpellInvocation,
+  invocation: RuntimeSpellProcedure,
 ): BattleTurnResources {
   return spellInvocationIsLevelOnePlus(invocation)
     ? markLevelOnePlusSpellCastThisTurn(resources, combatantId)

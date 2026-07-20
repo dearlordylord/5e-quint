@@ -10,6 +10,7 @@ import {
   BattleSubjectSchema,
   StatBlockExecutionSnapshotSchema,
   addBattleCombatant,
+  discoverBattleActCandidates,
   discoverBattleActs,
   removeBattleCombatants,
   snapshotBattle,
@@ -42,7 +43,6 @@ import {
   battleStatBlockExecutionScopeRef,
   battleStatBlockExecutionScopeRefIsWellFormed,
   combatantId,
-  spellId,
   type BattleStatBlockExecutionScopeRef as BattleStatBlockExecutionScopeReference,
   type CombatantId,
 } from "./identity.ts";
@@ -169,8 +169,9 @@ describe("Stat Block execution references", () => {
   });
 
   test("binds spell discovery and replay to character procedure references", () => {
-    const state = wizardVsSkeletonBattle();
-    const spellActs = discoverBattleActs(state).flatMap((act) =>
+    const session = wizardVsSkeletonBattle();
+    const state = session.state;
+    const spellActs = discoverBattleActs(session).flatMap((act) =>
       act.subject.tag === "actionSpell"
         ? [{ ...act, subject: act.subject }]
         : [],
@@ -187,10 +188,43 @@ describe("Stat Block execution references", () => {
     );
     const magicMissileRef = magicMissileActs[0]?.subject.procedureRef;
     const rayOfFrostRef = rayOfFrostActs[0]?.subject.procedureRef;
+    const wizard = state.combatants.get(wizardId);
+    if (wizard?.origin.kind !== "character") {
+      throw new Error("Expected the Wizard character origin.");
+    }
+    const liveCharacterBindings = JSON.stringify(
+      wizard.origin.execution.procedureBindings,
+    );
+    expect(liveCharacterBindings).not.toContain("magic_missile");
+    expect(liveCharacterBindings).not.toContain("ray_of_frost");
+    expect(liveCharacterBindings).not.toContain("Magic Missile");
+    expect(liveCharacterBindings).not.toContain("Ray of Frost");
 
     expect(magicMissileRef).toBeDefined();
     expect(rayOfFrostRef).toBeDefined();
     expect(magicMissileRef).not.toBe(rayOfFrostRef);
+    expect(
+      wizard.origin.execution.procedureBindings.find(
+        (binding) => binding.procedureRef === magicMissileRef,
+      ),
+    ).toMatchObject({
+      procedureRef: magicMissileRef,
+      procedure: {
+        kind: "spellInvocation",
+        execution: { procedure: "repeatedDamageAllocation" },
+      },
+    });
+    expect(
+      wizard.origin.execution.procedureBindings.find(
+        (binding) => binding.procedureRef === rayOfFrostRef,
+      ),
+    ).toMatchObject({
+      procedureRef: rayOfFrostRef,
+      procedure: {
+        kind: "spellInvocation",
+        execution: { procedure: "spellAttackDamage" },
+      },
+    });
     expect(
       magicMissileActs.every(
         (act) => act.subject.procedureRef === magicMissileRef,
@@ -206,11 +240,40 @@ describe("Stat Block execution references", () => {
       kind: "character",
       execution: {
         procedureBindings: expect.arrayContaining([
-          expect.objectContaining({ procedureRef: magicMissileRef }),
-          expect.objectContaining({ procedureRef: rayOfFrostRef }),
+          {
+            procedureRef: magicMissileRef,
+            procedure: {
+              kind: "spellInvocation",
+              executionFacts: {
+                kind: "actionSpell",
+                familiarTouchDelivery: false,
+                readiedSpellCompatible: true,
+              },
+            },
+          },
+          {
+            procedureRef: rayOfFrostRef,
+            procedure: {
+              kind: "spellInvocation",
+              executionFacts: {
+                kind: "actionSpell",
+                familiarTouchDelivery: false,
+                readiedSpellCompatible: true,
+              },
+            },
+          },
         ]),
       },
     });
+    const serializedCharacterBindings = JSON.stringify(
+      wizardSnapshot?.origin.kind === "character"
+        ? wizardSnapshot.origin.execution.procedureBindings
+        : [],
+    );
+    expect(serializedCharacterBindings).not.toContain("magic_missile");
+    expect(serializedCharacterBindings).not.toContain("ray_of_frost");
+    expect(serializedCharacterBindings).not.toContain("Magic Missile");
+    expect(serializedCharacterBindings).not.toContain("Ray of Frost");
 
     const castAct = magicMissileActs.find(
       (act) => act.subject.mode.tag === "cast",
@@ -218,17 +281,10 @@ describe("Stat Block execution references", () => {
     if (castAct === undefined || castAct.subject.procedureRef === undefined) {
       throw new Error("Expected a bound Magic Missile cast act.");
     }
-    const forgedAuthoredIdentity = {
-      ...castAct.subject,
-      invocation: {
-        ...battleActSpellPresentation(castAct)?.invocation,
-        spellId: spellId("synthetic-lookalike"),
-      },
-    };
     expect(
       resolveBattleSubject({
         state,
-        subject: forgedAuthoredIdentity,
+        subject: castAct.subject,
         fills: [],
       }),
     ).toMatchObject({
@@ -335,7 +391,7 @@ describe("Stat Block execution references", () => {
     expect(allocatedReferences.join("|")).not.toContain("Cinder Breath");
     expect(allocatedReferences.join("|")).not.toContain("Dread Gaze");
     expect(allocatedReferences.join("|")).not.toContain(statBlock.id);
-    const replaySubject = discoverBattleActs(firstBattle).find(
+    const replaySubject = discoverBattleActCandidates(firstBattle).find(
       (act) =>
         act.subject.tag === "action" &&
         act.subject.action === "attack" &&
@@ -435,7 +491,7 @@ describe("Stat Block execution references", () => {
   });
 
   test("does not reuse a character execution scope after re-admission", () => {
-    const battle = wizardVsSkeletonBattle();
+    const battle = wizardVsSkeletonBattle().state;
     const original = battle.combatants.get(wizardId);
     if (original?.origin.kind !== "character") {
       throw new Error("Expected an admitted character execution.");
@@ -879,7 +935,7 @@ describe("Stat Block execution references", () => {
       ],
     });
     const execution = executionReferenceView(battle, actorId);
-    const discoveredSubjects = discoverBattleActs(battle)
+    const discoveredSubjects = discoverBattleActCandidates(battle)
       .filter((act) => act.subject.actorId === actorId)
       .map((act) => act.subject);
 
@@ -900,7 +956,7 @@ describe("Stat Block execution references", () => {
     const meleeOption = statBlockAttackActionOptions(actor.origin).find(
       (option) => option.attack.attackType === "melee",
     );
-    const attackAct = discoverBattleActs(battle).find(
+    const attackAct = discoverBattleActCandidates(battle).find(
       (act) =>
         meleeOption !== undefined &&
         act.subject.tag === "action" &&
@@ -1031,6 +1087,74 @@ describe("Stat Block execution references", () => {
         combatants: [...encoded.combatants, duplicatedCombatant],
       }),
     ).toThrow();
+    const actorProcedureRef = encoded.combatants.find(
+      (combatant) => combatant.combatantId === actorId,
+    )?.origin.execution.procedureBindings[0]?.procedureRef;
+    if (actorProcedureRef === undefined) {
+      throw new Error("Expected an actor procedure binding.");
+    }
+    expect(() =>
+      Schema.decodeUnknownSync(BattleSnapshotSchema)({
+        ...encoded,
+        obscurementZones: [
+          {
+            kind: "spellObscurementZone",
+            sourceProcedureRef: actorProcedureRef,
+            sourceCombatantId: fighterId,
+            obscurement: "heavilyObscured",
+            area: {
+              kind: "pointOriginSphere",
+              areaId: "battle:test:wrong-owner-obscurement",
+              radiusFeet: 10,
+            },
+            expiresAt: { kind: "duration", durationTicks: 1 },
+          },
+        ],
+      }),
+    ).toThrow();
+    const encodedFighterForAttack = encoded.combatants.find(
+      (combatant) => combatant.combatantId === fighterId,
+    );
+    if (encodedFighterForAttack?.origin.kind !== "character") {
+      throw new Error("Expected the serialized character combatant.");
+    }
+    const fighterAttackProcedureRef =
+      encodedFighterForAttack.origin.attackExecution.unarmedStrikeProcedureRef;
+    expect(() =>
+      Schema.decodeUnknownSync(BattleSnapshotSchema)({
+        ...encoded,
+        lightEmitters: [
+          {
+            kind: "spellLightEmitter",
+            sourceProcedureRef: fighterAttackProcedureRef,
+            sourceCombatantId: fighterId,
+            attachment: { kind: "combatant", combatantId: fighterId },
+            emission: { kind: "dim", radiusFeet: 10 },
+            opaqueCoverInteraction: { kind: "blocksEmission" },
+            expiresAt: { kind: "duration", durationTicks: 1 },
+          },
+        ],
+      }),
+    ).toThrow();
+    expect(() =>
+      Schema.decodeUnknownSync(BattleSnapshotSchema)({
+        ...encoded,
+        obscurementZones: [
+          {
+            kind: "spellObscurementZone",
+            sourceProcedureRef: fighterAttackProcedureRef,
+            sourceCombatantId: fighterId,
+            obscurement: "heavilyObscured",
+            area: {
+              kind: "pointOriginSphere",
+              areaId: "battle:test:attack-backed-obscurement",
+              radiusFeet: 10,
+            },
+            expiresAt: { kind: "duration", durationTicks: 1 },
+          },
+        ],
+      }),
+    ).toThrow();
     const encodedText = JSON.stringify(encoded);
     for (const pool of execution.resourcePools) {
       expect(encodedText).toContain(
@@ -1058,6 +1182,278 @@ describe("Stat Block execution references", () => {
     if (decodedOrigin?.kind !== "statBlock") {
       throw new Error("Expected decoded Stat Block origin.");
     }
+    const unboundProcedureRef = battleProcedureExecutionRef(
+      decodedOrigin.execution.scopeRef,
+      NonNegativeInteger(999),
+    );
+    const unboundResourceRef = battleResourcePoolExecutionRef(
+      decodedOrigin.execution.scopeRef,
+      NonNegativeInteger(999),
+    );
+    const unboundEffectRef = battleActiveEffectExecutionRef(
+      JSON.stringify({
+        kind: "activeEffectOccurrence",
+        ownerScopeRef: decodedOrigin.execution.scopeRef,
+        ordinal: 999,
+      }),
+    );
+    const firstAct = encoded.acts[0];
+    if (firstAct === undefined) {
+      throw new Error("Expected at least one serialized Stat Block act.");
+    }
+    const encodedFighter = encoded.combatants.find(
+      (combatant) => combatant.combatantId === fighterId,
+    );
+    const encodedActor = encoded.combatants.find(
+      (combatant) => combatant.combatantId === actorId,
+    );
+    if (encodedFighter?.origin.kind !== "character") {
+      throw new Error("Expected the serialized character combatant.");
+    }
+    if (encodedActor?.origin.kind !== "statBlock") {
+      throw new Error("Expected the serialized Stat Block combatant.");
+    }
+    const fighterEffectRef = battleActiveEffectExecutionRef(
+      JSON.stringify({
+        kind: "activeEffectOccurrence",
+        ownerScopeRef: encodedFighter.origin.execution.scopeRef,
+        ordinal: encodedFighter.nextActiveEffectOrdinal,
+      }),
+    );
+    const actorEffectRef = battleActiveEffectExecutionRef(
+      JSON.stringify({
+        kind: "activeEffectOccurrence",
+        ownerScopeRef: decodedOrigin.execution.scopeRef,
+        ordinal: encodedActor.nextActiveEffectOrdinal,
+      }),
+    );
+    const escapeSubject = {
+      tag: "action" as const,
+      actorId,
+      action: "escapeSpellRestraint" as const,
+      targetId: fighterId,
+      effectRef: fighterEffectRef,
+    };
+    const snapshotWithEffectOwner = (
+      ownerId: CombatantId,
+      effectRef: BattleActiveEffectExecutionRef,
+    ) => ({
+      ...encoded,
+      combatants: encoded.combatants.map((combatant) =>
+        combatant.combatantId === ownerId
+          ? {
+              ...combatant,
+              nextActiveEffectOrdinal: combatant.nextActiveEffectOrdinal + 1,
+              activeEffectRefs: [...combatant.activeEffectRefs, effectRef],
+            }
+          : combatant,
+      ),
+      acts: [
+        { ...firstAct, subject: escapeSubject, initialHoles: [] },
+        ...encoded.acts.slice(1),
+      ],
+    });
+    expect(() =>
+      Schema.decodeUnknownSync(BattleSnapshotSchema)(
+        snapshotWithEffectOwner(fighterId, fighterEffectRef),
+      ),
+    ).not.toThrow();
+    expect(() =>
+      Schema.decodeUnknownSync(BattleSnapshotSchema)({
+        ...snapshotWithEffectOwner(actorId, actorEffectRef),
+        acts: [
+          {
+            ...firstAct,
+            subject: { ...escapeSubject, effectRef: actorEffectRef },
+            initialHoles: [],
+          },
+          ...encoded.acts.slice(1),
+        ],
+      }),
+    ).toThrow();
+    const encodedAttackSnapshot = Schema.encodeSync(BattleSnapshotSchema)(
+      snapshotBattle(battle),
+    );
+    const encodedAttackActIndex = encodedAttackSnapshot.acts.findIndex(
+      (act) =>
+        act.subject.tag === "action" &&
+        act.subject.action === "attack" &&
+        "procedureRef" in act.subject &&
+        act.subject.procedureRef === decodedStatBlockAttack.procedureRef,
+    );
+    const encodedAttackAct = encodedAttackSnapshot.acts[encodedAttackActIndex];
+    if (encodedAttackAct === undefined) {
+      throw new Error("Expected the encoded Stat Block attack act.");
+    }
+    const snapshotWithAttackInitialHole = (hole: unknown) => ({
+      ...encodedAttackSnapshot,
+      acts: encodedAttackSnapshot.acts.map((act, index) =>
+        index === encodedAttackActIndex
+          ? { ...encodedAttackAct, initialHoles: [hole] }
+          : act,
+      ),
+    });
+    expect(() =>
+      Schema.decodeUnknownSync(BattleSnapshotSchema)(
+        snapshotWithAttackInitialHole(decodedAttackRollHole),
+      ),
+    ).not.toThrow();
+    expect(() =>
+      Schema.decodeUnknownSync(BattleSnapshotSchema)(
+        snapshotWithAttackInitialHole({
+          ...decodedAttackRollHole,
+          ongoingFeatureActivations: [
+            { procedureRef: unboundProcedureRef, rollMode: "advantage" },
+          ],
+        }),
+      ),
+    ).toThrow();
+    expect(() =>
+      Schema.decodeUnknownSync(BattleSnapshotSchema)(
+        snapshotWithAttackInitialHole({
+          kind: "rolledDice",
+          holeId: "battle:test:unbound-damage-choice",
+          holeInstanceKey: "battle:test:unbound-damage-choice",
+          label: "Synthetic damage",
+          attack: decodedStatBlockAttack,
+          critical: false,
+          weaponDamageDiceRollChoiceProcedureRefs: [unboundProcedureRef],
+        }),
+      ),
+    ).toThrow();
+    expect(() =>
+      Schema.decodeUnknownSync(BattleSnapshotSchema)(
+        snapshotWithAttackInitialHole({
+          kind: "hitPointHealingDistribution",
+          holeId: "battle:test:unbound-healing-pool",
+          holeInstanceKey: "battle:test:unbound-healing-pool",
+          label: "Synthetic healing pool",
+          requiresTableSpatialFact: true,
+          healingPool: {
+            sourceCombatantId: actorId,
+            sourceProcedureRef: unboundProcedureRef,
+            rangeFeet: 5,
+            poolHitPoints: 1,
+            perTargetCap: "halfHitPointMaximum",
+          },
+          choices: [actorId],
+        }),
+      ),
+    ).toThrow();
+    expect(() =>
+      Schema.decodeUnknownSync(BattleSnapshotSchema)(
+        snapshotWithAttackInitialHole({
+          kind: "concentrationSavingThrow",
+          holeId: "battle:test:unbound-concentration-bonus",
+          holeInstanceKey: "battle:test:unbound-concentration-bonus",
+          label: "Synthetic concentration save",
+          combatantId: actorId,
+          dc: 10,
+          damageAmount: 1,
+          targetFlatBonuses: [
+            {
+              targetId: actorId,
+              sourceProcedureRef: unboundProcedureRef,
+              bonus: 1,
+            },
+          ],
+        }),
+      ),
+    ).toThrow();
+    expect(() =>
+      Schema.decodeUnknownSync(BattleSnapshotSchema)(
+        snapshotWithAttackInitialHole({
+          kind: "attackDamageDisposition",
+          holeId: "battle:test:unbound-damage-disposition",
+          holeInstanceKey: "battle:test:unbound-damage-disposition",
+          label: "Synthetic damage disposition",
+          attackerId: fighterId,
+          targetId: actorId,
+          choices: [
+            {
+              kind: "zeroHitPointReplacement",
+              procedureRef: unboundProcedureRef,
+            },
+          ],
+        }),
+      ),
+    ).toThrow();
+    expect(() =>
+      Schema.decodeUnknownSync(BattleSnapshotSchema)(
+        snapshotWithAttackInitialHole({
+          kind: "movableZoneRamMovement",
+          holeId: "battle:test:unbound-movable-zone",
+          holeInstanceKey: "battle:test:unbound-movable-zone",
+          label: "Synthetic movable zone",
+          movableZone: {
+            targetId: fighterId,
+            sourceProcedureRef: unboundProcedureRef,
+            sourceCombatantId: actorId,
+            areaId: "battle:test:unbound-movable-zone",
+            maxMoveFeet: 5,
+          },
+          requiresTableSpatialFact: true,
+        }),
+      ),
+    ).toThrow();
+    expect(() =>
+      Schema.decodeUnknownSync(BattleSnapshotSchema)({
+        ...encoded,
+        acts: [
+          {
+            ...firstAct,
+            initialHoles: [
+              {
+                kind: "statBlockRechargeRoll",
+                holeId: "battle:test:unbound-recharge",
+                holeInstanceKey: "battle:test:unbound-recharge",
+                label: "Synthetic recharge",
+                combatantId: actorId,
+                rechargeTargets: [unboundResourceRef],
+              },
+            ],
+          },
+          ...encoded.acts.slice(1),
+        ],
+      }),
+    ).toThrow();
+    expect(() =>
+      Schema.decodeUnknownSync(BattleSnapshotSchema)({
+        ...encoded,
+        acts: [
+          {
+            ...firstAct,
+            subject: {
+              tag: "action",
+              actorId,
+              action: "escapeSpellRestraint",
+              targetId: actorId,
+              effectRef: unboundEffectRef,
+            },
+          },
+          ...encoded.acts.slice(1),
+        ],
+      }),
+    ).toThrow();
+    expect(() =>
+      Schema.decodeUnknownSync(BattleSnapshotSchema)({
+        ...encoded,
+        obscurementZones: [
+          {
+            kind: "spellObscurementZone",
+            sourceProcedureRef: unboundProcedureRef,
+            sourceCombatantId: actorId,
+            obscurement: "heavilyObscured",
+            area: {
+              kind: "pointOriginSphere",
+              areaId: "battle:test:unbound-obscurement",
+              radiusFeet: 10,
+            },
+            expiresAt: { kind: "duration", durationTicks: 1 },
+          },
+        ],
+      }),
+    ).toThrow();
     const restored = restoreStatBlockExecutionAdmission(
       battle.battleId,
       actorId,

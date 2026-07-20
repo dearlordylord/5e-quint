@@ -18,12 +18,13 @@ import type {
 } from "../battle-reducer.ts";
 import type { CombatantId } from "../identity.ts";
 import {
-  enemyZeroHitPointTemporaryHitPointsProcedureRef,
+  enemyZeroHitPointTemporaryHitPointsProcedures,
   enemyZeroHitPointTemporaryHitPointsTriggerApplies,
   enemyZeroHitPointTransitionOccurs,
 } from "./enemy-zero-hit-point-temporary-hit-points.ts";
 import { damageRelationshipQuestionId } from "./damage-relationship-question-id.ts";
 import { applyHpDamage } from "./damage-apply.ts";
+import { isCharacterBattleCreatureState } from "./creature-state.ts";
 
 export type DamageRelationshipDecisionParseResult =
   | {
@@ -251,22 +252,18 @@ function damageRelationshipQuestions(input: {
   for (const beneficiary of input.targetTransitionsToZero
     ? input.state.combatants.values()
     : []) {
-    if (beneficiary.origin.kind !== "character") {
+    if (!isCharacterBattleCreatureState(beneficiary)) {
       continue;
     }
-    for (const profile of beneficiary.origin.enemyZeroHitPointTemporaryHitPointsProfiles.values()) {
-      const procedureRef = enemyZeroHitPointTemporaryHitPointsProcedureRef(
-        beneficiary.origin.execution,
-        profile.unit.id,
-      );
-      if (procedureRef === undefined) continue;
+    for (const procedure of enemyZeroHitPointTemporaryHitPointsProcedures(beneficiary)) {
+      const { execution, procedureRef } = procedure;
       const triggerApplies = enemyZeroHitPointTemporaryHitPointsTriggerApplies({
         procedureRef,
         beneficiaryId: beneficiary.combatantId,
         damageSourceId: input.damageSourceId,
         targetId: input.targetId,
-        selfTrigger: profile.temporaryHitPoints.trigger.bySelf,
-        otherWithinFeet: profile.temporaryHitPoints.trigger.byOtherWithinFeet,
+        selfTrigger: execution.temporaryHitPoints.trigger.bySelf,
+        otherWithinFeet: execution.temporaryHitPoints.trigger.byOtherWithinFeet,
         spatialFacts: input.spatialFacts,
       });
       if (triggerApplies) {

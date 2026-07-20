@@ -1,4 +1,5 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-damage-reduction
+import { BattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
 //
 // The damageReduction Spell Procedure Profile: a cantrip-access spell (today
 // Resistance) that, on touch, grants an ongoing reduction of one damage roll
@@ -13,21 +14,17 @@
 //                            spells-discovery.ts:discoverBattleActs
 //   - castSummary()        — was the damageReduction branch in
 //                            spells-discovery.ts:spellInvocationCastSummary
-//   - invocationRef()      — was the damageReduction Match case in
-//                            spells-invocation-ref.ts:supportedSpellInvocationRef
 //   - resolve()            — was resolveDamageReductionSpellAct in
 //                            spells-resolve-support-effects.ts
 //   - applyEffect()        — was applyDamageReductionSpellEffect in
 //                            spells-active-effects.ts (kept as a file-local
 //                            helper; not exported from the profile)
-//   - knownWillingTargetSpellIds — known-willing targeting classification
 //
 import { movementFeet } from "@dnd/shared/types";
 import { DamageTypeSchema } from "@dnd/surface/surface/schema";
 import type { DamageType, SpellRecord } from "@dnd/surface/surface/types";
 import { Schema } from "effect";
 
-import { spellId } from "../../identity.ts";
 import type { CombatantId } from "../../identity.ts";
 import {
   snapshotBattle,
@@ -49,16 +46,13 @@ import {
 import { spellDamageTypeChoiceHole } from "../spells-damage-fills.ts";
 import { scalarBuffActiveEffectExpiration } from "../spells-profiles-support.ts";
 import { spellTargetHole, spellTargetIsLegal } from "../spells-targeting.ts";
-import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
-import { spellProcedureInvocationSchema } from "./profile.ts";
-import type { SupportedSpellInvocation } from "../../battle-reducer.ts";
+import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
 import {
-  BattleRuntimeObjectSchema,
   ClassCantripSpellAccessSchema,
   MovementFeet,
   NoSpellInvocationResourceSchema,
@@ -86,6 +80,8 @@ function damageReductionShape(
     spell.mechanics.attachment.kind !== "hole" ||
     spell.mechanics.attachment.value.kind !== "target" ||
     spell.mechanics.attachment.value.selection.mode !== "one" ||
+    !("disposition" in spell.mechanics.attachment.value.selection) ||
+    spell.mechanics.attachment.value.selection.disposition !== "willing" ||
     spell.mechanics.operations.length !== 1
   ) {
     return null;
@@ -122,7 +118,12 @@ function damageReductionShape(
     return null;
   }
   return {
-    targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 },
+    targeting: {
+      kind: "targetList",
+      minTargets: 1,
+      maxTargets: 1,
+      requiredTargetDisposition: "willing",
+    },
     damageTypeChoices: choices,
     amount: { dice: 1, dieSize: 4 },
     expiresAt,
@@ -204,7 +205,6 @@ function discoverDamageReductionCastAct(
         tag: "actionSpell",
         actorId,
         procedureRef: invocation.sourceProcedureRef,
-        invocation: damageReductionInvocationRef(invocation),
         mode: { tag: "cast" },
       },
       initialHoles: [targetHole, spellDamageTypeChoiceHole(invocation)],
@@ -212,21 +212,6 @@ function discoverDamageReductionCastAct(
   ];
 }
 
-function damageReductionInvocationRef(
-  invocation: DamageReductionSpellInvocation,
-): SpellInvocationRef {
-  return {
-    tag: "cantrip",
-    spellId: spellId(invocation.spell.id),
-    procedure: "damageReduction",
-  };
-}
-
-function damageReductionCastSummary(
-  invocation: DamageReductionSpellInvocation,
-): string {
-  return `Cast ${invocation.spell.name} as a cantrip.`;
-}
 
 function resolveDamageReduction(
   input: SpellProcedureProfileResolveInput<DamageReductionSpellInvocation>,
@@ -338,26 +323,25 @@ function resolveDamageReduction(
       };
 }
 
-export const DamageReductionInvocationSchema = spellProcedureInvocationSchema<
-  Extract<SupportedSpellInvocation, { readonly procedure: "damageReduction" }>
->(
+export const DamageReductionInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: ClassCantripSpellAccessSchema,
     resource: NoSpellInvocationResourceSchema,
     procedure: Schema.Literal("damageReduction"),
-    spell: BattleRuntimeObjectSchema,
+    spellRuleFacts: SpellRuleExecutionFactsSchema,
     actionCost: Schema.Literal("magicAction"),
     targeting: Schema.Struct({
       kind: Schema.Literal("targetList"),
       minTargets: Schema.Literal(1),
       maxTargets: Schema.Number,
+      requiredTargetDisposition: Schema.Literal("willing"),
     }),
     damageTypeChoices: Schema.Array(DamageTypeSchema),
     amount: Schema.Struct({
       dice: Schema.Literal(1),
       dieSize: Schema.Literal(4),
     }),
-    expiresAt: BattleRuntimeObjectSchema,
+    expiresAt: BattleActiveEffectExpirationSchema,
     rangeFeet: MovementFeet,
   }),
 );
@@ -369,13 +353,8 @@ export const damageReductionProfile: SpellProcedureProfile<
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   targetListInvocation: { kind: "always" },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: ["resistance"] as const satisfies ReadonlyArray<
-    SpellRecord["id"]
-  >,
   admit: admitDamageReduction,
   discoverCastAct: discoverDamageReductionCastAct,
-  castSummary: damageReductionCastSummary,
-  invocationRef: damageReductionInvocationRef,
-  invocationSchema: DamageReductionInvocationSchema,
+  executionSchema: DamageReductionInvocationSchema,
   resolve: resolveDamageReduction,
 };

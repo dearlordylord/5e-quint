@@ -35,7 +35,7 @@ import {
 import {
   battleId,
   combatantId,
-  discoverBattleActs,
+  discoverBattleActCandidates,
   initiativeScore,
   startBattle,
   type BattleCreatureInit,
@@ -43,7 +43,7 @@ import {
   type BattleHole,
   type BattleResolutionResult,
   type BattleState,
-  type BattleActDiscoverySubject as BattleSubject,
+  type BattleSubject,
   type CombatantId,
 } from "./index.ts";
 
@@ -378,12 +378,11 @@ function requireDiscoveredStatBlockAttackSubject(
   BattleSubject,
   { readonly tag: "action"; readonly action: "attack" }
 > {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActCandidates(state).find(
     (candidate) =>
       candidate.subject.tag === "action" &&
       candidate.subject.action === "attack" &&
       candidate.subject.actorId === actorId &&
-      candidate.summary.includes(multiDamageAttackName) &&
       (candidate.subject.statBlockDamageNotation ?? "rolled") === damageMode,
   );
   if (
@@ -425,7 +424,7 @@ function startBattleRight(
   if (Either.isLeft(result)) {
     throw new Error(result.left.message);
   }
-  return result.right;
+  return result.right.state;
 }
 
 function statBlockCreature(input: {

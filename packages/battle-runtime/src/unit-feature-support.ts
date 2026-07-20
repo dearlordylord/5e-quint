@@ -20,6 +20,7 @@ import {
   movementDeltaFeet,
   movementFeet,
   type Condition,
+  type DamageType,
   type DamageDieSize,
   type MovementDeltaFeet,
   type MovementFeet,
@@ -32,7 +33,6 @@ import type {
   ClassName,
   DiceAmount,
   DiceExpr,
-  DamageType,
   EffectAtom,
   EquipmentPredicate,
   CreatureType,
@@ -184,12 +184,19 @@ const DRUID_WILD_SHAPE_RESOURCE_UNIT_ID =
 const MONK_FOCUS_RESOURCE_UNIT_ID =
   "monk_monks_focus" as const satisfies UnitRecord["id"];
 const MONK_FLURRY_OF_BLOWS_OPTION_ID = "flurry_of_blows" as const;
-const DRACONIC_ANCESTRY_DAMAGE_TYPE_HOLE_ID =
+export const DRACONIC_ANCESTRY_DAMAGE_TYPE_HOLE_ID =
   "species_dragonborn_draconic_ancestry_damage_type" as const;
 type DraconicAncestryDamageTypeSource =
   DragonbornSpeciesRecord["draconicAncestry"]["damageType"];
 type DraconicAncestryDamageType =
   DraconicAncestryDamageTypeSource["options"][number]["damageType"];
+export const DRACONIC_ANCESTRY_DAMAGE_TYPES = [
+  "acid",
+  "cold",
+  "fire",
+  "lightning",
+  "poison",
+] as const satisfies ReadonlyArray<DamageType & DraconicAncestryDamageType>;
 const DAMAGE_TYPE_VALUES = new Set<string>(DAMAGE_TYPES);
 export type BattleUnitSupportProfileSourceFacts = {
   readonly draconicAncestryDamageType: DraconicAncestryDamageType;
@@ -535,6 +542,7 @@ export type MagicActionHealingPoolProfile = {
 };
 export type BattleMagicActionHealingPoolSupportProfile = {
   readonly kind: typeof MAGIC_ACTION_HEALING_POOL_SUPPORT_PROFILE;
+  readonly className: ClassName;
   readonly healingPool: MagicActionHealingPoolProfile;
 };
 export type FixedD6AmountProfile = {
@@ -629,6 +637,7 @@ export type EnemyZeroHitPointTemporaryHitPointsProfile = {
 };
 export type BattleEnemyZeroHitPointTemporaryHitPointsSupportProfile = {
   readonly kind: typeof ENEMY_ZERO_HIT_POINT_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE;
+  readonly className: ClassName;
   readonly temporaryHitPoints: EnemyZeroHitPointTemporaryHitPointsProfile;
 };
 export const PASSIVE_SPEED_KIND_GRANT_KINDS = [
@@ -907,7 +916,6 @@ export type CunningStrikeProfile = {
 };
 export type BattleCunningStrikeSupportProfile = {
   readonly kind: typeof CUNNING_STRIKE_SUPPORT_PROFILE;
-  readonly unit: UnitRecord;
   readonly cunningStrike: CunningStrikeProfile;
 };
 export type CunningStrikeOptionGrantProfile = {
@@ -916,7 +924,6 @@ export type CunningStrikeOptionGrantProfile = {
 };
 export type BattleCunningStrikeOptionGrantSupportProfile = {
   readonly kind: typeof CUNNING_STRIKE_OPTION_GRANT_SUPPORT_PROFILE;
-  readonly unit: UnitRecord;
   readonly optionGrant: CunningStrikeOptionGrantProfile;
 };
 export type PaladinSacredWeaponProfile = {
@@ -2358,15 +2365,13 @@ export type MartialArtsDamageReplacementProfile = {
   readonly dieSize: MartialArtsDieSize;
 };
 
-export type SupportedUnitFeatureProfile =
+export type SupportedUnitFeatureFacts =
   | {
       readonly kind: "extraActionGrant";
-      readonly unit: UnitRecord;
       readonly restriction: ActionRestriction;
     }
   | {
       readonly kind: "selfBonusActionHealing";
-      readonly unit: UnitRecord;
       readonly dice: number;
       readonly dieSize: number;
       readonly flatBase: number;
@@ -2377,7 +2382,6 @@ export type SupportedUnitFeatureProfile =
     }
   | {
       readonly kind: "ongoingFeature";
-      readonly unit: UnitRecord;
       readonly activationTrigger: "bonusAction" | "firstAttackRoll";
       readonly spendsUse: boolean;
       readonly lifecycle: OngoingFeatureLifecycleProfile;
@@ -2390,7 +2394,6 @@ export type SupportedUnitFeatureProfile =
     }
   | {
       readonly kind: "attackDamageRider";
-      readonly unit: UnitRecord;
       readonly optional: true;
       readonly usageLimit: "oncePerTurn";
       readonly trigger: "finesseOrRangedAttackWithAdvantageOrAlly";
@@ -2407,7 +2410,6 @@ export type SupportedUnitFeatureProfile =
     }
   | {
       readonly kind: "attackDamageRider";
-      readonly unit: UnitRecord;
       readonly optional: false;
       readonly usageLimit: "oncePerTurn";
       readonly trigger: "rageActiveRecklessStrengthWeaponOrUnarmedStrikeFirstHit";
@@ -2419,7 +2421,6 @@ export type SupportedUnitFeatureProfile =
     }
   | {
       readonly kind: "saveDamageReplacement";
-      readonly unit: UnitRecord;
       readonly ability: "dex";
       readonly requiredSuccessDamage: "half";
       readonly onSuccess: "none";
@@ -2428,99 +2429,80 @@ export type SupportedUnitFeatureProfile =
     }
   | {
       readonly kind: "reactionRollOrDamageReduction";
-      readonly unit: UnitRecord;
       readonly classLevel: ClassLevel;
       readonly modifiers: readonly ReactionRollOrDamageReductionProfile[];
     }
   | {
       readonly kind: "passiveArmorClassBonus";
-      readonly unit: UnitRecord;
       readonly armorClass: PassiveArmorClassBonusProfile;
     }
   | {
       readonly kind: "passiveRangedAttackRollBonus";
-      readonly unit: UnitRecord;
       readonly attackRoll: PassiveRangedAttackRollBonusProfile;
     }
   | {
       readonly kind: "initiativeProficiencyAndSwap";
-      readonly unit: UnitRecord;
       readonly initiative: InitiativeProficiencyAndSwapProfile;
     }
   | {
       readonly kind: "attackRollMissToHitReplacement";
-      readonly unit: UnitRecord;
       readonly replacement: AttackRollMissToHitReplacementProfile;
     }
   | {
       readonly kind: "attackActionAreaSaveDamageReplacement";
-      readonly unit: UnitRecord;
       readonly breath: AttackActionAreaSaveDamageReplacementProfile;
     }
   | {
       readonly kind: "d20TestNaturalOneReroll";
-      readonly unit: UnitRecord;
       readonly reroll: D20TestNaturalOneRerollProfile;
     }
   | {
       readonly kind: "passiveSavingThrowRollMode";
-      readonly unit: UnitRecord;
       readonly savingThrow: PassiveSavingThrowRollModeProfile;
     }
   | {
       readonly kind: "passiveAbilityCheckRollMode";
-      readonly unit: UnitRecord;
       readonly abilityCheck: PassiveAbilityCheckRollModeProfile;
     }
   | {
       readonly kind: "passiveSpeedBonus";
-      readonly unit: UnitRecord;
       readonly speed: PassiveSpeedBonusProfile;
     }
   | {
       readonly kind: "passiveSpeedKindGrants";
-      readonly unit: UnitRecord;
       readonly speedKindGrants: PassiveSpeedKindGrantsProfile;
     }
   | {
       readonly kind: "acrobaticMovement";
-      readonly unit: UnitRecord;
       readonly acrobaticMovement: AcrobaticMovementProfile;
     }
   | {
       readonly kind: "creatureSpaceMovementPermission";
-      readonly unit: UnitRecord;
       readonly permission: CreatureSpaceMovementPermissionProfile;
     }
   | {
       readonly kind: "hideActionObscurementPermission";
-      readonly unit: UnitRecord;
       readonly permission: HideActionObscurementPermissionProfile;
     }
   | {
       readonly kind: "weaponDamageDiceRollChoice";
-      readonly unit: UnitRecord;
       readonly damageDiceChoice: WeaponDamageDiceRollChoiceProfile;
     }
   | {
       readonly kind: "attackDamageDieFloor";
-      readonly unit: UnitRecord;
       readonly damageDieFloor: AttackDamageDieFloorProfile;
     }
   | {
       readonly kind: "lightExtraAttackDamageAbilityModifier";
-      readonly unit: UnitRecord;
       readonly damageAbilityModifier: LightExtraAttackDamageAbilityModifierProfile;
     }
   | {
       readonly kind: "martialArtsAttackProjection";
-      readonly unit: UnitRecord;
       readonly classLevel: ClassLevel;
       readonly martialArts: MartialArtsAttackProjectionProfile;
     }
   | {
       readonly kind: "bardicInspirationGrant";
-      readonly unit: UnitRecord;
       readonly rangeFeet: MovementFeet;
       readonly dieSize: DamageDieSize;
       readonly durationTicks: ElapsedTimeTicks;
@@ -2529,15 +2511,13 @@ export type SupportedUnitFeatureProfile =
         readonly amount: 1;
       };
     }
-  | SupportedDruidWildShapeKnownFormProfile
+  | BattleDruidWildShapeKnownFormSupportProfile
   | {
       readonly kind: "attackActionAttackCountScaling";
-      readonly unit: UnitRecord;
       readonly additionalAttacks: BattleAttackActionAdditionalAttacks;
     }
   | {
       readonly kind: "zeroHitPointReplacement";
-      readonly unit: UnitRecord;
       readonly optional: true;
       readonly trigger: "reducedToZeroHitPointsNotKilledOutright";
       readonly replacementHp: 1;
@@ -2545,91 +2525,80 @@ export type SupportedUnitFeatureProfile =
     }
   | {
       readonly kind: "bonusActionDashTemporaryHitPoints";
-      readonly unit: UnitRecord;
       readonly dashTemporaryHitPoints: BonusActionDashTemporaryHitPointsProfile;
     }
   | {
       readonly kind: "failedAbilityCheckResourceBoost";
-      readonly unit: UnitRecord;
       readonly abilityCheck: FailedAbilityCheckResourceBoostProfile;
     }
   | {
       readonly kind: "failedSavingThrowReroll";
-      readonly unit: UnitRecord;
       readonly savingThrow: FailedSavingThrowRerollProfile;
     }
   | {
       readonly kind: "spellSlotHealingModifier";
-      readonly unit: UnitRecord;
       readonly healingModifier: SpellSlotHealingModifierProfile;
     }
   | {
       readonly kind: "magicActionHealingPool";
-      readonly unit: UnitRecord;
+      readonly className: ClassName;
       readonly healingPool: MagicActionHealingPoolProfile;
     }
   | {
       readonly kind: "magicActionAreaSaveDamageHealing";
-      readonly unit: UnitRecord;
       readonly damageHealing: MagicActionAreaSaveDamageHealingProfile;
     }
   | {
       readonly kind: "magicActionSaveGatedCondition";
-      readonly unit: UnitRecord;
       readonly condition: MagicActionSaveGatedConditionProfile;
     }
   | {
       readonly kind: "enemyZeroHitPointTemporaryHitPoints";
-      readonly unit: UnitRecord;
+      readonly className: ClassName;
       readonly temporaryHitPoints: EnemyZeroHitPointTemporaryHitPointsProfile;
     }
   | {
       readonly kind: "bonusActionDelegatedStandardActions";
-      readonly unit: UnitRecord;
       readonly actionEconomy: BattleBonusActionDelegatedStandardActionsSupportProfile;
     }
   | {
       readonly kind: "remarkableAthlete";
-      readonly unit: UnitRecord;
       readonly remarkableAthlete: RemarkableAthleteProfile;
     }
   | {
       readonly kind: "openHandTechnique";
-      readonly unit: UnitRecord;
       readonly technique: OpenHandTechniqueProfile;
     }
   | {
       readonly kind: "stunningStrike";
-      readonly unit: UnitRecord;
       readonly stunningStrike: StunningStrikeProfile;
     }
   | BattleCunningStrikeSupportProfile
   | BattleCunningStrikeOptionGrantSupportProfile
   | {
       readonly kind: "paladinSacredWeapon";
-      readonly unit: UnitRecord;
       readonly sacredWeapon: PaladinSacredWeaponProfile;
     }
   | {
       readonly kind: "rogueSteadyAim";
-      readonly unit: UnitRecord;
       readonly steadyAim: RogueSteadyAimProfile;
     }
   | {
       readonly kind: "potentCantrip";
-      readonly unit: UnitRecord;
       readonly potentCantrip: PotentCantripProfile;
     }
   | {
       readonly kind: "grappler";
-      readonly unit: UnitRecord;
       readonly grappler: GrapplerProfile;
     }
   | {
       readonly kind: "retaliationReactionAttack";
-      readonly unit: UnitRecord;
       readonly retaliation: RetaliationReactionAttackProfile;
     };
+
+export type SupportedUnitFeatureProfile = SupportedUnitFeatureFacts & {
+  readonly unit: UnitRecord;
+};
 
 export type BattleAttackDamageRiderSupport =
   | "attackDamageRider"
@@ -3037,7 +3006,7 @@ function isAlternateActionCostAction(
   );
 }
 
-function isClassicNonSrdMechanicsUnit(
+export function isClassicNonSrdMechanicsUnit(
   unit: BattleUnitSupportSource,
 ): unit is ClassicNonSrdMechanicsUnit {
   return unit.provenance.kind === "classic-2024-mechanics-source-lane";
@@ -3755,6 +3724,7 @@ export function battleMagicActionHealingPoolSupportForUnit(
     ? "unsupported"
     : {
         kind: MAGIC_ACTION_HEALING_POOL_SUPPORT_PROFILE,
+        className: profile.className,
         healingPool: profile.healingPool,
       };
 }
@@ -3789,6 +3759,7 @@ export function battleEnemyZeroHitPointTemporaryHitPointsSupportForUnit(
     ? "unsupported"
     : {
         kind: ENEMY_ZERO_HIT_POINT_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE,
+        className: profile.className,
         temporaryHitPoints: profile.temporaryHitPoints,
       };
 }
@@ -3849,7 +3820,6 @@ export function battleCunningStrikeSupportForUnit(
     ? "unsupported"
     : {
         kind: CUNNING_STRIKE_SUPPORT_PROFILE,
-        unit,
         cunningStrike: profile.cunningStrike,
       };
 }
@@ -3865,7 +3835,6 @@ export function battleCunningStrikeOptionGrantSupportForUnit(
     ? "unsupported"
     : {
         kind: CUNNING_STRIKE_OPTION_GRANT_SUPPORT_PROFILE,
-        unit,
         optionGrant: profile.optionGrant,
       };
 }
@@ -4498,6 +4467,7 @@ export function magicActionHealingPoolProfileForUnit(
   return {
     kind: "magicActionHealingPool",
     unit,
+    className: unit.className,
     healingPool: {
       activationCost: { kind: "standardAction", action: "magic" },
       spends: {
@@ -4718,6 +4688,7 @@ export function enemyZeroHitPointTemporaryHitPointsProfileForUnit(
   return {
     kind: "enemyZeroHitPointTemporaryHitPoints",
     unit,
+    className: unit.className,
     temporaryHitPoints: {
       trigger: {
         kind: "enemyReducedToZeroHitPoints",

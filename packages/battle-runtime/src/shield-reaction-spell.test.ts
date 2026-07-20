@@ -1,4 +1,3 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
@@ -24,6 +23,7 @@ import {
   battleId,
   characterId,
   combatantId,
+  discoverBattleActCandidates,
   discoverBattleActs,
   initiativeScore,
   resolveBattleInterrupt,
@@ -32,8 +32,9 @@ import {
   type BattleCreatureInit,
   type BattleFill,
   type BattleHole,
+  type BattleRuntimeSession,
   type BattleState,
-  type BattleActDiscoverySubject as BattleSubject,
+  type BattleSubject,
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
@@ -72,12 +73,10 @@ type AttackAct = AvailableBattleAct & {
 describe("Shield Reaction spell", () => {
   test("is offered when the caster is hit by an Attack Roll and adds +5 Armor Class against the triggering Attack Roll", () => {
     const spell = srdSpellRecord(shieldUnitId);
-    const state = battleWithShieldReactionSpell(spell);
-    const attackAct = discoverBattleActs(state).find(
+    const session = battleWithShieldReactionSpell(spell);
+    const attackAct = discoverBattleActCandidates(session.state).find(
       (act): act is AttackAct =>
-        act.subject.tag === "action" &&
-        act.subject.action === "attack" &&
-        act.summary === "Take the Attack action with Unarmed Strike.",
+        act.subject.tag === "action" && act.subject.action === "attack",
     );
     expect(attackAct).toBeDefined();
     if (attackAct === undefined) {
@@ -85,7 +84,7 @@ describe("Shield Reaction spell", () => {
     }
     const targetHole = requireHole(attackAct.initialHoles, "targetChoice");
     const awaitingAttackRoll = resolveBattleSubject({
-      state,
+      state: session.state,
       subject: attackAct.subject,
       fills: [attackTargetFill(targetHole, spellTargetId, spellCasterId)],
     });
@@ -96,7 +95,7 @@ describe("Shield Reaction spell", () => {
     const attackRollHole = requireHole(awaitingAttackRoll.holes, "attackRoll");
 
     const awaitingReaction = resolveBattleSubject({
-      state,
+      state: session.state,
       subject: attackAct.subject,
       fills: [
         attackTargetFill(targetHole, spellTargetId, spellCasterId),
@@ -110,7 +109,7 @@ describe("Shield Reaction spell", () => {
     if (awaitingReaction.tag !== "needsHoles") {
       throw new Error("Expected Shield to open an attack-hit Reaction window.");
     }
-    const resolved = resolveShieldReactionChoice(awaitingReaction);
+    const resolved = resolveShieldReactionChoice(awaitingReaction, session);
     expect(resolved).toMatchObject({
       tag: "resolved",
       snapshot: { pendingInterrupt: null },
@@ -138,13 +137,13 @@ describe("Shield Reaction spell", () => {
     const attackerOneId = combatantId("shield-reaction-attacker-1");
     const attackerTwoId = combatantId("shield-reaction-attacker-2");
     const attackerThreeId = combatantId("shield-reaction-attacker-3");
-    const state = battleWithAttackers({
+    const session = battleWithAttackers({
       shield,
       attackerIds: [attackerOneId, attackerTwoId, attackerThreeId],
     });
 
     const firstHit = resolveAttackRollOnly({
-      state,
+      state: session.state,
       attackerId: attackerOneId,
       targetId: spellCasterId,
       total: 14,
@@ -153,7 +152,7 @@ describe("Shield Reaction spell", () => {
     if (firstHit.tag !== "needsHoles") {
       throw new Error("Expected first hit to open Shield Reaction window.");
     }
-    const shielded = resolveShieldReactionChoice(firstHit);
+    const shielded = resolveShieldReactionChoice(firstHit, session);
     if (shielded.tag !== "resolved") {
       throw new Error(
         "Expected Shield Reaction to turn first hit into a miss.",
@@ -321,17 +320,16 @@ describe("Shield Reaction spell", () => {
   test("is offered against a spell Attack Roll hit before spell damage", () => {
     const shield = srdSpellRecord(shieldUnitId);
     const rayOfFrost = srdSpellRecord(rayOfFrostUnitId);
-    const state = battleWithSpellAttack({ shield, spellAttack: rayOfFrost });
-    const act = spellAct({ state, spellId: rayOfFrostUnitId });
+    const session = battleWithSpellAttack({ shield, spellAttack: rayOfFrost });
+    const act = spellAct({ session, spellId: rayOfFrostUnitId });
     const targetHole = requireHole(act.initialHoles, "targetChoice");
     const targetFill = spellTargetFill(
       targetHole,
-      rayOfFrostUnitId,
       spellTargetId,
       spellCasterId,
     );
     const awaitingAttackRoll = resolveBattleSubject({
-      state,
+      state: session.state,
       subject: act.subject,
       fills: [targetFill],
     });
@@ -342,7 +340,7 @@ describe("Shield Reaction spell", () => {
     const attackRollHole = requireHole(awaitingAttackRoll.holes, "attackRoll");
 
     const awaitingReaction = resolveBattleSubject({
-      state,
+      state: session.state,
       subject: act.subject,
       fills: [
         targetFill,
@@ -357,7 +355,7 @@ describe("Shield Reaction spell", () => {
       throw new Error("Expected spell Attack Roll hit to open Shield window.");
     }
 
-    const resolved = resolveShieldReactionChoice(awaitingReaction);
+    const resolved = resolveShieldReactionChoice(awaitingReaction, session);
     expect(resolved).toMatchObject({
       tag: "resolved",
       snapshot: { pendingInterrupt: null },
@@ -380,8 +378,8 @@ describe("Shield Reaction spell", () => {
   test("is offered from Magic Missile target selection and negates target damage", () => {
     const shield = srdSpellRecord(shieldUnitId);
     const magicMissile = srdSpellRecord(magicMissileUnitId);
-    const state = battleWithMagicMissile({ shield, magicMissile });
-    const act = spellAct({ state, spellId: magicMissileUnitId });
+    const session = battleWithMagicMissile({ shield, magicMissile });
+    const act = spellAct({ session, spellId: magicMissileUnitId });
     const allocationHole = requireHole(
       act.initialHoles,
       "spellTargetAllocation",
@@ -389,12 +387,11 @@ describe("Shield Reaction spell", () => {
     const allocationFill = spellTargetAllocationFill(
       allocationHole,
       spellTargetId,
-      magicMissileUnitId,
       [{ targetId: spellCasterId, count: 3 }],
     );
 
     const awaitingReaction = resolveBattleSubject({
-      state,
+      state: session.state,
       subject: act.subject,
       fills: [allocationFill],
     });
@@ -406,7 +403,10 @@ describe("Shield Reaction spell", () => {
       throw new Error("Expected Magic Missile to open Shield window.");
     }
 
-    const awaitingDamage = resolveShieldReactionChoice(awaitingReaction);
+    const awaitingDamage = resolveShieldReactionChoice(
+      awaitingReaction,
+      session,
+    );
     expect(awaitingDamage).toMatchObject({ tag: "needsHoles" });
     if (awaitingDamage.tag !== "needsHoles") {
       throw new Error("Expected Magic Missile damage hole after Shield.");
@@ -415,11 +415,11 @@ describe("Shield Reaction spell", () => {
     const resolved = resolveBattleSubject({
       state: awaitingDamage.state,
       subject: act.subject,
-      fills: [
-        allocationFill,
-        damageRollFillWithGroups(damageHole, [[4, 4, 4]]),
-      ],
+      fills: [damageRollFillWithGroups(damageHole, [[4, 4, 4]])],
     });
+    if (resolved.tag === "invalid") {
+      throw new Error(resolved.message);
+    }
     expect(resolved).toMatchObject({
       tag: "resolved",
       snapshot: { pendingInterrupt: null },
@@ -455,11 +455,11 @@ describe("Shield Reaction spell", () => {
       },
     };
     const magicMissile = srdSpellRecord(magicMissileUnitId);
-    const state = battleWithMagicMissile({
+    const session = battleWithMagicMissile({
       shield: attackHitOnlyShield,
       magicMissile,
     });
-    const act = spellAct({ state, spellId: magicMissileUnitId });
+    const act = spellAct({ session, spellId: magicMissileUnitId });
     const allocationHole = requireHole(
       act.initialHoles,
       "spellTargetAllocation",
@@ -467,12 +467,11 @@ describe("Shield Reaction spell", () => {
     const allocationFill = spellTargetAllocationFill(
       allocationHole,
       spellTargetId,
-      magicMissileUnitId,
       [{ targetId: spellCasterId, count: 3 }],
     );
 
     const awaitingDamage = resolveBattleSubject({
-      state,
+      state: session.state,
       subject: act.subject,
       fills: [allocationFill],
     });
@@ -486,8 +485,8 @@ describe("Shield Reaction spell", () => {
   test("is not offered to spend a second Spell Slot during the current actor's Magic Missile", () => {
     const shield = srdSpellRecord(shieldUnitId);
     const magicMissile = srdSpellRecord(magicMissileUnitId);
-    const state = spellBattle({ preparedSpells: [magicMissile, shield] });
-    const act = spellAct({ state, spellId: magicMissileUnitId });
+    const session = spellBattle({ preparedSpells: [magicMissile, shield] });
+    const act = spellAct({ session, spellId: magicMissileUnitId });
     const allocationHole = requireHole(
       act.initialHoles,
       "spellTargetAllocation",
@@ -495,12 +494,11 @@ describe("Shield Reaction spell", () => {
     const allocationFill = spellTargetAllocationFill(
       allocationHole,
       spellCasterId,
-      magicMissileUnitId,
       [{ targetId: spellCasterId, count: 3 }],
     );
 
     const awaitingDamage = resolveBattleSubject({
-      state,
+      state: session.state,
       subject: act.subject,
       fills: [allocationFill],
     });
@@ -564,7 +562,7 @@ function srdSpellRecord(unitId: string): SpellRecord {
 
 function spellBattle(input: {
   readonly preparedSpells?: readonly SpellRecord[];
-}): BattleState {
+}): BattleRuntimeSession {
   const result = startBattle({
     battleId: battleId("shield-reaction-spell-slot"),
     combatants: [
@@ -599,7 +597,9 @@ function spellBattle(input: {
   return result.right;
 }
 
-function battleWithShieldReactionSpell(spell: SpellRecord): BattleState {
+function battleWithShieldReactionSpell(
+  spell: SpellRecord,
+): BattleRuntimeSession {
   const result = startBattle({
     battleId: battleId("shield-reaction-spell-attack-roll"),
     combatants: [
@@ -637,7 +637,7 @@ function battleWithShieldReactionSpell(spell: SpellRecord): BattleState {
 function battleWithAttackers(input: {
   readonly shield: SpellRecord;
   readonly attackerIds: readonly [CombatantId, CombatantId, CombatantId];
-}): BattleState {
+}): BattleRuntimeSession {
   const result = startBattle({
     battleId: battleId("shield-reaction-spell-duration"),
     combatants: [
@@ -685,7 +685,7 @@ function battleWithAttackers(input: {
 function battleWithSpellAttack(input: {
   readonly shield: SpellRecord;
   readonly spellAttack: SpellRecord;
-}): BattleState {
+}): BattleRuntimeSession {
   const result = startBattle({
     battleId: battleId("shield-reaction-spell-attack-spell"),
     combatants: [
@@ -735,7 +735,7 @@ function battleWithSpellAttack(input: {
 function battleWithMagicMissile(input: {
   readonly shield: SpellRecord;
   readonly magicMissile: SpellRecord;
-}): BattleState {
+}): BattleRuntimeSession {
   const result = startBattle({
     battleId: battleId("shield-reaction-spell-magic-missile"),
     combatants: [
@@ -829,10 +829,10 @@ function characterCreature(input: {
 }
 
 function spellAct(input: {
-  readonly state: BattleState;
+  readonly session: BattleRuntimeSession;
   readonly spellId: string;
 }): ActionSpellAct {
-  const act = discoverBattleActs(input.state).find(
+  const act = discoverBattleActs(input.session).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
       battleActSpellPresentation(candidate)?.invocation.spellId ===
@@ -866,12 +866,11 @@ function resolveAttackRollOnly(input: {
   readonly total: number;
   readonly naturalD20: number;
 }): ReturnType<typeof resolveBattleSubject> {
-  const attackAct = discoverBattleActs(input.state).find(
+  const attackAct = discoverBattleActCandidates(input.state).find(
     (act): act is AttackAct =>
       act.subject.tag === "action" &&
       act.subject.action === "attack" &&
-      act.subject.actorId === input.attackerId &&
-      act.summary === "Take the Attack action with Unarmed Strike.",
+      act.subject.actorId === input.attackerId,
   );
   if (attackAct === undefined) {
     throw new Error("Expected Unarmed Strike attack act.");
@@ -999,10 +998,12 @@ function unarmedStrikeSelection(state: BattleState, actorId: CombatantId) {
 
 function spellTargetFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
-  spellId: string,
   casterId: CombatantId,
   targetId: CombatantId,
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  if (hole.spellTargetSpatialFactRequest === undefined) {
+    throw new Error("Expected a spell target spatial-fact request.");
+  }
   return {
     kind: "targetChoice",
     holeId: hole.holeId,
@@ -1012,7 +1013,8 @@ function spellTargetFill(
         kind: "spellTarget",
         casterId,
         targetId,
-        sourceProcedureRef: battleProcedureExecutionRefForTest(spellId),
+        sourceProcedureRef:
+          hole.spellTargetSpatialFactRequest.sourceProcedureRef,
       },
     ],
   };
@@ -1021,7 +1023,6 @@ function spellTargetFill(
 function spellTargetAllocationFill(
   hole: Extract<BattleHole, { readonly kind: "spellTargetAllocation" }>,
   casterId: CombatantId,
-  sourceProcedureRef: string,
   allocations: readonly {
     readonly targetId: CombatantId;
     readonly count: number;
@@ -1035,8 +1036,7 @@ function spellTargetAllocationFill(
       kind: "spellTarget",
       casterId,
       targetId: allocation.targetId,
-      sourceProcedureRef:
-        battleProcedureExecutionRefForTest(sourceProcedureRef),
+      sourceProcedureRef: hole.sourceProcedureRef,
     })),
   };
 }
@@ -1076,6 +1076,7 @@ function resolveShieldReactionChoice(
     ReturnType<typeof resolveBattleSubject>,
     { readonly tag: "needsHoles" }
   >,
+  session: BattleRuntimeSession,
 ): ReturnType<typeof resolveBattleInterrupt> {
   const reactionChoice =
     awaitingReaction.snapshot.pendingInterrupt?.choices.find(
@@ -1090,7 +1091,7 @@ function resolveShieldReactionChoice(
   expect(reactionChoice.reactorId).toBe(spellCasterId);
   expect(
     characterSpellInvocationRefForProcedureRefForTest(
-      awaitingReaction.state,
+      { state: awaitingReaction.state, context: session.context },
       reactionChoice.reactorId,
       reactionChoice.subject.procedureRef,
     ),

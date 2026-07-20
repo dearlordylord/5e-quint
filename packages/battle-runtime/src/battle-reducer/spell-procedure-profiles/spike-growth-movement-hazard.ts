@@ -1,4 +1,6 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spike-growth-movement-hazard
+import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
+import { DiceExprSchema } from "@dnd/surface/surface/schema";
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD
 //
 // The spikeGrowthMovementHazard Spell Procedure Profile: action-time Spell
@@ -31,7 +33,6 @@ import type {
 } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
-import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
@@ -39,7 +40,7 @@ import {
   type BattleState,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
-import { spellId, type CombatantId } from "../../identity.ts";
+import { type CombatantId } from "../../identity.ts";
 import { spellAreaChoiceHole } from "../spells-holes-fills.ts";
 import { resolveSpikeGrowthMovementHazardSpellAct } from "../spells-resolve-area-effects.ts";
 import type {
@@ -48,9 +49,8 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
-import { spellProcedureInvocationSchema } from "./profile.ts";
+import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
 import {
-  BattleRuntimeObjectSchema,
   MovementFeet,
   PreparedSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
@@ -197,29 +197,11 @@ function discoverSpikeGrowthMovementHazardCastAct(
         tag: "actionSpell",
         actorId,
         procedureRef: invocation.sourceProcedureRef,
-        invocation: spikeGrowthMovementHazardInvocationRef(invocation),
         mode: { tag: "cast" },
       },
       initialHoles: [spellAreaChoiceHole(invocation)],
     },
   ];
-}
-
-function spikeGrowthMovementHazardInvocationRef(
-  invocation: SpikeGrowthMovementHazardSpellInvocation,
-): SpellInvocationRef {
-  return {
-    tag: "spellSlot",
-    spellId: spellId(invocation.spell.id),
-    slotLevel: invocation.resource.slotLevel,
-    procedure: "spikeGrowthMovementHazard",
-  };
-}
-
-function spikeGrowthMovementHazardCastSummary(
-  invocation: SpikeGrowthMovementHazardSpellInvocation,
-): string {
-  return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
 }
 
 function resolveSpikeGrowthMovementHazard(
@@ -234,25 +216,20 @@ function resolveSpikeGrowthMovementHazard(
 }
 
 const SpikeGrowthMovementHazardInvocationSchema =
-  spellProcedureInvocationSchema<
-    Extract<
-      SupportedSpellInvocation,
-      { readonly procedure: "spikeGrowthMovementHazard" }
-    >
-  >(
+  spellProcedureExecutionSchema(
     Schema.Struct({
       access: PreparedSpellAccessSchema,
       resource: SpellSlotInvocationResourceSchema,
       procedure: Schema.Literal("spikeGrowthMovementHazard"),
-      spell: BattleRuntimeObjectSchema,
+      spellRuleFacts: SpellRuleExecutionFactsSchema,
       targeting: Schema.Struct({
         kind: Schema.Literal("pointOriginSphere"),
         radiusFeet: MovementFeet,
       }),
-      durationTicks: BattleRuntimeObjectSchema,
+      durationTicks: ElapsedTimeTicksSchema,
       rangeFeet: MovementFeet,
       damage: Schema.Struct({
-        expr: BattleRuntimeObjectSchema,
+        expr: DiceExprSchema,
         damageType: Schema.Literal("piercing"),
       }),
       damagePerFeet: MovementFeet,
@@ -260,15 +237,12 @@ const SpikeGrowthMovementHazardInvocationSchema =
   );
 export const spikeGrowthMovementHazardProfile = {
   procedure: "spikeGrowthMovementHazard",
-  invocationSchema: SpikeGrowthMovementHazardInvocationSchema,
+  executionSchema: SpikeGrowthMovementHazardInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: [],
   admit: admitSpikeGrowthMovementHazard,
   discoverCastAct: discoverSpikeGrowthMovementHazardCastAct,
-  castSummary: spikeGrowthMovementHazardCastSummary,
-  invocationRef: spikeGrowthMovementHazardInvocationRef,
   resolve: resolveSpikeGrowthMovementHazard,
 } satisfies SpellProcedureProfile<
   "spikeGrowthMovementHazard",

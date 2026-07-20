@@ -63,6 +63,7 @@ import {
   type BattleFill,
   type BattleHole,
   type BattleResolutionResult,
+  type BattleRuntimeSession,
   type BattleState,
 } from "./index.ts";
 
@@ -105,7 +106,7 @@ type AntimagicFieldOngoingSuppressionState = {
 };
 
 type AntimagicRuntimeState = {
-  readonly battle: BattleState;
+  readonly battle: BattleRuntimeSession;
   readonly lastResult: AntimagicLastResult;
 };
 
@@ -335,25 +336,31 @@ function initialRuntimeState(): AntimagicRuntimeState {
       spellSlots: [{ spellLevel: 8, count: 1 }],
     },
   });
-  const caster = requireCombatant(base, spellCasterId);
+  const caster = requireCombatant(base.state, spellCasterId);
   const withOngoingSpell = {
     ...base,
-    combatants: new Map(base.combatants).set(spellCasterId, {
-      ...caster,
-      activeEffects: [spiritualWeaponActiveEffect()],
-      concentration: {
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          "spiritual-weapon-effect-fixture",
-        ),
-        effectKind: "spellEffect",
-      },
-    }),
+    state: {
+      ...base.state,
+      combatants: new Map(base.state.combatants).set(spellCasterId, {
+        ...caster,
+        activeEffects: [spiritualWeaponActiveEffect()],
+        concentration: {
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            "spiritual-weapon-effect-fixture",
+          ),
+          effectKind: "spellEffect",
+        },
+      }),
+    },
   };
   const targetTurn = requireResolved(
-    endTurn({ state: withOngoingSpell, actorId: spellCasterId }),
+    endTurn({ state: withOngoingSpell.state, actorId: spellCasterId }),
     "Expected target turn setup to resolve.",
   );
-  return { battle: targetTurn.state, lastResult: "init" };
+  return {
+    battle: { ...withOngoingSpell, state: targetTurn.state },
+    lastResult: "init",
+  };
 }
 
 function suppressOngoingSpell(
@@ -361,14 +368,14 @@ function suppressOngoingSpell(
   sourceKind: AntimagicSuppressionSourceKind,
 ): AntimagicRuntimeState {
   const act = spellAct({
-    state: state.battle,
+    session: state.battle,
     spellId: antimagicFieldUnitId,
     slotLevel: 8,
   });
   const areaHole = requireHole(act.initialHoles, "spellAreaChoice");
   const resolved = requireResolved(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: act.subject,
       fills: [
         antimagicFieldAreaFill({
@@ -383,7 +390,7 @@ function suppressOngoingSpell(
   );
   assertSuppressionActiveEffectShape(resolved.state, sourceKind);
   return {
-    battle: resolved.state,
+    battle: { ...state.battle, state: resolved.state },
     lastResult:
       sourceKind === "ordinarySpell"
         ? "suppressedOrdinarySpell"
@@ -395,7 +402,10 @@ function breakAntimagicConcentration(
   state: AntimagicRuntimeState,
 ): AntimagicRuntimeState {
   return {
-    battle: breakBattleConcentration(state.battle, spellTargetId),
+    battle: {
+      ...state.battle,
+      state: breakBattleConcentration(state.battle.state, spellTargetId),
+    },
     lastResult: "restored",
   };
 }
@@ -403,9 +413,9 @@ function breakAntimagicConcentration(
 function antimagicProjection(
   state: AntimagicRuntimeState,
 ): AntimagicFieldOngoingSuppressionState {
-  const antimagicCaster = requireCombatant(state.battle, spellTargetId);
-  const ongoingCaster = requireCombatant(state.battle, spellCasterId);
-  const suppression = antimagicSuppressionEffect(state.battle);
+  const antimagicCaster = requireCombatant(state.battle.state, spellTargetId);
+  const ongoingCaster = requireCombatant(state.battle.state, spellCasterId);
+  const suppression = antimagicSuppressionEffect(state.battle.state);
   const ongoingSpell = ongoingCaster.activeEffects.find(
     (effect) =>
       effect.kind === "spiritualWeapon" &&
@@ -417,10 +427,13 @@ function antimagicProjection(
     effectRef: spiritualWeaponEffectRef,
   };
   const projection = {
-    actionAvailable: canSpendAction(state.battle.currentTurnResources, "magic"),
+    actionAvailable: canSpendAction(
+      state.battle.state.currentTurnResources,
+      "magic",
+    ),
     spellAvailable:
       maybeSpellAct({
-        state: state.battle,
+        session: state.battle,
         spellId: antimagicFieldUnitId,
         slotLevel: 8,
       }) !== undefined,
@@ -429,7 +442,7 @@ function antimagicProjection(
     suppressedEffectRefCount:
       suppression?.suppressedOngoingSpellEffects.length ?? 0,
     ongoingSpellSuppressed: ongoingSpellEffectSuppressedByAntimagicField(
-      state.battle,
+      state.battle.state,
       ongoingSpellRef,
     ),
     antimagicCasterConcentrating:

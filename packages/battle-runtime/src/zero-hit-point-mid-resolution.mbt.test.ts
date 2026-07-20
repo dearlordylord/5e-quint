@@ -1,5 +1,5 @@
 import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
-import { battleActSpellPresentation } from "./battle-act-composition.ts";
+import type { BattleActDiscoveryCandidate } from "./battle-reducer.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.PROTOCOL.ZERO_HIT_POINT_MID_RESOLUTION
 // RAW trace:
 // - .references/srd-5.2.1/Playing-the-Game.md#Dropping to 0 Hit Points:
@@ -42,7 +42,6 @@ import {
 import {
   resolveBattleSubject,
   attackRollFill,
-  cantripSpellInvocationRef,
   characterSeed,
   concentrationSavingThrowFill,
   damageRollFillWithGroups,
@@ -59,9 +58,8 @@ import {
 import {
   battleId,
   battleReducerStartRouteEvent,
-  discoverBattleActs,
+  discoverBattleActCandidates,
   spellId,
-  type AvailableBattleAct,
   type BattleActiveEffect,
   type BattleHole,
   type BattleReducerRouteEvent,
@@ -126,9 +124,9 @@ type ZeroHitPointMidResolutionRuntimeState = {
   readonly remainderUsedPostTeardownState: boolean;
 };
 
-type ZeroHitPointSpellAttackAct = AvailableBattleAct & {
+type ZeroHitPointSpellAttackAct = BattleActDiscoveryCandidate & {
   readonly subject: Extract<
-    AvailableBattleAct["subject"],
+    BattleActDiscoveryCandidate["subject"],
     { readonly tag: "actionSpell" }
   >;
 };
@@ -425,15 +423,7 @@ function resolveEldritchBlast(
   state: ZeroHitPointMidResolutionRuntimeState,
 ): ZeroHitPointMidResolutionRuntimeState {
   expect(state.scenario).toBe("init");
-  const subject = {
-    tag: "actionSpell" as const,
-    actorId: wizardId,
-    invocation: cantripSpellInvocationRef(
-      eldritchBlastUnitId,
-      "spellAttackSequence",
-    ),
-    mode: { tag: "cast" as const },
-  };
+  const subject = requireZeroHitPointSpellAttackAct(state.battle).subject;
   const firstTarget = requireHole(
     resolveBattleSubject({
       state: state.battle,
@@ -607,7 +597,7 @@ function battleWithConcentratingShieldOfFaithSource(): BattleState {
     ),
     sourceCombatantId: skeletonId,
     bonus: 2,
-    negatedSpellIds: [],
+    negatesRepeatedDamageAllocation: false,
     expiresAt: {
       kind: "concentration",
       combatantId: skeletonId,
@@ -740,14 +730,23 @@ function shieldOfFaithPresentOnProtectedTarget(state: BattleState): boolean {
 function requireZeroHitPointSpellAttackAct(
   state: BattleState,
 ): ZeroHitPointSpellAttackAct {
-  const act = discoverBattleActs(state).find(
+  const actor = state.combatants.get(wizardId);
+  if (actor?.origin.kind !== "character") {
+    throw new Error("Expected Eldritch Blast caster character.");
+  }
+  const procedureRefs = new Set(
+    actor.origin.execution.procedureBindings.flatMap((binding) =>
+      binding.procedure.kind === "spellInvocation" &&
+      binding.procedure.execution.procedure === "spellAttackSequence"
+        ? [binding.procedureRef]
+        : [],
+    ),
+  );
+  const act = discoverBattleActCandidates(state).find(
     (candidate): candidate is ZeroHitPointSpellAttackAct =>
       candidate.subject.tag === "actionSpell" &&
       candidate.subject.actorId === wizardId &&
-      battleActSpellPresentation(candidate)?.invocation.spellId ===
-        spellId(eldritchBlastUnitId) &&
-      battleActSpellPresentation(candidate)?.invocation.procedure ===
-        "spellAttackSequence",
+      procedureRefs.has(candidate.subject.procedureRef),
   );
   if (act === undefined) {
     throw new Error("Expected Eldritch Blast spell attack sequence act.");

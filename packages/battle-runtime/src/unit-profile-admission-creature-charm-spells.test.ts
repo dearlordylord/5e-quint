@@ -59,7 +59,7 @@ describe("SRDINV30C deterministic creature charm Spell Unit admission", () => {
         },
       ],
     });
-    const act = spellAct({ state, spellId: animalFriendshipUnitId });
+    const act = spellAct({ session: state, spellId: animalFriendshipUnitId });
     const targetHole = requireHole(act.initialHoles, "spellTargetList");
 
     expect(targetHole.choices).toContain(beastId);
@@ -75,7 +75,7 @@ describe("SRDINV30C deterministic creature charm Spell Unit admission", () => {
       [beastId],
     );
     const awaitingSave = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [targetFill],
     });
@@ -84,7 +84,7 @@ describe("SRDINV30C deterministic creature charm Spell Unit admission", () => {
     expect(saveHole).toMatchObject({ ability: "wis" });
 
     const resolved = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [
         targetFill,
@@ -138,7 +138,7 @@ describe("SRDINV30C deterministic creature charm Spell Unit admission", () => {
       ],
     });
     const act = spellAct({
-      state,
+      session: state,
       spellId: animalFriendshipUnitId,
       slotLevel: 2,
     });
@@ -166,7 +166,7 @@ describe("SRDINV30C deterministic creature charm Spell Unit admission", () => {
         },
       ],
     });
-    const act = spellAct({ state, spellId: animalFriendshipUnitId });
+    const act = spellAct({ session: state, spellId: animalFriendshipUnitId });
     const targetHole = requireHole(act.initialHoles, "spellTargetList");
     const targetFill = spellTargetListFill(
       targetHole,
@@ -176,14 +176,14 @@ describe("SRDINV30C deterministic creature charm Spell Unit admission", () => {
     );
     const saveHole = requireResultHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject: act.subject,
         fills: [targetFill],
       }),
       "savingThrowOutcome",
     );
     const charmed = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [
         targetFill,
@@ -218,7 +218,7 @@ describe("SRDINV30C deterministic creature charm Spell Unit admission", () => {
     }
 
     const damageAct = spellAct({
-      state: casterTurn.state,
+      session: { state: casterTurn.state, context: state.context },
       spellId: sacredFlameUnitId,
     });
     const damageTarget = requireHole(damageAct.initialHoles, "targetChoice");
@@ -467,7 +467,7 @@ describe("SRDINV30C deterministic creature charm Spell Unit admission", () => {
         },
       ],
     });
-    const act = spellAct({ state, spellId: charmPersonUnitId });
+    const act = spellAct({ session: state, spellId: charmPersonUnitId });
     const targetHole = requireHole(act.initialHoles, "spellTargetList");
 
     expect(targetHole.choices).toEqual(
@@ -500,7 +500,7 @@ describe("SRDINV30C deterministic creature charm Spell Unit admission", () => {
     );
     const saveHole = requireResultHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject: act.subject,
         fills: [targetFill],
       }),
@@ -526,7 +526,7 @@ describe("SRDINV30C deterministic creature charm Spell Unit admission", () => {
       preparedSpells: [spell],
       attack: zeroAbilityWeaponAttack("weapon_longsword"),
     });
-    const act = spellAct({ state, spellId: charmPersonUnitId });
+    const act = spellAct({ session: state, spellId: charmPersonUnitId });
     const targetHole = requireHole(act.initialHoles, "spellTargetList");
     const targetFill = spellTargetListFill(
       targetHole,
@@ -536,7 +536,7 @@ describe("SRDINV30C deterministic creature charm Spell Unit admission", () => {
     );
     const saveHole = requireResultHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject: act.subject,
         fills: [targetFill],
       }),
@@ -544,7 +544,7 @@ describe("SRDINV30C deterministic creature charm Spell Unit admission", () => {
     );
 
     const resolved = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [
         targetFill,
@@ -620,7 +620,7 @@ describe("SRDINV30C deterministic creature charm Spell Unit admission", () => {
       preparedSpells: [charmPerson],
       cantrips: [sacredFlame],
     });
-    const act = spellAct({ state, spellId: charmPersonUnitId });
+    const act = spellAct({ session: state, spellId: charmPersonUnitId });
     const targetHole = requireHole(act.initialHoles, "spellTargetList");
     const targetFill = spellTargetListFill(
       targetHole,
@@ -630,14 +630,14 @@ describe("SRDINV30C deterministic creature charm Spell Unit admission", () => {
     );
     const saveHole = requireResultHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject: act.subject,
         fills: [targetFill],
       }),
       "savingThrowOutcome",
     );
     const charmed = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [
         targetFill,
@@ -675,7 +675,7 @@ describe("SRDINV30C deterministic creature charm Spell Unit admission", () => {
     }
 
     const damageAct = spellAct({
-      state: afterTargetTurn.state,
+      session: { state: afterTargetTurn.state, context: state.context },
       spellId: sacredFlameUnitId,
     });
     const damageTarget = requireHole(damageAct.initialHoles, "targetChoice");
@@ -748,7 +748,7 @@ describe("SRDINV30C deterministic creature charm Spell Unit admission", () => {
       ],
     });
     const act = spellAct({
-      state,
+      session: state,
       spellId: charmPersonUnitId,
       slotLevel: 2,
     });

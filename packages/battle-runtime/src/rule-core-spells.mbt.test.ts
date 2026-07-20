@@ -62,9 +62,7 @@ import massHealingWordInput from "../../surface/content/mass_healing_word.json";
 import rayOfFrostInput from "../../surface/content/ray_of_frost.json";
 import { repeatedDamageAllocationAdmissionFacts } from "./battle-reducer/spell-procedure-profiles/repeated-damage-allocation-facts.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
-import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import {
-  type AvailableBattleAct,
   battleAreaId,
   type BattleCreatureInit,
   type BattleFill,
@@ -74,12 +72,12 @@ import {
   type BattleResolutionResult,
   type BattleRolledDiceFill,
   type BattleState,
-  type BattleActDiscoverySubject as BattleSubject,
+  type BattleSubject,
   cantripSpellInvocationRef,
   characterId,
   combatantId,
   type CombatantId,
-  discoverBattleActs,
+  discoverBattleActCandidates,
   endTurn,
   initiativeScore,
   resolveBattleInterrupt,
@@ -747,7 +745,12 @@ function createRuleCoreSpellDriver() {
         resetProjection();
         resolveSingleTargetHealingSpell({
           spellId: "healing_word",
-          subject: healingSpellSubject("healing_word", "bonusActionSpell", 1),
+          subject: healingSpellSubject(
+            state,
+            "healing_word",
+            "bonusActionSpell",
+            1,
+          ),
           healingGroups: [[4, 3]],
         });
       },
@@ -760,20 +763,23 @@ function createRuleCoreSpellDriver() {
         resetProjection();
         resolveSingleTargetHealingSpell({
           spellId: "healing_word",
-          subject: healingSpellSubject("healing_word", "bonusActionSpell", 1),
+          subject: healingSpellSubject(
+            state,
+            "healing_word",
+            "bonusActionSpell",
+            1,
+          ),
           healingGroups: [[1, 1]],
         });
       },
       doCureWoundsNeedsTarget: () =>
         resolveSingleTargetHealingSpellStaged({
           spellId: "cure_wounds",
-          subject: healingSpellSubject("cure_wounds", "actionSpell", 1),
           stopAt: "target",
         }),
       doCureWoundsNeedsHealingRoll: () =>
         resolveSingleTargetHealingSpellStaged({
           spellId: "cure_wounds",
-          subject: healingSpellSubject("cure_wounds", "actionSpell", 1),
           stopAt: "healingRoll",
         }),
       doCureWoundsWounded: () => {
@@ -784,7 +790,7 @@ function createRuleCoreSpellDriver() {
         resetProjection();
         resolveSingleTargetHealingSpell({
           spellId: "cure_wounds",
-          subject: healingSpellSubject("cure_wounds", "actionSpell", 1),
+          subject: healingSpellSubject(state, "cure_wounds", "actionSpell", 1),
           healingGroups: [[4, 3]],
         });
       },
@@ -891,16 +897,12 @@ function createRuleCoreSpellDriver() {
         recordResult(
           resolveBattleSubject({
             state,
-            subject: {
-              tag: "bonusActionSpell",
-              actorId: casterId,
-              invocation: spellSlotInvocationRef(
-                "healing_word",
-                1,
-                "directHitPointRestoration",
-              ),
-              mode: { tag: "cast" },
-            },
+            subject: healingSpellSubject(
+              state,
+              "healing_word",
+              "bonusActionSpell",
+              1,
+            ),
             fills: [],
           }),
         );
@@ -908,24 +910,23 @@ function createRuleCoreSpellDriver() {
       doReadySpellHold: () => {
         state = spellBattle();
         resetProjection();
-        resolveSubject({
-          tag: "actionSpell",
-          actorId: casterId,
-          invocation: magicMissileRepeatedDamageAllocationRef(),
-          mode: { tag: "ready", trigger: "attackHit" },
-        });
+        resolveSubject(
+          actionSpellSubject(state, magicMissileRepeatedDamageAllocationRef(), {
+            tag: "ready",
+            trigger: "attackHit",
+          }),
+        );
       },
       doReleaseReadiedSpell: () => {
         state = spellBattle();
         resetProjection();
         const readied = resolveBattleSubject({
           state,
-          subject: {
-            tag: "actionSpell",
-            actorId: casterId,
-            invocation: magicMissileRepeatedDamageAllocationRef(),
-            mode: { tag: "ready", trigger: "attackHit" },
-          },
+          subject: actionSpellSubject(
+            state,
+            magicMissileRepeatedDamageAllocationRef(),
+            { tag: "ready", trigger: "attackHit" },
+          ),
           fills: [],
         });
         if (readied.tag !== "resolved") {
@@ -1237,17 +1238,12 @@ function createRuleCoreSpellDriver() {
     function resolveHealingWordStaged(stopAt: "target" | "healingRoll"): void {
       resolveSingleTargetHealingSpellStaged({
         spellId: "healing_word",
-        subject: healingSpellSubject("healing_word", "bonusActionSpell", 1),
         stopAt,
       });
     }
 
     function resolveSingleTargetHealingSpellStaged(input: {
       readonly spellId: DirectHitPointRestorationSpellId;
-      readonly subject: Extract<
-        BattleSubject,
-        { readonly tag: "actionSpell" | "bonusActionSpell" }
-      >;
       readonly stopAt: "target" | "healingRoll";
     }): void {
       state = spellBattle({
@@ -1255,14 +1251,18 @@ function createRuleCoreSpellDriver() {
         preparedSpells: [spellRecord(input.spellId)],
       });
       resetProjection();
+      const subject = healingSpellSubject(
+        state,
+        input.spellId,
+        input.spellId === "healing_word" ? "bonusActionSpell" : "actionSpell",
+        1,
+      );
       if (input.stopAt === "target") {
-        recordResult(
-          resolveBattleSubject({ state, subject: input.subject, fills: [] }),
-        );
+        recordResult(resolveBattleSubject({ state, subject, fills: [] }));
         return;
       }
-      const act = discoverBattleActs(state).find((candidate) =>
-        isDeepStrictEqual(candidate.subject, input.subject),
+      const act = discoverBattleActCandidates(state).find((candidate) =>
+        isDeepStrictEqual(candidate.subject, subject),
       );
       if (act === undefined) {
         throw new Error(`Expected ${input.spellId} healing spell act.`);
@@ -1271,7 +1271,7 @@ function createRuleCoreSpellDriver() {
       recordResult(
         resolveBattleSubject({
           state,
-          subject: input.subject,
+          subject,
           fills: [spellTargetFill(target, input.spellId, casterId, targetId)],
         }),
       );
@@ -1285,7 +1285,7 @@ function createRuleCoreSpellDriver() {
       >;
       readonly healingGroups: readonly (readonly number[])[];
     }): void {
-      const act = discoverBattleActs(state).find((candidate) =>
+      const act = discoverBattleActCandidates(state).find((candidate) =>
         isDeepStrictEqual(candidate.subject, input.subject),
       );
       if (act === undefined) {
@@ -1330,6 +1330,7 @@ function createRuleCoreSpellDriver() {
       });
       resetProjection();
       const subject = healingSpellSubject(
+        state,
         "mass_healing_word",
         "bonusActionSpell",
         3,
@@ -1338,7 +1339,7 @@ function createRuleCoreSpellDriver() {
         recordResult(resolveBattleSubject({ state, subject, fills: [] }));
         return;
       }
-      const act = discoverBattleActs(state).find((candidate) =>
+      const act = discoverBattleActCandidates(state).find((candidate) =>
         isDeepStrictEqual(candidate.subject, subject),
       );
       if (act === undefined) {
@@ -1361,11 +1362,12 @@ function createRuleCoreSpellDriver() {
       healingGroups: readonly (readonly number[])[],
     ): void {
       const subject = healingSpellSubject(
+        state,
         "mass_healing_word",
         "bonusActionSpell",
         3,
       );
-      const act = discoverBattleActs(state).find((candidate) =>
+      const act = discoverBattleActCandidates(state).find((candidate) =>
         isDeepStrictEqual(candidate.subject, subject),
       );
       if (act === undefined) {
@@ -1404,12 +1406,17 @@ function createRuleCoreSpellDriver() {
         spellSlots: [{ spellLevel: 5, count: 1 }],
       });
       resetProjection();
-      const subject = healingSpellSubject("mass_cure_wounds", "actionSpell", 5);
+      const subject = healingSpellSubject(
+        state,
+        "mass_cure_wounds",
+        "actionSpell",
+        5,
+      );
       if (stopAt === "targetList") {
         recordResult(resolveBattleSubject({ state, subject, fills: [] }));
         return;
       }
-      const act = discoverBattleActs(state).find((candidate) =>
+      const act = discoverBattleActCandidates(state).find((candidate) =>
         isDeepStrictEqual(candidate.subject, subject),
       );
       if (act === undefined) {
@@ -1431,8 +1438,13 @@ function createRuleCoreSpellDriver() {
     function resolveMassCureWounds(
       healingGroups: readonly (readonly number[])[],
     ): void {
-      const subject = healingSpellSubject("mass_cure_wounds", "actionSpell", 5);
-      const act = discoverBattleActs(state).find((candidate) =>
+      const subject = healingSpellSubject(
+        state,
+        "mass_cure_wounds",
+        "actionSpell",
+        5,
+      );
+      const act = discoverBattleActCandidates(state).find((candidate) =>
         isDeepStrictEqual(candidate.subject, subject),
       );
       if (act === undefined) {
@@ -1675,7 +1687,7 @@ function startBattleRight(
   if (Either.isLeft(result)) {
     throw new Error(result.left.message);
   }
-  return result.right;
+  return result.right.state;
 }
 
 function spellcaster(input: {
@@ -1792,21 +1804,32 @@ type DirectHitPointRestorationSpellId =
 function actionSpellSubject(
   state: BattleState,
   invocation: SpellInvocationRef,
-  mode: Extract<
-    BattleSubject,
-    { readonly tag: "actionSpell"; readonly invocation: unknown }
-  >["mode"] = {
+  mode: Extract<BattleSubject, { readonly tag: "actionSpell" }>["mode"] = {
     tag: "cast",
   },
-): Extract<AvailableBattleAct["subject"], { readonly tag: "actionSpell" }> {
-  const act = discoverBattleActs(state).find(
-    (candidate) =>
-      candidate.subject.tag === "actionSpell" &&
-      candidate.subject.actorId === casterId &&
-      battleActSpellPresentation(candidate)?.invocation.spellId ===
-        invocation.spellId &&
-      candidate.subject.mode.tag === mode.tag,
-  );
+): Extract<BattleSubject, { readonly tag: "actionSpell" }> {
+  const caster = state.combatants.get(casterId);
+  if (caster?.origin.kind !== "character") {
+    throw new Error("Expected rule-core spell caster.");
+  }
+  const matches = discoverBattleActCandidates(state).filter((candidate) => {
+    const subject = candidate.subject;
+    return (
+      subject.tag === "actionSpell" &&
+      subject.actorId === casterId &&
+      subject.mode.tag === mode.tag &&
+      caster.origin.execution.procedureBindings.some(
+        (binding) =>
+          binding.procedureRef === subject.procedureRef &&
+          binding.procedure.kind === "spellInvocation" &&
+          binding.procedure.execution.procedure === invocation.procedure,
+      )
+    );
+  });
+  const [act] = matches;
+  if (matches.length !== 1) {
+    throw new Error("Expected exactly one admitted action Spell subject.");
+  }
   if (act?.subject.tag !== "actionSpell") {
     throw new Error("Expected admitted action Spell subject.");
   }
@@ -1823,26 +1846,48 @@ function targetAttackSubject(
 }
 
 function healingSpellSubject(
+  state: BattleState,
   spellId: DirectHitPointRestorationSpellId,
   subjectTag: "actionSpell" | "bonusActionSpell",
   slotLevel: 1 | 3 | 5,
 ): Extract<
   BattleSubject,
-  {
-    readonly tag: "actionSpell" | "bonusActionSpell";
-    readonly invocation: unknown;
-  }
+  { readonly tag: "actionSpell" | "bonusActionSpell" }
 > {
-  return {
-    tag: subjectTag,
-    actorId: casterId,
-    invocation: spellSlotInvocationRef(
-      recordSelectedUnitRuntimeBoundaryId(spellId),
-      slotLevel,
-      "directHitPointRestoration",
-    ),
-    mode: { tag: "cast" },
-  };
+  const invocation = spellSlotInvocationRef(
+    recordSelectedUnitRuntimeBoundaryId(spellId),
+    slotLevel,
+    "directHitPointRestoration",
+  );
+  const caster = state.combatants.get(casterId);
+  if (caster?.origin.kind !== "character") {
+    throw new Error("Expected rule-core healing spell caster.");
+  }
+  const matches = discoverBattleActCandidates(state).filter((candidate) => {
+    const subject = candidate.subject;
+    return (
+      subject.tag === subjectTag &&
+      subject.actorId === casterId &&
+      (subject.tag === "actionSpell" || subject.tag === "bonusActionSpell") &&
+      caster.origin.execution.procedureBindings.some(
+        (binding) =>
+          binding.procedureRef === subject.procedureRef &&
+          binding.procedure.kind === "spellInvocation" &&
+          binding.procedure.execution.procedure === invocation.procedure,
+      )
+    );
+  });
+  const [act] = matches;
+  if (matches.length !== 1) {
+    throw new Error(`Expected exactly one ${spellId} healing spell act.`);
+  }
+  if (
+    act?.subject.tag !== "actionSpell" &&
+    act?.subject.tag !== "bonusActionSpell"
+  ) {
+    throw new Error(`Expected ${spellId} healing spell act.`);
+  }
+  return act.subject;
 }
 
 function attackTargetFill(hole: BattleHole): BattleFill {

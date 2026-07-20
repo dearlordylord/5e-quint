@@ -6,6 +6,8 @@ import {
   battleObjectId,
   type BattleObjectIgnitionOutcome,
   type BattleResolutionResult,
+  type BattleRuntimeContext,
+  type BattleRuntimeSession,
   type BattleSnapshot,
   type BattleState,
   characterId,
@@ -26,7 +28,6 @@ import { Either } from "effect"
 
 import {
   counterspellDecision,
-  type CounterspellTriggerFact,
   counterspellTriggerFact,
   damageRollFillWithGroups,
   deathSavingThrowFill,
@@ -35,6 +36,7 @@ import {
   interruptDecisionFill,
   requireActionSpellAct,
   requireCounterspellChoice,
+  requireCounterspellProcedureRef,
   requireHole,
   requireNeedsHoles,
   requireNeedsReaction,
@@ -197,6 +199,7 @@ type AreaSpellPlan = {
 
 type WizardBattleDemoBuilder = {
   state: BattleState
+  readonly context: BattleRuntimeContext
   startedTurnActorId: CombatantId | undefined
   readonly steps: Array<WizardBattleDemoStep>
   readonly objectIgnitions: Array<BattleObjectIgnitionOutcome>
@@ -386,12 +389,14 @@ function requireWizardBattleDemo(): WizardBattleDemo {
   const fireball = requireSpellRecord(fireballUnitId)
   const counterspell = requireSpellRecord(counterspellUnitId)
   const shatter = requireSpellRecord(shatterUnitId)
+  const initialSession = requireInitialSession({
+    [counterspellUnitId]: counterspell,
+    [fireballUnitId]: fireball,
+    [shatterUnitId]: shatter
+  })
   const builder: WizardBattleDemoBuilder = {
-    state: requireInitialState({
-      [counterspellUnitId]: counterspell,
-      [fireballUnitId]: fireball,
-      [shatterUnitId]: shatter
-    }),
+    state: initialSession.state,
+    context: initialSession.context,
     startedTurnActorId: undefined,
     steps: [],
     objectIgnitions: []
@@ -599,7 +604,11 @@ function shatterPlan(
 function castAreaSpell(builder: WizardBattleDemoBuilder, plan: AreaSpellPlan): void {
   ensureTurnStarted(builder, plan.casterId)
   requireCurrentActor(builder.state, plan.casterId)
-  const act = requireActionSpellAct(builder.state, plan.spell.id, plan.spell.slotLevel)
+  const act = requireActionSpellAct(
+    { state: builder.state, context: builder.context },
+    plan.spell.id,
+    plan.spell.slotLevel
+  )
   pushStep(builder, {
     title: plan.title,
     detail: plan.detail,
@@ -614,7 +623,7 @@ function castAreaSpell(builder: WizardBattleDemoBuilder, plan: AreaSpellPlan): v
   const pending = resolveBattleSubject({
     state: builder.state,
     subject: act.subject,
-    fills: [spellCastReactionFactsFill(counterspellFactsForPlan(plan, act.subject.procedureRef))]
+    fills: [spellCastReactionFactsFill(counterspellFactsForPlan(builder.context, plan))]
   })
   const spellReady = resolveSpellCastWindows(builder, plan, pending)
 
@@ -729,7 +738,7 @@ function resolveCounterspellChain(
       }
     })
 
-    const choice = requireCounterspellChoice(pendingInterrupt, {
+    const choice = requireCounterspellChoice(builder.context, pendingInterrupt, {
       reactorId: link.reactorId,
       slotLevel: counterspellSlotLevel,
       spellId: counterspellUnitId
@@ -744,11 +753,7 @@ function resolveCounterspellChain(
           choice,
           nextLink === undefined
             ? []
-            : [
-                spellCastReactionFactsFill([
-                  counterspellFactForLink(nextLink, link.reactorId, choice.subject.procedureRef)
-                ])
-              ]
+            : [spellCastReactionFactsFill([counterspellFactForLink(builder.context, nextLink, link.reactorId)])]
         )
       )
     })
@@ -789,7 +794,7 @@ function resolveDeclinedCounterspell(
   decline: Extract<SpellCastReactionPlan, { readonly kind: "declinedCounterspell" }>
 ): Extract<BattleResolutionResult, { readonly tag: "needsHoles" }> {
   requireNeedsReaction(result, `Expected ${nameOf(decline.reactorId)} Counterspell window.`)
-  requireCounterspellChoice(result, {
+  requireCounterspellChoice(builder.context, result, {
     reactorId: decline.reactorId,
     slotLevel: counterspellSlotLevel,
     spellId: counterspellUnitId
@@ -909,19 +914,21 @@ function requireCurrentActor(state: BattleState, actorId: CombatantId): void {
   }
 }
 
-function counterspellFactsForPlan(
-  plan: AreaSpellPlan,
-  sourceProcedureRef: CounterspellTriggerFact["sourceProcedureRef"]
-) {
+function counterspellFactsForPlan(context: BattleRuntimeContext, plan: AreaSpellPlan) {
   if (plan.reaction.kind === "counterspellChain") {
-    return [counterspellFactForLink(plan.reaction.chain[0], plan.casterId, sourceProcedureRef)]
+    return [counterspellFactForLink(context, plan.reaction.chain[0], plan.casterId)]
   }
   if (plan.reaction.kind === "declinedCounterspell") {
     return [
       counterspellTriggerFact({
         reactorId: plan.reaction.reactorId,
         casterId: plan.casterId,
-        sourceProcedureRef,
+        sourceProcedureRef: requireCounterspellProcedureRef(
+          context,
+          plan.reaction.reactorId,
+          counterspellUnitId,
+          counterspellSlotLevel
+        ),
         rangeFeet: counterspellRangeFeet
       })
     ]
@@ -944,15 +951,16 @@ function counterspellFactsDetail(plan: AreaSpellPlan): string {
   return "The table projection supplies no eligible Counterspell reactor for this casting."
 }
 
-function counterspellFactForLink(
-  link: CounterspellChainLink,
-  casterId: CombatantId,
-  sourceProcedureRef: CounterspellTriggerFact["sourceProcedureRef"]
-) {
+function counterspellFactForLink(context: BattleRuntimeContext, link: CounterspellChainLink, casterId: CombatantId) {
   return counterspellTriggerFact({
     reactorId: link.reactorId,
     casterId,
-    sourceProcedureRef,
+    sourceProcedureRef: requireCounterspellProcedureRef(
+      context,
+      link.reactorId,
+      counterspellUnitId,
+      counterspellSlotLevel
+    ),
     rangeFeet: counterspellRangeFeet
   })
 }
@@ -1027,8 +1035,8 @@ function requireNonEmptySteps(
   return [first, ...steps.slice(1)]
 }
 
-function requireInitialState(spellsById: Readonly<Record<string, SpellRecord>>): BattleState {
-  const state = startBattle({
+function requireInitialSession(spellsById: Readonly<Record<string, SpellRecord>>): BattleRuntimeSession {
+  const session = startBattle({
     battleId: battleId("battle:wizard-fireball-counterspell-demo"),
     combatants: WIZARD_BATTLE_DEMO_COMBATANTS.map((combatant) =>
       wizardCreature({
@@ -1041,10 +1049,10 @@ function requireInitialState(spellsById: Readonly<Record<string, SpellRecord>>):
       })
     )
   })
-  if (Either.isLeft(state)) {
-    throw new Error(`Wizard battle demo fixture is invalid: ${state.left.message}`)
+  if (Either.isLeft(session)) {
+    throw new Error(`Wizard battle demo fixture is invalid: ${session.left.message}`)
   }
-  return state.right
+  return session.right
 }
 
 function wizardCreature(input: {

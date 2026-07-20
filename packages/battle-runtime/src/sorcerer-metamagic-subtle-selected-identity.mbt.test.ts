@@ -50,11 +50,11 @@ import {
   discoverBattleActs,
   type AvailableBattleAct,
   type BattleReducerRouteEvent,
-  type BattleActDiscoverySubject as BattleSubject,
+  type BattleRuntimeSession,
+  type BattleSubject,
 } from "./index.ts";
 import {
   resolveBattleSubject,
-  spellSlotInvocationRef,
   type BattleState,
 } from "./unit-profile-admission-test-support.ts";
 
@@ -82,10 +82,7 @@ type SubtleMetamagicRouteReplayProjection = {
 };
 
 type SubtleFalseLifeAct = AvailableBattleAct & {
-  readonly subject: Extract<
-    BattleSubject,
-    { readonly tag: "actionSpell"; readonly invocation: unknown }
-  >;
+  readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
 };
 
 defineSelectedIdentityReplayAndQntReplay({
@@ -211,7 +208,7 @@ function resolveSubtleFalseLife(): {
   >;
 } {
   const state = subtleFalseLifeBattle({ sorceryPoints: 2 });
-  const actor = state.combatants.get(spellCasterId);
+  const actor = state.state.combatants.get(spellCasterId);
   if (actor === undefined) {
     throw new Error("Expected Subtle Spell caster.");
   }
@@ -219,7 +216,7 @@ function resolveSubtleFalseLife(): {
   const subject = act.subject;
   const falseLifeSpell = spellRecord(falseLifeUnitId);
   const admitted = admitSpellMetamagicApplications({
-    state,
+    state: state.state,
     actor,
     actorId: spellCasterId,
     invocation: supportedFalseLifeInvocation(state),
@@ -241,7 +238,7 @@ function resolveSubtleFalseLife(): {
   });
   const rollHole = requireHole(act.initialHoles, "rolledDice");
   const resolved = resolveBattleSubject({
-    state,
+    state: state.state,
     subject,
     fills: [damageRollFillWithGroups(rollHole, [[4, 3]])],
   });
@@ -300,7 +297,7 @@ function observeSubtleFalseLifeRoute() {
   const act = subtleFalseLifeAct(state);
   const rollHole = requireHole(act.initialHoles, "rolledDice");
   const resolved = resolveBattleSubject({
-    state,
+    state: state.state,
     subject: act.subject,
     fills: [damageRollFillWithGroups(rollHole, [[4, 3]])],
   });
@@ -319,12 +316,12 @@ function observeSubtleFalseLifeRoute() {
 function rejectSubtleFalseLifeWithoutSorceryPoints(): SubtleFalseLifeProjection {
   const state = subtleFalseLifeBattle({ sorceryPoints: 0 });
   const rollHole = requireHole(
-    spellAct({ state, spellId: falseLifeUnitId }).initialHoles,
+    spellAct({ session: state, spellId: falseLifeUnitId }).initialHoles,
     "rolledDice",
   );
   const rejected = resolveBattleSubject({
-    state,
-    subject: subtleFalseLifeSubject(),
+    state: state.state,
+    subject: subtleFalseLifeSubject(state),
     fills: [damageRollFillWithGroups(rollHole, [[4, 3]])],
   });
   expect(rejected).toMatchObject({
@@ -332,20 +329,20 @@ function rejectSubtleFalseLifeWithoutSorceryPoints(): SubtleFalseLifeProjection 
     message: "Metamagic requires enough unexpended Sorcery Points.",
   });
   expect(rejected).not.toHaveProperty("state");
-  expect(sorceryPointsRemaining(state)).toBe(0);
+  expect(sorceryPointsRemaining(state.state)).toBe(0);
   return {
     verbalSuppressed: false,
     somaticSuppressed: false,
     materialSuppressed: false,
     materialPreserved: false,
-    sorceryPointsRemaining: sorceryPointsRemaining(state),
-    tempHp: state.combatants.get(spellCasterId)?.tempHp ?? 0,
+    sorceryPointsRemaining: sorceryPointsRemaining(state.state),
+    tempHp: state.state.combatants.get(spellCasterId)?.tempHp ?? 0,
     lastResult: "unaffordableSubtleFalseLife",
   };
 }
 
-function subtleFalseLifeAct(state: BattleState): SubtleFalseLifeAct {
-  const act = discoverBattleActs(state).find(
+function subtleFalseLifeAct(session: BattleRuntimeSession): SubtleFalseLifeAct {
+  const act = discoverBattleActs(session).find(
     (candidate): candidate is SubtleFalseLifeAct =>
       candidate.subject.tag === "actionSpell" &&
       battleActSpellPresentation(candidate)?.invocation.spellId ===
@@ -356,7 +353,7 @@ function subtleFalseLifeAct(state: BattleState): SubtleFalseLifeAct {
         (selection) => selection.effectKind === SUBTLE_METAMAGIC_EFFECT_KIND,
       ) === true,
   );
-  if (act === undefined || act.subject.tag !== "actionSpell") {
+  if (act === undefined) {
     throw new Error("Expected Subtle False Life spell act.");
   }
   return act;
@@ -379,7 +376,7 @@ function subtleFalseLifeProjection(input: {
 
 function subtleFalseLifeBattle(input: {
   readonly sorceryPoints: number;
-}): BattleState {
+}): BattleRuntimeSession {
   const spell = spellRecord(falseLifeUnitId);
   return spellBattle({
     preparedSpells: [spell],
@@ -400,7 +397,7 @@ function subtleFalseLifeBattle(input: {
 
 function subtleBarkskinBattle(input: {
   readonly sorceryPoints: number;
-}): BattleState {
+}): BattleRuntimeSession {
   return spellBattle({
     preparedSpells: [spellRecord(barkskinUnitId)],
     spellSlots: [{ spellLevel: 2, count: 1 }],
@@ -419,25 +416,27 @@ function subtleBarkskinBattle(input: {
   });
 }
 
-function subtleFalseLifeSubject() {
+function subtleFalseLifeSubject(
+  session: BattleRuntimeSession,
+): Extract<BattleSubject, { readonly tag: "actionSpell" }> {
+  const act = spellAct({ session, spellId: falseLifeUnitId });
+  if (act.subject.tag !== "actionSpell") {
+    throw new Error("Expected False Life action spell subject.");
+  }
   return {
-    tag: "actionSpell",
-    actorId: spellCasterId,
-    invocation: spellSlotInvocationRef(falseLifeUnitId, 1, "scalarBuff"),
-    mode: { tag: "cast" },
+    ...act.subject,
     metamagic: [{ effectKind: SUBTLE_METAMAGIC_EFFECT_KIND }],
-  } as const;
+  };
 }
 
-function supportedFalseLifeInvocation(state: BattleState) {
-  const actor = state.combatants.get(spellCasterId);
+function supportedFalseLifeInvocation(session: BattleRuntimeSession) {
+  const actor = session.state.combatants.get(spellCasterId);
   if (actor === undefined) {
     throw new Error("Expected Subtle Spell caster.");
   }
-  const invocation = supportedSpellActs(actor, state).find(
-    (candidate) =>
-      candidate.spell.id === falseLifeUnitId &&
-      candidate.procedure === "scalarBuff",
+  const procedureRef = subtleFalseLifeSubject(session).procedureRef;
+  const invocation = supportedSpellActs(actor).find(
+    (candidate) => candidate.sourceProcedureRef === procedureRef,
   );
   if (invocation === undefined) {
     throw new Error("Expected False Life scalar buff invocation.");
@@ -455,11 +454,15 @@ function subtleMetamagicOption(): CharacterBattleMetamagicOptionFact {
 
 function sorceryPointsRemaining(state: BattleState): number {
   const actor = state.combatants.get(spellCasterId);
+  const resourcePoolRef =
+    actor?.origin.kind === "character"
+      ? actor.origin.metamagic?.sorceryPointResourcePoolRef
+      : undefined;
   const resource =
     actor?.origin.kind === "character"
       ? actor.origin.resources.find(
           (candidate): candidate is CharacterBattlePointPoolResourceState =>
-            candidate.unit.id === "sorcerer_font_of_magic" &&
+            candidate.resourcePoolRef === resourcePoolRef &&
             characterBattleResourceIsPointPool(candidate),
         )
       : undefined;

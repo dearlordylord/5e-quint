@@ -3,8 +3,7 @@
 import { describe, expect, it } from "vitest";
 
 import { requiredAbilityCheckRollMode } from "./battle-reducer/hole-helpers.ts";
-import { admitCharacterProcedureSelectionSubject } from "./battle-act-composition.ts";
-import { isCharacterProcedureSelectionSubject } from "./battle-subjects.ts";
+import { discoverBattleActCandidates } from "./battle-reducer/battle-discovery.ts";
 import {
   MBT_TEST_TIMEOUT_MS,
   booleanValue,
@@ -32,7 +31,6 @@ import {
   abilityCheckFill,
   fighterId,
   fighterVsGoblinBattle,
-  findAct,
   goblinId,
   hidePrerequisites,
   resolveBattleSubject,
@@ -41,7 +39,6 @@ import {
 import {
   battleFillKind,
   battleHoleFamilyKind,
-  discoverBattleActs,
   endTurn,
   sameBattleSubject,
   snapshotBattle,
@@ -49,8 +46,9 @@ import {
   type BattleFill,
   type BattleHole,
   type BattleResolutionResult,
+  type BattleRuntimeSession,
   type BattleState,
-  type BattleActDiscoverySubject as BattleSubject,
+  type BattleSubject,
   type CombatantId,
 } from "./index.ts";
 import {
@@ -424,7 +422,7 @@ function applyRouteScenario(
 function observeSearchTargetChoiceOpenRoute(): AbilityCheckChoiceSearchRouteProjection {
   const state = hiddenFighterOnGoblinTurn();
   const searchSubject = goblinSearchSubject();
-  const act = findAct(state, searchSubject);
+  const act = findMechanicalAct(state, searchSubject);
   return routeState("search-target-choice-open", [
     startRoute(),
     discoverFromAct(
@@ -439,7 +437,7 @@ function observeSearchAbilityCheckOpenRoute(): AbilityCheckChoiceSearchRouteProj
   const state = hiddenFighterOnGoblinTurn();
   const searchSubject = goblinSearchSubject();
   const target = requireHole(
-    findAct(state, searchSubject).initialHoles,
+    findMechanicalAct(state, searchSubject).initialHoles,
     "targetChoice",
   );
   const targetFill = targetFillForSearch(target, fighterId);
@@ -463,7 +461,7 @@ function observeSearchInvalidTargetRejectedRoute(): AbilityCheckChoiceSearchRout
   const state = hiddenFighterOnGoblinTurn();
   const searchSubject = goblinSearchSubject();
   const target = requireHole(
-    findAct(state, searchSubject).initialHoles,
+    findMechanicalAct(state, searchSubject).initialHoles,
     "targetChoice",
   );
   const targetFill = targetFillForSearch(target, goblinId);
@@ -487,7 +485,7 @@ function observeSearchInvalidAbilityFillRejectedRoute(): AbilityCheckChoiceSearc
   const state = hiddenFighterOnGoblinTurn();
   const searchSubject = goblinSearchSubject();
   const target = requireHole(
-    findAct(state, searchSubject).initialHoles,
+    findMechanicalAct(state, searchSubject).initialHoles,
     "targetChoice",
   );
   const targetFill = targetFillForSearch(target, fighterId);
@@ -527,7 +525,7 @@ function observeSearchResolvedRoute(
   const state = hiddenFighterOnGoblinTurn();
   const searchSubject = goblinSearchSubject();
   const target = requireHole(
-    findAct(state, searchSubject).initialHoles,
+    findMechanicalAct(state, searchSubject).initialHoles,
     "targetChoice",
   );
   const targetFill = targetFillForSearch(target, fighterId);
@@ -557,8 +555,8 @@ function observeSearchResolvedRoute(
 }
 
 function observeGuidanceSkillChoiceOpenRoute(): AbilityCheckChoiceSearchRouteProjection {
-  const state = guidanceBattle();
-  const act = spellAct({ state, spellId: guidanceUnitId });
+  const session = guidanceBattle();
+  const act = spellAct({ session, spellId: guidanceUnitId });
   const target = requireHole(act.initialHoles, "targetChoice");
   const targetFill = spellTargetFill(
     target,
@@ -567,7 +565,7 @@ function observeGuidanceSkillChoiceOpenRoute(): AbilityCheckChoiceSearchRoutePro
     spellCasterId,
   );
   const result = resolveBattleSubject({
-    state,
+    state: session.state,
     subject: act.subject,
     fills: [targetFill],
   });
@@ -583,8 +581,8 @@ function observeGuidanceSkillChoiceOpenRoute(): AbilityCheckChoiceSearchRoutePro
 }
 
 function observeGuidanceInvalidAbilityFillRejectedRoute(): AbilityCheckChoiceSearchRouteProjection {
-  const state = guidanceBattle();
-  const act = spellAct({ state, spellId: guidanceUnitId });
+  const session = guidanceBattle();
+  const act = spellAct({ session, spellId: guidanceUnitId });
   const target = requireHole(act.initialHoles, "targetChoice");
   const skill = requireHole(act.initialHoles, "skillChoice");
   const targetFill = spellTargetFill(
@@ -599,12 +597,16 @@ function observeGuidanceInvalidAbilityFillRejectedRoute(): AbilityCheckChoiceSea
     value: "dex",
   };
   const result = resolveBattleSubject({
-    state,
+    state: session.state,
     subject: act.subject,
     fills: [targetFill, wrongFill],
   });
   return routeState("guidance-invalid-ability-fill-rejected", [
-    ...rollModifierOpeningRouteFromState(state, act.subject, targetFill),
+    ...rollModifierOpeningRouteFromState(
+      session.state,
+      act.subject,
+      targetFill,
+    ),
     resolveFromResult(
       result,
       ROLL_MODIFIER_ROUTE_SUBJECT,
@@ -615,8 +617,8 @@ function observeGuidanceInvalidAbilityFillRejectedRoute(): AbilityCheckChoiceSea
 }
 
 function observeGuidanceSkillAthleticsRoute(): AbilityCheckChoiceSearchRouteProjection {
-  const state = guidanceBattle();
-  const act = spellAct({ state, spellId: guidanceUnitId });
+  const session = guidanceBattle();
+  const act = spellAct({ session, spellId: guidanceUnitId });
   const target = requireHole(act.initialHoles, "targetChoice");
   const skill = requireHole(act.initialHoles, "skillChoice");
   const targetFill = spellTargetFill(
@@ -627,12 +629,16 @@ function observeGuidanceSkillAthleticsRoute(): AbilityCheckChoiceSearchRouteProj
   );
   const choiceFill = skillChoiceFill(skill, "athletics");
   const result = resolveBattleSubject({
-    state,
+    state: session.state,
     subject: act.subject,
     fills: [targetFill, choiceFill],
   });
   return routeState("guidance-skill-athletics", [
-    ...rollModifierOpeningRouteFromState(state, act.subject, targetFill),
+    ...rollModifierOpeningRouteFromState(
+      session.state,
+      act.subject,
+      targetFill,
+    ),
     resolveFromResult(
       result,
       ROLL_MODIFIER_ROUTE_SUBJECT,
@@ -640,7 +646,7 @@ function observeGuidanceSkillAthleticsRoute(): AbilityCheckChoiceSearchRouteProj
       "battleActiveEffect",
     ),
     concentrationRouteFromResolvedRollModifierResult({
-      beforeState: state,
+      beforeState: session.state,
       result,
       casterId: spellCasterId,
     }),
@@ -648,8 +654,8 @@ function observeGuidanceSkillAthleticsRoute(): AbilityCheckChoiceSearchRouteProj
 }
 
 function observeEnhanceAbilityChoiceOpenRoute(): AbilityCheckChoiceSearchRouteProjection {
-  const state = enhanceAbilityBattle();
-  const act = spellAct({ state, spellId: enhanceAbilityUnitId });
+  const session = enhanceAbilityBattle();
+  const act = spellAct({ session, spellId: enhanceAbilityUnitId });
   const target = requireHole(act.initialHoles, "targetChoice");
   const targetFill = spellTargetFill(
     target,
@@ -658,7 +664,7 @@ function observeEnhanceAbilityChoiceOpenRoute(): AbilityCheckChoiceSearchRoutePr
     spellTargetId,
   );
   const result = resolveBattleSubject({
-    state,
+    state: session.state,
     subject: act.subject,
     fills: [targetFill],
   });
@@ -674,8 +680,8 @@ function observeEnhanceAbilityChoiceOpenRoute(): AbilityCheckChoiceSearchRoutePr
 }
 
 function observeEnhanceAbilityInvalidSkillFillRejectedRoute(): AbilityCheckChoiceSearchRouteProjection {
-  const state = enhanceAbilityBattle();
-  const act = spellAct({ state, spellId: enhanceAbilityUnitId });
+  const session = enhanceAbilityBattle();
+  const act = spellAct({ session, spellId: enhanceAbilityUnitId });
   const target = requireHole(act.initialHoles, "targetChoice");
   const ability = requireHole(act.initialHoles, "abilityChoice");
   const targetFill = spellTargetFill(
@@ -690,12 +696,16 @@ function observeEnhanceAbilityInvalidSkillFillRejectedRoute(): AbilityCheckChoic
     value: "athletics",
   };
   const result = resolveBattleSubject({
-    state,
+    state: session.state,
     subject: act.subject,
     fills: [targetFill, wrongFill],
   });
   return routeState("enhance-ability-invalid-skill-fill-rejected", [
-    ...rollModifierOpeningRouteFromState(state, act.subject, targetFill),
+    ...rollModifierOpeningRouteFromState(
+      session.state,
+      act.subject,
+      targetFill,
+    ),
     resolveFromResult(
       result,
       ROLL_MODIFIER_ROUTE_SUBJECT,
@@ -706,8 +716,8 @@ function observeEnhanceAbilityInvalidSkillFillRejectedRoute(): AbilityCheckChoic
 }
 
 function observeEnhanceAbilityDexRoute(): AbilityCheckChoiceSearchRouteProjection {
-  const state = enhanceAbilityBattle();
-  const act = spellAct({ state, spellId: enhanceAbilityUnitId });
+  const session = enhanceAbilityBattle();
+  const act = spellAct({ session, spellId: enhanceAbilityUnitId });
   const target = requireHole(act.initialHoles, "targetChoice");
   const ability = requireHole(act.initialHoles, "abilityChoice");
   const targetFill = spellTargetFill(
@@ -718,12 +728,16 @@ function observeEnhanceAbilityDexRoute(): AbilityCheckChoiceSearchRouteProjectio
   );
   const choiceFill = abilityChoiceFill(ability, "dex");
   const result = resolveBattleSubject({
-    state,
+    state: session.state,
     subject: act.subject,
     fills: [targetFill, choiceFill],
   });
   return routeState("enhance-ability-dex", [
-    ...rollModifierOpeningRouteFromState(state, act.subject, targetFill),
+    ...rollModifierOpeningRouteFromState(
+      session.state,
+      act.subject,
+      targetFill,
+    ),
     resolveFromResult(
       result,
       ROLL_MODIFIER_ROUTE_SUBJECT,
@@ -731,7 +745,7 @@ function observeEnhanceAbilityDexRoute(): AbilityCheckChoiceSearchRouteProjectio
       "battleActiveEffect",
     ),
     concentrationRouteFromResolvedRollModifierResult({
-      beforeState: state,
+      beforeState: session.state,
       result,
       casterId: spellCasterId,
     }),
@@ -742,7 +756,7 @@ function searchTargetChoiceRouteFromState(
   state: BattleState,
   searchSubject: BattleSubject,
 ): readonly ReducerRouteEvent[] {
-  const act = findAct(state, searchSubject);
+  const act = findMechanicalAct(state, searchSubject);
   return [
     startRoute(),
     discoverFromAct(
@@ -792,12 +806,8 @@ function rollModifierOpeningRouteFromState(
   subject: BattleSubject,
   targetFill: BattleFill,
 ): readonly ReducerRouteEvent[] {
-  const admitted = isCharacterProcedureSelectionSubject(subject)
-    ? admitCharacterProcedureSelectionSubject(state, subject)
-    : subject;
-  const act = discoverBattleActs(state).find(
-    (candidate) =>
-      admitted !== undefined && sameBattleSubject(candidate.subject, admitted),
+  const act = discoverBattleActCandidates(state).find((candidate) =>
+    sameBattleSubject(candidate.subject, subject),
   );
   if (act === undefined) {
     throw new Error("Expected roll-modifier spell act from battle discovery.");
@@ -954,7 +964,7 @@ function expectGuidanceReplaySkillsMatchRuntimeChoices(): void {
     cantrips: [spellRecord(guidanceUnitId)],
     spellSlots: [],
   });
-  const act = spellAct({ state, spellId: guidanceUnitId });
+  const act = spellAct({ session: state, spellId: guidanceUnitId });
   const skill = requireHole(act.initialHoles, "skillChoice");
   expect(skill.choices).toEqual(replaySkills);
 }
@@ -1140,7 +1150,7 @@ function hiddenFighterOnGoblinTurn(): BattleState {
     actorId: fighterId,
     action: "hide",
   };
-  const hideAct = findAct(state, hideSubject);
+  const hideAct = findMechanicalAct(state, hideSubject);
   const hidden = requireResolved(
     resolveBattleSubject({
       state,
@@ -1161,19 +1171,32 @@ function goblinSearchSubject(): BattleSubject {
   };
 }
 
+function findMechanicalAct(
+  state: BattleState,
+  subject: BattleSubject,
+): ReturnType<typeof discoverBattleActCandidates>[number] {
+  const act = discoverBattleActCandidates(state).find((candidate) =>
+    sameBattleSubject(candidate.subject, subject),
+  );
+  if (act === undefined) {
+    throw new Error(`Expected discovered act ${JSON.stringify(subject)}.`);
+  }
+  return act;
+}
+
 function guidanceSkillChoiceOpenScenario(): AbilityCheckChoiceSearchProjection {
-  const state = guidanceBattle();
-  const act = spellAct({ state, spellId: guidanceUnitId });
+  const session = guidanceBattle();
+  const act = spellAct({ session, spellId: guidanceUnitId });
   const target = requireHole(act.initialHoles, "targetChoice");
   const result = resolveBattleSubject({
-    state,
+    state: session.state,
     subject: act.subject,
     fills: [
       spellTargetFill(target, guidanceUnitId, spellCasterId, spellCasterId),
     ],
   });
   return projectState({
-    state: resultState(result, state),
+    state: resultState(result, session.state),
     result,
     scenario: "guidance-skill-choice-open",
     targetId: spellCasterId,
@@ -1182,8 +1205,8 @@ function guidanceSkillChoiceOpenScenario(): AbilityCheckChoiceSearchProjection {
 }
 
 function guidanceInvalidAbilityFillRejectedScenario(): AbilityCheckChoiceSearchProjection {
-  const state = guidanceBattle();
-  const act = spellAct({ state, spellId: guidanceUnitId });
+  const session = guidanceBattle();
+  const act = spellAct({ session, spellId: guidanceUnitId });
   const target = requireHole(act.initialHoles, "targetChoice");
   const skill = requireHole(act.initialHoles, "skillChoice");
   const wrongFill: Extract<BattleFill, { readonly kind: "abilityChoice" }> = {
@@ -1192,7 +1215,7 @@ function guidanceInvalidAbilityFillRejectedScenario(): AbilityCheckChoiceSearchP
     value: "dex",
   };
   const result = resolveBattleSubject({
-    state,
+    state: session.state,
     subject: act.subject,
     fills: [
       spellTargetFill(target, guidanceUnitId, spellCasterId, spellCasterId),
@@ -1200,7 +1223,7 @@ function guidanceInvalidAbilityFillRejectedScenario(): AbilityCheckChoiceSearchP
     ],
   });
   return projectState({
-    state,
+    state: session.state,
     result,
     scenario: "guidance-invalid-ability-fill-rejected",
     targetId: spellCasterId,
@@ -1209,12 +1232,12 @@ function guidanceInvalidAbilityFillRejectedScenario(): AbilityCheckChoiceSearchP
 }
 
 function guidanceSkillAthleticsScenario(): AbilityCheckChoiceSearchProjection {
-  const state = guidanceBattle();
-  const act = spellAct({ state, spellId: guidanceUnitId });
+  const session = guidanceBattle();
+  const act = spellAct({ session, spellId: guidanceUnitId });
   const target = requireHole(act.initialHoles, "targetChoice");
   const skill = requireHole(act.initialHoles, "skillChoice");
   const result = resolveBattleSubject({
-    state,
+    state: session.state,
     subject: act.subject,
     fills: [
       spellTargetFill(target, guidanceUnitId, spellCasterId, spellCasterId),
@@ -1222,7 +1245,7 @@ function guidanceSkillAthleticsScenario(): AbilityCheckChoiceSearchProjection {
     ],
   });
   return projectState({
-    state: resultState(result, state),
+    state: resultState(result, session.state),
     result,
     scenario: "guidance-skill-athletics",
     targetId: spellCasterId,
@@ -1230,7 +1253,7 @@ function guidanceSkillAthleticsScenario(): AbilityCheckChoiceSearchProjection {
   });
 }
 
-function guidanceBattle(): BattleState {
+function guidanceBattle(): BattleRuntimeSession {
   return spellBattle({
     cantrips: [spellRecord(guidanceUnitId)],
     spellSlots: [],
@@ -1238,11 +1261,11 @@ function guidanceBattle(): BattleState {
 }
 
 function enhanceAbilityChoiceOpenScenario(): AbilityCheckChoiceSearchProjection {
-  const state = enhanceAbilityBattle();
-  const act = spellAct({ state, spellId: enhanceAbilityUnitId });
+  const session = enhanceAbilityBattle();
+  const act = spellAct({ session, spellId: enhanceAbilityUnitId });
   const target = requireHole(act.initialHoles, "targetChoice");
   const result = resolveBattleSubject({
-    state,
+    state: session.state,
     subject: act.subject,
     fills: [
       spellTargetFill(
@@ -1254,7 +1277,7 @@ function enhanceAbilityChoiceOpenScenario(): AbilityCheckChoiceSearchProjection 
     ],
   });
   return projectState({
-    state: resultState(result, state),
+    state: resultState(result, session.state),
     result,
     scenario: "enhance-ability-choice-open",
     targetId: spellTargetId,
@@ -1263,8 +1286,8 @@ function enhanceAbilityChoiceOpenScenario(): AbilityCheckChoiceSearchProjection 
 }
 
 function enhanceAbilityInvalidSkillFillRejectedScenario(): AbilityCheckChoiceSearchProjection {
-  const state = enhanceAbilityBattle();
-  const act = spellAct({ state, spellId: enhanceAbilityUnitId });
+  const session = enhanceAbilityBattle();
+  const act = spellAct({ session, spellId: enhanceAbilityUnitId });
   const target = requireHole(act.initialHoles, "targetChoice");
   const ability = requireHole(act.initialHoles, "abilityChoice");
   const wrongFill: Extract<BattleFill, { readonly kind: "skillChoice" }> = {
@@ -1273,7 +1296,7 @@ function enhanceAbilityInvalidSkillFillRejectedScenario(): AbilityCheckChoiceSea
     value: "athletics",
   };
   const result = resolveBattleSubject({
-    state,
+    state: session.state,
     subject: act.subject,
     fills: [
       spellTargetFill(
@@ -1286,7 +1309,7 @@ function enhanceAbilityInvalidSkillFillRejectedScenario(): AbilityCheckChoiceSea
     ],
   });
   return projectState({
-    state,
+    state: session.state,
     result,
     scenario: "enhance-ability-invalid-skill-fill-rejected",
     targetId: spellTargetId,
@@ -1295,12 +1318,12 @@ function enhanceAbilityInvalidSkillFillRejectedScenario(): AbilityCheckChoiceSea
 }
 
 function enhanceAbilityDexScenario(): AbilityCheckChoiceSearchProjection {
-  const state = enhanceAbilityBattle();
-  const act = spellAct({ state, spellId: enhanceAbilityUnitId });
+  const session = enhanceAbilityBattle();
+  const act = spellAct({ session, spellId: enhanceAbilityUnitId });
   const target = requireHole(act.initialHoles, "targetChoice");
   const ability = requireHole(act.initialHoles, "abilityChoice");
   const result = resolveBattleSubject({
-    state,
+    state: session.state,
     subject: act.subject,
     fills: [
       spellTargetFill(
@@ -1313,7 +1336,7 @@ function enhanceAbilityDexScenario(): AbilityCheckChoiceSearchProjection {
     ],
   });
   return projectState({
-    state: resultState(result, state),
+    state: resultState(result, session.state),
     result,
     scenario: "enhance-ability-dex",
     targetId: spellTargetId,
@@ -1321,7 +1344,7 @@ function enhanceAbilityDexScenario(): AbilityCheckChoiceSearchProjection {
   });
 }
 
-function enhanceAbilityBattle(): BattleState {
+function enhanceAbilityBattle(): BattleRuntimeSession {
   return spellBattle({
     preparedSpells: [spellRecord(enhanceAbilityUnitId)],
     spellSlots: [{ spellLevel: 2, count: 1 }],

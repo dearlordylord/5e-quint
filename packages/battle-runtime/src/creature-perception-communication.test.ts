@@ -8,8 +8,9 @@ import {
   type BattleFill,
   type BattleCreatureState,
   type BattleHole,
+  type BattleRuntimeSession,
   type BattleState,
-  type BattleActDiscoverySubject as BattleSubject,
+  type BattleSubject,
 } from "./index.ts";
 import {
   battleId,
@@ -20,6 +21,7 @@ import {
   resolveBattleSubject,
   spellRecord,
   startBattleRight,
+  startBattleSessionRight,
   statBlockCatalog,
   statBlockCreatureInit,
   statBlockRecord,
@@ -198,8 +200,8 @@ function characterCombatant(input: {
 function wildShapeBattle(input: {
   readonly knownLanguages: ["Common", ...("Druidic" | "Goblin")[]];
   readonly knownForms: readonly StatBlockRecord[];
-}): BattleState {
-  return startBattleRight({
+}): BattleRuntimeSession {
+  return startBattleSessionRight({
     battleId: battleId("battle:projection-wild-shape"),
     combatants: [
       characterSeed({
@@ -224,10 +226,10 @@ function wildShapeBattle(input: {
 }
 
 function wildShapeAssumeFormSubject(
-  state: BattleState,
+  session: BattleRuntimeSession,
   formStatBlockId: string,
 ): Extract<BattleSubject, { readonly tag: "druidWildShape" }> {
-  const subject = discoverBattleActs(state).find(
+  const subject = discoverBattleActs(session).find(
     (act) =>
       act.subject.tag === "druidWildShape" &&
       act.subject.action === "assumeForm" &&
@@ -241,12 +243,12 @@ function wildShapeAssumeFormSubject(
 }
 
 function resolveWildShapeAssumeFormWithMergedEquipment(
-  state: BattleState,
+  session: BattleRuntimeSession,
   formStatBlockId: string,
 ) {
-  const subject = wildShapeAssumeFormSubject(state, formStatBlockId);
+  const subject = wildShapeAssumeFormSubject(session, formStatBlockId);
   const needsDisposition = resolveBattleSubject({
-    state,
+    state: session.state,
     subject,
     fills: [],
   });
@@ -255,7 +257,7 @@ function resolveWildShapeAssumeFormWithMergedEquipment(
   }
   const hole = requireWildShapeEquipmentDispositionHole(needsDisposition.holes);
   return resolveBattleSubject({
-    state,
+    state: session.state,
     subject,
     fills: [wildShapeDispositionFill(hole)],
   });

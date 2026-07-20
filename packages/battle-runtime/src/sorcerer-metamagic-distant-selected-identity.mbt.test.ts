@@ -187,7 +187,7 @@ function resolveDistantObjectLightSubject() {
       knownOptions: [distantMetamagicOption()],
     },
   });
-  spellAct({ state, spellId: lightUnitId });
+  spellAct({ session: state, spellId: lightUnitId });
   const distantAct = discoverBattleActs(state).find(
     (candidate) =>
       candidate.subject.tag === "actionSpell" &&
@@ -203,7 +203,7 @@ function resolveDistantObjectLightSubject() {
     throw new Error("Expected Distant Light spell act.");
   }
   const resolved = resolveBattleSubject({
-    state,
+    state: state.state,
     subject: distantAct.subject,
     fills: [
       spellDistantObjectLightTargetFill({
@@ -234,11 +234,15 @@ function distantObjectLightProjection(
 ): DistantObjectLightProjection {
   const emitter = state.lightEmitters[0];
   const caster = state.combatants.get(spellCasterId);
+  const sorceryPointResourceRef =
+    caster?.origin.kind === "character"
+      ? caster.origin.metamagic?.sorceryPointResourcePoolRef
+      : undefined;
   const sorceryPointResource =
     caster?.origin.kind === "character"
       ? caster.origin.resources.find(
           (candidate): candidate is CharacterBattlePointPoolResourceState =>
-            candidate.unit.id === "sorcerer_font_of_magic" &&
+            candidate.resourcePoolRef === sorceryPointResourceRef &&
             characterBattleResourceIsPointPool(candidate),
         )
       : undefined;

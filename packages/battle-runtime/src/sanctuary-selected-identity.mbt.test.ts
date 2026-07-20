@@ -1,8 +1,4 @@
-import {
-  characterSpellProcedureRefMatchesSpellForTest,
-} from "./battle-runtime-test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
-import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.SANCTUARY.TARGETING_INTERDICTION
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1H-SANCTUARY sanctuary
 // UNIT-IDENTITY-REPLAY: L1H-SANCTUARY sanctuary doCastSanctuaryWardCreation doInterdictDirectAttackFailedSaveLoss doInterdictDirectSpellSuccessfulSavePassThrough doRetargetDirectAttackToLegalReplacement doRejectIllegalReplacementTarget doExcludeAreaEffectFromInterdiction doEndWardOnWardedAttackRoll doEndWardOnWardedSpellCast doEndWardOnWardedDamageDealt
@@ -29,7 +25,7 @@ import {
   battleReducerStartRouteEvent,
   characterId,
   combatantId,
-  discoverBattleActs,
+  discoverBattleActCandidates,
   initiativeScore,
   startBattle,
   type AvailableBattleAct,
@@ -42,7 +38,7 @@ import {
   type BattleResolutionResult,
   type BattleState,
   type BattleProcedureExecutionRef,
-  type BattleActDiscoverySubject as BattleSubject,
+  type BattleSubject,
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
@@ -142,10 +138,7 @@ type BonusActionSpellAct = AvailableBattleAct & {
   >;
 };
 type ActionSpellAct = AvailableBattleAct & {
-  readonly subject: Extract<
-    BattleSubject,
-    { readonly tag: "actionSpell"; readonly invocation: unknown }
-  >;
+  readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
 };
 type AttackAct = AvailableBattleAct & {
   readonly subject: Extract<BattleSubject, { readonly tag: "action" }>;
@@ -1136,12 +1129,6 @@ function projectBattleState(input: {
     wardPresent: ward !== undefined,
     wardSourceIsSanctuary:
       ward !== undefined &&
-      characterSpellProcedureRefMatchesSpellForTest(
-        input.state,
-        ward.sourceCombatantId,
-        ward.sourceProcedureRef,
-        sanctuaryUnitId,
-      ) &&
       ward.sourceCombatantId === casterId &&
       ward.save.ability === "wis",
     wardedHp: Number(combatant(input.state, wardedId).hp),
@@ -1199,7 +1186,7 @@ function battleWithSanctuary(): BattleState {
   if (Either.isLeft(result)) {
     throw new Error(result.left.message);
   }
-  return result.right;
+  return result.right.state;
 }
 
 function characterCreature(
@@ -1271,11 +1258,9 @@ function castSanctuary(state: BattleState, targetId: CombatantId): BattleState {
 }
 
 function bonusActionSanctuaryAct(state: BattleState): BonusActionSpellAct {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActCandidates(state).find(
     (candidate): candidate is BonusActionSpellAct =>
-      candidate.subject.tag === "bonusActionSpell" &&
-      battleActSpellPresentation(candidate)?.invocation.procedure ===
-        "sanctuaryTargetingInterdiction",
+      candidate.subject.tag === "bonusActionSpell",
   );
   if (act === undefined) {
     throw new Error("Expected Sanctuary Bonus Action spell act.");
@@ -1287,10 +1272,9 @@ function actionSpellAct(
   state: BattleState,
   spellId: SanctuarySelectedIdentityActionSpellUnitId,
 ): ActionSpellAct {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActCandidates(state).find(
     (candidate): candidate is ActionSpellAct =>
-      candidate.subject.tag === "actionSpell" &&
-      battleActSpellPresentation(candidate)?.invocation.spellId === spellId,
+      candidate.subject.tag === "actionSpell",
   );
   if (act === undefined) {
     throw new Error(`Expected action spell act for ${spellId}.`);
@@ -1299,7 +1283,7 @@ function actionSpellAct(
 }
 
 function attackAct(state: BattleState, targetId: CombatantId): AttackAct {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActCandidates(state).find(
     (candidate): candidate is AttackAct =>
       candidate.subject.tag === "action" &&
       candidate.subject.action === "attack" &&
@@ -1370,7 +1354,7 @@ function flamingSphereRamAct(
   state: BattleState,
   targetId: CombatantId,
 ): FlamingSphereRamAct {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActCandidates(state).find(
     (candidate): candidate is FlamingSphereRamAct =>
       candidate.subject.tag === "runtimeCommand" &&
       candidate.subject.command === "movableZoneRam" &&

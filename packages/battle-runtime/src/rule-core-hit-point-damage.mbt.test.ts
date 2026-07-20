@@ -80,15 +80,15 @@ const hitPointDamageComponentOwner = "RuleCoreHitPointDamageOwner";
 const initialProjection: HitPointDamageProjection = withRuleCoreComponentRoute(
   hitPointDamageComponentOwner,
   {
-  lastScenario: "init",
-  hitPoints: 0,
-  hitPointMaximum: 1,
-  temporaryHitPoints: 0,
-  dead: false,
-  unconscious: false,
-  damageToHitPoints: 0,
-  remainingDamageAtZero: 0,
-  replayIndex: 0,
+    lastScenario: "init",
+    hitPoints: 0,
+    hitPointMaximum: 1,
+    temporaryHitPoints: 0,
+    dead: false,
+    unconscious: false,
+    damageToHitPoints: 0,
+    remainingDamageAtZero: 0,
+    replayIndex: 0,
   },
 );
 

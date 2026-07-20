@@ -21,12 +21,16 @@ import {
   requiredAbilityCheckRollMode,
   requireResolved,
   resolveBattleSubject,
-  startBattleRight,
+  startBattleSessionRight,
   statBlockCreatureInit,
   unitLibrary,
   wizardSpellcasting,
 } from "./battle-runtime-test-support.ts";
-import { type BattleFill, type BattleHole, type BattleState } from "./index.ts";
+import {
+  type BattleFill,
+  type BattleHole,
+  type BattleRuntimeSession,
+} from "./index.ts";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 
 type BattleRollMode = "normal" | "advantage" | "disadvantage";
@@ -84,14 +88,18 @@ defineSelectedIdentityReplayAndQntReplay({
           actionName: "doResolveThaumaturgyBoomingVoice",
           discover: () => {
             const initial = battleWithThaumaturgy();
+            const act = findAct(initial, thaumaturgySubject);
             const resolved = requireResolved(
               resolveBattleSubject({
-                state: initial,
-                subject: thaumaturgySubject,
+                state: initial.state,
+                subject: act.subject,
                 fills: [thaumaturgyCountFill(initial, 0)],
               }),
-            ).state;
-            return projectThaumaturgyState(resolved, "resolved");
+            );
+            return projectThaumaturgyState(
+              { ...initial, state: resolved.state },
+              "resolved",
+            );
           },
         },
       ],
@@ -134,7 +142,7 @@ function observeThaumaturgyBoomingVoiceRoute(): ThaumaturgyRouteProjection {
   const act = findAct(state, thaumaturgySubject);
   const resolved = requireResolved(
     resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [thaumaturgyCountFill(state, 0)],
     }),
@@ -148,8 +156,8 @@ function observeThaumaturgyBoomingVoiceRoute(): ThaumaturgyRouteProjection {
   };
 }
 
-function battleWithThaumaturgy(): BattleState {
-  return startBattleRight({
+function battleWithThaumaturgy(): BattleRuntimeSession {
+  return startBattleSessionRight({
     battleId: battleId("thaumaturgy-selected-identity"),
     combatants: [
       characterSeed({
@@ -178,10 +186,10 @@ function srdThaumaturgySpell(): SpellRecord {
 }
 
 function thaumaturgyCountFill(
-  state: BattleState,
+  session: BattleRuntimeSession,
   activeOneMinuteEffectCount: number,
 ): BattleFill {
-  const act = findAct(state, thaumaturgySubject);
+  const act = findAct(session, thaumaturgySubject);
   const hole = findThaumaturgyCountHole(act.initialHoles);
   return {
     kind: "thaumaturgyActiveOneMinuteEffectCount",
@@ -199,17 +207,17 @@ function findThaumaturgyCountHole(holes: readonly BattleHole[]) {
 }
 
 function projectThaumaturgyState(
-  state: BattleState,
+  session: BattleRuntimeSession,
   lastResult: ThaumaturgyProjection["lastResult"],
 ): ThaumaturgyProjection {
   return {
     casterEffectCount:
-      state.combatants
+      session.state.combatants
         .get(fighterId)
         ?.activeEffects.filter(
           (effect) => effect.kind === "thaumaturgyBoomingVoice",
         ).length ?? 0,
-    actionAvailable: discoverBattleActs(state).some(
+    actionAvailable: discoverBattleActs(session).some(
       (act) =>
         act.subject.tag === "actionSpell" &&
         battleActSpellPresentation(act)?.invocation.spellId === "thaumaturgy" &&
@@ -217,15 +225,15 @@ function projectThaumaturgyState(
           "thaumaturgyBoomingVoice",
     ),
     intimidationRollMode:
-      requiredAbilityCheckRollMode(state, fighterId, "cha", {
+      requiredAbilityCheckRollMode(session.state, fighterId, "cha", {
         skill: "intimidation",
       }) ?? "normal",
     wisdomIntimidationRollMode:
-      requiredAbilityCheckRollMode(state, fighterId, "wis", {
+      requiredAbilityCheckRollMode(session.state, fighterId, "wis", {
         skill: "intimidation",
       }) ?? "normal",
     perceptionRollMode:
-      requiredAbilityCheckRollMode(state, fighterId, "cha", {
+      requiredAbilityCheckRollMode(session.state, fighterId, "cha", {
         skill: "perception",
       }) ?? "normal",
     lastResult,

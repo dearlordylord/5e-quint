@@ -50,7 +50,7 @@ import {
 } from "./battle-runtime-test-support.ts";
 import {
   battleReducerStartRouteEvent,
-  discoverBattleActs,
+  discoverBattleActCandidates,
   endTurn,
   resolveBattleInterrupt,
   snapshotBattle,
@@ -59,7 +59,7 @@ import {
   type BattleHole,
   type BattleResolutionResult,
   type BattleState,
-  type BattleActDiscoverySubject as BattleSubject,
+  type BattleSubject,
   type CombatantId,
 } from "./index.ts";
 
@@ -139,7 +139,9 @@ type RuntimeCommandSubject = Extract<
   BattleSubject,
   { readonly tag: "runtimeCommand" }
 >;
-type RuntimeCommandAct = ReturnType<typeof discoverBattleActs>[number] & {
+type RuntimeCommandAct = ReturnType<
+  typeof discoverBattleActCandidates
+>[number] & {
   readonly subject: RuntimeCommandSubject;
 };
 
@@ -691,7 +693,11 @@ function castCommand(
     preparedSpells: [spellRecord(commandUnitId)],
     spellSlots: [{ spellLevel: 1, count: 1 }],
   });
-  const act = spellAct({ state, spellId: commandUnitId, slotLevel: 1 });
+  const act = spellAct({
+    session: state,
+    spellId: commandUnitId,
+    slotLevel: 1,
+  });
   const target = requireHole(act.initialHoles, "spellTargetList");
   const commandOption = requireHole(act.initialHoles, "commandOptionChoice");
   const targetSelection = spellTargetListFill(
@@ -709,14 +715,14 @@ function castCommand(
     value: option,
   };
   const awaitingSave = resolveBattleSubject({
-    state,
+    state: state.state,
     subject: act.subject,
     fills: [targetSelection, optionSelection],
   });
   const savingThrow = requireResultHole(awaitingSave, "savingThrowOutcome");
   const resolved = requireResolved(
     resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [
         targetSelection,
@@ -756,7 +762,7 @@ function requireRuntimeCommand(
   state: BattleState,
   command: RuntimeCommandSubject["command"],
 ): RuntimeCommandAct {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActCandidates(state).find(
     (candidate): candidate is RuntimeCommandAct =>
       candidate.subject.tag === "runtimeCommand" &&
       candidate.subject.command === command,

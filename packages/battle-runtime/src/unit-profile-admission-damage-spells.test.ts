@@ -57,6 +57,7 @@ import {
   spellHoleInvocation,
   spellTargetFill,
 } from "./unit-profile-admission-spell-fill-support.ts";
+import { characterSpellProcedure } from "./character-execution.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 import {
   battleObjectId,
@@ -75,6 +76,7 @@ import type {
   BattleHole,
   BattleObjectDamageDisposition,
   BattleObjectIgnitionDisposition,
+  BattleRuntimeSession,
   CombatantId,
   EffectAtom,
 } from "./unit-profile-admission-test-support.ts";
@@ -90,12 +92,30 @@ import {
 
 const fireballObjectId = battleObjectId("unit-profile-fireball-object");
 
+function spellExecutionForAct(
+  session: BattleRuntimeSession,
+  act: ReturnType<typeof spellAct>,
+) {
+  const actor = session.state.combatants.get(act.subject.actorId);
+  if (actor?.origin.kind !== "character") {
+    throw new Error("Expected character spell caster.");
+  }
+  const execution = characterSpellProcedure(
+    actor.origin.execution,
+    act.subject.procedureRef,
+  );
+  if (execution === undefined) {
+    throw new Error("Expected admitted mechanical spell execution.");
+  }
+  return execution;
+}
+
 describe("QMBT14 deterministic damage Spell Unit admission", () => {
   test("magic_missile is admitted through catalog spell access and projected as a prepared slot spell", () => {
     const spell = spellRecord(magicMissileUnitId);
     const state = spellBattle({ preparedSpells: [spell] });
     const act = spellAct({
-      state,
+      session: state,
       spellId: magicMissileUnitId,
     });
 
@@ -112,11 +132,13 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       ),
       mode: { tag: "cast" },
     });
-    const invocation = spellActInvocation(state, act);
+    const invocation = spellExecutionForAct(state, act);
     expect(invocation).toEqual(
       expect.objectContaining({
         procedure: "repeatedDamageAllocation",
-        spell,
+        spellRuleFacts: expect.objectContaining({
+          level: spell.mechanics.level,
+        }),
         resource: { tag: "spellSlot", slotLevel: 1 },
         targeting: {
           kind: "repeatedEffectTargetAllocation",
@@ -165,7 +187,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     const spell = spellRecord(rayOfFrostUnitId);
     const state = spellBattle({ cantrips: [spell] });
     const act = spellAct({
-      state,
+      session: state,
       spellId: rayOfFrostUnitId,
     });
 
@@ -245,11 +267,11 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       { readonly procedure: "spellAttackDamage" }
     > => {
       const state = spellBattle({ cantrips: [spell] });
-      const act = spellAct({ state, spellId: spell.id });
+      const act = spellAct({ session: state, spellId: spell.id });
       const targetHole = requireHole(act.initialHoles, "targetChoice");
       const attackRoll = requireResultHole(
         resolveBattleSubject({
-          state,
+          state: state.state,
           subject: act.subject,
           fills: [
             spellTargetFill(targetHole, spell.id, spellCasterId, spellTargetId),
@@ -363,7 +385,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
         cantrips: [spell],
         targetStatBlock: coldResistantTarget,
       });
-      const act = spellAct({ state, spellId: spell.id });
+      const act = spellAct({ session: state, spellId: spell.id });
       const targetFill = spellTargetFill(
         requireHole(act.initialHoles, "targetChoice"),
         spell.id,
@@ -372,14 +394,14 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       );
       const attackRoll = requireResultHole(
         resolveBattleSubject({
-          state,
+          state: state.state,
           subject: act.subject,
           fills: [targetFill],
         }),
         "attackRoll",
       );
       const pendingDamage = resolveBattleSubject({
-        state,
+        state: state.state,
         subject: act.subject,
         fills: [
           targetFill,
@@ -388,7 +410,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       });
       const damageRoll = requireResultHole(pendingDamage, "rolledDice");
       const resolved = resolveBattleSubject({
-        state,
+        state: state.state,
         subject: act.subject,
         fills: [
           targetFill,
@@ -406,7 +428,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       spellBattle({
         cantrips: [coldStableIdentity],
         targetStatBlock: coldResistantTarget,
-      }),
+      }).state,
       spellTargetId,
     ).hp;
 
@@ -421,7 +443,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     const spell = spellRecord(acidSplashUnitId);
     const state = spellBattle({ cantrips: [spell] });
     const act = spellAct({
-      state,
+      session: state,
       spellId: acidSplashUnitId,
     });
 
@@ -434,10 +456,12 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       invocation: cantripSpellInvocationRef("acid_splash", "saveGatedDamage"),
       mode: { tag: "cast" },
     });
-    expect(spellActInvocation(state, act)).toEqual(
+    expect(spellExecutionForAct(state, act)).toEqual(
       expect.objectContaining({
         procedure: "saveGatedDamage",
-        spell,
+        spellRuleFacts: expect.objectContaining({
+          level: spell.mechanics.level,
+        }),
         ability: "dex",
         targeting: {
           kind: "pointOriginSphere",
@@ -466,7 +490,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
     const act = spellAct({
-      state,
+      session: state,
       spellId: acidArrowUnitId,
       slotLevel: 2,
     });
@@ -486,7 +510,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     });
     const attackRoll = requireResultHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject: act.subject,
         fills: [
           spellTargetFill(
@@ -528,14 +552,14 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       targetMaxHp: 30,
     });
     const hitAct = spellAct({
-      state: hitState,
+      session: hitState,
       spellId: acidArrowUnitId,
       slotLevel: 2,
     });
     const hitTargetHole = requireHole(hitAct.initialHoles, "targetChoice");
     const hitAttackRoll = requireResultHole(
       resolveBattleSubject({
-        state: hitState,
+        state: hitState.state,
         subject: hitAct.subject,
         fills: [
           spellTargetFill(
@@ -550,7 +574,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     );
     const hitDamage = requireResultHole(
       resolveBattleSubject({
-        state: hitState,
+        state: hitState.state,
         subject: hitAct.subject,
         fills: [
           spellTargetFill(
@@ -565,7 +589,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       "rolledDice",
     );
     const hitResolved = resolveBattleSubject({
-      state: hitState,
+      state: hitState.state,
       subject: hitAct.subject,
       fills: [
         spellTargetFill(
@@ -632,14 +656,14 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       targetMaxHp: 30,
     });
     const missAct = spellAct({
-      state: missState,
+      session: missState,
       spellId: acidArrowUnitId,
       slotLevel: 2,
     });
     const missTargetHole = requireHole(missAct.initialHoles, "targetChoice");
     const missAttackRoll = requireResultHole(
       resolveBattleSubject({
-        state: missState,
+        state: missState.state,
         subject: missAct.subject,
         fills: [
           spellTargetFill(
@@ -654,7 +678,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     );
     const missDamage = requireResultHole(
       resolveBattleSubject({
-        state: missState,
+        state: missState.state,
         subject: missAct.subject,
         fills: [
           spellTargetFill(
@@ -669,7 +693,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       "rolledDice",
     );
     const missResolved = resolveBattleSubject({
-      state: missState,
+      state: missState.state,
       subject: missAct.subject,
       fills: [
         spellTargetFill(
@@ -695,7 +719,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     const spell = spellRecord(poisonSprayUnitId);
     const state = spellBattle({ cantrips: [spell] });
     const act = spellAct({
-      state,
+      session: state,
       spellId: poisonSprayUnitId,
     });
 
@@ -713,7 +737,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     });
     const attackRoll = requireResultHole(
       resolveBattleSubject({
-        state: spellBattle({ cantrips: [spell] }),
+        state: spellBattle({ cantrips: [spell] }).state,
         subject: act.subject,
         fills: [
           spellTargetFill(
@@ -751,7 +775,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     const spell = spellRecord(chillTouchUnitId);
     const state = spellBattle({ cantrips: [spell] });
     const act = spellAct({
-      state,
+      session: state,
       spellId: chillTouchUnitId,
     });
 
@@ -766,7 +790,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     });
     const attackRoll = requireResultHole(
       resolveBattleSubject({
-        state: spellBattle({ cantrips: [spell] }),
+        state: spellBattle({ cantrips: [spell] }).state,
         subject: act.subject,
         fills: [
           spellTargetFill(
@@ -815,7 +839,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     const spell = spellRecord(shockingGraspUnitId);
     const state = spellBattle({ cantrips: [spell] });
     const act = spellAct({
-      state,
+      session: state,
       spellId: shockingGraspUnitId,
     });
 
@@ -833,7 +857,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     });
     const attackRoll = requireResultHole(
       resolveBattleSubject({
-        state: spellBattle({ cantrips: [spell] }),
+        state: spellBattle({ cantrips: [spell] }).state,
         subject: act.subject,
         fills: [
           spellTargetFill(
@@ -869,7 +893,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     const spell = spellRecord(guidingBoltUnitId);
     const state = spellBattle({ preparedSpells: [spell] });
     const act = spellAct({
-      state,
+      session: state,
       spellId: guidingBoltUnitId,
     });
 
@@ -888,7 +912,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     });
     const attackRoll = requireResultHole(
       resolveBattleSubject({
-        state: spellBattle({ preparedSpells: [spell] }),
+        state: spellBattle({ preparedSpells: [spell] }).state,
         subject: act.subject,
         fills: [
           spellTargetFill(
@@ -925,7 +949,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     const spell = spellRecord(rayOfSicknessUnitId);
     const state = spellBattle({ preparedSpells: [spell] });
     const act = spellAct({
-      state,
+      session: state,
       spellId: rayOfSicknessUnitId,
     });
 
@@ -944,7 +968,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     });
     const attackRoll = requireResultHole(
       resolveBattleSubject({
-        state: spellBattle({ preparedSpells: [spell] }),
+        state: spellBattle({ preparedSpells: [spell] }).state,
         subject: act.subject,
         fills: [
           spellTargetFill(
@@ -981,7 +1005,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     const spell = spellRecord(viciousMockeryUnitId);
     const state = spellBattle({ cantrips: [spell] });
     const act = spellAct({
-      state,
+      session: state,
       spellId: viciousMockeryUnitId,
     });
 
@@ -999,7 +1023,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     });
     const savingThrow = requireResultHole(
       resolveBattleSubject({
-        state: spellBattle({ cantrips: [spell] }),
+        state: spellBattle({ cantrips: [spell] }).state,
         subject: act.subject,
         fills: [
           spellTargetFill(
@@ -1104,25 +1128,25 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
 
     expect(
       maybeSpellAct({
-        state: spellBattle({ preparedSpells: [genericPoisonRay] }),
+        session: spellBattle({ preparedSpells: [genericPoisonRay] }),
         spellId: genericPoisonRay.id,
       }),
     ).toBeDefined();
     expect(
       maybeSpellAct({
-        state: spellBattle({ cantrips: [genericOpportunityAttackDenial] }),
+        session: spellBattle({ cantrips: [genericOpportunityAttackDenial] }),
         spellId: genericOpportunityAttackDenial.id,
       }),
     ).toBeDefined();
     expect(
       maybeSpellAct({
-        state: spellBattle({ preparedSpells: [genericNextAttackAdvantage] }),
+        session: spellBattle({ preparedSpells: [genericNextAttackAdvantage] }),
         spellId: genericNextAttackAdvantage.id,
       }),
     ).toBeDefined();
     expect(
       maybeSpellAct({
-        state: spellBattle({ cantrips: [genericIncomingAttackDisadvantage] }),
+        session: spellBattle({ cantrips: [genericIncomingAttackDisadvantage] }),
         spellId: genericIncomingAttackDisadvantage.id,
       }),
     ).toBeUndefined();
@@ -1131,7 +1155,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     const spell = spellRecord(sacredFlameUnitId);
     const state = spellBattle({ cantrips: [spell] });
     const act = spellAct({
-      state,
+      session: state,
       spellId: sacredFlameUnitId,
     });
 
@@ -1146,7 +1170,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     });
     const savingThrow = requireResultHole(
       resolveBattleSubject({
-        state: spellBattle({ cantrips: [spell] }),
+        state: spellBattle({ cantrips: [spell] }).state,
         subject: act.subject,
         fills: [
           spellTargetFill(
@@ -1187,7 +1211,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       spellSlots: [{ spellLevel: 3, count: 1 }],
     });
     const act = spellAct({
-      state,
+      session: state,
       spellId: inflictWoundsUnitId,
       slotLevel: 3,
     });
@@ -1210,7 +1234,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
         state: spellBattle({
           preparedSpells: [spell],
           spellSlots: [{ spellLevel: 3, count: 1 }],
-        }),
+        }).state,
         subject: act.subject,
         fills: [
           spellTargetFill(
@@ -1252,7 +1276,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       spellSlots: [{ spellLevel: 3, count: 1 }],
     });
     const act = spellAct({
-      state,
+      session: state,
       spellId: mindSpikeUnitId,
       slotLevel: 3,
     });
@@ -1271,7 +1295,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
         state: spellBattle({
           preparedSpells: [spell],
           spellSlots: [{ spellLevel: 3, count: 1 }],
-        }),
+        }).state,
         subject: act.subject,
         fills: [
           spellTargetFill(
@@ -1315,7 +1339,11 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       targetHp: 30,
       targetMaxHp: 30,
     });
-    const act = spellAct({ state, spellId: mindSpikeUnitId, slotLevel: 2 });
+    const act = spellAct({
+      session: state,
+      spellId: mindSpikeUnitId,
+      slotLevel: 2,
+    });
     const targetFill = spellTargetFill(
       requireHole(act.initialHoles, "targetChoice"),
       mindSpikeUnitId,
@@ -1324,7 +1352,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     );
     const savingThrow = requireResultHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject: act.subject,
         fills: [targetFill],
       }),
@@ -1335,7 +1363,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     ]);
     const damageRoll = requireResultHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject: act.subject,
         fills: [targetFill, saveFill],
       }),
@@ -1343,7 +1371,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     );
 
     const resolved = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [
         targetFill,
@@ -1402,7 +1430,11 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       targetHp: 30,
       targetMaxHp: 30,
     });
-    const act = spellAct({ state, spellId: mindSpikeUnitId, slotLevel: 2 });
+    const act = spellAct({
+      session: state,
+      spellId: mindSpikeUnitId,
+      slotLevel: 2,
+    });
     const targetFill = spellTargetFill(
       requireHole(act.initialHoles, "targetChoice"),
       mindSpikeUnitId,
@@ -1411,7 +1443,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     );
     const savingThrow = requireResultHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject: act.subject,
         fills: [targetFill],
       }),
@@ -1422,7 +1454,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     ]);
     const damageRoll = requireResultHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject: act.subject,
         fills: [targetFill, saveFill],
       }),
@@ -1430,7 +1462,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     );
 
     const resolved = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [
         targetFill,
@@ -1478,21 +1510,24 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
-    const caster = requireCombatant(state, spellCasterId);
-    const concentratingState = {
+    const caster = requireCombatant(state.state, spellCasterId);
+    const concentratingSession = {
       ...state,
-      combatants: new Map(state.combatants).set(spellCasterId, {
-        ...caster,
-        concentration: {
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String(spellId("synthetic_prior_concentration")),
-          ),
-          effectKind: "spellEffect",
-        },
-      }),
+      state: {
+        ...state.state,
+        combatants: new Map(state.state.combatants).set(spellCasterId, {
+          ...caster,
+          concentration: {
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              String(spellId("synthetic_prior_concentration")),
+            ),
+            effectKind: "spellEffect",
+          },
+        }),
+      },
     };
     const act = spellAct({
-      state: concentratingState,
+      session: concentratingSession,
       spellId: mindSpikeUnitId,
       slotLevel: 2,
     });
@@ -1504,7 +1539,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     );
     const savingThrow = requireResultHole(
       resolveBattleSubject({
-        state: concentratingState,
+        state: concentratingSession.state,
         subject: act.subject,
         fills: [targetFill],
       }),
@@ -1515,7 +1550,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     ]);
     const damageRoll = requireResultHole(
       resolveBattleSubject({
-        state: concentratingState,
+        state: concentratingSession.state,
         subject: act.subject,
         fills: [targetFill, saveFill],
       }),
@@ -1523,7 +1558,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     );
 
     const resolved = resolveBattleSubject({
-      state: concentratingState,
+      state: concentratingSession.state,
       subject: act.subject,
       fills: [
         targetFill,
@@ -1565,21 +1600,24 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       targetHp: 30,
       targetMaxHp: 30,
     });
-    const caster = requireCombatant(state, spellCasterId);
-    const concentratingState = {
+    const caster = requireCombatant(state.state, spellCasterId);
+    const concentratingSession = {
       ...state,
-      combatants: new Map(state.combatants).set(spellCasterId, {
-        ...caster,
-        concentration: {
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String(spellId("synthetic_prior_concentration")),
-          ),
-          effectKind: "spellEffect",
-        },
-      }),
+      state: {
+        ...state.state,
+        combatants: new Map(state.state.combatants).set(spellCasterId, {
+          ...caster,
+          concentration: {
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              String(spellId("synthetic_prior_concentration")),
+            ),
+            effectKind: "spellEffect",
+          },
+        }),
+      },
     };
     const act = spellAct({
-      state: concentratingState,
+      session: concentratingSession,
       spellId: mindSpikeUnitId,
       slotLevel: 2,
     });
@@ -1591,7 +1629,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     );
     const savingThrow = requireResultHole(
       resolveBattleSubject({
-        state: concentratingState,
+        state: concentratingSession.state,
         subject: act.subject,
         fills: [targetFill],
       }),
@@ -1602,7 +1640,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     ]);
     const damageRoll = requireResultHole(
       resolveBattleSubject({
-        state: concentratingState,
+        state: concentratingSession.state,
         subject: act.subject,
         fills: [targetFill, saveFill],
       }),
@@ -1610,7 +1648,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     );
 
     const resolved = resolveBattleSubject({
-      state: concentratingState,
+      state: concentratingSession.state,
       subject: act.subject,
       fills: [
         targetFill,
@@ -1638,7 +1676,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
     const act = spellAct({
-      state,
+      session: state,
       spellId: burningHandsUnitId,
       slotLevel: 2,
     });
@@ -1655,7 +1693,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
     expect(savingThrow).toEqual(
       expect.objectContaining({
-        label: "Burning Hands self-origin Cone Saving Throw outcomes",
+        label: "Spell self-origin Cone Saving Throw outcomes",
         ability: "dex",
         dc: { kind: "caster_spell_save_dc" },
       }),
@@ -1689,7 +1727,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       spellSlots: [{ spellLevel: 4, count: 1 }],
     });
     const act = spellAct({
-      state,
+      session: state,
       spellId: lightningBoltUnitId,
       slotLevel: 4,
     });
@@ -1710,7 +1748,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
     expect(savingThrow).toEqual(
       expect.objectContaining({
-        label: "Lightning Bolt self-origin Line Saving Throw outcomes",
+        label: "Spell self-origin Line Saving Throw outcomes",
         ability: "dex",
         dc: { kind: "caster_spell_save_dc" },
       }),
@@ -1745,7 +1783,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       spellSlots: [{ spellLevel: 5, count: 1 }],
     });
     const act = spellAct({
-      state,
+      session: state,
       spellId: coneOfColdUnitId,
       slotLevel: 5,
     });
@@ -1766,7 +1804,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
     expect(savingThrow).toEqual(
       expect.objectContaining({
-        label: "Cone of Cold self-origin Cone Saving Throw outcomes",
+        label: "Spell self-origin Cone Saving Throw outcomes",
         ability: "con",
         dc: { kind: "caster_spell_save_dc" },
       }),
@@ -1801,7 +1839,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       spellSlots: [{ spellLevel: 5, count: 1 }],
     });
     const act = spellAct({
-      state,
+      session: state,
       spellId: flameStrikeUnitId,
       slotLevel: 5,
     });
@@ -1822,7 +1860,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
     expect(savingThrow).toEqual(
       expect.objectContaining({
-        label: "Flame Strike point-origin Cylinder Saving Throw outcomes",
+        label: "Spell point-origin Cylinder Saving Throw outcomes",
         ability: "dex",
         dc: { kind: "caster_spell_save_dc" },
       }),
@@ -1867,7 +1905,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       extraTargetMaxHp: 40,
     });
     const act = spellAct({
-      state,
+      session: state,
       spellId: flameStrikeUnitId,
       slotLevel: 5,
     });
@@ -1878,7 +1916,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     ]);
     const damageRoll = requireResultHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject: act.subject,
         fills: [saveFill],
       }),
@@ -1886,7 +1924,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     );
 
     const resolved = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [
         saveFill,
@@ -1931,7 +1969,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       extraTargetIds: [secondTargetId],
     });
     const act = spellAct({
-      state,
+      session: state,
       spellId: lightningBoltUnitId,
       slotLevel: 3,
     });
@@ -1950,7 +1988,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     });
     const damageRoll = requireResultHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject: act.subject,
         fills: [saveFill],
       }),
@@ -1958,7 +1996,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     );
 
     const resolved = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [
         saveFill,
@@ -1993,7 +2031,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       spellSlots: [{ spellLevel: 4, count: 1 }],
     });
     const act = spellAct({
-      state,
+      session: state,
       spellId: fireballUnitId,
       slotLevel: 4,
     });
@@ -2010,7 +2048,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
     expect(savingThrow).toEqual(
       expect.objectContaining({
-        label: "Fireball point-origin Sphere Saving Throw outcomes",
+        label: "Spell point-origin Sphere Saving Throw outcomes",
         ability: "dex",
         dc: { kind: "caster_spell_save_dc" },
       }),
@@ -2041,7 +2079,11 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       targetHp: 50,
       targetMaxHp: 50,
     });
-    const act = spellAct({ state, spellId: fireballUnitId, slotLevel: 3 });
+    const act = spellAct({
+      session: state,
+      spellId: fireballUnitId,
+      slotLevel: 3,
+    });
     const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
     const saveFill = fireballSavingThrowOutcomeFill(
       savingThrow,
@@ -2055,7 +2097,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     );
     const damageRoll = requireResultHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject: act.subject,
         fills: [saveFill],
       }),
@@ -2063,7 +2105,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     );
 
     const resolved = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [
         saveFill,
@@ -2106,11 +2148,15 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 3, count: 1 }],
     });
-    const act = spellAct({ state, spellId: fireballUnitId, slotLevel: 3 });
+    const act = spellAct({
+      session: state,
+      spellId: fireballUnitId,
+      slotLevel: 3,
+    });
     const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
 
     const resolved = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [
         fireballSavingThrowOutcomeFill(
@@ -2148,12 +2194,16 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 3, count: 1 }],
     });
-    const act = spellAct({ state, spellId: fireballUnitId, slotLevel: 3 });
+    const act = spellAct({
+      session: state,
+      spellId: fireballUnitId,
+      slotLevel: 3,
+    });
     const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
 
     expect(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject: act.subject,
         fills: [
           savingThrowOutcomeFill(savingThrow, [
@@ -2173,7 +2223,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       spellSlots: [{ spellLevel: 3, count: 1 }],
     });
     const act = spellAct({
-      state,
+      session: state,
       spellId: shatterUnitId,
       slotLevel: 3,
     });
@@ -2190,7 +2240,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
     expect(savingThrow).toEqual(
       expect.objectContaining({
-        label: "Shatter point-origin Sphere Saving Throw outcomes",
+        label: "Spell point-origin Sphere Saving Throw outcomes",
         ability: "con",
         dc: { kind: "caster_spell_save_dc" },
       }),
@@ -2232,7 +2282,11 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
         },
       ],
     });
-    const act = spellAct({ state, spellId: shatterUnitId, slotLevel: 2 });
+    const act = spellAct({
+      session: state,
+      spellId: shatterUnitId,
+      slotLevel: 2,
+    });
     const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
 
     expect(savingThrow.targetRollModes).toEqual([
@@ -2249,7 +2303,11 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       targetHp: 30,
       targetMaxHp: 30,
     });
-    const act = spellAct({ state, spellId: shatterUnitId, slotLevel: 2 });
+    const act = spellAct({
+      session: state,
+      spellId: shatterUnitId,
+      slotLevel: 2,
+    });
     const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
     const saveFill = shatterSavingThrowOutcomeFill(
       savingThrow,
@@ -2261,7 +2319,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     );
     const damageRoll = requireResultHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject: act.subject,
         fills: [saveFill],
       }),
@@ -2269,7 +2327,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     );
 
     const resolved = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [saveFill, damageRollFillWithGroups(damageRoll, [[5, 5, 4]])],
     });
@@ -2287,7 +2345,11 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
-    const act = spellAct({ state, spellId: shatterUnitId, slotLevel: 2 });
+    const act = spellAct({
+      session: state,
+      spellId: shatterUnitId,
+      slotLevel: 2,
+    });
     const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
     const objectId = battleObjectId("unit-profile-shatter-vase");
     const saveFill = shatterSavingThrowOutcomeFill(
@@ -2302,7 +2364,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     );
     const damageRoll = requireResultHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject: act.subject,
         fills: [saveFill],
       }),
@@ -2310,7 +2372,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     );
 
     const resolved = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [saveFill, damageRollFillWithGroups(damageRoll, [[5, 5, 4]])],
     });
@@ -2337,12 +2399,16 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
-    const act = spellAct({ state, spellId: shatterUnitId, slotLevel: 2 });
+    const act = spellAct({
+      session: state,
+      spellId: shatterUnitId,
+      slotLevel: 2,
+    });
     const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
 
     expect(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject: act.subject,
         fills: [
           savingThrowOutcomeFill(savingThrow, [

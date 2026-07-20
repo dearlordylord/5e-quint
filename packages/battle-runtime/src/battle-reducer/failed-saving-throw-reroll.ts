@@ -11,7 +11,7 @@ import {
   spendCharacterResourceUse,
   type CharacterBattleUseCountResourceState,
 } from "../character-battle-resources.ts";
-import type { BattleFailedSavingThrowRerollSupportProfile } from "../unit-feature-support.ts";
+import type { UnitFeatureProcedureExecution } from "../character-execution.ts";
 
 export type FailedSavingThrowRerollIssueReason =
   | "originalSavingThrowDidNotFail"
@@ -25,7 +25,10 @@ export type FailedSavingThrowRerollIssue = {
 };
 
 export type FailedSavingThrowRerollInput = {
-  readonly profile: BattleFailedSavingThrowRerollSupportProfile;
+  readonly execution: Extract<
+    UnitFeatureProcedureExecution,
+    { readonly kind: "failedSavingThrowReroll" }
+  >;
   readonly resource: CharacterBattleUseCountResourceState;
   readonly fighterLevel: ClassLevel;
   readonly failedSave: {
@@ -63,8 +66,8 @@ export function resolveFailedSavingThrowReroll(
     );
   }
   if (
-    input.resource.unit.id !==
-    input.profile.savingThrow.spends.resourceUnitId
+    input.resource.resourcePoolRef !==
+    input.execution.savingThrow.spends.resourcePoolRef
   ) {
     return failedSavingThrowRerollIssue(
       "resourceMismatch",

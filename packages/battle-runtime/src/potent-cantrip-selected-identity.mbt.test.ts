@@ -2,13 +2,16 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.potent-cantrip
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3PUTB-05 wizard_potent_cantrip
 // UNIT-IDENTITY-REPLAY: L3PUTB-05 wizard_potent_cantrip doAttackMissHalfDamage doAttackMissNoAdditionalEffect doAttackMissNoLightEmitter doSaveSuccessHalfDamage doSaveSuccessNoAdditionalEffect doRejectObjectMissHalfDamage
+import { classLevel } from "@dnd/shared/types";
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import {
+  characterBattleFeatureInitForTest,
   armorClass,
   attackRollFill,
   battleId,
   battleObjectId,
+  battleProcedureExecutionRefForSpellHoleForTest,
   characterSeed,
   damageRollFill,
   findAct,
@@ -24,7 +27,7 @@ import {
   skeletonCreatureInit,
   skeletonId,
   spellRecord,
-  startBattleRight,
+  startBattleSessionRight,
   supportedBattleUnitRef,
   targetFill,
   unitLibrary,
@@ -33,6 +36,8 @@ import {
 } from "./battle-runtime-test-support.ts";
 import type {
   BattleResolutionResult,
+  BattleRuntimeSession,
+  BattleProcedureExecutionRef,
   BattleState,
   CombatantId,
 } from "./index.ts";
@@ -175,12 +180,13 @@ function projectResolvedResult(
 }
 
 function resolveAttackMissCantrip(spellId: Parameters<typeof spellRecord>[0]) {
-  const state = potentCantripBattle({ cantrips: [spellId] });
-  const subject = magicSubject(spellId);
-  const target = findHole(findAct(state, subject).initialHoles, "targetChoice");
+  const session = potentCantripBattle({ cantrips: [spellId] });
+  const act = findAct(session, magicSubject(spellId));
+  const subject = act.subject;
+  const target = findHole(act.initialHoles, "targetChoice");
   const attack = requireHole(
     resolveBattleSubject({
-      state,
+      state: session.state,
       subject,
       fills: [targetFill(target, skeletonId)],
     }),
@@ -188,7 +194,7 @@ function resolveAttackMissCantrip(spellId: Parameters<typeof spellRecord>[0]) {
   );
   const damage = requireHole(
     resolveBattleSubject({
-      state,
+      state: session.state,
       subject,
       fills: [
         targetFill(target, skeletonId),
@@ -198,7 +204,7 @@ function resolveAttackMissCantrip(spellId: Parameters<typeof spellRecord>[0]) {
     "rolledDice",
   );
   return resolveBattleSubject({
-    state,
+    state: session.state,
     subject,
     fills: [
       targetFill(target, skeletonId),
@@ -211,16 +217,15 @@ function resolveAttackMissCantrip(spellId: Parameters<typeof spellRecord>[0]) {
 function resolveSuccessfulSaveCantrip(
   spellId: Parameters<typeof spellRecord>[0],
 ) {
-  const state = potentCantripBattle({ cantrips: [spellId] });
-  const subject = magicSubject(spellId);
-  const target = findAct(state, subject).initialHoles.find(
-    (hole) => hole.kind === "targetChoice",
-  );
+  const session = potentCantripBattle({ cantrips: [spellId] });
+  const act = findAct(session, magicSubject(spellId));
+  const subject = act.subject;
+  const target = act.initialHoles.find((hole) => hole.kind === "targetChoice");
   const targetFills =
     target === undefined ? [] : [targetFill(target, skeletonId)];
   const save = requireHole(
     resolveBattleSubject({
-      state,
+      state: session.state,
       subject,
       fills: targetFills,
     }),
@@ -231,53 +236,56 @@ function resolveSuccessfulSaveCantrip(
   ]);
   const damage = requireHole(
     resolveBattleSubject({
-      state,
+      state: session.state,
       subject,
       fills: [...targetFills, saveSuccess],
     }),
     "rolledDice",
   );
   return resolveBattleSubject({
-    state,
+    state: session.state,
     subject,
     fills: [...targetFills, saveSuccess, damageRollFill(damage, 5)],
   });
 }
 
 function resolveObjectMissCantrip(spellId: "fire_bolt") {
-  const state = potentCantripBattle({ cantrips: [spellId] });
-  const subject = magicSubject(spellId);
+  const session = potentCantripBattle({ cantrips: [spellId] });
+  const act = findAct(session, magicSubject(spellId));
+  const subject = act.subject;
+  const objectTargetHole = findHole(act.initialHoles, "objectTargetChoice");
   const objectTarget = objectTargetFill({
-    hole: findHole(findAct(state, subject).initialHoles, "objectTargetChoice"),
+    hole: objectTargetHole,
     objectId: battleObjectId("potent-cantrip-selected-object-target"),
-    spellId,
     rangeFeet: movementFeet(120),
     damageDisposition: { kind: "hitPoints", hitPoints: Hp(8) },
-    spatialFacts: objectTargetFacts(spellId),
+    spatialFacts: objectTargetFacts(
+      battleProcedureExecutionRefForSpellHoleForTest(objectTargetHole),
+    ),
   });
   const attack = requireHole(
     resolveBattleSubject({
-      state,
+      state: session.state,
       subject,
       fills: [objectTarget],
     }),
     "attackRoll",
   );
   return resolveBattleSubject({
-    state,
+    state: session.state,
     subject,
     fills: [objectTarget, attackRollFill(attack, { total: 4, naturalD20: 3 })],
   });
 }
 
-function objectTargetFacts(spellId: "fire_bolt") {
+function objectTargetFacts(sourceProcedureRef: BattleProcedureExecutionRef) {
   const objectId = battleObjectId("potent-cantrip-selected-object-target");
   return [
     {
       kind: "spellObjectTarget" as const,
       casterId: wizardId,
       objectId,
-      sourceProcedureRef: battleProcedureExecutionRefForTest(spellId),
+      sourceProcedureRef,
       rangeFeet: movementFeet(120),
       armorClass: armorClass(13),
       damageDisposition: { kind: "hitPoints" as const, hitPoints: Hp(8) },
@@ -286,7 +294,7 @@ function objectTargetFacts(spellId: "fire_bolt") {
       kind: "spellObjectIgnition" as const,
       casterId: wizardId,
       objectId,
-      sourceProcedureRef: battleProcedureExecutionRefForTest(spellId),
+      sourceProcedureRef,
       disposition: { kind: "flammableUnattended" as const },
     },
   ];
@@ -294,8 +302,8 @@ function objectTargetFacts(spellId: "fire_bolt") {
 
 function potentCantripBattle(input: {
   readonly cantrips: readonly Parameters<typeof spellRecord>[0][];
-}): BattleState {
-  return startBattleRight({
+}): BattleRuntimeSession {
+  return startBattleSessionRight({
     battleId: battleId("potent-cantrip-selected-identity"),
     combatants: [
       characterSeed({
@@ -305,7 +313,11 @@ function potentCantripBattle(input: {
         attack: null,
         classLevels: [{ className: "wizard", level: 3 }],
         characterUnitRefs: [potentCantripUnitRef],
-        unitFeatures: [{ unit: potentCantripUnit }],
+        unitFeatures: [
+          characterBattleFeatureInitForTest(potentCantripUnit, [
+            { className: "wizard", level: classLevel(3) },
+          ]),
+        ],
         spellcasting: wizardSpellcasting({
           cantrips: input.cantrips.map(spellRecord),
           preparedSpells: [],
@@ -335,4 +347,3 @@ function activeEffectCount(
   }
   return combatant.activeEffects.length;
 }
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";

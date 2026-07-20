@@ -49,6 +49,7 @@ import {
   battleFailedSavingThrowRerollSupportForUnit,
   FAILED_SAVING_THROW_REROLL_SUPPORT_PROFILE,
 } from "./unit-feature-support.ts";
+import type { UnitFeatureProcedureExecution } from "./character-execution.ts";
 import { NonNegativeInteger } from "@dnd/shared/types";
 import {
   battleCharacterExecutionScopeRef,
@@ -56,6 +57,7 @@ import {
   battleId,
   battleResourcePoolExecutionRef,
   combatantId,
+  type BattleResourcePoolExecutionRef,
 } from "./identity.ts";
 
 function resourcePoolRefForTest(unitId: UnitRecord["id"]) {
@@ -67,6 +69,29 @@ function resourcePoolRefForTest(unitId: UnitRecord["id"]) {
     ),
     NonNegativeInteger(0),
   );
+}
+
+function failedSavingThrowRerollExecutionForTest(
+  resourcePoolRef: BattleResourcePoolExecutionRef,
+): Extract<
+  UnitFeatureProcedureExecution,
+  { readonly kind: "failedSavingThrowReroll" }
+> {
+  return {
+    kind: "failedSavingThrowReroll",
+    savingThrow: {
+      trigger: "failedSavingThrow",
+      reroll: {
+        use: "newRoll",
+        bonus: { kind: "classLevel", className: "fighter" },
+      },
+      spends: {
+        resourcePoolRef,
+        amount: 1,
+      },
+      resetCadence: "longRest",
+    },
+  };
 }
 
 const indomitableSelectedIdentityDriverSchema = {
@@ -132,7 +157,9 @@ const indomitableSelectedIdentityActions = {
         throw new Error("Expected Indomitable use-count resource.");
       }
       const result = resolveFailedSavingThrowReroll({
-        profile,
+        execution: failedSavingThrowRerollExecutionForTest(
+          resource.resourcePoolRef,
+        ),
         resource,
         fighterLevel: classLevel(9),
         failedSave: {
@@ -194,7 +221,7 @@ describe("QMBT7 deterministic Unit profile admission", () => {
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
       Either.right({
-        unit: unitLibrary.requireUnit(fighterSecondWindUnitId),
+        unit,
         supportProfiles: [],
       }),
     );
@@ -223,7 +250,7 @@ describe("QMBT7 deterministic Unit profile admission", () => {
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
       Either.right({
-        unit: unitLibrary.requireUnit(barbarianRecklessAttackUnitId),
+        unit,
         supportProfiles: [],
       }),
     );
@@ -278,7 +305,7 @@ describe("QMBT7 deterministic Unit profile admission", () => {
         }),
       ).toEqual(
         Either.right({
-          unitId,
+          unit,
           supportProfiles: [SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE],
         }),
       );
@@ -314,7 +341,7 @@ describe("QMBT62 Tactical Mind deterministic Unit profile admission", () => {
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
       Either.right({
-        unit: unitLibrary.requireUnit(fighterTacticalMindUnitId),
+        unit,
         supportProfiles: [supportProfile],
       }),
     );
@@ -409,7 +436,7 @@ describe("L19D-04 Fighter Indomitable failed Saving Throw reroll", () => {
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
       Either.right({
-        unit: unitLibrary.requireUnit(fighterIndomitableUnitId),
+        unit,
         supportProfiles: [supportProfile],
       }),
     );
@@ -469,7 +496,9 @@ describe("L19D-04 Fighter Indomitable failed Saving Throw reroll", () => {
 
     expect(
       resolveFailedSavingThrowReroll({
-        profile,
+        execution: failedSavingThrowRerollExecutionForTest(
+          resource.resourcePoolRef,
+        ),
         resource,
         fighterLevel: classLevel(9),
         failedSave: {
@@ -512,7 +541,9 @@ describe("L19D-04 Fighter Indomitable failed Saving Throw reroll", () => {
 
     expect(
       resolveFailedSavingThrowReroll({
-        profile,
+        execution: failedSavingThrowRerollExecutionForTest(
+          resource.resourcePoolRef,
+        ),
         resource,
         fighterLevel: classLevel(9),
         failedSave: {
@@ -567,7 +598,9 @@ describe("L19D-04 Fighter Indomitable failed Saving Throw reroll", () => {
       throw new Error("Expected use-count resources.");
     }
     const baseInput = {
-      profile,
+      execution: failedSavingThrowRerollExecutionForTest(
+        resource.resourcePoolRef,
+      ),
       fighterLevel: classLevel(9),
       failedSave: {
         ability: "dex" as const,
@@ -661,7 +694,7 @@ describe("QMBT65 Cutting Words deterministic Unit profile admission", () => {
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
       Either.right({
-        unit: unitLibrary.requireUnit(bardBardicInspirationUnitId),
+        unit,
         supportProfiles: [BARDIC_INSPIRATION_GRANT_SUPPORT_PROFILE],
       }),
     );
@@ -822,7 +855,7 @@ describe("QMBT65 Cutting Words deterministic Unit profile admission", () => {
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
       Either.right({
-        unit: unitLibrary.requireUnit(bardCuttingWordsUnitId),
+        unit,
         supportProfiles: [supportProfile],
       }),
     );
@@ -1019,7 +1052,7 @@ describe("SRDINV75A Innate Sorcery deterministic Unit profile admission", () => 
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
       Either.right({
-        unit: unitLibrary.requireUnit(sorcererInnateSorceryUnitId),
+        unit,
         supportProfiles: [],
       }),
     );

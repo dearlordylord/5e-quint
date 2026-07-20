@@ -1,4 +1,3 @@
-import { battleActUnitPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3CF-03-PALADIN-SACRED-WEAPON-ACTIVATION paladin_sacred_weapon
 // UNIT-IDENTITY-REPLAY: L3CF-03-PALADIN-SACRED-WEAPON-ACTIVATION paladin_sacred_weapon doActivateSacredWeapon doRejectSacredWeaponNoResource doRejectSacredWeaponRangedWeapon doRecastSacredWeapon
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3CF-04-PALADIN-SACRED-WEAPON-ATTACK-DAMAGE-LIGHT paladin_sacred_weapon
@@ -6,15 +5,21 @@ import { battleActUnitPresentation } from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.paladin-sacred-weapon
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.paladin-sacred-weapon
 import { describe, expect, test } from "vitest";
-import { characterAttackSubjectForTest } from "./battle-runtime-test-support.ts";
+import { classLevel } from "@dnd/shared/types";
+import {
+  characterAttackSubjectForTest,
+  characterBattleFeatureInitForTest,
+} from "./battle-runtime-test-support.ts";
 
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
+import type { BattleActDiscoveryCandidate } from "./battle-reducer.ts";
 import {
   attackTargetFill,
   battleId,
   battleUnitRefWithSupportProfiles,
   combatantId,
+  discoverBattleActCandidates,
   discoverBattleActs,
   Either,
   requireResultHole,
@@ -24,6 +29,7 @@ import {
   type AvailableBattleAct,
   type BattleActiveEffect,
   type BattleHole,
+  type BattleRuntimeSession,
   type BattleState,
   type BattleSubject,
   unitLibrary,
@@ -61,11 +67,11 @@ const clericChannelDivinityUnitId = "cleric_channel_divinity";
 
 describe("Sacred Weapon activation", () => {
   test("admits only the Sacred Weapon Channel Divinity spend resource for this battle path", () => {
-    expect(sacredWeaponActorResourceUnitIds(sacredWeaponBattle({}))).toEqual([
+    expect(sacredWeaponActorResourceUnitIds(sacredWeaponSession({}))).toEqual([
       paladinChannelDivinityUnitId,
     ]);
     expect(
-      sacredWeaponActorResourceUnitIds(sacredWeaponBattle({})),
+      sacredWeaponActorResourceUnitIds(sacredWeaponSession({})),
     ).not.toContain(clericChannelDivinityUnitId);
   });
 
@@ -149,13 +155,17 @@ describe("Sacred Weapon activation", () => {
   });
 
   test("active binding adds Charisma attack-roll bonus with minimum 1 and offers normal or Radiant damage", () => {
-    const state = sacredWeaponBattle({ charismaScore: 8 });
+    const session = sacredWeaponSession({ charismaScore: 8 });
+    const state = session.state;
     const activated = withFreshAttackAction(
       resolveSacredWeapon(state, requireSacredWeaponAct(state)),
       state,
     );
 
-    const attackSummaries = discoverBattleActs(activated)
+    const attackSummaries = discoverBattleActs({
+      ...session,
+      state: activated,
+    })
       .filter(
         (
           act,
@@ -390,6 +400,15 @@ function sacredWeaponBattle(input: {
   readonly weaponUnitId?: "weapon_longsword" | "weapon_shortbow";
   readonly charismaScore?: number;
 }): BattleState {
+  return sacredWeaponSession(input).state;
+}
+
+function sacredWeaponSession(input: {
+  readonly selectedProfile?: boolean;
+  readonly channelDivinityUsesRemaining?: number;
+  readonly weaponUnitId?: "weapon_longsword" | "weapon_shortbow";
+  readonly charismaScore?: number;
+}): BattleRuntimeSession {
   const sacredWeapon = unitLibrary.requireUnit(paladinSacredWeaponUnitId);
   const channelDivinity = unitLibrary.requireUnit(paladinChannelDivinityUnitId);
   const unitRef = battleUnitRefWithSupportProfiles({
@@ -412,7 +431,11 @@ function sacredWeaponBattle(input: {
         attack: zeroAbilityWeaponAttack(
           input.weaponUnitId ?? "weapon_longsword",
         ),
-        unitFeatures: [{ unit: sacredWeapon }],
+        unitFeatures: [
+          characterBattleFeatureInitForTest(sacredWeapon, [
+            { className: "paladin", level: classLevel(3) },
+          ]),
+        ],
         resources: [
           {
             unit: channelDivinity,
@@ -432,14 +455,17 @@ function sacredWeaponBattle(input: {
   }
   return input.charismaScore === undefined
     ? state.right
-    : withCharismaScore(state.right, input.charismaScore);
+    : {
+        ...state.right,
+        state: withCharismaScore(state.right.state, input.charismaScore),
+      };
 }
 
-function sacredWeaponAct(state: BattleState): AvailableBattleAct | undefined {
-  return discoverBattleActs(state).find(
-    (act) =>
-      act.subject.tag === "unitFeatureHeldWeaponActivation" &&
-      battleActUnitPresentation(act)?.unitId === paladinSacredWeaponUnitId,
+function sacredWeaponAct(
+  state: BattleState,
+): BattleActDiscoveryCandidate | undefined {
+  return discoverBattleActCandidates(state).find(
+    (act) => act.subject.tag === "unitFeatureHeldWeaponActivation",
   );
 }
 
@@ -458,9 +484,11 @@ function isPaladinAttackAct(
   );
 }
 
-function requireSacredWeaponAct(state: BattleState): AvailableBattleAct & {
+function requireSacredWeaponAct(
+  state: BattleState,
+): BattleActDiscoveryCandidate & {
   readonly subject: Extract<
-    AvailableBattleAct["subject"],
+    BattleActDiscoveryCandidate["subject"],
     { readonly tag: "unitFeatureHeldWeaponActivation" }
   >;
 } {
@@ -472,18 +500,15 @@ function requireSacredWeaponAct(state: BattleState): AvailableBattleAct & {
 }
 
 function sacredWeaponDismissAct(state: BattleState):
-  | (AvailableBattleAct & {
+  | (BattleActDiscoveryCandidate & {
       readonly subject: Extract<
-        AvailableBattleAct["subject"],
+        BattleActDiscoveryCandidate["subject"],
         { readonly tag: "unitFeature" }
       >;
     })
   | undefined {
-  const act = discoverBattleActs(state).find(
-    (candidate) =>
-      candidate.subject.tag === "unitFeature" &&
-      battleActUnitPresentation(candidate)?.unitId ===
-        paladinSacredWeaponUnitId,
+  const act = discoverBattleActCandidates(state).find(
+    (candidate) => candidate.subject.tag === "unitFeature",
   );
   return act?.subject.tag === "unitFeature"
     ? { ...act, subject: act.subject }
@@ -533,7 +558,8 @@ function sacredWeaponProjection(
     throw new Error("Expected Sacred Weapon character actor.");
   }
   const resource = actor.origin.resources.find(
-    (candidate) => candidate.unit.id === paladinChannelDivinityUnitId,
+    (candidate) =>
+      candidate.resourcePoolRef === sacredWeaponResourcePoolRef(state),
   );
   const activeEffects = actor.activeEffects.filter(isSacredWeaponEffect);
   return {
@@ -550,13 +576,32 @@ function sacredWeaponProjection(
 }
 
 function sacredWeaponActorResourceUnitIds(
-  state: BattleState,
+  session: BattleRuntimeSession,
 ): readonly string[] {
+  return (
+    session.context.characters
+      .get(paladinId)
+      ?.resourceOwnership.map((resource) => resource.unit.id) ?? []
+  );
+}
+
+function sacredWeaponResourcePoolRef(state: BattleState) {
   const actor = state.combatants.get(paladinId);
   if (actor?.origin.kind !== "character") {
     throw new Error("Expected Sacred Weapon character actor.");
   }
-  return actor.origin.resources.map((resource) => resource.unit.id);
+  for (const binding of actor.origin.execution.procedureBindings) {
+    const procedure = binding.procedure;
+    if (
+      procedure.kind === "unitSupportProfile" &&
+      typeof procedure.execution !== "string" &&
+      procedure.execution.kind === "paladinSacredWeapon" &&
+      procedure.source.kind === "resourcePool"
+    ) {
+      return procedure.source.resourcePoolRef;
+    }
+  }
+  throw new Error("Expected resource-backed Sacred Weapon procedure.");
 }
 
 function isSacredWeaponEffect(

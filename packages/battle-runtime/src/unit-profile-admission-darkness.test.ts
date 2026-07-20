@@ -28,6 +28,7 @@ import {
   breakBattleConcentration,
   characterSeed,
   discoverBattleActs,
+  findAct,
   magicSubject,
   movementFeet,
   requireHole,
@@ -35,13 +36,14 @@ import {
   resolveBattleSubject,
   spellRecord,
   spellSlotInvocationRef,
-  startBattleRight,
+  startBattleSessionRight,
   statBlockCreatureInit,
   supportedSpellActs,
   tickDurationEffects,
   wizardId,
   wizardSpellcasting,
   type BattleState,
+  type BattleRuntimeSession,
 } from "./battle-runtime-test-support.ts";
 import { parseBattleSpellEffectLevel } from "./battle-reducer/spells-effective-level.ts";
 import { battleSpellEffectOccurrenceId } from "./identity.ts";
@@ -51,12 +53,12 @@ const darknessDurationTicks = elapsedTimeTicks(100);
 
 describe("battle runtime: Darkness", () => {
   test("Darkness admits only level-2-or-higher point-origin Sphere casts", () => {
-    const state = darknessBattle("battle-darkness-admission", [
+    const session = darknessBattle("battle-darkness-admission", [
       { spellLevel: 1, count: 1 },
       { spellLevel: 2, count: 1 },
       { spellLevel: 3, count: 1 },
     ]);
-    const levelOneAct = discoverBattleActs(state).find(
+    const levelOneAct = discoverBattleActs(session).find(
       (candidate) =>
         candidate.subject.tag === "actionSpell" &&
         battleActSpellPresentation(candidate)?.invocation.tag === "spellSlot" &&
@@ -66,7 +68,7 @@ describe("battle runtime: Darkness", () => {
     );
     expect(levelOneAct).toBeUndefined();
 
-    const levelTwoAct = discoverBattleActs(state).find(
+    const levelTwoAct = discoverBattleActs(session).find(
       (candidate) =>
         candidate.subject.tag === "actionSpell" &&
         battleActSpellPresentation(candidate)?.invocation.tag === "spellSlot" &&
@@ -89,7 +91,7 @@ describe("battle runtime: Darkness", () => {
       }),
     ]);
 
-    const wizard = state.combatants.get(wizardId);
+    const wizard = session.state.combatants.get(wizardId);
     if (wizard === undefined) {
       throw new Error("Expected Wizard.");
     }
@@ -243,8 +245,9 @@ describe("battle runtime: Darkness", () => {
       sourceSpellLevel: 2,
       objectId: "darkness-untracked-level-two-object",
     });
+    const baseSession = darknessBattle("battle-darkness-light-overlap");
     const state = {
-      ...darknessBattle("battle-darkness-light-overlap"),
+      ...baseSession.state,
       lightEmitters: [
         trackedObjectSpellLightEmitter({
           sourceEffectId: overlappingLevelTwoEffectId,
@@ -259,7 +262,10 @@ describe("battle runtime: Darkness", () => {
         untrackedLevelTwo,
       ],
     };
-    const subject = magicSubject(darknessUnitId);
+    const subject = findAct(
+      { ...baseSession, state },
+      magicSubject(darknessUnitId),
+    ).subject;
     const area = requireHole(
       resolveBattleSubject({ state, subject, fills: [] }),
       "spellAreaChoice",
@@ -295,8 +301,8 @@ function darknessBattle(
     readonly spellLevel: 1 | 2 | 3;
     readonly count: number;
   }[] = [{ spellLevel: 2, count: 1 }],
-): BattleState {
-  return startBattleRight({
+): BattleRuntimeSession {
+  return startBattleSessionRight({
     battleId: battleId(battleIdValue),
     combatants: [
       characterSeed({
@@ -320,15 +326,15 @@ function castDarkness(
   ReturnType<typeof resolveBattleSubject>,
   { readonly tag: "resolved" }
 > {
-  const state = darknessBattle(battleIdValue);
-  const subject = magicSubject(darknessUnitId);
+  const session = darknessBattle(battleIdValue);
+  const subject = findAct(session, magicSubject(darknessUnitId)).subject;
   const area = requireHole(
-    resolveBattleSubject({ state, subject, fills: [] }),
+    resolveBattleSubject({ state: session.state, subject, fills: [] }),
     "spellAreaChoice",
   );
   return requireResolved(
     resolveBattleSubject({
-      state,
+      state: session.state,
       subject,
       fills: [magicalDarknessAreaFill(area, areaId)],
     }),

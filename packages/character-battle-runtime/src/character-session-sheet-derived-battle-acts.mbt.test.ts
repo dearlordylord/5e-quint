@@ -16,9 +16,9 @@ import {
   type BattleFill,
   type BattleHole,
   type BattleResolutionResult,
+  type BattleRuntimeSession,
   type BattleState,
   type BattleSubject,
-  type CharacterBattleSpellcastingState,
 } from "@dnd/battle-runtime";
 import {
   abilityScoreAssignment,
@@ -122,7 +122,7 @@ type SheetDerivedInitialBranch =
 
 type SheetDerivedSession = {
   readonly sheet: CharacterSheet;
-  readonly state: BattleState;
+  readonly battle: BattleRuntimeSession;
   readonly character: CharacterBattleCombatant;
 };
 
@@ -257,9 +257,9 @@ function createSheetDerivedBattleActsDriver(input: {
         const missingSpell = startSheetDerivedSession(
           sheetDerivedBuild({ preparedSpell: false }),
         );
-        expect(findWeaponAttackAct(missingWeapon.state)).toBeUndefined();
-        expect(findRayOfSicknessAct(missingSpell.state)).toBeUndefined();
-        const weaponAct = requireWeaponAttackAct(session.state);
+        expect(findWeaponAttackAct(missingWeapon.battle)).toBeUndefined();
+        expect(findRayOfSicknessAct(missingSpell.battle)).toBeUndefined();
+        const weaponAct = requireWeaponAttackAct(session.battle);
         expect(weaponAct.subject).toMatchObject({
           tag: "action",
           actorId: characterCombatantId,
@@ -281,7 +281,7 @@ function createSheetDerivedBattleActsDriver(input: {
         const missingWeapon = startSheetDerivedSession(
           sheetDerivedBuild({ wieldedWeapon: false }),
         );
-        expect(findWeaponAttackAct(missingWeapon.state)).toBeUndefined();
+        expect(findWeaponAttackAct(missingWeapon.battle)).toBeUndefined();
         projection = {
           outcome: "missing-wielded-weapon-rejected",
           accepted: false,
@@ -298,7 +298,7 @@ function createSheetDerivedBattleActsDriver(input: {
         const missingSpell = startSheetDerivedSession(
           sheetDerivedBuild({ preparedSpell: false }),
         );
-        expect(findRayOfSicknessAct(missingSpell.state)).toBeUndefined();
+        expect(findRayOfSicknessAct(missingSpell.battle)).toBeUndefined();
         projection = {
           outcome: "missing-selected-spell-rejected",
           accepted: false,
@@ -312,7 +312,7 @@ function createSheetDerivedBattleActsDriver(input: {
       },
       doProjectResourceBackedSpellAttackCapability: () => {
         const currentSession = requireSession(session);
-        const act = requireRayOfSicknessAct(currentSession.state);
+        const act = requireRayOfSicknessAct(currentSession.battle);
         spellSubject = act.subject;
         expect(levelOneSlotsRemaining(currentSession.character)).toBe(2);
         projection = {
@@ -331,7 +331,7 @@ function createSheetDerivedBattleActsDriver(input: {
         const subject = requireSpellSubject(spellSubject);
         const targetHole = requireHole(
           resolveBattleSubject({
-            state: currentSession.state,
+            state: currentSession.battle.state,
             subject,
             fills: [],
           }),
@@ -342,7 +342,7 @@ function createSheetDerivedBattleActsDriver(input: {
           { total: 20, naturalD20: 15 },
         );
         const result = resolveBattleSubject({
-          state: currentSession.state,
+          state: currentSession.battle.state,
           subject,
           fills: [earlyFill],
         });
@@ -365,7 +365,7 @@ function createSheetDerivedBattleActsDriver(input: {
         const subject = requireSpellSubject(spellSubject);
         const targetHole = requireHole(
           resolveBattleSubject({
-            state: currentSession.state,
+            state: currentSession.battle.state,
             subject,
             fills: [],
           }),
@@ -381,7 +381,7 @@ function createSheetDerivedBattleActsDriver(input: {
         ]);
         const attackHole = requireHole(
           resolveBattleSubject({
-            state: currentSession.state,
+            state: currentSession.battle.state,
             subject,
             fills: [targetChoice],
           }),
@@ -393,7 +393,7 @@ function createSheetDerivedBattleActsDriver(input: {
         });
         const damageHole = requireHole(
           resolveBattleSubject({
-            state: currentSession.state,
+            state: currentSession.battle.state,
             subject,
             fills: [targetChoice, attack],
           }),
@@ -402,7 +402,7 @@ function createSheetDerivedBattleActsDriver(input: {
         const damage = damageRollFill(damageHole, [2, 2]);
         acceptedSpellFills = [targetChoice, attack, damage];
         const result = resolveBattleSubject({
-          state: currentSession.state,
+          state: currentSession.battle.state,
           subject,
           fills: acceptedSpellFills,
         });
@@ -496,6 +496,7 @@ function createSheetDerivedBattleActsDriver(input: {
         const settled = expectRight(
           settleCharacterSheetFromBattle({
             state,
+            context: currentSession.battle.context,
             sheet: currentSession.sheet,
             unitLibrary,
             combatant: character,
@@ -527,7 +528,7 @@ function createSheetDerivedBattleActsDriver(input: {
         const exhausted = startSheetDerivedSession(sheetDerivedBuild(), {
           levelOneSlotsExpended: 2,
         });
-        expect(findRayOfSicknessAct(exhausted.state)).toBeUndefined();
+        expect(findRayOfSicknessAct(exhausted.battle)).toBeUndefined();
         expect(settledSheet).not.toBeUndefined();
         projection = {
           outcome: "exhausted-slots-rejected-rediscovery",
@@ -622,18 +623,18 @@ function startSheetDerivedSession(
     }),
   );
   const targetInit = battleCreatureInitFromRidingHorse();
-  const state = expectRight(
+  const battle = expectRight(
     startBattle({
       battleId: battleId("battle:sheet-derived-acts"),
       combatants: [characterInit, targetInit],
     }),
   );
-  const character = requireCharacterCombatant(state);
-  const target = state.combatants.get(targetCombatantId);
+  const character = requireCharacterCombatant(battle.state);
+  const target = battle.state.combatants.get(targetCombatantId);
   if (target === undefined) {
     throw new Error("Expected target combatant in sheet-derived battle.");
   }
-  return { sheet, state, character };
+  return { sheet, battle, character };
 }
 
 function battleCreatureInitFromRidingHorse() {
@@ -710,9 +711,9 @@ function sheetDerivedBuild(input?: {
 }
 
 function findWeaponAttackAct(
-  state: BattleState,
+  session: BattleRuntimeSession,
 ): AvailableBattleAct | undefined {
-  return discoverBattleActs(state).find(
+  return discoverBattleActs(session).find(
     (act) =>
       act.subject.tag === "action" &&
       act.subject.action === "attack" &&
@@ -721,20 +722,22 @@ function findWeaponAttackAct(
   );
 }
 
-function requireWeaponAttackAct(state: BattleState): AvailableBattleAct {
-  const act = findWeaponAttackAct(state);
+function requireWeaponAttackAct(
+  session: BattleRuntimeSession,
+): AvailableBattleAct {
+  const act = findWeaponAttackAct(session);
   if (act === undefined) {
     throw new Error("Expected sheet-derived wielded weapon attack act.");
   }
   return act;
 }
 
-function findRayOfSicknessAct(state: BattleState):
+function findRayOfSicknessAct(session: BattleRuntimeSession):
   | (AvailableBattleAct & {
       readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
     })
   | undefined {
-  return discoverBattleActs(state).find(
+  return discoverBattleActs(session).find(
     (
       act,
     ): act is AvailableBattleAct & {
@@ -750,10 +753,12 @@ function findRayOfSicknessAct(state: BattleState):
   );
 }
 
-function requireRayOfSicknessAct(state: BattleState): AvailableBattleAct & {
+function requireRayOfSicknessAct(
+  session: BattleRuntimeSession,
+): AvailableBattleAct & {
   readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
 } {
-  const act = findRayOfSicknessAct(state);
+  const act = findRayOfSicknessAct(session);
   if (act === undefined) {
     throw new Error("Expected sheet-derived Ray of Sickness spell act.");
   }
@@ -771,7 +776,7 @@ function levelOneSlotsRemaining(combatant: CharacterBattleCombatant): number {
 
 function requireCharacterSpellcasting(
   combatant: CharacterBattleCombatant,
-): CharacterBattleSpellcastingState {
+): NonNullable<CharacterBattleCombatant["origin"]["spellcasting"]> {
   const spellcasting = combatant.origin.spellcasting;
   if (spellcasting === undefined) {
     throw new Error("Expected character spellcasting state.");

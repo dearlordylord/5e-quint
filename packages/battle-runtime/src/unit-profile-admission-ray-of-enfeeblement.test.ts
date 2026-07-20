@@ -50,6 +50,7 @@ import { abilityD20TestRollModeSaveGateProfile } from "./battle-reducer/spell-pr
 import { spellAdmissionContextFor } from "./battle-reducer/spell-procedure-profiles/profile.ts";
 import { spellFillSet } from "./battle-reducer/spells-resolve-fill-set.ts";
 import { spellTargetListHole } from "./battle-reducer/spells-holes-fills.ts";
+import { spellProcedureExecution } from "./character-execution.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 import { endTurn } from "./unit-profile-admission-test-support.ts";
 import {
@@ -58,7 +59,7 @@ import {
   discoverBattleActs,
   type BattleFill,
   type BattleHole,
-  type BattleState,
+  type BattleRuntimeSession,
   type SupportedSpellInvocation,
 } from "./index.ts";
 
@@ -66,19 +67,31 @@ const rayOfEnfeeblementUnitId = "ray_of_enfeeblement";
 
 function rayOfEnfeeblementSpell(): SpellRecord {
   const unit = decodeUnitRecordSync(rayOfEnfeeblementInput);
-  expect(unit.kind).toBe("spell");
-  return unit as SpellRecord;
+  if (unit.kind !== "spell") {
+    throw new Error("Expected Ray of Enfeeblement spell Unit.");
+  }
+  return unit;
 }
 
 function rayOfEnfeeblementInvocation(
-  state: BattleState,
+  session: BattleRuntimeSession,
   spell: SpellRecord,
 ): Extract<
   SupportedSpellInvocation,
   { readonly procedure: "abilityD20TestRollModeSaveGate" }
 > {
+  const state = session.state;
   const actor = requireCombatant(state, spellCasterId);
-  const admissionContext = spellAdmissionContextFor(actor, state);
+  const resourceOwnership =
+    session.context.characters.get(spellCasterId)?.resourceOwnership;
+  if (resourceOwnership === undefined) {
+    throw new Error("Expected spell caster runtime ownership context.");
+  }
+  const admissionContext = spellAdmissionContextFor(
+    actor,
+    state,
+    resourceOwnership,
+  );
   if (admissionContext === null) {
     throw new Error("Expected spell caster admission actor.");
   }
@@ -94,26 +107,27 @@ function rayOfEnfeeblementInvocation(
 }
 
 function resolveRayOfEnfeeblementCast(input: {
-  readonly state: BattleState;
+  readonly session: BattleRuntimeSession;
   readonly spell: SpellRecord;
   readonly succeeded: boolean;
 }) {
-  const invocation = rayOfEnfeeblementInvocation(input.state, input.spell);
+  const state = input.session.state;
+  const invocation = rayOfEnfeeblementInvocation(input.session, input.spell);
   const act = spellAct({
-    state: input.state,
+    session: input.session,
     spellId: rayOfEnfeeblementUnitId,
   });
   const executableInvocation = {
-    ...invocation,
+    ...spellProcedureExecution(invocation),
     sourceProcedureRef: act.subject.procedureRef,
   };
   const targetHole = spellTargetListHole(
-    input.state,
+    state,
     spellCasterId,
     executableInvocation,
   );
   const saveHole = spellSavingThrowOutcomeHole(
-    input.state,
+    state,
     spellCasterId,
     executableInvocation,
   );
@@ -132,7 +146,7 @@ function resolveRayOfEnfeeblementCast(input: {
     executableInvocation,
     executableInvocation.sourceProcedureRef,
     spellCasterId,
-    input.state,
+    state,
   );
   expect(fillSet.tag).toBe("ok");
   if (fillSet.tag !== "ok") {
@@ -140,7 +154,7 @@ function resolveRayOfEnfeeblementCast(input: {
   }
   return abilityD20TestRollModeSaveGateProfile.resolve({
     input: {
-      state: input.state,
+      state,
       subject: act.subject,
       fills,
     },
@@ -153,13 +167,13 @@ function resolveRayOfEnfeeblementCast(input: {
 describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
   test("success applies one next-attack Disadvantage until caster turn start", () => {
     const spell = rayOfEnfeeblementSpell();
-    const baseState = spellBattle({
+    const baseSession = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
       casterClassLevels: [{ className: "wizard", level: 3 }],
     });
     const cast = resolveRayOfEnfeeblementCast({
-      state: baseState,
+      session: baseSession,
       spell,
       succeeded: true,
     });
@@ -205,7 +219,7 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
     ).toBe(null);
 
     const castForStartTurnExpiry = resolveRayOfEnfeeblementCast({
-      state: baseState,
+      session: baseSession,
       spell,
       succeeded: true,
     });
@@ -245,13 +259,13 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
 
   test("failed save applies Strength D20 Disadvantage and repeat-save cleanup", () => {
     const spell = rayOfEnfeeblementSpell();
-    const baseState = spellBattle({
+    const baseSession = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
       casterClassLevels: [{ className: "wizard", level: 3 }],
     });
     const cast = resolveRayOfEnfeeblementCast({
-      state: baseState,
+      session: baseSession,
       spell,
       succeeded: false,
     });
@@ -328,14 +342,14 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
 
   test("failed save subtracts 1d8 from the affected target's damage rolls before concentration damage", () => {
     const spell = rayOfEnfeeblementSpell();
-    const baseState = spellBattle({
+    const baseSession = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
       casterClassLevels: [{ className: "wizard", level: 3 }],
       targetAttack: zeroAbilityWeaponAttack("weapon_longsword"),
     });
     const cast = resolveRayOfEnfeeblementCast({
-      state: baseState,
+      session: baseSession,
       spell,
       succeeded: false,
     });
@@ -345,11 +359,15 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
     const targetTurn = endTurn({ state: cast.state, actorId: spellCasterId });
     expect(targetTurn.tag).toBe("resolved");
     if (targetTurn.tag !== "resolved") return;
-    const attackAct = discoverBattleActs(targetTurn.state).find(
+    const attackAct = discoverBattleActs({
+      state: targetTurn.state,
+      context: baseSession.context,
+    }).find(
       (candidate) =>
         candidate.subject.tag === "action" &&
         candidate.subject.action === "attack" &&
-        candidate.summary === "Take the Attack action with Longsword.",
+        candidate.presentation.kind === "attack" &&
+        candidate.presentation.name === "Longsword",
     );
     expect(attackAct).toBeDefined();
     if (attackAct === undefined) return;
@@ -475,14 +493,14 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
 
   test("failed save subtracts the penalty before Resistance spell reduction", () => {
     const spell = rayOfEnfeeblementSpell();
-    const baseState = spellBattle({
+    const baseSession = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
       casterClassLevels: [{ className: "wizard", level: 3 }],
       targetAttack: zeroAbilityWeaponAttack("weapon_longsword"),
     });
     const cast = resolveRayOfEnfeeblementCast({
-      state: baseState,
+      session: baseSession,
       spell,
       succeeded: false,
     });
@@ -501,11 +519,15 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
     });
     expect(targetTurn.tag).toBe("resolved");
     if (targetTurn.tag !== "resolved") return;
-    const attackAct = discoverBattleActs(targetTurn.state).find(
+    const attackAct = discoverBattleActs({
+      state: targetTurn.state,
+      context: baseSession.context,
+    }).find(
       (candidate) =>
         candidate.subject.tag === "action" &&
         candidate.subject.action === "attack" &&
-        candidate.summary === "Take the Attack action with Longsword.",
+        candidate.presentation.kind === "attack" &&
+        candidate.presentation.name === "Longsword",
     );
     expect(attackAct).toBeDefined();
     if (attackAct === undefined) return;
@@ -626,7 +648,7 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
   test("failed save requests a separate penalty roll for spell attack sequence damage", () => {
     const spell = rayOfEnfeeblementSpell();
     const scorchingRay = spellRecord("scorching_ray");
-    const baseState = spellBattle({
+    const baseSession = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
       casterClassLevels: [{ className: "wizard", level: 3 }],
@@ -645,7 +667,7 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
       },
     });
     const cast = resolveRayOfEnfeeblementCast({
-      state: baseState,
+      session: baseSession,
       spell,
       succeeded: false,
     });
@@ -661,7 +683,7 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
     ).toBe(true);
 
     const act = spellAct({
-      state: targetTurn.state,
+      session: { state: targetTurn.state, context: baseSession.context },
       spellId: "scorching_ray",
       slotLevel: 2,
     });
@@ -720,7 +742,7 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
     const spell = rayOfEnfeeblementSpell();
     const burningHands = spellRecord("burning_hands");
     const sacredFlame = spellRecord("sacred_flame");
-    const baseState = spellBattle({
+    const baseSession = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
       casterClassLevels: [{ className: "wizard", level: 3 }],
@@ -739,7 +761,7 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
       },
     });
     const cast = resolveRayOfEnfeeblementCast({
-      state: baseState,
+      session: baseSession,
       spell,
       succeeded: false,
     });
@@ -750,7 +772,7 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
     if (targetTurn.tag !== "resolved") return;
 
     const act = spellAct({
-      state: targetTurn.state,
+      session: { state: targetTurn.state, context: baseSession.context },
       spellId: "burning_hands",
       slotLevel: 2,
     });
@@ -791,7 +813,7 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
       damageRoll.holeId,
     );
     const noDamageAct = spellAct({
-      state: targetTurn.state,
+      session: { state: targetTurn.state, context: baseSession.context },
       spellId: "sacred_flame",
     });
     expect(noDamageAct.subject.actorId).toBe(spellTargetId);
@@ -869,7 +891,7 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
   test("failed save composes save-gated damage with target-side Resistance reduction", () => {
     const spell = rayOfEnfeeblementSpell();
     const burningHands = spellRecord("burning_hands");
-    const baseState = spellBattle({
+    const baseSession = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
       casterClassLevels: [{ className: "wizard", level: 3 }],
@@ -888,7 +910,7 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
       },
     });
     const cast = resolveRayOfEnfeeblementCast({
-      state: baseState,
+      session: baseSession,
       spell,
       succeeded: false,
     });
@@ -908,7 +930,7 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
     if (targetTurn.tag !== "resolved") return;
 
     const act = spellAct({
-      state: targetTurn.state,
+      session: { state: targetTurn.state, context: baseSession.context },
       spellId: "burning_hands",
       slotLevel: 2,
     });
@@ -1017,7 +1039,7 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
     const spell = rayOfEnfeeblementSpell();
     const starryWisp = spellRecord("starry_wisp");
     const objectId = battleObjectId("ray-weakened-starry-wisp-object");
-    const baseState = spellBattle({
+    const baseSession = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
       casterClassLevels: [{ className: "wizard", level: 3 }],
@@ -1035,7 +1057,7 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
       },
     });
     const cast = resolveRayOfEnfeeblementCast({
-      state: baseState,
+      session: baseSession,
       spell,
       succeeded: false,
     });
@@ -1045,7 +1067,10 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
     expect(targetTurn.tag).toBe("resolved");
     if (targetTurn.tag !== "resolved") return;
 
-    const act = spellAct({ state: targetTurn.state, spellId: "starry_wisp" });
+    const act = spellAct({
+      session: { state: targetTurn.state, context: baseSession.context },
+      spellId: "starry_wisp",
+    });
     expect(act.subject.actorId).toBe(spellTargetId);
     const objectFill = spellObjectTargetFill({
       hole: requireHole(act.initialHoles, "objectTargetChoice"),
@@ -1123,7 +1148,7 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
   test("failed save rejects stale source-penalty fills on direct spell damage", () => {
     const spell = rayOfEnfeeblementSpell();
     const starryWisp = spellRecord("starry_wisp");
-    const baseState = spellBattle({
+    const baseSession = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
       casterClassLevels: [{ className: "wizard", level: 3 }],
@@ -1141,7 +1166,7 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
       },
     });
     const cast = resolveRayOfEnfeeblementCast({
-      state: baseState,
+      session: baseSession,
       spell,
       succeeded: false,
     });
@@ -1151,7 +1176,10 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
     expect(targetTurn.tag).toBe("resolved");
     if (targetTurn.tag !== "resolved") return;
 
-    const act = spellAct({ state: targetTurn.state, spellId: "starry_wisp" });
+    const act = spellAct({
+      session: { state: targetTurn.state, context: baseSession.context },
+      spellId: "starry_wisp",
+    });
     expect(act.subject.actorId).toBe(spellTargetId);
     const targetFill = spellTargetFill(
       requireHole(act.initialHoles, "targetChoice"),
@@ -1222,7 +1250,7 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
     const spell = rayOfEnfeeblementSpell();
     const shatter = spellRecord("shatter");
     const objectId = battleObjectId("ray-weakened-shatter-object");
-    const baseState = spellBattle({
+    const baseSession = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
       casterClassLevels: [{ className: "wizard", level: 3 }],
@@ -1241,7 +1269,7 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
       },
     });
     const cast = resolveRayOfEnfeeblementCast({
-      state: baseState,
+      session: baseSession,
       spell,
       succeeded: false,
     });
@@ -1252,7 +1280,7 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
     if (targetTurn.tag !== "resolved") return;
 
     const act = spellAct({
-      state: targetTurn.state,
+      session: { state: targetTurn.state, context: baseSession.context },
       spellId: "shatter",
       slotLevel: 2,
     });
@@ -1355,7 +1383,7 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
       "ray-heat-metal-second-contact-target",
     );
     const objectId = battleObjectId("ray-weakened-heat-metal-object");
-    const baseState = spellBattle({
+    const baseSession = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
       casterClassLevels: [{ className: "wizard", level: 3 }],
@@ -1375,7 +1403,7 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
       },
     });
     const cast = resolveRayOfEnfeeblementCast({
-      state: baseState,
+      session: baseSession,
       spell,
       succeeded: false,
     });
@@ -1386,7 +1414,7 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
     if (targetTurn.tag !== "resolved") return;
 
     const act = spellAct({
-      state: targetTurn.state,
+      session: { state: targetTurn.state, context: baseSession.context },
       spellId: heatMetalUnitId,
       slotLevel: 2,
     });

@@ -1,4 +1,5 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-grease-ground-hazard unit-feature.metamagic-heightened-save-disadvantage
+import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 //
 // The greaseGroundHazard Spell Procedure Profile: action-time Spell Slot
 // casting that creates a one-minute ground-area Difficult Terrain hazard and
@@ -18,7 +19,6 @@ import {
 } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet, MovementFeet } from "@dnd/shared/types";
 import type { ActivationPhase } from "@dnd/surface/surface/types";
-import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
@@ -30,7 +30,7 @@ import {
   type SpellTargeting,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
-import { spellId, type CombatantId } from "../../identity.ts";
+import { type CombatantId } from "../../identity.ts";
 import { hasSaveGateRepeatSaves } from "./_save-gate-helpers.ts";
 import { resolveGreaseGroundHazardSpellAct } from "../spells-resolve-save-gates.ts";
 import type {
@@ -38,9 +38,8 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
-import { spellProcedureInvocationSchema } from "./profile.ts";
+import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
 import {
-  BattleRuntimeObjectSchema,
   DcSourceSchema,
   PreparedSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
@@ -271,7 +270,6 @@ function greaseGroundHazardCastAct(
       tag: "actionSpell",
       actorId,
       procedureRef: invocation.sourceProcedureRef,
-      invocation: greaseGroundHazardInvocationRef(invocation),
       mode: { tag: "cast" },
     },
     initialHoles,
@@ -306,22 +304,6 @@ function greaseGroundHazardMetamagicInitialHoles(
   return holes;
 }
 
-function greaseGroundHazardInvocationRef(
-  invocation: GreaseGroundHazardSpellInvocation,
-): SpellInvocationRef {
-  return {
-    tag: "spellSlot",
-    spellId: spellId(invocation.spell.id),
-    slotLevel: invocation.resource.slotLevel,
-    procedure: "greaseGroundHazard",
-  };
-}
-
-function greaseGroundHazardCastSummary(
-  invocation: GreaseGroundHazardSpellInvocation,
-): string {
-  return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
-}
 
 function resolveGreaseGroundHazard(
   input: GreaseGroundHazardResolveInput,
@@ -337,38 +319,30 @@ function resolveGreaseGroundHazard(
   });
 }
 
-const GreaseGroundHazardInvocationSchema = spellProcedureInvocationSchema<
-  Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "greaseGroundHazard" }
-  >
->(
+const GreaseGroundHazardInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
     resource: SpellSlotInvocationResourceSchema,
     procedure: Schema.Literal("greaseGroundHazard"),
-    spell: BattleRuntimeObjectSchema,
+    spellRuleFacts: SpellRuleExecutionFactsSchema,
     ability: Schema.Literal("dex"),
     dc: DcSourceSchema,
     targeting: Schema.Struct({
       kind: Schema.Literal("pointOriginCube"),
       sideFeet: MovementFeet,
     }),
-    durationTicks: Schema.Number,
+    durationTicks: ElapsedTimeTicksSchema,
     rangeFeet: MovementFeet,
   }),
 );
 export const greaseGroundHazardProfile = {
   procedure: "greaseGroundHazard",
-  invocationSchema: GreaseGroundHazardInvocationSchema,
+  executionSchema: GreaseGroundHazardInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: [],
   admit: admitGreaseGroundHazard,
   discoverCastAct: discoverGreaseGroundHazardCastAct,
-  castSummary: greaseGroundHazardCastSummary,
-  invocationRef: greaseGroundHazardInvocationRef,
   resolve: resolveGreaseGroundHazard,
 } satisfies SpellProcedureProfile<
   "greaseGroundHazard",

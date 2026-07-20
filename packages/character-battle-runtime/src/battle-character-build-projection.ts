@@ -614,8 +614,7 @@ function martialArtsUnarmedStrike(
   const effect = {
     kind: "damage" as const,
     damage: {
-      kind: "authoredReplacement" as const,
-      sourceUnitId: projection.unit.id,
+      kind: "mechanicalReplacement" as const,
       dice: damageReplacement.dice,
       dieSize: damageReplacement.dieSize,
       damageType: "bludgeoning" as const,

@@ -69,7 +69,11 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
       spellSlots: [{ spellLevel: 3, count: 1 }],
       targetUnitRefs: [extraAttackBattleUnitRef()],
     });
-    const act = spellAct({ state, spellId: hasteUnitId, slotLevel: 3 });
+    const act = spellAct({
+      session: state,
+      spellId: hasteUnitId,
+      slotLevel: 3,
+    });
     const targetHole = requireHole(act.initialHoles, "targetChoice");
 
     expect({
@@ -87,7 +91,7 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
     });
 
     const resolved = resolveHaste({
-      state,
+      state: state.state,
       subject: act.subject,
       targetHole,
     });
@@ -188,11 +192,15 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 3, count: 1 }],
     });
-    const act = spellAct({ state, spellId: hasteUnitId, slotLevel: 3 });
+    const act = spellAct({
+      session: state,
+      spellId: hasteUnitId,
+      slotLevel: 3,
+    });
     const targetHole = requireHole(act.initialHoles, "targetChoice");
 
     const resolved = resolveHaste({
-      state,
+      state: state.state,
       subject: act.subject,
       targetHole,
       targetId: spellCasterId,
@@ -219,10 +227,14 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 3, count: 1 }],
     });
-    const act = spellAct({ state, spellId: hasteUnitId, slotLevel: 3 });
+    const act = spellAct({
+      session: state,
+      spellId: hasteUnitId,
+      slotLevel: 3,
+    });
     const targetHole = requireHole(act.initialHoles, "targetChoice");
     const resolved = resolveHaste({
-      state,
+      state: state.state,
       subject: act.subject,
       targetHole,
       targetId: spellCasterId,
@@ -254,9 +266,13 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 3, count: 1 }],
     });
-    const act = spellAct({ state, spellId: hasteUnitId, slotLevel: 3 });
+    const act = spellAct({
+      session: state,
+      spellId: hasteUnitId,
+      slotLevel: 3,
+    });
     const resolved = resolveHaste({
-      state,
+      state: state.state,
       subject: act.subject,
       targetHole: requireHole(act.initialHoles, "targetChoice"),
     });
@@ -279,8 +295,12 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 3, count: 1 }],
     });
-    const state = stateWithSyntheticTargetConcentration(base);
-    const act = spellAct({ state, spellId: hasteUnitId, slotLevel: 3 });
+    const state = stateWithSyntheticTargetConcentration(base.state);
+    const act = spellAct({
+      session: { ...base, state },
+      spellId: hasteUnitId,
+      slotLevel: 3,
+    });
     const resolved = resolveHaste({
       state,
       subject: act.subject,
@@ -304,8 +324,12 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 3, count: 1 }],
     });
-    const state = stateWithSyntheticTargetConcentration(base);
-    const act = spellAct({ state, spellId: hasteUnitId, slotLevel: 3 });
+    const state = stateWithSyntheticTargetConcentration(base.state);
+    const act = spellAct({
+      session: { ...base, state },
+      spellId: hasteUnitId,
+      slotLevel: 3,
+    });
     const resolved = resolveHaste({
       state,
       subject: act.subject,
@@ -358,8 +382,12 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 3, count: 1 }],
     });
-    const state = stateWithDirectIncapacitated(base, spellTargetId);
-    const act = spellAct({ state, spellId: hasteUnitId, slotLevel: 3 });
+    const state = stateWithDirectIncapacitated(base.state, spellTargetId);
+    const act = spellAct({
+      session: { ...base, state },
+      spellId: hasteUnitId,
+      slotLevel: 3,
+    });
     const resolved = resolveHaste({
       state,
       subject: act.subject,
@@ -386,9 +414,13 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 3, count: 1 }],
     });
-    const act = spellAct({ state, spellId: hasteUnitId, slotLevel: 3 });
+    const act = spellAct({
+      session: state,
+      spellId: hasteUnitId,
+      slotLevel: 3,
+    });
     const resolved = resolveHaste({
-      state,
+      state: state.state,
       subject: act.subject,
       targetHole: requireHole(act.initialHoles, "targetChoice"),
     });
@@ -416,9 +448,13 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 3, count: 1 }],
     });
-    const act = spellAct({ state, spellId: hasteUnitId, slotLevel: 3 });
+    const act = spellAct({
+      session: state,
+      spellId: hasteUnitId,
+      slotLevel: 3,
+    });
     const resolved = resolveHaste({
-      state,
+      state: state.state,
       subject: act.subject,
       targetHole: requireHole(act.initialHoles, "targetChoice"),
     });
@@ -452,16 +488,20 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 3, count: 2 }],
     });
-    const firstAct = spellAct({ state, spellId: hasteUnitId, slotLevel: 3 });
+    const firstAct = spellAct({
+      session: state,
+      spellId: hasteUnitId,
+      slotLevel: 3,
+    });
     const first = resolveHaste({
-      state,
+      state: state.state,
       subject: firstAct.subject,
       targetHole: requireHole(firstAct.initialHoles, "targetChoice"),
     });
     const targetTurn = expectEndTurn(first.state, spellCasterId);
     const nextCasterTurn = expectEndTurn(targetTurn, spellTargetId);
     const secondAct = spellAct({
-      state: nextCasterTurn,
+      session: { ...state, state: nextCasterTurn },
       spellId: hasteUnitId,
       slotLevel: 3,
     });
@@ -572,7 +612,7 @@ function stateWithSyntheticTargetConcentration(
     ),
     sourceCombatantId: spellTargetId,
     bonus: 1,
-    negatedSpellIds: [],
+    negatesRepeatedDamageAllocation: false,
     expiresAt: {
       kind: "concentration",
       combatantId: spellTargetId,
@@ -828,9 +868,9 @@ function replayHasteCast(): {
     preparedSpells: [spell],
     spellSlots: [{ spellLevel: 3, count: 1 }],
   });
-  const act = spellAct({ state, spellId: hasteUnitId, slotLevel: 3 });
+  const act = spellAct({ session: state, spellId: hasteUnitId, slotLevel: 3 });
   return resolveHaste({
-    state,
+    state: state.state,
     subject: act.subject,
     targetHole: requireHole(act.initialHoles, "targetChoice"),
   });

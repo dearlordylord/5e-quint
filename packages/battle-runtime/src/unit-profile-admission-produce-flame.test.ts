@@ -1,6 +1,9 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV87A produce_flame
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-held-light-emitter
-import { battleActSpellPresentation } from "./battle-act-composition.ts";
+import {
+  battleActSpellPresentation,
+  battleSubjectPresentation,
+} from "./battle-act-composition.ts";
 import { describe, expect, test } from "vitest";
 import { Either, Schema } from "effect";
 import { BattleHoleSchema } from "./index.ts";
@@ -22,7 +25,6 @@ import {
   bonusSpellAct,
   maybeSpellAct,
   spellAct,
-  spellHoleInvocation,
   spellObjectTargetFill,
   spellTargetFill,
 } from "./unit-profile-admission-spell-fill-support.ts";
@@ -40,17 +42,22 @@ import {
   resolveBattleInterrupt,
   resolveBattleSubject,
 } from "./unit-profile-admission-test-support.ts";
-import type { BattleState } from "./unit-profile-admission-test-support.ts";
+import type {
+  BattleRuntimeSession,
+  BattleState,
+} from "./unit-profile-admission-test-support.ts";
 import {
   battleActiveEffectExecutionRefForTest,
+  battleProcedureExecutionRefForSpellHoleForTest,
   requireCharacterSpellProcedureRefForTest,
 } from "./battle-runtime-test-support.ts";
+import { characterSpellProcedureExecution } from "./character-execution.ts";
 
 describe("SRDINV32A deterministic Produce Flame held-light admission", () => {
   test("produce_flame is admitted as a Bonus Action cantrip held light", () => {
     const spell = spellRecord(produceFlameUnitId);
     const state = spellBattle({ cantrips: [spell] });
-    const act = bonusSpellAct({ state, spellId: produceFlameUnitId });
+    const act = bonusSpellAct({ session: state, spellId: produceFlameUnitId });
 
     expect(act).toEqual(
       expect.objectContaining({
@@ -65,7 +72,7 @@ describe("SRDINV32A deterministic Produce Flame held-light admission", () => {
     );
 
     const resolved = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [],
     });
@@ -131,7 +138,7 @@ describe("SRDINV32A deterministic Produce Flame held-light admission", () => {
         },
       ],
     });
-    const act = bonusSpellAct({ state, spellId: produceFlameUnitId });
+    const act = bonusSpellAct({ session: state, spellId: produceFlameUnitId });
 
     expect({
       ...act.subject,
@@ -146,44 +153,47 @@ describe("SRDINV32A deterministic Produce Flame held-light admission", () => {
   test("produce_flame recast replaces the caster's prior held flame", () => {
     const spell = spellRecord(produceFlameUnitId);
     const state = spellBattle({ cantrips: [spell] });
-    const caster = state.combatants.get(spellCasterId);
+    const caster = state.state.combatants.get(spellCasterId);
     if (caster === undefined) {
       throw new Error("Expected Produce Flame caster.");
     }
-    const stateWithPriorCasting: BattleState = {
+    const stateWithPriorCasting: BattleRuntimeSession = {
       ...state,
-      combatants: new Map(state.combatants).set(spellCasterId, {
-        ...caster,
-        activeEffects: [
-          ...caster.activeEffects,
-          {
-            kind: "heldLight",
-            effectRef: battleActiveEffectExecutionRefForTest(
-              "synthetic-prior-produce-flame-held-light",
-            ),
-            sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
-              state,
-              spellCasterId,
-              cantripSpellInvocationRef(produceFlameUnitId, "heldLight"),
-            ),
-            sourceCombatantId: spellCasterId,
-            brightRadiusFeet: movementFeet(20),
-            dimAdditionalFeet: movementFeet(20),
-            expiresAt: {
-              kind: "duration",
-              durationTicks: elapsedTimeTicks(1),
+      state: {
+        ...state.state,
+        combatants: new Map(state.state.combatants).set(spellCasterId, {
+          ...caster,
+          activeEffects: [
+            ...caster.activeEffects,
+            {
+              kind: "heldLight",
+              effectRef: battleActiveEffectExecutionRefForTest(
+                "synthetic-prior-produce-flame-held-light",
+              ),
+              sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
+                state,
+                spellCasterId,
+                cantripSpellInvocationRef(produceFlameUnitId, "heldLight"),
+              ),
+              sourceCombatantId: spellCasterId,
+              brightRadiusFeet: movementFeet(20),
+              dimAdditionalFeet: movementFeet(20),
+              expiresAt: {
+                kind: "duration",
+                durationTicks: elapsedTimeTicks(1),
+              },
             },
-          },
-        ],
-      }),
+          ],
+        }),
+      },
     };
     const act = bonusSpellAct({
-      state: stateWithPriorCasting,
+      session: stateWithPriorCasting,
       spellId: produceFlameUnitId,
     });
 
     const resolved = resolveBattleSubject({
-      state: stateWithPriorCasting,
+      state: stateWithPriorCasting.state,
       subject: act.subject,
       fills: [],
     });
@@ -231,9 +241,9 @@ describe("SRDINV32A deterministic Produce Flame held-light admission", () => {
       cantrips: [spell],
       extraTargetIds: [combatantId("unit-profile-produce-flame-round-end")],
     });
-    const act = bonusSpellAct({ state, spellId: produceFlameUnitId });
+    const act = bonusSpellAct({ session: state, spellId: produceFlameUnitId });
     const resolved = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [],
     });
@@ -317,13 +327,13 @@ describe("SRDINV32A deterministic Produce Flame held-light admission", () => {
     const unlitState = spellBattle({ cantrips: [spell] });
 
     expect(
-      maybeSpellAct({ state: unlitState, spellId: produceFlameUnitId }),
+      maybeSpellAct({ session: unlitState, spellId: produceFlameUnitId }),
     ).toBeUndefined();
 
     const lit = resolveBattleSubject({
-      state: unlitState,
+      state: unlitState.state,
       subject: bonusSpellAct({
-        state: unlitState,
+        session: unlitState,
         spellId: produceFlameUnitId,
       }).subject,
       fills: [],
@@ -333,7 +343,11 @@ describe("SRDINV32A deterministic Produce Flame held-light admission", () => {
       throw new Error("Expected Produce Flame held light to resolve.");
     }
 
-    const hurl = spellAct({ state: lit.state, spellId: produceFlameUnitId });
+    const litSession = battleSessionWithState(unlitState, lit.state);
+    const hurl = spellAct({
+      session: litSession,
+      spellId: produceFlameUnitId,
+    });
 
     expect({
       ...hurl.subject,
@@ -359,10 +373,18 @@ describe("SRDINV32A deterministic Produce Flame held-light admission", () => {
       }),
       "attackRoll",
     );
-    expect(spellHoleInvocation(lit.state, [attackRoll])).toEqual(
+    const caster = lit.state.combatants.get(spellCasterId);
+    if (caster?.origin.kind !== "character") {
+      throw new Error("Expected a Character spell caster.");
+    }
+    expect(
+      characterSpellProcedureExecution(
+        caster.origin.execution,
+        battleProcedureExecutionRefForSpellHoleForTest(attackRoll),
+      ),
+    ).toEqual(
       expect.objectContaining({
         procedure: "heldLightHurl",
-        spell,
         targeting: { kind: "singleCreatureOrObject" },
         damage: {
           expr: { dice: 1, dieSize: 8 },
@@ -379,7 +401,7 @@ describe("SRDINV32A deterministic Produce Flame held-light admission", () => {
       }),
       expect.objectContaining({
         kind: "objectTargetChoice",
-        label: "Produce Flame object target",
+        label: "Spell object target",
       }),
     ]);
   });
@@ -387,14 +409,18 @@ describe("SRDINV32A deterministic Produce Flame held-light admission", () => {
     const spell = spellRecord(produceFlameUnitId);
     const state = spellBattle({ cantrips: [spell] });
     const lit = resolveBattleSubject({
-      state,
-      subject: bonusSpellAct({ state, spellId: produceFlameUnitId }).subject,
+      state: state.state,
+      subject: bonusSpellAct({ session: state, spellId: produceFlameUnitId })
+        .subject,
       fills: [],
     });
     if (lit.tag !== "resolved") {
       throw new Error("Expected Produce Flame held light to resolve.");
     }
-    const hurl = spellAct({ state: lit.state, spellId: produceFlameUnitId });
+    const hurl = spellAct({
+      session: battleSessionWithState(state, lit.state),
+      spellId: produceFlameUnitId,
+    });
     const targetFill = spellTargetFill(
       requireHole(hurl.initialHoles, "targetChoice"),
       produceFlameUnitId,
@@ -432,14 +458,18 @@ describe("SRDINV32A deterministic Produce Flame held-light admission", () => {
       targetMaxHp: 20,
     });
     const lit = resolveBattleSubject({
-      state,
-      subject: bonusSpellAct({ state, spellId: produceFlameUnitId }).subject,
+      state: state.state,
+      subject: bonusSpellAct({ session: state, spellId: produceFlameUnitId })
+        .subject,
       fills: [],
     });
     if (lit.tag !== "resolved") {
       throw new Error("Expected Produce Flame held light to resolve.");
     }
-    const hurl = spellAct({ state: lit.state, spellId: produceFlameUnitId });
+    const hurl = spellAct({
+      session: battleSessionWithState(state, lit.state),
+      spellId: produceFlameUnitId,
+    });
     const target = requireHole(hurl.initialHoles, "targetChoice");
     const attack = requireResultHole(
       resolveBattleSubject({
@@ -473,7 +503,7 @@ describe("SRDINV32A deterministic Produce Flame held-light admission", () => {
       "rolledDice",
     );
     expect(damage).toMatchObject({
-      label: "Produce Flame damage (2d8-fire)",
+      label: "Spell damage (2d8-fire)",
     });
 
     const resolved = resolveBattleSubject({
@@ -504,6 +534,12 @@ describe("SRDINV32A deterministic Produce Flame held-light admission", () => {
         ?.activeEffects.some((effect) => effect.kind === "heldLight"),
     ).toBe(false);
     expect(resolved.snapshot.lightEmitters).toEqual([]);
+    expect(
+      battleSubjectPresentation(
+        battleSessionWithState(state, resolved.state),
+        hurl.subject,
+      ),
+    ).toEqual(battleActSpellPresentation(hurl));
     expect(canSpendAction(resolved.state.currentTurnResources, "magic")).toBe(
       false,
     );
@@ -522,14 +558,18 @@ describe("SRDINV32A deterministic Produce Flame held-light admission", () => {
       targetMaxHp: 20,
     });
     const lit = resolveBattleSubject({
-      state,
-      subject: bonusSpellAct({ state, spellId: produceFlameUnitId }).subject,
+      state: state.state,
+      subject: bonusSpellAct({ session: state, spellId: produceFlameUnitId })
+        .subject,
       fills: [],
     });
     if (lit.tag !== "resolved") {
       throw new Error("Expected Produce Flame held light to resolve.");
     }
-    const hurl = spellAct({ state: lit.state, spellId: produceFlameUnitId });
+    const hurl = spellAct({
+      session: battleSessionWithState(state, lit.state),
+      spellId: produceFlameUnitId,
+    });
     const target = requireHole(hurl.initialHoles, "targetChoice");
     const targetFill = spellTargetFill(
       target,
@@ -590,14 +630,18 @@ describe("SRDINV32A deterministic Produce Flame held-light admission", () => {
     const spell = spellRecord(produceFlameUnitId);
     const state = spellBattle({ cantrips: [spell] });
     const lit = resolveBattleSubject({
-      state,
-      subject: bonusSpellAct({ state, spellId: produceFlameUnitId }).subject,
+      state: state.state,
+      subject: bonusSpellAct({ session: state, spellId: produceFlameUnitId })
+        .subject,
       fills: [],
     });
     if (lit.tag !== "resolved") {
       throw new Error("Expected Produce Flame held light to resolve.");
     }
-    const hurl = spellAct({ state: lit.state, spellId: produceFlameUnitId });
+    const hurl = spellAct({
+      session: battleSessionWithState(state, lit.state),
+      spellId: produceFlameUnitId,
+    });
     const objectTarget = requireHole(hurl.initialHoles, "objectTargetChoice");
     const objectFill = spellObjectTargetFill({
       hole: objectTarget,
@@ -642,14 +686,18 @@ describe("SRDINV32A deterministic Produce Flame held-light admission", () => {
       casterClassLevels: [{ className: "druid", level: classLevel(5) }],
     });
     const lit = resolveBattleSubject({
-      state,
-      subject: bonusSpellAct({ state, spellId: produceFlameUnitId }).subject,
+      state: state.state,
+      subject: bonusSpellAct({ session: state, spellId: produceFlameUnitId })
+        .subject,
       fills: [],
     });
     if (lit.tag !== "resolved") {
       throw new Error("Expected Produce Flame held light to resolve.");
     }
-    const hurl = spellAct({ state: lit.state, spellId: produceFlameUnitId });
+    const hurl = spellAct({
+      session: battleSessionWithState(state, lit.state),
+      spellId: produceFlameUnitId,
+    });
     const objectTarget = requireHole(hurl.initialHoles, "objectTargetChoice");
     const objectId = battleObjectId("produce-flame-target");
     const objectFill = spellObjectTargetFill({
@@ -679,7 +727,7 @@ describe("SRDINV32A deterministic Produce Flame held-light admission", () => {
       "rolledDice",
     );
     expect(damage).toMatchObject({
-      label: "Produce Flame damage (2d8-fire)",
+      label: "Spell damage (2d8-fire)",
     });
 
     const resolved = resolveBattleSubject({
@@ -718,3 +766,10 @@ describe("SRDINV32A deterministic Produce Flame held-light admission", () => {
     expect(resolved.snapshot.lightEmitters).toEqual([]);
   });
 });
+
+function battleSessionWithState(
+  session: BattleRuntimeSession,
+  state: BattleState,
+): BattleRuntimeSession {
+  return { ...session, state };
+}

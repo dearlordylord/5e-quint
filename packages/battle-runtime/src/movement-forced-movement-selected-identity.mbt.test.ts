@@ -1,5 +1,4 @@
 import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
-import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay movement-forced-movement dissonant_whispers command expeditious_retreat ranger_roving barbarian_fast_movement
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay B5-CLASS-FEATURE-IDENTITY-BATCH-2 monk_unarmored_movement
 // UNIT-IDENTITY-REPLAY: movement-forced-movement dissonant_whispers doDissonantWhispersForcedReactionMovement
@@ -33,7 +32,7 @@ import {
   battleUnitRefWithSupportProfiles,
   characterId,
   combatantId,
-  discoverBattleActs,
+  discoverBattleActCandidates,
   endTurn,
   initiativeScore,
   snapshotBattle,
@@ -48,7 +47,7 @@ import {
   type BattleResolutionResult,
   type BattleRolledDiceFill,
   type BattleState,
-  type BattleActDiscoverySubject as BattleSubject,
+  type BattleSubject,
   type BattleUnitRef,
   type CombatantId,
 } from "./index.ts";
@@ -119,10 +118,7 @@ type MovementForcedMovementSelectedIdentityProjection = {
 };
 
 type ActionSpellAct = AvailableBattleAct & {
-  readonly subject: Extract<
-    BattleSubject,
-    { readonly tag: "actionSpell"; readonly invocation: unknown }
-  >;
+  readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
 };
 type BonusActionDashSpellAct = AvailableBattleAct & {
   readonly subject: Extract<
@@ -1664,7 +1660,7 @@ function movementForcedMovementBattle(input: {
   if (Either.isLeft(result)) {
     throw new Error(result.left.message);
   }
-  return result.right;
+  return result.right.state;
 }
 
 function movementForcedMovementCreature(input: {
@@ -1754,10 +1750,9 @@ function actionSpellAct(
     "command" | "dissonant_whispers"
   >,
 ): ActionSpellAct {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActCandidates(state).find(
     (candidate): candidate is ActionSpellAct =>
-      candidate.subject.tag === "actionSpell" &&
-      battleActSpellPresentation(candidate)?.invocation.spellId === spellId,
+      candidate.subject.tag === "actionSpell",
   );
   if (act === undefined) {
     throw new Error(`Expected ${spellId} action Spell act.`);
@@ -1769,10 +1764,9 @@ function bonusActionDashSpellAct(
   state: BattleState,
   spellId: Extract<MovementForcedMovementSpellId, "expeditious_retreat">,
 ): BonusActionDashSpellAct {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActCandidates(state).find(
     (candidate): candidate is BonusActionDashSpellAct =>
-      candidate.subject.tag === "bonusActionDashSpell" &&
-      battleActSpellPresentation(candidate)?.invocation.spellId === spellId,
+      candidate.subject.tag === "bonusActionDashSpell",
   );
   if (act === undefined) {
     throw new Error(`Expected ${spellId} Bonus Action Dash spell act.`);
@@ -1781,7 +1775,7 @@ function bonusActionDashSpellAct(
 }
 
 function moveAct(state: BattleState): RuntimeMoveAct {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActCandidates(state).find(
     (candidate): candidate is RuntimeMoveAct =>
       candidate.subject.tag === "runtimeCommand" &&
       candidate.subject.actorId === casterId &&
@@ -1794,7 +1788,7 @@ function moveAct(state: BattleState): RuntimeMoveAct {
 }
 
 function dashAct(state: BattleState): DashAct {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActCandidates(state).find(
     (candidate): candidate is DashAct =>
       candidate.subject.tag === "action" &&
       candidate.subject.actorId === casterId &&
@@ -1807,7 +1801,7 @@ function dashAct(state: BattleState): DashAct {
 }
 
 function commandFleeAct(state: BattleState): RuntimeCommandFleeAct {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActCandidates(state).find(
     (candidate): candidate is RuntimeCommandFleeAct =>
       candidate.subject.tag === "runtimeCommand" &&
       candidate.subject.actorId === targetId &&

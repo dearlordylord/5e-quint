@@ -66,7 +66,7 @@ export const battleToolDefinitions = [
   {
     name: battleToolNames.endTurn,
     description:
-      "Resolve the current actor's End Turn runtime command and store the returned BattleState.",
+      "Resolve the current actor's End Turn runtime command and store the updated battle session.",
     inputSchema: endTurnInputSchema,
     outputSchema: mcpOutputJsonSchema(BattleResolutionOutputSchema),
   },

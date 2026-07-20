@@ -1,4 +1,6 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
+import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
+import { DiceExprSchema } from "@dnd/surface/surface/schema";
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE
 //
 // The objectContactDamage profile family: an action-time spell heats a
@@ -37,7 +39,6 @@ import type {
   SpellRecord,
 } from "@dnd/surface/surface/types";
 import { Either } from "effect";
-import { bindSpellProcedureExecutionFacts } from "../../character-execution.ts";
 import {
   type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
@@ -48,11 +49,15 @@ import {
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
 import {
-  type SpellInvocationRef,
-  spellEffectInvocationRef,
-} from "../../battle-subjects.ts";
-import { spellId, type CombatantId } from "../../identity.ts";
-import { antimagicFieldOngoingSpellEffectRefForActiveEffect } from "../antimagic-field-suppression.ts";
+  BattleActiveEffectExecutionRef,
+  BattleProcedureExecutionRef,
+  CombatantId,
+} from "../../identity.ts";
+import { currentActorId } from "../creature-state-leaves.ts";
+import {
+  antimagicFieldOngoingSpellEffectRefForActiveEffect,
+  ongoingSpellEffectSuppressedByAntimagicField,
+} from "../antimagic-field-suppression.ts";
 import {
   resolveObjectContactDamageRepeatSpellAct,
   resolveObjectContactDamageSpellAct,
@@ -72,17 +77,15 @@ import type {
 } from "./profile.ts";
 import { Schema } from "effect";
 import {
-  BattleRuntimeObjectSchema,
   DamageTypeSchema,
-  NoSpellInvocationResourceSchema,
   PreparedSpellAccessSchema,
-  SpellEffectSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import {
   spellAdmissionBattleTurn,
   spellAdmissionOngoingSpellEffectSuppressed,
-  spellProcedureInvocationSchema,
+  SpellRuleExecutionFactsSchema,
+  spellProcedureExecutionSchema,
 } from "./profile.ts";
 
 type ObjectContactDamageInvocation = Extract<
@@ -187,8 +190,6 @@ function admitObjectContactDamageRepeat(
           spell,
           actionCost: "bonusAction",
           activeEffect: effect,
-          damage: effect.damage,
-          rangeFeet: effect.rangeFeet,
         },
       ];
     },
@@ -417,7 +418,6 @@ function discoverObjectContactDamageCastAct(
         tag: "actionSpell" as const,
         actorId,
         procedureRef: invocation.sourceProcedureRef,
-        invocation: objectContactDamageInvocationRef(invocation),
         mode: { tag: "cast" as const },
       },
       initialHoles: [spellObjectTargetHole(invocation)],
@@ -430,13 +430,28 @@ function discoverObjectContactDamageRepeatCastAct(
   actorId: CombatantId,
   invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<ObjectContactDamageRepeatInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
+  if (
+    currentActorId(state) === invocation.activeEffect.startedOn.actorId &&
+    state.initiative.round === invocation.activeEffect.startedOn.round
+  ) {
+    return [];
+  }
+  if (
+    ongoingSpellEffectSuppressedByAntimagicField(
+      state,
+      antimagicFieldOngoingSpellEffectRefForActiveEffect(
+        invocation.activeEffect,
+      ),
+    )
+  ) {
+    return [];
+  }
   return [
     {
       subject: {
         tag: "bonusActionSpell" as const,
         actorId,
         procedureRef: invocation.sourceProcedureRef,
-        invocation: objectContactDamageRepeatInvocationRef(invocation),
         mode: { tag: "cast" as const },
       },
       initialHoles: [
@@ -444,48 +459,15 @@ function discoverObjectContactDamageRepeatCastAct(
           state,
           sourceCombatantId: invocation.activeEffect.sourceCombatantId,
           objectId: invocation.activeEffect.objectId,
-          invocation: bindSpellProcedureExecutionFacts(
-            invocation,
-            invocation.activeEffect.sourceProcedureRef,
-          ),
+          invocation: {
+            ...invocation,
+            sourceProcedureRef: invocation.activeEffect.sourceProcedureRef,
+          },
           requiresObjectWithinRange: true,
         }),
       ],
     },
   ];
-}
-
-function objectContactDamageInvocationRef(
-  invocation: ObjectContactDamageInvocation,
-): SpellInvocationRef {
-  return {
-    tag: "spellSlot",
-    spellId: spellId(invocation.spell.id),
-    slotLevel: invocation.resource.slotLevel,
-    procedure: "objectContactDamage",
-  };
-}
-
-function objectContactDamageRepeatInvocationRef(
-  invocation: ObjectContactDamageRepeatInvocation,
-): SpellInvocationRef {
-  return spellEffectInvocationRef(
-    invocation.spell.id,
-    invocation.activeEffect.sourceCombatantId,
-    "objectContactDamageRepeat",
-  );
-}
-
-function objectContactDamageCastSummary(
-  invocation: ObjectContactDamageInvocation,
-): string {
-  return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
-}
-
-function objectContactDamageRepeatCastSummary(
-  invocation: ObjectContactDamageRepeatInvocation,
-): string {
-  return `Use a Bonus Action to repeat ${invocation.spell.name} contact damage.`;
 }
 
 function resolveObjectContactDamage(
@@ -500,49 +482,32 @@ function resolveObjectContactDamageRepeat(
   return resolveObjectContactDamageRepeatSpellAct(input);
 }
 
-const ObjectContactDamageInvocationSchema = spellProcedureInvocationSchema<
-  Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "objectContactDamage" }
-  >
->(
+const ObjectContactDamageInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
     resource: SpellSlotInvocationResourceSchema,
     procedure: Schema.Literal("objectContactDamage"),
-    spell: BattleRuntimeObjectSchema,
+    spellRuleFacts: SpellRuleExecutionFactsSchema,
     actionCost: Schema.Literal("magicAction"),
     targeting: Schema.Struct({
       kind: Schema.Literal("singleManufacturedMetalObject"),
     }),
     damage: Schema.Struct({
-      expr: BattleRuntimeObjectSchema,
+      expr: DiceExprSchema,
       damageType: DamageTypeSchema,
     }),
     rangeFeet: MovementFeet,
-    durationTicks: BattleRuntimeObjectSchema,
+    durationTicks: ElapsedTimeTicksSchema,
   }),
 );
 
 const ObjectContactDamageRepeatInvocationSchema =
-  spellProcedureInvocationSchema<
-    Extract<
-      SupportedSpellInvocation,
-      { readonly procedure: "objectContactDamageRepeat" }
-    >
-  >(
+  spellProcedureExecutionSchema(
     Schema.Struct({
-      access: SpellEffectSpellAccessSchema,
-      resource: NoSpellInvocationResourceSchema,
       procedure: Schema.Literal("objectContactDamageRepeat"),
-      spell: BattleRuntimeObjectSchema,
-      actionCost: Schema.Literal("bonusAction"),
-      activeEffect: BattleRuntimeObjectSchema,
-      damage: Schema.Struct({
-        expr: BattleRuntimeObjectSchema,
-        damageType: DamageTypeSchema,
-      }),
-      rangeFeet: MovementFeet,
+      spellRuleFacts: Schema.optionalWith(Schema.Never, { exact: true }),
+      activeEffectRef: BattleActiveEffectExecutionRef,
+      activeEffectSourceProcedureRef: BattleProcedureExecutionRef,
     }),
   );
 export const objectContactDamageProfile: SpellProcedureProfile<
@@ -551,15 +516,12 @@ export const objectContactDamageProfile: SpellProcedureProfile<
   ActionSpellBattleResolutionInput
 > = {
   procedure: "objectContactDamage",
-  invocationSchema: ObjectContactDamageInvocationSchema,
+  executionSchema: ObjectContactDamageInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: [],
   admit: admitObjectContactDamage,
   discoverCastAct: discoverObjectContactDamageCastAct,
-  castSummary: objectContactDamageCastSummary,
-  invocationRef: objectContactDamageInvocationRef,
   resolve: resolveObjectContactDamage,
 };
 
@@ -569,14 +531,11 @@ export const objectContactDamageRepeatProfile: SpellProcedureProfile<
   BonusActionSpellBattleResolutionInput
 > = {
   procedure: "objectContactDamageRepeat",
-  invocationSchema: ObjectContactDamageRepeatInvocationSchema,
+  executionSchema: ObjectContactDamageRepeatInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
   targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: [],
   admit: admitObjectContactDamageRepeat,
   discoverCastAct: discoverObjectContactDamageRepeatCastAct,
-  castSummary: objectContactDamageRepeatCastSummary,
-  invocationRef: objectContactDamageRepeatInvocationRef,
   resolve: resolveObjectContactDamageRepeat,
 };

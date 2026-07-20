@@ -13,7 +13,7 @@ import {
   initiativeScore,
   startBattle,
   type BattleCreatureInit,
-  type BattleState,
+  type BattleRuntimeSession,
   type CharacterBattleClassLevelInit,
   type CharacterWeaponAttackActionOption,
 } from "@dnd/battle-runtime";
@@ -39,7 +39,7 @@ const allyId = combatantId("ally");
 describe("manual MCP battle surface coverage", () => {
   test("uses Bardic Inspiration grant through MCP battle tools", () => {
     const root = createMcpCompositionRoot();
-    root.sessionStore.battleState = startBattleRight(root, [
+    root.sessionStore.battleSession = startBattleRight(root, [
       character(root, {
         combatantId: fighterId,
         displayName: "Bard",
@@ -107,7 +107,7 @@ describe("manual MCP battle surface coverage", () => {
       ]),
     );
     expect(
-      root.sessionStore.battleState?.combatants
+      root.sessionStore.battleSession?.state.combatants
         .get(goblinId)
         ?.activeEffects.some(
           (effect) => effect.kind === "bardicInspirationDie",
@@ -117,7 +117,7 @@ describe("manual MCP battle surface coverage", () => {
 
   test("uses Innate Sorcery activation and projected spell attack Advantage through MCP battle tools", () => {
     const root = createMcpCompositionRoot();
-    root.sessionStore.battleState = startBattleRight(root, [
+    root.sessionStore.battleSession = startBattleRight(root, [
       character(root, {
         combatantId: fighterId,
         displayName: "Sorcerer",
@@ -126,6 +126,12 @@ describe("manual MCP battle surface coverage", () => {
         attack: null,
         resources: [
           { unit: root.unitLibrary.requireUnit("sorcerer_innate_sorcery") },
+        ],
+        characterUnitRefs: [
+          {
+            unit: root.unitLibrary.requireUnit("sorcerer_innate_sorcery"),
+            supportProfiles: [],
+          },
         ],
         spellcasting: spellcasting(root, {
           sourceClassName: "sorcerer",
@@ -176,7 +182,7 @@ describe("manual MCP battle surface coverage", () => {
 
   test("uses Monk Martial Arts bonus Unarmed Strike through MCP battle tools", () => {
     const root = createMcpCompositionRoot();
-    root.sessionStore.battleState = startBattleRight(root, [
+    root.sessionStore.battleSession = startBattleRight(root, [
       character(root, {
         combatantId: fighterId,
         displayName: "Monk",
@@ -200,7 +206,11 @@ describe("manual MCP battle surface coverage", () => {
       statBlock(root, { combatantId: goblinId, initiative: 10 }),
     ]);
 
-    const act = requireUnitAct(root, "monk_martial_arts");
+    const act = requireMechanicalAct(
+      root,
+      "bonusAction",
+      "martialArtsUnarmedStrike",
+    );
     const afterTarget = call(root, "fill_battle_hole", {
       subject: act.subject,
       fill: attackTargetFill(
@@ -235,7 +245,7 @@ describe("manual MCP battle surface coverage", () => {
 
   test("uses Weapon Mastery Sap and Topple holes through MCP battle tools", () => {
     const sapRoot = createMcpCompositionRoot();
-    sapRoot.sessionStore.battleState = startBattleRight(sapRoot, [
+    sapRoot.sessionStore.battleSession = startBattleRight(sapRoot, [
       character(sapRoot, {
         combatantId: fighterId,
         initiative: 20,
@@ -272,7 +282,7 @@ describe("manual MCP battle surface coverage", () => {
     });
 
     const toppleRoot = createMcpCompositionRoot();
-    toppleRoot.sessionStore.battleState = startBattleRight(toppleRoot, [
+    toppleRoot.sessionStore.battleSession = startBattleRight(toppleRoot, [
       character(toppleRoot, {
         combatantId: fighterId,
         initiative: 20,
@@ -309,7 +319,7 @@ describe("manual MCP battle surface coverage", () => {
 
   test("uses Weapon Mastery Cleave decision through MCP battle tools", () => {
     const root = createMcpCompositionRoot();
-    root.sessionStore.battleState = startBattleRight(root, [
+    root.sessionStore.battleSession = startBattleRight(root, [
       character(root, {
         combatantId: fighterId,
         initiative: 20,
@@ -392,7 +402,7 @@ describe("manual MCP battle surface coverage", () => {
 
   test("uses Armor of Shadows Mage Armor through MCP battle tools", () => {
     const root = createMcpCompositionRoot();
-    root.sessionStore.battleState = startBattleRight(root, [
+    root.sessionStore.battleSession = startBattleRight(root, [
       character(root, {
         combatantId: fighterId,
         displayName: "Warlock",
@@ -439,7 +449,8 @@ describe("manual MCP battle surface coverage", () => {
         expect.objectContaining({ combatantId: "fighter", armorClass: 15 }),
       ]),
     );
-    const warlock = root.sessionStore.battleState?.combatants.get(fighterId);
+    const warlock =
+      root.sessionStore.battleSession?.state.combatants.get(fighterId);
     expect(warlock?.origin.kind).toBe("character");
     if (warlock?.origin.kind !== "character") return;
     expect(warlock.origin.spellcasting?.spellSlots).toEqual([
@@ -449,7 +460,7 @@ describe("manual MCP battle surface coverage", () => {
 
   test("uses Shield triggered reaction through MCP battle tools", () => {
     const root = createMcpCompositionRoot();
-    root.sessionStore.battleState = startBattleRight(root, [
+    root.sessionStore.battleSession = startBattleRight(root, [
       statBlock(root, { combatantId: goblinId, initiative: 20 }),
       character(root, {
         combatantId: fighterId,
@@ -491,7 +502,7 @@ describe("manual MCP battle surface coverage", () => {
       "interruptDecision",
     );
     const shieldChoice = requireTriggeredSpellChoice(
-      afterAttackRoll.result,
+      afterAttackRoll,
       "fighter",
       "shield",
     );
@@ -537,7 +548,7 @@ describe("manual MCP battle surface coverage", () => {
 
   test("uses Hellish Rebuke after-damage reaction through MCP battle tools", () => {
     const root = createMcpCompositionRoot();
-    root.sessionStore.battleState = startBattleRight(root, [
+    root.sessionStore.battleSession = startBattleRight(root, [
       statBlock(root, { combatantId: goblinId, initiative: 20 }),
       character(root, {
         combatantId: fighterId,
@@ -561,6 +572,7 @@ describe("manual MCP battle surface coverage", () => {
       root,
       fighterId,
       "hellish_rebuke",
+      2,
     );
     const afterTarget = call(root, "fill_battle_hole", {
       subject: goblinAttack.subject,
@@ -605,7 +617,7 @@ describe("manual MCP battle surface coverage", () => {
       snapshot: { pendingInterrupt: { trigger: "afterDamage" } },
     });
     const hellishChoice = requireTriggeredSpellChoice(
-      afterDamage.result,
+      afterDamage,
       "fighter",
       "hellish_rebuke",
       2,
@@ -660,7 +672,7 @@ describe("manual MCP battle surface coverage", () => {
 
   test("uses Feather Fall falling-trigger reaction through MCP battle tools", () => {
     const root = createMcpCompositionRoot();
-    root.sessionStore.battleState = startBattleRight(root, [
+    root.sessionStore.battleSession = startBattleRight(root, [
       character(root, {
         combatantId: fighterId,
         displayName: "Feather Fall Caster",
@@ -709,7 +721,7 @@ describe("manual MCP battle surface coverage", () => {
       snapshot: { pendingInterrupt: { trigger: "creatureFalls" } },
     });
     const featherFallChoice = requireTriggeredSpellChoice(
-      falling.result,
+      falling,
       "fighter",
       "feather_fall",
     );
@@ -739,7 +751,7 @@ describe("manual MCP battle surface coverage", () => {
                     kind: "featherFallTargetFallingWithinRange",
                     casterId: "fighter",
                     targetId: "ally",
-                    spellId: "feather_fall",
+                    sourceProcedureRef: featherFallProcedureRef,
                     rangeFeet: 60,
                   },
                 ],
@@ -749,7 +761,6 @@ describe("manual MCP battle surface coverage", () => {
         },
       },
     });
-
     expect(resolved.result).toMatchObject({
       tag: "resolved",
       snapshot: {
@@ -763,7 +774,7 @@ describe("manual MCP battle surface coverage", () => {
       },
     });
     expect(
-      root.sessionStore.battleState?.combatants
+      root.sessionStore.battleSession?.state.combatants
         .get(allyId)
         ?.activeEffects.some(
           (effect) => effect.kind === "featherFallMitigation",
@@ -773,7 +784,7 @@ describe("manual MCP battle surface coverage", () => {
 
   test("retains Pact of the Chain and uses Pact of the Tome cantrips through MCP battle tools", () => {
     const chainRoot = createMcpCompositionRoot();
-    chainRoot.sessionStore.battleState = startBattleRight(chainRoot, [
+    chainRoot.sessionStore.battleSession = startBattleRight(chainRoot, [
       character(chainRoot, {
         combatantId: fighterId,
         displayName: "Pact of the Chain Warlock",
@@ -789,24 +800,28 @@ describe("manual MCP battle surface coverage", () => {
         }),
       }),
     ]);
-    const chainWarlock =
-      chainRoot.sessionStore.battleState?.combatants.get(fighterId);
+    const chainSession = chainRoot.sessionStore.battleSession;
+    const chainWarlock = chainSession?.state.combatants.get(fighterId);
+    const chainSpellcasting =
+      chainSession?.context.characters.get(
+        fighterId,
+      )?.spellcastingPresentationSource;
     expect(chainWarlock?.origin.kind).toBe("character");
     if (chainWarlock?.origin.kind !== "character") return;
-    expect(chainWarlock.origin.spellcasting?.invocationSpellAccesses).toEqual([
+    expect(chainSpellcasting?.invocationSpellAccesses).toEqual([
       expect.objectContaining({
         tag: "pactOfTheChainFindFamiliar",
         spell: expect.objectContaining({ id: "find_familiar" }),
       }),
     ]);
     expect(
-      call(chainRoot, "discover_battle_acts", {}).snapshot.acts.some(
+      call(chainRoot, "discover_battle_acts", {}).availableActs.some(
         (act: Json) => String(act.summary).includes("Find Familiar"),
       ),
     ).toBe(false);
 
     const tomeRoot = createMcpCompositionRoot();
-    tomeRoot.sessionStore.battleState = startBattleRight(tomeRoot, [
+    tomeRoot.sessionStore.battleSession = startBattleRight(tomeRoot, [
       character(tomeRoot, {
         combatantId: fighterId,
         displayName: "Pact of the Tome Warlock",
@@ -849,7 +864,7 @@ describe("manual MCP battle surface coverage", () => {
 
   test("uses Favored Enemy Hunter's Mark free cast through MCP battle tools", () => {
     const root = createMcpCompositionRoot();
-    root.sessionStore.battleState = startBattleRight(root, [
+    root.sessionStore.battleSession = startBattleRight(root, [
       character(root, {
         combatantId: fighterId,
         displayName: "Ranger",
@@ -893,17 +908,27 @@ describe("manual MCP battle surface coverage", () => {
       tag: "resolved",
       snapshot: { turn: { spellSlotUsesThisTurn: [] } },
     });
-    const ranger = root.sessionStore.battleState?.combatants.get(fighterId);
+    const ranger =
+      root.sessionStore.battleSession?.state.combatants.get(fighterId);
     expect(ranger?.concentration).toEqual({
       sourceProcedureRef: huntersMark.subject.procedureRef,
       effectKind: "spellEffect",
     });
     expect(ranger?.origin.kind).toBe("character");
     if (ranger?.origin.kind !== "character") return;
-    expect(ranger.origin.resources[0]).toMatchObject({
-      unit: expect.objectContaining({ id: "ranger_favored_enemy" }),
-      usesRemaining: 1,
-    });
+    const [favoredEnemyResource] = ranger.origin.resources;
+    if (favoredEnemyResource === undefined) {
+      throw new Error("Expected Favored Enemy execution resource.");
+    }
+    const favoredEnemyOwnership =
+      root.sessionStore.battleSession?.context.characters
+        .get(fighterId)
+        ?.resourceOwnership.find(
+          (candidate) =>
+            candidate.resourcePoolRef === favoredEnemyResource.resourcePoolRef,
+        );
+    expect(favoredEnemyOwnership?.unit.id).toBe("ranger_favored_enemy");
+    expect(favoredEnemyResource.usesRemaining).toBe(1);
     expect(ranger.origin.spellcasting?.spellSlots).toEqual([
       { spellLevel: 1, count: 1, expended: 0 },
     ]);
@@ -954,7 +979,7 @@ describe("manual MCP battle surface coverage", () => {
       "sleep",
       "thunderwave",
     ] as const;
-    root.sessionStore.battleState = startBattleRight(root, [
+    root.sessionStore.battleSession = startBattleRight(root, [
       character(root, {
         combatantId: fighterId,
         displayName: "Prepared Caster",
@@ -982,7 +1007,7 @@ describe("manual MCP battle surface coverage", () => {
 
     const discovered = call(root, "discover_battle_acts", {});
     const discoveredSpellIds = new Set(
-      discovered.snapshot.acts.flatMap((candidate: Json) => {
+      discovered.availableActs.flatMap((candidate: Json) => {
         const spellId =
           candidate.presentation?.kind === "spell"
             ? candidate.presentation.invocation?.spellId
@@ -1001,41 +1026,35 @@ type Root = ReturnType<typeof createMcpCompositionRoot>;
 type Json = Record<string, any>;
 
 function requireTriggeredSpellChoice(
-  result: Json,
+  response: Json,
   reactorId: string,
   spellId: string,
   slotLevel?: number,
 ): Json {
-  const reactor = result.snapshot.combatants.find(
-    (combatant: Json) => combatant.combatantId === reactorId,
-  );
-  const matchingChoices = result.snapshot.pendingInterrupt.choices.filter(
-    (choice: Json) => {
+  const matchingChoices = response.presentedInterruptChoices.filter(
+    (presented: Json) => {
+      const choice = presented.choice;
       if (
         choice.kind !== "castTriggeredReactionSpell" ||
         choice.reactorId !== reactorId
       ) {
         return false;
       }
-      const binding = reactor?.origin?.execution?.procedureBindings.find(
-        (candidate: Json) =>
-          candidate.procedureRef === choice.subject?.procedureRef,
-      );
-      const invocation = binding?.procedure?.invocation;
+      const invocation = presented.presentation?.invocation;
       return (
-        binding?.procedure?.kind === "spellInvocation" &&
-        invocation?.spell?.id === spellId &&
+        presented.presentation?.kind === "spell" &&
+        invocation?.spellId === spellId &&
         (slotLevel === undefined ||
-          (invocation.resource?.tag === "spellSlot" &&
-            Number(invocation.resource.slotLevel) === slotLevel))
+          (invocation.tag === "spellSlot" &&
+            Number(invocation.slotLevel) === slotLevel))
       );
     },
   );
-  const [choice] = matchingChoices;
-  if (matchingChoices.length !== 1 || choice === undefined) {
+  const [presented] = matchingChoices;
+  if (matchingChoices.length !== 1 || presented === undefined) {
     throw new Error(`Expected one ${spellId} triggered spell choice.`);
   }
-  return choice;
+  return presented.choice;
 }
 
 function call(root: Root, toolName: string, args: Json): Json {
@@ -1048,7 +1067,7 @@ function call(root: Root, toolName: string, args: Json): Json {
 function startBattleRight(
   _root: Root,
   combatants: readonly BattleCreatureInit[],
-): BattleState {
+): BattleRuntimeSession {
   const result = startBattle({
     battleId: battleId(`battle:${crypto.randomUUID()}`),
     combatants,
@@ -1179,8 +1198,7 @@ function character(
         effect: {
           kind: "damage",
           damage: {
-            kind: "authoredReplacement",
-            sourceUnitId: "monk_martial_arts",
+            kind: "mechanicalReplacement",
             dice: 1,
             dieSize: 6,
             damageType: "bludgeoning",
@@ -1296,7 +1314,7 @@ function spellcasting(
 
 function requireAct(root: Root, label: string, attackName?: string): Json {
   const discovered = call(root, "discover_battle_acts", {});
-  const matchingActs = discovered.snapshot.acts.filter(
+  const matchingActs = discovered.availableActs.filter(
     (candidate: Json) =>
       candidate.label === label &&
       (attackName === undefined ||
@@ -1312,7 +1330,7 @@ function requireAct(root: Root, label: string, attackName?: string): Json {
 
 function requireSpellAct(root: Root, spellId: string): Json {
   const discovered = call(root, "discover_battle_acts", {});
-  const act = discovered.snapshot.acts.find(
+  const act = discovered.availableActs.find(
     (candidate: Json) =>
       candidate.presentation?.kind === "spell" &&
       candidate.presentation.invocation?.spellId === spellId,
@@ -1323,7 +1341,7 @@ function requireSpellAct(root: Root, spellId: string): Json {
 
 function requireUnitAct(root: Root, unitId: string): Json {
   const discovered = call(root, "discover_battle_acts", {});
-  const act = discovered.snapshot.acts.find(
+  const act = discovered.availableActs.find(
     (candidate: Json) =>
       candidate.presentation?.kind === "unit" &&
       candidate.presentation.unitId === unitId,
@@ -1332,24 +1350,41 @@ function requireUnitAct(root: Root, unitId: string): Json {
   return act;
 }
 
+function requireMechanicalAct(root: Root, tag: string, action: string): Json {
+  const discovered = call(root, "discover_battle_acts", {});
+  const act = discovered.availableActs.find(
+    (candidate: Json) =>
+      candidate.subject?.tag === tag && candidate.subject.action === action,
+  );
+  if (act === undefined) throw new Error(`Expected MCP ${tag}.${action} act.`);
+  return act;
+}
+
 function spellProcedureRef(
   root: Root,
   actorId: ReturnType<typeof combatantId>,
   spellId: string,
+  slotLevel?: number,
 ): string {
-  const actor = root.sessionStore.battleState?.combatants.get(actorId);
+  const actor = root.sessionStore.battleSession?.state.combatants.get(actorId);
   if (actor?.origin.kind !== "character") {
     throw new Error(`Expected character spell owner: ${actorId}`);
   }
-  const binding = actor.origin.execution.procedureBindings.find(
-    (candidate) =>
-      candidate.procedure.kind === "spellInvocation" &&
-      candidate.procedure.invocation.spell.id === spellId,
+  const presentation = call(
+    root,
+    "discover_battle_acts",
+    {},
+  ).admittedSpellPresentations.find(
+    (candidate: Json) =>
+      candidate.invocation?.spellId === spellId &&
+      (slotLevel === undefined ||
+        (candidate.invocation.tag === "spellSlot" &&
+          Number(candidate.invocation.slotLevel) === slotLevel)),
   );
-  if (binding === undefined) {
+  if (presentation?.procedureRef === undefined) {
     throw new Error(`Expected admitted spell procedure: ${spellId}`);
   }
-  return binding.procedureRef;
+  return presentation.procedureRef;
 }
 
 function resourcePoolRefForUnit(
@@ -1357,15 +1392,26 @@ function resourcePoolRefForUnit(
   actorId: ReturnType<typeof combatantId>,
   unitId: string,
 ): string {
-  const actor = root.sessionStore.battleState?.combatants.get(actorId);
+  const session = root.sessionStore.battleSession;
+  if (session === null) {
+    throw new Error("Expected active battle session.");
+  }
+  const actor = session.state.combatants.get(actorId);
   if (actor?.origin.kind !== "character") {
     throw new Error(`Expected character resource owner: ${actorId}`);
   }
+  const matchingOwnership = session.context.characters
+    .get(actorId)
+    ?.resourceOwnership.filter((candidate) => candidate.unit.id === unitId);
+  const [ownership] = matchingOwnership ?? [];
+  if (matchingOwnership?.length !== 1 || ownership === undefined) {
+    throw new Error(`Expected one admitted unit resource owner: ${unitId}`);
+  }
   const resource = actor.origin.resources.find(
-    (candidate) => candidate.unit.id === unitId,
+    (candidate) => candidate.resourcePoolRef === ownership.resourcePoolRef,
   );
   if (resource === undefined) {
-    throw new Error(`Expected admitted unit resource: ${unitId}`);
+    throw new Error(`Expected mechanical resource owned by unit: ${unitId}`);
   }
   return resource.resourcePoolRef;
 }

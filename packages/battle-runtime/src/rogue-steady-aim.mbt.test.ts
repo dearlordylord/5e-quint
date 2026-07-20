@@ -86,19 +86,23 @@ describe("Rogue Steady Aim MBT", () => {
     }
   });
 
-  it("replays Bonus Action aim, movement rejection, next attack Advantage, Speed 0, and cleanup", async () => {
-    await run({
-      spec: mbtSpecPath(
-        import.meta.dirname,
-        "battle-runtime-rogue-steady-aim.mbt.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createRogueSteadyAimDriver(rogueSteadyAimDriverSchema),
-      backend: "typescript",
-      nTraces: mbtTraceCount(),
-      maxSteps: focusedMbtMaxSteps(4),
-      stateCheck: rogueSteadyAimStateCheck,
-    });
-  }, MBT_TEST_TIMEOUT_MS);
+  it(
+    "replays Bonus Action aim, movement rejection, next attack Advantage, Speed 0, and cleanup",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-rogue-steady-aim.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createRogueSteadyAimDriver(rogueSteadyAimDriverSchema),
+        backend: "typescript",
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(4),
+        stateCheck: rogueSteadyAimStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 });

@@ -1,5 +1,4 @@
 import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
-import { battleActUnitPresentation } from "./battle-act-composition.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.magic-action-area-save-damage-healing
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3PUTB-08-DRUID-LANDS-AID-RUNTIME druid_lands_aid
@@ -8,7 +7,6 @@ import { DieRollResult, movementFeet } from "@dnd/shared/types";
 import * as Either from "effect/Either";
 
 import {
-  type AvailableBattleAct,
   type BattleFill,
   type BattleHole,
   type BattleResolutionResult,
@@ -17,6 +15,7 @@ import {
   type CombatantId,
 } from "./index.ts";
 import {
+  characterBattleFeatureInitForTest,
   characterSeed,
   wizardSpellcasting,
 } from "./battle-runtime-test-support.ts";
@@ -39,7 +38,7 @@ import {
   battleUnitRefWithSupportProfiles,
   classLevel,
   combatantId,
-  discoverBattleActs,
+  discoverBattleActCandidates,
   resolveBattleSubject,
   startBattle,
 } from "./unit-profile-admission-test-support.ts";
@@ -183,7 +182,7 @@ defineSelectedIdentityReplayAndQntReplay({
             recordInvalidResult(
               resolveBattleSubject({
                 state,
-                subject: landsAidSubject(),
+                subject: landsAidAct(state).subject,
                 fills: [],
               }),
             );
@@ -322,7 +321,11 @@ function landsAidBattle(
         initiative: 20,
         classLevels: [{ className: "druid", level: classLevel(druidLevel) }],
         characterUnitRefs: [requireLandsAidUnitRef(druidLevel)],
-        unitFeatures: [{ unit: landsAidUnit }],
+        unitFeatures: [
+          characterBattleFeatureInitForTest(landsAidUnit, [
+            { className: "druid", level: classLevel(druidLevel) },
+          ]),
+        ],
         resources: [
           {
             unit: wildShapeUnit,
@@ -362,28 +365,21 @@ function landsAidBattle(
   if (Either.isLeft(result)) {
     throw new Error(result.left.message);
   }
-  return result.right;
+  return result.right.state;
 }
 
-function landsAidAct(state: BattleState): AvailableBattleAct {
-  const act = discoverBattleActs(state).find(
+function landsAidAct(
+  state: BattleState,
+): ReturnType<typeof discoverBattleActCandidates>[number] {
+  const act = discoverBattleActCandidates(state).find(
     (candidate) =>
       candidate.subject.tag === "unitFeature" &&
-      candidate.subject.actorId === spellCasterId &&
-      battleActUnitPresentation(candidate)?.unitId === druidLandsAidUnitId,
+      candidate.subject.actorId === spellCasterId,
   );
   if (act === undefined) {
     throw new Error("Expected Land's Aid act.");
   }
   return act;
-}
-
-function landsAidSubject() {
-  return {
-    tag: "unitFeature" as const,
-    actorId: spellCasterId,
-    unitId: druidLandsAidUnitId,
-  };
 }
 
 function resolveLandsAid(
@@ -527,7 +523,7 @@ function wildShapeUsesRemaining(state: BattleState): number {
     throw new Error("Expected Druid actor.");
   }
   const resource = actor.origin.resources.find(
-    (candidate) => candidate.unit.id === druidWildShapeUnitId,
+    (candidate) => "usesRemaining" in candidate,
   );
   if (resource === undefined || !("usesRemaining" in resource)) {
     throw new Error("Expected Druid Wild Shape use-count resource.");

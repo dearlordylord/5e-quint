@@ -44,7 +44,7 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
       spellSlots: [{ spellLevel: 1, count: 1 }],
     });
     const act = spellAct({
-      state,
+      session: state,
       spellId: faerieFireUnitId,
       slotLevel: 1,
     });
@@ -65,7 +65,7 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
     const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
     expect(savingThrow).toEqual(
       expect.objectContaining({
-        label: "Faerie Fire point-origin Cube Saving Throw outcomes",
+        label: "Spell point-origin Cube Saving Throw outcomes",
         ability: "dex",
         dc: { kind: "caster_spell_save_dc" },
       }),
@@ -83,10 +83,10 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
   test("faerie_fire grants persistent attack Advantage against failed-save creatures", () => {
     const spell = spellRecord(faerieFireUnitId);
     const state = spellBattle({ preparedSpells: [spell] });
-    const act = spellAct({ state, spellId: faerieFireUnitId });
+    const act = spellAct({ session: state, spellId: faerieFireUnitId });
     const savingThrows = requireHole(act.initialHoles, "savingThrowOutcome");
     const resolved = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [
         savingThrowOutcomeFill(savingThrows, [
@@ -187,10 +187,10 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
   test("faerie_fire outline denies Invisible benefit for affected creatures", () => {
     const spell = spellRecord(faerieFireUnitId);
     const state = spellBattle({ preparedSpells: [spell] });
-    const act = spellAct({ state, spellId: faerieFireUnitId });
+    const act = spellAct({ session: state, spellId: faerieFireUnitId });
     const savingThrows = requireHole(act.initialHoles, "savingThrowOutcome");
     const resolved = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [
         savingThrowOutcomeFill(savingThrows, [
@@ -266,10 +266,10 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
   test("breaking faerie_fire Concentration clears its attack Advantage effect", () => {
     const spell = spellRecord(faerieFireUnitId);
     const state = spellBattle({ preparedSpells: [spell] });
-    const act = spellAct({ state, spellId: faerieFireUnitId });
+    const act = spellAct({ session: state, spellId: faerieFireUnitId });
     const savingThrows = requireHole(act.initialHoles, "savingThrowOutcome");
     const resolved = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [
         savingThrowOutcomeFill(savingThrows, [
@@ -306,7 +306,7 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
       throw new Error("Expected Faerie Fire target end turn to resolve.");
     }
     const recast = spellAct({
-      state: afterTargetTurn.state,
+      session: { ...state, state: afterTargetTurn.state },
       spellId: faerieFireUnitId,
     });
     const recastSavingThrows = requireHole(
@@ -336,10 +336,10 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
     const spell = spellRecord(faerieFireUnitId);
     const objectId = battleObjectId("faerie-fire-object");
     const state = spellBattle({ preparedSpells: [spell] });
-    const act = spellAct({ state, spellId: faerieFireUnitId });
+    const act = spellAct({ session: state, spellId: faerieFireUnitId });
     const savingThrows = requireHole(act.initialHoles, "savingThrowOutcome");
     const resolved = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [faerieFireObjectOutlineFill(savingThrows, [objectId])],
     });
@@ -390,12 +390,12 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
     const spell = spellRecord(faerieFireUnitId);
     const objectId = battleObjectId("faerie-fire-rejected-object");
     const state = spellBattle({ preparedSpells: [spell] });
-    const act = spellAct({ state, spellId: faerieFireUnitId });
+    const act = spellAct({ session: state, spellId: faerieFireUnitId });
     const savingThrows = requireHole(act.initialHoles, "savingThrowOutcome");
     if (!("outcomeTargeting" in savingThrows)) {
       throw new Error("Expected spell Saving Throw outcome hole.");
     }
-    const actor = state.combatants.get(spellCasterId);
+    const actor = state.state.combatants.get(spellCasterId);
     const invocation =
       actor?.origin.kind === "character"
         ? characterSpellProcedure(
@@ -409,20 +409,14 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
     if (invocation.procedure !== "saveGatedAttackRollAdvantage") {
       throw new Error("Expected Faerie Fire save-gated attack Advantage.");
     }
-    const sameProcedureNonFaerieFireInvocation = {
-      ...invocation,
-      spell: {
-        ...spell,
-        name: "Future Save Advantage",
-      },
-    };
+    expect(battleActSpellPresentation(act)?.invocation.spellId).toBe(spell.id);
     const fill = faerieFireObjectOutlineFill(savingThrows, [objectId]);
 
     expect(
       validateSavingThrowOutcomes(
         fill.value,
-        sameProcedureNonFaerieFireInvocation,
-        state,
+        invocation,
+        state.state,
         spellCasterId,
         undefined,
       ),
@@ -437,13 +431,16 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
       preparedSpells: [faerieFire],
       cantrips: [starryWisp],
     });
-    const faerieFireAct = spellAct({ state, spellId: faerieFireUnitId });
+    const faerieFireAct = spellAct({
+      session: state,
+      spellId: faerieFireUnitId,
+    });
     const savingThrows = requireHole(
       faerieFireAct.initialHoles,
       "savingThrowOutcome",
     );
     const outlined = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: faerieFireAct.subject,
       fills: [faerieFireObjectOutlineFill(savingThrows, [objectId])],
     });
@@ -475,7 +472,7 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
       throw new Error("Expected Faerie Fire target end turn to resolve.");
     }
     const attackAct = spellAct({
-      state: afterTargetTurn.state,
+      session: { ...state, state: afterTargetTurn.state },
       spellId: starryWispUnitId,
     });
     const objectTarget = requireHole(

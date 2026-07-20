@@ -12,7 +12,9 @@ import {
   type BattleHole,
   type BattleState,
 } from "./battle-reducer.ts";
-import { difficultyClass, movementFeet } from "@dnd/shared/types";
+import type { BattleSubject } from "./battle-subjects.ts";
+import { classLevel, difficultyClass, movementFeet } from "@dnd/shared/types";
+import type { BattleRuntimeSession } from "./index.ts";
 import {
   attackDamageDispositionFill,
   attackDamageHoleAfterHit,
@@ -22,6 +24,7 @@ import {
   attackRollHoleAfterTarget,
   attackTargetFill,
   battleId,
+  characterBattleFeatureInitForTest,
   characterBonusAttackSubjectForTest,
   characterSeed,
   combatantId,
@@ -47,7 +50,7 @@ import {
   resolveBattleSubject,
   savingThrowOutcomeFill,
   sneakAttackFeature,
-  startBattleRight,
+  startBattleSessionRight,
   statBlockCreatureInit,
   statBlockRecord,
   targetFill,
@@ -56,40 +59,47 @@ import {
   testShortswordAttack,
   unitLibrary,
 } from "./battle-runtime-test-support.ts";
-import {
-  CUNNING_STRIKE_OPTION_GRANT_SUPPORT_PROFILE,
-  battleCunningStrikeOptionGrantSupportForUnit,
-} from "./unit-feature-support.ts";
+import { battleCunningStrikeOptionGrantSupportForUnit } from "./unit-feature-support.ts";
 
 describe("battle runtime: Cunning Strike", () => {
   test("exposes typed Cunning Strike options from an eligible Sneak Attack damage rider", () => {
     const window = cunningStrikeDamageWindow("trip");
+    const sneakAttackProcedureRef = requireCharacterUnitProcedureRefForTest(
+      window.session,
+      fighterId,
+      "rogue_sneak_attack",
+    );
+    const cunningStrikeProcedureRef = requireCharacterUnitProcedureRefForTest(
+      window.session,
+      fighterId,
+      "rogue_cunning_strike",
+    );
 
     expect(window.damage).toMatchObject({
       kind: "rolledDice",
       attackDamageRiders: [
         expect.objectContaining({
-          unitId: "rogue_sneak_attack",
+          procedureRef: sneakAttackProcedureRef,
           damage: { dice: 3, dieSize: 6, damageType: "piercing" },
         }),
       ],
       cunningStrikeOptions: [
         expect.objectContaining({
-          unitId: "rogue_cunning_strike",
+          procedureRef: cunningStrikeProcedureRef,
           optionId: "poison",
-          sourceDamageRiderUnitId: "rogue_sneak_attack",
+          sourceDamageRiderProcedureRef: sneakAttackProcedureRef,
           dieCost: { dice: 1, dieSize: 6 },
         }),
         expect.objectContaining({
-          unitId: "rogue_cunning_strike",
+          procedureRef: cunningStrikeProcedureRef,
           optionId: "trip",
-          sourceDamageRiderUnitId: "rogue_sneak_attack",
+          sourceDamageRiderProcedureRef: sneakAttackProcedureRef,
           dieCost: { dice: 1, dieSize: 6 },
         }),
         expect.objectContaining({
-          unitId: "rogue_cunning_strike",
+          procedureRef: cunningStrikeProcedureRef,
           optionId: "withdraw",
-          sourceDamageRiderUnitId: "rogue_sneak_attack",
+          sourceDamageRiderProcedureRef: sneakAttackProcedureRef,
           dieCost: { dice: 1, dieSize: 6 },
         }),
       ],
@@ -100,20 +110,30 @@ describe("battle runtime: Cunning Strike", () => {
     const window = cunningStrikeDamageWindow("stealth_attack", {
       withSupremeSneak: true,
     });
+    const sneakAttackProcedureRef = requireCharacterUnitProcedureRefForTest(
+      window.session,
+      fighterId,
+      "rogue_sneak_attack",
+    );
+    const supremeSneakProcedureRef = requireCharacterUnitProcedureRefForTest(
+      window.session,
+      fighterId,
+      "rogue_supreme_sneak",
+    );
 
     expect(window.damage).toMatchObject({
       kind: "rolledDice",
       attackDamageRiders: [
         expect.objectContaining({
-          unitId: "rogue_sneak_attack",
+          procedureRef: sneakAttackProcedureRef,
           damage: { dice: 5, dieSize: 6, damageType: "piercing" },
         }),
       ],
       cunningStrikeOptions: expect.arrayContaining([
         expect.objectContaining({
-          unitId: "rogue_supreme_sneak",
+          procedureRef: supremeSneakProcedureRef,
           optionId: "stealth_attack",
-          sourceDamageRiderUnitId: "rogue_sneak_attack",
+          sourceDamageRiderProcedureRef: sneakAttackProcedureRef,
           dieCost: { dice: 1, dieSize: 6 },
         }),
       ]),
@@ -169,10 +189,20 @@ describe("battle runtime: Cunning Strike", () => {
   test("rolled-dice fill equality includes the selected Cunning Strike option", () => {
     const window = cunningStrikeDamageWindow("trip");
     const roll = requireRolledDiceFill(window.damageAppliedFills);
+    const poisonProcedureRef = requireCharacterUnitProcedureRefForTest(
+      window.session,
+      fighterId,
+      "rogue_cunning_strike",
+    );
+    const sneakAttackProcedureRef = requireCharacterUnitProcedureRefForTest(
+      window.session,
+      fighterId,
+      "rogue_sneak_attack",
+    );
     const omittedSelection = damageRollFillWithGroups(
       window.damage,
       [[4], [6, 5]],
-      ["rogue_sneak_attack"],
+      [sneakAttackProcedureRef],
     );
 
     expect(battleFillEquals(roll, { ...roll })).toBe(true);
@@ -181,7 +211,7 @@ describe("battle runtime: Cunning Strike", () => {
       battleFillEquals(roll, {
         ...roll,
         cunningStrikeOption: {
-          unitId: "rogue_cunning_strike",
+          procedureRef: poisonProcedureRef,
           optionId: "poison",
         },
       }),
@@ -255,7 +285,16 @@ describe("battle runtime: Cunning Strike", () => {
     expect(targetTempHp(resolved.state)).toBe(22);
     expect(
       resolved.state.currentTurnResources.attackDamageRidersUsedThisTurn,
-    ).toEqual([{ attackerId: fighterId, unitId: "rogue_sneak_attack" }]);
+    ).toEqual([
+      {
+        attackerId: fighterId,
+        procedureRef: requireCharacterUnitProcedureRefForTest(
+          window.session,
+          fighterId,
+          "rogue_sneak_attack",
+        ),
+      },
+    ]);
     expect(resolved.snapshot.turn.actionResources).toHaveLength(0);
   });
 
@@ -348,6 +387,10 @@ describe("battle runtime: Cunning Strike", () => {
 
   test("Poison requires Poisoner's Kit possession, then applies Poisoned with an end-turn repeat save", () => {
     const window = cunningStrikeDamageWindow("poison");
+    const poisonProcedureRef = requireCunningStrikeOptionProcedureRef(
+      window.damage,
+      "poison",
+    );
     const kit = requireHole(
       resolveBattleSubject({
         state: window.state,
@@ -400,17 +443,7 @@ describe("battle runtime: Cunning Strike", () => {
       expect.arrayContaining([
         expect.objectContaining({
           kind: "unitFeatureConditionEndTurnSave",
-          sourceProcedureRef: requireCharacterUnitProcedureRefForTest(
-            window.state,
-            fighterId,
-            "rogue_cunning_strike",
-            {
-              kind: "unitSupportProfile",
-              supportKinds: new Set([
-                CUNNING_STRIKE_OPTION_GRANT_SUPPORT_PROFILE,
-              ]),
-            },
-          ),
+          sourceProcedureRef: poisonProcedureRef,
           sourceCombatantId: fighterId,
           condition: "poisoned",
           expiresAt: {
@@ -525,7 +558,10 @@ const cunningStrikeAllyId = combatantId("cunning-strike-ally");
 function supremeSneakFeature(): NonNullable<
   Parameters<typeof characterSeed>[0]["unitFeatures"]
 >[number] {
-  return { unit: unitLibrary.requireUnit("rogue_supreme_sneak") };
+  return characterBattleFeatureInitForTest(
+    unitLibrary.requireUnit("rogue_supreme_sneak"),
+    [{ className: "rogue", level: classLevel(9) }],
+  );
 }
 
 function supremeSneakUnitRefs(): ReturnType<typeof cunningStrikeUnitRefs> {
@@ -550,6 +586,7 @@ function cunningStrikeOptionUnitId(optionId: CunningStrikeOptionId): string {
 }
 
 function cunningStrikeDamagePreview(input: CunningStrikeBattleInput = {}): {
+  readonly session: BattleRuntimeSession;
   readonly state: BattleState;
   readonly subject: ReturnType<typeof fighterAttackSubject>;
   readonly target: BattleHole;
@@ -561,7 +598,8 @@ function cunningStrikeDamagePreview(input: CunningStrikeBattleInput = {}): {
   };
   readonly damage: BattleHole;
 } {
-  const state = cunningStrikeBattle(input);
+  const session = cunningStrikeBattle(input);
+  const state = session.state;
   const subject = fighterAttackSubject(state, "Dagger");
   const target = attackInitialTargetHole(state, subject);
   const roll = attackRollHoleAfterTarget(state, target, subject);
@@ -578,12 +616,13 @@ function cunningStrikeDamagePreview(input: CunningStrikeBattleInput = {}): {
     subject,
   );
 
-  return { state, subject, target, roll, attackRoll, damage };
+  return { session, state, subject, target, roll, attackRoll, damage };
 }
 
 type CunningStrikeStagedDamageWindow = {
+  readonly session: BattleRuntimeSession;
   readonly state: BattleState;
-  readonly subject: Parameters<typeof resolveBattleSubject>[0]["subject"];
+  readonly subject: BattleSubject;
   readonly damageAppliedFills: readonly BattleFill[];
 };
 
@@ -591,14 +630,16 @@ function cunningStrikeDamageWindow(
   optionId: CunningStrikeOptionId,
   input: CunningStrikeBattleInput = {},
 ): CunningStrikeStagedDamageWindow & { readonly damage: BattleHole } {
-  const { state, subject, target, roll, attackRoll, damage } =
+  const { session, state, subject, target, roll, attackRoll, damage } =
     cunningStrikeDamagePreview(input);
 
   return {
+    session,
     state,
     subject,
     damage,
     damageAppliedFills: cunningStrikeDamageAppliedFills({
+      session,
       state,
       subject,
       prefixFills: [
@@ -607,7 +648,6 @@ function cunningStrikeDamageWindow(
       ],
       damage,
       optionId,
-      optionUnitId: cunningStrikeOptionUnitId(optionId),
       sneakAttackResultsAfterCost:
         optionId === "stealth_attack" ? [6, 5, 4, 3] : [6, 5],
     }),
@@ -617,10 +657,11 @@ function cunningStrikeDamageWindow(
 function cunningStrikeOffHandDamageWindow(
   optionId: CunningStrikeOptionId,
 ): CunningStrikeStagedDamageWindow {
-  const state = cunningStrikeBattle({
+  const session = cunningStrikeBattle({
     withOffHandAttack: true,
     withSneakAttackAlly: true,
   });
+  const state = session.state;
   const attackSubject = fighterAttackSubject(state, "Shortsword");
   const attackTarget = attackInitialTargetHole(state, attackSubject);
   const qualifyingAttackRoll = attackRollHoleAfterTarget(
@@ -684,9 +725,11 @@ function cunningStrikeOffHandDamageWindow(
   );
 
   return {
+    session: { ...session, state: afterQualifyingAttack },
     state: afterQualifyingAttack,
     subject,
     damageAppliedFills: cunningStrikeDamageAppliedFills({
+      session: { ...session, state: afterQualifyingAttack },
       state: afterQualifyingAttack,
       subject,
       prefixFills: [targetSelection, attackRollFill(roll, attackRoll)],
@@ -699,9 +742,10 @@ function cunningStrikeOffHandDamageWindow(
 function cunningStrikeOpportunityAttackDamageWindow(
   optionId: CunningStrikeOptionId,
 ): CunningStrikeStagedDamageWindow {
+  const session = cunningStrikeBattle({ withSneakAttackAlly: true });
   const state = requireResolved(
     endTurn({
-      state: cunningStrikeBattle({ withSneakAttackAlly: true }),
+      state: session.state,
       actorId: fighterId,
     }),
   ).state;
@@ -772,9 +816,11 @@ function cunningStrikeOpportunityAttackDamageWindow(
   );
 
   return {
+    session: { ...session, state: startedReaction.state },
     state: startedReaction.state,
     subject,
     damageAppliedFills: cunningStrikeDamageAppliedFills({
+      session: { ...session, state: startedReaction.state },
       state: startedReaction.state,
       subject,
       prefixFills: [attackRollFill(roll, attackRoll)],
@@ -785,12 +831,12 @@ function cunningStrikeOpportunityAttackDamageWindow(
 }
 
 function cunningStrikeDamageAppliedFills(input: {
+  readonly session: BattleRuntimeSession;
   readonly state: BattleState;
-  readonly subject: Parameters<typeof resolveBattleSubject>[0]["subject"];
+  readonly subject: BattleSubject;
   readonly prefixFills: readonly BattleFill[];
   readonly damage: BattleHole;
   readonly optionId: CunningStrikeOptionId;
-  readonly optionUnitId?: string;
   readonly sneakAttackResultsAfterCost?: readonly number[];
 }): readonly BattleFill[] {
   const throughDamageRoll = [
@@ -798,10 +844,20 @@ function cunningStrikeDamageAppliedFills(input: {
     damageRollFillWithGroups(
       input.damage,
       [[4], [...(input.sneakAttackResultsAfterCost ?? [6, 5])]],
-      ["rogue_sneak_attack"],
+      [
+        requireCharacterUnitProcedureRefForTest(
+          input.session,
+          fighterId,
+          "rogue_sneak_attack",
+        ),
+      ],
       undefined,
       {
-        unitId: input.optionUnitId ?? "rogue_cunning_strike",
+        procedureRef: requireCharacterUnitProcedureRefForTest(
+          input.session,
+          fighterId,
+          cunningStrikeOptionUnitId(input.optionId),
+        ),
         optionId: input.optionId,
       },
     ),
@@ -871,11 +927,11 @@ function expectStagedTripResumeSingleAppliesDamage(
 
 function cunningStrikeBattle(
   input: CunningStrikeBattleInput = {},
-): BattleState {
+): BattleRuntimeSession {
   const attack = input.withOffHandAttack
     ? testShortswordAttack()
     : testDaggerAttack();
-  const visibleState = startBattleRight({
+  const session = startBattleSessionRight({
     battleId: battleId("battle-cunning-strike"),
     combatants: [
       characterSeed({
@@ -889,7 +945,9 @@ function cunningStrikeBattle(
         ],
         d20Statistics: testCharacterD20Statistics({ dex: 16 }),
         unitFeatures: [
-          sneakAttackFeature(),
+          sneakAttackFeature({
+            classLevel: input.withSupremeSneak === true ? 9 : 5,
+          }),
           cunningStrikeFeature(),
           ...(input.withSupremeSneak === true ? [supremeSneakFeature()] : []),
         ],
@@ -934,6 +992,7 @@ function cunningStrikeBattle(
       }),
     ],
   });
+  const visibleState = session.state;
   const rogue = visibleState.combatants.get(fighterId);
   if (rogue === undefined) {
     throw new Error("Expected Cunning Strike rogue combatant.");
@@ -943,29 +1002,32 @@ function cunningStrikeBattle(
     throw new Error("Expected Cunning Strike target combatant.");
   }
   return {
-    ...visibleState,
-    combatants: new Map(visibleState.combatants)
-      .set(fighterId, {
-        ...rogue,
-        hidden: { discoveryDc: difficultyClass(16) },
-      })
-      .set(goblinId, {
-        ...target,
-        activeEffects: [
-          ...target.activeEffects,
-          ...(input.targetActiveEffects ?? []),
-        ],
-        ...(input.targetConcentrating === true
-          ? {
-              concentration: {
-                sourceProcedureRef: battleProcedureExecutionRefForTest(
-                  String("synthetic_cunning_strike_concentration"),
-                ),
-                effectKind: "spellEffect" as const,
-              },
-            }
-          : {}),
-      }),
+    ...session,
+    state: {
+      ...visibleState,
+      combatants: new Map(visibleState.combatants)
+        .set(fighterId, {
+          ...rogue,
+          hidden: { discoveryDc: difficultyClass(16) },
+        })
+        .set(goblinId, {
+          ...target,
+          activeEffects: [
+            ...target.activeEffects,
+            ...(input.targetActiveEffects ?? []),
+          ],
+          ...(input.targetConcentrating === true
+            ? {
+                concentration: {
+                  sourceProcedureRef: battleProcedureExecutionRefForTest(
+                    String("synthetic_cunning_strike_concentration"),
+                  ),
+                  effectKind: "spellEffect" as const,
+                },
+              }
+            : {}),
+        }),
+    },
   };
 }
 
@@ -1006,6 +1068,19 @@ function requireAttackDamageHole(hole: BattleHole): BattleDamageRollHole {
     throw new Error("Expected attack damage roll hole.");
   }
   return hole;
+}
+
+function requireCunningStrikeOptionProcedureRef(
+  hole: BattleHole,
+  optionId: CunningStrikeOptionId,
+) {
+  const option = requireAttackDamageHole(hole).cunningStrikeOptions?.find(
+    (candidate) => candidate.optionId === optionId,
+  );
+  if (option === undefined) {
+    throw new Error(`Expected Cunning Strike ${optionId} option.`);
+  }
+  return option.procedureRef;
 }
 
 function requireRolledDiceFill(

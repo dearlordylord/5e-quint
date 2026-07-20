@@ -41,8 +41,9 @@ import type {
   AvailableBattleAct,
   BattleActiveEffect,
   BattleResolutionResult,
+  BattleRuntimeSession,
   BattleState,
-  BattleActDiscoverySubject as BattleSubject,
+  BattleSubject,
 } from "./index.ts";
 import {
   breakBattleConcentration,
@@ -112,7 +113,7 @@ type SpellCreatedHeldObjectProjection = {
 };
 
 type SpellCreatedHeldObjectRuntimeState = {
-  readonly battle: BattleState;
+  readonly battle: BattleRuntimeSession;
   readonly lastResult: LastResult;
 };
 
@@ -159,7 +160,10 @@ function createSpellCreatedHeldObjectLifecycleDriver() {
       },
       doBreakConcentration: () => {
         state = {
-          battle: breakBattleConcentration(state.battle, spellCasterId),
+          battle: {
+            ...state.battle,
+            state: breakBattleConcentration(state.battle.state, spellCasterId),
+          },
           lastResult: "concentrationCleaned",
         };
       },
@@ -241,11 +245,12 @@ describe("Spell-created held object lifecycle MBT parity", () => {
   });
 
   it("cleans up held object state and light when Concentration ends or duration expires", () => {
+    const cast = castHeldObject(initialRuntimeState());
     const broken: SpellCreatedHeldObjectRuntimeState = {
-      battle: breakBattleConcentration(
-        castHeldObject(initialRuntimeState()).battle,
-        spellCasterId,
-      ),
+      battle: {
+        ...cast.battle,
+        state: breakBattleConcentration(cast.battle.state, spellCasterId),
+      },
       lastResult: "concentrationCleaned",
     };
     const expired = expireHeldObjectDuration(
@@ -309,13 +314,16 @@ function castHeldObject(
   const act = requireInitialCastAct(state.battle);
   const resolved = requireResolved(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: act.subject,
       fills: [],
     }),
     "Expected Flame Blade cast to resolve.",
   );
-  return { battle: resolved.state, lastResult: "castHeldObject" };
+  return {
+    battle: { ...state.battle, state: resolved.state },
+    lastResult: "castHeldObject",
+  };
 }
 
 function attackHeldObject(
@@ -330,7 +338,7 @@ function attackHeldObject(
   );
   const attackRoll = requireResultHole(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: act.subject,
       fills: [targetFill],
     }),
@@ -338,7 +346,7 @@ function attackHeldObject(
   );
   const damage = requireResultHole(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: act.subject,
       fills: [
         targetFill,
@@ -349,7 +357,7 @@ function attackHeldObject(
   );
   const resolved = requireResolved(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: act.subject,
       fills: [
         targetFill,
@@ -359,7 +367,10 @@ function attackHeldObject(
     }),
     "Expected Flame Blade attack to resolve.",
   );
-  return { battle: resolved.state, lastResult: "attackedHeldObject" };
+  return {
+    battle: { ...state.battle, state: resolved.state },
+    lastResult: "attackedHeldObject",
+  };
 }
 
 function releaseHeldObject(
@@ -368,13 +379,16 @@ function releaseHeldObject(
   const act = requireReleaseAct(state.battle);
   const resolved = requireResolved(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: act.subject,
       fills: [],
     }),
     "Expected Flame Blade release to resolve.",
   );
-  return { battle: resolved.state, lastResult: "releasedHeldObject" };
+  return {
+    battle: { ...state.battle, state: resolved.state },
+    lastResult: "releasedHeldObject",
+  };
 }
 
 function advanceToNextCasterTurn(
@@ -382,7 +396,7 @@ function advanceToNextCasterTurn(
 ): SpellCreatedHeldObjectRuntimeState {
   const casterEnd = requireResolved(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: {
         tag: "runtimeCommand",
         actorId: spellCasterId,
@@ -404,7 +418,10 @@ function advanceToNextCasterTurn(
     }),
     "Expected target end turn to resolve.",
   );
-  return { battle: targetEnd.state, lastResult: "nextCasterTurn" };
+  return {
+    battle: { ...state.battle, state: targetEnd.state },
+    lastResult: "nextCasterTurn",
+  };
 }
 
 function reEvokeHeldObject(
@@ -413,25 +430,28 @@ function reEvokeHeldObject(
   const act = requireReEvokeAct(state.battle);
   const resolved = requireResolved(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: act.subject,
       fills: [],
     }),
     "Expected Flame Blade re-evocation to resolve.",
   );
-  return { battle: resolved.state, lastResult: "reEvokedHeldObject" };
+  return {
+    battle: { ...state.battle, state: resolved.state },
+    lastResult: "reEvokedHeldObject",
+  };
 }
 
 function expireHeldObjectDuration(
   state: SpellCreatedHeldObjectRuntimeState,
 ): SpellCreatedHeldObjectRuntimeState {
   const expiring = withHeldObjectDurationTicks(
-    state.battle,
+    state.battle.state,
     elapsedTimeTicks(1),
   );
   return {
     ...advanceToNextCasterTurn({
-      battle: expiring,
+      battle: { ...state.battle, state: expiring },
       lastResult: state.lastResult,
     }),
     lastResult: "durationCleaned",
@@ -441,15 +461,15 @@ function expireHeldObjectDuration(
 function spellCreatedHeldObjectProjection(
   state: SpellCreatedHeldObjectRuntimeState,
 ): SpellCreatedHeldObjectProjection {
-  const caster = requireCombatant(state.battle, spellCasterId);
-  const activeEffect = spellCreatedHeldObjectEffect(state.battle);
+  const caster = requireCombatant(state.battle.state, spellCasterId);
+  const activeEffect = spellCreatedHeldObjectEffect(state.battle.state);
   return {
     magicActionAvailable: canSpendAction(
-      state.battle.currentTurnResources,
+      state.battle.state.currentTurnResources,
       "magic",
     ),
     bonusActionAvailable: canSpendBonusAction(
-      state.battle.currentTurnResources,
+      state.battle.state.currentTurnResources,
     ),
     initialCastAvailable: maybeInitialCastAct(state.battle) !== undefined,
     heldObjectEffectActive: activeEffect !== undefined,
@@ -462,7 +482,7 @@ function spellCreatedHeldObjectProjection(
       caster.concentration?.sourceProcedureRef ===
         activeEffect.sourceProcedureRef &&
       caster.concentration.effectKind === "spellEffect",
-    lightProjected: snapshotBattle(state.battle).lightEmitters.some(
+    lightProjected: snapshotBattle(state.battle.state).lightEmitters.some(
       (emitter) =>
         emitter.kind === "spellLightEmitter" &&
         activeEffect !== undefined &&
@@ -474,21 +494,21 @@ function spellCreatedHeldObjectProjection(
         emitter.emission.brightRadiusFeet === FLAME_BLADE_BRIGHT_RADIUS_FEET &&
         emitter.emission.dimAdditionalFeet === FLAME_BLADE_DIM_ADDITIONAL_FEET,
     ),
-    spellSlotExpended: casterSpellSlotExpended(state.battle),
+    spellSlotExpended: casterSpellSlotExpended(state.battle.state),
     spellSlotCommittedThisTurn:
-      state.battle.currentTurnResources.spellSlotUsesThisTurn.some(
+      state.battle.state.currentTurnResources.spellSlotUsesThisTurn.some(
         (use) => use.kind === "committed" && use.combatantId === spellCasterId,
       ),
     attackAvailable: maybeAttackAct(state.battle) !== undefined,
     reEvokeAvailable: maybeReEvokeAct(state.battle) !== undefined,
-    targetHp: Number(requireCombatant(state.battle, spellTargetId).hp),
+    targetHp: Number(requireCombatant(state.battle.state, spellTargetId).hp),
     lastResult: state.lastResult,
   };
 }
 
-function maybeInitialCastAct(state: BattleState) {
+function maybeInitialCastAct(state: BattleRuntimeSession) {
   const act = maybeBonusSpellAct({
-    state,
+    session: state,
     spellId: flameBladeUnitId,
     slotLevel: 2,
   });
@@ -500,7 +520,7 @@ function maybeInitialCastAct(state: BattleState) {
     : undefined;
 }
 
-function requireInitialCastAct(state: BattleState) {
+function requireInitialCastAct(state: BattleRuntimeSession) {
   const act = maybeInitialCastAct(state);
   expect(act).toBeDefined();
   if (act === undefined) {
@@ -509,8 +529,8 @@ function requireInitialCastAct(state: BattleState) {
   return act;
 }
 
-function maybeAttackAct(state: BattleState) {
-  const act = maybeSpellAct({ state, spellId: flameBladeUnitId });
+function maybeAttackAct(state: BattleRuntimeSession) {
+  const act = maybeSpellAct({ session: state, spellId: flameBladeUnitId });
   return act !== undefined &&
     battleActSpellPresentation(act)?.invocation.tag === "spellEffect" &&
     battleActSpellPresentation(act)?.invocation.procedure ===
@@ -519,7 +539,7 @@ function maybeAttackAct(state: BattleState) {
     : undefined;
 }
 
-function requireAttackAct(state: BattleState) {
+function requireAttackAct(state: BattleRuntimeSession) {
   const act = maybeAttackAct(state);
   expect(act).toBeDefined();
   if (act === undefined) {
@@ -528,8 +548,8 @@ function requireAttackAct(state: BattleState) {
   return act;
 }
 
-function maybeReEvokeAct(state: BattleState) {
-  const act = maybeBonusSpellAct({ state, spellId: flameBladeUnitId });
+function maybeReEvokeAct(state: BattleRuntimeSession) {
+  const act = maybeBonusSpellAct({ session: state, spellId: flameBladeUnitId });
   return act !== undefined &&
     battleActSpellPresentation(act)?.invocation.tag === "spellEffect" &&
     battleActSpellPresentation(act)?.invocation.procedure ===
@@ -538,7 +558,7 @@ function maybeReEvokeAct(state: BattleState) {
     : undefined;
 }
 
-function requireReEvokeAct(state: BattleState) {
+function requireReEvokeAct(state: BattleRuntimeSession) {
   const act = maybeReEvokeAct(state);
   expect(act).toBeDefined();
   if (act === undefined) {
@@ -547,7 +567,7 @@ function requireReEvokeAct(state: BattleState) {
   return act;
 }
 
-function requireReleaseAct(state: BattleState): AvailableBattleAct & {
+function requireReleaseAct(state: BattleRuntimeSession): AvailableBattleAct & {
   readonly subject: Extract<
     BattleSubject,
     {

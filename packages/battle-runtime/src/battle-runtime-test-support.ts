@@ -11,7 +11,7 @@ import {
   resolveFindFamiliarForm,
   resolvePactOfTheChainFindFamiliarForm,
 } from "@dnd/surface/surface/find-familiar-forms";
-import { Schema } from "effect";
+import { Match, Schema } from "effect";
 import * as Either from "effect/Either";
 import * as Option from "effect/Option";
 import { attackActionOptionName } from "./battle-reducer/statblock-attacks.ts";
@@ -104,24 +104,24 @@ import viciousMockeryInput from "../../surface/content/vicious_mockery.json";
 import weaponLongbowInput from "../../surface/content/weapon_longbow.json";
 import weaponQuarterstaffInput from "../../surface/content/weapon_quarterstaff.json";
 import { applyWeaponMasterySapOnHit } from "./battle-reducer/attack-roll.ts";
-import { battleActSpellPresentation } from "./battle-act-composition.ts";
+import {
+  battleActDruidWildShapePresentation,
+  battleActSpellPresentation,
+  battleActUnitPresentation,
+  battleSelectedSpellInvocationForProcedure,
+} from "./battle-act-composition.ts";
+import { characterUnitProcedureRefsForAuthoredSelection } from "./battle-composition-admission.ts";
 import { combatantCanSee } from "./battle-reducer/creature-state-leaves.ts";
 import { isCharacterBattleCreatureState } from "./battle-reducer/creature-state.ts";
 import { applyBattleHitPointDamage } from "./battle-reducer/damage-apply.ts";
+import { discoverBattleActCandidates } from "./battle-reducer/battle-discovery.ts";
 import { requiredAbilityCheckRollMode } from "./battle-reducer/hole-helpers.ts";
-import {
-  supportedSpellInvocationMatchesRef,
-  supportedSpellInvocationRef,
-} from "./battle-reducer/spells-invocation-ref.ts";
+import { supportedSpellInvocationRef } from "./battle-reducer/spells-invocation-ref.ts";
 import { supportedSpellActs } from "./battle-reducer/spells-profiles.ts";
 import { spellFillSet } from "./battle-reducer/spells-resolve-fill-set.ts";
 import { tickDurationEffects } from "./battle-reducer/turn-end-movement.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
-import type {
-  BattleInterruptAttackExecutionSelection,
-  CharacterProcedureSelectionSubject,
-} from "./battle-subjects.ts";
-import type { BattleExecutableSpellInvocation } from "./battle-reducer.ts";
+import type { BattleInterruptAttackExecutionSelection } from "./battle-subjects.ts";
 import {
   battleCharacterExecutionScopeRef,
   battleActiveEffectExecutionRef,
@@ -130,24 +130,21 @@ import {
   BattleProcedureExecutionRef,
 } from "./identity.ts";
 import type { BattleActiveEffectExecutionRef } from "./identity.ts";
-import { isCharacterProcedureSelectionSubject } from "./battle-subjects.ts";
+import type { BattleRuntimeSession } from "./battle-runtime-context.ts";
 import {
   characterBattleResourceIsUnlimited,
   characterBattleResourceIsUseCount,
   parseCharacterBattleClassLevels,
+  type CharacterBattleFeatureInit,
 } from "./character-battle-resources.ts";
+import type { CharacterBattleClassLevel } from "./character-class-level.ts";
 import {
   CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
-  characterExecutionWithSpellInvocations,
-  characterSpellProcedure,
-  characterSpellProcedureRefForInvocationRef,
-  characterStoredSpellProcedureRefForInvocationRef,
-  characterUnitProcedureRef,
+  characterUnitProcedure,
   type CharacterUnitProcedureQuery,
 } from "./character-execution.ts";
 import {
   addBattleCombatant,
-  admitCharacterProcedureSelectionSubject,
   armorOfShadowsSpellInvocationRef,
   ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SUPPORT_PROFILE,
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
@@ -205,7 +202,6 @@ import {
   WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
   ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE,
   type ActiveOngoingFeatureOccurrence,
-  type BattleActDiscoverySubject,
   type BattleAreaId,
   type BattleAttackExecutionSelection,
   type BattleAttackProcedureExecutionRef,
@@ -217,6 +213,7 @@ import {
   type BattleInterruptCheckpoint,
   type BattleInterruptProcedureSelection,
   type BattleReadiedSpellTrigger,
+  type BattleSelectedSpellInvocation,
   type BattleSpellAreaOriginAnchor,
   type BattleState,
   type BattleSubject,
@@ -225,8 +222,196 @@ import {
   type OngoingFeatureSourceKey,
   type SpellInvocationRef,
 } from "./index.ts";
-import { battleCunningStrikeSupportForUnit } from "./unit-feature-support.ts";
+import {
+  battleCunningStrikeSupportForUnit,
+  type BattleUnitSupportProfileSourceFacts,
+} from "./unit-feature-support.ts";
 export { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
+
+export function characterBattleFeatureInitForTest(
+  unit: UnitRecord,
+  classLevels: readonly CharacterBattleClassLevel[] = [],
+  sourceFacts?: BattleUnitSupportProfileSourceFacts,
+): CharacterBattleFeatureInit {
+  const profile = parseSupportedUnitFeatureProfile(
+    unit,
+    classLevels,
+    sourceFacts,
+  );
+  if (profile === null) {
+    throw new Error(`Expected a supported battle feature fixture: ${unit.id}.`);
+  }
+  return profile;
+}
+
+type CharacterProcedureSubjectForTest = Extract<
+  BattleSubject,
+  {
+    readonly tag:
+      | "actionSpell"
+      | "bonusActionSpell"
+      | "bonusActionDashSpell"
+      | "findFamiliarTouchSpell"
+      | "unitFeature"
+      | "unitFeatureHeldWeaponActivation"
+      | "druidWildShape"
+      | "bonusActionStandardAction"
+      | "monkFocusOption";
+  }
+>;
+
+type ActionSpellSubjectForTest = Extract<
+  CharacterProcedureSubjectForTest,
+  { readonly tag: "actionSpell" }
+>;
+type BonusActionSpellSubjectForTest = Extract<
+  CharacterProcedureSubjectForTest,
+  { readonly tag: "bonusActionSpell" }
+>;
+type BonusActionDashSpellSubjectForTest = Extract<
+  CharacterProcedureSubjectForTest,
+  { readonly tag: "bonusActionDashSpell" }
+>;
+type FindFamiliarTouchSpellSubjectForTest = Extract<
+  CharacterProcedureSubjectForTest,
+  { readonly tag: "findFamiliarTouchSpell" }
+>;
+
+type SpellProcedureSelectorForTest =
+  | {
+      readonly tag: "actionSpell";
+      readonly actorId: CombatantId;
+      readonly invocation: SpellInvocationRef;
+      readonly procedureRef?: BattleProcedureExecutionRef;
+      readonly mode: ActionSpellSubjectForTest["mode"];
+      readonly metamagic?: ActionSpellSubjectForTest["metamagic"];
+    }
+  | {
+      readonly tag: "bonusActionSpell";
+      readonly actorId: CombatantId;
+      readonly invocation: SpellInvocationRef;
+      readonly procedureRef?: BattleProcedureExecutionRef;
+      readonly mode: BonusActionSpellSubjectForTest["mode"];
+      readonly metamagic?: BonusActionSpellSubjectForTest["metamagic"];
+    }
+  | {
+      readonly tag: "bonusActionDashSpell";
+      readonly actorId: CombatantId;
+      readonly invocation: SpellInvocationRef;
+      readonly procedureRef?: BattleProcedureExecutionRef;
+      readonly mode: BonusActionDashSpellSubjectForTest["mode"];
+      readonly speedKind: BonusActionDashSpellSubjectForTest["speedKind"];
+    }
+  | {
+      readonly tag: "findFamiliarTouchSpell";
+      readonly actorId: CombatantId;
+      readonly invocation: SpellInvocationRef;
+      readonly procedureRef?: BattleProcedureExecutionRef;
+      readonly companionId: FindFamiliarTouchSpellSubjectForTest["companionId"];
+      readonly spellAction: FindFamiliarTouchSpellSubjectForTest["spellAction"];
+      readonly mode: FindFamiliarTouchSpellSubjectForTest["mode"];
+      readonly metamagic?: FindFamiliarTouchSpellSubjectForTest["metamagic"];
+    };
+
+type UnitFeatureSelectorForTest =
+  | {
+      readonly tag: "unitFeature";
+      readonly actorId: CombatantId;
+      readonly unitId: UnitRecord["id"];
+    }
+  | {
+      readonly tag: "unitFeatureHeldWeaponActivation";
+      readonly actorId: CombatantId;
+      readonly unitId: UnitRecord["id"];
+      readonly weaponItemId: Extract<
+        CharacterProcedureSubjectForTest,
+        { readonly tag: "unitFeatureHeldWeaponActivation" }
+      >["weaponItemId"];
+    };
+
+type DruidWildShapeSelectorForTest =
+  | {
+      readonly tag: "druidWildShape";
+      readonly actorId: CombatantId;
+      readonly action: "assumeForm";
+      readonly unitId: UnitRecord["id"];
+      readonly formStatBlockId: StatBlockRecord["id"];
+    }
+  | {
+      readonly tag: "druidWildShape";
+      readonly actorId: CombatantId;
+      readonly action: "dismiss";
+      readonly unitId: UnitRecord["id"];
+    };
+
+type BonusActionStandardActionSelectorForTest =
+  | {
+      readonly tag: "bonusActionStandardAction";
+      readonly actorId: CombatantId;
+      readonly sourceUnitId: UnitRecord["id"];
+      readonly action: "dash";
+      readonly speedKind: Extract<
+        CharacterProcedureSubjectForTest,
+        { readonly tag: "bonusActionStandardAction"; readonly action: "dash" }
+      >["speedKind"];
+    }
+  | {
+      readonly tag: "bonusActionStandardAction";
+      readonly actorId: CombatantId;
+      readonly sourceUnitId: UnitRecord["id"];
+      readonly action: "disengage" | "hide";
+    }
+  | {
+      readonly tag: "bonusActionStandardAction";
+      readonly actorId: CombatantId;
+      readonly sourceProcedureRef: BattleProcedureExecutionRef;
+      readonly sourceEffectRef: BattleActiveEffectExecutionRef;
+      readonly action: "dash";
+      readonly speedKind: Extract<
+        CharacterProcedureSubjectForTest,
+        { readonly tag: "bonusActionStandardAction"; readonly action: "dash" }
+      >["speedKind"];
+    };
+
+type MonkFocusSelectorForTest =
+  | {
+      readonly tag: "monkFocusOption";
+      readonly actorId: CombatantId;
+      readonly resourceUnitId: UnitRecord["id"];
+      readonly option: "flurryOfBlows";
+    }
+  | {
+      readonly tag: "monkFocusOption";
+      readonly actorId: CombatantId;
+      readonly resourceUnitId: UnitRecord["id"];
+      readonly option: "patientDefense";
+      readonly mode: Extract<
+        CharacterProcedureSubjectForTest,
+        { readonly tag: "monkFocusOption"; readonly option: "patientDefense" }
+      >["mode"];
+    }
+  | {
+      readonly tag: "monkFocusOption";
+      readonly actorId: CombatantId;
+      readonly resourceUnitId: UnitRecord["id"];
+      readonly option: "stepOfTheWind";
+      readonly mode: Extract<
+        CharacterProcedureSubjectForTest,
+        { readonly tag: "monkFocusOption"; readonly option: "stepOfTheWind" }
+      >["mode"];
+      readonly speedKind: Extract<
+        CharacterProcedureSubjectForTest,
+        { readonly tag: "monkFocusOption"; readonly option: "stepOfTheWind" }
+      >["speedKind"];
+    };
+
+export type BattleActSelectorForTest =
+  | BattleSubject
+  | SpellProcedureSelectorForTest
+  | UnitFeatureSelectorForTest
+  | DruidWildShapeSelectorForTest
+  | BonusActionStandardActionSelectorForTest
+  | MonkFocusSelectorForTest;
 
 export function battleProcedureExecutionRefForTest(
   discriminator: string,
@@ -297,16 +482,13 @@ export function battleActiveEffectExecutionRefForTest(
 }
 
 export function characterSpellInvocationForProcedureRefForTest(
-  state: BattleState,
+  session: BattleRuntimeSession,
   actorId: CombatantId,
   procedureRef: BattleProcedureExecutionRef,
-): BattleExecutableSpellInvocation {
-  const actor = state.combatants.get(actorId);
-  if (!isCharacterBattleCreatureState(actor)) {
-    throw new Error(`Expected character combatant ${actorId}.`);
-  }
-  const invocation = characterSpellProcedure(
-    actor.origin.execution,
+): BattleSelectedSpellInvocation {
+  const invocation = battleSelectedSpellInvocationForProcedure(
+    session,
+    actorId,
     procedureRef,
   );
   if (invocation === undefined) {
@@ -316,13 +498,13 @@ export function characterSpellInvocationForProcedureRefForTest(
 }
 
 export function characterSpellInvocationRefForProcedureRefForTest(
-  state: BattleState,
+  session: BattleRuntimeSession,
   actorId: CombatantId,
   procedureRef: BattleProcedureExecutionRef,
 ): SpellInvocationRef {
   return supportedSpellInvocationRef(
     characterSpellInvocationForProcedureRefForTest(
-      state,
+      session,
       actorId,
       procedureRef,
     ),
@@ -330,14 +512,14 @@ export function characterSpellInvocationRefForProcedureRefForTest(
 }
 
 export function characterSpellProcedureRefMatchesSpellForTest(
-  state: BattleState,
+  session: BattleRuntimeSession,
   actorId: CombatantId,
   procedureRef: BattleProcedureExecutionRef,
   spellId: string,
 ): boolean {
   return (
     characterSpellInvocationRefForProcedureRefForTest(
-      state,
+      session,
       actorId,
       procedureRef,
     ).spellId === spellId
@@ -345,22 +527,31 @@ export function characterSpellProcedureRefMatchesSpellForTest(
 }
 
 export function requireCharacterSpellProcedureRefForTest(
-  state: BattleState,
+  session: BattleRuntimeSession,
   actorId: CombatantId,
   invocationRef: SpellInvocationRef,
 ): BattleProcedureExecutionRef {
-  const actor = state.combatants.get(actorId);
-  if (!isCharacterBattleCreatureState(actor)) {
-    throw new Error(`Expected character combatant ${actorId}.`);
+  const discoveredProcedureRef = discoverBattleActs(session).find((act) => {
+    if (act.subject.actorId !== actorId || !("procedureRef" in act.subject)) {
+      return false;
+    }
+    const presentation = battleActSpellPresentation(act);
+    return (
+      presentation !== undefined &&
+      sameSpellInvocationRef(presentation.invocation, invocationRef)
+    );
+  })?.subject;
+  if (
+    discoveredProcedureRef !== undefined &&
+    "procedureRef" in discoveredProcedureRef
+  ) {
+    return discoveredProcedureRef.procedureRef;
   }
-  const execution = characterExecutionWithSpellInvocations(
-    actor.origin.execution,
-    supportedSpellActs(actor, state),
-  );
-  const procedureRef = characterSpellProcedureRefForInvocationRef(
-    execution,
-    invocationRef,
-  );
+  const procedureRef = session.context.characters
+    .get(actorId)
+    ?.spellPresentationSources.find((source) =>
+      supportedSpellInvocationMatchesRef(source.invocation, invocationRef),
+    )?.procedureRef;
   if (procedureRef === undefined) {
     throw new Error(
       `Expected selected spell procedure for ${actorId}: ${JSON.stringify(invocationRef)}.`,
@@ -369,21 +560,79 @@ export function requireCharacterSpellProcedureRefForTest(
   return procedureRef;
 }
 
+function sameSpellInvocationRef(
+  left: SpellInvocationRef,
+  right: SpellInvocationRef,
+): boolean {
+  if (
+    left.tag !== right.tag ||
+    left.spellId !== right.spellId ||
+    left.procedure !== right.procedure
+  ) {
+    return false;
+  }
+  if (left.tag === "cantrip" && right.tag === "cantrip") return true;
+  if (left.tag === "spellEffect" && right.tag === "spellEffect") {
+    return left.sourceCombatantId === right.sourceCombatantId;
+  }
+  if (
+    left.tag === "classFeatureFreeCast" &&
+    right.tag === "classFeatureFreeCast"
+  ) {
+    return left.resourcePoolRef === right.resourcePoolRef;
+  }
+  if (left.tag === "armorOfShadows" && right.tag === "armorOfShadows") {
+    return true;
+  }
+  return left.tag === "spellSlot" && right.tag === "spellSlot"
+    ? left.slotLevel === right.slotLevel
+    : false;
+}
+
+function supportedSpellInvocationMatchesRef(
+  invocation: Parameters<typeof supportedSpellInvocationRef>[0],
+  ref: SpellInvocationRef,
+): boolean {
+  return sameSpellInvocationRef(supportedSpellInvocationRef(invocation), ref);
+}
+
 export function requireCharacterUnitProcedureRefForTest(
-  state: BattleState,
+  session: BattleRuntimeSession,
   actorId: CombatantId,
   unitId: string,
   query: CharacterUnitProcedureQuery = CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
 ): BattleProcedureExecutionRef {
-  const actor = state.combatants.get(actorId);
+  const actor = session.state.combatants.get(actorId);
   if (!isCharacterBattleCreatureState(actor)) {
     throw new Error(`Expected character combatant ${actorId}.`);
   }
-  const procedureRef = characterUnitProcedureRef(
-    actor.origin.execution,
+  const characterContext = session.context.characters.get(actorId);
+  if (characterContext === undefined) {
+    throw new Error(`Expected character runtime context for ${actorId}.`);
+  }
+  const discoveredProcedureRef = discoverBattleActs(session).find(
+    (act) =>
+      act.subject.actorId === actorId &&
+      "procedureRef" in act.subject &&
+      battleActUnitPresentation(act)?.unitId === unitId &&
+      characterUnitProcedure(
+        actor.origin.execution,
+        act.subject.procedureRef,
+        query,
+      ) !== undefined,
+  )?.subject;
+  if (
+    discoveredProcedureRef !== undefined &&
+    "procedureRef" in discoveredProcedureRef
+  ) {
+    return discoveredProcedureRef.procedureRef;
+  }
+  const procedureRef = characterUnitProcedureRefsForAuthoredSelection(
+    characterContext,
+    actor,
     unitId,
     query,
-  );
+  )[0];
   if (procedureRef === undefined) {
     throw new Error(
       `Expected selected Unit procedure for ${actorId}: ${unitId}.`,
@@ -395,6 +644,16 @@ export function requireCharacterUnitProcedureRefForTest(
 export function startBattleRight(
   input: Parameters<typeof startBattle>[0],
 ): BattleState {
+  const result = startBattle(input);
+  if (Either.isLeft(result)) {
+    throw new Error(result.left.message);
+  }
+  return result.right.state;
+}
+
+export function startBattleSessionRight(
+  input: Parameters<typeof startBattle>[0],
+): BattleRuntimeSession {
   const result = startBattle(input);
   if (Either.isLeft(result)) {
     throw new Error(result.left.message);
@@ -962,39 +1221,27 @@ export function fighterGrapplesGoblin(
 export function fighterTurnWithReadiedRay(
   trigger: BattleReadiedSpellTrigger,
 ): BattleState {
+  const session = startBattleSessionRight({
+    battleId: battleId(`battle-readied-${trigger}`),
+    combatants: [
+      characterSeed({
+        combatantId: wizardId,
+        displayName: "Wizard",
+        initiative: 30,
+        attack: null,
+        spellcasting: wizardSpellcasting(),
+      }),
+      characterSeed({ initiative: 20 }),
+      statBlockCreatureInit({ initiative: 10 }),
+    ],
+  });
   const wizardReady = resolveBattleSubject({
-    state: startBattleRight({
-      battleId: battleId(`battle-readied-${trigger}`),
-      combatants: [
-        characterSeed({
-          combatantId: wizardId,
-          displayName: "Wizard",
-          initiative: 30,
-          attack: null,
-          spellcasting: wizardSpellcasting(),
-        }),
-        characterSeed({ initiative: 20 }),
-        statBlockCreatureInit({ initiative: 10 }),
-      ],
-    }),
+    state: session.state,
     subject: {
       tag: "actionSpell",
       actorId: wizardId,
       procedureRef: requireCharacterSpellProcedureRefForTest(
-        startBattleRight({
-          battleId: battleId(`battle-readied-${trigger}`),
-          combatants: [
-            characterSeed({
-              combatantId: wizardId,
-              displayName: "Wizard",
-              initiative: 30,
-              attack: null,
-              spellcasting: wizardSpellcasting(),
-            }),
-            characterSeed({ initiative: 20 }),
-            statBlockCreatureInit({ initiative: 10 }),
-          ],
-        }),
+        session,
         wizardId,
         cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
       ),
@@ -1017,54 +1264,35 @@ export function fighterTurnWithReadiedRay(
 
 export function fighterTurnWithReadiedRayAndHealer(
   trigger: BattleReadiedSpellTrigger,
-): BattleState {
+): BattleRuntimeSession {
+  const session = startBattleSessionRight({
+    battleId: battleId(`battle-readied-${trigger}-healing-word`),
+    combatants: [
+      characterSeed({
+        combatantId: wizardId,
+        displayName: "Wizard",
+        initiative: 30,
+        attack: null,
+        spellcasting: wizardSpellcasting(),
+      }),
+      characterSeed({
+        initiative: 20,
+        currentHp: 4,
+        attack: null,
+        spellcasting: wizardSpellcasting({
+          preparedSpells: [spellRecord("healing_word")],
+        }),
+      }),
+      statBlockCreatureInit({ initiative: 10 }),
+    ],
+  });
   const wizardReady = resolveBattleSubject({
-    state: startBattleRight({
-      battleId: battleId(`battle-readied-${trigger}-healing-word`),
-      combatants: [
-        characterSeed({
-          combatantId: wizardId,
-          displayName: "Wizard",
-          initiative: 30,
-          attack: null,
-          spellcasting: wizardSpellcasting(),
-        }),
-        characterSeed({
-          initiative: 20,
-          currentHp: 4,
-          attack: null,
-          spellcasting: wizardSpellcasting({
-            preparedSpells: [spellRecord("healing_word")],
-          }),
-        }),
-        statBlockCreatureInit({ initiative: 10 }),
-      ],
-    }),
+    state: session.state,
     subject: {
       tag: "actionSpell",
       actorId: wizardId,
       procedureRef: requireCharacterSpellProcedureRefForTest(
-        startBattleRight({
-          battleId: battleId(`battle-readied-${trigger}-healing-word`),
-          combatants: [
-            characterSeed({
-              combatantId: wizardId,
-              displayName: "Wizard",
-              initiative: 30,
-              attack: null,
-              spellcasting: wizardSpellcasting(),
-            }),
-            characterSeed({
-              initiative: 20,
-              currentHp: 4,
-              attack: null,
-              spellcasting: wizardSpellcasting({
-                preparedSpells: [spellRecord("healing_word")],
-              }),
-            }),
-            statBlockCreatureInit({ initiative: 10 }),
-          ],
-        }),
+        session,
         wizardId,
         cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
       ),
@@ -1079,58 +1307,39 @@ export function fighterTurnWithReadiedRayAndHealer(
   if (fighterTurn.tag !== "resolved") {
     throw new Error(`Expected resolved End Turn, got ${fighterTurn.tag}.`);
   }
-  return fighterTurn.state;
+  return { state: fighterTurn.state, context: session.context };
 }
 
 export function fighterTurnWithReadiedAcidAndSecondReadiedRay(): BattleState {
+  const session = startBattleSessionRight({
+    battleId: battleId("battle-nested-readied-reactions"),
+    combatants: [
+      characterSeed({
+        combatantId: wizardId,
+        displayName: "Wizard",
+        initiative: 40,
+        attack: null,
+        spellcasting: wizardSpellcasting(),
+      }),
+      characterSeed({
+        combatantId: secondWizardId,
+        displayName: "Second Wizard",
+        initiative: 30,
+        attack: null,
+        spellcasting: wizardSpellcasting(),
+      }),
+      characterSeed({ initiative: 20 }),
+      statBlockCreatureInit({ initiative: 10 }),
+    ],
+  });
   const firstReady = requireResolved(
     resolveBattleSubject({
-      state: startBattleRight({
-        battleId: battleId("battle-nested-readied-reactions"),
-        combatants: [
-          characterSeed({
-            combatantId: wizardId,
-            displayName: "Wizard",
-            initiative: 40,
-            attack: null,
-            spellcasting: wizardSpellcasting(),
-          }),
-          characterSeed({
-            combatantId: secondWizardId,
-            displayName: "Second Wizard",
-            initiative: 30,
-            attack: null,
-            spellcasting: wizardSpellcasting(),
-          }),
-          characterSeed({ initiative: 20 }),
-          statBlockCreatureInit({ initiative: 10 }),
-        ],
-      }),
+      state: session.state,
       subject: {
         tag: "actionSpell",
         actorId: wizardId,
         procedureRef: requireCharacterSpellProcedureRefForTest(
-          startBattleRight({
-            battleId: battleId("battle-nested-readied-reactions"),
-            combatants: [
-              characterSeed({
-                combatantId: wizardId,
-                displayName: "Wizard",
-                initiative: 40,
-                attack: null,
-                spellcasting: wizardSpellcasting(),
-              }),
-              characterSeed({
-                combatantId: secondWizardId,
-                displayName: "Second Wizard",
-                initiative: 30,
-                attack: null,
-                spellcasting: wizardSpellcasting(),
-              }),
-              characterSeed({ initiative: 20 }),
-              statBlockCreatureInit({ initiative: 10 }),
-            ],
-          }),
+          session,
           wizardId,
           cantripSpellInvocationRef("acid_splash", "saveGatedDamage"),
         ),
@@ -1149,7 +1358,7 @@ export function fighterTurnWithReadiedAcidAndSecondReadiedRay(): BattleState {
         tag: "actionSpell",
         actorId: secondWizardId,
         procedureRef: requireCharacterSpellProcedureRefForTest(
-          secondWizardTurn,
+          { ...session, state: secondWizardTurn },
           secondWizardId,
           cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
         ),
@@ -1165,15 +1374,16 @@ export function fighterTurnWithReadiedAcidAndSecondReadiedRay(): BattleState {
 
 export function wizardTurnWithReadiedRay(
   trigger: BattleReadiedSpellTrigger,
-): BattleState {
-  const base = wizardVsSkeletonBattle();
+): BattleRuntimeSession {
+  const session = wizardVsSkeletonBattle();
+  const base = session.state;
   const wizardReady = resolveBattleSubject({
     state: base,
     subject: {
       tag: "actionSpell",
       actorId: wizardId,
       procedureRef: requireCharacterSpellProcedureRefForTest(
-        base,
+        session,
         wizardId,
         cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
       ),
@@ -1190,9 +1400,12 @@ export function wizardTurnWithReadiedRay(
     throw new Error("Expected Wizard to hold a readied spell.");
   }
   return {
-    ...base,
-    combatants: new Map(base.combatants).set(wizardId, concentratingWizard),
-    readiedSpells: new Map([[wizardId, readied]]),
+    state: {
+      ...base,
+      combatants: new Map(base.combatants).set(wizardId, concentratingWizard),
+      readiedSpells: new Map([[wizardId, readied]]),
+    },
+    context: session.context,
   };
 }
 
@@ -1621,44 +1834,86 @@ export function findHole(
   return hole;
 }
 
-type SpellProcedureSelectionSubjectForTest = Extract<
-  CharacterProcedureSelectionSubject,
-  {
-    readonly tag:
-      | "actionSpell"
-      | "bonusActionSpell"
-      | "bonusActionDashSpell"
-      | "findFamiliarTouchSpell";
-  }
->;
-
-function isSpellProcedureSelectionSubjectForTest(
-  subject: BattleActDiscoverySubject,
-): subject is SpellProcedureSelectionSubjectForTest {
+function isSpellProcedureSelectorForTest(
+  selector: BattleActSelectorForTest,
+): selector is SpellProcedureSelectorForTest {
   return (
-    isCharacterProcedureSelectionSubject(subject) &&
-    (subject.tag === "actionSpell" ||
-      subject.tag === "bonusActionSpell" ||
-      subject.tag === "bonusActionDashSpell" ||
-      subject.tag === "findFamiliarTouchSpell")
+    "invocation" in selector &&
+    (selector.tag === "actionSpell" ||
+      selector.tag === "bonusActionSpell" ||
+      selector.tag === "bonusActionDashSpell" ||
+      selector.tag === "findFamiliarTouchSpell")
   );
 }
 
-function boundCharacterProcedureSelectionForTest(
-  state: BattleState,
-  selection: BattleActDiscoverySubject,
-): BattleActDiscoverySubject {
-  if (
-    !isSpellProcedureSelectionSubjectForTest(selection) ||
-    selection.procedureRef !== undefined
-  ) {
-    return selection;
+function spellProcedureSubjectForTest(
+  selection: SpellProcedureSelectorForTest,
+  procedureRef: BattleProcedureExecutionRef,
+): BattleSubject {
+  return Match.value(selection).pipe(
+    Match.discriminatorsExhaustive("tag")({
+      actionSpell: (value) => ({
+        tag: value.tag,
+        actorId: value.actorId,
+        procedureRef,
+        mode: value.mode,
+        ...(value.metamagic === undefined
+          ? {}
+          : { metamagic: value.metamagic }),
+      }),
+      bonusActionSpell: (value) => ({
+        tag: value.tag,
+        actorId: value.actorId,
+        procedureRef,
+        mode: value.mode,
+        ...(value.metamagic === undefined
+          ? {}
+          : { metamagic: value.metamagic }),
+      }),
+      bonusActionDashSpell: (value) => ({
+        tag: value.tag,
+        actorId: value.actorId,
+        procedureRef,
+        mode: value.mode,
+        speedKind: value.speedKind,
+      }),
+      findFamiliarTouchSpell: (value) => ({
+        tag: value.tag,
+        actorId: value.actorId,
+        procedureRef,
+        companionId: value.companionId,
+        spellAction: value.spellAction,
+        mode: value.mode,
+        ...(value.metamagic === undefined
+          ? {}
+          : { metamagic: value.metamagic }),
+      }),
+    }),
+  );
+}
+
+function isBattleSubjectSelectorForTest(
+  selector: BattleActSelectorForTest,
+): selector is BattleSubject {
+  return Schema.is(BattleSubjectSchema)(selector);
+}
+
+function selectedSpellProcedureSubjectForTest(
+  session: BattleRuntimeSession,
+  selection: SpellProcedureSelectorForTest,
+): BattleSubject | undefined {
+  if (selection.procedureRef !== undefined) {
+    return spellProcedureSubjectForTest(selection, selection.procedureRef);
   }
-  const selectedSpellAct = discoverBattleActs(state).find((candidate) => {
+  const selectedSpellAct = discoverBattleActs(session).find((candidate) => {
     const presentation = battleActSpellPresentation(candidate);
     return (
       candidate.subject.actorId === selection.actorId &&
       candidate.subject.tag === selection.tag &&
+      candidate.subject.mode.tag === selection.mode.tag &&
+      (candidate.subject.mode.tag !== "ready" ||
+        (selection.mode.tag === "ready" &&
+          candidate.subject.mode.trigger === selection.mode.trigger)) &&
       presentation !== undefined &&
       presentation.invocation.tag === selection.invocation.tag &&
       presentation.invocation.spellId === selection.invocation.spellId &&
@@ -1668,66 +1923,188 @@ function boundCharacterProcedureSelectionForTest(
           presentation.invocation.slotLevel === selection.invocation.slotLevel))
     );
   });
-  const actor = state.combatants.get(selection.actorId);
   const procedureRef =
     selectedSpellAct === undefined
-      ? actor?.origin.kind === "character"
-        ? characterStoredSpellProcedureRefForInvocationRef(
-            actor.origin.execution,
-            selection.invocation,
-          )
-        : undefined
+      ? session.context.characters
+          .get(selection.actorId)
+          ?.spellPresentationSources.find((source) =>
+            supportedSpellInvocationMatchesRef(
+              source.invocation,
+              selection.invocation,
+            ),
+          )?.procedureRef
       : battleActSpellPresentation(selectedSpellAct)?.procedureRef;
-  return procedureRef === undefined
-    ? selection
-    : { ...selection, procedureRef };
+  if (procedureRef === undefined) return undefined;
+  return spellProcedureSubjectForTest(selection, procedureRef);
+}
+
+function selectionMatchesDiscoveredActForTest(
+  selection: BattleActSelectorForTest,
+  act: ReturnType<typeof discoverBattleActs>[number],
+): boolean {
+  if (
+    act.subject.actorId !== selection.actorId ||
+    act.subject.tag !== selection.tag
+  ) {
+    return false;
+  }
+  if (
+    selection.tag === "bonusActionStandardAction" &&
+    act.subject.tag === "bonusActionStandardAction" &&
+    (selection.action !== act.subject.action ||
+      (selection.action === "dash" &&
+        act.subject.action === "dash" &&
+        selection.speedKind !== act.subject.speedKind))
+  ) {
+    return false;
+  }
+  if (
+    selection.tag === "unitFeatureHeldWeaponActivation" &&
+    act.subject.tag === "unitFeatureHeldWeaponActivation" &&
+    selection.weaponItemId !== act.subject.weaponItemId
+  ) {
+    return false;
+  }
+  if (
+    selection.tag === "druidWildShape" &&
+    act.subject.tag === "druidWildShape" &&
+    selection.action !== act.subject.action
+  ) {
+    return false;
+  }
+  if (
+    selection.tag === "monkFocusOption" &&
+    act.subject.tag === "monkFocusOption" &&
+    (selection.option !== act.subject.option ||
+      (selection.option === "patientDefense" &&
+        act.subject.option === "patientDefense" &&
+        selection.mode !== act.subject.mode) ||
+      (selection.option === "stepOfTheWind" &&
+        act.subject.option === "stepOfTheWind" &&
+        (selection.mode !== act.subject.mode ||
+          selection.speedKind !== act.subject.speedKind)))
+  ) {
+    return false;
+  }
+  if ("unitId" in selection) {
+    const presentation =
+      selection.tag === "druidWildShape" && selection.action === "assumeForm"
+        ? battleActDruidWildShapePresentation(act)
+        : battleActUnitPresentation(act);
+    return (
+      presentation?.unitId === selection.unitId &&
+      (!("formStatBlockId" in selection) ||
+        (presentation?.kind === "druidWildShapeForm" &&
+          presentation.formStatBlockId === selection.formStatBlockId))
+    );
+  }
+  if ("sourceUnitId" in selection) {
+    return battleActUnitPresentation(act)?.unitId === selection.sourceUnitId;
+  }
+  if ("resourceUnitId" in selection) {
+    return battleActUnitPresentation(act)?.unitId === selection.resourceUnitId;
+  }
+  if ("sourceProcedureRef" in selection) {
+    return (
+      act.subject.tag === "bonusActionStandardAction" &&
+      act.subject.procedureRef === selection.sourceProcedureRef &&
+      act.subject.sourceEffectRef === selection.sourceEffectRef
+    );
+  }
+  return (
+    isBattleSubjectSelectorForTest(selection) &&
+    sameBattleSubject(act.subject, selection)
+  );
+}
+
+function selectedBattleSubjectForTest(
+  session: BattleRuntimeSession,
+  selection: BattleActSelectorForTest,
+): BattleSubject | undefined {
+  if (isSpellProcedureSelectorForTest(selection)) {
+    return selectedSpellProcedureSubjectForTest(session, selection);
+  }
+  if (isBattleSubjectSelectorForTest(selection)) {
+    return selection;
+  }
+  return discoverBattleActs(session).find((act) =>
+    selectionMatchesDiscoveredActForTest(selection, act),
+  )?.subject;
 }
 
 export function findAct(
   state: BattleState,
-  subject: BattleActDiscoverySubject,
-): ReturnType<typeof discoverBattleActs>[number] {
-  const boundSelection = boundCharacterProcedureSelectionForTest(
-    state,
-    subject,
-  );
-  const admittedSubject = isCharacterProcedureSelectionSubject(boundSelection)
-    ? admitCharacterProcedureSelectionSubject(state, boundSelection)
-    : boundSelection;
-  if (admittedSubject === undefined) {
-    throw new Error(`Expected subject admission ${JSON.stringify(subject)}.`);
+  selector: BattleSubject,
+): ReturnType<typeof discoverBattleActCandidates>[number];
+export function findAct(
+  session: BattleRuntimeSession,
+  selector: BattleActSelectorForTest,
+): ReturnType<typeof discoverBattleActs>[number];
+export function findAct(
+  source: BattleState | BattleRuntimeSession,
+  selector: BattleActSelectorForTest,
+):
+  | ReturnType<typeof discoverBattleActCandidates>[number]
+  | ReturnType<typeof discoverBattleActs>[number] {
+  if (!("state" in source)) {
+    if (!isBattleSubjectSelectorForTest(selector)) {
+      throw new Error(
+        `Authored act selector requires a battle runtime session: ${JSON.stringify(selector)}.`,
+      );
+    }
+    const act = discoverBattleActCandidates(source).find((candidate) =>
+      sameBattleSubject(candidate.subject, selector),
+    );
+    if (act === undefined) {
+      throw new Error(`Expected discovered act ${JSON.stringify(selector)}.`);
+    }
+    return act;
   }
-  const act = discoverBattleActs(state).find((candidate) => {
-    return sameBattleSubject(candidate.subject, admittedSubject);
+  const session = source;
+  const subject = selectedBattleSubjectForTest(session, selector);
+  if (subject === undefined)
+    throw new Error(`Expected selected act ${JSON.stringify(selector)}.`);
+  const act = discoverBattleActs(session).find((candidate) => {
+    return sameBattleSubject(candidate.subject, subject);
   });
   if (act === undefined) {
-    throw new Error(`Expected discovered act ${JSON.stringify(subject)}.`);
+    throw new Error(`Expected discovered act ${JSON.stringify(selector)}.`);
   }
   return act;
 }
 
+type AuthoredBattleActSelectorForTest = Exclude<
+  BattleActSelectorForTest,
+  BattleSubject
+>;
+
 function resolveBattleSubject(
-  input: Omit<Parameters<typeof resolveBattleSubjectRuntime>[0], "subject"> & {
-    readonly subject: BattleActDiscoverySubject;
+  input: Parameters<typeof resolveBattleSubjectRuntime>[0],
+): ReturnType<typeof resolveBattleSubjectRuntime>;
+function resolveBattleSubject(
+  input: Omit<
+    Parameters<typeof resolveBattleSubjectRuntime>[0],
+    "state" | "subject"
+  > & {
+    readonly session: BattleRuntimeSession;
+    readonly subject: AuthoredBattleActSelectorForTest;
   },
+): ReturnType<typeof resolveBattleSubjectRuntime>;
+function resolveBattleSubject(
+  input:
+    | Parameters<typeof resolveBattleSubjectRuntime>[0]
+    | (Omit<
+        Parameters<typeof resolveBattleSubjectRuntime>[0],
+        "state" | "subject"
+      > & {
+        readonly session: BattleRuntimeSession;
+        readonly subject: AuthoredBattleActSelectorForTest;
+      }),
 ): ReturnType<typeof resolveBattleSubjectRuntime> {
-  const boundSelection = boundCharacterProcedureSelectionForTest(
-    input.state,
-    input.subject,
-  );
-  const subject =
-    isSpellProcedureSelectionSubjectForTest(boundSelection) &&
-    boundSelection.procedureRef !== undefined
-      ? (() => {
-          const { invocation: _invocation, ...replaySubject } = boundSelection;
-          return {
-            ...replaySubject,
-            procedureRef: boundSelection.procedureRef,
-          };
-        })()
-      : isCharacterProcedureSelectionSubject(boundSelection)
-        ? admitCharacterProcedureSelectionSubject(input.state, boundSelection)
-        : boundSelection;
+  if ("state" in input) {
+    return resolveBattleSubjectRuntime(input);
+  }
+  const subject = selectedBattleSubjectForTest(input.session, input.subject);
   if (subject === undefined) {
     throw new Error(
       `Expected character procedure selection to be admitted: ${JSON.stringify(input.subject)}.`,
@@ -1741,7 +2118,20 @@ function resolveBattleSubject(
       subject.tag === "findFamiliarTouchSpell")
       ? bindSelectedSpellSpatialFactsForTest(input.fills, subject.procedureRef)
       : input.fills;
-  return resolveBattleSubjectRuntime({ ...input, subject, fills });
+  return resolveBattleSubjectRuntime({
+    state: input.session.state,
+    subject,
+    fills,
+    ...(input.statBlockCatalog === undefined
+      ? {}
+      : { statBlockCatalog: input.statBlockCatalog }),
+  });
+}
+
+export function resolveBattleSubjectUncheckedForTest(
+  input: Parameters<typeof resolveBattleSubjectRuntime>[0],
+): ReturnType<typeof resolveBattleSubjectRuntime> {
+  return resolveBattleSubjectRuntime(input);
 }
 
 function bindSelectedSpellSpatialFactsForTest(
@@ -1815,7 +2205,7 @@ export function battleAfterFailedSleepInitialSave(input: {
   readonly helperInitiative?: number;
   readonly targetConditions?: Parameters<typeof characterSeed>[0]["conditions"];
 }): BattleState {
-  const battleState = startBattleRight({
+  const session = startBattleSessionRight({
     battleId: battleId(input.battle),
     combatants: [
       characterSeed({
@@ -1846,7 +2236,7 @@ export function battleAfterFailedSleepInitialSave(input: {
   });
   const savingThrows = requireHole(
     resolveBattleSubject({
-      state: battleState,
+      session,
       subject: magicSubject("sleep"),
       fills: [],
     }),
@@ -1854,7 +2244,7 @@ export function battleAfterFailedSleepInitialSave(input: {
   );
   const slept = requireResolved(
     resolveBattleSubject({
-      state: battleState,
+      session,
       subject: magicSubject("sleep"),
       fills: [
         savingThrowOutcomeFill(savingThrows, [
@@ -2028,7 +2418,6 @@ export function objectTargetFill(input: {
   readonly hole: BattleHole;
   readonly objectId?: ObjectTargetChoiceFill["value"];
   readonly casterId?: CombatantId;
-  readonly spellId: string;
   readonly rangeFeet?: SpellObjectTargetFact["rangeFeet"];
   readonly armorClass?: SpellObjectTargetFact["armorClass"];
   readonly damageDisposition?: SpellObjectTargetFact["damageDisposition"];
@@ -2227,7 +2616,7 @@ export function attackRollFill(
     readonly naturalD20: number;
     readonly rollMode?: AttackRollMode;
     readonly rolledD20s?: TestD20RolledD20s;
-    readonly activatedOngoingFeatureUnitId?: string;
+    readonly activatedOngoingFeatureProcedureRef?: BattleProcedureExecutionRef;
     readonly spellAttackReroll?: Extract<
       BattleFill,
       { readonly kind: "attackRoll" }
@@ -2267,10 +2656,11 @@ export function attackRollFill(
       ...(value.rolledD20s === undefined
         ? {}
         : { rolledD20s: testD20RolledD20s(value.rolledD20s) }),
-      ...(value.activatedOngoingFeatureUnitId === undefined
+      ...(value.activatedOngoingFeatureProcedureRef === undefined
         ? {}
         : {
-            activatedOngoingFeatureUnitId: value.activatedOngoingFeatureUnitId,
+            activatedOngoingFeatureProcedureRef:
+              value.activatedOngoingFeatureProcedureRef,
           }),
       ...(value.spellAttackReroll === undefined
         ? {}
@@ -2451,7 +2841,7 @@ export function movementFill(
 export function castGroundHazardForMovementTest(
   areaId: BattleAreaId,
 ): BattleState {
-  const battleState = startBattleRight({
+  const session = startBattleSessionRight({
     battleId: battleId(`battle-grease-movement-${areaId}`),
     combatants: [
       characterSeed({
@@ -2469,12 +2859,12 @@ export function castGroundHazardForMovementTest(
   });
   const subject = magicSubject("grease");
   const save = requireHole(
-    resolveBattleSubject({ state: battleState, subject, fills: [] }),
+    resolveBattleSubject({ session, subject, fills: [] }),
     "savingThrowOutcome",
   );
   return requireResolved(
     resolveBattleSubject({
-      state: battleState,
+      session,
       subject,
       fills: [greaseGroundAreaSavingThrowFill(save, areaId)],
     }),
@@ -2482,7 +2872,11 @@ export function castGroundHazardForMovementTest(
 }
 
 export function fogCloudBattle(battleIdValue: string): BattleState {
-  return startBattleRight({
+  return fogCloudSession(battleIdValue).state;
+}
+
+function fogCloudSession(battleIdValue: string): BattleRuntimeSession {
+  return startBattleSessionRight({
     battleId: battleId(battleIdValue),
     combatants: [
       characterSeed({
@@ -2507,15 +2901,15 @@ export function castFogCloud(
   ReturnType<typeof resolveBattleSubject>,
   { readonly tag: "resolved" }
 > {
-  const state = fogCloudBattle(battleIdValue);
+  const session = fogCloudSession(battleIdValue);
   const subject = magicSubject("fog_cloud");
   const area = requireHole(
-    resolveBattleSubject({ state, subject, fills: [] }),
+    resolveBattleSubject({ session, subject, fills: [] }),
     "spellAreaChoice",
   );
   return requireResolved(
     resolveBattleSubject({
-      state,
+      session,
       subject,
       fills: [fogCloudAreaFill(area, areaId)],
     }),
@@ -2740,7 +3134,7 @@ export function damageRollFill(
 export function damageRollFillWithGroups(
   hole: BattleFillableHole,
   groups: readonly (readonly number[])[],
-  selectedAttackDamageRiderUnitIds?: readonly string[],
+  selectedAttackDamageRiderProcedureRefs?: readonly BattleProcedureExecutionRef[],
   attackDamageAbilityModifierChoice?: Extract<
     BattleFill,
     { readonly kind: "rolledDice" }
@@ -2756,9 +3150,9 @@ export function damageRollFillWithGroups(
   return {
     kind: "rolledDice",
     holeId: hole.holeId,
-    ...(selectedAttackDamageRiderUnitIds === undefined
+    ...(selectedAttackDamageRiderProcedureRefs === undefined
       ? {}
-      : { selectedAttackDamageRiderUnitIds }),
+      : { selectedAttackDamageRiderProcedureRefs }),
     ...(attackDamageAbilityModifierChoice === undefined
       ? {}
       : { attackDamageAbilityModifierChoice }),
@@ -3124,8 +3518,7 @@ export function testUnarmedStrikeDieAttack(): Extract<
     effect: {
       kind: "damage",
       damage: {
-        kind: "authoredReplacement",
-        sourceUnitId: "test_unarmed_die_profile",
+        kind: "mechanicalReplacement",
         dice: 1,
         dieSize: 4,
         damageType: "bludgeoning",
@@ -3631,18 +4024,29 @@ export function recklessAttackFeature(): NonNullable<
     { readonly kind: "character" }
   >["unitFeatures"]
 >[number] {
-  return { unit: barbarianRecklessAttackUnit() };
+  return characterBattleFeatureInitForTest(
+    barbarianRecklessAttackUnit(),
+    parseCharacterBattleClassLevels([{ className: "barbarian", level: 2 }]),
+  );
 }
 
 export function sneakAttackFeature(input?: {
   readonly acquiredAtLevel?: number;
+  readonly classLevel?: number;
 }): NonNullable<
   Extract<
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
   >["unitFeatures"]
 >[number] {
-  return { unit: rogueSneakAttackUnit(input) };
+  const acquiredAtLevel = input?.acquiredAtLevel ?? 1;
+  const featureClassLevel = input?.classLevel ?? acquiredAtLevel;
+  return characterBattleFeatureInitForTest(
+    rogueSneakAttackUnit({ acquiredAtLevel }),
+    parseCharacterBattleClassLevels([
+      { className: "rogue", level: featureClassLevel },
+    ]),
+  );
 }
 
 export function cunningStrikeFeature(input?: {
@@ -3653,7 +4057,13 @@ export function cunningStrikeFeature(input?: {
     { readonly kind: "character" }
   >["unitFeatures"]
 >[number] {
-  return { unit: rogueCunningStrikeUnit(input) };
+  const acquiredAtLevel = input?.acquiredAtLevel ?? 5;
+  return characterBattleFeatureInitForTest(
+    rogueCunningStrikeUnit({ acquiredAtLevel }),
+    parseCharacterBattleClassLevels([
+      { className: "rogue", level: acquiredAtLevel },
+    ]),
+  );
 }
 
 function evasionFeature(input?: {
@@ -3664,7 +4074,10 @@ function evasionFeature(input?: {
     { readonly kind: "character" }
   >["unitFeatures"]
 >[number] {
-  return { unit: rogueEvasionUnit(input) };
+  return characterBattleFeatureInitForTest(
+    rogueEvasionUnit(input),
+    parseCharacterBattleClassLevels([{ className: "rogue", level: 7 }]),
+  );
 }
 
 export function reactionModifierUnitRef(
@@ -3753,7 +4166,7 @@ export function bardicInspirationUnit(): Extract<
 
 export function bardicInspirationSubject(
   unitId: string,
-): BattleActDiscoverySubject {
+): UnitFeatureSelectorForTest {
   return { tag: "unitFeature", actorId: fighterId, unitId };
 }
 
@@ -3780,8 +4193,8 @@ export function bardicInspirationBattle(input: {
   readonly charismaModifier: number;
   readonly bardHidden?: boolean;
   readonly targetConditions?: readonly Condition[];
-}): BattleState {
-  const state = startBattleRight({
+}): BattleRuntimeSession {
+  const session = startBattleSessionRight({
     battleId: battleId("battle-bardic-inspiration-grant"),
     combatants: [
       characterSeed({
@@ -3805,6 +4218,7 @@ export function bardicInspirationBattle(input: {
       statBlockCreatureInit({ initiative: 10 }),
     ],
   });
+  const state = session.state;
   let combatants: Map<CombatantId, BattleCreatureState> = new Map(
     state.combatants,
   );
@@ -3834,16 +4248,18 @@ export function bardicInspirationBattle(input: {
       hidden: { discoveryDc: difficultyClass(16) },
     });
   }
-  return { ...state, combatants };
+  return {
+    state: { ...state, combatants },
+    context: session.context,
+  };
 }
 
 export function bardicInspirationTargetFill(
   hole: BattleHole,
+  sourceProcedureRef: BattleProcedureExecutionRef,
   targetId: CombatantId,
   input?: { readonly canHear?: boolean },
 ): BattleFill {
-  const sourceProcedureRef =
-    battleProcedureExecutionRefForSpellHoleForTest(hole);
   return targetFill(hole, targetId, [
     {
       kind: "bardicInspirationTargetWithinRange",
@@ -3867,14 +4283,21 @@ export function bardicInspirationTargetFill(
 
 export function grantBardicInspirationToGoblin(): BattleState {
   const bardicInspiration = bardicInspirationUnit();
-  const state = bardicInspirationBattle({ charismaModifier: 3 });
+  const session = bardicInspirationBattle({ charismaModifier: 3 });
+  const state = session.state;
   const subject = bardicInspirationSubject(bardicInspiration.id);
-  const target = findHole(findAct(state, subject).initialHoles, "targetChoice");
+  const act = findAct(session, subject);
+  if (act.subject.tag !== "unitFeature") {
+    throw new Error("Expected Bardic Inspiration unit feature act.");
+  }
+  const target = findHole(act.initialHoles, "targetChoice");
   return requireResolved(
     resolveBattleSubject({
       state,
-      subject,
-      fills: [bardicInspirationTargetFill(target, goblinId)],
+      subject: act.subject,
+      fills: [
+        bardicInspirationTargetFill(target, act.subject.procedureRef, goblinId),
+      ],
     }),
   ).state;
 }
@@ -3893,20 +4316,15 @@ export function combatantHasBardicInspirationDie(
 }
 
 export function bardicInspirationStaleTargetHole(
-  state: BattleState,
+  sourceProcedureRef: BattleProcedureExecutionRef,
 ): BattleHole {
-  const unit = bardicInspirationUnit();
-  const protocolId = `battle:unit-feature:${unit.id}:target`;
+  const protocolId = `battle:unit-feature:${sourceProcedureRef}:target`;
   return {
     kind: "targetChoice",
     holeId: holeId(protocolId),
     holeInstanceKey: holeInstanceKey(protocolId),
-    label: `${unit.name} target`,
-    procedureRef: requireCharacterUnitProcedureRefForTest(
-      state,
-      fighterId,
-      unit.id,
-    ),
+    label: "Bardic Inspiration target",
+    procedureRef: sourceProcedureRef,
     requiresTableSpatialFact: true,
     choices: [goblinId],
   };
@@ -3956,7 +4374,14 @@ export function goblinAttacksReactionModifierCharacter(input: {
         ...(input.resources === undefined
           ? {}
           : { resources: input.resources }),
-        unitFeatures: [{ unit: input.unit }],
+        unitFeatures: [
+          characterBattleFeatureInitForTest(
+            input.unit,
+            parseCharacterBattleClassLevels([
+              { className: input.className, level: input.level },
+            ]),
+          ),
+        ],
         characterUnitRefs: [
           {
             unit: input.unit,
@@ -4720,8 +5145,8 @@ function duplicateRuntimeDirectEffects(
 
 export function wizardVsSkeletonBattle(input?: {
   readonly extraCombatants?: readonly BattleCreatureInit[];
-}): BattleState {
-  return startBattleRight({
+}): BattleRuntimeSession {
+  return startBattleSessionRight({
     battleId: battleId("battle-wizard-skeleton"),
     combatants: [
       characterSeed({
@@ -4985,7 +5410,7 @@ export function spellRecord(spellId: SpellRecord["id"]): SpellRecord {
 
 export function magicSubject(
   spellId: SpellRecord["id"] | "dex_half_cantrip",
-): BattleActDiscoverySubject {
+): SpellProcedureSelectorForTest {
   const spell =
     spellId === "dex_half_cantrip"
       ? dexHalfDamageCantrip()
@@ -4999,7 +5424,7 @@ export function magicSubject(
 }
 
 function testMagicSubjectInvocation(spell: SpellRecord): SpellInvocationRef {
-  const invocationState = startBattleRight({
+  const invocationSession = startBattleSessionRight({
     battleId: battleId(`battle-test-spell-invocation-${spell.id}`),
     combatants: [
       characterSeed({
@@ -5018,15 +5443,17 @@ function testMagicSubjectInvocation(spell: SpellRecord): SpellInvocationRef {
       statBlockCreatureInit({ initiative: 10 }),
     ],
   });
-  const actor = invocationState.combatants.get(wizardId);
-  if (actor?.origin.kind !== "character") {
-    throw new Error("Expected test spell invocation actor.");
-  }
-  const invocations = supportedSpellActs(actor, invocationState).filter(
-    (invocation) =>
-      invocation.spell.id === spell.id &&
-      invocation.procedure !== "shieldReaction",
-  );
+  const invocations = discoverBattleActs(invocationSession).flatMap((act) => {
+    const presentation = battleActSpellPresentation(act);
+    return presentation !== undefined &&
+      presentation.invocation.spellId === spell.id &&
+      presentation.invocation.procedure !== "shieldReaction" &&
+      act.subject.tag === "actionSpell" &&
+      act.subject.mode.tag === "cast" &&
+      act.subject.metamagic === undefined
+      ? [presentation.invocation]
+      : [];
+  });
   if (invocations.length !== 1) {
     throw new Error(
       `Expected one supported test spell invocation for ${spell.id}, got ${invocations.length}.`,
@@ -5038,7 +5465,7 @@ function testMagicSubjectInvocation(spell: SpellRecord): SpellInvocationRef {
       `Expected supported test spell invocation for ${spell.id}.`,
     );
   }
-  return supportedSpellInvocationRef(invocation);
+  return invocation;
 }
 
 function testSpellSlotLevelForSpell(spell: SpellRecord): 1 | 2 | 3 | 4 | 5 {
@@ -5109,6 +5536,7 @@ export {
   defaultArmorClassState,
   DieRollResult,
   difficultyClass,
+  discoverBattleActCandidates,
   discoverBattleActs,
   Either,
   elapsedTimeTicks,
@@ -5152,11 +5580,11 @@ export {
 
 export type {
   ActiveOngoingFeatureOccurrence,
-  BattleActDiscoverySubject,
   BattleFill,
   BattleHole,
   BattleInterruptCheckpoint,
   BattleReadiedSpellTrigger,
+  BattleRuntimeSession,
   BattleState,
   BattleSubject,
   CombatantId,

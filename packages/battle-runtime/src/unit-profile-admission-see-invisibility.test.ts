@@ -1,4 +1,3 @@
-
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT see_invisibility
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-see-invisible-observer-sight
@@ -9,6 +8,7 @@ import {
   seeInvisibleRevealsEtherealWitness,
   seeInvisibleRevealsInvisibleObject,
   type BattleResolutionResult,
+  type BattleRuntimeSession,
   type BattleState,
   combatantId,
 } from "./index.ts";
@@ -41,12 +41,12 @@ const observerId = combatantId("unit-profile-see-invisibility-observer");
 describe("L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT deterministic See Invisibility admission", () => {
   test("see_invisibility admits as a self timed observer-sight spell", () => {
     const spell = spellRecord(seeInvisibilityUnitId);
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
     const act = spellAct({
-      state,
+      session,
       spellId: seeInvisibilityUnitId,
       slotLevel: 2,
     });
@@ -65,7 +65,7 @@ describe("L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT deterministic See Invis
 
     const cast = requireResolved(
       resolveBattleSubject({
-        state,
+        state: session.state,
         subject: act.subject,
         fills: [],
       }),
@@ -98,7 +98,7 @@ describe("L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT deterministic See Invis
   });
 
   test("see_invisibility is observer-scoped and does not remove the target's Invisible condition", () => {
-    const state = withInvisibleTarget(
+    const session = withInvisibleTarget(
       spellBattle({
         preparedSpells: [spellRecord(seeInvisibilityUnitId)],
         spellSlots: [{ spellLevel: 2, count: 1 }],
@@ -112,10 +112,14 @@ describe("L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT deterministic See Invis
       }),
     );
 
-    expect(combatantCanSee(state, spellCasterId, spellTargetId)).toBe(false);
-    expect(combatantCanSee(state, observerId, spellTargetId)).toBe(false);
+    expect(combatantCanSee(session.state, spellCasterId, spellTargetId)).toBe(
+      false,
+    );
+    expect(combatantCanSee(session.state, observerId, spellTargetId)).toBe(
+      false,
+    );
 
-    const cast = castSeeInvisibility(state);
+    const cast = castSeeInvisibility(session);
 
     expect(combatantCanSee(cast.state, spellCasterId, spellTargetId)).toBe(
       true,
@@ -302,49 +306,57 @@ describe("L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT deterministic See Invis
 });
 
 function castSeeInvisibility(
-  state: BattleState,
+  session: BattleRuntimeSession,
 ): Extract<BattleResolutionResult, { readonly tag: "resolved" }> {
   const act = spellAct({
-    state,
+    session,
     spellId: seeInvisibilityUnitId,
     slotLevel: 2,
   });
   return requireResolved(
     resolveBattleSubject({
-      state,
+      state: session.state,
       subject: act.subject,
       fills: [],
     }),
   );
 }
 
-function withInvisibleTarget(state: BattleState): BattleState {
-  const target = requireCombatant(state, spellTargetId);
+function withInvisibleTarget(
+  session: BattleRuntimeSession,
+): BattleRuntimeSession {
+  const target = requireCombatant(session.state, spellTargetId);
   return {
-    ...state,
-    combatants: new Map(state.combatants).set(spellTargetId, {
-      ...battleCreatureStateWithKnockOutPreservedConditions(
-        target,
-        applyCondition(target.conditions, "invisible"),
-      ),
-    }),
+    ...session,
+    state: {
+      ...session.state,
+      combatants: new Map(session.state.combatants).set(spellTargetId, {
+        ...battleCreatureStateWithKnockOutPreservedConditions(
+          target,
+          applyCondition(target.conditions, "invisible"),
+        ),
+      }),
+    },
   };
 }
 
-function withHiddenInvisibleTarget(): BattleState {
-  const state = withInvisibleTarget(
+function withHiddenInvisibleTarget(): BattleRuntimeSession {
+  const session = withInvisibleTarget(
     spellBattle({
       preparedSpells: [spellRecord(seeInvisibilityUnitId)],
       spellSlots: [{ spellLevel: 2, count: 1 }],
     }),
   );
-  const target = requireCombatant(state, spellTargetId);
+  const target = requireCombatant(session.state, spellTargetId);
   return {
-    ...state,
-    combatants: new Map(state.combatants).set(spellTargetId, {
-      ...target,
-      hidden: { discoveryDc: difficultyClass(16) },
-    }),
+    ...session,
+    state: {
+      ...session.state,
+      combatants: new Map(session.state.combatants).set(spellTargetId, {
+        ...target,
+        hidden: { discoveryDc: difficultyClass(16) },
+      }),
+    },
   };
 }
 

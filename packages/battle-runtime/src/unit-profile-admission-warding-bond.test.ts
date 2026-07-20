@@ -70,6 +70,7 @@ import type {
   BattleActiveEffect,
   BattleFill,
   BattleHole,
+  BattleRuntimeSession,
   BattleState,
   BattleSubject,
   CombatantId,
@@ -79,7 +80,11 @@ import type { BattleProcedureExecutionRef } from "./identity.ts";
 describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding Bond admission", () => {
   test("casts as a level-2 Magic Action spell with willing target, worn rings, and connection facts", () => {
     const state = wardingBondBattle();
-    const act = spellAct({ state, spellId: wardingBondUnitId, slotLevel: 2 });
+    const act = spellAct({
+      session: state,
+      spellId: wardingBondUnitId,
+      slotLevel: 2,
+    });
     const targetHole = requireHole(act.initialHoles, "targetChoice");
 
     expect({
@@ -100,7 +105,7 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
 
     expect(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject: act.subject,
         fills: [
           knownWillingSpellTargetFill(
@@ -118,7 +123,7 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
 
     expect(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject: act.subject,
         fills: [
           wardingBondSpellTargetFillWithoutWilling(
@@ -135,7 +140,7 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
     });
 
     const resolved = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [
         wardingBondSpellTargetFill(
@@ -294,8 +299,9 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
   });
 
   test("attack damage continuation carries direct and linked-caster Concentration fills", () => {
+    const session = wardingBondBattle();
     const state = withTargetConcentration(
-      withCasterConcentration(castWardingBond(wardingBondBattle())),
+      withCasterConcentration(castWardingBond(session)),
     );
     const subject = characterAttackSubjectForTest(
       state,
@@ -384,13 +390,14 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
   });
 
   test("offhand attack damage requests the linked caster Concentration save", () => {
+    const session = wardingBondClubBattle();
     const state = withCasterConcentration(
-      advanceRound(castWardingBond(wardingBondClubBattle()), [
-        spellCasterId,
-        spellTargetId,
-      ]),
+      advanceRound(castWardingBond(session), [spellCasterId, spellTargetId]),
     );
-    const attackSubject: BattleSubject = weaponAttackSubject(state, "Club");
+    const attackSubject: BattleSubject = weaponAttackSubject(
+      { ...session, state },
+      "Club",
+    );
     const attackTarget = requireResultHole(
       resolveBattleSubject({ state, subject: attackSubject, fills: [] }),
       "targetChoice",
@@ -484,13 +491,11 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
   });
 
   test("Opportunity Attack damage requests the linked caster Concentration save", () => {
+    const session = wardingBondClubBattle();
     const state = withCasterConcentration(
-      advanceRound(castWardingBond(wardingBondClubBattle()), [
-        spellCasterId,
-        spellTargetId,
-      ]),
+      advanceRound(castWardingBond(session), [spellCasterId, spellTargetId]),
     );
-    const clubAttack = weaponAttackSubject(state, "Club");
+    const clubAttack = weaponAttackSubject({ ...session, state }, "Club");
     const subject: Extract<
       BattleSubject,
       { readonly tag: "runtimeCommand"; readonly command: "opportunityAttack" }
@@ -552,13 +557,16 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
   });
 
   test("repeated allocation spell damage requests the linked caster Concentration save", () => {
-    const state = withCasterConcentration(
-      damageSpellTurnState(magicMissileUnitId, [
-        { spellLevel: 2, count: 1 },
-        { spellLevel: 1, count: 1 },
-      ]),
-    );
-    const act = spellAct({ state, spellId: magicMissileUnitId, slotLevel: 1 });
+    const session = damageSpellTurnSession(magicMissileUnitId, [
+      { spellLevel: 2, count: 1 },
+      { spellLevel: 1, count: 1 },
+    ]);
+    const state = withCasterConcentration(session.state);
+    const act = spellAct({
+      session: { ...session, state },
+      spellId: magicMissileUnitId,
+      slotLevel: 1,
+    });
     const allocationHole = requireHole(
       act.initialHoles,
       "spellTargetAllocation",
@@ -611,13 +619,16 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
   });
 
   test("save-gated spell damage requests the linked caster Concentration save", () => {
-    const state = withCasterConcentration(
-      damageSpellTurnState(burningHandsUnitId, [
-        { spellLevel: 2, count: 1 },
-        { spellLevel: 1, count: 1 },
-      ]),
-    );
-    const act = spellAct({ state, spellId: burningHandsUnitId, slotLevel: 1 });
+    const session = damageSpellTurnSession(burningHandsUnitId, [
+      { spellLevel: 2, count: 1 },
+      { spellLevel: 1, count: 1 },
+    ]);
+    const state = withCasterConcentration(session.state);
+    const act = spellAct({
+      session: { ...session, state },
+      spellId: burningHandsUnitId,
+      slotLevel: 1,
+    });
     const save = requireHole(act.initialHoles, "savingThrowOutcome");
     const saveFill = savingThrowOutcomeFill(save, [
       { targetId: spellTargetId, succeeded: false },
@@ -665,13 +676,16 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
   });
 
   test("attack-burst spell damage requests the linked caster Concentration save", () => {
-    const state = withCasterConcentration(
-      damageSpellTurnState(iceKnifeUnitId, [
-        { spellLevel: 2, count: 1 },
-        { spellLevel: 1, count: 1 },
-      ]),
-    );
-    const act = spellAct({ state, spellId: iceKnifeUnitId, slotLevel: 1 });
+    const session = damageSpellTurnSession(iceKnifeUnitId, [
+      { spellLevel: 2, count: 1 },
+      { spellLevel: 1, count: 1 },
+    ]);
+    const state = withCasterConcentration(session.state);
+    const act = spellAct({
+      session: { ...session, state },
+      spellId: iceKnifeUnitId,
+      slotLevel: 1,
+    });
     const targetFill = spellTargetFill(
       requireHole(act.initialHoles, "targetChoice"),
       iceKnifeUnitId,
@@ -919,7 +933,10 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
       spellTargetId,
       secondTargetId,
     ]);
-    const recast = castWardingBond(nextCasterTurn, secondTargetId);
+    const recast = castWardingBond(
+      { ...recastInitial, state: nextCasterTurn },
+      secondTargetId,
+    );
     expect(wardingBondEffects(recast, spellTargetId)).toEqual([]);
     expect(wardingBondEffects(recast, secondTargetId)).toHaveLength(1);
 
@@ -952,7 +969,7 @@ function wardingBondBattle(
       typeof spellBattle
     >[0]["selectedLoadout"];
   } = {},
-): BattleState {
+): BattleRuntimeSession {
   return spellBattle({
     preparedSpells: [
       spellRecord(wardingBondUnitId),
@@ -976,22 +993,22 @@ function wardingBondBattle(
   });
 }
 
-function damageSpellTurnState(
+function damageSpellTurnSession(
   damageSpellId: string,
   spellSlots: NonNullable<Parameters<typeof spellBattle>[0]["spellSlots"]>,
-): BattleState {
-  return advanceRound(
-    castWardingBond(
-      wardingBondBattle({
-        additionalPreparedSpells: [spellRecord(damageSpellId)],
-        spellSlots,
-      }),
-    ),
-    [spellCasterId, spellTargetId],
-  );
+): BattleRuntimeSession {
+  const session = wardingBondBattle({
+    additionalPreparedSpells: [spellRecord(damageSpellId)],
+    spellSlots,
+  });
+  const state = advanceRound(castWardingBond(session), [
+    spellCasterId,
+    spellTargetId,
+  ]);
+  return { ...session, state };
 }
 
-function wardingBondClubBattle(): BattleState {
+function wardingBondClubBattle(): BattleRuntimeSession {
   const club = zeroAbilityWeaponAttack("weapon_club");
   return wardingBondBattle({
     casterAttack: club,
@@ -1013,6 +1030,11 @@ function wardingBondSpellTargetFillWithoutWilling(
   targetId: CombatantId,
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
   const base = spellTargetFill(hole, spellId, casterId, targetId);
+  const sourceProcedureRef =
+    hole.spellTargetSpatialFactRequest?.sourceProcedureRef ?? hole.procedureRef;
+  if (sourceProcedureRef === undefined) {
+    throw new Error("Expected spell target hole procedure reference.");
+  }
   return {
     ...base,
     spatialFacts: [
@@ -1021,13 +1043,13 @@ function wardingBondSpellTargetFillWithoutWilling(
         kind: "wardingBondPairedWornPlatinumRings",
         casterId,
         targetId,
-        sourceProcedureRef: battleProcedureExecutionRefForTest(String(spellId)),
+        sourceProcedureRef,
       },
       {
         kind: "wardingBondCreaturesDistance",
         casterId,
         targetId,
-        sourceProcedureRef: battleProcedureExecutionRefForTest(String(spellId)),
+        sourceProcedureRef,
         distanceFeet: movementFeet(60),
       },
     ],
@@ -1056,13 +1078,17 @@ function spellTargetAllocationFill(
 }
 
 function castWardingBond(
-  state: BattleState,
+  session: BattleRuntimeSession,
   targetId: CombatantId = spellTargetId,
 ): BattleState {
-  const act = spellAct({ state, spellId: wardingBondUnitId, slotLevel: 2 });
+  const act = spellAct({
+    session,
+    spellId: wardingBondUnitId,
+    slotLevel: 2,
+  });
   const targetHole = requireHole(act.initialHoles, "targetChoice");
   const resolved = resolveBattleSubject({
-    state,
+    state: session.state,
     subject: act.subject,
     fills: [
       wardingBondSpellTargetFill(

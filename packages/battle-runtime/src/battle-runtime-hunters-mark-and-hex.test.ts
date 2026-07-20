@@ -49,7 +49,7 @@ import {
   skeletonId,
   spellRecord,
   spellSlotInvocationRef,
-  startBattleRight,
+  startBattleSessionRight,
   statBlockCreatureInit,
   targetFill,
   tickDurationEffects,
@@ -58,7 +58,7 @@ import {
 
 describe("battle runtime: Hunter's Mark and Hex", () => {
   test("Hunter's Mark adds Force damage to attack-roll hits against the mark and transfers after the mark drops", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-hunters-mark"),
       combatants: [
         characterSeed({
@@ -82,7 +82,8 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
         skeletonCreatureInit({ initiative: 5 }),
       ],
     });
-    const markAct = discoverBattleActs(state).find(
+    const state = session.state;
+    const markAct = discoverBattleActs(session).find(
       (candidate) =>
         candidate.subject.tag === "bonusActionSpell" &&
         battleActSpellPresentation(candidate)?.invocation.spellId ===
@@ -124,7 +125,7 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
     const magicMissileTurn = requireResolved(
       endTurn({ state: magicMissileAfterGoblin, actorId: skeletonId }),
     ).state;
-    const magicMissileSubject = {
+    const magicMissileSelection = {
       tag: "actionSpell" as const,
       actorId: fighterId,
       invocation: spellSlotInvocationRef(
@@ -134,6 +135,10 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
       ),
       mode: { tag: "cast" as const },
     };
+    const magicMissileSubject = findAct(
+      { state: magicMissileTurn, context: session.context },
+      magicMissileSelection,
+    ).subject;
     const magicMissileTargetAllocation = requireHole(
       resolveBattleSubject({
         state: magicMissileTurn,
@@ -186,7 +191,7 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
       }),
     ]);
 
-    const spellSubject = {
+    const spellSelection = {
       tag: "actionSpell" as const,
       actorId: fighterId,
       invocation: cantripSpellInvocationRef(
@@ -195,7 +200,11 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
       ),
       mode: { tag: "cast" as const },
     };
-    const spellAct = findAct(marked.state, spellSubject);
+    const spellAct = findAct(
+      { state: marked.state, context: session.context },
+      spellSelection,
+    );
+    const spellSubject = spellAct.subject;
     const spellTarget = findHole(spellAct.initialHoles, "targetChoice");
     const spellAttack = requireHole(
       resolveBattleSubject({
@@ -217,7 +226,7 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
       "rolledDice",
     );
     expect(spellDamage).toMatchObject({
-      label: "Ray of Frost damage (1d8-cold+1d6-force)",
+      label: "Spell damage (1d8-cold+1d6-force)",
       spellMarkedDamageRiders: [
         expect.objectContaining({ targetCombatantId: goblinId }),
       ],
@@ -300,7 +309,10 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
     const nextFighterTurn = requireResolved(
       endTurn({ state: afterGoblinTurn, actorId: skeletonId }),
     ).state;
-    const transferAct = discoverBattleActs(nextFighterTurn).find(
+    const transferAct = discoverBattleActs({
+      state: nextFighterTurn,
+      context: session.context,
+    }).find(
       (candidate) =>
         candidate.subject.tag === "bonusActionSpell" &&
         battleActSpellPresentation(candidate)?.invocation.tag ===
@@ -353,9 +365,10 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
         ]),
       }),
     };
-    const restrictedTransferAct = discoverBattleActs(
-      restrictedHiddenTransferState,
-    ).find(
+    const restrictedTransferAct = discoverBattleActs({
+      state: restrictedHiddenTransferState,
+      context: session.context,
+    }).find(
       (candidate) =>
         candidate.subject.tag === "bonusActionSpell" &&
         battleActSpellPresentation(candidate)?.invocation.tag ===
@@ -408,7 +421,7 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
   });
 
   test("Hunter's Mark projects Advantage on owner checks to find the marked target", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-hunters-mark-finding-advantage"),
       combatants: [
         characterSeed({
@@ -421,7 +434,8 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
         skeletonCreatureInit({ initiative: 5 }),
       ],
     });
-    const markAct = discoverBattleActs(state).find(
+    const state = session.state;
+    const markAct = discoverBattleActs(session).find(
       (candidate) =>
         candidate.subject.tag === "bonusActionSpell" &&
         battleActSpellPresentation(candidate)?.invocation.spellId ===
@@ -523,7 +537,10 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
         actorId: skeletonId,
       }),
     ).state;
-    const transferAct = discoverBattleActs(nextFighterTurn).find(
+    const transferAct = discoverBattleActs({
+      state: nextFighterTurn,
+      context: session.context,
+    }).find(
       (candidate) =>
         candidate.subject.tag === "bonusActionSpell" &&
         battleActSpellPresentation(candidate)?.invocation.spellId ===
@@ -567,7 +584,7 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
   });
 
   test("breaking Hunter's Mark concentration clears the marked target rider", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-hunters-mark-concentration"),
       combatants: [
         characterSeed({
@@ -580,7 +597,8 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
-    const markAct = discoverBattleActs(state).find(
+    const state = session.state;
+    const markAct = discoverBattleActs(session).find(
       (candidate) =>
         candidate.subject.tag === "bonusActionSpell" &&
         battleActSpellPresentation(candidate)?.invocation.spellId ===
@@ -614,7 +632,7 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
     ] as const;
 
     for (const [slotLevel, expectedTicks] of expectedTicksBySlot) {
-      const state = startBattleRight({
+      const session = startBattleSessionRight({
         battleId: battleId(`battle-hunters-mark-slot-${slotLevel}`),
         combatants: [
           characterSeed({
@@ -627,6 +645,7 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
           statBlockCreatureInit({ initiative: 10 }),
         ],
       });
+      const state = session.state;
       const subject = {
         tag: "bonusActionSpell" as const,
         actorId: fighterId,
@@ -637,12 +656,12 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
         ),
         mode: { tag: "cast" as const },
       };
-      const act = findAct(state, subject);
+      const act = findAct(session, subject);
       const markTarget = findHole(act.initialHoles, "targetChoice");
       const marked = requireResolved(
         resolveBattleSubject({
           state,
-          subject,
+          subject: act.subject,
           fills: [targetFill(markTarget, goblinId)],
         }),
       );
@@ -662,7 +681,7 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
   });
 
   test("Hex applies Necrotic attack-hit damage and chosen-ability check Disadvantage", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-hex"),
       combatants: [
         characterSeed({
@@ -675,7 +694,8 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
-    const hexAct = discoverBattleActs(state).find(
+    const state = session.state;
+    const hexAct = discoverBattleActs(session).find(
       (candidate) =>
         candidate.subject.tag === "bonusActionSpell" &&
         battleActSpellPresentation(candidate)?.invocation.spellId === "hex",
@@ -774,7 +794,7 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
   });
 
   test("Hex retarget waits until a later turn after the cursed target drops", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-hex-later-turn-retarget"),
       combatants: [
         characterSeed({
@@ -795,7 +815,8 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
         }),
       ],
     });
-    const hexAct = discoverBattleActs(state).find(
+    const state = session.state;
+    const hexAct = discoverBattleActs(session).find(
       (candidate) =>
         candidate.subject.tag === "bonusActionSpell" &&
         battleActSpellPresentation(candidate)?.invocation.spellId === "hex",
@@ -852,7 +873,7 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
       }),
     ]);
     expect(
-      discoverBattleActs(dropped).some(
+      discoverBattleActs({ state: dropped, context: session.context }).some(
         (candidate) =>
           candidate.subject.tag === "bonusActionSpell" &&
           battleActSpellPresentation(candidate)?.invocation.spellId === "hex",
@@ -872,7 +893,10 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
         actorId: skeletonId,
       }),
     ).state;
-    const transferAct = discoverBattleActs(laterTurn).find(
+    const transferAct = discoverBattleActs({
+      state: laterTurn,
+      context: session.context,
+    }).find(
       (candidate) =>
         candidate.subject.tag === "bonusActionSpell" &&
         battleActSpellPresentation(candidate)?.invocation.spellId === "hex",
@@ -907,7 +931,7 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
   });
 
   test("Hunter's Mark maximum duration expiry clears Concentration and preserves damage behavior before expiry", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-hunters-mark-duration-expiry"),
       combatants: [
         characterSeed({
@@ -920,6 +944,7 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
+    const state = session.state;
     const subject = {
       tag: "bonusActionSpell" as const,
       actorId: fighterId,
@@ -930,12 +955,12 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
       ),
       mode: { tag: "cast" as const },
     };
-    const act = findAct(state, subject);
+    const act = findAct(session, subject);
     const markTarget = findHole(act.initialHoles, "targetChoice");
     const marked = requireResolved(
       resolveBattleSubject({
         state,
-        subject,
+        subject: act.subject,
         fills: [targetFill(markTarget, goblinId)],
       }),
     );

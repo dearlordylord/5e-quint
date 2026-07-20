@@ -69,6 +69,7 @@ import {
   type BattleHole,
   type BattleReducerRouteEvent,
   type BattleResolutionResult,
+  type BattleRuntimeSession,
   type BattleState,
   type CombatantId,
 } from "./index.ts";
@@ -186,7 +187,7 @@ type RollModifierActiveEffectsProjection = {
 };
 
 type RollModifierActiveEffectsRuntimeState = {
-  readonly battle: BattleState;
+  readonly battle: BattleRuntimeSession;
   readonly holes: readonly BattleHole[];
   readonly lastResult: LastResult;
 };
@@ -551,7 +552,7 @@ function routeDiscoverBaneSave(
   const act = publicSpellActInState(state.battle, baneUnitId, 1);
   const targetList = requireHole(act.initialHoles, "spellTargetList");
   const result = resolveBattleSubject({
-    state: state.battle,
+    state: state.battle.state,
     subject: act.subject,
     fills: [
       spellTargetListFill(targetList, spellCasterId, baneUnitId, [
@@ -582,7 +583,7 @@ function routeCastBaneFailed(
   const save = requireHole(state.holes, "savingThrowOutcome");
   const resolved = requireResolved(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: act.subject,
       fills: [
         spellTargetListFill(targetList, spellCasterId, baneUnitId, [
@@ -614,7 +615,7 @@ function routeCastBless(
   const targetList = requireHole(act.initialHoles, "spellTargetList");
   const resolved = requireResolved(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: act.subject,
       fills: [
         spellTargetListFill(targetList, spellCasterId, blessUnitId, [
@@ -655,7 +656,7 @@ function routeCastGuidanceStealth(
   const skill = requireHole(act.initialHoles, "skillChoice");
   const resolved = requireResolved(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: act.subject,
       fills: [
         spellTargetFill(target, guidanceUnitId, spellCasterId, spellCasterId),
@@ -684,7 +685,7 @@ function routeCastPassWithoutTrace(
   const targetList = requireHole(act.initialHoles, "spellTargetList");
   const resolved = requireResolved(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: act.subject,
       fills: [
         spellTargetListFill(targetList, spellCasterId, passWithoutTraceUnitId, [
@@ -726,7 +727,7 @@ function routeCastEnhanceDex(
   const ability = requireHole(act.initialHoles, "abilityChoice");
   const resolved = requireResolved(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: act.subject,
       fills: [
         spellTargetFill(
@@ -774,7 +775,7 @@ function routeCastEnhancePerTarget(
   const abilityByTarget = requireHole(act.initialHoles, "targetAbilityChoices");
   const resolved = requireResolved(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: act.subject,
       fills: [
         spellTargetListFill(targetList, spellCasterId, enhanceAbilityUnitId, [
@@ -814,14 +815,14 @@ function routeCastEnthrall(
     [spellTargetId, secondTargetId],
   );
   const saveResult = resolveBattleSubject({
-    state: state.battle,
+    state: state.battle.state,
     subject: act.subject,
     fills: [targetFill],
   });
   const save = requireResultHole(saveResult, "savingThrowOutcome");
   const resolved = requireResolved(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: act.subject,
       fills: [
         targetFill,
@@ -868,8 +869,8 @@ function routeCastThaumaturgyBoomingVoice(
   const resolved = requireResolved(
     resolveBattleSubject({
       state: cancelWithDisadvantage
-        ? withCharismaDisadvantageAgainstCaster(state.battle)
-        : state.battle,
+        ? withCharismaDisadvantageAgainstCaster(state.battle.state)
+        : state.battle.state,
       subject: act.subject,
       fills: [thaumaturgyCountFill(count, 0)],
     }),
@@ -898,7 +899,7 @@ function routeBreakConcentration(
   const act = endConcentrationAct(state.battle);
   const resolved = requireResolved(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: act.subject,
       fills: [],
     }),
@@ -923,7 +924,10 @@ function routeState(input: {
   readonly routeEvents: readonly BattleReducerRouteEvent[] | undefined;
 }): RollModifierRouteRuntimeState {
   return {
-    battle: input.battle ?? input.state.battle,
+    battle:
+      input.battle === undefined
+        ? input.state.battle
+        : { ...input.state.battle, state: input.battle },
     holes: input.holes,
     lastResult: input.lastResult,
     surface: input.surface,
@@ -945,7 +949,7 @@ function rollModifierRouteProjection(
 }
 
 function publicSpellActInState(
-  state: BattleState,
+  state: BattleRuntimeSession,
   spellId: string,
   slotLevel?: number,
 ): AvailableBattleAct {
@@ -965,7 +969,7 @@ function publicSpellActInState(
   return act;
 }
 
-function endConcentrationAct(state: BattleState): AvailableBattleAct {
+function endConcentrationAct(state: BattleRuntimeSession): AvailableBattleAct {
   const act = discoverBattleActs(state).find(
     (candidate) =>
       candidate.subject.tag === "runtimeCommand" &&
@@ -984,7 +988,7 @@ function discoverBaneSave(
   const act = spellActInState(state.battle, baneUnitId, 1);
   const targetList = requireHole(act.initialHoles, "spellTargetList");
   const result = resolveBattleSubject({
-    state: state.battle,
+    state: state.battle.state,
     subject: act.subject,
     fills: [
       spellTargetListFill(targetList, spellCasterId, baneUnitId, [
@@ -1008,7 +1012,7 @@ function castBaneFailed(
   const save = requireHole(state.holes, "savingThrowOutcome");
   const resolved = requireResolved(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: act.subject,
       fills: [
         spellTargetListFill(targetList, spellCasterId, baneUnitId, [
@@ -1023,7 +1027,11 @@ function castBaneFailed(
     }),
     "Expected Bane failed target to resolve.",
   );
-  return { battle: resolved.state, holes: [], lastResult: "baneFailedTarget" };
+  return {
+    battle: { state: resolved.state, context: state.battle.context },
+    holes: [],
+    lastResult: "baneFailedTarget",
+  };
 }
 
 function castBless(
@@ -1033,7 +1041,7 @@ function castBless(
   const targetList = requireHole(act.initialHoles, "spellTargetList");
   const resolved = requireResolved(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: act.subject,
       fills: [
         spellTargetListFill(targetList, spellCasterId, blessUnitId, [
@@ -1043,7 +1051,11 @@ function castBless(
     }),
     "Expected Bless target to resolve.",
   );
-  return { battle: resolved.state, holes: [], lastResult: "blessTarget" };
+  return {
+    battle: { state: resolved.state, context: state.battle.context },
+    holes: [],
+    lastResult: "blessTarget",
+  };
 }
 
 function discoverGuidanceSkillChoice(
@@ -1065,7 +1077,7 @@ function castGuidanceStealth(
   const skill = requireHole(act.initialHoles, "skillChoice");
   const resolved = requireResolved(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: act.subject,
       fills: [
         spellTargetFill(target, guidanceUnitId, spellCasterId, spellCasterId),
@@ -1074,7 +1086,11 @@ function castGuidanceStealth(
     }),
     "Expected Guidance Stealth target to resolve.",
   );
-  return { battle: resolved.state, holes: [], lastResult: "guidanceStealth" };
+  return {
+    battle: { state: resolved.state, context: state.battle.context },
+    holes: [],
+    lastResult: "guidanceStealth",
+  };
 }
 
 function castPassWithoutTrace(
@@ -1084,7 +1100,7 @@ function castPassWithoutTrace(
   const targetList = requireHole(act.initialHoles, "spellTargetList");
   const resolved = requireResolved(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: act.subject,
       fills: [
         spellTargetListFill(targetList, spellCasterId, passWithoutTraceUnitId, [
@@ -1096,7 +1112,7 @@ function castPassWithoutTrace(
     "Expected Pass without Trace targets to resolve.",
   );
   return {
-    battle: resolved.state,
+    battle: { state: resolved.state, context: state.battle.context },
     holes: [],
     lastResult: "passWithoutTraceStealth",
   };
@@ -1121,7 +1137,7 @@ function castEnhanceDex(
   const ability = requireHole(act.initialHoles, "abilityChoice");
   const resolved = requireResolved(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: act.subject,
       fills: [
         spellTargetFill(
@@ -1135,7 +1151,11 @@ function castEnhanceDex(
     }),
     "Expected Enhance Ability Dexterity target to resolve.",
   );
-  return { battle: resolved.state, holes: [], lastResult: "enhanceDex" };
+  return {
+    battle: { state: resolved.state, context: state.battle.context },
+    holes: [],
+    lastResult: "enhanceDex",
+  };
 }
 
 function discoverEnhanceTargetAbilityChoices(
@@ -1157,7 +1177,7 @@ function castEnhancePerTarget(
   const abilityByTarget = requireHole(act.initialHoles, "targetAbilityChoices");
   const resolved = requireResolved(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: act.subject,
       fills: [
         spellTargetListFill(targetList, spellCasterId, enhanceAbilityUnitId, [
@@ -1172,7 +1192,11 @@ function castEnhancePerTarget(
     }),
     "Expected upcast Enhance Ability per-target choices to resolve.",
   );
-  return { battle: resolved.state, holes: [], lastResult: "enhancePerTarget" };
+  return {
+    battle: { state: resolved.state, context: state.battle.context },
+    holes: [],
+    lastResult: "enhancePerTarget",
+  };
 }
 
 function castEnthrall(
@@ -1188,7 +1212,7 @@ function castEnthrall(
   );
   const save = requireResultHole(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: act.subject,
       fills: [targetFill],
     }),
@@ -1196,7 +1220,7 @@ function castEnthrall(
   );
   const resolved = requireResolved(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: act.subject,
       fills: [
         targetFill,
@@ -1209,7 +1233,7 @@ function castEnthrall(
     "Expected Enthrall failed target to resolve.",
   );
   return {
-    battle: resolved.state,
+    battle: { state: resolved.state, context: state.battle.context },
     holes: [],
     lastResult: "enthrallPerception",
   };
@@ -1235,15 +1259,15 @@ function castThaumaturgyBoomingVoice(
   const resolved = requireResolved(
     resolveBattleSubject({
       state: cancelWithDisadvantage
-        ? withCharismaDisadvantageAgainstCaster(state.battle)
-        : state.battle,
+        ? withCharismaDisadvantageAgainstCaster(state.battle.state)
+        : state.battle.state,
       subject: act.subject,
       fills: [thaumaturgyCountFill(count, 0)],
     }),
     "Expected Thaumaturgy Booming Voice to resolve.",
   );
   return {
-    battle: resolved.state,
+    battle: { state: resolved.state, context: state.battle.context },
     holes: [],
     lastResult: cancelWithDisadvantage
       ? "thaumaturgyCancelled"
@@ -1255,7 +1279,10 @@ function breakRollModifierConcentration(
   state: RollModifierActiveEffectsRuntimeState,
 ): RollModifierActiveEffectsRuntimeState {
   return {
-    battle: breakBattleConcentration(state.battle, spellCasterId),
+    battle: {
+      ...state.battle,
+      state: breakBattleConcentration(state.battle.state, spellCasterId),
+    },
     holes: [],
     lastResult: "concentrationBroken",
   };
@@ -1265,62 +1292,70 @@ function rollModifierActiveEffectsProjection(
   state: RollModifierActiveEffectsRuntimeState,
 ): RollModifierActiveEffectsProjection {
   return {
-    actionAvailable: canSpendAction(state.battle.currentTurnResources, "magic"),
+    actionAvailable: canSpendAction(
+      state.battle.state.currentTurnResources,
+      "magic",
+    ),
     spellAvailable:
       maybeSpellAct({
-        state: state.battle,
+        session: state.battle,
         spellId: blessUnitId,
         slotLevel: 1,
       }) !== undefined,
     casterConcentrating:
-      requireCombatant(state.battle, spellCasterId).concentration !== null,
+      requireCombatant(state.battle.state, spellCasterId).concentration !==
+      null,
     targetAttackModifier: d20ModifierFor(
-      state.battle,
+      state.battle.state,
       spellTargetId,
       "attack_roll",
     ),
     targetSavingThrowModifier: d20ModifierFor(
-      state.battle,
+      state.battle.state,
       spellTargetId,
       "saving_throw",
     ),
     casterAbilityCheckModifier: d20ModifierFor(
-      state.battle,
+      state.battle.state,
       spellCasterId,
       "ability_check",
     ),
     targetAbilityCheckModifier: d20ModifierFor(
-      state.battle,
+      state.battle.state,
       spellTargetId,
       "ability_check",
     ),
-    casterSkill: d20ModifierSkillFor(state.battle, spellCasterId),
-    targetSkill: d20ModifierSkillFor(state.battle, spellTargetId),
+    casterSkill: d20ModifierSkillFor(state.battle.state, spellCasterId),
+    targetSkill: d20ModifierSkillFor(state.battle.state, spellTargetId),
     targetAbilityChoice: abilityCheckModeAbilityFor(
-      state.battle,
+      state.battle.state,
       spellTargetId,
     ),
     secondTargetAbilityChoice: abilityCheckModeAbilityFor(
-      state.battle,
+      state.battle.state,
       secondTargetId,
     ),
     targetAbilityCheckRollMode: abilityCheckModeFor(
-      state.battle,
+      state.battle.state,
       spellTargetId,
       "dex",
       "stealth",
     ),
     secondTargetAbilityCheckRollMode: abilityCheckModeFor(
-      state.battle,
+      state.battle.state,
       secondTargetId,
       "wis",
       "perception",
     ),
-    thaumaturgyIntimidationRollMode: thaumaturgyIntimidationMode(state.battle),
-    thaumaturgyEffectActive: thaumaturgyBoomingVoiceEffectActive(state.battle),
+    thaumaturgyIntimidationRollMode: thaumaturgyIntimidationMode(
+      state.battle.state,
+    ),
+    thaumaturgyEffectActive: thaumaturgyBoomingVoiceEffectActive(
+      state.battle.state,
+    ),
     holes: battleHolesToRollModifierHoles(state.holes),
     passivePerceptionDelta: passivePerceptionModifierDelta(
-      state.battle,
+      state.battle.state,
       spellTargetId,
     ),
     lastResult: state.lastResult,
@@ -1442,12 +1477,12 @@ function battleHolesToRollModifierHoles(
 }
 
 function spellActInState(
-  state: BattleState,
+  state: BattleRuntimeSession,
   spellId: string,
   slotLevel?: number,
 ) {
   const act = maybeSpellAct({
-    state,
+    session: state,
     spellId,
     ...(slotLevel === undefined ? {} : { slotLevel }),
   });

@@ -16,6 +16,7 @@ import {
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
   battleId,
   battleUnitRefWithSupportProfiles,
+  discoverBattleActCandidates,
   discoverBattleActs,
   resolveBattleSubject,
   startBattle,
@@ -28,6 +29,7 @@ import {
   type BattleState,
   type BattleSubject,
   type BattleProcedureExecutionRef,
+  type BattleRuntimeSession,
 } from "./index.ts";
 import {
   BONUS_ACTION_DASH_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE,
@@ -81,7 +83,7 @@ export function archeryBattle(input: {
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
   >["characterUnitRefs"];
-}): BattleState {
+}): BattleRuntimeSession {
   const characterUnitRefs = input.characterUnitRefs ?? [archeryBattleUnitRef()];
   const result = startBattle({
     battleId: battleId("unit-profile-archery-admission"),
@@ -131,7 +133,7 @@ export function savageAttackerBattle(input: {
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
   >["unitFeatures"];
-}): BattleState {
+}): BattleRuntimeSession {
   const savageAttackerUnitRef = savageAttackerBattleUnitRef();
   const result = startBattle({
     battleId: battleId("unit-profile-savage-attacker-admission"),
@@ -172,7 +174,7 @@ export function greatWeaponFightingBattle(input: {
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
   >["selectedLoadout"];
-}): BattleState {
+}): BattleRuntimeSession {
   const result = startBattle({
     battleId: battleId("unit-profile-great-weapon-fighting-admission"),
     combatants: [
@@ -205,7 +207,7 @@ export function combatProwessBattle(input: {
   >["attack"];
   readonly cantrips?: readonly SpellRecord[];
   readonly targetPreparedSpells?: readonly SpellRecord[];
-}): BattleState {
+}): BattleRuntimeSession {
   const result = startBattle({
     battleId: battleId("unit-profile-combat-prowess-admission"),
     combatants: [
@@ -290,7 +292,7 @@ export function extraAttackBattle(
   if (Either.isLeft(result)) {
     throw new Error(result.left.message);
   }
-  return result.right;
+  return result.right.state;
 }
 
 export function fastMovementBattle(
@@ -325,7 +327,7 @@ export function fastMovementBattle(
   if (Either.isLeft(result)) {
     throw new Error(result.left.message);
   }
-  return result.right;
+  return result.right.state;
 }
 
 export function rovingBattle(
@@ -360,7 +362,7 @@ export function rovingBattle(
   if (Either.isLeft(result)) {
     throw new Error(result.left.message);
   }
-  return result.right;
+  return result.right.state;
 }
 
 export function monkUnarmoredMovementBattle(
@@ -402,14 +404,14 @@ export function monkUnarmoredMovementBattle(
   if (Either.isLeft(result)) {
     throw new Error(result.left.message);
   }
-  return result.right;
+  return result.right.state;
 }
 
 export function relentlessEnduranceBattle(input: {
   readonly targetHp: number;
   readonly targetMaxHp?: number;
   readonly usesRemaining?: number;
-}): BattleState {
+}): BattleRuntimeSession {
   const unit = unitLibrary.requireUnit(orcRelentlessEnduranceUnitId);
   const result = startBattle({
     battleId: battleId("unit-profile-relentless-endurance-admission"),
@@ -449,7 +451,7 @@ export function relentlessEnduranceBattle(input: {
 
 export function adrenalineRushBattle(
   input: { readonly tempHp?: number; readonly usesRemaining?: number } = {},
-): BattleState {
+): BattleRuntimeSession {
   const unit = unitLibrary.requireUnit(orcAdrenalineRushUnitId);
   const result = startBattle({
     battleId: battleId("unit-profile-adrenaline-rush-admission"),
@@ -482,14 +484,14 @@ export function adrenalineRushBattle(
 }
 
 export function adrenalineRushDashAct(
-  state: BattleState,
+  session: BattleRuntimeSession,
 ): AvailableBattleAct & {
   readonly subject: Extract<
     BattleSubject,
     { readonly tag: "bonusActionStandardAction"; readonly action: "dash" }
   >;
 } {
-  const act = discoverBattleActs(state).find(isBonusActionWalkDashAct);
+  const act = discoverBattleActs(session).find(isBonusActionWalkDashAct);
   expect(isBonusActionWalkDashAct(act)).toBe(true);
   if (!isBonusActionWalkDashAct(act)) {
     throw new Error("Expected Adrenaline Rush Bonus Action Dash act.");
@@ -509,7 +511,9 @@ function isBonusActionWalkDashAct(
     act !== undefined &&
     act.subject.tag === "bonusActionStandardAction" &&
     act.subject.action === "dash" &&
-    act.subject.speedKind === "walk"
+    act.subject.speedKind === "walk" &&
+    act.presentation.kind === "unit" &&
+    act.presentation.unitId === orcAdrenalineRushUnitId
   );
 }
 
@@ -529,12 +533,13 @@ export function adrenalineRushDashSubject(
 }
 
 export function relentlessEnduranceDisposition(
-  state: BattleState,
+  session: BattleRuntimeSession,
   damageRoll: number,
 ): Extract<BattleHole, { readonly kind: "attackDamageDisposition" }> & {
   readonly prefixFills: readonly BattleFill[];
 } {
-  const subject = weaponAttackSubject(state, "Longsword");
+  const state = session.state;
+  const subject = weaponAttackSubject(session, "Longsword");
   const target = requireResultHole(
     resolveBattleSubject({ state, subject, fills: [] }),
     "targetChoice",
@@ -571,10 +576,11 @@ export function relentlessEnduranceDisposition(
 }
 
 export function relentlessEnduranceDamageResult(
-  state: BattleState,
+  session: BattleRuntimeSession,
   damageRoll: number,
 ): ReturnType<typeof resolveBattleSubject> {
-  const subject = weaponAttackSubject(state, "Longsword");
+  const state = session.state;
+  const subject = weaponAttackSubject(session, "Longsword");
   const target = requireResultHole(
     resolveBattleSubject({ state, subject, fills: [] }),
     "targetChoice",
@@ -908,7 +914,7 @@ export function rovingSpeedKindGrants() {
 export function rovingMovementHole(
   state: BattleState,
 ): Extract<BattleHole, { readonly kind: "movement" }> {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActCandidates(state).find(
     (candidate) =>
       candidate.subject.tag === "runtimeCommand" &&
       candidate.subject.actorId === spellCasterId &&

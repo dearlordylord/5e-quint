@@ -48,8 +48,8 @@ import {
   endTurn,
   type BattleHole,
   type BattleResolutionResult,
-  type BattleState,
-  type BattleActDiscoverySubject as BattleSubject,
+  type BattleRuntimeSession,
+  type BattleSubject,
 } from "./index.ts";
 import type { WebRestraintHazardEffect } from "./battle-reducer/turn-end-movement.ts";
 
@@ -96,7 +96,7 @@ type WebRestraintHazardState = {
 };
 
 type WebRuntimeState = {
-  readonly battle: BattleState;
+  readonly battle: BattleRuntimeSession;
   readonly currentTurnRole: WebTurnRole;
   readonly holes: readonly BattleHole[];
   readonly lastResult: WebLastResult;
@@ -257,14 +257,14 @@ function initialRuntimeState(): WebRuntimeState {
 
 function castWeb(state: WebRuntimeState): WebRuntimeState {
   const act = spellAct({
-    state: state.battle,
+    session: state.battle,
     spellId: webUnitId,
     slotLevel: 2,
   });
   const area = requireHole(act.initialHoles, "spellAreaChoice");
   const result = requireResolved(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: act.subject,
       fills: [webAreaFill(area)],
     }),
@@ -272,7 +272,7 @@ function castWeb(state: WebRuntimeState): WebRuntimeState {
   );
   return {
     ...state,
-    battle: result.state,
+    battle: { ...state.battle, state: result.state },
     currentTurnRole: "caster",
     holes: [],
     lastResult: "resolved",
@@ -281,12 +281,12 @@ function castWeb(state: WebRuntimeState): WebRuntimeState {
 
 function endCasterTurn(state: WebRuntimeState): WebRuntimeState {
   const result = requireResolved(
-    endTurn({ state: state.battle, actorId: spellCasterId }),
+    endTurn({ state: state.battle.state, actorId: spellCasterId }),
     "Expected Web caster End Turn to resolve.",
   );
   return {
     ...state,
-    battle: result.state,
+    battle: { ...state.battle, state: result.state },
     currentTurnRole: "target",
     holes: [],
     lastResult: "resolved",
@@ -299,7 +299,7 @@ function discoverWebSave(
 ): WebRuntimeState {
   const act = webRestraintSaveAct(state.battle, spellTargetId, trigger);
   const result = resolveBattleSubject({
-    state: state.battle,
+    state: state.battle.state,
     subject: act.subject,
     fills: [],
   });
@@ -323,7 +323,7 @@ function fillWebSave(
   const act = webRestraintSaveAct(state.battle, spellTargetId, trigger);
   const result = requireResolved(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: act.subject,
       fills: [
         singleTargetSavingThrowOutcomeFill(save, spellTargetId, succeeded),
@@ -333,7 +333,7 @@ function fillWebSave(
   );
   return {
     ...state,
-    battle: result.state,
+    battle: { ...state.battle, state: result.state },
     holes: [],
     lastResult: succeeded ? "saved" : "restrained",
   };
@@ -359,7 +359,7 @@ function escapeWeb(
   const abilityCheck = requireHole(act.initialHoles, "abilityCheck");
   const result = requireResolved(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: act.subject,
       fills: [abilityCheckFill(abilityCheck, succeeded ? 13 : 12)],
     }),
@@ -367,7 +367,7 @@ function escapeWeb(
   );
   return {
     ...state,
-    battle: result.state,
+    battle: { ...state.battle, state: result.state },
     holes: [],
     lastResult: succeeded ? "escaped" : "escapeFailed",
   };
@@ -377,7 +377,7 @@ function resolveNoLongerInArea(state: WebRuntimeState): WebRuntimeState {
   const act = webRestrainedNoLongerInAreaAct(state.battle, spellTargetId);
   const result = requireResolved(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: act.subject,
       fills: [],
     }),
@@ -385,7 +385,7 @@ function resolveNoLongerInArea(state: WebRuntimeState): WebRuntimeState {
   );
   return {
     ...state,
-    battle: result.state,
+    battle: { ...state.battle, state: result.state },
     holes: [],
     lastResult: "leftArea",
   };
@@ -393,7 +393,7 @@ function resolveNoLongerInArea(state: WebRuntimeState): WebRuntimeState {
 
 function moveWithDifficultTerrain(state: WebRuntimeState): WebRuntimeState {
   const hazard = requireCombatant(
-    state.battle,
+    state.battle.state,
     spellCasterId,
   ).activeEffects.find(
     (effect): effect is WebRestraintHazardEffect =>
@@ -409,7 +409,7 @@ function moveWithDifficultTerrain(state: WebRuntimeState): WebRuntimeState {
   };
   const moveHole = requireResultHole(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: moveSubject,
       fills: [],
     }),
@@ -417,7 +417,7 @@ function moveWithDifficultTerrain(state: WebRuntimeState): WebRuntimeState {
   );
   const result = requireResolved(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: moveSubject,
       fills: [
         movementFill(moveHole, {
@@ -443,7 +443,7 @@ function moveWithDifficultTerrain(state: WebRuntimeState): WebRuntimeState {
   );
   return {
     ...state,
-    battle: result.state,
+    battle: { ...state.battle, state: result.state },
     holes: [],
     lastResult: "moved",
   };
@@ -452,7 +452,7 @@ function moveWithDifficultTerrain(state: WebRuntimeState): WebRuntimeState {
 function removeArea(state: WebRuntimeState): WebRuntimeState {
   const result = requireResolved(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: webAreaRemovedAct(state.battle).subject,
       fills: [],
     }),
@@ -460,15 +460,15 @@ function removeArea(state: WebRuntimeState): WebRuntimeState {
   );
   return {
     ...state,
-    battle: result.state,
+    battle: { ...state.battle, state: result.state },
     holes: [],
     lastResult: "removed",
   };
 }
 
 function webProjection(state: WebRuntimeState): WebRestraintHazardState {
-  const caster = requireCombatant(state.battle, spellCasterId);
-  const target = requireCombatant(state.battle, spellTargetId);
+  const caster = requireCombatant(state.battle.state, spellCasterId);
+  const target = requireCombatant(state.battle.state, spellTargetId);
   const hazard = caster.activeEffects.find(
     (effect): effect is WebRestraintHazardEffect =>
       effect.kind === "webRestraintHazard" &&
@@ -477,10 +477,13 @@ function webProjection(state: WebRuntimeState): WebRestraintHazardState {
   );
   const projection = {
     currentTurnRole: state.currentTurnRole,
-    actionAvailable: canSpendAction(state.battle.currentTurnResources, "magic"),
+    actionAvailable: canSpendAction(
+      state.battle.state.currentTurnResources,
+      "magic",
+    ),
     spellAvailable:
       maybeSpellAct({
-        state: state.battle,
+        session: state.battle,
         spellId: webUnitId,
         slotLevel: 2,
       }) !== undefined,

@@ -48,8 +48,8 @@ import {
   type BattleFill,
   type BattleHole,
   type BattleResolutionResult,
-  type BattleState,
-  type BattleActDiscoverySubject as BattleSubject,
+  type BattleRuntimeSession,
+  type BattleSubject,
 } from "./index.ts";
 
 type AcidArrowScenario = "hit" | "hitComplete" | "miss" | "missComplete";
@@ -99,7 +99,7 @@ type PendingInvocation =
   | { readonly tag: "laterDamage" };
 
 type AcidArrowRuntimeState = {
-  readonly battle: BattleState;
+  readonly battle: BattleRuntimeSession;
   readonly scenario: AcidArrowScenario;
   readonly currentTurnRole: AcidArrowTurnRole;
   readonly holes: readonly BattleHole[];
@@ -236,7 +236,7 @@ function discoverAcidArrow(
   state: AcidArrowRuntimeState,
 ): AcidArrowRuntimeState {
   const act = spellAct({
-    state: state.battle,
+    session: state.battle,
     spellId: acidArrowUnitId,
     slotLevel: 2,
   });
@@ -260,7 +260,7 @@ function fillTargetChoice(state: AcidArrowRuntimeState): AcidArrowRuntimeState {
   );
   const attackRoll = requireResultHole(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: state.pending.subject,
       fills: [targetFill],
     }),
@@ -291,7 +291,7 @@ function fillAttackRoll(
   });
   const damageRoll = requireResultHole(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: state.pending.subject,
       fills: [state.pending.targetFill, attackFill],
     }),
@@ -321,7 +321,7 @@ function fillInitialDamage(
   }
   const result = requireResolved(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: state.pending.subject,
       fills: [
         state.pending.targetFill,
@@ -335,7 +335,7 @@ function fillInitialDamage(
   );
   return {
     ...state,
-    battle: result.state,
+    battle: { ...state.battle, state: result.state },
     holes: [],
     pending: { tag: "none" },
     lastResult: "resolved",
@@ -344,12 +344,12 @@ function fillInitialDamage(
 
 function endCasterTurn(state: AcidArrowRuntimeState): AcidArrowRuntimeState {
   const result = requireResolved(
-    endTurn({ state: state.battle, actorId: spellCasterId }),
+    endTurn({ state: state.battle.state, actorId: spellCasterId }),
     "Expected Acid Arrow caster turn to end.",
   );
   return {
     ...state,
-    battle: result.state,
+    battle: { ...state.battle, state: result.state },
     currentTurnRole: "target",
     holes: [],
     pending: { tag: "none" },
@@ -360,7 +360,10 @@ function endCasterTurn(state: AcidArrowRuntimeState): AcidArrowRuntimeState {
 function discoverLaterDamage(
   state: AcidArrowRuntimeState,
 ): AcidArrowRuntimeState {
-  const result = endTurn({ state: state.battle, actorId: spellTargetId });
+  const result = endTurn({
+    state: state.battle.state,
+    actorId: spellTargetId,
+  });
   expect(result).toMatchObject({ tag: "needsHoles" });
   if (result.tag !== "needsHoles") {
     throw new Error("Expected Acid Arrow later damage hole.");
@@ -382,7 +385,7 @@ function fillLaterDamage(
   }
   const result = requireResolved(
     endTurn({
-      state: state.battle,
+      state: state.battle.state,
       actorId: spellTargetId,
       fills: [
         damageRollFillWithGroups(requireHole(state.holes, "rolledDice"), [
@@ -394,7 +397,7 @@ function fillLaterDamage(
   );
   return {
     ...state,
-    battle: result.state,
+    battle: { ...state.battle, state: result.state },
     scenario: "hitComplete",
     currentTurnRole: "caster",
     holes: [],
@@ -407,12 +410,12 @@ function endTargetTurnAfterMiss(
   state: AcidArrowRuntimeState,
 ): AcidArrowRuntimeState {
   const result = requireResolved(
-    endTurn({ state: state.battle, actorId: spellTargetId }),
+    endTurn({ state: state.battle.state, actorId: spellTargetId }),
     "Expected Acid Arrow miss target turn to end without later damage.",
   );
   return {
     ...state,
-    battle: result.state,
+    battle: { ...state.battle, state: result.state },
     scenario: "missComplete",
     currentTurnRole: "caster",
     holes: [],
@@ -424,12 +427,15 @@ function endTargetTurnAfterMiss(
 function acidArrowProjection(
   state: AcidArrowRuntimeState,
 ): AcidArrowTimingState {
-  const target = requireCombatant(state.battle, spellTargetId);
+  const target = requireCombatant(state.battle.state, spellTargetId);
   return {
     scenario: state.scenario,
     currentTurnRole: state.currentTurnRole,
     targetHp: Number(target.hp),
-    actionAvailable: canSpendAction(state.battle.currentTurnResources, "magic"),
+    actionAvailable: canSpendAction(
+      state.battle.state.currentTurnResources,
+      "magic",
+    ),
     spellAvailable:
       state.currentTurnRole === "caster" && spellActAvailable(state.battle),
     delayedDamageTiming: acidArrowDelayedDamageTimingForTarget(target),
@@ -450,10 +456,13 @@ function acidArrowDelayedDamageTimingForTarget(
     : "none";
 }
 
-function spellActAvailable(state: BattleState): boolean {
+function spellActAvailable(session: BattleRuntimeSession): boolean {
   return (
-    maybeSpellAct({ state, spellId: acidArrowUnitId, slotLevel: 2 }) !==
-    undefined
+    maybeSpellAct({
+      session,
+      spellId: acidArrowUnitId,
+      slotLevel: 2,
+    }) !== undefined
   );
 }
 

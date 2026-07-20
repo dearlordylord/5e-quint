@@ -1,17 +1,23 @@
 import { attackDamageInterruptionFrame } from "./battle-reducer.ts";
 import {
-  CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
-  characterUnitProcedureRef,
-} from "./character-execution.ts";
+  classLevel,
+  DieRollResult,
+  NonNegativeInteger,
+} from "@dnd/shared/types";
+import {
+  battleProcedureExecutionRef,
+  battleResourcePoolExecutionRef,
+  type BattleProcedureExecutionRef,
+} from "./identity.ts";
 import { isCharacterBattleCreatureState } from "./battle-reducer/creature-state.ts";
-import { DieRollResult, NonNegativeInteger } from "@dnd/shared/types";
-import { battleProcedureExecutionRef } from "./identity.ts";
+import { REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE } from "./unit-feature-support.ts";
 import type {
   BattleInterruptCheckpoint,
   BattleState,
 } from "./battle-runtime-test-support.ts";
 import { describe, expect, test } from "vitest";
 import {
+  characterBattleFeatureInitForTest,
   applyCondition,
   attackInitialTargetHole,
   attackRollFill,
@@ -130,7 +136,11 @@ describe("battle runtime: Uncanny Dodge and damage reductions", () => {
           initiative: 10,
           classLevels: [{ className: "rogue", level: 5 }],
           attack: null,
-          unitFeatures: [{ unit: uncannyDodgeUnit() }],
+          unitFeatures: [
+            characterBattleFeatureInitForTest(uncannyDodgeUnit(), [
+              { className: "rogue", level: classLevel(5) },
+            ]),
+          ],
           characterUnitRefs: [reactionModifierUnitRef("rogue_uncanny_dodge")],
         }),
       ],
@@ -154,10 +164,10 @@ describe("battle runtime: Uncanny Dodge and damage reductions", () => {
     if (awaitingReaction.tag !== "needsHoles") {
       throw new Error("Expected attack-hit Reaction window.");
     }
-    const procedureRef = requireCharacterUnitProcedureRef(
+    const procedureRef = requireReactionModifierProcedureRef(
       state,
       fighterId,
-      "rogue_uncanny_dodge",
+      "attackDamageReduction",
     );
 
     expect(awaitingReaction.snapshot.pendingInterrupt!.choices).toEqual(
@@ -213,12 +223,24 @@ describe("battle runtime: Uncanny Dodge and damage reductions", () => {
           ],
           attack: null,
           resources: [cuttingWordsResource({ unit: cuttingWordsDamageOnly })],
-          unitFeatures: [uncannyDodgeUnit(), cuttingWordsDamageOnly].map(
-            (unit) => ({ unit }),
-          ),
+          unitFeatures: [
+            characterBattleFeatureInitForTest(uncannyDodgeUnit(), [
+              { className: "rogue", level: classLevel(5) },
+              { className: "bard", level: classLevel(3) },
+            ]),
+            characterBattleFeatureInitForTest(cuttingWordsDamageOnly, [
+              { className: "rogue", level: classLevel(5) },
+              { className: "bard", level: classLevel(3) },
+            ]),
+          ],
           characterUnitRefs: [
             reactionModifierUnitRef("rogue_uncanny_dodge"),
-            reactionModifierUnitRef(cuttingWordsDamageOnly.id),
+            {
+              unit: cuttingWordsDamageOnly,
+              supportProfiles: [
+                REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
+              ],
+            },
           ],
         }),
       ],
@@ -298,10 +320,15 @@ describe("battle runtime: Uncanny Dodge and damage reductions", () => {
       resources: [cuttingWordsResource({ unit: cuttingWords })],
     });
     const subject = goblinAttackSubject(state, "Scimitar");
-    const procedureRef = requireCharacterUnitProcedureRef(
+    const procedureRef = requireReactionModifierProcedureRef(
       state,
       fighterId,
-      cuttingWords.id,
+      "attackDamageRollReduction",
+    );
+    const resourcePoolRef = requireCharacterProcedureResourcePoolRef(
+      state,
+      fighterId,
+      procedureRef,
     );
     const frame: BattleInterruptCheckpoint = {
       trigger: "attackDamage",
@@ -314,13 +341,12 @@ describe("battle runtime: Uncanny Dodge and damage reductions", () => {
           choice: {
             kind: "damageRollReduction",
             procedureRef,
-            label: "Cutting Words",
             reduction: {
               kind: "rolled",
               dice: 1,
               flatModifier: 0,
               dieSize: 6,
-              spends: { resourceUnitId: cuttingWords.id, amount: 1 },
+              spends: { resourcePoolRef, amount: 1 },
             },
           },
           initialHoles: [
@@ -328,7 +354,7 @@ describe("battle runtime: Uncanny Dodge and damage reductions", () => {
               kind: "rolledDice",
               holeId: holeId("battle:reaction:modifier-roll"),
               holeInstanceKey: holeInstanceKey("battle:reaction:modifier-roll"),
-              label: "Cutting Words reduction roll",
+              label: "Reaction modifier reduction roll",
             },
           ],
         },
@@ -413,6 +439,10 @@ describe("battle runtime: Uncanny Dodge and damage reductions", () => {
       fighter.origin.execution.scopeRef,
       NonNegativeInteger(0),
     );
+    const resourcePoolRef = battleResourcePoolExecutionRef(
+      fighter.origin.execution.scopeRef,
+      NonNegativeInteger(0),
+    );
     const frame: BattleInterruptCheckpoint = {
       trigger: "attackDamage",
       eligibleResponders: [skeletonId, fighterId],
@@ -424,7 +454,6 @@ describe("battle runtime: Uncanny Dodge and damage reductions", () => {
           choice: {
             kind: "attackDamageReduction",
             procedureRef,
-            label: "Uncanny Dodge",
             reduction: { kind: "halfDamage" },
           },
           initialHoles: [],
@@ -435,13 +464,12 @@ describe("battle runtime: Uncanny Dodge and damage reductions", () => {
           choice: {
             kind: "damageRollReduction",
             procedureRef,
-            label: "Cutting Words",
             reduction: {
               kind: "rolled",
               dice: 1,
               flatModifier: 0,
               dieSize: 6,
-              spends: { resourceUnitId: "test_cutting_words", amount: 1 },
+              spends: { resourcePoolRef, amount: 1 },
             },
           },
           initialHoles: [],
@@ -586,22 +614,52 @@ describe("battle runtime: Uncanny Dodge and damage reductions", () => {
   });
 });
 
-function requireCharacterUnitProcedureRef(
+function requireReactionModifierProcedureRef(
   state: BattleState,
   combatantId: typeof fighterId,
-  unitId: string,
+  modifierKind:
+    | "attackRollReduction"
+    | "attackDamageRollReduction"
+    | "attackDamageReduction"
+    | "fallDamageReduction",
+): BattleProcedureExecutionRef {
+  const combatant = state.combatants.get(combatantId);
+  if (!isCharacterBattleCreatureState(combatant)) {
+    throw new Error(`Expected character combatant ${combatantId}.`);
+  }
+  const binding = combatant.origin.execution.procedureBindings.find(
+    (candidate) =>
+      candidate.procedure.kind === "unitFeature" &&
+      candidate.procedure.execution.kind === "reactionRollOrDamageReduction" &&
+      candidate.procedure.execution.modifiers.some(
+        (modifier) => modifier.kind === modifierKind,
+      ),
+  );
+  if (binding === undefined) {
+    throw new Error(`Expected admitted ${modifierKind} procedure.`);
+  }
+  return binding.procedureRef;
+}
+
+function requireCharacterProcedureResourcePoolRef(
+  state: BattleState,
+  combatantId: typeof fighterId,
+  procedureRef: BattleProcedureExecutionRef,
 ) {
   const combatant = state.combatants.get(combatantId);
   if (!isCharacterBattleCreatureState(combatant)) {
-    throw new Error(`Expected ${combatantId} to be a character.`);
+    throw new Error(`Expected character combatant ${combatantId}.`);
   }
-  const procedureRef = characterUnitProcedureRef(
-    combatant.origin.execution,
-    unitId,
-    CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
+  const binding = combatant.origin.execution.procedureBindings.find(
+    (candidate) => candidate.procedureRef === procedureRef,
   );
-  if (procedureRef === undefined) {
-    throw new Error(`Expected ${unitId} procedure reference.`);
+  if (
+    binding === undefined ||
+    (binding.procedure.kind !== "unitFeature" &&
+      binding.procedure.kind !== "unitSupportProfile") ||
+    binding.procedure.source.kind !== "resourcePool"
+  ) {
+    throw new Error(`Expected resource-backed procedure ${procedureRef}.`);
   }
-  return procedureRef;
+  return binding.procedure.source.resourcePoolRef;
 }

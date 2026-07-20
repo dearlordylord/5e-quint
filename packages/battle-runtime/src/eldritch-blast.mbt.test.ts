@@ -1,6 +1,5 @@
 import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import { sameBattleSubject } from "./battle-subjects.ts";
-import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-independent-attack-sequence
 import { Either } from "effect";
 import { describe, expect, it } from "vitest";
@@ -39,9 +38,8 @@ import {
 } from "./battle-runtime-test-support.ts";
 import {
   battleId,
-  cantripSpellInvocationRef,
   characterId,
-  discoverBattleActs,
+  discoverBattleActCandidates,
   initiativeScore,
   snapshotBattle,
   startBattle,
@@ -50,7 +48,7 @@ import {
   type BattleHole,
   type BattleResolutionResult,
   type BattleState,
-  type BattleActDiscoverySubject as BattleSubject,
+  type BattleSubject,
 } from "./index.ts";
 
 // Production path: Eldritch Blast is admitted through the independent spell
@@ -110,7 +108,7 @@ function createEldritchBlastDriver() {
   return defineDriver(eldritchBlastDriverSchema, () => {
     let state = eldritchBlastBattle();
     let projectionState = state;
-    const subject = eldritchBlastSubject();
+    const subject = eldritchBlastSubject(state);
     let fills: readonly BattleFill[] = [];
     let holes: readonly BattleHole[] = discoverEldritchBlastHoles(
       state,
@@ -341,33 +339,41 @@ function eldritchBlastCasterCreatureInit(input: {
   };
 }
 
-function eldritchBlastSubject(): Extract<
-  BattleSubject,
-  { readonly tag: "actionSpell" }
-> {
-  return {
-    tag: "actionSpell",
-    actorId: fighterId,
-    invocation: cantripSpellInvocationRef(
-      eldritchBlastUnitId,
-      "spellAttackSequence",
-    ),
-    mode: { tag: "cast" },
-  };
+function eldritchBlastSubject(
+  state: BattleState,
+): Extract<BattleSubject, { readonly tag: "actionSpell" }> {
+  const actor = state.combatants.get(fighterId);
+  if (actor?.origin.kind !== "character") {
+    throw new Error("Expected Eldritch Blast character actor.");
+  }
+  const act = discoverBattleActCandidates(state).find((candidate) => {
+    const subject = candidate.subject;
+    return (
+      subject.tag === "actionSpell" &&
+      subject.actorId === fighterId &&
+      actor.origin.execution.procedureBindings.some(
+        (binding) =>
+          binding.procedureRef === subject.procedureRef &&
+          binding.procedure.kind === "spellInvocation" &&
+          binding.procedure.execution.procedure === "spellAttackSequence",
+      )
+    );
+  });
+  if (act?.subject.tag !== "actionSpell") {
+    throw new Error("Expected Eldritch Blast spell act.");
+  }
+  return act.subject;
 }
 
 function discoverEldritchBlastHoles(
   state: BattleState,
   subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>,
 ): readonly BattleHole[] {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActCandidates(state).find(
     (candidate) =>
       candidate.subject.tag === "actionSpell" &&
       candidate.subject.actorId === subject.actorId &&
-      ("invocation" in subject
-        ? battleActSpellPresentation(candidate)?.invocation.spellId ===
-          subject.invocation.spellId
-        : sameBattleSubject(candidate.subject, subject)),
+      sameBattleSubject(candidate.subject, subject),
   );
   if (act === undefined) {
     throw new Error("Expected Eldritch Blast spell act.");
@@ -551,5 +557,5 @@ function startBattleRight(
   if (Either.isLeft(result)) {
     throw new Error(result.left.message);
   }
-  return result.right;
+  return result.right.state;
 }

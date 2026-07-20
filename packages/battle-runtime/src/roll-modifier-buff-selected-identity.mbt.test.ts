@@ -1,5 +1,4 @@
 import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
-import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay roll-modifier-buff bless bane guidance resistance shield_of_faith
 // UNIT-IDENTITY-REPLAY: roll-modifier-buff bless doBlessAttackAndSaveModifier
 // UNIT-IDENTITY-REPLAY: roll-modifier-buff bane doBaneFailedSavePenalty
@@ -34,12 +33,11 @@ import {
   battleReducerStartRouteEvent,
   characterId,
   combatantId,
-  discoverBattleActs,
+  discoverBattleActCandidates,
   endTurn,
   initiativeScore,
   snapshotBattle,
   startBattle,
-  type AvailableBattleAct,
   type BattleActiveEffect,
   type BattleCreatureInit,
   type BattleFill,
@@ -48,7 +46,7 @@ import {
   type BattleResolutionResult,
   type BattleRolledDiceFill,
   type BattleState,
-  type BattleActDiscoverySubject as BattleSubject,
+  type BattleSubject,
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
@@ -102,13 +100,15 @@ type RollModifierBuffSelectedIdentityProjection = {
     | "shieldOfFaith";
 };
 
-type ActionSpellAct = AvailableBattleAct & {
+type ActionSpellAct = ReturnType<typeof discoverBattleActCandidates>[number] & {
   readonly subject: Extract<
     BattleSubject,
     { readonly tag: "actionSpell"; readonly invocation: unknown }
   >;
 };
-type BonusActionSpellAct = AvailableBattleAct & {
+type BonusActionSpellAct = ReturnType<
+  typeof discoverBattleActCandidates
+>[number] & {
   readonly subject: Extract<
     BattleSubject,
     { readonly tag: "bonusActionSpell" }
@@ -492,7 +492,7 @@ function rollModifierBuffBattle(
   if (Either.isLeft(result)) {
     throw new Error(result.left.message);
   }
-  return result.right;
+  return result.right.state;
 }
 
 function rollModifierBuffCreature(input: {
@@ -553,10 +553,9 @@ function actionSpellAct(
   state: BattleState,
   spellId: RollModifierBuffSpellId,
 ): ActionSpellAct {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActCandidates(state).find(
     (candidate): candidate is ActionSpellAct =>
-      candidate.subject.tag === "actionSpell" &&
-      battleActSpellPresentation(candidate)?.invocation.spellId === spellId,
+      candidate.subject.tag === "actionSpell",
   );
   if (act === undefined) {
     throw new Error(`Expected ${spellId} action Spell act.`);
@@ -568,10 +567,9 @@ function bonusActionSpellAct(
   state: BattleState,
   spellId: RollModifierBuffSpellId,
 ): BonusActionSpellAct {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActCandidates(state).find(
     (candidate): candidate is BonusActionSpellAct =>
-      candidate.subject.tag === "bonusActionSpell" &&
-      battleActSpellPresentation(candidate)?.invocation.spellId === spellId,
+      candidate.subject.tag === "bonusActionSpell",
   );
   if (act === undefined) {
     throw new Error(`Expected ${spellId} Bonus Action Spell act.`);

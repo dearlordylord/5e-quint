@@ -4,6 +4,7 @@ import { describe, expect, test } from "vitest";
 import { Hp } from "@dnd/shared/types";
 
 import {
+  characterBattleFeatureInitForTest,
   damageRollFillWithGroups,
   type BattleState,
   type CombatantId,
@@ -34,7 +35,12 @@ import {
   classLevel,
   resolveBattleSubject,
 } from "./unit-profile-admission-test-support.ts";
-import type { BattleResolutionResult, BattleUnitRef } from "./index.ts";
+import type {
+  BattleResolutionInput,
+  BattleResolutionResult,
+  BattleRuntimeSession,
+  BattleUnitRef,
+} from "./index.ts";
 
 const discipleOfLifeUnit = unitLibrary.requireUnit(clericDiscipleOfLifeUnitId);
 const discipleOfLifeUnitRef = requireDiscipleOfLifeUnitRef();
@@ -65,16 +71,20 @@ describe("Disciple of Life slot-cast healing modifier", () => {
       cantrips: [syntheticHealingCantrip()],
       casterClassLevels: [{ className: "cleric", level: classLevel(3) }],
       casterUnitRefs: [discipleOfLifeUnitRef],
-      casterUnitFeatures: [{ unit: discipleOfLifeUnit }],
+      casterUnitFeatures: [
+        characterBattleFeatureInitForTest(discipleOfLifeUnit, [
+          { className: "cleric", level: classLevel(3) },
+        ]),
+      ],
       spellSlots: [{ spellLevel: 1, count: 1 }],
       targetHp: 1,
       targetMaxHp: 20,
     });
 
     expect(
-      maybeSpellAct({ state, spellId: syntheticHealingCantripUnitId }),
+      maybeSpellAct({ session: state, spellId: syntheticHealingCantripUnitId }),
     ).toBeUndefined();
-    expect(currentHp(state, spellTargetId)).toBe(1);
+    expect(currentHp(state.state, spellTargetId)).toBe(1);
   });
 
   test("uses the spent Spell Slot level for higher-level Healing Word", () => {
@@ -83,14 +93,14 @@ describe("Disciple of Life slot-cast healing modifier", () => {
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
     const act = bonusSpellAct({
-      state,
+      session: state,
       spellId: healingWordUnitId,
       slotLevel: 2,
     });
     const targetHole = requireHole(act.initialHoles, "targetChoice");
     const awaitingHealing = recordNeedsHolesResult(
       resolveBattleSubjectOrThrow({
-        state,
+        state: state.state,
         subject: act.subject,
         fills: [
           spellTargetFill(
@@ -105,7 +115,7 @@ describe("Disciple of Life slot-cast healing modifier", () => {
     const healingRoll = requireHole(awaitingHealing.holes, "rolledDice");
     const resolved = recordResolvedState(
       resolveBattleSubjectOrThrow({
-        state,
+        state: state.state,
         subject: act.subject,
         fills: [
           spellTargetFill(
@@ -133,7 +143,7 @@ describe("Disciple of Life slot-cast healing modifier", () => {
       extraTargetIds: [secondTargetId],
     });
     const act = bonusSpellAct({
-      state,
+      session: state,
       spellId: massHealingWordUnitId,
       slotLevel: 3,
     });
@@ -146,7 +156,7 @@ describe("Disciple of Life slot-cast healing modifier", () => {
     );
     const awaitingHealing = recordNeedsHolesResult(
       resolveBattleSubjectOrThrow({
-        state,
+        state: state.state,
         subject: act.subject,
         fills: [targets],
       }),
@@ -154,7 +164,7 @@ describe("Disciple of Life slot-cast healing modifier", () => {
     const healingRoll = requireHole(awaitingHealing.holes, "rolledDice");
     const resolved = recordResolvedState(
       resolveBattleSubjectOrThrow({
-        state,
+        state: state.state,
         subject: act.subject,
         fills: [targets, damageRollFillWithGroups(healingRoll, [[1, 1]])],
       }),
@@ -172,12 +182,16 @@ function discipleOfLifeBattle(input: {
     | typeof massHealingWordUnitId;
   readonly spellSlots?: Parameters<typeof spellBattle>[0]["spellSlots"];
   readonly extraTargetIds?: readonly CombatantId[];
-}): BattleState {
+}): BattleRuntimeSession {
   return spellBattle({
     preparedSpells: [spellRecord(input.spellId)],
     casterClassLevels: [{ className: "cleric", level: classLevel(3) }],
     casterUnitRefs: [discipleOfLifeUnitRef],
-    casterUnitFeatures: [{ unit: discipleOfLifeUnit }],
+    casterUnitFeatures: [
+      characterBattleFeatureInitForTest(discipleOfLifeUnit, [
+        { className: "cleric", level: classLevel(3) },
+      ]),
+    ],
     targetHp: 1,
     targetMaxHp: 20,
     extraTargetHp: 1,
@@ -191,7 +205,7 @@ function discipleOfLifeBattle(input: {
 
 function healingBattleWithoutModifier(input: {
   readonly spellId: typeof cureWoundsUnitId;
-}): BattleState {
+}): BattleRuntimeSession {
   return spellBattle({
     preparedSpells: [spellRecord(input.spellId)],
     casterClassLevels: [{ className: "cleric", level: classLevel(3) }],
@@ -217,13 +231,13 @@ function syntheticHealingCantrip(): ReturnType<typeof spellRecord> {
 }
 
 function resolveCureWounds(
-  state: BattleState,
+  session: BattleRuntimeSession,
   input: {
     readonly targetId: CombatantId;
     readonly dice: readonly number[];
   },
 ): BattleState {
-  const act = spellAct({ state, spellId: cureWoundsUnitId });
+  const act = spellAct({ session, spellId: cureWoundsUnitId });
   const targetHole = requireHole(act.initialHoles, "targetChoice");
   const target = spellTargetFill(
     targetHole,
@@ -233,7 +247,7 @@ function resolveCureWounds(
   );
   const awaitingHealing = recordNeedsHolesResult(
     resolveBattleSubjectOrThrow({
-      state,
+      state: session.state,
       subject: act.subject,
       fills: [target],
     }),
@@ -241,7 +255,7 @@ function resolveCureWounds(
   const healingRoll = requireHole(awaitingHealing.holes, "rolledDice");
   return recordResolvedState(
     resolveBattleSubjectOrThrow({
-      state,
+      state: session.state,
       subject: act.subject,
       fills: [target, damageRollFillWithGroups(healingRoll, [input.dice])],
     }),
@@ -249,7 +263,7 @@ function resolveCureWounds(
 }
 
 function resolveBattleSubjectOrThrow(
-  input: Parameters<typeof resolveBattleSubject>[0],
+  input: BattleResolutionInput,
 ): BattleResolutionResult {
   return resolveBattleSubject(input);
 }

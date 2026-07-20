@@ -2,8 +2,10 @@ import {
   requireHole,
   savingThrowOutcomeFill,
   damageRollFill,
+  discoverBattleActCandidates,
   wizardVsRogueBattle,
-  magicSubject,
+  type BattleState,
+  type BattleSubject,
   fighterId,
   wizardId,
   resolveBattleSubject,
@@ -13,7 +15,7 @@ import { describe, expect, test } from "vitest";
 describe("battle runtime: save-damage replacements", () => {
   test("save-damage replacement riders reduce failed half-damage saves", () => {
     const state = wizardVsRogueBattle({ evasion: true });
-    const subject = magicSubject("dex_half_cantrip");
+    const subject = dexHalfDamageSubject(state);
     const savingThrows = requireHole(
       resolveBattleSubject({ state, subject, fills: [] }),
       "savingThrowOutcome",
@@ -55,7 +57,7 @@ describe("battle runtime: save-damage replacements", () => {
 
   test("save-damage replacement riders replace successful half-damage saves with no damage", () => {
     const state = wizardVsRogueBattle({ evasion: true });
-    const subject = magicSubject("dex_half_cantrip");
+    const subject = dexHalfDamageSubject(state);
     const savingThrows = requireHole(
       resolveBattleSubject({ state, subject, fills: [] }),
       "savingThrowOutcome",
@@ -84,7 +86,7 @@ describe("battle runtime: save-damage replacements", () => {
 
   test("half-damage save gates still damage targets without replacement riders", () => {
     const state = wizardVsRogueBattle({ evasion: false });
-    const subject = magicSubject("dex_half_cantrip");
+    const subject = dexHalfDamageSubject(state);
     const savingThrows = requireHole(
       resolveBattleSubject({ state, subject, fills: [] }),
       "savingThrowOutcome",
@@ -124,29 +126,16 @@ describe("battle runtime: save-damage replacements", () => {
     });
   });
 
-  test("save-damage replacement riders require admitted Unit support", () => {
+  test("selected Evasion execution facts do not require a duplicate support-profile projection", () => {
     const state = wizardVsRogueBattle({
       evasion: true,
       saveDamageReplacementSupport: false,
     });
-    const subject = magicSubject("dex_half_cantrip");
+    const subject = dexHalfDamageSubject(state);
     const savingThrows = requireHole(
       resolveBattleSubject({ state, subject, fills: [] }),
       "savingThrowOutcome",
     );
-    const damage = requireHole(
-      resolveBattleSubject({
-        state,
-        subject,
-        fills: [
-          savingThrowOutcomeFill(savingThrows, [
-            { targetId: fighterId, succeeded: true },
-          ]),
-        ],
-      }),
-      "rolledDice",
-    );
-
     const result = resolveBattleSubject({
       state,
       subject,
@@ -154,7 +143,6 @@ describe("battle runtime: save-damage replacements", () => {
         savingThrowOutcomeFill(savingThrows, [
           { targetId: fighterId, succeeded: true },
         ]),
-        damageRollFill(damage, 6),
       ],
     });
 
@@ -163,18 +151,28 @@ describe("battle runtime: save-damage replacements", () => {
       snapshot: {
         combatants: [
           { combatantId: wizardId, hp: 12 },
-          { combatantId: fighterId, hp: 9 },
+          { combatantId: fighterId, hp: 12 },
         ],
       },
     });
   });
 
-  test("rejects non-Dexterity save-damage replacement mechanics during admission", () => {
+  test("rejects non-Dexterity Evasion mechanics at typed feature projection", () => {
     expect(() =>
       wizardVsRogueBattle({
         evasion: true,
         evasionAbility: "con",
       }),
-    ).toThrow("Unsupported battle save-damage replacement Unit hook");
+    ).toThrow("Expected a supported battle feature fixture: rogue_evasion.");
   });
 });
+
+function dexHalfDamageSubject(state: BattleState): BattleSubject {
+  const subject = discoverBattleActCandidates(state).find(
+    (candidate) => candidate.subject.tag === "actionSpell",
+  )?.subject;
+  if (subject === undefined) {
+    throw new Error("Expected Dexterity half-damage cantrip act.");
+  }
+  return subject;
+}

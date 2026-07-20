@@ -25,9 +25,7 @@ import { savingThrowRollModeProjections } from "./battle-reducer/spells-damage-f
 import {
   characterBattleResourceIsPointPool,
   type CharacterBattleMetamagicOptionFact,
-  type CharacterBattlePointPoolResourceState,
 } from "./character-battle-resources.ts";
-import type { BattleActDiscoverySubject as BattleSubject } from "./index.ts";
 import {
   enlargeReduceUnitId,
   spellCasterId,
@@ -59,6 +57,7 @@ import {
   resolveBattleSubject,
   spellId,
   spellSlotInvocationRef,
+  type BattleRuntimeSession,
   type BattleState,
   type SpellMarkedDamageRider,
 } from "./unit-profile-admission-test-support.ts";
@@ -66,22 +65,22 @@ import {
 function creatureSizeAct(
   procedure: "creatureSizeIncrease" | "creatureSizeDecrease",
 ): {
-  readonly state: ReturnType<typeof spellBattle>;
+  readonly session: ReturnType<typeof spellBattle>;
   readonly act: ActionSpellAct;
 } {
   const spell = spellRecord(enlargeReduceUnitId);
-  const state = spellBattle({
+  const session = spellBattle({
     preparedSpells: [spell],
     spellSlots: [{ spellLevel: 2, count: 1 }],
   });
-  return { state, act: creatureSizeActInState(state, procedure) };
+  return { session, act: creatureSizeActInSession(session, procedure) };
 }
 
-function creatureSizeActInState(
-  state: ReturnType<typeof spellBattle>,
+function creatureSizeActInSession(
+  session: ReturnType<typeof spellBattle>,
   procedure: "creatureSizeIncrease" | "creatureSizeDecrease",
 ): ActionSpellAct {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActs(session).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
       battleActSpellPresentation(candidate)?.invocation.tag === "spellSlot" &&
@@ -99,11 +98,11 @@ function creatureSizeActInState(
 function extendedCreatureSizeAct(
   procedure: "creatureSizeIncrease" | "creatureSizeDecrease",
 ): {
-  readonly state: ReturnType<typeof spellBattle>;
+  readonly session: ReturnType<typeof spellBattle>;
   readonly act: ActionSpellAct;
 } {
   const spell = spellRecord(enlargeReduceUnitId);
-  const state = spellBattle({
+  const session = spellBattle({
     preparedSpells: [spell],
     spellSlots: [{ spellLevel: 2, count: 1 }],
     casterClassLevels: [{ className: "sorcerer", level: 2 }],
@@ -119,7 +118,7 @@ function extendedCreatureSizeAct(
       knownOptions: [extendedMetamagicOption()],
     },
   });
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActs(session).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
       battleActSpellPresentation(candidate)?.invocation.tag === "spellSlot" &&
@@ -135,13 +134,13 @@ function extendedCreatureSizeAct(
   if (act === undefined) {
     throw new Error(`Expected Extended ${procedure} spell act.`);
   }
-  return { state, act };
+  return { session, act };
 }
 
 describe("L12G deterministic Enlarge/Reduce creature admission", () => {
   test("admits only creature size increase and decrease spell-slot acts from the creature-or-object Surface target", () => {
-    const { state } = creatureSizeAct("creatureSizeIncrease");
-    const procedures = discoverBattleActs(state).flatMap((act) => {
+    const { session } = creatureSizeAct("creatureSizeIncrease");
+    const procedures = discoverBattleActs(session).flatMap((act) => {
       const presentation = battleActSpellSlotPresentation(act);
       return act.subject.tag === "actionSpell" &&
         presentation?.invocation.spellId === enlargeReduceUnitId
@@ -174,7 +173,8 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
   });
 
   test("willing size increase applies size and Strength roll-mode projections", () => {
-    const { state, act } = creatureSizeAct("creatureSizeIncrease");
+    const { session, act } = creatureSizeAct("creatureSizeIncrease");
+    const state = session.state;
     const target = requireHole(act.initialHoles, "targetChoice");
 
     const resolved = resolveBattleSubject({
@@ -211,7 +211,8 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
   });
 
   test("unwilling size decrease is gated by Constitution save and records reduce floor", () => {
-    const { state, act } = creatureSizeAct("creatureSizeDecrease");
+    const { session, act } = creatureSizeAct("creatureSizeDecrease");
+    const state = session.state;
     const target = requireHole(act.initialHoles, "targetChoice");
     const needsSave = resolveBattleSubject({
       state,
@@ -289,11 +290,15 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
 
   test("opposite-mode recast replaces the prior creature size-change effect", () => {
     const spell = spellRecord(enlargeReduceUnitId);
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 2 }],
     });
-    const enlargeAct = creatureSizeActInState(state, "creatureSizeIncrease");
+    const state = session.state;
+    const enlargeAct = creatureSizeActInSession(
+      session,
+      "creatureSizeIncrease",
+    );
     const enlargeTarget = requireHole(enlargeAct.initialHoles, "targetChoice");
     const enlarged = resolveBattleSubject({
       state,
@@ -316,8 +321,8 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
       ...enlarged.state,
       currentTurnResources: INITIAL_TURN_RESOURCES,
     };
-    const reduceAct = creatureSizeActInState(
-      recastReady,
+    const reduceAct = creatureSizeActInSession(
+      { state: recastReady, context: session.context },
       "creatureSizeDecrease",
     );
     const reduceTarget = requireHole(reduceAct.initialHoles, "targetChoice");
@@ -356,13 +361,14 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
 
   test("creature size projection stays within the SRD Size category bounds", () => {
     const spell = spellRecord(enlargeReduceUnitId);
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
+    const state = session.state;
     const reduceReady = withCombatantSize(state, spellTargetId, "tiny");
-    const reduceAct = creatureSizeActInState(
-      reduceReady,
+    const reduceAct = creatureSizeActInSession(
+      { state: reduceReady, context: session.context },
       "creatureSizeDecrease",
     );
     const reduceTarget = requireHole(reduceAct.initialHoles, "targetChoice");
@@ -387,8 +393,8 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
     ).toBe("tiny");
 
     const enlargeReady = withCombatantSize(state, spellTargetId, "gargantuan");
-    const enlargeAct = creatureSizeActInState(
-      enlargeReady,
+    const enlargeAct = creatureSizeActInSession(
+      { state: enlargeReady, context: session.context },
       "creatureSizeIncrease",
     );
     const enlargeTarget = requireHole(enlargeAct.initialHoles, "targetChoice");
@@ -415,11 +421,15 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
 
   test("successful unwilling save still ends prior Concentration spell", () => {
     const spell = spellRecord(enlargeReduceUnitId);
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 2 }],
     });
-    const enlargeAct = creatureSizeActInState(state, "creatureSizeIncrease");
+    const state = session.state;
+    const enlargeAct = creatureSizeActInSession(
+      session,
+      "creatureSizeIncrease",
+    );
     const enlargeTarget = requireHole(enlargeAct.initialHoles, "targetChoice");
     const enlarged = resolveBattleSubject({
       state,
@@ -442,8 +452,8 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
       ...enlarged.state,
       currentTurnResources: INITIAL_TURN_RESOURCES,
     };
-    const reduceAct = creatureSizeActInState(
-      recastReady,
+    const reduceAct = creatureSizeActInSession(
+      { state: recastReady, context: session.context },
       "creatureSizeDecrease",
     );
     const reduceTarget = requireHole(reduceAct.initialHoles, "targetChoice");
@@ -489,13 +499,17 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
 
   test("size change adjusts affected weapon and Unarmed Strike hit damage", () => {
     const spell = spellRecord(enlargeReduceUnitId);
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 2 }],
       attack: zeroAbilityWeaponAttack("weapon_longsword"),
     });
+    const state = session.state;
 
-    const enlargeAct = creatureSizeActInState(state, "creatureSizeIncrease");
+    const enlargeAct = creatureSizeActInSession(
+      session,
+      "creatureSizeIncrease",
+    );
     const enlargeTarget = requireHole(enlargeAct.initialHoles, "targetChoice");
     const enlarged = resolveBattleSubject({
       state,
@@ -516,20 +530,32 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
 
     expect(
       resolveAttackHitHp(
-        { ...enlarged.state, currentTurnResources: INITIAL_TURN_RESOURCES },
+        {
+          state: {
+            ...enlarged.state,
+            currentTurnResources: INITIAL_TURN_RESOURCES,
+          },
+          context: session.context,
+        },
         "Longsword",
         [[4], [3]],
       ),
     ).toBe(5);
     expect(
       resolveAttackHitHp(
-        { ...enlarged.state, currentTurnResources: INITIAL_TURN_RESOURCES },
+        {
+          state: {
+            ...enlarged.state,
+            currentTurnResources: INITIAL_TURN_RESOURCES,
+          },
+          context: session.context,
+        },
         "Unarmed Strike",
         [[3]],
       ),
     ).toBe(8);
 
-    const reduceAct = creatureSizeActInState(state, "creatureSizeDecrease");
+    const reduceAct = creatureSizeActInSession(session, "creatureSizeDecrease");
     const reduceTarget = requireHole(reduceAct.initialHoles, "targetChoice");
     const reduced = resolveBattleSubject({
       state,
@@ -550,14 +576,26 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
 
     expect(
       resolveAttackHitHp(
-        { ...reduced.state, currentTurnResources: INITIAL_TURN_RESOURCES },
+        {
+          state: {
+            ...reduced.state,
+            currentTurnResources: INITIAL_TURN_RESOURCES,
+          },
+          context: session.context,
+        },
         "Longsword",
         [[1], [4]],
       ),
     ).toBe(11);
     expect(
       resolveAttackHitHp(
-        { ...reduced.state, currentTurnResources: INITIAL_TURN_RESOURCES },
+        {
+          state: {
+            ...reduced.state,
+            currentTurnResources: INITIAL_TURN_RESOURCES,
+          },
+          context: session.context,
+        },
         "Unarmed Strike",
         [[4]],
       ),
@@ -566,12 +604,13 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
 
   test("Reduce damage floor applies before target resistance", () => {
     const spell = spellRecord(enlargeReduceUnitId);
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
       attack: zeroAbilityWeaponAttack("weapon_longsword"),
     });
-    const reduceAct = creatureSizeActInState(state, "creatureSizeDecrease");
+    const state = session.state;
+    const reduceAct = creatureSizeActInSession(session, "creatureSizeDecrease");
     const reduceTarget = requireHole(reduceAct.initialHoles, "targetChoice");
     const reduced = resolveBattleSubject({
       state,
@@ -593,7 +632,13 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
     const withRider = withSyntheticHitRider(reduced.state, false);
     expect(
       resolveAttackHitHp(
-        { ...withRider, currentTurnResources: INITIAL_TURN_RESOURCES },
+        {
+          state: {
+            ...withRider,
+            currentTurnResources: INITIAL_TURN_RESOURCES,
+          },
+          context: session.context,
+        },
         "Longsword",
         [[1], [3], [4]],
       ),
@@ -602,7 +647,13 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
     const resisted = withSyntheticHitRider(reduced.state, true);
     expect(
       resolveAttackHitHp(
-        { ...resisted, currentTurnResources: INITIAL_TURN_RESOURCES },
+        {
+          state: {
+            ...resisted,
+            currentTurnResources: INITIAL_TURN_RESOURCES,
+          },
+          context: session.context,
+        },
         "Longsword",
         [[1], [3], [4]],
       ),
@@ -611,12 +662,13 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
 
   test("Reduce subtracts from total attack-hit damage including marked riders", () => {
     const spell = spellRecord(enlargeReduceUnitId);
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
       attack: zeroAbilityWeaponAttack("weapon_longsword"),
     });
-    const reduceAct = creatureSizeActInState(state, "creatureSizeDecrease");
+    const state = session.state;
+    const reduceAct = creatureSizeActInSession(session, "creatureSizeDecrease");
     const reduceTarget = requireHole(reduceAct.initialHoles, "targetChoice");
     const reduced = resolveBattleSubject({
       state,
@@ -638,7 +690,13 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
     const withMarkedRider = withSyntheticMarkedDamageRider(reduced.state);
     expect(
       resolveAttackHitHp(
-        { ...withMarkedRider, currentTurnResources: INITIAL_TURN_RESOURCES },
+        {
+          state: {
+            ...withMarkedRider,
+            currentTurnResources: INITIAL_TURN_RESOURCES,
+          },
+          context: session.context,
+        },
         "Longsword",
         [[1], [4], [6]],
       ),
@@ -647,7 +705,7 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
 
   test("replacing another caster's size-change effect clears stale concentration", () => {
     const spell = spellRecord(enlargeReduceUnitId);
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
       targetPreparedSpells: [spell],
@@ -664,7 +722,11 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
         spellSlots: [{ spellLevel: 2, count: 1 }],
       },
     });
-    const enlargeAct = creatureSizeActInState(state, "creatureSizeIncrease");
+    const state = session.state;
+    const enlargeAct = creatureSizeActInSession(
+      session,
+      "creatureSizeIncrease",
+    );
     const enlargeTarget = requireHole(enlargeAct.initialHoles, "targetChoice");
     const enlarged = resolveBattleSubject({
       state,
@@ -700,8 +762,8 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
       throw new Error("Expected caster end turn to resolve.");
     }
 
-    const reduceAct = creatureSizeActInState(
-      targetTurn.state,
+    const reduceAct = creatureSizeActInSession(
+      { state: targetTurn.state, context: session.context },
       "creatureSizeDecrease",
     );
     const reduceTarget = requireHole(reduceAct.initialHoles, "targetChoice");
@@ -738,7 +800,8 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
   });
 
   test("size change cleans up on Concentration break and duration expiry", () => {
-    const { state, act } = creatureSizeAct("creatureSizeIncrease");
+    const { session, act } = creatureSizeAct("creatureSizeIncrease");
+    const state = session.state;
     const target = requireHole(act.initialHoles, "targetChoice");
     const resolved = resolveBattleSubject({
       state,
@@ -794,7 +857,8 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
   });
 
   test("Extended Spell doubles creature size-change duration and projects Concentration save Advantage", () => {
-    const { state, act } = extendedCreatureSizeAct("creatureSizeIncrease");
+    const { session, act } = extendedCreatureSizeAct("creatureSizeIncrease");
+    const state = session.state;
     const target = requireHole(act.initialHoles, "targetChoice");
 
     const resolved = resolveBattleSubject({
@@ -845,14 +909,12 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
 });
 
 function resolveAttackHitHp(
-  state: ReturnType<typeof spellBattle>,
+  session: BattleRuntimeSession,
   attackName: "Longsword" | "Unarmed Strike",
   damageRolls: readonly (readonly number[])[],
 ): number {
-  const subject =
-    attackName === "Longsword"
-      ? weaponAttackSubject(state, "Longsword")
-      : attackActSubject(state, "Unarmed Strike");
+  const state = session.state;
+  const subject = weaponAttackSubject(session, attackName);
   const target = requireResultHole(
     resolveBattleSubject({ state, subject, fills: [] }),
     "targetChoice",
@@ -1042,32 +1104,15 @@ function extendedMetamagicOption(): CharacterBattleMetamagicOptionFact {
 
 function sorceryPointsRemaining(state: BattleState): number {
   const caster = requireCombatant(state, spellCasterId);
-  const resource =
-    caster.origin.kind === "character"
-      ? caster.origin.resources.find(
-          (candidate): candidate is CharacterBattlePointPoolResourceState =>
-            candidate.unit.id === "sorcerer_font_of_magic" &&
-            characterBattleResourceIsPointPool(candidate),
-        )
-      : undefined;
-  return resource === undefined ? 0 : Number(resource.pointsRemaining);
-}
-
-function attackActSubject(
-  state: BattleState,
-  attackName: "Unarmed Strike",
-): Extract<BattleSubject, { readonly tag: "action" }> {
-  const act = discoverBattleActs(state).find(
-    (candidate) =>
-      candidate.subject.tag === "action" &&
-      candidate.subject.action === "attack" &&
-      candidate.summary === `Take the Attack action with ${attackName}.`,
+  if (caster.origin.kind !== "character") return 0;
+  const resourcePoolRef = caster.origin.metamagic?.sorceryPointResourcePoolRef;
+  const resource = caster.origin.resources.find(
+    (candidate) => candidate.resourcePoolRef === resourcePoolRef,
   );
-  expect(act).toBeDefined();
-  if (act === undefined || act.subject.tag !== "action") {
-    throw new Error(`Expected ${attackName} attack act.`);
+  if (resource === undefined || !characterBattleResourceIsPointPool(resource)) {
+    return 0;
   }
-  return act.subject;
+  return Number(resource.pointsRemaining);
 }
 
 function advanceToNextCasterTurn(state: BattleState): BattleState {

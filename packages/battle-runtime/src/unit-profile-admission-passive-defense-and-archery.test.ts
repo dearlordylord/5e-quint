@@ -86,7 +86,7 @@ describe("QMBT18 deterministic unsupported feature profile slice", () => {
       attack: zeroAbilityWeaponAttack("weapon_shortbow"),
     });
     const attackRollHole = weaponAttackRollHole({
-      state,
+      session: state,
       attackName: "Shortbow",
       actorId: spellCasterId,
       targetId: spellTargetId,
@@ -110,7 +110,7 @@ describe("QMBT18 deterministic unsupported feature profile slice", () => {
       characterUnitRefs: [archeryUnitRef, archeryUnitRef],
     });
     const attackRollHole = weaponAttackRollHole({
-      state,
+      session: state,
       attackName: "Shortbow",
       actorId: spellCasterId,
       targetId: spellTargetId,
@@ -132,7 +132,7 @@ describe("QMBT18 deterministic unsupported feature profile slice", () => {
       attack: zeroAbilityWeaponAttack("weapon_longsword"),
     });
     const attackRollHole = weaponAttackRollHole({
-      state,
+      session: state,
       attackName: "Longsword",
       actorId: spellCasterId,
       targetId: spellTargetId,

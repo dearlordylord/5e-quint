@@ -26,6 +26,7 @@ import {
   attackTargetFill,
   combatantId,
   commandUnitId,
+  discoverBattleActCandidates,
   discoverBattleActs,
   elapsedTimeTicks,
   endTurn,
@@ -55,6 +56,7 @@ import type {
   BattleActiveEffect,
   BattleFill,
   BattleHole,
+  BattleRuntimeSession,
   BattleSpellSavingThrowOutcomeHole,
   BattleState,
   CombatantId,
@@ -84,11 +86,11 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
       extraTargetIds: [slowExtraTargetId],
     });
 
-    expect(maybeSpellAct({ state, spellId: slowUnitId, slotLevel: 2 })).toBe(
-      undefined,
-    );
+    expect(
+      maybeSpellAct({ session: state, spellId: slowUnitId, slotLevel: 2 }),
+    ).toBe(undefined);
     const act = spellAct({
-      state,
+      session: state,
       spellId: slowUnitId,
       slotLevel: 3,
     });
@@ -110,7 +112,7 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
     const savingThrow = requireSpellSavingThrowOutcomeHole(act.initialHoles);
     expect(savingThrow).toEqual(
       expect.objectContaining({
-        label: "Slow point-origin Cube Saving Throw outcomes",
+        label: "Spell point-origin Cube Saving Throw outcomes",
         ability: "wis",
         dc: { kind: "caster_spell_save_dc" },
       }),
@@ -118,12 +120,12 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
     expect(savingThrow).toMatchObject({ outcomeTargeting: "area" });
     expect("spell" in savingThrow).toBe(false);
 
-    const baseTarget = requireCombatant(state, spellTargetId);
+    const baseTarget = requireCombatant(state.state, spellTargetId);
     const baseArmorClass = Number(
       currentArmorClass(activeEffectArmorClass(baseTarget)),
     );
     const cast = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [
         slowSavingThrowOutcomeFill(savingThrow, [
@@ -176,11 +178,11 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
       preparedSpells: [spellRecord(slowUnitId)],
       spellSlots: [{ spellLevel: 3, count: 1 }],
     });
-    const act = spellAct({ state, spellId: slowUnitId, slotLevel: 3 });
+    const act = spellAct({ session: state, spellId: slowUnitId, slotLevel: 3 });
     const savingThrow = requireSpellSavingThrowOutcomeHole(act.initialHoles);
 
     const cast = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [
         savingThrowOutcomeFill(savingThrow, [
@@ -268,17 +270,21 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
     );
 
     expect(
-      targetTurn.currentTurnResources.actionOrBonusActionExclusion,
+      targetTurn.state.currentTurnResources.actionOrBonusActionExclusion,
     ).toEqual({
       kind: "restricted",
       choice: "notChosen",
     });
-    expect(canSpendAction(targetTurn.currentTurnResources, "dodge")).toBe(true);
-    expect(canSpendBonusAction(targetTurn.currentTurnResources)).toBe(true);
+    expect(canSpendAction(targetTurn.state.currentTurnResources, "dodge")).toBe(
+      true,
+    );
+    expect(canSpendBonusAction(targetTurn.state.currentTurnResources)).toBe(
+      true,
+    );
 
     const dodge = actionAct(targetTurn, spellTargetId, "dodge");
     const dodged = resolveBattleSubject({
-      state: targetTurn,
+      state: targetTurn.state,
       subject: dodge.subject,
       fills: [],
     });
@@ -307,11 +313,11 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
       preparedSpells: [spellRecord(slowUnitId)],
       spellSlots: [{ spellLevel: 3, count: 1 }],
     });
-    const act = spellAct({ state, spellId: slowUnitId, slotLevel: 3 });
+    const act = spellAct({ session: state, spellId: slowUnitId, slotLevel: 3 });
     const savingThrow = requireSpellSavingThrowOutcomeHole(act.initialHoles);
 
     const cast = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [
         slowSavingThrowOutcomeFill(savingThrow, [
@@ -341,7 +347,7 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
     );
     expect(canSpendBonusAction(cast.state.currentTurnResources)).toBe(false);
     expect(
-      discoverBattleActs(cast.state).some(
+      discoverBattleActCandidates(cast.state).some(
         (candidate) =>
           candidate.subject.actorId === spellCasterId &&
           (candidate.subject.tag === "action" ||
@@ -363,7 +369,7 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
     const attack = actionAct(targetTurn, spellTargetId, "attack", "Club");
     const targetHole = requireResultHole(
       resolveBattleSubject({
-        state: targetTurn,
+        state: targetTurn.state,
         subject: attack.subject,
         fills: [],
       }),
@@ -377,14 +383,14 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
     );
     const attackRoll = requireResultHole(
       resolveBattleSubject({
-        state: targetTurn,
+        state: targetTurn.state,
         subject: attack.subject,
         fills: [targetFill],
       }),
       "attackRoll",
     );
     const attacked = resolveBattleSubject({
-      state: targetTurn,
+      state: targetTurn.state,
       subject: attack.subject,
       fills: [
         targetFill,
@@ -416,7 +422,7 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
       "multiattack",
     );
     const resolved = resolveBattleSubject({
-      state: targetTurn,
+      state: targetTurn.state,
       subject: multiattack.subject,
       fills: [],
     });
@@ -435,7 +441,7 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
       false,
     );
     expect(
-      discoverBattleActs(resolved.state).some(
+      discoverBattleActCandidates(resolved.state).some(
         (candidate) =>
           candidate.subject.tag === "action" &&
           candidate.subject.actorId === slowMultiattackTargetId &&
@@ -462,7 +468,7 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
       "movableZoneRepositionMovement",
     );
     const moved = resolveBattleSubject({
-      state: targetTurn,
+      state: targetTurn.state,
       subject: reposition.subject,
       fills: [flamingSphereRepositionMovementFill(movement)],
     });
@@ -485,7 +491,7 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
     );
     expect(canSpendBonusAction(moved.state.currentTurnResources)).toBe(false);
     expect(
-      discoverBattleActs(moved.state).some(
+      discoverBattleActCandidates(moved.state).some(
         (candidate) =>
           candidate.subject.tag === "action" &&
           candidate.subject.actorId === spellTargetId,
@@ -509,14 +515,14 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
     );
     const slowChance = requireSlowSomaticSpellFailureHole(act.initialHoles);
     const slowEffect = requireCombatant(
-      targetTurn,
+      targetTurn.state,
       spellTargetId,
     ).activeEffects.find((effect) => effect.kind === "slowActivePenalties");
     expect(slowEffect).toBeDefined();
     expect(slowChance).toEqual(
       expect.objectContaining({
         actorId: spellTargetId,
-        spellId: expeditiousRetreatUnitId,
+        sourceProcedureRef: act.subject.procedureRef,
         failurePercent: SLOW_ACTIVE_PENALTIES_SOMATIC_FAILURE_PERCENT,
         activeEffectSources: [
           {
@@ -528,7 +534,7 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
     );
 
     const failed = resolveBattleSubject({
-      state: targetTurn,
+      state: targetTurn.state,
       subject: act.subject,
       fills: [slowSomaticSpellFailureFill(slowChance, true)],
     });
@@ -577,23 +583,23 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
   });
 });
 
-function castFailedSlow(state: BattleState): BattleState {
-  return castSlowWithOutcomes(state, [
+function castFailedSlow(session: BattleRuntimeSession): BattleState {
+  return castSlowWithOutcomes(session, [
     { targetId: spellTargetId, succeeded: false },
   ]);
 }
 
 function castSlowWithOutcomes(
-  state: BattleState,
+  session: BattleRuntimeSession,
   outcomes: readonly {
     readonly targetId: CombatantId;
     readonly succeeded: boolean;
   }[],
 ): BattleState {
-  const act = spellAct({ state, spellId: slowUnitId, slotLevel: 3 });
+  const act = spellAct({ session, spellId: slowUnitId, slotLevel: 3 });
   const savingThrow = requireSpellSavingThrowOutcomeHole(act.initialHoles);
   const cast = resolveBattleSubject({
-    state,
+    state: session.state,
     subject: act.subject,
     fills: [slowSavingThrowOutcomeFill(savingThrow, outcomes)],
   });
@@ -603,49 +609,54 @@ function castSlowWithOutcomes(
   return cast.state;
 }
 
-function statBlockTargetTurnAfterFailedSlow(): BattleState {
-  const cast = castSlowWithOutcomes(
-    spellBattle({
-      preparedSpells: [spellRecord(slowUnitId)],
-      spellSlots: [{ spellLevel: 3, count: 1 }],
-      statBlockTargets: [
-        {
-          combatantId: slowMultiattackTargetId,
-          statBlock: monsterMultiattackStatBlock(),
-          initiative: 15,
-        },
-      ],
-    }),
-    [{ targetId: slowMultiattackTargetId, succeeded: false }],
-  );
+function statBlockTargetTurnAfterFailedSlow(): BattleRuntimeSession {
+  const session = spellBattle({
+    preparedSpells: [spellRecord(slowUnitId)],
+    spellSlots: [{ spellLevel: 3, count: 1 }],
+    statBlockTargets: [
+      {
+        combatantId: slowMultiattackTargetId,
+        statBlock: monsterMultiattackStatBlock(),
+        initiative: 15,
+      },
+    ],
+  });
+  const cast = castSlowWithOutcomes(session, [
+    { targetId: slowMultiattackTargetId, succeeded: false },
+  ]);
   const targetTurn = endTurn({ state: cast, actorId: spellCasterId });
   if (targetTurn.tag !== "resolved") {
     throw new Error("Expected Slow caster End Turn to resolve.");
   }
-  return targetTurn.state;
+  return { ...session, state: targetTurn.state };
 }
 
-function targetTurnAfterFailedSlow(state: BattleState): BattleState {
-  const cast = castFailedSlow(state);
+function targetTurnAfterFailedSlow(
+  session: BattleRuntimeSession,
+): BattleRuntimeSession {
+  const cast = castFailedSlow(session);
   const targetTurn = endTurn({ state: cast, actorId: spellCasterId });
   if (targetTurn.tag !== "resolved") {
     throw new Error("Expected Slow caster End Turn to resolve.");
   }
-  return targetTurn.state;
+  return { ...session, state: targetTurn.state };
 }
 
 function withCombatantActiveEffect(
-  state: BattleState,
+  session: BattleRuntimeSession,
   combatantId: CombatantId,
   effect: BattleActiveEffect,
-): BattleState {
-  const combatant = requireCombatant(state, combatantId);
+): BattleRuntimeSession {
+  const combatant = requireCombatant(session.state, combatantId);
   return {
-    ...state,
-    combatants: new Map(state.combatants).set(combatantId, {
-      ...combatant,
-      activeEffects: [...combatant.activeEffects, effect],
-    }),
+    ...session,
+    state: {
+      ...session.state,
+      combatants: new Map(session.state.combatants).set(combatantId, {
+        ...combatant,
+        activeEffects: [...combatant.activeEffects, effect],
+      }),
+    },
   };
 }
 
@@ -672,7 +683,7 @@ function targetOwnedFlamingSphereEffect(): Extract<
 }
 
 function actionAct(
-  state: BattleState,
+  session: BattleRuntimeSession,
   actorId: CombatantId,
   action: Extract<
     AvailableBattleAct["subject"],
@@ -685,7 +696,7 @@ function actionAct(
     { readonly tag: "action" }
   >;
 } {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActs(session).find(
     (
       candidate,
     ): candidate is AvailableBattleAct & {
@@ -698,7 +709,8 @@ function actionAct(
       candidate.subject.actorId === actorId &&
       candidate.subject.action === action &&
       (attackName === undefined ||
-        candidate.summary === `Take the Attack action with ${attackName}.`),
+        (candidate.presentation.kind === "attack" &&
+          candidate.presentation.name === attackName)),
   );
   if (act === undefined) {
     throw new Error(`Expected ${action} act for ${actorId}.`);
@@ -707,7 +719,7 @@ function actionAct(
 }
 
 function spellActForActor(
-  state: BattleState,
+  session: BattleRuntimeSession,
   actorId: CombatantId,
   unitId: string,
 ): AvailableBattleAct & {
@@ -718,7 +730,7 @@ function spellActForActor(
     }
   >;
 } {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActs(session).find(
     (
       candidate,
     ): candidate is AvailableBattleAct & {
@@ -850,7 +862,7 @@ defineSelectedIdentityReplayWitness({
               act.initialHoles,
             );
             const failed = resolveBattleSubject({
-              state: targetTurn,
+              state: targetTurn.state,
               subject: act.subject,
               fills: [slowSomaticSpellFailureFill(slowChance, true)],
             });

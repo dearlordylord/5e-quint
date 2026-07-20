@@ -1,22 +1,21 @@
 import type {
+  BattleExecutableSpellInvocation,
   BattleState,
-  SupportedSpellInvocation,
 } from "../battle-reducer.ts";
 import type { CombatantId } from "../identity.ts";
 import { revealHidden } from "./hole-helpers.ts";
 import { battleStateAfterTargetActionEarlyEndForActor } from "./sanctuary-targeting-interdiction.ts";
-import { spellRequiresVerbal } from "./spells-discovery.ts";
 
 export function stateAfterSpellCastDeclared(input: {
   readonly state: BattleState;
   readonly casterId: CombatantId;
-  readonly invocation: SupportedSpellInvocation;
+  readonly invocation: BattleExecutableSpellInvocation;
 }): BattleState {
   const earlyEnded = battleStateAfterTargetActionEarlyEndForActor(
     input.state,
     input.casterId,
   );
-  return spellRequiresVerbal(input.invocation.spell)
+  return input.invocation.spellRuleFacts.components.verbal
     ? revealHidden(earlyEnded, input.casterId)
     : earlyEnded;
 }

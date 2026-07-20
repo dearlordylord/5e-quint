@@ -1,5 +1,10 @@
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
-import type { BattleState } from "./battle-runtime-test-support.ts";
+import { cantripSpellInvocationRef } from "./battle-subjects.ts";
+import type {
+  BattleRuntimeSession,
+  BattleState,
+  BattleSubject,
+} from "./battle-runtime-test-support.ts";
 import { describe, expect, test } from "vitest";
 import {
   attackDamageDispositionFill,
@@ -10,7 +15,7 @@ import {
   attackRollFill,
   attackRollHoleAfterTarget,
   battleId,
-  battleProcedureExecutionRefForTest,
+  battleProcedureExecutionRefForSpellHoleForTest,
   characterSeed,
   characterWithDeathSaveCounters,
   combatantId,
@@ -32,8 +37,8 @@ import {
   goblinTurnBattle,
   holeId,
   KNOCKED_OUT_UNCONSCIOUS,
-  magicSubject,
   movementFeet,
+  requireCharacterSpellProcedureRefForTest,
   requireHole,
   requireResolved,
   resolveBattleSubject,
@@ -42,6 +47,7 @@ import {
   spellRecord,
   startBattle,
   startBattleRight,
+  startBattleSessionRight,
   statBlockCreatureInit,
   subjectName,
   supportedSpellActs,
@@ -49,6 +55,21 @@ import {
   wizardId,
   wizardSpellcasting,
 } from "./battle-runtime-test-support.ts";
+
+function spareTheDyingSubject(
+  session: BattleRuntimeSession,
+): Extract<BattleSubject, { readonly tag: "actionSpell" }> {
+  return {
+    tag: "actionSpell",
+    actorId: wizardId,
+    procedureRef: requireCharacterSpellProcedureRefForTest(
+      session,
+      wizardId,
+      cantripSpellInvocationRef("spare_the_dying", "makeStable"),
+    ),
+    mode: { tag: "cast" },
+  };
+}
 
 describe("battle runtime: death saves and turns", () => {
   test("character target at 0 HP enters the death-save lifecycle scaffold", () => {
@@ -114,7 +135,7 @@ describe("battle runtime: death saves and turns", () => {
 
   test("Spare the Dying makes a zero-HP non-dead character Stable", () => {
     const targetCharacterId = combatantId("spare-the-dying-target");
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-spare-the-dying-stable"),
       combatants: [
         characterSeed({
@@ -146,8 +167,10 @@ describe("battle runtime: death saves and turns", () => {
         }),
       ],
     });
+    const state = session.state;
 
-    const act = findAct(state, magicSubject("spare_the_dying"));
+    const subject = spareTheDyingSubject(session);
+    const act = findAct(state, subject);
     const targetHole = findHole(act.initialHoles, "targetChoice");
     if (targetHole.kind !== "targetChoice") {
       throw new Error("Expected targetChoice hole.");
@@ -172,9 +195,8 @@ describe("battle runtime: death saves and turns", () => {
               kind: "spellTarget",
               casterId: wizardId,
               targetId: targetCharacterId,
-              sourceProcedureRef: battleProcedureExecutionRefForTest(
-                String("spare_the_dying"),
-              ),
+              sourceProcedureRef:
+                battleProcedureExecutionRefForSpellHoleForTest(targetHole),
             },
           ]),
         ],
@@ -201,7 +223,7 @@ describe("battle runtime: death saves and turns", () => {
 
   test("Spare the Dying rejects positive-HP, dead, and monster-dead targets", () => {
     const deadCharacterId = combatantId("spare-the-dying-dead-target");
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-spare-the-dying-target-gate"),
       combatants: [
         characterSeed({
@@ -239,8 +261,9 @@ describe("battle runtime: death saves and turns", () => {
         statBlockCreatureInit({ initiative: 5, currentHp: 0 }),
       ],
     });
+    const state = session.state;
 
-    const subject = magicSubject("spare_the_dying");
+    const subject = spareTheDyingSubject(session);
     const targetHole = requireHole(
       resolveBattleSubject({ state, subject, fills: [] }),
       "targetChoice",
@@ -260,7 +283,8 @@ describe("battle runtime: death saves and turns", () => {
               kind: "spellTarget",
               casterId: wizardId,
               targetId: deadCharacterId,
-              sourceProcedureRef: expect.any(String),
+              sourceProcedureRef:
+                battleProcedureExecutionRefForSpellHoleForTest(targetHole),
             },
           ]),
         ],
@@ -297,7 +321,6 @@ describe("battle runtime: death saves and turns", () => {
       ],
     });
 
-    findAct(state, magicSubject("spare_the_dying"));
     const cleric = state.combatants.get(wizardId);
     const invocation =
       cleric?.origin.kind === "character"
@@ -369,7 +392,7 @@ describe("battle runtime: death saves and turns", () => {
   });
 
   test("healing a Knocked Out positive-HP creature ends Unconscious recovery", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-healing-knock-out-recovery"),
       combatants: [
         characterSeed({
@@ -390,7 +413,8 @@ describe("battle runtime: death saves and turns", () => {
         }),
       ],
     });
-    const healingWordAct = discoverBattleActs(state).find(
+    const state = session.state;
+    const healingWordAct = discoverBattleActs(session).find(
       (candidate) =>
         candidate.subject.tag === "bonusActionSpell" &&
         battleActSpellPresentation(candidate)?.invocation.spellId ===
@@ -417,9 +441,10 @@ describe("battle runtime: death saves and turns", () => {
               kind: "spellTarget",
               casterId: wizardId,
               targetId: fighterId,
-              sourceProcedureRef: battleProcedureExecutionRefForTest(
-                String("healing_word"),
-              ),
+              sourceProcedureRef:
+                battleProcedureExecutionRefForSpellHoleForTest(
+                  healingWordTarget,
+                ),
             },
           ]),
         ],
@@ -437,9 +462,10 @@ describe("battle runtime: death saves and turns", () => {
               kind: "spellTarget",
               casterId: wizardId,
               targetId: fighterId,
-              sourceProcedureRef: battleProcedureExecutionRefForTest(
-                String("healing_word"),
-              ),
+              sourceProcedureRef:
+                battleProcedureExecutionRefForSpellHoleForTest(
+                  healingWordTarget,
+                ),
             },
           ]),
           damageRollFillWithGroups(healingWordRoll, [[1, 1]]),

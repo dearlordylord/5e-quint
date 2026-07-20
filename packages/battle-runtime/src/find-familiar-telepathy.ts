@@ -20,7 +20,7 @@ import {
   snapshotBattle,
 } from "./battle-reducer/dispatcher.ts";
 import { invalidResult } from "./battle-reducer/result-helpers.ts";
-import { spellInvocationIsSpellcasting } from "./battle-reducer/spells-discovery.ts";
+import { spellInvocationIsSpellcasting } from "./battle-reducer/spell-turn-resources.ts";
 import { characterSpellProcedure } from "./character-execution.ts";
 import type { BattleSubject } from "./battle-subjects.ts";
 import { findFamiliarCompanionEntryForOwner } from "./find-familiar-state.ts";
@@ -147,17 +147,18 @@ export function deliverTouchSpellThroughFindFamiliar(input: {
   readonly fact: FindFamiliarWithin100FeetFact;
 }): BattleResolutionResult {
   const actor = input.state.combatants.get(input.subject.actorId);
-  const invocation =
+  const procedure =
     actor?.origin.kind === "character"
       ? characterSpellProcedure(
           actor.origin.execution,
           input.subject.procedureRef,
+          actor,
         )
       : undefined;
   if (
     actor?.origin.kind !== "character" ||
-    invocation === undefined ||
-    !spellInvocationIsSpellcasting(invocation)
+    procedure === undefined ||
+    !spellInvocationIsSpellcasting(procedure)
   ) {
     return invalidResult(
       input.state,
@@ -165,7 +166,7 @@ export function deliverTouchSpellThroughFindFamiliar(input: {
       "Find Familiar touch delivery requires a supported spell invocation.",
     );
   }
-  if (invocation.spell.mechanics.range.kind !== "touch") {
+  if (procedure.spellRuleFacts.range.kind !== "touch") {
     return invalidResult(
       input.state,
       "invalidFill",
@@ -192,7 +193,7 @@ export function deliverTouchSpellThroughFindFamiliar(input: {
     fills: input.fills,
     ownerId: input.subject.actorId,
     familiarId: connection.familiarId,
-    sourceProcedureRef: invocation.sourceProcedureRef,
+    sourceProcedureRef: procedure.sourceProcedureRef,
   });
   if (deliveryFills.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", deliveryFills.message);

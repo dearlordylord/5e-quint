@@ -1,4 +1,5 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-fog-cloud-obscurement
+import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE
 //
 // The Fog Cloud Spell Procedure Profile: action-time Spell Slot casting creates
@@ -31,8 +32,7 @@ import {
   type BattleState,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
-import type { SpellInvocationRef } from "../../battle-subjects.ts";
-import { spellId, type CombatantId } from "../../identity.ts";
+import { type CombatantId } from "../../identity.ts";
 import { spellAreaChoiceHole } from "../spells-holes-fills.ts";
 import { resolveFogCloudObscurementSpellAct } from "../spells-resolve-area-effects.ts";
 import type {
@@ -41,9 +41,8 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
-import { spellProcedureInvocationSchema } from "./profile.ts";
+import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
 import {
-  BattleRuntimeObjectSchema,
   MovementFeet,
   PreparedSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
@@ -174,7 +173,6 @@ function discoverFogCloudObscurementCastAct(
         tag: "actionSpell",
         actorId,
         procedureRef: invocation.sourceProcedureRef,
-        invocation: fogCloudObscurementInvocationRef(invocation),
         mode: { tag: "cast" },
       },
       initialHoles: [spellAreaChoiceHole(invocation)],
@@ -182,22 +180,6 @@ function discoverFogCloudObscurementCastAct(
   ];
 }
 
-function fogCloudObscurementInvocationRef(
-  invocation: FogCloudObscurementSpellInvocation,
-): SpellInvocationRef {
-  return {
-    tag: "spellSlot",
-    spellId: spellId(invocation.spell.id),
-    slotLevel: invocation.resource.slotLevel,
-    procedure: "fogCloudObscurement",
-  };
-}
-
-function fogCloudObscurementCastSummary(
-  invocation: FogCloudObscurementSpellInvocation,
-): string {
-  return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
-}
 
 function resolveFogCloudObscurement(
   input: FogCloudObscurementResolveInput,
@@ -210,36 +192,28 @@ function resolveFogCloudObscurement(
   });
 }
 
-const FogCloudObscurementInvocationSchema = spellProcedureInvocationSchema<
-  Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "fogCloudObscurement" }
-  >
->(
+const FogCloudObscurementInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
     resource: SpellSlotInvocationResourceSchema,
     procedure: Schema.Literal("fogCloudObscurement"),
-    spell: BattleRuntimeObjectSchema,
+    spellRuleFacts: SpellRuleExecutionFactsSchema,
     targeting: Schema.Struct({
       kind: Schema.Literal("pointOriginSphere"),
       radiusFeet: MovementFeet,
     }),
-    durationTicks: BattleRuntimeObjectSchema,
+    durationTicks: ElapsedTimeTicksSchema,
     rangeFeet: MovementFeet,
   }),
 );
 export const fogCloudObscurementProfile = {
   procedure: "fogCloudObscurement",
-  invocationSchema: FogCloudObscurementInvocationSchema,
+  executionSchema: FogCloudObscurementInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: [],
   admit: admitFogCloudObscurement,
   discoverCastAct: discoverFogCloudObscurementCastAct,
-  castSummary: fogCloudObscurementCastSummary,
-  invocationRef: fogCloudObscurementInvocationRef,
   resolve: resolveFogCloudObscurement,
 } satisfies SpellProcedureProfile<
   "fogCloudObscurement",

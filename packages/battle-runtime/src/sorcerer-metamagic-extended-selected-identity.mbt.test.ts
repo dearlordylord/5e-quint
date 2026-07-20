@@ -201,7 +201,7 @@ function resolveExtendedCreatureSizeIncreaseSubject() {
     throw new Error("Expected Extended Enlarge/Reduce spell act.");
   }
   const resolved = resolveBattleSubject({
-    state,
+    state: state.state,
     subject: extendedAct.subject,
     fills: [
       knownWillingSpellTargetFill(
@@ -235,11 +235,15 @@ function extendedCreatureSizeProjection(
   const sizeChangeEffect = caster?.activeEffects.find(
     (effect) => effect.kind === "spellCreatureSizeChange",
   );
+  const sorceryPointResourceRef =
+    caster?.origin.kind === "character"
+      ? caster.origin.metamagic?.sorceryPointResourcePoolRef
+      : undefined;
   const sorceryPointResource =
     caster?.origin.kind === "character"
       ? caster.origin.resources.find(
           (candidate): candidate is CharacterBattlePointPoolResourceState =>
-            candidate.unit.id === "sorcerer_font_of_magic" &&
+            candidate.resourcePoolRef === sorceryPointResourceRef &&
             characterBattleResourceIsPointPool(candidate),
         )
       : undefined;

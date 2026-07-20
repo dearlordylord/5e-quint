@@ -219,13 +219,7 @@ import {
   combatantEffectiveSize,
   refreshActiveDruidWildShapeStartTurnExecution,
 } from "./druid-wild-shape.ts";
-import {
-  ACROBATIC_MOVEMENT_SUPPORT_PROFILE,
-  CREATURE_SPACE_MOVEMENT_PERMISSION_SUPPORT_PROFILE,
-  type BattleAcrobaticMovementSupportProfile,
-  type BattleCreatureSpaceMovementPermissionSupportProfile,
-  type BattleUnitSupportProfile,
-} from "../unit-feature-support.ts";
+import type { UnitSupportProcedureExecution } from "../character-execution.ts";
 import {
   battleStateWithFlySpeedGrantEndFallCleanupFrames,
   flySpeedGrantEndFallCleanupFramesForExpiredEffects,
@@ -9162,28 +9156,25 @@ function validateAcrobaticMovementFact(
 
 function acrobaticMovementProfileForCombatant(
   combatant: BattleCreatureState,
-): BattleAcrobaticMovementSupportProfile | null {
+): Extract<
+  UnitSupportProcedureExecution,
+  { readonly kind: "acrobaticMovement" }
+> | null {
   if (combatant.origin.kind !== "character") {
     return null;
   }
-  for (const unitRef of combatant.origin.characterUnitRefs) {
-    const profile = unitRef.supportProfiles.find(
-      isBattleAcrobaticMovementSupportProfile,
-    );
-    if (profile !== undefined) {
-      return profile;
+  for (const binding of combatant.origin.execution.procedureBindings) {
+    const procedure = binding.procedure;
+    if (
+      (procedure.kind === "unitFeature" ||
+        procedure.kind === "unitSupportProfile") &&
+      typeof procedure.execution === "object" &&
+      procedure.execution.kind === "acrobaticMovement"
+    ) {
+      return procedure.execution;
     }
   }
   return null;
-}
-
-function isBattleAcrobaticMovementSupportProfile(
-  profile: BattleUnitSupportProfile,
-): profile is BattleAcrobaticMovementSupportProfile {
-  return (
-    typeof profile === "object" &&
-    profile.kind === ACROBATIC_MOVEMENT_SUPPORT_PROFILE
-  );
 }
 
 const CREATURE_SPACE_TRAVERSAL_WRONG_KIND_MESSAGE =
@@ -9283,28 +9274,25 @@ function validateCreatureSpaceTraversalMovementFact(
 
 function creatureSpaceMovementPermissionProfileForCombatant(
   combatant: BattleCreatureState,
-): BattleCreatureSpaceMovementPermissionSupportProfile | null {
+): Extract<
+  UnitSupportProcedureExecution,
+  { readonly kind: "creatureSpaceMovementPermission" }
+> | null {
   if (combatant.origin.kind !== "character") {
     return null;
   }
-  for (const unitRef of combatant.origin.characterUnitRefs) {
-    const profile = unitRef.supportProfiles.find(
-      isBattleCreatureSpaceMovementPermissionSupportProfile,
-    );
-    if (profile !== undefined) {
-      return profile;
+  for (const binding of combatant.origin.execution.procedureBindings) {
+    const procedure = binding.procedure;
+    if (
+      (procedure.kind === "unitFeature" ||
+        procedure.kind === "unitSupportProfile") &&
+      typeof procedure.execution === "object" &&
+      procedure.execution.kind === "creatureSpaceMovementPermission"
+    ) {
+      return procedure.execution;
     }
   }
   return null;
-}
-
-function isBattleCreatureSpaceMovementPermissionSupportProfile(
-  profile: BattleUnitSupportProfile,
-): profile is BattleCreatureSpaceMovementPermissionSupportProfile {
-  return (
-    typeof profile === "object" &&
-    profile.kind === CREATURE_SPACE_MOVEMENT_PERMISSION_SUPPORT_PROFILE
-  );
 }
 
 function validateMovementCostFacts(

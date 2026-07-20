@@ -1,5 +1,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.fighter-tactical-master unit-feature.weapon-mastery-push unit-feature.weapon-mastery-slow
+import { classLevel } from "@dnd/shared/types";
 import {
+  characterBattleFeatureInitForTest,
   startBattleRight,
   requireResolved,
   fighterVsGoblinBattle,
@@ -47,7 +49,6 @@ import {
   applyWeaponMasterySapOnHit,
   battleAbilityModifier,
   battleId,
-  cantripSpellInvocationRef,
   concentrationSavingThrowDc,
   difficultyClass,
   elapsedTimeTicks,
@@ -63,7 +64,7 @@ import {
 } from "./battle-runtime-test-support.ts";
 import type {
   BattleState,
-  BattleActDiscoverySubject as BattleSubject,
+  BattleSubject,
   CombatantId,
 } from "./battle-runtime-test-support.ts";
 import { wardingBondUnitId } from "./unit-profile-admission-catalog-support.ts";
@@ -72,8 +73,35 @@ import { describe, expect, test } from "vitest";
 import {
   battleActiveEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
-  requireCharacterSpellProcedureRefForTest,
 } from "./battle-runtime-test-support.ts";
+
+function requireMechanicalCharacterProcedureRef(
+  state: BattleState,
+  actorId: CombatantId,
+  procedure: "weaponMasterySlow" | "weaponMasterySap" | "spellAttackDamage",
+) {
+  const actor = state.combatants.get(actorId);
+  if (actor?.origin.kind !== "character") {
+    throw new Error(`Expected character actor ${actorId}.`);
+  }
+  const binding =
+    procedure === "spellAttackDamage"
+      ? actor.origin.execution.procedureBindings.find(
+          (candidate) =>
+            candidate.procedure.kind === "spellInvocation" &&
+            typeof candidate.procedure.execution === "object" &&
+            candidate.procedure.execution.procedure === procedure,
+        )
+      : actor.origin.execution.procedureBindings.find(
+          (candidate) =>
+            candidate.procedure.kind === "unitSupportProfile" &&
+            candidate.procedure.execution === procedure,
+        );
+  if (binding === undefined) {
+    throw new Error(`Expected mechanical procedure ${procedure}.`);
+  }
+  return binding.procedureRef;
+}
 
 function withWardingBondTargetAndConcentratingCaster(
   state: BattleState,
@@ -480,10 +508,6 @@ describe("battle runtime: Weapon Mastery", () => {
 
     expect(replacementHole).toMatchObject({
       label: "Tactical Master mastery replacement",
-      unitFeature: {
-        unitId: "fighter_tactical_master",
-        label: "Tactical Master",
-      },
       choices: ["push", "sap", "slow", "decline"],
     });
 
@@ -573,10 +597,20 @@ describe("battle runtime: Weapon Mastery", () => {
         ],
       }),
     );
+    const slowProcedureRef = requireMechanicalCharacterProcedureRef(
+      state,
+      fighterId,
+      "weaponMasterySlow",
+    );
+    const sapProcedureRef = requireMechanicalCharacterProcedureRef(
+      state,
+      fighterId,
+      "weaponMasterySap",
+    );
 
     expect(hit.state.combatants.get(goblinId)?.activeEffects).toContainEqual({
       kind: "unitFeatureSpeedDelta",
-      sourceProcedureRef: expect.any(String),
+      sourceProcedureRef: slowProcedureRef,
       sourceCombatantId: fighterId,
       deltaFeet: movementDeltaFeet(-10),
       expiresAt: { kind: "startOfTurn", combatantId: fighterId },
@@ -584,7 +618,7 @@ describe("battle runtime: Weapon Mastery", () => {
     expect(
       hit.state.combatants.get(goblinId)?.activeEffects,
     ).not.toContainEqual(
-      expect.objectContaining({ sourceProcedureRef: expect.any(String) }),
+      expect.objectContaining({ sourceProcedureRef: sapProcedureRef }),
     );
   });
 
@@ -668,7 +702,6 @@ describe("battle runtime: Weapon Mastery", () => {
         {
           kind: "savingThrowOutcome",
           label: "Topple Constitution saving throw",
-          unitFeature: { unitId: "mastery_topple", label: "Topple" },
           ability: "con",
           dc: { kind: "fixed", dc: difficultyClass(13) },
           targetIds: [goblinId],
@@ -915,7 +948,6 @@ describe("battle runtime: Weapon Mastery", () => {
     );
     expect(decision).toMatchObject({
       label: "Use Cleave",
-      unitFeature: { unitId: "mastery_cleave", label: "Cleave" },
       choices: ["use", "decline"],
     });
 
@@ -1585,7 +1617,7 @@ describe("battle runtime: Weapon Mastery", () => {
         subject: {
           tag: "actionSpell",
           actorId: wizardId,
-          procedureRef: requireCharacterSpellProcedureRefForTest(
+          procedureRef: requireMechanicalCharacterProcedureRef(
             startBattleRight({
               battleId: battleId(
                 "battle-weapon-mastery-cleave-after-damage-order",
@@ -1616,7 +1648,7 @@ describe("battle runtime: Weapon Mastery", () => {
               ],
             }),
             wizardId,
-            cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
+            "spellAttackDamage",
           ),
           mode: { tag: "ready", trigger: "afterDamage" },
         },
@@ -1707,7 +1739,11 @@ describe("battle runtime: Weapon Mastery", () => {
           initiative: 9,
           attack: null,
           classLevels: [{ className: "rogue", level: 5 }],
-          unitFeatures: [{ unit: uncannyDodgeUnit() }],
+          unitFeatures: [
+            characterBattleFeatureInitForTest(uncannyDodgeUnit(), [
+              { className: "rogue", level: classLevel(5) },
+            ]),
+          ],
           characterUnitRefs: [reactionModifierUnitRef("rogue_uncanny_dodge")],
         }),
       ],

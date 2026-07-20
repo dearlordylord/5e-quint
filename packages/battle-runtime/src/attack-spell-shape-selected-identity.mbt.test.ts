@@ -41,9 +41,10 @@ import {
   type BattleReducerRouteEvent,
   type BattleResolutionResult,
   type BattleRolledDiceFill,
+  type BattleRuntimeSession,
   type BattleState,
   type BattleProcedureExecutionRef,
-  type BattleActDiscoverySubject as BattleSubject,
+  type BattleSubject,
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
@@ -91,10 +92,7 @@ const ATTACK_SPELL_SHAPE_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG = {
 } as const;
 
 type ActionSpellAct = AvailableBattleAct & {
-  readonly subject: Extract<
-    BattleSubject,
-    { readonly tag: "actionSpell"; readonly invocation: unknown }
-  >;
+  readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
 };
 
 const casterId = combatantId("attack-spell-shape-caster");
@@ -113,7 +111,7 @@ const unitLibrary = unitCatalogResult.catalog;
 it("observes selected attack spell shape qRoute through public reducer events", () => {
   expect(
     resolveSpellAttackHitRoute({
-      state: attackSpellShapeBattle({
+      session: attackSpellShapeBattle({
         sourceClassName: "wizard",
         cantrips: [spellRecord("fire_bolt")],
       }),
@@ -129,7 +127,7 @@ it("observes selected attack spell shape qRoute through public reducer events", 
 
   expect(
     resolveSpellAttackHitRoute({
-      state: attackSpellShapeBattle({
+      session: attackSpellShapeBattle({
         sourceClassName: "wizard",
         cantrips: [spellRecord("chill_touch")],
       }),
@@ -149,7 +147,7 @@ it("observes selected attack spell shape qRoute through public reducer events", 
 
   expect(
     resolveSpellAttackHitRoute({
-      state: attackSpellShapeBattle({
+      session: attackSpellShapeBattle({
         sourceClassName: "cleric",
         preparedSpells: [spellRecord("guiding_bolt")],
       }),
@@ -168,7 +166,7 @@ it("observes selected attack spell shape qRoute through public reducer events", 
 
   expect(
     resolveSaveDamageRoute({
-      state: attackSpellShapeBattle({
+      session: attackSpellShapeBattle({
         sourceClassName: "cleric",
         preparedSpells: [spellRecord("inflict_wounds")],
       }),
@@ -180,7 +178,7 @@ it("observes selected attack spell shape qRoute through public reducer events", 
 
   expect(
     resolveSaveDamageRoute({
-      state: attackSpellShapeBattle({
+      session: attackSpellShapeBattle({
         sourceClassName: "cleric",
         preparedSpells: [spellRecord("inflict_wounds")],
       }),
@@ -192,7 +190,7 @@ it("observes selected attack spell shape qRoute through public reducer events", 
 
   expect(
     resolveSpellAttackHitRoute({
-      state: attackSpellShapeBattle({
+      session: attackSpellShapeBattle({
         sourceClassName: "wizard",
         cantrips: [spellRecord("shocking_grasp")],
       }),
@@ -239,7 +237,7 @@ defineSelectedIdentityReplayAndQntReplay({
           actionName: "doFireBoltHit",
           discover: () =>
             resolveAttackSpellShapeProjection({
-              state: attackSpellShapeBattle({
+              session: attackSpellShapeBattle({
                 sourceClassName: "wizard",
                 cantrips: [spellRecord("fire_bolt")],
               }),
@@ -257,7 +255,7 @@ defineSelectedIdentityReplayAndQntReplay({
           actionName: "doChillTouchHitPointRegainPrevention",
           discover: () =>
             resolveAttackSpellShapeProjection({
-              state: attackSpellShapeBattle({
+              session: attackSpellShapeBattle({
                 sourceClassName: "wizard",
                 cantrips: [spellRecord("chill_touch")],
               }),
@@ -275,7 +273,7 @@ defineSelectedIdentityReplayAndQntReplay({
           actionName: "doGuidingBoltNextAttackAdvantage",
           discover: () =>
             resolveAttackSpellShapeProjection({
-              state: attackSpellShapeBattle({
+              session: attackSpellShapeBattle({
                 sourceClassName: "cleric",
                 preparedSpells: [spellRecord("guiding_bolt")],
               }),
@@ -293,7 +291,7 @@ defineSelectedIdentityReplayAndQntReplay({
           actionName: "doInflictWoundsFailedSave",
           discover: () =>
             resolveSaveDamageProjection({
-              state: attackSpellShapeBattle({
+              session: attackSpellShapeBattle({
                 sourceClassName: "cleric",
                 preparedSpells: [spellRecord("inflict_wounds")],
               }),
@@ -307,7 +305,7 @@ defineSelectedIdentityReplayAndQntReplay({
           actionName: "doInflictWoundsSuccessfulSave",
           discover: () =>
             resolveSaveDamageProjection({
-              state: attackSpellShapeBattle({
+              session: attackSpellShapeBattle({
                 sourceClassName: "cleric",
                 preparedSpells: [spellRecord("inflict_wounds")],
               }),
@@ -326,7 +324,7 @@ defineSelectedIdentityReplayAndQntReplay({
           actionName: "doShockingGraspOpportunityAttackDenied",
           discover: () =>
             resolveAttackSpellShapeProjection({
-              state: attackSpellShapeBattle({
+              session: attackSpellShapeBattle({
                 sourceClassName: "wizard",
                 cantrips: [spellRecord("shocking_grasp")],
               }),
@@ -368,16 +366,16 @@ function requireResolvedAttackSpellShape(
 }
 
 function resolveSpellAttackHitRoute(input: {
-  readonly state: BattleState;
+  readonly session: BattleRuntimeSession;
   readonly spellId: Exclude<AttackSpellShapeSpellId, "inflict_wounds">;
   readonly damageGroups: readonly (readonly number[])[];
 }): readonly BattleReducerRouteEvent[] {
-  const act = actionSpellAct(input.state, input.spellId);
+  const act = actionSpellAct(input.session, input.spellId);
   const target = requireTypedHole(act.initialHoles, "targetChoice");
   const targetFill = spellTargetFill(target, act.subject.procedureRef);
   const awaitingAttack = requireNeedsHoles(
     resolveBattleSubject({
-      state: input.state,
+      state: input.session.state,
       subject: act.subject,
       fills: [targetFill],
     }),
@@ -389,7 +387,7 @@ function resolveSpellAttackHitRoute(input: {
   });
   const awaitingDamage = requireNeedsHoles(
     resolveBattleSubject({
-      state: input.state,
+      state: input.session.state,
       subject: act.subject,
       fills: [targetFill, attackFill],
     }),
@@ -397,7 +395,7 @@ function resolveSpellAttackHitRoute(input: {
   const damage = requireTypedHole(awaitingDamage.holes, "rolledDice");
   const resolved = requireResolvedAttackSpellShape(
     resolveBattleSubject({
-      state: input.state,
+      state: input.session.state,
       subject: act.subject,
       fills: [
         targetFill,
@@ -416,17 +414,17 @@ function resolveSpellAttackHitRoute(input: {
 }
 
 function resolveSaveDamageRoute(input: {
-  readonly state: BattleState;
+  readonly session: BattleRuntimeSession;
   readonly spellId: Extract<AttackSpellShapeSpellId, "inflict_wounds">;
   readonly succeeded: boolean;
   readonly damageGroups: readonly (readonly number[])[];
 }): readonly BattleReducerRouteEvent[] {
-  const act = actionSpellAct(input.state, input.spellId);
+  const act = actionSpellAct(input.session, input.spellId);
   const target = requireTypedHole(act.initialHoles, "targetChoice");
   const targetFill = spellTargetFill(target, act.subject.procedureRef);
   const awaitingSave = requireNeedsHoles(
     resolveBattleSubject({
-      state: input.state,
+      state: input.session.state,
       subject: act.subject,
       fills: [targetFill],
     }),
@@ -435,7 +433,7 @@ function resolveSaveDamageRoute(input: {
   const saveFill = savingThrowOutcomeFill(save, input.succeeded);
   const awaitingDamage = requireNeedsHoles(
     resolveBattleSubject({
-      state: input.state,
+      state: input.session.state,
       subject: act.subject,
       fills: [targetFill, saveFill],
     }),
@@ -443,7 +441,7 @@ function resolveSaveDamageRoute(input: {
   const damage = requireTypedHole(awaitingDamage.holes, "rolledDice");
   const resolved = requireResolvedAttackSpellShape(
     resolveBattleSubject({
-      state: input.state,
+      state: input.session.state,
       subject: act.subject,
       fills: [
         targetFill,
@@ -598,7 +596,7 @@ function requireTypedHole<K extends BattleHole["kind"]>(
 }
 
 function resolveAttackSpellShapeProjection(input: {
-  readonly state: BattleState;
+  readonly session: BattleRuntimeSession;
   readonly spellId: Exclude<AttackSpellShapeSpellId, "inflict_wounds">;
   readonly damageGroups: readonly (readonly number[])[];
   readonly lastResult: Exclude<
@@ -608,7 +606,7 @@ function resolveAttackSpellShapeProjection(input: {
 }): AttackSpellShapeSelectedIdentityProjection {
   const resolved = requireResolvedAttackSpellShape(
     resolveSpellAttackHit({
-      state: input.state,
+      session: input.session,
       spellId: input.spellId,
       damageGroups: input.damageGroups,
     }),
@@ -620,7 +618,7 @@ function resolveAttackSpellShapeProjection(input: {
 }
 
 function resolveSaveDamageProjection(input: {
-  readonly state: BattleState;
+  readonly session: BattleRuntimeSession;
   readonly spellId: Extract<AttackSpellShapeSpellId, "inflict_wounds">;
   readonly succeeded: boolean;
   readonly damageGroups: readonly (readonly number[])[];
@@ -631,7 +629,7 @@ function resolveSaveDamageProjection(input: {
 }): AttackSpellShapeSelectedIdentityProjection {
   const resolved = requireResolvedAttackSpellShape(
     resolveSaveDamageSpell({
-      state: input.state,
+      session: input.session,
       spellId: input.spellId,
       succeeded: input.succeeded,
       damageGroups: input.damageGroups,
@@ -644,14 +642,14 @@ function resolveSaveDamageProjection(input: {
 }
 
 function resolveSpellAttackHit(input: {
-  readonly state: BattleState;
+  readonly session: BattleRuntimeSession;
   readonly spellId: Exclude<AttackSpellShapeSpellId, "inflict_wounds">;
   readonly damageGroups: readonly (readonly number[])[];
 }): BattleResolutionResult {
-  const act = actionSpellAct(input.state, input.spellId);
+  const act = actionSpellAct(input.session, input.spellId);
   const target = requireResultHole(
     resolveBattleSubject({
-      state: input.state,
+      state: input.session.state,
       subject: act.subject,
       fills: [],
     }),
@@ -660,7 +658,7 @@ function resolveSpellAttackHit(input: {
   const targetFill = spellTargetFill(target, act.subject.procedureRef);
   const attack = requireResultHole(
     resolveBattleSubject({
-      state: input.state,
+      state: input.session.state,
       subject: act.subject,
       fills: [targetFill],
     }),
@@ -672,14 +670,14 @@ function resolveSpellAttackHit(input: {
   });
   const damage = requireResultHole(
     resolveBattleSubject({
-      state: input.state,
+      state: input.session.state,
       subject: act.subject,
       fills: [targetFill, attackFill],
     }),
     "rolledDice",
   );
   return resolveBattleSubject({
-    state: input.state,
+    state: input.session.state,
     subject: act.subject,
     fills: [
       targetFill,
@@ -690,15 +688,15 @@ function resolveSpellAttackHit(input: {
 }
 
 function resolveSaveDamageSpell(input: {
-  readonly state: BattleState;
+  readonly session: BattleRuntimeSession;
   readonly spellId: Extract<AttackSpellShapeSpellId, "inflict_wounds">;
   readonly succeeded: boolean;
   readonly damageGroups: readonly (readonly number[])[];
 }): BattleResolutionResult {
-  const act = actionSpellAct(input.state, input.spellId);
+  const act = actionSpellAct(input.session, input.spellId);
   const target = requireResultHole(
     resolveBattleSubject({
-      state: input.state,
+      state: input.session.state,
       subject: act.subject,
       fills: [],
     }),
@@ -707,7 +705,7 @@ function resolveSaveDamageSpell(input: {
   const targetFill = spellTargetFill(target, act.subject.procedureRef);
   const save = requireResultHole(
     resolveBattleSubject({
-      state: input.state,
+      state: input.session.state,
       subject: act.subject,
       fills: [targetFill],
     }),
@@ -716,14 +714,14 @@ function resolveSaveDamageSpell(input: {
   const saveFill = savingThrowOutcomeFill(save, input.succeeded);
   const damage = requireResultHole(
     resolveBattleSubject({
-      state: input.state,
+      state: input.session.state,
       subject: act.subject,
       fills: [targetFill, saveFill],
     }),
     "rolledDice",
   );
   return resolveBattleSubject({
-    state: input.state,
+    state: input.session.state,
     subject: act.subject,
     fills: [
       targetFill,
@@ -739,7 +737,7 @@ function attackSpellShapeBattle(
     readonly cantrips?: readonly SpellRecord[];
     readonly preparedSpells?: readonly SpellRecord[];
   } = {},
-): BattleState {
+): BattleRuntimeSession {
   const result = startBattle({
     battleId: battleId("attack-spell-shape-selected-identity"),
     combatants: [
@@ -833,10 +831,10 @@ function spellRecord(spellId: AttackSpellShapeSpellId): SpellRecord {
 }
 
 function actionSpellAct(
-  state: BattleState,
+  session: BattleRuntimeSession,
   spellId: AttackSpellShapeSpellId,
 ): ActionSpellAct {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActs(session).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
       battleActSpellPresentation(candidate)?.invocation.spellId === spellId,

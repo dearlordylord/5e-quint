@@ -25,7 +25,6 @@ import type {
 } from "@dnd/surface/surface/types";
 import { Either, Match } from "effect";
 
-import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   maybeOpenInterruptWindow,
   snapshotBattle,
@@ -39,7 +38,7 @@ import {
   type SelfTransformationModeSpellInvocation,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
-import { spellId, type CombatantId } from "../../identity.ts";
+import { CombatantId } from "../../identity.ts";
 import { allocateBattleActiveEffectRef } from "../../active-effect/execution-ref.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";
 import { SELF_TRANSFORMATION_MODE_KINDS } from "../domain-constants.ts";
@@ -48,7 +47,6 @@ import { invalidResult } from "../result-helpers.ts";
 import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
 import {
   applySelfTransformationModeEffect,
-  selfTransformationModeLabel,
 } from "../spells-active-effects.ts";
 import { spellDamageTypeChoiceHole } from "../spells-damage-fills.ts";
 import {
@@ -63,10 +61,10 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
-import { spellProcedureInvocationSchema } from "./profile.ts";
+import { ElapsedTimeTicksSchema } from "@dnd/shared-algebras/elapsed-time-algebra";
+import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
 import {
   AttackBonus,
-  BattleRuntimeObjectSchema,
   DamageDieSizeSchema,
   DamageTypeSchema,
   PreparedSpellAccessSchema,
@@ -325,29 +323,11 @@ function discoverSelfTransformationModeCastAct(
         tag: "actionSpell" as const,
         actorId,
         procedureRef: invocation.sourceProcedureRef,
-        invocation: selfTransformationModeInvocationRef(invocation),
         mode: { tag: "cast" as const },
       },
       initialHoles: [selfTransformationModeChoiceHole(invocation)],
     },
   ];
-}
-
-function selfTransformationModeInvocationRef(
-  invocation: SelfTransformationModeInvocation,
-): SpellInvocationRef {
-  return {
-    tag: "spellSlot",
-    spellId: spellId(invocation.spell.id),
-    slotLevel: invocation.resource.slotLevel,
-    procedure: "selfTransformationMode",
-  };
-}
-
-function selfTransformationModeCastSummary(
-  invocation: SelfTransformationModeInvocation,
-): string {
-  return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot and choose ${invocation.modeChoices.map(selfTransformationModeLabel).join(" or ")}.`;
 }
 
 function resolveSelfTransformationMode(
@@ -448,7 +428,7 @@ export function resolveStoredGlyphSelfTransformationModeSpellRelease(input: {
   readonly subject: ActionSpellBattleResolutionInput["subject"];
   readonly targetId: CombatantId;
   readonly sourceCombatantId: CombatantId;
-  readonly invocation: SelfTransformationModeInvocation;
+  readonly invocation: SelfTransformationModeResolveInput["invocation"];
   readonly fillSet: OkSpellFillSet;
 }): BattleResolutionResult {
   const invalidFillMessage = selfTransformationModeInvalidFillMessage(
@@ -552,7 +532,7 @@ function selfTransformationModeInvalidFillMessage(
 }
 
 function selfTransformationModeEffectPayloadFromFillSet(
-  invocation: SelfTransformationModeInvocation,
+  invocation: SelfTransformationModeResolveInput["invocation"],
   fillSet: OkSpellFillSet,
 ):
   | {
@@ -572,7 +552,7 @@ function selfTransformationModeEffectPayloadFromFillSet(
 }
 
 function selfTransformationModeEffectPayload(
-  invocation: SelfTransformationModeInvocation,
+  invocation: SelfTransformationModeResolveInput["invocation"],
   mode: SelfTransformationModeKind,
   damageTypeChoice:
     | Extract<BattleFill, { readonly kind: "damageTypeChoice" }>
@@ -624,17 +604,12 @@ function selfTransformationModeEffectPayload(
 }
 
 export const SelfTransformationModeInvocationSchema =
-  spellProcedureInvocationSchema<
-    Extract<
-      SupportedSpellInvocation,
-      { readonly procedure: "selfTransformationMode" }
-    >
-  >(
+  spellProcedureExecutionSchema(
     Schema.Struct({
       access: PreparedSpellAccessSchema,
       resource: SpellSlotInvocationResourceSchema,
       procedure: Schema.Literal("selfTransformationMode"),
-      spell: BattleRuntimeObjectSchema,
+      spellRuleFacts: SpellRuleExecutionFactsSchema,
       actionCost: Schema.Literal("magicAction"),
       modeChoices: Schema.NonEmptyArray(
         Schema.Literal(...SELF_TRANSFORMATION_MODE_KINDS),
@@ -648,20 +623,21 @@ export const SelfTransformationModeInvocationSchema =
         spellcastingAbilityModifier: AbilityModifier,
         attackBonus: AttackBonus,
       }),
-      expiresAt: BattleRuntimeObjectSchema,
+      expiresAt: Schema.Struct({
+        kind: Schema.Literal("concentration"),
+        combatantId: CombatantId,
+        durationTicks: ElapsedTimeTicksSchema,
+      }),
     }),
   );
 export const selfTransformationModeProfile = {
   procedure: "selfTransformationMode",
-  invocationSchema: SelfTransformationModeInvocationSchema,
+  executionSchema: SelfTransformationModeInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: [],
   admit: admitSelfTransformationMode,
   discoverCastAct: discoverSelfTransformationModeCastAct,
-  castSummary: selfTransformationModeCastSummary,
-  invocationRef: selfTransformationModeInvocationRef,
   resolve: resolveSelfTransformationMode,
 } satisfies SpellProcedureProfile<
   "selfTransformationMode",

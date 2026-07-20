@@ -1,7 +1,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY
 
 import { Match } from "effect";
-import type { BattleActDiscoverySubject as BattleSubject } from "./battle-subjects.ts";
+import type { BattleSubject } from "./battle-subjects.ts";
 import type { BattleFill } from "./battle-reducer.ts";
 
 const byBattleFillKind = Match.discriminator("kind");

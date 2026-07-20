@@ -53,7 +53,7 @@ verification for this delivery record.
     {
       "number": 6,
       "id": "GH-162",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Replace relationship partitions in Battle target and Act discovery",
       "dependencies": []
     },
@@ -584,7 +584,7 @@ verification for this delivery record.
     {
       "number": 63,
       "id": "GH-171",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Remove Encounter Side from Battle setup, state, and QNT vocabulary",
       "dependencies": [
         "GH-162",

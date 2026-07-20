@@ -1,4 +1,6 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-chosen-damage-resistance
+import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
+import { CombatantId } from "../../identity.ts";
 //
 // The chosenDamageResistance Spell Procedure Profile: a prepared action spell
 // that targets one willing touched creature, accepts a caster-selected damage
@@ -10,7 +12,6 @@ import { movementFeet } from "@dnd/shared/types";
 import type { DamageType, SpellRecord } from "@dnd/surface/surface/types";
 import { Either, Schema } from "effect";
 
-import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   snapshotBattle,
   type ActionSpellBattleResolutionInput,
@@ -20,9 +21,7 @@ import {
   type BattleState,
   type BattleExecutableSpellInvocation,
   type ChosenDamageResistanceSpellInvocation,
-  type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
-import { spellId, type CombatantId } from "../../identity.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";
 import { maybeOpenInterruptWindow } from "../dispatcher.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
@@ -36,7 +35,6 @@ import {
   spendSpellCastResources,
 } from "../spells-resolve-resources.ts";
 import {
-  BattleRuntimeObjectSchema,
   DamageTypeSchema,
   MovementFeet,
   PreparedSpellAccessSchema,
@@ -47,7 +45,7 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
-import { spellProcedureInvocationSchema } from "./profile.ts";
+import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
 
 const CHOSEN_ENERGY_RESISTANCE_DAMAGE_TYPES = [
   "acid",
@@ -190,7 +188,6 @@ function discoverChosenDamageResistanceCastAct(
         tag: "actionSpell" as const,
         actorId,
         procedureRef: invocation.sourceProcedureRef,
-        invocation: chosenDamageResistanceInvocationRef(invocation),
         mode: { tag: "cast" as const },
       },
       initialHoles: [targetHole, spellDamageTypeChoiceHole(invocation)],
@@ -198,22 +195,6 @@ function discoverChosenDamageResistanceCastAct(
   ];
 }
 
-function chosenDamageResistanceInvocationRef(
-  invocation: ChosenDamageResistanceSpellInvocation,
-): SpellInvocationRef {
-  return {
-    tag: "spellSlot",
-    spellId: spellId(invocation.spell.id),
-    slotLevel: invocation.resource.slotLevel,
-    procedure: "chosenDamageResistance",
-  };
-}
-
-function chosenDamageResistanceCastSummary(
-  invocation: ChosenDamageResistanceSpellInvocation,
-): string {
-  return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
-}
 
 function resolveChosenDamageResistance(
   input: ChosenDamageResistanceResolveInput,
@@ -393,17 +374,12 @@ function applyChosenDamageResistanceEffect(input: {
 }
 
 export const ChosenDamageResistanceInvocationSchema =
-  spellProcedureInvocationSchema<
-    Extract<
-      SupportedSpellInvocation,
-      { readonly procedure: "chosenDamageResistance" }
-    >
-  >(
+  spellProcedureExecutionSchema(
     Schema.Struct({
       access: PreparedSpellAccessSchema,
       resource: SpellSlotInvocationResourceSchema,
       procedure: Schema.Literal("chosenDamageResistance"),
-      spell: BattleRuntimeObjectSchema,
+      spellRuleFacts: SpellRuleExecutionFactsSchema,
       actionCost: Schema.Literal("magicAction"),
       targeting: Schema.Struct({
         kind: Schema.Literal("targetList"),
@@ -412,7 +388,11 @@ export const ChosenDamageResistanceInvocationSchema =
         requiredTargetDisposition: Schema.Literal("willing"),
       }),
       damageTypeChoices: Schema.Array(DamageTypeSchema),
-      expiresAt: BattleRuntimeObjectSchema,
+      expiresAt: Schema.Struct({
+        kind: Schema.Literal("concentration"),
+        combatantId: CombatantId,
+        durationTicks: ElapsedTimeTicksSchema,
+      }),
       rangeFeet: MovementFeet,
     }),
   );
@@ -422,14 +402,11 @@ export const chosenDamageResistanceProfile: SpellProcedureProfile<
   ChosenDamageResistanceSpellInvocation
 > = {
   procedure: "chosenDamageResistance",
-  invocationSchema: ChosenDamageResistanceInvocationSchema,
+  executionSchema: ChosenDamageResistanceInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   targetListInvocation: { kind: "always" },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: [],
   admit: admitChosenDamageResistance,
   discoverCastAct: discoverChosenDamageResistanceCastAct,
-  castSummary: chosenDamageResistanceCastSummary,
-  invocationRef: chosenDamageResistanceInvocationRef,
   resolve: resolveChosenDamageResistance,
 };

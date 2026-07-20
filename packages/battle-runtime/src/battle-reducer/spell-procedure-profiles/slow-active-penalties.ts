@@ -1,4 +1,5 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties unit-feature.metamagic-heightened-save-disadvantage unit-feature.metamagic-careful-save-protection
+import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
 //
 // Slow active-penalties profile: action-time level-3+ Spell Slot casting,
@@ -26,7 +27,6 @@ import {
 import { movementFeet } from "@dnd/shared/types";
 import type { ActivationPhase, EffectAtom } from "@dnd/surface/surface/types";
 import { Either, Schema } from "effect";
-import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   maybeOpenInterruptWindow,
   snapshotBattle,
@@ -40,7 +40,7 @@ import {
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
 import { battleCreatureWithSpellActiveEffects } from "../../active-effect/lifecycle.ts";
-import { spellId, type CombatantId } from "../../identity.ts";
+import { type CombatantId } from "../../identity.ts";
 import {
   SLOW_ACTIVE_PENALTIES_ARMOR_CLASS_DELTA,
   SLOW_ACTIVE_PENALTIES_DEX_SAVE_DELTA,
@@ -59,7 +59,6 @@ import {
 import { invalidResult } from "../result-helpers.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
 import {
-  BattleRuntimeObjectSchema,
   DcSourceSchema,
   MovementFeet,
   PreparedSpellAccessSchema,
@@ -72,7 +71,7 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
-import { spellProcedureInvocationSchema } from "./profile.ts";
+import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
 import {
   CAREFUL_METAMAGIC_EFFECT_KIND,
   discoverSpellMetamagicSelections,
@@ -360,7 +359,6 @@ function slowActivePenaltiesCastAct(
       tag: "actionSpell",
       actorId,
       procedureRef: invocation.sourceProcedureRef,
-      invocation: slowActivePenaltiesInvocationRef(invocation),
       mode: { tag: "cast" },
     },
     initialHoles,
@@ -393,23 +391,6 @@ function slowActivePenaltiesMetamagicInitialHoles(
     holes.push(heightenedSpellTargetChoiceHole(state, actorId, invocation));
   }
   return holes;
-}
-
-function slowActivePenaltiesInvocationRef(
-  invocation: SlowActivePenaltiesSpellInvocation,
-): SpellInvocationRef {
-  return {
-    tag: "spellSlot",
-    spellId: spellId(invocation.spell.id),
-    slotLevel: invocation.resource.slotLevel,
-    procedure: "slowActivePenalties",
-  };
-}
-
-function slowActivePenaltiesCastSummary(
-  invocation: SlowActivePenaltiesSpellInvocation,
-): string {
-  return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
 }
 
 function resolveSlowActivePenalties(
@@ -662,12 +643,12 @@ function validateSlowAreaWitness(
 }
 
 const SlowActivePenaltiesInvocationSchema =
-  spellProcedureInvocationSchema<SlowActivePenaltiesSpellInvocation>(
+  spellProcedureExecutionSchema(
     Schema.Struct({
       access: PreparedSpellAccessSchema,
       resource: SpellSlotInvocationResourceSchema,
       procedure: Schema.Literal("slowActivePenalties"),
-      spell: BattleRuntimeObjectSchema,
+      spellRuleFacts: SpellRuleExecutionFactsSchema,
       actionCost: Schema.Literal("magicAction"),
       ability: Schema.Literal("wis"),
       dc: DcSourceSchema,
@@ -677,21 +658,18 @@ const SlowActivePenaltiesInvocationSchema =
       }),
       maxTargets: Schema.Literal(6),
       rangeFeet: MovementFeet,
-      durationTicks: Schema.Number,
+      durationTicks: ElapsedTimeTicksSchema,
     }),
   );
 
 export const slowActivePenaltiesProfile = {
   procedure: "slowActivePenalties",
-  invocationSchema: SlowActivePenaltiesInvocationSchema,
+  executionSchema: SlowActivePenaltiesInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: [],
   admit: admitSlowActivePenalties,
   discoverCastAct: discoverSlowActivePenaltiesCastAct,
-  castSummary: slowActivePenaltiesCastSummary,
-  invocationRef: slowActivePenaltiesInvocationRef,
   resolve: resolveSlowActivePenalties,
 } satisfies SpellProcedureProfile<
   "slowActivePenalties",

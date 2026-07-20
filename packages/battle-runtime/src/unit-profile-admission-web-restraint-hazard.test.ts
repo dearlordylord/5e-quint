@@ -50,36 +50,44 @@ function castWeb(
   input: { readonly extraTargetIds?: readonly CombatantId[] } = {},
 ) {
   const spell = spellRecord(webUnitId);
-  const state = spellBattle({
+  const session = spellBattle({
     preparedSpells: [spell],
     spellSlots: [{ spellLevel: 2, count: 1 }],
     ...(input.extraTargetIds === undefined
       ? {}
       : { extraTargetIds: input.extraTargetIds }),
   });
-  const act = spellAct({ state, spellId: webUnitId, slotLevel: 2 });
+  const act = spellAct({ session, spellId: webUnitId, slotLevel: 2 });
   const area = requireHole(act.initialHoles, "spellAreaChoice");
   const cast = resolveBattleSubject({
-    state,
+    state: session.state,
     subject: act.subject,
     fills: [webAreaFill(area)],
   });
   if (cast.tag !== "resolved") {
     throw new Error("Expected Web cast to resolve.");
   }
-  const targetTurn = endTurn({ state: cast.state, actorId: spellCasterId });
+  const castSession = { ...session, state: cast.state };
+  const targetTurn = endTurn({
+    state: castSession.state,
+    actorId: spellCasterId,
+  });
   if (targetTurn.tag !== "resolved") {
     throw new Error("Expected Web caster End Turn to resolve.");
   }
-  return { spell, cast: cast.state, targetTurn: targetTurn.state };
+  return {
+    spell,
+    cast: castSession,
+    targetTurn: { ...castSession, state: targetTurn.state },
+  };
 }
 
-function failedWebEntryState() {
+function failedWebEntrySession() {
   const { targetTurn } = castWeb();
   const entryAct = webRestraintSaveAct(targetTurn, spellTargetId, "entersArea");
   const entrySave = requireHole(entryAct.initialHoles, "savingThrowOutcome");
   const failed = resolveBattleSubject({
-    state: targetTurn,
+    state: targetTurn.state,
     subject: entryAct.subject,
     fills: [
       singleTargetSavingThrowOutcomeFill(entrySave, spellTargetId, false),
@@ -88,13 +96,13 @@ function failedWebEntryState() {
   if (failed.tag !== "resolved") {
     throw new Error("Expected Web entry save to resolve.");
   }
-  return failed.state;
+  return { ...targetTurn, state: failed.state };
 }
 
 describe("L12G deterministic Web restraint-hazard admission", () => {
   test("web is admitted as a one-hour point-origin Cube restraint hazard", () => {
     const spell = spellRecord(webUnitId);
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [
         { spellLevel: 2, count: 1 },
@@ -102,12 +110,12 @@ describe("L12G deterministic Web restraint-hazard admission", () => {
       ],
     });
     const secondLevelAct = spellAct({
-      state,
+      session,
       spellId: webUnitId,
       slotLevel: 2,
     });
     const thirdLevelAct = spellAct({
-      state,
+      session,
       spellId: webUnitId,
       slotLevel: 3,
     });
@@ -119,7 +127,7 @@ describe("L12G deterministic Web restraint-hazard admission", () => {
       tag: "actionSpell",
       actorId: spellCasterId,
       procedureRef: requireCharacterSpellProcedureRefForTest(
-        state,
+        session,
         spellCasterId,
         spellSlotInvocationRef(webUnitId, 2, "webRestraintHazard"),
       ),
@@ -128,11 +136,11 @@ describe("L12G deterministic Web restraint-hazard admission", () => {
     const area = requireHole(secondLevelAct.initialHoles, "spellAreaChoice");
     expect(area).toEqual(
       expect.objectContaining({
-        label: "Web area",
+        label: "Spell area",
         area: { kind: "pointOriginCube", sideFeet: movementFeet(20) },
       }),
     );
-    expect(spellHoleInvocation(state, [area])).toEqual(
+    expect(spellHoleInvocation(session, [area])).toEqual(
       expect.objectContaining({
         procedure: "webRestraintHazard",
         spell,
@@ -144,7 +152,7 @@ describe("L12G deterministic Web restraint-hazard admission", () => {
         rangeFeet: movementFeet(60),
       }),
     );
-    expect(spellHoleInvocation(state, thirdLevelAct.initialHoles)).toEqual(
+    expect(spellHoleInvocation(session, thirdLevelAct.initialHoles)).toEqual(
       expect.objectContaining({
         procedure: "webRestraintHazard",
         resource: { tag: "spellSlot", slotLevel: 3 },
@@ -155,7 +163,7 @@ describe("L12G deterministic Web restraint-hazard admission", () => {
   test("cast records the source-owned web area effect and concentration", () => {
     const { cast } = castWeb();
 
-    expect(requireCombatant(cast, spellCasterId)).toMatchObject({
+    expect(requireCombatant(cast.state, spellCasterId)).toMatchObject({
       concentration: {
         sourceProcedureRef: expect.any(String),
         effectKind: "spellEffect",
@@ -189,14 +197,14 @@ describe("L12G deterministic Web restraint-hazard admission", () => {
     };
     const moveHole = requireResultHole(
       resolveBattleSubject({
-        state: targetTurn,
+        state: targetTurn.state,
         subject: moveSubject,
         fills: [],
       }),
       "movement",
     );
     const activeWeb = requireCombatant(
-      targetTurn,
+      targetTurn.state,
       spellCasterId,
     ).activeEffects.find((effect) => effect.kind === "webRestraintHazard");
     if (activeWeb === undefined) {
@@ -218,7 +226,7 @@ describe("L12G deterministic Web restraint-hazard admission", () => {
 
     expect(
       resolveBattleSubject({
-        state: targetTurn,
+        state: targetTurn.state,
         subject: moveSubject,
         fills: [
           movementFill(moveHole, {
@@ -235,7 +243,7 @@ describe("L12G deterministic Web restraint-hazard admission", () => {
     });
 
     const moved = resolveBattleSubject({
-      state: targetTurn,
+      state: targetTurn.state,
       subject: moveSubject,
       fills: [
         movementFill(moveHole, {
@@ -252,7 +260,7 @@ describe("L12G deterministic Web restraint-hazard admission", () => {
     expect(requireCombatant(moved.state, spellTargetId)).toMatchObject({
       movementSpentFeet: movementFeet(15),
     });
-    expect(battleObscurementZones(targetTurn)).toEqual([
+    expect(battleObscurementZones(targetTurn.state)).toEqual([
       expect.objectContaining({
         kind: "spellObscurementZone",
         sourceProcedureRef: activeWeb.sourceProcedureRef,
@@ -271,9 +279,9 @@ describe("L12G deterministic Web restraint-hazard admission", () => {
   });
 
   test("entry save failure restrains and records first-entry resolution for the turn", () => {
-    const failed = failedWebEntryState();
+    const failed = failedWebEntrySession();
 
-    expect(requireCombatant(failed, spellTargetId)).toMatchObject({
+    expect(requireCombatant(failed.state, spellTargetId)).toMatchObject({
       conditions: expect.objectContaining({ restrained: true }),
       activeEffects: [
         expect.objectContaining({
@@ -291,13 +299,15 @@ describe("L12G deterministic Web restraint-hazard admission", () => {
         }),
       ],
     });
-    expect(requireCombatant(failed, spellCasterId).activeEffects).toEqual([
-      expect.objectContaining({
-        kind: "webRestraintHazard",
-        entrySavedThisTurn: [spellTargetId],
-        startTurnSavedThisTurn: [],
-      }),
-    ]);
+    expect(requireCombatant(failed.state, spellCasterId).activeEffects).toEqual(
+      [
+        expect.objectContaining({
+          kind: "webRestraintHazard",
+          entrySavedThisTurn: [spellTargetId],
+          startTurnSavedThisTurn: [],
+        }),
+      ],
+    );
     expect(
       discoverBattleActs(failed).some(
         (act) =>
@@ -327,14 +337,14 @@ describe("L12G deterministic Web restraint-hazard admission", () => {
 
     expect(
       resolveBattleSubject({
-        state: targetTurn,
+        state: targetTurn.state,
         subject: entryAct.subject,
         fills: [
           singleTargetSavingThrowOutcomeFill(wrongHole, spellTargetId, false),
         ],
       }),
     ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
-    expect(requireCombatant(targetTurn, spellTargetId)).toMatchObject({
+    expect(requireCombatant(targetTurn.state, spellTargetId)).toMatchObject({
       conditions: expect.objectContaining({ restrained: false }),
       activeEffects: [],
     });
@@ -352,7 +362,7 @@ describe("L12G deterministic Web restraint-hazard admission", () => {
       "savingThrowOutcome",
     );
     const restrained = resolveBattleSubject({
-      state: targetTurn,
+      state: targetTurn.state,
       subject: startTurnAct.subject,
       fills: [
         singleTargetSavingThrowOutcomeFill(startTurnSave, spellTargetId, false),
@@ -361,6 +371,7 @@ describe("L12G deterministic Web restraint-hazard admission", () => {
     if (restrained.tag !== "resolved") {
       throw new Error("Expected Web start-turn save to resolve.");
     }
+    const restrainedSession = { ...targetTurn, state: restrained.state };
     expect(
       requireCombatant(restrained.state, spellCasterId).activeEffects,
     ).toEqual([
@@ -371,7 +382,7 @@ describe("L12G deterministic Web restraint-hazard admission", () => {
       }),
     ]);
     expect(
-      discoverBattleActs(restrained.state).some(
+      discoverBattleActs(restrainedSession).some(
         (act) =>
           act.subject.tag === "runtimeCommand" &&
           act.subject.command === "webRestraintSave" &&
@@ -379,7 +390,7 @@ describe("L12G deterministic Web restraint-hazard admission", () => {
       ),
     ).toBe(false);
 
-    const escapeAct = discoverBattleActs(restrained.state).find(
+    const escapeAct = discoverBattleActs(restrainedSession).find(
       (act) =>
         act.subject.tag === "action" &&
         act.subject.action === "escapeSpellRestraint" &&
@@ -431,7 +442,7 @@ describe("L12G deterministic Web restraint-hazard admission", () => {
       "savingThrowOutcome",
     );
     const restrained = resolveBattleSubject({
-      state: targetTurn,
+      state: targetTurn.state,
       subject: startTurnAct.subject,
       fills: [
         singleTargetSavingThrowOutcomeFill(startTurnSave, spellTargetId, false),
@@ -440,16 +451,18 @@ describe("L12G deterministic Web restraint-hazard admission", () => {
     if (restrained.tag !== "resolved") {
       throw new Error("Expected Web start-turn save to resolve.");
     }
+    const restrainedSession = { ...targetTurn, state: restrained.state };
     const helperTurn = endTurn({
-      state: restrained.state,
+      state: restrainedSession.state,
       actorId: spellTargetId,
     });
     if (helperTurn.tag !== "resolved") {
       throw new Error("Expected Web helper turn to start.");
     }
+    const helperTurnSession = { ...restrainedSession, state: helperTurn.state };
 
     expect(
-      discoverBattleActs(helperTurn.state).some(
+      discoverBattleActs(helperTurnSession).some(
         (act) =>
           act.subject.tag === "action" &&
           act.subject.action === "escapeSpellRestraint" &&
@@ -475,13 +488,13 @@ describe("L12G deterministic Web restraint-hazard admission", () => {
   });
 
   test("table cleanup removes restrained condition and area removal ends the spell", () => {
-    const noLongerInWebsState = failedWebEntryState();
+    const noLongerInWebsSession = failedWebEntrySession();
     const noLongerInWebsAct = webRestrainedNoLongerInAreaAct(
-      noLongerInWebsState,
+      noLongerInWebsSession,
       spellTargetId,
     );
     const noLongerRestrained = resolveBattleSubject({
-      state: noLongerInWebsState,
+      state: noLongerInWebsSession.state,
       subject: noLongerInWebsAct.subject,
       fills: [],
     });
@@ -497,10 +510,10 @@ describe("L12G deterministic Web restraint-hazard admission", () => {
       requireCombatant(noLongerRestrained.state, spellCasterId).activeEffects,
     ).toEqual([expect.objectContaining({ kind: "webRestraintHazard" })]);
 
-    const areaRemovalState = failedWebEntryState();
+    const areaRemovalSession = failedWebEntrySession();
     const removed = resolveBattleSubject({
-      state: areaRemovalState,
-      subject: webAreaRemovedAct(areaRemovalState).subject,
+      state: areaRemovalSession.state,
+      subject: webAreaRemovedAct(areaRemovalSession).subject,
       fills: [],
     });
     if (removed.tag !== "resolved") {
@@ -516,9 +529,9 @@ describe("L12G deterministic Web restraint-hazard admission", () => {
   });
 
   test("duration expiration removes the Web area and Web-owned restraint", () => {
-    const restrained = failedWebEntryState();
-    const caster = requireCombatant(restrained, spellCasterId);
-    const nearlyExpiredCombatants = new Map(restrained.combatants).set(
+    const restrained = failedWebEntrySession();
+    const caster = requireCombatant(restrained.state, spellCasterId);
+    const nearlyExpiredCombatants = new Map(restrained.state.combatants).set(
       spellCasterId,
       {
         ...caster,

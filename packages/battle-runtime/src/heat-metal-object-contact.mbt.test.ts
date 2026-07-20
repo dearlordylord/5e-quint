@@ -45,8 +45,8 @@ import {
   battleObjectId,
   breakBattleConcentration,
   endTurn,
+  type BattleRuntimeSession,
   type BattleResolutionResult,
-  type BattleState,
 } from "./index.ts";
 import type { SpellObjectContactDamageActiveEffect } from "./active-effect/types.ts";
 
@@ -91,7 +91,7 @@ type HeatMetalObjectContactState = {
 };
 
 type HeatMetalRuntimeState = {
-  readonly battle: BattleState;
+  readonly session: BattleRuntimeSession;
   readonly currentTurnRole: HeatMetalTurnRole;
   readonly lastResult: HeatMetalLastResult;
 };
@@ -216,7 +216,7 @@ describe("Heat Metal object-contact MBT parity", () => {
 
 function initialRuntimeState(): HeatMetalRuntimeState {
   return {
-    battle: spellBattle({
+    session: spellBattle({
       preparedSpells: [spellRecord(heatMetalUnitId)],
       spellSlots: [{ spellLevel: 2, count: 1 }],
       targetHp: initialTargetHp,
@@ -232,7 +232,7 @@ function castHeatMetal(
   input: { readonly contactTarget: boolean },
 ): HeatMetalRuntimeState {
   const act = spellAct({
-    state: state.battle,
+    session: state.session,
     spellId: heatMetalUnitId,
     slotLevel: 2,
   });
@@ -244,7 +244,7 @@ function castHeatMetal(
   });
   const contactHole = requireResultHole(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.session.state,
       subject: act.subject,
       fills: [objectFill],
     }),
@@ -258,14 +258,14 @@ function castHeatMetal(
   if (!input.contactTarget) {
     const result = requireResolved(
       resolveBattleSubject({
-        state: state.battle,
+        state: state.session.state,
         subject: act.subject,
         fills: [objectFill, contactFill],
       }),
       "Expected no-contact Heat Metal cast to resolve.",
     );
     return {
-      battle: result.state,
+      session: { ...state.session, state: result.state },
       currentTurnRole: "caster",
       lastResult: "castNoContact",
     };
@@ -273,7 +273,7 @@ function castHeatMetal(
 
   const damageHole = requireResultHole(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.session.state,
       subject: act.subject,
       fills: [objectFill, contactFill],
     }),
@@ -281,7 +281,7 @@ function castHeatMetal(
   );
   const result = requireResolved(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.session.state,
       subject: act.subject,
       fills: [
         objectFill,
@@ -292,7 +292,7 @@ function castHeatMetal(
     "Expected contact Heat Metal cast to resolve.",
   );
   return {
-    battle: result.state,
+    session: { ...state.session, state: result.state },
     currentTurnRole: "caster",
     lastResult: "castContactDamage",
   };
@@ -302,18 +302,18 @@ function trySameTurnRepeat(
   state: HeatMetalRuntimeState,
 ): HeatMetalRuntimeState {
   expect(
-    maybeBonusSpellAct({ state: state.battle, spellId: heatMetalUnitId }),
+    maybeBonusSpellAct({ session: state.session, spellId: heatMetalUnitId }),
   ).toBeUndefined();
   return { ...state, lastResult: "repeatBlocked" };
 }
 
 function endCasterTurn(state: HeatMetalRuntimeState): HeatMetalRuntimeState {
   const result = requireResolved(
-    endTurn({ state: state.battle, actorId: spellCasterId }),
+    endTurn({ state: state.session.state, actorId: spellCasterId }),
     "Expected Heat Metal caster End Turn to resolve.",
   );
   return {
-    battle: result.state,
+    session: { ...state.session, state: result.state },
     currentTurnRole: "target",
     lastResult: "endCasterTurn",
   };
@@ -321,11 +321,11 @@ function endCasterTurn(state: HeatMetalRuntimeState): HeatMetalRuntimeState {
 
 function endTargetTurn(state: HeatMetalRuntimeState): HeatMetalRuntimeState {
   const result = requireResolved(
-    endTurn({ state: state.battle, actorId: spellTargetId }),
+    endTurn({ state: state.session.state, actorId: spellTargetId }),
     "Expected Heat Metal target End Turn to resolve.",
   );
   return {
-    battle: result.state,
+    session: { ...state.session, state: result.state },
     currentTurnRole: "caster",
     lastResult: "endTargetTurn",
   };
@@ -335,7 +335,7 @@ function repeatHeatMetalDamage(
   state: HeatMetalRuntimeState,
 ): HeatMetalRuntimeState {
   const act = bonusSpellAct({
-    state: state.battle,
+    session: state.session,
     spellId: heatMetalUnitId,
   });
   const contactFill = spellObjectContactTargetsFill({
@@ -344,7 +344,7 @@ function repeatHeatMetalDamage(
   });
   const damageHole = requireResultHole(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.session.state,
       subject: act.subject,
       fills: [contactFill],
     }),
@@ -352,14 +352,14 @@ function repeatHeatMetalDamage(
   );
   const result = requireResolved(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.session.state,
       subject: act.subject,
       fills: [contactFill, damageRollFillWithGroups(damageHole, [[2, 3]])],
     }),
     "Expected Heat Metal repeat damage to resolve.",
   );
   return {
-    battle: result.state,
+    session: { ...state.session, state: result.state },
     currentTurnRole: "caster",
     lastResult: "repeatContactDamage",
   };
@@ -369,7 +369,10 @@ function breakHeatMetalConcentration(
   state: HeatMetalRuntimeState,
 ): HeatMetalRuntimeState {
   return {
-    battle: breakBattleConcentration(state.battle, spellCasterId),
+    session: {
+      ...state.session,
+      state: breakBattleConcentration(state.session.state, spellCasterId),
+    },
     currentTurnRole: state.currentTurnRole,
     lastResult: "concentrationBroken",
   };
@@ -378,8 +381,8 @@ function breakHeatMetalConcentration(
 function heatMetalProjection(
   state: HeatMetalRuntimeState,
 ): HeatMetalObjectContactState {
-  const caster = requireCombatant(state.battle, spellCasterId);
-  const target = requireCombatant(state.battle, spellTargetId);
+  const caster = requireCombatant(state.session.state, spellCasterId);
+  const target = requireCombatant(state.session.state, spellTargetId);
   const effect = caster.activeEffects.find(
     (candidate): candidate is SpellObjectContactDamageActiveEffect =>
       candidate.kind === "spellObjectContactDamage" &&
@@ -388,18 +391,21 @@ function heatMetalProjection(
   );
   const projection = {
     currentTurnRole: state.currentTurnRole,
-    actionAvailable: canSpendAction(state.battle.currentTurnResources, "magic"),
+    actionAvailable: canSpendAction(
+      state.session.state.currentTurnResources,
+      "magic",
+    ),
     bonusActionAvailable:
-      state.battle.currentTurnResources.currentHasBonusAction,
+      state.session.state.currentTurnResources.currentHasBonusAction,
     spellAvailable:
       maybeSpellAct({
-        state: state.battle,
+        session: state.session,
         spellId: heatMetalUnitId,
         slotLevel: 2,
       }) !== undefined,
     repeatAvailable:
       maybeBonusSpellAct({
-        state: state.battle,
+        session: state.session,
         spellId: heatMetalUnitId,
       }) !== undefined,
     objectContactEffectActive: effect !== undefined,

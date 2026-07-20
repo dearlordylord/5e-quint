@@ -12,7 +12,7 @@ import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elaps
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
-import type { SpellInvocationRef } from "../../battle-subjects.ts";
+import { WardingBondActiveEffectTemplateSchema } from "../../active-effect/codecs.ts";
 import {
   maybeOpenInterruptWindow,
   snapshotBattle,
@@ -23,7 +23,7 @@ import {
   type BattleState,
   type WardingBondSpellInvocation,
 } from "../../battle-reducer.ts";
-import { spellId, type CombatantId } from "../../identity.ts";
+import { type CombatantId } from "../../identity.ts";
 import {
   WARDING_BOND_ARMOR_CLASS_BONUS,
   WARDING_BOND_CAST_RANGE_FEET,
@@ -51,10 +51,8 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
-import { spellProcedureInvocationSchema } from "./profile.ts";
-import type { SupportedSpellInvocation } from "../../battle-reducer.ts";
+import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
 import {
-  BattleRuntimeObjectSchema,
   MovementFeet,
   PreparedSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
@@ -275,30 +273,12 @@ function discoverWardingBondCastAct(
               tag: "actionSpell" as const,
               actorId,
               procedureRef: invocation.sourceProcedureRef,
-              invocation: wardingBondInvocationRef(invocation),
               mode: { tag: "cast" as const },
             },
             initialHoles: [targetHole],
           },
         ];
   return castActs;
-}
-
-function wardingBondInvocationRef(
-  invocation: WardingBondSpellInvocation,
-): SpellInvocationRef {
-  return {
-    tag: "spellSlot",
-    spellId: spellId(invocation.spell.id),
-    slotLevel: invocation.resource.slotLevel,
-    procedure: "wardingBond",
-  };
-}
-
-function wardingBondCastSummary(
-  invocation: WardingBondSpellInvocation,
-): string {
-  return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
 }
 
 function resolveWardingBond(
@@ -373,7 +353,6 @@ function resolveWardingBond(
     input.actorId,
     target.combatantId,
     input.invocation,
-    input.input.subject.procedureRef,
   );
   const resourced = spendSpellCastResources({
     state: effected,
@@ -421,16 +400,14 @@ function wardingBondFillSetHasDisallowedFills(
   );
 }
 
-const WardingBondInvocationSchema = spellProcedureInvocationSchema<
-  Extract<SupportedSpellInvocation, { readonly procedure: "wardingBond" }>
->(
+const WardingBondInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
     resource: SpellSlotInvocationResourceSchema,
     procedure: Schema.Literal("wardingBond"),
-    spell: BattleRuntimeObjectSchema,
+    spellRuleFacts: SpellRuleExecutionFactsSchema,
     actionCost: Schema.Literal("magicAction"),
-    activeEffect: BattleRuntimeObjectSchema,
+    activeEffect: WardingBondActiveEffectTemplateSchema,
     rangeFeet: MovementFeet,
     connectionRangeFeet: MovementFeet,
   }),
@@ -441,14 +418,11 @@ export const wardingBondProfile: SpellProcedureProfile<
   ActionSpellBattleResolutionInput
 > = {
   procedure: "wardingBond",
-  invocationSchema: WardingBondInvocationSchema,
+  executionSchema: WardingBondInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: [],
   admit: admitWardingBond,
   discoverCastAct: discoverWardingBondCastAct,
-  castSummary: wardingBondCastSummary,
-  invocationRef: wardingBondInvocationRef,
   resolve: resolveWardingBond,
 };

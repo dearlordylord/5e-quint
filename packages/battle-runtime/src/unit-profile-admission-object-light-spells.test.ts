@@ -29,7 +29,10 @@ import {
   spellTouchedObjectTargetFill,
 } from "./unit-profile-admission-spell-fill-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
-import type { BattleState } from "./unit-profile-admission-test-support.ts";
+import type {
+  BattleRuntimeSession,
+  BattleState,
+} from "./unit-profile-admission-test-support.ts";
 import {
   battleIlluminationFromLightEmitters,
   battleLightEmitterProjection,
@@ -42,11 +45,9 @@ import {
   elapsedTimeTicks,
   movementFeet,
   resolveBattleSubject,
+  spellSlotInvocationRef,
 } from "./unit-profile-admission-test-support.ts";
-import {
-  battleProcedureExecutionRefForTest,
-  requireCharacterSpellProcedureRefForTest,
-} from "./battle-runtime-test-support.ts";
+import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime-test-support.ts";
 
 function distantMetamagicOption(): CharacterBattleMetamagicOptionFact {
   return {
@@ -56,8 +57,8 @@ function distantMetamagicOption(): CharacterBattleMetamagicOptionFact {
   };
 }
 
-function actWithDistantSpellMetamagic(state: BattleState) {
-  const act = discoverBattleActs(state).find(
+function actWithDistantSpellMetamagic(session: BattleRuntimeSession) {
+  const act = discoverBattleActs(session).find(
     (candidate) =>
       candidate.subject.tag === "actionSpell" &&
       battleActSpellPresentation(candidate)?.invocation.spellId ===
@@ -80,9 +81,10 @@ function sorceryPointsRemaining(state: BattleState): unknown {
   if (actor?.origin.kind !== "character") {
     return undefined;
   }
+  const resourcePoolRef = actor.origin.metamagic?.sorceryPointResourcePoolRef;
   const resource = actor.origin.resources.find(
     (candidate): candidate is CharacterBattlePointPoolResourceState =>
-      candidate.unit.id === "sorcerer_font_of_magic" &&
+      candidate.resourcePoolRef === resourcePoolRef &&
       characterBattleResourceIsPointPool(candidate),
   );
   return resource?.pointsRemaining;
@@ -91,15 +93,16 @@ function sorceryPointsRemaining(state: BattleState): unknown {
 describe("SRDINV70B deterministic object-light Spell Unit admission", () => {
   test("light is admitted as a Magic action cantrip object emitter", () => {
     const spell = spellRecord(lightUnitId);
-    const state = spellBattle({ cantrips: [spell] });
-    const act = spellAct({ state, spellId: lightUnitId });
+    const session = spellBattle({ cantrips: [spell] });
+    const act = spellAct({ session, spellId: lightUnitId });
+    const procedureRef = act.subject.procedureRef;
     const targetHole = requireHole(act.initialHoles, "objectTargetChoice");
     const objectId = battleObjectId("unit-profile-light-object");
 
     expect(act).toEqual(
       expect.objectContaining({
         subject: {
-          procedureRef: expect.any(String),
+          procedureRef,
           tag: "actionSpell",
           actorId: spellCasterId,
           mode: { tag: "cast" },
@@ -107,7 +110,7 @@ describe("SRDINV70B deterministic object-light Spell Unit admission", () => {
         initialHoles: [
           expect.objectContaining({
             kind: "objectTargetChoice",
-            label: "Light object target",
+            label: "Spell object target",
             requiresTableSpatialFact: true,
           }),
         ],
@@ -115,7 +118,7 @@ describe("SRDINV70B deterministic object-light Spell Unit admission", () => {
     );
 
     const resolved = resolveBattleSubject({
-      state,
+      state: session.state,
       subject: act.subject,
       fills: [
         spellObjectLightTargetFill({
@@ -133,7 +136,7 @@ describe("SRDINV70B deterministic object-light Spell Unit admission", () => {
       state: {
         lightEmitters: [
           {
-            sourceProcedureRef: expect.any(String),
+            sourceProcedureRef: procedureRef,
             sourceCombatantId: spellCasterId,
             attachment: { kind: "object", objectId },
             emission: {
@@ -151,7 +154,7 @@ describe("SRDINV70B deterministic object-light Spell Unit admission", () => {
       snapshot: {
         lightEmitters: [
           expect.objectContaining({
-            sourceProcedureRef: expect.any(String),
+            sourceProcedureRef: procedureRef,
             attachment: { kind: "object", objectId },
           }),
         ],
@@ -178,22 +181,23 @@ describe("SRDINV70B deterministic object-light Spell Unit admission", () => {
 
   test("continual flame is admitted as a Magic action spell slot object emitter", () => {
     const spell = spellRecord(continualFlameUnitId);
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
     const act = spellAct({
-      state,
+      session,
       spellId: continualFlameUnitId,
       slotLevel: 2,
     });
+    const procedureRef = act.subject.procedureRef;
     const targetHole = requireHole(act.initialHoles, "objectTargetChoice");
     const objectId = battleObjectId("unit-profile-continual-flame-object");
 
     expect(act).toEqual(
       expect.objectContaining({
         subject: {
-          procedureRef: expect.any(String),
+          procedureRef,
           tag: "actionSpell",
           actorId: spellCasterId,
           mode: { tag: "cast" },
@@ -201,7 +205,7 @@ describe("SRDINV70B deterministic object-light Spell Unit admission", () => {
         initialHoles: [
           expect.objectContaining({
             kind: "objectTargetChoice",
-            label: "Continual Flame object target",
+            label: "Spell object target",
             requiresTableSpatialFact: true,
           }),
         ],
@@ -209,7 +213,7 @@ describe("SRDINV70B deterministic object-light Spell Unit admission", () => {
     );
 
     const resolved = resolveBattleSubject({
-      state,
+      state: session.state,
       subject: act.subject,
       fills: [
         spellTouchedObjectTargetFill({
@@ -226,7 +230,7 @@ describe("SRDINV70B deterministic object-light Spell Unit admission", () => {
       state: {
         lightEmitters: [
           {
-            sourceProcedureRef: expect.any(String),
+            sourceProcedureRef: procedureRef,
             sourceCombatantId: spellCasterId,
             attachment: { kind: "object", objectId },
             emission: {
@@ -246,7 +250,7 @@ describe("SRDINV70B deterministic object-light Spell Unit admission", () => {
         },
         lightEmitters: [
           expect.objectContaining({
-            sourceProcedureRef: expect.any(String),
+            sourceProcedureRef: procedureRef,
             attachment: { kind: "object", objectId },
           }),
         ],
@@ -290,11 +294,11 @@ describe("SRDINV70B deterministic object-light Spell Unit admission", () => {
 
   test("light object emitter illumination is derived with opaque-cover suppression", () => {
     const spell = spellRecord(lightUnitId);
-    const state = spellBattle({ cantrips: [spell] });
-    const act = spellAct({ state, spellId: lightUnitId });
+    const session = spellBattle({ cantrips: [spell] });
+    const act = spellAct({ session, spellId: lightUnitId });
     const objectId = battleObjectId("unit-profile-light-covered-object");
     const resolved = resolveBattleSubject({
-      state,
+      state: session.state,
       subject: act.subject,
       fills: [
         spellObjectLightTargetFill({
@@ -382,11 +386,11 @@ describe("SRDINV70B deterministic object-light Spell Unit admission", () => {
 
   test("light rejects objects larger than Large", () => {
     const spell = spellRecord(lightUnitId);
-    const state = spellBattle({ cantrips: [spell] });
-    const act = spellAct({ state, spellId: lightUnitId });
+    const session = spellBattle({ cantrips: [spell] });
+    const act = spellAct({ session, spellId: lightUnitId });
 
     const resolved = resolveBattleSubject({
-      state,
+      state: session.state,
       subject: act.subject,
       fills: [
         spellObjectLightTargetFill({
@@ -409,11 +413,11 @@ describe("SRDINV70B deterministic object-light Spell Unit admission", () => {
     { kind: "someoneElse" as const, relation: "carried" as const },
   ])("light rejects an object $relation by someone else", (wornOrCarried) => {
     const spell = spellRecord(lightUnitId);
-    const state = spellBattle({ cantrips: [spell] });
-    const act = spellAct({ state, spellId: lightUnitId });
+    const session = spellBattle({ cantrips: [spell] });
+    const act = spellAct({ session, spellId: lightUnitId });
 
     const resolved = resolveBattleSubject({
-      state,
+      state: session.state,
       subject: act.subject,
       fills: [
         spellObjectLightTargetFill({
@@ -433,14 +437,18 @@ describe("SRDINV70B deterministic object-light Spell Unit admission", () => {
 
   test("light recast replaces the caster's prior object emitter", () => {
     const spell = spellRecord(lightUnitId);
+    const baseSession = spellBattle({ cantrips: [spell] });
+    const procedureRef = requireCharacterSpellProcedureRefForTest(
+      baseSession,
+      spellCasterId,
+      cantripSpellInvocationRef(lightUnitId, "objectLight"),
+    );
     const state = {
-      ...spellBattle({ cantrips: [spell] }),
+      ...baseSession.state,
       lightEmitters: [
         {
           kind: "spellLightEmitter" as const,
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String(lightUnitId),
-          ),
+          sourceProcedureRef: procedureRef,
           sourceCombatantId: spellCasterId,
           attachment: {
             kind: "object" as const,
@@ -459,7 +467,7 @@ describe("SRDINV70B deterministic object-light Spell Unit admission", () => {
         },
       ],
     };
-    const act = spellAct({ state, spellId: lightUnitId });
+    const act = spellAct({ session: baseSession, spellId: lightUnitId });
     const objectId = battleObjectId("unit-profile-light-recast");
 
     const resolved = resolveBattleSubject({
@@ -481,7 +489,7 @@ describe("SRDINV70B deterministic object-light Spell Unit admission", () => {
       state: {
         lightEmitters: [
           expect.objectContaining({
-            sourceProcedureRef: expect.any(String),
+            sourceProcedureRef: procedureRef,
             sourceCombatantId: spellCasterId,
             attachment: { kind: "object", objectId },
             expiresAt: {
@@ -500,7 +508,7 @@ describe("SRDINV70B deterministic object-light Spell Unit admission", () => {
 
   test("distant light admits a 30-foot object target without changing light radii", () => {
     const spell = spellRecord(lightUnitId);
-    const state = spellBattle({
+    const session = spellBattle({
       cantrips: [spell],
       casterClassLevels: [{ className: "sorcerer", level: 2 }],
       casterResources: [
@@ -515,8 +523,8 @@ describe("SRDINV70B deterministic object-light Spell Unit admission", () => {
         knownOptions: [distantMetamagicOption()],
       },
     });
-    const act = spellAct({ state, spellId: lightUnitId });
-    const distantAct = actWithDistantSpellMetamagic(state);
+    const act = spellAct({ session, spellId: lightUnitId });
+    const distantAct = actWithDistantSpellMetamagic(session);
     const targetHole = requireHole(
       distantAct.initialHoles,
       "objectTargetChoice",
@@ -529,13 +537,13 @@ describe("SRDINV70B deterministic object-light Spell Unit admission", () => {
           tag: "actionSpell",
           actorId: spellCasterId,
           procedureRef: requireCharacterSpellProcedureRefForTest(
-            state,
+            session,
             spellCasterId,
             cantripSpellInvocationRef(lightUnitId, "objectLight"),
           ),
           metamagic: [{ effectKind: DISTANT_METAMAGIC_EFFECT_KIND }],
         }),
-        label: "Light (Distant Spell)",
+        label: "Light — Distant Spell",
       }),
     );
     expect(act.subject).not.toHaveProperty("metamagic");
@@ -549,17 +557,20 @@ describe("SRDINV70B deterministic object-light Spell Unit admission", () => {
       size: "large",
     });
     const resolved = resolveBattleSubject({
-      state,
+      state: session.state,
       subject: distantAct.subject,
       fills: [fill],
     });
+    if (distantAct.subject.tag !== "actionSpell") {
+      throw new Error("Expected Distant Light spell subject.");
+    }
 
     expect(resolved).toMatchObject({
       tag: "resolved",
       state: {
         lightEmitters: [
           {
-            sourceProcedureRef: expect.any(String),
+            sourceProcedureRef: distantAct.subject.procedureRef,
             sourceCombatantId: spellCasterId,
             attachment: { kind: "object", objectId },
             emission: {
@@ -582,7 +593,7 @@ describe("SRDINV70B deterministic object-light Spell Unit admission", () => {
 
   test("distant light rejects a non-range-bearing object-light target fact before spending", () => {
     const spell = spellRecord(lightUnitId);
-    const state = spellBattle({
+    const session = spellBattle({
       cantrips: [spell],
       casterClassLevels: [{ className: "sorcerer", level: 2 }],
       casterResources: [
@@ -597,14 +608,14 @@ describe("SRDINV70B deterministic object-light Spell Unit admission", () => {
         knownOptions: [distantMetamagicOption()],
       },
     });
-    const distantAct = actWithDistantSpellMetamagic(state);
+    const distantAct = actWithDistantSpellMetamagic(session);
     const targetHole = requireHole(
       distantAct.initialHoles,
       "objectTargetChoice",
     );
 
     const resolved = resolveBattleSubject({
-      state,
+      state: session.state,
       subject: distantAct.subject,
       fills: [
         spellObjectLightTargetFill({
@@ -620,24 +631,28 @@ describe("SRDINV70B deterministic object-light Spell Unit admission", () => {
       tag: "invalid",
       reason: "invalidFill",
     });
-    expect(sorceryPointsRemaining(state)).toEqual(resourceCount(1));
+    expect(sorceryPointsRemaining(session.state)).toEqual(resourceCount(1));
   });
 
   test("continual flame does not replace the caster's prior continual flame emitter", () => {
     const spell = spellRecord(continualFlameUnitId);
     const priorObjectId = battleObjectId("unit-profile-continual-flame-prior");
     const nextObjectId = battleObjectId("unit-profile-continual-flame-next");
+    const baseSession = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+    });
+    const procedureRef = requireCharacterSpellProcedureRefForTest(
+      baseSession,
+      spellCasterId,
+      spellSlotInvocationRef(continualFlameUnitId, 2, "objectLight"),
+    );
     const state: BattleState = {
-      ...spellBattle({
-        preparedSpells: [spell],
-        spellSlots: [{ spellLevel: 2, count: 1 }],
-      }),
+      ...baseSession.state,
       lightEmitters: [
         {
           kind: "spellLightEmitter",
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String(continualFlameUnitId),
-          ),
+          sourceProcedureRef: procedureRef,
           sourceCombatantId: spellCasterId,
           attachment: { kind: "object", objectId: priorObjectId },
           emission: {
@@ -651,7 +666,7 @@ describe("SRDINV70B deterministic object-light Spell Unit admission", () => {
       ],
     };
     const act = spellAct({
-      state,
+      session: baseSession,
       spellId: continualFlameUnitId,
       slotLevel: 2,
     });
@@ -674,11 +689,11 @@ describe("SRDINV70B deterministic object-light Spell Unit admission", () => {
       state: {
         lightEmitters: expect.arrayContaining([
           expect.objectContaining({
-            sourceProcedureRef: expect.any(String),
+            sourceProcedureRef: procedureRef,
             attachment: { kind: "object", objectId: priorObjectId },
           }),
           expect.objectContaining({
-            sourceProcedureRef: expect.any(String),
+            sourceProcedureRef: act.subject.procedureRef,
             attachment: { kind: "object", objectId: nextObjectId },
           }),
         ]),
@@ -692,15 +707,18 @@ describe("SRDINV70B deterministic object-light Spell Unit admission", () => {
 
   test("light object emitter expires on its timed duration", () => {
     const spell = spellRecord(lightUnitId);
-    const state = spellBattle({ cantrips: [spell] });
+    const session = spellBattle({ cantrips: [spell] });
+    const procedureRef = requireCharacterSpellProcedureRefForTest(
+      session,
+      spellCasterId,
+      cantripSpellInvocationRef(lightUnitId, "objectLight"),
+    );
     const oneRoundRemaining: BattleState = {
-      ...state,
+      ...session.state,
       lightEmitters: [
         {
           kind: "spellLightEmitter",
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String(lightUnitId),
-          ),
+          sourceProcedureRef: procedureRef,
           sourceCombatantId: spellCasterId,
           attachment: {
             kind: "object",
@@ -750,16 +768,23 @@ describe("SRDINV70B deterministic object-light Spell Unit admission", () => {
   });
 
   test("continual flame object emitter remains until dispelled", () => {
-    const state = spellBattle({});
+    const spell = spellRecord(continualFlameUnitId);
+    const session = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+    });
+    const procedureRef = requireCharacterSpellProcedureRefForTest(
+      session,
+      spellCasterId,
+      spellSlotInvocationRef(continualFlameUnitId, 2, "objectLight"),
+    );
     const objectId = battleObjectId("unit-profile-continual-flame-persistent");
     const ongoingFlame: BattleState = {
-      ...state,
+      ...session.state,
       lightEmitters: [
         {
           kind: "spellLightEmitter",
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String(continualFlameUnitId),
-          ),
+          sourceProcedureRef: procedureRef,
           sourceCombatantId: spellCasterId,
           attachment: { kind: "object", objectId },
           emission: {
@@ -800,7 +825,7 @@ describe("SRDINV70B deterministic object-light Spell Unit admission", () => {
       state: {
         lightEmitters: [
           expect.objectContaining({
-            sourceProcedureRef: expect.any(String),
+            sourceProcedureRef: procedureRef,
             attachment: { kind: "object", objectId },
             expiresAt: { kind: "untilDispelled" },
           }),

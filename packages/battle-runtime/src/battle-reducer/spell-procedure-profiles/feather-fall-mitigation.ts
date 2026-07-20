@@ -28,7 +28,6 @@ import { movementFeet } from "@dnd/shared/types";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
-import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   snapshotBattle,
   type AvailableBattleAct,
@@ -39,7 +38,8 @@ import {
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
 import type { BattleSubject } from "../../battle-subjects.ts";
-import { spellId, type CombatantId } from "../../identity.ts";
+import { CombatantId } from "../../identity.ts";
+import { DurationBattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { stateAfterSpellCastDeclared } from "../spell-cast-declaration.ts";
 import { expendSpellSlot } from "../spell-effects.ts";
@@ -57,9 +57,8 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
-import { spellProcedureInvocationSchema } from "./profile.ts";
+import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
 import {
-  BattleRuntimeObjectSchema,
   MovementFeet,
   PreparedSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
@@ -188,22 +187,6 @@ function discoverFeatherFallMitigationCastAct(): readonly AvailableBattleAct[] {
   return [];
 }
 
-function featherFallMitigationInvocationRef(
-  invocation: FeatherFallMitigationInvocation,
-): SpellInvocationRef {
-  return {
-    tag: "spellSlot",
-    spellId: spellId(invocation.spell.id),
-    slotLevel: invocation.resource.slotLevel,
-    procedure: "featherFallMitigation",
-  };
-}
-
-function featherFallMitigationCastSummary(
-  invocation: FeatherFallMitigationInvocation,
-): string {
-  return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
-}
 
 function resolveFeatherFallMitigation(
   input: FeatherFallMitigationResolveInput,
@@ -307,37 +290,33 @@ function resolveFeatherFallMitigation(
   };
 }
 
-const FeatherFallMitigationInvocationSchema = spellProcedureInvocationSchema<
-  Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "featherFallMitigation" }
-  >
->(
+const FeatherFallMitigationInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
     resource: SpellSlotInvocationResourceSchema,
     procedure: Schema.Literal("featherFallMitigation"),
-    spell: BattleRuntimeObjectSchema,
+    spellRuleFacts: SpellRuleExecutionFactsSchema,
     targeting: Schema.Struct({
       kind: Schema.Literal("targetList"),
       minTargets: Schema.Literal(1),
       maxTargets: Schema.Literal(5),
     }),
-    activeEffect: BattleRuntimeObjectSchema,
+    activeEffect: Schema.Struct({
+      kind: Schema.Literal("featherFallMitigation"),
+      sourceCombatantId: CombatantId,
+      expiresAt: DurationBattleActiveEffectExpirationSchema,
+    }),
     rangeFeet: MovementFeet,
   }),
 );
 export const featherFallMitigationProfile = {
   procedure: "featherFallMitigation",
-  invocationSchema: FeatherFallMitigationInvocationSchema,
+  executionSchema: FeatherFallMitigationInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
   targetListInvocation: { kind: "always" },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: [],
   admit: admitFeatherFallMitigation,
   discoverCastAct: discoverFeatherFallMitigationCastAct,
-  castSummary: featherFallMitigationCastSummary,
-  invocationRef: featherFallMitigationInvocationRef,
   resolve: resolveFeatherFallMitigation,
 } satisfies SpellProcedureProfile<
   "featherFallMitigation",

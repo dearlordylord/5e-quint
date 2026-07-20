@@ -1,5 +1,5 @@
 import { Schema } from "effect";
-import type { SupportedSpellInvocation } from "../battle-reducer.ts";
+import type { RuntimeSpellProcedureExecution } from "../character-execution.ts";
 
 const BATTLE_SPELL_EFFECT_LEVEL_MIN = 0;
 const BATTLE_SPELL_EFFECT_LEVEL_MAX = 9;
@@ -34,11 +34,11 @@ function requireBattleSpellEffectLevel(value: number): BattleSpellEffectLevel {
 }
 
 export function spellInvocationEffectiveSpellLevel(
-  invocation: SupportedSpellInvocation,
+  invocation: RuntimeSpellProcedureExecution,
 ): BattleSpellEffectLevel {
   return requireBattleSpellEffectLevel(
     invocation.resource.tag === "spellSlot"
       ? Number(invocation.resource.slotLevel)
-      : invocation.spell.mechanics.level,
+      : invocation.spellRuleFacts.level,
   );
 }

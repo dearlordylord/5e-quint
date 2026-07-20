@@ -1,5 +1,4 @@
 import { describe, expect, test } from "vitest";
-import { isTriggeredReactionSpellInvocation } from "./battle-reducer/spell-interrupt-procedure-kinds.ts";
 import type { BattleState } from "./battle-runtime-test-support.ts";
 import {
   applyCondition,
@@ -75,15 +74,18 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
     const actionSaveSpell = wizard.origin.execution.procedureBindings.find(
       (binding) =>
         binding.procedure.kind === "spellInvocation" &&
-        binding.procedure.invocation.procedure === "saveGatedDamage",
+        binding.procedure.execution.procedure === "saveGatedDamage",
     );
-    if (actionSaveSpell?.procedure.kind !== "spellInvocation") {
+    if (
+      actionSaveSpell?.procedure.kind !== "spellInvocation" ||
+      actionSaveSpell.procedure.execution.procedure !== "saveGatedDamage"
+    ) {
       throw new Error("Expected an action-time save-damage spell binding.");
     }
 
-    expect(
-      isTriggeredReactionSpellInvocation(actionSaveSpell.procedure.invocation),
-    ).toBe(false);
+    expect(actionSaveSpell.procedure.execution.castingTime.kind).not.toBe(
+      "reaction",
+    );
   });
 
   test("attack hit procedures open a typed reaction window and resume after decline", () => {
@@ -420,14 +422,14 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
   });
 
   test("spell cast procedures open typed reaction windows", () => {
-    const state = wizardTurnWithReadiedRay("spellCast");
+    const session = wizardTurnWithReadiedRay("spellCast");
     const subject = magicSubject("magic_missile");
     const target = requireHole(
-      resolveBattleSubject({ state, subject, fills: [] }),
+      resolveBattleSubject({ session, subject, fills: [] }),
       "spellTargetAllocation",
     );
     const awaitingReaction = resolveBattleSubject({
-      state,
+      session,
       subject,
       fills: [
         spellTargetAllocationFill(target, [{ targetId: skeletonId, count: 3 }]),
@@ -444,10 +446,10 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
   });
 
   test("save-failed and after-damage spell procedures open typed reaction windows", () => {
-    const saveState = wizardTurnWithReadiedRay("saveFailed");
+    const saveSession = wizardTurnWithReadiedRay("saveFailed");
     const subject = magicSubject("acid_splash");
     const saveHole = requireHole(
-      resolveBattleSubject({ state: saveState, subject, fills: [] }),
+      resolveBattleSubject({ session: saveSession, subject, fills: [] }),
       "savingThrowOutcome",
     );
     if (saveHole.kind !== "savingThrowOutcome") {
@@ -455,7 +457,7 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
     }
     const saveOutcomes = [{ targetId: skeletonId, succeeded: false }];
     const failedSave = resolveBattleSubject({
-      state: saveState,
+      session: saveSession,
       subject,
       fills: [savingThrowOutcomeFill(saveHole, saveOutcomes)],
     });
@@ -464,9 +466,9 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
       holes: [{ kind: "interruptDecision", trigger: "saveFailed" }],
     });
 
-    const damageState = wizardTurnWithReadiedRay("afterDamage");
+    const damageSession = wizardTurnWithReadiedRay("afterDamage");
     const damageSaveHole = requireHole(
-      resolveBattleSubject({ state: damageState, subject, fills: [] }),
+      resolveBattleSubject({ session: damageSession, subject, fills: [] }),
       "savingThrowOutcome",
     );
     if (damageSaveHole.kind !== "savingThrowOutcome") {
@@ -475,14 +477,14 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
     const damageOutcomes = [{ targetId: skeletonId, succeeded: false }];
     const damageHole = requireHole(
       resolveBattleSubject({
-        state: damageState,
+        session: damageSession,
         subject,
         fills: [savingThrowOutcomeFill(damageSaveHole, damageOutcomes)],
       }),
       "rolledDice",
     );
     const maybeConcentration = resolveBattleSubject({
-      state: damageState,
+      session: damageSession,
       subject,
       fills: [
         savingThrowOutcomeFill(damageSaveHole, damageOutcomes),
@@ -493,7 +495,7 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
       maybeConcentration.tag === "needsHoles" &&
       maybeConcentration.holes[0]?.kind === "concentrationSavingThrow"
         ? resolveBattleSubject({
-            state: damageState,
+            session: damageSession,
             subject,
             fills: [
               savingThrowOutcomeFill(damageSaveHole, damageOutcomes),
@@ -510,13 +512,13 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
 
   test("Dodge projects Advantage for Dexterity saving throw outcome holes", () => {
     const base = wizardVsSkeletonBattle();
-    const skeleton = base.combatants.get(skeletonId);
+    const skeleton = base.state.combatants.get(skeletonId);
     if (skeleton === undefined) {
       throw new Error("Expected Skeleton combatant.");
     }
     const state: BattleState = {
-      ...base,
-      combatants: new Map(base.combatants).set(skeletonId, {
+      ...base.state,
+      combatants: new Map(base.state.combatants).set(skeletonId, {
         ...testBattleCreatureStateWithConditions(
           skeleton,
           applyCondition(skeleton.conditions, "blinded"),
@@ -526,7 +528,7 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
     };
     const saveHole = requireHole(
       resolveBattleSubject({
-        state,
+        session: { state, context: base.context },
         subject: magicSubject("acid_splash"),
         fills: [],
       }),
@@ -541,14 +543,14 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
 
   test("Ready stores the runtime-selected trigger without test-only state surgery", () => {
     for (const trigger of BATTLE_READIED_SPELL_TRIGGERS) {
-      const state = wizardVsSkeletonBattle();
+      const session = wizardVsSkeletonBattle();
       const readied = resolveBattleSubject({
-        state,
+        state: session.state,
         subject: {
           tag: "actionSpell",
           actorId: wizardId,
           procedureRef: requireCharacterSpellProcedureRefForTest(
-            state,
+            session,
             wizardId,
             cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
           ),
@@ -582,9 +584,9 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
   });
 
   test("structured spell subjects keep cast mode separate from Ready mode", () => {
-    const state = wizardVsSkeletonBattle();
+    const session = wizardVsSkeletonBattle();
     const procedureRef = requireCharacterSpellProcedureRefForTest(
-      state,
+      session,
       wizardId,
       cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
     );
@@ -607,7 +609,7 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
   });
 
   test("structured spell subject equality uses the admitted procedure reference", () => {
-    const state = wizardVsSkeletonBattle();
+    const session = wizardVsSkeletonBattle();
     const invocation = spellSlotInvocationRef(
       "magic_missile",
       1,
@@ -617,7 +619,7 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
       throw new Error("Expected a Spell Slot invocation ref.");
     }
     const procedureRef = requireCharacterSpellProcedureRefForTest(
-      state,
+      session,
       wizardId,
       invocation,
     );

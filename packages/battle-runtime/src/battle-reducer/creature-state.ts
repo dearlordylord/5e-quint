@@ -18,7 +18,6 @@
 import { Either, Match } from "effect";
 import {
   Hp,
-  NonNegativeInteger,
   movementFeet,
   type Condition,
   type ReadonlyNonEmptyArray,
@@ -55,7 +54,6 @@ import {
   battleActiveEffectExecutionOrdinal,
   battleAttackExecutionScopeRefForProcedureRef,
   battleExecutionScopeOrdinal,
-  battleResourcePoolExecutionRef,
   type BattleId,
   type BattleExecutionScopeOrdinal,
   type CombatantId,
@@ -70,23 +68,30 @@ import type {
 import {
   characterBattleInvocationSpellAccessInitIssue,
   characterBattleMetamagicInitIssue,
+  characterBattleMetamagicState,
+  admitCharacterBattleResources,
   characterBattleResourceIsPointPool,
   characterBattleSpellbookRitualSpellAccessInitIssue,
   characterBattleResourceInitIssue,
   characterBattleResourceUsage,
-  characterResourceState,
+  characterSpellcastingExecutionState,
   characterSpellcastingState,
   parseCharacterBattleInvocationSpellAccesses,
   parseCharacterBattleClassLevels,
   type CharacterBattleFeatureInit,
   type CharacterBattleResourceInit,
+  type CharacterBattleResourceOwnership,
   type CharacterBattleResourceState,
   type CharacterBattleSpellcastingStateInit,
 } from "../character-battle-resources.ts";
+import type { CharacterBattleRuntimeContext } from "../battle-runtime-context.ts";
 import type { CharacterBattleClassLevel } from "../character-class-level.ts";
 import {
+  CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
+  characterUnitProcedure,
   characterExecutionFromUnits,
   characterProcedureBindingSnapshots,
+  type UnitFeatureProcedureExecution,
 } from "../character-execution.ts";
 import { spellExecutionFacts } from "./spell-execution-facts.ts";
 import { registeredSpellProcedureProfile } from "./spell-procedure-profiles/registry.ts";
@@ -117,7 +122,6 @@ import type { BattleSubject } from "../battle-subjects.ts";
 import {
   KnockedOutOneHp,
   KnockedOutConditionState,
-  OngoingFeatureSourceKey as OngoingFeatureSourceKeyBrand,
   zeroHpLifecycleIsTerminal,
   type ActiveOngoingFeatureOccurrence,
   type BattleActiveEffect,
@@ -134,8 +138,8 @@ import {
   type HpDamageProjection,
   type KnockedOutConditionState as KnockedOutConditionStateT,
   type KnockedOutOneHp as KnockedOutOneHpT,
-  type OngoingFeatureSource,
   type OngoingFeatureSourceKey,
+  type StatBlockBattleCreatureState,
 } from "../battle-reducer.ts";
 import { battleStateInitIssue } from "./domain-helpers.ts";
 import {
@@ -167,24 +171,6 @@ import {
 import { wildShapeCanUseWornLoadoutObject } from "./wild-shape-equipment.ts";
 import { admitCharacterAttackExecution } from "../attack-execution.ts";
 
-export function ongoingFeatureSourceKey(
-  source: OngoingFeatureSource,
-): OngoingFeatureSourceKey {
-  return OngoingFeatureSourceKeyBrand(source.unitId);
-}
-
-export function ongoingFeatureSourceForUnit(
-  unitId: UnitRecord["id"],
-): OngoingFeatureSource {
-  return { kind: "unit", unitId };
-}
-
-export function ongoingFeatureSourceKeyForUnit(
-  unitId: UnitRecord["id"],
-): OngoingFeatureSourceKey {
-  return ongoingFeatureSourceKey(ongoingFeatureSourceForUnit(unitId));
-}
-
 export function assertCurrentHpWithinMaxHp(
   creatureInit: BattleCreatureInit["creatureInit"],
 ): void {
@@ -199,6 +185,12 @@ export function isCharacterBattleCreatureState(
   return actor?.origin.kind === "character";
 }
 
+function isStatBlockBattleCreatureState(
+  actor: BattleCreatureState,
+): actor is StatBlockBattleCreatureState {
+  return actor.origin.kind === "statBlock";
+}
+
 export function battleCreatureStateAdmissionFromInit(
   battleId: BattleId,
   input: BattleCreatureInit,
@@ -206,7 +198,13 @@ export function battleCreatureStateAdmissionFromInit(
 ):
   | {
       readonly tag: "admitted";
-      readonly creature: BattleCreatureState;
+      readonly creature: CharacterBattleCreatureState;
+      readonly nextScopeOrdinal: BattleExecutionScopeOrdinal;
+      readonly runtimeContext: CharacterBattleRuntimeContext;
+    }
+  | {
+      readonly tag: "admitted";
+      readonly creature: StatBlockBattleCreatureState;
       readonly nextScopeOrdinal: BattleExecutionScopeOrdinal;
     }
   | {
@@ -278,14 +276,27 @@ export function battleCreatureStateAdmissionFromInit(
       ...(creatureInit.resources ?? []).map((resource) => resource.unit),
       ...(creatureInit.unitFeatures ?? []).map((feature) => feature.unit),
     ];
+    const explicitFeatureUnitIds = new Set(
+      (creatureInit.unitFeatures ?? []).map((feature) => feature.unit.id),
+    );
     const execution = characterExecutionFromUnits({
       battleId,
       combatantId: input.combatantId,
       scopeOrdinal: characterScopeOrdinal,
-      unitFeatureProfiles: characterUnits.flatMap((unit) => {
-        const profile = parseSupportedUnitFeatureProfile(unit, classLevels);
-        return profile === null ? [] : [profile];
-      }),
+      resourceUnits: (creatureInit.resources ?? []).map(
+        (resource) => resource.unit,
+      ),
+      unitFeatureProfiles: [
+        ...(creatureInit.resources ?? []).flatMap((resource) => {
+          if (explicitFeatureUnitIds.has(resource.unit.id)) return [];
+          const profile = parseSupportedUnitFeatureProfile(
+            resource.unit,
+            classLevels,
+          );
+          return profile === null ? [] : [profile];
+        }),
+        ...(creatureInit.unitFeatures ?? []),
+      ],
       units: characterUnits,
       unitRefs: creatureInit.characterUnitRefs,
       classLevels,
@@ -293,176 +304,85 @@ export function battleCreatureStateAdmissionFromInit(
     if (Either.isLeft(execution)) {
       return { tag: "invalid", issues: execution.left };
     }
+    const resourceAdmission = admitCharacterBattleResources(
+      creatureInit.resources ?? [],
+      classLevels,
+      execution.right.execution.scopeRef,
+    );
+    const resources = resourceAdmission.states;
+    const resourceOwnership: readonly CharacterBattleResourceOwnership[] =
+      resourceAdmission.ownership;
+    const metamagic = characterBattleMetamagicState(
+      creatureInit.metamagic,
+      resources,
+      resourceOwnership,
+    );
+    const spellcastingPresentationSource =
+      creatureInit.spellcasting === undefined
+        ? undefined
+        : characterSpellcastingState(
+            requireCharacterSpellcastingStateInit(creatureInit.spellcasting),
+            classLevels,
+            [
+              ...(creatureInit.resources ?? []),
+              ...(creatureInit.unitFeatures ?? []),
+            ],
+          );
+    const admittedCreature = applyInitialZeroHpLifecycle({
+      ...base,
+      armorClass: creatureInit.armorClass,
+      size: creatureInit.size,
+      origin: {
+        kind: "character",
+        characterId: creatureInit.characterId,
+        execution: execution.right.execution,
+        classLevels,
+        knownLanguages: creatureInit.knownLanguages,
+        d20Statistics: creatureInit.d20Statistics,
+        ...(creatureInit.druidWildShapeAvailableForms === undefined
+          ? {}
+          : {
+              druidWildShapeAvailableForms: executionCohort.admissions,
+            }),
+        weaponProficiencies: creatureInit.weaponProficiencies ?? [],
+        selectedLoadout: creatureInit.selectedLoadout,
+        weaponMasteries: creatureInit.weaponMasteries ?? [],
+        invocationFeatures: creatureInit.invocationFeatures ?? [],
+        speed: creatureInit.speed,
+        attack: attackExecution.execution.attack,
+        unarmedStrike: attackExecution.execution.unarmedStrike,
+        ...(attackExecution.execution.offHandAttack === undefined
+          ? {}
+          : { offHandAttack: attackExecution.execution.offHandAttack }),
+        resources,
+        ...(metamagic === undefined ? {} : { metamagic }),
+        ...(spellcastingPresentationSource === undefined
+          ? {}
+          : {
+              spellcasting: characterSpellcastingExecutionState(
+                spellcastingPresentationSource,
+              ),
+            }),
+      },
+    });
+    if (!isCharacterBattleCreatureState(admittedCreature)) {
+      throw new Error(
+        "Character initialization constructed a non-character battle creature.",
+      );
+    }
     return {
       tag: "admitted",
-      creature: applyInitialZeroHpLifecycle({
-        ...base,
-        armorClass: creatureInit.armorClass,
-        size: creatureInit.size,
-        origin: {
-          kind: "character",
-          characterId: creatureInit.characterId,
-          execution: execution.right,
-          characterUnitRefs: creatureInit.characterUnitRefs,
-          classLevels,
-          knownLanguages: creatureInit.knownLanguages,
-          d20Statistics: creatureInit.d20Statistics,
-          ...(creatureInit.druidWildShapeAvailableForms === undefined
-            ? {}
-            : {
-                druidWildShapeAvailableForms: executionCohort.admissions,
-              }),
-          weaponProficiencies: creatureInit.weaponProficiencies ?? [],
-          selectedLoadout: creatureInit.selectedLoadout,
-          weaponMasteries: creatureInit.weaponMasteries ?? [],
-          invocationFeatures: creatureInit.invocationFeatures ?? [],
-          speed: creatureInit.speed,
-          attack: attackExecution.execution.attack,
-          unarmedStrike: attackExecution.execution.unarmedStrike,
-          ...(attackExecution.execution.offHandAttack === undefined
-            ? {}
-            : { offHandAttack: attackExecution.execution.offHandAttack }),
-          resources: (creatureInit.resources ?? []).map((resource, ordinal) =>
-            characterResourceState(
-              resource,
-              classLevels,
-              battleResourcePoolExecutionRef(
-                execution.right.scopeRef,
-                NonNegativeInteger(ordinal),
-              ),
-            ),
-          ),
-          ...(creatureInit.metamagic === undefined
-            ? {}
-            : { metamagic: creatureInit.metamagic }),
-          ongoingFeatureProfiles: characterOngoingFeatureProfiles(
-            creatureInit.resources ?? [],
-            creatureInit.unitFeatures ?? [],
-            classLevels,
-          ),
-          attackDamageRiderProfiles: characterAttackDamageRiderProfiles(
-            creatureInit.resources ?? [],
-            creatureInit.unitFeatures ?? [],
-            creatureInit.characterUnitRefs,
-            classLevels,
-          ),
-          saveDamageReplacementProfiles: characterSaveDamageReplacementProfiles(
-            creatureInit.resources ?? [],
-            creatureInit.unitFeatures ?? [],
-            creatureInit.characterUnitRefs,
-            classLevels,
-          ),
-          d20TestNaturalOneRerollProfiles:
-            characterD20TestNaturalOneRerollProfiles(
-              creatureInit.resources ?? [],
-              creatureInit.unitFeatures ?? [],
-              creatureInit.characterUnitRefs,
-              classLevels,
-            ),
-          passiveSavingThrowRollModeProfiles:
-            characterPassiveSavingThrowRollModeProfiles(
-              creatureInit.resources ?? [],
-              creatureInit.unitFeatures ?? [],
-              creatureInit.characterUnitRefs,
-              classLevels,
-            ),
-          passiveAbilityCheckRollModeProfiles:
-            characterPassiveAbilityCheckRollModeProfiles(
-              creatureInit.resources ?? [],
-              creatureInit.unitFeatures ?? [],
-              creatureInit.characterUnitRefs,
-              classLevels,
-            ),
-          reactionRollOrDamageReductionProfiles:
-            characterReactionRollOrDamageReductionProfiles(
-              creatureInit.resources ?? [],
-              creatureInit.unitFeatures ?? [],
-              creatureInit.characterUnitRefs,
-              classLevels,
-            ),
-          failedAbilityCheckResourceBoostProfiles:
-            characterFailedAbilityCheckResourceBoostProfiles(
-              creatureInit.resources ?? [],
-              creatureInit.unitFeatures ?? [],
-              creatureInit.characterUnitRefs,
-              classLevels,
-            ),
-          spellSlotHealingModifierProfiles:
-            characterSpellSlotHealingModifierProfiles(
-              creatureInit.resources ?? [],
-              creatureInit.unitFeatures ?? [],
-              creatureInit.characterUnitRefs,
-              classLevels,
-            ),
-          magicActionHealingPoolProfiles:
-            characterMagicActionHealingPoolProfiles(
-              creatureInit.resources ?? [],
-              creatureInit.unitFeatures ?? [],
-              creatureInit.characterUnitRefs,
-              classLevels,
-            ),
-          magicActionAreaSaveDamageHealingProfiles:
-            characterMagicActionAreaSaveDamageHealingProfiles(
-              creatureInit.resources ?? [],
-              creatureInit.unitFeatures ?? [],
-              creatureInit.characterUnitRefs,
-              classLevels,
-            ),
-          magicActionSaveGatedConditionProfiles:
-            characterMagicActionSaveGatedConditionProfiles(
-              creatureInit.resources ?? [],
-              creatureInit.unitFeatures ?? [],
-              creatureInit.characterUnitRefs,
-              classLevels,
-            ),
-          rogueSteadyAimProfiles: characterRogueSteadyAimProfiles(
-            creatureInit.resources ?? [],
-            creatureInit.unitFeatures ?? [],
-            creatureInit.characterUnitRefs,
-            classLevels,
-          ),
-          potentCantripProfiles: characterPotentCantripProfiles(
-            creatureInit.resources ?? [],
-            creatureInit.unitFeatures ?? [],
-            creatureInit.characterUnitRefs,
-            classLevels,
-          ),
-          enemyZeroHitPointTemporaryHitPointsProfiles:
-            characterEnemyZeroHitPointTemporaryHitPointsProfiles(
-              creatureInit.resources ?? [],
-              creatureInit.unitFeatures ?? [],
-              creatureInit.characterUnitRefs,
-              classLevels,
-            ),
-          remarkableAthleteProfiles: characterRemarkableAthleteProfiles(
-            creatureInit.resources ?? [],
-            creatureInit.unitFeatures ?? [],
-            creatureInit.characterUnitRefs,
-            classLevels,
-          ),
-          paladinSacredWeaponProfiles: characterPaladinSacredWeaponProfiles(
-            creatureInit.resources ?? [],
-            creatureInit.unitFeatures ?? [],
-            creatureInit.characterUnitRefs,
-            classLevels,
-          ),
-          ...(creatureInit.spellcasting === undefined
-            ? {}
-            : {
-                spellcasting: characterSpellcastingState(
-                  requireCharacterSpellcastingStateInit(
-                    creatureInit.spellcasting,
-                  ),
-                  classLevels,
-                  [
-                    ...(creatureInit.resources ?? []),
-                    ...(creatureInit.unitFeatures ?? []),
-                  ],
-                ),
-              }),
-        },
-      }),
+      creature: admittedCreature,
       nextScopeOrdinal: executionCohort.nextScopeOrdinal,
+      runtimeContext: {
+        resourceOwnership,
+        ...(spellcastingPresentationSource === undefined
+          ? {}
+          : { spellcastingPresentationSource }),
+        spellPresentationSources: [],
+        unitProcedureOwnership: execution.right.unitProcedureOwnership,
+        unitPresentationSources: creatureInit.characterUnitRefs,
+      },
     };
   }
 
@@ -476,19 +396,25 @@ export function battleCreatureStateAdmissionFromInit(
   if (admission === undefined) {
     throw new Error("A stat block init always admits its one stat block.");
   }
+  const admittedCreature = applyInitialZeroHpLifecycle({
+    ...base,
+    armorClass: statBlockArmorClassState(
+      literalStatBlockNumber(creatureInit.statBlock.statBlock.ac),
+    ),
+    size: literalCreatureSize(creatureInit.statBlock.statBlock.size),
+    origin: {
+      kind: "statBlock",
+      ...admission,
+    },
+  });
+  if (!isStatBlockBattleCreatureState(admittedCreature)) {
+    throw new Error(
+      "Stat Block initialization constructed a non-Stat-Block battle creature.",
+    );
+  }
   return {
     tag: "admitted",
-    creature: applyInitialZeroHpLifecycle({
-      ...base,
-      armorClass: statBlockArmorClassState(
-        literalStatBlockNumber(creatureInit.statBlock.statBlock.ac),
-      ),
-      size: literalCreatureSize(creatureInit.statBlock.statBlock.size),
-      origin: {
-        kind: "statBlock",
-        ...admission,
-      },
-    }),
+    creature: admittedCreature,
     nextScopeOrdinal: executionCohort.nextScopeOrdinal,
   };
 }
@@ -671,13 +597,21 @@ export function ongoingFeatureProfileForSourceKey(
   combatant: BattleCreatureState,
   key: OngoingFeatureSourceKey,
 ): Extract<
-  SupportedUnitFeatureProfile,
+  UnitFeatureProcedureExecution,
   { readonly kind: "ongoingFeature" }
 > | null {
   if (!isCharacterBattleCreatureState(combatant)) {
     return null;
   }
-  return combatant.origin.ongoingFeatureProfiles.get(key) ?? null;
+  const procedure = characterUnitProcedure(
+    combatant.origin.execution,
+    key,
+    CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
+  );
+  return procedure?.kind === "unitFeature" &&
+    procedure.execution.kind === "ongoingFeature"
+    ? procedure.execution
+    : null;
 }
 
 export function normalizeEarlyEndedOngoingFeatures(
@@ -1339,23 +1273,40 @@ export function consumeLegendaryActionWindow(state: BattleState): BattleState {
       };
 }
 
+function characterSupportedUnitFeatureProfiles(
+  resources: readonly CharacterBattleResourceInit[],
+  features: readonly CharacterBattleFeatureInit[],
+  classLevels: readonly CharacterBattleClassLevel[],
+): readonly SupportedUnitFeatureProfile[] {
+  return [
+    ...resources.flatMap((resource) => {
+      const profile = parseSupportedUnitFeatureProfile(
+        resource.unit,
+        classLevels,
+      );
+      return profile === null ? [] : [profile];
+    }),
+    ...features,
+  ];
+}
+
 export function characterOngoingFeatureProfiles(
   resources: readonly CharacterBattleResourceInit[],
   features: readonly CharacterBattleFeatureInit[],
   classLevels: readonly CharacterBattleClassLevel[],
 ): ReadonlyMap<
-  OngoingFeatureSourceKey,
+  UnitRecord["id"],
   Extract<SupportedUnitFeatureProfile, { readonly kind: "ongoingFeature" }>
 > {
-  const units = [
-    ...resources.map((resource) => resource.unit),
-    ...features.map((feature) => feature.unit),
-  ];
   return new Map(
-    units.flatMap((unit) => {
-      const profile = parseSupportedUnitFeatureProfile(unit, classLevels);
+    characterSupportedUnitFeatureProfiles(
+      resources,
+      features,
+      classLevels,
+    ).flatMap((profile) => {
+      const unit = profile.unit;
       return profile?.kind === "ongoingFeature"
-        ? [[ongoingFeatureSourceKeyForUnit(unit.id), profile] as const]
+        ? [[unit.id, profile] as const]
         : [];
     }),
   );
@@ -1370,13 +1321,13 @@ export function characterAttackDamageRiderProfiles(
   UnitRecord["id"],
   Extract<SupportedUnitFeatureProfile, { readonly kind: "attackDamageRider" }>
 > {
-  const units = [
-    ...resources.map((resource) => resource.unit),
-    ...features.map((feature) => feature.unit),
-  ];
   return new Map(
-    units.flatMap((unit) => {
-      const profile = parseSupportedUnitFeatureProfile(unit, classLevels);
+    characterSupportedUnitFeatureProfiles(
+      resources,
+      features,
+      classLevels,
+    ).flatMap((profile) => {
+      const unit = profile.unit;
       return profile?.kind === "attackDamageRider" &&
         unitRefSupportsProfile(
           unitRefs,
@@ -1401,13 +1352,13 @@ export function characterSaveDamageReplacementProfiles(
     { readonly kind: "saveDamageReplacement" }
   >
 > {
-  const units = [
-    ...resources.map((resource) => resource.unit),
-    ...features.map((feature) => feature.unit),
-  ];
   return new Map(
-    units.flatMap((unit) => {
-      const profile = parseSupportedUnitFeatureProfile(unit, classLevels);
+    characterSupportedUnitFeatureProfiles(
+      resources,
+      features,
+      classLevels,
+    ).flatMap((profile) => {
+      const unit = profile.unit;
       return profile?.kind === "saveDamageReplacement" &&
         unitRefSupportsProfile(
           unitRefs,
@@ -1432,13 +1383,13 @@ export function characterD20TestNaturalOneRerollProfiles(
     { readonly kind: "d20TestNaturalOneReroll" }
   >
 > {
-  const units = [
-    ...resources.map((resource) => resource.unit),
-    ...features.map((feature) => feature.unit),
-  ];
   return new Map(
-    units.flatMap((unit) => {
-      const profile = parseSupportedUnitFeatureProfile(unit, classLevels);
+    characterSupportedUnitFeatureProfiles(
+      resources,
+      features,
+      classLevels,
+    ).flatMap((profile) => {
+      const unit = profile.unit;
       return profile?.kind === "d20TestNaturalOneReroll" &&
         unitRefSupportsProfileKind(
           unitRefs,
@@ -1463,13 +1414,13 @@ export function characterPassiveSavingThrowRollModeProfiles(
     { readonly kind: "passiveSavingThrowRollMode" }
   >
 > {
-  const units = [
-    ...resources.map((resource) => resource.unit),
-    ...features.map((feature) => feature.unit),
-  ];
   return new Map(
-    units.flatMap((unit) => {
-      const profile = parseSupportedUnitFeatureProfile(unit, classLevels);
+    characterSupportedUnitFeatureProfiles(
+      resources,
+      features,
+      classLevels,
+    ).flatMap((profile) => {
+      const unit = profile.unit;
       return profile?.kind === "passiveSavingThrowRollMode" &&
         unitRefSupportsProfileKind(
           unitRefs,
@@ -1494,13 +1445,13 @@ export function characterPassiveAbilityCheckRollModeProfiles(
     { readonly kind: "passiveAbilityCheckRollMode" }
   >
 > {
-  const units = [
-    ...resources.map((resource) => resource.unit),
-    ...features.map((feature) => feature.unit),
-  ];
   return new Map(
-    units.flatMap((unit) => {
-      const profile = parseSupportedUnitFeatureProfile(unit, classLevels);
+    characterSupportedUnitFeatureProfiles(
+      resources,
+      features,
+      classLevels,
+    ).flatMap((profile) => {
+      const unit = profile.unit;
       return profile?.kind === "passiveAbilityCheckRollMode" &&
         unitRefSupportsProfileKind(
           unitRefs,
@@ -1525,13 +1476,13 @@ export function characterReactionRollOrDamageReductionProfiles(
     { readonly kind: "reactionRollOrDamageReduction" }
   >
 > {
-  const units = [
-    ...resources.map((resource) => resource.unit),
-    ...features.map((feature) => feature.unit),
-  ];
   return new Map(
-    units.flatMap((unit) => {
-      const profile = parseSupportedUnitFeatureProfile(unit, classLevels);
+    characterSupportedUnitFeatureProfiles(
+      resources,
+      features,
+      classLevels,
+    ).flatMap((profile) => {
+      const unit = profile.unit;
       return profile?.kind === "reactionRollOrDamageReduction" &&
         (unitRefSupportsProfile(
           unitRefs,
@@ -1561,13 +1512,13 @@ export function characterFailedAbilityCheckResourceBoostProfiles(
     { readonly kind: "failedAbilityCheckResourceBoost" }
   >
 > {
-  const units = [
-    ...resources.map((resource) => resource.unit),
-    ...features.map((feature) => feature.unit),
-  ];
   return new Map(
-    units.flatMap((unit) => {
-      const profile = parseSupportedUnitFeatureProfile(unit, classLevels);
+    characterSupportedUnitFeatureProfiles(
+      resources,
+      features,
+      classLevels,
+    ).flatMap((profile) => {
+      const unit = profile.unit;
       return profile?.kind === "failedAbilityCheckResourceBoost" &&
         unitRefSupportsProfileKind(
           unitRefs,
@@ -1592,13 +1543,13 @@ export function characterSpellSlotHealingModifierProfiles(
     { readonly kind: "spellSlotHealingModifier" }
   >
 > {
-  const units = [
-    ...resources.map((resource) => resource.unit),
-    ...features.map((feature) => feature.unit),
-  ];
   return new Map(
-    units.flatMap((unit) => {
-      const profile = parseSupportedUnitFeatureProfile(unit, classLevels);
+    characterSupportedUnitFeatureProfiles(
+      resources,
+      features,
+      classLevels,
+    ).flatMap((profile) => {
+      const unit = profile.unit;
       return profile?.kind === "spellSlotHealingModifier" &&
         unitRefSupportsProfileKind(
           unitRefs,
@@ -1623,13 +1574,13 @@ export function characterMagicActionHealingPoolProfiles(
     { readonly kind: "magicActionHealingPool" }
   >
 > {
-  const units = [
-    ...resources.map((resource) => resource.unit),
-    ...features.map((feature) => feature.unit),
-  ];
   return new Map(
-    units.flatMap((unit) => {
-      const profile = parseSupportedUnitFeatureProfile(unit, classLevels);
+    characterSupportedUnitFeatureProfiles(
+      resources,
+      features,
+      classLevels,
+    ).flatMap((profile) => {
+      const unit = profile.unit;
       return profile?.kind === "magicActionHealingPool" &&
         unitRefSupportsProfileKind(
           unitRefs,
@@ -1654,13 +1605,13 @@ export function characterMagicActionAreaSaveDamageHealingProfiles(
     { readonly kind: "magicActionAreaSaveDamageHealing" }
   >
 > {
-  const units = [
-    ...resources.map((resource) => resource.unit),
-    ...features.map((feature) => feature.unit),
-  ];
   return new Map(
-    units.flatMap((unit) => {
-      const profile = parseSupportedUnitFeatureProfile(unit, classLevels);
+    characterSupportedUnitFeatureProfiles(
+      resources,
+      features,
+      classLevels,
+    ).flatMap((profile) => {
+      const unit = profile.unit;
       return profile?.kind === "magicActionAreaSaveDamageHealing" &&
         unitRefSupportsProfileKind(
           unitRefs,
@@ -1685,13 +1636,13 @@ export function characterMagicActionSaveGatedConditionProfiles(
     { readonly kind: "magicActionSaveGatedCondition" }
   >
 > {
-  const units = [
-    ...resources.map((resource) => resource.unit),
-    ...features.map((feature) => feature.unit),
-  ];
   return new Map(
-    units.flatMap((unit) => {
-      const profile = parseSupportedUnitFeatureProfile(unit, classLevels);
+    characterSupportedUnitFeatureProfiles(
+      resources,
+      features,
+      classLevels,
+    ).flatMap((profile) => {
+      const unit = profile.unit;
       return profile?.kind === "magicActionSaveGatedCondition" &&
         unitRefSupportsProfileKind(
           unitRefs,
@@ -1713,13 +1664,13 @@ export function characterRogueSteadyAimProfiles(
   UnitRecord["id"],
   Extract<SupportedUnitFeatureProfile, { readonly kind: "rogueSteadyAim" }>
 > {
-  const units = [
-    ...resources.map((resource) => resource.unit),
-    ...features.map((feature) => feature.unit),
-  ];
   return new Map(
-    units.flatMap((unit) => {
-      const profile = parseSupportedUnitFeatureProfile(unit, classLevels);
+    characterSupportedUnitFeatureProfiles(
+      resources,
+      features,
+      classLevels,
+    ).flatMap((profile) => {
+      const unit = profile.unit;
       return profile?.kind === "rogueSteadyAim" &&
         unitRefSupportsProfileKind(
           unitRefs,
@@ -1741,13 +1692,13 @@ export function characterPotentCantripProfiles(
   UnitRecord["id"],
   Extract<SupportedUnitFeatureProfile, { readonly kind: "potentCantrip" }>
 > {
-  const units = [
-    ...resources.map((resource) => resource.unit),
-    ...features.map((feature) => feature.unit),
-  ];
   return new Map(
-    units.flatMap((unit) => {
-      const profile = parseSupportedUnitFeatureProfile(unit, classLevels);
+    characterSupportedUnitFeatureProfiles(
+      resources,
+      features,
+      classLevels,
+    ).flatMap((profile) => {
+      const unit = profile.unit;
       return profile?.kind === "potentCantrip" &&
         unitRefSupportsProfileKind(
           unitRefs,
@@ -1772,13 +1723,13 @@ export function characterEnemyZeroHitPointTemporaryHitPointsProfiles(
     { readonly kind: "enemyZeroHitPointTemporaryHitPoints" }
   >
 > {
-  const units = [
-    ...resources.map((resource) => resource.unit),
-    ...features.map((feature) => feature.unit),
-  ];
   return new Map(
-    units.flatMap((unit) => {
-      const profile = parseSupportedUnitFeatureProfile(unit, classLevels);
+    characterSupportedUnitFeatureProfiles(
+      resources,
+      features,
+      classLevels,
+    ).flatMap((profile) => {
+      const unit = profile.unit;
       return profile?.kind === "enemyZeroHitPointTemporaryHitPoints" &&
         unitRefSupportsProfileKind(
           unitRefs,
@@ -1800,13 +1751,13 @@ export function characterRemarkableAthleteProfiles(
   UnitRecord["id"],
   Extract<SupportedUnitFeatureProfile, { readonly kind: "remarkableAthlete" }>
 > {
-  const units = [
-    ...resources.map((resource) => resource.unit),
-    ...features.map((feature) => feature.unit),
-  ];
   return new Map(
-    units.flatMap((unit) => {
-      const profile = parseSupportedUnitFeatureProfile(unit, classLevels);
+    characterSupportedUnitFeatureProfiles(
+      resources,
+      features,
+      classLevels,
+    ).flatMap((profile) => {
+      const unit = profile.unit;
       return profile?.kind === "remarkableAthlete" &&
         unitRefSupportsProfileKind(
           unitRefs,
@@ -1828,13 +1779,13 @@ export function characterPaladinSacredWeaponProfiles(
   UnitRecord["id"],
   Extract<SupportedUnitFeatureProfile, { readonly kind: "paladinSacredWeapon" }>
 > {
-  const units = [
-    ...resources.map((resource) => resource.unit),
-    ...features.map((feature) => feature.unit),
-  ];
   return new Map(
-    units.flatMap((unit) => {
-      const profile = parseSupportedUnitFeatureProfile(unit, classLevels);
+    characterSupportedUnitFeatureProfiles(
+      resources,
+      features,
+      classLevels,
+    ).flatMap((profile) => {
+      const unit = profile.unit;
       return profile?.kind === "paladinSacredWeapon" &&
         unitRefSupportsProfileKind(
           unitRefs,

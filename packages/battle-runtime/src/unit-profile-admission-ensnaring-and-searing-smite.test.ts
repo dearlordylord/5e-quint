@@ -5,7 +5,10 @@ import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime-test-
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save
 import { describe, expect, test } from "vitest";
 import { characterSpellInvocationRefForProcedureRefForTest } from "./battle-runtime-test-support.ts";
-import type { BattleInterruptProcedureChoice, BattleState } from "./index.ts";
+import type {
+  BattleInterruptProcedureChoice,
+  BattleRuntimeSession,
+} from "./index.ts";
 import {
   ensnaringStrikeHelperId,
   ensnaringStrikeUnitId,
@@ -32,7 +35,7 @@ import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 import {
   abilityModifier,
   cantripSpellInvocationRef,
-  discoverBattleActs,
+  discoverBattleActCandidates,
   elapsedTimeTicks,
   endTurn,
   Hp,
@@ -43,14 +46,14 @@ import {
 } from "./unit-profile-admission-test-support.ts";
 
 function afterHitChoiceMatchesSpell(
-  state: BattleState,
+  session: BattleRuntimeSession,
   candidate: BattleInterruptProcedureChoice,
   spellId: string,
 ): boolean {
   if (candidate.kind !== "castAttackHitBonusActionSpell") return false;
   return (
     characterSpellInvocationRefForProcedureRefForTest(
-      state,
+      session,
       candidate.reactorId,
       candidate.subject.procedureRef,
     ).spellId === spellId
@@ -69,7 +72,7 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
     });
     const subject = weaponAttackSubject(state, "Shortbow");
     const target = requireResultHole(
-      resolveBattleSubject({ state, subject, fills: [] }),
+      resolveBattleSubject({ state: state.state, subject, fills: [] }),
       "targetChoice",
     );
     const targetFill = attackTargetFill(
@@ -79,12 +82,16 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
       "Shortbow",
     );
     const roll = requireResultHole(
-      resolveBattleSubject({ state, subject, fills: [targetFill] }),
+      resolveBattleSubject({
+        state: state.state,
+        subject,
+        fills: [targetFill],
+      }),
       "attackRoll",
     );
     const rollFill = attackRollFill(roll, { total: 15, naturalD20: 10 });
     const awaitingReaction = resolveBattleSubject({
-      state,
+      state: state.state,
       subject,
       fills: [targetFill, rollFill],
     });
@@ -94,7 +101,7 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
     const choice = awaitingReaction.snapshot.pendingInterrupt?.choices.find(
       (candidate) =>
         afterHitChoiceMatchesSpell(
-          awaitingReaction.state,
+          { ...state, state: awaitingReaction.state },
           candidate,
           ensnaringStrikeUnitId,
         ),
@@ -174,7 +181,7 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
     }
     expect(requireCombatant(targetTurn.state, spellTargetId).hp).toBe(Hp(13));
 
-    const escapeAct = discoverBattleActs(targetTurn.state).find(
+    const escapeAct = discoverBattleActCandidates(targetTurn.state).find(
       (act) =>
         act.subject.tag === "action" &&
         act.subject.action === "escapeSpellRestraint",
@@ -214,7 +221,7 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
       throw new Error("Expected Ensnaring Strike helper turn to start.");
     }
     const helperTurn = helperTurnResult.state;
-    const helperEscapeAct = discoverBattleActs(helperTurn).find(
+    const helperEscapeAct = discoverBattleActCandidates(helperTurn).find(
       (act) =>
         act.subject.tag === "action" &&
         act.subject.action === "escapeSpellRestraint" &&
@@ -276,7 +283,7 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
     });
     const subject = weaponAttackSubject(state, "Longsword");
     const target = requireResultHole(
-      resolveBattleSubject({ state, subject, fills: [] }),
+      resolveBattleSubject({ state: state.state, subject, fills: [] }),
       "targetChoice",
     );
     const targetFill = attackTargetFill(
@@ -286,12 +293,16 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
       "Longsword",
     );
     const roll = requireResultHole(
-      resolveBattleSubject({ state, subject, fills: [targetFill] }),
+      resolveBattleSubject({
+        state: state.state,
+        subject,
+        fills: [targetFill],
+      }),
       "attackRoll",
     );
     const rollFill = attackRollFill(roll, { total: 15, naturalD20: 10 });
     const awaitingReaction = resolveBattleSubject({
-      state,
+      state: state.state,
       subject,
       fills: [targetFill, rollFill],
     });
@@ -301,7 +312,7 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
     const choice = awaitingReaction.snapshot.pendingInterrupt?.choices.find(
       (candidate) =>
         afterHitChoiceMatchesSpell(
-          awaitingReaction.state,
+          { ...state, state: awaitingReaction.state },
           candidate,
           searingSmiteUnitId,
         ),
@@ -314,7 +325,7 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
     }
     expect(
       characterSpellInvocationRefForProcedureRefForTest(
-        awaitingReaction.state,
+        { ...state, state: awaitingReaction.state },
         choice.reactorId,
         choice.subject.procedureRef,
       ),
@@ -518,7 +529,7 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
       },
     });
     const targetTurn = endTurn({
-      state: initialState,
+      state: initialState.state,
       actorId: spellCasterId,
     });
     if (targetTurn.tag !== "resolved") {
@@ -530,7 +541,7 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
         tag: "actionSpell",
         actorId: spellTargetId,
         procedureRef: requireCharacterSpellProcedureRefForTest(
-          targetTurn.state,
+          { state: targetTurn.state, context: initialState.context },
           spellTargetId,
           cantripSpellInvocationRef(rayOfFrostUnitId, "spellAttackDamage"),
         ),
@@ -549,7 +560,10 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
       throw new Error("Expected caster turn to resume.");
     }
 
-    const subject = weaponAttackSubject(casterTurn.state, "Shortbow");
+    const subject = weaponAttackSubject(
+      { ...initialState, state: casterTurn.state },
+      "Shortbow",
+    );
     const target = requireResultHole(
       resolveBattleSubject({ state: casterTurn.state, subject, fills: [] }),
       "targetChoice",
@@ -580,7 +594,7 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
     const choice = awaitingAttackHit.snapshot.pendingInterrupt?.choices.find(
       (candidate) =>
         afterHitChoiceMatchesSpell(
-          awaitingAttackHit.state,
+          { ...initialState, state: awaitingAttackHit.state },
           candidate,
           ensnaringStrikeUnitId,
         ),
@@ -652,7 +666,7 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
       },
     });
     const targetTurn = endTurn({
-      state: initialState,
+      state: initialState.state,
       actorId: spellCasterId,
     });
     if (targetTurn.tag !== "resolved") {
@@ -664,7 +678,7 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
         tag: "actionSpell",
         actorId: spellTargetId,
         procedureRef: requireCharacterSpellProcedureRefForTest(
-          targetTurn.state,
+          { state: targetTurn.state, context: initialState.context },
           spellTargetId,
           cantripSpellInvocationRef(rayOfFrostUnitId, "spellAttackDamage"),
         ),
@@ -683,7 +697,10 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
       throw new Error("Expected caster turn to resume.");
     }
 
-    const subject = weaponAttackSubject(casterTurn.state, "Shortbow");
+    const subject = weaponAttackSubject(
+      { ...initialState, state: casterTurn.state },
+      "Shortbow",
+    );
     const target = requireResultHole(
       resolveBattleSubject({ state: casterTurn.state, subject, fills: [] }),
       "targetChoice",
@@ -714,7 +731,7 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
     const choice = awaitingAttackHit.snapshot.pendingInterrupt?.choices.find(
       (candidate) =>
         afterHitChoiceMatchesSpell(
-          awaitingAttackHit.state,
+          { ...initialState, state: awaitingAttackHit.state },
           candidate,
           ensnaringStrikeUnitId,
         ),
@@ -797,7 +814,7 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
       },
     });
     const targetTurn = endTurn({
-      state: initialState,
+      state: initialState.state,
       actorId: spellCasterId,
     });
     if (targetTurn.tag !== "resolved") {
@@ -809,7 +826,7 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
         tag: "actionSpell",
         actorId: spellTargetId,
         procedureRef: requireCharacterSpellProcedureRefForTest(
-          targetTurn.state,
+          { state: targetTurn.state, context: initialState.context },
           spellTargetId,
           cantripSpellInvocationRef(rayOfFrostUnitId, "spellAttackDamage"),
         ),
@@ -848,7 +865,10 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
       throw new Error("Expected caster turn to resume.");
     }
 
-    const subject = weaponAttackSubject(casterTurn.state, "Shortbow");
+    const subject = weaponAttackSubject(
+      { ...initialState, state: casterTurn.state },
+      "Shortbow",
+    );
     const target = requireResultHole(
       resolveBattleSubject({ state: casterTurn.state, subject, fills: [] }),
       "targetChoice",
@@ -879,7 +899,7 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
     const choice = awaitingAttackHit.snapshot.pendingInterrupt?.choices.find(
       (candidate) =>
         afterHitChoiceMatchesSpell(
-          awaitingAttackHit.state,
+          { ...initialState, state: awaitingAttackHit.state },
           candidate,
           ensnaringStrikeUnitId,
         ),

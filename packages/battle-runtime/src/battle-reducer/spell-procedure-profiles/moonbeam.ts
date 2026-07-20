@@ -1,4 +1,6 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-moonbeam-movable-zone
+import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
+import { DiceExprSchema } from "@dnd/surface/surface/schema";
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE
 //
 // The moonbeam Spell Procedure Profile: action-time Spell Slot casting creates
@@ -27,7 +29,6 @@ import { movementFeet } from "@dnd/shared/types";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either, Schema } from "effect";
 
-import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
@@ -35,7 +36,7 @@ import {
   type BattleState,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
-import { spellId, type CombatantId } from "../../identity.ts";
+import { type CombatantId } from "../../identity.ts";
 import { spellAreaChoiceHole } from "../spells-holes-fills.ts";
 import { supportedDamageAmountExpr } from "../spells-profile-shared.ts";
 import { resolveMoonbeamSpellAct } from "../spells-resolve-area-effects.ts";
@@ -44,9 +45,8 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
-import { spellProcedureInvocationSchema } from "./profile.ts";
+import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
 import {
-  BattleRuntimeObjectSchema,
   DcSourceSchema,
   MovementFeet,
   PreparedSpellAccessSchema,
@@ -294,7 +294,6 @@ function discoverMoonbeamCastAct(
         tag: "actionSpell",
         actorId,
         procedureRef: invocation.sourceProcedureRef,
-        invocation: moonbeamInvocationRef(invocation),
         mode: { tag: "cast" },
       },
       initialHoles: [spellAreaChoiceHole(invocation)],
@@ -302,20 +301,6 @@ function discoverMoonbeamCastAct(
   ];
 }
 
-function moonbeamInvocationRef(
-  invocation: MoonbeamSpellInvocation,
-): SpellInvocationRef {
-  return {
-    tag: "spellSlot",
-    spellId: spellId(invocation.spell.id),
-    slotLevel: invocation.resource.slotLevel,
-    procedure: "moonbeam",
-  };
-}
-
-function moonbeamCastSummary(invocation: MoonbeamSpellInvocation): string {
-  return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
-}
 
 function resolveMoonbeam(input: MoonbeamResolveInput): BattleResolutionResult {
   return resolveMoonbeamSpellAct({
@@ -326,14 +311,12 @@ function resolveMoonbeam(input: MoonbeamResolveInput): BattleResolutionResult {
   });
 }
 
-const MoonbeamInvocationSchema = spellProcedureInvocationSchema<
-  Extract<SupportedSpellInvocation, { readonly procedure: "moonbeam" }>
->(
+const MoonbeamInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
     resource: SpellSlotInvocationResourceSchema,
     procedure: Schema.Literal("moonbeam"),
-    spell: BattleRuntimeObjectSchema,
+    spellRuleFacts: SpellRuleExecutionFactsSchema,
     ability: Schema.Literal("con"),
     dc: DcSourceSchema,
     targeting: Schema.Struct({
@@ -341,11 +324,11 @@ const MoonbeamInvocationSchema = spellProcedureInvocationSchema<
       radiusFeet: MovementFeet,
       heightFeet: MovementFeet,
     }),
-    durationTicks: Schema.Number,
+    durationTicks: ElapsedTimeTicksSchema,
     rangeFeet: MovementFeet,
     repositionMaxMoveFeet: MovementFeet,
     damage: Schema.Struct({
-      expr: BattleRuntimeObjectSchema,
+      expr: DiceExprSchema,
       damageType: Schema.Literal("radiant"),
     }),
   }),
@@ -353,15 +336,12 @@ const MoonbeamInvocationSchema = spellProcedureInvocationSchema<
 
 export const moonbeamProfile = {
   procedure: "moonbeam",
-  invocationSchema: MoonbeamInvocationSchema,
+  executionSchema: MoonbeamInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: [],
   admit: admitMoonbeam,
   discoverCastAct: discoverMoonbeamCastAct,
-  castSummary: moonbeamCastSummary,
-  invocationRef: moonbeamInvocationRef,
   resolve: resolveMoonbeam,
 } satisfies SpellProcedureProfile<
   "moonbeam",

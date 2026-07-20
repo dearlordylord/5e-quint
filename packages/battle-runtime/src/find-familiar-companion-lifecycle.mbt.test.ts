@@ -1,4 +1,3 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.find-familiar-lifecycle
@@ -65,9 +64,10 @@ import {
   type BattleFill,
   type BattleHole,
   type BattleResolutionResult,
+  type BattleRuntimeSession,
   type BattleState,
   type AvailableBattleAct,
-  type BattleActDiscoverySubject as BattleSubject,
+  type BattleSubject,
   type PactOfTheChainFamiliarAttackSubject,
 } from "./index.ts";
 import {
@@ -125,7 +125,7 @@ type FindFamiliarCompanionProjection = {
 };
 
 type FindFamiliarCompanionRuntimeState = {
-  readonly battle: BattleState;
+  readonly battle: BattleRuntimeSession;
   readonly lastResult: LastResult;
 };
 
@@ -359,7 +359,7 @@ function observeFamiliarReplacementRoute(): readonly ReducerRouteEvent[] {
 function observeFamiliarDismissalReappearanceRoute(): readonly ReducerRouteEvent[] {
   const created = createCatFamiliar(initialRuntimeState());
   const dismissed = temporarilyDismissFindFamiliar({
-    state: created.battle,
+    state: created.battle.state,
     casterId,
     heldObjectIds: [],
   });
@@ -377,10 +377,10 @@ function observeFamiliarDismissalReappearanceRoute(): readonly ReducerRouteEvent
 }
 
 function observeSharedSensesRoute(): readonly ReducerRouteEvent[] {
-  const state = createCatFamiliar(initialRuntimeState()).battle;
-  const act = sharedSensesAct(state);
+  const session = createCatFamiliar(initialRuntimeState()).battle;
+  const act = sharedSensesAct(session);
   const resolved = resolveBattleSubject({
-    state,
+    state: session.state,
     subject: act.subject,
     fills: [
       findFamiliarConnectionFill(
@@ -396,24 +396,31 @@ function observeSharedSensesRoute(): readonly ReducerRouteEvent[] {
 }
 
 function observeTouchDeliveryRoute(): readonly ReducerRouteEvent[] {
-  const state = createCatFamiliar(initialRuntimeState()).battle;
-  const act = touchDeliveryAct(state);
+  const session = createCatFamiliar(initialRuntimeState()).battle;
+  const act = touchDeliveryAct(session);
   const connectionFill = findFamiliarConnectionFill(
     requireHole(act.initialHoles, "findFamiliarConnection"),
   );
   const targetFill = touchSpellTargetFill(
     requireHole(act.initialHoles, "targetChoice"),
+    act.subject.procedureRef,
   );
   const awaitingHealingRoll = resolveBattleSubject({
-    state,
+    state: session.state,
     subject: act.subject,
     fills: [connectionFill, targetFill],
   });
   if (awaitingHealingRoll.tag !== "needsHoles") {
-    throw new Error("Expected Find Familiar Touch delivery healing roll hole.");
+    throw new Error(
+      `Expected Find Familiar Touch delivery healing roll hole, got ${awaitingHealingRoll.tag}${
+        awaitingHealingRoll.tag === "invalid"
+          ? `: ${awaitingHealingRoll.message}`
+          : ""
+      }.`,
+    );
   }
   const resolved = resolveBattleSubject({
-    state,
+    state: session.state,
     subject: act.subject,
     fills: [
       connectionFill,
@@ -433,10 +440,10 @@ function observeTouchDeliveryRoute(): readonly ReducerRouteEvent[] {
 }
 
 function observePactFamiliarAttackRoute(): readonly ReducerRouteEvent[] {
-  const state = createCatFamiliar(initialRuntimeState()).battle;
-  const act = pactFamiliarAttackAct(state);
+  const session = createCatFamiliar(initialRuntimeState()).battle;
+  const act = pactFamiliarAttackAct(session);
   const awaitingTarget = resolveBattleSubject({
-    state,
+    state: session.state,
     subject: act.subject,
     fills: [],
   });
@@ -447,7 +454,7 @@ function observePactFamiliarAttackRoute(): readonly ReducerRouteEvent[] {
     requireHole(awaitingTarget.holes, "targetChoice"),
   );
   const awaitingAttackRoll = resolveBattleSubject({
-    state,
+    state: session.state,
     subject: act.subject,
     fills: [target],
   });
@@ -458,7 +465,7 @@ function observePactFamiliarAttackRoute(): readonly ReducerRouteEvent[] {
     requireHole(awaitingAttackRoll.holes, "attackRoll"),
   );
   const awaitingDamage = resolveBattleSubject({
-    state,
+    state: session.state,
     subject: act.subject,
     fills: [target, attackRoll],
   });
@@ -466,7 +473,7 @@ function observePactFamiliarAttackRoute(): readonly ReducerRouteEvent[] {
     throw new Error("Expected Pact familiar damage roll hole.");
   }
   const resolved = resolveBattleSubject({
-    state,
+    state: session.state,
     subject: act.subject,
     fills: [
       target,
@@ -544,7 +551,10 @@ function castNormalFamiliar(
   lastResult: Extract<LastResult, "createdCat" | "replacedRat">,
 ): FindFamiliarCompanionRuntimeState {
   const result = castNormalFamiliarResult(state, formId);
-  return { battle: requireResolved(result), lastResult };
+  return {
+    battle: { ...state.battle, state: requireResolved(result) },
+    lastResult,
+  };
 }
 
 function castNormalFamiliarResult(
@@ -552,7 +562,7 @@ function castNormalFamiliarResult(
   formId: Extract<FamiliarForm, "cat" | "rat">,
 ): BattleResolutionResult {
   return castFindFamiliar({
-    state: state.battle,
+    state: state.battle.state,
     casterId,
     catalog: statBlockCatalog,
     eligibility: familiarEligibility,
@@ -568,11 +578,14 @@ function shareSenses(
   state: FindFamiliarCompanionRuntimeState,
 ): FindFamiliarCompanionRuntimeState {
   const result = shareFindFamiliarSenses({
-    state: state.battle,
+    state: state.battle.state,
     casterId,
     fact: familiarWithin100FeetFact(),
   });
-  return { battle: requireResolved(result), lastResult: "sharedSenses" };
+  return {
+    battle: { ...state.battle, state: requireResolved(result) },
+    lastResult: "sharedSenses",
+  };
 }
 
 function deliverTouchSpell(
@@ -581,18 +594,25 @@ function deliverTouchSpell(
   const act = actionSpellAct(state.battle, "cure_wounds");
   const targetFill = touchSpellTargetFill(
     requireHole(act.initialHoles, "targetChoice"),
+    act.subject.procedureRef,
   );
   const awaitingHealingRoll = deliverTouchSpellThroughFindFamiliar({
-    state: state.battle,
+    state: state.battle.state,
     subject: act.subject,
     fills: [targetFill],
     fact: familiarWithin100FeetFact(),
   });
   if (awaitingHealingRoll.tag !== "needsHoles") {
-    throw new Error("Expected Find Familiar Touch delivery healing roll hole.");
+    throw new Error(
+      `Expected Find Familiar Touch delivery healing roll hole, got ${awaitingHealingRoll.tag}${
+        awaitingHealingRoll.tag === "invalid"
+          ? `: ${awaitingHealingRoll.message}`
+          : ""
+      }.`,
+    );
   }
   const result = deliverTouchSpellThroughFindFamiliar({
-    state: state.battle,
+    state: state.battle.state,
     subject: act.subject,
     fills: [
       targetFill,
@@ -600,44 +620,50 @@ function deliverTouchSpell(
     ],
     fact: familiarWithin100FeetFact(),
   });
-  return { battle: requireResolved(result), lastResult: "touchDelivered" };
+  return {
+    battle: { ...state.battle, state: requireResolved(result) },
+    lastResult: "touchDelivered",
+  };
 }
 
 function resolvePactFamiliarAttack(
   state: FindFamiliarCompanionRuntimeState,
 ): FindFamiliarCompanionRuntimeState {
   const result = resolveBattleSubject({
-    state: state.battle,
-    subject: pactScratchSubject(state.battle),
-    fills: pactScratchFilledAttackFills(state.battle),
+    state: state.battle.state,
+    subject: pactScratchSubject(state.battle.state),
+    fills: pactScratchFilledAttackFills(state.battle.state),
   });
-  return { battle: requireResolved(result), lastResult: "pactAttack" };
+  return {
+    battle: { ...state.battle, state: requireResolved(result) },
+    lastResult: "pactAttack",
+  };
 }
 
 function findFamiliarCompanionProjection(
   state: FindFamiliarCompanionRuntimeState,
 ): FindFamiliarCompanionProjection {
   const familiarEntry = findFamiliarCompanionEntryForOwner(
-    state.battle,
+    state.battle.state,
     casterId,
   );
   const familiar = familiarEntry?.companion ?? null;
   const familiarCombatant =
     familiarEntry !== null && familiarEntry.companion.status === "present"
-      ? state.battle.combatants.get(familiarEntry.companion.combatantId)
+      ? state.battle.state.combatants.get(familiarEntry.companion.combatantId)
       : undefined;
   const familiarReactionAvailable =
     familiarCombatant?.reactionAvailable === true;
   const spellSlotCommitted =
-    state.battle.currentTurnResources.spellSlotUsesThisTurn.some(
+    state.battle.state.currentTurnResources.spellSlotUsesThisTurn.some(
       (use) => use.kind === "committed",
     );
-  const targetHp = Number(requireCombatant(state.battle, targetId).hp);
+  const targetHp = Number(requireCombatant(state.battle.state, targetId).hp);
   const connection = findFamiliarTelepathicConnection(
-    state.battle,
+    state.battle.state,
     familiarWithin100FeetFact(),
   );
-  const caster = requireCombatant(state.battle, casterId);
+  const caster = requireCombatant(state.battle.state, casterId);
   const projection = {
     familiarStatus: familiar?.status === "present" ? "present" : "none",
     familiarId: familiar?.status === "present" ? "primary" : "none",
@@ -650,7 +676,7 @@ function findFamiliarCompanionProjection(
     creatureTypeOverride: creatureTypeOverride(
       familiar?.creatureTypeOverride ?? "none",
     ),
-    companionCount: state.battle.companions.size,
+    companionCount: state.battle.state.companions.size,
     telepathyAvailable: connection !== null,
     sharedSensesActive: caster.activeEffects.some(
       (effect) =>
@@ -658,10 +684,10 @@ function findFamiliarCompanionProjection(
         effect.familiarId === familiarId,
     ),
     bonusActionAvailable: canSpendBonusAction(
-      state.battle.currentTurnResources,
+      state.battle.state.currentTurnResources,
     ),
     ownerAttackAvailable:
-      state.battle.currentTurnResources.actionResources.length > 0,
+      state.battle.state.currentTurnResources.actionResources.length > 0,
     familiarReactionAvailable,
     touchDeliveryReactionSpent:
       spellSlotCommitted && !familiarReactionAvailable,
@@ -686,22 +712,16 @@ function familiarWithin100FeetFact() {
 }
 
 function actionSpellAct(
-  state: BattleState,
+  session: BattleRuntimeSession,
   spellId: "cure_wounds",
 ): AvailableBattleAct & {
-  readonly subject: Extract<
-    BattleSubject,
-    { readonly tag: "actionSpell"; readonly invocation: unknown }
-  >;
+  readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
 } {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActs(session).find(
     (
       candidate,
     ): candidate is AvailableBattleAct & {
-      readonly subject: Extract<
-        BattleSubject,
-        { readonly tag: "actionSpell"; readonly invocation: unknown }
-      >;
+      readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
     } =>
       candidate.subject.tag === "actionSpell" &&
       battleActSpellPresentation(candidate)?.invocation.spellId === spellId,
@@ -712,13 +732,13 @@ function actionSpellAct(
   return act;
 }
 
-function sharedSensesAct(state: BattleState): AvailableBattleAct & {
+function sharedSensesAct(session: BattleRuntimeSession): AvailableBattleAct & {
   readonly subject: Extract<
     BattleSubject,
     { readonly tag: "findFamiliarSharedSenses" }
   >;
 } {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActs(session).find(
     (
       candidate,
     ): candidate is AvailableBattleAct & {
@@ -734,13 +754,13 @@ function sharedSensesAct(state: BattleState): AvailableBattleAct & {
   return act;
 }
 
-function touchDeliveryAct(state: BattleState): AvailableBattleAct & {
+function touchDeliveryAct(session: BattleRuntimeSession): AvailableBattleAct & {
   readonly subject: Extract<
     BattleSubject,
     { readonly tag: "findFamiliarTouchSpell" }
   >;
 } {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActs(session).find(
     (
       candidate,
     ): candidate is AvailableBattleAct & {
@@ -759,11 +779,13 @@ function touchDeliveryAct(state: BattleState): AvailableBattleAct & {
   return act;
 }
 
-function pactFamiliarAttackAct(state: BattleState): AvailableBattleAct & {
+function pactFamiliarAttackAct(
+  session: BattleRuntimeSession,
+): AvailableBattleAct & {
   readonly subject: PactOfTheChainFamiliarAttackSubject;
 } {
-  const subject = pactScratchSubject(state);
-  const act = discoverBattleActs(state).find(
+  const subject = pactScratchSubject(session.state);
+  const act = discoverBattleActs(session).find(
     (
       candidate,
     ): candidate is AvailableBattleAct & {
@@ -799,6 +821,10 @@ function requireFindFamiliarEligibility(
 
 function touchSpellTargetFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
+  procedureRef: Extract<
+    BattleSubject,
+    { readonly tag: "actionSpell" }
+  >["procedureRef"],
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
   return {
     kind: "targetChoice",
@@ -810,9 +836,7 @@ function touchSpellTargetFill(
         ownerId: casterId,
         familiarId,
         targetId,
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String("cure_wounds"),
-        ),
+        sourceProcedureRef: procedureRef,
       },
     ],
   };

@@ -40,12 +40,13 @@ import {
   breakBattleConcentration,
   canSpendAction,
   classLevel,
-  discoverBattleActs,
+  discoverBattleActCandidates,
   elapsedTimeTicks,
   Hp,
   movementFeet,
   resolveBattleSubject,
   snapshotBattle,
+  type BattleRuntimeSession,
   type BattleState,
 } from "./unit-profile-admission-test-support.ts";
 import {
@@ -57,7 +58,7 @@ describe("SRDINV95 deterministic Flame Blade admission", () => {
   test("flame_blade casts as a Bonus Action slot spell and occupies the canonical free hand", () => {
     const spell = spellRecord(flameBladeUnitId);
     const state = flameBladeBattle();
-    const act = bonusSpellAct({ state, spellId: flameBladeUnitId });
+    const act = bonusSpellAct({ session: state, spellId: flameBladeUnitId });
 
     expect(act).toEqual(
       expect.objectContaining({
@@ -72,7 +73,7 @@ describe("SRDINV95 deterministic Flame Blade admission", () => {
     );
 
     const resolved = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [],
     });
@@ -151,7 +152,7 @@ describe("SRDINV95 deterministic Flame Blade admission", () => {
     const state = flameBladeBattle({ targetHp: 20, targetMaxHp: 20 });
     const cast = castFlameBlade(state);
     const attackAct = spellAct({
-      state: cast.state,
+      session: cast,
       spellId: flameBladeUnitId,
     });
 
@@ -162,7 +163,7 @@ describe("SRDINV95 deterministic Flame Blade admission", () => {
       tag: "actionSpell",
       actorId: spellCasterId,
       procedureRef: requireCharacterSpellProcedureRefForTest(
-        cast.state,
+        cast,
         spellCasterId,
         {
           tag: "spellEffect",
@@ -193,11 +194,12 @@ describe("SRDINV95 deterministic Flame Blade admission", () => {
       }),
       "attackRoll",
     );
-    expect(spellHoleInvocation(state, [attackRoll])).toEqual(
+    expect(spellHoleInvocation(cast, [attackRoll])).toEqual(
       expect.objectContaining({
         access: { tag: "spellEffect", sourceCombatantId: spellCasterId },
         resource: { tag: "none" },
         procedure: "spellCreatedHeldObjectAttack",
+        sourceProcedureRef: attackAct.subject.procedureRef,
         spell,
         targeting: { kind: "singleCombatant" },
         damage: {
@@ -220,7 +222,7 @@ describe("SRDINV95 deterministic Flame Blade admission", () => {
       }),
       "rolledDice",
     );
-    expect(damage.label).toBe("Flame Blade damage (3d6+3-fire)");
+    expect(damage.label).toBe("Spell damage (3d6+3-fire)");
 
     const resolved = resolveBattleSubject({
       state: cast.state,
@@ -260,7 +262,10 @@ describe("SRDINV95 deterministic Flame Blade admission", () => {
       flameBladeBattle({ targetHp: 20, targetMaxHp: 20 }),
     );
     const hidden = withHiddenCaster(cast.state);
-    const attackAct = spellAct({ state: hidden, spellId: flameBladeUnitId });
+    const attackAct = spellAct({
+      session: { ...cast, state: hidden },
+      spellId: flameBladeUnitId,
+    });
     const targetFill = spellTargetFill(
       requireHole(attackAct.initialHoles, "targetChoice"),
       flameBladeUnitId,
@@ -329,7 +334,7 @@ describe("SRDINV95 deterministic Flame Blade admission", () => {
   test("flame_blade attack rejects spell-cast Reaction facts", () => {
     const cast = castFlameBlade(flameBladeBattle());
     const attackAct = spellAct({
-      state: cast.state,
+      session: cast,
       spellId: flameBladeUnitId,
     });
     const targetFill = spellTargetFill(
@@ -379,7 +384,10 @@ describe("SRDINV95 deterministic Flame Blade admission", () => {
       throw new Error("Expected Flame Blade release to resolve.");
     }
     expect(
-      maybeSpellAct({ state: released.state, spellId: flameBladeUnitId }),
+      maybeSpellAct({
+        session: { ...state, state: released.state },
+        spellId: flameBladeUnitId,
+      }),
     ).toBeUndefined();
     expect(
       requireCombatant(released.state, spellCasterId).activeEffects,
@@ -398,7 +406,7 @@ describe("SRDINV95 deterministic Flame Blade admission", () => {
 
     const nextCasterTurn = advanceToNextCasterTurn(released.state);
     const reEvokeAct = bonusSpellAct({
-      state: nextCasterTurn,
+      session: { ...state, state: nextCasterTurn },
       spellId: flameBladeUnitId,
     });
     expect({
@@ -408,7 +416,7 @@ describe("SRDINV95 deterministic Flame Blade admission", () => {
       tag: "bonusActionSpell",
       actorId: spellCasterId,
       procedureRef: requireCharacterSpellProcedureRefForTest(
-        nextCasterTurn,
+        { ...state, state: nextCasterTurn },
         spellCasterId,
         {
           tag: "spellEffect",
@@ -465,14 +473,17 @@ describe("SRDINV95 deterministic Flame Blade admission", () => {
 
   test("flame_blade rejects canonical hand state with no free hand", () => {
     const state = flameBladeBattle();
-    const act = bonusSpellAct({ state, spellId: flameBladeUnitId });
-    const noFreeHand = withCasterHands(state, {
+    const act = bonusSpellAct({ session: state, spellId: flameBladeUnitId });
+    const noFreeHand = withCasterHands(state.state, {
       leftHandUse: "shield",
       rightHandUse: "mainWeapon",
     });
 
     expect(
-      maybeSpellAct({ state: noFreeHand, spellId: flameBladeUnitId }),
+      maybeSpellAct({
+        session: { ...state, state: noFreeHand },
+        spellId: flameBladeUnitId,
+      }),
     ).toBeUndefined();
 
     const rejected = resolveBattleSubject({
@@ -490,10 +501,10 @@ describe("SRDINV95 deterministic Flame Blade admission", () => {
 
   test("flame_blade rejects fabricated held-object facts fills", () => {
     const state = flameBladeBattle();
-    const act = bonusSpellAct({ state, spellId: flameBladeUnitId });
+    const act = bonusSpellAct({ session: state, spellId: flameBladeUnitId });
 
     const rejected = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [
         {
@@ -513,7 +524,7 @@ describe("SRDINV95 deterministic Flame Blade admission", () => {
 
   test("held flame_blade blocks other canonical free-hand consumers", () => {
     const state = flameBladeBattle();
-    expect(discoverBattleActs(state)).toEqual(
+    expect(discoverBattleActCandidates(state.state)).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           subject: expect.objectContaining({
@@ -526,7 +537,7 @@ describe("SRDINV95 deterministic Flame Blade admission", () => {
 
     const cast = castFlameBlade(state);
 
-    expect(discoverBattleActs(cast.state)).not.toEqual(
+    expect(discoverBattleActCandidates(cast.state)).not.toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           subject: expect.objectContaining({
@@ -585,7 +596,7 @@ describe("SRDINV95 deterministic Flame Blade admission", () => {
       });
 
       expect(
-        maybeSpellAct({ state, spellId: flameBladeUnitId }),
+        maybeSpellAct({ session: state, spellId: flameBladeUnitId }),
       ).toBeUndefined();
     }
   });
@@ -650,7 +661,7 @@ function flameBladeBattle(
     readonly targetHp?: number;
     readonly targetMaxHp?: number;
   } = {},
-): BattleState {
+): BattleRuntimeSession {
   return spellBattle({
     preparedSpells: [spellRecord(flameBladeUnitId)],
     spellSlots: [{ spellLevel: 2, count: 1 }],
@@ -660,21 +671,21 @@ function flameBladeBattle(
   });
 }
 
-function castFlameBlade(state: BattleState) {
-  const act = bonusSpellAct({ state, spellId: flameBladeUnitId });
+function castFlameBlade(session: BattleRuntimeSession) {
+  const act = bonusSpellAct({ session, spellId: flameBladeUnitId });
   const result = resolveBattleSubject({
-    state,
+    state: session.state,
     subject: act.subject,
     fills: [],
   });
   if (result.tag !== "resolved") {
     throw new Error("Expected Flame Blade cast to resolve.");
   }
-  return result;
+  return { ...result, context: session.context };
 }
 
 function releaseFlameBladeAct(state: BattleState) {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActCandidates(state).find(
     (candidate) =>
       candidate.subject.tag === "runtimeCommand" &&
       candidate.subject.command === "releaseSpellCreatedHeldObject",

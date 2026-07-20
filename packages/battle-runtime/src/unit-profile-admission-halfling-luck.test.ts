@@ -64,6 +64,7 @@ import {
   attackExecutionSelectionForSubjectForTest,
   attackRollFill,
   battleProcedureExecutionRefForTest,
+  characterBattleFeatureInitForTest,
   characterAttackSubjectForTest,
   characterBonusAttackSubjectForTest,
   characterSeed,
@@ -88,13 +89,15 @@ import {
   savingThrowOutcomeFill,
   skeletonId,
   startBattleRight,
+  startBattleSessionRight,
   statBlockCreatureInit,
   targetFill,
   testDaggerAttack,
   testShortswordAttack,
   wizardId,
   wizardSpellcasting,
-  type BattleActDiscoverySubject as BattleSubject,
+  type BattleState,
+  type BattleSubject,
 } from "./battle-runtime-test-support.ts";
 
 const expectedRerollProfile = {
@@ -475,7 +478,7 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
           attack: testShortswordAttack(),
           offHandAttack: testDaggerAttack(),
           characterUnitRefs: [unitRef],
-          unitFeatures: [{ unit }],
+          unitFeatures: [characterBattleFeatureInitForTest(unit)],
           selectedLoadout: {
             weapon: {
               itemId: "main:weapon_shortsword",
@@ -579,7 +582,7 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
           initiative: 10,
           attack: testShortswordAttack(),
           characterUnitRefs: [unitRef],
-          unitFeatures: [{ unit }],
+          unitFeatures: [characterBattleFeatureInitForTest(unit)],
         }),
       ],
     });
@@ -655,7 +658,7 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
           initiative: 20,
           attack: testShortswordAttack(),
           characterUnitRefs: [unitRef],
-          unitFeatures: [{ unit }],
+          unitFeatures: [characterBattleFeatureInitForTest(unit)],
         }),
         characterSeed({
           combatantId: goblinId,
@@ -802,11 +805,14 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
       preparedSpells: [spellRecord(dispelMagicUnitId)],
       spellSlots: [{ spellLevel: 3, count: 1 }],
       casterUnitRefs: [unitRef],
-      casterUnitFeatures: [{ unit }],
+      casterUnitFeatures: [characterBattleFeatureInitForTest(unit)],
     });
-    const state = { ...baseState, lightEmitters: [emitter] };
+    const state = {
+      state: { ...baseState.state, lightEmitters: [emitter] },
+      context: baseState.context,
+    };
     const act = spellAct({
-      state,
+      session: state,
       spellId: dispelMagicUnitId,
       slotLevel: 3,
     });
@@ -820,7 +826,7 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
     });
     const check = requireTypedHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject: act.subject,
         fills: [targetSelection],
       }),
@@ -829,7 +835,7 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
 
     expectD20TestNaturalOneRerollHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject: act.subject,
         fills: [
           targetSelection,
@@ -844,7 +850,7 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
 
     const resolved = requireResolved(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject: act.subject,
         fills: [
           targetSelection,
@@ -868,9 +874,9 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
     const state = spellBattle({
       cantrips: [spell],
       targetUnitRefs: [unitRef],
-      targetUnitFeatures: [{ unit }],
+      targetUnitFeatures: [characterBattleFeatureInitForTest(unit)],
     });
-    const act = spellAct({ state, spellId: viciousMockeryUnitId });
+    const act = spellAct({ session: state, spellId: viciousMockeryUnitId });
     const target = requireInitialHole(act.initialHoles, "targetChoice");
     const targetSelection = spellTargetFill(
       target,
@@ -880,7 +886,7 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
     );
     const savingThrow = requireTypedHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject: act.subject,
         fills: [targetSelection],
       }),
@@ -888,7 +894,7 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
     );
 
     const omittedRolledDie = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [
         targetSelection,
@@ -906,7 +912,7 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
     });
 
     const noRollFailure = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [
         targetSelection,
@@ -929,7 +935,7 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
 
     const noRollSuccess = requireResolved(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject: act.subject,
         fills: [
           targetSelection,
@@ -944,12 +950,12 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
       }),
     );
     expect(Number(noRollSuccess.state.combatants.get(spellTargetId)?.hp)).toBe(
-      Number(state.combatants.get(spellTargetId)?.hp),
+      Number(state.state.combatants.get(spellTargetId)?.hp),
     );
 
     expectD20TestNaturalOneRerollHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject: act.subject,
         fills: [
           targetSelection,
@@ -967,7 +973,7 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
 
     const resolved = requireResolved(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject: act.subject,
         fills: [
           targetSelection,
@@ -987,7 +993,7 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
     );
 
     expect(Number(resolved.state.combatants.get(spellTargetId)?.hp)).toBe(
-      Number(state.combatants.get(spellTargetId)?.hp),
+      Number(state.state.combatants.get(spellTargetId)?.hp),
     );
   });
 
@@ -1096,7 +1102,7 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
       cantrips: [rayOfFrost],
       casterClassLevels: [{ className: "sorcerer", level: 5 }],
       casterUnitRefs: [unitRef],
-      casterUnitFeatures: [{ unit }],
+      casterUnitFeatures: [characterBattleFeatureInitForTest(unit)],
       casterResources: [
         {
           unit: unitLibrary.requireUnit("sorcerer_font_of_magic"),
@@ -1109,7 +1115,7 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
         knownOptions: [seekingMetamagicOption()],
       },
     });
-    const act = spellAct({ state, spellId: rayOfFrost.id });
+    const act = spellAct({ session: state, spellId: rayOfFrost.id });
     const target = requireInitialHole(act.initialHoles, "targetChoice");
     const targetSelection = spellTargetFill(
       target,
@@ -1119,7 +1125,7 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
     );
     const attack = requireTypedHole(
       resolveBattleSubject({
-        state,
+        state: state.state,
         subject: act.subject,
         fills: [targetSelection],
       }),
@@ -1127,7 +1133,7 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
     );
 
     const awaitingLuck = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [
         targetSelection,
@@ -1156,7 +1162,7 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
       }),
     });
     const afterLuck = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [targetSelection, luckReplacementHit],
     });
@@ -1174,7 +1180,7 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
     ).toBe(false);
 
     const stackedSeeking = resolveBattleSubject({
-      state,
+      state: state.state,
       subject: act.subject,
       fills: [
         targetSelection,
@@ -1204,7 +1210,7 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
 
   test("Concentration Saving Throws consume natural-1 reroll decisions", () => {
     const { unit, unitRef } = halflingLuckSelection();
-    const base = startBattleRight({
+    const baseSession = startBattleSessionRight({
       battleId: battleId("halfling-luck-concentration-save"),
       combatants: [
         characterSeed({
@@ -1217,7 +1223,7 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
             preparedSpells: [],
           }),
           characterUnitRefs: [unitRef],
-          unitFeatures: [{ unit }],
+          unitFeatures: [characterBattleFeatureInitForTest(unit)],
         }),
         characterSeed({
           combatantId: skeletonId,
@@ -1225,10 +1231,11 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
           initiative: 10,
           attack: null,
           characterUnitRefs: [unitRef],
-          unitFeatures: [{ unit }],
+          unitFeatures: [characterBattleFeatureInitForTest(unit)],
         }),
       ],
     });
+    const base = baseSession.state;
     const targetCombatant = base.combatants.get(skeletonId);
     if (targetCombatant === undefined) {
       throw new Error("Expected concentrating target.");
@@ -1245,7 +1252,10 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
         },
       }),
     };
-    const subject = magicSubject("eldritch_blast");
+    const subject = findAct(
+      { ...baseSession, state },
+      magicSubject("eldritch_blast"),
+    ).subject;
     const target = requireInitialHole(
       findAct(state, subject).initialHoles,
       "targetChoice",
@@ -1397,7 +1407,7 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
           currentHp: 0,
           attack: null,
           characterUnitRefs: [unitRef],
-          unitFeatures: [{ unit }],
+          unitFeatures: [characterBattleFeatureInitForTest(unit)],
         }),
       ],
     });
@@ -1435,7 +1445,7 @@ function halflingLuckFighterBattle() {
       characterSeed({
         initiative: 20,
         characterUnitRefs: [unitRef],
-        unitFeatures: [{ unit }],
+        unitFeatures: [characterBattleFeatureInitForTest(unit)],
       }),
       statBlockCreatureInit({ initiative: 10 }),
     ],
@@ -1459,13 +1469,13 @@ function halflingLuckSelection() {
 }
 
 function attackSubject(
-  state: Parameters<typeof resolveBattleSubject>[0]["state"],
+  state: BattleState,
 ): Extract<BattleSubject, { readonly tag: "action" }> {
   return fighterAttackSubject(state, "Longsword");
 }
 
 function resolveAttack(
-  state: Parameters<typeof resolveBattleSubject>[0]["state"],
+  state: BattleState,
   subject: BattleSubject,
   fills: readonly BattleFill[],
 ): BattleResolutionResult {
@@ -1480,19 +1490,18 @@ function ongoingSpellTargetFill(
     kind: "ongoingSpellTargetChoice",
     holeId: hole.holeId,
     value: target,
-    spatialFacts: [ongoingSpellTargetWithinRangeFact(target)],
+    spatialFacts: [ongoingSpellTargetWithinRangeFact(hole, target)],
   };
 }
 
 function ongoingSpellTargetWithinRangeFact(
+  hole: Extract<BattleHole, { readonly kind: "ongoingSpellTargetChoice" }>,
   target: OngoingSpellTarget,
 ): OngoingSpellTargetWithinRangeFact {
   return {
     kind: "ongoingSpellTargetWithinRange",
     casterId: spellCasterId,
-    sourceProcedureRef: battleProcedureExecutionRefForTest(
-      String(dispelMagicUnitId),
-    ),
+    sourceProcedureRef: hole.procedureRef,
     target,
     rangeFeet: movementFeet(120),
   };
@@ -1574,10 +1583,7 @@ function expectD20TestNaturalOneRerollHole<K extends BattleHole["kind"]>(
   return hole;
 }
 
-function startOpportunityAttack(
-  state: Parameters<typeof resolveBattleSubject>[0]["state"],
-  attackName: string,
-) {
+function startOpportunityAttack(state: BattleState, attackName: string) {
   const subject = {
     tag: "runtimeCommand",
     actorId: fighterId,

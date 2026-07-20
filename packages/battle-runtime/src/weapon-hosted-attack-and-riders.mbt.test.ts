@@ -62,8 +62,9 @@ import {
   type BattleFill,
   type BattleHole,
   type BattleResolutionResult,
+  type BattleRuntimeSession,
   type BattleState,
-  type BattleActDiscoverySubject as BattleSubject,
+  type BattleSubject,
 } from "./index.ts";
 import {
   attackBonus,
@@ -192,7 +193,7 @@ type PendingInvocation =
     };
 
 type WeaponHostedRuntimeState = {
-  readonly battle: BattleState;
+  readonly battle: BattleRuntimeSession;
   readonly scenario: WeaponHostedScenario;
   readonly phase: WeaponHostedPhase;
   readonly holes: readonly BattleHole[];
@@ -517,14 +518,14 @@ describe("Weapon-hosted attack and riders MBT parity", () => {
     }
     expect(
       attackActionOptionForSubject(
-        targetChosen.battle,
+        targetChosen.battle.state,
         targetChosen.pending.subject,
       )?.kind,
     ).toBe("unarmedStrike");
     const attack = requireHole(targetChosen.holes, "attackRoll");
     const result = requireResolved(
       resolveBattleSubject({
-        state: targetChosen.battle,
+        state: targetChosen.battle.state,
         subject: targetChosen.pending.subject,
         fills: [
           targetChosen.pending.targetFill,
@@ -642,7 +643,7 @@ function initialRuntimeState(
 
 function battleForScenario(
   scenario: Exclude<WeaponHostedScenario, "done">,
-): BattleState {
+): BattleRuntimeSession {
   if (scenario === "trueStrikeRadiantHit") {
     return spellBattle({
       cantrips: [spellRecord(trueStrikeUnitId)],
@@ -695,7 +696,7 @@ function routeSpellHostedDamageTypeChoice(): readonly ReducerRouteEvent[] {
   );
   const result = requireNeedsHoles(
     resolveBattleSubject({
-      state: discovered.battle,
+      state: discovered.battle.state,
       subject: discovered.pending.subject,
       fills: [damageTypeFill],
     }),
@@ -720,7 +721,7 @@ function routeSpellHostedTargetChoice(): readonly ReducerRouteEvent[] {
   );
   const damageTypeResult = requireNeedsHoles(
     resolveBattleSubject({
-      state: discovered.battle,
+      state: discovered.battle.state,
       subject: discovered.pending.subject,
       fills: [damageTypeFill],
     }),
@@ -734,7 +735,7 @@ function routeSpellHostedTargetChoice(): readonly ReducerRouteEvent[] {
   );
   const result = requireNeedsHoles(
     resolveBattleSubject({
-      state: discovered.battle,
+      state: discovered.battle.state,
       subject: discovered.pending.subject,
       fills: [damageTypeFill, targetFill],
     }),
@@ -763,7 +764,7 @@ function routeSpellHostedAttackRoll(): readonly ReducerRouteEvent[] {
   );
   const result = requireNeedsHoles(
     resolveBattleSubject({
-      state: targetChosen.battle,
+      state: targetChosen.battle.state,
       subject: targetChosen.pending.subject,
       fills: [
         targetChosen.pending.damageTypeFill,
@@ -791,7 +792,7 @@ function routeSpellHostedDamage(): readonly ReducerRouteEvent[] {
   }
   const result = requireResolved(
     resolveBattleSubject({
-      state: hit.battle,
+      state: hit.battle.state,
       subject: hit.pending.subject,
       fills: [
         hit.pending.damageTypeFill,
@@ -815,9 +816,11 @@ function routeHeldWeaponActiveEffect(): readonly ReducerRouteEvent[] {
   const state = initialRuntimeState("shillelaghHeldWeaponOverride");
   const result = requireResolved(
     resolveBattleSubject({
-      state: state.battle,
-      subject: bonusSpellAct({ state: state.battle, spellId: shillelaghUnitId })
-        .subject,
+      state: state.battle.state,
+      subject: bonusSpellAct({
+        session: state.battle,
+        spellId: shillelaghUnitId,
+      }).subject,
       fills: [],
     }),
     "Expected Shillelagh to resolve.",
@@ -842,7 +845,7 @@ function routeHeldWeaponAttackRoll(): readonly ReducerRouteEvent[] {
   expect(attack.attackBonus).toBe(attackBonus(5));
   const result = requireNeedsHoles(
     resolveBattleSubject({
-      state: targetChosen.battle,
+      state: targetChosen.battle.state,
       subject: targetChosen.pending.subject,
       fills: [
         targetChosen.pending.targetFill,
@@ -873,7 +876,7 @@ function routeHeldWeaponDamage(): readonly ReducerRouteEvent[] {
   }
   const result = requireResolved(
     resolveBattleSubject({
-      state: hit.battle,
+      state: hit.battle.state,
       subject: hit.pending.subject,
       fills: [
         hit.pending.targetFill,
@@ -895,9 +898,9 @@ function routeWeaponDamageRiderActiveEffect(): readonly ReducerRouteEvent[] {
   const state = initialRuntimeState("divineFavorWeaponDamageRider");
   const result = requireResolved(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: bonusSpellAct({
-        state: state.battle,
+        session: state.battle,
         spellId: divineFavorUnitId,
       }).subject,
       fills: [],
@@ -922,7 +925,7 @@ function routeWeaponDamageRiderDamage(): readonly ReducerRouteEvent[] {
   }
   const result = requireResolved(
     resolveBattleSubject({
-      state: hit.battle,
+      state: hit.battle.state,
       subject: hit.pending.subject,
       fills: [
         hit.pending.targetFill,
@@ -948,7 +951,7 @@ function routeWeaponEnhancementItemTarget(): readonly ReducerRouteEvent[] {
   const target = requireHole(discovered.holes, "magicWeaponTargetItem");
   const result = requireResolved(
     resolveBattleSubject({
-      state: discovered.battle,
+      state: discovered.battle.state,
       subject: discovered.pending.subject,
       fills: [
         magicWeaponTargetItemFill(target, {
@@ -978,13 +981,13 @@ function routeHeldWeaponReleaseCleanup(): readonly ReducerRouteEvent[] {
     ),
     [[2, 2]],
   );
-  const caster = requireCombatant(damaged.battle, spellCasterId);
+  const caster = requireCombatant(damaged.battle.state, spellCasterId);
   if (caster.origin.kind !== "character") {
     throw new Error("Expected Shillelagh caster character origin.");
   }
   const letGoState: BattleState = {
-    ...damaged.battle,
-    combatants: new Map(damaged.battle.combatants).set(spellCasterId, {
+    ...damaged.battle.state,
+    combatants: new Map(damaged.battle.state.combatants).set(spellCasterId, {
       ...caster,
       origin: {
         ...caster.origin,
@@ -1015,10 +1018,10 @@ function routeWeaponDamageRiderDurationCleanup(): readonly ReducerRouteEvent[] {
     ),
     [[2], [3]],
   );
-  const caster = requireCombatant(damaged.battle, spellCasterId);
+  const caster = requireCombatant(damaged.battle.state, spellCasterId);
   const expiringState: BattleState = {
-    ...damaged.battle,
-    combatants: new Map(damaged.battle.combatants).set(spellCasterId, {
+    ...damaged.battle.state,
+    combatants: new Map(damaged.battle.state.combatants).set(spellCasterId, {
       ...caster,
       activeEffects: caster.activeEffects.map((effect) =>
         effect.kind === "spellWeaponDamageRider" &&
@@ -1052,10 +1055,10 @@ function routeWeaponEnhancementDurationCleanup(): readonly ReducerRouteEvent[] {
   const enhanced = fillMagicWeaponTarget(
     discoverMagicWeapon(initialRuntimeState("magicWeaponEnhancement")),
   );
-  const caster = requireCombatant(enhanced.battle, spellCasterId);
+  const caster = requireCombatant(enhanced.battle.state, spellCasterId);
   const expiringState: BattleState = {
-    ...enhanced.battle,
-    combatants: new Map(enhanced.battle.combatants).set(spellCasterId, {
+    ...enhanced.battle.state,
+    combatants: new Map(enhanced.battle.state.combatants).set(spellCasterId, {
       ...caster,
       activeEffects: caster.activeEffects.map((effect) =>
         effect.kind === "spellMagicWeaponEnhancement"
@@ -1120,7 +1123,7 @@ function requireNeedsHoles(
 function discoverTrueStrike(
   state: WeaponHostedRuntimeState,
 ): WeaponHostedRuntimeState {
-  const act = spellAct({ state: state.battle, spellId: trueStrikeUnitId });
+  const act = spellAct({ session: state.battle, spellId: trueStrikeUnitId });
   return {
     ...state,
     phase: "spellChoiceNeeded",
@@ -1154,7 +1157,7 @@ function fillTrueStrikeRadiantTarget(
   };
   const attack = requireResultHole(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: state.pending.subject,
       fills: [damageTypeFill, targetFill],
     }),
@@ -1187,7 +1190,7 @@ function fillTrueStrikeHit(
   });
   const damage = requireResultHole(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: state.pending.subject,
       fills: [
         state.pending.damageTypeFill,
@@ -1231,7 +1234,7 @@ function fillTrueStrikeDamage(
   }
   const resolved = requireResolved(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: state.pending.subject,
       fills: [
         state.pending.damageTypeFill,
@@ -1247,7 +1250,7 @@ function fillTrueStrikeDamage(
   );
   return {
     ...state,
-    battle: resolved.state,
+    battle: { ...state.battle, state: resolved.state },
     phase: "cleaned",
     holes: [],
     pending: { tag: "none" },
@@ -1260,16 +1263,18 @@ function castShillelagh(
 ): WeaponHostedRuntimeState {
   const cast = requireResolved(
     resolveBattleSubject({
-      state: state.battle,
-      subject: bonusSpellAct({ state: state.battle, spellId: shillelaghUnitId })
-        .subject,
+      state: state.battle.state,
+      subject: bonusSpellAct({
+        session: state.battle,
+        spellId: shillelaghUnitId,
+      }).subject,
       fills: [],
     }),
     "Expected Shillelagh to resolve.",
   );
   return {
     ...state,
-    battle: cast.state,
+    battle: { ...state.battle, state: cast.state },
     phase: "activeEffectApplied",
     lastResult: "resolved",
   };
@@ -1286,7 +1291,7 @@ function discoverWeaponAttack(
       : [
           requireResultHole(
             resolveBattleSubject({
-              state: state.battle,
+              state: state.battle.state,
               subject: act.subject,
               fills: [],
             }),
@@ -1338,7 +1343,7 @@ function fillWeaponTarget(
   );
   const attack = requireResultHole(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: state.pending.subject,
       fills: [targetFill],
     }),
@@ -1374,7 +1379,7 @@ function fillWeaponHit(
   const attackFill = attackRollFill(attack, { total: 15, naturalD20: 10 });
   const damage = requireResultHole(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: state.pending.subject,
       fills: [state.pending.targetFill, attackFill],
     }),
@@ -1382,7 +1387,7 @@ function fillWeaponHit(
   );
   if (options.expectDamageRider === true) {
     const activeRider = requireCombatant(
-      state.battle,
+      state.battle.state,
       spellCasterId,
     ).activeEffects.find(
       (
@@ -1430,7 +1435,7 @@ function fillWeaponDamage(
   }
   const resolved = requireResolved(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: state.pending.subject,
       fills: [
         state.pending.targetFill,
@@ -1445,7 +1450,7 @@ function fillWeaponDamage(
   );
   return {
     ...state,
-    battle: resolved.state,
+    battle: { ...state.battle, state: resolved.state },
     phase: "afterWeaponDamage",
     holes: [],
     pending: { tag: "none" },
@@ -1456,13 +1461,13 @@ function fillWeaponDamage(
 function cleanShillelaghLetGo(
   state: WeaponHostedRuntimeState,
 ): WeaponHostedRuntimeState {
-  const caster = requireCombatant(state.battle, spellCasterId);
+  const caster = requireCombatant(state.battle.state, spellCasterId);
   if (caster.origin.kind !== "character") {
     throw new Error("Expected Shillelagh caster character origin.");
   }
   const letGoState: BattleState = {
-    ...state.battle,
-    combatants: new Map(state.battle.combatants).set(spellCasterId, {
+    ...state.battle.state,
+    combatants: new Map(state.battle.state.combatants).set(spellCasterId, {
       ...caster,
       origin: {
         ...caster.origin,
@@ -1476,7 +1481,7 @@ function cleanShillelaghLetGo(
   );
   return {
     ...state,
-    battle: cleaned.state,
+    battle: { ...state.battle, state: cleaned.state },
     phase: "cleaned",
     lastResult: "resolved",
   };
@@ -1487,9 +1492,9 @@ function castDivineFavor(
 ): WeaponHostedRuntimeState {
   const cast = requireResolved(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: bonusSpellAct({
-        state: state.battle,
+        session: state.battle,
         spellId: divineFavorUnitId,
       }).subject,
       fills: [],
@@ -1498,7 +1503,7 @@ function castDivineFavor(
   );
   return {
     ...state,
-    battle: cast.state,
+    battle: { ...state.battle, state: cast.state },
     phase: "activeEffectApplied",
     lastResult: "resolved",
   };
@@ -1507,10 +1512,10 @@ function castDivineFavor(
 function cleanDivineFavorDuration(
   state: WeaponHostedRuntimeState,
 ): WeaponHostedRuntimeState {
-  const caster = requireCombatant(state.battle, spellCasterId);
+  const caster = requireCombatant(state.battle.state, spellCasterId);
   const expiringState: BattleState = {
-    ...state.battle,
-    combatants: new Map(state.battle.combatants).set(spellCasterId, {
+    ...state.battle.state,
+    combatants: new Map(state.battle.state.combatants).set(spellCasterId, {
       ...caster,
       activeEffects: caster.activeEffects.map((effect) =>
         effect.kind === "spellWeaponDamageRider" &&
@@ -1536,7 +1541,7 @@ function cleanDivineFavorDuration(
   );
   return {
     ...state,
-    battle: expired.state,
+    battle: { ...state.battle, state: expired.state },
     phase: "cleaned",
     lastResult: "resolved",
   };
@@ -1546,7 +1551,7 @@ function discoverMagicWeapon(
   state: WeaponHostedRuntimeState,
 ): WeaponHostedRuntimeState {
   const act = bonusSpellAct({
-    state: state.battle,
+    session: state.battle,
     spellId: magicWeaponUnitId,
     slotLevel: 2,
   });
@@ -1568,7 +1573,7 @@ function fillMagicWeaponTarget(
   const target = requireHole(state.holes, "magicWeaponTargetItem");
   const cast = requireResolved(
     resolveBattleSubject({
-      state: state.battle,
+      state: state.battle.state,
       subject: state.pending.subject,
       fills: [
         magicWeaponTargetItemFill(target, {
@@ -1595,7 +1600,7 @@ function fillMagicWeaponTarget(
   ).toBe(1);
   return {
     ...state,
-    battle: cast.state,
+    battle: { ...state.battle, state: cast.state },
     phase: "activeEffectApplied",
     holes: [],
     pending: { tag: "none" },
@@ -1606,10 +1611,10 @@ function fillMagicWeaponTarget(
 function cleanMagicWeaponDuration(
   state: WeaponHostedRuntimeState,
 ): WeaponHostedRuntimeState {
-  const caster = requireCombatant(state.battle, spellCasterId);
+  const caster = requireCombatant(state.battle.state, spellCasterId);
   const expiringState: BattleState = {
-    ...state.battle,
-    combatants: new Map(state.battle.combatants).set(spellCasterId, {
+    ...state.battle.state,
+    combatants: new Map(state.battle.state.combatants).set(spellCasterId, {
       ...caster,
       activeEffects: caster.activeEffects.map((effect) =>
         effect.kind === "spellMagicWeaponEnhancement"
@@ -1634,7 +1639,7 @@ function cleanMagicWeaponDuration(
   );
   return {
     ...state,
-    battle: expired.state,
+    battle: { ...state.battle, state: expired.state },
     phase: "cleaned",
     lastResult: "resolved",
   };
@@ -1649,22 +1654,26 @@ function weaponHostedProjection(
     targetHp:
       state.scenario === "magicWeaponEnhancement" || state.scenario === "done"
         ? 20
-        : Number(requireCombatant(state.battle, spellTargetId).hp),
+        : Number(requireCombatant(state.battle.state, spellTargetId).hp),
     bonusActionAvailable:
       state.scenario === "shillelaghHeldWeaponOverride" &&
       state.phase === "cleaned"
         ? true
-        : state.battle.currentTurnResources.currentHasBonusAction,
-    slotExpended: state.battle.currentTurnResources.spellSlotUsesThisTurn.some(
-      (use) => use.kind === "committed" && use.combatantId === spellCasterId,
+        : state.battle.state.currentTurnResources.currentHasBonusAction,
+    slotExpended:
+      state.battle.state.currentTurnResources.spellSlotUsesThisTurn.some(
+        (use) => use.kind === "committed" && use.combatantId === spellCasterId,
+      ),
+    activeEffectPresent: activeEffectPresent(
+      state.battle.state,
+      state.scenario,
     ),
-    activeEffectPresent: activeEffectPresent(state.battle, state.scenario),
     attackBonus: projectedAttackBonus(state),
     damageTypeChoiceApplied: damageTypeChoiceApplied(state),
     damageRiderPresent: damageRiderPresent(state),
     weaponEnhancementBonus:
       battleWeaponItemMagicWeaponEnhancementBonus(
-        state.battle,
+        state.battle.state,
         spellCasterId,
         "main:weapon_longsword",
       ) ?? 0,

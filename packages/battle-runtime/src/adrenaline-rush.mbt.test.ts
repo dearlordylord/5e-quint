@@ -69,35 +69,43 @@ describe("Adrenaline Rush MBT", () => {
     }
   });
 
-  it("replays Orc Adrenaline Rush Bonus Action Dash and Temporary Hit Points", async () => {
-    await run({
-      spec: mbtSpecPath(
-        import.meta.dirname,
-        "battle-runtime-adrenaline-rush.mbt.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createAdrenalineRushDriver(adrenalineRushDriverSchema),
-      backend: "typescript",
-      nTraces: mbtTraceCount(),
-      maxSteps: focusedMbtMaxSteps(2),
-      stateCheck: adrenalineRushStateCheck,
-    });
-  }, MBT_TEST_TIMEOUT_MS);
+  it(
+    "replays Orc Adrenaline Rush Bonus Action Dash and Temporary Hit Points",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-adrenaline-rush.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createAdrenalineRushDriver(adrenalineRushDriverSchema),
+        backend: "typescript",
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(2),
+        stateCheck: adrenalineRushStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 
-  it("routes Orc Adrenaline Rush through reducer owners", async () => {
-    await run({
-      spec: mbtSpecPath(
-        import.meta.dirname,
-        "battle-runtime-adrenaline-rush.route.mbt.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createAdrenalineRushRouteDriver(adrenalineRushDriverSchema),
-      backend: "typescript",
-      nTraces: mbtTraceCount(),
-      maxSteps: focusedMbtMaxSteps(2),
-      stateCheck: reducerRoutedAdrenalineRushStateCheck,
-    });
-  }, MBT_TEST_TIMEOUT_MS);
+  it(
+    "routes Orc Adrenaline Rush through reducer owners",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-adrenaline-rush.route.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createAdrenalineRushRouteDriver(adrenalineRushDriverSchema),
+        backend: "typescript",
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(2),
+        stateCheck: reducerRoutedAdrenalineRushStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 });

@@ -1,6 +1,10 @@
-import type { SupportedSpellInvocation } from "../battle-reducer.ts";
-import { isTriggeredReactionSpellInvocation } from "./spell-interrupt-procedure-kinds.ts";
+import type {
+  BattleExecutableSpellInvocation,
+  SupportedSpellInvocation,
+} from "../battle-reducer.ts";
+import type { SpellProcedureExecution } from "../character-execution.ts";
 import { spellInvocationIsSpellcasting } from "./spell-turn-resources.ts";
+import { isTriggeredReactionSpellInvocation } from "./spell-interrupt-procedure-kinds.ts";
 import { Match, Schema } from "effect";
 
 export const SpellExecutionFactsSchema = Schema.Union(
@@ -116,13 +120,13 @@ const SPELL_EXECUTION_CLASS_BY_PROCEDURE = {
 >;
 
 function executionClassForInvocation(
-  invocation: SupportedSpellInvocation,
+  invocation: Pick<SupportedSpellInvocation, "procedure">,
 ): SpellExecutionClass {
   return SPELL_EXECUTION_CLASS_BY_PROCEDURE[invocation.procedure];
 }
 
 export function spellSubjectTagForInvocation(
-  invocation: SupportedSpellInvocation,
+  invocation: SpellProcedureExecution | BattleExecutableSpellInvocation,
 ): "actionSpell" | "bonusActionSpell" {
   if (
     invocation.procedure === "directHitPointRestoration" ||
@@ -144,7 +148,7 @@ export function spellSubjectTagForInvocation(
 }
 
 export function spellExecutionFacts(
-  invocation: SupportedSpellInvocation,
+  invocation: SpellProcedureExecution,
   readiedSpellCompatible: boolean,
 ): SpellExecutionFacts {
   const executionClass = executionClassForInvocation(invocation);
@@ -163,7 +167,8 @@ export function spellExecutionFacts(
   const kind = spellSubjectTagForInvocation(invocation);
   const familiarTouchDelivery =
     spellInvocationIsSpellcasting(invocation) &&
-    invocation.spell.mechanics.range.kind === "touch";
+    "spellRuleFacts" in invocation &&
+    invocation.spellRuleFacts.range.kind === "touch";
   return kind === "actionSpell"
     ? { kind, familiarTouchDelivery, readiedSpellCompatible }
     : { kind, familiarTouchDelivery };

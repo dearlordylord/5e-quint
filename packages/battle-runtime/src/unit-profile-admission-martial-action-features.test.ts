@@ -88,6 +88,7 @@ import {
 } from "./unit-feature-support.ts";
 import { characterCreature } from "./unit-profile-admission-creature-fixture-support.ts";
 import {
+  characterBattleFeatureInitForTest,
   grappleOutcomeFill,
   requireHole,
   requireResolved,
@@ -530,7 +531,7 @@ describe("L3MSPEC species battle support", () => {
     if (Either.isLeft(result)) {
       throw new Error(result.left.message);
     }
-    const target = result.right.combatants.get(targetId);
+    const target = result.right.state.combatants.get(targetId);
     if (target === undefined) {
       throw new Error("Expected Dragonborn target combatant.");
     }
@@ -858,7 +859,9 @@ function powerfulBuildEscapeGrappleHole(input: {
         displayName: "Powerful Build Goliath",
         initiative: 10,
         characterUnitRefs: input.selected ? [unitRef.right] : [],
-        unitFeatures: [{ unit }],
+        unitFeatures: input.selected
+          ? [characterBattleFeatureInitForTest(unit)]
+          : [],
         conditions: input.poisoned === true ? ["poisoned"] : [],
       }),
     ],
@@ -874,7 +877,7 @@ function powerfulBuildEscapeGrappleHole(input: {
   } as const;
   const target = requireHole(
     resolveBattleSubject({
-      state: state.right,
+      state: state.right.state,
       subject: grappleSubject,
       fills: [],
     }),
@@ -885,7 +888,7 @@ function powerfulBuildEscapeGrappleHole(input: {
   ]);
   const outcome = requireHole(
     resolveBattleSubject({
-      state: state.right,
+      state: state.right.state,
       subject: grappleSubject,
       fills: [targetChoice],
     }),
@@ -893,7 +896,7 @@ function powerfulBuildEscapeGrappleHole(input: {
   );
   const grappled = requireResolved(
     resolveBattleSubject({
-      state: state.right,
+      state: state.right.state,
       subject: grappleSubject,
       fills: [targetChoice, grappleOutcomeFill(outcome, false)],
     }),
@@ -934,7 +937,7 @@ function dwarvenResilienceBattle() {
         combatantId: targetId,
         displayName: "Dwarf Target",
         initiative: 10,
-        unitFeatures: [{ unit }],
+        unitFeatures: [characterBattleFeatureInitForTest(unit)],
         characterUnitRefs: [unitRef.right],
       }),
       characterCreature({
@@ -948,7 +951,7 @@ function dwarvenResilienceBattle() {
   if (Either.isLeft(result)) {
     throw new Error(result.left.message);
   }
-  return result.right;
+  return result.right.state;
 }
 
 function halflingBraveBattle() {
@@ -969,7 +972,7 @@ function halflingBraveBattle() {
         combatantId: targetId,
         displayName: "Halfling Target",
         initiative: 10,
-        unitFeatures: [{ unit }],
+        unitFeatures: [characterBattleFeatureInitForTest(unit)],
         characterUnitRefs: [unitRef.right],
       }),
       characterCreature({
@@ -983,7 +986,7 @@ function halflingBraveBattle() {
   if (Either.isLeft(result)) {
     throw new Error(result.left.message);
   }
-  return result.right;
+  return result.right.state;
 }
 
 describe("QMBT68 Monk Deflect Attacks deterministic Unit profile admission", () => {

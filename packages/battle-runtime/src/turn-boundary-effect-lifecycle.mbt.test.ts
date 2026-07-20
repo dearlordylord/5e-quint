@@ -14,8 +14,17 @@
 // fixture does not assert a same-timing ordering for that lifecycle.
 import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
-import { difficultyClass, Hp, Round } from "@dnd/shared/types";
-import type { SpellRecord, UnitRecord } from "@dnd/surface/surface/types";
+import {
+  difficultyClass,
+  Hp,
+  NonNegativeInteger,
+  Round,
+} from "@dnd/shared/types";
+import {
+  battleProcedureExecutionCursor,
+  battleProcedureExecutionRef,
+} from "./identity.ts";
+import type { SpellRecord } from "@dnd/surface/surface/types";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -60,7 +69,7 @@ import {
   type BattleState,
   type OngoingFeatureSourceKey,
 } from "./index.ts";
-import type { SupportedUnitFeatureProfile } from "./unit-feature-support.ts";
+import type { UnitFeatureProcedureExecution } from "./character-execution.ts";
 
 const turnBoundaryLifecycleScenarios = [
   "init",
@@ -169,12 +178,6 @@ const turnEndDamageSpellId = syntheticSpellId(
 const untilNextTurnSpellId = syntheticSpellId(
   "synthetic_turn_boundary_until_next_turn",
 );
-const startTurnOngoingFeatureKey = syntheticOngoingFeatureSourceKey(
-  "synthetic_turn_boundary_start_ongoing_feature",
-);
-const endTurnOngoingFeatureKey = syntheticOngoingFeatureSourceKey(
-  "synthetic_turn_boundary_end_ongoing_feature",
-);
 const initialTargetHp = 10;
 const turnStartDamageRoll = 2;
 const turnEndDamageRoll = 3;
@@ -185,13 +188,6 @@ function syntheticSpellId(id: string): SpellRecord["id"] {
   // Surface content; active-effect lifecycle code only carries and compares the
   // raw string for equality.
   return id as SpellRecord["id"];
-}
-
-function syntheticOngoingFeatureSourceKey(id: string): OngoingFeatureSourceKey {
-  // OngoingFeatureSourceKey is a branded string whose brand is compile-time-only
-  // and erased at runtime. This fixture uses the raw synthetic string only as a
-  // Map key paired with the synthetic profile below.
-  return id as OngoingFeatureSourceKey;
 }
 
 const driverSchema = {
@@ -722,7 +718,7 @@ function resolveSourceNextTurn(
     endTurnOngoingExpiredAtTargetEnd: !hasOngoingFeature(
       resolved.state,
       fighterId,
-      endTurnOngoingFeatureKey,
+      ongoingFeatureProcedureRef(resolved.state, "fixedDuration"),
     ),
     untilNextTurnExpiredAtSourceStart: !hasEffect(
       resolved.state,
@@ -732,7 +728,7 @@ function resolveSourceNextTurn(
     startTurnOngoingExpiredAtSourceStart: !hasOngoingFeature(
       resolved.state,
       fighterId,
-      startTurnOngoingFeatureKey,
+      ongoingFeatureProcedureRef(resolved.state, "turnBoundary"),
     ),
     turnStartDurationExpiredAfterRoundTick: !hasEffect(
       resolved.state,
@@ -755,6 +751,17 @@ function battleWithTurnBoundaryEffects(input?: {
       "Turn-boundary lifecycle fixture source must be a character.",
     );
   }
+  const firstProcedureOrdinal = Number(
+    fighter.origin.execution.nextProcedureOrdinal,
+  );
+  const startTurnOngoingFeatureKey = battleProcedureExecutionRef(
+    fighter.origin.execution.scopeRef,
+    NonNegativeInteger(firstProcedureOrdinal),
+  );
+  const endTurnOngoingFeatureKey = battleProcedureExecutionRef(
+    fighter.origin.execution.scopeRef,
+    NonNegativeInteger(firstProcedureOrdinal + 1),
+  );
   return {
     ...battle,
     combatants: new Map(battle.combatants)
@@ -762,23 +769,31 @@ function battleWithTurnBoundaryEffects(input?: {
         ...fighter,
         origin: {
           ...fighter.origin,
-          ongoingFeatureProfiles: new Map([
-            ...fighter.origin.ongoingFeatureProfiles,
-            [
-              startTurnOngoingFeatureKey,
-              syntheticOngoingFeatureProfile(
-                startTurnOngoingFeatureKey,
-                syntheticOngoingFeatureUnit("start"),
-              ),
+          execution: {
+            ...fighter.origin.execution,
+            nextProcedureOrdinal: battleProcedureExecutionCursor(
+              firstProcedureOrdinal + 2,
+            ),
+            procedureBindings: [
+              ...fighter.origin.execution.procedureBindings,
+              {
+                procedureRef: startTurnOngoingFeatureKey,
+                procedure: {
+                  kind: "unitFeature",
+                  source: { kind: "intrinsic" },
+                  execution: syntheticOngoingFeatureExecution("turnBoundary"),
+                },
+              },
+              {
+                procedureRef: endTurnOngoingFeatureKey,
+                procedure: {
+                  kind: "unitFeature",
+                  source: { kind: "intrinsic" },
+                  execution: syntheticOngoingFeatureExecution("fixedDuration"),
+                },
+              },
             ],
-            [
-              endTurnOngoingFeatureKey,
-              syntheticOngoingFeatureProfile(
-                endTurnOngoingFeatureKey,
-                syntheticOngoingFeatureUnit("end"),
-              ),
-            ],
-          ]),
+          },
         },
         activeEffects: [...fighter.activeEffects, untilNextTurnEffect()],
         activeOngoingFeatureOccurrences: new Map([
@@ -925,29 +940,15 @@ function fighterTurnEndDamageEffect(): BattleActiveEffect {
   };
 }
 
-function syntheticOngoingFeatureUnit(boundary: "start" | "end"): UnitRecord {
-  const unit = {
-    id: `synthetic_turn_boundary_${boundary}_ongoing_feature`,
-    name: `Synthetic Turn Boundary ${boundary} Ongoing Feature`,
-  };
-  // SupportedUnitFeatureProfile stores a UnitRecord, but this fixture does not
-  // run Surface readers or unit-feature discovery against the synthetic unit.
-  // The exercised reducer path reads only the lifecycle profile and carries the
-  // unit id/name as inert identity for the paired Map key.
-  return unit as UnitRecord;
-}
-
-function syntheticOngoingFeatureProfile(
-  sourceKey: OngoingFeatureSourceKey,
-  unit: UnitRecord,
-): Extract<SupportedUnitFeatureProfile, { readonly kind: "ongoingFeature" }> {
+function syntheticOngoingFeatureExecution(
+  lifecycleKind: "turnBoundary" | "fixedDuration",
+): Extract<UnitFeatureProcedureExecution, { readonly kind: "ongoingFeature" }> {
   return {
     kind: "ongoingFeature",
-    unit,
     activationTrigger: "bonusAction",
     spendsUse: false,
     lifecycle:
-      sourceKey === startTurnOngoingFeatureKey
+      lifecycleKind === "turnBoundary"
         ? {
             kind: "turnBoundary",
             initialExpiration: "startOfNextTurn",
@@ -968,6 +969,26 @@ function syntheticOngoingFeatureProfile(
     damageModifiers: [],
     resistances: [],
   };
+}
+
+function ongoingFeatureProcedureRef(
+  state: BattleState,
+  lifecycleKind: "turnBoundary" | "fixedDuration",
+): OngoingFeatureSourceKey {
+  const fighter = requireCombatant(state, fighterId);
+  if (fighter.origin.kind !== "character") {
+    throw new Error("Expected the ongoing-feature source character.");
+  }
+  const binding = fighter.origin.execution.procedureBindings.find(
+    ({ procedure }) =>
+      procedure.kind === "unitFeature" &&
+      procedure.execution.kind === "ongoingFeature" &&
+      procedure.execution.lifecycle.kind === lifecycleKind,
+  );
+  if (binding === undefined) {
+    throw new Error(`Expected ${lifecycleKind} ongoing-feature procedure.`);
+  }
+  return binding.procedureRef;
 }
 
 function startTurnOngoingFeature(): ActiveOngoingFeatureOccurrence {
@@ -1058,12 +1079,12 @@ function turnBoundaryLifecycleProjection(
     startTurnOngoingFeatureActive: hasOngoingFeature(
       state.battle,
       fighterId,
-      startTurnOngoingFeatureKey,
+      ongoingFeatureProcedureRef(state.battle, "turnBoundary"),
     ),
     endTurnOngoingFeatureActive: hasOngoingFeature(
       state.battle,
       fighterId,
-      endTurnOngoingFeatureKey,
+      ongoingFeatureProcedureRef(state.battle, "fixedDuration"),
     ),
     turnStartDamageAppliedBeforeEndDamage:
       state.turnStartDamageAppliedBeforeEndDamage,

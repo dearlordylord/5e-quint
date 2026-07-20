@@ -11,7 +11,7 @@
 
 import * as Either from "effect/Either";
 import { canSpendBonusAction } from "@dnd/shared-algebras/action-economy-algebra";
-import { abilityScoreToMod } from "@dnd/shared/types";
+import { abilityScoreToMod, type DieRollResult } from "@dnd/shared/types";
 import type {
   BattleAttackRollResult,
   BattleCreatureState,
@@ -34,8 +34,15 @@ import {
   type CharacterBattlePointPoolResourceState,
 } from "../character-battle-resources.ts";
 import type { CombatantId } from "../identity.ts";
+import type {
+  RuntimeSpellProcedureExecution,
+  SpellProcedureExecution,
+} from "../character-execution.ts";
 import { combatantHasLevelOnePlusSpellCastThisTurn } from "./spell-turn-resources.ts";
-import { REGISTERED_SPELL_PROCEDURE_PROFILES } from "./spell-procedure-profiles/registry.ts";
+import {
+  registeredSpellProcedureProfile,
+  type RegisteredSpellProcedureProfiles,
+} from "./spell-procedure-profiles/registry.ts";
 import {
   DISTANT_METAMAGIC_EFFECT_KIND,
   distantSpellRangeModifierFact,
@@ -107,6 +114,8 @@ export const SEEKING_METAMAGIC_UNSUPPORTED_MESSAGE =
 
 export const QUICKENED_ACTION_SPELL_PROCEDURE_UNSUPPORTED_MESSAGE =
   "Quickened Spell is not supported for this action-casting spell procedure until its resolver threads a Bonus Action rewrite and Metamagic applications through the shared spell-cast resource boundary.";
+
+type RuntimeSpellProcedure = RuntimeSpellProcedureExecution;
 export const QUICKENED_ACTION_CASTING_TIME_REQUIRED_MESSAGE =
   "Quickened Spell can modify only spells with a casting time of an action.";
 
@@ -124,31 +133,11 @@ type QuickenedActionRewriteProcedureDisposition =
   | "notActionSpellCasting";
 
 type QuickenedActionRewriteProcedureDispositions = {
-  readonly [Profile in (typeof REGISTERED_SPELL_PROCEDURE_PROFILES)[number] as Profile["procedure"]]: Profile["metamagicCompatibility"];
+  readonly [Procedure in keyof RegisteredSpellProcedureProfiles]: RegisteredSpellProcedureProfiles[Procedure]["metamagicCompatibility"];
 } & Record<
   SupportedSpellInvocation["procedure"],
   QuickenedActionRewriteProcedureDisposition
 >;
-
-let quickenedActionRewriteProcedureDispositions:
-  | QuickenedActionRewriteProcedureDispositions
-  | undefined;
-
-function quickenedActionRewriteProcedureDispositionTable(): QuickenedActionRewriteProcedureDispositions {
-  // Build lazily so registry imports can finish before metamagic reads the
-  // registered profile list.
-  // Object.fromEntries erases the one-entry-per-procedure relationship; the
-  // mapped type above keeps that registry-derived key/value invariant visible.
-  quickenedActionRewriteProcedureDispositions ??= Object.freeze(
-    Object.fromEntries(
-      REGISTERED_SPELL_PROCEDURE_PROFILES.map((profile) => [
-        profile.procedure,
-        profile.metamagicCompatibility,
-      ]),
-    ),
-  ) as QuickenedActionRewriteProcedureDispositions;
-  return quickenedActionRewriteProcedureDispositions;
-}
 
 type QuickenedActionRewriteProcedure = {
   [Procedure in keyof QuickenedActionRewriteProcedureDispositions]: QuickenedActionRewriteProcedureDispositions[Procedure] extends "bonusActionRewrite"
@@ -177,7 +166,7 @@ export function admitSpellMetamagicApplications(input: {
   readonly state: BattleState;
   readonly actor: BattleCreatureState;
   readonly actorId: CombatantId;
-  readonly invocation: SupportedSpellInvocation;
+  readonly invocation: RuntimeSpellProcedure;
   readonly subject: SpellMetamagicSubject;
 }): SpellMetamagicAdmission {
   const selections = input.subject.metamagic ?? [];
@@ -259,7 +248,7 @@ export function actorCanOfferQuickenedSpellMetamagic(input: {
   readonly state: BattleState;
   readonly actor: BattleCreatureState;
   readonly actorId: CombatantId;
-  readonly invocation: SupportedSpellInvocation;
+  readonly invocation: RuntimeSpellProcedure;
 }): boolean {
   if (input.actor.origin.kind !== "character") {
     return false;
@@ -339,70 +328,45 @@ export function effectiveEmpoweredSpellDamageRoll(
   if (damageRoll.spellDamageReroll === undefined) {
     return damageRoll;
   }
-  const applied = damageRoll.value.reduce<{
-    readonly groups: readonly BattleRolledDiceFill["value"][number][];
-    readonly remaining: readonly BattleSpellDamageDieReroll[];
-  }>(
-    (state, group) => {
-      const appliedGroup = effectiveEmpoweredSpellDiceGroup(
-        group,
-        state.remaining,
-      );
-      return {
-        groups: [...state.groups, appliedGroup.group],
-        remaining: appliedGroup.remaining,
-      };
-    },
-    { groups: [], remaining: damageRoll.spellDamageReroll.dice },
+  const applied = damageRoll.value
+    .flatMap((group) => group.results)
+    .reduce<{
+      readonly results: readonly DieRollResult[];
+      readonly remaining: readonly BattleSpellDamageDieReroll[];
+    }>(
+      (state, result) => {
+        const replacementIndex = state.remaining.findIndex(
+          (candidate) => candidate.original === result,
+        );
+        const replacement = state.remaining[replacementIndex];
+        return replacement === undefined
+          ? { results: [...state.results, result], remaining: state.remaining }
+          : {
+              results: [...state.results, replacement.replacement],
+              remaining: [
+                ...state.remaining.slice(0, replacementIndex),
+                ...state.remaining.slice(replacementIndex + 1),
+              ],
+            };
+      },
+      {
+        results: [],
+        remaining: [...damageRoll.spellDamageReroll.dice].sort(
+          (left, right) =>
+            Number(left.original) - Number(right.original) ||
+            Number(left.replacement) - Number(right.replacement),
+        ),
+      },
+    );
+  const [firstResult, ...remainingResults] = [...applied.results].sort(
+    (left, right) => Number(left) - Number(right),
   );
-  const [firstGroup, ...remainingGroups] = applied.groups;
-  if (firstGroup === undefined) return damageRoll;
+  if (firstResult === undefined) return damageRoll;
   return {
     ...damageRoll,
-    value: [firstGroup, ...remainingGroups],
+    value: [{ results: [firstResult, ...remainingResults] }],
   };
 }
-
-function effectiveEmpoweredSpellDiceGroup(
-  group: BattleRolledDiceFill["value"][number],
-  replacements: readonly BattleSpellDamageDieReroll[],
-): {
-  readonly group: BattleRolledDiceFill["value"][number];
-  readonly remaining: readonly BattleSpellDamageDieReroll[];
-} {
-  const applied = group.results.reduce<{
-    readonly results: readonly (typeof group.results)[number][];
-    readonly remaining: readonly BattleSpellDamageDieReroll[];
-  }>(
-    (state, result) => {
-      const replacementIndex = state.remaining.findIndex(
-        (candidate) => candidate.original === result,
-      );
-      const replacement = state.remaining[replacementIndex];
-      return replacement === undefined
-        ? { results: [...state.results, result], remaining: state.remaining }
-        : {
-            results: [...state.results, replacement.replacement],
-            remaining: [
-              ...state.remaining.slice(0, replacementIndex),
-              ...state.remaining.slice(replacementIndex + 1),
-            ],
-          };
-    },
-    { results: [], remaining: replacements },
-  );
-  const [firstResult, ...remainingResults] = applied.results;
-  return {
-    group: {
-      results:
-        firstResult === undefined
-          ? group.results
-          : [firstResult, ...remainingResults],
-    },
-    remaining: applied.remaining,
-  };
-}
-
 export function empoweredSpellRerollApplicationForDamageRoll(input: {
   readonly actor: BattleCreatureState | undefined;
   readonly damageRoll: BattleRolledDiceFill;
@@ -428,7 +392,7 @@ export function empoweredSpellRerollApplicationForDamageRoll(input: {
 
 export function empoweredSpellDamageRerollValidationIssue(input: {
   readonly actor: BattleCreatureState | undefined;
-  readonly invocation: SupportedSpellInvocation;
+  readonly invocation: RuntimeSpellProcedure;
   readonly damageRoll: BattleRolledDiceFill;
   readonly castApplications: readonly CharacterBattleMetamagicOptionFact[];
 }): string | null {
@@ -654,7 +618,7 @@ export function seekingSpellMetamagicApplication(
 }
 
 export function spellInvocationHasMagicActionCastingTime(
-  invocation: SupportedSpellInvocation,
+  invocation: RuntimeSpellProcedure,
 ): boolean {
   if (invocation.procedure === "saveGatedDamage") {
     return invocation.castingTime.kind === "action";
@@ -665,9 +629,9 @@ export function spellInvocationHasMagicActionCastingTime(
 }
 
 export function spellInvocationSupportsQuickenedActionRewrite(
-  invocation: SupportedSpellInvocation,
+  invocation: RuntimeSpellProcedure,
 ): invocation is Extract<
-  SupportedSpellInvocation,
+  SpellProcedureExecution,
   { readonly procedure: QuickenedActionRewriteProcedure }
 > {
   return (
@@ -698,7 +662,7 @@ export function spendSpellMetamagicSorceryPoints(input: {
   }
   const resource = actor.origin.resources.find(
     (candidate): candidate is CharacterBattlePointPoolResourceState =>
-      candidate.unit.id === metamagic.sorceryPointResourceUnitId &&
+      candidate.resourcePoolRef === metamagic.sorceryPointResourcePoolRef &&
       characterBattleResourceIsPointPool(candidate),
   );
   if (resource === undefined) {
@@ -718,7 +682,7 @@ export function spendSpellMetamagicSorceryPoints(input: {
       origin: {
         ...actor.origin,
         resources: actor.origin.resources.map((candidate) =>
-          candidate.unit.id === metamagic.sorceryPointResourceUnitId &&
+          candidate.resourcePoolRef === metamagic.sorceryPointResourcePoolRef &&
           characterBattleResourceIsPointPool(candidate)
             ? spent.right
             : candidate,
@@ -758,7 +722,7 @@ function metamagicStackingIssue(
 
 function spellMetamagicSupportIssue(input: {
   readonly applications: readonly SpellMetamagicApplicationFact[];
-  readonly invocation: SupportedSpellInvocation;
+  readonly invocation: RuntimeSpellProcedure;
   readonly subject: Pick<SpellMetamagicSubject, "tag" | "mode">;
 }): string | null {
   const effectKinds = new Set(
@@ -817,15 +781,14 @@ function spellMetamagicSupportIssue(input: {
 }
 
 function quickenedActionRewriteProcedureDisposition(
-  invocation: SupportedSpellInvocation,
+  invocation: RuntimeSpellProcedure,
 ): QuickenedActionRewriteProcedureDisposition {
-  return quickenedActionRewriteProcedureDispositionTable()[
-    invocation.procedure
-  ];
+  return registeredSpellProcedureProfile(invocation.procedure)
+    .metamagicCompatibility;
 }
 
 function quickenedActionRewriteSupportIssue(
-  invocation: SupportedSpellInvocation,
+  invocation: RuntimeSpellProcedure,
 ): string | null {
   const disposition = quickenedActionRewriteProcedureDisposition(invocation);
   if (disposition === "bonusActionRewrite") {
@@ -841,7 +804,7 @@ function castPropertyMetamagicSupportIssue(
   effectKinds: ReadonlySet<CharacterBattleMetamagicEffectKind>,
   input: {
     readonly applications: readonly SpellMetamagicApplicationFact[];
-    readonly invocation: SupportedSpellInvocation;
+    readonly invocation: RuntimeSpellProcedure;
     readonly subject: Pick<SpellMetamagicSubject, "tag" | "mode">;
   },
 ): string | null {
@@ -860,7 +823,7 @@ function damageShapeMetamagicSupportIssue(
   effectKinds: ReadonlySet<CharacterBattleMetamagicEffectKind>,
   input: {
     readonly applications: readonly SpellMetamagicApplicationFact[];
-    readonly invocation: SupportedSpellInvocation;
+    readonly invocation: RuntimeSpellProcedure;
     readonly subject: Pick<SpellMetamagicSubject, "tag" | "mode">;
   },
 ): string | null {
@@ -875,7 +838,7 @@ function damageShapeMetamagicSupportIssue(
 function metamagicApplicationForSelection(input: {
   readonly application: CharacterBattleMetamagicOptionFact;
   readonly selection: SpellMetamagicSelection;
-  readonly invocation: SupportedSpellInvocation;
+  readonly invocation: RuntimeSpellProcedure;
 }): SpellMetamagicApplicationFact | string {
   if (input.application.effectKind === DISTANT_METAMAGIC_EFFECT_KIND) {
     const rangeModifier = distantSpellRangeModifierFact(input.invocation);
@@ -947,7 +910,7 @@ function quickenedSpellAdmissionIssue(input: {
   readonly state: BattleState;
   readonly actor: BattleCreatureState;
   readonly actorId: CombatantId;
-  readonly invocation: SupportedSpellInvocation;
+  readonly invocation: RuntimeSpellProcedure;
   readonly subject: SpellMetamagicSubject;
 }): string | null {
   if (input.subject.tag !== "bonusActionSpell") {

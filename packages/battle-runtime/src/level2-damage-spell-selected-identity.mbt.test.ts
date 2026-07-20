@@ -31,6 +31,7 @@ import {
   type BattleReducerRouteOwnerGroup,
   type BattleReducerRouteSubjectFamily,
   type BattleState,
+  type BattleRuntimeSession,
 } from "./index.ts";
 import {
   acidArrowUnitId,
@@ -282,6 +283,7 @@ type RouteHoles = RouteDiscoverEvent["holes"];
 type HazardCastReplay = {
   readonly route: readonly BattleReducerRouteEvent[];
   readonly state: BattleState;
+  readonly session: BattleRuntimeSession;
 };
 
 function replayFlamingSphereHazardRoute(): readonly BattleReducerRouteEvent[] {
@@ -295,11 +297,15 @@ function replayMoonbeamHazardRoute(): readonly BattleReducerRouteEvent[] {
 function flamingSphereHazardCastReplay(): HazardCastReplay {
   const route: BattleReducerRouteEvent[] = [startRoute()];
   const state = selectedSpellBattle(spellRecord(flamingSphereUnitId));
-  const act = spellAct({ state, spellId: flamingSphereUnitId, slotLevel: 2 });
+  const act = spellAct({
+    session: state,
+    spellId: flamingSphereUnitId,
+    slotLevel: 2,
+  });
   route.push(...routeEventsOfSubject(act, "Flaming Sphere discovery"));
   const area = requireHole(act.initialHoles, "spellAreaChoice");
   const cast = resolveBattleSubject({
-    state,
+    state: state.state,
     subject: act.subject,
     fills: [flamingSphereAreaFill(area)],
   });
@@ -309,17 +315,21 @@ function flamingSphereHazardCastReplay(): HazardCastReplay {
       `Expected Flaming Sphere cast to resolve, got ${cast.tag}.`,
     );
   }
-  return { route, state: cast.state };
+  return { route, state: cast.state, session: state };
 }
 
 function moonbeamHazardCastReplay(): HazardCastReplay {
   const route: BattleReducerRouteEvent[] = [startRoute()];
   const state = selectedSpellBattle(spellRecord(moonbeamUnitId));
-  const act = spellAct({ state, spellId: moonbeamUnitId, slotLevel: 2 });
+  const act = spellAct({
+    session: state,
+    spellId: moonbeamUnitId,
+    slotLevel: 2,
+  });
   route.push(...routeEventsOfSubject(act, "Moonbeam discovery"));
   const area = requireHole(act.initialHoles, "spellAreaChoice");
   const cast = resolveBattleSubject({
-    state,
+    state: state.state,
     subject: act.subject,
     fills: [moonbeamAreaFill(area)],
   });
@@ -327,7 +337,7 @@ function moonbeamHazardCastReplay(): HazardCastReplay {
   if (cast.tag !== "resolved") {
     throw new Error(`Expected Moonbeam cast to resolve, got ${cast.tag}.`);
   }
-  return { route, state: cast.state };
+  return { route, state: cast.state, session: state };
 }
 
 function replayFlamingSphereExactDamageRoute(): readonly BattleReducerRouteEvent[] {
@@ -337,7 +347,10 @@ function replayFlamingSphereExactDamageRoute(): readonly BattleReducerRouteEvent
   if (targetTurn.tag !== "resolved") {
     throw new Error("Expected Flaming Sphere caster end turn to resolve.");
   }
-  const saveAct = flamingSphereEndTurnAct(targetTurn.state);
+  const saveAct = flamingSphereEndTurnAct({
+    ...replay.session,
+    state: targetTurn.state,
+  });
   route.push(...routeEventsOfSubject(saveAct, "Flaming Sphere save discovery"));
   const save = requireHole(saveAct.initialHoles, "savingThrowOutcome");
   const succeededSave = singleTargetSavingThrowOutcomeFill(
@@ -368,7 +381,10 @@ function replayMoonbeamExactDamageRoute(): readonly BattleReducerRouteEvent[] {
   if (targetTurn.tag !== "resolved") {
     throw new Error("Expected Moonbeam caster end turn to resolve.");
   }
-  const saveAct = moonbeamEndTurnSaveAct(targetTurn.state);
+  const saveAct = moonbeamEndTurnSaveAct({
+    ...replay.session,
+    state: targetTurn.state,
+  });
   route.push(...routeEventsOfSubject(saveAct, "Moonbeam save discovery"));
   const save = requireHole(saveAct.initialHoles, "savingThrowOutcome");
   const succeededSave = singleTargetSavingThrowOutcomeFill(
@@ -518,12 +534,12 @@ function recordDiscoveredInvocation(
   const act =
     input.actionTag === "bonusActionSpell"
       ? bonusSpellAct({
-          state,
+          session: state,
           spellId: input.spellId,
           slotLevel: input.slotLevel,
         })
       : spellAct({
-          state,
+          session: state,
           spellId: input.spellId,
           slotLevel: input.slotLevel,
         });
@@ -550,7 +566,7 @@ function expectedProjection(
   return { lastResult };
 }
 
-function selectedSpellBattle(spell: SpellRecord): BattleState {
+function selectedSpellBattle(spell: SpellRecord): BattleRuntimeSession {
   return spellBattle({
     preparedSpells: [spell],
     spellSlots: [{ spellLevel: 2, count: 1 }],

@@ -30,6 +30,7 @@ import {
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 import { spellActiveEffectExecutionRef } from "./active-effect/execution-ref.ts";
 import type { SpellActiveEffect } from "./active-effect/execution-ref.ts";
+import { spellProcedureExecution } from "./character-execution.ts";
 import {
   applyCondition,
   applyFailedSaveSpellConditionEffects,
@@ -38,7 +39,7 @@ import {
   combatantId,
   conditionApplicationPreventedByCreatureTypeProtection,
   difficultyClass,
-  discoverBattleActs,
+  discoverBattleActCandidates,
   elapsedTimeTicks,
   endTurn,
   resolveBattlePossessionAttempt,
@@ -71,7 +72,7 @@ describe("SRDINV30C deterministic Protection from Evil and Good admission", () =
     const spell = spellRecord(protectionFromEvilAndGoodUnitId);
     const undeadId = combatantId("unit-profile-protection-undead");
     const humanoidId = combatantId("unit-profile-protection-humanoid");
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       statBlockTargets: [
         {
@@ -86,8 +87,9 @@ describe("SRDINV30C deterministic Protection from Evil and Good admission", () =
         },
       ],
     });
+    const state = session.state;
     const act = spellAct({
-      state,
+      session,
       spellId: protectionFromEvilAndGoodUnitId,
     });
     const targetHole = requireHole(act.initialHoles, "targetChoice");
@@ -158,7 +160,7 @@ describe("SRDINV30C deterministic Protection from Evil and Good admission", () =
     }
 
     const undeadAttack = statBlockAttackAct(
-      undeadTurn.state,
+      { ...session, state: undeadTurn.state },
       undeadId,
       "Scimitar",
     );
@@ -191,7 +193,7 @@ describe("SRDINV30C deterministic Protection from Evil and Good admission", () =
       throw new Error("Expected to advance to humanoid attacker turn.");
     }
     const humanoidAttack = statBlockAttackAct(
-      humanoidTurn.state,
+      { ...session, state: humanoidTurn.state },
       humanoidId,
       "Scimitar",
     );
@@ -224,7 +226,7 @@ describe("SRDINV30C deterministic Protection from Evil and Good admission", () =
     const protection = spellRecord(protectionFromEvilAndGoodUnitId);
     const charmPerson = spellRecord(charmPersonUnitId);
     const feySourceId = combatantId("unit-profile-protection-fey-source");
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [protection, charmPerson],
       statBlockTargets: [
         {
@@ -234,8 +236,9 @@ describe("SRDINV30C deterministic Protection from Evil and Good admission", () =
         },
       ],
     });
+    const state = session.state;
     const protectionAct = spellAct({
-      state,
+      session,
       spellId: protectionFromEvilAndGoodUnitId,
     });
     const protectionTarget = requireHole(
@@ -260,14 +263,14 @@ describe("SRDINV30C deterministic Protection from Evil and Good admission", () =
     }
 
     const charmInvocation = spellActInvocation(
-      state,
-      spellAct({ state, spellId: charmPersonUnitId }),
+      session,
+      spellAct({ session, spellId: charmPersonUnitId }),
     );
     if (charmInvocation.procedure !== "saveGatedCondition") {
       throw new Error("Expected Charm Person to be a save-gated condition.");
     }
     const executableCharmInvocation = {
-      ...charmInvocation,
+      ...spellProcedureExecution(charmInvocation),
       sourceProcedureRef: battleProcedureExecutionRefForTest(
         String(charmPersonUnitId),
       ),
@@ -358,7 +361,7 @@ describe("SRDINV30C deterministic Protection from Evil and Good admission", () =
     const protection = spellRecord(protectionFromEvilAndGoodUnitId);
     const charmPerson = spellRecord(charmPersonUnitId);
     const undeadSourceId = combatantId("unit-profile-protection-undead-source");
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [protection, charmPerson],
       statBlockTargets: [
         {
@@ -368,8 +371,9 @@ describe("SRDINV30C deterministic Protection from Evil and Good admission", () =
         },
       ],
     });
+    const state = session.state;
     const protectionAct = spellAct({
-      state,
+      session,
       spellId: protectionFromEvilAndGoodUnitId,
     });
     const targetHole = requireHole(protectionAct.initialHoles, "targetChoice");
@@ -389,14 +393,14 @@ describe("SRDINV30C deterministic Protection from Evil and Good admission", () =
       throw new Error("Expected Protection from Evil and Good to resolve.");
     }
     const charmInvocation = spellActInvocation(
-      state,
-      spellAct({ state, spellId: charmPersonUnitId }),
+      session,
+      spellAct({ session, spellId: charmPersonUnitId }),
     );
     if (charmInvocation.procedure !== "saveGatedCondition") {
       throw new Error("Expected Charm Person to be a save-gated condition.");
     }
     const executableCharmInvocation = {
-      ...charmInvocation,
+      ...spellProcedureExecution(charmInvocation),
       sourceProcedureRef: battleProcedureExecutionRefForTest(
         String(charmPersonUnitId),
       ),
@@ -450,7 +454,7 @@ describe("SRDINV30C deterministic Protection from Evil and Good admission", () =
     const feySourceId = combatantId(
       "unit-profile-protection-save-hole-fey-source",
     );
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [protection, charmPerson],
       statBlockTargets: [
         {
@@ -460,8 +464,9 @@ describe("SRDINV30C deterministic Protection from Evil and Good admission", () =
         },
       ],
     });
+    const state = session.state;
     const protectionAct = spellAct({
-      state,
+      session,
       spellId: protectionFromEvilAndGoodUnitId,
     });
     const targetHole = requireHole(protectionAct.initialHoles, "targetChoice");
@@ -482,14 +487,14 @@ describe("SRDINV30C deterministic Protection from Evil and Good admission", () =
     }
 
     const charmInvocation = spellActInvocation(
-      state,
-      spellAct({ state, spellId: charmPersonUnitId }),
+      session,
+      spellAct({ session, spellId: charmPersonUnitId }),
     );
     if (charmInvocation.procedure !== "saveGatedCondition") {
       throw new Error("Expected Charm Person to be a save-gated condition.");
     }
     const executableCharmInvocation = {
-      ...charmInvocation,
+      ...spellProcedureExecution(charmInvocation),
       sourceProcedureRef: battleProcedureExecutionRefForTest(
         String(charmPersonUnitId),
       ),
@@ -512,7 +517,7 @@ describe("SRDINV30C deterministic Protection from Evil and Good admission", () =
     const humanoidSourceId = combatantId(
       "unit-profile-protection-repeat-save-humanoid-source",
     );
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [protection],
       statBlockTargets: [
         {
@@ -527,8 +532,9 @@ describe("SRDINV30C deterministic Protection from Evil and Good admission", () =
         },
       ],
     });
+    const state = session.state;
     const protectionAct = spellAct({
-      state,
+      session,
       spellId: protectionFromEvilAndGoodUnitId,
     });
     const targetHole = requireHole(protectionAct.initialHoles, "targetChoice");
@@ -633,7 +639,9 @@ describe("SRDINV30C deterministic Protection from Evil and Good admission", () =
         targetWithRelevantEffects,
       ),
     };
-    const discoveredRelevantSaveSubjects = discoverBattleActs(activeEffectState)
+    const discoveredRelevantSaveSubjects = discoverBattleActCandidates(
+      activeEffectState,
+    )
       .map((act) => act.subject)
       .filter(
         (subject) =>

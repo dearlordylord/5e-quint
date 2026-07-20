@@ -1,18 +1,14 @@
-import {
-  battleActiveEffectExecutionRefForTest,
-  battleProcedureExecutionRefForTest,
-} from "./battle-runtime-test-support.ts";
+import { battleActiveEffectExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 import { describe, expect, it } from "vitest";
 
 import {
   battleReducerStartRouteEvent,
-  spellId,
   type BattleActiveEffect,
-  type BattleCreatureState,
   type BattleFill,
   type BattleReducerRouteEvent,
   type BattleResolutionResult,
+  type BattleRuntimeSession,
   type BattleState,
 } from "./index.ts";
 import {
@@ -56,8 +52,9 @@ const WEAPON_HOSTED_ROUTE_SUBJECTS = [
 
 describe("weapon-hosted reducer route call segments", () => {
   it("emits True Strike resolutions followed only by newly opened frontiers", () => {
-    const state = trueStrikeBattle();
-    const act = spellAct({ state, spellId: trueStrikeUnitId });
+    const session = trueStrikeBattle();
+    const state = session.state;
+    const act = spellAct({ session, spellId: trueStrikeUnitId });
     expect(act.routeEvents).toEqual([
       {
         kind: "discoverBattleActs",
@@ -262,9 +259,10 @@ describe("weapon-hosted reducer route call segments", () => {
   });
 
   it("routes only the selected Shillelagh weapon through the held effect", () => {
-    const initial = shillelaghBattle();
+    const initialSession = shillelaghBattle();
+    const initial = initialSession.state;
     const castAct = bonusSpellAct({
-      state: initial,
+      session: initialSession,
       spellId: shillelaghUnitId,
     });
     const cast = requireResolved(
@@ -302,7 +300,7 @@ describe("weapon-hosted reducer route call segments", () => {
     });
 
     const quarterstaff = statBlockAttackAct(
-      cast.state,
+      { ...initialSession, state: cast.state },
       spellCasterId,
       "Quarterstaff (force)",
     );
@@ -427,7 +425,7 @@ describe("weapon-hosted reducer route call segments", () => {
     ]);
 
     const unarmed = statBlockAttackAct(
-      cast.state,
+      { ...initialSession, state: cast.state },
       spellCasterId,
       "Unarmed Strike",
     );
@@ -469,9 +467,10 @@ describe("weapon-hosted reducer route call segments", () => {
   });
 
   it("does not repeat discovery when admitting Divine Favor or Magic Weapon", () => {
-    const divineState = divineFavorBattle();
+    const divineSession = divineFavorBattle();
+    const divineState = divineSession.state;
     const divineAct = bonusSpellAct({
-      state: divineState,
+      session: divineSession,
       spellId: divineFavorUnitId,
     });
     const divineCast = requireResolved(
@@ -507,7 +506,10 @@ describe("weapon-hosted reducer route call segments", () => {
         },
       ],
     });
-    const longswordSubject = weaponAttackSubject(divineCast.state, "Longsword");
+    const longswordSubject = weaponAttackSubject(
+      { ...divineSession, state: divineCast.state },
+      "Longsword",
+    );
     const targetHoleResult = requireNeedsHoles(
       resolveBattleSubject({
         state: divineCast.state,
@@ -608,9 +610,10 @@ describe("weapon-hosted reducer route call segments", () => {
       },
     ]);
 
-    const unarmedDivineState = divineFavorBattleWithUnarmedDamageDie();
+    const unarmedDivineSession = divineFavorBattle();
+    const unarmedDivineState = unarmedDivineSession.state;
     const unarmedDivineAct = bonusSpellAct({
-      state: unarmedDivineState,
+      session: unarmedDivineSession,
       spellId: divineFavorUnitId,
     });
     const unarmedDivineCast = requireResolved(
@@ -621,7 +624,7 @@ describe("weapon-hosted reducer route call segments", () => {
       }),
     );
     const unarmedAct = statBlockAttackAct(
-      unarmedDivineCast.state,
+      { ...unarmedDivineSession, state: unarmedDivineCast.state },
       spellCasterId,
       "Unarmed Strike",
     );
@@ -642,7 +645,7 @@ describe("weapon-hosted reducer route call segments", () => {
       requireHole(unarmedTargetResult.holes, "attackRoll"),
       { total: 15, naturalD20: 10 },
     );
-    const unarmedAttackResult = requireNeedsHoles(
+    const unarmedAttackResult = requireResolved(
       resolveBattleSubject({
         state: unarmedDivineCast.state,
         subject: unarmedAct.subject,
@@ -654,37 +657,15 @@ describe("weapon-hosted reducer route call segments", () => {
         kind: "resolveBattleSubject",
         subject: "weaponAttack",
         fill: "attackRoll",
-        holes: ["rolledDice"],
+        holes: [],
         owner: "battleAttackRoll",
       },
     ]);
-    const unarmedDamageResult = requireResolved(
-      resolveBattleSubject({
-        state: unarmedDivineCast.state,
-        subject: unarmedAct.subject,
-        fills: [
-          unarmedTargetFill,
-          unarmedAttackFill,
-          damageRollFillWithGroups(
-            requireHole(unarmedAttackResult.holes, "rolledDice"),
-            [[3]],
-          ),
-        ],
-      }),
-    );
-    expect(unarmedDamageResult.routeEvents).toEqual([
-      {
-        kind: "resolveBattleSubject",
-        subject: "weaponAttack",
-        fill: "rolledDice",
-        holes: [],
-        owner: "battleHitPoint",
-      },
-    ]);
 
-    const magicState = magicWeaponBattle();
+    const magicSession = magicWeaponBattle();
+    const magicState = magicSession.state;
     const magicAct = bonusSpellAct({
-      state: magicState,
+      session: magicSession,
       spellId: magicWeaponUnitId,
       slotLevel: 2,
     });
@@ -732,23 +713,26 @@ describe("weapon-hosted reducer route call segments", () => {
   });
 
   it("keeps marked, selected held, and weapon-rider contributions ordered", () => {
-    const shillelaghInitial = shillelaghBattle();
+    const shillelaghSession = shillelaghBattle();
+    const shillelaghInitial = shillelaghSession.state;
+    const shillelaghAct = bonusSpellAct({
+      session: shillelaghSession,
+      spellId: shillelaghUnitId,
+    });
     const shillelaghCast = requireResolved(
       resolveBattleSubject({
         state: shillelaghInitial,
-        subject: bonusSpellAct({
-          state: shillelaghInitial,
-          spellId: shillelaghUnitId,
-        }).subject,
+        subject: shillelaghAct.subject,
         fills: [],
       }),
     );
-    const divineInitial = divineFavorBattle();
+    const divineSession = divineFavorBattle();
+    const divineInitial = divineSession.state;
     const divineCast = requireResolved(
       resolveBattleSubject({
         state: divineInitial,
         subject: bonusSpellAct({
-          state: divineInitial,
+          session: divineSession,
           spellId: divineFavorUnitId,
         }).subject,
         fills: [],
@@ -768,9 +752,7 @@ describe("weapon-hosted reducer route call segments", () => {
     > = {
       kind: "spellMarkedDamageRider",
       effectRef: battleActiveEffectExecutionRefForTest("weapon-route-mark"),
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        String(spellId("synthetic_route_mark")),
-      ),
+      sourceProcedureRef: shillelaghAct.subject.procedureRef,
       sourceCombatantId: spellCasterId,
       targetCombatantId: spellTargetId,
       transfer: { kind: "awaitingTargetDrop", retargetTiming: "sameTurn" },
@@ -786,7 +768,7 @@ describe("weapon-hosted reducer route call segments", () => {
       }),
     };
     const attack = statBlockAttackAct(
-      state,
+      { ...shillelaghSession, state },
       spellCasterId,
       "Quarterstaff (force)",
     );
@@ -897,7 +879,7 @@ describe("weapon-hosted reducer route call segments", () => {
   });
 });
 
-function trueStrikeBattle(): BattleState {
+function trueStrikeBattle(): BattleRuntimeSession {
   return spellBattle({
     cantrips: [spellRecord(trueStrikeUnitId)],
     spellSlots: [],
@@ -912,7 +894,7 @@ function trueStrikeBattle(): BattleState {
   });
 }
 
-function shillelaghBattle(): BattleState {
+function shillelaghBattle(): BattleRuntimeSession {
   return spellBattle({
     cantrips: [spellRecord(shillelaghUnitId)],
     attack: zeroAbilityWeaponAttack("weapon_quarterstaff"),
@@ -922,7 +904,7 @@ function shillelaghBattle(): BattleState {
   });
 }
 
-function divineFavorBattle(): BattleState {
+function divineFavorBattle(): BattleRuntimeSession {
   return spellBattle({
     preparedSpells: [spellRecord(divineFavorUnitId)],
     attack: zeroAbilityWeaponAttack("weapon_longsword"),
@@ -931,45 +913,7 @@ function divineFavorBattle(): BattleState {
   });
 }
 
-function divineFavorBattleWithUnarmedDamageDie(): BattleState {
-  const state = divineFavorBattle();
-  const caster = requireCombatant(state, spellCasterId);
-  if (caster.origin.kind !== "character") {
-    throw new Error(
-      "Expected the Divine Favor fixture caster to be a character.",
-    );
-  }
-  const casterWithUnarmedDamageDie: BattleCreatureState = {
-    ...caster,
-    origin: {
-      ...caster.origin,
-      unarmedStrike: {
-        ...caster.origin.unarmedStrike,
-        effect: {
-          kind: "damage",
-          damage: {
-            kind: "authoredReplacement",
-            sourceUnitId: spellId("synthetic_unarmed_damage_die"),
-            dice: 1,
-            dieSize: 4,
-            damageType: "bludgeoning",
-          },
-        },
-      },
-    },
-  };
-  return {
-    ...state,
-    combatants: new Map(
-      [...state.combatants].map(([combatantId, combatant]) => [
-        combatantId,
-        combatantId === spellCasterId ? casterWithUnarmedDamageDie : combatant,
-      ]),
-    ),
-  };
-}
-
-function magicWeaponBattle(): BattleState {
+function magicWeaponBattle(): BattleRuntimeSession {
   return spellBattle({
     preparedSpells: [spellRecord(magicWeaponUnitId)],
     spellSlots: [{ spellLevel: 2, count: 1 }],

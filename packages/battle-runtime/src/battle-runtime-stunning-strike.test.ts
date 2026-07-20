@@ -8,13 +8,12 @@ import {
   attackRollFill,
   battleId,
   characterSeed,
-  discoverBattleActs,
+  discoverBattleActCandidates,
   endTurn,
   fighterId,
   goblinId,
   hasCondition,
   monksFocusResource,
-  requireCharacterUnitProcedureRefForTest,
   requireHole,
   requireResolved,
   resolveBattleSubject,
@@ -26,7 +25,7 @@ import {
   testLongswordAttack,
   unitFeatureDecisionFill,
   unitLibrary,
-  type BattleActDiscoverySubject as BattleSubject,
+  type BattleSubject,
 } from "./battle-runtime-test-support.ts";
 
 describe("battle runtime: Stunning Strike", () => {
@@ -65,11 +64,7 @@ describe("battle runtime: Stunning Strike", () => {
       expect.arrayContaining([
         expect.objectContaining({
           kind: "unitFeatureCondition",
-          sourceProcedureRef: requireCharacterUnitProcedureRefForTest(
-            window.state,
-            fighterId,
-            "monk_stunning_strike",
-          ),
+          sourceProcedureRef: stunningStrikeProcedureRef(window.state),
           sourceCombatantId: fighterId,
           condition: "stunned",
           expiresAt: { kind: "startOfTurn", combatantId: fighterId },
@@ -81,14 +76,20 @@ describe("battle runtime: Stunning Strike", () => {
     ).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          unit: expect.objectContaining({ id: "monk_monks_focus" }),
+          resourcePoolRef: stunningStrikeBinding(window.state).execution.spends
+            .resourcePoolRef,
           usesRemaining: 1,
         }),
       ]),
     );
     expect(
       resolved.state.currentTurnResources.stunningStrikesUsedThisTurn,
-    ).toEqual([{ attackerId: fighterId, unitId: "monk_stunning_strike" }]);
+    ).toEqual([
+      {
+        attackerId: fighterId,
+        procedureRef: stunningStrikeProcedureRef(window.state),
+      },
+    ]);
 
     const goblinTurn = requireResolved(
       endTurn({ state: resolved.state, actorId: fighterId }),
@@ -151,7 +152,10 @@ describe("battle runtime: Stunning Strike", () => {
       currentTurnResources: {
         ...state.currentTurnResources,
         stunningStrikesUsedThisTurn: [
-          { attackerId: fighterId, unitId: "monk_stunning_strike" },
+          {
+            attackerId: fighterId,
+            procedureRef: stunningStrikeProcedureRef(state),
+          },
         ],
       },
     };
@@ -297,7 +301,7 @@ function attackSubject(state: BattleState): BattleSubject {
 }
 
 function resolveAttackAct(state: BattleState) {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActCandidates(state).find(
     (candidate) =>
       candidate.subject.tag === "action" &&
       candidate.subject.action === "attack",
@@ -306,6 +310,41 @@ function resolveAttackAct(state: BattleState) {
     throw new Error("Expected attack action.");
   }
   return act;
+}
+
+function stunningStrikeProcedureRef(state: BattleState) {
+  return stunningStrikeBinding(state).procedureRef;
+}
+
+function stunningStrikeBinding(state: BattleState) {
+  const actor = state.combatants.get(fighterId);
+  if (actor?.origin.kind !== "character") {
+    throw new Error("Expected Stunning Strike Monk character.");
+  }
+  const binding = actor.origin.execution.procedureBindings.find((candidate) => {
+    const procedure = candidate.procedure;
+    return (
+      (procedure.kind === "unitFeature" ||
+        procedure.kind === "unitSupportProfile") &&
+      typeof procedure.execution === "object" &&
+      procedure.execution.kind === "stunningStrike"
+    );
+  });
+  const procedure = binding?.procedure;
+  if (
+    binding === undefined ||
+    procedure === undefined ||
+    (procedure.kind !== "unitFeature" &&
+      procedure.kind !== "unitSupportProfile") ||
+    typeof procedure.execution !== "object" ||
+    procedure.execution.kind !== "stunningStrike"
+  ) {
+    throw new Error("Expected mechanical Stunning Strike procedure binding.");
+  }
+  return {
+    procedureRef: binding.procedureRef,
+    execution: procedure.execution.stunningStrike,
+  };
 }
 
 function stunningStrikeSavingThrowFill(

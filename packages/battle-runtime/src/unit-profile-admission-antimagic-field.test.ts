@@ -6,6 +6,8 @@ import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { attackBonus, movementFeet, Round } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
 import { parseBattleSpellEffectLevel } from "./battle-reducer/spells-effective-level.ts";
+import { admittedSpellActs } from "./battle-reducer/spells-profiles.ts";
+import { characterExecutionWithSpellInvocations } from "./character-execution.ts";
 import { battleSpellEffectOccurrenceId } from "./identity.ts";
 import {
   battleAreaId,
@@ -20,6 +22,7 @@ import {
   type BattleAntimagicFieldAuraMembership,
   type BattleFill,
   type BattleHole,
+  type BattleRuntimeSession,
   type BattleState,
   type BattleStoredLightEmitter,
   type BattleTrackedOngoingSpellLightEmitter,
@@ -63,10 +66,10 @@ type SpellBattleSlots = NonNullable<
 
 describe("SRD Antimagic Field ongoing spell suppression admission", () => {
   test("antimagic field is admitted as a level-8 self Emanation suppression spell", () => {
-    const state = antimagicFieldBattle();
+    const session = antimagicFieldBattle();
 
     const act = spellAct({
-      state,
+      session,
       spellId: antimagicFieldUnitId,
       slotLevel: 8,
     });
@@ -115,11 +118,11 @@ describe("SRD Antimagic Field ongoing spell suppression admission", () => {
       sourceSpellLevel: 2,
       objectId: "unit-profile-antimagic-artifact-light-object",
     });
-    const state = antimagicFieldBattle({
+    const session = antimagicFieldBattle({
       lightEmitters: [ordinaryLight, artifactLight],
     });
 
-    const resolved = castAntimagicField(state, [
+    const resolved = castAntimagicField(session, [
       antimagicAffectedLight(continualFlameEffectId, "ordinarySpell"),
       antimagicAffectedLight(artifactEffectId, "artifact"),
     ]);
@@ -170,16 +173,16 @@ describe("SRD Antimagic Field ongoing spell suppression admission", () => {
   });
 
   test("rejects an aura membership that lists the source as non-origin", () => {
-    const state = antimagicFieldBattle();
+    const session = antimagicFieldBattle();
     const act = spellAct({
-      state,
+      session,
       spellId: antimagicFieldUnitId,
       slotLevel: 8,
     });
     const areaHole = requireHole(act.initialHoles, "spellAreaChoice");
 
     const result = resolveBattleSubject({
-      state,
+      state: session.state,
       subject: act.subject,
       fills: [
         antimagicFieldAreaFill({
@@ -215,8 +218,8 @@ describe("SRD Antimagic Field ongoing spell suppression admission", () => {
       objectId: "unit-profile-antimagic-duration-light-object",
       expiresAt: { kind: "duration", durationTicks: elapsedTimeTicks(1) },
     });
-    const state = antimagicFieldBattle({ lightEmitters: [durationLight] });
-    const suppressed = castAntimagicField(state, [
+    const session = antimagicFieldBattle({ lightEmitters: [durationLight] });
+    const suppressed = castAntimagicField(session, [
       antimagicAffectedLight(sourceEffectId, "ordinarySpell"),
     ]);
 
@@ -253,7 +256,7 @@ describe("SRD Antimagic Field ongoing spell suppression admission", () => {
       effectId: sourceEffectId,
       durationTicks: elapsedTimeTicks(3),
     });
-    const state = antimagicFieldBattle({
+    const session = antimagicFieldBattle({
       activeEffects: [heatMetalEffect],
       preparedSpells: [
         spellRecord(antimagicFieldUnitId),
@@ -264,7 +267,7 @@ describe("SRD Antimagic Field ongoing spell suppression admission", () => {
         { spellLevel: 2, count: 1 },
       ],
     });
-    const suppressed = antimagicFieldSuppressing(state, [
+    const suppressed = antimagicFieldSuppressing(session.state, [
       antimagicAffectedSpellObjectContactDamage(
         sourceEffectId,
         "ordinarySpell",
@@ -281,7 +284,10 @@ describe("SRD Antimagic Field ongoing spell suppression admission", () => {
         ),
     ).toBe(true);
     expect(
-      maybeBonusSpellAct({ state: suppressed, spellId: heatMetalUnitId }),
+      maybeBonusSpellAct({
+        session: { ...session, state: suppressed },
+        spellId: heatMetalUnitId,
+      }),
     ).toBeUndefined();
 
     const targetTurn = endTurn({
@@ -318,7 +324,10 @@ describe("SRD Antimagic Field ongoing spell suppression admission", () => {
 
     const restored = breakBattleConcentration(suppressed, spellTargetId);
     expect(
-      maybeBonusSpellAct({ state: restored, spellId: heatMetalUnitId }),
+      maybeBonusSpellAct({
+        session: { ...session, state: restored },
+        spellId: heatMetalUnitId,
+      }),
     ).toBeDefined();
   });
 
@@ -330,7 +339,7 @@ describe("SRD Antimagic Field ongoing spell suppression admission", () => {
       effectId: sourceEffectId,
       durationTicks: elapsedTimeTicks(3),
     });
-    const state = antimagicFieldBattle({
+    const session = antimagicFieldBattle({
       activeEffects: [spiritualWeaponEffect],
       preparedSpells: [
         spellRecord(antimagicFieldUnitId),
@@ -341,7 +350,7 @@ describe("SRD Antimagic Field ongoing spell suppression admission", () => {
         { spellLevel: 2, count: 1 },
       ],
     });
-    const suppressed = antimagicFieldSuppressing(state, [
+    const suppressed = antimagicFieldSuppressing(session.state, [
       antimagicAffectedSpiritualWeapon(sourceEffectId, "ordinarySpell"),
     ]);
 
@@ -354,7 +363,9 @@ describe("SRD Antimagic Field ongoing spell suppression admission", () => {
             effect.effectRef === effectRefForTest(sourceEffectId),
         ),
     ).toBe(true);
-    expect(maybeSpiritualWeaponRepeatAct(suppressed)).toBeUndefined();
+    expect(
+      maybeSpiritualWeaponRepeatAct({ ...session, state: suppressed }),
+    ).toBeUndefined();
 
     const targetTurn = endTurn({
       state: suppressed,
@@ -389,7 +400,9 @@ describe("SRD Antimagic Field ongoing spell suppression admission", () => {
     });
 
     const restored = breakBattleConcentration(suppressed, spellTargetId);
-    expect(maybeSpiritualWeaponRepeatAct(restored)).toBeDefined();
+    expect(
+      maybeSpiritualWeaponRepeatAct({ ...session, state: restored }),
+    ).toBeDefined();
   });
 
   test("rejects a stale Spiritual Weapon repeat subject after Antimagic Field suppression", () => {
@@ -400,7 +413,7 @@ describe("SRD Antimagic Field ongoing spell suppression admission", () => {
       effectId: sourceEffectId,
       durationTicks: elapsedTimeTicks(3),
     });
-    const state = antimagicFieldBattle({
+    const session = antimagicFieldBattle({
       activeEffects: [spiritualWeaponEffect],
       preparedSpells: [
         spellRecord(antimagicFieldUnitId),
@@ -411,14 +424,14 @@ describe("SRD Antimagic Field ongoing spell suppression admission", () => {
         { spellLevel: 2, count: 1 },
       ],
     });
-    const staleAct = maybeSpiritualWeaponRepeatAct(state);
+    const staleAct = maybeSpiritualWeaponRepeatAct(session);
     expect(staleAct).toBeDefined();
     if (staleAct === undefined) {
       throw new Error(
         "Expected Spiritual Weapon repeat act before suppression.",
       );
     }
-    const suppressed = antimagicFieldSuppressing(state, [
+    const suppressed = antimagicFieldSuppressing(session.state, [
       antimagicAffectedSpiritualWeapon(sourceEffectId, "ordinarySpell"),
     ]);
     const forceHole = requireHole(
@@ -462,8 +475,8 @@ describe("SRD Antimagic Field ongoing spell suppression admission", () => {
   });
 });
 
-function maybeSpiritualWeaponRepeatAct(state: BattleState) {
-  return discoverBattleActs(state).find(
+function maybeSpiritualWeaponRepeatAct(session: BattleRuntimeSession) {
+  return discoverBattleActs(session).find(
     (candidate) =>
       candidate.subject.tag === "bonusActionSpell" &&
       battleActSpellPresentation(candidate)?.invocation.spellId ===
@@ -478,7 +491,7 @@ function antimagicFieldBattle(input?: {
   readonly activeEffects?: readonly BattleActiveEffect[];
   readonly preparedSpells?: readonly ReturnType<typeof spellRecord>[];
   readonly spellSlots?: SpellBattleSlots;
-}): BattleState {
+}): BattleRuntimeSession {
   const base = spellBattle({
     preparedSpells: input?.preparedSpells ?? [
       spellRecord(antimagicFieldUnitId),
@@ -488,41 +501,87 @@ function antimagicFieldBattle(input?: {
   if (input?.activeEffects === undefined) {
     return {
       ...base,
-      lightEmitters: input?.lightEmitters ?? [],
+      state: {
+        ...base.state,
+        lightEmitters: input?.lightEmitters ?? [],
+      },
     };
   }
-  const caster = requireCombatant(base, spellCasterId);
+  const caster = requireCombatant(base.state, spellCasterId);
+  if (caster.origin.kind !== "character") {
+    throw new Error("Expected Antimagic Field caster to be a character.");
+  }
+  const characterContext = base.context.characters.get(spellCasterId);
+  if (characterContext === undefined) {
+    throw new Error("Expected Antimagic Field caster runtime context.");
+  }
+  const activeEffects = input.activeEffects.map((effect) => {
+    const sourceProcedure =
+      effect.kind === "spellObjectContactDamage"
+        ? "objectContactDamage"
+        : effect.kind === "spiritualWeapon"
+          ? "spiritualWeaponAttackProxy"
+          : undefined;
+    if (sourceProcedure === undefined) return effect;
+    const sourceProcedureRef = characterContext.spellPresentationSources.find(
+      (source) => source.invocation.procedure === sourceProcedure,
+    )?.procedureRef;
+    if (sourceProcedureRef === undefined) {
+      throw new Error(`Expected ${sourceProcedure} presentation source.`);
+    }
+    return { ...effect, sourceProcedureRef };
+  });
+  const casterWithEffects = { ...caster, activeEffects };
+  const provisionalState = {
+    ...base.state,
+    combatants: new Map(base.state.combatants).set(
+      spellCasterId,
+      casterWithEffects,
+    ),
+  };
+  const execution = characterExecutionWithSpellInvocations(
+    caster.origin.execution,
+    admittedSpellActs(
+      casterWithEffects,
+      provisionalState,
+      characterContext.resourceOwnership,
+      characterContext.spellcastingPresentationSource,
+    ),
+  );
   return {
     ...base,
-    lightEmitters: input?.lightEmitters ?? [],
-    combatants: new Map(base.combatants).set(spellCasterId, {
-      ...caster,
-      activeEffects: input.activeEffects,
-      concentration: {
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(heatMetalUnitId),
-        ),
-        effectKind: "spellEffect",
-      },
-    }),
+    state: {
+      ...base.state,
+      lightEmitters: input?.lightEmitters ?? [],
+      combatants: new Map(base.state.combatants).set(spellCasterId, {
+        ...casterWithEffects,
+        origin: { ...caster.origin, execution },
+        concentration: {
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String(heatMetalUnitId),
+          ),
+          effectKind: "spellEffect",
+        },
+      }),
+    },
   };
 }
 
 function castAntimagicField(
-  state: BattleState,
+  session: BattleRuntimeSession,
   affectedOngoingSpellEffects: readonly BattleAntimagicFieldAffectedOngoingSpellEffect[],
 ): Extract<
   ReturnType<typeof resolveBattleSubject>,
   { readonly tag: "resolved" }
 > {
   const act = spellAct({
-    state,
+    session,
     spellId: antimagicFieldUnitId,
     slotLevel: 8,
   });
   const areaHole = requireHole(act.initialHoles, "spellAreaChoice");
   const resolved = resolveBattleSubject({
-    state,
+    state: session.state,
     subject: act.subject,
     fills: [
       antimagicFieldAreaFill({

@@ -40,7 +40,7 @@ import type {
 describe("L12G-SPELL-SCORCHING-RAY deterministic Scorching Ray admission", () => {
   test("scorching_ray is admitted as slot-scaled creature-or-object spell attack rays", () => {
     const spell = spellRecord(scorchingRayUnitId);
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [
         { spellLevel: 2, count: 1 },
@@ -48,7 +48,7 @@ describe("L12G-SPELL-SCORCHING-RAY deterministic Scorching Ray admission", () =>
       ],
     });
     const act = spellAct({
-      state,
+      session,
       spellId: scorchingRayUnitId,
       slotLevel: 2,
     });
@@ -60,7 +60,7 @@ describe("L12G-SPELL-SCORCHING-RAY deterministic Scorching Ray admission", () =>
       tag: "actionSpell",
       actorId: spellCasterId,
       procedureRef: requireCharacterSpellProcedureRefForTest(
-        state,
+        session,
         spellCasterId,
         spellSlotInvocationRef(scorchingRayUnitId, 2, "spellAttackSequence"),
       ),
@@ -75,19 +75,19 @@ describe("L12G-SPELL-SCORCHING-RAY deterministic Scorching Ray admission", () =>
       "objectTargetChoice",
     ]);
     expect(act.initialHoles).toEqual([
-      expect.objectContaining({ label: "Scorching Ray attack 1 target" }),
+      expect.objectContaining({ label: "Spell attack 1 target" }),
       expect.objectContaining({
-        label: "Scorching Ray attack 1 object target",
+        label: "Spell attack 1 object target",
         requiresTableSpatialFact: true,
       }),
-      expect.objectContaining({ label: "Scorching Ray attack 2 target" }),
+      expect.objectContaining({ label: "Spell attack 2 target" }),
       expect.objectContaining({
-        label: "Scorching Ray attack 2 object target",
+        label: "Spell attack 2 object target",
         requiresTableSpatialFact: true,
       }),
-      expect.objectContaining({ label: "Scorching Ray attack 3 target" }),
+      expect.objectContaining({ label: "Spell attack 3 target" }),
       expect.objectContaining({
-        label: "Scorching Ray attack 3 object target",
+        label: "Spell attack 3 object target",
         requiresTableSpatialFact: true,
       }),
     ]);
@@ -97,13 +97,13 @@ describe("L12G-SPELL-SCORCHING-RAY deterministic Scorching Ray admission", () =>
     );
     const attackRoll = requireResultHole(
       resolveBattleSubject({
-        state,
+        state: session.state,
         subject: act.subject,
         fills: targetFills,
       }),
       "attackRoll",
     );
-    expect(spellHoleInvocation(state, [attackRoll])).toEqual(
+    expect(spellHoleInvocation(session, [attackRoll])).toEqual(
       expect.objectContaining({
         access: { tag: "prepared" },
         resource: { tag: "spellSlot", slotLevel: 2 },
@@ -125,7 +125,7 @@ describe("L12G-SPELL-SCORCHING-RAY deterministic Scorching Ray admission", () =>
     );
 
     const upcast = spellAct({
-      state,
+      session,
       spellId: scorchingRayUnitId,
       slotLevel: 3,
     });
@@ -135,7 +135,7 @@ describe("L12G-SPELL-SCORCHING-RAY deterministic Scorching Ray admission", () =>
     ).toHaveLength(4);
     const upcastAttackRoll = requireResultHole(
       resolveBattleSubject({
-        state,
+        state: session.state,
         subject: upcast.subject,
         fills: targetChoiceHoles(upcast.initialHoles).map((hole) =>
           spellTargetFill(
@@ -148,7 +148,7 @@ describe("L12G-SPELL-SCORCHING-RAY deterministic Scorching Ray admission", () =>
       }),
       "attackRoll",
     );
-    expect(spellHoleInvocation(state, [upcastAttackRoll])).toEqual(
+    expect(spellHoleInvocation(session, [upcastAttackRoll])).toEqual(
       expect.objectContaining({
         resource: { tag: "spellSlot", slotLevel: 3 },
         targeting: {
@@ -201,7 +201,7 @@ describe("L12G-SPELL-SCORCHING-RAY deterministic Scorching Ray admission", () =>
     for (const malformedSpell of malformedSpells) {
       expect(
         maybeSpellAct({
-          state: spellBattle({
+          session: spellBattle({
             preparedSpells: [malformedSpell],
             spellSlots: [{ spellLevel: 2, count: 1 }],
           }),
@@ -215,7 +215,7 @@ describe("L12G-SPELL-SCORCHING-RAY deterministic Scorching Ray admission", () =>
   test("scorching_ray resolves independent repeated and split creature rays", () => {
     const spell = spellRecord(scorchingRayUnitId);
     const secondTargetId = combatantId("unit-profile-scorching-ray-target-2");
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
       targetHp: 20,
@@ -223,7 +223,7 @@ describe("L12G-SPELL-SCORCHING-RAY deterministic Scorching Ray admission", () =>
       extraTargetIds: [secondTargetId],
     });
     const act = spellAct({
-      state,
+      session,
       spellId: scorchingRayUnitId,
       slotLevel: 2,
     });
@@ -238,40 +238,64 @@ describe("L12G-SPELL-SCORCHING-RAY deterministic Scorching Ray admission", () =>
     const fills: BattleFill[] = [...targetFills];
 
     const firstAttack = requireResultHole(
-      resolveBattleSubject({ state, subject: act.subject, fills }),
+      resolveBattleSubject({
+        state: session.state,
+        subject: act.subject,
+        fills,
+      }),
       "attackRoll",
     );
     fills.push(attackRollFill(firstAttack, { total: 15, naturalD20: 10 }));
     const firstDamage = requireResultHole(
-      resolveBattleSubject({ state, subject: act.subject, fills }),
+      resolveBattleSubject({
+        state: session.state,
+        subject: act.subject,
+        fills,
+      }),
       "rolledDice",
     );
     fills.push(damageRollFillWithGroups(firstDamage, [[3, 4]]));
 
     const secondAttack = requireResultHole(
-      resolveBattleSubject({ state, subject: act.subject, fills }),
+      resolveBattleSubject({
+        state: session.state,
+        subject: act.subject,
+        fills,
+      }),
       "attackRoll",
     );
     fills.push(attackRollFill(secondAttack, { total: 15, naturalD20: 10 }));
     const secondDamage = requireResultHole(
-      resolveBattleSubject({ state, subject: act.subject, fills }),
+      resolveBattleSubject({
+        state: session.state,
+        subject: act.subject,
+        fills,
+      }),
       "rolledDice",
     );
     fills.push(damageRollFillWithGroups(secondDamage, [[2, 3]]));
 
     const thirdAttack = requireResultHole(
-      resolveBattleSubject({ state, subject: act.subject, fills }),
+      resolveBattleSubject({
+        state: session.state,
+        subject: act.subject,
+        fills,
+      }),
       "attackRoll",
     );
     fills.push(attackRollFill(thirdAttack, { total: 15, naturalD20: 10 }));
     const thirdDamage = requireResultHole(
-      resolveBattleSubject({ state, subject: act.subject, fills }),
+      resolveBattleSubject({
+        state: session.state,
+        subject: act.subject,
+        fills,
+      }),
       "rolledDice",
     );
     fills.push(damageRollFillWithGroups(thirdDamage, [[1, 1]]));
 
     const resolved = resolveBattleSubject({
-      state,
+      state: session.state,
       subject: act.subject,
       fills,
     });

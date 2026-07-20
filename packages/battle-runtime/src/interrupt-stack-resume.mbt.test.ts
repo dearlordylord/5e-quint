@@ -44,7 +44,6 @@ import {
   resolveBattleSubject,
   attackInitialTargetHole,
   attackExecutionSelectionForSubjectForTest,
-  characterSpellInvocationRefForProcedureRefForTest,
   attackRollFill,
   attackRollHoleAfterTarget,
   damageRollFill,
@@ -67,12 +66,11 @@ import {
   battleId,
   characterId,
   combatantId,
-  discoverBattleActs,
+  discoverBattleActCandidates,
   initiativeScore,
   resolveBattleInterrupt,
   snapshotBattle,
   startBattle,
-  type AvailableBattleAct,
   type BattleCreatureInit,
   type BattleFill,
   type BattleHole,
@@ -80,7 +78,7 @@ import {
   type BattleInterruptedProcedure,
   type BattleResolutionResult,
   type BattleState,
-  type BattleActDiscoverySubject as BattleSubject,
+  type BattleSubject,
   type CombatantId,
 } from "./index.ts";
 
@@ -529,7 +527,7 @@ function shieldBattle(shield: SpellRecord): BattleState {
   if (Either.isLeft(result)) {
     throw new Error(result.left.message);
   }
-  return result.right;
+  return result.right.state;
 }
 
 function characterCreature(input: {
@@ -578,7 +576,7 @@ function characterCreature(input: {
   };
 }
 
-type AttackAct = AvailableBattleAct & {
+type AttackAct = ReturnType<typeof discoverBattleActCandidates>[number] & {
   readonly subject: Extract<
     BattleSubject,
     { readonly tag: "action"; readonly action: "attack" }
@@ -586,12 +584,11 @@ type AttackAct = AvailableBattleAct & {
 };
 
 function unarmedStrikeAct(state: BattleState): AttackAct {
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActCandidates(state).find(
     (candidate): candidate is AttackAct =>
       candidate.subject.tag === "action" &&
       candidate.subject.action === "attack" &&
-      candidate.subject.actorId === shieldAttackerId &&
-      candidate.summary === "Take the Attack action with Unarmed Strike.",
+      candidate.subject.actorId === shieldAttackerId,
   );
   if (act === undefined) {
     throw new Error("Expected Unarmed Strike attack act.");
@@ -650,15 +647,15 @@ function requireShieldReactionChoice(
         candidate.reactorId !== shieldCasterId
       )
         return false;
-      const invocation = characterSpellInvocationRefForProcedureRefForTest(
-        result.state,
-        candidate.reactorId,
-        candidate.subject.procedureRef,
-      );
+      const reactor = result.state.combatants.get(candidate.reactorId);
       return (
-        invocation.tag === "spellSlot" &&
-        invocation.spellId === shieldUnitId &&
-        invocation.procedure === "shieldReaction"
+        reactor?.origin.kind === "character" &&
+        reactor.origin.execution.procedureBindings.some(
+          (binding) =>
+            binding.procedureRef === candidate.subject.procedureRef &&
+            binding.procedure.kind === "spellInvocation" &&
+            binding.procedure.execution.procedure === "shieldReaction",
+        )
       );
     },
   );

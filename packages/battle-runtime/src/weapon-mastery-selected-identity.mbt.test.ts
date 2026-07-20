@@ -50,7 +50,7 @@ import {
   battleId,
   characterId,
   combatantId,
-  discoverBattleActs,
+  discoverBattleActCandidates,
   initiativeScore,
   snapshotBattle,
   startBattle,
@@ -60,7 +60,7 @@ import {
   type BattleReducerRouteEvent,
   type BattleResolutionResult,
   type BattleState,
-  type BattleActDiscoverySubject as BattleSubject,
+  type BattleSubject,
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
@@ -890,8 +890,8 @@ function attackAct(
     BattleSubject,
     { readonly tag: "action"; readonly action: "attack" }
   >,
-): ReturnType<typeof discoverBattleActs>[number] {
-  const act = discoverBattleActs(state).find(
+): ReturnType<typeof discoverBattleActCandidates>[number] {
+  const act = discoverBattleActCandidates(state).find(
     (candidate) =>
       candidate.subject.tag === "action" &&
       candidate.subject.action === "attack" &&
@@ -1061,5 +1061,5 @@ function startBattleRight(
   if (Either.isLeft(result)) {
     throw new Error(result.left.message);
   }
-  return result.right;
+  return result.right.state;
 }

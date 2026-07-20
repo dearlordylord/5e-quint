@@ -33,6 +33,7 @@ import {
   type BattleFill,
   type BattleHole,
   type BattleResolutionResult,
+  type BattleRuntimeSession,
   type BattleState,
   type BattleStoredLightEmitter,
   type BattleTrackedOngoingSpellLightEmitter,
@@ -68,7 +69,7 @@ type DispelMagicSelectedIdentityState = {
   readonly lastResult: DispelMagicLastResult;
 };
 type DispelMagicRuntimeState = {
-  readonly battle: BattleState;
+  readonly battle: BattleRuntimeSession;
   readonly lastResult: DispelMagicLastResult;
 };
 type BattleSpellEffectOccurrenceId = ReturnType<
@@ -149,7 +150,7 @@ function endObjectAttachedSpellLight(): DispelMagicRuntimeState {
     }),
   ]);
   const act = spellAct({
-    state: battle,
+    session: battle,
     spellId: dispelMagicUnitId,
     slotLevel: 3,
   });
@@ -159,7 +160,7 @@ function endObjectAttachedSpellLight(): DispelMagicRuntimeState {
   });
   const resolved = requireResolved(
     resolveBattleSubject({
-      state: battle,
+      state: battle.state,
       subject: act.subject,
       fills: [
         ongoingSpellTargetFill({
@@ -170,7 +171,10 @@ function endObjectAttachedSpellLight(): DispelMagicRuntimeState {
     }),
     "Expected selected Dispel Magic object target to resolve.",
   );
-  return { battle: resolved.state, lastResult: "objectSpellLightEnded" };
+  return {
+    battle: { ...battle, state: resolved.state },
+    lastResult: "objectSpellLightEnded",
+  };
 }
 
 function endSelectedMagicalEffectActiveEffect(): DispelMagicRuntimeState {
@@ -187,7 +191,7 @@ function endSelectedMagicalEffectActiveEffect(): DispelMagicRuntimeState {
     }),
   ]);
   const act = spellAct({
-    state: battle,
+    session: battle,
     spellId: dispelMagicUnitId,
     slotLevel: 3,
   });
@@ -197,7 +201,7 @@ function endSelectedMagicalEffectActiveEffect(): DispelMagicRuntimeState {
   });
   const resolved = requireResolved(
     resolveBattleSubject({
-      state: battle,
+      state: battle.state,
       subject: act.subject,
       fills: [
         ongoingSpellTargetFill({
@@ -217,7 +221,10 @@ function endSelectedMagicalEffectActiveEffect(): DispelMagicRuntimeState {
     }),
     "Expected selected Dispel Magic magical-effect target to resolve.",
   );
-  return { battle: resolved.state, lastResult: "selectedMagicalEffectEnded" };
+  return {
+    battle: { ...battle, state: resolved.state },
+    lastResult: "selectedMagicalEffectEnded",
+  };
 }
 
 function rejectOutOfRangeObjectTarget(): DispelMagicRuntimeState {
@@ -231,7 +238,7 @@ function rejectOutOfRangeObjectTarget(): DispelMagicRuntimeState {
     }),
   ]);
   const act = spellAct({
-    state: battle,
+    session: battle,
     spellId: dispelMagicUnitId,
     slotLevel: 3,
   });
@@ -241,7 +248,7 @@ function rejectOutOfRangeObjectTarget(): DispelMagicRuntimeState {
   });
   const target = { kind: "object" as const, objectId: selectedObjectId };
   const rejected = resolveBattleSubject({
-    state: battle,
+    state: battle.state,
     subject: act.subject,
     fills: [
       ongoingSpellTargetFill({
@@ -267,21 +274,22 @@ function rejectOutOfRangeObjectTarget(): DispelMagicRuntimeState {
 
 function battleWithLightEmitters(
   lightEmitters: readonly BattleStoredLightEmitter[],
-): BattleState {
+): BattleRuntimeSession {
+  const session = spellBattle({
+    preparedSpells: [spellRecord(dispelMagicUnitId)],
+    spellSlots: [{ spellLevel: 3, count: 1 }],
+  });
   return {
-    ...spellBattle({
-      preparedSpells: [spellRecord(dispelMagicUnitId)],
-      spellSlots: [{ spellLevel: 3, count: 1 }],
-    }),
-    lightEmitters,
+    ...session,
+    state: { ...session.state, lightEmitters },
   };
 }
 
 function battleWithActiveEffects(
   activeEffects: readonly BattleActiveEffect[],
-): BattleState {
+): BattleRuntimeSession {
   const battle = battleWithLightEmitters([]);
-  const combatants = new Map(battle.combatants);
+  const combatants = new Map(battle.state.combatants);
   const caster = combatants.get(spellCasterId);
   const target = combatants.get(spellTargetId);
   if (caster === undefined || target === undefined) {
@@ -317,32 +325,36 @@ function battleWithActiveEffects(
       ),
     ],
   });
-  return { ...battle, combatants };
+  return { ...battle, state: { ...battle.state, combatants } };
 }
 
-function battleWithSpellLightAndActiveEffects(): BattleState {
+function battleWithSpellLightAndActiveEffects(): BattleRuntimeSession {
+  const battle = battleWithActiveEffects([
+    heatMetalObjectContactDamageEffect({
+      objectId: selectedObjectId,
+      sourceCombatantId: spellCasterId,
+      effectId: selectedActiveEffectId,
+    }),
+    heatMetalObjectContactDamageEffect({
+      objectId: selectedObjectId,
+      sourceCombatantId: spellTargetId,
+      effectId: retainedActiveEffectId,
+    }),
+  ]);
   return {
-    ...battleWithActiveEffects([
-      heatMetalObjectContactDamageEffect({
-        objectId: selectedObjectId,
-        sourceCombatantId: spellCasterId,
-        effectId: selectedActiveEffectId,
-      }),
-      heatMetalObjectContactDamageEffect({
-        objectId: selectedObjectId,
-        sourceCombatantId: spellTargetId,
-        effectId: retainedActiveEffectId,
-      }),
-    ]),
-    lightEmitters: [
-      objectSpellEmitter({
-        objectId: selectedObjectId,
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(continualFlameUnitId),
-        ),
-        sourceSpellLevel: 2,
-      }),
-    ],
+    ...battle,
+    state: {
+      ...battle.state,
+      lightEmitters: [
+        objectSpellEmitter({
+          objectId: selectedObjectId,
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String(continualFlameUnitId),
+          ),
+          sourceSpellLevel: 2,
+        }),
+      ],
+    },
   };
 }
 
@@ -407,22 +419,22 @@ function dispelMagicProjection(
 ): DispelMagicSelectedIdentityState {
   return {
     magicActionAvailable: canSpendAction(
-      state.battle.currentTurnResources,
+      state.battle.state.currentTurnResources,
       "magic",
     ),
     thirdLevelSlotCommitted:
-      state.battle.currentTurnResources.spellSlotUsesThisTurn.some(
+      state.battle.state.currentTurnResources.spellSlotUsesThisTurn.some(
         (use) => use.kind === "committed" && use.combatantId === spellCasterId,
       ),
-    spellLightEmitterCount: state.battle.lightEmitters.filter(
+    spellLightEmitterCount: state.battle.state.lightEmitters.filter(
       (emitter) => emitter.kind === "spellLightEmitter",
     ).length,
     selectedActiveEffectPresent: hasActiveEffect(
-      state.battle,
+      state.battle.state,
       selectedActiveEffectId,
     ),
     retainedActiveEffectPresent: hasActiveEffect(
-      state.battle,
+      state.battle.state,
       retainedActiveEffectId,
     ),
     lastResult: state.lastResult,

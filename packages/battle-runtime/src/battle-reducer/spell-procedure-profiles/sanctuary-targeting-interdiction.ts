@@ -21,7 +21,7 @@ import { movementFeet } from "@dnd/shared/types";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
-import type { SpellInvocationRef } from "../../battle-subjects.ts";
+import { DurationBattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
 import {
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
@@ -31,7 +31,7 @@ import {
   type SanctuaryTargetingInterdictionSpellInvocation,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
-import { spellId, type CombatantId } from "../../identity.ts";
+import { CombatantId } from "../../identity.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
 import { invalidResult } from "../result-helpers.ts";
 import {
@@ -50,13 +50,23 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
-import { spellProcedureInvocationSchema } from "./profile.ts";
+import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
 import {
-  BattleRuntimeObjectSchema,
+  DcSourceSchema,
   MovementFeet,
   PreparedSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
+
+const SanctuaryWardTemplateSchema = Schema.Struct({
+  sourceCombatantId: CombatantId,
+  kind: Schema.Literal("sanctuaryWard"),
+  save: Schema.Struct({
+    ability: Schema.Literal("wis"),
+    dc: DcSourceSchema,
+  }),
+  expiresAt: DurationBattleActiveEffectExpirationSchema,
+});
 
 type SanctuaryTargetingInterdictionInvocation = Extract<
   SupportedSpellInvocation,
@@ -179,29 +189,11 @@ function discoverSanctuaryTargetingInterdictionCastAct(
             tag: "bonusActionSpell" as const,
             actorId,
             procedureRef: invocation.sourceProcedureRef,
-            invocation: sanctuaryTargetingInterdictionInvocationRef(invocation),
             mode: { tag: "cast" as const },
           },
           initialHoles: [targetHole],
         },
       ];
-}
-
-function sanctuaryTargetingInterdictionInvocationRef(
-  invocation: SanctuaryTargetingInterdictionInvocation,
-): SpellInvocationRef {
-  return {
-    tag: "spellSlot",
-    spellId: spellId(invocation.spell.id),
-    slotLevel: invocation.resource.slotLevel,
-    procedure: "sanctuaryTargetingInterdiction",
-  };
-}
-
-function sanctuaryTargetingInterdictionCastSummary(
-  invocation: SanctuaryTargetingInterdictionInvocation,
-): string {
-  return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
 }
 
 function resolveSanctuaryTargetingInterdiction(
@@ -256,38 +248,30 @@ function resolveSanctuaryTargetingInterdiction(
 }
 
 const SanctuaryTargetingInterdictionInvocationSchema =
-  spellProcedureInvocationSchema<
-    Extract<
-      SupportedSpellInvocation,
-      { readonly procedure: "sanctuaryTargetingInterdiction" }
-    >
-  >(
+  spellProcedureExecutionSchema(
     Schema.Struct({
       access: PreparedSpellAccessSchema,
       resource: SpellSlotInvocationResourceSchema,
       procedure: Schema.Literal("sanctuaryTargetingInterdiction"),
-      spell: BattleRuntimeObjectSchema,
+      spellRuleFacts: SpellRuleExecutionFactsSchema,
       actionCost: Schema.Literal("bonusAction"),
       targeting: Schema.Struct({
         kind: Schema.Literal("targetList"),
         minTargets: Schema.Literal(1),
         maxTargets: Schema.Literal(1),
       }),
-      activeEffect: BattleRuntimeObjectSchema,
+      activeEffect: SanctuaryWardTemplateSchema,
       rangeFeet: MovementFeet,
     }),
   );
 export const sanctuaryTargetingInterdictionProfile = {
   procedure: "sanctuaryTargetingInterdiction",
-  invocationSchema: SanctuaryTargetingInterdictionInvocationSchema,
+  executionSchema: SanctuaryTargetingInterdictionInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
   targetListInvocation: { kind: "always" },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: [],
   admit: admitSanctuaryTargetingInterdiction,
   discoverCastAct: discoverSanctuaryTargetingInterdictionCastAct,
-  castSummary: sanctuaryTargetingInterdictionCastSummary,
-  invocationRef: sanctuaryTargetingInterdictionInvocationRef,
   resolve: resolveSanctuaryTargetingInterdiction,
 } satisfies SpellProcedureProfile<
   "sanctuaryTargetingInterdiction",

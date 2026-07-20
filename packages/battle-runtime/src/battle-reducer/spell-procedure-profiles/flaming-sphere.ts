@@ -1,4 +1,6 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-flaming-sphere-hazard-ram
+import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
+import { DiceExprSchema } from "@dnd/surface/surface/schema";
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE
 //
 // The flamingSphere Spell Procedure Profile: action-time Spell Slot casting
@@ -25,7 +27,6 @@ import { movementFeet } from "@dnd/shared/types";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
-import type { SpellInvocationRef } from "../../battle-subjects.ts";
 import {
   type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
@@ -33,7 +34,7 @@ import {
   type BattleState,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
-import { spellId, type CombatantId } from "../../identity.ts";
+import { type CombatantId } from "../../identity.ts";
 import { spellAreaChoiceHole } from "../spells-holes-fills.ts";
 import { supportedDamageAmountExpr } from "../spells-profile-shared.ts";
 import { resolveFlamingSphereSpellAct } from "../spells-resolve-area-effects.ts";
@@ -43,9 +44,8 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
-import { spellProcedureInvocationSchema } from "./profile.ts";
+import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
 import {
-  BattleRuntimeObjectSchema,
   DcSourceSchema,
   MovementFeet,
   PreparedSpellAccessSchema,
@@ -265,7 +265,6 @@ function discoverFlamingSphereCastAct(
         tag: "actionSpell",
         actorId,
         procedureRef: invocation.sourceProcedureRef,
-        invocation: flamingSphereInvocationRef(invocation),
         mode: { tag: "cast" },
       },
       initialHoles: [spellAreaChoiceHole(invocation)],
@@ -273,22 +272,6 @@ function discoverFlamingSphereCastAct(
   ];
 }
 
-function flamingSphereInvocationRef(
-  invocation: FlamingSphereSpellInvocation,
-): SpellInvocationRef {
-  return {
-    tag: "spellSlot",
-    spellId: spellId(invocation.spell.id),
-    slotLevel: invocation.resource.slotLevel,
-    procedure: "flamingSphere",
-  };
-}
-
-function flamingSphereCastSummary(
-  invocation: FlamingSphereSpellInvocation,
-): string {
-  return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
-}
 
 function resolveFlamingSphere(
   input: FlamingSphereResolveInput,
@@ -301,40 +284,35 @@ function resolveFlamingSphere(
   });
 }
 
-const FlamingSphereInvocationSchema = spellProcedureInvocationSchema<
-  Extract<SupportedSpellInvocation, { readonly procedure: "flamingSphere" }>
->(
+const FlamingSphereInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
     resource: SpellSlotInvocationResourceSchema,
     procedure: Schema.Literal("flamingSphere"),
-    spell: BattleRuntimeObjectSchema,
+    spellRuleFacts: SpellRuleExecutionFactsSchema,
     ability: Schema.Literal("dex"),
     dc: DcSourceSchema,
     targeting: Schema.Struct({
       kind: Schema.Literal("pointOriginSphereDiameter"),
       diameterFeet: MovementFeet,
     }),
-    durationTicks: BattleRuntimeObjectSchema,
+    durationTicks: ElapsedTimeTicksSchema,
     rangeFeet: MovementFeet,
     ramMaxMoveFeet: MovementFeet,
     damage: Schema.Struct({
-      expr: BattleRuntimeObjectSchema,
+      expr: DiceExprSchema,
       damageType: Schema.Literal("fire"),
     }),
   }),
 );
 export const flamingSphereProfile = {
   procedure: "flamingSphere",
-  invocationSchema: FlamingSphereInvocationSchema,
+  executionSchema: FlamingSphereInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: [],
   admit: admitFlamingSphere,
   discoverCastAct: discoverFlamingSphereCastAct,
-  castSummary: flamingSphereCastSummary,
-  invocationRef: flamingSphereInvocationRef,
   resolve: resolveFlamingSphere,
 } satisfies SpellProcedureProfile<
   "flamingSphere",

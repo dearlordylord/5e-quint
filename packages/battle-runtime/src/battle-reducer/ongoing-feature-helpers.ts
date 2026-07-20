@@ -10,8 +10,8 @@ import type { CombatantId } from "../identity.ts";
 import type {
   OngoingFeatureExtensionTrigger,
   OngoingFeatureLifecycleProfile,
-  SupportedUnitFeatureProfile,
 } from "../unit-feature-support.ts";
+import type { UnitFeatureProcedureExecution } from "../character-execution.ts";
 import type {
   ActiveOngoingFeatureOccurrence,
   BattleState,
@@ -19,15 +19,17 @@ import type {
   OngoingFeatureExpiration,
 } from "../battle-reducer.ts";
 
-export function activeOngoingFeatureOccurrenceFromProfile(
+type OngoingFeatureExecution = Extract<
+  UnitFeatureProcedureExecution,
+  { readonly kind: "ongoingFeature" }
+>;
+
+export function activeOngoingFeatureOccurrenceFromExecution(
   state: BattleState,
   actorId: CombatantId,
-  unitFeature: Extract<
-    SupportedUnitFeatureProfile,
-    { readonly kind: "ongoingFeature" }
-  >,
+  unitFeature: OngoingFeatureExecution,
 ): ActiveOngoingFeatureOccurrence {
-  const expiresAt = ongoingFeatureExpirationFromProfile(
+  const expiresAt = ongoingFeatureExpirationFromExecution(
     state,
     actorId,
     unitFeature,
@@ -69,13 +71,10 @@ export function requireEndOfTurnOngoingFeatureExpiration(
   return expiration;
 }
 
-export function ongoingFeatureExpirationFromProfile(
+export function ongoingFeatureExpirationFromExecution(
   state: BattleState,
   actorId: CombatantId,
-  unitFeature: Extract<
-    SupportedUnitFeatureProfile,
-    { readonly kind: "ongoingFeature" }
-  >,
+  unitFeature: OngoingFeatureExecution,
 ): OngoingFeatureExpiration {
   if (
     unitFeature.lifecycle.kind === "turnBoundary" &&
@@ -138,10 +137,7 @@ export function ongoingFeatureLifecycleHasExtensionTrigger(
 }
 
 export function ongoingFeatureProfileHasExtensionTrigger(
-  profile: Extract<
-    SupportedUnitFeatureProfile,
-    { readonly kind: "ongoingFeature" }
-  > | null,
+  profile: OngoingFeatureExecution | null,
   trigger: OngoingFeatureExtensionTrigger,
 ): boolean {
   return (

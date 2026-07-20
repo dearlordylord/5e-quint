@@ -38,12 +38,12 @@ import type { ActionSpellAct } from "./unit-profile-admission-catalog-support.ts
 describe("QMBT14 deterministic chained attack and Mage Armor admission", () => {
   test("ice_knife is admitted as a mixed spell attack plus primary-target burst save", () => {
     const spell = spellRecord(iceKnifeUnitId);
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
     const act = spellAct({
-      state,
+      session,
       spellId: iceKnifeUnitId,
       slotLevel: 2,
     });
@@ -55,7 +55,7 @@ describe("QMBT14 deterministic chained attack and Mage Armor admission", () => {
       tag: "actionSpell",
       actorId: spellCasterId,
       procedureRef: requireCharacterSpellProcedureRefForTest(
-        state,
+        session,
         spellCasterId,
         spellSlotInvocationRef("ice_knife", 2, "attackBurstSaveDamage"),
       ),
@@ -63,7 +63,7 @@ describe("QMBT14 deterministic chained attack and Mage Armor admission", () => {
     });
     const attackRoll = requireResultHole(
       resolveBattleSubject({
-        state,
+        state: session.state,
         subject: act.subject,
         fills: [
           spellTargetFill(
@@ -76,7 +76,7 @@ describe("QMBT14 deterministic chained attack and Mage Armor admission", () => {
       }),
       "attackRoll",
     );
-    expect(spellHoleInvocation(state, [attackRoll])).toEqual(
+    expect(spellHoleInvocation(session, [attackRoll])).toEqual(
       expect.objectContaining({
         procedure: "attackBurstSaveDamage",
         spell,
@@ -109,12 +109,12 @@ describe("QMBT14 deterministic chained attack and Mage Armor admission", () => {
   });
   test("chromatic_orb is admitted as a chained spell attack with a cast-local damage-type choice", () => {
     const spell = spellRecord(chromaticOrbUnitId);
-    const state = spellBattle({
+    const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
     const act = spellAct({
-      state,
+      session,
       spellId: chromaticOrbUnitId,
       slotLevel: 2,
     });
@@ -126,7 +126,7 @@ describe("QMBT14 deterministic chained attack and Mage Armor admission", () => {
       tag: "actionSpell",
       actorId: spellCasterId,
       procedureRef: requireCharacterSpellProcedureRefForTest(
-        state,
+        session,
         spellCasterId,
         spellSlotInvocationRef("chromatic_orb", 2, "chainedSpellAttackDamage"),
       ),
@@ -135,11 +135,11 @@ describe("QMBT14 deterministic chained attack and Mage Armor admission", () => {
     const damageType = requireHole(act.initialHoles, "damageTypeChoice");
     expect(damageType).toEqual(
       expect.objectContaining({
-        label: "Chromatic Orb damage type",
+        label: "Spell damage type",
         choices: ["acid", "cold", "fire", "lightning", "poison", "thunder"],
       }),
     );
-    expect(spellHoleInvocation(state, [damageType])).toEqual(
+    expect(spellHoleInvocation(session, [damageType])).toEqual(
       expect.objectContaining({
         procedure: "chainedSpellAttackDamage",
         spell,
@@ -163,12 +163,12 @@ describe("QMBT14 deterministic chained attack and Mage Armor admission", () => {
   });
   test("damage-type choice refs do not widen ordinary spell damage admission profiles", () => {
     const spell = spellRecord(chromaticOrbUnitId);
-    const state = spellBattle({
+    const session = spellBattle({
       cantrips: [spell],
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 1, count: 1 }],
     });
-    const acts = discoverBattleActs(state).filter(
+    const acts = discoverBattleActs(session).filter(
       (candidate): candidate is ActionSpellAct =>
         candidate.subject.tag === "actionSpell" &&
         battleActSpellPresentation(candidate)?.invocation.spellId ===
@@ -201,9 +201,9 @@ describe("QMBT14 deterministic chained attack and Mage Armor admission", () => {
   });
   test("damage-type choice refs preserve existing spell attack and save-gated projections", () => {
     const spellAttack = spellRecord(rayOfFrostUnitId);
-    const spellAttackState = spellBattle({ cantrips: [spellAttack] });
+    const spellAttackSession = spellBattle({ cantrips: [spellAttack] });
     const spellAttackAct = spellAct({
-      state: spellAttackState,
+      session: spellAttackSession,
       spellId: rayOfFrostUnitId,
     });
 
@@ -213,9 +213,10 @@ describe("QMBT14 deterministic chained attack and Mage Armor admission", () => {
     }).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
-      invocation: cantripSpellInvocationRef(
-        "ray_of_frost",
-        "spellAttackDamage",
+      procedureRef: requireCharacterSpellProcedureRefForTest(
+        spellAttackSession,
+        spellCasterId,
+        cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
       ),
       mode: { tag: "cast" },
     });
@@ -227,7 +228,7 @@ describe("QMBT14 deterministic chained attack and Mage Armor admission", () => {
     ]);
     const attackRoll = requireResultHole(
       resolveBattleSubject({
-        state: spellAttackState,
+        state: spellAttackSession.state,
         subject: spellAttackAct.subject,
         fills: [
           spellTargetFill(
@@ -240,7 +241,7 @@ describe("QMBT14 deterministic chained attack and Mage Armor admission", () => {
       }),
       "attackRoll",
     );
-    expect(spellHoleInvocation(spellAttackState, [attackRoll])).toEqual(
+    expect(spellHoleInvocation(spellAttackSession, [attackRoll])).toEqual(
       expect.objectContaining({
         procedure: "spellAttackDamage",
         targeting: { kind: "singleCombatant" },
@@ -261,9 +262,9 @@ describe("QMBT14 deterministic chained attack and Mage Armor admission", () => {
     );
 
     const saveGated = spellRecord(acidSplashUnitId);
-    const saveGatedState = spellBattle({ cantrips: [saveGated] });
+    const saveGatedSession = spellBattle({ cantrips: [saveGated] });
     const saveGatedAct = spellAct({
-      state: saveGatedState,
+      session: saveGatedSession,
       spellId: acidSplashUnitId,
     });
 
@@ -273,7 +274,11 @@ describe("QMBT14 deterministic chained attack and Mage Armor admission", () => {
     }).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
-      invocation: cantripSpellInvocationRef("acid_splash", "saveGatedDamage"),
+      procedureRef: requireCharacterSpellProcedureRefForTest(
+        saveGatedSession,
+        spellCasterId,
+        cantripSpellInvocationRef("acid_splash", "saveGatedDamage"),
+      ),
       mode: { tag: "cast" },
     });
     expect(saveGatedAct.initialHoles).toEqual([
@@ -283,7 +288,7 @@ describe("QMBT14 deterministic chained attack and Mage Armor admission", () => {
         targetRollModes: [],
       }),
     ]);
-    expect(spellActInvocation(saveGatedState, saveGatedAct)).toEqual(
+    expect(spellActInvocation(saveGatedSession, saveGatedAct)).toEqual(
       expect.objectContaining({
         procedure: "saveGatedDamage",
         ability: "dex",
@@ -302,9 +307,9 @@ describe("QMBT14 deterministic chained attack and Mage Armor admission", () => {
   });
   test("mage_armor is admitted through catalog spell access and projected as a persistent prepared spell", () => {
     const spell = spellRecord(mageArmorUnitId);
-    const state = spellBattle({ preparedSpells: [spell] });
+    const session = spellBattle({ preparedSpells: [spell] });
     const act = spellAct({
-      state,
+      session,
       spellId: mageArmorUnitId,
     });
 
@@ -314,10 +319,10 @@ describe("QMBT14 deterministic chained attack and Mage Armor admission", () => {
     }).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
-      invocation: spellSlotInvocationRef(
-        "mage_armor",
-        1,
-        "persistentArmorEffect",
+      procedureRef: requireCharacterSpellProcedureRefForTest(
+        session,
+        spellCasterId,
+        spellSlotInvocationRef("mage_armor", 1, "persistentArmorEffect"),
       ),
       mode: { tag: "cast" },
     });
@@ -326,7 +331,7 @@ describe("QMBT14 deterministic chained attack and Mage Armor admission", () => {
     expect(act.initialHoles).toEqual([
       expect.objectContaining({
         kind: "targetChoice",
-        choices: [spellCasterId],
+        choices: [spellCasterId, spellTargetId],
       }),
     ]);
   });

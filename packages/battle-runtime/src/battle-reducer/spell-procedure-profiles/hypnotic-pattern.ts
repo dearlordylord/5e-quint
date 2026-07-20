@@ -1,4 +1,5 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-hypnotic-pattern-control spell.invocation-glyph-stored-concentration-full-duration
+import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 //
 // Hypnotic Pattern control profile: action-time level-3+ Spell Slot casting,
 // table-supplied point-origin Cube affected targets with sight witnesses,
@@ -18,7 +19,10 @@ import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { movementFeet } from "@dnd/shared/types";
 import type { ActivationPhase, EffectAtom } from "@dnd/surface/surface/types";
 import { Either, Schema } from "effect";
-import { bindSpellProcedureExecutionFacts } from "../../character-execution.ts";
+import {
+  bindStoredSpellProcedureExecutionFacts,
+  type SpellProcedureExecution,
+} from "../../character-execution.ts";
 import type {
   ActionSpellBattleResolutionInput,
   BattleActDiscoveryCandidate,
@@ -40,7 +44,7 @@ import {
   snapshotBattle,
 } from "../../battle-reducer.ts";
 import type { CharacterBattleMetamagicOptionFact } from "../../character-battle-resources.ts";
-import { spellId, type CombatantId } from "../../identity.ts";
+import { type CombatantId } from "../../identity.ts";
 import { battleCreatureWithSpellActiveEffects } from "../../active-effect/lifecycle.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";
 import {
@@ -64,9 +68,8 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
-import { spellProcedureInvocationSchema } from "./profile.ts";
+import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
 import {
-  BattleRuntimeObjectSchema,
   DcSourceSchema,
   MovementFeet,
   PreparedSpellAccessSchema,
@@ -88,7 +91,7 @@ type HypnoticPatternSpellInvocation = Extract<
   SupportedSpellInvocation,
   { readonly procedure: "hypnoticPattern" }
 >;
-type StoredGlyphAreaControlSpellInvocation = GlyphStoredAreaControlInvocation;
+type StoredGlyphAreaControlSpellInvocation = SpellProcedureExecution<GlyphStoredAreaControlInvocation>;
 
 type HypnoticPatternPhase = Extract<
   ActivationPhase,
@@ -125,10 +128,24 @@ type HypnoticPatternReleaseResource =
 
 export function isGlyphStoredAreaControlSpellInvocation(
   invocation: SupportedSpellInvocation,
-): invocation is StoredGlyphAreaControlSpellInvocation {
+): invocation is GlyphStoredAreaControlInvocation;
+export function isGlyphStoredAreaControlSpellInvocation(
+  invocation: SpellProcedureExecution,
+): invocation is StoredGlyphAreaControlSpellInvocation;
+export function isGlyphStoredAreaControlSpellInvocation(
+  invocation: SupportedSpellInvocation | SpellProcedureExecution,
+): invocation is
+  | GlyphStoredAreaControlInvocation
+  | StoredGlyphAreaControlSpellInvocation;
+export function isGlyphStoredAreaControlSpellInvocation(
+  invocation: SupportedSpellInvocation | SpellProcedureExecution,
+): boolean {
   return (
     isGlyphStoredAreaControlProcedure(invocation.procedure) &&
-    invocation.spell.mechanics.duration.kind === "concentration"
+    ("spellRuleFacts" in invocation
+      ? invocation.spellRuleFacts.duration.kind === "concentration"
+      : "spell" in invocation &&
+        invocation.spell.mechanics.duration.kind === "concentration")
   );
 }
 
@@ -153,7 +170,7 @@ export function resolveStoredGlyphAreaControlSpellRelease(input: {
   return resolveHypnoticPattern({
     input: input.input,
     actorId: input.actorId,
-    invocation: bindSpellProcedureExecutionFacts(
+    invocation: bindStoredSpellProcedureExecutionFacts(
       input.invocation,
       input.input.subject.procedureRef,
     ),
@@ -331,7 +348,6 @@ function hypnoticPatternCastAct(
       tag: "actionSpell",
       actorId,
       procedureRef: invocation.sourceProcedureRef,
-      invocation: hypnoticPatternInvocationRef(invocation),
       mode: { tag: "cast" },
     },
     initialHoles,
@@ -363,23 +379,6 @@ function hypnoticPatternMetamagicInitialHoles(
   return holes;
 }
 
-function hypnoticPatternInvocationRef(
-  invocation: HypnoticPatternSpellInvocation,
-) {
-  return {
-    tag: "spellSlot" as const,
-    spellId: spellId(invocation.spell.id),
-    slotLevel: invocation.resource.slotLevel,
-    procedure: "hypnoticPattern" as const,
-  };
-}
-
-function hypnoticPatternCastSummary(
-  invocation: HypnoticPatternSpellInvocation,
-): string {
-  return `Cast ${invocation.spell.name} using a level ${invocation.resource.slotLevel} Spell Slot.`;
-}
-
 function ordinaryHypnoticPatternReleaseResource(
   metamagicApplications:
     | readonly CharacterBattleMetamagicOptionFact[]
@@ -393,8 +392,7 @@ function ordinaryHypnoticPatternReleaseResource(
 function hypnoticPatternReleaseResourceState(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
-  readonly invocation: HypnoticPatternSpellInvocation;
-  readonly sourceProcedureRef: BattleExecutableSpellInvocation["sourceProcedureRef"];
+  readonly invocation: HypnoticPatternResolveInput["invocation"];
   readonly errorState: BattleState;
   readonly resource: HypnoticPatternReleaseResource;
 }): Extract<BattleResolutionResult, { readonly tag: "resolved" | "invalid" }> {
@@ -408,10 +406,7 @@ function hypnoticPatternReleaseResourceState(input: {
   return spendSpellCastResources({
     state: input.state,
     actorId: input.actorId,
-    invocation: bindSpellProcedureExecutionFacts(
-      input.invocation,
-      input.sourceProcedureRef,
-    ),
+    invocation: input.invocation,
     errorState: input.errorState,
     startConcentration: false,
     ...(input.resource.metamagicApplications === undefined
@@ -573,7 +568,6 @@ function resolveHypnoticPattern(
     state: input.input.state,
     actorId: input.actorId,
     invocation: input.invocation,
-    sourceProcedureRef: input.input.subject.procedureRef,
     errorState: input.input.state,
     resource:
       input.releaseResource ??
@@ -734,12 +728,12 @@ function breakConcentrationForIncapacitatedTargets(
 }
 
 const HypnoticPatternInvocationSchema =
-  spellProcedureInvocationSchema<HypnoticPatternSpellInvocation>(
+  spellProcedureExecutionSchema(
     Schema.Struct({
       access: PreparedSpellAccessSchema,
       resource: SpellSlotInvocationResourceSchema,
       procedure: Schema.Literal("hypnoticPattern"),
-      spell: BattleRuntimeObjectSchema,
+      spellRuleFacts: SpellRuleExecutionFactsSchema,
       actionCost: Schema.Literal("magicAction"),
       ability: Schema.Literal("wis"),
       dc: DcSourceSchema,
@@ -748,21 +742,18 @@ const HypnoticPatternInvocationSchema =
         sideFeet: MovementFeet,
       }),
       rangeFeet: MovementFeet,
-      durationTicks: Schema.Number,
+      durationTicks: ElapsedTimeTicksSchema,
     }),
   );
 
 export const hypnoticPatternProfile = {
   procedure: "hypnoticPattern",
-  invocationSchema: HypnoticPatternInvocationSchema,
+  executionSchema: HypnoticPatternInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
   targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
-  knownWillingTargetSpellIds: [],
   admit: admitHypnoticPattern,
   discoverCastAct: discoverHypnoticPatternCastAct,
-  castSummary: hypnoticPatternCastSummary,
-  invocationRef: hypnoticPatternInvocationRef,
   resolve: resolveHypnoticPattern,
 } satisfies SpellProcedureProfile<
   "hypnoticPattern",

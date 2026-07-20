@@ -5,10 +5,13 @@
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { isMonkWeapon } from "@dnd/shared-algebras/martial-arts-algebra";
 import { difficultyClass } from "@dnd/shared/types";
-import type { UnitRecord } from "@dnd/surface/surface/types";
 import { Match } from "effect";
 import type { BattleActiveEffect } from "../active-effect/types.ts";
-import { characterUnitProcedureRef } from "../character-execution.ts";
+import {
+  type CharacterProcedureBinding,
+  type UnitFeatureProcedureExecution,
+  type UnitSupportProcedureExecution,
+} from "../character-execution.ts";
 import type {
   CharacterWeaponAttackActionOption,
   SupportedAttackActionOption,
@@ -31,7 +34,6 @@ import {
   resourceHasUsesRemaining,
   spendCharacterResourceUse,
 } from "../character-battle-resources.ts";
-import { STUNNING_STRIKE_SUPPORT_PROFILE } from "../unit-feature-support.ts";
 import { battleCreatureStateWithKnockOutPreservedConditions } from "./creature-state.ts";
 import {
   extendSavingThrowOngoingFeatures,
@@ -50,10 +52,6 @@ import {
   savingThrowFlatBonusProjections,
   savingThrowRollModeProjections,
 } from "./spells-damage-fills.ts";
-import type {
-  BattleStunningStrikeSupportProfile,
-  BattleUnitSupportProfile,
-} from "../unit-feature-support.ts";
 
 const STUNNING_STRIKE_CHOICES = ["attempt", "decline"] as const;
 type StunningStrikeChoice = (typeof STUNNING_STRIKE_CHOICES)[number];
@@ -61,11 +59,15 @@ type StunningStrikeChoice = (typeof STUNNING_STRIKE_CHOICES)[number];
 type StunningStrikeHit = {
   readonly actorId: CombatantId;
   readonly targetId: CombatantId;
-  readonly unitId: UnitRecord["id"];
   readonly procedureRef: BattleProcedureExecutionRef;
-  readonly profile: BattleStunningStrikeSupportProfile;
+  readonly execution: StunningStrikeExecution;
   readonly focus: MonkFocusResourceFact;
 };
+
+type StunningStrikeExecution = Extract<
+  UnitFeatureProcedureExecution | UnitSupportProcedureExecution,
+  { readonly kind: "stunningStrike" }
+>;
 
 export type StunningStrikeAfterHitResult =
   | { readonly tag: "ok"; readonly state: BattleState }
@@ -215,14 +217,14 @@ function stunningStrikeSavingThrowHole(
   if (actor === undefined) {
     throw new Error("Stunning Strike save hole requires an actor.");
   }
-  const focusSaveDc = hit.focus.profile.effectSaveDc;
+  const focusSaveDc = hit.focus.execution.effectSaveDc;
   const abilityModifier =
     actor.origin.kind === "character"
       ? scoreModifier(
           actor.origin.d20Statistics.abilityScores[focusSaveDc.ability],
         )
       : 0;
-  const ability = hit.profile.stunningStrike.savingThrow.ability;
+  const ability = hit.execution.stunningStrike.savingThrow.ability;
   return {
     kind: "savingThrowOutcome",
     holeId: STUNNING_STRIKE_SAVE_HOLE_ID,
@@ -275,7 +277,7 @@ function spendStunningStrikeFocus(
       ...spentFocusState.currentTurnResources,
       stunningStrikesUsedThisTurn: [
         ...spentFocusState.currentTurnResources.stunningStrikesUsedThisTurn,
-        { attackerId: hit.actorId, unitId: hit.unitId },
+        { attackerId: hit.actorId, procedureRef: hit.procedureRef },
       ],
     },
   };
@@ -291,10 +293,10 @@ function applyStunningStrikeFailure(
     kind: "unitFeatureCondition",
     sourceProcedureRef: hit.procedureRef,
     sourceCombatantId: hit.actorId,
-    condition: hit.profile.stunningStrike.onFail.condition,
+    condition: hit.execution.stunningStrike.onFail.condition,
     conditionHadNonSpellSource: conditionHadNonSpellSourceBeforeSpellEffect(
       target,
-      hit.profile.stunningStrike.onFail.condition,
+      hit.execution.stunningStrike.onFail.condition,
     ),
     earlyEnd: null,
     turnRestriction: null,
@@ -307,7 +309,7 @@ function applyStunningStrikeFailure(
         target,
         applyCondition(
           target.conditions,
-          hit.profile.stunningStrike.onFail.condition,
+          hit.execution.stunningStrike.onFail.condition,
         ),
       ),
       activeEffects: [
@@ -318,7 +320,7 @@ function applyStunningStrikeFailure(
               candidate.sourceProcedureRef === hit.procedureRef &&
               candidate.sourceCombatantId === hit.actorId &&
               candidate.condition ===
-                hit.profile.stunningStrike.onFail.condition
+                hit.execution.stunningStrike.onFail.condition
             ),
         ),
         activeEffect,
@@ -343,7 +345,7 @@ function applyStunningStrikeSuccess(
     kind: "nextAttackRollAgainstSelf",
     sourceProcedureRef: hit.procedureRef,
     sourceCombatantId: hit.actorId,
-    mode: hit.profile.stunningStrike.onSuccess.attackRoll.mode,
+    mode: hit.execution.stunningStrike.onSuccess.attackRoll.mode,
     expiresAt: { kind: "startOfTurn", combatantId: hit.actorId },
   };
   return {
@@ -382,47 +384,57 @@ function stunningStrikeHit(input: {
   ) {
     return null;
   }
-  const selectedProfile = actor.origin.characterUnitRefs.flatMap((unitRef) =>
-    unitRef.supportProfiles.flatMap((supportProfile) =>
-      stunningStrikeSupportProfile(unitRef.unit.id, supportProfile),
-    ),
+  const focus = monkFocusResourceForActor(input.state, input.actorId);
+  if (focus === null) return null;
+  const selected = actor.origin.execution.procedureBindings.flatMap(
+    (binding) => {
+      const execution = stunningStrikeExecution(binding);
+      return execution !== undefined &&
+        execution.stunningStrike.spends.resourcePoolRef ===
+          focus.resource.resourcePoolRef
+        ? [{ binding, execution }]
+        : [];
+    },
   )[0];
-  if (selectedProfile === undefined) return null;
+  if (
+    selected === undefined ||
+    !resourceHasUsesRemaining(focus.resource)
+  ) {
+    return null;
+  }
   if (
     input.state.currentTurnResources.stunningStrikesUsedThisTurn.some(
       (usage) =>
         usage.attackerId === input.actorId &&
-        usage.unitId === selectedProfile.unitId,
+        usage.procedureRef === selected.binding.procedureRef,
     )
-  ) {
-    return null;
-  }
-  const focus = monkFocusResourceForActor(input.state, input.actorId);
-  const procedureRef = characterUnitProcedureRef(
-    actor.origin.execution,
-    selectedProfile.unitId,
-    {
-      kind: "unitSupportProfile",
-      supportKinds: new Set([selectedProfile.profile.kind]),
-    },
-  );
-  if (
-    focus === null ||
-    procedureRef === undefined ||
-    focus.resource.unit.id !==
-      selectedProfile.profile.stunningStrike.spends.resourceUnitId ||
-    !resourceHasUsesRemaining(focus.resource)
   ) {
     return null;
   }
   return {
     actorId: input.actorId,
     targetId: input.targetId,
-    unitId: selectedProfile.unitId,
-    procedureRef,
-    profile: selectedProfile.profile,
+    procedureRef: selected.binding.procedureRef,
+    execution: selected.execution,
     focus,
   };
+}
+
+function stunningStrikeExecution(
+  binding: CharacterProcedureBinding,
+): StunningStrikeExecution | undefined {
+  return Match.value(binding.procedure).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      unitFeature: ({ execution }) =>
+        execution.kind === "stunningStrike" ? execution : undefined,
+      unitSupportProfile: ({ execution }) =>
+        typeof execution === "object" && execution.kind === "stunningStrike"
+          ? execution
+          : undefined,
+      spellInvocation: () => undefined,
+      unavailableSpellInvocation: () => undefined,
+    }),
+  );
 }
 
 function stunningStrikeAttackEligible(
@@ -438,23 +450,6 @@ function isCharacterWeaponAttack(
   attack: SupportedAttackActionOption,
 ): attack is CharacterWeaponAttackActionOption {
   return attack.kind === "weapon";
-}
-
-function stunningStrikeSupportProfile(
-  unitId: UnitRecord["id"],
-  supportProfile: BattleUnitSupportProfile,
-):
-  | readonly [
-      {
-        readonly unitId: UnitRecord["id"];
-        readonly profile: BattleStunningStrikeSupportProfile;
-      },
-    ]
-  | readonly [] {
-  return typeof supportProfile === "object" &&
-    supportProfile.kind === STUNNING_STRIKE_SUPPORT_PROFILE
-    ? [{ unitId, profile: supportProfile }]
-    : [];
 }
 
 function isStunningStrikeChoice(
