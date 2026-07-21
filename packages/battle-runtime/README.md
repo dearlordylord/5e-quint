@@ -1462,6 +1462,10 @@ For BA5 action-economy overlap, promoted runtime divergence from old root
 - `scripts/check-qnt-proof-closure.cjs` - proof-root import-closure guard shared
   with the QNT import utility used by the MBT closure gate. Replacement roots
   are capped at 60 counted files and 12,500 physical lines.
+- `.github/workflows/qnt-proofs.yml` - dedicated bounded proof job. It retains
+  the raw `QNT_PROOF_EVENT` stream and a structured per-module timing report as
+  the `qnt-proof-timings` artifact, then compares the next successful run with
+  the latest artifact from the head branch or base branch.
 - `battle-runtime-weapon-attack-skeleton.mbt.qnt` - focused randomized model
   for the selected weapon Attack/Sneak Attack path.
 

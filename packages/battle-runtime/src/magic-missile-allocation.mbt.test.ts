@@ -23,6 +23,7 @@ describe("Magic Missile allocation MBT", () => {
         step: "step",
         driver: createMagicMissileDriver(),
         backend: "typescript",
+        seed: process.env["QUINT_SEED"],
         nTraces: mbtTraceCount(),
         maxSteps: focusedMbtMaxSteps(2),
         stateCheck: battleRuntimeStateCheck,

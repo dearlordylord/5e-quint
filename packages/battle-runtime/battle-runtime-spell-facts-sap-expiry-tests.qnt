@@ -2,14 +2,15 @@
 
 module battleRuntimeSpellFactsSapExpiryTests {
   import battleRuntimeModel.* from "./battle-runtime-model"
-  import battleRuntimeRayOfEnfeeblement.* from "./battle-runtime-ray-of-enfeeblement"
   import battleRuntimeTimedEffects.* from "./battle-runtime-timed-effects"
 
   run test_spell_facts_sap_expiry = {
-    val raySuccess = resolveRayOfEnfeeblementD20Lifecycle(initialState, Goblin, true)
+    val fighterSourcedRiders = Set(
+      RayOfEnfeeblementNextAttackDisadvantage({ source: Fighter }),
+    )
     all {
-      assert(activeEffectsWithoutExpiredSapStartOfTurnRiders(raySuccess.goblin.activeEffects, Fighter) == Set()),
-      assert(activeEffectsWithoutExpiredSapStartOfTurnRiders(raySuccess.goblin.activeEffects, Goblin) == raySuccess.goblin.activeEffects),
+      assert(activeEffectsWithoutExpiredSapStartOfTurnRiders(fighterSourcedRiders, Fighter) == Set()),
+      assert(activeEffectsWithoutExpiredSapStartOfTurnRiders(fighterSourcedRiders, Goblin) == fighterSourcedRiders),
     }
   }
 }

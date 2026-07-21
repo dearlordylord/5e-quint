@@ -631,6 +631,7 @@ describe("Quickened Spell governor MBT parity", () => {
         step: "step",
         driver: createQuickenedSpellGovernorDriver(),
         backend: "typescript",
+        seed: process.env["QUINT_SEED"],
         nTraces: mbtTraceCount(),
         maxSteps: focusedMbtMaxSteps(4),
         stateCheck: quickenedSpellGovernorStateCheck,

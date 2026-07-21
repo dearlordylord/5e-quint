@@ -664,6 +664,9 @@ type MbtHole =
   | "SlowSomaticSpellFailureOutcome";
 type MbtLastResult = "init" | "needsHoles" | "resolved" | "invalid";
 type MbtLastInvalidReason = "" | "invalidFill" | "staleSubject" | "wrongActor";
+type SpellTargetSubject =
+  | Extract<BattleSubject, { readonly tag: "actionSpell" }>
+  | Extract<BattleSubject, { readonly tag: "bonusActionSpell" }>;
 type WeaponAttackOrderingStage =
   | "actSelection"
   | "targetChoice"
@@ -3384,7 +3387,9 @@ export function createSaveGatedSpellOrderingDriver() {
       doFillTargetListBeforeConditionChoice: () => {
         const targetList = requireHole(holes, "spellTargetList");
         fills = [
-          spellTargetListFill(targetList, "blindness_deafness", [skeletonId]),
+          spellTargetListFill(targetList, requireSpellTargetSubject(subject), [
+            skeletonId,
+          ]),
         ];
         recordAccepted(
           resolveBattleSubject({ state, subject, fills }),
@@ -3414,7 +3419,9 @@ export function createSaveGatedSpellOrderingDriver() {
         const targetList = requireHole(holes, "spellTargetList");
         fills = [
           ...fills,
-          spellTargetListFill(targetList, "blindness_deafness", [skeletonId]),
+          spellTargetListFill(targetList, requireSpellTargetSubject(subject), [
+            skeletonId,
+          ]),
         ];
         recordAccepted(
           resolveBattleSubject({ state, subject, fills }),
@@ -9057,7 +9064,9 @@ export function createSaveGatedSpellOrderingRouteDriver() {
       doFillTargetListBeforeConditionChoice: () => {
         const targetList = requireHole(holes, "spellTargetList");
         fills = [
-          spellTargetListFill(targetList, "blindness_deafness", [skeletonId]),
+          spellTargetListFill(targetList, requireSpellTargetSubject(subject), [
+            skeletonId,
+          ]),
         ];
         recordAccepted(
           resolveBattleSubject({ state, subject, fills }),
@@ -9093,7 +9102,9 @@ export function createSaveGatedSpellOrderingRouteDriver() {
         const targetList = requireHole(holes, "spellTargetList");
         fills = [
           ...fills,
-          spellTargetListFill(targetList, "blindness_deafness", [skeletonId]),
+          spellTargetListFill(targetList, requireSpellTargetSubject(subject), [
+            skeletonId,
+          ]),
         ];
         recordAccepted(
           resolveBattleSubject({ state, subject, fills }),
@@ -9221,7 +9232,7 @@ export function createSpellAttackOrderingDriver() {
         const target = requireHole(holes, "targetChoice");
         const attackRoll = requireHole(
           spellAttackHolesAfterFills(state, subject, [
-            spellTargetChoiceFill(target, skeletonId, "fire_bolt"),
+            spellTargetChoiceFill(target, skeletonId, subject),
           ]),
           "attackRoll",
         );
@@ -9237,7 +9248,7 @@ export function createSpellAttackOrderingDriver() {
       },
       doFillTargetChoice: () => {
         const target = requireHole(holes, "targetChoice");
-        fills = [spellTargetChoiceFill(target, skeletonId, "fire_bolt")];
+        fills = [spellTargetChoiceFill(target, skeletonId, subject)];
         recordAccepted(
           resolveBattleSubject({ state, subject, fills }),
           "attackRoll",
@@ -9305,7 +9316,7 @@ export function createSpellAttackOrderingDriver() {
       },
       doFillTargetChoiceBeforeDamageType: () => {
         const target = requireHole(holes, "targetChoice");
-        fills = [spellTargetChoiceFill(target, skeletonId, "sorcerous_burst")];
+        fills = [spellTargetChoiceFill(target, skeletonId, subject)];
         recordAccepted(
           resolveBattleSubject({ state, subject, fills }),
           "damageTypeChoice",
@@ -9321,10 +9332,7 @@ export function createSpellAttackOrderingDriver() {
       },
       doFillTargetChoiceAfterDamageType: () => {
         const target = requireHole(holes, "targetChoice");
-        fills = [
-          ...fills,
-          spellTargetChoiceFill(target, skeletonId, "sorcerous_burst"),
-        ];
+        fills = [...fills, spellTargetChoiceFill(target, skeletonId, subject)];
         recordAccepted(
           resolveBattleSubject({ state, subject, fills }),
           "attackRoll",
@@ -9441,7 +9449,7 @@ export function createSpellAttackOrderingRouteDriver() {
         const target = requireHole(holes, "targetChoice");
         const attackRoll = requireHole(
           spellAttackHolesAfterFills(state, subject, [
-            spellTargetChoiceFill(target, skeletonId, "fire_bolt"),
+            spellTargetChoiceFill(target, skeletonId, subject),
           ]),
           "attackRoll",
         );
@@ -9457,7 +9465,7 @@ export function createSpellAttackOrderingRouteDriver() {
       },
       doFillTargetChoice: () => {
         const target = requireHole(holes, "targetChoice");
-        fills = [spellTargetChoiceFill(target, skeletonId, "fire_bolt")];
+        fills = [spellTargetChoiceFill(target, skeletonId, subject)];
         recordAccepted(
           resolveBattleSubject({ state, subject, fills }),
           "attackRoll",
@@ -9525,7 +9533,13 @@ export function createSpellAttackOrderingRouteDriver() {
       },
       doFillTargetChoiceBeforeDamageType: () => {
         const target = requireHole(holes, "targetChoice");
-        fills = [spellTargetChoiceFill(target, skeletonId, "sorcerous_burst")];
+        fills = [
+          spellTargetChoiceFill(
+            target,
+            skeletonId,
+            requireSpellTargetSubject(subject),
+          ),
+        ];
         recordAccepted(
           resolveBattleSubject({ state, subject, fills }),
           "damageTypeChoice",
@@ -9541,10 +9555,7 @@ export function createSpellAttackOrderingRouteDriver() {
       },
       doFillTargetChoiceAfterDamageType: () => {
         const target = requireHole(holes, "targetChoice");
-        fills = [
-          ...fills,
-          spellTargetChoiceFill(target, skeletonId, "sorcerous_burst"),
-        ];
+        fills = [...fills, spellTargetChoiceFill(target, skeletonId, subject)];
         recordAccepted(
           resolveBattleSubject({ state, subject, fills }),
           "attackRoll",
@@ -10240,7 +10251,11 @@ export function createHitPointRestorationOrderingDriver() {
         const target = requireHole(holes, "targetChoice");
         const healingRoll = requireHole(
           healingOrderingHolesAfterFills(state, subject, [
-            spellTargetChoiceFill(target, skeletonId, "healing_word"),
+            spellTargetChoiceFill(
+              target,
+              skeletonId,
+              requireSpellTargetSubject(subject),
+            ),
           ]),
           "rolledDice",
         );
@@ -10256,7 +10271,13 @@ export function createHitPointRestorationOrderingDriver() {
       },
       doFillSpellHealingTargetChoice: () => {
         const target = requireHole(holes, "targetChoice");
-        fills = [spellTargetChoiceFill(target, skeletonId, "healing_word")];
+        fills = [
+          spellTargetChoiceFill(
+            target,
+            skeletonId,
+            requireSpellTargetSubject(subject),
+          ),
+        ];
         recordAccepted(
           resolveBattleSubject({ state, subject, fills }),
           "spellHealingRoll",
@@ -10278,7 +10299,11 @@ export function createHitPointRestorationOrderingDriver() {
         const targetList = requireHole(holes, "spellTargetList");
         const healingRoll = requireHole(
           healingOrderingHolesAfterFills(state, subject, [
-            spellTargetListFill(targetList, "mass_healing_word", [skeletonId]),
+            spellTargetListFill(
+              targetList,
+              requireSpellTargetSubject(subject),
+              [skeletonId],
+            ),
           ]),
           "rolledDice",
         );
@@ -10295,7 +10320,9 @@ export function createHitPointRestorationOrderingDriver() {
       doFillSpellHealingTargetList: () => {
         const targetList = requireHole(holes, "spellTargetList");
         fills = [
-          spellTargetListFill(targetList, "mass_healing_word", [skeletonId]),
+          spellTargetListFill(targetList, requireSpellTargetSubject(subject), [
+            skeletonId,
+          ]),
         ];
         recordAccepted(
           resolveBattleSubject({ state, subject, fills }),
@@ -10497,7 +10524,11 @@ export function createHitPointRestorationOrderingRouteDriver() {
         const target = requireHole(holes, "targetChoice");
         const healingRoll = requireHole(
           healingOrderingHolesAfterFills(state, subject, [
-            spellTargetChoiceFill(target, skeletonId, "healing_word"),
+            spellTargetChoiceFill(
+              target,
+              skeletonId,
+              requireSpellTargetSubject(subject),
+            ),
           ]),
           "rolledDice",
         );
@@ -10513,7 +10544,13 @@ export function createHitPointRestorationOrderingRouteDriver() {
       },
       doFillSpellHealingTargetChoice: () => {
         const target = requireHole(holes, "targetChoice");
-        fills = [spellTargetChoiceFill(target, skeletonId, "healing_word")];
+        fills = [
+          spellTargetChoiceFill(
+            target,
+            skeletonId,
+            requireSpellTargetSubject(subject),
+          ),
+        ];
         recordAccepted(
           resolveBattleSubject({ state, subject, fills }),
           "spellHealingRoll",
@@ -10538,7 +10575,11 @@ export function createHitPointRestorationOrderingRouteDriver() {
         const targetList = requireHole(holes, "spellTargetList");
         const healingRoll = requireHole(
           healingOrderingHolesAfterFills(state, subject, [
-            spellTargetListFill(targetList, "mass_healing_word", [skeletonId]),
+            spellTargetListFill(
+              targetList,
+              requireSpellTargetSubject(subject),
+              [skeletonId],
+            ),
           ]),
           "rolledDice",
         );
@@ -10555,7 +10596,9 @@ export function createHitPointRestorationOrderingRouteDriver() {
       doFillSpellHealingTargetList: () => {
         const targetList = requireHole(holes, "spellTargetList");
         fills = [
-          spellTargetListFill(targetList, "mass_healing_word", [skeletonId]),
+          spellTargetListFill(targetList, requireSpellTargetSubject(subject), [
+            skeletonId,
+          ]),
         ];
         recordAccepted(
           resolveBattleSubject({ state, subject, fills }),
@@ -11001,7 +11044,11 @@ function createCommandOrderingDriverWithRoute<
       },
       doFillTargetList: () => {
         const targetList = requireHole(holes, "spellTargetList");
-        fills = [spellTargetListFill(targetList, "command", [skeletonId])];
+        fills = [
+          spellTargetListFill(targetList, requireSpellTargetSubject(subject), [
+            skeletonId,
+          ]),
+        ];
         const result = resolveBattleSubject({ state, subject, fills });
         recordAccepted(result, "optionChoice");
         appendCommandOrderingRouteEvents(result);
@@ -11823,7 +11870,13 @@ function createScalarBuffDriverWithRoute<const IncludeRoute extends boolean>(
       init: reset,
       doFillLongstriderTarget: () => {
         const target = requireHole(holes, "targetChoice");
-        fills = [spellTargetChoiceFill(target, skeletonId, "longstrider")];
+        fills = [
+          spellTargetChoiceFill(
+            target,
+            skeletonId,
+            requireSpellTargetSubject(subject),
+          ),
+        ];
         recordResult(resolveBattleSubject({ state, subject, fills }));
       },
       doRejectStaleAfterResolved: () => {
@@ -12168,7 +12221,7 @@ function activeFeatureSpellAttackRollMode(
     resolveBattleSubject({
       state,
       subject,
-      fills: [spellTargetChoiceFill(target, skeletonId, rayOfFrostUnitId)],
+      fills: [spellTargetChoiceFill(target, skeletonId, subject)],
     }),
     "attackRoll",
   );
@@ -17139,7 +17192,9 @@ function castCommandForOrdering(
   const act = commandOrderingCastAct(session);
   const target = requireHole(act.initialHoles, "spellTargetList");
   const commandOption = requireHole(act.initialHoles, "commandOptionChoice");
-  const targetSelection = spellTargetListFill(target, "command", [skeletonId]);
+  const targetSelection = spellTargetListFill(target, act.subject, [
+    skeletonId,
+  ]);
   const optionSelection = commandOptionFill(commandOption, option);
   const savingThrow = requireHole(
     commandHolesAfterFills(session.state, act.subject, [
@@ -18216,7 +18271,7 @@ function targetFill(
 function spellTargetChoiceFill(
   hole: BattleHole,
   targetId: CombatantId,
-  spellId: string,
+  subject: SpellTargetSubject,
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
   if (hole.kind !== "targetChoice") {
     throw new Error("Expected target choice hole.");
@@ -18228,12 +18283,27 @@ function spellTargetChoiceFill(
     spatialFacts: [
       {
         kind: "spellTarget",
-        casterId: fighterId,
+        casterId: subject.actorId,
         targetId,
-        sourceProcedureRef: battleProcedureExecutionRefForTest(String(spellId)),
+        sourceProcedureRef: subject.procedureRef,
       },
     ],
   };
+}
+
+function requireSpellTargetSubject(subject: BattleSubject): SpellTargetSubject {
+  if (subject.tag === "actionSpell" || subject.tag === "bonusActionSpell") {
+    return subject;
+  }
+  throw new Error(
+    "Expected the current ordering stage to own a spell subject.",
+  );
+}
+
+function isSpellProcedureRollHole(
+  hole: Extract<BattleHole, { readonly kind: "rolledDice" }>,
+): boolean {
+  return "sourceProcedureRef" in hole;
 }
 
 function chainedAttackProcedureTargetFill(
@@ -18278,7 +18348,7 @@ function chainedAttackProcedureLeapTargetFill(
 
 function spellTargetListFill(
   hole: BattleHole,
-  spellId: string,
+  subject: SpellTargetSubject,
   targetIds: readonly CombatantId[],
 ): Extract<BattleFill, { readonly kind: "spellTargetList" }> {
   if (hole.kind !== "spellTargetList") {
@@ -18290,9 +18360,9 @@ function spellTargetListFill(
     value: { targetIds },
     spatialFacts: targetIds.map((targetId) => ({
       kind: "spellTarget",
-      casterId: fighterId,
+      casterId: subject.actorId,
       targetId,
-      sourceProcedureRef: battleProcedureExecutionRefForTest(spellId),
+      sourceProcedureRef: subject.procedureRef,
     })),
   };
 }
@@ -18852,7 +18922,7 @@ function projectHole(hole: BattleHole): readonly MbtHole[] {
           return "AttackRoll" as const;
         }),
         Match.when({ kind: "rolledDice" }, (rolledDice) => {
-          if ("spell" in rolledDice) {
+          if (isSpellProcedureRollHole(rolledDice)) {
             return "SpellDamageRoll" as const;
           }
           return "DamageRoll" as const;
