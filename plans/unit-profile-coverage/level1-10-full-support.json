@@ -19455,7 +19455,9 @@
             "profileId": "spell.invocation-condition-save",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime-save-gated-spell.qnt"
+              "packages/battle-runtime/battle-runtime-save-condition-target-list-resolution.qnt",
+              "packages/battle-runtime/battle-runtime-save-condition-targeting-facts.qnt",
+              "packages/battle-runtime/battle-runtime-save-gated-facts.qnt"
             ]
           }
         ],
@@ -19750,7 +19752,9 @@
             "profileId": "spell.invocation-condition-save",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime-save-gated-spell.qnt"
+              "packages/battle-runtime/battle-runtime-save-condition-target-list-resolution.qnt",
+              "packages/battle-runtime/battle-runtime-save-condition-targeting-facts.qnt",
+              "packages/battle-runtime/battle-runtime-save-gated-facts.qnt"
             ]
           }
         ],
@@ -20142,7 +20146,7 @@
             "profileId": "spell.invocation-independent-attack-sequence",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime-spell-attack.qnt"
+              "packages/battle-runtime/battle-runtime-spell-attack-independent-sequence.qnt"
             ]
           }
         ],
@@ -20208,7 +20212,9 @@
             "profileId": "spell.invocation-condition-save",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime-save-gated-spell.qnt"
+              "packages/battle-runtime/battle-runtime-save-condition-target-list-resolution.qnt",
+              "packages/battle-runtime/battle-runtime-save-condition-targeting-facts.qnt",
+              "packages/battle-runtime/battle-runtime-save-gated-facts.qnt"
             ]
           }
         ],
@@ -20258,7 +20264,8 @@
             "profileId": "spell.invocation-attack-roll-advantage-save",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime-save-gated-spell.qnt"
+              "packages/battle-runtime/battle-runtime-save-condition-faerie-fire.qnt",
+              "packages/battle-runtime/battle-runtime-spell-attack-facts.qnt"
             ]
           }
         ],
@@ -21053,7 +21060,9 @@
             "profileId": "spell.invocation-condition-save",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime-save-gated-spell.qnt"
+              "packages/battle-runtime/battle-runtime-save-condition-target-list-resolution.qnt",
+              "packages/battle-runtime/battle-runtime-save-condition-targeting-facts.qnt",
+              "packages/battle-runtime/battle-runtime-save-gated-facts.qnt"
             ]
           }
         ],
@@ -21075,7 +21084,9 @@
             "profileId": "spell.invocation-condition-save",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime-save-gated-spell.qnt"
+              "packages/battle-runtime/battle-runtime-save-condition-target-list-resolution.qnt",
+              "packages/battle-runtime/battle-runtime-save-condition-targeting-facts.qnt",
+              "packages/battle-runtime/battle-runtime-save-gated-facts.qnt"
             ]
           }
         ],
@@ -22460,8 +22471,8 @@
               "packages/battle-runtime/battle-runtime-armor-class.qnt",
               "packages/battle-runtime/battle-runtime-concentration.qnt",
               "packages/battle-runtime/battle-runtime-model.qnt",
-              "packages/battle-runtime/battle-runtime-save-gated-spell.qnt",
-              "packages/battle-runtime/battle-runtime-spell-attack.qnt",
+              "packages/battle-runtime/battle-runtime-ray-of-enfeeblement-facts.qnt",
+              "packages/battle-runtime/battle-runtime-ray-of-enfeeblement.qnt",
               "packages/battle-runtime/battle-runtime-timed-effects.qnt"
             ]
           },
@@ -22478,7 +22489,8 @@
             "profileId": "spell.invocation-ray-of-enfeeblement-damage-penalty",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime-save-gated-spell.qnt"
+              "packages/battle-runtime/battle-runtime-ray-of-enfeeblement.qnt",
+              "packages/battle-runtime/battle-runtime-save-gated-damage-resolution.qnt"
             ]
           }
         ],
@@ -22938,7 +22950,7 @@
             "profileId": "spell.invocation-independent-attack-sequence",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime-spell-attack.qnt"
+              "packages/battle-runtime/battle-runtime-spell-attack-independent-sequence.qnt"
             ]
           }
         ],

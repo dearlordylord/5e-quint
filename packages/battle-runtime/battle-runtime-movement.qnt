@@ -9,18 +9,14 @@ module battleRuntimeMovement {
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"
-  import battleRuntimeSpellInvocation.* from "./battle-runtime-spell-invocation"
+  import battleRuntimeSpellCastResources.* from "./battle-runtime-spell-cast-resources"
   import battleRuntimeReactionWindow.* from "./battle-runtime-reaction-window"
   import battleRuntimeFighterOngoingFeatures.* from "./battle-runtime-fighter-ongoing-features"
+  import battleRuntimeFighterRageFacts.* from "./battle-runtime-fighter-rage-facts"
   import battleRuntimeHidden.* from "./battle-runtime-hidden"
   import battleRuntimeArmorClass.* from "./battle-runtime-armor-class"
   import battleRuntimeAttackFacts.* from "./battle-runtime-attack-facts"
   import battleRuntimeHitPoints.* from "./battle-runtime-hit-points"
-
-  type FighterSpellActionCostSpendResult = {
-    state: BattleState,
-    admitted: bool,
-  }
 
   pure def dashFighter(state: BattleState): BattleState =
     dashFighterWithSpeedKind(state, WalkSpeedKind)
@@ -602,18 +598,4 @@ module battleRuntimeMovement {
     else
       applyFighterMovementWithSpeedKind(state, speedKind, movementCost)
 
-  pure def spendFighterSpellActionCost(state: BattleState, actionCost: SpellActionCost): FighterSpellActionCostSpendResult = {
-    val spend =
-      if (actionCost == SpellBonusAction)
-        battleRuntimeSpendBonusAction(movementProjectionForFighter(state, WalkSpeedKind))
-      else
-        battleRuntimeSpendMagicAction(movementProjectionForFighter(state, WalkSpeedKind))
-    {
-      state: stateWithFighterMovementStep(state, spend.step),
-      admitted: spend.admitted,
-    }
-  }
-
-  pure def canSpendFighterSpellActionCost(state: BattleState, actionCost: SpellActionCost): bool =
-    spendFighterSpellActionCost(state, actionCost).admitted
 }

@@ -3,8 +3,8 @@
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.creature-type-protection-and-charm
 
 module battleRuntimeCreatureTypeProtection {
+  import battleRuntimeSavingThrowRollMode.* from "./battle-runtime-saving-throw-roll-mode"
   import battleRuntimeModel.* from "./battle-runtime-model"
-  import battleRuntimeSpellAttack.* from "./battle-runtime-spell-attack"
 
   pure def protectionFromEvilAndGoodCreatureTypeIsScoped(creatureType: RuntimeCreatureType): bool =
     creatureType == AberrationCreature or
@@ -13,22 +13,6 @@ module battleRuntimeCreatureTypeProtection {
     creatureType == FeyCreature or
     creatureType == FiendCreature or
     creatureType == UndeadCreature
-
-  pure def spellAttackRollModeFromCreatureTypeScopedActiveEffects(
-    attackerCreatureType: RuntimeCreatureType,
-    attackerEffects: Set[ActiveEffect],
-    targetEffects: Set[ActiveEffect],
-    attackerCanSeeTarget: bool,
-  ): SpellAttackRollMode = {
-    val hasDisadvantage = activeEffectsGrantAttackRollDisadvantage(attackerEffects) or (
-        targetEffects.contains(ProtectionFromEvilAndGoodCreatureTypeProtection)
-        and protectionFromEvilAndGoodCreatureTypeIsScoped(attackerCreatureType)
-      )
-    attackRollModeFromFlags(
-      activeEffectsGrantAttackRollAdvantage(targetEffects, attackerCanSeeTarget),
-      hasDisadvantage,
-    )
-  }
 
   pure def protectionFromEvilAndGoodConditionIsPrevented(condition: PreventedProtectionCondition): bool =
     condition == PreventedCharmed or condition == PreventedFrightened

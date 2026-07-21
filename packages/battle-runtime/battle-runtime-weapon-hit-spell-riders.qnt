@@ -3,12 +3,12 @@
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-after-hit-damage spell.invocation-after-hit-damage-illumination spell.invocation-magic-weapon-enhancement spell.invocation-weapon-damage-rider
 
 module battleRuntimeWeaponHitSpellRiders {
-  import battleRuntimeSpellBridge.* from "./battle-runtime-spell-bridge"
+  import battleRuntimeSpellRiderBridge.* from "./battle-runtime-spell-rider-bridge"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
-  import battleRuntimeSpellInvocation.* from "./battle-runtime-spell-invocation"
+  import battleRuntimeSpellCastResources.* from "./battle-runtime-spell-cast-resources"
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"
-  import battleRuntimeFighterOngoingFeatures.* from "./battle-runtime-fighter-ongoing-features"
+  import battleRuntimeFighterRageFacts.* from "./battle-runtime-fighter-rage-facts"
   import battleRuntimeHitPoints.* from "./battle-runtime-hit-points"
 
   pure def favorWeaponDamageRiderDurationTicks: int =

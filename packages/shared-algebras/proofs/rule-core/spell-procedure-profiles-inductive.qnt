@@ -1,4 +1,7 @@
 // -*- mode: Bluespec; -*-
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.hit-point-restoration
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.reaction-shield
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.readied-action-time-spell
 // RAW-COVERAGE: verification-owner:qnt-proof RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-damage-save-or-attack spell.hit-point-restoration spell.reaction-shield spell.readied-action-time-spell
 

@@ -7,6 +7,7 @@
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-ray-of-enfeeblement-d20-lifecycle
 
 module battleRuntimeConcentration {
+  import battleRuntimeSavingThrowRollMode.* from "./battle-runtime-saving-throw-roll-mode"
   import reactionsContinuationsConcentration as RC from "../shared-algebras/proofs/rule-core/reactions-continuations-concentration"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeMarkedRiders.* from "./battle-runtime-marked-riders"

@@ -5,11 +5,11 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-gust-of-wind-line
 module battleRuntimeGustOfWind {
   import battleRuntimeModel.* from "./battle-runtime-model"
-  import battleRuntimeSpellInvocation.* from "./battle-runtime-spell-invocation"
+  import battleRuntimeSpellCastResources.* from "./battle-runtime-spell-cast-resources"
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
   import battleRuntimeTurnAdvancement.* from "./battle-runtime-turn-advancement"
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"
-  import battleRuntimeFighterOngoingFeatures.* from "./battle-runtime-fighter-ongoing-features"
+  import battleRuntimeFighterRageFacts.* from "./battle-runtime-fighter-rage-facts"
 
   type GustOfWindLineEffect =
     | NoGustOfWindLine

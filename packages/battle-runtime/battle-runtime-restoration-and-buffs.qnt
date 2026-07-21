@@ -4,20 +4,31 @@
 // KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS
 // KERNEL-COVERAGE: qnt-owner BATTLE.PROTOCOL.ZERO_HIT_POINT_MID_RESOLUTION
 module battleRuntimeRestorationAndBuffs {
-  import battleRuntimeSpellBridge.* from "./battle-runtime-spell-bridge"
+  import battleRuntimeSpellRestorationBridge.* from "./battle-runtime-spell-restoration-bridge"
+  import battleRuntimeSpellScalarBuffBridge.* from "./battle-runtime-spell-scalar-buff-bridge"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
-  import battleRuntimeSpellInvocation.* from "./battle-runtime-spell-invocation"
-  import battleRuntimeMovement.* from "./battle-runtime-movement"
+  import battleRuntimeSpellCastResources.* from "./battle-runtime-spell-cast-resources"
   import battleRuntimeHitPoints.* from "./battle-runtime-hit-points"
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"
-  import battleRuntimeFighterOngoingFeatures.* from "./battle-runtime-fighter-ongoing-features"
+  import battleRuntimeFighterRageFacts.* from "./battle-runtime-fighter-rage-facts"
   import battleRuntimeFeatherFall.* from "./battle-runtime-feather-fall"
 
   type ScalarBuffSpellResolutionResult = {
     state: BattleState,
     admitted: bool,
   }
+
+  pure def battleRuntimeScalarBuffProfileForInvocation(invocation: ScalarBuffSpell): BattleRuntimeScalarBuffProfile =
+    match invocation {
+      | FalseLifeScalarBuff => BattleRuntimeFalseLifeScalarBuff
+      | LongstriderScalarBuff => BattleRuntimeLongstriderScalarBuff
+      | ShieldOfFaithScalarBuff => BattleRuntimeShieldOfFaithScalarBuff
+      | SpiderClimbScalarBuff => BattleRuntimeSpiderClimbScalarBuff
+      | FlyScalarBuff => BattleRuntimeFlyScalarBuff
+      | BarkskinScalarBuff => BattleRuntimeBarkskinScalarBuff
+      | AidScalarBuff => BattleRuntimeAidScalarBuff
+    }
 
   pure def battleRuntimeDirectRestorationProfile(
     invocation: DirectHitPointRestorationSpell

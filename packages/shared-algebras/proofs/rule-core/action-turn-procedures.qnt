@@ -18,6 +18,17 @@ module actionTurnProcedures {
 
   type ActionCost = StandardActionCost(StandardAction) | BonusActionCost | FreeCost
 
+  type ActionResourceState = {
+    actionQuota: ActionQuota,
+    bonusActionAvailable: bool,
+    currentActorOwnsTurn: bool,
+  }
+
+  type ActionResourceSpendResult = {
+    resources: ActionResourceState,
+    admitted: bool,
+  }
+
   type TurnProcedureState = {
     actionQuota: ActionQuota,
     bonusActionAvailable: bool,
@@ -100,51 +111,48 @@ module actionTurnProcedures {
   pure def canSpendBonusAction(state: TurnProcedureState): bool =
     state.currentActorOwnsTurn and state.bonusActionAvailable
 
-  pure def canSpendActionCost(state: TurnProcedureState, cost: ActionCost): bool =
+  pure def canSpendActionResources(state: ActionResourceState, cost: ActionCost): bool =
     if (cost == FreeCost) true
-    else if (cost == BonusActionCost) canSpendBonusAction(state)
-    else canSpendAction(state)
+    else if (cost == BonusActionCost)
+      state.currentActorOwnsTurn and state.bonusActionAvailable
+    else
+      state.currentActorOwnsTurn and state.actionQuota == ActionAvailable
 
-  pure def spendActionCost(state: TurnProcedureState, cost: ActionCost): ActionCostSpendResult =
-    if (not(canSpendActionCost(state, cost))) {
-      turn: state,
+  pure def spendActionResources(state: ActionResourceState, cost: ActionCost): ActionResourceSpendResult =
+    if (not(canSpendActionResources(state, cost))) {
+      resources: state,
       admitted: false,
     } else if (cost == FreeCost) {
-      turn: state,
+      resources: state,
       admitted: true,
     } else if (cost == BonusActionCost) {
-      turn: {
-        actionQuota: state.actionQuota,
-        bonusActionAvailable: false,
-        reactionAvailable: state.reactionAvailable,
-        dashMovementBonusFeet: state.dashMovementBonusFeet,
-        disengaged: state.disengaged,
-        dodging: state.dodging,
-        hidden: state.hidden,
-        helpAttackHeld: state.helpAttackHeld,
-        readiedMovementHeld: state.readiedMovementHeld,
-        startOfTurnHookActive: state.startOfTurnHookActive,
-        endOfTurnHookActive: state.endOfTurnHookActive,
-        currentActorOwnsTurn: state.currentActorOwnsTurn,
-      },
+      resources: { ...state, bonusActionAvailable: false },
       admitted: true,
     } else {
-      turn: {
-        actionQuota: ActionSpent,
-        bonusActionAvailable: state.bonusActionAvailable,
-        reactionAvailable: state.reactionAvailable,
-        dashMovementBonusFeet: state.dashMovementBonusFeet,
-        disengaged: state.disengaged,
-        dodging: state.dodging,
-        hidden: state.hidden,
-        helpAttackHeld: state.helpAttackHeld,
-        readiedMovementHeld: state.readiedMovementHeld,
-        startOfTurnHookActive: state.startOfTurnHookActive,
-        endOfTurnHookActive: state.endOfTurnHookActive,
-        currentActorOwnsTurn: state.currentActorOwnsTurn,
-      },
+      resources: { ...state, actionQuota: ActionSpent },
       admitted: true,
     }
+
+  pure def turnActionResources(state: TurnProcedureState): ActionResourceState = {
+    actionQuota: state.actionQuota,
+    bonusActionAvailable: state.bonusActionAvailable,
+    currentActorOwnsTurn: state.currentActorOwnsTurn,
+  }
+
+  pure def canSpendActionCost(state: TurnProcedureState, cost: ActionCost): bool =
+    canSpendActionResources(turnActionResources(state), cost)
+
+  pure def spendActionCost(state: TurnProcedureState, cost: ActionCost): ActionCostSpendResult = {
+    val spend = spendActionResources(turnActionResources(state), cost)
+    {
+      turn: {
+        ...state,
+        actionQuota: spend.resources.actionQuota,
+        bonusActionAvailable: spend.resources.bonusActionAvailable,
+      },
+      admitted: spend.admitted,
+    }
+  }
 
   pure def resolveDash(state: TurnProcedureState, speedFeet: int, cost: ActionCost): TurnProcedureState = {
     val spend = spendActionCost(state, cost)

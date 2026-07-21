@@ -1,6 +1,7 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
+import { battleRuntimeSessionWithState } from "./battle-runtime-context.ts";
 import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.metamagic-cast-governor-quickened
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR
@@ -815,7 +816,7 @@ function resolveQuickenedCreatureSizeChange(): QuickenedSpellGovernorRuntimeStat
     }),
   );
   return {
-    battle: { ...state.battle, state: resolved.state },
+    battle: battleRuntimeSessionWithState(state.battle, resolved.state),
     invalidKind: "none",
     lastResult: "resolvedQuickenedCreatureSizeChange",
   };

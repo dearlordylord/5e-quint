@@ -7,15 +7,16 @@ module battleRuntimeReactionResolution {
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeHitPoints.* from "./battle-runtime-hit-points"
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
-  import battleRuntimeSpellInvocation.* from "./battle-runtime-spell-invocation"
+  import battleRuntimeSpellCastResources.* from "./battle-runtime-spell-cast-resources"
   import battleRuntimeReactionWindow.* from "./battle-runtime-reaction-window"
-  import battleRuntimeSaveGatedSpell.* from "./battle-runtime-save-gated-spell"
-  import battleRuntimeSpellAttack.* from "./battle-runtime-spell-attack"
+  import battleRuntimeSaveGatedDamageResolution.* from "./battle-runtime-save-gated-damage-resolution"
+  import battleRuntimeSaveGatedDamageTarget.* from "./battle-runtime-save-gated-damage-target"
+  import battleRuntimeSpellAttackDirectResolution.* from "./battle-runtime-spell-attack-direct-resolution"
   import battleRuntimeLight.* from "./battle-runtime-light"
   import battleRuntimeWeaponAttacks.* from "./battle-runtime-weapon-attacks"
   import battleRuntimeMovement.* from "./battle-runtime-movement"
   import battleRuntimeGroundCommand.* from "./battle-runtime-ground-command"
-  import battleRuntimeFighterOngoingFeatures.* from "./battle-runtime-fighter-ongoing-features"
+  import battleRuntimeFighterRageFacts.* from "./battle-runtime-fighter-rage-facts"
 
   pure def resolveHellishRebukeAfterDamage(
     state: BattleState,

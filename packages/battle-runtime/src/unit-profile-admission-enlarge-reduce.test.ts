@@ -9,6 +9,7 @@ import {
   battleActSpellPresentation,
   battleActSpellSlotPresentation,
 } from "./battle-act-composition.ts";
+import { battleRuntimeSessionWithState } from "./battle-runtime-context.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME enlarge_reduce
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L14G-D03-SORCERER-METAMAGIC-PARTIAL-PROFILE sorcerer_metamagic
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-creature-size-change
@@ -288,10 +289,10 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
     expect(
       sizeChangeEffects(awaitingCounterspell.state, spellCasterId),
     ).toEqual([]);
-    const choice = requireCounterspellChoice(awaitingCounterspell, {
-      ...castingSession,
-      state: awaitingCounterspell.state,
-    });
+    const choice = requireCounterspellChoice(
+      awaitingCounterspell,
+      battleRuntimeSessionWithState(castingSession, awaitingCounterspell.state),
+    );
     const countered = resolveBattleInterrupt({
       state: awaitingCounterspell.state,
       fill: interruptDecisionFill(
@@ -412,10 +413,10 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
     if (awaitingCounterspell.tag !== "needsHoles") {
       throw new Error("Expected Quickened Enlarge Counterspell window.");
     }
-    const choice = requireCounterspellChoice(awaitingCounterspell, {
-      ...session,
-      state: awaitingCounterspell.state,
-    });
+    const choice = requireCounterspellChoice(
+      awaitingCounterspell,
+      battleRuntimeSessionWithState(session, awaitingCounterspell.state),
+    );
     const save = requireHole(choice.initialHoles, "savingThrowOutcome");
     const resolved = resolveBattleInterrupt({
       state: awaitingCounterspell.state,
@@ -1469,17 +1470,14 @@ function withExistingCreatureSizeConcentration(
   }
   const caster = requireCombatant(session.state, spellCasterId);
   const priorCaster = requireCombatant(priorCast.state, spellCasterId);
-  return {
-    ...session,
-    state: {
-      ...session.state,
-      combatants: new Map(session.state.combatants).set(spellCasterId, {
-        ...caster,
-        concentration: priorCaster.concentration,
-        activeEffects: priorCaster.activeEffects,
-      }),
-    },
-  };
+  return battleRuntimeSessionWithState(session, {
+    ...session.state,
+    combatants: new Map(session.state.combatants).set(spellCasterId, {
+      ...caster,
+      concentration: priorCaster.concentration,
+      activeEffects: priorCaster.activeEffects,
+    }),
+  });
 }
 
 type CounterspellTriggerFact = Extract<

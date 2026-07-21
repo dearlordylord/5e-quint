@@ -30,6 +30,14 @@
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
+const {
+  dependenciesOf: depsOf,
+  importClosure,
+  listQntFiles,
+  pureVocabularyLeafIssues,
+  repoPathToFile,
+  toRepoPath,
+} = require("./qnt-import-closure.cjs");
 
 const ROOT = path.resolve(__dirname, "..");
 const BUDGET_FILES = 8;
@@ -229,37 +237,8 @@ const ALLOWLIST = {
   },
 };
 
-const IMPORT_RE = /from "((?:\.\/|\.\.\/)[A-Za-z0-9/\-]+)"/g;
-
-function toRepoPath(root, file) {
-  return path.relative(root, file).split(path.sep).join("/");
-}
-
 function listDrivers(dir) {
-  if (!fs.existsSync(dir)) return [];
-  const out = [];
-  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-    if (entry.name === "node_modules" || entry.name === ".worktrees") continue;
-    const full = path.join(dir, entry.name);
-    if (entry.isDirectory()) out.push(...listDrivers(full));
-    else if (entry.name.endsWith(".mbt.qnt")) out.push(full);
-  }
-  return out;
-}
-
-function depsOf(file) {
-  if (!fs.existsSync(file)) return [];
-  const deps = [];
-  let m;
-  const re = new RegExp(IMPORT_RE.source, "g");
-  while ((m = re.exec(fs.readFileSync(file, "utf8"))) !== null) {
-    deps.push(path.resolve(path.dirname(file), m[1]) + ".qnt");
-  }
-  return deps;
-}
-
-function repoPathToFile(root, rel) {
-  return path.join(root, ...rel.split("/"));
+  return listQntFiles(dir).filter((file) => file.endsWith(".mbt.qnt"));
 }
 
 function validateNoRuntimeDeclarations(rel, text, label) {
@@ -354,33 +333,7 @@ function forbiddenReason(root, file) {
 }
 
 function validatePureVocabularyLeaf(root, rel, rationale) {
-  const file = repoPathToFile(root, rel);
-  const issues = [];
-  if (!rationale || rationale.trim().length === 0) {
-    issues.push(`${rel}: pure vocabulary leaf entry must include a rationale.`);
-  }
-  if (!fs.existsSync(file)) {
-    return [
-      ...issues,
-      `${rel}: configured pure vocabulary leaf does not exist.`,
-    ];
-  }
-  const text = fs.readFileSync(file, "utf8");
-  if (depsOf(file).length > 0) {
-    issues.push(`${rel}: pure vocabulary leaf must not import other modules.`);
-  }
-  for (const [label, pattern] of [
-    ["var", /^\s*var\b/m],
-    ["action", /^\s*action\b/m],
-    ["run", /^\s*run\b/m],
-  ]) {
-    if (pattern.test(text)) {
-      issues.push(
-        `${rel}: pure vocabulary leaf must not contain ${label} declarations.`,
-      );
-    }
-  }
-  return issues;
+  return pureVocabularyLeafIssues(root, rel, rationale);
 }
 
 function validPureVocabularyLeaves(root) {
@@ -399,14 +352,7 @@ function validPureVocabularyLeaves(root) {
 
 // OTHER .qnt files transitively imported (excludes the driver itself)
 function importedFiles(start) {
-  const seen = new Set();
-  const stack = [start];
-  while (stack.length) {
-    const f = stack.pop();
-    if (seen.has(f) || !fs.existsSync(f)) continue;
-    seen.add(f);
-    stack.push(...depsOf(f));
-  }
+  const seen = importClosure(start);
   seen.delete(start);
   return seen;
 }

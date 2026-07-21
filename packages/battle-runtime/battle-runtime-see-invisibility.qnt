@@ -4,12 +4,13 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-see-invisible-observer-sight
 
 module battleRuntimeSeeInvisibility {
+  import battleRuntimeSpellAttackRollAndVisibilityFacts.* from "./battle-runtime-spell-attack-roll-and-visibility-facts"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
-  import battleRuntimeSpellInvocation.* from "./battle-runtime-spell-invocation"
-  import battleRuntimeFighterOngoingFeatures.* from "./battle-runtime-fighter-ongoing-features"
+  import battleRuntimeSpellCastResources.* from "./battle-runtime-spell-cast-resources"
+  import battleRuntimeFighterRageFacts.* from "./battle-runtime-fighter-rage-facts"
   import battleRuntimeActorCombatants.* from "./battle-runtime-actor-combatants"
-  import battleRuntimeSpellAttack.* from "./battle-runtime-spell-attack"
+  import battleRuntimeSpellAttackFacts.* from "./battle-runtime-spell-attack-facts"
   import battleRuntimeSanctuary.* from "./battle-runtime-sanctuary"
   import battleRuntimeMovement.* from "./battle-runtime-movement"
   import battleRuntimeSeeInvisibilityConstants.* from "./battle-runtime-see-invisibility-constants"

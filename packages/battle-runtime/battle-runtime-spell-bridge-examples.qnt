@@ -21,7 +21,15 @@ module battleRuntimeSpellBridgeExamples {
   import spellObjectHitPointDamageCore.* from "../shared-algebras/proofs/rule-core/spell-object-hit-point-damage-core"
   import spellSleepRepeatSaveLifecycleCore.* from "../shared-algebras/proofs/rule-core/spell-sleep-repeat-save-lifecycle-core"
   import spellProcedureProfiles.* from "../shared-algebras/proofs/rule-core/spell-procedure-profiles"
-  import battleRuntimeSpellBridge.* from "./battle-runtime-spell-bridge"
+  import battleRuntimeSpellRestorationBridge.* from "./battle-runtime-spell-restoration-bridge"
+  import battleRuntimeSpellAttackBridge.* from "./battle-runtime-spell-attack-bridge"
+  import battleRuntimeSpellSaveBridge.* from "./battle-runtime-spell-save-bridge"
+  import battleRuntimeSpellScalarBuffBridge.* from "./battle-runtime-spell-scalar-buff-bridge"
+  import battleRuntimeSpellRiderBridge.* from "./battle-runtime-spell-rider-bridge"
+  import battleRuntimeSpellChainedAttackBridge.* from "./battle-runtime-spell-chained-attack-bridge"
+  import battleRuntimeSpellAttackBurstBridge.* from "./battle-runtime-spell-attack-burst-bridge"
+  import battleRuntimeSpellIndependentSequenceBridge.* from "./battle-runtime-spell-independent-sequence-bridge"
+  import battleRuntimeSpellLifecycleBridge.* from "./battle-runtime-spell-lifecycle-bridge"
 
   run test_direct_hit_point_restoration_profile_projection = {
     all {

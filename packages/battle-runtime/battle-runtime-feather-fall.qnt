@@ -4,7 +4,7 @@
 
 module battleRuntimeFeatherFall {
   import battleRuntimeModel.* from "./battle-runtime-model"
-  import battleRuntimeSpellInvocation.* from "./battle-runtime-spell-invocation"
+  import battleRuntimeSpellCastResources.* from "./battle-runtime-spell-cast-resources"
   import battleRuntimeReactionWindow.* from "./battle-runtime-reaction-window"
 
   pure def featherFallMitigationActiveEffect(): ActiveEffect =

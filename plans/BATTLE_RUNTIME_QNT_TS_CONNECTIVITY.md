@@ -16,14 +16,14 @@ through verification lanes: focused MBT drivers run via quint-connect, the
 self-discovering opt-in QNT proof lane, direct TS reducer tests, and the public
 trace checkpoint contract.
 
-Corpus shape at regeneration time: `packages/battle-runtime/` holds 224 `.qnt`
-files — 106 `*.mbt.qnt` MBT witnesses paired with 106 `src/*.mbt.test.ts`
-quint-connect drivers, 25 `*-tests.qnt` proof modules, and 93 other modules:
-focused behavioural slices, five `*-bridge.qnt` modules plus their
+Corpus shape at regeneration time: `packages/battle-runtime/` holds 432 `.qnt`
+files — 208 `*.mbt.qnt` MBT witnesses, 52 package-root modules with
+`run test_*` proof blocks, and 172 other modules: focused behavioural slices,
+13 `*-bridge.qnt` modules plus their
 `*-bridge-examples.qnt` companions, leaf modules, the
 `battle-runtime-model.qnt` type vocabulary, and
 `battle-runtime-public-trace-contract.qnt`.
-`packages/shared-algebras/proofs/rule-core/` holds 89 reusable rule slices.
+`packages/shared-algebras/proofs/rule-core/` holds 132 reusable rule slices.
 
 ## End-To-End Shape
 
@@ -36,7 +36,7 @@ flowchart TB
       Conc["battle-runtime-concentration.qnt"]
       ReactWin["battle-runtime-reaction-window.qnt"]
       HPSlice["battle-runtime-hit-points.qnt"]
-      MoreSlices["weapon-attacks, spell-invocation, movement,<br/>turn-advancement, legendary-actions, and many more"]
+      MoreSlices["weapon-attacks, focused spell resources and facts, movement,<br/>turn-advancement, legendary-actions, and many more"]
     end
 
     Model["battle-runtime-model.qnt<br/>type vocabulary: Actor, Combatant, BattleState,<br/>ActiveEffect, Hole, replay variants<br/>no behavioural imports"]
@@ -51,10 +51,10 @@ flowchart TB
       IntBridge["battle-runtime-interrupt-bridge.qnt"]
       StatBridge["battle-runtime-stat-block-bridge.qnt"]
       FeatureBridge["battle-runtime-feature-bridge.qnt"]
-      SpellBridge["battle-runtime-spell-bridge.qnt"]
+      SpellBridge["focused spell procedure bridges<br/>restoration, saves, attacks, scalar buffs,<br/>riders, sequences, and lifecycle"]
     end
 
-    subgraph RuleCore["shared-algebras/proofs/rule-core - 89 slices"]
+    subgraph RuleCore["shared-algebras/proofs/rule-core - 132 slices"]
       ActionTurn["action-turn-procedures.qnt"]
       Movement["movement-spatial-grapple.qnt"]
       HP["hit-point-damage, hit-point-recovery,<br/>zero-hit-point-lifecycle.qnt"]
@@ -66,9 +66,9 @@ flowchart TB
       Spells["spell-definition-profiles, spell-invocation-*-core,<br/>spell-*-projection-core, spell-procedure-profiles.qnt"]
     end
 
-    ProofMods["25 battle-runtime-*-tests.qnt proof modules<br/>run test_* blocks grouped by domain"]
+    ProofMods["52 battle-runtime run-block proof modules<br/>run test_* blocks grouped by domain"]
 
-    subgraph QntMbt["106 *.mbt.qnt MBT witnesses"]
+    subgraph QntMbt["208 *.mbt.qnt MBT witnesses"]
       WitnessQ["literal projection witnesses - most<br/>self-contained SRD outcomes as literals,<br/>e.g. battle-runtime-weapon-attack-skeleton.mbt.qnt"]
       OracleQ["computed-oracle drivers - few, allowlisted<br/>import the rule slice as SRD oracle,<br/>e.g. battle-runtime-direct-condition-lifecycle.mbt.qnt"]
       RuleCoreMbtQ["9 rule-core-*.mbt.qnt lanes<br/>movement, reactions, features, spells,<br/>stat-block-controls, hit-point-damage, ..."]
@@ -78,13 +78,13 @@ flowchart TB
   subgraph TS["TypeScript runtime layer"]
     PublicIndex["src/index.ts<br/>public package API"]
     BattleReducer["src/battle-reducer.ts<br/>public facade: types, schemas, re-exports"]
-    ReducerImpl["src/battle-reducer/<br/>split implementation - 169 files"]
+    ReducerImpl["src/battle-reducer/<br/>split implementation - 120 TypeScript files"]
     Subjects["src/battle-subjects.ts<br/>BattleSubject replay keys"]
     TraceTS["src/battle-trace-contract.ts<br/>projects public results to checkpoints"]
   end
 
   subgraph Verify["TS verification lanes"]
-    MbtDrivers["106 src/*.mbt.test.ts quint-connect drivers<br/>53 via the shared src/selected-identity-witness.ts wrapper"]
+    MbtDrivers["144 src/*.mbt.test.ts quint-connect drivers<br/>60 via the shared src/selected-identity-witness.ts wrapper"]
     ProofLane["src/battle-runtime-qnt-proofs.ts + .test.ts<br/>opt-in RUN_QNT_PROOFS=1, one bounded quint test per module"]
     TraceTest["src/battle-trace-contract.test.ts"]
     ReducerTests["focused src/*.test.ts reducer tests"]

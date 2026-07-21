@@ -3,7 +3,7 @@
 module battleRuntimeGustOfWindTests {
   import battleRuntimeGustOfWind.* from "./battle-runtime-gust-of-wind"
   import battleRuntimeModel.* from "./battle-runtime-model"
-  import battleRuntimeSpellInvocation.* from "./battle-runtime-spell-invocation"
+  import battleRuntimeSpellCastResources.* from "./battle-runtime-spell-cast-resources"
   import battleRuntimeTurnAdvancement.* from "./battle-runtime-turn-advancement"
 
   run test_gust_of_wind_line_runtime_support = {

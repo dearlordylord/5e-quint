@@ -7,7 +7,6 @@ module battleRuntimeSelfTransformationTests {
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"
   import battleRuntimeTimedEffects.* from "./battle-runtime-timed-effects"
   import battleRuntimeSelfTransformation.* from "./battle-runtime-self-transformation"
-  import battleRuntimeSpellInvocation.* from "./battle-runtime-spell-invocation"
 
   run test_alter_self_aquatic_adaptation_projects_water_breathing_and_swim_speed = {
     val result = resolveAlterSelfSelfTransformationMode(initialState, AquaticAdaptationMode, 2)

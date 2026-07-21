@@ -4,29 +4,19 @@
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-ray-of-enfeeblement-d20-lifecycle unit-feature.weapon-mastery-sap
 
 module battleRuntimeTimedEffects {
-  import battleRuntimeSpellBridge.* from "./battle-runtime-spell-bridge"
+  import battleRuntimeSpellLifecycleBridge.* from "./battle-runtime-spell-lifecycle-bridge"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
   import battleRuntimeLight.* from "./battle-runtime-light"
   import battleRuntimeMarkedRiders.* from "./battle-runtime-marked-riders"
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"
+  import battleRuntimeEndOfTurnRiderExpiration.* from "./battle-runtime-end-of-turn-rider-expiration"
+  import battleRuntimeEndOfTurnLightExpiration.* from "./battle-runtime-end-of-turn-light-expiration"
 
   pure def activeEffectsContainTimedLevitatedCreatureFrom(effects: Set[ActiveEffect], source: Actor): bool =
     effects.exists(effect => match effect {
       | LevitatedCreature(data) => data.source == source
       | _ => false
-    })
-
-  pure def activeEffectsWithoutExpiredEndOfTurnRiders(
-    effects: Set[ActiveEffect],
-    actor: Actor,
-    round: int
-  ): Set[ActiveEffect] =
-    effects.filter(effect => match effect {
-      | ChillTouchHitPointRegainPrevented(data) => data.source != actor or data.expiresAtRound != round
-      | StarryWispInvisibleBenefitDenied(data) => data.source != actor or data.expiresAtRound != round
-      | ColorSprayBlinded(data) => data.source != actor or data.expiresAtRound != round
-      | _ => true
     })
 
   pure def activeEffectsWithoutExpiredSapStartOfTurnRiders(

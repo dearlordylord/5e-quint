@@ -3,7 +3,8 @@
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-chained-attack-damage
 
 module battleRuntimeChainedSpellAttack {
-  import battleRuntimeSpellBridge.* from "./battle-runtime-spell-bridge"
+  import battleRuntimeSpellAttackBridge.* from "./battle-runtime-spell-attack-bridge"
+  import battleRuntimeSpellChainedAttackBridge.* from "./battle-runtime-spell-chained-attack-bridge"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeDamageAdjustments.* from "./battle-runtime-damage-adjustments"
 

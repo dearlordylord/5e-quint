@@ -414,7 +414,8 @@
         "packages/shared-algebras/proofs/rule-core/unit-feature-potent-cantrip-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-remarkable-athlete-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-rogue-steady-aim-core.qnt",
-        "packages/shared-algebras/proofs/rule-core/unit-feature-stunning-strike-core.qnt"
+        "packages/shared-algebras/proofs/rule-core/unit-feature-stunning-strike-core.qnt",
+        "packages/battle-runtime/battle-runtime-fighter-rage-facts.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -482,8 +483,21 @@
         "packages/shared-algebras/proofs/rule-core/spell-sleep-repeat-save-lifecycle-core.qnt",
         "packages/shared-algebras/proofs/rule-core/spell-attack-burst-save-damage-core.qnt",
         "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
-        "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
-        "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+        "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+        "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
+        "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
+        "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
+        "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
+        "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
+        "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
+        "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
+        "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
+        "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
+        "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
+        "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
+        "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
+        "packages/battle-runtime/battle-runtime-spell-attack-timed-effects.qnt",
+        "packages/battle-runtime/battle-runtime-spellcasting-facts.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -573,9 +587,21 @@
         "spell.invocation-save-gated-condition-immunity"
       ],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-save-gated-spell.qnt",
         "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt",
-        "packages/battle-runtime/battle-runtime-prone-movement.qnt"
+        "packages/battle-runtime/battle-runtime-prone-movement.qnt",
+        "packages/battle-runtime/battle-runtime-save-gated-facts.qnt",
+        "packages/battle-runtime/battle-runtime-save-condition-target-list.qnt",
+        "packages/battle-runtime/battle-runtime-save-condition-target-list-resolution.qnt",
+        "packages/battle-runtime/battle-runtime-save-condition-blindness.qnt",
+        "packages/battle-runtime/battle-runtime-save-condition-calm-emotions.qnt",
+        "packages/battle-runtime/battle-runtime-save-condition-color-spray.qnt",
+        "packages/battle-runtime/battle-runtime-save-condition-entangle.qnt",
+        "packages/battle-runtime/battle-runtime-save-condition-faerie-fire.qnt",
+        "packages/battle-runtime/battle-runtime-save-condition-hold.qnt",
+        "packages/battle-runtime/battle-runtime-save-condition-blindness-facts.qnt",
+        "packages/battle-runtime/battle-runtime-save-condition-targeting-facts.qnt",
+        "packages/battle-runtime/battle-runtime-save-gated-damage-target.qnt",
+        "packages/battle-runtime/battle-runtime-save-gated-object-facts.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -602,8 +628,9 @@
         "spell.invocation-attack-roll-advantage-save"
       ],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-save-gated-spell.qnt",
-        "packages/battle-runtime/battle-runtime-spell-attack.qnt"
+        "packages/battle-runtime/battle-runtime-save-condition-faerie-fire.qnt",
+        "packages/battle-runtime/battle-runtime-spell-attack-facts.qnt",
+        "packages/battle-runtime/battle-runtime-spell-attack-roll-and-visibility-facts.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -666,10 +693,10 @@
         "spell.invocation-ray-of-enfeeblement-d20-lifecycle"
       ],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-save-gated-spell.qnt",
-        "packages/battle-runtime/battle-runtime-spell-attack.qnt",
         "packages/battle-runtime/battle-runtime-timed-effects.qnt",
-        "packages/battle-runtime/battle-runtime-concentration.qnt"
+        "packages/battle-runtime/battle-runtime-concentration.qnt",
+        "packages/battle-runtime/battle-runtime-ray-of-enfeeblement-facts.qnt",
+        "packages/battle-runtime/battle-runtime-ray-of-enfeeblement.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -705,8 +732,9 @@
         "spell.invocation-ray-of-enfeeblement-damage-penalty"
       ],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-save-gated-spell.qnt",
-        "packages/battle-runtime/battle-runtime-spell-facts-tests.qnt"
+        "packages/battle-runtime/battle-runtime-ray-of-enfeeblement.qnt",
+        "packages/battle-runtime/battle-runtime-save-gated-damage-resolution.qnt",
+        "packages/battle-runtime/battle-runtime-ray-of-enfeeblement-damage-resolution.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -1040,7 +1068,14 @@
         "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-quickened-action-spell-procedure-support-core.qnt",
-        "packages/battle-runtime/battle-runtime-metamagic.qnt"
+        "packages/battle-runtime/battle-runtime-metamagic-quickened-common.qnt",
+        "packages/battle-runtime/battle-runtime-metamagic-quickened-restoration-buffs.qnt",
+        "packages/battle-runtime/battle-runtime-metamagic-quickened-roll-modifier.qnt",
+        "packages/battle-runtime/battle-runtime-metamagic-quickened-save-condition.qnt",
+        "packages/battle-runtime/battle-runtime-metamagic-quickened-spell-attack.qnt",
+        "packages/battle-runtime/battle-runtime-metamagic-quickened-condition-immunity.qnt",
+        "packages/battle-runtime/battle-runtime-metamagic-quickened-direct-condition.qnt",
+        "packages/battle-runtime/battle-runtime-metamagic-quickened-save-damage.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -1083,7 +1118,8 @@
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core.qnt",
-        "packages/battle-runtime/battle-runtime-metamagic.qnt"
+        "packages/battle-runtime/battle-runtime-metamagic-save-common.qnt",
+        "packages/battle-runtime/battle-runtime-metamagic-careful.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -1124,7 +1160,8 @@
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core.qnt",
-        "packages/battle-runtime/battle-runtime-metamagic.qnt"
+        "packages/battle-runtime/battle-runtime-metamagic-save-common.qnt",
+        "packages/battle-runtime/battle-runtime-metamagic-heightened.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -1169,7 +1206,7 @@
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core.qnt",
-        "packages/battle-runtime/battle-runtime-metamagic.qnt"
+        "packages/battle-runtime/battle-runtime-metamagic-transmuted.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -1210,7 +1247,7 @@
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core.qnt",
-        "packages/battle-runtime/battle-runtime-metamagic.qnt"
+        "packages/battle-runtime/battle-runtime-metamagic-twinned.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -1250,7 +1287,7 @@
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core.qnt",
-        "packages/battle-runtime/battle-runtime-metamagic.qnt"
+        "packages/battle-runtime/battle-runtime-metamagic-distant.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -1293,7 +1330,7 @@
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core.qnt",
-        "packages/battle-runtime/battle-runtime-metamagic.qnt"
+        "packages/battle-runtime/battle-runtime-metamagic-extended.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -1338,7 +1375,7 @@
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core.qnt",
-        "packages/battle-runtime/battle-runtime-metamagic.qnt"
+        "packages/battle-runtime/battle-runtime-metamagic-subtle.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -1650,7 +1687,8 @@
         "spell.invocation-object-light"
       ],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-light.qnt"
+        "packages/battle-runtime/battle-runtime-light.qnt",
+        "packages/battle-runtime/battle-runtime-end-of-turn-light-expiration.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -2156,7 +2194,8 @@
         "spell.invocation-save-gated-condition-immunity"
       ],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-creature-type-protection.qnt"
+        "packages/battle-runtime/battle-runtime-creature-type-protection.qnt",
+        "packages/battle-runtime/battle-runtime-creature-type-protection-attack-roll.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -2310,7 +2349,8 @@
       ],
       "qntOwners": [
         "packages/battle-runtime/battle-runtime-reaction-window.qnt",
-        "packages/battle-runtime/battle-runtime-spell-invocation.qnt"
+        "packages/battle-runtime/battle-runtime-spell-slot-classification.qnt",
+        "packages/battle-runtime/battle-runtime-spell-cast-resources.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -2358,8 +2398,10 @@
       ],
       "qntOwners": [
         "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt",
-        "packages/battle-runtime/battle-runtime-spell-invocation.qnt",
-        "packages/battle-runtime/battle-runtime-concentration.qnt"
+        "packages/battle-runtime/battle-runtime-concentration.qnt",
+        "packages/battle-runtime/battle-runtime-spell-slot-classification.qnt",
+        "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
+        "packages/battle-runtime/battle-runtime-end-of-turn-rider-expiration.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -2412,7 +2454,8 @@
         "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt",
         "packages/battle-runtime/battle-runtime-weapon-attacks.qnt",
         "packages/battle-runtime/battle-runtime-light.qnt",
-        "packages/battle-runtime/battle-runtime-spell-invocation.qnt"
+        "packages/battle-runtime/battle-runtime-spell-slot-classification.qnt",
+        "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -2492,8 +2535,9 @@
       ],
       "qntOwners": [
         "packages/battle-runtime/battle-runtime-chained-spell-attack.qnt",
-        "packages/battle-runtime/battle-runtime-spell-attack.qnt",
-        "packages/battle-runtime/battle-runtime-spell-invocation.qnt"
+        "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
+        "packages/battle-runtime/battle-runtime-spell-attack-facts.qnt",
+        "packages/battle-runtime/battle-runtime-spell-cast-resources.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -2531,8 +2575,9 @@
         "spell.invocation-independent-attack-sequence"
       ],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-spell-attack.qnt",
-        "packages/battle-runtime/battle-runtime-spell-invocation.qnt"
+        "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
+        "packages/battle-runtime/battle-runtime-spell-attack-independent-sequence.qnt",
+        "packages/battle-runtime/battle-runtime-spell-cast-resources.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -4367,7 +4412,7 @@
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core.qnt",
-        "packages/battle-runtime/battle-runtime-metamagic.qnt"
+        "packages/battle-runtime/battle-runtime-metamagic-seeking.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -4408,7 +4453,7 @@
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core.qnt",
-        "packages/battle-runtime/battle-runtime-metamagic.qnt"
+        "packages/battle-runtime/battle-runtime-metamagic-empowered.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -8553,23 +8598,6 @@
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-metamagic.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
-      "obligationIds": [
-        "BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION",
-        "BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE",
-        "BATTLE.FEATURE.METAMAGIC_EMPOWERED_DAMAGE_DICE_REROLL",
-        "BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION",
-        "BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE",
-        "BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR",
-        "BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL",
-        "BATTLE.FEATURE.METAMAGIC_SUBTLE_COMPONENT_SUPPRESSION",
-        "BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION",
-        "BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET"
-      ],
-      "ownerPath": "packages/battle-runtime/battle-runtime-metamagic.qnt",
-      "role": "semantic-core"
-    },
-    {
       "evidence": "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core.qnt is the covered obligation QNT owner carrying typed Metamagic option effect-kind, stacking-mode, and Sorcery Point cost projection semantics without importing authored Unit catalog rows.",
       "obligationIds": [
         "BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION",
@@ -8821,17 +8849,6 @@
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-save-gated-spell.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
-      "obligationIds": [
-        "BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE",
-        "BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_DAMAGE_PENALTY",
-        "BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE",
-        "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE"
-      ],
-      "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-spell.qnt",
-      "role": "semantic-core"
-    },
-    {
       "evidence": "packages/battle-runtime/battle-runtime-see-invisibility.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
       "obligationIds": [
         "BATTLE.SPELL.SEE_INVISIBILITY_OBSERVER_SIGHT"
@@ -8870,37 +8887,6 @@
         "BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt",
-      "role": "semantic-core"
-    },
-    {
-      "evidence": "packages/battle-runtime/battle-runtime-spell-attack.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
-      "obligationIds": [
-        "BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE",
-        "BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE",
-        "BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE",
-        "BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE"
-      ],
-      "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack.qnt",
-      "role": "semantic-core"
-    },
-    {
-      "evidence": "packages/battle-runtime/battle-runtime-spell-facts-tests.qnt is a bounded replay or run-test owner for covered parity evidence; treat it as fixture-bound unless later split. It is classified as proof-only because profile coverage uses it as qnt-proof verification evidence.",
-      "obligationIds": [
-        "BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_DAMAGE_PENALTY"
-      ],
-      "ownerPath": "packages/battle-runtime/battle-runtime-spell-facts-tests.qnt",
-      "role": "proof-only"
-    },
-    {
-      "evidence": "packages/battle-runtime/battle-runtime-spell-invocation.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
-      "obligationIds": [
-        "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
-        "BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE",
-        "BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE",
-        "BATTLE.SPELL.REACTION_CASTING_TIME",
-        "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS"
-      ],
-      "ownerPath": "packages/battle-runtime/battle-runtime-spell-invocation.qnt",
       "role": "semantic-core"
     },
     {
@@ -9902,12 +9888,6 @@
       "role": "mbt-fixture"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-metamagic-tests.qnt is assessed generator-readiness proofOnly evidence for Metamagic replay coverage. It is classified as proof-only because profile coverage uses it as qnt-proof verification evidence.",
-      "obligationIds": [],
-      "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-tests.qnt",
-      "role": "proof-only"
-    },
-    {
       "evidence": "packages/battle-runtime/battle-runtime-monk-focus-tests.qnt is assessed generator-readiness proofOnly evidence for Monk's Focus replay coverage. It is classified as proof-only because profile coverage uses it as qnt-proof verification evidence.",
       "obligationIds": [],
       "ownerPath": "packages/battle-runtime/battle-runtime-monk-focus-tests.qnt",
@@ -10345,14 +10325,6 @@
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-shape-shifting.qnt",
       "role": "proof-only"
-    },
-    {
-      "evidence": "packages/battle-runtime/battle-runtime-spell-bridge.qnt projects rule-core spell procedure facts into the battle runtime shape for registered spell procedure obligations.",
-      "obligationIds": [
-        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
-      ],
-      "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
-      "role": "bridge"
     },
     {
       "evidence": "packages/battle-runtime/battle-runtime-stat-block-bridge.qnt projects rule-core Stat Block controls into the battle runtime shape for registered Stat Block obligations.",
@@ -10874,6 +10846,512 @@
       "obligationIds": [],
       "ownerPath": "packages/battle-runtime/battle-runtime-relationship-discovery.mbt.qnt",
       "role": "proof-only"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt is a focused QNT owner extracted from a former catch-all production closure.",
+      "obligationIds": [
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-metamagic-distant.qnt is a focused QNT owner extracted from a former catch-all production closure.",
+      "obligationIds": [
+        "BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-distant.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-metamagic-empowered.qnt is a focused QNT owner extracted from a former catch-all production closure.",
+      "obligationIds": [
+        "BATTLE.FEATURE.METAMAGIC_EMPOWERED_DAMAGE_DICE_REROLL"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-empowered.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-metamagic-extended.qnt is a focused QNT owner extracted from a former catch-all production closure.",
+      "obligationIds": [
+        "BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-extended.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-metamagic-quickened-common.qnt is a focused QNT owner extracted from a former catch-all production closure.",
+      "obligationIds": [
+        "BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-quickened-common.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-metamagic-quickened-restoration-buffs.qnt is a focused QNT owner extracted from a former catch-all production closure.",
+      "obligationIds": [
+        "BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-quickened-restoration-buffs.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-metamagic-quickened-roll-modifier.qnt is a focused QNT owner extracted from a former catch-all production closure.",
+      "obligationIds": [
+        "BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-quickened-roll-modifier.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-metamagic-quickened-save-condition.qnt is a focused QNT owner extracted from a former catch-all production closure.",
+      "obligationIds": [
+        "BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-quickened-save-condition.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-metamagic-quickened-spell-attack.qnt is a focused QNT owner extracted from a former catch-all production closure.",
+      "obligationIds": [
+        "BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-quickened-spell-attack.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Focused Careful Spell admission, protected-target selection, and successful-save half-damage suppression semantics.",
+      "obligationIds": [
+        "BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-careful.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Focused Heightened Spell admission, affected-target selection, and Saving Throw roll-mode semantics.",
+      "obligationIds": [
+        "BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-heightened.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Shared save-affecting Metamagic procedure vocabulary and named-option admission helper used by Careful Spell and Heightened Spell.",
+      "obligationIds": [
+        "BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION",
+        "BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-save-common.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-metamagic-seeking.qnt is a focused QNT owner extracted from a former catch-all production closure.",
+      "obligationIds": [
+        "BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-seeking.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-metamagic-subtle.qnt is a focused QNT owner extracted from a former catch-all production closure.",
+      "obligationIds": [
+        "BATTLE.FEATURE.METAMAGIC_SUBTLE_COMPONENT_SUPPRESSION"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-subtle.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-metamagic-transmuted.qnt is a focused QNT owner extracted from a former catch-all production closure.",
+      "obligationIds": [
+        "BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-transmuted.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-metamagic-twinned.qnt is a focused QNT owner extracted from a former catch-all production closure.",
+      "obligationIds": [
+        "BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-twinned.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-ray-of-enfeeblement-facts.qnt is a focused QNT owner extracted from a former catch-all production closure.",
+      "obligationIds": [
+        "BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-ray-of-enfeeblement-facts.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-ray-of-enfeeblement.qnt is a focused QNT owner extracted from a former catch-all production closure.",
+      "obligationIds": [
+        "BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE",
+        "BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_DAMAGE_PENALTY"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-ray-of-enfeeblement.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-save-condition-blindness.qnt is a focused QNT owner extracted from a former catch-all production closure.",
+      "obligationIds": [
+        "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-blindness.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-save-condition-calm-emotions.qnt is a focused QNT owner extracted from a former catch-all production closure.",
+      "obligationIds": [
+        "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-calm-emotions.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-save-condition-color-spray.qnt is a focused QNT owner extracted from a former catch-all production closure.",
+      "obligationIds": [
+        "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-color-spray.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-save-condition-entangle.qnt is a focused QNT owner extracted from a former catch-all production closure.",
+      "obligationIds": [
+        "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-entangle.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-save-condition-faerie-fire.qnt is a focused QNT owner extracted from a former catch-all production closure.",
+      "obligationIds": [
+        "BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE",
+        "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-faerie-fire.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-save-condition-hold.qnt is a focused QNT owner extracted from a former catch-all production closure.",
+      "obligationIds": [
+        "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-hold.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-save-condition-target-list-resolution.qnt is a focused QNT owner extracted from a former catch-all production closure.",
+      "obligationIds": [
+        "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-target-list-resolution.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-save-condition-target-list.qnt is a focused QNT owner extracted from a former catch-all production closure.",
+      "obligationIds": [
+        "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-target-list.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-save-gated-damage-resolution.qnt is a focused QNT owner extracted from a former catch-all production closure.",
+      "obligationIds": [
+        "BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_DAMAGE_PENALTY"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-damage-resolution.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-save-gated-facts.qnt is a focused QNT owner extracted from a former catch-all production closure.",
+      "obligationIds": [
+        "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-facts.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt is a focused QNT owner extracted from a former catch-all production closure.",
+      "obligationIds": [
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt is a focused QNT owner extracted from a former catch-all production closure.",
+      "obligationIds": [
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt is a focused QNT owner extracted from a former catch-all production closure.",
+      "obligationIds": [
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt is a focused QNT owner extracted from a former catch-all production closure.",
+      "obligationIds": [
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-spell-attack-facts.qnt is a focused QNT owner extracted from a former catch-all production closure.",
+      "obligationIds": [
+        "BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE",
+        "BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-facts.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-spell-attack-independent-sequence.qnt is a focused QNT owner extracted from a former catch-all production closure.",
+      "obligationIds": [
+        "BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-independent-sequence.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-spell-attack-timed-effects.qnt is a focused QNT owner extracted from a former catch-all production closure.",
+      "obligationIds": [
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-timed-effects.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-spell-cast-resources.qnt is a focused QNT owner extracted from a former catch-all production closure.",
+      "obligationIds": [
+        "BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE",
+        "BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE",
+        "BATTLE.SPELL.REACTION_CASTING_TIME"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-spell-cast-resources.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt is a focused QNT owner extracted from a former catch-all production closure.",
+      "obligationIds": [
+        "BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE",
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt is a focused QNT owner extracted from a former catch-all production closure.",
+      "obligationIds": [
+        "BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE",
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt is a focused QNT owner extracted from a former catch-all production closure.",
+      "obligationIds": [
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt is a focused QNT owner extracted from a former catch-all production closure.",
+      "obligationIds": [
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt is a focused QNT owner extracted from a former catch-all production closure.",
+      "obligationIds": [
+        "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+        "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt is a focused QNT owner extracted from a former catch-all production closure.",
+      "obligationIds": [
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt is a focused QNT owner extracted from a former catch-all production closure.",
+      "obligationIds": [
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-spell-slot-classification.qnt is a focused QNT owner extracted from a former catch-all production closure.",
+      "obligationIds": [
+        "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
+        "BATTLE.SPELL.REACTION_CASTING_TIME",
+        "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-spell-slot-classification.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-spellcasting-facts.qnt is a focused QNT owner extracted from a former catch-all production closure.",
+      "obligationIds": [
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-spellcasting-facts.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Focused run-block proof owner for named Metamagic options, shared Quickened admission, restoration, scalar-buff, and roll-modifier integration.",
+      "obligationIds": [],
+      "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-options-and-quickened-restoration-tests.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-metamagic-quickened-save-condition-tests.qnt is a focused run-block proof owner.",
+      "obligationIds": [],
+      "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-quickened-save-condition-tests.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "Focused run-block proof owner for save-gated, Ray of Enfeeblement, and spell-rider facts.",
+      "obligationIds": [],
+      "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-and-rider-facts-tests.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-metamagic-quickened-condition-immunity.qnt is a focused QNT semantic owner.",
+      "obligationIds": [
+        "BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-quickened-condition-immunity.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-metamagic-quickened-direct-condition.qnt is a focused QNT semantic owner.",
+      "obligationIds": [
+        "BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-quickened-direct-condition.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-metamagic-quickened-save-damage.qnt is a focused QNT semantic owner.",
+      "obligationIds": [
+        "BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-quickened-save-damage.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-save-condition-blindness-facts.qnt is a focused QNT semantic owner.",
+      "obligationIds": [
+        "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-blindness-facts.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-save-condition-targeting-facts.qnt is a focused QNT semantic owner.",
+      "obligationIds": [
+        "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-targeting-facts.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Focused creature-type-protection attack-roll projection owner.",
+      "obligationIds": [
+        "BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-creature-type-protection-attack-roll.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Focused end-of-turn light-emitter expiration owner.",
+      "obligationIds": [
+        "BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-end-of-turn-light-expiration.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Focused end-of-turn active-effect rider expiration owner.",
+      "obligationIds": [
+        "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-end-of-turn-rider-expiration.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Focused Fighter Rage occurrence fact owner.",
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-fighter-rage-facts.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Focused Ray of Enfeeblement damage-penalty resolution owner.",
+      "obligationIds": [
+        "BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_DAMAGE_PENALTY"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-ray-of-enfeeblement-damage-resolution.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Focused save-gated target damage owner.",
+      "obligationIds": [
+        "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-damage-target.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Focused save-gated object-effect fact owner.",
+      "obligationIds": [
+        "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-object-facts.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Focused spell attack roll-mode and visibility fact owner.",
+      "obligationIds": [
+        "BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-roll-and-visibility-facts.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Focused run-block proof owner for direct, timed, and independent spell attacks.",
+      "obligationIds": [],
+      "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-procedure-tests.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "Focused run-block proof owner for spellcasting, size, movement, and utility facts.",
+      "obligationIds": [],
+      "ownerPath": "packages/battle-runtime/battle-runtime-spellcasting-and-utility-facts-tests.qnt",
+      "role": "proof-only"
     }
   ],
   "qntRegistry": [
@@ -10975,6 +11453,11 @@
     },
     {
       "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-creature-type-protection-attack-roll.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-creature-type-protection.qnt",
       "role": "semantic-core"
     },
@@ -11010,6 +11493,16 @@
     },
     {
       "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-end-of-turn-light-expiration.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-end-of-turn-rider-expiration.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-feather-fall.qnt",
       "role": "semantic-core"
     },
@@ -11033,6 +11526,11 @@
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-fighter-ongoing-features.qnt",
       "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-fighter-rage-facts.qnt",
+      "role": "semantic-core"
     },
     {
       "classification": "qnt-owner-role",
@@ -11120,6 +11618,11 @@
       "role": "semantic-core"
     },
     {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
+      "role": "semantic-core"
+    },
+    {
       "category": "proof-only-example",
       "classification": "exempt",
       "evidence": "Literal Magic Missile fixture facts shared by the focused witness and the reducer-route connector; the active route contract is owned by battle-runtime-magic-missile.route.mbt.qnt.",
@@ -11143,7 +11646,92 @@
     },
     {
       "classification": "qnt-owner-role",
-      "ownerPath": "packages/battle-runtime/battle-runtime-metamagic.qnt",
+      "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-careful.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-distant.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-empowered.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-extended.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-heightened.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-quickened-common.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-quickened-condition-immunity.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-quickened-direct-condition.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-quickened-restoration-buffs.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-quickened-roll-modifier.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-quickened-save-condition.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-quickened-save-damage.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-quickened-spell-attack.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-save-common.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-seeking.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-subtle.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-transmuted.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-twinned.qnt",
       "role": "semantic-core"
     },
     {
@@ -11261,6 +11849,21 @@
       "ownerPath": "packages/battle-runtime/battle-runtime-public-trace-contract.qnt"
     },
     {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-ray-of-enfeeblement-damage-resolution.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-ray-of-enfeeblement-facts.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-ray-of-enfeeblement.qnt",
+      "role": "semantic-core"
+    },
+    {
       "category": "leaf-type-vocabulary",
       "classification": "exempt",
       "evidence": "Reaction kind vocabulary leaf shared by the model and interrupt bridge.",
@@ -11329,12 +11932,82 @@
     },
     {
       "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-blindness-facts.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-blindness.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-calm-emotions.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-color-spray.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-entangle.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-faerie-fire.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-hold.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-target-list-resolution.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-target-list.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-targeting-facts.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-damage-resolution.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-damage-target.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-facts.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-object-facts.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.qnt",
       "role": "semantic-core"
     },
     {
       "classification": "qnt-owner-role",
-      "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-spell.qnt",
+      "ownerPath": "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
       "role": "semantic-core"
     },
     {
@@ -11391,12 +12064,42 @@
     },
     {
       "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-facts.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-independent-sequence.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-ordering.qnt",
       "role": "semantic-core"
     },
     {
       "classification": "qnt-owner-role",
-      "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack.qnt",
+      "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-roll-and-visibility-facts.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-timed-effects.qnt",
       "role": "semantic-core"
     },
     {
@@ -11407,12 +12110,52 @@
     },
     {
       "classification": "qnt-owner-role",
-      "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
-      "role": "bridge"
+      "ownerPath": "packages/battle-runtime/battle-runtime-spell-cast-resources.qnt",
+      "role": "semantic-core"
     },
     {
       "classification": "qnt-owner-role",
-      "ownerPath": "packages/battle-runtime/battle-runtime-spell-invocation.qnt",
+      "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-spell-slot-classification.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-spellcasting-facts.qnt",
       "role": "semantic-core"
     },
     {
@@ -13146,7 +13889,8 @@
       "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
       "proofOnly": [
         "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt",
-        "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-examples.qnt"
+        "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-examples.qnt",
+        "packages/battle-runtime/battle-runtime-spellcasting-and-utility-facts-tests.qnt"
       ],
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
@@ -13168,7 +13912,15 @@
         "packages/shared-algebras/proofs/rule-core/spell-object-hit-point-damage-core.qnt",
         "packages/shared-algebras/proofs/rule-core/spell-sleep-repeat-save-lifecycle-core.qnt",
         "packages/shared-algebras/proofs/rule-core/spell-attack-burst-save-damage-core.qnt",
-        "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt"
+        "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
+        "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
+        "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
+        "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
+        "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
+        "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
+        "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
+        "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
+        "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -13282,7 +14034,8 @@
         "packages/shared-algebras/proofs/rule-core/unit-feature-potent-cantrip-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-remarkable-athlete-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-rogue-steady-aim-core.qnt",
-        "packages/shared-algebras/proofs/rule-core/unit-feature-stunning-strike-core.qnt"
+        "packages/shared-algebras/proofs/rule-core/unit-feature-stunning-strike-core.qnt",
+        "packages/battle-runtime/battle-runtime-fighter-rage-facts.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -13367,7 +14120,19 @@
         "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt"
       ],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime-save-gated-spell.qnt"
+        "packages/battle-runtime/battle-runtime-save-gated-facts.qnt",
+        "packages/battle-runtime/battle-runtime-save-condition-target-list.qnt",
+        "packages/battle-runtime/battle-runtime-save-condition-target-list-resolution.qnt",
+        "packages/battle-runtime/battle-runtime-save-condition-blindness.qnt",
+        "packages/battle-runtime/battle-runtime-save-condition-calm-emotions.qnt",
+        "packages/battle-runtime/battle-runtime-save-condition-color-spray.qnt",
+        "packages/battle-runtime/battle-runtime-save-condition-entangle.qnt",
+        "packages/battle-runtime/battle-runtime-save-condition-faerie-fire.qnt",
+        "packages/battle-runtime/battle-runtime-save-condition-hold.qnt",
+        "packages/battle-runtime/battle-runtime-save-condition-blindness-facts.qnt",
+        "packages/battle-runtime/battle-runtime-save-condition-targeting-facts.qnt",
+        "packages/battle-runtime/battle-runtime-save-gated-damage-target.qnt",
+        "packages/battle-runtime/battle-runtime-save-gated-object-facts.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -13394,8 +14159,9 @@
       "obligationId": "BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE",
       "proofOnly": [],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime-save-gated-spell.qnt",
-        "packages/battle-runtime/battle-runtime-spell-attack.qnt"
+        "packages/battle-runtime/battle-runtime-save-condition-faerie-fire.qnt",
+        "packages/battle-runtime/battle-runtime-spell-attack-facts.qnt",
+        "packages/battle-runtime/battle-runtime-spell-attack-roll-and-visibility-facts.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -13454,10 +14220,10 @@
       "obligationId": "BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE",
       "proofOnly": [],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime-save-gated-spell.qnt",
-        "packages/battle-runtime/battle-runtime-spell-attack.qnt",
         "packages/battle-runtime/battle-runtime-timed-effects.qnt",
-        "packages/battle-runtime/battle-runtime-concentration.qnt"
+        "packages/battle-runtime/battle-runtime-concentration.qnt",
+        "packages/battle-runtime/battle-runtime-ray-of-enfeeblement-facts.qnt",
+        "packages/battle-runtime/battle-runtime-ray-of-enfeeblement.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -13486,10 +14252,12 @@
       ],
       "obligationId": "BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_DAMAGE_PENALTY",
       "proofOnly": [
-        "packages/battle-runtime/battle-runtime-spell-facts-tests.qnt"
+        "packages/battle-runtime/battle-runtime-spell-save-and-rider-facts-tests.qnt"
       ],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime-save-gated-spell.qnt"
+        "packages/battle-runtime/battle-runtime-ray-of-enfeeblement.qnt",
+        "packages/battle-runtime/battle-runtime-save-gated-damage-resolution.qnt",
+        "packages/battle-runtime/battle-runtime-ray-of-enfeeblement-damage-resolution.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -13762,21 +14530,28 @@
         "forall",
         "exists",
         "membership",
-        "size",
-        "set-operators"
+        "size"
       ],
       "obligationId": "BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR",
       "proofOnly": [
         "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core-examples.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core-examples.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-quickened-action-spell-procedure-support-core-examples.qnt",
-        "packages/battle-runtime/battle-runtime-metamagic-tests.qnt"
+        "packages/battle-runtime/battle-runtime-metamagic-options-and-quickened-restoration-tests.qnt",
+        "packages/battle-runtime/battle-runtime-metamagic-quickened-save-condition-tests.qnt"
       ],
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-quickened-action-spell-procedure-support-core.qnt",
-        "packages/battle-runtime/battle-runtime-metamagic.qnt"
+        "packages/battle-runtime/battle-runtime-metamagic-quickened-common.qnt",
+        "packages/battle-runtime/battle-runtime-metamagic-quickened-restoration-buffs.qnt",
+        "packages/battle-runtime/battle-runtime-metamagic-quickened-roll-modifier.qnt",
+        "packages/battle-runtime/battle-runtime-metamagic-quickened-save-condition.qnt",
+        "packages/battle-runtime/battle-runtime-metamagic-quickened-spell-attack.qnt",
+        "packages/battle-runtime/battle-runtime-metamagic-quickened-condition-immunity.qnt",
+        "packages/battle-runtime/battle-runtime-metamagic-quickened-direct-condition.qnt",
+        "packages/battle-runtime/battle-runtime-metamagic-quickened-save-damage.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -13786,13 +14561,11 @@
         "import",
         "variant",
         "record",
-        "record-update",
         "pure-def",
         "constant-def",
         "int",
         "bool",
         "if-expression",
-        "let-binding",
         "arithmetic",
         "comparison",
         "boolean-connective",
@@ -13803,19 +14576,19 @@
         "forall",
         "exists",
         "membership",
-        "size",
-        "set-operators"
+        "size"
       ],
       "obligationId": "BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION",
       "proofOnly": [
         "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core-examples.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core-examples.qnt",
-        "packages/battle-runtime/battle-runtime-metamagic-tests.qnt"
+        "packages/battle-runtime/battle-runtime-metamagic-options-and-quickened-restoration-tests.qnt"
       ],
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core.qnt",
-        "packages/battle-runtime/battle-runtime-metamagic.qnt"
+        "packages/battle-runtime/battle-runtime-metamagic-save-common.qnt",
+        "packages/battle-runtime/battle-runtime-metamagic-careful.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -13825,13 +14598,11 @@
         "import",
         "variant",
         "record",
-        "record-update",
         "pure-def",
         "constant-def",
         "int",
         "bool",
         "if-expression",
-        "let-binding",
         "arithmetic",
         "comparison",
         "boolean-connective",
@@ -13842,19 +14613,19 @@
         "forall",
         "exists",
         "membership",
-        "size",
-        "set-operators"
+        "size"
       ],
       "obligationId": "BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE",
       "proofOnly": [
         "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core-examples.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core-examples.qnt",
-        "packages/battle-runtime/battle-runtime-metamagic-tests.qnt"
+        "packages/battle-runtime/battle-runtime-metamagic-options-and-quickened-restoration-tests.qnt"
       ],
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core.qnt",
-        "packages/battle-runtime/battle-runtime-metamagic.qnt"
+        "packages/battle-runtime/battle-runtime-metamagic-save-common.qnt",
+        "packages/battle-runtime/battle-runtime-metamagic-heightened.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -13863,14 +14634,11 @@
       "generatorSubset": [
         "import",
         "variant",
-        "record",
-        "record-update",
         "pure-def",
         "constant-def",
         "int",
         "bool",
         "if-expression",
-        "let-binding",
         "arithmetic",
         "comparison",
         "boolean-connective",
@@ -13881,19 +14649,18 @@
         "forall",
         "exists",
         "membership",
-        "size",
-        "set-operators"
+        "size"
       ],
       "obligationId": "BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION",
       "proofOnly": [
         "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core-examples.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core-examples.qnt",
-        "packages/battle-runtime/battle-runtime-metamagic-tests.qnt"
+        "packages/battle-runtime/battle-runtime-metamagic-options-and-quickened-restoration-tests.qnt"
       ],
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core.qnt",
-        "packages/battle-runtime/battle-runtime-metamagic.qnt"
+        "packages/battle-runtime/battle-runtime-metamagic-transmuted.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -13903,7 +14670,6 @@
         "import",
         "variant",
         "record",
-        "record-update",
         "pure-def",
         "constant-def",
         "int",
@@ -13920,19 +14686,18 @@
         "forall",
         "exists",
         "membership",
-        "size",
-        "set-operators"
+        "size"
       ],
       "obligationId": "BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET",
       "proofOnly": [
         "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core-examples.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core-examples.qnt",
-        "packages/battle-runtime/battle-runtime-metamagic-tests.qnt"
+        "packages/battle-runtime/battle-runtime-metamagic-options-and-quickened-restoration-tests.qnt"
       ],
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core.qnt",
-        "packages/battle-runtime/battle-runtime-metamagic.qnt"
+        "packages/battle-runtime/battle-runtime-metamagic-twinned.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -13942,7 +14707,6 @@
         "import",
         "variant",
         "record",
-        "record-update",
         "pure-def",
         "constant-def",
         "int",
@@ -13959,19 +14723,18 @@
         "forall",
         "exists",
         "membership",
-        "size",
-        "set-operators"
+        "size"
       ],
       "obligationId": "BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE",
       "proofOnly": [
         "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core-examples.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core-examples.qnt",
-        "packages/battle-runtime/battle-runtime-metamagic-tests.qnt"
+        "packages/battle-runtime/battle-runtime-metamagic-options-and-quickened-restoration-tests.qnt"
       ],
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core.qnt",
-        "packages/battle-runtime/battle-runtime-metamagic.qnt"
+        "packages/battle-runtime/battle-runtime-metamagic-distant.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -13981,7 +14744,6 @@
         "import",
         "variant",
         "record",
-        "record-update",
         "pure-def",
         "constant-def",
         "int",
@@ -13998,19 +14760,18 @@
         "forall",
         "exists",
         "membership",
-        "size",
-        "set-operators"
+        "size"
       ],
       "obligationId": "BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION",
       "proofOnly": [
         "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core-examples.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core-examples.qnt",
-        "packages/battle-runtime/battle-runtime-metamagic-tests.qnt"
+        "packages/battle-runtime/battle-runtime-metamagic-options-and-quickened-restoration-tests.qnt"
       ],
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core.qnt",
-        "packages/battle-runtime/battle-runtime-metamagic.qnt"
+        "packages/battle-runtime/battle-runtime-metamagic-extended.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -14020,7 +14781,6 @@
         "import",
         "variant",
         "record",
-        "record-update",
         "pure-def",
         "constant-def",
         "int",
@@ -14037,19 +14797,18 @@
         "forall",
         "exists",
         "membership",
-        "size",
-        "set-operators"
+        "size"
       ],
       "obligationId": "BATTLE.FEATURE.METAMAGIC_SUBTLE_COMPONENT_SUPPRESSION",
       "proofOnly": [
         "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core-examples.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core-examples.qnt",
-        "packages/battle-runtime/battle-runtime-metamagic-tests.qnt"
+        "packages/battle-runtime/battle-runtime-metamagic-options-and-quickened-restoration-tests.qnt"
       ],
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core.qnt",
-        "packages/battle-runtime/battle-runtime-metamagic.qnt"
+        "packages/battle-runtime/battle-runtime-metamagic-subtle.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -14239,7 +14998,8 @@
       "obligationId": "BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE",
       "proofOnly": [],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime-light.qnt"
+        "packages/battle-runtime/battle-runtime-light.qnt",
+        "packages/battle-runtime/battle-runtime-end-of-turn-light-expiration.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -14668,7 +15428,8 @@
       "obligationId": "BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION",
       "proofOnly": [],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime-creature-type-protection.qnt"
+        "packages/battle-runtime/battle-runtime-creature-type-protection.qnt",
+        "packages/battle-runtime/battle-runtime-creature-type-protection-attack-roll.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -14802,7 +15563,8 @@
       "proofOnly": [],
       "semanticCore": [
         "packages/battle-runtime/battle-runtime-reaction-window.qnt",
-        "packages/battle-runtime/battle-runtime-spell-invocation.qnt"
+        "packages/battle-runtime/battle-runtime-spell-slot-classification.qnt",
+        "packages/battle-runtime/battle-runtime-spell-cast-resources.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -14835,8 +15597,10 @@
       "proofOnly": [],
       "semanticCore": [
         "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt",
-        "packages/battle-runtime/battle-runtime-spell-invocation.qnt",
-        "packages/battle-runtime/battle-runtime-concentration.qnt"
+        "packages/battle-runtime/battle-runtime-concentration.qnt",
+        "packages/battle-runtime/battle-runtime-spell-slot-classification.qnt",
+        "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
+        "packages/battle-runtime/battle-runtime-end-of-turn-rider-expiration.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -14871,7 +15635,8 @@
         "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt",
         "packages/battle-runtime/battle-runtime-weapon-attacks.qnt",
         "packages/battle-runtime/battle-runtime-light.qnt",
-        "packages/battle-runtime/battle-runtime-spell-invocation.qnt"
+        "packages/battle-runtime/battle-runtime-spell-slot-classification.qnt",
+        "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -14934,8 +15699,9 @@
       "proofOnly": [],
       "semanticCore": [
         "packages/battle-runtime/battle-runtime-chained-spell-attack.qnt",
-        "packages/battle-runtime/battle-runtime-spell-attack.qnt",
-        "packages/battle-runtime/battle-runtime-spell-invocation.qnt"
+        "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
+        "packages/battle-runtime/battle-runtime-spell-attack-facts.qnt",
+        "packages/battle-runtime/battle-runtime-spell-cast-resources.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -14962,10 +15728,13 @@
         "membership"
       ],
       "obligationId": "BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE",
-      "proofOnly": [],
+      "proofOnly": [
+        "packages/battle-runtime/battle-runtime-spell-attack-procedure-tests.qnt"
+      ],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime-spell-attack.qnt",
-        "packages/battle-runtime/battle-runtime-spell-invocation.qnt"
+        "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
+        "packages/battle-runtime/battle-runtime-spell-attack-independent-sequence.qnt",
+        "packages/battle-runtime/battle-runtime-spell-cast-resources.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -15813,17 +16582,16 @@
         "forall",
         "exists",
         "membership",
-        "size",
-        "record-update"
+        "size"
       ],
       "obligationId": "BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL",
       "proofOnly": [
-        "packages/battle-runtime/battle-runtime-metamagic-tests.qnt"
+        "packages/battle-runtime/battle-runtime-metamagic-options-and-quickened-restoration-tests.qnt"
       ],
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core.qnt",
-        "packages/battle-runtime/battle-runtime-metamagic.qnt"
+        "packages/battle-runtime/battle-runtime-metamagic-seeking.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -15850,17 +16618,16 @@
         "forall",
         "exists",
         "membership",
-        "size",
-        "record-update"
+        "size"
       ],
       "obligationId": "BATTLE.FEATURE.METAMAGIC_EMPOWERED_DAMAGE_DICE_REROLL",
       "proofOnly": [
-        "packages/battle-runtime/battle-runtime-metamagic-tests.qnt"
+        "packages/battle-runtime/battle-runtime-metamagic-options-and-quickened-restoration-tests.qnt"
       ],
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core.qnt",
-        "packages/battle-runtime/battle-runtime-metamagic.qnt"
+        "packages/battle-runtime/battle-runtime-metamagic-empowered.qnt"
       ],
       "status": "generation-subset-clean"
     },

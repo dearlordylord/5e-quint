@@ -4,7 +4,6 @@ module battleRuntimeDragonsBreathTests {
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeDragonsBreath.* from "./battle-runtime-dragons-breath"
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"
-  import battleRuntimeSpellInvocation.* from "./battle-runtime-spell-invocation"
 
   pure def goblinTurnState(state: BattleState): BattleState =
     {

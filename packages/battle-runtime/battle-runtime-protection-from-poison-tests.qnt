@@ -2,6 +2,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-condition-removal-protection
 
 module battleRuntimeProtectionFromPoisonTests {
+  import battleRuntimeSavingThrowRollMode.* from "./battle-runtime-saving-throw-roll-mode"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeProtectionFromPoison.* from "./battle-runtime-protection-from-poison"
   import battleRuntimeTimedEffects.* from "./battle-runtime-timed-effects"
