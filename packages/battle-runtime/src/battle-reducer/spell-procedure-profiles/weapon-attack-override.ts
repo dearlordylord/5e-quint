@@ -18,6 +18,7 @@ import {
   snapshotBattle,
   type BattleActDiscoveryCandidate,
   type BattleActiveEffect,
+  type BattleCreatureState,
   type BattleResolutionResult,
   type BattleState,
   type BonusActionSpellBattleResolutionInput,
@@ -27,7 +28,9 @@ import {
   admitWeaponAttackOverride,
   type WeaponAttackOverrideInvocation,
 } from "../../procedure-admission/weapon-attack-override.ts";
+import type { WeaponAttackOverrideProcedureFacts } from "../../procedure-facts/weapon-attack-override.ts";
 import { activeDruidWildShapeEffect } from "../druid-wild-shape.ts";
+import { loadoutWeaponItemIsUsableDuringWildShape } from "../wild-shape-equipment.ts";
 import {
   activeEffectsAfterWeaponAttackOverride,
   WeaponAttackOverrideExecutionSchema,
@@ -47,10 +50,17 @@ type WeaponAttackOverrideResolveInput = SpellProcedureProfileResolveInput<
 >;
 
 function discoverWeaponAttackOverrideCastAct(
-  _state: BattleState,
+  state: BattleState,
   actorId: CombatantId,
   invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<WeaponAttackOverrideInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
+  const actor = state.combatants.get(actorId);
+  if (
+    actor?.origin.kind !== "character" ||
+    !weaponAttackOverrideWeaponIsUsable(actor, invocation)
+  ) {
+    return [];
+  }
   return [
     {
       subject: {
@@ -81,6 +91,24 @@ function resolveWeaponAttackOverride(
       "Weapon attack override source combatant does not match the caster.",
     );
   }
+  const actor = input.input.state.combatants.get(input.actorId);
+  if (actor === undefined) {
+    return invalidResult(
+      input.input.state,
+      "missingCombatant",
+      "Weapon attack override caster is not in this battle.",
+    );
+  }
+  if (
+    actor.origin.kind !== "character" ||
+    !weaponAttackOverrideWeaponIsUsable(actor, input.invocation)
+  ) {
+    return invalidResult(
+      input.input.state,
+      "unsupportedSubject",
+      "Weapon attack override requires its attached weapon to remain usable.",
+    );
+  }
   const spellCastReactionWindow = maybeOpenInterruptWindow(
     input.input.state,
     spellCastInterruptFrame({
@@ -101,14 +129,6 @@ function resolveWeaponAttackOverride(
     return spellCastReactionWindow;
   }
 
-  const actor = input.input.state.combatants.get(input.actorId);
-  if (actor === undefined) {
-    return invalidResult(
-      input.input.state,
-      "missingCombatant",
-      "Weapon attack override caster is not in this battle.",
-    );
-  }
   const activeEffects: readonly BattleActiveEffect[] =
     activeEffectsAfterWeaponAttackOverride(
       actor.activeEffects,
@@ -135,6 +155,20 @@ function resolveWeaponAttackOverride(
         state: resourced.state,
         snapshot: snapshotBattle(resourced.state),
       };
+}
+
+function weaponAttackOverrideWeaponIsUsable(
+  actor: BattleCreatureState,
+  invocation: Pick<WeaponAttackOverrideProcedureFacts, "activeEffect">,
+): boolean {
+  if (actor.origin.kind !== "character") {
+    return false;
+  }
+  return loadoutWeaponItemIsUsableDuringWildShape({
+    loadout: actor.origin.selectedLoadout,
+    activeWildShape: activeDruidWildShapeEffect(actor),
+    itemId: invocation.activeEffect.weaponItemId,
+  });
 }
 
 function weaponAttackOverrideFillSetHasDisallowedFills(

@@ -5922,7 +5922,6 @@ export function spellProcedureExecution(
         access: value.access,
         actionCost: value.actionCost,
         activeEffect: value.activeEffect,
-        attachedWeaponItemId: value.attachedWeapon.itemId,
         procedure: value.procedure,
         resource: value.resource,
       }),

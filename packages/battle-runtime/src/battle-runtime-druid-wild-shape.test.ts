@@ -38,6 +38,7 @@ import {
   damageRollFill,
   discoverBattleActCandidates,
   discoverBattleActs,
+  endTurn,
   findHole,
   goblinId,
   requireHole,
@@ -2092,6 +2093,95 @@ test("Beast Spells admits no-Material spell invocation while Wild Shape is activ
   ).toBe(true);
 });
 
+test("Beast Spells exposes Shillelagh only while its attached weapon remains usable", () => {
+  const session = druidWildShapeSession({
+    druidLevel: DRUID_BEAST_SPELLS_CLASS_LEVEL,
+    cantrips: [spellRecord("shillelagh")],
+    attack: weakTrueFormWeaponAttack("weapon_quarterstaff"),
+    selectedLoadout: {
+      weapon: {
+        itemId: "main:weapon_quarterstaff",
+        unitId: "weapon_quarterstaff",
+        grip: "one_handed",
+      },
+    },
+  });
+  const preShapeShillelagh = discoverBattleActs(session).find(
+    (act) =>
+      battleActSpellPresentation(act)?.invocation.spellId === "shillelagh",
+  );
+  if (preShapeShillelagh?.subject.tag !== "bonusActionSpell") {
+    throw new Error("Expected pre-shape Shillelagh act.");
+  }
+  const subject = wildShapeSubject(session.state, {
+    action: "assumeForm",
+    formStatBlockId: ridingHorseId,
+  });
+  const needsDisposition = resolveDruidWildShape(session.state, subject);
+  if (needsDisposition.tag !== "needsHoles") {
+    throw new Error("Expected Wild Shape equipment disposition hole.");
+  }
+  const dispositionHole = requireWildShapeEquipmentDispositionHole(
+    needsDisposition.holes,
+  );
+  const mainWeapon = dispositionHole.candidates.find(
+    (candidate) => candidate.kind === "mainWeapon",
+  );
+  if (mainWeapon === undefined) {
+    throw new Error("Expected Quarterstaff disposition candidate.");
+  }
+  const merged = requireResolved(
+    resolveDruidWildShape(session.state, subject, [
+      wildShapeDispositionFill(dispositionHole, [
+        { item: mainWeapon, disposition: "merges" },
+      ]),
+    ]),
+  );
+  const mergedNextTurn = nextDruidTurn(merged.state);
+
+  expect(
+    hasSpell(
+      battleRuntimeSessionForTest({
+        state: mergedNextTurn,
+        context: session.context,
+      }),
+      "shillelagh",
+    ),
+  ).toBe(false);
+  expect(
+    resolveBattleSubject({
+      state: mergedNextTurn,
+      subject: preShapeShillelagh.subject,
+      fills: [],
+    }),
+  ).toMatchObject({
+    tag: "invalid",
+    reason: "unsupportedSubject",
+  });
+
+  const worn = requireResolved(
+    resolveDruidWildShape(session.state, subject, [
+      wildShapeDispositionFill(dispositionHole, [
+        {
+          item: mainWeapon,
+          disposition: "worn",
+          practicality: { kind: "practicalToWear" },
+        },
+      ]),
+    ]),
+  );
+  const wornNextTurn = nextDruidTurn(worn.state);
+  expect(
+    hasSpell(
+      battleRuntimeSessionForTest({
+        state: wornNextTurn,
+        context: session.context,
+      }),
+      "shillelagh",
+    ),
+  ).toBe(true);
+});
+
 test("Beast Spells admits focus-replaceable Material spell invocation while Wild Shape is active", () => {
   const session = druidWildShapeSession({
     druidLevel: DRUID_BEAST_SPELLS_CLASS_LEVEL,
@@ -2173,6 +2263,7 @@ function druidWildShapeBattle(input?: {
   readonly d20Statistics?: CharacterBattleD20Statistics;
   readonly knownForms?: readonly StatBlockRecord[];
   readonly preparedSpells?: readonly SpellRecord[];
+  readonly cantrips?: readonly SpellRecord[];
   readonly selectedLoadout?: CharacterBattleCreatureState["origin"]["selectedLoadout"];
   readonly spellSlots?: readonly {
     readonly spellLevel: 1 | 2 | 3 | 4 | 5;
@@ -2192,6 +2283,7 @@ function druidWildShapeSession(input?: {
   readonly d20Statistics?: CharacterBattleD20Statistics;
   readonly knownForms?: readonly StatBlockRecord[];
   readonly preparedSpells?: readonly SpellRecord[];
+  readonly cantrips?: readonly SpellRecord[];
   readonly selectedLoadout?: CharacterBattleCreatureState["origin"]["selectedLoadout"];
   readonly spellSlots?: readonly {
     readonly spellLevel: 1 | 2 | 3 | 4 | 5;
@@ -2223,6 +2315,7 @@ function druidWildShapeCreatureInit(input?: {
   readonly d20Statistics?: CharacterBattleD20Statistics;
   readonly knownForms?: readonly StatBlockRecord[];
   readonly preparedSpells?: readonly SpellRecord[];
+  readonly cantrips?: readonly SpellRecord[];
   readonly selectedLoadout?: CharacterBattleCreatureState["origin"]["selectedLoadout"];
   readonly spellSlots?: readonly {
     readonly spellLevel: 1 | 2 | 3 | 4 | 5;
@@ -2250,7 +2343,7 @@ function druidWildShapeCreatureInit(input?: {
     selectedLoadout: input?.selectedLoadout ?? {},
     spellcasting: {
       ...wizardSpellcasting({
-        cantrips: [spellRecord("produce_flame")],
+        cantrips: input?.cantrips ?? [spellRecord("produce_flame")],
         preparedSpells: input?.preparedSpells ?? [spellRecord("cure_wounds")],
         ...(input?.spellSlots === undefined
           ? {}
@@ -2272,6 +2365,19 @@ function hasActionSpell(
   );
 }
 
+function hasSpell(session: BattleRuntimeSession, spellId: string): boolean {
+  return discoverBattleActs(session).some(
+    (act) => battleActSpellPresentation(act)?.invocation.spellId === spellId,
+  );
+}
+
+function nextDruidTurn(state: BattleState): BattleState {
+  const targetTurn = requireResolved(endTurn({ state, actorId: druidId }));
+  return requireResolved(
+    endTurn({ state: targetTurn.state, actorId: goblinId }),
+  ).state;
+}
+
 function weakTrueFormLongswordAttack(): NonNullable<
   CharacterSeedInput["attack"]
 > {
@@ -2291,7 +2397,11 @@ function weakTrueFormDaggerAttack(): NonNullable<
 }
 
 function weakTrueFormWeaponAttack(
-  unitId: "weapon_longsword" | "weapon_shortsword" | "weapon_dagger",
+  unitId:
+    | "weapon_longsword"
+    | "weapon_shortsword"
+    | "weapon_dagger"
+    | "weapon_quarterstaff",
 ): NonNullable<CharacterSeedInput["attack"]> {
   const weapon = unitLibrary.requireUnit(unitId);
   if (weapon.kind !== "weapon") {

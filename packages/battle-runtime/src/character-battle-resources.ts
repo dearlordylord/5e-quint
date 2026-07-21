@@ -1,6 +1,5 @@
 import {
   AbilityModifier,
-  ClassLevel,
   NonNegativeInteger,
   ResourceCount,
   SpellSlotLevel,
@@ -30,8 +29,12 @@ import {
 } from "@dnd/surface/surface/types";
 import {
   type CharacterBattleClassLevel,
-  type CharacterBattleClassLevelInit,
+  type CharacterBattleClassLevels,
   characterBattleLevel,
+} from "./character-class-level.ts";
+export {
+  parseCharacterBattleClassLevels,
+  type CharacterBattleClassLevelsIssue,
 } from "./character-class-level.ts";
 import {
   battleBardicInspirationGrantSupportForUnit,
@@ -202,7 +205,7 @@ export type CharacterBattleResourceAdmission = {
 
 export function admitCharacterBattleResources(
   inits: readonly CharacterBattleResourceInit[],
-  classLevels: readonly CharacterBattleClassLevel[],
+  classLevels: CharacterBattleClassLevels,
   scopeRef: BattleCharacterExecutionScopeRef,
 ): CharacterBattleResourceAdmission {
   const admitted = inits.map((init, ordinal) => {
@@ -512,32 +515,9 @@ export function parseCharacterBattleInvocationSpellAccesses(
   };
 }
 
-export function parseCharacterBattleClassLevels(
-  classLevels: readonly CharacterBattleClassLevelInit[],
-): readonly CharacterBattleClassLevel[] {
-  const seenClassNames = new Set<ClassName>();
-  return classLevels.map((classLevel) => {
-    if (
-      !Number.isInteger(classLevel.level) ||
-      classLevel.level < 1 ||
-      classLevel.level > 20
-    ) {
-      throw new Error("Character class levels must be integers from 1 to 20.");
-    }
-    if (seenClassNames.has(classLevel.className)) {
-      throw new Error("Character class levels must not duplicate classes.");
-    }
-    seenClassNames.add(classLevel.className);
-    return {
-      className: classLevel.className,
-      level: ClassLevel.make(classLevel.level),
-    };
-  });
-}
-
 export function characterResourceState(
   input: CharacterBattleResourceInit,
-  classLevels: readonly CharacterBattleClassLevel[],
+  classLevels: CharacterBattleClassLevels,
   resourcePoolRef: BattleResourcePoolExecutionRef,
 ): CharacterBattleResourceState {
   const initIssue = characterBattleResourceInitIssue(input, classLevels);
@@ -601,7 +581,7 @@ export function characterResourceState(
 
 export function characterBattleResourceMaxUses(input: {
   readonly unit: UnitRecord;
-  readonly classLevels: readonly CharacterBattleClassLevel[];
+  readonly classLevels: CharacterBattleClassLevels;
   readonly capAbilityModifier?: AbilityModifier;
 }): ResourceCount | undefined {
   const resource = characterBattleResourceForUnit(input.unit);
@@ -623,7 +603,7 @@ export function characterBattleResourceMaxUses(input: {
 
 export function characterBattleResourceMaxPoints(input: {
   readonly unit: UnitRecord;
-  readonly classLevels: readonly CharacterBattleClassLevel[];
+  readonly classLevels: CharacterBattleClassLevels;
   readonly capAbilityModifier?: AbilityModifier;
 }): ResourceCount | undefined {
   const resource = characterBattleResourceForUnit(input.unit);
@@ -639,7 +619,7 @@ export function characterBattleResourceMaxPoints(input: {
 
 function characterBattleResourceLevel(
   unit: UnitRecord,
-  classLevels: readonly CharacterBattleClassLevel[],
+  classLevels: CharacterBattleClassLevels,
 ): number {
   const unitClassLevel =
     unit.kind === "class_feature"
@@ -650,7 +630,7 @@ function characterBattleResourceLevel(
 
 export function characterBattleResourceInitIssue(
   input: CharacterBattleResourceInit,
-  classLevels: readonly CharacterBattleClassLevel[],
+  classLevels: CharacterBattleClassLevels,
 ): string | null {
   const resource = characterBattleResourceForUnitOrNull(input.unit);
   if (resource === null) {

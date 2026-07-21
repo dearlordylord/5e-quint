@@ -3327,7 +3327,7 @@ function assertLevelOneShillelagh(input: {
     ),
   ).toMatchObject({
     procedure: "weaponAttackOverride",
-    attachedWeaponItemId: shillelaghQuarterstaffItemId,
+    activeEffect: { weaponItemId: shillelaghQuarterstaffItemId },
   });
 
   const resolved = requireResolved(
@@ -8507,7 +8507,7 @@ function spellProcedureComponentWeaponItemId(
   if (binding?.procedure.kind !== "spellInvocation") return undefined;
   const execution = binding.procedure.execution;
   return execution.procedure === "weaponAttackOverride"
-    ? execution.attachedWeaponItemId
+    ? execution.activeEffect.weaponItemId
     : execution.procedure === "spellHostedWeaponAttack"
       ? execution.componentWeaponItemId
       : undefined;

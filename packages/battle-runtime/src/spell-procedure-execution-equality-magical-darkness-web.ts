@@ -821,7 +821,6 @@ export function sameWeaponAttackOverrideExecution(
     sameSpellAccess(left.access, right.access) &&
     sameSpellResource(left.resource, right.resource) &&
     left.actionCost === right.actionCost &&
-    left.attachedWeaponItemId === right.attachedWeaponItemId &&
     left.activeEffect.kind === right.activeEffect.kind &&
     sameActiveEffectSource(left.activeEffect, right.activeEffect) &&
     left.activeEffect.weaponItemId === right.activeEffect.weaponItemId &&

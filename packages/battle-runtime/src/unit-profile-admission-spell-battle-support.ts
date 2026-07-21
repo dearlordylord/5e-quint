@@ -1,6 +1,7 @@
 import { abilityModifier } from "@dnd/shared-algebras/armor-class-algebra";
 import { proficiencyBonus, type ProficiencyBonus } from "@dnd/shared/types";
 import type {
+  ClassName,
   SpellRecord,
   StatBlockRecord,
   WeaponProficiency,
@@ -40,6 +41,7 @@ import {
 
 export function spellBattle(input: {
   readonly casterId?: CombatantId;
+  readonly casterSpellcastingSourceClassName?: ClassName;
   readonly cantrips?: readonly SpellRecord[];
   readonly preparedSpells?: readonly SpellRecord[];
   readonly attack?: Extract<
@@ -129,7 +131,9 @@ export function spellBattle(input: {
         displayName: "Spellcaster",
         initiative: 20,
         spellcasting: {
-          sourceClassName: singleSpellcastingSourceClassName(casterClassLevels),
+          sourceClassName:
+            input.casterSpellcastingSourceClassName ??
+            singleSpellcastingSourceClassName(casterClassLevels),
           spellcastingAbilityModifier: abilityModifier(3),
           proficiencyBonus: input.casterProficiencyBonus ?? proficiencyBonus(2),
           canCastSpells: true,
