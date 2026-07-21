@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
   battleActiveEffectExecutionRefForTest,
   battleProcedureExecutionRefForSpellHoleForTest,
@@ -1785,10 +1786,7 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
     const damageRoll: Extract<BattleFill, { readonly kind: "rolledDice" }> = {
       kind: "rolledDice",
       holeId: damageHoleId,
-      value: [
-        { results: [DieRollResult(1)] },
-        { results: [DieRollResult(1)] },
-      ],
+      value: [{ results: [DieRollResult(1)] }, { results: [DieRollResult(1)] }],
       spellDamageReroll: {
         kind: "reroll",
         effectKind: EMPOWERED_METAMAGIC_EFFECT_KIND,
@@ -3535,7 +3533,7 @@ function battleSessionAtState(
   session: BattleRuntimeSession,
   state: BattleState,
 ): BattleRuntimeSession {
-  return { state, context: session.context };
+  return battleRuntimeSessionForTest({ state, context: session.context });
 }
 
 function requireBattleCreature(

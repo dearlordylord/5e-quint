@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV87A produce_flame
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-held-light-emitter
 import {
@@ -157,36 +158,37 @@ describe("SRDINV32A deterministic Produce Flame held-light admission", () => {
     if (caster === undefined) {
       throw new Error("Expected Produce Flame caster.");
     }
-    const stateWithPriorCasting: BattleRuntimeSession = {
-      ...state,
-      state: {
-        ...state.state,
-        combatants: new Map(state.state.combatants).set(spellCasterId, {
-          ...caster,
-          activeEffects: [
-            ...caster.activeEffects,
-            {
-              kind: "heldLight",
-              effectRef: battleActiveEffectExecutionRefForTest(
-                "synthetic-prior-produce-flame-held-light",
-              ),
-              sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
-                state,
-                spellCasterId,
-                cantripSpellInvocationRef(produceFlameUnitId, "heldLight"),
-              ),
-              sourceCombatantId: spellCasterId,
-              brightRadiusFeet: movementFeet(20),
-              dimAdditionalFeet: movementFeet(20),
-              expiresAt: {
-                kind: "duration",
-                durationTicks: elapsedTimeTicks(1),
+    const stateWithPriorCasting: BattleRuntimeSession =
+      battleRuntimeSessionForTest({
+        ...state,
+        state: {
+          ...state.state,
+          combatants: new Map(state.state.combatants).set(spellCasterId, {
+            ...caster,
+            activeEffects: [
+              ...caster.activeEffects,
+              {
+                kind: "heldLight",
+                effectRef: battleActiveEffectExecutionRefForTest(
+                  "synthetic-prior-produce-flame-held-light",
+                ),
+                sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
+                  state,
+                  spellCasterId,
+                  cantripSpellInvocationRef(produceFlameUnitId, "heldLight"),
+                ),
+                sourceCombatantId: spellCasterId,
+                brightRadiusFeet: movementFeet(20),
+                dimAdditionalFeet: movementFeet(20),
+                expiresAt: {
+                  kind: "duration",
+                  durationTicks: elapsedTimeTicks(1),
+                },
               },
-            },
-          ],
-        }),
-      },
-    };
+            ],
+          }),
+        },
+      });
     const act = bonusSpellAct({
       session: stateWithPriorCasting,
       spellId: produceFlameUnitId,
@@ -771,5 +773,5 @@ function battleSessionWithState(
   session: BattleRuntimeSession,
   state: BattleState,
 ): BattleRuntimeSession {
-  return { ...session, state };
+  return battleRuntimeSessionForTest({ ...session, state });
 }

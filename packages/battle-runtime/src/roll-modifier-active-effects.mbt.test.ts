@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
   battleActiveEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
@@ -927,7 +928,10 @@ function routeState(input: {
     battle:
       input.battle === undefined
         ? input.state.battle
-        : { ...input.state.battle, state: input.battle },
+        : battleRuntimeSessionForTest({
+            ...input.state.battle,
+            state: input.battle,
+          }),
     holes: input.holes,
     lastResult: input.lastResult,
     surface: input.surface,
@@ -1028,7 +1032,10 @@ function castBaneFailed(
     "Expected Bane failed target to resolve.",
   );
   return {
-    battle: { state: resolved.state, context: state.battle.context },
+    battle: battleRuntimeSessionForTest({
+      state: resolved.state,
+      context: state.battle.context,
+    }),
     holes: [],
     lastResult: "baneFailedTarget",
   };
@@ -1052,7 +1059,10 @@ function castBless(
     "Expected Bless target to resolve.",
   );
   return {
-    battle: { state: resolved.state, context: state.battle.context },
+    battle: battleRuntimeSessionForTest({
+      state: resolved.state,
+      context: state.battle.context,
+    }),
     holes: [],
     lastResult: "blessTarget",
   };
@@ -1087,7 +1097,10 @@ function castGuidanceStealth(
     "Expected Guidance Stealth target to resolve.",
   );
   return {
-    battle: { state: resolved.state, context: state.battle.context },
+    battle: battleRuntimeSessionForTest({
+      state: resolved.state,
+      context: state.battle.context,
+    }),
     holes: [],
     lastResult: "guidanceStealth",
   };
@@ -1112,7 +1125,10 @@ function castPassWithoutTrace(
     "Expected Pass without Trace targets to resolve.",
   );
   return {
-    battle: { state: resolved.state, context: state.battle.context },
+    battle: battleRuntimeSessionForTest({
+      state: resolved.state,
+      context: state.battle.context,
+    }),
     holes: [],
     lastResult: "passWithoutTraceStealth",
   };
@@ -1152,7 +1168,10 @@ function castEnhanceDex(
     "Expected Enhance Ability Dexterity target to resolve.",
   );
   return {
-    battle: { state: resolved.state, context: state.battle.context },
+    battle: battleRuntimeSessionForTest({
+      state: resolved.state,
+      context: state.battle.context,
+    }),
     holes: [],
     lastResult: "enhanceDex",
   };
@@ -1193,7 +1212,10 @@ function castEnhancePerTarget(
     "Expected upcast Enhance Ability per-target choices to resolve.",
   );
   return {
-    battle: { state: resolved.state, context: state.battle.context },
+    battle: battleRuntimeSessionForTest({
+      state: resolved.state,
+      context: state.battle.context,
+    }),
     holes: [],
     lastResult: "enhancePerTarget",
   };
@@ -1233,7 +1255,10 @@ function castEnthrall(
     "Expected Enthrall failed target to resolve.",
   );
   return {
-    battle: { state: resolved.state, context: state.battle.context },
+    battle: battleRuntimeSessionForTest({
+      state: resolved.state,
+      context: state.battle.context,
+    }),
     holes: [],
     lastResult: "enthrallPerception",
   };
@@ -1267,7 +1292,10 @@ function castThaumaturgyBoomingVoice(
     "Expected Thaumaturgy Booming Voice to resolve.",
   );
   return {
-    battle: { state: resolved.state, context: state.battle.context },
+    battle: battleRuntimeSessionForTest({
+      state: resolved.state,
+      context: state.battle.context,
+    }),
     holes: [],
     lastResult: cancelWithDisadvantage
       ? "thaumaturgyCancelled"
@@ -1279,10 +1307,10 @@ function breakRollModifierConcentration(
   state: RollModifierActiveEffectsRuntimeState,
 ): RollModifierActiveEffectsRuntimeState {
   return {
-    battle: {
+    battle: battleRuntimeSessionForTest({
       ...state.battle,
       state: breakBattleConcentration(state.battle.state, spellCasterId),
-    },
+    }),
     holes: [],
     lastResult: "concentrationBroken",
   };

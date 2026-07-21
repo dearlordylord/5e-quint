@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-SHINING-SMITE shining_smite
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-after-hit-damage-illumination
@@ -78,7 +79,10 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
         if (candidate.kind !== "castAttackHitBonusActionSpell") return false;
         return (
           characterSpellInvocationRefForProcedureRefForTest(
-            { ...session, state: awaitingReaction.state },
+            battleRuntimeSessionForTest({
+              ...session,
+              state: awaitingReaction.state,
+            }),
             candidate.reactorId,
             candidate.subject.procedureRef,
           ).spellId === shiningSmiteUnitId
@@ -93,7 +97,10 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
     }
     expect(
       characterSpellInvocationRefForProcedureRefForTest(
-        { ...session, state: awaitingReaction.state },
+        battleRuntimeSessionForTest({
+          ...session,
+          state: awaitingReaction.state,
+        }),
         choice.reactorId,
         choice.subject.procedureRef,
       ),
@@ -342,7 +349,10 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
     }
     expect(
       characterSpellInvocationRefForProcedureRefForTest(
-        { ...unarmedSession, state: unarmedHit.state },
+        battleRuntimeSessionForTest({
+          ...unarmedSession,
+          state: unarmedHit.state,
+        }),
         unarmedChoice.reactorId,
         unarmedChoice.subject.procedureRef,
       ),

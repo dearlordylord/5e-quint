@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.bardic-inspiration-failed-d20-test unit-feature.grappler unit-feature.innate-sorcery-activation unit-feature.martial-arts-attack-projection unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.weapon-mastery-push unit-feature.weapon-mastery-slow unit-feature.fighter-tactical-master spell.invocation-independent-attack-sequence spell.invocation-condition-save spell.invocation-damage-save-or-attack spell.invocation-fog-cloud-obscurement spell.invocation-grease-ground-hazard spell.invocation-make-stable spell.invocation-marked-damage-rider spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-weapon-damage-rider
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV72B bard_bardic_inspiration
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV75B sorcerer_innate_sorcery
@@ -132,6 +133,10 @@ import {
 import type { BattleActiveEffectExecutionRef } from "./identity.ts";
 import type { BattleRuntimeSession } from "./battle-runtime-context.ts";
 import {
+  addBattleCombatant,
+  removeBattleCombatants,
+} from "./battle-reducer/api-lifecycle.ts";
+import {
   characterBattleResourceIsUnlimited,
   characterBattleResourceIsUseCount,
   parseCharacterBattleClassLevels,
@@ -144,7 +149,6 @@ import {
   type CharacterUnitProcedureQuery,
 } from "./character-execution.ts";
 import {
-  addBattleCombatant,
   armorOfShadowsSpellInvocationRef,
   ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SUPPORT_PROFILE,
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
@@ -179,7 +183,6 @@ import {
   PACT_OF_THE_CHAIN_FIND_FAMILIAR_INVOCATION_MODE,
   parseSupportedUnitFeatureProfile,
   REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
-  removeBattleCombatants,
   resolveBardicInspirationFailedD20Test,
   resolveBattleConcentrationDamage,
   resolveBattleInterrupt,
@@ -1307,7 +1310,10 @@ export function fighterTurnWithReadiedRayAndHealer(
   if (fighterTurn.tag !== "resolved") {
     throw new Error(`Expected resolved End Turn, got ${fighterTurn.tag}.`);
   }
-  return { state: fighterTurn.state, context: session.context };
+  return battleRuntimeSessionForTest({
+    state: fighterTurn.state,
+    context: session.context,
+  });
 }
 
 export function fighterTurnWithReadiedAcidAndSecondReadiedRay(): BattleState {
@@ -1358,7 +1364,7 @@ export function fighterTurnWithReadiedAcidAndSecondReadiedRay(): BattleState {
         tag: "actionSpell",
         actorId: secondWizardId,
         procedureRef: requireCharacterSpellProcedureRefForTest(
-          { ...session, state: secondWizardTurn },
+          battleRuntimeSessionForTest({ ...session, state: secondWizardTurn }),
           secondWizardId,
           cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
         ),
@@ -1399,14 +1405,14 @@ export function wizardTurnWithReadiedRay(
   if (readied === undefined || concentratingWizard === undefined) {
     throw new Error("Expected Wizard to hold a readied spell.");
   }
-  return {
+  return battleRuntimeSessionForTest({
     state: {
       ...base,
       combatants: new Map(base.combatants).set(wizardId, concentratingWizard),
       readiedSpells: new Map([[wizardId, readied]]),
     },
     context: session.context,
-  };
+  });
 }
 
 export function goblinTurnBattle(
@@ -4248,10 +4254,10 @@ export function bardicInspirationBattle(input: {
       hidden: { discoveryDc: difficultyClass(16) },
     });
   }
-  return {
+  return battleRuntimeSessionForTest({
     state: { ...state, combatants },
     context: session.context,
-  };
+  });
 }
 
 export function bardicInspirationTargetFill(

@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3-FOLLOWUP-GLYPH-DURABLE-OCCURRENCE glyph_of_warding
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3-FOLLOWUP-GLYPH-EXPLOSIVE-RUNE-RELEASE glyph_of_warding
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3-FOLLOWUP-GLYPH-STORED-SPELL-RELEASE glyph_of_warding
@@ -1120,16 +1121,18 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
         { spellLevel: 2, count: 1 },
       ],
     });
-    const state = stateWithUnrelatedReadiedSpell({
-      state: stateWithGlyphEffect(
-        requireCompletedGlyphEffect({
-          anchor: { kind: "surface", areaId: glyphSurfaceAnchorAreaId },
-          release: { kind: "spellGlyph", storedInvocation },
-        }),
-        session.state,
-      ),
-      context: session.context,
-    }).state;
+    const state = stateWithUnrelatedReadiedSpell(
+      battleRuntimeSessionForTest({
+        state: stateWithGlyphEffect(
+          requireCompletedGlyphEffect({
+            anchor: { kind: "surface", areaId: glyphSurfaceAnchorAreaId },
+            release: { kind: "spellGlyph", storedInvocation },
+          }),
+          session.state,
+        ),
+        context: session.context,
+      }),
+    ).state;
     const readiedBefore = state.readiedSpells.get(spellCasterId);
     const readiedConcentration = {
       sourceProcedureRef: readiedBefore?.procedureRef ?? glyphProcedureRef,
@@ -1224,19 +1227,21 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       targetHp: 30,
       targetMaxHp: 30,
     });
-    const state = stateWithUnrelatedReadiedSpell({
-      state: stateWithPriorCasterSpellSlotUse(
-        stateWithGlyphEffect(
-          requireCompletedGlyphEffect({
-            anchor: { kind: "surface", areaId: glyphSurfaceAnchorAreaId },
-            release: { kind: "spellGlyph", storedInvocation },
-          }),
-          session.state,
+    const state = stateWithUnrelatedReadiedSpell(
+      battleRuntimeSessionForTest({
+        state: stateWithPriorCasterSpellSlotUse(
+          stateWithGlyphEffect(
+            requireCompletedGlyphEffect({
+              anchor: { kind: "surface", areaId: glyphSurfaceAnchorAreaId },
+              release: { kind: "spellGlyph", storedInvocation },
+            }),
+            session.state,
+          ),
+          2,
         ),
-        2,
-      ),
-      context: session.context,
-    }).state;
+        context: session.context,
+      }),
+    ).state;
     const readiedBefore = state.readiedSpells.get(spellCasterId);
     const readiedConcentration = {
       sourceProcedureRef: readiedBefore?.procedureRef ?? glyphProcedureRef,
@@ -2641,10 +2646,12 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
         targetMaxHp: 20,
       },
     );
-    const state = stateWithUnrelatedReadiedSpell({
-      state: stateWithPriorCasterSpellSlotUse(session.state, 2),
-      context: session.context,
-    }).state;
+    const state = stateWithUnrelatedReadiedSpell(
+      battleRuntimeSessionForTest({
+        state: stateWithPriorCasterSpellSlotUse(session.state, 2),
+        context: session.context,
+      }),
+    ).state;
     expect(casterSpellSlotExpended(state, 2)).toBe(1);
     const priorTurnSpellSlotUses =
       state.currentTurnResources.spellSlotUsesThisTurn;
@@ -3630,7 +3637,10 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     expect(disposition.choices).toContainEqual({
       kind: "zeroHitPointReplacement",
       procedureRef: requireCharacterUnitProcedureRefForTest(
-        { state: baseState, context: baseSession.context },
+        battleRuntimeSessionForTest({
+          state: baseState,
+          context: baseSession.context,
+        }),
         spellTargetId,
         orcRelentlessEnduranceUnitId,
       ),
@@ -3640,7 +3650,10 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       {
         kind: "zeroHitPointReplacement",
         procedureRef: requireCharacterUnitProcedureRefForTest(
-          { state: baseState, context: baseSession.context },
+          battleRuntimeSessionForTest({
+            state: baseState,
+            context: baseSession.context,
+          }),
           spellTargetId,
           orcRelentlessEnduranceUnitId,
         ),
@@ -4012,7 +4025,7 @@ function stateWithUnrelatedReadiedSpell(
     throw new Error("Expected prepared Guiding Bolt readied-spell invocation.");
   }
   const procedureRef = readiedProcedureSource.procedureRef;
-  return {
+  return battleRuntimeSessionForTest({
     context: session.context,
     state: {
       ...state,
@@ -4033,7 +4046,7 @@ function stateWithUnrelatedReadiedSpell(
         },
       }),
     },
-  };
+  });
 }
 
 function stateWithOrdinaryMindSpikeConcentration(
@@ -4367,10 +4380,10 @@ function sessionWithGlyphEffect(
   input: Parameters<typeof spellBattle>[0] = {},
 ): BattleRuntimeSession {
   const session = glyphBattleSession(input);
-  return {
+  return battleRuntimeSessionForTest({
     state: stateWithGlyphEffect(effect, session.state),
     context: session.context,
-  };
+  });
 }
 
 function stateWithPriorCasterSpellSlotUse(

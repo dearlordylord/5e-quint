@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-web-restraint-hazard
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE
@@ -272,7 +273,10 @@ function castWeb(state: WebRuntimeState): WebRuntimeState {
   );
   return {
     ...state,
-    battle: { ...state.battle, state: result.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: result.state,
+    }),
     currentTurnRole: "caster",
     holes: [],
     lastResult: "resolved",
@@ -286,7 +290,10 @@ function endCasterTurn(state: WebRuntimeState): WebRuntimeState {
   );
   return {
     ...state,
-    battle: { ...state.battle, state: result.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: result.state,
+    }),
     currentTurnRole: "target",
     holes: [],
     lastResult: "resolved",
@@ -333,7 +340,10 @@ function fillWebSave(
   );
   return {
     ...state,
-    battle: { ...state.battle, state: result.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: result.state,
+    }),
     holes: [],
     lastResult: succeeded ? "saved" : "restrained",
   };
@@ -367,7 +377,10 @@ function escapeWeb(
   );
   return {
     ...state,
-    battle: { ...state.battle, state: result.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: result.state,
+    }),
     holes: [],
     lastResult: succeeded ? "escaped" : "escapeFailed",
   };
@@ -385,7 +398,10 @@ function resolveNoLongerInArea(state: WebRuntimeState): WebRuntimeState {
   );
   return {
     ...state,
-    battle: { ...state.battle, state: result.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: result.state,
+    }),
     holes: [],
     lastResult: "leftArea",
   };
@@ -443,7 +459,10 @@ function moveWithDifficultTerrain(state: WebRuntimeState): WebRuntimeState {
   );
   return {
     ...state,
-    battle: { ...state.battle, state: result.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: result.state,
+    }),
     holes: [],
     lastResult: "moved",
   };
@@ -460,7 +479,10 @@ function removeArea(state: WebRuntimeState): WebRuntimeState {
   );
   return {
     ...state,
-    battle: { ...state.battle, state: result.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: result.state,
+    }),
     holes: [],
     lastResult: "removed",
   };

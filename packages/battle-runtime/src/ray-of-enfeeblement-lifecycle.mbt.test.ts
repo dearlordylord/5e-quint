@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-ray-of-enfeeblement-d20-lifecycle
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-ray-of-enfeeblement-damage-penalty
@@ -287,7 +288,10 @@ function castRayOfEnfeeblementFailedSave(
   );
   return {
     ...state,
-    battle: { state: result.state, context: state.battle.context },
+    battle: battleRuntimeSessionForTest({
+      state: result.state,
+      context: state.battle.context,
+    }),
     currentTurnRole: "caster",
     holes: [],
     lastResult: "resolved",
@@ -303,7 +307,10 @@ function endCasterTurn(
   );
   return {
     ...state,
-    battle: { state: result.state, context: state.battle.context },
+    battle: battleRuntimeSessionForTest({
+      state: result.state,
+      context: state.battle.context,
+    }),
     currentTurnRole: "target",
     holes: [],
     lastResult: "resolved",
@@ -344,7 +351,10 @@ function fillRepeatSave(
   );
   return {
     ...state,
-    battle: { state: result.state, context: state.battle.context },
+    battle: battleRuntimeSessionForTest({
+      state: result.state,
+      context: state.battle.context,
+    }),
     currentTurnRole: "caster",
     holes: [],
     lastResult: succeeded ? "ended" : "maintained",
@@ -416,7 +426,10 @@ function resolveTargetDamage(
   const afterHp = Number(requireCombatant(resolved.state, spellCasterId).hp);
   return {
     ...state,
-    battle: { state: resolved.state, context: state.battle.context },
+    battle: battleRuntimeSessionForTest({
+      state: resolved.state,
+      context: state.battle.context,
+    }),
     holes: [],
     lastDamageAfterPenalty: beforeHp - afterHp,
     lastResult: "resolved",

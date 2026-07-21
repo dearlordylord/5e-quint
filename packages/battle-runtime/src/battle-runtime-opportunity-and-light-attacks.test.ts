@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import {
   characterBattleFeatureInitForTest,
@@ -639,9 +640,9 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
     ).state;
 
     expect(
-      discoverBattleActs({ ...session, state: afterMainDagger }).map(
-        (act) => act.subject,
-      ),
+      discoverBattleActs(
+        battleRuntimeSessionForTest({ ...session, state: afterMainDagger }),
+      ).map((act) => act.subject),
     ).toContainEqual(
       characterBonusAttackSubjectForTest(
         afterMainDagger,

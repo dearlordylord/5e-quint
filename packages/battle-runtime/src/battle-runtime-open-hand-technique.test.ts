@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.open-hand-technique
 import { describe, expect, test } from "vitest";
 
@@ -363,7 +364,10 @@ function openHandTechniqueHitWindow(session = openHandTechniqueBattle()): {
     "unitFeatureDecision",
   );
   return {
-    session: { ...session, state: activated.state },
+    session: battleRuntimeSessionForTest({
+      ...session,
+      state: activated.state,
+    }),
     state: activated.state,
     subject,
     hitFills,

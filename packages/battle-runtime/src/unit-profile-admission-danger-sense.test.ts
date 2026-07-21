@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-CLASS-BARBARIAN-DANGER-SENSE barbarian_danger_sense
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.passive-saving-throw-roll-mode
 import {
@@ -286,5 +287,5 @@ function dangerSenseGreaseGroundHazardBattle(input?: {
   if (targetTurn.tag !== "resolved") {
     throw new Error("Expected Danger Sense Grease target turn.");
   }
-  return { ...session, state: targetTurn.state };
+  return battleRuntimeSessionForTest({ ...session, state: targetTurn.state });
 }

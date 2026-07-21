@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
@@ -1091,7 +1092,10 @@ function resolveShieldReactionChoice(
   expect(reactionChoice.reactorId).toBe(spellCasterId);
   expect(
     characterSpellInvocationRefForProcedureRefForTest(
-      { state: awaitingReaction.state, context: session.context },
+      battleRuntimeSessionForTest({
+        state: awaitingReaction.state,
+        context: session.context,
+      }),
       reactionChoice.reactorId,
       reactionChoice.subject.procedureRef,
     ),

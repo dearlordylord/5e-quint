@@ -23,6 +23,8 @@ let weapon =
       , name = "Quarterstaff"
       , category = "simple"
       , usage = "melee"
+      , attachedWeaponAttackOverrideEligibility =
+        { kind = "clubOrQuarterstaff" }
       , provenance = { kind = "srd-5.2.1", section = "Equipment#Weapons" }
       , description = "Quarterstaff from the SRD weapons table."
       , damage =

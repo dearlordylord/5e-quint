@@ -1,12 +1,11 @@
 import {
   discoverBattleActs,
   battleSubjectPresentation,
-  openCreatureFallsInterruptWindow,
-  resolveBattleInterrupt,
+  openCreatureFallsRuntimeInterruptWindow,
+  resolveBattleRuntimeInterrupt,
   resolveBattleRuntimeSubject,
   sameBattleSubject,
   type BattleFill,
-  type BattleResolutionResult,
   type BattleRuntimeResolutionResult,
   type BattleRuntimeSession,
 } from "@dnd/battle-runtime";
@@ -116,13 +115,10 @@ export function handleBattleToolCall(
         ? visibleSession
         : (previous?.baseSession ?? visibleSession);
       const result = isInterruptDecision
-        ? runtimeResolutionFromMechanical(
-            replaySession,
-            resolveBattleInterrupt({
-              state: replaySession.state,
-              fill: matched.args.fill,
-            }),
-          )
+        ? resolveBattleRuntimeInterrupt({
+            session: replaySession,
+            fill: matched.args.fill,
+          })
         : resolveBattleRuntimeSubject({
             session: replaySession,
             subject,
@@ -155,14 +151,11 @@ export function handleBattleToolCall(
         matched.args.subject.tag === "runtimeCommand" &&
         matched.args.subject.command === "creatureFalls"
       ) {
-        const result = runtimeResolutionFromMechanical(
-          state.right,
-          openCreatureFallsInterruptWindow({
-            state: state.right.state,
-            fallingCreatureId: matched.args.subject.fallingCreatureId,
-            reactionSpellTargetFacts: matched.args.reactionSpellTargetFacts,
-          }),
-        );
+        const result = openCreatureFallsRuntimeInterruptWindow({
+          session: state.right,
+          fallingCreatureId: matched.args.subject.fallingCreatureId,
+          reactionSpellTargetFacts: matched.args.reactionSpellTargetFacts,
+        });
         if (
           storeBattleResolution(
             root,
@@ -351,60 +344,6 @@ function pendingTransactionForResult({
     subject: result.subject,
     fills: isInterruptDecision ? [] : fills,
   };
-}
-
-const byResolutionTag = Match.discriminator("tag");
-
-function runtimeResolutionFromMechanical(
-  session: BattleRuntimeSession,
-  result: BattleResolutionResult,
-): BattleRuntimeResolutionResult {
-  return Match.value(result).pipe(
-    byResolutionTag("resolved", (outcome) => ({
-      tag: outcome.tag,
-      session: { state: outcome.state, context: session.context },
-      snapshot: outcome.snapshot,
-      ...(outcome.routeEvents === undefined
-        ? {}
-        : { routeEvents: outcome.routeEvents }),
-      ...(outcome.objectDamages === undefined
-        ? {}
-        : { objectDamages: outcome.objectDamages }),
-      ...(outcome.objectIgnitions === undefined
-        ? {}
-        : { objectIgnitions: outcome.objectIgnitions }),
-      ...(outcome.droppedObjects === undefined
-        ? {}
-        : { droppedObjects: outcome.droppedObjects }),
-      ...(outcome.shovePushes === undefined
-        ? {}
-        : { shovePushes: outcome.shovePushes }),
-      ...(outcome.teleports === undefined
-        ? {}
-        : { teleports: outcome.teleports }),
-    })),
-    byResolutionTag("needsHoles", (outcome) => ({
-      tag: outcome.tag,
-      session: { state: outcome.state, context: session.context },
-      subject: outcome.subject,
-      holes: outcome.holes,
-      snapshot: outcome.snapshot,
-      ...(outcome.routeEvents === undefined
-        ? {}
-        : { routeEvents: outcome.routeEvents }),
-    })),
-    byResolutionTag("invalid", (outcome) => ({
-      tag: outcome.tag,
-      session,
-      reason: outcome.reason,
-      message: outcome.message,
-      snapshot: outcome.snapshot,
-      ...(outcome.routeEvents === undefined
-        ? {}
-        : { routeEvents: outcome.routeEvents }),
-    })),
-    Match.exhaustive,
-  );
 }
 
 function activeBattleWithoutPendingFills(

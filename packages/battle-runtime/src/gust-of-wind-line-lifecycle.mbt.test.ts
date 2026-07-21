@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-gust-of-wind-line
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE
@@ -327,7 +328,10 @@ function castGustOfWind(
   );
   return {
     ...state,
-    battle: { ...state.battle, state: result.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: result.state,
+    }),
     holes: [],
     lastResult: succeeded ? "initialSaveSucceeded" : "initialSaveFailed",
   };
@@ -347,7 +351,10 @@ function endCasterTurn(state: GustRuntimeState): GustRuntimeState {
   );
   return {
     ...state,
-    battle: { ...state.battle, state: result.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: result.state,
+    }),
     currentTurnRole: "target",
     holes: [],
     lastResult: "endCasterTurn",
@@ -405,7 +412,10 @@ function fillEndTurnLineSave(
   );
   return {
     ...state,
-    battle: { ...state.battle, state: result.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: result.state,
+    }),
     currentTurnRole: "caster",
     holes: [],
     lastResult: succeeded ? "endTurnSaveSucceeded" : "endTurnSaveFailed",
@@ -452,7 +462,10 @@ function moveCloserThroughLine(state: GustRuntimeState): GustRuntimeState {
   );
   return {
     ...state,
-    battle: { ...state.battle, state: result.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: result.state,
+    }),
     holes: [],
     lastResult: "movedCloser",
   };
@@ -495,7 +508,10 @@ function changeDirectionEast(state: GustRuntimeState): GustRuntimeState {
   );
   return {
     ...state,
-    battle: { ...state.battle, state: result.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: result.state,
+    }),
     holes: [],
     lastResult: "directionChanged",
   };
@@ -504,10 +520,10 @@ function changeDirectionEast(state: GustRuntimeState): GustRuntimeState {
 function breakGustConcentration(state: GustRuntimeState): GustRuntimeState {
   return {
     ...state,
-    battle: {
+    battle: battleRuntimeSessionForTest({
       ...state.battle,
       state: breakBattleConcentration(state.battle.state, spellCasterId),
-    },
+    }),
     holes: [],
     lastResult: "concentrationBroken",
   };

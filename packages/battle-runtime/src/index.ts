@@ -94,7 +94,6 @@ export {
   BattleActPresentationSchema,
   BattleInterruptProcedureChoiceSchema,
   BattleSpellPresentationSchema,
-  battleActPresentationMatchesSubject,
   BattleUnitSupportSourceSchema,
 } from "./battle-reducer/battle-codecs.ts";
 
@@ -193,6 +192,7 @@ export {
 
 export {
   admitCompanionToBattle,
+  admitCompanionToBattleRuntime,
   applyFindFamiliarZeroHitPointDisappearance,
   castFindFamiliar,
   castWildCompanion,
@@ -341,7 +341,7 @@ export {
   BattleShovePushOutcomeSchema,
   BattleSnapshotSchema,
   StatBlockExecutionSnapshotSchema,
-  addBattleCombatant,
+  addBattleRuntimeCombatant,
   applyInitiativeSwap,
   finishInitialInitiativeSetup,
   activeFeatherFallDescentRateCapFeetPerRound,
@@ -365,11 +365,13 @@ export {
   concentrationSavingThrowDc,
   discoverBattleActCandidates,
   discoverBattleActs,
+  endBattleRuntimeTurn,
   endTurn,
   FEATHER_FALL_DESCENT_RATE_CAP_FEET_PER_ROUND,
   openBattleInterruptWindow,
   openCreatureFallsInterruptWindow,
-  removeBattleCombatants,
+  openCreatureFallsRuntimeInterruptWindow,
+  removeBattleRuntimeCombatants,
   resolveBattleConcentrationDamage,
   resolveFallDamageLanding,
   resolveFeatherFallLanding,
@@ -378,6 +380,7 @@ export {
   requiredInitiativeRollModeForCombatant,
   resolveSuccessfulAbilityCheckReactionReduction,
   resolveBattleInterrupt,
+  resolveBattleRuntimeInterrupt,
   resolveBattleRuntimeSubject,
   resolveBattleSubject,
   resolveBardicInspirationFailedD20Test,

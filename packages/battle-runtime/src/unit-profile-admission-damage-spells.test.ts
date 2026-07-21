@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT14 acid_splash magic_missile ray_of_frost
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV28B inflict_wounds poison_spray sacred_flame
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV89A chill_touch
@@ -1511,7 +1512,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
     const caster = requireCombatant(state.state, spellCasterId);
-    const concentratingSession = {
+    const concentratingSession = battleRuntimeSessionForTest({
       ...state,
       state: {
         ...state.state,
@@ -1525,7 +1526,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
           },
         }),
       },
-    };
+    });
     const act = spellAct({
       session: concentratingSession,
       spellId: mindSpikeUnitId,
@@ -1601,7 +1602,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       targetMaxHp: 30,
     });
     const caster = requireCombatant(state.state, spellCasterId);
-    const concentratingSession = {
+    const concentratingSession = battleRuntimeSessionForTest({
       ...state,
       state: {
         ...state.state,
@@ -1615,7 +1616,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
           },
         }),
       },
-    };
+    });
     const act = spellAct({
       session: concentratingSession,
       spellId: mindSpikeUnitId,

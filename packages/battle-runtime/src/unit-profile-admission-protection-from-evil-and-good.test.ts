@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV60A protection_from_evil_and_good
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.creature-type-protection-and-charm
 import {
@@ -160,7 +161,7 @@ describe("SRDINV30C deterministic Protection from Evil and Good admission", () =
     }
 
     const undeadAttack = statBlockAttackAct(
-      { ...session, state: undeadTurn.state },
+      battleRuntimeSessionForTest({ ...session, state: undeadTurn.state }),
       undeadId,
       "Scimitar",
     );
@@ -193,7 +194,7 @@ describe("SRDINV30C deterministic Protection from Evil and Good admission", () =
       throw new Error("Expected to advance to humanoid attacker turn.");
     }
     const humanoidAttack = statBlockAttackAct(
-      { ...session, state: humanoidTurn.state },
+      battleRuntimeSessionForTest({ ...session, state: humanoidTurn.state }),
       humanoidId,
       "Scimitar",
     );

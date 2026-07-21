@@ -98,10 +98,13 @@ export const ARMOR_TRAINING_CATEGORY_VALUES = [
 // …), so shape alone would over-admit. The durable form is a typed support-profile
 // discriminant in the authored data, not an id list. Keep additions tied to
 // supported Character Sheet resource profiles and focused owner evidence.
+// authored-id-dispatch-allow: character-sheet-resource-support-admission-boundary
 export const CHARACTER_SHEET_USE_COUNT_RESOURCE_UNIT_IDS = [
   DRUID_WILD_SHAPE_UNIT_ID,
   MONK_MONKS_FOCUS_UNIT_ID,
+  // authored-id-dispatch-allow: character-sheet-resource-support-admission-boundary
   "cleric_divine_intervention",
+  // authored-id-dispatch-allow: character-sheet-resource-support-admission-boundary
   "ranger_tireless",
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
 export type CharacterSheetUseCountResourceUnitId =
@@ -111,6 +114,7 @@ export type CharacterSheetUseCountResourceUnitId =
 // here. The durable form is a typed support-profile discriminant in the authored
 // data, not an id list. Keep additions tied to supported Character Sheet
 // resource profiles and focused owner evidence.
+// authored-id-dispatch-allow: character-sheet-resource-support-admission-boundary
 export const CHARACTER_SHEET_POINT_POOL_RESOURCE_UNIT_IDS = [
   SORCERER_FONT_OF_MAGIC_UNIT_ID,
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
@@ -3756,6 +3760,7 @@ export type CharacterSheetSpellInvocation =
 export function isCharacterSheetUseCountResourceUnitId(
   unitId: UnitRecord["id"],
 ): unitId is CharacterSheetUseCountResourceUnitId {
+  // authored-id-dispatch-allow: character-sheet-resource-support-admission-boundary
   return CHARACTER_SHEET_USE_COUNT_RESOURCE_UNIT_IDS.some(
     (supportedUnitId) => supportedUnitId === unitId,
   );
@@ -3767,6 +3772,7 @@ export function isCharacterSheetUseCountResourceUnitId(
 export function isCharacterSheetPointPoolResourceUnitId(
   unitId: UnitRecord["id"],
 ): unitId is CharacterSheetPointPoolResourceUnitId {
+  // authored-id-dispatch-allow: character-sheet-resource-support-admission-boundary
   return CHARACTER_SHEET_POINT_POOL_RESOURCE_UNIT_IDS.some(
     (supportedUnitId) => supportedUnitId === unitId,
   );

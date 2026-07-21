@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
   battleProcedureExecutionRefForSpellHoleForTest,
   battleProcedureExecutionRefForTest,
@@ -136,7 +137,10 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
       mode: { tag: "cast" as const },
     };
     const magicMissileSubject = findAct(
-      { state: magicMissileTurn, context: session.context },
+      battleRuntimeSessionForTest({
+        state: magicMissileTurn,
+        context: session.context,
+      }),
       magicMissileSelection,
     ).subject;
     const magicMissileTargetAllocation = requireHole(
@@ -201,7 +205,10 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
       mode: { tag: "cast" as const },
     };
     const spellAct = findAct(
-      { state: marked.state, context: session.context },
+      battleRuntimeSessionForTest({
+        state: marked.state,
+        context: session.context,
+      }),
       spellSelection,
     );
     const spellSubject = spellAct.subject;
@@ -309,10 +316,12 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
     const nextFighterTurn = requireResolved(
       endTurn({ state: afterGoblinTurn, actorId: skeletonId }),
     ).state;
-    const transferAct = discoverBattleActs({
-      state: nextFighterTurn,
-      context: session.context,
-    }).find(
+    const transferAct = discoverBattleActs(
+      battleRuntimeSessionForTest({
+        state: nextFighterTurn,
+        context: session.context,
+      }),
+    ).find(
       (candidate) =>
         candidate.subject.tag === "bonusActionSpell" &&
         battleActSpellPresentation(candidate)?.invocation.tag ===
@@ -365,10 +374,12 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
         ]),
       }),
     };
-    const restrictedTransferAct = discoverBattleActs({
-      state: restrictedHiddenTransferState,
-      context: session.context,
-    }).find(
+    const restrictedTransferAct = discoverBattleActs(
+      battleRuntimeSessionForTest({
+        state: restrictedHiddenTransferState,
+        context: session.context,
+      }),
+    ).find(
       (candidate) =>
         candidate.subject.tag === "bonusActionSpell" &&
         battleActSpellPresentation(candidate)?.invocation.tag ===
@@ -537,10 +548,12 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
         actorId: skeletonId,
       }),
     ).state;
-    const transferAct = discoverBattleActs({
-      state: nextFighterTurn,
-      context: session.context,
-    }).find(
+    const transferAct = discoverBattleActs(
+      battleRuntimeSessionForTest({
+        state: nextFighterTurn,
+        context: session.context,
+      }),
+    ).find(
       (candidate) =>
         candidate.subject.tag === "bonusActionSpell" &&
         battleActSpellPresentation(candidate)?.invocation.spellId ===
@@ -873,7 +886,12 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
       }),
     ]);
     expect(
-      discoverBattleActs({ state: dropped, context: session.context }).some(
+      discoverBattleActs(
+        battleRuntimeSessionForTest({
+          state: dropped,
+          context: session.context,
+        }),
+      ).some(
         (candidate) =>
           candidate.subject.tag === "bonusActionSpell" &&
           battleActSpellPresentation(candidate)?.invocation.spellId === "hex",
@@ -893,10 +911,12 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
         actorId: skeletonId,
       }),
     ).state;
-    const transferAct = discoverBattleActs({
-      state: laterTurn,
-      context: session.context,
-    }).find(
+    const transferAct = discoverBattleActs(
+      battleRuntimeSessionForTest({
+        state: laterTurn,
+        context: session.context,
+      }),
+    ).find(
       (candidate) =>
         candidate.subject.tag === "bonusActionSpell" &&
         battleActSpellPresentation(candidate)?.invocation.spellId === "hex",

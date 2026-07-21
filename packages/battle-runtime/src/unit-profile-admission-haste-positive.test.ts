@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L5-C17-HASTE-POSITIVE-RUNTIME haste
@@ -297,7 +298,7 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
     });
     const state = stateWithSyntheticTargetConcentration(base.state);
     const act = spellAct({
-      session: { ...base, state },
+      session: battleRuntimeSessionForTest({ ...base, state }),
       spellId: hasteUnitId,
       slotLevel: 3,
     });
@@ -326,7 +327,7 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
     });
     const state = stateWithSyntheticTargetConcentration(base.state);
     const act = spellAct({
-      session: { ...base, state },
+      session: battleRuntimeSessionForTest({ ...base, state }),
       spellId: hasteUnitId,
       slotLevel: 3,
     });
@@ -384,7 +385,7 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
     });
     const state = stateWithDirectIncapacitated(base.state, spellTargetId);
     const act = spellAct({
-      session: { ...base, state },
+      session: battleRuntimeSessionForTest({ ...base, state }),
       spellId: hasteUnitId,
       slotLevel: 3,
     });
@@ -501,7 +502,7 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
     const targetTurn = expectEndTurn(first.state, spellCasterId);
     const nextCasterTurn = expectEndTurn(targetTurn, spellTargetId);
     const secondAct = spellAct({
-      session: { ...state, state: nextCasterTurn },
+      session: battleRuntimeSessionForTest({ ...state, state: nextCasterTurn }),
       spellId: hasteUnitId,
       slotLevel: 3,
     });

@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { expect } from "vitest";
 import { characterSpellInvocationRefForProcedureRefForTest } from "./battle-runtime-test-support.ts";
 
@@ -90,10 +91,10 @@ export const shiningSmiteSelectedIdentityReplay = {
                   }
                   return (
                     characterSpellInvocationRefForProcedureRefForTest(
-                      {
+                      battleRuntimeSessionForTest({
                         state: awaitingReaction.state,
                         context: state.context,
-                      },
+                      }),
                       candidate.reactorId,
                       candidate.subject.procedureRef,
                     ).spellId === shiningSmiteUnitId
@@ -111,7 +112,10 @@ export const shiningSmiteSelectedIdentityReplay = {
             const selectedProcedureRef = choice.subject.procedureRef;
             expect(
               characterSpellInvocationRefForProcedureRefForTest(
-                { state: awaitingReaction.state, context: state.context },
+                battleRuntimeSessionForTest({
+                  state: awaitingReaction.state,
+                  context: state.context,
+                }),
                 choice.reactorId,
                 selectedProcedureRef,
               ),

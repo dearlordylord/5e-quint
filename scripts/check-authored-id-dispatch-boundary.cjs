@@ -72,12 +72,15 @@ const INLINE_ALLOWLIST_PATH_RULES = [
     reason: "character-creation-selected-choice-runtime-projection-boundary",
     pattern: /^packages\/character-creation-runtime\/src\/finalization\.ts$/,
   },
+  {
+    reason: "character-sheet-resource-support-admission-boundary",
+    pattern: /^packages\/character-sheet-runtime\/src\/sheet-types\.ts$/,
+  },
 ];
 
 const INLINE_ALLOWLIST_COMMENT = /\bauthored-id-dispatch-allow:\s*([a-z0-9-]+)/;
 const IDENTIFIER_EXPRESSION_PATTERN = String.raw`[A-Za-z_$][\w$]*(?:(?:\.|\?\.)[A-Za-z_$][\w$]*)*`;
-const AUTHORED_SPELL_RUNTIME_KEY_PATTERN =
-  /\b[A-Za-z_$][\w$]*\.spell\.id\b/;
+const AUTHORED_SPELL_RUNTIME_KEY_PATTERN = /\b[A-Za-z_$][\w$]*\.spell\.id\b/;
 const SPELL_INVOCATION_PRESENTATION_REF_PROJECTION =
   "packages/battle-runtime/src/battle-reducer/spells-invocation-ref.ts";
 const POSITIONAL_DAMAGE_DIE_IDENTITY_PATTERN =
@@ -1236,7 +1239,10 @@ function battleReplayAstViolations(sourceText, relativePath) {
         procedure !== undefined &&
         !schemaNeverRejectsExpression(procedure.value)
       ) {
-        add(procedure.node, "spellTargetList codec retains redundant procedure");
+        add(
+          procedure.node,
+          "spellTargetList codec retains redundant procedure",
+        );
       }
     }
     if (
@@ -1640,48 +1646,96 @@ function collectAuthoredIdentityLiterals() {
 
 function collectDispatchContainerUsages(content) {
   const usages = [];
-
-  const membershipRegex =
-    /\b([A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)?)\s*\.\s*(?:includes|has|indexOf|get)\s*\(\s*([^)]*?)\s*\)/g;
-  for (;;) {
-    const match = membershipRegex.exec(content);
-    if (match == null) {
-      break;
+  const source = ts.createSourceFile(
+    "authored-id-dispatch.ts",
+    content,
+    ts.ScriptTarget.Latest,
+    true,
+    ts.ScriptKind.TS,
+  );
+  const membershipMethods = new Set([
+    "includes",
+    "has",
+    "indexOf",
+    "get",
+    "some",
+    "find",
+    "findIndex",
+  ]);
+  const predicateMembershipMethods = new Set(["some", "find", "findIndex"]);
+  const containerName = (expression) => {
+    const text = expression.getText(source);
+    return /^[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)?$/.test(text)
+      ? text
+      : undefined;
+  };
+  const predicateComparesElementToAuthoredSelector = (argument) => {
+    if (
+      argument === undefined ||
+      (!ts.isArrowFunction(argument) && !ts.isFunctionExpression(argument))
+    ) {
+      return false;
     }
+    const parameter = argument.parameters[0]?.name;
+    if (parameter === undefined || !ts.isIdentifier(parameter)) return false;
+    let found = false;
+    const visitPredicate = (node) => {
+      if (found) return;
+      if (ts.isBinaryExpression(node)) {
+        const left = node.left.getText(source);
+        const right = node.right.getText(source);
+        if (
+          (left === parameter.text && hasAuthoredIdentitySelector(right)) ||
+          (right === parameter.text && hasAuthoredIdentitySelector(left))
+        ) {
+          found = true;
+          return;
+        }
+      }
+      ts.forEachChild(node, visitPredicate);
+    };
+    visitPredicate(argument.body);
+    return found;
+  };
 
-    const container = match[1];
-    const argument = match[2] ?? "";
-    if (container == null || !hasAuthoredIdentitySelector(argument)) {
-      continue;
+  const visit = (node) => {
+    if (
+      ts.isCallExpression(node) &&
+      ts.isPropertyAccessExpression(node.expression) &&
+      membershipMethods.has(node.expression.name.text)
+    ) {
+      const container = containerName(node.expression.expression);
+      const method = node.expression.name.text;
+      const argumentNode = node.arguments[0];
+      const argument = argumentNode?.getText(source) ?? "";
+      const selectsAuthoredIdentity = predicateMembershipMethods.has(method)
+        ? predicateComparesElementToAuthoredSelector(argumentNode)
+        : hasAuthoredIdentitySelector(argument);
+      if (container !== undefined && selectsAuthoredIdentity) {
+        usages.push({
+          container,
+          index: node.getStart(source),
+          detail: node.getText(source),
+        });
+      }
     }
-
-    usages.push({
-      container,
-      index: match.index,
-      detail: match[0],
-    });
-  }
-
-  const indexRegex =
-    /\b([A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)?)\s*\[\s*([^\]]+?)\s*\]/g;
-  for (;;) {
-    const match = indexRegex.exec(content);
-    if (match == null) {
-      break;
+    if (ts.isElementAccessExpression(node)) {
+      const container = containerName(node.expression);
+      const indexExpression = node.argumentExpression?.getText(source) ?? "";
+      if (
+        container !== undefined &&
+        hasAuthoredIdentitySelector(indexExpression)
+      ) {
+        usages.push({
+          container,
+          index: node.getStart(source),
+          detail: node.getText(source),
+        });
+      }
     }
-
-    const container = match[1];
-    const indexExpression = match[2] ?? "";
-    if (container == null || !hasAuthoredIdentitySelector(indexExpression)) {
-      continue;
-    }
-
-    usages.push({
-      container,
-      index: match.index,
-      detail: match[0],
-    });
-  }
+    ts.forEachChild(node, visit);
+  };
+  visit(source);
 
   return usages;
 }
@@ -2591,6 +2645,7 @@ function runSelfTest() {
     "  }",
     '  const spellNames = ["Magic Missile"];',
     '  if (spellNames.includes(invocation.spell.name)) return "spell-name-container";',
+    '  if (spellNames.some((spellName) => spellName === invocation.spell.name)) return "spell-name-some";',
     "  Match.value(invocation.spell.name).pipe(",
     '    Match.when("Magic Missile", () => "spell-name-effect-match"),',
     "    Match.exhaustive,",
@@ -2610,6 +2665,12 @@ function runSelfTest() {
   const productionKinds = new Set(
     productionViolations.map((violation) => violation.context.kind),
   );
+  assert(
+    collectDispatchContainerUsages(productionBranch).some((usage) =>
+      usage.detail.includes("spellNames.some"),
+    ),
+    "Self-test failed: authored identity dispatch through Array.some was not caught.",
+  );
 
   assert(
     productionKinds.has("authored-identity-field-comparison"),
@@ -2626,6 +2687,60 @@ function runSelfTest() {
   assert(
     productionKinds.has("effect-match-identity-branch"),
     `Self-test failed: effect/Match spell.name branch was not caught. Got ${JSON.stringify(productionViolations)}`,
+  );
+
+  const someOnlyBranch = [
+    'const spellIds = ["magic_missile"];',
+    "export function someOnlyDispatch(invocation) {",
+    "  return spellIds.some((spellId) => spellId === invocation.spell.id);",
+    "}",
+  ].join("\n");
+  const someOnlyViolations = findViolationsForFile(
+    "packages/battle-runtime/src/battle-reducer/some-only-spell-dispatch.ts",
+    someOnlyBranch,
+    authoredAlternation,
+    new Set(),
+    new Map(),
+  );
+  assert(
+    someOnlyViolations.some(
+      (violation) => violation.context.kind === "dispatch-container",
+    ),
+    `Self-test failed: Array.some authored-ID dispatch did not reach the public violation gate. Got ${JSON.stringify(someOnlyViolations)}`,
+  );
+
+  for (const predicateMethod of ["find", "findIndex"]) {
+    const predicateOnlyBranch = [
+      'const spellIds = ["magic_missile"];',
+      `export function predicateOnlyDispatch(invocation) {`,
+      `  return spellIds.${predicateMethod}((spellId) => spellId === invocation.spell.id);`,
+      "}",
+    ].join("\n");
+    const predicateOnlyViolations = findViolationsForFile(
+      `packages/battle-runtime/src/battle-reducer/${predicateMethod}-only-spell-dispatch.ts`,
+      predicateOnlyBranch,
+      authoredAlternation,
+      new Set(),
+      new Map(),
+    );
+    assert(
+      predicateOnlyViolations.some(
+        (violation) => violation.context.kind === "dispatch-container",
+      ),
+      `Self-test failed: Array.${predicateMethod} authored-ID dispatch did not reach the public violation gate. Got ${JSON.stringify(predicateOnlyViolations)}`,
+    );
+  }
+
+  const objectLookupBranch = [
+    'const combatants = [{ combatantId: "synthetic", spellId: "magic_missile" }];',
+    "export function lookupCombatant(combatantId) {",
+    "  return combatants.find((candidate) => candidate.combatantId === combatantId);",
+    "}",
+  ].join("\n");
+  assert.equal(
+    collectDispatchContainerUsages(objectLookupBranch).length,
+    0,
+    "Self-test failed: object lookup was mistaken for authored-ID membership dispatch.",
   );
 
   const nonSpellUnitIdentityBranch = [

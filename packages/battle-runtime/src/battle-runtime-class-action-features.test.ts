@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.rogue-steady-aim
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.brutal-strike
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L19D-01-BRUTAL-STRIKE-RECKLESS-DAMAGE barbarian_brutal_strike
@@ -274,7 +275,7 @@ describe("battle runtime: class action features", () => {
     );
     expect(
       requireOwnedCharacterResource(
-        { ...session, state: afterFighter.state },
+        battleRuntimeSessionForTest({ ...session, state: afterFighter.state }),
         "fighter_action_surge",
       ),
     ).toEqual(expect.objectContaining({ usedThisTurn: true }));
@@ -284,7 +285,7 @@ describe("battle runtime: class action features", () => {
     );
     expect(
       requireOwnedCharacterResource(
-        { ...session, state: afterGoblin.state },
+        battleRuntimeSessionForTest({ ...session, state: afterGoblin.state }),
         "fighter_action_surge",
       ),
     ).toEqual(expect.objectContaining({ usedThisTurn: false }));
@@ -459,12 +460,14 @@ describe("battle runtime: class action features", () => {
     }
     expect(
       requireOwnedCharacterResource(
-        { ...session, state: result.state },
+        battleRuntimeSessionForTest({ ...session, state: result.state }),
         "fighter_second_wind",
       ),
     ).toEqual(expect.objectContaining({ usesRemaining: 1 }));
     expect(
-      discoverBattleActs({ ...session, state: result.state }).some(
+      discoverBattleActs(
+        battleRuntimeSessionForTest({ ...session, state: result.state }),
+      ).some(
         (act) =>
           act.subject.tag === "unitFeature" &&
           battleActUnitPresentation(act)?.unitId === "fighter_second_wind",
@@ -780,7 +783,9 @@ describe("battle runtime: class action features", () => {
       }),
     } satisfies BattleState;
     expect(
-      discoverBattleActs({ ...session, state: movedState }).some(
+      discoverBattleActs(
+        battleRuntimeSessionForTest({ ...session, state: movedState }),
+      ).some(
         (candidate) =>
           candidate.subject.tag === "unitFeature" &&
           battleActUnitPresentation(candidate)?.unitId === "rogue_steady_aim",
@@ -963,7 +968,7 @@ describe("battle runtime: class action features", () => {
       }),
     };
     const rayOfFrostProcedureRef = requireCharacterSpellProcedureRefForTest(
-      { ...session, state: concentratingState },
+      battleRuntimeSessionForTest({ ...session, state: concentratingState }),
       fighterId,
       cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
     );
@@ -971,7 +976,7 @@ describe("battle runtime: class action features", () => {
       tag: "unitFeature",
       actorId: fighterId,
       procedureRef: requireCharacterUnitProcedureRefForTest(
-        { ...session, state: concentratingState },
+        battleRuntimeSessionForTest({ ...session, state: concentratingState }),
         fighterId,
         "barbarian_rage",
       ),
@@ -1282,7 +1287,7 @@ describe("battle runtime: class action features", () => {
     }
     expect(
       requireOwnedCharacterResource(
-        { ...session, state: converted.state },
+        battleRuntimeSessionForTest({ ...session, state: converted.state }),
         "fighter_second_wind",
       ),
     ).toEqual(expect.objectContaining({ usesRemaining: 1 }));
@@ -1313,7 +1318,7 @@ describe("battle runtime: class action features", () => {
     }
     expect(
       requireOwnedCharacterResource(
-        { ...session, state: stillFailed.state },
+        battleRuntimeSessionForTest({ ...session, state: stillFailed.state }),
         "fighter_second_wind",
       ),
     ).toEqual(expect.objectContaining({ usesRemaining: 2 }));
@@ -1512,7 +1517,7 @@ describe("battle runtime: class action features", () => {
       }),
     );
     const rageState = requireOwnedCharacterResource(
-      { ...session, state: extended.state },
+      battleRuntimeSessionForTest({ ...session, state: extended.state }),
       "barbarian_rage",
     );
     if (
@@ -1763,7 +1768,7 @@ describe("battle runtime: class action features", () => {
       tag: "unitFeature",
       actorId: fighterId,
       procedureRef: requireCharacterUnitProcedureRefForTest(
-        { ...session, state: incapacitatedState },
+        battleRuntimeSessionForTest({ ...session, state: incapacitatedState }),
         fighterId,
         "barbarian_rage",
       ),
@@ -1890,7 +1895,7 @@ describe("battle runtime: class action features", () => {
     );
     const sorcerer = result.state.combatants.get(fighterId);
     const resource = requireOwnedCharacterResource(
-      { ...session, state: result.state },
+      battleRuntimeSessionForTest({ ...session, state: result.state }),
       "sorcerer_innate_sorcery",
     );
 
@@ -2397,7 +2402,7 @@ describe("battle runtime: class action features", () => {
       attackDamageRiders: [
         {
           procedureRef: requireCharacterUnitProcedureRefForTest(
-            { ...session, state: raging },
+            battleRuntimeSessionForTest({ ...session, state: raging }),
             fighterId,
             frenzyUnit.id,
           ),
@@ -2447,7 +2452,7 @@ describe("battle runtime: class action features", () => {
       {
         attackerId: fighterId,
         procedureRef: requireCharacterUnitProcedureRefForTest(
-          { ...session, state: raging },
+          battleRuntimeSessionForTest({ ...session, state: raging }),
           fighterId,
           frenzyUnit.id,
         ),
@@ -2560,7 +2565,10 @@ describe("battle runtime: class action features", () => {
       attackDamageRiders: [
         expect.objectContaining({
           procedureRef: requireCharacterUnitProcedureRefForTest(
-            { ...session, state: ragingAfterRecklessMiss },
+            battleRuntimeSessionForTest({
+              ...session,
+              state: ragingAfterRecklessMiss,
+            }),
             fighterId,
             frenzyUnit.id,
           ),
@@ -2773,7 +2781,10 @@ describe("battle runtime: class action features", () => {
       attackDamageRiders: [
         {
           procedureRef: requireCharacterUnitProcedureRefForTest(
-            { ...session, state: afterRecklessMiss },
+            battleRuntimeSessionForTest({
+              ...session,
+              state: afterRecklessMiss,
+            }),
             fighterId,
             brutalStrikeUnit.id,
           ),

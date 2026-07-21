@@ -29,6 +29,7 @@ import {
   type CharacterProcedureBinding,
   type CombatantId,
 } from "@dnd/battle-runtime";
+import { battleRuntimeSessionForTest } from "@dnd/battle-runtime/test-support";
 import {
   abilityScoreAssignment,
   characterEquipmentItemId,
@@ -431,7 +432,10 @@ describe("level 1 SDK RAW integration", () => {
     const rageHit = resolveOrdinaryAttackDamage({
       state: raging.state,
       subject: attackSubject(
-        { state: raging.state, context: session.context },
+        battleRuntimeSessionForTest({
+          state: raging.state,
+          context: session.context,
+        }),
         barbarianId,
         "Longsword",
       ),
@@ -449,7 +453,10 @@ describe("level 1 SDK RAW integration", () => {
     const resisted = resolveOrdinaryAttackDamage({
       state: monsterTurn,
       subject: attackSubject(
-        { state: monsterTurn, context: session.context },
+        battleRuntimeSessionForTest({
+          state: monsterTurn,
+          context: session.context,
+        }),
         monsterId,
         "Shortsword",
       ),
@@ -816,7 +823,10 @@ describe("level 1 SDK RAW integration", () => {
     ]);
     expect(spellSaveDcForCaster(activated, sorcererId)).toBe(14);
 
-    const activatedSession = { state: activated, context: session.context };
+    const activatedSession = battleRuntimeSessionForTest({
+      state: activated,
+      context: session.context,
+    });
     const spellAct = cantripCastActionSpellAct(
       activatedSession,
       sorcererId,
@@ -2667,7 +2677,10 @@ function assertLevelOneViciousMockery(input: {
     endTurn({ state: failedSave.state, actorId: input.casterId }),
   ).state;
   const monsterAttack = attackSubject(
-    { state: monsterTurn, context: session.context },
+    battleRuntimeSessionForTest({
+      state: monsterTurn,
+      context: session.context,
+    }),
     monsterId,
     "Shortsword",
   );
@@ -3162,7 +3175,10 @@ function assertLevelOneProduceFlame(input: {
     input.expectedSpellSlots,
   );
 
-  const litSession = { state: lit.state, context: session.context };
+  const litSession = battleRuntimeSessionForTest({
+    state: lit.state,
+    context: session.context,
+  });
   const hurlAct = cantripCastActionSpellAct(
     litSession,
     input.casterId,
@@ -3345,7 +3361,10 @@ function assertLevelOneShillelagh(input: {
   );
 
   const forceAttack = attackSubject(
-    { state: resolved.state, context: session.context },
+    battleRuntimeSessionForTest({
+      state: resolved.state,
+      context: session.context,
+    }),
     input.casterId,
     "Quarterstaff (force)",
   );
@@ -4994,7 +5013,10 @@ function assertLevelOneGuidingBolt(input: {
     endTurn({ state: guided.state, actorId: input.casterId }),
   ).state;
   const allyAttack = attackSubject(
-    { state: allyTurn, context: session.context },
+    battleRuntimeSessionForTest({
+      state: allyTurn,
+      context: session.context,
+    }),
     input.allyId,
     "Longsword",
   );

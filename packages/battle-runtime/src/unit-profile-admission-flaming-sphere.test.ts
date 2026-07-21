@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-MISSING-FLAMING-SPHERE flaming_sphere
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-flaming-sphere-hazard-ram
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE
@@ -183,10 +184,12 @@ describe("L12G deterministic Flaming Sphere admission", () => {
       throw new Error("Expected caster End Turn to resolve.");
     }
 
-    const endWithinFiveFeet = flamingSphereEndTurnAct({
-      ...session,
-      state: targetTurn.state,
-    });
+    const endWithinFiveFeet = flamingSphereEndTurnAct(
+      battleRuntimeSessionForTest({
+        ...session,
+        state: targetTurn.state,
+      }),
+    );
     const save = requireHole(
       endWithinFiveFeet.initialHoles,
       "savingThrowOutcome",
@@ -260,10 +263,12 @@ describe("L12G deterministic Flaming Sphere admission", () => {
       }),
     };
 
-    const endWithinFiveFeet = flamingSphereEndTurnAct({
-      ...session,
-      state: stateWithConcentratingTarget,
-    });
+    const endWithinFiveFeet = flamingSphereEndTurnAct(
+      battleRuntimeSessionForTest({
+        ...session,
+        state: stateWithConcentratingTarget,
+      }),
+    );
     const save = requireHole(
       endWithinFiveFeet.initialHoles,
       "savingThrowOutcome",
@@ -344,10 +349,12 @@ describe("L12G deterministic Flaming Sphere admission", () => {
       throw new Error("Expected Flaming Sphere cast to resolve.");
     }
 
-    const reposition = flamingSphereRepositionAct({
-      ...session,
-      state: cast.state,
-    });
+    const reposition = flamingSphereRepositionAct(
+      battleRuntimeSessionForTest({
+        ...session,
+        state: cast.state,
+      }),
+    );
     const movement = requireHole(
       reposition.initialHoles,
       "movableZoneRepositionMovement",
@@ -409,7 +416,9 @@ describe("L12G deterministic Flaming Sphere admission", () => {
       throw new Error("Expected Flaming Sphere cast to resolve.");
     }
 
-    const ram = flamingSphereRamAct({ ...session, state: cast.state });
+    const ram = flamingSphereRamAct(
+      battleRuntimeSessionForTest({ ...session, state: cast.state }),
+    );
     const movement = requireHole(ram.initialHoles, "movableZoneRamMovement");
     expect(movement).toEqual(
       expect.objectContaining({
@@ -483,7 +492,7 @@ describe("L12G deterministic Flaming Sphere admission", () => {
     }
 
     const selfRam = flamingSphereRamAct(
-      { ...session, state: cast.state },
+      battleRuntimeSessionForTest({ ...session, state: cast.state }),
       spellCasterId,
       spellCasterId,
     );
@@ -530,7 +539,9 @@ describe("L12G deterministic Flaming Sphere admission", () => {
       throw new Error("Expected Flaming Sphere cast to resolve.");
     }
 
-    const ram = flamingSphereRamAct({ ...session, state: cast.state });
+    const ram = flamingSphereRamAct(
+      battleRuntimeSessionForTest({ ...session, state: cast.state }),
+    );
     const movement = requireHole(ram.initialHoles, "movableZoneRamMovement");
     const save = requireHole(ram.initialHoles, "savingThrowOutcome");
     const succeededSave = singleTargetSavingThrowOutcomeFill(
@@ -595,7 +606,9 @@ describe("L12G deterministic Flaming Sphere admission", () => {
       throw new Error("Expected Flaming Sphere cast to resolve.");
     }
 
-    const ram = flamingSphereRamAct({ ...session, state: cast.state });
+    const ram = flamingSphereRamAct(
+      battleRuntimeSessionForTest({ ...session, state: cast.state }),
+    );
     const movement = requireHole(ram.initialHoles, "movableZoneRamMovement");
     const movementFill = flamingSphereRamMovementFill(movement);
     const save = requireHole(ram.initialHoles, "savingThrowOutcome");

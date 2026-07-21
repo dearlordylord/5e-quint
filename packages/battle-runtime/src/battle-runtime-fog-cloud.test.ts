@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
   battleActSpellSlotPresentation,
   battleActSpellPresentation,
@@ -218,5 +219,8 @@ function castFogCloudSession(
       fills: [fogCloudAreaFill(area, areaId)],
     }),
   );
-  return { result, session: { ...session, state: result.state } };
+  return {
+    result,
+    session: battleRuntimeSessionForTest({ ...session, state: result.state }),
+  };
 }

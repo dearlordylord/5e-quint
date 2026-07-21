@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-BLUR blur
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-blur-attack-roll-defense
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE
@@ -61,7 +62,7 @@ describe("L12G-SPELL-BLUR deterministic Blur admission", () => {
     });
 
     const attackRoll = attackerAttackRollHole({
-      session: { ...state, state: cast.state },
+      session: battleRuntimeSessionForTest({ ...state, state: cast.state }),
       attackerId,
       targetId: spellCasterId,
     });
@@ -76,7 +77,7 @@ describe("L12G-SPELL-BLUR deterministic Blur admission", () => {
       const cast = castBlur(state);
 
       const attackRoll = attackerAttackRollHole({
-        session: { ...state, state: cast.state },
+        session: battleRuntimeSessionForTest({ ...state, state: cast.state }),
         attackerId,
         targetId: spellCasterId,
         extraFacts: [blurBypassFact(attackerId, spellCasterId, sense)],
@@ -91,7 +92,7 @@ describe("L12G-SPELL-BLUR deterministic Blur admission", () => {
     const cast = castBlur(state);
 
     const attackRoll = attackerAttackRollHole({
-      session: { ...state, state: cast.state },
+      session: battleRuntimeSessionForTest({ ...state, state: cast.state }),
       attackerId,
       targetId: spellCasterId,
       extraFacts: [
@@ -123,7 +124,10 @@ describe("L12G-SPELL-BLUR deterministic Blur admission", () => {
     );
 
     const attackRoll = attackerAttackRollHole({
-      session: { ...state, state: concentrationBroken },
+      session: battleRuntimeSessionForTest({
+        ...state,
+        state: concentrationBroken,
+      }),
       attackerId,
       targetId: spellCasterId,
     });
@@ -186,7 +190,10 @@ function attackerAttackRollHole(input: {
     throw new Error("Expected to advance to Blur attacker turn.");
   }
 
-  const attackerSession = { ...input.session, state: attackerTurn.state };
+  const attackerSession = battleRuntimeSessionForTest({
+    ...input.session,
+    state: attackerTurn.state,
+  });
   const attack = statBlockAttackAct(
     attackerSession,
     input.attackerId,

@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L19E-03-CLOUDKILL-AREA-HAZARD cloudkill
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-cloudkill-area-hazard
@@ -86,7 +87,7 @@ function resolveCloudkillSave(input: {
   readonly succeeded: boolean;
 }) {
   const saveAct = cloudkillAreaHazardSaveAct(
-    { ...input.session, state: input.state },
+    battleRuntimeSessionForTest({ ...input.session, state: input.state }),
     spellTargetId,
     "appearsInArea",
   );
@@ -243,7 +244,7 @@ describe("L19E deterministic Cloudkill area-hazard admission", () => {
   test("cloud movement, entry, and end-turn saves share the once-per-turn hazard ledger", () => {
     const { targetTurn, session } = castCloudkill();
     const moveAct = cloudkillAreaHazardSaveAct(
-      { ...session, state: targetTurn },
+      battleRuntimeSessionForTest({ ...session, state: targetTurn }),
       spellTargetId,
       "movesIntoSpace",
     );
@@ -277,7 +278,10 @@ describe("L19E deterministic Cloudkill area-hazard admission", () => {
       resolveBattleSubject({
         state: movedIntoSpace.state,
         subject: cloudkillAreaHazardSaveAct(
-          { ...session, state: movedIntoSpace.state },
+          battleRuntimeSessionForTest({
+            ...session,
+            state: movedIntoSpace.state,
+          }),
           spellTargetId,
           "entersArea",
         ).subject,

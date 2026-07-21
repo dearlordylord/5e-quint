@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT56 feat_boon_of_combat_prowess
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-roll-miss-to-hit-replacement
 import { describe, expect, test } from "vitest";
@@ -294,7 +295,10 @@ describe("QMBT56 deterministic Combat Prowess profile slice", () => {
     }
 
     const act = spellAct({
-      session: { state: awaitingDamage.state, context: state.context },
+      session: battleRuntimeSessionForTest({
+        state: awaitingDamage.state,
+        context: state.context,
+      }),
       spellId: rayOfFrostUnitId,
     });
     const spellTarget = requireResultHole(
@@ -336,10 +340,12 @@ describe("QMBT56 deterministic Combat Prowess profile slice", () => {
           attackRollFill(spellRoll, {
             total: 1,
             naturalD20: 2,
-            missToHitReplacementProcedureRef: combatProwessProcedureRef({
-              state: awaitingDamage.state,
-              context: state.context,
-            }),
+            missToHitReplacementProcedureRef: combatProwessProcedureRef(
+              battleRuntimeSessionForTest({
+                state: awaitingDamage.state,
+                context: state.context,
+              }),
+            ),
           }),
         ],
       }),
@@ -488,10 +494,12 @@ describe("QMBT56 deterministic Combat Prowess profile slice", () => {
           attackRollFill(spellRoll, {
             total: 1,
             naturalD20: 2,
-            missToHitReplacementProcedureRef: combatProwessProcedureRef({
-              state: spellDamage.state,
-              context: spellState.context,
-            }),
+            missToHitReplacementProcedureRef: combatProwessProcedureRef(
+              battleRuntimeSessionForTest({
+                state: spellDamage.state,
+                context: spellState.context,
+              }),
+            ),
           }),
           damageRollFillWithGroups(
             requireHole(spellDamage.holes, "rolledDice"),
@@ -562,7 +570,10 @@ describe("QMBT56 deterministic Combat Prowess profile slice", () => {
         ),
     ).toEqual([
       requireCharacterUnitProcedureRefForTest(
-        { state: used.state, context: state.context },
+        battleRuntimeSessionForTest({
+          state: used.state,
+          context: state.context,
+        }),
         spellCasterId,
         boonOfCombatProwessUnitId,
       ),
@@ -601,7 +612,10 @@ describe("QMBT56 deterministic Combat Prowess profile slice", () => {
     ).toEqual([]);
     expect(
       weaponAttackRollHole({
-        session: { state: reset.state, context: state.context },
+        session: battleRuntimeSessionForTest({
+          state: reset.state,
+          context: state.context,
+        }),
         attackName: "Longsword",
         actorId: spellCasterId,
         targetId: spellTargetId,
@@ -609,10 +623,12 @@ describe("QMBT56 deterministic Combat Prowess profile slice", () => {
     ).toMatchObject({
       missToHitReplacements: [
         {
-          procedureRef: combatProwessProcedureRef({
-            state: reset.state,
-            context: state.context,
-          }),
+          procedureRef: combatProwessProcedureRef(
+            battleRuntimeSessionForTest({
+              state: reset.state,
+              context: state.context,
+            }),
+          ),
         },
       ],
     });

@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime-test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV88A dancing_lights
@@ -196,7 +197,10 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
       throw new Error("Expected caster turn to resume.");
     }
     const castAct = spellAct({
-      session: { state: casterTurn.state, context: initialSession.context },
+      session: battleRuntimeSessionForTest({
+        state: casterTurn.state,
+        context: initialSession.context,
+      }),
       spellId: dancingLightsUnitId,
     });
     const placement = {
@@ -366,7 +370,10 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
     );
 
     const moveAct = bonusSpellAct({
-      session: { state: resolved.state, context: session.context },
+      session: battleRuntimeSessionForTest({
+        state: resolved.state,
+        context: session.context,
+      }),
       spellId: dancingLightsUnitId,
     });
     expect(battleActSpellPresentation(moveAct)?.invocation).toEqual(
@@ -539,7 +546,10 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
     expect(lightIds).toHaveLength(2);
 
     const moveAct = bonusSpellAct({
-      session: { state: cast.state, context: session.context },
+      session: battleRuntimeSessionForTest({
+        state: cast.state,
+        context: session.context,
+      }),
       spellId: dancingLightsUnitId,
     });
     const moveHole = requireHole(
@@ -665,7 +675,10 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
     expect(cast.snapshot.lightEmitters).toHaveLength(1);
 
     const moveAct = bonusSpellAct({
-      session: { state: cast.state, context: session.context },
+      session: battleRuntimeSessionForTest({
+        state: cast.state,
+        context: session.context,
+      }),
       spellId: dancingLightsUnitId,
     });
     const moveHole = requireHole(

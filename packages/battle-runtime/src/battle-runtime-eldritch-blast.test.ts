@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import type {
   BattleHole,
@@ -348,7 +349,10 @@ describe("battle runtime: Eldritch Blast", () => {
         ],
       }),
     } satisfies BattleState;
-    const act = findAct({ ...session, state }, magicSubject("eldritch_blast"));
+    const act = findAct(
+      battleRuntimeSessionForTest({ ...session, state }),
+      magicSubject("eldritch_blast"),
+    );
     const subject = act.subject;
     const targetHoles = act.initialHoles.filter(
       (hole): hole is Extract<BattleHole, { readonly kind: "targetChoice" }> =>
@@ -564,7 +568,7 @@ describe("battle runtime: Eldritch Blast", () => {
       }),
     } satisfies BattleState;
     const act = findAct(
-      { ...session, state },
+      battleRuntimeSessionForTest({ ...session, state }),
       magicSubject("eldritch_blast"),
     );
     const subject = act.subject;
@@ -706,15 +710,9 @@ describe("battle runtime: Eldritch Blast", () => {
       ],
     });
     const zeroHpState = zeroHpSession.state;
-    const zeroHpAct = findAct(
-      zeroHpSession,
-      magicSubject("eldritch_blast"),
-    );
+    const zeroHpAct = findAct(zeroHpSession, magicSubject("eldritch_blast"));
     const zeroHpSubject = zeroHpAct.subject;
-    const zeroTarget = findHole(
-      zeroHpAct.initialHoles,
-      "targetChoice",
-    );
+    const zeroTarget = findHole(zeroHpAct.initialHoles, "targetChoice");
     const zeroAttack = requireHole(
       resolveBattleSubject({
         state: zeroHpState,
@@ -811,7 +809,7 @@ describe("battle runtime: Eldritch Blast", () => {
       if (next.tag !== "resolved") {
         throw new Error(`Expected resolved End Turn, got ${next.tag}.`);
       }
-      return { ...session, state: next.state };
+      return battleRuntimeSessionForTest({ ...session, state: next.state });
     };
     const attackHitSession = warlockTurnWithReadiedRay("attackHit");
     const attackHitState = attackHitSession.state;

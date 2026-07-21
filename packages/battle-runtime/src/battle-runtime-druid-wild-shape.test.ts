@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.druid-wild-shape-known-form
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRUID-WILD-SHAPE-D20-STAT-PROJECTION druid_wild_shape
@@ -2055,7 +2056,10 @@ test("Wild Shape blocks spell invocation before Beast Spells", () => {
 
   expect(
     hasActionSpell(
-      { state: assumed.state, context: session.context },
+      battleRuntimeSessionForTest({
+        state: assumed.state,
+        context: session.context,
+      }),
       "cure_wounds",
     ),
   ).toBe(false);
@@ -2079,7 +2083,10 @@ test("Beast Spells admits no-Material spell invocation while Wild Shape is activ
 
   expect(
     hasActionSpell(
-      { state: assumed.state, context: session.context },
+      battleRuntimeSessionForTest({
+        state: assumed.state,
+        context: session.context,
+      }),
       "cure_wounds",
     ),
   ).toBe(true);
@@ -2104,7 +2111,10 @@ test("Beast Spells admits focus-replaceable Material spell invocation while Wild
 
   expect(
     hasActionSpell(
-      { state: assumed.state, context: session.context },
+      battleRuntimeSessionForTest({
+        state: assumed.state,
+        context: session.context,
+      }),
       "animal_friendship",
     ),
   ).toBe(true);
@@ -2130,7 +2140,10 @@ test("Beast Spells rejects priced or consumed Material spells while Wild Shape i
     ),
   );
 
-  const assumedSession = { state: assumed.state, context: session.context };
+  const assumedSession = battleRuntimeSessionForTest({
+    state: assumed.state,
+    context: session.context,
+  });
   expect(hasActionSpell(assumedSession, "cure_wounds")).toBe(true);
   expect(hasActionSpell(assumedSession, "continual_flame")).toBe(false);
 });

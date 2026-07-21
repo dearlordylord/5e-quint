@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
   battleActiveEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
@@ -172,7 +173,7 @@ function endObjectAttachedSpellLight(): DispelMagicRuntimeState {
     "Expected selected Dispel Magic object target to resolve.",
   );
   return {
-    battle: { ...battle, state: resolved.state },
+    battle: battleRuntimeSessionForTest({ ...battle, state: resolved.state }),
     lastResult: "objectSpellLightEnded",
   };
 }
@@ -222,7 +223,7 @@ function endSelectedMagicalEffectActiveEffect(): DispelMagicRuntimeState {
     "Expected selected Dispel Magic magical-effect target to resolve.",
   );
   return {
-    battle: { ...battle, state: resolved.state },
+    battle: battleRuntimeSessionForTest({ ...battle, state: resolved.state }),
     lastResult: "selectedMagicalEffectEnded",
   };
 }
@@ -279,10 +280,10 @@ function battleWithLightEmitters(
     preparedSpells: [spellRecord(dispelMagicUnitId)],
     spellSlots: [{ spellLevel: 3, count: 1 }],
   });
-  return {
+  return battleRuntimeSessionForTest({
     ...session,
     state: { ...session.state, lightEmitters },
-  };
+  });
 }
 
 function battleWithActiveEffects(
@@ -325,7 +326,10 @@ function battleWithActiveEffects(
       ),
     ],
   });
-  return { ...battle, state: { ...battle.state, combatants } };
+  return battleRuntimeSessionForTest({
+    ...battle,
+    state: { ...battle.state, combatants },
+  });
 }
 
 function battleWithSpellLightAndActiveEffects(): BattleRuntimeSession {
@@ -341,7 +345,7 @@ function battleWithSpellLightAndActiveEffects(): BattleRuntimeSession {
       effectId: retainedActiveEffectId,
     }),
   ]);
-  return {
+  return battleRuntimeSessionForTest({
     ...battle,
     state: {
       ...battle.state,
@@ -355,7 +359,7 @@ function battleWithSpellLightAndActiveEffects(): BattleRuntimeSession {
         }),
       ],
     },
-  };
+  });
 }
 
 function objectSpellEmitter(input: {

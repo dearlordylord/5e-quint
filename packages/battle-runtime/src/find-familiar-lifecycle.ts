@@ -11,6 +11,10 @@ import type { StatBlockRecord } from "@dnd/surface/surface/types";
 import * as Either from "effect/Either";
 import * as Option from "effect/Option";
 
+import {
+  battleRuntimeSessionWithState,
+  type BattleRuntimeSession,
+} from "./battle-runtime-context.ts";
 import type {
   BattleDroppedObjectOutcome,
   BattleResolutionResult,
@@ -475,6 +479,21 @@ export function admitCompanionToBattle(
   return withInitialInitiativeOrder(
     nextState.state,
     input.initialCombatantOrder,
+  );
+}
+
+type WithoutBattleState<Input> = Input extends unknown
+  ? Omit<Input, "state">
+  : never;
+
+export function admitCompanionToBattleRuntime(
+  input: WithoutBattleState<CompanionBattleAdmissionInput> & {
+    readonly session: BattleRuntimeSession;
+  },
+): Either.Either<BattleRuntimeSession, BattleStateInitIssue> {
+  return Either.map(
+    admitCompanionToBattle({ ...input, state: input.session.state }),
+    (state) => battleRuntimeSessionWithState(input.session, state),
   );
 }
 

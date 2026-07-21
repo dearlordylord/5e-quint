@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
@@ -205,7 +206,9 @@ function observeDismissAndReappearFindFamiliarRoute(): readonly BattleReducerRou
 function observeDeliverTouchSpellThroughFindFamiliarRoute(): readonly BattleReducerRouteEvent[] {
   const session = startSpellcasterFixtureSession();
   const state = requireResolved(castCatFamiliar(session.state));
-  const act = touchDeliveryAct({ ...session, state });
+  const act = touchDeliveryAct(
+    battleRuntimeSessionForTest({ ...session, state }),
+  );
   const targetFill = selectedTouchSpellTargetFill(
     requireHole(act.initialHoles, "targetChoice"),
   );
@@ -351,10 +354,12 @@ function deliverTouchSpellThroughFindFamiliarProjection(): FindFamiliarSelectedI
   if (cast.tag !== "resolved") {
     throw new Error(`Expected Find Familiar cast, got ${cast.tag}.`);
   }
-  const cureWoundsAct = discoverBattleActs({
-    ...session,
-    state: cast.state,
-  }).find(
+  const cureWoundsAct = discoverBattleActs(
+    battleRuntimeSessionForTest({
+      ...session,
+      state: cast.state,
+    }),
+  ).find(
     (act) =>
       act.subject.tag === "actionSpell" &&
       battleActSpellPresentation(act)?.invocation.spellId === cureWoundsUnitId,

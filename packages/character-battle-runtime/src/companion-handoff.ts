@@ -1,6 +1,7 @@
 // KERNEL-COVERAGE: runtime-owner CHARACTER.BATTLE.HANDOFF.SETTLEMENT CHARACTER.BATTLE.HANDOFF.IDENTITY_CONFLICTS
 import {
   admitCompanionToBattle,
+  admitCompanionToBattleRuntime,
   findFamiliarCompanionEntryForOwner,
   retainedStoredFormForPresentCompanion,
   type BattleCompanionPlacement,
@@ -10,6 +11,7 @@ import {
   type CompanionBattleEmbodiedAdmissionManifestation,
   type CompanionBattleStoredAdmissionManifestation,
   type BattleState,
+  type BattleRuntimeSession,
   type CombatantId,
   type InitiativeScore,
 } from "@dnd/battle-runtime";
@@ -56,9 +58,27 @@ export type CharacterSheetCompanionBattleAdmissionInput = {
   readonly statBlockCatalog: StatBlockCatalog;
 };
 
+export type CharacterSheetCompanionBattleRuntimeAdmissionInput = Omit<
+  CharacterSheetCompanionBattleAdmissionInput,
+  "state"
+> & {
+  readonly session: BattleRuntimeSession;
+};
+
 export function admitCharacterSheetCompanionToBattle(
   input: CharacterSheetCompanionBattleAdmissionInput,
-): Either.Either<BattleState, CharacterSheetBattleHandoffIssue> {
+): Either.Either<BattleState, CharacterSheetBattleHandoffIssue>;
+export function admitCharacterSheetCompanionToBattle(
+  input: CharacterSheetCompanionBattleRuntimeAdmissionInput,
+): Either.Either<BattleRuntimeSession, CharacterSheetBattleHandoffIssue>;
+export function admitCharacterSheetCompanionToBattle(
+  input:
+    | CharacterSheetCompanionBattleAdmissionInput
+    | CharacterSheetCompanionBattleRuntimeAdmissionInput,
+): Either.Either<
+  BattleState | BattleRuntimeSession,
+  CharacterSheetBattleHandoffIssue
+> {
   const sheetCompanion = characterSheetCompanion(input.sheet);
   if (sheetCompanion.tag === "none") {
     return characterSheetBattleHandoffIssue(
@@ -77,7 +97,6 @@ export function admitCharacterSheetCompanionToBattle(
   });
   if (Either.isLeft(manifestation)) return Either.left(manifestation.left);
   const admissionBase = {
-    state: input.state,
     ownerId: input.ownerCombatantId,
     identity: {
       tag: "retainedBetweenBattles" as const,
@@ -89,18 +108,44 @@ export function admitCharacterSheetCompanionToBattle(
     initialCombatantOrder: input.initialCombatantOrder,
   };
   if (manifestation.right.tag === "embodiedOutsideBattle") {
-    const admitted = admitCompanionToBattle({
+    const admission = {
       ...admissionBase,
       companionId: manifestation.right.companionId,
       manifestation: manifestation.right.manifestation,
+    };
+    if ("session" in input) {
+      const admitted = admitCompanionToBattleRuntime({
+        ...admission,
+        session: input.session,
+      });
+      return Either.isLeft(admitted)
+        ? characterSheetBattleHandoffIssue(admitted.left.message)
+        : Either.right(admitted.right);
+    }
+    const admitted = admitCompanionToBattle({
+      ...admission,
+      state: input.state,
+    });
+    return Either.isLeft(admitted)
+      ? characterSheetBattleHandoffIssue(admitted.left.message)
+      : Either.right(admitted.right);
+  }
+  const admission = {
+    ...admissionBase,
+    manifestation: manifestation.right.manifestation,
+  };
+  if ("session" in input) {
+    const admitted = admitCompanionToBattleRuntime({
+      ...admission,
+      session: input.session,
     });
     return Either.isLeft(admitted)
       ? characterSheetBattleHandoffIssue(admitted.left.message)
       : Either.right(admitted.right);
   }
   const admitted = admitCompanionToBattle({
-    ...admissionBase,
-    manifestation: manifestation.right.manifestation,
+    ...admission,
+    state: input.state,
   });
   return Either.isLeft(admitted)
     ? characterSheetBattleHandoffIssue(admitted.left.message)

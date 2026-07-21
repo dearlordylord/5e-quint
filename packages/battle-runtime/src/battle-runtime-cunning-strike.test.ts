@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.cunning-strike
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.cunning-strike-option-grant
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L5-A13-ROGUE-CUNNING-STRIKE-BATTLE-RUNTIME rogue_cunning_strike
@@ -725,11 +726,17 @@ function cunningStrikeOffHandDamageWindow(
   );
 
   return {
-    session: { ...session, state: afterQualifyingAttack },
+    session: battleRuntimeSessionForTest({
+      ...session,
+      state: afterQualifyingAttack,
+    }),
     state: afterQualifyingAttack,
     subject,
     damageAppliedFills: cunningStrikeDamageAppliedFills({
-      session: { ...session, state: afterQualifyingAttack },
+      session: battleRuntimeSessionForTest({
+        ...session,
+        state: afterQualifyingAttack,
+      }),
       state: afterQualifyingAttack,
       subject,
       prefixFills: [targetSelection, attackRollFill(roll, attackRoll)],
@@ -816,11 +823,17 @@ function cunningStrikeOpportunityAttackDamageWindow(
   );
 
   return {
-    session: { ...session, state: startedReaction.state },
+    session: battleRuntimeSessionForTest({
+      ...session,
+      state: startedReaction.state,
+    }),
     state: startedReaction.state,
     subject,
     damageAppliedFills: cunningStrikeDamageAppliedFills({
-      session: { ...session, state: startedReaction.state },
+      session: battleRuntimeSessionForTest({
+        ...session,
+        state: startedReaction.state,
+      }),
       state: startedReaction.state,
       subject,
       prefixFills: [attackRollFill(roll, attackRoll)],
@@ -1001,7 +1014,7 @@ function cunningStrikeBattle(
   if (target === undefined) {
     throw new Error("Expected Cunning Strike target combatant.");
   }
-  return {
+  return battleRuntimeSessionForTest({
     ...session,
     state: {
       ...visibleState,
@@ -1028,7 +1041,7 @@ function cunningStrikeBattle(
             : {}),
         }),
     },
-  };
+  });
 }
 
 function largeTargetStatBlock(): ReturnType<typeof statBlockRecord> {

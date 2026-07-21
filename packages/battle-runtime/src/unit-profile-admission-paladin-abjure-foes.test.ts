@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
   battleActSpellPresentation,
   battleActUnitPresentation,
@@ -105,10 +106,12 @@ describe("Paladin Abjure Foes Magic Action save-gated condition", () => {
     const savedTarget = requireCombatant(resolved, secondTargetId);
 
     expect(
-      channelDivinityUsesRemaining({
-        state: resolved,
-        context: session.context,
-      }),
+      channelDivinityUsesRemaining(
+        battleRuntimeSessionForTest({
+          state: resolved,
+          context: session.context,
+        }),
+      ),
     ).toBe(1);
     expect(resolved.currentTurnResources.actionResources).toHaveLength(0);
     expect(hasCondition(failedTarget.conditions, "frightened")).toBe(true);

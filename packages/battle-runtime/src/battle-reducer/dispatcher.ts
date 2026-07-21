@@ -53,7 +53,10 @@ import {
 import { Match } from "effect";
 import * as Either from "effect/Either";
 import { type BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
-import type { BattleRuntimeSession } from "../battle-runtime-context.ts";
+import {
+  battleRuntimeSessionWithState,
+  type BattleRuntimeSession,
+} from "../battle-runtime-context.ts";
 import {
   permanentlyDismissFindFamiliar,
   reappearTemporarilyDismissedFindFamiliar,
@@ -432,7 +435,10 @@ export type BattleRuntimeResolutionResult =
   | {
       readonly tag: "invalid";
       readonly session: BattleRuntimeSession;
-      readonly reason: Extract<BattleResolutionResult, { readonly tag: "invalid" }>["reason"];
+      readonly reason: Extract<
+        BattleResolutionResult,
+        { readonly tag: "invalid" }
+      >["reason"];
       readonly message: string;
       readonly snapshot: BattleSnapshot;
       readonly routeEvents?: BattleReducerRouteEvents;
@@ -451,20 +457,67 @@ export function resolveBattleRuntimeSubject(
       ? {}
       : { statBlockCatalog: input.statBlockCatalog }),
   });
+  return battleRuntimeResolutionFromMechanical(input.session, result);
+}
+
+function battleRuntimeResolutionFromMechanical(
+  session: BattleRuntimeSession,
+  result: BattleResolutionResult,
+): BattleRuntimeResolutionResult {
   return Match.value(result).pipe(
     byBattleResolutionTag("resolved", ({ state, ...outcome }) => ({
       ...outcome,
-      session: { state, context: input.session.context },
+      session: battleRuntimeSessionWithState(session, state),
     })),
     byBattleResolutionTag("needsHoles", ({ state, ...outcome }) => ({
       ...outcome,
-      session: { state, context: input.session.context },
+      session: battleRuntimeSessionWithState(session, state),
     })),
     byBattleResolutionTag("invalid", (outcome) => ({
       ...outcome,
-      session: input.session,
+      session,
     })),
     Match.exhaustive,
+  );
+}
+
+export function resolveBattleRuntimeInterrupt(input: {
+  readonly session: BattleRuntimeSession;
+  readonly fill: Extract<BattleFill, { readonly kind: "interruptDecision" }>;
+}): BattleRuntimeResolutionResult {
+  return battleRuntimeResolutionFromMechanical(
+    input.session,
+    resolveBattleInterrupt({ state: input.session.state, fill: input.fill }),
+  );
+}
+
+export function endBattleRuntimeTurn(input: {
+  readonly session: BattleRuntimeSession;
+  readonly actorId: CombatantId;
+  readonly fills?: readonly BattleFill[];
+}): BattleRuntimeResolutionResult {
+  return battleRuntimeResolutionFromMechanical(
+    input.session,
+    endTurn({
+      state: input.session.state,
+      actorId: input.actorId,
+      ...(input.fills === undefined ? {} : { fills: input.fills }),
+    }),
+  );
+}
+
+export function openCreatureFallsRuntimeInterruptWindow(input: {
+  readonly session: BattleRuntimeSession;
+  readonly fallingCreatureId: CombatantId;
+  readonly reactionSpellTargetFacts: readonly BattleTargetSpatialFact[];
+}): BattleRuntimeResolutionResult {
+  return battleRuntimeResolutionFromMechanical(
+    input.session,
+    openCreatureFallsInterruptWindow({
+      state: input.session.state,
+      fallingCreatureId: input.fallingCreatureId,
+      reactionSpellTargetFacts: input.reactionSpellTargetFacts,
+    }),
   );
 }
 
@@ -531,11 +584,7 @@ function selectCharacterProcedureForResolution(
     replaySubject.tag === "bonusActionStandardAction" &&
     unitProcedure === undefined
   ) {
-    const invocation = characterSpellProcedure(
-      execution,
-      procedureRef,
-      actor,
-    );
+    const invocation = characterSpellProcedure(execution, procedureRef, actor);
     return invocation?.procedure === "expeditiousRetreatDash"
       ? { tag: "selected", input }
       : { tag: "invalid" };
@@ -6431,9 +6480,7 @@ export function attackDamageRiderSelectionsEqual(
 ): boolean {
   return (
     (a ?? []).length === (b ?? []).length &&
-    (a ?? []).every(
-      (procedureRef, index) => procedureRef === (b ?? [])[index],
-    )
+    (a ?? []).every((procedureRef, index) => procedureRef === (b ?? [])[index])
   );
 }
 
@@ -6493,14 +6540,27 @@ export function battleSnapshotProjection(state: BattleState): {
   }
   const turnOrder = [...initiativeOrder(state.initiative)];
   const availableActs = discoverBattleActCandidates(state);
+  const executionScopeCursorEntries = [...state.executionScopeCursors];
 
   const snapshot: BattleSnapshot = {
     battleId: state.battleId,
-    executionScopeCursors: [...state.executionScopeCursors].map(
-      ([combatantId, nextScopeOrdinal]) => ({
-        combatantId,
-        nextScopeOrdinal,
-      }),
+    executionScopeCursors: executionScopeCursorEntries.flatMap(
+      ([combatantId, allocation]) =>
+        allocation.kind === "active"
+          ? [{ combatantId, nextScopeOrdinal: allocation.nextScopeOrdinal }]
+          : [],
+    ),
+    retiredExecutionScopeAllocations: executionScopeCursorEntries.flatMap(
+      ([combatantId, allocation]) =>
+        allocation.kind === "retired"
+          ? [
+              {
+                combatantId,
+                nextScopeOrdinal: allocation.nextScopeOrdinal,
+                ownership: allocation.ownership,
+              },
+            ]
+          : [],
     ),
     round: state.initiative.round,
     currentActorId: currentActorId(state),

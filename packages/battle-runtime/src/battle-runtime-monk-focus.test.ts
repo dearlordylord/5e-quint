@@ -1,8 +1,10 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS monk_monks_focus
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L110D-03-MONK-HEIGHTENED-FOCUS-ATTACK-DEFENSE monk_heightened_focus
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L110D-04-MONK-STEP-OF-WIND-CARRY monk_heightened_focus
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.monk-focus-battle-options
 import { describe, expect, test } from "vitest";
+import { Either, Schema } from "effect";
 import {
   actionSurgeResource,
   applyCondition,
@@ -10,6 +12,7 @@ import {
   battleActiveEffectExecutionRefForTest,
   battleId,
   battleProcedureExecutionRefForTest,
+  BattleSnapshotSchema,
   characterSeed,
   damageRollFillWithGroups,
   discoverBattleActCandidates,
@@ -26,6 +29,7 @@ import {
   requireResolved,
   resolveBattleSubject,
   shoveOutcomeFill,
+  snapshotBattle,
   startBattleRight,
   startBattleSessionRight,
   statBlockCreatureInit,
@@ -458,10 +462,12 @@ describe("battle runtime: Monk's Focus battle options", () => {
       resolveBattleSubject({ state, subject, fills: [] }),
     );
 
-    const jumpAct = discoverBattleActs({
-      ...session,
-      state: stepped.state,
-    }).find(
+    const jumpAct = discoverBattleActs(
+      battleRuntimeSessionForTest({
+        ...session,
+        state: stepped.state,
+      }),
+    ).find(
       (candidate) =>
         candidate.subject.tag === "runtimeCommand" &&
         candidate.subject.command === "jumpMovementReplacement",
@@ -540,6 +546,28 @@ describe("battle runtime: Monk's Focus battle options", () => {
       activated.state,
       (candidate) => candidate.tag === "monkFocusFlurryOfBlowsStrike",
     );
+    const encoded = Schema.encodeSync(BattleSnapshotSchema)(
+      snapshotBattle(activated.state),
+    );
+    const forgedFocusOwner = {
+      ...encoded,
+      acts: encoded.acts.map((act) =>
+        act.subject.tag === "monkFocusFlurryOfBlowsStrike"
+          ? {
+              ...act,
+              subject: {
+                ...act.subject,
+                focusProcedureRef: act.subject.procedureRef,
+              },
+            }
+          : act,
+      ),
+    };
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(BattleSnapshotSchema)(forgedFocusOwner),
+      ),
+    ).toBe(true);
     const target = requireHole(
       resolveBattleSubject({
         state: activated.state,

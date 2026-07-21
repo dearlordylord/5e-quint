@@ -22,25 +22,26 @@ import * as Option from "effect/Option";
 import { Match } from "effect";
 
 import type { BattleCreatureInit } from "../battle-init.ts";
-import type {
-  BattleRuntimeContext,
-  BattleRuntimeSession,
-  CharacterBattleRuntimeContext,
+import {
+  battleRuntimeContextFromCharacterAdmission,
+  battleRuntimeSessionFromAdmittedContext,
+  type BattleRuntimeContext,
+  type BattleRuntimeSession,
+  type CharacterBattleRuntimeContext,
 } from "../battle-runtime-context.ts";
 
 import {
   BattleId,
   CombatantId,
+  battleAttackExecutionScopeRefForProcedureRef,
   battleExecutionScopeCursor,
   battleExecutionScopeOrdinal,
-  type BattleExecutionScopeCursor,
 } from "../identity.ts";
 import type { BattleCompanionState } from "../companion-state.ts";
 import {
   characterUnitProcedureBindings,
   characterExecutionWithSpellInvocations,
   characterSpellSelectionInvocation,
-  spellProcedureExecutionContext,
 } from "../character-execution.ts";
 import { battleCompanionEntries } from "../find-familiar-state.ts";
 
@@ -57,6 +58,7 @@ import {
   characterSpellcastingInitIssue,
   hidePrerequisitesReferenceCombatantsIssue,
   hidePrerequisiteReferencedCombatantIds,
+  isCharacterBattleCreatureState,
   positiveHpUnconsciousInitIssue,
 } from "./creature-state.ts";
 import { admittedSpellActs } from "./spells-profiles.ts";
@@ -67,9 +69,12 @@ import { resetBattleTurnResources } from "./turn-end-movement.ts";
 
 import type {
   BattleCreatureState,
+  BattleExecutionScopeAllocation,
+  BattleRetiredExecutionScopeOwnership,
   BattleHidePrerequisite,
   BattleState,
   BattleStateInitIssue,
+  CharacterBattleCreatureState,
 } from "../battle-reducer.ts";
 import { INITIAL_ROUND, INITIAL_TURN_RESOURCES } from "../battle-reducer.ts";
 
@@ -108,7 +113,7 @@ class InitialInitiativeSetupWorkflow {
 
   finish(): BattleRuntimeSession {
     this.#setupOpen = false;
-    return { state: this.#state, context: this.#context };
+    return battleRuntimeSessionFromAdmittedContext(this.#state, this.#context);
   }
 }
 
@@ -151,17 +156,16 @@ export function requiredInitiativeRollModeForCombatant(
   }
   const hasRemarkableAthleteAdvantage = characterUnitProcedureBindings(
     combatant.origin.execution,
-  ).some(
-    ({ procedure }) =>
-      Match.value(procedure).pipe(
-        Match.discriminatorsExhaustive("kind")({
-          unitFeature: ({ execution }) =>
-            execution.kind === "remarkableAthlete" &&
-            execution.remarkableAthlete.initiative.kind === "rollAdvantage" &&
-            execution.remarkableAthlete.initiative.roll === "initiative",
-          unitSupportProfile: () => false,
-        }),
-      ),
+  ).some(({ procedure }) =>
+    Match.value(procedure).pipe(
+      Match.discriminatorsExhaustive("kind")({
+        unitFeature: ({ execution }) =>
+          execution.kind === "remarkableAthlete" &&
+          execution.remarkableAthlete.initiative.kind === "rollAdvantage" &&
+          execution.remarkableAthlete.initiative.roll === "initiative",
+        unitSupportProfile: () => false,
+      }),
+    ),
   );
   return hasRemarkableAthleteAdvantage ? "advantage" : undefined;
 }
@@ -176,7 +180,7 @@ export function startBattle(
   const combatants = new Map<CombatantId, BattleCreatureState>();
   const executionScopeCursors = new Map<
     CombatantId,
-    BattleExecutionScopeCursor
+    BattleExecutionScopeAllocation
   >();
   const characterContexts = new Map<
     CombatantId,
@@ -221,12 +225,15 @@ export function startBattle(
     if ("runtimeContext" in admission) {
       characterContexts.set(combatant.combatantId, admission.runtimeContext);
     }
-    if (admission.nextScopeOrdinal > 0) {
-      executionScopeCursors.set(
-        combatant.combatantId,
-        battleExecutionScopeCursor(admission.nextScopeOrdinal),
+    if (admission.nextScopeOrdinal <= 0) {
+      return battleStateInitIssue(
+        `Combatant ${combatant.combatantId} admission allocated no execution scope.`,
       );
     }
+    executionScopeCursors.set(combatant.combatantId, {
+      kind: "active",
+      nextScopeOrdinal: battleExecutionScopeCursor(admission.nextScopeOrdinal),
+    });
   }
   const hidePrerequisiteIssue = hidePrerequisitesReferenceCombatantsIssue(
     input.hidePrerequisites ?? new Map(),
@@ -258,59 +265,30 @@ export function startBattle(
   };
   const combatantsWithCharacterExecutions = new Map(state.combatants);
   for (const [combatantId, combatant] of state.combatants) {
-    if (combatant.origin.kind !== "character") continue;
+    if (!isCharacterBattleCreatureState(combatant)) continue;
     const characterContext = characterContexts.get(combatantId);
     if (characterContext === undefined) {
       return battleStateInitIssue(
         `Character ${combatantId} is missing its runtime context.`,
       );
     }
-    const admitted = admittedSpellActs(
+    const spellAdmission = admitCharacterSpellExecution({
       combatant,
       state,
-      characterContext.resourceOwnership,
-      characterContext.spellcastingPresentationSource,
-    );
-    const spellContext = spellProcedureExecutionContext(
-      characterContext.resourceOwnership,
-    );
-    const execution = characterExecutionWithSpellInvocations(
-      combatant.origin.execution,
-      admitted,
-      spellContext,
-    );
-    combatantsWithCharacterExecutions.set(combatantId, {
-      ...combatant,
-      origin: {
-        ...combatant.origin,
-        execution,
-      },
+      runtimeContext: characterContext,
     });
-    characterContexts.set(combatantId, {
-      ...characterContext,
-      spellPresentationSources: execution.procedureBindings.flatMap(
-        (binding) => {
-          if (binding.procedure.kind !== "spellInvocation") return [];
-          const invocation = characterSpellSelectionInvocation(
-            execution,
-            binding.procedureRef,
-            admitted,
-            spellContext,
-          );
-          return invocation === undefined
-            ? []
-            : [{ procedureRef: binding.procedureRef, invocation }];
-        },
-      ),
-    });
+    combatantsWithCharacterExecutions.set(combatantId, spellAdmission.creature);
+    characterContexts.set(combatantId, spellAdmission.runtimeContext);
   }
-  return Either.right({
-    state: {
-      ...state,
-      combatants: combatantsWithCharacterExecutions,
-    },
-    context: { characters: characterContexts },
-  });
+  return Either.right(
+    battleRuntimeSessionFromAdmittedContext(
+      {
+        ...state,
+        combatants: combatantsWithCharacterExecutions,
+      },
+      battleRuntimeContextFromCharacterAdmission(characterContexts),
+    ),
+  );
 }
 
 type InitialInitiativeCombatant = Pick<
@@ -479,11 +457,71 @@ function combatantHasInitiativeProficiencyAndSwap(
   );
 }
 
-export function addBattleCombatant(input: {
+type AddBattleCombatantInput = {
   readonly state: BattleState;
   readonly combatant: BattleCreatureInit;
   readonly tieOrderIndex?: number;
-}): Either.Either<BattleState, BattleStateInitIssue> {
+};
+
+function admitCharacterSpellExecution(input: {
+  readonly combatant: CharacterBattleCreatureState;
+  readonly state: BattleState;
+  readonly runtimeContext: CharacterBattleRuntimeContext;
+}): {
+  readonly creature: CharacterBattleCreatureState;
+  readonly runtimeContext: CharacterBattleRuntimeContext;
+} {
+  const admitted = admittedSpellActs(
+    input.combatant,
+    input.state,
+    input.runtimeContext.resourceOwnership,
+    input.runtimeContext.spellcastingPresentationSource,
+  );
+  const execution = characterExecutionWithSpellInvocations(
+    input.combatant.origin.execution,
+    admitted,
+  );
+  return {
+    creature: {
+      ...input.combatant,
+      origin: {
+        ...input.combatant.origin,
+        execution,
+      },
+    },
+    runtimeContext: {
+      ...input.runtimeContext,
+      spellPresentationSources: execution.procedureBindings.flatMap(
+        ({ procedureRef, procedure }) =>
+          Match.value(procedure).pipe(
+            Match.discriminatorsExhaustive("kind")({
+              spellInvocation: () => {
+                const invocation = characterSpellSelectionInvocation(
+                  execution,
+                  procedureRef,
+                  admitted,
+                );
+                return invocation === undefined
+                  ? []
+                  : [{ procedureRef, invocation }];
+              },
+              unavailableSpellInvocation: () => [],
+              unitFeature: () => [],
+              unitSupportProfile: () => [],
+            }),
+          ),
+      ),
+    },
+  };
+}
+
+function admitBattleCombatant(input: AddBattleCombatantInput): Either.Either<
+  {
+    readonly state: BattleState;
+    readonly characterContext?: CharacterBattleRuntimeContext;
+  },
+  BattleStateInitIssue
+> {
   if (input.state.combatants.has(input.combatant.combatantId)) {
     return battleStateInitIssue(
       `Duplicate combatant id: ${input.combatant.combatantId}`,
@@ -513,8 +551,8 @@ export function addBattleCombatant(input: {
   const admission = battleCreatureStateAdmissionFromInit(
     input.state.battleId,
     input.combatant,
-    input.state.executionScopeCursors.get(input.combatant.combatantId) ??
-      battleExecutionScopeOrdinal(0),
+    input.state.executionScopeCursors.get(input.combatant.combatantId)
+      ?.nextScopeOrdinal ?? battleExecutionScopeOrdinal(0),
   );
   if (admission.tag === "invalid") {
     return battleStateInitIssue(
@@ -529,27 +567,17 @@ export function addBattleCombatant(input: {
     ...input.state,
     combatants: combatantsWithAdmission,
   };
-  const admittedCreature =
+  const characterSpellAdmission =
+    isCharacterBattleCreatureState(admission.creature) &&
     "runtimeContext" in admission
-      ? {
-          ...admission.creature,
-          origin: {
-            ...admission.creature.origin,
-            execution: characterExecutionWithSpellInvocations(
-              admission.creature.origin.execution,
-              admittedSpellActs(
-                admission.creature,
-                stateWithAdmission,
-                admission.runtimeContext.resourceOwnership,
-                admission.runtimeContext.spellcastingPresentationSource,
-              ),
-              spellProcedureExecutionContext(
-                admission.runtimeContext.resourceOwnership,
-              ),
-            ),
-          },
-        }
-      : admission.creature;
+      ? admitCharacterSpellExecution({
+          combatant: admission.creature,
+          state: stateWithAdmission,
+          runtimeContext: admission.runtimeContext,
+        })
+      : undefined;
+  const admittedCreature =
+    characterSpellAdmission?.creature ?? admission.creature;
   const nextCombatants = new Map(input.state.combatants).set(
     input.combatant.combatantId,
     admittedCreature,
@@ -568,19 +596,82 @@ export function addBattleCombatant(input: {
     },
   );
   const executionScopeCursors = new Map(input.state.executionScopeCursors);
-  if (admission.nextScopeOrdinal > 0) {
-    executionScopeCursors.set(
-      input.combatant.combatantId,
-      battleExecutionScopeCursor(admission.nextScopeOrdinal),
+  if (admission.nextScopeOrdinal <= 0) {
+    return battleStateInitIssue(
+      `Combatant ${input.combatant.combatantId} admission allocated no execution scope.`,
     );
   }
+  executionScopeCursors.set(input.combatant.combatantId, {
+    kind: "active",
+    nextScopeOrdinal: battleExecutionScopeCursor(admission.nextScopeOrdinal),
+  });
 
   return Either.right({
-    ...input.state,
-    initiative,
-    combatants: nextCombatants,
-    executionScopeCursors,
+    state: {
+      ...input.state,
+      initiative,
+      combatants: nextCombatants,
+      executionScopeCursors,
+    },
+    ...(characterSpellAdmission === undefined
+      ? {}
+      : { characterContext: characterSpellAdmission.runtimeContext }),
   });
+}
+
+export function addBattleCombatant(
+  input: AddBattleCombatantInput,
+): Either.Either<BattleState, BattleStateInitIssue> {
+  return Either.map(
+    admitBattleCombatant(input),
+    (admission) => admission.state,
+  );
+}
+
+export function addBattleRuntimeCombatant(input: {
+  readonly session: BattleRuntimeSession;
+  readonly combatant: BattleCreatureInit;
+  readonly tieOrderIndex?: number;
+}): Either.Either<BattleRuntimeSession, BattleStateInitIssue> {
+  return Either.map(
+    admitBattleCombatant({
+      state: input.session.state,
+      combatant: input.combatant,
+      ...(input.tieOrderIndex === undefined
+        ? {}
+        : { tieOrderIndex: input.tieOrderIndex }),
+    }),
+    (admission) => {
+      const characters = new Map(input.session.context.characters);
+      if (admission.characterContext !== undefined) {
+        characters.set(input.combatant.combatantId, admission.characterContext);
+      }
+      return battleRuntimeSessionFromAdmittedContext(
+        admission.state,
+        battleRuntimeContextFromCharacterAdmission(characters),
+      );
+    },
+  );
+}
+
+function battleCreatureRetiredExecutionScopeOwnership(
+  combatant: BattleCreatureState,
+): BattleRetiredExecutionScopeOwnership {
+  return combatant.origin.kind === "statBlock"
+    ? {
+        kind: "statBlock",
+        statBlockScopeRef: combatant.origin.execution.scopeRef,
+      }
+    : {
+        kind: "character",
+        characterScopeRef: combatant.origin.execution.scopeRef,
+        attackScopeRef: battleAttackExecutionScopeRefForProcedureRef(
+          combatant.origin.unarmedStrike.procedureRef,
+        ),
+        formScopeRefs: (
+          combatant.origin.druidWildShapeAvailableForms ?? []
+        ).map((form) => form.execution.scopeRef),
+      };
 }
 
 export function removeBattleCombatants(input: {
@@ -601,6 +692,21 @@ export function removeBattleCombatants(input: {
   }
   if (removeIds.size >= input.state.combatants.size) {
     return battleStateInitIssue("Cannot remove every combatant from a battle.");
+  }
+  const executionScopeCursors = new Map(input.state.executionScopeCursors);
+  for (const id of removeIds) {
+    const combatant = input.state.combatants.get(id);
+    const allocation = executionScopeCursors.get(id);
+    if (combatant === undefined || allocation?.kind !== "active") {
+      return battleStateInitIssue(
+        "Cannot retire a combatant without an active execution-scope allocation.",
+      );
+    }
+    executionScopeCursors.set(id, {
+      kind: "retired",
+      nextScopeOrdinal: allocation.nextScopeOrdinal,
+      ownership: battleCreatureRetiredExecutionScopeOwnership(combatant),
+    });
   }
   const currentRemoved = removeIds.has(currentActorId(input.state));
   const initiativeOption = removeFromInitiative(input.state.initiative, (id) =>
@@ -645,6 +751,7 @@ export function removeBattleCombatants(input: {
       ...input.state,
       initiative: initiativeOption.value,
       combatants,
+      executionScopeCursors,
       companions,
       objectOutlines: input.state.objectOutlines.filter(
         (outline) =>
@@ -694,6 +801,29 @@ export function removeBattleCombatants(input: {
           ? null
           : input.state.legendaryActionWindow,
     }),
+  );
+}
+
+export function removeBattleRuntimeCombatants(input: {
+  readonly session: BattleRuntimeSession;
+  readonly combatantIds: readonly CombatantId[];
+}): Either.Either<BattleRuntimeSession, BattleStateInitIssue> {
+  return Either.map(
+    removeBattleCombatants({
+      state: input.session.state,
+      combatantIds: input.combatantIds,
+    }),
+    (state) =>
+      battleRuntimeSessionFromAdmittedContext(
+        state,
+        battleRuntimeContextFromCharacterAdmission(
+          new Map(
+            [...input.session.context.characters].filter(([combatantId]) =>
+              state.combatants.has(combatantId),
+            ),
+          ),
+        ),
+      ),
   );
 }
 

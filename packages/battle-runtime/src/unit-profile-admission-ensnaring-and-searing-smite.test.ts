@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime-test-support.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31D ensnaring_strike
@@ -101,7 +102,10 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
     const choice = awaitingReaction.snapshot.pendingInterrupt?.choices.find(
       (candidate) =>
         afterHitChoiceMatchesSpell(
-          { ...state, state: awaitingReaction.state },
+          battleRuntimeSessionForTest({
+            ...state,
+            state: awaitingReaction.state,
+          }),
           candidate,
           ensnaringStrikeUnitId,
         ),
@@ -312,7 +316,10 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
     const choice = awaitingReaction.snapshot.pendingInterrupt?.choices.find(
       (candidate) =>
         afterHitChoiceMatchesSpell(
-          { ...state, state: awaitingReaction.state },
+          battleRuntimeSessionForTest({
+            ...state,
+            state: awaitingReaction.state,
+          }),
           candidate,
           searingSmiteUnitId,
         ),
@@ -325,7 +332,10 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
     }
     expect(
       characterSpellInvocationRefForProcedureRefForTest(
-        { ...state, state: awaitingReaction.state },
+        battleRuntimeSessionForTest({
+          ...state,
+          state: awaitingReaction.state,
+        }),
         choice.reactorId,
         choice.subject.procedureRef,
       ),
@@ -541,7 +551,10 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
         tag: "actionSpell",
         actorId: spellTargetId,
         procedureRef: requireCharacterSpellProcedureRefForTest(
-          { state: targetTurn.state, context: initialState.context },
+          battleRuntimeSessionForTest({
+            state: targetTurn.state,
+            context: initialState.context,
+          }),
           spellTargetId,
           cantripSpellInvocationRef(rayOfFrostUnitId, "spellAttackDamage"),
         ),
@@ -561,7 +574,7 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
     }
 
     const subject = weaponAttackSubject(
-      { ...initialState, state: casterTurn.state },
+      battleRuntimeSessionForTest({ ...initialState, state: casterTurn.state }),
       "Shortbow",
     );
     const target = requireResultHole(
@@ -594,7 +607,10 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
     const choice = awaitingAttackHit.snapshot.pendingInterrupt?.choices.find(
       (candidate) =>
         afterHitChoiceMatchesSpell(
-          { ...initialState, state: awaitingAttackHit.state },
+          battleRuntimeSessionForTest({
+            ...initialState,
+            state: awaitingAttackHit.state,
+          }),
           candidate,
           ensnaringStrikeUnitId,
         ),
@@ -678,7 +694,10 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
         tag: "actionSpell",
         actorId: spellTargetId,
         procedureRef: requireCharacterSpellProcedureRefForTest(
-          { state: targetTurn.state, context: initialState.context },
+          battleRuntimeSessionForTest({
+            state: targetTurn.state,
+            context: initialState.context,
+          }),
           spellTargetId,
           cantripSpellInvocationRef(rayOfFrostUnitId, "spellAttackDamage"),
         ),
@@ -698,7 +717,7 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
     }
 
     const subject = weaponAttackSubject(
-      { ...initialState, state: casterTurn.state },
+      battleRuntimeSessionForTest({ ...initialState, state: casterTurn.state }),
       "Shortbow",
     );
     const target = requireResultHole(
@@ -731,7 +750,10 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
     const choice = awaitingAttackHit.snapshot.pendingInterrupt?.choices.find(
       (candidate) =>
         afterHitChoiceMatchesSpell(
-          { ...initialState, state: awaitingAttackHit.state },
+          battleRuntimeSessionForTest({
+            ...initialState,
+            state: awaitingAttackHit.state,
+          }),
           candidate,
           ensnaringStrikeUnitId,
         ),
@@ -826,7 +848,10 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
         tag: "actionSpell",
         actorId: spellTargetId,
         procedureRef: requireCharacterSpellProcedureRefForTest(
-          { state: targetTurn.state, context: initialState.context },
+          battleRuntimeSessionForTest({
+            state: targetTurn.state,
+            context: initialState.context,
+          }),
           spellTargetId,
           cantripSpellInvocationRef(rayOfFrostUnitId, "spellAttackDamage"),
         ),
@@ -866,7 +891,7 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
     }
 
     const subject = weaponAttackSubject(
-      { ...initialState, state: casterTurn.state },
+      battleRuntimeSessionForTest({ ...initialState, state: casterTurn.state }),
       "Shortbow",
     );
     const target = requireResultHole(
@@ -899,7 +924,10 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
     const choice = awaitingAttackHit.snapshot.pendingInterrupt?.choices.find(
       (candidate) =>
         afterHitChoiceMatchesSpell(
-          { ...initialState, state: awaitingAttackHit.state },
+          battleRuntimeSessionForTest({
+            ...initialState,
+            state: awaitingAttackHit.state,
+          }),
           candidate,
           ensnaringStrikeUnitId,
         ),

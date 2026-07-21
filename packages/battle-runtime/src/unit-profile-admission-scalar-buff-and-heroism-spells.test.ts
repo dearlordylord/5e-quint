@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import type { BattleProcedureExecutionRef } from "./index.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30A false_life longstrider shield_of_faith
@@ -1132,7 +1133,7 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
       spellCasterId,
     );
     const featherFallProcedureRef = requireCharacterSpellProcedureRefForTest(
-      { ...session, state: broken },
+      battleRuntimeSessionForTest({ ...session, state: broken }),
       spellCasterId,
       spellSlotInvocationRef(featherFallUnitId, 1, "featherFallMitigation"),
     );
@@ -1179,7 +1180,7 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
         (candidate) => {
           if (candidate.kind !== "castTriggeredReactionSpell") return false;
           const invocation = characterSpellInvocationRefForProcedureRefForTest(
-            { ...session, state: reactionState },
+            battleRuntimeSessionForTest({ ...session, state: reactionState }),
             candidate.reactorId,
             candidate.subject.procedureRef,
           );
@@ -1301,7 +1302,10 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
     const firstCast = castFlyFromSession(session, 3);
     const laterCasterTurn = advanceToNextCasterTurn(firstCast.state);
     const secondCast = castFlyFromSession(
-      { state: laterCasterTurn.state, context: session.context },
+      battleRuntimeSessionForTest({
+        state: laterCasterTurn.state,
+        context: session.context,
+      }),
       4,
     );
     const endedEffect = requirePendingFlySpeedGrantCleanup(
@@ -1965,7 +1969,10 @@ describe("SRDINV30D deterministic Heroism Spell Unit admission", () => {
         conditions: applyCondition(target.conditions, "frightened"),
       }),
     };
-    const session = { state, context: baseSession.context };
+    const session = battleRuntimeSessionForTest({
+      state,
+      context: baseSession.context,
+    });
     const act = spellAct({ session, spellId: heroismUnitId });
     const targetHole = requireHole(act.initialHoles, "targetChoice");
 

@@ -2,7 +2,6 @@ import {
   BattleActPresentationSchema,
   BattleInterruptProcedureChoiceSchema,
   BattleSpellPresentationSchema,
-  battleActPresentationMatchesSubject,
   BattleDroppedObjectOutcomeSchema,
   BattleHoleSchema,
   BattleObjectDamageOutcomeSchema,
@@ -11,7 +10,7 @@ import {
   BattleSnapshotSchema,
   BattleSubjectSchema,
 } from "@dnd/battle-runtime";
-import { Match, Schema } from "effect";
+import { Schema } from "effect";
 
 import {
   McpSessionSnapshotSchema,
@@ -65,46 +64,12 @@ const AvailableBattleActSchema = Schema.Struct({
   label: Schema.NonEmptyTrimmedString,
   summary: Schema.NonEmptyTrimmedString,
   presentation: BattleActPresentationSchema,
-}).pipe(
-  Schema.filter(
-    ({ subject, presentation }) =>
-      battleActPresentationMatchesSubject(subject, presentation),
-    {
-      message: () =>
-        "Battle act presentation must describe the same execution variant and procedure as its subject.",
-    },
-  ),
-);
+});
 
 const PresentedBattleInterruptChoiceSchema = Schema.Struct({
   choice: BattleInterruptProcedureChoiceSchema,
   presentation: BattleActPresentationSchema,
-}).pipe(
-  Schema.filter(
-    ({ choice, presentation }) =>
-      Match.value(choice).pipe(
-        Match.discriminatorsExhaustive("kind")({
-          releaseReadiedSpell: (value) =>
-            battleActPresentationMatchesSubject(value.subject, presentation),
-          releaseReadiedMovement: (value) =>
-            battleActPresentationMatchesSubject(value.subject, presentation),
-          castTriggeredReactionSpell: (value) =>
-            battleActPresentationMatchesSubject(value.subject, presentation),
-          castAttackHitBonusActionSpell: (value) =>
-            battleActPresentationMatchesSubject(value.subject, presentation),
-          opportunityAttack: (value) =>
-            battleActPresentationMatchesSubject(value.subject, presentation),
-          retaliationAttack: (value) =>
-            battleActPresentationMatchesSubject(value.subject, presentation),
-          reactionRollOrDamageReduction: () => false,
-        }),
-      ),
-    {
-      message: () =>
-        "Interrupt presentation must describe the same execution choice and procedure.",
-    },
-  ),
-);
+});
 
 const BattlePresentationProjectionFields = {
   availableActs: Schema.Array(AvailableBattleActSchema),

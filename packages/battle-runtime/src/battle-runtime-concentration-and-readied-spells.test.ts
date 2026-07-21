@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import type {
   BattleState,
   BattleSubject,
@@ -139,7 +140,10 @@ describe("battle runtime: Concentration and readied spells", () => {
           tag: "actionSpell",
           actorId: wizardId,
           procedureRef: requireCharacterSpellProcedureRefForTest(
-            { state: wizardTurn, context: session.context },
+            battleRuntimeSessionForTest({
+              state: wizardTurn,
+              context: session.context,
+            }),
             wizardId,
             cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
           ),
@@ -912,7 +916,10 @@ describe("battle runtime: Concentration and readied spells", () => {
           tag: "actionSpell",
           actorId: secondWizardId,
           procedureRef: requireCharacterSpellProcedureRefForTest(
-            { state: secondWizardTurn, context: session.context },
+            battleRuntimeSessionForTest({
+              state: secondWizardTurn,
+              context: session.context,
+            }),
             secondWizardId,
             cantripSpellInvocationRef("acid_splash", "saveGatedDamage"),
           ),
