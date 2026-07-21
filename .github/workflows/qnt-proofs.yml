@@ -55,6 +55,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Install Quint CLI
+        run: |
+          pnpm add --global @informalsystems/quint@0.31.0
+          pnpm exec quint --version
+
       - name: Download previous successful timing artifact
         id: previous
         env:
