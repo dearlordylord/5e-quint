@@ -12,11 +12,6 @@
 // exactly that file.
 
 import { currentActing } from "@dnd/shared-algebras/initiative-algebra";
-import {
-  DurationSchema,
-  RangeSchema,
-  SpellLevelSchema,
-} from "@dnd/surface/surface/schema";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Schema } from "effect";
 import type {
@@ -34,8 +29,8 @@ import type {
 import type {
   BattleSpellProcedureExecution,
   SpellProcedureExecution,
-  SpellRuleExecutionFacts,
 } from "../../character-execution.ts";
+export { SpellRuleExecutionFactsSchema } from "../../procedure-execution/spell-rule-facts.ts";
 import type { CombatantId } from "../../identity.ts";
 import type {
   CharacterBattleResourceOwnership,
@@ -159,26 +154,6 @@ export type SpellProcedureMetamagicCompatibility =
   | "notActionSpellCasting";
 
 export type OkSpellFillSet = Extract<SpellFillSet, { readonly tag: "ok" }>;
-
-export const SpellRuleExecutionFactsSchema: Schema.Schema<SpellRuleExecutionFacts> =
-  Schema.Struct({
-    level: SpellLevelSchema,
-    range: RangeSchema,
-    duration: DurationSchema,
-    components: Schema.Struct({
-      verbal: Schema.Boolean,
-      somatic: Schema.Boolean,
-      hasMaterial: Schema.Boolean,
-      hasPricedOrConsumedMaterial: Schema.Boolean,
-    }),
-    twinnedTargetCount: Schema.Union(
-      Schema.Struct({
-        base: Schema.Number,
-        baseLevel: Schema.Number,
-      }),
-      Schema.Null,
-    ),
-  });
 
 export type SpellProcedureProfileResolveInput<
   I extends SupportedSpellInvocation,

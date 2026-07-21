@@ -110,6 +110,7 @@ export {
   battleAdmittedSpellPresentations,
   battleSelectedSpellInvocationForProcedure,
   battleSubjectPresentation,
+  discoverBattleActs,
 } from "./battle-act-composition.ts";
 
 export {
@@ -364,7 +365,6 @@ export {
   combatantKnockedOutUnconscious,
   concentrationSavingThrowDc,
   discoverBattleActCandidates,
-  discoverBattleActs,
   endBattleRuntimeTurn,
   endTurn,
   FEATHER_FALL_DESCENT_RATE_CAP_FEET_PER_ROUND,

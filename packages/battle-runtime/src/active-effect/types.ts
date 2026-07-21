@@ -87,39 +87,20 @@ import type {
   BattleAreaId,
   BattleLineDirectionId,
   BattleObjectId,
-  BattleProcedureExecutionRef,
   BattleSpellEffectOccurrenceId,
   BattleTablePositionId,
   CombatantId,
 } from "../identity.ts";
 import type { BattleSpellEffectLevel } from "../battle-reducer/spells-effective-level.ts";
+import type { SpellWeaponAttackOverrideEffect } from "../procedure-execution/weapon-attack-override.ts";
+import type { BattleActiveEffectExpiration } from "./expiration.ts";
 
-export type BattleActiveEffectExpiration =
-  | {
-      readonly kind: "startOfTurn";
-      readonly combatantId: CombatantId;
-    }
-  | {
-      readonly kind: "endOfTurn";
-      readonly combatantId: CombatantId;
-      readonly round: RoundType;
-    }
-  | {
-      readonly kind: "concentration";
-      readonly combatantId: CombatantId;
-      readonly durationTicks?: ElapsedTimeTicks;
-    }
-  | {
-      readonly kind: "duration";
-      readonly durationTicks: ElapsedTimeTicks;
-    }
-  | {
-      readonly kind: "untilDispelled";
-    };
-export type TurnAnchoredBattleActiveEffectExpiration = Extract<
+export type {
   BattleActiveEffectExpiration,
-  { readonly kind: "startOfTurn" } | { readonly kind: "endOfTurn" }
->;
+  TurnAnchoredBattleActiveEffectExpiration,
+} from "./expiration.ts";
+import type { BattleActiveEffectSource } from "./source.ts";
+
 export type AreaSpellEffectHeightenedRepeatSaveRider = null | {
   readonly kind: "heightenedSpellTargetDisadvantage";
   readonly targetId: CombatantId;
@@ -138,10 +119,7 @@ export type BattleConcentrationBrokenEarlyEnd = Extract<
   BattleSpellEffectEarlyEnd,
   { readonly kind: "concentrationBroken" }
 >;
-export type BattleSpellEffectBase = {
-  readonly sourceProcedureRef: BattleProcedureExecutionRef;
-  readonly sourceCombatantId: CombatantId;
-};
+export type BattleSpellEffectBase = BattleActiveEffectSource;
 export type BattleReplayAddressableEffect = {
   readonly effectRef: BattleActiveEffectExecutionRef;
 };
@@ -174,10 +152,7 @@ export type SpellLevitatedCreatureActiveEffect = BattleSpellEffectBase &
     readonly rangeFeet: MovementFeet;
     readonly expiresAt: SpellConcentrationOrStoredDurationExpiration;
   };
-export type BattleUnitFeatureEffectBase = {
-  readonly sourceProcedureRef: BattleProcedureExecutionRef;
-  readonly sourceCombatantId: CombatantId;
-};
+export type BattleUnitFeatureEffectBase = BattleActiveEffectSource;
 export type SpellConditionAbilityCheckSuccessEnd =
   (typeof SPELL_CONDITION_ABILITY_CHECK_SUCCESS_ENDS)[number];
 export type SpellConditionAbilityCheckActor =
@@ -1221,20 +1196,7 @@ export type BattleActiveEffect =
       };
       readonly expiresAt: BattleActiveEffectExpiration;
     })
-  | (BattleSpellEffectBase & {
-      readonly kind: "spellWeaponAttackOverride";
-      readonly weaponItemId: string;
-      readonly spellcastingAbilityModifier: AbilityModifier;
-      readonly attackBonus: AttackBonus;
-      readonly damage: {
-        readonly expr: DiceExpr;
-      };
-      readonly damageTypeChoices: readonly [DamageType, DamageType];
-      readonly expiresAt: Extract<
-        BattleActiveEffectExpiration,
-        { readonly kind: "duration" }
-      >;
-    })
+  | SpellWeaponAttackOverrideEffect
   | (BattleSpellEffectBase & {
       readonly kind: "spellMagicWeaponEnhancement";
       readonly holderCombatantId: CombatantId;
@@ -1259,12 +1221,12 @@ export type BattleActiveEffect =
       })
   | (BattleSpellEffectBase &
       BattleReplayAddressableEffect & {
-      readonly kind: "spellDashBonusAction";
-      readonly expiresAt: Extract<
-        BattleActiveEffectExpiration,
-        { readonly kind: "concentration" }
-      >;
-    })
+        readonly kind: "spellDashBonusAction";
+        readonly expiresAt: Extract<
+          BattleActiveEffectExpiration,
+          { readonly kind: "concentration" }
+        >;
+      })
   | (BattleSpellEffectBase &
       BattleReplayAddressableEffect & {
         readonly kind: "jumpMovementReplacement";
@@ -1319,12 +1281,12 @@ export type BattleActiveEffect =
   | ObjectContactPenaltyActiveEffect
   | (BattleSpellEffectBase &
       BattleReplayAddressableEffect & {
-      readonly kind: "dancingLights";
-      readonly expiresAt: Extract<
-        BattleActiveEffectExpiration,
-        { readonly kind: "concentration" }
-      > & { readonly durationTicks: ElapsedTimeTicks };
-    } & (
+        readonly kind: "dancingLights";
+        readonly expiresAt: Extract<
+          BattleActiveEffectExpiration,
+          { readonly kind: "concentration" }
+        > & { readonly durationTicks: ElapsedTimeTicks };
+      } & (
         | {
             readonly form: "separateLights";
             readonly lights: BattleDancingLightList;

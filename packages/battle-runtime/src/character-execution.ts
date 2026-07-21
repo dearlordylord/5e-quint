@@ -44,6 +44,10 @@ import type {
 import type { BattleUnitRef } from "./battle-init.ts";
 import { Brand, Match, Schema } from "effect";
 import type { SpellExecutionFacts } from "./battle-reducer/spell-execution-facts.ts";
+import type { SpellRuleExecutionFacts } from "./procedure-execution/spell-rule-facts.ts";
+import type { WeaponAttackOverrideSpellProcedureExecution } from "./procedure-execution/weapon-attack-override.ts";
+export type { SpellRuleExecutionFacts } from "./procedure-execution/spell-rule-facts.ts";
+export type { WeaponAttackOverrideSpellProcedureExecution } from "./procedure-execution/weapon-attack-override.ts";
 import {
   sameMagicalDarknessPointOriginExecution,
   sameMagicWeaponEnhancementExecution,
@@ -266,22 +270,6 @@ export function characterUnitProcedureBindings(
       : [];
   });
 }
-
-export type SpellRuleExecutionFacts = {
-  readonly level: SpellRecord["mechanics"]["level"];
-  readonly range: SpellRecord["mechanics"]["range"];
-  readonly duration: SpellRecord["mechanics"]["duration"];
-  readonly components: {
-    readonly verbal: boolean;
-    readonly somatic: boolean;
-    readonly hasMaterial: boolean;
-    readonly hasPricedOrConsumedMaterial: boolean;
-  };
-  readonly twinnedTargetCount: {
-    readonly base: number;
-    readonly baseLevel: number;
-  } | null;
-};
 
 type SpellInvocationResourceExecution<
   Resource extends SupportedSpellInvocation["resource"],
@@ -1620,20 +1608,6 @@ export type WardingBondSpellProcedureExecution =
     readonly rangeFeet: WardingBondSpellInvocation["rangeFeet"];
     readonly resource: SpellInvocationResourceExecution<
       WardingBondSpellInvocation["resource"]
-    >;
-  };
-
-type WeaponAttackOverrideSpellInvocation =
-  SpellInvocationFor<"weaponAttackOverride">;
-export type WeaponAttackOverrideSpellProcedureExecution =
-  SpellRuleExecutionFactsOwner & {
-    readonly access: WeaponAttackOverrideSpellInvocation["access"];
-    readonly actionCost: WeaponAttackOverrideSpellInvocation["actionCost"];
-    readonly activeEffect: WeaponAttackOverrideSpellInvocation["activeEffect"];
-    readonly attachedWeaponItemId: string;
-    readonly procedure: WeaponAttackOverrideSpellInvocation["procedure"];
-    readonly resource: SpellInvocationResourceExecution<
-      WeaponAttackOverrideSpellInvocation["resource"]
     >;
   };
 

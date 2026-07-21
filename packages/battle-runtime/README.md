@@ -59,6 +59,51 @@ Do not conflate these boundaries:
 - a creature initialization input is not authored content;
 - a creature initialization input is not durable battle state.
 
+### Admission, execution, and presentation ownership
+
+Battle procedure modules have three one-way ownership zones:
+
+| Zone           | Owns                                                                                                                               | Allowed dependency direction                                                                                   |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `admission`    | Parsing authored Surface records and retained composition facts into typed procedure execution facts and execution references      | May depend on execution types; must not depend on presentation                                                 |
+| `execution`    | Authored-identity-free battle state, procedure facts, discovery candidates, holes/fills, replay, resolution, codecs, and snapshots | Must not depend on admission or presentation                                                                   |
+| `presentation` | Joining execution references to retained authored identity, labels, summaries, and caller-facing presentation                      | May depend on admission context and execution projections; must not feed authored identity back into execution |
+
+Newly isolated procedure owners use `src/procedure-admission/`,
+`src/procedure-execution/`, and, when procedure-specific presentation is
+extracted, `src/act-presentation/`. `battle-act-composition.ts` and
+`battle-runtime-context.ts` are the current presentation owners.
+
+The gate currently protects the clean `procedure-execution` territory. The
+weapon-override admission tracer names its intended owner but still reaches
+legacy mixed contracts; the first graph-derived migration task removes those
+dependencies before admission roots receive their own no-presentation gate.
+Directory placement alone is therefore not evidence of a clean closure.
+
+The distinction is ownership, not package origin. Canonical mechanical
+vocabulary such as abilities, damage types, dice expressions, ranges, and
+durations remains imported from its existing Surface or shared owner; execution
+must not duplicate it merely to avoid a package import.
+
+`pnpm check:battle-runtime-import-ownership` discovers every TypeScript module
+under `src/procedure-execution/`, resolves its complete transitive import graph,
+and rejects the shortest path to an admission, presentation, or known legacy
+mixed owner. A module becomes a protected execution root only after its closure
+is clean; legacy mixed modules are migration inputs, not allowlisted exceptions.
+All Surface modules except the mixed `surface/types`, `surface/schema`, and
+`surface/schema-*` implementation closure are admission-owned. Within that
+mixed schema/type owner, imports whose names contain `Record` (including record
+parsers/codecs), the aggregate `SrdSurface` collection symbols, and inline
+record-type imports are classified as admission inputs. Provenance symbols are
+also admission-owned and cannot enter execution. Classification uses resolved
+repository paths as well as package specifiers, so helper indirection and
+relative imports cannot bypass it. Named canonical non-record mechanical
+vocabulary remains allowed.
+Unresolved repository-local imports and non-literal dynamic loading fail the
+gate so the transitive closure cannot be silently incomplete.
+Use `node scripts/check-battle-runtime-import-ownership.cjs --audit-candidates`
+to inspect the next candidate roots without weakening the enforced set.
+
 ## Reducer Extensibility Discipline
 
 The battle reducer interprets reusable SRD procedure families. It must not grow

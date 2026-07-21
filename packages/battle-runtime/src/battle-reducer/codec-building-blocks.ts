@@ -248,8 +248,7 @@ const SupportedStaticDamageCreatureAttackRollMechanicsSchema =
           supportedStatBlockAttackDamage(attack),
         ),
       {
-        message: () =>
-          "Static Stat Block damage requires static damage facts.",
+        message: () => "Static Stat Block damage requires static damage facts.",
       },
     ),
   );
@@ -322,9 +321,7 @@ export const PreparedSpellAccessSchema = Schema.Struct({
   tag: Schema.Literal("prepared"),
 });
 
-export const ClassCantripSpellAccessSchema = Schema.Struct({
-  tag: Schema.Literal("classCantrip"),
-});
+export { ClassCantripSpellAccessSchema } from "../procedure-execution/spell-invocation-codecs.ts";
 
 export const ArmorOfShadowsSpellAccessSchema = Schema.Struct({
   tag: Schema.Literal("armorOfShadows"),
@@ -340,9 +337,7 @@ export const SpellSlotInvocationResourceSchema = Schema.Struct({
   slotLevel: SpellSlotLevel,
 });
 
-export const NoSpellInvocationResourceSchema = Schema.Struct({
-  tag: Schema.Literal("none"),
-});
+export { NoSpellInvocationResourceSchema } from "../procedure-execution/spell-invocation-codecs.ts";
 
 export const ClassFeatureFreeCastInvocationResourceSchema = Schema.Struct({
   tag: Schema.Literal("classFeatureFreeCast"),
