@@ -51,7 +51,10 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
-import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
+import {
+  SpellRuleExecutionFactsSchema,
+  spellProcedureExecutionSchema,
+} from "./profile.ts";
 import {
   PreparedSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
@@ -167,7 +170,6 @@ function discoverExpeditiousRetreatDashCastAct(
     initialHoles: [],
   }));
 }
-
 
 function resolveExpeditiousRetreatDash(
   input: ExpeditiousRetreatDashResolveInput,

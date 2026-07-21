@@ -17445,11 +17445,11 @@ function activeFeatureSpellBenefitCasterCreatureInit(input: {
 }): BattleCreatureInit {
   const classLevels =
     input.sourceClassName === "sorcerer"
-      ? [{ className: "sorcerer" as const, level: classLevel(1) }]
-      : [
+      ? ([{ className: "sorcerer" as const, level: classLevel(1) }] as const)
+      : ([
           { className: "sorcerer" as const, level: classLevel(1) },
           { className: "wizard" as const, level: classLevel(1) },
-        ];
+        ] as const);
   return {
     combatantId: fighterId,
     displayName: "Active Feature Spell Benefit Caster",

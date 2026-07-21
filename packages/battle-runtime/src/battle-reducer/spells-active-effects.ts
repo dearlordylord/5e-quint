@@ -630,8 +630,7 @@ export function applySpellCreatedHeldObjectEffect(input: {
           attackKind: input.activeEffect.attack.attackKind,
           attackBonus: input.activeEffect.attack.attackBonus,
           sourceEffectRef: input.activeEffect.effectRef,
-          sourceHeldObjectProcedureRef:
-            input.activeEffect.sourceProcedureRef,
+          sourceHeldObjectProcedureRef: input.activeEffect.sourceProcedureRef,
         },
         {
           spellRuleFacts: input.sourceExecution.spellRuleFacts,
@@ -643,8 +642,7 @@ export function applySpellCreatedHeldObjectEffect(input: {
           procedure: "spellCreatedHeldObjectReEvoke",
           actionCost: "bonusAction",
           sourceEffectRef: input.activeEffect.effectRef,
-          sourceHeldObjectProcedureRef:
-            input.activeEffect.sourceProcedureRef,
+          sourceHeldObjectProcedureRef: input.activeEffect.sourceProcedureRef,
         },
       ],
     );

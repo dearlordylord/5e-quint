@@ -58,9 +58,7 @@ import {
   PreparedSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
-import type {
-  BattleSubject,
-} from "../../battle-subjects.ts";
+import type { BattleSubject } from "../../battle-subjects.ts";
 import {
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
@@ -167,7 +165,6 @@ function counterspellSpellProjection(
 function discoverCounterspellCastAct(): readonly BattleActDiscoveryCandidate[] {
   return [];
 }
-
 
 function resolveCounterspell(
   input: CounterspellResolveInput,

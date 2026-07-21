@@ -50,7 +50,10 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
-import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
+import {
+  SpellRuleExecutionFactsSchema,
+  spellProcedureExecutionSchema,
+} from "./profile.ts";
 import {
   AbilitySchema,
   AttackBonus,
@@ -93,16 +96,12 @@ function discoverAttackBurstSaveDamageCastAct(
       ? []
       : [
           {
-            subject: spellCastSelectionSubject(
-              actorId,
-              invocation,
-            ),
+            subject: spellCastSelectionSubject(actorId, invocation),
             initialHoles: [targetHole],
           },
         ];
   return [...castActs, ...readiedSpellAct(state, actorId, invocation)];
 }
-
 
 function resolveAttackBurstSaveDamage(
   input: AttackBurstSaveDamageResolveInput,

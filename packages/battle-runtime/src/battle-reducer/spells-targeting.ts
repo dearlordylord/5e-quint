@@ -100,7 +100,8 @@ type SingleObjectSpellInvocation =
       }
     >;
 
-type MechanicalTargetListSpellInvocation = import("../battle-reducer.ts").TargetListSpellInvocationOf<RuntimeSpellProcedure>;
+type MechanicalTargetListSpellInvocation =
+  import("../battle-reducer.ts").TargetListSpellInvocationOf<RuntimeSpellProcedure>;
 type MagicWeaponEnhancementSpellExecution = Extract<
   RuntimeSpellProcedure,
   { readonly procedure: "magicWeaponEnhancement" }
@@ -239,10 +240,7 @@ export function spiritualWeaponForcePositionHole(
     kind: "spiritualWeaponForcePosition",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
-    label:
-      mode === "cast"
-        ? `Spell force position`
-        : `Spell force reposition`,
+    label: mode === "cast" ? `Spell force position` : `Spell force reposition`,
     sourceProcedureRef: invocation.sourceProcedureRef,
     mode,
     maxDistanceFeet,
@@ -676,10 +674,7 @@ export function commandOptionChoiceHole(
 }
 
 export function commandOptionChoiceHoleId(
-  invocation: Extract<
-    RuntimeSpellProcedure,
-    { readonly procedure: "command" }
-  >,
+  invocation: Extract<RuntimeSpellProcedure, { readonly procedure: "command" }>,
 ): BattleHoleId {
   return holeId(`battle:spell:command-option:${invocation.procedure}`);
 }
@@ -922,10 +917,7 @@ export function spellObjectIgnitionFact(
   actorId: CombatantId,
   objectId: BattleObjectId,
   invocation: BattleExecutableSpellInvocation<
-    Extract<
-      RuntimeSpellProcedure,
-      { readonly procedure: "spellAttackDamage" }
-    >
+    Extract<RuntimeSpellProcedure, { readonly procedure: "spellAttackDamage" }>
   >,
 ): ObjectIgnitionFact | null {
   return (

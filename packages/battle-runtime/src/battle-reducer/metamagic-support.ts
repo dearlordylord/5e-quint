@@ -984,7 +984,10 @@ function twinnedSpellEffectiveTargetCount(
 
 function twinnedTargetCountFromExecutionFacts(
   facts: NonNullable<
-    Extract<RuntimeSpellProcedure, { readonly spellRuleFacts: unknown }>["spellRuleFacts"]
+    Extract<
+      RuntimeSpellProcedure,
+      { readonly spellRuleFacts: unknown }
+    >["spellRuleFacts"]
   >["twinnedTargetCount"],
 ): ((slotLevel: ReturnType<typeof spellSlotLevel>) => number) | null {
   return facts === null

@@ -107,11 +107,7 @@ export function attackDamageReductionZeroDamageRedirectSelection(input: {
     };
   }
   if (
-    !attackDamageReductionRedirectResourceAvailable(
-      state,
-      reactorId,
-      offer,
-    )
+    !attackDamageReductionRedirectResourceAvailable(state, reactorId, offer)
   ) {
     return {
       tag: "invalid",
@@ -482,10 +478,7 @@ export function spendAttackDamageReductionRedirectResource(
   if (reactor?.origin.kind !== "character") {
     return state;
   }
-  const resource = attackDamageReductionRedirectResource(
-    reactor,
-    offer,
-  );
+  const resource = attackDamageReductionRedirectResource(reactor, offer);
   if (resource === undefined) return state;
   return {
     ...state,

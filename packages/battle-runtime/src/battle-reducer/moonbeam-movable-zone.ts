@@ -171,10 +171,7 @@ export function resolveMoonbeamCast(
   if (!spellSlotExpenditureAccepted(slotResult)) {
     return state;
   }
-  const nextSlotState = spellSlotExpenditureResultState(
-    slotState,
-    slotResult,
-  );
+  const nextSlotState = spellSlotExpenditureResultState(slotState, slotResult);
   return {
     ...state,
     actionAvailable: false,

@@ -14,7 +14,7 @@ import {
   startBattle,
   type BattleCreatureInit,
   type BattleRuntimeSession,
-  type CharacterBattleClassLevelInit,
+  type CharacterBattleClassLevelInits,
   type CharacterWeaponAttackActionOption,
 } from "@dnd/battle-runtime";
 import {
@@ -1118,7 +1118,7 @@ function character(
     readonly combatantId: ReturnType<typeof combatantId>;
     readonly displayName?: string;
     readonly initiative: number;
-    readonly classLevels?: readonly CharacterBattleClassLevelInit[];
+    readonly classLevels?: CharacterBattleClassLevelInits;
     readonly characterUnitRefs?: any;
     readonly weaponMasteries?: any;
     readonly selectedLoadout?: any;

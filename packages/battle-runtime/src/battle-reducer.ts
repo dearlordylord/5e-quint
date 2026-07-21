@@ -170,7 +170,7 @@ import type {
   SpellProcedureExecution,
   UnitFeatureProcedureExecution,
 } from "./character-execution.ts";
-import type { CharacterBattleClassLevel } from "./character-class-level.ts";
+import type { CharacterBattleClassLevels } from "./character-class-level.ts";
 import type {
   BattleCompanionPlacement,
   BattleCompanionSnapshot,
@@ -3471,7 +3471,6 @@ export type WeaponAttackOverrideSpellInvocation = {
   readonly spell: SpellRecord;
   readonly actionCost: "bonusAction";
   readonly attachedWeapon: {
-    readonly itemId: string;
     readonly attack: BoundCharacterWeaponAttackActionOption;
   };
   readonly activeEffect: BattleSpellActiveEffectTemplate<
@@ -4534,7 +4533,7 @@ type BattleCreatureStateCommon = {
         readonly kind: "character";
         readonly characterId: CharacterId;
         readonly execution: CharacterExecutionState;
-        readonly classLevels: readonly CharacterBattleClassLevel[];
+        readonly classLevels: CharacterBattleClassLevels;
         readonly knownLanguages: ReadonlyNonEmptyArray<Language>;
         readonly d20Statistics: CharacterBattleD20Statistics;
         readonly druidWildShapeAvailableForms?: readonly StatBlockExecutionAdmission<BattleDruidWildShapeKnownForm>[];

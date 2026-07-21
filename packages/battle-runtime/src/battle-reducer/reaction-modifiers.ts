@@ -92,8 +92,7 @@ export function spendReactionModifierResource(
       origin: {
         ...reactor.origin,
         resources: reactor.origin.resources.map((resource) =>
-          (choice.reduction.kind === "rolled" &&
-          "spends" in choice.reduction
+          (choice.reduction.kind === "rolled" && "spends" in choice.reduction
             ? resource.resourcePoolRef ===
               choice.reduction.spends.resourcePoolRef
             : source.kind === "resourcePool" &&
@@ -352,9 +351,8 @@ export function reactionRollOrDamageReductionChoiceForProfile(
                 : {
                     kind: "rolled",
                     flatModifier:
-                      Number(
-                        characterAbilityModifier(reactor, "dex"),
-                      ) + Number(execution.classLevel),
+                      Number(characterAbilityModifier(reactor, "dex")) +
+                      Number(execution.classLevel),
                     dieSize: modifier.reduction.dieSize,
                   },
             ...(zeroDamageRedirect === undefined
@@ -403,9 +401,7 @@ export function reactionRollOrDamageReductionChoiceForProfile(
             spends: modifier.reduction.spends,
           },
         },
-        initialHoles: [
-          reactionModifierRollHole("attackRollReduction"),
-        ],
+        initialHoles: [reactionModifierRollHole("attackRollReduction")],
       },
     ];
   }
@@ -446,9 +442,7 @@ export function reactionRollOrDamageReductionChoiceForProfile(
             spends: modifier.reduction.spends,
           },
         },
-        initialHoles: [
-          reactionModifierRollHole("damageRollReduction"),
-        ],
+        initialHoles: [reactionModifierRollHole("damageRollReduction")],
       },
     ];
   }
@@ -578,8 +572,7 @@ export function reactionModifierResourceAvailable(
   const resource =
     source.kind === "resourcePool"
       ? reactor.origin.resources.find(
-          (candidate) =>
-            candidate.resourcePoolRef === source.resourcePoolRef,
+          (candidate) => candidate.resourcePoolRef === source.resourcePoolRef,
         )
       : undefined;
   return resource === undefined || resourceHasUsesRemaining(resource);
@@ -587,9 +580,11 @@ export function reactionModifierResourceAvailable(
 
 export function reactionModifierResourceSpend(
   modifier: ReactionRollOrDamageReductionModifier,
-): Extract<
-  ReactionRollOrDamageReductionModifier["reduction"],
-  { readonly spends: unknown }
->["spends"] | null {
+):
+  | Extract<
+      ReactionRollOrDamageReductionModifier["reduction"],
+      { readonly spends: unknown }
+    >["spends"]
+  | null {
   return "spends" in modifier.reduction ? modifier.reduction.spends : null;
 }

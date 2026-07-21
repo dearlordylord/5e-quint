@@ -16,8 +16,7 @@ export function sameSpiritualWeaponRepeatAttackExecution(
 ): boolean {
   return (
     left.activeEffectRef === right.activeEffectRef &&
-    left.activeEffectSourceProcedureRef ===
-      right.activeEffectSourceProcedureRef
+    left.activeEffectSourceProcedureRef === right.activeEffectSourceProcedureRef
   );
 }
 

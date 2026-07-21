@@ -1082,8 +1082,7 @@ export function bonusActionDashTemporaryHitPointsProfilesForActor(
     }
     const resourcePoolRef = procedure.source.resourcePoolRef;
     const resource = origin.resources.find(
-      (candidate) =>
-        candidate.resourcePoolRef === resourcePoolRef,
+      (candidate) => candidate.resourcePoolRef === resourcePoolRef,
     );
     return resource !== undefined && resourceHasUsesRemaining(resource)
       ? [
@@ -1195,12 +1194,10 @@ function canHideWhenObscuredOnlyByCreature(
 
 function obscuredOnlyByLargerCreatureHidePermissionForCombatant(
   combatant: BattleCreatureState,
-):
-  | Extract<
-      UnitFeatureProcedureExecution | UnitSupportProcedureExecution,
-      { readonly kind: "hideActionObscurementPermission" }
-    >
-  | null {
+): Extract<
+  UnitFeatureProcedureExecution | UnitSupportProcedureExecution,
+  { readonly kind: "hideActionObscurementPermission" }
+> | null {
   if (combatant.origin.kind !== "character") {
     return null;
   }

@@ -39,12 +39,13 @@ import {
   holeInstanceKey,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import {
-  characterLevel,
+  type CharacterLevel,
   difficultyClass,
   Hp,
   MovementFeet,
   proficiencyBonusForCharacterLevel,
 } from "@dnd/shared/types";
+import { characterBattleLevel } from "../character-class-level.ts";
 import type { DiceExpr } from "@dnd/surface/surface/types";
 import * as Either from "effect/Either";
 import {
@@ -165,9 +166,8 @@ import {
 const WILD_SHAPE_EQUIPMENT_DISPOSITION_PROTOCOL =
   "druid-wild-shape-equipment-disposition";
 
-type MechanicalUnitFeature<
-  Kind extends UnitFeatureProcedureExecution["kind"],
-> = Extract<UnitFeatureProcedureExecution, { readonly kind: Kind }>;
+type MechanicalUnitFeature<Kind extends UnitFeatureProcedureExecution["kind"]> =
+  Extract<UnitFeatureProcedureExecution, { readonly kind: Kind }>;
 
 export function supportedUnitFeatureActs(
   state: BattleState,
@@ -183,109 +183,110 @@ export function supportedUnitFeatureActs(
   }
 
   const resourceActs =
-    actor.origin.execution.procedureBindings.flatMap<BattleActDiscoveryCandidate>((binding) => {
-      const procedure = binding.procedure;
-      if (
-        procedure.kind !== "unitFeature" ||
-        procedure.source.kind !== "resourcePool"
-      ) {
-        return [];
-      }
-      const resourcePoolRef = procedure.source.resourcePoolRef;
-      const unitFeature = procedure.execution;
-      const procedureRef = binding.procedureRef;
-      const resource = actor.origin.resources.find(
-        (candidate) =>
-          candidate.resourcePoolRef === resourcePoolRef,
-      );
-      if (resource === undefined) return [];
-      if (
-        unitFeature?.kind === "extraActionGrant" &&
-        resourceHasUsesRemaining(resource) &&
-        !resource.usedThisTurn
-      ) {
-        return [
-          {
-            subject: {
-              tag: "unitFeature" as const,
-              actorId,
-              procedureRef,
-            },
-            initialHoles: [],
-          },
-        ];
-      }
-
-      if (
-        unitFeature?.kind === "ongoingFeature" &&
-        unitFeature.activationTrigger === "bonusAction" &&
-        ongoingFeatureIsAvailable(
-          state,
-          actor,
-          resource,
-          unitFeature,
-          procedureRef,
-        )
-      ) {
-        return [
-          {
-            subject: {
-              tag: "unitFeature" as const,
-              actorId,
-              procedureRef,
-            },
-            initialHoles: [],
-          },
-        ];
-      }
-
-      if (
-        unitFeature?.kind === "bardicInspirationGrant" &&
-        resourceHasUsesRemaining(resource) &&
-        canSpendBonusAction(state.currentTurnResources) &&
-        bardicInspirationGrantTargetChoices(state, actorId).length > 0
-      ) {
-        return [
-          {
-            subject: {
-              tag: "unitFeature" as const,
-              actorId,
-              procedureRef,
-            },
-            initialHoles: [
-              bardicInspirationGrantTargetHole(state, actorId, procedureRef),
-            ],
-          },
-        ];
-      }
-
-      if (
-        unitFeature?.kind === "druidWildShapeKnownForm" &&
-        canSpendBonusAction(state.currentTurnResources)
-      ) {
-        return druidWildShapeActsForResource(
-          state,
-          actor,
-          resource,
-          procedureRef,
+    actor.origin.execution.procedureBindings.flatMap<BattleActDiscoveryCandidate>(
+      (binding) => {
+        const procedure = binding.procedure;
+        if (
+          procedure.kind !== "unitFeature" ||
+          procedure.source.kind !== "resourcePool"
+        ) {
+          return [];
+        }
+        const resourcePoolRef = procedure.source.resourcePoolRef;
+        const unitFeature = procedure.execution;
+        const procedureRef = binding.procedureRef;
+        const resource = actor.origin.resources.find(
+          (candidate) => candidate.resourcePoolRef === resourcePoolRef,
         );
-      }
-
-      return unitFeature?.kind === "selfBonusActionHealing" &&
-        resourceHasUsesRemaining(resource) &&
-        canSpendBonusAction(state.currentTurnResources)
-        ? [
+        if (resource === undefined) return [];
+        if (
+          unitFeature?.kind === "extraActionGrant" &&
+          resourceHasUsesRemaining(resource) &&
+          !resource.usedThisTurn
+        ) {
+          return [
             {
               subject: {
                 tag: "unitFeature" as const,
                 actorId,
                 procedureRef,
               },
-              initialHoles: [selfBonusActionHealingRollHole(unitFeature)],
+              initialHoles: [],
             },
-          ]
-        : [];
-    });
+          ];
+        }
+
+        if (
+          unitFeature?.kind === "ongoingFeature" &&
+          unitFeature.activationTrigger === "bonusAction" &&
+          ongoingFeatureIsAvailable(
+            state,
+            actor,
+            resource,
+            unitFeature,
+            procedureRef,
+          )
+        ) {
+          return [
+            {
+              subject: {
+                tag: "unitFeature" as const,
+                actorId,
+                procedureRef,
+              },
+              initialHoles: [],
+            },
+          ];
+        }
+
+        if (
+          unitFeature?.kind === "bardicInspirationGrant" &&
+          resourceHasUsesRemaining(resource) &&
+          canSpendBonusAction(state.currentTurnResources) &&
+          bardicInspirationGrantTargetChoices(state, actorId).length > 0
+        ) {
+          return [
+            {
+              subject: {
+                tag: "unitFeature" as const,
+                actorId,
+                procedureRef,
+              },
+              initialHoles: [
+                bardicInspirationGrantTargetHole(state, actorId, procedureRef),
+              ],
+            },
+          ];
+        }
+
+        if (
+          unitFeature?.kind === "druidWildShapeKnownForm" &&
+          canSpendBonusAction(state.currentTurnResources)
+        ) {
+          return druidWildShapeActsForResource(
+            state,
+            actor,
+            resource,
+            procedureRef,
+          );
+        }
+
+        return unitFeature?.kind === "selfBonusActionHealing" &&
+          resourceHasUsesRemaining(resource) &&
+          canSpendBonusAction(state.currentTurnResources)
+          ? [
+              {
+                subject: {
+                  tag: "unitFeature" as const,
+                  actorId,
+                  procedureRef,
+                },
+                initialHoles: [selfBonusActionHealingRollHole(unitFeature)],
+              },
+            ]
+          : [];
+      },
+    );
   return [
     ...resourceActs,
     ...attackActionAreaSaveDamageReplacementActs(state, actor),
@@ -408,8 +409,7 @@ function magicActionAreaSaveDamageHealingActs(
     (binding): readonly BattleActDiscoveryCandidate[] => {
       if (
         binding.procedure.kind !== "unitFeature" ||
-        binding.procedure.execution.kind !==
-          "magicActionAreaSaveDamageHealing"
+        binding.procedure.execution.kind !== "magicActionAreaSaveDamageHealing"
       ) {
         return [];
       }
@@ -420,8 +420,7 @@ function magicActionAreaSaveDamageHealingActs(
           candidate.resourcePoolRef ===
           unitFeature.damageHealing.spends.resourcePoolRef,
       );
-      return resource !== undefined &&
-        resourceHasUsesRemaining(resource)
+      return resource !== undefined && resourceHasUsesRemaining(resource)
         ? [
             {
               subject: {
@@ -455,46 +454,46 @@ function magicActionSaveGatedConditionActs(
   }
   return actor.origin.execution.procedureBindings.flatMap(
     (binding): readonly BattleActDiscoveryCandidate[] => {
-    const procedure = binding.procedure;
-    if (
-      procedure.kind !== "unitFeature" ||
-      procedure.execution.kind !== "magicActionSaveGatedCondition"
-    ) {
-      return [];
-    }
-    const unitFeature = procedure.execution;
-    const procedureRef = binding.procedureRef;
-    const resource = actor.origin.resources.find(
-      (candidate) =>
-        candidate.resourcePoolRef ===
-        unitFeature.condition.spends.resourcePoolRef,
-    );
-    const choices = magicActionSaveGatedConditionTargetChoices(
-      state,
-      actor.combatantId,
-      unitFeature,
-    );
+      const procedure = binding.procedure;
+      if (
+        procedure.kind !== "unitFeature" ||
+        procedure.execution.kind !== "magicActionSaveGatedCondition"
+      ) {
+        return [];
+      }
+      const unitFeature = procedure.execution;
+      const procedureRef = binding.procedureRef;
+      const resource = actor.origin.resources.find(
+        (candidate) =>
+          candidate.resourcePoolRef ===
+          unitFeature.condition.spends.resourcePoolRef,
+      );
+      const choices = magicActionSaveGatedConditionTargetChoices(
+        state,
+        actor.combatantId,
+        unitFeature,
+      );
       return resource !== undefined &&
-      resourceHasUsesRemaining(resource) &&
-      choices.length > 0
-      ? [
-          {
-            subject: {
-              tag: "unitFeature" as const,
-              actorId: actor.combatantId,
-              procedureRef,
-            },
-            initialHoles: [
-              magicActionSaveGatedConditionSavingThrowHole(
-                state,
-                actor.combatantId,
-                unitFeature,
+        resourceHasUsesRemaining(resource) &&
+        choices.length > 0
+        ? [
+            {
+              subject: {
+                tag: "unitFeature" as const,
+                actorId: actor.combatantId,
                 procedureRef,
-              ),
-            ],
-          },
-        ]
-      : [];
+              },
+              initialHoles: [
+                magicActionSaveGatedConditionSavingThrowHole(
+                  state,
+                  actor.combatantId,
+                  unitFeature,
+                  procedureRef,
+                ),
+              ],
+            },
+          ]
+        : [];
     },
   );
 }
@@ -512,37 +511,37 @@ function paladinSacredWeaponActs(
     return [];
   }
   return actor.origin.execution.procedureBindings.flatMap((binding) => {
-      const procedure = binding.procedure;
-      if (
-        procedure.kind !== "unitFeature" ||
-        procedure.execution.kind !== "paladinSacredWeapon"
-      ) {
-        return [];
-      }
-      const unitFeature = procedure.execution;
-      const procedureRef = binding.procedureRef;
-      const resource = actor.origin.resources.find(
-        (candidate) =>
-          candidate.resourcePoolRef ===
-          unitFeature.sacredWeapon.spends.resourcePoolRef,
-      );
-      if (
-        procedureRef === undefined ||
-        resource === undefined ||
-        !resourceHasUsesRemaining(resource)
-      ) {
-        return [];
-      }
-      return sacredWeaponHeldMeleeWeapons(actor).map((weapon) => ({
-        subject: {
-          tag: "unitFeatureHeldWeaponActivation" as const,
-          actorId: actor.combatantId,
-          procedureRef,
-          weaponItemId: weapon.itemId,
-        },
-        initialHoles: [],
-      }));
-    });
+    const procedure = binding.procedure;
+    if (
+      procedure.kind !== "unitFeature" ||
+      procedure.execution.kind !== "paladinSacredWeapon"
+    ) {
+      return [];
+    }
+    const unitFeature = procedure.execution;
+    const procedureRef = binding.procedureRef;
+    const resource = actor.origin.resources.find(
+      (candidate) =>
+        candidate.resourcePoolRef ===
+        unitFeature.sacredWeapon.spends.resourcePoolRef,
+    );
+    if (
+      procedureRef === undefined ||
+      resource === undefined ||
+      !resourceHasUsesRemaining(resource)
+    ) {
+      return [];
+    }
+    return sacredWeaponHeldMeleeWeapons(actor).map((weapon) => ({
+      subject: {
+        tag: "unitFeatureHeldWeaponActivation" as const,
+        actorId: actor.combatantId,
+        procedureRef,
+        weaponItemId: weapon.itemId,
+      },
+      initialHoles: [],
+    }));
+  });
 }
 
 function paladinSacredWeaponDismissActs(
@@ -654,14 +653,16 @@ function rogueSteadyAimActs(
   return actor.origin.execution.procedureBindings.flatMap((binding) =>
     binding.procedure.kind === "unitFeature" &&
     binding.procedure.execution.kind === "rogueSteadyAim"
-      ? [{
+      ? [
+          {
             subject: {
               tag: "unitFeature" as const,
               actorId: actor.combatantId,
               procedureRef: binding.procedureRef,
             },
             initialHoles: [],
-          }]
+          },
+        ]
       : [],
   );
 }
@@ -1533,7 +1534,8 @@ export function resolveDruidWildShapeUnitFeature(
     input.subject.procedureRef,
     DRUID_WILD_SHAPE_PROCEDURE_QUERY,
   );
-  const source = procedure?.kind === "unitFeature" ? procedure.source : undefined;
+  const source =
+    procedure?.kind === "unitFeature" ? procedure.source : undefined;
   const resource =
     source?.kind === "resourcePool"
       ? actor.origin.resources.find((candidate) => {
@@ -2248,14 +2250,16 @@ function validateMagicActionHealingPoolDistribution(input: {
     if (!Number.isInteger(healing) || healing <= 0) {
       return {
         tag: "invalid",
-        message: "Magic Action healing allocations must restore a positive integer number of Hit Points.",
+        message:
+          "Magic Action healing allocations must restore a positive integer number of Hit Points.",
       };
     }
     const target = input.state.combatants.get(allocation.targetId);
     if (target === undefined) {
       return {
         tag: "invalid",
-        message: "Magic Action healing target must be a creature in this battle.",
+        message:
+          "Magic Action healing target must be a creature in this battle.",
       };
     }
     const antimagicInterdiction = magicalEffectTargetsInterdictionMessage({
@@ -2291,7 +2295,8 @@ function validateMagicActionHealingPoolDistribution(input: {
     if (Number(target.hp) + healing > cap) {
       return {
         tag: "invalid",
-        message: "Magic Action healing cannot restore a target above half its Hit Point Maximum.",
+        message:
+          "Magic Action healing cannot restore a target above half its Hit Point Maximum.",
       };
     }
     spentHitPoints += healing;
@@ -2381,8 +2386,7 @@ function magicActionHealingPoolSize(
   const classLevel =
     actor.origin.classLevels.find(
       (level) => level.className === unitFeature.className,
-    )
-      ?.level ?? 0;
+    )?.level ?? 0;
   return Number(classLevel) * unitFeature.healingPool.pool.multiplier;
 }
 
@@ -2446,8 +2450,7 @@ function attackActionAreaSaveDamageReplacementProcedureForResource(
         "attackActionAreaSaveDamageReplacement",
   );
   return binding?.procedure.kind === "unitFeature" &&
-    binding.procedure.execution.kind ===
-      "attackActionAreaSaveDamageReplacement"
+    binding.procedure.execution.kind === "attackActionAreaSaveDamageReplacement"
     ? {
         procedureRef: binding.procedureRef,
         execution: binding.procedure.execution,
@@ -2648,7 +2651,8 @@ function attackActionAreaSaveDamageReplacementFills(
       if (savingThrows !== undefined) {
         return {
           tag: "invalid",
-          message: "Area damage replacement Saving Throw outcomes were filled twice.",
+          message:
+            "Area damage replacement Saving Throw outcomes were filled twice.",
         };
       }
       savingThrows = fill;
@@ -2701,20 +2705,23 @@ function validateAttackActionAreaSaveDamageReplacementSavingThrows(input: {
   if (!("area" in input.savingThrows.value)) {
     return {
       tag: "invalid",
-      message: "Area damage replacement requires table-supplied Cone or Line area facts.",
+      message:
+        "Area damage replacement requires table-supplied Cone or Line area facts.",
     };
   }
   const area = input.savingThrows.value.area;
   if (area.originAnchorId !== input.actorId) {
     return {
       tag: "invalid",
-      message: "Area damage replacement must originate from the acting creature.",
+      message:
+        "Area damage replacement must originate from the acting creature.",
     };
   }
   if (!input.state.combatants.has(area.originAnchorId)) {
     return {
       tag: "invalid",
-      message: "Area damage replacement origin must be a combatant in this battle.",
+      message:
+        "Area damage replacement origin must be a combatant in this battle.",
     };
   }
   if ("kind" in area || "sleepNonSleeperFacts" in area) {
@@ -2727,14 +2734,16 @@ function validateAttackActionAreaSaveDamageReplacementSavingThrows(input: {
   if (affectedTargetIds.size !== area.affectedTargetIds.length) {
     return {
       tag: "invalid",
-      message: "Area damage replacement affected targets must not duplicate targets.",
+      message:
+        "Area damage replacement affected targets must not duplicate targets.",
     };
   }
   for (const targetId of affectedTargetIds) {
     if (!input.state.combatants.has(targetId)) {
       return {
         tag: "invalid",
-        message: "Area damage replacement target must be a creature in this battle.",
+        message:
+          "Area damage replacement target must be a creature in this battle.",
       };
     }
   }
@@ -2751,13 +2760,15 @@ function validateAttackActionAreaSaveDamageReplacementSavingThrows(input: {
     if (!affectedTargetIds.has(outcome.targetId)) {
       return {
         tag: "invalid",
-        message: "Area damage replacement Saving Throw outcomes must match the table-supplied affected targets.",
+        message:
+          "Area damage replacement Saving Throw outcomes must match the table-supplied affected targets.",
       };
     }
     if (outcomesByTargetId.has(outcome.targetId)) {
       return {
         tag: "invalid",
-        message: "Area damage replacement Saving Throw outcomes must not duplicate targets.",
+        message:
+          "Area damage replacement Saving Throw outcomes must not duplicate targets.",
       };
     }
     outcomesByTargetId.set(outcome.targetId, outcome);
@@ -2770,7 +2781,8 @@ function validateAttackActionAreaSaveDamageReplacementSavingThrows(input: {
       }
     : {
         tag: "invalid",
-        message: "Area damage replacement Saving Throw outcomes must cover every table-supplied affected target.",
+        message:
+          "Area damage replacement Saving Throw outcomes must cover every table-supplied affected target.",
       };
 }
 
@@ -2782,7 +2794,8 @@ function attackActionAreaSaveDamageReplacementSavingThrowHole(
 ): BattleUnitFeatureSavingThrowOutcomeHole {
   return {
     kind: "savingThrowOutcome",
-    holeId: attackActionAreaSaveDamageReplacementSavingThrowHoleId(procedureRef),
+    holeId:
+      attackActionAreaSaveDamageReplacementSavingThrowHoleId(procedureRef),
     holeInstanceKey:
       attackActionAreaSaveDamageReplacementSavingThrowHoleInstanceKey(
         procedureRef,
@@ -2870,7 +2883,10 @@ function attackActionAreaSaveDamageReplacementDamageRollHoleId(
   procedureRef: BattleProcedureExecutionRef,
 ): BattleHoleId {
   return holeId(
-    attackActionAreaSaveDamageReplacementProtocolId(procedureRef, "damage-roll"),
+    attackActionAreaSaveDamageReplacementProtocolId(
+      procedureRef,
+      "damage-roll",
+    ),
   );
 }
 
@@ -2878,7 +2894,10 @@ function attackActionAreaSaveDamageReplacementDamageRollHoleInstanceKey(
   procedureRef: BattleProcedureExecutionRef,
 ): HoleInstanceKey {
   return holeInstanceKey(
-    attackActionAreaSaveDamageReplacementProtocolId(procedureRef, "damage-roll"),
+    attackActionAreaSaveDamageReplacementProtocolId(
+      procedureRef,
+      "damage-roll",
+    ),
   );
 }
 
@@ -2900,11 +2919,7 @@ function attackActionAreaSaveDamageReplacementDc(
           unitFeature.breath.save.dc.ability
         ],
       ) +
-      Number(
-        proficiencyBonusForCharacterLevel(
-          characterLevel(characterTotalLevel(actor)),
-        ),
-      ),
+      Number(proficiencyBonusForCharacterLevel(characterTotalLevel(actor))),
   );
 }
 
@@ -2924,11 +2939,10 @@ function attackActionAreaSaveDamageReplacementDamageDiceExpr(
   };
 }
 
-function characterTotalLevel(actor: CharacterBattleCreatureState): number {
-  return actor.origin.classLevels.reduce(
-    (total, level) => total + Number(level.level),
-    0,
-  );
+function characterTotalLevel(
+  actor: CharacterBattleCreatureState,
+): CharacterLevel {
+  return characterBattleLevel(actor.origin.classLevels);
 }
 
 type MagicActionAreaSaveDamageHealingProfile =
@@ -2986,7 +3000,8 @@ function magicActionSaveGatedConditionFills(
       if (savingThrows !== undefined) {
         return {
           tag: "invalid",
-          message: "Magic Action condition Saving Throw outcomes were filled twice.",
+          message:
+            "Magic Action condition Saving Throw outcomes were filled twice.",
         };
       }
       savingThrows = fill;
@@ -3044,7 +3059,8 @@ function validateMagicActionSaveGatedCondition(input: {
   if (input.savingThrows.holeId !== hole.holeId) {
     return {
       tag: "invalid",
-      message: "Magic Action condition Saving Throw fill must use the selected feature hole.",
+      message:
+        "Magic Action condition Saving Throw fill must use the selected feature hole.",
     };
   }
   if (!("outcomes" in input.savingThrows.value)) {
@@ -3076,14 +3092,16 @@ function validateMagicActionSaveGatedCondition(input: {
     if (seen.has(outcome.targetId)) {
       return {
         tag: "invalid",
-        message: "Magic Action condition Saving Throw outcomes must not duplicate targets.",
+        message:
+          "Magic Action condition Saving Throw outcomes must not duplicate targets.",
       };
     }
     seen.add(outcome.targetId);
     if (!choices.has(outcome.targetId)) {
       return {
         tag: "invalid",
-        message: "Magic Action condition target must be a visible creature within range.",
+        message:
+          "Magic Action condition target must be a visible creature within range.",
       };
     }
     if (
@@ -3097,7 +3115,8 @@ function validateMagicActionSaveGatedCondition(input: {
     ) {
       return {
         tag: "invalid",
-        message: "Magic Action condition target requires table-supplied visibility and range evidence.",
+        message:
+          "Magic Action condition target requires table-supplied visibility and range evidence.",
       };
     }
   }
@@ -3304,8 +3323,7 @@ function magicActionAreaSaveDamageHealingFills(
       if (healingTarget !== undefined) {
         return {
           tag: "invalid",
-          message:
-            "Magic Action damage and healing target was filled twice.",
+          message: "Magic Action damage and healing target was filled twice.",
         };
       }
       healingTarget = fill;
@@ -3518,10 +3536,7 @@ function magicActionAreaSaveDamageHealingHoles(
       unitFeature,
     ),
     magicActionAreaSaveDamageHealingDamageRollHole(procedureRef, unitFeature),
-    magicActionAreaSaveDamageHealingHealingTargetHole(
-      state,
-      procedureRef,
-    ),
+    magicActionAreaSaveDamageHealingHealingTargetHole(state, procedureRef),
     magicActionAreaSaveDamageHealingHealingRollHole(procedureRef, unitFeature),
   ];
 }
@@ -3585,7 +3600,9 @@ function magicActionAreaSaveDamageHealingHealingTargetHole(
     kind: "targetChoice",
     holeId: magicActionAreaSaveDamageHealingHealingTargetHoleId(procedureRef),
     holeInstanceKey:
-      magicActionAreaSaveDamageHealingHealingTargetHoleInstanceKey(procedureRef),
+      magicActionAreaSaveDamageHealingHealingTargetHoleInstanceKey(
+        procedureRef,
+      ),
     label: "Magic Action damage and healing target",
     requiresTableSpatialFact: true,
     choices: [...state.combatants.keys()].filter(
@@ -3882,7 +3899,8 @@ export function resolveSuccessfulAbilityCheckReactionReduction(
           (candidate) => candidate.kind === "abilityCheckReduction",
         )
       : undefined;
-  const source = procedure?.kind === "unitFeature" ? procedure.source : undefined;
+  const source =
+    procedure?.kind === "unitFeature" ? procedure.source : undefined;
   if (
     execution === undefined ||
     modifier === undefined ||

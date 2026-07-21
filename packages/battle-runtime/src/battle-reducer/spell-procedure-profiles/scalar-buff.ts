@@ -40,9 +40,7 @@ import type {
   OngoingEffect,
   SpellRecord,
 } from "@dnd/surface/surface/types";
-import {
-  BATTLE_SPECIAL_SPEED_KINDS,
-} from "../../battle-subjects.ts";
+import { BATTLE_SPECIAL_SPEED_KINDS } from "../../battle-subjects.ts";
 import {
   maybeOpenInterruptWindow,
   snapshotBattle,
@@ -103,7 +101,10 @@ import type {
   SpellProcedureStoredGlyphReleaseOptions,
 } from "./profile.ts";
 import { Schema } from "effect";
-import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
+import {
+  SpellRuleExecutionFactsSchema,
+  spellProcedureExecutionSchema,
+} from "./profile.ts";
 import {
   MovementDeltaFeet,
   MovementFeet,
@@ -284,10 +285,7 @@ function discoverScalarBuffCastAct(
     const initialHoles = scalarBuffInitialHoles(invocation);
     const castActs = [
       {
-        subject: spellCastSelectionSubject(
-          actorId,
-          invocation,
-        ),
+        subject: spellCastSelectionSubject(actorId, invocation),
         initialHoles,
       },
       ...scalarBuffSubtleMetamagicCastActs({
@@ -310,10 +308,7 @@ function discoverScalarBuffCastAct(
       ? []
       : [
           {
-            subject: spellCastSelectionSubject(
-              actorId,
-              invocation,
-            ),
+            subject: spellCastSelectionSubject(actorId, invocation),
             initialHoles: [targetHole],
           },
           ...scalarBuffSubtleMetamagicCastActs({
@@ -334,10 +329,7 @@ function scalarBuffSubtleMetamagicCastActs(input: {
   >;
   readonly initialHoles: readonly BattleHole[];
 }): readonly BattleActDiscoveryCandidate[] {
-  const subject = spellCastSelectionSubject(
-    input.actorId,
-    input.invocation,
-  );
+  const subject = spellCastSelectionSubject(input.actorId, input.invocation);
   return discoverSubtleSpellMetamagicSelections({
     actor: input.state.combatants.get(input.actorId),
     invocation: input.invocation,

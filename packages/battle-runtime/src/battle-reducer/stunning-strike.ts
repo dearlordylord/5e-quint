@@ -396,10 +396,7 @@ function stunningStrikeHit(input: {
         : [];
     },
   )[0];
-  if (
-    selected === undefined ||
-    !resourceHasUsesRemaining(focus.resource)
-  ) {
+  if (selected === undefined || !resourceHasUsesRemaining(focus.resource)) {
     return null;
   }
   if (

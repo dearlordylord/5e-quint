@@ -29,7 +29,7 @@ import type {
   CharacterBattleResourceInit,
   CharacterBattleSpellcastingInit,
 } from "./character-battle-resources.ts";
-import type { CharacterBattleClassLevelInit } from "./character-class-level.ts";
+import type { CharacterBattleClassLevelInits } from "./character-class-level.ts";
 import type { CharacterId, CombatantId, InitiativeScore } from "./identity.ts";
 import type {
   BattleDruidWildShapeKnownFormSupportProfile,
@@ -272,7 +272,7 @@ export type CharacterBattleCreatureInit = {
   readonly kind: "character";
   readonly characterId: CharacterId;
   readonly characterUnitRefs: readonly BattleUnitRef[];
-  readonly classLevels: readonly CharacterBattleClassLevelInit[];
+  readonly classLevels: CharacterBattleClassLevelInits;
   readonly knownLanguages: ReadonlyNonEmptyArray<Language>;
   readonly d20Statistics: CharacterBattleD20Statistics;
   readonly druidWildShapeAvailableForms?: readonly BattleDruidWildShapeKnownForm[];

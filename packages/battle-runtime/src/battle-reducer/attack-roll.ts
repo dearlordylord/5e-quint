@@ -626,15 +626,13 @@ export function attackRollOngoingFeatureActivationProfile(
   attack: SupportedAttackActionOption,
   procedureRef: BattleProcedureExecutionRef | undefined,
   allowAlreadyActiveReplay: boolean,
-):
-  | {
-      readonly procedureRef: BattleProcedureExecutionRef;
-      readonly execution: Extract<
-        UnitFeatureProcedureExecution,
-        { readonly kind: "ongoingFeature" }
-      >;
-    }
-  | null {
+): {
+  readonly procedureRef: BattleProcedureExecutionRef;
+  readonly execution: Extract<
+    UnitFeatureProcedureExecution,
+    { readonly kind: "ongoingFeature" }
+  >;
+} | null {
   if (procedureRef === undefined) return null;
   const attacker = state.combatants.get(attackerId);
   if (!isCharacterBattleCreatureState(attacker)) return null;
@@ -1368,7 +1366,9 @@ export function weaponMasteryCleaveDamageHole(
     critical,
     ...(damageDieFloorProcedureRefs === null
       ? {}
-      : { attackDamageDieFloorChoiceProcedureRefs: damageDieFloorProcedureRefs }),
+      : {
+          attackDamageDieFloorChoiceProcedureRefs: damageDieFloorProcedureRefs,
+        }),
   };
 }
 
@@ -1511,7 +1511,9 @@ export function huntersPreyHordeBreakerDamageHole(
       : { spellMarkedDamageRiders }),
     ...(damageDieFloorProcedureRefs === null
       ? {}
-      : { attackDamageDieFloorChoiceProcedureRefs: damageDieFloorProcedureRefs }),
+      : {
+          attackDamageDieFloorChoiceProcedureRefs: damageDieFloorProcedureRefs,
+        }),
   };
 }
 
@@ -1551,8 +1553,7 @@ export function recordHuntersPreyHordeBreakerUsed(
 ): BattleState {
   return state.currentTurnResources.huntersPreyHordeBreakerUsedThisTurn.some(
     (usage) =>
-      usage.attackerId === attackerId &&
-      usage.procedureRef === procedureRef,
+      usage.attackerId === attackerId && usage.procedureRef === procedureRef,
   )
     ? state
     : {
@@ -1588,11 +1589,11 @@ export function huntersPreyHordeBreakerSelection(
     (candidate) => {
       const procedure = candidate.procedure;
       return (
-      !state.currentTurnResources.huntersPreyHordeBreakerUsedThisTurn.some(
-        (usage) =>
+        !state.currentTurnResources.huntersPreyHordeBreakerUsedThisTurn.some(
+          (usage) =>
             usage.attackerId === attackerId &&
             usage.procedureRef === candidate.procedureRef,
-      ) &&
+        ) &&
         procedure.kind === "unitSupportProfile" &&
         typeof procedure.execution === "object" &&
         procedure.execution.kind === HUNTERS_PREY_SUPPORT_PROFILE &&
@@ -2014,8 +2015,7 @@ export function recordAttackRollOngoingFeatures(
     )
       ? activeRageSourceKeysForFrenzy(attacker).map((rageSourceKey) => ({
           attackerId,
-          recklessAttackSourceKey:
-            activatedOngoingFeatureProfile.procedureRef,
+          recklessAttackSourceKey: activatedOngoingFeatureProfile.procedureRef,
           rageSourceKey,
         }))
       : [];

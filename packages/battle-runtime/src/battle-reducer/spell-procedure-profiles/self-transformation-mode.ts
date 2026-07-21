@@ -45,9 +45,7 @@ import { SELF_TRANSFORMATION_MODE_KINDS } from "../domain-constants.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
-import {
-  applySelfTransformationModeEffect,
-} from "../spells-active-effects.ts";
+import { applySelfTransformationModeEffect } from "../spells-active-effects.ts";
 import { spellDamageTypeChoiceHole } from "../spells-damage-fills.ts";
 import {
   spellRequiresConcentration,
@@ -62,7 +60,10 @@ import type {
 } from "./profile.ts";
 import { Schema } from "effect";
 import { ElapsedTimeTicksSchema } from "@dnd/shared-algebras/elapsed-time-algebra";
-import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
+import {
+  SpellRuleExecutionFactsSchema,
+  spellProcedureExecutionSchema,
+} from "./profile.ts";
 import {
   AttackBonus,
   DamageDieSizeSchema,

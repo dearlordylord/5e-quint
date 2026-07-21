@@ -50,7 +50,10 @@ import type {
   SpellProcedureStoredGlyphReleaseOptions,
 } from "./profile.ts";
 import { Schema } from "effect";
-import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
+import {
+  SpellRuleExecutionFactsSchema,
+  spellProcedureExecutionSchema,
+} from "./profile.ts";
 import {
   MovementFeet,
   PreparedSpellAccessSchema,
@@ -212,7 +215,6 @@ function discoverConditionImmunityAndTurnStartTemporaryHitPointsCastAct(
         },
       ];
 }
-
 
 function resolveConditionImmunityAndTurnStartTemporaryHitPoints(
   input: SpellProcedureProfileResolveInput<

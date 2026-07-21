@@ -33,6 +33,12 @@ import {
   startBattle,
 } from "./battle-runtime-test-support.ts";
 import { describe, expect, test } from "vitest";
+import fc from "fast-check";
+import {
+  characterBattleLevel,
+  parseCharacterBattleClassLevels,
+  type CharacterBattleClassLevelInit,
+} from "./character-class-level.ts";
 
 describe("battle runtime: setup and discovery", () => {
   test("battle ids must be non-empty trimmed strings", () => {
@@ -298,34 +304,113 @@ describe("battle runtime: setup and discovery", () => {
       ["battle-fractional-class-level", 1.5],
       ["battle-above-class-level-cap", 21],
     ] as const) {
-      expect(() =>
-        startBattleRight({
-          battleId: battleId(battle),
-          combatants: [
-            characterSeed({ initiative: 12, classLevel }),
-            statBlockCreatureInit({ initiative: 10 }),
-          ],
-        }),
-      ).toThrow("Character class levels must be integers from 1 to 20.");
+      const result = startBattle({
+        battleId: battleId(battle),
+        combatants: [
+          characterSeed({ initiative: 12, classLevel }),
+          statBlockCreatureInit({ initiative: 10 }),
+        ],
+      });
+      expect(Either.isLeft(result) ? result.left.message : "admitted").toBe(
+        "fighter class level must be an integer from 1 to 20.",
+      );
     }
   });
 
   test("startBattle rejects duplicate character class levels", () => {
-    expect(() =>
-      startBattleRight({
-        battleId: battleId("battle-duplicate-character-class-level"),
-        combatants: [
-          characterSeed({
-            initiative: 12,
-            classLevels: [
-              { className: "fighter", level: 1 },
-              { className: "fighter", level: 2 },
-            ],
-          }),
-          statBlockCreatureInit({ initiative: 10 }),
-        ],
+    const result = startBattle({
+      battleId: battleId("battle-duplicate-character-class-level"),
+      combatants: [
+        characterSeed({
+          initiative: 12,
+          classLevels: [
+            { className: "fighter", level: 1 },
+            { className: "fighter", level: 2 },
+          ],
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    expect(Either.isLeft(result) ? result.left.message : "admitted").toBe(
+      "Character class levels duplicate fighter.",
+    );
+  });
+
+  test("startBattle rejects multiclass totals above level 20", () => {
+    const result = startBattle({
+      battleId: battleId("battle-above-total-character-level-cap"),
+      combatants: [
+        characterSeed({
+          initiative: 12,
+          classLevels: [
+            { className: "fighter", level: 20 },
+            { className: "wizard", level: 1 },
+          ],
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    expect(Either.isLeft(result) ? result.left.message : "admitted").toBe(
+      "Total character level must not exceed 20.",
+    );
+  });
+
+  test("startBattle reports independent class-level parse issues together", () => {
+    const result = startBattle({
+      battleId: battleId("battle-multiple-character-class-level-issues"),
+      combatants: [
+        characterSeed({
+          initiative: 12,
+          classLevels: [
+            { className: "fighter", level: 0 },
+            { className: "fighter", level: 2 },
+            { className: "wizard", level: 21 },
+          ],
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    expect(Either.isLeft(result) ? result.left.message : "admitted").toBe(
+      "fighter class level must be an integer from 1 to 20.; Character class levels duplicate fighter.; wizard class level must be an integer from 1 to 20.",
+    );
+  });
+
+  test("class-level parsing preserves exactly the valid multiclass aggregate", () => {
+    const classLevelEntry: fc.Arbitrary<CharacterBattleClassLevelInit> =
+      fc.record({
+        className: fc.constantFrom("fighter", "wizard", "druid", "rogue"),
+        level: fc.integer({ min: 1, max: 20 }),
+      });
+    const nonemptyClassLevels = fc
+      .tuple(classLevelEntry, fc.array(classLevelEntry, { maxLength: 5 }))
+      .map(([first, rest]) => [first, ...rest] as const);
+
+    fc.assert(
+      fc.property(nonemptyClassLevels, (classLevels) => {
+        const result = parseCharacterBattleClassLevels(classLevels);
+        const uniqueClassCount = new Set(
+          classLevels.map((classLevel) => classLevel.className),
+        ).size;
+        const totalLevel = classLevels.reduce(
+          (total, classLevel) => total + classLevel.level,
+          0,
+        );
+        const validAggregate =
+          uniqueClassCount === classLevels.length && totalLevel <= 20;
+
+        expect(Either.isRight(result)).toBe(validAggregate);
+        if (Either.isRight(result)) {
+          expect(
+            result.right.map(({ className, level }) => ({
+              className,
+              level: Number(level),
+            })),
+          ).toEqual(classLevels);
+          expect(Number(characterBattleLevel(result.right))).toBe(totalLevel);
+        }
       }),
-    ).toThrow("Character class levels must not duplicate classes.");
+      { numRuns: 100 },
+    );
   });
 
   test("startBattle rejects class-feature resources without an owning class level", () => {
@@ -335,7 +420,7 @@ describe("battle runtime: setup and discovery", () => {
         combatants: [
           characterSeed({
             initiative: 12,
-            classLevels: [],
+            classLevels: [{ className: "wizard", level: 1 }],
             resources: [resource()],
           }),
           statBlockCreatureInit({ initiative: 10 }),

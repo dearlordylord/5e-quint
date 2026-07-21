@@ -15,7 +15,6 @@ import { elapsedTimeTicksFromHours } from "@dnd/shared-algebras/elapsed-time-alg
 import {
   Hp,
   SIZES,
-  characterLevel,
   proficiencyBonusForCharacterLevel,
   type DieRollResult,
 } from "@dnd/shared/types";
@@ -27,6 +26,7 @@ import type {
   StatBlockRecord,
 } from "@dnd/surface/surface/types";
 import * as Either from "effect/Either";
+import { characterBattleLevel } from "../character-class-level.ts";
 
 import {
   activeEffectsWithShapeShiftOwnerReplaced,
@@ -231,11 +231,11 @@ export function combatantD20ProficiencyBonus(
   combatant: BattleCreatureState,
 ): number {
   if (combatant.origin.kind === "statBlock") return 2;
-  const level = combatant.origin.classLevels.reduce(
-    (total, classLevel) => total + Number(classLevel.level),
-    0,
+  return Number(
+    proficiencyBonusForCharacterLevel(
+      characterBattleLevel(combatant.origin.classLevels),
+    ),
   );
-  return Number(proficiencyBonusForCharacterLevel(characterLevel(level)));
 }
 
 export function combatantD20AbilityScore(

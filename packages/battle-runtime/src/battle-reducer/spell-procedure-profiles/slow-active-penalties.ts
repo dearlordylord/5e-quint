@@ -71,7 +71,10 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
-import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
+import {
+  SpellRuleExecutionFactsSchema,
+  spellProcedureExecutionSchema,
+} from "./profile.ts";
 import {
   CAREFUL_METAMAGIC_EFFECT_KIND,
   discoverSpellMetamagicSelections,
@@ -642,25 +645,24 @@ function validateSlowAreaWitness(
   return null;
 }
 
-const SlowActivePenaltiesInvocationSchema =
-  spellProcedureExecutionSchema(
-    Schema.Struct({
-      access: PreparedSpellAccessSchema,
-      resource: SpellSlotInvocationResourceSchema,
-      procedure: Schema.Literal("slowActivePenalties"),
-      spellRuleFacts: SpellRuleExecutionFactsSchema,
-      actionCost: Schema.Literal("magicAction"),
-      ability: Schema.Literal("wis"),
-      dc: DcSourceSchema,
-      targeting: Schema.Struct({
-        kind: Schema.Literal("pointOriginCube"),
-        sideFeet: MovementFeet,
-      }),
-      maxTargets: Schema.Literal(6),
-      rangeFeet: MovementFeet,
-      durationTicks: ElapsedTimeTicksSchema,
+const SlowActivePenaltiesInvocationSchema = spellProcedureExecutionSchema(
+  Schema.Struct({
+    access: PreparedSpellAccessSchema,
+    resource: SpellSlotInvocationResourceSchema,
+    procedure: Schema.Literal("slowActivePenalties"),
+    spellRuleFacts: SpellRuleExecutionFactsSchema,
+    actionCost: Schema.Literal("magicAction"),
+    ability: Schema.Literal("wis"),
+    dc: DcSourceSchema,
+    targeting: Schema.Struct({
+      kind: Schema.Literal("pointOriginCube"),
+      sideFeet: MovementFeet,
     }),
-  );
+    maxTargets: Schema.Literal(6),
+    rangeFeet: MovementFeet,
+    durationTicks: ElapsedTimeTicksSchema,
+  }),
+);
 
 export const slowActivePenaltiesProfile = {
   procedure: "slowActivePenalties",

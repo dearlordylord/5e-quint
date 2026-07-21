@@ -60,7 +60,10 @@ import type {
   SpellProcedureProfileResolveInput,
   SpellProcedureStoredGlyphReleaseOptions,
 } from "./profile.ts";
-import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
+import {
+  SpellRuleExecutionFactsSchema,
+  spellProcedureExecutionSchema,
+} from "./profile.ts";
 
 const HASTE_POSITIVE_ACTIONS = [
   "attack",
@@ -339,7 +342,6 @@ function discoverHastePositiveCastAct(
       ];
 }
 
-
 function resolveHastePositive(
   input: SpellProcedureProfileResolveInput<
     HastePositiveSpellInvocation,
@@ -594,58 +596,57 @@ function isHastePositiveActiveEffect(
   );
 }
 
-const HastePositiveInvocationSchema =
-  spellProcedureExecutionSchema(
-    Schema.Struct({
-      access: PreparedSpellAccessSchema,
-      resource: SpellSlotInvocationResourceSchema,
-      procedure: Schema.Literal("hastePositive"),
-      spellRuleFacts: SpellRuleExecutionFactsSchema,
-      actionCost: Schema.Literal("magicAction"),
-      targeting: Schema.Struct({
-        kind: Schema.Literal("targetList"),
-        minTargets: Schema.Literal(1),
-        maxTargets: Schema.Literal(1),
-        requiredTargetDisposition: Schema.Literal("willing"),
-      }),
-      activeEffects: Schema.Struct({
-        speedRatio: Schema.Struct({
-          kind: Schema.Literal("speedRatio"),
-          sourceCombatantId: CombatantId,
-          numerator: Schema.Number,
-          denominator: Schema.Number,
-          expiresAt: HastePositiveExpirationSchema,
-        }),
-        armorClassBonus: Schema.Struct({
-          kind: Schema.Literal("spellArmorClassBonus"),
-          sourceCombatantId: CombatantId,
-          bonus: Schema.Number,
-          negatesRepeatedDamageAllocation: Schema.Literal(false),
-          expiresAt: HastePositiveExpirationSchema,
-        }),
-        dexteritySavingThrowAdvantage: Schema.Struct({
-          kind: Schema.Literal("savingThrowRollMode"),
-          sourceCombatantId: CombatantId,
-          ability: Schema.Literal("dex"),
-          mode: Schema.Literal("advantage"),
-          expiresAt: HastePositiveExpirationSchema,
-        }),
-        grantedActionResource: Schema.Struct({
-          kind: Schema.Literal("spellGrantedActionResource"),
-          sourceCombatantId: CombatantId,
-          restriction: HastePositiveActionRestrictionSchema,
-          expiresAt: HastePositiveExpirationSchema,
-        }),
-        spellEndTargetState: Schema.Struct({
-          kind: Schema.Literal("spellEndTargetState"),
-          sourceCombatantId: CombatantId,
-          condition: Schema.Literal("incapacitated"),
-          expiresAt: HastePositiveExpirationSchema,
-        }),
-      }),
-      rangeFeet: MovementFeet,
+const HastePositiveInvocationSchema = spellProcedureExecutionSchema(
+  Schema.Struct({
+    access: PreparedSpellAccessSchema,
+    resource: SpellSlotInvocationResourceSchema,
+    procedure: Schema.Literal("hastePositive"),
+    spellRuleFacts: SpellRuleExecutionFactsSchema,
+    actionCost: Schema.Literal("magicAction"),
+    targeting: Schema.Struct({
+      kind: Schema.Literal("targetList"),
+      minTargets: Schema.Literal(1),
+      maxTargets: Schema.Literal(1),
+      requiredTargetDisposition: Schema.Literal("willing"),
     }),
-  );
+    activeEffects: Schema.Struct({
+      speedRatio: Schema.Struct({
+        kind: Schema.Literal("speedRatio"),
+        sourceCombatantId: CombatantId,
+        numerator: Schema.Number,
+        denominator: Schema.Number,
+        expiresAt: HastePositiveExpirationSchema,
+      }),
+      armorClassBonus: Schema.Struct({
+        kind: Schema.Literal("spellArmorClassBonus"),
+        sourceCombatantId: CombatantId,
+        bonus: Schema.Number,
+        negatesRepeatedDamageAllocation: Schema.Literal(false),
+        expiresAt: HastePositiveExpirationSchema,
+      }),
+      dexteritySavingThrowAdvantage: Schema.Struct({
+        kind: Schema.Literal("savingThrowRollMode"),
+        sourceCombatantId: CombatantId,
+        ability: Schema.Literal("dex"),
+        mode: Schema.Literal("advantage"),
+        expiresAt: HastePositiveExpirationSchema,
+      }),
+      grantedActionResource: Schema.Struct({
+        kind: Schema.Literal("spellGrantedActionResource"),
+        sourceCombatantId: CombatantId,
+        restriction: HastePositiveActionRestrictionSchema,
+        expiresAt: HastePositiveExpirationSchema,
+      }),
+      spellEndTargetState: Schema.Struct({
+        kind: Schema.Literal("spellEndTargetState"),
+        sourceCombatantId: CombatantId,
+        condition: Schema.Literal("incapacitated"),
+        expiresAt: HastePositiveExpirationSchema,
+      }),
+    }),
+    rangeFeet: MovementFeet,
+  }),
+);
 
 export const hastePositiveProfile = {
   procedure: "hastePositive",

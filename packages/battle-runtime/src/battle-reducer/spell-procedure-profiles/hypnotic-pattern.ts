@@ -68,7 +68,10 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
-import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
+import {
+  SpellRuleExecutionFactsSchema,
+  spellProcedureExecutionSchema,
+} from "./profile.ts";
 import {
   DcSourceSchema,
   MovementFeet,
@@ -91,7 +94,8 @@ type HypnoticPatternSpellInvocation = Extract<
   SupportedSpellInvocation,
   { readonly procedure: "hypnoticPattern" }
 >;
-type StoredGlyphAreaControlSpellInvocation = SpellProcedureExecution<GlyphStoredAreaControlInvocation>;
+type StoredGlyphAreaControlSpellInvocation =
+  SpellProcedureExecution<GlyphStoredAreaControlInvocation>;
 
 type HypnoticPatternPhase = Extract<
   ActivationPhase,
@@ -727,24 +731,23 @@ function breakConcentrationForIncapacitatedTargets(
   );
 }
 
-const HypnoticPatternInvocationSchema =
-  spellProcedureExecutionSchema(
-    Schema.Struct({
-      access: PreparedSpellAccessSchema,
-      resource: SpellSlotInvocationResourceSchema,
-      procedure: Schema.Literal("hypnoticPattern"),
-      spellRuleFacts: SpellRuleExecutionFactsSchema,
-      actionCost: Schema.Literal("magicAction"),
-      ability: Schema.Literal("wis"),
-      dc: DcSourceSchema,
-      targeting: Schema.Struct({
-        kind: Schema.Literal("pointOriginCube"),
-        sideFeet: MovementFeet,
-      }),
-      rangeFeet: MovementFeet,
-      durationTicks: ElapsedTimeTicksSchema,
+const HypnoticPatternInvocationSchema = spellProcedureExecutionSchema(
+  Schema.Struct({
+    access: PreparedSpellAccessSchema,
+    resource: SpellSlotInvocationResourceSchema,
+    procedure: Schema.Literal("hypnoticPattern"),
+    spellRuleFacts: SpellRuleExecutionFactsSchema,
+    actionCost: Schema.Literal("magicAction"),
+    ability: Schema.Literal("wis"),
+    dc: DcSourceSchema,
+    targeting: Schema.Struct({
+      kind: Schema.Literal("pointOriginCube"),
+      sideFeet: MovementFeet,
     }),
-  );
+    rangeFeet: MovementFeet,
+    durationTicks: ElapsedTimeTicksSchema,
+  }),
+);
 
 export const hypnoticPatternProfile = {
   procedure: "hypnoticPattern",

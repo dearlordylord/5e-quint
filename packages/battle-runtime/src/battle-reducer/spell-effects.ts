@@ -23,12 +23,14 @@ import {
   type AttackDamageComponent,
 } from "./statblock-attacks.ts";
 
-type DamageSpellExecutionBase =
-  SpellExecutableExecutionOf<
-    SpellProcedureExecution<SupportedDamageSpellInvocation>
-  >;
+type DamageSpellExecutionBase = SpellExecutableExecutionOf<
+  SpellProcedureExecution<SupportedDamageSpellInvocation>
+>;
 type DamageSpellExecution =
-  | Exclude<DamageSpellExecutionBase, { readonly procedure: "spellAttackDamage" }>
+  | Exclude<
+      DamageSpellExecutionBase,
+      { readonly procedure: "spellAttackDamage" }
+    >
   | (Extract<
       DamageSpellExecutionBase,
       { readonly procedure: "spellAttackDamage" }

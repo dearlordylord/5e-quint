@@ -45,7 +45,10 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
-import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
+import {
+  SpellRuleExecutionFactsSchema,
+  spellProcedureExecutionSchema,
+} from "./profile.ts";
 
 const CHOSEN_ENERGY_RESISTANCE_DAMAGE_TYPES = [
   "acid",
@@ -194,7 +197,6 @@ function discoverChosenDamageResistanceCastAct(
     },
   ];
 }
-
 
 function resolveChosenDamageResistance(
   input: ChosenDamageResistanceResolveInput,

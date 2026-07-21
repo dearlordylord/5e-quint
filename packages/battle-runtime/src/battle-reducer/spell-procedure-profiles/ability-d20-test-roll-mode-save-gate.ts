@@ -35,7 +35,10 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
-import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
+import {
+  SpellRuleExecutionFactsSchema,
+  spellProcedureExecutionSchema,
+} from "./profile.ts";
 import {
   DcSourceSchema,
   MovementFeet,
@@ -125,7 +128,6 @@ function abilityD20TestRollModeSaveGateCastAct(
     initialHoles,
   };
 }
-
 
 function resolveAbilityD20TestRollModeSaveGate(
   input: AbilityD20TestRollModeSaveGateResolveInput,

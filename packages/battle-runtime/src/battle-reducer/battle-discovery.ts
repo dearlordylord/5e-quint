@@ -959,7 +959,7 @@ function readiedSpellReleaseActs(
     const caster = state.combatants.get(casterId);
     const invocation =
       caster?.origin.kind === "character"
-          ? characterSpellProcedure(
+        ? characterSpellProcedure(
             caster.origin.execution,
             readiedSpell.procedureRef,
             caster,

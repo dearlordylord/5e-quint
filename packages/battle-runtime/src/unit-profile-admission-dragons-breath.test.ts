@@ -335,6 +335,7 @@ describe("Dragon's Breath initial cast admission", () => {
     });
     expect(saveHole.targetFlatBonuses).toContainEqual({
       targetId: spellCasterId,
+      sourceCombatantId: spellTargetId,
       sourceProcedureRef: expect.any(String),
       bonus: 1,
     });

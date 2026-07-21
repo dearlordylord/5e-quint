@@ -43,7 +43,9 @@ import {
   characterBattleResourceIsUseCount,
   characterBattleResourceMaxUses,
   characterResourceState,
+  parseCharacterBattleClassLevels,
 } from "./character-battle-resources.ts";
+import type { CharacterBattleClassLevels } from "./character-class-level.ts";
 import { resolveFailedSavingThrowReroll } from "./battle-reducer/failed-saving-throw-reroll.ts";
 import {
   battleFailedSavingThrowRerollSupportForUnit,
@@ -69,6 +71,16 @@ function resourcePoolRefForTest(unitId: UnitRecord["id"]) {
     ),
     NonNegativeInteger(0),
   );
+}
+
+function fighterClassLevels(level: number): CharacterBattleClassLevels {
+  const result = parseCharacterBattleClassLevels([
+    { className: "fighter", level },
+  ]);
+  if (Either.isLeft(result)) {
+    throw new Error(result.left.messages.join("; "));
+  }
+  return result.right;
 }
 
 function failedSavingThrowRerollExecutionForTest(
@@ -147,7 +159,7 @@ const indomitableSelectedIdentityActions = {
       const profile = battleFailedSavingThrowRerollSupportForUnit(unit);
       const resource = characterResourceState(
         { unit },
-        [{ className: "fighter", level: classLevel(9) }],
+        fighterClassLevels(9),
         resourcePoolRefForTest(unit.id),
       );
       if (profile === null || profile === "unsupported") {
@@ -183,7 +195,7 @@ const indomitableSelectedIdentityActions = {
         resourceMaxUses: Number(
           characterBattleResourceMaxUses({
             unit,
-            classLevels: [{ className: "fighter", level: classLevel(9) }],
+            classLevels: fighterClassLevels(9),
           }),
         ),
         finalTotal: result.finalTotal,
@@ -444,9 +456,7 @@ describe("L19D-04 Fighter Indomitable failed Saving Throw reroll", () => {
       supportProfile,
     );
     expect(
-      parseSupportedUnitFeatureProfile(unit, [
-        { className: "fighter", level: classLevel(9) },
-      ]),
+      parseSupportedUnitFeatureProfile(unit, fighterClassLevels(9)),
     ).toEqual(
       expect.objectContaining({
         kind: "failedSavingThrowReroll",
@@ -462,19 +472,19 @@ describe("L19D-04 Fighter Indomitable failed Saving Throw reroll", () => {
     expect(
       characterBattleResourceMaxUses({
         unit,
-        classLevels: [{ className: "fighter", level: classLevel(9) }],
+        classLevels: fighterClassLevels(9),
       }),
     ).toBe(1);
     expect(
       characterBattleResourceMaxUses({
         unit,
-        classLevels: [{ className: "fighter", level: classLevel(13) }],
+        classLevels: fighterClassLevels(13),
       }),
     ).toBe(2);
     expect(
       characterBattleResourceMaxUses({
         unit,
-        classLevels: [{ className: "fighter", level: classLevel(17) }],
+        classLevels: fighterClassLevels(17),
       }),
     ).toBe(3);
   });
@@ -484,7 +494,7 @@ describe("L19D-04 Fighter Indomitable failed Saving Throw reroll", () => {
     const profile = battleFailedSavingThrowRerollSupportForUnit(unit);
     const resource = characterResourceState(
       { unit },
-      [{ className: "fighter", level: classLevel(9) }],
+      fighterClassLevels(9),
       resourcePoolRefForTest(unit.id),
     );
     if (profile === null || profile === "unsupported") {
@@ -529,7 +539,7 @@ describe("L19D-04 Fighter Indomitable failed Saving Throw reroll", () => {
     const profile = battleFailedSavingThrowRerollSupportForUnit(unit);
     const resource = characterResourceState(
       { unit },
-      [{ className: "fighter", level: classLevel(9) }],
+      fighterClassLevels(9),
       resourcePoolRefForTest(unit.id),
     );
     if (profile === null || profile === "unsupported") {
@@ -574,17 +584,17 @@ describe("L19D-04 Fighter Indomitable failed Saving Throw reroll", () => {
     const profile = battleFailedSavingThrowRerollSupportForUnit(unit);
     const resource = characterResourceState(
       { unit },
-      [{ className: "fighter", level: classLevel(9) }],
+      fighterClassLevels(9),
       resourcePoolRefForTest(unit.id),
     );
     const exhaustedResource = characterResourceState(
       { unit, usesRemaining: 0 },
-      [{ className: "fighter", level: classLevel(9) }],
+      fighterClassLevels(9),
       resourcePoolRefForTest(unit.id),
     );
     const wrongResource = characterResourceState(
       { unit: unitLibrary.requireUnit(fighterSecondWindUnitId) },
-      [{ className: "fighter", level: classLevel(9) }],
+      fighterClassLevels(9),
       resourcePoolRefForTest(fighterSecondWindUnitId),
     );
     if (profile === null || profile === "unsupported") {

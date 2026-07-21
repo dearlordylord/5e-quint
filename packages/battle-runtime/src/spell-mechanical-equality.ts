@@ -1,10 +1,7 @@
 import { Match } from "effect";
 
 import type { DamageType } from "@dnd/shared/types";
-import type {
-  ActionRestriction,
-  DiceExpr,
-} from "@dnd/surface/surface/types";
+import type { ActionRestriction, DiceExpr } from "@dnd/surface/surface/types";
 
 import type {
   BattleSpellEffectEarlyEnd,
@@ -101,8 +98,7 @@ export function sameSpellEffectEarlyEnds(
     left,
     right,
     (earlyEnd) => earlyEnd.kind,
-    (leftEarlyEnd, rightEarlyEnd) =>
-      leftEarlyEnd.kind === rightEarlyEnd.kind,
+    (leftEarlyEnd, rightEarlyEnd) => leftEarlyEnd.kind === rightEarlyEnd.kind,
   );
 }
 
@@ -149,8 +145,7 @@ export function sameActionRestriction(
             leftAction.action === rightAction.action &&
             (leftAction.action !== "attack" ||
               (rightAction.action === "attack" &&
-                leftAction.attackLimit.kind ===
-                  rightAction.attackLimit.kind &&
+                leftAction.attackLimit.kind === rightAction.attackLimit.kind &&
                 leftAction.attackLimit.count ===
                   rightAction.attackLimit.count)),
         ),

@@ -157,7 +157,6 @@ function discoverMakeStableCastAct(
   ];
 }
 
-
 function resolveMakeStable(
   input: SpellProcedureProfileResolveInput<MakeStableInvocation>,
 ): BattleResolutionResult {

@@ -62,8 +62,7 @@ export function sameExpiration(
   return Match.value(left).pipe(
     Match.discriminatorsExhaustive("kind")({
       startOfTurn: (value) =>
-        right.kind === "startOfTurn" &&
-        value.combatantId === right.combatantId,
+        right.kind === "startOfTurn" && value.combatantId === right.combatantId,
       endOfTurn: (value) =>
         right.kind === "endOfTurn" &&
         value.combatantId === right.combatantId &&
@@ -83,7 +82,10 @@ export function sameExpiration(
 type FailedSaveConditionEffect =
   AfterHitSaveGatedConditionSpellProcedureExecution["effect"];
 type ConditionEscape = Exclude<FailedSaveConditionEffect["escape"], null>;
-type ConditionRepeatSave = Exclude<FailedSaveConditionEffect["repeatSave"], null>;
+type ConditionRepeatSave = Exclude<
+  FailedSaveConditionEffect["repeatSave"],
+  null
+>;
 
 function sameConditionEscape(
   left: ConditionEscape | null,
@@ -179,14 +181,21 @@ export function sameAbilityD20TestRollModeSaveGateExecution(
       right.successEffect.sourceCombatantId &&
     left.successEffect.kind === right.successEffect.kind &&
     left.successEffect.mode === right.successEffect.mode &&
-    sameExpiration(left.successEffect.expiresAt, right.successEffect.expiresAt) &&
+    sameExpiration(
+      left.successEffect.expiresAt,
+      right.successEffect.expiresAt,
+    ) &&
     left.failedSaveEffect.sourceCombatantId ===
       right.failedSaveEffect.sourceCombatantId &&
     left.failedSaveEffect.kind === right.failedSaveEffect.kind &&
     left.failedSaveEffect.ability === right.failedSaveEffect.ability &&
     left.failedSaveEffect.mode === right.failedSaveEffect.mode &&
-    left.failedSaveEffect.save.ability === right.failedSaveEffect.save.ability &&
-    sameDcSource(left.failedSaveEffect.save.dc, right.failedSaveEffect.save.dc) &&
+    left.failedSaveEffect.save.ability ===
+      right.failedSaveEffect.save.ability &&
+    sameDcSource(
+      left.failedSaveEffect.save.dc,
+      right.failedSaveEffect.save.dc,
+    ) &&
     sameExpiration(
       left.failedSaveEffect.expiresAt,
       right.failedSaveEffect.expiresAt,
@@ -279,11 +288,16 @@ export function sameAfterHitTimedDamageAndSaveExecution(
       right.activeEffect.sourceCombatantId &&
     left.activeEffect.kind === right.activeEffect.kind &&
     left.activeEffect.source === right.activeEffect.source &&
-    sameDiceExpr(left.activeEffect.damage.expr, right.activeEffect.damage.expr) &&
-    left.activeEffect.damage.damageType === right.activeEffect.damage.damageType &&
+    sameDiceExpr(
+      left.activeEffect.damage.expr,
+      right.activeEffect.damage.expr,
+    ) &&
+    left.activeEffect.damage.damageType ===
+      right.activeEffect.damage.damageType &&
     left.activeEffect.save.ability === right.activeEffect.save.ability &&
     sameDcSource(left.activeEffect.save.dc, right.activeEffect.save.dc) &&
-    left.activeEffect.save.successEnds === right.activeEffect.save.successEnds &&
+    left.activeEffect.save.successEnds ===
+      right.activeEffect.save.successEnds &&
     sameExpiration(left.activeEffect.expiresAt, right.activeEffect.expiresAt)
   );
 }
@@ -431,7 +445,8 @@ export function sameConditionRemovalProtectionExecution(
     leftConditionSaveRollMode.sourceCombatantId ===
       rightConditionSaveRollMode.sourceCombatantId &&
     leftConditionSaveRollMode.kind === rightConditionSaveRollMode.kind &&
-    leftConditionSaveRollMode.condition === rightConditionSaveRollMode.condition &&
+    leftConditionSaveRollMode.condition ===
+      rightConditionSaveRollMode.condition &&
     leftConditionSaveRollMode.mode === rightConditionSaveRollMode.mode &&
     sameExpiration(
       leftConditionSaveRollMode.expiresAt,

@@ -57,7 +57,10 @@ import type {
   SpellProcedureStoredGlyphReleaseOptions,
 } from "./profile.ts";
 import { Schema } from "effect";
-import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
+import {
+  SpellRuleExecutionFactsSchema,
+  spellProcedureExecutionSchema,
+} from "./profile.ts";
 import {
   DcSourceSchema,
   PreparedSpellAccessSchema,
@@ -206,7 +209,6 @@ function discoverLevitatedCreatureCastAct(
         ];
   return castActs;
 }
-
 
 function resolveLevitatedCreature(
   input: LevitatedCreatureResolveInput,

@@ -72,7 +72,10 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
-import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
+import {
+  SpellRuleExecutionFactsSchema,
+  spellProcedureExecutionSchema,
+} from "./profile.ts";
 import {
   DamageTypeSchema,
   PreparedSpellAccessSchema,
@@ -279,7 +282,6 @@ function discoverAfterHitTimedDamageAndSaveCastAct(
 ): readonly BattleActDiscoveryCandidate[] {
   return [];
 }
-
 
 function applyAfterHitTimedDamageAndSaveSpellEffect(
   state: BattleState,
