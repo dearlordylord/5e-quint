@@ -27,6 +27,7 @@ import {
   admitWeaponAttackOverride,
   type WeaponAttackOverrideInvocation,
 } from "../../procedure-admission/weapon-attack-override.ts";
+import { activeDruidWildShapeEffect } from "../druid-wild-shape.ts";
 import {
   activeEffectsAfterWeaponAttackOverride,
   WeaponAttackOverrideExecutionSchema,
@@ -166,7 +167,11 @@ export const weaponAttackOverrideProfile: SpellProcedureProfile<
   metamagicCompatibility: "notActionSpellCasting",
   targetListInvocation: { kind: "none" },
   isReadiedSpellCompatible: false,
-  admit: admitWeaponAttackOverride,
+  admit: (spell, ctx) =>
+    admitWeaponAttackOverride(spell, {
+      actor: ctx.actor,
+      activeDruidWildShape: activeDruidWildShapeEffect(ctx.actor),
+    }),
   discoverCastAct: discoverWeaponAttackOverrideCastAct,
   resolve: resolveWeaponAttackOverride,
 };

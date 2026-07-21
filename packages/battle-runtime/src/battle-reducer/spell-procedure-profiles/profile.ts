@@ -12,6 +12,7 @@
 // exactly that file.
 
 import { currentActing } from "@dnd/shared-algebras/initiative-algebra";
+import type { CharacterLevel } from "@dnd/shared/types";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Schema } from "effect";
 import type {
@@ -40,7 +41,7 @@ import {
   antimagicFieldSuppressedOngoingSpellEffectKeys,
   ongoingSpellEffectRefKey,
 } from "../antimagic-field-suppression.ts";
-import { activeDruidWildShapeEffect } from "../druid-wild-shape.ts";
+import { characterBattleLevel } from "../../character-class-level.ts";
 import type { SpellFillSet } from "../spells-resolve-fill-set.ts";
 
 // Context handed to admit() at discovery time. Profiles use only what they
@@ -67,9 +68,6 @@ export type SpellAdmissionBattleProjection = {
 
 export type SpellAdmissionContext = {
   readonly actor: SpellAdmissionActor;
-  readonly activeDruidWildShape: ReturnType<
-    typeof activeDruidWildShapeEffect
-  >;
   readonly battle: SpellAdmissionBattleProjection | undefined;
   readonly resourceOwnership: readonly CharacterBattleResourceOwnership[];
 };
@@ -104,7 +102,6 @@ export function spellAdmissionContextFor(
   }
   return {
     actor,
-    activeDruidWildShape: activeDruidWildShapeEffect(actor),
     battle: spellAdmissionBattleProjection(state),
     resourceOwnership,
   };
@@ -144,11 +141,8 @@ function spellAdmissionBattleProjection(
 
 export function spellAdmissionCharacterLevel(
   ctx: SpellAdmissionContext,
-): number {
-  return ctx.actor.origin.classLevels.reduce(
-    (total, classLevel) => total + Number(classLevel.level),
-    0,
-  );
+): CharacterLevel {
+  return characterBattleLevel(ctx.actor.origin.classLevels);
 }
 
 // Each profile carries its own metamagic classification so dispatch tables can

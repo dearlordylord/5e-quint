@@ -2,6 +2,7 @@ import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elaps
 import {
   DAMAGE_DIE_SIZES,
   attackBonus,
+  type CharacterLevel,
   type DamageDieSize,
 } from "@dnd/shared/types";
 import type { SpellRecord, WeaponRecord } from "@dnd/surface/surface/types";
@@ -9,7 +10,10 @@ import { Either } from "effect";
 import type { BoundCharacterWeaponAttackActionOption } from "../battle-action-options.ts";
 import type { CharacterBattleLoadoutRef } from "../battle-init.ts";
 import type { CharacterBattleSpellcastingState } from "../character-battle-resources.ts";
-import type { CharacterBattleClassLevel } from "../character-class-level.ts";
+import {
+  characterBattleLevel,
+  type CharacterBattleClassLevel,
+} from "../character-class-level.ts";
 import type { CombatantId } from "../identity.ts";
 import { sameStringSet } from "../battle-reducer/spells-profile-shared.ts";
 import { wildShapeCanUseWornLoadoutObject } from "../battle-reducer/wild-shape-equipment.ts";
@@ -59,10 +63,7 @@ export function admitWeaponAttackOverride(
 ): readonly WeaponAttackOverrideInvocation[] {
   const projection = weaponAttackOverrideProjection(
     spell,
-    ctx.actor.origin.classLevels.reduce(
-      (total, classLevel) => total + Number(classLevel.level),
-      0,
-    ),
+    characterBattleLevel(ctx.actor.origin.classLevels),
   );
   if (projection === null) {
     return [];
@@ -95,7 +96,7 @@ export function admitWeaponAttackOverride(
 
 function weaponAttackOverrideProjection(
   spell: SpellRecord,
-  characterLevel: number,
+  characterLevel: CharacterLevel,
 ): WeaponAttackOverrideProjection | null {
   if (
     spell.mechanics.family !== "ongoing_effect" ||
@@ -217,7 +218,7 @@ function weaponAttackOverrideDamageExpr(
       };
     }[];
   },
-  characterLevel: number,
+  characterLevel: CharacterLevel,
 ): {
   readonly dice: number;
   readonly dieSize: DamageDieSize;

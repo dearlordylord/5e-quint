@@ -159,7 +159,15 @@ function executionRoots() {
 }
 
 function admissionRoots() {
-  return ADMISSION_ROOT_FILES.map(normalizedRepoPath).filter(fs.existsSync);
+  return ADMISSION_ROOT_FILES.map((file) => {
+    const root = normalizedRepoPath(file);
+    if (!fs.existsSync(root)) {
+      throw new Error(
+        `Declared battle-runtime admission root is missing: ${file}.`,
+      );
+    }
+    return root;
+  });
 }
 
 function forbiddenOwner(file, zone) {
@@ -572,11 +580,7 @@ function formatViolation(root, violation) {
   ].join("\n");
 }
 
-function checkRoots(
-  roots,
-  failOnViolation,
-  forbiddenZones = [undefined],
-) {
+function checkRoots(roots, failOnViolation, forbiddenZones = [undefined]) {
   const startedAt = process.hrtime.bigint();
   const graph = importGraph(roots);
   const violations = roots.flatMap((root) =>

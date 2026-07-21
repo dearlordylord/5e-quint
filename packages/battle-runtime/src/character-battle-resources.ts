@@ -31,6 +31,7 @@ import {
 import {
   type CharacterBattleClassLevel,
   type CharacterBattleClassLevelInit,
+  characterBattleLevel,
 } from "./character-class-level.ts";
 import {
   battleBardicInspirationGrantSupportForUnit,
@@ -180,7 +181,6 @@ type PactOfTheChainFindFamiliarSpellProfileParseResult =
     }
   | { readonly tag: "missingFamiliarFormCatalog" }
   | { readonly tag: "unsupported" };
-
 
 type CharacterBattleResourceStateBase = {
   readonly resourcePoolRef: BattleResourcePoolExecutionRef;
@@ -645,11 +645,7 @@ function characterBattleResourceLevel(
     unit.kind === "class_feature"
       ? requireCharacterClassLevel(classLevels, unit.className)
       : undefined;
-  const characterLevel = classLevels.reduce(
-    (total, classLevel) => total + Number(classLevel.level),
-    0,
-  );
-  return unitClassLevel ?? characterLevel;
+  return unitClassLevel ?? Number(characterBattleLevel(classLevels));
 }
 
 export function characterBattleResourceInitIssue(
@@ -1173,9 +1169,7 @@ function pactOfTheChainFindFamiliarSpellProfileForSpell(
   const components = spell.mechanics.components;
   const castingTime = topLevelSpellCastingTime(spell.mechanics);
 
-  if (
-    spell.mechanics.family !== "spawned_creature"
-  ) {
+  if (spell.mechanics.family !== "spawned_creature") {
     return { tag: "unsupported" };
   }
   if (spell.mechanics.creature.kind !== "familiar_form_catalog") {
@@ -1191,7 +1185,8 @@ function pactOfTheChainFindFamiliarSpellProfileForSpell(
   ) {
     return { tag: "unsupported" };
   }
-  const eligibleForms = pactOfTheChainFindFamiliarFormEligibilityForSpell(spell);
+  const eligibleForms =
+    pactOfTheChainFindFamiliarFormEligibilityForSpell(spell);
   return eligibleForms === null
     ? { tag: "missingFamiliarFormCatalog" }
     : {
