@@ -7,7 +7,7 @@ Definition, Spell Access, Spell Invocation, Spell Effect).
 ## What a Spell Procedure Profile is
 
 A **Spell Procedure Profile** is one class of spell behavior the battle
-runtime knows how to handle end-to-end. Each profile declares:
+runtime knows how to handle end-to-end. The registry currently assembles:
 
 - **admit** — inspect a Spell Definition for a given actor context, return
   the list of Spell Invocations that profile contributes (or `[]` if the
@@ -43,9 +43,13 @@ builders in `spells-invocation-ref.ts`, etc. The only thing binding the
 pieces was the string literal `"damageReduction"` (or similar) appearing
 across all of them.
 
-Consolidating each profile behind the `SpellProcedureProfile<P, I>` type
-localises change: adding a new profile is one file; changing how an
-existing profile behaves opens exactly that file.
+Consolidating each profile behind the `SpellProcedureProfile<P, I>` type made
+the procedure discriminant and completeness checks local. It did not make the
+combined module an execution-safe owner: authored admission, reducer execution,
+and presentation have different dependency rules. Profiles are now migrated by
+keeping their typed registry entry while moving authored parsing to
+`src/procedure-admission/` and authored-free execution facts to
+`src/procedure-execution/`. `weaponAttackOverride` is the first tracer split.
 
 ## Glossary used by this module
 
