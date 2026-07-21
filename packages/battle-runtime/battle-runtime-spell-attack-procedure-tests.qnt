@@ -244,7 +244,7 @@ module battleRuntimeSpellAttackProcedureTests {
       }
     },
     {
-    
+
         all {
           assert(spellAttackDamageObjectReplayHoles(ChillTouchSpellAttack, true, false, false, false, false) == Set(ObjectTargetChoice)),
           assert(spellAttackDamageObjectReplayHoles(ChillTouchSpellAttack, true, true, false, false, false) == Set(AttackRoll)),

@@ -161,7 +161,7 @@ module battleRuntimeSpellcastingAndUtilityFactsTests {
       }
     },
     {
-    
+
         all {
           assert(huntersMarkDurationTicks(2) == 600),
           assert(huntersMarkDurationTicks(3) == 4800),

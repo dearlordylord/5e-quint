@@ -1,6 +1,6 @@
 # Battle Runtime QNT/TS Connectivity
 
-Date: 2026-06-10
+Date: 2026-07-20
 
 Regenerated: the previous version of this map (2026-05-11) described the
 pre-forest hub shape, centered on a broad

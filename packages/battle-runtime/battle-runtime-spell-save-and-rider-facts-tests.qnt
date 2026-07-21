@@ -27,7 +27,7 @@ module battleRuntimeSpellSaveAndRiderFactsTests {
 
   run test_spell_save_and_rider_facts = all {
 {
-    
+
         all {
           assert(saveGatedAreaObjectIgnitionOutcomes(FireballSaveGate, FireballObjectTarget, Fighter, ObjectFlammableUnattended) == Set(ObjectStartsBurning({
             object: FireballObjectTarget,
@@ -51,7 +51,7 @@ module battleRuntimeSpellSaveAndRiderFactsTests {
         }
       },
     {
-    
+
         all {
           assert(attackBurstSaveDamageSpendsLevelOneSlot(IceKnifeAttackBurstSaveDamage)),
           assert(attackBurstSaveDamageAttackType(IceKnifeAttackBurstSaveDamage) == Piercing),
@@ -59,7 +59,7 @@ module battleRuntimeSpellSaveAndRiderFactsTests {
         }
       },
     {
-    
+
         all {
           assert(protectionFromEvilAndGoodRelevantEffectSaveRollMode(HumanoidCreature, Set(ProtectionFromEvilAndGoodCreatureTypeProtection, ProtectionRelevantCharmed({ source: Fighter, durationTicks: 10 })), ProtectionRelevantCharmed({ source: Fighter, durationTicks: 10 })) == NormalSavingThrow),
           assert(protectionFromEvilAndGoodRelevantEffectSaveRollMode(FeyCreature, Set(ProtectionFromEvilAndGoodCreatureTypeProtection), CharmPersonCharmed({ source: Fighter, durationTicks: charmPersonCharmedDurationTicks })) == NormalSavingThrow),
@@ -240,7 +240,7 @@ module battleRuntimeSpellSaveAndRiderFactsTests {
         }
       },
     {
-    
+
         all {
           assert(spellInvocationSpendsSpellSlot(ProtectionFromEvilAndGood)),
           assert(spellInvocationSpendsSpellSlot(DivineFavor)),
@@ -265,7 +265,7 @@ module battleRuntimeSpellSaveAndRiderFactsTests {
         }
       },
     {
-    
+
         all {
           assert(saveGatedTargeting(DissonantWhispersSaveGate) == SingleSaveTarget),
           assert(saveGatedDamageSuccess(DissonantWhispersSaveGate) == HalfDamageOnSaveSuccess),
@@ -290,7 +290,7 @@ module battleRuntimeSpellSaveAndRiderFactsTests {
         }
       },
     {
-    
+
         all {
           assert(saveGatedConditionTargetCreatureTypeIsLegal(CharmPersonSaveGate, HumanoidCreature)),
           assert(not(saveGatedConditionTargetCreatureTypeIsLegal(CharmPersonSaveGate, BeastCreature))),
