@@ -78,7 +78,10 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
-import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
+import {
+  SpellRuleExecutionFactsSchema,
+  spellProcedureExecutionSchema,
+} from "./profile.ts";
 import {
   AttackBonus,
   MovementFeet,
@@ -520,8 +523,6 @@ function discoverSpellCreatedHeldObjectReEvokeCastAct(
     },
   ];
 }
-
-
 
 function resolveSpellCreatedHeldObject(
   input: SpellCreatedHeldObjectResolveInput,

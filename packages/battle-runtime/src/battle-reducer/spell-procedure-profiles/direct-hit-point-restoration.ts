@@ -71,7 +71,10 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
-import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
+import {
+  SpellRuleExecutionFactsSchema,
+  spellProcedureExecutionSchema,
+} from "./profile.ts";
 import {
   MovementFeet as MovementFeetSchema,
   PreparedSpellAccessSchema,
@@ -280,16 +283,12 @@ function discoverDirectHitPointRestorationCastAct(
       ? []
       : [
           {
-            subject: spellCastSelectionSubject(
-              actorId,
-              invocation,
-            ),
+            subject: spellCastSelectionSubject(actorId, invocation),
             initialHoles: [targetHole],
           },
         ];
   return castActs;
 }
-
 
 function resolveDirectHitPointRestoration(
   input: DirectHitPointRestorationResolveInput,

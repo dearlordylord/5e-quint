@@ -68,7 +68,9 @@ export function activeRageSourceKeysForFrenzy(
 
 export function activeRageDamageBonusForFrenzy(
   attacker: CharacterBattleCreatureState,
-  attack: CharacterWeaponAttackActionOption | CharacterUnarmedStrikeActionOption,
+  attack:
+    | CharacterWeaponAttackActionOption
+    | CharacterUnarmedStrikeActionOption,
 ): ActiveRageDamageBonusForFrenzy | null {
   const bonuses = activeRageSourceKeysForFrenzy(attacker).flatMap(
     (key): readonly ActiveRageDamageBonusForFrenzy[] => {
@@ -90,7 +92,9 @@ export function activeRageDamageBonusForFrenzy(
 }
 
 function attackAbilityMatchesDamageModifier(
-  attack: CharacterWeaponAttackActionOption | CharacterUnarmedStrikeActionOption,
+  attack:
+    | CharacterWeaponAttackActionOption
+    | CharacterUnarmedStrikeActionOption,
   modifier: OngoingFeatureProfile["damageModifiers"][number],
 ): boolean {
   const attackAbility =

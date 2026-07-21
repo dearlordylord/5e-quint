@@ -125,63 +125,68 @@ export function eligibleCunningStrikeContexts(input: {
       return procedure.kind === "unitSupportProfile" &&
         typeof procedure.execution === "object" &&
         procedure.execution.kind === CUNNING_STRIKE_SUPPORT_PROFILE
-        ? [{ procedureRef: binding.procedureRef, execution: procedure.execution }]
+        ? [
+            {
+              procedureRef: binding.procedureRef,
+              execution: procedure.execution,
+            },
+          ]
         : [];
     },
   );
   return execution.procedureBindings.flatMap((binding) => {
-      if (binding.procedure.kind !== "unitSupportProfile") return [];
-      const supportProfile = binding.procedure.execution;
-      if (
-        typeof supportProfile !== "object" ||
-        (supportProfile.kind !== CUNNING_STRIKE_SUPPORT_PROFILE &&
-          supportProfile.kind !== CUNNING_STRIKE_OPTION_GRANT_SUPPORT_PROFILE)
-      ) {
-        return [];
-      }
-      const baseProfile =
-        supportProfile.kind === CUNNING_STRIKE_SUPPORT_PROFILE
-          ? supportProfile
-          : baseCunningStrikeProcedures.find(
-              (candidate) =>
-                candidate.procedureRef ===
-                supportProfile.optionGrant.sourceProcedureRef,
-            )?.execution;
-      if (baseProfile === undefined) {
-        return [];
-      }
-      const sourceRider = input.eligibleAttackDamageRiders.find(
-        (rider) =>
-          rider.procedureRef ===
-          baseProfile.cunningStrike.trigger.damageRiderProcedureRef,
-      );
-      if (sourceRider === undefined) {
-        return [];
-      }
-      const options =
-        supportProfile.kind === CUNNING_STRIKE_SUPPORT_PROFILE
-          ? supportProfile.cunningStrike.options
-          : [supportProfile.optionGrant.option];
-      return options.flatMap((option) =>
-        cunningStrikeOptionEligibleForTarget(
-          option,
-          targetSize,
-          input.hiddenBeforeAttack,
-        )
-          ? [
-              {
-                attackerId: input.attackerId,
-                targetId: input.targetId,
-                procedureRef: binding.procedureRef,
-                sourceDamageRiderProcedureRef: sourceRider.procedureRef,
-                support: baseProfile,
-                option,
-                hiddenBeforeAttack: input.hiddenBeforeAttack,
-              },
-            ]
-          : [],
-      );
-    });
+    if (binding.procedure.kind !== "unitSupportProfile") return [];
+    const supportProfile = binding.procedure.execution;
+    if (
+      typeof supportProfile !== "object" ||
+      (supportProfile.kind !== CUNNING_STRIKE_SUPPORT_PROFILE &&
+        supportProfile.kind !== CUNNING_STRIKE_OPTION_GRANT_SUPPORT_PROFILE)
+    ) {
+      return [];
+    }
+    const baseProfile =
+      supportProfile.kind === CUNNING_STRIKE_SUPPORT_PROFILE
+        ? supportProfile
+        : baseCunningStrikeProcedures.find(
+            (candidate) =>
+              candidate.procedureRef ===
+              supportProfile.optionGrant.sourceProcedureRef,
+          )?.execution;
+    if (baseProfile === undefined) {
+      return [];
+    }
+    const sourceRider = input.eligibleAttackDamageRiders.find(
+      (rider) =>
+        rider.procedureRef ===
+        baseProfile.cunningStrike.trigger.damageRiderProcedureRef,
+    );
+    if (sourceRider === undefined) {
+      return [];
+    }
+    const options =
+      supportProfile.kind === CUNNING_STRIKE_SUPPORT_PROFILE
+        ? supportProfile.cunningStrike.options
+        : [supportProfile.optionGrant.option];
+    return options.flatMap((option) =>
+      cunningStrikeOptionEligibleForTarget(
+        option,
+        targetSize,
+        input.hiddenBeforeAttack,
+      )
+        ? [
+            {
+              attackerId: input.attackerId,
+              targetId: input.targetId,
+              procedureRef: binding.procedureRef,
+              sourceDamageRiderProcedureRef: sourceRider.procedureRef,
+              support: baseProfile,
+              option,
+              hiddenBeforeAttack: input.hiddenBeforeAttack,
+            },
+          ]
+        : [],
+    );
+  });
 }
 
 export function cunningStrikeDamageRollOptions(
@@ -236,8 +241,7 @@ export function validateCunningStrikeDamageRollSelection(input: {
     return "Selected Cunning Strike option is not eligible for this attack.";
   }
   const sourceRider = input.selectedAttackDamageRiders.find(
-    (rider) =>
-      rider.procedureRef === context.sourceDamageRiderProcedureRef,
+    (rider) => rider.procedureRef === context.sourceDamageRiderProcedureRef,
   );
   if (sourceRider === undefined) {
     return "Cunning Strike requires selecting the triggering Sneak Attack damage rider.";

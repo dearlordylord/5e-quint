@@ -393,7 +393,8 @@ function applyOpenHandTechniqueApplyProne(
           target,
           applyCondition(
             target.conditions,
-            hit.execution.technique.effects.applyConditionOnFailedSave.condition,
+            hit.execution.technique.effects.applyConditionOnFailedSave
+              .condition,
           ),
         ),
       }),
@@ -456,19 +457,17 @@ function openHandTechniqueFlurryHit(
     return null;
   }
   const focusResourcePoolRef = focusProcedure.source.resourcePoolRef;
-  const binding = actor.origin.execution.procedureBindings.find(
-    (candidate) => {
-      const candidateProcedure = candidate.procedure;
-      return (
-        (candidateProcedure.kind === "unitSupportProfile" ||
-          candidateProcedure.kind === "unitFeature") &&
-        typeof candidateProcedure.execution === "object" &&
-        candidateProcedure.execution.kind === "openHandTechnique" &&
-        candidateProcedure.execution.technique.trigger.resourcePoolRef ===
-          focusResourcePoolRef
-      );
-    },
-  );
+  const binding = actor.origin.execution.procedureBindings.find((candidate) => {
+    const candidateProcedure = candidate.procedure;
+    return (
+      (candidateProcedure.kind === "unitSupportProfile" ||
+        candidateProcedure.kind === "unitFeature") &&
+      typeof candidateProcedure.execution === "object" &&
+      candidateProcedure.execution.kind === "openHandTechnique" &&
+      candidateProcedure.execution.technique.trigger.resourcePoolRef ===
+        focusResourcePoolRef
+    );
+  });
   const procedure = binding?.procedure;
   if (
     (procedure?.kind !== "unitSupportProfile" &&

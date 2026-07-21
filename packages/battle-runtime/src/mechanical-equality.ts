@@ -29,10 +29,7 @@ export function sameMultisetBy<Value>(
   });
 }
 
-export function sameSetByKey<
-  Value,
-  Key extends MechanicalPrimitive,
->(
+export function sameSetByKey<Value, Key extends MechanicalPrimitive>(
   left: readonly Value[],
   right: readonly Value[],
   key: (value: Value) => Key,
@@ -55,5 +52,10 @@ export function samePrimitiveSet<Value extends MechanicalPrimitive>(
   left: readonly Value[],
   right: readonly Value[],
 ): boolean {
-  return sameSetByKey(left, right, (value) => value, (a, b) => a === b);
+  return sameSetByKey(
+    left,
+    right,
+    (value) => value,
+    (a, b) => a === b,
+  );
 }

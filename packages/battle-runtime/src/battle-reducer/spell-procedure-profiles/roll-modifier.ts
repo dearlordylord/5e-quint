@@ -38,10 +38,7 @@
 import { spellSlotLevel } from "@dnd/shared/types";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 
-import {
-  BattleProcedureExecutionRef,
-  CombatantId,
-} from "../../identity.ts";
+import { BattleProcedureExecutionRef, CombatantId } from "../../identity.ts";
 import { BattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
 import {
   snapshotBattle,
@@ -88,7 +85,10 @@ import type {
   SpellProcedureStoredGlyphReleaseOptions,
 } from "./profile.ts";
 import { Schema } from "effect";
-import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
+import {
+  SpellRuleExecutionFactsSchema,
+  spellProcedureExecutionSchema,
+} from "./profile.ts";
 import {
   BATTLE_SURFACE_ABILITIES,
   BATTLE_SURFACE_SKILLS,

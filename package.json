@@ -31,7 +31,7 @@
     "sdk-raw-integration-inventory:check": "node scripts/sdk-raw-integration-inventory.cjs",
     "unit-profile-coverage:check": "node scripts/unit-profile-coverage-check.cjs",
     "unit-profile-coverage:check:self-test": "node scripts/unit-profile-coverage-check.cjs --self-test",
-    "lint": "pnpm --filter @dnd/mcp lint && pnpm --filter @dnd/app lint",
+    "lint": "pnpm --filter @dnd/battle-runtime format:check && pnpm --filter @dnd/mcp lint && pnpm --filter @dnd/app lint",
     "circular": "pnpm --filter @dnd/mcp circular && pnpm --filter @dnd/app circular",
     "quality": ". scripts/resource-lock-owner.sh && with_resource_lock_owner scripts/with-broad-workspace-lock.sh pnpm run quality:body",
     "quality:body": "scripts/assert-resource-lock.sh broad && pnpm check:authored-id-dispatch && pnpm check:battle-runtime-import-ownership && pnpm check:battle-runtime-test-support-boundary && pnpm check:character-sheet-runtime-split && pnpm check:surface-publication-typecheck && pnpm check:surface-publication-self-test && pnpm check:surface-content-publication && pnpm check:cleanroom-provenance && pnpm check:qa-generated-identity && pnpm check:mbt-driver-closure && pnpm check:test-lane-hygiene && pnpm check:mbt-script-inventory && pnpm check:qnt-inventory && pnpm check:qnt-run-block-separation && pnpm check:ralph-task-index && pnpm rules-kernel-coverage:check && pnpm unit-profile-coverage:check && pnpm sdk-raw-integration-inventory:check && pnpm lint && pnpm circular && pnpm run typecheck:turbo",

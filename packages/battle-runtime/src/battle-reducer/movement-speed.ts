@@ -64,9 +64,7 @@ import {
   type BattleState,
   type BattleTargetSpatialFact,
 } from "../battle-reducer.ts";
-import {
-  attackTargetConstraint,
-} from "./statblock-attacks.ts";
+import { attackTargetConstraint } from "./statblock-attacks.ts";
 import { attackActionOptionsForActor } from "./attack-damage-apply.ts";
 import { combatantHasGrapplerSupportProfile } from "./grappler-support-profile.ts";
 import { selfTransformationModeSpecialSpeedKind } from "./spells-active-effects.ts";

@@ -46,7 +46,6 @@ import {
   movementFeet,
 } from "@dnd/shared/types";
 
-
 import { Match } from "effect";
 import {
   characterProcedureBinding,
@@ -411,11 +410,11 @@ function bonusActionStandardActionProcedure(
   ) {
     return "sourceEffectRef" in subject &&
       actor.activeEffects.some(
-      (effect) =>
-        effect.kind === "spellDashBonusAction" &&
-        effect.effectRef === subject.sourceEffectRef &&
-        effect.sourceProcedureRef === subject.procedureRef &&
-        effect.sourceCombatantId === actor.combatantId,
+        (effect) =>
+          effect.kind === "spellDashBonusAction" &&
+          effect.effectRef === subject.sourceEffectRef &&
+          effect.sourceProcedureRef === subject.procedureRef &&
+          effect.sourceCombatantId === actor.combatantId,
       )
       ? { kind: "spell" }
       : { kind: "staleSpell" };
@@ -959,13 +958,12 @@ export function resolveHide(
   if (
     input.subject.tag === "bonusActionStandardAction" &&
     (bonusActionProcedure?.kind !== "unit" ||
-      (bonusActionProcedure.procedure.kind !== "unitSupportProfile" ||
-        typeof bonusActionProcedure.procedure.execution !== "object" ||
-        bonusActionProcedure.procedure.execution.kind !==
-          "alternateActionCost" ||
-        !bonusActionProcedure.procedure.execution.from.actions.includes(
-          input.subject.action,
-        )))
+      bonusActionProcedure.procedure.kind !== "unitSupportProfile" ||
+      typeof bonusActionProcedure.procedure.execution !== "object" ||
+      bonusActionProcedure.procedure.execution.kind !== "alternateActionCost" ||
+      !bonusActionProcedure.procedure.execution.from.actions.includes(
+        input.subject.action,
+      ))
   ) {
     return invalidResult(
       input.state,
@@ -2493,15 +2491,13 @@ export function classFeatureExtraAttackForActor(
       (procedure.kind !== "unitFeature" &&
         procedure.kind !== "unitSupportProfile") ||
       typeof procedure.execution !== "object" ||
-      procedure.execution.kind !== ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE
+      procedure.execution.kind !==
+        ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE
     ) {
       continue;
     }
     const additionalAttacks = procedure.execution.additionalAttacks;
-    if (
-      strongest === null ||
-      additionalAttacks > strongest.additionalAttacks
-    ) {
+    if (strongest === null || additionalAttacks > strongest.additionalAttacks) {
       strongest = {
         additionalAttacks,
         sourceProcedureRef: binding.procedureRef,

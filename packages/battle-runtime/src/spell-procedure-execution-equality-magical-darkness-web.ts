@@ -1,10 +1,7 @@
 import { Match } from "effect";
 
 import type { SpellProcedureExecutionByProcedure } from "./character-execution.ts";
-import {
-  sameMultisetBy,
-  samePrimitiveSet,
-} from "./mechanical-equality.ts";
+import { sameMultisetBy, samePrimitiveSet } from "./mechanical-equality.ts";
 import {
   sameActiveEffectSource,
   sameSpellDamageFacts,
@@ -52,8 +49,7 @@ type PersistentArmorEffectExecution =
   SpellProcedureExecutionByProcedure["persistentArmorEffect"];
 type RepeatedDamageAllocationExecution =
   SpellProcedureExecutionByProcedure["repeatedDamageAllocation"];
-type RollModifierExecution =
-  SpellProcedureExecutionByProcedure["rollModifier"];
+type RollModifierExecution = SpellProcedureExecutionByProcedure["rollModifier"];
 type SanctuaryTargetingInterdictionExecution =
   SpellProcedureExecutionByProcedure["sanctuaryTargetingInterdiction"];
 type SaveGatedAttackRollAdvantageExecution =
@@ -140,8 +136,7 @@ function sameObjectLightExpiration(
   return Match.value(left).pipe(
     Match.discriminatorsExhaustive("kind")({
       startOfTurn: (value) =>
-        right.kind === "startOfTurn" &&
-        value.combatantId === right.combatantId,
+        right.kind === "startOfTurn" && value.combatantId === right.combatantId,
       endOfTurn: (value) =>
         right.kind === "endOfTurn" &&
         value.combatantId === right.combatantId &&
@@ -298,9 +293,7 @@ function sameRollModifierChoices(
       ? "abilityChoiceApplication" in right &&
         left.abilityChoiceApplication === right.abilityChoiceApplication
       : !("abilityChoiceApplication" in right);
-  return (
-    sameSkillChoices && sameAbilityChoices && sameAbilityChoiceApplication
-  );
+  return sameSkillChoices && sameAbilityChoices && sameAbilityChoiceApplication;
 }
 
 function sameSpellAttackDamagePayload(
@@ -317,14 +310,12 @@ function sameSpellAttackDamagePayload(
         right.kind === "sorcerousBurstDamageTypeChoice" &&
         sameDiceExpr(value.expr, right.expr) &&
         samePrimitiveSet(value.damageTypeChoices, right.damageTypeChoices) &&
-        value.maxDieAdditionalDiceLimit ===
-          right.maxDieAdditionalDiceLimit,
+        value.maxDieAdditionalDiceLimit === right.maxDieAdditionalDiceLimit,
       selectedSorcerousBurstDamage: (value) =>
         right.kind === "selectedSorcerousBurstDamage" &&
         sameDiceExpr(value.expr, right.expr) &&
         value.damageType === right.damageType &&
-        value.maxDieAdditionalDiceLimit ===
-          right.maxDieAdditionalDiceLimit,
+        value.maxDieAdditionalDiceLimit === right.maxDieAdditionalDiceLimit,
     }),
   );
 }
@@ -429,10 +420,7 @@ export function sameOngoingSpellEndExecution(
   );
 }
 
-function sameMarkedDamage(
-  left: MarkedDamage,
-  right: MarkedDamage,
-): boolean {
+function sameMarkedDamage(left: MarkedDamage, right: MarkedDamage): boolean {
   return (
     left.damageType === right.damageType &&
     left.expr.dice === right.expr.dice &&
@@ -448,8 +436,7 @@ function sameMarkedExpiration(
   return Match.value(left).pipe(
     Match.discriminatorsExhaustive("kind")({
       startOfTurn: (value) =>
-        right.kind === "startOfTurn" &&
-        value.combatantId === right.combatantId,
+        right.kind === "startOfTurn" && value.combatantId === right.combatantId,
       endOfTurn: (value) =>
         right.kind === "endOfTurn" &&
         value.combatantId === right.combatantId &&
@@ -513,8 +500,7 @@ function sameMarkedDamageRiderTransferExecution(
   return (
     left.action === right.action &&
     left.activeEffectRef === right.activeEffectRef &&
-    left.activeEffectSourceProcedureRef ===
-      right.activeEffectSourceProcedureRef
+    left.activeEffectSourceProcedureRef === right.activeEffectSourceProcedureRef
   );
 }
 
@@ -596,8 +582,7 @@ export function sameObjectContactDamageRepeatExecution(
 ): boolean {
   return (
     left.activeEffectRef === right.activeEffectRef &&
-    left.activeEffectSourceProcedureRef ===
-      right.activeEffectSourceProcedureRef
+    left.activeEffectSourceProcedureRef === right.activeEffectSourceProcedureRef
   );
 }
 
@@ -652,8 +637,7 @@ export function sameRepeatedDamageAllocationExecution(
     sameRepeatedDamageAllocationDamage(left.damage, right.damage) &&
     left.rangeFeet === right.rangeFeet &&
     left.targeting.kind === right.targeting.kind &&
-    left.targeting.repeatedEffectCount ===
-      right.targeting.repeatedEffectCount
+    left.targeting.repeatedEffectCount === right.targeting.repeatedEffectCount
   );
 }
 
@@ -692,10 +676,7 @@ export function sameSanctuaryTargetingInterdictionExecution(
       right.activeEffect.sourceCombatantId &&
     left.activeEffect.save.ability === right.activeEffect.save.ability &&
     sameDcSource(left.activeEffect.save.dc, right.activeEffect.save.dc) &&
-    sameExpiration(
-      left.activeEffect.expiresAt,
-      right.activeEffect.expiresAt,
-    )
+    sameExpiration(left.activeEffect.expiresAt, right.activeEffect.expiresAt)
   );
 }
 
@@ -827,15 +808,15 @@ export function sameWeaponAttackOverrideExecution(
     left.activeEffect.spellcastingAbilityModifier ===
       right.activeEffect.spellcastingAbilityModifier &&
     left.activeEffect.attackBonus === right.activeEffect.attackBonus &&
-    sameDiceExpr(left.activeEffect.damage.expr, right.activeEffect.damage.expr) &&
+    sameDiceExpr(
+      left.activeEffect.damage.expr,
+      right.activeEffect.damage.expr,
+    ) &&
     samePrimitiveSet(
       left.activeEffect.damageTypeChoices,
       right.activeEffect.damageTypeChoices,
     ) &&
-    sameExpiration(
-      left.activeEffect.expiresAt,
-      right.activeEffect.expiresAt,
-    )
+    sameExpiration(left.activeEffect.expiresAt, right.activeEffect.expiresAt)
   );
 }
 
@@ -850,14 +831,8 @@ export function sameWeaponDamageRiderExecution(
     left.actionCost === right.actionCost &&
     left.activeEffect.kind === right.activeEffect.kind &&
     sameActiveEffectSource(left.activeEffect, right.activeEffect) &&
-    sameSpellDamageFacts(
-      left.activeEffect.damage,
-      right.activeEffect.damage,
-    ) &&
-    sameExpiration(
-      left.activeEffect.expiresAt,
-      right.activeEffect.expiresAt,
-    )
+    sameSpellDamageFacts(left.activeEffect.damage, right.activeEffect.damage) &&
+    sameExpiration(left.activeEffect.expiresAt, right.activeEffect.expiresAt)
   );
 }
 
@@ -1046,8 +1021,7 @@ export function sameSelfTransformationModeExecution(
     ) &&
     left.naturalWeaponFacts.spellcastingAbilityModifier ===
       right.naturalWeaponFacts.spellcastingAbilityModifier &&
-    left.naturalWeaponFacts.attackBonus ===
-      right.naturalWeaponFacts.attackBonus
+    left.naturalWeaponFacts.attackBonus === right.naturalWeaponFacts.attackBonus
   );
 }
 

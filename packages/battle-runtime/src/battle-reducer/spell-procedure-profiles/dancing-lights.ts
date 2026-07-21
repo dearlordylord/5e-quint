@@ -60,7 +60,10 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
-import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
+import {
+  SpellRuleExecutionFactsSchema,
+  spellProcedureExecutionSchema,
+} from "./profile.ts";
 import {
   ClassCantripSpellAccessSchema,
   NoSpellInvocationResourceSchema,
@@ -171,8 +174,7 @@ function admitDancingLightsReposition(
             spell,
             actionCost: "bonusAction",
             activeEffectRef: activeEffect.effectRef,
-            sourceDancingLightsProcedureRef:
-              activeEffect.sourceProcedureRef,
+            sourceDancingLightsProcedureRef: activeEffect.sourceProcedureRef,
             maxMoveFeet: profile.maxMoveFeet,
             rangeFeet: profile.rangeFeet,
             spacingFeet: profile.spacingFeet,
@@ -339,39 +341,37 @@ function resolveDancingLightsReposition(
   return resolveDancingLightsRepositionSpellAct(input);
 }
 
-const DancingLightsSeparateCastInvocationSchema =
-  spellProcedureExecutionSchema(
-    Schema.Struct({
-      access: ClassCantripSpellAccessSchema,
-      resource: NoSpellInvocationResourceSchema,
-      procedure: Schema.Literal("dancingLightsSeparateCast"),
-      spellRuleFacts: SpellRuleExecutionFactsSchema,
-      actionCost: Schema.Literal("magicAction"),
-      form: Schema.Literal("separateLights"),
-      dimRadiusFeet: MovementFeet,
-      rangeFeet: MovementFeet,
-      maxMoveFeet: MovementFeet,
-      spacingFeet: MovementFeet,
-      expiresAt: DancingLightsExpirationSchema,
-    }),
-  );
+const DancingLightsSeparateCastInvocationSchema = spellProcedureExecutionSchema(
+  Schema.Struct({
+    access: ClassCantripSpellAccessSchema,
+    resource: NoSpellInvocationResourceSchema,
+    procedure: Schema.Literal("dancingLightsSeparateCast"),
+    spellRuleFacts: SpellRuleExecutionFactsSchema,
+    actionCost: Schema.Literal("magicAction"),
+    form: Schema.Literal("separateLights"),
+    dimRadiusFeet: MovementFeet,
+    rangeFeet: MovementFeet,
+    maxMoveFeet: MovementFeet,
+    spacingFeet: MovementFeet,
+    expiresAt: DancingLightsExpirationSchema,
+  }),
+);
 
-const DancingLightsCombinedCastInvocationSchema =
-  spellProcedureExecutionSchema(
-    Schema.Struct({
-      access: ClassCantripSpellAccessSchema,
-      resource: NoSpellInvocationResourceSchema,
-      procedure: Schema.Literal("dancingLightsCombinedCast"),
-      spellRuleFacts: SpellRuleExecutionFactsSchema,
-      actionCost: Schema.Literal("magicAction"),
-      form: Schema.Literal("combinedMediumForm"),
-      dimRadiusFeet: MovementFeet,
-      rangeFeet: MovementFeet,
-      maxMoveFeet: MovementFeet,
-      spacingFeet: MovementFeet,
-      expiresAt: DancingLightsExpirationSchema,
-    }),
-  );
+const DancingLightsCombinedCastInvocationSchema = spellProcedureExecutionSchema(
+  Schema.Struct({
+    access: ClassCantripSpellAccessSchema,
+    resource: NoSpellInvocationResourceSchema,
+    procedure: Schema.Literal("dancingLightsCombinedCast"),
+    spellRuleFacts: SpellRuleExecutionFactsSchema,
+    actionCost: Schema.Literal("magicAction"),
+    form: Schema.Literal("combinedMediumForm"),
+    dimRadiusFeet: MovementFeet,
+    rangeFeet: MovementFeet,
+    maxMoveFeet: MovementFeet,
+    spacingFeet: MovementFeet,
+    expiresAt: DancingLightsExpirationSchema,
+  }),
+);
 
 const DancingLightsRepositionInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({

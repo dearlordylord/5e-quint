@@ -51,7 +51,10 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
-import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
+import {
+  SpellRuleExecutionFactsSchema,
+  spellProcedureExecutionSchema,
+} from "./profile.ts";
 
 type CloudkillAreaHazardSpellInvocation = Extract<
   SupportedSpellInvocation,
@@ -240,7 +243,6 @@ function discoverCloudkillAreaHazardCastAct(
     },
   ];
 }
-
 
 function resolveCloudkillAreaHazard(
   input: CloudkillAreaHazardResolveInput,

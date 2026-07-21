@@ -276,8 +276,7 @@ function grapplerPunchAndGrabEligibilityForHit(input: {
   readonly targetSpatialFacts: readonly BattleTargetSpatialFact[];
 }): GrapplerPunchAndGrabEligibility | null {
   const attacker = input.state.combatants.get(input.attackerId);
-  const supportsPunchAndGrab =
-    combatantHasGrapplerSupportProfile(attacker);
+  const supportsPunchAndGrab = combatantHasGrapplerSupportProfile(attacker);
   if (
     input.subject.tag !== "action" ||
     input.subject.action !== "attack" ||
@@ -2798,12 +2797,13 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
     return { tag: "result", result: remarkableAthleteMovement.result };
   }
   cleaveAttackRolledState = remarkableAthleteMovement.state;
-  const cleaveDamageDieFloorChoiceUnitIds = eligibleAttackDamageDieFloorProcedureRefs(
-    cleaveAttackRolledState,
-    input.subject.actorId,
-    cleaveAttack,
-    input.subject.procedureRef,
-  );
+  const cleaveDamageDieFloorChoiceUnitIds =
+    eligibleAttackDamageDieFloorProcedureRefs(
+      cleaveAttackRolledState,
+      input.subject.actorId,
+      cleaveAttack,
+      input.subject.procedureRef,
+    );
   if (!cleaveHit) {
     return input.fillSet.weaponMasteryCleaveDamageRoll === undefined
       ? {

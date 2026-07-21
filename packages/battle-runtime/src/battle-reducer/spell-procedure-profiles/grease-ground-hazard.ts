@@ -38,7 +38,10 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
-import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
+import {
+  SpellRuleExecutionFactsSchema,
+  spellProcedureExecutionSchema,
+} from "./profile.ts";
 import {
   DcSourceSchema,
   PreparedSpellAccessSchema,
@@ -303,7 +306,6 @@ function greaseGroundHazardMetamagicInitialHoles(
   }
   return holes;
 }
-
 
 function resolveGreaseGroundHazard(
   input: GreaseGroundHazardResolveInput,

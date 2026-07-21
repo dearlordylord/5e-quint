@@ -168,9 +168,7 @@ import {
   spellHasAvailableSpend,
   spellInvocationIsSpellcasting,
 } from "./spell-turn-resources.ts";
-import {
-  spellAttackKindForRedirect,
-} from "./spells-profiles.ts";
+import { spellAttackKindForRedirect } from "./spells-profiles.ts";
 import {
   recordAttackRollMissToHitReplacementUsed,
   selectedAttackRollMissToHitReplacement,
@@ -338,9 +336,8 @@ function spellActLane(input: SpellActInternalInput): SpellActLane {
 
 type SpellProcedureActionCostOverride = "magicAction" | "bonusAction";
 
-type SpellProcedureResolveInputFor<
-  Procedure extends RegisteredSpellProcedure,
-> = Parameters<RegisteredSpellProcedureProfiles[Procedure]["resolve"]>[0];
+type SpellProcedureResolveInputFor<Procedure extends RegisteredSpellProcedure> =
+  Parameters<RegisteredSpellProcedureProfiles[Procedure]["resolve"]>[0];
 
 type SpellProcedureResolveDispatchInput = {
   readonly [Procedure in RegisteredSpellProcedure]: {
@@ -706,8 +703,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       rollModifier: (value) =>
@@ -722,8 +718,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       makeStable: (value) =>
@@ -738,8 +733,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       heldLightHurl: (value) =>
@@ -754,8 +748,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       objectLight: (value) =>
@@ -770,8 +763,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       thaumaturgyBoomingVoice: (value) =>
@@ -786,8 +778,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       blurAttackRollDefense: (value) =>
@@ -802,8 +793,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       seeInvisibleObserverSight: (value) =>
@@ -818,8 +808,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       mirrorImageHitInterception: (value) =>
@@ -834,8 +823,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       persistentArmorEffect: (value) =>
@@ -850,8 +838,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       wardingBond: (value) =>
@@ -866,8 +853,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       creatureTypeProtection: (value) =>
@@ -882,8 +868,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       conditionRemovalProtection: (value) =>
@@ -898,8 +883,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       chosenDamageResistance: (value) =>
@@ -914,8 +898,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       hastePositive: (value) =>
@@ -930,8 +913,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       directCondition: (value) =>
@@ -946,8 +928,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       conditionImmunityAndTurnStartTemporaryHitPoints: (value) =>
@@ -962,8 +943,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       creatureSizeIncrease: (value) =>
@@ -978,8 +958,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       creatureSizeDecrease: (value) =>
@@ -994,8 +973,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       levitatedCreature: (value) =>
@@ -1010,8 +988,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       scalarBuff: (value) =>
@@ -1026,8 +1003,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       directHitPointRestoration: (value) =>
@@ -1042,8 +1018,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       selfTransformationMode: (value) =>
@@ -1058,8 +1033,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       spellHostedWeaponAttack: (value) =>
@@ -1074,8 +1048,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       saveGatedDamage: (value) =>
@@ -1090,8 +1063,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       saveGatedCondition: (value) =>
@@ -1106,8 +1078,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       saveGatedConditionImmunity: (value) =>
@@ -1122,8 +1093,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       saveGatedAttackRollAdvantage: (value) =>
@@ -1138,8 +1108,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       abilityD20TestRollModeSaveGate: (value) =>
@@ -1154,8 +1123,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       sleepTargetAdmission: (value) =>
@@ -1170,8 +1138,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       hideousLaughter: (value) =>
@@ -1186,8 +1153,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       hypnoticPattern: (value) =>
@@ -1202,8 +1168,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       slowActivePenalties: (value) =>
@@ -1218,8 +1183,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       greaseGroundHazard: (value) =>
@@ -1234,8 +1198,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       gustOfWindLine: (value) =>
@@ -1250,8 +1213,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       flamingSphere: (value) =>
@@ -1266,8 +1228,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       moonbeam: (value) =>
@@ -1282,8 +1243,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       fogCloudObscurement: (value) =>
@@ -1298,8 +1258,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       spikeGrowthMovementHazard: (value) =>
@@ -1314,8 +1273,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       webRestraintHazard: (value) =>
@@ -1330,8 +1288,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       sleetStormAreaHazard: (value) =>
@@ -1346,8 +1303,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       insectPlagueAreaHazard: (value) =>
@@ -1362,8 +1318,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       cloudkillAreaHazard: (value) =>
@@ -1378,8 +1333,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       magicalDarknessPointOrigin: (value) =>
@@ -1394,8 +1348,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       antimagicFieldOngoingSpellSuppression: (value) =>
@@ -1410,8 +1363,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       command: (value) =>
@@ -1426,8 +1378,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       spellAttackDamage: (value) =>
@@ -1442,8 +1393,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       spellAttackSequence: (value) =>
@@ -1458,8 +1408,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       spellCreatedHeldObjectAttack: (value) =>
@@ -1474,8 +1423,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       objectContactDamage: (value) =>
@@ -1490,8 +1438,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       ongoingSpellEnd: (value) =>
@@ -1506,8 +1453,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       attackBurstSaveDamage: (value) =>
@@ -1522,8 +1468,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       repeatedDamageAllocation: (value) =>
@@ -1538,8 +1483,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       dancingLightsSeparateCast: (value) =>
@@ -1554,8 +1498,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       dancingLightsCombinedCast: (value) =>
@@ -1570,8 +1513,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
     }),
@@ -1600,8 +1542,7 @@ function bonusActionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       heldLight: (value) =>
@@ -1616,8 +1557,7 @@ function bonusActionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       magicWeaponEnhancement: (value) =>
@@ -1632,8 +1572,7 @@ function bonusActionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       directCondition: (value) =>
@@ -1648,8 +1587,7 @@ function bonusActionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       directConditionRemoval: (value) =>
@@ -1664,8 +1602,7 @@ function bonusActionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       scalarBuff: (value) =>
@@ -1680,8 +1617,7 @@ function bonusActionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       directHitPointRestoration: (value) =>
@@ -1696,8 +1632,7 @@ function bonusActionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       jumpMovementReplacement: (value) =>
@@ -1712,8 +1647,7 @@ function bonusActionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       selfTeleport: (value) =>
@@ -1728,8 +1662,7 @@ function bonusActionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       dragonsBreathInitial: (value) =>
@@ -1744,8 +1677,7 @@ function bonusActionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       sanctuaryTargetingInterdiction: (value) =>
@@ -1760,8 +1692,7 @@ function bonusActionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       markedDamageRider: (value) =>
@@ -1776,8 +1707,7 @@ function bonusActionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       weaponDamageRider: (value) =>
@@ -1792,8 +1722,7 @@ function bonusActionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       weaponAttackOverride: (value) =>
@@ -1808,8 +1737,7 @@ function bonusActionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       saveGatedDamage: (value) =>
@@ -1824,8 +1752,7 @@ function bonusActionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       saveGatedCondition: (value) =>
@@ -1840,8 +1767,7 @@ function bonusActionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       saveGatedConditionImmunity: (value) =>
@@ -1856,8 +1782,7 @@ function bonusActionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       spellAttackDamage: (value) =>
@@ -1872,8 +1797,7 @@ function bonusActionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       spellAttackSequence: (value) =>
@@ -1888,8 +1812,7 @@ function bonusActionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       spellCreatedHeldObject: (value) =>
@@ -1904,8 +1827,7 @@ function bonusActionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       spellCreatedHeldObjectReEvoke: (value) =>
@@ -1920,8 +1842,7 @@ function bonusActionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       spiritualWeaponAttackProxy: (value) =>
@@ -1936,8 +1857,7 @@ function bonusActionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       spiritualWeaponRepeatAttack: (value) =>
@@ -1952,8 +1872,7 @@ function bonusActionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       objectContactDamageRepeat: (value) =>
@@ -1968,8 +1887,7 @@ function bonusActionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
       dancingLightsReposition: (value) =>
@@ -1984,8 +1902,7 @@ function bonusActionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.metamagicApplications === undefined
             ? {}
             : {
-                metamagicApplications:
-                  resolutionOptions.metamagicApplications,
+                metamagicApplications: resolutionOptions.metamagicApplications,
               }),
         }),
     }),
@@ -2009,9 +1926,9 @@ function actionSpellUsesSharedSpellAttackDamageBody(
   );
 }
 
-function isSupportedDamageSpellInvocation<I extends BattleExecutableSpellInvocation>(
-  invocation: I,
-): invocation is I & RuntimeDamageSpellProcedure {
+function isSupportedDamageSpellInvocation<
+  I extends BattleExecutableSpellInvocation,
+>(invocation: I): invocation is I & RuntimeDamageSpellProcedure {
   return (
     invocation.procedure === "heldLightHurl" ||
     invocation.procedure === "spellCreatedHeldObjectAttack" ||
@@ -2087,7 +2004,8 @@ function effectiveSpellAttackRoll(
               activatedOngoingFeatureProcedureRef:
                 naturalOneEffectiveRoll.activatedOngoingFeatureProcedureRef,
             }),
-        ...(naturalOneEffectiveRoll.missToHitReplacementProcedureRef === undefined
+        ...(naturalOneEffectiveRoll.missToHitReplacementProcedureRef ===
+        undefined
           ? {}
           : {
               missToHitReplacementProcedureRef:
@@ -2504,10 +2422,7 @@ function resolveSpellActInternal(
   if (slowSomaticSpellFailure.tag !== "continue") {
     return slowSomaticSpellFailure;
   }
-  if (
-    lane.tag === "action" &&
-    lane.input.subject.mode.tag === "ready"
-  ) {
+  if (lane.tag === "action" && lane.input.subject.mode.tag === "ready") {
     if (!isReadiedSpellInvocation(invocation)) {
       return invalidResult(
         input.state,
@@ -4379,7 +4294,8 @@ function resolveSpellAttackDamageObjectTarget(input: {
     );
   }
   if (
-    input.fillSet.attackRoll.activatedOngoingFeatureProcedureRef !== undefined ||
+    input.fillSet.attackRoll.activatedOngoingFeatureProcedureRef !==
+      undefined ||
     input.fillSet.attackRoll.missToHitReplacementProcedureRef !== undefined
   ) {
     return invalidResult(
@@ -4602,7 +4518,11 @@ export function resolveBonusActionSpellAct(
   const actor = input.state.combatants.get(subject.actorId);
   let invocation =
     actor?.origin.kind === "character"
-      ? supportedBonusActionSpellInvocationForSubject(input.state, actor, subject)
+      ? supportedBonusActionSpellInvocationForSubject(
+          input.state,
+          actor,
+          subject,
+        )
       : undefined;
   if (actor?.origin.kind === "character" && invocation == null) {
     invocation = antimagicSuppressedInvocationForStaleSubject(
@@ -4883,10 +4803,7 @@ export function resolveBonusActionSpellAct(
     return invalidResult(input.state, "invalidFill", fillSet.message);
   }
   if (
-    !invocationProcedureIsIn(
-      invocation,
-      BONUS_ACTION_SPELL_PROFILE_PROCEDURES,
-    )
+    !invocationProcedureIsIn(invocation, BONUS_ACTION_SPELL_PROFILE_PROCEDURES)
   ) {
     return invalidResult(
       input.state,

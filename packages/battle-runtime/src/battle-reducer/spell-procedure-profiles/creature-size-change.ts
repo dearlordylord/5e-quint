@@ -72,7 +72,10 @@ import type {
   SpellProcedureStoredGlyphReleaseOptions,
 } from "./profile.ts";
 import { Schema } from "effect";
-import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
+import {
+  SpellRuleExecutionFactsSchema,
+  spellProcedureExecutionSchema,
+} from "./profile.ts";
 import {
   DcSourceSchema,
   MovementFeet,
@@ -134,25 +137,24 @@ function admitCreatureSizeChangeForProcedure<
   if (projections.length === 0) {
     return [];
   }
-  return ctx.actor.origin.spellcasting.spellSlots.flatMap(
-    (slot) =>
-      Number(slot.spellLevel) < spell.mechanics.level
-        ? []
-        : projections
-            .filter(
-              (
-                projection,
-              ): projection is typeof projection & {
-                readonly procedure: Procedure;
-              } => projection.procedure === procedure,
-            )
-            .map((projection) => ({
-              access: { tag: "prepared" },
-              resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
-              spell,
-              actionCost: "magicAction",
-              ...projection,
-            })),
+  return ctx.actor.origin.spellcasting.spellSlots.flatMap((slot) =>
+    Number(slot.spellLevel) < spell.mechanics.level
+      ? []
+      : projections
+          .filter(
+            (
+              projection,
+            ): projection is typeof projection & {
+              readonly procedure: Procedure;
+            } => projection.procedure === procedure,
+          )
+          .map((projection) => ({
+            access: { tag: "prepared" },
+            resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+            spell,
+            actionCost: "magicAction",
+            ...projection,
+          })),
   );
 }
 

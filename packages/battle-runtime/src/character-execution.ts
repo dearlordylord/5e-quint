@@ -2280,10 +2280,7 @@ export function characterExecutionWithSpellInvocations(
     if (
       (binding?.procedure.kind !== "spellInvocation" &&
         binding?.procedure.kind !== "unavailableSpellInvocation") ||
-      !spellInvocationMatchesExecution(
-        invocation,
-        binding.procedure.execution,
-      )
+      !spellInvocationMatchesExecution(invocation, binding.procedure.execution)
     ) {
       return;
     }
@@ -4801,10 +4798,7 @@ export function characterSpellProcedureRef(
   return execution.procedureBindings.find(
     (binding) =>
       binding.procedure.kind === "spellInvocation" &&
-      spellInvocationMatchesExecution(
-        invocation,
-        binding.procedure.execution,
-      ),
+      spellInvocationMatchesExecution(invocation, binding.procedure.execution),
   )?.procedureRef;
 }
 
@@ -4944,9 +4938,7 @@ export function spellInvocationMatchesExecution(
   execution: SpellProcedureExecution,
 ): boolean {
   const projected =
-    "spell" in invocation
-      ? spellProcedureExecution(invocation)
-      : invocation;
+    "spell" in invocation ? spellProcedureExecution(invocation) : invocation;
   return (
     projected !== undefined && sameSpellProcedureExecution(projected, execution)
   );

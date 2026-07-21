@@ -208,10 +208,11 @@ function supportedSpellAttackMissDamage(
 function supportedSpellAttackLaterDamage(
   effects: readonly SpellAttackHitEffect[],
 ): {
-  readonly laterDamageEffect: (Extract<
-    SpellAttackHitEffect,
-    { readonly kind: "damage" }
-  > & { readonly damageType: DamageType }) | null;
+  readonly laterDamageEffect:
+    | (Extract<SpellAttackHitEffect, { readonly kind: "damage" }> & {
+        readonly damageType: DamageType;
+      })
+    | null;
   readonly postDamageEffects: readonly SpellAttackHitEffect[];
 } | null {
   const laterDamageEffects = effects.filter(
@@ -334,41 +335,43 @@ export function supportedPreparedSpellAttackSequenceProfile(
   if (scorchingRayTargetingIsCanonical(phase.attachment) !== true) {
     return [];
   }
-  return spellSlots.flatMap((slot): readonly SpellAttackSequenceInvocation[] => {
-    if (Number(slot.spellLevel) < spell.mechanics.level) {
-      return [];
-    }
-    const targeting = spellAttackSequenceSlotTargeting(
-      phase.attachment,
-      slot.spellLevel,
-    );
-    const damageExpr = supportedDamageAmountExpr({
-      amount: damageEffect.amount,
-      spellLevel: spell.mechanics.level,
-      slotLevel: slot.spellLevel,
-    });
-    if (targeting === null || damageExpr === null) {
-      return [];
-    }
-    return [
-      {
-        access: { tag: "prepared" },
-        resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
-        procedure: "spellAttackSequence",
-        spell,
-        targeting,
-        damage: {
-          expr: damageExpr,
-          damageType: SCORCHING_RAY_DAMAGE_TYPE,
+  return spellSlots.flatMap(
+    (slot): readonly SpellAttackSequenceInvocation[] => {
+      if (Number(slot.spellLevel) < spell.mechanics.level) {
+        return [];
+      }
+      const targeting = spellAttackSequenceSlotTargeting(
+        phase.attachment,
+        slot.spellLevel,
+      );
+      const damageExpr = supportedDamageAmountExpr({
+        amount: damageEffect.amount,
+        spellLevel: spell.mechanics.level,
+        slotLevel: slot.spellLevel,
+      });
+      if (targeting === null || damageExpr === null) {
+        return [];
+      }
+      return [
+        {
+          access: { tag: "prepared" },
+          resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+          procedure: "spellAttackSequence",
+          spell,
+          targeting,
+          damage: {
+            expr: damageExpr,
+            damageType: SCORCHING_RAY_DAMAGE_TYPE,
+          },
+          rangeFeet: movementFeet(SCORCHING_RAY_RANGE_FEET),
+          attackKind: SCORCHING_RAY_ATTACK_KIND,
+          attackBonus: attackBonus(
+            Number(spellcastingAbilityModifier) + Number(proficiencyBonus),
+          ),
         },
-        rangeFeet: movementFeet(SCORCHING_RAY_RANGE_FEET),
-        attackKind: SCORCHING_RAY_ATTACK_KIND,
-        attackBonus: attackBonus(
-          Number(spellcastingAbilityModifier) + Number(proficiencyBonus),
-        ),
-      },
-    ];
-  });
+      ];
+    },
+  );
 }
 
 export function supportedPreparedChainedSpellAttackDamageProfile(
@@ -662,9 +665,8 @@ export function supportedSpellAttackDamageProfile(
   if (missDamage === null) {
     return [];
   }
-  const laterDamageProjection = supportedSpellAttackLaterDamage(
-    postDamageEffects,
-  );
+  const laterDamageProjection =
+    supportedSpellAttackLaterDamage(postDamageEffects);
   if (laterDamageProjection === null) {
     return [];
   }

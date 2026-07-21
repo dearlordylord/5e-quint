@@ -1161,7 +1161,8 @@ function resolveSpellAttackSequenceObjectPart(input: {
     );
   }
   if (
-    input.partFill.attackRoll.activatedOngoingFeatureProcedureRef !== undefined ||
+    input.partFill.attackRoll.activatedOngoingFeatureProcedureRef !==
+      undefined ||
     input.partFill.attackRoll.missToHitReplacementProcedureRef !== undefined
   ) {
     return invalidResult(

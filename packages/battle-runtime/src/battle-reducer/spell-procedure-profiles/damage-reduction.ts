@@ -51,7 +51,10 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
-import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
+import {
+  SpellRuleExecutionFactsSchema,
+  spellProcedureExecutionSchema,
+} from "./profile.ts";
 import {
   ClassCantripSpellAccessSchema,
   MovementFeet,
@@ -211,7 +214,6 @@ function discoverDamageReductionCastAct(
     },
   ];
 }
-
 
 function resolveDamageReduction(
   input: SpellProcedureProfileResolveInput<DamageReductionSpellInvocation>,

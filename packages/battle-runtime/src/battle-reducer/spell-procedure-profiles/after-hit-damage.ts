@@ -1,5 +1,8 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-after-hit-damage
-import { CreatureTypeSchema, DiceExprSchema } from "@dnd/surface/surface/schema";
+import {
+  CreatureTypeSchema,
+  DiceExprSchema,
+} from "@dnd/surface/surface/schema";
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS
 //
 // The afterHitDamage Spell Procedure Profile: a Bonus Action spell cast
@@ -33,9 +36,7 @@ import type {
 import { Either } from "effect";
 
 import type { BattleInterruptTrigger } from "../../battle-interrupt-triggers.ts";
-import {
-  type BattleSubject,
-} from "../../battle-subjects.ts";
+import { type BattleSubject } from "../../battle-subjects.ts";
 import {
   snapshotBattle,
   type AfterHitDamageSpellInvocation,
@@ -81,7 +82,10 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
-import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
+import {
+  SpellRuleExecutionFactsSchema,
+  spellProcedureExecutionSchema,
+} from "./profile.ts";
 import {
   ClassFeatureFreeCastExecutionResourceSchema,
   DamageTypeSchema,
@@ -144,10 +148,11 @@ function admitAfterHitDamage(
                 candidate.resourcePoolRef === owner.resourcePoolRef,
             );
             return resource !== undefined &&
-            characterResourceIsClassFeatureFreeCastForSpell(
-              owner,
-              spell.id,
-            ) && resourceHasUsesRemaining(resource)
+              characterResourceIsClassFeatureFreeCastForSpell(
+                owner,
+                spell.id,
+              ) &&
+              resourceHasUsesRemaining(resource)
               ? [
                   {
                     access: { tag: "prepared" },
@@ -271,7 +276,6 @@ function sameCreatureTypeSet(
 function discoverAfterHitDamageCastAct(): readonly AvailableBattleAct[] {
   return [];
 }
-
 
 function resolveAfterHitDamage(
   input: AfterHitDamageResolveInput,

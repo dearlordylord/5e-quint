@@ -49,7 +49,10 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
-import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
+import {
+  SpellRuleExecutionFactsSchema,
+  spellProcedureExecutionSchema,
+} from "./profile.ts";
 import {
   MovementFeet,
   PreparedSpellAccessSchema,
@@ -215,26 +218,25 @@ function resolveSpikeGrowthMovementHazard(
   });
 }
 
-const SpikeGrowthMovementHazardInvocationSchema =
-  spellProcedureExecutionSchema(
-    Schema.Struct({
-      access: PreparedSpellAccessSchema,
-      resource: SpellSlotInvocationResourceSchema,
-      procedure: Schema.Literal("spikeGrowthMovementHazard"),
-      spellRuleFacts: SpellRuleExecutionFactsSchema,
-      targeting: Schema.Struct({
-        kind: Schema.Literal("pointOriginSphere"),
-        radiusFeet: MovementFeet,
-      }),
-      durationTicks: ElapsedTimeTicksSchema,
-      rangeFeet: MovementFeet,
-      damage: Schema.Struct({
-        expr: DiceExprSchema,
-        damageType: Schema.Literal("piercing"),
-      }),
-      damagePerFeet: MovementFeet,
+const SpikeGrowthMovementHazardInvocationSchema = spellProcedureExecutionSchema(
+  Schema.Struct({
+    access: PreparedSpellAccessSchema,
+    resource: SpellSlotInvocationResourceSchema,
+    procedure: Schema.Literal("spikeGrowthMovementHazard"),
+    spellRuleFacts: SpellRuleExecutionFactsSchema,
+    targeting: Schema.Struct({
+      kind: Schema.Literal("pointOriginSphere"),
+      radiusFeet: MovementFeet,
     }),
-  );
+    durationTicks: ElapsedTimeTicksSchema,
+    rangeFeet: MovementFeet,
+    damage: Schema.Struct({
+      expr: DiceExprSchema,
+      damageType: Schema.Literal("piercing"),
+    }),
+    damagePerFeet: MovementFeet,
+  }),
+);
 export const spikeGrowthMovementHazardProfile = {
   procedure: "spikeGrowthMovementHazard",
   executionSchema: SpikeGrowthMovementHazardInvocationSchema,

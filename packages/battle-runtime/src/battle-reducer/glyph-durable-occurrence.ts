@@ -114,10 +114,7 @@ import {
   savingThrowRollModeProjections,
 } from "./spells-damage-fills.ts";
 import { sameStringSet } from "./spells-profile-shared.ts";
-import {
-  spellTargetHole,
-  spellTargetListHole,
-} from "./spells-holes-fills.ts";
+import { spellTargetHole, spellTargetListHole } from "./spells-holes-fills.ts";
 import { resolveSpellRelease } from "./spells-resolve.ts";
 import { characterStoredSpellProcedureRef } from "../character-execution.ts";
 import { spellFillSet } from "./spells-resolve-fill-set.ts";
@@ -1371,7 +1368,9 @@ function glyphDurableOccurrenceReleaseFromCompletedInscription(input: {
         tag: "valid",
         release: {
           kind: "spellGlyph",
-          storedProcedure: spellProcedureExecution(storedSpell.storedInvocation),
+          storedProcedure: spellProcedureExecution(
+            storedSpell.storedInvocation,
+          ),
         },
       }
     : storedSpell;
@@ -1443,9 +1442,11 @@ function glyphStoredSpellInvocationValidation(input: {
 function glyphStoredSpellInvocationRequiresFullDurationOwner(
   invocation: GlyphStoredSpellCandidateFacts,
 ): boolean {
-  return ("spellRuleFacts" in invocation
-    ? invocation.spellRuleFacts.duration.kind
-    : invocation.spell.mechanics.duration.kind) === "concentration";
+  return (
+    ("spellRuleFacts" in invocation
+      ? invocation.spellRuleFacts.duration.kind
+      : invocation.spell.mechanics.duration.kind) === "concentration"
+  );
 }
 
 function glyphStoredSpellInvocationSupportsFullDurationOwner(

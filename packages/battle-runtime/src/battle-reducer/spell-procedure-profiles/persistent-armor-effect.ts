@@ -39,9 +39,7 @@ import {
   type SupportedSpellInvocation,
   type ActionSpellBattleResolutionInput,
 } from "../../battle-reducer.ts";
-import {
-  persistentArmorEffectSpellProfileForSpell,
-} from "../../procedure-admission/persistent-armor-effect-facts.ts";
+import { persistentArmorEffectSpellProfileForSpell } from "../../procedure-admission/persistent-armor-effect-facts.ts";
 import type { CharacterBattleInvocationSpellAccessState } from "../../character-battle-resources.ts";
 import { CombatantId } from "../../identity.ts";
 import { combatantWearingArmor } from "../creature-state-leaves.ts";
@@ -55,7 +53,10 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
-import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
+import {
+  SpellRuleExecutionFactsSchema,
+  spellProcedureExecutionSchema,
+} from "./profile.ts";
 import {
   ArmorOfShadowsSpellAccessSchema,
   MovementFeet,
@@ -75,7 +76,9 @@ const PersistentArmorEffectSchema = Schema.Union(
     sourceCombatantId: CombatantId,
     base: Schema.Number,
     ability: Schema.Literal("dex"),
-    earlyEnds: Schema.Tuple(Schema.Struct({ kind: Schema.Literal("targetDonsArmor") })),
+    earlyEnds: Schema.Tuple(
+      Schema.Struct({ kind: Schema.Literal("targetDonsArmor") }),
+    ),
     expiresAt: DurationBattleActiveEffectExpirationSchema,
   }),
   Schema.Struct({

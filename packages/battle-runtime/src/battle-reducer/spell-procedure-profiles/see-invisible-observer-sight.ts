@@ -47,7 +47,10 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
-import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
+import {
+  SpellRuleExecutionFactsSchema,
+  spellProcedureExecutionSchema,
+} from "./profile.ts";
 import {
   PreparedSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
@@ -256,17 +259,16 @@ function resolveSeeInvisibleObserverSight(
       };
 }
 
-const SeeInvisibleObserverSightInvocationSchema =
-  spellProcedureExecutionSchema(
-    Schema.Struct({
-      access: PreparedSpellAccessSchema,
-      resource: SpellSlotInvocationResourceSchema,
-      procedure: Schema.Literal("seeInvisibleObserverSight"),
-      spellRuleFacts: SpellRuleExecutionFactsSchema,
-      actionCost: Schema.Literal("magicAction"),
-      activeEffect: SeeInvisibleAndEtherealEffectSchema,
-    }),
-  );
+const SeeInvisibleObserverSightInvocationSchema = spellProcedureExecutionSchema(
+  Schema.Struct({
+    access: PreparedSpellAccessSchema,
+    resource: SpellSlotInvocationResourceSchema,
+    procedure: Schema.Literal("seeInvisibleObserverSight"),
+    spellRuleFacts: SpellRuleExecutionFactsSchema,
+    actionCost: Schema.Literal("magicAction"),
+    activeEffect: SeeInvisibleAndEtherealEffectSchema,
+  }),
+);
 export const seeInvisibleObserverSightProfile: SpellProcedureProfile<
   "seeInvisibleObserverSight",
   SeeInvisibleObserverSightSpellInvocation

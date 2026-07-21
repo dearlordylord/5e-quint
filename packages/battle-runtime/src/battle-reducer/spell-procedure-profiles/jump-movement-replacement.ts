@@ -14,9 +14,7 @@
 //     failed DC 10 Dexterity (Acrobatics) check.
 //   - UBIQUITOUS_LANGUAGE.md: Speed is capacity; Movement is consumption.
 
-import {
-  elapsedTimeTicksFromTimeSpanDuration,
-} from "@dnd/shared-algebras/elapsed-time-algebra";
+import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet, type SpellSlotLevel } from "@dnd/shared/types";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
@@ -51,7 +49,10 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
-import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
+import {
+  SpellRuleExecutionFactsSchema,
+  spellProcedureExecutionSchema,
+} from "./profile.ts";
 import {
   MovementFeet,
   PreparedSpellAccessSchema,
@@ -213,7 +214,6 @@ function discoverJumpMovementReplacementCastAct(
         },
       ];
 }
-
 
 function resolveJumpMovementReplacement(
   input: JumpMovementReplacementResolveInput,
