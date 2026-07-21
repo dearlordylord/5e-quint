@@ -7,7 +7,10 @@ import {
 } from "./battle-act-composition.ts";
 import { battleRuntimeContextFromCharacterAdmission } from "./battle-runtime-context.ts";
 import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime-test-support.ts";
-import { ATTACK_TARGET_HOLE_ID } from "./battle-reducer/battle-runtime-protocol.ts";
+import {
+  ATTACK_TARGET_HOLE_ID,
+  SPELL_CAST_REACTION_FACTS_HOLE_ID,
+} from "./battle-reducer/battle-runtime-protocol.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV84H shillelagh
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31A divine_favor
@@ -184,6 +187,32 @@ describe("SRDINV84H deterministic Shillelagh weapon override admission", () => {
       message:
         "Weapon attack override spells do not use target, roll, damage, or save fills.",
     });
+  });
+
+  test("shillelagh accepts spell-cast Reaction facts", () => {
+    const session = spellBattle({
+      cantrips: [spellRecord(shillelaghUnitId)],
+      attack: zeroAbilityWeaponAttack("weapon_quarterstaff"),
+      casterClassLevels: [{ className: "druid", level: 1 }],
+    });
+    const act = bonusSpellAct({
+      session,
+      spellId: shillelaghUnitId,
+    });
+
+    expect(
+      resolveBattleSubject({
+        state: session.state,
+        subject: act.subject,
+        fills: [
+          {
+            kind: "targetSpatialFacts",
+            holeId: SPELL_CAST_REACTION_FACTS_HOLE_ID,
+            spatialFacts: [],
+          },
+        ],
+      }),
+    ).toMatchObject({ tag: "resolved" });
   });
 
   test("presentation rejects a context invocation that contradicts committed execution", () => {
