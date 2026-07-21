@@ -11083,20 +11083,20 @@
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt is a focused QNT owner extracted from a former catch-all production closure.",
+      "evidence": "Focused battle-runtime projection bridge from portable spell-attack semantics into the battle state shape.",
       "obligationIds": [
         "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-      "role": "semantic-core"
+      "role": "bridge"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt is a focused QNT owner extracted from a former catch-all production closure.",
+      "evidence": "Focused battle-runtime projection bridge from portable spell-attack-burst semantics into the battle state shape.",
       "obligationIds": [
         "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-      "role": "semantic-core"
+      "role": "bridge"
     },
     {
       "evidence": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt is a focused QNT owner extracted from a former catch-all production closure.",
@@ -11142,64 +11142,64 @@
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt is a focused QNT owner extracted from a former catch-all production closure.",
+      "evidence": "Focused battle-runtime projection bridge from portable chained-attack semantics into the battle state shape.",
       "obligationIds": [
         "BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE",
         "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-      "role": "semantic-core"
+      "role": "bridge"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt is a focused QNT owner extracted from a former catch-all production closure.",
+      "evidence": "Focused battle-runtime projection bridge from portable independent-attack-sequence semantics into the battle state shape.",
       "obligationIds": [
         "BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE",
         "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-      "role": "semantic-core"
+      "role": "bridge"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt is a focused QNT owner extracted from a former catch-all production closure.",
+      "evidence": "Focused battle-runtime projection bridge from portable spell-lifecycle semantics into the battle state shape.",
       "obligationIds": [
         "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
-      "role": "semantic-core"
+      "role": "bridge"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt is a focused QNT owner extracted from a former catch-all production closure.",
+      "evidence": "Focused battle-runtime projection bridge from portable restoration semantics into the battle state shape.",
       "obligationIds": [
         "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
-      "role": "semantic-core"
+      "role": "bridge"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt is a focused QNT owner extracted from a former catch-all production closure.",
+      "evidence": "Focused battle-runtime projection bridge from portable spell-rider semantics into the battle state shape.",
       "obligationIds": [
         "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
         "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
         "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-      "role": "semantic-core"
+      "role": "bridge"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt is a focused QNT owner extracted from a former catch-all production closure.",
+      "evidence": "Focused battle-runtime projection bridge from portable save-gated spell semantics into the battle state shape.",
       "obligationIds": [
         "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-      "role": "semantic-core"
+      "role": "bridge"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt is a focused QNT owner extracted from a former catch-all production closure.",
+      "evidence": "Focused battle-runtime projection bridge from portable scalar-buff semantics into the battle state shape.",
       "obligationIds": [
         "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
-      "role": "semantic-core"
+      "role": "bridge"
     },
     {
       "evidence": "packages/battle-runtime/battle-runtime-spell-slot-classification.qnt is a focused QNT owner extracted from a former catch-all production closure.",
@@ -12065,12 +12065,12 @@
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-      "role": "semantic-core"
+      "role": "bridge"
     },
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-      "role": "semantic-core"
+      "role": "bridge"
     },
     {
       "classification": "qnt-owner-role",
@@ -12116,37 +12116,37 @@
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-      "role": "semantic-core"
+      "role": "bridge"
     },
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-      "role": "semantic-core"
+      "role": "bridge"
     },
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
-      "role": "semantic-core"
+      "role": "bridge"
     },
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
-      "role": "semantic-core"
+      "role": "bridge"
     },
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-      "role": "semantic-core"
+      "role": "bridge"
     },
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-      "role": "semantic-core"
+      "role": "bridge"
     },
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
-      "role": "semantic-core"
+      "role": "bridge"
     },
     {
       "classification": "qnt-owner-role",
@@ -13912,15 +13912,7 @@
         "packages/shared-algebras/proofs/rule-core/spell-object-hit-point-damage-core.qnt",
         "packages/shared-algebras/proofs/rule-core/spell-sleep-repeat-save-lifecycle-core.qnt",
         "packages/shared-algebras/proofs/rule-core/spell-attack-burst-save-damage-core.qnt",
-        "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
-        "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
-        "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-        "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-        "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
-        "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-        "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-        "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-        "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt"
+        "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -15599,7 +15591,6 @@
         "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt",
         "packages/battle-runtime/battle-runtime-concentration.qnt",
         "packages/battle-runtime/battle-runtime-spell-slot-classification.qnt",
-        "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
         "packages/battle-runtime/battle-runtime-end-of-turn-rider-expiration.qnt"
       ],
       "status": "generation-subset-clean"
@@ -15635,8 +15626,7 @@
         "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt",
         "packages/battle-runtime/battle-runtime-weapon-attacks.qnt",
         "packages/battle-runtime/battle-runtime-light.qnt",
-        "packages/battle-runtime/battle-runtime-spell-slot-classification.qnt",
-        "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt"
+        "packages/battle-runtime/battle-runtime-spell-slot-classification.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -15699,7 +15689,6 @@
       "proofOnly": [],
       "semanticCore": [
         "packages/battle-runtime/battle-runtime-chained-spell-attack.qnt",
-        "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
         "packages/battle-runtime/battle-runtime-spell-attack-facts.qnt",
         "packages/battle-runtime/battle-runtime-spell-cast-resources.qnt"
       ],
@@ -15732,7 +15721,6 @@
         "packages/battle-runtime/battle-runtime-spell-attack-procedure-tests.qnt"
       ],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
         "packages/battle-runtime/battle-runtime-spell-attack-independent-sequence.qnt",
         "packages/battle-runtime/battle-runtime-spell-cast-resources.qnt"
       ],

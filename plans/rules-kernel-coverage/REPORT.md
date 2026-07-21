@@ -674,20 +674,20 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/battle-runtime/battle-runtime-save-gated-damage-resolution.qnt` | semantic-core | `BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_DAMAGE_PENALTY` |
 | `packages/battle-runtime/battle-runtime-save-gated-facts.qnt` | semantic-core | `BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE` |
 | `packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt` | semantic-core | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` |
-| `packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt` | semantic-core | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` |
-| `packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt` | semantic-core | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` |
+| `packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt` | bridge | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` |
+| `packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt` | bridge | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` |
 | `packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt` | semantic-core | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` |
 | `packages/battle-runtime/battle-runtime-spell-attack-facts.qnt` | semantic-core | `BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE`, `BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE` |
 | `packages/battle-runtime/battle-runtime-spell-attack-independent-sequence.qnt` | semantic-core | `BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE` |
 | `packages/battle-runtime/battle-runtime-spell-attack-timed-effects.qnt` | semantic-core | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` |
 | `packages/battle-runtime/battle-runtime-spell-cast-resources.qnt` | semantic-core | `BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE`, `BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE`, `BATTLE.SPELL.REACTION_CASTING_TIME` |
-| `packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt` | semantic-core | `BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE`, `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` |
-| `packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt` | semantic-core | `BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE`, `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` |
-| `packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt` | semantic-core | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` |
-| `packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt` | semantic-core | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` |
-| `packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt` | semantic-core | `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS`, `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS` |
-| `packages/battle-runtime/battle-runtime-spell-save-bridge.qnt` | semantic-core | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` |
-| `packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt` | semantic-core | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` |
+| `packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt` | bridge | `BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE`, `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` |
+| `packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt` | bridge | `BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE`, `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` |
+| `packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt` | bridge | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` |
+| `packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt` | bridge | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` |
+| `packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt` | bridge | `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS`, `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS` |
+| `packages/battle-runtime/battle-runtime-spell-save-bridge.qnt` | bridge | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` |
+| `packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt` | bridge | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` |
 | `packages/battle-runtime/battle-runtime-spell-slot-classification.qnt` | semantic-core | `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS`, `BATTLE.SPELL.REACTION_CASTING_TIME`, `BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS` |
 | `packages/battle-runtime/battle-runtime-spellcasting-facts.qnt` | semantic-core | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` |
 | `packages/battle-runtime/battle-runtime-metamagic-options-and-quickened-restoration-tests.qnt` | proof-only | _none_ |
@@ -853,8 +853,8 @@ Rows here inventory `packages/**/*.qnt` files excluding `.mbt.qnt` drivers and `
 | `packages/battle-runtime/battle-runtime-sorcerous-burst-damage-choice.qnt` | exempt | leaf-type-vocabulary: Sorcerous Burst damage-choice vocabulary leaf shared by the model and spell bridge. |
 | `packages/battle-runtime/battle-runtime-spatial-effect-route-facts.qnt` | qnt-owner-role | bridge |
 | `packages/battle-runtime/battle-runtime-spatial-effect-route-surfaces.qnt` | qnt-owner-role | bridge |
-| `packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt` | qnt-owner-role | semantic-core |
-| `packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt` | qnt-owner-role | bridge |
+| `packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt` | qnt-owner-role | bridge |
 | `packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-spell-attack-facts.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-spell-attack-independent-sequence.qnt` | qnt-owner-role | semantic-core |
@@ -863,13 +863,13 @@ Rows here inventory `packages/**/*.qnt` files excluding `.mbt.qnt` drivers and `
 | `packages/battle-runtime/battle-runtime-spell-attack-timed-effects.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-spell-bridge-examples.qnt` | exempt | proof-only-example: Run-block examples for the spell bridge; registered spell rule-core and battle owners carry active coverage. |
 | `packages/battle-runtime/battle-runtime-spell-cast-resources.qnt` | qnt-owner-role | semantic-core |
-| `packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt` | qnt-owner-role | semantic-core |
-| `packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt` | qnt-owner-role | semantic-core |
-| `packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt` | qnt-owner-role | semantic-core |
-| `packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt` | qnt-owner-role | semantic-core |
-| `packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt` | qnt-owner-role | semantic-core |
-| `packages/battle-runtime/battle-runtime-spell-save-bridge.qnt` | qnt-owner-role | semantic-core |
-| `packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt` | qnt-owner-role | bridge |
+| `packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt` | qnt-owner-role | bridge |
+| `packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt` | qnt-owner-role | bridge |
+| `packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt` | qnt-owner-role | bridge |
+| `packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt` | qnt-owner-role | bridge |
+| `packages/battle-runtime/battle-runtime-spell-save-bridge.qnt` | qnt-owner-role | bridge |
+| `packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt` | qnt-owner-role | bridge |
 | `packages/battle-runtime/battle-runtime-spell-slot-classification.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-spellcasting-facts.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-spiritual-weapon.qnt` | qnt-owner-role | proof-only |

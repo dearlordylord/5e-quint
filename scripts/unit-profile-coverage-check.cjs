@@ -220,9 +220,10 @@ function validateLevelSevenRogueEvasionEvidence({
       "level-1-7 full-support report must classify rogue_evasion as supported-profile.",
     );
   }
-  const rulesKernelJoin = level17FullSupport.rulesKernelSupportedUnitJoin.units.find(
-    (unit) => unit.unitId === rogueEvasionUnitId,
-  );
+  const rulesKernelJoin =
+    level17FullSupport.rulesKernelSupportedUnitJoin.units.find(
+      (unit) => unit.unitId === rogueEvasionUnitId,
+    );
   if (
     rulesKernelJoin?.joinStatus !== "covered" ||
     !rulesKernelJoin.profiles.some(
@@ -308,6 +309,7 @@ function main() {
       taskClaims,
       rulesKernelObligations,
       rulesKernelProfileObligations,
+      rulesKernelQntOwnerRoles: rulesKernelCoverage.matrix.qntOwnerRoles,
     },
     {
       executableProfileKinds,
@@ -342,17 +344,20 @@ function main() {
   const level19FullSupport = buildLevel19FullSupport(matrix, srdUnitInventory, {
     root,
   });
-  const level110FullSupport = buildLevel110FullSupport(matrix, srdUnitInventory, {
-    root,
-  });
+  const level110FullSupport = buildLevel110FullSupport(
+    matrix,
+    srdUnitInventory,
+    {
+      root,
+    },
+  );
   const levelOneSevenMiningAudit =
     buildLevelOneSevenMiningAudit(srdUnitInventory);
   const levelOneEightMiningAudit =
     buildLevelOneEightMiningAudit(srdUnitInventory);
   const levelOneNineMiningAudit =
     buildLevelOneNineMiningAudit(srdUnitInventory);
-  const levelOneTenMiningAudit =
-    buildLevelOneTenMiningAudit(srdUnitInventory);
+  const levelOneTenMiningAudit = buildLevelOneTenMiningAudit(srdUnitInventory);
   const ultraGoldenGate = buildUltraGoldenGate({
     level1FullSupport,
     level12FullSupport,
@@ -383,29 +388,28 @@ function main() {
     level12FullSupport,
     rulesKernelMatrix: rulesKernelCoverage.matrix,
   });
-  const postBuildIssues =
-    validateSupportedUnitFeatureRulesKernelJoins(
-      matrix.rulesKernelProfileJoin.supportedUnitJoin,
-    ).concat(
-      validateUnitFeatureProfileScopedOwnerEvidence({
-        featureProcedureMbtEvidenceGate,
-        level12QntMbtJoin,
-        profiles,
-      }),
-      validateLevelSevenRogueEvasionEvidence({
-        level17FullSupport,
-        unitClaims,
-        unitEvidence,
-      }),
-      validateLevelEightSpellLevelFourCarryForward({
-        level17FullSupport,
-        level18FullSupport,
-      }),
-      validateLevelTenSpellLevelFiveCarryForward({
-        level19FullSupport,
-        level110FullSupport,
-      }),
-    );
+  const postBuildIssues = validateSupportedUnitFeatureRulesKernelJoins(
+    matrix.rulesKernelProfileJoin.supportedUnitJoin,
+  ).concat(
+    validateUnitFeatureProfileScopedOwnerEvidence({
+      featureProcedureMbtEvidenceGate,
+      level12QntMbtJoin,
+      profiles,
+    }),
+    validateLevelSevenRogueEvasionEvidence({
+      level17FullSupport,
+      unitClaims,
+      unitEvidence,
+    }),
+    validateLevelEightSpellLevelFourCarryForward({
+      level17FullSupport,
+      level18FullSupport,
+    }),
+    validateLevelTenSpellLevelFiveCarryForward({
+      level19FullSupport,
+      level110FullSupport,
+    }),
+  );
   if (postBuildIssues.length > 0) {
     for (const issue of postBuildIssues)
       console.error(`unit-profile-coverage: ${issue}`);

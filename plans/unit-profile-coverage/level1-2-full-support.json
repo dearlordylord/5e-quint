@@ -1404,8 +1404,8 @@
     },
     "rulesKernelCoveredProfileJoin": {
       "denominator": 72,
-      "numerator": 72,
-      "percent": "100%"
+      "numerator": 63,
+      "percent": "87.5%"
     },
     "rulesKernelProfileJoin": {
       "denominator": 72,
@@ -1414,8 +1414,8 @@
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 96,
-      "numerator": 96,
-      "percent": "100%"
+      "numerator": 79,
+      "percent": "82.3%"
     },
     "strictFinalSupport": {
       "denominator": 128,
@@ -5271,8 +5271,8 @@
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
         "denominator": 96,
-        "numerator": 96,
-        "percent": "100%"
+        "numerator": 79,
+        "percent": "82.3%"
       }
     },
     "units": [
@@ -5458,10 +5458,10 @@
         "unitId": "barbarian_unarmored_defense"
       },
       {
-        "joinStatus": "covered",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
-            "joinStatus": "covered",
+            "joinStatus": "mapped-open",
             "obligations": [
               {
                 "obligationId": "CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION",
@@ -5548,10 +5548,10 @@
         "unitId": "bard_bardic_inspiration"
       },
       {
-        "joinStatus": "covered",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
-            "joinStatus": "covered",
+            "joinStatus": "mapped-open",
             "obligations": [
               {
                 "obligationId": "CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION",
@@ -5757,10 +5757,10 @@
         "unitId": "chromatic_orb"
       },
       {
-        "joinStatus": "covered",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
-            "joinStatus": "covered",
+            "joinStatus": "mapped-open",
             "obligations": [
               {
                 "obligationId": "CREATION.CLASS_FEATURE_RESOURCE.PROJECTION",
@@ -5777,10 +5777,10 @@
         "unitId": "cleric_channel_divinity"
       },
       {
-        "joinStatus": "covered",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
-            "joinStatus": "covered",
+            "joinStatus": "mapped-open",
             "obligations": [
               {
                 "obligationId": "CREATION.CLASS_FEATURE_OPTION.PROJECTION",
@@ -6035,10 +6035,10 @@
         "unitId": "divine_smite"
       },
       {
-        "joinStatus": "covered",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
-            "joinStatus": "covered",
+            "joinStatus": "mapped-open",
             "obligations": [
               {
                 "obligationId": "CREATION.CLASS_FEATURE_OPTION.PROJECTION",
@@ -6246,10 +6246,10 @@
         "unitId": "fighter_action_surge"
       },
       {
-        "joinStatus": "covered",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
-            "joinStatus": "covered",
+            "joinStatus": "mapped-open",
             "obligations": [
               {
                 "obligationId": "CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION",
@@ -6263,7 +6263,7 @@
             "qntOwners": []
           },
           {
-            "joinStatus": "covered",
+            "joinStatus": "mapped-open",
             "obligations": [
               {
                 "obligationId": "CREATION.ADVANCEMENT.CLASS_FEATURE_REPLACEMENT",
@@ -6324,10 +6324,10 @@
         "unitId": "fighter_tactical_mind"
       },
       {
-        "joinStatus": "covered",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
-            "joinStatus": "covered",
+            "joinStatus": "mapped-open",
             "obligations": [
               {
                 "obligationId": "CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION",
@@ -7004,10 +7004,10 @@
         "unitId": "monk_unarmored_movement"
       },
       {
-        "joinStatus": "covered",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
-            "joinStatus": "covered",
+            "joinStatus": "mapped-open",
             "obligations": [
               {
                 "obligationId": "CREATION.CLASS_FEATURE_SOURCE_FACT.PROJECTION",
@@ -7061,10 +7061,10 @@
         "unitId": "monk_uncanny_metabolism"
       },
       {
-        "joinStatus": "covered",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
-            "joinStatus": "covered",
+            "joinStatus": "mapped-open",
             "obligations": [
               {
                 "obligationId": "CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION",
@@ -7078,7 +7078,7 @@
             "qntOwners": []
           },
           {
-            "joinStatus": "covered",
+            "joinStatus": "mapped-open",
             "obligations": [
               {
                 "obligationId": "CREATION.CLASS_FEATURE_OPTION.PROJECTION",
@@ -7142,10 +7142,10 @@
         "unitId": "paladin_paladins_smite"
       },
       {
-        "joinStatus": "covered",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
-            "joinStatus": "covered",
+            "joinStatus": "mapped-open",
             "obligations": [
               {
                 "obligationId": "CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION",
@@ -7296,10 +7296,10 @@
         "unitId": "protection_from_evil_and_good"
       },
       {
-        "joinStatus": "covered",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
-            "joinStatus": "covered",
+            "joinStatus": "mapped-open",
             "obligations": [
               {
                 "obligationId": "CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION",
@@ -7316,10 +7316,10 @@
         "unitId": "ranger_deft_explorer"
       },
       {
-        "joinStatus": "covered",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
-            "joinStatus": "covered",
+            "joinStatus": "mapped-open",
             "obligations": [
               {
                 "obligationId": "CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION",
@@ -7333,7 +7333,7 @@
             "qntOwners": []
           },
           {
-            "joinStatus": "covered",
+            "joinStatus": "mapped-open",
             "obligations": [
               {
                 "obligationId": "CREATION.CLASS_FEATURE_OPTION.PROJECTION",
@@ -7350,10 +7350,10 @@
         "unitId": "ranger_fighting_style"
       },
       {
-        "joinStatus": "covered",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
-            "joinStatus": "covered",
+            "joinStatus": "mapped-open",
             "obligations": [
               {
                 "obligationId": "CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION",
@@ -7533,10 +7533,10 @@
         "unitId": "rogue_cunning_action"
       },
       {
-        "joinStatus": "covered",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
-            "joinStatus": "covered",
+            "joinStatus": "mapped-open",
             "obligations": [
               {
                 "obligationId": "CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION",
@@ -7576,10 +7576,10 @@
         "unitId": "rogue_sneak_attack"
       },
       {
-        "joinStatus": "covered",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
-            "joinStatus": "covered",
+            "joinStatus": "mapped-open",
             "obligations": [
               {
                 "obligationId": "CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION",
@@ -8071,10 +8071,10 @@
         "unitId": "vicious_mockery"
       },
       {
-        "joinStatus": "covered",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
-            "joinStatus": "covered",
+            "joinStatus": "mapped-open",
             "obligations": [
               {
                 "obligationId": "CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE",
@@ -8088,7 +8088,7 @@
             "qntOwners": []
           },
           {
-            "joinStatus": "covered",
+            "joinStatus": "mapped-open",
             "obligations": [
               {
                 "obligationId": "CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION",
@@ -8168,10 +8168,10 @@
         "unitId": "wizard_ritual_adept"
       },
       {
-        "joinStatus": "covered",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
-            "joinStatus": "covered",
+            "joinStatus": "mapped-open",
             "obligations": [
               {
                 "obligationId": "CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION",

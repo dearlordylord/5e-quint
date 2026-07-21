@@ -14,11 +14,17 @@ module battleRuntimeQuickenedSpellGovernorMbt {
   // - .references/srd-5.2.1/Spells/Gaining-and-Casting.md#Casting Time:
   //   spells use the Casting Time entry and a turn can expend only one Spell
   //   Slot to cast a spell.
-  // - UBIQUITOUS_LANGUAGE.md: Magic Action, Bonus Action, Spell Slot,
-  //   Sorcery Points as a Pool, and Spend.
+  // - .references/srd-5.2.1/Spells/Descriptions-A-D.md#Counterspell:
+  //   Counterspell makes the caster roll a Constitution save; on failure the
+  //   spell has no effect and its Spell Slot is not expended.
+  // - .references/srd-5.2.1/Rules-Glossary.md#Concentration:
+  //   a creature maintains at most one Concentration effect at a time.
+  // - UBIQUITOUS_LANGUAGE.md: Magic Action, Bonus Action, Reaction, Saving
+  //   Throw, Spell Effect, Spell Slot, Concentration, Decline, Sorcery Points
+  //   as a Pool, and Spend.
   type WitnessHole = | WitnessProtocolHole
 
-  type QuickenedSpellGovernorScenarioOutcome = | Init | ResolvedQuickenedRestoration | ResolvedQuickenedSaveGatedCondition | ResolvedQuickenedSaveGatedConditionImmunity | ResolvedQuickenedDirectCondition | ResolvedQuickenedRollModifier | ResolvedQuickenedCreatureSizeChange | ResolvedAfterMagicActionSpent | RejectedUnaffordable | RejectedUnknownOption | RejectedUnsupportedSecondOption | RejectedOnePerSpell | RejectedPriorLevelOnePlusSpell
+  type QuickenedSpellGovernorScenarioOutcome = | Init | ResolvedQuickenedRestoration | ResolvedQuickenedSaveGatedCondition | ResolvedQuickenedSaveGatedConditionImmunity | ResolvedQuickenedDirectCondition | ResolvedQuickenedRollModifier | ResolvedQuickenedCreatureSizeChange | ResolvedAfterMagicActionSpent | CounteredQuickenedConcentration | CounteredQuickenedNonConcentrationWithPriorConcentration | ResolvedQuickenedConcentrationAfterCounterspellDeclined | ResolvedQuickenedConcentrationAfterCounterspellFailed | RejectedUnaffordable | RejectedUnknownOption | RejectedUnsupportedSecondOption | RejectedOnePerSpell | RejectedPriorLevelOnePlusSpell
 
 
   type QuickenedSpellGovernorWitnessState = {
@@ -36,6 +42,7 @@ module battleRuntimeQuickenedSpellGovernorMbt {
     qLevelOnePlusCastThisTurn: bool,
     qQuickenedLevelOnePlusCastThisTurn: bool,
     qSpellSlotActsAvailable: bool,
+    qCasterConcentrating: bool,
     qInvalidKind: str,
     qScenarioOutcome: QuickenedSpellGovernorScenarioOutcome,
     protocol: WitnessProtocol[WitnessHole],
@@ -57,6 +64,7 @@ module battleRuntimeQuickenedSpellGovernorMbt {
   pure def qLevelOnePlusCastThisTurn: bool = qState.qLevelOnePlusCastThisTurn
   pure def qQuickenedLevelOnePlusCastThisTurn: bool = qState.qQuickenedLevelOnePlusCastThisTurn
   pure def qSpellSlotActsAvailable: bool = qState.qSpellSlotActsAvailable
+  pure def qCasterConcentrating: bool = qState.qCasterConcentrating
   pure def qInvalidKind: str = qState.qInvalidKind
   pure def scenarioOutcome: QuickenedSpellGovernorScenarioOutcome = qState.qScenarioOutcome
 
@@ -106,6 +114,11 @@ module battleRuntimeQuickenedSpellGovernorMbt {
       qLevelOnePlusCastThisTurn: levelOnePlusCastThisTurn,
       qQuickenedLevelOnePlusCastThisTurn: quickenedLevelOnePlusCastThisTurn,
       qSpellSlotActsAvailable: spellSlotActsAvailable,
+      qCasterConcentrating:
+        calmEmotionsImmunity
+          or invisibilityActive
+          or blessActive
+          or lastResult == ResolvedQuickenedCreatureSizeChange,
       qInvalidKind: invalidKind,
       qScenarioOutcome: lastResult,
       protocol: witnessProtocolForProjection(Set(), lastResult),
@@ -256,6 +269,78 @@ module battleRuntimeQuickenedSpellGovernorMbt {
     ResolvedAfterMagicActionSpent,
   )
 
+  action doCounterQuickenedConcentration = recordQuickenedGovernorState(
+    false,
+    false,
+    false,
+    false,
+    false,
+    true,
+    false,
+    initialSorceryPoints - 2,
+    initialTargetHp,
+    false,
+    false,
+    true,
+    false,
+    "none",
+    CounteredQuickenedConcentration,
+  )
+
+  action doCounterQuickenedNonConcentrationWithPriorConcentration = recordQuickenedGovernorState(
+    false,
+    false,
+    false,
+    false,
+    true,
+    true,
+    false,
+    initialSorceryPoints - 2,
+    initialTargetHp,
+    false,
+    false,
+    true,
+    false,
+    "none",
+    CounteredQuickenedNonConcentrationWithPriorConcentration,
+  )
+
+  action doResolveQuickenedConcentrationAfterCounterspellDeclined = recordQuickenedGovernorState(
+    false,
+    false,
+    false,
+    false,
+    true,
+    true,
+    false,
+    initialSorceryPoints - 2,
+    initialTargetHp,
+    true,
+    true,
+    true,
+    false,
+    "none",
+    ResolvedQuickenedConcentrationAfterCounterspellDeclined,
+  )
+
+  action doResolveQuickenedConcentrationAfterCounterspellFailed = recordQuickenedGovernorState(
+    false,
+    false,
+    false,
+    false,
+    true,
+    true,
+    false,
+    initialSorceryPoints - 2,
+    initialTargetHp,
+    true,
+    true,
+    true,
+    false,
+    "none",
+    ResolvedQuickenedConcentrationAfterCounterspellFailed,
+  )
+
   action doRejectUnaffordable = recordQuickenedGovernorState(
     false,
     false,
@@ -354,6 +439,10 @@ module battleRuntimeQuickenedSpellGovernorMbt {
     doResolveQuickenedRollModifier,
     doResolveQuickenedCreatureSizeChange,
     doResolveQuickenedAfterMagicActionSpent,
+    doCounterQuickenedConcentration,
+    doCounterQuickenedNonConcentrationWithPriorConcentration,
+    doResolveQuickenedConcentrationAfterCounterspellDeclined,
+    doResolveQuickenedConcentrationAfterCounterspellFailed,
     doRejectUnaffordable,
     doRejectUnknownOption,
     doRejectUnsupportedSecondOption,

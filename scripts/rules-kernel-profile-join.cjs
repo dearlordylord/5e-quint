@@ -60,11 +60,21 @@ function buildProfileObligationMap(profileObligations) {
   }, new Map());
 }
 
-function profileJoinStatus(obligationIds, obligationsById) {
+function profileJoinStatus(
+  obligationIds,
+  obligationsById,
+  qntOwnerRolesByPath,
+) {
   if (obligationIds.length === 0) return "unmapped";
-  return obligationIds.every(
-    (obligationId) => obligationsById.get(obligationId)?.status === "covered",
-  )
+  return obligationIds.every((obligationId) => {
+    const obligation = obligationsById.get(obligationId);
+    return (
+      obligation?.status === "covered" &&
+      (obligation.qntOwners ?? []).some(
+        (ownerPath) => qntOwnerRolesByPath.get(ownerPath) === "semantic-core",
+      )
+    );
+  })
     ? "covered"
     : "mapped-open";
 }
@@ -73,11 +83,15 @@ function buildRulesKernelProfileJoin({
   obligations,
   profileObligations,
   profiles,
+  qntOwnerRoles = [],
 }) {
   const obligationsById = new Map(
     obligations.map((obligation) => [obligation.id, obligation]),
   );
   const obligationIdsByProfile = buildProfileObligationMap(profileObligations);
+  const qntOwnerRolesByPath = new Map(
+    qntOwnerRoles.map((row) => [row.ownerPath, row.role]),
+  );
   const rows = profiles
     .filter((profile) => isRulesKernelProfile(profile, obligationIdsByProfile))
     .map((profile) => {
@@ -106,7 +120,11 @@ function buildRulesKernelProfileJoin({
           ? { followUpTaskIds: uniqueSorted(mapping.followUpTaskIds) }
           : {}),
         ...(mapping.reason !== undefined ? { gapReason: mapping.reason } : {}),
-        joinStatus: profileJoinStatus(obligationIds, obligationsById),
+        joinStatus: profileJoinStatus(
+          obligationIds,
+          obligationsById,
+          qntOwnerRolesByPath,
+        ),
         obligations: obligationRows,
       });
     });
@@ -119,7 +137,7 @@ function buildRulesKernelProfileJoin({
         "plans/rules-kernel-coverage/profile-obligations.jsonl",
     },
     denominatorRule:
-      "profile records with rules-kernel profile kinds and either QNT owners or explicit profile-obligation mappings",
+      "profile records with rules-kernel profile kinds and either QNT owners or explicit profile-obligation mappings; covered joins require every mapped obligation to have a semantic-core QNT owner",
     profileKinds: Array.from(rulesKernelProfileKinds).sort(),
     metrics: {
       rulesKernelProfileJoinCoverage: countCoverage(mapped.length, rows.length),
@@ -134,10 +152,7 @@ function buildRulesKernelProfileJoin({
 
 function rulesKernelJoinByProfileId(rulesKernelProfileJoin) {
   return new Map(
-    (rulesKernelProfileJoin?.profiles ?? []).map((row) => [
-      row.profileId,
-      row,
-    ]),
+    (rulesKernelProfileJoin?.profiles ?? []).map((row) => [row.profileId, row]),
   );
 }
 

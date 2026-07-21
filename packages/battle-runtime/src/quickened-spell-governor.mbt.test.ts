@@ -1,8 +1,11 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import {
+  battleProcedureExecutionRefForTest,
+  characterSpellInvocationRefForProcedureRefForTest,
+  requireCharacterSpellProcedureRefForTest,
+} from "./battle-runtime-test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { battleRuntimeSessionWithState } from "./battle-runtime-context.ts";
-import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.metamagic-cast-governor-quickened
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR
 // RAW trace:
@@ -16,14 +19,20 @@ import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 // - .references/srd-5.2.1/Spells/Gaining-and-Casting.md#Casting Time:
 //   spells use the Casting Time entry and a turn can expend only one Spell
 //   Slot to cast a spell.
-// - UBIQUITOUS_LANGUAGE.md: Magic Action, Bonus Action, Spell Slot,
-//   Sorcery Points as a Pool, and Spend.
+// - .references/srd-5.2.1/Spells/Descriptions-A-D.md#Counterspell:
+//   Counterspell makes the caster roll a Constitution save; on failure the
+//   spell has no effect and its Spell Slot is not expended.
+// - .references/srd-5.2.1/Rules-Glossary.md#Concentration:
+//   a creature maintains at most one Concentration effect at a time.
+// - UBIQUITOUS_LANGUAGE.md: Magic Action, Bonus Action, Reaction, Saving
+//   Throw, Spell Effect, Spell Slot, Concentration, Decline, Sorcery Points
+//   as a Pool, and Spend.
 import {
   canSpendAction,
   spendAction,
 } from "@dnd/shared-algebras/action-economy-algebra";
 import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
-import { resourceCount } from "@dnd/shared/types";
+import { movementFeet, resourceCount } from "@dnd/shared/types";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import * as Either from "effect/Either";
 import { describe, expect, it } from "vitest";
@@ -57,6 +66,7 @@ import {
   damageRollFillWithGroups,
   fighterId,
   findHole,
+  interruptDecisionFill,
   requireResolved,
   savingThrowOutcomeFill,
   skeletonId,
@@ -77,15 +87,20 @@ import {
   type AvailableBattleAct,
   type BattleFill,
   type BattleHole,
+  type BattleInterruptProcedureChoice,
   type BattleReducerRouteEvent,
   type BattleResolutionResult,
   type BattleRuntimeSession,
   type BattleState,
   type CharacterBattleMetamagicOptionFact,
   type CombatantId,
+  SPELL_CAST_REACTION_FACTS_HOLE_ID,
   battleReducerStartRouteEvent,
   characterBattleResourceIsPointPool,
   discoverBattleActs,
+  resolveBattleInterrupt,
+  resolveBattleSubject,
+  spellSlotInvocationRef,
 } from "./index.ts";
 
 const INVALID_KINDS = [
@@ -108,6 +123,10 @@ const LAST_RESULTS = [
   "resolvedQuickenedRollModifier",
   "resolvedQuickenedCreatureSizeChange",
   "resolvedAfterMagicActionSpent",
+  "counteredQuickenedConcentration",
+  "counteredQuickenedNonConcentrationWithPriorConcentration",
+  "resolvedQuickenedConcentrationAfterCounterspellDeclined",
+  "resolvedQuickenedConcentrationAfterCounterspellFailed",
   "rejectedUnaffordable",
   "rejectedUnknownOption",
   "rejectedUnsupportedSecondOption",
@@ -125,6 +144,13 @@ const LAST_RESULT_BY_SCENARIO_OUTCOME_TAG = {
   ResolvedQuickenedRollModifier: "resolvedQuickenedRollModifier",
   ResolvedQuickenedCreatureSizeChange: "resolvedQuickenedCreatureSizeChange",
   ResolvedAfterMagicActionSpent: "resolvedAfterMagicActionSpent",
+  CounteredQuickenedConcentration: "counteredQuickenedConcentration",
+  CounteredQuickenedNonConcentrationWithPriorConcentration:
+    "counteredQuickenedNonConcentrationWithPriorConcentration",
+  ResolvedQuickenedConcentrationAfterCounterspellDeclined:
+    "resolvedQuickenedConcentrationAfterCounterspellDeclined",
+  ResolvedQuickenedConcentrationAfterCounterspellFailed:
+    "resolvedQuickenedConcentrationAfterCounterspellFailed",
   RejectedUnaffordable: "rejectedUnaffordable",
   RejectedUnknownOption: "rejectedUnknownOption",
   RejectedUnsupportedSecondOption: "rejectedUnsupportedSecondOption",
@@ -147,6 +173,7 @@ type QuickenedSpellGovernorProjection = {
   readonly levelOnePlusCastThisTurn: boolean;
   readonly quickenedLevelOnePlusCastThisTurn: boolean;
   readonly spellSlotActsAvailable: boolean;
+  readonly casterConcentrating: boolean;
   readonly invalidKind: InvalidKind;
   readonly lastResult: LastResult;
 };
@@ -159,11 +186,30 @@ type QuickenedSpellGovernorRuntimeState = {
 
 type MetamagicOptionFixture = CharacterBattleMetamagicOptionFact;
 
+type MetamagicBattleInput = {
+  readonly casterLevel?: 5 | 8;
+  readonly sorceryPoints?: number;
+  readonly knownOptions?: readonly MetamagicOptionFixture[];
+  readonly preparedSpellIds?: readonly SpellRecord["id"][];
+  readonly casterSpellSlots?: readonly {
+    readonly spellLevel: 1 | 2 | 3 | 4 | 5;
+    readonly count: number;
+  }[];
+  readonly counterspeller?: true;
+};
+
 const INITIAL_SORCERY_POINTS = 4;
 const HIGH_SORCERY_POINTS = 5;
 const UNAFFORDABLE_SORCERY_POINTS = 1;
 const INITIAL_TARGET_HP = 4;
 const QUICKENED_HEALING_RESULT_HP = 14;
+const COUNTERSPELL_OUTCOMES = ["success", "decline", "failure"] as const;
+type CounterspellOutcome = (typeof COUNTERSPELL_OUTCOMES)[number];
+const CONCENTRATION_COUNTERSPELL_LAST_RESULT = {
+  success: "counteredQuickenedConcentration",
+  decline: "resolvedQuickenedConcentrationAfterCounterspellDeclined",
+  failure: "resolvedQuickenedConcentrationAfterCounterspellFailed",
+} as const satisfies Readonly<Record<CounterspellOutcome, LastResult>>;
 
 const driverSchema = {
   init: {},
@@ -174,6 +220,10 @@ const driverSchema = {
   doResolveQuickenedRollModifier: {},
   doResolveQuickenedCreatureSizeChange: {},
   doResolveQuickenedAfterMagicActionSpent: {},
+  doCounterQuickenedConcentration: {},
+  doCounterQuickenedNonConcentrationWithPriorConcentration: {},
+  doResolveQuickenedConcentrationAfterCounterspellDeclined: {},
+  doResolveQuickenedConcentrationAfterCounterspellFailed: {},
   doRejectUnaffordable: {},
   doRejectUnknownOption: {},
   doRejectUnsupportedSecondOption: {},
@@ -216,6 +266,18 @@ function createQuickenedSpellGovernorDriver() {
           lastResult: "init",
         });
         state = { ...state, lastResult: "resolvedAfterMagicActionSpent" };
+      },
+      doCounterQuickenedConcentration: () => {
+        state = resolveQuickenedConcentrationCounterspell("success");
+      },
+      doCounterQuickenedNonConcentrationWithPriorConcentration: () => {
+        state = resolveQuickenedNonConcentrationCounterspellWithPriorBless();
+      },
+      doResolveQuickenedConcentrationAfterCounterspellDeclined: () => {
+        state = resolveQuickenedConcentrationCounterspell("decline");
+      },
+      doResolveQuickenedConcentrationAfterCounterspellFailed: () => {
+        state = resolveQuickenedConcentrationCounterspell("failure");
       },
       doRejectUnaffordable: () => {
         state = rejectUnaffordable();
@@ -619,6 +681,70 @@ describe("Quickened Spell governor MBT parity", () => {
     });
   });
 
+  it("connects Quickened Spell commitments and Concentration across Counterspell outcomes", () => {
+    expect(
+      quickenedSpellGovernorProjection(
+        resolveQuickenedConcentrationCounterspell("success"),
+      ),
+    ).toMatchObject({
+      blessActive: false,
+      bonusActionAvailable: false,
+      sorceryPointsRemaining: INITIAL_SORCERY_POINTS - 2,
+      spellSlotCommitted: false,
+      levelOnePlusCastThisTurn: false,
+      quickenedLevelOnePlusCastThisTurn: true,
+      spellSlotActsAvailable: false,
+      casterConcentrating: false,
+      lastResult: "counteredQuickenedConcentration",
+    });
+    expect(
+      quickenedSpellGovernorProjection(
+        resolveQuickenedNonConcentrationCounterspellWithPriorBless(),
+      ),
+    ).toMatchObject({
+      blessActive: true,
+      bonusActionAvailable: false,
+      sorceryPointsRemaining: INITIAL_SORCERY_POINTS - 2,
+      targetHp: INITIAL_TARGET_HP,
+      spellSlotCommitted: false,
+      levelOnePlusCastThisTurn: false,
+      quickenedLevelOnePlusCastThisTurn: true,
+      spellSlotActsAvailable: false,
+      casterConcentrating: true,
+      lastResult: "counteredQuickenedNonConcentrationWithPriorConcentration",
+    });
+    expect(
+      quickenedSpellGovernorProjection(
+        resolveQuickenedConcentrationCounterspell("decline"),
+      ),
+    ).toMatchObject({
+      blessActive: true,
+      bonusActionAvailable: false,
+      sorceryPointsRemaining: INITIAL_SORCERY_POINTS - 2,
+      spellSlotCommitted: true,
+      levelOnePlusCastThisTurn: true,
+      quickenedLevelOnePlusCastThisTurn: true,
+      spellSlotActsAvailable: false,
+      casterConcentrating: true,
+      lastResult: "resolvedQuickenedConcentrationAfterCounterspellDeclined",
+    });
+    expect(
+      quickenedSpellGovernorProjection(
+        resolveQuickenedConcentrationCounterspell("failure"),
+      ),
+    ).toMatchObject({
+      blessActive: true,
+      bonusActionAvailable: false,
+      sorceryPointsRemaining: INITIAL_SORCERY_POINTS - 2,
+      spellSlotCommitted: true,
+      levelOnePlusCastThisTurn: true,
+      quickenedLevelOnePlusCastThisTurn: true,
+      spellSlotActsAvailable: false,
+      casterConcentrating: true,
+      lastResult: "resolvedQuickenedConcentrationAfterCounterspellFailed",
+    });
+  });
+
   it(
     "matches the focused Quickened Spell governor slice against bounded random MBT traces",
     async () => {
@@ -642,10 +768,7 @@ describe("Quickened Spell governor MBT parity", () => {
 });
 
 function initialRuntimeState(
-  input?: Partial<{
-    readonly sorceryPoints: number;
-    readonly knownOptions: readonly MetamagicOptionFixture[];
-  }>,
+  input?: MetamagicBattleInput,
 ): QuickenedSpellGovernorRuntimeState {
   return {
     battle: metamagicBattle(input),
@@ -823,6 +946,179 @@ function resolveQuickenedCreatureSizeChange(): QuickenedSpellGovernorRuntimeStat
   };
 }
 
+function resolveQuickenedConcentrationCounterspell(
+  outcome: CounterspellOutcome,
+): QuickenedSpellGovernorRuntimeState {
+  const casterSlotLevel = outcome === "decline" ? 1 : 4;
+  const state = initialRuntimeState({
+    casterLevel: 8,
+    counterspeller: true,
+    preparedSpellIds: ["bless"],
+    casterSpellSlots: [{ spellLevel: casterSlotLevel, count: 1 }],
+  });
+  const act = quickenedSpellAct(state.battle, "bless");
+  const targetHole = findSpellTargetListHole(act.initialHoles);
+  const awaitingCounterspell = requireCounterspellWindow(
+    resolveBattleSubject({
+      state: state.battle.state,
+      subject: act.subject,
+      fills: [
+        spellTargetListFill(targetHole, "bless", [fighterId]),
+        spellCastReactionFactsFill([counterspellTriggerFact(state.battle)]),
+      ],
+    }),
+  );
+  const resolved = resolveCounterspellOutcome({
+    session: state.battle,
+    awaitingCounterspell,
+    outcome,
+  });
+  return {
+    battle: battleRuntimeSessionWithState(state.battle, resolved.state),
+    invalidKind: "none",
+    lastResult: CONCENTRATION_COUNTERSPELL_LAST_RESULT[outcome],
+  };
+}
+
+function resolveQuickenedNonConcentrationCounterspellWithPriorBless(): QuickenedSpellGovernorRuntimeState {
+  const initial = initialRuntimeState({
+    casterLevel: 8,
+    counterspeller: true,
+    preparedSpellIds: ["bless", "cure_wounds"],
+    casterSpellSlots: [{ spellLevel: 4, count: 2 }],
+  });
+  const state = {
+    ...initial,
+    battle: withPriorBlessConcentration(initial.battle),
+  };
+  const act = quickenedCureWoundsAct(state.battle);
+  const targetHole = findHole(act.initialHoles, "targetChoice");
+  const target = targetFill(targetHole, fighterId, [
+    {
+      kind: "spellTarget",
+      casterId: wizardId,
+      targetId: fighterId,
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String("cure_wounds"),
+      ),
+    },
+  ]);
+  const awaitingCounterspell = requireCounterspellWindow(
+    resolveBattleSubject({
+      state: state.battle.state,
+      subject: act.subject,
+      fills: [
+        target,
+        spellCastReactionFactsFill([counterspellTriggerFact(state.battle)]),
+      ],
+    }),
+  );
+  const resolved = resolveCounterspellOutcome({
+    session: state.battle,
+    awaitingCounterspell,
+    outcome: "success",
+  });
+  return {
+    battle: battleRuntimeSessionWithState(state.battle, resolved.state),
+    invalidKind: "none",
+    lastResult: "counteredQuickenedNonConcentrationWithPriorConcentration",
+  };
+}
+
+function withPriorBlessConcentration(
+  session: BattleRuntimeSession,
+): BattleRuntimeSession {
+  const act = discoverBattleActs(session).find(
+    (candidate) =>
+      candidate.subject.tag === "actionSpell" &&
+      battleActSpellPresentation(candidate)?.invocation.spellId === "bless",
+  );
+  if (act?.subject.tag !== "actionSpell") {
+    throw new Error("Expected ordinary Bless act for prior Concentration.");
+  }
+  const targetHole = findSpellTargetListHole(act.initialHoles);
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state: session.state,
+      subject: act.subject,
+      fills: [spellTargetListFill(targetHole, "bless", [fighterId])],
+    }),
+  );
+  return battleRuntimeSessionWithState(session, {
+    ...resolved.state,
+    currentTurnResources: session.state.currentTurnResources,
+  });
+}
+
+function requireCounterspellWindow(
+  result: BattleResolutionResult,
+): Extract<BattleResolutionResult, { readonly tag: "needsHoles" }> {
+  if (result.tag !== "needsHoles") {
+    throw new Error("Expected Counterspell interrupt window.");
+  }
+  return result;
+}
+
+function resolveCounterspellOutcome(input: {
+  readonly session: BattleRuntimeSession;
+  readonly awaitingCounterspell: Extract<
+    BattleResolutionResult,
+    { readonly tag: "needsHoles" }
+  >;
+  readonly outcome: CounterspellOutcome;
+}): Extract<BattleResolutionResult, { readonly tag: "resolved" }> {
+  const interruptHole = findHole(
+    input.awaitingCounterspell.holes,
+    "interruptDecision",
+  );
+  const value =
+    input.outcome === "decline"
+      ? { kind: "decline" as const, responderId: fighterId }
+      : triggeredCounterspellDecision({
+          session: input.session,
+          awaitingCounterspell: input.awaitingCounterspell,
+          outcome: input.outcome,
+        });
+  return requireResolved(
+    resolveBattleInterrupt({
+      state: input.awaitingCounterspell.state,
+      fill: interruptDecisionFill(interruptHole, value),
+    }),
+  );
+}
+
+function triggeredCounterspellDecision(input: {
+  readonly session: BattleRuntimeSession;
+  readonly awaitingCounterspell: Extract<
+    BattleResolutionResult,
+    { readonly tag: "needsHoles" }
+  >;
+  readonly outcome: Exclude<CounterspellOutcome, "decline">;
+}) {
+  const choice = requireCounterspellChoice(
+    input.awaitingCounterspell,
+    battleRuntimeSessionWithState(
+      input.session,
+      input.awaitingCounterspell.state,
+    ),
+  );
+  const fills = [
+    savingThrowOutcomeFill(
+      findHole(choice.initialHoles, "savingThrowOutcome"),
+      [{ targetId: wizardId, succeeded: input.outcome === "failure" }],
+    ),
+  ];
+  return {
+    kind: "resolve" as const,
+    responderId: fighterId,
+    choice: {
+      kind: "castTriggeredReactionSpell" as const,
+      procedureRef: choice.subject.procedureRef,
+      fills,
+    },
+  };
+}
+
 function rejectUnaffordable(): QuickenedSpellGovernorRuntimeState {
   const state = initialRuntimeState({
     sorceryPoints: UNAFFORDABLE_SORCERY_POINTS,
@@ -954,6 +1250,7 @@ function quickenedSpellGovernorProjection(
   state: QuickenedSpellGovernorRuntimeState,
 ): QuickenedSpellGovernorProjection {
   const resources = state.battle.state.currentTurnResources;
+  const caster = state.battle.state.combatants.get(wizardId);
   const skeleton = state.battle.state.combatants.get(skeletonId);
   const fighter = state.battle.state.combatants.get(fighterId);
   return {
@@ -997,6 +1294,7 @@ function quickenedSpellGovernorProjection(
       (candidate) =>
         battleActSpellPresentation(candidate)?.invocation.tag === "spellSlot",
     ),
+    casterConcentrating: (caster?.concentration ?? null) !== null,
     invalidKind: state.invalidKind,
     lastResult: state.lastResult,
   };
@@ -1229,11 +1527,7 @@ function quickenedTargetListActiveEffectPublicRoute(): readonly BattleReducerRou
   ];
 }
 
-function metamagicBattle(input?: {
-  readonly sorceryPoints?: number;
-  readonly knownOptions?: readonly MetamagicOptionFixture[];
-  readonly preparedSpellIds?: readonly SpellRecord["id"][];
-}): BattleRuntimeSession {
+function metamagicBattle(input?: MetamagicBattleInput): BattleRuntimeSession {
   return startBattleSessionRight({
     battleId: battleId("battle:quickened-spell-governor-mbt"),
     combatants: [
@@ -1242,7 +1536,9 @@ function metamagicBattle(input?: {
         displayName: "Sorcerer",
         initiative: 20,
         attack: null,
-        classLevels: [{ className: "sorcerer", level: 5 }],
+        classLevels: [
+          { className: "sorcerer", level: input?.casterLevel ?? 5 },
+        ],
         resources: [
           {
             unit: unitLibrary.requireUnit("sorcerer_font_of_magic"),
@@ -1271,7 +1567,7 @@ function metamagicBattle(input?: {
                 "ray_of_frost",
               ]
             ).map((spellId) => spellRecord(spellId)),
-            spellSlots: [
+            spellSlots: input?.casterSpellSlots ?? [
               { spellLevel: 1, count: 2 },
               { spellLevel: 2, count: 2 },
             ],
@@ -1285,6 +1581,14 @@ function metamagicBattle(input?: {
         initiative: 10,
         currentHp: INITIAL_TARGET_HP,
         maxHp: 20,
+        ...(input?.counterspeller === true
+          ? {
+              spellcasting: wizardSpellcasting({
+                preparedSpells: [spellRecord("counterspell")],
+                spellSlots: [{ spellLevel: 3, count: 1 }],
+              }),
+            }
+          : {}),
       }),
       statBlockCreatureInit({
         combatantId: skeletonId,
@@ -1478,6 +1782,79 @@ function spellTargetListFill(
   return knownWillingSpellTargetListFill(hole, wizardId, spellId, targetIds);
 }
 
+type CounterspellTriggerFact = Extract<
+  Extract<
+    BattleFill,
+    { readonly kind: "targetSpatialFacts" }
+  >["spatialFacts"][number],
+  { readonly kind: "counterspellTriggerCasterVisibleWithinRange" }
+>;
+
+function counterspellTriggerFact(
+  session: BattleRuntimeSession,
+): CounterspellTriggerFact {
+  return {
+    kind: "counterspellTriggerCasterVisibleWithinRange",
+    reactorId: fighterId,
+    casterId: wizardId,
+    sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
+      session,
+      fighterId,
+      spellSlotInvocationRef("counterspell", 3, "counterspell"),
+    ),
+    rangeFeet: movementFeet(60),
+  };
+}
+
+function spellCastReactionFactsFill(
+  facts: readonly CounterspellTriggerFact[],
+): Extract<BattleFill, { readonly kind: "targetSpatialFacts" }> {
+  return {
+    kind: "targetSpatialFacts",
+    holeId: SPELL_CAST_REACTION_FACTS_HOLE_ID,
+    spatialFacts: facts,
+  };
+}
+
+function requireCounterspellChoice(
+  result: Extract<BattleResolutionResult, { readonly tag: "needsHoles" }>,
+  session: BattleRuntimeSession,
+): Extract<
+  BattleInterruptProcedureChoice,
+  { readonly kind: "castTriggeredReactionSpell" }
+> {
+  const choice = result.snapshot.pendingInterrupt?.choices.find(
+    (
+      candidate,
+    ): candidate is Extract<
+      BattleInterruptProcedureChoice,
+      { readonly kind: "castTriggeredReactionSpell" }
+    > => {
+      if (
+        candidate.kind !== "castTriggeredReactionSpell" ||
+        candidate.reactorId !== fighterId
+      ) {
+        return false;
+      }
+      const invocation = characterSpellInvocationRefForProcedureRefForTest(
+        session,
+        candidate.reactorId,
+        candidate.subject.procedureRef,
+      );
+      return (
+        invocation.tag === "spellSlot" &&
+        invocation.spellId === "counterspell" &&
+        invocation.procedure === "counterspell" &&
+        Number(invocation.slotLevel) === 3
+      );
+    },
+  );
+  if (choice === undefined) {
+    throw new Error("Expected Counterspell Reaction choice.");
+  }
+  return choice;
+}
+
 function sorceryPointsRemaining(state: BattleState) {
   const actor = state.combatants.get(wizardId);
   if (actor?.origin.kind !== "character") {
@@ -1548,6 +1925,7 @@ function normalizeQuickenedSpellGovernorQuintState(
       "qQuickenedLevelOnePlusCastThisTurn",
     ),
     spellSlotActsAvailable: booleanField(state, "qSpellSlotActsAvailable"),
+    casterConcentrating: booleanField(state, "qCasterConcentrating"),
     invalidKind: invalidKind(state["qInvalidKind"]),
     lastResult: lastResultValue,
   };

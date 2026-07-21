@@ -236,35 +236,35 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
@@ -276,7 +276,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
@@ -482,35 +482,35 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
@@ -522,7 +522,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
@@ -873,35 +873,35 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
@@ -913,7 +913,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
@@ -1119,35 +1119,35 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
@@ -1159,7 +1159,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
@@ -1377,35 +1377,35 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
@@ -1417,7 +1417,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
@@ -1623,35 +1623,35 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
@@ -1663,7 +1663,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
@@ -1718,7 +1718,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-facts.qnt",
@@ -1920,35 +1920,35 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
@@ -1960,7 +1960,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
@@ -2343,35 +2343,35 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
@@ -2383,7 +2383,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
@@ -2567,7 +2567,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             }
           ],
           "runtime": "battle",
@@ -2626,7 +2626,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-end-of-turn-rider-expiration.qnt",
@@ -2673,7 +2673,7 @@
           "qntOwners": [
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-independent-sequence.qnt",
@@ -2740,7 +2740,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-end-of-turn-rider-expiration.qnt",
@@ -3283,35 +3283,35 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
@@ -3323,7 +3323,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
@@ -3666,35 +3666,35 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
@@ -3706,7 +3706,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
@@ -3912,35 +3912,35 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
@@ -3952,7 +3952,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
@@ -4205,35 +4205,35 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
@@ -4245,7 +4245,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
@@ -4691,35 +4691,35 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
@@ -4731,7 +4731,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
@@ -4949,35 +4949,35 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
@@ -4989,7 +4989,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
@@ -5195,35 +5195,35 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
@@ -5235,7 +5235,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
@@ -5613,35 +5613,35 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
@@ -5653,7 +5653,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
@@ -5859,35 +5859,35 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
@@ -5899,7 +5899,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
@@ -6117,35 +6117,35 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
@@ -6157,7 +6157,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
@@ -6363,35 +6363,35 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
@@ -6403,7 +6403,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
@@ -6621,35 +6621,35 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
@@ -6661,7 +6661,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
@@ -6867,35 +6867,35 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
@@ -6907,7 +6907,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
@@ -7125,35 +7125,35 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
@@ -7165,7 +7165,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
@@ -7457,35 +7457,35 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
@@ -7497,7 +7497,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
@@ -7703,35 +7703,35 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
@@ -7743,7 +7743,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
@@ -7961,35 +7961,35 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
@@ -8001,7 +8001,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
@@ -8207,35 +8207,35 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
@@ -8247,7 +8247,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
@@ -8508,35 +8508,35 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
@@ -8548,7 +8548,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
@@ -8754,35 +8754,35 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
@@ -8794,7 +8794,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
@@ -8908,7 +8908,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-end-of-turn-rider-expiration.qnt",
@@ -9018,7 +9018,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             }
           ],
           "runtime": "battle",
@@ -9224,35 +9224,35 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
@@ -9264,7 +9264,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
@@ -9470,35 +9470,35 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
@@ -9510,7 +9510,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
@@ -9763,35 +9763,35 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
@@ -9803,7 +9803,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
@@ -10056,35 +10056,35 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
@@ -10096,7 +10096,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
@@ -10314,35 +10314,35 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
@@ -10354,7 +10354,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
@@ -10425,7 +10425,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             }
           ],
           "runtime": "battle",
@@ -10631,35 +10631,35 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
@@ -10671,7 +10671,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
@@ -10877,35 +10877,35 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
@@ -10917,7 +10917,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
@@ -11166,35 +11166,35 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
@@ -11206,7 +11206,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
@@ -11412,35 +11412,35 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
@@ -11452,7 +11452,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
@@ -11803,35 +11803,35 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
@@ -11843,7 +11843,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
@@ -12049,35 +12049,35 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
@@ -12089,7 +12089,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
@@ -12307,35 +12307,35 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
@@ -12347,7 +12347,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
@@ -12553,35 +12553,35 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
@@ -12593,7 +12593,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
@@ -12648,7 +12648,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-facts.qnt",
@@ -12850,35 +12850,35 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
@@ -12890,7 +12890,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
@@ -13273,35 +13273,35 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
@@ -13313,7 +13313,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
@@ -13497,7 +13497,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             }
           ],
           "runtime": "battle",
@@ -13556,7 +13556,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-end-of-turn-rider-expiration.qnt",
@@ -13603,7 +13603,7 @@
           "qntOwners": [
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-independent-sequence.qnt",
@@ -13670,7 +13670,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-end-of-turn-rider-expiration.qnt",
@@ -14213,35 +14213,35 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
@@ -14253,7 +14253,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
@@ -14596,35 +14596,35 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
@@ -14636,7 +14636,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
@@ -14842,35 +14842,35 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
@@ -14882,7 +14882,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
@@ -15135,35 +15135,35 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
@@ -15175,7 +15175,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
@@ -15621,35 +15621,35 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
@@ -15661,7 +15661,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
@@ -15879,35 +15879,35 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
@@ -15919,7 +15919,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
@@ -16125,35 +16125,35 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
@@ -16165,7 +16165,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
@@ -16543,35 +16543,35 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
@@ -16583,7 +16583,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
@@ -16789,35 +16789,35 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
@@ -16829,7 +16829,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
@@ -17047,35 +17047,35 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
@@ -17087,7 +17087,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
@@ -17293,35 +17293,35 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
@@ -17333,7 +17333,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
@@ -17404,7 +17404,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-end-of-turn-rider-expiration.qnt",
@@ -17614,35 +17614,35 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
@@ -17654,7 +17654,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
@@ -17860,35 +17860,35 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
@@ -17900,7 +17900,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
@@ -18118,35 +18118,35 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
@@ -18158,7 +18158,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
@@ -18450,35 +18450,35 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
@@ -18490,7 +18490,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
@@ -18696,35 +18696,35 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
@@ -18736,7 +18736,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
@@ -18954,35 +18954,35 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
@@ -18994,7 +18994,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
@@ -19200,35 +19200,35 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
@@ -19240,7 +19240,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
@@ -19501,35 +19501,35 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
@@ -19541,7 +19541,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
@@ -19747,35 +19747,35 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
@@ -19787,7 +19787,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
@@ -19901,7 +19901,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-end-of-turn-rider-expiration.qnt",
@@ -20011,7 +20011,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             }
           ],
           "runtime": "battle",
@@ -20217,35 +20217,35 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
@@ -20257,7 +20257,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
@@ -20463,35 +20463,35 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
@@ -20503,7 +20503,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
@@ -20756,35 +20756,35 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
@@ -20796,7 +20796,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
@@ -21049,35 +21049,35 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
@@ -21089,7 +21089,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
@@ -21307,35 +21307,35 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
@@ -21347,7 +21347,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
@@ -21418,7 +21418,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             }
           ],
           "runtime": "battle",
@@ -21624,35 +21624,35 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
@@ -21664,7 +21664,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
@@ -21870,35 +21870,35 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
@@ -21910,7 +21910,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-              "role": "semantic-core"
+              "role": "bridge"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",

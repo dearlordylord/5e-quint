@@ -214,7 +214,10 @@ function groupUnitEvidence(unitEvidence) {
   return grouped;
 }
 
-function selectedIdentityEvidenceStatus(unit, selectedIdentityReplayEvidenceTag) {
+function selectedIdentityEvidenceStatus(
+  unit,
+  selectedIdentityReplayEvidenceTag,
+) {
   const claim = unit.claim;
   if (
     claim?.tag !== "supported-profile" &&
@@ -248,7 +251,9 @@ function selectedIdentityEvidenceStatus(unit, selectedIdentityReplayEvidenceTag)
 
   const deferredDisposition =
     claim.deferredMechanicsSelectedIdentityDisposition;
-  if (deferredDisposition?.tag === selectedIdentityNonApplicableDispositionTag) {
+  if (
+    deferredDisposition?.tag === selectedIdentityNonApplicableDispositionTag
+  ) {
     return {
       status: selectedIdentityStatus.missingWitnessDeferredNotApplicable,
       owner: deferredDisposition.owner,
@@ -603,11 +608,11 @@ function buildSelectedIdentityReplayGapReport({
         left.kind.localeCompare(right.kind) ||
         left.unitId.localeCompare(right.unitId),
     );
-  const replayRequiredRows = rowsWithStatus.filter(
-    (row) => isSelectedIdentityReplayRequiredGap(row.selectedIdentity),
+  const replayRequiredRows = rowsWithStatus.filter((row) =>
+    isSelectedIdentityReplayRequiredGap(row.selectedIdentity),
   );
-  const deferredNonApplicableRows = rowsWithStatus.filter(
-    (row) => isSelectedIdentityDeferredNonApplicable(row.selectedIdentity),
+  const deferredNonApplicableRows = rowsWithStatus.filter((row) =>
+    isSelectedIdentityDeferredNonApplicable(row.selectedIdentity),
   );
   return stable({
     criteria: {
@@ -653,9 +658,8 @@ function buildUnitGroupDenominatorAudit({
         isSelectedIdentityReplayRequiredGap(selectedIdentity),
     );
     const selectedIdentityDeferredNonApplicableUnits =
-      selectedIdentityScopedUnits.filter(
-        ({ selectedIdentity }) =>
-          isSelectedIdentityDeferredNonApplicable(selectedIdentity),
+      selectedIdentityScopedUnits.filter(({ selectedIdentity }) =>
+        isSelectedIdentityDeferredNonApplicable(selectedIdentity),
       );
     return {
       kind,
@@ -670,8 +674,7 @@ function buildUnitGroupDenominatorAudit({
       profileSubsetSupportedUnits: groupUnits.filter(
         (unit) => unit.claim?.tag === "profile-subset-supported",
       ).length,
-      unsupportedOrOtherUnits:
-        groupUnits.length - profileClaimUnits.length,
+      unsupportedOrOtherUnits: groupUnits.length - profileClaimUnits.length,
       profileFactDenominator: profileClaimUnits.reduce(
         (count, unit) => count + unit.claim.profileIds.length,
         0,
@@ -679,8 +682,7 @@ function buildUnitGroupDenominatorAudit({
       selectedIdentityReplayDenominator: selectedIdentityScopedUnits.length,
       selectedIdentityDeferredNonApplicableUnits:
         selectedIdentityDeferredNonApplicableUnits.length,
-      selectedIdentityReplayWitnessUnits:
-        selectedIdentityWitnessUnits.length,
+      selectedIdentityReplayWitnessUnits: selectedIdentityWitnessUnits.length,
       selectedIdentityReplayGapUnits: selectedIdentityReplayGapUnits.length,
     };
   });
@@ -720,6 +722,7 @@ function buildMatrix(
     taskClaims,
     rulesKernelObligations,
     rulesKernelProfileObligations,
+    rulesKernelQntOwnerRoles,
   },
   {
     executableProfileKinds,
@@ -732,6 +735,7 @@ function buildMatrix(
     obligations: rulesKernelObligations,
     profileObligations: rulesKernelProfileObligations,
     profiles,
+    qntOwnerRoles: rulesKernelQntOwnerRoles,
   });
   const claimsByUnit = new Map(
     unitClaims.map((claim) => [claim.unitId, claim]),
@@ -797,7 +801,7 @@ function buildMatrix(
               (row) => row.evidence,
             ),
           });
-      }),
+        }),
     );
   const executableProfiles = profiles.filter((profile) =>
     executableProfileKinds.has(profile.profileKind),
@@ -1091,7 +1095,9 @@ function renderReport(
         return groups;
       }, new Map())
       .entries(),
-  ).sort(([leftStatus], [rightStatus]) => leftStatus.localeCompare(rightStatus));
+  ).sort(([leftStatus], [rightStatus]) =>
+    leftStatus.localeCompare(rightStatus),
+  );
   const rulesKernelUnitGroups = Array.from(
     rulesKernelJoin.supportedUnitJoin.units
       .reduce((groups, row) => {
@@ -1101,7 +1107,9 @@ function renderReport(
         return groups;
       }, new Map())
       .entries(),
-  ).sort(([leftStatus], [rightStatus]) => leftStatus.localeCompare(rightStatus));
+  ).sort(([leftStatus], [rightStatus]) =>
+    leftStatus.localeCompare(rightStatus),
+  );
   const rulesKernelProfileGaps = rulesKernelJoin.profiles.filter(
     (row) => row.joinStatus !== "covered",
   );
@@ -1332,7 +1340,9 @@ function renderReport(
     "",
     `This generated view lists ${selectedIdentityReplayGapClaimTags
       .map((tag) => `\`${tag}\``)
-      .join(" and ")} Units that have no \`${selectedIdentityReplayEvidenceTag}\` evidence row and no selected-identity non-applicable disposition at the whole-claim or deferred-mechanics boundary.`,
+      .join(
+        " and ",
+      )} Units that have no \`${selectedIdentityReplayEvidenceTag}\` evidence row and no selected-identity non-applicable disposition at the whole-claim or deferred-mechanics boundary.`,
     "Deferred-portion non-applicable rows are not replay gaps; they are listed in the next section so they remain visible without being counted as missing replay witnesses.",
     "",
     "| Unit | Claim | Selected identity | Catalog | Collection | Kind | Profiles | Source |",
