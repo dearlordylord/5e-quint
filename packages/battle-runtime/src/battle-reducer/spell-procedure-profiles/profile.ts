@@ -40,6 +40,7 @@ import {
   antimagicFieldSuppressedOngoingSpellEffectKeys,
   ongoingSpellEffectRefKey,
 } from "../antimagic-field-suppression.ts";
+import { activeDruidWildShapeEffect } from "../druid-wild-shape.ts";
 import type { SpellFillSet } from "../spells-resolve-fill-set.ts";
 
 // Context handed to admit() at discovery time. Profiles use only what they
@@ -66,6 +67,9 @@ export type SpellAdmissionBattleProjection = {
 
 export type SpellAdmissionContext = {
   readonly actor: SpellAdmissionActor;
+  readonly activeDruidWildShape: ReturnType<
+    typeof activeDruidWildShapeEffect
+  >;
   readonly battle: SpellAdmissionBattleProjection | undefined;
   readonly resourceOwnership: readonly CharacterBattleResourceOwnership[];
 };
@@ -100,6 +104,7 @@ export function spellAdmissionContextFor(
   }
   return {
     actor,
+    activeDruidWildShape: activeDruidWildShapeEffect(actor),
     battle: spellAdmissionBattleProjection(state),
     resourceOwnership,
   };

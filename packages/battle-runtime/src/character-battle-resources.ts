@@ -54,7 +54,7 @@ import {
 import {
   persistentArmorEffectSpellProfileForSpell,
   type PersistentArmorEffectSpellRecord,
-} from "./battle-reducer/spell-procedure-profiles/persistent-armor-effect-facts.ts";
+} from "./procedure-admission/persistent-armor-effect-facts.ts";
 
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.attack-action-area-save-damage-replacement unit-feature.magic-action-healing-pool
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.metamagic-battle-resource-bridge unit-feature.failed-saving-throw-reroll unit-feature.paladin-sacred-weapon

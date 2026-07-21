@@ -41,7 +41,7 @@ import {
 } from "../../battle-reducer.ts";
 import {
   persistentArmorEffectSpellProfileForSpell,
-} from "./persistent-armor-effect-facts.ts";
+} from "../../procedure-admission/persistent-armor-effect-facts.ts";
 import type { CharacterBattleInvocationSpellAccessState } from "../../character-battle-resources.ts";
 import { CombatantId } from "../../identity.ts";
 import { combatantWearingArmor } from "../creature-state-leaves.ts";

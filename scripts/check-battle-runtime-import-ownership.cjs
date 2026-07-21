@@ -14,6 +14,10 @@ const EXECUTION_ROOT_DIRECTORIES = [
 ];
 const EXECUTION_ROOT_FILES = [];
 
+const ADMISSION_ROOT_FILES = [
+  `${BATTLE_RUNTIME_SRC}/procedure-admission/weapon-attack-override.ts`,
+];
+
 const FORBIDDEN_OWNERS = [
   {
     zone: "admission",
@@ -152,6 +156,10 @@ function executionRoots() {
     ),
     ...EXECUTION_ROOT_FILES.map(normalizedRepoPath).filter(fs.existsSync),
   ].sort();
+}
+
+function admissionRoots() {
+  return ADMISSION_ROOT_FILES.map(normalizedRepoPath).filter(fs.existsSync);
 }
 
 function forbiddenOwner(file, zone) {
@@ -564,13 +572,17 @@ function formatViolation(root, violation) {
   ].join("\n");
 }
 
-function checkRoots(roots, failOnViolation, reportEveryZone = false) {
+function checkRoots(
+  roots,
+  failOnViolation,
+  forbiddenZones = [undefined],
+) {
   const startedAt = process.hrtime.bigint();
   const graph = importGraph(roots);
   const violations = roots.flatMap((root) =>
-    (reportEveryZone ? FORBIDDEN_OWNERS : [undefined]).flatMap((owner) => {
+    forbiddenZones.flatMap((zone) => {
       const violation = shortestForbiddenPath(graph, root, (file) =>
-        forbiddenOwner(file, owner?.zone),
+        forbiddenOwner(file, zone),
       );
       return violation === undefined ? [] : [{ root, violation }];
     }),
@@ -594,7 +606,7 @@ if (process.argv.includes("--self-test")) {
   checkRoots(
     MIGRATION_CANDIDATES.map(normalizedRepoPath).filter(fs.existsSync),
     false,
-    true,
+    FORBIDDEN_OWNERS.map((owner) => owner.zone),
   );
 } else {
   const roots = executionRoots();
@@ -602,4 +614,8 @@ if (process.argv.includes("--self-test")) {
     throw new Error("No battle-runtime procedure-execution roots were found.");
   }
   checkRoots(roots, true);
+  checkRoots(admissionRoots(), true, [
+    "presentation",
+    "legacy mixed aggregation",
+  ]);
 }
