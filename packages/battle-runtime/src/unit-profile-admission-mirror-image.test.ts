@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-MISSING-MIRROR-IMAGE mirror_image
@@ -192,7 +193,7 @@ describe("L12G-MISSING-MIRROR-IMAGE deterministic Mirror Image admission", () =>
     const cast = castMirrorImage(mirrorImageBattle(attackerId));
     const oneDuplicate = withMirrorImageDuplicateCount(cast.state, 1);
     const attack = attackThroughRoll({
-      session: { ...cast, state: oneDuplicate },
+      session: battleRuntimeSessionForTest({ ...cast, state: oneDuplicate }),
       attackerId,
       targetId: spellCasterId,
     });
@@ -239,7 +240,7 @@ describe("L12G-MISSING-MIRROR-IMAGE deterministic Mirror Image admission", () =>
     const cast = castMirrorImage(mirrorImageBattle(attackerId));
     const blinded = withBlindedAttacker(cast.state, attackerId);
     const damageHole = attackDamageHole({
-      session: { ...cast, state: blinded },
+      session: battleRuntimeSessionForTest({ ...cast, state: blinded }),
       attackerId,
       targetFacts: [],
     });
@@ -284,7 +285,7 @@ function castMirrorImage(session: BattleRuntimeSession): BattleRuntimeSession {
   if (result.tag !== "resolved") {
     throw new Error("Expected Mirror Image to resolve.");
   }
-  return { ...session, state: result.state };
+  return battleRuntimeSessionForTest({ ...session, state: result.state });
 }
 
 function attackerTurnState(
@@ -311,7 +312,10 @@ function attackThroughRoll(input: {
   readonly mirrorHole: MirrorImageDuplicateRollHole;
 } {
   const attackerTurn = attackerTurnState(input.session.state);
-  const attackerSession = { ...input.session, state: attackerTurn.state };
+  const attackerSession = battleRuntimeSessionForTest({
+    ...input.session,
+    state: attackerTurn.state,
+  });
   const attack = statBlockAttackAct(
     attackerSession,
     input.attackerId,
@@ -369,7 +373,10 @@ function attackDamageHole(input: {
   readonly targetFacts: readonly BattleTargetSpatialFact[];
 }): Extract<BattleHole, { readonly kind: "rolledDice" }> {
   const attackerTurn = attackerTurnState(input.session.state);
-  const attackerSession = { ...input.session, state: attackerTurn.state };
+  const attackerSession = battleRuntimeSessionForTest({
+    ...input.session,
+    state: attackerTurn.state,
+  });
   const attack = statBlockAttackAct(
     attackerSession,
     input.attackerId,

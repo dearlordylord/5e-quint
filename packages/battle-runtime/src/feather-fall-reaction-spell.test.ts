@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV56A feather_fall
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-feather-fall-mitigation
 import * as Either from "effect/Either";
@@ -76,7 +77,10 @@ describe("Feather Fall Reaction spell", () => {
       (candidate) => {
         if (candidate.kind !== "castTriggeredReactionSpell") return false;
         const invocation = characterSpellInvocationRefForProcedureRefForTest(
-          { ...state, state: awaitingReaction.state },
+          battleRuntimeSessionForTest({
+            ...state,
+            state: awaitingReaction.state,
+          }),
           candidate.reactorId,
           candidate.subject.procedureRef,
         );
@@ -354,7 +358,10 @@ function castFeatherFallOn(
     (candidate) => {
       if (candidate.kind !== "castTriggeredReactionSpell") return false;
       const invocation = characterSpellInvocationRefForProcedureRefForTest(
-        { ...session, state: awaitingReaction.state },
+        battleRuntimeSessionForTest({
+          ...session,
+          state: awaitingReaction.state,
+        }),
         candidate.reactorId,
         candidate.subject.procedureRef,
       );

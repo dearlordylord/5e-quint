@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DISPEL-MAGIC-ONGOING-SPELL-ENDING dispel_magic
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-ongoing-spell-ending
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING
@@ -790,7 +791,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
       effectRef: effectAllocation.effectRef,
       sourceProcedureRef: boundProcedureRef,
     };
-    const state: BattleRuntimeSession = {
+    const state: BattleRuntimeSession = battleRuntimeSessionForTest({
       ...baseState,
       state: {
         ...baseState.state,
@@ -803,7 +804,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
           activeEffects: [...caster.activeEffects, effect],
         }),
       },
-    };
+    });
     const act = spellAct({
       session: state,
       spellId: dispelMagicUnitId,
@@ -1102,10 +1103,10 @@ function stateWithLightEmitters(
     preparedSpells: [spellRecord(dispelMagicUnitId)],
     spellSlots,
   });
-  return {
+  return battleRuntimeSessionForTest({
     ...session,
     state: { ...session.state, lightEmitters },
-  };
+  });
 }
 
 function stateWithActiveEffects(
@@ -1131,7 +1132,7 @@ function stateWithActiveEffects(
   if (caster === undefined) {
     throw new Error("Expected spell caster combatant.");
   }
-  return {
+  return battleRuntimeSessionForTest({
     ...session,
     state: {
       ...session.state,
@@ -1141,7 +1142,7 @@ function stateWithActiveEffects(
         activeEffects: [...caster.activeEffects, ...activeEffects],
       }),
     },
-  };
+  });
 }
 
 function stateWithCombatantActiveEffects(input: {
@@ -1188,7 +1189,10 @@ function stateWithCombatantActiveEffects(input: {
       activeEffects: [...target.activeEffects, ...input.target.activeEffects],
     });
   }
-  return { ...session, state: { ...session.state, combatants } };
+  return battleRuntimeSessionForTest({
+    ...session,
+    state: { ...session.state, combatants },
+  });
 }
 
 function objectSpellEmitter(input: {

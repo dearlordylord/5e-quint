@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME warding_bond
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-warding-bond-linked-effect
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING
@@ -187,6 +188,7 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
     expect(savingThrowFlatBonusProjections(resolved.state, "wis")).toEqual([
       {
         targetId: spellTargetId,
+        sourceCombatantId: spellCasterId,
         sourceProcedureRef: act.subject.procedureRef,
         bonus: 1,
       },
@@ -255,6 +257,7 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
         targetFlatBonuses: expect.arrayContaining([
           {
             targetId: spellTargetId,
+            sourceCombatantId: spellCasterId,
             sourceProcedureRef: effect.sourceProcedureRef,
             bonus: 1,
           },
@@ -395,7 +398,7 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
       advanceRound(castWardingBond(session), [spellCasterId, spellTargetId]),
     );
     const attackSubject: BattleSubject = weaponAttackSubject(
-      { ...session, state },
+      battleRuntimeSessionForTest({ ...session, state }),
       "Club",
     );
     const attackTarget = requireResultHole(
@@ -495,7 +498,10 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
     const state = withCasterConcentration(
       advanceRound(castWardingBond(session), [spellCasterId, spellTargetId]),
     );
-    const clubAttack = weaponAttackSubject({ ...session, state }, "Club");
+    const clubAttack = weaponAttackSubject(
+      battleRuntimeSessionForTest({ ...session, state }),
+      "Club",
+    );
     const subject: Extract<
       BattleSubject,
       { readonly tag: "runtimeCommand"; readonly command: "opportunityAttack" }
@@ -563,7 +569,7 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
     ]);
     const state = withCasterConcentration(session.state);
     const act = spellAct({
-      session: { ...session, state },
+      session: battleRuntimeSessionForTest({ ...session, state }),
       spellId: magicMissileUnitId,
       slotLevel: 1,
     });
@@ -625,7 +631,7 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
     ]);
     const state = withCasterConcentration(session.state);
     const act = spellAct({
-      session: { ...session, state },
+      session: battleRuntimeSessionForTest({ ...session, state }),
       spellId: burningHandsUnitId,
       slotLevel: 1,
     });
@@ -682,7 +688,7 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
     ]);
     const state = withCasterConcentration(session.state);
     const act = spellAct({
-      session: { ...session, state },
+      session: battleRuntimeSessionForTest({ ...session, state }),
       spellId: iceKnifeUnitId,
       slotLevel: 1,
     });
@@ -934,7 +940,7 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
       secondTargetId,
     ]);
     const recast = castWardingBond(
-      { ...recastInitial, state: nextCasterTurn },
+      battleRuntimeSessionForTest({ ...recastInitial, state: nextCasterTurn }),
       secondTargetId,
     );
     expect(wardingBondEffects(recast, spellTargetId)).toEqual([]);
@@ -1005,7 +1011,7 @@ function damageSpellTurnSession(
     spellCasterId,
     spellTargetId,
   ]);
-  return { ...session, state };
+  return battleRuntimeSessionForTest({ ...session, state });
 }
 
 function wardingBondClubBattle(): BattleRuntimeSession {

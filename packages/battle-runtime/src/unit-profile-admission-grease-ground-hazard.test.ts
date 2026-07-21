@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV40 grease
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-grease-ground-hazard
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.metamagic-heightened-save-disadvantage
@@ -243,7 +244,10 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
     }
 
     const entryAct = greaseGroundHazardSaveAct(
-      { state: targetTurn.state, context: session.context },
+      battleRuntimeSessionForTest({
+        state: targetTurn.state,
+        context: session.context,
+      }),
       spellTargetId,
       "entersArea",
     );
@@ -283,7 +287,10 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
       throw new Error("Expected Grease caster end turn to resolve.");
     }
     const selectedEntryAct = greaseGroundHazardSaveAct(
-      { state: targetTurn.state, context: session.context },
+      battleRuntimeSessionForTest({
+        state: targetTurn.state,
+        context: session.context,
+      }),
       spellTargetId,
       "entersArea",
     );
@@ -351,7 +358,10 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
     }
 
     const endTurnAct = greaseGroundHazardEndTurnAct(
-      { state: targetTurn.state, context: session.context },
+      battleRuntimeSessionForTest({
+        state: targetTurn.state,
+        context: session.context,
+      }),
       spellTargetId,
     );
     const endTurnSave = requireHole(
@@ -392,7 +402,10 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
     }
 
     const endTurnAct = greaseGroundHazardEndTurnAct(
-      { state: targetTurn.state, context: session.context },
+      battleRuntimeSessionForTest({
+        state: targetTurn.state,
+        context: session.context,
+      }),
       spellTargetId,
     );
     const endTurnSave = requireHole(
@@ -417,7 +430,10 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
     }
 
     const nonSelectedEndTurnAct = greaseGroundHazardEndTurnAct(
-      { state: selectedTurnDone.state, context: session.context },
+      battleRuntimeSessionForTest({
+        state: selectedTurnDone.state,
+        context: session.context,
+      }),
       thunderwaveSecondTargetId,
     );
     const nonSelectedEndTurnSave = requireHole(
@@ -490,7 +506,10 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
       }),
     };
     const endTurnAct = greaseGroundHazardEndTurnAct(
-      { state: stateWithZeroHpCaster, context: session.context },
+      battleRuntimeSessionForTest({
+        state: stateWithZeroHpCaster,
+        context: session.context,
+      }),
       spellTargetId,
     );
     const endTurnSave = requireHole(
@@ -597,7 +616,10 @@ function castHeightenedGreaseWithSelectedTarget(): BattleRuntimeSession {
   if (resolved.tag !== "resolved") {
     throw new Error("Expected Heightened Grease to resolve.");
   }
-  return { state: resolved.state, context: session.context };
+  return battleRuntimeSessionForTest({
+    state: resolved.state,
+    context: session.context,
+  });
 }
 
 function heightenedGreaseAct(state: BattleState): ActionSpellAct {

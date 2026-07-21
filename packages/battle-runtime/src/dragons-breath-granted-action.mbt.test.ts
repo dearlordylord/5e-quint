@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-dragons-breath-granted-action
@@ -349,7 +350,7 @@ function initialRuntimeState(): DragonsBreathRuntimeState {
   });
   const caster = requireCombatant(baseSession.state, spellCasterId);
   return {
-    session: {
+    session: battleRuntimeSessionForTest({
       ...baseSession,
       state: {
         ...baseSession.state,
@@ -360,7 +361,7 @@ function initialRuntimeState(): DragonsBreathRuntimeState {
           positiveHpUnconscious: null,
         }),
       },
-    },
+    }),
     turnRole: "caster",
     holes: [],
     pendingExhale: null,
@@ -401,7 +402,10 @@ function castDragonsBreath(
   );
   return {
     ...state,
-    session: { ...state.session, state: result.state },
+    session: battleRuntimeSessionForTest({
+      ...state.session,
+      state: result.state,
+    }),
     turnRole: "caster",
     holes: [],
     pendingExhale: null,
@@ -421,7 +425,10 @@ function endCasterTurn(
   );
   return {
     ...state,
-    session: { ...state.session, state: result.state },
+    session: battleRuntimeSessionForTest({
+      ...state.session,
+      state: result.state,
+    }),
     turnRole: "target",
     holes: [],
     pendingExhale: null,
@@ -579,7 +586,10 @@ function resolveConcentration(
   );
   return {
     ...state,
-    session: { ...state.session, state: result.state },
+    session: battleRuntimeSessionForTest({
+      ...state.session,
+      state: result.state,
+    }),
     holes: [],
     pendingExhale: null,
     pendingDamageHole: null,
@@ -592,10 +602,10 @@ function breakDragonsBreathConcentration(
 ): DragonsBreathRuntimeState {
   return {
     ...state,
-    session: {
+    session: battleRuntimeSessionForTest({
       ...state.session,
       state: breakBattleConcentration(state.session.state, spellCasterId),
-    },
+    }),
     holes: [],
     pendingExhale: null,
     pendingDamageHole: null,

@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L1D2-THAUMATURGY-BOOMING-VOICE thaumaturgy
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-self-ability-check-advantage
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS
@@ -258,13 +259,13 @@ function castThaumaturgy(
       fills: [thaumaturgyCountFill(countHole, activeOneMinuteEffectCount)],
     }),
   );
-  return { ...session, state: resolved.state };
+  return battleRuntimeSessionForTest({ ...session, state: resolved.state });
 }
 
 function withFreshMagicAction(
   session: BattleRuntimeSession,
 ): BattleRuntimeSession {
-  return {
+  return battleRuntimeSessionForTest({
     ...session,
     state: {
       ...session.state,
@@ -273,7 +274,7 @@ function withFreshMagicAction(
         actionResources: [{ kind: "action", source: "turn" }],
       },
     },
-  };
+  });
 }
 
 function thaumaturgyBoomingVoiceEffectCount(

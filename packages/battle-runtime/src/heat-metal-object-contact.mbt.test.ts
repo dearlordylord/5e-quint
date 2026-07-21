@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-object-contact-damage
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE
@@ -265,7 +266,10 @@ function castHeatMetal(
       "Expected no-contact Heat Metal cast to resolve.",
     );
     return {
-      session: { ...state.session, state: result.state },
+      session: battleRuntimeSessionForTest({
+        ...state.session,
+        state: result.state,
+      }),
       currentTurnRole: "caster",
       lastResult: "castNoContact",
     };
@@ -292,7 +296,10 @@ function castHeatMetal(
     "Expected contact Heat Metal cast to resolve.",
   );
   return {
-    session: { ...state.session, state: result.state },
+    session: battleRuntimeSessionForTest({
+      ...state.session,
+      state: result.state,
+    }),
     currentTurnRole: "caster",
     lastResult: "castContactDamage",
   };
@@ -313,7 +320,10 @@ function endCasterTurn(state: HeatMetalRuntimeState): HeatMetalRuntimeState {
     "Expected Heat Metal caster End Turn to resolve.",
   );
   return {
-    session: { ...state.session, state: result.state },
+    session: battleRuntimeSessionForTest({
+      ...state.session,
+      state: result.state,
+    }),
     currentTurnRole: "target",
     lastResult: "endCasterTurn",
   };
@@ -325,7 +335,10 @@ function endTargetTurn(state: HeatMetalRuntimeState): HeatMetalRuntimeState {
     "Expected Heat Metal target End Turn to resolve.",
   );
   return {
-    session: { ...state.session, state: result.state },
+    session: battleRuntimeSessionForTest({
+      ...state.session,
+      state: result.state,
+    }),
     currentTurnRole: "caster",
     lastResult: "endTargetTurn",
   };
@@ -359,7 +372,10 @@ function repeatHeatMetalDamage(
     "Expected Heat Metal repeat damage to resolve.",
   );
   return {
-    session: { ...state.session, state: result.state },
+    session: battleRuntimeSessionForTest({
+      ...state.session,
+      state: result.state,
+    }),
     currentTurnRole: "caster",
     lastResult: "repeatContactDamage",
   };
@@ -369,10 +385,10 @@ function breakHeatMetalConcentration(
   state: HeatMetalRuntimeState,
 ): HeatMetalRuntimeState {
   return {
-    session: {
+    session: battleRuntimeSessionForTest({
       ...state.session,
       state: breakBattleConcentration(state.session.state, spellCasterId),
-    },
+    }),
     currentTurnRole: state.currentTurnRole,
     lastResult: "concentrationBroken",
   };

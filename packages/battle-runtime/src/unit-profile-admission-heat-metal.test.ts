@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-HEAT-METAL-HOLDING-WEARING-PENALTY heat_metal
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-object-contact-damage
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE
@@ -325,7 +326,10 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
     );
     expect(
       maybeBonusSpellAct({
-        session: { state: resolved.state, context: session.context },
+        session: battleRuntimeSessionForTest({
+          state: resolved.state,
+          context: session.context,
+        }),
         spellId: heatMetalUnitId,
       }),
     ).toBeUndefined();
@@ -674,10 +678,10 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
       throw new Error("Expected target End Turn to resolve.");
     }
 
-    const repeatSession = {
+    const repeatSession = battleRuntimeSessionForTest({
       state: casterTurn.state,
       context: session.context,
-    };
+    });
     const repeat = bonusSpellAct({
       session: repeatSession,
       spellId: heatMetalUnitId,

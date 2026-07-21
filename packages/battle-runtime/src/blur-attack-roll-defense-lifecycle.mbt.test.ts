@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-blur-attack-roll-defense
@@ -340,7 +341,10 @@ function castBlur(
   );
   return {
     ...state,
-    battle: { ...state.battle, state: result.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: result.state,
+    }),
     lastResult: "blurCast",
   };
 }
@@ -353,10 +357,10 @@ function breakBlurConcentration(
   }
   return {
     ...state,
-    battle: {
+    battle: battleRuntimeSessionForTest({
       ...state.battle,
       state: breakBattleConcentration(state.battle.state, spellCasterId),
-    },
+    }),
     lastResult: "concentrationBroken",
   };
 }
@@ -411,7 +415,10 @@ function attackerAttackRollMode(
     throw new Error("Expected to advance to Blur attacker turn.");
   }
 
-  const attackerSession = { ...state.battle, state: attackerTurn.state };
+  const attackerSession = battleRuntimeSessionForTest({
+    ...state.battle,
+    state: attackerTurn.state,
+  });
   const attack = statBlockAttackAct(
     attackerSession,
     state.attackerId,

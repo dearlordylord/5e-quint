@@ -482,6 +482,7 @@ export {
   currentInterruptCheckpoint,
   currentInterruptFrame,
   damageAmountByTypeEntriesAfterScalarReduction,
+  endBattleRuntimeTurn,
   endTurn,
   hasAttackDamageReductionRedirectTargetSpatialFact,
   interruptCheckpointAfterModifier,
@@ -495,6 +496,7 @@ export {
   openAfterDamageSequenceInterruptWindow,
   openBattleInterruptWindow,
   openCreatureFallsInterruptWindow,
+  openCreatureFallsRuntimeInterruptWindow,
   opportunityAttackReactionChoices,
   parseAttackDamageInterruptionFrame,
   pendingInterruptSnapshot,
@@ -506,6 +508,7 @@ export {
   resolveAttackDamageContinuationConcentration,
   resolveAttackDamageReductionZeroDamageRedirectAfterReduction,
   resolveBattleInterrupt,
+  resolveBattleRuntimeInterrupt,
   resolveBattleRuntimeSubject,
   resolveBattleSubject,
   resolveBattleSubjectInternal,
@@ -4576,6 +4579,29 @@ type BattleCreatureStateCommon = {
 export type BattleCreatureState = BattleCreatureStateCommon &
   BattleCreatureKnockOutLifecycle;
 
+export type BattleExecutionScopeAllocation =
+  | {
+      readonly kind: "active";
+      readonly nextScopeOrdinal: BattleExecutionScopeCursor;
+    }
+  | {
+      readonly kind: "retired";
+      readonly nextScopeOrdinal: BattleExecutionScopeCursor;
+      readonly ownership: BattleRetiredExecutionScopeOwnership;
+    };
+
+export type BattleRetiredExecutionScopeOwnership =
+  | {
+      readonly kind: "statBlock";
+      readonly statBlockScopeRef: BattleStatBlockExecutionScopeRef;
+    }
+  | {
+      readonly kind: "character";
+      readonly characterScopeRef: BattleCharacterExecutionScopeRef;
+      readonly attackScopeRef: BattleAttackExecutionScopeRef;
+      readonly formScopeRefs: readonly BattleStatBlockExecutionScopeRef[];
+    };
+
 export type LegendaryActionWindow = {
   readonly afterTurnActorId: CombatantId;
   readonly consumed: boolean;
@@ -4587,7 +4613,7 @@ export type BattleState = {
   readonly combatants: ReadonlyMap<CombatantId, BattleCreatureState>;
   readonly executionScopeCursors: ReadonlyMap<
     CombatantId,
-    BattleExecutionScopeCursor
+    BattleExecutionScopeAllocation
   >;
   readonly companions: BattleCompanions;
   readonly objectOutlines: readonly BattleObjectOutline[];
@@ -4732,6 +4758,7 @@ export type BattleActPresentation =
   | {
       readonly kind: "druidWildShapeForm";
       readonly procedureRef: BattleProcedureExecutionRef;
+      readonly formExecutionRef: BattleStatBlockExecutionScopeRef;
       readonly unitId: UnitRecord["id"];
       readonly formStatBlockId: BattleDruidWildShapeKnownForm["id"];
     };
@@ -6136,6 +6163,7 @@ export type BattleSavingThrowRollModeProjection = {
 };
 export type BattleSavingThrowFlatBonusProjection = {
   readonly targetId: CombatantId;
+  readonly sourceCombatantId: CombatantId;
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly bonus: number;
 };
@@ -7312,6 +7340,11 @@ export type BattleSnapshot = {
     readonly combatantId: CombatantId;
     readonly nextScopeOrdinal: BattleExecutionScopeCursor;
   }[];
+  readonly retiredExecutionScopeAllocations: readonly {
+    readonly combatantId: CombatantId;
+    readonly nextScopeOrdinal: BattleExecutionScopeCursor;
+    readonly ownership: BattleRetiredExecutionScopeOwnership;
+  }[];
   readonly round: RoundType;
   readonly currentActorId: CombatantId;
   readonly turnOrder: readonly CombatantId[];
@@ -7593,9 +7626,11 @@ export {
 
 export {
   addBattleCombatant,
+  addBattleRuntimeCombatant,
   applyInitiativeSwap,
   finishInitialInitiativeSetup,
   removeBattleCombatants,
+  removeBattleRuntimeCombatants,
   requiredInitiativeRollModeForCombatant,
   startBattle,
   startBattleWithInitialInitiativeSetup,

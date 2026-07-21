@@ -7,7 +7,6 @@ import {
   startBattle,
   type BattleCreatureInit,
   type BattleRuntimeSession,
-  type BattleState,
   type CombatantId,
 } from "@dnd/battle-runtime";
 import {
@@ -90,17 +89,14 @@ export function handleStartBattleToolCall(
   }
   const admittedState = admitCompanionAdmissions({
     root,
-    state: session.right.state,
+    session: session.right,
     admissions: input.companionAdmissions,
     characterSessions: combatants.right.characterSessions,
     initialCombatantOrder,
   });
   if (Either.isLeft(admittedState)) return admittedState.left;
 
-  const admittedSession: BattleRuntimeSession = {
-    state: admittedState.right,
-    context: session.right.context,
-  };
+  const admittedSession = admittedState.right;
   root.sessionStore.battleSession = admittedSession;
   root.sessionStore.pendingBattleFills = null;
   for (const { session } of combatants.right.characterSessions) {
@@ -277,12 +273,12 @@ function startableBattleCombatant(input: {
 
 function admitCompanionAdmissions(input: {
   readonly root: McpCompositionRoot;
-  readonly state: BattleState;
+  readonly session: BattleRuntimeSession;
   readonly admissions: readonly CompanionAdmissionToolInput[];
   readonly characterSessions: readonly StartableCharacterSessionCombatant[];
   readonly initialCombatantOrder: ReadonlyMap<CombatantId, number>;
-}): Either.Either<BattleState, ReturnType<typeof errorContent>> {
-  let state = input.state;
+}): Either.Either<BattleRuntimeSession, ReturnType<typeof errorContent>> {
+  let session = input.session;
   for (const admission of input.admissions) {
     const owner = input.characterSessions.find(
       ({ character }) => character.characterId === admission.ownerCharacterId,
@@ -299,7 +295,7 @@ function admitCompanionAdmissions(input: {
       );
     }
     const admitted = admitCharacterSheetCompanionToBattle({
-      state,
+      session,
       sheet: owner.session,
       unitLibrary: input.root.unitLibrary,
       ownerCombatantId: owner.character.combatantId,
@@ -331,9 +327,9 @@ function admitCompanionAdmissions(input: {
         }),
       );
     }
-    state = admitted.right;
+    session = admitted.right;
   }
-  return Either.right(state);
+  return Either.right(session);
 }
 
 function initialCombatantOrderForStartInput(

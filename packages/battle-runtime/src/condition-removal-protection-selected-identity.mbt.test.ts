@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
   battleActiveEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
@@ -225,7 +226,7 @@ function resolveLesserRestorationChoiceBattle(): BattleState {
     ),
   };
   const act = bonusSpellAct({
-    session: { ...session, state },
+    session: battleRuntimeSessionForTest({ ...session, state }),
     spellId: lesserRestorationUnitId,
   });
   const targetHole = requireHole(act.initialHoles, "targetChoice");
@@ -303,7 +304,7 @@ function resolveLesserRestorationConcentrationCleanupBattle(): BattleState {
       ),
   };
   const act = bonusSpellAct({
-    session: { ...session, state },
+    session: battleRuntimeSessionForTest({ ...session, state }),
     spellId: lesserRestorationUnitId,
   });
   const targetHole = requireHole(act.initialHoles, "targetChoice");
@@ -370,7 +371,7 @@ function resolveProtectionFromPoisonBattle(): BattleState {
     ),
   };
   const act = spellAct({
-    session: { ...session, state },
+    session: battleRuntimeSessionForTest({ ...session, state }),
     spellId: protectionFromPoisonUnitId,
     slotLevel: 2,
   });

@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.creature-space-movement-permission unit-feature.grappler
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-GRAPPLER-RUNTIME feat_grappler
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-HALFLING-NIMBLENESS-RUNTIME species_halfling_nimbleness
@@ -2561,7 +2562,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
       endTurn({ state: grappled, actorId: fighterId }),
     ).state;
     const spellSubject = findAct(
-      { ...session, state: wizardTurn },
+      battleRuntimeSessionForTest({ ...session, state: wizardTurn }),
       magicSubject("ray_of_frost"),
     ).subject;
     const spellTarget = requireHole(
@@ -2819,7 +2820,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
         tag: "actionSpell",
         actorId: wizardId,
         procedureRef: requireCharacterSpellProcedureRefForTest(
-          { ...session, state: hiddenState },
+          battleRuntimeSessionForTest({ ...session, state: hiddenState }),
           wizardId,
           cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
         ),

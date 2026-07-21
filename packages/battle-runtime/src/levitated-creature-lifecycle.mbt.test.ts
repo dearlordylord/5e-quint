@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-levitated-creature
@@ -426,7 +427,10 @@ function castUnwillingLevitate(
       );
   return {
     ...state,
-    battle: { ...state.battle, state: resolved.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: resolved.state,
+    }),
     holes: [],
     lastResult,
   };
@@ -519,7 +523,10 @@ function castWillingLevitate(
   );
   return {
     ...state,
-    battle: { ...state.battle, state: resolved.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: resolved.state,
+    }),
     holes: [],
     lastResult: "willingLevitated",
   };
@@ -532,7 +539,7 @@ function discoverTargetMovement(
   const act = moveActInState(battle);
   return {
     ...state,
-    battle: { ...state.battle, state: battle },
+    battle: battleRuntimeSessionForTest({ ...state.battle, state: battle }),
     holes: act.initialHoles,
     lastResult: "needsTargetMovement",
   };
@@ -591,7 +598,10 @@ function moveTargetWithWitnessUp5Feet(
   );
   return {
     ...state,
-    battle: { ...state.battle, state: resolved.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: resolved.state,
+    }),
     holes: [],
     lastResult: "targetMoved",
   };
@@ -604,7 +614,7 @@ function discoverCasterControl(
   const act = levitateAltitudeControlActInState(battle);
   return {
     ...state,
-    battle: { ...state.battle, state: battle },
+    battle: battleRuntimeSessionForTest({ ...state.battle, state: battle }),
     holes: act.initialHoles,
     lastResult: "needsCasterControl",
   };
@@ -653,7 +663,10 @@ function controlAltitudeDown10Feet(
   );
   return {
     ...state,
-    battle: { ...state.battle, state: resolved.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: resolved.state,
+    }),
     holes: [],
     lastResult: "casterControlled",
   };
@@ -664,10 +677,10 @@ function breakLevitateConcentration(
 ): LevitateCreatureRuntimeState {
   return {
     ...state,
-    battle: {
+    battle: battleRuntimeSessionForTest({
       ...state.battle,
       state: breakBattleConcentration(state.battle.state, spellCasterId),
-    },
+    }),
     holes: [],
     lastResult: "concentrationBroken",
   };
@@ -697,10 +710,10 @@ function expireLevitateDuration(
   };
   return {
     ...state,
-    battle: {
+    battle: battleRuntimeSessionForTest({
       ...state.battle,
       state: advanceToNextCasterTurn(nearlyExpired),
-    },
+    }),
     holes: [],
     lastResult: "durationExpired",
   };

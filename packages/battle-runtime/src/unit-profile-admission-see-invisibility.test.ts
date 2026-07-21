@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT see_invisibility
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-see-invisible-observer-sight
@@ -326,7 +327,7 @@ function withInvisibleTarget(
   session: BattleRuntimeSession,
 ): BattleRuntimeSession {
   const target = requireCombatant(session.state, spellTargetId);
-  return {
+  return battleRuntimeSessionForTest({
     ...session,
     state: {
       ...session.state,
@@ -337,7 +338,7 @@ function withInvisibleTarget(
         ),
       }),
     },
-  };
+  });
 }
 
 function withHiddenInvisibleTarget(): BattleRuntimeSession {
@@ -348,7 +349,7 @@ function withHiddenInvisibleTarget(): BattleRuntimeSession {
     }),
   );
   const target = requireCombatant(session.state, spellTargetId);
-  return {
+  return battleRuntimeSessionForTest({
     ...session,
     state: {
       ...session.state,
@@ -357,7 +358,7 @@ function withHiddenInvisibleTarget(): BattleRuntimeSession {
         hidden: { discoveryDc: difficultyClass(16) },
       }),
     },
-  };
+  });
 }
 
 function requireResolved(

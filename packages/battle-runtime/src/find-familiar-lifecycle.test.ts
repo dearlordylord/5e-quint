@@ -1,7 +1,9 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.find-familiar-lifecycle unit-feature.d20-test-natural-one-reroll
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV84I5 find_familiar
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
+import { removeBattleCombatants } from "./battle-reducer/api-lifecycle.ts";
 import * as Either from "effect/Either";
 import { Schema } from "effect";
 import { describe, expect, test } from "vitest";
@@ -46,7 +48,6 @@ import {
   initiativeScore,
   permanentlyDismissFindFamiliar,
   reappearTemporarilyDismissedFindFamiliar,
-  removeBattleCombatants,
   resolveBattleInterrupt,
   shareFindFamiliarSenses,
   snapshotBattle,
@@ -1329,10 +1330,12 @@ describe("Find Familiar lifecycle", () => {
     if (dismissed.tag !== "resolved") return;
 
     const reappearanceReadyState = withFreshMagicAction(dismissed.state);
-    const reappearanceAct = discoverBattleActs({
-      state: reappearanceReadyState,
-      context: session.context,
-    }).find(
+    const reappearanceAct = discoverBattleActs(
+      battleRuntimeSessionForTest({
+        state: reappearanceReadyState,
+        context: session.context,
+      }),
+    ).find(
       (act) =>
         act.subject.tag === "companionLifecycle" &&
         act.subject.action === "reappear",
@@ -1698,10 +1701,12 @@ describe("Find Familiar lifecycle", () => {
         }),
       ]),
     );
-    const acts = discoverBattleActs({
-      state: familiarTurn.state,
-      context: emptyBattleRuntimeContext(),
-    });
+    const acts = discoverBattleActs(
+      battleRuntimeSessionForTest({
+        state: familiarTurn.state,
+        context: emptyBattleRuntimeContext(),
+      }),
+    );
     expect(acts.map((act) => act.subject)).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ tag: "action", action: "dash" }),
@@ -1973,10 +1978,12 @@ describe("Find Familiar lifecycle", () => {
     const cast = castCatFamiliar(session);
     expect(cast.tag).toBe("resolved");
     if (cast.tag !== "resolved") return;
-    const cureWoundsAct = discoverBattleActs({
-      state: cast.state,
-      context: session.context,
-    }).find(
+    const cureWoundsAct = discoverBattleActs(
+      battleRuntimeSessionForTest({
+        state: cast.state,
+        context: session.context,
+      }),
+    ).find(
       (act) =>
         act.subject.tag === "actionSpell" &&
         battleActSpellPresentation(act)?.invocation.spellId === "cure_wounds",
@@ -2047,10 +2054,12 @@ describe("Find Familiar lifecycle", () => {
     const cast = castCatFamiliar(session);
     expect(cast.tag).toBe("resolved");
     if (cast.tag !== "resolved") return;
-    const cureWoundsAct = discoverBattleActs({
-      state: cast.state,
-      context: session.context,
-    }).find(
+    const cureWoundsAct = discoverBattleActs(
+      battleRuntimeSessionForTest({
+        state: cast.state,
+        context: session.context,
+      }),
+    ).find(
       (act) =>
         act.subject.tag === "actionSpell" &&
         battleActSpellPresentation(act)?.invocation.spellId === "cure_wounds",
@@ -2093,10 +2102,12 @@ describe("Find Familiar lifecycle", () => {
     const cast = castCatFamiliar(session);
     expect(cast.tag).toBe("resolved");
     if (cast.tag !== "resolved") return;
-    const healingWordAct = discoverBattleActs({
-      state: cast.state,
-      context: session.context,
-    }).find(
+    const healingWordAct = discoverBattleActs(
+      battleRuntimeSessionForTest({
+        state: cast.state,
+        context: session.context,
+      }),
+    ).find(
       (act) =>
         act.subject.tag === "bonusActionSpell" &&
         battleActSpellPresentation(act)?.invocation.spellId === "healing_word",
@@ -2122,10 +2133,12 @@ describe("Find Familiar lifecycle", () => {
     ).toBe(false);
     expect(cast.state.combatants.get(familiarId)?.reactionAvailable).toBe(true);
 
-    const cureWoundsAct = discoverBattleActs({
-      state: cast.state,
-      context: session.context,
-    }).find(
+    const cureWoundsAct = discoverBattleActs(
+      battleRuntimeSessionForTest({
+        state: cast.state,
+        context: session.context,
+      }),
+    ).find(
       (act) =>
         act.subject.tag === "actionSpell" &&
         battleActSpellPresentation(act)?.invocation.spellId === "cure_wounds",
@@ -2163,10 +2176,12 @@ describe("Find Familiar lifecycle", () => {
     expect(cast.tag).toBe("resolved");
     if (cast.tag !== "resolved") return;
 
-    const acts = discoverBattleActs({
-      state: cast.state,
-      context: session.context,
-    });
+    const acts = discoverBattleActs(
+      battleRuntimeSessionForTest({
+        state: cast.state,
+        context: session.context,
+      }),
+    );
     const temporaryDismiss = acts.find(
       (act) =>
         act.subject.tag === "companionLifecycle" &&
@@ -2229,20 +2244,24 @@ describe("Find Familiar lifecycle", () => {
       }),
     ]);
     expect(
-      discoverBattleActs({
-        state: dismissed.state,
-        context: session.context,
-      }).some(
+      discoverBattleActs(
+        battleRuntimeSessionForTest({
+          state: dismissed.state,
+          context: session.context,
+        }),
+      ).some(
         (act) =>
           act.subject.tag === "companionLifecycle" &&
           act.subject.action === "reappear",
       ),
     ).toBe(false);
     const reappearanceReadyState = withFreshMagicAction(dismissed.state);
-    const reappearanceAct = discoverBattleActs({
-      state: reappearanceReadyState,
-      context: session.context,
-    }).find(
+    const reappearanceAct = discoverBattleActs(
+      battleRuntimeSessionForTest({
+        state: reappearanceReadyState,
+        context: session.context,
+      }),
+    ).find(
       (act) =>
         act.subject.tag === "companionLifecycle" &&
         act.subject.action === "reappear",
@@ -2303,10 +2322,12 @@ describe("Find Familiar lifecycle", () => {
     expect(cast.tag).toBe("resolved");
     if (cast.tag !== "resolved") return;
 
-    const acts = discoverBattleActs({
-      state: cast.state,
-      context: session.context,
-    });
+    const acts = discoverBattleActs(
+      battleRuntimeSessionForTest({
+        state: cast.state,
+        context: session.context,
+      }),
+    );
     expect(
       acts.some(
         (act) =>
@@ -2429,7 +2450,12 @@ describe("Find Familiar lifecycle", () => {
     ]);
     expect(cast.state.combatants.get(familiarId)?.reactionAvailable).toBe(true);
     expect(
-      discoverBattleActs({ state: cast.state, context: session.context }),
+      discoverBattleActs(
+        battleRuntimeSessionForTest({
+          state: cast.state,
+          context: session.context,
+        }),
+      ),
     ).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -2763,10 +2789,12 @@ describe("Find Familiar lifecycle", () => {
     const cast = castCatFamiliarAfterCasterTurn(session);
     expect(cast.tag).toBe("resolved");
     if (cast.tag !== "resolved") return;
-    const attackActs = discoverBattleActs({
-      state: cast.state,
-      context: session.context,
-    }).filter((act) => act.subject.tag === "pactOfTheChainFamiliarAttack");
+    const attackActs = discoverBattleActs(
+      battleRuntimeSessionForTest({
+        state: cast.state,
+        context: session.context,
+      }),
+    ).filter((act) => act.subject.tag === "pactOfTheChainFamiliarAttack");
     const rolledSubject = attackActs.find(
       (act) =>
         act.subject.tag === "pactOfTheChainFamiliarAttack" &&
@@ -2842,10 +2870,12 @@ describe("Find Familiar lifecycle", () => {
     };
 
     expect(
-      discoverBattleActs({
-        state: unableToReact,
-        context: session.context,
-      }).some((act) => act.subject.tag === "pactOfTheChainFamiliarAttack"),
+      discoverBattleActs(
+        battleRuntimeSessionForTest({
+          state: unableToReact,
+          context: session.context,
+        }),
+      ).some((act) => act.subject.tag === "pactOfTheChainFamiliarAttack"),
     ).toBe(false);
 
     const blocked = resolveBattleSubject({

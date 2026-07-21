@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-ALTER-SELF-NATURAL-WEAPONS-RUNTIME alter_self
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-self-transformation-mode
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SELF_TRANSFORMATION_MODE
@@ -203,10 +204,12 @@ describe("L12G Alter Self self-transformation Spell Unit admission", () => {
       throw new Error("Expected target end turn to resolve.");
     }
 
-    const unarmedStrike = discoverBattleActs({
-      ...state,
-      state: casterTurn.state,
-    }).find(
+    const unarmedStrike = discoverBattleActs(
+      battleRuntimeSessionForTest({
+        ...state,
+        state: casterTurn.state,
+      }),
+    ).find(
       (candidate) =>
         candidate.subject.tag === "action" &&
         candidate.subject.action === "attack" &&
@@ -333,10 +336,12 @@ describe("L12G Alter Self self-transformation Spell Unit admission", () => {
       throw new Error("Expected active self-transformation effect.");
     }
 
-    const replacementAct = discoverBattleActs({
-      ...state,
-      state: casterTurn.state,
-    }).find(
+    const replacementAct = discoverBattleActs(
+      battleRuntimeSessionForTest({
+        ...state,
+        state: casterTurn.state,
+      }),
+    ).find(
       (candidate) =>
         candidate.subject.tag === "runtimeCommand" &&
         candidate.subject.command === "replaceSelfTransformationMode" &&
@@ -423,10 +428,12 @@ describe("L12G Alter Self self-transformation Spell Unit admission", () => {
       throw new Error("Expected active self-transformation effect.");
     }
 
-    const replacementAct = discoverBattleActs({
-      ...state,
-      state: casterTurn.state,
-    }).find(
+    const replacementAct = discoverBattleActs(
+      battleRuntimeSessionForTest({
+        ...state,
+        state: casterTurn.state,
+      }),
+    ).find(
       (candidate) =>
         candidate.subject.tag === "runtimeCommand" &&
         candidate.subject.command === "replaceSelfTransformationMode" &&

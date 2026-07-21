@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
   battleActiveEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
@@ -337,7 +338,7 @@ function initialRuntimeState(): AntimagicRuntimeState {
     },
   });
   const caster = requireCombatant(base.state, spellCasterId);
-  const withOngoingSpell = {
+  const withOngoingSpell = battleRuntimeSessionForTest({
     ...base,
     state: {
       ...base.state,
@@ -352,13 +353,16 @@ function initialRuntimeState(): AntimagicRuntimeState {
         },
       }),
     },
-  };
+  });
   const targetTurn = requireResolved(
     endTurn({ state: withOngoingSpell.state, actorId: spellCasterId }),
     "Expected target turn setup to resolve.",
   );
   return {
-    battle: { ...withOngoingSpell, state: targetTurn.state },
+    battle: battleRuntimeSessionForTest({
+      ...withOngoingSpell,
+      state: targetTurn.state,
+    }),
     lastResult: "init",
   };
 }
@@ -390,7 +394,10 @@ function suppressOngoingSpell(
   );
   assertSuppressionActiveEffectShape(resolved.state, sourceKind);
   return {
-    battle: { ...state.battle, state: resolved.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: resolved.state,
+    }),
     lastResult:
       sourceKind === "ordinarySpell"
         ? "suppressedOrdinarySpell"
@@ -402,10 +409,10 @@ function breakAntimagicConcentration(
   state: AntimagicRuntimeState,
 ): AntimagicRuntimeState {
   return {
-    battle: {
+    battle: battleRuntimeSessionForTest({
       ...state.battle,
       state: breakBattleConcentration(state.battle.state, spellTargetId),
-    },
+    }),
     lastResult: "restored",
   };
 }

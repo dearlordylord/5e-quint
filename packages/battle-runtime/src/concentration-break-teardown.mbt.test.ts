@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.PROTOCOL.CONCENTRATION_BREAK_TEARDOWN
@@ -368,7 +369,10 @@ function stateAfterBlurCast(
   );
   return {
     ...state,
-    battle: { ...state.battle, state: resolved.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: resolved.state,
+    }),
     pendingConcentrationSave: null,
   };
 }
@@ -427,7 +431,7 @@ function damageRequestsConcentrationSave(
   expect(state.scenario).toBe("concentrationSpellCast");
   const attackerTurn = advanceToAttackerTurn(state.battle.state);
   const attack = statBlockAttackAct(
-    { ...state.battle, state: attackerTurn },
+    battleRuntimeSessionForTest({ ...state.battle, state: attackerTurn }),
     attackerId,
     "Scimitar",
   );
@@ -484,7 +488,10 @@ function damageRequestsConcentrationSave(
   expect(damageTaken).toBe(damageDiePip + 2);
   return {
     ...state,
-    battle: { ...state.battle, state: pending.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: pending.state,
+    }),
     scenario: "damageSaveNeeded",
     damageTaken,
     saveDc: Number(concentration.dc),
@@ -520,7 +527,10 @@ function failConcentrationSave(
   );
   return {
     ...state,
-    battle: { ...state.battle, state: resolved.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: resolved.state,
+    }),
     scenario: "damageFailedTeardownBeforeNextCommand",
     saveRollTotal,
     concentrationSaveOffered: false,
@@ -538,7 +548,7 @@ function voluntarilyEndConcentration(
   const broken = breakBattleConcentration(cast.battle.state, spellCasterId);
   return {
     ...cast,
-    battle: { ...cast.battle, state: broken },
+    battle: battleRuntimeSessionForTest({ ...cast.battle, state: broken }),
     scenario: "voluntaryEndTeardown",
     teardownBeforeNextCommand:
       concentrationTeardownIsVisibleBeforeNextCommand(broken),
@@ -553,7 +563,10 @@ function castReplacementConcentrationSpell(
   );
   const replaced = stateAfterBlurCast({
     ...state,
-    battle: { ...state.battle, state: beforeReplacement },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: beforeReplacement,
+    }),
   });
   return {
     ...replaced,

@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-CLASS-PALADINS-SMITE paladin_paladins_smite
@@ -112,7 +113,10 @@ describe("battle runtime: Favored Enemy", () => {
         ],
       }),
     );
-    const markedSession = { ...session, state: marked.state };
+    const markedSession = battleRuntimeSessionForTest({
+      ...session,
+      state: marked.state,
+    });
     const ranger = markedSession.state.combatants.get(fighterId);
 
     expect(ranger?.origin.kind).toBe("character");
@@ -414,7 +418,10 @@ describe("battle runtime: Favored Enemy", () => {
         ],
       }),
     );
-    const markedSession = { ...session, state: marked.state };
+    const markedSession = battleRuntimeSessionForTest({
+      ...session,
+      state: marked.state,
+    });
     const ranger = markedSession.state.combatants.get(fighterId);
 
     expect(ranger?.origin.kind).toBe("character");
@@ -473,7 +480,10 @@ describe("battle runtime: Paladin's Smite", () => {
           return false;
         return (
           characterSpellInvocationRefForProcedureRefForTest(
-            { state: awaitingReaction.state, context: session.context },
+            battleRuntimeSessionForTest({
+              state: awaitingReaction.state,
+              context: session.context,
+            }),
             choice.reactorId,
             choice.subject.procedureRef,
           ).tag === "classFeatureFreeCast"
@@ -487,7 +497,10 @@ describe("battle runtime: Paladin's Smite", () => {
     }
     expect(
       characterSpellInvocationRefForProcedureRefForTest(
-        { state: awaitingReaction.state, context: session.context },
+        battleRuntimeSessionForTest({
+          state: awaitingReaction.state,
+          context: session.context,
+        }),
         smiteChoice.reactorId,
         smiteChoice.subject.procedureRef,
       ),
@@ -627,7 +640,10 @@ describe("battle runtime: Paladin's Smite", () => {
       awaitingReaction.snapshot.pendingInterrupt?.choices.some((choice) => {
         if (choice.kind !== "castAttackHitBonusActionSpell") return false;
         const invocation = characterSpellInvocationRefForProcedureRefForTest(
-          { state: awaitingReaction.state, context: session.context },
+          battleRuntimeSessionForTest({
+            state: awaitingReaction.state,
+            context: session.context,
+          }),
           choice.reactorId,
           choice.subject.procedureRef,
         );
@@ -641,7 +657,10 @@ describe("battle runtime: Paladin's Smite", () => {
       awaitingReaction.snapshot.pendingInterrupt?.choices.some((choice) => {
         if (choice.kind !== "castAttackHitBonusActionSpell") return false;
         const invocation = characterSpellInvocationRefForProcedureRefForTest(
-          { state: awaitingReaction.state, context: session.context },
+          battleRuntimeSessionForTest({
+            state: awaitingReaction.state,
+            context: session.context,
+          }),
           choice.reactorId,
           choice.subject.procedureRef,
         );
@@ -694,7 +713,10 @@ describe("battle runtime: Paladin's Smite", () => {
       awaitingReaction.snapshot.pendingInterrupt?.choices.some((choice) => {
         if (choice.kind !== "castAttackHitBonusActionSpell") return false;
         const invocation = characterSpellInvocationRefForProcedureRefForTest(
-          { state: awaitingReaction.state, context: session.context },
+          battleRuntimeSessionForTest({
+            state: awaitingReaction.state,
+            context: session.context,
+          }),
           choice.reactorId,
           choice.subject.procedureRef,
         );
@@ -708,7 +730,10 @@ describe("battle runtime: Paladin's Smite", () => {
       awaitingReaction.snapshot.pendingInterrupt?.choices.some((choice) => {
         if (choice.kind !== "castAttackHitBonusActionSpell") return false;
         const invocation = characterSpellInvocationRefForProcedureRefForTest(
-          { state: awaitingReaction.state, context: session.context },
+          battleRuntimeSessionForTest({
+            state: awaitingReaction.state,
+            context: session.context,
+          }),
           choice.reactorId,
           choice.subject.procedureRef,
         );

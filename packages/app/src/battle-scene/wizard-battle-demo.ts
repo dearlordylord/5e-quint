@@ -5,18 +5,18 @@ import {
   battleId,
   battleObjectId,
   type BattleObjectIgnitionOutcome,
-  type BattleResolutionResult,
   type BattleRuntimeContext,
+  type BattleRuntimeResolutionResult,
   type BattleRuntimeSession,
   type BattleSnapshot,
   type BattleState,
   characterId,
   type CombatantId,
   combatantId,
-  endTurn,
+  endBattleRuntimeTurn,
   initiativeScore,
-  resolveBattleInterrupt,
-  resolveBattleSubject,
+  resolveBattleRuntimeInterrupt,
+  resolveBattleRuntimeSubject,
   snapshotBattle,
   startBattle
 } from "@dnd/battle-runtime"
@@ -198,8 +198,7 @@ type AreaSpellPlan = {
 }
 
 type WizardBattleDemoBuilder = {
-  state: BattleState
-  readonly context: BattleRuntimeContext
+  session: BattleRuntimeSession
   startedTurnActorId: CombatantId | undefined
   readonly steps: Array<WizardBattleDemoStep>
   readonly objectIgnitions: Array<BattleObjectIgnitionOutcome>
@@ -395,8 +394,7 @@ function requireWizardBattleDemo(): WizardBattleDemo {
     [shatterUnitId]: shatter
   })
   const builder: WizardBattleDemoBuilder = {
-    state: initialSession.state,
-    context: initialSession.context,
+    session: initialSession,
     startedTurnActorId: undefined,
     steps: [],
     objectIgnitions: []
@@ -603,12 +601,8 @@ function shatterPlan(
 
 function castAreaSpell(builder: WizardBattleDemoBuilder, plan: AreaSpellPlan): void {
   ensureTurnStarted(builder, plan.casterId)
-  requireCurrentActor(builder.state, plan.casterId)
-  const act = requireActionSpellAct(
-    { state: builder.state, context: builder.context },
-    plan.spell.id,
-    plan.spell.slotLevel
-  )
+  requireCurrentActor(builder.session.state, plan.casterId)
+  const act = requireActionSpellAct(builder.session, plan.spell.id, plan.spell.slotLevel)
   pushStep(builder, {
     title: plan.title,
     detail: plan.detail,
@@ -620,23 +614,23 @@ function castAreaSpell(builder: WizardBattleDemoBuilder, plan: AreaSpellPlan): v
     cue: { spell: spellCue(plan) }
   })
 
-  const pending = resolveBattleSubject({
-    state: builder.state,
+  const pending = resolveBattleRuntimeSubject({
+    session: builder.session,
     subject: act.subject,
-    fills: [spellCastReactionFactsFill(counterspellFactsForPlan(builder.context, plan))]
+    fills: [spellCastReactionFactsFill(counterspellFactsForPlan(builder.session.context, plan))]
   })
   const spellReady = resolveSpellCastWindows(builder, plan, pending)
 
   pushStep(builder, {
     title: "Area selected",
     detail: `${plan.spell.name} catches ${plan.outcomes.map((outcome) => nameOf(outcome.targetId)).join(", ")}.`,
-    state: spellReady.state,
+    state: spellReady.session.state,
     cue: { spell: spellCue(plan) }
   })
   pushStep(builder, {
     title: `${plan.spell.name} saves`,
     detail: `${plan.spell.name} asks the table for affected creatures and Saving Throw outcomes.`,
-    state: spellReady.state,
+    state: spellReady.session.state,
     cue: { spell: spellCue(plan) }
   })
 
@@ -644,7 +638,7 @@ function castAreaSpell(builder: WizardBattleDemoBuilder, plan: AreaSpellPlan): v
     pushStep(builder, {
       title: "Saving throw",
       detail: outcome.detail,
-      state: spellReady.state,
+      state: spellReady.session.state,
       cue: {
         spell: spellCue(plan),
         labels: [
@@ -661,8 +655,8 @@ function castAreaSpell(builder: WizardBattleDemoBuilder, plan: AreaSpellPlan): v
   const savingThrow = requireHole(spellReady.holes, "savingThrowOutcome")
   const saveFill = savingThrowFillForPlan(savingThrow, plan)
   const damageRoll = requireResultHole(
-    resolveBattleSubject({
-      state: spellReady.state,
+    resolveBattleRuntimeSubject({
+      session: spellReady.session,
       subject: spellReady.subject,
       fills: [saveFill]
     }),
@@ -671,19 +665,19 @@ function castAreaSpell(builder: WizardBattleDemoBuilder, plan: AreaSpellPlan): v
   pushStep(builder, {
     title: "Damage roll",
     detail: `${plan.spell.name} rolls ${plan.spell.damageRollResults.join(" + ")}.`,
-    state: spellReady.state,
+    state: spellReady.session.state,
     cue: { spell: spellCue(plan) }
   })
 
-  const resolved = resolveBattleSubject({
-    state: spellReady.state,
+  const resolved = resolveBattleRuntimeSubject({
+    session: spellReady.session,
     subject: spellReady.subject,
     fills: [saveFill, damageRollFillWithGroups(damageRoll, [plan.spell.damageRollResults])]
   })
   if (resolved.tag !== "resolved") {
     throw new Error(`Expected ${plan.spell.name} to resolve, got ${resolved.tag}.`)
   }
-  builder.state = resolved.state
+  builder.session = resolved.session
   builder.objectIgnitions.push(...(resolved.objectIgnitions ?? []))
 
   pushStep(builder, {
@@ -705,8 +699,8 @@ function castAreaSpell(builder: WizardBattleDemoBuilder, plan: AreaSpellPlan): v
 function resolveSpellCastWindows(
   builder: WizardBattleDemoBuilder,
   plan: AreaSpellPlan,
-  result: BattleResolutionResult
-): Extract<BattleResolutionResult, { readonly tag: "needsHoles" }> {
+  result: BattleRuntimeResolutionResult
+): Extract<BattleRuntimeResolutionResult, { readonly tag: "needsHoles" }> {
   if (plan.reaction.kind === "counterspellChain") {
     return resolveCounterspellChain(builder, plan, result, plan.reaction.chain)
   }
@@ -722,30 +716,30 @@ function resolveSpellCastWindows(
 function resolveCounterspellChain(
   builder: WizardBattleDemoBuilder,
   plan: AreaSpellPlan,
-  result: BattleResolutionResult,
+  result: BattleRuntimeResolutionResult,
   chain: ReadonlyNonEmptyArray<CounterspellChainLink>
-): Extract<BattleResolutionResult, { readonly tag: "needsHoles" }> {
+): Extract<BattleRuntimeResolutionResult, { readonly tag: "needsHoles" }> {
   requireNeedsReaction(result, `Expected ${plan.spell.name} Counterspell window.`)
   let pendingInterrupt = result
   for (const [index, link] of chain.entries()) {
     pushStep(builder, {
       title: "Counterspell window",
       detail: link.waitingDetail,
-      state: pendingInterrupt.state,
+      state: pendingInterrupt.session.state,
       cue: {
         reactingId: link.reactorId,
         spell: counterspellCue(link)
       }
     })
 
-    const choice = requireCounterspellChoice(builder.context, pendingInterrupt, {
+    const choice = requireCounterspellChoice(pendingInterrupt, {
       reactorId: link.reactorId,
       slotLevel: counterspellSlotLevel,
       spellId: counterspellUnitId
     })
     const nextLink = chain.at(index + 1)
-    const reactionResult = resolveBattleInterrupt({
-      state: pendingInterrupt.state,
+    const reactionResult = resolveBattleRuntimeInterrupt({
+      session: pendingInterrupt.session,
       fill: interruptDecisionFill(
         requireHole(pendingInterrupt.holes, "interruptDecision"),
         counterspellDecision(
@@ -753,7 +747,11 @@ function resolveCounterspellChain(
           choice,
           nextLink === undefined
             ? []
-            : [spellCastReactionFactsFill([counterspellFactForLink(builder.context, nextLink, link.reactorId)])]
+            : [
+                spellCastReactionFactsFill([
+                  counterspellFactForLink(pendingInterrupt.session.context, nextLink, link.reactorId)
+                ])
+              ]
         )
       )
     })
@@ -773,12 +771,12 @@ function resolveCounterspellChain(
 function pushCounterspellCastStep(
   builder: WizardBattleDemoBuilder,
   link: CounterspellChainLink,
-  result: Extract<BattleResolutionResult, { readonly tag: "needsHoles" }>
+  result: Extract<BattleRuntimeResolutionResult, { readonly tag: "needsHoles" }>
 ): void {
   pushStep(builder, {
     title: "Counterspell",
     detail: link.castDetail,
-    state: result.state,
+    state: result.session.state,
     cue: {
       reactingId: link.reactorId,
       spell: counterspellCue(link),
@@ -790,11 +788,11 @@ function pushCounterspellCastStep(
 function resolveDeclinedCounterspell(
   builder: WizardBattleDemoBuilder,
   plan: AreaSpellPlan,
-  result: BattleResolutionResult,
+  result: BattleRuntimeResolutionResult,
   decline: Extract<SpellCastReactionPlan, { readonly kind: "declinedCounterspell" }>
-): Extract<BattleResolutionResult, { readonly tag: "needsHoles" }> {
+): Extract<BattleRuntimeResolutionResult, { readonly tag: "needsHoles" }> {
   requireNeedsReaction(result, `Expected ${nameOf(decline.reactorId)} Counterspell window.`)
-  requireCounterspellChoice(builder.context, result, {
+  requireCounterspellChoice(result, {
     reactorId: decline.reactorId,
     slotLevel: counterspellSlotLevel,
     spellId: counterspellUnitId
@@ -802,7 +800,7 @@ function resolveDeclinedCounterspell(
   pushStep(builder, {
     title: "Counterspell window",
     detail: decline.detail,
-    state: result.state,
+    state: result.session.state,
     cue: {
       reactingId: decline.reactorId,
       spell: {
@@ -813,8 +811,8 @@ function resolveDeclinedCounterspell(
       }
     }
   })
-  const declined = resolveBattleInterrupt({
-    state: result.state,
+  const declined = resolveBattleRuntimeInterrupt({
+    session: result.session,
     fill: interruptDecisionFill(
       requireHole(result.holes, "interruptDecision"),
       declineInterruptDecision(decline.reactorId)
@@ -824,7 +822,7 @@ function resolveDeclinedCounterspell(
   pushStep(builder, {
     title: "Counterspell declined",
     detail: `${nameOf(decline.reactorId)} declines the reaction.`,
-    state: declined.state,
+    state: declined.session.state,
     cue: {
       reactingId: decline.reactorId,
       labels: [{ combatantId: decline.reactorId, text: "Decline", tone: "positive" }]
@@ -840,18 +838,18 @@ function passCurrentTurn(
   deathSave?: { readonly roll: number; readonly targetId: CombatantId }
 ): void {
   ensureTurnStarted(builder, actorId)
-  requireCurrentActor(builder.state, actorId)
+  requireCurrentActor(builder.session.state, actorId)
   pushStep(builder, {
     title: "Turn passes",
     detail,
     cue: {}
   })
-  const result = endTurn({ state: builder.state, actorId })
+  const result = endBattleRuntimeTurn({ session: builder.session, actorId })
   if (result.tag === "resolved") {
     if (deathSave !== undefined) {
       throw new Error(`Did not receive expected Death Saving Throw for ${nameOf(deathSave.targetId)}.`)
     }
-    builder.state = result.state
+    builder.session = result.session
     builder.startedTurnActorId = undefined
     return
   }
@@ -860,15 +858,15 @@ function passCurrentTurn(
   if (deathSave === undefined || deathSavingThrow.combatantId !== deathSave.targetId) {
     throw new Error("Unexpected Death Saving Throw hole while advancing the wizard battle demo.")
   }
-  const resolved = resolveBattleSubject({
-    state: builder.state,
+  const resolved = resolveBattleRuntimeSubject({
+    session: result.session,
     subject: result.subject,
     fills: [deathSavingThrowFill(deathSavingThrow, deathSave.roll)]
   })
   if (resolved.tag !== "resolved") {
     throw new Error(`Expected Death Saving Throw to resolve, got ${resolved.tag}.`)
   }
-  builder.state = resolved.state
+  builder.session = resolved.session
   builder.startedTurnActorId = undefined
   ensureTurnStarted(builder, deathSave.targetId)
   pushStep(builder, {
@@ -888,7 +886,7 @@ function passCurrentTurn(
 
 function ensureTurnStarted(builder: WizardBattleDemoBuilder, actorId: CombatantId): void {
   if (builder.startedTurnActorId === actorId) return
-  requireCurrentActor(builder.state, actorId)
+  requireCurrentActor(builder.session.state, actorId)
   pushStep(builder, {
     title: "Turn starts",
     detail: `${nameOf(actorId)} takes the turn.`,
@@ -903,7 +901,7 @@ function pushStep(
 ): void {
   builder.steps.push({
     ...input,
-    state: input.state ?? builder.state
+    state: input.state ?? builder.session.state
   })
 }
 

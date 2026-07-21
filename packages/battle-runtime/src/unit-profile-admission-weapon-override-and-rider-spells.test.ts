@@ -1,5 +1,10 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
-import { battleActSpellPresentation } from "./battle-act-composition.ts";
+import {
+  battleActSpellPresentation,
+  battleAdmittedSpellPresentations,
+} from "./battle-act-composition.ts";
+import { battleRuntimeContextFromCharacterAdmission } from "./battle-runtime-context.ts";
 import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime-test-support.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV84H shillelagh
@@ -105,6 +110,119 @@ describe("SRDINV84H deterministic Shillelagh weapon override admission", () => {
             shillelaghUnitId,
       ),
     ).toBe(false);
+
+    const syntheticEligibleAttack = zeroAbilityWeaponAttack(
+      "weapon_quarterstaff",
+    );
+    const syntheticEligibleState = spellBattle({
+      cantrips: [shillelagh],
+      attack: {
+        ...syntheticEligibleAttack,
+        weapon: {
+          ...syntheticEligibleAttack.weapon,
+          id: "weapon_synthetic_eligible_staff",
+        },
+      },
+      casterClassLevels: [{ className: "druid", level: 1 }],
+    });
+    expect(
+      discoverBattleActs(syntheticEligibleState).some(
+        (candidate) =>
+          candidate.subject.tag === "bonusActionSpell" &&
+          battleActSpellPresentation(candidate)?.invocation.spellId ===
+            shillelaghUnitId,
+      ),
+    ).toBe(true);
+
+    const authoredIdOnlyAttack = zeroAbilityWeaponAttack("weapon_longsword");
+    const authoredIdOnlyState = spellBattle({
+      cantrips: [shillelagh],
+      attack: {
+        ...authoredIdOnlyAttack,
+        weapon: { ...authoredIdOnlyAttack.weapon, id: "weapon_club" },
+      },
+      casterClassLevels: [{ className: "druid", level: 1 }],
+    });
+    expect(
+      discoverBattleActs(authoredIdOnlyState).some(
+        (candidate) =>
+          candidate.subject.tag === "bonusActionSpell" &&
+          battleActSpellPresentation(candidate)?.invocation.spellId ===
+            shillelaghUnitId,
+      ),
+    ).toBe(false);
+  });
+
+  test("presentation rejects a context invocation that contradicts committed execution", () => {
+    const session = spellBattle({
+      cantrips: [spellRecord(shillelaghUnitId)],
+      preparedSpells: [spellRecord(magicWeaponUnitId)],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+      attack: zeroAbilityWeaponAttack("weapon_quarterstaff"),
+      casterClassLevels: [{ className: "druid", level: 1 }],
+    });
+    const characterContext = session.context.characters.get(spellCasterId);
+    const shillelaghSource = characterContext?.spellPresentationSources.find(
+      (source) => source.invocation.spell.id === shillelaghUnitId,
+    );
+    const otherSource = characterContext?.spellPresentationSources.find(
+      (source) => source.invocation.spell.id === magicWeaponUnitId,
+    );
+    if (
+      characterContext === undefined ||
+      shillelaghSource === undefined ||
+      otherSource === undefined
+    ) {
+      throw new Error("Expected both admitted spell presentation sources.");
+    }
+    const forgedSession = battleRuntimeSessionForTest({
+      ...session,
+      context: battleRuntimeContextFromCharacterAdmission(
+        new Map(session.context.characters).set(spellCasterId, {
+          ...characterContext,
+          spellPresentationSources:
+            characterContext.spellPresentationSources.map((source) =>
+              source === shillelaghSource
+                ? { ...source, invocation: otherSource.invocation }
+                : source,
+            ),
+        }),
+      ),
+    });
+
+    expect(
+      discoverBattleActs(forgedSession).some(
+        (candidate) =>
+          battleActSpellPresentation(candidate)?.procedureRef ===
+          shillelaghSource.procedureRef,
+      ),
+    ).toBe(false);
+    expect(
+      battleAdmittedSpellPresentations(forgedSession).some(
+        (presentation) =>
+          presentation.procedureRef === shillelaghSource.procedureRef,
+      ),
+    ).toBe(false);
+
+    const ambiguousSession = battleRuntimeSessionForTest({
+      ...session,
+      context: battleRuntimeContextFromCharacterAdmission(
+        new Map(session.context.characters).set(spellCasterId, {
+          ...characterContext,
+          spellPresentationSources: [
+            ...characterContext.spellPresentationSources,
+            shillelaghSource,
+          ],
+        }),
+      ),
+    });
+    expect(
+      discoverBattleActs(ambiguousSession).some(
+        (candidate) =>
+          battleActSpellPresentation(candidate)?.procedureRef ===
+          shillelaghSource.procedureRef,
+      ),
+    ).toBe(false);
   });
 
   test("shillelagh projects spellcasting ability, damage die scaling, and Force-or-normal damage", () => {
@@ -123,7 +241,10 @@ describe("SRDINV84H deterministic Shillelagh weapon override admission", () => {
     if (cast.tag !== "resolved") {
       throw new Error("Expected Shillelagh to resolve.");
     }
-    const castSession = { ...session, state: cast.state };
+    const castSession = battleRuntimeSessionForTest({
+      ...session,
+      state: cast.state,
+    });
 
     expect(
       cast.state.combatants.get(spellCasterId)?.activeEffects,
@@ -200,7 +321,10 @@ describe("SRDINV84H deterministic Shillelagh weapon override admission", () => {
     if (cast.tag !== "resolved") {
       throw new Error("Expected Club Shillelagh to resolve.");
     }
-    const castSession = { ...session, state: cast.state };
+    const castSession = battleRuntimeSessionForTest({
+      ...session,
+      state: cast.state,
+    });
 
     expect(
       cast.state.combatants.get(spellCasterId)?.activeEffects,
@@ -255,7 +379,10 @@ describe("SRDINV84H deterministic Shillelagh weapon override admission", () => {
     if (cast.tag !== "resolved") {
       throw new Error("Expected off-hand Club Shillelagh to resolve.");
     }
-    const castSession = { ...session, state: cast.state };
+    const castSession = battleRuntimeSessionForTest({
+      ...session,
+      state: cast.state,
+    });
 
     expect(
       discoverBattleActs(castSession).some(
@@ -267,7 +394,7 @@ describe("SRDINV84H deterministic Shillelagh weapon override admission", () => {
       ),
     ).toBe(false);
 
-    const offHandReadySession = {
+    const offHandReadySession = battleRuntimeSessionForTest({
       ...castSession,
       state: {
         ...castSession.state,
@@ -277,7 +404,7 @@ describe("SRDINV84H deterministic Shillelagh weapon override admission", () => {
           lightWeaponAttackMade: { weaponItemId: "main:weapon_club" },
         },
       },
-    };
+    });
     expect(
       discoverBattleActs(offHandReadySession).some(
         (candidate) =>
@@ -299,7 +426,7 @@ describe("SRDINV84H deterministic Shillelagh weapon override admission", () => {
     if (initialCaster === undefined) {
       throw new Error("Expected Shillelagh caster.");
     }
-    const sessionWithPriorCasting = {
+    const sessionWithPriorCasting = battleRuntimeSessionForTest({
       ...session,
       state: {
         ...session.state,
@@ -327,7 +454,7 @@ describe("SRDINV84H deterministic Shillelagh weapon override admission", () => {
           ],
         }),
       },
-    };
+    });
     const second = resolveBattleSubject({
       state: sessionWithPriorCasting.state,
       subject: bonusSpellAct({
@@ -349,8 +476,11 @@ describe("SRDINV84H deterministic Shillelagh weapon override admission", () => {
       ),
     ).toHaveLength(1);
 
-    const secondSession = { ...sessionWithPriorCasting, state: second.state };
-    const letGoSession = {
+    const secondSession = battleRuntimeSessionForTest({
+      ...sessionWithPriorCasting,
+      state: second.state,
+    });
+    const letGoSession = battleRuntimeSessionForTest({
       ...secondSession,
       state: {
         ...secondSession.state,
@@ -362,7 +492,7 @@ describe("SRDINV84H deterministic Shillelagh weapon override admission", () => {
           },
         }),
       },
-    };
+    });
     const letGoCleaned = endTurn({
       state: letGoSession.state,
       actorId: spellCasterId,
@@ -463,7 +593,10 @@ describe("SRDINV31A deterministic weapon damage rider Spell Unit admission", () 
     if (cast.tag !== "resolved") {
       throw new Error("Expected Divine Favor to resolve.");
     }
-    const castSession = { state: cast.state, context: session.context };
+    const castSession = battleRuntimeSessionForTest({
+      state: cast.state,
+      context: session.context,
+    });
 
     const subject = weaponAttackSubject(castSession, "Longsword");
     const target = requireResultHole(
@@ -653,10 +786,10 @@ describe("SRDINV31A deterministic weapon damage rider Spell Unit admission", () 
         ),
     ).toBe(false);
 
-    const nextRoundSession = {
+    const nextRoundSession = battleRuntimeSessionForTest({
       state: nextRound.state,
       context: session.context,
-    };
+    });
     const subject = weaponAttackSubject(nextRoundSession, "Longsword");
     const target = requireResultHole(
       resolveBattleSubject({
@@ -831,7 +964,10 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
       throw new Error("Expected level 6 Magic Weapon to resolve.");
     }
 
-    const castSession = { state: cast.state, context: session.context };
+    const castSession = battleRuntimeSessionForTest({
+      state: cast.state,
+      context: session.context,
+    });
     const subject = weaponAttackSubject(castSession, "Longsword");
     const target = requireResultHole(
       resolveBattleSubject({ state: cast.state, subject, fills: [] }),
@@ -950,7 +1086,10 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
     if (cast.tag !== "resolved") {
       throw new Error("Expected Magic Weapon to resolve.");
     }
-    const castSession = { ...session, state: cast.state };
+    const castSession = battleRuntimeSessionForTest({
+      ...session,
+      state: cast.state,
+    });
 
     expect(
       weaponAttackRollHole({
@@ -967,7 +1106,10 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
     if (targetTurn.tag !== "resolved") {
       throw new Error("Expected Magic Weapon caster end turn to resolve.");
     }
-    const targetTurnSession = { ...castSession, state: targetTurn.state };
+    const targetTurnSession = battleRuntimeSessionForTest({
+      ...castSession,
+      state: targetTurn.state,
+    });
     expect(
       weaponAttackRollHole({
         session: targetTurnSession,
@@ -986,7 +1128,7 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
       attack: zeroAbilityWeaponAttack("weapon_longsword"),
     });
     const caster = requireCombatant(session.state, spellCasterId);
-    const priorSession = {
+    const priorSession = battleRuntimeSessionForTest({
       ...session,
       state: {
         ...session.state,
@@ -1013,7 +1155,7 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
           ],
         }),
       },
-    };
+    });
     const act = bonusSpellAct({
       session: priorSession,
       spellId: magicWeaponUnitId,
@@ -1056,7 +1198,7 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
       attack: zeroAbilityWeaponAttack("weapon_longsword"),
     });
     const target = requireCombatant(session.state, spellTargetId);
-    const alreadyMagicalSession = {
+    const alreadyMagicalSession = battleRuntimeSessionForTest({
       ...session,
       state: {
         ...session.state,
@@ -1081,7 +1223,7 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
           ],
         }),
       },
-    };
+    });
     const rejectedAct = bonusSpellAct({
       session: alreadyMagicalSession,
       spellId: magicWeaponUnitId,

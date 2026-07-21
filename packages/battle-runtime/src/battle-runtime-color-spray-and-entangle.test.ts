@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
   startBattleSessionRight,
   requireResolved,
@@ -329,10 +330,12 @@ describe("battle runtime: Color Spray and Entangle", () => {
     const skeletonTurn = requireResolved(
       endTurn({ state: entangled, actorId: wizardId }),
     ).state;
-    const escapeAct = discoverBattleActs({
-      state: skeletonTurn,
-      context: session.context,
-    }).find(
+    const escapeAct = discoverBattleActs(
+      battleRuntimeSessionForTest({
+        state: skeletonTurn,
+        context: session.context,
+      }),
+    ).find(
       (act) =>
         act.subject.tag === "action" &&
         act.subject.action === "escapeSpellRestraint",
@@ -469,10 +472,12 @@ describe("battle runtime: Color Spray and Entangle", () => {
     const skeletonTurn = requireResolved(
       endTurn({ state: twiceEntangled, actorId: secondWizardId }),
     ).state;
-    const escapeActs = discoverBattleActs({
-      state: skeletonTurn,
-      context: session.context,
-    }).filter(
+    const escapeActs = discoverBattleActs(
+      battleRuntimeSessionForTest({
+        state: skeletonTurn,
+        context: session.context,
+      }),
+    ).filter(
       (act) =>
         act.subject.tag === "action" &&
         act.subject.action === "escapeSpellRestraint",

@@ -16,6 +16,7 @@ import {
   type BattleRuntimeSession,
   type BattleSubject,
 } from "@dnd/battle-runtime";
+import { battleRuntimeSessionForTest } from "@dnd/battle-runtime/test-support";
 import {
   abilityScoreAssignment,
   characterBuildHitPoints,
@@ -550,7 +551,7 @@ function resolveSkeletonShortswordAttack(
       `Expected resolved Shortsword attack, got ${resolved.tag}.`,
     );
   }
-  return { ...session, state: resolved.state };
+  return battleRuntimeSessionForTest({ ...session, state: resolved.state });
 }
 
 function requireSkeletonShortswordAct(

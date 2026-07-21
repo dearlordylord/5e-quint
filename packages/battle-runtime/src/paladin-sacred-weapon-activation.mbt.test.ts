@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3CF-03-PALADIN-SACRED-WEAPON-ACTIVATION paladin_sacred_weapon
 // UNIT-IDENTITY-REPLAY: L3CF-03-PALADIN-SACRED-WEAPON-ACTIVATION paladin_sacred_weapon doActivateSacredWeapon doRejectSacredWeaponNoResource doRejectSacredWeaponRangedWeapon doRecastSacredWeapon
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3CF-04-PALADIN-SACRED-WEAPON-ATTACK-DAMAGE-LIGHT paladin_sacred_weapon
@@ -162,10 +163,12 @@ describe("Sacred Weapon activation", () => {
       state,
     );
 
-    const attackSummaries = discoverBattleActs({
-      ...session,
-      state: activated,
-    })
+    const attackSummaries = discoverBattleActs(
+      battleRuntimeSessionForTest({
+        ...session,
+        state: activated,
+      }),
+    )
       .filter(
         (
           act,
@@ -455,10 +458,10 @@ function sacredWeaponSession(input: {
   }
   return input.charismaScore === undefined
     ? state.right
-    : {
+    : battleRuntimeSessionForTest({
         ...state.right,
         state: withCharismaScore(state.right.state, input.charismaScore),
-      };
+      });
 }
 
 function sacredWeaponAct(

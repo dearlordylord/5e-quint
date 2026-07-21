@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-MISSING-CALM-EMOTIONS calm_emotions
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-save-gated-condition-immunity
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
@@ -128,7 +129,7 @@ describe("L12G deterministic Calm Emotions Spell Unit admission", () => {
       }),
     };
     const act = spellAct({
-      session: { ...baseSession, state },
+      session: battleRuntimeSessionForTest({ ...baseSession, state }),
       spellId: calmEmotionsUnitId,
     });
     const procedureRef = act.subject.procedureRef;

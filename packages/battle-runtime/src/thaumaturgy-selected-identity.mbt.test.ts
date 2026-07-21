@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1D2-THAUMATURGY-BOOMING-VOICE thaumaturgy
 // UNIT-IDENTITY-REPLAY: L1D2-THAUMATURGY-BOOMING-VOICE thaumaturgy doResolveThaumaturgyBoomingVoice
@@ -97,7 +98,10 @@ defineSelectedIdentityReplayAndQntReplay({
               }),
             );
             return projectThaumaturgyState(
-              { ...initial, state: resolved.state },
+              battleRuntimeSessionForTest({
+                ...initial,
+                state: resolved.state,
+              }),
               "resolved",
             );
           },

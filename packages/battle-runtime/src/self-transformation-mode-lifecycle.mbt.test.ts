@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-self-transformation-mode
@@ -363,7 +364,10 @@ function castSelfTransformationMode(
     "Expected Alter Self self-transformation mode to resolve.",
   );
   return {
-    battle: { ...state.battle, state: resolved.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: resolved.state,
+    }),
     lastResult: input.lastResult,
   };
 }
@@ -380,7 +384,10 @@ function startNextCasterTurn(
     "Expected target end turn to resolve.",
   );
   return {
-    battle: { ...state.battle, state: casterTurn.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: casterTurn.state,
+    }),
     lastResult: "nextCasterTurn",
   };
 }
@@ -411,7 +418,10 @@ function replaceSelfTransformationMode(
     "Expected Alter Self mode replacement to resolve.",
   );
   return {
-    battle: { ...state.battle, state: resolved.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: resolved.state,
+    }),
     lastResult: input.lastResult,
   };
 }

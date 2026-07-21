@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-magical-darkness-point-origin
@@ -236,7 +237,7 @@ function initialRuntimeState(): DarknessRuntimeState {
     spellSlots: [{ spellLevel: 2, count: 1 }],
   });
   return {
-    battle: {
+    battle: battleRuntimeSessionForTest({
       ...session,
       state: {
         ...session.state,
@@ -258,7 +259,7 @@ function initialRuntimeState(): DarknessRuntimeState {
           }),
         ],
       },
-    },
+    }),
     lastResult: "init",
   };
 }
@@ -288,7 +289,10 @@ function castWithAreaAndLightWitnesses(
     "Expected Darkness cast to resolve.",
   );
   return {
-    battle: { state: resolved.state, context: state.battle.context },
+    battle: battleRuntimeSessionForTest({
+      state: resolved.state,
+      context: state.battle.context,
+    }),
     lastResult: "castWithAreaAndLightWitnesses",
   };
 }
@@ -297,10 +301,10 @@ function breakDarknessConcentration(
   state: DarknessRuntimeState,
 ): DarknessRuntimeState {
   return {
-    battle: {
+    battle: battleRuntimeSessionForTest({
       state: breakBattleConcentration(state.battle.state, spellCasterId),
       context: state.battle.context,
-    },
+    }),
     lastResult: "concentrationCleaned",
   };
 }
@@ -313,13 +317,13 @@ function expireDarknessDuration(
     elapsedTimeTicks(1),
   );
   return {
-    battle: {
+    battle: battleRuntimeSessionForTest({
       state: {
         ...expiring,
         combatants: tickDurationEffects(expiring.combatants).value,
       },
       context: state.battle.context,
-    },
+    }),
     lastResult: "durationCleaned",
   };
 }

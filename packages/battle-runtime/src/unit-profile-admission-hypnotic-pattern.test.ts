@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3SPELL-08-HYPNOTIC-PATTERN-CONTROL-RUNTIME hypnotic_pattern
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-hypnotic-pattern-control
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
@@ -166,7 +167,7 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
       spellSlots: [{ spellLevel: 3, count: 1 }],
     });
     const baseTarget = requireCombatant(baseState.state, spellTargetId);
-    const state: BattleRuntimeSession = {
+    const state: BattleRuntimeSession = battleRuntimeSessionForTest({
       ...baseState,
       state: {
         ...baseState.state,
@@ -192,7 +193,7 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
           ],
         }),
       },
-    };
+    });
 
     const cast = castFailedHypnoticPattern(state);
     const caster = requireCombatant(cast.state, spellCasterId);
@@ -228,7 +229,7 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
       spellSlots: [{ spellLevel: 3, count: 1 }],
     });
     const baseTarget = requireCombatant(baseState.state, spellTargetId);
-    const state: BattleRuntimeSession = {
+    const state: BattleRuntimeSession = battleRuntimeSessionForTest({
       ...baseState,
       state: {
         ...baseState.state,
@@ -252,7 +253,7 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
           ],
         }),
       },
-    };
+    });
 
     const cast = castFailedHypnoticPattern(state);
     const caster = requireCombatant(cast.state, spellCasterId);
@@ -289,7 +290,7 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
       spellSlots: [{ spellLevel: 3, count: 1 }],
     });
     const baseTarget = requireCombatant(baseState.state, spellTargetId);
-    const state: BattleRuntimeSession = {
+    const state: BattleRuntimeSession = battleRuntimeSessionForTest({
       ...baseState,
       state: {
         ...baseState.state,
@@ -303,7 +304,7 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
           ),
         }),
       },
-    };
+    });
     const cast = castFailedHypnoticPattern(state);
     const controlled = requireCombatant(cast.state, spellTargetId);
     expect(
@@ -407,7 +408,7 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
       spellSlots: [{ spellLevel: 3, count: 2 }],
     });
     const baseTarget = requireCombatant(baseState.state, spellTargetId);
-    const state: BattleRuntimeSession = {
+    const state: BattleRuntimeSession = battleRuntimeSessionForTest({
       ...baseState,
       state: {
         ...baseState.state,
@@ -421,7 +422,7 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
           ),
         }),
       },
-    };
+    });
     const firstCast = castFailedHypnoticPattern(state);
     const casterTurnEnded = endTurn({
       state: firstCast.state,
@@ -438,10 +439,12 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
       throw new Error("Expected target End Turn to resolve.");
     }
 
-    const recast = castFailedHypnoticPattern({
-      ...firstCast,
-      state: targetTurnEnded.state,
-    });
+    const recast = castFailedHypnoticPattern(
+      battleRuntimeSessionForTest({
+        ...firstCast,
+        state: targetTurnEnded.state,
+      }),
+    );
     const controlled = requireCombatant(recast.state, spellTargetId);
     expect(controlled.activeEffects).toEqual([
       expect.objectContaining({
@@ -491,10 +494,10 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
       throw new Error("Expected target End Turn to resolve.");
     }
 
-    const activeSession: BattleRuntimeSession = {
+    const activeSession: BattleRuntimeSession = battleRuntimeSessionForTest({
       ...cast,
       state: targetTurnEnded.state,
-    };
+    });
     const act = discoverBattleActs(activeSession).find(
       (candidate) =>
         candidate.subject.tag === "action" &&
@@ -550,7 +553,7 @@ function castFailedHypnoticPattern(
       `Expected Hypnotic Pattern cast to resolve: ${JSON.stringify(cast)}`,
     );
   }
-  return { ...session, state: cast.state };
+  return battleRuntimeSessionForTest({ ...session, state: cast.state });
 }
 
 function hypnoticPatternSavingThrowOutcomeFill(

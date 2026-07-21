@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-hideous-laughter-repeat-save-lifecycle
 import {
   battleActiveEffectExecutionRefForTest,
@@ -236,7 +237,7 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
         }),
     };
     const act = spellAct({
-      session: { ...baseState, state },
+      session: battleRuntimeSessionForTest({ ...baseState, state }),
       spellId: eldritchBlastUnitId,
     });
     const targetFills = act.initialHoles
@@ -410,7 +411,7 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
       }),
     };
     const act = spellAct({
-      session: { ...baseState, state },
+      session: battleRuntimeSessionForTest({ ...baseState, state }),
       spellId: iceKnifeUnitId,
     });
     const targetFill = spellTargetFill(
@@ -597,7 +598,10 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
         activeEffects: [hideousLaughterEffect],
       }),
     };
-    const subject = weaponAttackSubject({ ...baseState, state }, "Longsword");
+    const subject = weaponAttackSubject(
+      battleRuntimeSessionForTest({ ...baseState, state }),
+      "Longsword",
+    );
     const targetHole = requireResultHole(
       resolveBattleSubject({ state, subject, fills: [] }),
       "targetChoice",

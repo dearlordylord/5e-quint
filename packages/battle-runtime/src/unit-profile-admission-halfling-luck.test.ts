@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3-FOLLOWUP-HALFLING-LUCK-RUNTIME species_halfling_luck
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3-FOLLOWUP-D20-TEST-ROLLED-DIE-REROLL-CHOICE species_halfling_luck
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-HALFLING-LUCK-RUNTIME species_halfling_luck
@@ -807,10 +808,10 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
       casterUnitRefs: [unitRef],
       casterUnitFeatures: [characterBattleFeatureInitForTest(unit)],
     });
-    const state = {
+    const state = battleRuntimeSessionForTest({
       state: { ...baseState.state, lightEmitters: [emitter] },
       context: baseState.context,
-    };
+    });
     const act = spellAct({
       session: state,
       spellId: dispelMagicUnitId,
@@ -1253,7 +1254,7 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
       }),
     };
     const subject = findAct(
-      { ...baseSession, state },
+      battleRuntimeSessionForTest({ ...baseSession, state }),
       magicSubject("eldritch_blast"),
     ).subject;
     const target = requireInitialHole(

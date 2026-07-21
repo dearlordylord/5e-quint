@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV51 thunderwave
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV52 dissonant_whispers
@@ -538,7 +539,7 @@ describe("SRDINV52 deterministic Dissonant Whispers Spell Unit admission", () =>
     const spell = spellRecord(dissonantWhispersUnitId);
     const battle = spellBattle({ preparedSpells: [spell] });
     const target = requireCombatant(battle.state, spellTargetId);
-    const session = {
+    const session = battleRuntimeSessionForTest({
       state: {
         ...battle.state,
         combatants: new Map(battle.state.combatants).set(spellTargetId, {
@@ -547,7 +548,7 @@ describe("SRDINV52 deterministic Dissonant Whispers Spell Unit admission", () =>
         }),
       },
       context: battle.context,
-    };
+    });
     const act = spellAct({ session, spellId: dissonantWhispersUnitId });
     const targetChoice = requireHole(act.initialHoles, "targetChoice");
     const targetFill = spellTargetFill(
@@ -602,7 +603,7 @@ describe("SRDINV52 deterministic Dissonant Whispers Spell Unit admission", () =>
       targetHp: 30,
       targetMaxHp: 30,
     });
-    const session: BattleRuntimeSession = {
+    const session: BattleRuntimeSession = battleRuntimeSessionForTest({
       state: {
         ...battle.state,
         grapples: [
@@ -616,7 +617,7 @@ describe("SRDINV52 deterministic Dissonant Whispers Spell Unit admission", () =>
         ],
       },
       context: battle.context,
-    };
+    });
     const act = spellAct({ session, spellId: dissonantWhispersUnitId });
     const targetChoice = requireHole(act.initialHoles, "targetChoice");
     const targetFill = spellTargetFill(

@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
   battleActiveEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
@@ -643,7 +644,10 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
       currentTurnResources: INITIAL_TURN_RESOURCES,
     };
     const reduceAct = creatureSizeActInSession(
-      { state: recastReady, context: session.context },
+      battleRuntimeSessionForTest({
+        state: recastReady,
+        context: session.context,
+      }),
       "creatureSizeDecrease",
     );
     const reduceTarget = requireHole(reduceAct.initialHoles, "targetChoice");
@@ -689,7 +693,10 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
     const state = session.state;
     const reduceReady = withCombatantSize(state, spellTargetId, "tiny");
     const reduceAct = creatureSizeActInSession(
-      { state: reduceReady, context: session.context },
+      battleRuntimeSessionForTest({
+        state: reduceReady,
+        context: session.context,
+      }),
       "creatureSizeDecrease",
     );
     const reduceTarget = requireHole(reduceAct.initialHoles, "targetChoice");
@@ -715,7 +722,10 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
 
     const enlargeReady = withCombatantSize(state, spellTargetId, "gargantuan");
     const enlargeAct = creatureSizeActInSession(
-      { state: enlargeReady, context: session.context },
+      battleRuntimeSessionForTest({
+        state: enlargeReady,
+        context: session.context,
+      }),
       "creatureSizeIncrease",
     );
     const enlargeTarget = requireHole(enlargeAct.initialHoles, "targetChoice");
@@ -774,7 +784,10 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
       currentTurnResources: INITIAL_TURN_RESOURCES,
     };
     const reduceAct = creatureSizeActInSession(
-      { state: recastReady, context: session.context },
+      battleRuntimeSessionForTest({
+        state: recastReady,
+        context: session.context,
+      }),
       "creatureSizeDecrease",
     );
     const reduceTarget = requireHole(reduceAct.initialHoles, "targetChoice");
@@ -851,26 +864,26 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
 
     expect(
       resolveAttackHitHp(
-        {
+        battleRuntimeSessionForTest({
           state: {
             ...enlarged.state,
             currentTurnResources: INITIAL_TURN_RESOURCES,
           },
           context: session.context,
-        },
+        }),
         "Longsword",
         [[4], [3]],
       ),
     ).toBe(5);
     expect(
       resolveAttackHitHp(
-        {
+        battleRuntimeSessionForTest({
           state: {
             ...enlarged.state,
             currentTurnResources: INITIAL_TURN_RESOURCES,
           },
           context: session.context,
-        },
+        }),
         "Unarmed Strike",
         [[3]],
       ),
@@ -897,26 +910,26 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
 
     expect(
       resolveAttackHitHp(
-        {
+        battleRuntimeSessionForTest({
           state: {
             ...reduced.state,
             currentTurnResources: INITIAL_TURN_RESOURCES,
           },
           context: session.context,
-        },
+        }),
         "Longsword",
         [[1], [4]],
       ),
     ).toBe(11);
     expect(
       resolveAttackHitHp(
-        {
+        battleRuntimeSessionForTest({
           state: {
             ...reduced.state,
             currentTurnResources: INITIAL_TURN_RESOURCES,
           },
           context: session.context,
-        },
+        }),
         "Unarmed Strike",
         [[4]],
       ),
@@ -953,13 +966,13 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
     const withRider = withSyntheticHitRider(reduced.state, false);
     expect(
       resolveAttackHitHp(
-        {
+        battleRuntimeSessionForTest({
           state: {
             ...withRider,
             currentTurnResources: INITIAL_TURN_RESOURCES,
           },
           context: session.context,
-        },
+        }),
         "Longsword",
         [[1], [3], [4]],
       ),
@@ -968,13 +981,13 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
     const resisted = withSyntheticHitRider(reduced.state, true);
     expect(
       resolveAttackHitHp(
-        {
+        battleRuntimeSessionForTest({
           state: {
             ...resisted,
             currentTurnResources: INITIAL_TURN_RESOURCES,
           },
           context: session.context,
-        },
+        }),
         "Longsword",
         [[1], [3], [4]],
       ),
@@ -1011,13 +1024,13 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
     const withMarkedRider = withSyntheticMarkedDamageRider(reduced.state);
     expect(
       resolveAttackHitHp(
-        {
+        battleRuntimeSessionForTest({
           state: {
             ...withMarkedRider,
             currentTurnResources: INITIAL_TURN_RESOURCES,
           },
           context: session.context,
-        },
+        }),
         "Longsword",
         [[1], [4], [6]],
       ),
@@ -1084,7 +1097,10 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
     }
 
     const reduceAct = creatureSizeActInSession(
-      { state: targetTurn.state, context: session.context },
+      battleRuntimeSessionForTest({
+        state: targetTurn.state,
+        context: session.context,
+      }),
       "creatureSizeDecrease",
     );
     const reduceTarget = requireHole(reduceAct.initialHoles, "targetChoice");

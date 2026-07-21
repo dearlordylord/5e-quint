@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV50D2 command
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-command-drop-held-object spell.invocation-command-halt-grovel
 import { battleActiveEffectExecutionRefForTest } from "./battle-runtime-test-support.ts";
@@ -313,10 +314,12 @@ describe("QMBT14 deterministic Command control option admission", () => {
         (speedKind) => speedKind.remainingFeet === movementFeet(0),
       ),
     ).toBe(true);
-    const haltedActs = discoverBattleActs({
-      state: targetTurn.state,
-      context: session.context,
-    });
+    const haltedActs = discoverBattleActs(
+      battleRuntimeSessionForTest({
+        state: targetTurn.state,
+        context: session.context,
+      }),
+    );
     const legendaryAct = haltedActs.find(
       (
         candidate,

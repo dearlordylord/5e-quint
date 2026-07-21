@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
   battleActSpellPresentation,
   battleActSpellSlotPresentation,
@@ -644,7 +645,7 @@ function beginNextTurn(
   state: DruidWildShapeFormLifecycleRuntimeState,
 ): DruidWildShapeFormLifecycleRuntimeState {
   return {
-    battle: {
+    battle: battleRuntimeSessionForTest({
       ...state.battle,
       state: {
         ...state.battle.state,
@@ -653,7 +654,7 @@ function beginNextTurn(
           currentHasBonusAction: true,
         },
       },
-    },
+    }),
     lastResult: "nextTurn",
   };
 }
@@ -728,7 +729,10 @@ function resolveWildShapeSubjectWithRoute(
   );
   return {
     state: {
-      battle: { ...state.battle, state: resolved.state },
+      battle: battleRuntimeSessionForTest({
+        ...state.battle,
+        state: resolved.state,
+      }),
       lastResult,
     },
     routeEvents: [...(act.routeEvents ?? []), ...(resolved.routeEvents ?? [])],
@@ -749,7 +753,10 @@ function dismissFormWithRoute(state: DruidWildShapeFormLifecycleRuntimeState): {
   );
   return {
     state: {
-      battle: { ...state.battle, state: resolved.state },
+      battle: battleRuntimeSessionForTest({
+        ...state.battle,
+        state: resolved.state,
+      }),
       lastResult: "dismissed",
     },
     routeEvents: [...(act.routeEvents ?? []), ...(resolved.routeEvents ?? [])],
@@ -778,7 +785,10 @@ function resolveIncapacitatedReversionWithRoute(
   );
   return {
     state: {
-      battle: { ...opponentTurn.state.battle, state: resolved.state },
+      battle: battleRuntimeSessionForTest({
+        ...opponentTurn.state.battle,
+        state: resolved.state,
+      }),
       lastResult: "incapacitated",
     },
     terminalRouteEvents: resolved.routeEvents ?? [],
@@ -845,7 +855,10 @@ function resolveDeathReversionWithRoute(
   const resolved = result;
   return {
     state: {
-      battle: { ...opponentTurn.state.battle, state: resolved.state },
+      battle: battleRuntimeSessionForTest({
+        ...opponentTurn.state.battle,
+        state: resolved.state,
+      }),
       lastResult: "dead",
     },
     terminalRouteEvents: resolved.routeEvents ?? [],
@@ -878,7 +891,10 @@ function endDruidTurnWithRoute(
   );
   return {
     state: {
-      battle: { ...state.battle, state: resolved.state },
+      battle: battleRuntimeSessionForTest({
+        ...state.battle,
+        state: resolved.state,
+      }),
       lastResult: state.lastResult,
     },
     routeEvents: resolved.routeEvents ?? [],
@@ -1014,7 +1030,10 @@ function beginNextTurnWithRoute(
   );
   return {
     state: {
-      battle: { ...state.battle, state: druidTurn.state },
+      battle: battleRuntimeSessionForTest({
+        ...state.battle,
+        state: druidTurn.state,
+      }),
       lastResult: "nextTurn",
     },
     routeEvents: [

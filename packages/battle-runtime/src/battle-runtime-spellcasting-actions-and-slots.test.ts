@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { describe, expect, test } from "vitest";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import type {
@@ -484,7 +485,12 @@ describe("battle runtime: spellcasting actions and slots", () => {
       levelOnePlusSpellCastsThisTurn: [wizardId],
     });
     expect(
-      discoverBattleActs({ ...slotTurnState, state: afterSlotSpell }).some(
+      discoverBattleActs(
+        battleRuntimeSessionForTest({
+          ...slotTurnState,
+          state: afterSlotSpell,
+        }),
+      ).some(
         (act) =>
           act.subject.tag === "bonusActionSpell" &&
           battleActSpellPresentation(act)?.invocation.spellId ===
@@ -498,7 +504,10 @@ describe("battle runtime: spellcasting actions and slots", () => {
           tag: "bonusActionSpell",
           actorId: wizardId,
           procedureRef: requireCharacterSpellProcedureRefForTest(
-            { ...slotTurnState, state: afterSlotSpell },
+            battleRuntimeSessionForTest({
+              ...slotTurnState,
+              state: afterSlotSpell,
+            }),
             wizardId,
             spellSlotInvocationRef(
               "healing_word",
@@ -855,7 +864,10 @@ describe("battle runtime: spellcasting actions and slots", () => {
       }),
     } satisfies BattleState;
     const refreshedRay = resolveBattleSubject({
-      session: { ...rayState, state: stackedRayState },
+      session: battleRuntimeSessionForTest({
+        ...rayState,
+        state: stackedRayState,
+      }),
       subject: magicSubject("ray_of_frost"),
       fills: [
         targetFill(rayTarget, skeletonId),

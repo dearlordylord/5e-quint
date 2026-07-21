@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30B bane bless guidance
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-PASS-WITHOUT-TRACE pass_without_trace
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3SPELL-01-ENHANCE-ABILITY-UPCAST-PER-TARGET enhance_ability
@@ -285,28 +286,29 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
       skill: null,
       expiresAt: { kind: "concentration" as const, combatantId: spellCasterId },
     };
-    const stateWithPriorBless: BattleRuntimeSession = {
-      ...state,
-      state: {
-        ...state.state,
-        combatants: new Map(state.state.combatants)
-          .set(spellCasterId, {
-            ...caster,
-            concentration: {
-              sourceProcedureRef: act.subject.procedureRef,
-              effectKind: "spellEffect",
-            },
-          })
-          .set(spellTargetId, {
-            ...firstTarget,
-            activeEffects: [...firstTarget.activeEffects, priorBlessEffect],
-          })
-          .set(secondTargetId, {
-            ...secondTarget,
-            activeEffects: [...secondTarget.activeEffects, priorBlessEffect],
-          }),
-      },
-    };
+    const stateWithPriorBless: BattleRuntimeSession =
+      battleRuntimeSessionForTest({
+        ...state,
+        state: {
+          ...state.state,
+          combatants: new Map(state.state.combatants)
+            .set(spellCasterId, {
+              ...caster,
+              concentration: {
+                sourceProcedureRef: act.subject.procedureRef,
+                effectKind: "spellEffect",
+              },
+            })
+            .set(spellTargetId, {
+              ...firstTarget,
+              activeEffects: [...firstTarget.activeEffects, priorBlessEffect],
+            })
+            .set(secondTargetId, {
+              ...secondTarget,
+              activeEffects: [...secondTarget.activeEffects, priorBlessEffect],
+            }),
+        },
+      });
     const targetListHole = requireHole(act.initialHoles, "spellTargetList");
 
     const resolved = resolveBattleSubject({
@@ -1301,7 +1303,10 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
         ],
       }),
     };
-    const subject = weaponAttackSubject({ ...baseState, state }, "Longsword");
+    const subject = weaponAttackSubject(
+      battleRuntimeSessionForTest({ ...baseState, state }),
+      "Longsword",
+    );
     const target = requireResultHole(
       resolveBattleSubject({ state, subject, fills: [] }),
       "targetChoice",
@@ -1509,7 +1514,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
 
     const spell = spellRecord(rayOfFrostUnitId);
     const spellBase = spellBattle({ cantrips: [spell], spellSlots: [] });
-    const spellSession = {
+    const spellSession = battleRuntimeSessionForTest({
       ...spellBase,
       state: withResistanceEffect(
         spellBase.state,
@@ -1517,7 +1522,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
         "cold",
         false,
       ),
-    };
+    });
     const act = spellAct({ session: spellSession, spellId: rayOfFrostUnitId });
     const spellTarget = requireResultHole(
       resolveBattleSubject({
@@ -1720,7 +1725,7 @@ describe("L12G Protection from Poison deterministic Spell Unit admission", () =>
       ),
     };
     const act = spellAct({
-      session: { ...baseSession, state },
+      session: battleRuntimeSessionForTest({ ...baseSession, state }),
       spellId: protectionFromPoisonUnitId,
       slotLevel: 2,
     });
@@ -1733,7 +1738,7 @@ describe("L12G Protection from Poison deterministic Spell Unit admission", () =>
       tag: "actionSpell",
       actorId: spellCasterId,
       procedureRef: requireCharacterSpellProcedureRefForTest(
-        { ...baseSession, state },
+        battleRuntimeSessionForTest({ ...baseSession, state }),
         spellCasterId,
         spellSlotInvocationRef(
           protectionFromPoisonUnitId,
@@ -1802,13 +1807,13 @@ describe("L12G Protection from Poison deterministic Spell Unit admission", () =>
       cantrips: [poisonSpell],
       spellSlots: [],
     });
-    const poisonSession = {
+    const poisonSession = battleRuntimeSessionForTest({
       ...poisonBase,
       state: withProtectionFromPoisonResistance(
         poisonBase.state,
         spellTargetId,
       ),
-    };
+    });
     const act = spellAct({
       session: poisonSession,
       spellId: poisonSprayUnitId,
@@ -2227,14 +2232,14 @@ describe("L5-B08 Protection from Energy deterministic Spell Unit admission", () 
   test("protection_from_energy Resistance halves only matching damage through the target-side adjustment pipeline", () => {
     const fireSpell = spellRecord(fireBoltUnitId);
     const fireBase = spellBattle({ cantrips: [fireSpell], spellSlots: [] });
-    const fireSession = {
+    const fireSession = battleRuntimeSessionForTest({
       ...fireBase,
       state: withProtectionFromEnergyResistance(
         fireBase.state,
         spellTargetId,
         "fire",
       ),
-    };
+    });
     const act = spellAct({ session: fireSession, spellId: fireBoltUnitId });
     const targetHole = requireHole(act.initialHoles, "targetChoice");
     const targetFill = spellTargetFill(

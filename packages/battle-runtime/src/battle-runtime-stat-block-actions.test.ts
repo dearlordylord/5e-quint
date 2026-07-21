@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.STAT_BLOCK.ATTACK_CONTROL
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test stat-block.attack-control
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-SIZE-GATED-CONDITION-RIDERS druid_wild_shape
@@ -75,7 +76,12 @@ import { supportedStatBlockAttackHitConditionRiders } from "./statblock-attack-h
 const statBlockPresentationContext = emptyBattleRuntimeContext();
 
 function discoverStatBlockActs(state: BattleState) {
-  return discoverBattleActs({ state, context: statBlockPresentationContext });
+  return discoverBattleActs(
+    battleRuntimeSessionForTest({
+      state,
+      context: statBlockPresentationContext,
+    }),
+  );
 }
 
 function discoveredMultiattackSubject(state: BattleState): BattleSubject {

@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
   battleActiveEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
@@ -303,7 +304,7 @@ function initialRuntimeState(): DispelMagicRuntimeState {
   const caster = requireCombatant(base.state, spellCasterId);
   const target = requireCombatant(base.state, spellTargetId);
   return {
-    battle: {
+    battle: battleRuntimeSessionForTest({
       ...base,
       state: {
         ...base.state,
@@ -336,7 +337,7 @@ function initialRuntimeState(): DispelMagicRuntimeState {
           }),
         lightEmitters: [lowLevelObjectLightEmitter()],
       },
-    },
+    }),
     higherLevelCheckHoles: [],
     lastResult: "init",
   };
@@ -385,7 +386,10 @@ function requestHigherLevelCheck(
     },
   });
   return {
-    battle: { ...state.battle, state: result.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: result.state,
+    }),
     higherLevelCheckHoles: checkHoles,
     lastResult: "needsHigherLevelCheck",
   };
@@ -424,7 +428,10 @@ function resolveHigherLevelCheck(
     "Expected Dispel Magic check resolution to complete.",
   );
   return {
-    battle: { ...state.battle, state: resolved.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: resolved.state,
+    }),
     higherLevelCheckHoles: [],
     lastResult,
   };
@@ -452,7 +459,10 @@ function upcastAutoEnd(
     "Expected upcast Dispel Magic to resolve.",
   );
   return {
-    battle: { ...state.battle, state: resolved.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: resolved.state,
+    }),
     higherLevelCheckHoles: [],
     lastResult: "upcastAutoEnded",
   };
@@ -492,7 +502,10 @@ function targetAntimagicAura(
     "Expected Dispel Magic Antimagic Field aura target to resolve.",
   );
   return {
-    battle: { ...state.battle, state: resolved.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: resolved.state,
+    }),
     higherLevelCheckHoles: [],
     lastResult: "antimagicAuraUnaffected",
   };

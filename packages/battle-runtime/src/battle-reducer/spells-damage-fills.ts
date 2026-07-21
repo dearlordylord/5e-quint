@@ -1593,6 +1593,7 @@ function slowActivePenaltiesSavingThrowFlatBonusProjection(
     : [
         {
           targetId: target.combatantId,
+          sourceCombatantId: effect.sourceCombatantId,
           sourceProcedureRef: effect.sourceProcedureRef,
           bonus: SLOW_ACTIVE_PENALTIES_DEX_SAVE_DELTA,
         },

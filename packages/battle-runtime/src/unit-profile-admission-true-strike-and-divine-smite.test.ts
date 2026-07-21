@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31F true_strike
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31C divine_smite
@@ -596,7 +597,10 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
         tag: "actionSpell",
         actorId: spellTargetId,
         procedureRef: requireCharacterSpellProcedureRefForTest(
-          { state: targetTurn.state, context: initialState.context },
+          battleRuntimeSessionForTest({
+            state: targetTurn.state,
+            context: initialState.context,
+          }),
           spellTargetId,
           cantripSpellInvocationRef(rayOfFrostUnitId, "spellAttackDamage"),
         ),
@@ -616,7 +620,7 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
     }
 
     const subject = weaponAttackSubject(
-      { ...initialState, state: casterTurn.state },
+      battleRuntimeSessionForTest({ ...initialState, state: casterTurn.state }),
       "Longsword",
     );
     const target = requireResultHole(

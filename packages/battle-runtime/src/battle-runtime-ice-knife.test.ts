@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-ray-of-enfeeblement-damage-penalty
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_DAMAGE_PENALTY
 import type {
@@ -96,7 +97,7 @@ describe("battle runtime: Ice Knife", () => {
       tag: "actionSpell",
       actorId: wizardId,
       procedureRef: requireCharacterSpellProcedureRefForTest(
-        { ...session, state },
+        battleRuntimeSessionForTest({ ...session, state }),
         wizardId,
         spellSlotInvocationRef("ice_knife", 2, "attackBurstSaveDamage"),
       ),
@@ -303,7 +304,7 @@ describe("battle runtime: Ice Knife", () => {
       tag: "actionSpell",
       actorId: wizardId,
       procedureRef: requireCharacterSpellProcedureRefForTest(
-        { ...session, state },
+        battleRuntimeSessionForTest({ ...session, state }),
         wizardId,
         spellSlotInvocationRef("ice_knife", 2, "attackBurstSaveDamage"),
       ),
@@ -498,7 +499,7 @@ describe("battle runtime: Ice Knife", () => {
         {
           kind: "zeroHitPointReplacement",
           procedureRef: requireCharacterUnitProcedureRefForTest(
-            { ...session, state },
+            battleRuntimeSessionForTest({ ...session, state }),
             primaryTargetId,
             "orc_relentless_endurance",
           ),
@@ -517,7 +518,7 @@ describe("battle runtime: Ice Knife", () => {
           attackDamageDispositionFill(disposition, {
             kind: "zeroHitPointReplacement",
             procedureRef: requireCharacterUnitProcedureRefForTest(
-              { ...session, state },
+              battleRuntimeSessionForTest({ ...session, state }),
               primaryTargetId,
               "orc_relentless_endurance",
             ),
@@ -537,7 +538,7 @@ describe("battle runtime: Ice Knife", () => {
           attackDamageDispositionFill(disposition, {
             kind: "zeroHitPointReplacement",
             procedureRef: requireCharacterUnitProcedureRefForTest(
-              { ...session, state },
+              battleRuntimeSessionForTest({ ...session, state }),
               primaryTargetId,
               "orc_relentless_endurance",
             ),
@@ -678,7 +679,7 @@ describe("battle runtime: Ice Knife", () => {
         {
           kind: "zeroHitPointReplacement",
           procedureRef: requireCharacterUnitProcedureRefForTest(
-            { ...session, state },
+            battleRuntimeSessionForTest({ ...session, state }),
             primaryTargetId,
             "orc_relentless_endurance",
           ),
@@ -698,7 +699,7 @@ describe("battle runtime: Ice Knife", () => {
           attackDamageDispositionFill(disposition, {
             kind: "zeroHitPointReplacement",
             procedureRef: requireCharacterUnitProcedureRefForTest(
-              { ...session, state },
+              battleRuntimeSessionForTest({ ...session, state }),
               primaryTargetId,
               "orc_relentless_endurance",
             ),

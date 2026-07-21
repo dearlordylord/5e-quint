@@ -32,6 +32,10 @@ import type {
   CharacterBattleSpellcastingExecutionState,
 } from "@dnd/battle-runtime";
 import {
+  battleRuntimeContextForTest,
+  battleRuntimeSessionForTest,
+} from "@dnd/battle-runtime/test-support";
+import {
   ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
   PASSIVE_DAMAGE_RESISTANCE_SUPPORT_PROFILE,
   PASSIVE_SAVING_THROW_ROLL_MODE_SUPPORT_PROFILE,
@@ -201,20 +205,22 @@ describe("Character Sheet battle handoff", () => {
     expect(Either.isRight(entry)).toBe(true);
     if (Either.isLeft(entry)) return;
 
-    expect([...entry.right.state.combatants.keys()]).toEqual([
+    expect([...entry.right.session.state.combatants.keys()]).toEqual([
       characterCombatantId,
       monsterCombatantId,
     ]);
     expect(
-      entry.right.state.combatants.get(characterCombatantId),
+      entry.right.session.state.combatants.get(characterCombatantId),
     ).not.toHaveProperty("side");
     expect(
-      entry.right.state.combatants.get(monsterCombatantId),
+      entry.right.session.state.combatants.get(monsterCombatantId),
     ).not.toHaveProperty("side");
     expect(
-      entry.right.state.initiative.stillToAct.map((turn) => turn.creature),
+      entry.right.session.state.initiative.stillToAct.map(
+        (turn) => turn.creature,
+      ),
     ).toEqual([characterCombatantId, monsterCombatantId]);
-    expect(entry.right.state.initiative.stillToAct[0]?.creature).toBe(
+    expect(entry.right.session.state.initiative.stillToAct[0]?.creature).toBe(
       characterCombatantId,
     );
     expect(entry.right.encounterCompositionRouteEvents).toEqual([
@@ -1725,10 +1731,10 @@ describe("Character Sheet battle handoff", () => {
     expect(Either.isLeft(activeHandoff)).toBe(true);
 
     const dismissableState = restoreBonusAction(assume.state);
-    const dismissableSession = {
+    const dismissableSession = battleRuntimeSessionForTest({
       state: dismissableState,
       context: state.context,
-    };
+    });
     const dismissed = requireResolvedBattleSubject(
       resolveBattleSubject({
         state: dismissableState,
@@ -4199,10 +4205,10 @@ describe("Character Build battle projection", () => {
     ).state;
 
     const offHandAttackName = "Dagger (Charisma) (radiant)";
-    const afterMainAttackSession = {
+    const afterMainAttackSession = battleRuntimeSessionForTest({
       state: afterMainAttack,
       context: state.context,
-    };
+    });
     const offHandSubject = requireDiscoveredAttackSubject(
       afterMainAttackSession,
       actorId,
@@ -6247,7 +6253,7 @@ function handoffBranchSession(
       ],
     }),
   );
-  return {
+  return battleRuntimeSessionForTest({
     state: {
       ...session.state,
       combatants: new Map(session.state.combatants).set(
@@ -6255,8 +6261,8 @@ function handoffBranchSession(
         combatant,
       ),
     },
-    context: {
-      characters: new Map([
+    context: battleRuntimeContextForTest(
+      new Map([
         [
           combatant.combatantId,
           {
@@ -6267,8 +6273,8 @@ function handoffBranchSession(
           },
         ],
       ]),
-    },
-  };
+    ),
+  });
 }
 
 function handoffBranchCombatant(

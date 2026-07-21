@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 // RAW trace:
 // - .references/srd-5.2.1/Spells/Descriptions-A-D.md#Dragon's Breath:
@@ -270,7 +271,7 @@ function initialRuntimeState(): SpellSequencingRuntimeState {
   });
   const caster = requireCombatant(battle.state, spellCasterId);
   return {
-    battle: {
+    battle: battleRuntimeSessionForTest({
       ...battle,
       state: {
         ...battle.state,
@@ -281,7 +282,7 @@ function initialRuntimeState(): SpellSequencingRuntimeState {
           positiveHpUnconscious: null,
         }),
       },
-    },
+    }),
     turnRole: "caster",
     lastResult: "init",
   };
@@ -314,7 +315,10 @@ function castDragonsBreath(
     "Expected Dragon's Breath cast to resolve.",
   );
   return {
-    battle: { ...state.battle, state: result.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: result.state,
+    }),
     turnRole: "caster",
     lastResult: "castDragonsBreath",
   };
@@ -328,7 +332,10 @@ function endCasterTurnForDragonsBreath(
     "Expected Dragon's Breath caster End Turn to resolve.",
   );
   return {
-    battle: { ...state.battle, state: result.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: result.state,
+    }),
     turnRole: "target",
     lastResult: "targetTurnWithBreath",
   };
@@ -390,7 +397,10 @@ function exhaleDragonsBreathAndMaintainConcentration(
     "Expected Dragon's Breath exhale to resolve.",
   );
   return {
-    battle: { ...state.battle, state: result.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: result.state,
+    }),
     turnRole: "target",
     lastResult: "exhaledBreath",
   };
@@ -404,7 +414,10 @@ function endTargetTurnAfterBreath(
     "Expected target End Turn before Heat Metal to resolve.",
   );
   return {
-    battle: { ...state.battle, state: result.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: result.state,
+    }),
     turnRole: "caster",
     lastResult: "casterTurnAfterBreath",
   };
@@ -457,7 +470,10 @@ function castHeatMetalContact(
     "Expected Heat Metal cast to resolve.",
   );
   return {
-    battle: { ...state.battle, state: result.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: result.state,
+    }),
     turnRole: "caster",
     lastResult: "castHeatMetal",
   };
@@ -471,7 +487,10 @@ function endCasterTurnForHeatMetal(
     "Expected Heat Metal caster End Turn to resolve.",
   );
   return {
-    battle: { ...state.battle, state: result.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: result.state,
+    }),
     turnRole: "target",
     lastResult: "targetTurnWithHeatMetal",
   };
@@ -485,7 +504,10 @@ function endTargetTurnForHeatMetalRepeat(
     "Expected Heat Metal target End Turn to resolve.",
   );
   return {
-    battle: { ...state.battle, state: result.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: result.state,
+    }),
     turnRole: "caster",
     lastResult: "casterTurnWithHeatMetalRepeat",
   };
@@ -522,7 +544,10 @@ function repeatHeatMetalContactDamage(
     "Expected Heat Metal repeat damage to resolve.",
   );
   return {
-    battle: { ...state.battle, state: result.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: result.state,
+    }),
     turnRole: "caster",
     lastResult: "repeatHeatMetal",
   };

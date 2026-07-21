@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 import { battleActUnitPresentation } from "./battle-act-composition.ts";
@@ -351,10 +352,10 @@ function activeAntimagicAuraSession(
     ...source,
     activeEffects: [...source.activeEffects, antimagicFieldAuraEffect(aura)],
   });
-  return {
+  return battleRuntimeSessionForTest({
     ...session,
     state: { ...session.state, combatants },
-  };
+  });
 }
 
 function antimagicFieldAuraEffect(

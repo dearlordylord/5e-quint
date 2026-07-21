@@ -38,6 +38,7 @@ import {
   MONK_FOCUS_PROCEDURE_QUERY,
   characterSpellProcedure,
   characterSpellProcedureExecution,
+  spellInvocationMatchesExecution,
   type BattleSpellProcedureExecution,
   type SpellProcedureExecution,
 } from "./character-execution.ts";
@@ -125,12 +126,25 @@ export function battleSubjectPresentation(
 export function battleAdmittedSpellPresentations(
   session: BattleRuntimeSession,
 ): readonly Extract<BattleActPresentation, { readonly kind: "spell" }>[] {
-  return [...session.context.characters.values()].flatMap((context) =>
-    context.spellPresentationSources.map((source) => ({
-      kind: "spell" as const,
-      procedureRef: source.procedureRef,
-      invocation: supportedSpellInvocationRef(source.invocation),
-    })),
+  return [...session.context.characters].flatMap(([actorId, context]) =>
+    context.spellPresentationSources.flatMap((source) => {
+      const correlated = spellPresentationSourceForProcedure(
+        session.state,
+        session.context,
+        actorId,
+        source.procedureRef,
+      );
+      if (correlated === undefined) return [];
+      const presentation: Extract<
+        BattleActPresentation,
+        { readonly kind: "spell" }
+      > = {
+        kind: "spell",
+        procedureRef: correlated.procedureRef,
+        invocation: supportedSpellInvocationRef(correlated.invocation),
+      };
+      return [presentation];
+    }),
   );
 }
 
@@ -192,6 +206,7 @@ function intrinsicActPresentation(
           ? subject.reactorId
           : subject.casterId;
     const source = spellPresentationSourceForProcedure(
+      state,
       context,
       spellOwnerId,
       subject.procedureRef,
@@ -299,6 +314,7 @@ function intrinsicActPresentationText(
     })[0];
     if (effect !== undefined && "sourceProcedureRef" in effect) {
       const source = spellPresentationSourceForProcedure(
+        state,
         context,
         effect.sourceCombatantId,
         effect.sourceProcedureRef,
@@ -505,6 +521,7 @@ function characterProcedurePresentationJoin(
       presentation: {
         kind: "druidWildShapeForm",
         procedureRef,
+        formExecutionRef: subject.formExecutionRef,
         unitId: unit.id,
         formStatBlockId: form.statBlock.id,
       },
@@ -515,6 +532,7 @@ function characterProcedurePresentationJoin(
     subject.sourceEffectRef !== undefined
   ) {
     const source = spellPresentationSourceForProcedure(
+      state,
       context,
       actor.combatantId,
       procedureRef,
@@ -745,15 +763,35 @@ function battleUnitPresentationName(unit: BattleUnitRef["unit"]): string {
 }
 
 function spellPresentationSourceForProcedure(
+  state: BattleState,
   context: BattleRuntimeContext,
   actorId: CombatantId,
   procedureRef: BattleProcedureExecutionRef,
 ) {
-  return context.characters
-    .get(actorId)
-    ?.spellPresentationSources.find(
-      (source) => source.procedureRef === procedureRef,
+  const actor = state.combatants.get(actorId);
+  return isCharacterBattleCreatureState(actor)
+    ? spellPresentationSourceForCharacter(actor, context, procedureRef)
+    : undefined;
+}
+
+function spellPresentationSourceForCharacter(
+  actor: CharacterBattleCreatureState,
+  context: BattleRuntimeContext,
+  procedureRef: BattleProcedureExecutionRef,
+) {
+  const execution = characterSpellProcedureExecution(
+    actor.origin.execution,
+    procedureRef,
+  );
+  if (execution === undefined) return undefined;
+  const matches = context.characters
+    .get(actor.combatantId)
+    ?.spellPresentationSources.filter(
+      (source) =>
+        source.procedureRef === procedureRef &&
+        spellInvocationMatchesExecution(source.invocation, execution),
     );
+  return matches?.length === 1 ? matches[0] : undefined;
 }
 
 export function battleSelectedSpellInvocationForProcedure(
@@ -783,16 +821,16 @@ function spellPresentationInvocationForProcedure(
   actorId: CombatantId,
   procedureRef: BattleProcedureExecutionRef,
 ): BattleSelectedSpellInvocation | undefined {
-  const direct = spellPresentationSourceForProcedure(
+  const actor = state.combatants.get(actorId);
+  if (!isCharacterBattleCreatureState(actor)) return undefined;
+  const direct = spellPresentationSourceForCharacter(
+    actor,
     context,
-    actorId,
     procedureRef,
   );
   if (direct !== undefined) {
     return { ...direct.invocation, sourceProcedureRef: procedureRef };
   }
-  const actor = state.combatants.get(actorId);
-  if (!isCharacterBattleCreatureState(actor)) return undefined;
   const execution = characterSpellProcedure(
     actor.origin.execution,
     procedureRef,
@@ -807,7 +845,6 @@ function spellPresentationInvocationForProcedure(
   return dynamicSpellPresentationInvocation(
     actor,
     context,
-    actorId,
     procedureRef,
     execution,
   );
@@ -861,7 +898,6 @@ function isDynamicSpellPresentationExecution(
 function dynamicSpellPresentationInvocation(
   actor: CharacterBattleCreatureState,
   context: BattleRuntimeContext,
-  actorId: CombatantId,
   procedureRef: BattleProcedureExecutionRef,
   execution: DynamicSpellPresentationExecution,
 ): BattleSelectedSpellInvocation | undefined {
@@ -873,9 +909,9 @@ function dynamicSpellPresentationInvocation(
           value.sourceHeldLightProcedureRef,
         );
         if (sourceExecution?.procedure !== "heldLight") return undefined;
-        const source = spellPresentationSourceForProcedure(
+        const source = spellPresentationSourceForCharacter(
+          actor,
           context,
-          actorId,
           value.sourceHeldLightProcedureRef,
         );
         if (source?.invocation.procedure !== "heldLight") return undefined;
@@ -896,9 +932,9 @@ function dynamicSpellPresentationInvocation(
         ) {
           return undefined;
         }
-        const source = spellPresentationSourceForProcedure(
+        const source = spellPresentationSourceForCharacter(
+          actor,
           context,
-          actorId,
           value.sourceDancingLightsProcedureRef,
         );
         if (
@@ -917,7 +953,6 @@ function dynamicSpellPresentationInvocation(
         spellCreatedHeldObjectPresentationInvocation(
           actor,
           context,
-          actorId,
           procedureRef,
           value,
         ),
@@ -925,14 +960,13 @@ function dynamicSpellPresentationInvocation(
         spellCreatedHeldObjectPresentationInvocation(
           actor,
           context,
-          actorId,
           procedureRef,
           value,
         ),
       spiritualWeaponRepeatAttack: (value) => {
-        const source = spellPresentationSourceForProcedure(
+        const source = spellPresentationSourceForCharacter(
+          actor,
           context,
-          actorId,
           value.activeEffect.sourceProcedureRef,
         );
         if (source?.invocation.procedure !== "spiritualWeaponAttackProxy") {
@@ -945,9 +979,9 @@ function dynamicSpellPresentationInvocation(
         };
       },
       objectContactDamageRepeat: (value) => {
-        const source = spellPresentationSourceForProcedure(
+        const source = spellPresentationSourceForCharacter(
+          actor,
           context,
-          actorId,
           value.activeEffect.sourceProcedureRef,
         );
         if (source?.invocation.procedure !== "objectContactDamage") {
@@ -960,9 +994,9 @@ function dynamicSpellPresentationInvocation(
         };
       },
       markedDamageRider: (value) => {
-        const source = spellPresentationSourceForProcedure(
+        const source = spellPresentationSourceForCharacter(
+          actor,
           context,
-          actorId,
           value.activeEffect.sourceProcedureRef,
         );
         if (
@@ -984,7 +1018,6 @@ function dynamicSpellPresentationInvocation(
 function spellCreatedHeldObjectPresentationInvocation(
   actor: CharacterBattleCreatureState,
   context: BattleRuntimeContext,
-  actorId: CombatantId,
   procedureRef: BattleProcedureExecutionRef,
   execution: Extract<
     SpellProcedureExecution,
@@ -1002,9 +1035,9 @@ function spellCreatedHeldObjectPresentationInvocation(
   if (sourceExecution?.procedure !== "spellCreatedHeldObject") {
     return undefined;
   }
-  const source = spellPresentationSourceForProcedure(
+  const source = spellPresentationSourceForCharacter(
+    actor,
     context,
-    actorId,
     execution.sourceHeldObjectProcedureRef,
   );
   if (source?.invocation.procedure !== "spellCreatedHeldObject") {
@@ -1029,12 +1062,13 @@ function unitForProcedureRef(
 ): BattleUnitRef["unit"] | undefined {
   const characterContext = context.characters.get(actor.combatantId);
   if (characterContext === undefined) return undefined;
-  return characterContext.unitPresentationSources.find((candidate) =>
+  const matches = characterContext.unitPresentationSources.filter((candidate) =>
     characterUnitProcedureRefsForAuthoredSelection(
       characterContext,
       actor,
       candidate.unit.id,
       query,
     ).includes(procedureRef),
-  )?.unit;
+  );
+  return matches.length === 1 ? matches[0]?.unit : undefined;
 }

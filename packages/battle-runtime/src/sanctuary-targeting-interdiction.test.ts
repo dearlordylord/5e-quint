@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV84G sanctuary
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-sanctuary-targeting-interdiction
 import { battleProcedureExecutionRefForSpellHoleForTest } from "./battle-runtime-test-support.ts";
@@ -1048,7 +1049,10 @@ function castSanctuary(
   if (resolved.tag !== "resolved") {
     throw new Error("Expected Sanctuary cast to resolve.");
   }
-  return { state: resolved.state, context: session.context };
+  return battleRuntimeSessionForTest({
+    state: resolved.state,
+    context: session.context,
+  });
 }
 
 function advanceToAttacker(
@@ -1078,7 +1082,10 @@ function endTurnFor(
   if (resolved.tag !== "resolved") {
     throw new Error(`Expected ${actorId} to end turn.`);
   }
-  return { state: resolved.state, context: session.context };
+  return battleRuntimeSessionForTest({
+    state: resolved.state,
+    context: session.context,
+  });
 }
 
 function attackAct(

@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
   battleProcedureExecutionRefForTest,
   characterSpellProcedureRefMatchesSpellForTest,
@@ -1682,7 +1683,7 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
   function level1BuffMarkSmiteSessionAtState(
     mechanicalState: BattleState,
   ): BattleRuntimeSession {
-    return { ...session, state: mechanicalState };
+    return battleRuntimeSessionForTest({ ...session, state: mechanicalState });
   }
 
   function recordRouteEvents(

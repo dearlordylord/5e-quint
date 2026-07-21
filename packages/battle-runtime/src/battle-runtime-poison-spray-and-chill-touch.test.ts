@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { describe, expect, test } from "vitest";
 import {
@@ -188,10 +189,12 @@ describe("battle runtime: Poison Spray and Chill Touch", () => {
       },
     });
 
-    const healingWordAct = discoverBattleActs({
-      state: result.state,
-      context: state.context,
-    }).find(
+    const healingWordAct = discoverBattleActs(
+      battleRuntimeSessionForTest({
+        state: result.state,
+        context: state.context,
+      }),
+    ).find(
       (candidate) =>
         candidate.subject.tag === "bonusActionSpell" &&
         battleActSpellPresentation(candidate)?.invocation.spellId ===
@@ -388,10 +391,12 @@ describe("battle runtime: Poison Spray and Chill Touch", () => {
     const wizardThirdTurn = requireResolved(
       endTurn({ state: expired.state, actorId: skeletonId }),
     );
-    const healingWordAct = discoverBattleActs({
-      state: wizardThirdTurn.state,
-      context: state.context,
-    }).find(
+    const healingWordAct = discoverBattleActs(
+      battleRuntimeSessionForTest({
+        state: wizardThirdTurn.state,
+        context: state.context,
+      }),
+    ).find(
       (candidate) =>
         candidate.subject.tag === "bonusActionSpell" &&
         battleActSpellPresentation(candidate)?.invocation.spellId ===

@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING
 
 import { isDeepStrictEqual } from "node:util";
@@ -277,7 +278,10 @@ function createStatBlockActionOrderingDriverWithProjection<State>(
             ? []
             : holes;
       if (result.tag === "needsHoles") {
-        session = { ...session, state: result.state };
+        session = battleRuntimeSessionForTest({
+          ...session,
+          state: result.state,
+        });
         holes = result.holes;
         route = [
           ...route,
@@ -294,7 +298,10 @@ function createStatBlockActionOrderingDriverWithProjection<State>(
         return;
       }
       if (result.tag === "resolved") {
-        session = { ...session, state: result.state };
+        session = battleRuntimeSessionForTest({
+          ...session,
+          state: result.state,
+        });
         holes = [];
         route = [
           ...route,
@@ -379,7 +386,10 @@ function createStatBlockActionOrderingDriverWithProjection<State>(
             fills: [],
           }),
         );
-        const multiattackSession = { ...battle, state: multiattack.state };
+        const multiattackSession = battleRuntimeSessionForTest({
+          ...battle,
+          state: multiattack.state,
+        });
         discoverAttack({
           battle: multiattackSession,
           attackSubject: requireDiscoveredStatBlockAttackSubject(
@@ -533,7 +543,10 @@ function createStatBlockActionOrderingDriverWithProjection<State>(
         const fighterTurn = requireResolved(
           endTurn({ state: spent.state, actorId: goblinId }),
         );
-        const fighterTurnSession = { ...spent, state: fighterTurn.state };
+        const fighterTurnSession = battleRuntimeSessionForTest({
+          ...spent,
+          state: fighterTurn.state,
+        });
         const rechargeRequest = requireNeedsHoles(
           endTurn({ state: fighterTurnSession.state, actorId: fighterId }),
         );
@@ -820,7 +833,7 @@ function statBlockActionOrderingBattle(
       actorId: fighterId,
     }),
   );
-  return { ...session, state: goblinTurn.state };
+  return battleRuntimeSessionForTest({ ...session, state: goblinTurn.state });
 }
 
 function requireDiscoveredStatBlockAttackSubject(
@@ -895,7 +908,7 @@ function spendRechargeAttack(): BattleRuntimeSession {
       ],
     }),
   ).state;
-  const spentSession = { ...battle, state: spent };
+  const spentSession = battleRuntimeSessionForTest({ ...battle, state: spent });
   if (statBlockAttackAvailable(spentSession, rechargeAttackName)) {
     throw new Error("Expected spent recharge Stat Block attack to be hidden.");
   }
