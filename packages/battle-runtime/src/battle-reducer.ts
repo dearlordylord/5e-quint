@@ -289,14 +289,6 @@ export {
 } from "./battle-reducer/battle-discovery.ts";
 
 export {
-  battleActDruidWildShapePresentation,
-  battleActSpellPresentation,
-  battleActSpellSlotPresentation,
-  battleActUnitPresentation,
-  discoverBattleActs,
-} from "./battle-act-composition.ts";
-
-export {
   discoverLegendaryActionActs,
   druidWildShapeActsForResource,
   hasReactionRollOrDamageReductionRangeFact,

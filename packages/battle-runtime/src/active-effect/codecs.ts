@@ -1,11 +1,8 @@
-import { ElapsedTimeTicksSchema } from "@dnd/shared-algebras/elapsed-time-algebra";
 import {
-  AbilityModifier,
-  AttackBonus,
-  type AbilityModifier as AbilityModifierType,
-  type AttackBonus as AttackBonusType,
-} from "@dnd/shared/types";
-import { AbilitySchema, DamageTypeSchema, DiceExprSchema } from "@dnd/surface/surface/schema";
+  AbilitySchema,
+  DamageTypeSchema,
+  DiceExprSchema,
+} from "@dnd/surface/surface/schema";
 import type { DamageType, DiceExpr } from "@dnd/surface/surface/types";
 import { Schema } from "effect";
 import { HUNTERS_MARK_FINDING_SKILLS } from "../battle-reducer/domain-constants.ts";
@@ -20,9 +17,30 @@ import {
 } from "../identity.ts";
 import type {
   BattleActiveEffect,
-  BattleActiveEffectExpiration,
   MarkedDamageRiderTransferState,
 } from "./types.ts";
+import type {
+  BattleActiveEffectExpiration,
+  DurationBattleActiveEffectExpiration,
+} from "./expiration.ts";
+import { BattleRoundSchema } from "./round-codec.ts";
+import {
+  BattleActiveEffectExpirationSchema,
+  ConcentrationBattleActiveEffectExpirationSchema,
+  DurationBattleActiveEffectExpirationSchema,
+} from "./expiration-codecs.ts";
+export type { SpellWeaponAttackOverrideTemplate } from "../procedure-execution/weapon-attack-override.ts";
+export { SpellWeaponAttackOverrideTemplateSchema } from "../procedure-execution/weapon-attack-override.ts";
+export {
+  BattleActiveEffectExpirationSchema,
+  ConcentrationBattleActiveEffectExpirationSchema,
+  DurationBattleActiveEffectExpirationSchema,
+} from "./expiration-codecs.ts";
+
+type ConcentrationBattleActiveEffectExpiration = Extract<
+  BattleActiveEffectExpiration,
+  { readonly kind: "concentration" }
+>;
 
 function exactSchema<Expected>() {
   return <Encoded, Context, Actual extends Expected>(
@@ -30,69 +48,6 @@ function exactSchema<Expected>() {
       ([Expected] extends [Actual] ? unknown : never),
   ): Schema.Schema<Actual, Encoded, Context> => schema;
 }
-
-const BattleRoundSchema = Schema.Number.pipe(
-  Schema.int(),
-  Schema.greaterThanOrEqualTo(1),
-  Schema.brand("PositiveInteger"),
-  Schema.brand("Round"),
-);
-
-export const BattleActiveEffectExpirationSchema =
-  exactSchema<BattleActiveEffectExpiration>()(
-    Schema.Union(
-      Schema.Struct({
-        kind: Schema.Literal("startOfTurn"),
-        combatantId: CombatantId,
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("endOfTurn"),
-        combatantId: CombatantId,
-        round: BattleRoundSchema,
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("concentration"),
-        combatantId: CombatantId,
-        durationTicks: Schema.optionalWith(ElapsedTimeTicksSchema, {
-          exact: true,
-        }),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("duration"),
-        durationTicks: ElapsedTimeTicksSchema,
-      }),
-      Schema.Struct({ kind: Schema.Literal("untilDispelled") }),
-    ),
-  );
-
-type DurationBattleActiveEffectExpiration = Extract<
-  BattleActiveEffectExpiration,
-  { readonly kind: "duration" }
->;
-
-export const DurationBattleActiveEffectExpirationSchema =
-  exactSchema<DurationBattleActiveEffectExpiration>()(
-    Schema.Struct({
-      kind: Schema.Literal("duration"),
-      durationTicks: ElapsedTimeTicksSchema,
-    }),
-  );
-
-type ConcentrationBattleActiveEffectExpiration = Extract<
-  BattleActiveEffectExpiration,
-  { readonly kind: "concentration" }
->;
-
-export const ConcentrationBattleActiveEffectExpirationSchema =
-  exactSchema<ConcentrationBattleActiveEffectExpiration>()(
-    Schema.Struct({
-      kind: Schema.Literal("concentration"),
-      combatantId: CombatantId,
-      durationTicks: Schema.optionalWith(ElapsedTimeTicksSchema, {
-        exact: true,
-      }),
-    }),
-  );
 
 export const MarkedDamageRiderTransferStateSchema =
   exactSchema<MarkedDamageRiderTransferState>()(
@@ -139,16 +94,15 @@ type SpellWeaponDamageRider = Extract<
   BattleActiveEffect,
   { readonly kind: "spellWeaponDamageRider" }
 >;
-export type SpellWeaponDamageRiderTemplate =
-  {
-    readonly sourceCombatantId: CombatantId;
-    readonly kind: "spellWeaponDamageRider";
-    readonly damage: {
-      readonly expr: DiceExpr;
-      readonly damageType: DamageType;
-    };
-    readonly expiresAt: BattleActiveEffectExpiration;
+export type SpellWeaponDamageRiderTemplate = {
+  readonly sourceCombatantId: CombatantId;
+  readonly kind: "spellWeaponDamageRider";
+  readonly damage: {
+    readonly expr: DiceExpr;
+    readonly damageType: DamageType;
   };
+  readonly expiresAt: BattleActiveEffectExpiration;
+};
 
 const SpellWeaponDamageRiderMechanicalFields = {
   sourceCombatantId: CombatantId,
@@ -165,26 +119,26 @@ export const SpellWeaponDamageRiderTemplateSchema =
     Schema.Struct(SpellWeaponDamageRiderMechanicalFields),
   );
 
-export const SpellWeaponDamageRiderSchema = exactSchema<SpellWeaponDamageRider>()(
-  Schema.Struct({
-    sourceProcedureRef: BattleProcedureExecutionRef,
-    ...SpellWeaponDamageRiderMechanicalFields,
-  }),
-);
+export const SpellWeaponDamageRiderSchema =
+  exactSchema<SpellWeaponDamageRider>()(
+    Schema.Struct({
+      sourceProcedureRef: BattleProcedureExecutionRef,
+      ...SpellWeaponDamageRiderMechanicalFields,
+    }),
+  );
 
-export type SpellMarkedDamageRiderTemplate =
-  {
-    readonly sourceCombatantId: CombatantId;
-    readonly kind: "spellMarkedDamageRider";
-    readonly targetCombatantId: CombatantId;
-    readonly transfer: MarkedDamageRiderTransferState;
-    readonly abilityCheckBehavior: MarkedDamageRiderAbilityCheckBehavior;
-    readonly damage: {
-      readonly expr: DiceExpr;
-      readonly damageType: DamageType;
-    };
-    readonly expiresAt: BattleActiveEffectExpiration;
+export type SpellMarkedDamageRiderTemplate = {
+  readonly sourceCombatantId: CombatantId;
+  readonly kind: "spellMarkedDamageRider";
+  readonly targetCombatantId: CombatantId;
+  readonly transfer: MarkedDamageRiderTransferState;
+  readonly abilityCheckBehavior: MarkedDamageRiderAbilityCheckBehavior;
+  readonly damage: {
+    readonly expr: DiceExpr;
+    readonly damageType: DamageType;
   };
+  readonly expiresAt: BattleActiveEffectExpiration;
+};
 
 const SpellMarkedDamageRiderMechanicalFields = {
   sourceCombatantId: CombatantId,
@@ -204,13 +158,14 @@ export const SpellMarkedDamageRiderTemplateSchema =
     Schema.Struct(SpellMarkedDamageRiderMechanicalFields),
   );
 
-export const SpellMarkedDamageRiderSchema = exactSchema<SpellMarkedDamageRider>()(
-  Schema.Struct({
-    sourceProcedureRef: BattleProcedureExecutionRef,
-    effectRef: BattleActiveEffectExecutionRef,
-    ...SpellMarkedDamageRiderMechanicalFields,
-  }),
-);
+export const SpellMarkedDamageRiderSchema =
+  exactSchema<SpellMarkedDamageRider>()(
+    Schema.Struct({
+      sourceProcedureRef: BattleProcedureExecutionRef,
+      effectRef: BattleActiveEffectExecutionRef,
+      ...SpellMarkedDamageRiderMechanicalFields,
+    }),
+  );
 
 export type ThaumaturgyBoomingVoiceTemplate = {
   readonly sourceCombatantId: CombatantId;
@@ -253,33 +208,6 @@ export const WardingBondActiveEffectTemplateSchema =
     Schema.Struct({
       sourceCombatantId: CombatantId,
       kind: Schema.Literal("wardingBond"),
-      expiresAt: DurationBattleActiveEffectExpirationSchema,
-    }),
-  );
-
-export type SpellWeaponAttackOverrideTemplate = {
-  readonly sourceCombatantId: CombatantId;
-  readonly kind: "spellWeaponAttackOverride";
-  readonly weaponItemId: string;
-  readonly spellcastingAbilityModifier: AbilityModifierType;
-  readonly attackBonus: AttackBonusType;
-  readonly damage: {
-    readonly expr: DiceExpr;
-  };
-  readonly damageTypeChoices: readonly [DamageType, DamageType];
-  readonly expiresAt: DurationBattleActiveEffectExpiration;
-};
-
-export const SpellWeaponAttackOverrideTemplateSchema =
-  exactSchema<SpellWeaponAttackOverrideTemplate>()(
-    Schema.Struct({
-      sourceCombatantId: CombatantId,
-      kind: Schema.Literal("spellWeaponAttackOverride"),
-      weaponItemId: Schema.String,
-      spellcastingAbilityModifier: AbilityModifier,
-      attackBonus: AttackBonus,
-      damage: Schema.Struct({ expr: DiceExprSchema }),
-      damageTypeChoices: Schema.Tuple(DamageTypeSchema, DamageTypeSchema),
       expiresAt: DurationBattleActiveEffectExpirationSchema,
     }),
   );
