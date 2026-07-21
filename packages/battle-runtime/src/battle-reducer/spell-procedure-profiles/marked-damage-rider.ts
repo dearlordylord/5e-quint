@@ -38,9 +38,7 @@ import type {
 } from "@dnd/surface/surface/types";
 import { Either, Match } from "effect";
 import { allocateBattleActiveEffectRef } from "../../active-effect/execution-ref.ts";
-import {
-  BattleActiveEffectExpirationSchema,
-} from "../../active-effect/codecs.ts";
+import { BattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
 import {
   characterExecutionWithMarkedDamageRiderTransfer,
   characterSpellProcedureRefsForProcedure,
@@ -102,10 +100,7 @@ import {
   PreparedSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
-import {
-  DamageTypeSchema,
-  DiceExprSchema,
-} from "@dnd/surface/surface/schema";
+import { DamageTypeSchema, DiceExprSchema } from "@dnd/surface/surface/schema";
 import {
   sameStringSet,
   supportedDamageAmountExpr,
@@ -494,7 +489,6 @@ function discoverMarkedDamageRiderCastAct(
         },
       ];
 }
-
 
 function resolveMarkedDamageRider(
   input: MarkedDamageRiderResolveInput,

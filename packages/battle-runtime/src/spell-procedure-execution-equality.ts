@@ -1,6 +1,10 @@
 import { Match } from "effect";
 
-import type { Duration, DurationValue, Range } from "@dnd/surface/surface/types";
+import type {
+  Duration,
+  DurationValue,
+  Range,
+} from "@dnd/surface/surface/types";
 
 import type { SpellRuleExecutionFacts } from "./character-execution.ts";
 import type { SupportedSpellInvocation } from "./battle-reducer.ts";
@@ -10,7 +14,10 @@ type SpellAccess = SupportedSpellInvocation["access"];
 type SpellResource = SupportedSpellInvocation["resource"];
 type DurationBranch = Exclude<Duration, { readonly kind: "slot_tiered" }>;
 
-export function sameSpellAccess(left: SpellAccess, right: SpellAccess): boolean {
+export function sameSpellAccess(
+  left: SpellAccess,
+  right: SpellAccess,
+): boolean {
   return Match.value(left).pipe(
     Match.discriminatorsExhaustive("tag")({
       prepared: () => right.tag === "prepared",
@@ -39,10 +46,7 @@ export function sameSpellResource(
   );
 }
 
-function sameDurationValue(
-  left: DurationValue,
-  right: DurationValue,
-): boolean {
+function sameDurationValue(left: DurationValue, right: DurationValue): boolean {
   const leftTiers = left.upcastTiers ?? [];
   const rightTiers = right.upcastTiers ?? [];
   return (
@@ -67,14 +71,12 @@ function sameDurationBranch(
       concentration: (value) =>
         right.kind === "concentration" &&
         sameDurationValue(value.upTo, right.upTo) &&
-        value.permanentIfMaintainedFull ===
-          right.permanentIfMaintainedFull &&
+        value.permanentIfMaintainedFull === right.permanentIfMaintainedFull &&
         sameSetByKey(
           value.earlyEnd ?? [],
           right.earlyEnd ?? [],
           (trigger) => trigger.kind,
-          (leftTrigger, rightTrigger) =>
-            leftTrigger.kind === rightTrigger.kind,
+          (leftTrigger, rightTrigger) => leftTrigger.kind === rightTrigger.kind,
         ),
       timed: (value) =>
         right.kind === "timed" &&
@@ -83,8 +85,7 @@ function sameDurationBranch(
           value.earlyEnd ?? [],
           right.earlyEnd ?? [],
           (trigger) => trigger.kind,
-          (leftTrigger, rightTrigger) =>
-            leftTrigger.kind === rightTrigger.kind,
+          (leftTrigger, rightTrigger) => leftTrigger.kind === rightTrigger.kind,
         ) &&
         (value.permanentAfter === undefined ||
         right.permanentAfter === undefined

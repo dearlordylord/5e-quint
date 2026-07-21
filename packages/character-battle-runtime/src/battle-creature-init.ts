@@ -17,7 +17,7 @@ import {
   type CharacterBattleResourceInit,
   type CharacterBattleSpellSlotState,
   type CharacterBattleBookOfShadowsPresence,
-  type CharacterBattleClassLevel,
+  type CharacterBattleClassLevels,
   type CharacterBattleCreatureInit,
   type CharacterZeroHpLifecycleInit,
   type BattleId,
@@ -49,7 +49,6 @@ import type {
   CharacterSheetResourceExpenditure,
 } from "@dnd/character-sheet-runtime";
 import {
-  ClassLevel,
   Hp,
   abilityModifier,
   characterLevel,
@@ -273,6 +272,10 @@ export function battleCreatureInitFromCharacterBuild(
   if (Either.isLeft(classLevels)) {
     return battleCreatureInitIssue(classLevels.left.message);
   }
+  const parsedClassLevels = parseCharacterBattleClassLevels(classLevels.right);
+  if (Either.isLeft(parsedClassLevels)) {
+    return battleCreatureInitIssue(parsedClassLevels.left.messages.join("; "));
+  }
   const characterUnitRefs = characterUnitRefsWithBattleSupportProfiles(
     input.build,
     input.unitLibrary,
@@ -320,7 +323,7 @@ export function battleCreatureInitFromCharacterBuild(
   const unitFeatures = characterBattleFeatures(
     input.build,
     input.unitLibrary,
-    parseCharacterBattleClassLevels(classLevels.right),
+    parsedClassLevels.right,
     supportProfileSourceFacts.right,
   );
   if (Either.isLeft(unitFeatures)) {
@@ -330,7 +333,7 @@ export function battleCreatureInitFromCharacterBuild(
     input.build,
     input.unitLibrary,
     input.resourceExpenditures ?? [],
-    parseCharacterBattleClassLevels(classLevels.right),
+    parsedClassLevels.right,
   );
   if (Either.isLeft(resources)) {
     return battleCreatureInitIssue(resources.left.message);
@@ -382,13 +385,9 @@ export function battleCreatureInitFromCharacterBuild(
   if (Either.isLeft(druidWildShapeFacts)) {
     return battleCreatureInitIssue(druidWildShapeFacts.left.message);
   }
-  const supportProfileClassLevels = classLevels.right.map((level) => ({
-    className: level.className,
-    level: ClassLevel.make(level.level),
-  }));
   const druidWildShapeProfile = singleDruidWildShapeProfile(
     resources.right,
-    supportProfileClassLevels,
+    parsedClassLevels.right,
   );
   if (Either.isLeft(druidWildShapeProfile)) {
     return Either.left(druidWildShapeProfile.left);
@@ -568,11 +567,11 @@ function characterBattleClassLevels(
   >["classLevels"],
   BattleCreatureInitIssue
 > {
-  type CharacterBattleClassLevels = Extract<
+  type CharacterBattleClassLevelInits = Extract<
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
   >["classLevels"];
-  const classLevels: CharacterBattleClassLevels[number][] = [];
+  const classLevels: CharacterBattleClassLevelInits[number][] = [];
 
   for (const entry of progressionClassLevels(build.progression)) {
     const classUnit = getRequiredUnit(unitLibrary, entry.classUnitId);
@@ -590,7 +589,12 @@ function characterBattleClassLevels(
     });
   }
 
-  return Either.right(classLevels satisfies CharacterBattleClassLevels);
+  const [first, ...rest] = classLevels;
+  return first === undefined
+    ? battleCreatureInitIssue(
+        "Character battle initialization requires at least one class level.",
+      )
+    : Either.right([first, ...rest]);
 }
 
 function characterBattleMetamagicFromBuild(
@@ -622,7 +626,7 @@ export function characterBattleResourceInitsFromBuild(
   build: CharacterBuild,
   unitLibrary: UnitCatalog,
   resourceExpenditures: readonly CharacterSheetResourceExpenditure[],
-  parsedClassLevels?: readonly CharacterBattleClassLevel[],
+  parsedClassLevels?: CharacterBattleClassLevels,
 ): Either.Either<
   readonly CharacterBattleResourceInit[],
   BattleCreatureInitIssue
@@ -632,8 +636,13 @@ export function characterBattleResourceInitsFromBuild(
       ? characterBattleClassLevels(build, unitLibrary)
       : Either.right(parsedClassLevels);
   if (Either.isLeft(classLevels)) return Either.left(classLevels.left);
-  const parsedLevels =
-    parsedClassLevels ?? parseCharacterBattleClassLevels(classLevels.right);
+  const parsedLevelsResult =
+    parsedClassLevels === undefined
+      ? parseCharacterBattleClassLevels(classLevels.right)
+      : Either.right(parsedClassLevels);
+  if (Either.isLeft(parsedLevelsResult)) {
+    return battleCreatureInitIssue(parsedLevelsResult.left.messages.join("; "));
+  }
   const resources: CharacterBattleResourceInit[] = [];
   for (const unitRef of characterBuildUnitRefs(build, unitLibrary)) {
     const unit = unitLibrary.getUnit(unitRef.unitId);
@@ -655,7 +664,7 @@ export function characterBattleResourceInitsFromBuild(
       unit.value,
       unitLibrary,
       resourceExpenditures,
-      parsedLevels,
+      parsedLevelsResult.right,
     );
     if (Either.isLeft(init)) return Either.left(init.left);
     resources.push(init.right);
@@ -671,7 +680,7 @@ function characterBattleResourceInit(
   >,
   unitLibrary: UnitCatalog,
   resourceExpenditures: readonly CharacterSheetResourceExpenditure[],
-  classLevels: readonly CharacterBattleClassLevel[],
+  classLevels: CharacterBattleClassLevels,
 ): Either.Either<CharacterBattleResourceInit, BattleCreatureInitIssue> {
   const battleResource = characterBattleResourceForUnit(unit);
   if (battleResource.kind === "point_pool") {
@@ -726,7 +735,7 @@ function characterBattlePersistedPointsRemaining(
   unit: UnitRecord,
   unitLibrary: UnitCatalog,
   resourceExpenditures: readonly CharacterSheetResourceExpenditure[],
-  classLevels: readonly CharacterBattleClassLevel[],
+  classLevels: CharacterBattleClassLevels,
 ): Either.Either<number | undefined, BattleCreatureInitIssue> {
   const facts = characterBuildSorcererFontOfMagicFacts({ build, unitLibrary });
   if (Either.isLeft(facts)) {
@@ -760,7 +769,7 @@ function characterBattlePersistedUsesRemaining(
   unit: UnitRecord,
   unitLibrary: UnitCatalog,
   resourceExpenditures: readonly CharacterSheetResourceExpenditure[],
-  classLevels: readonly CharacterBattleClassLevel[],
+  classLevels: CharacterBattleClassLevels,
 ): Either.Either<number | undefined, BattleCreatureInitIssue> {
   const facts = characterBuildDruidWildShapeFacts({ build, unitLibrary });
   if (Either.isLeft(facts)) {

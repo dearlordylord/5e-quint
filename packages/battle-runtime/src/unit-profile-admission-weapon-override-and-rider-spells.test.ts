@@ -1,5 +1,6 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { battleObjectId } from "./identity.ts";
 import {
   battleActSpellPresentation,
   battleAdmittedSpellPresentations,
@@ -306,6 +307,42 @@ describe("SRDINV84H deterministic Shillelagh weapon override admission", () => {
     ).toBe(true);
   });
 
+  test("shillelagh damage die uses total character level for a multiclass caster", () => {
+    const session = spellBattle({
+      cantrips: [spellRecord(shillelaghUnitId)],
+      attack: zeroAbilityWeaponAttack("weapon_quarterstaff"),
+      casterClassLevels: [
+        { className: "druid", level: 1 },
+        { className: "fighter", level: 4 },
+      ],
+      casterSpellcastingSourceClassName: "druid",
+    });
+    const act = bonusSpellAct({ session, spellId: shillelaghUnitId });
+    const cast = resolveBattleSubject({
+      state: session.state,
+      subject: act.subject,
+      fills: [],
+    });
+
+    expect(cast).toMatchObject({
+      tag: "resolved",
+      state: {
+        combatants: expect.any(Map),
+      },
+    });
+    if (cast.tag !== "resolved") {
+      throw new Error("Expected multiclass Shillelagh to resolve.");
+    }
+    expect(
+      cast.state.combatants.get(spellCasterId)?.activeEffects,
+    ).toContainEqual(
+      expect.objectContaining({
+        kind: "spellWeaponAttackOverride",
+        damage: { expr: { dice: 1, dieSize: 10 } },
+      }),
+    );
+  });
+
   test("shillelagh projects Club attacks", () => {
     const session = spellBattle({
       cantrips: [spellRecord(shillelaghUnitId)],
@@ -441,7 +478,7 @@ describe("SRDINV84H deterministic Shillelagh weapon override admission", () => {
                 spellId: shillelaghUnitId,
               }).subject.procedureRef,
               sourceCombatantId: spellCasterId,
-              weaponItemId: "main:weapon_quarterstaff",
+              weaponItemId: battleObjectId("main:weapon_quarterstaff"),
               spellcastingAbilityModifier: abilityModifier(1),
               attackBonus: attackBonus(3),
               damage: { expr: { dice: 1, dieSize: 8 } },

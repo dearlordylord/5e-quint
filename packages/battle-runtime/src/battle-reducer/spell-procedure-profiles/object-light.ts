@@ -57,7 +57,10 @@ import type {
 } from "./profile.ts";
 import { Schema } from "effect";
 import { BattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
-import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
+import {
+  SpellRuleExecutionFactsSchema,
+  spellProcedureExecutionSchema,
+} from "./profile.ts";
 import {
   ClassCantripSpellAccessSchema,
   MovementFeet,

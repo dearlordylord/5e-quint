@@ -53,9 +53,6 @@ import {
 import {
   battleCreatureStateAdmissionFromInit,
   combatantInitiativeInsertionIndex,
-  characterDruidWildShapeAvailableFormsInitIssue,
-  characterResourceInitIssue,
-  characterSpellcastingInitIssue,
   hidePrerequisitesReferenceCombatantsIssue,
   hidePrerequisiteReferencedCombatantIds,
   isCharacterBattleCreatureState,
@@ -196,20 +193,6 @@ export function startBattle(
       positiveHpUnconsciousInitIssue(combatant);
     if (positiveHpUnconsciousIssue !== null) {
       return positiveHpUnconsciousIssue;
-    }
-    const characterResourceIssue = characterResourceInitIssue(combatant);
-    if (characterResourceIssue !== null) {
-      return characterResourceIssue;
-    }
-    const druidWildShapeAvailableFormsIssue =
-      characterDruidWildShapeAvailableFormsInitIssue(combatant);
-    if (druidWildShapeAvailableFormsIssue !== null) {
-      return druidWildShapeAvailableFormsIssue;
-    }
-    const characterSpellcastingIssue =
-      characterSpellcastingInitIssue(combatant);
-    if (characterSpellcastingIssue !== null) {
-      return characterSpellcastingIssue;
     }
     const admission = battleCreatureStateAdmissionFromInit(
       input.battleId,
@@ -532,21 +515,6 @@ function admitBattleCombatant(input: AddBattleCombatantInput): Either.Either<
   );
   if (positiveHpUnconsciousIssue !== null) {
     return positiveHpUnconsciousIssue;
-  }
-  const characterResourceIssue = characterResourceInitIssue(input.combatant);
-  if (characterResourceIssue !== null) {
-    return characterResourceIssue;
-  }
-  const druidWildShapeAvailableFormsIssue =
-    characterDruidWildShapeAvailableFormsInitIssue(input.combatant);
-  if (druidWildShapeAvailableFormsIssue !== null) {
-    return druidWildShapeAvailableFormsIssue;
-  }
-  const characterSpellcastingIssue = characterSpellcastingInitIssue(
-    input.combatant,
-  );
-  if (characterSpellcastingIssue !== null) {
-    return characterSpellcastingIssue;
   }
   const admission = battleCreatureStateAdmissionFromInit(
     input.state.battleId,

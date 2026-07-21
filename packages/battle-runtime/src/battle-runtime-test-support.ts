@@ -142,7 +142,10 @@ import {
   parseCharacterBattleClassLevels,
   type CharacterBattleFeatureInit,
 } from "./character-battle-resources.ts";
-import type { CharacterBattleClassLevel } from "./character-class-level.ts";
+import type {
+  CharacterBattleClassLevel,
+  CharacterBattleClassLevels,
+} from "./character-class-level.ts";
 import {
   CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
   characterUnitProcedure,
@@ -660,6 +663,16 @@ export function startBattleSessionRight(
   const result = startBattle(input);
   if (Either.isLeft(result)) {
     throw new Error(result.left.message);
+  }
+  return result.right;
+}
+
+function parseCharacterBattleClassLevelsRight(
+  classLevels: Parameters<typeof parseCharacterBattleClassLevels>[0],
+): CharacterBattleClassLevels {
+  const result = parseCharacterBattleClassLevels(classLevels);
+  if (Either.isLeft(result)) {
+    throw new Error(result.left.messages.join("; "));
   }
   return result.right;
 }
@@ -3348,7 +3361,7 @@ export function characterSeed(input: {
       : (input.resources ?? []).flatMap((resource) => {
           const profile = parseSupportedUnitFeatureProfile(
             resource.unit,
-            parseCharacterBattleClassLevels(classLevels),
+            parseCharacterBattleClassLevelsRight(classLevels),
           );
           return profile?.kind === "druidWildShapeKnownForm" ? [profile] : [];
         })[0];
@@ -3381,7 +3394,7 @@ export function characterSeed(input: {
   const resourceUnitRefs = (input.resources ?? []).map((resource) => {
     const supportProfiles = battleUnitSupportProfilesForUnit({
       unit: resource.unit,
-      classLevels: parseCharacterBattleClassLevels(classLevels),
+      classLevels: parseCharacterBattleClassLevelsRight(classLevels),
     });
     if (Either.isLeft(supportProfiles)) {
       throw new Error(supportProfiles.left.message);
@@ -4032,7 +4045,9 @@ export function recklessAttackFeature(): NonNullable<
 >[number] {
   return characterBattleFeatureInitForTest(
     barbarianRecklessAttackUnit(),
-    parseCharacterBattleClassLevels([{ className: "barbarian", level: 2 }]),
+    parseCharacterBattleClassLevelsRight([
+      { className: "barbarian", level: 2 },
+    ]),
   );
 }
 
@@ -4049,7 +4064,7 @@ export function sneakAttackFeature(input?: {
   const featureClassLevel = input?.classLevel ?? acquiredAtLevel;
   return characterBattleFeatureInitForTest(
     rogueSneakAttackUnit({ acquiredAtLevel }),
-    parseCharacterBattleClassLevels([
+    parseCharacterBattleClassLevelsRight([
       { className: "rogue", level: featureClassLevel },
     ]),
   );
@@ -4066,7 +4081,7 @@ export function cunningStrikeFeature(input?: {
   const acquiredAtLevel = input?.acquiredAtLevel ?? 5;
   return characterBattleFeatureInitForTest(
     rogueCunningStrikeUnit({ acquiredAtLevel }),
-    parseCharacterBattleClassLevels([
+    parseCharacterBattleClassLevelsRight([
       { className: "rogue", level: acquiredAtLevel },
     ]),
   );
@@ -4082,7 +4097,7 @@ function evasionFeature(input?: {
 >[number] {
   return characterBattleFeatureInitForTest(
     rogueEvasionUnit(input),
-    parseCharacterBattleClassLevels([{ className: "rogue", level: 7 }]),
+    parseCharacterBattleClassLevelsRight([{ className: "rogue", level: 7 }]),
   );
 }
 
@@ -4383,7 +4398,7 @@ export function goblinAttacksReactionModifierCharacter(input: {
         unitFeatures: [
           characterBattleFeatureInitForTest(
             input.unit,
-            parseCharacterBattleClassLevels([
+            parseCharacterBattleClassLevelsRight([
               { className: input.className, level: input.level },
             ]),
           ),

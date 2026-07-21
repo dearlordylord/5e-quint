@@ -501,15 +501,14 @@ const ObjectContactDamageInvocationSchema = spellProcedureExecutionSchema(
   }),
 );
 
-const ObjectContactDamageRepeatInvocationSchema =
-  spellProcedureExecutionSchema(
-    Schema.Struct({
-      procedure: Schema.Literal("objectContactDamageRepeat"),
-      spellRuleFacts: Schema.optionalWith(Schema.Never, { exact: true }),
-      activeEffectRef: BattleActiveEffectExecutionRef,
-      activeEffectSourceProcedureRef: BattleProcedureExecutionRef,
-    }),
-  );
+const ObjectContactDamageRepeatInvocationSchema = spellProcedureExecutionSchema(
+  Schema.Struct({
+    procedure: Schema.Literal("objectContactDamageRepeat"),
+    spellRuleFacts: Schema.optionalWith(Schema.Never, { exact: true }),
+    activeEffectRef: BattleActiveEffectExecutionRef,
+    activeEffectSourceProcedureRef: BattleProcedureExecutionRef,
+  }),
+);
 export const objectContactDamageProfile: SpellProcedureProfile<
   "objectContactDamage",
   ObjectContactDamageInvocation,

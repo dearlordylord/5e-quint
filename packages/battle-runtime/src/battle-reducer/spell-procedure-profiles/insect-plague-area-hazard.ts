@@ -49,7 +49,10 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
-import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
+import {
+  SpellRuleExecutionFactsSchema,
+  spellProcedureExecutionSchema,
+} from "./profile.ts";
 
 type InsectPlagueAreaHazardSpellInvocation = Extract<
   SupportedSpellInvocation,
@@ -248,7 +251,6 @@ function discoverInsectPlagueAreaHazardCastAct(
     },
   ];
 }
-
 
 function resolveInsectPlagueAreaHazard(
   input: InsectPlagueAreaHazardResolveInput,

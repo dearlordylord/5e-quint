@@ -82,10 +82,7 @@ import {
   spendCharacterResourceUse,
   type CharacterBattleResourceState,
 } from "../character-battle-resources.ts";
-import type {
-  BattleProcedureExecutionRef,
-  CombatantId,
-} from "../identity.ts";
+import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
 import { setCompanion } from "../companion-state.ts";
 import { findPresentFamiliarById } from "../find-familiar-state.ts";
 import { retainedStoredFormForPresentCompanion } from "../find-familiar-lifecycle.ts";
@@ -1290,8 +1287,7 @@ export function zeroHitPointReplacementResource(
   }
   const resourcePoolRef = binding.procedure.source.resourcePoolRef;
   const resource = combatant.origin.resources.find(
-    (candidate) =>
-      candidate.resourcePoolRef === resourcePoolRef,
+    (candidate) => candidate.resourcePoolRef === resourcePoolRef,
   );
   if (resource === undefined || !resourceHasUsesRemaining(resource)) {
     return null;

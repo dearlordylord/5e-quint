@@ -93,8 +93,7 @@ function samePostSaveAreaEffect(
       shatterObjectDamage: () => right.kind === "shatterObjectDamage",
       thunderwave: (value) =>
         right.kind === "thunderwave" &&
-        value.creaturePush.distanceFeet ===
-          right.creaturePush.distanceFeet &&
+        value.creaturePush.distanceFeet === right.creaturePush.distanceFeet &&
         value.creaturePush.originDirection ===
           right.creaturePush.originDirection &&
         value.unsecuredObjectPush.distanceFeet ===
@@ -179,9 +178,6 @@ export function sameSaveGatedDamageExecution(
       left.saveRollModeRule,
       right.saveRollModeRule,
     ) &&
-    samePostSaveAreaEffect(
-      left.postSaveAreaEffect,
-      right.postSaveAreaEffect,
-    )
+    samePostSaveAreaEffect(left.postSaveAreaEffect, right.postSaveAreaEffect)
   );
 }

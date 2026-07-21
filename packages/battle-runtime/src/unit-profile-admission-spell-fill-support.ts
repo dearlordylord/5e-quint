@@ -209,7 +209,7 @@ function characterSpellProcedureItemId(
     act.subject.procedureRef,
   );
   return procedure?.procedure === "weaponAttackOverride"
-    ? procedure.attachedWeaponItemId
+    ? procedure.activeEffect.weaponItemId
     : procedure?.procedure === "spellHostedWeaponAttack"
       ? procedure.componentWeaponItemId
       : undefined;

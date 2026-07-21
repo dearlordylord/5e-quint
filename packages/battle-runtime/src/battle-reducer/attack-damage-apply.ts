@@ -145,8 +145,7 @@ export function attackDamageHole(
     ...(damageDieFloorProcedureRefs === null
       ? {}
       : {
-          attackDamageDieFloorChoiceProcedureRefs:
-            damageDieFloorProcedureRefs,
+          attackDamageDieFloorChoiceProcedureRefs: damageDieFloorProcedureRefs,
         }),
     ...(attack.kind !== "weapon" ||
     attack.attackDamageAbilityModifierChoice === undefined
@@ -1405,19 +1404,16 @@ function hasMartialArtsAttackProjectionSupport(
   actor: BattleCreatureState,
 ): boolean {
   if (actor.origin.kind !== "character") return false;
-  return actor.origin.execution.procedureBindings.some(
-    (binding) => {
-      const procedure = binding.procedure;
-      return (
-        (procedure.kind === "unitFeature" &&
-          procedure.execution.kind ===
-            MARTIAL_ARTS_ATTACK_PROJECTION_SUPPORT_PROFILE) ||
-        (procedure.kind === "unitSupportProfile" &&
-          procedure.execution ===
-            MARTIAL_ARTS_ATTACK_PROJECTION_SUPPORT_PROFILE)
-      );
-    },
-  );
+  return actor.origin.execution.procedureBindings.some((binding) => {
+    const procedure = binding.procedure;
+    return (
+      (procedure.kind === "unitFeature" &&
+        procedure.execution.kind ===
+          MARTIAL_ARTS_ATTACK_PROJECTION_SUPPORT_PROFILE) ||
+      (procedure.kind === "unitSupportProfile" &&
+        procedure.execution === MARTIAL_ARTS_ATTACK_PROJECTION_SUPPORT_PROFILE)
+    );
+  });
 }
 
 function martialArtsLoadoutEligible(

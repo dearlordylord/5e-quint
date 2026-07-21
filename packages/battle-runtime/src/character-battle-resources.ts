@@ -1,6 +1,5 @@
 import {
   AbilityModifier,
-  ClassLevel,
   NonNegativeInteger,
   ResourceCount,
   SpellSlotLevel,
@@ -30,7 +29,12 @@ import {
 } from "@dnd/surface/surface/types";
 import {
   type CharacterBattleClassLevel,
-  type CharacterBattleClassLevelInit,
+  type CharacterBattleClassLevels,
+  characterBattleLevel,
+} from "./character-class-level.ts";
+export {
+  parseCharacterBattleClassLevels,
+  type CharacterBattleClassLevelsIssue,
 } from "./character-class-level.ts";
 import {
   battleBardicInspirationGrantSupportForUnit,
@@ -54,7 +58,7 @@ import {
 import {
   persistentArmorEffectSpellProfileForSpell,
   type PersistentArmorEffectSpellRecord,
-} from "./battle-reducer/spell-procedure-profiles/persistent-armor-effect-facts.ts";
+} from "./procedure-admission/persistent-armor-effect-facts.ts";
 
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.attack-action-area-save-damage-replacement unit-feature.magic-action-healing-pool
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.metamagic-battle-resource-bridge unit-feature.failed-saving-throw-reroll unit-feature.paladin-sacred-weapon
@@ -181,7 +185,6 @@ type PactOfTheChainFindFamiliarSpellProfileParseResult =
   | { readonly tag: "missingFamiliarFormCatalog" }
   | { readonly tag: "unsupported" };
 
-
 type CharacterBattleResourceStateBase = {
   readonly resourcePoolRef: BattleResourcePoolExecutionRef;
 };
@@ -202,7 +205,7 @@ export type CharacterBattleResourceAdmission = {
 
 export function admitCharacterBattleResources(
   inits: readonly CharacterBattleResourceInit[],
-  classLevels: readonly CharacterBattleClassLevel[],
+  classLevels: CharacterBattleClassLevels,
   scopeRef: BattleCharacterExecutionScopeRef,
 ): CharacterBattleResourceAdmission {
   const admitted = inits.map((init, ordinal) => {
@@ -512,32 +515,9 @@ export function parseCharacterBattleInvocationSpellAccesses(
   };
 }
 
-export function parseCharacterBattleClassLevels(
-  classLevels: readonly CharacterBattleClassLevelInit[],
-): readonly CharacterBattleClassLevel[] {
-  const seenClassNames = new Set<ClassName>();
-  return classLevels.map((classLevel) => {
-    if (
-      !Number.isInteger(classLevel.level) ||
-      classLevel.level < 1 ||
-      classLevel.level > 20
-    ) {
-      throw new Error("Character class levels must be integers from 1 to 20.");
-    }
-    if (seenClassNames.has(classLevel.className)) {
-      throw new Error("Character class levels must not duplicate classes.");
-    }
-    seenClassNames.add(classLevel.className);
-    return {
-      className: classLevel.className,
-      level: ClassLevel.make(classLevel.level),
-    };
-  });
-}
-
 export function characterResourceState(
   input: CharacterBattleResourceInit,
-  classLevels: readonly CharacterBattleClassLevel[],
+  classLevels: CharacterBattleClassLevels,
   resourcePoolRef: BattleResourcePoolExecutionRef,
 ): CharacterBattleResourceState {
   const initIssue = characterBattleResourceInitIssue(input, classLevels);
@@ -601,7 +581,7 @@ export function characterResourceState(
 
 export function characterBattleResourceMaxUses(input: {
   readonly unit: UnitRecord;
-  readonly classLevels: readonly CharacterBattleClassLevel[];
+  readonly classLevels: CharacterBattleClassLevels;
   readonly capAbilityModifier?: AbilityModifier;
 }): ResourceCount | undefined {
   const resource = characterBattleResourceForUnit(input.unit);
@@ -623,7 +603,7 @@ export function characterBattleResourceMaxUses(input: {
 
 export function characterBattleResourceMaxPoints(input: {
   readonly unit: UnitRecord;
-  readonly classLevels: readonly CharacterBattleClassLevel[];
+  readonly classLevels: CharacterBattleClassLevels;
   readonly capAbilityModifier?: AbilityModifier;
 }): ResourceCount | undefined {
   const resource = characterBattleResourceForUnit(input.unit);
@@ -639,22 +619,18 @@ export function characterBattleResourceMaxPoints(input: {
 
 function characterBattleResourceLevel(
   unit: UnitRecord,
-  classLevels: readonly CharacterBattleClassLevel[],
+  classLevels: CharacterBattleClassLevels,
 ): number {
   const unitClassLevel =
     unit.kind === "class_feature"
       ? requireCharacterClassLevel(classLevels, unit.className)
       : undefined;
-  const characterLevel = classLevels.reduce(
-    (total, classLevel) => total + Number(classLevel.level),
-    0,
-  );
-  return unitClassLevel ?? characterLevel;
+  return unitClassLevel ?? Number(characterBattleLevel(classLevels));
 }
 
 export function characterBattleResourceInitIssue(
   input: CharacterBattleResourceInit,
-  classLevels: readonly CharacterBattleClassLevel[],
+  classLevels: CharacterBattleClassLevels,
 ): string | null {
   const resource = characterBattleResourceForUnitOrNull(input.unit);
   if (resource === null) {
@@ -1173,9 +1149,7 @@ function pactOfTheChainFindFamiliarSpellProfileForSpell(
   const components = spell.mechanics.components;
   const castingTime = topLevelSpellCastingTime(spell.mechanics);
 
-  if (
-    spell.mechanics.family !== "spawned_creature"
-  ) {
+  if (spell.mechanics.family !== "spawned_creature") {
     return { tag: "unsupported" };
   }
   if (spell.mechanics.creature.kind !== "familiar_form_catalog") {
@@ -1191,7 +1165,8 @@ function pactOfTheChainFindFamiliarSpellProfileForSpell(
   ) {
     return { tag: "unsupported" };
   }
-  const eligibleForms = pactOfTheChainFindFamiliarFormEligibilityForSpell(spell);
+  const eligibleForms =
+    pactOfTheChainFindFamiliarFormEligibilityForSpell(spell);
   return eligibleForms === null
     ? { tag: "missingFamiliarFormCatalog" }
     : {

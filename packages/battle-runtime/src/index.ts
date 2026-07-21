@@ -141,6 +141,8 @@ export {
 export type {
   CharacterBattleClassLevel,
   CharacterBattleClassLevelInit,
+  CharacterBattleClassLevelInits,
+  CharacterBattleClassLevels,
 } from "./character-class-level.ts";
 
 export {
@@ -164,6 +166,7 @@ export {
   unitIsFavoredEnemyHuntersMarkFreeCastResource,
   unitIsSupportedClassFeatureSpellFreeCastResource,
   type CharacterBattleBookOfShadowsSpellAccessInit,
+  type CharacterBattleClassLevelsIssue,
   type CharacterBattleBookOfShadowsPresence,
   type CharacterBattleFeaturePreparedSpellInit,
   type CharacterBattleFeatureInit,

@@ -29,7 +29,7 @@ import {
   ConcentrationBattleActiveEffectExpirationSchema,
   DurationBattleActiveEffectExpirationSchema,
 } from "./expiration-codecs.ts";
-export type { SpellWeaponAttackOverrideTemplate } from "../procedure-execution/weapon-attack-override.ts";
+export type { SpellWeaponAttackOverrideTemplate } from "../procedure-facts/weapon-attack-override.ts";
 export { SpellWeaponAttackOverrideTemplateSchema } from "../procedure-execution/weapon-attack-override.ts";
 export {
   BattleActiveEffectExpirationSchema,

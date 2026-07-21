@@ -42,10 +42,7 @@ import {
   type BattleExecutableSpellInvocation,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
-import {
-  type BattleAreaId,
-  type CombatantId,
-} from "../../identity.ts";
+import { type BattleAreaId, type CombatantId } from "../../identity.ts";
 import {
   antimagicFieldOngoingSpellEffectRefForActiveEffect,
   antimagicFieldOngoingSpellEffectRefForEmitter,
@@ -65,7 +62,10 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
-import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
+import {
+  SpellRuleExecutionFactsSchema,
+  spellProcedureExecutionSchema,
+} from "./profile.ts";
 import {
   MovementFeet,
   PreparedSpellAccessSchema,
@@ -188,7 +188,6 @@ function discoverAntimagicFieldOngoingSpellSuppressionCastAct(
     },
   ];
 }
-
 
 function resolveAntimagicFieldOngoingSpellSuppression(
   input: AntimagicFieldOngoingSpellSuppressionResolveInput,

@@ -122,7 +122,10 @@ type BattleCompanionPresentSnapshotFields = {
 
 export type BattleCompanionSnapshot =
   | (Omit<
-      Extract<BattleCompanionPresentState, { readonly formAccess: "findFamiliar" }>,
+      Extract<
+        BattleCompanionPresentState,
+        { readonly formAccess: "findFamiliar" }
+      >,
       "combatantId"
     > &
       BattleCompanionPresentSnapshotFields)

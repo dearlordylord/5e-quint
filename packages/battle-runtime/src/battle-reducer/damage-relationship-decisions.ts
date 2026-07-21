@@ -255,7 +255,9 @@ function damageRelationshipQuestions(input: {
     if (!isCharacterBattleCreatureState(beneficiary)) {
       continue;
     }
-    for (const procedure of enemyZeroHitPointTemporaryHitPointsProcedures(beneficiary)) {
+    for (const procedure of enemyZeroHitPointTemporaryHitPointsProcedures(
+      beneficiary,
+    )) {
       const { execution, procedureRef } = procedure;
       const triggerApplies = enemyZeroHitPointTemporaryHitPointsTriggerApplies({
         procedureRef,

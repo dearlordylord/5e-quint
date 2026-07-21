@@ -33,10 +33,7 @@ import {
 } from "../../battle-reducer.ts";
 import { type CombatantId } from "../../identity.ts";
 import { ElapsedTimeTicksSchema } from "@dnd/shared-algebras/elapsed-time-algebra";
-import {
-  DamageTypeSchema,
-  DiceExprSchema,
-} from "@dnd/surface/surface/schema";
+import { DamageTypeSchema, DiceExprSchema } from "@dnd/surface/surface/schema";
 import { supportedPreparedSaveGateConditionProfile } from "./_save-gate-helpers.ts";
 import { resolveSaveGateConditionSpellAct } from "../spells-resolve-save-gates.ts";
 import type {
@@ -45,7 +42,10 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
-import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
+import {
+  SpellRuleExecutionFactsSchema,
+  spellProcedureExecutionSchema,
+} from "./profile.ts";
 import {
   BattleConditionSchema,
   MovementFeet,

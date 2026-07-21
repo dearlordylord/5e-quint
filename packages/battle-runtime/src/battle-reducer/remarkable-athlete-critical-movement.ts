@@ -196,10 +196,10 @@ function remarkableAthleteCriticalHitMovementProfileForActor(
         "scoreCriticalHit" &&
       procedure.execution.remarkableAthlete.criticalHitMovement.timing ===
         "immediatelyAfterTrigger" &&
-      procedure.execution.remarkableAthlete.criticalHitMovement.distance.kind ===
-        "halfSpeed" &&
-      procedure.execution.remarkableAthlete.criticalHitMovement.opportunityAttacks ===
-        "doesNotProvoke"
+      procedure.execution.remarkableAthlete.criticalHitMovement.distance
+        .kind === "halfSpeed" &&
+      procedure.execution.remarkableAthlete.criticalHitMovement
+        .opportunityAttacks === "doesNotProvoke"
     ) {
       return procedure.execution;
     }

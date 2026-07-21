@@ -2,25 +2,59 @@ import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elaps
 import {
   DAMAGE_DIE_SIZES,
   attackBonus,
+  type CharacterLevel,
   type DamageDieSize,
 } from "@dnd/shared/types";
 import type { SpellRecord, WeaponRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 import type { BoundCharacterWeaponAttackActionOption } from "../battle-action-options.ts";
-import type { SupportedSpellInvocation } from "../battle-reducer.ts";
-import { activeDruidWildShapeEffect } from "../battle-reducer/druid-wild-shape.ts";
-import { sameStringSet } from "../battle-reducer/spells-profile-shared.ts";
-import { wildShapeCanUseWornLoadoutObject } from "../battle-reducer/wild-shape-equipment.ts";
+import type { CharacterBattleLoadoutRef } from "../battle-init.ts";
+import type { CharacterBattleSpellcastingState } from "../character-battle-resources.ts";
 import {
-  spellAdmissionCharacterLevel,
-  type SpellAdmissionActor,
-  type SpellAdmissionContext,
-} from "../battle-reducer/spell-procedure-profiles/profile.ts";
+  characterBattleLevel,
+  type CharacterBattleClassLevels,
+} from "../character-class-level.ts";
+import {
+  battleObjectId,
+  type BattleObjectId,
+  type CombatantId,
+} from "../identity.ts";
+import type { WeaponAttackOverrideProcedureFacts } from "../procedure-facts/weapon-attack-override.ts";
+import { sameStringSet } from "../battle-reducer/spells-profile-shared.ts";
+import {
+  loadoutWeaponItemIsUsableDuringWildShape,
+  wildShapeCanUseWornLoadoutObject,
+} from "../battle-reducer/wild-shape-equipment.ts";
 
-export type WeaponAttackOverrideInvocation = Extract<
-  SupportedSpellInvocation,
-  { readonly procedure: "weaponAttackOverride" }
->;
+type WeaponAttackOverrideAdmissionActor = {
+  readonly combatantId: CombatantId;
+  readonly origin: {
+    readonly kind: "character";
+    readonly attack: BoundCharacterWeaponAttackActionOption | null;
+    readonly offHandAttack?: BoundCharacterWeaponAttackActionOption;
+    readonly selectedLoadout: CharacterBattleLoadoutRef;
+    readonly classLevels: CharacterBattleClassLevels;
+    readonly spellcasting: CharacterBattleSpellcastingState & {
+      readonly canCastSpells: true;
+    };
+  };
+};
+
+export type WeaponAttackOverrideAdmissionContext = {
+  readonly actor: WeaponAttackOverrideAdmissionActor;
+  readonly activeDruidWildShape: Pick<
+    Parameters<typeof wildShapeCanUseWornLoadoutObject>[0],
+    "formLimbs" | "equipmentDisposition"
+  > | null;
+};
+
+export type WeaponAttackOverrideInvocation =
+  WeaponAttackOverrideProcedureFacts & {
+    readonly spell: SpellRecord;
+    readonly attachedWeapon: {
+      readonly attack: BoundCharacterWeaponAttackActionOption;
+    };
+  };
 
 type WeaponAttackOverrideProjection = {
   readonly damage: WeaponAttackOverrideInvocation["activeEffect"]["damage"];
@@ -29,24 +63,24 @@ type WeaponAttackOverrideProjection = {
 
 export function admitWeaponAttackOverride(
   spell: SpellRecord,
-  ctx: SpellAdmissionContext,
+  ctx: WeaponAttackOverrideAdmissionContext,
 ): readonly WeaponAttackOverrideInvocation[] {
   const projection = weaponAttackOverrideProjection(
     spell,
-    spellAdmissionCharacterLevel(ctx),
+    characterBattleLevel(ctx.actor.origin.classLevels),
   );
   if (projection === null) {
     return [];
   }
   const spellcasting = ctx.actor.origin.spellcasting;
-  return attachedWeaponAttacksEligibleForOverride(ctx.actor).map(
+  return attachedWeaponAttacksEligibleForOverride(ctx).map(
     ({ itemId, attack }): WeaponAttackOverrideInvocation => ({
       access: { tag: "classCantrip" },
       resource: { tag: "none" },
       procedure: "weaponAttackOverride",
       spell,
       actionCost: "bonusAction",
-      attachedWeapon: { itemId, attack },
+      attachedWeapon: { attack },
       activeEffect: {
         kind: "spellWeaponAttackOverride",
         sourceCombatantId: ctx.actor.combatantId,
@@ -66,7 +100,7 @@ export function admitWeaponAttackOverride(
 
 function weaponAttackOverrideProjection(
   spell: SpellRecord,
-  characterLevel: number,
+  characterLevel: CharacterLevel,
 ): WeaponAttackOverrideProjection | null {
   if (
     spell.mechanics.family !== "ongoing_effect" ||
@@ -115,46 +149,41 @@ function weaponAttackOverrideProjection(
 }
 
 function attachedWeaponAttacksEligibleForOverride(
-  actor: SpellAdmissionActor,
+  actorContext: WeaponAttackOverrideAdmissionContext,
 ): readonly {
-  readonly itemId: string;
+  readonly itemId: BattleObjectId;
   readonly attack: BoundCharacterWeaponAttackActionOption;
 }[] {
+  const actor = actorContext.actor;
   const origin = actor.origin;
-  const activeWildShape = activeDruidWildShapeEffect(actor);
+  const activeWildShape = actorContext.activeDruidWildShape;
   return [
     ...(origin.attack === null ||
     origin.selectedLoadout.weapon === undefined ||
-    (activeWildShape !== null &&
-      !wildShapeCanUseWornLoadoutObject({
-        loadout: origin.selectedLoadout,
-        formLimbs: activeWildShape.formLimbs,
-        equipmentDisposition: activeWildShape.equipmentDisposition,
-        objectKind: "mainWeapon",
-        unitId: origin.selectedLoadout.weapon.unitId,
-      }))
+    !loadoutWeaponItemIsUsableDuringWildShape({
+      loadout: origin.selectedLoadout,
+      activeWildShape,
+      itemId: battleObjectId(origin.selectedLoadout.weapon.itemId),
+    })
       ? []
       : [
           {
-            itemId: origin.selectedLoadout.weapon.itemId,
+            itemId: battleObjectId(origin.selectedLoadout.weapon.itemId),
             attack: origin.attack,
             unitId: origin.selectedLoadout.weapon.unitId,
           },
         ]),
     ...(origin.offHandAttack === undefined ||
     origin.selectedLoadout.offHandWeapon === undefined ||
-    (activeWildShape !== null &&
-      !wildShapeCanUseWornLoadoutObject({
-        loadout: origin.selectedLoadout,
-        formLimbs: activeWildShape.formLimbs,
-        equipmentDisposition: activeWildShape.equipmentDisposition,
-        objectKind: "offHandWeapon",
-        unitId: origin.selectedLoadout.offHandWeapon.unitId,
-      }))
+    !loadoutWeaponItemIsUsableDuringWildShape({
+      loadout: origin.selectedLoadout,
+      activeWildShape,
+      itemId: battleObjectId(origin.selectedLoadout.offHandWeapon.itemId),
+    })
       ? []
       : [
           {
-            itemId: origin.selectedLoadout.offHandWeapon.itemId,
+            itemId: battleObjectId(origin.selectedLoadout.offHandWeapon.itemId),
             attack: origin.offHandAttack,
             unitId: origin.selectedLoadout.offHandWeapon.unitId,
           },
@@ -163,7 +192,7 @@ function attachedWeaponAttacksEligibleForOverride(
     (
       held,
     ): held is {
-      readonly itemId: string;
+      readonly itemId: BattleObjectId;
       readonly attack: BoundCharacterWeaponAttackActionOption;
       readonly unitId: WeaponRecord["id"];
     } =>
@@ -187,7 +216,7 @@ function weaponAttackOverrideDamageExpr(
       };
     }[];
   },
-  characterLevel: number,
+  characterLevel: CharacterLevel,
 ): {
   readonly dice: number;
   readonly dieSize: DamageDieSize;

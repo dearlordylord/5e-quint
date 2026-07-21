@@ -102,10 +102,7 @@ function discoverSpellAttackSequenceCastAct(
   ).flat();
   return [
     {
-      subject: spellCastSelectionSubject(
-        actorId,
-        invocation,
-      ),
+      subject: spellCastSelectionSubject(actorId, invocation),
       initialHoles,
     },
   ];

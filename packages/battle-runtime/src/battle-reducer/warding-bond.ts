@@ -182,7 +182,7 @@ export function applyWardingBondSpellEffect(
         ...allocatedTarget.activeEffects,
         {
           ...invocation.activeEffect,
-    sourceProcedureRef: invocation.sourceProcedureRef,
+          sourceProcedureRef: invocation.sourceProcedureRef,
           sourceCombatantId: casterId,
           effectRef: allocation.effectRef,
         },

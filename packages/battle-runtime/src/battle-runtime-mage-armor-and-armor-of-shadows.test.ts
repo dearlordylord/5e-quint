@@ -613,7 +613,9 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
   test("Armor of Shadows Spell Access rejects spells without its persistent-armor mechanics", () => {
     const mageArmor = spellRecord("mage_armor");
     if (mageArmor.mechanics.family !== "ongoing_effect") {
-      throw new Error("Expected the Mage Armor fixture to be an ongoing effect.");
+      throw new Error(
+        "Expected the Mage Armor fixture to be an ongoing effect.",
+      );
     }
     const mageArmorWithWrongLevel = {
       ...mageArmor,

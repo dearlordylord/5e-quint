@@ -1,8 +1,8 @@
 // Small fill-selection helpers shared by spell resolution modules.
 
 import type {
-BattleConcentrationSavingThrowHole,
-BattleFill,
+  BattleConcentrationSavingThrowHole,
+  BattleFill,
 } from "../battle-reducer.ts";
 
 export function concentrationSavingThrowFillFor(

@@ -88,7 +88,9 @@ function enemyZeroHitPointTemporaryHitPointsAward(
   relationshipDecisions: readonly BattleDamageRelationshipDecision[],
 ): number | null {
   let highestAward: number | null = null;
-  for (const procedure of enemyZeroHitPointTemporaryHitPointsProcedures(beneficiary)) {
+  for (const procedure of enemyZeroHitPointTemporaryHitPointsProcedures(
+    beneficiary,
+  )) {
     const { execution, procedureRef } = procedure;
     if (
       procedureRef === undefined ||
@@ -167,10 +169,12 @@ export function enemyZeroHitPointTemporaryHitPointsProcedures(
   return actor.origin.execution.procedureBindings.flatMap((binding) =>
     binding.procedure.kind === "unitFeature" &&
     binding.procedure.execution.kind === "enemyZeroHitPointTemporaryHitPoints"
-      ? [{
-          procedureRef: binding.procedureRef,
-          execution: binding.procedure.execution,
-        }]
+      ? [
+          {
+            procedureRef: binding.procedureRef,
+            execution: binding.procedure.execution,
+          },
+        ]
       : [],
   );
 }

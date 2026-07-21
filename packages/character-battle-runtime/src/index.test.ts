@@ -50,6 +50,7 @@ import {
   castFindFamiliar,
   discoverBattleActs,
   initiativeScore,
+  parseCharacterBattleClassLevels,
   resolveBattleSubject,
   spendCharacterPointPoolResource,
   startBattle,
@@ -1795,7 +1796,7 @@ describe("Character Sheet battle handoff", () => {
         origin: {
           kind: "character",
           characterId: characterId("character:druid-wild-shape-drift"),
-          classLevels: [{ className: "druid", level: classLevel(2) }],
+          classLevels: parsedClassLevelsForTest("druid", 2),
           resources: [
             {
               resourcePoolRef,
@@ -2881,7 +2882,7 @@ describe("Character Sheet battle handoff", () => {
         origin: {
           kind: "character",
           characterId: characterId("character:monk-focus-handoff"),
-          classLevels: [{ className: "monk", level: classLevel(2) }],
+          classLevels: parsedClassLevelsForTest("monk", 2),
           resources: [
             {
               resourcePoolRef,
@@ -2942,7 +2943,7 @@ describe("Character Sheet battle handoff", () => {
         origin: {
           kind: "character",
           characterId: characterId("character:monk-focus-capacity-drift"),
-          classLevels: [{ className: "monk", level: classLevel(2) }],
+          classLevels: parsedClassLevelsForTest("monk", 2),
           resources: [
             {
               resourcePoolRef,
@@ -3036,7 +3037,7 @@ describe("Character Sheet battle handoff", () => {
         origin: {
           kind: "character",
           characterId: characterId("character:monk-uncanny-handoff"),
-          classLevels: [{ className: "monk", level: classLevel(2) }],
+          classLevels: parsedClassLevelsForTest("monk", 2),
           resources: [
             {
               resourcePoolRef,
@@ -3103,7 +3104,7 @@ describe("Character Sheet battle handoff", () => {
         origin: {
           kind: "character",
           characterId: characterId("character:sorcery-point-capacity-drift"),
-          classLevels: [{ className: "sorcerer", level: classLevel(5) }],
+          classLevels: parsedClassLevelsForTest("sorcerer", 5),
           resources: [
             {
               resourcePoolRef,
@@ -6293,9 +6294,22 @@ function handoffBranchCombatant(
     combatantId: combatantId("combatant:handoff-branch"),
     ...combatant,
     origin: {
-      classLevels: [],
+      classLevels: [{ className: "fighter", level: classLevel(1) }],
       resources: [],
       ...combatant.origin,
     },
   } as BattleCreatureState;
+}
+
+function parsedClassLevelsForTest(
+  className: Parameters<
+    typeof parseCharacterBattleClassLevels
+  >[0][number]["className"],
+  level: number,
+) {
+  const result = parseCharacterBattleClassLevels([{ className, level }]);
+  if (Either.isLeft(result)) {
+    throw new Error(result.left.messages.join("; "));
+  }
+  return result.right;
 }

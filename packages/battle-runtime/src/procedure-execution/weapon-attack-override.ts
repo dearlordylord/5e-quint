@@ -1,11 +1,17 @@
 import { AbilityModifier, AttackBonus } from "@dnd/shared/types";
 import { DamageTypeSchema, DiceExprSchema } from "@dnd/surface/surface/schema";
-import type { DamageType, DiceExpr } from "@dnd/surface/surface/types";
 import { Schema } from "effect";
 import { DurationBattleActiveEffectExpirationSchema } from "../active-effect/expiration-codecs.ts";
-import type { DurationBattleActiveEffectExpiration } from "../active-effect/expiration.ts";
 import type { BattleActiveEffectIdentity } from "../active-effect/source.ts";
-import { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
+import {
+  BattleObjectId,
+  BattleProcedureExecutionRef,
+  CombatantId,
+} from "../identity.ts";
+import type {
+  SpellWeaponAttackOverrideTemplate,
+  WeaponAttackOverrideProcedureFacts,
+} from "../procedure-facts/weapon-attack-override.ts";
 import {
   ClassCantripSpellAccessSchema,
   NoSpellInvocationResourceSchema,
@@ -15,30 +21,11 @@ import {
   type SpellRuleExecutionFacts,
 } from "./spell-rule-facts.ts";
 
-/** Reducer-owned effect facts projected by weapon-attack-override admission. */
-export type SpellWeaponAttackOverrideTemplate = {
-  readonly sourceCombatantId: CombatantId;
-  readonly kind: "spellWeaponAttackOverride";
-  readonly weaponItemId: string;
-  readonly spellcastingAbilityModifier: AbilityModifier;
-  readonly attackBonus: AttackBonus;
-  readonly damage: {
-    readonly expr: DiceExpr;
-  };
-  readonly damageTypeChoices: readonly [DamageType, DamageType];
-  readonly expiresAt: DurationBattleActiveEffectExpiration;
-};
-
 /** Authored-identity-free facts consumed by weapon-attack-override execution. */
-export type WeaponAttackOverrideSpellProcedureExecution = {
-  readonly spellRuleFacts: SpellRuleExecutionFacts;
-  readonly access: { readonly tag: "classCantrip" };
-  readonly actionCost: "bonusAction";
-  readonly activeEffect: SpellWeaponAttackOverrideTemplate;
-  readonly attachedWeaponItemId: string;
-  readonly procedure: "weaponAttackOverride";
-  readonly resource: { readonly tag: "none" };
-};
+export type WeaponAttackOverrideSpellProcedureExecution =
+  WeaponAttackOverrideProcedureFacts & {
+    readonly spellRuleFacts: SpellRuleExecutionFacts;
+  };
 
 export type SpellWeaponAttackOverrideEffect =
   SpellWeaponAttackOverrideTemplate & {
@@ -57,7 +44,7 @@ export const SpellWeaponAttackOverrideTemplateSchema =
     Schema.Struct({
       sourceCombatantId: CombatantId,
       kind: Schema.Literal("spellWeaponAttackOverride"),
-      weaponItemId: Schema.String,
+      weaponItemId: BattleObjectId,
       spellcastingAbilityModifier: AbilityModifier,
       attackBonus: AttackBonus,
       damage: Schema.Struct({ expr: DiceExprSchema }),
@@ -74,7 +61,6 @@ export const WeaponAttackOverrideExecutionSchema =
       procedure: Schema.Literal("weaponAttackOverride"),
       spellRuleFacts: SpellRuleExecutionFactsSchema,
       actionCost: Schema.Literal("bonusAction"),
-      attachedWeaponItemId: Schema.String,
       activeEffect: SpellWeaponAttackOverrideTemplateSchema,
     }),
   );

@@ -43,7 +43,10 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
-import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
+import {
+  SpellRuleExecutionFactsSchema,
+  spellProcedureExecutionSchema,
+} from "./profile.ts";
 import {
   AttackBonus,
   DamageTypeSchema,
@@ -92,16 +95,12 @@ function discoverChainedSpellAttackDamageCastAct(
 ): readonly BattleActDiscoveryCandidate[] {
   const castActs = [
     {
-      subject: spellCastSelectionSubject(
-        actorId,
-        invocation,
-      ),
+      subject: spellCastSelectionSubject(actorId, invocation),
       initialHoles: [spellDamageTypeChoiceHole(invocation)],
     },
   ];
   return [...castActs, ...readiedSpellAct(state, actorId, invocation)];
 }
-
 
 function resolveChainedSpellAttackDamage(
   input: ChainedSpellAttackDamageResolveInput,

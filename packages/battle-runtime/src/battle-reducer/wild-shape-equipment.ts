@@ -327,6 +327,42 @@ export function wildShapeCanUseWornLoadoutObject(input: {
   return wildShapeWornLoadoutObjectForUse(input) !== undefined;
 }
 
+export function loadoutWeaponItemIsUsableDuringWildShape(input: {
+  readonly loadout: CharacterBattleLoadoutRef;
+  readonly activeWildShape: {
+    readonly formLimbs: WildShapeFormLimbObjectHandlingWitness;
+    readonly equipmentDisposition: readonly ActiveWildShapeEquipmentDisposition[];
+  } | null;
+  readonly itemId: BattleObjectId;
+}): boolean {
+  const heldWeapon = [
+    ...(input.loadout.weapon === undefined
+      ? []
+      : [{ objectKind: "mainWeapon" as const, ...input.loadout.weapon }]),
+    ...(input.loadout.offHandWeapon === undefined
+      ? []
+      : [
+          {
+            objectKind: "offHandWeapon" as const,
+            ...input.loadout.offHandWeapon,
+          },
+        ]),
+  ].find((candidate) => candidate.itemId === input.itemId);
+  if (heldWeapon === undefined) {
+    return false;
+  }
+  return (
+    input.activeWildShape === null ||
+    wildShapeCanUseWornLoadoutObject({
+      loadout: input.loadout,
+      formLimbs: input.activeWildShape.formLimbs,
+      equipmentDisposition: input.activeWildShape.equipmentDisposition,
+      objectKind: heldWeapon.objectKind,
+      unitId: heldWeapon.unitId,
+    })
+  );
+}
+
 export function wildShapeWornLoadoutObjectForUse(input: {
   readonly loadout: CharacterBattleLoadoutRef;
   readonly formLimbs: WildShapeFormLimbObjectHandlingWitness;

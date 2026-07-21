@@ -22,10 +22,7 @@
 // one damage lifecycle. The profile owns dispatch into that shared lifecycle.
 
 import type { SpellRecord } from "@dnd/surface/surface/types";
-import {
-  DamageTypeSchema,
-  DiceExprSchema,
-} from "@dnd/surface/surface/schema";
+import { DamageTypeSchema, DiceExprSchema } from "@dnd/surface/surface/schema";
 import {
   type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
@@ -153,10 +150,7 @@ function discoverSpellAttackDamageCastAct(
     ];
     const castActs = [
       {
-        subject: spellCastSelectionSubject(
-          actorId,
-          invocation,
-        ),
+        subject: spellCastSelectionSubject(actorId, invocation),
         initialHoles,
       },
     ];
@@ -169,10 +163,7 @@ function discoverSpellAttackDamageCastAct(
       ? []
       : [
           {
-            subject: spellCastSelectionSubject(
-              actorId,
-              invocation,
-            ),
+            subject: spellCastSelectionSubject(actorId, invocation),
             initialHoles: [
               ...(invocation.damage.kind === "sorcerousBurstDamageTypeChoice"
                 ? [spellDamageTypeChoiceHole(invocation)]
@@ -236,7 +227,10 @@ export const SpellAttackDamageInvocationSchema = spellProcedureExecutionSchema(
 );
 export const spellAttackDamageProfile: SpellProcedureProfile<
   "spellAttackDamage",
-  Extract<SupportedSpellInvocation, { readonly procedure: "spellAttackDamage" }>,
+  Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "spellAttackDamage" }
+  >,
   ActionSpellBattleResolutionInput | BonusActionSpellBattleResolutionInput
 > = {
   procedure: "spellAttackDamage",

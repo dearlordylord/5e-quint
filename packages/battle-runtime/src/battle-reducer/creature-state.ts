@@ -85,7 +85,10 @@ import {
   type CharacterBattleSpellcastingStateInit,
 } from "../character-battle-resources.ts";
 import type { CharacterBattleRuntimeContext } from "../battle-runtime-context.ts";
-import type { CharacterBattleClassLevel } from "../character-class-level.ts";
+import type {
+  CharacterBattleClassLevel,
+  CharacterBattleClassLevels,
+} from "../character-class-level.ts";
 import {
   CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
   characterUnitProcedure,
@@ -261,9 +264,47 @@ export function battleCreatureStateAdmissionFromInit(
       creatureInit.druidWildShapeAvailableForms ?? [],
       attackExecution.nextScopeOrdinal,
     );
-    const classLevels = parseCharacterBattleClassLevels(
+    const parsedClassLevels = parseCharacterBattleClassLevels(
       creatureInit.classLevels,
     );
+    if (Either.isLeft(parsedClassLevels)) {
+      const [firstMessage, ...remainingMessages] =
+        parsedClassLevels.left.messages;
+      return {
+        tag: "invalid",
+        issues: [
+          { tag: "battleUnitSupportProfileIssue", message: firstMessage },
+          ...remainingMessages.map((message) => ({
+            tag: "battleUnitSupportProfileIssue" as const,
+            message,
+          })),
+        ],
+      };
+    }
+    const classLevels = parsedClassLevels.right;
+    const initIssues = [
+      characterResourceInitIssue(creatureInit, classLevels),
+      characterDruidWildShapeAvailableFormsInitIssue(creatureInit, classLevels),
+      characterSpellcastingInitIssue(creatureInit, classLevels),
+    ].flatMap((issue) =>
+      issue !== null && Either.isLeft(issue) ? [issue.left] : [],
+    );
+    if (initIssues.length > 0) {
+      const [firstIssue, ...remainingIssues] = initIssues;
+      return {
+        tag: "invalid",
+        issues: [
+          {
+            tag: "battleUnitSupportProfileIssue",
+            message: firstIssue!.message,
+          },
+          ...remainingIssues.map((issue) => ({
+            tag: "battleUnitSupportProfileIssue" as const,
+            message: issue.message,
+          })),
+        ],
+      };
+    }
     assertCharacterBattleLoadoutMatchesHands(creatureInit);
     assertCharacterBattleResourcesHaveUniqueUnits(creatureInit.resources ?? []);
     assertCharacterBattleFeaturesHaveUniqueUnits(
@@ -956,13 +997,9 @@ export function positiveHpUnconsciousInitIssue(
 }
 
 export function characterResourceInitIssue(
-  input: BattleCreatureInit,
+  creatureInit: CharacterBattleCreatureInit,
+  classLevels: CharacterBattleClassLevels,
 ): Either.Either<never, BattleStateInitIssue> | null {
-  const creatureInit = input.creatureInit;
-  if (creatureInit.kind !== "character") {
-    return null;
-  }
-  const classLevels = parseCharacterBattleClassLevels(creatureInit.classLevels);
   for (const resource of creatureInit.resources ?? []) {
     const issue = characterBattleResourceInitIssue(resource, classLevels);
     if (issue !== null) {
@@ -980,11 +1017,9 @@ export function characterResourceInitIssue(
 }
 
 export function characterDruidWildShapeAvailableFormsInitIssue(
-  input: BattleCreatureInit,
+  creatureInit: CharacterBattleCreatureInit,
+  classLevels: CharacterBattleClassLevels,
 ): Either.Either<never, BattleStateInitIssue> | null {
-  const creatureInit = input.creatureInit;
-  if (creatureInit.kind !== "character") return null;
-  const classLevels = parseCharacterBattleClassLevels(creatureInit.classLevels);
   const wildShapeProfiles = (creatureInit.resources ?? []).flatMap(
     (resource) => {
       const profile = parseSupportedUnitFeatureProfile(
@@ -1015,16 +1050,12 @@ export function characterDruidWildShapeAvailableFormsInitIssue(
 }
 
 export function characterSpellcastingInitIssue(
-  input: BattleCreatureInit,
+  creatureInit: CharacterBattleCreatureInit,
+  classLevels: CharacterBattleClassLevels,
 ): Either.Either<never, BattleStateInitIssue> | null {
-  const creatureInit = input.creatureInit;
-  if (
-    creatureInit.kind !== "character" ||
-    creatureInit.spellcasting === undefined
-  ) {
+  if (creatureInit.spellcasting === undefined) {
     return null;
   }
-  const classLevels = parseCharacterBattleClassLevels(creatureInit.classLevels);
   const invocationSpellAccessIssue =
     characterBattleInvocationSpellAccessInitIssue(
       creatureInit.spellcasting.invocationSpellAccesses,

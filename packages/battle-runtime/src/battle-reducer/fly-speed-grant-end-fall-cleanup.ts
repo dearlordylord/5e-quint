@@ -15,13 +15,11 @@ export function flySpeedGrantEndFallCleanupFramesForExpiredEffects(
   targetId: CombatantId,
   expiring: readonly BattleActiveEffect[],
 ): readonly BattleFlySpeedGrantEndFallCleanupFrame[] {
-  return expiring
-    .filter(isEndedFlySpeedGrant)
-    .map((endedEffect) => ({
-      kind: "flySpeedGrantEndFallCleanup" as const,
-      targetId,
-      endedEffect,
-    }));
+  return expiring.filter(isEndedFlySpeedGrant).map((endedEffect) => ({
+    kind: "flySpeedGrantEndFallCleanup" as const,
+    targetId,
+    endedEffect,
+  }));
 }
 
 export function battleStateWithFlySpeedGrantEndFallCleanupFrames(

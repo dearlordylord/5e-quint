@@ -37,10 +37,7 @@ import type {
   SupportedCreatureNamedAttackRoll,
 } from "../battle-action-options.ts";
 import type { CreatureNamedAttackRoll } from "@dnd/surface/surface/types";
-import type {
-  BattleProcedureExecutionRef,
-  CombatantId,
-} from "../identity.ts";
+import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
 import { sameBattleSubject, type BattleSubject } from "../battle-subjects.ts";
 import {
   type AttackDamageRider,
@@ -483,39 +480,39 @@ export function eligibleAttackDamageRiders(
         return [];
       }
       const profile = binding.procedure.execution;
-    if (
-      state.currentTurnResources.attackDamageRidersUsedThisTurn.some(
-        (usage) =>
-          usage.attackerId === attackerId &&
-          usage.procedureRef === binding.procedureRef,
-      )
-    ) {
-      return [];
-    }
-    const damageType = selectedAttackDamageTypeForProfile({
-      state,
-      attacker,
-      attackerId,
-      attack,
-      attackRoll,
-      targetId,
-      targetSpatialFacts,
-      profile,
-    });
-    if (damageType === null) {
-      return [];
-    }
-    const rider = attackDamageRiderForProfile(
-      profile,
-      binding.procedureRef,
-      attackerId,
-      damageType,
-      profile.trigger ===
-        "rageActiveRecklessStrengthWeaponOrUnarmedStrikeFirstHit" &&
-        attackUsesStrengthWeaponOrUnarmedStrike(attack)
-        ? (activeRageDamageBonusForFrenzy(attacker, attack)?.damageBonus ?? 0)
-        : 0,
-    );
+      if (
+        state.currentTurnResources.attackDamageRidersUsedThisTurn.some(
+          (usage) =>
+            usage.attackerId === attackerId &&
+            usage.procedureRef === binding.procedureRef,
+        )
+      ) {
+        return [];
+      }
+      const damageType = selectedAttackDamageTypeForProfile({
+        state,
+        attacker,
+        attackerId,
+        attack,
+        attackRoll,
+        targetId,
+        targetSpatialFacts,
+        profile,
+      });
+      if (damageType === null) {
+        return [];
+      }
+      const rider = attackDamageRiderForProfile(
+        profile,
+        binding.procedureRef,
+        attackerId,
+        damageType,
+        profile.trigger ===
+          "rageActiveRecklessStrengthWeaponOrUnarmedStrikeFirstHit" &&
+          attackUsesStrengthWeaponOrUnarmedStrike(attack)
+          ? (activeRageDamageBonusForFrenzy(attacker, attack)?.damageBonus ?? 0)
+          : 0,
+      );
       return rider === null ? [] : [rider];
     },
   );
@@ -546,43 +543,45 @@ function huntersPreyColossusSlayerRiders(input: {
   if (target === undefined || target.hp >= target.maxHp) {
     return [];
   }
-  return input.attacker.origin.execution.procedureBindings.flatMap((binding) => {
-    if (
-      binding.procedure.kind !== "unitSupportProfile" ||
-      typeof binding.procedure.execution !== "object" ||
-      binding.procedure.execution.kind !== HUNTERS_PREY_SUPPORT_PROFILE
-    ) {
-      return [];
-    }
-    if (
-      input.state.currentTurnResources.attackDamageRidersUsedThisTurn.some(
-        (usage) =>
-          usage.attackerId === input.attackerId &&
-          usage.procedureRef === binding.procedureRef,
-      )
-    ) {
-      return [];
-    }
-    const huntersPrey = binding.procedure.execution.huntersPrey;
-    if (
-      huntersPrey.kind !== "woundedTargetWeaponDamage" ||
-      huntersPrey.damage.kind !== "addAttackDamageDice"
-    ) {
-      return [];
-    }
-    return [
-      {
-        attackerId: input.attackerId,
-        procedureRef: binding.procedureRef,
-        optional: true,
-        damage: {
-          dice: huntersPrey.damage.dice.dice,
-          dieSize: huntersPrey.damage.dice.dieSize,
-          damageType: selectedWeaponDamage(attack.weapon).damageType,
+  return input.attacker.origin.execution.procedureBindings.flatMap(
+    (binding) => {
+      if (
+        binding.procedure.kind !== "unitSupportProfile" ||
+        typeof binding.procedure.execution !== "object" ||
+        binding.procedure.execution.kind !== HUNTERS_PREY_SUPPORT_PROFILE
+      ) {
+        return [];
+      }
+      if (
+        input.state.currentTurnResources.attackDamageRidersUsedThisTurn.some(
+          (usage) =>
+            usage.attackerId === input.attackerId &&
+            usage.procedureRef === binding.procedureRef,
+        )
+      ) {
+        return [];
+      }
+      const huntersPrey = binding.procedure.execution.huntersPrey;
+      if (
+        huntersPrey.kind !== "woundedTargetWeaponDamage" ||
+        huntersPrey.damage.kind !== "addAttackDamageDice"
+      ) {
+        return [];
+      }
+      return [
+        {
+          attackerId: input.attackerId,
+          procedureRef: binding.procedureRef,
+          optional: true,
+          damage: {
+            dice: huntersPrey.damage.dice.dice,
+            dieSize: huntersPrey.damage.dice.dieSize,
+            damageType: selectedWeaponDamage(attack.weapon).damageType,
+          },
         },
-      },
-    ];
-  });
+      ];
+    },
+  );
 }
 
 function selectedAttackDamageTypeForProfile(input: {
@@ -1075,14 +1074,15 @@ export function attackRollMissToHitReplacementForProcedure(
   if (attacker?.origin.kind !== "character") {
     return null;
   }
-  const hasReplacementProfile = attacker.origin.execution.procedureBindings.some(
-    (binding) =>
-      binding.procedureRef === procedureRef &&
-      binding.procedure.kind === "unitSupportProfile" &&
-      typeof binding.procedure.execution === "object" &&
-      binding.procedure.execution.kind ===
-        ATTACK_ROLL_MISS_TO_HIT_REPLACEMENT_SUPPORT_PROFILE,
-  );
+  const hasReplacementProfile =
+    attacker.origin.execution.procedureBindings.some(
+      (binding) =>
+        binding.procedureRef === procedureRef &&
+        binding.procedure.kind === "unitSupportProfile" &&
+        typeof binding.procedure.execution === "object" &&
+        binding.procedure.execution.kind ===
+          ATTACK_ROLL_MISS_TO_HIT_REPLACEMENT_SUPPORT_PROFILE,
+    );
   if (!hasReplacementProfile) {
     return null;
   }

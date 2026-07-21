@@ -53,7 +53,10 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
-import { SpellRuleExecutionFactsSchema, spellProcedureExecutionSchema } from "./profile.ts";
+import {
+  SpellRuleExecutionFactsSchema,
+  spellProcedureExecutionSchema,
+} from "./profile.ts";
 import {
   PreparedSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
@@ -146,7 +149,6 @@ function discoverBlurAttackRollDefenseCastAct(
     },
   ];
 }
-
 
 function applyBlurAttackRollDefenseEffect(
   state: BattleState,
