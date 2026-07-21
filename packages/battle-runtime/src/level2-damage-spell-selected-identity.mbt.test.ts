@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH acid_arrow dragons_breath flame_blade flaming_sphere heat_metal moonbeam ray_of_enfeeblement scorching_ray shatter spiritual_weapon
@@ -347,10 +348,12 @@ function replayFlamingSphereExactDamageRoute(): readonly BattleReducerRouteEvent
   if (targetTurn.tag !== "resolved") {
     throw new Error("Expected Flaming Sphere caster end turn to resolve.");
   }
-  const saveAct = flamingSphereEndTurnAct({
-    ...replay.session,
-    state: targetTurn.state,
-  });
+  const saveAct = flamingSphereEndTurnAct(
+    battleRuntimeSessionForTest({
+      ...replay.session,
+      state: targetTurn.state,
+    }),
+  );
   route.push(...routeEventsOfSubject(saveAct, "Flaming Sphere save discovery"));
   const save = requireHole(saveAct.initialHoles, "savingThrowOutcome");
   const succeededSave = singleTargetSavingThrowOutcomeFill(
@@ -381,10 +384,12 @@ function replayMoonbeamExactDamageRoute(): readonly BattleReducerRouteEvent[] {
   if (targetTurn.tag !== "resolved") {
     throw new Error("Expected Moonbeam caster end turn to resolve.");
   }
-  const saveAct = moonbeamEndTurnSaveAct({
-    ...replay.session,
-    state: targetTurn.state,
-  });
+  const saveAct = moonbeamEndTurnSaveAct(
+    battleRuntimeSessionForTest({
+      ...replay.session,
+      state: targetTurn.state,
+    }),
+  );
   route.push(...routeEventsOfSubject(saveAct, "Moonbeam save discovery"));
   const save = requireHole(saveAct.initialHoles, "savingThrowOutcome");
   const succeededSave = singleTargetSavingThrowOutcomeFill(

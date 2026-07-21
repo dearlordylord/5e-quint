@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.find-familiar-lifecycle
@@ -552,7 +553,10 @@ function castNormalFamiliar(
 ): FindFamiliarCompanionRuntimeState {
   const result = castNormalFamiliarResult(state, formId);
   return {
-    battle: { ...state.battle, state: requireResolved(result) },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: requireResolved(result),
+    }),
     lastResult,
   };
 }
@@ -583,7 +587,10 @@ function shareSenses(
     fact: familiarWithin100FeetFact(),
   });
   return {
-    battle: { ...state.battle, state: requireResolved(result) },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: requireResolved(result),
+    }),
     lastResult: "sharedSenses",
   };
 }
@@ -621,7 +628,10 @@ function deliverTouchSpell(
     fact: familiarWithin100FeetFact(),
   });
   return {
-    battle: { ...state.battle, state: requireResolved(result) },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: requireResolved(result),
+    }),
     lastResult: "touchDelivered",
   };
 }
@@ -635,7 +645,10 @@ function resolvePactFamiliarAttack(
     fills: pactScratchFilledAttackFills(state.battle.state),
   });
   return {
-    battle: { ...state.battle, state: requireResolved(result) },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: requireResolved(result),
+    }),
     lastResult: "pactAttack",
   };
 }

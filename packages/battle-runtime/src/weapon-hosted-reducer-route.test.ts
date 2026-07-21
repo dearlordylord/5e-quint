@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleActiveEffectExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 import { describe, expect, it } from "vitest";
@@ -300,7 +301,7 @@ describe("weapon-hosted reducer route call segments", () => {
     });
 
     const quarterstaff = statBlockAttackAct(
-      { ...initialSession, state: cast.state },
+      battleRuntimeSessionForTest({ ...initialSession, state: cast.state }),
       spellCasterId,
       "Quarterstaff (force)",
     );
@@ -425,7 +426,7 @@ describe("weapon-hosted reducer route call segments", () => {
     ]);
 
     const unarmed = statBlockAttackAct(
-      { ...initialSession, state: cast.state },
+      battleRuntimeSessionForTest({ ...initialSession, state: cast.state }),
       spellCasterId,
       "Unarmed Strike",
     );
@@ -507,7 +508,10 @@ describe("weapon-hosted reducer route call segments", () => {
       ],
     });
     const longswordSubject = weaponAttackSubject(
-      { ...divineSession, state: divineCast.state },
+      battleRuntimeSessionForTest({
+        ...divineSession,
+        state: divineCast.state,
+      }),
       "Longsword",
     );
     const targetHoleResult = requireNeedsHoles(
@@ -624,7 +628,10 @@ describe("weapon-hosted reducer route call segments", () => {
       }),
     );
     const unarmedAct = statBlockAttackAct(
-      { ...unarmedDivineSession, state: unarmedDivineCast.state },
+      battleRuntimeSessionForTest({
+        ...unarmedDivineSession,
+        state: unarmedDivineCast.state,
+      }),
       spellCasterId,
       "Unarmed Strike",
     );
@@ -768,7 +775,7 @@ describe("weapon-hosted reducer route call segments", () => {
       }),
     };
     const attack = statBlockAttackAct(
-      { ...shillelaghSession, state },
+      battleRuntimeSessionForTest({ ...shillelaghSession, state }),
       spellCasterId,
       "Quarterstaff (force)",
     );

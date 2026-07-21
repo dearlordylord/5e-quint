@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-slow-active-penalties
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
@@ -367,7 +368,10 @@ function castSlowFailedSave(
     throw new Error("Expected Slow failed-save cast to resolve.");
   }
   return {
-    battle: { ...state.battle, state: resolved.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: resolved.state,
+    }),
     currentTurnRole: "caster",
     holes: [],
     lastResult: "failedSave",
@@ -400,7 +404,10 @@ function castSlowSelfFailedSave(
     throw new Error("Expected self-targeted Slow cast to resolve.");
   }
   return {
-    battle: { ...state.battle, state: resolved.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: resolved.state,
+    }),
     currentTurnRole: "caster",
     holes: [],
     lastResult: "selfFailedSave",
@@ -436,7 +443,10 @@ function castSlowMultiattackFailedSave(
     );
   }
   return {
-    battle: { ...multiattackState.battle, state: resolved.state },
+    battle: battleRuntimeSessionForTest({
+      ...multiattackState.battle,
+      state: resolved.state,
+    }),
     currentTurnRole: "caster",
     holes: [],
     lastResult: "multiattackFailedSave",
@@ -458,7 +468,10 @@ function endCasterTurn(
     throw new Error("Expected Slow caster End Turn to resolve.");
   }
   return {
-    battle: { ...state.battle, state: resolved.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: resolved.state,
+    }),
     currentTurnRole: "target",
     holes: [],
     lastResult: "targetTurn",
@@ -480,7 +493,10 @@ function endCasterTurnForMultiattackTarget(
     throw new Error("Expected Slow caster End Turn to resolve.");
   }
   return {
-    battle: { ...state.battle, state: resolved.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: resolved.state,
+    }),
     currentTurnRole: "multiattackTarget",
     holes: [],
     lastResult: "multiattackTargetTurn",
@@ -529,7 +545,10 @@ function fillEndTurnSave(
     throw new Error("Expected Slow end-turn save fill to resolve.");
   }
   return {
-    battle: { ...state.battle, state: resolved.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: resolved.state,
+    }),
     currentTurnRole: "caster",
     holes: [],
     lastResult: succeeded ? "saved" : "failedAgain",
@@ -553,7 +572,10 @@ function spendTargetAction(
     throw new Error("Expected slowed Dodge action to resolve.");
   }
   return {
-    battle: { ...state.battle, state: resolved.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: resolved.state,
+    }),
     currentTurnRole: "target",
     holes: [],
     lastResult: "spentAction",
@@ -602,7 +624,10 @@ function makeTargetAttack(
     throw new Error("Expected slowed Attack action to resolve.");
   }
   return {
-    battle: { ...state.battle, state: resolved.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: resolved.state,
+    }),
     currentTurnRole: "target",
     holes: [],
     lastResult: "attackedOnce",
@@ -626,7 +651,10 @@ function makeSlowedStatBlockMultiattack(
     throw new Error("Expected slowed Stat Block Multiattack to resolve.");
   }
   return {
-    battle: { ...state.battle, state: resolved.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: resolved.state,
+    }),
     currentTurnRole: "multiattackTarget",
     holes: [],
     lastResult: "multiattackedOnce",
@@ -678,7 +706,10 @@ function fillSomaticSpellFailure(
     throw new Error("Expected failed slowed Somatic spell cast to resolve.");
   }
   return {
-    battle: { ...state.battle, state: resolved.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: resolved.state,
+    }),
     currentTurnRole: "target",
     holes: [],
     lastResult: "somaticSpellFailed",

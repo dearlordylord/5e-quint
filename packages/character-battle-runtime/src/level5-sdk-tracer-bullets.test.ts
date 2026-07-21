@@ -32,6 +32,7 @@ import {
   type CombatantId,
   type SpellSlotProcedure,
 } from "@dnd/battle-runtime";
+import { battleRuntimeSessionForTest } from "@dnd/battle-runtime/test-support";
 import {
   CHARACTER_SHEET_SHORT_REST_TICKS,
   characterSheetId,
@@ -1137,10 +1138,10 @@ describe("level 5 SDK tracer bullets", () => {
         ],
       });
       const state = stateWithSleetStormTargetConcentration(session.state);
-      const sessionWithTargetConcentration: BattleRuntimeSession = {
+      const sessionWithTargetConcentration = battleRuntimeSessionForTest({
         ...session,
         state,
-      };
+      });
       const act = spellSlotActForProcedure(
         sessionWithTargetConcentration,
         sleetStormSpellId,
@@ -1743,10 +1744,10 @@ describe("level 5 SDK tracer bullets", () => {
           }),
         ],
       };
-      const sessionWithTrackedLightEmitter: BattleRuntimeSession = {
+      const sessionWithTrackedLightEmitter = battleRuntimeSessionForTest({
         ...session,
         state,
-      };
+      });
       const act = spellSlotActForProcedure(
         sessionWithTrackedLightEmitter,
         dispelMagicSpellId,
@@ -3678,7 +3679,10 @@ function protectionFromEnergyDamageScenario(damageType: "fire" | "cold"): {
     endTurn({ state: cast.state, actorId: wizardId }),
   ).state;
   const subject = attackSubject(
-    { state: monsterTurn, context: session.context },
+    battleRuntimeSessionForTest({
+      state: monsterTurn,
+      context: session.context,
+    }),
     monsterId,
     "Elemental Touch",
   );
@@ -3882,7 +3886,10 @@ function assertLevelFiveExtraAttackHandoff(input: {
   ]);
 
   const second = resolveWeaponAttackMiss({
-    session: { state: first.state, context: session.context },
+    session: battleRuntimeSessionForTest({
+      state: first.state,
+      context: session.context,
+    }),
     actorId: input.actorId,
     targetId: monsterId,
     attackName: input.attackName,

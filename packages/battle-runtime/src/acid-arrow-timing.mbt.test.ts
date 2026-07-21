@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-acid-arrow-attack-timing
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.ACID_ARROW_ATTACK_TIMING
@@ -335,7 +336,10 @@ function fillInitialDamage(
   );
   return {
     ...state,
-    battle: { ...state.battle, state: result.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: result.state,
+    }),
     holes: [],
     pending: { tag: "none" },
     lastResult: "resolved",
@@ -349,7 +353,10 @@ function endCasterTurn(state: AcidArrowRuntimeState): AcidArrowRuntimeState {
   );
   return {
     ...state,
-    battle: { ...state.battle, state: result.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: result.state,
+    }),
     currentTurnRole: "target",
     holes: [],
     pending: { tag: "none" },
@@ -397,7 +404,10 @@ function fillLaterDamage(
   );
   return {
     ...state,
-    battle: { ...state.battle, state: result.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: result.state,
+    }),
     scenario: "hitComplete",
     currentTurnRole: "caster",
     holes: [],
@@ -415,7 +425,10 @@ function endTargetTurnAfterMiss(
   );
   return {
     ...state,
-    battle: { ...state.battle, state: result.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: result.state,
+    }),
     scenario: "missComplete",
     currentTurnRole: "caster",
     holes: [],

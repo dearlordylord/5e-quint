@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1D2-BARDIC-INSPIRATION-SCALING bard_bardic_inspiration
 // UNIT-IDENTITY-REPLAY: L1D2-BARDIC-INSPIRATION-SCALING bard_bardic_inspiration doGrantBardicInspirationD12
@@ -117,7 +118,10 @@ function grantBardicInspirationD12(): BardicInspirationProjection {
   if (result.tag !== "resolved") {
     return { ...initialProjection(), lastResult: "invalid" };
   }
-  const resolvedSession = { ...session, state: result.state };
+  const resolvedSession = battleRuntimeSessionForTest({
+    ...session,
+    state: result.state,
+  });
   return {
     bonusActionAvailable:
       resolvedSession.state.currentTurnResources.currentHasBonusAction,

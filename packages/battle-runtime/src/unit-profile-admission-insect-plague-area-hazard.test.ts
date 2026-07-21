@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import type {
   BattleProcedureExecutionRef,
@@ -278,7 +279,10 @@ describe("L19E deterministic Insect Plague area-hazard admission", () => {
   test("appearance save applies full or half Piercing damage through the active hazard", () => {
     const first = castInsectPlague();
     const failed = resolveInsectPlagueSave({
-      session: { state: first.cast, context: first.session.context },
+      session: battleRuntimeSessionForTest({
+        state: first.cast,
+        context: first.session.context,
+      }),
       succeeded: false,
     });
     expect(failed).toMatchObject({
@@ -292,7 +296,10 @@ describe("L19E deterministic Insect Plague area-hazard admission", () => {
 
     const second = castInsectPlague();
     const succeeded = resolveInsectPlagueSave({
-      session: { state: second.cast, context: second.session.context },
+      session: battleRuntimeSessionForTest({
+        state: second.cast,
+        context: second.session.context,
+      }),
       succeeded: true,
     });
     expect(succeeded).toMatchObject({
@@ -307,7 +314,10 @@ describe("L19E deterministic Insect Plague area-hazard admission", () => {
 
   test("entry and end-turn saves share the once-per-turn hazard ledger", () => {
     const { session, targetTurn } = castInsectPlague();
-    const targetTurnSession = { state: targetTurn, context: session.context };
+    const targetTurnSession = battleRuntimeSessionForTest({
+      state: targetTurn,
+      context: session.context,
+    });
     const entryAct = insectPlagueAreaHazardSaveAct(
       targetTurnSession,
       spellTargetId,
@@ -341,7 +351,10 @@ describe("L19E deterministic Insect Plague area-hazard admission", () => {
 
     expect(
       insectPlagueAreaHazardSaveAct(
-        { state: entrySaved.state, context: session.context },
+        battleRuntimeSessionForTest({
+          state: entrySaved.state,
+          context: session.context,
+        }),
         spellTargetId,
         "endsTurnInArea",
       ).subject,
@@ -352,7 +365,10 @@ describe("L19E deterministic Insect Plague area-hazard admission", () => {
       resolveBattleSubject({
         state: entrySaved.state,
         subject: insectPlagueAreaHazardSaveAct(
-          { state: entrySaved.state, context: session.context },
+          battleRuntimeSessionForTest({
+            state: entrySaved.state,
+            context: session.context,
+          }),
           spellTargetId,
           "endsTurnInArea",
         ).subject,

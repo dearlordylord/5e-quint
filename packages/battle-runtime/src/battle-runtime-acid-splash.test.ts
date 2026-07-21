@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import {
   requireCharacterSpellProcedureRefForTest,
@@ -243,7 +244,7 @@ describe("battle runtime: Acid Splash", () => {
         },
       }),
     };
-    const session = { ...baseSession, state };
+    const session = battleRuntimeSessionForTest({ ...baseSession, state });
     const subject = magicSubject("acid_splash");
     const savingThrows = requireHole(
       resolveBattleSubject({ session, subject, fills: [] }),

@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV29B color_spray
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV29C entangle
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV38A sleep
@@ -474,7 +475,10 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
         ],
       }),
     };
-    const session = { state, context: baseSession.context };
+    const session = battleRuntimeSessionForTest({
+      state,
+      context: baseSession.context,
+    });
     const act = spellAct({
       session,
       spellId: holdPersonUnitId,
@@ -1336,7 +1340,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
         affectedTarget,
       ),
     };
-    const session = { ...baseSession, state };
+    const session = battleRuntimeSessionForTest({ ...baseSession, state });
     const act = bonusSpellAct({
       session,
       spellId: lesserRestorationUnitId,
@@ -1464,7 +1468,10 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
         })
         .set(spellTargetId, affectedTarget),
     };
-    const session = { state, context: baseSession.context };
+    const session = battleRuntimeSessionForTest({
+      state,
+      context: baseSession.context,
+    });
     const act = bonusSpellAct({
       session,
       spellId: lesserRestorationUnitId,

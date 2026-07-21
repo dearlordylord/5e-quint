@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV84F hideous_laughter
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { resourceCount } from "@dnd/shared/types";
@@ -641,7 +642,7 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
       const spell = spellRecord(hideousLaughterUnitId);
       const baseState = spellBattle({ preparedSpells: [spell] });
       const baseTarget = requireCombatant(baseState.state, spellTargetId);
-      const state: BattleRuntimeSession = {
+      const state: BattleRuntimeSession = battleRuntimeSessionForTest({
         ...baseState,
         state: {
           ...baseState.state,
@@ -665,7 +666,7 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
             ],
           }),
         },
-      };
+      });
       const act = spellAct({ session: state, spellId: hideousLaughterUnitId });
       const targetHole = requireHole(act.initialHoles, "spellTargetList");
       const targetFill = spellTargetListFill(
@@ -883,7 +884,7 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
       ),
       effectKind: "spellEffect" as const,
     };
-    const state: BattleRuntimeSession = {
+    const state: BattleRuntimeSession = battleRuntimeSessionForTest({
       ...baseState,
       state: {
         ...baseState.state,
@@ -920,7 +921,7 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
           ],
         }),
       },
-    };
+    });
     const act = spellAct({ session: state, spellId: hideousLaughterUnitId });
     const targetHole = requireHole(act.initialHoles, "spellTargetList");
     const targetFill = spellTargetListFill(
@@ -968,5 +969,5 @@ function battleSessionWithState(
   session: BattleRuntimeSession,
   state: BattleState,
 ): BattleRuntimeSession {
-  return { ...session, state };
+  return battleRuntimeSessionForTest({ ...session, state });
 }

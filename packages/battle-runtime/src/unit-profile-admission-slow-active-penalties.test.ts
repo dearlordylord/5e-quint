@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME slow
@@ -161,6 +162,7 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
     expect(savingThrowFlatBonusProjections(cast.state, "dex")).toEqual([
       {
         targetId: spellTargetId,
+        sourceCombatantId: spellCasterId,
         sourceProcedureRef: act.subject.procedureRef,
         bonus: -2,
       },
@@ -628,7 +630,7 @@ function statBlockTargetTurnAfterFailedSlow(): BattleRuntimeSession {
   if (targetTurn.tag !== "resolved") {
     throw new Error("Expected Slow caster End Turn to resolve.");
   }
-  return { ...session, state: targetTurn.state };
+  return battleRuntimeSessionForTest({ ...session, state: targetTurn.state });
 }
 
 function targetTurnAfterFailedSlow(
@@ -639,7 +641,7 @@ function targetTurnAfterFailedSlow(
   if (targetTurn.tag !== "resolved") {
     throw new Error("Expected Slow caster End Turn to resolve.");
   }
-  return { ...session, state: targetTurn.state };
+  return battleRuntimeSessionForTest({ ...session, state: targetTurn.state });
 }
 
 function withCombatantActiveEffect(
@@ -648,7 +650,7 @@ function withCombatantActiveEffect(
   effect: BattleActiveEffect,
 ): BattleRuntimeSession {
   const combatant = requireCombatant(session.state, combatantId);
-  return {
+  return battleRuntimeSessionForTest({
     ...session,
     state: {
       ...session.state,
@@ -657,7 +659,7 @@ function withCombatantActiveEffect(
         activeEffects: [...combatant.activeEffects, effect],
       }),
     },
-  };
+  });
 }
 
 function targetOwnedFlamingSphereEffect(): Extract<

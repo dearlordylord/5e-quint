@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-creature-size-change
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE
@@ -566,7 +567,9 @@ function creatureSizeActInState(
   context: BattleRuntimeContext,
   procedure: "creatureSizeIncrease" | "creatureSizeDecrease",
 ): ActionSpellAct {
-  const act = discoverBattleActs({ state, context }).find(
+  const act = discoverBattleActs(
+    battleRuntimeSessionForTest({ state, context }),
+  ).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
       battleActSpellPresentation(candidate)?.invocation.procedure === procedure,
@@ -604,7 +607,10 @@ function creatureSizeChangeProjection(
     actionAvailable: canSpendAction(state.battle.currentTurnResources, "magic"),
     spellAvailable:
       maybeSpellAct({
-        session: { state: state.battle, context: state.context },
+        session: battleRuntimeSessionForTest({
+          state: state.battle,
+          context: state.context,
+        }),
         spellId: enlargeReduceUnitId,
         slotLevel: 2,
       }) !== undefined,

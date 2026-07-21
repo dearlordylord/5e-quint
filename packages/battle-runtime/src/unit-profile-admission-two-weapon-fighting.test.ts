@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME feat_two_weapon_fighting
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3-FOLLOWUP-TWO-WEAPON-FIGHTING-DECLINE-RUNTIME feat_two_weapon_fighting
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME feat_two_weapon_fighting
@@ -455,7 +456,10 @@ function afterQualifyingLightAttack(
       ],
     }),
   );
-  return { state: resolved.state, context: session.context };
+  return battleRuntimeSessionForTest({
+    state: resolved.state,
+    context: session.context,
+  });
 }
 
 function resolveOffHandHit(input: {

@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
   battleActiveEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
@@ -19,6 +20,7 @@ import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 
 import { parseBattleSpellEffectLevel } from "./battle-reducer/spells-effective-level.ts";
+import { removeBattleCombatants } from "./battle-reducer/api-lifecycle.ts";
 import { isCharacterBattleCreatureState } from "./battle-reducer/creature-state.ts";
 import { characterExecutionWithSpiritualWeaponRepeatAttack } from "./character-execution.ts";
 import {
@@ -60,7 +62,6 @@ import {
   combatantId,
   discoverBattleActs,
   endTurn,
-  removeBattleCombatants,
   startBattle,
   type BattleActiveEffect,
   type BattleAntimagicFieldAuraMembership,
@@ -111,9 +112,7 @@ describe("Antimagic Field action interdiction", () => {
       }),
     );
 
-    expect(
-      maybeSpellAct({ session, spellId: rayOfFrostUnitId }),
-    ).toBeDefined();
+    expect(maybeSpellAct({ session, spellId: rayOfFrostUnitId })).toBeDefined();
     expect(
       maybeBonusSpellAct({ session, spellId: healingWordUnitId }),
     ).toBeDefined();
@@ -337,7 +336,9 @@ describe("Antimagic Field action interdiction", () => {
       }),
     );
     expect(
-      preserveLifeActOrUndefined({ ...session, state: removed.right }),
+      preserveLifeActOrUndefined(
+        battleRuntimeSessionForTest({ ...session, state: removed.right }),
+      ),
     ).toBeUndefined();
   });
 });
@@ -372,7 +373,7 @@ function flameBladeAttackBattle(): BattleRuntimeSession {
   if (cast.tag !== "resolved") {
     throw new Error("Expected Flame Blade held object to resolve.");
   }
-  return { ...session, state: cast.state };
+  return battleRuntimeSessionForTest({ ...session, state: cast.state });
 }
 
 function spiritualWeaponRepeatBattle(): BattleRuntimeSession {
@@ -391,8 +392,7 @@ function spiritualWeaponRepeatBattle(): BattleRuntimeSession {
   );
   if (
     sourceBinding?.procedure.kind !== "spellInvocation" ||
-    sourceBinding.procedure.execution.procedure !==
-      "spiritualWeaponAttackProxy"
+    sourceBinding.procedure.execution.procedure !== "spiritualWeaponAttackProxy"
   ) {
     throw new Error("Expected Spiritual Weapon source procedure binding.");
   }
@@ -405,7 +405,7 @@ function spiritualWeaponRepeatBattle(): BattleRuntimeSession {
       activeEffectSourceProcedureRef: sourceBinding.procedureRef,
     },
   );
-  return {
+  return battleRuntimeSessionForTest({
     ...session,
     state: {
       ...session.state,
@@ -415,15 +415,12 @@ function spiritualWeaponRepeatBattle(): BattleRuntimeSession {
         origin: { ...caster.origin, execution },
       }),
     },
-  };
+  });
 }
 
 function spiritualWeaponActiveEffect(
   sourceProcedureRef: BattleProcedureExecutionRef,
-): Extract<
-  BattleActiveEffect,
-  { readonly kind: "spiritualWeapon" }
-> {
+): Extract<BattleActiveEffect, { readonly kind: "spiritualWeapon" }> {
   const sourceSpellLevel = parseBattleSpellEffectLevel(2);
   if (sourceSpellLevel === null) {
     throw new Error("Expected valid Spiritual Weapon spell effect level.");
@@ -519,7 +516,10 @@ function levitateCasterControlBattle(): BattleRuntimeSession {
   if (nextCasterTurn.tag !== "resolved") {
     throw new Error("Expected target end turn.");
   }
-  return { ...session, state: nextCasterTurn.state };
+  return battleRuntimeSessionForTest({
+    ...session,
+    state: nextCasterTurn.state,
+  });
 }
 
 function levitateAltitudeControlAct(session: BattleRuntimeSession) {
@@ -558,10 +558,10 @@ function activeAntimagicAuraSession(
     ...source,
     activeEffects: [...source.activeEffects, antimagicFieldAuraEffect(aura)],
   });
-  return {
+  return battleRuntimeSessionForTest({
     ...session,
     state: { ...session.state, combatants },
-  };
+  });
 }
 
 function antimagicFieldAuraEffect(

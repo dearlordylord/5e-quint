@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { describe, expect, test } from "vitest";
 import type { BattleState } from "./battle-runtime-test-support.ts";
 import {
@@ -528,7 +529,7 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
     };
     const saveHole = requireHole(
       resolveBattleSubject({
-        session: { state, context: base.context },
+        session: battleRuntimeSessionForTest({ state, context: base.context }),
         subject: magicSubject("acid_splash"),
         fills: [],
       }),

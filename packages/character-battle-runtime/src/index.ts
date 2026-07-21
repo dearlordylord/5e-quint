@@ -204,7 +204,8 @@ export type CharacterBattleInitProjectionIssue = {
   readonly routeEvents: readonly CharacterBattleRouteEvent[];
 };
 
-export type CharacterBattleRuntimeEntry = BattleRuntimeSession & {
+export type CharacterBattleRuntimeEntry = {
+  readonly session: BattleRuntimeSession;
   readonly initProjectionRouteEvents: readonly CharacterBattleRouteEvent[];
   readonly encounterCompositionRouteEvents: readonly CharacterBattleRouteEvent[];
 };
@@ -370,7 +371,7 @@ export function startBattleFromCharacterSheetAndStatBlock(input: {
     });
   }
   return Either.right({
-    ...session.right,
+    session: session.right,
     initProjectionRouteEvents: characterInit.right.routeEvents,
     encounterCompositionRouteEvents:
       characterBattleEncounterCompositionRouteEvents({

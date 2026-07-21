@@ -9,11 +9,13 @@ import {
   BattleSnapshotSchema,
   BattleSubjectSchema,
   StatBlockExecutionSnapshotSchema,
-  addBattleCombatant,
+  addBattleRuntimeCombatant,
   discoverBattleActCandidates,
   discoverBattleActs,
-  removeBattleCombatants,
+  endBattleRuntimeTurn,
+  removeBattleRuntimeCombatants,
   snapshotBattle,
+  startBattle,
   type BattleState,
 } from "./index.ts";
 import {
@@ -27,6 +29,7 @@ import {
   statBlockCreatureInit,
   unitLibrary,
   wizardId,
+  wizardSpellcasting,
   wizardVsSkeletonBattle,
 } from "./battle-runtime-test-support.ts";
 import {
@@ -57,6 +60,10 @@ import {
   type StatBlockExecutionState,
 } from "./stat-block-execution.ts";
 import { opportunityAttackReactionChoices } from "./battle-reducer/dispatcher.ts";
+import {
+  addBattleCombatant,
+  removeBattleCombatants,
+} from "./battle-reducer/api-lifecycle.ts";
 import { statBlockAttackProcedureSection } from "./battle-reducer/statblock.ts";
 import { statBlockAttackActionOptions } from "./stat-block-execution.ts";
 
@@ -438,15 +445,51 @@ describe("Stat Block execution references", () => {
     const serializedAfterRemoval = Schema.decodeUnknownSync(
       BattleSnapshotSchema,
     )(Schema.encodeSync(BattleSnapshotSchema)(snapshotBattle(removed.right)));
-    const restoredScopeCursors = new Map(
-      serializedAfterRemoval.executionScopeCursors.map((cursor) => [
-        cursor.combatantId,
-        cursor.nextScopeOrdinal,
-      ]),
-    );
-    expect(restoredScopeCursors.get(actorId)).toBe(
+    const restoredScopeCursors = new Map(removed.right.executionScopeCursors);
+    restoredScopeCursors.clear();
+    for (const cursor of serializedAfterRemoval.executionScopeCursors) {
+      restoredScopeCursors.set(cursor.combatantId, {
+        kind: "active",
+        nextScopeOrdinal: cursor.nextScopeOrdinal,
+      });
+    }
+    for (const allocation of serializedAfterRemoval.retiredExecutionScopeAllocations) {
+      restoredScopeCursors.set(allocation.combatantId, {
+        kind: "retired",
+        nextScopeOrdinal: allocation.nextScopeOrdinal,
+        ownership: allocation.ownership,
+      });
+    }
+    expect(() =>
+      Schema.decodeUnknownSync(BattleSnapshotSchema)({
+        ...serializedAfterRemoval,
+        executionScopeCursors: [
+          ...serializedAfterRemoval.executionScopeCursors,
+          ...serializedAfterRemoval.retiredExecutionScopeAllocations,
+        ],
+      }),
+    ).toThrow();
+    expect(restoredScopeCursors.get(actorId)).toEqual(
       removed.right.executionScopeCursors.get(actorId),
     );
+    const retiredAllocation =
+      serializedAfterRemoval.retiredExecutionScopeAllocations[0];
+    if (retiredAllocation === undefined) {
+      throw new Error("Expected retired execution ownership evidence.");
+    }
+    expect(() =>
+      Schema.decodeUnknownSync(BattleSnapshotSchema)({
+        ...serializedAfterRemoval,
+        retiredExecutionScopeAllocations: [
+          ...serializedAfterRemoval.retiredExecutionScopeAllocations,
+          {
+            combatantId: combatantId("never-admitted-combatant"),
+            nextScopeOrdinal: retiredAllocation.nextScopeOrdinal,
+            ownership: retiredAllocation.ownership,
+          },
+        ],
+      }),
+    ).toThrow();
     const restoredAfterRemoval: BattleState = {
       ...removed.right,
       executionScopeCursors: restoredScopeCursors,
@@ -488,6 +531,65 @@ describe("Stat Block execution references", () => {
     expect(
       statBlockProcedureBinding(readmittedExecution, originalRef),
     ).toBeUndefined();
+  });
+
+  test("session-aware roster changes update authored context atomically", () => {
+    const initialMonsterId = combatantId("roster-context-monster");
+    const initial = startBattle({
+      battleId: battleId("battle-runtime-roster-context"),
+      combatants: [
+        statBlockCreatureInit({
+          combatantId: initialMonsterId,
+          initiative: 5,
+          statBlock: monsterResourceStatBlock(),
+        }),
+      ],
+    });
+    if (Either.isLeft(initial)) {
+      throw new Error("Expected the initial runtime session.");
+    }
+    const addedCharacterId = combatantId("roster-context-character");
+    const added = addBattleRuntimeCombatant({
+      session: initial.right,
+      combatant: characterSeed({
+        combatantId: addedCharacterId,
+        initiative: 10,
+        spellcasting: wizardSpellcasting(),
+      }),
+    });
+    if (Either.isLeft(added)) {
+      throw new Error("Expected the character runtime admission.");
+    }
+    expect(added.right.context.characters.has(addedCharacterId)).toBe(true);
+    expect(
+      added.right.context.characters.get(addedCharacterId)
+        ?.spellPresentationSources.length,
+    ).toBeGreaterThan(0);
+    const advanced = endBattleRuntimeTurn({
+      session: added.right,
+      actorId: initialMonsterId,
+    });
+    if (advanced.tag !== "resolved") {
+      throw new Error("Expected the added character's turn.");
+    }
+    expect(
+      discoverBattleActs(advanced.session).some(
+        (act) =>
+          act.subject.actorId === addedCharacterId &&
+          battleActSpellPresentation(act)?.invocation.spellId ===
+            "magic_missile",
+      ),
+    ).toBe(true);
+
+    const removed = removeBattleRuntimeCombatants({
+      session: advanced.session,
+      combatantIds: [addedCharacterId],
+    });
+    if (Either.isLeft(removed)) {
+      throw new Error("Expected the character runtime removal.");
+    }
+    expect(removed.right.context.characters.has(addedCharacterId)).toBe(false);
+    expect(removed.right.state.combatants.has(addedCharacterId)).toBe(false);
   });
 
   test("does not reuse a character execution scope after re-admission", () => {
@@ -1343,6 +1445,30 @@ describe("Stat Block execution references", () => {
     expect(() =>
       Schema.decodeUnknownSync(BattleSnapshotSchema)(
         snapshotWithAttackInitialHole({
+          kind: "savingThrowOutcome",
+          holeId: "battle:test:externally-owned-save-bonus",
+          holeInstanceKey: "battle:test:externally-owned-save-bonus",
+          label: "Synthetic externally modified save",
+          sourceProcedureRef: decodedStatBlockAttack.procedureRef,
+          outcomeTargeting: "singleTarget",
+          ability: "con",
+          dc: { kind: "caster_spell_save_dc" },
+          areaChoices: [],
+          targetRollModes: [],
+          targetFlatBonuses: [
+            {
+              targetId: actorId,
+              sourceCombatantId: fighterId,
+              sourceProcedureRef: fighterAttackProcedureRef,
+              bonus: 1,
+            },
+          ],
+        }),
+      ),
+    ).not.toThrow();
+    expect(() =>
+      Schema.decodeUnknownSync(BattleSnapshotSchema)(
+        snapshotWithAttackInitialHole({
           kind: "concentrationSavingThrow",
           holeId: "battle:test:unbound-concentration-bonus",
           holeInstanceKey: "battle:test:unbound-concentration-bonus",
@@ -1353,6 +1479,7 @@ describe("Stat Block execution references", () => {
           targetFlatBonuses: [
             {
               targetId: actorId,
+              sourceCombatantId: actorId,
               sourceProcedureRef: unboundProcedureRef,
               bonus: 1,
             },

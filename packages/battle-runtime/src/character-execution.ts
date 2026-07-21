@@ -2274,7 +2274,6 @@ function allocateCharacterProcedureOccurrences<Input>(
 export function characterExecutionWithSpellInvocations(
   execution: CharacterExecutionState,
   invocations: readonly SupportedSpellInvocation[],
-  context: SpellProcedureExecutionContext = EMPTY_SPELL_PROCEDURE_EXECUTION_CONTEXT,
 ): CharacterExecutionState {
   let refreshed = false;
   const remainingInvocations = [...invocations];
@@ -2310,7 +2309,6 @@ export function characterExecutionWithSpellInvocations(
       !spellInvocationMatchesExecution(
         invocation,
         binding.procedure.execution,
-        context,
       )
     ) {
       return;
@@ -2334,7 +2332,7 @@ export function characterExecutionWithSpellInvocations(
     const storedExecution = binding.procedure.execution;
     const currentInvocationIndex = remainingInvocations.findIndex(
       (invocation) =>
-        spellInvocationMatchesExecution(invocation, storedExecution, context),
+        spellInvocationMatchesExecution(invocation, storedExecution),
     );
     if (currentInvocationIndex < 0) return;
     const [currentInvocation] = remainingInvocations.splice(
@@ -2382,10 +2380,7 @@ export function characterExecutionWithSpellInvocations(
           },
         };
       }
-      const currentExecution = spellProcedureExecution(
-        currentInvocation,
-        context,
-      );
+      const currentExecution = spellProcedureExecution(currentInvocation);
       if (currentExecution === undefined) {
         return binding.procedure.kind === "unavailableSpellInvocation"
           ? binding
@@ -2421,7 +2416,7 @@ export function characterExecutionWithSpellInvocations(
     execution.scopeRef,
     execution.nextProcedureOrdinal,
     newInvocations.flatMap((invocation): CharacterProcedureWithoutRef[] => {
-      const spellExecution = spellProcedureExecution(invocation, context);
+      const spellExecution = spellProcedureExecution(invocation);
       return spellExecution === undefined
         ? []
         : [
@@ -4828,7 +4823,6 @@ export function unitSupportProcedureExecution(
 export function characterSpellProcedureRef(
   execution: CharacterExecutionState,
   invocation: SupportedSpellInvocation | SpellProcedureExecution,
-  context: SpellProcedureExecutionContext = EMPTY_SPELL_PROCEDURE_EXECUTION_CONTEXT,
 ): BattleProcedureExecutionRef | undefined {
   return execution.procedureBindings.find(
     (binding) =>
@@ -4836,7 +4830,6 @@ export function characterSpellProcedureRef(
       spellInvocationMatchesExecution(
         invocation,
         binding.procedure.execution,
-        context,
       ),
   )?.procedureRef;
 }
@@ -4844,7 +4837,6 @@ export function characterSpellProcedureRef(
 export function characterSpellProcedureRefs(
   execution: CharacterExecutionState,
   invocations: readonly SupportedSpellInvocation[],
-  context: SpellProcedureExecutionContext = EMPTY_SPELL_PROCEDURE_EXECUTION_CONTEXT,
 ): readonly (BattleProcedureExecutionRef | undefined)[] {
   const remainingBindings = execution.procedureBindings.filter(
     (binding) => binding.procedure.kind === "spellInvocation",
@@ -4856,7 +4848,6 @@ export function characterSpellProcedureRefs(
         spellInvocationMatchesExecution(
           invocation,
           binding.procedure.execution,
-          context,
         ),
     );
     if (bindingIndex < 0) return undefined;
@@ -4974,14 +4965,13 @@ export function characterStoredSpellProcedureRef(
   )?.procedureRef;
 }
 
-function spellInvocationMatchesExecution(
+export function spellInvocationMatchesExecution(
   invocation: SupportedSpellInvocation | SpellProcedureExecution,
   execution: SpellProcedureExecution,
-  context: SpellProcedureExecutionContext = EMPTY_SPELL_PROCEDURE_EXECUTION_CONTEXT,
 ): boolean {
   const projected =
     "spell" in invocation
-      ? spellProcedureExecution(invocation, context)
+      ? spellProcedureExecution(invocation)
       : invocation;
   return (
     projected !== undefined && sameSpellProcedureExecution(projected, execution)
@@ -4992,7 +4982,6 @@ export function spellProcedureExecution<
   Invocation extends SupportedSpellInvocation,
 >(
   invocation: Invocation,
-  context?: SpellProcedureExecutionContext,
 ): Extract<
   Invocation["resource"],
   ClassFeatureFreeCastInvocationResource
@@ -5001,7 +4990,6 @@ export function spellProcedureExecution<
   : SpellProcedureExecution<Invocation> | undefined;
 export function spellProcedureExecution(
   invocation: SupportedSpellInvocation,
-  _context: SpellProcedureExecutionContext = EMPTY_SPELL_PROCEDURE_EXECUTION_CONTEXT,
 ): SpellProcedureExecution | undefined {
   const spellRuleFacts = spellRuleExecutionFacts(invocation.spell.mechanics);
   return Match.value(invocation).pipe(
@@ -5987,31 +5975,6 @@ export function spellProcedureExecution(
   );
 }
 
-export type SpellProcedureExecutionContext = {
-  readonly resourcePoolRefsByUnitId: ReadonlyMap<
-    UnitRecord["id"],
-    BattleResourcePoolExecutionRef
-  >;
-};
-
-export function spellProcedureExecutionContext(
-  ownership: readonly {
-    readonly unit: Pick<UnitRecord, "id">;
-    readonly resourcePoolRef: BattleResourcePoolExecutionRef;
-  }[],
-): SpellProcedureExecutionContext {
-  return {
-    resourcePoolRefsByUnitId: new Map(
-      ownership.map((resource) => [resource.unit.id, resource.resourcePoolRef]),
-    ),
-  };
-}
-
-const EMPTY_SPELL_PROCEDURE_EXECUTION_CONTEXT: SpellProcedureExecutionContext =
-  {
-    resourcePoolRefsByUnitId: new Map(),
-  };
-
 function classFeatureSpellInvocationResourceExecution(
   resource: AfterHitDamageSpellInvocation["resource"],
 ): AfterHitDamageSpellProcedureExecution["resource"] | undefined {
@@ -6429,7 +6392,6 @@ export function characterSpellSelectionInvocation(
   execution: CharacterExecutionState,
   procedureRef: BattleProcedureExecutionRef,
   invocations: readonly SupportedSpellInvocation[],
-  context: SpellProcedureExecutionContext = EMPTY_SPELL_PROCEDURE_EXECUTION_CONTEXT,
 ): BattleSelectedSpellInvocation | undefined {
   const storedExecution = characterSpellProcedureExecution(
     execution,
@@ -6437,7 +6399,7 @@ export function characterSpellSelectionInvocation(
   );
   if (storedExecution === undefined) return undefined;
   const invocation = invocations.find((candidate) =>
-    spellInvocationMatchesExecution(candidate, storedExecution, context),
+    spellInvocationMatchesExecution(candidate, storedExecution),
   );
   return invocation === undefined
     ? undefined

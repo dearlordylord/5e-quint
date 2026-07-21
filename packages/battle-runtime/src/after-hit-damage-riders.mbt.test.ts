@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-after-hit-damage-illumination
 
@@ -1381,7 +1382,10 @@ function fillHitAttackRoll(state: AfterHitRuntimeState): AfterHitRuntimeState {
   );
   return {
     ...state,
-    battle: { ...state.battle, state: awaitingInterrupt.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: awaitingInterrupt.state,
+    }),
     phase: "afterHitChoiceNeeded",
     holes: [interruptHole],
     pending: {
@@ -1427,7 +1431,10 @@ function chooseAfterHitDamageSpell(
   const damageHole = requireHole(afterChoice.holes, "rolledDice");
   return {
     ...state,
-    battle: { ...state.battle, state: afterChoice.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: afterChoice.state,
+    }),
     phase: "attackDamageNeeded",
     holes: [damageHole],
     pending: {
@@ -1495,7 +1502,10 @@ function fillEnsnaringSave(
   const damageHole = requireHole(afterChoice.holes, "rolledDice");
   return {
     ...state,
-    battle: { ...state.battle, state: afterChoice.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: afterChoice.state,
+    }),
     phase: "attackDamageNeeded",
     holes: [damageHole],
     pending: {
@@ -1542,7 +1552,10 @@ function fillAttackDamage(
   );
   return {
     ...state,
-    battle: { ...state.battle, state: resolved.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: resolved.state,
+    }),
     phase: "afterDamage",
     holes: [],
     pending: { tag: "none" },
@@ -1563,7 +1576,10 @@ function breakConcentration(state: AfterHitRuntimeState): AfterHitRuntimeState {
   );
   return {
     ...state,
-    battle: { ...state.battle, state: resolved.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: resolved.state,
+    }),
     phase: "cleaned",
     holes: [],
     pending: { tag: "none" },
@@ -1588,7 +1604,10 @@ function discoverTurnStartDamage(
   const damageHole = requireHole(awaitingTurnStartDamage.holes, "rolledDice");
   return {
     ...state,
-    battle: { ...state.battle, state: awaitingTurnStartDamage.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: awaitingTurnStartDamage.state,
+    }),
     phase: "turnStartDamageNeeded",
     holes: [damageHole],
     pending: {
@@ -1622,7 +1641,10 @@ function fillEnsnaringStartTurnDamage(
     }),
     "Expected Ensnaring Strike turn-start damage to resolve.",
   );
-  const targetTurnSession = { ...state.battle, state: targetTurn.state };
+  const targetTurnSession = battleRuntimeSessionForTest({
+    ...state.battle,
+    state: targetTurn.state,
+  });
   const escapeAct = requireSpellRestraintEscapeAct(targetTurnSession);
   const escapeCheck = requireHole(escapeAct.initialHoles, "abilityCheck");
   return {
@@ -1658,7 +1680,10 @@ function fillEnsnaringEscapeCheck(
   );
   return {
     ...state,
-    battle: { ...state.battle, state: escaped.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: escaped.state,
+    }),
     phase: "cleaned",
     holes: [],
     pending: { tag: "none" },
@@ -1681,7 +1706,10 @@ function discoverTurnStartDamageAndSave(
   const saveHole = requireHole(awaitingTurnStart.holes, "savingThrowOutcome");
   return {
     ...state,
-    battle: { ...state.battle, state: awaitingTurnStart.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: awaitingTurnStart.state,
+    }),
     phase: "turnStartDamageSaveNeeded",
     holes: [damageHole, saveHole],
     pending: {
@@ -1720,7 +1748,10 @@ function fillSearingStartTurnDamageAndSave(
   );
   return {
     ...state,
-    battle: { ...state.battle, state: targetTurn.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: targetTurn.state,
+    }),
     phase: "cleaned",
     holes: [],
     pending: { tag: "none" },
@@ -1966,9 +1997,9 @@ function requireAfterHitChoice(
   };
 }
 
-function requireSpellRestraintEscapeAct(session: BattleRuntimeSession): ReturnType<
-  typeof discoverBattleActs
->[number] & {
+function requireSpellRestraintEscapeAct(
+  session: BattleRuntimeSession,
+): ReturnType<typeof discoverBattleActs>[number] & {
   readonly subject: Extract<
     BattleSubject,
     { readonly tag: "action"; readonly action: "escapeSpellRestraint" }

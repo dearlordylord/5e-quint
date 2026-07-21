@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import {
   battleActSpellSlotPresentation,
@@ -263,7 +264,7 @@ describe("battle runtime: Darkness", () => {
       ],
     };
     const subject = findAct(
-      { ...baseSession, state },
+      battleRuntimeSessionForTest({ ...baseSession, state }),
       magicSubject(darknessUnitId),
     ).subject;
     const area = requireHole(

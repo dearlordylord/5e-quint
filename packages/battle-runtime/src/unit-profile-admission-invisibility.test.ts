@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-INVISIBILITY invisibility
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-direct-condition
@@ -187,7 +188,10 @@ describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
       endTurn({ state: cast.state, actorId: spellCasterId }),
     );
     const attack = statBlockAttackAct(
-      { state: attackerTurn.state, context: session.context },
+      battleRuntimeSessionForTest({
+        state: attackerTurn.state,
+        context: session.context,
+      }),
       attackerId,
       "Scimitar",
     );
@@ -269,7 +273,10 @@ describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
       endTurn({ state: cast.state, actorId: spellCasterId }),
     );
     const blur = spellAct({
-      session: { state: targetTurn.state, context: session.context },
+      session: battleRuntimeSessionForTest({
+        state: targetTurn.state,
+        context: session.context,
+      }),
       spellId: blurUnitId,
       slotLevel: 2,
     });
@@ -327,7 +334,10 @@ describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
       endTurn({ state: cast.state, actorId: spellCasterId }),
     );
     const blur = spellAct({
-      session: { state: targetTurn.state, context: session.context },
+      session: battleRuntimeSessionForTest({
+        state: targetTurn.state,
+        context: session.context,
+      }),
       spellId: blurUnitId,
       slotLevel: 2,
     });
@@ -338,7 +348,10 @@ describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
         fills: [
           spellCastReactionFactsFill([
             counterspellTriggerFact({
-              session: { state: targetTurn.state, context: session.context },
+              session: battleRuntimeSessionForTest({
+                state: targetTurn.state,
+                context: session.context,
+              }),
               reactorId: counterspellerId,
               casterId: spellTargetId,
             }),
@@ -405,7 +418,10 @@ describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
     );
 
     const magicMissile = spellAct({
-      session: { state: missileTurn.state, context: session.context },
+      session: battleRuntimeSessionForTest({
+        state: missileTurn.state,
+        context: session.context,
+      }),
       spellId: magicMissileUnitId,
       slotLevel: 1,
     });
@@ -496,7 +512,10 @@ describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
     );
 
     const magicMissile = spellAct({
-      session: { state: missileTurn.state, context: session.context },
+      session: battleRuntimeSessionForTest({
+        state: missileTurn.state,
+        context: session.context,
+      }),
       spellId: magicMissileUnitId,
       slotLevel: 1,
     });
@@ -522,7 +541,10 @@ describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
           }),
           spellCastReactionFactsFill([
             counterspellTriggerFact({
-              session: { state: missileTurn.state, context: session.context },
+              session: battleRuntimeSessionForTest({
+                state: missileTurn.state,
+                context: session.context,
+              }),
               reactorId: spellTargetId,
               casterId: magicMissileCasterId,
             }),
@@ -715,7 +737,10 @@ function requireTriggeredReactionSpellChoice(input: {
       )
         return false;
       const invocation = characterSpellInvocationRefForProcedureRefForTest(
-        { state: input.result.state, context: input.session.context },
+        battleRuntimeSessionForTest({
+          state: input.result.state,
+          context: input.session.context,
+        }),
         candidate.reactorId,
         candidate.subject.procedureRef,
       );

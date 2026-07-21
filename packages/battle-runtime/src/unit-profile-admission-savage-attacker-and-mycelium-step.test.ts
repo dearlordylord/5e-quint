@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT31 feat_savage_attacker
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT21 mycelium_step
 import { describe, expect, test } from "vitest";
@@ -503,7 +504,7 @@ describe("QMBT31 deterministic Savage Attacker profile slice", () => {
       },
     };
     const subject = weaponAttackSubject(
-      { state, context: baseSession.context },
+      battleRuntimeSessionForTest({ state, context: baseSession.context }),
       "Longsword",
     );
     const target = requireResultHole(

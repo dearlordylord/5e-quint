@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import * as path from "node:path";
 import {
   battleActSpellPresentation,
@@ -2690,8 +2691,13 @@ export function createBattleRuntimeDriver() {
     return {
       init: reset,
       doDiscoverAttack: () => {
-        subject = fighterAttackSubject({ state, context: session.context });
-        holes = discoverAttackHoles({ state, context: session.context }, subject);
+        subject = fighterAttackSubject(
+          battleRuntimeSessionForTest({ state, context: session.context }),
+        );
+        holes = discoverAttackHoles(
+          battleRuntimeSessionForTest({ state, context: session.context }),
+          subject,
+        );
         lastResult = "needsHoles";
         lastInvalidReason = "";
       },
@@ -2733,26 +2739,40 @@ export function createBattleRuntimeDriver() {
         const damage = requireHole(holes, "rolledDice");
         submit([
           ...fills,
-          damageRollFillWithGroups(damage, [[2], [2]], [
-            requireCharacterUnitProcedureRefForTest(
-              { state, context: session.context },
-              fighterId,
-              "rogue_sneak_attack",
-            ),
-          ]),
+          damageRollFillWithGroups(
+            damage,
+            [[2], [2]],
+            [
+              requireCharacterUnitProcedureRefForTest(
+                battleRuntimeSessionForTest({
+                  state,
+                  context: session.context,
+                }),
+                fighterId,
+                "rogue_sneak_attack",
+              ),
+            ],
+          ),
         ]);
       },
       doFillDamageHighSneakAttack: () => {
         const damage = requireHole(holes, "rolledDice");
         submit([
           ...fills,
-          damageRollFillWithGroups(damage, [[4], [4]], [
-            requireCharacterUnitProcedureRefForTest(
-              { state, context: session.context },
-              fighterId,
-              "rogue_sneak_attack",
-            ),
-          ]),
+          damageRollFillWithGroups(
+            damage,
+            [[4], [4]],
+            [
+              requireCharacterUnitProcedureRefForTest(
+                battleRuntimeSessionForTest({
+                  state,
+                  context: session.context,
+                }),
+                fighterId,
+                "rogue_sneak_attack",
+              ),
+            ],
+          ),
         ]);
       },
       doRejectStaleAfterResolved: () => {
@@ -2764,19 +2784,28 @@ export function createBattleRuntimeDriver() {
         recordResult(resolveBattleSubject({ state, subject, fills }));
       },
       doResolveSkeletonMultiattack: () => {
-        subject = skeletonMultiattackSubject({ state, context: session.context });
+        subject = skeletonMultiattackSubject(
+          battleRuntimeSessionForTest({ state, context: session.context }),
+        );
         fills = [];
         recordResult(resolveBattleSubject({ state, subject, fills }));
       },
       doRejectRecursiveSkeletonMultiattack: () => {
-        subject = skeletonMultiattackSubject({ state, context: session.context });
+        subject = skeletonMultiattackSubject(
+          battleRuntimeSessionForTest({ state, context: session.context }),
+        );
         fills = [];
         recordResult(resolveBattleSubject({ state, subject, fills }));
       },
       doSpendSkeletonMultiattackDispatch: () => {
-        subject = skeletonShortswordSubject({ state, context: session.context });
+        subject = skeletonShortswordSubject(
+          battleRuntimeSessionForTest({ state, context: session.context }),
+        );
         const target = requireHole(
-          discoverAttackHoles({ state, context: session.context }, subject),
+          discoverAttackHoles(
+            battleRuntimeSessionForTest({ state, context: session.context }),
+            subject,
+          ),
           "targetChoice",
         );
         const targetChoice = targetFill(target, fighterId);
@@ -2882,8 +2911,13 @@ export function createBattleRuntimeRouteDriver() {
     return {
       init: reset,
       doDiscoverAttack: () => {
-        subject = fighterAttackSubject({ state, context: session.context });
-        const act = discoverAttackAct({ state, context: session.context }, subject);
+        subject = fighterAttackSubject(
+          battleRuntimeSessionForTest({ state, context: session.context }),
+        );
+        const act = discoverAttackAct(
+          battleRuntimeSessionForTest({ state, context: session.context }),
+          subject,
+        );
         holes = act.initialHoles;
         appendRequiredRouteEvents({
           routeEvents: act.routeEvents,
@@ -2930,26 +2964,40 @@ export function createBattleRuntimeRouteDriver() {
         const damage = requireHole(holes, "rolledDice");
         submit([
           ...fills,
-          damageRollFillWithGroups(damage, [[2], [2]], [
-            requireCharacterUnitProcedureRefForTest(
-              { state, context: session.context },
-              fighterId,
-              "rogue_sneak_attack",
-            ),
-          ]),
+          damageRollFillWithGroups(
+            damage,
+            [[2], [2]],
+            [
+              requireCharacterUnitProcedureRefForTest(
+                battleRuntimeSessionForTest({
+                  state,
+                  context: session.context,
+                }),
+                fighterId,
+                "rogue_sneak_attack",
+              ),
+            ],
+          ),
         ]);
       },
       doFillDamageHighSneakAttack: () => {
         const damage = requireHole(holes, "rolledDice");
         submit([
           ...fills,
-          damageRollFillWithGroups(damage, [[4], [4]], [
-            requireCharacterUnitProcedureRefForTest(
-              { state, context: session.context },
-              fighterId,
-              "rogue_sneak_attack",
-            ),
-          ]),
+          damageRollFillWithGroups(
+            damage,
+            [[4], [4]],
+            [
+              requireCharacterUnitProcedureRefForTest(
+                battleRuntimeSessionForTest({
+                  state,
+                  context: session.context,
+                }),
+                fighterId,
+                "rogue_sneak_attack",
+              ),
+            ],
+          ),
         ]);
       },
       doRejectStaleAfterResolved: () => {
@@ -2962,18 +3010,27 @@ export function createBattleRuntimeRouteDriver() {
         resolveWithoutFill();
       },
       doResolveSkeletonMultiattack: () => {
-        subject = skeletonMultiattackSubject({ state, context: session.context });
+        subject = skeletonMultiattackSubject(
+          battleRuntimeSessionForTest({ state, context: session.context }),
+        );
         fills = [];
         resolveWithoutFill();
       },
       doRejectRecursiveSkeletonMultiattack: () => {
-        subject = skeletonMultiattackSubject({ state, context: session.context });
+        subject = skeletonMultiattackSubject(
+          battleRuntimeSessionForTest({ state, context: session.context }),
+        );
         fills = [];
         resolveWithoutFill();
       },
       doSpendSkeletonMultiattackDispatch: () => {
-        subject = skeletonShortswordSubject({ state, context: session.context });
-        const act = discoverAttackAct({ state, context: session.context }, subject);
+        subject = skeletonShortswordSubject(
+          battleRuntimeSessionForTest({ state, context: session.context }),
+        );
+        const act = discoverAttackAct(
+          battleRuntimeSessionForTest({ state, context: session.context }),
+          subject,
+        );
         appendRequiredRouteEvents({
           routeEvents: act.routeEvents,
           context: "weapon Attack skeleton stat-block attack discovery",
@@ -3084,7 +3141,10 @@ export function createWeaponAttackOrderingDriver() {
     return {
       init: reset,
       doDiscoverAttack: () => {
-        holes = discoverAttackHoles({ state, context: session.context }, subject);
+        holes = discoverAttackHoles(
+          battleRuntimeSessionForTest({ state, context: session.context }),
+          subject,
+        );
         stage = "targetChoice";
         lastResult = "needsHoles";
         orderingError = "";
@@ -3470,7 +3530,7 @@ export function createWeaponAttackOrderingRouteDriver() {
       init: reset,
       doDiscoverAttack: () => {
         const act = discoverAttackAct(
-          { state, context: session.context },
+          battleRuntimeSessionForTest({ state, context: session.context }),
           subject,
         );
         holes = act.initialHoles;
@@ -10670,10 +10730,10 @@ export function createConcentrationBreakTeardownRouteDriver() {
       appendResolutionRouteEvents(result);
       return {
         ...input,
-        battle: {
+        battle: battleRuntimeSessionForTest({
           state: requireResolved(result).state,
           context: input.battle.context,
-        },
+        }),
         pendingConcentrationSave: null,
         lastRouteEvents: result.routeEvents ?? [],
       };
@@ -10713,16 +10773,18 @@ export function createConcentrationBreakTeardownRouteDriver() {
         appendResolutionRouteEvents(result);
         state = {
           ...cast,
-          battle: {
+          battle: battleRuntimeSessionForTest({
             state: requireResolved(result).state,
             context: cast.battle.context,
-          },
+          }),
           scenario: "voluntaryEndTeardown",
           teardownBeforeNextCommand:
-            concentrationTeardownIsVisibleBeforeNextCommand({
-              state: requireResolved(result).state,
-              context: cast.battle.context,
-            }),
+            concentrationTeardownIsVisibleBeforeNextCommand(
+              battleRuntimeSessionForTest({
+                state: requireResolved(result).state,
+                context: cast.battle.context,
+              }),
+            ),
           lastRouteEvents: result.routeEvents ?? [],
         };
       },
@@ -10733,7 +10795,10 @@ export function createConcentrationBreakTeardownRouteDriver() {
         );
         const replaced = recordConcentrationCast({
           ...initial,
-          battle: { state: beforeReplacement, context: initial.battle.context },
+          battle: battleRuntimeSessionForTest({
+            state: beforeReplacement,
+            context: initial.battle.context,
+          }),
         });
         state = {
           ...replaced,
@@ -10796,7 +10861,10 @@ function createCommandOrderingDriverWithRoute<
       lastResult = result.tag;
       if (result.tag === "resolved") {
         state = result.state;
-        session = { state, context: session.context };
+        session = battleRuntimeSessionForTest({
+          state,
+          context: session.context,
+        });
         holes = [];
         stage = nextStage;
         orderingError = "";
@@ -10807,7 +10875,10 @@ function createCommandOrderingDriverWithRoute<
       }
       if (result.tag === "needsHoles") {
         state = result.state;
-        session = { state, context: session.context };
+        session = battleRuntimeSessionForTest({
+          state,
+          context: session.context,
+        });
         holes = result.holes;
         stage = nextStage;
         orderingError = "";
@@ -10874,7 +10945,10 @@ function createCommandOrderingDriverWithRoute<
       input: CommandTargetTurnInput = {},
     ): ReturnType<typeof commandRuntimeAct> {
       state = commandTargetTurn(option, input);
-      session = { state, context: session.context };
+      session = battleRuntimeSessionForTest({
+        state,
+        context: session.context,
+      });
       const act = commandRuntimeAct(session, option);
       subject = act.subject;
       fills = [];
@@ -10989,7 +11063,10 @@ function createCommandOrderingDriverWithRoute<
           }),
         ).state;
         const command = commandRuntimeAct(
-          { state: targetTurn, context: session.context },
+          battleRuntimeSessionForTest({
+            state: targetTurn,
+            context: session.context,
+          }),
           "grovel",
         );
         const result = resolveBattleSubject({
@@ -11193,9 +11270,14 @@ export function createExtraAttackDriver(
 
     function resolveAttackMiss(): void {
       recordExtraAttackBoundaryFromState(state, currentUnitId);
-      subject = fighterAttackSubject({ state, context: session.context });
+      subject = fighterAttackSubject(
+        battleRuntimeSessionForTest({ state, context: session.context }),
+      );
       const target = requireHole(
-        discoverAttackHoles({ state, context: session.context }, subject),
+        discoverAttackHoles(
+          battleRuntimeSessionForTest({ state, context: session.context }),
+          subject,
+        ),
         "targetChoice",
       );
       const targetChoice = targetFill(target, skeletonId);
@@ -11248,7 +11330,9 @@ export function createExtraAttackDriver(
       },
       doResolveSecondExtraAttackMiss: resolveAttackMiss,
       doRejectThirdExtraAttack: () => {
-        subject = fighterAttackSubject({ state, context: session.context });
+        subject = fighterAttackSubject(
+          battleRuntimeSessionForTest({ state, context: session.context }),
+        );
         recordResult(resolveBattleSubject({ state, subject, fills: [] }));
       },
       doEndTurnClosesExtraAttackSlot: () => {
@@ -11464,7 +11548,10 @@ export function createReducerSpineContractDriver() {
       if (context === null) {
         throw new Error("Expected reducer-spine battle context to be started.");
       }
-      return { state: requireStartedState(), context };
+      return battleRuntimeSessionForTest({
+        state: requireStartedState(),
+        context,
+      });
     }
 
     function recordAccepted(
@@ -11513,7 +11600,10 @@ export function createReducerSpineContractDriver() {
         const spellSubject = magicMissileSubject();
         subject = spellSubject;
         fills = [];
-        holes = discoverMagicMissileHoles(requireStartedSession(), spellSubject);
+        holes = discoverMagicMissileHoles(
+          requireStartedSession(),
+          spellSubject,
+        );
         stage = "actDiscovered";
         entrypoint = "discoverBattleActs";
         subjectKind = "slotSpell";
@@ -11870,10 +11960,12 @@ function createAdrenalineRushDriverWithRoute<
         recordResult(
           resolveBattleSubject({
             state,
-            subject: adrenalineRushDashSubject({
-              state,
-              context: session.context,
-            }),
+            subject: adrenalineRushDashSubject(
+              battleRuntimeSessionForTest({
+                state,
+                context: session.context,
+              }),
+            ),
             fills: [],
           }),
           FEATURE_DASH_TEMPORARY_HIT_POINT_RESOLVED_OWNERS,
@@ -11883,10 +11975,12 @@ function createAdrenalineRushDriverWithRoute<
         recordResult(
           resolveBattleSubject({
             state,
-            subject: adrenalineRushDashSubject({
-              state,
-              context: session.context,
-            }),
+            subject: adrenalineRushDashSubject(
+              battleRuntimeSessionForTest({
+                state,
+                context: session.context,
+              }),
+            ),
             fills: [],
           }),
           FEATURE_DASH_TEMPORARY_HIT_POINT_STALE_OWNERS,
@@ -12015,7 +12109,7 @@ function activeFeatureSpellBenefitActivatedBattle(
       fills: [],
     }),
   ).state;
-  return { state, context: session.context };
+  return battleRuntimeSessionForTest({ state, context: session.context });
 }
 
 function activeFeatureSpellBenefitBattle(
@@ -12180,9 +12274,14 @@ export function createRogueSteadyAimDriver(
     }
 
     function resolveAttack(): void {
-      const subject = fighterAttackSubject({ state, context: session.context });
+      const subject = fighterAttackSubject(
+        battleRuntimeSessionForTest({ state, context: session.context }),
+      );
       const targetHole = requireHole(
-        discoverAttackHoles({ state, context: session.context }, subject),
+        discoverAttackHoles(
+          battleRuntimeSessionForTest({ state, context: session.context }),
+          subject,
+        ),
         "targetChoice",
       );
       const target = targetFill(targetHole, skeletonId);
@@ -12214,10 +12313,12 @@ export function createRogueSteadyAimDriver(
         recordResult(
           resolveBattleSubject({
             state,
-            subject: rogueSteadyAimSubject({
-              state,
-              context: session.context,
-            }),
+            subject: rogueSteadyAimSubject(
+              battleRuntimeSessionForTest({
+                state,
+                context: session.context,
+              }),
+            ),
             fills: [],
           }),
         );
@@ -12228,10 +12329,12 @@ export function createRogueSteadyAimDriver(
         recordResult(
           resolveBattleSubject({
             state,
-            subject: rogueSteadyAimSubject({
-              state,
-              context: session.context,
-            }),
+            subject: rogueSteadyAimSubject(
+              battleRuntimeSessionForTest({
+                state,
+                context: session.context,
+              }),
+            ),
             fills: [],
           }),
         );
@@ -12240,10 +12343,12 @@ export function createRogueSteadyAimDriver(
         recordResult(
           resolveBattleSubject({
             state,
-            subject: rogueSteadyAimSubject({
-              state,
-              context: session.context,
-            }),
+            subject: rogueSteadyAimSubject(
+              battleRuntimeSessionForTest({
+                state,
+                context: session.context,
+              }),
+            ),
             fills: [],
           }),
         );
@@ -15148,8 +15253,7 @@ function projectMbtState(input: {
         resource.sourceOwnerId === skeletonId,
     ).length,
     sneakAttackUsedThisTurn: snapshot.turn.attackDamageRidersUsedThisTurn.some(
-      (usage) =>
-        usage.attackerId === fighterId,
+      (usage) => usage.attackerId === fighterId,
     ),
     holes: projectHoles(input.holes),
     lastResult: input.lastResult,
@@ -15424,10 +15528,10 @@ function damageRequestsConcentrationSave(
     throw new Error("Expected Concentration spell cast before damage.");
   }
   const attackerTurn = advanceToConcentrationAttackerTurn(state.battle.state);
-  const attackerTurnSession = {
+  const attackerTurnSession = battleRuntimeSessionForTest({
     state: attackerTurn,
     context: state.battle.context,
-  };
+  });
   const act = statBlockAttackAct(
     attackerTurnSession,
     concentrationBreakAttackerId,
@@ -15488,7 +15592,10 @@ function damageRequestsConcentrationSave(
   const damageTaken = Number(concentration.damageAmount);
   return {
     ...state,
-    battle: { state: pending.state, context: state.battle.context },
+    battle: battleRuntimeSessionForTest({
+      state: pending.state,
+      context: state.battle.context,
+    }),
     scenario: "damageSaveNeeded",
     damageTaken,
     saveDc: Number(concentration.dc),
@@ -15530,21 +15637,27 @@ function failConcentrationSave(
   );
   return {
     ...state,
-    battle: { state: resolved.state, context: state.battle.context },
+    battle: battleRuntimeSessionForTest({
+      state: resolved.state,
+      context: state.battle.context,
+    }),
     scenario: "damageFailedTeardownBeforeNextCommand",
     saveRollTotal,
     concentrationSaveOffered: false,
     teardownBeforeNextCommand: concentrationTeardownIsVisibleBeforeNextCommand(
-      { state: resolved.state, context: state.battle.context },
+      battleRuntimeSessionForTest({
+        state: resolved.state,
+        context: state.battle.context,
+      }),
     ),
     pendingConcentrationSave: null,
     lastRouteEvents: resolved.routeEvents ?? [],
   };
 }
 
-function concentrationBreakTeardownCastAct(session: BattleRuntimeSession): ReturnType<
-  typeof discoverBattleActs
->[number] & {
+function concentrationBreakTeardownCastAct(
+  session: BattleRuntimeSession,
+): ReturnType<typeof discoverBattleActs>[number] & {
   readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
 } {
   const act = discoverBattleActs(session).find(
@@ -15721,7 +15834,10 @@ function projectAdrenalineRushMbtState(input: {
     bonusActionAvailable: snapshot.turn.bonusActionAvailable,
     dashBonusFeet: Number(snapshot.turn.dashMovementBonusFeet),
     featureUsesRemaining: resourceUsesRemaining(
-      { state: input.state, context: input.context },
+      battleRuntimeSessionForTest({
+        state: input.state,
+        context: input.context,
+      }),
       "orc_adrenaline_rush",
     ),
     lastResult: input.lastResult,
@@ -16264,7 +16380,7 @@ function requireInterruptShieldReactionChoice(
       )
         return false;
       const invocation = characterSpellInvocationRefForProcedureRefForTest(
-        { state: result.state, context },
+        battleRuntimeSessionForTest({ state: result.state, context }),
         candidate.reactorId,
         candidate.subject.procedureRef,
       );
@@ -16716,7 +16832,7 @@ function rogueSteadyAimBattleWithMovementSpent(): BattleRuntimeSession {
   if (actor === undefined) {
     throw new Error("Expected Steady Aim MBT actor.");
   }
-  return {
+  return battleRuntimeSessionForTest({
     state: {
       ...state,
       combatants: new Map(state.combatants).set(fighterId, {
@@ -16725,7 +16841,7 @@ function rogueSteadyAimBattleWithMovementSpent(): BattleRuntimeSession {
       }),
     },
     context: session.context,
-  };
+  });
 }
 
 function scalarBuffBattle(): BattleRuntimeSession {
@@ -17885,8 +18001,9 @@ function resourceUsesRemaining(
   if (actor?.origin.kind !== "character") return 1;
   const resourcePoolRef = session.context.characters
     .get(fighterId)
-    ?.resourceOwnership.find((ownership) => ownership.unit.id === unitId)
-    ?.resourcePoolRef;
+    ?.resourceOwnership.find(
+      (ownership) => ownership.unit.id === unitId,
+    )?.resourcePoolRef;
   if (resourcePoolRef === undefined) return 1;
   const resource = actor.origin.resources.find(
     (candidate) => candidate.resourcePoolRef === resourcePoolRef,

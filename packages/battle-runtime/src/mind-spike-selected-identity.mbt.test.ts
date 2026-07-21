@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L13UG-A01-MIND-SPIKE-SELECTED-IDENTITY mind_spike
 // UNIT-IDENTITY-REPLAY: L13UG-A01-MIND-SPIKE-SELECTED-IDENTITY mind_spike doResolveMindSpikeFailedSaveConcentrationDuration doResolveMindSpikeSuccessfulSaveHalfDamage
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
@@ -330,7 +331,7 @@ function resolveMindSpikeFailedSaveConcentrationDuration(): MindSpikeSelectedIde
 function resolveMindSpikeSuccessfulSaveHalfDamage(): MindSpikeSelectedIdentityProjection {
   const state = mindSpikeBattle();
   const caster = requireCombatant(state.state, spellCasterId);
-  const concentratingState = {
+  const concentratingState = battleRuntimeSessionForTest({
     ...state,
     state: {
       ...state.state,
@@ -344,7 +345,7 @@ function resolveMindSpikeSuccessfulSaveHalfDamage(): MindSpikeSelectedIdentityPr
         },
       }),
     },
-  };
+  });
   const act = spellAct({
     session: concentratingState,
     spellId: mindSpikeUnitId,

@@ -1,4 +1,7 @@
 {
+  "attachedWeaponAttackOverrideEligibility": {
+    "kind": "clubOrQuarterstaff"
+  },
   "category": "simple",
   "costGp": 0.2,
   "damage": {

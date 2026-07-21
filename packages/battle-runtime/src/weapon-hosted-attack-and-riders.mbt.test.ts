@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-attack-override spell.invocation-weapon-damage-rider spell.invocation-magic-weapon-enhancement
@@ -1250,7 +1251,10 @@ function fillTrueStrikeDamage(
   );
   return {
     ...state,
-    battle: { ...state.battle, state: resolved.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: resolved.state,
+    }),
     phase: "cleaned",
     holes: [],
     pending: { tag: "none" },
@@ -1274,7 +1278,7 @@ function castShillelagh(
   );
   return {
     ...state,
-    battle: { ...state.battle, state: cast.state },
+    battle: battleRuntimeSessionForTest({ ...state.battle, state: cast.state }),
     phase: "activeEffectApplied",
     lastResult: "resolved",
   };
@@ -1450,7 +1454,10 @@ function fillWeaponDamage(
   );
   return {
     ...state,
-    battle: { ...state.battle, state: resolved.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: resolved.state,
+    }),
     phase: "afterWeaponDamage",
     holes: [],
     pending: { tag: "none" },
@@ -1481,7 +1488,10 @@ function cleanShillelaghLetGo(
   );
   return {
     ...state,
-    battle: { ...state.battle, state: cleaned.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: cleaned.state,
+    }),
     phase: "cleaned",
     lastResult: "resolved",
   };
@@ -1503,7 +1513,7 @@ function castDivineFavor(
   );
   return {
     ...state,
-    battle: { ...state.battle, state: cast.state },
+    battle: battleRuntimeSessionForTest({ ...state.battle, state: cast.state }),
     phase: "activeEffectApplied",
     lastResult: "resolved",
   };
@@ -1541,7 +1551,10 @@ function cleanDivineFavorDuration(
   );
   return {
     ...state,
-    battle: { ...state.battle, state: expired.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: expired.state,
+    }),
     phase: "cleaned",
     lastResult: "resolved",
   };
@@ -1600,7 +1613,7 @@ function fillMagicWeaponTarget(
   ).toBe(1);
   return {
     ...state,
-    battle: { ...state.battle, state: cast.state },
+    battle: battleRuntimeSessionForTest({ ...state.battle, state: cast.state }),
     phase: "activeEffectApplied",
     holes: [],
     pending: { tag: "none" },
@@ -1639,7 +1652,10 @@ function cleanMagicWeaponDuration(
   );
   return {
     ...state,
-    battle: { ...state.battle, state: expired.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: expired.state,
+    }),
     phase: "cleaned",
     lastResult: "resolved",
   };

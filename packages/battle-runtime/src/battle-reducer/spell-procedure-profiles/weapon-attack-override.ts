@@ -58,11 +58,6 @@ import {
   spellProcedureExecutionSchema,
 } from "./profile.ts";
 
-const SHILLELAGH_WEAPON_UNIT_IDS = [
-  "weapon_club",
-  "weapon_quarterstaff",
-] as const satisfies readonly WeaponRecord["id"][];
-
 type WeaponAttackOverrideInvocation = Extract<
   SupportedSpellInvocation,
   { readonly procedure: "weaponAttackOverride" }
@@ -216,7 +211,8 @@ function shillelaghAttachedWeaponAttacks(actor: SpellAdmissionActor): readonly {
     } =>
       held.attack.weapon.usage === "melee" &&
       held.unitId === held.attack.weapon.id &&
-      SHILLELAGH_WEAPON_UNIT_IDS.some((unitId) => unitId === held.unitId),
+      held.attack.weapon.attachedWeaponAttackOverrideEligibility?.kind ===
+        "clubOrQuarterstaff",
   );
 }
 

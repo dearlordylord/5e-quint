@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import {
   battleActDruidWildShapePresentation,
@@ -1077,7 +1078,7 @@ function battleSessionWithState(
   session: BattleRuntimeSession,
   state: BattleState,
 ): BattleRuntimeSession {
-  return { ...session, state };
+  return battleRuntimeSessionForTest({ ...session, state });
 }
 
 function moonbeamSaveSubject(

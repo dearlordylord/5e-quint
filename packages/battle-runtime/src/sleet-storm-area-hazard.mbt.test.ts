@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-sleet-storm-area-hazard
@@ -302,10 +303,10 @@ function initialRuntimeState(): SleetStormRuntimeState {
     spellSlots: [{ spellLevel: 3, count: 1 }],
   });
   return {
-    battle: {
+    battle: battleRuntimeSessionForTest({
       ...battle,
       state: stateWithTargetConcentration(battle.state),
-    },
+    }),
     currentTurnRole: "caster",
     holes: [],
     lastResult: "init",
@@ -359,7 +360,10 @@ function castSleetStorm(state: SleetStormRuntimeState): SleetStormRuntimeState {
   );
   return {
     ...state,
-    battle: { ...state.battle, state: result.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: result.state,
+    }),
     currentTurnRole: "caster",
     holes: [],
     lastResult: "resolved",
@@ -373,7 +377,10 @@ function endCasterTurn(state: SleetStormRuntimeState): SleetStormRuntimeState {
   );
   return {
     ...state,
-    battle: { ...state.battle, state: result.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: result.state,
+    }),
     currentTurnRole: "target",
     holes: [],
     lastResult: "resolved",
@@ -428,7 +435,10 @@ function fillSleetStormSave(
   );
   return {
     ...state,
-    battle: { ...state.battle, state: result.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: result.state,
+    }),
     holes: [],
     lastResult: succeeded ? "saved" : "prone",
   };
@@ -490,7 +500,10 @@ function moveWithDifficultTerrain(
   );
   return {
     ...state,
-    battle: { ...state.battle, state: result.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: result.state,
+    }),
     holes: [],
     lastResult: "moved",
   };
@@ -503,7 +516,10 @@ function endTargetTurn(state: SleetStormRuntimeState): SleetStormRuntimeState {
   );
   return {
     ...state,
-    battle: { ...state.battle, state: result.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: result.state,
+    }),
     currentTurnRole: "caster",
     holes: [],
     lastResult: "reset",

@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-spell-created-held-object
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE
@@ -160,10 +161,10 @@ function createSpellCreatedHeldObjectLifecycleDriver() {
       },
       doBreakConcentration: () => {
         state = {
-          battle: {
+          battle: battleRuntimeSessionForTest({
             ...state.battle,
             state: breakBattleConcentration(state.battle.state, spellCasterId),
-          },
+          }),
           lastResult: "concentrationCleaned",
         };
       },
@@ -247,10 +248,10 @@ describe("Spell-created held object lifecycle MBT parity", () => {
   it("cleans up held object state and light when Concentration ends or duration expires", () => {
     const cast = castHeldObject(initialRuntimeState());
     const broken: SpellCreatedHeldObjectRuntimeState = {
-      battle: {
+      battle: battleRuntimeSessionForTest({
         ...cast.battle,
         state: breakBattleConcentration(cast.battle.state, spellCasterId),
-      },
+      }),
       lastResult: "concentrationCleaned",
     };
     const expired = expireHeldObjectDuration(
@@ -321,7 +322,10 @@ function castHeldObject(
     "Expected Flame Blade cast to resolve.",
   );
   return {
-    battle: { ...state.battle, state: resolved.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: resolved.state,
+    }),
     lastResult: "castHeldObject",
   };
 }
@@ -368,7 +372,10 @@ function attackHeldObject(
     "Expected Flame Blade attack to resolve.",
   );
   return {
-    battle: { ...state.battle, state: resolved.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: resolved.state,
+    }),
     lastResult: "attackedHeldObject",
   };
 }
@@ -386,7 +393,10 @@ function releaseHeldObject(
     "Expected Flame Blade release to resolve.",
   );
   return {
-    battle: { ...state.battle, state: resolved.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: resolved.state,
+    }),
     lastResult: "releasedHeldObject",
   };
 }
@@ -419,7 +429,10 @@ function advanceToNextCasterTurn(
     "Expected target end turn to resolve.",
   );
   return {
-    battle: { ...state.battle, state: targetEnd.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: targetEnd.state,
+    }),
     lastResult: "nextCasterTurn",
   };
 }
@@ -437,7 +450,10 @@ function reEvokeHeldObject(
     "Expected Flame Blade re-evocation to resolve.",
   );
   return {
-    battle: { ...state.battle, state: resolved.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: resolved.state,
+    }),
     lastResult: "reEvokedHeldObject",
   };
 }
@@ -451,7 +467,7 @@ function expireHeldObjectDuration(
   );
   return {
     ...advanceToNextCasterTurn({
-      battle: { ...state.battle, state: expiring },
+      battle: battleRuntimeSessionForTest({ ...state.battle, state: expiring }),
       lastResult: state.lastResult,
     }),
     lastResult: "durationCleaned",

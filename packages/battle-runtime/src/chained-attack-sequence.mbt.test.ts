@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import {
   battleActSpellPresentation,
@@ -777,7 +778,9 @@ function chainedAttackAct(
   context: BattleRuntimeContext,
   slotLevel: ChainedSlotLevel,
 ): ChainedActionSpellAct {
-  const act = discoverBattleActs({ state, context }).find(
+  const act = discoverBattleActs(
+    battleRuntimeSessionForTest({ state, context }),
+  ).find(
     (candidate): candidate is ChainedActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
       battleActSpellPresentation(candidate)?.invocation.procedure ===

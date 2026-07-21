@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME feat_great_weapon_fighting
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME feat_great_weapon_fighting
 // UNIT-IDENTITY-REPLAY: L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME feat_great_weapon_fighting doReplayGreatWeaponFightingAttackDamageDieFloor
@@ -424,7 +425,7 @@ function withTargetSlashingResistance(
     damageType: "slashing",
     expiresAt: { kind: "duration", durationTicks: elapsedTimeTicks(10) },
   } as const satisfies BattleActiveEffect;
-  return {
+  return battleRuntimeSessionForTest({
     ...session,
     state: {
       ...session.state,
@@ -433,7 +434,7 @@ function withTargetSlashingResistance(
         activeEffects: [...target.activeEffects, resistance],
       }),
     },
-  };
+  });
 }
 
 defineSelectedIdentityReplayWitness({

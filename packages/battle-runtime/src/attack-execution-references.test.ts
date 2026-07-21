@@ -127,7 +127,9 @@ describe("character attack execution references", () => {
           ),
       ).toBe(true);
     }
-    expect(Number(first.executionScopeCursors.get(fighterId))).toBe(2);
+    expect(
+      Number(first.executionScopeCursors.get(fighterId)?.nextScopeOrdinal),
+    ).toBe(2);
   });
 
   test("keeps presentation names outside the reducer protocol", () => {

@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
   battleActSpellPresentation,
   battleActSpellSlotPresentation,
@@ -147,10 +148,12 @@ describe("SRDINV49 deterministic Expeditious Retreat admission", () => {
     if (nextCasterTurn.tag !== "resolved") {
       throw new Error("Expected Expeditious Retreat target end turn.");
     }
-    const laterDashAct = discoverBattleActs({
-      state: nextCasterTurn.state,
-      context: session.context,
-    }).find(
+    const laterDashAct = discoverBattleActs(
+      battleRuntimeSessionForTest({
+        state: nextCasterTurn.state,
+        context: session.context,
+      }),
+    ).find(
       (candidate) =>
         candidate.subject.tag === "bonusActionStandardAction" &&
         battleActSpellPresentation(candidate)?.invocation.spellId ===
@@ -218,10 +221,12 @@ describe("SRDINV49 deterministic Expeditious Retreat admission", () => {
       throw new Error("Expected broken Expeditious Retreat target end turn.");
     }
     expect(
-      discoverBattleActs({
-        state: afterBrokenCasterTurn.state,
-        context: session.context,
-      }),
+      discoverBattleActs(
+        battleRuntimeSessionForTest({
+          state: afterBrokenCasterTurn.state,
+          context: session.context,
+        }),
+      ),
     ).not.toEqual(
       expect.arrayContaining([
         expect.objectContaining({

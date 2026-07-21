@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import {
   battleProcedureExecutionRefForTest,
@@ -473,7 +474,10 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
           ],
         }),
       ).state;
-      return { state: resolvedState, context: session.context };
+      return battleRuntimeSessionForTest({
+        state: resolvedState,
+        context: session.context,
+      });
     };
 
     const firstSpell = castRayOfSickness(poisoned, wizardId);
@@ -481,7 +485,10 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
       endTurn({ state: firstSpell.state, actorId: wizardId }),
     ).state;
     const secondSpell = castRayOfSickness(
-      { state: secondWizardTurn, context: firstSpell.context },
+      battleRuntimeSessionForTest({
+        state: secondWizardTurn,
+        context: firstSpell.context,
+      }),
       secondWizardId,
     );
     const skeletonTurn = requireResolved(

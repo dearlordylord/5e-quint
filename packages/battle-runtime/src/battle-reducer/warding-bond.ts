@@ -117,6 +117,7 @@ export function wardingBondSavingThrowFlatBonusProjectionsForTarget(
     : [
         {
           targetId: target.combatantId,
+          sourceCombatantId: effect.sourceCombatantId,
           sourceProcedureRef: effect.sourceProcedureRef,
           bonus: WARDING_BOND_SAVING_THROW_BONUS,
         },

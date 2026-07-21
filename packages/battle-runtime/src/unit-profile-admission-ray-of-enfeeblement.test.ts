@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-D20-LIFECYCLE ray_of_enfeeblement
@@ -359,10 +360,12 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
     const targetTurn = endTurn({ state: cast.state, actorId: spellCasterId });
     expect(targetTurn.tag).toBe("resolved");
     if (targetTurn.tag !== "resolved") return;
-    const attackAct = discoverBattleActs({
-      state: targetTurn.state,
-      context: baseSession.context,
-    }).find(
+    const attackAct = discoverBattleActs(
+      battleRuntimeSessionForTest({
+        state: targetTurn.state,
+        context: baseSession.context,
+      }),
+    ).find(
       (candidate) =>
         candidate.subject.tag === "action" &&
         candidate.subject.action === "attack" &&
@@ -519,10 +522,12 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
     });
     expect(targetTurn.tag).toBe("resolved");
     if (targetTurn.tag !== "resolved") return;
-    const attackAct = discoverBattleActs({
-      state: targetTurn.state,
-      context: baseSession.context,
-    }).find(
+    const attackAct = discoverBattleActs(
+      battleRuntimeSessionForTest({
+        state: targetTurn.state,
+        context: baseSession.context,
+      }),
+    ).find(
       (candidate) =>
         candidate.subject.tag === "action" &&
         candidate.subject.action === "attack" &&
@@ -683,7 +688,10 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
     ).toBe(true);
 
     const act = spellAct({
-      session: { state: targetTurn.state, context: baseSession.context },
+      session: battleRuntimeSessionForTest({
+        state: targetTurn.state,
+        context: baseSession.context,
+      }),
       spellId: "scorching_ray",
       slotLevel: 2,
     });
@@ -772,7 +780,10 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
     if (targetTurn.tag !== "resolved") return;
 
     const act = spellAct({
-      session: { state: targetTurn.state, context: baseSession.context },
+      session: battleRuntimeSessionForTest({
+        state: targetTurn.state,
+        context: baseSession.context,
+      }),
       spellId: "burning_hands",
       slotLevel: 2,
     });
@@ -813,7 +824,10 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
       damageRoll.holeId,
     );
     const noDamageAct = spellAct({
-      session: { state: targetTurn.state, context: baseSession.context },
+      session: battleRuntimeSessionForTest({
+        state: targetTurn.state,
+        context: baseSession.context,
+      }),
       spellId: "sacred_flame",
     });
     expect(noDamageAct.subject.actorId).toBe(spellTargetId);
@@ -930,7 +944,10 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
     if (targetTurn.tag !== "resolved") return;
 
     const act = spellAct({
-      session: { state: targetTurn.state, context: baseSession.context },
+      session: battleRuntimeSessionForTest({
+        state: targetTurn.state,
+        context: baseSession.context,
+      }),
       spellId: "burning_hands",
       slotLevel: 2,
     });
@@ -1068,7 +1085,10 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
     if (targetTurn.tag !== "resolved") return;
 
     const act = spellAct({
-      session: { state: targetTurn.state, context: baseSession.context },
+      session: battleRuntimeSessionForTest({
+        state: targetTurn.state,
+        context: baseSession.context,
+      }),
       spellId: "starry_wisp",
     });
     expect(act.subject.actorId).toBe(spellTargetId);
@@ -1177,7 +1197,10 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
     if (targetTurn.tag !== "resolved") return;
 
     const act = spellAct({
-      session: { state: targetTurn.state, context: baseSession.context },
+      session: battleRuntimeSessionForTest({
+        state: targetTurn.state,
+        context: baseSession.context,
+      }),
       spellId: "starry_wisp",
     });
     expect(act.subject.actorId).toBe(spellTargetId);
@@ -1280,7 +1303,10 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
     if (targetTurn.tag !== "resolved") return;
 
     const act = spellAct({
-      session: { state: targetTurn.state, context: baseSession.context },
+      session: battleRuntimeSessionForTest({
+        state: targetTurn.state,
+        context: baseSession.context,
+      }),
       spellId: "shatter",
       slotLevel: 2,
     });
@@ -1414,7 +1440,10 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
     if (targetTurn.tag !== "resolved") return;
 
     const act = spellAct({
-      session: { state: targetTurn.state, context: baseSession.context },
+      session: battleRuntimeSessionForTest({
+        state: targetTurn.state,
+        context: baseSession.context,
+      }),
       spellId: heatMetalUnitId,
       slotLevel: 2,
     });

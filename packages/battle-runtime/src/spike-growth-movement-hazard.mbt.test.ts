@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-spike-growth-movement-hazard
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD
@@ -273,7 +274,10 @@ function castSpikeGrowth(
   state: SpikeGrowthRuntimeState,
 ): SpikeGrowthRuntimeState {
   const act = spellAct({
-    session: { state: state.battle, context: state.context },
+    session: battleRuntimeSessionForTest({
+      state: state.battle,
+      context: state.context,
+    }),
     spellId: spikeGrowthUnitId,
     slotLevel: 2,
   });
@@ -450,7 +454,10 @@ function spikeGrowthProjection(
     actionAvailable: canSpendAction(state.battle.currentTurnResources, "magic"),
     spellAvailable:
       maybeSpellAct({
-        session: { state: state.battle, context: state.context },
+        session: battleRuntimeSessionForTest({
+          state: state.battle,
+          context: state.context,
+        }),
         spellId: spikeGrowthUnitId,
         slotLevel: 2,
       }) !== undefined,

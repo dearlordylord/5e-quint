@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L19E-02-L5-SAVE-CONDITION-CONTROL dispel_evil_and_good
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.creature-type-protection-and-charm
 
@@ -91,7 +92,10 @@ describe("L19E-02 Dispel Evil and Good creature-type protection subset", () => {
       throw new Error("Expected to advance to undead attacker turn.");
     }
     const undeadAttack = statBlockAttackAct(
-      { state: undeadTurn.state, context: state.context },
+      battleRuntimeSessionForTest({
+        state: undeadTurn.state,
+        context: state.context,
+      }),
       undeadId,
       "Scimitar",
     );
@@ -124,7 +128,10 @@ describe("L19E-02 Dispel Evil and Good creature-type protection subset", () => {
       throw new Error("Expected to advance to aberration attacker turn.");
     }
     const aberrationAttack = statBlockAttackAct(
-      { state: aberrationTurn.state, context: state.context },
+      battleRuntimeSessionForTest({
+        state: aberrationTurn.state,
+        context: state.context,
+      }),
       aberrationId,
       "Scimitar",
     );

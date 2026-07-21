@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import {
@@ -326,7 +327,7 @@ function replayWebRestraintHazardRoute(): readonly BattleReducerRouteEvent[] {
     throw new Error("Expected Web caster End Turn to resolve.");
   }
   const saveAct = webRestraintSaveAct(
-    { ...cast.session, state: targetTurn.state },
+    battleRuntimeSessionForTest({ ...cast.session, state: targetTurn.state }),
     spellTargetId,
     "entersArea",
   );

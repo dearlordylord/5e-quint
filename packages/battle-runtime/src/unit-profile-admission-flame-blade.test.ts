@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV95 flame_blade
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-spell-created-held-object
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE
@@ -263,7 +264,7 @@ describe("SRDINV95 deterministic Flame Blade admission", () => {
     );
     const hidden = withHiddenCaster(cast.state);
     const attackAct = spellAct({
-      session: { ...cast, state: hidden },
+      session: battleRuntimeSessionForTest({ ...cast, state: hidden }),
       spellId: flameBladeUnitId,
     });
     const targetFill = spellTargetFill(
@@ -385,7 +386,10 @@ describe("SRDINV95 deterministic Flame Blade admission", () => {
     }
     expect(
       maybeSpellAct({
-        session: { ...state, state: released.state },
+        session: battleRuntimeSessionForTest({
+          ...state,
+          state: released.state,
+        }),
         spellId: flameBladeUnitId,
       }),
     ).toBeUndefined();
@@ -406,7 +410,7 @@ describe("SRDINV95 deterministic Flame Blade admission", () => {
 
     const nextCasterTurn = advanceToNextCasterTurn(released.state);
     const reEvokeAct = bonusSpellAct({
-      session: { ...state, state: nextCasterTurn },
+      session: battleRuntimeSessionForTest({ ...state, state: nextCasterTurn }),
       spellId: flameBladeUnitId,
     });
     expect({
@@ -416,7 +420,7 @@ describe("SRDINV95 deterministic Flame Blade admission", () => {
       tag: "bonusActionSpell",
       actorId: spellCasterId,
       procedureRef: requireCharacterSpellProcedureRefForTest(
-        { ...state, state: nextCasterTurn },
+        battleRuntimeSessionForTest({ ...state, state: nextCasterTurn }),
         spellCasterId,
         {
           tag: "spellEffect",
@@ -481,7 +485,7 @@ describe("SRDINV95 deterministic Flame Blade admission", () => {
 
     expect(
       maybeSpellAct({
-        session: { ...state, state: noFreeHand },
+        session: battleRuntimeSessionForTest({ ...state, state: noFreeHand }),
         spellId: flameBladeUnitId,
       }),
     ).toBeUndefined();
@@ -681,7 +685,7 @@ function castFlameBlade(session: BattleRuntimeSession) {
   if (result.tag !== "resolved") {
     throw new Error("Expected Flame Blade cast to resolve.");
   }
-  return { ...result, context: session.context };
+  return battleRuntimeSessionForTest({ ...result, context: session.context });
 }
 
 function releaseFlameBladeAct(state: BattleState) {

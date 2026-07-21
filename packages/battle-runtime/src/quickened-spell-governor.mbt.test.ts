@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
@@ -514,7 +515,7 @@ describe("Quickened Spell governor MBT parity", () => {
     ).toEqual(quickenedResourceGovernorRoute());
 
     const priorLevelOnePlusBase = initialRuntimeState().battle;
-    const priorLevelOnePlusState = {
+    const priorLevelOnePlusState = battleRuntimeSessionForTest({
       ...priorLevelOnePlusBase,
       state: {
         ...priorLevelOnePlusBase.state,
@@ -523,7 +524,7 @@ describe("Quickened Spell governor MBT parity", () => {
           levelOnePlusSpellCastsThisTurn: [wizardId],
         },
       },
-    };
+    });
     expect(
       invalidQuickenedRoute({
         session: priorLevelOnePlusState,
@@ -650,7 +651,10 @@ function resolveQuickenedRestoration(
     }),
   );
   return {
-    battle: { ...state.battle, state: resolved.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: resolved.state,
+    }),
     invalidKind: "none",
     lastResult: "resolvedQuickenedRestoration",
   };
@@ -673,7 +677,10 @@ function resolveQuickenedSaveGatedCondition(
     }),
   );
   return {
-    battle: { ...state.battle, state: resolved.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: resolved.state,
+    }),
     invalidKind: "none",
     lastResult: "resolvedQuickenedSaveGatedCondition",
   };
@@ -696,7 +703,10 @@ function resolveQuickenedSaveGatedConditionImmunity(
     }),
   );
   return {
-    battle: { ...state.battle, state: resolved.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: resolved.state,
+    }),
     invalidKind: "none",
     lastResult: "resolvedQuickenedSaveGatedConditionImmunity",
   };
@@ -715,7 +725,10 @@ function resolveQuickenedDirectCondition(
     }),
   );
   return {
-    battle: { ...state.battle, state: resolved.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: resolved.state,
+    }),
     invalidKind: "none",
     lastResult: "resolvedQuickenedDirectCondition",
   };
@@ -734,7 +747,10 @@ function resolveQuickenedRollModifier(
     }),
   );
   return {
-    battle: { ...state.battle, state: resolved.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: resolved.state,
+    }),
     invalidKind: "none",
     lastResult: "resolvedQuickenedRollModifier",
   };
@@ -838,7 +854,7 @@ function rejectOnePerSpell(): QuickenedSpellGovernorRuntimeState {
 function rejectPriorLevelOnePlusSpell(): QuickenedSpellGovernorRuntimeState {
   const base = initialRuntimeState();
   const state: QuickenedSpellGovernorRuntimeState = {
-    battle: {
+    battle: battleRuntimeSessionForTest({
       ...base.battle,
       state: {
         ...base.battle.state,
@@ -847,7 +863,7 @@ function rejectPriorLevelOnePlusSpell(): QuickenedSpellGovernorRuntimeState {
           levelOnePlusSpellCastsThisTurn: [wizardId],
         },
       },
-    },
+    }),
     invalidKind: "none",
     lastResult: "init",
   };
@@ -1217,7 +1233,10 @@ function magicActionSpent(state: BattleState): BattleState {
 function withMagicActionSpent(
   session: BattleRuntimeSession,
 ): BattleRuntimeSession {
-  return { ...session, state: magicActionSpent(session.state) };
+  return battleRuntimeSessionForTest({
+    ...session,
+    state: magicActionSpent(session.state),
+  });
 }
 
 function quickenedMetamagicOption(): MetamagicOptionFixture {

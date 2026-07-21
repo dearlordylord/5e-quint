@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-SPIRITUAL-WEAPON-PERSISTENT-ATTACK-RUNTIME spiritual_weapon
@@ -855,10 +856,12 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     };
 
     expect(
-      discoverBattleActs({
-        state: sameTurnWithBonusAction,
-        context: session.context,
-      }).some(
+      discoverBattleActs(
+        battleRuntimeSessionForTest({
+          state: sameTurnWithBonusAction,
+          context: session.context,
+        }),
+      ).some(
         (candidate) =>
           candidate.subject.tag === "bonusActionSpell" &&
           battleActSpellPresentation(candidate)?.invocation.spellId ===
@@ -932,10 +935,12 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
       throw new Error("Expected target End Turn to resolve.");
     }
 
-    const repeatAct = discoverBattleActs({
-      state: casterTurn.state,
-      context: session.context,
-    }).find(
+    const repeatAct = discoverBattleActs(
+      battleRuntimeSessionForTest({
+        state: casterTurn.state,
+        context: session.context,
+      }),
+    ).find(
       (candidate) =>
         candidate.subject.tag === "bonusActionSpell" &&
         battleActSpellPresentation(candidate)?.invocation.spellId ===
@@ -1105,10 +1110,12 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
       },
     };
 
-    const repeatAct = discoverBattleActs({
-      state: afterPriorSlotSpell,
-      context: session.context,
-    }).find(
+    const repeatAct = discoverBattleActs(
+      battleRuntimeSessionForTest({
+        state: afterPriorSlotSpell,
+        context: session.context,
+      }),
+    ).find(
       (candidate) =>
         candidate.subject.tag === "bonusActionSpell" &&
         battleActSpellPresentation(candidate)?.invocation.spellId ===
@@ -1253,10 +1260,12 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
       throw new Error("Expected target End Turn to resolve.");
     }
 
-    const repeatAct = discoverBattleActs({
-      state: casterTurn.state,
-      context: session.context,
-    }).find(
+    const repeatAct = discoverBattleActs(
+      battleRuntimeSessionForTest({
+        state: casterTurn.state,
+        context: session.context,
+      }),
+    ).find(
       (candidate) =>
         candidate.subject.tag === "bonusActionSpell" &&
         battleActSpellPresentation(candidate)?.invocation.spellId ===
@@ -1410,10 +1419,12 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     }
     const warded = withSanctuaryWard(casterTurn.state, spellTargetId);
 
-    const repeatAct = discoverBattleActs({
-      state: warded,
-      context: session.context,
-    }).find(
+    const repeatAct = discoverBattleActs(
+      battleRuntimeSessionForTest({
+        state: warded,
+        context: session.context,
+      }),
+    ).find(
       (candidate) =>
         candidate.subject.tag === "bonusActionSpell" &&
         battleActSpellPresentation(candidate)?.invocation.spellId ===
@@ -1551,7 +1562,10 @@ function requireTriggeredReactionSpellChoice(input: {
       )
         return false;
       const invocation = characterSpellInvocationRefForProcedureRefForTest(
-        { ...input.session, state: input.result.state },
+        battleRuntimeSessionForTest({
+          ...input.session,
+          state: input.result.state,
+        }),
         candidate.reactorId,
         candidate.subject.procedureRef,
       );

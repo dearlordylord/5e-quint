@@ -6,8 +6,8 @@ import {
   type BattleInterruptProcedureChoice,
   type BattleObjectDamageDisposition,
   type BattleObjectId,
-  type BattleResolutionResult,
   type BattleRuntimeContext,
+  type BattleRuntimeResolutionResult,
   type BattleRuntimeSession,
   type BattleSubject,
   battleSubjectPresentation,
@@ -51,8 +51,7 @@ export function requireActionSpellAct(
 }
 
 export function requireCounterspellChoice(
-  context: BattleRuntimeContext,
-  result: Extract<BattleResolutionResult, { readonly tag: "needsHoles" }>,
+  result: Extract<BattleRuntimeResolutionResult, { readonly tag: "needsHoles" }>,
   input: {
     readonly reactorId: CombatantId
     readonly slotLevel: number
@@ -64,7 +63,7 @@ export function requireCounterspellChoice(
       if (candidate.kind !== "castTriggeredReactionSpell" || candidate.reactorId !== input.reactorId) {
         return false
       }
-      const presentation = battleSubjectPresentation({ state: result.state, context }, candidate.subject)
+      const presentation = battleSubjectPresentation(result.session, candidate.subject)
       return (
         presentation?.kind === "spell" &&
         presentation.invocation.tag === "spellSlot" &&
@@ -247,9 +246,9 @@ export function deathSavingThrowFill(
 }
 
 export function requireNeedsReaction(
-  result: BattleResolutionResult,
+  result: BattleRuntimeResolutionResult,
   message: string
-): asserts result is Extract<BattleResolutionResult, { readonly tag: "needsHoles" }> {
+): asserts result is Extract<BattleRuntimeResolutionResult, { readonly tag: "needsHoles" }> {
   requireNeedsHoles(result, message)
   if (result.snapshot.pendingInterrupt?.trigger !== "spellCast") {
     throw new Error(message)
@@ -257,16 +256,16 @@ export function requireNeedsReaction(
 }
 
 export function requireNeedsHoles(
-  result: BattleResolutionResult,
+  result: BattleRuntimeResolutionResult,
   message: string
-): asserts result is Extract<BattleResolutionResult, { readonly tag: "needsHoles" }> {
+): asserts result is Extract<BattleRuntimeResolutionResult, { readonly tag: "needsHoles" }> {
   if (result.tag !== "needsHoles") {
     throw new Error(message)
   }
 }
 
 export function requireResultHole<K extends BattleHole["kind"]>(
-  result: BattleResolutionResult,
+  result: BattleRuntimeResolutionResult,
   kind: K
 ): Extract<BattleHole, { readonly kind: K }> {
   requireNeedsHoles(result, `Expected ${kind} hole.`)

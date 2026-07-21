@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { describe, expect, test } from "vitest";
 import { battleActUnitPresentation } from "./battle-act-composition.ts";
 import {
@@ -503,16 +504,18 @@ describe("battle runtime: Bardic Inspiration", () => {
     ).state;
 
     expect(
-      discoverBattleActs({
-        ...state,
-        state: {
-          ...granted,
-          currentTurnResources: {
-            ...granted.currentTurnResources,
-            currentHasBonusAction: true,
+      discoverBattleActs(
+        battleRuntimeSessionForTest({
+          ...state,
+          state: {
+            ...granted,
+            currentTurnResources: {
+              ...granted.currentTurnResources,
+              currentHasBonusAction: true,
+            },
           },
-        },
-      }).some(
+        }),
+      ).some(
         (act) =>
           act.subject.tag === "unitFeature" &&
           subject.tag === "unitFeature" &&

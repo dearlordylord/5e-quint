@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
   startBattleSessionRight,
   testBattleCreatureStateWithConditions,
@@ -190,7 +191,10 @@ describe("battle runtime: Starry Wisp", () => {
         ),
       ),
     };
-    const invisibleSession = { state: invisibleState, context: state.context };
+    const invisibleSession = battleRuntimeSessionForTest({
+      state: invisibleState,
+      context: state.context,
+    });
     const subject = findAct(
       invisibleSession,
       magicSubject("starry_wisp"),

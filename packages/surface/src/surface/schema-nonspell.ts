@@ -106,8 +106,9 @@ const PositiveIntegerSchema = Schema.Number.pipe(
   Schema.greaterThanOrEqualTo(1),
 );
 
-const AbilityScoreIncreasePositiveIntegerSchema =
-  PositiveIntegerSchema.pipe(Schema.brand("PositiveInteger"));
+const AbilityScoreIncreasePositiveIntegerSchema = PositiveIntegerSchema.pipe(
+  Schema.brand("PositiveInteger"),
+);
 
 const FONT_OF_MAGIC_CREATED_SPELL_SLOT_LEVELS = [
   1, 2, 3, 4, 5,
@@ -4280,6 +4281,9 @@ export const WeaponTemplateRecordSchema = Schema.Struct({
 export const WeaponRecordSchema = Schema.Struct({
   ...UnitMetadataSchema.fields,
   kind: Schema.Literal("weapon"),
+  attachedWeaponAttackOverrideEligibility: exactOptional(
+    Schema.Struct({ kind: Schema.Literal("clubOrQuarterstaff") }),
+  ),
   category: WeaponCategorySchema,
   usage: WeaponUsageSchema,
   damage: WeaponDamageSchema,

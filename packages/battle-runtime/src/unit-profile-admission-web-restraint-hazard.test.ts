@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import {
   battleActiveEffectExecutionRefForTest,
@@ -67,7 +68,10 @@ function castWeb(
   if (cast.tag !== "resolved") {
     throw new Error("Expected Web cast to resolve.");
   }
-  const castSession = { ...session, state: cast.state };
+  const castSession = battleRuntimeSessionForTest({
+    ...session,
+    state: cast.state,
+  });
   const targetTurn = endTurn({
     state: castSession.state,
     actorId: spellCasterId,
@@ -78,7 +82,10 @@ function castWeb(
   return {
     spell,
     cast: castSession,
-    targetTurn: { ...castSession, state: targetTurn.state },
+    targetTurn: battleRuntimeSessionForTest({
+      ...castSession,
+      state: targetTurn.state,
+    }),
   };
 }
 
@@ -96,7 +103,7 @@ function failedWebEntrySession() {
   if (failed.tag !== "resolved") {
     throw new Error("Expected Web entry save to resolve.");
   }
-  return { ...targetTurn, state: failed.state };
+  return battleRuntimeSessionForTest({ ...targetTurn, state: failed.state });
 }
 
 describe("L12G deterministic Web restraint-hazard admission", () => {
@@ -371,7 +378,10 @@ describe("L12G deterministic Web restraint-hazard admission", () => {
     if (restrained.tag !== "resolved") {
       throw new Error("Expected Web start-turn save to resolve.");
     }
-    const restrainedSession = { ...targetTurn, state: restrained.state };
+    const restrainedSession = battleRuntimeSessionForTest({
+      ...targetTurn,
+      state: restrained.state,
+    });
     expect(
       requireCombatant(restrained.state, spellCasterId).activeEffects,
     ).toEqual([
@@ -451,7 +461,10 @@ describe("L12G deterministic Web restraint-hazard admission", () => {
     if (restrained.tag !== "resolved") {
       throw new Error("Expected Web start-turn save to resolve.");
     }
-    const restrainedSession = { ...targetTurn, state: restrained.state };
+    const restrainedSession = battleRuntimeSessionForTest({
+      ...targetTurn,
+      state: restrained.state,
+    });
     const helperTurn = endTurn({
       state: restrainedSession.state,
       actorId: spellTargetId,
@@ -459,7 +472,10 @@ describe("L12G deterministic Web restraint-hazard admission", () => {
     if (helperTurn.tag !== "resolved") {
       throw new Error("Expected Web helper turn to start.");
     }
-    const helperTurnSession = { ...restrainedSession, state: helperTurn.state };
+    const helperTurnSession = battleRuntimeSessionForTest({
+      ...restrainedSession,
+      state: helperTurn.state,
+    });
 
     expect(
       discoverBattleActs(helperTurnSession).some(

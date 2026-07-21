@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-dragons-breath-initial
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE
@@ -302,7 +303,10 @@ function castDragonsBreath(
     "Expected Dragon's Breath cast to resolve.",
   );
   return {
-    battle: { ...state.battle, state: result.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: result.state,
+    }),
     turnRole: "caster",
     lastResult: "cast",
   };
@@ -316,7 +320,10 @@ function endCasterTurn(
     "Expected Dragon's Breath caster End Turn to resolve.",
   );
   return {
-    battle: { ...state.battle, state: result.state },
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: result.state,
+    }),
     turnRole: "target",
     lastResult: "targetTurn",
   };
@@ -327,10 +334,10 @@ function breakDragonsBreathConcentration(
 ): DragonsBreathInitialRuntimeState {
   return {
     ...state,
-    battle: {
+    battle: battleRuntimeSessionForTest({
       ...state.battle,
       state: breakBattleConcentration(state.battle.state, spellCasterId),
-    },
+    }),
     lastResult: "concentrationBroken",
   };
 }

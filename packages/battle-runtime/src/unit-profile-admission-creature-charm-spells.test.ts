@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30C animal_friendship
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV37 charm_person
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.creature-type-protection-and-charm
@@ -218,7 +219,10 @@ describe("SRDINV30C deterministic creature charm Spell Unit admission", () => {
     }
 
     const damageAct = spellAct({
-      session: { state: casterTurn.state, context: state.context },
+      session: battleRuntimeSessionForTest({
+        state: casterTurn.state,
+        context: state.context,
+      }),
       spellId: sacredFlameUnitId,
     });
     const damageTarget = requireHole(damageAct.initialHoles, "targetChoice");
@@ -675,7 +679,10 @@ describe("SRDINV30C deterministic creature charm Spell Unit admission", () => {
     }
 
     const damageAct = spellAct({
-      session: { state: afterTargetTurn.state, context: state.context },
+      session: battleRuntimeSessionForTest({
+        state: afterTargetTurn.state,
+        context: state.context,
+      }),
       spellId: sacredFlameUnitId,
     });
     const damageTarget = requireHole(damageAct.initialHoles, "targetChoice");

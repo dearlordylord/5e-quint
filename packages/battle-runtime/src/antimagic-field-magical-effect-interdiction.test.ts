@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
   battleProcedureExecutionRefForTest,
   characterBattleFeatureInitForTest,
@@ -270,7 +271,10 @@ describe("Antimagic Field magical-effect interdiction", () => {
       throw new Error("Expected Heat Metal target End Turn to resolve.");
     }
     const session = activeAntimagicAuraSession(
-      { ...initialSession, state: casterTurn.state },
+      battleRuntimeSessionForTest({
+        ...initialSession,
+        state: casterTurn.state,
+      }),
       auraMembership({
         sourceCombatantId: spellTargetId,
         originIncluded: true,
@@ -356,10 +360,10 @@ function activeAntimagicAuraSession(
     ...source,
     activeEffects: [...source.activeEffects, antimagicFieldAuraEffect(aura)],
   });
-  return {
+  return battleRuntimeSessionForTest({
     ...session,
     state: { ...session.state, combatants },
-  };
+  });
 }
 
 function antimagicFieldAuraEffect(

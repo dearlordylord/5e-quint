@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV58C faerie_fire
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-attack-roll-advantage-save
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
@@ -306,7 +307,10 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
       throw new Error("Expected Faerie Fire target end turn to resolve.");
     }
     const recast = spellAct({
-      session: { ...state, state: afterTargetTurn.state },
+      session: battleRuntimeSessionForTest({
+        ...state,
+        state: afterTargetTurn.state,
+      }),
       spellId: faerieFireUnitId,
     });
     const recastSavingThrows = requireHole(
@@ -472,7 +476,10 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
       throw new Error("Expected Faerie Fire target end turn to resolve.");
     }
     const attackAct = spellAct({
-      session: { ...state, state: afterTargetTurn.state },
+      session: battleRuntimeSessionForTest({
+        ...state,
+        state: afterTargetTurn.state,
+      }),
       spellId: starryWispUnitId,
     });
     const objectTarget = requireHole(

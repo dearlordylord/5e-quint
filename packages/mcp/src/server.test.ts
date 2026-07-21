@@ -20,6 +20,7 @@ import {
   type BattleRuntimeSession,
   type BattleState,
 } from "@dnd/battle-runtime";
+import { battleRuntimeSessionForTest } from "@dnd/battle-runtime/test-support";
 import {
   characterDraftId,
   characterBuildHitPoints,
@@ -327,7 +328,10 @@ describe("MCP server route", () => {
       unitLibrary: root.unitLibrary,
     });
 
-    root.sessionStore.battleSession = { state, context };
+    root.sessionStore.battleSession = battleRuntimeSessionForTest({
+      state,
+      context,
+    });
     root.sessionStore.pendingBattleFills = null;
 
     expect(snapshotBattle(state)).toMatchObject({
@@ -357,7 +361,9 @@ describe("MCP server route", () => {
     });
     expect(root.sessionStore.snapshot().transientBattleFills).toBeNull();
     expect(
-      discoverBattleActs({ state, context }).map((act) => act.summary),
+      discoverBattleActs(battleRuntimeSessionForTest({ state, context })).map(
+        (act) => act.summary,
+      ),
     ).toEqual(
       expect.arrayContaining([
         "Take the Attack action with Longsword.",
@@ -471,7 +477,9 @@ describe("MCP server route", () => {
       },
     });
     expect(
-      discoverBattleActs({ state, context }).map((act) => act.summary),
+      discoverBattleActs(battleRuntimeSessionForTest({ state, context })).map(
+        (act) => act.summary,
+      ),
     ).toContain("Take the Attack action with Unarmed Strike.");
   });
 
@@ -921,7 +929,9 @@ describe("MCP server route", () => {
       unitLibrary: root.unitLibrary,
     });
 
-    expect(discoverBattleActs({ state, context })).toEqual(
+    expect(
+      discoverBattleActs(battleRuntimeSessionForTest({ state, context })),
+    ).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           presentation: expect.objectContaining({
@@ -962,9 +972,9 @@ describe("MCP server route", () => {
     );
 
     expect(
-      discoverBattleActs({ state: goblinTurn, context }).map(
-        (act) => act.subject,
-      ),
+      discoverBattleActs(
+        battleRuntimeSessionForTest({ state: goblinTurn, context }),
+      ).map((act) => act.subject),
     ).toEqual(
       expect.arrayContaining([
         {
@@ -1006,7 +1016,9 @@ describe("MCP server route", () => {
     });
 
     expect(
-      discoverBattleActs({ state, context }).map((act) => act.summary),
+      discoverBattleActs(battleRuntimeSessionForTest({ state, context })).map(
+        (act) => act.summary,
+      ),
     ).not.toContain("Make the Light property Bonus Action attack with Dagger.");
   });
 
@@ -2101,10 +2113,10 @@ describe("MCP server route", () => {
       combatantId: allyId,
       displayName: "Sneak Attack Ally",
     });
-    root.sessionStore.battleSession = {
+    root.sessionStore.battleSession = battleRuntimeSessionForTest({
       ...battleState,
       state: { ...battleState.state, combatants },
-    };
+    });
     root.sessionStore.pendingBattleFills = null;
 
     const afterTarget = fillBattleHoleThroughTool(root, "fighter", "Dagger", {
@@ -3798,7 +3810,7 @@ describe("MCP server route", () => {
     ) {
       throw new Error("Expected in-battle Fighter character combatant.");
     }
-    root.sessionStore.battleSession = {
+    root.sessionStore.battleSession = battleRuntimeSessionForTest({
       ...battleState,
       state: {
         ...battleState.state,
@@ -3818,7 +3830,7 @@ describe("MCP server route", () => {
           },
         }),
       },
-    } satisfies BattleRuntimeSession;
+    });
 
     const ended = readPayload(handleToolCall(root, "end_battle", {}));
 
@@ -3896,7 +3908,7 @@ describe("MCP server route", () => {
     if (battleState === null || fighter === undefined) {
       throw new Error("Expected in-battle Fighter character combatant.");
     }
-    root.sessionStore.battleSession = {
+    root.sessionStore.battleSession = battleRuntimeSessionForTest({
       ...battleState,
       state: {
         ...battleState.state,
@@ -3908,7 +3920,7 @@ describe("MCP server route", () => {
           }),
         ),
       },
-    } satisfies BattleRuntimeSession;
+    });
 
     readPayload(handleToolCall(root, "end_turn", { actorId: "fighter" }));
     const goblinScimitar = battleAttackSubjectForName(
@@ -4024,7 +4036,7 @@ describe("MCP server route", () => {
     if (battleState === null || fighter === undefined) {
       throw new Error("Expected in-battle Fighter character combatant.");
     }
-    root.sessionStore.battleSession = {
+    root.sessionStore.battleSession = battleRuntimeSessionForTest({
       ...battleState,
       state: {
         ...battleState.state,
@@ -4036,7 +4048,7 @@ describe("MCP server route", () => {
           }),
         ),
       },
-    } satisfies BattleRuntimeSession;
+    });
 
     readPayload(handleToolCall(root, "end_battle", {}));
 
@@ -4342,7 +4354,7 @@ describe("MCP server route", () => {
     ) {
       throw new Error("Expected in-battle Fighter character combatant.");
     }
-    root.sessionStore.battleSession = {
+    root.sessionStore.battleSession = battleRuntimeSessionForTest({
       ...battleState,
       state: {
         ...battleState.state,
@@ -4362,7 +4374,7 @@ describe("MCP server route", () => {
           },
         }),
       },
-    } satisfies BattleRuntimeSession;
+    });
 
     readPayload(handleToolCall(root, "end_battle", {}));
 
@@ -4687,7 +4699,9 @@ describe("MCP server route", () => {
       spellSlots: [{ spellLevel: 1, count: 2, expended: 1 }],
     });
     expect(
-      discoverBattleActs({ state, context }).map((act) => act.subject),
+      discoverBattleActs(battleRuntimeSessionForTest({ state, context })).map(
+        (act) => act.subject,
+      ),
     ).not.toContainEqual(expect.objectContaining({ tag: "actionSpell" }));
   });
 
@@ -4737,7 +4751,9 @@ describe("MCP server route", () => {
       canCastSpells: true,
     });
     expect(
-      discoverBattleActs({ state, context }).map((act) => act.subject),
+      discoverBattleActs(battleRuntimeSessionForTest({ state, context })).map(
+        (act) => act.subject,
+      ),
     ).toContainEqual(expect.objectContaining({ tag: "actionSpell" }));
   });
 
@@ -4779,7 +4795,10 @@ describe("MCP server route", () => {
       },
       unitLibrary: root.unitLibrary,
     });
-    root.sessionStore.battleSession = { state, context };
+    root.sessionStore.battleSession = battleRuntimeSessionForTest({
+      state,
+      context,
+    });
     root.sessionStore.pendingBattleFills = null;
 
     const discovered = readPayload(
@@ -4907,7 +4926,10 @@ describe("MCP server route", () => {
       },
       unitLibrary: root.unitLibrary,
     });
-    root.sessionStore.battleSession = { state, context };
+    root.sessionStore.battleSession = battleRuntimeSessionForTest({
+      state,
+      context,
+    });
     root.sessionStore.pendingBattleFills = null;
 
     const discovered = readPayload(
@@ -5091,7 +5113,10 @@ describe("MCP server route", () => {
       },
       unitLibrary: root.unitLibrary,
     });
-    root.sessionStore.battleSession = { state, context };
+    root.sessionStore.battleSession = battleRuntimeSessionForTest({
+      state,
+      context,
+    });
     root.sessionStore.pendingBattleFills = null;
 
     const discovered = readPayload(
@@ -5289,7 +5314,7 @@ describe("MCP server route", () => {
     ) {
       throw new Error("Expected in-battle dying ally character combatant.");
     }
-    root.sessionStore.battleSession = {
+    root.sessionStore.battleSession = battleRuntimeSessionForTest({
       ...battleState,
       state: {
         ...battleState.state,
@@ -5312,7 +5337,7 @@ describe("MCP server route", () => {
           },
         ),
       },
-    } satisfies BattleRuntimeSession;
+    });
     const discovered = readPayload(
       handleToolCall(root, "discover_battle_acts", {}),
     );
@@ -5416,7 +5441,10 @@ describe("MCP server route", () => {
       },
       unitLibrary: root.unitLibrary,
     });
-    root.sessionStore.battleSession = { state, context };
+    root.sessionStore.battleSession = battleRuntimeSessionForTest({
+      state,
+      context,
+    });
     root.sessionStore.pendingBattleFills = null;
 
     const discovered = readPayload(
@@ -5554,10 +5582,15 @@ describe("MCP server route", () => {
       },
       unitLibrary: root.unitLibrary,
     });
-    root.sessionStore.battleSession = { state, context };
+    root.sessionStore.battleSession = battleRuntimeSessionForTest({
+      state,
+      context,
+    });
     root.sessionStore.pendingBattleFills = null;
 
-    const rayOfFrostAct = discoverBattleActs({ state, context }).find(
+    const rayOfFrostAct = discoverBattleActs(
+      battleRuntimeSessionForTest({ state, context }),
+    ).find(
       (act) =>
         act.subject.tag === "actionSpell" &&
         act.subject.actorId === fighterId &&

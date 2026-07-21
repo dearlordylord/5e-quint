@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-ANTIMAGIC-FIELD-GENERIC-SUPPRESSION antimagic_field
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-antimagic-field-ongoing-spell-suppression
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION
@@ -285,7 +286,7 @@ describe("SRD Antimagic Field ongoing spell suppression admission", () => {
     ).toBe(true);
     expect(
       maybeBonusSpellAct({
-        session: { ...session, state: suppressed },
+        session: battleRuntimeSessionForTest({ ...session, state: suppressed }),
         spellId: heatMetalUnitId,
       }),
     ).toBeUndefined();
@@ -325,7 +326,7 @@ describe("SRD Antimagic Field ongoing spell suppression admission", () => {
     const restored = breakBattleConcentration(suppressed, spellTargetId);
     expect(
       maybeBonusSpellAct({
-        session: { ...session, state: restored },
+        session: battleRuntimeSessionForTest({ ...session, state: restored }),
         spellId: heatMetalUnitId,
       }),
     ).toBeDefined();
@@ -364,7 +365,9 @@ describe("SRD Antimagic Field ongoing spell suppression admission", () => {
         ),
     ).toBe(true);
     expect(
-      maybeSpiritualWeaponRepeatAct({ ...session, state: suppressed }),
+      maybeSpiritualWeaponRepeatAct(
+        battleRuntimeSessionForTest({ ...session, state: suppressed }),
+      ),
     ).toBeUndefined();
 
     const targetTurn = endTurn({
@@ -401,7 +404,9 @@ describe("SRD Antimagic Field ongoing spell suppression admission", () => {
 
     const restored = breakBattleConcentration(suppressed, spellTargetId);
     expect(
-      maybeSpiritualWeaponRepeatAct({ ...session, state: restored }),
+      maybeSpiritualWeaponRepeatAct(
+        battleRuntimeSessionForTest({ ...session, state: restored }),
+      ),
     ).toBeDefined();
   });
 
@@ -499,13 +504,13 @@ function antimagicFieldBattle(input?: {
     spellSlots: input?.spellSlots ?? [{ spellLevel: 8, count: 1 }],
   });
   if (input?.activeEffects === undefined) {
-    return {
+    return battleRuntimeSessionForTest({
       ...base,
       state: {
         ...base.state,
         lightEmitters: input?.lightEmitters ?? [],
       },
-    };
+    });
   }
   const caster = requireCombatant(base.state, spellCasterId);
   if (caster.origin.kind !== "character") {
@@ -548,7 +553,7 @@ function antimagicFieldBattle(input?: {
       characterContext.spellcastingPresentationSource,
     ),
   );
-  return {
+  return battleRuntimeSessionForTest({
     ...base,
     state: {
       ...base.state,
@@ -564,7 +569,7 @@ function antimagicFieldBattle(input?: {
         },
       }),
     },
-  };
+  });
 }
 
 function castAntimagicField(

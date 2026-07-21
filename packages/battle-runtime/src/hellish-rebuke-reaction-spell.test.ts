@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV69B hellish_rebuke
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.reaction-hellish-rebuke spell.invocation-damage-save-or-attack
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.REACTION_CASTING_TIME
@@ -313,13 +314,13 @@ describe("Hellish Rebuke Reaction spell", () => {
     const session = battleWithHellishRebuke(
       srdSpellRecord(hellishRebukeUnitId),
     );
-    const state = {
+    const state = battleRuntimeSessionForTest({
       ...session,
       state: withCombatant(session.state, spellCasterId, (caster) => ({
         ...caster,
         reactionAvailable: false,
       })),
-    };
+    });
     const result = resolveUnarmedStrikeAgainstCaster({
       state,
       includeHellishRebukeTriggerFact: true,
@@ -390,7 +391,10 @@ describe("Hellish Rebuke Reaction spell", () => {
         )
           return false;
         const invocation = characterSpellInvocationRefForProcedureRefForTest(
-          { ...state, state: awaitingReaction.state },
+          battleRuntimeSessionForTest({
+            ...state,
+            state: awaitingReaction.state,
+          }),
           candidate.reactorId,
           candidate.subject.procedureRef,
         );
@@ -411,7 +415,10 @@ describe("Hellish Rebuke Reaction spell", () => {
     }
     expect(
       characterSpellInvocationRefForProcedureRefForTest(
-        { ...state, state: awaitingReaction.state },
+        battleRuntimeSessionForTest({
+          ...state,
+          state: awaitingReaction.state,
+        }),
         choice.reactorId,
         choice.subject.procedureRef,
       ),
@@ -883,7 +890,7 @@ function expectHellishRebukeChoice(
   }
   expect(
     characterSpellInvocationRefForProcedureRefForTest(
-      { ...session, state: result.state },
+      battleRuntimeSessionForTest({ ...session, state: result.state }),
       choice.reactorId,
       choice.subject.procedureRef,
     ),
@@ -917,7 +924,7 @@ function requireHellishRebukeChoice(
       )
         return false;
       const invocation = characterSpellInvocationRefForProcedureRefForTest(
-        { ...session, state: result.state },
+        battleRuntimeSessionForTest({ ...session, state: result.state }),
         candidate.reactorId,
         candidate.subject.procedureRef,
       );

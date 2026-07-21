@@ -1,3 +1,4 @@
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRAGONS-BREATH-INITIAL-CAST dragons_breath
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-dragons-breath-initial
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-dragons-breath-granted-action
@@ -193,10 +194,12 @@ describe("Dragon's Breath initial cast admission", () => {
     const targetTurn = stateWithExhalingTargetActionEarlyEndCondition(
       endedCasterTurn.state,
     );
-    const exhaleAct = discoverBattleActs({
-      ...session,
-      state: targetTurn,
-    }).find(
+    const exhaleAct = discoverBattleActs(
+      battleRuntimeSessionForTest({
+        ...session,
+        state: targetTurn,
+      }),
+    ).find(
       (act) =>
         act.subject.tag === "runtimeCommand" &&
         act.subject.command === "dragonsBreathExhale",
