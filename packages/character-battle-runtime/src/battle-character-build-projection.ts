@@ -405,6 +405,10 @@ const PACT_OF_THE_CHAIN_INVOCATION_ID =
   eldritchInvocationId("pact_of_the_chain");
 const PACT_OF_THE_TOME_INVOCATION_ID = eldritchInvocationId("pact_of_the_tome");
 const ELDRITCH_MIND_INVOCATION_ID = eldritchInvocationId("eldritch_mind");
+// Armor of Shadows and Mage Armor are distinct authored records. The canonical
+// invocation explicitly references that spell; this transitional constant
+// preserves the authored cross-reference rather than equating their identities
+// or selecting runtime mechanics. Move ownership to authored data in #219.
 const ARMOR_OF_SHADOWS_SPELL_ID = "mage_armor";
 const PACT_OF_THE_CHAIN_SPELL_ID = "find_familiar";
 const PACT_OF_THE_BLADE_ADDITIONAL_DAMAGE_TYPE_CHOICES = [
