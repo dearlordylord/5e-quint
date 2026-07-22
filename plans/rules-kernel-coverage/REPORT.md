@@ -409,7 +409,6 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/battle-runtime/battle-runtime-levitate-creature.qnt` | semantic-core | `BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE` |
 | `packages/battle-runtime/battle-runtime-marked-riders.qnt` | semantic-core | `BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER` |
 | `packages/battle-runtime/battle-runtime-marked-spells.qnt` | semantic-core | `BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER` |
-| `packages/battle-runtime/battle-runtime-metamagic.qnt` | semantic-core | `BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION`, `BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE`, `BATTLE.FEATURE.METAMAGIC_EMPOWERED_DAMAGE_DICE_REROLL`, `BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION`, `BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE`, `BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR`, `BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL`, `BATTLE.FEATURE.METAMAGIC_SUBTLE_COMPONENT_SUPPRESSION`, `BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION`, `BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET` |
 | `packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-option-fact-core.qnt` | semantic-core | `BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION`, `BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE`, `BATTLE.FEATURE.METAMAGIC_EMPOWERED_DAMAGE_DICE_REROLL`, `BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION`, `BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE`, `BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR`, `BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL`, `BATTLE.FEATURE.METAMAGIC_SUBTLE_COMPONENT_SUPPRESSION`, `BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION`, `BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET` |
 | `packages/shared-algebras/proofs/rule-core/unit-feature-metamagic-spell-modification-admission-core.qnt` | semantic-core | `BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION`, `BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE`, `BATTLE.FEATURE.METAMAGIC_EMPOWERED_DAMAGE_DICE_REROLL`, `BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION`, `BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE`, `BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR`, `BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL`, `BATTLE.FEATURE.METAMAGIC_SUBTLE_COMPONENT_SUPPRESSION`, `BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION`, `BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET` |
 | `packages/shared-algebras/proofs/rule-core/unit-feature-quickened-action-spell-procedure-support-core.qnt` | semantic-core | `BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR` |
@@ -434,15 +433,11 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/battle-runtime/battle-runtime-ability-check-search.qnt` | semantic-core | `BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES` |
 | `packages/battle-runtime/battle-runtime-roll-modifier-choice.qnt` | semantic-core | `BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES`, `BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS` |
 | `packages/battle-runtime/battle-runtime-sanctuary.qnt` | semantic-core | `BATTLE.SANCTUARY.TARGETING_INTERDICTION`, `BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE` |
-| `packages/battle-runtime/battle-runtime-save-gated-spell.qnt` | semantic-core | `BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE`, `BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_DAMAGE_PENALTY`, `BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE`, `BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE` |
 | `packages/battle-runtime/battle-runtime-see-invisibility.qnt` | semantic-core | `BATTLE.SPELL.SEE_INVISIBILITY_OBSERVER_SIGHT` |
 | `packages/battle-runtime/battle-runtime-self-teleport.qnt` | semantic-core | `BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE` |
 | `packages/battle-runtime/battle-runtime-self-teleport-lifecycle.mbt.qnt` | mbt-fixture | `BATTLE.SPELL.ANTIMAGIC_FIELD_TRANSIT_BLOCKING` |
 | `packages/battle-runtime/battle-runtime-self-transformation.qnt` | semantic-core | `BATTLE.SPELL.SELF_TRANSFORMATION_MODE` |
 | `packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt` | semantic-core | `BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE`, `BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE` |
-| `packages/battle-runtime/battle-runtime-spell-attack.qnt` | semantic-core | `BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE`, `BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE`, `BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE`, `BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE` |
-| `packages/battle-runtime/battle-runtime-spell-facts-tests.qnt` | proof-only | `BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_DAMAGE_PENALTY` |
-| `packages/battle-runtime/battle-runtime-spell-invocation.qnt` | semantic-core | `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS`, `BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE`, `BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE`, `BATTLE.SPELL.REACTION_CASTING_TIME`, `BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS` |
 | `packages/battle-runtime/battle-runtime-spiritual-weapon.qnt` | proof-only | `BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING` |
 | `packages/battle-runtime/battle-runtime-thaumaturgy.qnt` | semantic-core | `BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS` |
 | `packages/battle-runtime/battle-runtime-timed-effects.qnt` | semantic-core | `BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS`, `BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE`, `BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE`, `BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE`, `BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE`<br>profile-scoped: `unit-feature.weapon-mastery-sap` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
@@ -537,7 +532,6 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/battle-runtime/battle-runtime-direct-condition-removal-tests.qnt` | proof-only | _none_ |
 | `packages/battle-runtime/battle-runtime-gust-of-wind-tests.qnt` | mbt-fixture | _none_ |
 | `packages/battle-runtime/battle-runtime-levitate-creature-tests.qnt` | mbt-fixture | _none_ |
-| `packages/battle-runtime/battle-runtime-metamagic-tests.qnt` | proof-only | _none_ |
 | `packages/battle-runtime/battle-runtime-monk-focus-tests.qnt` | proof-only | _none_ |
 | `packages/battle-runtime/battle-runtime-protection-from-poison-tests.qnt` | proof-only | _none_ |
 | `packages/battle-runtime/battle-runtime-self-transformation-tests.qnt` | proof-only | _none_ |
@@ -597,7 +591,6 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/battle-runtime/battle-runtime-legendary-actions.qnt` | proof-only | `BATTLE.STAT_BLOCK.ATTACK_CONTROL` |
 | `packages/battle-runtime/battle-runtime-movement-bridge.qnt` | bridge | `BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND` |
 | `packages/battle-runtime/battle-runtime-shape-shifting.qnt` | proof-only | `BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE` |
-| `packages/battle-runtime/battle-runtime-spell-bridge.qnt` | bridge | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` |
 | `packages/battle-runtime/battle-runtime-stat-block-bridge.qnt` | bridge | `BATTLE.STAT_BLOCK.ATTACK_CONTROL` |
 | `packages/battle-runtime/battle-runtime-warding-bond.qnt` | proof-only | `BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING` |
 | `packages/shared-algebras/proofs/rule-core/action-turn-procedures.qnt` | proof-only | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` |
@@ -652,6 +645,69 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/shared-algebras/proofs/rule-core/spell-rest-benefit-application-examples.qnt` | proof-only | _none_ |
 | `packages/battle-runtime/battle-runtime-relationship-discovery.qnt` | semantic-core | `BATTLE.RELATIONSHIP_DISCOVERY` |
 | `packages/battle-runtime/battle-runtime-relationship-discovery.mbt.qnt` | proof-only | _none_ |
+| `packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt` | semantic-core | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` |
+| `packages/battle-runtime/battle-runtime-metamagic-distant.qnt` | semantic-core | `BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE` |
+| `packages/battle-runtime/battle-runtime-metamagic-empowered.qnt` | semantic-core | `BATTLE.FEATURE.METAMAGIC_EMPOWERED_DAMAGE_DICE_REROLL` |
+| `packages/battle-runtime/battle-runtime-metamagic-extended.qnt` | semantic-core | `BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION` |
+| `packages/battle-runtime/battle-runtime-metamagic-quickened-common.qnt` | semantic-core | `BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR` |
+| `packages/battle-runtime/battle-runtime-metamagic-quickened-restoration-buffs.qnt` | semantic-core | `BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR` |
+| `packages/battle-runtime/battle-runtime-metamagic-quickened-roll-modifier.qnt` | semantic-core | `BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR` |
+| `packages/battle-runtime/battle-runtime-metamagic-quickened-save-condition.qnt` | semantic-core | `BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR` |
+| `packages/battle-runtime/battle-runtime-metamagic-quickened-spell-attack.qnt` | semantic-core | `BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR` |
+| `packages/battle-runtime/battle-runtime-metamagic-careful.qnt` | semantic-core | `BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION` |
+| `packages/battle-runtime/battle-runtime-metamagic-heightened.qnt` | semantic-core | `BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE` |
+| `packages/battle-runtime/battle-runtime-metamagic-save-common.qnt` | semantic-core | `BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION`, `BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE` |
+| `packages/battle-runtime/battle-runtime-metamagic-seeking.qnt` | semantic-core | `BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL` |
+| `packages/battle-runtime/battle-runtime-metamagic-subtle.qnt` | semantic-core | `BATTLE.FEATURE.METAMAGIC_SUBTLE_COMPONENT_SUPPRESSION` |
+| `packages/battle-runtime/battle-runtime-metamagic-transmuted.qnt` | semantic-core | `BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION` |
+| `packages/battle-runtime/battle-runtime-metamagic-twinned.qnt` | semantic-core | `BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET` |
+| `packages/battle-runtime/battle-runtime-ray-of-enfeeblement-facts.qnt` | semantic-core | `BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE` |
+| `packages/battle-runtime/battle-runtime-ray-of-enfeeblement.qnt` | semantic-core | `BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE`, `BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_DAMAGE_PENALTY` |
+| `packages/battle-runtime/battle-runtime-save-condition-blindness.qnt` | semantic-core | `BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE` |
+| `packages/battle-runtime/battle-runtime-save-condition-calm-emotions.qnt` | semantic-core | `BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE` |
+| `packages/battle-runtime/battle-runtime-save-condition-color-spray.qnt` | semantic-core | `BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE` |
+| `packages/battle-runtime/battle-runtime-save-condition-entangle.qnt` | semantic-core | `BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE` |
+| `packages/battle-runtime/battle-runtime-save-condition-faerie-fire.qnt` | semantic-core | `BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE`, `BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE` |
+| `packages/battle-runtime/battle-runtime-save-condition-hold.qnt` | semantic-core | `BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE` |
+| `packages/battle-runtime/battle-runtime-save-condition-target-list-resolution.qnt` | semantic-core | `BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE` |
+| `packages/battle-runtime/battle-runtime-save-condition-target-list.qnt` | semantic-core | `BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE` |
+| `packages/battle-runtime/battle-runtime-save-gated-damage-resolution.qnt` | semantic-core | `BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_DAMAGE_PENALTY` |
+| `packages/battle-runtime/battle-runtime-save-gated-facts.qnt` | semantic-core | `BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE` |
+| `packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt` | semantic-core | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` |
+| `packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt` | bridge | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` |
+| `packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt` | bridge | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` |
+| `packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt` | semantic-core | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` |
+| `packages/battle-runtime/battle-runtime-spell-attack-facts.qnt` | semantic-core | `BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE`, `BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE` |
+| `packages/battle-runtime/battle-runtime-spell-attack-independent-sequence.qnt` | semantic-core | `BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE` |
+| `packages/battle-runtime/battle-runtime-spell-attack-timed-effects.qnt` | semantic-core | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` |
+| `packages/battle-runtime/battle-runtime-spell-cast-resources.qnt` | semantic-core | `BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE`, `BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE`, `BATTLE.SPELL.REACTION_CASTING_TIME` |
+| `packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt` | bridge | `BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE`, `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` |
+| `packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt` | bridge | `BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE`, `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` |
+| `packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt` | bridge | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` |
+| `packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt` | bridge | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` |
+| `packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt` | bridge | `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS`, `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS` |
+| `packages/battle-runtime/battle-runtime-spell-save-bridge.qnt` | bridge | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` |
+| `packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt` | bridge | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` |
+| `packages/battle-runtime/battle-runtime-spell-slot-classification.qnt` | semantic-core | `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS`, `BATTLE.SPELL.REACTION_CASTING_TIME`, `BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS` |
+| `packages/battle-runtime/battle-runtime-spellcasting-facts.qnt` | semantic-core | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` |
+| `packages/battle-runtime/battle-runtime-metamagic-options-and-quickened-restoration-tests.qnt` | proof-only | _none_ |
+| `packages/battle-runtime/battle-runtime-metamagic-quickened-save-condition-tests.qnt` | proof-only | _none_ |
+| `packages/battle-runtime/battle-runtime-spell-save-and-rider-facts-tests.qnt` | proof-only | _none_ |
+| `packages/battle-runtime/battle-runtime-metamagic-quickened-condition-immunity.qnt` | semantic-core | `BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR` |
+| `packages/battle-runtime/battle-runtime-metamagic-quickened-direct-condition.qnt` | semantic-core | `BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR` |
+| `packages/battle-runtime/battle-runtime-metamagic-quickened-save-damage.qnt` | semantic-core | `BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR` |
+| `packages/battle-runtime/battle-runtime-save-condition-blindness-facts.qnt` | semantic-core | `BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE` |
+| `packages/battle-runtime/battle-runtime-save-condition-targeting-facts.qnt` | semantic-core | `BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE` |
+| `packages/battle-runtime/battle-runtime-creature-type-protection-attack-roll.qnt` | semantic-core | `BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION` |
+| `packages/battle-runtime/battle-runtime-end-of-turn-light-expiration.qnt` | semantic-core | `BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE` |
+| `packages/battle-runtime/battle-runtime-end-of-turn-rider-expiration.qnt` | semantic-core | `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS` |
+| `packages/battle-runtime/battle-runtime-fighter-rage-facts.qnt` | semantic-core | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` |
+| `packages/battle-runtime/battle-runtime-ray-of-enfeeblement-damage-resolution.qnt` | semantic-core | `BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_DAMAGE_PENALTY` |
+| `packages/battle-runtime/battle-runtime-save-gated-damage-target.qnt` | semantic-core | `BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE` |
+| `packages/battle-runtime/battle-runtime-save-gated-object-facts.qnt` | semantic-core | `BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE` |
+| `packages/battle-runtime/battle-runtime-spell-attack-roll-and-visibility-facts.qnt` | semantic-core | `BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE` |
+| `packages/battle-runtime/battle-runtime-spell-attack-procedure-tests.qnt` | proof-only | _none_ |
+| `packages/battle-runtime/battle-runtime-spellcasting-and-utility-facts-tests.qnt` | proof-only | _none_ |
 
 ## QNT Registry
 
@@ -678,6 +734,7 @@ Rows here inventory `packages/**/*.qnt` files excluding `.mbt.qnt` drivers and `
 | `packages/battle-runtime/battle-runtime-condition-rider-route-facts.qnt` | exempt | leaf-type-vocabulary: Generic condition-rider route fact vocabulary leaf imported by the focused route connector without owning reducer semantics. |
 | `packages/battle-runtime/battle-runtime-condition-spell-resolution.qnt` | qnt-owner-role | proof-only |
 | `packages/battle-runtime/battle-runtime-creature-size-change.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-creature-type-protection-attack-roll.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-creature-type-protection.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-cunning-strike.qnt` | qnt-owner-role | proof-only |
 | `packages/battle-runtime/battle-runtime-damage-adjustments.qnt` | qnt-owner-role | semantic-core |
@@ -685,11 +742,14 @@ Rows here inventory `packages/**/*.qnt` files excluding `.mbt.qnt` drivers and `
 | `packages/battle-runtime/battle-runtime-direct-condition-removal.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-dragons-breath.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-druid-wild-shape.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-end-of-turn-light-expiration.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-end-of-turn-rider-expiration.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-feather-fall.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-feature-bridge-examples.qnt` | exempt | proof-only-example: Run-block examples for the feature bridge; registered rule-core and feature owners carry active coverage. |
 | `packages/battle-runtime/battle-runtime-feature-bridge.qnt` | qnt-owner-role | bridge |
 | `packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-fighter-ongoing-features.qnt` | qnt-owner-role | proof-only |
+| `packages/battle-runtime/battle-runtime-fighter-rage-facts.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-fill-kinds.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-find-familiar.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-flaming-sphere-hazard-ram.qnt` | qnt-owner-role | semantic-core |
@@ -707,11 +767,29 @@ Rows here inventory `packages/**/*.qnt` files excluding `.mbt.qnt` drivers and `
 | `packages/battle-runtime/battle-runtime-legendary-actions.qnt` | qnt-owner-role | proof-only |
 | `packages/battle-runtime/battle-runtime-levitate-creature.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-light.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-magic-missile-facts.qnt` | exempt | proof-only-example: Literal Magic Missile fixture facts shared by the focused witness and the reducer-route connector; the active route contract is owned by battle-runtime-magic-missile.route.mbt.qnt. |
 | `packages/battle-runtime/battle-runtime-marked-damage-immunity-route-facts.qnt` | exempt | leaf-type-vocabulary: Generic marked-damage and condition-immunity route fact vocabulary leaf imported by the focused route connector without owning reducer semantics. |
 | `packages/battle-runtime/battle-runtime-marked-riders.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-marked-spells.qnt` | qnt-owner-role | semantic-core |
-| `packages/battle-runtime/battle-runtime-metamagic.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-metamagic-careful.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-metamagic-distant.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-metamagic-empowered.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-metamagic-extended.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-metamagic-heightened.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-metamagic-quickened-common.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-metamagic-quickened-condition-immunity.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-metamagic-quickened-direct-condition.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-metamagic-quickened-restoration-buffs.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-metamagic-quickened-roll-modifier.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-metamagic-quickened-save-condition.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-metamagic-quickened-save-damage.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-metamagic-quickened-spell-attack.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-metamagic-save-common.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-metamagic-seeking.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-metamagic-subtle.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-metamagic-transmuted.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-metamagic-twinned.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-mirror-image-constants.qnt` | exempt | leaf-type-vocabulary: Mirror Image constants leaf imported by registered Mirror Image owners. |
 | `packages/battle-runtime/battle-runtime-mirror-image-hit-interception.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-mirror-image.qnt` | qnt-owner-role | semantic-core |
@@ -733,6 +811,9 @@ Rows here inventory `packages/**/*.qnt` files excluding `.mbt.qnt` drivers and `
 | `packages/battle-runtime/battle-runtime-prone-movement.qnt` | qnt-owner-role | proof-only |
 | `packages/battle-runtime/battle-runtime-protection-from-poison.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-public-trace-contract.qnt` | exempt | witness-protocol-leaf: Public trace protocol vocabulary leaf shared by witnesses. |
+| `packages/battle-runtime/battle-runtime-ray-of-enfeeblement-damage-resolution.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-ray-of-enfeeblement-facts.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-ray-of-enfeeblement.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-reaction-kinds.qnt` | exempt | leaf-type-vocabulary: Reaction kind vocabulary leaf shared by the model and interrupt bridge. |
 | `packages/battle-runtime/battle-runtime-reaction-resolution.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-reaction-window.qnt` | qnt-owner-role | semantic-core |
@@ -746,8 +827,22 @@ Rows here inventory `packages/**/*.qnt` files excluding `.mbt.qnt` drivers and `
 | `packages/battle-runtime/battle-runtime-roll-modifier-choice.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-route-choice-payloads.qnt` | exempt | leaf-type-vocabulary: Exact reducer-route choice payload vocabulary leaf imported by focused route connector MBT drivers without owning reducer semantics. |
 | `packages/battle-runtime/battle-runtime-sanctuary.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-save-condition-blindness-facts.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-save-condition-blindness.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-save-condition-calm-emotions.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-save-condition-color-spray.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-save-condition-entangle.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-save-condition-faerie-fire.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-save-condition-hold.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-save-condition-target-list-resolution.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-save-condition-target-list.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-save-condition-targeting-facts.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-save-gated-damage-resolution.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-save-gated-damage-target.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-save-gated-facts.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-save-gated-object-facts.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-save-gated-spell-ordering.qnt` | qnt-owner-role | semantic-core |
-| `packages/battle-runtime/battle-runtime-save-gated-spell.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-see-invisibility-constants.qnt` | exempt | leaf-type-vocabulary: See Invisibility constants and witness-plane vocabulary leaf. |
 | `packages/battle-runtime/battle-runtime-see-invisibility.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-self-teleport.qnt` | qnt-owner-role | semantic-core |
@@ -758,11 +853,25 @@ Rows here inventory `packages/**/*.qnt` files excluding `.mbt.qnt` drivers and `
 | `packages/battle-runtime/battle-runtime-sorcerous-burst-damage-choice.qnt` | exempt | leaf-type-vocabulary: Sorcerous Burst damage-choice vocabulary leaf shared by the model and spell bridge. |
 | `packages/battle-runtime/battle-runtime-spatial-effect-route-facts.qnt` | qnt-owner-role | bridge |
 | `packages/battle-runtime/battle-runtime-spatial-effect-route-surfaces.qnt` | qnt-owner-role | bridge |
+| `packages/battle-runtime/battle-runtime-spell-attack-bridge.qnt` | qnt-owner-role | bridge |
+| `packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt` | qnt-owner-role | bridge |
+| `packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-spell-attack-facts.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-spell-attack-independent-sequence.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-spell-attack-ordering.qnt` | qnt-owner-role | semantic-core |
-| `packages/battle-runtime/battle-runtime-spell-attack.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-spell-attack-roll-and-visibility-facts.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-spell-attack-timed-effects.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-spell-bridge-examples.qnt` | exempt | proof-only-example: Run-block examples for the spell bridge; registered spell rule-core and battle owners carry active coverage. |
-| `packages/battle-runtime/battle-runtime-spell-bridge.qnt` | qnt-owner-role | bridge |
-| `packages/battle-runtime/battle-runtime-spell-invocation.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-spell-cast-resources.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-spell-chained-attack-bridge.qnt` | qnt-owner-role | bridge |
+| `packages/battle-runtime/battle-runtime-spell-independent-sequence-bridge.qnt` | qnt-owner-role | bridge |
+| `packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt` | qnt-owner-role | bridge |
+| `packages/battle-runtime/battle-runtime-spell-restoration-bridge.qnt` | qnt-owner-role | bridge |
+| `packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt` | qnt-owner-role | bridge |
+| `packages/battle-runtime/battle-runtime-spell-save-bridge.qnt` | qnt-owner-role | bridge |
+| `packages/battle-runtime/battle-runtime-spell-scalar-buff-bridge.qnt` | qnt-owner-role | bridge |
+| `packages/battle-runtime/battle-runtime-spell-slot-classification.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-spellcasting-facts.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-spiritual-weapon.qnt` | qnt-owner-role | proof-only |
 | `packages/battle-runtime/battle-runtime-stat-block-action-ordering.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-stat-block-bridge-examples.qnt` | exempt | proof-only-example: Run-block examples for the stat-block bridge; registered stat-block owners carry active coverage. |
@@ -1009,14 +1118,14 @@ Rows here are derived from `plans/unit-profile-coverage/profiles.jsonl` for prof
 | `BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `map`, `filter`, `exists`, `set-operators`, `membership` |  |  |
 | `BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-val`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `map`, `filter`, `fold`, `exists`, `set-operators` |  |  |
 | `BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `map`, `filter`, `fold`, `exists`, `set-operators`, `membership` |  |  |
-| `BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `map`, `fold`, `forall`, `exists`, `membership`, `size`, `set-operators` |  |  |
-| `BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `map`, `fold`, `forall`, `exists`, `membership`, `size`, `set-operators` |  |  |
-| `BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `map`, `fold`, `forall`, `exists`, `membership`, `size`, `set-operators` |  |  |
-| `BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `map`, `fold`, `forall`, `exists`, `membership`, `size`, `set-operators` |  |  |
-| `BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `map`, `fold`, `forall`, `exists`, `membership`, `size`, `set-operators` |  |  |
-| `BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `map`, `fold`, `forall`, `exists`, `membership`, `size`, `set-operators` |  |  |
-| `BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `map`, `fold`, `forall`, `exists`, `membership`, `size`, `set-operators` |  |  |
-| `BATTLE.FEATURE.METAMAGIC_SUBTLE_COMPONENT_SUPPRESSION` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `map`, `fold`, `forall`, `exists`, `membership`, `size`, `set-operators` |  |  |
+| `BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `map`, `fold`, `forall`, `exists`, `membership`, `size` |  |  |
+| `BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION` | generation-subset-clean | `import`, `variant`, `record`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `map`, `fold`, `forall`, `exists`, `membership`, `size` |  |  |
+| `BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE` | generation-subset-clean | `import`, `variant`, `record`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `map`, `fold`, `forall`, `exists`, `membership`, `size` |  |  |
+| `BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION` | generation-subset-clean | `import`, `variant`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `map`, `fold`, `forall`, `exists`, `membership`, `size` |  |  |
+| `BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET` | generation-subset-clean | `import`, `variant`, `record`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `map`, `fold`, `forall`, `exists`, `membership`, `size` |  |  |
+| `BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE` | generation-subset-clean | `import`, `variant`, `record`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `map`, `fold`, `forall`, `exists`, `membership`, `size` |  |  |
+| `BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION` | generation-subset-clean | `import`, `variant`, `record`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `map`, `fold`, `forall`, `exists`, `membership`, `size` |  |  |
+| `BATTLE.FEATURE.METAMAGIC_SUBTLE_COMPONENT_SUPPRESSION` | generation-subset-clean | `import`, `variant`, `record`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `map`, `fold`, `forall`, `exists`, `membership`, `size` |  |  |
 | `BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `map`, `filter`, `fold`, `exists`, `set-operators`, `membership` |  |  |
 | `BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `list`, `filter`, `exists`, `set-operators` |  |  |
 | `BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `map`, `filter`, `fold`, `exists`, `set-operators`, `membership` |  |  |
@@ -1076,8 +1185,8 @@ Rows here are derived from `plans/unit-profile-coverage/profiles.jsonl` for prof
 | `BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `filter`, `exists`, `set-operators`, `membership` |  |  |
 | `BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `filter`, `exists`, `set-operators`, `membership` |  |  |
 | `BATTLE.ATTACK.MINIMAL_RESOLUTION` | generation-subset-clean | `import`, `variant`, `record`, `pure-def`, `int`, `bool`, `if-expression`, `arithmetic`, `boolean-connective`, `pattern-match` |  |  |
-| `BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL` | generation-subset-clean | `import`, `variant`, `record`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `set-operators`, `map`, `fold`, `forall`, `exists`, `membership`, `size`, `record-update` |  |  |
-| `BATTLE.FEATURE.METAMAGIC_EMPOWERED_DAMAGE_DICE_REROLL` | generation-subset-clean | `import`, `variant`, `record`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `set-operators`, `map`, `fold`, `forall`, `exists`, `membership`, `size`, `record-update` |  |  |
+| `BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL` | generation-subset-clean | `import`, `variant`, `record`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `set-operators`, `map`, `fold`, `forall`, `exists`, `membership`, `size` |  |  |
+| `BATTLE.FEATURE.METAMAGIC_EMPOWERED_DAMAGE_DICE_REROLL` | generation-subset-clean | `import`, `variant`, `record`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `set-operators`, `map`, `fold`, `forall`, `exists`, `membership`, `size` |  |  |
 | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY` | generation-subset-clean | `variant` |  |  |
 | `BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING` | generation-subset-clean | `import`, `variant`, `record`, `pure-def`, `bool`, `if-expression`, `comparison`, `pattern-match`, `set` |  |  |
 | `BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `pattern-match`, `set`, `map`, `set-operators`, `membership`, `list` |  |  |

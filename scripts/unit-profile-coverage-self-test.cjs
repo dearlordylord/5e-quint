@@ -2928,6 +2928,7 @@ function runSelfTest(root) {
           profileKind: "spell-invocation",
         },
       ],
+      qntOwnerRoles: [],
     });
     const rulesKernelSupportedUnitJoin = buildRulesKernelSupportedUnitJoin(
       [
@@ -2966,6 +2967,7 @@ function runSelfTest(root) {
           qntOwners: [],
         },
       ],
+      qntOwnerRoles: [],
     });
     const projectionOnlyRulesKernelSupportedUnitJoin =
       buildRulesKernelSupportedUnitJoin(
@@ -2990,6 +2992,77 @@ function runSelfTest(root) {
     ) {
       fail(
         `Self-test failed: projection-only sheet profiles without QNT owners or profile-obligation mappings must not enter the rules-kernel join, got ${JSON.stringify({ projectionOnlyRulesKernelProfileJoin, projectionOnlyRulesKernelSupportedUnitJoin })}`,
+      );
+    }
+    const bridgeOnlyProfileJoin = buildRulesKernelProfileJoin({
+      obligations: [
+        {
+          id: "BATTLE.BRIDGE_ONLY",
+          status: "covered",
+          qntOwners: ["fixture/bridge.qnt"],
+        },
+      ],
+      profileObligations: [
+        {
+          profileId: "spell.bridge-only",
+          obligationIds: ["BATTLE.BRIDGE_ONLY"],
+        },
+      ],
+      profiles: [
+        {
+          id: "spell.bridge-only",
+          profileKind: "spell-invocation",
+          qntOwners: ["fixture/bridge.qnt"],
+        },
+      ],
+      qntOwnerRoles: [{ ownerPath: "fixture/bridge.qnt", role: "bridge" }],
+    });
+    if (bridgeOnlyProfileJoin.profiles[0]?.joinStatus !== "mapped-open") {
+      fail(
+        `Self-test failed: a bridge-only obligation must not satisfy a profile semantic-coverage join, got ${JSON.stringify(bridgeOnlyProfileJoin)}`,
+      );
+    }
+    const bridgeOnlyEvidenceGate = buildSpellProcedureMbtEvidenceGate({
+      level1FullSupport: {
+        scope: { title: "Fixture level 1" },
+        rulesKernelSupportedUnitJoin: {
+          units: [
+            {
+              unitId: "fixture_bridge_spell",
+              profiles: bridgeOnlyProfileJoin.profiles,
+            },
+          ],
+        },
+      },
+      level12FullSupport: {
+        scope: { title: "Fixture level 1-2" },
+        rulesKernelSupportedUnitJoin: { units: [] },
+      },
+      rulesKernelMatrix: {
+        obligations: [
+          {
+            id: "BATTLE.BRIDGE_ONLY",
+            status: "covered",
+            qntOwners: ["fixture/bridge.qnt"],
+            parityWitnesses: [
+              {
+                kind: "focused-mbt",
+                ownerPath: "fixture/bridge.mbt.test.ts",
+                qntSpecPath: "fixture/bridge.mbt.qnt",
+                stepAction: "step",
+              },
+            ],
+          },
+        ],
+        qntOwnerRoles: [{ ownerPath: "fixture/bridge.qnt", role: "bridge" }],
+      },
+    });
+    if (
+      bridgeOnlyEvidenceGate.scopes[0]?.openGapRows[0]?.gaps[0]?.kind !==
+      "missing-semantic-core-qnt-owner"
+    ) {
+      fail(
+        `Self-test failed: bridge ownership must remain traceable without satisfying semantic parity evidence, got ${JSON.stringify(bridgeOnlyEvidenceGate)}`,
       );
     }
     const spellProcedureEvidenceGate = buildSpellProcedureMbtEvidenceGate({

@@ -5,12 +5,14 @@
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-dancing-lights-movable-dim-light spell.invocation-held-light-emitter spell.invocation-object-light spell.invocation-spell-created-held-object
 
 module battleRuntimeLight {
-  import battleRuntimeSpellBridge.* from "./battle-runtime-spell-bridge"
+  import battleRuntimeSpellRiderBridge.* from "./battle-runtime-spell-rider-bridge"
+  import battleRuntimeSpellLifecycleBridge.* from "./battle-runtime-spell-lifecycle-bridge"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeAntimagicSuppression.* from "./battle-runtime-antimagic-suppression"
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"
   import battleRuntimeFighterOngoingFeatures.* from "./battle-runtime-fighter-ongoing-features"
+  import battleRuntimeFighterRageFacts.* from "./battle-runtime-fighter-rage-facts"
   import battleRuntimeAttackFacts.* from "./battle-runtime-attack-facts"
   import battleRuntimeArmorClass.* from "./battle-runtime-armor-class"
   import battleRuntimeDamageAdjustments.* from "./battle-runtime-damage-adjustments"
@@ -18,23 +20,9 @@ module battleRuntimeLight {
   import battleRuntimeHitPoints.* from "./battle-runtime-hit-points"
   import battleRuntimeHidden.* from "./battle-runtime-hidden"
   import battleRuntimeReactionWindow.* from "./battle-runtime-reaction-window"
-  import battleRuntimeSpellInvocation.* from "./battle-runtime-spell-invocation"
+  import battleRuntimeSpellCastResources.* from "./battle-runtime-spell-cast-resources"
   import battleRuntimeMirrorImage.* from "./battle-runtime-mirror-image"
-
-  pure def lightEmittersWithoutExpiredEndOfTurnEmitters(
-    emitters: Set[LightEmitter],
-    actor: Actor,
-    round: int
-  ): Set[LightEmitter] =
-    emitters.filter(emitter => match emitter {
-      | SpellLightEmitter(data) => match data.expiresAt {
-          | EndOfTurnLightEmitterExpiration(expiresAt) => expiresAt.actor != actor or expiresAt.round != round
-          | ConcentrationLightEmitterExpiration(_) => true
-          | DurationLightEmitterExpiration(_) => true
-          | UntilDispelledLightEmitterExpiration => true
-        }
-      | ObjectInvisibleRevealLightEmitter(data) => data.expiresAtActor != actor or data.expiresAtRound != round
-    })
+  import battleRuntimeEndOfTurnLightExpiration.* from "./battle-runtime-end-of-turn-light-expiration"
 
   pure def tickDurationLightEmitters(emitters: Set[LightEmitter]): Set[LightEmitter] =
     emitters

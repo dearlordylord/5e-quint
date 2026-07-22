@@ -4,7 +4,7 @@
 module battleRuntimeArmorSpellResolution {
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
-  import battleRuntimeFighterOngoingFeatures.* from "./battle-runtime-fighter-ongoing-features"
+  import battleRuntimeFighterRageFacts.* from "./battle-runtime-fighter-rage-facts"
   import battleRuntimeArmorClass.* from "./battle-runtime-armor-class"
 
   pure def resolveArmorOfShadowsMageArmorSpell(state: BattleState): BattleState =

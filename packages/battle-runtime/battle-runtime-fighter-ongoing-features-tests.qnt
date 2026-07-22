@@ -1,4 +1,5 @@
 module battleRuntimeFighterOngoingFeaturesTests {
+  import battleRuntimeFighterRageFacts.* from "./battle-runtime-fighter-rage-facts"
   import battleRuntimeFeatureBridge.* from "./battle-runtime-feature-bridge"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"

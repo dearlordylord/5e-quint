@@ -153,6 +153,20 @@ export function declineInterruptDecision(
   return { kind: "decline", responderId: reactorId }
 }
 
+export function counterspellSavingThrowOutcomeFill(
+  hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>,
+  casterId: CombatantId,
+  succeeded: boolean
+): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
+  return {
+    kind: "savingThrowOutcome",
+    holeId: hole.holeId,
+    value: {
+      outcomes: [{ targetId: casterId, succeeded }]
+    }
+  }
+}
+
 export function fireballSavingThrowOutcomeFill(
   hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>,
   input: {

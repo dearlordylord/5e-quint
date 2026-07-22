@@ -307,6 +307,7 @@ function main() {
       taskClaims,
       rulesKernelObligations,
       rulesKernelProfileObligations,
+      rulesKernelQntOwnerRoles: rulesKernelCoverage.matrix.qntOwnerRoles,
     },
     {
       executableProfileKinds,

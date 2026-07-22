@@ -8,15 +8,10 @@ module battleRuntimeFighterOngoingFeatures {
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"
   import battleRuntimeSanctuary.* from "./battle-runtime-sanctuary"
   import battleRuntimeHitPoints.* from "./battle-runtime-hit-points"
-
-  pure def fighterRageOccurrence(state: BattleState): ActiveOngoingFeatureOccurrence =
-    state.fighter.activeOngoingFeatureOccurrences.rage
+  import battleRuntimeFighterRageFacts.* from "./battle-runtime-fighter-rage-facts"
 
   pure def fighterRecklessAttackOccurrence(state: BattleState): ActiveOngoingFeatureOccurrence =
     state.fighter.activeOngoingFeatureOccurrences.recklessAttack
-
-  pure def fighterHasRage(state: BattleState): bool =
-    fighterRageOccurrence(state) != NoActiveOngoingFeatureOccurrence
 
   pure def fighterHasRoundExtendedRage(state: BattleState): bool =
     match fighterRageOccurrence(state) {

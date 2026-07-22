@@ -1,4 +1,5 @@
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.REACTION_CASTING_TIME BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-governor-quickened
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.REACTION_CASTING_TIME BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR
 import type {
   BattleSpellCastReactionFactsHole,
   BattleSpellCastReactionFact,
@@ -8,6 +9,7 @@ import type {
   SpellComponent,
   BattleExecutableSpellInvocation,
 } from "../battle-reducer.ts";
+import type { CharacterBattleMetamagicOptionFact } from "../character-battle-resources.ts";
 import type { CombatantId } from "../identity.ts";
 import {
   SPELL_CAST_REACTION_FACTS_HOLE_ID,
@@ -37,14 +39,43 @@ export function spellCastReactionFactsHole(input: {
   };
 }
 
-export function spellCastInterruptFrame(input: {
+type SpellCastInterruptFrameInput = {
   readonly casterId: CombatantId;
   readonly invocation: BattleExecutableSpellInvocation;
   readonly targetIds: readonly CombatantId[];
   readonly reactionSpellTargetFacts: readonly BattleSpellCastReactionFact[];
   readonly castingResource: BattleSpellCastingTimeResource;
   readonly continuation: BattleInterruptedProcedure;
-}): Extract<BattleInterruptCheckpointInput, { readonly trigger: "spellCast" }> {
+} & (
+  | { readonly metamagicApplications?: never }
+  | {
+      readonly metamagicApplications: readonly [
+        CharacterBattleMetamagicOptionFact,
+        ...CharacterBattleMetamagicOptionFact[],
+      ];
+    }
+);
+
+export function spellCastMetamagicApplicationsInput(
+  applications: readonly CharacterBattleMetamagicOptionFact[],
+):
+  | { readonly metamagicApplications?: never }
+  | {
+      readonly metamagicApplications: readonly [
+        CharacterBattleMetamagicOptionFact,
+        ...CharacterBattleMetamagicOptionFact[],
+      ];
+    } {
+  return applications.length === 0
+    ? {}
+    : {
+        metamagicApplications: [applications[0], ...applications.slice(1)],
+      };
+}
+
+export function spellCastInterruptFrame(
+  input: SpellCastInterruptFrameInput,
+): Extract<BattleInterruptCheckpointInput, { readonly trigger: "spellCast" }> {
   const resource = input.invocation.resource;
   return {
     trigger: "spellCast",
@@ -60,6 +91,17 @@ export function spellCastInterruptFrame(input: {
     spellSlotCommitment:
       resource.tag === "spellSlot"
         ? { kind: "pendingCasterSpellSlot" }
+        : { kind: "none" },
+    metamagicCommitment:
+      input.metamagicApplications === undefined
+        ? { kind: "none" }
+        : {
+            kind: "applications",
+            applications: input.metamagicApplications,
+          },
+    concentrationCommitment:
+      input.invocation.spellRuleFacts.duration.kind === "concentration"
+        ? { kind: "breakExisting" }
         : { kind: "none" },
     targetIds: input.targetIds,
     reactionSpellTargetFacts: input.reactionSpellTargetFacts,

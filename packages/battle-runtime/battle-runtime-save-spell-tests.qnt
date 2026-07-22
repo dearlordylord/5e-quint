@@ -1,7 +1,19 @@
 // -*- mode: Bluespec; -*-
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-chained-attack-damage
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-condition-save
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-sleep-target-admission
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-sleep-repeat-save-lifecycle
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-attack-roll-advantage-save
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-save-gated-condition-immunity
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-hideous-laughter-repeat-save-lifecycle
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-hypnotic-pattern-control
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-direct-condition
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-condition-save spell.invocation-direct-condition spell.invocation-hideous-laughter-repeat-save-lifecycle spell.invocation-hypnotic-pattern-control spell.invocation-save-gated-condition-immunity spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission
 
 module battleRuntimeSaveSpellTests {
+  import battleRuntimeSavingThrowRollMode.* from "./battle-runtime-saving-throw-roll-mode"
+  import battleRuntimeSpellAttackRollAndVisibilityFacts.* from "./battle-runtime-spell-attack-roll-and-visibility-facts"
+  import battleRuntimeSaveConditionTargetListResolution.* from "./battle-runtime-save-condition-target-list-resolution"
   import attackDamageComposition.* from "../shared-algebras/proofs/rule-core/attack-damage-composition"
   import hitPointDamage.* from "../shared-algebras/proofs/rule-core/hit-point-damage"
   import hitPointRecovery.* from "../shared-algebras/proofs/rule-core/hit-point-recovery"
@@ -10,7 +22,7 @@ module battleRuntimeSaveSpellTests {
   import battleRuntimeInterruptBridge.* from "./battle-runtime-interrupt-bridge"
   import battleRuntimeStatBlockBridge.* from "./battle-runtime-stat-block-bridge"
   import battleRuntimeFeatureBridge.* from "./battle-runtime-feature-bridge"
-  import battleRuntimeSpellBridge.* from "./battle-runtime-spell-bridge"
+
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeFindFamiliar.* from "./battle-runtime-find-familiar"
   import battleRuntimeLight.* from "./battle-runtime-light"
@@ -22,11 +34,21 @@ module battleRuntimeSaveSpellTests {
   import battleRuntimeHitPoints.* from "./battle-runtime-hit-points"
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
   import battleRuntimeDamageAdjustments.* from "./battle-runtime-damage-adjustments"
-  import battleRuntimeSpellInvocation.* from "./battle-runtime-spell-invocation"
+  import battleRuntimeSpellCastResources.* from "./battle-runtime-spell-cast-resources"
   import battleRuntimeReactionWindow.* from "./battle-runtime-reaction-window"
-  import battleRuntimeSpellAttack.* from "./battle-runtime-spell-attack"
+  import battleRuntimeSpellAttackFacts.* from "./battle-runtime-spell-attack-facts"
   import battleRuntimeChainedSpellAttack.* from "./battle-runtime-chained-spell-attack"
-  import battleRuntimeSaveGatedSpell.* from "./battle-runtime-save-gated-spell"
+  import battleRuntimeSaveGatedFacts.* from "./battle-runtime-save-gated-facts"
+  import battleRuntimeSaveGatedDamageResolution.* from "./battle-runtime-save-gated-damage-resolution"
+  import battleRuntimeSaveConditionTargetList.* from "./battle-runtime-save-condition-target-list"
+  import battleRuntimeSaveConditionHold.* from "./battle-runtime-save-condition-hold"
+  import battleRuntimeSaveConditionBlindness.* from "./battle-runtime-save-condition-blindness"
+  import battleRuntimeSaveConditionBlindnessFacts.* from "./battle-runtime-save-condition-blindness-facts"
+  import battleRuntimeSaveConditionTargetingFacts.* from "./battle-runtime-save-condition-targeting-facts"
+  import battleRuntimeSaveConditionColorSpray.* from "./battle-runtime-save-condition-color-spray"
+  import battleRuntimeSaveConditionFaerieFire.* from "./battle-runtime-save-condition-faerie-fire"
+  import battleRuntimeSaveConditionCalmEmotions.* from "./battle-runtime-save-condition-calm-emotions"
+  import battleRuntimeSaveConditionEntangle.* from "./battle-runtime-save-condition-entangle"
   import battleRuntimeMarkedRiders.* from "./battle-runtime-marked-riders"
   import battleRuntimeMarkedSpells.* from "./battle-runtime-marked-spells"
   import battleRuntimeReactionWindow.* from "./battle-runtime-reaction-window"

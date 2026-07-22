@@ -172,12 +172,14 @@ function runSelfTest() {
       JSON.stringify({
         ownerPath: "packages/battle-runtime/battle-runtime-hole-kinds.qnt",
         role: "semantic-core",
-        evidence: "battle-runtime-hole-kinds.qnt is sample protocol vocabulary.",
+        evidence:
+          "battle-runtime-hole-kinds.qnt is sample protocol vocabulary.",
       }),
       JSON.stringify({
         ownerPath: "packages/battle-runtime/battle-runtime-fill-kinds.qnt",
         role: "semantic-core",
-        evidence: "battle-runtime-fill-kinds.qnt is sample protocol vocabulary.",
+        evidence:
+          "battle-runtime-fill-kinds.qnt is sample protocol vocabulary.",
       }),
       JSON.stringify({
         ownerPath: "packages/battle-runtime/battle-runtime-subject-kinds.qnt",
@@ -533,7 +535,7 @@ function runSelfTest() {
     ),
     `Expected missing qnt-owner role issue, got ${JSON.stringify(missingQntOwnerRoleResult.issues)}`,
   );
-  for (const role of ["proof-only", "mbt-fixture"]) {
+  for (const role of ["proof-only", "mbt-fixture", "bridge"]) {
     writeFile(
       sampleQntOwnerRolesPath,
       JSON.stringify({

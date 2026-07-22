@@ -1,4 +1,10 @@
 // -*- mode: Bluespec; -*-
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.innate-sorcery-activation
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.passive-saving-throw-roll-mode
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.passive-ability-check-roll-mode
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.weapon-mastery-push
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.weapon-mastery-slow
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.fighter-tactical-master
 // KERNEL-COVERAGE: qnt-owner BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.brutal-strike unit-feature.fighter-tactical-master unit-feature.innate-sorcery-activation unit-feature.magic-action-save-gated-condition unit-feature.passive-ability-check-roll-mode unit-feature.passive-saving-throw-roll-mode unit-feature.weapon-mastery-push unit-feature.weapon-mastery-slow
 // UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.brutal-strike unit-feature.fighter-tactical-master unit-feature.magic-action-save-gated-condition unit-feature.weapon-mastery-push unit-feature.weapon-mastery-slow

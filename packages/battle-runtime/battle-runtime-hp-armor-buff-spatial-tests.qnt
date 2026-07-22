@@ -1,8 +1,27 @@
 // -*- mode: Bluespec; -*-
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.weapon-mastery-topple
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.weapon-mastery-cleave
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-after-hit-damage-illumination
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-expeditious-retreat-dash
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-feather-fall-mitigation
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-jump-movement-replacement
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-forced-reaction-movement
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-make-stable
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-weapon-damage-rider
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-after-hit-restraint-turn-start-damage
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-after-hit-timed-damage-save
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-spell-hosted-weapon-attack
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-weapon-attack-override
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-marked-damage-rider
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-condition-immunity-turn-start-temporary-hit-points
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.scalar-buff
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-self-teleport
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-magic-weapon-enhancement
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-after-hit-damage spell.invocation-after-hit-damage-illumination spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-forced-reaction-movement spell.invocation-jump-movement-replacement spell.invocation-magic-weapon-enhancement spell.invocation-make-stable spell.invocation-marked-damage-rider spell.invocation-self-teleport spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-attack-override spell.invocation-weapon-damage-rider spell.scalar-buff
 
 module battleRuntimeHpArmorBuffSpatialTests {
+  import battleRuntimeSpellAttackRollAndVisibilityFacts.* from "./battle-runtime-spell-attack-roll-and-visibility-facts"
   import attackDamageComposition.* from "../shared-algebras/proofs/rule-core/attack-damage-composition"
   import hitPointDamage.* from "../shared-algebras/proofs/rule-core/hit-point-damage"
   import hitPointRecovery.* from "../shared-algebras/proofs/rule-core/hit-point-recovery"
@@ -11,7 +30,7 @@ module battleRuntimeHpArmorBuffSpatialTests {
   import battleRuntimeInterruptBridge.* from "./battle-runtime-interrupt-bridge"
   import battleRuntimeStatBlockBridge.* from "./battle-runtime-stat-block-bridge"
   import battleRuntimeFeatureBridge.* from "./battle-runtime-feature-bridge"
-  import battleRuntimeSpellBridge.* from "./battle-runtime-spell-bridge"
+
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeFindFamiliar.* from "./battle-runtime-find-familiar"
   import battleRuntimeLight.* from "./battle-runtime-light"
@@ -23,10 +42,11 @@ module battleRuntimeHpArmorBuffSpatialTests {
   import battleRuntimeHitPoints.* from "./battle-runtime-hit-points"
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
   import battleRuntimeDamageAdjustments.* from "./battle-runtime-damage-adjustments"
-  import battleRuntimeSpellInvocation.* from "./battle-runtime-spell-invocation"
-  import battleRuntimeSpellAttack.* from "./battle-runtime-spell-attack"
+  import battleRuntimeSpellCastResources.* from "./battle-runtime-spell-cast-resources"
+  import battleRuntimeSpellSlotClassification.* from "./battle-runtime-spell-slot-classification"
+  import battleRuntimeSpellAttackFacts.* from "./battle-runtime-spell-attack-facts"
   import battleRuntimeChainedSpellAttack.* from "./battle-runtime-chained-spell-attack"
-  import battleRuntimeSaveGatedSpell.* from "./battle-runtime-save-gated-spell"
+  import battleRuntimeSaveGatedDamageResolution.* from "./battle-runtime-save-gated-damage-resolution"
   import battleRuntimeMarkedRiders.* from "./battle-runtime-marked-riders"
   import battleRuntimeMarkedSpells.* from "./battle-runtime-marked-spells"
   import battleRuntimeReactionWindow.* from "./battle-runtime-reaction-window"

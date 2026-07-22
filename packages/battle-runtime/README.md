@@ -1388,17 +1388,22 @@ For BA5 action-economy overlap, promoted runtime divergence from old root
   eligibility, next-initiative calculation, and end-of-caster-next-turn timing.
 - `battle-runtime-damage-adjustments.qnt` - damage type projection,
   resistance/vulnerability/immunity adjustment, and Resistance spell reduction.
-- `battle-runtime-spell-invocation.qnt` - spell slot turn-use guards, spell
-  invocation slot classification, spellcasting gate helpers, Innate Sorcery
-  spell modifiers, scalar-buff profile projection, and Magic Missile helpers.
-- `battle-runtime-spell-attack.qnt` - spell attack profile projection, spell
-  attack active effects, object damage and ignition helpers, spell attack roll
-  modes, Eldritch Blast beam replay holes, and spell attack reducers.
+- `battle-runtime-spell-cast-resources.qnt`,
+  `battle-runtime-spell-slot-classification.qnt`,
+  `battle-runtime-spellcasting-facts.qnt`, and
+  `battle-runtime-magic-missile-arithmetic.qnt` - focused spell resource,
+  classification, spellcasting, and Magic Missile facts.
+- `battle-runtime-spell-attack-facts.qnt`,
+  `battle-runtime-spell-attack-timed-effects.qnt`,
+  `battle-runtime-spell-attack-direct-resolution.qnt`, and
+  `battle-runtime-spell-attack-independent-sequence.qnt` - focused spell
+  attack facts, timed effects, direct resolution, and independent sequences.
 - `battle-runtime-chained-spell-attack.qnt` - Chromatic Orb chained attack
   damage choices, d8 duplicate-face facts, leap legality, and replay holes.
-- `battle-runtime-save-gated-spell.qnt` - save-gated damage and condition
-  profile projection, attack-burst save helpers, save-gated active effects,
-  replay holes, and save/attack-burst spell reducers.
+- `battle-runtime-save-gated-facts.qnt`,
+  `battle-runtime-save-gated-damage-resolution.qnt`, and the focused
+  `battle-runtime-save-condition-*.qnt` owners - save-gated projection,
+  damage resolution, targeting facts, and named condition lifecycles.
 - `battle-runtime-marked-riders.qnt` - Hunter's Mark and Hex durations,
   transfer eligibility, marked damage riders, and marked Ability Check modes.
 - `battle-runtime-marked-spells.qnt` - Hunter's Mark, Favored Enemy Hunter's
@@ -1456,6 +1461,13 @@ For BA5 action-economy overlap, promoted runtime divergence from old root
   `pnpm --filter @dnd/battle-runtime test:qnt-proofs` (each `run`-block module
   runs as its own bounded `quint test`; see CLAUDE.md "QNT proof lane (run
   consciously)").
+- `scripts/check-qnt-proof-closure.cjs` - proof-root import-closure guard shared
+  with the QNT import utility used by the MBT closure gate. Replacement roots
+  are capped at 60 counted files and 12,500 physical lines.
+- `.github/workflows/qnt-proofs.yml` - dedicated bounded proof job. It retains
+  the raw `QNT_PROOF_EVENT` stream and a structured per-module timing report as
+  the `qnt-proof-timings` artifact, then compares the next successful run with
+  the latest artifact from the head branch or base branch.
 - `battle-runtime-weapon-attack-skeleton.mbt.qnt` - focused randomized model
   for the selected weapon Attack/Sneak Attack path.
 

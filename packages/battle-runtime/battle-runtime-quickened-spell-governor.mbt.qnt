@@ -14,11 +14,17 @@ module battleRuntimeQuickenedSpellGovernorMbt {
   // - .references/srd-5.2.1/Spells/Gaining-and-Casting.md#Casting Time:
   //   spells use the Casting Time entry and a turn can expend only one Spell
   //   Slot to cast a spell.
-  // - UBIQUITOUS_LANGUAGE.md: Magic Action, Bonus Action, Spell Slot,
-  //   Sorcery Points as a Pool, and Spend.
+  // - .references/srd-5.2.1/Spells/Descriptions-A-D.md#Counterspell:
+  //   Counterspell makes the caster roll a Constitution save; on failure the
+  //   spell has no effect and its Spell Slot is not expended.
+  // - .references/srd-5.2.1/Rules-Glossary.md#Concentration:
+  //   a creature maintains at most one Concentration effect at a time.
+  // - UBIQUITOUS_LANGUAGE.md: Magic Action, Bonus Action, Reaction, Saving
+  //   Throw, Spell Effect, Spell Slot, Concentration, Decline, Sorcery Points
+  //   as a Pool, and Spend.
   type WitnessHole = | WitnessProtocolHole
 
-  type QuickenedSpellGovernorScenarioOutcome = | Init | ResolvedQuickenedRestoration | ResolvedQuickenedSaveGatedCondition | ResolvedQuickenedSaveGatedConditionImmunity | ResolvedQuickenedDirectCondition | ResolvedQuickenedRollModifier | ResolvedAfterMagicActionSpent | RejectedUnaffordable | RejectedUnknownOption | RejectedUnsupportedSecondOption | RejectedOnePerSpell | RejectedPriorLevelOnePlusSpell
+  type QuickenedSpellGovernorScenarioOutcome = | Init | ResolvedQuickenedRestoration | ResolvedQuickenedSaveGatedCondition | ResolvedQuickenedSaveGatedConditionImmunity | ResolvedQuickenedDirectCondition | ResolvedQuickenedRollModifier | ResolvedQuickenedCreatureSizeChange | ResolvedAfterMagicActionSpent | CounteredQuickenedConcentration | CounteredQuickenedNonConcentrationWithPriorConcentration | ResolvedQuickenedConcentrationAfterCounterspellDeclined | ResolvedQuickenedConcentrationAfterCounterspellFailed | RejectedUnaffordable | RejectedUnknownOption | RejectedUnsupportedSecondOption | RejectedOnePerSpell | RejectedPriorLevelOnePlusSpell
 
 
   type QuickenedSpellGovernorWitnessState = {
@@ -27,6 +33,7 @@ module battleRuntimeQuickenedSpellGovernorMbt {
     qCalmEmotionsImmunity: bool,
     qInvisibilityActive: bool,
     qBlessActive: bool,
+    qCreatureSizeIncreased: bool,
     qMagicActionAvailable: bool,
     qBonusActionAvailable: bool,
     qSorceryPointsRemaining: int,
@@ -47,6 +54,7 @@ module battleRuntimeQuickenedSpellGovernorMbt {
   pure def qCalmEmotionsImmunity: bool = qState.qCalmEmotionsImmunity
   pure def qInvisibilityActive: bool = qState.qInvisibilityActive
   pure def qBlessActive: bool = qState.qBlessActive
+  pure def qCreatureSizeIncreased: bool = qState.qCreatureSizeIncreased
   pure def qMagicActionAvailable: bool = qState.qMagicActionAvailable
   pure def qBonusActionAvailable: bool = qState.qBonusActionAvailable
   pure def qSorceryPointsRemaining: int = qState.qSorceryPointsRemaining
@@ -55,6 +63,11 @@ module battleRuntimeQuickenedSpellGovernorMbt {
   pure def qLevelOnePlusCastThisTurn: bool = qState.qLevelOnePlusCastThisTurn
   pure def qQuickenedLevelOnePlusCastThisTurn: bool = qState.qQuickenedLevelOnePlusCastThisTurn
   pure def qSpellSlotActsAvailable: bool = qState.qSpellSlotActsAvailable
+  pure def qCasterConcentrating: bool =
+    qState.qCalmEmotionsImmunity
+      or qState.qInvisibilityActive
+      or qState.qBlessActive
+      or qState.qCreatureSizeIncreased
   pure def qInvalidKind: str = qState.qInvalidKind
   pure def scenarioOutcome: QuickenedSpellGovernorScenarioOutcome = qState.qScenarioOutcome
 
@@ -95,6 +108,7 @@ module battleRuntimeQuickenedSpellGovernorMbt {
       qCalmEmotionsImmunity: calmEmotionsImmunity,
       qInvisibilityActive: invisibilityActive,
       qBlessActive: blessActive,
+      qCreatureSizeIncreased: lastResult == ResolvedQuickenedCreatureSizeChange,
       qMagicActionAvailable: magicActionAvailable,
       qBonusActionAvailable: bonusActionAvailable,
       qSorceryPointsRemaining: sorceryPointsRemaining,
@@ -217,6 +231,24 @@ module battleRuntimeQuickenedSpellGovernorMbt {
     ResolvedQuickenedRollModifier,
   )
 
+  action doResolveQuickenedCreatureSizeChange = recordQuickenedGovernorState(
+    false,
+    false,
+    false,
+    false,
+    false,
+    true,
+    false,
+    initialSorceryPoints - 2,
+    initialTargetHp,
+    true,
+    true,
+    true,
+    false,
+    "none",
+    ResolvedQuickenedCreatureSizeChange,
+  )
+
   action doResolveQuickenedAfterMagicActionSpent = recordQuickenedGovernorState(
     false,
     false,
@@ -233,6 +265,78 @@ module battleRuntimeQuickenedSpellGovernorMbt {
     false,
     "none",
     ResolvedAfterMagicActionSpent,
+  )
+
+  action doCounterQuickenedConcentration = recordQuickenedGovernorState(
+    false,
+    false,
+    false,
+    false,
+    false,
+    true,
+    false,
+    initialSorceryPoints - 2,
+    initialTargetHp,
+    false,
+    false,
+    true,
+    false,
+    "none",
+    CounteredQuickenedConcentration,
+  )
+
+  action doCounterQuickenedNonConcentrationWithPriorConcentration = recordQuickenedGovernorState(
+    false,
+    false,
+    false,
+    false,
+    true,
+    true,
+    false,
+    initialSorceryPoints - 2,
+    initialTargetHp,
+    false,
+    false,
+    true,
+    false,
+    "none",
+    CounteredQuickenedNonConcentrationWithPriorConcentration,
+  )
+
+  action doResolveQuickenedConcentrationAfterCounterspellDeclined = recordQuickenedGovernorState(
+    false,
+    false,
+    false,
+    false,
+    true,
+    true,
+    false,
+    initialSorceryPoints - 2,
+    initialTargetHp,
+    true,
+    true,
+    true,
+    false,
+    "none",
+    ResolvedQuickenedConcentrationAfterCounterspellDeclined,
+  )
+
+  action doResolveQuickenedConcentrationAfterCounterspellFailed = recordQuickenedGovernorState(
+    false,
+    false,
+    false,
+    false,
+    true,
+    true,
+    false,
+    initialSorceryPoints - 2,
+    initialTargetHp,
+    true,
+    true,
+    true,
+    false,
+    "none",
+    ResolvedQuickenedConcentrationAfterCounterspellFailed,
   )
 
   action doRejectUnaffordable = recordQuickenedGovernorState(
@@ -331,7 +435,12 @@ module battleRuntimeQuickenedSpellGovernorMbt {
     doResolveQuickenedSaveGatedConditionImmunity,
     doResolveQuickenedDirectCondition,
     doResolveQuickenedRollModifier,
+    doResolveQuickenedCreatureSizeChange,
     doResolveQuickenedAfterMagicActionSpent,
+    doCounterQuickenedConcentration,
+    doCounterQuickenedNonConcentrationWithPriorConcentration,
+    doResolveQuickenedConcentrationAfterCounterspellDeclined,
+    doResolveQuickenedConcentrationAfterCounterspellFailed,
     doRejectUnaffordable,
     doRejectUnknownOption,
     doRejectUnsupportedSecondOption,

@@ -48,6 +48,7 @@ import {
   type BattleCreatureSnapshot,
   type BattleReducerRouteEvent,
   type BattleResolutionResult,
+  type BattleProcedureExecutionRef,
   type BattleState,
   type CombatantId,
 } from "./index.ts";
@@ -92,15 +93,6 @@ const SCENARIO_OUTCOME_BY_TAG = {
   Aid: "aid",
   FalseLife: "falseLife",
 } as const satisfies Readonly<Record<string, LastResult>>;
-const RESULT_SOURCE_SPELL_IDS = {
-  init: null,
-  shieldOfFaith: shieldOfFaithUnitId,
-  longstrider: longstriderUnitId,
-  spiderClimb: spiderClimbUnitId,
-  aid: aidUnitId,
-  falseLife: falseLifeUnitId,
-} as const satisfies Readonly<Record<LastResult, string | null>>;
-
 type ScalarBuffActiveEffectsProjection = {
   readonly affectedArmorClass: number;
   readonly affectedSpeedFeet: number;
@@ -123,6 +115,7 @@ type ScalarBuffRuntimeState = {
 type ScalarBuffResolvedCast = {
   readonly state: BattleState;
   readonly affectedId: CombatantId;
+  readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly routeEvents: readonly BattleReducerRouteEvent[];
 };
 
@@ -290,6 +283,7 @@ describe("scalar buff active-effects MBT parity", () => {
         step: "step",
         driver: createScalarBuffActiveEffectsDriver(),
         backend: "typescript",
+        seed: process.env["QUINT_SEED"],
         nTraces: mbtTraceCount(),
         maxSteps: focusedMbtMaxSteps(6),
         stateCheck: scalarBuffActiveEffectsStateCheck,
@@ -310,6 +304,7 @@ describe("scalar buff active-effects MBT parity", () => {
         step: "step",
         driver: createScalarBuffActiveEffectsRouteDriver(),
         backend: "typescript",
+        seed: process.env["QUINT_SEED"],
         nTraces: mbtTraceCount(),
         maxSteps: focusedMbtMaxSteps(6),
         stateCheck: scalarBuffRouteStateCheck,
@@ -361,6 +356,7 @@ function castShieldOfFaith(): ScalarBuffRuntimeState {
   return projectScalarBuffState(
     resolved.state,
     resolved.affectedId,
+    resolved.sourceProcedureRef,
     "shieldOfFaith",
   );
 }
@@ -394,6 +390,7 @@ function castLongstrider(): ScalarBuffRuntimeState {
   return projectScalarBuffState(
     resolved.state,
     resolved.affectedId,
+    resolved.sourceProcedureRef,
     "longstrider",
   );
 }
@@ -431,6 +428,7 @@ function castSpiderClimb(): ScalarBuffRuntimeState {
   return projectScalarBuffState(
     resolved.state,
     resolved.affectedId,
+    resolved.sourceProcedureRef,
     "spiderClimb",
   );
 }
@@ -466,7 +464,12 @@ function resolveSpiderClimbCast(): ScalarBuffResolvedCast {
 
 function castAid(): ScalarBuffRuntimeState {
   const resolved = resolveAidCast();
-  return projectScalarBuffState(resolved.state, resolved.affectedId, "aid");
+  return projectScalarBuffState(
+    resolved.state,
+    resolved.affectedId,
+    resolved.sourceProcedureRef,
+    "aid",
+  );
 }
 
 function resolveAidCast(): ScalarBuffResolvedCast {
@@ -496,6 +499,7 @@ function castFalseLife(): ScalarBuffRuntimeState {
   return projectScalarBuffState(
     resolved.state,
     resolved.affectedId,
+    resolved.sourceProcedureRef,
     "falseLife",
   );
 }
@@ -529,11 +533,19 @@ function scalarBuffResolvedCast(
   return {
     state: resolved.state,
     affectedId,
+    sourceProcedureRef: requireScalarBuffProcedureRef(act),
     routeEvents: [
       ...requireScalarBuffActRouteEvents(act),
       ...requireScalarBuffResolutionRouteEvents(resolved),
     ],
   };
+}
+
+function requireScalarBuffProcedureRef(
+  act: AvailableBattleAct,
+): BattleProcedureExecutionRef {
+  if ("procedureRef" in act.subject) return act.subject.procedureRef;
+  throw new Error("Expected scalar buff act to own a procedure reference.");
 }
 
 function requireScalarBuffActRouteEvents(
@@ -559,6 +571,7 @@ function requireScalarBuffResolutionRouteEvents(
 function projectScalarBuffState(
   battle: BattleState,
   affectedId: CombatantId,
+  sourceProcedureRef: BattleProcedureExecutionRef,
   lastResult: LastResult,
 ): ScalarBuffRuntimeState {
   const affected = requireCombatant(battle, affectedId);
@@ -567,7 +580,6 @@ function projectScalarBuffState(
   const climbSpeed = affectedSnapshot.movement.speedKinds.find(
     (speed) => speed.kind === "climb",
   );
-  const sourceProcedureRef = RESULT_SOURCE_SPELL_IDS[lastResult];
   return {
     projection: {
       affectedArmorClass: Number(affectedSnapshot.armorClass),

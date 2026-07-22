@@ -14,9 +14,9 @@
 module battleRuntimeDragonsBreath {
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
-  import battleRuntimeSpellInvocation.* from "./battle-runtime-spell-invocation"
+  import battleRuntimeSpellCastResources.* from "./battle-runtime-spell-cast-resources"
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"
-  import battleRuntimeFighterOngoingFeatures.* from "./battle-runtime-fighter-ongoing-features"
+  import battleRuntimeFighterRageFacts.* from "./battle-runtime-fighter-rage-facts"
   import battleRuntimeHitPoints.* from "./battle-runtime-hit-points"
   import battleRuntimeDamageAdjustments.* from "./battle-runtime-damage-adjustments"
   import battleRuntimeActorCombatants.* from "./battle-runtime-actor-combatants"

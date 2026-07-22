@@ -1,5 +1,6 @@
 import { execFile, execFileSync } from "node:child_process";
 import { readdirSync, readFileSync } from "node:fs";
+import { basename } from "node:path";
 import { fileURLToPath } from "node:url";
 
 export type NonEmptyReadonlyArray<T> = readonly [T, ...T[]];
@@ -198,6 +199,7 @@ function logProofProgress(
   console.error(
     `QNT_PROOF_EVENT ${JSON.stringify({
       event,
+      suite: basename(fileURLToPath(config.packageRootUrl)),
       kind: config.proofKind,
       module: config.modulePath,
       pid,
@@ -254,6 +256,16 @@ async function runProofProcess(
     }, proofModuleTimeoutMs);
   });
 
+  if (result.timedOut) {
+    logProofProgress(config, "fail", startedAtMs, childPid);
+    return {
+      tag: "failed",
+      module: config.modulePath,
+      detail:
+        `${config.timedOutDetail}\n${result.stderr}${result.stdout}`.trimEnd(),
+    };
+  }
+
   if (result.error === null) {
     if (
       config.requiredStdoutFragment !== undefined &&
@@ -272,12 +284,12 @@ async function runProofProcess(
     return { tag: "passed", module: config.modulePath };
   }
 
-  const banner = result.timedOut ? config.timedOutDetail : result.error.message;
   logProofProgress(config, "fail", startedAtMs, childPid);
   return {
     tag: "failed",
     module: config.modulePath,
-    detail: `${banner}\n${result.stderr}${result.stdout}`.trimEnd(),
+    detail:
+      `${result.error.message}\n${result.stderr}${result.stdout}`.trimEnd(),
   };
 }
 

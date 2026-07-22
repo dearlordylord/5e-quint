@@ -1,7 +1,13 @@
 // -*- mode: Bluespec; -*-
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-object-light
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-held-light-emitter
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-spell-created-held-object
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.reaction-hellish-rebuke
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-sanctuary-targeting-interdiction
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-dancing-lights-movable-dim-light spell.invocation-held-light-emitter spell.invocation-object-light spell.invocation-sanctuary-targeting-interdiction spell.invocation-spell-created-held-object spell.reaction-hellish-rebuke
 
 module battleRuntimeLightConcentrationMovementReactionTests {
+  import battleRuntimeSavingThrowRollMode.* from "./battle-runtime-saving-throw-roll-mode"
   import attackDamageComposition.* from "../shared-algebras/proofs/rule-core/attack-damage-composition"
   import hitPointDamage.* from "../shared-algebras/proofs/rule-core/hit-point-damage"
   import hitPointRecovery.* from "../shared-algebras/proofs/rule-core/hit-point-recovery"
@@ -10,7 +16,7 @@ module battleRuntimeLightConcentrationMovementReactionTests {
   import battleRuntimeInterruptBridge.* from "./battle-runtime-interrupt-bridge"
   import battleRuntimeStatBlockBridge.* from "./battle-runtime-stat-block-bridge"
   import battleRuntimeFeatureBridge.* from "./battle-runtime-feature-bridge"
-  import battleRuntimeSpellBridge.* from "./battle-runtime-spell-bridge"
+
   import battleRuntimeModel.* from "./battle-runtime-model"
   // Continuation-kind variants (e.g. BattleRuntimeMovementContinuation) live in
   // this leaf; used directly in the module body below, so import it directly —
@@ -26,12 +32,13 @@ module battleRuntimeLightConcentrationMovementReactionTests {
   import battleRuntimeHitPoints.* from "./battle-runtime-hit-points"
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
   import battleRuntimeDamageAdjustments.* from "./battle-runtime-damage-adjustments"
-  import battleRuntimeSpellInvocation.* from "./battle-runtime-spell-invocation"
+  import battleRuntimeSpellCastResources.* from "./battle-runtime-spell-cast-resources"
+  import battleRuntimeSpellSlotClassification.* from "./battle-runtime-spell-slot-classification"
   import battleRuntimeReactionWindow.* from "./battle-runtime-reaction-window"
   import battleRuntimeReactionResolution.* from "./battle-runtime-reaction-resolution"
-  import battleRuntimeSpellAttack.* from "./battle-runtime-spell-attack"
+  import battleRuntimeSpellAttackFacts.* from "./battle-runtime-spell-attack-facts"
   import battleRuntimeChainedSpellAttack.* from "./battle-runtime-chained-spell-attack"
-  import battleRuntimeSaveGatedSpell.* from "./battle-runtime-save-gated-spell"
+  import battleRuntimeSaveGatedDamageResolution.* from "./battle-runtime-save-gated-damage-resolution"
   import battleRuntimeMarkedRiders.* from "./battle-runtime-marked-riders"
   import battleRuntimeMarkedSpells.* from "./battle-runtime-marked-spells"
   import battleRuntimeReactionWindow.* from "./battle-runtime-reaction-window"
