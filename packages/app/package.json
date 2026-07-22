@@ -19,12 +19,6 @@
     "circular": "madge --extensions ts,tsx --circular --exclude '.*\\.gen\\..*' src",
     "check-all": "pnpm build && pnpm typecheck && pnpm lint && pnpm test:coverage"
   },
-  "lint-staged": {
-    "*.{ts,tsx}": [
-      "eslint --fix",
-      "prettier --write"
-    ]
-  },
   "dependencies": {
     "@dnd/battle-runtime": "workspace:*",
     "@dnd/character-creation-runtime": "workspace:*",
