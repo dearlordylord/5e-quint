@@ -67,8 +67,6 @@ export function targetCountBySlot(
     Math.max(0, Number(slotLevel) - baseLevel) * count.perSlotAboveBase;
 }
 
-export { singleTargetSpellRangeFeet } from "../procedure-admission/spell-range-facts.ts";
-
 type ExplodingMaxDieThresholdTier = {
   readonly atLevel: number;
   readonly dice: number;

@@ -46,11 +46,11 @@ import {
 } from "../../battle-reducer.ts";
 import type { CharacterBattleSpellcastingState } from "../../character-battle-resources.ts";
 import type { CombatantId } from "../../identity.ts";
+import { singleTargetSpellRangeFeet } from "../../procedure-admission/spell-range-facts.ts";
 import {
   sameStringSet,
   scalarBuffSpellTargetCount,
   scalarBuffSpellTargetCountBySlot,
-  singleTargetSpellRangeFeet,
   supportedDamageAmountExpr,
 } from "../spells-profile-shared.ts";
 

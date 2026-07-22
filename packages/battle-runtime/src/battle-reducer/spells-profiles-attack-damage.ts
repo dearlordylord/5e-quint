@@ -34,6 +34,7 @@ import {
   type SupportedSpellInvocation,
 } from "../battle-reducer.ts";
 import type { CharacterBattleSpellcastingState } from "../character-battle-resources.ts";
+import { singleTargetSpellRangeFeet } from "../procedure-admission/spell-range-facts.ts";
 import {
   CHROMATIC_ORB_CONTINUATION_LIMIT_KINDS,
   CHROMATIC_ORB_DAMAGE_TYPES,
@@ -46,7 +47,6 @@ import {
 import {
   sameDiceExpr,
   sameStringSet,
-  singleTargetSpellRangeFeet,
   supportedDamageAmountExpr,
 } from "./spells-profile-shared.ts";
 
