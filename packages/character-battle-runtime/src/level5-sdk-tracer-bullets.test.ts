@@ -1623,6 +1623,10 @@ describe("level 5 SDK tracer bullets", () => {
         awaitingCounterspell,
         counterspellCase.reactorId,
       );
+      const save = requireHoleFromList(
+        choice.initialHoles,
+        "savingThrowOutcome",
+      );
 
       const resolved = requireResolved(
         resolveBattleInterrupt({
@@ -1632,7 +1636,14 @@ describe("level 5 SDK tracer bullets", () => {
               awaitingCounterspell.holes,
               "interruptDecision",
             ),
-            counterspellDecision(counterspellCase.reactorId, choice, []),
+            counterspellDecision(counterspellCase.reactorId, choice, [
+              savingThrowOutcomeFill(save, [
+                {
+                  targetId: counterspellTriggeringWizardId,
+                  succeeded: false,
+                },
+              ]),
+            ]),
           ),
         }),
       );

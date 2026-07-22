@@ -1899,16 +1899,20 @@ function normalizeQuickenedSpellGovernorQuintState(
     scenarioOutcome: lastResultValue,
     protocol,
   });
+  const calmEmotionsImmunity = booleanField(state, "qCalmEmotionsImmunity");
+  const invisibilityActive = booleanField(state, "qInvisibilityActive");
+  const blessActive = booleanField(state, "qBlessActive");
+  const creatureSizeIncreased = booleanField(state, "qCreatureSizeIncreased");
   return {
     quickenedCureWoundsOffered: booleanField(
       state,
       "qQuickenedCureWoundsOffered",
     ),
     colorSprayBlinded: booleanField(state, "qColorSprayBlinded"),
-    calmEmotionsImmunity: booleanField(state, "qCalmEmotionsImmunity"),
-    invisibilityActive: booleanField(state, "qInvisibilityActive"),
-    blessActive: booleanField(state, "qBlessActive"),
-    creatureSizeIncreased: booleanField(state, "qCreatureSizeIncreased"),
+    calmEmotionsImmunity,
+    invisibilityActive,
+    blessActive,
+    creatureSizeIncreased,
     magicActionAvailable: booleanField(state, "qMagicActionAvailable"),
     bonusActionAvailable: booleanField(state, "qBonusActionAvailable"),
     sorceryPointsRemaining: numberFromQuintInt(
@@ -1923,7 +1927,11 @@ function normalizeQuickenedSpellGovernorQuintState(
       "qQuickenedLevelOnePlusCastThisTurn",
     ),
     spellSlotActsAvailable: booleanField(state, "qSpellSlotActsAvailable"),
-    casterConcentrating: booleanField(state, "qCasterConcentrating"),
+    casterConcentrating:
+      calmEmotionsImmunity ||
+      invisibilityActive ||
+      blessActive ||
+      creatureSizeIncreased,
     invalidKind: invalidKind(state["qInvalidKind"]),
     lastResult: lastResultValue,
   };

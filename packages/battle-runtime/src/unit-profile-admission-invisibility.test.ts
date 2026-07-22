@@ -35,6 +35,7 @@ import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
   spellAct,
   spellActInvocation,
+  savingThrowOutcomeFill,
   spellTargetListFill,
 } from "./unit-profile-admission-spell-fill-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
@@ -373,12 +374,17 @@ describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
       procedure: "counterspell",
       slotLevel: 3,
     });
+    const save = requireHole(choice.initialHoles, "savingThrowOutcome");
     const countered = requireResolved(
       resolveBattleInterrupt({
         state: awaitingCounterspell.state,
         fill: interruptDecisionFill(
           requireHole(awaitingCounterspell.holes, "interruptDecision"),
-          triggeredReactionSpellDecision(counterspellerId, choice, []),
+          triggeredReactionSpellDecision(counterspellerId, choice, [
+            savingThrowOutcomeFill(save, [
+              { targetId: spellTargetId, succeeded: false },
+            ]),
+          ]),
         ),
       }),
     );
@@ -560,12 +566,17 @@ describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
       procedure: "counterspell",
       slotLevel: 3,
     });
+    const save = requireHole(choice.initialHoles, "savingThrowOutcome");
     const countered = requireResolved(
       resolveBattleInterrupt({
         state: awaitingCounterspell.state,
         fill: interruptDecisionFill(
           requireHole(awaitingCounterspell.holes, "interruptDecision"),
-          triggeredReactionSpellDecision(spellTargetId, choice, []),
+          triggeredReactionSpellDecision(spellTargetId, choice, [
+            savingThrowOutcomeFill(save, [
+              { targetId: magicMissileCasterId, succeeded: false },
+            ]),
+          ]),
         ),
       }),
     );

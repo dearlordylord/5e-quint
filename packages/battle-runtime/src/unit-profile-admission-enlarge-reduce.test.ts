@@ -293,6 +293,7 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
       awaitingCounterspell,
       battleRuntimeSessionWithState(castingSession, awaitingCounterspell.state),
     );
+    const save = requireHole(choice.initialHoles, "savingThrowOutcome");
     const countered = resolveBattleInterrupt({
       state: awaitingCounterspell.state,
       fill: interruptDecisionFill(
@@ -303,7 +304,11 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
           choice: {
             kind: "castTriggeredReactionSpell",
             procedureRef: choice.subject.procedureRef,
-            fills: [],
+            fills: [
+              savingThrowOutcomeFill(save, [
+                { targetId: spellCasterId, succeeded: false },
+              ]),
+            ],
           },
         },
       ),
