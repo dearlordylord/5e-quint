@@ -24,6 +24,7 @@ import type {
   BattleSpellActiveEffectTemplate,
   DirectConditionSpellActiveEffectTemplate,
   MarkedDamageRiderRetargetTiming,
+  PersistentArmorSpellActiveEffect,
   SelfTransformationNaturalWeaponFacts,
   SpellCreatedHeldObjectActiveEffect,
   SpellCreatureSizeChangeActiveEffect,
@@ -84,10 +85,25 @@ type SourcedBattleActiveEffect = Extract<
   BattleActiveEffect,
   BattleActiveEffectSource
 >;
-type SpellActiveEffectTemplate<Kind extends SourcedBattleActiveEffect["kind"]> =
-  BattleSpellActiveEffectTemplate<
+type IsUnion<Value, Whole = Value> = Value extends Whole
+  ? [Whole] extends [Value]
+    ? false
+    : true
+  : never;
+type UniqueSourcedBattleActiveEffectKind = {
+  readonly [Kind in SourcedBattleActiveEffect["kind"]]: IsUnion<
     Extract<SourcedBattleActiveEffect, { readonly kind: Kind }>
-  >;
+  > extends false
+    ? Kind
+    : never;
+}[SourcedBattleActiveEffect["kind"]];
+type SpellActiveEffectTemplate<
+  Kind extends UniqueSourcedBattleActiveEffectKind,
+> = BattleSpellActiveEffectTemplate<
+  Extract<SourcedBattleActiveEffect, { readonly kind: Kind }>
+>;
+type PersistentArmorSpellActiveEffectTemplate =
+  BattleSpellActiveEffectTemplate<PersistentArmorSpellActiveEffect>;
 
 export type AbilityD20TestRollModeSaveGateSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
@@ -888,7 +904,7 @@ export type OngoingSpellEndSpellProcedureExecution =
 export type PersistentArmorEffectPreparedSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
     readonly access: PreparedSpellAccess;
-    readonly activeEffect: SpellActiveEffectTemplate<"spellBaseArmorClass">;
+    readonly activeEffect: PersistentArmorSpellActiveEffectTemplate;
     readonly procedure: "persistentArmorEffect";
     readonly rangeFeet: MovementFeet;
     readonly resource: SpellSlotInvocationResource;
@@ -897,7 +913,7 @@ export type PersistentArmorEffectPreparedSpellProcedureExecution =
 export type PersistentArmorEffectArmorOfShadowsSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
     readonly access: ArmorOfShadowsSpellAccess;
-    readonly activeEffect: SpellActiveEffectTemplate<"spellBaseArmorClass">;
+    readonly activeEffect: PersistentArmorSpellActiveEffectTemplate;
     readonly procedure: "persistentArmorEffect";
     readonly rangeFeet: MovementFeet;
     readonly resource: NoSpellInvocationResource;

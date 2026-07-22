@@ -170,23 +170,6 @@ function sameObjectLightTargeting(
   );
 }
 
-function samePersistentArmorExpiration(
-  left: PersistentArmorEffectExecution["activeEffect"]["expiresAt"],
-  right: PersistentArmorEffectExecution["activeEffect"]["expiresAt"],
-): boolean {
-  return Match.value(left).pipe(
-    Match.discriminatorsExhaustive("kind")({
-      concentration: (value) =>
-        right.kind === "concentration" &&
-        value.combatantId === right.combatantId &&
-        value.durationTicks === right.durationTicks,
-      duration: (value) =>
-        right.kind === "duration" &&
-        value.durationTicks === right.durationTicks,
-    }),
-  );
-}
-
 function sameRepeatedDamageAllocationDamage(
   left: RepeatedDamageAllocationExecution["damage"],
   right: RepeatedDamageAllocationExecution["damage"],
@@ -619,10 +602,8 @@ export function samePersistentArmorEffectExecution(
     left.activeEffect.ability === right.activeEffect.ability &&
     left.activeEffect.earlyEnds[0].kind ===
       right.activeEffect.earlyEnds[0].kind &&
-    samePersistentArmorExpiration(
-      left.activeEffect.expiresAt,
-      right.activeEffect.expiresAt,
-    )
+    left.activeEffect.expiresAt.durationTicks ===
+      right.activeEffect.expiresAt.durationTicks
   );
 }
 

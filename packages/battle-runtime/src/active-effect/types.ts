@@ -1109,6 +1109,15 @@ export type BattleActiveEffect =
       >;
     };
 
+export type PersistentArmorSpellActiveEffect = Extract<
+  BattleActiveEffect,
+  {
+    readonly kind: "spellBaseArmorClass";
+    readonly earlyEnds: readonly [BattleTargetDonsArmorEarlyEnd];
+    readonly expiresAt: { readonly kind: "duration" };
+  }
+>;
+
 export type SpellMarkedDamageRider = Extract<
   BattleActiveEffect,
   { readonly kind: "spellMarkedDamageRider" }

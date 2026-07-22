@@ -1,8 +1,5 @@
 // The persistentArmorEffect Spell Procedure Profile: a touch spell that
-import {
-  ConcentrationBattleActiveEffectExpirationSchema,
-  DurationBattleActiveEffectExpirationSchema,
-} from "../../active-effect/codecs.ts";
+import { DurationBattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
 // creates a timed Spell Effect setting the willing unarmored target's base
 // Armor Class to a fixed base plus Dexterity modifier.
 //
@@ -71,28 +68,16 @@ type PersistentArmorInvocation = Extract<
   { readonly procedure: "persistentArmorEffect" }
 >;
 
-const PersistentArmorEffectSchema = Schema.Union(
-  Schema.Struct({
-    kind: Schema.Literal("spellBaseArmorClass"),
-    sourceCombatantId: CombatantId,
-    base: ArmorClassSchema,
-    ability: Schema.Literal("dex"),
-    earlyEnds: Schema.Tuple(
-      Schema.Struct({ kind: Schema.Literal("targetDonsArmor") }),
-    ),
-    expiresAt: DurationBattleActiveEffectExpirationSchema,
-  }),
-  Schema.Struct({
-    kind: Schema.Literal("spellBaseArmorClass"),
-    sourceCombatantId: CombatantId,
-    base: ArmorClassSchema,
-    ability: Schema.Literal("dex"),
-    earlyEnds: Schema.Tuple(
-      Schema.Struct({ kind: Schema.Literal("concentrationBroken") }),
-    ),
-    expiresAt: ConcentrationBattleActiveEffectExpirationSchema,
-  }),
-);
+const PersistentArmorEffectSchema = Schema.Struct({
+  kind: Schema.Literal("spellBaseArmorClass"),
+  sourceCombatantId: CombatantId,
+  base: ArmorClassSchema,
+  ability: Schema.Literal("dex"),
+  earlyEnds: Schema.Tuple(
+    Schema.Struct({ kind: Schema.Literal("targetDonsArmor") }),
+  ),
+  expiresAt: DurationBattleActiveEffectExpirationSchema,
+});
 type PersistentArmorEffectResolutionInput = ActionSpellBattleResolutionInput & {
   readonly castingState: BattleState;
 };

@@ -280,6 +280,7 @@ import type {
   BattleSpellActiveEffectTemplate,
   BattleUnitFeatureEffectBase,
   MarkedDamageRiderRetargetTiming,
+  PersistentArmorSpellActiveEffect,
   SelfTransformationNaturalWeaponFacts,
   SpellCreatedHeldObjectActiveEffect,
   SpellLevitatedCreatureActiveEffect,
@@ -3233,9 +3234,7 @@ export type PersistentArmorSpellInvocation =
       readonly procedure: "persistentArmorEffect";
       readonly spell: SpellRecord;
       readonly rangeFeet: MovementFeet;
-      readonly activeEffect: BattleSpellActiveEffectTemplate<
-        Extract<BattleActiveEffect, { readonly kind: "spellBaseArmorClass" }>
-      >;
+      readonly activeEffect: BattleSpellActiveEffectTemplate<PersistentArmorSpellActiveEffect>;
     }
   | {
       readonly access: ArmorOfShadowsSpellAccess;
@@ -3243,9 +3242,7 @@ export type PersistentArmorSpellInvocation =
       readonly procedure: "persistentArmorEffect";
       readonly spell: SpellRecord;
       readonly rangeFeet: MovementFeet;
-      readonly activeEffect: BattleSpellActiveEffectTemplate<
-        Extract<BattleActiveEffect, { readonly kind: "spellBaseArmorClass" }>
-      >;
+      readonly activeEffect: BattleSpellActiveEffectTemplate<PersistentArmorSpellActiveEffect>;
     };
 
 export type ResolvedSpellAttackDamagePayload = Extract<
