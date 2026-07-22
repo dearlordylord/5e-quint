@@ -43,7 +43,7 @@ import { parseBattleSpellEffectLevel } from "./battle-reducer/spells-effective-l
 import type {
   BattleOngoingSpellTarget,
   BattleOngoingSpellTargetWithinRangeFact,
-} from "./battle-reducer.ts";
+} from "./battle-state-execution.ts";
 import { battleSpellEffectOccurrenceId } from "./identity.ts";
 import {
   antimagicFieldUnitId,

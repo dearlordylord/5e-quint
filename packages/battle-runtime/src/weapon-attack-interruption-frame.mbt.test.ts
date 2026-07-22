@@ -27,11 +27,11 @@ import {
   currentInterruptCheckpoint,
   interruptDecisionHole,
   resolveBattleInterrupt,
-  resolveBattleSubject,
   type BattleAttackDamageInterruptionFrame,
   type BattleHole,
   type BattleState,
-} from "./battle-reducer.ts";
+} from "./battle-state-execution.ts";
+import { resolveBattleSubject } from "./battle-session-execution.ts";
 import type { BattleSubject } from "./battle-subjects.ts";
 import {
   battleAttackExecutionScopeRefBelongsToCombatant,

@@ -13,7 +13,7 @@ import {
 import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { describe, expect, it } from "vitest";
 
-import { zeroHpLifecycleIsTerminal } from "./battle-reducer.ts";
+import { zeroHpLifecycleIsTerminal } from "./battle-state-execution.ts";
 import {
   applyBattleHitPointDamage,
   hpDamageProjection,

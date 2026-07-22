@@ -58,7 +58,7 @@ import {
   type BattleSubject,
   type CombatantId,
 } from "./index.ts";
-import type { BattleActDiscoveryCandidate } from "./battle-reducer.ts";
+import type { BattleActDiscoveryCandidate } from "./battle-state-execution.ts";
 
 const level1DamageSpellUnitIds = [
   "burning_hands",

@@ -1,7 +1,6 @@
-// Runtime protocol constants and reducer-local parse result shapes extracted
-// from ../battle-reducer.ts. This module owns battle hole identifiers, initial
-// turn resources, supported action-resource projections, and small fill-set
-// result types used by resolver modules.
+// Owns battle hole identifiers, initial turn resources, supported
+// action-resource projections, and small fill-set result types used by resolver
+// modules.
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.remarkable-athlete
 

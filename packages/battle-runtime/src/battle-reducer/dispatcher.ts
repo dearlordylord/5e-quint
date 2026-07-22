@@ -1,4 +1,3 @@
-// State-only battle execution dispatcher extracted from ../battle-reducer.ts.
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.retaliation-reaction-attack
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-self-transformation-mode
@@ -12,12 +11,6 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-action-interdiction
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ANTIMAGIC_FIELD_ACTION_INTERDICTION
-// Owns admitted subject resolution, interrupt checkpoints,
-// interrupted-procedure replay, turn snapshots, and mechanical Reaction-window
-// progression. Session/context advancement and initial character-procedure
-// admission live in ../battle-session-execution.ts; presentation lives in
-// ../battle-act-composition.ts.
-
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-flaming-sphere-hazard-ram
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.monk-focus-battle-options

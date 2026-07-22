@@ -51,7 +51,7 @@ import {
   type BattleSubject,
   type CombatantId,
 } from "./index.ts";
-import type { BattleActDiscoveryCandidate } from "./battle-reducer.ts";
+import type { BattleActDiscoveryCandidate } from "./battle-state-execution.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import {
   attackRollFill,

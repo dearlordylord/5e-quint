@@ -37,7 +37,7 @@ import {
 import type {
   BattleActDiscoveryCandidate,
   BattleCreatureAttackDamageRollHole,
-} from "./battle-reducer.ts";
+} from "./battle-state-execution.ts";
 import {
   CREATURE_ATTACK_DAMAGE_HOLE_ID,
   resolveCreatureAttack,

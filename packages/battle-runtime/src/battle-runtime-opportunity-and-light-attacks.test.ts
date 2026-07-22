@@ -52,7 +52,7 @@ import { describe, expect, test } from "vitest";
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { classLevel } from "@dnd/shared/types";
 import { sourceDamageRollPenaltyRollHole } from "./battle-reducer/damage-helpers.ts";
-import { battleFillEquals } from "./battle-reducer.ts";
+import { battleFillEquals } from "./battle-state-execution.ts";
 import { BattleStatBlockProcedureExecutionRef } from "./identity.ts";
 
 function goblinOpportunityAttackThreat(state: BattleState) {

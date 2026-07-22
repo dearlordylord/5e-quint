@@ -90,8 +90,8 @@ import type {
   BattleActiveEffect,
   BattleSpellTurnStartDamageRollHole,
   BattleSpellTurnStartSavingThrowOutcomeHole,
-} from "./battle-reducer.ts";
-import { KnockedOutConditionState } from "./battle-reducer.ts";
+} from "./battle-state-execution.ts";
+import { KnockedOutConditionState } from "./battle-state-execution.ts";
 import {
   applyBattleHitPointDamage,
   breakBattleConcentration,

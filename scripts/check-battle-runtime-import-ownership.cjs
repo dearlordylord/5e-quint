@@ -39,10 +39,6 @@ const FORBIDDEN_OWNERS = [
       `${BATTLE_RUNTIME_SRC}/battle-runtime-context.ts`,
     ],
   },
-  {
-    zone: "legacy mixed aggregation",
-    paths: [`${BATTLE_RUNTIME_SRC}/battle-reducer.ts`],
-  },
 ];
 
 const MIGRATION_CANDIDATES = [
@@ -619,8 +615,5 @@ if (process.argv.includes("--self-test")) {
     throw new Error("No battle-runtime procedure-execution roots were found.");
   }
   checkRoots(roots, true);
-  checkRoots(admissionRoots(), true, [
-    "presentation",
-    "legacy mixed aggregation",
-  ]);
+  checkRoots(admissionRoots(), true, ["presentation"]);
 }

@@ -1,4 +1,3 @@
-// By-type damage math helpers extracted from battle-reducer.ts.
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-creature-size-change
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
@@ -13,9 +12,6 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING
 // KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.ATTACK_CONTROL
-// Cluster N (damage_helpers). Mechanical extraction — no behavior change.
-// Consumes only G (creature_state) and W (statblock_attacks).
-
 import { DieRollResult, type DamageType } from "@dnd/shared/types";
 import {
   holeId,

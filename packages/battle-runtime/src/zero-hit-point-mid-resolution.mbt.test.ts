@@ -1,5 +1,5 @@
 import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
-import type { BattleActDiscoveryCandidate } from "./battle-reducer.ts";
+import type { BattleActDiscoveryCandidate } from "./battle-state-execution.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.PROTOCOL.ZERO_HIT_POINT_MID_RESOLUTION
 // RAW trace:
 // - .references/srd-5.2.1/Playing-the-Game.md#Dropping to 0 Hit Points:

@@ -5,7 +5,7 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import { describe, expect, it } from "vitest";
 
-import type { BattleActiveEffect } from "./battle-reducer.ts";
+import type { BattleActiveEffect } from "./battle-state-execution.ts";
 import {
   MBT_TEST_TIMEOUT_MS,
   assertWitnessProtocolConsistentWithScenario,

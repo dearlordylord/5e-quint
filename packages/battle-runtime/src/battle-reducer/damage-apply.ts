@@ -1,17 +1,11 @@
-// Damage application + HP lifecycle + concentration helpers extracted from
 // RAW-COVERAGE: runtime-owner RAW-RULES-GLOSSARY-CONCENTRATION-DAMAGE-001
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll unit-feature.enemy-zero-hit-point-temporary-hit-points
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-duration-and-concentration
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-haste-positive
-// battle-reducer.ts. Cluster M (damage_apply). Mechanical extraction — no
-// behavior change. Pass 9 also absorbs:
-//   - breakBattleConcentration, breakBattleConcentrationAfterDamage,
-//     resolveBattleConcentrationDamage (from H, cycle #10)
-//   - applyTemporaryHitPoints (from H, cycle #13)
 // Spell-condition protocol helpers live in spell-condition-effects-helpers.ts
-// (cycle #19) so both M and P can import them without a cycle.
+// so damage application and spell effects can share them without a cycle.
 // KERNEL-COVERAGE: runtime-owner SHARED.HIT_POINTS.POSITIVE_DAMAGE BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_DAMAGE_PENALTY
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING

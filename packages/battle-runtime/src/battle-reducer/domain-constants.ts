@@ -1,7 +1,4 @@
-// Constants extracted from battle-reducer.ts. Pure leaf values with no
-// dependency on internal helpers in battle-reducer.ts. Movement: zero-behavior
-// mechanical extraction only — every value (and its `as const satisfies T`
-// shape) is preserved verbatim.
+// Pure leaf constants with no dependency on reducer implementation helpers.
 
 import {
   holeId,

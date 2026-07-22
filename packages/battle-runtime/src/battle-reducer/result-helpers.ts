@@ -1,6 +1,5 @@
-// Shared result envelope helpers extracted from battle-reducer.ts.
-// Cycle #21 in REFACTOR_MAP.md — `invalidResult` is used across many
-// clusters (V, W, T, J, etc.), so it lives in this tiny shared module.
+// `invalidResult` lives in this shared leaf because resolver modules across the
+// reducer need the same invalid-result envelope.
 
 import {
   snapshotBattle,

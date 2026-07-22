@@ -5,7 +5,7 @@ import {
   parseAttackDamageInterruptionFrame,
   type BattleAttackDamageInterruptionBoundaryInput,
   type BattleAttackDamageInterruptionFrame,
-} from "./battle-reducer.ts";
+} from "./battle-state-execution.ts";
 import {
   fighterAttackSubject,
   fighterVsGoblinBattle,

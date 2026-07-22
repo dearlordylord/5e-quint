@@ -6,7 +6,7 @@ import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import { battleTablePositionId } from "./index.ts";
 import type { BattleResolutionResult } from "./index.ts";
-import type { BattleShovePushOutcome } from "./battle-reducer.ts";
+import type { BattleShovePushOutcome } from "./battle-state-execution.ts";
 import {
   attackRollFill,
   battleId,

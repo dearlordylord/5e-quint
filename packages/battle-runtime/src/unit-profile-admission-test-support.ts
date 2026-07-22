@@ -55,7 +55,7 @@ import type {
   BattleCreatureState,
   SpellMarkedDamageRider,
   SupportedDamageSpellInvocation,
-} from "./battle-reducer.ts";
+} from "./battle-state-execution.ts";
 import { battleCreatureStateWithKnockOutPreservedConditions } from "./battle-reducer/creature-state.ts";
 import { applyBattleHitPointDamage } from "./battle-reducer/damage-apply.ts";
 import { hideousLaughterRepeatSavingThrowOutcomeHole } from "./battle-reducer/hideous-laughter-repeat-save.ts";

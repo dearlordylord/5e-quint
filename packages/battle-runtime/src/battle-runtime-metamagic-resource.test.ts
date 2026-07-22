@@ -26,11 +26,11 @@ import { describe, expect, test } from "vitest";
 import type {
   BattleActiveEffect,
   BattleSpellTargetListHole,
-} from "./battle-reducer.ts";
+} from "./battle-state-execution.ts";
 import {
   EMPOWERED_SPELL_REROLL_UNSUPPORTED_DAMAGE_ROLL_OWNER_MESSAGE,
   SEEKING_SPELL_REROLL_UNSUPPORTED_ATTACK_ROLL_OWNER_MESSAGE,
-} from "./battle-reducer.ts";
+} from "./battle-state-execution.ts";
 import {
   admitSpellMetamagicApplications,
   CAREFUL_METAMAGIC_EFFECT_KIND,

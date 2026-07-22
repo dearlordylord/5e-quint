@@ -1,8 +1,3 @@
-// Runtime hole resolution helpers extracted from battle-reducer.ts.
-// Cluster R (hole_helpers). Mechanical extraction — no behavior change.
-// Includes prerequisite moves: bonusActionDashSubjectForSpeedKind (from C),
-// hideAbilityCheckHole, searchAbilityCheckHole, escapeSpellRestraintAbilityCheckHole (from H).
-
 // KERNEL-COVERAGE: runtime-owner BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE

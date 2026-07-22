@@ -50,7 +50,7 @@ import {
   resolveBattleSubject,
   startBattle,
 } from "./unit-profile-admission-test-support.ts";
-import type { BattleActiveEffect } from "./battle-reducer.ts";
+import type { BattleActiveEffect } from "./battle-state-execution.ts";
 import { requiredAbilityCheckRollMode } from "./battle-reducer/hole-helpers.ts";
 import { characterCreature } from "./unit-profile-admission-creature-fixture-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";

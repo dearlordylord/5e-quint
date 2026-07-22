@@ -1,7 +1,3 @@
-// Turn-end, movement command, opportunity-attack, and readied-release resolution
-// extracted from ../battle-reducer.ts. Mechanical move; no behavior change
-// intended.
-
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-flaming-sphere-hazard-ram spell.invocation-moonbeam-movable-zone
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spike-growth-movement-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-gust-of-wind-line

@@ -20,7 +20,7 @@ import {
 import type {
   BattleDamageRelationshipDecision,
   BattleTargetSpatialFact,
-} from "./battle-reducer.ts";
+} from "./battle-state-execution.ts";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import { enemyZeroHitPointTemporaryHitPointsProcedures } from "./battle-reducer/enemy-zero-hit-point-temporary-hit-points.ts";

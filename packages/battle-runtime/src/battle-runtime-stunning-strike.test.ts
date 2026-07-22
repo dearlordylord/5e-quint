@@ -1,6 +1,10 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.stunning-strike
 import { describe, expect, test } from "vitest";
-import type { BattleFill, BattleHole, BattleState } from "./battle-reducer.ts";
+import type {
+  BattleFill,
+  BattleHole,
+  BattleState,
+} from "./battle-state-execution.ts";
 import { requiredAttackRollMode } from "./battle-reducer/attack-roll.ts";
 import { effectiveWalkSpeed } from "./battle-reducer/movement-speed.ts";
 import { battleStunningStrikeSupportForUnit } from "./unit-feature-support.ts";

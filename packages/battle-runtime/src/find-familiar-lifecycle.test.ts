@@ -68,7 +68,7 @@ import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics
 import {
   ATTACK_TARGET_HOLE_ID,
   D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
-} from "./battle-reducer.ts";
+} from "./battle-state-execution.ts";
 import { battleCreatureStateWithoutKnockOut } from "./battle-reducer/creature-state.ts";
 import { applyBattleHitPointDamage } from "./battle-reducer/damage-apply.ts";
 import { D20_TEST_NATURAL_ONE_REROLL_UNAVAILABLE_MESSAGE } from "./battle-reducer/d20-test-natural-one-reroll.ts";

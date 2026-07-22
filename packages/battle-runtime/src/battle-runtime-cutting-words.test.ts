@@ -1,4 +1,4 @@
-import { attackDamageInterruptionFrame } from "./battle-reducer.ts";
+import { attackDamageInterruptionFrame } from "./battle-state-execution.ts";
 import { classLevel } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
 import {

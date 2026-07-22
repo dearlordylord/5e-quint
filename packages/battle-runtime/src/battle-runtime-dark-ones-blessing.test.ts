@@ -38,7 +38,7 @@ import {
 import type {
   BattleDamageRelationshipDecision,
   BattleTargetSpatialFact,
-} from "./battle-reducer.ts";
+} from "./battle-state-execution.ts";
 import { applyPreparedSlotSpellDamage } from "./battle-reducer/spells-damage-fills.ts";
 import { damageRelationshipQuestionId } from "./battle-reducer/damage-relationship-question-id.ts";
 import { applyChainedSpellDamage } from "./battle-reducer/spells-resolve-chained.ts";

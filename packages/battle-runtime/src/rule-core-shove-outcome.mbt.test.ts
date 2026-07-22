@@ -35,7 +35,7 @@ import type {
   BattleFill,
   BattleSubject,
 } from "./battle-runtime-test-support.ts";
-import type { BattleShovePushOutcome } from "./battle-reducer.ts";
+import type { BattleShovePushOutcome } from "./battle-state-execution.ts";
 
 const shoveOutcomeScenarios = [
   "init",

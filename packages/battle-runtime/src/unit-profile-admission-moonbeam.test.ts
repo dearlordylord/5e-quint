@@ -69,7 +69,7 @@ import {
   statBlockCatalog,
   unitLibrary,
 } from "./unit-profile-admission-catalog-support.ts";
-import { EMPOWERED_SPELL_REROLL_UNSUPPORTED_DAMAGE_ROLL_OWNER_MESSAGE } from "./battle-reducer.ts";
+import { EMPOWERED_SPELL_REROLL_UNSUPPORTED_DAMAGE_ROLL_OWNER_MESSAGE } from "./battle-state-execution.ts";
 
 describe("L12G deterministic Moonbeam admission", () => {
   test("moonbeam is admitted as a movable Cylinder CON-save radiant hazard", () => {

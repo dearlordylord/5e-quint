@@ -1,8 +1,4 @@
-// Pure spell-effect expression helpers extracted from battle-reducer.ts.
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
-// Cluster Q (spell_effects). Mechanical extraction — no behavior change.
-// Consumed by clusters L (spells_resolve) and P (spells_holes_fills).
-
 import { SpellSlotLevel } from "@dnd/shared/types";
 import { expendSpellSlotInCapacities } from "@dnd/shared-algebras/spell-slot-expenditure-algebra";
 import { rolledDiceTotal } from "@dnd/shared-algebras/runtime-dice-algebra";

@@ -12,7 +12,7 @@ import {
   type BattleFill,
   type BattleHole,
   type BattleState,
-} from "./battle-reducer.ts";
+} from "./battle-state-execution.ts";
 import type { BattleSubject } from "./battle-subjects.ts";
 import { classLevel, difficultyClass, movementFeet } from "@dnd/shared/types";
 import type { BattleRuntimeSession } from "./index.ts";

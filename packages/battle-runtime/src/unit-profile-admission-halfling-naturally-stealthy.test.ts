@@ -5,7 +5,7 @@
 
 import type { Size, UnitRecord } from "@dnd/surface/surface/types";
 import { describe, expect, test } from "vitest";
-import type { BattleHidePrerequisite } from "./battle-reducer.ts";
+import type { BattleHidePrerequisite } from "./battle-state-execution.ts";
 import type { BattleUnitRef } from "./battle-init.ts";
 import type { BattleSubject } from "./battle-subjects.ts";
 import {

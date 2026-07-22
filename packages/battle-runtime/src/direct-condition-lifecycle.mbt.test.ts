@@ -56,7 +56,7 @@ import type {
   BattleState,
   SupportedSpellInvocation,
 } from "./index.ts";
-import type { BattleExecutableSpellInvocation } from "./battle-reducer.ts";
+import type { BattleExecutableSpellInvocation } from "./battle-state-execution.ts";
 import { spellProcedureExecution } from "./character-execution-admission.ts";
 
 type DirectConditionSpellInvocation = Extract<

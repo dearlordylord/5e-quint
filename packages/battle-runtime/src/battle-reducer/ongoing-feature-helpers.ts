@@ -1,8 +1,5 @@
-// Shared ongoing-feature occurrence/expiration helpers extracted from
-// battle-reducer.ts. Cycle #20 in REFACTOR_MAP.md — both T (attack_roll) and
-// J (unit_features) need these helpers; hoisting them here lets both clusters
-// import from a common leaf without forming a J↔T cycle. Mechanical
-// extraction — no behavior change.
+// Attack rolls and unit features share these occurrence/expiration helpers
+// through a common leaf to avoid a cycle between those owners.
 // KERNEL-COVERAGE: runtime-owner BATTLE.COMPOSITION.TURN_BOUNDARY_EFFECT_LIFECYCLE_ORDERING
 
 import { Round } from "@dnd/shared/types";

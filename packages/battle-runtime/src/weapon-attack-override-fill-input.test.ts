@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import type { BattleFill } from "./battle-reducer.ts";
+import type { BattleFill } from "./battle-state-execution.ts";
 import {
   ATTACK_TARGET_HOLE_ID,
   SPELL_CAST_REACTION_FACTS_HOLE_ID,

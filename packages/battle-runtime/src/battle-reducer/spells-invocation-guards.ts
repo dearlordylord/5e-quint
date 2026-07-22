@@ -1,7 +1,6 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form
-// Spell invocation predicates and lightweight projections extracted from
-// ../battle-reducer.ts. Keeps narrowing logic close to the spell invocation
-// vocabulary while the reducer facade continues to own the public type surface.
+// Spell invocation predicates and lightweight projections keep narrowing logic
+// close to the spell invocation vocabulary.
 
 import type {
   BattleCreatureState,

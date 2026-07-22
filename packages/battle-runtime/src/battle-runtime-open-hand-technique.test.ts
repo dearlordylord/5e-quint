@@ -3,7 +3,7 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 import { describe, expect, test } from "vitest";
 
 import { battleTablePositionId } from "./index.ts";
-import type { BattleShovePushOutcome } from "./battle-reducer.ts";
+import type { BattleShovePushOutcome } from "./battle-state-execution.ts";
 import {
   attackRollFill,
   battleId,

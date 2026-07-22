@@ -1,6 +1,4 @@
-// Pure leaf helpers extracted from battle-reducer.ts. Mechanical extraction —
-// no behavior change. These functions depend only on shared algebra/type
-// imports and exported types from battle-reducer.
+// Pure leaf helpers that depend only on shared algebra and domain types.
 // RAW-COVERAGE: runtime-owner RAW-RULES-GLOSSARY-CONCENTRATION-DAMAGE-001
 
 import * as Either from "effect/Either";

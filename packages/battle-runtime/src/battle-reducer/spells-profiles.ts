@@ -1,16 +1,15 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ongoing-spell-ending
-// Spell profile predicates and projections (Cluster O). Mechanical extraction
-// from battle-reducer.ts. Aggregates: per-procedure `supported*Profile`
+// Spell profile predicates and projections aggregate per-procedure
+// `supported*Profile`
 // predicates, spell-specific authoring bodies (faerieFire, animalFriendship,
 // colorSpray, entangle), targeting/range/cost helpers, shape predicates,
 // and equality helpers.
 //
-// O is a leaf cluster within the spells subsystem: it depends on Q
-// (spell-effects), domain constants/types from `../battle-reducer.ts`, and
-// surface types only. Consumers are K (discovery), P (holes/fills), L
-// (resolve), and F (turn).
+// This is a leaf module within the spells subsystem. It depends on spell-effect
+// and domain vocabulary plus Surface types; discovery, holes/fills, resolution,
+// and turn processing consume it.
 
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-flaming-sphere-hazard-ram
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spike-growth-movement-hazard

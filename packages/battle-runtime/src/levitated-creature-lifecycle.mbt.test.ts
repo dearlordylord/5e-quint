@@ -69,7 +69,7 @@ import {
   type BattleState,
   type BattleSubject,
 } from "./index.ts";
-import type { BattleActDiscoveryCandidate } from "./battle-reducer.ts";
+import type { BattleActDiscoveryCandidate } from "./battle-state-execution.ts";
 
 const noAltitude = -1;
 

@@ -66,7 +66,7 @@ import {
   type BattleState,
   type BattleSubject,
 } from "./battle-runtime-test-support.ts";
-import type { AttackDamageRider } from "./battle-reducer.ts";
+import type { AttackDamageRider } from "./battle-state-execution.ts";
 import type { BattleResolutionResult } from "./index.ts";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
 import type { StatBlockDamageNotation } from "./battle-action-options.ts";

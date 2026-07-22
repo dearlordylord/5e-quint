@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 
-import type { SupportedSpellInvocation } from "../battle-reducer.ts";
+import type { SupportedSpellInvocation } from "../battle-state-execution.ts";
 import { isReadiedSpellInvocation } from "./spells-discovery.ts";
 
 type ReadiedGuardRelevantInvocationShape = {

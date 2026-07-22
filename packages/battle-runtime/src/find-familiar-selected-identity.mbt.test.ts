@@ -20,7 +20,7 @@ import { expect, it } from "vitest";
 
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
-import { ATTACK_TARGET_HOLE_ID } from "./battle-reducer.ts";
+import { ATTACK_TARGET_HOLE_ID } from "./battle-state-execution.ts";
 import {
   characterCreature,
   requireHole,

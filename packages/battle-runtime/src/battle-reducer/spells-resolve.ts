@@ -22,8 +22,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_EMPOWERED_DAMAGE_DICE_REROLL
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
-// Spell resolution dispatch (Cluster L). Mechanical extraction from
-// battle-reducer.ts. The largest cluster in the file: master spell-act
+// Spell resolution dispatch owns the spell-act
 // resolvers (`resolveSpellAct`, `resolveAttackBurstSaveDamageSpellAct`,
 // `resolveSpellRelease`, `resolvePreparedSlotSpellAct`, …),
 // per-procedure resolver bodies (chained spells, healing, scalar buff,
@@ -36,9 +35,7 @@
 // O (profiles), P (holes/fills), Q (spell-effects), M (damage-apply),
 // N (damage-helpers), R (hole-helpers), S (movement-speed), T (attack-roll),
 // U (attack-damage-apply), V (statblock), W (statblock-attacks), and G
-// (creature-state). Calls into dispatcher-layer functions (`endTurn`,
-// `snapshotBattle`, `discoverBattleActs`, etc.) round-trip through
-// `../battle-reducer.ts` until Pass 19 merges the dispatcher.
+// (creature-state).
 // KERNEL-COVERAGE: runtime-owner BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION BATTLE.SPELL.ACID_ARROW_ATTACK_TIMING BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE
 

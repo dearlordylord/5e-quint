@@ -13,14 +13,14 @@ behavior.
 
 The strongest precedent is the May 2026 battle reducer split.
 
-| Commit | Date | Evidence | Lesson |
-| --- | --- | --- | --- |
-| `9dfcf174` `reducer split WIP` | 2026-05-10 | `packages/battle-runtime/src/battle-reducer.ts` was 30,597 lines before the split. The commit added `REFACTOR_MAP.md` and extracted domain clusters such as creature state, attack roll, damage apply, movement speed, spells profiles, spells resolve, and stat-block attacks. | Start with an inventory by domain and call graph pressure, then extract in dependency order. |
-| `962065b2` `Split battle reducer into focused modules` | 2026-05-10 | Reduced `battle-reducer.ts` from 13,961 lines to 2,363 lines and created focused files under `src/battle-reducer/`. Added `scripts/audit-battle-reducer-split.mjs`. | Large splits need an executable audit for moved functions/barrels, not just visual review. |
-| `be38b6c6` `Split battle runtime reducer domains` | 2026-05-04 | Split a 15,166-line `packages/battle-runtime/src/index.ts` into runtime modules such as battle init, action options, subjects, resources, distances, identity, and unit feature support. | Public package entrypoints can remain stable while implementation modules move behind them. |
-| `36ecb99a` `Split battle runtime QNT through rule-core bridges` | 2026-05-11 | Added package-local bridge QNT modules and a vertical inventory. | QNT splits must move semantic authority to rule-core or focused bridge modules; plain file movement does not reduce state space. |
-| `f158425d` `Split character creation runtime modules` | 2026-04-29 | Split character creation into discovery, draft, fill reducer, finalization, support gates, hole factories, and types. | Runtime flow phases are good module names when they match domain workflow. |
-| `f5243a80` `Finish unit profile checker modularization` | 2026-05-06 | Split a checker script into config, discovery, IO, validation, claim scan, and self-test modules. | Scripts need the same locality rule as runtime code. |
+| Commit                                                          | Date       | Evidence                                                                                                                                                                                                                                                                        | Lesson                                                                                                                           |
+| --------------------------------------------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `9dfcf174` `reducer split WIP`                                  | 2026-05-10 | `packages/battle-runtime/src/battle-reducer.ts` was 30,597 lines before the split. The commit added `REFACTOR_MAP.md` and extracted domain clusters such as creature state, attack roll, damage apply, movement speed, spells profiles, spells resolve, and stat-block attacks. | Start with an inventory by domain and call graph pressure, then extract in dependency order.                                     |
+| `962065b2` `Split battle reducer into focused modules`          | 2026-05-10 | Reduced `battle-reducer.ts` from 13,961 lines to 2,363 lines and created focused files under `src/battle-reducer/`. Added `scripts/audit-battle-reducer-split.mjs`.                                                                                                             | Large splits need an executable audit for moved functions/barrels, not just visual review.                                       |
+| `be38b6c6` `Split battle runtime reducer domains`               | 2026-05-04 | Split a 15,166-line `packages/battle-runtime/src/index.ts` into runtime modules such as battle init, action options, subjects, resources, distances, identity, and unit feature support.                                                                                        | Public package entrypoints can remain stable while implementation modules move behind them.                                      |
+| `36ecb99a` `Split battle runtime QNT through rule-core bridges` | 2026-05-11 | Added package-local bridge QNT modules and a vertical inventory.                                                                                                                                                                                                                | QNT splits must move semantic authority to rule-core or focused bridge modules; plain file movement does not reduce state space. |
+| `f158425d` `Split character creation runtime modules`           | 2026-04-29 | Split character creation into discovery, draft, fill reducer, finalization, support gates, hole factories, and types.                                                                                                                                                           | Runtime flow phases are good module names when they match domain workflow.                                                       |
+| `f5243a80` `Finish unit profile checker modularization`         | 2026-05-06 | Split a checker script into config, discovery, IO, validation, claim scan, and self-test modules.                                                                                                                                                                               | Scripts need the same locality rule as runtime code.                                                                             |
 
 The historical pattern is: first inventory by domain, then extract leaf modules,
 then keep a stable package interface, then verify with typecheck/tests plus a
@@ -667,21 +667,21 @@ Benefits:
 These are useful but lower priority than the active battle, Surface, MCP, and
 character runtimes.
 
-| File | Lines | Recommendation |
-| --- | ---: | --- |
-| `packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts` | 4,615 | Split selected identity evidence into light/object sight, forced movement/terrain, and visibility witness files. |
-| `packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts` | 4,132 | Split into scalar buffs, roll modifiers, marked riders, smite/weapon riders, and protection/charm evidence. |
-| `packages/battle-runtime/src/level1-damage-spell-selected-identity.mbt.test.ts` | 2,204 | Split into attack damage, save-gated damage, burst/chained, and object-target evidence. |
-| retired grouped battle-runtime MBT harness | retired | Split into focused MBT files plus `battle-runtime-mbt-fixtures.ts`; do not recreate a broad shell. |
-| `packages/battle-runtime/src/rule-core-features.mbt.test.ts` | 2,673 | Split by rule-core feature family if it keeps growing past current feature batches. |
-| `packages/battle-runtime/src/rule-core-spells.mbt.test.ts` | 2,199 | Split by spell procedure family after spell QNT modules settle. |
-| `packages/character-creation-runtime/src/finalization.ts` | 2,709 | Split into readiness/support, build identity, proficiencies, spellcasting, equipment/loadout, ability-score increases. |
-| `packages/character-creation-runtime/src/character-build-advancement.ts` | 2,244 | Split into class-level gain, Fighter Fighting Style replacement, Warlock invocation advancement, Pact Magic advancement. |
-| `packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt` | 2,239 | Split by procedure family only when battle-runtime QNT imports have narrowed. |
-| `packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt` | 1,690 | Split after the battle-runtime spell QNT split identifies stable spell procedure families. |
-| `scripts/srd-unit-inventory.cjs` | 3,632 | Split into inventory IO, source scanning, classification, report writing, and task planning. |
-| `scripts/ralph-run.sh` | historical one-off harness | Do not refactor it into the Ralph tooling architecture. Retain only as evidence while candidate requirements and failure lessons are traced to their owning decisions. |
-| `packages/character-battle-runtime/src/battle-character-build-projection.ts` | 1,181 | Split only if projection broadens: character sheet init, spellcasting projection, invocation projection, and handoff settlement. |
+| File                                                                               |                      Lines | Recommendation                                                                                                                                                         |
+| ---------------------------------------------------------------------------------- | -------------------------: | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts` |                      4,615 | Split selected identity evidence into light/object sight, forced movement/terrain, and visibility witness files.                                                       |
+| `packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts` |                      4,132 | Split into scalar buffs, roll modifiers, marked riders, smite/weapon riders, and protection/charm evidence.                                                            |
+| `packages/battle-runtime/src/level1-damage-spell-selected-identity.mbt.test.ts`    |                      2,204 | Split into attack damage, save-gated damage, burst/chained, and object-target evidence.                                                                                |
+| retired grouped battle-runtime MBT harness                                         |                    retired | Split into focused MBT files plus `battle-runtime-mbt-fixtures.ts`; do not recreate a broad shell.                                                                     |
+| `packages/battle-runtime/src/rule-core-features.mbt.test.ts`                       |                      2,673 | Split by rule-core feature family if it keeps growing past current feature batches.                                                                                    |
+| `packages/battle-runtime/src/rule-core-spells.mbt.test.ts`                         |                      2,199 | Split by spell procedure family after spell QNT modules settle.                                                                                                        |
+| `packages/character-creation-runtime/src/finalization.ts`                          |                      2,709 | Split into readiness/support, build identity, proficiencies, spellcasting, equipment/loadout, ability-score increases.                                                 |
+| `packages/character-creation-runtime/src/character-build-advancement.ts`           |                      2,244 | Split into class-level gain, Fighter Fighting Style replacement, Warlock invocation advancement, Pact Magic advancement.                                               |
+| `packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles.qnt`    |                      2,239 | Split by procedure family only when battle-runtime QNT imports have narrowed.                                                                                          |
+| `packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt`           |                      1,690 | Split after the battle-runtime spell QNT split identifies stable spell procedure families.                                                                             |
+| `scripts/srd-unit-inventory.cjs`                                                   |                      3,632 | Split into inventory IO, source scanning, classification, report writing, and task planning.                                                                           |
+| `scripts/ralph-run.sh`                                                             | historical one-off harness | Do not refactor it into the Ralph tooling architecture. Retain only as evidence while candidate requirements and failure lessons are traced to their owning decisions. |
+| `packages/character-battle-runtime/src/battle-character-build-projection.ts`       |                      1,181 | Split only if projection broadens: character sheet init, spellcasting projection, invocation projection, and handoff settlement.                                       |
 
 ## Recommended Wave Order
 
@@ -730,9 +730,8 @@ Mechanical checks:
 - Run `pnpm --filter <package> typecheck` after each code split batch.
 - Run focused `pnpm --filter <package> exec vitest run <moved test files>` after
   each test split batch.
-- For large source moves, add or reuse an audit like
-  `scripts/audit-battle-reducer-split.mjs` to compare moved function names,
-  hashes when possible, and barrel exports.
+- For large source moves, add a focused audit that compares moved function
+  names, hashes when possible, and barrel exports.
 - For battle-runtime production source, run
   `pnpm check:authored-id-dispatch` after reducer/support-profile splits.
 - For unit profile admission test splits, run

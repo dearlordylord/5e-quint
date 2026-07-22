@@ -7,7 +7,7 @@ import {
   battleRuntimeContextFromCharacterAdmission,
   battleRuntimeSessionFromAdmittedContext,
 } from "./battle-runtime-context.ts";
-import type { BattleState } from "./battle-reducer.ts";
+import type { BattleState } from "./battle-state-execution.ts";
 import type { CombatantId } from "./identity.ts";
 
 /**

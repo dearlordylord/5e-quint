@@ -1,6 +1,4 @@
-// StatBlock and unit attack damage/target/bonus helpers extracted from
-// battle-reducer.ts. Cluster W (statblock_attacks). Mechanical extraction —
-// no behavior change. Mutual import cycle with statblock.ts (V) is tolerated
+// The mutual import cycle with statblock.ts is tolerated
 // because all imported bindings are function values used only at call time.
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.hunters-prey
 // KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.ATTACK_CONTROL

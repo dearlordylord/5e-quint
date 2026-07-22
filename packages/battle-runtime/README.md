@@ -84,8 +84,8 @@ the dispatcher does not project authored action-option records.
 The gate protects the clean `procedure-execution` territory and the
 weapon-override admission tracer. Protected admission roots may depend on
 authored admission facts and protected execution facts, but cannot reach
-presentation or the legacy mixed aggregation module. Directory placement alone
-is therefore not evidence of a clean closure.
+presentation. Directory placement alone is therefore not evidence of a clean
+closure.
 
 The distinction is ownership, not package origin. Canonical mechanical
 vocabulary such as abilities, damage types, dice expressions, ranges, and
@@ -94,11 +94,9 @@ must not duplicate it merely to avoid a package import.
 
 `pnpm check:battle-runtime-import-ownership` discovers every TypeScript module
 under `src/procedure-execution/`, resolves its complete transitive import graph,
-and rejects the shortest path to an admission, presentation, or known legacy
-mixed owner. It separately checks declared admission roots against presentation
-and legacy mixed owners. A module becomes a protected root only after its
-closure is clean; legacy mixed modules are migration inputs, not allowlisted
-exceptions.
+and rejects the shortest path to an admission or presentation owner. It
+separately checks declared admission roots against presentation owners. A module
+becomes a protected root only after its closure is clean.
 All Surface modules except the mixed `surface/types`, `surface/schema`, and
 `surface/schema-*` implementation closure are admission-owned. Within that
 mixed schema/type owner, imports whose names contain `Record` (including record
@@ -1351,8 +1349,6 @@ For BA5 action-economy overlap, promoted runtime divergence from old root
   reducer state transitions and state-only procedure dispatch.
 - `src/battle-session-execution.ts` - outer session orchestration owner for
   procedure admission, replay, interrupts, and route-event integration.
-- `src/battle-reducer.ts` - compatibility surface that re-exports the state and
-  session execution APIs.
 - `src/unit-feature-support.ts` - Unit feature support-profile boundary:
   profile types, support gates, and parsers that classify authored Surface
   mechanics into battle-runtime procedure families.

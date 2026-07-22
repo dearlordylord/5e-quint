@@ -81,7 +81,7 @@ import {
   SPELL_CAST_REACTION_FACTS_HOLE_ID,
   type BattleSpellCastReactionFact,
   type GlyphStoredSpellInvocationCandidate,
-} from "./battle-reducer.ts";
+} from "./battle-state-execution.ts";
 import {
   GLYPH_STORED_SINGLE_CREATURE_ACTIVE_EFFECT_PROCEDURES,
   type GlyphStoredSingleCreatureActiveEffectProcedure,
@@ -170,7 +170,7 @@ import {
   snapshotBattle,
   spellSaveDcForCaster,
 } from "./unit-profile-admission-test-support.ts";
-import type { BattleSelectedSpellInvocation } from "./battle-reducer.ts";
+import type { BattleSelectedSpellInvocation } from "./battle-state-execution.ts";
 import {
   battleSpellEffectOccurrenceId,
   type BattleProcedureExecutionRef,

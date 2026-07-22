@@ -1,6 +1,5 @@
-// Small leaf helpers shared between G (creature_state) and S (movement_speed).
-// Mechanical extraction — no behavior change. Per cycle #17/#26 in the
-// refactor map, hoisting these here lets S avoid cycling back into G.
+// Small leaf helpers shared by creature state and movement speed avoid a cycle
+// between those owners.
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SEE_INVISIBILITY_OBSERVER_SIGHT
 
 import {

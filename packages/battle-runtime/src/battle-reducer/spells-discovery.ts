@@ -11,16 +11,10 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ANTIMAGIC_FIELD_ACTION_INTERDICTION
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
-// Spell discovery (Cluster K). Mechanical extraction from battle-reducer.ts.
-// Discovers per-actor SupportedSpellInvocation acts, computes cast-summary
+// Spell discovery finds per-actor SupportedSpellInvocation acts, computes cast-summary
 // strings, classifies invocations, and synthesises the optional readied-spell
 // variant for each cast act.
 //
-// Dependencies on profile predicates (cluster O) and hole/fill helpers
-// (cluster P) currently round-trip through `../battle-reducer.ts`; they will
-// be retargeted after Pass 11/12 land. Likewise `interruptTriggerLabel` stays
-// in `../battle-reducer.ts` pending the dispatcher merge (Pass 19, cycle #25).
-
 // KERNEL-COVERAGE: runtime-owner BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES BATTLE.COMMAND.OPTION_AND_NEXT_TURN
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Match } from "effect";

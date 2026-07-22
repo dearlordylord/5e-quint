@@ -2,8 +2,6 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form unit-feature.grappler unit-feature.martial-arts-attack-projection spell.invocation-haste-positive
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE
-// Movement-budget and speed helpers extracted from battle-reducer.ts.
-// Cluster S (movement_speed). Mechanical extraction — no behavior change.
 // Reads creature-state-leaves.ts to avoid cycling back into G.
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SELF_TRANSFORMATION_MODE

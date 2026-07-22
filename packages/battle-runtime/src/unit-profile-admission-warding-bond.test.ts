@@ -23,7 +23,7 @@ import {
   attackDamageInterruptionFrame,
   resumeInterruptedProcedure,
   type BattleInterruptedProcedure,
-} from "./battle-reducer.ts";
+} from "./battle-state-execution.ts";
 import {
   burningHandsUnitId,
   hideousLaughterDurationTicks,
