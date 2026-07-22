@@ -22,7 +22,10 @@
 
 import { resetDeathSaveRuntimeState } from "@dnd/shared-algebras/death-saves-algebra";
 import { movementFeet, MovementFeet } from "@dnd/shared/types";
-import type { SpellRecord } from "@dnd/surface/surface/types";
+import {
+  isThresholdTierPointRange,
+  type SpellRecord,
+} from "@dnd/surface/surface/types";
 import type { CombatantId } from "../../identity.ts";
 import {
   maybeOpenInterruptWindow,
@@ -63,12 +66,7 @@ function spareTheDyingRangeFeet(
   range: SpellRecord["mechanics"]["range"],
   characterLevel: number,
 ): MovementFeet | null {
-  if (
-    range.kind !== "point" ||
-    typeof range.feet !== "object" ||
-    range.feet.kind !== "threshold_tiers" ||
-    range.feet.axis !== "character"
-  ) {
+  if (!isThresholdTierPointRange(range) || range.feet.axis !== "character") {
     return null;
   }
   return movementFeet(

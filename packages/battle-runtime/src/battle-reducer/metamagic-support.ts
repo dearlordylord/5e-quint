@@ -23,6 +23,7 @@ import {
   type MovementFeet,
   type ResourceCount,
 } from "@dnd/shared/types";
+import { isFixedDistancePointRange } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 import {
   isTargetListSpellInvocation,
@@ -626,11 +627,7 @@ export function distantSpellRangeModifierFact(
       rangeFeet: movementFeet(30),
     };
   }
-  if (
-    range.kind !== "point" ||
-    typeof range.feet !== "number" ||
-    range.feet < 5
-  ) {
+  if (!isFixedDistancePointRange(range) || range.feet < 5) {
     return null;
   }
   return {

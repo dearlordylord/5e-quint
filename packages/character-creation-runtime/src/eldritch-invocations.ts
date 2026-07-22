@@ -1,9 +1,10 @@
 // KERNEL-COVERAGE: runtime-owner CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE
-import type {
-  EffectAtom,
-  FeatRecord,
-  SpellRecord,
-  UnitRecord,
+import {
+  isFixedDistancePointRange,
+  type EffectAtom,
+  type FeatRecord,
+  type SpellRecord,
+  type UnitRecord,
 } from "@dnd/surface/surface/types";
 import { Option } from "effect";
 import {
@@ -409,11 +410,11 @@ function isOriginFeat(
 }
 
 function spellRangeIsAtLeast(spell: SpellRecord, minimumFeet: number): boolean {
+  const range = spell.mechanics.range;
   return (
     spell.mechanics.family === "activation" &&
-    spell.mechanics.range.kind === "point" &&
-    typeof spell.mechanics.range.feet === "number" &&
-    spell.mechanics.range.feet >= minimumFeet
+    isFixedDistancePointRange(range) &&
+    range.feet >= minimumFeet
   );
 }
 

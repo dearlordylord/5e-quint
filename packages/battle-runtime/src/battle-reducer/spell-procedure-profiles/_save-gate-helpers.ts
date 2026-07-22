@@ -23,7 +23,10 @@ import type {
   SpellRecord,
   TargetSelection,
 } from "@dnd/surface/surface/types";
-import { topLevelSpellCastingTime } from "@dnd/surface/surface/types";
+import {
+  isFixedDistancePointRange,
+  topLevelSpellCastingTime,
+} from "@dnd/surface/surface/types";
 import { Either, Match } from "effect";
 import {
   COLOR_SPRAY_FAILED_SAVE_CONDITION,
@@ -1445,9 +1448,7 @@ export function areaSaveGateSpellRangeFeet(
 function fixedPointRangeFeet(
   range: SpellRecord["mechanics"]["range"],
 ): MovementFeet | null {
-  return range.kind === "point" && typeof range.feet === "number"
-    ? movementFeet(range.feet)
-    : null;
+  return isFixedDistancePointRange(range) ? movementFeet(range.feet) : null;
 }
 
 export function supportedSaveGateFailedSaveEffects(

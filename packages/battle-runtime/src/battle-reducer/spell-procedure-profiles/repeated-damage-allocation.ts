@@ -21,7 +21,10 @@ import { DamageTypeSchema, DiceExprSchema } from "@dnd/surface/surface/schema";
 // Readied Spell release continuation sequencing.
 
 import { movementFeet } from "@dnd/shared/types";
-import type { SpellRecord } from "@dnd/surface/surface/types";
+import {
+  isFixedDistancePointRange,
+  type SpellRecord,
+} from "@dnd/surface/surface/types";
 
 import {
   type ActionSpellBattleResolutionInput,
@@ -80,8 +83,7 @@ function admitRepeatedDamageAllocation(
   if (
     spell.mechanics.level !== 1 ||
     spell.mechanics.castingTime.kind !== "action" ||
-    spell.mechanics.range.kind !== "point" ||
-    typeof spell.mechanics.range.feet !== "number" ||
+    !isFixedDistancePointRange(spell.mechanics.range) ||
     spell.mechanics.phases.length !== 1 ||
     phase?.kind !== "direct" ||
     phase.attachment.kind !== "hole" ||
