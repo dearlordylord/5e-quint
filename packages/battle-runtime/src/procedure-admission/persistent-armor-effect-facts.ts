@@ -11,7 +11,7 @@ import type {
   OngoingEffectMechanics,
   SpellRecord,
 } from "@dnd/surface/surface/types";
-import { Either, Schema } from "effect";
+import { Brand, Either, Schema } from "effect";
 
 /** Authored-free facts projected at the persistent-armor admission boundary. */
 export type PersistentArmorEffectExecutionFacts = {
@@ -19,14 +19,16 @@ export type PersistentArmorEffectExecutionFacts = {
   readonly durationTicks: ElapsedTimeTicks;
 };
 
-export type PersistentArmorEffectSpellRecord = SpellRecord & {
+type OngoingEffectSpellRecord = SpellRecord & {
   readonly mechanics: OngoingEffectMechanics;
 };
 
 export type PersistentArmorEffectAdmission = {
-  readonly authoredSpell: PersistentArmorEffectSpellRecord;
+  readonly authoredSpell: OngoingEffectSpellRecord;
   readonly executionFacts: PersistentArmorEffectExecutionFacts;
-};
+} & Brand.Brand<"PersistentArmorEffectAdmission">;
+const PersistentArmorEffectAdmission =
+  Brand.nominal<PersistentArmorEffectAdmission>();
 
 export function admitPersistentArmorEffectSpell(
   spell: SpellRecord,
@@ -66,17 +68,11 @@ export function admitPersistentArmorEffectSpell(
   ) {
     return null;
   }
-  return {
+  return PersistentArmorEffectAdmission({
     authoredSpell: { ...spell, mechanics: spell.mechanics },
     executionFacts: {
       baseArmorClass: baseArmorClass.right,
       durationTicks: durationTicks.right,
     },
-  };
-}
-
-export function persistentArmorEffectExecutionFactsForSpell(
-  spell: SpellRecord,
-): PersistentArmorEffectExecutionFacts | null {
-  return admitPersistentArmorEffectSpell(spell)?.executionFacts ?? null;
+  });
 }
