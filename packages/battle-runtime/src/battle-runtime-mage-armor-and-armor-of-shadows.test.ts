@@ -704,6 +704,7 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
             authoredSpell: { id: mageArmor.id },
             executionFacts: {
               rangeFeet: 5,
+              slotLevel: 1,
               baseArmorClass: 13,
               ability: "dex",
               durationTicks: requireElapsedHours(8),

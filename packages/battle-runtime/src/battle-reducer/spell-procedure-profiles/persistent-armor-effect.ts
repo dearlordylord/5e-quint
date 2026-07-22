@@ -24,7 +24,6 @@ import { DurationBattleActiveEffectExpirationSchema } from "../../active-effect/
 //   - The Armor of Shadows Spell Access parser stays in
 //     character-battle-resources.ts.
 
-import { spellSlotLevel } from "@dnd/shared/types";
 import { ArmorClassSchema } from "@dnd/shared-algebras/armor-class-values";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Match } from "effect";
@@ -144,7 +143,10 @@ function admitPersistentArmorEffect(
     : [
         buildPersistentArmorEffectInvocation(ctx.actor.combatantId, admission, {
           access: { tag: "prepared" },
-          resource: { tag: "spellSlot", slotLevel: spellSlotLevel(1) },
+          resource: {
+            tag: "spellSlot",
+            slotLevel: admission.executionFacts.slotLevel,
+          },
         }),
       ];
 }
