@@ -1,3 +1,4 @@
+import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-moonbeam-movable-zone
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 import { DiceExprSchema } from "@dnd/surface/surface/schema";
@@ -26,7 +27,6 @@ import {
   type ElapsedTimeTicks,
 } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
-import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either, Schema } from "effect";
 
 import {
@@ -37,7 +37,7 @@ import {
 } from "../../battle-state-execution.ts";
 import { type CombatantId } from "../../identity.ts";
 import { spellAreaChoiceHole } from "../spells-holes-fills.ts";
-import { supportedDamageAmountExpr } from "../spells-profile-shared.ts";
+import { supportedDamageAmountExpr } from "../spells-execution-facts.ts";
 import { resolveMoonbeamSpellAct } from "../spells-resolve-area-effects.ts";
 import type {
   SpellAdmissionContext,
@@ -63,11 +63,11 @@ type MoonbeamResolveInput =
   SpellProcedureProfileResolveInput<MoonbeamSpellInvocation>;
 
 type OngoingOperationEffect = Extract<
-  SpellRecord["mechanics"],
+  BattleSpellAdmissionSource["mechanics"],
   { readonly family: "ongoing_effect" }
 >["operations"][number]["effect"];
 type MoonbeamInitialPhase = Extract<
-  SpellRecord["mechanics"],
+  BattleSpellAdmissionSource["mechanics"],
   { readonly family: "ongoing_effect" }
 >["initialPhase"];
 type MoonbeamFailedSaveEffect = Extract<
@@ -98,7 +98,7 @@ const MOONBEAM_DAMAGE_DIE_SIZE = 10;
 const MOONBEAM_DAMAGE_DICE_PER_SLOT_LEVEL = 1;
 
 function admitMoonbeam(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly MoonbeamSpellInvocation[] {
   const moonbeam = moonbeamSpell(spell);
@@ -142,7 +142,9 @@ function admitMoonbeam(
   );
 }
 
-function moonbeamSpell(spell: SpellRecord): MoonbeamProfileShape | null {
+function moonbeamSpell(
+  spell: BattleSpellAdmissionSource,
+): MoonbeamProfileShape | null {
   if (spell.mechanics.family !== "ongoing_effect") {
     return null;
   }

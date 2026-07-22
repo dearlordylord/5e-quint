@@ -1,3 +1,7 @@
+import {
+  statBlockId as authoredStatBlockId,
+  unitId as authoredUnitId,
+} from "@dnd/shared/game-facts";
 import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
@@ -52,6 +56,7 @@ import {
   type CharacterSheetWeaponMasteryReselection,
   type CharacterSheetWeaponMasterySelectedReferenceProjection,
 } from "./index.ts";
+import { authoredNonEmptyUnitIds } from "./test-support.ts";
 
 const MBT_TEST_TIMEOUT_MS = 120_000;
 
@@ -273,122 +278,162 @@ const routeStateCheck = stateCheck(
 );
 
 describe("character sheet reducer route connector MBT", () => {
-  it("routes Ability Check Proficiency Bonus projections through the sheet reducer surface", async () => {
-    await runRouteMbt({
-      specFileName:
-        "character-sheet-ability-check-proficiency-bonus.route.mbt.qnt",
-      driver: createIndexedRouteDriver(
-        abilityCheckRouteDriverSchema,
-        abilityCheckRouteActions,
-      ),
-      maxSteps: 6,
-    });
-  }, MBT_TEST_TIMEOUT_MS);
+  it(
+    "routes Ability Check Proficiency Bonus projections through the sheet reducer surface",
+    async () => {
+      await runRouteMbt({
+        specFileName:
+          "character-sheet-ability-check-proficiency-bonus.route.mbt.qnt",
+        driver: createIndexedRouteDriver(
+          abilityCheckRouteDriverSchema,
+          abilityCheckRouteActions,
+        ),
+        maxSteps: 6,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 
-  it("routes Hit Point Maximum projections through the sheet reducer surface", async () => {
-    await runRouteMbt({
-      specFileName: "character-sheet-hit-point-maximum.route.mbt.qnt",
-      driver: createIndexedRouteDriver(
-        hitPointMaximumRouteDriverSchema,
-        hitPointMaximumRouteActions,
-      ),
-      maxSteps: 6,
-    });
-  }, MBT_TEST_TIMEOUT_MS);
+  it(
+    "routes Hit Point Maximum projections through the sheet reducer surface",
+    async () => {
+      await runRouteMbt({
+        specFileName: "character-sheet-hit-point-maximum.route.mbt.qnt",
+        driver: createIndexedRouteDriver(
+          hitPointMaximumRouteDriverSchema,
+          hitPointMaximumRouteActions,
+        ),
+        maxSteps: 6,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 
-  it("routes Armor Class selected-reference projections through the sheet reducer surface", async () => {
-    await runRouteMbt({
-      specFileName:
-        "character-sheet-armor-class-base-selected-identity.route.mbt.qnt",
-      driver: createReadyRouteDriver(
-        armorClassRouteDriverSchema,
-        armorClassRouteActions,
-      ),
-      maxSteps: 1,
-    });
-  }, MBT_TEST_TIMEOUT_MS);
+  it(
+    "routes Armor Class selected-reference projections through the sheet reducer surface",
+    async () => {
+      await runRouteMbt({
+        specFileName:
+          "character-sheet-armor-class-base-selected-identity.route.mbt.qnt",
+        driver: createReadyRouteDriver(
+          armorClassRouteDriverSchema,
+          armorClassRouteActions,
+        ),
+        maxSteps: 1,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 
-  it("routes in-scope class-feature selected references through the sheet reducer surface", async () => {
-    await runRouteMbt({
-      specFileName:
-        "character-sheet-class-feature-selected-identity.route.mbt.qnt",
-      driver: createReadyRouteDriver(
-        classFeatureSelectedReferenceRouteDriverSchema,
-        classFeatureSelectedReferenceRouteActions,
-      ),
-      maxSteps: 1,
-    });
-  }, MBT_TEST_TIMEOUT_MS);
+  it(
+    "routes in-scope class-feature selected references through the sheet reducer surface",
+    async () => {
+      await runRouteMbt({
+        specFileName:
+          "character-sheet-class-feature-selected-identity.route.mbt.qnt",
+        driver: createReadyRouteDriver(
+          classFeatureSelectedReferenceRouteDriverSchema,
+          classFeatureSelectedReferenceRouteActions,
+        ),
+        maxSteps: 1,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 
-  it("routes healing resource spending through the sheet reducer surface", async () => {
-    await runRouteMbt({
-      specFileName:
-        "character-sheet-healing-resource-selected-identity.route.mbt.qnt",
-      driver: createReadyRouteDriver(
-        healingResourceRouteDriverSchema,
-        healingResourceRouteActions,
-      ),
-      maxSteps: 1,
-    });
-  }, MBT_TEST_TIMEOUT_MS);
+  it(
+    "routes healing resource spending through the sheet reducer surface",
+    async () => {
+      await runRouteMbt({
+        specFileName:
+          "character-sheet-healing-resource-selected-identity.route.mbt.qnt",
+        driver: createReadyRouteDriver(
+          healingResourceRouteDriverSchema,
+          healingResourceRouteActions,
+        ),
+        maxSteps: 1,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 
-  it("routes in-scope Arcane Recovery state through the sheet reducer surface", async () => {
-    await runRouteMbt({
-      specFileName:
-        "character-sheet-arcane-recovery-selected-identity.route.mbt.qnt",
-      driver: createReadyRouteDriver(
-        arcaneRecoveryRouteDriverSchema,
-        arcaneRecoveryRouteActions,
-      ),
-      maxSteps: 1,
-    });
-  }, MBT_TEST_TIMEOUT_MS);
+  it(
+    "routes in-scope Arcane Recovery state through the sheet reducer surface",
+    async () => {
+      await runRouteMbt({
+        specFileName:
+          "character-sheet-arcane-recovery-selected-identity.route.mbt.qnt",
+        driver: createReadyRouteDriver(
+          arcaneRecoveryRouteDriverSchema,
+          arcaneRecoveryRouteActions,
+        ),
+        maxSteps: 1,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 
-  it("routes HP rest and Hit Dice transitions through the sheet reducer surface", async () => {
-    await runRouteMbt({
-      specFileName: "character-sheet-hp-rest-hit-dice.route.mbt.qnt",
-      driver: createIndexedRouteDriver(
-        hpRestHitDiceRouteDriverSchema,
-        hpRestHitDiceRouteActions,
-      ),
-      maxSteps: 13,
-    });
-  }, MBT_TEST_TIMEOUT_MS);
+  it(
+    "routes HP rest and Hit Dice transitions through the sheet reducer surface",
+    async () => {
+      await runRouteMbt({
+        specFileName: "character-sheet-hp-rest-hit-dice.route.mbt.qnt",
+        driver: createIndexedRouteDriver(
+          hpRestHitDiceRouteDriverSchema,
+          hpRestHitDiceRouteActions,
+        ),
+        maxSteps: 13,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 
-  it("routes in-scope Spell Slot and Pact Slot transitions through the sheet reducer surface", async () => {
-    await runRouteMbt({
-      specFileName: "character-sheet-spell-slots-pact-slots.route.mbt.qnt",
-      driver: createReadyRouteDriver(
-        spellResourceRouteDriverSchema,
-        spellResourceRouteActions,
-      ),
-      maxSteps: 1,
-    });
-  }, MBT_TEST_TIMEOUT_MS);
+  it(
+    "routes in-scope Spell Slot and Pact Slot transitions through the sheet reducer surface",
+    async () => {
+      await runRouteMbt({
+        specFileName: "character-sheet-spell-slots-pact-slots.route.mbt.qnt",
+        driver: createReadyRouteDriver(
+          spellResourceRouteDriverSchema,
+          spellResourceRouteActions,
+        ),
+        maxSteps: 1,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 
-  it("routes spellbook Ritual selected references through the sheet reducer surface", async () => {
-    await runRouteMbt({
-      specFileName:
-        "character-sheet-spellbook-ritual-selected-identity.route.mbt.qnt",
-      driver: createReadyRouteDriver(
-        spellbookRitualRouteDriverSchema,
-        spellbookRitualRouteActions,
-      ),
-      maxSteps: 1,
-    });
-  }, MBT_TEST_TIMEOUT_MS);
+  it(
+    "routes spellbook Ritual selected references through the sheet reducer surface",
+    async () => {
+      await runRouteMbt({
+        specFileName:
+          "character-sheet-spellbook-ritual-selected-identity.route.mbt.qnt",
+        driver: createReadyRouteDriver(
+          spellbookRitualRouteDriverSchema,
+          spellbookRitualRouteActions,
+        ),
+        maxSteps: 1,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 
-  it("routes Weapon Mastery selected weapon refs through the sheet reducer surface", async () => {
-    await runRouteMbt({
-      specFileName:
-        "character-sheet-weapon-mastery-containers-selected-identity.route.mbt.qnt",
-      driver: createReadyRouteDriver(
-        weaponMasteryRouteDriverSchema,
-        weaponMasteryRouteActions,
-      ),
-      maxSteps: 1,
-    });
-  }, MBT_TEST_TIMEOUT_MS);
+  it(
+    "routes Weapon Mastery selected weapon refs through the sheet reducer surface",
+    async () => {
+      await runRouteMbt({
+        specFileName:
+          "character-sheet-weapon-mastery-containers-selected-identity.route.mbt.qnt",
+        driver: createReadyRouteDriver(
+          weaponMasteryRouteDriverSchema,
+          weaponMasteryRouteActions,
+        ),
+        maxSteps: 1,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 });
 
 const abilityCheckRouteActions = indexedActionEntries(
@@ -400,7 +445,7 @@ const abilityCheckRouteActions = indexedActionEntries(
         build: bardAbilityCheckBuild({ totalLevel: 2 }),
         expectedProjection: {
           tag: "jackOfAllTrades",
-          sourceUnitId: "bard_jack_of_all_trades",
+          sourceUnitId: authoredUnitId("bard_jack_of_all_trades"),
           skill: "performance",
           bonus: 1,
         },
@@ -412,7 +457,7 @@ const abilityCheckRouteActions = indexedActionEntries(
         build: bardAbilityCheckBuild({ totalLevel: 5 }),
         expectedProjection: {
           tag: "jackOfAllTrades",
-          sourceUnitId: "bard_jack_of_all_trades",
+          sourceUnitId: authoredUnitId("bard_jack_of_all_trades"),
           skill: "performance",
           bonus: 1,
         },
@@ -534,8 +579,8 @@ const hitPointMaximumRouteActions = indexedActionEntries(
           features: [
             {
               kind: "selectedClassChoice",
-              selectedFromUnitId: "class_sorcerer",
-              unitId: "subclass_sorcerer_draconic_sorcery",
+              selectedFromUnitId: authoredUnitId("class_sorcerer"),
+              unitId: authoredUnitId("subclass_sorcerer_draconic_sorcery"),
             },
           ],
         },
@@ -567,7 +612,7 @@ const armorClassRouteActions = {
     }),
     baseChoice: {
       kind: "class_feature",
-      unitId: "barbarian_unarmored_defense",
+      unitId: authoredUnitId("barbarian_unarmored_defense"),
     },
     expectedArmorClass: 13,
   }),
@@ -579,7 +624,7 @@ const armorClassRouteActions = {
     }),
     baseChoice: {
       kind: "class_feature",
-      unitId: "barbarian_unarmored_defense",
+      unitId: authoredUnitId("barbarian_unarmored_defense"),
     },
     expectedArmorClass: 15,
   }),
@@ -590,7 +635,7 @@ const armorClassRouteActions = {
     }),
     baseChoice: {
       kind: "class_feature",
-      unitId: "monk_unarmored_defense",
+      unitId: authoredUnitId("monk_unarmored_defense"),
     },
     expectedArmorClass: 15,
   }),
@@ -620,10 +665,12 @@ const armorClassRouteActions = {
 } as const satisfies ReadyRouteActionMap<typeof armorClassRouteDriverSchema>;
 
 const classFeatureSelectedReferenceRouteActions = {
-  doProjectBardJackOfAllTrades: projectPublicClassFeatureSelectedReferenceRoute({
-    build: classFeatureBuild({ startingClass: "class_bard", totalLevel: 2 }),
-    expectedClassFeatureUnitId: "bard_jack_of_all_trades",
-  }),
+  doProjectBardJackOfAllTrades: projectPublicClassFeatureSelectedReferenceRoute(
+    {
+      build: classFeatureBuild({ startingClass: "class_bard", totalLevel: 2 }),
+      expectedClassFeatureUnitId: "bard_jack_of_all_trades",
+    },
+  ),
   doProjectClericLifeDomainSpells:
     projectPublicClassFeatureSelectedReferenceRoute({
       build: classFeatureBuild({
@@ -632,8 +679,8 @@ const classFeatureSelectedReferenceRouteActions = {
         features: [
           {
             kind: "selectedClassChoice",
-            selectedFromUnitId: "class_cleric",
-            unitId: "subclass_cleric_life_domain",
+            selectedFromUnitId: authoredUnitId("class_cleric"),
+            unitId: authoredUnitId("subclass_cleric_life_domain"),
           },
         ],
       }),
@@ -662,8 +709,8 @@ const classFeatureSelectedReferenceRouteActions = {
         features: [
           {
             kind: "selectedClassChoice",
-            selectedFromUnitId: "class_paladin",
-            unitId: "subclass_paladin_oath_of_devotion",
+            selectedFromUnitId: authoredUnitId("class_paladin"),
+            unitId: authoredUnitId("subclass_paladin_oath_of_devotion"),
           },
         ],
       }),
@@ -686,49 +733,57 @@ const classFeatureSelectedReferenceRouteActions = {
         features: [
           {
             kind: "selectedClassChoice",
-            selectedFromUnitId: "class_sorcerer",
-            unitId: "subclass_sorcerer_draconic_sorcery",
+            selectedFromUnitId: authoredUnitId("class_sorcerer"),
+            unitId: authoredUnitId("subclass_sorcerer_draconic_sorcery"),
           },
         ],
       }),
       expectedClassFeatureUnitId: "sorcerer_draconic_spells",
-      expectedSelectedClassChoiceUnitIds: ["subclass_sorcerer_draconic_sorcery"],
+      expectedSelectedClassChoiceUnitIds: [
+        "subclass_sorcerer_draconic_sorcery",
+      ],
     }),
-  doProjectWarlockFiendSpells:
-    projectPublicClassFeatureSelectedReferenceRoute({
-      build: classFeatureBuild({
-        startingClass: "class_warlock",
-        totalLevel: 3,
-        features: [
-          {
-            kind: "selectedClassChoice",
-            selectedFromUnitId: "class_warlock",
-            unitId: "subclass_warlock_fiend_patron",
-          },
-        ],
-      }),
-      expectedClassFeatureUnitId: "warlock_fiend_spells",
-      expectedSelectedClassChoiceUnitIds: ["subclass_warlock_fiend_patron"],
+  doProjectWarlockFiendSpells: projectPublicClassFeatureSelectedReferenceRoute({
+    build: classFeatureBuild({
+      startingClass: "class_warlock",
+      totalLevel: 3,
+      features: [
+        {
+          kind: "selectedClassChoice",
+          selectedFromUnitId: authoredUnitId("class_warlock"),
+          unitId: authoredUnitId("subclass_warlock_fiend_patron"),
+        },
+      ],
     }),
+    expectedClassFeatureUnitId: "warlock_fiend_spells",
+    expectedSelectedClassChoiceUnitIds: ["subclass_warlock_fiend_patron"],
+  }),
 } as const satisfies ReadyRouteActionMap<
   typeof classFeatureSelectedReferenceRouteDriverSchema
 >;
 
 const healingResourceRouteActions = {
   doLayOnHandsRestoreHpAndRemovePoisoned: spendHealingResourceRoute,
-} as const satisfies ReadyRouteActionMap<typeof healingResourceRouteDriverSchema>;
+} as const satisfies ReadyRouteActionMap<
+  typeof healingResourceRouteDriverSchema
+>;
 
 const arcaneRecoveryRouteActions = {
   doRecoverSecondLevelSpellSlot: recoverSecondLevelSpellSlotRoute,
   doResetArcaneRecoveryOnLongRest: resetArcaneRecoveryOnLongRestRoute,
   doRejectPactSlotArcaneRecovery: rejectPactSlotArcaneRecoveryRoute,
-} as const satisfies ReadyRouteActionMap<typeof arcaneRecoveryRouteDriverSchema>;
+} as const satisfies ReadyRouteActionMap<
+  typeof arcaneRecoveryRouteDriverSchema
+>;
 
 const hpRestHitDiceRouteActions = indexedActionEntries(
   hpRestHitDiceRouteDriverSchema,
   [
     ["doRejectLongRestStartAtZeroHp", rejectRestRoute("hitPoint")],
-    ["doRejectLongRestBeforeSixteenHourWait", rejectRestRoute("characterSheetState")],
+    [
+      "doRejectLongRestBeforeSixteenHourWait",
+      rejectRestRoute("characterSheetState"),
+    ],
     ["doSpendShortRestHitPointDie", spendHitDiceRoute],
     ["doInterruptShortRestNoBenefit", completeShortRestWithoutBenefitsRoute],
     [
@@ -741,8 +796,14 @@ const hpRestHitDiceRouteActions = indexedActionEntries(
     ],
     ["doInterruptLongRestWithShortRestBenefits", spendHitDiceRoute],
     ["doRejectShortRestStartAtZeroHp", rejectRestRoute("hitPoint")],
-    ["doRejectShortRestDurationTooShort", rejectRestRoute("characterSheetState")],
-    ["doRejectLongRestDurationTooShort", rejectRestRoute("characterSheetState")],
+    [
+      "doRejectShortRestDurationTooShort",
+      rejectRestRoute("characterSheetState"),
+    ],
+    [
+      "doRejectLongRestDurationTooShort",
+      rejectRestRoute("characterSheetState"),
+    ],
     [
       "doRejectLongRestPhysicalExertionTooShort",
       rejectRestRoute("characterSheetState"),
@@ -769,8 +830,7 @@ const spellResourceRouteActions = {
   doInterruptLongRestWithShortRestSlotBenefits:
     completeRestoredSlotRoute("pactSlot"),
   doMagicalCunningRecoversPactSlots: pactSlotRecoveryRoute,
-  doRejectMagicalCunningWithoutExpendedPactSlots:
-    rejectPactSlotRecoveryRoute,
+  doRejectMagicalCunningWithoutExpendedPactSlots: rejectPactSlotRecoveryRoute,
   doRejectArcaneRecoveryPactSlotRefund: rejectPactSlotRecoveryRoute,
 } as const satisfies ReadyRouteActionMap<typeof spellResourceRouteDriverSchema>;
 
@@ -817,16 +877,19 @@ const spellbookRitualRouteActions = {
     spellId: "light",
     expectedTag: "rejected",
   }),
-} as const satisfies ReadyRouteActionMap<typeof spellbookRitualRouteDriverSchema>;
+} as const satisfies ReadyRouteActionMap<
+  typeof spellbookRitualRouteDriverSchema
+>;
 
 const weaponMasteryRouteActions = {
-  doSelectPaladinWeaponMastery: projectPublicWeaponMasterySelectedReferenceRoute({
-    classUnitId: "class_paladin",
-    featureUnitId: "paladin_weapon_mastery",
-    selectedWeaponUnitIds: ["weapon_longsword", "weapon_dagger"],
-    expectedChoiceCount: 2,
-    expectedLongRestChangeCount: 2,
-  }),
+  doSelectPaladinWeaponMastery:
+    projectPublicWeaponMasterySelectedReferenceRoute({
+      classUnitId: "class_paladin",
+      featureUnitId: "paladin_weapon_mastery",
+      selectedWeaponUnitIds: ["weapon_longsword", "weapon_dagger"],
+      expectedChoiceCount: 2,
+      expectedLongRestChangeCount: 2,
+    }),
   doReselectPaladinWeaponMasteryOnLongRest:
     completePublicWeaponMasteryReselectionRoute({
       classUnitId: "class_paladin",
@@ -835,13 +898,15 @@ const weaponMasteryRouteActions = {
       reselectedWeaponUnitIds: ["weapon_spear", "weapon_flail"],
       expectedTag: "accepted",
     }),
-  doSelectRangerWeaponMastery: projectPublicWeaponMasterySelectedReferenceRoute({
-    classUnitId: "class_ranger",
-    featureUnitId: "ranger_weapon_mastery",
-    selectedWeaponUnitIds: ["weapon_longsword", "weapon_dagger"],
-    expectedChoiceCount: 2,
-    expectedLongRestChangeCount: 2,
-  }),
+  doSelectRangerWeaponMastery: projectPublicWeaponMasterySelectedReferenceRoute(
+    {
+      classUnitId: "class_ranger",
+      featureUnitId: "ranger_weapon_mastery",
+      selectedWeaponUnitIds: ["weapon_longsword", "weapon_dagger"],
+      expectedChoiceCount: 2,
+      expectedLongRestChangeCount: 2,
+    },
+  ),
   doReselectRangerWeaponMasteryOnLongRest:
     completePublicWeaponMasteryReselectionRoute({
       classUnitId: "class_ranger",
@@ -987,14 +1052,14 @@ function baseBuild(input: {
 }): CharacterBuild {
   return {
     progression: {
-      startingClass: classUnitId(input.startingClass),
+      startingClass: classUnitId(authoredUnitId(input.startingClass)),
       advancements: (input.advancements ?? []).map((classId) => ({
-        classUnitId: classUnitId(classId),
+        classUnitId: classUnitId(authoredUnitId(classId)),
         hitPointRule: { tag: "fixedHigherLevelGain" },
       })),
     },
-    background: "background_soldier",
-    species: "species_orc",
+    background: authoredUnitId("background_soldier"),
+    species: authoredUnitId("species_orc"),
     originLanguages: ["Common", "Dwarvish", "Goblin"],
     classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
@@ -1049,14 +1114,16 @@ function armorClassBuild(input: {
       ? undefined
       : characterEquipmentItemId({
           slot: "armor",
-          unitId: requireRight(characterEquipmentItemUnitId(input.armor)),
+          unitId: requireRight(
+            characterEquipmentItemUnitId(authoredUnitId(input.armor)),
+          ),
         });
   const shieldItemId =
     input.shield === true
       ? characterEquipmentItemId({
           slot: "shield",
           unitId: requireRight(
-            characterEquipmentItemUnitId("equipment_shield"),
+            characterEquipmentItemUnitId(authoredUnitId("equipment_shield")),
           ),
         })
       : undefined;
@@ -1081,10 +1148,15 @@ function armorClassBuild(input: {
       owned: [
         ...(armorItemId === undefined || input.armor === undefined
           ? []
-          : [{ itemId: armorItemId, unitId: input.armor }]),
+          : [{ itemId: armorItemId, unitId: authoredUnitId(input.armor) }]),
         ...(shieldItemId === undefined
           ? []
-          : [{ itemId: shieldItemId, unitId: "equipment_shield" }]),
+          : [
+              {
+                itemId: shieldItemId,
+                unitId: authoredUnitId("equipment_shield"),
+              },
+            ]),
       ],
       loadout: {
         ...(armorItemId === undefined ? {} : { armor: armorItemId }),
@@ -1117,7 +1189,9 @@ function projectPublicClassFeatureSelectedReferenceRoute(input: {
           ? {}
           : {
               druidWildShapeKnownFormStatBlockIds:
-                input.druidWildShapeKnownFormStatBlockIds,
+                input.druidWildShapeKnownFormStatBlockIds.map(
+                  authoredStatBlockId,
+                ),
             }),
         ...(input.druidCircleLand === undefined
           ? {}
@@ -1169,22 +1243,22 @@ function druidCircleLandBuild(): CharacterBuild {
       features: [
         {
           kind: "selectedClassChoice",
-          selectedFromUnitId: "class_druid",
-          unitId: "subclass_druid_circle_of_the_land",
+          selectedFromUnitId: authoredUnitId("class_druid"),
+          unitId: authoredUnitId("subclass_druid_circle_of_the_land"),
         },
       ],
     }),
     classFeatureLanguages: [
       {
         kind: "classFeatureLanguageGrant",
-        sourceUnitId: "druid_druidic",
+        sourceUnitId: authoredUnitId("druid_druidic"),
         language: "Druidic",
       },
     ],
     spellcasting: {
       sources: [
         {
-          sourceUnitId: "class_druid",
+          sourceUnitId: authoredUnitId("class_druid"),
           spellcastingAbility: "wis",
           cantrips: [],
           spellbook: [],
@@ -1369,7 +1443,7 @@ function arcaneRecoveryBuildWithPactSlots(): CharacterBuild {
     spellcasting: {
       sources: [
         {
-          sourceUnitId: "class_wizard",
+          sourceUnitId: authoredUnitId("class_wizard"),
           spellcastingAbility: "int",
           cantrips: [],
           spellbook: [],
@@ -1652,7 +1726,7 @@ function spellbookRitualRoute(input: {
     const projection = characterSheetSpellbookRitualInvocationProjection({
       sheet: input.sheet,
       unitLibrary,
-      spellId: input.spellId,
+      spellId: authoredUnitId(input.spellId),
       invocation: { kind: "ritual" },
     });
     expect(projection.tag).toBe(input.expectedTag);
@@ -1674,11 +1748,11 @@ function spellbookRitualSheet(input: {
         spellcasting: {
           sources: [
             {
-              sourceUnitId: "class_wizard",
+              sourceUnitId: authoredUnitId("class_wizard"),
               spellcastingAbility: "int",
               cantrips: [],
-              spellbook: input.spellbook,
-              preparedSpells: input.preparedSpells ?? [],
+              spellbook: input.spellbook.map(authoredUnitId),
+              preparedSpells: (input.preparedSpells ?? []).map(authoredUnitId),
               spellcastingFocuses: ["spellbook"],
             },
           ],
@@ -1711,7 +1785,7 @@ function projectPublicWeaponMasterySelectedReferenceRoute(input: {
       characterSheetWeaponMasterySelectedReferenceProjection({
         sheet: weaponMasteryRouteSheet(input),
         unitLibrary,
-        featureUnitId: input.featureUnitId,
+        featureUnitId: authoredUnitId(input.featureUnitId),
       }),
     );
     expectWeaponMasterySelectionProjection(projection, input);
@@ -1735,8 +1809,10 @@ function completePublicWeaponMasteryReselectionRoute(input: {
       finishLongRest({ rest, restedTicks: rest.requiredRestTicks }),
     );
     const reselection = {
-      featureUnitId: input.featureUnitId,
-      selectedWeaponUnitIds: input.reselectedWeaponUnitIds,
+      featureUnitId: authoredUnitId(input.featureUnitId),
+      selectedWeaponUnitIds: authoredNonEmptyUnitIds(
+        input.reselectedWeaponUnitIds,
+      ),
     } satisfies CharacterSheetWeaponMasteryReselection;
     const projected = completeLongRestWeaponMasteryReselectionWithRoute({
       completion,
@@ -1749,7 +1825,7 @@ function completePublicWeaponMasteryReselectionRoute(input: {
         characterSheetWeaponMasterySelectedReferenceProjection({
           sheet: projected.sheet,
           unitLibrary,
-          featureUnitId: input.featureUnitId,
+          featureUnitId: authoredUnitId(input.featureUnitId),
         }),
       );
       expect(projection.selectedWeaponUnitIds).toEqual(
@@ -1772,8 +1848,8 @@ function weaponMasteryRouteSheet(input: {
         ...baseBuild({ startingClass: input.classUnitId }),
         features: input.selectedWeaponUnitIds.map((unitId) => ({
           kind: "selectedClassChoice" as const,
-          selectedFromUnitId: input.featureUnitId,
-          unitId,
+          selectedFromUnitId: authoredUnitId(input.featureUnitId),
+          unitId: authoredUnitId(unitId),
         })),
       },
       currentHp: Hp(8),
@@ -1885,7 +1961,10 @@ function indexedActionEntries<const Schema extends RouteDriverSchema>(
   entries: readonly (readonly [keyof Schema, RouteAppender])[],
 ): IndexedRouteActionMap<Schema> {
   const out: Partial<
-    Record<keyof Schema, { readonly replayIndex: number; readonly append: RouteAppender }>
+    Record<
+      keyof Schema,
+      { readonly replayIndex: number; readonly append: RouteAppender }
+    >
   > = {};
   entries.forEach(([actionName, append], replayIndex) => {
     out[actionName] = { replayIndex, append };
@@ -2120,11 +2199,7 @@ function routeFill(raw: unknown): CharacterSheetRouteFill {
 function mappedVariant<
   const Value extends string,
   const Mapping extends Readonly<Record<string, Value>>,
->(
-  raw: unknown,
-  mapping: Mapping,
-  label: string,
-): Value {
+>(raw: unknown, mapping: Mapping, label: string): Value {
   const tag = quintVariantTag(raw, label);
   if (hasOwnKey(mapping, tag)) {
     return mapping[tag];
@@ -2189,7 +2264,9 @@ function quintVariantValue(
   ) {
     return raw["value"];
   }
-  throw new Error(`Expected Quint ${expectedTag} variant value field ${field}.`);
+  throw new Error(
+    `Expected Quint ${expectedTag} variant value field ${field}.`,
+  );
 }
 
 function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {

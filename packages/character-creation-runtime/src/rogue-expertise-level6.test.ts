@@ -1,3 +1,4 @@
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, test } from "vitest";
 import { Either } from "effect";
 import {
@@ -48,14 +49,14 @@ const unitLibrary = unitCatalogResult.catalog;
 
 describe("Rogue level 6 Expertise", () => {
   test("production support admits Rogue 6 and finalizes four selected Expertise skills", () => {
-    const rogueSix = testProgression("class_rogue", 6);
+    const rogueSix = testProgression(authoredUnitId("class_rogue"), 6);
     const rogue = completeSupportedProgressionDraft({
       draftId: "draft:srd-level-6-rogue-expertise-feature-choice",
       progression: rogueSix,
     });
     const selectedExpertise = selectedChoiceOptionIds(
       rogue,
-      "rogue_expertise",
+      authoredUnitId("rogue_expertise"),
       CLASS_FEATURE_PROFICIENCY_CHOICE_KEY,
     );
 

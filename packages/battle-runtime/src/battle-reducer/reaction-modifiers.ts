@@ -21,7 +21,7 @@ import { Match } from "effect";
 import {
   resourceHasUsesRemaining,
   spendCharacterResourceUse,
-} from "../character-battle-resources.ts";
+} from "../character-battle-resource-execution.ts";
 
 import { CombatantId } from "../identity.ts";
 
@@ -30,16 +30,18 @@ import { combatantCanSee } from "./creature-state-leaves.ts";
 import {
   combatantCanTakeReactions,
   isCharacterBattleCreatureState,
-} from "./creature-state.ts";
+} from "./creature-state-execution.ts";
 
 import { combatantProficiencyBonus } from "./movement-speed.ts";
 import { battleAttackHostParticipantId } from "./attack-damage-events.ts";
 import {
   CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
   characterUnitProcedure,
-  type CharacterUnitProcedureSource,
-  type UnitFeatureProcedureExecution,
-} from "../character-execution-admission.ts";
+} from "../character-execution-queries.ts";
+import type {
+  CharacterUnitProcedureSource,
+  UnitFeatureProcedureExecution,
+} from "../character-execution-vocabulary.ts";
 import type { BattleProcedureExecutionRef } from "../identity.ts";
 
 import { signedModifier } from "./statblock-attacks.ts";
@@ -54,11 +56,11 @@ import type {
   BattleRolledDiceFill,
   BattleState,
 } from "../battle-state-execution.ts";
+import { validateRolledDiceFillForDiceExpr } from "../battle-state-execution.ts";
 import {
   REACTION_MODIFIER_ROLL_HOLE_ID,
   REACTION_MODIFIER_ROLL_HOLE_INSTANCE,
-  validateRolledDiceFillForDiceExpr,
-} from "../battle-state-execution.ts";
+} from "./battle-runtime-protocol.ts";
 
 type ReactionRollOrDamageReductionExecution = Extract<
   UnitFeatureProcedureExecution,

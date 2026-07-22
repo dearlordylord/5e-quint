@@ -4,6 +4,8 @@
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L110D-08-LAND-AND-FIEND-RESISTANCES druid_natures_ward warlock_fiendish_resilience
 // UNIT-IDENTITY-REPLAY: L110D-08-LAND-AND-FIEND-RESISTANCES druid_natures_ward doProjectDruidNaturesWard
 // UNIT-IDENTITY-REPLAY: L110D-08-LAND-AND-FIEND-RESISTANCES warlock_fiendish_resilience doSelectWarlockFiendishResilience
+import { statBlockId as authoredStatBlockId } from "@dnd/shared/game-facts";
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, it, test } from "vitest";
 import {
   buildStatBlockCatalog,
@@ -258,10 +260,10 @@ describe("Character Sheet runtime / passive defenses", () => {
         unitLibrary,
         druidWildShapeKnownFormStatBlockIds: [
           ...druidWildShapeFixtureKnownFormStatBlockIds,
-          "stat_block_cat",
-          "stat_block_frog",
-          "stat_block_lizard",
-          "stat_block_weasel",
+          authoredStatBlockId("stat_block_cat"),
+          authoredStatBlockId("stat_block_frog"),
+          authoredStatBlockId("stat_block_lizard"),
+          authoredStatBlockId("stat_block_weasel"),
         ],
         druidCircleLand: { land: "temperate" },
         statBlockCatalog,
@@ -276,7 +278,7 @@ describe("Character Sheet runtime / passive defenses", () => {
         damageResistances: ["lightning"],
         conditionImmunities: ["poisoned"],
         naturesWard: {
-          sourceUnitId: "druid_natures_ward",
+          sourceUnitId: authoredUnitId("druid_natures_ward"),
           conditionImmunities: ["poisoned"],
           resistance: {
             land: "temperate",
@@ -329,7 +331,7 @@ describe("Character Sheet runtime / passive defenses", () => {
       right: {
         conditionImmunities: ["frightened"],
         auraOfCourage: {
-          sourceUnitId: "paladin_aura_of_courage",
+          sourceUnitId: authoredUnitId("paladin_aura_of_courage"),
           conditionImmunities: ["frightened"],
           auraMembershipSource: {
             kind: "auraOfProtection",
@@ -358,7 +360,7 @@ describe("Character Sheet runtime / passive defenses", () => {
       _tag: "Right",
       right: {
         selfRestoration: {
-          sourceUnitId: "monk_self_restoration",
+          sourceUnitId: authoredUnitId("monk_self_restoration"),
           turnEndRemovableConditions: ["charmed", "frightened", "poisoned"],
           foodAndDrinkExhaustionPrevented: true,
         },
@@ -406,12 +408,12 @@ describe("Character Sheet runtime / passive defenses", () => {
         sheet,
         unitLibrary,
         spell: fireball,
-        spellSourceUnitId: "class_wizard",
+        spellSourceUnitId: authoredUnitId("class_wizard"),
       }),
     ).toMatchObject({
       _tag: "Right",
       right: {
-        sourceUnitId: "wizard_empowered_evocation",
+        sourceUnitId: authoredUnitId("wizard_empowered_evocation"),
         spellSourceUnitId: "class_wizard",
         school: "evocation",
         damageRollAbility: "int",
@@ -424,7 +426,7 @@ describe("Character Sheet runtime / passive defenses", () => {
         sheet,
         unitLibrary,
         spell: spellRecord("hold_person"),
-        spellSourceUnitId: "class_wizard",
+        spellSourceUnitId: authoredUnitId("class_wizard"),
       }),
     ).toMatchObject({
       _tag: "Left",
@@ -438,7 +440,7 @@ describe("Character Sheet runtime / passive defenses", () => {
         sheet,
         unitLibrary,
         spell: fireball,
-        spellSourceUnitId: "class_sorcerer",
+        spellSourceUnitId: authoredUnitId("class_sorcerer"),
       }),
     ).toMatchObject({
       _tag: "Left",
@@ -461,8 +463,8 @@ function fiendWarlockLevelTenBuild() {
       ...build.features,
       {
         kind: "selectedClassChoice" as const,
-        selectedFromUnitId: "class_warlock",
-        unitId: "subclass_warlock_fiend_patron",
+        selectedFromUnitId: authoredUnitId("class_warlock"),
+        unitId: authoredUnitId("subclass_warlock_fiend_patron"),
       },
     ],
   };
@@ -490,8 +492,8 @@ function wizardEvokerLevelTenBuild(): CharacterBuild {
       features: [
         {
           kind: "selectedClassChoice" as const,
-          selectedFromUnitId: "class_wizard",
-          unitId: "subclass_wizard_evoker",
+          selectedFromUnitId: authoredUnitId("class_wizard"),
+          unitId: authoredUnitId("subclass_wizard_evoker"),
         },
       ],
     }),
@@ -508,11 +510,17 @@ function wizardEvokerLevelTenBuild(): CharacterBuild {
     spellcasting: {
       sources: [
         {
-          sourceUnitId: "class_wizard" as const,
+          sourceUnitId: authoredUnitId("class_wizard" as const),
           spellcastingAbility: "int" as const,
           cantrips: [] as const,
-          spellbook: ["fireball", "hold_person"] as const,
-          preparedSpells: ["fireball", "hold_person"] as const,
+          spellbook: [
+            authoredUnitId("fireball"),
+            authoredUnitId("hold_person"),
+          ] as const,
+          preparedSpells: [
+            authoredUnitId("fireball"),
+            authoredUnitId("hold_person"),
+          ] as const,
           spellcastingFocuses: ["arcane_focus" as const],
         },
       ] as const,
@@ -551,10 +559,10 @@ const passiveDefenseSelectedIdentityActions = {
         unitLibrary,
         druidWildShapeKnownFormStatBlockIds: [
           ...druidWildShapeFixtureKnownFormStatBlockIds,
-          "stat_block_cat",
-          "stat_block_frog",
-          "stat_block_lizard",
-          "stat_block_weasel",
+          authoredStatBlockId("stat_block_cat"),
+          authoredStatBlockId("stat_block_frog"),
+          authoredStatBlockId("stat_block_lizard"),
+          authoredStatBlockId("stat_block_weasel"),
         ],
         druidCircleLand: { land: "temperate" },
         statBlockCatalog,

@@ -8,10 +8,9 @@ import {
   type LoadoutSlot,
   type UnitChoiceKey,
 } from "@dnd/character-creation-runtime";
-import type { UnitRecord } from "@dnd/surface/surface/types";
 
 export function unitHoleId(
-  unitId: UnitRecord["id"],
+  unitId: string,
   choiceKey: UnitChoiceKey,
 ): CreationHoleIdText {
   const sourceUnitId = unitChoiceSourceUnitId(unitId);
@@ -27,7 +26,7 @@ export function unitHoleId(
 }
 
 export function loadoutHoleId(
-  equipmentUnitId: UnitRecord["id"],
+  equipmentUnitId: string,
   slot: LoadoutSlot,
 ): CreationHoleIdText {
   const sourceEquipmentUnitId = loadoutEquipmentUnitId(equipmentUnitId);

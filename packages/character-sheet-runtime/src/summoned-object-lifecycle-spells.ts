@@ -1,5 +1,6 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.summoned-object-lifecycle-session-invocation
 // UNIT-PROFILE-COVERAGE: runtime-owner table-caller.summoned-object-lifecycle-control
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import {
   timeSpanDuration,
   type TimeSpanDuration,
@@ -205,7 +206,7 @@ function spellRecord(
   unitLibrary: UnitCatalog,
   spellId: string,
 ): Either.Either<SpellRecord, CharacterSheetIssue> {
-  const unit = getRequiredUnit(unitLibrary, spellId);
+  const unit = getRequiredUnit(unitLibrary, authoredUnitId(spellId));
   if (Either.isLeft(unit)) return Either.left(unit.left);
   return unit.right.kind === "spell"
     ? Either.right(unit.right)

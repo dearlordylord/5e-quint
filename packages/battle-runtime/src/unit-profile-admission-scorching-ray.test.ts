@@ -108,7 +108,7 @@ describe("L12G-SPELL-SCORCHING-RAY deterministic Scorching Ray admission", () =>
         access: { tag: "prepared" },
         resource: { tag: "spellSlot", slotLevel: 2 },
         procedure: "spellAttackSequence",
-        spell,
+        spellRuleFacts: expect.objectContaining({ spellId: spell.id }),
         targeting: {
           kind: "spellAttackSequenceCreatureOrObject",
           countSource: "spellSlotLevel",

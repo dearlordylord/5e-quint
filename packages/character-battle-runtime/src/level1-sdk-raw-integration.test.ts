@@ -1,3 +1,5 @@
+import { statBlockId as authoredStatBlockId } from "@dnd/shared/game-facts";
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import {
   battleActSpellPresentation,
   battleActSpellSlotPresentation,
@@ -293,7 +295,9 @@ const magicMissileSpellId = "magic_missile";
 const thunderwaveSpellId = "thunderwave";
 const shillelaghQuarterstaffItemId = characterEquipmentItemId({
   slot: "main",
-  unitId: requireRight(characterEquipmentItemUnitId("weapon_quarterstaff")),
+  unitId: requireRight(
+    characterEquipmentItemUnitId(authoredUnitId("weapon_quarterstaff")),
+  ),
 });
 const mageArmorDurationTicks = requireRight(elapsedTimeTicksFromHours(8));
 const shillelaghDurationTicks = requireRight(elapsedTimeTicksFromMinutes(1));
@@ -312,8 +316,8 @@ describe("level 1 SDK RAW integration", () => {
         characterSheet({
           characterIdText: "character:l1-sdk-second-wind",
           build: levelOneSingleClassBuild({
-            classUnitId: "class_fighter",
-            weaponUnitId: "weapon_longsword",
+            classUnitId: authoredUnitId("class_fighter"),
+            weaponUnitId: authoredUnitId("weapon_longsword"),
           }),
           combatantId: fighterId,
           initiative: 20,
@@ -321,14 +325,18 @@ describe("level 1 SDK RAW integration", () => {
         }),
       ],
       monsters: [
-        monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
+        monsterBattleInput(
+          monsterId,
+          10,
+          srdStatBlock(authoredStatBlockId("stat_block_skeleton")),
+        ),
       ],
     });
     const state = session.state;
     const act = unitFeatureActForUnitId(
       session,
       fighterId,
-      fighterSecondWindUnitId,
+      authoredUnitId(fighterSecondWindUnitId),
     );
     const healingRoll = requireHoleFromList(act.initialHoles, "rolledDice");
 
@@ -343,7 +351,7 @@ describe("level 1 SDK RAW integration", () => {
     const secondWindOwnership = requireCharacterResourceOwnershipForUnit(
       session,
       fighterId,
-      fighterSecondWindUnitId,
+      authoredUnitId(fighterSecondWindUnitId),
     );
 
     expect(requireCombatant(resolved.state, fighterId).hp).toBe(Hp(8));
@@ -375,8 +383,8 @@ describe("level 1 SDK RAW integration", () => {
         characterSheet({
           characterIdText: "character:l1-sdk-rage",
           build: levelOneSingleClassBuild({
-            classUnitId: "class_barbarian",
-            weaponUnitId: "weapon_longsword",
+            classUnitId: authoredUnitId("class_barbarian"),
+            weaponUnitId: authoredUnitId("weapon_longsword"),
             abilityScores: {
               str: 16,
               dex: 14,
@@ -391,14 +399,18 @@ describe("level 1 SDK RAW integration", () => {
         }),
       ],
       monsters: [
-        monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
+        monsterBattleInput(
+          monsterId,
+          10,
+          srdStatBlock(authoredStatBlockId("stat_block_skeleton")),
+        ),
       ],
     });
     const state = session.state;
     const act = unitFeatureActForUnitId(
       session,
       barbarianId,
-      barbarianRageUnitId,
+      authoredUnitId(barbarianRageUnitId),
     );
     const raging = requireResolved(
       resolveBattleSubject({ state, subject: act.subject, fills: [] }),
@@ -407,7 +419,7 @@ describe("level 1 SDK RAW integration", () => {
     const rageOwnership = requireCharacterResourceOwnershipForUnit(
       session,
       barbarianId,
-      barbarianRageUnitId,
+      authoredUnitId(barbarianRageUnitId),
     );
 
     expect(snapshotBattle(raging.state).turn.bonusActionAvailable).toBe(false);
@@ -477,8 +489,8 @@ describe("level 1 SDK RAW integration", () => {
         characterSheet({
           characterIdText: "character:l1-sdk-sneak-attack",
           build: levelOneSingleClassBuild({
-            classUnitId: "class_rogue",
-            weaponUnitId: "weapon_dagger",
+            classUnitId: authoredUnitId("class_rogue"),
+            weaponUnitId: authoredUnitId("weapon_dagger"),
             abilityScores: {
               str: 10,
               dex: 16,
@@ -494,15 +506,19 @@ describe("level 1 SDK RAW integration", () => {
         characterSheet({
           characterIdText: "character:l1-sdk-sneak-attack-ally",
           build: levelOneSingleClassBuild({
-            classUnitId: "class_fighter",
-            weaponUnitId: "weapon_longsword",
+            classUnitId: authoredUnitId("class_fighter"),
+            weaponUnitId: authoredUnitId("weapon_longsword"),
           }),
           combatantId: rogueAllyId,
           initiative: 15,
         }),
       ],
       monsters: [
-        monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
+        monsterBattleInput(
+          monsterId,
+          10,
+          srdStatBlock(authoredStatBlockId("stat_block_skeleton")),
+        ),
       ],
     });
     const state = session.state;
@@ -588,7 +604,7 @@ describe("level 1 SDK RAW integration", () => {
         characterSheet({
           characterIdText: "character:l1-sdk-bardic-inspiration",
           build: levelOneSingleClassBuild({
-            classUnitId: "class_bard",
+            classUnitId: authoredUnitId("class_bard"),
             abilityScores: {
               str: 10,
               dex: 14,
@@ -604,22 +620,26 @@ describe("level 1 SDK RAW integration", () => {
         characterSheet({
           characterIdText: "character:l1-sdk-bardic-inspiration-ally",
           build: levelOneSingleClassBuild({
-            classUnitId: "class_fighter",
-            weaponUnitId: "weapon_longsword",
+            classUnitId: authoredUnitId("class_fighter"),
+            weaponUnitId: authoredUnitId("weapon_longsword"),
           }),
           combatantId: inspiredAllyId,
           initiative: 15,
         }),
       ],
       monsters: [
-        monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
+        monsterBattleInput(
+          monsterId,
+          10,
+          srdStatBlock(authoredStatBlockId("stat_block_skeleton")),
+        ),
       ],
     });
     const state = session.state;
     const act = unitFeatureActForUnitId(
       session,
       bardId,
-      bardBardicInspirationUnitId,
+      authoredUnitId(bardBardicInspirationUnitId),
     );
     const target = requireHoleFromList(act.initialHoles, "targetChoice");
     const resolved = requireResolved(
@@ -640,7 +660,7 @@ describe("level 1 SDK RAW integration", () => {
     const bardicInspirationOwnership = requireCharacterResourceOwnershipForUnit(
       session,
       bardId,
-      bardBardicInspirationUnitId,
+      authoredUnitId(bardBardicInspirationUnitId),
     );
 
     expect(snapshotBattle(resolved.state).turn.bonusActionAvailable).toBe(
@@ -720,7 +740,7 @@ describe("level 1 SDK RAW integration", () => {
         characterSheet({
           characterIdText: "character:l1-sdk-innate-sorcery",
           build: levelOneSingleClassBuild({
-            classUnitId: "class_sorcerer",
+            classUnitId: authoredUnitId("class_sorcerer"),
             abilityScores: {
               str: 8,
               dex: 14,
@@ -732,16 +752,19 @@ describe("level 1 SDK RAW integration", () => {
             spellcasting: {
               sources: [
                 {
-                  sourceUnitId: "class_sorcerer",
+                  sourceUnitId: authoredUnitId("class_sorcerer"),
                   spellcastingAbility: "cha",
                   cantrips: [
-                    "fire_bolt",
-                    "light",
-                    "shocking_grasp",
-                    sorcerousBurstSpellId,
+                    authoredUnitId("fire_bolt"),
+                    authoredUnitId("light"),
+                    authoredUnitId("shocking_grasp"),
+                    authoredUnitId(sorcerousBurstSpellId),
                   ],
                   spellbook: [],
-                  preparedSpells: ["burning_hands", "detect_magic"],
+                  preparedSpells: [
+                    authoredUnitId("burning_hands"),
+                    authoredUnitId("detect_magic"),
+                  ],
                   spellcastingFocuses: ["arcane_focus"],
                 },
               ],
@@ -758,20 +781,24 @@ describe("level 1 SDK RAW integration", () => {
         }),
       ],
       monsters: [
-        monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
+        monsterBattleInput(
+          monsterId,
+          10,
+          srdStatBlock(authoredStatBlockId("stat_block_skeleton")),
+        ),
       ],
     });
     const state = session.state;
     const act = unitFeatureActForUnitId(
       session,
       sorcererId,
-      sorcererInnateSorceryUnitId,
+      authoredUnitId(sorcererInnateSorceryUnitId),
     );
     const preActivationSorcerer = requireCharacterCombatant(state, sorcererId);
     const innateSorceryOwnership = requireCharacterResourceOwnershipForUnit(
       session,
       sorcererId,
-      sorcererInnateSorceryUnitId,
+      authoredUnitId(sorcererInnateSorceryUnitId),
     );
 
     expect(
@@ -830,7 +857,7 @@ describe("level 1 SDK RAW integration", () => {
     const spellAct = cantripCastActionSpellAct(
       activatedSession,
       sorcererId,
-      sorcerousBurstSpellId,
+      authoredUnitId(sorcerousBurstSpellId),
     );
     const damageType = requireHoleFromList(
       spellAct.initialHoles,
@@ -843,7 +870,12 @@ describe("level 1 SDK RAW integration", () => {
         subject: spellAct.subject,
         fills: [
           damageTypeChoiceFill(damageType, "fire"),
-          spellTargetFill(target, sorcerousBurstSpellId, sorcererId, monsterId),
+          spellTargetFill(
+            target,
+            authoredUnitId(sorcerousBurstSpellId),
+            sorcererId,
+            monsterId,
+          ),
         ],
       }),
       "attackRoll",
@@ -1619,7 +1651,11 @@ describe("level 1 SDK RAW integration", () => {
       battleIdText: "battle:l1-sdk-hex-warlock",
       characters: [hexSheet],
       monsters: [
-        monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
+        monsterBattleInput(
+          monsterId,
+          10,
+          srdStatBlock(authoredStatBlockId("stat_block_skeleton")),
+        ),
       ],
     });
     const state = session.state;
@@ -1644,7 +1680,12 @@ describe("level 1 SDK RAW integration", () => {
         state,
         subject: act.subject,
         fills: [
-          spellTargetFill(target, hexSpellId, hexWarlockId, monsterId),
+          spellTargetFill(
+            target,
+            authoredUnitId(hexSpellId),
+            hexWarlockId,
+            monsterId,
+          ),
           abilityChoiceFill(ability, "wis"),
         ],
       }),
@@ -2087,7 +2128,7 @@ describe("level 1 SDK RAW integration", () => {
         characterSheet({
           characterIdText: "character:l1-sdk-martial-arts",
           build: levelOneSingleClassBuild({
-            classUnitId: "class_monk",
+            classUnitId: authoredUnitId("class_monk"),
             abilityScores: {
               str: 10,
               dex: 16,
@@ -2105,7 +2146,7 @@ describe("level 1 SDK RAW integration", () => {
         monsterBattleInput(
           monsterId,
           10,
-          srdStatBlock("stat_block_goblin_warrior"),
+          srdStatBlock(authoredStatBlockId("stat_block_goblin_warrior")),
         ),
       ],
     });
@@ -2153,11 +2194,15 @@ function assertLevelOneBurningHands(input: {
       }),
     ],
     monsters: [
-      monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
+      monsterBattleInput(
+        monsterId,
+        10,
+        srdStatBlock(authoredStatBlockId("stat_block_skeleton")),
+      ),
       monsterBattleInput(
         secondMonsterId,
         8,
-        srdStatBlock("stat_block_skeleton"),
+        srdStatBlock(authoredStatBlockId("stat_block_skeleton")),
       ),
     ],
   });
@@ -2243,11 +2288,15 @@ function assertLevelOneThunderwave(input: {
       }),
     ],
     monsters: [
-      monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
+      monsterBattleInput(
+        monsterId,
+        10,
+        srdStatBlock(authoredStatBlockId("stat_block_skeleton")),
+      ),
       monsterBattleInput(
         secondMonsterId,
         8,
-        srdStatBlock("stat_block_skeleton"),
+        srdStatBlock(authoredStatBlockId("stat_block_skeleton")),
       ),
     ],
   });
@@ -2378,7 +2427,11 @@ function assertLevelOneDissonantWhispers(input: {
       }),
     ],
     monsters: [
-      monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
+      monsterBattleInput(
+        monsterId,
+        10,
+        srdStatBlock(authoredStatBlockId("stat_block_skeleton")),
+      ),
     ],
   });
   const state = session.state;
@@ -2391,7 +2444,7 @@ function assertLevelOneDissonantWhispers(input: {
   const target = requireHoleFromList(act.initialHoles, "targetChoice");
   const targetFill = spellTargetFill(
     target,
-    dissonantWhispersSpellId,
+    authoredUnitId(dissonantWhispersSpellId),
     input.casterId,
     monsterId,
   );
@@ -2564,20 +2617,24 @@ function assertLevelOneViciousMockery(input: {
       }),
     ],
     monsters: [
-      monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
+      monsterBattleInput(
+        monsterId,
+        10,
+        srdStatBlock(authoredStatBlockId("stat_block_skeleton")),
+      ),
     ],
   });
   const state = session.state;
   const act = cantripCastActionSpellAct(
     session,
     input.casterId,
-    viciousMockerySpellId,
+    authoredUnitId(viciousMockerySpellId),
     "saveGatedDamage",
   );
   const target = requireHoleFromList(act.initialHoles, "targetChoice");
   const targetFill = spellTargetFill(
     target,
-    viciousMockerySpellId,
+    authoredUnitId(viciousMockerySpellId),
     input.casterId,
     monsterId,
   );
@@ -2767,11 +2824,15 @@ function assertLevelOneAcidSplash(input: {
       }),
     ],
     monsters: [
-      monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
+      monsterBattleInput(
+        monsterId,
+        10,
+        srdStatBlock(authoredStatBlockId("stat_block_skeleton")),
+      ),
       monsterBattleInput(
         secondMonsterId,
         8,
-        srdStatBlock("stat_block_skeleton"),
+        srdStatBlock(authoredStatBlockId("stat_block_skeleton")),
       ),
     ],
   });
@@ -2779,7 +2840,7 @@ function assertLevelOneAcidSplash(input: {
   const act = cantripCastActionSpellAct(
     session,
     input.casterId,
-    acidSplashSpellId,
+    authoredUnitId(acidSplashSpellId),
     "saveGatedDamage",
   );
   const save = requireHoleFromList(act.initialHoles, "savingThrowOutcome");
@@ -2860,14 +2921,18 @@ function assertLevelOneSorcerousBurst(input: {
       }),
     ],
     monsters: [
-      monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
+      monsterBattleInput(
+        monsterId,
+        10,
+        srdStatBlock(authoredStatBlockId("stat_block_skeleton")),
+      ),
     ],
   });
   const state = session.state;
   const act = cantripCastActionSpellAct(
     session,
     input.casterId,
-    sorcerousBurstSpellId,
+    authoredUnitId(sorcerousBurstSpellId),
   );
   const damageType = requireHoleFromList(act.initialHoles, "damageTypeChoice");
   const target = requireHoleFromList(act.initialHoles, "targetChoice");
@@ -2878,7 +2943,7 @@ function assertLevelOneSorcerousBurst(input: {
   const damageTypeFill = damageTypeChoiceFill(damageType, "thunder");
   const targetFill = spellTargetFill(
     target,
-    sorcerousBurstSpellId,
+    authoredUnitId(sorcerousBurstSpellId),
     input.casterId,
     monsterId,
   );
@@ -2997,7 +3062,7 @@ function assertLevelOnePoisonSpray(input: {
       monsterBattleInput(
         monsterId,
         10,
-        srdStatBlock("stat_block_goblin_warrior"),
+        srdStatBlock(authoredStatBlockId("stat_block_goblin_warrior")),
       ),
     ],
   });
@@ -3005,12 +3070,12 @@ function assertLevelOnePoisonSpray(input: {
   const act = cantripCastActionSpellAct(
     session,
     input.casterId,
-    poisonSpraySpellId,
+    authoredUnitId(poisonSpraySpellId),
   );
   const target = requireHoleFromList(act.initialHoles, "targetChoice");
   const targetFill = spellTargetFill(
     target,
-    poisonSpraySpellId,
+    authoredUnitId(poisonSpraySpellId),
     input.casterId,
     monsterId,
   );
@@ -3116,7 +3181,7 @@ function assertLevelOneProduceFlame(input: {
       monsterBattleInput(
         monsterId,
         10,
-        srdStatBlock("stat_block_goblin_warrior"),
+        srdStatBlock(authoredStatBlockId("stat_block_goblin_warrior")),
       ),
     ],
   });
@@ -3125,14 +3190,14 @@ function assertLevelOneProduceFlame(input: {
     hasCantripSpellInvocationAct(
       session,
       input.casterId,
-      produceFlameSpellId,
+      authoredUnitId(produceFlameSpellId),
       "heldLightHurl",
     ),
   ).toBe(false);
   const heldLightAct = cantripCastHeldLightBonusActionSpellAct(
     session,
     input.casterId,
-    produceFlameSpellId,
+    authoredUnitId(produceFlameSpellId),
   );
   expect(heldLightAct.initialHoles).toEqual([]);
 
@@ -3182,7 +3247,7 @@ function assertLevelOneProduceFlame(input: {
   const hurlAct = cantripCastActionSpellAct(
     litSession,
     input.casterId,
-    produceFlameSpellId,
+    authoredUnitId(produceFlameSpellId),
     "heldLightHurl",
   );
   const target = requireHoleFromList(hurlAct.initialHoles, "targetChoice");
@@ -3192,7 +3257,7 @@ function assertLevelOneProduceFlame(input: {
   );
   const targetFill = spellTargetFill(
     target,
-    produceFlameSpellId,
+    authoredUnitId(produceFlameSpellId),
     input.casterId,
     monsterId,
   );
@@ -3298,7 +3363,11 @@ function assertLevelOneShillelagh(input: {
       }),
     ],
     monsters: [
-      monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
+      monsterBattleInput(
+        monsterId,
+        10,
+        srdStatBlock(authoredStatBlockId("stat_block_skeleton")),
+      ),
     ],
   });
   const state = session.state;
@@ -3451,20 +3520,24 @@ function assertLevelOneSacredFlame(input: {
       }),
     ],
     monsters: [
-      monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
+      monsterBattleInput(
+        monsterId,
+        10,
+        srdStatBlock(authoredStatBlockId("stat_block_skeleton")),
+      ),
     ],
   });
   const state = session.state;
   const act = cantripCastActionSpellAct(
     session,
     input.casterId,
-    sacredFlameSpellId,
+    authoredUnitId(sacredFlameSpellId),
     "saveGatedDamage",
   );
   const target = requireHoleFromList(act.initialHoles, "targetChoice");
   const targetFill = spellTargetFill(
     target,
-    sacredFlameSpellId,
+    authoredUnitId(sacredFlameSpellId),
     input.casterId,
     monsterId,
   );
@@ -3589,14 +3662,18 @@ function assertLevelOneThaumaturgyBoomingVoice(input: {
       }),
     ],
     monsters: [
-      monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
+      monsterBattleInput(
+        monsterId,
+        10,
+        srdStatBlock(authoredStatBlockId("stat_block_skeleton")),
+      ),
     ],
   });
   const state = session.state;
   const act = cantripCastActionSpellAct(
     session,
     input.casterId,
-    thaumaturgySpellId,
+    authoredUnitId(thaumaturgySpellId),
     "thaumaturgyBoomingVoice",
   );
   const countHole = requireHoleFromList(
@@ -3671,7 +3748,11 @@ function assertLevelOneInflictWounds(input: {
       }),
     ],
     monsters: [
-      monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
+      monsterBattleInput(
+        monsterId,
+        10,
+        srdStatBlock(authoredStatBlockId("stat_block_skeleton")),
+      ),
     ],
   });
   const state = session.state;
@@ -3684,7 +3765,7 @@ function assertLevelOneInflictWounds(input: {
   const target = requireHoleFromList(act.initialHoles, "targetChoice");
   const targetFill = spellTargetFill(
     target,
-    inflictWoundsSpellId,
+    authoredUnitId(inflictWoundsSpellId),
     input.casterId,
     monsterId,
   );
@@ -3816,15 +3897,19 @@ function assertLevelOneSanctuary(input: {
       characterSheet({
         characterIdText: "character:l1-sdk-sanctuary-warded-ally",
         build: levelOneSingleClassBuild({
-          classUnitId: "class_fighter",
-          weaponUnitId: "weapon_longsword",
+          classUnitId: authoredUnitId("class_fighter"),
+          weaponUnitId: authoredUnitId("weapon_longsword"),
         }),
         combatantId: input.wardedId,
         initiative: 15,
       }),
     ],
     monsters: [
-      monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
+      monsterBattleInput(
+        monsterId,
+        10,
+        srdStatBlock(authoredStatBlockId("stat_block_skeleton")),
+      ),
     ],
   });
   const state = session.state;
@@ -3915,15 +4000,19 @@ function assertLevelOneBless(input: {
       characterSheet({
         characterIdText: "character:l1-sdk-bless-target",
         build: levelOneSingleClassBuild({
-          classUnitId: "class_fighter",
-          weaponUnitId: "weapon_longsword",
+          classUnitId: authoredUnitId("class_fighter"),
+          weaponUnitId: authoredUnitId("weapon_longsword"),
         }),
         combatantId: input.targetId,
         initiative: 15,
       }),
     ],
     monsters: [
-      monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
+      monsterBattleInput(
+        monsterId,
+        10,
+        srdStatBlock(authoredStatBlockId("stat_block_skeleton")),
+      ),
     ],
   });
   const state = session.state;
@@ -4043,8 +4132,8 @@ function assertLevelOneShieldOfFaith(input: {
       characterSheet({
         characterIdText: "character:l1-sdk-shield-of-faith-target",
         build: levelOneSingleClassBuild({
-          classUnitId: "class_fighter",
-          weaponUnitId: "weapon_longsword",
+          classUnitId: authoredUnitId("class_fighter"),
+          weaponUnitId: authoredUnitId("weapon_longsword"),
         }),
         combatantId: input.targetId,
         initiative: 15,
@@ -4092,7 +4181,7 @@ function assertLevelOneShieldOfFaith(input: {
       fills: [
         spellTargetFill(
           target,
-          shieldOfFaithSpellId,
+          authoredUnitId(shieldOfFaithSpellId),
           input.casterId,
           input.targetId,
         ),
@@ -4161,8 +4250,8 @@ function assertLevelOneHealingWord(input: {
       characterSheet({
         characterIdText: `${input.characterIdText}-target`,
         build: levelOneSingleClassBuild({
-          classUnitId: "class_fighter",
-          weaponUnitId: "weapon_longsword",
+          classUnitId: authoredUnitId("class_fighter"),
+          weaponUnitId: authoredUnitId("weapon_longsword"),
         }),
         combatantId: input.targetId,
         initiative: 15,
@@ -4195,7 +4284,7 @@ function assertLevelOneHealingWord(input: {
 
   const targetFill = spellTargetFill(
     target,
-    healingWordSpellId,
+    authoredUnitId(healingWordSpellId),
     input.casterId,
     input.targetId,
   );
@@ -4269,8 +4358,8 @@ function assertLevelOneCureWounds(input: {
       characterSheet({
         characterIdText: `${input.characterIdText}-target`,
         build: levelOneSingleClassBuild({
-          classUnitId: "class_fighter",
-          weaponUnitId: "weapon_longsword",
+          classUnitId: authoredUnitId("class_fighter"),
+          weaponUnitId: authoredUnitId("weapon_longsword"),
         }),
         combatantId: input.targetId,
         initiative: 15,
@@ -4308,7 +4397,7 @@ function assertLevelOneCureWounds(input: {
 
   const targetFill = spellTargetFill(
     target,
-    cureWoundsSpellId,
+    authoredUnitId(cureWoundsSpellId),
     input.casterId,
     input.targetId,
   );
@@ -4390,12 +4479,12 @@ function assertLevelOneAnimalFriendship(input: {
       monsterBattleInput(
         animalFriendshipBeastId,
         10,
-        srdStatBlock("stat_block_wolf"),
+        srdStatBlock(authoredStatBlockId("stat_block_wolf")),
       ),
       monsterBattleInput(
         animalFriendshipNonBeastId,
         8,
-        srdStatBlock("stat_block_skeleton"),
+        srdStatBlock(authoredStatBlockId("stat_block_skeleton")),
       ),
     ],
   });
@@ -4544,7 +4633,11 @@ function assertLevelOneHuntersMark(input: {
     battleIdText: input.battleIdText,
     characters: [rangerSheet],
     monsters: [
-      monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
+      monsterBattleInput(
+        monsterId,
+        10,
+        srdStatBlock(authoredStatBlockId("stat_block_skeleton")),
+      ),
     ],
   });
   const state = session.state;
@@ -4557,7 +4650,7 @@ function assertLevelOneHuntersMark(input: {
   const favoredEnemyOwnership = requireCharacterResourceOwnershipForUnit(
     session,
     input.casterId,
-    rangerFavoredEnemyUnitId,
+    authoredUnitId(rangerFavoredEnemyUnitId),
   );
 
   expect(rangerBefore.origin.spellcasting).toMatchObject({
@@ -4595,7 +4688,12 @@ function assertLevelOneHuntersMark(input: {
       state,
       subject: act.subject,
       fills: [
-        spellTargetFill(target, huntersMarkSpellId, input.casterId, monsterId),
+        spellTargetFill(
+          target,
+          authoredUnitId(huntersMarkSpellId),
+          input.casterId,
+          monsterId,
+        ),
       ],
     }),
   );
@@ -4729,7 +4827,11 @@ function assertLevelOneHuntersMarkSpellSlot(input: {
     battleIdText: input.battleIdText,
     characters: [rangerSheet],
     monsters: [
-      monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
+      monsterBattleInput(
+        monsterId,
+        10,
+        srdStatBlock(authoredStatBlockId("stat_block_skeleton")),
+      ),
     ],
   });
   const state = session.state;
@@ -4739,7 +4841,7 @@ function assertLevelOneHuntersMarkSpellSlot(input: {
   const favoredEnemyOwnership = requireCharacterResourceOwnershipForUnit(
     session,
     input.casterId,
-    rangerFavoredEnemyUnitId,
+    authoredUnitId(rangerFavoredEnemyUnitId),
   );
 
   expect(rangerBefore.origin.spellcasting).toMatchObject({
@@ -4778,7 +4880,12 @@ function assertLevelOneHuntersMarkSpellSlot(input: {
       state,
       subject: act.subject,
       fills: [
-        spellTargetFill(target, huntersMarkSpellId, input.casterId, monsterId),
+        spellTargetFill(
+          target,
+          authoredUnitId(huntersMarkSpellId),
+          input.casterId,
+          monsterId,
+        ),
       ],
     }),
   );
@@ -4890,15 +4997,19 @@ function assertLevelOneGuidingBolt(input: {
       characterSheet({
         characterIdText: "character:l1-sdk-guiding-bolt-ally",
         build: levelOneSingleClassBuild({
-          classUnitId: "class_fighter",
-          weaponUnitId: "weapon_longsword",
+          classUnitId: authoredUnitId("class_fighter"),
+          weaponUnitId: authoredUnitId("weapon_longsword"),
         }),
         combatantId: input.allyId,
         initiative: 15,
       }),
     ],
     monsters: [
-      monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
+      monsterBattleInput(
+        monsterId,
+        10,
+        srdStatBlock(authoredStatBlockId("stat_block_skeleton")),
+      ),
     ],
   });
   const state = session.state;
@@ -4911,7 +5022,7 @@ function assertLevelOneGuidingBolt(input: {
   const target = requireHoleFromList(act.initialHoles, "targetChoice");
   const targetFill = spellTargetFill(
     target,
-    guidingBoltSpellId,
+    authoredUnitId(guidingBoltSpellId),
     input.casterId,
     monsterId,
   );
@@ -5089,7 +5200,7 @@ function assertLevelOneChillTouch(input: {
       monsterBattleInput(
         monsterId,
         10,
-        srdStatBlock("stat_block_goblin_warrior"),
+        srdStatBlock(authoredStatBlockId("stat_block_goblin_warrior")),
       ),
     ],
   });
@@ -5097,7 +5208,7 @@ function assertLevelOneChillTouch(input: {
   const act = cantripCastActionSpellAct(
     session,
     input.casterId,
-    chillTouchSpellId,
+    authoredUnitId(chillTouchSpellId),
   );
   const target = requireHoleFromList(act.initialHoles, "targetChoice");
   const objectTarget = requireHoleFromList(
@@ -5106,7 +5217,7 @@ function assertLevelOneChillTouch(input: {
   );
   const targetFill = spellTargetFill(
     target,
-    chillTouchSpellId,
+    authoredUnitId(chillTouchSpellId),
     input.casterId,
     monsterId,
   );
@@ -5229,7 +5340,7 @@ function assertLevelOneEldritchBlast(input: {
       monsterBattleInput(
         monsterId,
         10,
-        srdStatBlock("stat_block_goblin_warrior"),
+        srdStatBlock(authoredStatBlockId("stat_block_goblin_warrior")),
       ),
     ],
   });
@@ -5237,7 +5348,7 @@ function assertLevelOneEldritchBlast(input: {
   const act = cantripCastActionSpellAct(
     session,
     input.casterId,
-    eldritchBlastSpellId,
+    authoredUnitId(eldritchBlastSpellId),
     "spellAttackSequence",
   );
   const target = requireHoleFromList(act.initialHoles, "targetChoice");
@@ -5247,7 +5358,7 @@ function assertLevelOneEldritchBlast(input: {
   );
   const targetFill = spellTargetFill(
     target,
-    eldritchBlastSpellId,
+    authoredUnitId(eldritchBlastSpellId),
     input.casterId,
     monsterId,
   );
@@ -5345,14 +5456,18 @@ function assertLevelOneFireBolt(input: {
       }),
     ],
     monsters: [
-      monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
+      monsterBattleInput(
+        monsterId,
+        10,
+        srdStatBlock(authoredStatBlockId("stat_block_skeleton")),
+      ),
     ],
   });
   const state = session.state;
   const act = cantripCastActionSpellAct(
     session,
     input.casterId,
-    fireBoltSpellId,
+    authoredUnitId(fireBoltSpellId),
   );
   const target = requireHoleFromList(act.initialHoles, "targetChoice");
   const objectTarget = requireHoleFromList(
@@ -5361,7 +5476,7 @@ function assertLevelOneFireBolt(input: {
   );
   const targetFill = spellTargetFill(
     target,
-    fireBoltSpellId,
+    authoredUnitId(fireBoltSpellId),
     input.casterId,
     monsterId,
   );
@@ -5459,14 +5574,18 @@ function assertLevelOneRayOfFrost(input: {
       }),
     ],
     monsters: [
-      monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
+      monsterBattleInput(
+        monsterId,
+        10,
+        srdStatBlock(authoredStatBlockId("stat_block_skeleton")),
+      ),
     ],
   });
   const state = session.state;
   const act = cantripCastActionSpellAct(
     session,
     input.casterId,
-    rayOfFrostSpellId,
+    authoredUnitId(rayOfFrostSpellId),
   );
   const target = requireHoleFromList(act.initialHoles, "targetChoice");
   const attackRoll = requireHole(
@@ -5474,7 +5593,12 @@ function assertLevelOneRayOfFrost(input: {
       state,
       subject: act.subject,
       fills: [
-        spellTargetFill(target, rayOfFrostSpellId, input.casterId, monsterId),
+        spellTargetFill(
+          target,
+          authoredUnitId(rayOfFrostSpellId),
+          input.casterId,
+          monsterId,
+        ),
       ],
     }),
     "attackRoll",
@@ -5503,7 +5627,12 @@ function assertLevelOneRayOfFrost(input: {
       state,
       subject: act.subject,
       fills: [
-        spellTargetFill(target, rayOfFrostSpellId, input.casterId, monsterId),
+        spellTargetFill(
+          target,
+          authoredUnitId(rayOfFrostSpellId),
+          input.casterId,
+          monsterId,
+        ),
         attackRollFill(attackRoll, { total: 14, naturalD20: 10 }),
       ],
     }),
@@ -5520,7 +5649,12 @@ function assertLevelOneRayOfFrost(input: {
       state,
       subject: act.subject,
       fills: [
-        spellTargetFill(target, rayOfFrostSpellId, input.casterId, monsterId),
+        spellTargetFill(
+          target,
+          authoredUnitId(rayOfFrostSpellId),
+          input.casterId,
+          monsterId,
+        ),
         attackRollFill(attackRoll, { total: 14, naturalD20: 10 }),
         damageRollFillWithGroups(damage, [[4]]),
       ],
@@ -5605,16 +5739,20 @@ function assertLevelOneShockingGrasp(input: {
       monsterBattleInput(
         secondMonsterId,
         15,
-        srdStatBlock("stat_block_skeleton"),
+        srdStatBlock(authoredStatBlockId("stat_block_skeleton")),
       ),
-      monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
+      monsterBattleInput(
+        monsterId,
+        10,
+        srdStatBlock(authoredStatBlockId("stat_block_skeleton")),
+      ),
     ],
   });
   const state = session.state;
   const act = cantripCastActionSpellAct(
     session,
     input.casterId,
-    shockingGraspSpellId,
+    authoredUnitId(shockingGraspSpellId),
   );
   const target = requireHoleFromList(act.initialHoles, "targetChoice");
   const attackRoll = requireHole(
@@ -5624,7 +5762,7 @@ function assertLevelOneShockingGrasp(input: {
       fills: [
         spellTargetFill(
           target,
-          shockingGraspSpellId,
+          authoredUnitId(shockingGraspSpellId),
           input.casterId,
           monsterId,
         ),
@@ -5658,7 +5796,7 @@ function assertLevelOneShockingGrasp(input: {
       fills: [
         spellTargetFill(
           target,
-          shockingGraspSpellId,
+          authoredUnitId(shockingGraspSpellId),
           input.casterId,
           monsterId,
         ),
@@ -5680,7 +5818,7 @@ function assertLevelOneShockingGrasp(input: {
       fills: [
         spellTargetFill(
           target,
-          shockingGraspSpellId,
+          authoredUnitId(shockingGraspSpellId),
           input.casterId,
           monsterId,
         ),
@@ -5748,11 +5886,15 @@ function assertLevelOneChromaticOrb(input: {
       }),
     ],
     monsters: [
-      monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
+      monsterBattleInput(
+        monsterId,
+        10,
+        srdStatBlock(authoredStatBlockId("stat_block_skeleton")),
+      ),
       monsterBattleInput(
         secondMonsterId,
         8,
-        srdStatBlock("stat_block_skeleton"),
+        srdStatBlock(authoredStatBlockId("stat_block_skeleton")),
       ),
     ],
   });
@@ -5805,7 +5947,7 @@ function assertLevelOneChromaticOrb(input: {
   );
   const primaryTargetFill = spellTargetFill(
     primaryTarget,
-    chromaticOrbSpellId,
+    authoredUnitId(chromaticOrbSpellId),
     input.casterId,
     monsterId,
   );
@@ -5866,7 +6008,7 @@ function assertLevelOneChromaticOrb(input: {
 
   const leapTargetFill = spellLeapTargetFill(
     leapTarget,
-    chromaticOrbSpellId,
+    authoredUnitId(chromaticOrbSpellId),
     monsterId,
     secondMonsterId,
   );
@@ -5952,7 +6094,11 @@ function assertLevelOneMageArmor(input: {
       }),
     ],
     monsters: [
-      monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
+      monsterBattleInput(
+        monsterId,
+        10,
+        srdStatBlock(authoredStatBlockId("stat_block_skeleton")),
+      ),
     ],
   });
   const state = session.state;
@@ -5975,7 +6121,7 @@ function assertLevelOneMageArmor(input: {
       fills: [
         spellTargetFill(
           target,
-          mageArmorSpellId,
+          authoredUnitId(mageArmorSpellId),
           input.casterId,
           input.casterId,
         ),
@@ -6026,7 +6172,11 @@ function assertLevelOneFalseLife(input: {
       }),
     ],
     monsters: [
-      monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
+      monsterBattleInput(
+        monsterId,
+        10,
+        srdStatBlock(authoredStatBlockId("stat_block_skeleton")),
+      ),
     ],
   });
   const state = session.state;
@@ -6099,7 +6249,7 @@ function assertLevelOneRayOfSickness(input: {
       monsterBattleInput(
         monsterId,
         10,
-        srdStatBlock("stat_block_goblin_warrior"),
+        srdStatBlock(authoredStatBlockId("stat_block_goblin_warrior")),
       ),
     ],
   });
@@ -6119,7 +6269,7 @@ function assertLevelOneRayOfSickness(input: {
 
   const targetFill = spellTargetFill(
     target,
-    rayOfSicknessSpellId,
+    authoredUnitId(rayOfSicknessSpellId),
     input.casterId,
     monsterId,
   );
@@ -6273,11 +6423,15 @@ function assertLevelOneMagicMissile(input: {
       }),
     ],
     monsters: [
-      monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
+      monsterBattleInput(
+        monsterId,
+        10,
+        srdStatBlock(authoredStatBlockId("stat_block_skeleton")),
+      ),
       monsterBattleInput(
         secondMonsterId,
         8,
-        srdStatBlock("stat_block_skeleton"),
+        srdStatBlock(authoredStatBlockId("stat_block_skeleton")),
       ),
     ],
   });
@@ -6419,8 +6573,8 @@ function levelOneSingleClassBuild(input: {
       startingClass: classUnitId(input.classUnitId),
       advancements: [],
     },
-    background: "background_soldier",
-    species: "species_orc",
+    background: authoredUnitId("background_soldier"),
+    species: authoredUnitId("species_orc"),
     originLanguages: ["Common", "Dwarvish", "Goblin"],
     classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
@@ -6461,7 +6615,7 @@ function levelOneEquipment(
 
 function levelOneSorcererBurningHandsBuild(): CharacterBuild {
   return levelOneSingleClassBuild({
-    classUnitId: "class_sorcerer",
+    classUnitId: authoredUnitId("class_sorcerer"),
     abilityScores: {
       str: 8,
       dex: 14,
@@ -6473,16 +6627,19 @@ function levelOneSorcererBurningHandsBuild(): CharacterBuild {
     spellcasting: {
       sources: [
         {
-          sourceUnitId: "class_sorcerer",
+          sourceUnitId: authoredUnitId("class_sorcerer"),
           spellcastingAbility: "cha",
           cantrips: [
-            "fire_bolt",
-            "light",
-            shockingGraspSpellId,
-            sorcerousBurstSpellId,
+            authoredUnitId("fire_bolt"),
+            authoredUnitId("light"),
+            authoredUnitId(shockingGraspSpellId),
+            authoredUnitId(sorcerousBurstSpellId),
           ],
           spellbook: [],
-          preparedSpells: [burningHandsSpellId, "detect_magic"],
+          preparedSpells: [
+            authoredUnitId(burningHandsSpellId),
+            authoredUnitId("detect_magic"),
+          ],
           spellcastingFocuses: ["arcane_focus"],
         },
       ],
@@ -6615,43 +6772,61 @@ function finalizedLevelOneBardBuild(input: {
       expectedRevision: afterInitial.revision,
       fills: [
         creationChoiceFill(
-          testUnitChoiceHoleId("class_bard", "class_skill_proficiency_choice"),
+          testUnitChoiceHoleId(
+            authoredUnitId("class_bard"),
+            "class_skill_proficiency_choice",
+          ),
           "arcana",
           "performance",
           "persuasion",
         ),
         creationChoiceFill(
-          testUnitChoiceHoleId("class_bard", "class_tool_proficiency_choice"),
+          testUnitChoiceHoleId(
+            authoredUnitId("class_bard"),
+            "class_tool_proficiency_choice",
+          ),
           "tool:tool_drum",
           "tool:tool_flute",
           "tool:tool_lute",
         ),
         creationChoiceFill(
-          testUnitChoiceHoleId("class_bard", "class_cantrip_choices"),
+          testUnitChoiceHoleId(
+            authoredUnitId("class_bard"),
+            "class_cantrip_choices",
+          ),
           ...input.cantrips,
         ),
         creationChoiceFill(
-          testUnitChoiceHoleId("class_bard", "class_prepared_spell_choices"),
+          testUnitChoiceHoleId(
+            authoredUnitId("class_bard"),
+            "class_prepared_spell_choices",
+          ),
           ...input.preparedSpells,
         ),
         creationChoiceFill(
           testUnitChoiceHoleId(
-            "background_criminal",
+            authoredUnitId("background_criminal"),
             "background_ability_score_increase",
           ),
           "two_and_one:dex:con",
         ),
         creationChoiceFill(
-          testUnitChoiceHoleId("background_criminal", "background_tool_choice"),
+          testUnitChoiceHoleId(
+            authoredUnitId("background_criminal"),
+            "background_tool_choice",
+          ),
           "thieves_tools",
         ),
         creationChoiceFill(
-          testUnitChoiceHoleId("class_bard", "class_equipment_choice"),
+          testUnitChoiceHoleId(
+            authoredUnitId("class_bard"),
+            "class_equipment_choice",
+          ),
           "option_b",
         ),
         creationChoiceFill(
           testUnitChoiceHoleId(
-            "background_criminal",
+            authoredUnitId("background_criminal"),
             "background_equipment_choice",
           ),
           "option_b",
@@ -6666,7 +6841,10 @@ function finalizedLevelOneBardBuild(input: {
       expectedRevision: afterChoices.revision,
       fills: [
         creationChoiceFill(
-          testUnitChoiceHoleId("class_bard", "equipment_purchase"),
+          testUnitChoiceHoleId(
+            authoredUnitId("class_bard"),
+            "equipment_purchase",
+          ),
           "weapon_dagger",
         ),
       ],
@@ -6857,42 +7035,57 @@ function finalizedLevelOneClericBuild(input: {
       fills: [
         creationChoiceFill(
           testUnitChoiceHoleId(
-            "class_cleric",
+            authoredUnitId("class_cleric"),
             "class_skill_proficiency_choice",
           ),
           "insight",
           "religion",
         ),
         creationChoiceFill(
-          testUnitChoiceHoleId("class_cleric", "class_cantrip_choices"),
+          testUnitChoiceHoleId(
+            authoredUnitId("class_cleric"),
+            "class_cantrip_choices",
+          ),
           ...input.cantrips,
         ),
         creationChoiceFill(
-          testUnitChoiceHoleId("class_cleric", "class_prepared_spell_choices"),
+          testUnitChoiceHoleId(
+            authoredUnitId("class_cleric"),
+            "class_prepared_spell_choices",
+          ),
           ...input.preparedSpells,
         ),
         creationChoiceFill(
-          testUnitChoiceHoleId("cleric_divine_order", "divine_order"),
+          testUnitChoiceHoleId(
+            authoredUnitId("cleric_divine_order"),
+            "divine_order",
+          ),
           "protector",
         ),
         creationChoiceFill(
           testUnitChoiceHoleId(
-            "background_criminal",
+            authoredUnitId("background_criminal"),
             "background_ability_score_increase",
           ),
           "two_and_one:dex:con",
         ),
         creationChoiceFill(
-          testUnitChoiceHoleId("background_criminal", "background_tool_choice"),
+          testUnitChoiceHoleId(
+            authoredUnitId("background_criminal"),
+            "background_tool_choice",
+          ),
           "thieves_tools",
         ),
         creationChoiceFill(
-          testUnitChoiceHoleId("class_cleric", "class_equipment_choice"),
+          testUnitChoiceHoleId(
+            authoredUnitId("class_cleric"),
+            "class_equipment_choice",
+          ),
           "option_b",
         ),
         creationChoiceFill(
           testUnitChoiceHoleId(
-            "background_criminal",
+            authoredUnitId("background_criminal"),
             "background_equipment_choice",
           ),
           "option_b",
@@ -6907,7 +7100,10 @@ function finalizedLevelOneClericBuild(input: {
       expectedRevision: afterChoices.revision,
       fills: [
         creationChoiceFill(
-          testUnitChoiceHoleId("class_cleric", "equipment_purchase"),
+          testUnitChoiceHoleId(
+            authoredUnitId("class_cleric"),
+            "equipment_purchase",
+          ),
           "weapon_dagger",
         ),
       ],
@@ -6962,7 +7158,7 @@ function finalizedLevelOneDruidShillelaghBuild(): CharacterBuild {
       "faerie_fire",
     ],
     weaponPurchase: {
-      unitId: "weapon_quarterstaff",
+      unitId: authoredUnitId("weapon_quarterstaff"),
       loadout: "wielded_one_handed",
     },
   });
@@ -7065,40 +7261,58 @@ function finalizedLevelOneDruidBuild(input: {
       expectedRevision: afterInitial.revision,
       fills: [
         creationChoiceFill(
-          testUnitChoiceHoleId("class_druid", "class_skill_proficiency_choice"),
+          testUnitChoiceHoleId(
+            authoredUnitId("class_druid"),
+            "class_skill_proficiency_choice",
+          ),
           "nature",
           "perception",
         ),
         creationChoiceFill(
-          testUnitChoiceHoleId("class_druid", "class_cantrip_choices"),
+          testUnitChoiceHoleId(
+            authoredUnitId("class_druid"),
+            "class_cantrip_choices",
+          ),
           ...input.cantrips,
         ),
         creationChoiceFill(
-          testUnitChoiceHoleId("class_druid", "class_prepared_spell_choices"),
+          testUnitChoiceHoleId(
+            authoredUnitId("class_druid"),
+            "class_prepared_spell_choices",
+          ),
           ...input.preparedSpells,
         ),
         creationChoiceFill(
-          testUnitChoiceHoleId("druid_primal_order", "primal_order"),
+          testUnitChoiceHoleId(
+            authoredUnitId("druid_primal_order"),
+            "primal_order",
+          ),
           "warden",
         ),
         creationChoiceFill(
           testUnitChoiceHoleId(
-            "background_criminal",
+            authoredUnitId("background_criminal"),
             "background_ability_score_increase",
           ),
           "two_and_one:dex:con",
         ),
         creationChoiceFill(
-          testUnitChoiceHoleId("background_criminal", "background_tool_choice"),
+          testUnitChoiceHoleId(
+            authoredUnitId("background_criminal"),
+            "background_tool_choice",
+          ),
           "thieves_tools",
         ),
         creationChoiceFill(
-          testUnitChoiceHoleId("class_druid", "class_equipment_choice"),
+          testUnitChoiceHoleId(
+            authoredUnitId("class_druid"),
+            "class_equipment_choice",
+          ),
           "option_b",
         ),
         creationChoiceFill(
           testUnitChoiceHoleId(
-            "background_criminal",
+            authoredUnitId("background_criminal"),
             "background_equipment_choice",
           ),
           "option_b",
@@ -7113,7 +7327,10 @@ function finalizedLevelOneDruidBuild(input: {
       expectedRevision: afterChoices.revision,
       fills: [
         creationChoiceFill(
-          testUnitChoiceHoleId("class_druid", "equipment_purchase"),
+          testUnitChoiceHoleId(
+            authoredUnitId("class_druid"),
+            "equipment_purchase",
+          ),
           (input.weaponPurchase ?? defaultDruidWeaponPurchase).unitId,
         ),
       ],
@@ -7146,7 +7363,7 @@ function finalizedLevelOneDruidBuild(input: {
 }
 
 const defaultDruidWeaponPurchase = {
-  unitId: "weapon_dagger",
+  unitId: authoredUnitId("weapon_dagger"),
   loadout: "not_wielded",
 } as const satisfies LevelOneDruidWeaponPurchase;
 
@@ -7154,7 +7371,10 @@ function finalizedLevelOnePaladinCureWoundsBuild(): CharacterBuild {
   return finalizedLevelOnePaladinBuild({
     draftIdText: "draft:l1-sdk-paladin-cure-wounds",
     expectedBuildLabel: "Paladin Cure Wounds",
-    preparedSpells: [cureWoundsSpellId, "bless"],
+    preparedSpells: [
+      authoredUnitId(cureWoundsSpellId),
+      authoredUnitId("bless"),
+    ],
   });
 }
 
@@ -7162,7 +7382,10 @@ function finalizedLevelOnePaladinBlessBuild(): CharacterBuild {
   return finalizedLevelOnePaladinBuild({
     draftIdText: "draft:l1-sdk-paladin-bless",
     expectedBuildLabel: "Paladin Bless",
-    preparedSpells: [blessSpellId, cureWoundsSpellId],
+    preparedSpells: [
+      authoredUnitId(blessSpellId),
+      authoredUnitId(cureWoundsSpellId),
+    ],
   });
 }
 
@@ -7170,7 +7393,10 @@ function finalizedLevelOnePaladinShieldOfFaithBuild(): CharacterBuild {
   return finalizedLevelOnePaladinBuild({
     draftIdText: "draft:l1-sdk-paladin-shield-of-faith",
     expectedBuildLabel: "Paladin Shield of Faith",
-    preparedSpells: [shieldOfFaithSpellId, blessSpellId],
+    preparedSpells: [
+      authoredUnitId(shieldOfFaithSpellId),
+      authoredUnitId(blessSpellId),
+    ],
   });
 }
 
@@ -7223,19 +7449,22 @@ function finalizedLevelOnePaladinBuild(input: {
       fills: [
         creationChoiceFill(
           testUnitChoiceHoleId(
-            "class_paladin",
+            authoredUnitId("class_paladin"),
             "class_skill_proficiency_choice",
           ),
           "athletics",
           "persuasion",
         ),
         creationChoiceFill(
-          testUnitChoiceHoleId("class_paladin", "class_prepared_spell_choices"),
+          testUnitChoiceHoleId(
+            authoredUnitId("class_paladin"),
+            "class_prepared_spell_choices",
+          ),
           ...input.preparedSpells,
         ),
         creationChoiceFill(
           testUnitChoiceHoleId(
-            "paladin_weapon_mastery",
+            authoredUnitId("paladin_weapon_mastery"),
             "weapon_mastery_options",
           ),
           "weapon_longsword",
@@ -7243,22 +7472,28 @@ function finalizedLevelOnePaladinBuild(input: {
         ),
         creationChoiceFill(
           testUnitChoiceHoleId(
-            "background_criminal",
+            authoredUnitId("background_criminal"),
             "background_ability_score_increase",
           ),
           "two_and_one:dex:con",
         ),
         creationChoiceFill(
-          testUnitChoiceHoleId("background_criminal", "background_tool_choice"),
+          testUnitChoiceHoleId(
+            authoredUnitId("background_criminal"),
+            "background_tool_choice",
+          ),
           "thieves_tools",
         ),
         creationChoiceFill(
-          testUnitChoiceHoleId("class_paladin", "class_equipment_choice"),
+          testUnitChoiceHoleId(
+            authoredUnitId("class_paladin"),
+            "class_equipment_choice",
+          ),
           "option_b",
         ),
         creationChoiceFill(
           testUnitChoiceHoleId(
-            "background_criminal",
+            authoredUnitId("background_criminal"),
             "background_equipment_choice",
           ),
           "option_b",
@@ -7273,7 +7508,10 @@ function finalizedLevelOnePaladinBuild(input: {
       expectedRevision: afterChoices.revision,
       fills: [
         creationChoiceFill(
-          testUnitChoiceHoleId("class_paladin", "equipment_purchase"),
+          testUnitChoiceHoleId(
+            authoredUnitId("class_paladin"),
+            "equipment_purchase",
+          ),
           "weapon_longsword",
         ),
       ],
@@ -7286,7 +7524,7 @@ function finalizedLevelOnePaladinBuild(input: {
       expectedRevision: afterPurchase.revision,
       fills: [
         creationChoiceFill(
-          testLoadoutHoleId("weapon_longsword", "weapon"),
+          testLoadoutHoleId(authoredUnitId("weapon_longsword"), "weapon"),
           "wielded_one_handed",
         ),
       ],
@@ -7305,7 +7543,10 @@ function finalizedLevelOneRangerHuntersMarkBuild(): CharacterBuild {
   return finalizedLevelOneRangerBuild({
     draftIdText: "draft:l1-sdk-ranger-hunters-mark",
     expectedBuildLabel: "Ranger Hunter's Mark",
-    preparedSpells: ["cure_wounds", "ensnaring_strike"],
+    preparedSpells: [
+      authoredUnitId("cure_wounds"),
+      authoredUnitId("ensnaring_strike"),
+    ],
   });
 }
 
@@ -7313,7 +7554,10 @@ function finalizedLevelOneRangerSpellListHuntersMarkBuild(): CharacterBuild {
   return finalizedLevelOneRangerBuild({
     draftIdText: "draft:l1-sdk-ranger-hunters-mark-spell-slot",
     expectedBuildLabel: "Ranger Hunter's Mark Spell Slot",
-    preparedSpells: [huntersMarkSpellId, "cure_wounds"],
+    preparedSpells: [
+      authoredUnitId(huntersMarkSpellId),
+      authoredUnitId("cure_wounds"),
+    ],
   });
 }
 
@@ -7321,7 +7565,10 @@ function finalizedLevelOneRangerCureWoundsBuild(): CharacterBuild {
   return finalizedLevelOneRangerBuild({
     draftIdText: "draft:l1-sdk-ranger-cure-wounds",
     expectedBuildLabel: "Ranger Cure Wounds",
-    preparedSpells: [cureWoundsSpellId, "ensnaring_strike"],
+    preparedSpells: [
+      authoredUnitId(cureWoundsSpellId),
+      authoredUnitId("ensnaring_strike"),
+    ],
   });
 }
 
@@ -7329,7 +7576,10 @@ function finalizedLevelOneRangerAnimalFriendshipBuild(): CharacterBuild {
   return finalizedLevelOneRangerBuild({
     draftIdText: "draft:l1-sdk-ranger-animal-friendship",
     expectedBuildLabel: "Ranger Animal Friendship",
-    preparedSpells: [animalFriendshipSpellId, "cure_wounds"],
+    preparedSpells: [
+      authoredUnitId(animalFriendshipSpellId),
+      authoredUnitId("cure_wounds"),
+    ],
   });
 }
 
@@ -7382,7 +7632,7 @@ function finalizedLevelOneRangerBuild(input: {
       fills: [
         creationChoiceFill(
           testUnitChoiceHoleId(
-            "class_ranger",
+            authoredUnitId("class_ranger"),
             "class_skill_proficiency_choice",
           ),
           "animal_handling",
@@ -7390,12 +7640,15 @@ function finalizedLevelOneRangerBuild(input: {
           "survival",
         ),
         creationChoiceFill(
-          testUnitChoiceHoleId("class_ranger", "class_prepared_spell_choices"),
+          testUnitChoiceHoleId(
+            authoredUnitId("class_ranger"),
+            "class_prepared_spell_choices",
+          ),
           ...input.preparedSpells,
         ),
         creationChoiceFill(
           testUnitChoiceHoleId(
-            "ranger_weapon_mastery",
+            authoredUnitId("ranger_weapon_mastery"),
             "weapon_mastery_options",
           ),
           "weapon_longsword",
@@ -7403,22 +7656,28 @@ function finalizedLevelOneRangerBuild(input: {
         ),
         creationChoiceFill(
           testUnitChoiceHoleId(
-            "background_criminal",
+            authoredUnitId("background_criminal"),
             "background_ability_score_increase",
           ),
           "two_and_one:dex:con",
         ),
         creationChoiceFill(
-          testUnitChoiceHoleId("background_criminal", "background_tool_choice"),
+          testUnitChoiceHoleId(
+            authoredUnitId("background_criminal"),
+            "background_tool_choice",
+          ),
           "thieves_tools",
         ),
         creationChoiceFill(
-          testUnitChoiceHoleId("class_ranger", "class_equipment_choice"),
+          testUnitChoiceHoleId(
+            authoredUnitId("class_ranger"),
+            "class_equipment_choice",
+          ),
           "option_b",
         ),
         creationChoiceFill(
           testUnitChoiceHoleId(
-            "background_criminal",
+            authoredUnitId("background_criminal"),
             "background_equipment_choice",
           ),
           "option_b",
@@ -7433,7 +7692,10 @@ function finalizedLevelOneRangerBuild(input: {
       expectedRevision: afterChoices.revision,
       fills: [
         creationChoiceFill(
-          testUnitChoiceHoleId("class_ranger", "equipment_purchase"),
+          testUnitChoiceHoleId(
+            authoredUnitId("class_ranger"),
+            "equipment_purchase",
+          ),
           "weapon_longsword",
         ),
       ],
@@ -7446,7 +7708,7 @@ function finalizedLevelOneRangerBuild(input: {
       expectedRevision: afterPurchase.revision,
       fills: [
         creationChoiceFill(
-          testLoadoutHoleId("weapon_longsword", "weapon"),
+          testLoadoutHoleId(authoredUnitId("weapon_longsword"), "weapon"),
           "wielded_one_handed",
         ),
       ],
@@ -7693,41 +7955,50 @@ function finalizedLevelOneSorcererBuild(input: {
       fills: [
         creationChoiceFill(
           testUnitChoiceHoleId(
-            "class_sorcerer",
+            authoredUnitId("class_sorcerer"),
             "class_skill_proficiency_choice",
           ),
           "arcana",
           "persuasion",
         ),
         creationChoiceFill(
-          testUnitChoiceHoleId("class_sorcerer", "class_cantrip_choices"),
+          testUnitChoiceHoleId(
+            authoredUnitId("class_sorcerer"),
+            "class_cantrip_choices",
+          ),
           ...input.cantrips,
         ),
         creationChoiceFill(
           testUnitChoiceHoleId(
-            "class_sorcerer",
+            authoredUnitId("class_sorcerer"),
             "class_prepared_spell_choices",
           ),
           ...input.preparedSpells,
         ),
         creationChoiceFill(
           testUnitChoiceHoleId(
-            "background_criminal",
+            authoredUnitId("background_criminal"),
             "background_ability_score_increase",
           ),
           "two_and_one:dex:con",
         ),
         creationChoiceFill(
-          testUnitChoiceHoleId("background_criminal", "background_tool_choice"),
+          testUnitChoiceHoleId(
+            authoredUnitId("background_criminal"),
+            "background_tool_choice",
+          ),
           "thieves_tools",
         ),
         creationChoiceFill(
-          testUnitChoiceHoleId("class_sorcerer", "class_equipment_choice"),
+          testUnitChoiceHoleId(
+            authoredUnitId("class_sorcerer"),
+            "class_equipment_choice",
+          ),
           "option_b",
         ),
         creationChoiceFill(
           testUnitChoiceHoleId(
-            "background_criminal",
+            authoredUnitId("background_criminal"),
             "background_equipment_choice",
           ),
           "option_b",
@@ -7742,7 +8013,10 @@ function finalizedLevelOneSorcererBuild(input: {
       expectedRevision: afterChoices.revision,
       fills: [
         creationChoiceFill(
-          testUnitChoiceHoleId("class_sorcerer", "equipment_purchase"),
+          testUnitChoiceHoleId(
+            authoredUnitId("class_sorcerer"),
+            "equipment_purchase",
+          ),
           "weapon_dagger",
         ),
       ],
@@ -7848,45 +8122,57 @@ function finalizedLevelOneWarlockBuild(input: {
       fills: [
         creationChoiceFill(
           testUnitChoiceHoleId(
-            "class_warlock",
+            authoredUnitId("class_warlock"),
             "class_skill_proficiency_choice",
           ),
           "arcana",
           "history",
         ),
         creationChoiceFill(
-          testUnitChoiceHoleId("class_warlock", "class_cantrip_choices"),
+          testUnitChoiceHoleId(
+            authoredUnitId("class_warlock"),
+            "class_cantrip_choices",
+          ),
           ...input.cantrips,
         ),
         creationChoiceFill(
-          testUnitChoiceHoleId("class_warlock", "class_prepared_spell_choices"),
+          testUnitChoiceHoleId(
+            authoredUnitId("class_warlock"),
+            "class_prepared_spell_choices",
+          ),
           ...input.preparedSpells,
         ),
         creationChoiceFill(
           testUnitChoiceHoleId(
-            "warlock_eldritch_invocations",
+            authoredUnitId("warlock_eldritch_invocations"),
             "eldritch_invocations",
           ),
           input.eldritchInvocation,
         ),
         creationChoiceFill(
           testUnitChoiceHoleId(
-            "background_criminal",
+            authoredUnitId("background_criminal"),
             "background_ability_score_increase",
           ),
           "two_and_one:dex:con",
         ),
         creationChoiceFill(
-          testUnitChoiceHoleId("background_criminal", "background_tool_choice"),
+          testUnitChoiceHoleId(
+            authoredUnitId("background_criminal"),
+            "background_tool_choice",
+          ),
           "thieves_tools",
         ),
         creationChoiceFill(
-          testUnitChoiceHoleId("class_warlock", "class_equipment_choice"),
+          testUnitChoiceHoleId(
+            authoredUnitId("class_warlock"),
+            "class_equipment_choice",
+          ),
           "option_b",
         ),
         creationChoiceFill(
           testUnitChoiceHoleId(
-            "background_criminal",
+            authoredUnitId("background_criminal"),
             "background_equipment_choice",
           ),
           "option_b",
@@ -7901,7 +8187,10 @@ function finalizedLevelOneWarlockBuild(input: {
       expectedRevision: afterChoices.revision,
       fills: [
         creationChoiceFill(
-          testUnitChoiceHoleId("class_warlock", "equipment_purchase"),
+          testUnitChoiceHoleId(
+            authoredUnitId("class_warlock"),
+            "equipment_purchase",
+          ),
           "weapon_dagger",
         ),
       ],
@@ -8227,42 +8516,57 @@ function finalizedLevelOneWizardBuild(input: {
       fills: [
         creationChoiceFill(
           testUnitChoiceHoleId(
-            "class_wizard",
+            authoredUnitId("class_wizard"),
             "class_skill_proficiency_choice",
           ),
           "arcana",
           "history",
         ),
         creationChoiceFill(
-          testUnitChoiceHoleId("class_wizard", "wizard_cantrip_choices"),
+          testUnitChoiceHoleId(
+            authoredUnitId("class_wizard"),
+            "wizard_cantrip_choices",
+          ),
           ...input.cantrips,
         ),
         creationChoiceFill(
-          testUnitChoiceHoleId("class_wizard", "wizard_spellbook_choices"),
+          testUnitChoiceHoleId(
+            authoredUnitId("class_wizard"),
+            "wizard_spellbook_choices",
+          ),
           ...input.spellbook,
         ),
         creationChoiceFill(
-          testUnitChoiceHoleId("class_wizard", "wizard_prepared_spell_choices"),
+          testUnitChoiceHoleId(
+            authoredUnitId("class_wizard"),
+            "wizard_prepared_spell_choices",
+          ),
           ...input.preparedSpells,
         ),
         creationChoiceFill(
           testUnitChoiceHoleId(
-            "background_criminal",
+            authoredUnitId("background_criminal"),
             "background_ability_score_increase",
           ),
           "two_and_one:int:con",
         ),
         creationChoiceFill(
-          testUnitChoiceHoleId("background_criminal", "background_tool_choice"),
+          testUnitChoiceHoleId(
+            authoredUnitId("background_criminal"),
+            "background_tool_choice",
+          ),
           "thieves_tools",
         ),
         creationChoiceFill(
-          testUnitChoiceHoleId("class_wizard", "class_equipment_choice"),
+          testUnitChoiceHoleId(
+            authoredUnitId("class_wizard"),
+            "class_equipment_choice",
+          ),
           "option_b",
         ),
         creationChoiceFill(
           testUnitChoiceHoleId(
-            "background_criminal",
+            authoredUnitId("background_criminal"),
             "background_equipment_choice",
           ),
           "option_b",
@@ -8277,7 +8581,10 @@ function finalizedLevelOneWizardBuild(input: {
       expectedRevision: afterChoices.revision,
       fills: [
         creationChoiceFill(
-          testUnitChoiceHoleId("class_wizard", "equipment_purchase"),
+          testUnitChoiceHoleId(
+            authoredUnitId("class_wizard"),
+            "equipment_purchase",
+          ),
           "weapon_dagger",
         ),
       ],

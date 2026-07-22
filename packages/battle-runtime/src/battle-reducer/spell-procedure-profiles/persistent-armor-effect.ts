@@ -1,3 +1,4 @@
+import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // The persistentArmorEffect Spell Procedure Profile: a touch spell that
 import { DurationBattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
 // creates a timed Spell Effect setting the willing unarmored target's base
@@ -25,9 +26,6 @@ import { DurationBattleActiveEffectExpirationSchema } from "../../active-effect/
 //     character-battle-resources.ts.
 
 import { ArmorClassSchema } from "@dnd/shared-algebras/armor-class-values";
-import type { SpellRecord } from "@dnd/surface/surface/types";
-import { Match } from "effect";
-
 import {
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
@@ -36,11 +34,9 @@ import {
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
 import {
-  admitPersistentArmorEffectSpell,
-  type PersistentArmorEffectAdmission,
+  persistentArmorEffectExecutionFactsForSpell,
   type PersistentArmorEffectExecutionFacts,
-} from "../../procedure-admission/persistent-armor-effect-facts.ts";
-import type { CharacterBattleInvocationSpellAccessState } from "../../character-battle-resources.ts";
+} from "../../procedure-execution/persistent-armor-effect-facts.ts";
 import { CombatantId } from "../../identity.ts";
 import { combatantWearingArmor } from "../creature-state-leaves.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
@@ -118,49 +114,59 @@ function persistentArmorEffectShape(
 
 function buildPersistentArmorEffectInvocation(
   actorId: CombatantId,
-  admission: PersistentArmorEffectAdmission,
+  spell: BattleSpellAdmissionSource,
+  executionFacts: PersistentArmorEffectExecutionFacts,
   source: PersistentArmorSpellSource,
 ): PersistentArmorInvocation {
   return {
     ...source,
     procedure: "persistentArmorEffect",
-    spell: admission.authoredSpell,
-    ...persistentArmorEffectShape(actorId, admission.executionFacts),
+    spell,
+    ...persistentArmorEffectShape(actorId, executionFacts),
   };
 }
 
 function admitPersistentArmorEffect(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly PersistentArmorInvocation[] {
-  const admission = admitPersistentArmorEffectSpell(spell);
-  return admission === null
+  const executionFacts = persistentArmorEffectExecutionFactsForSpell(spell);
+  return executionFacts === null
     ? []
     : [
-        buildPersistentArmorEffectInvocation(ctx.actor.combatantId, admission, {
-          access: { tag: "prepared" },
-          resource: {
-            tag: "spellSlot",
-            slotLevel: admission.executionFacts.slotLevel,
+        buildPersistentArmorEffectInvocation(
+          ctx.actor.combatantId,
+          spell,
+          executionFacts,
+          {
+            access: { tag: "prepared" },
+            resource: {
+              tag: "spellSlot",
+              slotLevel: executionFacts.slotLevel,
+            },
           },
-        }),
+        ),
       ];
 }
 
 export function admitPersistentArmorEffectInvocationSpellAccess(
   actorId: CombatantId,
-  access: CharacterBattleInvocationSpellAccessState,
+  access: {
+    readonly spell: BattleSpellAdmissionSource;
+    readonly executionFacts: PersistentArmorEffectExecutionFacts;
+  },
 ): readonly PersistentArmorInvocation[] {
-  return Match.value(access).pipe(
-    Match.when({ tag: "armorOfShadowsMageArmor" }, (armorOfShadows) => [
-      buildPersistentArmorEffectInvocation(actorId, armorOfShadows.admission, {
+  return [
+    buildPersistentArmorEffectInvocation(
+      actorId,
+      access.spell,
+      access.executionFacts,
+      {
         access: { tag: "armorOfShadows" },
         resource: { tag: "none" },
-      }),
-    ]),
-    Match.when({ tag: "pactOfTheChainFindFamiliar" }, () => []),
-    Match.exhaustive,
-  );
+      },
+    ),
+  ];
 }
 
 function discoverPersistentArmorEffectCastAct(

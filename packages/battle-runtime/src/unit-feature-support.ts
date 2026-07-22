@@ -8,7 +8,7 @@ import {
   elapsedTimeTicksFromTimeSpanDuration,
   type ElapsedTimeTicks,
 } from "@dnd/shared-algebras/elapsed-time-algebra";
-import { CLASS_NAMES } from "@dnd/shared/game-facts";
+import { CLASS_NAMES, unitId } from "@dnd/shared/game-facts";
 import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { zeroHitPointReplacementUnitProfile } from "@dnd/shared-algebras/zero-hit-point-replacement-algebra";
 import {
@@ -35,16 +35,12 @@ import type {
   DiceExpr,
   EffectAtom,
   EquipmentPredicate,
-  CreatureType,
   CunningStrikeMechanics,
   SupremeSneakMechanics,
-  DragonbornSpeciesRecord,
+  DragonbornSpeciesSource,
   StandardActionKind,
-  UnitRecord,
-  WeaponMasteryName,
-  WeaponRecord,
+  AuthoredUnitSource,
 } from "@dnd/surface/surface/types";
-import { CUNNING_STRIKE_OPTION_SELECTION_IDS as BASE_CUNNING_STRIKE_OPTION_SELECTION_IDS } from "@dnd/surface/surface/schema";
 import { isEffectAtom } from "@dnd/surface/surface/types";
 import {
   druidWildShapeKnownFormRosterFromPhase,
@@ -52,7 +48,6 @@ import {
   type DruidWildShapeActivationPhase,
   type DruidWildShapeKnownFormsRoster,
 } from "@dnd/surface/surface/druid-wild-shape-readers";
-import type { BattleMovementSpeedKind } from "./battle-subjects.ts";
 import type { BattleUnitRef } from "./battle-init.ts";
 import type {
   CharacterBattleClassLevel,
@@ -70,12 +65,8 @@ export const ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SUPPORT_PROFILE =
   "attackDamageReductionZeroDamageRedirect";
 export const PASSIVE_ARMOR_CLASS_BONUS_SUPPORT_PROFILE =
   "passiveArmorClassBonus";
-export const PASSIVE_RANGED_ATTACK_ROLL_BONUS_SUPPORT_PROFILE =
-  "passiveRangedAttackRollBonus";
 export const INITIATIVE_PROFICIENCY_AND_SWAP_SUPPORT_PROFILE =
   "initiativeProficiencyAndSwap";
-export const ATTACK_ROLL_MISS_TO_HIT_REPLACEMENT_SUPPORT_PROFILE =
-  "attackRollMissToHitReplacement";
 export const ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE =
   "attackActionAreaSaveDamageReplacement";
 export const D20_TEST_NATURAL_ONE_REROLL_SUPPORT_PROFILE =
@@ -92,38 +83,82 @@ export const PASSIVE_ABILITY_CHECK_ROLL_MODE_SUPPORT_PROFILE =
   "passiveAbilityCheckRollMode";
 export const PASSIVE_DAMAGE_RESISTANCE_SUPPORT_PROFILE =
   "passiveDamageResistance";
-export const PASSIVE_SPEED_BONUS_SUPPORT_PROFILE = "passiveSpeedBonus";
-export const PASSIVE_SPEED_KIND_GRANTS_SUPPORT_PROFILE =
-  "passiveSpeedKindGrants";
 export const ACROBATIC_MOVEMENT_SUPPORT_PROFILE = "acrobaticMovement";
 export const CREATURE_SPACE_MOVEMENT_PERMISSION_SUPPORT_PROFILE =
   "creatureSpaceMovementPermission";
-export const HIDE_ACTION_OBSCUREMENT_PERMISSION_SUPPORT_PROFILE =
-  "hideActionObscurementPermission";
-export const WEAPON_DAMAGE_DICE_ROLL_CHOICE_SUPPORT_PROFILE =
-  "weaponDamageDiceRollChoice";
-export const ATTACK_DAMAGE_DIE_FLOOR_SUPPORT_PROFILE = "attackDamageDieFloor";
-export const ATTACK_DAMAGE_DIE_FLOOR_MINIMUM_RESULT = 3;
-export const LIGHT_EXTRA_ATTACK_DAMAGE_ABILITY_MODIFIER_SUPPORT_PROFILE =
-  "lightExtraAttackDamageAbilityModifier";
-export const MARTIAL_ARTS_ATTACK_PROJECTION_SUPPORT_PROFILE =
-  "martialArtsAttackProjection";
-export const ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE =
-  "attackActionAttackCountScaling";
+export * from "./unit-feature-execution-constants.ts";
+import {
+  ALTERNATE_ACTION_COST_ACTIONS,
+  ATTACK_DAMAGE_DIE_FLOOR_MINIMUM_RESULT,
+  ATTACK_DAMAGE_DIE_FLOOR_SUPPORT_PROFILE,
+  ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE,
+  ATTACK_ROLL_MISS_TO_HIT_REPLACEMENT_SUPPORT_PROFILE,
+  BATTLE_ATTACK_ACTION_ADDITIONAL_ATTACKS,
+  BRUTAL_STRIKE_OPTION_IDS,
+  BRUTAL_STRIKE_SUPPORT_PROFILE,
+  BONUS_ACTION_DASH_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE,
+  BONUS_ACTION_DELEGATED_STANDARD_ACTIONS_SUPPORT_PROFILE,
+  CUNNING_STRIKE_OPTION_GRANT_SUPPORT_PROFILE,
+  CUNNING_STRIKE_SUPPORT_PROFILE,
+  DRACONIC_ANCESTRY_DAMAGE_TYPE_HOLE_ID,
+  HIDE_ACTION_OBSCUREMENT_PERMISSION_SUPPORT_PROFILE,
+  HUNTERS_PREY_SUPPORT_PROFILE,
+  LIGHT_EXTRA_ATTACK_DAMAGE_ABILITY_MODIFIER_SUPPORT_PROFILE,
+  MARTIAL_ARTS_BASE_DIE_SIZE,
+  MARTIAL_ARTS_DIE_TIERS,
+  MARTIAL_ARTS_ATTACK_PROJECTION_SUPPORT_PROFILE,
+  MONK_FOCUS_BATTLE_OPTIONS_SUPPORT_PROFILE,
+  PASSIVE_RANGED_ATTACK_ROLL_BONUS_SUPPORT_PROFILE,
+  PASSIVE_SPEED_BONUS_SUPPORT_PROFILE,
+  PASSIVE_SPEED_KIND_GRANTS_SUPPORT_PROFILE,
+  PASSIVE_SPEED_KIND_GRANT_KINDS,
+  TACTICAL_MASTER_REPLACEMENT_MASTERY_PROPERTIES,
+  TACTICAL_MASTER_REPLACEMENT_SUPPORT_PROFILE,
+  WEAPON_DAMAGE_DICE_ROLL_CHOICE_SUPPORT_PROFILE,
+  WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE,
+  WEAPON_MASTERY_PUSH_SUPPORT_PROFILE,
+  WEAPON_MASTERY_SAP_SUPPORT_PROFILE,
+  WEAPON_MASTERY_SLOW_SUPPORT_PROFILE,
+  WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE,
+  martialArtsSrdDieSizeAtClassLevel,
+  type AlternateActionCostAction,
+  type BattleAttackActionAdditionalAttacks,
+  type BattleCunningStrikeSupportProfile,
+  type BattlePassiveSpeedBonusSupportProfile,
+  type BattlePassiveSpeedKindGrantsSupportProfile,
+  type CunningStrikeEquipmentGatedConditionSaveEffect,
+  type CunningStrikeHideInvisibleEndSuppressionEffect,
+  type CunningStrikeOption,
+  type CunningStrikePostDamageMovementEffect,
+  type CunningStrikeSizeGatedConditionSaveEffect,
+  type HideActionObscurementPermissionProfile,
+  type MartialArtsDieSize,
+  type OngoingFeatureDamageModifier,
+  type OngoingFeatureExtensionTrigger,
+  type OngoingFeatureLifecycleProfile,
+  type OngoingFeatureRollModifier,
+  type PassiveSavingThrowRollModeProfile,
+  type PassiveSpeedBonusCondition,
+  type PassiveSpeedBonusProfile,
+  type PassiveSpeedKindGrantKind,
+  type PassiveSpeedKindGrantProfile,
+} from "./unit-feature-execution-constants.ts";
 export const ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE =
   "zeroHitPointReplacement";
-export const BONUS_ACTION_DASH_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE =
-  "bonusActionDashTemporaryHitPoints";
 export const FAILED_ABILITY_CHECK_RESOURCE_BOOST_SUPPORT_PROFILE =
   "failedAbilityCheckResourceBoost";
 export const FAILED_SAVING_THROW_REROLL_SUPPORT_PROFILE =
   "failedSavingThrowReroll";
 export const BARDIC_INSPIRATION_GRANT_SUPPORT_PROFILE =
   "bardicInspirationGrant";
-export const MONK_FOCUS_BATTLE_OPTIONS_SUPPORT_PROFILE =
-  "monkFocusBattleOptions";
-export const DRUID_WILD_SHAPE_KNOWN_FORM_SUPPORT_PROFILE =
-  "druidWildShapeKnownForm";
+export {
+  DRUID_WILD_SHAPE_KNOWN_FORM_SUPPORT_PROFILE,
+  type BattleDruidWildShapeKnownFormSupportProfile,
+} from "./druid-wild-shape-support-execution.ts";
+import {
+  DRUID_WILD_SHAPE_KNOWN_FORM_SUPPORT_PROFILE,
+  type BattleDruidWildShapeKnownFormSupportProfile,
+} from "./druid-wild-shape-support-execution.ts";
 export const DRUID_BEAST_SPELLS_CLASS_LEVEL = 18;
 export const DRUID_WILD_COMPANION_SPELL_CAST_SUPPORT_PROFILE =
   "druidWildCompanionSpellCast";
@@ -137,66 +172,30 @@ export const MAGIC_ACTION_SAVE_GATED_CONDITION_SUPPORT_PROFILE =
   "magicActionSaveGatedCondition";
 export const ENEMY_ZERO_HIT_POINT_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE =
   "enemyZeroHitPointTemporaryHitPoints";
-export const BONUS_ACTION_DELEGATED_STANDARD_ACTIONS_SUPPORT_PROFILE =
-  "bonusActionDelegatedStandardActions";
 export const REMARKABLE_ATHLETE_SUPPORT_PROFILE = "remarkableAthlete";
 export const OPEN_HAND_TECHNIQUE_SUPPORT_PROFILE = "openHandTechnique";
 export const STUNNING_STRIKE_SUPPORT_PROFILE = "stunningStrike";
-export const CUNNING_STRIKE_SUPPORT_PROFILE = "cunningStrike";
-export const CUNNING_STRIKE_OPTION_GRANT_SUPPORT_PROFILE =
-  "cunningStrikeOptionGrant";
 export const PALADIN_SACRED_WEAPON_SUPPORT_PROFILE = "paladinSacredWeapon";
-export const HUNTERS_PREY_SUPPORT_PROFILE = "huntersPrey";
 export const ROGUE_STEADY_AIM_SUPPORT_PROFILE = "rogueSteadyAim";
 export const POTENT_CANTRIP_SUPPORT_PROFILE = "potentCantrip";
 export const GRAPPLER_SUPPORT_PROFILE = "grappler";
-export const BRUTAL_STRIKE_SUPPORT_PROFILE = "brutalStrike";
 export const RETALIATION_REACTION_ATTACK_SUPPORT_PROFILE =
   "retaliationReactionAttack";
-export const WEAPON_MASTERY_SAP_SUPPORT_PROFILE = "weaponMasterySap";
-export const WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE = "weaponMasteryTopple";
-export const WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE = "weaponMasteryCleave";
-export const WEAPON_MASTERY_PUSH_SUPPORT_PROFILE = "weaponMasteryPush";
-export const WEAPON_MASTERY_SLOW_SUPPORT_PROFILE = "weaponMasterySlow";
-export const TACTICAL_MASTER_REPLACEMENT_SUPPORT_PROFILE =
-  "tacticalMasterReplacement";
-export const TACTICAL_MASTER_REPLACEMENT_MASTERY_PROPERTIES = [
-  "push",
-  "sap",
-  "slow",
-] as const satisfies ReadonlyArray<WeaponMasteryName>;
-export type TacticalMasterReplacementMasteryProperty =
-  (typeof TACTICAL_MASTER_REPLACEMENT_MASTERY_PROPERTIES)[number];
-export const TACTICAL_MASTER_REPLACEMENT_DECISION_CHOICES = [
-  ...TACTICAL_MASTER_REPLACEMENT_MASTERY_PROPERTIES,
-  "decline",
-] as const;
-export type TacticalMasterReplacementDecision =
-  (typeof TACTICAL_MASTER_REPLACEMENT_DECISION_CHOICES)[number];
 const BARDIC_INSPIRATION_RANGE_FEET = 60;
 const BARDIC_INSPIRATION_BASE_DIE_SIZE = 6;
-const CLERIC_CHANNEL_DIVINITY_RESOURCE_UNIT_ID =
-  "cleric_channel_divinity" as const satisfies UnitRecord["id"];
-export const PALADIN_CHANNEL_DIVINITY_RESOURCE_UNIT_ID =
-  "paladin_channel_divinity" as const satisfies UnitRecord["id"];
-const DRUID_WILD_SHAPE_RESOURCE_UNIT_ID =
-  "druid_wild_shape" as const satisfies UnitRecord["id"];
-const MONK_FOCUS_RESOURCE_UNIT_ID =
-  "monk_monks_focus" as const satisfies UnitRecord["id"];
+const CLERIC_CHANNEL_DIVINITY_RESOURCE_UNIT_ID = unitId(
+  "cleric_channel_divinity",
+);
+export const PALADIN_CHANNEL_DIVINITY_RESOURCE_UNIT_ID = unitId(
+  "paladin_channel_divinity",
+);
+const DRUID_WILD_SHAPE_RESOURCE_UNIT_ID = unitId("druid_wild_shape");
+const MONK_FOCUS_RESOURCE_UNIT_ID = unitId("monk_monks_focus");
 const MONK_FLURRY_OF_BLOWS_OPTION_ID = "flurry_of_blows" as const;
-export const DRACONIC_ANCESTRY_DAMAGE_TYPE_HOLE_ID =
-  "species_dragonborn_draconic_ancestry_damage_type" as const;
 type DraconicAncestryDamageTypeSource =
-  DragonbornSpeciesRecord["draconicAncestry"]["damageType"];
+  DragonbornSpeciesSource["draconicAncestry"]["damageType"];
 type DraconicAncestryDamageType =
   DraconicAncestryDamageTypeSource["options"][number]["damageType"];
-export const DRACONIC_ANCESTRY_DAMAGE_TYPES = [
-  "acid",
-  "cold",
-  "fire",
-  "lightning",
-  "poison",
-] as const satisfies ReadonlyArray<DamageType & DraconicAncestryDamageType>;
 const DAMAGE_TYPE_VALUES = new Set<string>(DAMAGE_TYPES);
 export type BattleUnitSupportProfileSourceFacts = {
   readonly draconicAncestryDamageType: DraconicAncestryDamageType;
@@ -212,25 +211,6 @@ const BARDIC_INSPIRATION_DIE_TIERS = [
 type BardicInspirationDieSize =
   | typeof BARDIC_INSPIRATION_BASE_DIE_SIZE
   | (typeof BARDIC_INSPIRATION_DIE_TIERS)[number]["dieSize"];
-const MARTIAL_ARTS_BASE_DIE_SIZE = 6;
-const MARTIAL_ARTS_DIE_TIERS = [
-  { atLevel: 5, dieSize: 8 },
-  { atLevel: 11, dieSize: 10 },
-  { atLevel: 17, dieSize: 12 },
-] as const satisfies ReadonlyArray<{
-  readonly atLevel: number;
-  readonly dieSize: DamageDieSize;
-}>;
-type MartialArtsDieSize =
-  | typeof MARTIAL_ARTS_BASE_DIE_SIZE
-  | (typeof MARTIAL_ARTS_DIE_TIERS)[number]["dieSize"];
-export const ALTERNATE_ACTION_COST_ACTIONS = [
-  "dash",
-  "disengage",
-  "hide",
-] as const satisfies ReadonlyArray<StandardActionKind>;
-export type AlternateActionCostAction =
-  (typeof ALTERNATE_ACTION_COST_ACTIONS)[number];
 export const BATTLE_UNIT_SUPPORT_PROFILES = [
   "alternateActionCost",
   WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
@@ -290,11 +270,6 @@ export const BATTLE_UNIT_SUPPORT_PROFILES = [
   TACTICAL_MASTER_REPLACEMENT_SUPPORT_PROFILE,
   ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE,
 ] as const;
-export type BattlePassiveSpeedBonusSupportProfile = {
-  readonly kind: typeof PASSIVE_SPEED_BONUS_SUPPORT_PROFILE;
-  readonly deltaFeet: MovementDeltaFeet;
-  readonly condition: PassiveSpeedBonusCondition;
-};
 export type PassiveRangedAttackRollBonusProfile = {
   readonly bonus: 2;
   readonly weaponFilter: {
@@ -392,22 +367,6 @@ export type BattleD20TestNaturalOneRerollSupportProfile = {
   readonly kind: typeof D20_TEST_NATURAL_ONE_REROLL_SUPPORT_PROFILE;
   readonly reroll: D20TestNaturalOneRerollProfile;
 };
-export type PassiveSavingThrowRollModeProfile =
-  | {
-      readonly mode: "advantage";
-      readonly scope: {
-        readonly kind: "savingThrowAbility";
-        readonly ability: "dex";
-        readonly suppressedByCondition: "incapacitated";
-      };
-    }
-  | {
-      readonly mode: "advantage";
-      readonly scope: {
-        readonly kind: "condition";
-        readonly condition: PassiveConditionSavingThrowRollModeCondition;
-      };
-    };
 export type BattlePassiveSavingThrowRollModeSupportProfile = {
   readonly kind: typeof PASSIVE_SAVING_THROW_ROLL_MODE_SUPPORT_PROFILE;
   readonly savingThrow: PassiveSavingThrowRollModeProfile;
@@ -439,11 +398,6 @@ export type BattlePassiveDamageResistanceSupportProfile = {
   readonly kind: typeof PASSIVE_DAMAGE_RESISTANCE_SUPPORT_PROFILE;
   readonly resistance: PassiveDamageResistanceProfile;
 };
-export const BATTLE_ATTACK_ACTION_ADDITIONAL_ATTACKS = [
-  1, 2, 3,
-] as const satisfies ReadonlyArray<number>;
-export type BattleAttackActionAdditionalAttacks =
-  (typeof BATTLE_ATTACK_ACTION_ADDITIONAL_ATTACKS)[number];
 export type BattleAttackActionAttackCountScalingSupportProfile = {
   readonly kind: typeof ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE;
   readonly additionalAttacks: BattleAttackActionAdditionalAttacks;
@@ -476,7 +430,7 @@ export type FailedAbilityCheckResourceBoostProfile = {
     readonly dieSize: 10;
   };
   readonly spends: {
-    readonly resourceUnitId: UnitRecord["id"];
+    readonly resourceUnitId: AuthoredUnitSource["id"];
   };
   readonly refundSpendOnStillFailed: true;
 };
@@ -494,7 +448,7 @@ export type FailedSavingThrowRerollProfile = {
     };
   };
   readonly spends: {
-    readonly resourceUnitId: UnitRecord["id"];
+    readonly resourceUnitId: AuthoredUnitSource["id"];
     readonly amount: 1;
   };
   readonly resetCadence: "longRest";
@@ -524,7 +478,7 @@ export type MagicActionHealingPoolProfile = {
     readonly action: "magic";
   };
   readonly spends: {
-    readonly resourceUnitId: UnitRecord["id"];
+    readonly resourceUnitId: AuthoredUnitSource["id"];
     readonly amount: 1;
   };
   readonly rangeFeet: MovementFeet;
@@ -558,7 +512,7 @@ export type MagicActionAreaSaveDamageHealingProfile = {
     readonly action: "magic";
   };
   readonly spends: {
-    readonly resourceUnitId: UnitRecord["id"];
+    readonly resourceUnitId: AuthoredUnitSource["id"];
     readonly amount: 1;
   };
   readonly area: {
@@ -596,7 +550,7 @@ export type MagicActionSaveGatedConditionProfile = {
     readonly action: "magic";
   };
   readonly spends: {
-    readonly resourceUnitId: UnitRecord["id"];
+    readonly resourceUnitId: AuthoredUnitSource["id"];
     readonly amount: 1;
   };
   readonly targetSelection: {
@@ -640,12 +594,6 @@ export type BattleEnemyZeroHitPointTemporaryHitPointsSupportProfile = {
   readonly className: ClassName;
   readonly temporaryHitPoints: EnemyZeroHitPointTemporaryHitPointsProfile;
 };
-export const PASSIVE_SPEED_KIND_GRANT_KINDS = [
-  "climb",
-  "swim",
-] as const satisfies ReadonlyArray<BattleMovementSpeedKind>;
-export type PassiveSpeedKindGrantKind =
-  (typeof PASSIVE_SPEED_KIND_GRANT_KINDS)[number];
 type PassiveSpeedKindGrantProfileForKind<
   TKind extends PassiveSpeedKindGrantKind,
 > = {
@@ -656,18 +604,10 @@ export type ClimbSpeedKindGrantProfile =
   PassiveSpeedKindGrantProfileForKind<"climb">;
 export type SwimSpeedKindGrantProfile =
   PassiveSpeedKindGrantProfileForKind<"swim">;
-export type PassiveSpeedKindGrantProfile =
-  | ClimbSpeedKindGrantProfile
-  | SwimSpeedKindGrantProfile;
 export type PassiveSpeedKindGrantProfiles = readonly [
   PassiveSpeedKindGrantProfile,
   ...PassiveSpeedKindGrantProfile[],
 ];
-export type BattlePassiveSpeedKindGrantsSupportProfile = {
-  readonly kind: typeof PASSIVE_SPEED_KIND_GRANTS_SUPPORT_PROFILE;
-  readonly speed?: PassiveSpeedBonusProfile;
-  readonly grants: PassiveSpeedKindGrantProfiles;
-};
 export type BattleAcrobaticMovementSupportProfile = {
   readonly kind: typeof ACROBATIC_MOVEMENT_SUPPORT_PROFILE;
   readonly acrobaticMovement: AcrobaticMovementProfile;
@@ -682,12 +622,6 @@ export type CreatureSpaceMovementPermissionProfile = {
 export type BattleCreatureSpaceMovementPermissionSupportProfile = {
   readonly kind: typeof CREATURE_SPACE_MOVEMENT_PERMISSION_SUPPORT_PROFILE;
   readonly permission: CreatureSpaceMovementPermissionProfile;
-};
-export type HideActionObscurementPermissionProfile = {
-  readonly allowedObscurement: {
-    readonly kind: "obscuredOnlyByCreature";
-    readonly creatureSizeRelationToSelf: "atLeastOneSizeLarger";
-  };
 };
 export type BattleHideActionObscurementPermissionSupportProfile = {
   readonly kind: typeof HIDE_ACTION_OBSCUREMENT_PERMISSION_SUPPORT_PROFILE;
@@ -821,87 +755,21 @@ export type CunningStrikeSurfaceOption =
   CunningStrikeMechanics["options"][number];
 export type CunningStrikeOptionGrantSurfaceOption =
   SupremeSneakMechanics["option"];
-export type CunningStrikeOptionSelectionId =
-  | CunningStrikeSurfaceOption["id"]
-  | CunningStrikeOptionGrantSurfaceOption["id"];
-export const BATTLE_CUNNING_STRIKE_OPTION_SELECTION_IDS = [
-  ...BASE_CUNNING_STRIKE_OPTION_SELECTION_IDS,
-  "stealth_attack",
-] as const satisfies ReadonlyArray<CunningStrikeOptionSelectionId>;
 export const CUNNING_STRIKE_END_TURN_COVER_DEGREES = [
   "none",
   "half",
   "threeQuarters",
   "total",
 ] as const;
-export type CunningStrikeEndTurnCoverDegree =
-  (typeof CUNNING_STRIKE_END_TURN_COVER_DEGREES)[number];
-export type CunningStrikeQualifyingCoverDegree = Extract<
-  CunningStrikeEndTurnCoverDegree,
-  "threeQuarters" | "total"
->;
-export type CunningStrikeEquipmentGatedConditionSaveEffect = {
-  readonly kind: "equipmentGatedConditionSave";
-  readonly requires: {
-    readonly kind: "equipmentOnPerson";
-    readonly equipment: {
-      readonly kind: "tool";
-      readonly toolId: "poisoners_kit";
-    };
-  };
-  readonly save: { readonly ability: "con" };
-  readonly onFail: {
-    readonly kind: "applyCondition";
-    readonly condition: "poisoned";
-    readonly durationTicks: ElapsedTimeTicks;
-    readonly repeatSave: {
-      readonly cadence: "endOfTargetTurn";
-      readonly onSuccess: "endCondition";
-    };
-  };
-};
-export type CunningStrikeSizeGatedConditionSaveEffect = {
-  readonly kind: "sizeGatedConditionSave";
-  readonly target: { readonly maxSize: "large" };
-  readonly save: { readonly ability: "dex" };
-  readonly onFail: {
-    readonly kind: "applyCondition";
-    readonly condition: "prone";
-  };
-};
-export type CunningStrikePostDamageMovementEffect = {
-  readonly kind: "postDamageMovement";
-  readonly movement: {
-    readonly timing: "immediatelyAfterAttack";
-    readonly distance: { readonly kind: "halfSpeed" };
-    readonly opportunityAttacks: "doesNotProvoke";
-  };
-};
-export type CunningStrikeHideInvisibleEndSuppressionEffect = {
-  readonly kind: "hideInvisibleEndSuppression";
-  readonly prerequisite: {
-    readonly kind: "hideActionInvisibleCondition";
-  };
-  readonly conditionSource: "hideAction";
-  readonly ifTurnEndsBehindCover: readonly [
-    CunningStrikeQualifyingCoverDegree,
-    CunningStrikeQualifyingCoverDegree,
-  ];
-};
 export type CunningStrikeOptionEffect =
   | CunningStrikeEquipmentGatedConditionSaveEffect
   | CunningStrikeSizeGatedConditionSaveEffect
   | CunningStrikePostDamageMovementEffect
   | CunningStrikeHideInvisibleEndSuppressionEffect;
-export type CunningStrikeOption = {
-  readonly selectionId: CunningStrikeOptionSelectionId;
-  readonly cost: CunningStrikeDieCost;
-  readonly effect: CunningStrikeOptionEffect;
-};
 export type CunningStrikeProfile = {
   readonly trigger: {
     readonly kind: "dealSneakAttackDamage";
-    readonly sourceUnitId: UnitRecord["id"];
+    readonly sourceUnitId: AuthoredUnitSource["id"];
   };
   readonly choice: {
     readonly kind: "chooseOne";
@@ -914,12 +782,8 @@ export type CunningStrikeProfile = {
   };
   readonly options: readonly CunningStrikeOption[];
 };
-export type BattleCunningStrikeSupportProfile = {
-  readonly kind: typeof CUNNING_STRIKE_SUPPORT_PROFILE;
-  readonly cunningStrike: CunningStrikeProfile;
-};
 export type CunningStrikeOptionGrantProfile = {
-  readonly sourceUnitId: UnitRecord["id"];
+  readonly sourceUnitId: AuthoredUnitSource["id"];
   readonly option: CunningStrikeOption;
 };
 export type BattleCunningStrikeOptionGrantSupportProfile = {
@@ -1052,17 +916,7 @@ export type BattleGrapplerSupportProfile = {
   readonly kind: typeof GRAPPLER_SUPPORT_PROFILE;
   readonly grappler: GrapplerProfile;
 };
-export const BRUTAL_STRIKE_OPTION_IDS = [
-  "forceful_blow",
-  "hamstring_blow",
-] as const;
 export type BrutalStrikeOptionId = (typeof BRUTAL_STRIKE_OPTION_IDS)[number];
-export const BRUTAL_STRIKE_DECISION_CHOICES = [
-  ...BRUTAL_STRIKE_OPTION_IDS,
-  "decline",
-] as const;
-export type BrutalStrikeDecisionChoice =
-  (typeof BRUTAL_STRIKE_DECISION_CHOICES)[number];
 export type BrutalStrikeProfile = {
   readonly trigger: {
     readonly kind: "recklessAttackStrengthAttackHit";
@@ -1138,20 +992,9 @@ export type BattleMonkFocusBattleOptionsSupportProfile = {
     };
   };
 };
-export type BattleDruidWildShapeKnownFormSupportProfile = {
-  readonly kind: typeof DRUID_WILD_SHAPE_KNOWN_FORM_SUPPORT_PROFILE;
-  readonly classLevel: ClassLevel;
-  readonly knownFormRoster: {
-    readonly creatureType: CreatureType;
-    readonly count: number;
-    readonly maxChallengeRating: number;
-    readonly flySpeed: "allowed" | "forbidden";
-  };
-};
-
 export type SupportedDruidWildShapeKnownFormProfile =
   BattleDruidWildShapeKnownFormSupportProfile & {
-    readonly unit: UnitRecord;
+    readonly unit: AuthoredUnitSource;
   };
 export type BattleTacticalMasterReplacementSupportProfile = {
   readonly kind: typeof TACTICAL_MASTER_REPLACEMENT_SUPPORT_PROFILE;
@@ -1248,7 +1091,7 @@ export type BattleUnitSupportProfileIssue = {
 };
 
 export type ClassicNonSrdMechanicsUnit = {
-  readonly id: UnitRecord["id"];
+  readonly id: AuthoredUnitSource["id"];
   readonly syntheticLabel: string;
   readonly provenance: { readonly kind: "classic-2024-mechanics-source-lane" };
   readonly kind: "class_feature";
@@ -1262,7 +1105,9 @@ export type ClassicNonSrdMechanicsUnit = {
   };
 };
 
-export type BattleUnitSupportSource = UnitRecord | ClassicNonSrdMechanicsUnit;
+export type BattleUnitSupportSource =
+  | AuthoredUnitSource
+  | ClassicNonSrdMechanicsUnit;
 
 function battleUnitSupportProfileIssue(
   message: string,
@@ -1940,7 +1785,7 @@ export function battleUnitSupportProfilesForUnit(input: {
 
 export function battleUnitRefWithSupportProfiles(input: {
   readonly unitRef: {
-    readonly unitId: UnitRecord["id"];
+    readonly unitId: AuthoredUnitSource["id"];
     readonly selectedOption?: BattleUnitSupportProfileSelectedOption;
   };
   readonly unit: BattleUnitSupportSource;
@@ -1998,56 +1843,11 @@ export function battleUnitRefWithSupportProfiles(input: {
   });
 }
 
-export type OngoingFeatureRollModifier = {
-  readonly mode: AttackRollMode;
-  readonly affects: "selfRoll" | "rollsAgainstSelf";
-  readonly on: "attackRoll";
-  readonly abilityFilter?: readonly Ability[];
-};
-
 export type OngoingFeatureSpellModifier = {
   readonly sourceClassName: ClassName;
   readonly saveDcBonus: number;
   readonly attackRollMode: AttackRollMode;
 };
-
-export type OngoingFeatureDamageModifier = {
-  readonly amount: number;
-  readonly abilityFilter?: readonly Ability[];
-  readonly weaponUsageFilter?: WeaponRecord["usage"];
-};
-
-export type OngoingFeatureExtensionTrigger =
-  | "attackRollAgainstEnemy"
-  | "bonusAction"
-  | "enemySavingThrow";
-
-export type OngoingFeatureLifecycleProfile =
-  | {
-      readonly kind: "turnBoundary";
-      readonly initialExpiration: "startOfNextTurn" | "endOfNextTurn";
-      readonly earlyEndConditions: readonly Condition[];
-      readonly earlyEndArmorCategories: readonly ["heavy"] | readonly [];
-      readonly extensionTriggers: readonly [];
-    }
-  | {
-      readonly kind: "roundExtended";
-      readonly initialExpiration: "endOfNextTurn";
-      readonly maximumDurationRounds: number;
-      readonly earlyEndConditions: readonly Condition[];
-      readonly earlyEndArmorCategories: readonly ["heavy"] | readonly [];
-      readonly extensionTriggers: readonly [
-        OngoingFeatureExtensionTrigger,
-        ...OngoingFeatureExtensionTrigger[],
-      ];
-    }
-  | {
-      readonly kind: "fixedDuration";
-      readonly maximumDurationRounds: number;
-      readonly earlyEndConditions: readonly Condition[];
-      readonly earlyEndArmorCategories: readonly ["heavy"] | readonly [];
-      readonly extensionTriggers: readonly [];
-    };
 
 export type ReactionRollOrDamageReductionProfile =
   | {
@@ -2113,7 +1913,7 @@ export type ReactionRollOrDamageReductionProfile =
 
 type AuthoredAttackDamageReductionZeroDamageRedirect = {
   readonly spends: {
-    readonly resourceUnitId: UnitRecord["id"];
+    readonly resourceUnitId: AuthoredUnitSource["id"];
     readonly amount: 1;
   };
   readonly save: {
@@ -2148,7 +1948,7 @@ type AttackDamageReductionZeroDamageRedirectProfile = NonNullable<
 
 function attackDamageReductionZeroDamageRedirectProjection(
   redirect: unknown,
-  expectedResourceUnitId: UnitRecord["id"],
+  expectedResourceUnitId: AuthoredUnitSource["id"],
   classLevel: ClassLevel,
 ): AttackDamageReductionZeroDamageRedirectProfile | null {
   const authored = parseAuthoredAttackDamageReductionZeroDamageRedirect(
@@ -2186,7 +1986,7 @@ function attackDamageReductionZeroDamageRedirectProjection(
 
 function parseAuthoredAttackDamageReductionZeroDamageRedirect(
   redirect: unknown,
-  expectedResourceUnitId: UnitRecord["id"],
+  expectedResourceUnitId: AuthoredUnitSource["id"],
 ): AuthoredAttackDamageReductionZeroDamageRedirect | null {
   if (typeof redirect !== "object" || redirect === null) return null;
   // Cast justification: the object guard above is the boundary evidence; every
@@ -2247,7 +2047,7 @@ function martialArtsDieSize(classLevel: ClassLevel): MartialArtsDieSize {
 }
 
 export type ReactionReductionResourceSpend = {
-  readonly resourceUnitId: UnitRecord["id"];
+  readonly resourceUnitId: AuthoredUnitSource["id"];
   readonly amount: 1;
 };
 
@@ -2266,24 +2066,6 @@ export type PassiveArmorClassBonusProfile = {
     readonly categories: readonly ["light", "medium", "heavy"];
   };
 };
-
-export type PassiveSpeedBonusProfile = {
-  readonly deltaFeet: MovementDeltaFeet;
-  readonly condition: PassiveSpeedBonusCondition;
-};
-
-type PassiveHeavyArmorSpeedBonusCondition = {
-  readonly kind: "notWearingArmor";
-  readonly categories: readonly ["heavy"];
-};
-
-type PassiveUnarmoredUnshieldedSpeedBonusCondition = {
-  readonly kind: "unarmoredUnshielded";
-};
-
-export type PassiveSpeedBonusCondition =
-  | PassiveHeavyArmorSpeedBonusCondition
-  | PassiveUnarmoredUnshieldedSpeedBonusCondition;
 
 export type PassiveSpeedKindGrantsProfile = {
   readonly speed?: PassiveSpeedBonusProfile;
@@ -2507,7 +2289,7 @@ export type SupportedUnitFeatureFacts =
       readonly dieSize: DamageDieSize;
       readonly durationTicks: ElapsedTimeTicks;
       readonly spends: {
-        readonly resourceUnitId: UnitRecord["id"];
+        readonly resourceUnitId: AuthoredUnitSource["id"];
         readonly amount: 1;
       };
     }
@@ -2597,7 +2379,7 @@ export type SupportedUnitFeatureFacts =
     };
 
 export type SupportedUnitFeatureProfile = SupportedUnitFeatureFacts & {
-  readonly unit: UnitRecord;
+  readonly unit: AuthoredUnitSource;
 };
 
 export type BattleAttackDamageRiderSupport =
@@ -2818,7 +2600,7 @@ function alternateActionCostActions(
 }
 
 export function battleMonkFocusBattleOptionsSupportForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): BattleMonkFocusBattleOptionsSupport {
   if (
     unit.kind !== "class_feature" ||
@@ -3013,7 +2795,7 @@ export function isClassicNonSrdMechanicsUnit(
 }
 
 export function battleWeaponOrUnarmedCriticalRange19SupportForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): BattleWeaponOrUnarmedCriticalRange19Support {
   if (unit.kind !== "class_feature" || unit.mechanics.family !== "passive") {
     return null;
@@ -3059,7 +2841,7 @@ type AttackDamageRiderMechanicsProjection =
     >;
 
 export function battleAttackDamageRiderSupportForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): BattleAttackDamageRiderSupport {
   if (
     unit.kind !== "class_feature" ||
@@ -3073,7 +2855,7 @@ export function battleAttackDamageRiderSupportForUnit(
 }
 
 function attackDamageRiderMechanicsProjection(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): AttackDamageRiderMechanicsProjection | null {
   if (
     unit.kind !== "class_feature" ||
@@ -3153,7 +2935,7 @@ type SaveDamageReplacementMechanicsProjection = {
 };
 
 export function battleSaveDamageReplacementSupportForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): BattleSaveDamageReplacementSupport {
   if (
     unit.kind !== "class_feature" ||
@@ -3167,7 +2949,7 @@ export function battleSaveDamageReplacementSupportForUnit(
 }
 
 function saveDamageReplacementMechanicsProjection(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): SaveDamageReplacementMechanicsProjection | null {
   if (
     unit.kind !== "class_feature" ||
@@ -3198,7 +2980,7 @@ export type BattleReactionRollOrDamageReductionSupport =
   | null;
 
 export function battleReactionRollOrDamageReductionSupportForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): BattleReactionRollOrDamageReductionSupport {
   if (
     unit.kind !== "class_feature" ||
@@ -3371,7 +3153,7 @@ export type BattleWeaponMasterySlowSupport =
   | null;
 
 export function battlePassiveArmorClassBonusSupportForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): BattlePassiveArmorClassBonusSupport {
   if (!hasPassiveArmorClassBonusMechanics(unit)) {
     return null;
@@ -3382,7 +3164,7 @@ export function battlePassiveArmorClassBonusSupportForUnit(
 }
 
 export function battlePassiveRangedAttackRollBonusSupportForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): BattlePassiveRangedAttackRollBonusSupport {
   if (!hasPassiveRangedAttackRollBonusMechanics(unit)) {
     return null;
@@ -3394,7 +3176,7 @@ export function battlePassiveRangedAttackRollBonusSupportForUnit(
 }
 
 export function battleInitiativeProficiencyAndSwapSupportForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): BattleInitiativeProficiencyAndSwapSupport {
   if (!hasInitiativeProficiencyAndSwapMechanics(unit)) {
     return null;
@@ -3406,7 +3188,7 @@ export function battleInitiativeProficiencyAndSwapSupportForUnit(
 }
 
 export function battleAttackRollMissToHitReplacementSupportForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): BattleAttackRollMissToHitReplacementSupport {
   if (!hasAttackRollMissToHitReplacementMechanics(unit)) {
     return null;
@@ -3421,7 +3203,7 @@ export function battleAttackRollMissToHitReplacementSupportForUnit(
 }
 
 export function battleAttackActionAreaSaveDamageReplacementSupportForUnit(input: {
-  readonly unit: UnitRecord;
+  readonly unit: AuthoredUnitSource;
   readonly draconicAncestryDamageType?: DraconicAncestryDamageType | undefined;
 }): BattleAttackActionAreaSaveDamageReplacementSupport {
   if (!hasAttackActionAreaSaveDamageReplacementMechanics(input.unit)) {
@@ -3443,7 +3225,7 @@ export function battleAttackActionAreaSaveDamageReplacementSupportForUnit(input:
 }
 
 export function battleD20TestNaturalOneRerollSupportForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): BattleD20TestNaturalOneRerollSupport {
   if (!hasD20TestNaturalOneRerollMechanics(unit)) {
     return null;
@@ -3458,7 +3240,7 @@ export function battleD20TestNaturalOneRerollSupportForUnit(
 }
 
 export function battlePassiveSavingThrowRollModeSupportForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): BattlePassiveSavingThrowRollModeSupport {
   if (!hasPassiveSavingThrowRollModeMechanics(unit)) {
     return null;
@@ -3473,7 +3255,7 @@ export function battlePassiveSavingThrowRollModeSupportForUnit(
 }
 
 export function battlePassiveAbilityCheckRollModeSupportForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): BattlePassiveAbilityCheckRollModeSupport {
   if (!hasPassiveAbilityCheckRollModeMechanics(unit)) {
     return null;
@@ -3488,7 +3270,7 @@ export function battlePassiveAbilityCheckRollModeSupportForUnit(
 }
 
 export function battlePassiveDamageResistanceSupportForUnit(input: {
-  readonly unit: UnitRecord;
+  readonly unit: AuthoredUnitSource;
   readonly draconicAncestryDamageType?: DraconicAncestryDamageType | undefined;
 }): BattlePassiveDamageResistanceSupport {
   if (!hasPassiveDamageResistanceMechanics(input.unit)) {
@@ -3507,7 +3289,7 @@ export function battlePassiveDamageResistanceSupportForUnit(input: {
 }
 
 export function battlePassiveSpeedBonusSupportForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): BattlePassiveSpeedBonusSupport {
   if (!hasPassiveSpeedBonusMechanics(unit)) {
     return null;
@@ -3519,7 +3301,7 @@ export function battlePassiveSpeedBonusSupportForUnit(
 }
 
 export function battlePassiveSpeedKindGrantsSupportForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): BattlePassiveSpeedKindGrantsSupport {
   if (!hasPassiveSpeedKindGrantsMechanics(unit)) {
     return null;
@@ -3534,7 +3316,7 @@ export function battlePassiveSpeedKindGrantsSupportForUnit(
 }
 
 export function battleAcrobaticMovementSupportForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): BattleAcrobaticMovementSupport {
   if (!hasAcrobaticMovementMechanics(unit)) {
     return null;
@@ -3549,7 +3331,7 @@ export function battleAcrobaticMovementSupportForUnit(
 }
 
 export function battleCreatureSpaceMovementPermissionSupportForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): BattleCreatureSpaceMovementPermissionSupport {
   if (!hasCreatureSpaceMovementPermissionMechanics(unit)) {
     return null;
@@ -3564,7 +3346,7 @@ export function battleCreatureSpaceMovementPermissionSupportForUnit(
 }
 
 export function battleHideActionObscurementPermissionSupportForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): BattleHideActionObscurementPermissionSupport {
   if (!hasHideActionObscurementPermissionMechanics(unit)) {
     return null;
@@ -3579,7 +3361,7 @@ export function battleHideActionObscurementPermissionSupportForUnit(
 }
 
 export function battleWeaponDamageDiceRollChoiceSupportForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): BattleWeaponDamageDiceRollChoiceSupport {
   if (!hasWeaponDamageDiceRollChoiceMechanics(unit)) {
     return null;
@@ -3590,7 +3372,7 @@ export function battleWeaponDamageDiceRollChoiceSupportForUnit(
 }
 
 export function battleAttackDamageDieFloorSupportForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): BattleAttackDamageDieFloorSupport {
   if (!hasAttackDamageDieFloorMechanics(unit)) {
     return null;
@@ -3601,7 +3383,7 @@ export function battleAttackDamageDieFloorSupportForUnit(
 }
 
 export function battleLightExtraAttackDamageAbilityModifierSupportForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): BattleLightExtraAttackDamageAbilityModifierSupport {
   if (!hasLightExtraAttackDamageAbilityModifierMechanics(unit)) {
     return null;
@@ -3617,7 +3399,7 @@ export function battleLightExtraAttackDamageAbilityModifierSupportForUnit(
 }
 
 export function battleMartialArtsAttackProjectionSupportForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): BattleMartialArtsAttackProjectionSupport {
   if (!hasMartialArtsAttackProjectionMechanics(unit)) {
     return null;
@@ -3628,7 +3410,7 @@ export function battleMartialArtsAttackProjectionSupportForUnit(
 }
 
 export function battleAttackActionAttackCountScalingSupportForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): BattleAttackActionAttackCountScalingSupport {
   if (!hasAttackActionAttackCountScalingMechanics(unit)) {
     return null;
@@ -3643,7 +3425,7 @@ export function battleAttackActionAttackCountScalingSupportForUnit(
 }
 
 export function battleZeroHitPointReplacementSupportForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): BattleZeroHitPointReplacementSupport {
   if (!hasZeroHitPointReplacementMechanics(unit)) {
     return null;
@@ -3654,7 +3436,7 @@ export function battleZeroHitPointReplacementSupportForUnit(
 }
 
 export function battleBonusActionDashTemporaryHitPointsSupportForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): BattleBonusActionDashTemporaryHitPointsSupport {
   if (!hasBonusActionDashTemporaryHitPointsMechanics(unit)) {
     return null;
@@ -3669,7 +3451,7 @@ export function battleBonusActionDashTemporaryHitPointsSupportForUnit(
 }
 
 export function battleFailedAbilityCheckResourceBoostSupportForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): BattleFailedAbilityCheckResourceBoostSupport {
   if (!hasFailedAbilityCheckResourceBoostMechanics(unit)) {
     return null;
@@ -3684,7 +3466,7 @@ export function battleFailedAbilityCheckResourceBoostSupportForUnit(
 }
 
 export function battleFailedSavingThrowRerollSupportForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): BattleFailedSavingThrowRerollSupport {
   if (!hasFailedSavingThrowRerollMechanics(unit)) {
     return null;
@@ -3699,7 +3481,7 @@ export function battleFailedSavingThrowRerollSupportForUnit(
 }
 
 export function battleSpellSlotHealingModifierSupportForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): BattleSpellSlotHealingModifierSupport {
   if (!hasSpellSlotHealingModifierMechanics(unit)) {
     return null;
@@ -3714,7 +3496,7 @@ export function battleSpellSlotHealingModifierSupportForUnit(
 }
 
 export function battleMagicActionHealingPoolSupportForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): BattleMagicActionHealingPoolSupport {
   if (!hasMagicActionHealingPoolMechanics(unit)) {
     return null;
@@ -3730,7 +3512,7 @@ export function battleMagicActionHealingPoolSupportForUnit(
 }
 
 export function battleMagicActionAreaSaveDamageHealingSupportForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
   classLevels?: readonly CharacterBattleClassLevel[],
 ): BattleMagicActionAreaSaveDamageHealingSupport {
   if (!hasMagicActionAreaSaveDamageHealingMechanics(unit)) {
@@ -3749,7 +3531,7 @@ export function battleMagicActionAreaSaveDamageHealingSupportForUnit(
 }
 
 export function battleEnemyZeroHitPointTemporaryHitPointsSupportForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): BattleEnemyZeroHitPointTemporaryHitPointsSupport {
   if (!hasEnemyZeroHitPointTemporaryHitPointsMechanics(unit)) {
     return null;
@@ -3765,7 +3547,7 @@ export function battleEnemyZeroHitPointTemporaryHitPointsSupportForUnit(
 }
 
 export function battleRemarkableAthleteSupportForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): BattleRemarkableAthleteSupport {
   if (!hasClassFeatureMechanicsFamily(unit, "remarkable_athlete")) {
     return null;
@@ -3780,7 +3562,7 @@ export function battleRemarkableAthleteSupportForUnit(
 }
 
 export function battleOpenHandTechniqueSupportForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): BattleOpenHandTechniqueSupport {
   if (!hasClassFeatureMechanicsFamily(unit, "open_hand_technique")) {
     return null;
@@ -3795,7 +3577,7 @@ export function battleOpenHandTechniqueSupportForUnit(
 }
 
 export function battleStunningStrikeSupportForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): BattleStunningStrikeSupport {
   if (!hasClassFeatureMechanicsFamily(unit, "stunning_strike")) {
     return null;
@@ -3810,7 +3592,7 @@ export function battleStunningStrikeSupportForUnit(
 }
 
 export function battleCunningStrikeSupportForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): BattleCunningStrikeSupport {
   if (!hasClassFeatureMechanicsFamily(unit, "cunning_strike")) {
     return null;
@@ -3825,7 +3607,7 @@ export function battleCunningStrikeSupportForUnit(
 }
 
 export function battleCunningStrikeOptionGrantSupportForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): BattleCunningStrikeOptionGrantSupport {
   if (!hasClassFeatureMechanicsFamily(unit, "cunning_strike_option_grant")) {
     return null;
@@ -3840,7 +3622,7 @@ export function battleCunningStrikeOptionGrantSupportForUnit(
 }
 
 export function battlePaladinSacredWeaponSupportForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): BattlePaladinSacredWeaponSupport {
   if (!hasClassFeatureMechanicsFamily(unit, "sacred_weapon")) {
     return null;
@@ -3908,7 +3690,7 @@ function battleHuntersPreySupportValidationForUnit(
 }
 
 export function battleRogueSteadyAimSupportForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): BattleRogueSteadyAimSupport {
   if (!hasClassFeatureMechanicsFamily(unit, "steady_aim")) {
     return null;
@@ -3923,7 +3705,7 @@ export function battleRogueSteadyAimSupportForUnit(
 }
 
 export function battlePotentCantripSupportForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): BattlePotentCantripSupport {
   if (!hasClassFeatureMechanicsFamily(unit, "potent_cantrip")) {
     return null;
@@ -3938,18 +3720,20 @@ export function battlePotentCantripSupportForUnit(
 }
 
 function hasClassFeatureMechanicsFamily(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
   family: string,
 ): boolean {
   return unit.kind === "class_feature" && unit.mechanics.family === family;
 }
 
-function hasFailedSavingThrowRerollMechanics(unit: UnitRecord): boolean {
+function hasFailedSavingThrowRerollMechanics(
+  unit: AuthoredUnitSource,
+): boolean {
   return hasClassFeatureMechanicsFamily(unit, "failed_saving_throw_reroll");
 }
 
 type D20TestNaturalOneRerollUnit = Extract<
-  UnitRecord,
+  AuthoredUnitSource,
   { readonly kind: "species_trait" }
 > & {
   readonly mechanics: {
@@ -3958,7 +3742,7 @@ type D20TestNaturalOneRerollUnit = Extract<
 };
 
 function hasD20TestNaturalOneRerollMechanics(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): unit is D20TestNaturalOneRerollUnit {
   return (
     unit.kind === "species_trait" &&
@@ -3967,7 +3751,7 @@ function hasD20TestNaturalOneRerollMechanics(
 }
 
 function d20TestNaturalOneRerollProfileForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): D20TestNaturalOneRerollProfile | null {
   if (!hasD20TestNaturalOneRerollMechanics(unit)) {
     return null;
@@ -3985,7 +3769,7 @@ function d20TestNaturalOneRerollProfileForUnit(
     : null;
 }
 
-function hasPassiveArmorClassBonusMechanics(unit: UnitRecord): boolean {
+function hasPassiveArmorClassBonusMechanics(unit: AuthoredUnitSource): boolean {
   if (unit.kind !== "feat" || unit.mechanics.family !== "passive") {
     return false;
   }
@@ -3996,7 +3780,9 @@ function hasPassiveArmorClassBonusMechanics(unit: UnitRecord): boolean {
   );
 }
 
-function hasPassiveRangedAttackRollBonusMechanics(unit: UnitRecord): boolean {
+function hasPassiveRangedAttackRollBonusMechanics(
+  unit: AuthoredUnitSource,
+): boolean {
   if (unit.kind !== "feat" || unit.mechanics.family !== "passive") {
     return false;
   }
@@ -4008,7 +3794,9 @@ function hasPassiveRangedAttackRollBonusMechanics(unit: UnitRecord): boolean {
   );
 }
 
-function hasInitiativeProficiencyAndSwapMechanics(unit: UnitRecord): boolean {
+function hasInitiativeProficiencyAndSwapMechanics(
+  unit: AuthoredUnitSource,
+): boolean {
   if (unit.kind !== "feat" || unit.mechanics.family !== "passive") {
     return false;
   }
@@ -4022,7 +3810,9 @@ function hasInitiativeProficiencyAndSwapMechanics(unit: UnitRecord): boolean {
   );
 }
 
-function hasAttackRollMissToHitReplacementMechanics(unit: UnitRecord): boolean {
+function hasAttackRollMissToHitReplacementMechanics(
+  unit: AuthoredUnitSource,
+): boolean {
   return (
     unit.kind === "feat" &&
     unit.mechanics.family === "triggered_replacement" &&
@@ -4031,7 +3821,7 @@ function hasAttackRollMissToHitReplacementMechanics(unit: UnitRecord): boolean {
 }
 
 function hasAttackActionAreaSaveDamageReplacementMechanics(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): boolean {
   return (
     unit.kind === "species_trait" &&
@@ -4040,7 +3830,9 @@ function hasAttackActionAreaSaveDamageReplacementMechanics(
   );
 }
 
-function hasPassiveSavingThrowRollModeMechanics(unit: UnitRecord): boolean {
+function hasPassiveSavingThrowRollModeMechanics(
+  unit: AuthoredUnitSource,
+): boolean {
   if (
     (unit.kind !== "class_feature" && unit.kind !== "species_trait") ||
     unit.mechanics.family !== "passive"
@@ -4054,7 +3846,9 @@ function hasPassiveSavingThrowRollModeMechanics(unit: UnitRecord): boolean {
   );
 }
 
-function hasPassiveAbilityCheckRollModeMechanics(unit: UnitRecord): boolean {
+function hasPassiveAbilityCheckRollModeMechanics(
+  unit: AuthoredUnitSource,
+): boolean {
   if (unit.kind !== "species_trait" || unit.mechanics.family !== "passive") {
     return false;
   }
@@ -4065,7 +3859,9 @@ function hasPassiveAbilityCheckRollModeMechanics(unit: UnitRecord): boolean {
   );
 }
 
-function hasPassiveDamageResistanceMechanics(unit: UnitRecord): boolean {
+function hasPassiveDamageResistanceMechanics(
+  unit: AuthoredUnitSource,
+): boolean {
   if (unit.kind !== "species_trait" || unit.mechanics.family !== "passive") {
     return false;
   }
@@ -4076,7 +3872,7 @@ function hasPassiveDamageResistanceMechanics(unit: UnitRecord): boolean {
   );
 }
 
-function hasPassiveSpeedBonusMechanics(unit: UnitRecord): boolean {
+function hasPassiveSpeedBonusMechanics(unit: AuthoredUnitSource): boolean {
   if (unit.kind !== "class_feature" || unit.mechanics.family !== "passive") {
     return false;
   }
@@ -4087,7 +3883,7 @@ function hasPassiveSpeedBonusMechanics(unit: UnitRecord): boolean {
   );
 }
 
-function hasPassiveSpeedKindGrantsMechanics(unit: UnitRecord): boolean {
+function hasPassiveSpeedKindGrantsMechanics(unit: AuthoredUnitSource): boolean {
   if (unit.kind !== "class_feature") {
     return false;
   }
@@ -4106,7 +3902,7 @@ function hasPassiveSpeedKindGrantsMechanics(unit: UnitRecord): boolean {
   );
 }
 
-function hasAcrobaticMovementMechanics(unit: UnitRecord): boolean {
+function hasAcrobaticMovementMechanics(unit: AuthoredUnitSource): boolean {
   return (
     unit.kind === "class_feature" &&
     unit.mechanics.family === "acrobatic_movement"
@@ -4114,7 +3910,7 @@ function hasAcrobaticMovementMechanics(unit: UnitRecord): boolean {
 }
 
 function hasCreatureSpaceMovementPermissionMechanics(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): boolean {
   return (
     unit.kind === "species_trait" &&
@@ -4123,7 +3919,7 @@ function hasCreatureSpaceMovementPermissionMechanics(
 }
 
 function hasHideActionObscurementPermissionMechanics(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): boolean {
   return (
     unit.kind === "species_trait" &&
@@ -4131,7 +3927,9 @@ function hasHideActionObscurementPermissionMechanics(
   );
 }
 
-function hasWeaponDamageDiceRollChoiceMechanics(unit: UnitRecord): boolean {
+function hasWeaponDamageDiceRollChoiceMechanics(
+  unit: AuthoredUnitSource,
+): boolean {
   return (
     unit.kind === "feat" &&
     unit.mechanics.family === "on_hit_trigger" &&
@@ -4139,12 +3937,12 @@ function hasWeaponDamageDiceRollChoiceMechanics(unit: UnitRecord): boolean {
   );
 }
 
-function hasAttackDamageDieFloorMechanics(unit: UnitRecord): boolean {
+function hasAttackDamageDieFloorMechanics(unit: AuthoredUnitSource): boolean {
   return unit.kind === "feat" && unit.mechanics.family === "damage_die_floor";
 }
 
 function hasLightExtraAttackDamageAbilityModifierMechanics(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): boolean {
   return (
     unit.kind === "feat" &&
@@ -4152,7 +3950,9 @@ function hasLightExtraAttackDamageAbilityModifierMechanics(
   );
 }
 
-function hasMartialArtsAttackProjectionMechanics(unit: UnitRecord): boolean {
+function hasMartialArtsAttackProjectionMechanics(
+  unit: AuthoredUnitSource,
+): boolean {
   return (
     unit.kind === "class_feature" &&
     unit.className === "monk" &&
@@ -4165,7 +3965,9 @@ function hasMartialArtsAttackProjectionMechanics(unit: UnitRecord): boolean {
   );
 }
 
-function hasAttackActionAttackCountScalingMechanics(unit: UnitRecord): boolean {
+function hasAttackActionAttackCountScalingMechanics(
+  unit: AuthoredUnitSource,
+): boolean {
   if (unit.kind !== "class_feature" || unit.mechanics.family !== "passive") {
     return false;
   }
@@ -4174,7 +3976,9 @@ function hasAttackActionAttackCountScalingMechanics(unit: UnitRecord): boolean {
   );
 }
 
-function hasZeroHitPointReplacementMechanics(unit: UnitRecord): boolean {
+function hasZeroHitPointReplacementMechanics(
+  unit: AuthoredUnitSource,
+): boolean {
   return (
     unit.kind === "species_trait" &&
     unit.mechanics.family === "triggered_replacement"
@@ -4182,7 +3986,7 @@ function hasZeroHitPointReplacementMechanics(unit: UnitRecord): boolean {
 }
 
 function hasBonusActionDashTemporaryHitPointsMechanics(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): boolean {
   if (unit.kind !== "species_trait" || unit.mechanics.family !== "activation") {
     return false;
@@ -4201,7 +4005,7 @@ function hasBonusActionDashTemporaryHitPointsMechanics(
 }
 
 function hasFailedAbilityCheckResourceBoostMechanics(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): boolean {
   return (
     unit.kind === "class_feature" &&
@@ -4209,14 +4013,16 @@ function hasFailedAbilityCheckResourceBoostMechanics(
   );
 }
 
-function hasSpellSlotHealingModifierMechanics(unit: UnitRecord): boolean {
+function hasSpellSlotHealingModifierMechanics(
+  unit: AuthoredUnitSource,
+): boolean {
   return (
     unit.kind === "class_feature" &&
     unit.mechanics.family === "spell_slot_healing_modifier"
   );
 }
 
-function hasMagicActionHealingPoolMechanics(unit: UnitRecord): boolean {
+function hasMagicActionHealingPoolMechanics(unit: AuthoredUnitSource): boolean {
   return (
     unit.kind === "class_feature" &&
     unit.mechanics.family === "magic_action_healing_pool"
@@ -4224,7 +4030,7 @@ function hasMagicActionHealingPoolMechanics(unit: UnitRecord): boolean {
 }
 
 function hasMagicActionAreaSaveDamageHealingMechanics(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): boolean {
   return (
     unit.kind === "class_feature" &&
@@ -4232,14 +4038,16 @@ function hasMagicActionAreaSaveDamageHealingMechanics(
   );
 }
 
-function hasMagicActionSaveGatedConditionMechanics(unit: UnitRecord): boolean {
+function hasMagicActionSaveGatedConditionMechanics(
+  unit: AuthoredUnitSource,
+): boolean {
   return (
     unit.kind === "class_feature" && unit.mechanics.family === "abjure_foes"
   );
 }
 
 function hasEnemyZeroHitPointTemporaryHitPointsMechanics(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): boolean {
   return (
     unit.kind === "class_feature" &&
@@ -4248,7 +4056,7 @@ function hasEnemyZeroHitPointTemporaryHitPointsMechanics(
 }
 
 export function zeroHitPointReplacementProfileForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): Extract<
   SupportedUnitFeatureProfile,
   { readonly kind: "zeroHitPointReplacement" }
@@ -4266,7 +4074,7 @@ export function zeroHitPointReplacementProfileForUnit(
 }
 
 export function bonusActionDashTemporaryHitPointsProfileForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): Extract<
   SupportedUnitFeatureProfile,
   { readonly kind: "bonusActionDashTemporaryHitPoints" }
@@ -4311,7 +4119,7 @@ export function bonusActionDashTemporaryHitPointsProfileForUnit(
 }
 
 export function failedAbilityCheckResourceBoostProfileForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): Extract<
   SupportedUnitFeatureProfile,
   { readonly kind: "failedAbilityCheckResourceBoost" }
@@ -4345,7 +4153,7 @@ export function failedAbilityCheckResourceBoostProfileForUnit(
 }
 
 export function failedSavingThrowRerollProfileForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): Extract<
   SupportedUnitFeatureProfile,
   { readonly kind: "failedSavingThrowReroll" }
@@ -4397,7 +4205,7 @@ export function failedSavingThrowRerollProfileForUnit(
 }
 
 export function spellSlotHealingModifierProfileForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): Extract<
   SupportedUnitFeatureProfile,
   { readonly kind: "spellSlotHealingModifier" }
@@ -4433,7 +4241,7 @@ export function spellSlotHealingModifierProfileForUnit(
 }
 
 export function magicActionHealingPoolProfileForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): Extract<
   SupportedUnitFeatureProfile,
   { readonly kind: "magicActionHealingPool" }
@@ -4488,7 +4296,7 @@ export function magicActionHealingPoolProfileForUnit(
 }
 
 export function magicActionAreaSaveDamageHealingProfileForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
   classLevels?: readonly CharacterBattleClassLevel[],
 ): Extract<
   SupportedUnitFeatureProfile,
@@ -4564,7 +4372,7 @@ export function magicActionAreaSaveDamageHealingProfileForUnit(
 }
 
 export function magicActionSaveGatedConditionProfileForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
   classLevels?: readonly CharacterBattleClassLevel[],
 ): Extract<
   SupportedUnitFeatureProfile,
@@ -4646,7 +4454,7 @@ export function magicActionSaveGatedConditionProfileForUnit(
 }
 
 export function battleMagicActionSaveGatedConditionSupportForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
   classLevels?: readonly CharacterBattleClassLevel[],
 ): BattleMagicActionSaveGatedConditionSupport {
   const profile = magicActionSaveGatedConditionProfileForUnit(
@@ -4663,7 +4471,7 @@ export function battleMagicActionSaveGatedConditionSupportForUnit(
 }
 
 export function enemyZeroHitPointTemporaryHitPointsProfileForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): Extract<
   SupportedUnitFeatureProfile,
   { readonly kind: "enemyZeroHitPointTemporaryHitPoints" }
@@ -4772,7 +4580,7 @@ function sameDiceExprDelta(
 }
 
 export function attackActionAttackCountScalingProfileForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): Extract<
   SupportedUnitFeatureProfile,
   { readonly kind: "attackActionAttackCountScaling" }
@@ -4807,7 +4615,7 @@ function isBattleAttackActionAdditionalAttacks(
 }
 
 export function passiveArmorClassBonusProfileForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): PassiveArmorClassBonusProfile | null {
   if (unit.kind !== "feat" || unit.mechanics.family !== "passive") {
     return null;
@@ -4838,7 +4646,7 @@ export function passiveArmorClassBonusProfileForUnit(
 }
 
 export function passiveRangedAttackRollBonusProfileForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): PassiveRangedAttackRollBonusProfile | null {
   if (unit.kind !== "feat" || unit.mechanics.family !== "passive") {
     return null;
@@ -4866,7 +4674,7 @@ export function passiveRangedAttackRollBonusProfileForUnit(
 }
 
 export function initiativeProficiencyAndSwapProfileForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): InitiativeProficiencyAndSwapProfile | null {
   if (unit.kind !== "feat" || unit.mechanics.family !== "passive") {
     return null;
@@ -4925,7 +4733,7 @@ export function initiativeProficiencyAndSwapProfileForUnit(
 }
 
 export function attackRollMissToHitReplacementProfileForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): AttackRollMissToHitReplacementProfile | null {
   if (
     unit.kind !== "feat" ||
@@ -4951,7 +4759,7 @@ export function attackRollMissToHitReplacementProfileForUnit(
 }
 
 export function attackActionAreaSaveDamageReplacementProfileForUnit(input: {
-  readonly unit: UnitRecord;
+  readonly unit: AuthoredUnitSource;
   readonly draconicAncestryDamageType: DraconicAncestryDamageType;
 }): Extract<
   SupportedUnitFeatureProfile,
@@ -5085,7 +4893,7 @@ const DRACONIC_ANCESTRY_RESOURCE_SHAPE_WITNESS_DAMAGE_TYPE =
   "fire" satisfies DraconicAncestryDamageType;
 
 export function unitHasAttackActionAreaSaveDamageReplacementResourceShape(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): boolean {
   return (
     attackActionAreaSaveDamageReplacementProfileForUnit({
@@ -5185,7 +4993,7 @@ function draconicAncestryResistanceDamageTypeMechanicsAreSupported(
 }
 
 export function passiveDamageResistanceProfileForUnit(input: {
-  readonly unit: UnitRecord;
+  readonly unit: AuthoredUnitSource;
   readonly draconicAncestryDamageType?: DraconicAncestryDamageType | undefined;
 }): PassiveDamageResistanceProfile | null {
   const { unit } = input;
@@ -5211,7 +5019,7 @@ export function passiveDamageResistanceProfileForUnit(input: {
 }
 
 export function passiveSavingThrowRollModeProfileForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): PassiveSavingThrowRollModeProfile | null {
   if (
     (unit.kind !== "class_feature" && unit.kind !== "species_trait") ||
@@ -5311,7 +5119,7 @@ function isPassiveConditionSavingThrowRollModeCondition(
 }
 
 export function passiveAbilityCheckRollModeProfileForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): PassiveAbilityCheckRollModeProfile | null {
   if (unit.kind !== "species_trait" || unit.mechanics.family !== "passive") {
     return null;
@@ -5358,7 +5166,7 @@ function isRollModeAdvantage(
 }
 
 export function passiveSpeedBonusProfileForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): PassiveSpeedBonusProfile | null {
   if (unit.kind !== "class_feature" || unit.mechanics.family !== "passive") {
     return null;
@@ -5367,7 +5175,7 @@ export function passiveSpeedBonusProfileForUnit(
 }
 
 export function passiveSpeedKindGrantsProfileForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): PassiveSpeedKindGrantsProfile | null {
   if (unit.kind !== "class_feature") {
     return null;
@@ -5393,7 +5201,7 @@ export function passiveSpeedKindGrantsProfileForUnit(
 }
 
 export function acrobaticMovementProfileForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): AcrobaticMovementProfile | null {
   if (
     unit.kind !== "class_feature" ||
@@ -5436,7 +5244,7 @@ export function acrobaticMovementProfileForUnit(
 }
 
 export function creatureSpaceMovementPermissionProfileForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): CreatureSpaceMovementPermissionProfile | null {
   if (
     unit.kind !== "species_trait" ||
@@ -5462,7 +5270,7 @@ export function creatureSpaceMovementPermissionProfileForUnit(
 }
 
 export function hideActionObscurementPermissionProfileForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): HideActionObscurementPermissionProfile | null {
   if (
     unit.kind !== "species_trait" ||
@@ -5489,7 +5297,10 @@ export function hideActionObscurementPermissionProfileForUnit(
 
 function passiveSpeedBonusProfileForPassiveMechanics(
   mechanics: Extract<
-    Extract<UnitRecord, { readonly kind: "class_feature" }>["mechanics"],
+    Extract<
+      AuthoredUnitSource,
+      { readonly kind: "class_feature" }
+    >["mechanics"],
     { readonly family: "passive" }
   >,
 ): PassiveSpeedBonusProfile | null {
@@ -5542,7 +5353,10 @@ function passiveSpeedBonusConditionForEquipmentPredicate(
 
 function passiveSpeedKindGrantsForPassiveMechanics(
   mechanics: Extract<
-    Extract<UnitRecord, { readonly kind: "class_feature" }>["mechanics"],
+    Extract<
+      AuthoredUnitSource,
+      { readonly kind: "class_feature" }
+    >["mechanics"],
     { readonly family: "passive" }
   >,
 ): PassiveSpeedKindGrantsProfile["grants"] | null {
@@ -5585,7 +5399,7 @@ function isPassiveSpeedKindGrantKind(
 }
 
 export function weaponDamageDiceRollChoiceProfileForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): WeaponDamageDiceRollChoiceProfile | null {
   if (unit.kind !== "feat" || unit.mechanics.family !== "on_hit_trigger") {
     return null;
@@ -5612,7 +5426,7 @@ export function weaponDamageDiceRollChoiceProfileForUnit(
 }
 
 export function attackDamageDieFloorProfileForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): AttackDamageDieFloorProfile | null {
   if (unit.kind !== "feat" || unit.mechanics.family !== "damage_die_floor") {
     return null;
@@ -5643,7 +5457,7 @@ export function attackDamageDieFloorProfileForUnit(
 }
 
 export function lightExtraAttackDamageAbilityModifierProfileForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): LightExtraAttackDamageAbilityModifierProfile | null {
   if (
     unit.kind !== "feat" ||
@@ -5672,7 +5486,7 @@ export function lightExtraAttackDamageAbilityModifierProfileForUnit(
 }
 
 export function martialArtsAttackProjectionProfileForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
   classLevels: readonly CharacterBattleClassLevel[],
 ): Extract<
   SupportedUnitFeatureProfile,
@@ -5701,7 +5515,7 @@ export function martialArtsAttackProjectionProfileForUnit(
 }
 
 function martialArtsAttackProjectionMechanicsForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): MartialArtsAttackProjectionProfile | null {
   if (
     unit.kind !== "class_feature" ||
@@ -5788,7 +5602,7 @@ function martialArtsAttackProjectionMechanicsForUnit(
 }
 
 function parseMartialArtsAttackProjectionUnitFeatureProfile(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
   classLevels: readonly CharacterBattleClassLevel[],
 ): Extract<
   SupportedUnitFeatureProfile,
@@ -5815,7 +5629,7 @@ function fixedDiceDeltaValue(delta: {
 }
 
 function reactionRollOrDamageReductionMechanicsProjection(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
   classLevel: ClassLevel,
 ): ReadonlyNonEmptyArray<ReactionRollOrDamageReductionProfile> | null {
   if (
@@ -5957,7 +5771,7 @@ function reactionRollOrDamageReductionMechanicsProjection(
 }
 
 function bardicInspirationReactionReduction(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
   classLevel: ClassLevel,
 ): ReactionReductionResourceDie | null {
   if (
@@ -5991,7 +5805,7 @@ function reactionRollOrDamageReductionKindsUnique(
 }
 
 export function parseSupportedUnitFeatureProfile(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
   classLevels: readonly CharacterBattleClassLevel[],
   sourceFacts?: BattleUnitSupportProfileSourceFacts,
 ): SupportedUnitFeatureProfile | null {
@@ -6051,7 +5865,7 @@ export function parseSupportedUnitFeatureProfile(
 }
 
 function d20TestNaturalOneRerollUnitFeatureProfile(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): Extract<
   SupportedUnitFeatureProfile,
   { readonly kind: "d20TestNaturalOneReroll" }
@@ -6067,7 +5881,7 @@ function d20TestNaturalOneRerollUnitFeatureProfile(
 }
 
 function bonusActionDelegatedStandardActionsProfileForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): SupportedUnitFeatureProfile | null {
   const support = battleBonusActionDelegatedStandardActionsSupportForUnit(unit);
   return support === null || support === "unsupported"
@@ -6080,7 +5894,7 @@ function bonusActionDelegatedStandardActionsProfileForUnit(
 }
 
 function remarkableAthleteProfileForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): Extract<
   SupportedUnitFeatureProfile,
   { readonly kind: "remarkableAthlete" }
@@ -6127,7 +5941,7 @@ function remarkableAthleteProfileForUnit(
 }
 
 function openHandTechniqueProfileForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): Extract<
   SupportedUnitFeatureProfile,
   { readonly kind: "openHandTechnique" }
@@ -6217,7 +6031,7 @@ function openHandTechniqueProfileForUnit(
 }
 
 function stunningStrikeProfileForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): Extract<
   SupportedUnitFeatureProfile,
   { readonly kind: "stunningStrike" }
@@ -6433,7 +6247,7 @@ function cunningStrikeOptionsForMechanics(
 }
 
 function cunningStrikeProfileForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
   classLevels?: readonly CharacterBattleClassLevel[],
 ): Extract<
   SupportedUnitFeatureProfile,
@@ -6487,7 +6301,7 @@ function cunningStrikeProfileForUnit(
 }
 
 function cunningStrikeOptionGrantProfileForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): Extract<
   SupportedUnitFeatureProfile,
   { readonly kind: "cunningStrikeOptionGrant" }
@@ -6514,7 +6328,7 @@ function cunningStrikeOptionGrantProfileForUnit(
 }
 
 function paladinSacredWeaponProfileForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): Extract<
   SupportedUnitFeatureProfile,
   { readonly kind: "paladinSacredWeapon" }
@@ -6657,7 +6471,7 @@ function huntersPreyAdmittedMechanicsProfileForUnit(
 }
 
 function rogueSteadyAimProfileForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): Extract<
   SupportedUnitFeatureProfile,
   { readonly kind: "rogueSteadyAim" }
@@ -6696,7 +6510,7 @@ function rogueSteadyAimProfileForUnit(
 }
 
 function potentCantripProfileForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): Extract<
   SupportedUnitFeatureProfile,
   { readonly kind: "potentCantrip" }
@@ -6734,7 +6548,7 @@ function potentCantripProfileForUnit(
 }
 
 function grapplerProfileForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): Extract<SupportedUnitFeatureProfile, { readonly kind: "grappler" }> | null {
   if (unit.kind !== "feat" || unit.mechanics.family !== "grappler") {
     return null;
@@ -6775,7 +6589,7 @@ function grapplerProfileForUnit(
 }
 
 export function battleGrapplerSupportForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): BattleGrapplerSupportProfile | "unsupported" | null {
   const profile = grapplerProfileForUnit(unit);
   if (profile !== null) {
@@ -6787,7 +6601,7 @@ export function battleGrapplerSupportForUnit(
 }
 
 export function battleBrutalStrikeSupportForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): BattleBrutalStrikeSupportProfile | "unsupported" | null {
   if (
     unit.kind !== "class_feature" ||
@@ -6864,7 +6678,7 @@ export function battleBrutalStrikeSupportForUnit(
 }
 
 export function battleBardicInspirationGrantSupportForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): typeof BARDIC_INSPIRATION_GRANT_SUPPORT_PROFILE | "unsupported" | null {
   const profile = parseBardicInspirationGrantUnitFeatureProfile(unit, [
     { className: "bard", level: classLevel(1) },
@@ -6885,7 +6699,7 @@ export function battleBardicInspirationGrantSupportForUnit(
 }
 
 export function battleDruidWildShapeKnownFormSupportForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): BattleDruidWildShapeKnownFormSupport {
   if (
     unit.kind !== "class_feature" ||
@@ -6909,7 +6723,7 @@ export function battleDruidWildShapeKnownFormSupportForUnit(
 }
 
 export function battleDruidWildCompanionSpellCastSupportForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ):
   | typeof DRUID_WILD_COMPANION_SPELL_CAST_SUPPORT_PROFILE
   | "unsupported"
@@ -6937,7 +6751,7 @@ export function battleDruidWildCompanionSpellCastSupportForUnit(
 }
 
 function battleDruidWildShapeKnownFormSupportForUnitAtClassLevels(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
   classLevels: readonly CharacterBattleClassLevel[],
 ): BattleDruidWildShapeKnownFormSupport {
   if (
@@ -6970,7 +6784,7 @@ function battleDruidWildShapeKnownFormSupportForUnitAtClassLevels(
 }
 
 function battleTacticalMasterReplacementSupportForUnitAtClassLevels(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
   classLevels: readonly CharacterBattleClassLevel[],
 ): BattleTacticalMasterReplacementSupport {
   if (unit.kind !== "class_feature") {
@@ -6988,7 +6802,7 @@ function battleTacticalMasterReplacementSupportForUnitAtClassLevels(
 }
 
 export function battleTacticalMasterReplacementSupportForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): BattleTacticalMasterReplacementSupport {
   if (
     unit.kind !== "class_feature" ||
@@ -7026,7 +6840,7 @@ function parseBattleUnitSupportClassLevels(
 }
 
 function parseDruidWildShapeKnownFormUnitFeatureProfile(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
   classLevels: readonly CharacterBattleClassLevel[],
 ): SupportedDruidWildShapeKnownFormProfile | null {
   if (!isDruidWildShapeFeatureRecord(unit)) {
@@ -7105,7 +6919,7 @@ function thresholdTierNumberAtClassLevel(
 }
 
 export function battleWeaponMasterySapSupportForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): BattleWeaponMasterySapSupport {
   if (unit.kind !== "mastery") {
     return null;
@@ -7130,7 +6944,7 @@ export function battleWeaponMasterySapSupportForUnit(
 }
 
 export function battleWeaponMasteryPushSupportForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): BattleWeaponMasteryPushSupport {
   if (unit.kind !== "mastery") {
     return null;
@@ -7153,7 +6967,7 @@ export function battleWeaponMasteryPushSupportForUnit(
 }
 
 export function battleWeaponMasteryToppleSupportForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): BattleWeaponMasteryToppleSupport {
   if (unit.kind !== "mastery") {
     return null;
@@ -7179,7 +6993,7 @@ export function battleWeaponMasteryToppleSupportForUnit(
 }
 
 export function battleWeaponMasterySlowSupportForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): BattleWeaponMasterySlowSupport {
   if (unit.kind !== "mastery") {
     return null;
@@ -7202,7 +7016,7 @@ export function battleWeaponMasterySlowSupportForUnit(
 }
 
 export function battleWeaponMasteryCleaveSupportForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): BattleWeaponMasteryCleaveSupport {
   if (unit.kind !== "mastery") {
     return null;
@@ -7231,7 +7045,7 @@ export function battleWeaponMasteryCleaveSupportForUnit(
 }
 
 function parseBardicInspirationGrantUnitFeatureProfile(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
   classLevels: readonly CharacterBattleClassLevel[],
 ): Extract<
   SupportedUnitFeatureProfile,
@@ -7374,20 +7188,8 @@ function bardicInspirationSrdDieSizeAtClassLevel(
   );
 }
 
-export function martialArtsSrdDieSizeAtClassLevel(
-  classLevel: ClassLevel,
-): MartialArtsDieSize {
-  return (
-    MARTIAL_ARTS_DIE_TIERS.filter(
-      (candidate) => classLevel >= candidate.atLevel,
-    )
-      .sort((left, right) => left.atLevel - right.atLevel)
-      .at(-1)?.dieSize ?? MARTIAL_ARTS_BASE_DIE_SIZE
-  );
-}
-
 function parseExtraActionGrantUnitFeatureProfile(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): Extract<
   SupportedUnitFeatureProfile,
   { readonly kind: "extraActionGrant" }
@@ -7426,7 +7228,7 @@ function parseExtraActionGrantUnitFeatureProfile(
 }
 
 function parseRetaliationReactionAttackUnitFeatureProfile(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): Extract<
   SupportedUnitFeatureProfile,
   { readonly kind: "retaliationReactionAttack" }
@@ -7442,7 +7244,7 @@ function parseRetaliationReactionAttackUnitFeatureProfile(
 }
 
 export function battleRetaliationReactionAttackSupportForUnit(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): BattleRetaliationReactionAttackSupport {
   if (unit.kind !== "class_feature") {
     return null;
@@ -7506,7 +7308,7 @@ export function battleRetaliationReactionAttackSupportForUnit(
 }
 
 function parseSelfBonusActionHealingUnitFeatureProfile(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
   classLevels: readonly CharacterBattleClassLevel[],
 ): Extract<
   SupportedUnitFeatureProfile,
@@ -7564,7 +7366,7 @@ function parseSelfBonusActionHealingUnitFeatureProfile(
 }
 
 function parseOngoingFeatureUnitFeatureProfile(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
   classLevels: readonly CharacterBattleClassLevel[],
 ): Extract<
   SupportedUnitFeatureProfile,
@@ -7652,7 +7454,7 @@ function parseOngoingFeatureUnitFeatureProfile(
 }
 
 function parseAttackDamageRiderUnitFeatureProfile(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
   classLevels: readonly CharacterBattleClassLevel[],
 ): Extract<
   SupportedUnitFeatureProfile,
@@ -7690,7 +7492,7 @@ function parseAttackDamageRiderUnitFeatureProfile(
 }
 
 function parseSaveDamageReplacementUnitFeatureProfile(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
   classLevels: readonly CharacterBattleClassLevel[],
 ): Extract<
   SupportedUnitFeatureProfile,
@@ -7716,7 +7518,7 @@ function parseSaveDamageReplacementUnitFeatureProfile(
 }
 
 function parseReactionRollOrDamageReductionUnitFeatureProfile(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
   classLevels: readonly CharacterBattleClassLevel[],
 ): Extract<
   SupportedUnitFeatureProfile,
@@ -7745,7 +7547,7 @@ function parseReactionRollOrDamageReductionUnitFeatureProfile(
 }
 
 function parsePassiveArmorClassBonusUnitFeatureProfile(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): Extract<
   SupportedUnitFeatureProfile,
   { readonly kind: "passiveArmorClassBonus" }
@@ -7761,7 +7563,7 @@ function parsePassiveArmorClassBonusUnitFeatureProfile(
 }
 
 function parsePassiveRangedAttackRollBonusUnitFeatureProfile(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): Extract<
   SupportedUnitFeatureProfile,
   { readonly kind: "passiveRangedAttackRollBonus" }
@@ -7777,7 +7579,7 @@ function parsePassiveRangedAttackRollBonusUnitFeatureProfile(
 }
 
 function parseInitiativeProficiencyAndSwapUnitFeatureProfile(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): Extract<
   SupportedUnitFeatureProfile,
   { readonly kind: "initiativeProficiencyAndSwap" }
@@ -7793,7 +7595,7 @@ function parseInitiativeProficiencyAndSwapUnitFeatureProfile(
 }
 
 function parsePassiveSpeedBonusUnitFeatureProfile(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): Extract<
   SupportedUnitFeatureProfile,
   { readonly kind: "passiveSpeedBonus" }
@@ -7809,7 +7611,7 @@ function parsePassiveSpeedBonusUnitFeatureProfile(
 }
 
 function parsePassiveSavingThrowRollModeUnitFeatureProfile(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): Extract<
   SupportedUnitFeatureProfile,
   { readonly kind: "passiveSavingThrowRollMode" }
@@ -7825,7 +7627,7 @@ function parsePassiveSavingThrowRollModeUnitFeatureProfile(
 }
 
 function parsePassiveAbilityCheckRollModeUnitFeatureProfile(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): Extract<
   SupportedUnitFeatureProfile,
   { readonly kind: "passiveAbilityCheckRollMode" }
@@ -7841,7 +7643,7 @@ function parsePassiveAbilityCheckRollModeUnitFeatureProfile(
 }
 
 function parsePassiveSpeedKindGrantsUnitFeatureProfile(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): Extract<
   SupportedUnitFeatureProfile,
   { readonly kind: "passiveSpeedKindGrants" }
@@ -7857,7 +7659,7 @@ function parsePassiveSpeedKindGrantsUnitFeatureProfile(
 }
 
 function parseAcrobaticMovementUnitFeatureProfile(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): Extract<
   SupportedUnitFeatureProfile,
   { readonly kind: "acrobaticMovement" }
@@ -7873,7 +7675,7 @@ function parseAcrobaticMovementUnitFeatureProfile(
 }
 
 function parseCreatureSpaceMovementPermissionUnitFeatureProfile(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): Extract<
   SupportedUnitFeatureProfile,
   { readonly kind: "creatureSpaceMovementPermission" }
@@ -7889,7 +7691,7 @@ function parseCreatureSpaceMovementPermissionUnitFeatureProfile(
 }
 
 function parseHideActionObscurementPermissionUnitFeatureProfile(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): Extract<
   SupportedUnitFeatureProfile,
   { readonly kind: "hideActionObscurementPermission" }
@@ -7905,7 +7707,7 @@ function parseHideActionObscurementPermissionUnitFeatureProfile(
 }
 
 function parseAttackRollMissToHitReplacementUnitFeatureProfile(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): Extract<
   SupportedUnitFeatureProfile,
   { readonly kind: "attackRollMissToHitReplacement" }
@@ -7921,7 +7723,7 @@ function parseAttackRollMissToHitReplacementUnitFeatureProfile(
 }
 
 function parseWeaponDamageDiceRollChoiceUnitFeatureProfile(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): Extract<
   SupportedUnitFeatureProfile,
   { readonly kind: "weaponDamageDiceRollChoice" }
@@ -7937,7 +7739,7 @@ function parseWeaponDamageDiceRollChoiceUnitFeatureProfile(
 }
 
 function parseAttackDamageDieFloorUnitFeatureProfile(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): Extract<
   SupportedUnitFeatureProfile,
   { readonly kind: "attackDamageDieFloor" }
@@ -7953,7 +7755,7 @@ function parseAttackDamageDieFloorUnitFeatureProfile(
 }
 
 function parseLightExtraAttackDamageAbilityModifierUnitFeatureProfile(
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): Extract<
   SupportedUnitFeatureProfile,
   { readonly kind: "lightExtraAttackDamageAbilityModifier" }
@@ -8185,7 +7987,7 @@ function durationToRounds(duration: {
 function parseOngoingFeatureEffects(
   effects: readonly EffectAtom[],
   classLevels: readonly CharacterBattleClassLevel[],
-  unit: UnitRecord,
+  unit: AuthoredUnitSource,
 ): Pick<
   Extract<SupportedUnitFeatureProfile, { readonly kind: "ongoingFeature" }>,
   "rollModifiers" | "spellModifiers" | "damageModifiers" | "resistances"

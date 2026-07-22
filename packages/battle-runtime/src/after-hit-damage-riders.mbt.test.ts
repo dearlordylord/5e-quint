@@ -58,12 +58,12 @@ import {
 } from "./unit-profile-admission-catalog-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import { savingThrowOutcomeFill } from "./unit-profile-admission-spell-fill-support.ts";
-import { supportedSpellInvocationRef } from "./battle-reducer/spells-invocation-ref.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 import {
   resolveBattleSubject,
   paladinsSmiteResource,
   characterSpellInvocationForProcedureRefForTest,
+  characterSpellInvocationRefForProcedureRefForTest,
   startBattleSessionRight,
   wizardSpellcasting,
 } from "./battle-runtime-test-support.ts";
@@ -79,9 +79,9 @@ import {
   type BattleResolutionResult,
   type BattleRuntimeSession,
   type BattleProcedureExecutionRef,
+  type BattleSelectedSpellInvocation,
   type BattleState,
   type BattleSubject,
-  type SupportedSpellInvocation,
 } from "./index.ts";
 
 const AFTER_HIT_SCENARIOS = [
@@ -148,7 +148,7 @@ type InterruptChoiceFill = Extract<
 
 type PendingAfterHitChoice = {
   readonly procedureRef: InterruptChoiceFill["procedureRef"];
-  readonly invocation: SupportedSpellInvocation;
+  readonly invocation: BattleSelectedSpellInvocation;
   readonly initialHoles: readonly BattleHole[];
 };
 
@@ -1970,12 +1970,11 @@ function requireAfterHitChoice(
   const choice = snapshotBattle(session.state).pendingInterrupt?.choices.find(
     (candidate) => {
       if (candidate.kind !== "castAttackHitBonusActionSpell") return false;
-      const invocation = characterSpellInvocationForProcedureRefForTest(
+      const invocationRef = characterSpellInvocationRefForProcedureRefForTest(
         session,
         candidate.reactorId,
         candidate.subject.procedureRef,
       );
-      const invocationRef = supportedSpellInvocationRef(invocation);
       return (
         invocationRef.spellId === spellId &&
         (options.invocationTag === undefined ||

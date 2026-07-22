@@ -1,3 +1,5 @@
+import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
+import { unitId } from "@dnd/shared/game-facts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.reaction-shield
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.REACTION_CASTING_TIME
 //
@@ -15,20 +17,19 @@
 //     the Reaction.
 //   - UBIQUITOUS_LANGUAGE.md: Reaction, Armor Class (AC), Casting Time.
 
-import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
 import {
-  snapshotBattle,
   type AvailableBattleAct,
   type BattleResolutionResult,
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
+import { snapshotBattle } from "../dispatcher.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { stateAfterSpellCastDeclared } from "../spell-cast-declaration.ts";
 import { expendSpellSlot } from "../spell-effects.ts";
 import { applyShieldReactionSpellActiveEffect } from "../spells-active-effects.ts";
-import { sameStringSet } from "../spells-profile-shared.ts";
+import { sameStringSet } from "../spells-execution-facts.ts";
 import {
   reactionTriggerIncludesHitByAttackRoll,
   reactionTriggerNamedSpellIds,
@@ -44,8 +45,7 @@ import type {
 
 // Required SRD cross-record reference: Shield explicitly also triggers when
 // targeted by the Magic Missile spell.
-const SHIELD_MAGIC_MISSILE_SPELL_ID =
-  "magic_missile" satisfies SpellRecord["id"];
+const SHIELD_MAGIC_MISSILE_SPELL_ID = unitId("magic_missile");
 import { Schema } from "effect";
 import {
   SpellRuleExecutionFactsSchema,
@@ -64,7 +64,7 @@ type ShieldReactionResolveInput =
   SpellProcedureProfileResolveInput<ShieldReactionInvocation>;
 
 function admitShieldReaction(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly ShieldReactionInvocation[] {
   const projection = shieldReactionSpellProjection(spell);
@@ -88,7 +88,7 @@ function admitShieldReaction(
 }
 
 function shieldReactionSpellProjection(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
 ): Pick<
   ShieldReactionInvocation,
   "armorClassBonus" | "negatesRepeatedDamageAllocation"

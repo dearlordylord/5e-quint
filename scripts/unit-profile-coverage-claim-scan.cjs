@@ -171,12 +171,12 @@ function extractTableSelectedUnitIdentityReplays(text) {
   const constBindings = extractStringConstBindings([{ text }]);
   return [
     ...tableMatch[1].matchAll(
-      /\{\s*taskId:\s*"([^"]+)"[\s\S]*?unitId:\s*(?:"([^"]+)"|([A-Za-z_]\w*))[\s\S]*?actions:\s*\[([\s\S]*?)\][\s\S]*?sequences:\s*\[/g,
+      /\{\s*taskId:\s*"([^"]+)"[\s\S]*?unitId:\s*(?:"([^"]+)"|[A-Za-z_]\w*\(\s*"([^"]+)"\s*\)|([A-Za-z_]\w*))[\s\S]*?actions:\s*\[([\s\S]*?)\][\s\S]*?sequences:\s*\[/g,
     ),
   ].map((match) => ({
     taskId: match[1],
-    unitId: match[2] ?? constBindings.get(match[3]) ?? match[3],
-    actionNames: [...match[4].matchAll(/"([A-Za-z_]\w*)"/g)].map(
+    unitId: match[2] ?? match[3] ?? constBindings.get(match[4]) ?? match[4],
+    actionNames: [...match[5].matchAll(/"([A-Za-z_]\w*)"/g)].map(
       (actionMatch) => actionMatch[1],
     ),
   }));
@@ -405,9 +405,9 @@ function extractStringConstBindings(sources) {
   const bindings = new Map();
   for (const source of sources) {
     for (const match of source.text.matchAll(
-      /\b(?:export\s+)?const\s+([A-Za-z_]\w*)\s*=\s*"([^"]+)"/g,
+      /\b(?:export\s+)?const\s+([A-Za-z_]\w*)\s*=\s*(?:"([^"]+)"|[A-Za-z_]\w*\(\s*"([^"]+)"\s*\))/g,
     )) {
-      bindings.set(match[1], match[2]);
+      bindings.set(match[1], match[2] ?? match[3]);
     }
   }
   return bindings;

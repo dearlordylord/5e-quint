@@ -342,7 +342,7 @@ describe("battle runtime: Favored Enemy", () => {
         ...favoredEnemy.mechanics,
         grants: favoredEnemy.mechanics.grants.map((grant) =>
           grant.kind === "grant_spell_free_casts"
-            ? { ...grant, spellId: "magic_missile" }
+            ? { ...grant, spellId: parseUnitId("magic_missile") }
             : grant,
         ),
       },
@@ -763,7 +763,7 @@ describe("battle runtime: Paladin's Smite", () => {
         ...paladinsSmite.mechanics,
         grants: paladinsSmite.mechanics.grants.map((grant) =>
           grant.kind === "grant_spell_free_casts"
-            ? { ...grant, spellId: "magic_missile" }
+            ? { ...grant, spellId: parseUnitId("magic_missile") }
             : grant,
         ),
       },
@@ -841,3 +841,4 @@ function characterResourcePoolRefForUnit(
   }
   return resource.resourcePoolRef;
 }
+import { unitId as parseUnitId } from "@dnd/shared/game-facts";

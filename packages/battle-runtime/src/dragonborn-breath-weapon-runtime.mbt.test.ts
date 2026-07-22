@@ -1,3 +1,4 @@
+import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { requireCharacterUnitProcedureRefForTest } from "./battle-runtime-test-support.ts";
 // RAW-COVERAGE: runtime-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
@@ -796,7 +797,7 @@ function rolledDiceFill(
 
 function breathWeaponUnitRef() {
   const unitRef = battleUnitRefWithSupportProfiles({
-    unitRef: { unitId: speciesDragonbornBreathWeaponUnitId },
+    unitRef: { unitId: parseSharedUnitId(speciesDragonbornBreathWeaponUnitId) },
     unit: breathWeaponUnit,
     sourceFacts: { draconicAncestryDamageType: "fire" },
   });

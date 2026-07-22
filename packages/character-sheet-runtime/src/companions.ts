@@ -1,5 +1,9 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-use-count-resource
 import {
+  statBlockId as authoredStatBlockId,
+  unitId as authoredUnitId,
+} from "@dnd/shared/game-facts";
+import {
   characterBuildFeatureUnitIds,
   eldritchInvocationId,
   type CharacterBuild,
@@ -313,7 +317,7 @@ function parseStoredRetainedCompanionManifestation(
   const proof = {
     selectedForm: selectedForm.right,
     creatureTypeOverride: value.creatureTypeOverride,
-    resolvedStatBlockId: value.resolvedStatBlockId,
+    resolvedStatBlockId: authoredStatBlockId(value.resolvedStatBlockId),
   };
   if (value.tag === "disappearedAtZeroHitPoints") {
     return Either.right({ tag: "disappearedAtZeroHitPoints", ...proof });
@@ -339,7 +343,7 @@ function parseStoredRetainedCompanionFormSelection(
     return typeof value.statBlockId === "string" && value.statBlockId.length > 0
       ? Either.right({
           tag: "challengeRatingZeroBeast",
-          statBlockId: value.statBlockId,
+          statBlockId: authoredStatBlockId(value.statBlockId),
         })
       : characterSheetIssue(
           "Retained companion Beast form requires Stat Block id.",
@@ -466,7 +470,7 @@ function retainedCompanionCreationSource(
   if (spendIssue !== null) return characterSheetIssue(spendIssue);
   const spell = requiredSpellRecord(
     input.unitLibrary,
-    feature.right.mechanics.spellId,
+    authoredUnitId(feature.right.mechanics.spellId),
   );
   if (Either.isLeft(spell)) return Either.left(spell.left);
   const eligibility = findFamiliarFormEligibilityForSpell(spell.right);

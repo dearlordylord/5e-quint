@@ -1,21 +1,11 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.hunters-prey
 import type { ArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
-import type {
-  Condition,
-  Hp,
-  MovementFeet,
-  ReadonlyNonEmptyArray,
-} from "@dnd/shared/types";
+import type { Condition, Hp, ReadonlyNonEmptyArray } from "@dnd/shared/types";
+import { Hp as toHp } from "@dnd/shared/types";
 import type { Language } from "@dnd/shared/game-facts";
 import type {
-  Ability,
-  CreatureSpeed,
-  SixAbilityScores,
   Size,
-  Skill,
   StatBlockRecord,
-  StatBlockValue,
-  UnitRecord,
   WeaponProficiency,
 } from "@dnd/surface/surface/types";
 import * as Either from "effect/Either";
@@ -36,6 +26,16 @@ import type {
   BattleUnitSupportSource,
   BattleUnitSupportProfile,
 } from "./unit-feature-support.ts";
+import type { BattleStatBlockExecutionSource } from "./stat-block-execution.ts";
+import type {
+  BattleDruidWildShapeFormSpeeds,
+  BattleDruidWildShapeKnownForm,
+  BattleDruidWildShapeKnownFormProjection,
+  LiteralStatBlockSpeed,
+  LiteralWalkStatBlockSpeed,
+} from "./druid-wild-shape-known-form-execution.ts";
+export type { BattleDruidWildShapeKnownForm } from "./druid-wild-shape-known-form-execution.ts";
+import { literalStatBlockNumber } from "./battle-reducer/creature-state-execution.ts";
 import type { CharacterZeroHpLifecycleInit } from "./zero-hp-lifecycle.ts";
 import { statBlockActionSurfaceIsSupported } from "./statblock-action-support.ts";
 import {
@@ -48,86 +48,20 @@ export type BattleUnitRef = {
   readonly supportProfiles: readonly BattleUnitSupportProfile[];
 };
 
-export type CharacterBattleInvocationFeature = {
-  readonly tag: "eldritchMind";
-};
-
-export type CharacterBattleLoadoutRef = {
-  readonly armor?: {
-    readonly itemId: string;
-    readonly unitId: UnitRecord["id"];
-  };
-  readonly shield?: {
-    readonly itemId: string;
-    readonly unitId: UnitRecord["id"];
-  };
-  readonly weapon?: {
-    readonly itemId: string;
-    readonly unitId: UnitRecord["id"];
-    readonly grip: "one_handed" | "two_handed";
-  };
-  readonly offHandWeapon?: {
-    readonly itemId: string;
-    readonly unitId: UnitRecord["id"];
-  };
-};
-
-export type CharacterBattleWeaponMasterySelection = {
-  readonly weaponUnitId: UnitRecord["id"];
-};
-
-export type CharacterBattleD20Statistics = {
-  readonly abilityScores: SixAbilityScores;
-  readonly savingThrowProficiencies: readonly Ability[];
-  readonly skillProficiencies: readonly Skill[];
-  readonly skillExpertise: readonly Skill[];
-};
-
-export type BattleWalkSpeed = {
-  readonly walkFeet: MovementFeet;
-};
-
-type LiteralStatBlockValue = Extract<
-  StatBlockValue,
-  { readonly kind: "literal" }
->;
-
-type LiteralCreatureSpeedFeet = Extract<
-  CreatureSpeed["feet"],
-  { readonly kind: "literal" }
->;
-
-type LiteralStatBlockSpeed = {
-  readonly kind: CreatureSpeed["kind"];
-  readonly feet: LiteralCreatureSpeedFeet;
-};
-
-type LiteralWalkStatBlockSpeed = LiteralStatBlockSpeed & {
-  readonly kind: "walk";
-};
-
-type BattleDruidWildShapeFormSpeeds = readonly [
-  LiteralWalkStatBlockSpeed,
-  ...LiteralStatBlockSpeed[],
-];
-
-type BattleDruidWildShapeFormProjectionStatBlock = StatBlockRecord & {
-  readonly statBlock: Omit<
-    StatBlockRecord["statBlock"],
-    "ac" | "size" | "speeds"
-  > & {
-    readonly ac: LiteralStatBlockValue;
-    readonly size: Size;
-    readonly speeds: BattleDruidWildShapeFormSpeeds;
-  };
-};
-
-declare const battleDruidWildShapeKnownFormBrand: unique symbol;
-
-export type BattleDruidWildShapeKnownForm =
-  BattleDruidWildShapeFormProjectionStatBlock & {
-    readonly [battleDruidWildShapeKnownFormBrand]: true;
-  };
+import type {
+  BattleWalkSpeed,
+  CharacterBattleD20Statistics,
+  CharacterBattleInvocationFeature,
+  CharacterBattleLoadoutRef,
+  CharacterBattleWeaponMasterySelection,
+} from "./character-creature-execution-facts.ts";
+export type {
+  BattleWalkSpeed,
+  CharacterBattleD20Statistics,
+  CharacterBattleInvocationFeature,
+  CharacterBattleLoadoutRef,
+  CharacterBattleWeaponMasterySelection,
+} from "./character-creature-execution-facts.ts";
 
 export type BattleDruidWildShapeKnownFormIssue = {
   readonly tag: "battleDruidWildShapeKnownFormIssue";
@@ -181,7 +115,7 @@ export function battleAvailableDruidWildShapeKnownForms(input: {
 }
 
 function battleDruidWildShapeKnownForm(
-  form: BattleDruidWildShapeFormProjectionStatBlock,
+  form: BattleDruidWildShapeKnownFormProjection,
 ): BattleDruidWildShapeKnownForm {
   // Brands are erased at runtime; the parser applies this brand only after
   // proving roster eligibility, projection facts, and supported actions.
@@ -191,7 +125,7 @@ function battleDruidWildShapeKnownForm(
 function battleDruidWildShapeFormProjectionStatBlock(
   form: StatBlockRecord,
 ): Either.Either<
-  BattleDruidWildShapeFormProjectionStatBlock,
+  BattleDruidWildShapeKnownFormProjection,
   BattleDruidWildShapeKnownFormIssue
 > {
   const armorClass = form.statBlock.ac;
@@ -211,7 +145,7 @@ function battleDruidWildShapeFormProjectionStatBlock(
   const speeds = battleDruidWildShapeFormProjectionSpeeds(form);
   if (Either.isLeft(speeds)) return Either.left(speeds.left);
   return Either.right({
-    ...form,
+    id: form.id,
     statBlock: {
       ...form.statBlock,
       ac: armorClass,
@@ -261,12 +195,11 @@ function battleDruidWildShapeFormProjectionSpeeds(
 // started by Knock Out completes, when it regains HP, or after successful
 // DC 10 Wisdom (Medicine) first aid. Battle runtime executes the HP-healing
 // ending path; rest completion and first aid are carried for session workflows.
-export type BattlePositiveHpUnconscious = {
-  readonly tag: "knockedOut";
-};
-export const KNOCKED_OUT_UNCONSCIOUS = {
-  tag: "knockedOut",
-} as const satisfies BattlePositiveHpUnconscious;
+import type { BattlePositiveHpUnconscious } from "./positive-hp-unconscious.ts";
+export {
+  KNOCKED_OUT_UNCONSCIOUS,
+  type BattlePositiveHpUnconscious,
+} from "./positive-hp-unconscious.ts";
 
 export type CharacterBattleCreatureInit = {
   readonly kind: "character";
@@ -300,7 +233,7 @@ export type CharacterBattleCreatureInit = {
 
 export type StatBlockBattleInitInput = {
   readonly combatantId: CombatantId;
-  readonly statBlock: StatBlockRecord;
+  readonly statBlock: BattleStatBlockExecutionSource;
   readonly initiative: InitiativeScore;
   // defaults to max
   readonly currentHp?: Hp;
@@ -309,7 +242,7 @@ export type StatBlockBattleInitInput = {
 
 export type StatBlockBattleCreatureInit = {
   readonly kind: "statBlock";
-  readonly statBlock: StatBlockRecord;
+  readonly statBlock: BattleStatBlockExecutionSource;
   readonly currentHp: Hp;
   readonly maxHp: Hp;
   readonly tempHp: Hp;
@@ -325,3 +258,21 @@ export type BattleCreatureInit = {
     | CharacterBattleCreatureInit
     | StatBlockBattleCreatureInit;
 };
+
+export function battleCreatureInitFromStatBlock(
+  input: StatBlockBattleInitInput,
+): BattleCreatureInit {
+  const maxHp = toHp(literalStatBlockNumber(input.statBlock.statBlock.hp));
+  return {
+    combatantId: input.combatantId,
+    displayName: input.statBlock.statBlock.displayName,
+    initiative: input.initiative,
+    creatureInit: {
+      kind: "statBlock",
+      statBlock: input.statBlock,
+      currentHp: input.currentHp ?? maxHp,
+      maxHp,
+      tempHp: input.tempHp ?? toHp(0),
+    },
+  };
+}

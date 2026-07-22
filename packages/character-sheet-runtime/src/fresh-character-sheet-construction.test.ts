@@ -1,3 +1,4 @@
+import { statBlockId as authoredStatBlockId } from "@dnd/shared/game-facts";
 import { Either, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
@@ -75,7 +76,9 @@ describe("fresh Character Sheet construction", () => {
       unitLibrary,
       spellSlotExpenditures: [],
       pactSlots: { expended: resourceCount(0) },
-      druidWildShapeKnownFormStatBlockIds: ["stat_block_rat"],
+      druidWildShapeKnownFormStatBlockIds: [
+        authoredStatBlockId("stat_block_rat"),
+      ],
     });
 
     expect(result).toEqual(
@@ -133,12 +136,12 @@ describe("fresh Character Sheet construction", () => {
       unitLibrary,
       druidCircleLand: { land: "temperate" },
       druidWildShapeKnownFormStatBlockIds: [
-        "stat_block_rat",
-        "stat_block_riding_horse",
-        "stat_block_spider",
-        "stat_block_wolf",
-        "stat_block_goblin_warrior",
-        "stat_block_missing",
+        authoredStatBlockId("stat_block_rat"),
+        authoredStatBlockId("stat_block_riding_horse"),
+        authoredStatBlockId("stat_block_spider"),
+        authoredStatBlockId("stat_block_wolf"),
+        authoredStatBlockId("stat_block_goblin_warrior"),
+        authoredStatBlockId("stat_block_missing"),
       ],
     });
 
@@ -146,11 +149,11 @@ describe("fresh Character Sheet construction", () => {
       Either.left([
         {
           code: "wildShapeKnownFormWrongCreatureType",
-          statBlockId: "stat_block_goblin_warrior",
+          statBlockId: authoredStatBlockId("stat_block_goblin_warrior"),
         },
         {
           code: "wildShapeKnownFormUnavailable",
-          statBlockId: "stat_block_missing",
+          statBlockId: authoredStatBlockId("stat_block_missing"),
         },
       ]),
     );

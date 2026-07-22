@@ -1,3 +1,4 @@
+import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.magic-action-area-save-damage-healing
@@ -533,7 +534,7 @@ function wildShapeUsesRemaining(state: BattleState): number {
 
 function requireLandsAidUnitRef(druidLevel = 3) {
   const unitRef = battleUnitRefWithSupportProfiles({
-    unitRef: { unitId: druidLandsAidUnitId },
+    unitRef: { unitId: parseSharedUnitId(druidLandsAidUnitId) },
     unit: landsAidUnit,
     classLevels: [{ className: "druid", level: classLevel(druidLevel) }],
   });

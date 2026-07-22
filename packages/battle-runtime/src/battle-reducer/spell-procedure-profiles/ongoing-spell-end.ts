@@ -1,3 +1,4 @@
+import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ongoing-spell-ending
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING
 //
@@ -24,13 +25,8 @@ import {
   holeInstanceKey,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { difficultyClass, movementFeet } from "@dnd/shared/types";
+import { isFixedDistancePointRange } from "@dnd/surface/surface/types";
 import {
-  isFixedDistancePointRange,
-  type SpellRecord,
-} from "@dnd/surface/surface/types";
-import {
-  maybeOpenInterruptWindow,
-  snapshotBattle,
   type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
@@ -46,6 +42,7 @@ import {
   type BattleTrackedOngoingSpellLightEmitter,
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
+import { maybeOpenInterruptWindow, snapshotBattle } from "../dispatcher.ts";
 import {
   type BattleProcedureExecutionRef,
   type CombatantId,
@@ -62,7 +59,7 @@ import {
 } from "../antimagic-field-suppression.ts";
 import { combatantsAfterConcentrationSpellEffectsEndedIfNoEffects } from "../spell-condition-effects-helpers.ts";
 import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
-import { sameStringSet } from "../spells-profile-shared.ts";
+import { sameStringSet } from "../spells-execution-facts.ts";
 import type { BattleSpellEffectLevel } from "../spells-effective-level.ts";
 import type { SpellFillSet } from "../spells-resolve-fill-set.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
@@ -87,7 +84,7 @@ type OngoingSpellEndInvocation = Extract<
   { readonly procedure: "ongoingSpellEnd" }
 >;
 type ActivationPhase = Extract<
-  SpellRecord["mechanics"],
+  BattleSpellAdmissionSource["mechanics"],
   { readonly family: "activation" }
 >["phases"][number];
 
@@ -100,7 +97,7 @@ const DISPEL_MAGIC_TARGET_KINDS = [
 ] as const;
 
 function admitOngoingSpellEnd(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly OngoingSpellEndInvocation[] {
   const rangeFeet = ongoingSpellEndSpellRangeFeet(spell);
@@ -124,7 +121,9 @@ function admitOngoingSpellEnd(
   );
 }
 
-function ongoingSpellEndSpellRangeFeet(spell: SpellRecord): number | null {
+function ongoingSpellEndSpellRangeFeet(
+  spell: BattleSpellAdmissionSource,
+): number | null {
   const range =
     spell.mechanics.family === "activation" ? spell.mechanics.range : null;
   const rangeFeet =

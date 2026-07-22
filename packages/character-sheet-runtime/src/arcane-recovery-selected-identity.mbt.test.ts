@@ -1,5 +1,6 @@
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay short-rest-spell-slot-recovery wizard_arcane_recovery
 // UNIT-IDENTITY-REPLAY: short-rest-spell-slot-recovery wizard_arcane_recovery doRecoverSecondLevelSpellSlot doResetArcaneRecoveryOnLongRest doRejectPactSlotArcaneRecovery
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
@@ -395,15 +396,15 @@ function arcaneRecoverySheet(input: {
 function wizard4BuildWithPactSlots(): CharacterBuild {
   return {
     progression: {
-      startingClass: classUnitId("class_wizard"),
+      startingClass: classUnitId(authoredUnitId("class_wizard")),
       advancements: [
         wizardAdvancement(),
         wizardAdvancement(),
         wizardAdvancement(),
       ],
     },
-    background: "background_soldier",
-    species: "species_orc",
+    background: authoredUnitId("background_soldier"),
+    species: authoredUnitId("species_orc"),
     originLanguages: ["Common", "Dwarvish", "Goblin"],
     classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
@@ -422,7 +423,7 @@ function wizard4BuildWithPactSlots(): CharacterBuild {
     spellcasting: {
       sources: [
         {
-          sourceUnitId: "class_wizard",
+          sourceUnitId: authoredUnitId("class_wizard"),
           spellcastingAbility: "int",
           cantrips: [],
           spellbook: [],
@@ -451,7 +452,7 @@ function wizard4BuildWithPactSlots(): CharacterBuild {
 
 function wizardAdvancement(): CharacterBuild["progression"]["advancements"][number] {
   return {
-    classUnitId: classUnitId("class_wizard"),
+    classUnitId: classUnitId(authoredUnitId("class_wizard")),
     hitPointRule: { tag: "fixedHigherLevelGain" },
   };
 }
@@ -460,7 +461,9 @@ function wizardArcaneRecoveryFeatureUnitId(
   sheet: CharacterSheet,
 ): typeof WIZARD_ARCANE_RECOVERY_UNIT_ID {
   const featureUnitIds = characterBuildFeatureUnitIds(sheet.build, unitLibrary);
-  if (!featureUnitIds.includes(WIZARD_ARCANE_RECOVERY_UNIT_ID)) {
+  if (
+    !featureUnitIds.includes(authoredUnitId(WIZARD_ARCANE_RECOVERY_UNIT_ID))
+  ) {
     throw new Error("Expected Wizard Arcane Recovery feature on the build.");
   }
   return WIZARD_ARCANE_RECOVERY_UNIT_ID;

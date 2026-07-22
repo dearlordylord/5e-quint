@@ -1,3 +1,4 @@
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import {
   ALIGNMENT_MORALITIES,
   ALIGNMENT_ORDERS,
@@ -188,7 +189,9 @@ function parseDraftSelections(
     ...(progression.right === undefined
       ? {}
       : { progression: progression.right }),
-    ...(background.right === undefined ? {} : { background: background.right }),
+    ...(background.right === undefined
+      ? {}
+      : { background: authoredUnitId(background.right) }),
     ...(abilityScoreGeneration.right === undefined
       ? {}
       : { abilityScoreGeneration: abilityScoreGeneration.right }),
@@ -197,7 +200,9 @@ function parseDraftSelections(
       : {
           backgroundAbilityScoreIncrease: backgroundAbilityScoreIncrease.right,
         }),
-    ...(species.right === undefined ? {} : { species: species.right }),
+    ...(species.right === undefined
+      ? {}
+      : { species: authoredUnitId(species.right) }),
     ...(speciesSize.right === undefined
       ? {}
       : { speciesSize: speciesSize.right }),
@@ -262,7 +267,7 @@ function parseCharacterProgression(
     return failIssue(parsedAdvancements.left);
 
   return Either.right({
-    startingClass: classUnitId(startingClass.right),
+    startingClass: classUnitId(authoredUnitId(startingClass.right)),
     advancements: parsedAdvancements.right,
   });
 }
@@ -284,7 +289,7 @@ function parseCharacterProgressionEntry(
   if (Either.isLeft(hitPointRule)) return failIssue(hitPointRule.left);
 
   return Either.right({
-    classUnitId: classUnitId(classId.right),
+    classUnitId: classUnitId(authoredUnitId(classId.right)),
     hitPointRule: hitPointRule.right,
   });
 }
@@ -413,7 +418,9 @@ function parseEquipmentSelection(
   );
   return Either.isLeft(parsedUnitIds)
     ? failIssue(parsedUnitIds.left)
-    : Either.right({ selectedUnitIds: parsedUnitIds.right });
+    : Either.right({
+        selectedUnitIds: parsedUnitIds.right.map(authoredUnitId),
+      });
 }
 
 function parseCharacterChoiceSelection(
@@ -477,7 +484,7 @@ function parseUnitChoiceSelectionSource(
   }
   const unitId = stringAt(source.right, "unitId", `${path}.unitId`);
   if (Either.isLeft(unitId)) return failIssue(unitId.left);
-  const parsedUnitId = unitChoiceSourceUnitId(unitId.right);
+  const parsedUnitId = unitChoiceSourceUnitId(authoredUnitId(unitId.right));
   if (Either.isLeft(parsedUnitId)) {
     return invalid(`${path}.unitId`, "Expected a non-empty Unit id.");
   }
@@ -512,7 +519,9 @@ function parseLoadoutSelectionSource(
     `${path}.equipmentUnitId`,
   );
   if (Either.isLeft(equipmentUnitId)) return failIssue(equipmentUnitId.left);
-  const parsedEquipmentUnitId = loadoutEquipmentUnitId(equipmentUnitId.right);
+  const parsedEquipmentUnitId = loadoutEquipmentUnitId(
+    authoredUnitId(equipmentUnitId.right),
+  );
   if (Either.isLeft(parsedEquipmentUnitId)) {
     return invalid(
       `${path}.equipmentUnitId`,
@@ -586,7 +595,7 @@ function parseUnitRef(value: unknown, path: string): ParseResult<UnitRef> {
   const unitId = stringAt(unitRef.right, "unitId", `${path}.unitId`);
   return Either.isLeft(unitId)
     ? failIssue(unitId.left)
-    : Either.right({ unitId: unitId.right });
+    : Either.right({ unitId: authoredUnitId(unitId.right) });
 }
 
 function parseAbility(value: unknown, path: string): ParseResult<Ability> {

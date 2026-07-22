@@ -1,5 +1,6 @@
 // KERNEL-COVERAGE: runtime-owner CREATION.CHOICE_DISCOVERY_CARDINALITY
 // UNIT-PROFILE-COVERAGE: runtime-owner character-creation.grappler-general-feat character-creation.origin-feat-proficiency-choice character-creation.species-trait-proficiency-choice character-creation.species-origin-feat-choice character-creation.species-origin-feat-proficiency-choice character-creation.species-lineage-choice character-sheet.cleric-divine-intervention-session-invocation character-sheet.ranger-tireless
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { Either } from "effect";
 import { abilityScore, PositiveInteger } from "@dnd/shared/types";
 import {
@@ -160,8 +161,9 @@ export type CharacterCreationSupportProfile = {
   readonly backgroundUnitIds: readonly UnitRecord["id"][];
   readonly purchasableEquipmentUnitIds: readonly UnitRecord["id"][];
   readonly equipmentPurchaseChoiceCount: 3;
-  readonly coinEquipmentChoiceOptionIdsByUnitId: Partial<
-    Record<UnitRecord["id"], readonly CreationChoiceOptionId[]>
+  readonly coinEquipmentChoiceOptionIdsByUnitId: ReadonlyMap<
+    UnitRecord["id"],
+    readonly CreationChoiceOptionId[]
   >;
   readonly loadoutChoices: readonly SupportedLoadoutChoice[];
   readonly manifest: {
@@ -185,34 +187,55 @@ type SupportedDraftChoicePath = (typeof SUPPORTED_DRAFT_CHOICE_PATHS)[number];
 const SUPPORTED_PROGRESSIONS = [
   ...SRD_LEVEL_ONE_CLASS_UNIT_IDS.map(supportedLevelOneProgression),
   ...SRD_LEVEL_ONE_CLASS_UNIT_IDS.map((classUnitId) =>
-    supportedSameClassProgression(classUnitId, 3),
+    supportedSameClassProgression(authoredUnitId(classUnitId), 3),
   ),
-  supportedSameClassSecondLevelProgression(PHASE1_CLASS_FIGHTER_UNIT_ID),
-  supportedSameClassSecondLevelProgression(SRD_BARD_CLASS_UNIT_ID),
-  supportedSameClassSecondLevelProgression(SRD_CLERIC_CLASS_UNIT_ID),
-  supportedSameClassSecondLevelProgression(SRD_DRUID_CLASS_UNIT_ID),
-  supportedSameClassSecondLevelProgression(SRD_MONK_CLASS_UNIT_ID),
-  supportedSameClassSecondLevelProgression(SRD_PALADIN_CLASS_UNIT_ID),
-  supportedSameClassSecondLevelProgression(SRD_RANGER_CLASS_UNIT_ID),
-  supportedSameClassSecondLevelProgression(SRD_SORCERER_CLASS_UNIT_ID),
-  supportedSameClassSecondLevelProgression(WIDTH_CLASS_WIZARD_UNIT_ID),
-  supportedSameClassProgression(PHASE1_CLASS_FIGHTER_UNIT_ID, 5),
-  supportedSameClassProgression(WIDTH_CLASS_WIZARD_UNIT_ID, 4),
-  supportedSameClassProgression(WIDTH_CLASS_WIZARD_UNIT_ID, 5),
-  supportedSameClassProgression(SRD_RANGER_CLASS_UNIT_ID, 9),
-  supportedSameClassProgression(SRD_ROGUE_CLASS_UNIT_ID, 6),
-  supportedSameClassProgression(SRD_ROGUE_CLASS_UNIT_ID, 10),
+  supportedSameClassSecondLevelProgression(
+    authoredUnitId(PHASE1_CLASS_FIGHTER_UNIT_ID),
+  ),
+  supportedSameClassSecondLevelProgression(
+    authoredUnitId(SRD_BARD_CLASS_UNIT_ID),
+  ),
+  supportedSameClassSecondLevelProgression(
+    authoredUnitId(SRD_CLERIC_CLASS_UNIT_ID),
+  ),
+  supportedSameClassSecondLevelProgression(
+    authoredUnitId(SRD_DRUID_CLASS_UNIT_ID),
+  ),
+  supportedSameClassSecondLevelProgression(
+    authoredUnitId(SRD_MONK_CLASS_UNIT_ID),
+  ),
+  supportedSameClassSecondLevelProgression(
+    authoredUnitId(SRD_PALADIN_CLASS_UNIT_ID),
+  ),
+  supportedSameClassSecondLevelProgression(
+    authoredUnitId(SRD_RANGER_CLASS_UNIT_ID),
+  ),
+  supportedSameClassSecondLevelProgression(
+    authoredUnitId(SRD_SORCERER_CLASS_UNIT_ID),
+  ),
+  supportedSameClassSecondLevelProgression(
+    authoredUnitId(WIDTH_CLASS_WIZARD_UNIT_ID),
+  ),
+  supportedSameClassProgression(
+    authoredUnitId(PHASE1_CLASS_FIGHTER_UNIT_ID),
+    5,
+  ),
+  supportedSameClassProgression(authoredUnitId(WIDTH_CLASS_WIZARD_UNIT_ID), 4),
+  supportedSameClassProgression(authoredUnitId(WIDTH_CLASS_WIZARD_UNIT_ID), 5),
+  supportedSameClassProgression(authoredUnitId(SRD_RANGER_CLASS_UNIT_ID), 9),
+  supportedSameClassProgression(authoredUnitId(SRD_ROGUE_CLASS_UNIT_ID), 6),
+  supportedSameClassProgression(authoredUnitId(SRD_ROGUE_CLASS_UNIT_ID), 10),
   ...SRD_LEVEL_ONE_CLASS_UNIT_IDS.filter(
     (classUnitId) => classUnitId !== PHASE1_CLASS_FIGHTER_UNIT_ID,
   ).map((classUnitId) =>
     supportedTwoClassSecondLevelProgression(
-      PHASE1_CLASS_FIGHTER_UNIT_ID,
+      authoredUnitId(PHASE1_CLASS_FIGHTER_UNIT_ID),
       classUnitId,
     ),
   ),
   supportedTwoClassSecondLevelProgression(
-    WIDTH_CLASS_WIZARD_UNIT_ID,
-    PHASE1_CLASS_FIGHTER_UNIT_ID,
+    authoredUnitId(WIDTH_CLASS_WIZARD_UNIT_ID),
+    authoredUnitId(PHASE1_CLASS_FIGHTER_UNIT_ID),
   ),
 ] as const satisfies ReadonlyArray<CharacterProgression>;
 
@@ -338,19 +361,19 @@ const SUPPORTED_MUSICAL_INSTRUMENT_PROFICIENCY_OPTION_IDS =
 const SUPPORTED_ABILITY_SCORE_INCREASE_OPTION_IDS =
   supportedAbilityScoreIncreaseOptionIds();
 const CHARACTER_BUILD_RESOURCE_UNIT_IDS = [
-  "barbarian_rage",
-  "bard_bardic_inspiration",
-  "cleric_channel_divinity",
-  "cleric_divine_intervention",
-  "druid_wild_shape",
-  "fighter_action_surge",
-  "fighter_second_wind",
-  "monk_monks_focus",
-  "paladin_channel_divinity",
-  "paladin_lay_on_hands",
-  "ranger_tireless",
-  "sorcerer_font_of_magic",
-  "sorcerer_innate_sorcery",
+  authoredUnitId("barbarian_rage"),
+  authoredUnitId("bard_bardic_inspiration"),
+  authoredUnitId("cleric_channel_divinity"),
+  authoredUnitId("cleric_divine_intervention"),
+  authoredUnitId("druid_wild_shape"),
+  authoredUnitId("fighter_action_surge"),
+  authoredUnitId("fighter_second_wind"),
+  authoredUnitId("monk_monks_focus"),
+  authoredUnitId("paladin_channel_divinity"),
+  authoredUnitId("paladin_lay_on_hands"),
+  authoredUnitId("ranger_tireless"),
+  authoredUnitId("sorcerer_font_of_magic"),
+  authoredUnitId("sorcerer_innate_sorcery"),
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
 
 export const CHARACTER_CREATION_SUPPORT_PROFILE = {
@@ -418,39 +441,47 @@ export const CHARACTER_CREATION_SUPPORT_PROFILE = {
   backgroundUnitIds: SUPPORTED_BACKGROUND_UNIT_IDS,
   purchasableEquipmentUnitIds: SUPPORTED_PURCHASE_UNIT_IDS,
   equipmentPurchaseChoiceCount: 3,
-  coinEquipmentChoiceOptionIdsByUnitId: {
-    ...Object.fromEntries(
-      SRD_LEVEL_ONE_CLASS_UNIT_IDS.map((classUnitId) => [
-        classUnitId,
-        [creationChoiceOptionId("option_b")],
-      ]),
+  coinEquipmentChoiceOptionIdsByUnitId: new Map<
+    UnitRecord["id"],
+    readonly CreationChoiceOptionId[]
+  >([
+    ...SRD_LEVEL_ONE_CLASS_UNIT_IDS.map(
+      (classUnitId) =>
+        [
+          authoredUnitId(classUnitId),
+          [creationChoiceOptionId("option_b")],
+        ] as const,
     ),
-    [PHASE1_CLASS_FIGHTER_UNIT_ID]: [PHASE1_CLASS_EQUIPMENT_OPTION_ID],
-    ...Object.fromEntries(
-      SUPPORTED_BACKGROUND_UNIT_IDS.map((backgroundUnitId) => [
-        backgroundUnitId,
-        [PHASE1_BACKGROUND_EQUIPMENT_OPTION_ID],
-      ]),
+    ...SUPPORTED_BACKGROUND_UNIT_IDS.map(
+      (backgroundUnitId) =>
+        [
+          authoredUnitId(backgroundUnitId),
+          [PHASE1_BACKGROUND_EQUIPMENT_OPTION_ID],
+        ] as const,
     ),
-  },
+    [
+      authoredUnitId(PHASE1_CLASS_FIGHTER_UNIT_ID),
+      [PHASE1_CLASS_EQUIPMENT_OPTION_ID],
+    ],
+  ]),
   loadoutChoices: [
     {
       slot: LOADOUT_ARMOR_SLOT,
-      unitId: PHASE1_ARMOR_CHAIN_MAIL_UNIT_ID,
+      unitId: authoredUnitId(PHASE1_ARMOR_CHAIN_MAIL_UNIT_ID),
       optionId: PHASE1_LOADOUT_ARMOR_OPTION_ID,
       label: "Worn",
       buildSlot: "armor",
     },
     {
       slot: LOADOUT_SHIELD_SLOT,
-      unitId: PHASE1_SHIELD_UNIT_ID,
+      unitId: authoredUnitId(PHASE1_SHIELD_UNIT_ID),
       optionId: PHASE1_LOADOUT_SHIELD_OPTION_ID,
       label: "Wielded",
       buildSlot: "shield",
     },
     {
       slot: LOADOUT_WEAPON_SLOT,
-      unitId: PHASE1_WEAPON_LONGSWORD_UNIT_ID,
+      unitId: authoredUnitId(PHASE1_WEAPON_LONGSWORD_UNIT_ID),
       optionId: PHASE1_LOADOUT_WEAPON_OPTION_ID,
       label: "Wielded one-handed",
       buildSlot: "weapon",
@@ -458,7 +489,7 @@ export const CHARACTER_CREATION_SUPPORT_PROFILE = {
     },
     {
       slot: LOADOUT_WEAPON_SLOT,
-      unitId: PHASE1_WEAPON_FLAIL_UNIT_ID,
+      unitId: authoredUnitId(PHASE1_WEAPON_FLAIL_UNIT_ID),
       optionId: PHASE1_LOADOUT_WEAPON_OPTION_ID,
       label: "Wielded one-handed",
       buildSlot: "weapon",
@@ -466,7 +497,7 @@ export const CHARACTER_CREATION_SUPPORT_PROFILE = {
     },
     {
       slot: LOADOUT_WEAPON_SLOT,
-      unitId: PHASE1_WEAPON_QUARTERSTAFF_UNIT_ID,
+      unitId: authoredUnitId(PHASE1_WEAPON_QUARTERSTAFF_UNIT_ID),
       optionId: PHASE1_LOADOUT_WEAPON_OPTION_ID,
       label: "Wielded one-handed",
       buildSlot: "weapon",
@@ -589,11 +620,11 @@ export function supportedUnitOptionIdsForSource(
     source.choiceKey === CLASS_EQUIPMENT_CHOICE_KEY ||
     source.choiceKey === BACKGROUND_EQUIPMENT_CHOICE_KEY
   ) {
-    const coinEquipmentChoices =
-      CHARACTER_CREATION_SUPPORT_PROFILE.coinEquipmentChoiceOptionIdsByUnitId as Partial<
-        Record<UnitRecord["id"], readonly CreationChoiceOptionId[]>
-      >;
-    return coinEquipmentChoices[source.unitId] ?? [];
+    return (
+      CHARACTER_CREATION_SUPPORT_PROFILE.coinEquipmentChoiceOptionIdsByUnitId.get(
+        source.unitId,
+      ) ?? []
+    );
   }
 
   if (source.choiceKey === CLASS_SKILL_PROFICIENCY_CHOICE_KEY) {

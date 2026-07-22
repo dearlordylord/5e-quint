@@ -1,3 +1,4 @@
+import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 import { battleActUnitPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1D2-MYCELIUM-STEP mycelium_step
@@ -223,7 +224,7 @@ function myceliumStepDashAct(
   return act;
 }
 
-function assertMyceliumStepSourceUnitId(raw: string): void {
+function assertMyceliumStepSourceUnitId(raw: string | undefined): void {
   expect(raw, "Mycelium Step act must bind its Unit id").toBe(
     myceliumStepUnitId,
   );
@@ -254,7 +255,7 @@ function mechanicsOnlyClassicUnit(
   }
 
   return {
-    id: input.id,
+    id: parseSharedUnitId(input.id),
     syntheticLabel: input.syntheticLabel,
     provenance: { kind: input.provenance.kind },
     kind: "class_feature",

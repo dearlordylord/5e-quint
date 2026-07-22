@@ -25,10 +25,8 @@ import {
 } from "@dnd/shared/types";
 import { isFixedDistancePointRange } from "@dnd/surface/surface/types";
 import { Either } from "effect";
-import {
-  isTargetListSpellInvocation,
-  type BattleCreatureState,
-} from "../battle-state-execution.ts";
+import { type BattleCreatureState } from "../battle-state-execution.ts";
+import { isTargetListSpellInvocation } from "./spells-invocation-guards.ts";
 import type { RuntimeSpellProcedureExecution } from "../character-execution.ts";
 import type {
   BattleSubject,
@@ -39,7 +37,7 @@ import {
   type CharacterBattleMetamagicEffectKind,
   type CharacterBattleMetamagicOptionFact,
   type CharacterBattlePointPoolResourceState,
-} from "../character-battle-resources.ts";
+} from "../character-battle-resource-execution.ts";
 import {
   TRANSMUTED_METAMAGIC_EFFECT_KIND,
   TRANSMUTED_SPELL_DAMAGE_TYPES,

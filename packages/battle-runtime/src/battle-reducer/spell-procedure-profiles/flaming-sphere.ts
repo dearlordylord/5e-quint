@@ -1,3 +1,4 @@
+import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-flaming-sphere-hazard-ram
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 import { DiceExprSchema } from "@dnd/surface/surface/schema";
@@ -24,7 +25,6 @@ import {
   type ElapsedTimeTicks,
 } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
-import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
 import {
@@ -35,7 +35,7 @@ import {
 } from "../../battle-state-execution.ts";
 import { type CombatantId } from "../../identity.ts";
 import { spellAreaChoiceHole } from "../spells-holes-fills.ts";
-import { supportedDamageAmountExpr } from "../spells-profile-shared.ts";
+import { supportedDamageAmountExpr } from "../spells-execution-facts.ts";
 import { resolveFlamingSphereSpellAct } from "../spells-resolve-area-effects.ts";
 import type {
   SpellAdmissionContext,
@@ -62,7 +62,7 @@ type FlamingSphereResolveInput =
   SpellProcedureProfileResolveInput<FlamingSphereSpellInvocation>;
 
 type OngoingOperationEffect = Extract<
-  SpellRecord["mechanics"],
+  BattleSpellAdmissionSource["mechanics"],
   { readonly family: "ongoing_effect" }
 >["operations"][number]["effect"];
 type OngoingSaveGateEffect = Extract<
@@ -97,7 +97,7 @@ const FLAMING_SPHERE_DAMAGE_DIE_SIZE = 6;
 const FLAMING_SPHERE_DAMAGE_DICE_PER_SLOT_LEVEL = 1;
 
 function admitFlamingSphere(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly FlamingSphereSpellInvocation[] {
   const sphere = flamingSphereSpell(spell);
@@ -141,7 +141,7 @@ function admitFlamingSphere(
 }
 
 function flamingSphereSpell(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
 ): FlamingSphereProfileShape | null {
   if (spell.mechanics.family !== "ongoing_effect") {
     return null;

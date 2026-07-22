@@ -1,3 +1,4 @@
+import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT18 defense
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT27 feat_archery
 import { describe, expect, test } from "vitest";
@@ -94,11 +95,11 @@ describe("QMBT18 deterministic unsupported feature profile slice", () => {
 
     expect(attackRollHole).toMatchObject({
       kind: "attackRoll",
-      label: "Shortbow attack roll",
+      label: "weapon_shortbow attack roll",
       attackBonus: 2,
       attack: {
         kind: "weapon",
-        weapon: { id: "weapon_shortbow", usage: "ranged" },
+        weapon: { weaponUnitId: "weapon_shortbow", usage: "ranged" },
       },
     });
   });
@@ -118,11 +119,11 @@ describe("QMBT18 deterministic unsupported feature profile slice", () => {
 
     expect(attackRollHole).toMatchObject({
       kind: "attackRoll",
-      label: "Shortbow attack roll",
+      label: "weapon_shortbow attack roll",
       attackBonus: 2,
       attack: {
         kind: "weapon",
-        weapon: { id: "weapon_shortbow", usage: "ranged" },
+        weapon: { weaponUnitId: "weapon_shortbow", usage: "ranged" },
       },
     });
   });
@@ -140,11 +141,11 @@ describe("QMBT18 deterministic unsupported feature profile slice", () => {
 
     expect(attackRollHole).toMatchObject({
       kind: "attackRoll",
-      label: "Longsword attack roll",
+      label: "weapon_longsword attack roll",
       attackBonus: 0,
       attack: {
         kind: "weapon",
-        weapon: { id: "weapon_longsword", usage: "melee" },
+        weapon: { weaponUnitId: "weapon_longsword", usage: "melee" },
       },
     });
   });
@@ -158,7 +159,7 @@ describe("QMBT18 deterministic unsupported feature profile slice", () => {
     const adjacentPassiveRollUnits = [
       {
         ...unit,
-        id: "test_archery_saving_throw_bonus",
+        id: parseSharedUnitId("test_archery_saving_throw_bonus"),
         mechanics: {
           ...unit.mechanics,
           grants: [{ ...effect, on: ["saving_throw"] }],
@@ -166,7 +167,7 @@ describe("QMBT18 deterministic unsupported feature profile slice", () => {
       },
       {
         ...unit,
-        id: "test_archery_melee_attack_bonus",
+        id: parseSharedUnitId("test_archery_melee_attack_bonus"),
         mechanics: {
           ...unit.mechanics,
           grants: [
@@ -182,7 +183,7 @@ describe("QMBT18 deterministic unsupported feature profile slice", () => {
     for (const adjacentUnit of adjacentPassiveRollUnits) {
       expect(
         battleUnitRefWithSupportProfiles({
-          unitRef: { unitId: adjacentUnit.id },
+          unitRef: { unitId: parseSharedUnitId(adjacentUnit.id) },
           unit: adjacentUnit,
         }),
       ).toEqual(

@@ -1,3 +1,4 @@
+import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-weapon-damage-rider
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS
 //
@@ -10,11 +11,7 @@
 //   - UBIQUITOUS_LANGUAGE.md: Attack Damage Rider, Bonus Action, Attack Roll,
 //     Damage Roll, and Spell Invocation.
 
-import type { SpellRecord } from "@dnd/surface/surface/types";
-
 import {
-  maybeOpenInterruptWindow,
-  snapshotBattle,
   type BattleActDiscoveryCandidate,
   type BattleActiveEffect,
   type BattleActiveEffectExpiration,
@@ -22,11 +19,12 @@ import {
   type BattleState,
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
+import { maybeOpenInterruptWindow, snapshotBattle } from "../dispatcher.ts";
 import { SpellWeaponDamageRiderTemplateSchema } from "../../active-effect/codecs.ts";
 import { type CombatantId } from "../../identity.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
-import { supportedDamageAmountExpr } from "../spells-profile-shared.ts";
+import { supportedDamageAmountExpr } from "../spells-execution-facts.ts";
 import { scalarBuffActiveEffectExpiration } from "../spells-profiles-support.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
 import type {
@@ -53,7 +51,7 @@ type WeaponDamageRiderResolveInput =
   SpellProcedureProfileResolveInput<WeaponDamageRiderInvocation>;
 
 function admitWeaponDamageRider(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly WeaponDamageRiderInvocation[] {
   const activeEffect = weaponDamageRiderActiveEffect(
@@ -82,7 +80,7 @@ function admitWeaponDamageRider(
 
 function weaponDamageRiderActiveEffect(
   actorId: CombatantId,
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
 ): WeaponDamageRiderInvocation["activeEffect"] | null {
   if (
     spell.mechanics.family !== "ongoing_effect" ||
@@ -113,7 +111,7 @@ function weaponDamageRiderActiveEffect(
 
 function weaponDamageRiderExpiration(
   actorId: CombatantId,
-  duration: SpellRecord["mechanics"]["duration"],
+  duration: BattleSpellAdmissionSource["mechanics"]["duration"],
 ): BattleActiveEffectExpiration | null {
   return scalarBuffActiveEffectExpiration(actorId, duration);
 }
@@ -121,7 +119,7 @@ function weaponDamageRiderExpiration(
 function weaponDamageRiderDamage(
   operation:
     | Extract<
-        SpellRecord["mechanics"],
+        BattleSpellAdmissionSource["mechanics"],
         { readonly family: "ongoing_effect" }
       >["operations"][number]
     | undefined,

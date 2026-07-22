@@ -17,6 +17,7 @@ import {
 } from "@dnd/surface/surface/druid-wild-shape-readers";
 import type { StatBlockRecord, UnitRecord } from "@dnd/surface/surface/types";
 import type { UnitCatalog } from "./types.ts";
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { characterBuildFeatureUnitIds } from "./finalization.ts";
 import {
   classLevelForUnit,
@@ -29,8 +30,7 @@ import {
 } from "./class-level-scaling.ts";
 import type { CharacterBuild } from "./types.ts";
 
-export const DRUID_WILD_SHAPE_UNIT_ID =
-  "druid_wild_shape" as const satisfies UnitRecord["id"];
+export const DRUID_WILD_SHAPE_UNIT_ID = authoredUnitId("druid_wild_shape");
 
 const byKind = Match.discriminator("kind");
 

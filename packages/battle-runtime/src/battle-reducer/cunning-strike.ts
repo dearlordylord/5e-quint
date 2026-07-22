@@ -32,17 +32,17 @@ import type {
   CunningStrikePostDamageMovementEffect,
   CunningStrikeQualifyingCoverDegree,
   CunningStrikeSizeGatedConditionSaveEffect,
-} from "../unit-feature-support.ts";
+} from "../unit-feature-execution-constants.ts";
 import {
   CUNNING_STRIKE_OPTION_GRANT_SUPPORT_PROFILE,
   CUNNING_STRIKE_SUPPORT_PROFILE,
-} from "../unit-feature-support.ts";
+} from "../unit-feature-execution-constants.ts";
 import {
   extendSavingThrowOngoingFeatures,
   ongoingFeatureEnemyRelationshipDecisionRequired,
 } from "./attack-roll.ts";
 import { parseSavingThrowRelationshipFacts } from "./roll-trigger-relationship-facts.ts";
-import { battleCreatureStateWithKnockOutPreservedConditions } from "./creature-state.ts";
+import { battleCreatureStateWithKnockOutPreservedConditions } from "./creature-state-execution.ts";
 import { scoreModifier } from "./domain-helpers.ts";
 import { combatantEffectiveSize } from "./druid-wild-shape.ts";
 import {

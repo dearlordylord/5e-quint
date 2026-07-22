@@ -1,60 +1,62 @@
 import { Option } from "effect";
 
-import type { CreatureType } from "@dnd/shared/game-facts";
+import {
+  FIND_FAMILIAR_CREATURE_TYPE_OVERRIDE_TYPES,
+  type CreatureType,
+  type FindFamiliarCreatureTypeOverride,
+  StatBlockId,
+} from "@dnd/shared/game-facts";
 import type { StatBlockCatalog } from "./stat-block-catalog.ts";
 import type { SpellRecord, StatBlockRecord } from "./types.ts";
 
-export const FIND_FAMILIAR_CREATURE_TYPE_OVERRIDE_TYPES = [
-  "celestial",
-  "fey",
-  "fiend",
-] as const satisfies ReadonlyArray<CreatureType>;
-export type FindFamiliarCreatureTypeOverride =
-  (typeof FIND_FAMILIAR_CREATURE_TYPE_OVERRIDE_TYPES)[number];
+export {
+  FIND_FAMILIAR_CREATURE_TYPE_OVERRIDE_TYPES,
+  type FindFamiliarCreatureTypeOverride,
+};
 const FIND_FAMILIAR_CREATURE_TYPE_OVERRIDE_TYPE_SET = new Set<CreatureType>(
   FIND_FAMILIAR_CREATURE_TYPE_OVERRIDE_TYPES,
 );
 
 type PactOfTheChainSpecialFormRefShape = {
   readonly formId: string;
-  readonly statBlockId: string;
+  readonly statBlockId: StatBlockId;
   readonly displayName: string;
 };
 
 export const PACT_OF_THE_CHAIN_SPECIAL_FORM_REFS = [
   {
     formId: "imp",
-    statBlockId: "stat_block_imp",
+    statBlockId: StatBlockId.make("stat_block_imp"),
     displayName: "Imp",
   },
   {
     formId: "pseudodragon",
-    statBlockId: "stat_block_pseudodragon",
+    statBlockId: StatBlockId.make("stat_block_pseudodragon"),
     displayName: "Pseudodragon",
   },
   {
     formId: "quasit",
-    statBlockId: "stat_block_quasit",
+    statBlockId: StatBlockId.make("stat_block_quasit"),
     displayName: "Quasit",
   },
   {
     formId: "skeleton",
-    statBlockId: "stat_block_skeleton",
+    statBlockId: StatBlockId.make("stat_block_skeleton"),
     displayName: "Skeleton",
   },
   {
     formId: "sphinx_of_wonder",
-    statBlockId: "stat_block_sphinx_of_wonder",
+    statBlockId: StatBlockId.make("stat_block_sphinx_of_wonder"),
     displayName: "Sphinx of Wonder",
   },
   {
     formId: "sprite",
-    statBlockId: "stat_block_sprite",
+    statBlockId: StatBlockId.make("stat_block_sprite"),
     displayName: "Sprite",
   },
   {
     formId: "venomous_snake",
-    statBlockId: "stat_block_venomous_snake",
+    statBlockId: StatBlockId.make("stat_block_venomous_snake"),
     displayName: "Venomous Snake",
   },
 ] as const satisfies readonly [
@@ -397,7 +399,7 @@ function resolveChallengeRatingZeroBeastStatBlock(input: {
 
 function getStatBlock(
   catalog: StatBlockCatalog,
-  statBlockId: StatBlockRecord["id"],
+  statBlockId: StatBlockId,
 ): StatBlockRecord | null {
   return Option.getOrNull(catalog.getStatBlock(statBlockId));
 }

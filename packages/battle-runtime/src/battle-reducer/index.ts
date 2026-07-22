@@ -40,7 +40,7 @@ export * from "./spells-discovery.ts";
 export * from "./spells-holes-fills.ts";
 export * from "./spells-invocation-guards.ts";
 export * from "./spells-invocation-ref.ts";
-export * from "./spells-profile-shared.ts";
+export * from "./spells-execution-facts.ts";
 export * from "./spells-profiles-attack-damage.ts";
 export * from "./spells-profiles-support.ts";
 export * from "./spells-profiles.ts";

@@ -1,3 +1,4 @@
+import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
   battleProcedureExecutionRefForTest,
@@ -915,7 +916,9 @@ function resolveQuickenedRollModifier(
 
 function resolveQuickenedCreatureSizeChange(): QuickenedSpellGovernorRuntimeState {
   const state: QuickenedSpellGovernorRuntimeState = {
-    battle: metamagicBattle({ preparedSpellIds: [enlargeReduceUnitId] }),
+    battle: metamagicBattle({
+      preparedSpellIds: [parseSharedUnitId(enlargeReduceUnitId)],
+    }),
     invalidKind: "none",
     lastResult: "init",
   };
@@ -950,7 +953,7 @@ function resolveQuickenedConcentrationCounterspell(
 ): QuickenedSpellGovernorRuntimeState {
   const state = initialRuntimeState({
     counterspeller: true,
-    preparedSpellIds: ["bless"],
+    preparedSpellIds: [parseSharedUnitId("bless")],
     casterSpellSlots: [{ spellLevel: 1, count: 1 }],
   });
   const act = quickenedSpellAct(state.battle, "bless");
@@ -980,7 +983,10 @@ function resolveQuickenedConcentrationCounterspell(
 function resolveQuickenedNonConcentrationCounterspellWithPriorBless(): QuickenedSpellGovernorRuntimeState {
   const initial = initialRuntimeState({
     counterspeller: true,
-    preparedSpellIds: ["bless", "cure_wounds"],
+    preparedSpellIds: [
+      parseSharedUnitId("bless"),
+      parseSharedUnitId("cure_wounds"),
+    ],
     casterSpellSlots: [{ spellLevel: 1, count: 2 }],
   });
   const state = {
@@ -1542,7 +1548,9 @@ function metamagicBattle(input?: MetamagicBattleInput): BattleRuntimeSession {
           },
         ],
         metamagic: {
-          sorceryPointResourceUnitId: "sorcerer_font_of_magic",
+          sorceryPointResourceUnitId: parseSharedUnitId(
+            "sorcerer_font_of_magic",
+          ),
           spellUseLimit: "one_per_spell_unless_option_allows_stacking",
           knownOptions: input?.knownOptions ?? [
             quickenedMetamagicOption(),

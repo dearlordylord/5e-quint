@@ -1,3 +1,4 @@
+import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-blur-attack-roll-defense
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE
 //
@@ -24,24 +25,21 @@
 //     witnesses stay in attack-roll.ts.
 //   - Concentration cleanup stays in the shared active-effect lifecycle.
 
-import type { SpellRecord } from "@dnd/surface/surface/types";
-
 import { battleCreatureWithSpellActiveEffects } from "../../active-effect/lifecycle.ts";
 import {
-  maybeOpenInterruptWindow,
-  snapshotBattle,
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
   type BattleState,
   type BlurAttackRollDefenseSpellInvocation,
 } from "../../battle-state-execution.ts";
+import { maybeOpenInterruptWindow, snapshotBattle } from "../dispatcher.ts";
 import { type CombatantId } from "../../identity.ts";
 import { BlurredActiveEffectTemplateSchema } from "../../active-effect/codecs.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
-import { sameStringSet } from "../spells-profile-shared.ts";
+import { sameStringSet } from "../spells-execution-facts.ts";
 import { scalarBuffActiveEffectExpiration } from "../spells-profiles-support.ts";
 import {
   spellRequiresConcentration,
@@ -64,7 +62,7 @@ import {
 
 function blurAttackRollDefenseShape(
   actorId: CombatantId,
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
 ): Pick<BlurAttackRollDefenseSpellInvocation, "activeEffect"> | null {
   if (
     spell.mechanics.family !== "activation" ||
@@ -108,7 +106,7 @@ function blurAttackRollDefenseShape(
 }
 
 function admitBlurAttackRollDefense(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly BlurAttackRollDefenseSpellInvocation[] {
   const shape = blurAttackRollDefenseShape(ctx.actor.combatantId, spell);

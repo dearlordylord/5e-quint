@@ -142,7 +142,7 @@ function admittedAttackOption(
   if (admission === undefined) {
     throw new Error("Expected the driver Stat Block admission.");
   }
-  return statBlockAttackActionOptions(admission).find(
+  return statBlockAttackActionOptions(admission.execution).find(
     (option) => option.damageNotation === damageNotation,
   );
 }

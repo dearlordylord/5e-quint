@@ -1,3 +1,4 @@
+import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.hit-point-restoration unit-feature.spell-slot-healing-modifier
 import { DiceExprSchema } from "@dnd/surface/surface/schema";
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HIT_POINT_RESTORATION BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING
@@ -27,7 +28,6 @@ import {
 import type {
   Attachment,
   DiceExpr,
-  SpellRecord,
   TopLevelSpellCastingTime,
   DiceAmount as SurfaceDiceAmount,
   TargetSelection,
@@ -35,9 +35,8 @@ import type {
 import { topLevelSpellCastingTime } from "@dnd/surface/surface/types";
 import { Match, Schema } from "effect";
 
-import { characterUnitProcedureBindings } from "../../character-execution-admission.ts";
+import { characterUnitProcedureBindings } from "../../character-execution-queries.ts";
 import {
-  maybeOpenInterruptWindow,
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
@@ -46,6 +45,7 @@ import {
   type HealingSpellTargeting,
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
+import { maybeOpenInterruptWindow } from "../dispatcher.ts";
 import { type CombatantId } from "../../identity.ts";
 import { applyHpHealing } from "../damage-apply.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
@@ -89,7 +89,7 @@ type DirectHitPointRestorationResolveInput =
   SpellProcedureProfileResolveInput<DirectHitPointRestorationInvocation>;
 
 function admitDirectHitPointRestoration(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly DirectHitPointRestorationInvocation[] {
   const projection = directHitPointRestorationProjection(spell);
@@ -125,7 +125,9 @@ function admitDirectHitPointRestoration(
   );
 }
 
-function directHitPointRestorationProjection(spell: SpellRecord): {
+function directHitPointRestorationProjection(
+  spell: BattleSpellAdmissionSource,
+): {
   readonly actionCost: HealingSpellActionCost;
   readonly targeting: HealingSpellTargeting;
   readonly amount: SurfaceDiceAmount;
@@ -232,7 +234,7 @@ function hitPointRestorationTargetBounds(
 }
 
 function hitPointRestorationRangeFeet(
-  range: SpellRecord["mechanics"]["range"],
+  range: BattleSpellAdmissionSource["mechanics"]["range"],
 ): MovementFeet | null {
   return Match.value(range).pipe(
     Match.when({ kind: "point" }, (point) =>

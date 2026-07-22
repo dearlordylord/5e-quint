@@ -1,3 +1,4 @@
+import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spike-growth-movement-hazard
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 import { DiceExprSchema } from "@dnd/surface/surface/schema";
@@ -26,11 +27,7 @@ import {
   type ElapsedTimeTicks,
 } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
-import type {
-  DamageType,
-  DiceExpr,
-  SpellRecord,
-} from "@dnd/surface/surface/types";
+import type { DamageType, DiceExpr } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
 import {
@@ -85,7 +82,7 @@ const SPIKE_GROWTH_DAMAGE_DICE = 2;
 const SPIKE_GROWTH_DAMAGE_DIE_SIZE = 4;
 
 function admitSpikeGrowthMovementHazard(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly SpikeGrowthMovementHazardSpellInvocation[] {
   const spikeGrowth = spikeGrowthMovementHazardSpell(spell);
@@ -122,7 +119,7 @@ function admitSpikeGrowthMovementHazard(
 }
 
 function spikeGrowthMovementHazardSpell(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
 ): SpikeGrowthMovementHazardProfileShape | null {
   if (spell.mechanics.family !== "ongoing_effect") {
     return null;

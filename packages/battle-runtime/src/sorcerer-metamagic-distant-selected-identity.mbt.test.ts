@@ -1,3 +1,4 @@
+import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.metamagic-cast-range-increase
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3MMETA-15-DISTANT-OBJECT-LIGHT sorcerer_metamagic
@@ -182,7 +183,7 @@ function resolveDistantObjectLightSubject() {
       },
     ],
     casterMetamagic: {
-      sorceryPointResourceUnitId: "sorcerer_font_of_magic",
+      sorceryPointResourceUnitId: parseSharedUnitId("sorcerer_font_of_magic"),
       spellUseLimit: "one_per_spell_unless_option_allows_stacking",
       knownOptions: [distantMetamagicOption()],
     },

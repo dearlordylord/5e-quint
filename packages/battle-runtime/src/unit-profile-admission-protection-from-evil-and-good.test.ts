@@ -31,7 +31,6 @@ import {
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 import { spellActiveEffectExecutionRef } from "./active-effect/execution-ref.ts";
 import type { SpellActiveEffect } from "./active-effect/execution-ref.ts";
-import { spellProcedureExecution } from "./character-execution-admission.ts";
 import {
   applyCondition,
   applyFailedSaveSpellConditionEffects,
@@ -49,15 +48,16 @@ import {
   spellSavingThrowOutcomeHole,
 } from "./unit-profile-admission-test-support.ts";
 import type {
+  BattleSelectedSpellInvocation,
   BattleActiveEffect,
   BattleCreatureState,
   BattleState,
   SupportedSpellInvocation,
-} from "./unit-profile-admission-test-support.ts";
+} from "./battle-state-execution.ts";
 
 function selectedFixedConditionEffect(
   invocation: Extract<
-    SupportedSpellInvocation,
+    SupportedSpellInvocation | BattleSelectedSpellInvocation,
     { readonly procedure: "saveGatedCondition" }
   >,
 ) {
@@ -271,7 +271,7 @@ describe("SRDINV30C deterministic Protection from Evil and Good admission", () =
       throw new Error("Expected Charm Person to be a save-gated condition.");
     }
     const executableCharmInvocation = {
-      ...spellProcedureExecution(charmInvocation),
+      ...charmInvocation,
       sourceProcedureRef: battleProcedureExecutionRefForTest(
         String(charmPersonUnitId),
       ),
@@ -401,7 +401,7 @@ describe("SRDINV30C deterministic Protection from Evil and Good admission", () =
       throw new Error("Expected Charm Person to be a save-gated condition.");
     }
     const executableCharmInvocation = {
-      ...spellProcedureExecution(charmInvocation),
+      ...charmInvocation,
       sourceProcedureRef: battleProcedureExecutionRefForTest(
         String(charmPersonUnitId),
       ),
@@ -495,7 +495,7 @@ describe("SRDINV30C deterministic Protection from Evil and Good admission", () =
       throw new Error("Expected Charm Person to be a save-gated condition.");
     }
     const executableCharmInvocation = {
-      ...spellProcedureExecution(charmInvocation),
+      ...charmInvocation,
       sourceProcedureRef: battleProcedureExecutionRefForTest(
         String(charmPersonUnitId),
       ),

@@ -1,5 +1,6 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.scrying-session-invocation
 // UNIT-PROFILE-COVERAGE: runtime-owner table-caller.scrying-remote-sensor-perception
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import {
   timeSpanDuration,
   type TimeSpanDuration,
@@ -80,7 +81,7 @@ export function scryingSavingThrowModifier(
 function scryingSpell(
   unitLibrary: UnitCatalog,
 ): Either.Either<SpellRecord, CharacterSheetIssue> {
-  const unit = getRequiredUnit(unitLibrary, SCRYING_SPELL_ID);
+  const unit = getRequiredUnit(unitLibrary, authoredUnitId(SCRYING_SPELL_ID));
   if (Either.isLeft(unit)) return Either.left(unit.left);
   if (unit.right.kind !== "spell") {
     return characterSheetIssue("Scrying requires a Spell record.");

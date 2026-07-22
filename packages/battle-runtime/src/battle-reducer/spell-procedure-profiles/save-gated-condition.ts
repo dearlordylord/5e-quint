@@ -1,3 +1,4 @@
+import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-condition-save
 import {
   AbilitySchema,
@@ -20,7 +21,6 @@ import {
 //     Invocation.
 
 import {
-  isTargetListSpellInvocation,
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
   type BattleCreatureState,
@@ -29,6 +29,7 @@ import {
   type BattleState,
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
+import { isTargetListSpellInvocation } from "../spells-invocation-guards.ts";
 import { type CombatantId } from "../../identity.ts";
 import { ElapsedTimeTicksSchema } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { DamageTypeSchema, DiceExprSchema } from "@dnd/surface/surface/schema";
@@ -137,7 +138,7 @@ type SaveGatedConditionResolveInput =
   SpellProcedureProfileResolveInput<SaveGatedConditionSpellInvocation>;
 
 function admitSaveGatedCondition(
-  spell: SaveGatedConditionSpellInvocation["spell"],
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly SaveGatedConditionSpellInvocation[] {
   return supportedPreparedSaveGateConditionProfile(

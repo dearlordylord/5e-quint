@@ -9,7 +9,10 @@ import {
   type InitiativeScore,
 } from "@dnd/battle-runtime";
 import { Hp, type Hp as HpType } from "@dnd/shared/types";
-import type { StatBlockId } from "@dnd/surface/surface/stat-block-catalog";
+import {
+  StatBlockId,
+  type StatBlockId as StatBlockIdType,
+} from "@dnd/shared/game-facts";
 import { Either, Schema } from "effect";
 
 import {
@@ -43,7 +46,7 @@ const InitialEncounterStatBlockCombatantArgsSchema = Schema.Struct({
   kind: Schema.Literal("statBlock").annotations({
     description: "Initial combatant source: SRD Stat Block catalog record.",
   }),
-  statBlockId: Schema.NonEmptyTrimmedString.annotations({
+  statBlockId: StatBlockId.annotations({
     description: "SRD Stat Block id from list_stat_blocks.",
   }),
   combatantId: Schema.NonEmptyTrimmedString.annotations({
@@ -140,7 +143,7 @@ export type InitialEncounterStatBlockCombatantToolInput = {
   readonly combatantId: CombatantId;
   readonly initiative: InitiativeScore;
   readonly admissionSource: { readonly kind: "encounterParticipant" };
-  readonly statBlockId: StatBlockId;
+  readonly statBlockId: StatBlockIdType;
   readonly currentHp?: HpType;
   readonly tempHp?: HpType;
 };

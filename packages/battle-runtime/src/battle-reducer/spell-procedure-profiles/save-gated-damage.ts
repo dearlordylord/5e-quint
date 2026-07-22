@@ -1,3 +1,4 @@
+import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-damage-save-or-attack
 import {
   DamageTypeSchema,
@@ -82,7 +83,7 @@ type SaveGatedDamageResolveInput =
   SpellProcedureProfileResolveInput<SaveGatedDamageSpellInvocation>;
 
 function admitSaveGatedDamage(
-  spell: SaveGatedDamageSpellInvocation["spell"],
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly SaveGatedDamageSpellInvocation[] {
   const invocations =

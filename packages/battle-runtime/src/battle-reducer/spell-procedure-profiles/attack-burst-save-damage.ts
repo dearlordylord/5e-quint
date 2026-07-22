@@ -1,3 +1,4 @@
+import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-damage-save-or-attack
 import { DiceExprSchema } from "@dnd/surface/surface/schema";
 // KERNEL-COVERAGE: runtime-owner BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES
@@ -21,8 +22,6 @@ import { DiceExprSchema } from "@dnd/surface/surface/schema";
 // in spells-resolve-attack-burst.ts because it owns the existing replay,
 // reaction, and damage-lifecycle sequencing. The profile owns dispatch into
 // that resolver and the procedure's admission/discovery projections.
-
-import type { SpellRecord } from "@dnd/surface/surface/types";
 
 import {
   type BattleActDiscoveryCandidate,
@@ -65,7 +64,7 @@ type AttackBurstSaveDamageResolveInput =
   SpellProcedureProfileResolveInput<AttackBurstSaveDamageInvocation>;
 
 function admitAttackBurstSaveDamage(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly AttackBurstSaveDamageInvocation[] {
   const spellcasting = ctx.actor.origin.spellcasting;

@@ -1,3 +1,4 @@
+import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-MISSING-CALM-EMOTIONS calm_emotions
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-save-gated-condition-immunity
@@ -72,7 +73,7 @@ describe("L12G deterministic Calm Emotions Spell Unit admission", () => {
     expect(spellHoleInvocation(session, [savingThrow])).toEqual(
       expect.objectContaining({
         procedure: "saveGatedConditionImmunity",
-        spell,
+        spellRuleFacts: expect.objectContaining({ spellId: spell.id }),
         resource: { tag: "spellSlot", slotLevel: 2 },
         ability: "cha",
         targeting: { kind: "pointOriginSphere", radiusFeet: 20 },
@@ -256,7 +257,7 @@ function calmEmotionsWithExtraFailedSaveEffect(base: SpellRecord): SpellRecord {
   } satisfies typeof phase;
   const spellWithExtraFailedSaveEffect: SpellRecord = {
     ...base,
-    id: "synthetic_calm_emotions_extra_failed_save_effect",
+    id: parseSharedUnitId("synthetic_calm_emotions_extra_failed_save_effect"),
     mechanics: {
       ...base.mechanics,
       phases: [phaseWithExtraFailedSaveEffect],

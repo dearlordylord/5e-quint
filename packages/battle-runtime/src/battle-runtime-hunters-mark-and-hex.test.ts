@@ -256,7 +256,7 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
     );
 
     expect(damage).toMatchObject({
-      label: "Longsword damage (1d8+1d6+3-slashing)",
+      label: "weapon_longsword damage (1d8+1d6+3-slashing)",
       spellMarkedDamageRiders: [
         expect.objectContaining({ targetCombatantId: goblinId }),
       ],
@@ -765,7 +765,7 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
       goblinId,
     );
     expect(damage).toMatchObject({
-      label: "Longsword damage (1d8+1d6+3-slashing)",
+      label: "weapon_longsword damage (1d8+1d6+3-slashing)",
       spellMarkedDamageRiders: [
         expect.objectContaining({
           targetCombatantId: goblinId,
@@ -1027,7 +1027,7 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
       goblinId,
     );
     expect(damage).toMatchObject({
-      label: "Longsword damage (1d8+1d6+3-slashing)",
+      label: "weapon_longsword damage (1d8+1d6+3-slashing)",
       spellMarkedDamageRiders: [
         expect.objectContaining({ targetCombatantId: goblinId }),
       ],

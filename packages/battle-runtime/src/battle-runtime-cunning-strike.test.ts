@@ -1,3 +1,7 @@
+import {
+  statBlockId as parseSharedStatBlockId,
+  unitId,
+} from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.cunning-strike
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.cunning-strike-option-grant
@@ -6,13 +10,13 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import { describe, expect, test } from "vitest";
 import {
-  battleFillEquals,
   type BattleActiveEffect,
   type BattleDamageRollHole,
   type BattleFill,
   type BattleHole,
   type BattleState,
 } from "./battle-reducer.ts";
+import { battleFillEquals } from "./battle-reducer/dispatcher.ts";
 import type { BattleSubject } from "./battle-subjects.ts";
 import { classLevel, difficultyClass, movementFeet } from "@dnd/shared/types";
 import type { BattleRuntimeSession } from "./index.ts";
@@ -975,12 +979,12 @@ function cunningStrikeBattle(
               selectedLoadout: {
                 weapon: {
                   itemId: "main:weapon_shortsword",
-                  unitId: "weapon_shortsword",
+                  unitId: unitId("weapon_shortsword"),
                   grip: "one_handed" as const,
                 },
                 offHandWeapon: {
                   itemId: "off:weapon_dagger",
-                  unitId: "weapon_dagger",
+                  unitId: unitId("weapon_dagger"),
                 },
               },
             }
@@ -1048,7 +1052,9 @@ function largeTargetStatBlock(): ReturnType<typeof statBlockRecord> {
   const base = statBlockRecord();
   return {
     ...base,
-    id: "stat_block_synthetic_cunning_strike_large_target",
+    id: parseSharedStatBlockId(
+      "stat_block_synthetic_cunning_strike_large_target",
+    ),
     name: "Synthetic Cunning Strike Large Target",
     statBlock: {
       ...base.statBlock,

@@ -50,6 +50,7 @@ export {
   type BattleRuntimeSession,
   type CharacterBattleRuntimeContext,
   type CharacterSpellPresentationSource,
+  type RetainedCompanionBattleSelection,
 } from "./battle-runtime-context.ts";
 
 export {
@@ -196,7 +197,6 @@ export {
 
 export {
   admitCompanionToBattle,
-  admitCompanionToBattleRuntime,
   applyFindFamiliarZeroHitPointDisappearance,
   castFindFamiliar,
   castWildCompanion,
@@ -215,6 +215,11 @@ export {
   type WildCompanionCastInput,
   type WildCompanionSpend,
 } from "./find-familiar-lifecycle.ts";
+export {
+  admitCompanionToBattleRuntime,
+  castRetainedFindFamiliarRuntime,
+  type RetainedCompanionRuntimeCastResult,
+} from "./find-familiar-presentation.ts";
 
 export type {
   BattleCompanionAbsentState,
@@ -248,7 +253,10 @@ export {
 
 export type { PactOfTheChainFamiliarAttackSubject } from "./find-familiar-pact-chain.ts";
 
-export { statBlockProcedurePresentations } from "./stat-block-execution.ts";
+export {
+  battleCreaturePresentationDisplayName,
+  statBlockProcedurePresentations,
+} from "./stat-block-presentation.ts";
 
 export {
   combatantPerceptionCommunicationProjection,
@@ -304,7 +312,6 @@ export type {
   CharacterWeaponAttackDamageTypeChoices,
   StatBlockAttackActionOption,
   SupportedAttackActionOption,
-  SupportedCreatureNamedAttackRoll,
   UnarmedStrikeDamageEffect,
   UnarmedStrikeDamageProfile,
 } from "./battle-action-options.ts";
@@ -338,75 +345,14 @@ export {
 } from "./statblock-action-support.ts";
 
 export {
-  ActiveOngoingFeatureOccurrenceSnapshotSchema,
   BATTLE_INVALID_REASON_CODES,
-  BattleDroppedObjectOutcomeSchema,
-  BattleFillSchema,
-  BattleHoleSchema,
-  BattleObjectDamageOutcomeSchema,
-  BattleObjectIgnitionOutcomeSchema,
-  BattleShovePushOutcomeSchema,
-  BattleSnapshotSchema,
-  StatBlockExecutionSnapshotSchema,
-  addBattleRuntimeCombatant,
-  applyInitiativeSwap,
-  finishInitialInitiativeSetup,
-  activeFeatherFallDescentRateCapFeetPerRound,
-  activeSelfTransformationModeEffect,
-  battleIlluminationFromLightEmitters,
-  battleMagicalDarknessNonmagicalLightIllumination,
-  battleMagicalDarknessSightObscurement,
-  battleCreatureCanBreatheUnderwater,
-  activeFeatureSpellSaveDcRouteEvents,
-  battleReducerStartRouteEvent,
-  passiveSavingThrowRollModeRouteEvents,
-  battleLightEmitterProjection,
-  battleLightEmitters,
-  battleObscurementZones,
-  battlePerceptionRollModeForObscurement,
-  battlePerceptionRollModeForSight,
-  battleSightObscurement,
-  battleCreatureInitFromStatBlock,
-  breakBattleConcentration,
-  combatantKnockedOutUnconscious,
-  concentrationSavingThrowDc,
-  discoverBattleActCandidates,
-  endTurn,
-  FEATHER_FALL_DESCENT_RATE_CAP_FEET_PER_ROUND,
-  openBattleInterruptWindow,
-  openCreatureFallsInterruptWindow,
-  removeBattleRuntimeCombatants,
-  resolveBattleConcentrationDamage,
-  resolveFallDamageLanding,
-  resolveFeatherFallLanding,
-  resolveFlySpeedGrantEndFallCleanup,
-  resolveFailedAbilityCheckResourceBoost,
-  requiredInitiativeRollModeForCombatant,
-  resolveSuccessfulAbilityCheckReactionReduction,
-  resolveBattleInterrupt,
-  resolveBardicInspirationFailedD20Test,
-  scoreModifier,
-  SELF_TRANSFORMATION_MODE_KINDS,
-  battleSnapshotProjection,
-  snapshotBattle,
-  SPELL_CAST_REACTION_FACTS_HOLE_ID,
-  spellSaveDcForCaster,
-  startBattle,
-  startBattleWithInitialInitiativeSetup,
-  validateWildShapeEquipmentDispositionFill,
-  wildShapeLoadoutObjectRefs,
   type ActiveOngoingFeatureOccurrence,
-  type ActiveWildShapeEquipmentDisposition,
   type ActiveOngoingFeatureOccurrenceSnapshot,
   type ActiveOngoingFeatureOccurrenceSnapshotEncoded,
   type BattleAttackDamageDisposition,
   type AttackDamageRider,
   type AttackDamageRiderUsage,
   type AttackRollFeatureActivation,
-  type AttackDamageAbilityModifierChoice,
-  type AttackDamageAbilityModifierChoiceFill,
-  type AttackDamageAbilityModifierChoiceSelection,
-  type AttackDamageAbilityModifierChoiceProcedureRefs,
   type AvailableBattleAct,
   type BattleActPresentation,
   type BattleAbilityCheckHole,
@@ -438,12 +384,6 @@ export {
   type BattleHelpAttack,
   type BattleHiddenState,
   type BattleHidePrerequisite,
-  type BattleReducerRouteEvent,
-  type BattleReducerRouteEvents,
-  type BattleReducerRouteFill,
-  type BattleReducerRouteHole,
-  type BattleReducerRouteOwnerGroup,
-  type BattleReducerRouteSubjectFamily,
   type BattleHitPointHealingPoolAllocation,
   type BattleHitPointHealingPoolDistributionHole,
   type BattleHole,
@@ -453,8 +393,6 @@ export {
   type BattleInterruptFrame,
   type BattleInterruptedProcedure,
   type BattleInvalidReasonCode,
-  type InitialInitiativeSetup,
-  type InitiativeSwapCandidateWitness,
   type BattleIllumination,
   type BattleLightEmission,
   type BattleSeeInvisibleEtherealWitness,
@@ -500,6 +438,10 @@ export {
   type BattleSightObserver,
   type BattleSightObscurement,
   type BattleSnapshot,
+  type BattlePresentedCreatureSnapshot,
+  type BattlePresentedSnapshot,
+  type BattleSnapshotPresentationIssue,
+  type BattleSnapshotPresentationIssues,
   type BattleStoredLightEmitter,
   type BattleSpellAreaChoice,
   type BattleSpellAreaOriginAnchor,
@@ -527,9 +469,6 @@ export {
   type BattleUnitFeatureRollHole,
   type BattleWildShapeEquipmentDispositionHole,
   type EndedFlySpeedGrant,
-  type FlyEndCanStopFallReason,
-  type FlySpeedGrantEndFallWitness,
-  type FlySpeedGrantEndFallWitnessResult,
   type BardicInspirationFailedD20TestResolutionInput,
   type BardicInspirationFailedD20TestResolutionResult,
   type FailedAbilityCheckResourceBoostResolutionInput,
@@ -537,7 +476,6 @@ export {
   type LegendaryActionWindow,
   type OngoingFeatureExpiration,
   type OngoingFeatureSourceKey,
-  type SelfTransformationModeKind,
   type SelfTransformationModeSpellInvocation,
   type SupportedSpellInvocation,
   type MagicWeaponEnhancementBonus,
@@ -545,10 +483,111 @@ export {
   type ThaumaturgyBoomingVoiceSpellInvocation,
   type SuccessfulAbilityCheckReactionReductionResolutionInput,
   type SuccessfulAbilityCheckReactionReductionResolutionResult,
+} from "./battle-state-execution.ts";
+export {
+  ActiveOngoingFeatureOccurrenceSnapshotSchema,
+  BattleDroppedObjectOutcomeSchema,
+  BattleFillSchema,
+  BattleHoleSchema,
+  BattleObjectDamageOutcomeSchema,
+  BattleObjectIgnitionOutcomeSchema,
+  BattleShovePushOutcomeSchema,
+  BattleSnapshotSchema,
+  BattlePresentedSnapshotSchema,
+  StatBlockExecutionSnapshotSchema,
+} from "./battle-reducer/battle-codecs.ts";
+export {
+  BattleCreatureDisplayNameSchema,
+  type BattleCreatureDisplayName,
+} from "./battle-creature-display-name.ts";
+export { battlePresentedSnapshot } from "./battle-snapshot-presentation.ts";
+export {
+  addBattleRuntimeCombatant,
+  applyInitiativeSwap,
+  finishInitialInitiativeSetup,
+  removeBattleRuntimeCombatants,
+  requiredInitiativeRollModeForCombatant,
+  startBattle,
+  startBattleWithInitialInitiativeSetup,
+  type InitialInitiativeSetup,
+  type InitiativeSwapCandidateWitness,
+} from "./battle-reducer/api-lifecycle.ts";
+export {
+  activeFeatherFallDescentRateCapFeetPerRound,
+  activeSelfTransformationModeEffect,
+  battleIlluminationFromLightEmitters,
+  battleMagicalDarknessNonmagicalLightIllumination,
+  battleMagicalDarknessSightObscurement,
+  battleCreatureCanBreatheUnderwater,
+  battleLightEmitterProjection,
+  battleLightEmitters,
+  battleObscurementZones,
+  battlePerceptionRollModeForObscurement,
+  battlePerceptionRollModeForSight,
+  battleSightObscurement,
+  FEATHER_FALL_DESCENT_RATE_CAP_FEET_PER_ROUND,
+} from "./battle-reducer/spells-active-effects.ts";
+export {
+  activeFeatureSpellSaveDcRouteEvents,
+  battleReducerStartRouteEvent,
+  passiveSavingThrowRollModeRouteEvents,
+  type BattleReducerRouteEvent,
+  type BattleReducerRouteEvents,
+  type BattleReducerRouteFill,
+  type BattleReducerRouteHole,
+  type BattleReducerRouteOwnerGroup,
+  type BattleReducerRouteSubjectFamily,
+} from "./battle-reducer/reducer-route.ts";
+export { battleCreatureInitFromStatBlock } from "./battle-init.ts";
+export { spellSaveDcForCaster } from "./battle-reducer/attack-resolution.ts";
+export {
+  breakBattleConcentration,
+  resolveBattleConcentrationDamage,
+} from "./battle-reducer/damage-apply.ts";
+export { combatantKnockedOutUnconscious } from "./battle-reducer/creature-state.ts";
+export {
+  concentrationSavingThrowDc,
+  scoreModifier,
+} from "./battle-reducer/domain-helpers.ts";
+export { discoverBattleActCandidates } from "./battle-reducer/battle-discovery.ts";
+export {
+  endTurn,
+  openBattleInterruptWindow,
+  openCreatureFallsInterruptWindow,
+  resolveFallDamageLanding,
+  resolveFeatherFallLanding,
+  resolveFlySpeedGrantEndFallCleanup,
+  resolveBattleInterrupt,
+  battleSnapshotProjection,
+  snapshotBattle,
+  type FlyEndCanStopFallReason,
+  type FlySpeedGrantEndFallWitness,
+  type FlySpeedGrantEndFallWitnessResult,
+} from "./battle-reducer/dispatcher.ts";
+export {
+  resolveFailedAbilityCheckResourceBoost,
+  resolveSuccessfulAbilityCheckReactionReduction,
+  resolveBardicInspirationFailedD20Test,
+} from "./battle-reducer/unit-features.ts";
+export {
+  SELF_TRANSFORMATION_MODE_KINDS,
+  type SelfTransformationModeKind,
+} from "./battle-reducer/domain-constants.ts";
+export { SPELL_CAST_REACTION_FACTS_HOLE_ID } from "./battle-reducer/battle-runtime-protocol.ts";
+export {
+  validateWildShapeEquipmentDispositionFill,
+  wildShapeLoadoutObjectRefs,
+  type ActiveWildShapeEquipmentDisposition,
   type WildShapeEquipmentDispositionChoice,
   type WildShapeEquipmentDispositionFillValue,
   type WildShapeLoadoutObjectRef,
-} from "./battle-state-execution.ts";
+} from "./battle-reducer/wild-shape-equipment.ts";
+export {
+  type AttackDamageAbilityModifierChoice,
+  type AttackDamageAbilityModifierChoiceFill,
+  type AttackDamageAbilityModifierChoiceSelection,
+  type AttackDamageAbilityModifierChoiceProcedureRefs,
+} from "./battle-reducer/attack-damage-ability-modifier-choice.ts";
 
 export {
   endBattleRuntimeTurn,
@@ -777,3 +816,5 @@ export {
   type BattleShapeShiftTrueFormFacts,
   type SpellShapeShiftedFormActiveEffect,
 } from "./battle-reducer/shape-shifting.ts";
+
+export { admitCharacterWeaponAttackExecutionWeapon } from "./character-weapon-execution-admission.ts";

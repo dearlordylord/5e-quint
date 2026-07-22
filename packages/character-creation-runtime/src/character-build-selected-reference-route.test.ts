@@ -1,3 +1,4 @@
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { Either } from "effect";
 import { describe, expect, test } from "vitest";
 
@@ -18,15 +19,15 @@ const selectedReferenceFeatureCases = [
     name: "selected class choice",
     feature: {
       kind: "selectedClassChoice",
-      selectedFromUnitId: "fighter_fighting_style",
-      unitId: "defense",
+      selectedFromUnitId: authoredUnitId("fighter_fighting_style"),
+      unitId: authoredUnitId("defense"),
     },
   },
   {
     name: "selected Eldritch Invocation",
     feature: {
       kind: "selectedEldritchInvocation",
-      selectedFromUnitId: "warlock_eldritch_invocations",
+      selectedFromUnitId: authoredUnitId("warlock_eldritch_invocations"),
       selection: {
         kind: "nonRepeatable",
         invocationId: eldritchInvocationId("warlock_pact_of_the_chain"),
@@ -37,7 +38,7 @@ const selectedReferenceFeatureCases = [
     name: "selected Sorcerer Metamagic option",
     feature: {
       kind: "selectedSorcererMetamagicOption",
-      selectedFromUnitId: "sorcerer_metamagic",
+      selectedFromUnitId: authoredUnitId("sorcerer_metamagic"),
       optionId: expectRight(
         sorcererMetamagicOptionId("sorcerer_empowered_spell"),
       ),
@@ -78,11 +79,11 @@ describe("characterBuildSelectedReferencesWithRoute", () => {
         slotPools: {},
         sources: [
           {
-            sourceUnitId: "class_wizard",
+            sourceUnitId: authoredUnitId("class_wizard"),
             spellcastingAbility: "int",
-            cantrips: ["fire_bolt"],
-            spellbook: ["detect_magic"],
-            preparedSpells: ["magic_missile"],
+            cantrips: [authoredUnitId("fire_bolt")],
+            spellbook: [authoredUnitId("detect_magic")],
+            preparedSpells: [authoredUnitId("magic_missile")],
             spellcastingFocuses: [],
           },
         ],
@@ -129,7 +130,7 @@ describe("characterBuildSelectedReferencesWithRoute", () => {
       features: [
         {
           kind: "abilityCheckBonus",
-          selectedFromUnitId: "ranger_deft_explorer",
+          selectedFromUnitId: authoredUnitId("ranger_deft_explorer"),
           ability: "wis",
           skills: ["survival"],
           bonus: {
@@ -162,11 +163,11 @@ function testBuild(input: {
 }): CharacterBuild {
   const build: CharacterBuild = {
     progression: {
-      startingClass: classUnitId("class_fighter"),
+      startingClass: classUnitId(authoredUnitId("class_fighter")),
       advancements: [],
     },
-    background: "background_soldier",
-    species: "species_orc",
+    background: authoredUnitId("background_soldier"),
+    species: authoredUnitId("species_orc"),
     originLanguages: ["Common", "Dwarvish", "Goblin"],
     classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },

@@ -2,12 +2,10 @@
 import { isIncapacitated } from "@dnd/shared-algebras/conditions-algebra";
 import type { Language } from "@dnd/shared/game-facts";
 import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
-import type {
-  CreatureSense,
-  StatBlockRecord,
-} from "@dnd/surface/surface/types";
+import type { CreatureSense } from "@dnd/surface/surface/types";
 
 import type { BattleCreatureState } from "./battle-state-execution.ts";
+import type { BattleRuntimeContext } from "./battle-runtime-context.ts";
 import {
   activeDruidWildShapeForm,
   combatantSkillModifier,
@@ -51,11 +49,12 @@ export type BattleCreaturePerceptionCommunicationProjection = {
 
 export function combatantPerceptionCommunicationProjection(
   combatant: BattleCreatureState,
+  context: BattleRuntimeContext,
 ): BattleCreaturePerceptionCommunicationProjection {
   return {
     specialSenses: combatantSpecialSenses(combatant),
     passivePerception: 10 + combatantSkillModifier(combatant, "perception"),
-    communication: combatantCommunicationProjection(combatant),
+    communication: combatantCommunicationProjection(combatant, context),
   };
 }
 
@@ -67,13 +66,14 @@ function combatantSpecialSenses(
     return activeForm.statBlock.senses ?? [];
   }
   if (combatant.origin.kind === "statBlock") {
-    return combatant.origin.statBlock.statBlock.senses ?? [];
+    return combatant.origin.mechanics.specialSenses;
   }
   return [];
 }
 
 function combatantCommunicationProjection(
   combatant: BattleCreatureState,
+  context: BattleRuntimeContext,
 ): BattleCreatureCommunicationProjection {
   if (combatant.origin.kind === "character") {
     return {
@@ -87,22 +87,8 @@ function combatantCommunicationProjection(
   }
   return {
     kind: "statBlockCommunicationText",
-    languages: statBlockCommunicationText(combatant.origin.statBlock),
-  };
-}
-
-function statBlockCommunicationText(
-  statBlock: StatBlockRecord,
-): BattleStatBlockCommunicationText {
-  const languages = statBlock.statBlock.languages;
-  if (languages === undefined) {
-    return { kind: "absentStatBlockLanguages" };
-  }
-  if (languages === "caster_languages") {
-    return { kind: "casterLanguagesReference" };
-  }
-  return {
-    kind: "authoredStatBlockLanguageEntries",
-    entries: languages,
+    languages:
+      context.statBlocks.get(combatant.combatantId)?.languages ??
+      ({ kind: "absentStatBlockLanguages" } as const),
   };
 }

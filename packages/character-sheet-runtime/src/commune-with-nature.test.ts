@@ -3,6 +3,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L19E-07-L5-DIVINATION-SOCIAL-EXPLORATION commune_with_nature
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L19E-07-L5-DIVINATION-SOCIAL-EXPLORATION commune_with_nature
 // UNIT-IDENTITY-REPLAY: L19E-07-L5-DIVINATION-SOCIAL-EXPLORATION commune_with_nature doCastCommuneWithNature
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, it, test } from "vitest";
 
 import {
@@ -73,9 +74,7 @@ describe("Character Sheet runtime / Commune with Nature", () => {
         new Set<CommuneWithNatureSelectedIdentityDriverAction>();
 
       for (const sequence of replay.sequences) {
-        let projection:
-          | CommuneWithNatureSelectedIdentityProjection
-          | undefined;
+        let projection: CommuneWithNatureSelectedIdentityProjection | undefined;
 
         for (const actionName of sequence.actions) {
           replayedActions.add(actionName);
@@ -205,7 +204,9 @@ function communeWithNatureDruidSheet(input: {
     parseCharacterSheet(
       {
         ...storedAvailableSheetInput({
-          characterId: characterSheetId("character:commune-with-nature-druid-9"),
+          characterId: characterSheetId(
+            "character:commune-with-nature-druid-9",
+          ),
           build: {
             ...armorClassBuild({
               startingClass: "class_druid",
@@ -214,18 +215,18 @@ function communeWithNatureDruidSheet(input: {
             classFeatureLanguages: [
               {
                 kind: "classFeatureLanguageGrant",
-                sourceUnitId: "druid_druidic",
+                sourceUnitId: authoredUnitId("druid_druidic"),
                 language: "Druidic",
               },
             ],
             spellcasting: {
               sources: [
                 {
-                  sourceUnitId: "class_druid",
+                  sourceUnitId: authoredUnitId("class_druid"),
                   spellcastingAbility: "wis",
                   cantrips: ["druidcraft", "guidance", "produce_flame"],
                   spellbook: [],
-                  preparedSpells: input.preparedSpells,
+                  preparedSpells: input.preparedSpells.map(authoredUnitId),
                   spellcastingFocuses: ["druidic_focus"],
                 },
               ],

@@ -1,3 +1,4 @@
+import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-glyph-stored-concentration-full-duration
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE
@@ -12,12 +13,9 @@ import {
   ElapsedTimeTicksSchema,
 } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet, MovementFeet } from "@dnd/shared/types";
-import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
 import {
-  maybeOpenInterruptWindow,
-  snapshotBattle,
   type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
   type BattleCreatureState,
@@ -26,6 +24,7 @@ import {
   type BattleState,
   type LevitatedCreatureSpellInvocation,
 } from "../../battle-state-execution.ts";
+import { maybeOpenInterruptWindow, snapshotBattle } from "../dispatcher.ts";
 import { CombatantId } from "../../identity.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";
 import { allocateBattleActiveEffectRef } from "../../active-effect/execution-ref.ts";
@@ -38,7 +37,7 @@ import {
   LEVITATE_INITIAL_RISE_FEET,
   levitateInitialRiseHole,
 } from "../levitate-creature.ts";
-import { sameStringSet } from "../spells-profile-shared.ts";
+import { sameStringSet } from "../spells-execution-facts.ts";
 import { spellSavingThrowOutcomeHole } from "../spells-damage-fills.ts";
 import {
   spellTargetHole,
@@ -71,7 +70,7 @@ type LevitatedCreatureResolveInput =
   SpellProcedureProfileResolveInput<LevitatedCreatureInvocation>;
 
 function admitLevitatedCreature(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly LevitatedCreatureInvocation[] {
   const projection = levitatedCreatureSpellProjection(
@@ -99,7 +98,7 @@ function admitLevitatedCreature(
 
 function levitatedCreatureSpellProjection(
   actorId: CombatantId,
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
 ): Omit<
   LevitatedCreatureInvocation,
   "access" | "resource" | "spell" | "actionCost"

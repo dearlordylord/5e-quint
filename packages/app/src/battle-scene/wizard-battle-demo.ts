@@ -8,7 +8,6 @@ import {
   type BattleRuntimeContext,
   type BattleRuntimeResolutionResult,
   type BattleRuntimeSession,
-  type BattleSnapshot,
   type BattleState,
   characterId,
   type CombatantId,
@@ -119,7 +118,7 @@ export type WizardBattleDemoCue = {
 export type WizardBattleDemoStep = {
   readonly title: string
   readonly detail: string
-  readonly state: BattleState
+  readonly session: BattleRuntimeSession
   readonly cue: WizardBattleDemoCue
 }
 
@@ -343,8 +342,7 @@ export const WIZARD_BATTLE_DEMO_META: WizardBattleDemoMeta = {
 }
 
 export const WIZARD_BATTLE_DEMO_STEPS = demo.steps
-export const WIZARD_BATTLE_DEMO_STATE: BattleState = lastStep(WIZARD_BATTLE_DEMO_STEPS).state
-export const WIZARD_BATTLE_DEMO_SNAPSHOT: BattleSnapshot = snapshotBattle(WIZARD_BATTLE_DEMO_STATE)
+export const WIZARD_BATTLE_DEMO_STATE: BattleState = lastStep(WIZARD_BATTLE_DEMO_STEPS).session.state
 export const WIZARD_BATTLE_DEMO_OBJECT_IGNITIONS = demo.objectIgnitions
 
 function wizardSprite(file: number): WizardBattleSprite {
@@ -625,13 +623,13 @@ function castAreaSpell(builder: WizardBattleDemoBuilder, plan: AreaSpellPlan): v
   pushStep(builder, {
     title: "Area selected",
     detail: `${plan.spell.name} catches ${plan.outcomes.map((outcome) => nameOf(outcome.targetId)).join(", ")}.`,
-    state: spellReady.session.state,
+    session: spellReady.session,
     cue: { spell: spellCue(plan) }
   })
   pushStep(builder, {
     title: `${plan.spell.name} saves`,
     detail: `${plan.spell.name} asks the table for affected creatures and Saving Throw outcomes.`,
-    state: spellReady.session.state,
+    session: spellReady.session,
     cue: { spell: spellCue(plan) }
   })
 
@@ -639,7 +637,7 @@ function castAreaSpell(builder: WizardBattleDemoBuilder, plan: AreaSpellPlan): v
     pushStep(builder, {
       title: "Saving throw",
       detail: outcome.detail,
-      state: spellReady.session.state,
+      session: spellReady.session,
       cue: {
         spell: spellCue(plan),
         labels: [
@@ -666,7 +664,7 @@ function castAreaSpell(builder: WizardBattleDemoBuilder, plan: AreaSpellPlan): v
   pushStep(builder, {
     title: "Damage roll",
     detail: `${plan.spell.name} rolls ${plan.spell.damageRollResults.join(" + ")}.`,
-    state: spellReady.session.state,
+    session: spellReady.session,
     cue: { spell: spellCue(plan) }
   })
 
@@ -726,7 +724,7 @@ function resolveCounterspellChain(
     pushStep(builder, {
       title: "Counterspell window",
       detail: link.waitingDetail,
-      state: pendingInterrupt.session.state,
+      session: pendingInterrupt.session,
       cue: {
         reactingId: link.reactorId,
         spell: counterspellCue(link)
@@ -783,7 +781,7 @@ function pushCounterspellCastStep(
   pushStep(builder, {
     title: "Counterspell",
     detail: link.castDetail,
-    state: result.session.state,
+    session: result.session,
     cue: {
       reactingId: link.reactorId,
       spell: counterspellCue(link),
@@ -807,7 +805,7 @@ function resolveDeclinedCounterspell(
   pushStep(builder, {
     title: "Counterspell window",
     detail: decline.detail,
-    state: result.session.state,
+    session: result.session,
     cue: {
       reactingId: decline.reactorId,
       spell: {
@@ -829,7 +827,7 @@ function resolveDeclinedCounterspell(
   pushStep(builder, {
     title: "Counterspell declined",
     detail: `${nameOf(decline.reactorId)} declines the reaction.`,
-    state: declined.session.state,
+    session: declined.session,
     cue: {
       reactingId: decline.reactorId,
       labels: [{ combatantId: decline.reactorId, text: "Decline", tone: "positive" }]
@@ -904,11 +902,11 @@ function ensureTurnStarted(builder: WizardBattleDemoBuilder, actorId: CombatantI
 
 function pushStep(
   builder: WizardBattleDemoBuilder,
-  input: Omit<WizardBattleDemoStep, "state"> & { readonly state?: BattleState }
+  input: Omit<WizardBattleDemoStep, "session"> & { readonly session?: BattleRuntimeSession }
 ): void {
   builder.steps.push({
     ...input,
-    state: input.state ?? builder.session.state
+    session: input.session ?? builder.session
   })
 }
 

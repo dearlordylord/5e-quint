@@ -1,3 +1,4 @@
+import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-gust-of-wind-line unit-feature.metamagic-heightened-save-disadvantage
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE
@@ -26,7 +27,6 @@ import {
   type ElapsedTimeTicks,
 } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
-import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 import {
   type BattleActDiscoveryCandidate,
@@ -76,11 +76,11 @@ type GustOfWindLineResolveInput =
   SpellProcedureProfileResolveInput<GustOfWindLineSpellInvocation>;
 
 type OngoingOperationEffect = Extract<
-  SpellRecord["mechanics"],
+  BattleSpellAdmissionSource["mechanics"],
   { readonly family: "ongoing_effect" }
 >["operations"][number]["effect"];
 type GustOfWindLineInitialPhase = Extract<
-  SpellRecord["mechanics"],
+  BattleSpellAdmissionSource["mechanics"],
   { readonly family: "ongoing_effect" }
 >["initialPhase"];
 type OngoingSaveGateEffect = Extract<
@@ -110,7 +110,7 @@ const GUST_OF_WIND_PUSH_DISTANCE_FEET = 15;
 const GUST_OF_WIND_MOVEMENT_COST_MULTIPLIER = 2;
 
 function admitGustOfWindLine(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly GustOfWindLineSpellInvocation[] {
   const line = gustOfWindLineSpell(spell);
@@ -150,7 +150,7 @@ function admitGustOfWindLine(
 }
 
 function gustOfWindLineSpell(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
 ): GustOfWindLineProfileShape | null {
   if (spell.mechanics.family !== "ongoing_effect") {
     return null;

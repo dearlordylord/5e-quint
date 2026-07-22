@@ -1,6 +1,7 @@
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1D2-WARLOCK-ELDRITCH-INVOCATIONS warlock_eldritch_invocations
 // UNIT-IDENTITY-REPLAY: L1D2-WARLOCK-ELDRITCH-INVOCATIONS warlock_eldritch_invocations doSelectLevelOneArmorOfShadows doGainLevelTwoInvocations doReplaceArmorWithEldritchMindOnWarlockLevelGain doReplaceRepeatableInvocationByChoice doRejectPrerequisiteRetainedInvocationReplacement doRejectDuplicateInvocationSelections
 // KERNEL-COVERAGE: parity-witness CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
@@ -68,25 +69,25 @@ const REPELLING_BLAST_INVOCATION_ID = eldritchInvocationId("repelling_blast");
 const ELDRITCH_BLAST_CANTRIP_UNIT_ID = "eldritch_blast";
 const POISON_SPRAY_CANTRIP_UNIT_ID = "poison_spray";
 const LEVEL_ONE_CANTRIP_UNIT_IDS = [
-  ELDRITCH_BLAST_CANTRIP_UNIT_ID,
-  "minor_illusion",
+  authoredUnitId(ELDRITCH_BLAST_CANTRIP_UNIT_ID),
+  authoredUnitId("minor_illusion"),
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
 const LEVEL_ONE_PREPARED_SPELL_UNIT_IDS = [
-  "charm_person",
-  "hellish_rebuke",
+  authoredUnitId("charm_person"),
+  authoredUnitId("hellish_rebuke"),
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
 const WARLOCK_FIXTURE_PURCHASE_UNIT_IDS = [
-  "weapon_longsword",
-  "equipment_shield",
-  "weapon_flail",
+  authoredUnitId("weapon_longsword"),
+  authoredUnitId("equipment_shield"),
+  authoredUnitId("weapon_flail"),
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
 const ELDRITCH_BLAST_CHOICE = {
   kind: "knownWarlockCantrip",
-  cantripId: ELDRITCH_BLAST_CANTRIP_UNIT_ID,
+  cantripId: authoredUnitId(ELDRITCH_BLAST_CANTRIP_UNIT_ID),
 } as const satisfies CharacterBuildEldritchInvocationRepeatableChoice;
 const POISON_SPRAY_CHOICE = {
   kind: "knownWarlockCantrip",
-  cantripId: POISON_SPRAY_CANTRIP_UNIT_ID,
+  cantripId: authoredUnitId(POISON_SPRAY_CANTRIP_UNIT_ID),
 } as const satisfies CharacterBuildEldritchInvocationRepeatableChoice;
 
 const WARLOCK_INVOCATION_SELECTED_IDENTITY_RESULTS = [
@@ -594,7 +595,7 @@ function lockedReplacementRejectedProjection(): WarlockEldritchInvocationsSelect
         classUnitId: warlockClassUnitId(),
         hitPointRule: { tag: "fixedHigherLevelGain" },
         pactMagic: warlockPactMagicLevelGain({
-          gainedPreparedSpells: ["hideous_laughter"],
+          gainedPreparedSpells: [authoredUnitId("hideous_laughter")],
         }),
         gainedInvocations: [],
         replacement: {
@@ -624,7 +625,10 @@ function lockedReplacementRejectedProjection(): WarlockEldritchInvocationsSelect
 function duplicateSelectionRejectedProjection(): WarlockEldritchInvocationsSelectedIdentityProjection {
   const build = warlockBuildWithKnownWarlockCantrips(
     finalizedWarlockBuild("warlock-eldritch-invocations-duplicates"),
-    [ELDRITCH_BLAST_CANTRIP_UNIT_ID, POISON_SPRAY_CANTRIP_UNIT_ID],
+    [
+      authoredUnitId(ELDRITCH_BLAST_CANTRIP_UNIT_ID),
+      authoredUnitId(POISON_SPRAY_CANTRIP_UNIT_ID),
+    ],
   );
   const duplicateNonRepeatable = advanceCharacterBuildClassLevel({
     build,
@@ -635,7 +639,7 @@ function duplicateSelectionRejectedProjection(): WarlockEldritchInvocationsSelec
         classUnitId: warlockClassUnitId(),
         hitPointRule: { tag: "fixedHigherLevelGain" },
         pactMagic: warlockPactMagicLevelGain({
-          gainedPreparedSpells: ["hex"],
+          gainedPreparedSpells: [authoredUnitId("hex")],
         }),
         gainedInvocations: [
           nonRepeatableEldritchInvocation(ARMOR_OF_SHADOWS_INVOCATION_ID),
@@ -658,7 +662,7 @@ function duplicateSelectionRejectedProjection(): WarlockEldritchInvocationsSelec
         classUnitId: warlockClassUnitId(),
         hitPointRule: { tag: "fixedHigherLevelGain" },
         pactMagic: warlockPactMagicLevelGain({
-          gainedPreparedSpells: ["hex"],
+          gainedPreparedSpells: [authoredUnitId("hex")],
         }),
         gainedInvocations: [
           repeatableEldritchInvocation(
@@ -746,7 +750,7 @@ function levelTwoNonRepeatableInvocationBuild(): CharacterBuild {
           classUnitId: warlockClassUnitId(),
           hitPointRule: { tag: "fixedHigherLevelGain" },
           pactMagic: warlockPactMagicLevelGain({
-            gainedPreparedSpells: ["hex"],
+            gainedPreparedSpells: [authoredUnitId("hex")],
           }),
           gainedInvocations: [
             nonRepeatableEldritchInvocation(PACT_OF_THE_BLADE_INVOCATION_ID),
@@ -769,7 +773,7 @@ function nonRepeatableReplacementBuild(): CharacterBuild {
           classUnitId: warlockClassUnitId(),
           hitPointRule: { tag: "fixedHigherLevelGain" },
           pactMagic: warlockPactMagicLevelGain({
-            gainedPreparedSpells: ["bane"],
+            gainedPreparedSpells: [authoredUnitId("bane")],
           }),
           gainedInvocations: [],
           replacement: {
@@ -791,7 +795,10 @@ function repeatableReplacementBuild(): CharacterBuild {
     advanceCharacterBuildClassLevel({
       build: warlockBuildWithKnownWarlockCantrips(
         finalizedWarlockBuild("warlock-eldritch-invocations-repeatable"),
-        [ELDRITCH_BLAST_CANTRIP_UNIT_ID, POISON_SPRAY_CANTRIP_UNIT_ID],
+        [
+          authoredUnitId(ELDRITCH_BLAST_CANTRIP_UNIT_ID),
+          authoredUnitId(POISON_SPRAY_CANTRIP_UNIT_ID),
+        ],
       ),
       unitLibrary,
       levelGain: expectRight(
@@ -800,7 +807,7 @@ function repeatableReplacementBuild(): CharacterBuild {
           classUnitId: warlockClassUnitId(),
           hitPointRule: { tag: "fixedHigherLevelGain" },
           pactMagic: warlockPactMagicLevelGain({
-            gainedPreparedSpells: ["hex"],
+            gainedPreparedSpells: [authoredUnitId("hex")],
           }),
           gainedInvocations: [
             repeatableEldritchInvocation(
@@ -827,7 +834,7 @@ function repeatableReplacementBuild(): CharacterBuild {
           classUnitId: warlockClassUnitId(),
           hitPointRule: { tag: "fixedHigherLevelGain" },
           pactMagic: warlockPactMagicLevelGain({
-            gainedPreparedSpells: ["bane"],
+            gainedPreparedSpells: [authoredUnitId("bane")],
           }),
           gainedInvocations: [],
           replacement: {
@@ -857,7 +864,7 @@ function warlockLevelFiveBuildWithThirstingBlade(): CharacterBuild {
           classUnitId: warlockClassUnitId(),
           hitPointRule: { tag: "fixedHigherLevelGain" },
           pactMagic: warlockPactMagicLevelGain({
-            gainedPreparedSpells: ["bane"],
+            gainedPreparedSpells: [authoredUnitId("bane")],
           }),
           gainedInvocations: [],
         }),
@@ -874,8 +881,8 @@ function warlockLevelFiveBuildWithThirstingBlade(): CharacterBuild {
           classUnitId: warlockClassUnitId(),
           hitPointRule: { tag: "fixedHigherLevelGain" },
           pactMagic: warlockPactMagicLevelGain({
-            gainedCantrips: [POISON_SPRAY_CANTRIP_UNIT_ID],
-            gainedPreparedSpells: ["detect_magic"],
+            gainedCantrips: [authoredUnitId(POISON_SPRAY_CANTRIP_UNIT_ID)],
+            gainedPreparedSpells: [authoredUnitId("detect_magic")],
           }),
           gainedInvocations: [],
         }),
@@ -893,7 +900,7 @@ function warlockLevelFiveBuildWithThirstingBlade(): CharacterBuild {
           classUnitId: warlockClassUnitId(),
           hitPointRule: { tag: "fixedHigherLevelGain" },
           pactMagic: warlockPactMagicLevelGain({
-            gainedPreparedSpells: ["expeditious_retreat"],
+            gainedPreparedSpells: [authoredUnitId("expeditious_retreat")],
           }),
           gainedInvocations: [
             nonRepeatableEldritchInvocation(THIRSTING_BLADE_INVOCATION_ID),
@@ -1063,7 +1070,7 @@ function preferredOptionIdsForHole(input: {
 function warlockProgression(): CharacterProgression {
   const parsedClassUnitId = classUnitIdFromUnitId({
     unitLibrary,
-    classUnitId: WARLOCK_CLASS_UNIT_ID,
+    classUnitId: authoredUnitId(WARLOCK_CLASS_UNIT_ID),
   });
   if (Either.isLeft(parsedClassUnitId)) {
     throw new Error(
@@ -1087,7 +1094,7 @@ function warlockClassUnitId() {
   return expectRight(
     classUnitIdFromUnitId({
       unitLibrary,
-      classUnitId: WARLOCK_CLASS_UNIT_ID,
+      classUnitId: authoredUnitId(WARLOCK_CLASS_UNIT_ID),
     }),
   );
 }
@@ -1183,7 +1190,7 @@ function warlockInvocationFacts(build: CharacterBuild): WarlockInvocationFacts {
     selectedInvocationCount: selectedInvocationFeatures.length,
     selectedClassChoiceFeatureRefCount,
     warlockInvocationsUnitRefPresent: unitRefIds.includes(
-      WARLOCK_ELDRITCH_INVOCATIONS_UNIT_ID,
+      authoredUnitId(WARLOCK_ELDRITCH_INVOCATIONS_UNIT_ID),
     ),
     armorOfShadowsInvocationPresent: hasNonRepeatableInvocation(
       selectedInvocationFeatures,
@@ -1208,14 +1215,16 @@ function warlockInvocationFacts(build: CharacterBuild): WarlockInvocationFacts {
     repellingBlastEldritchBlastPresent: hasRepeatableKnownCantripInvocation(
       selectedInvocationFeatures,
       REPELLING_BLAST_INVOCATION_ID,
-      ELDRITCH_BLAST_CANTRIP_UNIT_ID,
+      authoredUnitId(ELDRITCH_BLAST_CANTRIP_UNIT_ID),
     ),
     repellingBlastPoisonSprayPresent: hasRepeatableKnownCantripInvocation(
       selectedInvocationFeatures,
       REPELLING_BLAST_INVOCATION_ID,
-      POISON_SPRAY_CANTRIP_UNIT_ID,
+      authoredUnitId(POISON_SPRAY_CANTRIP_UNIT_ID),
     ),
-    armorOfShadowsUnitRefPresent: unitRefIds.includes("armor_of_shadows"),
+    armorOfShadowsUnitRefPresent: unitRefIds.includes(
+      authoredUnitId("armor_of_shadows"),
+    ),
     pactMagicCantripCount: spellcasting.cantripCount,
     pactMagicPreparedSpellCount: spellcasting.preparedSpellCount,
     pactMagicSlotCount: spellcasting.slotCount,

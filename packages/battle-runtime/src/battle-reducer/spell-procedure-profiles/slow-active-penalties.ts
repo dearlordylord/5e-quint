@@ -28,8 +28,6 @@ import { movementFeet } from "@dnd/shared/types";
 import type { ActivationPhase, EffectAtom } from "@dnd/surface/surface/types";
 import { Either, Schema } from "effect";
 import {
-  maybeOpenInterruptWindow,
-  snapshotBattle,
   type BattleActDiscoveryCandidate,
   type BattleHole,
   type BattleResolutionResult,
@@ -38,6 +36,7 @@ import {
   type BattleExecutableSpellInvocation,
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
+import { maybeOpenInterruptWindow, snapshotBattle } from "../dispatcher.ts";
 import { battleCreatureWithSpellActiveEffects } from "../../active-effect/lifecycle.ts";
 import { type CombatantId } from "../../identity.ts";
 import {

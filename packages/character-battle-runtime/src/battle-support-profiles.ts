@@ -1,3 +1,4 @@
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import {
   battleUnitRefWithSupportProfiles,
   TACTICAL_MASTER_REPLACEMENT_SUPPORT_PROFILE,
@@ -29,17 +30,17 @@ type CharacterBattleWeaponMasterySelection = NonNullable<
 const BATTLE_SUPPORTED_MASTERY_UNIT_IDS: Partial<
   Record<WeaponMasteryName, UnitRecord["id"]>
 > = {
-  cleave: "mastery_cleave",
-  push: "mastery_push",
-  sap: "mastery_sap",
-  slow: "mastery_slow",
-  topple: "mastery_topple",
+  cleave: authoredUnitId("mastery_cleave"),
+  push: authoredUnitId("mastery_push"),
+  sap: authoredUnitId("mastery_sap"),
+  slow: authoredUnitId("mastery_slow"),
+  topple: authoredUnitId("mastery_topple"),
 };
 
 const TACTICAL_MASTER_REPLACEMENT_SUPPORT_PROFILE_MASTERY_UNIT_IDS = [
-  "mastery_push",
-  "mastery_sap",
-  "mastery_slow",
+  authoredUnitId("mastery_push"),
+  authoredUnitId("mastery_sap"),
+  authoredUnitId("mastery_slow"),
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
 
 export function characterUnitRefsWithBattleSupportProfiles(

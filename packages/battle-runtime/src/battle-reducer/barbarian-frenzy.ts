@@ -7,8 +7,8 @@ import type {
   CharacterBattleCreatureState,
   OngoingFeatureSourceKey,
 } from "../battle-state-execution.ts";
-import type { UnitFeatureProcedureExecution } from "../character-execution-admission.ts";
-import { ongoingFeatureProfileForSourceKey } from "./creature-state.ts";
+import type { UnitFeatureProcedureExecution } from "../character-execution-vocabulary.ts";
+import { ongoingFeatureProfileForSourceKey } from "./creature-state-execution.ts";
 
 const RAGE_RESISTANCE_DAMAGE_TYPES = [
   "bludgeoning",

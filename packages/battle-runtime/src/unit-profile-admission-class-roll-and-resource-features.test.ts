@@ -1,3 +1,4 @@
+import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT7 fighter_second_wind barbarian_reckless_attack rogue_evasion monk_evasion
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT62 fighter_tactical_mind
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L19D-04-FIGHTER-INDOMITABLE fighter_indomitable
@@ -595,7 +596,7 @@ describe("L19D-04 Fighter Indomitable failed Saving Throw reroll", () => {
     const wrongResource = characterResourceState(
       { unit: unitLibrary.requireUnit(fighterSecondWindUnitId) },
       fighterClassLevels(9),
-      resourcePoolRefForTest(fighterSecondWindUnitId),
+      resourcePoolRefForTest(parseSharedUnitId(fighterSecondWindUnitId)),
     );
     if (profile === null || profile === "unsupported") {
       throw new Error("Expected supported Indomitable profile.");

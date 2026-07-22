@@ -1,3 +1,4 @@
+import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import { battleObjectId } from "./identity.ts";
@@ -27,6 +28,7 @@ import {
   shillelaghUnitId,
   spellCasterId,
   spellTargetId,
+  unitLibrary,
 } from "./unit-profile-admission-catalog-support.ts";
 import {
   attackRollFill,
@@ -128,9 +130,19 @@ describe("SRDINV84H deterministic Shillelagh weapon override admission", () => {
         ...syntheticEligibleAttack,
         weapon: {
           ...syntheticEligibleAttack.weapon,
-          id: "weapon_synthetic_eligible_staff",
+          weaponUnitId: parseSharedUnitId("weapon_synthetic_eligible_staff"),
         },
       },
+      casterUnitRefs: [
+        {
+          unit: {
+            ...unitLibrary.requireUnit("weapon_quarterstaff"),
+            id: parseSharedUnitId("weapon_synthetic_eligible_staff"),
+            name: "Synthetic Eligible Staff",
+          },
+          supportProfiles: [],
+        },
+      ],
       casterClassLevels: [{ className: "druid", level: 1 }],
     });
     expect(
@@ -147,7 +159,10 @@ describe("SRDINV84H deterministic Shillelagh weapon override admission", () => {
       cantrips: [shillelagh],
       attack: {
         ...authoredIdOnlyAttack,
-        weapon: { ...authoredIdOnlyAttack.weapon, id: "weapon_club" },
+        weapon: {
+          ...authoredIdOnlyAttack.weapon,
+          weaponUnitId: parseSharedUnitId("weapon_club"),
+        },
       },
       casterClassLevels: [{ className: "druid", level: 1 }],
     });
@@ -427,12 +442,12 @@ describe("SRDINV84H deterministic Shillelagh weapon override admission", () => {
     expect(damage.label).toContain("2d6+3-force");
 
     expect(
-      discoverBattleActs(castSession).some(
-        (candidate) =>
-          candidate.presentation.kind === "attack" &&
-          candidate.presentation.name === "Quarterstaff (bludgeoning)",
+      discoverBattleActs(castSession).flatMap((candidate) =>
+        candidate.presentation.kind === "attack"
+          ? [candidate.presentation.name]
+          : [],
       ),
-    ).toBe(true);
+    ).toContain("Quarterstaff");
   });
 
   test("shillelagh damage die uses total character level for a multiclass caster", () => {

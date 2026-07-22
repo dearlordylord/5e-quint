@@ -1,3 +1,4 @@
+import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-self-teleport
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ANTIMAGIC_FIELD_TRANSIT_BLOCKING
@@ -20,11 +21,8 @@
 //     Attack, and Teleportation.
 
 import { movementFeet } from "@dnd/shared/types";
-import type { SpellRecord } from "@dnd/surface/surface/types";
 
 import {
-  maybeOpenInterruptWindow,
-  snapshotBattle,
   type BattleActDiscoveryCandidate,
   type BattleFill,
   type BattleResolutionResult,
@@ -34,6 +32,7 @@ import {
   type BattleTeleportDestinationFact,
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
+import { maybeOpenInterruptWindow, snapshotBattle } from "../dispatcher.ts";
 import { type CombatantId } from "../../identity.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
 import { invalidResult } from "../result-helpers.ts";
@@ -68,7 +67,7 @@ type SelfTeleportResolveInput =
   SpellProcedureProfileResolveInput<SelfTeleportInvocation>;
 
 function admitSelfTeleport(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly SelfTeleportInvocation[] {
   const projection = selfTeleportSpellProjection(spell);
@@ -93,7 +92,7 @@ function admitSelfTeleport(
 }
 
 function selfTeleportSpellProjection(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
 ): Pick<SelfTeleportInvocation, "maxDistanceFeet"> | null {
   if (
     spell.mechanics.family !== "activation" ||

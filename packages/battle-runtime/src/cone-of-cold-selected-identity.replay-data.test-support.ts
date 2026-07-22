@@ -65,7 +65,9 @@ export const coneOfColdSelectedIdentityReplay = {
             expect(spellHoleInvocation(state, [savingThrow])).toEqual(
               expect.objectContaining({
                 procedure: "saveGatedDamage",
-                spell,
+                spellRuleFacts: expect.objectContaining({
+                  spellId: spell.id,
+                }),
                 resource: { tag: "spellSlot", slotLevel: 5 },
                 ability: "con",
                 targeting: { kind: "selfOriginCone", lengthFeet: 60 },
@@ -126,7 +128,9 @@ export const coneOfColdSelectedIdentityReplay = {
             expect(spellHoleInvocation(state, [savingThrow])).toEqual(
               expect.objectContaining({
                 procedure: "saveGatedDamage",
-                spell,
+                spellRuleFacts: expect.objectContaining({
+                  spellId: spell.id,
+                }),
                 resource: { tag: "spellSlot", slotLevel: 5 },
                 ability: "dex",
                 targeting: {

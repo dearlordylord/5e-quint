@@ -5618,6 +5618,21 @@ function assertLocalRawSources(rows) {
   );
 }
 
+function seedNeedleMatches(sourceText, needle) {
+  const canonical = (text) =>
+    text
+      .replace(
+        /\bauthored(?:Unit|StatBlock)Id\(\s*("(?:[^"\\]|\\.)*"|[A-Za-z_]\w*)\s*\)/g,
+        "$1",
+      )
+      .replace(/\s+/g, "")
+      .replace(/,\]/g, "]");
+  return (
+    sourceText.includes(needle) ||
+    canonical(sourceText).includes(canonical(needle))
+  );
+}
+
 function assertSeedScenarios(seedScenarioSources, rows) {
   const rowsById = new Map(rows.map((row) => [row.rowId, row]));
   const errors = seededSdkScenarioRows.flatMap((seed) => {
@@ -5647,7 +5662,10 @@ function assertSeedScenarios(seedScenarioSources, rows) {
         ? undefined
         : seedScenarioSourceText(seedSourceText, title);
     for (const needle of seed.tracerNeedles) {
-      if (scenarioText === undefined || !scenarioText.includes(needle)) {
+      if (
+        scenarioText === undefined ||
+        !seedNeedleMatches(scenarioText, needle)
+      ) {
         seedErrors.push(
           `${seed.rowId} tracer needle "${needle}" is absent from scenario "${title}"`,
         );
@@ -5665,7 +5683,7 @@ function assertSeedScenarios(seedScenarioSources, rows) {
         continue;
       }
       for (const needle of helper.needles) {
-        if (!helperText.includes(needle)) {
+        if (!seedNeedleMatches(helperText, needle)) {
           seedErrors.push(
             `${seed.rowId} helper needle "${needle}" is absent from helper "${helper.anchor}"`,
           );
@@ -5691,7 +5709,7 @@ function assertSeedScenarios(seedScenarioSources, rows) {
         continue;
       }
       for (const needle of evidence.needles) {
-        if (!evidenceText.includes(needle)) {
+        if (!seedNeedleMatches(evidenceText, needle)) {
           seedErrors.push(
             `${seed.rowId} evidence needle "${needle}" is absent from test "${evidence.testTitle}"`,
           );

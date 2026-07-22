@@ -1,3 +1,4 @@
+import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.reaction-counterspell
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-governor-quickened
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.REACTION_CASTING_TIME BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR
@@ -24,11 +25,8 @@ import {
   spendActivationResource,
 } from "@dnd/shared-algebras/action-economy-algebra";
 import { movementFeet } from "@dnd/shared/types";
-import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 import {
-  snapshotBattle,
-  interruptedProcedureSubject,
   type BattleActDiscoveryCandidate,
   type BattleInterruptCheckpoint,
   type BattleInterruptCheckpointFrame,
@@ -37,13 +35,14 @@ import {
   type BattleTurnResources,
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
+import { snapshotBattle, interruptedProcedureSubject } from "../dispatcher.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
 import { counterspellReactionSpellMatchesTrigger } from "../reaction-triggered-spells.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { stateAfterSpellCastDeclared } from "../spell-cast-declaration.ts";
 import { spellSavingThrowOutcomeHole } from "../spells-damage-fills.ts";
 import { expendSpellSlot } from "../spell-effects.ts";
-import { sameStringSet } from "../spells-profile-shared.ts";
+import { sameStringSet } from "../spells-execution-facts.ts";
 import { spellFillSetContainsOnlySpellCastReactionFacts } from "../spells-resolve-fill-set.ts";
 import { validateSavingThrowOutcomes } from "../spells-resolve-save-gates.ts";
 import {
@@ -74,7 +73,7 @@ type CounterspellResolveInput =
   SpellProcedureProfileResolveInput<CounterspellInvocation>;
 
 function admitCounterspell(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly CounterspellInvocation[] {
   const projection = counterspellSpellProjection(spell);
@@ -98,7 +97,7 @@ function admitCounterspell(
 }
 
 function counterspellSpellProjection(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
 ): Pick<
   CounterspellInvocation,
   "ability" | "dc" | "targeting" | "rangeFeet" | "triggerComponents"

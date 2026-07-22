@@ -1,3 +1,4 @@
+import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-sanctuary-targeting-interdiction
 // KERNEL-COVERAGE: runtime-owner BATTLE.SANCTUARY.TARGETING_INTERDICTION
 //
@@ -18,7 +19,6 @@
 
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
-import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
 import { DurationBattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
@@ -37,7 +37,7 @@ import {
   battleStateAfterTargetActionEarlyEndForActor,
   combatantWithSanctuaryWard,
 } from "../sanctuary-targeting-interdiction.ts";
-import { sameStringSet } from "../spells-profile-shared.ts";
+import { sameStringSet } from "../spells-execution-facts.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
 import {
   spellTargetIsLegal,
@@ -78,7 +78,7 @@ type SanctuaryTargetingInterdictionResolveInput =
   SpellProcedureProfileResolveInput<SanctuaryTargetingInterdictionInvocation>;
 
 function admitSanctuaryTargetingInterdiction(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly SanctuaryTargetingInterdictionInvocation[] {
   const projection = sanctuaryTargetingInterdictionProjection(
@@ -108,7 +108,7 @@ function admitSanctuaryTargetingInterdiction(
 
 function sanctuaryTargetingInterdictionProjection(
   actorId: CombatantId,
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
 ): Pick<
   SanctuaryTargetingInterdictionSpellInvocation,
   "activeEffect" | "rangeFeet"

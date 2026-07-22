@@ -1,4 +1,5 @@
 // KERNEL-COVERAGE: runtime-owner CREATION.CLASS_FEATURE_SOURCE_FACT.PROJECTION
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { Either, Option } from "effect";
 import { DAMAGE_DIE_SIZES, type DamageDieSize } from "@dnd/shared/types";
 import type {
@@ -16,10 +17,10 @@ import {
 } from "./monk-focus.ts";
 import { characterBuildClassFeatureOwnerLevel } from "./class-feature-facts.ts";
 
-export const MONK_UNCANNY_METABOLISM_UNIT_ID =
-  "monk_uncanny_metabolism" as const satisfies UnitRecord["id"];
-export const MONK_MARTIAL_ARTS_UNIT_ID =
-  "monk_martial_arts" as const satisfies UnitRecord["id"];
+export const MONK_UNCANNY_METABOLISM_UNIT_ID = authoredUnitId(
+  "monk_uncanny_metabolism",
+);
+export const MONK_MARTIAL_ARTS_UNIT_ID = authoredUnitId("monk_martial_arts");
 
 type MonkUncannyMetabolismFeature = ClassFeatureRecord & {
   readonly className: "monk";
@@ -103,7 +104,7 @@ export function characterBuildMonkUncannyMetabolismFacts(input: {
 > {
   if (
     !characterBuildFeatureUnitIds(input.build, input.unitLibrary).includes(
-      MONK_UNCANNY_METABOLISM_UNIT_ID,
+      authoredUnitId(MONK_UNCANNY_METABOLISM_UNIT_ID),
     )
   ) {
     return Either.right(undefined);

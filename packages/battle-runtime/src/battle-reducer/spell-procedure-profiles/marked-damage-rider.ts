@@ -1,3 +1,4 @@
+import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-marked-damage-rider
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER
 //
@@ -35,7 +36,6 @@ import {
   type DamageType,
   type DiceExpr,
   type EffectAtom,
-  type SpellRecord,
 } from "@dnd/surface/surface/types";
 import { Either, Match } from "effect";
 import { allocateBattleActiveEffectRef } from "../../active-effect/execution-ref.ts";
@@ -43,10 +43,9 @@ import { BattleActiveEffectExpirationSchema } from "../../active-effect/codecs.t
 import {
   characterExecutionWithMarkedDamageRiderTransfer,
   characterSpellProcedureRefsForProcedure,
-  type MarkedDamageRiderTransferSpellProcedureExecution,
-} from "../../character-execution-admission.ts";
+} from "../../character-execution-queries.ts";
+import type { MarkedDamageRiderTransferSpellProcedureExecution } from "../../character-execution.ts";
 import {
-  snapshotBattle,
   type BattleActDiscoveryCandidate,
   type BattleActiveEffect,
   type BattleActiveEffectExpiration,
@@ -59,15 +58,12 @@ import {
   type SpellMarkedDamageRider,
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
+import { snapshotBattle } from "../dispatcher.ts";
 import {
   BattleActiveEffectExecutionRef,
   BattleProcedureExecutionRef,
   type CombatantId,
 } from "../../identity.ts";
-import {
-  characterResourceIsFavoredEnemyFreeCast,
-  resourceHasUsesRemaining,
-} from "../../character-battle-resources.ts";
 import { activeMarkedDamageRiderEffect } from "../damage-helpers.ts";
 import { currentActorId } from "../creature-state-leaves.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";
@@ -104,7 +100,7 @@ import { DamageTypeSchema, DiceExprSchema } from "@dnd/surface/surface/schema";
 import {
   sameStringSet,
   supportedDamageAmountExpr,
-} from "../spells-profile-shared.ts";
+} from "../spells-execution-facts.ts";
 import {
   spellAdmissionBattleTurn,
   SpellRuleExecutionFactsSchema,
@@ -123,7 +119,7 @@ type MarkedDamageRiderResolveInput =
   SpellProcedureProfileResolveInput<MarkedDamageRiderInvocation>;
 
 function admitMarkedDamageRider(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly MarkedDamageRiderInvocation[] {
   const projection = markedDamageRiderSpellProjection(spell);
@@ -171,30 +167,22 @@ function admitMarkedDamageRider(
         ]
       : [];
   }
-  const favoredEnemyResource = ctx.resourceOwnership.flatMap((owner) => {
-    const resource = ctx.actor.origin.resources.find(
-      (candidate) => candidate.resourcePoolRef === owner.resourcePoolRef,
-    );
-    return resource !== undefined &&
-      characterResourceIsFavoredEnemyFreeCast(owner) &&
-      resourceHasUsesRemaining(resource)
-      ? [resource]
-      : [];
-  })[0];
+  const favoredEnemyResourcePoolRef =
+    ctx.availableClassFeatureFreeCastResourcePoolRefsForSpell(spell.id)[0];
   const favoredEnemyExpiresAt = markedDamageRiderConcentrationExpirationForSlot(
     ctx.actor.combatantId,
     spell,
     spellSlotLevel(1),
   );
   const freeCastInvocations: readonly MarkedDamageRiderInvocation[] =
-    favoredEnemyResource === undefined || favoredEnemyExpiresAt === null
+    favoredEnemyResourcePoolRef === undefined || favoredEnemyExpiresAt === null
       ? []
       : [
           {
             access: { tag: "prepared" },
             resource: {
               tag: "classFeatureFreeCast",
-              resourcePoolRef: favoredEnemyResource.resourcePoolRef,
+              resourcePoolRef: favoredEnemyResourcePoolRef,
             },
             procedure: "markedDamageRider",
             action: "cast",
@@ -256,7 +244,7 @@ function markedDamageRiderTransferIsDiscoverable(
   );
 }
 
-function markedDamageRiderSpellProjection(spell: SpellRecord): {
+function markedDamageRiderSpellProjection(spell: BattleSpellAdmissionSource): {
   readonly abilityCheckBehavior: MarkedDamageRiderCastAbilityCheckBehavior;
   readonly damageType: DamageType;
   readonly expr: DiceExpr;
@@ -312,7 +300,7 @@ function markedDamageRiderSpellProjection(spell: SpellRecord): {
 }
 
 function markedDamageRiderDamageProjection(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   damageType: DamageType,
   abilityCheckBehavior: MarkedDamageRiderCastAbilityCheckBehavior,
   retargetTiming: MarkedDamageRiderRetargetTiming,
@@ -378,7 +366,7 @@ function hexAbilityChoices(
 
 function markedDamageRiderConcentrationExpirationForSlot(
   actorId: CombatantId,
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   slotLevel: SpellSlotLevel,
 ): Extract<
   BattleActiveEffectExpiration,
@@ -414,7 +402,7 @@ function markedDamageRiderConcentrationExpirationForSlot(
 
 function hasSupportedMarkedDamageRiderDurationTiers(
   upTo: Extract<
-    SpellRecord["mechanics"]["duration"],
+    BattleSpellAdmissionSource["mechanics"]["duration"],
     { readonly kind: "concentration" }
   >["upTo"],
 ): boolean {

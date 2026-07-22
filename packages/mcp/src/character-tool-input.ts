@@ -2,7 +2,10 @@ import {
   characterDraftId,
   type CharacterDraftId,
 } from "@dnd/character-creation-runtime";
-import type { StatBlockId } from "@dnd/surface/surface/stat-block-catalog";
+import {
+  StatBlockId,
+  type StatBlockId as StatBlockIdType,
+} from "@dnd/shared/game-facts";
 import { Either, Match, Schema } from "effect";
 
 import {
@@ -33,7 +36,7 @@ const FinalizeCharacterArgsSchema = Schema.Struct({
     description: "Character Draft id returned by create_character_draft.",
   }),
   druidWildShapeKnownFormStatBlockIds: Schema.optionalWith(
-    Schema.Array(Schema.String).annotations({
+    Schema.Array(StatBlockId).annotations({
       description:
         "Selected Beast Stat Block ids for a Druid Wild Shape character. Required when the finalized draft has Wild Shape.",
     }),
@@ -77,7 +80,7 @@ type DraftIdToolInput = {
 };
 type FinalizeCharacterToolInput = {
   readonly draftId: CharacterDraftId;
-  readonly druidWildShapeKnownFormStatBlockIds?: readonly StatBlockId[];
+  readonly druidWildShapeKnownFormStatBlockIds?: readonly StatBlockIdType[];
 };
 type EmptyToolInput = Record<string, never>;
 export type CharacterToolCall =

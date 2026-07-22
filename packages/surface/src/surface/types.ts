@@ -4,6 +4,7 @@ import {
   CREATURE_TYPES as SHARED_CREATURE_TYPES,
   SURFACE_CONDITIONS,
   SURFACE_SKILLS,
+  UnitId,
 } from "@dnd/shared/game-facts";
 import {
   ARMOR_TRAINING_CATEGORIES as SCHEMA_ARMOR_TRAINING_CATEGORIES,
@@ -610,6 +611,9 @@ export type CreatureSense = Schema.Schema.Type<
 >;
 export type CreatureNamedAttackRoll = Schema.Schema.Type<
   typeof SurfaceSchema.CreatureNamedAttackRollSchema
+>;
+export type CreatureAttackRollMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.CreatureAttackRollMechanicsSchema
 >;
 export type CreatureNamedSaveGate = Schema.Schema.Type<
   typeof SurfaceSchema.CreatureNamedSaveGateSchema
@@ -1280,6 +1284,11 @@ export type UnitRecord =
 export type StatBlockRecord = Schema.Schema.Type<
   typeof SurfaceSchema.StatBlockRecordSchema
 >;
+export type AuthoredSpellSource = SpellRecord;
+export type AuthoredUnitSource = UnitRecord;
+export type DragonbornSpeciesSource = DragonbornSpeciesRecord;
+export type StatBlockId = StatBlockRecord["id"];
+export type StatBlockMechanics = StatBlockRecord["statBlock"];
 
 export type SpellFreeCastGrant = Extract<
   EffectAtom,
@@ -1318,12 +1327,11 @@ type PassiveClassFeatureUnitRecord = ClassFeatureUnitRecord & {
   >;
 };
 
-export const FAVORED_ENEMY_HUNTERS_MARK_SPELL_ID =
-  "hunters_mark" satisfies SpellRecord["id"];
-export const PALADINS_SMITE_DIVINE_SMITE_SPELL_ID =
-  "divine_smite" satisfies SpellRecord["id"];
-export const CONTACT_PATRON_CONTACT_OTHER_PLANE_SPELL_ID =
-  "contact_other_plane" satisfies SpellRecord["id"];
+export const FAVORED_ENEMY_HUNTERS_MARK_SPELL_ID = UnitId.make("hunters_mark");
+export const PALADINS_SMITE_DIVINE_SMITE_SPELL_ID = UnitId.make("divine_smite");
+export const CONTACT_PATRON_CONTACT_OTHER_PLANE_SPELL_ID = UnitId.make(
+  "contact_other_plane",
+);
 export const CONTACT_PATRON_CONTACT_OTHER_PLANE_FREE_CAST_RESOURCE_TAG =
   "contactPatronContactOtherPlaneFreeCast" as const;
 
@@ -1339,7 +1347,7 @@ export type SupportedClassFeatureSpellFreeCastResourceTag =
 const SUPPORTED_CLASS_FEATURE_SPELL_FREE_CAST_PROFILES = [
   {
     resourceTag: "favoredEnemyHuntersMarkFreeCasts",
-    unitId: "ranger_favored_enemy",
+    unitId: UnitId.make("ranger_favored_enemy"),
     unitName: "Favored Enemy",
     className: "ranger",
     acquiredAtLevel: 1,
@@ -1350,7 +1358,7 @@ const SUPPORTED_CLASS_FEATURE_SPELL_FREE_CAST_PROFILES = [
   },
   {
     resourceTag: "paladinsSmiteDivineSmiteFreeCast",
-    unitId: "paladin_paladins_smite",
+    unitId: UnitId.make("paladin_paladins_smite"),
     unitName: "Paladin's Smite",
     className: "paladin",
     acquiredAtLevel: 2,
@@ -1361,7 +1369,7 @@ const SUPPORTED_CLASS_FEATURE_SPELL_FREE_CAST_PROFILES = [
   },
   {
     resourceTag: CONTACT_PATRON_CONTACT_OTHER_PLANE_FREE_CAST_RESOURCE_TAG,
-    unitId: "warlock_contact_patron",
+    unitId: UnitId.make("warlock_contact_patron"),
     unitName: "Contact Patron",
     className: "warlock",
     acquiredAtLevel: 9,

@@ -1,3 +1,4 @@
+import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-attack-roll-advantage-save
 //
 // The saveGatedAttackRollAdvantage Spell Procedure Profile: action-time Spell
@@ -69,7 +70,7 @@ type SaveGatedAttackRollAdvantageResolveInput =
   SpellProcedureProfileResolveInput<SaveGatedAttackRollAdvantageSpellInvocation>;
 
 function admitSaveGatedAttackRollAdvantage(
-  spell: SaveGatedAttackRollAdvantageSpellInvocation["spell"],
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly SaveGatedAttackRollAdvantageSpellInvocation[] {
   return supportedPreparedSaveGateAttackRollAdvantageProfile(

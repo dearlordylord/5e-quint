@@ -1,3 +1,7 @@
+import {
+  statBlockId as authoredStatBlockId,
+  unitId as authoredUnitId,
+} from "@dnd/shared/game-facts";
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
@@ -293,10 +297,10 @@ const statBlockCatalog = statBlockCatalogResult.catalog;
 const sorcererFontOfMagicResourceFactsTestName =
   "projects Sorcerer 2 Font of Magic shared Sorcery Point resource facts";
 const druidWildShapeFixtureKnownFormStatBlockIds = [
-  "stat_block_rat",
-  "stat_block_riding_horse",
-  "stat_block_spider",
-  "stat_block_wolf",
+  authoredStatBlockId("stat_block_rat"),
+  authoredStatBlockId("stat_block_riding_horse"),
+  authoredStatBlockId("stat_block_spider"),
+  authoredStatBlockId("stat_block_wolf"),
 ] as const;
 
 function expectRight<T, E>(result: Either.Either<T, E>): T {
@@ -332,7 +336,7 @@ function finalizedWarlockBuild(draftId: string): CharacterBuild {
   const result = finalizeCharacterDraft({
     draft: completeSupportedProgressionDraft({
       draftId,
-      progression: testProgression("class_warlock", 1),
+      progression: testProgression(authoredUnitId("class_warlock"), 1),
       preferredOptionIdsBySource: {
         [testUnitChoiceSourceKey(
           "class_warlock",
@@ -358,7 +362,7 @@ function finalizedSorcererMetamagicBuild(draftId: string): CharacterBuild {
   const result = finalizeCharacterDraft({
     draft: completeSupportedProgressionDraft({
       draftId,
-      progression: testProgression("class_sorcerer", 2),
+      progression: testProgression(authoredUnitId("class_sorcerer"), 2),
       preferredOptionIdsBySource: {
         [testUnitChoiceSourceKey(
           SORCERER_METAMAGIC_UNIT_ID,
@@ -383,7 +387,7 @@ function finalizedSorcererMetamagicBuild(draftId: string): CharacterBuild {
 function warlockSpellcastingSourceWithKnownCantrips(
   cantripIds: readonly UnitRecord["id"][],
 ): NonNullable<CharacterBuild["spellcasting"]>["sources"][number] {
-  const classFacts = readableClassFacts("class_warlock");
+  const classFacts = readableClassFacts(authoredUnitId("class_warlock"));
   if (
     !("spellcasting" in classFacts) ||
     classFacts.spellcasting.kind !== "pact_magic_spellcasting_creation"
@@ -393,7 +397,7 @@ function warlockSpellcastingSourceWithKnownCantrips(
   const spellcasting = classFacts.spellcasting;
 
   return {
-    sourceUnitId: "class_warlock",
+    sourceUnitId: authoredUnitId("class_warlock"),
     spellcastingAbility: spellcasting.spellcastingAbility,
     cantrips: cantripIds,
     spellbook: [],
@@ -486,7 +490,7 @@ function warlockPactMagicLevelGain(
 }
 
 function warlockLevelFiveBuildWithThirstingBlade(): CharacterBuild {
-  const warlockClassUnitId = testClassUnitId("class_warlock");
+  const warlockClassUnitId = testClassUnitId(authoredUnitId("class_warlock"));
   const levelTwo = expectRight(
     advanceCharacterBuildClassLevel({
       build: finalizedWarlockBuild("draft:warlock-level-five-source"),
@@ -497,7 +501,7 @@ function warlockLevelFiveBuildWithThirstingBlade(): CharacterBuild {
           classUnitId: warlockClassUnitId,
           hitPointRule: { tag: "fixedHigherLevelGain" },
           pactMagic: warlockPactMagicLevelGain({
-            gainedPreparedSpells: ["hex"],
+            gainedPreparedSpells: [authoredUnitId("hex")],
           }),
           gainedInvocations: [
             nonRepeatableEldritchInvocation("pact_of_the_blade"),
@@ -517,7 +521,7 @@ function warlockLevelFiveBuildWithThirstingBlade(): CharacterBuild {
           classUnitId: warlockClassUnitId,
           hitPointRule: { tag: "fixedHigherLevelGain" },
           pactMagic: warlockPactMagicLevelGain({
-            gainedPreparedSpells: ["bane"],
+            gainedPreparedSpells: [authoredUnitId("bane")],
           }),
           gainedInvocations: [],
         }),
@@ -534,8 +538,8 @@ function warlockLevelFiveBuildWithThirstingBlade(): CharacterBuild {
           classUnitId: warlockClassUnitId,
           hitPointRule: { tag: "fixedHigherLevelGain" },
           pactMagic: warlockPactMagicLevelGain({
-            gainedCantrips: ["poison_spray"],
-            gainedPreparedSpells: ["detect_magic"],
+            gainedCantrips: [authoredUnitId("poison_spray")],
+            gainedPreparedSpells: [authoredUnitId("detect_magic")],
           }),
           gainedInvocations: [],
         }),
@@ -553,7 +557,7 @@ function warlockLevelFiveBuildWithThirstingBlade(): CharacterBuild {
           classUnitId: warlockClassUnitId,
           hitPointRule: { tag: "fixedHigherLevelGain" },
           pactMagic: warlockPactMagicLevelGain({
-            gainedPreparedSpells: ["expeditious_retreat"],
+            gainedPreparedSpells: [authoredUnitId("expeditious_retreat")],
           }),
           gainedInvocations: [
             nonRepeatableEldritchInvocation("thirsting_blade"),
@@ -566,7 +570,7 @@ function warlockLevelFiveBuildWithThirstingBlade(): CharacterBuild {
 }
 
 function warlockLevelNineBuild(): CharacterBuild {
-  const warlockClassUnitId = testClassUnitId("class_warlock");
+  const warlockClassUnitId = testClassUnitId(authoredUnitId("class_warlock"));
   const levelFive = warlockLevelFiveBuildWithThirstingBlade();
   const levelSix = expectRight(
     advanceCharacterBuildClassLevel({
@@ -578,7 +582,7 @@ function warlockLevelNineBuild(): CharacterBuild {
           classUnitId: warlockClassUnitId,
           hitPointRule: { tag: "fixedHigherLevelGain" },
           pactMagic: warlockPactMagicLevelGain({
-            gainedPreparedSpells: ["fly"],
+            gainedPreparedSpells: [authoredUnitId("fly")],
           }),
           gainedInvocations: [],
         }),
@@ -595,7 +599,7 @@ function warlockLevelNineBuild(): CharacterBuild {
           classUnitId: warlockClassUnitId,
           hitPointRule: { tag: "fixedHigherLevelGain" },
           pactMagic: warlockPactMagicLevelGain({
-            gainedPreparedSpells: ["counterspell"],
+            gainedPreparedSpells: [authoredUnitId("counterspell")],
           }),
           gainedInvocations: [
             nonRepeatableEldritchInvocation("ascendant_step"),
@@ -614,7 +618,7 @@ function warlockLevelNineBuild(): CharacterBuild {
           classUnitId: warlockClassUnitId,
           hitPointRule: { tag: "fixedHigherLevelGain" },
           pactMagic: warlockPactMagicLevelGain({
-            gainedPreparedSpells: ["invisibility"],
+            gainedPreparedSpells: [authoredUnitId("invisibility")],
           }),
           gainedInvocations: [],
         }),
@@ -632,7 +636,7 @@ function warlockLevelNineBuild(): CharacterBuild {
           classUnitId: warlockClassUnitId,
           hitPointRule: { tag: "fixedHigherLevelGain" },
           pactMagic: warlockPactMagicLevelGain({
-            gainedPreparedSpells: ["contact_other_plane"],
+            gainedPreparedSpells: [authoredUnitId("contact_other_plane")],
           }),
           gainedInvocations: [
             nonRepeatableEldritchInvocation("mask_of_many_faces"),
@@ -791,7 +795,9 @@ describe("CharacterDraft parser", () => {
 });
 
 describe("UnitChoiceSourceKey", () => {
-  const sourceUnitIdText = fc.string({ minLength: 1, maxLength: 40 });
+  const sourceUnitIdText = fc
+    .string({ minLength: 1, maxLength: 40 })
+    .filter((value) => value.trim() === value);
   const unitChoiceKeyText = fc.constantFrom(...UNIT_CHOICE_KEYS);
 
   test("preserves source facts through the source/key isomorphism", () => {
@@ -828,6 +834,15 @@ describe("UnitChoiceSourceKey", () => {
     );
   });
 
+  test.each(["", " "])(
+    "rejects an invalid raw Unit id %j with a typed issue",
+    (value) => {
+      expect(unitChoiceSourceUnitId(value)).toEqual(
+        Either.left({ tag: "unitChoiceSourceUnitIdEmpty", value }),
+      );
+    },
+  );
+
   test("satisfies source/key isomorphism laws", () => {
     fc.assert(
       fc.property(
@@ -851,7 +866,9 @@ describe("UnitChoiceSourceKey", () => {
 });
 
 describe("LoadoutSourceKey", () => {
-  const equipmentUnitIdText = fc.string({ minLength: 1, maxLength: 40 });
+  const equipmentUnitIdText = fc
+    .string({ minLength: 1, maxLength: 40 })
+    .filter((value) => value.trim() === value);
   const loadoutSlot = fc.constantFrom(...LOADOUT_SLOTS);
 
   test("satisfies source/key isomorphism laws", () => {
@@ -880,11 +897,22 @@ describe("LoadoutSourceKey", () => {
       }),
     );
   });
+
+  test.each(["", " "])(
+    "rejects an invalid raw equipment Unit id %j with a typed issue",
+    (value) => {
+      expect(loadoutEquipmentUnitId(value)).toEqual(
+        Either.left({ tag: "loadoutEquipmentUnitIdEmpty", value }),
+      );
+    },
+  );
 });
 
 describe("CharacterEquipmentItemId", () => {
   const itemSlot = fc.constantFrom(...CHARACTER_EQUIPMENT_ITEM_SLOTS);
-  const itemUnitIdText = fc.string({ minLength: 1, maxLength: 40 });
+  const itemUnitIdText = fc
+    .string({ minLength: 1, maxLength: 40 })
+    .filter((value) => value.trim() === value);
 
   test("satisfies source/key isomorphism laws", () => {
     fc.assert(
@@ -927,7 +955,23 @@ describe("CharacterEquipmentItemId", () => {
         slot: "main",
       }),
     );
+    expect(parseCharacterEquipmentItemId("main: ")).toEqual(
+      Either.left({
+        tag: "characterEquipmentItemIdUnitIdEmpty",
+        value: "main: ",
+        slot: "main",
+      }),
+    );
   });
+
+  test.each(["", " "])(
+    "rejects an invalid raw item Unit id %j with a typed issue",
+    (value) => {
+      expect(characterEquipmentItemUnitId(value)).toEqual(
+        Either.left({ tag: "characterEquipmentItemUnitIdEmpty", value }),
+      );
+    },
+  );
 });
 
 const packageRootPath = fileURLToPath(new URL("../", import.meta.url));
@@ -1122,7 +1166,7 @@ describe("character creation hole discovery", () => {
   test("opens Fighter holes after the class selection", () => {
     const holes = discoverCreationHoles({
       draft: draftWithSelections({
-        progression: testProgression("class_fighter", 1),
+        progression: testProgression(authoredUnitId("class_fighter"), 1),
       }),
       unitLibrary,
     });
@@ -1206,7 +1250,7 @@ describe("character creation hole discovery", () => {
     );
 
     const branchHole = classFeatureGrantChoiceHoles(
-      "paladin_fighting_style",
+      authoredUnitId("paladin_fighting_style"),
       unitLibrary,
       { classLevel: 2 },
     )[0];
@@ -1237,7 +1281,7 @@ describe("character creation hole discovery", () => {
           "fighting_style_feat",
         ),
       ],
-      classUnitId: "class_paladin",
+      classUnitId: authoredUnitId("class_paladin"),
       classFacts: paladinFacts.value,
       classLevel: 2,
       unitLibrary,
@@ -1268,7 +1312,7 @@ describe("character creation hole discovery", () => {
             "blessed_warrior",
           ),
         ],
-        classUnitId: "class_paladin",
+        classUnitId: authoredUnitId("class_paladin"),
         classFacts: paladinFacts.value,
         classLevel: 2,
         unitLibrary,
@@ -1291,7 +1335,7 @@ describe("character creation hole discovery", () => {
   });
 
   test("fills and finalizes Paladin level 2 Fighting Style branches through the supported workflow", () => {
-    const progression = testProgression("class_paladin", 2);
+    const progression = testProgression(authoredUnitId("class_paladin"), 2);
     const initialDraft = createTestDraft(
       "draft:paladin-fighting-style-initial",
     );
@@ -1343,14 +1387,14 @@ describe("character creation hole discovery", () => {
       expect(
         selectedChoiceOptionIds(
           featDraft,
-          "paladin_fighting_style",
+          authoredUnitId("paladin_fighting_style"),
           PALADIN_FIGHTING_STYLE_CHOICE_KEY,
         ),
       ).toEqual(["fighting_style_feat"]);
       expect(
         selectedChoiceOptionIds(
           featDraft,
-          "paladin_fighting_style",
+          authoredUnitId("paladin_fighting_style"),
           CLASS_FEATURE_FEAT_CHOICE_KEY,
         ),
       ).toEqual([selectedFeatOptionId]);
@@ -1368,7 +1412,7 @@ describe("character creation hole discovery", () => {
       expect(
         selectedBuildClassChoiceUnitIds(
           paladinFeatBuild.build,
-          "paladin_fighting_style",
+          authoredUnitId("paladin_fighting_style"),
         ),
       ).toEqual([selectedFeatUnitId]);
     }
@@ -1393,14 +1437,14 @@ describe("character creation hole discovery", () => {
     expect(
       selectedChoiceOptionIds(
         blessedWarriorDraft,
-        "paladin_fighting_style",
+        authoredUnitId("paladin_fighting_style"),
         PALADIN_FIGHTING_STYLE_CHOICE_KEY,
       ),
     ).toEqual(["blessed_warrior"]);
     expect(
       selectedChoiceOptionIds(
         blessedWarriorDraft,
-        "paladin_fighting_style",
+        authoredUnitId("paladin_fighting_style"),
         CLASS_CANTRIP_CHOICE_KEY,
       ),
     ).toEqual(["guidance", "sacred_flame"]);
@@ -1411,7 +1455,10 @@ describe("character creation hole discovery", () => {
     expect(blessedWarriorBuild.tag).toBe("ready");
     if (blessedWarriorBuild.tag !== "ready") return;
     expect(
-      spellcastingSourceCantrips(blessedWarriorBuild.build, "class_paladin"),
+      spellcastingSourceCantrips(
+        blessedWarriorBuild.build,
+        authoredUnitId("class_paladin"),
+      ),
     ).toEqual(["guidance", "sacred_flame"]);
     expect(
       blessedWarriorBuild.build.spellcasting?.sources.find(
@@ -1473,7 +1520,7 @@ describe("character creation hole discovery", () => {
     );
 
     const deftHoles = classFeatureGrantChoiceHoles(
-      "ranger_deft_explorer",
+      authoredUnitId("ranger_deft_explorer"),
       unitLibrary,
       {
         classLevel: 2,
@@ -1514,7 +1561,7 @@ describe("character creation hole discovery", () => {
     );
 
     const branchHole = classFeatureGrantChoiceHoles(
-      "ranger_fighting_style",
+      authoredUnitId("ranger_fighting_style"),
       unitLibrary,
       { classLevel: 2 },
     )[0];
@@ -1545,7 +1592,7 @@ describe("character creation hole discovery", () => {
           "fighting_style_feat",
         ),
       ],
-      classUnitId: "class_ranger",
+      classUnitId: authoredUnitId("class_ranger"),
       classFacts: rangerFacts.value,
       classLevel: 2,
       unitLibrary,
@@ -1576,7 +1623,7 @@ describe("character creation hole discovery", () => {
             "druidic_warrior",
           ),
         ],
-        classUnitId: "class_ranger",
+        classUnitId: authoredUnitId("class_ranger"),
         classFacts: rangerFacts.value,
         classLevel: 2,
         unitLibrary,
@@ -1600,7 +1647,7 @@ describe("character creation hole discovery", () => {
   });
 
   test("fills and finalizes Ranger level 2 Deft Explorer and Fighting Style branches through the supported workflow", () => {
-    const progression = testProgression("class_ranger", 2);
+    const progression = testProgression(authoredUnitId("class_ranger"), 2);
     const initialDraft = createTestDraft("draft:ranger-level-2-initial");
     expect(
       optionIds(
@@ -1694,14 +1741,14 @@ describe("character creation hole discovery", () => {
       expect(
         selectedChoiceOptionIds(
           featDraft,
-          "ranger_fighting_style",
+          authoredUnitId("ranger_fighting_style"),
           RANGER_FIGHTING_STYLE_CHOICE_KEY,
         ),
       ).toEqual(["fighting_style_feat"]);
       expect(
         selectedChoiceOptionIds(
           featDraft,
-          "ranger_fighting_style",
+          authoredUnitId("ranger_fighting_style"),
           CLASS_FEATURE_FEAT_CHOICE_KEY,
         ),
       ).toEqual([selectedFeatOptionId]);
@@ -1723,7 +1770,7 @@ describe("character creation hole discovery", () => {
       expect(
         selectedBuildClassChoiceUnitIds(
           rangerFeatBuild.build,
-          "ranger_fighting_style",
+          authoredUnitId("ranger_fighting_style"),
         ),
       ).toEqual([selectedFeatUnitId]);
       expect(
@@ -1774,14 +1821,14 @@ describe("character creation hole discovery", () => {
     expect(
       selectedChoiceOptionIds(
         druidicWarriorDraft,
-        "ranger_fighting_style",
+        authoredUnitId("ranger_fighting_style"),
         RANGER_FIGHTING_STYLE_CHOICE_KEY,
       ),
     ).toEqual(["druidic_warrior"]);
     expect(
       selectedChoiceOptionIds(
         druidicWarriorDraft,
-        "ranger_fighting_style",
+        authoredUnitId("ranger_fighting_style"),
         CLASS_CANTRIP_CHOICE_KEY,
       ),
     ).toEqual(["guidance", "starry_wisp"]);
@@ -1792,7 +1839,10 @@ describe("character creation hole discovery", () => {
     expect(druidicWarriorBuild.tag).toBe("ready");
     if (druidicWarriorBuild.tag !== "ready") return;
     expect(
-      spellcastingSourceCantrips(druidicWarriorBuild.build, "class_ranger"),
+      spellcastingSourceCantrips(
+        druidicWarriorBuild.build,
+        authoredUnitId("class_ranger"),
+      ),
     ).toEqual(["guidance", "starry_wisp"]);
     expect(
       druidicWarriorBuild.build.spellcasting?.sources.find(
@@ -1802,7 +1852,7 @@ describe("character creation hole discovery", () => {
     expect(
       selectedBuildClassChoiceUnitIds(
         druidicWarriorBuild.build,
-        "ranger_fighting_style",
+        authoredUnitId("ranger_fighting_style"),
       ),
     ).toEqual([]);
   });
@@ -1810,7 +1860,7 @@ describe("character creation hole discovery", () => {
   test("opens Rogue Thieves' Cant extra language choice from Character Creation language tables", () => {
     const holes = discoverCreationHoles({
       draft: draftWithSelections({
-        progression: testProgression("class_rogue", 1),
+        progression: testProgression(authoredUnitId("class_rogue"), 1),
         languages: ["Common", "Dwarvish", "Goblin"],
       }),
       unitLibrary,
@@ -1840,7 +1890,7 @@ describe("character creation hole discovery", () => {
 
   test("reads non-Fighter Weapon Mastery holes from class proficiencies", () => {
     const barbarianMasteryHole = classFeatureGrantChoiceHoles(
-      "barbarian_weapon_mastery",
+      authoredUnitId("barbarian_weapon_mastery"),
       unitLibrary,
     )[0];
     expect(barbarianMasteryHole).toMatchObject({
@@ -1857,7 +1907,7 @@ describe("character creation hole discovery", () => {
     expect(optionIds(barbarianMasteryHole)).not.toContain("weapon_shortbow");
 
     const rogueMasteryHole = classFeatureGrantChoiceHoles(
-      "rogue_weapon_mastery",
+      authoredUnitId("rogue_weapon_mastery"),
       unitLibrary,
     )[0];
     expect(rogueMasteryHole).toMatchObject({
@@ -1878,7 +1928,10 @@ describe("character creation hole discovery", () => {
       "paladin_weapon_mastery",
       "ranger_weapon_mastery",
     ] as const) {
-      const masteryHole = classFeatureGrantChoiceHoles(unitId, unitLibrary)[0];
+      const masteryHole = classFeatureGrantChoiceHoles(
+        authoredUnitId(unitId),
+        unitLibrary,
+      )[0];
       expect(masteryHole).toMatchObject({
         kind: "choice",
         cardinality: { tag: "exactly", count: 2 },
@@ -1896,8 +1949,8 @@ describe("character creation hole discovery", () => {
   test("opens Soldier holes after class and background selections", () => {
     const holes = discoverCreationHoles({
       draft: draftWithSelections({
-        progression: testProgression("class_fighter", 1),
-        background: "background_soldier",
+        progression: testProgression(authoredUnitId("class_fighter"), 1),
+        background: authoredUnitId("background_soldier"),
       }),
       unitLibrary,
     });
@@ -1988,8 +2041,8 @@ describe("character creation hole discovery", () => {
     ({ backgroundUnitId, expectedAsiOptions, expectedToolOptions }) => {
       const holes = discoverCreationHoles({
         draft: draftWithSelections({
-          progression: testProgression("class_fighter", 1),
-          background: backgroundUnitId,
+          progression: testProgression(authoredUnitId("class_fighter"), 1),
+          background: authoredUnitId(backgroundUnitId),
         }),
         unitLibrary,
       });
@@ -2024,8 +2077,8 @@ describe("character creation hole discovery", () => {
   test("opens purchase after the manifest coin equipment path is selected", () => {
     const holes = discoverCreationHoles({
       draft: draftWithSelections({
-        progression: testProgression("class_fighter", 1),
-        background: "background_soldier",
+        progression: testProgression(authoredUnitId("class_fighter"), 1),
+        background: authoredUnitId("background_soldier"),
         choices: [
           selectedChoice("class_fighter", "class_equipment_choice", "option_c"),
           selectedChoice(
@@ -2072,8 +2125,8 @@ describe("character creation hole discovery", () => {
   test("does not open purchase from malformed equipment-path choice metadata", () => {
     const holes = discoverCreationHoles({
       draft: draftWithSelections({
-        progression: testProgression("class_fighter", 1),
-        background: "background_soldier",
+        progression: testProgression(authoredUnitId("class_fighter"), 1),
+        background: authoredUnitId("background_soldier"),
         choices: [
           selectedChoiceWithUnitRef(
             "class_fighter",
@@ -2108,8 +2161,8 @@ describe("character creation hole discovery", () => {
   test("does not open purchase for a non-manifest background equipment path", () => {
     const holes = discoverCreationHoles({
       draft: draftWithSelections({
-        progression: testProgression("class_fighter", 1),
-        background: "background_soldier",
+        progression: testProgression(authoredUnitId("class_fighter"), 1),
+        background: authoredUnitId("background_soldier"),
         choices: [
           selectedChoice("class_fighter", "class_equipment_choice", "option_c"),
           selectedChoice(
@@ -2171,8 +2224,8 @@ describe("character creation hole discovery", () => {
   test("does not open purchase for Fighter item-bundle equipment choices", () => {
     const holes = discoverCreationHoles({
       draft: draftWithSelections({
-        progression: testProgression("class_fighter", 1),
-        background: "background_soldier",
+        progression: testProgression(authoredUnitId("class_fighter"), 1),
+        background: authoredUnitId("background_soldier"),
         choices: [
           selectedChoice("class_fighter", "class_equipment_choice", "option_b"),
           selectedChoice(
@@ -2202,8 +2255,8 @@ describe("character creation hole discovery", () => {
   test("opens loadout only for purchased equipment and suppresses filled loadout slots", () => {
     const holes = discoverCreationHoles({
       draft: draftWithSelections({
-        progression: testProgression("class_fighter", 1),
-        background: "background_soldier",
+        progression: testProgression(authoredUnitId("class_fighter"), 1),
+        background: authoredUnitId("background_soldier"),
         choices: [
           selectedChoice("class_fighter", "class_equipment_choice", "option_c"),
           selectedChoice(
@@ -2215,9 +2268,9 @@ describe("character creation hole discovery", () => {
         ],
         equipment: {
           selectedUnitIds: [
-            "armor_chain_mail",
-            "weapon_longsword",
-            "equipment_shield",
+            authoredUnitId("armor_chain_mail"),
+            authoredUnitId("weapon_longsword"),
+            authoredUnitId("equipment_shield"),
           ],
         },
       }),
@@ -2249,8 +2302,8 @@ describe("character creation hole discovery", () => {
   test("opens Flail loadout when the Skeleton-pressure bludgeoning weapon is purchased", () => {
     const holes = discoverCreationHoles({
       draft: draftWithSelections({
-        progression: testProgression("class_fighter", 1),
-        background: "background_soldier",
+        progression: testProgression(authoredUnitId("class_fighter"), 1),
+        background: authoredUnitId("background_soldier"),
         choices: [
           selectedChoice("class_fighter", "class_equipment_choice", "option_c"),
           selectedChoice(
@@ -2261,9 +2314,9 @@ describe("character creation hole discovery", () => {
         ],
         equipment: {
           selectedUnitIds: [
-            "armor_chain_mail",
-            "weapon_flail",
-            "equipment_shield",
+            authoredUnitId("armor_chain_mail"),
+            authoredUnitId("weapon_flail"),
+            authoredUnitId("equipment_shield"),
           ],
         },
       }),
@@ -2282,8 +2335,8 @@ describe("character creation hole discovery", () => {
   test("opens Quarterstaff loadout when a coin-equipment Druid purchases a Shillelagh weapon", () => {
     const holes = discoverCreationHoles({
       draft: draftWithSelections({
-        progression: testProgression("class_druid", 1),
-        background: "background_criminal",
+        progression: testProgression(authoredUnitId("class_druid"), 1),
+        background: authoredUnitId("background_criminal"),
         choices: [
           selectedChoice("class_druid", "class_equipment_choice", "option_b"),
           selectedChoice(
@@ -2293,7 +2346,7 @@ describe("character creation hole discovery", () => {
           ),
         ],
         equipment: {
-          selectedUnitIds: ["weapon_quarterstaff"],
+          selectedUnitIds: [authoredUnitId("weapon_quarterstaff")],
         },
       }),
       unitLibrary,
@@ -2311,8 +2364,8 @@ describe("character creation hole discovery", () => {
   test("keeps malformed equipment purchase selections fillable", () => {
     const holes = discoverCreationHoles({
       draft: draftWithSelections({
-        progression: testProgression("class_fighter", 1),
-        background: "background_soldier",
+        progression: testProgression(authoredUnitId("class_fighter"), 1),
+        background: authoredUnitId("background_soldier"),
         choices: [
           selectedChoice("class_fighter", "class_equipment_choice", "option_c"),
           selectedChoice(
@@ -2323,10 +2376,10 @@ describe("character creation hole discovery", () => {
         ],
         equipment: {
           selectedUnitIds: [
-            "armor_chain_mail",
-            "weapon_longsword",
-            "equipment_shield",
-            "tool_dice_set",
+            authoredUnitId("armor_chain_mail"),
+            authoredUnitId("weapon_longsword"),
+            authoredUnitId("equipment_shield"),
+            authoredUnitId("tool_dice_set"),
           ],
         },
       }),
@@ -2353,8 +2406,8 @@ describe("character creation hole discovery", () => {
   test("suppresses already-filled class and background unit-choice holes", () => {
     const holes = discoverCreationHoles({
       draft: draftWithSelections({
-        progression: testProgression("class_fighter", 1),
-        background: "background_soldier",
+        progression: testProgression(authoredUnitId("class_fighter"), 1),
+        background: authoredUnitId("background_soldier"),
         choices: [
           selectedChoice(
             "class_fighter",
@@ -2425,7 +2478,7 @@ describe("character creation hole discovery", () => {
   test("keeps malformed existing choice selections fillable", () => {
     const holes = discoverCreationHoles({
       draft: draftWithSelections({
-        progression: testProgression("class_fighter", 1),
+        progression: testProgression(authoredUnitId("class_fighter"), 1),
         choices: [
           selectedChoice(
             "class_fighter",
@@ -2451,7 +2504,7 @@ describe("character creation hole discovery", () => {
   test("keeps existing choice selections with malformed unit refs fillable", () => {
     const holes = discoverCreationHoles({
       draft: draftWithSelections({
-        progression: testProgression("class_fighter", 1),
+        progression: testProgression(authoredUnitId("class_fighter"), 1),
         choices: [
           selectedChoice(
             "fighter_fighting_style",
@@ -2477,8 +2530,8 @@ describe("character creation hole discovery", () => {
   test("suppresses Soldier ability-score increase from the typed draft field", () => {
     const holes = discoverCreationHoles({
       draft: draftWithSelections({
-        progression: testProgression("class_fighter", 1),
-        background: "background_soldier",
+        progression: testProgression(authoredUnitId("class_fighter"), 1),
+        background: authoredUnitId("background_soldier"),
         backgroundAbilityScoreIncrease: {
           kind: "twoAndOne",
           plusTwo: "str",
@@ -2502,8 +2555,8 @@ describe("character creation hole discovery", () => {
   test("keeps malformed typed Soldier ability-score increase fillable", () => {
     const holes = discoverCreationHoles({
       draft: draftWithSelections({
-        progression: testProgression("class_fighter", 1),
-        background: "background_soldier",
+        progression: testProgression(authoredUnitId("class_fighter"), 1),
+        background: authoredUnitId("background_soldier"),
         backgroundAbilityScoreIncrease: {
           kind: "twoAndOne",
           plusTwo: "cha",
@@ -2530,7 +2583,7 @@ describe("character creation hole discovery", () => {
   test("removes selected species from draft holes without adding synthetic species choices", () => {
     const holes = discoverCreationHoles({
       draft: draftWithSelections({
-        species: "species_orc",
+        species: authoredUnitId("species_orc"),
       }),
       unitLibrary,
     });
@@ -2548,13 +2601,13 @@ describe("character creation hole discovery", () => {
   test("discovers selected species size source fact only for choice-sized species", () => {
     const fixedSpeciesHoles = discoverCreationHoles({
       draft: draftWithSelections({
-        species: "species_dwarf",
+        species: authoredUnitId("species_dwarf"),
       }),
       unitLibrary,
     });
     const choiceSpeciesHoles = discoverCreationHoles({
       draft: draftWithSelections({
-        species: "species_tiefling",
+        species: authoredUnitId("species_tiefling"),
       }),
       unitLibrary,
     });
@@ -2570,13 +2623,13 @@ describe("character creation hole discovery", () => {
   test("discovers selected Draconic Ancestry source fact only for Dragonborn", () => {
     const orcHoles = discoverCreationHoles({
       draft: draftWithSelections({
-        species: "species_orc",
+        species: authoredUnitId("species_orc"),
       }),
       unitLibrary,
     });
     const dragonbornHoles = discoverCreationHoles({
       draft: draftWithSelections({
-        species: "species_dragonborn",
+        species: authoredUnitId("species_dragonborn"),
       }),
       unitLibrary,
     });
@@ -2602,7 +2655,7 @@ describe("character creation hole discovery", () => {
 
   test("discovers and fills selected Gnomish Lineage trait choices", () => {
     const draft = draftWithSelections({
-      species: SRD_GNOME_SPECIES_UNIT_ID,
+      species: authoredUnitId(SRD_GNOME_SPECIES_UNIT_ID),
     });
     const holes = discoverCreationHoles({ draft, unitLibrary });
 
@@ -2872,7 +2925,7 @@ describe("character creation batch fill", () => {
     expect(draft.revision).toBe(0);
     expect(result.draft.revision).toBe(1);
     expect(result.draft.selections).toMatchObject({
-      progression: testProgression("class_fighter", 1),
+      progression: testProgression(authoredUnitId("class_fighter"), 1),
       background: "background_soldier",
       species: "species_orc",
       abilityScoreGeneration: {
@@ -2911,7 +2964,9 @@ describe("character creation batch fill", () => {
         unitLibrary,
         expectedRevision: draftRevision(0),
         fills: initialManifestFills(
-          progressionOptionId(testProgression("class_rogue", 1)),
+          progressionOptionId(
+            testProgression(authoredUnitId("class_rogue"), 1),
+          ),
         ),
       }),
     );
@@ -3316,8 +3371,8 @@ describe("character creation batch fill", () => {
 
   test("reports unsupported Soldier gaming sets as unsupported, not invalid", () => {
     const draft = draftWithSelections({
-      progression: testProgression("class_fighter", 1),
-      background: "background_soldier",
+      progression: testProgression(authoredUnitId("class_fighter"), 1),
+      background: authoredUnitId("background_soldier"),
     });
     const result = fillCreationHoles({
       draft,
@@ -3552,7 +3607,7 @@ describe("character creation finalization", () => {
       expectedOriginFeatUnitId,
     }) => {
       const draft = completeFighterDraftForBackground({
-        backgroundUnitId,
+        backgroundUnitId: authoredUnitId(backgroundUnitId),
         asiOptionId,
         toolOptionId,
       });
@@ -3834,7 +3889,7 @@ describe("character creation finalization", () => {
         expectedRevision: draft.revision,
         fills: initialManifestFills(
           "13:class_fighter:level_1:maximum_hit_die",
-          "species_human",
+          authoredUnitId("species_human"),
         ),
       }),
     );
@@ -4104,7 +4159,9 @@ describe("character creation finalization", () => {
       });
 
       const afterHumanChoices =
-        humanVersatileOriginFeatDraftAfterSpeciesChoices(featUnitId);
+        humanVersatileOriginFeatDraftAfterSpeciesChoices(
+          authoredUnitId(featUnitId),
+        );
       const selectedFeatHoles = discoverCreationHoles({
         draft: afterHumanChoices,
         unitLibrary,
@@ -4117,7 +4174,9 @@ describe("character creation finalization", () => {
       expect(selectedFeatHoles).toEqual([]);
 
       const result = finalizeCharacterDraft({
-        draft: completeHumanVersatileOriginFeatDraft(featUnitId),
+        draft: completeHumanVersatileOriginFeatDraft(
+          authoredUnitId(featUnitId),
+        ),
         unitLibrary,
       });
       expect(result.tag).toBe("ready");
@@ -4141,12 +4200,16 @@ describe("character creation finalization", () => {
 
   test("requires species size selection exactly for choice-sized species", () => {
     const tieflingWithoutSize = finalizeCharacterDraft({
-      draft: completeManifestDraftForSpecies("species_tiefling"),
+      draft: completeManifestDraftForSpecies(
+        authoredUnitId("species_tiefling"),
+      ),
       unitLibrary,
     });
     expect(tieflingWithoutSize).toMatchObject({ tag: "incomplete" });
 
-    const dwarf = completeManifestDraftForSpecies("species_dwarf");
+    const dwarf = completeManifestDraftForSpecies(
+      authoredUnitId("species_dwarf"),
+    );
     const dwarfWithStaleSize: CharacterDraft = {
       ...dwarf,
       selections: {
@@ -4180,7 +4243,9 @@ describe("character creation finalization", () => {
     });
     expect(dragonbornWithoutAncestry).toMatchObject({ tag: "incomplete" });
 
-    const dwarf = completeManifestDraftForSpecies("species_dwarf");
+    const dwarf = completeManifestDraftForSpecies(
+      authoredUnitId("species_dwarf"),
+    );
     const dwarfWithStaleAncestry: CharacterDraft = {
       ...dwarf,
       selections: {
@@ -4249,9 +4314,9 @@ describe("character creation finalization", () => {
     for (const classUnitId of SRD_LEVEL_ONE_CLASS_UNIT_IDS) {
       const draft = completeSupportedProgressionDraft({
         draftId: `draft:srd-level-1-${classUnitId}`,
-        progression: testProgression(classUnitId, 1),
+        progression: testProgression(authoredUnitId(classUnitId), 1),
       });
-      const classFacts = readableClassFacts(classUnitId);
+      const classFacts = readableClassFacts(authoredUnitId(classUnitId));
       const result = finalizeCharacterDraft({ draft, unitLibrary });
 
       expect(result.tag, classUnitId).toBe("ready");
@@ -4299,13 +4364,13 @@ describe("character creation finalization", () => {
         expect.arrayContaining([
           ...selectedChoiceOptionIds(
             draft,
-            classUnitId,
+            authoredUnitId(classUnitId),
             "class_skill_proficiency_choice",
           ),
         ]),
       );
       assertClassToolProficienciesProjected({
-        classUnitId,
+        classUnitId: authoredUnitId(classUnitId),
         toolProficiencies: classFacts.toolProficiencies,
         proficiencies,
         draft,
@@ -4321,7 +4386,11 @@ describe("character creation finalization", () => {
         ),
       );
       expect(
-        selectedChoiceOptionIds(draft, classUnitId, "class_equipment_choice"),
+        selectedChoiceOptionIds(
+          draft,
+          authoredUnitId(classUnitId),
+          "class_equipment_choice",
+        ),
       ).toHaveLength(1);
       expect(result.build.equipment.owned.map((item) => item.unitId)).toEqual(
         draft.selections.equipment?.selectedUnitIds,
@@ -4346,7 +4415,7 @@ describe("character creation finalization", () => {
     for (const testCase of cases) {
       const draft = completeSupportedProgressionDraft({
         draftId: `draft:${testCase.classUnitId}-language-grant`,
-        progression: testProgression(testCase.classUnitId, 1),
+        progression: testProgression(authoredUnitId(testCase.classUnitId), 1),
       });
       const result = finalizeCharacterDraft({ draft, unitLibrary });
 
@@ -4373,7 +4442,7 @@ describe("character creation finalization", () => {
   test("finalizes Rogue Thieves' Cant extra language choice without changing origin languages", () => {
     const draft = completeSupportedProgressionDraft({
       draftId: "draft:rogue-thieves-cant-extra-language-choice",
-      progression: testProgression("class_rogue", 1),
+      progression: testProgression(authoredUnitId("class_rogue"), 1),
       preferredOptionIdsBySource: {
         [testUnitChoiceSourceKey(
           "rogue_thieves_cant",
@@ -4386,7 +4455,7 @@ describe("character creation finalization", () => {
     expect(
       selectedChoiceOptionIds(
         draft,
-        "rogue_thieves_cant",
+        authoredUnitId("rogue_thieves_cant"),
         CLASS_FEATURE_LANGUAGE_CHOICE_KEY,
       ),
     ).toEqual(["Elvish"]);
@@ -4415,10 +4484,10 @@ describe("character creation finalization", () => {
   test("rejects unsupported authored class-feature language grants during finalization", () => {
     const draft = completeSupportedProgressionDraft({
       draftId: "draft:druid-unsupported-language-grant",
-      progression: testProgression("class_druid", 1),
+      progression: testProgression(authoredUnitId("class_druid"), 1),
     });
     const brokenUnitLibrary = unitCatalogWithUnsupportedLanguageGrant({
-      unitId: "druid_druidic",
+      unitId: authoredUnitId("druid_druidic"),
       languageId: "secret_tree_talk",
     });
     const result = finalizeCharacterDraft({
@@ -4444,7 +4513,7 @@ describe("character creation finalization", () => {
   test("finalizes supported level-1 class-feature acquisition choices", () => {
     const clericProtector = completeSupportedProgressionDraft({
       draftId: "draft:srd-level-1-cleric-protector-feature-choice",
-      progression: testProgression("class_cleric", 1),
+      progression: testProgression(authoredUnitId("class_cleric"), 1),
       preferredOptionIdsBySource: {
         [testUnitChoiceSourceKey("cleric_divine_order", "divine_order")]: [
           creationChoiceOptionId("protector"),
@@ -4453,7 +4522,7 @@ describe("character creation finalization", () => {
     });
     const clericThaumaturge = completeSupportedProgressionDraft({
       draftId: "draft:srd-level-1-cleric-thaumaturge-feature-choice",
-      progression: testProgression("class_cleric", 1),
+      progression: testProgression(authoredUnitId("class_cleric"), 1),
       preferredOptionIdsBySource: {
         [testUnitChoiceSourceKey("cleric_divine_order", "divine_order")]: [
           creationChoiceOptionId("thaumaturge"),
@@ -4466,11 +4535,11 @@ describe("character creation finalization", () => {
     });
     const druidMagician = completeSupportedProgressionDraft({
       draftId: "draft:srd-level-1-druid-magician-feature-choice",
-      progression: testProgression("class_druid", 1),
+      progression: testProgression(authoredUnitId("class_druid"), 1),
     });
     const druidWarden = completeSupportedProgressionDraft({
       draftId: "draft:srd-level-1-druid-warden-feature-choice",
-      progression: testProgression("class_druid", 1),
+      progression: testProgression(authoredUnitId("class_druid"), 1),
       preferredOptionIdsBySource: {
         [testUnitChoiceSourceKey("druid_primal_order", "primal_order")]: [
           creationChoiceOptionId("warden"),
@@ -4479,55 +4548,55 @@ describe("character creation finalization", () => {
     });
     const rogue = completeSupportedProgressionDraft({
       draftId: "draft:srd-level-1-rogue-feature-choices",
-      progression: testProgression("class_rogue", 1),
+      progression: testProgression(authoredUnitId("class_rogue"), 1),
     });
 
     expect(
       selectedChoiceOptionIds(
         clericProtector,
-        "cleric_divine_order",
+        authoredUnitId("cleric_divine_order"),
         "divine_order",
       ),
     ).toEqual(["protector"]);
     expect(
       selectedChoiceOptionIds(
         clericThaumaturge,
-        "cleric_divine_order",
+        authoredUnitId("cleric_divine_order"),
         "divine_order",
       ),
     ).toEqual(["thaumaturge"]);
     expect(
       selectedChoiceOptionIds(
         clericThaumaturge,
-        "cleric_divine_order",
+        authoredUnitId("cleric_divine_order"),
         CLASS_CANTRIP_CHOICE_KEY,
       ),
     ).toEqual(["resistance"]);
     expect(
       selectedChoiceOptionIds(
         druidMagician,
-        "druid_primal_order",
+        authoredUnitId("druid_primal_order"),
         "primal_order",
       ),
     ).toEqual(["magician"]);
     expect(
       selectedChoiceOptionIds(
         druidMagician,
-        "druid_primal_order",
+        authoredUnitId("druid_primal_order"),
         CLASS_CANTRIP_CHOICE_KEY,
       ),
     ).toEqual(["guidance"]);
     expect(
       selectedChoiceOptionIds(
         druidWarden,
-        "druid_primal_order",
+        authoredUnitId("druid_primal_order"),
         "primal_order",
       ),
     ).toEqual(["warden"]);
     expect(
       selectedChoiceOptionIds(
         rogue,
-        "rogue_expertise",
+        authoredUnitId("rogue_expertise"),
         "class_feature_proficiency_choice",
       ),
     ).toHaveLength(2);
@@ -4618,7 +4687,7 @@ describe("character creation finalization", () => {
     ).toEqual(
       selectedChoiceOptionIds(
         rogue,
-        "rogue_expertise",
+        authoredUnitId("rogue_expertise"),
         "class_feature_proficiency_choice",
       ),
     );
@@ -4627,7 +4696,9 @@ describe("character creation finalization", () => {
   test("finalizes supported multiclass order cantrip projections", () => {
     const clericThaumaturge = completeSupportedProgressionDraft({
       draftId: "draft:srd-multiclass-cleric-thaumaturge-feature-choice",
-      progression: supportedMulticlassProgressionForClass("class_cleric"),
+      progression: supportedMulticlassProgressionForClass(
+        authoredUnitId("class_cleric"),
+      ),
       preferredOptionIdsBySource: {
         [testUnitChoiceSourceKey("cleric_divine_order", "divine_order")]: [
           creationChoiceOptionId("thaumaturge"),
@@ -4640,7 +4711,9 @@ describe("character creation finalization", () => {
     });
     const druidMagician = completeSupportedProgressionDraft({
       draftId: "draft:srd-multiclass-druid-magician-feature-choice",
-      progression: supportedMulticlassProgressionForClass("class_druid"),
+      progression: supportedMulticlassProgressionForClass(
+        authoredUnitId("class_druid"),
+      ),
       preferredOptionIdsBySource: {
         [testUnitChoiceSourceKey("druid_primal_order", "primal_order")]: [
           creationChoiceOptionId("magician"),
@@ -4655,14 +4728,14 @@ describe("character creation finalization", () => {
     expect(
       selectedChoiceOptionIds(
         clericThaumaturge,
-        "cleric_divine_order",
+        authoredUnitId("cleric_divine_order"),
         CLASS_CANTRIP_CHOICE_KEY,
       ),
     ).toEqual(["light"]);
     expect(
       selectedChoiceOptionIds(
         druidMagician,
-        "druid_primal_order",
+        authoredUnitId("druid_primal_order"),
         CLASS_CANTRIP_CHOICE_KEY,
       ),
     ).toEqual(["guidance"]);
@@ -4683,17 +4756,23 @@ describe("character creation finalization", () => {
     }
 
     expect(
-      spellcastingSourceCantrips(clericBuild.build, "class_cleric"),
+      spellcastingSourceCantrips(
+        clericBuild.build,
+        authoredUnitId("class_cleric"),
+      ),
     ).toEqual(expect.arrayContaining(["light"]));
-    expect(spellcastingSourceCantrips(druidBuild.build, "class_druid")).toEqual(
-      expect.arrayContaining(["guidance"]),
-    );
+    expect(
+      spellcastingSourceCantrips(
+        druidBuild.build,
+        authoredUnitId("class_druid"),
+      ),
+    ).toEqual(expect.arrayContaining(["guidance"]));
   });
 
   test("rejects Rogue Expertise choices that are not already skill proficiencies", () => {
     const rogue = completeSupportedProgressionDraft({
       draftId: "draft:srd-level-1-rogue-invalid-expertise",
-      progression: testProgression("class_rogue", 1),
+      progression: testProgression(authoredUnitId("class_rogue"), 1),
     });
     const invalidExpertise: CharacterDraft = {
       ...rogue,
@@ -4726,12 +4805,12 @@ describe("character creation finalization", () => {
 
   test("finalizes non-Wizard level-1 Spell Access from Surface class spellcasting facts", () => {
     const spellAccessClassUnitIds = [
-      "class_bard",
-      "class_cleric",
-      "class_druid",
-      "class_paladin",
-      "class_ranger",
-      "class_sorcerer",
+      authoredUnitId("class_bard"),
+      authoredUnitId("class_cleric"),
+      authoredUnitId("class_druid"),
+      authoredUnitId("class_paladin"),
+      authoredUnitId("class_ranger"),
+      authoredUnitId("class_sorcerer"),
     ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
 
     for (const classUnitId of spellAccessClassUnitIds) {
@@ -4807,9 +4886,9 @@ describe("character creation finalization", () => {
   test("finalizes Warlock level-1 Pact Magic spellcasting facts", () => {
     const draft = completeSupportedProgressionDraft({
       draftId: "draft:srd-level-1-class_warlock-pact-magic",
-      progression: testProgression("class_warlock", 1),
+      progression: testProgression(authoredUnitId("class_warlock"), 1),
     });
-    const classFacts = readableClassFacts("class_warlock");
+    const classFacts = readableClassFacts(authoredUnitId("class_warlock"));
     if (
       !("spellcasting" in classFacts) ||
       classFacts.spellcasting.kind !== "pact_magic_spellcasting_creation"
@@ -4829,13 +4908,13 @@ describe("character creation finalization", () => {
           spellcastingAbility: "cha",
           cantrips: selectedChoiceOptionIds(
             draft,
-            "class_warlock",
+            authoredUnitId("class_warlock"),
             CLASS_CANTRIP_CHOICE_KEY,
           ),
           spellbook: [],
           preparedSpells: selectedChoiceOptionIds(
             draft,
-            "class_warlock",
+            authoredUnitId("class_warlock"),
             CLASS_PREPARED_SPELL_CHOICE_KEY,
           ),
           spellcastingFocuses: ["arcane_focus"],
@@ -4854,7 +4933,7 @@ describe("character creation finalization", () => {
   test("projects Paladin and Warlock level-3 spellcasting facts from progression rows", () => {
     const paladinDraft = completeSupportedProgressionDraft({
       draftId: "draft:srd-level-3-class_paladin-spellcasting",
-      progression: testProgression("class_paladin", 3),
+      progression: testProgression(authoredUnitId("class_paladin"), 3),
       preferredOptionIdsBySource: {
         [testUnitChoiceSourceKey(
           "class_paladin",
@@ -4877,7 +4956,7 @@ describe("character creation finalization", () => {
     expect(
       selectedChoiceOptionIds(
         paladinDraft,
-        "class_paladin",
+        authoredUnitId("class_paladin"),
         CLASS_PREPARED_SPELL_CHOICE_KEY,
       ),
     ).toEqual(["heroism", "searing_smite", "bless", "command"]);
@@ -4893,7 +4972,7 @@ describe("character creation finalization", () => {
 
     const warlockDraft = completeSupportedProgressionDraft({
       draftId: "draft:srd-level-3-class_warlock-pact-magic",
-      progression: testProgression("class_warlock", 3),
+      progression: testProgression(authoredUnitId("class_warlock"), 3),
       preferredOptionIdsBySource: {
         [testUnitChoiceSourceKey(
           "class_warlock",
@@ -4916,7 +4995,7 @@ describe("character creation finalization", () => {
     expect(
       selectedChoiceOptionIds(
         warlockDraft,
-        "class_warlock",
+        authoredUnitId("class_warlock"),
         CLASS_PREPARED_SPELL_CHOICE_KEY,
       ),
     ).toEqual(["charm_person", "hellish_rebuke", "hex", "mirror_image"]);
@@ -4933,7 +5012,7 @@ describe("character creation finalization", () => {
   });
 
   test("rejects level-gated prepared spell options before their class has matching slots", () => {
-    const progression = testProgression("class_bard", 2);
+    const progression = testProgression(authoredUnitId("class_bard"), 2);
     const draft = createTestDraft("draft:srd-level-2-class_bard-aid-rejected");
     const afterInitial = requireAcceptedBatch(
       fillCreationHoles({
@@ -5008,7 +5087,7 @@ describe("character creation finalization", () => {
     ] as const;
     const draft = completeSupportedProgressionDraft({
       draftId: "draft:srd-level-3-class_wizard-acid-arrow-prepared",
-      progression: testProgression("class_wizard", 3),
+      progression: testProgression(authoredUnitId("class_wizard"), 3),
       preferredOptionIdsBySource: {
         [testUnitChoiceSourceKey("class_wizard", WIZARD_SPELLBOOK_CHOICE_KEY)]:
           spellbookSpellIds.map(creationChoiceOptionId),
@@ -5026,7 +5105,7 @@ describe("character creation finalization", () => {
     expect(
       selectedChoiceOptionIds(
         draft,
-        "class_wizard",
+        authoredUnitId("class_wizard"),
         WIZARD_PREPARED_SPELL_CHOICE_KEY,
       ),
     ).toEqual([...preparedSpellIds]);
@@ -5040,7 +5119,7 @@ describe("character creation finalization", () => {
   test("finalizes Ranger Hunter's Prey with a retained selected option Unit ref", () => {
     const draft = completeSupportedProgressionDraft({
       draftId: "draft:srd-level-3-ranger-hunter-horde-breaker",
-      progression: testProgression("class_ranger", 3),
+      progression: testProgression(authoredUnitId("class_ranger"), 3),
       preferredOptionIdsBySource: {
         [testUnitChoiceSourceKey("class_ranger", CLASS_SUBCLASS_CHOICE_KEY)]: [
           creationChoiceOptionId("subclass_ranger_hunter"),
@@ -5059,7 +5138,7 @@ describe("character creation finalization", () => {
     expect(
       selectedChoiceOptionIds(
         draft,
-        "ranger_hunters_prey",
+        authoredUnitId("ranger_hunters_prey"),
         HUNTERS_PREY_CHOICE_KEY,
       ),
     ).toEqual(["horde_breaker"]);
@@ -5075,12 +5154,21 @@ describe("character creation finalization", () => {
   test("finalizes non-Fighter level-1 Weapon Mastery choices from Surface mastery records", () => {
     const masteryProfiles = [
       {
-        classUnitId: "class_barbarian",
-        featureUnitId: "barbarian_weapon_mastery",
+        classUnitId: authoredUnitId("class_barbarian"),
+        featureUnitId: authoredUnitId("barbarian_weapon_mastery"),
       },
-      { classUnitId: "class_paladin", featureUnitId: "paladin_weapon_mastery" },
-      { classUnitId: "class_ranger", featureUnitId: "ranger_weapon_mastery" },
-      { classUnitId: "class_rogue", featureUnitId: "rogue_weapon_mastery" },
+      {
+        classUnitId: authoredUnitId("class_paladin"),
+        featureUnitId: authoredUnitId("paladin_weapon_mastery"),
+      },
+      {
+        classUnitId: authoredUnitId("class_ranger"),
+        featureUnitId: authoredUnitId("ranger_weapon_mastery"),
+      },
+      {
+        classUnitId: authoredUnitId("class_rogue"),
+        featureUnitId: authoredUnitId("rogue_weapon_mastery"),
+      },
     ] as const satisfies ReadonlyArray<{
       readonly classUnitId: UnitRecord["id"];
       readonly featureUnitId: UnitRecord["id"];
@@ -5089,11 +5177,11 @@ describe("character creation finalization", () => {
     for (const profile of masteryProfiles) {
       const draft = completeSupportedProgressionDraft({
         draftId: `draft:srd-level-1-${profile.classUnitId}-weapon-mastery`,
-        progression: testProgression(profile.classUnitId, 1),
+        progression: testProgression(authoredUnitId(profile.classUnitId), 1),
       });
       const selectedMasteryWeapons = selectedChoiceOptionIds(
         draft,
-        profile.featureUnitId,
+        authoredUnitId(profile.featureUnitId),
         WEAPON_MASTERY_OPTIONS_CHOICE_KEY,
       );
       const result = finalizeCharacterDraft({ draft, unitLibrary });
@@ -5216,7 +5304,7 @@ describe("character creation finalization", () => {
   test("accepts Cleric 2 Channel Divinity as a class resource container", () => {
     const clericTwo = completeSupportedProgressionDraft({
       draftId: "draft:cleric-channel-divinity",
-      progression: testProgression("class_cleric", 2),
+      progression: testProgression(authoredUnitId("class_cleric"), 2),
     });
     const result = finalizeCharacterDraft({ draft: clericTwo, unitLibrary });
 
@@ -5253,7 +5341,7 @@ describe("character creation finalization", () => {
   test("accepts Paladin 3 Channel Divinity as a class resource container", () => {
     const paladinThree = completeSupportedProgressionDraft({
       draftId: "draft:paladin-channel-divinity",
-      progression: testProgression("class_paladin", 3),
+      progression: testProgression(authoredUnitId("class_paladin"), 3),
     });
     const result = finalizeCharacterDraft({ draft: paladinThree, unitLibrary });
 
@@ -5282,7 +5370,7 @@ describe("character creation finalization", () => {
   test("accepts Druid 2 Wild Shape and projects character facts", () => {
     const druidTwo = completeSupportedProgressionDraft({
       draftId: "draft:druid-wild-companion",
-      progression: testProgression("class_druid", 2),
+      progression: testProgression(authoredUnitId("class_druid"), 2),
     });
     const result = finalizeCharacterDraft({ draft: druidTwo, unitLibrary });
 
@@ -5367,8 +5455,8 @@ describe("character creation finalization", () => {
           currentKnownFormStatBlockIds:
             druidWildShapeFixtureKnownFormStatBlockIds,
           replacement: {
-            replaceStatBlockId: "stat_block_rat",
-            selectedStatBlockId: "stat_block_cat",
+            replaceStatBlockId: authoredStatBlockId("stat_block_rat"),
+            selectedStatBlockId: authoredStatBlockId("stat_block_cat"),
           },
           statBlockCatalog,
         }),
@@ -5386,8 +5474,8 @@ describe("character creation finalization", () => {
           currentKnownFormStatBlockIds:
             druidWildShapeFixtureKnownFormStatBlockIds,
           replacement: {
-            replaceStatBlockId: "stat_block_rat",
-            selectedStatBlockId: "stat_block_hawk",
+            replaceStatBlockId: authoredStatBlockId("stat_block_rat"),
+            selectedStatBlockId: authoredStatBlockId("stat_block_hawk"),
           },
           statBlockCatalog,
         }),
@@ -5452,7 +5540,7 @@ describe("character creation finalization", () => {
   test("accepts Monk 2 Monk's Focus as shared Focus Point character facts", () => {
     const monkTwo = completeSupportedProgressionDraft({
       draftId: "draft:monk-monks-focus",
-      progression: testProgression("class_monk", 2),
+      progression: testProgression(authoredUnitId("class_monk"), 2),
     });
     const result = finalizeCharacterDraft({ draft: monkTwo, unitLibrary });
 
@@ -5518,7 +5606,7 @@ describe("character creation finalization", () => {
       characterBuildMonksFocusFacts({
         build: {
           features: result.build.features,
-          progression: testProgression("class_monk", 4),
+          progression: testProgression(authoredUnitId("class_monk"), 4),
         },
         unitLibrary,
       }),
@@ -5529,7 +5617,7 @@ describe("character creation finalization", () => {
   test("projects Monk 2 Uncanny Metabolism source facts without duplicating Focus or Martial Arts tables", () => {
     const monkTwo = completeSupportedProgressionDraft({
       draftId: "draft:monk-uncanny-metabolism",
-      progression: testProgression("class_monk", 2),
+      progression: testProgression(authoredUnitId("class_monk"), 2),
     });
     const result = finalizeCharacterDraft({ draft: monkTwo, unitLibrary });
 
@@ -5588,7 +5676,10 @@ describe("character creation finalization", () => {
         characterBuildMonkUncannyMetabolismFacts({
           build: {
             features: result.build.features,
-            progression: testProgression("class_monk", expectation.level),
+            progression: testProgression(
+              authoredUnitId("class_monk"),
+              expectation.level,
+            ),
           },
           unitLibrary,
         }),
@@ -5604,7 +5695,7 @@ describe("character creation finalization", () => {
   test(sorcererFontOfMagicResourceFactsTestName, () => {
     const sorcererTwo = completeSupportedProgressionDraft({
       draftId: "draft:sorcerer-font-of-magic",
-      progression: testProgression("class_sorcerer", 2),
+      progression: testProgression(authoredUnitId("class_sorcerer"), 2),
     });
     const result = finalizeCharacterDraft({ draft: sorcererTwo, unitLibrary });
 
@@ -5676,7 +5767,7 @@ describe("character creation finalization", () => {
       characterBuildSorcererFontOfMagicFacts({
         build: {
           features: result.build.features,
-          progression: testProgression("class_sorcerer", 4),
+          progression: testProgression(authoredUnitId("class_sorcerer"), 4),
         },
         unitLibrary,
       }),
@@ -5691,7 +5782,7 @@ describe("character creation finalization", () => {
     ] as const;
     const sorcererTwo = completeSupportedProgressionDraft({
       draftId: "draft:sorcerer-metamagic-facts",
-      progression: testProgression("class_sorcerer", 2),
+      progression: testProgression(authoredUnitId("class_sorcerer"), 2),
       preferredOptionIdsBySource: {
         [testUnitChoiceSourceKey(
           SORCERER_METAMAGIC_UNIT_ID,
@@ -5707,18 +5798,21 @@ describe("character creation finalization", () => {
     expect(
       selectedChoiceOptionIds(
         sorcererTwo,
-        SORCERER_METAMAGIC_UNIT_ID,
+        authoredUnitId(SORCERER_METAMAGIC_UNIT_ID),
         SORCERER_METAMAGIC_OPTIONS_CHOICE_KEY,
       ),
     ).toEqual(preferredMetamagicOptionIds);
     expect(
       selectedBuildSorcererMetamagicOptionIds(
         result.build,
-        SORCERER_METAMAGIC_UNIT_ID,
+        authoredUnitId(SORCERER_METAMAGIC_UNIT_ID),
       ),
     ).toEqual(preferredMetamagicOptionIds);
     expect(
-      selectedBuildClassChoiceUnitIds(result.build, SORCERER_METAMAGIC_UNIT_ID),
+      selectedBuildClassChoiceUnitIds(
+        result.build,
+        authoredUnitId(SORCERER_METAMAGIC_UNIT_ID),
+      ),
     ).toEqual([]);
     expect(
       characterBuildUnitRefs(result.build, unitLibrary).map(
@@ -5768,16 +5862,16 @@ describe("character creation finalization", () => {
             ...result.build.features,
             {
               kind: "selectedSorcererMetamagicOption" as const,
-              selectedFromUnitId: SORCERER_METAMAGIC_UNIT_ID,
+              selectedFromUnitId: authoredUnitId(SORCERER_METAMAGIC_UNIT_ID),
               optionId: testSorcererMetamagicOptionId("sorcerer_seeking_spell"),
             },
             {
               kind: "selectedSorcererMetamagicOption" as const,
-              selectedFromUnitId: SORCERER_METAMAGIC_UNIT_ID,
+              selectedFromUnitId: authoredUnitId(SORCERER_METAMAGIC_UNIT_ID),
               optionId: testSorcererMetamagicOptionId("sorcerer_subtle_spell"),
             },
           ],
-          progression: testProgression("class_sorcerer", 10),
+          progression: testProgression(authoredUnitId("class_sorcerer"), 10),
         },
         unitLibrary,
       }),
@@ -5800,7 +5894,7 @@ describe("character creation finalization", () => {
     const levelGain = expectRight(
       sorcererLevelGain({
         unitLibrary,
-        classUnitId: testClassUnitId("class_sorcerer"),
+        classUnitId: testClassUnitId(authoredUnitId("class_sorcerer")),
         hitPointRule: { tag: "fixedHigherLevelGain" },
         gainedOptions: [],
         replacement: {
@@ -5822,7 +5916,7 @@ describe("character creation finalization", () => {
     expect(
       selectedBuildSorcererMetamagicOptionIds(
         result,
-        SORCERER_METAMAGIC_UNIT_ID,
+        authoredUnitId(SORCERER_METAMAGIC_UNIT_ID),
       ),
     ).toEqual(["sorcerer_empowered_spell", "sorcerer_subtle_spell"]);
     expect(
@@ -5842,7 +5936,7 @@ describe("character creation finalization", () => {
     expect(
       sorcererLevelGain({
         unitLibrary,
-        classUnitId: testClassUnitId("class_sorcerer"),
+        classUnitId: testClassUnitId(authoredUnitId("class_sorcerer")),
         hitPointRule: { tag: "fixedHigherLevelGain" },
         gainedOptions: [],
         replacement: {
@@ -5858,7 +5952,7 @@ describe("character creation finalization", () => {
     const missingKnownOption = expectRight(
       sorcererLevelGain({
         unitLibrary,
-        classUnitId: testClassUnitId("class_sorcerer"),
+        classUnitId: testClassUnitId(authoredUnitId("class_sorcerer")),
         hitPointRule: { tag: "fixedHigherLevelGain" },
         gainedOptions: [],
         replacement: {
@@ -5881,7 +5975,7 @@ describe("character creation finalization", () => {
     const duplicateKnownOption = expectRight(
       sorcererLevelGain({
         unitLibrary,
-        classUnitId: testClassUnitId("class_sorcerer"),
+        classUnitId: testClassUnitId(authoredUnitId("class_sorcerer")),
         hitPointRule: { tag: "fixedHigherLevelGain" },
         gainedOptions: [],
         replacement: {
@@ -5905,7 +5999,7 @@ describe("character creation finalization", () => {
   test("advances Sorcerer level 10 and 17 Metamagic option gains from Surface thresholds", () => {
     const levelNineBuild = {
       ...finalizedSorcererMetamagicBuild("draft:sorcerer-metamagic-level-ten"),
-      progression: testProgression("class_sorcerer", 9),
+      progression: testProgression(authoredUnitId("class_sorcerer"), 9),
     };
 
     const levelTen = expectRight(
@@ -5915,7 +6009,7 @@ describe("character creation finalization", () => {
         levelGain: expectRight(
           sorcererLevelGain({
             unitLibrary,
-            classUnitId: testClassUnitId("class_sorcerer"),
+            classUnitId: testClassUnitId(authoredUnitId("class_sorcerer")),
             hitPointRule: { tag: "fixedHigherLevelGain" },
             gainedOptions: ["sorcerer_seeking_spell", "sorcerer_subtle_spell"],
           }),
@@ -5926,7 +6020,7 @@ describe("character creation finalization", () => {
     expect(
       selectedBuildSorcererMetamagicOptionIds(
         levelTen,
-        SORCERER_METAMAGIC_UNIT_ID,
+        authoredUnitId(SORCERER_METAMAGIC_UNIT_ID),
       ),
     ).toEqual([
       "sorcerer_empowered_spell",
@@ -5945,7 +6039,7 @@ describe("character creation finalization", () => {
 
     const levelSixteenBuild = {
       ...levelTen,
-      progression: testProgression("class_sorcerer", 16),
+      progression: testProgression(authoredUnitId("class_sorcerer"), 16),
     };
     const levelSeventeen = expectRight(
       advanceCharacterBuildClassLevel({
@@ -5954,7 +6048,7 @@ describe("character creation finalization", () => {
         levelGain: expectRight(
           sorcererLevelGain({
             unitLibrary,
-            classUnitId: testClassUnitId("class_sorcerer"),
+            classUnitId: testClassUnitId(authoredUnitId("class_sorcerer")),
             hitPointRule: { tag: "fixedHigherLevelGain" },
             gainedOptions: ["sorcerer_distant_spell", "sorcerer_twinned_spell"],
           }),
@@ -5965,7 +6059,7 @@ describe("character creation finalization", () => {
     expect(
       selectedBuildSorcererMetamagicOptionIds(
         levelSeventeen,
-        SORCERER_METAMAGIC_UNIT_ID,
+        authoredUnitId(SORCERER_METAMAGIC_UNIT_ID),
       ),
     ).toEqual([
       "sorcerer_empowered_spell",
@@ -5990,12 +6084,12 @@ describe("character creation finalization", () => {
       ...finalizedSorcererMetamagicBuild(
         "draft:sorcerer-metamagic-duplicate-gain",
       ),
-      progression: testProgression("class_sorcerer", 9),
+      progression: testProgression(authoredUnitId("class_sorcerer"), 9),
     };
     const levelGain = expectRight(
       sorcererLevelGain({
         unitLibrary,
-        classUnitId: testClassUnitId("class_sorcerer"),
+        classUnitId: testClassUnitId(authoredUnitId("class_sorcerer")),
         hitPointRule: { tag: "fixedHigherLevelGain" },
         gainedOptions: ["sorcerer_empowered_spell", "sorcerer_subtle_spell"],
       }),
@@ -6019,7 +6113,7 @@ describe("character creation finalization", () => {
   test("projects Druid 4 Wild Shape roster thresholds without known-form defaults", () => {
     const druidTwo = completeSupportedProgressionDraft({
       draftId: "draft:druid-wild-shape-level-four",
-      progression: testProgression("class_druid", 2),
+      progression: testProgression(authoredUnitId("class_druid"), 2),
     });
     const result = finalizeCharacterDraft({ draft: druidTwo, unitLibrary });
 
@@ -6030,7 +6124,7 @@ describe("character creation finalization", () => {
       characterBuildDruidWildShapeFacts({
         build: {
           features: result.build.features,
-          progression: testProgression("class_druid", 4),
+          progression: testProgression(authoredUnitId("class_druid"), 4),
         },
         unitLibrary,
       }),
@@ -6061,7 +6155,7 @@ describe("character creation finalization", () => {
     const fighterClassUnitId = expectRight(
       classUnitIdFromUnitId({
         unitLibrary,
-        classUnitId: "class_fighter",
+        classUnitId: authoredUnitId("class_fighter"),
       }),
     );
     const levelGain = expectRight(
@@ -6069,7 +6163,7 @@ describe("character creation finalization", () => {
         unitLibrary,
         classUnitId: fighterClassUnitId,
         hitPointRule: { tag: "fixedHigherLevelGain" },
-        selectedFeatUnitId: "feat_archery",
+        selectedFeatUnitId: authoredUnitId("feat_archery"),
       }),
     );
 
@@ -6091,10 +6185,16 @@ describe("character creation finalization", () => {
       ],
     });
     expect(
-      selectedBuildClassChoiceUnitIds(result, "fighter_fighting_style"),
+      selectedBuildClassChoiceUnitIds(
+        result,
+        authoredUnitId("fighter_fighting_style"),
+      ),
     ).toEqual(["feat_archery"]);
     expect(
-      selectedBuildClassChoiceUnitIds(result, "fighter_weapon_mastery"),
+      selectedBuildClassChoiceUnitIds(
+        result,
+        authoredUnitId("fighter_weapon_mastery"),
+      ),
     ).toEqual(["weapon_longsword", "weapon_spear", "weapon_flail"]);
     const unitRefIds = characterBuildUnitRefs(result, unitLibrary).map(
       (ref) => ref.unitId,
@@ -6114,7 +6214,7 @@ describe("character creation finalization", () => {
     const fighterClassUnitId = expectRight(
       classUnitIdFromUnitId({
         unitLibrary,
-        classUnitId: "class_fighter",
+        classUnitId: authoredUnitId("class_fighter"),
       }),
     );
     const levelGain = {
@@ -6133,7 +6233,10 @@ describe("character creation finalization", () => {
 
     expect(computeTotalLevel(result.progression)).toBe(2);
     expect(
-      selectedBuildClassChoiceUnitIds(result, "fighter_fighting_style"),
+      selectedBuildClassChoiceUnitIds(
+        result,
+        authoredUnitId("fighter_fighting_style"),
+      ),
     ).toEqual(["defense"]);
   });
 
@@ -6141,7 +6244,7 @@ describe("character creation finalization", () => {
     const fighterClassUnitId = expectRight(
       classUnitIdFromUnitId({
         unitLibrary,
-        classUnitId: "class_fighter",
+        classUnitId: authoredUnitId("class_fighter"),
       }),
     );
     const levelGain = {
@@ -6184,12 +6287,12 @@ describe("character creation finalization", () => {
         unitLibrary,
         classUnitId: fighterClassUnitId,
         hitPointRule: { tag: "fixedHigherLevelGain" },
-        featureUnitId: "fighter_weapon_mastery",
+        featureUnitId: authoredUnitId("fighter_weapon_mastery"),
         selectedWeaponUnitIds: [
-          "weapon_longsword",
-          "weapon_spear",
-          "weapon_flail",
-          "weapon_shortsword",
+          authoredUnitId("weapon_longsword"),
+          authoredUnitId("weapon_spear"),
+          authoredUnitId("weapon_flail"),
+          authoredUnitId("weapon_shortsword"),
         ],
       }),
     );
@@ -6203,7 +6306,10 @@ describe("character creation finalization", () => {
 
     expect(computeTotalLevel(levelFour.progression)).toBe(4);
     expect(
-      selectedBuildClassChoiceUnitIds(levelFour, "fighter_weapon_mastery"),
+      selectedBuildClassChoiceUnitIds(
+        levelFour,
+        authoredUnitId("fighter_weapon_mastery"),
+      ),
     ).toEqual([
       "weapon_longsword",
       "weapon_spear",
@@ -6216,7 +6322,7 @@ describe("character creation finalization", () => {
     const fighterClassUnitId = expectRight(
       classUnitIdFromUnitId({
         unitLibrary,
-        classUnitId: "class_fighter",
+        classUnitId: authoredUnitId("class_fighter"),
       }),
     );
     const plainLevelGain = {
@@ -6243,15 +6349,15 @@ describe("character creation finalization", () => {
         unitLibrary,
         classUnitId: fighterClassUnitId,
         hitPointRule: { tag: "fixedHigherLevelGain" },
-        featureUnitId: "fighter_weapon_mastery",
+        featureUnitId: authoredUnitId("fighter_weapon_mastery"),
         selectedWeaponUnitIds: [
-          "weapon_longsword",
-          "weapon_spear",
-          "weapon_flail",
-          "weapon_shortsword",
+          authoredUnitId("weapon_longsword"),
+          authoredUnitId("weapon_spear"),
+          authoredUnitId("weapon_flail"),
+          authoredUnitId("weapon_shortsword"),
         ],
         fightingStyleReplacement: {
-          selectedFeatUnitId: "feat_archery",
+          selectedFeatUnitId: authoredUnitId("feat_archery"),
         },
       }),
     );
@@ -6268,7 +6374,10 @@ describe("character creation finalization", () => {
     );
 
     expect(
-      selectedBuildClassChoiceUnitIds(result, "fighter_weapon_mastery"),
+      selectedBuildClassChoiceUnitIds(
+        result,
+        authoredUnitId("fighter_weapon_mastery"),
+      ),
     ).toEqual([
       "weapon_longsword",
       "weapon_spear",
@@ -6276,7 +6385,10 @@ describe("character creation finalization", () => {
       "weapon_shortsword",
     ]);
     expect(
-      selectedBuildClassChoiceUnitIds(result, "fighter_fighting_style"),
+      selectedBuildClassChoiceUnitIds(
+        result,
+        authoredUnitId("fighter_fighting_style"),
+      ),
     ).toEqual(["feat_archery"]);
   });
 
@@ -6284,7 +6396,7 @@ describe("character creation finalization", () => {
     const barbarianClassUnitId = expectRight(
       classUnitIdFromUnitId({
         unitLibrary,
-        classUnitId: "class_barbarian",
+        classUnitId: authoredUnitId("class_barbarian"),
       }),
     );
 
@@ -6292,14 +6404,14 @@ describe("character creation finalization", () => {
       unitLibrary,
       classUnitId: barbarianClassUnitId,
       hitPointRule: { tag: "fixedHigherLevelGain" },
-      featureUnitId: "barbarian_weapon_mastery",
+      featureUnitId: authoredUnitId("barbarian_weapon_mastery"),
       selectedWeaponUnitIds: [
-        "weapon_longsword",
-        "weapon_dagger",
-        "weapon_spear",
+        authoredUnitId("weapon_longsword"),
+        authoredUnitId("weapon_dagger"),
+        authoredUnitId("weapon_spear"),
       ],
       fightingStyleReplacement: {
-        selectedFeatUnitId: "feat_archery",
+        selectedFeatUnitId: authoredUnitId("feat_archery"),
       },
     });
 
@@ -6313,12 +6425,12 @@ describe("character creation finalization", () => {
     const barbarianClassUnitId = expectRight(
       classUnitIdFromUnitId({
         unitLibrary,
-        classUnitId: "class_barbarian",
+        classUnitId: authoredUnitId("class_barbarian"),
       }),
     );
     const draft = completeSupportedProgressionDraft({
       draftId: "draft:srd-level-3-barbarian-weapon-mastery",
-      progression: testProgression("class_barbarian", 3),
+      progression: testProgression(authoredUnitId("class_barbarian"), 3),
       preferredOptionIdsBySource: {
         [testUnitChoiceSourceKey(
           "barbarian_weapon_mastery",
@@ -6340,11 +6452,11 @@ describe("character creation finalization", () => {
         unitLibrary,
         classUnitId: barbarianClassUnitId,
         hitPointRule: { tag: "fixedHigherLevelGain" },
-        featureUnitId: "barbarian_weapon_mastery",
+        featureUnitId: authoredUnitId("barbarian_weapon_mastery"),
         selectedWeaponUnitIds: [
-          "weapon_longsword",
-          "weapon_dagger",
-          "weapon_spear",
+          authoredUnitId("weapon_longsword"),
+          authoredUnitId("weapon_dagger"),
+          authoredUnitId("weapon_spear"),
         ],
       }),
     );
@@ -6359,7 +6471,10 @@ describe("character creation finalization", () => {
 
     expect(computeTotalLevel(result.progression)).toBe(4);
     expect(
-      selectedBuildClassChoiceUnitIds(result, "barbarian_weapon_mastery"),
+      selectedBuildClassChoiceUnitIds(
+        result,
+        authoredUnitId("barbarian_weapon_mastery"),
+      ),
     ).toEqual(["weapon_longsword", "weapon_dagger", "weapon_spear"]);
   });
 
@@ -6368,7 +6483,7 @@ describe("character creation finalization", () => {
     const fighterClassUnitId = expectRight(
       classUnitIdFromUnitId({
         unitLibrary,
-        classUnitId: "class_fighter",
+        classUnitId: authoredUnitId("class_fighter"),
       }),
     );
     const levelGain = expectRight(
@@ -6376,7 +6491,7 @@ describe("character creation finalization", () => {
         unitLibrary,
         classUnitId: fighterClassUnitId,
         hitPointRule: { tag: "fixedHigherLevelGain" },
-        selectedFeatUnitId: "defense",
+        selectedFeatUnitId: authoredUnitId("defense"),
       }),
     );
     const result = advanceCharacterBuildClassLevel({
@@ -6395,7 +6510,7 @@ describe("character creation finalization", () => {
     const fighterClassUnitId = expectRight(
       classUnitIdFromUnitId({
         unitLibrary,
-        classUnitId: "class_fighter",
+        classUnitId: authoredUnitId("class_fighter"),
       }),
     );
 
@@ -6403,7 +6518,7 @@ describe("character creation finalization", () => {
       unitLibrary,
       classUnitId: fighterClassUnitId,
       hitPointRule: { tag: "fixedHigherLevelGain" },
-      selectedFeatUnitId: "feat_savage_attacker",
+      selectedFeatUnitId: authoredUnitId("feat_savage_attacker"),
     });
 
     expect(result).toMatchObject({
@@ -6416,7 +6531,7 @@ describe("character creation finalization", () => {
     const wizardClassUnitId = expectRight(
       classUnitIdFromUnitId({
         unitLibrary,
-        classUnitId: "class_wizard",
+        classUnitId: authoredUnitId("class_wizard"),
       }),
     );
 
@@ -6424,7 +6539,7 @@ describe("character creation finalization", () => {
       unitLibrary,
       classUnitId: wizardClassUnitId,
       hitPointRule: { tag: "fixedHigherLevelGain" },
-      selectedFeatUnitId: "feat_archery",
+      selectedFeatUnitId: authoredUnitId("feat_archery"),
     });
 
     expect(result).toMatchObject({
@@ -6436,7 +6551,7 @@ describe("character creation finalization", () => {
   test("advances a Paladin level and replaces one Fighting Style cantrip", () => {
     const draft = completeSupportedProgressionDraft({
       draftId: "draft:paladin-blessed-warrior-replacement",
-      progression: testProgression("class_paladin", 2),
+      progression: testProgression(authoredUnitId("class_paladin"), 2),
       preferredOptionIdsBySource: {
         [testUnitChoiceSourceKey(
           "paladin_fighting_style",
@@ -6462,16 +6577,16 @@ describe("character creation finalization", () => {
     const finalized = finalizeCharacterDraft({ draft, unitLibrary });
     expect(finalized.tag).toBe("ready");
     if (finalized.tag !== "ready") return;
-    const classUnitId = testClassUnitId("class_paladin");
+    const classUnitId = testClassUnitId(authoredUnitId("class_paladin"));
     const levelGain = expectRight(
       classLevelGainWithFightingStyleCantripReplacement({
         unitLibrary,
         classUnitId,
         hitPointRule: { tag: "fixedHigherLevelGain" },
-        replaceCantripId: "guidance",
-        selectedCantripId: "thaumaturgy",
+        replaceCantripId: authoredUnitId("guidance"),
+        selectedCantripId: authoredUnitId("thaumaturgy"),
         preparedSpellcasting: {
-          gainedPreparedSpells: ["command"],
+          gainedPreparedSpells: [authoredUnitId("command")],
         },
       }),
     );
@@ -6485,10 +6600,9 @@ describe("character creation finalization", () => {
     );
 
     expect(computeTotalLevel(result.progression)).toBe(3);
-    expect(spellcastingSourceCantrips(result, "class_paladin")).toEqual([
-      "thaumaturgy",
-      "sacred_flame",
-    ]);
+    expect(
+      spellcastingSourceCantrips(result, authoredUnitId("class_paladin")),
+    ).toEqual(["thaumaturgy", "sacred_flame"]);
     expect(
       result.spellcasting?.sources.find(
         (source) => source.sourceUnitId === "class_paladin",
@@ -6502,7 +6616,7 @@ describe("character creation finalization", () => {
   test("advances a Ranger level and replaces one Fighting Style cantrip", () => {
     const draft = completeSupportedProgressionDraft({
       draftId: "draft:ranger-druidic-warrior-replacement",
-      progression: testProgression("class_ranger", 2),
+      progression: testProgression(authoredUnitId("class_ranger"), 2),
       preferredOptionIdsBySource: {
         [testUnitChoiceSourceKey(
           "class_ranger",
@@ -6547,16 +6661,16 @@ describe("character creation finalization", () => {
     const finalized = finalizeCharacterDraft({ draft, unitLibrary });
     expect(finalized.tag).toBe("ready");
     if (finalized.tag !== "ready") return;
-    const classUnitId = testClassUnitId("class_ranger");
+    const classUnitId = testClassUnitId(authoredUnitId("class_ranger"));
     const levelGain = expectRight(
       classLevelGainWithFightingStyleCantripReplacement({
         unitLibrary,
         classUnitId,
         hitPointRule: { tag: "fixedHigherLevelGain" },
-        replaceCantripId: "starry_wisp",
-        selectedCantripId: "druidcraft",
+        replaceCantripId: authoredUnitId("starry_wisp"),
+        selectedCantripId: authoredUnitId("druidcraft"),
         preparedSpellcasting: {
-          gainedPreparedSpells: ["hunters_mark"],
+          gainedPreparedSpells: [authoredUnitId("hunters_mark")],
         },
       }),
     );
@@ -6570,10 +6684,9 @@ describe("character creation finalization", () => {
     );
 
     expect(computeTotalLevel(result.progression)).toBe(3);
-    expect(spellcastingSourceCantrips(result, "class_ranger")).toEqual([
-      "guidance",
-      "druidcraft",
-    ]);
+    expect(
+      spellcastingSourceCantrips(result, authoredUnitId("class_ranger")),
+    ).toEqual(["guidance", "druidcraft"]);
     expect(
       result.spellcasting?.sources.find(
         (source) => source.sourceUnitId === "class_ranger",
@@ -6590,16 +6703,16 @@ describe("character creation finalization", () => {
   });
 
   test("rejects Fighting Style cantrip replacement outside the granted spell list", () => {
-    const classUnitId = testClassUnitId("class_paladin");
+    const classUnitId = testClassUnitId(authoredUnitId("class_paladin"));
 
     const result = classLevelGainWithFightingStyleCantripReplacement({
       unitLibrary,
       classUnitId,
       hitPointRule: { tag: "fixedHigherLevelGain" },
-      replaceCantripId: "guidance",
-      selectedCantripId: "fire_bolt",
+      replaceCantripId: authoredUnitId("guidance"),
+      selectedCantripId: authoredUnitId("fire_bolt"),
       preparedSpellcasting: {
-        gainedPreparedSpells: ["command"],
+        gainedPreparedSpells: [authoredUnitId("command")],
       },
     });
 
@@ -6610,16 +6723,16 @@ describe("character creation finalization", () => {
   });
 
   test("rejects cantrip-granting class features without a level-gain replacement fact", () => {
-    const classUnitId = testClassUnitId("class_cleric");
+    const classUnitId = testClassUnitId(authoredUnitId("class_cleric"));
 
     const result = classLevelGainWithFightingStyleCantripReplacement({
       unitLibrary,
       classUnitId,
       hitPointRule: { tag: "fixedHigherLevelGain" },
-      replaceCantripId: "guidance",
-      selectedCantripId: "thaumaturgy",
+      replaceCantripId: authoredUnitId("guidance"),
+      selectedCantripId: authoredUnitId("thaumaturgy"),
       preparedSpellcasting: {
-        gainedPreparedSpells: ["command"],
+        gainedPreparedSpells: [authoredUnitId("command")],
       },
     });
 
@@ -6632,7 +6745,7 @@ describe("character creation finalization", () => {
   test("rejects duplicate Fighting Style cantrips after replacement", () => {
     const draft = completeSupportedProgressionDraft({
       draftId: "draft:paladin-blessed-warrior-duplicate-replacement",
-      progression: testProgression("class_paladin", 2),
+      progression: testProgression(authoredUnitId("class_paladin"), 2),
       preferredOptionIdsBySource: {
         [testUnitChoiceSourceKey(
           "paladin_fighting_style",
@@ -6650,16 +6763,16 @@ describe("character creation finalization", () => {
     const finalized = finalizeCharacterDraft({ draft, unitLibrary });
     expect(finalized.tag).toBe("ready");
     if (finalized.tag !== "ready") return;
-    const classUnitId = testClassUnitId("class_paladin");
+    const classUnitId = testClassUnitId(authoredUnitId("class_paladin"));
     const levelGain = expectRight(
       classLevelGainWithFightingStyleCantripReplacement({
         unitLibrary,
         classUnitId,
         hitPointRule: { tag: "fixedHigherLevelGain" },
-        replaceCantripId: "guidance",
-        selectedCantripId: "sacred_flame",
+        replaceCantripId: authoredUnitId("guidance"),
+        selectedCantripId: authoredUnitId("sacred_flame"),
         preparedSpellcasting: {
-          gainedPreparedSpells: ["command"],
+          gainedPreparedSpells: [authoredUnitId("command")],
         },
       }),
     );
@@ -6679,7 +6792,7 @@ describe("character creation finalization", () => {
   test("rejects replacing a Fighting Style cantrip the build does not know", () => {
     const draft = completeSupportedProgressionDraft({
       draftId: "draft:paladin-blessed-warrior-missing-replacement",
-      progression: testProgression("class_paladin", 2),
+      progression: testProgression(authoredUnitId("class_paladin"), 2),
       preferredOptionIdsBySource: {
         [testUnitChoiceSourceKey(
           "paladin_fighting_style",
@@ -6697,16 +6810,16 @@ describe("character creation finalization", () => {
     const finalized = finalizeCharacterDraft({ draft, unitLibrary });
     expect(finalized.tag).toBe("ready");
     if (finalized.tag !== "ready") return;
-    const classUnitId = testClassUnitId("class_paladin");
+    const classUnitId = testClassUnitId(authoredUnitId("class_paladin"));
     const levelGain = expectRight(
       classLevelGainWithFightingStyleCantripReplacement({
         unitLibrary,
         classUnitId,
         hitPointRule: { tag: "fixedHigherLevelGain" },
-        replaceCantripId: "thaumaturgy",
-        selectedCantripId: "guidance",
+        replaceCantripId: authoredUnitId("thaumaturgy"),
+        selectedCantripId: authoredUnitId("guidance"),
         preparedSpellcasting: {
-          gainedPreparedSpells: ["command"],
+          gainedPreparedSpells: [authoredUnitId("command")],
         },
       }),
     );
@@ -6730,7 +6843,7 @@ describe("character creation finalization", () => {
         throw new Error(`Expected subclass Unit: ${subclassUnitId}`);
       }
       const classUnitId = `class_${subclassUnit.className}`;
-      const classThree = testProgression(classUnitId, 3);
+      const classThree = testProgression(authoredUnitId(classUnitId), 3);
       const isSupportedLevelThreeProgression =
         CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions.some(
           (progression) =>
@@ -6772,14 +6885,14 @@ describe("character creation finalization", () => {
       supportedProgressions: CharacterProgression[];
     };
     const originalProgressions = profile.supportedProgressions;
-    const fighterFour = testProgression("class_fighter", 4);
+    const fighterFour = testProgression(authoredUnitId("class_fighter"), 4);
     profile.supportedProgressions = [...originalProgressions, fighterFour];
     try {
       const fighter = unitLibrary.requireUnit("class_fighter");
       const secondWind = unitLibrary.requireUnit("fighter_second_wind");
       const abilityScoreImprovement = {
         ...secondWind,
-        id: "fighter_ability_score_improvement_l4",
+        id: authoredUnitId("fighter_ability_score_improvement_l4"),
         name: "Ability Score Improvement",
         acquiredAtLevel: 4,
         mechanics: {
@@ -6898,7 +7011,7 @@ describe("character creation finalization", () => {
   test("projects selected Grappler feat choices with its Strength or Dexterity ASI", () => {
     const draft = completeSupportedProgressionDraft({
       draftId: "draft:wizard-grappler",
-      progression: testProgression("class_wizard", 4),
+      progression: testProgression(authoredUnitId("class_wizard"), 4),
       preferredOptionIdsBySource: {
         [testUnitChoiceSourceKey("class_wizard", WIZARD_SPELLBOOK_CHOICE_KEY)]:
           grapplerWizardSpellbookSpellIds.map(creationChoiceOptionId),
@@ -6965,7 +7078,7 @@ describe("character creation finalization", () => {
   test("rejects selected Grappler below Level 4", () => {
     const levelThreeDraft = completeSupportedProgressionDraft({
       draftId: "draft:wizard-grappler-low-level",
-      progression: testProgression("class_wizard", 3),
+      progression: testProgression(authoredUnitId("class_wizard"), 3),
       preferredOptionIdsBySource: {
         [testUnitChoiceSourceKey("class_wizard", WIZARD_SPELLBOOK_CHOICE_KEY)]:
           grapplerWizardSpellbookSpellIds.map(creationChoiceOptionId),
@@ -7011,7 +7124,7 @@ describe("character creation finalization", () => {
   test("rejects selected Grappler when Strength and Dexterity prerequisites are not met", () => {
     const legalDraft = completeSupportedProgressionDraft({
       draftId: "draft:wizard-grappler-low-ability",
-      progression: testProgression("class_wizard", 4),
+      progression: testProgression(authoredUnitId("class_wizard"), 4),
       preferredOptionIdsBySource: {
         [testUnitChoiceSourceKey("class_wizard", WIZARD_SPELLBOOK_CHOICE_KEY)]:
           grapplerWizardSpellbookSpellIds.map(creationChoiceOptionId),
@@ -7131,14 +7244,14 @@ describe("character creation finalization", () => {
       supportedProgressions: CharacterProgression[];
     };
     const originalProgressions = profile.supportedProgressions;
-    const fighterFour = testProgression("class_fighter", 4);
+    const fighterFour = testProgression(authoredUnitId("class_fighter"), 4);
     profile.supportedProgressions = [...originalProgressions, fighterFour];
     try {
       const fighter = unitLibrary.requireUnit("class_fighter");
       const secondWind = unitLibrary.requireUnit("fighter_second_wind");
       const abilityScoreImprovement = {
         ...secondWind,
-        id: "fighter_ability_score_improvement_l4",
+        id: authoredUnitId("fighter_ability_score_improvement_l4"),
         name: "Ability Score Improvement",
         acquiredAtLevel: 4,
         mechanics: {
@@ -7225,14 +7338,14 @@ describe("character creation finalization", () => {
       supportedProgressions: CharacterProgression[];
     };
     const originalProgressions = profile.supportedProgressions;
-    const fighterSix = testProgression("class_fighter", 6);
+    const fighterSix = testProgression(authoredUnitId("class_fighter"), 6);
     profile.supportedProgressions = [...originalProgressions, fighterSix];
     try {
       const fighter = unitLibrary.requireUnit("class_fighter");
       const secondWind = unitLibrary.requireUnit("fighter_second_wind");
       const abilityScoreImprovement = {
         ...secondWind,
-        id: "fighter_ability_score_improvement_l4",
+        id: authoredUnitId("fighter_ability_score_improvement_l4"),
         name: "Ability Score Improvement",
         acquiredAtLevel: 4,
         mechanics: {
@@ -7344,7 +7457,7 @@ describe("character creation finalization", () => {
         startingClass: expectRight(
           classUnitIdFromUnitId({
             unitLibrary,
-            classUnitId: "class_fighter",
+            classUnitId: authoredUnitId("class_fighter"),
           }),
         ),
         advancements: [
@@ -7352,7 +7465,7 @@ describe("character creation finalization", () => {
             classUnitId: expectRight(
               classUnitIdFromUnitId({
                 unitLibrary,
-                classUnitId: "class_wizard",
+                classUnitId: authoredUnitId("class_wizard"),
               }),
             ),
             hitPointRule: { tag: "fixedHigherLevelGain" },
@@ -7360,7 +7473,7 @@ describe("character creation finalization", () => {
         ],
       }),
     );
-    const fighterTwo = testProgression("class_fighter", 2);
+    const fighterTwo = testProgression(authoredUnitId("class_fighter"), 2);
 
     expect(progressionOptionId(fighterThenWizard)).not.toBe(
       progressionOptionId(fighterTwo),
@@ -7398,12 +7511,14 @@ describe("character creation finalization", () => {
 
   test("finalizes each supported SRD multiclass-entry source facts from Surface class records", () => {
     for (const classUnitId of SRD_LEVEL_ONE_CLASS_UNIT_IDS) {
-      const progression = supportedMulticlassProgressionForClass(classUnitId);
+      const progression = supportedMulticlassProgressionForClass(
+        authoredUnitId(classUnitId),
+      );
       const draft = completeSupportedProgressionDraft({
         draftId: `draft:srd-multiclass-entry-${classUnitId}`,
         progression,
       });
-      const classFacts = readableClassFacts(classUnitId);
+      const classFacts = readableClassFacts(authoredUnitId(classUnitId));
       const result = finalizeCharacterDraft({ draft, unitLibrary });
 
       expect(result.tag, classUnitId).toBe("ready");
@@ -7428,7 +7543,7 @@ describe("character creation finalization", () => {
         ),
       );
       assertMulticlassProficienciesProjected({
-        classUnitId,
+        classUnitId: authoredUnitId(classUnitId),
         multiclassProficiencies: classFacts.multiclassProficiencies,
         proficiencies: expectRight(
           characterBuildProficiencies(result.build, unitLibrary),
@@ -7504,7 +7619,7 @@ describe("character creation finalization", () => {
   test("finalizes a selected Warlock Eldritch Invocation as option ownership, not a retained Unit ref", () => {
     const draft = completeSupportedProgressionDraft({
       draftId: "draft:warlock-invocation-finalization",
-      progression: testProgression("class_warlock", 1),
+      progression: testProgression(authoredUnitId("class_warlock"), 1),
     });
     const result = finalizeCharacterDraft({ draft, unitLibrary });
 
@@ -7541,17 +7656,17 @@ describe("character creation finalization", () => {
 
   test("advances a finalized Warlock build and gains invocations from the Warlock table", () => {
     const build = finalizedWarlockBuild("draft:warlock-invocation-level-2");
-    const warlockClassUnitId = testClassUnitId("class_warlock");
+    const warlockClassUnitId = testClassUnitId(authoredUnitId("class_warlock"));
     const levelGain = expectRight(
       warlockLevelGain({
         unitLibrary,
         classUnitId: warlockClassUnitId,
         hitPointRule: { tag: "fixedHigherLevelGain" },
         pactMagic: warlockPactMagicLevelGain({
-          gainedPreparedSpells: ["hex"],
+          gainedPreparedSpells: [authoredUnitId("hex")],
           preparedSpellReplacement: {
-            replaceSpellId: "hellish_rebuke",
-            selectedSpellId: "bane",
+            replaceSpellId: authoredUnitId("hellish_rebuke"),
+            selectedSpellId: authoredUnitId("bane"),
           },
         }),
         gainedInvocations: [
@@ -7573,7 +7688,7 @@ describe("character creation finalization", () => {
     expect(
       selectedBuildEldritchInvocationIds(
         result,
-        "warlock_eldritch_invocations",
+        authoredUnitId("warlock_eldritch_invocations"),
       ),
     ).toEqual(["armor_of_shadows", "pact_of_the_blade", "devils_sight"]);
     expect(
@@ -7592,7 +7707,7 @@ describe("character creation finalization", () => {
   });
 
   test("uses Warlock class-list levels for Pact Magic prepared-spell advancement without requiring spell Unit admission", () => {
-    const warlockClassUnitId = testClassUnitId("class_warlock");
+    const warlockClassUnitId = testClassUnitId(authoredUnitId("class_warlock"));
     const levelTwo = expectRight(
       advanceCharacterBuildClassLevel({
         build: finalizedWarlockBuild("draft:warlock-class-list-level-2"),
@@ -7603,7 +7718,7 @@ describe("character creation finalization", () => {
             classUnitId: warlockClassUnitId,
             hitPointRule: { tag: "fixedHigherLevelGain" },
             pactMagic: warlockPactMagicLevelGain({
-              gainedPreparedSpells: ["hex"],
+              gainedPreparedSpells: [authoredUnitId("hex")],
             }),
             gainedInvocations: [
               nonRepeatableEldritchInvocation("pact_of_the_blade"),
@@ -7624,7 +7739,7 @@ describe("character creation finalization", () => {
             classUnitId: warlockClassUnitId,
             hitPointRule: { tag: "fixedHigherLevelGain" },
             pactMagic: warlockPactMagicLevelGain({
-              gainedPreparedSpells: ["hold_person"],
+              gainedPreparedSpells: [authoredUnitId("hold_person")],
             }),
             gainedInvocations: [],
           }),
@@ -7653,10 +7768,10 @@ describe("character creation finalization", () => {
         levelGain: expectRight(
           warlockLevelGain({
             unitLibrary,
-            classUnitId: testClassUnitId("class_warlock"),
+            classUnitId: testClassUnitId(authoredUnitId("class_warlock")),
             hitPointRule: { tag: "fixedHigherLevelGain" },
             pactMagic: warlockPactMagicLevelGain({
-              gainedCantrips: ["mage_hand"],
+              gainedCantrips: [authoredUnitId("mage_hand")],
             }),
             gainedInvocations: [],
           }),
@@ -7683,19 +7798,19 @@ describe("character creation finalization", () => {
     expect(
       selectedBuildEldritchInvocationIds(
         result,
-        "warlock_eldritch_invocations",
+        authoredUnitId("warlock_eldritch_invocations"),
       ),
     ).toHaveLength(7);
   });
 
   test("authored level-10 spellcasting projections expose no spell-level-6 choices or slots", () => {
     const classUnitIds = [
-      "class_bard",
-      "class_cleric",
-      "class_druid",
-      "class_sorcerer",
-      "class_warlock",
-      "class_wizard",
+      authoredUnitId("class_bard"),
+      authoredUnitId("class_cleric"),
+      authoredUnitId("class_druid"),
+      authoredUnitId("class_sorcerer"),
+      authoredUnitId("class_warlock"),
+      authoredUnitId("class_wizard"),
     ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
     const projectedClassUnitIds: UnitRecord["id"][] = [];
 
@@ -7770,7 +7885,7 @@ describe("character creation finalization", () => {
     );
     const levelGain = {
       tag: "classLevelGain",
-      classUnitId: testClassUnitId("class_warlock"),
+      classUnitId: testClassUnitId(authoredUnitId("class_warlock")),
       hitPointRule: { tag: "fixedHigherLevelGain" },
     } as const satisfies CharacterBuildClassLevelGain;
 
@@ -7793,10 +7908,10 @@ describe("character creation finalization", () => {
     const levelGain = expectRight(
       warlockLevelGain({
         unitLibrary,
-        classUnitId: testClassUnitId("class_warlock"),
+        classUnitId: testClassUnitId(authoredUnitId("class_warlock")),
         hitPointRule: { tag: "fixedHigherLevelGain" },
         pactMagic: warlockPactMagicLevelGain({
-          gainedPreparedSpells: ["hex"],
+          gainedPreparedSpells: [authoredUnitId("hex")],
         }),
         gainedInvocations: [
           nonRepeatableEldritchInvocation("ascendant_step"),
@@ -7825,10 +7940,10 @@ describe("character creation finalization", () => {
     const levelGain = expectRight(
       warlockLevelGain({
         unitLibrary,
-        classUnitId: testClassUnitId("class_warlock"),
+        classUnitId: testClassUnitId(authoredUnitId("class_warlock")),
         hitPointRule: { tag: "fixedHigherLevelGain" },
         pactMagic: warlockPactMagicLevelGain({
-          gainedPreparedSpells: ["hideous_laughter"],
+          gainedPreparedSpells: [authoredUnitId("hideous_laughter")],
         }),
         gainedInvocations: [],
         replacement: {
@@ -7859,23 +7974,23 @@ describe("character creation finalization", () => {
   test("enforces duplicate invocation selection identity for Repeatable and non-Repeatable invocations", () => {
     const build = warlockBuildWithKnownWarlockCantrips(
       finalizedWarlockBuild("draft:warlock-invocation-duplicates"),
-      ["eldritch_blast", "poison_spray"],
+      [authoredUnitId("eldritch_blast"), authoredUnitId("poison_spray")],
     );
     const eldritchBlastChoice = {
       kind: "knownWarlockCantrip",
-      cantripId: "eldritch_blast",
+      cantripId: authoredUnitId("eldritch_blast"),
     } as const satisfies CharacterBuildEldritchInvocationRepeatableChoice;
     const poisonSprayChoice = {
       kind: "knownWarlockCantrip",
-      cantripId: "poison_spray",
+      cantripId: authoredUnitId("poison_spray"),
     } as const satisfies CharacterBuildEldritchInvocationRepeatableChoice;
     const duplicateArmorLevelGain = expectRight(
       warlockLevelGain({
         unitLibrary,
-        classUnitId: testClassUnitId("class_warlock"),
+        classUnitId: testClassUnitId(authoredUnitId("class_warlock")),
         hitPointRule: { tag: "fixedHigherLevelGain" },
         pactMagic: warlockPactMagicLevelGain({
-          gainedPreparedSpells: ["hex"],
+          gainedPreparedSpells: [authoredUnitId("hex")],
         }),
         gainedInvocations: [
           nonRepeatableEldritchInvocation("armor_of_shadows"),
@@ -7900,10 +8015,10 @@ describe("character creation finalization", () => {
     const duplicateRepeatableLevelGain = expectRight(
       warlockLevelGain({
         unitLibrary,
-        classUnitId: testClassUnitId("class_warlock"),
+        classUnitId: testClassUnitId(authoredUnitId("class_warlock")),
         hitPointRule: { tag: "fixedHigherLevelGain" },
         pactMagic: warlockPactMagicLevelGain({
-          gainedPreparedSpells: ["hex"],
+          gainedPreparedSpells: [authoredUnitId("hex")],
         }),
         gainedInvocations: [
           repeatableEldritchInvocation("repelling_blast", eldritchBlastChoice),
@@ -7928,10 +8043,10 @@ describe("character creation finalization", () => {
     const repeatableLevelGain = expectRight(
       warlockLevelGain({
         unitLibrary,
-        classUnitId: testClassUnitId("class_warlock"),
+        classUnitId: testClassUnitId(authoredUnitId("class_warlock")),
         hitPointRule: { tag: "fixedHigherLevelGain" },
         pactMagic: warlockPactMagicLevelGain({
-          gainedPreparedSpells: ["hex"],
+          gainedPreparedSpells: [authoredUnitId("hex")],
         }),
         gainedInvocations: [
           repeatableEldritchInvocation("repelling_blast", eldritchBlastChoice),
@@ -7949,7 +8064,7 @@ describe("character creation finalization", () => {
     expect(
       selectedBuildEldritchInvocations(
         repeatableResult,
-        "warlock_eldritch_invocations",
+        authoredUnitId("warlock_eldritch_invocations"),
       ),
     ).toEqual([
       { invocationId: "armor_of_shadows" },
@@ -7967,15 +8082,15 @@ describe("character creation finalization", () => {
   test("replaces one Repeatable invocation selection by associated choice", () => {
     const build = warlockBuildWithKnownWarlockCantrips(
       finalizedWarlockBuild("draft:warlock-repeatable-replacement"),
-      ["eldritch_blast", "poison_spray"],
+      [authoredUnitId("eldritch_blast"), authoredUnitId("poison_spray")],
     );
     const eldritchBlastChoice = {
       kind: "knownWarlockCantrip",
-      cantripId: "eldritch_blast",
+      cantripId: authoredUnitId("eldritch_blast"),
     } as const satisfies CharacterBuildEldritchInvocationRepeatableChoice;
     const poisonSprayChoice = {
       kind: "knownWarlockCantrip",
-      cantripId: "poison_spray",
+      cantripId: authoredUnitId("poison_spray"),
     } as const satisfies CharacterBuildEldritchInvocationRepeatableChoice;
     const levelTwo = expectRight(
       advanceCharacterBuildClassLevel({
@@ -7984,10 +8099,10 @@ describe("character creation finalization", () => {
         levelGain: expectRight(
           warlockLevelGain({
             unitLibrary,
-            classUnitId: testClassUnitId("class_warlock"),
+            classUnitId: testClassUnitId(authoredUnitId("class_warlock")),
             hitPointRule: { tag: "fixedHigherLevelGain" },
             pactMagic: warlockPactMagicLevelGain({
-              gainedPreparedSpells: ["hex"],
+              gainedPreparedSpells: [authoredUnitId("hex")],
             }),
             gainedInvocations: [
               repeatableEldritchInvocation(
@@ -8011,10 +8126,10 @@ describe("character creation finalization", () => {
         levelGain: expectRight(
           warlockLevelGain({
             unitLibrary,
-            classUnitId: testClassUnitId("class_warlock"),
+            classUnitId: testClassUnitId(authoredUnitId("class_warlock")),
             hitPointRule: { tag: "fixedHigherLevelGain" },
             pactMagic: warlockPactMagicLevelGain({
-              gainedPreparedSpells: ["bane"],
+              gainedPreparedSpells: [authoredUnitId("bane")],
             }),
             gainedInvocations: [],
             replacement: {
@@ -8031,7 +8146,10 @@ describe("character creation finalization", () => {
     );
 
     expect(
-      selectedBuildEldritchInvocations(result, "warlock_eldritch_invocations"),
+      selectedBuildEldritchInvocations(
+        result,
+        authoredUnitId("warlock_eldritch_invocations"),
+      ),
     ).toEqual([
       { invocationId: "armor_of_shadows" },
       { invocationId: "devils_sight" },
@@ -8045,20 +8163,20 @@ describe("character creation finalization", () => {
   test("requires Repeatable known-cantrip choices to be selected Warlock-list cantrips that match the invocation rule", () => {
     const build = warlockBuildWithKnownWarlockCantrips(
       finalizedWarlockBuild("draft:warlock-repeatable-cantrip-choice"),
-      ["eldritch_blast"],
+      [authoredUnitId("eldritch_blast")],
     );
     const levelGain = expectRight(
       warlockLevelGain({
         unitLibrary,
-        classUnitId: testClassUnitId("class_warlock"),
+        classUnitId: testClassUnitId(authoredUnitId("class_warlock")),
         hitPointRule: { tag: "fixedHigherLevelGain" },
         pactMagic: warlockPactMagicLevelGain({
-          gainedPreparedSpells: ["hex"],
+          gainedPreparedSpells: [authoredUnitId("hex")],
         }),
         gainedInvocations: [
           repeatableEldritchInvocation("repelling_blast", {
             kind: "knownWarlockCantrip",
-            cantripId: "fire_bolt",
+            cantripId: authoredUnitId("fire_bolt"),
           }),
           nonRepeatableEldritchInvocation("devils_sight"),
         ],
@@ -8083,19 +8201,19 @@ describe("character creation finalization", () => {
   test("admits True Strike as a Warlock damage cantrip via its spell-granted weapon attack", () => {
     const build = warlockBuildWithKnownWarlockCantrips(
       finalizedWarlockBuild("draft:warlock-true-strike-invocations"),
-      ["true_strike"],
+      [authoredUnitId("true_strike")],
     );
     const trueStrikeChoice = {
       kind: "knownWarlockCantrip",
-      cantripId: "true_strike",
+      cantripId: authoredUnitId("true_strike"),
     } as const satisfies CharacterBuildEldritchInvocationRepeatableChoice;
     const levelGain = expectRight(
       warlockLevelGain({
         unitLibrary,
-        classUnitId: testClassUnitId("class_warlock"),
+        classUnitId: testClassUnitId(authoredUnitId("class_warlock")),
         hitPointRule: { tag: "fixedHigherLevelGain" },
         pactMagic: warlockPactMagicLevelGain({
-          gainedPreparedSpells: ["hex"],
+          gainedPreparedSpells: [authoredUnitId("hex")],
         }),
         gainedInvocations: [
           repeatableEldritchInvocation("agonizing_blast", trueStrikeChoice),
@@ -8113,7 +8231,10 @@ describe("character creation finalization", () => {
     );
 
     expect(
-      selectedBuildEldritchInvocations(result, "warlock_eldritch_invocations"),
+      selectedBuildEldritchInvocations(
+        result,
+        authoredUnitId("warlock_eldritch_invocations"),
+      ),
     ).toEqual([
       { invocationId: "armor_of_shadows" },
       {
@@ -8128,7 +8249,7 @@ describe("character creation finalization", () => {
   });
 
   test("checks invocation cantrip prerequisites against Pact Magic facts after a Warlock cantrip gain", () => {
-    const warlockClassUnitId = testClassUnitId("class_warlock");
+    const warlockClassUnitId = testClassUnitId(authoredUnitId("class_warlock"));
     const levelTwo = expectRight(
       advanceCharacterBuildClassLevel({
         build: finalizedWarlockBuild("draft:warlock-fresh-cantrip-level-2"),
@@ -8140,10 +8261,10 @@ describe("character creation finalization", () => {
             hitPointRule: { tag: "fixedHigherLevelGain" },
             pactMagic: warlockPactMagicLevelGain({
               cantripReplacement: {
-                replaceCantripId: "eldritch_blast",
-                selectedCantripId: "prestidigitation",
+                replaceCantripId: authoredUnitId("eldritch_blast"),
+                selectedCantripId: authoredUnitId("prestidigitation"),
               },
-              gainedPreparedSpells: ["hex"],
+              gainedPreparedSpells: [authoredUnitId("hex")],
             }),
             gainedInvocations: [
               nonRepeatableEldritchInvocation("pact_of_the_blade"),
@@ -8163,7 +8284,7 @@ describe("character creation finalization", () => {
             classUnitId: warlockClassUnitId,
             hitPointRule: { tag: "fixedHigherLevelGain" },
             pactMagic: warlockPactMagicLevelGain({
-              gainedPreparedSpells: ["bane"],
+              gainedPreparedSpells: [authoredUnitId("bane")],
             }),
             gainedInvocations: [],
           }),
@@ -8172,7 +8293,7 @@ describe("character creation finalization", () => {
     );
     const trueStrikeChoice = {
       kind: "knownWarlockCantrip",
-      cantripId: "true_strike",
+      cantripId: authoredUnitId("true_strike"),
     } as const satisfies CharacterBuildEldritchInvocationRepeatableChoice;
 
     const result = expectRight(
@@ -8185,8 +8306,8 @@ describe("character creation finalization", () => {
             classUnitId: warlockClassUnitId,
             hitPointRule: { tag: "fixedHigherLevelGain" },
             pactMagic: warlockPactMagicLevelGain({
-              gainedCantrips: ["true_strike"],
-              gainedPreparedSpells: ["detect_magic"],
+              gainedCantrips: [authoredUnitId("true_strike")],
+              gainedPreparedSpells: [authoredUnitId("detect_magic")],
             }),
             gainedInvocations: [],
             replacement: {
@@ -8202,13 +8323,14 @@ describe("character creation finalization", () => {
       }),
     );
 
-    expect(spellcastingSourceCantrips(result, "class_warlock")).toEqual([
-      "chill_touch",
-      "prestidigitation",
-      "true_strike",
-    ]);
     expect(
-      selectedBuildEldritchInvocations(result, "warlock_eldritch_invocations"),
+      spellcastingSourceCantrips(result, authoredUnitId("class_warlock")),
+    ).toEqual(["chill_touch", "prestidigitation", "true_strike"]);
+    expect(
+      selectedBuildEldritchInvocations(
+        result,
+        authoredUnitId("warlock_eldritch_invocations"),
+      ),
     ).toEqual([
       {
         invocationId: "agonizing_blast",
@@ -8222,14 +8344,14 @@ describe("character creation finalization", () => {
   test("collects all missing class Unit issues while projecting a build", () => {
     const progression = expectRight(
       parseCharacterProgressionShape({
-        startingClass: classUnitId("class_fighter"),
+        startingClass: classUnitId(authoredUnitId("class_fighter")),
         advancements: [
           {
-            classUnitId: classUnitId("class_missing_one"),
+            classUnitId: classUnitId(authoredUnitId("class_missing_one")),
             hitPointRule: { tag: "fixedHigherLevelGain" },
           },
           {
-            classUnitId: classUnitId("class_missing_two"),
+            classUnitId: classUnitId(authoredUnitId("class_missing_two")),
             hitPointRule: { tag: "fixedHigherLevelGain" },
           },
         ],
@@ -8262,10 +8384,10 @@ describe("character creation finalization", () => {
   test("collects independent support dependency issues in owner order", () => {
     const progression = expectRight(
       parseCharacterProgressionShape({
-        startingClass: classUnitId("class_missing_one"),
+        startingClass: classUnitId(authoredUnitId("class_missing_one")),
         advancements: [
           {
-            classUnitId: classUnitId("class_missing_two"),
+            classUnitId: classUnitId(authoredUnitId("class_missing_two")),
             hitPointRule: { tag: "fixedHigherLevelGain" },
           },
         ],
@@ -8276,7 +8398,7 @@ describe("character creation finalization", () => {
       ...complete,
       selections: {
         ...complete.selections,
-        background: "background_missing",
+        background: authoredUnitId("background_missing"),
         progression,
       },
     });
@@ -8284,9 +8406,7 @@ describe("character creation finalization", () => {
       throw new Error("Expected complete synthetic selections.");
     }
 
-    expect(
-      executableSupportIssues(selections, unitLibrary),
-    ).toEqual([
+    expect(executableSupportIssues(selections, unitLibrary)).toEqual([
       {
         tag: "characterBuildProjection",
         cause: {
@@ -8318,7 +8438,10 @@ describe("character creation finalization", () => {
     const complete = completeManifestDraft();
     const missingSpecies = finalizedSelections({
       ...complete,
-      selections: { ...complete.selections, species: "species_missing" },
+      selections: {
+        ...complete.selections,
+        species: authoredUnitId("species_missing"),
+      },
     });
     const missingFeat = finalizedSelections({
       ...complete,
@@ -8351,9 +8474,7 @@ describe("character creation finalization", () => {
         unitId: "species_missing",
       },
     });
-    expect(
-      executableSupportIssues(missingFeat, unitLibrary),
-    ).toEqual(
+    expect(executableSupportIssues(missingFeat, unitLibrary)).toEqual(
       expect.arrayContaining([
         {
           tag: "characterBuildProjection",
@@ -8458,10 +8579,12 @@ describe("character creation finalization", () => {
   test("uses collision-resistant progression option ids for class paths", () => {
     const singleClassWithRawEncodedSeparator = expectRight(
       parseCharacterProgressionShape({
-        startingClass: classUnitId("class_alpha%7Cclass_beta"),
+        startingClass: classUnitId(authoredUnitId("class_alpha%7Cclass_beta")),
         advancements: [
           {
-            classUnitId: classUnitId("class_alpha%7Cclass_beta"),
+            classUnitId: classUnitId(
+              authoredUnitId("class_alpha%7Cclass_beta"),
+            ),
             hitPointRule: { tag: "fixedHigherLevelGain" },
           },
         ],
@@ -8469,10 +8592,10 @@ describe("character creation finalization", () => {
     );
     const multiclassPath = expectRight(
       parseCharacterProgressionShape({
-        startingClass: classUnitId("class_alpha"),
+        startingClass: classUnitId(authoredUnitId("class_alpha")),
         advancements: [
           {
-            classUnitId: classUnitId("class_beta"),
+            classUnitId: classUnitId(authoredUnitId("class_beta")),
             hitPointRule: { tag: "fixedHigherLevelGain" },
           },
         ],
@@ -8589,8 +8712,8 @@ describe("character creation finalization", () => {
     const projection = finalizedBuildEquipment(
       {
         ...complete.selections,
-        progression: testProgression("class_fighter", 1),
-        background: "background_soldier",
+        progression: testProgression(authoredUnitId("class_fighter"), 1),
+        background: authoredUnitId("background_soldier"),
         abilityScoreGeneration: {
           method: "standardArray",
           assignedScores: testAbilityScoreAssignment({
@@ -8607,14 +8730,14 @@ describe("character creation finalization", () => {
           plusTwo: "str",
           plusOne: "con",
         },
-        species: "species_orc",
+        species: authoredUnitId("species_orc"),
         languages: ["Common", "Dwarvish", "Goblin"],
         alignment: { order: "lawful", morality: "good" },
         equipment: {
           selectedUnitIds: [
-            "armor_chain_mail",
-            "weapon_longsword",
-            "equipment_shield",
+            authoredUnitId("armor_chain_mail"),
+            authoredUnitId("weapon_longsword"),
+            authoredUnitId("equipment_shield"),
           ],
         },
         choices: complete.selections.choices.map((choice) =>
@@ -8655,10 +8778,10 @@ describe("character creation finalization", () => {
           ...complete.selections,
           equipment: {
             selectedUnitIds: [
-              "armor_chain_mail",
-              "weapon_longsword",
-              "weapon_flail",
-              "equipment_shield",
+              authoredUnitId("armor_chain_mail"),
+              authoredUnitId("weapon_longsword"),
+              authoredUnitId("weapon_flail"),
+              authoredUnitId("equipment_shield"),
             ],
           },
           choices: [
@@ -8703,7 +8826,7 @@ describe("character creation finalization", () => {
     const originalLoadoutChoices = mutableProfile.loadoutChoices;
     const spearWeaponLoadout: SupportedLoadoutChoice = {
       slot: "weapon",
-      unitId: "weapon_spear",
+      unitId: authoredUnitId("weapon_spear"),
       optionId: creationChoiceOptionId("wielded_one_handed"),
       label: "Wielded one-handed",
       buildSlot: "weapon",
@@ -8716,9 +8839,9 @@ describe("character creation finalization", () => {
       creationChoiceOptionId("equipment_shield"),
     ];
     mutableProfile.purchasableEquipmentUnitIds = [
-      "armor_chain_mail",
-      "weapon_spear",
-      "equipment_shield",
+      authoredUnitId("armor_chain_mail"),
+      authoredUnitId("weapon_spear"),
+      authoredUnitId("equipment_shield"),
     ];
     mutableProfile.loadoutChoices = [
       originalLoadoutChoices[0]!,
@@ -8733,9 +8856,9 @@ describe("character creation finalization", () => {
           ...complete.selections,
           equipment: {
             selectedUnitIds: [
-              "armor_chain_mail",
-              "weapon_spear",
-              "equipment_shield",
+              authoredUnitId("armor_chain_mail"),
+              authoredUnitId("weapon_spear"),
+              authoredUnitId("equipment_shield"),
             ],
           },
           choices: complete.selections.choices.map((choice) =>
@@ -8798,7 +8921,7 @@ describe("character creation finalization", () => {
           {
             optionId: creationChoiceOptionId("defense"),
             label: "Defense",
-            unitRef: { unitId: "defense" },
+            unitRef: { unitId: authoredUnitId("defense") },
           },
         ],
       },
@@ -8817,12 +8940,12 @@ describe("character creation finalization", () => {
           {
             optionId: creationChoiceOptionId("defense"),
             label: "Defense",
-            unitRef: { unitId: "defense" },
+            unitRef: { unitId: authoredUnitId("defense") },
           },
           {
             optionId: creationChoiceOptionId("dueling"),
             label: "Dueling",
-            unitRef: { unitId: "dueling" },
+            unitRef: { unitId: authoredUnitId("dueling") },
           },
         ],
       },
@@ -8873,7 +8996,7 @@ describe("character creation finalization", () => {
           {
             optionId: creationChoiceOptionId("defense"),
             label: "Defense",
-            unitRef: { unitId: "defense" },
+            unitRef: { unitId: authoredUnitId("defense") },
           },
         ],
       },
@@ -8894,7 +9017,7 @@ describe("character creation finalization", () => {
           {
             optionId: creationChoiceOptionId("dueling"),
             label: "Dueling",
-            unitRef: { unitId: "dueling" },
+            unitRef: { unitId: authoredUnitId("dueling") },
           },
         ],
       },
@@ -8927,7 +9050,7 @@ describe("character creation finalization", () => {
       ...complete,
       selections: {
         ...complete.selections,
-        progression: testProgression("class_fighter", 4),
+        progression: testProgression(authoredUnitId("class_fighter"), 4),
         choices: [
           ...complete.selections.choices,
           selectedUnitChoice(
@@ -9077,7 +9200,7 @@ describe("character creation finalization", () => {
     const secondWind = unitLibrary.requireUnit("fighter_second_wind");
     const bonusProficiencies = {
       ...secondWind,
-      id: "fighter_bonus_proficiencies",
+      id: authoredUnitId("fighter_bonus_proficiencies"),
       name: "Bonus Proficiencies",
       mechanics: {
         family: "passive",
@@ -9256,7 +9379,7 @@ describe("character creation finalization", () => {
 
   test("derives Primal Knowledge proficiency choice from the level-3 Barbarian feature grant", () => {
     const featureHoles = classFeatureGrantChoiceHoles(
-      "barbarian_primal_knowledge",
+      authoredUnitId("barbarian_primal_knowledge"),
       unitLibrary,
       {
         classLevel: 3,
@@ -9283,8 +9406,8 @@ describe("character creation finalization", () => {
     );
 
     const build = {
-      progression: testProgression("class_barbarian", 3),
-      background: "background_soldier",
+      progression: testProgression(authoredUnitId("class_barbarian"), 3),
+      background: authoredUnitId("background_soldier"),
       proficiencyChoices: [
         { kind: "skill", skill: "athletics" },
         { kind: "skill", skill: "intimidation" },
@@ -9303,7 +9426,7 @@ describe("character creation finalization", () => {
 
   test("adds Draconic Resilience to Sorcerer Hit Point maximum from the retained feature", () => {
     const baseBuild = {
-      progression: testProgression("class_sorcerer", 3),
+      progression: testProgression(authoredUnitId("class_sorcerer"), 3),
       abilityScores: testAbilityScoreAssignment({
         str: 8,
         dex: 14,
@@ -9319,8 +9442,8 @@ describe("character creation finalization", () => {
       features: [
         {
           kind: "selectedClassChoice",
-          selectedFromUnitId: "class_sorcerer",
-          unitId: "subclass_sorcerer_draconic_sorcery",
+          selectedFromUnitId: authoredUnitId("class_sorcerer"),
+          unitId: authoredUnitId("subclass_sorcerer_draconic_sorcery"),
         },
       ],
     } as const;
@@ -9359,7 +9482,7 @@ describe("character creation finalization", () => {
       const secondWind = unitLibrary.requireUnit("fighter_second_wind");
       const mixedProficiencies = {
         ...secondWind,
-        id: "fighter_mixed_proficiencies",
+        id: authoredUnitId("fighter_mixed_proficiencies"),
         name: "Mixed Proficiencies",
         mechanics: {
           family: "passive",
@@ -9445,7 +9568,7 @@ describe("character creation finalization", () => {
 
     const skilledSoldier = {
       ...soldier,
-      originFeatId: "feat_skilled",
+      originFeatId: authoredUnitId("feat_skilled"),
     } satisfies UnitRecord;
     const skilledOriginUnitLibrary = unitLibraryReplacingUnits([
       skilledSoldier,
@@ -9663,7 +9786,7 @@ describe("character creation finalization", () => {
 
     const skilledSoldier = {
       ...soldier,
-      originFeatId: "feat_skilled",
+      originFeatId: authoredUnitId("feat_skilled"),
     } satisfies UnitRecord;
     const skilledOriginUnitLibrary = unitLibraryReplacingUnits([
       skilledSoldier,
@@ -9676,7 +9799,7 @@ describe("character creation finalization", () => {
         expectedRevision: draft.revision,
         fills: initialManifestFills(
           "13:class_fighter:level_1:maximum_hit_die",
-          "species_human",
+          authoredUnitId("species_human"),
         ),
       }),
     );
@@ -9966,10 +10089,10 @@ describe("character creation finalization", () => {
         ...complete.selections,
         equipment: {
           selectedUnitIds: [
-            "armor_chain_mail",
-            "weapon_longsword",
-            "equipment_shield",
-            "equipment_shield",
+            authoredUnitId("armor_chain_mail"),
+            authoredUnitId("weapon_longsword"),
+            authoredUnitId("equipment_shield"),
+            authoredUnitId("equipment_shield"),
           ],
         },
       },
@@ -9980,9 +10103,9 @@ describe("character creation finalization", () => {
         ...complete.selections,
         equipment: {
           selectedUnitIds: [
-            "armor_chain_mail",
-            "weapon_longsword",
-            "weapon_longsword",
+            authoredUnitId("armor_chain_mail"),
+            authoredUnitId("weapon_longsword"),
+            authoredUnitId("weapon_longsword"),
           ],
         },
       },
@@ -10555,7 +10678,7 @@ function unitLibraryReplacingUnits(
 
 function initialManifestFills(
   progressionOptionId = "13:class_fighter:level_1:maximum_hit_die",
-  speciesUnitId: UnitRecord["id"] = "species_orc",
+  speciesUnitId: UnitRecord["id"] = authoredUnitId("species_orc"),
 ): readonly CreationFill[] {
   return [
     choiceFill("cc:draft:draft.progression.initial", progressionOptionId),
@@ -10587,7 +10710,7 @@ function initialManifestFills(
 }
 
 function completeManifestDraft(): CharacterDraft {
-  return completeManifestDraftForSpecies("species_orc");
+  return completeManifestDraftForSpecies(authoredUnitId("species_orc"));
 }
 
 function completeHumanVersatileOriginFeatDraft(
@@ -10609,7 +10732,7 @@ function humanVersatileOriginFeatDraftAfterSpeciesChoices(
       expectedRevision: draft.revision,
       fills: initialManifestFills(
         "13:class_fighter:level_1:maximum_hit_die",
-        "species_human",
+        authoredUnitId("species_human"),
       ),
     }),
   );
@@ -10641,23 +10764,23 @@ function humanVersatileOriginFeatDraftAfterSpeciesChoices(
 }
 
 function completeManifestDraftForSpecies(input: {
-  readonly speciesUnitId: UnitRecord["id"];
+  readonly speciesUnitId: string;
   readonly speciesSize?: "medium" | "small";
   readonly draconicAncestry?: "red" | false;
 }): CharacterDraft;
-function completeManifestDraftForSpecies(
-  speciesUnitId: UnitRecord["id"],
-): CharacterDraft;
+function completeManifestDraftForSpecies(speciesUnitId: string): CharacterDraft;
 function completeManifestDraftForSpecies(
   input:
-    | UnitRecord["id"]
+    | string
     | {
-        readonly speciesUnitId: UnitRecord["id"];
+        readonly speciesUnitId: string;
         readonly speciesSize?: "medium" | "small";
         readonly draconicAncestry?: "red" | false;
       },
 ): CharacterDraft {
-  const speciesUnitId = typeof input === "string" ? input : input.speciesUnitId;
+  const speciesUnitId = authoredUnitId(
+    typeof input === "string" ? input : input.speciesUnitId,
+  );
   const speciesSize = typeof input === "string" ? undefined : input.speciesSize;
   const draconicAncestry =
     typeof input === "string"
@@ -10711,13 +10834,15 @@ function completeManifestDraftForGnomishLineage(
   lineageId: "forest_gnome" | "rock_gnome",
   spellcastingAbility: "int" | "wis" | "cha",
 ): CharacterDraft {
-  const complete = completeManifestDraftForSpecies(SRD_GNOME_SPECIES_UNIT_ID);
+  const complete = completeManifestDraftForSpecies(
+    authoredUnitId(SRD_GNOME_SPECIES_UNIT_ID),
+  );
 
   return {
     ...complete,
     selections: {
       ...complete.selections,
-      species: SRD_GNOME_SPECIES_UNIT_ID,
+      species: authoredUnitId(SRD_GNOME_SPECIES_UNIT_ID),
       choices: [
         ...complete.selections.choices,
         selectedChoice(
@@ -10740,7 +10865,9 @@ function replayGnomishLineageChoice(): {
   readonly procedure: "species-lineage-choice";
   readonly result: "accepted";
 } {
-  const draft = draftWithSelections({ species: SRD_GNOME_SPECIES_UNIT_ID });
+  const draft = draftWithSelections({
+    species: authoredUnitId(SRD_GNOME_SPECIES_UNIT_ID),
+  });
   const holes = discoverCreationHoles({ draft, unitLibrary });
   expect(
     optionIds(
@@ -11992,7 +12119,7 @@ function selectedChoiceWithUnitRef(
     options: [
       {
         optionId: creationChoiceOptionId(optionId),
-        unitRef: { unitId: optionUnitId },
+        unitRef: { unitId: authoredUnitId(optionUnitId) },
       },
     ],
   };
@@ -12012,7 +12139,7 @@ function selectedUnitChoice(
     },
     options: optionIds.map((optionId) => ({
       optionId: creationChoiceOptionId(optionId),
-      unitRef: { unitId: optionId },
+      unitRef: { unitId: authoredUnitId(optionId) },
     })),
   };
 }

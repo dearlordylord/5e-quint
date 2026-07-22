@@ -1,4 +1,5 @@
 // KERNEL-COVERAGE: parity-witness SHEET.ABILITY_CHECK.PROFICIENCY_BONUS
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
@@ -173,7 +174,7 @@ function initialProjection(): AbilityCheckProficiencyBonusProjection {
   return {
     outcome: "init",
     projectionTag: "none",
-    sourceUnitId: "none",
+    sourceUnitId: authoredUnitId("none"),
     skill: "none",
     bonus: 0,
     replayIndex: 0,
@@ -231,14 +232,14 @@ function baseBuild(input: {
 }): CharacterBuild {
   return {
     progression: {
-      startingClass: classUnitId(input.startingClass),
+      startingClass: classUnitId(authoredUnitId(input.startingClass)),
       advancements: (input.advancements ?? []).map((classId) => ({
-        classUnitId: classUnitId(classId),
+        classUnitId: classUnitId(authoredUnitId(classId)),
         hitPointRule: { tag: "fixedHigherLevelGain" },
       })),
     },
-    background: "background_soldier",
-    species: "species_orc",
+    background: authoredUnitId("background_soldier"),
+    species: authoredUnitId("species_orc"),
     originLanguages: ["Common", "Dwarvish", "Goblin"],
     classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },

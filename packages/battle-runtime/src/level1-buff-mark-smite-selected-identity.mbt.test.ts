@@ -30,6 +30,7 @@ import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { Either } from "effect";
 import { describe, expect, it } from "vitest";
 import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
+import { admitCharacterWeaponAttackExecutionWeapon } from "./character-weapon-execution-admission.ts";
 
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
@@ -91,7 +92,7 @@ import type {
   BattleSpellTurnStartDamageRollHole,
   BattleSpellTurnStartSavingThrowOutcomeHole,
 } from "./battle-reducer.ts";
-import { KnockedOutConditionState } from "./battle-reducer.ts";
+import { KnockedOutConditionState } from "./battle-reducer/knocked-out-state.ts";
 import {
   applyBattleHitPointDamage,
   breakBattleConcentration,
@@ -2675,8 +2676,8 @@ function level1BuffMarkSmiteCreature(input: {
           ? {}
           : {
               weapon: {
-                itemId: `main:${attack.weapon.id}`,
-                unitId: attack.weapon.id,
+                itemId: `main:${attack.weapon.weaponUnitId}`,
+                unitId: attack.weapon.weaponUnitId,
                 grip: "one_handed" as const,
               },
             },
@@ -2887,7 +2888,7 @@ function zeroAbilityWeaponAttack(
   }
   return {
     kind: "weapon",
-    weapon,
+    weapon: admitCharacterWeaponAttackExecutionWeapon(weapon),
     ability: "str",
     abilityModifier: abilityModifier(0),
   };
@@ -3579,13 +3580,13 @@ function shillelaghForceAttackProjection(
   if (attackRoll.attack.kind !== "weapon" || damage.attack.kind !== "weapon") {
     throw new Error("Expected Shillelagh weapon attack projection.");
   }
-  const attackName = attackRoll.attack.weapon.name;
-  if (attackName !== shillelaghQuarterstaffForceAttackName) {
-    throw new Error(`Unexpected Shillelagh attack name ${attackName}.`);
+  const weaponUnitId = attackRoll.attack.weapon.weaponUnitId;
+  if (weaponUnitId !== "weapon_quarterstaff") {
+    throw new Error(`Unexpected Shillelagh weapon ${weaponUnitId}.`);
   }
-  if (damage.attack.weapon.name !== attackName) {
+  if (damage.attack.weapon.weaponUnitId !== weaponUnitId) {
     throw new Error(
-      `Expected Shillelagh damage attack ${damage.attack.weapon.name} to match ${attackName}.`,
+      `Expected Shillelagh damage weapon ${damage.attack.weapon.weaponUnitId} to match ${weaponUnitId}.`,
     );
   }
   const weaponDamage = damage.attack.weapon.damage;
@@ -3598,7 +3599,7 @@ function shillelaghForceAttackProjection(
     );
   }
   return {
-    attackName,
+    attackName: shillelaghQuarterstaffForceAttackName,
     attackBonus: Number(attackRoll.attackBonus),
     damageType: "force",
     damageDice: weaponDamage.dice,
@@ -3703,13 +3704,13 @@ function trueStrikeRadiantAttackProjection(
   if (attackRoll.attack.kind !== "weapon" || damage.attack.kind !== "weapon") {
     throw new Error("Expected True Strike weapon attack projection.");
   }
-  const attackName = attackRoll.attack.weapon.name;
-  if (attackName !== trueStrikeDaggerAttackName) {
-    throw new Error(`Unexpected True Strike attack name ${attackName}.`);
+  const weaponUnitId = attackRoll.attack.weapon.weaponUnitId;
+  if (weaponUnitId !== "weapon_dagger") {
+    throw new Error(`Unexpected True Strike weapon ${weaponUnitId}.`);
   }
-  if (damage.attack.weapon.name !== attackName) {
+  if (damage.attack.weapon.weaponUnitId !== weaponUnitId) {
     throw new Error(
-      `Expected True Strike damage attack ${damage.attack.weapon.name} to match ${attackName}.`,
+      `Expected True Strike damage weapon ${damage.attack.weapon.weaponUnitId} to match ${weaponUnitId}.`,
     );
   }
   const weaponDamage = damage.attack.weapon.damage;
@@ -3722,7 +3723,7 @@ function trueStrikeRadiantAttackProjection(
     );
   }
   return {
-    attackName,
+    attackName: trueStrikeDaggerAttackName,
     attackBonus: Number(attackRoll.attackBonus),
     damageType: "radiant",
     damageDice: weaponDamage.dice,

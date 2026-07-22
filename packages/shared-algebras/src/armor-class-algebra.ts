@@ -9,7 +9,6 @@ import type {
   ArmorCategory,
   ArmorAcFormula,
   ArmorTrainingCategory,
-  UnitRecord,
 } from "@dnd/surface/surface/types";
 import {
   armorClass,
@@ -46,7 +45,7 @@ export type ArmorClassBaseSource =
       readonly base: ArmorClass;
       readonly abilityModifiers: ReadonlyNonEmptyArray<Ability>;
       readonly source: "unarmored_defense" | "class_feature_base_plus_ability";
-      readonly sourceUnitId: UnitRecord["id"];
+      readonly sourceUnitId: string;
     }
   | {
       readonly kind: "ability_sum";

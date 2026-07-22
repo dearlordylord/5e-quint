@@ -11,6 +11,7 @@ import {
 import type { SpellRecord, UnitRecord } from "@dnd/surface/surface/types";
 import * as Either from "effect/Either";
 import { expect } from "vitest";
+import { unitId } from "@dnd/shared/game-facts";
 import {
   ATTACK_DAMAGE_DIE_FLOOR_SUPPORT_PROFILE,
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
@@ -992,7 +993,7 @@ export function shieldLoadout(): Extract<
   return {
     shield: {
       itemId: "shield:equipment_shield",
-      unitId: "equipment_shield",
+      unitId: unitId("equipment_shield"),
     },
   };
 }

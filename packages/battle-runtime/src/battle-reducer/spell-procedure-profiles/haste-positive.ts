@@ -1,3 +1,4 @@
+import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-haste-positive
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-glyph-stored-concentration-full-duration
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_POSITIVE_EFFECTS
@@ -17,7 +18,6 @@ import type {
   ActionRestriction,
   AreaDirectEffectAtom,
   EffectAtom,
-  SpellRecord,
 } from "@dnd/surface/surface/types";
 import { isEffectAtom } from "@dnd/surface/surface/types";
 import { Either, Schema } from "effect";
@@ -25,8 +25,6 @@ import { Either, Schema } from "effect";
 import { battleCreatureWithSpellActiveEffects } from "../../active-effect/lifecycle.ts";
 import type { BattleActiveEffect } from "../../active-effect/types.ts";
 import {
-  maybeOpenInterruptWindow,
-  snapshotBattle,
   type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
@@ -35,6 +33,7 @@ import {
   type BattleState,
   type HastePositiveSpellInvocation,
 } from "../../battle-state-execution.ts";
+import { maybeOpenInterruptWindow, snapshotBattle } from "../dispatcher.ts";
 import { CombatantId } from "../../identity.ts";
 import { allocateBattleActiveEffectRef } from "../../active-effect/execution-ref.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";
@@ -42,7 +41,7 @@ import { needsHolesResult } from "../hole-helpers.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { battleStateWithCurrentActorSpellGrantedActionResourcesForTargets } from "../spell-granted-action-resource.ts";
 import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
-import { sameStringSet } from "../spells-profile-shared.ts";
+import { sameStringSet } from "../spells-execution-facts.ts";
 import type { SpellFillSet } from "../spells-resolve-fill-set.ts";
 import {
   spellRequiresConcentration,
@@ -101,7 +100,7 @@ type HastePositiveTargetSelection =
   | { readonly tag: "invalid"; readonly message: string };
 
 function admitHastePositive(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly HastePositiveSpellInvocation[] {
   const projection = hastePositiveSpellProjection(ctx.actor.combatantId, spell);
@@ -128,7 +127,7 @@ function admitHastePositive(
 
 function hastePositiveSpellProjection(
   actorId: CombatantId,
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
 ): Pick<
   HastePositiveSpellInvocation,
   "targeting" | "activeEffects" | "rangeFeet"

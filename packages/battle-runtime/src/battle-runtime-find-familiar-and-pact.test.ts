@@ -1,3 +1,4 @@
+import { statBlockId as parseSharedStatBlockId } from "@dnd/shared/game-facts";
 import {
   startBattleSessionRight,
   characterSeed,
@@ -295,7 +296,7 @@ describe("battle runtime: Find Familiar and Pact of the Chain", () => {
         eligibility: eligibleForms,
         selection: {
           tag: "challengeRatingZeroBeast",
-          statBlockId: "stat_block_skeleton",
+          statBlockId: parseSharedStatBlockId("stat_block_skeleton"),
         },
         creatureTypeOverrideChoiceId: "fiend",
       }),

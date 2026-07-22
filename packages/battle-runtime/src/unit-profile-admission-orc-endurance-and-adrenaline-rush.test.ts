@@ -1,4 +1,5 @@
 import { battleActUnitPresentation } from "./battle-act-composition.ts";
+import { unitId } from "@dnd/shared/game-facts";
 import {
   battleProcedureExecutionRefForTest,
   requireCharacterUnitProcedureRefForTest,
@@ -433,10 +434,9 @@ describe("QMBT47 deterministic Relentless Endurance admission", () => {
         },
       }),
       {
-        ...base,
-        id: "relentless_endurance_spell_source",
-        kind: "spell",
-      } as UnitRecord,
+        ...spellRecord("ray_of_frost"),
+        id: unitId("relentless_endurance_spell_source"),
+      },
     ];
 
     for (const unit of malformedUnits) {

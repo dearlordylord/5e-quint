@@ -1,3 +1,4 @@
+import { statBlockId as parseSharedStatBlockId } from "@dnd/shared/game-facts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1H-ANIMAL-FRIENDSHIP animal_friendship
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1H-PROTECTION-EVIL-GOOD protection_from_evil_and_good
 // UNIT-IDENTITY-REPLAY: L1H-ANIMAL-FRIENDSHIP animal_friendship doDiscoverAnimalFriendshipBeastTargetAdmission doResolveAnimalFriendshipFailedSaveCharmed doResolveAnimalFriendshipCasterDamageBreak
@@ -25,7 +26,6 @@ import {
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
 import type { SpellRecord, StatBlockRecord } from "@dnd/surface/surface/types";
-import { statBlockProcedurePresentations } from "./stat-block-execution.ts";
 import {
   battleId,
   battleReducerStartRouteEvent,
@@ -78,6 +78,7 @@ import {
   battleActiveEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
   resolveBattleSubject,
+  statBlockProcedurePresentationsForStateForTest,
 } from "./battle-runtime-test-support.ts";
 import {
   characterSpellProcedure,
@@ -1413,7 +1414,7 @@ function statBlockWithCreatureType(
   const base = statBlockCatalog.requireStatBlock("stat_block_goblin_warrior");
   return {
     ...base,
-    id: `stat_block_selected_identity_${creatureType}`,
+    id: parseSharedStatBlockId(`stat_block_selected_identity_${creatureType}`),
     name: `Selected Identity ${creatureType}`,
     statBlock: {
       ...base.statBlock,
@@ -1481,7 +1482,10 @@ function statBlockAttackAct(
   if (creature?.origin.kind !== "statBlock") {
     throw new Error(`Expected Stat Block attacker ${actorId}.`);
   }
-  const procedureRef = statBlockProcedurePresentations(creature.origin).find(
+  const procedureRef = statBlockProcedurePresentationsForStateForTest(
+    state,
+    actorId,
+  ).find(
     (candidate) => candidate.kind === "attack" && candidate.name === attackName,
   )?.procedureRef;
   if (procedureRef === undefined) {

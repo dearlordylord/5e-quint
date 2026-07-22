@@ -1,4 +1,5 @@
 // KERNEL-COVERAGE: parity-witness CHARACTER.BATTLE.HANDOFF.INIT_PROJECTION CHARACTER.BATTLE.HANDOFF.SETTLEMENT
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import * as path from "node:path";
 
 import {
@@ -650,7 +651,7 @@ function sheetDerivedBuild(input?: {
   readonly preparedSpell?: boolean;
 }): CharacterBuild {
   const daggerUnitId = expectRight(
-    characterEquipmentItemUnitId("weapon_dagger"),
+    characterEquipmentItemUnitId(authoredUnitId("weapon_dagger")),
   );
   const daggerItemId = characterEquipmentItemId({
     slot: "main",
@@ -660,11 +661,11 @@ function sheetDerivedBuild(input?: {
   const preparedSpell = input?.preparedSpell ?? true;
   const build: CharacterBuild = {
     progression: {
-      startingClass: classUnitId("class_wizard"),
+      startingClass: classUnitId(authoredUnitId("class_wizard")),
       advancements: [],
     },
-    background: "background_soldier",
-    species: "species_orc",
+    background: authoredUnitId("background_soldier"),
+    species: authoredUnitId("species_orc"),
     originLanguages: ["Common", "Dwarvish", "Goblin"],
     classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
@@ -691,11 +692,13 @@ function sheetDerivedBuild(input?: {
     spellcasting: {
       sources: [
         {
-          sourceUnitId: "class_wizard",
+          sourceUnitId: authoredUnitId("class_wizard"),
           spellcastingAbility: "int",
           cantrips: [],
           spellbook: [],
-          preparedSpells: preparedSpell ? ["ray_of_sickness"] : [],
+          preparedSpells: preparedSpell
+            ? [authoredUnitId("ray_of_sickness")]
+            : [],
           spellcastingFocuses: ["arcane_focus"],
         },
       ],

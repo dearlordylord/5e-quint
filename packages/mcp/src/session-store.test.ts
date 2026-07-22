@@ -8,6 +8,7 @@ import {
   characterSheetId,
 } from "@dnd/character-sheet-runtime";
 import { Hp } from "@dnd/shared/types";
+import { statBlockId, unitId } from "@dnd/shared/game-facts";
 import {
   buildUnitCatalog,
   srdUnitCollection,
@@ -26,10 +27,10 @@ if (unitCatalogResult.tag !== "ok") {
 }
 const unitLibrary = unitCatalogResult.catalog;
 const DRUID_WILD_SHAPE_KNOWN_FORM_IDS = [
-  "stat_block_rat",
-  "stat_block_riding_horse",
-  "stat_block_spider",
-  "stat_block_wolf",
+  statBlockId("stat_block_rat"),
+  statBlockId("stat_block_riding_horse"),
+  statBlockId("stat_block_spider"),
+  statBlockId("stat_block_wolf"),
 ] as const;
 
 describe("MCP character sessions", () => {
@@ -75,16 +76,16 @@ describe("MCP character sessions", () => {
 function druidWildShapeBuild(): CharacterBuild {
   return {
     progression: {
-      startingClass: classUnitId("class_druid"),
+      startingClass: classUnitId(unitId("class_druid")),
       advancements: [
         {
-          classUnitId: classUnitId("class_druid"),
+          classUnitId: classUnitId(unitId("class_druid")),
           hitPointRule: { tag: "fixedHigherLevelGain" },
         },
       ],
     },
-    background: "background_soldier",
-    species: "species_orc",
+    background: unitId("background_soldier"),
+    species: unitId("species_orc"),
     originLanguages: ["Common", "Dwarvish", "Goblin"],
     classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
@@ -107,7 +108,7 @@ function druidWildShapeBuild(): CharacterBuild {
     spellcasting: {
       sources: [
         {
-          sourceUnitId: "class_druid",
+          sourceUnitId: unitId("class_druid"),
           spellcastingAbility: "wis",
           cantrips: [],
           spellbook: [],

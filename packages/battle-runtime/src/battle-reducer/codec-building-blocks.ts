@@ -12,12 +12,11 @@ import {
 } from "@dnd/shared/types";
 import {
   AbilitySchema,
-  CreatureNamedAttackRollSchema,
+  CreatureAttackRollMechanicsSchema,
   DamageTypeSchema,
   DcSourceSchema,
   DiceExprSchema,
   SizeSchema,
-  WeaponRecordSchema,
 } from "@dnd/surface/surface/schema";
 import { SKILLS as SURFACE_SKILLS } from "@dnd/surface/surface/types";
 import { Schema } from "effect";
@@ -33,11 +32,12 @@ import {
   type SupportedCreatureAttackRollMechanics,
   type SupportedStaticDamageCreatureAttackRollMechanics,
 } from "../battle-action-options.ts";
-import { creatureAttackRollMechanicsAreSupported } from "../statblock-action-support.ts";
+import { creatureAttackRollMechanicsAreSupported } from "../statblock-attack-execution-mechanics.ts";
 import {
   statBlockAttackDamageSupportsStaticNotation,
   supportedStatBlockAttackDamage,
 } from "../statblock-attack-damage-support.ts";
+import { CharacterWeaponAttackExecutionWeaponSchema } from "../character-weapon-execution-schema.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-acid-arrow-attack-timing
 import {
   ELDRITCH_BLAST_BEAM_COUNTS,
@@ -172,7 +172,7 @@ const AttackDamageAbilityModifierChoiceSchema = Schema.Struct({
 
 export const CharacterWeaponAttackActionOptionSchema = Schema.Struct({
   kind: Schema.Literal("weapon"),
-  weapon: WeaponRecordSchema,
+  weapon: CharacterWeaponAttackExecutionWeaponSchema,
   ability: AbilitySchema,
   abilityModifier: AbilityModifier,
   attackBonus: Schema.optionalWith(AttackBonus, {
@@ -231,8 +231,7 @@ export const BoundCharacterWeaponAttackActionOptionSchema = Schema.extend(
 );
 
 const SupportedCreatureAttackRollMechanicsSchema =
-  CreatureNamedAttackRollSchema.pipe(
-    Schema.omit("name", "description", "limitedUse"),
+  CreatureAttackRollMechanicsSchema.pipe(
     Schema.filter(creatureAttackRollMechanicsAreSupported, {
       message: () => "Unsupported Stat Block attack mechanics.",
     }),

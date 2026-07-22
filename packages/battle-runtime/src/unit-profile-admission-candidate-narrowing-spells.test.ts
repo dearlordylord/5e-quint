@@ -31,7 +31,6 @@ import {
   spellTargetFill,
 } from "./unit-profile-admission-spell-fill-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
-import { spellProcedureExecution } from "./character-execution-admission.ts";
 import {
   battleObjectId,
   cantripSpellInvocationRef,
@@ -108,7 +107,7 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
     expect(spellHoleInvocation(state, [attackRoll])).toEqual(
       expect.objectContaining({
         procedure: "spellAttackDamage",
-        spell,
+        spellRuleFacts: expect.objectContaining({ spellId: spell.id }),
         targeting: { kind: "singleCreatureOrObject" },
         attackKind: "ranged_spell_attack",
         damage: {
@@ -180,7 +179,7 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
     expect(spellHoleInvocation(state, [attackRoll])).toEqual(
       expect.objectContaining({
         procedure: "spellAttackDamage",
-        spell,
+        spellRuleFacts: expect.objectContaining({ spellId: spell.id }),
         targeting: { kind: "singleCreatureOrObject" },
         attackKind: "ranged_spell_attack",
         damage: {
@@ -298,7 +297,7 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
       },
     };
     const selectedSorcerousBurstInvocation = {
-      ...spellProcedureExecution(selectedSorcerousBurstSource),
+      ...selectedSorcerousBurstSource,
       sourceProcedureRef: act.subject.procedureRef,
     };
     if (

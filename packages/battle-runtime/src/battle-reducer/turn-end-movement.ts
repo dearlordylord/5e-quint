@@ -88,7 +88,7 @@ import {
   type BattleInterruptAttackExecutionSelection,
   type BattleSubject,
 } from "../battle-subjects.ts";
-import { characterBattleResourceIsUseCount } from "../character-battle-resources.ts";
+import { characterBattleResourceIsUseCount } from "../character-battle-resource-execution.ts";
 import { attackExecutionSelectionKey } from "../battle-action-options.ts";
 
 import { type BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
@@ -119,7 +119,7 @@ import {
 import {
   battleCreatureStateWithKnockOutPreservedConditions,
   combatantCanTakeActions,
-} from "./creature-state.ts";
+} from "./creature-state-execution.ts";
 
 import {
   applyStartTurnDeathSavingThrow,
@@ -145,7 +145,8 @@ import {
   effectiveD20TestNaturalOneRerollDeathSavingThrow,
 } from "./d20-test-natural-one-reroll.ts";
 
-import { maybeOpenInterruptWindow, snapshotBattle } from "./dispatcher.ts";
+import { maybeOpenInterruptWindow } from "./interrupt-execution.ts";
+import { snapshotBattle } from "./battle-snapshot.ts";
 import {
   flamingSphereDamageAfterSave,
   flamingSphereMoveDistanceAccepted,
@@ -219,7 +220,7 @@ import {
   combatantEffectiveSize,
   refreshActiveDruidWildShapeStartTurnExecution,
 } from "./druid-wild-shape.ts";
-import type { UnitSupportProcedureExecution } from "../character-execution-admission.ts";
+import type { UnitSupportProcedureExecution } from "../character-execution-queries.ts";
 import {
   battleStateWithFlySpeedGrantEndFallCleanupFrames,
   flySpeedGrantEndFallCleanupFramesForExpiredEffects,
@@ -251,7 +252,7 @@ import { validateGustOfWindLineAreaPushFacts } from "./spells-resolve-save-gates
 
 import { attackTargetConstraint } from "./statblock-attacks.ts";
 
-import { refreshStatBlockStartTurnExecution } from "../stat-block-execution.ts";
+import { refreshStatBlockStartTurnExecution } from "../stat-block-execution-state.ts";
 
 import type {
   ActiveOngoingFeatureOccurrence,
@@ -326,13 +327,13 @@ import type {
   SpellTurnStartDamage,
 } from "../battle-state-execution.ts";
 import { UNIT_FEATURE_CONDITION_END_TURN_SAVE_HOLE_KEY_PREFIX } from "./domain-constants.ts";
+import { validateRolledDiceFillForDiceExpr } from "../battle-state-execution.ts";
 import {
   DEATH_SAVING_THROW_HOLE_ID,
   MOVEMENT_HOLE_ID,
   MOVEMENT_HOLE_INSTANCE,
   STAT_BLOCK_RECHARGE_ROLL_HOLE_ID,
-  validateRolledDiceFillForDiceExpr,
-} from "../battle-state-execution.ts";
+} from "./battle-runtime-protocol.ts";
 export function resolveEndTurn(
   state: BattleState,
   deathSavingThrowRoll?: DieRollResult,

@@ -14,7 +14,7 @@ import {
   resourceHasUsesRemaining,
   spendCharacterResourceUse,
   type CharacterBattleResourceState,
-} from "../character-battle-resources.ts";
+} from "../character-battle-resource-execution.ts";
 
 import { CombatantId } from "../identity.ts";
 
@@ -70,7 +70,7 @@ import type {
   BattleState,
   BattleTargetSpatialFact,
 } from "../battle-state-execution.ts";
-import { zeroHpLifecycleIsTerminal } from "../battle-state-execution.ts";
+import { zeroHpLifecycleIsTerminal } from "./creature-state-leaves.ts";
 import {
   extendSavingThrowOngoingFeatures,
   ongoingFeatureEnemyRelationshipDecisionRequired,

@@ -76,7 +76,7 @@ import {
   activeEffectArmorClass,
   activeOngoingFeatureOccurrencesForCombatant,
   ongoingFeatureProfileForSourceKey,
-} from "./creature-state.ts";
+} from "./creature-state-execution.ts";
 
 import {
   applyAttackDamageAmount,
@@ -111,11 +111,11 @@ import {
   attackDamageInterruptionFrame,
   battleAttackHostParticipantId,
   attackFillsThroughAttackRoll,
-  maybeOpenInterruptWindow,
   resolveAttackDamageReductionZeroDamageRedirectAfterReduction,
   resumeInterruptedProcedure,
-  snapshotBattle,
 } from "./dispatcher.ts";
+import { maybeOpenInterruptWindow } from "./interrupt-execution.ts";
+import { snapshotBattle } from "./battle-snapshot.ts";
 
 import {
   attackTargetHole,
@@ -187,14 +187,16 @@ import {
   BRUTAL_STRIKE_DECISION_CHOICES,
   BRUTAL_STRIKE_SUPPORT_PROFILE,
   type BrutalStrikeDecisionChoice,
-} from "../unit-feature-support.ts";
+} from "../unit-feature-execution-constants.ts";
 
 import {
   ATTACK_ROLL_HOLE_ID,
   ATTACK_TARGET_HOLE_ID,
+} from "./battle-runtime-protocol.ts";
+import {
   spellAttackRerollUnsupportedIssue,
   spellDamageRerollUnsupportedIssue,
-} from "../battle-state-execution.ts";
+} from "./spell-reroll-issues.ts";
 import type {
   AttackBattleResolutionInput,
   BattleAttackHostSubject,
@@ -210,8 +212,8 @@ import type {
   BattleState,
   BattleTargetSpatialFact,
   BattleUnitFeatureDecisionHole,
-  AttackFillSet,
 } from "../battle-state-execution.ts";
+import type { AttackFillSet } from "./battle-runtime-protocol.ts";
 import type {
   BoundSupportedAttackActionOption,
   SupportedAttackActionOption,

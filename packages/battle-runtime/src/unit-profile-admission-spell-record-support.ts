@@ -6,6 +6,7 @@ import type {
 import { expect } from "vitest";
 import { type BattleCreatureInit } from "./index.ts";
 import { unitLibrary } from "./unit-profile-admission-catalog-support.ts";
+import { unitId as parseUnitId } from "@dnd/shared/game-facts";
 
 export function spellRecord(unitId: string): SpellRecord {
   const unit = unitLibrary.requireUnit(unitId);
@@ -36,7 +37,7 @@ export function spellWithSaveGateRepeatSaves(
 
   return {
     ...base,
-    id,
+    id: parseUnitId(id),
     mechanics: {
       ...base.mechanics,
       phases: [repeatPhase],
@@ -76,7 +77,7 @@ export function thunderwaveWithoutDirectPhase(
   const [phase] = base.mechanics.phases;
   return {
     ...base,
-    id,
+    id: parseUnitId(id),
     mechanics: {
       ...base.mechanics,
       phases: [phase],
@@ -91,7 +92,7 @@ export function thunderwaveWithoutFailedSavePush(
   const { phase, directPhase, damage } = thunderwaveSaveGateParts(base);
   return {
     ...base,
-    id,
+    id: parseUnitId(id),
     mechanics: {
       ...base.mechanics,
       phases: [{ ...phase, onFail: damage }, directPhase],
@@ -109,7 +110,7 @@ export function thunderwaveWithFailedSaveDamage(
   const { phase, directPhase, damage, riders } = thunderwaveSaveGateParts(base);
   return {
     ...base,
-    id,
+    id: parseUnitId(id),
     mechanics: {
       ...base.mechanics,
       phases: [
@@ -133,7 +134,7 @@ export function thunderwaveWithFixedSaveDc(
   const { phase, directPhase } = thunderwaveSaveGateParts(base);
   return {
     ...base,
-    id,
+    id: parseUnitId(id),
     mechanics: {
       ...base.mechanics,
       phases: [{ ...phase, dc: { kind: "fixed", dc: 12 } }, directPhase],
@@ -158,7 +159,7 @@ export function thunderwaveWithSaveGateCone(
   }
   return {
     ...base,
-    id,
+    id: parseUnitId(id),
     mechanics: {
       ...base.mechanics,
       phases: [
@@ -211,7 +212,7 @@ export function eldritchBlastWithTargetCount(
   }
   return {
     ...base,
-    id,
+    id: parseUnitId(id),
     mechanics: {
       ...base.mechanics,
       phases: [

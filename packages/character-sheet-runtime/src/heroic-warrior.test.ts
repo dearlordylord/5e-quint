@@ -2,6 +2,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L110D-02-FIGHTER-HEROIC-WARRIOR fighter_heroic_warrior
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L110D-02-FIGHTER-HEROIC-WARRIOR fighter_heroic_warrior
 // UNIT-IDENTITY-REPLAY: L110D-02-FIGHTER-HEROIC-WARRIOR fighter_heroic_warrior doUseHeroicWarrior
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, it, test } from "vitest";
 
 import {
@@ -77,7 +78,8 @@ describe("Character Sheet runtime / Fighter Heroic Warrior", () => {
 
         for (const actionName of sequence.actions) {
           replayedActions.add(actionName);
-          projection = fighterHeroicWarriorSelectedIdentityActions[actionName]();
+          projection =
+            fighterHeroicWarriorSelectedIdentityActions[actionName]();
         }
 
         expect(projection, `${replay.unitId}:${sequence.name}`).toEqual(
@@ -198,8 +200,8 @@ function championFighterLevelTenBuild() {
       ...build.features,
       {
         kind: "selectedClassChoice" as const,
-        selectedFromUnitId: "class_fighter",
-        unitId: "subclass_fighter_champion",
+        selectedFromUnitId: authoredUnitId("class_fighter"),
+        unitId: authoredUnitId("subclass_fighter_champion"),
       },
     ],
   };

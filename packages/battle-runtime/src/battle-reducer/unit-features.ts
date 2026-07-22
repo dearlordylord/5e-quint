@@ -18,7 +18,7 @@ import {
   DRUID_WILD_SHAPE_PROCEDURE_QUERY,
   characterUnitProcedure,
   type UnitFeatureProcedureExecution,
-} from "../character-execution-admission.ts";
+} from "../character-execution-queries.ts";
 import {
   canSpendAction,
   canSpendBonusAction,
@@ -52,7 +52,7 @@ import {
   resourceHasUsesRemaining,
   spendCharacterResourceUse,
   type CharacterBattleResourceState,
-} from "../character-battle-resources.ts";
+} from "../character-battle-resource-execution.ts";
 import { CombatantId, type BattleProcedureExecutionRef } from "../identity.ts";
 import {
   combatantCanSee,
@@ -67,7 +67,7 @@ import {
   combatantCanTakeReactions,
   isCharacterBattleCreatureState,
   statBlockLegendaryActionWindowIsOpen,
-} from "./creature-state.ts";
+} from "./creature-state-execution.ts";
 import {
   activeDruidWildShapeEffect,
   assumeDruidWildShapeForm,
@@ -93,7 +93,8 @@ import {
   OTHER_MAGICAL_EFFECT_SOURCE,
   magicalEffectTargetsInterdictionMessage,
 } from "./antimagic-field-magical-effect-interdiction.ts";
-import { snapshotBattle, spendReaction } from "./dispatcher.ts";
+import { spendReaction } from "./interrupt-execution.ts";
+import { snapshotBattle } from "./battle-snapshot.ts";
 import {
   reactionModifierResourceAvailable,
   reactionReductionResourceDieRollTotal,
@@ -152,12 +153,10 @@ import type {
   SuccessfulAbilityCheckReactionReductionResolutionInput,
   SuccessfulAbilityCheckReactionReductionResolutionResult,
   UnitFeatureBattleResolutionInput,
-  UnitFeatureRolledDiceFill,
 } from "../battle-state-execution.ts";
-import {
-  spellAttackRerollUnsupportedIssue,
-  validateRolledDiceFillForDiceExpr,
-} from "../battle-state-execution.ts";
+import type { UnitFeatureRolledDiceFill } from "./battle-runtime-protocol.ts";
+import { validateRolledDiceFillForDiceExpr } from "../battle-state-execution.ts";
+import { spellAttackRerollUnsupportedIssue } from "./spell-reroll-issues.ts";
 import {
   attackSubjectPart,
   statBlockAttackProcedureSection,
@@ -586,7 +585,7 @@ function sacredWeaponHeldMeleeWeapons(
   if (
     main !== undefined &&
     actor.origin.attack?.kind === "weapon" &&
-    actor.origin.attack.weapon.id === main.unitId &&
+    actor.origin.attack.weapon.weaponUnitId === main.unitId &&
     wildShapeCanUseLoadoutWeaponObject({
       loadout: actor.origin.selectedLoadout,
       activeWildShape,
@@ -604,7 +603,7 @@ function sacredWeaponHeldMeleeWeapons(
   if (
     offHand !== undefined &&
     actor.origin.offHandAttack?.kind === "weapon" &&
-    actor.origin.offHandAttack.weapon.id === offHand.unitId &&
+    actor.origin.offHandAttack.weapon.weaponUnitId === offHand.unitId &&
     wildShapeCanUseLoadoutWeaponObject({
       loadout: actor.origin.selectedLoadout,
       activeWildShape,

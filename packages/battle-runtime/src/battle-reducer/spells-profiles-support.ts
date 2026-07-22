@@ -19,11 +19,11 @@ import type {
   OngoingEffect,
   Skill,
   SkillFilter,
-  SpellRecord,
   TopLevelSpellCastingTime,
   DiceAmount as SurfaceDiceAmount,
   TargetSelection,
 } from "@dnd/surface/surface/types";
+import type { BattleSpellAdmissionSource } from "../battle-state-execution.ts";
 import { topLevelSpellCastingTime } from "@dnd/surface/surface/types";
 import { Either, Match } from "effect";
 import {
@@ -33,7 +33,6 @@ import {
 import {
   type BattleActiveEffectExpiration,
   type BattleD20RollModifierDelta,
-  type BattleD20RollModifierKind,
   type AbilityCheckRollModeSpellEffect,
   type D20RollModifierSpellEffect,
   type HealingSpellActionCost,
@@ -42,6 +41,7 @@ import {
   type ScalarBuffSpellTargeting,
   type ThaumaturgyBoomingVoiceSpellInvocation,
 } from "../battle-state-execution.ts";
+import { type BattleD20RollModifierKind } from "./domain-constants.ts";
 import type { CombatantId } from "../identity.ts";
 import {
   BATTLE_D20_ROLL_MODIFIER_DIE_SIZES,
@@ -52,7 +52,7 @@ import {
 import {
   sameStringSet,
   scalarBuffSpellTargetCount,
-} from "./spells-profile-shared.ts";
+} from "./spells-execution-facts.ts";
 
 type D20RollModifierSpellProjection = {
   readonly effect: D20RollModifierSpellEffect;
@@ -99,7 +99,7 @@ export function sameCreatureTypeSet(
 
 export function thaumaturgyBoomingVoiceProjection(
   actorId: CombatantId,
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
 ): Pick<
   ThaumaturgyBoomingVoiceSpellInvocation,
   "activeEffect" | "rangeFeet"
@@ -170,7 +170,7 @@ export function scalarBuffSpellActionCost(
 }
 
 export function scalarBuffSpellRangeFeet(
-  range: SpellRecord["mechanics"]["range"],
+  range: BattleSpellAdmissionSource["mechanics"]["range"],
 ): MovementFeet | null {
   return Match.value(range).pipe(
     Match.when({ kind: "self" }, () => movementFeet(0)),
@@ -235,9 +235,9 @@ function scalarBuffRequiredTargetDisposition(
 
 export function scalarBuffSpellEffect(
   actorId: CombatantId,
-  _spell: SpellRecord,
+  _spell: BattleSpellAdmissionSource,
   effect: EffectAtom | OngoingEffect,
-  duration: SpellRecord["mechanics"]["duration"],
+  duration: BattleSpellAdmissionSource["mechanics"]["duration"],
   spellLevel: number,
   slotLevel: SpellSlotLevel,
 ): ScalarBuffSpellEffect | null {
@@ -381,7 +381,7 @@ function isEqualToSpeedGrantKind(
 
 function scalarBuffSpecialSpeedGrantExpiration(
   actorId: CombatantId,
-  duration: SpellRecord["mechanics"]["duration"],
+  duration: BattleSpellAdmissionSource["mechanics"]["duration"],
 ): BattleActiveEffectExpiration | null {
   if (duration.kind !== "concentration") {
     return scalarBuffActiveEffectExpiration(actorId, duration);
@@ -398,7 +398,7 @@ function scalarBuffSpecialSpeedGrantExpiration(
 
 export function rollModifierSpellProjection(
   actorId: CombatantId,
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   slotLevel: SpellSlotLevel,
 ): RollModifierSpellProjection | null {
   const castingTime = topLevelSpellCastingTime(spell.mechanics);
@@ -562,7 +562,7 @@ export function rollModifierSpellTargeting(
 
 export function rollModifierActiveEffect(
   actorId: CombatantId,
-  _spell: SpellRecord,
+  _spell: BattleSpellAdmissionSource,
   effect: Extract<EffectAtom, { readonly kind: "modify_roll_numeric" }>,
   expiresAt: BattleActiveEffectExpiration,
 ): {
@@ -592,7 +592,7 @@ export function rollModifierActiveEffect(
 
 export function rollModifierAbilityCheckRollModeEffect(
   actorId: CombatantId,
-  _spell: SpellRecord,
+  _spell: BattleSpellAdmissionSource,
   effect: Extract<EffectAtom, { readonly kind: "modify_roll_advantage" }>,
   expiresAt: BattleActiveEffectExpiration,
 ): {
@@ -691,7 +691,7 @@ export function rollModifierDelta(
 }
 
 function rollModifierSpellRangeFeet(
-  range: SpellRecord["mechanics"]["range"],
+  range: BattleSpellAdmissionSource["mechanics"]["range"],
   attachment: Attachment,
 ): MovementFeet | null {
   if (
@@ -743,7 +743,7 @@ export function rollModifierSkillFilter(
 
 export function scalarBuffActiveEffectExpiration(
   actorId: CombatantId,
-  duration: SpellRecord["mechanics"]["duration"],
+  duration: BattleSpellAdmissionSource["mechanics"]["duration"],
 ): BattleActiveEffectExpiration | null {
   if (duration.kind === "concentration") {
     return { kind: "concentration", combatantId: actorId };

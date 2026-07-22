@@ -1,3 +1,4 @@
+import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-feather-fall-mitigation
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE
 //
@@ -25,22 +26,21 @@
 
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
-import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
 import {
-  snapshotBattle,
   type AvailableBattleAct,
   type BattleResolutionResult,
   type BattleState,
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
+import { snapshotBattle } from "../dispatcher.ts";
 import { CombatantId } from "../../identity.ts";
 import { DurationBattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { stateAfterSpellCastDeclared } from "../spell-cast-declaration.ts";
 import { expendSpellSlot } from "../spell-effects.ts";
-import { sameStringSet } from "../spells-profile-shared.ts";
+import { sameStringSet } from "../spells-execution-facts.ts";
 import { markSpellSlotExpendedThisTurn } from "../spell-turn-resources.ts";
 import {
   spellTargetListHole,
@@ -72,7 +72,7 @@ type FeatherFallMitigationResolveInput =
   SpellProcedureProfileResolveInput<FeatherFallMitigationInvocation>;
 
 function admitFeatherFallMitigation(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly FeatherFallMitigationInvocation[] {
   const projection = featherFallMitigationSpellProjection(
@@ -105,7 +105,7 @@ function admitFeatherFallMitigation(
 
 function featherFallMitigationSpellProjection(
   actorId: CombatantId,
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
 ): Pick<FeatherFallMitigationInvocation, "activeEffect" | "rangeFeet"> | null {
   if (
     spell.mechanics.family !== "triggered_reaction" ||

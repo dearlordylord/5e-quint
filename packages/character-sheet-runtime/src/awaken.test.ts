@@ -3,6 +3,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L19E-07-L5-DIVINATION-SOCIAL-EXPLORATION awaken
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L19E-07-L5-DIVINATION-SOCIAL-EXPLORATION awaken
 // UNIT-IDENTITY-REPLAY: L19E-07-L5-DIVINATION-SOCIAL-EXPLORATION awaken doCastAwaken
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, it, test } from "vitest";
 
 import {
@@ -314,11 +315,15 @@ function awakenBardSheet(input: {
         spellcasting: {
           sources: [
             {
-              sourceUnitId: "class_bard",
+              sourceUnitId: authoredUnitId("class_bard"),
               spellcastingAbility: "cha",
-              cantrips: ["dancing_lights", "light", "vicious_mockery"],
+              cantrips: [
+                authoredUnitId("dancing_lights"),
+                authoredUnitId("light"),
+                authoredUnitId("vicious_mockery"),
+              ],
               spellbook: [],
-              preparedSpells: input.preparedSpells,
+              preparedSpells: input.preparedSpells.map(authoredUnitId),
               spellcastingFocuses: ["musical_instrument"],
             },
           ],

@@ -1,3 +1,4 @@
+import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
 import { DiceExprSchema } from "@dnd/surface/surface/schema";
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE
@@ -41,13 +42,10 @@ import { DamageTypeSchema } from "@dnd/surface/surface/schema";
 import type {
   DiceAmount as SurfaceDiceAmount,
   DiceExpr,
-  SpellRecord,
 } from "@dnd/surface/surface/types";
 import { Either, Schema } from "effect";
-import { characterSpellProcedureRefsForProcedure } from "../../character-execution-admission.ts";
+import { characterSpellProcedureRefsForProcedure } from "../../character-execution-queries.ts";
 import {
-  maybeOpenInterruptWindow,
-  snapshotBattle,
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
@@ -55,6 +53,7 @@ import {
   type SpellCreatedHeldObjectActiveEffect,
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
+import { maybeOpenInterruptWindow, snapshotBattle } from "../dispatcher.ts";
 import {
   BattleActiveEffectExecutionRef,
   BattleProcedureExecutionRef,
@@ -70,7 +69,7 @@ import { spellTargetHole } from "../spells-targeting.ts";
 import { resolveSpellAttackDamageAct } from "../spells-resolve.ts";
 import type { SpellProcedureExecutionRegistry } from "./execution-registry.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
-import { sameStringSet } from "../spells-profile-shared.ts";
+import { sameStringSet } from "../spells-execution-facts.ts";
 import type {
   OkSpellFillSet,
   SpellAdmissionContext,
@@ -131,7 +130,7 @@ type SpellCreatedHeldObjectReEvokeInvocation = Extract<
   { readonly procedure: "spellCreatedHeldObjectReEvoke" }
 >;
 type OngoingEffectSpellMechanics = Extract<
-  SpellRecord["mechanics"],
+  BattleSpellAdmissionSource["mechanics"],
   { readonly family: "ongoing_effect" }
 >;
 type OngoingEffectInitialEffect = NonNullable<
@@ -167,7 +166,7 @@ type SpellCreatedHeldObjectReEvokeResolveInput =
   SpellProcedureProfileResolveInput<SpellCreatedHeldObjectReEvokeInvocation>;
 
 function admitSpellCreatedHeldObject(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly SpellCreatedHeldObjectInvocation[] {
   const spellcasting = ctx.actor.origin.spellcasting;
@@ -200,7 +199,7 @@ function admitSpellCreatedHeldObject(
 }
 
 function admitSpellCreatedHeldObjectAttack(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly SpellCreatedHeldObjectAttackInvocation[] {
   return spellCreatedHeldObjectEffectsForSpell(ctx, spell).flatMap(
@@ -229,7 +228,7 @@ function admitSpellCreatedHeldObjectAttack(
 }
 
 function admitSpellCreatedHeldObjectReEvoke(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly SpellCreatedHeldObjectReEvokeInvocation[] {
   return spellCreatedHeldObjectEffectsForSpell(ctx, spell).flatMap(
@@ -255,7 +254,7 @@ function admitSpellCreatedHeldObjectReEvoke(
 
 function spellCreatedHeldObjectEffectsForSpell(
   ctx: SpellAdmissionContext,
-  _spell: SpellRecord,
+  _spell: BattleSpellAdmissionSource,
 ): readonly SpellCreatedHeldObjectActiveEffect[] {
   const selectedExecutionRefs = new Set(
     characterSpellProcedureRefsForProcedure(
@@ -273,7 +272,7 @@ function spellCreatedHeldObjectEffectsForSpell(
 
 function spellCreatedHeldObjectActiveEffectProjection(input: {
   readonly actorId: CombatantId;
-  readonly spell: SpellRecord;
+  readonly spell: BattleSpellAdmissionSource;
   readonly slotLevel: SpellSlotLevel;
   readonly spellcastingAbilityModifier: AbilityModifier;
   readonly proficiencyBonus: ProficiencyBonusType;

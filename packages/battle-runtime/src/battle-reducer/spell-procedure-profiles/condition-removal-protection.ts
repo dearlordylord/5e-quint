@@ -1,3 +1,4 @@
+import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-condition-removal-protection
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION
 //
@@ -6,11 +7,8 @@
 // Saving Throw Advantage and Poison damage Resistance.
 
 import { movementFeet } from "@dnd/shared/types";
-import type { SpellRecord } from "@dnd/surface/surface/types";
 
 import {
-  maybeOpenInterruptWindow,
-  snapshotBattle,
   type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
@@ -19,6 +17,7 @@ import {
   type BattleState,
   type ConditionRemovalProtectionSpellInvocation,
 } from "../../battle-state-execution.ts";
+import { maybeOpenInterruptWindow, snapshotBattle } from "../dispatcher.ts";
 import { CombatantId } from "../../identity.ts";
 import { BattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";
@@ -26,7 +25,7 @@ import { needsHolesResult } from "../hole-helpers.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
 import { battleCreatureAfterConditionRemoval } from "../spell-condition-effects-helpers.ts";
-import { sameStringSet } from "../spells-profile-shared.ts";
+import { sameStringSet } from "../spells-execution-facts.ts";
 import { scalarBuffActiveEffectExpiration } from "../spells-profiles-support.ts";
 import { spellTargetHole, spellTargetIsLegal } from "../spells-holes-fills.ts";
 import type { SpellFillSet } from "../spells-resolve-fill-set.ts";
@@ -56,7 +55,7 @@ type ConditionRemovalProtectionTargetSelection =
   | { readonly tag: "invalid"; readonly message: string };
 
 function admitConditionRemovalProtection(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly ConditionRemovalProtectionSpellInvocation[] {
   const projection = conditionRemovalProtectionSpellProjection(
@@ -85,7 +84,7 @@ function admitConditionRemovalProtection(
 
 function conditionRemovalProtectionSpellProjection(
   actorId: CombatantId,
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
 ): Pick<
   ConditionRemovalProtectionSpellInvocation,
   "protection" | "rangeFeet" | "targeting"

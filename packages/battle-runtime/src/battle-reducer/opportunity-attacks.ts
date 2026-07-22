@@ -29,7 +29,7 @@ import {
   recordAttackRollOngoingFeatures,
   requiredAttackRollMode,
 } from "./attack-roll.ts";
-import { activeEffectArmorClass } from "./creature-state.ts";
+import { activeEffectArmorClass } from "./creature-state-execution.ts";
 import {
   attackRollHoleWithD20TestNaturalOneRerollOption,
   d20TestNaturalOneRerollRollDecisionRequired,
@@ -65,9 +65,9 @@ import {
   attackDamageEventWithEntries,
   attackDamageInterruptionFrame,
   attackFillsThroughAttackRoll,
-  maybeOpenInterruptWindow,
-  snapshotBattle,
 } from "./dispatcher.ts";
+import { maybeOpenInterruptWindow } from "./interrupt-execution.ts";
+import { snapshotBattle } from "./battle-snapshot.ts";
 import { needsHolesResult, revealHidden } from "./hole-helpers.ts";
 import {
   attackDamageRidersAfterCunningStrikeCost,
@@ -102,10 +102,8 @@ import type {
   BattleResolutionInputForSubject,
   BattleResolutionResult,
 } from "../battle-state-execution.ts";
-import {
-  ATTACK_ROLL_HOLE_ID,
-  spellAttackRerollUnsupportedIssue,
-} from "../battle-state-execution.ts";
+import { ATTACK_ROLL_HOLE_ID } from "./battle-runtime-protocol.ts";
+import { spellAttackRerollUnsupportedIssue } from "./spell-reroll-issues.ts";
 
 export function resolveOpportunityAttackCommand(
   input: BattleResolutionInputForSubject<

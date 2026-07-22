@@ -1,3 +1,4 @@
+import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-independent-attack-sequence
 import { DiceExprSchema } from "@dnd/surface/surface/schema";
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING
@@ -13,7 +14,6 @@ import { DiceExprSchema } from "@dnd/surface/surface/schema";
 //   - UBIQUITOUS_LANGUAGE.md: Spell Attack, Attack Roll, Damage Roll,
 //     Damage Type, and Spell Invocation.
 
-import type { SpellRecord } from "@dnd/surface/surface/types";
 import {
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
@@ -60,7 +60,7 @@ type SpellAttackSequenceResolveInput =
   SpellProcedureProfileResolveInput<SpellAttackSequenceInvocation>;
 
 function admitSpellAttackSequence(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly SpellAttackSequenceInvocation[] {
   const spellcasting = ctx.actor.origin.spellcasting;

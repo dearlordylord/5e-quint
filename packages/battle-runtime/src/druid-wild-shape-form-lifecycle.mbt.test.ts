@@ -1,3 +1,4 @@
+import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
   battleActSpellPresentation,
@@ -587,11 +588,11 @@ function initialRuntimeState(): DruidWildShapeFormLifecycleRuntimeState {
           selectedLoadout: {
             armor: {
               itemId: "armor:armor_chain_mail",
-              unitId: "armor_chain_mail",
+              unitId: parseSharedUnitId("armor_chain_mail"),
             },
             weapon: {
               itemId: "main:weapon_quarterstaff",
-              unitId: "weapon_quarterstaff",
+              unitId: parseSharedUnitId("weapon_quarterstaff"),
               grip: "one_handed",
             },
           },

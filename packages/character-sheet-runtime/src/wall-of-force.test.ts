@@ -3,6 +3,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L19E-04-L5-BARRIER-WALL wall_of_force
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L19E-04-L5-BARRIER-WALL wall_of_force
 // UNIT-IDENTITY-REPLAY: L19E-04-L5-BARRIER-WALL wall_of_force doCastWallOfForce
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, it, test } from "vitest";
 
 import {
@@ -309,11 +310,15 @@ function wallOfForceWizardSheet(input: {
         spellcasting: {
           sources: [
             {
-              sourceUnitId: "class_wizard",
+              sourceUnitId: authoredUnitId("class_wizard"),
               spellcastingAbility: "int",
-              cantrips: ["fire_bolt", "light", "mage_hand"],
-              spellbook: ["wall_of_force"],
-              preparedSpells: input.preparedSpells,
+              cantrips: [
+                authoredUnitId("fire_bolt"),
+                authoredUnitId("light"),
+                authoredUnitId("mage_hand"),
+              ],
+              spellbook: [authoredUnitId("wall_of_force")],
+              preparedSpells: input.preparedSpells.map(authoredUnitId),
               spellcastingFocuses: ["arcane_focus"],
             },
           ],

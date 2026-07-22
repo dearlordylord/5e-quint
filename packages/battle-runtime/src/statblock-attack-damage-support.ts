@@ -2,7 +2,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.ATTACK_CONTROL
 import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import type {
-  CreatureNamedAttackRoll,
+  CreatureAttackRollMechanics,
   DiceExpr,
 } from "@dnd/surface/surface/types";
 import type {
@@ -10,13 +10,11 @@ import type {
   StatBlockAttackDamageComponent,
   StaticStatBlockAttackDamage,
   SupportedCreatureAttackRollMechanics,
-  SupportedCreatureNamedAttackRoll,
   SupportedStaticDamageCreatureAttackRollMechanics,
-  SupportedStaticDamageCreatureNamedAttackRoll,
 } from "./battle-action-options.ts";
 import { supportedStatBlockAttackHitConditionRiderEffect } from "./statblock-attack-hit-condition-support.ts";
 
-type CreatureAttackHitEffects = Pick<CreatureNamedAttackRoll, "onHit">;
+type CreatureAttackHitEffects = Pick<CreatureAttackRollMechanics, "onHit">;
 
 type SupportedStatBlockAttackDamageEffect =
   | {
@@ -29,14 +27,8 @@ type SupportedStatBlockAttackDamageEffect =
     };
 
 export function supportedStatBlockAttackDamage(
-  attack: SupportedStaticDamageCreatureNamedAttackRoll,
-): StaticStatBlockAttackDamage;
-export function supportedStatBlockAttackDamage(
   attack: SupportedStaticDamageCreatureAttackRollMechanics,
 ): StaticStatBlockAttackDamage;
-export function supportedStatBlockAttackDamage(
-  attack: SupportedCreatureNamedAttackRoll,
-): StatBlockAttackDamage;
 export function supportedStatBlockAttackDamage(
   attack: SupportedCreatureAttackRollMechanics,
 ): StatBlockAttackDamage;
@@ -93,7 +85,7 @@ export function supportedStatBlockAttackDamage(
 }
 
 function supportedStatBlockAttackDamageEffect(
-  effect: CreatureNamedAttackRoll["onHit"][number],
+  effect: CreatureAttackRollMechanics["onHit"][number],
 ): SupportedStatBlockAttackDamageEffect | null {
   const base = supportedStatBlockBaseDamageEffect(effect);
   if (base !== null) {
@@ -106,7 +98,7 @@ function supportedStatBlockAttackDamageEffect(
 }
 
 function supportedStatBlockBaseDamageEffect(
-  effect: CreatureNamedAttackRoll["onHit"][number],
+  effect: CreatureAttackRollMechanics["onHit"][number],
 ): StatBlockAttackDamageComponent | null {
   if (
     effect.kind !== "damage" ||
@@ -125,7 +117,7 @@ function supportedStatBlockBaseDamageEffect(
 }
 
 function supportedStatBlockAdvantageBonusDamageEffect(
-  effect: CreatureNamedAttackRoll["onHit"][number],
+  effect: CreatureAttackRollMechanics["onHit"][number],
 ): StatBlockAttackDamageComponent | null {
   if (
     effect.kind !== "conditional_bonus_damage" ||

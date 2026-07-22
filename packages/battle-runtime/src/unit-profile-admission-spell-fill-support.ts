@@ -7,9 +7,6 @@ import {
 import type { Ability, Size } from "@dnd/surface/surface/types";
 import { expect } from "vitest";
 import {
-  insectPlagueAreaHazardSavingThrowOutcomeHole,
-  cloudkillAreaHazardSavingThrowOutcomeHole,
-  sleetStormAreaHazardSavingThrowOutcomeHole,
   type BattleActiveEffect,
   type BattleCloudkillAreaHazardTrigger,
   type BattleInsectPlagueAreaHazardTrigger,
@@ -17,9 +14,13 @@ import {
   type BattleSpellTargetListRelationshipFact,
 } from "./battle-state-execution.ts";
 import {
+  insectPlagueAreaHazardSavingThrowOutcomeHole,
+  cloudkillAreaHazardSavingThrowOutcomeHole,
+  sleetStormAreaHazardSavingThrowOutcomeHole,
+} from "./battle-reducer/turn-end-movement.ts";
+import {
   battleAreaId,
   battleActSpellPresentation,
-  battleSelectedSpellInvocationForProcedure,
   battleObjectId,
   battleTablePositionId,
   discoverBattleActCandidates,
@@ -72,6 +73,7 @@ import {
   battleProcedureExecutionRefForTest,
 } from "./battle-runtime-test-support.ts";
 import {
+  bindSelectedSpellInvocation,
   characterSpellProcedureExecution,
   characterSpellProcedure,
   type SpellProcedureExecution,
@@ -2034,21 +2036,14 @@ function requireSpellProcedureForTest(
   procedureRef: BattleProcedureExecutionRef,
 ): BattleSelectedSpellInvocation {
   for (const combatant of session.state.combatants.values()) {
-    if (
-      combatant.origin.kind !== "character" ||
-      characterSpellProcedureExecution(
-        combatant.origin.execution,
-        procedureRef,
-      ) === undefined
-    ) {
-      continue;
-    }
-    const invocation = battleSelectedSpellInvocationForProcedure(
-      session,
-      combatant.combatantId,
+    if (combatant.origin.kind !== "character") continue;
+    const execution = characterSpellProcedureExecution(
+      combatant.origin.execution,
       procedureRef,
     );
-    if (invocation !== undefined) return invocation;
+    if (execution !== undefined && "spellRuleFacts" in execution) {
+      return bindSelectedSpellInvocation(execution, procedureRef);
+    }
   }
   const availableRefs = [...session.state.combatants.values()].flatMap(
     (combatant) =>

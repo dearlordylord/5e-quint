@@ -35,7 +35,7 @@ import {
   ongoingFeatureEnemyRelationshipDecisionRequired,
 } from "./attack-roll.ts";
 import { parseSavingThrowRelationshipFacts } from "./roll-trigger-relationship-facts.ts";
-import { combatantCanTakeActions } from "./creature-state.ts";
+import { combatantCanTakeActions } from "./creature-state-execution.ts";
 import { currentActorId } from "./creature-state-leaves.ts";
 import { needsHolesResult } from "./hole-helpers.ts";
 import { invalidResult } from "./result-helpers.ts";
@@ -57,10 +57,8 @@ import type {
   BattleSpellAreaChoice,
   BattleState,
 } from "../battle-state-execution.ts";
-import {
-  snapshotBattle,
-  validateRolledDiceFillForDiceExpr,
-} from "../battle-state-execution.ts";
+import { validateRolledDiceFillForDiceExpr } from "../battle-state-execution.ts";
+import { snapshotBattle } from "./battle-snapshot.ts";
 
 type DragonsBreathEffect = Extract<
   BattleCreatureState["activeEffects"][number],

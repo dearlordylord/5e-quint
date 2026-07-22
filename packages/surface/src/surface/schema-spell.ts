@@ -1,6 +1,6 @@
 import { Schema } from "effect";
 import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
-import type { ClassName } from "@dnd/shared/game-facts";
+import { StatBlockId, UnitId, type ClassName } from "@dnd/shared/game-facts";
 import {
   AbilitySchema,
   AlternateActionCostSchema,
@@ -60,7 +60,7 @@ const surfaceReference = <A, I, R>(
   schema: Schema.Schema<A & string, I, R>,
   relation: SurfaceUnitReferenceRelation,
 ) =>
-  surfaceSchemaRole(schema, {
+  surfaceSchemaRole(Schema.typeSchema(schema.pipe(Schema.compose(UnitId))), {
     category: "reference",
     relation,
     targetKind: "unit",
@@ -70,11 +70,14 @@ const surfaceStatBlockReference = <A, I, R>(
   schema: Schema.Schema<A & string, I, R>,
   relation: SurfaceStatBlockReferenceRelation,
 ) =>
-  surfaceSchemaRole(schema, {
-    category: "reference",
-    relation,
-    targetKind: "statBlock",
-  });
+  surfaceSchemaRole(
+    Schema.typeSchema(schema.pipe(Schema.compose(StatBlockId))),
+    {
+      category: "reference",
+      relation,
+      targetKind: "statBlock",
+    },
+  );
 
 const surfaceProse = <A, I, R>(schema: Schema.Schema<A & string, I, R>) =>
   surfaceSchemaRole(schema, { category: "prose" });
@@ -751,11 +754,11 @@ type AreaScopedEffectAtom = AreaPushUnsecuredObjects;
 type AreaDirectEffectAtom = EffectAtom | AreaScopedEffectAtom;
 type LandChoiceSpellAccessTier = {
   readonly minimumClassLevel: number;
-  readonly spellIds: ReadonlyNonEmptyArray<string>;
+  readonly spellIds: ReadonlyNonEmptyArray<UnitId>;
 };
 type ClassLevelPreparedSpellAccessTier = {
   readonly minimumClassLevel: number;
-  readonly spellIds: ReadonlyNonEmptyArray<string>;
+  readonly spellIds: ReadonlyNonEmptyArray<UnitId>;
 };
 type TransformTargetEffect = Schema.Schema.Type<
   typeof TransformTargetEffectSchema
@@ -790,7 +793,7 @@ type ReactionTrigger =
       readonly rangeFeet?: number;
     }
   | { readonly kind: "self_or_visible_creature_falls"; readonly rangeFeet: 60 }
-  | { readonly kind: "targeted_by_named_spell"; readonly spellId: string }
+  | { readonly kind: "targeted_by_named_spell"; readonly spellId: UnitId }
   | {
       readonly kind: "creature_casts_spell";
       readonly components: ReadonlyNonEmptyArray<"V" | "S" | "M">;
@@ -1253,8 +1256,8 @@ type EffectAtom =
   | { readonly kind: "end_if_created_in_occupied_space" }
   | { readonly kind: "allow_designated_creatures_safe_passage" }
   | { readonly kind: "object_immune_to_all_damage" }
-  | { readonly kind: "object_destroyed_by_spell"; readonly spellId: string }
-  | { readonly kind: "cannot_be_dispelled_by_spell"; readonly spellId: string }
+  | { readonly kind: "object_destroyed_by_spell"; readonly spellId: UnitId }
+  | { readonly kind: "cannot_be_dispelled_by_spell"; readonly spellId: UnitId }
   | { readonly kind: "block_ethereal_travel" }
   | {
       readonly kind: "replace_destroyed_object_section_with_area";
@@ -1273,7 +1276,7 @@ type EffectAtom =
     }
   | {
       readonly kind: "negate_named_effect";
-      readonly spellId: string;
+      readonly spellId: UnitId;
       readonly scope: "damage_only" | "all_effects";
     }
   | {
@@ -1551,7 +1554,7 @@ type EffectAtom =
     }
   | {
       readonly kind: "grant_spell_access";
-      readonly spellId: string;
+      readonly spellId: UnitId;
       readonly mode: Schema.Schema.Type<typeof SpellAccessModeSchema>;
       readonly dcOverride?: DcSource;
       readonly areaOverride?: AreaShapeSpec;
@@ -1592,7 +1595,7 @@ type EffectAtom =
     }
   | {
       readonly kind: "grant_spell_free_casts";
-      readonly spellId: string;
+      readonly spellId: UnitId;
       readonly count:
         | number
         | {
@@ -1641,7 +1644,7 @@ type EffectAtom =
       };
       readonly requiredActiveFeature?: {
         readonly kind: "class_feature";
-        readonly unitId: string;
+        readonly unitId: UnitId;
       };
     }
   | {
@@ -4847,9 +4850,7 @@ const CreatureAttackEffectAtomSchema = Schema.Union(
   EffectAtomSchema,
 );
 
-export const CreatureNamedAttackRollSchema = Schema.Struct({
-  name: surfaceIdentity(Schema.String, "name"),
-  description: optionalExact(surfaceProse(Schema.String)),
+export const CreatureAttackRollMechanicsSchema = Schema.Struct({
   attackType: Schema.Literal("melee", "ranged"),
   attackBonus: StatBlockValueSchema,
   reachFeet: optionalExact(Schema.Number),
@@ -4861,12 +4862,20 @@ export const CreatureNamedAttackRollSchema = Schema.Struct({
   ),
   onHit: nonEmpty(CreatureAttackEffectAtomSchema),
   multiattackCount: optionalExact(StatBlockValueSchema),
-  limitedUse: optionalExact(
-    Schema.suspend(() => CreatureLimitedUseSchema).annotations({
-      identifier: "CreatureLimitedUse",
-    }),
-  ),
 });
+
+export const CreatureNamedAttackRollSchema = Schema.extend(
+  CreatureAttackRollMechanicsSchema,
+  Schema.Struct({
+    name: surfaceIdentity(Schema.String, "name"),
+    description: optionalExact(surfaceProse(Schema.String)),
+    limitedUse: optionalExact(
+      Schema.suspend(() => CreatureLimitedUseSchema).annotations({
+        identifier: "CreatureLimitedUse",
+      }),
+    ),
+  }),
+);
 
 const CreatureNamedSaveGateBaseSchemaFields = {
   name: surfaceIdentity(Schema.String, "name"),
@@ -5706,7 +5715,7 @@ export const SpellMechanicsSchema = Schema.Union(
 );
 
 export const SpellRecordSchema = Schema.Struct({
-  id: surfaceIdentity(Schema.String, "id"),
+  id: surfaceIdentity(UnitId, "id"),
   name: surfaceIdentity(Schema.String, "name"),
   provenance: ProvenanceSchema,
   description: surfaceProse(Schema.String),

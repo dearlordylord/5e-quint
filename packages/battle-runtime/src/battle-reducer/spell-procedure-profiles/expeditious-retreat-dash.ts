@@ -1,3 +1,4 @@
+import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-expeditious-retreat-dash
 import { ConcentrationBattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE
@@ -16,18 +17,16 @@ import { ConcentrationBattleActiveEffectExpirationSchema } from "../../active-ef
 //     grants additional movement budget rather than changing Speed.
 
 import { spendActivationResource } from "@dnd/shared-algebras/action-economy-algebra";
-import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
 import {
-  activeOngoingFeaturesPreventSpellInvocation,
-  maybeOpenInterruptWindow,
-  snapshotBattle,
   type BattleActDiscoveryCandidate,
   type BattleResolutionResult,
   type BattleState,
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
+import { activeOngoingFeaturesPreventSpellInvocation } from "../spells-invocation-guards.ts";
+import { maybeOpenInterruptWindow, snapshotBattle } from "../dispatcher.ts";
 import { CombatantId } from "../../identity.ts";
 import { allocateBattleActiveEffectRef } from "../../active-effect/execution-ref.ts";
 import { applyDashToActor } from "../attack-resolution.ts";
@@ -73,7 +72,7 @@ type ExpeditiousRetreatDashResolveInput =
   SpellProcedureProfileResolveInput<ExpeditiousRetreatDashInvocation>;
 
 function admitExpeditiousRetreatDash(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly ExpeditiousRetreatDashInvocation[] {
   const activeEffect = expeditiousRetreatDashActiveEffect(
@@ -102,7 +101,7 @@ function admitExpeditiousRetreatDash(
 
 function expeditiousRetreatDashActiveEffect(
   actorId: CombatantId,
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
 ): ExpeditiousRetreatDashInvocation["activeEffect"] | null {
   if (spell.mechanics.family !== "ongoing_effect") {
     return null;

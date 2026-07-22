@@ -37,7 +37,7 @@ import type {
 import {
   ATTACK_DAMAGE_DIE_FLOOR_MINIMUM_RESULT,
   type OngoingFeatureDamageModifier,
-} from "../unit-feature-support.ts";
+} from "../unit-feature-execution-constants.ts";
 import {
   type AttackDamageRider,
   type BattleCreatureState,
@@ -57,7 +57,7 @@ import {
 import {
   activeOngoingFeatureOccurrencesForCombatant,
   ongoingFeatureProfileForSourceKey,
-} from "./creature-state.ts";
+} from "./creature-state-execution.ts";
 import { combatantHasWardingBondResistance } from "./warding-bond.ts";
 import {
   attackDamageComponents,
@@ -883,19 +883,18 @@ export function damageAmountAfterTargetAdjustments(
       : amount;
   }
 
-  const statBlock = target.origin.statBlock.statBlock;
-  if (statBlock.immunities?.damageTypes?.includes(damageType) === true) {
+  const statBlock = target.origin.mechanics;
+  if (statBlock.immunities.damageTypes.includes(damageType)) {
     return 0;
   }
 
   const afterResistance =
     targetHasRuntimeDamageResistance(target, damageType) ||
-    (statBlock.resistances?.kind === "fixed" &&
-      statBlock.resistances.damageTypes.includes(damageType))
+    statBlock.resistances.includes(damageType)
       ? Math.floor(amount / 2)
       : amount;
 
-  return statBlock.vulnerabilities?.damageTypes.includes(damageType) === true
+  return statBlock.vulnerabilities.includes(damageType)
     ? afterResistance * 2
     : afterResistance;
 }

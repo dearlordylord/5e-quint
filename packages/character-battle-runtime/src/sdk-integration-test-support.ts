@@ -1,4 +1,8 @@
 import {
+  statBlockId as authoredStatBlockId,
+  unitId as authoredUnitId,
+} from "@dnd/shared/game-facts";
+import {
   battleActSpellSlotPresentation,
   battleCreatureInitFromStatBlock,
   battleCharacterExecutionScopeRef,
@@ -256,8 +260,8 @@ function levelFiveBaseBuild(input: {
         hitPointRule: { tag: "fixedHigherLevelGain" as const },
       })),
     },
-    background: "background_soldier",
-    species: "species_orc",
+    background: authoredUnitId("background_soldier"),
+    species: authoredUnitId("species_orc"),
     originLanguages: ["Common", "Dwarvish", "Goblin"],
     classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
@@ -396,44 +400,44 @@ type LevelFiveFighterChoicePreference =
   | { readonly kind: "any" };
 
 const levelFiveWizardCantrips = [
-  "light",
-  "fire_bolt",
-  "ray_of_frost",
-  "minor_illusion",
+  authoredUnitId("light"),
+  authoredUnitId("fire_bolt"),
+  authoredUnitId("ray_of_frost"),
+  authoredUnitId("minor_illusion"),
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
 
 const levelFiveWizardBaseClassSpellbook = [
-  "detect_magic",
-  "feather_fall",
-  "false_life",
-  "mage_armor",
-  "magic_missile",
-  "ray_of_sickness",
-  "shield",
-  "sleep",
-  "thunderwave",
-  "burning_hands",
-  "chromatic_orb",
-  "acid_arrow",
-  "darkness",
-  "misty_step",
+  authoredUnitId("detect_magic"),
+  authoredUnitId("feather_fall"),
+  authoredUnitId("false_life"),
+  authoredUnitId("mage_armor"),
+  authoredUnitId("magic_missile"),
+  authoredUnitId("ray_of_sickness"),
+  authoredUnitId("shield"),
+  authoredUnitId("sleep"),
+  authoredUnitId("thunderwave"),
+  authoredUnitId("burning_hands"),
+  authoredUnitId("chromatic_orb"),
+  authoredUnitId("acid_arrow"),
+  authoredUnitId("darkness"),
+  authoredUnitId("misty_step"),
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
 
 const levelFiveWizardBasePreparedSpells = [
-  "detect_magic",
-  "feather_fall",
-  "false_life",
-  "mage_armor",
-  "magic_missile",
-  "ray_of_sickness",
-  "shield",
-  "thunderwave",
-  "burning_hands",
+  authoredUnitId("detect_magic"),
+  authoredUnitId("feather_fall"),
+  authoredUnitId("false_life"),
+  authoredUnitId("mage_armor"),
+  authoredUnitId("magic_missile"),
+  authoredUnitId("ray_of_sickness"),
+  authoredUnitId("shield"),
+  authoredUnitId("thunderwave"),
+  authoredUnitId("burning_hands"),
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
 
 const levelFiveWizardFeatureSpellbook = [
-  "continual_flame",
-  "shatter",
+  authoredUnitId("continual_flame"),
+  authoredUnitId("shatter"),
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
 const levelFiveWizardFeatureSpellbookIds: ReadonlySet<UnitRecord["id"]> =
   new Set(levelFiveWizardFeatureSpellbook);
@@ -443,12 +447,12 @@ const levelFiveFullCasterSpellSlots = [
   { spellLevel: 3, count: 2 },
 ] as const;
 export const levelFiveDruidWildShapeKnownFormStatBlockIds = [
-  "stat_block_rat",
-  "stat_block_riding_horse",
-  "stat_block_spider",
-  "stat_block_wolf",
-  "stat_block_lizard",
-  "stat_block_cat",
+  authoredStatBlockId("stat_block_rat"),
+  authoredStatBlockId("stat_block_riding_horse"),
+  authoredStatBlockId("stat_block_spider"),
+  authoredStatBlockId("stat_block_wolf"),
+  authoredStatBlockId("stat_block_lizard"),
+  authoredStatBlockId("stat_block_cat"),
 ] as const satisfies ReadonlyArray<StatBlockRecord["id"]>;
 
 function levelFiveWizardChoices(
@@ -499,7 +503,7 @@ function chooseDistinctOptions<T>(
 }
 
 function levelFiveFighterProgression(): CharacterProgression {
-  const fighterClassUnitId = classUnitId("class_fighter");
+  const fighterClassUnitId = classUnitId(authoredUnitId("class_fighter"));
   return {
     startingClass: fighterClassUnitId,
     advancements: Array.from({ length: 4 }, () => ({
@@ -658,16 +662,20 @@ function levelFiveFighterUnitChoicePreferredOptionIds(
 ): readonly UnitRecord["id"][] | undefined {
   if (unitId === "class_fighter") {
     if (choiceKey === "class_skill_proficiency_choice") {
-      return ["perception", "survival"];
+      return [authoredUnitId("perception"), authoredUnitId("survival")];
     }
     if (choiceKey === "class_subclass_choice") {
-      return ["subclass_fighter_champion"];
+      return [authoredUnitId("subclass_fighter_champion")];
     }
     if (choiceKey === "class_equipment_choice") {
-      return ["option_c"];
+      return [authoredUnitId("option_c")];
     }
     if (choiceKey === "equipment_purchase") {
-      return ["armor_chain_mail", "weapon_longsword", "equipment_shield"];
+      return [
+        authoredUnitId("armor_chain_mail"),
+        authoredUnitId("weapon_longsword"),
+        authoredUnitId("equipment_shield"),
+      ];
     }
   }
 
@@ -675,7 +683,7 @@ function levelFiveFighterUnitChoicePreferredOptionIds(
     unitId === "fighter_fighting_style" &&
     choiceKey === "class_feature_feat_choice"
   ) {
-    return ["defense"];
+    return [authoredUnitId("defense")];
   }
 
   if (
@@ -683,10 +691,10 @@ function levelFiveFighterUnitChoicePreferredOptionIds(
     choiceKey === "weapon_mastery_options"
   ) {
     return [
-      "weapon_longsword",
-      "weapon_spear",
-      "weapon_flail",
-      "weapon_dagger",
+      authoredUnitId("weapon_longsword"),
+      authoredUnitId("weapon_spear"),
+      authoredUnitId("weapon_flail"),
+      authoredUnitId("weapon_dagger"),
     ];
   }
 
@@ -694,25 +702,25 @@ function levelFiveFighterUnitChoicePreferredOptionIds(
     unitId === "fighter_ability_score_improvement_l4" &&
     choiceKey === "class_feature_feat_choice"
   ) {
-    return ["feat_ability_score_improvement"];
+    return [authoredUnitId("feat_ability_score_improvement")];
   }
 
   if (
     unitId === "fighter_ability_score_improvement_l4" &&
     choiceKey === "class_feature_ability_score_increase_choice"
   ) {
-    return ["ability_score:str:+2:max20"];
+    return [authoredUnitId("ability_score:str:+2:max20")];
   }
 
   if (unitId === "background_soldier") {
     if (choiceKey === "background_ability_score_increase") {
-      return ["two_and_one:str:con"];
+      return [authoredUnitId("two_and_one:str:con")];
     }
     if (choiceKey === "background_tool_choice") {
-      return ["tool_dice_set"];
+      return [authoredUnitId("tool_dice_set")];
     }
     if (choiceKey === "background_equipment_choice") {
-      return ["option_b"];
+      return [authoredUnitId("option_b")];
     }
   }
 
@@ -720,7 +728,7 @@ function levelFiveFighterUnitChoicePreferredOptionIds(
 }
 
 function levelFiveWizardProgression(): CharacterProgression {
-  const wizardClassUnitId = classUnitId("class_wizard");
+  const wizardClassUnitId = classUnitId(authoredUnitId("class_wizard"));
   return {
     startingClass: wizardClassUnitId,
     advancements: Array.from({ length: 4 }, () => ({
@@ -876,7 +884,7 @@ function levelFiveWizardUnitChoicePreferredOptionIds(
 ): readonly UnitRecord["id"][] | undefined {
   if (unitId === "class_wizard") {
     if (choiceKey === "class_skill_proficiency_choice") {
-      return ["arcana", "history"];
+      return [authoredUnitId("arcana"), authoredUnitId("history")];
     }
     if (choiceKey === "wizard_cantrip_choices") {
       return levelFiveWizardCantrips;
@@ -888,10 +896,10 @@ function levelFiveWizardUnitChoicePreferredOptionIds(
       return choices.preparedSpells;
     }
     if (choiceKey === "class_subclass_choice") {
-      return ["subclass_wizard_evoker"];
+      return [authoredUnitId("subclass_wizard_evoker")];
     }
     if (choiceKey === "class_equipment_choice") {
-      return ["option_b"];
+      return [authoredUnitId("option_b")];
     }
   }
 
@@ -906,27 +914,27 @@ function levelFiveWizardUnitChoicePreferredOptionIds(
     unitId === "wizard_scholar" &&
     choiceKey === "class_feature_proficiency_choice"
   ) {
-    return ["arcana"];
+    return [authoredUnitId("arcana")];
   }
 
   if (unitId === "background_criminal") {
     if (choiceKey === "background_ability_score_increase") {
-      return ["two_and_one:int:con"];
+      return [authoredUnitId("two_and_one:int:con")];
     }
     if (choiceKey === "background_tool_choice") {
-      return ["thieves_tools"];
+      return [authoredUnitId("thieves_tools")];
     }
     if (choiceKey === "background_equipment_choice") {
-      return ["option_b"];
+      return [authoredUnitId("option_b")];
     }
   }
 
   if (unitId === "wizard_ability_score_improvement_l4") {
     if (choiceKey === "class_feature_feat_choice") {
-      return ["feat_ability_score_improvement"];
+      return [authoredUnitId("feat_ability_score_improvement")];
     }
     if (choiceKey === "class_feature_ability_score_increase_choice") {
-      return ["ability_score:int:+2:max20"];
+      return [authoredUnitId("ability_score:int:+2:max20")];
     }
   }
 
@@ -999,7 +1007,7 @@ export function levelFiveBardBuild(input: {
   readonly preparedSpells: readonly UnitRecord["id"][];
 }): CharacterBuild {
   return levelFiveFullCasterBuild({
-    classUnitId: "class_bard",
+    classUnitId: authoredUnitId("class_bard"),
     spellcastingAbility: "cha",
     spellcastingFocuses: ["musical_instrument"],
     preparedSpells: input.preparedSpells,
@@ -1011,7 +1019,7 @@ export function levelFiveClericBuild(input: {
   readonly preparedSpells: readonly UnitRecord["id"][];
 }): CharacterBuild {
   return levelFiveFullCasterBuild({
-    classUnitId: "class_cleric",
+    classUnitId: authoredUnitId("class_cleric"),
     spellcastingAbility: "wis",
     spellcastingFocuses: ["holy_symbol"],
     preparedSpells: input.preparedSpells,
@@ -1023,7 +1031,7 @@ export function levelFiveDruidBuild(input: {
   readonly preparedSpells: readonly UnitRecord["id"][];
 }): CharacterBuild {
   return levelFiveFullCasterBuild({
-    classUnitId: "class_druid",
+    classUnitId: authoredUnitId("class_druid"),
     spellcastingAbility: "wis",
     spellcastingFocuses: ["druidic_focus"],
     preparedSpells: input.preparedSpells,
@@ -1035,19 +1043,19 @@ export function levelFiveSorcererBuild(
   input: { readonly preparedSpells?: readonly UnitRecord["id"][] } = {},
 ): CharacterBuild {
   return levelFiveBaseBuild({
-    classUnitId: "class_sorcerer",
+    classUnitId: authoredUnitId("class_sorcerer"),
     abilityScores: { str: 8, dex: 14, con: 14, int: 10, wis: 10, cha: 16 },
     features: [
       {
         kind: "selectedSorcererMetamagicOption",
-        selectedFromUnitId: "sorcerer_metamagic",
+        selectedFromUnitId: authoredUnitId("sorcerer_metamagic"),
         optionId: requireRight(
           sorcererMetamagicOptionId("sorcerer_empowered_spell"),
         ),
       },
       {
         kind: "selectedSorcererMetamagicOption",
-        selectedFromUnitId: "sorcerer_metamagic",
+        selectedFromUnitId: authoredUnitId("sorcerer_metamagic"),
         optionId: requireRight(
           sorcererMetamagicOptionId("sorcerer_heightened_spell"),
         ),
@@ -1056,7 +1064,7 @@ export function levelFiveSorcererBuild(
     spellcasting: {
       sources: [
         {
-          sourceUnitId: "class_sorcerer",
+          sourceUnitId: authoredUnitId("class_sorcerer"),
           spellcastingAbility: "cha",
           cantrips: [],
           spellbook: [],
@@ -1078,12 +1086,12 @@ export function levelFiveWarlockBuild(input: {
   readonly preparedSpells: readonly UnitRecord["id"][];
 }): CharacterBuild {
   return levelFiveBaseBuild({
-    classUnitId: "class_warlock",
+    classUnitId: authoredUnitId("class_warlock"),
     abilityScores: { str: 8, dex: 14, con: 14, int: 10, wis: 10, cha: 16 },
     spellcasting: {
       sources: [
         {
-          sourceUnitId: "class_warlock",
+          sourceUnitId: authoredUnitId("class_warlock"),
           spellcastingAbility: "cha",
           cantrips: [],
           spellbook: [],

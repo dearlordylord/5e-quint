@@ -1,3 +1,4 @@
+import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magical-darkness-point-origin
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE
@@ -25,7 +26,6 @@ import {
   type ElapsedTimeTicks,
 } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
-import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
 import {
@@ -78,7 +78,7 @@ const DARKNESS_RADIUS_FEET = 15;
 const DARKNESS_DISPELLED_LIGHT_MAX_SPELL_LEVEL = 2;
 
 function admitMagicalDarknessPointOrigin(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly MagicalDarknessPointOriginSpellInvocation[] {
   const darkness = magicalDarknessPointOriginSpell(spell);
@@ -112,7 +112,7 @@ function admitMagicalDarknessPointOrigin(
 }
 
 function magicalDarknessPointOriginSpell(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
 ): MagicalDarknessPointOriginProfileShape | null {
   if (spell.mechanics.family !== "ongoing_effect") {
     return null;

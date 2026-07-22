@@ -25,6 +25,7 @@ import type { BattleCreatureInit } from "../battle-init.ts";
 import {
   battleRuntimeContextFromCharacterAdmission,
   battleRuntimeSessionFromAdmittedContext,
+  characterWeaponPresentationSource,
   type BattleRuntimeContext,
   type BattleRuntimeSession,
   type CharacterBattleRuntimeContext,
@@ -41,7 +42,9 @@ import type { BattleCompanionState } from "../companion-state.ts";
 import {
   characterUnitProcedureBindings,
   characterExecutionWithSpellInvocations,
-  characterSpellSelectionInvocation,
+  bindAuthoredSelectedSpellInvocation,
+  characterSpellProcedureExecution,
+  spellInvocationMatchesExecution,
 } from "../character-execution-admission.ts";
 import { battleCompanionEntries } from "../find-familiar-state.ts";
 
@@ -76,7 +79,7 @@ import type {
 import {
   INITIAL_ROUND,
   INITIAL_TURN_RESOURCES,
-} from "../battle-state-execution.ts";
+} from "./battle-runtime-protocol.ts";
 
 const InitialInitiativeSetupBrand: unique symbol = Symbol(
   "InitialInitiativeSetup",
@@ -186,6 +189,10 @@ export function startBattle(
     CombatantId,
     CharacterBattleRuntimeContext
   >();
+  const statBlockPresentations = new Map<
+    CombatantId,
+    import("../battle-runtime-context.ts").BattleStatBlockPresentationSource
+  >();
   for (const combatant of input.combatants) {
     if (combatants.has(combatant.combatantId)) {
       return battleStateInitIssue(
@@ -210,6 +217,12 @@ export function startBattle(
     combatants.set(combatant.combatantId, admission.creature);
     if ("runtimeContext" in admission) {
       characterContexts.set(combatant.combatantId, admission.runtimeContext);
+    }
+    if ("statBlockPresentation" in admission) {
+      statBlockPresentations.set(
+        combatant.combatantId,
+        admission.statBlockPresentation,
+      );
     }
     if (admission.nextScopeOrdinal <= 0) {
       return battleStateInitIssue(
@@ -258,6 +271,21 @@ export function startBattle(
         `Character ${combatantId} is missing its runtime context.`,
       );
     }
+    for (const attack of [
+      combatant.origin.attack,
+      combatant.origin.offHandAttack,
+    ]) {
+      if (attack == null) continue;
+      const presentationSource = characterWeaponPresentationSource(
+        characterContext,
+        attack.weapon.weaponUnitId,
+      );
+      if (Either.isLeft(presentationSource)) {
+        return battleStateInitIssue(
+          `Character ${combatantId} weapon ${attack.weapon.weaponUnitId} has ${presentationSource.left.reason} authored presentation source.`,
+        );
+      }
+    }
     const spellAdmission = admitCharacterSpellExecution({
       combatant,
       state,
@@ -272,7 +300,10 @@ export function startBattle(
         ...state,
         combatants: combatantsWithCharacterExecutions,
       },
-      battleRuntimeContextFromCharacterAdmission(characterContexts),
+      battleRuntimeContextFromCharacterAdmission(
+        characterContexts,
+        statBlockPresentations,
+      ),
     ),
   );
 }
@@ -482,14 +513,30 @@ function admitCharacterSpellExecution(input: {
           Match.value(procedure).pipe(
             Match.discriminatorsExhaustive("kind")({
               spellInvocation: () => {
-                const invocation = characterSpellSelectionInvocation(
+                const storedExecution = characterSpellProcedureExecution(
                   execution,
                   procedureRef,
-                  admitted,
                 );
+                const invocation =
+                  storedExecution === undefined
+                    ? undefined
+                    : admitted.find((candidate) =>
+                        spellInvocationMatchesExecution(
+                          candidate,
+                          storedExecution,
+                        ),
+                      );
                 return invocation === undefined
                   ? []
-                  : [{ procedureRef, invocation }];
+                  : [
+                      {
+                        procedureRef,
+                        invocation: bindAuthoredSelectedSpellInvocation(
+                          invocation,
+                          procedureRef,
+                        ),
+                      },
+                    ];
               },
               unavailableSpellInvocation: () => [],
               unitFeature: () => [],

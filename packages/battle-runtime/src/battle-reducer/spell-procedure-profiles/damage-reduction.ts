@@ -1,3 +1,4 @@
+import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-damage-reduction
 import { BattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
 //
@@ -22,18 +23,18 @@ import { BattleActiveEffectExpirationSchema } from "../../active-effect/codecs.t
 //
 import { movementFeet } from "@dnd/shared/types";
 import { DamageTypeSchema } from "@dnd/surface/surface/schema";
-import type { DamageType, SpellRecord } from "@dnd/surface/surface/types";
+import type { DamageType } from "@dnd/surface/surface/types";
 import { Schema } from "effect";
 
 import type { CombatantId } from "../../identity.ts";
 import {
-  snapshotBattle,
   type BattleActDiscoveryCandidate,
   type BattleResolutionResult,
   type BattleState,
   type BattleExecutableSpellInvocation,
   type DamageReductionSpellInvocation,
 } from "../../battle-state-execution.ts";
+import { snapshotBattle } from "../dispatcher.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";
 import { maybeOpenInterruptWindow } from "../dispatcher.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
@@ -61,13 +62,13 @@ import {
   NoSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 
-// Shape extractor: given a SpellRecord, return the fields of a damageReduction
+// Shape extractor: given a return the fields of a damageReduction
 // invocation that are derivable from the spell definition, or null if the
 // spell does not fit the profile. Today only the SRD Resistance shape is
 // admitted.
 function damageReductionShape(
   actorId: CombatantId,
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
 ): Pick<
   DamageReductionSpellInvocation,
   "amount" | "damageTypeChoices" | "expiresAt" | "rangeFeet" | "targeting"
@@ -174,7 +175,7 @@ function applyDamageReductionEffect(
 }
 
 function admitDamageReduction(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly DamageReductionSpellInvocation[] {
   const shape = damageReductionShape(ctx.actor.combatantId, spell);

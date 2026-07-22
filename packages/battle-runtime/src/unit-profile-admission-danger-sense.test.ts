@@ -1,3 +1,4 @@
+import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-CLASS-BARBARIAN-DANGER-SENSE barbarian_danger_sense
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.passive-saving-throw-roll-mode
@@ -92,7 +93,7 @@ describe("L12G deterministic Danger Sense admission", () => {
     }
     const adjacentUnit: UnitRecord = {
       ...unit,
-      id: "barbarian_danger_sense_con_test",
+      id: parseSharedUnitId("barbarian_danger_sense_con_test"),
       mechanics: {
         ...unit.mechanics,
         grants: [{ ...effect, saveAbilityFilter: ["con"] }],

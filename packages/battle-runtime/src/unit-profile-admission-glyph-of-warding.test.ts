@@ -1,3 +1,4 @@
+import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3-FOLLOWUP-GLYPH-DURABLE-OCCURRENCE glyph_of_warding
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3-FOLLOWUP-GLYPH-EXPLOSIVE-RUNE-RELEASE glyph_of_warding
@@ -48,7 +49,7 @@ import type {
 } from "@dnd/surface/surface/types";
 import { describe, expect, test } from "vitest";
 import {
-  bindSelectedSpellInvocation,
+  type AuthoredSelectedSpellInvocation,
   characterExecutionWithSpellInvocations,
   characterSpellProcedure,
   characterSpellProcedureRef,
@@ -62,7 +63,6 @@ import {
   glyphExplosiveRuneDamageRollHole,
   glyphExplosiveRuneSavingThrowOutcomeHole,
   glyphExplosiveRuneReleaseProfileForSpell,
-  glyphDurableOccurrenceEffectFromCompletedInscription,
   glyphDurableOccurrenceProfileForSpell,
   glyphStoredSpellReleaseProfileForSpell,
   releaseGlyphExplosiveRune,
@@ -73,19 +73,20 @@ import {
   type GlyphExplosiveRuneReleaseProfile,
   type GlyphStoredSpellReleaseProfile,
 } from "./battle-reducer/glyph-durable-occurrence.ts";
+import { glyphDurableOccurrenceEffectFromCompletedInscription } from "./glyph-durable-occurrence-admission.ts";
 import { effectiveWalkSpeed } from "./battle-reducer/movement-speed.ts";
 import { spellProcedureExecutionRegistry } from "./battle-reducer/spell-procedure-profiles/execution-composition.ts";
 import { tickDurationEffects } from "./battle-reducer/turn-end-movement.ts";
 import {
   D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
-  SPELL_CAST_REACTION_FACTS_HOLE_ID,
   type BattleSpellCastReactionFact,
   type GlyphStoredSpellInvocationCandidate,
 } from "./battle-reducer.ts";
+import { SPELL_CAST_REACTION_FACTS_HOLE_ID } from "./battle-reducer/battle-runtime-protocol.ts";
 import {
   GLYPH_STORED_SINGLE_CREATURE_ACTIVE_EFFECT_PROCEDURES,
   type GlyphStoredSingleCreatureActiveEffectProcedure,
-} from "./procedure-admission/glyph-stored-spell.ts";
+} from "./glyph-stored-spell-invocation.ts";
 import {
   parseBattleSpellEffectLevel,
   type BattleSpellEffectLevel,
@@ -170,7 +171,6 @@ import {
   snapshotBattle,
   spellSaveDcForCaster,
 } from "./unit-profile-admission-test-support.ts";
-import type { BattleSelectedSpellInvocation } from "./battle-reducer.ts";
 import {
   battleSpellEffectOccurrenceId,
   type BattleProcedureExecutionRef,
@@ -446,7 +446,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     const release = requireGlyphExplosiveRuneProfile();
     const synthetic = {
       ...glyph,
-      id: "synthetic_completed_mark",
+      id: parseSharedUnitId("synthetic_completed_mark"),
       name: "Synthetic Completed Mark",
       description: "Synthetic durable mark record for identity-free tests.",
     } satisfies SpellRecord;
@@ -490,7 +490,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     const profile = glyphExplosiveRuneReleaseProfileForSpell(glyph);
     const synthetic = {
       ...glyph,
-      id: "synthetic_delayed_burst_mark",
+      id: parseSharedUnitId("synthetic_delayed_burst_mark"),
       name: "Synthetic Delayed Burst Mark",
       description:
         "Synthetic delayed mark record for identity-free release tests.",
@@ -562,7 +562,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     const profile = glyphStoredSpellReleaseProfileForSpell(glyph);
     const synthetic = {
       ...glyph,
-      id: "synthetic_delayed_spell_mark",
+      id: parseSharedUnitId("synthetic_delayed_spell_mark"),
       name: "Synthetic Delayed Spell Mark",
       description:
         "Synthetic delayed mark record for stored-spell release tests.",
@@ -820,8 +820,9 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
   test("preserves distinct refs for mechanically identical spell occurrences", () => {
     const firstInvocation = storedSpellInvocation(guidingBoltUnitId, 1);
     const secondInvocation = firstInvocation;
+    const guidingBolt = spellRecord(guidingBoltUnitId);
     const state = glyphBattle({
-      preparedSpells: [spellRecord(guidingBoltUnitId)],
+      preparedSpells: [guidingBolt],
       spellSlots: [{ spellLevel: 1, count: 1 }],
     });
     const caster = requireCombatant(state, spellCasterId);
@@ -837,7 +838,10 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       secondInvocation,
     ]).filter((ref) => ref !== undefined);
     const storedBindings = JSON.stringify(duplicated.procedureBindings);
-    expect(storedBindings).not.toContain(firstInvocation.spell.id);
+    expect(storedBindings).toContain(firstInvocation.spell.id);
+    expect(storedBindings).not.toContain(guidingBolt.name);
+    expect(storedBindings).not.toContain(guidingBolt.description);
+    expect(storedBindings).not.toContain(guidingBolt.provenance.section);
     expect(originalRefs).toHaveLength(2);
     expect(new Set(originalRefs).size).toBe(2);
     const [firstRef, secondRef] = originalRefs;
@@ -845,14 +849,11 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       throw new Error("Expected two distinct spell procedure refs.");
     }
 
-    const selectedFirst = bindSelectedSpellInvocation(
-      firstInvocation,
-      firstRef,
-    );
-    const selectedSecond = bindSelectedSpellInvocation(
-      secondInvocation,
-      secondRef,
-    );
+    const selectedFirst = { ...firstInvocation, sourceProcedureRef: firstRef };
+    const selectedSecond = {
+      ...secondInvocation,
+      sourceProcedureRef: secondRef,
+    };
     const oneRemaining = characterExecutionWithSpellInvocations(duplicated, [
       selectedSecond,
     ]);
@@ -3935,7 +3936,8 @@ function storedSpellInvocation(
     .find(
       (
         candidate,
-      ): candidate is BattleSelectedSpellInvocation<GlyphStoredSpellInvocationCandidate> =>
+      ): candidate is AuthoredSelectedSpellInvocation &
+        GlyphStoredSpellInvocationCandidate =>
         candidate.spell.id === storedSpellId &&
         candidate.access.tag === "prepared" &&
         candidate.resource.tag === "spellSlot" &&

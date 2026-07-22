@@ -41,10 +41,8 @@ import {
   SELF_TRANSFORMATION_NATURAL_WEAPONS_MODE_KIND,
   SELF_TRANSFORMATION_NON_NATURAL_WEAPON_MODE_KINDS,
 } from "./battle-reducer/domain-constants.ts";
-import {
-  CHARACTER_BATTLE_METAMAGIC_EFFECT_KINDS,
-  type CharacterBattleMetamagicEffectKind,
-} from "./character-battle-resources.ts";
+import { type CharacterBattleMetamagicEffectKind } from "./character-battle-resource-execution.ts";
+import { SORCERER_METAMAGIC_EFFECT_KINDS as CHARACTER_BATTLE_METAMAGIC_EFFECT_KINDS } from "@dnd/surface/surface/schema";
 import {
   TRANSMUTED_METAMAGIC_EFFECT_KIND,
   TRANSMUTED_SPELL_DAMAGE_TYPES,

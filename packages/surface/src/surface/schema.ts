@@ -1,4 +1,5 @@
 import { Either, JSONSchema, ParseResult, Schema } from "effect";
+import { StatBlockId } from "@dnd/shared/game-facts";
 import * as SchemaAST from "effect/SchemaAST";
 
 export {
@@ -46,6 +47,7 @@ export {
   CreatureSavingThrowModifierSchema,
   CreatureModeSchema,
   CreatureNamedAttackRollSchema,
+  CreatureAttackRollMechanicsSchema,
   CreatureNamedMultiattackSchema,
   CreatureNamedSaveGateSchema,
   CreatureNamedSupportSchema,
@@ -485,7 +487,7 @@ export const SRD_CHALLENGE_RATINGS = [
 export const ChallengeRatingSchema = Schema.Literal(...SRD_CHALLENGE_RATINGS);
 
 export const StatBlockRecordSchema = Schema.Struct({
-  id: surfaceSchemaRole(Schema.NonEmptyTrimmedString, {
+  id: surfaceSchemaRole(StatBlockId, {
     category: "identity",
     kind: "id",
   }),

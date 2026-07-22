@@ -48,7 +48,7 @@ import {
 import { damageAmount, Hp, proficiencyBonus } from "@dnd/shared/types";
 import { spellSavingThrowOutcomeHole } from "./battle-reducer/spells-damage-fills.ts";
 import { abilityD20TestRollModeSaveGateProfile } from "./battle-reducer/spell-procedure-profiles/ability-d20-test-roll-mode-save-gate.ts";
-import { spellAdmissionContextFor } from "./battle-reducer/spell-procedure-profiles/profile.ts";
+import { spellAdmissionContextFor } from "./battle-reducer/spell-procedure-profiles/admission-context.ts";
 import { spellFillSet } from "./battle-reducer/spells-resolve-fill-set.ts";
 import { spellTargetListHole } from "./battle-reducer/spells-holes-fills.ts";
 import { spellProcedureExecution } from "./character-execution-admission.ts";

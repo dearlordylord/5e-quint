@@ -51,17 +51,19 @@ import type {
   CombatantId,
 } from "../identity.ts";
 import { allocateBattleActiveEffectRef } from "../active-effect/execution-ref.ts";
-import { battleCreatureStateWithKnockOutPreservedConditions } from "./creature-state.ts";
+import { battleCreatureStateWithKnockOutPreservedConditions } from "./creature-state-execution.ts";
 import {
   CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
   characterExecutionWithDancingLightsReposition,
   characterExecutionWithSpellCreatedHeldObjectProcedures,
   characterExecutionWithSpiritualWeaponRepeatAttack,
   characterUnitProcedure,
-  type DancingLightsRepositionSpellProcedureExecution,
-  type SpellCreatedHeldObjectSpellProcedureExecution,
-  type SpiritualWeaponRepeatAttackSpellProcedureExecution,
-} from "../character-execution-admission.ts";
+} from "../character-execution-queries.ts";
+import type {
+  DancingLightsRepositionSpellProcedureExecution,
+  SpellCreatedHeldObjectSpellProcedureExecution,
+  SpiritualWeaponRepeatAttackSpellProcedureExecution,
+} from "../character-execution.ts";
 import { breakBattleConcentration } from "./damage-apply.ts";
 import {
   combatantsAfterConcentrationSpellEffectsEndedIfNoEffects,
@@ -100,7 +102,6 @@ import {
   type SpellCreatedHeldObjectState,
   type BattleSpecialSpeedKind,
   type SelfTransformationModeEffectPayload,
-  type SelfTransformationModeKind,
   type SpellActiveEffectPostDamageRider,
   type SpellConditionCountedRepeatSave,
   type SpellFailedSaveConditionChoiceEffect,
@@ -113,6 +114,7 @@ import {
   type SupportedSpellInvocation,
   type BattleWebRestraintTrigger,
 } from "../battle-state-execution.ts";
+import { type SelfTransformationModeKind } from "./domain-constants.ts";
 import {
   antimagicFieldSuppressedOngoingSpellEffectKeys,
   isTrackedOngoingSpellLightEmitter,

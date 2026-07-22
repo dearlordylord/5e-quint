@@ -1,5 +1,6 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.dominate-person-session-invocation
 // UNIT-PROFILE-COVERAGE: runtime-owner table-caller.dominate-person-command-control
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import {
   timeSpanDuration,
   type TimeSpanDuration,
@@ -66,7 +67,10 @@ export function castDominatePerson(input: {
 function dominatePersonSpell(
   unitLibrary: UnitCatalog,
 ): Either.Either<SpellRecord, CharacterSheetIssue> {
-  const unit = getRequiredUnit(unitLibrary, DOMINATE_PERSON_SPELL_ID);
+  const unit = getRequiredUnit(
+    unitLibrary,
+    authoredUnitId(DOMINATE_PERSON_SPELL_ID),
+  );
   if (Either.isLeft(unit)) return Either.left(unit.left);
   if (unit.right.kind !== "spell") {
     return characterSheetIssue("Dominate Person requires a Spell record.");

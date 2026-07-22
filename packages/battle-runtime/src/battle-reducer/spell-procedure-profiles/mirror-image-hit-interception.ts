@@ -1,3 +1,4 @@
+import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-mirror-image-hit-interception
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION
 //
@@ -25,19 +26,17 @@
 
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { DurationBattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
-import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
 import { battleCreatureWithSpellActiveEffects } from "../../active-effect/lifecycle.ts";
 import {
-  maybeOpenInterruptWindow,
-  snapshotBattle,
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
   type BattleState,
   type MirrorImageHitInterceptionSpellInvocation,
 } from "../../battle-state-execution.ts";
+import { maybeOpenInterruptWindow, snapshotBattle } from "../dispatcher.ts";
 import { CombatantId } from "../../identity.ts";
 import {
   MIRROR_IMAGE_DUPLICATE_DIE_SIZE,
@@ -47,7 +46,7 @@ import {
 } from "../domain-constants.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
-import { sameStringSet } from "../spells-profile-shared.ts";
+import { sameStringSet } from "../spells-execution-facts.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
 import type {
   SpellAdmissionContext,
@@ -66,7 +65,7 @@ import {
 
 function mirrorImageHitInterceptionShape(
   actorId: CombatantId,
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
 ): Pick<MirrorImageHitInterceptionSpellInvocation, "activeEffect"> | null {
   if (
     spell.mechanics.family !== "passive_hit_intercept" ||
@@ -116,7 +115,7 @@ function mirrorImageHitInterceptionShape(
 }
 
 function admitMirrorImageHitInterception(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly MirrorImageHitInterceptionSpellInvocation[] {
   const shape = mirrorImageHitInterceptionShape(ctx.actor.combatantId, spell);

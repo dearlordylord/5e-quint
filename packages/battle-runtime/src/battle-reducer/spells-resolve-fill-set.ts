@@ -14,11 +14,6 @@
 import type { Condition, MovementFeet } from "@dnd/shared/types";
 import type { Ability, Skill } from "@dnd/surface/surface/types";
 import {
-  ATTACK_ROLL_HOLE_ID,
-  ATTACK_TARGET_HOLE_ID,
-  SPELL_CAST_REACTION_FACTS_HOLE_ID,
-  isScalarBuffTargetListInvocation,
-  isTargetListSpellInvocation,
   type BattleAttackRollResult,
   type BattleAttackRollRelationshipFact,
   type BattleCommandOption,
@@ -36,11 +31,20 @@ import {
   type BattleSpiritualWeaponForcePosition,
   type BattleObjectContactTargetSpatialFact,
   type BattleOngoingSpellTargetWithinRangeFact,
-  type SelfTransformationModeKind,
   type BattleTargetSpatialFact,
   type BattleState,
   type SpellTargeting,
 } from "../battle-state-execution.ts";
+import {
+  ATTACK_ROLL_HOLE_ID,
+  ATTACK_TARGET_HOLE_ID,
+  SPELL_CAST_REACTION_FACTS_HOLE_ID,
+} from "./battle-runtime-protocol.ts";
+import {
+  isScalarBuffTargetListInvocation,
+  isTargetListSpellInvocation,
+} from "./spells-invocation-guards.ts";
+import { type SelfTransformationModeKind } from "./domain-constants.ts";
 import type { RuntimeSpellProcedureExecution } from "../character-execution.ts";
 import type {
   BattleObjectId,

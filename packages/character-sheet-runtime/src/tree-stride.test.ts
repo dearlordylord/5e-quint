@@ -3,6 +3,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L19E-08-L5-TELEPORT-TRAVEL tree_stride
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L19E-08-L5-TELEPORT-TRAVEL tree_stride
 // UNIT-IDENTITY-REPLAY: L19E-08-L5-TELEPORT-TRAVEL tree_stride doCastTreeStride doResolveTreeStrideTransit
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, it, test } from "vitest";
 
 import {
@@ -326,18 +327,18 @@ function treeStrideDruidSheet(input: {
             classFeatureLanguages: [
               {
                 kind: "classFeatureLanguageGrant",
-                sourceUnitId: "druid_druidic",
+                sourceUnitId: authoredUnitId("druid_druidic"),
                 language: "Druidic",
               },
             ],
             spellcasting: {
               sources: [
                 {
-                  sourceUnitId: "class_druid",
+                  sourceUnitId: authoredUnitId("class_druid"),
                   spellcastingAbility: "wis",
                   cantrips: ["druidcraft", "guidance", "produce_flame"],
                   spellbook: [],
-                  preparedSpells: input.preparedSpells,
+                  preparedSpells: input.preparedSpells.map(authoredUnitId),
                   spellcastingFocuses: ["druidic_focus"],
                 },
               ],

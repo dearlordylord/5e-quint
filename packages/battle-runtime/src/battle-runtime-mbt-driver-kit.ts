@@ -1,3 +1,4 @@
+import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import * as path from "node:path";
 import {
@@ -75,6 +76,7 @@ import {
   resolveBattleSubject,
   type BattleActSelectorForTest,
 } from "./battle-runtime-test-support.ts";
+import { admitCharacterWeaponAttackExecutionWeapon } from "./character-weapon-execution-admission.ts";
 import { battleMagicActionHealingPoolSupportForUnit } from "./unit-feature-support.ts";
 import {
   chromaticOrbUnitId,
@@ -2641,11 +2643,9 @@ function resetSelectedUnitRuntimeBoundaryIds(): void {
   selectedUnitRuntimeBoundaryIds.clear();
 }
 
-function recordSelectedUnitRuntimeBoundaryId<UnitId extends string>(
-  unitId: UnitId,
-): UnitId {
+function recordSelectedUnitRuntimeBoundaryId(unitId: string) {
   selectedUnitRuntimeBoundaryIds.add(unitId);
-  return unitId;
+  return parseSharedUnitId(unitId);
 }
 
 export function createBattleRuntimeDriver() {
@@ -16727,7 +16727,7 @@ function preserveLifeSubject(
   const subject = requireAdmittedCharacterProcedureSubject(session, {
     tag: "unitFeature",
     actorId: fighterId,
-    unitId: "cleric_preserve_life",
+    unitId: parseSharedUnitId("cleric_preserve_life"),
   });
   if (subject.tag !== "unitFeature") throw new Error("Expected Unit feature.");
   return subject;
@@ -16835,7 +16835,7 @@ function syntheticExtraAttackMbtUnit(
   }
   return {
     ...unit,
-    id: `test_synthetic_attack_count_${additionalAttacks}`,
+    id: parseSharedUnitId(`test_synthetic_attack_count_${additionalAttacks}`),
     name: `Synthetic Attack Count ${additionalAttacks}`,
     description: `Synthetic fixture for ${additionalAttacks} additional Attack action attack(s).`,
     provenance: {
@@ -17292,7 +17292,7 @@ function rogueCreatureInit(input: {
       selectedLoadout: {
         weapon: {
           itemId: "main:weapon_dagger",
-          unitId: "weapon_dagger",
+          unitId: parseSharedUnitId("weapon_dagger"),
           grip: "one_handed",
         },
       },
@@ -17391,7 +17391,7 @@ function rogueSteadyAimCreatureInit(input: {
       selectedLoadout: {
         weapon: {
           itemId: "main:weapon_dagger",
-          unitId: "weapon_dagger",
+          unitId: parseSharedUnitId("weapon_dagger"),
           grip: "one_handed",
         },
       },
@@ -17442,7 +17442,7 @@ function extraAttackCreatureInit(input: {
       selectedLoadout: {
         weapon: {
           itemId: "main:weapon_dagger",
-          unitId: "weapon_dagger",
+          unitId: parseSharedUnitId("weapon_dagger"),
           grip: "one_handed",
         },
       },
@@ -18085,7 +18085,7 @@ function daggerAttack(): NonNullable<
 
   return {
     kind: "weapon",
-    weapon,
+    weapon: admitCharacterWeaponAttackExecutionWeapon(weapon),
     ability: "str",
     abilityModifier: abilityModifier(3),
   };

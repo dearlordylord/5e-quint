@@ -1,3 +1,4 @@
+import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-ongoing-spell-suppression
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-action-interdiction
@@ -29,7 +30,6 @@ import {
   type ElapsedTimeTicks,
 } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
-import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
 import {
@@ -52,7 +52,7 @@ import {
 import { snapshotBattle } from "../dispatcher.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
 import { invalidResult } from "../result-helpers.ts";
-import { sameStringSet } from "../spells-profile-shared.ts";
+import { sameStringSet } from "../spells-execution-facts.ts";
 import { spellAreaChoiceHole } from "../spells-holes-fills.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
 import type {
@@ -92,7 +92,7 @@ const ANTIMAGIC_FIELD_SUPPRESSION_EXCEPT_SOURCES = [
 ] as const satisfies readonly string[];
 
 function admitAntimagicFieldOngoingSpellSuppression(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly AntimagicFieldOngoingSpellSuppressionInvocation[] {
   const profile = antimagicFieldOngoingSpellSuppressionSpell(spell);
@@ -124,7 +124,7 @@ function admitAntimagicFieldOngoingSpellSuppression(
 }
 
 function antimagicFieldOngoingSpellSuppressionSpell(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
 ): AntimagicFieldOngoingSpellSuppressionProfileShape | null {
   if (spell.mechanics.family !== "ongoing_effect") {
     return null;

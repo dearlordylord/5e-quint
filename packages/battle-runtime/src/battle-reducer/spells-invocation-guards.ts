@@ -16,27 +16,27 @@ import type { RuntimeSpellProcedureExecution } from "../character-execution.ts";
 type RuntimeSpellProcedure =
   | SupportedSpellInvocation
   | RuntimeSpellProcedureExecution;
-import type { SpellRecord } from "@dnd/surface/surface/types";
+import type { SpellMechanics } from "@dnd/surface/surface/types";
 import { Match } from "effect";
 import {
   activeOngoingFeatureOccurrencesForCombatant,
   ongoingFeatureProfileForSourceKey,
-} from "./creature-state.ts";
+} from "./creature-state-execution.ts";
 import { activeDruidWildShapeEffect } from "./druid-wild-shape.ts";
 import {
   DRUID_WILD_SHAPE_PROCEDURE_QUERY,
   characterUnitProcedure,
-} from "../character-execution-admission.ts";
+} from "../character-execution-queries.ts";
 import { spellInvocationIsSpellcasting } from "./spell-turn-resources.ts";
 import {
   DRUID_BEAST_SPELLS_CLASS_LEVEL,
   DRUID_WILD_SHAPE_KNOWN_FORM_SUPPORT_PROFILE,
   type BattleDruidWildShapeKnownFormSupportProfile,
-} from "../unit-feature-support.ts";
+} from "../druid-wild-shape-support-execution.ts";
 
 const byKind = Match.discriminator("kind");
 
-type SpellComponents = SpellRecord["mechanics"]["components"];
+type SpellComponents = SpellMechanics["components"];
 type StructuredMaterialComponent = Exclude<
   SpellComponents["m"],
   boolean | string
@@ -160,9 +160,9 @@ function activeDruidWildShapeSupportProfile(
     : null;
 }
 
-export function spellDefinitionHasPricedOrConsumedMaterialComponent(
-  spell: SpellRecord,
-): boolean {
+export function spellDefinitionHasPricedOrConsumedMaterialComponent(spell: {
+  readonly mechanics: SpellMechanics;
+}): boolean {
   const components = spell.mechanics.components;
   if (components.m === false) {
     return false;

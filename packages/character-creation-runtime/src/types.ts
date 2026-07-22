@@ -1,4 +1,5 @@
-import { Brand, Either } from "effect";
+import { UnitId as UnitIdSchema } from "@dnd/shared/game-facts";
+import { Brand, Either, Schema } from "effect";
 import {
   ALIGNMENT_MORALITIES,
   ALIGNMENT_ORDERS,
@@ -323,14 +324,15 @@ const UnitChoiceSourceUnitId = Brand.nominal<UnitChoiceSourceUnitId>();
 
 export type UnitChoiceSourceUnitIdIssue = {
   readonly tag: "unitChoiceSourceUnitIdEmpty";
-  readonly value: UnitRecord["id"];
+  readonly value: string;
 };
 
 export function unitChoiceSourceUnitId(
-  value: UnitRecord["id"],
+  value: string,
 ): Either.Either<UnitChoiceSourceUnitId, UnitChoiceSourceUnitIdIssue> {
-  return value.length > 0
-    ? Either.right(UnitChoiceSourceUnitId(value))
+  const unitId = Schema.decodeUnknownEither(UnitIdSchema)(value);
+  return Either.isRight(unitId)
+    ? Either.right(UnitChoiceSourceUnitId(unitId.right))
     : Either.left({ tag: "unitChoiceSourceUnitIdEmpty", value });
 }
 
@@ -340,14 +342,15 @@ const LoadoutEquipmentUnitId = Brand.nominal<LoadoutEquipmentUnitId>();
 
 export type LoadoutEquipmentUnitIdIssue = {
   readonly tag: "loadoutEquipmentUnitIdEmpty";
-  readonly value: UnitRecord["id"];
+  readonly value: string;
 };
 
 export function loadoutEquipmentUnitId(
-  value: UnitRecord["id"],
+  value: string,
 ): Either.Either<LoadoutEquipmentUnitId, LoadoutEquipmentUnitIdIssue> {
-  return value.length > 0
-    ? Either.right(LoadoutEquipmentUnitId(value))
+  const unitId = Schema.decodeUnknownEither(UnitIdSchema)(value);
+  return Either.isRight(unitId)
+    ? Either.right(LoadoutEquipmentUnitId(unitId.right))
     : Either.left({ tag: "loadoutEquipmentUnitIdEmpty", value });
 }
 
@@ -633,17 +636,18 @@ const CharacterEquipmentItemUnitId =
 
 export type CharacterEquipmentItemUnitIdIssue = {
   readonly tag: "characterEquipmentItemUnitIdEmpty";
-  readonly value: UnitRecord["id"];
+  readonly value: string;
 };
 
 export function characterEquipmentItemUnitId(
-  value: UnitRecord["id"],
+  value: string,
 ): Either.Either<
   CharacterEquipmentItemUnitId,
   CharacterEquipmentItemUnitIdIssue
 > {
-  return value.length > 0
-    ? Either.right(CharacterEquipmentItemUnitId(value))
+  const unitId = Schema.decodeUnknownEither(UnitIdSchema)(value);
+  return Either.isRight(unitId)
+    ? Either.right(CharacterEquipmentItemUnitId(unitId.right))
     : Either.left({ tag: "characterEquipmentItemUnitIdEmpty", value });
 }
 

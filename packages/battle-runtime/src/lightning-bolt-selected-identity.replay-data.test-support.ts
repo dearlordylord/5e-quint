@@ -64,7 +64,9 @@ export const lightningBoltSelectedIdentityReplay = {
             expect(spellHoleInvocation(state, [savingThrow])).toEqual(
               expect.objectContaining({
                 procedure: "saveGatedDamage",
-                spell,
+                spellRuleFacts: expect.objectContaining({
+                  spellId: spell.id,
+                }),
                 resource: { tag: "spellSlot", slotLevel: 3 },
                 ability: "dex",
                 targeting: {

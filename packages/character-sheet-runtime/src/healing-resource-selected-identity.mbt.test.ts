@@ -1,5 +1,6 @@
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay healing-stabilization paladin_lay_on_hands
 // UNIT-IDENTITY-REPLAY: healing-stabilization paladin_lay_on_hands doLayOnHandsRestoreHpAndRemovePoisoned
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
@@ -222,9 +223,9 @@ function paladinBuild(input: {
   return {
     ...characterBuild("class_paladin"),
     progression: {
-      startingClass: classUnitId("class_paladin"),
+      startingClass: classUnitId(authoredUnitId("class_paladin")),
       advancements: Array.from({ length: input.paladinAdvancements }, () => ({
-        classUnitId: classUnitId("class_paladin"),
+        classUnitId: classUnitId(authoredUnitId("class_paladin")),
         hitPointRule: { tag: "fixedHigherLevelGain" as const },
       })),
     },
@@ -234,11 +235,11 @@ function paladinBuild(input: {
 function characterBuild(startingClass: string): CharacterBuild {
   return {
     progression: {
-      startingClass: classUnitId(startingClass),
+      startingClass: classUnitId(authoredUnitId(startingClass)),
       advancements: [],
     },
-    background: "background_soldier",
-    species: "species_orc",
+    background: authoredUnitId("background_soldier"),
+    species: authoredUnitId("species_orc"),
     originLanguages: ["Common", "Dwarvish", "Goblin"],
     classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },

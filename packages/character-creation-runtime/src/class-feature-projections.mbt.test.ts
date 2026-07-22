@@ -2,6 +2,7 @@
 // UNIT-IDENTITY-REPLAY: B6-CLASS-FEATURE-IDENTITY-BATCH-3 sorcerer_font_of_magic doProjectSorcererFontAndMetamagic
 // UNIT-IDENTITY-REPLAY: B6-CLASS-FEATURE-IDENTITY-BATCH-3 sorcerer_metamagic doProjectSorcererFontAndMetamagic
 // KERNEL-COVERAGE: parity-witness CREATION.CLASS_FEATURE_RESOURCE.PROJECTION CREATION.CLASS_FEATURE_SOURCE_FACT.PROJECTION
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
@@ -286,14 +287,14 @@ function projectSorcererFontAndMetamagic(): ClassFeatureProjection {
     features: [
       {
         kind: "selectedSorcererMetamagicOption",
-        selectedFromUnitId: "sorcerer_metamagic",
+        selectedFromUnitId: authoredUnitId("sorcerer_metamagic"),
         optionId: requireRight(
           sorcererMetamagicOptionId("sorcerer_empowered_spell"),
         ),
       },
       {
         kind: "selectedSorcererMetamagicOption",
-        selectedFromUnitId: "sorcerer_metamagic",
+        selectedFromUnitId: authoredUnitId("sorcerer_metamagic"),
         optionId: requireRight(
           sorcererMetamagicOptionId("sorcerer_heightened_spell"),
         ),
@@ -358,14 +359,14 @@ function classBuild(input: {
 }): CharacterBuild {
   return {
     progression: {
-      startingClass: classUnitId(input.startingClass),
+      startingClass: classUnitId(authoredUnitId(input.startingClass)),
       advancements: Array.from({ length: input.totalLevel - 1 }, () => ({
-        classUnitId: classUnitId(input.startingClass),
+        classUnitId: classUnitId(authoredUnitId(input.startingClass)),
         hitPointRule: { tag: "fixedHigherLevelGain" as const },
       })),
     },
-    background: "background_soldier",
-    species: "species_orc",
+    background: authoredUnitId("background_soldier"),
+    species: authoredUnitId("species_orc"),
     originLanguages: ["Common", "Dwarvish", "Goblin"],
     classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },

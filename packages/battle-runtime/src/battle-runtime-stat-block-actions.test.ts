@@ -1,3 +1,4 @@
+import { statBlockId as parseSharedStatBlockId } from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.STAT_BLOCK.ATTACK_CONTROL
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test stat-block.attack-control
@@ -19,6 +20,7 @@ import {
   attackRollHoleAfterTarget,
   attackTargetFill,
   battleId,
+  battleRuntimeContextForStateForTest,
   characterAttackSubjectForTest,
   characterSeed,
   damageRollFill,
@@ -57,6 +59,7 @@ import {
   snapshotBattle,
   startBattleRight,
   statBlockCreatureInit,
+  statBlockProcedurePresentationsForStateForTest,
   statBlockRecord,
   targetFill,
   testLightHammerAttack,
@@ -68,18 +71,14 @@ import {
   type BattleResourcePoolExecutionRef,
   type CombatantId,
 } from "./identity.ts";
-import { statBlockProcedurePresentations } from "./stat-block-execution.ts";
-import { emptyBattleRuntimeContext } from "./battle-runtime-context.ts";
 import { creatureNamedAttackRollIsSupported } from "./statblock-action-support.ts";
 import { supportedStatBlockAttackHitConditionRiders } from "./statblock-attack-hit-condition-support.ts";
-
-const statBlockPresentationContext = emptyBattleRuntimeContext();
 
 function discoverStatBlockActs(state: BattleState) {
   return discoverBattleActs(
     battleRuntimeSessionForTest({
       state,
-      context: statBlockPresentationContext,
+      context: battleRuntimeContextForStateForTest(state),
     }),
   );
 }
@@ -151,7 +150,10 @@ function resourcePoolRefForAttack(
     throw new Error("Expected Stat Block goblin.");
   }
   const origin = actor.origin;
-  const procedureRef = statBlockProcedurePresentations(origin).find(
+  const procedureRef = statBlockProcedurePresentationsForStateForTest(
+    state,
+    goblinId,
+  ).find(
     (candidate) => candidate.kind === "attack" && candidate.name === attackName,
   )?.procedureRef;
   const binding = origin.execution.procedureBindings.find(
@@ -173,7 +175,10 @@ function procedureRefForAttack(
     throw new Error("Expected Stat Block goblin.");
   }
   const origin = actor.origin;
-  const procedureRef = statBlockProcedurePresentations(origin).find(
+  const procedureRef = statBlockProcedurePresentationsForStateForTest(
+    state,
+    goblinId,
+  ).find(
     (candidate) => candidate.kind === "attack" && candidate.name === attackName,
   )?.procedureRef;
   const binding = origin.execution.procedureBindings.find(
@@ -189,7 +194,7 @@ function sizeGatedConditionRiderStatBlock(): StatBlockRecord {
   const base = statBlockRecord();
   return {
     ...base,
-    id: "stat_block_size_gated_condition_test_monster",
+    id: parseSharedStatBlockId("stat_block_size_gated_condition_test_monster"),
     name: "Size-Gated Condition Test Monster",
     statBlock: {
       ...base.statBlock,
@@ -236,7 +241,9 @@ function untypedConditionRiderStatBlock(): StatBlockRecord {
   }
   return {
     ...base,
-    id: "stat_block_untyped_condition_rider_test_monster",
+    id: parseSharedStatBlockId(
+      "stat_block_untyped_condition_rider_test_monster",
+    ),
     name: "Untyped Condition Rider Test Monster",
     statBlock: {
       ...base.statBlock,
@@ -261,7 +268,7 @@ function conditionOnlyRiderStatBlock(): StatBlockRecord {
   }
   return {
     ...base,
-    id: "stat_block_condition_only_rider_test_monster",
+    id: parseSharedStatBlockId("stat_block_condition_only_rider_test_monster"),
     name: "Condition-Only Rider Test Monster",
     statBlock: {
       ...base.statBlock,
@@ -296,7 +303,9 @@ function nonProneSizeGatedConditionRiderStatBlock(): StatBlockRecord {
   }
   return {
     ...base,
-    id: "stat_block_non_prone_size_gated_condition_test_monster",
+    id: parseSharedStatBlockId(
+      "stat_block_non_prone_size_gated_condition_test_monster",
+    ),
     name: "Non-Prone Size-Gated Condition Test Monster",
     statBlock: {
       ...base.statBlock,
@@ -324,7 +333,7 @@ function largeTargetStatBlock(): StatBlockRecord {
   const base = statBlockRecord();
   return {
     ...base,
-    id: "stat_block_large_condition_rider_target",
+    id: parseSharedStatBlockId("stat_block_large_condition_rider_target"),
     name: "Large Condition Rider Target",
     statBlock: {
       ...base.statBlock,
@@ -339,7 +348,9 @@ function proneImmuneTargetStatBlock(): StatBlockRecord {
   const base = statBlockRecord();
   return {
     ...base,
-    id: "stat_block_prone_immune_condition_rider_target",
+    id: parseSharedStatBlockId(
+      "stat_block_prone_immune_condition_rider_target",
+    ),
     name: "Prone-Immune Condition Rider Target",
     statBlock: {
       ...base.statBlock,
@@ -419,7 +430,7 @@ function monsterMultiDamageStatBlock(): StatBlockRecord {
   }
   return {
     ...base,
-    id: "stat_block_multi_damage_test_monster",
+    id: parseSharedStatBlockId("stat_block_multi_damage_test_monster"),
     name: "Multi Damage Test Monster",
     statBlock: {
       ...base.statBlock,
@@ -1188,7 +1199,9 @@ describe("battle runtime: Stat Block actions", () => {
     const statBlock = monsterResourceStatBlock();
     const repeatedLimitedUseStatBlock: StatBlockRecord = {
       ...statBlock,
-      id: "stat_block_repeated_limited_use_multiattack_test_monster",
+      id: parseSharedStatBlockId(
+        "stat_block_repeated_limited_use_multiattack_test_monster",
+      ),
       statBlock: {
         ...statBlock.statBlock,
         actions: {

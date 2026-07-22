@@ -19,10 +19,8 @@ import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { movementFeet } from "@dnd/shared/types";
 import type { ActivationPhase, EffectAtom } from "@dnd/surface/surface/types";
 import { Either, Schema } from "effect";
-import {
-  bindStoredSpellProcedureExecutionFacts,
-  type SpellProcedureExecution,
-} from "../../character-execution-admission.ts";
+import { bindStoredSpellProcedureExecutionFacts } from "../../character-execution-queries.ts";
+import type { SpellProcedureExecution } from "../../character-execution.ts";
 import type {
   ActionSpellBattleResolutionInput,
   BattleActDiscoveryCandidate,
@@ -38,12 +36,9 @@ import {
   GLYPH_STORED_AREA_CONTROL_PROCEDURES,
   type GlyphStoredAreaControlInvocation,
   type GlyphStoredAreaControlProcedure,
-} from "../../procedure-admission/glyph-stored-spell.ts";
-import {
-  maybeOpenInterruptWindow,
-  snapshotBattle,
-} from "../../battle-state-execution.ts";
-import type { CharacterBattleMetamagicOptionFact } from "../../character-battle-resources.ts";
+} from "../../glyph-stored-spell-invocation.ts";
+import { maybeOpenInterruptWindow, snapshotBattle } from "../dispatcher.ts";
+import type { CharacterBattleMetamagicOptionFact } from "../../character-battle-resource-execution.ts";
 import { type CombatantId } from "../../identity.ts";
 import { battleCreatureWithSpellActiveEffects } from "../../active-effect/lifecycle.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";

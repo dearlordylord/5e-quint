@@ -10,6 +10,10 @@
 // UNIT-IDENTITY-REPLAY: B6-CLASS-FEATURE-IDENTITY-BATCH-3 sorcerer_draconic_spells doProjectSorcererDraconicSpells
 // UNIT-IDENTITY-REPLAY: B6-CLASS-FEATURE-IDENTITY-BATCH-3 warlock_fiend_spells doProjectWarlockFiendSpells
 // KERNEL-COVERAGE: parity-witness SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION
+import {
+  statBlockId as authoredStatBlockId,
+  unitId as authoredUnitId,
+} from "@dnd/shared/game-facts";
 import * as path from "node:path";
 
 import {
@@ -54,10 +58,10 @@ const RANGER_FAVORED_ENEMY_EXPECTED_SPELL_ID = "hunters_mark";
 const SORCERER_DRACONIC_EXPECTED_SPELL_ID = "alter_self";
 const WARLOCK_FIEND_EXPECTED_SPELL_ID = "burning_hands";
 const DRUID_WILD_SHAPE_KNOWN_FORM_STAT_BLOCK_IDS = [
-  "stat_block_rat",
-  "stat_block_riding_horse",
-  "stat_block_spider",
-  "stat_block_wolf",
+  authoredStatBlockId("stat_block_rat"),
+  authoredStatBlockId("stat_block_riding_horse"),
+  authoredStatBlockId("stat_block_spider"),
+  authoredStatBlockId("stat_block_wolf"),
 ] as const;
 
 const classFeatureSelectedIdentityResults = [
@@ -377,7 +381,10 @@ function initialProjection(): ClassFeatureSelectedIdentityProjection {
 function bardJackOfAllTradesProjection(): ClassFeatureSelectedIdentityProjection {
   const result = requireRight(
     characterSheetAbilityCheckProficiencyBonus({
-      build: classBuild({ startingClass: "class_bard", totalLevel: 2 }),
+      build: classBuild({
+        startingClass: authoredUnitId("class_bard"),
+        totalLevel: 2,
+      }),
       unitLibrary,
       skill: "performance",
       otherProficiencyBonus: CHARACTER_SHEET_NO_OTHER_PROFICIENCY_BONUS,
@@ -404,13 +411,13 @@ function bardJackOfAllTradesProjection(): ClassFeatureSelectedIdentityProjection
 function clericLifeDomainSpellsProjection(): ClassFeatureSelectedIdentityProjection {
   const access = requiredPreparedSpellAccess(
     classBuild({
-      startingClass: "class_cleric",
+      startingClass: authoredUnitId("class_cleric"),
       totalLevel: 3,
       features: [
         {
           kind: "selectedClassChoice",
-          selectedFromUnitId: "class_cleric",
-          unitId: "subclass_cleric_life_domain",
+          selectedFromUnitId: authoredUnitId("class_cleric"),
+          unitId: authoredUnitId("subclass_cleric_life_domain"),
         },
       ],
     }),
@@ -424,7 +431,7 @@ function clericLifeDomainSpellsProjection(): ClassFeatureSelectedIdentityProject
     ),
     spellcastingSourceUnitId: "none",
     expectedSpellPresent: access.spellIds.includes(
-      CLERIC_LIFE_DOMAIN_LEVEL_3_EXPECTED_SPELL_ID,
+      authoredUnitId(CLERIC_LIFE_DOMAIN_LEVEL_3_EXPECTED_SPELL_ID),
     ),
     spellCount: access.spellIds.length,
     abilityCheckBonus: 0,
@@ -465,7 +472,7 @@ function druidCircleLandSpellsProjection(): ClassFeatureSelectedIdentityProjecti
     ),
     spellcastingSourceUnitId: access.spellcastingSourceUnitId,
     expectedSpellPresent: access.spellIds.includes(
-      DRUID_CIRCLE_LAND_TEMPERATE_EXPECTED_SPELL_ID,
+      authoredUnitId(DRUID_CIRCLE_LAND_TEMPERATE_EXPECTED_SPELL_ID),
     ),
     spellCount: access.spellIds.length,
     abilityCheckBonus: 0,
@@ -477,13 +484,13 @@ function druidCircleLandSpellsProjection(): ClassFeatureSelectedIdentityProjecti
 function paladinOathDevotionSpellsProjection(): ClassFeatureSelectedIdentityProjection {
   const access = requiredPreparedSpellAccess(
     classBuild({
-      startingClass: "class_paladin",
+      startingClass: authoredUnitId("class_paladin"),
       totalLevel: 3,
       features: [
         {
           kind: "selectedClassChoice",
-          selectedFromUnitId: "class_paladin",
-          unitId: "subclass_paladin_oath_of_devotion",
+          selectedFromUnitId: authoredUnitId("class_paladin"),
+          unitId: authoredUnitId("subclass_paladin_oath_of_devotion"),
         },
       ],
     }),
@@ -493,46 +500,52 @@ function paladinOathDevotionSpellsProjection(): ClassFeatureSelectedIdentityProj
     outcome: "paladin-oath-devotion-spells",
     access,
     expectedUnitId: PALADIN_OATH_DEVOTION_SPELLS_UNIT_ID,
-    expectedSpellId: PALADIN_OATH_DEVOTION_EXPECTED_SPELL_ID,
+    expectedSpellId: authoredUnitId(PALADIN_OATH_DEVOTION_EXPECTED_SPELL_ID),
   });
 }
 
 function paladinsSmiteProjection(): ClassFeatureSelectedIdentityProjection {
   const access = requiredPreparedSpellAccess(
-    classBuild({ startingClass: "class_paladin", totalLevel: 2 }),
+    classBuild({
+      startingClass: authoredUnitId("class_paladin"),
+      totalLevel: 2,
+    }),
     PALADIN_PALADINS_SMITE_UNIT_ID,
   );
   return preparedSpellAccessProjection({
     outcome: "paladins-smite",
     access,
     expectedUnitId: PALADIN_PALADINS_SMITE_UNIT_ID,
-    expectedSpellId: PALADINS_SMITE_EXPECTED_SPELL_ID,
+    expectedSpellId: authoredUnitId(PALADINS_SMITE_EXPECTED_SPELL_ID),
   });
 }
 
 function rangerFavoredEnemyProjection(): ClassFeatureSelectedIdentityProjection {
   const access = requiredPreparedSpellAccess(
-    classBuild({ startingClass: "class_ranger", totalLevel: 2 }),
+    classBuild({
+      startingClass: authoredUnitId("class_ranger"),
+      totalLevel: 2,
+    }),
     RANGER_FAVORED_ENEMY_UNIT_ID,
   );
   return preparedSpellAccessProjection({
     outcome: "ranger-favored-enemy",
     access,
     expectedUnitId: RANGER_FAVORED_ENEMY_UNIT_ID,
-    expectedSpellId: RANGER_FAVORED_ENEMY_EXPECTED_SPELL_ID,
+    expectedSpellId: authoredUnitId(RANGER_FAVORED_ENEMY_EXPECTED_SPELL_ID),
   });
 }
 
 function sorcererDraconicSpellsProjection(): ClassFeatureSelectedIdentityProjection {
   const access = requiredPreparedSpellAccess(
     classBuild({
-      startingClass: "class_sorcerer",
+      startingClass: authoredUnitId("class_sorcerer"),
       totalLevel: 3,
       features: [
         {
           kind: "selectedClassChoice",
-          selectedFromUnitId: "class_sorcerer",
-          unitId: "subclass_sorcerer_draconic_sorcery",
+          selectedFromUnitId: authoredUnitId("class_sorcerer"),
+          unitId: authoredUnitId("subclass_sorcerer_draconic_sorcery"),
         },
       ],
     }),
@@ -542,20 +555,20 @@ function sorcererDraconicSpellsProjection(): ClassFeatureSelectedIdentityProject
     outcome: "sorcerer-draconic-spells",
     access,
     expectedUnitId: SORCERER_DRACONIC_SPELLS_UNIT_ID,
-    expectedSpellId: SORCERER_DRACONIC_EXPECTED_SPELL_ID,
+    expectedSpellId: authoredUnitId(SORCERER_DRACONIC_EXPECTED_SPELL_ID),
   });
 }
 
 function warlockFiendSpellsProjection(): ClassFeatureSelectedIdentityProjection {
   const access = requiredPreparedSpellAccess(
     classBuild({
-      startingClass: "class_warlock",
+      startingClass: authoredUnitId("class_warlock"),
       totalLevel: 3,
       features: [
         {
           kind: "selectedClassChoice",
-          selectedFromUnitId: "class_warlock",
-          unitId: "subclass_warlock_fiend_patron",
+          selectedFromUnitId: authoredUnitId("class_warlock"),
+          unitId: authoredUnitId("subclass_warlock_fiend_patron"),
         },
       ],
     }),
@@ -565,7 +578,7 @@ function warlockFiendSpellsProjection(): ClassFeatureSelectedIdentityProjection 
     outcome: "warlock-fiend-spells",
     access,
     expectedUnitId: WARLOCK_FIEND_SPELLS_UNIT_ID,
-    expectedSpellId: WARLOCK_FIEND_EXPECTED_SPELL_ID,
+    expectedSpellId: authoredUnitId(WARLOCK_FIEND_EXPECTED_SPELL_ID),
   });
 }
 
@@ -626,27 +639,27 @@ function expectedTemperateLand(actual: string): "temperate" {
 function druidCircleLandBuild(): CharacterBuild {
   return {
     ...classBuild({
-      startingClass: "class_druid",
+      startingClass: authoredUnitId("class_druid"),
       totalLevel: 3,
       features: [
         {
           kind: "selectedClassChoice",
-          selectedFromUnitId: "class_druid",
-          unitId: "subclass_druid_circle_of_the_land",
+          selectedFromUnitId: authoredUnitId("class_druid"),
+          unitId: authoredUnitId("subclass_druid_circle_of_the_land"),
         },
       ],
     }),
     classFeatureLanguages: [
       {
         kind: "classFeatureLanguageGrant",
-        sourceUnitId: "druid_druidic",
+        sourceUnitId: authoredUnitId("druid_druidic"),
         language: "Druidic",
       },
     ],
     spellcasting: {
       sources: [
         {
-          sourceUnitId: "class_druid",
+          sourceUnitId: authoredUnitId("class_druid"),
           spellcastingAbility: "wis",
           cantrips: [],
           spellbook: [],
@@ -677,8 +690,8 @@ function classBuild(input: {
         hitPointRule: { tag: "fixedHigherLevelGain" as const },
       })),
     },
-    background: "background_soldier",
-    species: "species_orc",
+    background: authoredUnitId("background_soldier"),
+    species: authoredUnitId("species_orc"),
     originLanguages: ["Common", "Dwarvish", "Goblin"],
     classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
@@ -708,9 +721,11 @@ function normalizeClassFeatureSelectedIdentityQuintState(
   return {
     outcome: outcomeField(state["outcome"]),
     featureUnitId: featureUnitIdField(state["featureUnitId"]),
-    spellcastingSourceUnitId: stringField(
-      state["spellcastingSourceUnitId"],
-      "qState.spellcastingSourceUnitId",
+    spellcastingSourceUnitId: authoredUnitId(
+      stringField(
+        state["spellcastingSourceUnitId"],
+        "qState.spellcastingSourceUnitId",
+      ),
     ),
     expectedSpellPresent: booleanField(
       state["expectedSpellPresent"],

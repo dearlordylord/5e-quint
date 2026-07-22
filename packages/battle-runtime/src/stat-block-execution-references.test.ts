@@ -1,3 +1,4 @@
+import { statBlockId as parseSharedStatBlockId } from "@dnd/shared/game-facts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { Schema } from "effect";
 import * as Either from "effect/Either";
@@ -202,10 +203,12 @@ describe("Stat Block execution references", () => {
     const liveCharacterBindings = JSON.stringify(
       wizard.origin.execution.procedureBindings,
     );
-    expect(liveCharacterBindings).not.toContain("magic_missile");
-    expect(liveCharacterBindings).not.toContain("ray_of_frost");
+    expect(liveCharacterBindings).toContain('"spellId":"magic_missile"');
+    expect(liveCharacterBindings).toContain('"spellId":"ray_of_frost"');
     expect(liveCharacterBindings).not.toContain("Magic Missile");
     expect(liveCharacterBindings).not.toContain("Ray of Frost");
+    expect(liveCharacterBindings).not.toContain('"provenance"');
+    expect(liveCharacterBindings).not.toContain('"description"');
 
     expect(magicMissileRef).toBeDefined();
     expect(rayOfFrostRef).toBeDefined();
@@ -998,7 +1001,7 @@ describe("Stat Block execution references", () => {
     if (actor?.origin.kind !== "statBlock") {
       throw new Error("Expected Stat Block Opportunity Attack reactor.");
     }
-    const attack = statBlockAttackActionOptions(actor.origin).find(
+    const attack = statBlockAttackActionOptions(actor.origin.execution).find(
       (candidate) =>
         statBlockAttackProcedureSection(
           battle,
@@ -1055,9 +1058,9 @@ describe("Stat Block execution references", () => {
     if (actor?.origin.kind !== "statBlock") {
       throw new Error("Expected Stat Block actor admission.");
     }
-    const meleeOption = statBlockAttackActionOptions(actor.origin).find(
-      (option) => option.attack.attackType === "melee",
-    );
+    const meleeOption = statBlockAttackActionOptions(
+      actor.origin.execution,
+    ).find((option) => option.attack.attackType === "melee");
     const attackAct = discoverBattleActCandidates(battle).find(
       (act) =>
         meleeOption !== undefined &&
@@ -1954,7 +1957,7 @@ describe("Stat Block execution references", () => {
     }
     const limitedForm: StatBlockRecord = {
       ...baseForm,
-      id: "synthetic_limited_wild_shape_form",
+      id: parseSharedStatBlockId("synthetic_limited_wild_shape_form"),
       name: "Synthetic Limited Wild Shape Form",
       provenance: {
         kind: "synthetic-test",

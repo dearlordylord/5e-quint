@@ -1,3 +1,4 @@
+import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-d20-lifecycle
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE
@@ -20,7 +21,6 @@ import type {
   ActivationPhase,
   Attachment,
   EffectAtom,
-  SpellRecord,
   TargetSelection,
 } from "@dnd/surface/surface/types";
 import {
@@ -34,7 +34,6 @@ import {
   SUPPORTED_POINT_CUBE_SAVE_GATE_SIDE_FEET,
   SUPPORTED_POINT_SPHERE_SAVE_GATE_RADIUS_FEET,
   SUPPORTED_SELF_CONE_SAVE_GATE_LENGTH_FEET,
-  damageSpellSource,
   type DamageSpellSource,
   type SaveGateFailureEffect,
   type SpellActivationPhase,
@@ -47,15 +46,16 @@ import {
   type SaveGatedConditionImmunitySpellInvocation,
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
-import type { CharacterBattleSpellcastingState } from "../../character-battle-resources.ts";
+import { damageSpellSource } from "../spells-invocation-guards.ts";
+import type { CharacterBattleSpellcastingExecutionState } from "../../character-battle-resource-execution.ts";
 import type { CombatantId } from "../../identity.ts";
-import { singleTargetSpellRangeFeet } from "../../procedure-admission/spell-range-facts.ts";
 import {
   sameStringSet,
   scalarBuffSpellTargetCount,
   scalarBuffSpellTargetCountBySlot,
+  singleTargetSpellRangeFeet,
   supportedDamageAmountExpr,
-} from "../spells-profile-shared.ts";
+} from "../spells-execution-facts.ts";
 
 export type SaveGateConditionSpell = {
   readonly phase: Extract<ActivationPhase, { readonly kind: "save_gate" }>;
@@ -143,7 +143,7 @@ const RAY_OF_ENFEEBLEMENT_RANGE_FEET = 60;
 const RAY_OF_ENFEEBLEMENT_DURATION_AMOUNT = 1;
 const RAY_OF_ENFEEBLEMENT_DURATION_UNIT = "minute";
 
-function spellHasActionCastingTime(spell: SpellRecord): boolean {
+function spellHasActionCastingTime(spell: BattleSpellAdmissionSource): boolean {
   return topLevelSpellCastingTime(spell.mechanics)?.kind === "action";
 }
 
@@ -154,7 +154,7 @@ export function hasSaveGateRepeatSaves(
 }
 
 export function supportedCantripSaveGateDamageProfile(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   characterLevel: number,
 ): readonly SupportedSpellInvocation[] {
   return supportedSaveGateDamageProfile({
@@ -166,8 +166,8 @@ export function supportedCantripSaveGateDamageProfile(
 }
 
 export function supportedPreparedSaveGateDamageProfile(
-  spell: SpellRecord,
-  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
+  spell: BattleSpellAdmissionSource,
+  spellSlots: CharacterBattleSpellcastingExecutionState["spellSlots"],
 ): readonly SupportedSpellInvocation[] {
   return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] => {
     if (Number(slot.spellLevel) < spell.mechanics.level) {
@@ -183,8 +183,8 @@ export function supportedPreparedSaveGateDamageProfile(
 }
 
 export function supportedPreparedSaveGateConditionProfile(
-  spell: SpellRecord,
-  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
+  spell: BattleSpellAdmissionSource,
+  spellSlots: CharacterBattleSpellcastingExecutionState["spellSlots"],
 ): readonly SupportedSpellInvocation[] {
   const conditionSpell = supportedSaveGateConditionSpell(spell);
   if (conditionSpell === null) {
@@ -214,7 +214,7 @@ export function supportedPreparedSaveGateConditionProfile(
 }
 
 export function supportedSaveGateConditionSpell(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
 ): SaveGateConditionSpell | null {
   return (
     animalFriendshipSaveGateConditionSpell(spell) ??
@@ -229,8 +229,8 @@ export function supportedSaveGateConditionSpell(
 
 export function supportedPreparedSaveGateAttackRollAdvantageProfile(
   actorId: CombatantId,
-  spell: SpellRecord,
-  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
+  spell: BattleSpellAdmissionSource,
+  spellSlots: CharacterBattleSpellcastingExecutionState["spellSlots"],
 ): readonly SupportedSpellInvocation[] {
   const attackRollAdvantageSpell = faerieFireSaveGateAttackRollAdvantageSpell(
     actorId,
@@ -262,8 +262,8 @@ export function supportedPreparedSaveGateAttackRollAdvantageProfile(
 
 export function supportedPreparedAbilityD20TestRollModeSaveGateProfile(
   actorId: CombatantId,
-  spell: SpellRecord,
-  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
+  spell: BattleSpellAdmissionSource,
+  spellSlots: CharacterBattleSpellcastingExecutionState["spellSlots"],
 ): readonly SupportedSpellInvocation[] {
   const d20Lifecycle = abilityD20TestRollModeSaveGateSpell(actorId, spell);
   if (d20Lifecycle === null) {
@@ -296,8 +296,8 @@ export function supportedPreparedAbilityD20TestRollModeSaveGateProfile(
 
 export function supportedPreparedSaveGateConditionImmunityProfile(
   actorId: CombatantId,
-  spell: SpellRecord,
-  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
+  spell: BattleSpellAdmissionSource,
+  spellSlots: CharacterBattleSpellcastingExecutionState["spellSlots"],
 ): readonly SupportedSpellInvocation[] {
   const conditionImmunitySpell = calmEmotionsSaveGateConditionImmunitySpell(
     actorId,
@@ -331,7 +331,7 @@ export function supportedPreparedSaveGateConditionImmunityProfile(
 
 function calmEmotionsSaveGateConditionImmunitySpell(
   actorId: CombatantId,
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
 ): {
   readonly phase: Extract<ActivationPhase, { readonly kind: "save_gate" }>;
   readonly targeting: Extract<
@@ -462,7 +462,7 @@ export function oneAdditionalTargetPerSpellSlotAboveBaseLevel(
 
 function abilityD20TestRollModeSaveGateSpell(
   actorId: CombatantId,
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
 ): {
   readonly phase: RayOfEnfeeblementPhase;
   readonly targeting: Extract<SpellTargeting, { readonly kind: "targetList" }>;
@@ -615,7 +615,7 @@ function sameAbilitySet(
 
 export function faerieFireSaveGateAttackRollAdvantageSpell(
   actorId: CombatantId,
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
 ): SaveGateAttackRollAdvantageSpell | null {
   if (spell.mechanics.family !== "activation") {
     return null;
@@ -687,7 +687,7 @@ function faerieFireFailedSaveAttackAdvantageEffect(
 }
 
 export function animalFriendshipSaveGateConditionSpell(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
 ): SaveGateConditionSpell | null {
   return creatureTypeCharmedSaveGateConditionSpell({
     spell,
@@ -698,7 +698,7 @@ export function animalFriendshipSaveGateConditionSpell(
 }
 
 export function charmPersonSaveGateConditionSpell(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
 ): SaveGateConditionSpell | null {
   return creatureTypeCharmedSaveGateConditionSpell({
     spell,
@@ -709,7 +709,7 @@ export function charmPersonSaveGateConditionSpell(
 }
 
 export function blindnessDeafnessSaveGateConditionSpell(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
 ): SaveGateConditionSpell | null {
   if (spell.mechanics.family !== "activation") {
     return null;
@@ -803,7 +803,7 @@ export function blindnessDeafnessSaveGateConditionSpell(
 }
 
 export function holdPersonSaveGateConditionSpell(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
 ): SaveGateConditionSpell | null {
   return paralyzedTargetListSaveGateConditionSpell({
     spell,
@@ -814,7 +814,7 @@ export function holdPersonSaveGateConditionSpell(
 }
 
 export function holdMonsterSaveGateConditionSpell(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
 ): SaveGateConditionSpell | null {
   return paralyzedTargetListSaveGateConditionSpell({
     spell,
@@ -825,7 +825,7 @@ export function holdMonsterSaveGateConditionSpell(
 }
 
 function paralyzedTargetListSaveGateConditionSpell(input: {
-  readonly spell: SpellRecord;
+  readonly spell: BattleSpellAdmissionSource;
   readonly baseSpellLevel: number;
   readonly rangeFeet: number;
   readonly targetCreatureTypes: readonly CreatureType[] | null;
@@ -928,7 +928,7 @@ function matchesOptionalCreatureTypeFilter(
 }
 
 function creatureTypeCharmedSaveGateConditionSpell(input: {
-  readonly spell: SpellRecord;
+  readonly spell: BattleSpellAdmissionSource;
   readonly duration: { readonly unit: "hour"; readonly amount: 1 | 24 };
   readonly targetCreatureType: CreatureType;
   readonly saveRollModeRule: SpellSavingThrowRollModeRule | null;
@@ -1011,7 +1011,7 @@ function creatureTypeCharmedSaveGateConditionSpell(input: {
 }
 
 export function colorSpraySaveGateConditionSpell(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
 ): SaveGateConditionSpell | null {
   if (spell.mechanics.family !== "activation") {
     return null;
@@ -1064,7 +1064,7 @@ export function colorSpraySaveGateConditionSpell(
 }
 
 export function entangleSaveGateConditionSpell(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
 ): SaveGateConditionSpell | null {
   if (spell.mechanics.family !== "activation") {
     return null;
@@ -1126,7 +1126,7 @@ export function entangleSaveGateConditionSpell(
 
 export function supportedSaveGateDamageProfile(
   input: {
-    readonly spell: SpellRecord;
+    readonly spell: BattleSpellAdmissionSource;
     readonly slotLevel?: SpellSlotLevel;
     readonly characterLevel?: number;
   } & DamageSpellSource,
@@ -1329,7 +1329,7 @@ export function saveGateTargeting(
 }
 
 function saveGatedDamageTargeting(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   attachment: Attachment,
 ): SpellTargeting | null {
   return (
@@ -1341,7 +1341,7 @@ function saveGatedDamageTargeting(
 }
 
 function level5SelfOriginConeTargeting(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   attachment: Attachment,
 ): Extract<SpellTargeting, { readonly kind: "selfOriginCone" }> | null {
   const value = attachment.kind === "hole" ? attachment.value : attachment;
@@ -1363,7 +1363,7 @@ function level5SelfOriginConeTargeting(
 }
 
 function fireballPointOriginSphereTargeting(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   attachment: Attachment,
 ): Extract<SpellTargeting, { readonly kind: "pointOriginSphere" }> | null {
   const value = attachment.kind === "hole" ? attachment.value : attachment;
@@ -1384,7 +1384,7 @@ function fireballPointOriginSphereTargeting(
 }
 
 function shatterPointOriginSphereTargeting(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   attachment: Attachment,
 ): Extract<SpellTargeting, { readonly kind: "pointOriginSphere" }> | null {
   const value = attachment.kind === "hole" ? attachment.value : attachment;
@@ -1407,7 +1407,7 @@ function shatterPointOriginSphereTargeting(
 }
 
 export function areaSaveGateSpellRangeFeet(
-  range: SpellRecord["mechanics"]["range"],
+  range: BattleSpellAdmissionSource["mechanics"]["range"],
   targeting: Exclude<
     SpellTargeting,
     { readonly kind: "singleCombatant" | "singleCreatureOrObject" }
@@ -1446,13 +1446,13 @@ export function areaSaveGateSpellRangeFeet(
 }
 
 function fixedPointRangeFeet(
-  range: SpellRecord["mechanics"]["range"],
+  range: BattleSpellAdmissionSource["mechanics"]["range"],
 ): MovementFeet | null {
   return isFixedDistancePointRange(range) ? movementFeet(range.feet) : null;
 }
 
 export function supportedSaveGateFailedSaveEffects(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   phase: Extract<SpellActivationPhase, { readonly kind: "save_gate" }>,
   effect: SaveGateFailureEffect,
   postSaveAreaEffect: SpellPostSaveAreaEffect | null = null,
@@ -1556,7 +1556,7 @@ type FailedSaveConditionSupport = {
 };
 
 function supportedFailedSaveConditionEffects(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   phase: Extract<SpellActivationPhase, { readonly kind: "save_gate" }>,
   effects: readonly SaveGateFailureEffect[],
 ): FailedSaveConditionSupport | null {
@@ -1568,7 +1568,7 @@ function supportedFailedSaveConditionEffects(
 }
 
 function contagionFailedSaveConditionSupport(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   phase: Extract<SpellActivationPhase, { readonly kind: "save_gate" }>,
   effects: readonly SaveGateFailureEffect[],
 ): FailedSaveConditionSupport | null {
@@ -1635,7 +1635,7 @@ function contagionFailedSaveConditionSupport(
 }
 
 function isContagionSaveGateSpellShape(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   phase: Extract<SpellActivationPhase, { readonly kind: "save_gate" }>,
 ): boolean {
   return (
@@ -1718,7 +1718,7 @@ function isAbility(value: unknown): value is Ability {
 }
 
 export function supportedFailedSavePostDamageRiders(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   phase: Extract<SpellActivationPhase, { readonly kind: "save_gate" }>,
   effects: readonly SaveGateFailureEffect[],
   postSaveAreaEffect: SpellPostSaveAreaEffect | null = null,
@@ -1765,7 +1765,7 @@ export function supportedFailedSavePostDamageRiders(
 }
 
 function isDissonantWhispersForcedReactionMovementShape(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   phase: Extract<SpellActivationPhase, { readonly kind: "save_gate" }>,
   effect: SaveGateFailureEffect,
 ): boolean {
@@ -1808,7 +1808,7 @@ function isDissonantWhispersFailedSaveDamageShape(
 }
 
 function saveGatedDamagePostSaveAreaEffect(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   phase: Extract<SpellActivationPhase, { readonly kind: "save_gate" }>,
   directPhase: SpellActivationPhase | undefined,
 ): SpellPostSaveAreaEffect | null {
@@ -1839,7 +1839,7 @@ function saveGatedDamagePhaseCount(
 }
 
 function saveGatedDamageSaveRollModeRule(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   phase: Extract<SpellActivationPhase, { readonly kind: "save_gate" }>,
 ): SpellSavingThrowRollModeRule | null {
   return isShatterSaveGateDamageShape(spell, phase)
@@ -1848,7 +1848,7 @@ function saveGatedDamageSaveRollModeRule(
 }
 
 function fireballPostSaveAreaEffect(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   phase: Extract<SpellActivationPhase, { readonly kind: "save_gate" }>,
   directPhase: SpellActivationPhase | undefined,
 ): SpellPostSaveAreaEffect | null {
@@ -1895,7 +1895,7 @@ function fireballPostSaveAreaEffect(
 }
 
 function shatterPostSaveAreaEffect(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   phase: Extract<SpellActivationPhase, { readonly kind: "save_gate" }>,
   directPhase: SpellActivationPhase | undefined,
 ): SpellPostSaveAreaEffect | null {
@@ -1905,7 +1905,7 @@ function shatterPostSaveAreaEffect(
 }
 
 function isShatterSaveGateDamageShape(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   phase: Extract<SpellActivationPhase, { readonly kind: "save_gate" }>,
 ): boolean {
   const damage = phase.onFail;
@@ -1940,7 +1940,7 @@ function isShatterSaveGateDamageShape(
 }
 
 function thunderwavePostSaveAreaEffect(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   phase: Extract<SpellActivationPhase, { readonly kind: "save_gate" }>,
   directPhase: SpellActivationPhase | undefined,
 ): SpellPostSaveAreaEffect | null {
@@ -2030,7 +2030,7 @@ function isThunderwaveFailedSaveDamageShape(
 }
 
 export function isViciousMockeryNextAttackRiderShape(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   phase: Extract<SpellActivationPhase, { readonly kind: "save_gate" }>,
 ): boolean {
   return (

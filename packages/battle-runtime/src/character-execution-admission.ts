@@ -1,3 +1,32 @@
+import { sameSpellProcedureExecution } from "./same-spell-procedure-execution.ts";
+import {
+  characterSpellProcedureExecution,
+  characterStoredExecutionProcedureRef,
+  unitSupportProfileKind,
+  type CharacterUnitProcedureQuery,
+} from "./character-execution-queries.ts";
+export {
+  BONUS_ACTION_STANDARD_ACTION_PROCEDURE_QUERY,
+  CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
+  DRUID_WILD_SHAPE_PROCEDURE_QUERY,
+  MONK_FOCUS_PROCEDURE_QUERY,
+  bindStoredSpellProcedureExecutionFacts,
+  characterExecutionWithDancingLightsReposition,
+  characterExecutionWithHeldLightHurl,
+  characterExecutionWithMarkedDamageRiderTransfer,
+  characterExecutionWithObjectContactDamageRepeat,
+  characterExecutionWithSpellCreatedHeldObjectProcedures,
+  characterExecutionWithSpiritualWeaponRepeatAttack,
+  characterProcedureBinding,
+  characterProcedureBindingSnapshots,
+  characterSpellProcedure,
+  characterSpellProcedureExecution,
+  characterSpellProcedureRefsForProcedure,
+  characterUnitProcedure,
+  characterUnitProcedureBindings,
+  unitSupportProfileKind,
+  type CharacterUnitProcedureQuery,
+} from "./character-execution-queries.ts";
 import * as Either from "effect/Either";
 import type { CharacterBattleClassLevel } from "./character-class-level.ts";
 import {
@@ -6,9 +35,9 @@ import {
 } from "@dnd/shared/types";
 import {
   type Attachment,
-  type SpellRecord,
+  type AuthoredSpellSource,
   type TargetSelection,
-  type UnitRecord,
+  type AuthoredUnitSource,
 } from "@dnd/surface/surface/types";
 import type {
   BattleCharacterExecutionScopeRef,
@@ -25,70 +54,61 @@ import {
   battleProcedureExecutionCursor,
   battleProcedureExecutionRef,
   battleResourcePoolExecutionRef,
+  spellId,
 } from "./identity.ts";
 import {
-  BONUS_ACTION_DASH_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE,
-  BONUS_ACTION_DELEGATED_STANDARD_ACTIONS_SUPPORT_PROFILE,
-  MONK_FOCUS_BATTLE_OPTIONS_SUPPORT_PROFILE,
   type BattleUnitSupportProfile,
   type BattleUnitSupportProfileIssue,
+  type BattleUnitSupportSource,
   type SupportedUnitFeatureProfile,
 } from "./unit-feature-support.ts";
 import type {
-  BattleActiveEffect,
+  BattleSpellAdmissionSource,
   BattleSelectedSpellInvocation,
   ClassFeatureFreeCastInvocationResource,
+  SelectableSpellProcedureExecution,
   SupportedSpellInvocation,
 } from "./battle-state-execution.ts";
-import type { BattleUnitRef } from "./battle-init.ts";
+import type {
+  CharacterExecutionState,
+  CharacterProcedureBinding,
+  CharacterUnitProcedureExecution,
+  CharacterUnitProcedureSource,
+  UnitFeatureProcedureExecution,
+  UnitSupportProcedureExecution,
+} from "./character-execution-vocabulary.ts";
+export type {
+  CharacterExecutionState,
+  CharacterProcedureBinding,
+  CharacterProcedureBindingSnapshot,
+  CharacterUnitProcedureExecution,
+  CharacterUnitProcedureSource,
+  UnitFeatureProcedureExecution,
+  UnitSupportProcedureExecution,
+} from "./character-execution-vocabulary.ts";
+
+/** Authored spell admission retained only until execution projection. */
+export type AuthoredSupportedSpellInvocation =
+  SupportedSpellInvocation extends infer Invocation
+    ? Invocation extends {
+        readonly spell: unknown;
+      }
+      ? Omit<Invocation, "spell"> & { readonly spell: AuthoredSpellSource }
+      : never
+    : never;
+
+export type AuthoredSelectedSpellInvocation<
+  I extends AuthoredSupportedSpellInvocation = AuthoredSupportedSpellInvocation,
+> = I & { readonly sourceProcedureRef: BattleProcedureExecutionRef };
 import { Brand, Match, Schema } from "effect";
-import type { SpellExecutionFacts } from "./battle-reducer/spell-execution-facts.ts";
 import type { SpellRuleExecutionFacts } from "./procedure-execution/spell-rule-facts.ts";
 import type {
   AfterHitDamageSpellProcedureExecution,
-  BattleSpellProcedureExecution,
-  DancingLightsRepositionSpellProcedureExecution,
-  HeldLightHurlSpellProcedureExecution,
-  MarkedDamageRiderTransferSpellProcedureExecution,
-  ObjectContactDamageRepeatSpellProcedureExecution,
-  SpellCreatedHeldObjectAttackSpellProcedureExecution,
-  SpellCreatedHeldObjectReEvokeSpellProcedureExecution,
-  SpellExecutableExecutionOf,
   SpellProcedureExecution,
-  SpiritualWeaponRepeatAttackSpellProcedureExecution,
 } from "./procedure-execution/spell-procedure-execution.ts";
 export type { SpellRuleExecutionFacts } from "./procedure-execution/spell-rule-facts.ts";
 export type { WeaponAttackOverrideSpellProcedureExecution } from "./procedure-execution/weapon-attack-override.ts";
 export type * from "./procedure-execution/spell-procedure-execution.ts";
-import {
-  sameMagicalDarknessPointOriginExecution,
-  sameMagicWeaponEnhancementExecution,
-  sameMakeStableExecution,
-  sameMarkedDamageRiderExecution,
-  sameMirrorImageHitInterceptionExecution,
-  sameMoonbeamExecution,
-  sameObjectContactDamageExecution,
-  sameObjectContactDamageRepeatExecution,
-  sameObjectLightExecution,
-  sameOngoingSpellEndExecution,
-  samePersistentArmorEffectExecution,
-  sameRepeatedDamageAllocationExecution,
-  sameRollModifierExecution,
-  sameSanctuaryTargetingInterdictionExecution,
-  sameSaveGatedAttackRollAdvantageExecution,
-  sameSaveGatedConditionExecution,
-  sameScalarBuffExecution,
-  sameSelfTransformationModeExecution,
-  sameSleetStormAreaHazardExecution,
-  sameSlowActivePenaltiesExecution,
-  sameSpellAttackDamageExecution,
-  sameSpellAttackSequenceExecution,
-  sameSpikeGrowthMovementHazardExecution,
-  sameSpiritualWeaponAttackProxyExecution,
-  sameWebRestraintHazardExecution,
-  sameWeaponAttackOverrideExecution,
-  sameWeaponDamageRiderExecution,
-} from "./spell-procedure-execution-equality-magical-darkness-web.ts";
 import {
   sameMultisetBy,
   samePrimitiveMultiset,
@@ -96,170 +116,6 @@ import {
   sameSetByKey,
   type MechanicalPrimitive,
 } from "./mechanical-equality.ts";
-import {
-  sameAbilityD20TestRollModeSaveGateExecution,
-  sameAfterHitDamageAndIlluminationExecution,
-  sameAfterHitDamageExecution,
-  sameAfterHitSaveGatedConditionExecution,
-  sameAfterHitTimedDamageAndSaveExecution,
-  sameAntimagicFieldOngoingSpellSuppressionExecution,
-  sameChainedSpellAttackDamageExecution,
-  sameChosenDamageResistanceExecution,
-  sameCloudkillAreaHazardExecution,
-  sameCommandExecution,
-  sameConditionImmunityAndTurnStartTemporaryHitPointsExecution,
-  sameConditionRemovalProtectionExecution,
-  sameDamageReductionExecution,
-  sameDancingLightsCombinedCastExecution,
-  sameDancingLightsRepositionExecution,
-  sameDancingLightsSeparateCastExecution,
-  sameDirectHitPointRestorationExecution,
-  sameDragonsBreathInitialExecution,
-  sameHypnoticPatternExecution,
-  sameInsectPlagueAreaHazardExecution,
-} from "./spell-procedure-execution-equality-ability-insect-plague.ts";
-import {
-  sameSeeInvisibleObserverSightExecution,
-  sameSelfTeleportExecution,
-  sameShieldReactionExecution,
-  sameSleepTargetAdmissionExecution,
-  sameThaumaturgyBoomingVoiceExecution,
-} from "./simple-spell-procedure-execution-equality.ts";
-import {
-  sameAttackBurstSaveDamageExecution,
-  sameBlurAttackRollDefenseExecution,
-} from "./spell-procedure-execution-equality-attack-blur.ts";
-import {
-  sameCounterspellExecution,
-  sameCreatureSizeDecreaseExecution,
-  sameCreatureSizeIncreaseExecution,
-  sameCreatureTypeProtectionExecution,
-} from "./spell-procedure-execution-equality-counterspell-size.ts";
-import {
-  sameHastePositiveExecution,
-  sameHeldLightExecution,
-} from "./spell-procedure-execution-equality-haste-light.ts";
-import {
-  sameDirectConditionExecution,
-  sameDirectConditionRemovalExecution,
-} from "./spell-procedure-execution-equality-direct-condition.ts";
-import {
-  sameExpeditiousRetreatDashExecution,
-  sameFeatherFallMitigationExecution,
-} from "./spell-procedure-execution-equality-retreat-feather-fall.ts";
-import {
-  sameFlamingSphereExecution,
-  sameFogCloudObscurementExecution,
-} from "./spell-procedure-execution-equality-sphere-fog.ts";
-import {
-  sameGreaseGroundHazardExecution,
-  sameGustOfWindLineExecution,
-} from "./spell-procedure-execution-equality-grease-gust.ts";
-import {
-  sameHeldLightHurlExecution,
-  sameHideousLaughterExecution,
-} from "./spell-procedure-execution-equality-held-hurl-laughter.ts";
-import {
-  sameJumpMovementReplacementExecution,
-  sameLevitatedCreatureExecution,
-} from "./spell-procedure-execution-equality-jump-levitate.ts";
-import {
-  sameSaveGatedConditionImmunityExecution,
-  sameSaveGatedDamageExecution,
-} from "./spell-procedure-execution-equality-save-immunity-damage.ts";
-import {
-  sameSpellCreatedHeldObjectAttackExecution,
-  sameSpellCreatedHeldObjectExecution,
-  sameSpellCreatedHeldObjectReEvokeExecution,
-} from "./spell-procedure-execution-equality-created-object.ts";
-import { sameSpellHostedWeaponAttackExecution } from "./spell-procedure-execution-equality-hosted-weapon.ts";
-import {
-  sameSpiritualWeaponRepeatAttackExecution,
-  sameWardingBondExecution,
-} from "./spell-procedure-execution-equality-spiritual-warding.ts";
-
-export type UnitSupportProfileKind<TProfile = BattleUnitSupportProfile> =
-  TProfile extends string
-    ? TProfile
-    : TProfile extends { readonly kind: infer TKind extends string }
-      ? TKind
-      : never;
-
-export type CharacterUnitProcedureQuery =
-  | { readonly kind: "unitFeatureOrSupportProfile" }
-  | {
-      readonly kind: "unitFeatureOrSupportProfileKinds";
-      readonly featureKinds: ReadonlySet<UnitFeatureProcedureExecution["kind"]>;
-      readonly supportKinds: ReadonlySet<UnitSupportProfileKind>;
-    }
-  | {
-      readonly kind: "unitFeature";
-      readonly featureKinds: ReadonlySet<UnitFeatureProcedureExecution["kind"]>;
-    }
-  | {
-      readonly kind: "unitSupportProfile";
-      readonly supportKinds: ReadonlySet<UnitSupportProfileKind>;
-    };
-
-export const CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY = {
-  kind: "unitFeatureOrSupportProfile",
-} as const satisfies CharacterUnitProcedureQuery;
-export const MONK_FOCUS_PROCEDURE_QUERY = {
-  kind: "unitSupportProfile",
-  supportKinds: new Set<UnitSupportProfileKind>([
-    MONK_FOCUS_BATTLE_OPTIONS_SUPPORT_PROFILE,
-  ]),
-} as const satisfies CharacterUnitProcedureQuery;
-export const BONUS_ACTION_STANDARD_ACTION_PROCEDURE_QUERY = {
-  kind: "unitFeatureOrSupportProfileKinds",
-  featureKinds: new Set<UnitFeatureProcedureExecution["kind"]>([
-    BONUS_ACTION_DASH_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE,
-    BONUS_ACTION_DELEGATED_STANDARD_ACTIONS_SUPPORT_PROFILE,
-  ]),
-  supportKinds: new Set<UnitSupportProfileKind>([
-    "alternateActionCost",
-    BONUS_ACTION_DASH_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE,
-    BONUS_ACTION_DELEGATED_STANDARD_ACTIONS_SUPPORT_PROFILE,
-  ]),
-} as const satisfies CharacterUnitProcedureQuery;
-export const DRUID_WILD_SHAPE_PROCEDURE_QUERY = {
-  kind: "unitFeature",
-  featureKinds: new Set<UnitFeatureProcedureExecution["kind"]>([
-    "druidWildShapeKnownForm",
-  ]),
-} as const satisfies CharacterUnitProcedureQuery;
-
-export type CharacterProcedureBinding =
-  | {
-      readonly procedureRef: BattleProcedureExecutionRef;
-      readonly procedure: {
-        readonly kind: "unitSupportProfile";
-        readonly source: CharacterUnitProcedureSource;
-        readonly execution: UnitSupportProcedureExecution;
-      };
-    }
-  | {
-      readonly procedureRef: BattleProcedureExecutionRef;
-      readonly procedure: {
-        readonly kind: "unitFeature";
-        readonly source: CharacterUnitProcedureSource;
-        readonly execution: UnitFeatureProcedureExecution;
-      };
-    }
-  | {
-      readonly procedureRef: BattleProcedureExecutionRef;
-      readonly procedure: {
-        readonly kind: "spellInvocation";
-        readonly execution: SpellProcedureExecution;
-      };
-    }
-  | {
-      readonly procedureRef: BattleProcedureExecutionRef;
-      readonly procedure: {
-        readonly kind: "unavailableSpellInvocation";
-        readonly execution: SpellProcedureExecution;
-      };
-    };
 
 export type CharacterUnitProcedureBinding = {
   readonly procedureRef: BattleProcedureExecutionRef;
@@ -267,33 +123,21 @@ export type CharacterUnitProcedureBinding = {
 };
 
 export type CharacterUnitProcedureOwnership = {
-  readonly unitId: UnitRecord["id"];
+  readonly unitId: AuthoredUnitSource["id"];
   readonly procedureRef: BattleProcedureExecutionRef;
 };
 
-export function characterUnitProcedureBindings(
-  execution: CharacterExecutionState,
-): readonly CharacterUnitProcedureBinding[] {
-  return execution.procedureBindings.flatMap((binding) => {
-    const procedure = binding.procedure;
-    return procedure.kind === "unitFeature" ||
-      procedure.kind === "unitSupportProfile"
-      ? [{ procedureRef: binding.procedureRef, procedure }]
-      : [];
-  });
-}
-
 export type UnitSupportProcedureExecutionContext = {
   readonly resourcePoolRefsByUnitId: ReadonlyMap<
-    UnitRecord["id"],
+    AuthoredUnitSource["id"],
     BattleResourcePoolExecutionRef
   >;
   readonly unitFeatureProcedureRefsByUnitId: ReadonlyMap<
-    UnitRecord["id"],
+    AuthoredUnitSource["id"],
     BattleProcedureExecutionRef
   >;
   readonly supportProcedureRefsByUnitId: ReadonlyMap<
-    UnitRecord["id"],
+    AuthoredUnitSource["id"],
     BattleProcedureExecutionRef
   >;
 };
@@ -305,7 +149,7 @@ export type UnitFeatureProcedureExecutionContext = Pick<
 
 export function unitFeatureProcedureExecutionContext(
   ownership: readonly {
-    readonly unit: Pick<UnitRecord, "id">;
+    readonly unit: Pick<AuthoredUnitSource, "id">;
     readonly resourcePoolRef: BattleResourcePoolExecutionRef;
   }[],
 ): UnitFeatureProcedureExecutionContext {
@@ -316,35 +160,6 @@ export function unitFeatureProcedureExecutionContext(
   };
 }
 
-export type UnitSupportProcedureExecution = Exclude<
-  ReturnType<typeof unitSupportProcedureExecution>,
-  undefined
->;
-
-export type UnitFeatureProcedureExecution = Exclude<
-  ReturnType<typeof unitFeatureProcedureExecution>,
-  undefined
->;
-
-export type CharacterUnitProcedureExecution =
-  | {
-      readonly kind: "unitFeature";
-      readonly source: CharacterUnitProcedureSource;
-      readonly execution: UnitFeatureProcedureExecution;
-    }
-  | {
-      readonly kind: "unitSupportProfile";
-      readonly source: CharacterUnitProcedureSource;
-      readonly execution: UnitSupportProcedureExecution;
-    };
-
-export type CharacterUnitProcedureSource =
-  | { readonly kind: "intrinsic" }
-  | {
-      readonly kind: "resourcePool";
-      readonly resourcePoolRef: BattleResourcePoolExecutionRef;
-    };
-
 type CharacterProcedureWithoutRef =
   CharacterProcedureBinding extends infer TBinding
     ? TBinding extends CharacterProcedureBinding
@@ -352,53 +167,6 @@ type CharacterProcedureWithoutRef =
       : never
     : never;
 
-export function characterProcedureBinding(
-  execution: CharacterExecutionState,
-  procedureRef: BattleProcedureExecutionRef,
-): CharacterProcedureBinding | undefined {
-  return execution.procedureBindings.find(
-    (candidate) => candidate.procedureRef === procedureRef,
-  );
-}
-
-export type CharacterProcedureBindingSnapshot =
-  | {
-      readonly procedureRef: BattleProcedureExecutionRef;
-      readonly procedure: {
-        readonly kind: "unitFeature";
-        readonly source: CharacterUnitProcedureSource;
-        readonly execution: UnitFeatureProcedureExecution;
-      };
-    }
-  | {
-      readonly procedureRef: BattleProcedureExecutionRef;
-      readonly procedure: {
-        readonly kind: "unitSupportProfile";
-        readonly source: CharacterUnitProcedureSource;
-        readonly execution: UnitSupportProcedureExecution;
-      };
-    }
-  | {
-      readonly procedureRef: BattleProcedureExecutionRef;
-      readonly procedure: {
-        readonly kind: "spellInvocation";
-        readonly executionFacts: SpellExecutionFacts;
-      };
-    }
-  | {
-      readonly procedureRef: BattleProcedureExecutionRef;
-      readonly procedure: {
-        readonly kind: "unavailableSpellInvocation";
-      };
-    };
-
-type CharacterExecutionStateData = {
-  readonly scopeRef: BattleCharacterExecutionScopeRef;
-  readonly nextProcedureOrdinal: BattleProcedureExecutionCursor;
-  readonly procedureBindings: readonly CharacterProcedureBinding[];
-};
-export type CharacterExecutionState = CharacterExecutionStateData &
-  Brand.Brand<"CharacterExecutionState">;
 const CharacterExecutionState = Brand.nominal<CharacterExecutionState>();
 
 export type CharacterExecutionAdmission = {
@@ -407,12 +175,12 @@ export type CharacterExecutionAdmission = {
 };
 
 type UnitSupportProcedureCandidate = {
-  readonly unitId: UnitRecord["id"];
+  readonly unitId: AuthoredUnitSource["id"];
   readonly profile: BattleUnitSupportProfile;
 };
 
 type UnitFeatureProcedureCandidate = {
-  readonly unitId: UnitRecord["id"];
+  readonly unitId: AuthoredUnitSource["id"];
   readonly execution: UnitFeatureProcedureExecution;
 };
 
@@ -443,9 +211,12 @@ export function characterExecutionFromUnits(input: {
   readonly combatantId: CombatantId;
   readonly scopeOrdinal: BattleExecutionScopeOrdinal;
   readonly unitFeatureProfiles: readonly SupportedUnitFeatureProfile[];
-  readonly resourceUnits: readonly UnitRecord[];
-  readonly units: readonly UnitRecord[];
-  readonly unitRefs: readonly BattleUnitRef[];
+  readonly resourceUnits: readonly AuthoredUnitSource[];
+  readonly units: readonly AuthoredUnitSource[];
+  readonly unitRefs: readonly {
+    readonly unit: BattleUnitSupportSource;
+    readonly supportProfiles: readonly BattleUnitSupportProfile[];
+  }[];
   readonly classLevels: readonly CharacterBattleClassLevel[];
 }): Either.Either<
   CharacterExecutionAdmission,
@@ -543,7 +314,7 @@ export function characterExecutionFromUnits(input: {
       profile.kind !== "cunningStrikeOptionGrant",
   );
   const projectedPrimarySupportProcedures: Array<{
-    readonly unitId: UnitRecord["id"];
+    readonly unitId: AuthoredUnitSource["id"];
     readonly binding: CharacterProcedureWithoutRef;
   }> = [];
   for (const { profile, unitId } of primarySupportProcedures) {
@@ -595,7 +366,7 @@ export function characterExecutionFromUnits(input: {
     supportProcedureRefsByUnitId,
   };
   const grantProcedures: Array<{
-    readonly unitId: UnitRecord["id"];
+    readonly unitId: AuthoredUnitSource["id"];
     readonly binding: CharacterProcedureWithoutRef;
   }> = [];
   for (const { profile, unitId } of unitSupportProcedures) {
@@ -858,206 +629,6 @@ export function characterExecutionWithSpellInvocations(
   });
 }
 
-export function characterExecutionWithSpiritualWeaponRepeatAttack(
-  execution: CharacterExecutionState,
-  repeatExecution: SpiritualWeaponRepeatAttackSpellProcedureExecution,
-): CharacterExecutionState {
-  const alreadyBound = execution.procedureBindings.some(
-    (binding) =>
-      binding.procedure.kind === "spellInvocation" &&
-      binding.procedure.execution.procedure === "spiritualWeaponRepeatAttack" &&
-      binding.procedure.execution.activeEffectRef ===
-        repeatExecution.activeEffectRef &&
-      binding.procedure.execution.activeEffectSourceProcedureRef ===
-        repeatExecution.activeEffectSourceProcedureRef,
-  );
-  if (alreadyBound) return execution;
-  const allocated = allocateCharacterProcedureBindings(
-    execution.scopeRef,
-    execution.nextProcedureOrdinal,
-    [
-      {
-        procedure: {
-          kind: "spellInvocation",
-          execution: repeatExecution,
-        },
-      },
-    ],
-  );
-  return CharacterExecutionState({
-    scopeRef: execution.scopeRef,
-    nextProcedureOrdinal: allocated.nextProcedureOrdinal,
-    procedureBindings: [
-      ...execution.procedureBindings,
-      ...allocated.procedureBindings,
-    ],
-  });
-}
-
-export function characterExecutionWithHeldLightHurl(
-  execution: CharacterExecutionState,
-  hurlExecution: HeldLightHurlSpellProcedureExecution,
-): CharacterExecutionState {
-  const alreadyBound = execution.procedureBindings.some(
-    (binding) =>
-      binding.procedure.kind === "spellInvocation" &&
-      binding.procedure.execution.procedure === "heldLightHurl" &&
-      binding.procedure.execution.sourceEffectRef ===
-        hurlExecution.sourceEffectRef &&
-      binding.procedure.execution.sourceHeldLightProcedureRef ===
-        hurlExecution.sourceHeldLightProcedureRef,
-  );
-  if (alreadyBound) return execution;
-  const allocated = allocateCharacterProcedureBindings(
-    execution.scopeRef,
-    execution.nextProcedureOrdinal,
-    [
-      {
-        procedure: {
-          kind: "spellInvocation",
-          execution: hurlExecution,
-        },
-      },
-    ],
-  );
-  return CharacterExecutionState({
-    scopeRef: execution.scopeRef,
-    nextProcedureOrdinal: allocated.nextProcedureOrdinal,
-    procedureBindings: [
-      ...execution.procedureBindings,
-      ...allocated.procedureBindings,
-    ],
-  });
-}
-
-export function characterExecutionWithDancingLightsReposition(
-  execution: CharacterExecutionState,
-  repositionExecution: DancingLightsRepositionSpellProcedureExecution,
-): CharacterExecutionState {
-  return characterExecutionWithDynamicSpellProcedures(execution, [
-    repositionExecution,
-  ]);
-}
-
-export function characterExecutionWithSpellCreatedHeldObjectProcedures(
-  execution: CharacterExecutionState,
-  procedures: readonly [
-    SpellCreatedHeldObjectAttackSpellProcedureExecution,
-    SpellCreatedHeldObjectReEvokeSpellProcedureExecution,
-  ],
-): CharacterExecutionState {
-  return characterExecutionWithDynamicSpellProcedures(execution, procedures);
-}
-
-function characterExecutionWithDynamicSpellProcedures(
-  execution: CharacterExecutionState,
-  procedures: readonly (
-    | DancingLightsRepositionSpellProcedureExecution
-    | SpellCreatedHeldObjectAttackSpellProcedureExecution
-    | SpellCreatedHeldObjectReEvokeSpellProcedureExecution
-  )[],
-): CharacterExecutionState {
-  const unbound = procedures.filter(
-    (procedure) =>
-      !execution.procedureBindings.some(
-        (binding) =>
-          binding.procedure.kind === "spellInvocation" &&
-          sameSpellProcedureExecution(binding.procedure.execution, procedure),
-      ),
-  );
-  if (unbound.length === 0) return execution;
-  const allocated = allocateCharacterProcedureBindings(
-    execution.scopeRef,
-    execution.nextProcedureOrdinal,
-    unbound.map(
-      (procedure): CharacterProcedureWithoutRef => ({
-        procedure: { kind: "spellInvocation", execution: procedure },
-      }),
-    ),
-  );
-  return CharacterExecutionState({
-    scopeRef: execution.scopeRef,
-    nextProcedureOrdinal: allocated.nextProcedureOrdinal,
-    procedureBindings: [
-      ...execution.procedureBindings,
-      ...allocated.procedureBindings,
-    ],
-  });
-}
-
-export function characterExecutionWithMarkedDamageRiderTransfer(
-  execution: CharacterExecutionState,
-  transferExecution: MarkedDamageRiderTransferSpellProcedureExecution,
-): CharacterExecutionState {
-  const alreadyBound = execution.procedureBindings.some(
-    (binding) =>
-      binding.procedure.kind === "spellInvocation" &&
-      binding.procedure.execution.procedure === "markedDamageRider" &&
-      binding.procedure.execution.action === "transfer" &&
-      binding.procedure.execution.activeEffectRef ===
-        transferExecution.activeEffectRef &&
-      binding.procedure.execution.activeEffectSourceProcedureRef ===
-        transferExecution.activeEffectSourceProcedureRef,
-  );
-  if (alreadyBound) return execution;
-  const allocated = allocateCharacterProcedureBindings(
-    execution.scopeRef,
-    execution.nextProcedureOrdinal,
-    [
-      {
-        procedure: {
-          kind: "spellInvocation",
-          execution: transferExecution,
-        },
-      },
-    ],
-  );
-  return CharacterExecutionState({
-    scopeRef: execution.scopeRef,
-    nextProcedureOrdinal: allocated.nextProcedureOrdinal,
-    procedureBindings: [
-      ...execution.procedureBindings,
-      ...allocated.procedureBindings,
-    ],
-  });
-}
-
-export function characterExecutionWithObjectContactDamageRepeat(
-  execution: CharacterExecutionState,
-  repeatExecution: ObjectContactDamageRepeatSpellProcedureExecution,
-): CharacterExecutionState {
-  const alreadyBound = execution.procedureBindings.some(
-    (binding) =>
-      binding.procedure.kind === "spellInvocation" &&
-      binding.procedure.execution.procedure === "objectContactDamageRepeat" &&
-      binding.procedure.execution.activeEffectRef ===
-        repeatExecution.activeEffectRef &&
-      binding.procedure.execution.activeEffectSourceProcedureRef ===
-        repeatExecution.activeEffectSourceProcedureRef,
-  );
-  if (alreadyBound) return execution;
-  const allocated = allocateCharacterProcedureBindings(
-    execution.scopeRef,
-    execution.nextProcedureOrdinal,
-    [
-      {
-        procedure: {
-          kind: "spellInvocation",
-          execution: repeatExecution,
-        },
-      },
-    ],
-  );
-  return CharacterExecutionState({
-    scopeRef: execution.scopeRef,
-    nextProcedureOrdinal: allocated.nextProcedureOrdinal,
-    procedureBindings: [
-      ...execution.procedureBindings,
-      ...allocated.procedureBindings,
-    ],
-  });
-}
-
 function allocateCharacterProcedureBindings(
   scopeRef: BattleCharacterExecutionScopeRef,
   nextProcedureOrdinal: BattleProcedureExecutionCursor,
@@ -1082,47 +653,6 @@ function allocateCharacterProcedureBindings(
     nextProcedureOrdinal: battleProcedureExecutionCursor(cursor),
     procedureBindings,
   };
-}
-
-export function characterProcedureBindingSnapshots(
-  execution: CharacterExecutionState,
-  executionFactsFor: (
-    invocation: SpellProcedureExecution,
-  ) => SpellExecutionFacts,
-): readonly CharacterProcedureBindingSnapshot[] {
-  return execution.procedureBindings.map(
-    (binding): CharacterProcedureBindingSnapshot =>
-      Match.value(binding.procedure).pipe(
-        Match.when({ kind: "unitFeature" }, (procedure) => ({
-          procedureRef: binding.procedureRef,
-          procedure: {
-            kind: procedure.kind,
-            source: procedure.source,
-            execution: procedure.execution,
-          },
-        })),
-        Match.when({ kind: "unitSupportProfile" }, (procedure) => ({
-          procedureRef: binding.procedureRef,
-          procedure: {
-            kind: procedure.kind,
-            source: procedure.source,
-            execution: procedure.execution,
-          },
-        })),
-        Match.when({ kind: "spellInvocation" }, (procedure) => ({
-          procedureRef: binding.procedureRef,
-          procedure: {
-            kind: procedure.kind,
-            executionFacts: executionFactsFor(procedure.execution),
-          },
-        })),
-        Match.when({ kind: "unavailableSpellInvocation" }, (procedure) => ({
-          procedureRef: binding.procedureRef,
-          procedure: { kind: procedure.kind },
-        })),
-        Match.exhaustive,
-      ),
-  );
 }
 
 export function characterUnitProcedureRef(
@@ -1161,16 +691,10 @@ export function characterUnitProcedureRefsForSource(
   );
 }
 
-export function unitSupportProfileKind(
-  profile: UnitSupportProcedureExecution,
-): UnitSupportProfileKind {
-  return typeof profile === "string" ? profile : profile.kind;
-}
-
 function characterUnitProcedureSourceForAdmission(
   scopeRef: BattleCharacterExecutionScopeRef,
-  resourceUnits: readonly UnitRecord[],
-  unitId: UnitRecord["id"],
+  resourceUnits: readonly AuthoredUnitSource[],
+  unitId: AuthoredUnitSource["id"],
 ): CharacterUnitProcedureSource {
   const resourceOrdinal = resourceUnits.findIndex((unit) => unit.id === unitId);
   return resourceOrdinal < 0
@@ -1186,29 +710,15 @@ function characterUnitProcedureSourceForAdmission(
 
 export function characterUnitProcedureSourceForUnit(
   resources: readonly {
-    readonly unit: Pick<UnitRecord, "id">;
+    readonly unit: Pick<AuthoredUnitSource, "id">;
     readonly resourcePoolRef: BattleResourcePoolExecutionRef;
   }[],
-  unitId: UnitRecord["id"],
+  unitId: AuthoredUnitSource["id"],
 ): CharacterUnitProcedureSource {
   const resource = resources.find((candidate) => candidate.unit.id === unitId);
   return resource === undefined
     ? { kind: "intrinsic" }
     : { kind: "resourcePool", resourcePoolRef: resource.resourcePoolRef };
-}
-
-export function characterUnitProcedure(
-  execution: CharacterExecutionState,
-  procedureRef: BattleProcedureExecutionRef,
-  query: CharacterUnitProcedureQuery,
-): CharacterUnitProcedureExecution | undefined {
-  const binding = execution.procedureBindings.find(
-    (candidate) => candidate.procedureRef === procedureRef,
-  );
-  return binding !== undefined &&
-    characterUnitProcedureMatchesQuery(binding.procedure, query)
-    ? binding.procedure
-    : undefined;
 }
 
 function characterUnitProcedureMatchesQuery(
@@ -3273,24 +2783,12 @@ export function characterSpellProcedureRefs(
   });
 }
 
-export function characterSpellProcedureRefsForProcedure(
-  execution: CharacterExecutionState,
-  procedures: ReadonlySet<SupportedSpellInvocation["procedure"]>,
-): readonly BattleProcedureExecutionRef[] {
-  return execution.procedureBindings.flatMap((binding) => {
-    const procedure = binding.procedure;
-    return (procedure.kind === "spellInvocation" ||
-      procedure.kind === "unavailableSpellInvocation") &&
-      procedures.has(procedure.execution.procedure)
-      ? [binding.procedureRef]
-      : [];
-  });
-}
-
 function spellRuleExecutionFacts(
-  mechanics: SpellRecord["mechanics"],
+  spell: Pick<BattleSpellAdmissionSource, "id" | "mechanics">,
 ): SpellRuleExecutionFacts {
+  const mechanics = spell.mechanics;
   return {
+    spellId: spellId(spell.id),
     level: mechanics.level,
     range: mechanics.range,
     duration: mechanics.duration,
@@ -3311,7 +2809,7 @@ function spellRuleExecutionFacts(
 }
 
 function spellTwinnedTargetCountFacts(
-  mechanics: SpellRecord["mechanics"],
+  mechanics: AuthoredSpellSource["mechanics"],
 ): SpellRuleExecutionFacts["twinnedTargetCount"] {
   const selections = spellTargetSelections(mechanics).filter((selection) => {
     if (!("count" in selection)) return false;
@@ -3348,7 +2846,7 @@ function spellTwinnedTargetCountFacts(
 }
 
 function spellTargetSelections(
-  mechanics: SpellRecord["mechanics"],
+  mechanics: AuthoredSpellSource["mechanics"],
 ): readonly TargetSelection[] {
   if (mechanics.family === "ongoing_effect") {
     const selection = targetSelectionFromAttachment(mechanics.attachment);
@@ -3374,12 +2872,10 @@ export function characterStoredSpellProcedureRef(
   execution: CharacterExecutionState,
   invocation: SupportedSpellInvocation | SpellProcedureExecution,
 ): BattleProcedureExecutionRef | undefined {
-  return execution.procedureBindings.find(
-    (binding) =>
-      (binding.procedure.kind === "spellInvocation" ||
-        binding.procedure.kind === "unavailableSpellInvocation") &&
-      spellInvocationMatchesExecution(invocation, binding.procedure.execution),
-  )?.procedureRef;
+  const stored =
+    "spell" in invocation ? spellProcedureExecution(invocation) : invocation;
+  if (stored === undefined) return undefined;
+  return characterStoredExecutionProcedureRef(execution, stored);
 }
 
 export function spellInvocationMatchesExecution(
@@ -3406,7 +2902,7 @@ export function spellProcedureExecution<
 export function spellProcedureExecution(
   invocation: SupportedSpellInvocation,
 ): SpellProcedureExecution | undefined {
-  const spellRuleFacts = spellRuleExecutionFacts(invocation.spell.mechanics);
+  const spellRuleFacts = spellRuleExecutionFacts(invocation.spell);
   return Match.value(invocation).pipe(
     Match.discriminatorsExhaustive("procedure")({
       abilityD20TestRollModeSaveGate: (value) => ({
@@ -4400,408 +3896,6 @@ function classFeatureSpellInvocationResourceExecution(
   );
 }
 
-function sameSpellProcedureExecution(
-  left: SpellProcedureExecution,
-  right: SpellProcedureExecution,
-): boolean {
-  return Match.value(left).pipe(
-    Match.discriminatorsExhaustive("procedure")({
-      abilityD20TestRollModeSaveGate: (value) =>
-        right.procedure === value.procedure &&
-        sameAbilityD20TestRollModeSaveGateExecution(value, right),
-      afterHitDamage: (value) =>
-        right.procedure === value.procedure &&
-        sameAfterHitDamageExecution(value, right),
-      afterHitDamageAndIllumination: (value) =>
-        right.procedure === value.procedure &&
-        sameAfterHitDamageAndIlluminationExecution(value, right),
-      afterHitSaveGatedCondition: (value) =>
-        right.procedure === value.procedure &&
-        sameAfterHitSaveGatedConditionExecution(value, right),
-      afterHitTimedDamageAndSave: (value) =>
-        right.procedure === value.procedure &&
-        sameAfterHitTimedDamageAndSaveExecution(value, right),
-      antimagicFieldOngoingSpellSuppression: (value) =>
-        right.procedure === value.procedure &&
-        sameAntimagicFieldOngoingSpellSuppressionExecution(value, right),
-      attackBurstSaveDamage: (value) =>
-        right.procedure === value.procedure &&
-        sameAttackBurstSaveDamageExecution(value, right),
-      blurAttackRollDefense: (value) =>
-        right.procedure === value.procedure &&
-        sameBlurAttackRollDefenseExecution(value, right),
-      chainedSpellAttackDamage: (value) =>
-        right.procedure === value.procedure &&
-        sameChainedSpellAttackDamageExecution(value, right),
-      chosenDamageResistance: (value) =>
-        right.procedure === value.procedure &&
-        sameChosenDamageResistanceExecution(value, right),
-      cloudkillAreaHazard: (value) =>
-        right.procedure === value.procedure &&
-        sameCloudkillAreaHazardExecution(value, right),
-      command: (value) =>
-        right.procedure === value.procedure &&
-        sameCommandExecution(value, right),
-      conditionImmunityAndTurnStartTemporaryHitPoints: (value) =>
-        right.procedure === value.procedure &&
-        sameConditionImmunityAndTurnStartTemporaryHitPointsExecution(
-          value,
-          right,
-        ),
-      conditionRemovalProtection: (value) =>
-        right.procedure === value.procedure &&
-        sameConditionRemovalProtectionExecution(value, right),
-      counterspell: (value) =>
-        right.procedure === value.procedure &&
-        sameCounterspellExecution(value, right),
-      creatureSizeDecrease: (value) =>
-        right.procedure === value.procedure &&
-        sameCreatureSizeDecreaseExecution(value, right),
-      creatureSizeIncrease: (value) =>
-        right.procedure === value.procedure &&
-        sameCreatureSizeIncreaseExecution(value, right),
-      creatureTypeProtection: (value) =>
-        right.procedure === value.procedure &&
-        sameCreatureTypeProtectionExecution(value, right),
-      damageReduction: (value) =>
-        right.procedure === value.procedure &&
-        sameDamageReductionExecution(value, right),
-      dancingLightsCombinedCast: (value) =>
-        right.procedure === value.procedure &&
-        sameDancingLightsCombinedCastExecution(value, right),
-      dancingLightsReposition: (value) =>
-        right.procedure === value.procedure &&
-        sameDancingLightsRepositionExecution(value, right),
-      dancingLightsSeparateCast: (value) =>
-        right.procedure === value.procedure &&
-        sameDancingLightsSeparateCastExecution(value, right),
-      directCondition: (value) =>
-        right.procedure === value.procedure &&
-        sameDirectConditionExecution(value, right),
-      directConditionRemoval: (value) =>
-        right.procedure === value.procedure &&
-        sameDirectConditionRemovalExecution(value, right),
-      directHitPointRestoration: (value) =>
-        right.procedure === value.procedure &&
-        sameDirectHitPointRestorationExecution(value, right),
-      dragonsBreathInitial: (value) =>
-        right.procedure === value.procedure &&
-        sameDragonsBreathInitialExecution(value, right),
-      expeditiousRetreatDash: (value) =>
-        right.procedure === value.procedure &&
-        sameExpeditiousRetreatDashExecution(value, right),
-      featherFallMitigation: (value) =>
-        right.procedure === value.procedure &&
-        sameFeatherFallMitigationExecution(value, right),
-      flamingSphere: (value) =>
-        right.procedure === value.procedure &&
-        sameFlamingSphereExecution(value, right),
-      fogCloudObscurement: (value) =>
-        right.procedure === value.procedure &&
-        sameFogCloudObscurementExecution(value, right),
-      greaseGroundHazard: (value) =>
-        right.procedure === value.procedure &&
-        sameGreaseGroundHazardExecution(value, right),
-      gustOfWindLine: (value) =>
-        right.procedure === value.procedure &&
-        sameGustOfWindLineExecution(value, right),
-      hastePositive: (value) =>
-        right.procedure === value.procedure &&
-        sameHastePositiveExecution(value, right),
-      heldLight: (value) =>
-        right.procedure === value.procedure &&
-        sameHeldLightExecution(value, right),
-      heldLightHurl: (value) =>
-        right.procedure === value.procedure &&
-        sameHeldLightHurlExecution(value, right),
-      hideousLaughter: (value) =>
-        right.procedure === value.procedure &&
-        sameHideousLaughterExecution(value, right),
-      hypnoticPattern: (value) =>
-        right.procedure === value.procedure &&
-        sameHypnoticPatternExecution(value, right),
-      insectPlagueAreaHazard: (value) =>
-        right.procedure === value.procedure &&
-        sameInsectPlagueAreaHazardExecution(value, right),
-      jumpMovementReplacement: (value) =>
-        right.procedure === value.procedure &&
-        sameJumpMovementReplacementExecution(value, right),
-      levitatedCreature: (value) =>
-        right.procedure === value.procedure &&
-        sameLevitatedCreatureExecution(value, right),
-      magicalDarknessPointOrigin: (value) =>
-        right.procedure === value.procedure &&
-        sameMagicalDarknessPointOriginExecution(value, right),
-      magicWeaponEnhancement: (value) =>
-        right.procedure === value.procedure &&
-        sameMagicWeaponEnhancementExecution(value, right),
-      makeStable: (value) =>
-        right.procedure === value.procedure &&
-        sameMakeStableExecution(value, right),
-      markedDamageRider: (value) =>
-        right.procedure === value.procedure &&
-        sameMarkedDamageRiderExecution(value, right),
-      mirrorImageHitInterception: (value) =>
-        right.procedure === value.procedure &&
-        sameMirrorImageHitInterceptionExecution(value, right),
-      moonbeam: (value) =>
-        right.procedure === value.procedure &&
-        sameMoonbeamExecution(value, right),
-      objectContactDamage: (value) =>
-        right.procedure === value.procedure &&
-        sameObjectContactDamageExecution(value, right),
-      objectContactDamageRepeat: (value) =>
-        right.procedure === value.procedure &&
-        sameObjectContactDamageRepeatExecution(value, right),
-      objectLight: (value) =>
-        right.procedure === value.procedure &&
-        sameObjectLightExecution(value, right),
-      ongoingSpellEnd: (value) =>
-        right.procedure === value.procedure &&
-        sameOngoingSpellEndExecution(value, right),
-      persistentArmorEffect: (value) =>
-        right.procedure === value.procedure &&
-        samePersistentArmorEffectExecution(value, right),
-      repeatedDamageAllocation: (value) =>
-        right.procedure === value.procedure &&
-        sameRepeatedDamageAllocationExecution(value, right),
-      rollModifier: (value) =>
-        right.procedure === value.procedure &&
-        sameRollModifierExecution(value, right),
-      sanctuaryTargetingInterdiction: (value) =>
-        right.procedure === value.procedure &&
-        sameSanctuaryTargetingInterdictionExecution(value, right),
-      saveGatedAttackRollAdvantage: (value) =>
-        right.procedure === value.procedure &&
-        sameSaveGatedAttackRollAdvantageExecution(value, right),
-      saveGatedCondition: (value) =>
-        right.procedure === value.procedure &&
-        sameSaveGatedConditionExecution(value, right),
-      saveGatedConditionImmunity: (value) =>
-        right.procedure === value.procedure &&
-        sameSaveGatedConditionImmunityExecution(value, right),
-      saveGatedDamage: (value) =>
-        right.procedure === value.procedure &&
-        sameSaveGatedDamageExecution(value, right),
-      scalarBuff: (value) =>
-        right.procedure === value.procedure &&
-        sameScalarBuffExecution(value, right),
-      seeInvisibleObserverSight: (value) =>
-        right.procedure === value.procedure &&
-        sameSeeInvisibleObserverSightExecution(value, right),
-      selfTeleport: (value) =>
-        right.procedure === value.procedure &&
-        sameSelfTeleportExecution(value, right),
-      selfTransformationMode: (value) =>
-        right.procedure === value.procedure &&
-        sameSelfTransformationModeExecution(value, right),
-      shieldReaction: (value) =>
-        right.procedure === value.procedure &&
-        sameShieldReactionExecution(value, right),
-      sleepTargetAdmission: (value) =>
-        right.procedure === value.procedure &&
-        sameSleepTargetAdmissionExecution(value, right),
-      sleetStormAreaHazard: (value) =>
-        right.procedure === value.procedure &&
-        sameSleetStormAreaHazardExecution(value, right),
-      slowActivePenalties: (value) =>
-        right.procedure === value.procedure &&
-        sameSlowActivePenaltiesExecution(value, right),
-      spellAttackDamage: (value) =>
-        right.procedure === value.procedure &&
-        sameSpellAttackDamageExecution(value, right),
-      spellAttackSequence: (value) =>
-        right.procedure === value.procedure &&
-        sameSpellAttackSequenceExecution(value, right),
-      spellCreatedHeldObject: (value) =>
-        right.procedure === value.procedure &&
-        sameSpellCreatedHeldObjectExecution(value, right),
-      spellCreatedHeldObjectAttack: (value) =>
-        right.procedure === value.procedure &&
-        sameSpellCreatedHeldObjectAttackExecution(value, right),
-      spellCreatedHeldObjectReEvoke: (value) =>
-        right.procedure === value.procedure &&
-        sameSpellCreatedHeldObjectReEvokeExecution(value, right),
-      spellHostedWeaponAttack: (value) =>
-        right.procedure === value.procedure &&
-        sameSpellHostedWeaponAttackExecution(value, right),
-      spikeGrowthMovementHazard: (value) =>
-        right.procedure === value.procedure &&
-        sameSpikeGrowthMovementHazardExecution(value, right),
-      spiritualWeaponAttackProxy: (value) =>
-        right.procedure === value.procedure &&
-        sameSpiritualWeaponAttackProxyExecution(value, right),
-      spiritualWeaponRepeatAttack: (value) =>
-        right.procedure === value.procedure &&
-        sameSpiritualWeaponRepeatAttackExecution(value, right),
-      thaumaturgyBoomingVoice: (value) =>
-        right.procedure === value.procedure &&
-        sameThaumaturgyBoomingVoiceExecution(value, right),
-      wardingBond: (value) =>
-        right.procedure === value.procedure &&
-        sameWardingBondExecution(value, right),
-      weaponAttackOverride: (value) =>
-        right.procedure === value.procedure &&
-        sameWeaponAttackOverrideExecution(value, right),
-      weaponDamageRider: (value) =>
-        right.procedure === value.procedure &&
-        sameWeaponDamageRiderExecution(value, right),
-      webRestraintHazard: (value) =>
-        right.procedure === value.procedure &&
-        sameWebRestraintHazardExecution(value, right),
-    }),
-  );
-}
-
-export function characterSpellProcedure(
-  execution: CharacterExecutionState,
-  procedureRef: BattleProcedureExecutionRef,
-  liveActor?: {
-    readonly combatantId: CombatantId;
-    readonly activeEffects: readonly BattleActiveEffect[];
-  },
-): BattleSpellProcedureExecution | undefined {
-  const binding = execution.procedureBindings.find(
-    (candidate) => candidate.procedureRef === procedureRef,
-  );
-  if (binding?.procedure.kind !== "spellInvocation") return undefined;
-  const executable = executableSpellProcedureFromLiveEffects(
-    execution,
-    binding.procedure.execution,
-    liveActor,
-  );
-  if (executable === undefined) return undefined;
-  return {
-    ...executable,
-    sourceProcedureRef: procedureRef,
-  };
-}
-
-function executableSpellProcedureFromLiveEffects(
-  execution: CharacterExecutionState,
-  stored: SpellProcedureExecution,
-  liveActor:
-    | {
-        readonly combatantId: CombatantId;
-        readonly activeEffects: readonly BattleActiveEffect[];
-      }
-    | undefined,
-): SpellExecutableExecutionOf<SpellProcedureExecution> | undefined {
-  if (
-    stored.procedure === "markedDamageRider" &&
-    stored.action === "transfer"
-  ) {
-    if (liveActor === undefined) return undefined;
-    const source = characterSpellProcedureExecution(
-      execution,
-      stored.activeEffectSourceProcedureRef,
-    );
-    const activeEffect = liveActor.activeEffects.find(
-      (
-        effect,
-      ): effect is Extract<
-        BattleActiveEffect,
-        { readonly kind: "spellMarkedDamageRider" }
-      > =>
-        effect.kind === "spellMarkedDamageRider" &&
-        effect.effectRef === stored.activeEffectRef &&
-        effect.sourceProcedureRef === stored.activeEffectSourceProcedureRef &&
-        effect.sourceCombatantId === liveActor.combatantId,
-    );
-    return activeEffect !== undefined &&
-      source?.procedure === "markedDamageRider" &&
-      source.action === "cast"
-      ? {
-          spellRuleFacts: source.spellRuleFacts,
-          access: {
-            tag: "spellEffect",
-            sourceCombatantId: liveActor.combatantId,
-          },
-          resource: { tag: "none" },
-          procedure: stored.procedure,
-          action: stored.action,
-          actionCost: "bonusAction",
-          activeEffect,
-          rangeFeet: source.rangeFeet,
-          targeting: { kind: "singleCombatant" },
-        }
-      : undefined;
-  }
-  if (stored.procedure === "objectContactDamageRepeat") {
-    if (liveActor === undefined) return undefined;
-    const source = characterSpellProcedureExecution(
-      execution,
-      stored.activeEffectSourceProcedureRef,
-    );
-    const activeEffect = liveActor.activeEffects.find(
-      (
-        effect,
-      ): effect is Extract<
-        BattleActiveEffect,
-        { readonly kind: "spellObjectContactDamage" }
-      > =>
-        effect.kind === "spellObjectContactDamage" &&
-        effect.effectRef === stored.activeEffectRef &&
-        effect.sourceProcedureRef === stored.activeEffectSourceProcedureRef &&
-        effect.sourceCombatantId === liveActor.combatantId,
-    );
-    return activeEffect !== undefined &&
-      source?.procedure === "objectContactDamage"
-      ? {
-          spellRuleFacts: source.spellRuleFacts,
-          access: {
-            tag: "spellEffect",
-            sourceCombatantId: liveActor.combatantId,
-          },
-          resource: { tag: "none" },
-          procedure: stored.procedure,
-          actionCost: "bonusAction",
-          activeEffect,
-        }
-      : undefined;
-  }
-  if (stored.procedure === "spiritualWeaponRepeatAttack") {
-    if (liveActor === undefined) return undefined;
-    const source = characterSpellProcedureExecution(
-      execution,
-      stored.activeEffectSourceProcedureRef,
-    );
-    const activeEffect = liveActor.activeEffects.find(
-      (
-        effect,
-      ): effect is Extract<
-        BattleActiveEffect,
-        { readonly kind: "spiritualWeapon" }
-      > =>
-        effect.kind === "spiritualWeapon" &&
-        effect.effectRef === stored.activeEffectRef &&
-        effect.sourceProcedureRef === stored.activeEffectSourceProcedureRef &&
-        effect.sourceCombatantId === liveActor.combatantId,
-    );
-    return activeEffect !== undefined &&
-      source?.procedure === "spiritualWeaponAttackProxy"
-      ? {
-          spellRuleFacts: source.spellRuleFacts,
-          access: {
-            tag: "spellEffect",
-            sourceCombatantId: liveActor.combatantId,
-          },
-          resource: { tag: "none" },
-          procedure: stored.procedure,
-          actionCost: "bonusAction",
-          activeEffect,
-          targeting: { kind: "singleCombatant" },
-          damage: activeEffect.damage,
-          attackKind: activeEffect.attackKind,
-          attackBonus: activeEffect.attackBonus,
-          forceReachFeet: activeEffect.forceReachFeet,
-          repeatMoveMaxFeet: activeEffect.repeatMoveMaxFeet,
-        }
-      : undefined;
-  }
-  return stored;
-}
-
 export function characterSpellSelectionInvocation(
   execution: CharacterExecutionState,
   procedureRef: BattleProcedureExecutionRef,
@@ -4815,33 +3909,26 @@ export function characterSpellSelectionInvocation(
   const invocation = invocations.find((candidate) =>
     spellInvocationMatchesExecution(candidate, storedExecution),
   );
-  return invocation === undefined
+  if (invocation === undefined) return undefined;
+  const selectedExecution = spellProcedureExecution(invocation);
+  return selectedExecution === undefined ||
+    !("spellRuleFacts" in selectedExecution)
     ? undefined
-    : bindSelectedSpellInvocation(invocation, procedureRef);
+    : bindSelectedSpellInvocation(selectedExecution, procedureRef);
 }
 
-export function characterSpellProcedureExecution(
-  execution: CharacterExecutionState,
+export function bindSelectedSpellInvocation(
+  execution: SelectableSpellProcedureExecution,
   procedureRef: BattleProcedureExecutionRef,
-): SpellProcedureExecution | undefined {
-  const binding = characterProcedureBinding(execution, procedureRef);
-  return binding?.procedure.kind === "spellInvocation"
-    ? binding.procedure.execution
-    : undefined;
-}
-
-export function bindStoredSpellProcedureExecutionFacts<
-  I extends SpellProcedureExecution,
->(
-  execution: I,
-  procedureRef: BattleProcedureExecutionRef,
-): I & { readonly sourceProcedureRef: BattleProcedureExecutionRef } {
+): BattleSelectedSpellInvocation {
   return { ...execution, sourceProcedureRef: procedureRef };
 }
 
-export function bindSelectedSpellInvocation<I extends SupportedSpellInvocation>(
+export function bindAuthoredSelectedSpellInvocation<
+  I extends AuthoredSupportedSpellInvocation,
+>(
   invocation: I,
   procedureRef: BattleProcedureExecutionRef,
-): BattleSelectedSpellInvocation<I> {
+): AuthoredSelectedSpellInvocation<I> {
   return { ...invocation, sourceProcedureRef: procedureRef };
 }

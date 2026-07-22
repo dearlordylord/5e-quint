@@ -67,6 +67,7 @@ import {
   type BattleResolutionResult,
   type BattleRuntimeSession,
   type BattleState,
+  type BattleCompanionState,
   type AvailableBattleAct,
   type BattleSubject,
   type PactOfTheChainFamiliarAttackSubject,
@@ -77,7 +78,7 @@ import {
 } from "./unit-profile-admission-creature-fixture-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 import { statBlockCatalog } from "./unit-profile-admission-catalog-support.ts";
-import { statBlockProcedurePresentations } from "./stat-block-execution.ts";
+import { statBlockProcedurePresentations } from "./stat-block-presentation.ts";
 
 const FAMILIAR_STATUSES = ["none", "present"] as const;
 type FamiliarStatus = (typeof FAMILIAR_STATUSES)[number];
@@ -681,10 +682,8 @@ function findFamiliarCompanionProjection(
     familiarStatus: familiar?.status === "present" ? "present" : "none",
     familiarId: familiar?.status === "present" ? "primary" : "none",
     familiarForm:
-      familiar !== null &&
-      familiar.status !== "dismissedForever" &&
-      familiar.formSelection.tag === "normalNamedForm"
-        ? familiarForm(familiar.formSelection.formId)
+      familiar !== null && familiar.status !== "dismissedForever"
+        ? familiarFormForWitness(state.battle.state, familiar)
         : "none",
     creatureTypeOverride: creatureTypeOverride(
       familiar?.creatureTypeOverride ?? "none",
@@ -882,7 +881,10 @@ function pactScratchSubject(
   if (familiar?.origin.kind !== "statBlock") {
     throw new Error("Expected the committed familiar Stat Block admission.");
   }
-  const procedureRef = statBlockProcedurePresentations(familiar.origin).find(
+  const procedureRef = statBlockProcedurePresentations({
+    statBlock: statBlockCatalog.requireStatBlock(familiar.origin.statBlockId),
+    execution: familiar.origin.execution,
+  }).find(
     (presentation) =>
       presentation.kind === "attack" && presentation.name === "Scratch",
   )?.procedureRef;
@@ -1111,8 +1113,26 @@ function compareFindFamiliarCompanionStates(
   return true;
 }
 
-function familiarForm(raw: unknown): FamiliarForm {
-  return literalField(raw, FAMILIAR_FORMS);
+function familiarFormForWitness(
+  state: BattleState,
+  familiar: Exclude<
+    BattleCompanionState,
+    { readonly status: "dismissedForever" }
+  >,
+): FamiliarForm {
+  const combatant =
+    familiar.status === "present"
+      ? state.combatants.get(familiar.combatantId)
+      : undefined;
+  const resolvedStatBlockId =
+    familiar.status === "present"
+      ? combatant?.origin.kind === "statBlock"
+        ? combatant.origin.statBlockId
+        : undefined
+      : familiar.resolvedStatBlockId;
+  if (resolvedStatBlockId === "stat_block_cat") return "cat";
+  if (resolvedStatBlockId === "stat_block_rat") return "rat";
+  return "none";
 }
 
 function creatureTypeOverride(raw: unknown): CreatureTypeOverride {

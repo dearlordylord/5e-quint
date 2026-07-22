@@ -75,7 +75,8 @@ import {
 } from "./battle-runtime-protocol.ts";
 import { activeOngoingFeaturesPreventSpellInvocation } from "./spells-invocation-guards.ts";
 import { attackRollIsCriticalHit } from "./attack-resolution.ts";
-import { maybeOpenInterruptWindow, snapshotBattle } from "./dispatcher.ts";
+import { maybeOpenInterruptWindow } from "./interrupt-execution.ts";
+import { snapshotBattle } from "./battle-snapshot.ts";
 import {
   spellAttackRerollUnsupportedIssue,
   spellDamageRerollUnsupportedIssue,
@@ -85,7 +86,7 @@ import {
   characterUnitProcedureBindings,
   characterSpellProcedure,
   type BattleSpellProcedureExecution,
-} from "../character-execution-admission.ts";
+} from "../character-execution-queries.ts";
 
 import {
   damageDispositionFillFor,
@@ -102,7 +103,7 @@ import {
   requiredSpellObjectTargetAttackRollMode,
   requiredSpellAttackRollMode,
 } from "./attack-roll.ts";
-import { activeEffectArmorClass } from "./creature-state.ts";
+import { activeEffectArmorClass } from "./creature-state-execution.ts";
 import {
   concentrationSavingThrowHole,
   damageLifecycleConcentrationSavingThrowFillCheck,
@@ -177,7 +178,7 @@ import {
   spellHasAvailableSpend,
   spellInvocationIsSpellcasting,
 } from "./spell-turn-resources.ts";
-import { spellAttackKindForRedirect } from "./spells-profiles.ts";
+import { spellAttackKindForRedirect } from "./spells-profiles-attack-damage.ts";
 import {
   recordAttackRollMissToHitReplacementUsed,
   selectedAttackRollMissToHitReplacement,

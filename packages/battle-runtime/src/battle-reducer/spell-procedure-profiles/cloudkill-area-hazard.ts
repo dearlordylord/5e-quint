@@ -1,3 +1,4 @@
+import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-cloudkill-area-hazard
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 import { DiceExprSchema } from "@dnd/surface/surface/schema";
@@ -26,7 +27,6 @@ import {
   type ElapsedTimeTicks,
 } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
-import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either, Schema } from "effect";
 
 import {
@@ -43,7 +43,7 @@ import {
   SpellSlotInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import { spellAreaChoiceHole } from "../spells-holes-fills.ts";
-import { supportedDamageAmountExpr } from "../spells-profile-shared.ts";
+import { supportedDamageAmountExpr } from "../spells-execution-facts.ts";
 import { resolveCloudkillAreaHazardSpellAct } from "../spells-resolve-area-effects.ts";
 import type {
   SpellAdmissionContext,
@@ -62,7 +62,7 @@ type CloudkillAreaHazardSpellInvocation = Extract<
 type CloudkillAreaHazardResolveInput =
   SpellProcedureProfileResolveInput<CloudkillAreaHazardSpellInvocation>;
 type CloudkillMechanics = Extract<
-  SpellRecord["mechanics"],
+  BattleSpellAdmissionSource["mechanics"],
   { readonly family: "ongoing_effect" }
 >;
 type CloudkillSaveGate = Extract<
@@ -89,7 +89,7 @@ const CLOUDKILL_DAMAGE_DIE_SIZE = 8;
 const CLOUDKILL_DAMAGE_DICE_PER_SLOT_LEVEL = 1;
 
 function admitCloudkillAreaHazard(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly CloudkillAreaHazardSpellInvocation[] {
   const cloudkill = cloudkillAreaHazardSpell(spell);
@@ -132,7 +132,7 @@ function admitCloudkillAreaHazard(
 }
 
 function cloudkillAreaHazardSpell(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
 ): CloudkillProfileShape | null {
   if (spell.mechanics.family !== "ongoing_effect") {
     return null;

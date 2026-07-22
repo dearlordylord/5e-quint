@@ -1,4 +1,5 @@
-import type { BattleCreatureSnapshot, BattleSnapshot, CombatantId } from "@dnd/battle-runtime"
+import type { BattlePresentedCreatureSnapshot, BattlePresentedSnapshot, CombatantId } from "@dnd/battle-runtime"
+import { Either } from "effect"
 
 import type {
   BattleGridPosition,
@@ -117,6 +118,12 @@ export interface BattleSceneProjection {
   readonly activeCreatureName: string
 }
 
+export type BattleScenePresentationIssue = {
+  readonly tag: "battleScenePresentationIssue"
+  readonly reason: "missingCurrentActor"
+  readonly combatantId: CombatantId
+}
+
 const DEFAULT_LAYOUT_CONFIG: LayoutConfig = {
   barHeight: 5,
   barWidth: 44,
@@ -130,20 +137,29 @@ const FEET_PER_GRID_SQUARE = 5
 const FULL_BAR_RATIO = 1
 
 export function computeWizardBattleScene(input: {
-  readonly snapshot: BattleSnapshot
+  readonly snapshot: BattlePresentedSnapshot
   readonly meta: WizardBattleDemoMeta
   readonly step: WizardBattleDemoStep
   readonly stepIndex: number
   readonly config?: LayoutConfig
-}): BattleSceneProjection {
+}): Either.Either<BattleSceneProjection, BattleScenePresentationIssue> {
   const config = input.config ?? DEFAULT_LAYOUT_CONFIG
   const initiativeCreatures = input.snapshot.combatants.map((combatant) =>
     initiativeCreatureSnapshot(combatant, input.meta, input.snapshot.currentActorId, input.step.cue.reactingId)
   )
+  const activeCreature = input.snapshot.combatants.find(
+    (combatant) => combatant.combatantId === input.snapshot.currentActorId
+  )
+  if (activeCreature === undefined) {
+    return Either.left({
+      tag: "battleScenePresentationIssue",
+      reason: "missingCurrentActor",
+      combatantId: input.snapshot.currentActorId
+    })
+  }
 
-  return {
-    activeCreatureName:
-      input.meta.combatants[input.snapshot.currentActorId]?.name ?? String(input.snapshot.currentActorId),
+  return Either.right({
+    activeCreatureName: activeCreature.displayName,
     initiativeCreatures,
     layout: {
       aoeZones: computeAoEZones(input.step, input.stepIndex, config),
@@ -166,11 +182,11 @@ export function computeWizardBattleScene(input: {
       }
     },
     round: Number(input.snapshot.round)
-  }
+  })
 }
 
 function computeCreatureLayout(
-  combatant: BattleCreatureSnapshot,
+  combatant: BattlePresentedCreatureSnapshot,
   meta: WizardBattleDemoMeta,
   step: WizardBattleDemoStep,
   currentActorId: CombatantId,
@@ -229,7 +245,7 @@ function computeCreatureLayout(
     isActive: combatant.combatantId === currentActorId,
     isReacting: step.cue.reactingId === combatant.combatantId,
     justBecameUnconscious: false,
-    label: combatantMeta?.name ?? combatant.displayName,
+    label: combatant.displayName,
     labelTone: floatingLabel?.tone ?? "negative",
     labelY: hpBarY + config.barHeight + (tempHpBar === null ? 2 : config.barHeight + 4) + 8,
     opacity: dead ? 0.3 : unconscious ? 0.7 : 1,
@@ -244,7 +260,7 @@ function computeCreatureLayout(
 }
 
 function deathSavesLayout(
-  combatant: BattleCreatureSnapshot,
+  combatant: BattlePresentedCreatureSnapshot,
   unconscious: boolean,
   barX: number,
   hpBarY: number,
@@ -260,7 +276,7 @@ function deathSavesLayout(
 }
 
 function slotRows(
-  combatant: BattleCreatureSnapshot,
+  combatant: BattlePresentedCreatureSnapshot,
   barX: number,
   hpBarY: number,
   tempHpBar: BarLayout | null,
@@ -277,7 +293,7 @@ function slotRows(
 }
 
 function initiativeCreatureSnapshot(
-  combatant: BattleCreatureSnapshot,
+  combatant: BattlePresentedCreatureSnapshot,
   meta: WizardBattleDemoMeta,
   currentActorId: CombatantId,
   reactingId: CombatantId | undefined
@@ -290,7 +306,7 @@ function initiativeCreatureSnapshot(
     isActive: combatant.combatantId === currentActorId,
     isReacting: combatant.combatantId === reactingId,
     maxHp: Number(combatant.maxHp),
-    name: combatantMeta?.name ?? combatant.displayName,
+    name: combatant.displayName,
     preparedSpells: combatantMeta?.preparedSpellIds ?? [],
     reactionAvailable: combatant.reactionAvailable,
     slotsByLevel:

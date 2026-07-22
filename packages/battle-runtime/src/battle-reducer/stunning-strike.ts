@@ -11,7 +11,7 @@ import {
   type CharacterProcedureBinding,
   type UnitFeatureProcedureExecution,
   type UnitSupportProcedureExecution,
-} from "../character-execution-admission.ts";
+} from "../character-execution-vocabulary.ts";
 import type {
   CharacterWeaponAttackActionOption,
   SupportedAttackActionOption,
@@ -33,8 +33,8 @@ import {
 import {
   resourceHasUsesRemaining,
   spendCharacterResourceUse,
-} from "../character-battle-resources.ts";
-import { battleCreatureStateWithKnockOutPreservedConditions } from "./creature-state.ts";
+} from "../character-battle-resource-execution.ts";
+import { battleCreatureStateWithKnockOutPreservedConditions } from "./creature-state-execution.ts";
 import {
   extendSavingThrowOngoingFeatures,
   ongoingFeatureEnemyRelationshipDecisionRequired,

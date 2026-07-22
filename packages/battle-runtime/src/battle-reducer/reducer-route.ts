@@ -51,7 +51,7 @@ import {
   type BattleSpellProcedureExecution,
   characterUnitProcedure,
   unitSupportProfileKind,
-} from "../character-execution-admission.ts";
+} from "../character-execution-queries.ts";
 import {
   conditionSpellEndTurnRepeatSaveHoleIds,
   isCreatureSpaceTraversalMovementFactValidationMessage,
@@ -65,7 +65,7 @@ import {
   activeOngoingFeatureOccurrencesForCombatant,
   isCharacterBattleCreatureState,
   ongoingFeatureProfileForSourceKey,
-} from "./creature-state.ts";
+} from "./creature-state-execution.ts";
 import {
   currentActorId,
   zeroHpLifecycleIsTerminal,

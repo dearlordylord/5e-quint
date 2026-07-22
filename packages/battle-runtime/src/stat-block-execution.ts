@@ -2,33 +2,21 @@ import {
   NonNegativeInteger,
   PositiveInteger,
   resourceCount,
-  type DieRollResult,
   type ReadonlyNonEmptyArray,
-  type ResourceCount,
 } from "@dnd/shared/types";
 import { Brand } from "effect";
 import * as Either from "effect/Either";
 import type {
   CreatureLimitedUse,
+  CreatureNamedActionOption,
   CreatureNamedAttackRoll,
   CreatureNamedMultiattack,
-  StatBlockRecord,
 } from "@dnd/surface/surface/types";
-import type {
-  StatBlockAttackActionOption,
-  StatBlockTraitAttackRollMode,
-  StatBlockAttackSection,
-  SupportedCreatureAttackRollMechanics,
-  SupportedStaticDamageCreatureAttackRollMechanics,
-} from "./battle-action-options.ts";
+import type { StatBlockAttackSection } from "./battle-action-options.ts";
 import {
   SUPPORTED_STAT_BLOCK_BONUS_ACTION_STANDARD_ACTIONS,
   type SupportedStatBlockBonusActionStandardAction,
 } from "./battle-reducer/battle-runtime-protocol.ts";
-import {
-  statBlockAttackDamageSupportsStaticNotation,
-  supportedStatBlockAttackDamage,
-} from "./statblock-attack-damage-support.ts";
 import {
   type BattleStatBlockProcedureExecutionRef,
   type BattleId,
@@ -46,79 +34,20 @@ import {
 import {
   creatureNamedAttackRollIsSupported,
   supportedStatBlockTraitAttackRollModes,
-} from "./statblock-action-support.ts";
+} from "./statblock-action-execution-support.ts";
 
-export type StatBlockAttackProcedure = {
-  readonly kind: "attack";
-  readonly section: Extract<
-    StatBlockAttackSection,
-    "actions" | "legendaryActions"
-  >;
-  readonly attack: SupportedCreatureAttackRollMechanics;
-  readonly traitAttackRollModes?: ReadonlyNonEmptyArray<StatBlockTraitAttackRollMode>;
-};
-
-export type StatBlockMultiattackProcedure = {
-  readonly kind: "multiattack";
-  readonly dispatchProcedureRefs: ReadonlyNonEmptyArray<BattleStatBlockProcedureExecutionRef>;
-};
-
-export type StatBlockBonusActionOptionProcedure = {
-  readonly kind: "bonusActionOption";
-  readonly standardActions: ReadonlyNonEmptyArray<SupportedStatBlockBonusActionStandardAction>;
-};
-
-export type StatBlockProcedureBindingFor<
-  TProcedure extends StatBlockProcedure,
-> = {
-  readonly procedureRef: BattleStatBlockProcedureExecutionRef;
-  readonly resourcePoolRefs: readonly BattleResourcePoolExecutionRef[];
-  readonly procedure: TProcedure;
-};
-
-export type StatBlockProcedure =
-  | StatBlockAttackProcedure
-  | StatBlockMultiattackProcedure
-  | StatBlockBonusActionOptionProcedure;
-
-export type StatBlockProcedureBinding =
-  StatBlockProcedureBindingFor<StatBlockProcedure>;
-
-export type StatBlockProcedureBindingSnapshot = StatBlockProcedureBinding;
-
-export type StatBlockResourcePoolState =
-  | {
-      readonly resourcePoolRef: BattleResourcePoolExecutionRef;
-      readonly kind: "daily";
-      readonly usesMax: ResourceCount;
-      readonly usesRemaining: ResourceCount;
-    }
-  | {
-      readonly resourcePoolRef: BattleResourcePoolExecutionRef;
-      readonly kind: "recharge";
-      readonly minimumRoll: Extract<
-        CreatureLimitedUse,
-        { readonly kind: "recharge" }
-      >["minimumRoll"];
-      readonly available: boolean;
-    }
-  | {
-      readonly resourcePoolRef: BattleResourcePoolExecutionRef;
-      readonly kind: "recharge_after_rest";
-      readonly available: boolean;
-    }
-  | {
-      readonly resourcePoolRef: BattleResourcePoolExecutionRef;
-      readonly kind: "legendaryActions";
-      readonly usesMax: ResourceCount;
-      readonly usesRemaining: ResourceCount;
-    };
-
-export type StatBlockExecutionSnapshot = {
-  readonly scopeRef: BattleStatBlockExecutionScopeRef;
-  readonly procedureBindings: readonly StatBlockProcedureBindingSnapshot[];
-  readonly resourcePools: readonly StatBlockResourcePoolState[];
-};
+import {
+  admittedStatBlockExecutionState,
+  type BattleStatBlockExecutionSource,
+  type StatBlockAttackProcedure,
+  type StatBlockExecutionState,
+  type StatBlockExecutionAdmission,
+  type StatBlockExecutionSnapshot,
+  type StatBlockProcedureBinding,
+  type StatBlockProcedureBindingSnapshot,
+  type StatBlockResourcePoolState,
+} from "./stat-block-execution-state.ts";
+export * from "./stat-block-execution-state.ts";
 
 export type StatBlockExecutionRestoreIssue = {
   readonly tag: "invalidStatBlockExecutionSnapshot";
@@ -129,24 +58,6 @@ export type StatBlockExecutionRestoreIssue = {
     | "procedureBindingsMismatch"
     | "resourcePoolsMismatch";
 };
-
-type StatBlockExecutionStateData = {
-  readonly scopeRef: BattleStatBlockExecutionScopeRef;
-  readonly procedureBindings: readonly StatBlockProcedureBinding[];
-  readonly resourcePools: readonly StatBlockResourcePoolState[];
-};
-export type StatBlockExecutionState = StatBlockExecutionStateData &
-  Brand.Brand<"AdmittedStatBlockExecutionState">;
-
-const AdmittedStatBlockExecutionState =
-  Brand.nominal<StatBlockExecutionState>();
-
-export type StatBlockExecutionAdmission<
-  TStatBlock extends StatBlockRecord = StatBlockRecord,
-> = {
-  readonly statBlock: TStatBlock;
-  readonly execution: StatBlockExecutionState;
-} & Brand.Brand<"StatBlockExecutionAdmission">;
 
 type ExecutionReferenceAllocator = {
   readonly scopeRef: BattleStatBlockExecutionScopeRef;
@@ -170,76 +81,44 @@ type AllocatedStatBlockExecution = {
   >;
 };
 
-type StatBlockProcedurePresentation =
-  | {
-      readonly procedureRef: BattleStatBlockProcedureExecutionRef;
-      readonly kind: "attack";
-      readonly name: string;
-    }
-  | {
-      readonly procedureRef: BattleStatBlockProcedureExecutionRef;
-      readonly kind: "multiattack";
-      readonly label: string;
-    }
-  | {
-      readonly procedureRef: BattleStatBlockProcedureExecutionRef;
-      readonly kind: "bonusActionOption";
-      readonly label: string;
-    };
-
-type AdmittedAttackOccurrence = {
+export type AdmittedAttackOccurrence = {
   readonly kind: "attack";
+  readonly source: CreatureNamedAttackRoll;
   readonly section: StatBlockAttackProcedure["section"];
   readonly attack: StatBlockAttackProcedure["attack"];
   readonly traitAttackRollModes?: StatBlockAttackProcedure["traitAttackRollModes"];
   readonly limitedUse?: CreatureLimitedUse;
 };
 
-type AdmittedMultiattackOccurrence = {
+export type AdmittedMultiattackOccurrence = {
   readonly kind: "multiattack";
+  readonly source: CreatureNamedMultiattack;
   readonly dispatches: ReadonlyNonEmptyArray<{
     readonly attack: AdmittedAttackOccurrence;
     readonly count: PositiveInteger;
   }>;
 };
 
-type AdmittedBonusActionOccurrence = {
+export type AdmittedBonusActionOccurrence = {
   readonly kind: "bonusActionOption";
+  readonly source: CreatureNamedActionOption;
   readonly standardActions: ReadonlyNonEmptyArray<SupportedStatBlockBonusActionStandardAction>;
   readonly limitedUse?: CreatureLimitedUse;
 };
 
-type AdmittedStatBlockOccurrences = {
+export type AdmittedStatBlockOccurrences = {
   readonly legendaryActionUses?: PositiveInteger;
   readonly attacks: readonly AdmittedAttackOccurrence[];
   readonly multiattacks: readonly AdmittedMultiattackOccurrence[];
   readonly bonusActions: readonly AdmittedBonusActionOccurrence[];
 };
 
-type StatBlockPresentationOccurrence =
-  | {
-      readonly occurrence: AdmittedAttackOccurrence;
-      readonly kind: "attack";
-      readonly name: string;
-    }
-  | {
-      readonly occurrence: AdmittedMultiattackOccurrence;
-      readonly kind: "multiattack";
-      readonly label: string;
-    }
-  | {
-      readonly occurrence: AdmittedBonusActionOccurrence;
-      readonly kind: "bonusActionOption";
-      readonly label: string;
-    };
-
 type AdmittedStatBlock = {
   readonly occurrences: AdmittedStatBlockOccurrences;
-  readonly presentationOccurrences: readonly StatBlockPresentationOccurrence[];
 };
 
 export function statBlockExecutionAdmissionCohort<
-  TStatBlock extends StatBlockRecord,
+  TStatBlock extends BattleStatBlockExecutionSource,
 >(
   battleId: BattleId,
   combatantId: CombatantId,
@@ -269,12 +148,10 @@ export function statBlockExecutionAdmissionCohort<
   return { admissions, nextScopeOrdinal: scopeAllocator.scopeOrdinal };
 }
 
-function admitStatBlock(statBlock: StatBlockRecord): AdmittedStatBlock {
+function admitStatBlock(
+  statBlock: BattleStatBlockExecutionSource,
+): AdmittedStatBlock {
   const attacks: AdmittedAttackOccurrence[] = [];
-  const attackPresentations: Extract<
-    StatBlockPresentationOccurrence,
-    { readonly kind: "attack" }
-  >[] = [];
   const traitAttackRollModes = supportedStatBlockTraitAttackRollModes(
     statBlock.statBlock.traits,
   );
@@ -295,41 +172,33 @@ function admitStatBlock(statBlock: StatBlockRecord): AdmittedStatBlock {
       } = attack;
       const occurrence: AdmittedAttackOccurrence = {
         kind: "attack",
+        source: attack,
         section,
         attack: attackMechanics,
         ...(traitAttackRollModes === undefined ? {} : { traitAttackRollModes }),
         ...(limitedUse === undefined ? {} : { limitedUse }),
       };
       attacks.push(occurrence);
-      attackPresentations.push({ occurrence, kind: "attack", name });
     }
   }
 
-  const actionAttackPresentations = attackPresentations.filter(
-    ({ occurrence }) => occurrence.section === "actions",
-  );
+  const actionAttacks = attacks.filter(({ section }) => section === "actions");
   const multiattacks: AdmittedMultiattackOccurrence[] = [];
-  const multiattackPresentations: StatBlockPresentationOccurrence[] = [];
   for (const multiattack of statBlock.statBlock.actions?.multiattacks ?? []) {
     const dispatches = admittedMultiattackDispatches(
       multiattack,
-      actionAttackPresentations,
+      actionAttacks,
     );
     if (dispatches === null) continue;
     const occurrence: AdmittedMultiattackOccurrence = {
       kind: "multiattack",
+      source: multiattack,
       dispatches,
     };
     multiattacks.push(occurrence);
-    multiattackPresentations.push({
-      occurrence,
-      kind: "multiattack",
-      label: multiattack.name,
-    });
   }
 
   const bonusActions: AdmittedBonusActionOccurrence[] = [];
-  const bonusActionPresentations: StatBlockPresentationOccurrence[] = [];
   for (const option of statBlock.statBlock.bonusActions?.actionOptions ?? []) {
     const standardActions = option.options.filter(
       (
@@ -349,17 +218,13 @@ function admitStatBlock(statBlock: StatBlockRecord): AdmittedStatBlock {
     if (admittedStandardActions === null) continue;
     const occurrence: AdmittedBonusActionOccurrence = {
       kind: "bonusActionOption",
+      source: option,
       standardActions: admittedStandardActions,
       ...(option.limitedUse === undefined
         ? {}
         : { limitedUse: option.limitedUse }),
     };
     bonusActions.push(occurrence);
-    bonusActionPresentations.push({
-      occurrence,
-      kind: "bonusActionOption",
-      label: option.name,
-    });
   }
 
   return {
@@ -376,20 +241,12 @@ function admitStatBlock(statBlock: StatBlockRecord): AdmittedStatBlock {
       multiattacks,
       bonusActions,
     },
-    presentationOccurrences: [
-      ...attackPresentations,
-      ...multiattackPresentations,
-      ...bonusActionPresentations,
-    ],
   };
 }
 
 function admittedMultiattackDispatches(
   multiattack: CreatureNamedMultiattack,
-  actionAttacks: readonly Extract<
-    StatBlockPresentationOccurrence,
-    { readonly kind: "attack" }
-  >[],
+  actionAttacks: readonly AdmittedAttackOccurrence[],
 ): AdmittedMultiattackOccurrence["dispatches"] | null {
   if (multiattack.dispatches.length === 0) return null;
   const admittedDispatches: {
@@ -409,22 +266,19 @@ function admittedMultiattackDispatches(
       return null;
     }
     const candidates = actionAttacks.filter(
-      (attack) => attack.name === dispatch.name,
+      (attack) => attack.source.name === dispatch.name,
     );
     const [candidate] = candidates;
     if (candidate === undefined || candidates.length !== 1) return null;
-    if (candidate.occurrence.limitedUse !== undefined) {
+    if (candidate.limitedUse !== undefined) {
       const totalDispatchCount =
-        (limitedUseDispatchCountByAttack.get(candidate.occurrence) ?? 0) +
+        (limitedUseDispatchCountByAttack.get(candidate) ?? 0) +
         dispatch.count.value;
       if (totalDispatchCount > 1) return null;
-      limitedUseDispatchCountByAttack.set(
-        candidate.occurrence,
-        totalDispatchCount,
-      );
+      limitedUseDispatchCountByAttack.set(candidate, totalDispatchCount);
     }
     admittedDispatches.push({
-      attack: candidate.occurrence,
+      attack: candidate,
       count: PositiveInteger(dispatch.count.value),
     });
   }
@@ -533,7 +387,7 @@ function allocateStatBlockExecution(
   }
 
   return {
-    execution: AdmittedStatBlockExecutionState({
+    execution: admittedStatBlockExecutionState({
       scopeRef: allocator.scopeRef,
       procedureBindings,
       resourcePools,
@@ -542,63 +396,14 @@ function allocateStatBlockExecution(
   };
 }
 
-function statBlockPresentationsForAllocation(
-  admitted: AdmittedStatBlock,
-  allocated: AllocatedStatBlockExecution,
-): readonly StatBlockProcedurePresentation[] {
-  return admitted.presentationOccurrences.map((presentation) => {
-    const procedureRef = allocated.procedureRefs.get(presentation.occurrence);
-    if (procedureRef === undefined) {
-      throw new Error(
-        "Every admitted presentation occurrence must have an allocated ref.",
-      );
-    }
-    return presentation.kind === "attack"
-      ? {
-          procedureRef,
-          kind: presentation.kind,
-          name: presentation.name,
-        }
-      : {
-          procedureRef,
-          kind: presentation.kind,
-          label: presentation.label,
-        };
-  });
-}
+export type StatBlockPresentationAllocation = {
+  readonly occurrences: AdmittedStatBlockOccurrences;
+  readonly procedureRefs: AllocatedStatBlockExecution["procedureRefs"];
+};
 
-export function statBlockAttackActionOptions(
-  admission: StatBlockExecutionAdmission,
-): readonly StatBlockAttackActionOption[] {
-  return admission.execution.procedureBindings.flatMap((binding) => {
-    if (binding.procedure.kind !== "attack") return [];
-    const attack = binding.procedure.attack;
-    const base = {
-      kind: "statBlockAttack" as const,
-      procedureRef: binding.procedureRef,
-      attack,
-      ...(binding.procedure.traitAttackRollModes === undefined
-        ? {}
-        : { traitAttackRollModes: binding.procedure.traitAttackRollModes }),
-    };
-    return [
-      { ...base, damageNotation: "rolled" as const },
-      ...(statBlockAttackSupportsStaticDamageNotation(attack)
-        ? [
-            {
-              ...base,
-              attack,
-              damageNotation: "static" as const,
-            },
-          ]
-        : []),
-    ];
-  });
-}
-
-export function statBlockProcedurePresentations(
-  admission: StatBlockExecutionAdmission,
-): readonly StatBlockProcedurePresentation[] {
+export function statBlockPresentationAllocation(
+  admission: Pick<StatBlockExecutionAdmission, "statBlock" | "execution">,
+): StatBlockPresentationAllocation {
   const admitted = admitStatBlock(admission.statBlock);
   const allocated = allocateStatBlockExecution(
     executionReferenceAllocator(admission.execution.scopeRef),
@@ -611,18 +416,13 @@ export function statBlockProcedurePresentations(
     )
   ) {
     throw new Error(
-      "Presentation projection requires the paired admitted execution graph.",
+      "Stat Block admission projection requires the paired execution graph.",
     );
   }
-  return statBlockPresentationsForAllocation(admitted, allocated);
-}
-
-function statBlockAttackSupportsStaticDamageNotation(
-  attack: SupportedCreatureAttackRollMechanics,
-): attack is SupportedStaticDamageCreatureAttackRollMechanics {
-  return statBlockAttackDamageSupportsStaticNotation(
-    supportedStatBlockAttackDamage(attack),
-  );
+  return {
+    occurrences: admitted.occurrences,
+    procedureRefs: allocated.procedureRefs,
+  };
 }
 
 function requireAllocatedAttackRef(
@@ -639,142 +439,22 @@ function requireAllocatedAttackRef(
   return procedureRef;
 }
 
-export function statBlockProcedureResourcesAvailable(
-  execution: StatBlockExecutionState,
-  procedureRef: BattleStatBlockProcedureExecutionRef,
-): boolean {
-  const binding = statBlockProcedureBinding(execution, procedureRef);
-  return (
-    binding !== undefined &&
-    binding.resourcePoolRefs.every((resourcePoolRef) => {
-      const pool = statBlockResourcePool(execution, resourcePoolRef);
-      return pool !== undefined && resourcePoolAvailable(pool);
-    })
-  );
-}
-
-export function spendStatBlockProcedureResources(
-  execution: StatBlockExecutionState,
-  procedureRef: BattleStatBlockProcedureExecutionRef,
-): StatBlockExecutionState {
-  const binding = statBlockProcedureBinding(execution, procedureRef);
-  if (
-    binding === undefined ||
-    !statBlockProcedureResourcesAvailable(execution, procedureRef)
-  ) {
-    return execution;
-  }
-  const ownedPoolRefs = new Set(binding.resourcePoolRefs);
-  return AdmittedStatBlockExecutionState({
-    ...execution,
-    resourcePools: execution.resourcePools.map((pool) =>
-      ownedPoolRefs.has(pool.resourcePoolRef) ? spendResourcePool(pool) : pool,
-    ),
-  });
-}
-
-export function refreshStatBlockStartTurnExecution(
-  execution: StatBlockExecutionState,
-): StatBlockExecutionState {
-  return AdmittedStatBlockExecutionState({
-    ...execution,
-    resourcePools: execution.resourcePools.map((pool) =>
-      pool.kind === "legendaryActions"
-        ? { ...pool, usesRemaining: pool.usesMax }
-        : pool,
-    ),
-  });
-}
-
-export function unavailableStatBlockRechargePoolRefs(
-  execution: StatBlockExecutionState,
-): readonly BattleResourcePoolExecutionRef[] {
-  return execution.resourcePools.flatMap((pool) =>
-    pool.kind === "recharge" && !pool.available ? [pool.resourcePoolRef] : [],
-  );
-}
-
-export function applyStatBlockRechargeRolls(
-  execution: StatBlockExecutionState,
-  rolls: readonly {
-    readonly target: BattleResourcePoolExecutionRef;
-    readonly roll: DieRollResult;
-  }[],
-): StatBlockExecutionState {
-  const rollsByTarget = new Map(rolls.map((roll) => [roll.target, roll.roll]));
-  return AdmittedStatBlockExecutionState({
-    ...execution,
-    resourcePools: execution.resourcePools.map((pool) => {
-      if (pool.kind !== "recharge" || pool.available) return pool;
-      const roll = rollsByTarget.get(pool.resourcePoolRef);
-      return roll !== undefined && roll >= pool.minimumRoll
-        ? { ...pool, available: true }
-        : pool;
-    }),
-  });
-}
-
-function statBlockResourcePool(
-  execution: StatBlockExecutionState,
-  resourcePoolRef: BattleResourcePoolExecutionRef,
-): StatBlockResourcePoolState | undefined {
-  return execution.resourcePools.find(
-    (pool) => pool.resourcePoolRef === resourcePoolRef,
-  );
-}
-
-function resourcePoolAvailable(pool: StatBlockResourcePoolState): boolean {
-  return pool.kind === "daily" || pool.kind === "legendaryActions"
-    ? pool.usesRemaining > 0
-    : pool.available;
-}
-
-function spendResourcePool(
-  pool: StatBlockResourcePoolState,
-): StatBlockResourcePoolState {
-  if (pool.kind === "daily" || pool.kind === "legendaryActions") {
-    return {
-      ...pool,
-      usesRemaining: resourceCount(Number(pool.usesRemaining) - 1),
-    };
-  }
-  return { ...pool, available: false };
-}
-
-export function statBlockProcedureBinding(
-  execution: StatBlockExecutionState,
-  procedureRef: BattleStatBlockProcedureExecutionRef,
-): StatBlockProcedureBinding | undefined {
-  return execution.procedureBindings.find(
-    (binding) => binding.procedureRef === procedureRef,
-  );
-}
-
 function statBlockProcedureBindingSnapshots(
   execution: StatBlockExecutionState,
 ): readonly StatBlockProcedureBindingSnapshot[] {
   return execution.procedureBindings;
 }
 
-export function statBlockExecutionSnapshot(
-  execution: StatBlockExecutionState,
-): StatBlockExecutionSnapshot {
-  return {
-    scopeRef: execution.scopeRef,
-    procedureBindings: statBlockProcedureBindingSnapshots(execution),
-    resourcePools: execution.resourcePools,
-  };
-}
-
 export type StatBlockExecutionRestoration<
-  TStatBlock extends StatBlockRecord = StatBlockRecord,
+  TStatBlock extends BattleStatBlockExecutionSource =
+    BattleStatBlockExecutionSource,
 > = {
   readonly statBlock: TStatBlock;
   readonly snapshot: StatBlockExecutionSnapshot;
 };
 
 export function restoreStatBlockExecutionAdmissions<
-  TStatBlock extends StatBlockRecord,
+  TStatBlock extends BattleStatBlockExecutionSource,
 >(
   battleId: BattleId,
   combatantId: CombatantId,
@@ -861,7 +541,7 @@ export function restoreStatBlockExecutionAdmissions<
     restored.push(
       Brand.nominal<StatBlockExecutionAdmission<TStatBlock>>()({
         statBlock: restoration.statBlock,
-        execution: AdmittedStatBlockExecutionState({
+        execution: admittedStatBlockExecutionState({
           scopeRef: snapshot.scopeRef,
           procedureBindings: expected.execution.procedureBindings,
           resourcePools: restoredResourcePoolsInExecutionOrder(
@@ -893,7 +573,7 @@ function statBlockExecutionRestoreIssue(
 }
 
 export function restoreStatBlockExecutionAdmission<
-  TStatBlock extends StatBlockRecord,
+  TStatBlock extends BattleStatBlockExecutionSource,
 >(
   battleId: BattleId,
   combatantId: CombatantId,
@@ -1053,30 +733,8 @@ function sameMembers<T>(actual: readonly T[], expected: readonly T[]): boolean {
   );
 }
 
-export function statBlockMultiattackBindings(
-  execution: StatBlockExecutionState,
-): readonly StatBlockProcedureBindingFor<StatBlockMultiattackProcedure>[] {
-  return execution.procedureBindings.filter(
-    (
-      binding,
-    ): binding is StatBlockProcedureBindingFor<StatBlockMultiattackProcedure> =>
-      binding.procedure.kind === "multiattack",
-  );
-}
-
-export function statBlockBonusActionOptionBindings(
-  execution: StatBlockExecutionState,
-): readonly StatBlockProcedureBindingFor<StatBlockBonusActionOptionProcedure>[] {
-  return execution.procedureBindings.filter(
-    (
-      binding,
-    ): binding is StatBlockProcedureBindingFor<StatBlockBonusActionOptionProcedure> =>
-      binding.procedure.kind === "bonusActionOption",
-  );
-}
-
 function statBlockAttackSections(
-  statBlock: StatBlockRecord,
+  statBlock: BattleStatBlockExecutionSource,
 ): readonly [StatBlockAttackSection, readonly CreatureNamedAttackRoll[]][] {
   return [
     ["actions", statBlock.statBlock.actions?.attacks ?? []],

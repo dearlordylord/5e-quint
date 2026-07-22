@@ -1,3 +1,4 @@
+import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
   battleActSpellPresentation,
@@ -339,7 +340,7 @@ function hasMoveAct(state: BattleState, actorId: CombatantId): boolean {
 function requireAbjureFoesUnitRef(paladinLevel: ClassLevel) {
   const classLevels = [{ className: "paladin" as const, level: paladinLevel }];
   const unitRef = battleUnitRefWithSupportProfiles({
-    unitRef: { unitId: paladinAbjureFoesUnitId },
+    unitRef: { unitId: parseSharedUnitId(paladinAbjureFoesUnitId) },
     unit: abjureFoesUnit,
     classLevels,
   });

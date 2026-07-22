@@ -1,9 +1,21 @@
-import { Brand } from "effect";
+import { Brand, Schema } from "effect";
 import {
   difficultyClass,
   type AbilityModifier,
   type DifficultyClass,
 } from "./types.ts";
+
+/** Dependency-safe authored identity vocabulary for execution projections. */
+export const UnitId = Schema.NonEmptyTrimmedString.pipe(Schema.brand("UnitId"));
+export type UnitId = typeof UnitId.Type;
+export const unitId: (value: string) => UnitId = UnitId.make;
+/** Weapon records are authored units, so their identity uses the UnitId domain. */
+export type WeaponId = UnitId;
+export const StatBlockId = Schema.NonEmptyTrimmedString.pipe(
+  Schema.brand("StatBlockId"),
+);
+export type StatBlockId = typeof StatBlockId.Type;
+export const statBlockId: (value: string) => StatBlockId = StatBlockId.make;
 
 export const STANDARD_LANGUAGES = [
   "Common",
@@ -316,6 +328,14 @@ export function parseAlignmentOptionId(
 
 /** Base value for recurring game save DC formulas: 8 + modifier + proficiency bonus. */
 export const SAVE_DC_BASE = 8;
+
+export const FIND_FAMILIAR_CREATURE_TYPE_OVERRIDE_TYPES = [
+  "celestial",
+  "fey",
+  "fiend",
+] as const satisfies ReadonlyArray<CreatureType>;
+export type FindFamiliarCreatureTypeOverride =
+  (typeof FIND_FAMILIAR_CREATURE_TYPE_OVERRIDE_TYPES)[number];
 
 export function featureSaveDC(
   abilityMod: AbilityModifier,

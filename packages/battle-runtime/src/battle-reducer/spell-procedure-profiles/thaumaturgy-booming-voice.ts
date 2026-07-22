@@ -1,3 +1,4 @@
+import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-self-ability-check-advantage
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS
 //
@@ -24,11 +25,7 @@
 //   - The active 1-minute-effect count witness hole stays in
 //     spells-damage-fills.ts until the hole subsystem migrates.
 
-import type { SpellRecord } from "@dnd/surface/surface/types";
-
 import {
-  maybeOpenInterruptWindow,
-  snapshotBattle,
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
   type BattleActiveEffect,
@@ -36,6 +33,7 @@ import {
   type BattleState,
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
+import { maybeOpenInterruptWindow, snapshotBattle } from "../dispatcher.ts";
 import { type CombatantId } from "../../identity.ts";
 import { ThaumaturgyBoomingVoiceTemplateSchema } from "../../active-effect/codecs.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
@@ -67,7 +65,7 @@ type ThaumaturgyBoomingVoiceInvocation = Extract<
 >;
 
 function admitThaumaturgyBoomingVoice(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly ThaumaturgyBoomingVoiceInvocation[] {
   const projection = thaumaturgyBoomingVoiceProjection(

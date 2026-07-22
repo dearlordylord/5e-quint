@@ -5,7 +5,6 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS
 import {
   type RollModifierSpellEffect,
-  isScalarBuffTargetListInvocation,
   type SelectedRollModifierSpellEffect,
   type ActionSpellBattleResolutionInput,
   type BattleHole,
@@ -13,6 +12,7 @@ import {
   type BonusActionSpellBattleResolutionInput,
   type SupportedSpellInvocation,
 } from "../battle-state-execution.ts";
+import { isScalarBuffTargetListInvocation } from "./spells-invocation-guards.ts";
 import type { CombatantId } from "../identity.ts";
 import {
   sameCombatantIdSet,

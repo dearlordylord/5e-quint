@@ -3,6 +3,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L19E-04-L5-BARRIER-WALL wall_of_stone
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L19E-04-L5-BARRIER-WALL wall_of_stone
 // UNIT-IDENTITY-REPLAY: L19E-04-L5-BARRIER-WALL wall_of_stone doCastWallOfStone
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, it, test } from "vitest";
 import {
   abilityScoreAssignment,
@@ -331,11 +332,15 @@ function wallOfStoneWizardSheet(input: {
       spellcasting: {
         sources: [
           {
-            sourceUnitId: "class_wizard",
+            sourceUnitId: authoredUnitId("class_wizard"),
             spellcastingAbility: "int",
-            cantrips: ["fire_bolt", "light", "mage_hand"],
-            spellbook: ["wall_of_stone"],
-            preparedSpells: input.preparedSpells,
+            cantrips: [
+              authoredUnitId("fire_bolt"),
+              authoredUnitId("light"),
+              authoredUnitId("mage_hand"),
+            ],
+            spellbook: [authoredUnitId("wall_of_stone")],
+            preparedSpells: input.preparedSpells.map(authoredUnitId),
             spellcastingFocuses: ["arcane_focus"],
           },
         ],
@@ -371,14 +376,14 @@ function armorClassBuild(input: {
 }): CharacterBuild {
   return {
     progression: {
-      startingClass: classUnitId(input.startingClass),
+      startingClass: classUnitId(authoredUnitId(input.startingClass)),
       advancements: (input.advancements ?? []).map((classId) => ({
-        classUnitId: classUnitId(classId),
+        classUnitId: classUnitId(authoredUnitId(classId)),
         hitPointRule: { tag: "fixedHigherLevelGain" },
       })),
     },
-    background: "background_soldier",
-    species: "species_orc",
+    background: authoredUnitId("background_soldier"),
+    species: authoredUnitId("species_orc"),
     originLanguages: ["Common", "Dwarvish", "Goblin"],
     classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
@@ -417,10 +422,10 @@ function requireRight<R, L>(result: Either.Either<R, L>): R {
 function minimalUnitCatalog(units: readonly UnitRecord[]): UnitCatalog {
   const records = new Map(units.map((unit) => [unit.id, unit]));
   return {
-    getUnit: (id) => Option.fromNullable(records.get(id)),
+    getUnit: (id) => Option.fromNullable(records.get(authoredUnitId(id))),
     listUnits: () => [...records.values()],
     requireUnit: (id) => {
-      const unit = records.get(id);
+      const unit = records.get(authoredUnitId(id));
       if (unit === undefined) {
         throw new Error(`Missing test Unit: ${id}`);
       }

@@ -1,3 +1,4 @@
+import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV84F hideous_laughter
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
@@ -66,7 +67,7 @@ function castHeightenedHideousLaughter() {
       },
     ],
     casterMetamagic: {
-      sorceryPointResourceUnitId: "sorcerer_font_of_magic",
+      sorceryPointResourceUnitId: parseSharedUnitId("sorcerer_font_of_magic"),
       spellUseLimit: "one_per_spell_unless_option_allows_stacking",
       knownOptions: [
         {

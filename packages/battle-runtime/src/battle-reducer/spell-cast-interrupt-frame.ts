@@ -9,7 +9,7 @@ import type {
   SpellComponent,
   BattleExecutableSpellInvocation,
 } from "../battle-state-execution.ts";
-import type { CharacterBattleMetamagicOptionFact } from "../character-battle-resources.ts";
+import type { CharacterBattleMetamagicOptionFact } from "../character-battle-resource-execution.ts";
 import type { CombatantId } from "../identity.ts";
 import {
   SPELL_CAST_REACTION_FACTS_HOLE_ID,

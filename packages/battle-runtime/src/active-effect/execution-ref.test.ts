@@ -14,7 +14,7 @@ import { combatantId, type BattleProcedureExecutionRef } from "../identity.ts";
 import {
   addBattleCombatant,
   removeBattleCombatants,
-} from "../battle-reducer.ts";
+} from "../battle-reducer/api-lifecycle.ts";
 import * as Either from "effect/Either";
 import type { SpellActiveEffect } from "./execution-ref.ts";
 import {

@@ -1,3 +1,4 @@
+import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-after-hit-damage-illumination
 import { DiceExprSchema } from "@dnd/surface/surface/schema";
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
@@ -31,12 +32,10 @@ import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elaps
 import type {
   DamageType,
   DiceAmount as SurfaceDiceAmount,
-  SpellRecord,
 } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
 import {
-  snapshotBattle,
   type AfterHitDamageAndIlluminationSpellInvocation,
   type AttackSpellDamageAddition,
   type BattleActDiscoveryCandidate,
@@ -44,6 +43,7 @@ import {
   type BattleResolutionResult,
   type BattleState,
 } from "../../battle-state-execution.ts";
+import { snapshotBattle } from "../dispatcher.ts";
 import type { BattleSpellProcedureExecution } from "../../character-execution.ts";
 import { CombatantId } from "../../identity.ts";
 import {
@@ -57,7 +57,7 @@ import { SHINING_SMITE_BRIGHT_LIGHT_RADIUS_FEET } from "../spells-active-effects
 import {
   sameStringSet,
   supportedDamageAmountExpr,
-} from "../spells-profile-shared.ts";
+} from "../spells-execution-facts.ts";
 import { spellFillSetContainsOnlySpellCastReactionFacts } from "../spells-resolve-fill-set.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
 import type {
@@ -92,7 +92,7 @@ type AfterHitDamageAndIlluminationResolveInput =
   SpellProcedureProfileResolveInput<AfterHitDamageAndIlluminationInvocation>;
 
 function admitAfterHitDamageAndIllumination(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly AfterHitDamageAndIlluminationInvocation[] {
   const projection = afterHitDamageAndIlluminationSpellProjection(
@@ -139,7 +139,7 @@ function admitAfterHitDamageAndIllumination(
 
 function afterHitDamageAndIlluminationSpellProjection(
   actorId: CombatantId,
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
 ): {
   readonly damageAmount: SurfaceDiceAmount;
   readonly damageType: Extract<DamageType, "radiant">;

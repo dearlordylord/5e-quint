@@ -17,10 +17,10 @@ import * as Either from "effect/Either";
 import * as Option from "effect/Option";
 import { attackActionOptionName } from "./battle-reducer/statblock-attacks.ts";
 import { statBlockAttackProcedureSection } from "./battle-reducer/statblock.ts";
-import {
-  statBlockAttackActionOptions,
-  statBlockProcedurePresentations,
-} from "./stat-block-execution.ts";
+import { statBlockAttackActionOptions } from "./stat-block-execution.ts";
+import { statBlockProcedurePresentations } from "./stat-block-presentation.ts";
+import { admitFindFamiliarReappearance } from "./find-familiar-admission.ts";
+import { resolveAdmittedFindFamiliarReappearanceSubject } from "./battle-reducer/dispatcher.ts";
 
 import {
   abilityModifier,
@@ -56,6 +56,7 @@ import {
   resourceCount,
   type Condition,
 } from "@dnd/shared/types";
+import { statBlockId, unitId as parseUnitId } from "@dnd/shared/game-facts";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import {
   buildStatBlockCatalog,
@@ -129,9 +130,15 @@ import {
   battleExecutionScopeOrdinal,
   battleProcedureExecutionRef,
   BattleProcedureExecutionRef,
+  spellId,
 } from "./identity.ts";
 import type { BattleActiveEffectExecutionRef } from "./identity.ts";
-import type { BattleRuntimeSession } from "./battle-runtime-context.ts";
+import {
+  battleRuntimeContextFromCharacterAdmission,
+  type BattleRuntimeContext,
+  type BattleRuntimeSession,
+  type BattleStatBlockPresentationSource,
+} from "./battle-runtime-context.ts";
 import {
   addBattleCombatant,
   removeBattleCombatants,
@@ -147,10 +154,14 @@ import type {
   CharacterBattleClassLevels,
 } from "./character-class-level.ts";
 import {
+  type AuthoredSelectedSpellInvocation,
   CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
+  bindSelectedSpellInvocation,
   characterUnitProcedure,
+  spellProcedureExecution,
   type CharacterUnitProcedureQuery,
 } from "./character-execution-admission.ts";
+import { admitCharacterWeaponAttackExecutionWeapon } from "./character-weapon-execution-admission.ts";
 import {
   armorOfShadowsSpellInvocationRef,
   ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SUPPORT_PROFILE,
@@ -411,6 +422,56 @@ type MonkFocusSelectorForTest =
       >["speedKind"];
     };
 
+const statBlockPresentationsByExecutionScopeForTest = new Map<
+  string,
+  BattleStatBlockPresentationSource
+>();
+
+function registerStatBlockPresentationsForTest(
+  session: BattleRuntimeSession,
+): void {
+  for (const [combatantId, presentation] of session.context.statBlocks) {
+    const combatant = session.state.combatants.get(combatantId);
+    if (combatant?.origin.kind === "statBlock") {
+      statBlockPresentationsByExecutionScopeForTest.set(
+        String(combatant.origin.execution.scopeRef),
+        presentation,
+      );
+    }
+  }
+}
+
+export function statBlockProcedurePresentationsForStateForTest(
+  state: BattleState,
+  actorId: CombatantId,
+): ReturnType<typeof statBlockProcedurePresentations> {
+  const actor = state.combatants.get(actorId);
+  if (actor?.origin.kind !== "statBlock") {
+    throw new Error("Expected a Stat Block test actor.");
+  }
+  const presentations = statBlockPresentationsByExecutionScopeForTest.get(
+    String(actor.origin.execution.scopeRef),
+  );
+  if (presentations === undefined) {
+    throw new Error("Expected registered Stat Block test presentation.");
+  }
+  return presentations.procedures;
+}
+
+export function battleRuntimeContextForStateForTest(
+  state: BattleState,
+): BattleRuntimeContext {
+  const statBlocks = new Map<CombatantId, BattleStatBlockPresentationSource>();
+  for (const [combatantId, combatant] of state.combatants) {
+    if (combatant.origin.kind !== "statBlock") continue;
+    const presentation = statBlockPresentationsByExecutionScopeForTest.get(
+      String(combatant.origin.execution.scopeRef),
+    );
+    if (presentation !== undefined) statBlocks.set(combatantId, presentation);
+  }
+  return battleRuntimeContextFromCharacterAdmission(new Map(), statBlocks);
+}
+
 export type BattleActSelectorForTest =
   | BattleSubject
   | SpellProcedureSelectorForTest
@@ -497,10 +558,12 @@ export function characterSpellInvocationForProcedureRefForTest(
     actorId,
     procedureRef,
   );
-  if (invocation === undefined) {
+  const execution =
+    invocation === undefined ? undefined : spellProcedureExecution(invocation);
+  if (execution === undefined || !("spellRuleFacts" in execution)) {
     throw new Error(`Expected spell procedure ${procedureRef} for ${actorId}.`);
   }
-  return invocation;
+  return bindSelectedSpellInvocation(execution, procedureRef);
 }
 
 export function characterSpellInvocationRefForProcedureRefForTest(
@@ -508,13 +571,17 @@ export function characterSpellInvocationRefForProcedureRefForTest(
   actorId: CombatantId,
   procedureRef: BattleProcedureExecutionRef,
 ): SpellInvocationRef {
-  return supportedSpellInvocationRef(
-    characterSpellInvocationForProcedureRefForTest(
-      session,
-      actorId,
-      procedureRef,
-    ),
-  );
+  const source = session.context.characters
+    .get(actorId)
+    ?.spellPresentationSources.find(
+      (candidate) => candidate.procedureRef === procedureRef,
+    );
+  if (source === undefined) {
+    throw new Error(
+      `Expected spell presentation source ${procedureRef} for ${actorId}.`,
+    );
+  }
+  return supportedSpellInvocationRef(source.invocation);
 }
 
 export function characterSpellProcedureRefMatchesSpellForTest(
@@ -596,7 +663,7 @@ function sameSpellInvocationRef(
 }
 
 function supportedSpellInvocationMatchesRef(
-  invocation: Parameters<typeof supportedSpellInvocationRef>[0],
+  invocation: AuthoredSelectedSpellInvocation,
   ref: SpellInvocationRef,
 ): boolean {
   return sameSpellInvocationRef(supportedSpellInvocationRef(invocation), ref);
@@ -636,7 +703,7 @@ export function requireCharacterUnitProcedureRefForTest(
   const procedureRef = characterUnitProcedureRefsForAuthoredSelection(
     characterContext,
     actor,
-    unitId,
+    parseUnitId(unitId),
     query,
   )[0];
   if (procedureRef === undefined) {
@@ -654,6 +721,7 @@ export function startBattleRight(
   if (Either.isLeft(result)) {
     throw new Error(result.left.message);
   }
+  registerStatBlockPresentationsForTest(result.right);
   return result.right.state;
 }
 
@@ -664,6 +732,7 @@ export function startBattleSessionRight(
   if (Either.isLeft(result)) {
     throw new Error(result.left.message);
   }
+  registerStatBlockPresentationsForTest(result.right);
   return result.right;
 }
 
@@ -1164,7 +1233,7 @@ export function longswordWeaponMasterySelections(): Extract<
 >["weaponMasteries"] {
   return [
     {
-      weaponUnitId: "weapon_longsword",
+      weaponUnitId: parseUnitId("weapon_longsword"),
     },
   ];
 }
@@ -1175,7 +1244,7 @@ export function greataxeWeaponMasterySelections(): Extract<
 >["weaponMasteries"] {
   return [
     {
-      weaponUnitId: "weapon_greataxe",
+      weaponUnitId: parseUnitId("weapon_greataxe"),
     },
   ];
 }
@@ -1186,7 +1255,7 @@ export function longbowWeaponMasterySelections(): Extract<
 >["weaponMasteries"] {
   return [
     {
-      weaponUnitId: "weapon_longbow",
+      weaponUnitId: parseUnitId("weapon_longbow"),
     },
   ];
 }
@@ -1197,7 +1266,7 @@ export function quarterstaffWeaponMasterySelections(): Extract<
 >["weaponMasteries"] {
   return [
     {
-      weaponUnitId: "weapon_quarterstaff",
+      weaponUnitId: parseUnitId("weapon_quarterstaff"),
     },
   ];
 }
@@ -1480,8 +1549,20 @@ export function characterAttackSubjectForTest(
     throw new Error(`Expected character combatant ${actorId}.`);
   }
   const attack = [actor.origin.attack, actor.origin.unarmedStrike].find(
-    (candidate) =>
-      candidate !== null && attackActionOptionName(candidate) === attackName,
+    (candidate) => {
+      if (candidate === null) return false;
+      if (candidate.kind === "unarmedStrike") {
+        return attackActionOptionName(candidate) === attackName;
+      }
+      const unit = unitLibrary
+        .listUnits()
+        .find((entry) => entry.id === candidate.weapon.weaponUnitId);
+      return (
+        unit?.name === attackName ||
+        candidate.weapon.weaponUnitId ===
+          `weapon_${attackName.toLowerCase().replaceAll(" ", "_")}`
+      );
+    },
   );
   if (attack === null || attack === undefined) {
     throw new Error(`Expected discovered ${attackName} attack for ${actorId}.`);
@@ -1596,10 +1677,13 @@ export function statBlockAttackSubjectForTest(
   if (actor?.origin.kind !== "statBlock") {
     throw new Error("Expected Stat Block test actor.");
   }
-  const procedureRef = statBlockProcedurePresentations(actor.origin).find(
+  const procedureRef = statBlockProcedurePresentationsForStateForTest(
+    state,
+    actorId,
+  ).find(
     (candidate) => candidate.kind === "attack" && candidate.name === attackName,
   )?.procedureRef;
-  const option = statBlockAttackActionOptions(actor.origin).find(
+  const option = statBlockAttackActionOptions(actor.origin.execution).find(
     (candidate) =>
       candidate.procedureRef === procedureRef &&
       statBlockAttackProcedureSection(
@@ -2096,9 +2180,12 @@ type AuthoredBattleActSelectorForTest = Exclude<
   BattleActSelectorForTest,
   BattleSubject
 >;
+type BattleResolutionInputForTest = Parameters<
+  typeof resolveBattleSubjectRuntime
+>[0] & { readonly statBlockCatalog?: typeof statBlockCatalog };
 
 function resolveBattleSubject(
-  input: Parameters<typeof resolveBattleSubjectRuntime>[0],
+  input: BattleResolutionInputForTest,
 ): ReturnType<typeof resolveBattleSubjectRuntime>;
 function resolveBattleSubject(
   input: Omit<
@@ -2107,21 +2194,27 @@ function resolveBattleSubject(
   > & {
     readonly session: BattleRuntimeSession;
     readonly subject: AuthoredBattleActSelectorForTest;
+    readonly statBlockCatalog?: typeof statBlockCatalog;
   },
 ): ReturnType<typeof resolveBattleSubjectRuntime>;
 function resolveBattleSubject(
   input:
-    | Parameters<typeof resolveBattleSubjectRuntime>[0]
+    | BattleResolutionInputForTest
     | (Omit<
         Parameters<typeof resolveBattleSubjectRuntime>[0],
         "state" | "subject"
       > & {
         readonly session: BattleRuntimeSession;
         readonly subject: AuthoredBattleActSelectorForTest;
+        readonly statBlockCatalog?: typeof statBlockCatalog;
       }),
 ): ReturnType<typeof resolveBattleSubjectRuntime> {
   if ("state" in input) {
-    return resolveBattleSubjectRuntime(input);
+    const { statBlockCatalog: catalog, ...mechanicalInput } = input;
+    return resolveBattleSubjectWithOptionalFamiliarAdmission(
+      mechanicalInput,
+      catalog,
+    );
   }
   const subject = selectedBattleSubjectForTest(input.session, input.subject);
   if (subject === undefined) {
@@ -2137,14 +2230,44 @@ function resolveBattleSubject(
       subject.tag === "findFamiliarTouchSpell")
       ? bindSelectedSpellSpatialFactsForTest(input.fills, subject.procedureRef)
       : input.fills;
-  return resolveBattleSubjectRuntime({
-    state: input.session.state,
-    subject,
-    fills,
-    ...(input.statBlockCatalog === undefined
-      ? {}
-      : { statBlockCatalog: input.statBlockCatalog }),
+  return resolveBattleSubjectWithOptionalFamiliarAdmission(
+    { state: input.session.state, subject, fills },
+    input.statBlockCatalog,
+  );
+}
+
+function resolveBattleSubjectWithOptionalFamiliarAdmission(
+  input: Parameters<typeof resolveBattleSubjectRuntime>[0],
+  catalog: typeof statBlockCatalog | undefined,
+): ReturnType<typeof resolveBattleSubjectRuntime> {
+  if (
+    input.subject.tag !== "companionLifecycle" ||
+    input.subject.action !== "reappear" ||
+    catalog === undefined
+  ) {
+    return resolveBattleSubjectRuntime(input);
+  }
+  const admission = admitFindFamiliarReappearance({
+    state: input.state,
+    casterId: input.subject.actorId,
+    catalog,
   });
+  if (Either.isRight(admission)) {
+    statBlockPresentationsByExecutionScopeForTest.set(
+      String(
+        admission.right.mechanics.combatantAdmission.origin.execution.scopeRef,
+      ),
+      admission.right.presentation,
+    );
+  }
+  return Either.isLeft(admission)
+    ? resolveBattleSubjectRuntime(input)
+    : resolveAdmittedFindFamiliarReappearanceSubject({
+        state: input.state,
+        subject: { ...input.subject, action: "reappear" },
+        fills: input.fills,
+        admission: admission.right.mechanics,
+      });
 }
 
 export function resolveBattleSubjectUncheckedForTest(
@@ -3344,8 +3467,8 @@ export function characterSeed(input: {
       ? {}
       : {
           weapon: {
-            itemId: `main:${attack.weapon.id}`,
-            unitId: attack.weapon.id,
+            itemId: `main:${attack.weapon.weaponUnitId}`,
+            unitId: attack.weapon.weaponUnitId,
             grip: "one_handed" as const,
           },
         });
@@ -3401,12 +3524,26 @@ export function characterSeed(input: {
     }
     return { unit: resource.unit, supportProfiles: supportProfiles.right };
   });
+  const weaponPresentationUnitRefs = [attack, input.offHandAttack].flatMap(
+    (candidate) => {
+      if (candidate === null || candidate === undefined) return [];
+      const unit = unitLibrary
+        .listUnits()
+        .find(
+          (entry) =>
+            entry.kind === "weapon" &&
+            entry.id === candidate.weapon.weaponUnitId,
+        );
+      return unit?.kind === "weapon" ? [{ unit, supportProfiles: [] }] : [];
+    },
+  );
   const characterUnitRefs = [
     ...new Map(
-      [...resourceUnitRefs, ...(input.characterUnitRefs ?? [])].map((ref) => [
-        ref.unit.id,
-        ref,
-      ]),
+      [
+        ...resourceUnitRefs,
+        ...weaponPresentationUnitRefs,
+        ...(input.characterUnitRefs ?? []),
+      ].map((ref) => [ref.unit.id, ref]),
     ).values(),
   ];
   return {
@@ -3505,7 +3642,7 @@ export function testLongswordAttack(): TestCharacterWeaponAttack {
 
   return {
     kind: "weapon",
-    weapon,
+    weapon: admitCharacterWeaponAttackExecutionWeapon(weapon),
     ability: "str",
     abilityModifier: battleAbilityModifier(3),
   };
@@ -3558,7 +3695,7 @@ export function testDaggerAttack(): TestCharacterWeaponAttack {
 
   return {
     kind: "weapon",
-    weapon,
+    weapon: admitCharacterWeaponAttackExecutionWeapon(weapon),
     ability: "str",
     abilityModifier: battleAbilityModifier(3),
   };
@@ -3572,7 +3709,7 @@ export function testShortswordAttack(): TestCharacterWeaponAttack {
 
   return {
     kind: "weapon",
-    weapon,
+    weapon: admitCharacterWeaponAttackExecutionWeapon(weapon),
     ability: "str",
     abilityModifier: battleAbilityModifier(3),
   };
@@ -3586,7 +3723,7 @@ export function testQuarterstaffAttack(): TestCharacterWeaponAttack {
 
   return {
     kind: "weapon",
-    weapon,
+    weapon: admitCharacterWeaponAttackExecutionWeapon(weapon),
     ability: "str",
     abilityModifier: battleAbilityModifier(3),
   };
@@ -3602,26 +3739,37 @@ export function testGreataxeAttack(
 
   return {
     kind: "weapon",
-    weapon,
+    weapon: admitCharacterWeaponAttackExecutionWeapon(weapon),
     ability: "str",
     abilityModifier: ability,
   };
 }
 
 export function testRangedCleaveLongbowAttack(): TestCharacterWeaponAttack {
+  const unit = testRangedCleaveLongbowUnitRef().unit;
+  if (unit.kind !== "weapon") {
+    throw new Error("Expected Longbow weapon Unit.");
+  }
+  return {
+    kind: "weapon",
+    weapon: admitCharacterWeaponAttackExecutionWeapon(unit),
+    ability: "dex",
+    abilityModifier: battleAbilityModifier(3),
+  };
+}
+
+export function testRangedCleaveLongbowUnitRef(): BattleUnitRef {
   const weapon = decodeUnitRecordSync(weaponLongbowInput);
   if (weapon.kind !== "weapon") {
     throw new Error("Expected Longbow weapon Unit.");
   }
 
   return {
-    kind: "weapon",
-    weapon: {
+    unit: {
       ...weapon,
       mastery: "cleave",
     } satisfies WeaponRecord,
-    ability: "dex",
-    abilityModifier: battleAbilityModifier(3),
+    supportProfiles: [],
   };
 }
 
@@ -3633,7 +3781,7 @@ export function testLightHammerAttack(): TestCharacterWeaponAttack {
 
   return {
     kind: "weapon",
-    weapon,
+    weapon: admitCharacterWeaponAttackExecutionWeapon(weapon),
     ability: "str",
     abilityModifier: battleAbilityModifier(3),
   };
@@ -3693,7 +3841,7 @@ export function monsterResourceStatBlock(): StatBlockRecord {
   }
   return {
     ...base,
-    id: "stat_block_resource_test_monster",
+    id: statBlockId("stat_block_resource_test_monster"),
     name: "Resource Test Monster",
     statBlock: {
       ...base.statBlock,
@@ -3737,7 +3885,7 @@ export function monsterResourceStatBlockWithUnsupportedAttackSections(): StatBlo
   }
   return {
     ...base,
-    id: "stat_block_unsupported_attack_sections_test_monster",
+    id: statBlockId("stat_block_unsupported_attack_sections_test_monster"),
     statBlock: {
       ...base.statBlock,
       bonusActions: {
@@ -3777,7 +3925,7 @@ export function monsterMultiattackStatBlock(input?: {
   }
   return {
     ...base,
-    id: "stat_block_multiattack_test_monster",
+    id: statBlockId("stat_block_multiattack_test_monster"),
     statBlock: {
       ...base.statBlock,
       displayName: "Multiattack Test Monster",
@@ -3817,7 +3965,7 @@ export function monsterResourceStatBlockWithTwoRechargeActions(): StatBlockRecor
   }
   return {
     ...base,
-    id: "stat_block_two_recharge_test_monster",
+    id: statBlockId("stat_block_two_recharge_test_monster"),
     statBlock: {
       ...base.statBlock,
       actions: {
@@ -3868,14 +4016,7 @@ export function resistantSkeletonCreatureInit(input: {
     creatureInit: {
       kind: "statBlock",
       statBlock: {
-        id: "stat_block_slashing_resistant_skeleton",
-        kind: "statBlock",
-        name: "Slashing Resistant Skeleton",
-        challengeRating: skeleton.challengeRating,
-        provenance: {
-          kind: "xphb",
-          section: "battle-runtime test fixture",
-        },
+        id: statBlockId("stat_block_slashing_resistant_skeleton"),
         statBlock: {
           ...statBlockWithoutDamageModifiers,
           displayName: "Slashing Resistant Skeleton",
@@ -4188,7 +4329,11 @@ export function bardicInspirationUnit(): Extract<
 export function bardicInspirationSubject(
   unitId: string,
 ): UnitFeatureSelectorForTest {
-  return { tag: "unitFeature", actorId: fighterId, unitId };
+  return {
+    tag: "unitFeature",
+    actorId: fighterId,
+    unitId: parseUnitId(unitId),
+  };
 }
 
 function bardicInspirationResource(input: {
@@ -4606,7 +4751,7 @@ function rogueSneakAttackUnit(input?: {
   readonly acquiredAtLevel?: number;
 }): Extract<UnitRecord, { readonly kind: "class_feature" }> {
   return {
-    id: "rogue_sneak_attack",
+    id: parseUnitId("rogue_sneak_attack"),
     kind: "class_feature",
     name: "Sneak Attack",
     className: "rogue",
@@ -4655,7 +4800,7 @@ function rogueCunningStrikeUnit(input?: {
   readonly acquiredAtLevel?: number;
 }): Extract<UnitRecord, { readonly kind: "class_feature" }> {
   return {
-    id: "rogue_cunning_strike",
+    id: parseUnitId("rogue_cunning_strike"),
     kind: "class_feature",
     name: "Cunning Strike",
     className: "rogue",
@@ -4670,7 +4815,7 @@ function rogueCunningStrikeUnit(input?: {
       family: "cunning_strike",
       trigger: {
         kind: "deal_sneak_attack_damage",
-        sourceUnitId: "rogue_sneak_attack",
+        sourceUnitId: parseUnitId("rogue_sneak_attack"),
       },
       choice: { kind: "choose_one", maxOptions: 1 },
       effectSaveDc: {
@@ -4722,7 +4867,7 @@ function rogueEvasionUnit(input?: {
   readonly ability?: "dex" | "con";
 }): Extract<UnitRecord, { readonly kind: "class_feature" }> {
   return {
-    id: "rogue_evasion",
+    id: parseUnitId("rogue_evasion"),
     kind: "class_feature",
     name: "Evasion",
     className: "rogue",
@@ -4751,7 +4896,7 @@ export function uncannyDodgeUnit(): Extract<
   { readonly kind: "class_feature" }
 > {
   return {
-    id: "rogue_uncanny_dodge",
+    id: parseUnitId("rogue_uncanny_dodge"),
     kind: "class_feature",
     name: "Uncanny Dodge",
     className: "rogue",
@@ -4783,7 +4928,7 @@ export function cuttingWordsUnit(): Extract<
   { readonly kind: "class_feature" }
 > {
   return {
-    id: "bard_cutting_words",
+    id: parseUnitId("bard_cutting_words"),
     kind: "class_feature",
     name: "Cutting Words",
     className: "bard",
@@ -4850,7 +4995,7 @@ export function cuttingWordsDamageOnlyUnit(): Extract<
   }
   return {
     ...unit,
-    id: "bard_cutting_words_damage_test",
+    id: parseUnitId("bard_cutting_words_damage_test"),
     provenance: {
       kind: "xphb",
       section: "structured-input-only",
@@ -4878,7 +5023,7 @@ export function cuttingWordsAttackOnlyUnit(): Extract<
   }
   return {
     ...unit,
-    id: "bard_cutting_words_attack_test",
+    id: parseUnitId("bard_cutting_words_attack_test"),
     provenance: {
       kind: "xphb",
       section: "structured-input-only",
@@ -4895,7 +5040,7 @@ export function unsupportedAbilityModifierActivationUnit(): Extract<
   { readonly kind: "class_feature" }
 > {
   return {
-    id: "ranger_tireless_test",
+    id: parseUnitId("ranger_tireless_test"),
     kind: "class_feature",
     name: "Tireless Test",
     className: "ranger",
@@ -4942,7 +5087,7 @@ export function barbarianRageUnit(): Extract<
   { readonly kind: "class_feature" }
 > {
   return {
-    id: "barbarian_rage",
+    id: parseUnitId("barbarian_rage"),
     kind: "class_feature",
     name: "Rage",
     className: "barbarian",
@@ -5033,7 +5178,7 @@ function barbarianRecklessAttackUnit(): Extract<
   { readonly kind: "class_feature" }
 > {
   return {
-    id: "barbarian_reckless_attack",
+    id: parseUnitId("barbarian_reckless_attack"),
     kind: "class_feature",
     name: "Reckless Attack",
     className: "barbarian",
@@ -5097,7 +5242,7 @@ export function unsupportedClassRiderResource(
     throw new Error("Expected class feature resource Unit.");
   }
   return {
-    unit: { ...unit, id: unitId, name },
+    unit: { ...unit, id: parseUnitId(unitId), name },
   };
 }
 
@@ -5285,7 +5430,7 @@ function dexHalfDamageCantrip(): SpellRecord {
   }
   return {
     ...spell,
-    id: "dex_half_cantrip",
+    id: parseUnitId("dex_half_cantrip"),
     name: "Dex Half Cantrip",
     mechanics: {
       ...spell.mechanics,
@@ -5355,7 +5500,7 @@ export function slotAttackDamageSpell(input?: {
   }
   return {
     ...spell,
-    id: input?.id ?? "slot_attack_damage",
+    id: parseUnitId(input?.id ?? "slot_attack_damage"),
     name: input?.name ?? "Slot Attack Damage",
     mechanics: {
       ...spell.mechanics,
@@ -5392,7 +5537,7 @@ export function slotSaveDamageSpell(): SpellRecord {
   }
   return {
     ...spell,
-    id: "slot_save_damage",
+    id: parseUnitId("slot_save_damage"),
     name: "Slot Save Damage",
     mechanics: {
       ...spell.mechanics,
@@ -5416,10 +5561,11 @@ export function slotSaveDamageSpell(): SpellRecord {
   };
 }
 
-export function spellRecord(spellId: SpellRecord["id"]): SpellRecord {
+export function spellRecord(spellId: string): SpellRecord {
+  const parsedSpellId = parseUnitId(spellId);
   const unit =
-    testSpellRecords.get(spellId) ??
-    Option.getOrUndefined(unitLibrary.getUnit(spellId));
+    testSpellRecords.get(parsedSpellId) ??
+    Option.getOrUndefined(unitLibrary.getUnit(parsedSpellId));
   if (unit === undefined) {
     throw new Error(`Expected ${spellId} spell Unit.`);
   }
@@ -5429,9 +5575,7 @@ export function spellRecord(spellId: SpellRecord["id"]): SpellRecord {
   return unit;
 }
 
-export function magicSubject(
-  spellId: SpellRecord["id"] | "dex_half_cantrip",
-): SpellProcedureSelectorForTest {
+export function magicSubject(spellId: string): SpellProcedureSelectorForTest {
   const spell =
     spellId === "dex_half_cantrip"
       ? dexHalfDamageCantrip()
@@ -5467,7 +5611,7 @@ function testMagicSubjectInvocation(spell: SpellRecord): SpellInvocationRef {
   const invocations = discoverBattleActs(invocationSession).flatMap((act) => {
     const presentation = battleActSpellPresentation(act);
     return presentation !== undefined &&
-      presentation.invocation.spellId === spell.id &&
+      presentation.invocation.spellId === spellId(spell.id) &&
       presentation.invocation.procedure !== "shieldReaction" &&
       act.subject.tag === "actionSpell" &&
       act.subject.mode.tag === "cast" &&

@@ -1,5 +1,6 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.spellbook-ritual-invocation
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV91B wizard_ritual_adept
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, test } from "vitest";
 import {
   characterSheetSpellInvocation,
@@ -9,7 +10,7 @@ import {
   ritualAdeptRejectsNonRitualSpellTestName,
   ritualAdeptRejectsPreparedOnlySpellTestName,
   spellbookRitualSheet,
-  unitLibrary
+  unitLibrary,
 } from "./test-support.ts";
 
 describe("Character Sheet runtime / spell invocation", () => {
@@ -23,7 +24,7 @@ describe("Character Sheet runtime / spell invocation", () => {
       characterSheetSpellInvocation({
         sheet,
         unitLibrary,
-        spellId: "detect_magic",
+        spellId: authoredUnitId("detect_magic"),
         invocation: { kind: "ritual" },
       }),
     ).toMatchObject({
@@ -57,7 +58,7 @@ describe("Character Sheet runtime / spell invocation", () => {
       characterSheetSpellInvocation({
         sheet,
         unitLibrary,
-        spellId: "detect_magic",
+        spellId: authoredUnitId("detect_magic"),
         invocation: { kind: "ritual" },
       }),
     ).toMatchObject({
@@ -78,7 +79,7 @@ describe("Character Sheet runtime / spell invocation", () => {
       characterSheetSpellInvocation({
         sheet,
         unitLibrary,
-        spellId: "mage_armor",
+        spellId: authoredUnitId("mage_armor"),
         invocation: { kind: "ritual" },
       }),
     ).toMatchObject({
@@ -101,7 +102,7 @@ describe("Character Sheet runtime / spell invocation", () => {
       characterSheetSpellInvocation({
         sheet,
         unitLibrary,
-        spellId: "detect_magic",
+        spellId: authoredUnitId("detect_magic"),
         invocation: { kind: "ritual" },
       }),
     ).toMatchObject({
@@ -124,7 +125,7 @@ describe("Character Sheet runtime / spell invocation", () => {
       characterSheetSpellInvocation({
         sheet,
         unitLibrary,
-        spellId: "detect_magic",
+        spellId: authoredUnitId("detect_magic"),
         invocation: { kind: "ritual" },
       }),
     ).toMatchObject({

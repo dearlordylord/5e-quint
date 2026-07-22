@@ -1,5 +1,6 @@
 import { canSpendAction } from "@dnd/shared-algebras/action-economy-algebra";
 import { DieRollResult, resourceCount } from "@dnd/shared/types";
+import { unitId } from "@dnd/shared/game-facts";
 
 import {
   CAREFUL_METAMAGIC_EFFECT_KIND,
@@ -1269,7 +1270,7 @@ function sorcererMetamagicBattleWithOptions(
           },
         ],
         metamagic: {
-          sorceryPointResourceUnitId: "sorcerer_font_of_magic",
+          sorceryPointResourceUnitId: unitId("sorcerer_font_of_magic"),
           spellUseLimit: "one_per_spell_unless_option_allows_stacking",
           knownOptions,
         },

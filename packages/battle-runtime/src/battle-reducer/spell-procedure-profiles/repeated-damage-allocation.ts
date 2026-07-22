@@ -1,3 +1,4 @@
+import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-damage-save-or-attack
 import { DamageTypeSchema, DiceExprSchema } from "@dnd/surface/surface/schema";
 // KERNEL-COVERAGE: runtime-owner BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES
@@ -21,10 +22,7 @@ import { DamageTypeSchema, DiceExprSchema } from "@dnd/surface/surface/schema";
 // Readied Spell release continuation sequencing.
 
 import { movementFeet } from "@dnd/shared/types";
-import {
-  isFixedDistancePointRange,
-  type SpellRecord,
-} from "@dnd/surface/surface/types";
+import { isFixedDistancePointRange } from "@dnd/surface/surface/types";
 
 import {
   type BattleActDiscoveryCandidate,
@@ -40,7 +38,7 @@ import {
 import {
   supportedDamageAmountExpr,
   supportedRepeatedEffectCount,
-} from "../spells-profile-shared.ts";
+} from "../spells-execution-facts.ts";
 import { resolvePreparedSlotSpellAct } from "../spells-resolve-prepared-slot.ts";
 import { spellTargetAllocationHole } from "../spells-targeting.ts";
 import type {
@@ -69,7 +67,7 @@ type RepeatedDamageAllocationResolveInput =
   SpellProcedureProfileResolveInput<RepeatedDamageAllocationInvocation>;
 
 function admitRepeatedDamageAllocation(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly RepeatedDamageAllocationInvocation[] {
   const spellcasting = ctx.actor.origin.spellcasting;

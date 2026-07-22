@@ -1,3 +1,4 @@
+import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME gust_of_wind
@@ -93,7 +94,7 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
     expect(spellHoleInvocation(state, [savingThrow])).toEqual(
       expect.objectContaining({
         procedure: "gustOfWindLine",
-        spell,
+        spellRuleFacts: expect.objectContaining({ spellId: spell.id }),
         resource: { tag: "spellSlot", slotLevel: 2 },
         ability: "str",
         targeting: {
@@ -635,7 +636,9 @@ function castHeightenedGustOfWindWithSelectedTarget(): BattleState {
           },
         ],
         metamagic: {
-          sorceryPointResourceUnitId: "sorcerer_font_of_magic",
+          sorceryPointResourceUnitId: parseSharedUnitId(
+            "sorcerer_font_of_magic",
+          ),
           spellUseLimit: "one_per_spell_unless_option_allows_stacking",
           knownOptions: [
             {

@@ -1,3 +1,4 @@
+import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.fighter-tactical-master unit-feature.weapon-mastery-push unit-feature.weapon-mastery-slow
 import { classLevel } from "@dnd/shared/types";
 import {
@@ -38,6 +39,7 @@ import {
   testQuarterstaffAttack,
   testGreataxeAttack,
   testRangedCleaveLongbowAttack,
+  testRangedCleaveLongbowUnitRef,
   statBlockCreatureInit,
   reactionModifierUnitRef,
   uncannyDodgeUnit,
@@ -232,7 +234,7 @@ describe("battle runtime: Weapon Mastery", () => {
 
     expect(result).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "attackRoll", label: "Longsword attack roll" }],
+      holes: [{ kind: "attackRoll", label: "weapon_longsword attack roll" }],
     });
 
     expect(
@@ -250,7 +252,7 @@ describe("battle runtime: Weapon Mastery", () => {
     ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
   });
 
-  test("attack hit asks for Longsword damage dice before spending the action", () => {
+  test("attack hit asks for weapon_longsword damage dice before spending the action", () => {
     const state = fighterVsGoblinBattle();
     const targetHole = requireHole(
       resolveBattleSubject({
@@ -283,9 +285,9 @@ describe("battle runtime: Weapon Mastery", () => {
       holes: [
         {
           kind: "rolledDice",
-          label: "Longsword damage (1d8+3-slashing)",
+          label: "weapon_longsword damage (1d8+3-slashing)",
           attack: {
-            weapon: { id: "weapon_longsword" },
+            weapon: { weaponUnitId: "weapon_longsword" },
             ability: "str",
             abilityModifier: 3,
           },
@@ -450,7 +452,7 @@ describe("battle runtime: Weapon Mastery", () => {
       characterUnitRefs: masterySapUnitRefs(),
       weaponMasteries: [
         {
-          weaponUnitId: "weapon_shortsword",
+          weaponUnitId: parseSharedUnitId("weapon_shortsword"),
         },
       ],
     });
@@ -989,7 +991,9 @@ describe("battle runtime: Weapon Mastery", () => {
       label: "Cleave attack roll",
       attack: expect.objectContaining({
         kind: "weapon",
-        weapon: expect.objectContaining({ id: "weapon_greataxe" }),
+        weapon: expect.objectContaining({
+          weaponUnitId: "weapon_greataxe",
+        }),
         damageAbilityModifier: battleAbilityModifier(0),
       }),
     });
@@ -2308,7 +2312,10 @@ describe("battle runtime: Weapon Mastery", () => {
       combatants: [
         characterSeed({
           initiative: 20,
-          characterUnitRefs: masteryCleaveUnitRefs(),
+          characterUnitRefs: [
+            ...masteryCleaveUnitRefs(),
+            testRangedCleaveLongbowUnitRef(),
+          ],
           weaponMasteries: longbowWeaponMasterySelections(),
           attack: testRangedCleaveLongbowAttack(),
         }),

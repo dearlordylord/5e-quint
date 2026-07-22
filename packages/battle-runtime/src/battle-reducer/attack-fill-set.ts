@@ -4,11 +4,6 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.brutal-strike
 
 import {
-  ATTACK_DAMAGE_DISPOSITION_HOLE_ID,
-  ATTACK_ROLL_HOLE_ID,
-  ATTACK_TARGET_HOLE_ID,
-  GRAPPLE_OUTCOME_HOLE_ID,
-  type AttackFillSet,
   type BattleAttackDamageDisposition,
   type BattleAttackRollResult,
   type BattleFill,
@@ -17,6 +12,13 @@ import {
   type BattleState,
   type BattleTargetSpatialFact,
 } from "../battle-state-execution.ts";
+import {
+  ATTACK_DAMAGE_DISPOSITION_HOLE_ID,
+  ATTACK_ROLL_HOLE_ID,
+  ATTACK_TARGET_HOLE_ID,
+  GRAPPLE_OUTCOME_HOLE_ID,
+  type AttackFillSet,
+} from "./battle-runtime-protocol.ts";
 import { attackExecutionSelectionsEqual } from "./movement-speed.ts";
 import type { CombatantId } from "../identity.ts";
 import {

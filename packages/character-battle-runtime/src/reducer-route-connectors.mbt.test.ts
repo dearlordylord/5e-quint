@@ -1,3 +1,5 @@
+import { statBlockId as authoredStatBlockId } from "@dnd/shared/game-facts";
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import * as path from "node:path";
 
 import {
@@ -653,10 +655,10 @@ function shortRestRecoversUseCountPoolsRoute(
     }),
     currentHp: 15,
     druidWildShapeKnownFormStatBlockIds: [
-      "stat_block_rat",
-      "stat_block_riding_horse",
-      "stat_block_spider",
-      "stat_block_wolf",
+      authoredStatBlockId("stat_block_rat"),
+      authoredStatBlockId("stat_block_riding_horse"),
+      authoredStatBlockId("stat_block_spider"),
+      authoredStatBlockId("stat_block_wolf"),
     ],
     resourceExpenditures: [
       {
@@ -1275,14 +1277,14 @@ function featureResourceBaseBuild(input: {
 }): CharacterBuild {
   return {
     progression: {
-      startingClass: classUnitId(input.startingClass),
+      startingClass: classUnitId(authoredUnitId(input.startingClass)),
       advancements: (input.advancements ?? []).map((classId) => ({
-        classUnitId: classUnitId(classId),
+        classUnitId: classUnitId(authoredUnitId(classId)),
         hitPointRule: { tag: "fixedHigherLevelGain" },
       })),
     },
-    background: "background_soldier",
-    species: "species_orc",
+    background: authoredUnitId("background_soldier"),
+    species: authoredUnitId("species_orc"),
     originLanguages: ["Common", "Dwarvish", "Goblin"],
     classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
@@ -1331,11 +1333,11 @@ function featureResourceSorcererFontOfMagicBuild(input: {
     spellcasting: {
       sources: [
         {
-          sourceUnitId: "class_sorcerer",
+          sourceUnitId: authoredUnitId("class_sorcerer"),
           spellcastingAbility: "cha",
           cantrips: [],
           spellbook: [],
-          preparedSpells: input.preparedSpells ?? [],
+          preparedSpells: (input.preparedSpells ?? []).map(authoredUnitId),
           spellcastingFocuses: ["arcane_focus"],
         },
       ],
@@ -1364,14 +1366,14 @@ function featureResourceSorcererMetamagicBuild(): CharacterBuild {
     features: [
       {
         kind: "selectedSorcererMetamagicOption",
-        selectedFromUnitId: "sorcerer_metamagic",
+        selectedFromUnitId: authoredUnitId("sorcerer_metamagic"),
         optionId: expectRight(
           sorcererMetamagicOptionId("sorcerer_empowered_spell"),
         ),
       },
       {
         kind: "selectedSorcererMetamagicOption",
-        selectedFromUnitId: "sorcerer_metamagic",
+        selectedFromUnitId: authoredUnitId("sorcerer_metamagic"),
         optionId: expectRight(
           sorcererMetamagicOptionId("sorcerer_heightened_spell"),
         ),
@@ -1728,7 +1730,7 @@ function unitChoiceHoleId(
   unitId: string,
   choiceKey: UnitChoiceKey,
 ): CreationHoleIdText {
-  const parsedUnitId = unitChoiceSourceUnitId(unitId);
+  const parsedUnitId = unitChoiceSourceUnitId(authoredUnitId(unitId));
   if (Either.isLeft(parsedUnitId)) {
     throw new Error(`Invalid route Unit choice source Unit id ${unitId}.`);
   }
@@ -1743,7 +1745,9 @@ function loadoutHoleId(
   equipmentUnitId: string,
   slot: LoadoutSlot,
 ): CreationHoleIdText {
-  const parsedEquipmentUnitId = loadoutEquipmentUnitId(equipmentUnitId);
+  const parsedEquipmentUnitId = loadoutEquipmentUnitId(
+    authoredUnitId(equipmentUnitId),
+  );
   if (Either.isLeft(parsedEquipmentUnitId)) {
     throw new Error(
       `Invalid route loadout equipment Unit id ${equipmentUnitId}.`,

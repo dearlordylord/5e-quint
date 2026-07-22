@@ -3,6 +3,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L19E-05-L5-SUMMONED-OBJECT-LIFECYCLE arcane_hand
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L19E-05-L5-SUMMONED-OBJECT-LIFECYCLE arcane_hand
 // UNIT-IDENTITY-REPLAY: L19E-05-L5-SUMMONED-OBJECT-LIFECYCLE arcane_hand doCastArcaneHand
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -310,11 +311,15 @@ function arcaneHandWizardSheet(input: {
         spellcasting: {
           sources: [
             {
-              sourceUnitId: "class_wizard",
+              sourceUnitId: authoredUnitId("class_wizard"),
               spellcastingAbility: "int",
-              cantrips: ["fire_bolt", "light", "mage_hand"],
+              cantrips: [
+                authoredUnitId("fire_bolt"),
+                authoredUnitId("light"),
+                authoredUnitId("mage_hand"),
+              ],
               spellbook: [],
-              preparedSpells: input.preparedSpells,
+              preparedSpells: input.preparedSpells.map(authoredUnitId),
               spellcastingFocuses: ["arcane_focus"],
             },
           ],

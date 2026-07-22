@@ -1,3 +1,4 @@
+import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-hosted-weapon-attack
 import { DiceExprSchema } from "@dnd/surface/surface/schema";
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS
@@ -15,14 +16,12 @@ import { DiceExprSchema } from "@dnd/surface/surface/schema";
 //     Spell Invocation.
 
 import { attackBonus } from "@dnd/shared/types";
-import type {
-  DamageType,
-  SpellRecord,
-  WeaponProficiency,
-  WeaponRecord,
-} from "@dnd/surface/surface/types";
+import type { DamageType, WeaponProficiency } from "@dnd/surface/surface/types";
 import { Match } from "effect";
-import type { BoundCharacterWeaponAttackActionOption } from "../../battle-action-options.ts";
+import type {
+  BoundCharacterWeaponAttackActionOption,
+  CharacterWeaponAttackActionOption,
+} from "../../battle-action-options.ts";
 import {
   type AttackSpellDamageAddition,
   type BattleActDiscoveryCandidate,
@@ -34,13 +33,13 @@ import {
 } from "../../battle-state-execution.ts";
 import { type CombatantId } from "../../identity.ts";
 import { resolveSelectedAttackProcedure } from "../attack-main.ts";
-import { isCharacterBattleCreatureState } from "../creature-state.ts";
+import { isCharacterBattleCreatureState } from "../creature-state-execution.ts";
 import { activeDruidWildShapeEffect } from "../druid-wild-shape.ts";
 import { spellDamageTypeChoiceHole } from "../spells-damage-fills.ts";
 import {
   sameStringSet,
   supportedDamageAmountExpr,
-} from "../spells-profile-shared.ts";
+} from "../spells-execution-facts.ts";
 import { wildShapeCanUseWornLoadoutObject } from "../wild-shape-equipment.ts";
 import { attackTargetHole, needsHolesResult } from "../hole-helpers.ts";
 import { invalidResult } from "../result-helpers.ts";
@@ -73,7 +72,7 @@ type SpellHostedWeaponAttackResolveInput =
   SpellProcedureProfileResolveInput<SpellHostedWeaponAttackInvocation>;
 
 function admitSpellHostedWeaponAttack(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly SpellHostedWeaponAttackInvocation[] {
   const projection = spellHostedWeaponAttackProjection(
@@ -114,7 +113,7 @@ function admitSpellHostedWeaponAttack(
 }
 
 function spellHostedWeaponAttackProjection(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   characterLevel: number,
 ): Pick<SpellHostedWeaponAttackInvocation, "bonusDamage"> | null {
   if (
@@ -184,7 +183,8 @@ function spellHostedWeaponAttacks(
       : [
           {
             itemId:
-              origin.selectedLoadout.weapon?.itemId ?? origin.attack.weapon.id,
+              origin.selectedLoadout.weapon?.itemId ??
+              origin.attack.weapon.weaponUnitId,
             attack: origin.attack,
           },
         ]),
@@ -203,7 +203,7 @@ function spellHostedWeaponAttacks(
           {
             itemId:
               origin.selectedLoadout.offHandWeapon?.itemId ??
-              origin.offHandAttack.weapon.id,
+              origin.offHandAttack.weapon.weaponUnitId,
             attack: origin.offHandAttack,
           },
         ]),
@@ -213,7 +213,7 @@ function spellHostedWeaponAttacks(
 const byKind = Match.discriminator("kind");
 
 function weaponMatchesProficiency(
-  weapon: WeaponRecord,
+  weapon: CharacterWeaponAttackActionOption["weapon"],
   proficiency: WeaponProficiency,
 ): boolean {
   return Match.value(proficiency).pipe(
@@ -225,7 +225,7 @@ function weaponMatchesProficiency(
       "weapon_category_with_properties",
       (propertyProficiency) =>
         weapon.category === propertyProficiency.category &&
-        weapon.properties?.some((property) =>
+        weapon.properties.some((property) =>
           propertyProficiency.anyOfProperties.includes(property.kind),
         ) === true,
     ),

@@ -17,7 +17,7 @@ import {
 import {
   helpAttackAllyChoices,
   helpAttackTargetChoices,
-} from "./battle-reducer.ts";
+} from "./battle-reducer/attack-resolution.ts";
 import {
   MBT_TEST_TIMEOUT_MS,
   booleanField,

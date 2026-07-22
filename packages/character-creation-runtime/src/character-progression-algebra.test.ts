@@ -1,3 +1,4 @@
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { Either } from "effect";
 import { describe, expect, it } from "vitest";
 import {
@@ -44,7 +45,7 @@ describe("character progression algebra", () => {
     const fighterClassUnitId = expectRight(
       classUnitIdFromUnitId({
         unitLibrary,
-        classUnitId: "class_fighter",
+        classUnitId: authoredUnitId("class_fighter"),
       }),
     );
     const progression = expectRight(
@@ -65,7 +66,7 @@ describe("character progression algebra", () => {
     const fighterClassUnitId = expectRight(
       classUnitIdFromUnitId({
         unitLibrary,
-        classUnitId: "class_fighter",
+        classUnitId: authoredUnitId("class_fighter"),
       }),
     );
     const progression = expectRight(
@@ -96,13 +97,13 @@ describe("character progression algebra", () => {
     const fighterClassUnitId = expectRight(
       classUnitIdFromUnitId({
         unitLibrary,
-        classUnitId: "class_fighter",
+        classUnitId: authoredUnitId("class_fighter"),
       }),
     );
     const wizardClassUnitId = expectRight(
       classUnitIdFromUnitId({
         unitLibrary,
-        classUnitId: "class_wizard",
+        classUnitId: authoredUnitId("class_wizard"),
       }),
     );
 
@@ -119,8 +120,12 @@ describe("character progression algebra", () => {
     );
 
     expect(computeTotalLevel(progression)).toBe(2);
-    expect(classLevelForUnit(progression, "class_fighter")).toBe(1);
-    expect(classLevelForUnit(progression, "class_wizard")).toBe(1);
+    expect(
+      classLevelForUnit(progression, authoredUnitId("class_fighter")),
+    ).toBe(1);
+    expect(classLevelForUnit(progression, authoredUnitId("class_wizard"))).toBe(
+      1,
+    );
     expect(progression).toEqual({
       startingClass: "class_fighter",
       advancements: [
@@ -145,7 +150,7 @@ describe("character progression algebra", () => {
     expect(
       classUnitIdToClassName({
         unitLibrary,
-        classUnitId: "background_soldier",
+        classUnitId: authoredUnitId("background_soldier"),
       }),
     ).toEqual(
       Either.left({
@@ -160,7 +165,7 @@ describe("character progression algebra", () => {
     expect(
       classUnitIdToClassName({
         unitLibrary,
-        classUnitId: "missing_unit",
+        classUnitId: authoredUnitId("missing_unit"),
       }),
     ).toEqual(
       Either.left({
@@ -174,7 +179,7 @@ describe("character progression algebra", () => {
     const fighterClassUnitId = expectRight(
       classUnitIdFromUnitId({
         unitLibrary,
-        classUnitId: "class_fighter",
+        classUnitId: authoredUnitId("class_fighter"),
       }),
     );
 

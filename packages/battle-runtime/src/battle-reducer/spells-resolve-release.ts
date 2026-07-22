@@ -17,10 +17,6 @@ import {
 import { Either } from "effect";
 import { spellActiveEffectForExecutionRef } from "../active-effect/execution-ref.ts";
 import {
-  attackRollIsCriticalHit,
-  maybeOpenInterruptWindow,
-  snapshotBattle,
-  spellAttackRerollUnsupportedIssue,
   type ActionSpellBattleResolutionInput,
   type BattleActiveEffect,
   type BattleResolutionInputForSubject,
@@ -34,6 +30,10 @@ import {
   type SupportedDamageSpellInvocation,
   type SpellMarkedDamageRider,
 } from "../battle-state-execution.ts";
+import { attackRollIsCriticalHit } from "./attack-resolution.ts";
+import { maybeOpenInterruptWindow } from "./interrupt-execution.ts";
+import { snapshotBattle } from "./battle-snapshot.ts";
+import { spellAttackRerollUnsupportedIssue } from "./spell-reroll-issues.ts";
 import type { BattleSubject } from "../battle-subjects.ts";
 import type { BattleTablePositionId, CombatantId } from "../identity.ts";
 import {
@@ -48,7 +48,7 @@ import {
   recordAttackRollOngoingFeatures,
   requiredSpellAttackRollMode,
 } from "./attack-roll.ts";
-import { activeEffectArmorClass } from "./creature-state.ts";
+import { activeEffectArmorClass } from "./creature-state-execution.ts";
 import {
   breakBattleConcentration,
   concentrationSavingThrowHole,

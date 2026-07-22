@@ -22,16 +22,15 @@ import {
   run,
   stateCheck,
 } from "./battle-runtime-mbt-driver-kit.ts";
+import { type BattleHole, type BattleState } from "./battle-reducer.ts";
+import type { BattleAttackDamageInterruptionFrame } from "./battle-state-execution.ts";
 import {
-  attackDamageEventAmountBeforeTargetAdjustments,
   currentInterruptCheckpoint,
   interruptDecisionHole,
-  resolveBattleInterrupt,
-  resolveBattleSubject,
-  type BattleAttackDamageInterruptionFrame,
-  type BattleHole,
-  type BattleState,
-} from "./battle-reducer.ts";
+} from "./battle-reducer/interrupt-execution.ts";
+import { attackDamageEventAmountBeforeTargetAdjustments } from "./battle-reducer/attack-damage-events.ts";
+import { resolveBattleInterrupt } from "./battle-reducer/dispatcher.ts";
+import { resolveBattleSubject } from "./battle-session-execution.ts";
 import type { BattleSubject } from "./battle-subjects.ts";
 import {
   battleAttackExecutionScopeRefBelongsToCombatant,

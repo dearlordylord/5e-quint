@@ -48,16 +48,10 @@ import * as Either from "effect/Either";
 import {
   applyStatBlockRechargeRolls,
   unavailableStatBlockRechargePoolRefs,
-} from "../stat-block-execution.ts";
-import { KNOCKED_OUT_UNCONSCIOUS } from "../battle-init.ts";
-import { characterProcedureBinding } from "../character-execution-admission.ts";
+} from "../stat-block-execution-state.ts";
+import { KNOCKED_OUT_UNCONSCIOUS } from "../positive-hp-unconscious.ts";
+import { characterProcedureBinding } from "../character-execution-queries.ts";
 import {
-  CONCENTRATION_SAVING_THROW_HOLE_INSTANCE_PREFIX,
-  DEATH_SAVING_THROW_HOLE_ID,
-  DEATH_SAVING_THROW_HOLE_INSTANCE,
-  STAT_BLOCK_RECHARGE_ROLL_HOLE_ID,
-  STAT_BLOCK_RECHARGE_ROLL_HOLE_INSTANCE,
-  zeroHpLifecycleIsTerminal,
   type AttackDamageRider,
   type BattleActiveEffect,
   type BattleAttackDamageDisposition,
@@ -78,16 +72,24 @@ import {
   type WeaponDamageDiceRollChoiceUsage,
 } from "../battle-state-execution.ts";
 import {
+  CONCENTRATION_SAVING_THROW_HOLE_INSTANCE_PREFIX,
+  DEATH_SAVING_THROW_HOLE_ID,
+  DEATH_SAVING_THROW_HOLE_INSTANCE,
+  STAT_BLOCK_RECHARGE_ROLL_HOLE_ID,
+  STAT_BLOCK_RECHARGE_ROLL_HOLE_INSTANCE,
+} from "./battle-runtime-protocol.ts";
+import { zeroHpLifecycleIsTerminal } from "./creature-state-leaves.ts";
+import {
   resourceHasUsesRemaining,
   spendCharacterResourceUse,
   type CharacterBattleResourceState,
-} from "../character-battle-resources.ts";
+} from "../character-battle-resource-execution.ts";
 import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
 import { setCompanion } from "../companion-state.ts";
 import { findPresentFamiliarById } from "../find-familiar-state.ts";
-import { retainedStoredFormForPresentCompanion } from "../find-familiar-lifecycle.ts";
+import { retainedStoredFormForPresentCompanion } from "../find-familiar-lifecycle-execution.ts";
 import type { ZeroHpLifecycle } from "../zero-hp-lifecycle.ts";
-import { removeBattleCombatants } from "./api-lifecycle.ts";
+import { removeBattleCombatants } from "./combatant-removal.ts";
 import {
   currentActorId,
   normalizeBattleGrapples,
@@ -98,7 +100,7 @@ import {
   battleCreatureStateWithoutKnockOut,
   knockedOutConditionState,
   knockedOutOneHp,
-} from "./creature-state.ts";
+} from "./creature-state-execution.ts";
 import {
   activeDruidWildShape,
   applyActiveDruidWildShapeRechargeRolls,
@@ -1222,7 +1224,7 @@ export function applyHpDamage(
     : applyDropToZeroHpLifecycle(damaged);
 }
 
-import type { HpDamageProjection } from "../battle-state-execution.ts";
+import type { HpDamageProjection } from "./battle-runtime-protocol.ts";
 
 export function hpDamageProjection(
   combatant: BattleCreatureState,

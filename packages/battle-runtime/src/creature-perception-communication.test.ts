@@ -5,6 +5,7 @@ import { expect, test } from "vitest";
 import {
   battleActDruidWildShapePresentation,
   combatantPerceptionCommunicationProjection,
+  emptyBattleRuntimeContext,
   type BattleFill,
   type BattleCreatureState,
   type BattleHole,
@@ -43,9 +44,12 @@ test("projects Stat Block senses and authored communication text", () => {
       skillModifiers: [{ skill: "perception", modifier: 4 }],
     },
   } satisfies StatBlockRecord;
-  const combatant = statBlockCombatant(statBlock);
+  const session = statBlockSession(statBlock);
+  const combatant = requireCombatant(session.state, statBlockCombatantId);
 
-  expect(combatantPerceptionCommunicationProjection(combatant)).toEqual({
+  expect(
+    combatantPerceptionCommunicationProjection(combatant, session.context),
+  ).toEqual({
     specialSenses: [{ kind: "darkvision", rangeFeet: 60 }],
     passivePerception: 14,
     communication: {
@@ -62,13 +66,15 @@ test("projects absent Stat Block languages distinctly from authored entries", ()
   const base = statBlockRecord();
   const { languages: _languages, ...statBlockWithoutLanguages } =
     base.statBlock;
-  const combatant = statBlockCombatant({
+  const session = statBlockSession({
     ...base,
     statBlock: statBlockWithoutLanguages,
   });
+  const combatant = requireCombatant(session.state, statBlockCombatantId);
 
   expect(
-    combatantPerceptionCommunicationProjection(combatant).communication,
+    combatantPerceptionCommunicationProjection(combatant, session.context)
+      .communication,
   ).toEqual({
     kind: "statBlockCommunicationText",
     languages: { kind: "absentStatBlockLanguages" },
@@ -80,7 +86,12 @@ test("projects character languages and speech while not Incapacitated", () => {
     knownLanguages: ["Common", "Druidic", "Goblin"],
   });
 
-  expect(combatantPerceptionCommunicationProjection(combatant)).toEqual({
+  expect(
+    combatantPerceptionCommunicationProjection(
+      combatant,
+      emptyBattleRuntimeContext(),
+    ),
+  ).toEqual({
     specialSenses: [],
     passivePerception: 12,
     communication: {
@@ -101,7 +112,10 @@ test("projects retained character speech as blocked by Incapacitated", () => {
   });
 
   expect(
-    combatantPerceptionCommunicationProjection(combatant).communication,
+    combatantPerceptionCommunicationProjection(
+      combatant,
+      emptyBattleRuntimeContext(),
+    ).communication,
   ).toEqual({
     kind: "characterRetainedCommunication",
     knownLanguages: ["Common", "Druidic", "Goblin"],
@@ -136,7 +150,12 @@ test("projects Wild Shape form senses while retaining character communication", 
   );
   const combatant = requireCombatant(assumed.state, characterCombatantId);
 
-  expect(combatantPerceptionCommunicationProjection(combatant)).toEqual({
+  expect(
+    combatantPerceptionCommunicationProjection(
+      combatant,
+      emptyBattleRuntimeContext(),
+    ),
+  ).toEqual({
     specialSenses: [{ kind: "blindsight", rangeFeet: 10 }],
     passivePerception: 15,
     communication: {
@@ -150,8 +169,8 @@ test("projects Wild Shape form senses while retaining character communication", 
   });
 });
 
-function statBlockCombatant(statBlock: StatBlockRecord): BattleCreatureState {
-  const state = startBattleRight({
+function statBlockSession(statBlock: StatBlockRecord): BattleRuntimeSession {
+  return startBattleSessionRight({
     battleId: battleId("battle:projection-stat-block"),
     combatants: [
       statBlockCreatureInit({
@@ -161,7 +180,6 @@ function statBlockCombatant(statBlock: StatBlockRecord): BattleCreatureState {
       }),
     ],
   });
-  return requireCombatant(state, statBlockCombatantId);
 }
 
 function characterCombatant(input: {

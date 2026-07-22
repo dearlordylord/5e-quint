@@ -29,7 +29,7 @@ import {
   resolveMovementEffectsAfterMovement,
 } from "./turn-end-movement.ts";
 import { updateLevitatedCreatureAltitude } from "./levitate-creature.ts";
-import { battleCreatureStateWithKnockOutPreservedConditions } from "./creature-state.ts";
+import { battleCreatureStateWithKnockOutPreservedConditions } from "./creature-state-execution.ts";
 import {
   currentActorId,
   normalizeBattleGrapples,
@@ -38,8 +38,8 @@ import { breakBattleConcentration } from "./damage-apply.ts";
 import {
   currentInterruptCheckpoint,
   maybeOpenInterruptWindow,
-  snapshotBattle,
-} from "./dispatcher.ts";
+} from "./interrupt-execution.ts";
+import { snapshotBattle } from "./battle-snapshot.ts";
 import type { CombatantId } from "../identity.ts";
 import type {
   BattleHole,
@@ -50,8 +50,8 @@ import type {
   BattleResolvedMovement,
   BattleState,
 } from "../battle-state-execution.ts";
-import { MOVEMENT_HOLE_ID } from "../battle-state-execution.ts";
-import { characterSpellProcedure } from "../character-execution-admission.ts";
+import { MOVEMENT_HOLE_ID } from "./battle-runtime-protocol.ts";
+import { characterSpellProcedure } from "../character-execution-queries.ts";
 import { isReadiedSpellInvocation } from "./spells-discovery.ts";
 
 export function applyBattleMovement(

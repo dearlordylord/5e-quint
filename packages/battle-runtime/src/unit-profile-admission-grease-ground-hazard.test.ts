@@ -1,3 +1,4 @@
+import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV40 grease
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-grease-ground-hazard
@@ -90,7 +91,7 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
     expect(spellHoleInvocation(session, [savingThrow])).toEqual(
       expect.objectContaining({
         procedure: "greaseGroundHazard",
-        spell,
+        spellRuleFacts: expect.objectContaining({ spellId: spell.id }),
         resource: { tag: "spellSlot", slotLevel: 1 },
         ability: "dex",
         targeting: { kind: "pointOriginCube", sideFeet: 10 },
@@ -551,7 +552,9 @@ function castHeightenedGreaseWithSelectedTarget(): BattleRuntimeSession {
           },
         ],
         metamagic: {
-          sorceryPointResourceUnitId: "sorcerer_font_of_magic",
+          sorceryPointResourceUnitId: parseSharedUnitId(
+            "sorcerer_font_of_magic",
+          ),
           spellUseLimit: "one_per_spell_unless_option_allows_stacking",
           knownOptions: [
             {

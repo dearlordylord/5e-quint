@@ -7,7 +7,7 @@ import {
   BattleObjectDamageOutcomeSchema,
   BattleObjectIgnitionOutcomeSchema,
   BattleShovePushOutcomeSchema,
-  BattleSnapshotSchema,
+  BattlePresentedSnapshotSchema,
   BattleSubjectSchema,
 } from "@dnd/battle-runtime";
 import { Schema } from "effect";
@@ -24,7 +24,7 @@ const JsonObjectSchema = Schema.Record({
 const BattleResolutionResultSchema = Schema.Union(
   Schema.Struct({
     tag: Schema.Literal("resolved"),
-    snapshot: BattleSnapshotSchema,
+    snapshot: BattlePresentedSnapshotSchema,
     objectDamages: Schema.optionalWith(
       Schema.Array(BattleObjectDamageOutcomeSchema),
       { exact: true },
@@ -48,13 +48,13 @@ const BattleResolutionResultSchema = Schema.Union(
     tag: Schema.Literal("needsHoles"),
     subject: BattleSubjectSchema,
     holes: Schema.Array(BattleHoleSchema),
-    snapshot: BattleSnapshotSchema,
+    snapshot: BattlePresentedSnapshotSchema,
   }),
   Schema.Struct({
     tag: Schema.Literal("invalid"),
     reason: Schema.String,
     message: Schema.String,
-    snapshot: BattleSnapshotSchema,
+    snapshot: BattlePresentedSnapshotSchema,
   }),
 );
 
@@ -83,20 +83,20 @@ export const SelectStatBlockOutputSchema = Schema.Struct({
 });
 
 export const BattleSessionOutputSchema = Schema.Struct({
-  snapshot: Schema.Union(BattleSnapshotSchema, Schema.Null),
+  snapshot: Schema.Union(BattlePresentedSnapshotSchema, Schema.Null),
   ...BattlePresentationProjectionFields,
   session: McpSessionSnapshotSchema,
 });
 
 export const StartBattleOutputSchema = Schema.Struct({
-  snapshot: BattleSnapshotSchema,
+  snapshot: BattlePresentedSnapshotSchema,
   ...BattlePresentationProjectionFields,
   session: McpSessionSummarySchema,
 });
 
 export const BattleResolutionOutputSchema = Schema.Struct({
   result: BattleResolutionResultSchema,
-  snapshot: BattleSnapshotSchema,
+  snapshot: BattlePresentedSnapshotSchema,
   ...BattlePresentationProjectionFields,
   session: McpSessionSnapshotSchema,
 });

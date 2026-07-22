@@ -1,3 +1,4 @@
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, it, test } from "vitest";
 import { Either } from "effect";
 import {
@@ -72,14 +73,16 @@ type RangerExpertiseLevel9DriverAction =
 type SelectedUnitIdentityReplaySequence = {
   readonly name: string;
   readonly actions: readonly RangerExpertiseLevel9DriverAction[];
-  readonly expected: {
-    readonly kind: "selectedClassChoice";
-    readonly selectedFromUnitId: UnitRecord["id"];
-    readonly unitId: UnitRecord["id"];
-  } | {
-    readonly kind: "skillExpertise";
-    readonly expertise: readonly string[];
-  };
+  readonly expected:
+    | {
+        readonly kind: "selectedClassChoice";
+        readonly selectedFromUnitId: UnitRecord["id"];
+        readonly unitId: UnitRecord["id"];
+      }
+    | {
+        readonly kind: "skillExpertise";
+        readonly expertise: readonly string[];
+      };
 };
 type SelectedUnitIdentityReplay = {
   readonly taskId: "L19C-02-RANGER-EXPERTISE-GENERIC-OWNER";
@@ -91,7 +94,7 @@ type SelectedUnitIdentityReplay = {
 const selectedUnitIdentityReplays = [
   {
     taskId: "L19C-02-RANGER-EXPERTISE-GENERIC-OWNER",
-    unitId: "ranger_expertise",
+    unitId: authoredUnitId("ranger_expertise"),
     actions: ["doSelectRangerLevel9Expertise"],
     sequences: [
       {
@@ -106,7 +109,7 @@ const selectedUnitIdentityReplays = [
   },
   {
     taskId: "L19C-02-RANGER-EXPERTISE-GENERIC-OWNER",
-    unitId: "ranger_ability_score_improvement_l8",
+    unitId: authoredUnitId("ranger_ability_score_improvement_l8"),
     actions: ["doSelectRangerLevel8AbilityScoreImprovement"],
     sequences: [
       {
@@ -114,8 +117,10 @@ const selectedUnitIdentityReplays = [
         actions: ["doSelectRangerLevel8AbilityScoreImprovement"],
         expected: {
           kind: "selectedClassChoice",
-          selectedFromUnitId: "ranger_ability_score_improvement_l8",
-          unitId: "feat_ability_score_improvement",
+          selectedFromUnitId: authoredUnitId(
+            "ranger_ability_score_improvement_l8",
+          ),
+          unitId: authoredUnitId("feat_ability_score_improvement"),
         },
       },
     ],
@@ -124,13 +129,13 @@ const selectedUnitIdentityReplays = [
 
 describe("Ranger level 9 Expertise", () => {
   test("production support admits Ranger 9 and finalizes level-9 Expertise with third-level spell access", () => {
-    const rangerNine = testProgression("class_ranger", 9);
+    const rangerNine = testProgression(authoredUnitId("class_ranger"), 9);
     const ranger = completeSupportedProgressionDraft({
       draftId: "draft:srd-level-9-ranger-expertise",
       progression: rangerNine,
       preferredOptionIdsBySource: {
         [testUnitChoiceSourceKey(
-          "class_ranger",
+          authoredUnitId("class_ranger"),
           CLASS_SKILL_PROFICIENCY_CHOICE_KEY,
         )]: [
           creationChoiceOptionId("animal_handling"),
@@ -138,11 +143,11 @@ describe("Ranger level 9 Expertise", () => {
           creationChoiceOptionId("survival"),
         ],
         [testUnitChoiceSourceKey(
-          "class_ranger",
+          authoredUnitId("class_ranger"),
           CLASS_SUBCLASS_CHOICE_KEY,
         )]: [creationChoiceOptionId("subclass_ranger_hunter")],
         [testUnitChoiceSourceKey(
-          "class_ranger",
+          authoredUnitId("class_ranger"),
           CLASS_PREPARED_SPELL_CHOICE_KEY,
         )]: [
           creationChoiceOptionId("cure_wounds"),
@@ -156,46 +161,49 @@ describe("Ranger level 9 Expertise", () => {
           creationChoiceOptionId("revivify"),
         ],
         [testUnitChoiceSourceKey(
-          "ranger_deft_explorer",
+          authoredUnitId("ranger_deft_explorer"),
           CLASS_FEATURE_PROFICIENCY_CHOICE_KEY,
         )]: [creationChoiceOptionId("athletics")],
         [testUnitChoiceSourceKey(
-          "ranger_deft_explorer",
+          authoredUnitId("ranger_deft_explorer"),
           CLASS_FEATURE_LANGUAGE_CHOICE_KEY,
-        )]: [creationChoiceOptionId("Elvish"), creationChoiceOptionId("Gnomish")],
+        )]: [
+          creationChoiceOptionId("Elvish"),
+          creationChoiceOptionId("Gnomish"),
+        ],
         [testUnitChoiceSourceKey(
-          "ranger_fighting_style",
+          authoredUnitId("ranger_fighting_style"),
           RANGER_FIGHTING_STYLE_CHOICE_KEY,
         )]: [creationChoiceOptionId("druidic_warrior")],
         [testUnitChoiceSourceKey(
-          "ranger_fighting_style",
+          authoredUnitId("ranger_fighting_style"),
           CLASS_CANTRIP_CHOICE_KEY,
         )]: [
           creationChoiceOptionId("guidance"),
           creationChoiceOptionId("starry_wisp"),
         ],
         [testUnitChoiceSourceKey(
-          "ranger_hunters_prey",
+          authoredUnitId("ranger_hunters_prey"),
           HUNTERS_PREY_CHOICE_KEY,
         )]: [creationChoiceOptionId("colossus_slayer")],
         [testUnitChoiceSourceKey(
-          "ranger_ability_score_improvement_l4",
+          authoredUnitId("ranger_ability_score_improvement_l4"),
           CLASS_FEATURE_FEAT_CHOICE_KEY,
         )]: [creationChoiceOptionId("feat_ability_score_improvement")],
         [testUnitChoiceSourceKey(
-          "ranger_ability_score_improvement_l4",
+          authoredUnitId("ranger_ability_score_improvement_l4"),
           CLASS_FEATURE_ABILITY_SCORE_INCREASE_CHOICE_KEY,
         )]: [creationChoiceOptionId("ability_score:dex:+2:max20")],
         [testUnitChoiceSourceKey(
-          "ranger_ability_score_improvement_l8",
+          authoredUnitId("ranger_ability_score_improvement_l8"),
           CLASS_FEATURE_FEAT_CHOICE_KEY,
         )]: [creationChoiceOptionId("feat_ability_score_improvement")],
         [testUnitChoiceSourceKey(
-          "ranger_ability_score_improvement_l8",
+          authoredUnitId("ranger_ability_score_improvement_l8"),
           CLASS_FEATURE_ABILITY_SCORE_INCREASE_CHOICE_KEY,
         )]: [creationChoiceOptionId("ability_score:wis:+2:max20")],
         [testUnitChoiceSourceKey(
-          "ranger_expertise",
+          authoredUnitId("ranger_expertise"),
           CLASS_FEATURE_PROFICIENCY_CHOICE_KEY,
         )]: [
           creationChoiceOptionId("perception"),
@@ -205,12 +213,12 @@ describe("Ranger level 9 Expertise", () => {
     });
     const selectedDeftExpertise = selectedChoiceOptionIds(
       ranger,
-      "ranger_deft_explorer",
+      authoredUnitId("ranger_deft_explorer"),
       CLASS_FEATURE_PROFICIENCY_CHOICE_KEY,
     );
     const selectedLevelNineExpertise = selectedChoiceOptionIds(
       ranger,
-      "ranger_expertise",
+      authoredUnitId("ranger_expertise"),
       CLASS_FEATURE_PROFICIENCY_CHOICE_KEY,
     );
 
@@ -246,13 +254,13 @@ describe("Ranger level 9 Expertise", () => {
       "conjure_animals",
       "revivify",
     ]);
-    expect(rangerBuild.build.spellcasting?.slotPools.spellcasting?.slots).toEqual(
-      [
-        { spellLevel: 1, count: 4 },
-        { spellLevel: 2, count: 3 },
-        { spellLevel: 3, count: 2 },
-      ],
-    );
+    expect(
+      rangerBuild.build.spellcasting?.slotPools.spellcasting?.slots,
+    ).toEqual([
+      { spellLevel: 1, count: 4 },
+      { spellLevel: 2, count: 3 },
+      { spellLevel: 3, count: 2 },
+    ]);
     expect(rangerBuild.build.features).toEqual(
       expect.arrayContaining([
         {
@@ -306,7 +314,7 @@ describe("Ranger level 9 Expertise", () => {
 function finalizeReadyRangerNineBuild(draftId: string) {
   const ranger = completeSupportedProgressionDraft({
     draftId,
-    progression: testProgression("class_ranger", 9),
+    progression: testProgression(authoredUnitId("class_ranger"), 9),
   });
   const rangerBuild = finalizeCharacterDraft({ draft: ranger, unitLibrary });
   if (rangerBuild.tag !== "ready") {

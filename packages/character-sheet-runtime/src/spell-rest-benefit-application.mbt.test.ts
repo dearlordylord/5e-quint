@@ -1,6 +1,7 @@
 // KERNEL-COVERAGE: parity-witness SHEET.SPELL_REST_BENEFIT.APPLICATION
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH prayer_of_healing
 // UNIT-IDENTITY-REPLAY: B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH prayer_of_healing doApplyPrayerOfHealingRestBenefit doRejectRecipientLongRestLockout
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import * as path from "node:path";
 
 import {
@@ -203,7 +204,7 @@ function projectPrayerOfHealingApplication(): SpellRestBenefitProjection {
   const result = requireRight(
     applyCharacterSheetSpellRestBenefit({
       caster,
-      spellId: "prayer_of_healing",
+      spellId: authoredUnitId("prayer_of_healing"),
       unitLibrary,
       castLevel: spellSlotLevel(2),
       recipients: [
@@ -211,7 +212,10 @@ function projectPrayerOfHealingApplication(): SpellRestBenefitProjection {
           sheet: recipient,
           eligibility: { remainedWithinRangeForEntireCasting: true },
           spendHitDice: [
-            { classUnitId: "class_fighter", roll: DieRollResult(4) },
+            {
+              classUnitId: authoredUnitId("class_fighter"),
+              roll: DieRollResult(4),
+            },
           ],
           healingRolls,
         },
@@ -240,7 +244,7 @@ function projectPrayerOfHealingRecipientLockoutRejection(): SpellRestBenefitProj
   const lockedRecipient = projectLockedRecipient();
   const rejected = applyCharacterSheetSpellRestBenefit({
     caster,
-    spellId: "prayer_of_healing",
+    spellId: authoredUnitId("prayer_of_healing"),
     unitLibrary,
     castLevel: spellSlotLevel(2),
     recipients: [
@@ -270,7 +274,7 @@ function projectLockedRecipient(): CharacterSheet {
   const first = requireRight(
     applyCharacterSheetSpellRestBenefit({
       caster: prayerCaster(),
-      spellId: "prayer_of_healing",
+      spellId: authoredUnitId("prayer_of_healing"),
       unitLibrary,
       castLevel: spellSlotLevel(2),
       recipients: [
@@ -318,11 +322,11 @@ function characterBuild(input: {
 }): CharacterBuild {
   return {
     progression: {
-      startingClass: classUnitId(input.startingClass),
+      startingClass: classUnitId(authoredUnitId(input.startingClass)),
       advancements: [],
     },
-    background: "background_soldier",
-    species: "species_orc",
+    background: authoredUnitId("background_soldier"),
+    species: authoredUnitId("species_orc"),
     originLanguages: ["Common", "Dwarvish", "Goblin"],
     classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
@@ -353,11 +357,11 @@ function prayerOfHealingClericBuild(): CharacterBuild {
       ...build.progression,
       advancements: [
         {
-          classUnitId: classUnitId("class_cleric"),
+          classUnitId: classUnitId(authoredUnitId("class_cleric")),
           hitPointRule: { tag: "fixedHigherLevelGain" },
         },
         {
-          classUnitId: classUnitId("class_cleric"),
+          classUnitId: classUnitId(authoredUnitId("class_cleric")),
           hitPointRule: { tag: "fixedHigherLevelGain" },
         },
       ],
@@ -365,11 +369,11 @@ function prayerOfHealingClericBuild(): CharacterBuild {
     spellcasting: {
       sources: [
         {
-          sourceUnitId: "class_cleric",
+          sourceUnitId: authoredUnitId("class_cleric"),
           spellcastingAbility: "wis",
           cantrips: [],
           spellbook: [],
-          preparedSpells: ["prayer_of_healing"],
+          preparedSpells: [authoredUnitId("prayer_of_healing")],
           spellcastingFocuses: ["holy_symbol"],
         },
       ],

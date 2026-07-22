@@ -1,3 +1,5 @@
+import { statBlockId as authoredStatBlockId } from "@dnd/shared/game-facts";
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, test } from "vitest";
 import type { Hp as HpType } from "@dnd/shared/types";
 import {
@@ -66,7 +68,7 @@ function retainedCompanionInput(
           formId: "cat",
         },
         creatureTypeOverride: input.creatureTypeOverride ?? "fey",
-        resolvedStatBlockId: "stat_block_cat",
+        resolvedStatBlockId: authoredStatBlockId("stat_block_cat"),
         hitPoints: {
           // Cast evidence: retainedCompanionInput is a test fixture helper; tests
           // pass zero explicitly only when asserting the constructor rejects it.
@@ -122,7 +124,7 @@ describe("Character Sheet runtime / companions", () => {
         companionId: "companion:cat",
         manifestation: {
           tag: "embodiedOutsideBattle",
-          resolvedStatBlockId: "stat_block_cat",
+          resolvedStatBlockId: authoredStatBlockId("stat_block_cat"),
           hitPoints: { currentHp: 2, tempHp: 1 },
         },
       },
@@ -141,7 +143,10 @@ describe("Character Sheet runtime / companions", () => {
         unitLibrary,
         statBlockCatalog,
         companionId: retainedCompanionId("companion:cat"),
-        source: { tag: "ritualSpell", spellId: "find_familiar" },
+        source: {
+          tag: "ritualSpell",
+          spellId: authoredUnitId("find_familiar"),
+        },
         selectedForm: { tag: "normalNamedForm", formId: "cat" },
         creatureTypeOverrideChoiceId: "fey",
       }),
@@ -152,7 +157,7 @@ describe("Character Sheet runtime / companions", () => {
       companion: {
         manifestation: {
           tag: "embodiedOutsideBattle",
-          resolvedStatBlockId: "stat_block_cat",
+          resolvedStatBlockId: authoredStatBlockId("stat_block_cat"),
           hitPoints: { currentHp: Hp(2), tempHp: Hp(0) },
         },
       },
@@ -190,7 +195,10 @@ describe("Character Sheet runtime / companions", () => {
         unitLibrary,
         statBlockCatalog: nonliteralHpCatalog,
         companionId: retainedCompanionId("companion:cat"),
-        source: { tag: "ritualSpell", spellId: "find_familiar" },
+        source: {
+          tag: "ritualSpell",
+          spellId: authoredUnitId("find_familiar"),
+        },
         selectedForm: { tag: "normalNamedForm", formId: "cat" },
         creatureTypeOverrideChoiceId: "fey",
       }),

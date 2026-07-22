@@ -12,19 +12,14 @@ import {
 } from "@dnd/shared-algebras/armor-class-algebra";
 import { abilityScoreToMod } from "@dnd/shared-algebras/ability-score-algebra";
 import { elapsedTimeTicksFromHours } from "@dnd/shared-algebras/elapsed-time-algebra";
+import { druidWildShapeDurationHoursForClassLevel } from "@dnd/shared/wild-shape";
 import {
   Hp,
   SIZES,
   proficiencyBonusForCharacterLevel,
   type DieRollResult,
 } from "@dnd/shared/types";
-import { druidWildShapeDurationHoursForClassLevel } from "@dnd/surface/surface/druid-wild-shape-readers";
-import type {
-  Ability,
-  Size,
-  Skill,
-  StatBlockRecord,
-} from "@dnd/surface/surface/types";
+import type { Ability, Size, Skill } from "@dnd/surface/surface/types";
 import * as Either from "effect/Either";
 import { characterBattleLevel } from "../character-class-level.ts";
 
@@ -38,15 +33,15 @@ import {
   spendStatBlockProcedureResources,
   type StatBlockExecutionAdmission,
   type StatBlockExecutionState,
-} from "../stat-block-execution.ts";
-import type { BattleDruidWildShapeKnownForm } from "../battle-init.ts";
+} from "../stat-block-execution-state.ts";
+import type { BattleDruidWildShapeKnownForm } from "../druid-wild-shape-known-form-execution.ts";
 import type {
   BattleActiveEffect,
   BattleCreatureState,
   BattleState,
   CharacterBattleCreatureState,
 } from "../battle-state-execution.ts";
-import type { BattleDruidWildShapeKnownFormSupportProfile } from "../unit-feature-support.ts";
+import type { BattleDruidWildShapeKnownFormSupportProfile } from "../druid-wild-shape-support-execution.ts";
 import type {
   BattleProcedureExecutionRef,
   BattleResourcePoolExecutionRef,
@@ -273,8 +268,9 @@ export function combatantAbilityCheckModifier(
   }
   if (combatant.origin.kind === "statBlock" && input.skill !== undefined) {
     return (
-      statBlockSkillModifier(combatant.origin.statBlock, input.skill) ??
-      ownModifier
+      combatant.origin.mechanics.skillModifiers.find(
+        (modifier) => modifier.skill === input.skill,
+      )?.modifier ?? ownModifier
     );
   }
   return ownModifier;
@@ -307,8 +303,9 @@ export function combatantSavingThrowModifier(
   }
   if (combatant.origin.kind === "statBlock") {
     return (
-      statBlockSavingThrowModifier(combatant.origin.statBlock, ability) ??
-      ownModifier
+      combatant.origin.mechanics.savingThrowModifiers.find(
+        (modifier) => modifier.ability === ability,
+      )?.modifier ?? ownModifier
     );
   }
   return ownModifier;
@@ -484,7 +481,7 @@ function trueFormD20AbilityScore(
   ability: Ability,
 ): number {
   return combatant.origin.kind === "statBlock"
-    ? combatant.origin.statBlock.statBlock.abilityScores[ability]
+    ? combatant.origin.mechanics.abilityScores[ability]
     : combatant.origin.d20Statistics.abilityScores[ability];
 }
 
@@ -525,7 +522,7 @@ function characterSkillProficiencyBonus(
 }
 
 function statBlockSavingThrowModifier(
-  form: BattleDruidWildShapeKnownForm | StatBlockRecord,
+  form: BattleDruidWildShapeKnownForm,
   ability: Ability,
 ): number | undefined {
   return form.statBlock.savingThrowModifiers?.find(
@@ -534,7 +531,7 @@ function statBlockSavingThrowModifier(
 }
 
 function statBlockSkillModifier(
-  form: BattleDruidWildShapeKnownForm | StatBlockRecord,
+  form: BattleDruidWildShapeKnownForm,
   skill: Skill,
 ): number | undefined {
   return form.statBlock.skillModifiers?.find(

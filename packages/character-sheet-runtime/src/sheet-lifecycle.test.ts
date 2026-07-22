@@ -1,4 +1,5 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-SORCERER-METAMAGIC-CHARACTER-FACTS sorcerer_metamagic
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, test } from "vitest";
 import {
   CHARACTER_SHEET_NO_HEROIC_INSPIRATION,
@@ -265,7 +266,7 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
     expect(parsed.build.classFeatureLanguages).toEqual([
       {
         kind: "classFeatureLanguageGrant",
-        sourceUnitId: "druid_druidic",
+        sourceUnitId: authoredUnitId("druid_druidic"),
         language: "Druidic",
       },
     ]);
@@ -289,12 +290,12 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
     expect(parsed.build.classFeatureLanguages).toEqual([
       {
         kind: "classFeatureLanguageGrant",
-        sourceUnitId: "rogue_thieves_cant",
+        sourceUnitId: authoredUnitId("rogue_thieves_cant"),
         language: "Thieves' Cant",
       },
       {
         kind: "classFeatureLanguageChoice",
-        sourceUnitId: "rogue_thieves_cant",
+        sourceUnitId: authoredUnitId("rogue_thieves_cant"),
         language: "Elvish",
       },
     ]);
@@ -320,12 +321,12 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
     expect(sheet.build.classFeatureLanguages).toEqual([
       {
         kind: "classFeatureLanguageGrant",
-        sourceUnitId: "rogue_thieves_cant",
+        sourceUnitId: authoredUnitId("rogue_thieves_cant"),
         language: "Thieves' Cant",
       },
       {
         kind: "classFeatureLanguageChoice",
-        sourceUnitId: "rogue_thieves_cant",
+        sourceUnitId: authoredUnitId("rogue_thieves_cant"),
         language: "Elvish",
       },
     ]);
@@ -362,7 +363,7 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
           classFeatureLanguages: [
             {
               kind: "classFeatureLanguageGrant",
-              sourceUnitId: "rogue_thieves_cant",
+              sourceUnitId: authoredUnitId("rogue_thieves_cant"),
               language: "Thieves' Cant",
             },
           ],
@@ -390,7 +391,7 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
           classFeatureLanguages: [
             {
               kind: "classFeatureLanguageGrant",
-              sourceUnitId: "druid_druidic",
+              sourceUnitId: authoredUnitId("druid_druidic"),
               language: "Druidic",
             },
           ],
@@ -418,14 +419,14 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
           features: [
             {
               kind: "selectedClassChoice",
-              selectedFromUnitId: "fighter_weapon_mastery",
-              unitId: "druid_druidic",
+              selectedFromUnitId: authoredUnitId("fighter_weapon_mastery"),
+              unitId: authoredUnitId("druid_druidic"),
             },
           ],
           classFeatureLanguages: [
             {
               kind: "classFeatureLanguageGrant",
-              sourceUnitId: "druid_druidic",
+              sourceUnitId: authoredUnitId("druid_druidic"),
               language: "Druidic",
             },
           ],
@@ -453,7 +454,7 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
           classFeatureLanguages: [
             {
               kind: "classFeatureLanguageChoice",
-              sourceUnitId: "rogue_thieves_cant",
+              sourceUnitId: authoredUnitId("rogue_thieves_cant"),
               language: "Thieves' Cant",
             },
           ],
@@ -480,17 +481,17 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
           classFeatureLanguages: [
             {
               kind: "classFeatureLanguageGrant",
-              sourceUnitId: "rogue_thieves_cant",
+              sourceUnitId: authoredUnitId("rogue_thieves_cant"),
               language: "Thieves' Cant",
             },
             {
               kind: "classFeatureLanguageChoice",
-              sourceUnitId: "rogue_thieves_cant",
+              sourceUnitId: authoredUnitId("rogue_thieves_cant"),
               language: "Elvish",
             },
             {
               kind: "classFeatureLanguageChoice",
-              sourceUnitId: "rogue_thieves_cant",
+              sourceUnitId: authoredUnitId("rogue_thieves_cant"),
               language: "Sylvan",
             },
           ],
@@ -520,7 +521,9 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
             features: [
               {
                 kind: "selectedEldritchInvocation",
-                selectedFromUnitId: "warlock_eldritch_invocations",
+                selectedFromUnitId: authoredUnitId(
+                  "warlock_eldritch_invocations",
+                ),
                 selection: {
                   kind: "repeatable",
                   invocationId: "repelling_blast",
@@ -532,7 +535,9 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
               },
               {
                 kind: "selectedEldritchInvocation",
-                selectedFromUnitId: "warlock_eldritch_invocations",
+                selectedFromUnitId: authoredUnitId(
+                  "warlock_eldritch_invocations",
+                ),
                 selection: {
                   kind: "repeatable",
                   invocationId: "lessons_of_the_first_ones",
@@ -556,7 +561,7 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
       expect.arrayContaining([
         {
           kind: "selectedEldritchInvocation",
-          selectedFromUnitId: "warlock_eldritch_invocations",
+          selectedFromUnitId: authoredUnitId("warlock_eldritch_invocations"),
           selection: {
             kind: "repeatable",
             invocationId: "repelling_blast",
@@ -568,7 +573,7 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
         },
         {
           kind: "selectedEldritchInvocation",
-          selectedFromUnitId: "warlock_eldritch_invocations",
+          selectedFromUnitId: authoredUnitId("warlock_eldritch_invocations"),
           selection: {
             kind: "repeatable",
             invocationId: "lessons_of_the_first_ones",
@@ -670,7 +675,9 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
             features: [
               {
                 kind: "selectedEldritchInvocation",
-                selectedFromUnitId: "warlock_eldritch_invocations",
+                selectedFromUnitId: authoredUnitId(
+                  "warlock_eldritch_invocations",
+                ),
                 selection: {
                   kind: "repeatable",
                   invocationId: "repelling_blast",
@@ -705,7 +712,9 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
           features: [
             {
               kind: "selectedEldritchInvocation",
-              selectedFromUnitId: "warlock_eldritch_invocations",
+              selectedFromUnitId: authoredUnitId(
+                "warlock_eldritch_invocations",
+              ),
               selection: {
                 kind: "repeatable",
                 invocationId: "repelling_blast",
@@ -733,7 +742,7 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
     const invalidFeatures = [
       {
         kind: "selectedEldritchInvocation",
-        selectedFromUnitId: "warlock_eldritch_invocations",
+        selectedFromUnitId: authoredUnitId("warlock_eldritch_invocations"),
         selection: {
           kind: "repeatable",
           invocationId: "armor_of_shadows",
@@ -745,7 +754,7 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
       },
       {
         kind: "selectedEldritchInvocation",
-        selectedFromUnitId: "warlock_eldritch_invocations",
+        selectedFromUnitId: authoredUnitId("warlock_eldritch_invocations"),
         selection: {
           kind: "nonRepeatable",
           invocationId: "repelling_blast",
@@ -753,7 +762,7 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
       },
       {
         kind: "selectedEldritchInvocation",
-        selectedFromUnitId: "warlock_eldritch_invocations",
+        selectedFromUnitId: authoredUnitId("warlock_eldritch_invocations"),
         selection: {
           kind: "repeatable",
           invocationId: "lessons_of_the_first_ones",
@@ -765,7 +774,7 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
       },
       {
         kind: "selectedEldritchInvocation",
-        selectedFromUnitId: "warlock_eldritch_invocations",
+        selectedFromUnitId: authoredUnitId("warlock_eldritch_invocations"),
         selection: {
           kind: "repeatable",
           invocationId: "repelling_blast",
@@ -809,7 +818,9 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
           features: [
             {
               kind: "selectedEldritchInvocation",
-              selectedFromUnitId: "warlock_eldritch_invocations",
+              selectedFromUnitId: authoredUnitId(
+                "warlock_eldritch_invocations",
+              ),
               selection: {
                 kind: "nonRepeatable",
                 invocationId: "pact_of_the_tome",
@@ -819,7 +830,7 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
           spellcasting: {
             sources: [
               {
-                sourceUnitId: "class_warlock",
+                sourceUnitId: authoredUnitId("class_warlock"),
                 spellcastingAbility: "cha",
                 cantrips: [],
                 spellbook: [],

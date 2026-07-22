@@ -12,6 +12,7 @@ import {
   type CompanionBattleStoredAdmissionManifestation,
   type BattleState,
   type BattleRuntimeSession,
+  type RetainedCompanionBattleSelection,
   type CombatantId,
   type InitiativeScore,
 } from "@dnd/battle-runtime";
@@ -243,7 +244,7 @@ function companionAdmissionManifestation(input: {
 }
 
 type BattleStoredFormForSheetCompanion = {
-  readonly storedForm: BattleCompanionStoredForm;
+  readonly storedForm: CompanionBattleEmbodiedAdmissionManifestation["storedForm"];
   readonly formEligibility: CompanionBattleAdmissionFormEligibility;
 };
 
@@ -329,13 +330,16 @@ function battleCompanionFormEligibilityForAccess(input: {
 
 function retainedCompanionResolvedFormProofIssue(input: {
   readonly unitLibrary: UnitCatalog;
-  readonly statBlockCatalog: StatBlockCatalog;
+  readonly statBlockCatalog?: StatBlockCatalog;
   readonly selectedForm: CharacterSheetCompanionFormSelection;
   readonly resolvedStatBlockId: StatBlockRecord["id"];
 }): string | null {
   if (input.selectedForm.tag === "challengeRatingZeroBeast") {
     if (input.selectedForm.statBlockId !== input.resolvedStatBlockId) {
       return "Retained companion Challenge Rating 0 Beast form proof does not match its resolved Stat Block id.";
+    }
+    if (input.statBlockCatalog === undefined) {
+      return "Retained companion Challenge Rating 0 Beast form proof requires a Stat Block catalog.";
     }
     const statBlock = input.statBlockCatalog.getStatBlock(
       input.selectedForm.statBlockId,
@@ -441,6 +445,9 @@ export function settleCompanionFromBattle(input: {
   readonly sheet: CharacterSheet;
   readonly state: BattleState;
   readonly ownerCombatantId: CombatantId;
+  readonly unitLibrary: UnitCatalog;
+  readonly statBlockCatalog?: StatBlockCatalog;
+  readonly retainedCompanionSelection?: RetainedCompanionBattleSelection;
 }): Either.Either<CharacterSheet, CharacterSheetBattleHandoffIssue> {
   const battleEntry = findFamiliarCompanionEntryForOwner(
     input.state,
@@ -476,9 +483,26 @@ export function settleCompanionFromBattle(input: {
       companion: { tag: "none" },
     });
   }
+  if (input.retainedCompanionSelection === undefined) {
+    return characterSheetBattleHandoffIssue(
+      "Retained battle companion has no battle-owned authored form selection.",
+    );
+  }
+  if (
+    input.retainedCompanionSelection.formAccess !== battleCompanion.formAccess
+  ) {
+    return characterSheetBattleHandoffIssue(
+      "Retained battle companion form access does not match its battle-owned authored selection.",
+    );
+  }
   const manifestation = companionManifestationFromBattle({
     state: input.state,
     companion: battleCompanion,
+    selectedForm: input.retainedCompanionSelection.selectedForm,
+    unitLibrary: input.unitLibrary,
+    ...(input.statBlockCatalog === undefined
+      ? {}
+      : { statBlockCatalog: input.statBlockCatalog }),
   });
   if (Either.isLeft(manifestation)) return Either.left(manifestation.left);
   return replaceCharacterSheetCompanion({
@@ -500,6 +524,9 @@ function companionManifestationFromBattle(input: {
     BattleCompanionState,
     { readonly status: "dismissedForever" }
   >;
+  readonly selectedForm: CharacterSheetCompanionFormSelection;
+  readonly unitLibrary: UnitCatalog;
+  readonly statBlockCatalog?: StatBlockCatalog;
 }): Either.Either<
   CharacterSheetRetainedCompanionManifestation,
   CharacterSheetBattleHandoffIssue
@@ -528,10 +555,18 @@ function companionManifestationFromBattle(input: {
     const proof = sheetCompanionResolvedFormProofFromBattle({
       storedForm,
       creatureTypeOverride: input.companion.creatureTypeOverride,
+      selectedForm: input.selectedForm,
+      unitLibrary: input.unitLibrary,
+      ...(input.statBlockCatalog === undefined
+        ? {}
+        : { statBlockCatalog: input.statBlockCatalog }),
     });
+    if (Either.isLeft(proof)) {
+      return characterSheetBattleHandoffIssue(proof.left.message);
+    }
     return Either.right({
       tag: "embodiedOutsideBattle",
-      ...proof,
+      ...proof.right,
       hitPoints: {
         // Cast evidence: the present-companion branch already rejects 0 HP;
         // combatant HP is the same Hp brand used by retained companion HP.
@@ -544,27 +579,54 @@ function companionManifestationFromBattle(input: {
   const proof = sheetCompanionResolvedFormProofFromBattle({
     storedForm: input.companion,
     creatureTypeOverride: input.companion.creatureTypeOverride,
+    selectedForm: input.selectedForm,
+    unitLibrary: input.unitLibrary,
+    ...(input.statBlockCatalog === undefined
+      ? {}
+      : { statBlockCatalog: input.statBlockCatalog }),
   });
+  if (Either.isLeft(proof)) {
+    return characterSheetBattleHandoffIssue(proof.left.message);
+  }
   if (input.companion.status === "temporarilyDismissed") {
     return Either.right({
       tag: "temporarilyDismissed",
-      ...proof,
+      ...proof.right,
       hitPoints: input.companion.hitPoints,
     });
   }
   return Either.right({
     tag: "disappearedAtZeroHitPoints",
-    ...proof,
+    ...proof.right,
   });
 }
 
 function sheetCompanionResolvedFormProofFromBattle(input: {
   readonly storedForm: BattleCompanionStoredForm;
   readonly creatureTypeOverride: CharacterSheetCompanionCreatureTypeOverride;
-}): CharacterSheetRetainedCompanionResolvedFormProof {
-  return {
-    selectedForm: input.storedForm.formSelection,
+  readonly selectedForm: CharacterSheetCompanionFormSelection;
+  readonly unitLibrary: UnitCatalog;
+  readonly statBlockCatalog?: StatBlockCatalog;
+}): Either.Either<
+  CharacterSheetRetainedCompanionResolvedFormProof,
+  CharacterSheetBattleHandoffIssue
+> {
+  const retainedSelectionIssue = retainedCompanionResolvedFormProofIssue({
+    unitLibrary: input.unitLibrary,
+    ...(input.statBlockCatalog === undefined
+      ? {}
+      : { statBlockCatalog: input.statBlockCatalog }),
+    selectedForm: input.selectedForm,
+    resolvedStatBlockId: input.storedForm.resolvedStatBlockId,
+  });
+  if (retainedSelectionIssue !== null) {
+    return characterSheetBattleHandoffIssue(
+      `Battle companion execution form cannot be joined to its retained authored selection: ${retainedSelectionIssue}`,
+    );
+  }
+  return Either.right({
+    selectedForm: input.selectedForm,
     creatureTypeOverride: input.creatureTypeOverride,
     resolvedStatBlockId: input.storedForm.resolvedStatBlockId,
-  };
+  });
 }

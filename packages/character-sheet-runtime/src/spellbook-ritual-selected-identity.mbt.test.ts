@@ -1,6 +1,7 @@
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay spellbook-ritual-invocation wizard_ritual_adept
 // UNIT-IDENTITY-REPLAY: spellbook-ritual-invocation wizard_ritual_adept doInvokeSpellbookRitual doRejectPreparedOnlyRitual
 // KERNEL-COVERAGE: parity-witness SHEET.SPELLBOOK_RITUAL.SPELL_ACCESS_PROJECTION
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
@@ -27,9 +28,9 @@ import {
   type CharacterSheetSpellbookRitualInvocation,
 } from "./index.ts";
 
-const WIZARD_RITUAL_ADEPT_UNIT_ID = "wizard_ritual_adept";
-const DETECT_MAGIC_SPELL_ID = "detect_magic";
-const WIZARD_CLASS_UNIT_ID = "class_wizard";
+const WIZARD_RITUAL_ADEPT_UNIT_ID = authoredUnitId("wizard_ritual_adept");
+const DETECT_MAGIC_SPELL_ID = authoredUnitId("detect_magic");
+const WIZARD_CLASS_UNIT_ID = authoredUnitId("class_wizard");
 
 const spellbookRitualSelectedIdentityDriverSchema = {
   init: {},
@@ -151,7 +152,7 @@ const unitLibrary = unitCatalogResult.catalog;
 const selectedUnitIdentityReplays = [
   {
     taskId: "spellbook-ritual-invocation",
-    unitId: "wizard_ritual_adept",
+    unitId: WIZARD_RITUAL_ADEPT_UNIT_ID,
     actions: ["doInvokeSpellbookRitual", "doRejectPreparedOnlyRitual"],
     sequences: [
       {
@@ -315,7 +316,7 @@ function invokeSpellbookRitualProjection(): InvokedSpellbookRitualSelectedIdenti
   const result = characterSheetSpellInvocation({
     sheet,
     unitLibrary,
-    spellId: DETECT_MAGIC_SPELL_ID,
+    spellId: authoredUnitId(DETECT_MAGIC_SPELL_ID),
     invocation: { kind: "ritual" },
   });
   if (Either.isLeft(result)) {
@@ -335,7 +336,7 @@ function rejectPreparedOnlyRitualProjection(): PreparedOnlyRejectedSpellbookRitu
   const result = characterSheetSpellInvocation({
     sheet,
     unitLibrary,
-    spellId: DETECT_MAGIC_SPELL_ID,
+    spellId: authoredUnitId(DETECT_MAGIC_SPELL_ID),
     invocation: { kind: "ritual" },
   });
   if (Either.isRight(result)) {
@@ -410,7 +411,7 @@ function spellbookRitualSheet(input: {
       characterId: characterSheetId("character:wizard-ritual-selected"),
       build: wizardBuild({
         spellbook: input.spellbook,
-        preparedSpells: input.preparedSpells,
+        preparedSpells: input.preparedSpells.map(authoredUnitId),
       }),
       currentHp: Hp(7),
       tempHp: Hp(0),
@@ -427,11 +428,11 @@ function wizardBuild(input: {
 }): CharacterBuild {
   return {
     progression: {
-      startingClass: classUnitId(WIZARD_CLASS_UNIT_ID),
+      startingClass: classUnitId(authoredUnitId(WIZARD_CLASS_UNIT_ID)),
       advancements: [],
     },
-    background: "background_soldier",
-    species: "species_orc",
+    background: authoredUnitId("background_soldier"),
+    species: authoredUnitId("species_orc"),
     originLanguages: ["Common", "Dwarvish", "Goblin"],
     classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
@@ -450,11 +451,11 @@ function wizardBuild(input: {
     spellcasting: {
       sources: [
         {
-          sourceUnitId: WIZARD_CLASS_UNIT_ID,
+          sourceUnitId: authoredUnitId(WIZARD_CLASS_UNIT_ID),
           spellcastingAbility: "int",
           cantrips: [],
-          spellbook: input.spellbook,
-          preparedSpells: input.preparedSpells,
+          spellbook: input.spellbook.map(authoredUnitId),
+          preparedSpells: input.preparedSpells.map(authoredUnitId),
           spellcastingFocuses: ["spellbook"],
         },
       ],
@@ -473,7 +474,7 @@ function wizardRitualAdeptFeatureUnitId(
   sheet: CharacterSheet,
 ): typeof WIZARD_RITUAL_ADEPT_UNIT_ID {
   const featureUnitIds = characterBuildFeatureUnitIds(sheet.build, unitLibrary);
-  if (!featureUnitIds.includes(WIZARD_RITUAL_ADEPT_UNIT_ID)) {
+  if (!featureUnitIds.includes(authoredUnitId(WIZARD_RITUAL_ADEPT_UNIT_ID))) {
     throw new Error("Expected Wizard Ritual Adept feature on the build.");
   }
   return WIZARD_RITUAL_ADEPT_UNIT_ID;

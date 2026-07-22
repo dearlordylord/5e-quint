@@ -2,6 +2,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.sorcerous-restoration-sorcery-point-recovery
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.passive-defense-projection
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.ranger-tireless
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import {
   characterBuildMonkUncannyMetabolismFacts,
   type CharacterBuild,
@@ -860,7 +861,7 @@ function parseStoredSpentHitDice(
     const spentCount = parseResourceCount(spent.spent);
     if (Either.isLeft(spentCount)) return Either.left(spentCount.left);
     spentHitDice.push({
-      classUnitId: spent.classUnitId,
+      classUnitId: authoredUnitId(spent.classUnitId),
       spent: spentCount.right,
     });
   }
@@ -929,7 +930,7 @@ function parseStoredRestFeatureUses(
       }
       uses.push({
         tag: use.tag,
-        spellId: use.spellId,
+        spellId: authoredUnitId(use.spellId),
         usedSinceLongRest: true,
       });
       continue;

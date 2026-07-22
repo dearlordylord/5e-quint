@@ -1,5 +1,6 @@
 // KERNEL-COVERAGE: parity-witness SHEET.WEAPON_MASTERY.CLASS_LEVEL_RESELECTION
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt character-sheet.weapon-mastery-class-level-reselection
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
@@ -9,6 +10,7 @@ import { describe, expect, it } from "vitest";
 import {
   Either,
   Hp,
+  authoredNonEmptyUnitIds,
   characterSheetId,
   completeLongRest,
   rebuildCharacterSheetFixture,
@@ -31,32 +33,32 @@ const BARBARIAN_CLASS_UNIT_ID = "class_barbarian" as const;
 const FIGHTER_WEAPON_MASTERY_UNIT_ID = "fighter_weapon_mastery" as const;
 const BARBARIAN_WEAPON_MASTERY_UNIT_ID = "barbarian_weapon_mastery" as const;
 const FIGHTER_LEVEL_FOUR_CURRENT_WEAPON_UNIT_IDS = [
-  "weapon_longsword",
-  "weapon_dagger",
-  "weapon_spear",
-  "weapon_shortbow",
+  authoredUnitId("weapon_longsword"),
+  authoredUnitId("weapon_dagger"),
+  authoredUnitId("weapon_spear"),
+  authoredUnitId("weapon_shortbow"),
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
 const FIGHTER_LEVEL_FOUR_ONE_CHANGE_WEAPON_UNIT_IDS = [
-  "weapon_longsword",
-  "weapon_dagger",
-  "weapon_spear",
-  "weapon_flail",
+  authoredUnitId("weapon_longsword"),
+  authoredUnitId("weapon_dagger"),
+  authoredUnitId("weapon_spear"),
+  authoredUnitId("weapon_flail"),
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
 const FIGHTER_LEVEL_FOUR_TOO_MANY_CHANGES_WEAPON_UNIT_IDS = [
-  "weapon_longsword",
-  "weapon_dagger",
-  "weapon_shortsword",
-  "weapon_flail",
+  authoredUnitId("weapon_longsword"),
+  authoredUnitId("weapon_dagger"),
+  authoredUnitId("weapon_shortsword"),
+  authoredUnitId("weapon_flail"),
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
 const BARBARIAN_LEVEL_FOUR_CURRENT_WEAPON_UNIT_IDS = [
-  "weapon_longsword",
-  "weapon_dagger",
-  "weapon_spear",
+  authoredUnitId("weapon_longsword"),
+  authoredUnitId("weapon_dagger"),
+  authoredUnitId("weapon_spear"),
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
 const BARBARIAN_LEVEL_FOUR_ONE_CHANGE_WEAPON_UNIT_IDS = [
-  "weapon_longsword",
-  "weapon_dagger",
-  "weapon_flail",
+  authoredUnitId("weapon_longsword"),
+  authoredUnitId("weapon_dagger"),
+  authoredUnitId("weapon_flail"),
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
 const NO_REJECTED_FLAGS = {
   tooManyChangesRejected: false,
@@ -348,8 +350,10 @@ function acceptedProjection(input: {
       unitLibrary,
       weaponMasteryReselections: [
         {
-          featureUnitId: input.profile.featureUnitId,
-          selectedWeaponUnitIds: input.profile.requestedWeaponUnitIds,
+          featureUnitId: authoredUnitId(input.profile.featureUnitId),
+          selectedWeaponUnitIds: authoredNonEmptyUnitIds(
+            input.profile.requestedWeaponUnitIds,
+          ),
         },
       ],
     }),
@@ -374,8 +378,10 @@ function rejectedTooManyChangesProjection(): WeaponMasteryClassLevelReselectionP
     unitLibrary,
     weaponMasteryReselections: [
       {
-        featureUnitId: profile.featureUnitId,
-        selectedWeaponUnitIds: profile.requestedWeaponUnitIds,
+        featureUnitId: authoredUnitId(profile.featureUnitId),
+        selectedWeaponUnitIds: authoredNonEmptyUnitIds(
+          profile.requestedWeaponUnitIds,
+        ),
       },
     ],
   });

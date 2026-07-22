@@ -46,7 +46,6 @@ import {
   spendAction,
 } from "@dnd/shared-algebras/action-economy-algebra";
 import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
-import { initiativeOrder } from "@dnd/shared-algebras/initiative-algebra";
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { type StandardActionKind } from "@dnd/shared/game-facts";
 import {
@@ -54,14 +53,59 @@ import {
   type DamageAmount,
 } from "@dnd/shared/types";
 import { Match } from "effect";
+import {
+  attackDamageContinuationConcentrationFrame,
+  currentInterruptCheckpoint,
+  currentInterruptFrame,
+  interruptCheckpointFrame,
+  interruptDecisionHole,
+  interruptedProcedureSubject,
+  interruptedProcedureSupportsAttackDamageChanges,
+  maybeOpenInterruptWindow,
+  openAfterDamageSequenceInterruptWindow,
+  openBattleInterruptWindow,
+  readiedMovementReactionChoices,
+  readiedSpellReactionChoices,
+  snapshotBattle,
+  spendReaction,
+  unofferedEligibleResponders,
+  type BattleOpenedInterruptWindowResult,
+} from "./interrupt-execution.ts";
+export {
+  attackDamageContinuationConcentrationFrame,
+  attackHitBonusActionSpellReactionChoices,
+  battleSnapshotProjection,
+  battleTurnSnapshot,
+  currentInterruptCheckpoint,
+  currentInterruptFrame,
+  interruptCheckpointFrame,
+  interruptChoices,
+  interruptDecisionHole,
+  interruptTriggerLabel,
+  interruptWindowProgress,
+  interruptedProcedureSubject,
+  interruptedProcedureSupportsAttackDamageChanges,
+  maybeOpenInterruptWindow,
+  openAfterDamageSequenceInterruptWindow,
+  openBattleInterruptWindow,
+  opportunityAttackReactionChoices,
+  pendingInterruptSnapshot,
+  readiedMovementReactionChoices,
+  readiedSpellReactionChoices,
+  retaliationReactionAttackChoices,
+  snapshotBattle,
+  spendReaction,
+  unofferedEligibleResponders,
+  type BattleInterruptWindowProgress,
+  type BattleOpenedInterruptWindowResult,
+} from "./interrupt-execution.ts";
 import * as Either from "effect/Either";
 import { type BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
 import {
   permanentlyDismissFindFamiliar,
-  reappearTemporarilyDismissedFindFamiliar,
+  reappearAdmittedTemporarilyDismissedFindFamiliar,
   temporarilyDismissFindFamiliar,
-} from "../find-familiar-lifecycle.ts";
-import type { BattleCompanionSnapshot } from "../companion-state.ts";
+} from "../find-familiar-lifecycle-execution.ts";
 import {
   prepareTouchSpellDeliveryThroughFindFamiliar,
   shareFindFamiliarSenses as applyFindFamiliarSharedSenses,
@@ -77,7 +121,6 @@ import {
 } from "../find-familiar-companion-subjects.ts";
 import { resolvePactOfTheChainFamiliarReactionAttack } from "../find-familiar-pact-chain.ts";
 import {
-  battleCompanionEntries,
   findFamiliarCompanionEntryForOwner,
   isPresentFindFamiliarCombatant,
 } from "../find-familiar-state.ts";
@@ -90,13 +133,9 @@ import {
 import {
   characterSpellProcedure,
   type BattleSpellProcedureExecution,
-} from "../character-execution-admission.ts";
+} from "../character-execution-queries.ts";
 import { sameMultisetBy } from "../mechanical-equality.ts";
-import {
-  CombatantId,
-  battleReplayStackDepth,
-  type BattleProcedureExecutionRef,
-} from "../identity.ts";
+import { CombatantId, type BattleProcedureExecutionRef } from "../identity.ts";
 import { currentActorId } from "./creature-state-leaves.ts";
 import {
   battleStateAfterCreatureAttackDamage,
@@ -118,13 +157,12 @@ import {
   closeLegendaryActionWindow,
   combatantCanTakeActions,
   combatantCanTakeReactions,
-  combatantSnapshot,
   consumeLegendaryActionWindow,
   isCharacterBattleCreatureState,
   isLegendaryAttackSubject,
   normalizeEarlyEndedOngoingFeatures,
   statBlockLegendaryActionWindowIsOpen,
-} from "./creature-state.ts";
+} from "./creature-state-execution.ts";
 import {
   applyAttackDamageAmount,
   breakBattleConcentration,
@@ -145,11 +183,7 @@ import {
   zeroHitPointReplacementDispositionHole,
 } from "./attack-damage-apply.ts";
 import { needsHolesResult } from "./hole-helpers.ts";
-import {
-  interruptAttackExecutionSelectionsEqual,
-  meleeWeaponOrUnarmedStrikeSelectionsForReactor,
-  opportunityAttackSelectionForReactor,
-} from "./movement-speed.ts";
+import { interruptAttackExecutionSelectionsEqual } from "./movement-speed.ts";
 import {
   applyProtectionRelevantEffectSaveOutcome,
   conditionApplicationPreventedByCreatureTypeProtection,
@@ -191,16 +225,12 @@ import { releaseGlyphStoredSpell } from "./glyph-durable-occurrence.ts";
 import {
   antimagicFieldInterdictionMessage,
   battleSubjectInterdictedByAntimagicField,
-  combatantInsideActiveAntimagicFieldAura,
 } from "./antimagic-field-action-interdiction.ts";
 import { spellCastInterruptFrame } from "./spell-cast-interrupt-frame.ts";
 import { applySelfTransformationModeEffect } from "./spells-active-effects.ts";
 import { afterHitDamageAndIlluminationProfile } from "./spell-procedure-profiles/after-hit-damage-and-illumination.ts";
 import { afterHitDamageProfile } from "./spell-procedure-profiles/after-hit-damage.ts";
-import {
-  afterHitSaveGatedConditionProfile,
-  afterHitSaveGatedConditionSavingThrowOutcomeHole,
-} from "./spell-procedure-profiles/after-hit-save-gated-condition.ts";
+import { afterHitSaveGatedConditionProfile } from "./spell-procedure-profiles/after-hit-save-gated-condition.ts";
 import { afterHitTimedDamageAndSaveProfile } from "./spell-procedure-profiles/after-hit-timed-damage-and-save.ts";
 import { featherFallMitigationProfile } from "./spell-procedure-profiles/feather-fall-mitigation.ts";
 import { counterspellProfile } from "./spell-procedure-profiles/counterspell.ts";
@@ -216,8 +246,6 @@ import {
 } from "./warding-bond.ts";
 import { expendSpellSlot } from "./spell-effects.ts";
 import {
-  battleLightEmitters,
-  battleObscurementZones,
   applySpellDamage,
   featherFallLandingCleanupForCombatant,
   saveGateDamageResultForOutcome,
@@ -243,7 +271,6 @@ import {
 } from "./spell-turn-resources.ts";
 import {
   currentActorHasOpenStatBlockMultiattackDispatch,
-  discoverBattleActCandidates,
   subjectAllowedDuringStatBlockMultiattackDispatch,
 } from "./battle-discovery.ts";
 import {
@@ -259,10 +286,7 @@ import {
   spellFillSetContainsOnlySpellCastReactionFacts,
 } from "./spells-resolve-fill-set.ts";
 import { validateSavingThrowOutcomes } from "./spells-resolve-save-gates.ts";
-import {
-  INTERRUPT_DECISION_HOLE_ID,
-  INTERRUPT_DECISION_HOLE_INSTANCE,
-} from "./battle-runtime-protocol.ts";
+import { INTERRUPT_DECISION_HOLE_ID } from "./battle-runtime-protocol.ts";
 import { activeOngoingFeaturesPreventSpellInvocation } from "./spells-invocation-guards.ts";
 import {
   resolveAttack,
@@ -294,8 +318,6 @@ import {
 } from "./attack-offhand.ts";
 import {
   applyBattleMovement,
-  readiedMovementInitialHoles,
-  readiedSpellInitialHoles,
   resolveReleaseReadiedMovementCommand,
   resolveReleaseReadiedSpellCommand,
 } from "./readied-release.ts";
@@ -358,15 +380,11 @@ import type {
   BattleInterruptFrame,
   BattleInterruptedProcedure,
   BattleHole,
-  BattleObjectDamageOutcome,
-  BattleObjectIgnitionOutcome,
   BattleOpportunityAttackThreat,
   BattlePendingAttackDamageReduction,
   BattleInterruptDecision,
-  BattleInterruptDecisionHole,
   BattleInterruptCheckpoint,
   BattleInterruptCheckpointInput,
-  BattleInterruptCheckpointFrame,
   BattleReactionModifierChoice,
   BattleInterruptProcedureChoice,
   BattleInterruptProcedureModifierChoice,
@@ -383,7 +401,6 @@ import type {
   BattleState,
   BattleTargetSpatialFact,
   AttackSpellDamageAddition,
-  BattleTurnSnapshot,
   EndedFlySpeedGrant,
   SpellSlotInvocationResource,
 } from "../battle-state-execution.ts";
@@ -1839,35 +1856,11 @@ function resolveCompanionLifecycleSubject(
         });
   }
   if (input.subject.action === "reappear") {
-    if (familiar.status !== "temporarilyDismissed") {
-      return invalidResult(
-        input.state,
-        "staleSubject",
-        "Familiar reappearance requires the actor's temporarily dismissed familiar.",
-      );
-    }
-    if (input.statBlockCatalog === undefined) {
-      return invalidResult(
-        input.state,
-        "invalidFill",
-        "Familiar reappearance requires a Stat Block catalog in resolver context.",
-      );
-    }
-    const placement = companionReappearancePlacement(input);
-    if (placement.tag === "needsHoles" || placement.tag === "invalid") {
-      return placement;
-    }
-    const initiative = companionReappearanceInitiative(input);
-    if (initiative.tag === "needsHoles" || initiative.tag === "invalid") {
-      return initiative;
-    }
-    return reappearTemporarilyDismissedFindFamiliar({
-      state: input.state,
-      casterId: input.subject.actorId,
-      catalog: input.statBlockCatalog,
-      initiative: initiative.initiative,
-      placement: placement.placement,
-    });
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Familiar reappearance is a session-owned admitted operation.",
+    );
   }
   if (input.subject.action === "permanentlyDismiss") {
     return permanentlyDismissFindFamiliar({
@@ -1877,6 +1870,50 @@ function resolveCompanionLifecycleSubject(
   }
   const _exhaustive: never = input.subject.action;
   return _exhaustive;
+}
+
+type FindFamiliarReappearanceResolutionSubject = Omit<
+  Extract<BattleSubject, { readonly tag: "companionLifecycle" }>,
+  "action"
+> & { readonly action: "reappear" };
+
+/** Resolve the session-owned reappearance operation after catalog admission. */
+export function resolveAdmittedFindFamiliarReappearanceSubject(input: {
+  readonly state: BattleState;
+  readonly subject: FindFamiliarReappearanceResolutionSubject;
+  readonly fills: readonly BattleFill[];
+  readonly admission: import("../find-familiar-admission-state.ts").AdmittedFindFamiliarReappearance;
+}): BattleResolutionResult {
+  const familiarEntry = findFamiliarCompanionEntryForOwner(
+    input.state,
+    input.subject.actorId,
+  );
+  if (
+    familiarEntry === null ||
+    familiarEntry.companion.status !== "temporarilyDismissed"
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Familiar reappearance requires the actor's temporarily dismissed familiar.",
+    );
+  }
+  const placement = companionReappearancePlacement(input);
+  if (placement.tag === "needsHoles" || placement.tag === "invalid") {
+    return placement;
+  }
+  const initiative = companionReappearanceInitiative(input);
+  if (initiative.tag === "needsHoles" || initiative.tag === "invalid") {
+    return initiative;
+  }
+  const result = reappearAdmittedTemporarilyDismissedFindFamiliar({
+    state: input.state,
+    casterId: input.subject.actorId,
+    admission: input.admission,
+    initiative: initiative.initiative,
+    placement: placement.placement,
+  });
+  return consumeOrCloseLegendaryActionWindow(input.subject, result);
 }
 
 function companionReappearancePlacement(
@@ -2960,25 +2997,6 @@ export function consumeOrCloseLegendaryActionWindow(
     : { ...result, state, snapshot: snapshotBattle(state) };
 }
 
-export function openBattleInterruptWindow(input: {
-  readonly state: BattleState;
-  readonly frame: BattleInterruptCheckpoint;
-}): BattleState {
-  return {
-    ...input.state,
-    interruptStack: [
-      ...input.state.interruptStack,
-      interruptCheckpointFrame(input.frame),
-    ],
-  };
-}
-
-export function interruptCheckpointFrame(
-  frame: BattleInterruptCheckpoint,
-): BattleInterruptCheckpointFrame {
-  return { kind: "interruptCheckpoint", frame };
-}
-
 export function openCreatureFallsInterruptWindow(input: {
   readonly state: BattleState;
   readonly fallingCreatureId: CombatantId;
@@ -3525,23 +3543,6 @@ export function resolveBattleInterrupt(input: {
           snapshot: snapshotBattle(nextState),
         },
   );
-}
-
-export function spendReaction(
-  state: BattleState,
-  reactorId: CombatantId,
-): BattleState {
-  const reactor = state.combatants.get(reactorId);
-  if (reactor === undefined) {
-    return state;
-  }
-  return {
-    ...state,
-    combatants: new Map(state.combatants).set(reactorId, {
-      ...reactor,
-      reactionAvailable: false,
-    }),
-  };
 }
 
 function stateForOpeningInterruptCheckpoint(
@@ -5327,60 +5328,6 @@ export function resolveAttackDamageContinuationCunningStrike(input: {
   });
 }
 
-export function openAfterDamageSequenceInterruptWindow(input: {
-  readonly state: BattleState;
-  readonly subject: BattleSubject;
-  readonly events: readonly BattleAfterDamageEvent[];
-  readonly objectDamages: readonly BattleObjectDamageOutcome[];
-  readonly objectIgnitions: readonly BattleObjectIgnitionOutcome[];
-  readonly droppedObjects: readonly BattleDroppedObjectOutcome[];
-  readonly handledInterruptTrigger: BattleInterruptTrigger | undefined;
-}): BattleResolutionResult {
-  const [event, ...remainingEvents] = input.events;
-  if (event === undefined) {
-    return {
-      tag: "resolved",
-      state: input.state,
-      snapshot: snapshotBattle(input.state),
-      ...(input.objectDamages.length === 0
-        ? {}
-        : { objectDamages: input.objectDamages }),
-      ...(input.objectIgnitions.length === 0
-        ? {}
-        : { objectIgnitions: input.objectIgnitions }),
-      ...(input.droppedObjects.length === 0
-        ? {}
-        : { droppedObjects: input.droppedObjects }),
-    };
-  }
-  const reactionWindow = maybeOpenInterruptWindow(
-    input.state,
-    {
-      trigger: "afterDamage",
-      damageSourceId: event.damageSourceId,
-      damagedId: event.damagedId,
-      damageAmount: event.damageAmount,
-      reactionSpellTargetFacts: event.reactionSpellTargetFacts,
-      continuation: {
-        kind: "afterDamageSequence",
-        subject: input.subject,
-        events: remainingEvents,
-        objectDamages: input.objectDamages,
-        objectIgnitions: input.objectIgnitions,
-        droppedObjects: input.droppedObjects,
-      },
-    },
-    input.handledInterruptTrigger,
-  );
-  return (
-    reactionWindow ??
-    openAfterDamageSequenceInterruptWindow({
-      ...input,
-      events: remainingEvents,
-    })
-  );
-}
-
 function attackDamageContinuationTargetSpatialFacts(
   continuation: Extract<
     BattleInterruptedProcedure,
@@ -5746,17 +5693,6 @@ export function activeInterruptWithReplayContinuationAttackDamageChanges(
         },
       }),
     ],
-  };
-}
-
-export function attackDamageContinuationConcentrationFrame(
-  continuation: BattleAttackDamageContinuationWithoutConcentration,
-  handledInterruptTrigger: BattleInterruptTrigger,
-): BattleAttackDamageContinuationConcentrationFrame {
-  return {
-    kind: "attackDamageContinuationConcentration",
-    continuation,
-    handledInterruptTrigger,
   };
 }
 
@@ -6453,316 +6389,6 @@ export function endTurn(input: {
   return routeEvents === undefined ? result : { ...result, routeEvents };
 }
 
-export function battleSnapshotProjection(state: BattleState): {
-  readonly snapshot: BattleSnapshot;
-} {
-  const normalizedState = normalizeEarlyEndedOngoingFeatures(state);
-  if (normalizedState !== state) {
-    return battleSnapshotProjection(normalizedState);
-  }
-  const turnOrder = [...initiativeOrder(state.initiative)];
-  const availableActs = discoverBattleActCandidates(state);
-  const executionScopeCursorEntries = [...state.executionScopeCursors];
-
-  const snapshot: BattleSnapshot = {
-    battleId: state.battleId,
-    executionScopeCursors: executionScopeCursorEntries.flatMap(
-      ([combatantId, allocation]) =>
-        allocation.kind === "active"
-          ? [{ combatantId, nextScopeOrdinal: allocation.nextScopeOrdinal }]
-          : [],
-    ),
-    retiredExecutionScopeAllocations: executionScopeCursorEntries.flatMap(
-      ([combatantId, allocation]) =>
-        allocation.kind === "retired"
-          ? [
-              {
-                combatantId,
-                nextScopeOrdinal: allocation.nextScopeOrdinal,
-                ownership: allocation.ownership,
-              },
-            ]
-          : [],
-    ),
-    round: state.initiative.round,
-    currentActorId: currentActorId(state),
-    turnOrder,
-    combatants: turnOrder.flatMap((id) => {
-      const combatant = state.combatants.get(id);
-      return combatant == null ? [] : [combatantSnapshot(state, combatant)];
-    }),
-    companions: battleCompanionEntries(state).flatMap(
-      (entry): readonly BattleCompanionSnapshot[] => {
-        if (entry.companion.status === "dismissedForever") {
-          // The dismissedForever tombstone exists only for settlement; it is not
-          // a live companion, so it is not part of the read-model snapshot.
-          return [];
-        }
-        if (entry.companion.status !== "present") {
-          return [entry.companion];
-        }
-        const { combatantId, ...snapshotCompanion } = entry.companion;
-        return [
-          {
-            ...snapshotCompanion,
-            companionId: combatantId,
-            resolvedStatBlockId: requirePresentFamiliarCombatantStatBlockId(
-              state,
-              combatantId,
-            ),
-            initiative: requirePresentFamiliarCombatantInitiative(
-              state,
-              combatantId,
-            ),
-          },
-        ];
-      },
-    ),
-    lightEmitters: battleLightEmitters(state),
-    obscurementZones: battleObscurementZones(state),
-    acts: availableActs.map(({ subject, initialHoles }) => ({
-      subject,
-      initialHoles,
-    })),
-    turn: battleTurnSnapshot(state),
-    readiedResponses: {
-      spells: [...state.readiedSpells].map(([casterId, readiedSpell]) => ({
-        casterId,
-        ...readiedSpell,
-      })),
-      movements: [...state.readiedMovements].map(
-        ([actorId, readiedMovement]) => ({
-          actorId,
-          ...readiedMovement,
-        }),
-      ),
-    },
-    helpAttackMarkers: state.helpAttacks,
-    pendingInterrupt: pendingInterruptSnapshot(state),
-  };
-  return { snapshot };
-}
-
-export function snapshotBattle(state: BattleState): BattleSnapshot {
-  return battleSnapshotProjection(state).snapshot;
-}
-
-export function battleTurnSnapshot(state: BattleState): BattleTurnSnapshot {
-  const resources = state.currentTurnResources;
-  return {
-    actionResources: resources.actionResources,
-    bonusActionAvailable: canSpendBonusAction(resources),
-    jumpDistanceMultiplier: resources.jumpDistanceMultiplier,
-    heightenedStepOfTheWindCarriedCreatures:
-      resources.heightenedStepOfTheWindCarriedCreatures,
-    spellSlotUsesThisTurn: resources.spellSlotUsesThisTurn,
-    levelOnePlusSpellCastsThisTurn: resources.levelOnePlusSpellCastsThisTurn,
-    quickenedLevelOnePlusSpellCastsThisTurn:
-      resources.quickenedLevelOnePlusSpellCastsThisTurn,
-    attackRollMadeThisTurn: resources.attackRollMadeThisTurn,
-    attackDamageRidersUsedThisTurn: resources.attackDamageRidersUsedThisTurn,
-    stunningStrikesUsedThisTurn: resources.stunningStrikesUsedThisTurn,
-    recklessAttackWhileRagingUsedThisTurn:
-      resources.recklessAttackWhileRagingUsedThisTurn,
-    weaponDamageDiceRollChoicesUsedThisTurn:
-      resources.weaponDamageDiceRollChoicesUsedThisTurn,
-    weaponMasteryCleaveAttackersUsedThisTurn:
-      resources.weaponMasteryCleaveAttackersUsedThisTurn,
-    huntersPreyHordeBreakerUsedThisTurn:
-      resources.huntersPreyHordeBreakerUsedThisTurn,
-    grapplerPunchAndGrabUsedThisTurn:
-      resources.grapplerPunchAndGrabUsedThisTurn,
-    ...(resources.lightWeaponAttackMade === undefined
-      ? {}
-      : { lightWeaponAttackMade: resources.lightWeaponAttackMade }),
-    dashMovementBonusFeet: resources.dashMovementBonusFeet,
-    disengaged: resources.disengaged,
-  };
-}
-
-function requirePresentFamiliarCombatantInitiative(
-  state: BattleState,
-  familiarId: CombatantId,
-): Extract<
-  BattleCompanionSnapshot,
-  { readonly status: "present" }
->["initiative"] {
-  const combatant = state.combatants.get(familiarId);
-  if (combatant === undefined) {
-    throw new Error("Present Find Familiar snapshot requires a combatant.");
-  }
-  return combatant.initiative;
-}
-
-function requirePresentFamiliarCombatantStatBlockId(
-  state: BattleState,
-  familiarId: CombatantId,
-): Extract<
-  BattleCompanionSnapshot,
-  { readonly status: "present" }
->["resolvedStatBlockId"] {
-  const combatant = state.combatants.get(familiarId);
-  if (combatant?.origin.kind !== "statBlock") {
-    throw new Error(
-      "Present Find Familiar snapshot requires a Stat Block combatant.",
-    );
-  }
-  return combatant.origin.statBlock.id;
-}
-
-export function pendingInterruptSnapshot(
-  state: BattleState,
-): BattleSnapshot["pendingInterrupt"] {
-  const frame = currentInterruptCheckpoint(state);
-  return frame === null
-    ? null
-    : {
-        trigger: frame.trigger,
-        decisionHole: interruptDecisionHole(frame),
-        choices: frame.choices,
-        stackDepth: battleReplayStackDepth(state.interruptStack.length),
-      };
-}
-
-export function currentInterruptFrame(
-  state: BattleState,
-): BattleInterruptFrame | null {
-  return state.interruptStack[state.interruptStack.length - 1] ?? null;
-}
-
-export function currentInterruptCheckpoint(
-  state: BattleState,
-): BattleInterruptCheckpoint | null {
-  const frame = currentInterruptFrame(state);
-  return frame?.kind === "interruptCheckpoint" ? frame.frame : null;
-}
-
-export function interruptedProcedureSubject(
-  procedure: BattleInterruptedProcedure,
-): BattleSubject {
-  return procedure.kind === "attackDamage"
-    ? procedure.participant
-    : procedure.subject;
-}
-
-export function interruptedProcedureSupportsAttackDamageChanges(
-  procedure: BattleInterruptedProcedure,
-): procedure is Extract<
-  BattleInterruptedProcedure,
-  {
-    readonly kind: "replay";
-    readonly glyphStoredSpellReleaseReplay?: never;
-  }
-> {
-  return (
-    procedure.kind === "replay" &&
-    procedure.glyphStoredSpellReleaseReplay === undefined
-  );
-}
-
-export function interruptDecisionHole(
-  frame: BattleInterruptCheckpoint,
-): BattleInterruptDecisionHole {
-  return {
-    holeInstanceKey: INTERRUPT_DECISION_HOLE_INSTANCE,
-    holeId: INTERRUPT_DECISION_HOLE_ID,
-    kind: "interruptDecision",
-    label: `${interruptTriggerLabel(frame.trigger)} interrupt decision`,
-    trigger: frame.trigger,
-    eligibleResponders: unofferedEligibleResponders(frame),
-  };
-}
-
-export function interruptTriggerLabel(trigger: BattleInterruptTrigger): string {
-  return Match.value(trigger).pipe(
-    Match.when("attackHit", () => "Attack hit"),
-    Match.when("attackDamage", () => "Attack damage"),
-    Match.when("spellCast", () => "Spell cast"),
-    Match.when("saveFailed", () => "Failed save"),
-    Match.when("afterDamage", () => "After damage"),
-    Match.when("creatureFalls", () => "Creature falls"),
-    Match.when("opportunityAttack", () => "Opportunity Attack"),
-    Match.exhaustive,
-  );
-}
-
-export function unofferedEligibleResponders(
-  frame: BattleInterruptCheckpoint,
-): readonly CombatantId[] {
-  const offered = new Set(frame.offeredResponders);
-  return frame.eligibleResponders.filter(
-    (reactorId) => !offered.has(reactorId),
-  );
-}
-
-export type BattleOpenedInterruptWindowResult = Extract<
-  BattleResolutionResult,
-  { readonly tag: "needsHoles" }
-> & {
-  readonly holes: readonly [BattleHole, ...BattleHole[]];
-};
-
-export type BattleInterruptWindowProgress =
-  | {
-      readonly tag: "checkpointPreparationFailed";
-      readonly result: Extract<
-        BattleResolutionResult,
-        { readonly tag: "invalid" }
-      >;
-    }
-  | { readonly tag: "interruptionsCleared" }
-  | {
-      readonly tag: "windowOpened";
-      readonly result: BattleOpenedInterruptWindowResult;
-    };
-
-export function interruptWindowProgress(
-  state: BattleState,
-  frame: BattleInterruptCheckpointInput,
-  handledInterruptTrigger: BattleInterruptTrigger | undefined,
-): BattleInterruptWindowProgress {
-  if (frame.trigger === handledInterruptTrigger) {
-    return { tag: "interruptionsCleared" };
-  }
-  const checkpointState = stateForOpeningInterruptCheckpoint(state, frame);
-  if (checkpointState === null) {
-    return {
-      tag: "checkpointPreparationFailed",
-      result: invalidResult(
-        state,
-        "staleSubject",
-        "The interrupt checkpoint could not reserve its pending spell resource.",
-      ),
-    };
-  }
-  const choices = nonEmptyInterruptChoices(
-    interruptChoices(checkpointState, frame),
-  );
-  return choices === null
-    ? { tag: "interruptionsCleared" }
-    : {
-        tag: "windowOpened",
-        result: openPreparedInterruptWindowWithChoices(
-          checkpointState,
-          frame,
-          choices,
-        ),
-      };
-}
-
-export function maybeOpenInterruptWindow(
-  state: BattleState,
-  frame: BattleInterruptCheckpointInput,
-  handledInterruptTrigger: BattleInterruptTrigger | undefined,
-): Extract<BattleResolutionResult, { readonly tag: "needsHoles" }> | null {
-  const progress = interruptWindowProgress(
-    state,
-    frame,
-    handledInterruptTrigger,
-  );
-  return progress.tag === "windowOpened" ? progress.result : null;
-}
-
 export function maybeOpenSpellCastInterruptWindowWithTriggeredSpellChoices(
   state: BattleState,
   frame: BattleInterruptCheckpointInput,
@@ -6891,310 +6517,6 @@ function openPreparedInterruptWindowWithChoices(
     holes: [decisionHole],
     snapshot: snapshotBattle(nextState),
   };
-}
-
-export function readiedSpellReactionChoices(
-  state: BattleState,
-  trigger: BattleInterruptTrigger,
-): readonly BattleInterruptProcedureChoice[] {
-  const readiedChoices = [...state.readiedSpells].flatMap(
-    ([casterId, readiedSpell]) => {
-      const reactor = state.combatants.get(casterId);
-      if (
-        readiedSpell.trigger !== trigger ||
-        reactor === undefined ||
-        !combatantCanTakeReactions(reactor)
-      ) {
-        return [];
-      }
-      return [
-        {
-          kind: "releaseReadiedSpell" as const,
-          reactorId: casterId,
-          readiedSpellCasterId: casterId,
-          initialHoles: readiedSpellInitialHoles(state, casterId, readiedSpell),
-          subject: {
-            tag: "runtimeCommand" as const,
-            actorId: currentActorId(state),
-            command: "releaseReadiedSpell" as const,
-            readiedSpellCasterId: casterId,
-            procedureRef: readiedSpell.procedureRef,
-          },
-        },
-      ];
-    },
-  );
-  return readiedChoices;
-}
-
-export function readiedMovementReactionChoices(
-  state: BattleState,
-  trigger: BattleInterruptTrigger,
-): readonly BattleInterruptProcedureChoice[] {
-  return [...state.readiedMovements].flatMap(
-    ([readiedMovementActorId, readiedMovement]) => {
-      const reactor = state.combatants.get(readiedMovementActorId);
-      const initialHoles = readiedMovementInitialHoles(
-        state,
-        readiedMovementActorId,
-      );
-      if (
-        readiedMovement.trigger !== trigger ||
-        reactor === undefined ||
-        !combatantCanTakeReactions(reactor) ||
-        initialHoles.length === 0
-      ) {
-        return [];
-      }
-      return [
-        {
-          kind: "releaseReadiedMovement" as const,
-          reactorId: readiedMovementActorId,
-          readiedMovementActorId,
-          initialHoles,
-          subject: {
-            tag: "runtimeCommand" as const,
-            actorId: currentActorId(state),
-            command: "releaseReadiedMovement" as const,
-            readiedMovementActorId,
-          },
-        },
-      ];
-    },
-  );
-}
-
-export function interruptChoices(
-  state: BattleState,
-  frame: BattleInterruptCheckpointInput,
-): readonly BattleInterruptProcedureChoice[] {
-  const readiedChoices = [
-    ...readiedSpellReactionChoices(state, frame.trigger),
-    ...readiedMovementReactionChoices(state, frame.trigger),
-  ];
-  const attackHitBonusActionSpellChoices =
-    attackHitBonusActionSpellReactionChoices(state, frame);
-  const triggeredSpellChoices = triggeredReactionSpellChoices(state, frame);
-  const modifierChoices = reactionRollOrDamageReductionChoices(state, frame);
-  const retaliationChoices = retaliationReactionAttackChoices(state, frame);
-  return frame.trigger === "opportunityAttack"
-    ? [
-        ...readiedChoices,
-        ...triggeredSpellChoices,
-        ...modifierChoices,
-        ...opportunityAttackReactionChoices(
-          state,
-          frame.moverId,
-          frame.threats,
-        ),
-      ]
-    : [
-        ...readiedChoices,
-        ...attackHitBonusActionSpellChoices,
-        ...triggeredSpellChoices,
-        ...retaliationChoices,
-        ...modifierChoices,
-      ];
-}
-
-export function attackHitBonusActionSpellReactionChoices(
-  state: BattleState,
-  frame: BattleInterruptCheckpointInput,
-): readonly BattleInterruptProcedureChoice[] {
-  if (
-    frame.trigger !== "attackHit" ||
-    interruptedProcedureSubject(frame.continuation).tag === "bonusAction" ||
-    frame.attackerId !== currentActorId(state)
-  ) {
-    return [];
-  }
-  const actor = state.combatants.get(frame.attackerId);
-  const target =
-    frame.trigger === "attackHit"
-      ? state.combatants.get(frame.targetId)
-      : undefined;
-  if (
-    actor?.origin.kind !== "character" ||
-    target === undefined ||
-    !combatantCanTakeActions(actor) ||
-    !canSpendBonusAction(state.currentTurnResources) ||
-    combatantInsideActiveAntimagicFieldAura(state, frame.attackerId)
-  ) {
-    return [];
-  }
-  return executableSpellProceduresForActor(actor).flatMap(
-    (invocation): readonly BattleInterruptProcedureChoice[] => {
-      if (
-        !isAttackHitBonusActionSpellInvocation(invocation) ||
-        ((invocation.procedure === "afterHitDamage" ||
-          invocation.procedure === "afterHitTimedDamageAndSave" ||
-          invocation.procedure === "afterHitDamageAndIllumination") &&
-          !interruptedProcedureSupportsAttackDamageChanges(
-            frame.continuation,
-          )) ||
-        !afterHitSpellMatchesAttackTrigger(
-          invocation,
-          frame.attackHitTriggerKind,
-        ) ||
-        !spellHasAvailableSpend(actor, invocation) ||
-        !spellActTurnResourceAvailable(
-          state.currentTurnResources,
-          frame.attackerId,
-          invocation,
-        )
-      ) {
-        return [];
-      }
-      if (!isCharacterBattleCreatureState(actor)) return [];
-      const procedureRef = invocation.sourceProcedureRef;
-      const initialHoles =
-        invocation.procedure === "afterHitSaveGatedCondition"
-          ? [
-              afterHitSaveGatedConditionSavingThrowOutcomeHole(
-                state,
-                frame.attackerId,
-                target,
-                invocation,
-              ),
-            ]
-          : [];
-      return [
-        {
-          kind: "castAttackHitBonusActionSpell" as const,
-          reactorId: frame.attackerId,
-          initialHoles,
-          subject: {
-            tag: "runtimeCommand" as const,
-            actorId: currentActorId(state),
-            command: "castAttackHitBonusActionSpell" as const,
-            casterId: frame.attackerId,
-            procedureRef,
-          },
-        },
-      ];
-    },
-  );
-}
-
-function executableSpellProceduresForActor(
-  actor: BattleCreatureState,
-): readonly BattleSpellProcedureExecution[] {
-  if (!isCharacterBattleCreatureState(actor)) return [];
-  return actor.origin.execution.procedureBindings.flatMap((binding) => {
-    if (binding.procedure.kind !== "spellInvocation") return [];
-    const invocation = characterSpellProcedure(
-      actor.origin.execution,
-      binding.procedureRef,
-      actor,
-    );
-    return invocation === undefined ||
-      activeOngoingFeaturesPreventSpellInvocation(actor, invocation)
-      ? []
-      : [invocation];
-  });
-}
-
-export function opportunityAttackReactionChoices(
-  state: BattleState,
-  moverId: CombatantId,
-  threats: readonly BattleOpportunityAttackThreat[],
-): readonly BattleInterruptProcedureChoice[] {
-  return threats.flatMap((threat) => {
-    const reactorId = threat.reactorId;
-    const reactor = state.combatants.get(reactorId);
-    if (reactor === undefined) {
-      return [];
-    }
-    const selection = opportunityAttackSelectionForReactor(
-      state,
-      reactorId,
-      moverId,
-      threat,
-    );
-    if (selection === undefined) return [];
-    return [
-      {
-        kind: "opportunityAttack" as const,
-        reactorId,
-        initialHoles: [],
-        subject: {
-          tag: "runtimeCommand" as const,
-          actorId: currentActorId(state),
-          command: "opportunityAttack" as const,
-          reactorId,
-          targetId: moverId,
-          ...selection,
-        },
-      },
-    ];
-  });
-}
-
-export function retaliationReactionAttackChoices(
-  state: BattleState,
-  frame: BattleInterruptCheckpointInput,
-): readonly BattleInterruptProcedureChoice[] {
-  if (
-    frame.trigger !== "afterDamage" ||
-    Number(frame.damageAmount) <= 0 ||
-    frame.damageSourceId === frame.damagedId
-  ) {
-    return [];
-  }
-  const reactorId = frame.damagedId;
-  const reactor = state.combatants.get(reactorId);
-  if (
-    reactor?.origin.kind !== "character" ||
-    !combatantCanTakeReactions(reactor) ||
-    !retaliationDamageSourceWithinFiveFeet(frame, reactorId)
-  ) {
-    return [];
-  }
-  if (
-    !reactor.origin.execution.procedureBindings.some((binding) => {
-      const procedure = binding.procedure;
-      return (
-        (procedure.kind === "unitFeature" ||
-          procedure.kind === "unitSupportProfile") &&
-        typeof procedure.execution === "object" &&
-        procedure.execution.kind === "retaliationReactionAttack"
-      );
-    })
-  ) {
-    return [];
-  }
-  return meleeWeaponOrUnarmedStrikeSelectionsForReactor(
-    state,
-    reactorId,
-    frame.damageSourceId,
-  ).map((selection) => ({
-    kind: "retaliationAttack" as const,
-    reactorId,
-    initialHoles: [],
-    subject: {
-      tag: "runtimeCommand" as const,
-      actorId: currentActorId(state),
-      command: "retaliationAttack" as const,
-      reactorId,
-      targetId: frame.damageSourceId,
-      ...selection,
-    },
-  }));
-}
-
-function retaliationDamageSourceWithinFiveFeet(
-  frame: Extract<
-    BattleInterruptCheckpointInput,
-    { readonly trigger: "afterDamage" }
-  >,
-  reactorId: CombatantId,
-): boolean {
-  return frame.reactionSpellTargetFacts.some(
-    (fact) =>
-      fact.kind === "retaliationDamagerWithinFiveFeet" &&
-      fact.damagedId === reactorId &&
-      fact.damageSourceId === frame.damageSourceId,
-  );
 }
 
 export {

@@ -37,14 +37,16 @@ import {
   characterUnitProcedureBindings,
   type UnitFeatureProcedureExecution,
   type UnitSupportProcedureExecution,
-} from "../character-execution-admission.ts";
+} from "../character-execution-queries.ts";
 import {
   attackExecutionSelectionForOption,
   type BoundSupportedAttackActionOption,
   type SupportedAttackActionOption,
 } from "../battle-action-options.ts";
-import type { CharacterBattleResourceState } from "../character-battle-resources.ts";
-import { resourceHasUsesRemaining } from "../character-battle-resources.ts";
+import {
+  resourceHasUsesRemaining,
+  type CharacterBattleResourceState,
+} from "../character-battle-resource-execution.ts";
 import { ongoingSpellEffectSuppressedByAntimagicField } from "./antimagic-field-suppression.ts";
 import { ongoingFeatureEnemyRelationshipDecisionRequired } from "./attack-roll.ts";
 import {
@@ -56,7 +58,20 @@ import {
   HIDE_ACTION_OBSCUREMENT_PERMISSION_SUPPORT_PROFILE,
   type AlternateActionCostAction,
   type HideActionObscurementPermissionProfile,
-} from "../unit-feature-support.ts";
+} from "../unit-feature-execution-constants.ts";
+import {
+  type BattleActDiscoveryCandidate,
+  type BattleAbilityCheckHole,
+  type BattleActiveEffect,
+  type BattleCreatureState,
+  type BattleGrappleLink,
+  type BattleGrappleOutcomeHole,
+  type BattleShoveOutcomeHole,
+  type BattleHole,
+  type BattleResolutionResult,
+  type BattleState,
+  type BattleTargetChoiceHole,
+} from "../battle-state-execution.ts";
 import {
   ATTACK_TARGET_HOLE_ID,
   ATTACK_TARGET_HOLE_INSTANCE,
@@ -83,20 +98,9 @@ import {
   SHOVE_TARGET_HOLE_INSTANCE,
   SLEEP_SHAKE_AWAKE_TARGET_HOLE_ID,
   SLEEP_SHAKE_AWAKE_TARGET_HOLE_INSTANCE,
-  snapshotBattle,
-  spellSaveDcForCaster,
-  type BattleActDiscoveryCandidate,
-  type BattleAbilityCheckHole,
-  type BattleActiveEffect,
-  type BattleCreatureState,
-  type BattleGrappleLink,
-  type BattleGrappleOutcomeHole,
-  type BattleShoveOutcomeHole,
-  type BattleHole,
-  type BattleResolutionResult,
-  type BattleState,
-  type BattleTargetChoiceHole,
-} from "../battle-state-execution.ts";
+} from "./battle-runtime-protocol.ts";
+import { snapshotBattle } from "./battle-snapshot.ts";
+import { spellSaveDcForCaster } from "./attack-resolution.ts";
 import {
   creatureSizeIsLargerThanSelf,
   grappleLinkForTarget,
@@ -113,7 +117,7 @@ import {
 import {
   combatantCanTakeActions,
   isCharacterBattleCreatureState,
-} from "./creature-state.ts";
+} from "./creature-state-execution.ts";
 import {
   hypnoticPatternShakeAwakeTargetChoices,
   sleepShakeAwakeTargetChoices,

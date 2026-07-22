@@ -1,4 +1,5 @@
 // KERNEL-COVERAGE: runtime-owner CREATION.CLASS_FEATURE_SOURCE_FACT.PROJECTION
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { Either, Option } from "effect";
 import { resourceCount, type ResourceCount } from "@dnd/shared/types";
 import type {
@@ -19,8 +20,7 @@ import {
   type SorcererMetamagicOptionId,
 } from "./types.ts";
 
-export const SORCERER_METAMAGIC_UNIT_ID =
-  "sorcerer_metamagic" as const satisfies UnitRecord["id"];
+export const SORCERER_METAMAGIC_UNIT_ID = authoredUnitId("sorcerer_metamagic");
 
 type SorcererMetamagicMechanics = Extract<
   ClassFeatureRecord["mechanics"],
@@ -68,11 +68,11 @@ export function characterBuildSorcererMetamagicFacts(input: {
 > {
   const selectedOptionIds = characterBuildSorcererMetamagicOptionIds(
     input.build,
-    SORCERER_METAMAGIC_UNIT_ID,
+    authoredUnitId(SORCERER_METAMAGIC_UNIT_ID),
   );
   if (
     !characterBuildFeatureUnitIds(input.build, input.unitLibrary).includes(
-      SORCERER_METAMAGIC_UNIT_ID,
+      authoredUnitId(SORCERER_METAMAGIC_UNIT_ID),
     )
   ) {
     return selectedOptionIds.length === 0
@@ -145,7 +145,9 @@ export function characterBuildSorcererMetamagicFacts(input: {
     selectionRepeatability:
       featureUnit.value.mechanics.selectionRepeatability.kind,
     sorceryPointResource: {
-      resourceUnitId: featureUnit.value.mechanics.spends.resourceUnitId,
+      resourceUnitId: authoredUnitId(
+        featureUnit.value.mechanics.spends.resourceUnitId,
+      ),
       poolId: fontOfMagicFacts.right.sorceryPointPool.poolId,
     },
     spellUseLimit: featureUnit.value.mechanics.spellUseLimit.kind,

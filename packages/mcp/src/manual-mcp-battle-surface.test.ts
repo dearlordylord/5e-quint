@@ -8,12 +8,14 @@ import {
   WEAPON_MASTERY_SAP_SUPPORT_PROFILE,
   WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE,
   battleId,
+  admitCharacterWeaponAttackExecutionWeapon,
   characterId,
   combatantId,
   initiativeScore,
   startBattle,
   type BattleCreatureInit,
   type BattleRuntimeSession,
+  type BattleUnitRef,
   type CharacterBattleClassLevelInits,
   type CharacterWeaponAttackActionOption,
 } from "@dnd/battle-runtime";
@@ -28,7 +30,6 @@ import {
   abilityModifier as armorAbilityModifier,
   defaultArmorClassState,
 } from "@dnd/shared-algebras/armor-class-algebra";
-import type { WeaponRecord } from "@dnd/surface/surface/types";
 import { createMcpCompositionRoot, handleToolCall } from "./server.ts";
 import type { BattleToolResult } from "./battle-tools.ts";
 
@@ -37,6 +38,27 @@ const goblinId = combatantId("goblin");
 const allyId = combatantId("ally");
 
 describe("manual MCP battle surface coverage", () => {
+  test("rejects a weapon attack without its authored presentation source", () => {
+    const root = createMcpCompositionRoot();
+    const result = startBattle({
+      battleId: battleId("battle-missing-weapon-presentation"),
+      combatants: [
+        character(root, {
+          combatantId: fighterId,
+          initiative: 20,
+          omitWeaponPresentationSources: true,
+        }),
+        statBlock(root, { combatantId: goblinId, initiative: 10 }),
+      ],
+    });
+
+    expect(Either.isLeft(result)).toBe(true);
+    if (Either.isRight(result)) return;
+    expect(result.left.message).toBe(
+      "Character fighter weapon weapon_longsword has missing authored presentation source.",
+    );
+  });
+
   test("uses Bardic Inspiration grant through MCP battle tools", () => {
     const root = createMcpCompositionRoot();
     root.sessionStore.battleSession = startBattleRight(root, [
@@ -1119,7 +1141,7 @@ function character(
     readonly displayName?: string;
     readonly initiative: number;
     readonly classLevels?: CharacterBattleClassLevelInits;
-    readonly characterUnitRefs?: any;
+    readonly characterUnitRefs?: readonly BattleUnitRef[];
     readonly weaponMasteries?: any;
     readonly selectedLoadout?: any;
     readonly armorClass?: ReturnType<typeof defaultArmorClassState>;
@@ -1127,6 +1149,7 @@ function character(
     readonly resources?: any;
     readonly spellcasting?: any;
     readonly invocationFeatures?: any;
+    readonly omitWeaponPresentationSources?: boolean;
   },
 ): BattleCreatureInit {
   const attack =
@@ -1139,8 +1162,8 @@ function character(
       ? {}
       : {
           weapon: {
-            itemId: `main:${attack.weapon.id}`,
-            unitId: attack.weapon.id,
+            itemId: `main:${attack.weapon.weaponUnitId}`,
+            unitId: attack.weapon.weaponUnitId,
             grip: "one_handed",
           },
         });
@@ -1155,6 +1178,21 @@ function character(
         ? ("free" as const)
         : ("shield" as const),
   };
+  const characterUnitRefs = [...(input.characterUnitRefs ?? [])];
+  if (input.omitWeaponPresentationSources !== true) {
+    for (const weaponUnitId of [attack?.weapon.weaponUnitId].filter(
+      (id) => id !== undefined,
+    )) {
+      if (characterUnitRefs.some((ref) => ref.unit.id === weaponUnitId)) {
+        continue;
+      }
+      const unit = root.unitLibrary.requireUnit(weaponUnitId);
+      if (unit.kind !== "weapon") {
+        throw new Error(`Expected weapon Unit: ${weaponUnitId}`);
+      }
+      characterUnitRefs.push({ unit, supportProfiles: [] });
+    }
+  }
   return {
     combatantId: input.combatantId,
     displayName: input.displayName ?? "Fighter",
@@ -1162,7 +1200,7 @@ function character(
     creatureInit: {
       kind: "character",
       characterId: characterId(`${input.combatantId}-character`),
-      characterUnitRefs: input.characterUnitRefs ?? [],
+      characterUnitRefs,
       invocationFeatures: input.invocationFeatures ?? [],
       classLevels: input.classLevels ?? [
         {
@@ -1228,7 +1266,7 @@ function weaponAttack(
     throw new Error(`Expected weapon Unit: ${weaponId}`);
   return {
     kind: "weapon",
-    weapon: weapon as WeaponRecord,
+    weapon: admitCharacterWeaponAttackExecutionWeapon(weapon),
     ability,
     abilityModifier: abilityModifier(mod),
     attackBonus: attackBonus(mod + 2),

@@ -3,6 +3,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L19E-02-L5-SAVE-CONDITION-CONTROL dominate_person
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L19E-02-L5-SAVE-CONDITION-CONTROL dominate_person
 // UNIT-IDENTITY-REPLAY: L19E-02-L5-SAVE-CONDITION-CONTROL dominate_person doCastDominatePerson
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, it, test } from "vitest";
 
 import {
@@ -312,11 +313,15 @@ function dominatePersonWizardSheet(input: {
       spellcasting: {
         sources: [
           {
-            sourceUnitId: "class_wizard",
+            sourceUnitId: authoredUnitId("class_wizard"),
             spellcastingAbility: "int",
-            cantrips: ["fire_bolt", "light", "mage_hand"],
+            cantrips: [
+              authoredUnitId("fire_bolt"),
+              authoredUnitId("light"),
+              authoredUnitId("mage_hand"),
+            ],
             spellbook: [],
-            preparedSpells: input.preparedSpells,
+            preparedSpells: input.preparedSpells.map(authoredUnitId),
             spellcastingFocuses: ["arcane_focus"],
           },
         ],
@@ -357,10 +362,11 @@ const dominatePersonCatalogById = new Map(
   dominatePersonCatalogUnits.map((unit) => [unit.id, unit]),
 );
 const dominatePersonUnitLibrary: UnitCatalog = {
-  getUnit: (id) => Option.fromNullable(dominatePersonCatalogById.get(id)),
+  getUnit: (id) =>
+    Option.fromNullable(dominatePersonCatalogById.get(authoredUnitId(id))),
   listUnits: () => dominatePersonCatalogUnits,
   requireUnit: (id) => {
-    const unit = dominatePersonCatalogById.get(id);
+    const unit = dominatePersonCatalogById.get(authoredUnitId(id));
     if (unit !== undefined) return unit;
     throw new Error(`Unknown Unit id: ${id}`);
   },
@@ -372,14 +378,14 @@ function armorClassBuild(input: {
 }): CharacterBuild {
   return {
     progression: {
-      startingClass: classUnitId(input.startingClass),
+      startingClass: classUnitId(authoredUnitId(input.startingClass)),
       advancements: (input.advancements ?? []).map((classId) => ({
-        classUnitId: classUnitId(classId),
+        classUnitId: classUnitId(authoredUnitId(classId)),
         hitPointRule: { tag: "fixedHigherLevelGain" as const },
       })),
     },
-    background: "background_soldier",
-    species: "species_orc",
+    background: authoredUnitId("background_soldier"),
+    species: authoredUnitId("species_orc"),
     originLanguages: ["Common", "Dwarvish", "Goblin"],
     classFeatureLanguages: [],
     alignment: { order: "lawful" as const, morality: "good" as const },

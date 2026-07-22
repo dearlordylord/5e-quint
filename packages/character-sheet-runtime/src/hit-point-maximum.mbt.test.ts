@@ -1,4 +1,5 @@
 // KERNEL-COVERAGE: parity-witness SHEET.HIT_POINTS.MAXIMUM_DERIVATION
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
@@ -127,8 +128,8 @@ function createHitPointMaximumDriver() {
             features: [
               {
                 kind: "selectedClassChoice",
-                selectedFromUnitId: "class_sorcerer",
-                unitId: "subclass_sorcerer_draconic_sorcery",
+                selectedFromUnitId: authoredUnitId("class_sorcerer"),
+                unitId: authoredUnitId("subclass_sorcerer_draconic_sorcery"),
               },
             ],
           },
@@ -231,14 +232,14 @@ function buildFixture(input: {
 }): CharacterBuild {
   return {
     progression: {
-      startingClass: classUnitId(input.startingClass),
+      startingClass: classUnitId(authoredUnitId(input.startingClass)),
       advancements: (input.advancements ?? []).map((advancement) => ({
-        classUnitId: classUnitId(advancement),
+        classUnitId: classUnitId(authoredUnitId(advancement)),
         hitPointRule: { tag: "fixedHigherLevelGain" },
       })),
     },
-    background: "background_soldier",
-    species: "species_orc",
+    background: authoredUnitId("background_soldier"),
+    species: authoredUnitId("species_orc"),
     originLanguages: ["Common", "Dwarvish", "Goblin"],
     classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },

@@ -1,3 +1,4 @@
+import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-direct-condition
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-glyph-stored-concentration-full-duration
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE
@@ -11,18 +12,17 @@ import {
   ElapsedTimeTicksSchema,
 } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
-import type { SpellRecord, TargetSelection } from "@dnd/surface/surface/types";
+import type { TargetSelection } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
 import {
-  maybeOpenInterruptWindow,
-  snapshotBattle,
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
   type BattleState,
   type DirectConditionSpellInvocation,
 } from "../../battle-state-execution.ts";
+import { maybeOpenInterruptWindow, snapshotBattle } from "../dispatcher.ts";
 import { CombatantId } from "../../identity.ts";
 import { applyDirectConditionSpellEffects } from "../direct-condition-lifecycle.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
@@ -34,7 +34,7 @@ import {
 import {
   sameStringSet,
   scalarBuffSpellTargetCount,
-} from "../spells-profile-shared.ts";
+} from "../spells-execution-facts.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
 import {
   spellTargetListHole,
@@ -66,7 +66,7 @@ const DIRECT_CONDITION_EARLY_END_KINDS = [
 ] as const;
 
 function admitDirectCondition(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly DirectConditionSpellInvocation[] {
   return ctx.actor.origin.spellcasting.spellSlots.flatMap(
@@ -106,7 +106,7 @@ function admitDirectCondition(
 
 function directConditionProjection(
   actorId: CombatantId,
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
 ):
   | (Pick<DirectConditionSpellInvocation, "activeEffect" | "rangeFeet"> & {
       readonly selection: TargetSelection;

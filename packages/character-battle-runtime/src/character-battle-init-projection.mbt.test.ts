@@ -1,4 +1,5 @@
 // KERNEL-COVERAGE: parity-witness CHARACTER.BATTLE.HANDOFF.INIT_PROJECTION CHARACTER.BATTLE.HANDOFF.IDENTITY_CONFLICTS
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import * as path from "node:path";
 
 import {
@@ -467,16 +468,18 @@ function defenseBuild(input: {
 }): CharacterBuild {
   const armorItemId = characterEquipmentItemId({
     slot: "armor",
-    unitId: expectRight(characterEquipmentItemUnitId("armor_chain_mail")),
+    unitId: expectRight(
+      characterEquipmentItemUnitId(authoredUnitId("armor_chain_mail")),
+    ),
   });
 
   return {
     progression: {
-      startingClass: classUnitId("class_fighter"),
+      startingClass: classUnitId(authoredUnitId("class_fighter")),
       advancements: [],
     },
-    background: "background_soldier",
-    species: "species_orc",
+    background: authoredUnitId("background_soldier"),
+    species: authoredUnitId("species_orc"),
     originLanguages: ["Common", "Dwarvish", "Goblin"],
     classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
@@ -493,13 +496,15 @@ function defenseBuild(input: {
     proficiencyChoices: [],
     features: [
       {
-        selectedFromUnitId: "fighter_fighting_style",
+        selectedFromUnitId: authoredUnitId("fighter_fighting_style"),
         kind: "selectedClassChoice",
-        unitId: "defense",
+        unitId: authoredUnitId("defense"),
       },
     ],
     equipment: {
-      owned: [{ itemId: armorItemId, unitId: "armor_chain_mail" }],
+      owned: [
+        { itemId: armorItemId, unitId: authoredUnitId("armor_chain_mail") },
+      ],
       loadout: input.wearingArmor ? { armor: armorItemId } : {},
     },
   };
@@ -508,14 +513,14 @@ function defenseBuild(input: {
 function sorcererMetamagicBuild(): CharacterBuild {
   return {
     progression: {
-      startingClass: classUnitId("class_sorcerer"),
+      startingClass: classUnitId(authoredUnitId("class_sorcerer")),
       advancements: Array.from({ length: 4 }, () => ({
-        classUnitId: classUnitId("class_sorcerer"),
+        classUnitId: classUnitId(authoredUnitId("class_sorcerer")),
         hitPointRule: { tag: "fixedHigherLevelGain" as const },
       })),
     },
-    background: "background_soldier",
-    species: "species_orc",
+    background: authoredUnitId("background_soldier"),
+    species: authoredUnitId("species_orc"),
     originLanguages: ["Common", "Dwarvish", "Goblin"],
     classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
@@ -533,14 +538,14 @@ function sorcererMetamagicBuild(): CharacterBuild {
     features: [
       {
         kind: "selectedSorcererMetamagicOption",
-        selectedFromUnitId: "sorcerer_metamagic",
+        selectedFromUnitId: authoredUnitId("sorcerer_metamagic"),
         optionId: expectRight(
           sorcererMetamagicOptionId("sorcerer_empowered_spell"),
         ),
       },
       {
         kind: "selectedSorcererMetamagicOption",
-        selectedFromUnitId: "sorcerer_metamagic",
+        selectedFromUnitId: authoredUnitId("sorcerer_metamagic"),
         optionId: expectRight(
           sorcererMetamagicOptionId("sorcerer_heightened_spell"),
         ),
@@ -553,7 +558,7 @@ function sorcererMetamagicBuild(): CharacterBuild {
     spellcasting: {
       sources: [
         {
-          sourceUnitId: "class_sorcerer",
+          sourceUnitId: authoredUnitId("class_sorcerer"),
           spellcastingAbility: "cha",
           cantrips: [],
           spellbook: [],
@@ -578,11 +583,11 @@ function sorcererMetamagicBuild(): CharacterBuild {
 function warlockPactMagicBuild(): CharacterBuild {
   return {
     progression: {
-      startingClass: classUnitId("class_warlock"),
+      startingClass: classUnitId(authoredUnitId("class_warlock")),
       advancements: [],
     },
-    background: "background_soldier",
-    species: "species_orc",
+    background: authoredUnitId("background_soldier"),
+    species: authoredUnitId("species_orc"),
     originLanguages: ["Common", "Dwarvish", "Goblin"],
     classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
@@ -605,7 +610,7 @@ function warlockPactMagicBuild(): CharacterBuild {
     spellcasting: {
       sources: [
         {
-          sourceUnitId: "class_warlock",
+          sourceUnitId: authoredUnitId("class_warlock"),
           spellcastingAbility: "cha",
           cantrips: [],
           spellbook: [],

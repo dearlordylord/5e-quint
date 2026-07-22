@@ -1,3 +1,4 @@
+import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 // RAW-COVERAGE: verification-owner:focused-mbt RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-damage-save-or-attack spell.hit-point-restoration spell.reaction-shield spell.readied-action-time-spell
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS BATTLE.SPELL.HIT_POINT_RESTORATION BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES
@@ -2264,7 +2265,7 @@ function spellRecord(
     | "acid_splash"
     | DirectHitPointRestorationSpellId,
 ): SpellRecord {
-  const spell = spellRecords.get(spellId);
+  const spell = spellRecords.get(parseSharedUnitId(spellId));
   if (spell === undefined) {
     throw new Error(`Expected ${spellId} spell Unit.`);
   }

@@ -3,6 +3,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L19E-05-L5-SUMMONED-OBJECT-LIFECYCLE creation
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L19E-05-L5-SUMMONED-OBJECT-LIFECYCLE creation
 // UNIT-IDENTITY-REPLAY: L19E-05-L5-SUMMONED-OBJECT-LIFECYCLE creation doCastCreation
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, it, test } from "vitest";
 
 import {
@@ -229,11 +230,15 @@ function creationWizardSheet(input: {
         spellcasting: {
           sources: [
             {
-              sourceUnitId: "class_wizard",
+              sourceUnitId: authoredUnitId("class_wizard"),
               spellcastingAbility: "int",
-              cantrips: ["fire_bolt", "light", "mage_hand"],
-              spellbook: ["creation"],
-              preparedSpells: input.preparedSpells,
+              cantrips: [
+                authoredUnitId("fire_bolt"),
+                authoredUnitId("light"),
+                authoredUnitId("mage_hand"),
+              ],
+              spellbook: [authoredUnitId("creation")],
+              preparedSpells: input.preparedSpells.map(authoredUnitId),
               spellcastingFocuses: ["arcane_focus"],
             },
           ],

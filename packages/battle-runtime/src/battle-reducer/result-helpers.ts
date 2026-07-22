@@ -3,11 +3,11 @@
 // clusters (V, W, T, J, etc.), so it lives in this tiny shared module.
 
 import {
-  snapshotBattle,
   type BattleInvalidReasonCode,
   type BattleResolutionResult,
   type BattleState,
 } from "../battle-state-execution.ts";
+import { snapshotBattle } from "./battle-snapshot.ts";
 
 export function invalidResult(
   state: BattleState,

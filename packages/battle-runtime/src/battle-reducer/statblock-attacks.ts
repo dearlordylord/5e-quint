@@ -8,12 +8,7 @@
 import { Match } from "effect";
 import { attackBonus, movementFeet, type AttackBonus } from "@dnd/shared/types";
 import { isIncapacitated } from "@dnd/shared-algebras/conditions-algebra";
-import type {
-  Ability,
-  DamageType,
-  DiceExpr,
-  WeaponRecord,
-} from "@dnd/surface/surface/types";
+import type { DamageType, DiceExpr } from "@dnd/surface/surface/types";
 import type { AttackRollResult } from "@dnd/shared-algebras/runtime-hole-algebra";
 import {
   ATTACK_DAMAGE_DIE_FLOOR_SUPPORT_PROFILE,
@@ -21,8 +16,8 @@ import {
   HUNTERS_PREY_SUPPORT_PROFILE,
   PASSIVE_RANGED_ATTACK_ROLL_BONUS_SUPPORT_PROFILE,
   WEAPON_DAMAGE_DICE_ROLL_CHOICE_SUPPORT_PROFILE,
-} from "../unit-feature-support.ts";
-import type { UnitFeatureProcedureExecution } from "../character-execution-admission.ts";
+} from "../unit-feature-execution-constants.ts";
+import type { UnitFeatureProcedureExecution } from "../character-execution-queries.ts";
 import type {
   BoundSupportedAttackActionOption,
   BattleWeaponDamage,
@@ -34,9 +29,8 @@ import type {
   StaticStatBlockAttackDamage,
   SupportedAttackActionOption,
   SupportedCreatureAttackRollMechanics,
-  SupportedCreatureNamedAttackRoll,
 } from "../battle-action-options.ts";
-import type { CreatureNamedAttackRoll } from "@dnd/surface/surface/types";
+import type { CreatureAttackRollMechanics } from "@dnd/surface/surface/types";
 import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
 import { sameBattleSubject, type BattleSubject } from "../battle-subjects.ts";
 import {
@@ -53,14 +47,14 @@ import {
   type PendingAttackRollMissToHitReplacementContext,
   type SpellMarkedDamageRider,
   type SpellAttackDamageComponent,
-  type AttackDamageDieFloorChoiceFill,
   type WeaponDamageDiceRollChoiceFill,
 } from "../battle-state-execution.ts";
+import { type AttackDamageDieFloorChoiceFill } from "./attack-damage-die-floor-choice.ts";
 import { currentActorId } from "./creature-state-leaves.ts";
 import {
   isCharacterBattleCreatureState,
   ongoingFeatureProfileForSourceKey,
-} from "./creature-state.ts";
+} from "./creature-state-execution.ts";
 import {
   activeRageDamageBonusForFrenzy,
   ongoingFeatureProfileIsRecklessAttackForFrenzy,
@@ -68,17 +62,11 @@ import {
 import { supportedStatBlockAttackDamage } from "../statblock-attack-damage-support.ts";
 
 export function supportedStatBlockAttackTargetConstraint(
-  attack: SupportedCreatureNamedAttackRoll,
-): AttackTargetConstraint;
-export function supportedStatBlockAttackTargetConstraint(
   attack: SupportedCreatureAttackRollMechanics,
 ): AttackTargetConstraint;
 export function supportedStatBlockAttackTargetConstraint(
-  attack: CreatureNamedAttackRoll,
-): AttackTargetConstraint | null;
-export function supportedStatBlockAttackTargetConstraint(
   attack: Pick<
-    CreatureNamedAttackRoll,
+    CreatureAttackRollMechanics,
     "attackType" | "reachFeet" | "rangeFeet"
   >,
 ): AttackTargetConstraint | null {
@@ -148,9 +136,9 @@ export function attackCanCarryKnockOutChoice(
 }
 
 export function weaponTargetConstraint(
-  weapon: WeaponRecord,
+  weapon: CharacterWeaponAttackActionOption["weapon"],
 ): AttackTargetConstraint {
-  const properties = weapon.properties ?? [];
+  const properties = weapon.properties;
   if (weapon.usage === "ranged") {
     const ammunition = properties.find(
       (property) => property.kind === "ammunition",
@@ -175,7 +163,9 @@ export function weaponTargetConstraint(
   };
 }
 
-export function selectedWeaponDamage(weapon: WeaponRecord): BattleWeaponDamage {
+export function selectedWeaponDamage(
+  weapon: CharacterWeaponAttackActionOption["weapon"],
+): BattleWeaponDamage {
   if (weapon.damage.kind !== "dice") {
     throw new Error("Battle Attack requires dice weapon damage.");
   }
@@ -187,7 +177,10 @@ export function attackActionOptionName(
   attack: SupportedAttackActionOption,
 ): string {
   return Match.value(attack).pipe(
-    Match.when({ kind: "weapon" }, (weaponAttack) => weaponAttack.weapon.name),
+    Match.when(
+      { kind: "weapon" },
+      (weaponAttack) => weaponAttack.weapon.weaponUnitId,
+    ),
     Match.when({ kind: "unarmedStrike" }, () => "Unarmed Strike"),
     Match.when({ kind: "statBlockAttack" }, () => "Stat Block Attack"),
     Match.exhaustive,
@@ -228,25 +221,8 @@ function characterWeaponAttackAbilityOptions(
     ...attack.alternateAbilityChoices.map((choice) => ({
       ...baseAttackWithoutAbilityModifierChoice,
       ...choice,
-      weapon: {
-        ...baseAttack.weapon,
-        name: `${baseAttack.weapon.name} (${abilityName(choice.ability)})`,
-      },
     })),
   ];
-}
-
-const ABILITY_NAMES = {
-  str: "Strength",
-  dex: "Dexterity",
-  con: "Constitution",
-  int: "Intelligence",
-  wis: "Wisdom",
-  cha: "Charisma",
-} as const satisfies Record<Ability, string>;
-
-function abilityName(ability: Ability): string {
-  return ABILITY_NAMES[ability];
 }
 
 function characterWeaponAttackDamageTypeOptions(
@@ -273,7 +249,6 @@ function weaponAttackWithDamageType(
     ...attackWithoutChoices,
     weapon: {
       ...attack.weapon,
-      name: `${attack.weapon.name} (${damageType})`,
       damage: { ...attack.weapon.damage, damageType },
     },
   };
@@ -408,9 +383,7 @@ export function weaponAttackSupportsFinesseOrRanged(
   return (
     attack.kind === "weapon" &&
     (attack.weapon.usage === "ranged" ||
-      (attack.weapon.properties ?? []).some(
-        (property) => property.kind === "finesse",
-      ))
+      attack.weapon.properties.some((property) => property.kind === "finesse"))
   );
 }
 
@@ -995,7 +968,7 @@ export function eligibleAttackDamageDieFloorProcedureRefsForAttacker(
 function weaponHasTwoHandedOrVersatileProperty(
   weapon: CharacterWeaponAttackActionOption["weapon"],
 ): boolean {
-  return (weapon.properties ?? []).some(
+  return weapon.properties.some(
     (property) =>
       property.kind === "two_handed" || property.kind === "versatile",
   );

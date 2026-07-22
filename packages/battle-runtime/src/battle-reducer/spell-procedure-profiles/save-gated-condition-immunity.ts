@@ -1,3 +1,4 @@
+import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-save-gated-condition-immunity
 import { CreatureTypeSchema } from "@dnd/surface/surface/schema";
 import { BattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
@@ -76,7 +77,7 @@ type SaveGatedConditionImmunityResolveInput =
   SpellProcedureProfileResolveInput<SaveGatedConditionImmunitySpellInvocation>;
 
 function admitSaveGatedConditionImmunity(
-  spell: SaveGatedConditionImmunitySpellInvocation["spell"],
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly SaveGatedConditionImmunitySpellInvocation[] {
   return supportedPreparedSaveGateConditionImmunityProfile(

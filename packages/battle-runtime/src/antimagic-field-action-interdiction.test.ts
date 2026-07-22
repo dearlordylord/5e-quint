@@ -1,3 +1,4 @@
+import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
   battleActiveEffectExecutionRefForTest,
@@ -665,7 +666,7 @@ function preserveLifeActOrUndefined(session: BattleRuntimeSession) {
 
 function preserveLifeUnitRefWithSupport() {
   const unitRef = battleUnitRefWithSupportProfiles({
-    unitRef: { unitId: clericPreserveLifeUnitId },
+    unitRef: { unitId: parseSharedUnitId(clericPreserveLifeUnitId) },
     unit: preserveLifeUnit,
     classLevels: [{ className: "cleric", level: classLevel(3) }],
   });

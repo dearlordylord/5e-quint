@@ -1,3 +1,4 @@
+import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-chained-attack-damage
 import { DiceExprSchema } from "@dnd/surface/surface/schema";
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING
@@ -14,8 +15,6 @@ import { DiceExprSchema } from "@dnd/surface/surface/schema";
 //   - SRD 5.2.1 Rules Glossary "Spell Attack".
 //   - UBIQUITOUS_LANGUAGE.md: Spell Attack, Attack Roll, Damage Roll,
 //     Damage Type, and Spell Invocation.
-
-import type { SpellRecord } from "@dnd/surface/surface/types";
 
 import {
   type BattleActDiscoveryCandidate,
@@ -64,7 +63,7 @@ function isChainedSpellAttackDamageInvocation(
 }
 
 function admitChainedSpellAttackDamage(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly ChainedSpellAttackDamageInvocation[] {
   const spellcasting = ctx.actor.origin.spellcasting;

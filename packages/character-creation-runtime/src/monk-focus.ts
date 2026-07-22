@@ -1,4 +1,5 @@
 // KERNEL-COVERAGE: runtime-owner CREATION.CLASS_FEATURE_RESOURCE.PROJECTION
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { Either, Option } from "effect";
 import { resourceCount, type ResourceCount } from "@dnd/shared/types";
 import type {
@@ -16,8 +17,7 @@ import {
 import type { CharacterBuild } from "./types.ts";
 import { characterBuildClassFeatureOwnerLevel } from "./class-feature-facts.ts";
 
-export const MONK_MONKS_FOCUS_UNIT_ID =
-  "monk_monks_focus" as const satisfies UnitRecord["id"];
+export const MONK_MONKS_FOCUS_UNIT_ID = authoredUnitId("monk_monks_focus");
 const MONK_MONKS_FOCUS_SAVE_DC_ABILITY = "wis" as const satisfies Ability;
 
 type MonkFocusFeature = ClassFeatureRecord & {
@@ -70,7 +70,7 @@ export function characterBuildMonksFocusFacts(input: {
 > {
   if (
     !characterBuildFeatureUnitIds(input.build, input.unitLibrary).includes(
-      MONK_MONKS_FOCUS_UNIT_ID,
+      authoredUnitId(MONK_MONKS_FOCUS_UNIT_ID),
     )
   ) {
     return Either.right(undefined);

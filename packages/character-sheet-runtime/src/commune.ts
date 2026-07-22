@@ -1,5 +1,6 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.commune-session-invocation
 // UNIT-PROFILE-COVERAGE: runtime-owner table-caller.planar-entity-answers
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { timeSpanDuration } from "@dnd/shared/elapsed-time";
 import {
   PositiveInteger,
@@ -68,7 +69,7 @@ export function castCommune(input: {
 function communeSpell(
   unitLibrary: UnitCatalog,
 ): Either.Either<SpellRecord, CharacterSheetIssue> {
-  const unit = getRequiredUnit(unitLibrary, COMMUNE_SPELL_ID);
+  const unit = getRequiredUnit(unitLibrary, authoredUnitId(COMMUNE_SPELL_ID));
   if (Either.isLeft(unit)) return Either.left(unit.left);
   if (unit.right.kind !== "spell") {
     return characterSheetIssue("Commune requires a Spell record.");

@@ -1,5 +1,5 @@
 import type { SpellRecord } from "@dnd/surface/surface/types";
-import type { SupportedSpellInvocation } from "../../battle-state-execution.ts";
+import type { AuthoredSupportedSpellInvocation } from "../../character-execution-admission.ts";
 import {
   type AnySpellProcedureAdmission,
   type SpellAdmissionContext,
@@ -15,8 +15,8 @@ export function registeredSpellProcedureAdmissions(): readonly AnySpellProcedure
 export function admitRegisteredSpellProcedures(
   spell: SpellRecord,
   ctx: SpellAdmissionContext,
-): readonly SupportedSpellInvocation[] {
+): readonly AuthoredSupportedSpellInvocation[] {
   return registeredSpellProcedureAdmissions().flatMap(({ admit }) =>
-    admit(spell, ctx),
+    admit(spell, ctx).map((invocation) => ({ ...invocation, spell })),
   );
 }

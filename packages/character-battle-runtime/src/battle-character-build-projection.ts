@@ -18,6 +18,7 @@ import {
   martialArtsAttackProjectionProfileForUnit,
   passiveArmorClassBonusProfileForUnit,
   unitIsSupportedClassFeatureSpellFreeCastResource,
+  admitCharacterWeaponAttackExecutionWeapon,
 } from "@dnd/battle-runtime";
 import {
   characterBuildArmorTraining,
@@ -60,7 +61,6 @@ import type {
   DamageType,
   SpellRecord,
   UnitRecord,
-  WeaponRecord,
 } from "@dnd/surface/surface/types";
 import { spellHasTopLevelRitualTag } from "@dnd/surface/surface/types";
 import {
@@ -326,7 +326,7 @@ function characterWeaponAttackActionOption(
 
   const baseAttack = {
     kind: "weapon",
-    weapon: unit.right,
+    weapon: admitCharacterWeaponAttackExecutionWeapon(unit.right),
     ability: "str",
     abilityModifier: battleAbilityModifier(
       scoreModifier(build.abilityScores.str),
@@ -650,9 +650,9 @@ function martialArtsChosenAbility(
 }
 
 function weaponWithMartialArtsDamage(
-  weapon: WeaponRecord,
+  weapon: CharacterWeaponAttackActionOption["weapon"],
   projection: MartialArtsAttackProjection,
-): WeaponRecord {
+): CharacterWeaponAttackActionOption["weapon"] {
   const damageReplacement = projection.martialArts.damageReplacement;
   if (
     weapon.damage.kind !== "dice" ||
@@ -1050,7 +1050,7 @@ function invocationSpellAccess(input: {
   ) {
     const access = invocationSpellAccessForSpell({
       unitLibrary: input.unitLibrary,
-      spellId: ARMOR_OF_SHADOWS_SPELL_ID,
+      spellId: authoredUnitId(ARMOR_OF_SHADOWS_SPELL_ID),
       tag: "armorOfShadowsMageArmor",
     });
     if (Either.isLeft(access)) {
@@ -1063,7 +1063,7 @@ function invocationSpellAccess(input: {
   ) {
     const access = invocationSpellAccessForSpell({
       unitLibrary: input.unitLibrary,
-      spellId: PACT_OF_THE_CHAIN_SPELL_ID,
+      spellId: authoredUnitId(PACT_OF_THE_CHAIN_SPELL_ID),
       tag: "pactOfTheChainFindFamiliar",
     });
     if (Either.isLeft(access)) {
@@ -1119,7 +1119,10 @@ function featurePreparedSpellAccess(input: {
       if (grant.kind !== "grant_spell_access" || grant.mode !== "prepared") {
         continue;
       }
-      const spell = getRequiredUnit(input.unitLibrary, grant.spellId);
+      const spell = getRequiredUnit(
+        input.unitLibrary,
+        authoredUnitId(grant.spellId),
+      );
       if (Either.isLeft(spell)) {
         return battleCreatureInitIssue(spell.left.message);
       }
@@ -1215,3 +1218,4 @@ export function getRequiredUnit(
     ? Either.right(unit.value)
     : battleCreatureInitIssue(`Unknown Unit id: ${unitId}`);
 }
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";

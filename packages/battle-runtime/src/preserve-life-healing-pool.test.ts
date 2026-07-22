@@ -1,3 +1,4 @@
+import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.magic-action-healing-pool
 import { describe, expect, test } from "vitest";
 
@@ -437,7 +438,7 @@ function requiredMagicActionHealingPoolSupportProfile(
 
 function requirePreserveLifeUnitRef() {
   const unitRef = battleUnitRefWithSupportProfiles({
-    unitRef: { unitId: clericPreserveLifeUnitId },
+    unitRef: { unitId: parseSharedUnitId(clericPreserveLifeUnitId) },
     unit: preserveLifeUnit,
     classLevels: [{ className: "cleric", level: classLevel(3) }],
   });

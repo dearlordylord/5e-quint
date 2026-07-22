@@ -20,7 +20,7 @@ import {
   characterProcedureBinding,
   characterSpellProcedure,
   unitSupportProfileKind,
-} from "../character-execution-admission.ts";
+} from "../character-execution-queries.ts";
 import {
   spellInvocationIsSpellcasting,
   spellInvocationSpendsMagicAction,

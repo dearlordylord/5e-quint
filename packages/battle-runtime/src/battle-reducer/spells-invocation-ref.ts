@@ -24,16 +24,12 @@ export function supportedSpellInvocationRef(
         value.procedure,
       ),
     ),
-    Match.when(
-      {
-        resource: { tag: "classFeatureFreeCast" },
-      },
-      (value) =>
-        classFeatureFreeCastSpellInvocationRef(
-          value.spell.id,
-          value.resource.resourcePoolRef,
-          value.procedure,
-        ),
+    Match.when({ resource: { tag: "classFeatureFreeCast" } }, (value) =>
+      classFeatureFreeCastSpellInvocationRef(
+        value.spell.id,
+        value.resource.resourcePoolRef,
+        value.procedure,
+      ),
     ),
     Match.when(
       { access: { tag: "classCantrip" }, resource: { tag: "none" } },

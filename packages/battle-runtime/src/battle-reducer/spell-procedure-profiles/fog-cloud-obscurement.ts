@@ -1,3 +1,4 @@
+import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-fog-cloud-obscurement
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE
@@ -22,7 +23,7 @@ import {
   type ElapsedTimeTicks,
 } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
-import type { LinearPerLevel, SpellRecord } from "@dnd/surface/surface/types";
+import type { LinearPerLevel } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
 import {
@@ -69,7 +70,7 @@ const FOG_CLOUD_BASE_RADIUS_FEET = 20;
 const FOG_CLOUD_RADIUS_FEET_PER_SLOT_LEVEL = 20;
 
 function admitFogCloudObscurement(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly FogCloudObscurementSpellInvocation[] {
   const fogCloud = fogCloudObscurementSpell(spell);
@@ -105,7 +106,7 @@ function admitFogCloudObscurement(
 }
 
 function fogCloudObscurementSpell(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
 ): FogCloudObscurementProfileShape | null {
   if (spell.mechanics.family !== "ongoing_effect") {
     return null;

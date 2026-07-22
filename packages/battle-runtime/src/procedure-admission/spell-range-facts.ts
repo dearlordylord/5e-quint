@@ -1,15 +1,3 @@
-import { movementFeet, type MovementFeet } from "@dnd/shared/types";
-import {
-  isFixedDistancePointRange,
-  type Range,
-} from "@dnd/surface/surface/types";
-
-export function singleTargetSpellRangeFeet(range: Range): MovementFeet | null {
-  if (isFixedDistancePointRange(range)) {
-    return movementFeet(range.feet);
-  }
-  if (range.kind === "touch") {
-    return movementFeet(5);
-  }
-  return null;
-}
+// Compatibility owner for admission callers. Range mechanics live in the
+// dependency-closed execution facts leaf shared with reducer-side admission.
+export { singleTargetSpellRangeFeet } from "../battle-reducer/spells-execution-facts.ts";

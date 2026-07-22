@@ -1,4 +1,4 @@
-import type { CharacterBattleLoadoutRef } from "../battle-init.ts";
+import type { CharacterBattleLoadoutRef } from "../character-creature-execution-facts.ts";
 import { battleObjectId, type BattleObjectId } from "../identity.ts";
 import {
   WILD_SHAPE_EFFECTIVE_LOADOUT_WORN_KINDS,

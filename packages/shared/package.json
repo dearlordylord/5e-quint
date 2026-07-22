@@ -6,7 +6,8 @@
   "exports": {
     "./elapsed-time": "./src/elapsed-time.ts",
     "./game-facts": "./src/game-facts.ts",
-    "./types": "./src/types.ts"
+    "./types": "./src/types.ts",
+    "./wild-shape": "./src/wild-shape.ts"
   },
   "imports": {
     "#/*": "./src/*"

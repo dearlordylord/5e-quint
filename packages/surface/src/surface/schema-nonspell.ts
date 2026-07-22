@@ -1,6 +1,6 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.fighter-heroic-warrior character-sheet.cleric-divine-intervention-session-invocation
 import { Schema } from "effect";
-import type { ClassName } from "@dnd/shared/game-facts";
+import { UnitId, type ClassName } from "@dnd/shared/game-facts";
 import { AbilityScore } from "@dnd/shared/types";
 
 import {
@@ -85,7 +85,7 @@ const surfaceReference = <A, I, R>(
   schema: Schema.Schema<A & string, I, R>,
   relation: SurfaceUnitReferenceRelation,
 ) =>
-  surfaceSchemaRole(schema, {
+  surfaceSchemaRole(Schema.typeSchema(schema.pipe(Schema.compose(UnitId))), {
     category: "reference",
     relation,
     targetKind: "unit",
@@ -2440,7 +2440,7 @@ export const TriggeredReplacementMechanicsSchema = Schema.Union(
 );
 
 const UnitMetadataSchema = Schema.Struct({
-  id: surfaceIdentity(NonEmptyStringSchema, "id"),
+  id: surfaceIdentity(UnitId, "id"),
   name: surfaceIdentity(NonEmptyStringSchema, "name"),
   provenance: ProvenanceSchema,
   description: surfaceProse(Schema.String),

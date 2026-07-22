@@ -1,3 +1,4 @@
+import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-d20-lifecycle
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 //
@@ -56,7 +57,7 @@ type AbilityD20TestRollModeSaveGateResolveInput =
   SpellProcedureProfileResolveInput<AbilityD20TestRollModeSaveGateSpellInvocation>;
 
 function admitAbilityD20TestRollModeSaveGate(
-  spell: AbilityD20TestRollModeSaveGateSpellInvocation["spell"],
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly AbilityD20TestRollModeSaveGateSpellInvocation[] {
   return supportedPreparedAbilityD20TestRollModeSaveGateProfile(

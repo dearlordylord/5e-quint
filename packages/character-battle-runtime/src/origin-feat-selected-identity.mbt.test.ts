@@ -1,5 +1,6 @@
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay B7-FEAT-IDENTITY-BATCH alert
 // UNIT-IDENTITY-REPLAY: B7-FEAT-IDENTITY-BATCH alert doFinalizeCriminalAlertOriginFeat doProjectAlertInitiativeHandoff
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import * as path from "node:path";
 
 import {
@@ -322,7 +323,7 @@ function criminalAlertOriginFeatProjection(): OriginFeatSelectedIdentityProjecti
   const unitRefIds = characterBuildUnitRefs(build, unitLibrary).map(
     (ref) => ref.unitId,
   );
-  if (!unitRefIds.includes(ALERT_UNIT_ID)) {
+  if (!unitRefIds.includes(authoredUnitId(ALERT_UNIT_ID))) {
     throw new Error(
       "Expected finalized Criminal background build to retain Alert.",
     );
@@ -461,7 +462,7 @@ function finalizedFighterBuildForBackground(input: {
   const unitRefIds = characterBuildUnitRefs(finalized.build, unitLibrary).map(
     (ref) => ref.unitId,
   );
-  if (!unitRefIds.includes(input.originFeatUnitId)) {
+  if (!unitRefIds.includes(authoredUnitId(input.originFeatUnitId))) {
     throw new Error(
       `Expected ${input.backgroundUnitId} build refs to include ${input.originFeatUnitId}.`,
     );
@@ -617,7 +618,7 @@ function unitChoiceHoleId(
   unitId: string,
   choiceKey: UnitChoiceKey,
 ): CreationHoleIdText {
-  const parsedUnitId = unitChoiceSourceUnitId(unitId);
+  const parsedUnitId = unitChoiceSourceUnitId(authoredUnitId(unitId));
   if (Either.isLeft(parsedUnitId)) {
     throw new Error(`Invalid unit choice source Unit id ${unitId}.`);
   }
@@ -632,7 +633,9 @@ function loadoutHoleId(
   equipmentUnitId: string,
   slot: LoadoutSlot,
 ): CreationHoleIdText {
-  const parsedEquipmentUnitId = loadoutEquipmentUnitId(equipmentUnitId);
+  const parsedEquipmentUnitId = loadoutEquipmentUnitId(
+    authoredUnitId(equipmentUnitId),
+  );
   if (Either.isLeft(parsedEquipmentUnitId)) {
     throw new Error(`Invalid loadout equipment Unit id ${equipmentUnitId}.`);
   }

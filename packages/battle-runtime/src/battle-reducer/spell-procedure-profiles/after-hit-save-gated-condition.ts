@@ -1,3 +1,4 @@
+import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-after-hit-restraint-turn-start-damage
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS
 //
@@ -27,14 +28,12 @@
 import type {
   DamageType,
   DiceAmount as SurfaceDiceAmount,
-  SpellRecord,
 } from "@dnd/surface/surface/types";
 import { DamageTypeSchema, DiceExprSchema } from "@dnd/surface/surface/schema";
 import { type Size } from "@dnd/shared/types";
 
 import type { BattleInterruptTrigger } from "../../battle-interrupt-triggers.ts";
 import {
-  snapshotBattle,
   type AfterHitSaveGatedConditionSpellInvocation,
   type AvailableBattleAct,
   type BattleCreatureState,
@@ -46,6 +45,7 @@ import {
   type BattleSpellSavingThrowOutcomeValue,
   type BattleState,
 } from "../../battle-state-execution.ts";
+import { snapshotBattle } from "../dispatcher.ts";
 import type { BattleSubject } from "../../battle-subjects.ts";
 import { type CombatantId } from "../../identity.ts";
 import { combatantEffectiveSize } from "../druid-wild-shape.ts";
@@ -65,7 +65,7 @@ import {
 import { spellFillSet, type SpellFillSet } from "../spells-resolve-fill-set.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
 import { spellActTurnResourceAvailable } from "../spell-turn-resources.ts";
-import { supportedDamageAmountExpr } from "../spells-profile-shared.ts";
+import { supportedDamageAmountExpr } from "../spells-execution-facts.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
@@ -106,7 +106,7 @@ type AfterHitSaveGatedConditionResolveInput =
   SpellProcedureProfileResolveInput<AfterHitSaveGatedConditionInvocation>;
 
 function admitAfterHitSaveGatedCondition(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly AfterHitSaveGatedConditionInvocation[] {
   const projection = afterHitSaveGatedConditionSpellProjection(spell);
@@ -159,7 +159,9 @@ function admitAfterHitSaveGatedCondition(
   );
 }
 
-function afterHitSaveGatedConditionSpellProjection(spell: SpellRecord): {
+function afterHitSaveGatedConditionSpellProjection(
+  spell: BattleSpellAdmissionSource,
+): {
   readonly ability: "str";
   readonly dc: { readonly kind: "caster_spell_save_dc" };
   readonly condition: "restrained";
