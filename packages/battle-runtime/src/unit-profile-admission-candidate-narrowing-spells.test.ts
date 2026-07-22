@@ -640,9 +640,11 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
         ability: "con",
         onFail: { kind: "negate_triggering_spell" },
         onSuccess: { kind: "none" },
-        autoSuccessIfCasterSlotGte: "triggering_spell_level",
       }),
     ]);
+    expect(mechanics.phases[0]).not.toHaveProperty(
+      "autoSuccessIfCasterSlotGte",
+    );
     expect(
       maybeSpellAct({
         session: spellBattle({

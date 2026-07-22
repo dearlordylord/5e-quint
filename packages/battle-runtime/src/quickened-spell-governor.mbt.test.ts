@@ -949,12 +949,10 @@ function resolveQuickenedCreatureSizeChange(): QuickenedSpellGovernorRuntimeStat
 function resolveQuickenedConcentrationCounterspell(
   outcome: CounterspellOutcome,
 ): QuickenedSpellGovernorRuntimeState {
-  const casterSlotLevel = outcome === "decline" ? 1 : 4;
   const state = initialRuntimeState({
-    casterLevel: 8,
     counterspeller: true,
     preparedSpellIds: ["bless"],
-    casterSpellSlots: [{ spellLevel: casterSlotLevel, count: 1 }],
+    casterSpellSlots: [{ spellLevel: 1, count: 1 }],
   });
   const act = quickenedSpellAct(state.battle, "bless");
   const targetHole = findSpellTargetListHole(act.initialHoles);

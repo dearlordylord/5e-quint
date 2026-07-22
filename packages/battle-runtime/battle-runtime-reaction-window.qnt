@@ -263,23 +263,19 @@ module battleRuntimeReactionWindow {
       state
 
   pure def pendingCounterspellEndsTriggeringSpell(counterspell: PendingCounterspellReaction): bool =
-    counterspell.counterspellSlotLevel >= counterspell.triggeringSpellLevel or
-      not(counterspell.triggeringCasterConSaveSucceeded)
+    not(counterspell.triggeringCasterConSaveSucceeded)
 
   pure def counterspellSpellCastReactionEndsCounterspell(
-    firstCounterspellSlotLevel: int,
     reaction: PendingCounterspellSpellCastReaction,
   ): bool =
     match reaction {
       | CounterspellSpellCastNotCountered => false
       | CounterspellSpellCastCounteredByReaction(counterspell) =>
-          counterspell.counterspellSlotLevel >= firstCounterspellSlotLevel or
-            not(counterspell.counterspellCasterConSaveSucceeded)
+          not(counterspell.counterspellCasterConSaveSucceeded)
     }
 
   pure def pendingCounterspellTakesEffect(counterspell: PendingCounterspellReaction): bool =
     not(counterspellSpellCastReactionEndsCounterspell(
-      counterspell.counterspellSlotLevel,
       counterspell.counterspellSpellCastReaction,
     ))
 
@@ -304,7 +300,6 @@ module battleRuntimeReactionWindow {
   ): bool =
     not(counterspellNestedReactionCanCast(state, reactor, counterspell) and
       counterspellSpellCastReactionEndsCounterspell(
-        counterspell.counterspellSlotLevel,
         counterspell.counterspellSpellCastReaction,
       ))
 
@@ -343,7 +338,6 @@ module battleRuntimeReactionWindow {
           if (
             nestedCounterspellCanCast and
               counterspellSpellCastReactionEndsCounterspell(
-                counterspell.counterspellSlotLevel,
                 counterspell.counterspellSpellCastReaction,
               )
           )

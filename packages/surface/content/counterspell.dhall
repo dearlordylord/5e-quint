@@ -50,7 +50,7 @@ let counterspell =
                 , dc = { kind = "caster_spell_save_dc" }
                 , onFail = { kind = "negate_triggering_spell" }
                 , onSuccess = { kind = "none" }
-                , autoSuccessIfCasterSlotGte = "triggering_spell_level"
+                , autoSuccessIfCasterSlotGte = None Text
                 }
               ]
           }

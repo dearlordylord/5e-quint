@@ -999,7 +999,7 @@ module battleRuntimeCoreCombatTests {
     assert(resolveReactionOffer(awaiting, Fighter) == awaiting)
   }
 
-  run test_counterspell_reaction_spell_ends_spell_cast_window_and_wastes_casting_action = {
+  run test_counterspell_reaction_spell_failed_save_ends_spell_cast_window_and_wastes_casting_action = {
     val awaiting = openReactionWindow(initialState, {
       trigger: SpellCast,
       procedure: CounterspellReactionProcedure({
@@ -1008,7 +1008,7 @@ module battleRuntimeCoreCombatTests {
         triggeringSpellLevel: 1,
         triggeringSpellUsesSlot: true,
         counterspellSlotLevel: 3,
-        triggeringCasterConSaveSucceeded: true,
+        triggeringCasterConSaveSucceeded: false,
         counterspellSpellCastReaction: CounterspellSpellCastNotCountered,
       }),
       eligibleReactors: Set(Goblin),
@@ -1026,13 +1026,13 @@ module battleRuntimeCoreCombatTests {
     }
   }
 
-  run test_counterspell_reaction_spell_failed_save_gate_resumes_triggering_spell = {
+  run test_counterspell_reaction_spell_successful_save_resumes_lower_level_triggering_spell = {
     val awaiting = openReactionWindow(initialState, {
       trigger: SpellCast,
       procedure: CounterspellReactionProcedure({
         triggeringCaster: Fighter,
         triggeringCastingResource: CounterspellMagicAction,
-        triggeringSpellLevel: 4,
+        triggeringSpellLevel: 1,
         triggeringSpellUsesSlot: true,
         counterspellSlotLevel: 3,
         triggeringCasterConSaveSucceeded: true,
@@ -1066,7 +1066,7 @@ module battleRuntimeCoreCombatTests {
         counterspellSpellCastReaction: CounterspellSpellCastCounteredByReaction({
           reactor: Fighter,
           counterspellSlotLevel: 3,
-          counterspellCasterConSaveSucceeded: true,
+          counterspellCasterConSaveSucceeded: false,
         }),
       }),
       eligibleReactors: Set(Goblin),
@@ -1114,7 +1114,7 @@ module battleRuntimeCoreCombatTests {
       assert(resolved.interruptStack == []),
       assert(not(resolved.fighter.reactionAvailable)),
       assert(not(resolved.goblin.reactionAvailable)),
-      assert(not(battleActorHasSpellSlotUse(resolved, Fighter))),
+      assert(battleActorHasCommittedSpellSlotUse(resolved, Fighter)),
       assert(battleActorHasCommittedSpellSlotUse(resolved, Goblin)),
     }
   }

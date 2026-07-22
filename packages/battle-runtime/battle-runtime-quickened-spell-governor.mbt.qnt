@@ -42,7 +42,6 @@ module battleRuntimeQuickenedSpellGovernorMbt {
     qLevelOnePlusCastThisTurn: bool,
     qQuickenedLevelOnePlusCastThisTurn: bool,
     qSpellSlotActsAvailable: bool,
-    qCasterConcentrating: bool,
     qInvalidKind: str,
     qScenarioOutcome: QuickenedSpellGovernorScenarioOutcome,
     protocol: WitnessProtocol[WitnessHole],
@@ -64,7 +63,11 @@ module battleRuntimeQuickenedSpellGovernorMbt {
   pure def qLevelOnePlusCastThisTurn: bool = qState.qLevelOnePlusCastThisTurn
   pure def qQuickenedLevelOnePlusCastThisTurn: bool = qState.qQuickenedLevelOnePlusCastThisTurn
   pure def qSpellSlotActsAvailable: bool = qState.qSpellSlotActsAvailable
-  pure def qCasterConcentrating: bool = qState.qCasterConcentrating
+  pure def qCasterConcentrating: bool =
+    qState.qCalmEmotionsImmunity
+      or qState.qInvisibilityActive
+      or qState.qBlessActive
+      or qState.qCreatureSizeIncreased
   pure def qInvalidKind: str = qState.qInvalidKind
   pure def scenarioOutcome: QuickenedSpellGovernorScenarioOutcome = qState.qScenarioOutcome
 
@@ -114,11 +117,6 @@ module battleRuntimeQuickenedSpellGovernorMbt {
       qLevelOnePlusCastThisTurn: levelOnePlusCastThisTurn,
       qQuickenedLevelOnePlusCastThisTurn: quickenedLevelOnePlusCastThisTurn,
       qSpellSlotActsAvailable: spellSlotActsAvailable,
-      qCasterConcentrating:
-        calmEmotionsImmunity
-          or invisibilityActive
-          or blessActive
-          or lastResult == ResolvedQuickenedCreatureSizeChange,
       qInvalidKind: invalidKind,
       qScenarioOutcome: lastResult,
       protocol: witnessProtocolForProjection(Set(), lastResult),

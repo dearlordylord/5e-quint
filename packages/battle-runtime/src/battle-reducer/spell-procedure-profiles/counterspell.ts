@@ -4,17 +4,16 @@
 import { DcSourceSchema } from "@dnd/surface/surface/schema";
 //
 // The Counterspell Spell Procedure Profile: a prepared Reaction spell that
-// interrupts a visible spell cast within range, optionally asks for the
+// interrupts a visible spell cast within range, asks for the
 // triggering caster's Constitution Saving Throw, and ends the triggering spell
-// on a failed save or sufficient Counterspell slot level.
+// on a failed save.
 //
 // RAW anchors:
 //   - SRD 5.2.1 Spells "Counterspell": Reaction when seeing a creature within
 //     60 feet casting a spell with V/S/M components; range 60 feet; S
 //     component; instantaneous; target makes a Constitution save; on failure
 //     the spell dissipates with no effect and its action, Bonus Action, or
-//     Reaction is wasted while a used slot is not expended; using a sufficient
-//     slot automatically ends the spell.
+//     Reaction is wasted while a used slot is not expended.
 //   - SRD 5.2.1 Playing the Game "Reactions": a Reaction is an instant
 //     response to a trigger and an interrupting Reaction returns control after
 //     the Reaction.
@@ -151,7 +150,7 @@ function counterspellSpellProjection(
     phase.attachment.value.selection.mode !== "one" ||
     phase.onFail.kind !== "negate_triggering_spell" ||
     phase.onSuccess.kind !== "none" ||
-    phase.autoSuccessIfCasterSlotGte !== "triggering_spell_level"
+    phase.autoSuccessIfCasterSlotGte !== undefined
   ) {
     return null;
   }
@@ -197,51 +196,35 @@ function resolveCounterspell(
     );
   }
 
-  const countersAutomatically =
-    Number(input.invocation.resource.slotLevel) >= input.input.frame.castLevel;
-  if (
-    countersAutomatically &&
-    input.fillSet.savingThrowOutcomes !== undefined
-  ) {
+  const savingThrowHole = spellSavingThrowOutcomeHole(
+    input.input.state,
+    input.input.subject.reactorId,
+    input.invocation,
+  );
+  if (input.fillSet.savingThrowOutcomes === undefined) {
+    return needsHolesResult(input.input.state, input.input.subject, [
+      savingThrowHole,
+    ]);
+  }
+  const validation = validateSavingThrowOutcomes(
+    input.fillSet.savingThrowOutcomes,
+    input.invocation,
+    input.input.state,
+    input.input.subject.reactorId,
+    input.input.frame.casterId,
+  );
+  if (validation !== null) {
+    return invalidResult(input.input.state, "invalidFill", validation);
+  }
+  const outcome = input.fillSet.savingThrowOutcomes.outcomes[0];
+  if (outcome === undefined) {
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Counterspell cast with a sufficient spell slot does not use a Saving Throw outcome.",
+      "Counterspell requires the triggering caster's Saving Throw outcome.",
     );
   }
-
-  let triggeringCasterSaveSucceeded = false;
-  if (!countersAutomatically) {
-    const savingThrowHole = spellSavingThrowOutcomeHole(
-      input.input.state,
-      input.input.subject.reactorId,
-      input.invocation,
-    );
-    if (input.fillSet.savingThrowOutcomes === undefined) {
-      return needsHolesResult(input.input.state, input.input.subject, [
-        savingThrowHole,
-      ]);
-    }
-    const validation = validateSavingThrowOutcomes(
-      input.fillSet.savingThrowOutcomes,
-      input.invocation,
-      input.input.state,
-      input.input.subject.reactorId,
-      input.input.frame.casterId,
-    );
-    if (validation !== null) {
-      return invalidResult(input.input.state, "invalidFill", validation);
-    }
-    const outcome = input.fillSet.savingThrowOutcomes.outcomes[0];
-    if (outcome === undefined) {
-      return invalidResult(
-        input.input.state,
-        "invalidFill",
-        "Counterspell requires the triggering caster's Saving Throw outcome.",
-      );
-    }
-    triggeringCasterSaveSucceeded = outcome.succeeded;
-  }
+  const triggeringCasterSaveSucceeded = outcome.succeeded;
 
   const castingState = stateAfterSpellCastDeclared({
     state: input.input.state,

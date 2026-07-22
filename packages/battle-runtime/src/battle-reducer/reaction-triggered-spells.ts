@@ -114,9 +114,7 @@ export function triggeredReactionSpellChoices(
                   spellDamageHole(executableInvocation),
                 ]
               : executableInvocation.procedure === "counterspell" &&
-                  frame.trigger === "spellCast" &&
-                  Number(executableInvocation.resource.slotLevel) <
-                    frame.castLevel
+                  frame.trigger === "spellCast"
                 ? [
                     ...spellCastReactionFactsHoles,
                     spellSavingThrowOutcomeHole(
