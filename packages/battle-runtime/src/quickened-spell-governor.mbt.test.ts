@@ -187,7 +187,6 @@ type QuickenedSpellGovernorRuntimeState = {
 type MetamagicOptionFixture = CharacterBattleMetamagicOptionFact;
 
 type MetamagicBattleInput = {
-  readonly casterLevel?: 5 | 8;
   readonly sorceryPoints?: number;
   readonly knownOptions?: readonly MetamagicOptionFixture[];
   readonly preparedSpellIds?: readonly SpellRecord["id"][];
@@ -980,10 +979,9 @@ function resolveQuickenedConcentrationCounterspell(
 
 function resolveQuickenedNonConcentrationCounterspellWithPriorBless(): QuickenedSpellGovernorRuntimeState {
   const initial = initialRuntimeState({
-    casterLevel: 8,
     counterspeller: true,
     preparedSpellIds: ["bless", "cure_wounds"],
-    casterSpellSlots: [{ spellLevel: 4, count: 2 }],
+    casterSpellSlots: [{ spellLevel: 1, count: 2 }],
   });
   const state = {
     ...initial,
@@ -1534,9 +1532,7 @@ function metamagicBattle(input?: MetamagicBattleInput): BattleRuntimeSession {
         displayName: "Sorcerer",
         initiative: 20,
         attack: null,
-        classLevels: [
-          { className: "sorcerer", level: input?.casterLevel ?? 5 },
-        ],
+        classLevels: [{ className: "sorcerer", level: 5 }],
         resources: [
           {
             unit: unitLibrary.requireUnit("sorcerer_font_of_magic"),

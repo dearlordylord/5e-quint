@@ -1,8 +1,7 @@
 -- Counterspell — SRD 5.2.1 Spell, Level 3, Abjuration.
 -- Family: triggered_reaction (unified §C1 — phases shape).
 -- Trigger: creature_casts_spell with any V/S/M component within 60 ft.
--- Phase: save_gate (Con), caster slot ≥ triggering spell level auto-
--- succeeds; onFail negates the triggering spell.
+-- Phase: save_gate (Con); onFail negates the triggering spell.
 --
 -- Counterspell's cast is itself a spell (S-component), so another
 -- mage's Counterspell can fire against it — the trigger grammar
@@ -18,7 +17,7 @@ let counterspell =
           , section = "Spells/Descriptions-A-D#Counterspell"
           }
       , description =
-          "You attempt to interrupt a creature in the process of casting a spell. The creature makes a Constitution saving throw. On a failed save, the spell dissipates with no effect, and the action, Bonus Action, or Reaction used to cast it is wasted; if a slot was used, the slot isn't expended. Using a Higher-Level Spell Slot: you automatically end a spell on the target if the spell's level is equal to or less than the level of the spell slot you use."
+          "You attempt to interrupt a creature in the process of casting a spell. The creature makes a Constitution saving throw. On a failed save, the spell dissipates with no effect, and the action, Bonus Action, or Reaction used to cast it is wasted; if a slot was used, the slot isn't expended."
       , mechanics =
           { family = "triggered_reaction"
           , level = 3
