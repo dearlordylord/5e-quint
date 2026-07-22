@@ -424,10 +424,13 @@ character-creation evidence artifact maps SRD inventory row ids to discovery,
 fill, finalization, and build projection coverage; executable tests alone are
 not a row-level evidence manifest for this generator.
 
-The first generated scope inventories all SRD class files under
-`.references/srd-5.2.1/Classes/`, with level-1 class rows prioritized first and
-cantrip/level-1 spell-list entries tracked as Spell Unit pressure. Regenerate
-these artifacts with:
+The generated scope inventories all SRD class files under
+`.references/srd-5.2.1/Classes/` through character level 12. Character-level
+and spell-level bands remain separate: level 11 introduces spell-level-6
+pressure for classes whose own tables grant access, while level 12 carries that
+pressure forward. The level 11-12 mining reports are non-blocking denominators;
+they do not become strict full-support or ultra-golden claims until the owning
+implementation plan promotes those gates. Regenerate these artifacts with:
 
 ```sh
 node scripts/unit-profile-coverage-check.cjs --write

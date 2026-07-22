@@ -1,34 +1,11 @@
 const { characterLevelBands } = require("./level1-full-support-report.cjs");
+const { miningAuditFrontiers } = require("./mining-audit-frontiers.cjs");
 const { stable } = require("./unit-profile-coverage-report.cjs");
 
-const maxLevelOneSevenAuditCharacterLevel = 7;
-const maxLevelOneEightAuditCharacterLevel = 8;
-const maxLevelOneNineAuditCharacterLevel = 9;
-const maxLevelOneTenAuditCharacterLevel = 10;
-const levelOneSevenMiningAuditLevelBands = characterLevelBands(
-  maxLevelOneSevenAuditCharacterLevel,
-);
-const levelOneEightMiningAuditLevelBands = characterLevelBands(
-  maxLevelOneEightAuditCharacterLevel,
-);
-const levelOneNineMiningAuditLevelBands = characterLevelBands(
-  maxLevelOneNineAuditCharacterLevel,
-);
-const levelOneTenMiningAuditLevelBands = characterLevelBands(
-  maxLevelOneTenAuditCharacterLevel,
-);
-const levelOneSevenMiningAuditLevelBandSet = new Set(
-  levelOneSevenMiningAuditLevelBands,
-);
-const levelOneEightMiningAuditLevelBandSet = new Set(
-  levelOneEightMiningAuditLevelBands,
-);
-const levelOneNineMiningAuditLevelBandSet = new Set(
-  levelOneNineMiningAuditLevelBands,
-);
-const levelOneTenMiningAuditLevelBandSet = new Set(
-  levelOneTenMiningAuditLevelBands,
-);
+const miningAuditFrontiersWithBands = miningAuditFrontiers.map((frontier) => {
+  const levelBands = characterLevelBands(frontier.maxCharacterLevel);
+  return { ...frontier, levelBands, levelBandSet: new Set(levelBands) };
+});
 
 function countValues(values) {
   return Object.fromEntries(
@@ -41,10 +18,8 @@ function countValues(values) {
   );
 }
 
-function countByLevelBand(rows, levelBands = levelOneSevenMiningAuditLevelBands) {
-  const counts = new Map(
-    levelBands.map((band) => [band, 0]),
-  );
+function countByLevelBand(rows, levelBands) {
+  const counts = new Map(levelBands.map((band) => [band, 0]));
   for (const row of rows) {
     counts.set(row.levelBand, (counts.get(row.levelBand) ?? 0) + 1);
   }
@@ -125,6 +100,9 @@ function projectAuditRow(row) {
     ...(row.relatedSources === undefined
       ? {}
       : { relatedSources: row.relatedSources }),
+    ...(row.subclassUnitId === undefined
+      ? {}
+      : { subclassUnitId: row.subclassUnitId }),
     nextAction: row.nextAction,
   };
 }
@@ -151,6 +129,7 @@ const auditedSpellPressureLevelBands = [
   "spell-level-3",
   "spell-level-4",
   "spell-level-5",
+  "spell-level-6",
 ];
 const auditedSpellPressureLevelBandSet = new Set(
   auditedSpellPressureLevelBands,
@@ -245,11 +224,13 @@ function buildMiningAudit({
       denominatorRule:
         "A row enters this audit only when a mined SRD inventory row exists for an included character-level or spell-level band.",
       supportGate:
-        "non-blocking mining frontier; runtime admission and support snapshots are reported but do not pass or fail level 1-4 full-support gates",
+        "non-blocking mining frontier; runtime admission and support snapshots are reported but do not change any strict full-support gate",
       axisRule:
-        maxCharacterLevel >= 9
-          ? "Character level and spell level are separate axes. Character level 5 opens spell-level-3 pressure for full casters and Warlock Pact Magic; character level 7 opens spell-level-4 pressure for those same table-derived owners; character level 9 opens spell-level-5 pressure for full casters and Warlock Pact Magic. Paladin and Ranger class level 9 opens their spell-level-3 list sections inside this accounting without duplicating the global spell-level-3 denominator."
-          : `Character level and spell level are separate axes. Character level 5 opens spell-level-3 pressure for full casters and Warlock Pact Magic; character level 7 opens spell-level-4 pressure for those same table-derived owners. Paladin and Ranger spell-level-3 and spell-level-4 list sections are not counted in this level-${maxCharacterLevel} frontier because their SRD class tables do not grant matching slots by character level ${maxCharacterLevel}.`,
+        maxCharacterLevel >= 11
+          ? "Character level and spell level are separate axes. Character level 5 opens spell-level-3 pressure for full casters and Warlock Pact Magic; character level 7 opens spell-level-4 pressure; character level 9 opens spell-level-5 pressure; character level 11 opens spell-level-6 pressure for full casters. Paladin and Ranger spell access remains derived from their own class tables instead of the global full-caster frontier."
+          : maxCharacterLevel >= 9
+            ? "Character level and spell level are separate axes. Character level 5 opens spell-level-3 pressure for full casters and Warlock Pact Magic; character level 7 opens spell-level-4 pressure for those same table-derived owners; character level 9 opens spell-level-5 pressure for full casters and Warlock Pact Magic. Paladin and Ranger class level 9 opens their spell-level-3 list sections inside this accounting without duplicating the global spell-level-3 denominator."
+            : `Character level and spell level are separate axes. Character level 5 opens spell-level-3 pressure for full casters and Warlock Pact Magic; character level 7 opens spell-level-4 pressure for those same table-derived owners. Paladin and Ranger spell-level-3 and spell-level-4 list sections are not counted in this level-${maxCharacterLevel} frontier because their SRD class tables do not grant matching slots by character level ${maxCharacterLevel}.`,
     },
     metrics: {
       minedDenominatorRows: rows.length,
@@ -296,43 +277,13 @@ function buildMiningAudit({
   });
 }
 
-function buildLevelOneSevenMiningAudit(srdUnitInventory) {
+function buildMiningAuditForFrontier(srdUnitInventory, frontier) {
   return buildMiningAudit({
     srdUnitInventory,
-    maxCharacterLevel: maxLevelOneSevenAuditCharacterLevel,
-    levelBands: levelOneSevenMiningAuditLevelBands,
-    levelBandSet: levelOneSevenMiningAuditLevelBandSet,
-    title: "Character Levels 1-7 Mining Audit",
-  });
-}
-
-function buildLevelOneEightMiningAudit(srdUnitInventory) {
-  return buildMiningAudit({
-    srdUnitInventory,
-    maxCharacterLevel: maxLevelOneEightAuditCharacterLevel,
-    levelBands: levelOneEightMiningAuditLevelBands,
-    levelBandSet: levelOneEightMiningAuditLevelBandSet,
-    title: "Character Levels 1-8 Mining Audit",
-  });
-}
-
-function buildLevelOneNineMiningAudit(srdUnitInventory) {
-  return buildMiningAudit({
-    srdUnitInventory,
-    maxCharacterLevel: maxLevelOneNineAuditCharacterLevel,
-    levelBands: levelOneNineMiningAuditLevelBands,
-    levelBandSet: levelOneNineMiningAuditLevelBandSet,
-    title: "Character Levels 1-9 Mining Audit",
-  });
-}
-
-function buildLevelOneTenMiningAudit(srdUnitInventory) {
-  return buildMiningAudit({
-    srdUnitInventory,
-    maxCharacterLevel: maxLevelOneTenAuditCharacterLevel,
-    levelBands: levelOneTenMiningAuditLevelBands,
-    levelBandSet: levelOneTenMiningAuditLevelBandSet,
-    title: "Character Levels 1-10 Mining Audit",
+    maxCharacterLevel: frontier.maxCharacterLevel,
+    levelBands: frontier.levelBands,
+    levelBandSet: frontier.levelBandSet,
+    title: frontier.title,
   });
 }
 
@@ -405,6 +356,10 @@ function renderRelatedSources(row) {
 }
 
 function renderLevelOneSevenMiningAudit(report) {
+  const scopedAuditedSpellPressureLevelBands =
+    auditedSpellPressureLevelBands.filter((levelBand) =>
+      report.scope.levelBands.includes(levelBand),
+    );
   const rendersMinedFactColumns = report.rows.some(
     (row) =>
       (row.progressionDeltas ?? []).length > 0 ||
@@ -418,7 +373,7 @@ function renderLevelOneSevenMiningAudit(report) {
     "",
     "Generated by `scripts/unit-profile-coverage-check.cjs` from `plans/unit-profile-coverage/srd-unit-inventory.json`.",
     "",
-    "**This is a mining/audit frontier, not a full-support claim.** A `present` row means the SRD source row exists in the mined denominator. Runtime support, catalog admission, and battle-readiness columns are non-blocking snapshots and do not pass or fail the current level 1-4 gates.",
+    "**This is a mining/audit frontier, not a full-support claim.** A `present` row means the SRD source row exists in the mined denominator. Runtime support, catalog admission, and battle-readiness columns are non-blocking snapshots and do not change any strict full-support gate.",
     "",
     report.scope.axisRule,
     "",
@@ -469,13 +424,13 @@ function renderLevelOneSevenMiningAudit(report) {
     "| --- | ---: |",
     ...renderKeyCountRows(report.metrics.rowsByBattleReadinessStatus),
     "",
-    "## Spell-Level 3-4 Pressure Summary",
+    "## Later-Frontier Spell Pressure Summary",
     "",
     "These counts separate class-list rows from unique Spell Definition identities. A class-list row is one class spell-list entry; a unique identity is the candidate Spell Definition Unit after deduplicating the class lists within a spell level.",
     "",
     "| Level band | Class-list rows | Unique spell identities |",
     "| --- | ---: | ---: |",
-    ...auditedSpellPressureLevelBands.map(
+    ...scopedAuditedSpellPressureLevelBands.map(
       (levelBand) =>
         `| ${levelBand} | ${report.metrics.auditedSpellClassListRowsByLevelBand[levelBand] ?? 0} | ${report.metrics.auditedUniqueSpellIdentitiesByLevelBand[levelBand] ?? 0} |`,
     ),
@@ -561,13 +516,7 @@ function renderLevelOneSevenMiningAudit(report) {
 }
 
 module.exports = {
-  buildLevelOneEightMiningAudit,
-  buildLevelOneNineMiningAudit,
-  buildLevelOneTenMiningAudit,
-  buildLevelOneSevenMiningAudit,
-  levelOneEightMiningAuditLevelBands,
-  levelOneNineMiningAuditLevelBands,
-  levelOneTenMiningAuditLevelBands,
-  levelOneSevenMiningAuditLevelBands,
+  buildMiningAuditForFrontier,
+  miningAuditFrontiersWithBands,
   renderLevelOneSevenMiningAudit,
 };

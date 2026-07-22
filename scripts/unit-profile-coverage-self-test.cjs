@@ -57,14 +57,8 @@ const {
   buildFeatureProcedureMbtEvidenceGate,
 } = require("./feature-procedure-mbt-evidence-gate.cjs");
 const {
-  buildLevelOneEightMiningAudit,
-  levelOneEightMiningAuditLevelBands,
-  buildLevelOneNineMiningAudit,
-  levelOneNineMiningAuditLevelBands,
-  buildLevelOneTenMiningAudit,
-  levelOneTenMiningAuditLevelBands,
-  buildLevelOneSevenMiningAudit,
-  levelOneSevenMiningAuditLevelBands,
+  buildMiningAuditForFrontier,
+  miningAuditFrontiersWithBands,
   renderLevelOneSevenMiningAudit,
 } = require("./level1-7-mining-audit-report.cjs");
 const {
@@ -72,6 +66,25 @@ const {
   selectedIdentityEvidenceStatus,
   selectedIdentityStatus,
 } = require("./unit-profile-coverage-report.cjs");
+
+function miningAuditFrontier(maxCharacterLevel) {
+  const frontier = miningAuditFrontiersWithBands.find(
+    (candidate) => candidate.maxCharacterLevel === maxCharacterLevel,
+  );
+  if (frontier === undefined) {
+    fail(
+      `Self-test setup failed: no mining audit frontier for character level ${maxCharacterLevel}.`,
+    );
+  }
+  return frontier;
+}
+
+function buildMiningAuditAtLevel(maxCharacterLevel, inventory) {
+  return buildMiningAuditForFrontier(
+    inventory,
+    miningAuditFrontier(maxCharacterLevel),
+  );
+}
 
 const mindSpikeFixture = Object.freeze({
   unitId: "mind_spike",
@@ -315,11 +328,10 @@ function assertLaterLevelOnlyScopeAccounting() {
       ],
     },
   };
-  const mixedLevel9Status = strictStatusForUnitForTest(
-    mixedBeyondScopeUnit,
-    9,
-  );
-  if (mixedLevel9Status.status !== "closed-runtime-detached-table-adjudication") {
+  const mixedLevel9Status = strictStatusForUnitForTest(mixedBeyondScopeUnit, 9);
+  if (
+    mixedLevel9Status.status !== "closed-runtime-detached-table-adjudication"
+  ) {
     fail(
       `Self-test failed: expected accepted table residual plus beyond-scope later-level residual to close level-9 scope, got ${JSON.stringify(mixedLevel9Status)}`,
     );
@@ -329,8 +341,8 @@ function assertLaterLevelOnlyScopeAccounting() {
     ...mixedBeyondScopeUnit,
     claim: {
       ...mixedBeyondScopeUnit.claim,
-      deferredMechanics:
-        mixedBeyondScopeUnit.claim.deferredMechanics.map((entry) =>
+      deferredMechanics: mixedBeyondScopeUnit.claim.deferredMechanics.map(
+        (entry) =>
           entry.battleReadinessClosure.kind ===
           battleReadinessClosureKind.laterLevelOnly
             ? {
@@ -342,7 +354,7 @@ function assertLaterLevelOnlyScopeAccounting() {
                 },
               }
             : entry,
-        ),
+      ),
     },
   };
   const mixedInScopeLevel9Status = strictStatusForUnitForTest(
@@ -370,10 +382,7 @@ function assertLaterLevelOnlyScopeAccounting() {
       ],
     },
   };
-  const level4FollowUpStatus = strictStatusForUnitForTest(
-    followUpSplitUnit,
-    4,
-  );
+  const level4FollowUpStatus = strictStatusForUnitForTest(followUpSplitUnit, 4);
   if (level4FollowUpStatus.status !== "closed-later-level-only") {
     fail(
       `Self-test failed: expected out-of-scope later-level residual with follow-up split to stay closed-later-level-only, got ${JSON.stringify(level4FollowUpStatus)}`,
@@ -384,10 +393,7 @@ function assertLaterLevelOnlyScopeAccounting() {
       `Self-test failed: expected out-of-scope later-level residual with follow-up split to keep the later-level reason, got ${JSON.stringify(level4FollowUpStatus)}`,
     );
   }
-  const level5FollowUpStatus = strictStatusForUnitForTest(
-    followUpSplitUnit,
-    5,
-  );
+  const level5FollowUpStatus = strictStatusForUnitForTest(followUpSplitUnit, 5);
   if (level5FollowUpStatus.status !== "blocked-follow-up-split") {
     fail(
       `Self-test failed: expected in-scope later-level residual with follow-up split to close as blocked-follow-up-split, got ${JSON.stringify(level5FollowUpStatus)}`,
@@ -518,8 +524,7 @@ function assertLevelNineFinalSupportBlocksUnsupportedAndMissingRows() {
           battleReadinessClosure: {
             kind: battleReadinessClosureKind.tableSpatialDerivation,
             owner: "fixture table owner",
-            reason:
-              "Fixture old accounting would close this as table-owned.",
+            reason: "Fixture old accounting would close this as table-owned.",
           },
         },
       },
@@ -527,9 +532,7 @@ function assertLevelNineFinalSupportBlocksUnsupportedAndMissingRows() {
     rulesKernelProfileJoin: { profiles: [] },
   };
   const report = buildLevel19FullSupport(matrix, inventory);
-  const blockerIds = report.strictFinalSupportBlockers.map(
-    (row) => row.unitId,
-  );
+  const blockerIds = report.strictFinalSupportBlockers.map((row) => row.unitId);
   for (const expectedUnitId of [
     "fixture_unsupported_feature",
     "fixture_missing_spell",
@@ -1060,7 +1063,7 @@ function assertSelectedIdentityMetricExcludesWholeClaimNotApplicable() {
 }
 
 function assertLevelOneSevenMiningAuditSeparatesRowPresenceFromSupport() {
-  const report = buildLevelOneSevenMiningAudit({
+  const report = buildMiningAuditAtLevel(7, {
     rows: [
       {
         id: "fixture:level-5:feature",
@@ -1094,103 +1097,29 @@ function assertLevelOneSevenMiningAuditSeparatesRowPresenceFromSupport() {
       `Self-test failed: expected level 1-7 mining audit to keep row presence separate from support state, got ${JSON.stringify(row)}`,
     );
   }
-  const expectedAuditBands = [
-    "level-1",
-    "level-2",
-    "level-3",
-    "level-4",
-    "level-5",
-    "level-6",
-    "level-7",
-    "spell-level-0",
-    "spell-level-1",
-    "spell-level-2",
-    "spell-level-3",
-    "spell-level-4",
-  ];
+  const expectedMiningAuditLevels = [7, 8, 9, 10, 11, 12];
+  const actualMiningAuditLevels = miningAuditFrontiersWithBands.map(
+    (frontier) => frontier.maxCharacterLevel,
+  );
   if (
-    JSON.stringify(levelOneSevenMiningAuditLevelBands) !==
-    JSON.stringify(expectedAuditBands)
+    JSON.stringify(actualMiningAuditLevels) !==
+    JSON.stringify(expectedMiningAuditLevels)
   ) {
     fail(
-      `Self-test failed: expected level 1-7 mining audit bands ${JSON.stringify(expectedAuditBands)}, got ${JSON.stringify(levelOneSevenMiningAuditLevelBands)}`,
+      `Self-test failed: expected mining audit frontier levels ${JSON.stringify(expectedMiningAuditLevels)}, got ${JSON.stringify(actualMiningAuditLevels)}`,
     );
   }
-  const expectedLevelOneEightAuditBands = [
-    "level-1",
-    "level-2",
-    "level-3",
-    "level-4",
-    "level-5",
-    "level-6",
-    "level-7",
-    "level-8",
-    "spell-level-0",
-    "spell-level-1",
-    "spell-level-2",
-    "spell-level-3",
-    "spell-level-4",
-  ];
-  if (
-    JSON.stringify(levelOneEightMiningAuditLevelBands) !==
-    JSON.stringify(expectedLevelOneEightAuditBands)
-  ) {
-    fail(
-      `Self-test failed: expected level 1-8 mining audit bands ${JSON.stringify(expectedLevelOneEightAuditBands)}, got ${JSON.stringify(levelOneEightMiningAuditLevelBands)}`,
-    );
+  for (const frontier of miningAuditFrontiersWithBands) {
+    const expectedLevelBands = characterLevelBands(frontier.maxCharacterLevel);
+    if (
+      JSON.stringify(frontier.levelBands) !== JSON.stringify(expectedLevelBands)
+    ) {
+      fail(
+        `Self-test failed: expected ${frontier.id} mining audit bands ${JSON.stringify(expectedLevelBands)}, got ${JSON.stringify(frontier.levelBands)}`,
+      );
+    }
   }
-  const expectedLevelOneNineAuditBands = [
-    "level-1",
-    "level-2",
-    "level-3",
-    "level-4",
-    "level-5",
-    "level-6",
-    "level-7",
-    "level-8",
-    "level-9",
-    "spell-level-0",
-    "spell-level-1",
-    "spell-level-2",
-    "spell-level-3",
-    "spell-level-4",
-    "spell-level-5",
-  ];
-  if (
-    JSON.stringify(levelOneNineMiningAuditLevelBands) !==
-    JSON.stringify(expectedLevelOneNineAuditBands)
-  ) {
-    fail(
-      `Self-test failed: expected level 1-9 mining audit bands ${JSON.stringify(expectedLevelOneNineAuditBands)}, got ${JSON.stringify(levelOneNineMiningAuditLevelBands)}`,
-    );
-  }
-  const expectedLevelOneTenAuditBands = [
-    "level-1",
-    "level-2",
-    "level-3",
-    "level-4",
-    "level-5",
-    "level-6",
-    "level-7",
-    "level-8",
-    "level-9",
-    "level-10",
-    "spell-level-0",
-    "spell-level-1",
-    "spell-level-2",
-    "spell-level-3",
-    "spell-level-4",
-    "spell-level-5",
-  ];
-  if (
-    JSON.stringify(levelOneTenMiningAuditLevelBands) !==
-    JSON.stringify(expectedLevelOneTenAuditBands)
-  ) {
-    fail(
-      `Self-test failed: expected level 1-10 mining audit bands ${JSON.stringify(expectedLevelOneTenAuditBands)}, got ${JSON.stringify(levelOneTenMiningAuditLevelBands)}`,
-    );
-  }
-  const levelOneEightReport = buildLevelOneEightMiningAudit({
+  const levelOneEightReport = buildMiningAuditAtLevel(8, {
     rows: [
       {
         id: "fixture:level-8:feature",
@@ -1213,9 +1142,8 @@ function assertLevelOneSevenMiningAuditSeparatesRowPresenceFromSupport() {
       },
     ],
   });
-  const renderedLevelOneEight = renderLevelOneSevenMiningAudit(
-    levelOneEightReport,
-  );
+  const renderedLevelOneEight =
+    renderLevelOneSevenMiningAudit(levelOneEightReport);
   for (const expectedText of [
     "# Character Levels 1-8 Mining Audit",
     "| level-8 | character-level | present | 1 |",
@@ -1227,7 +1155,7 @@ function assertLevelOneSevenMiningAuditSeparatesRowPresenceFromSupport() {
       );
     }
   }
-  const levelOneTenReport = buildLevelOneTenMiningAudit({
+  const levelOneTenReport = buildMiningAuditAtLevel(10, {
     rows: [
       {
         id: "fixture:level-10:feature",
@@ -1250,9 +1178,7 @@ function assertLevelOneSevenMiningAuditSeparatesRowPresenceFromSupport() {
       },
     ],
   });
-  const renderedLevelOneTen = renderLevelOneSevenMiningAudit(
-    levelOneTenReport,
-  );
+  const renderedLevelOneTen = renderLevelOneSevenMiningAudit(levelOneTenReport);
   for (const expectedText of [
     "# Character Levels 1-10 Mining Audit",
     "| level-10 | character-level | present | 1 |",
@@ -1264,7 +1190,7 @@ function assertLevelOneSevenMiningAuditSeparatesRowPresenceFromSupport() {
       );
     }
   }
-  const levelOneNineReport = buildLevelOneNineMiningAudit({
+  const levelOneNineReport = buildMiningAuditAtLevel(9, {
     rows: [
       {
         id: "fixture:level-9:feature",
@@ -1306,9 +1232,8 @@ function assertLevelOneSevenMiningAuditSeparatesRowPresenceFromSupport() {
       },
     ],
   });
-  const renderedLevelOneNine = renderLevelOneSevenMiningAudit(
-    levelOneNineReport,
-  );
+  const renderedLevelOneNine =
+    renderLevelOneSevenMiningAudit(levelOneNineReport);
   for (const expectedText of [
     "# Character Levels 1-9 Mining Audit",
     "| level-9 | character-level | present | 1 |",
@@ -1336,7 +1261,7 @@ function assertLevelOneSevenMiningAuditSeparatesRowPresenceFromSupport() {
       );
     }
   }
-  const spellReport = buildLevelOneSevenMiningAudit({
+  const spellReport = buildMiningAuditAtLevel(7, {
     rows: ["Fixture", "Example"].map((className, index) => ({
       id: `fixture:spell-level-4:${className.toLowerCase()}:shared_spell`,
       levelBand: "spell-level-4",
@@ -1376,7 +1301,9 @@ function assertLevelOneSevenMiningAuditSeparatesRowPresenceFromSupport() {
 
 function adoptedNoMatrixDecisionRowsForSelfTest(root) {
   return fs
-    .readdirSync(path.join(root, "plans/unit-profile-coverage/frontier-decisions"))
+    .readdirSync(
+      path.join(root, "plans/unit-profile-coverage/frontier-decisions"),
+    )
     .filter((filename) => filename.endsWith(".md") && filename !== "README.md")
     .map((filename) => {
       const unitId = path.basename(filename, ".md");
@@ -1415,14 +1342,12 @@ function strictScopeWitnessRowForSelfTest(levelBand) {
     },
     className: "Fixture",
     levelBand,
-    rowKind:
-      levelBand.startsWith("spell-level-")
-        ? "spell-unit-pressure"
-        : "class-feature-grant",
-    category:
-      levelBand.startsWith("spell-level-")
-        ? "spell Unit pressure"
-        : "class feature",
+    rowKind: levelBand.startsWith("spell-level-")
+      ? "spell-unit-pressure"
+      : "class-feature-grant",
+    category: levelBand.startsWith("spell-level-")
+      ? "spell Unit pressure"
+      : "class feature",
     concept: `Fixture ${levelBand} scope witness`,
     detail: "Fixture non-vacuous scope witness row.",
     candidateUnitId: `fixture_${levelBand.replace(/-/g, "_")}`,
@@ -1716,6 +1641,27 @@ function runSelfTest(root) {
       `Self-test failed: expected character level 10 bands to include level-10 and spell-level-5 while excluding spell-level-6, got ${JSON.stringify(levelTenBands)}`,
     );
   }
+  const levelElevenBands = characterLevelBands(11);
+  if (
+    !levelElevenBands.includes("level-11") ||
+    !levelElevenBands.includes("spell-level-6") ||
+    levelElevenBands.includes("level-12") ||
+    levelElevenBands.includes("spell-level-7")
+  ) {
+    fail(
+      `Self-test failed: expected character level 11 bands to introduce level-11 and spell-level-6 only, got ${JSON.stringify(levelElevenBands)}`,
+    );
+  }
+  const levelTwelveBands = characterLevelBands(12);
+  if (
+    !levelTwelveBands.includes("level-12") ||
+    !levelTwelveBands.includes("spell-level-6") ||
+    levelTwelveBands.includes("spell-level-7")
+  ) {
+    fail(
+      `Self-test failed: expected character level 12 bands to carry spell-level-6 without introducing spell-level-7, got ${JSON.stringify(levelTwelveBands)}`,
+    );
+  }
   const emptyFullSupportMatrix = {
     units: [],
     rulesKernelProfileJoin: { profiles: [] },
@@ -1923,10 +1869,9 @@ function runSelfTest(root) {
     const levelNineReuseMcpAudit = mcpScenarioEvidenceFixture(
       mcpScenarioWitnessKind,
     );
-    const levelNineDecision =
-      levelNineReuseMcpAudit.scopeAuditDecisions.find(
-        (decision) => decision.scopeId === "level-1-9",
-      );
+    const levelNineDecision = levelNineReuseMcpAudit.scopeAuditDecisions.find(
+      (decision) => decision.scopeId === "level-1-9",
+    );
     levelNineDecision.result = "reuse-existing-evidence";
     levelNineDecision.reusedFlowIds = ["mcp-workflow-discovery"];
     delete levelNineDecision.requiredEvidence;
@@ -1948,10 +1893,9 @@ function runSelfTest(root) {
     const levelTenReuseMcpAudit = mcpScenarioEvidenceFixture(
       mcpScenarioWitnessKind,
     );
-    const levelTenDecision =
-      levelTenReuseMcpAudit.scopeAuditDecisions.find(
-        (decision) => decision.scopeId === "level-1-10",
-      );
+    const levelTenDecision = levelTenReuseMcpAudit.scopeAuditDecisions.find(
+      (decision) => decision.scopeId === "level-1-10",
+    );
     levelTenDecision.result = "reuse-existing-evidence";
     levelTenDecision.reusedFlowIds = ["mcp-workflow-discovery"];
     delete levelTenDecision.requiredEvidence;
@@ -1962,9 +1906,7 @@ function runSelfTest(root) {
     const expectedLevelTenReuseMcpAuditIssue =
       "MCP scenario evidence manifest scopeAuditDecisions[7].result must not reuse existing evidence for level-1-10; executable level-1-10 MCP scenario evidence is required.";
     if (
-      !levelTenReuseMcpAuditIssues.includes(
-        expectedLevelTenReuseMcpAuditIssue,
-      )
+      !levelTenReuseMcpAuditIssues.includes(expectedLevelTenReuseMcpAuditIssue)
     ) {
       fail(
         `Self-test failed: expected level-1-10 MCP audit reuse issue ${JSON.stringify(expectedLevelTenReuseMcpAuditIssue)}, got ${JSON.stringify(levelTenReuseMcpAuditIssues)}`,

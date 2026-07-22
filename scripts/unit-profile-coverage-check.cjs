@@ -60,10 +60,8 @@ const {
   renderLevel12QntMbtJoin,
 } = require("./level12-qnt-mbt-join-report.cjs");
 const {
-  buildLevelOneEightMiningAudit,
-  buildLevelOneNineMiningAudit,
-  buildLevelOneTenMiningAudit,
-  buildLevelOneSevenMiningAudit,
+  buildMiningAuditForFrontier,
+  miningAuditFrontiersWithBands,
   renderLevelOneSevenMiningAudit,
 } = require("./level1-7-mining-audit-report.cjs");
 const {
@@ -220,9 +218,10 @@ function validateLevelSevenRogueEvasionEvidence({
       "level-1-7 full-support report must classify rogue_evasion as supported-profile.",
     );
   }
-  const rulesKernelJoin = level17FullSupport.rulesKernelSupportedUnitJoin.units.find(
-    (unit) => unit.unitId === rogueEvasionUnitId,
-  );
+  const rulesKernelJoin =
+    level17FullSupport.rulesKernelSupportedUnitJoin.units.find(
+      (unit) => unit.unitId === rogueEvasionUnitId,
+    );
   if (
     rulesKernelJoin?.joinStatus !== "covered" ||
     !rulesKernelJoin.profiles.some(
@@ -342,17 +341,17 @@ function main() {
   const level19FullSupport = buildLevel19FullSupport(matrix, srdUnitInventory, {
     root,
   });
-  const level110FullSupport = buildLevel110FullSupport(matrix, srdUnitInventory, {
-    root,
-  });
-  const levelOneSevenMiningAudit =
-    buildLevelOneSevenMiningAudit(srdUnitInventory);
-  const levelOneEightMiningAudit =
-    buildLevelOneEightMiningAudit(srdUnitInventory);
-  const levelOneNineMiningAudit =
-    buildLevelOneNineMiningAudit(srdUnitInventory);
-  const levelOneTenMiningAudit =
-    buildLevelOneTenMiningAudit(srdUnitInventory);
+  const level110FullSupport = buildLevel110FullSupport(
+    matrix,
+    srdUnitInventory,
+    {
+      root,
+    },
+  );
+  const miningAudits = miningAuditFrontiersWithBands.map((frontier) => ({
+    frontier,
+    report: buildMiningAuditForFrontier(srdUnitInventory, frontier),
+  }));
   const ultraGoldenGate = buildUltraGoldenGate({
     level1FullSupport,
     level12FullSupport,
@@ -383,29 +382,28 @@ function main() {
     level12FullSupport,
     rulesKernelMatrix: rulesKernelCoverage.matrix,
   });
-  const postBuildIssues =
-    validateSupportedUnitFeatureRulesKernelJoins(
-      matrix.rulesKernelProfileJoin.supportedUnitJoin,
-    ).concat(
-      validateUnitFeatureProfileScopedOwnerEvidence({
-        featureProcedureMbtEvidenceGate,
-        level12QntMbtJoin,
-        profiles,
-      }),
-      validateLevelSevenRogueEvasionEvidence({
-        level17FullSupport,
-        unitClaims,
-        unitEvidence,
-      }),
-      validateLevelEightSpellLevelFourCarryForward({
-        level17FullSupport,
-        level18FullSupport,
-      }),
-      validateLevelTenSpellLevelFiveCarryForward({
-        level19FullSupport,
-        level110FullSupport,
-      }),
-    );
+  const postBuildIssues = validateSupportedUnitFeatureRulesKernelJoins(
+    matrix.rulesKernelProfileJoin.supportedUnitJoin,
+  ).concat(
+    validateUnitFeatureProfileScopedOwnerEvidence({
+      featureProcedureMbtEvidenceGate,
+      level12QntMbtJoin,
+      profiles,
+    }),
+    validateLevelSevenRogueEvasionEvidence({
+      level17FullSupport,
+      unitClaims,
+      unitEvidence,
+    }),
+    validateLevelEightSpellLevelFourCarryForward({
+      level17FullSupport,
+      level18FullSupport,
+    }),
+    validateLevelTenSpellLevelFiveCarryForward({
+      level19FullSupport,
+      level110FullSupport,
+    }),
+  );
   if (postBuildIssues.length > 0) {
     for (const issue of postBuildIssues)
       console.error(`unit-profile-coverage: ${issue}`);
@@ -575,46 +573,26 @@ function main() {
     paths.level110FullSupportReport,
     renderLevel110FullSupport(level110FullSupport),
   );
-  writeOrCompare(
-    { root, write },
-    paths.levelOneSevenMiningAudit,
-    `${JSON.stringify(levelOneSevenMiningAudit, null, 2)}\n`,
-  );
-  writeOrCompare(
-    { root, write },
-    paths.levelOneSevenMiningAuditReport,
-    renderLevelOneSevenMiningAudit(levelOneSevenMiningAudit),
-  );
-  writeOrCompare(
-    { root, write },
-    paths.levelOneEightMiningAudit,
-    `${JSON.stringify(levelOneEightMiningAudit, null, 2)}\n`,
-  );
-  writeOrCompare(
-    { root, write },
-    paths.levelOneEightMiningAuditReport,
-    renderLevelOneSevenMiningAudit(levelOneEightMiningAudit),
-  );
-  writeOrCompare(
-    { root, write },
-    paths.levelOneNineMiningAudit,
-    `${JSON.stringify(levelOneNineMiningAudit, null, 2)}\n`,
-  );
-  writeOrCompare(
-    { root, write },
-    paths.levelOneNineMiningAuditReport,
-    renderLevelOneSevenMiningAudit(levelOneNineMiningAudit),
-  );
-  writeOrCompare(
-    { root, write },
-    paths.levelOneTenMiningAudit,
-    `${JSON.stringify(levelOneTenMiningAudit, null, 2)}\n`,
-  );
-  writeOrCompare(
-    { root, write },
-    paths.levelOneTenMiningAuditReport,
-    renderLevelOneSevenMiningAudit(levelOneTenMiningAudit),
-  );
+  for (const { frontier, report } of miningAudits) {
+    const artifactPaths = paths.miningAuditFrontiers.find(
+      (candidate) => candidate.id === frontier.id,
+    );
+    if (artifactPaths === undefined) {
+      throw new Error(
+        `Missing mining audit artifact paths for ${frontier.id}.`,
+      );
+    }
+    writeOrCompare(
+      { root, write },
+      artifactPaths.jsonPath,
+      `${JSON.stringify(report, null, 2)}\n`,
+    );
+    writeOrCompare(
+      { root, write },
+      artifactPaths.reportPath,
+      renderLevelOneSevenMiningAudit(report),
+    );
+  }
   writeOrCompare(
     { root, write },
     paths.ultraGoldenGate,

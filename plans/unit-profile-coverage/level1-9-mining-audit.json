@@ -45,11 +45,12 @@
     "rowsByCategory": {
       "character-creation or progression mechanic": 196,
       "class container": 12,
-      "class feature": 138,
+      "class feature": 108,
       "equipment/weapon/armor pressure": 12,
       "mastery pressure": 5,
       "spell access/list pressure": 12,
       "spell Unit pressure": 667,
+      "subclass feature": 30,
       "subclass selection": 12
     },
     "rowsByFinalDisposition": {
@@ -77,7 +78,7 @@
     },
     "rowsByRowKind": {
       "class-container": 12,
-      "class-feature-grant": 138,
+      "class-feature-grant": 108,
       "class-table-summary": 108,
       "core-trait": 76,
       "equipment-pressure": 12,
@@ -85,6 +86,7 @@
       "multiclass-entry": 12,
       "spell-access": 7,
       "spell-unit-pressure": 667,
+      "subclass-feature-grant": 30,
       "subclass-selection": 12,
       "subclass-spell-access": 5
     },
@@ -806,50 +808,6 @@
     },
     {
       "axis": "character-level",
-      "candidateUnitId": "barbarian_frenzy",
-      "category": "class feature",
-      "className": "Barbarian",
-      "concept": "Barbarian Frenzy",
-      "levelBand": "level-3",
-      "minedDenominator": {
-        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
-        "sourceInventoryRowId": "srd521:classes/barbarian:level-3:class-feature-grant:barbarian_frenzy",
-        "state": "present"
-      },
-      "nextAction": "Owner-specific operational evidence is classified and present.",
-      "rowId": "srd521:classes/barbarian:level-3:class-feature-grant:barbarian_frenzy",
-      "rowKind": "class-feature-grant",
-      "source": {
-        "lineEnd": 181,
-        "lineStart": 178,
-        "path": ".references/srd-5.2.1/Classes/Barbarian.md"
-      },
-      "supportSnapshot": {
-        "authoredContent": {
-          "sourceRecordPath": "packages/surface/content/barbarian_frenzy.json",
-          "state": "authored-record-present",
-          "unitId": "barbarian_frenzy"
-        },
-        "battleReadiness": {
-          "state": "recorded",
-          "status": "accepted"
-        },
-        "battleReadinessClosure": {
-          "state": "not-recorded"
-        },
-        "catalogAdmission": {
-          "state": "installed",
-          "unitId": "barbarian_frenzy"
-        },
-        "finalDisposition": "catalog-installed-owner-evidence-present",
-        "unitProfile": {
-          "disposition": "supported-profile",
-          "state": "recorded"
-        }
-      }
-    },
-    {
-      "axis": "character-level",
       "candidateUnitId": "barbarian_primal_knowledge",
       "category": "class feature",
       "className": "Barbarian",
@@ -932,6 +890,51 @@
         "finalDisposition": "non-runtime",
         "unitProfile": {
           "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "barbarian_frenzy",
+      "category": "subclass feature",
+      "className": "Barbarian",
+      "concept": "Barbarian Frenzy",
+      "levelBand": "level-3",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/barbarian:level-3:subclass-feature-grant:barbarian_frenzy",
+        "state": "present"
+      },
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "rowId": "srd521:classes/barbarian:level-3:subclass-feature-grant:barbarian_frenzy",
+      "rowKind": "subclass-feature-grant",
+      "source": {
+        "lineEnd": 181,
+        "lineStart": 178,
+        "path": ".references/srd-5.2.1/Classes/Barbarian.md"
+      },
+      "subclassUnitId": "subclass_barbarian_path_of_the_berserker",
+      "supportSnapshot": {
+        "authoredContent": {
+          "sourceRecordPath": "packages/surface/content/barbarian_frenzy.json",
+          "state": "authored-record-present",
+          "unitId": "barbarian_frenzy"
+        },
+        "battleReadiness": {
+          "state": "recorded",
+          "status": "accepted"
+        },
+        "battleReadinessClosure": {
+          "state": "not-recorded"
+        },
+        "catalogAdmission": {
+          "state": "installed",
+          "unitId": "barbarian_frenzy"
+        },
+        "finalDisposition": "catalog-installed-owner-evidence-present",
+        "unitProfile": {
+          "disposition": "supported-profile",
           "state": "recorded"
         }
       }
@@ -1206,52 +1209,6 @@
     },
     {
       "axis": "character-level",
-      "candidateUnitId": "barbarian_mindless_rage",
-      "category": "class feature",
-      "className": "Barbarian",
-      "concept": "Barbarian Mindless Rage",
-      "levelBand": "level-6",
-      "minedDenominator": {
-        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
-        "sourceInventoryRowId": "srd521:classes/barbarian:level-6:class-feature-grant:barbarian_mindless_rage",
-        "state": "present"
-      },
-      "nextAction": "The existing Barbarian Rage owner supports activation, use-count spend, duration/extension, Bludgeoning/Piercing/Slashing Resistance, Rage Damage, Concentration break/prevention, and spellcasting restriction, but it does not admit subclass-gated Charmed/Frightened condition immunity or remove existing Charmed/Frightened active effects on entering Rage. Keep this not-installed row closed until a promoted owner consumes typed Surface facts for the selected Berserker feature, derives immunity from the active Rage occurrence, and performs condition cleanup without duplicating Rage state, condition state, subclass selection state, or authored-identity dispatch.",
-      "rowId": "srd521:classes/barbarian:level-6:class-feature-grant:barbarian_mindless_rage",
-      "rowKind": "class-feature-grant",
-      "source": {
-        "lineEnd": 185,
-        "lineStart": 182,
-        "path": ".references/srd-5.2.1/Classes/Barbarian.md"
-      },
-      "supportSnapshot": {
-        "authoredContent": {
-          "state": "missing-authored-record"
-        },
-        "battleReadiness": {
-          "state": "recorded",
-          "status": "accepted-no-battle-effect"
-        },
-        "battleReadinessClosure": {
-          "kind": "outside-battle-runtime",
-          "owner": "future battle-runtime active Rage condition-immunity and enter-rage cleanup owner plus subclass feature admission owner",
-          "reason": "The existing Barbarian Rage owner supports activation, use-count spend, duration/extension, Bludgeoning/Piercing/Slashing Resistance, Rage Damage, Concentration break/prevention, and spellcasting restriction, but it does not admit subclass-gated Charmed/Frightened condition immunity or remove existing Charmed/Frightened active effects on entering Rage. Keep this not-installed row closed until a promoted owner consumes typed Surface facts for the selected Berserker feature, derives immunity from the active Rage occurrence, and performs condition cleanup without duplicating Rage state, condition state, subclass selection state, or authored-identity dispatch.",
-          "source": "unit-claim",
-          "state": "recorded"
-        },
-        "catalogAdmission": {
-          "state": "not-installed",
-          "unitId": "barbarian_mindless_rage"
-        },
-        "finalDisposition": "catalog-only/dead-for-now",
-        "unitProfile": {
-          "disposition": "unsupported-profile",
-          "state": "recorded"
-        }
-      }
-    },
-    {
-      "axis": "character-level",
       "candidateUnitId": "class_barbarian",
       "category": "character-creation or progression mechanic",
       "className": "Barbarian",
@@ -1288,6 +1245,53 @@
           "unitId": "class_barbarian"
         },
         "finalDisposition": "non-runtime",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "barbarian_mindless_rage",
+      "category": "subclass feature",
+      "className": "Barbarian",
+      "concept": "Barbarian Mindless Rage",
+      "levelBand": "level-6",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/barbarian:level-6:subclass-feature-grant:barbarian_mindless_rage",
+        "state": "present"
+      },
+      "nextAction": "The existing Barbarian Rage owner supports activation, use-count spend, duration/extension, Bludgeoning/Piercing/Slashing Resistance, Rage Damage, Concentration break/prevention, and spellcasting restriction, but it does not admit subclass-gated Charmed/Frightened condition immunity or remove existing Charmed/Frightened active effects on entering Rage. Keep this not-installed row closed until a promoted owner consumes typed Surface facts for the selected Berserker feature, derives immunity from the active Rage occurrence, and performs condition cleanup without duplicating Rage state, condition state, subclass selection state, or authored-identity dispatch.",
+      "rowId": "srd521:classes/barbarian:level-6:subclass-feature-grant:barbarian_mindless_rage",
+      "rowKind": "subclass-feature-grant",
+      "source": {
+        "lineEnd": 185,
+        "lineStart": 182,
+        "path": ".references/srd-5.2.1/Classes/Barbarian.md"
+      },
+      "subclassUnitId": "subclass_barbarian_path_of_the_berserker",
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "missing-authored-record"
+        },
+        "battleReadiness": {
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
+        },
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future battle-runtime active Rage condition-immunity and enter-rage cleanup owner plus subclass feature admission owner",
+          "reason": "The existing Barbarian Rage owner supports activation, use-count spend, duration/extension, Bludgeoning/Piercing/Slashing Resistance, Rage Damage, Concentration break/prevention, and spellcasting restriction, but it does not admit subclass-gated Charmed/Frightened condition immunity or remove existing Charmed/Frightened active effects on entering Rage. Keep this not-installed row closed until a promoted owner consumes typed Surface facts for the selected Berserker feature, derives immunity from the active Rage occurrence, and performs condition cleanup without duplicating Rage state, condition state, subclass selection state, or authored-identity dispatch.",
+          "source": "unit-claim",
+          "state": "recorded"
+        },
+        "catalogAdmission": {
+          "state": "not-installed",
+          "unitId": "barbarian_mindless_rage"
+        },
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
           "disposition": "unsupported-profile",
           "state": "recorded"
@@ -2375,98 +2379,6 @@
     },
     {
       "axis": "character-level",
-      "candidateUnitId": "bard_bonus_proficiencies",
-      "category": "class feature",
-      "className": "Bard",
-      "concept": "Bard Bonus Proficiencies",
-      "levelBand": "level-3",
-      "minedDenominator": {
-        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
-        "sourceInventoryRowId": "srd521:classes/bard:level-3:class-feature-grant:bard_bonus_proficiencies",
-        "state": "present"
-      },
-      "nextAction": "The feature grants durable skill proficiency choices on the Character Sheet. Character creation already owns generic class-feature proficiency-choice discovery and finalization, while this absent subclass feature is not a promoted battle-runtime Unit profile.",
-      "rowId": "srd521:classes/bard:level-3:class-feature-grant:bard_bonus_proficiencies",
-      "rowKind": "class-feature-grant",
-      "source": {
-        "lineEnd": 331,
-        "lineStart": 328,
-        "path": ".references/srd-5.2.1/Classes/Bard.md"
-      },
-      "supportSnapshot": {
-        "authoredContent": {
-          "sourceRecordPath": "packages/surface/content/bard_bonus_proficiencies.json",
-          "state": "authored-record-present",
-          "unitId": "bard_bonus_proficiencies"
-        },
-        "battleReadiness": {
-          "state": "recorded",
-          "status": "accepted-no-battle-effect"
-        },
-        "battleReadinessClosure": {
-          "kind": "outside-battle-runtime",
-          "owner": "character-creation-runtime proficiency-choice projection and future subclass progression admission",
-          "reason": "The feature grants durable skill proficiency choices on the Character Sheet. Character creation already owns generic class-feature proficiency-choice discovery and finalization, while this absent subclass feature is not a promoted battle-runtime Unit profile.",
-          "source": "unit-claim",
-          "state": "recorded"
-        },
-        "catalogAdmission": {
-          "state": "not-installed",
-          "unitId": "bard_bonus_proficiencies"
-        },
-        "finalDisposition": "catalog-only/dead-for-now",
-        "unitProfile": {
-          "disposition": "unsupported-profile",
-          "state": "recorded"
-        }
-      }
-    },
-    {
-      "axis": "character-level",
-      "candidateUnitId": "bard_cutting_words",
-      "category": "class feature",
-      "className": "Bard",
-      "concept": "Bard Cutting Words",
-      "levelBand": "level-3",
-      "minedDenominator": {
-        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
-        "sourceInventoryRowId": "srd521:classes/bard:level-3:class-feature-grant:bard_cutting_words",
-        "state": "present"
-      },
-      "nextAction": "Owner-specific operational evidence is classified and present.",
-      "rowId": "srd521:classes/bard:level-3:class-feature-grant:bard_cutting_words",
-      "rowKind": "class-feature-grant",
-      "source": {
-        "lineEnd": 335,
-        "lineStart": 332,
-        "path": ".references/srd-5.2.1/Classes/Bard.md"
-      },
-      "supportSnapshot": {
-        "authoredContent": {
-          "sourceRecordPath": "packages/surface/content/bard_cutting_words.json",
-          "state": "authored-record-present",
-          "unitId": "bard_cutting_words"
-        },
-        "battleReadiness": {
-          "state": "recorded",
-          "status": "accepted"
-        },
-        "battleReadinessClosure": {
-          "state": "not-recorded"
-        },
-        "catalogAdmission": {
-          "state": "installed",
-          "unitId": "bard_cutting_words"
-        },
-        "finalDisposition": "catalog-installed-owner-evidence-present",
-        "unitProfile": {
-          "disposition": "supported-profile",
-          "state": "recorded"
-        }
-      }
-    },
-    {
-      "axis": "character-level",
       "candidateUnitId": "class_bard",
       "category": "character-creation or progression mechanic",
       "className": "Bard",
@@ -2505,6 +2417,100 @@
         "finalDisposition": "non-runtime",
         "unitProfile": {
           "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "bard_bonus_proficiencies",
+      "category": "subclass feature",
+      "className": "Bard",
+      "concept": "Bard Bonus Proficiencies",
+      "levelBand": "level-3",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/bard:level-3:subclass-feature-grant:bard_bonus_proficiencies",
+        "state": "present"
+      },
+      "nextAction": "The feature grants durable skill proficiency choices on the Character Sheet. Character creation already owns generic class-feature proficiency-choice discovery and finalization, while this absent subclass feature is not a promoted battle-runtime Unit profile.",
+      "rowId": "srd521:classes/bard:level-3:subclass-feature-grant:bard_bonus_proficiencies",
+      "rowKind": "subclass-feature-grant",
+      "source": {
+        "lineEnd": 331,
+        "lineStart": 328,
+        "path": ".references/srd-5.2.1/Classes/Bard.md"
+      },
+      "subclassUnitId": "subclass_bard_college_of_lore",
+      "supportSnapshot": {
+        "authoredContent": {
+          "sourceRecordPath": "packages/surface/content/bard_bonus_proficiencies.json",
+          "state": "authored-record-present",
+          "unitId": "bard_bonus_proficiencies"
+        },
+        "battleReadiness": {
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
+        },
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "character-creation-runtime proficiency-choice projection and future subclass progression admission",
+          "reason": "The feature grants durable skill proficiency choices on the Character Sheet. Character creation already owns generic class-feature proficiency-choice discovery and finalization, while this absent subclass feature is not a promoted battle-runtime Unit profile.",
+          "source": "unit-claim",
+          "state": "recorded"
+        },
+        "catalogAdmission": {
+          "state": "not-installed",
+          "unitId": "bard_bonus_proficiencies"
+        },
+        "finalDisposition": "catalog-only/dead-for-now",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "bard_cutting_words",
+      "category": "subclass feature",
+      "className": "Bard",
+      "concept": "Bard Cutting Words",
+      "levelBand": "level-3",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/bard:level-3:subclass-feature-grant:bard_cutting_words",
+        "state": "present"
+      },
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "rowId": "srd521:classes/bard:level-3:subclass-feature-grant:bard_cutting_words",
+      "rowKind": "subclass-feature-grant",
+      "source": {
+        "lineEnd": 335,
+        "lineStart": 332,
+        "path": ".references/srd-5.2.1/Classes/Bard.md"
+      },
+      "subclassUnitId": "subclass_bard_college_of_lore",
+      "supportSnapshot": {
+        "authoredContent": {
+          "sourceRecordPath": "packages/surface/content/bard_cutting_words.json",
+          "state": "authored-record-present",
+          "unitId": "bard_cutting_words"
+        },
+        "battleReadiness": {
+          "state": "recorded",
+          "status": "accepted"
+        },
+        "battleReadinessClosure": {
+          "state": "not-recorded"
+        },
+        "catalogAdmission": {
+          "state": "installed",
+          "unitId": "bard_cutting_words"
+        },
+        "finalDisposition": "catalog-installed-owner-evidence-present",
+        "unitProfile": {
+          "disposition": "supported-profile",
           "state": "recorded"
         }
       }
@@ -2737,52 +2743,6 @@
     },
     {
       "axis": "character-level",
-      "candidateUnitId": "bard_magical_discoveries",
-      "category": "class feature",
-      "className": "Bard",
-      "concept": "Bard Magical Discoveries",
-      "levelBand": "level-6",
-      "minedDenominator": {
-        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
-        "sourceInventoryRowId": "srd521:classes/bard:level-6:class-feature-grant:bard_magical_discoveries",
-        "state": "present"
-      },
-      "nextAction": "SRD Magical Discoveries grants two chosen always-prepared spells from the Cleric, Druid, or Wizard spell lists, limited to cantrips or spells for which the Bard has Spell Slots, and allows replacing one chosen spell whenever the character gains a Bard level. A future owner must consume typed Surface facts for the selected College of Lore feature, derive eligible cross-list options from canonical spell-list and Bard Spell Slot facts, retain selected Spell Access as source-scoped character facts, and perform Bard-level replacement without adding a duplicate prepared-spell list, duplicating Spell Slot state, or dispatching on Bard, College of Lore, Magical Discoveries, or selected spell authored identity. Individual Spell Definition invocation behavior remains owned by spell invocation profiles.",
-      "rowId": "srd521:classes/bard:level-6:class-feature-grant:bard_magical_discoveries",
-      "rowKind": "class-feature-grant",
-      "source": {
-        "lineEnd": 341,
-        "lineStart": 336,
-        "path": ".references/srd-5.2.1/Classes/Bard.md"
-      },
-      "supportSnapshot": {
-        "authoredContent": {
-          "state": "missing-authored-record"
-        },
-        "battleReadiness": {
-          "state": "recorded",
-          "status": "accepted-no-battle-effect"
-        },
-        "battleReadinessClosure": {
-          "kind": "character-fact-and-runtime-detached-split",
-          "owner": "future-owner-before-SDK character-creation and character-sheet Magical Discoveries spell-access selection owner plus selected Spell Definition invocation profiles",
-          "reason": "SRD Magical Discoveries grants two chosen always-prepared spells from the Cleric, Druid, or Wizard spell lists, limited to cantrips or spells for which the Bard has Spell Slots, and allows replacing one chosen spell whenever the character gains a Bard level. A future owner must consume typed Surface facts for the selected College of Lore feature, derive eligible cross-list options from canonical spell-list and Bard Spell Slot facts, retain selected Spell Access as source-scoped character facts, and perform Bard-level replacement without adding a duplicate prepared-spell list, duplicating Spell Slot state, or dispatching on Bard, College of Lore, Magical Discoveries, or selected spell authored identity. Individual Spell Definition invocation behavior remains owned by spell invocation profiles.",
-          "source": "unit-claim",
-          "state": "recorded"
-        },
-        "catalogAdmission": {
-          "state": "not-installed",
-          "unitId": "bard_magical_discoveries"
-        },
-        "finalDisposition": "catalog-only/dead-for-now",
-        "unitProfile": {
-          "disposition": "unsupported-profile",
-          "state": "recorded"
-        }
-      }
-    },
-    {
-      "axis": "character-level",
       "candidateUnitId": "class_bard",
       "category": "character-creation or progression mechanic",
       "className": "Bard",
@@ -2819,6 +2779,53 @@
           "unitId": "class_bard"
         },
         "finalDisposition": "non-runtime",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "bard_magical_discoveries",
+      "category": "subclass feature",
+      "className": "Bard",
+      "concept": "Bard Magical Discoveries",
+      "levelBand": "level-6",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/bard:level-6:subclass-feature-grant:bard_magical_discoveries",
+        "state": "present"
+      },
+      "nextAction": "SRD Magical Discoveries grants two chosen always-prepared spells from the Cleric, Druid, or Wizard spell lists, limited to cantrips or spells for which the Bard has Spell Slots, and allows replacing one chosen spell whenever the character gains a Bard level. A future owner must consume typed Surface facts for the selected College of Lore feature, derive eligible cross-list options from canonical spell-list and Bard Spell Slot facts, retain selected Spell Access as source-scoped character facts, and perform Bard-level replacement without adding a duplicate prepared-spell list, duplicating Spell Slot state, or dispatching on Bard, College of Lore, Magical Discoveries, or selected spell authored identity. Individual Spell Definition invocation behavior remains owned by spell invocation profiles.",
+      "rowId": "srd521:classes/bard:level-6:subclass-feature-grant:bard_magical_discoveries",
+      "rowKind": "subclass-feature-grant",
+      "source": {
+        "lineEnd": 341,
+        "lineStart": 336,
+        "path": ".references/srd-5.2.1/Classes/Bard.md"
+      },
+      "subclassUnitId": "subclass_bard_college_of_lore",
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "missing-authored-record"
+        },
+        "battleReadiness": {
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
+        },
+        "battleReadinessClosure": {
+          "kind": "character-fact-and-runtime-detached-split",
+          "owner": "future-owner-before-SDK character-creation and character-sheet Magical Discoveries spell-access selection owner plus selected Spell Definition invocation profiles",
+          "reason": "SRD Magical Discoveries grants two chosen always-prepared spells from the Cleric, Druid, or Wizard spell lists, limited to cantrips or spells for which the Bard has Spell Slots, and allows replacing one chosen spell whenever the character gains a Bard level. A future owner must consume typed Surface facts for the selected College of Lore feature, derive eligible cross-list options from canonical spell-list and Bard Spell Slot facts, retain selected Spell Access as source-scoped character facts, and perform Bard-level replacement without adding a duplicate prepared-spell list, duplicating Spell Slot state, or dispatching on Bard, College of Lore, Magical Discoveries, or selected spell authored identity. Individual Spell Definition invocation behavior remains owned by spell invocation profiles.",
+          "source": "unit-claim",
+          "state": "recorded"
+        },
+        "catalogAdmission": {
+          "state": "not-installed",
+          "unitId": "bard_magical_discoveries"
+        },
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
           "disposition": "unsupported-profile",
           "state": "recorded"
@@ -8426,94 +8433,6 @@
     },
     {
       "axis": "character-level",
-      "candidateUnitId": "cleric_disciple_of_life",
-      "category": "class feature",
-      "className": "Cleric",
-      "concept": "Cleric Disciple of Life",
-      "levelBand": "level-3",
-      "minedDenominator": {
-        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
-        "sourceInventoryRowId": "srd521:classes/cleric:level-3:class-feature-grant:cleric_disciple_of_life",
-        "state": "present"
-      },
-      "nextAction": "Owner-specific operational evidence is classified and present.",
-      "rowId": "srd521:classes/cleric:level-3:class-feature-grant:cleric_disciple_of_life",
-      "rowKind": "class-feature-grant",
-      "source": {
-        "lineEnd": 316,
-        "lineStart": 313,
-        "path": ".references/srd-5.2.1/Classes/Cleric.md"
-      },
-      "supportSnapshot": {
-        "authoredContent": {
-          "sourceRecordPath": "packages/surface/content/cleric_disciple_of_life.json",
-          "state": "authored-record-present",
-          "unitId": "cleric_disciple_of_life"
-        },
-        "battleReadiness": {
-          "state": "recorded",
-          "status": "accepted"
-        },
-        "battleReadinessClosure": {
-          "state": "not-recorded"
-        },
-        "catalogAdmission": {
-          "state": "installed",
-          "unitId": "cleric_disciple_of_life"
-        },
-        "finalDisposition": "catalog-installed-owner-evidence-present",
-        "unitProfile": {
-          "disposition": "supported-profile",
-          "state": "recorded"
-        }
-      }
-    },
-    {
-      "axis": "character-level",
-      "candidateUnitId": "cleric_preserve_life",
-      "category": "class feature",
-      "className": "Cleric",
-      "concept": "Cleric Preserve Life",
-      "levelBand": "level-3",
-      "minedDenominator": {
-        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
-        "sourceInventoryRowId": "srd521:classes/cleric:level-3:class-feature-grant:cleric_preserve_life",
-        "state": "present"
-      },
-      "nextAction": "Owner-specific operational evidence is classified and present.",
-      "rowId": "srd521:classes/cleric:level-3:class-feature-grant:cleric_preserve_life",
-      "rowKind": "class-feature-grant",
-      "source": {
-        "lineEnd": 333,
-        "lineStart": 330,
-        "path": ".references/srd-5.2.1/Classes/Cleric.md"
-      },
-      "supportSnapshot": {
-        "authoredContent": {
-          "sourceRecordPath": "packages/surface/content/cleric_preserve_life.json",
-          "state": "authored-record-present",
-          "unitId": "cleric_preserve_life"
-        },
-        "battleReadiness": {
-          "state": "recorded",
-          "status": "accepted"
-        },
-        "battleReadinessClosure": {
-          "state": "not-recorded"
-        },
-        "catalogAdmission": {
-          "state": "installed",
-          "unitId": "cleric_preserve_life"
-        },
-        "finalDisposition": "catalog-installed-owner-evidence-present",
-        "unitProfile": {
-          "disposition": "supported-profile",
-          "state": "recorded"
-        }
-      }
-    },
-    {
-      "axis": "character-level",
       "candidateUnitId": "class_cleric",
       "category": "character-creation or progression mechanic",
       "className": "Cleric",
@@ -8552,6 +8471,96 @@
         "finalDisposition": "non-runtime",
         "unitProfile": {
           "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "cleric_disciple_of_life",
+      "category": "subclass feature",
+      "className": "Cleric",
+      "concept": "Cleric Disciple of Life",
+      "levelBand": "level-3",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/cleric:level-3:subclass-feature-grant:cleric_disciple_of_life",
+        "state": "present"
+      },
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "rowId": "srd521:classes/cleric:level-3:subclass-feature-grant:cleric_disciple_of_life",
+      "rowKind": "subclass-feature-grant",
+      "source": {
+        "lineEnd": 316,
+        "lineStart": 313,
+        "path": ".references/srd-5.2.1/Classes/Cleric.md"
+      },
+      "subclassUnitId": "subclass_cleric_life_domain",
+      "supportSnapshot": {
+        "authoredContent": {
+          "sourceRecordPath": "packages/surface/content/cleric_disciple_of_life.json",
+          "state": "authored-record-present",
+          "unitId": "cleric_disciple_of_life"
+        },
+        "battleReadiness": {
+          "state": "recorded",
+          "status": "accepted"
+        },
+        "battleReadinessClosure": {
+          "state": "not-recorded"
+        },
+        "catalogAdmission": {
+          "state": "installed",
+          "unitId": "cleric_disciple_of_life"
+        },
+        "finalDisposition": "catalog-installed-owner-evidence-present",
+        "unitProfile": {
+          "disposition": "supported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "cleric_preserve_life",
+      "category": "subclass feature",
+      "className": "Cleric",
+      "concept": "Cleric Preserve Life",
+      "levelBand": "level-3",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/cleric:level-3:subclass-feature-grant:cleric_preserve_life",
+        "state": "present"
+      },
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "rowId": "srd521:classes/cleric:level-3:subclass-feature-grant:cleric_preserve_life",
+      "rowKind": "subclass-feature-grant",
+      "source": {
+        "lineEnd": 333,
+        "lineStart": 330,
+        "path": ".references/srd-5.2.1/Classes/Cleric.md"
+      },
+      "subclassUnitId": "subclass_cleric_life_domain",
+      "supportSnapshot": {
+        "authoredContent": {
+          "sourceRecordPath": "packages/surface/content/cleric_preserve_life.json",
+          "state": "authored-record-present",
+          "unitId": "cleric_preserve_life"
+        },
+        "battleReadiness": {
+          "state": "recorded",
+          "status": "accepted"
+        },
+        "battleReadinessClosure": {
+          "state": "not-recorded"
+        },
+        "catalogAdmission": {
+          "state": "installed",
+          "unitId": "cleric_preserve_life"
+        },
+        "finalDisposition": "catalog-installed-owner-evidence-present",
+        "unitProfile": {
+          "disposition": "supported-profile",
           "state": "recorded"
         }
       }
@@ -8620,6 +8629,7 @@
         "lineStart": 317,
         "path": ".references/srd-5.2.1/Classes/Cleric.md"
       },
+      "subclassUnitId": "subclass_cleric_life_domain",
       "supportSnapshot": {
         "authoredContent": {
           "sourceRecordPath": "packages/surface/content/cleric_life_domain_spells.json",
@@ -8832,52 +8842,6 @@
     },
     {
       "axis": "character-level",
-      "candidateUnitId": "cleric_blessed_healer",
-      "category": "class feature",
-      "className": "Cleric",
-      "concept": "Cleric Blessed Healer",
-      "levelBand": "level-6",
-      "minedDenominator": {
-        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
-        "sourceInventoryRowId": "srd521:classes/cleric:level-6:class-feature-grant:cleric_blessed_healer",
-        "state": "present"
-      },
-      "nextAction": "SRD Blessed Healer triggers immediately after the Cleric casts a spell with a Spell Slot that restores Hit Points to one or more creatures other than the caster, then restores Hit Points to the caster equal to 2 plus that Spell Slot level. Existing spell.hit-point-restoration profiles own Spell Slot spend, target healing facts, and Hit Point restoration for Cure Wounds, Healing Word, Mass Cure Wounds, and Mass Healing Word, and the Disciple of Life spell-slot healing modifier owner adds 2 plus Spell Slot level to each healed target. They do not admit a selected-feature, post-cast self-heal once per qualifying spell cast. A future owner must consume typed Surface facts for the selected Life Domain feature, the existing Spell Slot invocation level, and the resolved healed-target set with at least one non-caster target, then apply caster Hit Point restoration through the shared healing transition without duplicating Spell Slot state, prepared Spell Access, healing target state, caster Hit Point state, subclass selection state, or dispatching on Cleric, Life Domain, Blessed Healer, or healing spell authored identity.",
-      "rowId": "srd521:classes/cleric:level-6:class-feature-grant:cleric_blessed_healer",
-      "rowKind": "class-feature-grant",
-      "source": {
-        "lineEnd": 337,
-        "lineStart": 334,
-        "path": ".references/srd-5.2.1/Classes/Cleric.md"
-      },
-      "supportSnapshot": {
-        "authoredContent": {
-          "state": "missing-authored-record"
-        },
-        "battleReadiness": {
-          "state": "recorded",
-          "status": "accepted-no-battle-effect"
-        },
-        "battleReadinessClosure": {
-          "kind": "outside-battle-runtime",
-          "owner": "future-owner-before-SDK battle-runtime spell healing rider owner plus selected Life Domain feature admission owner and existing spell Hit Point restoration profiles",
-          "reason": "SRD Blessed Healer triggers immediately after the Cleric casts a spell with a Spell Slot that restores Hit Points to one or more creatures other than the caster, then restores Hit Points to the caster equal to 2 plus that Spell Slot level. Existing spell.hit-point-restoration profiles own Spell Slot spend, target healing facts, and Hit Point restoration for Cure Wounds, Healing Word, Mass Cure Wounds, and Mass Healing Word, and the Disciple of Life spell-slot healing modifier owner adds 2 plus Spell Slot level to each healed target. They do not admit a selected-feature, post-cast self-heal once per qualifying spell cast. A future owner must consume typed Surface facts for the selected Life Domain feature, the existing Spell Slot invocation level, and the resolved healed-target set with at least one non-caster target, then apply caster Hit Point restoration through the shared healing transition without duplicating Spell Slot state, prepared Spell Access, healing target state, caster Hit Point state, subclass selection state, or dispatching on Cleric, Life Domain, Blessed Healer, or healing spell authored identity.",
-          "source": "unit-claim",
-          "state": "recorded"
-        },
-        "catalogAdmission": {
-          "state": "not-installed",
-          "unitId": "cleric_blessed_healer"
-        },
-        "finalDisposition": "catalog-only/dead-for-now",
-        "unitProfile": {
-          "disposition": "unsupported-profile",
-          "state": "recorded"
-        }
-      }
-    },
-    {
-      "axis": "character-level",
       "candidateUnitId": "class_cleric",
       "category": "character-creation or progression mechanic",
       "className": "Cleric",
@@ -8914,6 +8878,53 @@
           "unitId": "class_cleric"
         },
         "finalDisposition": "non-runtime",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "cleric_blessed_healer",
+      "category": "subclass feature",
+      "className": "Cleric",
+      "concept": "Cleric Blessed Healer",
+      "levelBand": "level-6",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/cleric:level-6:subclass-feature-grant:cleric_blessed_healer",
+        "state": "present"
+      },
+      "nextAction": "SRD Blessed Healer triggers immediately after the Cleric casts a spell with a Spell Slot that restores Hit Points to one or more creatures other than the caster, then restores Hit Points to the caster equal to 2 plus that Spell Slot level. Existing spell.hit-point-restoration profiles own Spell Slot spend, target healing facts, and Hit Point restoration for Cure Wounds, Healing Word, Mass Cure Wounds, and Mass Healing Word, and the Disciple of Life spell-slot healing modifier owner adds 2 plus Spell Slot level to each healed target. They do not admit a selected-feature, post-cast self-heal once per qualifying spell cast. A future owner must consume typed Surface facts for the selected Life Domain feature, the existing Spell Slot invocation level, and the resolved healed-target set with at least one non-caster target, then apply caster Hit Point restoration through the shared healing transition without duplicating Spell Slot state, prepared Spell Access, healing target state, caster Hit Point state, subclass selection state, or dispatching on Cleric, Life Domain, Blessed Healer, or healing spell authored identity.",
+      "rowId": "srd521:classes/cleric:level-6:subclass-feature-grant:cleric_blessed_healer",
+      "rowKind": "subclass-feature-grant",
+      "source": {
+        "lineEnd": 337,
+        "lineStart": 334,
+        "path": ".references/srd-5.2.1/Classes/Cleric.md"
+      },
+      "subclassUnitId": "subclass_cleric_life_domain",
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "missing-authored-record"
+        },
+        "battleReadiness": {
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
+        },
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future-owner-before-SDK battle-runtime spell healing rider owner plus selected Life Domain feature admission owner and existing spell Hit Point restoration profiles",
+          "reason": "SRD Blessed Healer triggers immediately after the Cleric casts a spell with a Spell Slot that restores Hit Points to one or more creatures other than the caster, then restores Hit Points to the caster equal to 2 plus that Spell Slot level. Existing spell.hit-point-restoration profiles own Spell Slot spend, target healing facts, and Hit Point restoration for Cure Wounds, Healing Word, Mass Cure Wounds, and Mass Healing Word, and the Disciple of Life spell-slot healing modifier owner adds 2 plus Spell Slot level to each healed target. They do not admit a selected-feature, post-cast self-heal once per qualifying spell cast. A future owner must consume typed Surface facts for the selected Life Domain feature, the existing Spell Slot invocation level, and the resolved healed-target set with at least one non-caster target, then apply caster Hit Point restoration through the shared healing transition without duplicating Spell Slot state, prepared Spell Access, healing target state, caster Hit Point state, subclass selection state, or dispatching on Cleric, Life Domain, Blessed Healer, or healing spell authored identity.",
+          "source": "unit-claim",
+          "state": "recorded"
+        },
+        "catalogAdmission": {
+          "state": "not-installed",
+          "unitId": "cleric_blessed_healer"
+        },
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
           "disposition": "unsupported-profile",
           "state": "recorded"
@@ -13741,50 +13752,6 @@
     },
     {
       "axis": "character-level",
-      "candidateUnitId": "druid_lands_aid",
-      "category": "class feature",
-      "className": "Druid",
-      "concept": "Druid Land's Aid",
-      "levelBand": "level-3",
-      "minedDenominator": {
-        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
-        "sourceInventoryRowId": "srd521:classes/druid:level-3:class-feature-grant:druid_lands_aid",
-        "state": "present"
-      },
-      "nextAction": "Owner-specific operational evidence is classified and present.",
-      "rowId": "srd521:classes/druid:level-3:class-feature-grant:druid_lands_aid",
-      "rowKind": "class-feature-grant",
-      "source": {
-        "lineEnd": 411,
-        "lineStart": 406,
-        "path": ".references/srd-5.2.1/Classes/Druid.md"
-      },
-      "supportSnapshot": {
-        "authoredContent": {
-          "sourceRecordPath": "packages/surface/content/druid_lands_aid.json",
-          "state": "authored-record-present",
-          "unitId": "druid_lands_aid"
-        },
-        "battleReadiness": {
-          "state": "recorded",
-          "status": "accepted"
-        },
-        "battleReadinessClosure": {
-          "state": "not-recorded"
-        },
-        "catalogAdmission": {
-          "state": "installed",
-          "unitId": "druid_lands_aid"
-        },
-        "finalDisposition": "catalog-installed-owner-evidence-present",
-        "unitProfile": {
-          "disposition": "supported-profile",
-          "state": "recorded"
-        }
-      }
-    },
-    {
-      "axis": "character-level",
       "candidateUnitId": "class_druid",
       "category": "character-creation or progression mechanic",
       "className": "Druid",
@@ -13823,6 +13790,51 @@
         "finalDisposition": "non-runtime",
         "unitProfile": {
           "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "druid_lands_aid",
+      "category": "subclass feature",
+      "className": "Druid",
+      "concept": "Druid Land's Aid",
+      "levelBand": "level-3",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/druid:level-3:subclass-feature-grant:druid_lands_aid",
+        "state": "present"
+      },
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "rowId": "srd521:classes/druid:level-3:subclass-feature-grant:druid_lands_aid",
+      "rowKind": "subclass-feature-grant",
+      "source": {
+        "lineEnd": 411,
+        "lineStart": 406,
+        "path": ".references/srd-5.2.1/Classes/Druid.md"
+      },
+      "subclassUnitId": "subclass_druid_circle_of_the_land",
+      "supportSnapshot": {
+        "authoredContent": {
+          "sourceRecordPath": "packages/surface/content/druid_lands_aid.json",
+          "state": "authored-record-present",
+          "unitId": "druid_lands_aid"
+        },
+        "battleReadiness": {
+          "state": "recorded",
+          "status": "accepted"
+        },
+        "battleReadinessClosure": {
+          "state": "not-recorded"
+        },
+        "catalogAdmission": {
+          "state": "installed",
+          "unitId": "druid_lands_aid"
+        },
+        "finalDisposition": "catalog-installed-owner-evidence-present",
+        "unitProfile": {
+          "disposition": "supported-profile",
           "state": "recorded"
         }
       }
@@ -13891,6 +13903,7 @@
         "lineStart": 366,
         "path": ".references/srd-5.2.1/Classes/Druid.md"
       },
+      "subclassUnitId": "subclass_druid_circle_of_the_land",
       "supportSnapshot": {
         "authoredContent": {
           "sourceRecordPath": "packages/surface/content/druid_circle_of_the_land_spells.json",
@@ -14103,52 +14116,6 @@
     },
     {
       "axis": "character-level",
-      "candidateUnitId": "druid_natural_recovery",
-      "category": "class feature",
-      "className": "Druid",
-      "concept": "Druid Natural Recovery",
-      "levelBand": "level-6",
-      "minedDenominator": {
-        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
-        "sourceInventoryRowId": "srd521:classes/druid:level-6:class-feature-grant:druid_natural_recovery",
-        "state": "present"
-      },
-      "nextAction": "SRD Natural Recovery grants a once-per-Long-Rest no-slot cast of a prepared level 1+ spell from Circle Spells, and separately lets the Druid recover expended Spell Slots when finishing a Short Rest with a combined slot-level budget of half Druid level rounded up and no recovered slot at level 6 or higher. Existing character-sheet.short-rest-spell-slot-recovery and character-sheet.class-feature-long-rest-use-state owners cover shared Spell Slot refund and Long Rest use-state patterns, while character-sheet.druid-circle-land-spell-access owns selected-land prepared Spell Access. They do not admit a selected level-6 Circle of the Land feature that combines the no-slot Circle Spell cast resource, Druid-level recovery budget, Short Rest trigger, and Long Rest reset. A future owner must consume typed Surface facts for the selected Natural Recovery feature, existing Circle Spells prepared access, existing Druid class level, and existing Spell Slot expenditure state, then update the canonical Character Sheet Spell Slot owner and rest-feature use state without adding duplicate Spell Slot state, prepared Spell Access, subclass selection state, or dispatching on Druid, Circle of the Land, Natural Recovery, or spell authored identity.",
-      "rowId": "srd521:classes/druid:level-6:class-feature-grant:druid_natural_recovery",
-      "rowKind": "class-feature-grant",
-      "source": {
-        "lineEnd": 417,
-        "lineStart": 412,
-        "path": ".references/srd-5.2.1/Classes/Druid.md"
-      },
-      "supportSnapshot": {
-        "authoredContent": {
-          "state": "missing-authored-record"
-        },
-        "battleReadiness": {
-          "state": "recorded",
-          "status": "accepted-no-battle-effect"
-        },
-        "battleReadinessClosure": {
-          "kind": "character-fact-and-runtime-detached-split",
-          "owner": "future-owner-before-SDK character-sheet-runtime Natural Recovery rest feature owner plus existing Spell Slot and Circle Spells owners",
-          "reason": "SRD Natural Recovery grants a once-per-Long-Rest no-slot cast of a prepared level 1+ spell from Circle Spells, and separately lets the Druid recover expended Spell Slots when finishing a Short Rest with a combined slot-level budget of half Druid level rounded up and no recovered slot at level 6 or higher. Existing character-sheet.short-rest-spell-slot-recovery and character-sheet.class-feature-long-rest-use-state owners cover shared Spell Slot refund and Long Rest use-state patterns, while character-sheet.druid-circle-land-spell-access owns selected-land prepared Spell Access. They do not admit a selected level-6 Circle of the Land feature that combines the no-slot Circle Spell cast resource, Druid-level recovery budget, Short Rest trigger, and Long Rest reset. A future owner must consume typed Surface facts for the selected Natural Recovery feature, existing Circle Spells prepared access, existing Druid class level, and existing Spell Slot expenditure state, then update the canonical Character Sheet Spell Slot owner and rest-feature use state without adding duplicate Spell Slot state, prepared Spell Access, subclass selection state, or dispatching on Druid, Circle of the Land, Natural Recovery, or spell authored identity.",
-          "source": "unit-claim",
-          "state": "recorded"
-        },
-        "catalogAdmission": {
-          "state": "not-installed",
-          "unitId": "druid_natural_recovery"
-        },
-        "finalDisposition": "catalog-only/dead-for-now",
-        "unitProfile": {
-          "disposition": "unsupported-profile",
-          "state": "recorded"
-        }
-      }
-    },
-    {
-      "axis": "character-level",
       "candidateUnitId": "class_druid",
       "category": "character-creation or progression mechanic",
       "className": "Druid",
@@ -14185,6 +14152,53 @@
           "unitId": "class_druid"
         },
         "finalDisposition": "non-runtime",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "druid_natural_recovery",
+      "category": "subclass feature",
+      "className": "Druid",
+      "concept": "Druid Natural Recovery",
+      "levelBand": "level-6",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/druid:level-6:subclass-feature-grant:druid_natural_recovery",
+        "state": "present"
+      },
+      "nextAction": "SRD Natural Recovery grants a once-per-Long-Rest no-slot cast of a prepared level 1+ spell from Circle Spells, and separately lets the Druid recover expended Spell Slots when finishing a Short Rest with a combined slot-level budget of half Druid level rounded up and no recovered slot at level 6 or higher. Existing character-sheet.short-rest-spell-slot-recovery and character-sheet.class-feature-long-rest-use-state owners cover shared Spell Slot refund and Long Rest use-state patterns, while character-sheet.druid-circle-land-spell-access owns selected-land prepared Spell Access. They do not admit a selected level-6 Circle of the Land feature that combines the no-slot Circle Spell cast resource, Druid-level recovery budget, Short Rest trigger, and Long Rest reset. A future owner must consume typed Surface facts for the selected Natural Recovery feature, existing Circle Spells prepared access, existing Druid class level, and existing Spell Slot expenditure state, then update the canonical Character Sheet Spell Slot owner and rest-feature use state without adding duplicate Spell Slot state, prepared Spell Access, subclass selection state, or dispatching on Druid, Circle of the Land, Natural Recovery, or spell authored identity.",
+      "rowId": "srd521:classes/druid:level-6:subclass-feature-grant:druid_natural_recovery",
+      "rowKind": "subclass-feature-grant",
+      "source": {
+        "lineEnd": 417,
+        "lineStart": 412,
+        "path": ".references/srd-5.2.1/Classes/Druid.md"
+      },
+      "subclassUnitId": "subclass_druid_circle_of_the_land",
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "missing-authored-record"
+        },
+        "battleReadiness": {
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
+        },
+        "battleReadinessClosure": {
+          "kind": "character-fact-and-runtime-detached-split",
+          "owner": "future-owner-before-SDK character-sheet-runtime Natural Recovery rest feature owner plus existing Spell Slot and Circle Spells owners",
+          "reason": "SRD Natural Recovery grants a once-per-Long-Rest no-slot cast of a prepared level 1+ spell from Circle Spells, and separately lets the Druid recover expended Spell Slots when finishing a Short Rest with a combined slot-level budget of half Druid level rounded up and no recovered slot at level 6 or higher. Existing character-sheet.short-rest-spell-slot-recovery and character-sheet.class-feature-long-rest-use-state owners cover shared Spell Slot refund and Long Rest use-state patterns, while character-sheet.druid-circle-land-spell-access owns selected-land prepared Spell Access. They do not admit a selected level-6 Circle of the Land feature that combines the no-slot Circle Spell cast resource, Druid-level recovery budget, Short Rest trigger, and Long Rest reset. A future owner must consume typed Surface facts for the selected Natural Recovery feature, existing Circle Spells prepared access, existing Druid class level, and existing Spell Slot expenditure state, then update the canonical Character Sheet Spell Slot owner and rest-feature use state without adding duplicate Spell Slot state, prepared Spell Access, subclass selection state, or dispatching on Druid, Circle of the Land, Natural Recovery, or spell authored identity.",
+          "source": "unit-claim",
+          "state": "recorded"
+        },
+        "catalogAdmission": {
+          "state": "not-installed",
+          "unitId": "druid_natural_recovery"
+        },
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
           "disposition": "unsupported-profile",
           "state": "recorded"
@@ -19711,94 +19725,6 @@
     },
     {
       "axis": "character-level",
-      "candidateUnitId": "fighter_improved_critical",
-      "category": "class feature",
-      "className": "Fighter",
-      "concept": "Fighter Improved Critical",
-      "levelBand": "level-3",
-      "minedDenominator": {
-        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
-        "sourceInventoryRowId": "srd521:classes/fighter:level-3:class-feature-grant:fighter_improved_critical",
-        "state": "present"
-      },
-      "nextAction": "Owner-specific operational evidence is classified and present.",
-      "rowId": "srd521:classes/fighter:level-3:class-feature-grant:fighter_improved_critical",
-      "rowKind": "class-feature-grant",
-      "source": {
-        "lineEnd": 139,
-        "lineStart": 136,
-        "path": ".references/srd-5.2.1/Classes/Fighter.md"
-      },
-      "supportSnapshot": {
-        "authoredContent": {
-          "sourceRecordPath": "packages/surface/content/fighter_improved_critical.json",
-          "state": "authored-record-present",
-          "unitId": "fighter_improved_critical"
-        },
-        "battleReadiness": {
-          "state": "recorded",
-          "status": "accepted"
-        },
-        "battleReadinessClosure": {
-          "state": "not-recorded"
-        },
-        "catalogAdmission": {
-          "state": "installed",
-          "unitId": "fighter_improved_critical"
-        },
-        "finalDisposition": "catalog-installed-owner-evidence-present",
-        "unitProfile": {
-          "disposition": "supported-profile",
-          "state": "recorded"
-        }
-      }
-    },
-    {
-      "axis": "character-level",
-      "candidateUnitId": "fighter_remarkable_athlete",
-      "category": "class feature",
-      "className": "Fighter",
-      "concept": "Fighter Remarkable Athlete",
-      "levelBand": "level-3",
-      "minedDenominator": {
-        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
-        "sourceInventoryRowId": "srd521:classes/fighter:level-3:class-feature-grant:fighter_remarkable_athlete",
-        "state": "present"
-      },
-      "nextAction": "Owner-specific operational evidence is classified and present.",
-      "rowId": "srd521:classes/fighter:level-3:class-feature-grant:fighter_remarkable_athlete",
-      "rowKind": "class-feature-grant",
-      "source": {
-        "lineEnd": 145,
-        "lineStart": 140,
-        "path": ".references/srd-5.2.1/Classes/Fighter.md"
-      },
-      "supportSnapshot": {
-        "authoredContent": {
-          "sourceRecordPath": "packages/surface/content/fighter_remarkable_athlete.json",
-          "state": "authored-record-present",
-          "unitId": "fighter_remarkable_athlete"
-        },
-        "battleReadiness": {
-          "state": "recorded",
-          "status": "accepted"
-        },
-        "battleReadinessClosure": {
-          "state": "not-recorded"
-        },
-        "catalogAdmission": {
-          "state": "installed",
-          "unitId": "fighter_remarkable_athlete"
-        },
-        "finalDisposition": "catalog-installed-owner-evidence-present",
-        "unitProfile": {
-          "disposition": "supported-profile",
-          "state": "recorded"
-        }
-      }
-    },
-    {
-      "axis": "character-level",
       "candidateUnitId": "class_fighter",
       "category": "character-creation or progression mechanic",
       "className": "Fighter",
@@ -19837,6 +19763,96 @@
         "finalDisposition": "non-runtime",
         "unitProfile": {
           "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "fighter_improved_critical",
+      "category": "subclass feature",
+      "className": "Fighter",
+      "concept": "Fighter Improved Critical",
+      "levelBand": "level-3",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/fighter:level-3:subclass-feature-grant:fighter_improved_critical",
+        "state": "present"
+      },
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "rowId": "srd521:classes/fighter:level-3:subclass-feature-grant:fighter_improved_critical",
+      "rowKind": "subclass-feature-grant",
+      "source": {
+        "lineEnd": 139,
+        "lineStart": 136,
+        "path": ".references/srd-5.2.1/Classes/Fighter.md"
+      },
+      "subclassUnitId": "subclass_fighter_champion",
+      "supportSnapshot": {
+        "authoredContent": {
+          "sourceRecordPath": "packages/surface/content/fighter_improved_critical.json",
+          "state": "authored-record-present",
+          "unitId": "fighter_improved_critical"
+        },
+        "battleReadiness": {
+          "state": "recorded",
+          "status": "accepted"
+        },
+        "battleReadinessClosure": {
+          "state": "not-recorded"
+        },
+        "catalogAdmission": {
+          "state": "installed",
+          "unitId": "fighter_improved_critical"
+        },
+        "finalDisposition": "catalog-installed-owner-evidence-present",
+        "unitProfile": {
+          "disposition": "supported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "fighter_remarkable_athlete",
+      "category": "subclass feature",
+      "className": "Fighter",
+      "concept": "Fighter Remarkable Athlete",
+      "levelBand": "level-3",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/fighter:level-3:subclass-feature-grant:fighter_remarkable_athlete",
+        "state": "present"
+      },
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "rowId": "srd521:classes/fighter:level-3:subclass-feature-grant:fighter_remarkable_athlete",
+      "rowKind": "subclass-feature-grant",
+      "source": {
+        "lineEnd": 145,
+        "lineStart": 140,
+        "path": ".references/srd-5.2.1/Classes/Fighter.md"
+      },
+      "subclassUnitId": "subclass_fighter_champion",
+      "supportSnapshot": {
+        "authoredContent": {
+          "sourceRecordPath": "packages/surface/content/fighter_remarkable_athlete.json",
+          "state": "authored-record-present",
+          "unitId": "fighter_remarkable_athlete"
+        },
+        "battleReadiness": {
+          "state": "recorded",
+          "status": "accepted"
+        },
+        "battleReadinessClosure": {
+          "state": "not-recorded"
+        },
+        "catalogAdmission": {
+          "state": "installed",
+          "unitId": "fighter_remarkable_athlete"
+        },
+        "finalDisposition": "catalog-installed-owner-evidence-present",
+        "unitProfile": {
+          "disposition": "supported-profile",
           "state": "recorded"
         }
       }
@@ -20213,52 +20229,6 @@
     },
     {
       "axis": "character-level",
-      "candidateUnitId": "fighter_additional_fighting_style",
-      "category": "class feature",
-      "className": "Fighter",
-      "concept": "Fighter Additional Fighting Style",
-      "levelBand": "level-7",
-      "minedDenominator": {
-        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
-        "sourceInventoryRowId": "srd521:classes/fighter:level-7:class-feature-grant:fighter_additional_fighting_style",
-        "state": "present"
-      },
-      "nextAction": "SRD Champion Additional Fighting Style grants another Fighting Style feat choice. This level-7 subclass feature is a selection boundary, not an executable battle feature: the selected Fighting Style feat Unit owns any battle pressure, and character creation must retain the additional selected feat ref through the same selected-feature ownership model instead of copying feat behavior or creating a second divergent selected Fighting Style state model on the grant container.",
-      "rowId": "srd521:classes/fighter:level-7:class-feature-grant:fighter_additional_fighting_style",
-      "rowKind": "class-feature-grant",
-      "source": {
-        "lineEnd": 149,
-        "lineStart": 146,
-        "path": ".references/srd-5.2.1/Classes/Fighter.md"
-      },
-      "supportSnapshot": {
-        "authoredContent": {
-          "state": "missing-authored-record"
-        },
-        "battleReadiness": {
-          "state": "recorded",
-          "status": "accepted-no-battle-effect"
-        },
-        "battleReadinessClosure": {
-          "kind": "selection-grant-container",
-          "owner": "future character-creation repeated Fighting Style grant owner plus selected Fighting Style feat Unit profiles",
-          "reason": "SRD Champion Additional Fighting Style grants another Fighting Style feat choice. This level-7 subclass feature is a selection boundary, not an executable battle feature: the selected Fighting Style feat Unit owns any battle pressure, and character creation must retain the additional selected feat ref through the same selected-feature ownership model instead of copying feat behavior or creating a second divergent selected Fighting Style state model on the grant container.",
-          "source": "unit-claim",
-          "state": "recorded"
-        },
-        "catalogAdmission": {
-          "state": "not-installed",
-          "unitId": "fighter_additional_fighting_style"
-        },
-        "finalDisposition": "catalog-only/dead-for-now",
-        "unitProfile": {
-          "disposition": "unsupported-profile",
-          "state": "recorded"
-        }
-      }
-    },
-    {
-      "axis": "character-level",
       "candidateUnitId": "class_fighter",
       "category": "character-creation or progression mechanic",
       "className": "Fighter",
@@ -20299,6 +20269,53 @@
           "unitId": "class_fighter"
         },
         "finalDisposition": "non-runtime",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "fighter_additional_fighting_style",
+      "category": "subclass feature",
+      "className": "Fighter",
+      "concept": "Fighter Additional Fighting Style",
+      "levelBand": "level-7",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/fighter:level-7:subclass-feature-grant:fighter_additional_fighting_style",
+        "state": "present"
+      },
+      "nextAction": "SRD Champion Additional Fighting Style grants another Fighting Style feat choice. This level-7 subclass feature is a selection boundary, not an executable battle feature: the selected Fighting Style feat Unit owns any battle pressure, and character creation must retain the additional selected feat ref through the same selected-feature ownership model instead of copying feat behavior or creating a second divergent selected Fighting Style state model on the grant container.",
+      "rowId": "srd521:classes/fighter:level-7:subclass-feature-grant:fighter_additional_fighting_style",
+      "rowKind": "subclass-feature-grant",
+      "source": {
+        "lineEnd": 149,
+        "lineStart": 146,
+        "path": ".references/srd-5.2.1/Classes/Fighter.md"
+      },
+      "subclassUnitId": "subclass_fighter_champion",
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "missing-authored-record"
+        },
+        "battleReadiness": {
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
+        },
+        "battleReadinessClosure": {
+          "kind": "selection-grant-container",
+          "owner": "future character-creation repeated Fighting Style grant owner plus selected Fighting Style feat Unit profiles",
+          "reason": "SRD Champion Additional Fighting Style grants another Fighting Style feat choice. This level-7 subclass feature is a selection boundary, not an executable battle feature: the selected Fighting Style feat Unit owns any battle pressure, and character creation must retain the additional selected feat ref through the same selected-feature ownership model instead of copying feat behavior or creating a second divergent selected Fighting Style state model on the grant container.",
+          "source": "unit-claim",
+          "state": "recorded"
+        },
+        "catalogAdmission": {
+          "state": "not-installed",
+          "unitId": "fighter_additional_fighting_style"
+        },
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
           "disposition": "unsupported-profile",
           "state": "recorded"
@@ -21366,50 +21383,6 @@
     },
     {
       "axis": "character-level",
-      "candidateUnitId": "monk_open_hand_technique",
-      "category": "class feature",
-      "className": "Monk",
-      "concept": "Monk Open Hand Technique",
-      "levelBand": "level-3",
-      "minedDenominator": {
-        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
-        "sourceInventoryRowId": "srd521:classes/monk:level-3:class-feature-grant:monk_open_hand_technique",
-        "state": "present"
-      },
-      "nextAction": "Owner-specific operational evidence is classified and present.",
-      "rowId": "srd521:classes/monk:level-3:class-feature-grant:monk_open_hand_technique",
-      "rowKind": "class-feature-grant",
-      "source": {
-        "lineEnd": 201,
-        "lineStart": 192,
-        "path": ".references/srd-5.2.1/Classes/Monk.md"
-      },
-      "supportSnapshot": {
-        "authoredContent": {
-          "sourceRecordPath": "packages/surface/content/monk_open_hand_technique.json",
-          "state": "authored-record-present",
-          "unitId": "monk_open_hand_technique"
-        },
-        "battleReadiness": {
-          "state": "recorded",
-          "status": "accepted"
-        },
-        "battleReadinessClosure": {
-          "state": "not-recorded"
-        },
-        "catalogAdmission": {
-          "state": "installed",
-          "unitId": "monk_open_hand_technique"
-        },
-        "finalDisposition": "catalog-installed-owner-evidence-present",
-        "unitProfile": {
-          "disposition": "supported-profile",
-          "state": "recorded"
-        }
-      }
-    },
-    {
-      "axis": "character-level",
       "candidateUnitId": "class_monk",
       "category": "character-creation or progression mechanic",
       "className": "Monk",
@@ -21448,6 +21421,51 @@
         "finalDisposition": "non-runtime",
         "unitProfile": {
           "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "monk_open_hand_technique",
+      "category": "subclass feature",
+      "className": "Monk",
+      "concept": "Monk Open Hand Technique",
+      "levelBand": "level-3",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/monk:level-3:subclass-feature-grant:monk_open_hand_technique",
+        "state": "present"
+      },
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "rowId": "srd521:classes/monk:level-3:subclass-feature-grant:monk_open_hand_technique",
+      "rowKind": "subclass-feature-grant",
+      "source": {
+        "lineEnd": 201,
+        "lineStart": 192,
+        "path": ".references/srd-5.2.1/Classes/Monk.md"
+      },
+      "subclassUnitId": "subclass_monk_warrior_of_the_open_hand",
+      "supportSnapshot": {
+        "authoredContent": {
+          "sourceRecordPath": "packages/surface/content/monk_open_hand_technique.json",
+          "state": "authored-record-present",
+          "unitId": "monk_open_hand_technique"
+        },
+        "battleReadiness": {
+          "state": "recorded",
+          "status": "accepted"
+        },
+        "battleReadinessClosure": {
+          "state": "not-recorded"
+        },
+        "catalogAdmission": {
+          "state": "installed",
+          "unitId": "monk_open_hand_technique"
+        },
+        "finalDisposition": "catalog-installed-owner-evidence-present",
+        "unitProfile": {
+          "disposition": "supported-profile",
           "state": "recorded"
         }
       }
@@ -21812,52 +21830,6 @@
     },
     {
       "axis": "character-level",
-      "candidateUnitId": "monk_wholeness_of_body",
-      "category": "class feature",
-      "className": "Monk",
-      "concept": "Monk Wholeness of Body",
-      "levelBand": "level-6",
-      "minedDenominator": {
-        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
-        "sourceInventoryRowId": "srd521:classes/monk:level-6:class-feature-grant:monk_wholeness_of_body",
-        "state": "present"
-      },
-      "nextAction": "SRD Wholeness of Body lets the selected Monk use a Bonus Action to roll the Martial Arts die and regain Hit Points equal to the roll plus Wisdom modifier, with a minimum of 1 Hit Point regained, a Wisdom-modifier use count with a minimum of one use, and Long Rest recovery. Existing Martial Arts support owns the die-size projection, existing character facts own Wisdom ability scores, and existing Hit Point recovery owners apply positive healing. The current battle self-bonus-action-healing profile is admitted for Second Wind's class-level formula and partial Short Rest/full Long Rest reset, while the current Character Sheet use-count owner is limited to typed resource profiles such as Wild Shape and Monk's Focus rather than arbitrary feature ids. A future owner must consume typed Surface facts for the selected Wholeness of Body feature, derive the Martial Arts die, Wisdom modifier, Long Rest use state, and Bonus Action spend from existing owners, then apply self Hit Point healing without duplicating Hit Point state, Martial Arts progression, Wisdom ability state, use-count expenditure state, subclass selection state, action-economy state, or dispatching on Monk, Warrior of the Open Hand, or Wholeness of Body authored identity.",
-      "rowId": "srd521:classes/monk:level-6:class-feature-grant:monk_wholeness_of_body",
-      "rowKind": "class-feature-grant",
-      "source": {
-        "lineEnd": 207,
-        "lineStart": 202,
-        "path": ".references/srd-5.2.1/Classes/Monk.md"
-      },
-      "supportSnapshot": {
-        "authoredContent": {
-          "state": "missing-authored-record"
-        },
-        "battleReadiness": {
-          "state": "recorded",
-          "status": "accepted-no-battle-effect"
-        },
-        "battleReadinessClosure": {
-          "kind": "character-fact-and-runtime-detached-split",
-          "owner": "future-owner-before-SDK character-sheet-runtime and battle-runtime Wholeness of Body feature-resource self-healing owner plus selected Warrior of the Open Hand feature admission owner",
-          "reason": "SRD Wholeness of Body lets the selected Monk use a Bonus Action to roll the Martial Arts die and regain Hit Points equal to the roll plus Wisdom modifier, with a minimum of 1 Hit Point regained, a Wisdom-modifier use count with a minimum of one use, and Long Rest recovery. Existing Martial Arts support owns the die-size projection, existing character facts own Wisdom ability scores, and existing Hit Point recovery owners apply positive healing. The current battle self-bonus-action-healing profile is admitted for Second Wind's class-level formula and partial Short Rest/full Long Rest reset, while the current Character Sheet use-count owner is limited to typed resource profiles such as Wild Shape and Monk's Focus rather than arbitrary feature ids. A future owner must consume typed Surface facts for the selected Wholeness of Body feature, derive the Martial Arts die, Wisdom modifier, Long Rest use state, and Bonus Action spend from existing owners, then apply self Hit Point healing without duplicating Hit Point state, Martial Arts progression, Wisdom ability state, use-count expenditure state, subclass selection state, action-economy state, or dispatching on Monk, Warrior of the Open Hand, or Wholeness of Body authored identity.",
-          "source": "unit-claim",
-          "state": "recorded"
-        },
-        "catalogAdmission": {
-          "state": "not-installed",
-          "unitId": "monk_wholeness_of_body"
-        },
-        "finalDisposition": "catalog-only/dead-for-now",
-        "unitProfile": {
-          "disposition": "unsupported-profile",
-          "state": "recorded"
-        }
-      }
-    },
-    {
-      "axis": "character-level",
       "candidateUnitId": "class_monk",
       "category": "character-creation or progression mechanic",
       "className": "Monk",
@@ -21894,6 +21866,53 @@
           "unitId": "class_monk"
         },
         "finalDisposition": "non-runtime",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "monk_wholeness_of_body",
+      "category": "subclass feature",
+      "className": "Monk",
+      "concept": "Monk Wholeness of Body",
+      "levelBand": "level-6",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/monk:level-6:subclass-feature-grant:monk_wholeness_of_body",
+        "state": "present"
+      },
+      "nextAction": "SRD Wholeness of Body lets the selected Monk use a Bonus Action to roll the Martial Arts die and regain Hit Points equal to the roll plus Wisdom modifier, with a minimum of 1 Hit Point regained, a Wisdom-modifier use count with a minimum of one use, and Long Rest recovery. Existing Martial Arts support owns the die-size projection, existing character facts own Wisdom ability scores, and existing Hit Point recovery owners apply positive healing. The current battle self-bonus-action-healing profile is admitted for Second Wind's class-level formula and partial Short Rest/full Long Rest reset, while the current Character Sheet use-count owner is limited to typed resource profiles such as Wild Shape and Monk's Focus rather than arbitrary feature ids. A future owner must consume typed Surface facts for the selected Wholeness of Body feature, derive the Martial Arts die, Wisdom modifier, Long Rest use state, and Bonus Action spend from existing owners, then apply self Hit Point healing without duplicating Hit Point state, Martial Arts progression, Wisdom ability state, use-count expenditure state, subclass selection state, action-economy state, or dispatching on Monk, Warrior of the Open Hand, or Wholeness of Body authored identity.",
+      "rowId": "srd521:classes/monk:level-6:subclass-feature-grant:monk_wholeness_of_body",
+      "rowKind": "subclass-feature-grant",
+      "source": {
+        "lineEnd": 207,
+        "lineStart": 202,
+        "path": ".references/srd-5.2.1/Classes/Monk.md"
+      },
+      "subclassUnitId": "subclass_monk_warrior_of_the_open_hand",
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "missing-authored-record"
+        },
+        "battleReadiness": {
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
+        },
+        "battleReadinessClosure": {
+          "kind": "character-fact-and-runtime-detached-split",
+          "owner": "future-owner-before-SDK character-sheet-runtime and battle-runtime Wholeness of Body feature-resource self-healing owner plus selected Warrior of the Open Hand feature admission owner",
+          "reason": "SRD Wholeness of Body lets the selected Monk use a Bonus Action to roll the Martial Arts die and regain Hit Points equal to the roll plus Wisdom modifier, with a minimum of 1 Hit Point regained, a Wisdom-modifier use count with a minimum of one use, and Long Rest recovery. Existing Martial Arts support owns the die-size projection, existing character facts own Wisdom ability scores, and existing Hit Point recovery owners apply positive healing. The current battle self-bonus-action-healing profile is admitted for Second Wind's class-level formula and partial Short Rest/full Long Rest reset, while the current Character Sheet use-count owner is limited to typed resource profiles such as Wild Shape and Monk's Focus rather than arbitrary feature ids. A future owner must consume typed Surface facts for the selected Wholeness of Body feature, derive the Martial Arts die, Wisdom modifier, Long Rest use state, and Bonus Action spend from existing owners, then apply self Hit Point healing without duplicating Hit Point state, Martial Arts progression, Wisdom ability state, use-count expenditure state, subclass selection state, action-economy state, or dispatching on Monk, Warrior of the Open Hand, or Wholeness of Body authored identity.",
+          "source": "unit-claim",
+          "state": "recorded"
+        },
+        "catalogAdmission": {
+          "state": "not-installed",
+          "unitId": "monk_wholeness_of_body"
+        },
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
           "disposition": "unsupported-profile",
           "state": "recorded"
@@ -23002,50 +23021,6 @@
     },
     {
       "axis": "character-level",
-      "candidateUnitId": "paladin_sacred_weapon",
-      "category": "class feature",
-      "className": "Paladin",
-      "concept": "Paladin Sacred Weapon",
-      "levelBand": "level-3",
-      "minedDenominator": {
-        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
-        "sourceInventoryRowId": "srd521:classes/paladin:level-3:class-feature-grant:paladin_sacred_weapon",
-        "state": "present"
-      },
-      "nextAction": "Owner-specific operational evidence is classified and present.",
-      "rowId": "srd521:classes/paladin:level-3:class-feature-grant:paladin_sacred_weapon",
-      "rowKind": "class-feature-grant",
-      "source": {
-        "lineEnd": 270,
-        "lineStart": 263,
-        "path": ".references/srd-5.2.1/Classes/Paladin.md"
-      },
-      "supportSnapshot": {
-        "authoredContent": {
-          "sourceRecordPath": "packages/surface/content/paladin_sacred_weapon.json",
-          "state": "authored-record-present",
-          "unitId": "paladin_sacred_weapon"
-        },
-        "battleReadiness": {
-          "state": "recorded",
-          "status": "accepted"
-        },
-        "battleReadinessClosure": {
-          "state": "not-recorded"
-        },
-        "catalogAdmission": {
-          "state": "installed",
-          "unitId": "paladin_sacred_weapon"
-        },
-        "finalDisposition": "catalog-installed-owner-evidence-present",
-        "unitProfile": {
-          "disposition": "supported-profile",
-          "state": "recorded"
-        }
-      }
-    },
-    {
-      "axis": "character-level",
       "candidateUnitId": "class_paladin",
       "category": "character-creation or progression mechanic",
       "className": "Paladin",
@@ -23084,6 +23059,51 @@
         "finalDisposition": "non-runtime",
         "unitProfile": {
           "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "paladin_sacred_weapon",
+      "category": "subclass feature",
+      "className": "Paladin",
+      "concept": "Paladin Sacred Weapon",
+      "levelBand": "level-3",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/paladin:level-3:subclass-feature-grant:paladin_sacred_weapon",
+        "state": "present"
+      },
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "rowId": "srd521:classes/paladin:level-3:subclass-feature-grant:paladin_sacred_weapon",
+      "rowKind": "subclass-feature-grant",
+      "source": {
+        "lineEnd": 270,
+        "lineStart": 263,
+        "path": ".references/srd-5.2.1/Classes/Paladin.md"
+      },
+      "subclassUnitId": "subclass_paladin_oath_of_devotion",
+      "supportSnapshot": {
+        "authoredContent": {
+          "sourceRecordPath": "packages/surface/content/paladin_sacred_weapon.json",
+          "state": "authored-record-present",
+          "unitId": "paladin_sacred_weapon"
+        },
+        "battleReadiness": {
+          "state": "recorded",
+          "status": "accepted"
+        },
+        "battleReadinessClosure": {
+          "state": "not-recorded"
+        },
+        "catalogAdmission": {
+          "state": "installed",
+          "unitId": "paladin_sacred_weapon"
+        },
+        "finalDisposition": "catalog-installed-owner-evidence-present",
+        "unitProfile": {
+          "disposition": "supported-profile",
           "state": "recorded"
         }
       }
@@ -23152,6 +23172,7 @@
         "lineStart": 249,
         "path": ".references/srd-5.2.1/Classes/Paladin.md"
       },
+      "subclassUnitId": "subclass_paladin_oath_of_devotion",
       "supportSnapshot": {
         "authoredContent": {
           "sourceRecordPath": "packages/surface/content/paladin_oath_of_devotion_spells.json",
@@ -23498,52 +23519,6 @@
     },
     {
       "axis": "character-level",
-      "candidateUnitId": "paladin_aura_of_devotion",
-      "category": "class feature",
-      "className": "Paladin",
-      "concept": "Paladin Aura of Devotion",
-      "levelBand": "level-7",
-      "minedDenominator": {
-        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
-        "sourceInventoryRowId": "srd521:classes/paladin:level-7:class-feature-grant:paladin_aura_of_devotion",
-        "state": "present"
-      },
-      "nextAction": "A future owner must consume the selected Aura of Devotion source fact, the selected Oath of Devotion subclass fact, and the existing/future Aura of Protection membership facts: 10-foot or expanded Emanation from the Paladin, self-and-allies membership, inactive-while-Incapacitated gating, and table/spatial membership witnesses. It must prevent new Charmed application for affected members and suppress the effects of already-applied Charmed while the ally is in the aura, without representing that suppression as condition removal unless a separate removal effect occurs. The closure must not create a second Aura of Devotion area model, duplicate Aura of Protection membership or Paladin position state, duplicate Charmed condition state, treat immunity as damage Resistance, ignore inactive-while-Incapacitated gating, or dispatch on Paladin, Oath of Devotion, Aura of Protection, Aura of Devotion, or Charmed source authored identity.",
-      "rowId": "srd521:classes/paladin:level-7:class-feature-grant:paladin_aura_of_devotion",
-      "rowKind": "class-feature-grant",
-      "source": {
-        "lineEnd": 274,
-        "lineStart": 271,
-        "path": ".references/srd-5.2.1/Classes/Paladin.md"
-      },
-      "supportSnapshot": {
-        "authoredContent": {
-          "state": "missing-authored-record"
-        },
-        "battleReadiness": {
-          "state": "recorded",
-          "status": "accepted-no-battle-effect"
-        },
-        "battleReadinessClosure": {
-          "kind": "table-spatial-derivation",
-          "owner": "future Aura of Protection membership owner plus passive class-feature Charmed condition-immunity and active-condition suppression owner",
-          "reason": "A future owner must consume the selected Aura of Devotion source fact, the selected Oath of Devotion subclass fact, and the existing/future Aura of Protection membership facts: 10-foot or expanded Emanation from the Paladin, self-and-allies membership, inactive-while-Incapacitated gating, and table/spatial membership witnesses. It must prevent new Charmed application for affected members and suppress the effects of already-applied Charmed while the ally is in the aura, without representing that suppression as condition removal unless a separate removal effect occurs. The closure must not create a second Aura of Devotion area model, duplicate Aura of Protection membership or Paladin position state, duplicate Charmed condition state, treat immunity as damage Resistance, ignore inactive-while-Incapacitated gating, or dispatch on Paladin, Oath of Devotion, Aura of Protection, Aura of Devotion, or Charmed source authored identity.",
-          "source": "unit-claim",
-          "state": "recorded"
-        },
-        "catalogAdmission": {
-          "state": "not-installed",
-          "unitId": "paladin_aura_of_devotion"
-        },
-        "finalDisposition": "catalog-only/dead-for-now",
-        "unitProfile": {
-          "disposition": "unsupported-profile",
-          "state": "recorded"
-        }
-      }
-    },
-    {
-      "axis": "character-level",
       "candidateUnitId": "class_paladin",
       "category": "character-creation or progression mechanic",
       "className": "Paladin",
@@ -23584,6 +23559,53 @@
           "unitId": "class_paladin"
         },
         "finalDisposition": "non-runtime",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "paladin_aura_of_devotion",
+      "category": "subclass feature",
+      "className": "Paladin",
+      "concept": "Paladin Aura of Devotion",
+      "levelBand": "level-7",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/paladin:level-7:subclass-feature-grant:paladin_aura_of_devotion",
+        "state": "present"
+      },
+      "nextAction": "A future owner must consume the selected Aura of Devotion source fact, the selected Oath of Devotion subclass fact, and the existing/future Aura of Protection membership facts: 10-foot or expanded Emanation from the Paladin, self-and-allies membership, inactive-while-Incapacitated gating, and table/spatial membership witnesses. It must prevent new Charmed application for affected members and suppress the effects of already-applied Charmed while the ally is in the aura, without representing that suppression as condition removal unless a separate removal effect occurs. The closure must not create a second Aura of Devotion area model, duplicate Aura of Protection membership or Paladin position state, duplicate Charmed condition state, treat immunity as damage Resistance, ignore inactive-while-Incapacitated gating, or dispatch on Paladin, Oath of Devotion, Aura of Protection, Aura of Devotion, or Charmed source authored identity.",
+      "rowId": "srd521:classes/paladin:level-7:subclass-feature-grant:paladin_aura_of_devotion",
+      "rowKind": "subclass-feature-grant",
+      "source": {
+        "lineEnd": 274,
+        "lineStart": 271,
+        "path": ".references/srd-5.2.1/Classes/Paladin.md"
+      },
+      "subclassUnitId": "subclass_paladin_oath_of_devotion",
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "missing-authored-record"
+        },
+        "battleReadiness": {
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
+        },
+        "battleReadinessClosure": {
+          "kind": "table-spatial-derivation",
+          "owner": "future Aura of Protection membership owner plus passive class-feature Charmed condition-immunity and active-condition suppression owner",
+          "reason": "A future owner must consume the selected Aura of Devotion source fact, the selected Oath of Devotion subclass fact, and the existing/future Aura of Protection membership facts: 10-foot or expanded Emanation from the Paladin, self-and-allies membership, inactive-while-Incapacitated gating, and table/spatial membership witnesses. It must prevent new Charmed application for affected members and suppress the effects of already-applied Charmed while the ally is in the aura, without representing that suppression as condition removal unless a separate removal effect occurs. The closure must not create a second Aura of Devotion area model, duplicate Aura of Protection membership or Paladin position state, duplicate Charmed condition state, treat immunity as damage Resistance, ignore inactive-while-Incapacitated gating, or dispatch on Paladin, Oath of Devotion, Aura of Protection, Aura of Devotion, or Charmed source authored identity.",
+          "source": "unit-claim",
+          "state": "recorded"
+        },
+        "catalogAdmission": {
+          "state": "not-installed",
+          "unitId": "paladin_aura_of_devotion"
+        },
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
           "disposition": "unsupported-profile",
           "state": "recorded"
@@ -25940,91 +25962,6 @@
     },
     {
       "axis": "character-level",
-      "candidateUnitId": "ranger_hunters_lore",
-      "category": "class feature",
-      "className": "Ranger",
-      "concept": "Ranger Hunter's Lore",
-      "levelBand": "level-3",
-      "minedDenominator": {
-        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
-        "sourceInventoryRowId": "srd521:classes/ranger:level-3:class-feature-grant:ranger_hunters_lore",
-        "state": "present"
-      },
-      "nextAction": "Hunter's Lore reveals whether a Hunter's Mark target has Immunities, Resistances, or Vulnerabilities and what they are. That disclosure is table/stat-block knowledge, not promoted battle state; the runtime must not duplicate Stat Block facts into Ranger feature state.",
-      "rowId": "srd521:classes/ranger:level-3:class-feature-grant:ranger_hunters_lore",
-      "rowKind": "class-feature-grant",
-      "source": {
-        "lineEnd": 242,
-        "lineStart": 239,
-        "path": ".references/srd-5.2.1/Classes/Ranger.md"
-      },
-      "supportSnapshot": {
-        "authoredContent": {
-          "state": "missing-authored-record"
-        },
-        "battleReadiness": {
-          "state": "recorded",
-          "status": "accepted-no-battle-effect"
-        },
-        "battleReadinessClosure": {
-          "state": "not-recorded"
-        },
-        "catalogAdmission": {
-          "state": "not-installed",
-          "unitId": "ranger_hunters_lore"
-        },
-        "finalDisposition": "catalog-only/dead-for-now",
-        "unitProfile": {
-          "state": "not-recorded"
-        }
-      }
-    },
-    {
-      "axis": "character-level",
-      "candidateUnitId": "ranger_hunters_prey",
-      "category": "class feature",
-      "className": "Ranger",
-      "concept": "Ranger Hunter's Prey",
-      "levelBand": "level-3",
-      "minedDenominator": {
-        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
-        "sourceInventoryRowId": "srd521:classes/ranger:level-3:class-feature-grant:ranger_hunters_prey",
-        "state": "present"
-      },
-      "nextAction": "Owner-specific operational evidence is classified and present.",
-      "rowId": "srd521:classes/ranger:level-3:class-feature-grant:ranger_hunters_prey",
-      "rowKind": "class-feature-grant",
-      "source": {
-        "lineEnd": 250,
-        "lineStart": 243,
-        "path": ".references/srd-5.2.1/Classes/Ranger.md"
-      },
-      "supportSnapshot": {
-        "authoredContent": {
-          "sourceRecordPath": "packages/surface/content/ranger_hunters_prey.json",
-          "state": "authored-record-present",
-          "unitId": "ranger_hunters_prey"
-        },
-        "battleReadiness": {
-          "state": "recorded",
-          "status": "accepted"
-        },
-        "battleReadinessClosure": {
-          "state": "not-recorded"
-        },
-        "catalogAdmission": {
-          "state": "installed",
-          "unitId": "ranger_hunters_prey"
-        },
-        "finalDisposition": "catalog-installed-owner-evidence-present",
-        "unitProfile": {
-          "disposition": "supported-profile",
-          "state": "recorded"
-        }
-      }
-    },
-    {
-      "axis": "character-level",
       "candidateUnitId": "class_ranger",
       "category": "character-creation or progression mechanic",
       "className": "Ranger",
@@ -26063,6 +26000,93 @@
         "finalDisposition": "non-runtime",
         "unitProfile": {
           "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "ranger_hunters_lore",
+      "category": "subclass feature",
+      "className": "Ranger",
+      "concept": "Ranger Hunter's Lore",
+      "levelBand": "level-3",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/ranger:level-3:subclass-feature-grant:ranger_hunters_lore",
+        "state": "present"
+      },
+      "nextAction": "Hunter's Lore reveals whether a Hunter's Mark target has Immunities, Resistances, or Vulnerabilities and what they are. That disclosure is table/stat-block knowledge, not promoted battle state; the runtime must not duplicate Stat Block facts into Ranger feature state.",
+      "rowId": "srd521:classes/ranger:level-3:subclass-feature-grant:ranger_hunters_lore",
+      "rowKind": "subclass-feature-grant",
+      "source": {
+        "lineEnd": 242,
+        "lineStart": 239,
+        "path": ".references/srd-5.2.1/Classes/Ranger.md"
+      },
+      "subclassUnitId": "subclass_ranger_hunter",
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "missing-authored-record"
+        },
+        "battleReadiness": {
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
+        },
+        "battleReadinessClosure": {
+          "state": "not-recorded"
+        },
+        "catalogAdmission": {
+          "state": "not-installed",
+          "unitId": "ranger_hunters_lore"
+        },
+        "finalDisposition": "catalog-only/dead-for-now",
+        "unitProfile": {
+          "state": "not-recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "ranger_hunters_prey",
+      "category": "subclass feature",
+      "className": "Ranger",
+      "concept": "Ranger Hunter's Prey",
+      "levelBand": "level-3",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/ranger:level-3:subclass-feature-grant:ranger_hunters_prey",
+        "state": "present"
+      },
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "rowId": "srd521:classes/ranger:level-3:subclass-feature-grant:ranger_hunters_prey",
+      "rowKind": "subclass-feature-grant",
+      "source": {
+        "lineEnd": 250,
+        "lineStart": 243,
+        "path": ".references/srd-5.2.1/Classes/Ranger.md"
+      },
+      "subclassUnitId": "subclass_ranger_hunter",
+      "supportSnapshot": {
+        "authoredContent": {
+          "sourceRecordPath": "packages/surface/content/ranger_hunters_prey.json",
+          "state": "authored-record-present",
+          "unitId": "ranger_hunters_prey"
+        },
+        "battleReadiness": {
+          "state": "recorded",
+          "status": "accepted"
+        },
+        "battleReadinessClosure": {
+          "state": "not-recorded"
+        },
+        "catalogAdmission": {
+          "state": "installed",
+          "unitId": "ranger_hunters_prey"
+        },
+        "finalDisposition": "catalog-installed-owner-evidence-present",
+        "unitProfile": {
+          "disposition": "supported-profile",
           "state": "recorded"
         }
       }
@@ -26381,52 +26405,6 @@
     },
     {
       "axis": "character-level",
-      "candidateUnitId": "ranger_defensive_tactics",
-      "category": "class feature",
-      "className": "Ranger",
-      "concept": "Ranger Defensive Tactics",
-      "levelBand": "level-7",
-      "minedDenominator": {
-        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
-        "sourceInventoryRowId": "srd521:classes/ranger:level-7:class-feature-grant:ranger_defensive_tactics",
-        "state": "present"
-      },
-      "nextAction": "SRD 5.2.1 Defensive Tactics grants one replaceable option after a Short or Long Rest. Escape the Horde makes Opportunity Attacks have Disadvantage against the Ranger, consuming the existing Opportunity Attack reaction window and attack-roll roll-mode pipeline. Multiattack Defense triggers when a creature hits the Ranger with an attack roll, then gives that same creature Disadvantage on all other attack rolls against the Ranger for the rest of that turn, consuming the attack-hit event, current-turn boundary, attacker identity, and attack-roll roll-mode pipeline. A future owner must retain exactly one selected option on the selected feature ref, preserve Short/Long Rest replacement, and route each option through typed roll-mode facts without storing both options as simultaneously executable, duplicating Opportunity Attack/reaction state, duplicating attack history beyond the source-owned same-turn effect, or dispatching on Ranger, Hunter, Defensive Tactics, or option authored identity.",
-      "rowId": "srd521:classes/ranger:level-7:class-feature-grant:ranger_defensive_tactics",
-      "rowKind": "class-feature-grant",
-      "source": {
-        "lineEnd": 258,
-        "lineStart": 251,
-        "path": ".references/srd-5.2.1/Classes/Ranger.md"
-      },
-      "supportSnapshot": {
-        "authoredContent": {
-          "state": "missing-authored-record"
-        },
-        "battleReadiness": {
-          "state": "recorded",
-          "status": "accepted-no-battle-effect"
-        },
-        "battleReadinessClosure": {
-          "kind": "outside-battle-runtime",
-          "owner": "future Defensive Tactics selected-option owner plus Opportunity Attack and same-turn repeat-attacker attack-roll Disadvantage owners",
-          "reason": "SRD 5.2.1 Defensive Tactics grants one replaceable option after a Short or Long Rest. Escape the Horde makes Opportunity Attacks have Disadvantage against the Ranger, consuming the existing Opportunity Attack reaction window and attack-roll roll-mode pipeline. Multiattack Defense triggers when a creature hits the Ranger with an attack roll, then gives that same creature Disadvantage on all other attack rolls against the Ranger for the rest of that turn, consuming the attack-hit event, current-turn boundary, attacker identity, and attack-roll roll-mode pipeline. A future owner must retain exactly one selected option on the selected feature ref, preserve Short/Long Rest replacement, and route each option through typed roll-mode facts without storing both options as simultaneously executable, duplicating Opportunity Attack/reaction state, duplicating attack history beyond the source-owned same-turn effect, or dispatching on Ranger, Hunter, Defensive Tactics, or option authored identity.",
-          "source": "unit-claim",
-          "state": "recorded"
-        },
-        "catalogAdmission": {
-          "state": "not-installed",
-          "unitId": "ranger_defensive_tactics"
-        },
-        "finalDisposition": "catalog-only/dead-for-now",
-        "unitProfile": {
-          "disposition": "unsupported-profile",
-          "state": "recorded"
-        }
-      }
-    },
-    {
-      "axis": "character-level",
       "candidateUnitId": "class_ranger",
       "category": "character-creation or progression mechanic",
       "className": "Ranger",
@@ -26467,6 +26445,53 @@
           "unitId": "class_ranger"
         },
         "finalDisposition": "non-runtime",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "ranger_defensive_tactics",
+      "category": "subclass feature",
+      "className": "Ranger",
+      "concept": "Ranger Defensive Tactics",
+      "levelBand": "level-7",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/ranger:level-7:subclass-feature-grant:ranger_defensive_tactics",
+        "state": "present"
+      },
+      "nextAction": "SRD 5.2.1 Defensive Tactics grants one replaceable option after a Short or Long Rest. Escape the Horde makes Opportunity Attacks have Disadvantage against the Ranger, consuming the existing Opportunity Attack reaction window and attack-roll roll-mode pipeline. Multiattack Defense triggers when a creature hits the Ranger with an attack roll, then gives that same creature Disadvantage on all other attack rolls against the Ranger for the rest of that turn, consuming the attack-hit event, current-turn boundary, attacker identity, and attack-roll roll-mode pipeline. A future owner must retain exactly one selected option on the selected feature ref, preserve Short/Long Rest replacement, and route each option through typed roll-mode facts without storing both options as simultaneously executable, duplicating Opportunity Attack/reaction state, duplicating attack history beyond the source-owned same-turn effect, or dispatching on Ranger, Hunter, Defensive Tactics, or option authored identity.",
+      "rowId": "srd521:classes/ranger:level-7:subclass-feature-grant:ranger_defensive_tactics",
+      "rowKind": "subclass-feature-grant",
+      "source": {
+        "lineEnd": 258,
+        "lineStart": 251,
+        "path": ".references/srd-5.2.1/Classes/Ranger.md"
+      },
+      "subclassUnitId": "subclass_ranger_hunter",
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "missing-authored-record"
+        },
+        "battleReadiness": {
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
+        },
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future Defensive Tactics selected-option owner plus Opportunity Attack and same-turn repeat-attacker attack-roll Disadvantage owners",
+          "reason": "SRD 5.2.1 Defensive Tactics grants one replaceable option after a Short or Long Rest. Escape the Horde makes Opportunity Attacks have Disadvantage against the Ranger, consuming the existing Opportunity Attack reaction window and attack-roll roll-mode pipeline. Multiattack Defense triggers when a creature hits the Ranger with an attack roll, then gives that same creature Disadvantage on all other attack rolls against the Ranger for the rest of that turn, consuming the attack-hit event, current-turn boundary, attacker identity, and attack-roll roll-mode pipeline. A future owner must retain exactly one selected option on the selected feature ref, preserve Short/Long Rest replacement, and route each option through typed roll-mode facts without storing both options as simultaneously executable, duplicating Opportunity Attack/reaction state, duplicating attack history beyond the source-owned same-turn effect, or dispatching on Ranger, Hunter, Defensive Tactics, or option authored identity.",
+          "source": "unit-claim",
+          "state": "recorded"
+        },
+        "catalogAdmission": {
+          "state": "not-installed",
+          "unitId": "ranger_defensive_tactics"
+        },
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
           "disposition": "unsupported-profile",
           "state": "recorded"
@@ -29357,98 +29382,6 @@
     },
     {
       "axis": "character-level",
-      "candidateUnitId": "rogue_fast_hands",
-      "category": "class feature",
-      "className": "Rogue",
-      "concept": "Rogue Fast Hands",
-      "levelBand": "level-3",
-      "minedDenominator": {
-        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
-        "sourceInventoryRowId": "srd521:classes/rogue:level-3:class-feature-grant:rogue_fast_hands",
-        "state": "present"
-      },
-      "nextAction": "Owner-specific operational evidence is classified and present.",
-      "rowId": "srd521:classes/rogue:level-3:class-feature-grant:rogue_fast_hands",
-      "rowKind": "class-feature-grant",
-      "source": {
-        "lineEnd": 166,
-        "lineStart": 159,
-        "path": ".references/srd-5.2.1/Classes/Rogue.md"
-      },
-      "supportSnapshot": {
-        "authoredContent": {
-          "sourceRecordPath": "packages/surface/content/rogue_fast_hands.json",
-          "state": "authored-record-present",
-          "unitId": "rogue_fast_hands"
-        },
-        "battleReadiness": {
-          "state": "recorded",
-          "status": "accepted"
-        },
-        "battleReadinessClosure": {
-          "kind": "profile-subset-remaining-mechanics-closed",
-          "owner": "table/tool-check owner; Utilize action owner; magic-item activation owner",
-          "reason": "Fast Hands changes the action economy for these Dexterity (Sleight of Hand) checks, but the checks themselves depend on table-owned object and target facts. Current battle runtime has no standalone lock, trap, or pocket BattleSubject whose only missing piece is a Bonus Action wrapper.; Fast Hands delegates action economy only; object use state, object targets, and outcomes belong to the generic Utilize action boundary. A battle-local Fast Hands shell would spend a Bonus Action without an executable object-use procedure.; Fast Hands delegates the action economy for magic-item Magic actions without copying item-specific activation procedures or item state into the Unit feature profile. Current battle runtime cannot promote a magic-item Fast Hands shell independently of a magic-item activation owner.",
-          "source": "deferred-mechanics",
-          "state": "recorded"
-        },
-        "catalogAdmission": {
-          "state": "installed",
-          "unitId": "rogue_fast_hands"
-        },
-        "finalDisposition": "catalog-installed-owner-evidence-present",
-        "unitProfile": {
-          "disposition": "profile-subset-supported",
-          "state": "recorded"
-        }
-      }
-    },
-    {
-      "axis": "character-level",
-      "candidateUnitId": "rogue_second_story_work",
-      "category": "class feature",
-      "className": "Rogue",
-      "concept": "Rogue Second-Story Work",
-      "levelBand": "level-3",
-      "minedDenominator": {
-        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
-        "sourceInventoryRowId": "srd521:classes/rogue:level-3:class-feature-grant:rogue_second_story_work",
-        "state": "present"
-      },
-      "nextAction": "Owner-specific operational evidence is classified and present.",
-      "rowId": "srd521:classes/rogue:level-3:class-feature-grant:rogue_second_story_work",
-      "rowKind": "class-feature-grant",
-      "source": {
-        "lineEnd": 174,
-        "lineStart": 167,
-        "path": ".references/srd-5.2.1/Classes/Rogue.md"
-      },
-      "supportSnapshot": {
-        "authoredContent": {
-          "sourceRecordPath": "packages/surface/content/rogue_second_story_work.json",
-          "state": "authored-record-present",
-          "unitId": "rogue_second_story_work"
-        },
-        "battleReadiness": {
-          "state": "recorded",
-          "status": "accepted"
-        },
-        "battleReadinessClosure": {
-          "state": "not-recorded"
-        },
-        "catalogAdmission": {
-          "state": "installed",
-          "unitId": "rogue_second_story_work"
-        },
-        "finalDisposition": "catalog-installed-owner-evidence-present",
-        "unitProfile": {
-          "disposition": "supported-profile",
-          "state": "recorded"
-        }
-      }
-    },
-    {
-      "axis": "character-level",
       "candidateUnitId": "rogue_steady_aim",
       "category": "class feature",
       "className": "Rogue",
@@ -29531,6 +29464,100 @@
         "finalDisposition": "non-runtime",
         "unitProfile": {
           "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "rogue_fast_hands",
+      "category": "subclass feature",
+      "className": "Rogue",
+      "concept": "Rogue Fast Hands",
+      "levelBand": "level-3",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/rogue:level-3:subclass-feature-grant:rogue_fast_hands",
+        "state": "present"
+      },
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "rowId": "srd521:classes/rogue:level-3:subclass-feature-grant:rogue_fast_hands",
+      "rowKind": "subclass-feature-grant",
+      "source": {
+        "lineEnd": 166,
+        "lineStart": 159,
+        "path": ".references/srd-5.2.1/Classes/Rogue.md"
+      },
+      "subclassUnitId": "subclass_rogue_thief",
+      "supportSnapshot": {
+        "authoredContent": {
+          "sourceRecordPath": "packages/surface/content/rogue_fast_hands.json",
+          "state": "authored-record-present",
+          "unitId": "rogue_fast_hands"
+        },
+        "battleReadiness": {
+          "state": "recorded",
+          "status": "accepted"
+        },
+        "battleReadinessClosure": {
+          "kind": "profile-subset-remaining-mechanics-closed",
+          "owner": "table/tool-check owner; Utilize action owner; magic-item activation owner",
+          "reason": "Fast Hands changes the action economy for these Dexterity (Sleight of Hand) checks, but the checks themselves depend on table-owned object and target facts. Current battle runtime has no standalone lock, trap, or pocket BattleSubject whose only missing piece is a Bonus Action wrapper.; Fast Hands delegates action economy only; object use state, object targets, and outcomes belong to the generic Utilize action boundary. A battle-local Fast Hands shell would spend a Bonus Action without an executable object-use procedure.; Fast Hands delegates the action economy for magic-item Magic actions without copying item-specific activation procedures or item state into the Unit feature profile. Current battle runtime cannot promote a magic-item Fast Hands shell independently of a magic-item activation owner.",
+          "source": "deferred-mechanics",
+          "state": "recorded"
+        },
+        "catalogAdmission": {
+          "state": "installed",
+          "unitId": "rogue_fast_hands"
+        },
+        "finalDisposition": "catalog-installed-owner-evidence-present",
+        "unitProfile": {
+          "disposition": "profile-subset-supported",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "rogue_second_story_work",
+      "category": "subclass feature",
+      "className": "Rogue",
+      "concept": "Rogue Second-Story Work",
+      "levelBand": "level-3",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/rogue:level-3:subclass-feature-grant:rogue_second_story_work",
+        "state": "present"
+      },
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "rowId": "srd521:classes/rogue:level-3:subclass-feature-grant:rogue_second_story_work",
+      "rowKind": "subclass-feature-grant",
+      "source": {
+        "lineEnd": 174,
+        "lineStart": 167,
+        "path": ".references/srd-5.2.1/Classes/Rogue.md"
+      },
+      "subclassUnitId": "subclass_rogue_thief",
+      "supportSnapshot": {
+        "authoredContent": {
+          "sourceRecordPath": "packages/surface/content/rogue_second_story_work.json",
+          "state": "authored-record-present",
+          "unitId": "rogue_second_story_work"
+        },
+        "battleReadiness": {
+          "state": "recorded",
+          "status": "accepted"
+        },
+        "battleReadinessClosure": {
+          "state": "not-recorded"
+        },
+        "catalogAdmission": {
+          "state": "installed",
+          "unitId": "rogue_second_story_work"
+        },
+        "finalDisposition": "catalog-installed-owner-evidence-present",
+        "unitProfile": {
+          "disposition": "supported-profile",
           "state": "recorded"
         }
       }
@@ -30146,50 +30173,6 @@
     },
     {
       "axis": "character-level",
-      "candidateUnitId": "rogue_supreme_sneak",
-      "category": "class feature",
-      "className": "Rogue",
-      "concept": "Rogue Supreme Sneak",
-      "levelBand": "level-9",
-      "minedDenominator": {
-        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
-        "sourceInventoryRowId": "srd521:classes/rogue:level-9:class-feature-grant:rogue_supreme_sneak",
-        "state": "present"
-      },
-      "nextAction": "Owner-specific operational evidence is classified and present.",
-      "rowId": "srd521:classes/rogue:level-9:class-feature-grant:rogue_supreme_sneak",
-      "rowKind": "class-feature-grant",
-      "source": {
-        "lineEnd": 180,
-        "lineStart": 175,
-        "path": ".references/srd-5.2.1/Classes/Rogue.md"
-      },
-      "supportSnapshot": {
-        "authoredContent": {
-          "sourceRecordPath": "packages/surface/content/rogue_supreme_sneak.json",
-          "state": "authored-record-present",
-          "unitId": "rogue_supreme_sneak"
-        },
-        "battleReadiness": {
-          "state": "recorded",
-          "status": "accepted"
-        },
-        "battleReadinessClosure": {
-          "state": "not-recorded"
-        },
-        "catalogAdmission": {
-          "state": "installed",
-          "unitId": "rogue_supreme_sneak"
-        },
-        "finalDisposition": "catalog-installed-owner-evidence-present",
-        "unitProfile": {
-          "disposition": "supported-profile",
-          "state": "recorded"
-        }
-      }
-    },
-    {
-      "axis": "character-level",
       "candidateUnitId": "class_rogue",
       "category": "character-creation or progression mechanic",
       "className": "Rogue",
@@ -30266,6 +30249,51 @@
         "finalDisposition": "non-runtime",
         "unitProfile": {
           "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "rogue_supreme_sneak",
+      "category": "subclass feature",
+      "className": "Rogue",
+      "concept": "Rogue Supreme Sneak",
+      "levelBand": "level-9",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/rogue:level-9:subclass-feature-grant:rogue_supreme_sneak",
+        "state": "present"
+      },
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "rowId": "srd521:classes/rogue:level-9:subclass-feature-grant:rogue_supreme_sneak",
+      "rowKind": "subclass-feature-grant",
+      "source": {
+        "lineEnd": 180,
+        "lineStart": 175,
+        "path": ".references/srd-5.2.1/Classes/Rogue.md"
+      },
+      "subclassUnitId": "subclass_rogue_thief",
+      "supportSnapshot": {
+        "authoredContent": {
+          "sourceRecordPath": "packages/surface/content/rogue_supreme_sneak.json",
+          "state": "authored-record-present",
+          "unitId": "rogue_supreme_sneak"
+        },
+        "battleReadiness": {
+          "state": "recorded",
+          "status": "accepted"
+        },
+        "battleReadinessClosure": {
+          "state": "not-recorded"
+        },
+        "catalogAdmission": {
+          "state": "installed",
+          "unitId": "rogue_supreme_sneak"
+        },
+        "finalDisposition": "catalog-installed-owner-evidence-present",
+        "unitProfile": {
+          "disposition": "supported-profile",
           "state": "recorded"
         }
       }
@@ -30940,50 +30968,6 @@
     },
     {
       "axis": "character-level",
-      "candidateUnitId": "sorcerer_draconic_resilience",
-      "category": "class feature",
-      "className": "Sorcerer",
-      "concept": "Sorcerer Draconic Resilience",
-      "levelBand": "level-3",
-      "minedDenominator": {
-        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
-        "sourceInventoryRowId": "srd521:classes/sorcerer:level-3:class-feature-grant:sorcerer_draconic_resilience",
-        "state": "present"
-      },
-      "nextAction": "Owner-specific operational evidence is classified and present.",
-      "rowId": "srd521:classes/sorcerer:level-3:class-feature-grant:sorcerer_draconic_resilience",
-      "rowKind": "class-feature-grant",
-      "source": {
-        "lineEnd": 418,
-        "lineStart": 413,
-        "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-      },
-      "supportSnapshot": {
-        "authoredContent": {
-          "sourceRecordPath": "packages/surface/content/sorcerer_draconic_resilience.json",
-          "state": "authored-record-present",
-          "unitId": "sorcerer_draconic_resilience"
-        },
-        "battleReadiness": {
-          "state": "recorded",
-          "status": "accepted"
-        },
-        "battleReadinessClosure": {
-          "state": "not-recorded"
-        },
-        "catalogAdmission": {
-          "state": "installed",
-          "unitId": "sorcerer_draconic_resilience"
-        },
-        "finalDisposition": "catalog-installed-owner-evidence-present",
-        "unitProfile": {
-          "disposition": "supported-profile",
-          "state": "recorded"
-        }
-      }
-    },
-    {
-      "axis": "character-level",
       "candidateUnitId": "class_sorcerer",
       "category": "character-creation or progression mechanic",
       "className": "Sorcerer",
@@ -31022,6 +31006,51 @@
         "finalDisposition": "non-runtime",
         "unitProfile": {
           "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "sorcerer_draconic_resilience",
+      "category": "subclass feature",
+      "className": "Sorcerer",
+      "concept": "Sorcerer Draconic Resilience",
+      "levelBand": "level-3",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/sorcerer:level-3:subclass-feature-grant:sorcerer_draconic_resilience",
+        "state": "present"
+      },
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "rowId": "srd521:classes/sorcerer:level-3:subclass-feature-grant:sorcerer_draconic_resilience",
+      "rowKind": "subclass-feature-grant",
+      "source": {
+        "lineEnd": 418,
+        "lineStart": 413,
+        "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+      },
+      "subclassUnitId": "subclass_sorcerer_draconic_sorcery",
+      "supportSnapshot": {
+        "authoredContent": {
+          "sourceRecordPath": "packages/surface/content/sorcerer_draconic_resilience.json",
+          "state": "authored-record-present",
+          "unitId": "sorcerer_draconic_resilience"
+        },
+        "battleReadiness": {
+          "state": "recorded",
+          "status": "accepted"
+        },
+        "battleReadinessClosure": {
+          "state": "not-recorded"
+        },
+        "catalogAdmission": {
+          "state": "installed",
+          "unitId": "sorcerer_draconic_resilience"
+        },
+        "finalDisposition": "catalog-installed-owner-evidence-present",
+        "unitProfile": {
+          "disposition": "supported-profile",
           "state": "recorded"
         }
       }
@@ -31090,6 +31119,7 @@
         "lineStart": 419,
         "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
       },
+      "subclassUnitId": "subclass_sorcerer_draconic_sorcery",
       "supportSnapshot": {
         "authoredContent": {
           "sourceRecordPath": "packages/surface/content/sorcerer_draconic_spells.json",
@@ -31300,52 +31330,6 @@
     },
     {
       "axis": "character-level",
-      "candidateUnitId": "sorcerer_elemental_affinity",
-      "category": "class feature",
-      "className": "Sorcerer",
-      "concept": "Sorcerer Elemental Affinity",
-      "levelBand": "level-6",
-      "minedDenominator": {
-        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
-        "sourceInventoryRowId": "srd521:classes/sorcerer:level-6:class-feature-grant:sorcerer_elemental_affinity",
-        "state": "present"
-      },
-      "nextAction": "SRD Elemental Affinity chooses one of Acid, Cold, Fire, Lightning, or Poison, grants Resistance to that chosen damage type, and lets the Sorcerer add Charisma modifier to one damage roll of a spell that deals that damage type. The local SRD 5.2.1 text does not spend Sorcery Points for this feature. Existing passive damage Resistance support is scoped to fixed or species Draconic Ancestry facts, and existing spell damage owners do not admit a selected class-feature damage-type filter, one-roll-per-spell accounting, or a shared build-time damage-type binding across Resistance and the spell damage rider. A future owner must consume typed Surface facts for the selected Elemental Affinity feature, retain the single chosen damage type as a character-owned source fact, project target-side Resistance through the shared damage adjustment boundary, and project the optional Charisma modifier through the spell damage-roll owner without duplicating Spell Slot state, spell damage dice or totals, character ability state, damage adjustment state, Sorcery Point state, subclass selection state, or dispatching on Sorcerer, Draconic Sorcery, Elemental Affinity, or selected spell authored identity.",
-      "rowId": "srd521:classes/sorcerer:level-6:class-feature-grant:sorcerer_elemental_affinity",
-      "rowKind": "class-feature-grant",
-      "source": {
-        "lineEnd": 437,
-        "lineStart": 432,
-        "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-      },
-      "supportSnapshot": {
-        "authoredContent": {
-          "state": "missing-authored-record"
-        },
-        "battleReadiness": {
-          "state": "recorded",
-          "status": "accepted-no-battle-effect"
-        },
-        "battleReadinessClosure": {
-          "kind": "character-fact-and-runtime-detached-split",
-          "owner": "future-owner-before-SDK character-sheet-runtime selected Elemental Affinity damage-type owner plus battle-runtime passive Resistance and spell damage-roll modifier owners",
-          "reason": "SRD Elemental Affinity chooses one of Acid, Cold, Fire, Lightning, or Poison, grants Resistance to that chosen damage type, and lets the Sorcerer add Charisma modifier to one damage roll of a spell that deals that damage type. The local SRD 5.2.1 text does not spend Sorcery Points for this feature. Existing passive damage Resistance support is scoped to fixed or species Draconic Ancestry facts, and existing spell damage owners do not admit a selected class-feature damage-type filter, one-roll-per-spell accounting, or a shared build-time damage-type binding across Resistance and the spell damage rider. A future owner must consume typed Surface facts for the selected Elemental Affinity feature, retain the single chosen damage type as a character-owned source fact, project target-side Resistance through the shared damage adjustment boundary, and project the optional Charisma modifier through the spell damage-roll owner without duplicating Spell Slot state, spell damage dice or totals, character ability state, damage adjustment state, Sorcery Point state, subclass selection state, or dispatching on Sorcerer, Draconic Sorcery, Elemental Affinity, or selected spell authored identity.",
-          "source": "unit-claim",
-          "state": "recorded"
-        },
-        "catalogAdmission": {
-          "state": "not-installed",
-          "unitId": "sorcerer_elemental_affinity"
-        },
-        "finalDisposition": "catalog-only/dead-for-now",
-        "unitProfile": {
-          "disposition": "unsupported-profile",
-          "state": "recorded"
-        }
-      }
-    },
-    {
-      "axis": "character-level",
       "candidateUnitId": "class_sorcerer",
       "category": "character-creation or progression mechanic",
       "className": "Sorcerer",
@@ -31382,6 +31366,53 @@
           "unitId": "class_sorcerer"
         },
         "finalDisposition": "non-runtime",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "sorcerer_elemental_affinity",
+      "category": "subclass feature",
+      "className": "Sorcerer",
+      "concept": "Sorcerer Elemental Affinity",
+      "levelBand": "level-6",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/sorcerer:level-6:subclass-feature-grant:sorcerer_elemental_affinity",
+        "state": "present"
+      },
+      "nextAction": "SRD Elemental Affinity chooses one of Acid, Cold, Fire, Lightning, or Poison, grants Resistance to that chosen damage type, and lets the Sorcerer add Charisma modifier to one damage roll of a spell that deals that damage type. The local SRD 5.2.1 text does not spend Sorcery Points for this feature. Existing passive damage Resistance support is scoped to fixed or species Draconic Ancestry facts, and existing spell damage owners do not admit a selected class-feature damage-type filter, one-roll-per-spell accounting, or a shared build-time damage-type binding across Resistance and the spell damage rider. A future owner must consume typed Surface facts for the selected Elemental Affinity feature, retain the single chosen damage type as a character-owned source fact, project target-side Resistance through the shared damage adjustment boundary, and project the optional Charisma modifier through the spell damage-roll owner without duplicating Spell Slot state, spell damage dice or totals, character ability state, damage adjustment state, Sorcery Point state, subclass selection state, or dispatching on Sorcerer, Draconic Sorcery, Elemental Affinity, or selected spell authored identity.",
+      "rowId": "srd521:classes/sorcerer:level-6:subclass-feature-grant:sorcerer_elemental_affinity",
+      "rowKind": "subclass-feature-grant",
+      "source": {
+        "lineEnd": 437,
+        "lineStart": 432,
+        "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+      },
+      "subclassUnitId": "subclass_sorcerer_draconic_sorcery",
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "missing-authored-record"
+        },
+        "battleReadiness": {
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
+        },
+        "battleReadinessClosure": {
+          "kind": "character-fact-and-runtime-detached-split",
+          "owner": "future-owner-before-SDK character-sheet-runtime selected Elemental Affinity damage-type owner plus battle-runtime passive Resistance and spell damage-roll modifier owners",
+          "reason": "SRD Elemental Affinity chooses one of Acid, Cold, Fire, Lightning, or Poison, grants Resistance to that chosen damage type, and lets the Sorcerer add Charisma modifier to one damage roll of a spell that deals that damage type. The local SRD 5.2.1 text does not spend Sorcery Points for this feature. Existing passive damage Resistance support is scoped to fixed or species Draconic Ancestry facts, and existing spell damage owners do not admit a selected class-feature damage-type filter, one-roll-per-spell accounting, or a shared build-time damage-type binding across Resistance and the spell damage rider. A future owner must consume typed Surface facts for the selected Elemental Affinity feature, retain the single chosen damage type as a character-owned source fact, project target-side Resistance through the shared damage adjustment boundary, and project the optional Charisma modifier through the spell damage-roll owner without duplicating Spell Slot state, spell damage dice or totals, character ability state, damage adjustment state, Sorcery Point state, subclass selection state, or dispatching on Sorcerer, Draconic Sorcery, Elemental Affinity, or selected spell authored identity.",
+          "source": "unit-claim",
+          "state": "recorded"
+        },
+        "catalogAdmission": {
+          "state": "not-installed",
+          "unitId": "sorcerer_elemental_affinity"
+        },
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
           "disposition": "unsupported-profile",
           "state": "recorded"
@@ -37386,50 +37417,6 @@
     },
     {
       "axis": "character-level",
-      "candidateUnitId": "warlock_dark_ones_blessing",
-      "category": "class feature",
-      "className": "Warlock",
-      "concept": "Warlock Dark One's Blessing",
-      "levelBand": "level-3",
-      "minedDenominator": {
-        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
-        "sourceInventoryRowId": "srd521:classes/warlock:level-3:class-feature-grant:warlock_dark_ones_blessing",
-        "state": "present"
-      },
-      "nextAction": "Owner-specific operational evidence is classified and present.",
-      "rowId": "srd521:classes/warlock:level-3:class-feature-grant:warlock_dark_ones_blessing",
-      "rowKind": "class-feature-grant",
-      "source": {
-        "lineEnd": 463,
-        "lineStart": 460,
-        "path": ".references/srd-5.2.1/Classes/Warlock.md"
-      },
-      "supportSnapshot": {
-        "authoredContent": {
-          "sourceRecordPath": "packages/surface/content/warlock_dark_ones_blessing.json",
-          "state": "authored-record-present",
-          "unitId": "warlock_dark_ones_blessing"
-        },
-        "battleReadiness": {
-          "state": "recorded",
-          "status": "accepted"
-        },
-        "battleReadinessClosure": {
-          "state": "not-recorded"
-        },
-        "catalogAdmission": {
-          "state": "installed",
-          "unitId": "warlock_dark_ones_blessing"
-        },
-        "finalDisposition": "catalog-installed-owner-evidence-present",
-        "unitProfile": {
-          "disposition": "supported-profile",
-          "state": "recorded"
-        }
-      }
-    },
-    {
-      "axis": "character-level",
       "candidateUnitId": "class_warlock",
       "category": "character-creation or progression mechanic",
       "className": "Warlock",
@@ -37468,6 +37455,51 @@
         "finalDisposition": "non-runtime",
         "unitProfile": {
           "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "warlock_dark_ones_blessing",
+      "category": "subclass feature",
+      "className": "Warlock",
+      "concept": "Warlock Dark One's Blessing",
+      "levelBand": "level-3",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/warlock:level-3:subclass-feature-grant:warlock_dark_ones_blessing",
+        "state": "present"
+      },
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "rowId": "srd521:classes/warlock:level-3:subclass-feature-grant:warlock_dark_ones_blessing",
+      "rowKind": "subclass-feature-grant",
+      "source": {
+        "lineEnd": 463,
+        "lineStart": 460,
+        "path": ".references/srd-5.2.1/Classes/Warlock.md"
+      },
+      "subclassUnitId": "subclass_warlock_fiend_patron",
+      "supportSnapshot": {
+        "authoredContent": {
+          "sourceRecordPath": "packages/surface/content/warlock_dark_ones_blessing.json",
+          "state": "authored-record-present",
+          "unitId": "warlock_dark_ones_blessing"
+        },
+        "battleReadiness": {
+          "state": "recorded",
+          "status": "accepted"
+        },
+        "battleReadinessClosure": {
+          "state": "not-recorded"
+        },
+        "catalogAdmission": {
+          "state": "installed",
+          "unitId": "warlock_dark_ones_blessing"
+        },
+        "finalDisposition": "catalog-installed-owner-evidence-present",
+        "unitProfile": {
+          "disposition": "supported-profile",
           "state": "recorded"
         }
       }
@@ -37536,6 +37568,7 @@
         "lineStart": 464,
         "path": ".references/srd-5.2.1/Classes/Warlock.md"
       },
+      "subclassUnitId": "subclass_warlock_fiend_patron",
       "supportSnapshot": {
         "authoredContent": {
           "sourceRecordPath": "packages/surface/content/warlock_fiend_spells.json",
@@ -37702,52 +37735,6 @@
     },
     {
       "axis": "character-level",
-      "candidateUnitId": "warlock_dark_ones_own_luck",
-      "category": "class feature",
-      "className": "Warlock",
-      "concept": "Warlock Dark One's Own Luck",
-      "levelBand": "level-6",
-      "minedDenominator": {
-        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
-        "sourceInventoryRowId": "srd521:classes/warlock:level-6:class-feature-grant:warlock_dark_ones_own_luck",
-        "state": "present"
-      },
-      "nextAction": "SRD Dark One's Own Luck lets the Warlock add 1d10 to the Warlock's own Ability Check or Saving Throw after seeing the roll but before any effects occur, with uses equal to Charisma modifier minimum one, no more than one use per roll, and Long Rest recovery. Existing Fighter Tactical Mind support is limited to failed Ability Checks that spend Second Wind and may refund the spend, Bardic Inspiration support is a granted held die spent after an already failed D20 Test, spell roll-modifier support is active Spell Effect state, and reaction roll-reduction support spends a Reaction. None admits this selected-feature, reactionless Ability Check and Saving Throw modifier window or its own rest resource. A future owner must consume typed Surface facts for the selected Dark One's Own Luck feature, existing Charisma ability state, existing Ability Check and Saving Throw roll/result boundaries, and canonical Long Rest resource state, then apply exactly one optional 1d10 modifier per eligible roll without duplicating D20 roll state, Ability Check state, Saving Throw state, character ability state, rest use-count state, subclass selection state, or dispatching on Warlock, Fiend Patron, or Dark One's Own Luck authored identity.",
-      "rowId": "srd521:classes/warlock:level-6:class-feature-grant:warlock_dark_ones_own_luck",
-      "rowKind": "class-feature-grant",
-      "source": {
-        "lineEnd": 482,
-        "lineStart": 477,
-        "path": ".references/srd-5.2.1/Classes/Warlock.md"
-      },
-      "supportSnapshot": {
-        "authoredContent": {
-          "state": "missing-authored-record"
-        },
-        "battleReadiness": {
-          "state": "recorded",
-          "status": "accepted-no-battle-effect"
-        },
-        "battleReadinessClosure": {
-          "kind": "character-fact-and-runtime-detached-split",
-          "owner": "future-owner-before-SDK character-sheet-runtime Dark One's Own Luck Long Rest resource owner plus battle-runtime and Character Sheet reactionless Ability Check and Saving Throw d10 modifier owners",
-          "reason": "SRD Dark One's Own Luck lets the Warlock add 1d10 to the Warlock's own Ability Check or Saving Throw after seeing the roll but before any effects occur, with uses equal to Charisma modifier minimum one, no more than one use per roll, and Long Rest recovery. Existing Fighter Tactical Mind support is limited to failed Ability Checks that spend Second Wind and may refund the spend, Bardic Inspiration support is a granted held die spent after an already failed D20 Test, spell roll-modifier support is active Spell Effect state, and reaction roll-reduction support spends a Reaction. None admits this selected-feature, reactionless Ability Check and Saving Throw modifier window or its own rest resource. A future owner must consume typed Surface facts for the selected Dark One's Own Luck feature, existing Charisma ability state, existing Ability Check and Saving Throw roll/result boundaries, and canonical Long Rest resource state, then apply exactly one optional 1d10 modifier per eligible roll without duplicating D20 roll state, Ability Check state, Saving Throw state, character ability state, rest use-count state, subclass selection state, or dispatching on Warlock, Fiend Patron, or Dark One's Own Luck authored identity.",
-          "source": "unit-claim",
-          "state": "recorded"
-        },
-        "catalogAdmission": {
-          "state": "not-installed",
-          "unitId": "warlock_dark_ones_own_luck"
-        },
-        "finalDisposition": "catalog-only/dead-for-now",
-        "unitProfile": {
-          "disposition": "unsupported-profile",
-          "state": "recorded"
-        }
-      }
-    },
-    {
-      "axis": "character-level",
       "candidateUnitId": "class_warlock",
       "category": "character-creation or progression mechanic",
       "className": "Warlock",
@@ -37784,6 +37771,53 @@
           "unitId": "class_warlock"
         },
         "finalDisposition": "non-runtime",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "warlock_dark_ones_own_luck",
+      "category": "subclass feature",
+      "className": "Warlock",
+      "concept": "Warlock Dark One's Own Luck",
+      "levelBand": "level-6",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/warlock:level-6:subclass-feature-grant:warlock_dark_ones_own_luck",
+        "state": "present"
+      },
+      "nextAction": "SRD Dark One's Own Luck lets the Warlock add 1d10 to the Warlock's own Ability Check or Saving Throw after seeing the roll but before any effects occur, with uses equal to Charisma modifier minimum one, no more than one use per roll, and Long Rest recovery. Existing Fighter Tactical Mind support is limited to failed Ability Checks that spend Second Wind and may refund the spend, Bardic Inspiration support is a granted held die spent after an already failed D20 Test, spell roll-modifier support is active Spell Effect state, and reaction roll-reduction support spends a Reaction. None admits this selected-feature, reactionless Ability Check and Saving Throw modifier window or its own rest resource. A future owner must consume typed Surface facts for the selected Dark One's Own Luck feature, existing Charisma ability state, existing Ability Check and Saving Throw roll/result boundaries, and canonical Long Rest resource state, then apply exactly one optional 1d10 modifier per eligible roll without duplicating D20 roll state, Ability Check state, Saving Throw state, character ability state, rest use-count state, subclass selection state, or dispatching on Warlock, Fiend Patron, or Dark One's Own Luck authored identity.",
+      "rowId": "srd521:classes/warlock:level-6:subclass-feature-grant:warlock_dark_ones_own_luck",
+      "rowKind": "subclass-feature-grant",
+      "source": {
+        "lineEnd": 482,
+        "lineStart": 477,
+        "path": ".references/srd-5.2.1/Classes/Warlock.md"
+      },
+      "subclassUnitId": "subclass_warlock_fiend_patron",
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "missing-authored-record"
+        },
+        "battleReadiness": {
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
+        },
+        "battleReadinessClosure": {
+          "kind": "character-fact-and-runtime-detached-split",
+          "owner": "future-owner-before-SDK character-sheet-runtime Dark One's Own Luck Long Rest resource owner plus battle-runtime and Character Sheet reactionless Ability Check and Saving Throw d10 modifier owners",
+          "reason": "SRD Dark One's Own Luck lets the Warlock add 1d10 to the Warlock's own Ability Check or Saving Throw after seeing the roll but before any effects occur, with uses equal to Charisma modifier minimum one, no more than one use per roll, and Long Rest recovery. Existing Fighter Tactical Mind support is limited to failed Ability Checks that spend Second Wind and may refund the spend, Bardic Inspiration support is a granted held die spent after an already failed D20 Test, spell roll-modifier support is active Spell Effect state, and reaction roll-reduction support spends a Reaction. None admits this selected-feature, reactionless Ability Check and Saving Throw modifier window or its own rest resource. A future owner must consume typed Surface facts for the selected Dark One's Own Luck feature, existing Charisma ability state, existing Ability Check and Saving Throw roll/result boundaries, and canonical Long Rest resource state, then apply exactly one optional 1d10 modifier per eligible roll without duplicating D20 roll state, Ability Check state, Saving Throw state, character ability state, rest use-count state, subclass selection state, or dispatching on Warlock, Fiend Patron, or Dark One's Own Luck authored identity.",
+          "source": "unit-claim",
+          "state": "recorded"
+        },
+        "catalogAdmission": {
+          "state": "not-installed",
+          "unitId": "warlock_dark_ones_own_luck"
+        },
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
           "disposition": "unsupported-profile",
           "state": "recorded"
@@ -41190,98 +41224,6 @@
     },
     {
       "axis": "character-level",
-      "candidateUnitId": "wizard_evocation_savant",
-      "category": "class feature",
-      "className": "Wizard",
-      "concept": "Wizard Evocation Savant",
-      "levelBand": "level-3",
-      "minedDenominator": {
-        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
-        "sourceInventoryRowId": "srd521:classes/wizard:level-3:class-feature-grant:wizard_evocation_savant",
-        "state": "present"
-      },
-      "nextAction": "Owner-specific operational evidence is classified and present.",
-      "rowId": "srd521:classes/wizard:level-3:class-feature-grant:wizard_evocation_savant",
-      "rowKind": "class-feature-grant",
-      "source": {
-        "lineEnd": 416,
-        "lineStart": 411,
-        "path": ".references/srd-5.2.1/Classes/Wizard.md"
-      },
-      "supportSnapshot": {
-        "authoredContent": {
-          "sourceRecordPath": "packages/surface/content/wizard_evocation_savant.json",
-          "state": "authored-record-present",
-          "unitId": "wizard_evocation_savant"
-        },
-        "battleReadiness": {
-          "state": "recorded",
-          "status": "accepted"
-        },
-        "battleReadinessClosure": {
-          "kind": "profile-subset-remaining-mechanics-closed",
-          "owner": "future character-advancement Wizard spellbook learning owner",
-          "reason": "Wizard level 3 owns subclass acquisition and the two level-2-or-lower Evocation spellbook choices. The separate new-spell-slot-level grant does not fire during that same level-3 creation event; the next new Wizard Spell Slot level is level 3 spells at Wizard level 5.",
-          "source": "deferred-mechanics",
-          "state": "recorded"
-        },
-        "catalogAdmission": {
-          "state": "installed",
-          "unitId": "wizard_evocation_savant"
-        },
-        "finalDisposition": "catalog-installed-owner-evidence-present",
-        "unitProfile": {
-          "disposition": "profile-subset-supported",
-          "state": "recorded"
-        }
-      }
-    },
-    {
-      "axis": "character-level",
-      "candidateUnitId": "wizard_potent_cantrip",
-      "category": "class feature",
-      "className": "Wizard",
-      "concept": "Wizard Potent Cantrip",
-      "levelBand": "level-3",
-      "minedDenominator": {
-        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
-        "sourceInventoryRowId": "srd521:classes/wizard:level-3:class-feature-grant:wizard_potent_cantrip",
-        "state": "present"
-      },
-      "nextAction": "Owner-specific operational evidence is classified and present.",
-      "rowId": "srd521:classes/wizard:level-3:class-feature-grant:wizard_potent_cantrip",
-      "rowKind": "class-feature-grant",
-      "source": {
-        "lineEnd": 420,
-        "lineStart": 417,
-        "path": ".references/srd-5.2.1/Classes/Wizard.md"
-      },
-      "supportSnapshot": {
-        "authoredContent": {
-          "sourceRecordPath": "packages/surface/content/wizard_potent_cantrip.json",
-          "state": "authored-record-present",
-          "unitId": "wizard_potent_cantrip"
-        },
-        "battleReadiness": {
-          "state": "recorded",
-          "status": "accepted"
-        },
-        "battleReadinessClosure": {
-          "state": "not-recorded"
-        },
-        "catalogAdmission": {
-          "state": "installed",
-          "unitId": "wizard_potent_cantrip"
-        },
-        "finalDisposition": "catalog-installed-owner-evidence-present",
-        "unitProfile": {
-          "disposition": "supported-profile",
-          "state": "recorded"
-        }
-      }
-    },
-    {
-      "axis": "character-level",
       "candidateUnitId": "class_wizard",
       "category": "character-creation or progression mechanic",
       "className": "Wizard",
@@ -41320,6 +41262,100 @@
         "finalDisposition": "non-runtime",
         "unitProfile": {
           "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "wizard_evocation_savant",
+      "category": "subclass feature",
+      "className": "Wizard",
+      "concept": "Wizard Evocation Savant",
+      "levelBand": "level-3",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/wizard:level-3:subclass-feature-grant:wizard_evocation_savant",
+        "state": "present"
+      },
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "rowId": "srd521:classes/wizard:level-3:subclass-feature-grant:wizard_evocation_savant",
+      "rowKind": "subclass-feature-grant",
+      "source": {
+        "lineEnd": 416,
+        "lineStart": 411,
+        "path": ".references/srd-5.2.1/Classes/Wizard.md"
+      },
+      "subclassUnitId": "subclass_wizard_evoker",
+      "supportSnapshot": {
+        "authoredContent": {
+          "sourceRecordPath": "packages/surface/content/wizard_evocation_savant.json",
+          "state": "authored-record-present",
+          "unitId": "wizard_evocation_savant"
+        },
+        "battleReadiness": {
+          "state": "recorded",
+          "status": "accepted"
+        },
+        "battleReadinessClosure": {
+          "kind": "profile-subset-remaining-mechanics-closed",
+          "owner": "future character-advancement Wizard spellbook learning owner",
+          "reason": "Wizard level 3 owns subclass acquisition and the two level-2-or-lower Evocation spellbook choices. The separate new-spell-slot-level grant does not fire during that same level-3 creation event; the next new Wizard Spell Slot level is level 3 spells at Wizard level 5.",
+          "source": "deferred-mechanics",
+          "state": "recorded"
+        },
+        "catalogAdmission": {
+          "state": "installed",
+          "unitId": "wizard_evocation_savant"
+        },
+        "finalDisposition": "catalog-installed-owner-evidence-present",
+        "unitProfile": {
+          "disposition": "profile-subset-supported",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "wizard_potent_cantrip",
+      "category": "subclass feature",
+      "className": "Wizard",
+      "concept": "Wizard Potent Cantrip",
+      "levelBand": "level-3",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/wizard:level-3:subclass-feature-grant:wizard_potent_cantrip",
+        "state": "present"
+      },
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "rowId": "srd521:classes/wizard:level-3:subclass-feature-grant:wizard_potent_cantrip",
+      "rowKind": "subclass-feature-grant",
+      "source": {
+        "lineEnd": 420,
+        "lineStart": 417,
+        "path": ".references/srd-5.2.1/Classes/Wizard.md"
+      },
+      "subclassUnitId": "subclass_wizard_evoker",
+      "supportSnapshot": {
+        "authoredContent": {
+          "sourceRecordPath": "packages/surface/content/wizard_potent_cantrip.json",
+          "state": "authored-record-present",
+          "unitId": "wizard_potent_cantrip"
+        },
+        "battleReadiness": {
+          "state": "recorded",
+          "status": "accepted"
+        },
+        "battleReadinessClosure": {
+          "state": "not-recorded"
+        },
+        "catalogAdmission": {
+          "state": "installed",
+          "unitId": "wizard_potent_cantrip"
+        },
+        "finalDisposition": "catalog-installed-owner-evidence-present",
+        "unitProfile": {
+          "disposition": "supported-profile",
           "state": "recorded"
         }
       }
@@ -41552,52 +41588,6 @@
     },
     {
       "axis": "character-level",
-      "candidateUnitId": "wizard_sculpt_spells",
-      "category": "class feature",
-      "className": "Wizard",
-      "concept": "Wizard Sculpt Spells",
-      "levelBand": "level-6",
-      "minedDenominator": {
-        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
-        "sourceInventoryRowId": "srd521:classes/wizard:level-6:class-feature-grant:wizard_sculpt_spells",
-        "state": "present"
-      },
-      "nextAction": "SRD Sculpt Spells lets the caster choose up to 1 plus the spell's level creatures the caster can see among the other creatures affected by an Evocation spell the caster casts. The chosen creatures automatically succeed on their Saving Throws against that spell and take no damage if they would normally take half damage on a successful save. Existing spell invocation owners can represent spell School of Magic, effective spell level for a casting, affected-creature or area witnesses, Saving Throw outcomes, half-damage success branches, and damage application, but they do not admit a selected class-feature pre-save exemption choice over visible affected creatures. A future owner must consume typed Surface facts for the selected Sculpt Spells feature, the existing Spell Definition school fact, the spell invocation's effective spell level for that casting, the existing spell affected-creature or area membership witnesses, caster sight witnesses, and the shared Saving Throw/save-damage boundary without duplicating spell identity, effective spell level, area membership, line-of-sight, target selection, Saving Throw result, damage state, subclass selection state, or dispatching on Wizard, Evoker, Sculpt Spells, or selected spell authored identity.",
-      "rowId": "srd521:classes/wizard:level-6:class-feature-grant:wizard_sculpt_spells",
-      "rowKind": "class-feature-grant",
-      "source": {
-        "lineEnd": 424,
-        "lineStart": 421,
-        "path": ".references/srd-5.2.1/Classes/Wizard.md"
-      },
-      "supportSnapshot": {
-        "authoredContent": {
-          "state": "missing-authored-record"
-        },
-        "battleReadiness": {
-          "state": "recorded",
-          "status": "accepted-no-battle-effect"
-        },
-        "battleReadinessClosure": {
-          "kind": "table-spatial-derivation",
-          "owner": "future-owner-before-SDK battle-runtime selected area spell save-damage exemption owner plus table/sight affected-creature witness owner",
-          "reason": "SRD Sculpt Spells lets the caster choose up to 1 plus the spell's level creatures the caster can see among the other creatures affected by an Evocation spell the caster casts. The chosen creatures automatically succeed on their Saving Throws against that spell and take no damage if they would normally take half damage on a successful save. Existing spell invocation owners can represent spell School of Magic, effective spell level for a casting, affected-creature or area witnesses, Saving Throw outcomes, half-damage success branches, and damage application, but they do not admit a selected class-feature pre-save exemption choice over visible affected creatures. A future owner must consume typed Surface facts for the selected Sculpt Spells feature, the existing Spell Definition school fact, the spell invocation's effective spell level for that casting, the existing spell affected-creature or area membership witnesses, caster sight witnesses, and the shared Saving Throw/save-damage boundary without duplicating spell identity, effective spell level, area membership, line-of-sight, target selection, Saving Throw result, damage state, subclass selection state, or dispatching on Wizard, Evoker, Sculpt Spells, or selected spell authored identity.",
-          "source": "unit-claim",
-          "state": "recorded"
-        },
-        "catalogAdmission": {
-          "state": "not-installed",
-          "unitId": "wizard_sculpt_spells"
-        },
-        "finalDisposition": "catalog-only/dead-for-now",
-        "unitProfile": {
-          "disposition": "unsupported-profile",
-          "state": "recorded"
-        }
-      }
-    },
-    {
-      "axis": "character-level",
       "candidateUnitId": "class_wizard",
       "category": "character-creation or progression mechanic",
       "className": "Wizard",
@@ -41634,6 +41624,53 @@
           "unitId": "class_wizard"
         },
         "finalDisposition": "non-runtime",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "wizard_sculpt_spells",
+      "category": "subclass feature",
+      "className": "Wizard",
+      "concept": "Wizard Sculpt Spells",
+      "levelBand": "level-6",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/wizard:level-6:subclass-feature-grant:wizard_sculpt_spells",
+        "state": "present"
+      },
+      "nextAction": "SRD Sculpt Spells lets the caster choose up to 1 plus the spell's level creatures the caster can see among the other creatures affected by an Evocation spell the caster casts. The chosen creatures automatically succeed on their Saving Throws against that spell and take no damage if they would normally take half damage on a successful save. Existing spell invocation owners can represent spell School of Magic, effective spell level for a casting, affected-creature or area witnesses, Saving Throw outcomes, half-damage success branches, and damage application, but they do not admit a selected class-feature pre-save exemption choice over visible affected creatures. A future owner must consume typed Surface facts for the selected Sculpt Spells feature, the existing Spell Definition school fact, the spell invocation's effective spell level for that casting, the existing spell affected-creature or area membership witnesses, caster sight witnesses, and the shared Saving Throw/save-damage boundary without duplicating spell identity, effective spell level, area membership, line-of-sight, target selection, Saving Throw result, damage state, subclass selection state, or dispatching on Wizard, Evoker, Sculpt Spells, or selected spell authored identity.",
+      "rowId": "srd521:classes/wizard:level-6:subclass-feature-grant:wizard_sculpt_spells",
+      "rowKind": "subclass-feature-grant",
+      "source": {
+        "lineEnd": 424,
+        "lineStart": 421,
+        "path": ".references/srd-5.2.1/Classes/Wizard.md"
+      },
+      "subclassUnitId": "subclass_wizard_evoker",
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "missing-authored-record"
+        },
+        "battleReadiness": {
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
+        },
+        "battleReadinessClosure": {
+          "kind": "table-spatial-derivation",
+          "owner": "future-owner-before-SDK battle-runtime selected area spell save-damage exemption owner plus table/sight affected-creature witness owner",
+          "reason": "SRD Sculpt Spells lets the caster choose up to 1 plus the spell's level creatures the caster can see among the other creatures affected by an Evocation spell the caster casts. The chosen creatures automatically succeed on their Saving Throws against that spell and take no damage if they would normally take half damage on a successful save. Existing spell invocation owners can represent spell School of Magic, effective spell level for a casting, affected-creature or area witnesses, Saving Throw outcomes, half-damage success branches, and damage application, but they do not admit a selected class-feature pre-save exemption choice over visible affected creatures. A future owner must consume typed Surface facts for the selected Sculpt Spells feature, the existing Spell Definition school fact, the spell invocation's effective spell level for that casting, the existing spell affected-creature or area membership witnesses, caster sight witnesses, and the shared Saving Throw/save-damage boundary without duplicating spell identity, effective spell level, area membership, line-of-sight, target selection, Saving Throw result, damage state, subclass selection state, or dispatching on Wizard, Evoker, Sculpt Spells, or selected spell authored identity.",
+          "source": "unit-claim",
+          "state": "recorded"
+        },
+        "catalogAdmission": {
+          "state": "not-installed",
+          "unitId": "wizard_sculpt_spells"
+        },
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
           "disposition": "unsupported-profile",
           "state": "recorded"
@@ -49497,7 +49534,7 @@
       "spell-level-5"
     ],
     "maxCharacterLevel": 9,
-    "supportGate": "non-blocking mining frontier; runtime admission and support snapshots are reported but do not pass or fail level 1-4 full-support gates",
+    "supportGate": "non-blocking mining frontier; runtime admission and support snapshots are reported but do not change any strict full-support gate",
     "title": "Character Levels 1-9 Mining Audit"
   },
   "sourceAnchors": [

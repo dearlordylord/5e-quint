@@ -3171,7 +3171,7 @@
         "packages/character-creation-runtime/src/index.test.ts:derives Primal Knowledge proficiency choice from the level-3 Barbarian feature grant"
       ]
     },
-    "srd521:classes/sorcerer:level-3:class-feature-grant:sorcerer_draconic_resilience": {
+    "srd521:classes/sorcerer:level-3:subclass-feature-grant:sorcerer_draconic_resilience": {
       "taskId": "L13UG-A15",
       "profile": "Character Creation Hit Point maximum projection",
       "summary": "Sorcerer Draconic Resilience is retained only from the selected level-3 Draconic Sorcery subclass feature grants. Character Creation derives the Hit Point maximum bonus from the installed Surface modify_max_hp class-level scaling fact and the existing Sorcerer class level, without storing a parallel Hit Point table.",
@@ -3194,7 +3194,7 @@
         "packages/character-creation-runtime/src/index.test.ts:adds Draconic Resilience to Sorcerer Hit Point maximum from the retained feature"
       ]
     },
-    "srd521:classes/wizard:level-3:class-feature-grant:wizard_evocation_savant": {
+    "srd521:classes/wizard:level-3:subclass-feature-grant:wizard_evocation_savant": {
       "taskId": "L3MCHAR-05",
       "profile": "Character Creation Wizard spellbook learning acquisition choice",
       "summary": "Evocation Savant acquisition-time spellbook learning is discovered from the installed wizard_spellbook_learning Surface fact, filters existing Wizard spellbook Spell Access by Evocation school and spell level, finalizes selected spells into the existing Wizard spellbook projection, and rejects duplicate spellbook selections across class and feature grants. The focused QNT/runtime replay proves the separate later grant on future new Wizard Spell Slot levels is present but does not create a level-3 Character Creation hole; that grant remains closed by the Unit claim as a future character-advancement owner starting at Wizard level 5.",

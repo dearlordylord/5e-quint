@@ -408,7 +408,7 @@
         "packages/character-sheet-runtime/src/ability-checks.test.ts:primalKnowledgeAbilitySubstitutionProjectionTestName"
       ]
     },
-    "srd521:classes/rogue:level-3:class-feature-grant:rogue_second_story_work": {
+    "srd521:classes/rogue:level-3:subclass-feature-grant:rogue_second_story_work": {
       "taskId": "L13UG-A15",
       "profile": "Character Sheet linked-Speed and jump-distance projections",
       "summary": "Rogue Second-Story Work is read from the selected Thief subclass feature grants and projected by Character Sheet as a Climb Speed linked to walk Speed plus an optional Dexterity-for-Strength jump-distance ability substitution. The linked Speed remains a source link rather than a copied numeric Speed.",
@@ -420,7 +420,7 @@
         "packages/character-sheet-runtime/src/ability-checks.test.ts:secondStoryWorkProjectionTestName"
       ]
     },
-    "srd521:classes/sorcerer:level-3:class-feature-grant:sorcerer_draconic_resilience": {
+    "srd521:classes/sorcerer:level-3:subclass-feature-grant:sorcerer_draconic_resilience": {
       "taskId": "L13UG-A15",
       "profile": "Character Sheet Armor Class base formula projection",
       "summary": "Sorcerer Draconic Resilience is read from the selected Draconic Sorcery subclass feature grants and projected by Character Sheet as an unarmored base Armor Class of 10 plus Dexterity and Charisma modifiers from the installed Surface modify_ac_set_base fact and equipment predicate.",
@@ -574,9 +574,7 @@
         "packages/character-sheet-runtime/src/scrying.ts:scryingSavingThrowModifier",
         "packages/character-sheet-runtime/src/spell-slots.ts:spendCharacterSheetSpellSlot"
       ],
-      "tests": [
-        "packages/character-sheet-runtime/src/scrying.test.ts"
-      ]
+      "tests": ["packages/character-sheet-runtime/src/scrying.test.ts"]
     },
     "srd521:classes/cleric:spell-level-5:spell-unit-pressure:cleric_spell_list_scrying": {
       "taskId": "L19E-07-L5-DIVINATION-SOCIAL-EXPLORATION",
@@ -588,9 +586,7 @@
         "packages/character-sheet-runtime/src/scrying.ts:scryingSavingThrowModifier",
         "packages/character-sheet-runtime/src/spell-slots.ts:spendCharacterSheetSpellSlot"
       ],
-      "tests": [
-        "packages/character-sheet-runtime/src/scrying.test.ts"
-      ]
+      "tests": ["packages/character-sheet-runtime/src/scrying.test.ts"]
     },
     "srd521:classes/druid:spell-level-5:spell-unit-pressure:druid_spell_list_scrying": {
       "taskId": "L19E-07-L5-DIVINATION-SOCIAL-EXPLORATION",
@@ -602,9 +598,7 @@
         "packages/character-sheet-runtime/src/scrying.ts:scryingSavingThrowModifier",
         "packages/character-sheet-runtime/src/spell-slots.ts:spendCharacterSheetSpellSlot"
       ],
-      "tests": [
-        "packages/character-sheet-runtime/src/scrying.test.ts"
-      ]
+      "tests": ["packages/character-sheet-runtime/src/scrying.test.ts"]
     },
     "srd521:classes/warlock:spell-level-5:spell-unit-pressure:warlock_spell_list_scrying": {
       "taskId": "L19E-07-L5-DIVINATION-SOCIAL-EXPLORATION",
@@ -616,9 +610,7 @@
         "packages/character-sheet-runtime/src/scrying.ts:scryingSavingThrowModifier",
         "packages/character-sheet-runtime/src/spell-slots.ts:spendCharacterSheetSpellSlot"
       ],
-      "tests": [
-        "packages/character-sheet-runtime/src/scrying.test.ts"
-      ]
+      "tests": ["packages/character-sheet-runtime/src/scrying.test.ts"]
     },
     "srd521:classes/wizard:spell-level-5:spell-unit-pressure:wizard_spell_list_scrying": {
       "taskId": "L19E-07-L5-DIVINATION-SOCIAL-EXPLORATION",
@@ -630,9 +622,7 @@
         "packages/character-sheet-runtime/src/scrying.ts:scryingSavingThrowModifier",
         "packages/character-sheet-runtime/src/spell-slots.ts:spendCharacterSheetSpellSlot"
       ],
-      "tests": [
-        "packages/character-sheet-runtime/src/scrying.test.ts"
-      ]
+      "tests": ["packages/character-sheet-runtime/src/scrying.test.ts"]
     },
     "srd521:classes/bard:spell-level-5:spell-unit-pressure:bard_spell_list_dream": {
       "taskId": "L19E-07-L5-DIVINATION-SOCIAL-EXPLORATION",
@@ -643,9 +633,7 @@
         "packages/character-sheet-runtime/src/dream.ts:dreamInvocationFromSpell",
         "packages/character-sheet-runtime/src/spell-slots.ts:spendCharacterSheetSpellSlot"
       ],
-      "tests": [
-        "packages/character-sheet-runtime/src/dream.test.ts"
-      ]
+      "tests": ["packages/character-sheet-runtime/src/dream.test.ts"]
     },
     "srd521:classes/warlock:spell-level-5:spell-unit-pressure:warlock_spell_list_dream": {
       "taskId": "L19E-07-L5-DIVINATION-SOCIAL-EXPLORATION",
@@ -656,9 +644,7 @@
         "packages/character-sheet-runtime/src/dream.ts:dreamInvocationFromSpell",
         "packages/character-sheet-runtime/src/spell-slots.ts:spendCharacterSheetSpellSlot"
       ],
-      "tests": [
-        "packages/character-sheet-runtime/src/dream.test.ts"
-      ]
+      "tests": ["packages/character-sheet-runtime/src/dream.test.ts"]
     },
     "srd521:classes/wizard:spell-level-5:spell-unit-pressure:wizard_spell_list_dream": {
       "taskId": "L19E-07-L5-DIVINATION-SOCIAL-EXPLORATION",
@@ -669,9 +655,7 @@
         "packages/character-sheet-runtime/src/dream.ts:dreamInvocationFromSpell",
         "packages/character-sheet-runtime/src/spell-slots.ts:spendCharacterSheetSpellSlot"
       ],
-      "tests": [
-        "packages/character-sheet-runtime/src/dream.test.ts"
-      ]
+      "tests": ["packages/character-sheet-runtime/src/dream.test.ts"]
     },
     "srd521:classes/bard:spell-level-5:spell-unit-pressure:bard_spell_list_seeming": {
       "taskId": "L19E-07-L5-DIVINATION-SOCIAL-EXPLORATION",

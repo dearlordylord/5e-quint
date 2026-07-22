@@ -1,4 +1,5 @@
 const path = require("node:path");
+const { miningAuditFrontiers } = require("./mining-audit-frontiers.cjs");
 const {
   mcpScenarioWitnessKind,
   ultraGoldenWitnessKinds,
@@ -354,38 +355,11 @@ function coveragePaths(root) {
       coverageDir,
       "LEVEL1_10_FULL_SUPPORT.md",
     ),
-    levelOneSevenMiningAudit: path.join(
-      coverageDir,
-      "level1-7-mining-audit.json",
-    ),
-    levelOneSevenMiningAuditReport: path.join(
-      coverageDir,
-      "LEVEL1_7_MINING_AUDIT.md",
-    ),
-    levelOneEightMiningAudit: path.join(
-      coverageDir,
-      "level1-8-mining-audit.json",
-    ),
-    levelOneEightMiningAuditReport: path.join(
-      coverageDir,
-      "LEVEL1_8_MINING_AUDIT.md",
-    ),
-    levelOneNineMiningAudit: path.join(
-      coverageDir,
-      "level1-9-mining-audit.json",
-    ),
-    levelOneNineMiningAuditReport: path.join(
-      coverageDir,
-      "LEVEL1_9_MINING_AUDIT.md",
-    ),
-    levelOneTenMiningAudit: path.join(
-      coverageDir,
-      "level1-10-mining-audit.json",
-    ),
-    levelOneTenMiningAuditReport: path.join(
-      coverageDir,
-      "LEVEL1_10_MINING_AUDIT.md",
-    ),
+    miningAuditFrontiers: miningAuditFrontiers.map((frontier) => ({
+      id: frontier.id,
+      jsonPath: path.join(coverageDir, frontier.jsonFilename),
+      reportPath: path.join(coverageDir, frontier.reportFilename),
+    })),
     ultraGoldenGate: path.join(coverageDir, "ultra-golden-gate.json"),
     ultraGoldenGateReport: path.join(coverageDir, "ULTRA_GOLDEN_GATE.md"),
     rulesKernelObligations: path.join(
