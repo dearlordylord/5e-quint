@@ -13,7 +13,11 @@ import {
   canSpendAction,
   canSpendBonusAction,
 } from "@dnd/shared-algebras/action-economy-algebra";
-import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
+import {
+  abilityModifier,
+  currentArmorClass,
+} from "@dnd/shared-algebras/armor-class-algebra";
+import { proficiencyBonus } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
 import {
   activeEffectArmorClass,
@@ -68,6 +72,7 @@ import {
 } from "./battle-runtime-test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+import { shillelaghUnitId } from "./unit-profile-admission-catalog-support.ts";
 import { defineSelectedIdentityReplayWitness } from "./selected-identity-witness.ts";
 
 const slowExtraTargetId = combatantId("unit-profile-slow-extra-target");
@@ -564,6 +569,62 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
       kind: "committed",
       combatantId: spellTargetId,
     });
+  });
+
+  test("a successful Slow Somatic outcome continues a Shillelagh cast", () => {
+    const targetTurn = targetTurnAfterFailedSlow(
+      spellBattle({
+        preparedSpells: [spellRecord(slowUnitId)],
+        spellSlots: [{ spellLevel: 3, count: 1 }],
+        targetAttack: zeroAbilityWeaponAttack("weapon_quarterstaff"),
+        targetClassLevels: [{ className: "druid", level: 1 }],
+        targetSpellcasting: {
+          sourceClassName: "druid",
+          spellcastingAbilityModifier: abilityModifier(3),
+          proficiencyBonus: proficiencyBonus(2),
+          canCastSpells: true,
+          cantrips: [spellRecord(shillelaghUnitId)],
+          preparedSpells: [],
+          featurePreparedSpells: [],
+          spellbookRitualSpellAccesses: [],
+          invocationSpellAccesses: [],
+          spellSlots: [],
+        },
+      }),
+    );
+    const act = spellActForActor(targetTurn, spellTargetId, shillelaghUnitId);
+    const slowChance = requireSlowSomaticSpellFailureHole(act.initialHoles);
+
+    expect(
+      resolveBattleSubject({
+        state: targetTurn.state,
+        subject: act.subject,
+        fills: [
+          slowSomaticSpellFailureFill(slowChance, true),
+          {
+            kind: "targetChoice",
+            holeId: slowChance.holeId,
+            value: spellCasterId,
+          },
+        ],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
+
+    const resolved = resolveBattleSubject({
+      state: targetTurn.state,
+      subject: act.subject,
+      fills: [slowSomaticSpellFailureFill(slowChance, false)],
+    });
+
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected slowed Shillelagh to resolve after success.");
+    }
+    expect(
+      requireCombatant(resolved.state, spellTargetId).activeEffects,
+    ).toContainEqual(
+      expect.objectContaining({ kind: "spellWeaponAttackOverride" }),
+    );
   });
 
   test("slowed spell cast without an effective Somatic component does not ask for the Slow chance outcome", () => {

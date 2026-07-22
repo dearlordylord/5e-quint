@@ -86,6 +86,10 @@ export function spellBattle(input: {
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
   >["unitFeatures"];
+  readonly targetClassLevels?: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["classLevels"];
   readonly targetSpellcasting?: Extract<
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
@@ -195,6 +199,9 @@ export function spellBattle(input: {
               ...(input.targetUnitFeatures === undefined
                 ? {}
                 : { unitFeatures: input.targetUnitFeatures }),
+              ...(input.targetClassLevels === undefined
+                ? {}
+                : { classLevels: input.targetClassLevels }),
               ...(input.targetSpellcasting === undefined &&
               input.targetPreparedSpells === undefined
                 ? {}

@@ -14,188 +14,99 @@
 //     Type, and Weapon Property.
 
 import {
-  maybeOpenInterruptWindow,
+  interruptWindowProgress,
   snapshotBattle,
-  type BattleActDiscoveryCandidate,
-  type BattleActiveEffect,
-  type BattleCreatureState,
-  type BattleResolutionResult,
-  type BattleState,
+  type BattleInterruptWindowProgress,
   type BonusActionSpellBattleResolutionInput,
 } from "../../battle-reducer.ts";
-import { type CombatantId } from "../../identity.ts";
 import {
   admitWeaponAttackOverride,
   type WeaponAttackOverrideInvocation,
 } from "../../procedure-admission/weapon-attack-override.ts";
-import type { WeaponAttackOverrideProcedureFacts } from "../../procedure-facts/weapon-attack-override.ts";
 import { activeDruidWildShapeEffect } from "../druid-wild-shape.ts";
 import { loadoutWeaponItemIsUsableDuringWildShape } from "../wild-shape-equipment.ts";
 import {
-  activeEffectsAfterWeaponAttackOverride,
+  discoverWeaponAttackOverrideCastAct,
+  weaponAttackOverrideExecutor,
   WeaponAttackOverrideExecutionSchema,
 } from "../../procedure-execution/weapon-attack-override.ts";
-import { invalidResult } from "../result-helpers.ts";
 import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
-import type {
-  OkSpellFillSet,
-  SpellProcedureProfile,
-  SpellProcedureProfileResolveInput,
-} from "./profile.ts";
+import type { WeaponAttackOverrideFillInput } from "../weapon-attack-override-fill-input.ts";
+import type { SpellProcedureProfile } from "./profile.ts";
 
-type WeaponAttackOverrideResolveInput = SpellProcedureProfileResolveInput<
-  WeaponAttackOverrideInvocation,
-  BonusActionSpellBattleResolutionInput
->;
-
-function discoverWeaponAttackOverrideCastAct(
-  state: BattleState,
-  actorId: CombatantId,
-  invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<WeaponAttackOverrideInvocation>,
-): readonly BattleActDiscoveryCandidate[] {
-  const actor = state.combatants.get(actorId);
-  if (
-    actor?.origin.kind !== "character" ||
-    !weaponAttackOverrideWeaponIsUsable(actor, invocation)
-  ) {
-    return [];
-  }
-  return [
-    {
-      subject: {
-        tag: "bonusActionSpell",
-        actorId,
-        procedureRef: invocation.sourceProcedureRef,
-        mode: { tag: "cast" },
-      },
-      initialHoles: [],
-    },
-  ];
-}
-
-function resolveWeaponAttackOverride(
-  input: WeaponAttackOverrideResolveInput,
-): BattleResolutionResult {
-  if (weaponAttackOverrideFillSetHasDisallowedFills(input.fillSet)) {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      "Weapon attack override spells do not use target, roll, damage, or save fills.",
-    );
-  }
-  if (input.invocation.activeEffect.sourceCombatantId !== input.actorId) {
-    return invalidResult(
-      input.input.state,
-      "unsupportedSubject",
-      "Weapon attack override source combatant does not match the caster.",
-    );
-  }
-  const actor = input.input.state.combatants.get(input.actorId);
-  if (actor === undefined) {
-    return invalidResult(
-      input.input.state,
-      "missingCombatant",
-      "Weapon attack override caster is not in this battle.",
-    );
-  }
-  if (
-    actor.origin.kind !== "character" ||
-    !weaponAttackOverrideWeaponIsUsable(actor, input.invocation)
-  ) {
-    return invalidResult(
-      input.input.state,
-      "unsupportedSubject",
-      "Weapon attack override requires its attached weapon to remain usable.",
-    );
-  }
-  const spellCastReactionWindow = maybeOpenInterruptWindow(
-    input.input.state,
-    spellCastInterruptFrame({
-      casterId: input.actorId,
-      invocation: input.invocation,
-      targetIds: [input.actorId],
-      reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
-      castingResource: { kind: "bonusAction" },
-      continuation: {
-        kind: "replay",
-        subject: input.input.subject,
-        fills: input.input.fills,
-      },
-    }),
-    input.input.handledInterruptTrigger,
-  );
-  if (spellCastReactionWindow !== null) {
-    return spellCastReactionWindow;
-  }
-
-  const activeEffects: readonly BattleActiveEffect[] =
-    activeEffectsAfterWeaponAttackOverride(
-      actor.activeEffects,
-      input.invocation.sourceProcedureRef,
-      input.invocation.activeEffect,
-    );
-  const effected = {
-    ...input.input.state,
-    combatants: new Map(input.input.state.combatants).set(input.actorId, {
-      ...actor,
-      activeEffects,
-    }),
-  };
-  const resourced = spendSpellCastResources({
-    state: effected,
-    actorId: input.actorId,
-    invocation: input.invocation,
-    errorState: input.input.state,
-  });
-  return resourced.tag === "invalid"
-    ? resourced
-    : {
-        tag: "resolved",
-        state: resourced.state,
-        snapshot: snapshotBattle(resourced.state),
-      };
-}
-
-function weaponAttackOverrideWeaponIsUsable(
-  actor: BattleCreatureState,
-  invocation: Pick<WeaponAttackOverrideProcedureFacts, "activeEffect">,
-): boolean {
-  if (actor.origin.kind !== "character") {
-    return false;
-  }
-  return loadoutWeaponItemIsUsableDuringWildShape({
-    loadout: actor.origin.selectedLoadout,
-    activeWildShape: activeDruidWildShapeEffect(actor),
-    itemId: invocation.activeEffect.weaponItemId,
-  });
-}
-
-function weaponAttackOverrideFillSetHasDisallowedFills(
-  fillSet: OkSpellFillSet,
-): boolean {
-  return (
-    fillSet.targetId !== undefined ||
-    fillSet.targetList !== undefined ||
-    fillSet.attackRoll !== undefined ||
-    fillSet.targetAllocation !== undefined ||
-    fillSet.damageRoll !== undefined ||
-    fillSet.attackBurstDamageRoll !== undefined ||
-    fillSet.healingRoll !== undefined ||
-    fillSet.damageDispositions.length > 0 ||
-    fillSet.skillChoice !== undefined ||
-    fillSet.targetAbilityChoices !== undefined ||
-    fillSet.commandOptionChoice !== undefined ||
-    fillSet.savingThrowOutcomes !== undefined ||
-    fillSet.concentrationSavingThrows.length > 0
-  );
-}
-
-export const weaponAttackOverrideProfile: SpellProcedureProfile<
+type WeaponAttackOverrideProfile = SpellProcedureProfile<
   "weaponAttackOverride",
   WeaponAttackOverrideInvocation,
-  BonusActionSpellBattleResolutionInput
-> = {
+  BonusActionSpellBattleResolutionInput,
+  WeaponAttackOverrideFillInput
+>;
+
+type WeaponAttackOverrideOpenedInterruptResult = Extract<
+  BattleInterruptWindowProgress,
+  { readonly tag: "windowOpened" }
+>["result"];
+type WeaponAttackOverrideCheckpointFailureResult = Extract<
+  BattleInterruptWindowProgress,
+  { readonly tag: "checkpointPreparationFailed" }
+>["result"];
+
+const resolveWeaponAttackOverride = weaponAttackOverrideExecutor<
+  WeaponAttackOverrideOpenedInterruptResult,
+  WeaponAttackOverrideCheckpointFailureResult
+>();
+
+function resolveWeaponAttackOverrideProfile(
+  input: Parameters<WeaponAttackOverrideProfile["resolve"]>[0],
+) {
+  const continuation = {
+    kind: "replay",
+    subject: input.input.subject,
+    fills: input.input.fills,
+  } as const;
+  return resolveWeaponAttackOverride(
+    {
+      input: {
+        state: input.input.state,
+        subject: input.input.subject,
+        ...(input.input.handledInterruptTrigger === undefined
+          ? {}
+          : {
+              handledInterruptTrigger: input.input.handledInterruptTrigger,
+            }),
+      },
+      invocation: input.invocation,
+      fillInput: input.fillSet,
+      continuation,
+    },
+    {
+      snapshot: snapshotBattle,
+      activeDruidWildShapeEffect,
+      loadoutWeaponItemIsUsableDuringWildShape,
+      spellCastInterruptFrame,
+      interruptWindowProgress,
+      commitWeaponAttackOverrideEffect: ({ authorization, activeEffects }) => ({
+        ...authorization.execution.state,
+        combatants: new Map(authorization.execution.state.combatants).set(
+          authorization.execution.caster.combatantId,
+          {
+            ...authorization.execution.caster,
+            activeEffects,
+          },
+        ),
+      }),
+      spendSpellCastResources: ({ state, execution, errorState }) =>
+        spendSpellCastResources({
+          state,
+          actorId: execution.caster.combatantId,
+          invocation: execution.invocation,
+          errorState,
+        }),
+    },
+  );
+}
+
+export const weaponAttackOverrideProfile: WeaponAttackOverrideProfile = {
   procedure: "weaponAttackOverride",
   executionSchema: WeaponAttackOverrideExecutionSchema,
   metamagicCompatibility: "notActionSpellCasting",
@@ -206,6 +117,10 @@ export const weaponAttackOverrideProfile: SpellProcedureProfile<
       actor: ctx.actor,
       activeDruidWildShape: activeDruidWildShapeEffect(ctx.actor),
     }),
-  discoverCastAct: discoverWeaponAttackOverrideCastAct,
-  resolve: resolveWeaponAttackOverride,
+  discoverCastAct: (state, actorId, invocation) =>
+    discoverWeaponAttackOverrideCastAct(state, actorId, invocation, {
+      activeDruidWildShapeEffect,
+      loadoutWeaponItemIsUsableDuringWildShape,
+    }),
+  resolve: resolveWeaponAttackOverrideProfile,
 };
