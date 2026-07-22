@@ -44,7 +44,7 @@ import {
   wizardId,
   wizardSpellcasting,
 } from "./battle-runtime-test-support.ts";
-import { characterSpellProcedureExecution } from "./character-execution.ts";
+import { characterSpellProcedureExecution } from "./character-execution-admission.ts";
 
 function spellInvocationForAct(
   state: BattleState,

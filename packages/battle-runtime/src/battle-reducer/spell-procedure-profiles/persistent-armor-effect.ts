@@ -28,6 +28,7 @@ import {
 //     character-battle-resources.ts.
 
 import { movementFeet, spellSlotLevel } from "@dnd/shared/types";
+import { ArmorClassSchema } from "@dnd/shared-algebras/armor-class-values";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Match } from "effect";
 
@@ -39,7 +40,7 @@ import {
   type SupportedSpellInvocation,
   type ActionSpellBattleResolutionInput,
 } from "../../battle-reducer.ts";
-import { persistentArmorEffectSpellProfileForSpell } from "../../procedure-admission/persistent-armor-effect-facts.ts";
+import { persistentArmorEffectExecutionFactsForSpell } from "../../procedure-admission/persistent-armor-effect-facts.ts";
 import type { CharacterBattleInvocationSpellAccessState } from "../../character-battle-resources.ts";
 import { CombatantId } from "../../identity.ts";
 import { combatantWearingArmor } from "../creature-state-leaves.ts";
@@ -74,7 +75,7 @@ const PersistentArmorEffectSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("spellBaseArmorClass"),
     sourceCombatantId: CombatantId,
-    base: Schema.Number,
+    base: ArmorClassSchema,
     ability: Schema.Literal("dex"),
     earlyEnds: Schema.Tuple(
       Schema.Struct({ kind: Schema.Literal("targetDonsArmor") }),
@@ -84,7 +85,7 @@ const PersistentArmorEffectSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("spellBaseArmorClass"),
     sourceCombatantId: CombatantId,
-    base: Schema.Number,
+    base: ArmorClassSchema,
     ability: Schema.Literal("dex"),
     earlyEnds: Schema.Tuple(
       Schema.Struct({ kind: Schema.Literal("concentrationBroken") }),
@@ -115,8 +116,8 @@ function persistentArmorEffectShape(
   actorId: CombatantId,
   spell: SpellRecord,
 ): Pick<PersistentArmorInvocation, "rangeFeet" | "activeEffect"> | null {
-  const profile = persistentArmorEffectSpellProfileForSpell(spell);
-  if (profile === null) {
+  const executionFacts = persistentArmorEffectExecutionFactsForSpell(spell);
+  if (executionFacts === null) {
     return null;
   }
 
@@ -125,9 +126,12 @@ function persistentArmorEffectShape(
     activeEffect: {
       kind: "spellBaseArmorClass",
       sourceCombatantId: actorId,
-      base: profile.baseArmorClass,
+      base: executionFacts.baseArmorClass,
       ability: "dex",
-      expiresAt: { kind: "duration", durationTicks: profile.durationTicks },
+      expiresAt: {
+        kind: "duration",
+        durationTicks: executionFacts.durationTicks,
+      },
       earlyEnds: [{ kind: "targetDonsArmor" }],
     },
   };

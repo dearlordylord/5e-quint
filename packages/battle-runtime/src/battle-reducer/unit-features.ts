@@ -18,7 +18,7 @@ import {
   DRUID_WILD_SHAPE_PROCEDURE_QUERY,
   characterUnitProcedure,
   type UnitFeatureProcedureExecution,
-} from "../character-execution.ts";
+} from "../character-execution-admission.ts";
 import {
   canSpendAction,
   canSpendBonusAction,

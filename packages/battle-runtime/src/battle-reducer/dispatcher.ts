@@ -93,7 +93,7 @@ import {
   characterSpellProcedure,
   characterUnitProcedure,
   type BattleSpellProcedureExecution,
-} from "../character-execution.ts";
+} from "../character-execution-admission.ts";
 import { sameMultisetBy } from "../mechanical-equality.ts";
 import { characterUnitProcedureQueryForSubject } from "../battle-composition-admission.ts";
 import {

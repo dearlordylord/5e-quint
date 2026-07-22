@@ -7,7 +7,7 @@ import type {
   CharacterBattleCreatureState,
   OngoingFeatureSourceKey,
 } from "../battle-reducer.ts";
-import type { UnitFeatureProcedureExecution } from "../character-execution.ts";
+import type { UnitFeatureProcedureExecution } from "../character-execution-admission.ts";
 import { ongoingFeatureProfileForSourceKey } from "./creature-state.ts";
 
 const RAGE_RESISTANCE_DAMAGE_TYPES = [

@@ -22,7 +22,7 @@ import { Either, Schema } from "effect";
 import {
   bindStoredSpellProcedureExecutionFacts,
   type SpellProcedureExecution,
-} from "../../character-execution.ts";
+} from "../../character-execution-admission.ts";
 import type {
   ActionSpellBattleResolutionInput,
   BattleActDiscoveryCandidate,
@@ -38,7 +38,7 @@ import {
   GLYPH_STORED_AREA_CONTROL_PROCEDURES,
   type GlyphStoredAreaControlInvocation,
   type GlyphStoredAreaControlProcedure,
-} from "../../active-effect/types.ts";
+} from "../../procedure-admission/glyph-stored-spell.ts";
 import {
   maybeOpenInterruptWindow,
   snapshotBattle,

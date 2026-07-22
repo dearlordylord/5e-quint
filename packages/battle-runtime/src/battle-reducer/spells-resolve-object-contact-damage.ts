@@ -15,7 +15,7 @@ import { allocateBattleActiveEffectRef } from "../active-effect/execution-ref.ts
 import {
   characterExecutionWithObjectContactDamageRepeat,
   type ObjectContactDamageRepeatSpellProcedureExecution,
-} from "../character-execution.ts";
+} from "../character-execution-admission.ts";
 import {
   maybeOpenInterruptWindow,
   openAfterDamageSequenceInterruptWindow,

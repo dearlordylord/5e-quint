@@ -21,7 +21,7 @@ import { Either } from "effect";
 import type { BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
 import type { BattleSubject } from "../battle-subjects.ts";
 import type { CombatantId } from "../identity.ts";
-import { characterUnitProcedureBindings } from "../character-execution.ts";
+import { characterUnitProcedureBindings } from "../character-execution-admission.ts";
 import {
   damageDispositionFillFor,
   damageDispositionFillsValidation,

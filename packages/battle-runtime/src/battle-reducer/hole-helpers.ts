@@ -37,7 +37,7 @@ import {
   characterUnitProcedureBindings,
   type UnitFeatureProcedureExecution,
   type UnitSupportProcedureExecution,
-} from "../character-execution.ts";
+} from "../character-execution-admission.ts";
 import {
   attackExecutionSelectionForOption,
   type BoundSupportedAttackActionOption,

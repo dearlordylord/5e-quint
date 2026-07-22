@@ -6,6 +6,7 @@ import type {
 import { describe, expect, test } from "vitest";
 import {
   attackDamageDispositionFill,
+  armorClass,
   attackDamageHoleAfterHit,
   attackInitialTargetHole,
   attackRollFill,
@@ -222,7 +223,7 @@ describe("battle runtime: Concentration and readied spells", () => {
                 String("hold_person"),
               ),
               sourceCombatantId: wizardId,
-              base: 13,
+              base: armorClass(13),
               ability: "dex",
               expiresAt: {
                 kind: "concentration",

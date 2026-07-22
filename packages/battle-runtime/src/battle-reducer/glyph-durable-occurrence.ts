@@ -44,7 +44,7 @@ import {
   GLYPH_STORED_SELF_TRANSFORMATION_PROCEDURES,
   type GlyphStoredConcentrationSingleCreatureActiveEffectInvocation,
   type GlyphStoredConcentrationSelfTransformationInvocation,
-} from "../active-effect/types.ts";
+} from "../procedure-admission/glyph-stored-spell.ts";
 import type {
   BattleActiveEffect,
   BattleActiveEffectExpiration,
@@ -72,7 +72,8 @@ import {
   bindStoredSpellProcedureExecutionFacts,
   spellProcedureExecution,
   type SpellProcedureExecution,
-} from "../character-execution.ts";
+} from "../character-execution-admission.ts";
+import { glyphStoredSpellProcedureExecution } from "../procedure-execution/glyph-stored-spell.ts";
 import type {
   BattleAreaId,
   BattleProcedureExecutionRef,
@@ -116,7 +117,7 @@ import {
 import { sameStringSet } from "./spells-profile-shared.ts";
 import { spellTargetHole, spellTargetListHole } from "./spells-holes-fills.ts";
 import { resolveSpellRelease } from "./spells-resolve.ts";
-import { characterStoredSpellProcedureRef } from "../character-execution.ts";
+import { characterStoredSpellProcedureRef } from "../character-execution-admission.ts";
 import { spellFillSet } from "./spells-resolve-fill-set.ts";
 import {
   resolveGreaseGroundHazardSpellAct,
@@ -1363,17 +1364,19 @@ function glyphDurableOccurrenceReleaseFromCompletedInscription(input: {
     release: input.release,
     sourceSpellLevel: input.sourceSpellLevel,
   });
-  return storedSpell.tag === "valid"
+  if (storedSpell.tag !== "valid") return storedSpell;
+  const storedProcedure = glyphStoredSpellProcedureExecution(
+    spellProcedureExecution(storedSpell.storedInvocation),
+  );
+  return storedProcedure === null
     ? {
-        tag: "valid",
-        release: {
-          kind: "spellGlyph",
-          storedProcedure: spellProcedureExecution(
-            storedSpell.storedInvocation,
-          ),
-        },
+        tag: "storedSpellProcedureUnsupported",
+        storedInvocation: storedSpell.storedInvocation,
       }
-    : storedSpell;
+    : {
+        tag: "valid",
+        release: { kind: "spellGlyph", storedProcedure },
+      };
 }
 
 type GlyphStoredSpellInvocationValidationResult =

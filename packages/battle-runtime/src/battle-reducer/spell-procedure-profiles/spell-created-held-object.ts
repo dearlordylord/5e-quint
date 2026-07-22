@@ -44,7 +44,7 @@ import type {
   SpellRecord,
 } from "@dnd/surface/surface/types";
 import { Either, Schema } from "effect";
-import { characterSpellProcedureRefsForProcedure } from "../../character-execution.ts";
+import { characterSpellProcedureRefsForProcedure } from "../../character-execution-admission.ts";
 import {
   maybeOpenInterruptWindow,
   snapshotBattle,

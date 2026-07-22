@@ -21,7 +21,7 @@ import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
 import {
   characterProcedureBinding,
   type UnitSupportProcedureExecution,
-} from "../character-execution.ts";
+} from "../character-execution-admission.ts";
 
 import { battleCreatureStateWithKnockOutPreservedConditions } from "./creature-state.ts";
 import { isMonkFocusFlurryOfBlowsActionResource } from "./monk-focus.ts";

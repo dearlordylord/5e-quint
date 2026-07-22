@@ -1,4 +1,4 @@
-import { characterUnitProcedureBindings } from "./character-execution.ts";
+import { characterUnitProcedureBindings } from "./character-execution-admission.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.potent-cantrip
 import { describe, expect, test } from "vitest";
 import { classLevel } from "@dnd/shared/types";

@@ -9,7 +9,7 @@ import type {
 } from "../battle-reducer.ts";
 import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
 import type { CharacterBattleClassLevel } from "../character-class-level.ts";
-import type { UnitFeatureProcedureExecution } from "../character-execution.ts";
+import type { UnitFeatureProcedureExecution } from "../character-execution-admission.ts";
 import { scoreModifier } from "./domain-helpers.ts";
 
 export type EnemyZeroHitPointTemporaryHitPointsAward = {

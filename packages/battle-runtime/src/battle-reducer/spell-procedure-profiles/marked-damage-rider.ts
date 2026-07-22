@@ -43,7 +43,7 @@ import {
   characterExecutionWithMarkedDamageRiderTransfer,
   characterSpellProcedureRefsForProcedure,
   type MarkedDamageRiderTransferSpellProcedureExecution,
-} from "../../character-execution.ts";
+} from "../../character-execution-admission.ts";
 import {
   snapshotBattle,
   type BattleActDiscoveryCandidate,

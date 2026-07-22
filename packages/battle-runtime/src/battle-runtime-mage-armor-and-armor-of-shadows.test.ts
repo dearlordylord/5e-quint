@@ -1,6 +1,7 @@
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { describe, expect, test } from "vitest";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
+import { admitPersistentArmorEffectSpell } from "./procedure-admission/persistent-armor-effect-facts.ts";
 import {
   abilityModifier,
   armorOfShadowsSpellInvocationRef,
@@ -653,6 +654,37 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
         message: "Armor of Shadows Spell Access must grant Mage Armor.",
       }),
     );
+  });
+
+  test("persistent armor admission rejects an invalid Armor Class base", () => {
+    const mageArmor = spellRecord("mage_armor");
+    const operation =
+      mageArmor.mechanics.family === "ongoing_effect"
+        ? mageArmor.mechanics.operations[0]
+        : undefined;
+    if (
+      operation?.effect.kind !== "modify_ac_set_base" ||
+      operation.effect.formula.kind !== "base_plus_dex"
+    ) {
+      throw new Error("Expected the Mage Armor persistent-armor fixture.");
+    }
+    const invalidBaseArmorClass = {
+      ...mageArmor,
+      mechanics: {
+        ...mageArmor.mechanics,
+        operations: [
+          {
+            ...operation,
+            effect: {
+              ...operation.effect,
+              formula: { ...operation.effect.formula, base: 0 },
+            },
+          },
+        ] as const,
+      },
+    };
+
+    expect(admitPersistentArmorEffectSpell(invalidBaseArmorClass)).toBeNull();
   });
 
   test("Armor of Shadows rejects armored self before spending resources", () => {

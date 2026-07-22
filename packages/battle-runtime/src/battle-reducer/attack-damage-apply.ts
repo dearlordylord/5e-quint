@@ -23,7 +23,7 @@ import type { BattleSubject } from "../battle-subjects.ts";
 import {
   CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
   characterUnitProcedure,
-} from "../character-execution.ts";
+} from "../character-execution-admission.ts";
 import { isPresentFindFamiliarCombatant } from "../find-familiar-state.ts";
 import {
   attackExecutionSelectionForOption,

@@ -27,7 +27,7 @@ import {
   battleProcedureExecutionRefForTest,
   characterAttackSubjectForTest,
 } from "./battle-runtime-test-support.ts";
-import { characterSpellProcedure } from "./character-execution.ts";
+import { characterSpellProcedure } from "./character-execution-admission.ts";
 import {
   battleTablePositionId,
   combatantId,

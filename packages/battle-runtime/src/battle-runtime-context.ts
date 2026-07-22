@@ -3,7 +3,7 @@ import type {
   CharacterBattleResourceOwnership,
   CharacterBattleSpellcastingState,
 } from "./character-battle-resources.ts";
-import type { CharacterUnitProcedureOwnership } from "./character-execution.ts";
+import type { CharacterUnitProcedureOwnership } from "./character-execution-admission.ts";
 import type { BattleSelectedSpellInvocation } from "./battle-reducer.ts";
 import type { BattleProcedureExecutionRef, CombatantId } from "./identity.ts";
 

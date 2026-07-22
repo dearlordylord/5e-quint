@@ -11,7 +11,7 @@ import type {
   OngoingFeatureExtensionTrigger,
   OngoingFeatureLifecycleProfile,
 } from "../unit-feature-support.ts";
-import type { UnitFeatureProcedureExecution } from "../character-execution.ts";
+import type { UnitFeatureProcedureExecution } from "../character-execution-admission.ts";
 import type {
   ActiveOngoingFeatureOccurrence,
   BattleState,

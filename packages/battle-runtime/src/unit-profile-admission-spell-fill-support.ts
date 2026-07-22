@@ -75,7 +75,7 @@ import {
   characterSpellProcedureExecution,
   characterSpellProcedure,
   type SpellProcedureExecution,
-} from "./character-execution.ts";
+} from "./character-execution-admission.ts";
 function spellInvocationForAvailableAct(
   _state: BattleState,
   act: AvailableBattleAct,

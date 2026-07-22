@@ -58,7 +58,7 @@ import {
   spellHoleInvocation,
   spellTargetFill,
 } from "./unit-profile-admission-spell-fill-support.ts";
-import { characterSpellProcedure } from "./character-execution.ts";
+import { characterSpellProcedure } from "./character-execution-admission.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 import {
   battleObjectId,

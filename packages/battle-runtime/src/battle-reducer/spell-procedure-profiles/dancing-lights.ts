@@ -28,7 +28,7 @@ import {
 import { MovementFeet, movementFeet } from "@dnd/shared/types";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
-import { characterSpellProcedureRefsForProcedure } from "../../character-execution.ts";
+import { characterSpellProcedureRefsForProcedure } from "../../character-execution-admission.ts";
 
 import {
   type ActionSpellBattleResolutionInput,

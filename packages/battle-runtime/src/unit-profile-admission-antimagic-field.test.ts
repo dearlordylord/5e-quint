@@ -8,7 +8,7 @@ import { attackBonus, movementFeet, Round } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
 import { parseBattleSpellEffectLevel } from "./battle-reducer/spells-effective-level.ts";
 import { admittedSpellActs } from "./battle-reducer/spells-profiles.ts";
-import { characterExecutionWithSpellInvocations } from "./character-execution.ts";
+import { characterExecutionWithSpellInvocations } from "./character-execution-admission.ts";
 import { battleSpellEffectOccurrenceId } from "./identity.ts";
 import {
   battleAreaId,

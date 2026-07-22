@@ -15,7 +15,6 @@ import type {
   DamageType,
   EffectAtom,
   Skill,
-  SpellRecord,
 } from "@dnd/surface/surface/types";
 
 export const CRITICAL_HIT_THRESHOLDS = [19, 20] as const;
@@ -73,10 +72,6 @@ export const BATTLE_ANTIMAGIC_FIELD_ONGOING_SPELL_EFFECT_SOURCE_KINDS = [
 ] as const;
 export type BattleAntimagicFieldOngoingSpellEffectSourceKind =
   (typeof BATTLE_ANTIMAGIC_FIELD_ONGOING_SPELL_EFFECT_SOURCE_KINDS)[number];
-// Required SRD cross-record reference: Shield explicitly also triggers when
-// targeted by the Magic Missile spell.
-export const SHIELD_MAGIC_MISSILE_SPELL_ID =
-  "magic_missile" satisfies SpellRecord["id"];
 export const BLUR_ATTACK_ROLL_BYPASS_SENSES = [
   "blindsight",
   "truesight",

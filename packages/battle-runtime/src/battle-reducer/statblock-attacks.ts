@@ -22,7 +22,7 @@ import {
   PASSIVE_RANGED_ATTACK_ROLL_BONUS_SUPPORT_PROFILE,
   WEAPON_DAMAGE_DICE_ROLL_CHOICE_SUPPORT_PROFILE,
 } from "../unit-feature-support.ts";
-import type { UnitFeatureProcedureExecution } from "../character-execution.ts";
+import type { UnitFeatureProcedureExecution } from "../character-execution-admission.ts";
 import type {
   BoundSupportedAttackActionOption,
   BattleWeaponDamage,

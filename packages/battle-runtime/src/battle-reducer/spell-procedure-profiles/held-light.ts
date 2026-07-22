@@ -69,7 +69,7 @@ import type { HeldLightHurlMechanicalFacts } from "../../battle-reducer.ts";
 import {
   characterExecutionWithHeldLightHurl,
   type HeldLightHurlSpellProcedureExecution,
-} from "../../character-execution.ts";
+} from "../../character-execution-admission.ts";
 
 type HeldLightInvocation = Extract<
   SupportedSpellInvocation,

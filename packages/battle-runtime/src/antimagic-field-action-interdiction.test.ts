@@ -22,7 +22,7 @@ import { describe, expect, test } from "vitest";
 import { parseBattleSpellEffectLevel } from "./battle-reducer/spells-effective-level.ts";
 import { removeBattleCombatants } from "./battle-reducer/api-lifecycle.ts";
 import { isCharacterBattleCreatureState } from "./battle-reducer/creature-state.ts";
-import { characterExecutionWithSpiritualWeaponRepeatAttack } from "./character-execution.ts";
+import { characterExecutionWithSpiritualWeaponRepeatAttack } from "./character-execution-admission.ts";
 import {
   battleProcedureExecutionRef,
   type BattleProcedureExecutionRef,

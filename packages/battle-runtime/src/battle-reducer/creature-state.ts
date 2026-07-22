@@ -95,7 +95,7 @@ import {
   characterExecutionFromUnits,
   characterProcedureBindingSnapshots,
   type UnitFeatureProcedureExecution,
-} from "../character-execution.ts";
+} from "../character-execution-admission.ts";
 import { spellExecutionFacts } from "./spell-execution-facts.ts";
 import { registeredSpellProcedureProfile } from "./spell-procedure-profiles/registry.ts";
 import {

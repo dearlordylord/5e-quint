@@ -19,7 +19,7 @@ import type {
   BattleD20TestRollReplacement,
   BattleSavingThrowOutcome,
 } from "../battle-reducer.ts";
-import { characterUnitProcedureBindings } from "../character-execution.ts";
+import { characterUnitProcedureBindings } from "../character-execution-admission.ts";
 
 export const D20_TEST_NATURAL_ONE_REROLL_UNAVAILABLE_MESSAGE =
   "D20 Test natural-1 reroll is not available for this actor.";

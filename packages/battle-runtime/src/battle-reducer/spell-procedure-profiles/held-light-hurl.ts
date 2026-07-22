@@ -32,7 +32,7 @@ import {
   BattleProcedureExecutionRef,
   type CombatantId,
 } from "../../identity.ts";
-import { characterSpellProcedureExecution } from "../../character-execution.ts";
+import { characterSpellProcedureExecution } from "../../character-execution-admission.ts";
 import { spellCastSelectionSubject } from "../spells-discovery.ts";
 import { spellObjectTargetHole, spellTargetHole } from "../spells-targeting.ts";
 import { resolveSpellAttackDamageAct } from "../spells-resolve.ts";

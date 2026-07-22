@@ -82,7 +82,7 @@ import {
 import {
   characterSpellProcedure,
   type SpellProcedureExecution,
-} from "./character-execution.ts";
+} from "./character-execution-admission.ts";
 
 type CreatureTypeProtectionAndCharmSelectedIdentityLastResult =
   | "init"

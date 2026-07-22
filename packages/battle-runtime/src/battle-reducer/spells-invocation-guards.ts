@@ -26,7 +26,7 @@ import { activeDruidWildShapeEffect } from "./druid-wild-shape.ts";
 import {
   DRUID_WILD_SHAPE_PROCEDURE_QUERY,
   characterUnitProcedure,
-} from "../character-execution.ts";
+} from "../character-execution-admission.ts";
 import { spellInvocationIsSpellcasting } from "./spell-turn-resources.ts";
 import type { SpellProcedureAnyTargetListInvocationClassifier } from "./spell-procedure-profiles/profile.ts";
 import { registeredSpellProcedureProfile } from "./spell-procedure-profiles/registry.ts";

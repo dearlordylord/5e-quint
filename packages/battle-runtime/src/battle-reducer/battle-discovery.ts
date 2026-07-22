@@ -147,7 +147,7 @@ import {
   SUPPORTED_STAT_BLOCK_BONUS_ACTION_STANDARD_ACTIONS,
   discoverLegendaryActionActs,
 } from "../battle-reducer.ts";
-import { characterSpellProcedure } from "../character-execution.ts";
+import { characterSpellProcedure } from "../character-execution-admission.ts";
 import {
   activeSelfTransformationModeEffect,
   spellCreatedHeldObjectEffectsForActor,

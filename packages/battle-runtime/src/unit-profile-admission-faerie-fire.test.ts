@@ -28,7 +28,7 @@ import {
   spellSlotInvocationRef,
   validateSavingThrowOutcomes,
 } from "./unit-profile-admission-test-support.ts";
-import { characterSpellProcedure } from "./character-execution.ts";
+import { characterSpellProcedure } from "./character-execution-admission.ts";
 import {
   faerieFireObjectOutlineFill,
   savingThrowOutcomeFill,

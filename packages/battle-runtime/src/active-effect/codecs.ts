@@ -6,10 +6,6 @@ import {
 import type { DamageType, DiceExpr } from "@dnd/surface/surface/types";
 import { Schema } from "effect";
 import { HUNTERS_MARK_FINDING_SKILLS } from "../battle-reducer/domain-constants.ts";
-import type {
-  MarkedDamageRiderAbilityCheckBehavior,
-  SpellMarkedDamageRider,
-} from "../battle-reducer.ts";
 import {
   BattleActiveEffectExecutionRef,
   BattleProcedureExecutionRef,
@@ -17,7 +13,9 @@ import {
 } from "../identity.ts";
 import type {
   BattleActiveEffect,
+  MarkedDamageRiderAbilityCheckBehavior,
   MarkedDamageRiderTransferState,
+  SpellMarkedDamageRider,
 } from "./types.ts";
 import type {
   BattleActiveEffectExpiration,

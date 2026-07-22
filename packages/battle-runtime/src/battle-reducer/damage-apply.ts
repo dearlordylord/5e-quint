@@ -50,7 +50,7 @@ import {
   unavailableStatBlockRechargePoolRefs,
 } from "../stat-block-execution.ts";
 import { KNOCKED_OUT_UNCONSCIOUS } from "../battle-init.ts";
-import { characterProcedureBinding } from "../character-execution.ts";
+import { characterProcedureBinding } from "../character-execution-admission.ts";
 import {
   CONCENTRATION_SAVING_THROW_HOLE_INSTANCE_PREFIX,
   DEATH_SAVING_THROW_HOLE_ID,

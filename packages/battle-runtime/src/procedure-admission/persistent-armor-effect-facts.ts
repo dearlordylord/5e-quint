@@ -3,25 +3,34 @@ import {
   elapsedTimeTicksFromTimeSpanDuration,
   type ElapsedTimeTicks,
 } from "@dnd/shared-algebras/elapsed-time-algebra";
+import {
+  ArmorClassSchema,
+  type ArmorClass,
+} from "@dnd/shared-algebras/armor-class-values";
 import type {
   OngoingEffectMechanics,
   SpellRecord,
 } from "@dnd/surface/surface/types";
-import * as Either from "effect/Either";
+import { Either, Schema } from "effect";
+
+/** Authored-free facts projected at the persistent-armor admission boundary. */
+export type PersistentArmorEffectExecutionFacts = {
+  readonly baseArmorClass: ArmorClass;
+  readonly durationTicks: ElapsedTimeTicks;
+};
 
 export type PersistentArmorEffectSpellRecord = SpellRecord & {
   readonly mechanics: OngoingEffectMechanics;
 };
 
-export type PersistentArmorEffectSpellProfile = {
-  readonly spell: PersistentArmorEffectSpellRecord;
-  readonly baseArmorClass: number;
-  readonly durationTicks: ElapsedTimeTicks;
+export type PersistentArmorEffectAdmission = {
+  readonly authoredSpell: PersistentArmorEffectSpellRecord;
+  readonly executionFacts: PersistentArmorEffectExecutionFacts;
 };
 
-export function persistentArmorEffectSpellProfileForSpell(
+export function admitPersistentArmorEffectSpell(
   spell: SpellRecord,
-): PersistentArmorEffectSpellProfile | null {
+): PersistentArmorEffectAdmission | null {
   if (
     spell.mechanics.family !== "ongoing_effect" ||
     spell.mechanics.level !== 1 ||
@@ -46,16 +55,28 @@ export function persistentArmorEffectSpellProfileForSpell(
     spell.mechanics.duration.value,
   );
   const requiredDurationTicks = elapsedTimeTicksFromHours(8);
+  const baseArmorClass = Schema.decodeUnknownEither(ArmorClassSchema)(
+    operation.effect.formula.base,
+  );
   if (
     Either.isLeft(durationTicks) ||
     Either.isLeft(requiredDurationTicks) ||
+    Either.isLeft(baseArmorClass) ||
     Number(durationTicks.right) !== Number(requiredDurationTicks.right)
   ) {
     return null;
   }
   return {
-    spell: { ...spell, mechanics: spell.mechanics },
-    baseArmorClass: operation.effect.formula.base,
-    durationTicks: durationTicks.right,
+    authoredSpell: { ...spell, mechanics: spell.mechanics },
+    executionFacts: {
+      baseArmorClass: baseArmorClass.right,
+      durationTicks: durationTicks.right,
+    },
   };
+}
+
+export function persistentArmorEffectExecutionFactsForSpell(
+  spell: SpellRecord,
+): PersistentArmorEffectExecutionFacts | null {
+  return admitPersistentArmorEffectSpell(spell)?.executionFacts ?? null;
 }

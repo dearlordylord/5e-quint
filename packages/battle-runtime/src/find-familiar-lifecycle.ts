@@ -28,7 +28,7 @@ import {
 import {
   characterUnitProcedureBindings,
   type CharacterExecutionState,
-} from "./character-execution.ts";
+} from "./character-execution-admission.ts";
 import { currentActorId } from "./battle-reducer/creature-state-leaves.ts";
 import { snapshotBattle } from "./battle-reducer/dispatcher.ts";
 import {

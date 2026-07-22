@@ -82,7 +82,7 @@ import {
   characterUnitProcedureBindings,
   characterSpellProcedure,
   type BattleSpellProcedureExecution,
-} from "../character-execution.ts";
+} from "../character-execution-admission.ts";
 
 import {
   damageDispositionFillFor,

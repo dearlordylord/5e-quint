@@ -37,7 +37,7 @@ import type {
 } from "../battle-reducer.ts";
 import { SIZES } from "@dnd/shared/types";
 import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
-import type { UnitSupportProcedureExecution } from "../character-execution.ts";
+import type { UnitSupportProcedureExecution } from "../character-execution-admission.ts";
 import type { CharacterBattleUseCountResourceState } from "../character-battle-resources.ts";
 import {
   characterBattleResourceIsUseCount,

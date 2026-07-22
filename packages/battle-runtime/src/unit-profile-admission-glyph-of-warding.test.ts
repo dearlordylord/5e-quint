@@ -55,7 +55,7 @@ import {
   characterSpellProcedureRefs,
   characterStoredSpellProcedureRef,
   spellProcedureExecution,
-} from "./character-execution.ts";
+} from "./character-execution-admission.ts";
 import {
   addGlyphDurableOccurrence,
   endGlyphDurableOccurrence,
@@ -84,7 +84,7 @@ import {
 import {
   GLYPH_STORED_SINGLE_CREATURE_ACTIVE_EFFECT_PROCEDURES,
   type GlyphStoredSingleCreatureActiveEffectProcedure,
-} from "./active-effect/types.ts";
+} from "./procedure-admission/glyph-stored-spell.ts";
 import {
   parseBattleSpellEffectLevel,
   type BattleSpellEffectLevel,

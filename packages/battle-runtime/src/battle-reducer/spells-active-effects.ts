@@ -61,7 +61,7 @@ import {
   type DancingLightsRepositionSpellProcedureExecution,
   type SpellCreatedHeldObjectSpellProcedureExecution,
   type SpiritualWeaponRepeatAttackSpellProcedureExecution,
-} from "../character-execution.ts";
+} from "../character-execution-admission.ts";
 import { breakBattleConcentration } from "./damage-apply.ts";
 import {
   combatantsAfterConcentrationSpellEffectsEndedIfNoEffects,

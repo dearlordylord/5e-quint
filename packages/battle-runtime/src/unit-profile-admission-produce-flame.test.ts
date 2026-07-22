@@ -52,7 +52,7 @@ import {
   battleProcedureExecutionRefForSpellHoleForTest,
   requireCharacterSpellProcedureRefForTest,
 } from "./battle-runtime-test-support.ts";
-import { characterSpellProcedureExecution } from "./character-execution.ts";
+import { characterSpellProcedureExecution } from "./character-execution-admission.ts";
 
 describe("SRDINV32A deterministic Produce Flame held-light admission", () => {
   test("produce_flame is admitted as a Bonus Action cantrip held light", () => {

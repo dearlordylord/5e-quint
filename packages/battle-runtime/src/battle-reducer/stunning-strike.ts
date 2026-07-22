@@ -11,7 +11,7 @@ import {
   type CharacterProcedureBinding,
   type UnitFeatureProcedureExecution,
   type UnitSupportProcedureExecution,
-} from "../character-execution.ts";
+} from "../character-execution-admission.ts";
 import type {
   CharacterWeaponAttackActionOption,
   SupportedAttackActionOption,

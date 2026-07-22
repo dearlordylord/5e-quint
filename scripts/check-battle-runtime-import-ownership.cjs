@@ -12,7 +12,11 @@ const BATTLE_RUNTIME_SRC = "packages/battle-runtime/src";
 const EXECUTION_ROOT_DIRECTORIES = [
   `${BATTLE_RUNTIME_SRC}/procedure-execution`,
 ];
-const EXECUTION_ROOT_FILES = [];
+const EXECUTION_ROOT_FILES = [
+  `${BATTLE_RUNTIME_SRC}/character-execution.ts`,
+  `${BATTLE_RUNTIME_SRC}/active-effect/codecs.ts`,
+  `${BATTLE_RUNTIME_SRC}/active-effect/types.ts`,
+];
 
 const ADMISSION_ROOT_FILES = [
   `${BATTLE_RUNTIME_SRC}/procedure-admission/weapon-attack-override.ts`,
@@ -42,9 +46,6 @@ const FORBIDDEN_OWNERS = [
 ];
 
 const MIGRATION_CANDIDATES = [
-  `${BATTLE_RUNTIME_SRC}/character-execution.ts`,
-  `${BATTLE_RUNTIME_SRC}/active-effect/codecs.ts`,
-  `${BATTLE_RUNTIME_SRC}/active-effect/types.ts`,
   `${BATTLE_RUNTIME_SRC}/battle-reducer/battle-discovery.ts`,
   `${BATTLE_RUNTIME_SRC}/battle-reducer/reducer-route.ts`,
   `${BATTLE_RUNTIME_SRC}/battle-reducer/spells-resolve.ts`,

@@ -18,7 +18,7 @@ import { Match } from "effect";
 import {
   bindStoredSpellProcedureExecutionFacts,
   type SpellProcedureExecution,
-} from "../character-execution.ts";
+} from "../character-execution-admission.ts";
 import type {
   ActionSpellBattleResolutionInput,
   BattleMagicalDarknessAreaChoice,
@@ -33,7 +33,7 @@ import type {
 import {
   GLYPH_STORED_AREA_ONGOING_PROCEDURES,
   type GlyphStoredAreaOngoingProcedure,
-} from "../active-effect/types.ts";
+} from "../procedure-admission/glyph-stored-spell.ts";
 import type { CombatantId } from "../identity.ts";
 import { needsHolesResult } from "./hole-helpers.ts";
 import { invalidResult } from "./result-helpers.ts";

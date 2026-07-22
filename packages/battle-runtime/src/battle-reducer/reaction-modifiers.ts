@@ -39,7 +39,7 @@ import {
   characterUnitProcedure,
   type CharacterUnitProcedureSource,
   type UnitFeatureProcedureExecution,
-} from "../character-execution.ts";
+} from "../character-execution-admission.ts";
 import type { BattleProcedureExecutionRef } from "../identity.ts";
 
 import { signedModifier } from "./statblock-attacks.ts";

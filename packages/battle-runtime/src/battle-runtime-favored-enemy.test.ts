@@ -5,7 +5,7 @@ import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-after-hit-damage spell.invocation-marked-damage-rider
 import { describe, expect, test } from "vitest";
 import { markedDamageRiderProfile } from "./battle-reducer/spell-procedure-profiles/marked-damage-rider.ts";
-import { characterSpellProcedure } from "./character-execution.ts";
+import { characterSpellProcedure } from "./character-execution-admission.ts";
 import type {
   BattleRuntimeSession,
   BattleState,

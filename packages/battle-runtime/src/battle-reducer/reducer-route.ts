@@ -51,7 +51,7 @@ import {
   type BattleSpellProcedureExecution,
   characterUnitProcedure,
   unitSupportProfileKind,
-} from "../character-execution.ts";
+} from "../character-execution-admission.ts";
 import {
   conditionSpellEndTurnRepeatSaveHoleIds,
   isCreatureSpaceTraversalMovementFactValidationMessage,

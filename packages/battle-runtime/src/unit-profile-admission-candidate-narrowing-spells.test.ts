@@ -31,7 +31,7 @@ import {
   spellTargetFill,
 } from "./unit-profile-admission-spell-fill-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
-import { spellProcedureExecution } from "./character-execution.ts";
+import { spellProcedureExecution } from "./character-execution-admission.ts";
 import {
   battleObjectId,
   cantripSpellInvocationRef,

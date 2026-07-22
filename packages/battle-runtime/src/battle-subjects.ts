@@ -121,21 +121,16 @@ export const BATTLE_RUNTIME_COMMANDS = [
   "creatureFalls",
 ] as const;
 export type BattleRuntimeCommand = (typeof BATTLE_RUNTIME_COMMANDS)[number];
-export const BATTLE_MOVEMENT_SPEED_KINDS = [
-  "walk",
-  "climb",
-  "swim",
-  "fly",
-] as const;
-export type BattleMovementSpeedKind =
-  (typeof BATTLE_MOVEMENT_SPEED_KINDS)[number];
-export const BATTLE_SPECIAL_SPEED_KINDS = [
-  "climb",
-  "swim",
-  "fly",
-] as const satisfies ReadonlyArray<Exclude<BattleMovementSpeedKind, "walk">>;
-export type BattleSpecialSpeedKind =
-  (typeof BATTLE_SPECIAL_SPEED_KINDS)[number];
+export {
+  BATTLE_MOVEMENT_SPEED_KINDS,
+  BATTLE_SPECIAL_SPEED_KINDS,
+  type BattleMovementSpeedKind,
+  type BattleSpecialSpeedKind,
+} from "./active-effect/execution-vocabulary.ts";
+import {
+  BATTLE_MOVEMENT_SPEED_KINDS,
+  type BattleMovementSpeedKind,
+} from "./active-effect/execution-vocabulary.ts";
 export const MONK_FOCUS_PATIENT_DEFENSE_MODES = [
   "freeDisengage",
   "focusDisengageDodge",

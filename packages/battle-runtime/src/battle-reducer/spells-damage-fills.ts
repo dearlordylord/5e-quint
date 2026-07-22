@@ -119,7 +119,7 @@ import {
   characterUnitProcedureBindings,
   type RuntimeSpellProcedureExecution,
   type UnitFeatureProcedureExecution,
-} from "../character-execution.ts";
+} from "../character-execution-admission.ts";
 import {
   SLOW_ACTIVE_PENALTIES_DEX_SAVE_DELTA,
   THAUMATURGY_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_ID,

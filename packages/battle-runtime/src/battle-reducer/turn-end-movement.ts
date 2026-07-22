@@ -219,7 +219,7 @@ import {
   combatantEffectiveSize,
   refreshActiveDruidWildShapeStartTurnExecution,
 } from "./druid-wild-shape.ts";
-import type { UnitSupportProcedureExecution } from "../character-execution.ts";
+import type { UnitSupportProcedureExecution } from "../character-execution-admission.ts";
 import {
   battleStateWithFlySpeedGrantEndFallCleanupFrames,
   flySpeedGrantEndFallCleanupFramesForExpiredEffects,

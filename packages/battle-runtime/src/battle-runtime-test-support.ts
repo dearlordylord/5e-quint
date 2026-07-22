@@ -150,7 +150,7 @@ import {
   CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
   characterUnitProcedure,
   type CharacterUnitProcedureQuery,
-} from "./character-execution.ts";
+} from "./character-execution-admission.ts";
 import {
   armorOfShadowsSpellInvocationRef,
   ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SUPPORT_PROFILE,

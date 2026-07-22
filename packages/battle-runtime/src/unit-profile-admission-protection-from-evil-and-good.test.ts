@@ -31,7 +31,7 @@ import {
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 import { spellActiveEffectExecutionRef } from "./active-effect/execution-ref.ts";
 import type { SpellActiveEffect } from "./active-effect/execution-ref.ts";
-import { spellProcedureExecution } from "./character-execution.ts";
+import { spellProcedureExecution } from "./character-execution-admission.ts";
 import {
   applyCondition,
   applyFailedSaveSpellConditionEffects,

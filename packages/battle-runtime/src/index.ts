@@ -42,7 +42,7 @@ export type {
   CharacterExecutionState,
   CharacterProcedureBinding,
   CharacterUnitProcedureOwnership,
-} from "./character-execution.ts";
+} from "./character-execution-admission.ts";
 
 export {
   emptyBattleRuntimeContext,
@@ -55,7 +55,7 @@ export {
 export {
   characterProcedureBinding,
   characterProcedureBindingSnapshots,
-} from "./character-execution.ts";
+} from "./character-execution-admission.ts";
 
 export type {
   StatBlockExecutionAdmission,

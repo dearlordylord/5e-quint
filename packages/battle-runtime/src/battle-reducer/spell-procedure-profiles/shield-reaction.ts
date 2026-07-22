@@ -27,7 +27,6 @@ import {
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
 import type { BattleSubject } from "../../battle-subjects.ts";
-import { SHIELD_MAGIC_MISSILE_SPELL_ID } from "../domain-constants.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { stateAfterSpellCastDeclared } from "../spell-cast-declaration.ts";
 import { expendSpellSlot } from "../spell-effects.ts";
@@ -45,6 +44,11 @@ import type {
   SpellProcedureProfile,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+
+// Required SRD cross-record reference: Shield explicitly also triggers when
+// targeted by the Magic Missile spell.
+const SHIELD_MAGIC_MISSILE_SPELL_ID =
+  "magic_missile" satisfies SpellRecord["id"];
 import { Schema } from "effect";
 import {
   SpellRuleExecutionFactsSchema,

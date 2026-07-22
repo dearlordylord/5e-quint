@@ -69,7 +69,7 @@ import {
   type BattleState,
   type OngoingFeatureSourceKey,
 } from "./index.ts";
-import type { UnitFeatureProcedureExecution } from "./character-execution.ts";
+import type { UnitFeatureProcedureExecution } from "./character-execution-admission.ts";
 
 const turnBoundaryLifecycleScenarios = [
   "init",

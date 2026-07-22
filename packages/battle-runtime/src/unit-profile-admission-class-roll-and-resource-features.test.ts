@@ -51,7 +51,7 @@ import {
   battleFailedSavingThrowRerollSupportForUnit,
   FAILED_SAVING_THROW_REROLL_SUPPORT_PROFILE,
 } from "./unit-feature-support.ts";
-import type { UnitFeatureProcedureExecution } from "./character-execution.ts";
+import type { UnitFeatureProcedureExecution } from "./character-execution-admission.ts";
 import { NonNegativeInteger } from "@dnd/shared/types";
 import {
   battleCharacterExecutionScopeRef,

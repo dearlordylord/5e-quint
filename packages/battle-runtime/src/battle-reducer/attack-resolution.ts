@@ -50,7 +50,7 @@ import { Match } from "effect";
 import {
   characterProcedureBinding,
   type CharacterUnitProcedureExecution,
-} from "../character-execution.ts";
+} from "../character-execution-admission.ts";
 import type {
   BattleProcedureExecutionRef,
   BattleResourcePoolExecutionRef,

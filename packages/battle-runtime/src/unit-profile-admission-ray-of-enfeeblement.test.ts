@@ -51,7 +51,7 @@ import { abilityD20TestRollModeSaveGateProfile } from "./battle-reducer/spell-pr
 import { spellAdmissionContextFor } from "./battle-reducer/spell-procedure-profiles/profile.ts";
 import { spellFillSet } from "./battle-reducer/spells-resolve-fill-set.ts";
 import { spellTargetListHole } from "./battle-reducer/spells-holes-fills.ts";
-import { spellProcedureExecution } from "./character-execution.ts";
+import { spellProcedureExecution } from "./character-execution-admission.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 import { endTurn } from "./unit-profile-admission-test-support.ts";
 import {

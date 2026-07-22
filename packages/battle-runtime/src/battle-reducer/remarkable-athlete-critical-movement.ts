@@ -7,7 +7,7 @@ import type {
   BattleSubject,
 } from "../battle-subjects.ts";
 import type { CombatantId } from "../identity.ts";
-import type { UnitFeatureProcedureExecution } from "../character-execution.ts";
+import type { UnitFeatureProcedureExecution } from "../character-execution-admission.ts";
 import type {
   BattleCreatureState,
   BattleFill,

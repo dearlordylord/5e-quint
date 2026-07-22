@@ -11,7 +11,7 @@ import {
   spendCharacterResourceUse,
   type CharacterBattleUseCountResourceState,
 } from "../character-battle-resources.ts";
-import type { UnitFeatureProcedureExecution } from "../character-execution.ts";
+import type { UnitFeatureProcedureExecution } from "../character-execution-admission.ts";
 
 export type FailedSavingThrowRerollIssueReason =
   | "originalSavingThrowDidNotFail"

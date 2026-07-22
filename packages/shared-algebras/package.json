@@ -8,6 +8,7 @@
     "./conditions-algebra": "./src/conditions-algebra.ts",
     "./death-saves-algebra": "./src/death-saves-algebra.ts",
     "./armor-class-algebra": "./src/armor-class-algebra.ts",
+    "./armor-class-values": "./src/armor-class-values.ts",
     "./action-economy-algebra": "./src/action-economy-algebra.ts",
     "./ability-score-algebra": "./src/ability-score-algebra.ts",
     "./attack-roll-algebra": "./src/attack-roll-algebra.ts",

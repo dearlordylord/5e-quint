@@ -51,7 +51,7 @@ import type {
   BattleState,
 } from "../battle-reducer.ts";
 import { MOVEMENT_HOLE_ID } from "../battle-reducer.ts";
-import { characterSpellProcedure } from "../character-execution.ts";
+import { characterSpellProcedure } from "../character-execution-admission.ts";
 import { isReadiedSpellInvocation } from "./spells-discovery.ts";
 
 export function applyBattleMovement(

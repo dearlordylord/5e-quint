@@ -42,7 +42,7 @@ import {
   characterUnitProcedureBindings,
   characterExecutionWithSpellInvocations,
   characterSpellSelectionInvocation,
-} from "../character-execution.ts";
+} from "../character-execution-admission.ts";
 import { battleCompanionEntries } from "../find-familiar-state.ts";
 
 import {

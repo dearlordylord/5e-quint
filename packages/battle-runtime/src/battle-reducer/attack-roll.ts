@@ -31,7 +31,7 @@ import type {
 import {
   CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
   characterUnitProcedure,
-} from "../character-execution.ts";
+} from "../character-execution-admission.ts";
 import type {
   CharacterUnarmedStrikeActionOption,
   CharacterWeaponAttackActionOption,
@@ -83,7 +83,7 @@ import {
 import type {
   RuntimeSpellProcedureExecution,
   UnitFeatureProcedureExecution,
-} from "../character-execution.ts";
+} from "../character-execution-admission.ts";
 
 type RuntimeSpellProcedure =
   | SupportedSpellInvocation

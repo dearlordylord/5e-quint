@@ -7,7 +7,7 @@ import {
   MONK_FOCUS_PROCEDURE_QUERY,
   characterUnitProcedure,
   type CharacterUnitProcedureQuery,
-} from "./character-execution.ts";
+} from "./character-execution-admission.ts";
 import type { UnitRecord } from "@dnd/surface/surface/types";
 import type { BattleProcedureExecutionRef } from "./identity.ts";
 import type { CharacterBattleRuntimeContext } from "./battle-runtime-context.ts";

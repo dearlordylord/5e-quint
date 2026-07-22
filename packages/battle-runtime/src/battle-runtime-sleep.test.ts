@@ -6,6 +6,7 @@ import { discoverBattleActCandidates } from "./index.ts";
 import { describe, expect, test } from "vitest";
 import {
   applyBattleHitPointDamage,
+  armorClass,
   attackRollFill,
   attackTargetFill,
   battleAfterFailedSleepInitialSave,
@@ -165,7 +166,7 @@ describe("battle runtime: Sleep", () => {
               String("mage_armor"),
             ),
             sourceCombatantId: goblinId,
-            base: 13,
+            base: armorClass(13),
             ability: "dex",
             expiresAt: {
               kind: "concentration",
@@ -628,7 +629,7 @@ describe("battle runtime: Sleep", () => {
               String("mage_armor"),
             ),
             sourceCombatantId: goblinId,
-            base: 13,
+            base: armorClass(13),
             ability: "dex",
             expiresAt: {
               kind: "concentration",

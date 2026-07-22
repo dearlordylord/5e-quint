@@ -35,7 +35,7 @@ import type {
 import { topLevelSpellCastingTime } from "@dnd/surface/surface/types";
 import { Match, Schema } from "effect";
 
-import { characterUnitProcedureBindings } from "../../character-execution.ts";
+import { characterUnitProcedureBindings } from "../../character-execution-admission.ts";
 import {
   maybeOpenInterruptWindow,
   type ActionSpellBattleResolutionInput,

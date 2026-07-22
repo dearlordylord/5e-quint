@@ -19,7 +19,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.GLYPH_EXPLOSIVE_RUNE_RELEASE
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-glyph-stored-spell-release spell.invocation-glyph-stored-concentration-full-duration spell.invocation-glyph-stored-summon-object-placement
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.GLYPH_STORED_SPELL_RELEASE BATTLE.SPELL.GLYPH_STORED_CONCENTRATION_FULL_DURATION
-import type { ArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
+import type { ArmorClass } from "@dnd/shared-algebras/armor-class-values";
 import type { ElapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
 import type { CreatureType } from "@dnd/shared/game-facts";
@@ -34,7 +34,7 @@ import type {
   Round as RoundType,
   SpellSlotLevel,
 } from "@dnd/shared/types";
-import type { SpellProcedureExecution } from "../character-execution.ts";
+import type { GlyphStoredSpellProcedureExecution } from "../procedure-execution/glyph-stored-spell.ts";
 import type {
   Ability,
   ActionRestriction,
@@ -44,38 +44,27 @@ import type {
   DiceExpr,
   Size,
   Skill,
-  SpellRecord,
 } from "@dnd/surface/surface/types";
-import type { BattleDruidWildShapeKnownForm } from "../battle-init.ts";
 import type {
   ActiveWildShapeEquipmentDisposition,
   WildShapeFormLimbObjectHandlingWitness,
-} from "../battle-reducer/wild-shape-equipment.ts";
-// Transitional back-imports: these types belong to other domains (speed kinds,
-// d20 modifiers, Command, marked riders, dancing lights, condition repeat-save,
-// spell attack kind) and are still defined in battle-reducer.ts. They form a
-// type-only import cycle (erased at runtime, no import/no-cycle lint here) that
-// dissolves as those domains are extracted. See plans/ACTIVE_EFFECT_DEEP_MODULE.md.
+} from "../procedure-execution/wild-shape-equipment.ts";
+// Shared authored-free execution vocabulary used by active-effect payloads.
 import type {
-  BattleCommandOption,
   BattleAntimagicFieldAuraMembership,
   BattleAntimagicFieldOngoingSpellEffectRef,
+  BattleCommandOption,
   BattleD20RollModifierDelta,
-  BattleD20RollModifierKind,
   BattleDancingLight,
   BattleDancingLightList,
-  PreparedSpellAccess,
-  ReadiedSpellInvocation,
-  SupportedSpellInvocation,
   BattleSpecialSpeedKind,
   MagicWeaponEnhancementBonus,
-  MarkedDamageRiderAbilityCheckBehavior,
   SpellAttackKind,
   SpellConditionRepeatSave,
-  SpellSlotInvocationResource,
-  SpellTargeting,
-} from "../battle-reducer.ts";
+} from "./execution-vocabulary.ts";
 import {
+  HUNTERS_MARK_FINDING_SKILLS,
+  type BattleD20RollModifierKind,
   PROTECTION_FROM_EVIL_AND_GOOD_PREVENTED_CONDITIONS,
   SPELL_CONDITION_ABILITY_CHECK_ACTORS,
   SPELL_CONDITION_ABILITY_CHECK_SUCCESS_ENDS,
@@ -91,7 +80,7 @@ import type {
   BattleTablePositionId,
   CombatantId,
 } from "../identity.ts";
-import type { BattleSpellEffectLevel } from "../battle-reducer/spells-effective-level.ts";
+import type { BattleSpellEffectLevel } from "../procedure-execution/spell-effect-level.ts";
 import type { SpellWeaponAttackOverrideEffect } from "../procedure-execution/weapon-attack-override.ts";
 import type { BattleActiveEffectExpiration } from "./expiration.ts";
 
@@ -120,6 +109,15 @@ export type BattleConcentrationBrokenEarlyEnd = Extract<
   { readonly kind: "concentrationBroken" }
 >;
 export type BattleSpellEffectBase = BattleActiveEffectSource;
+export type MarkedDamageRiderFindingAdvantage = {
+  readonly kind: "findingAdvantage";
+  readonly ability: "wis";
+  readonly skills: typeof HUNTERS_MARK_FINDING_SKILLS;
+};
+export type MarkedDamageRiderAbilityCheckBehavior =
+  | { readonly kind: "none" }
+  | { readonly kind: "abilityDisadvantage"; readonly ability: Ability }
+  | MarkedDamageRiderFindingAdvantage;
 export type BattleReplayAddressableEffect = {
   readonly effectRef: BattleActiveEffectExecutionRef;
 };
@@ -289,7 +287,7 @@ export type SpiritualWeaponRepeatTargeting =
       readonly kind: "fixedCombatant";
       readonly combatantId: CombatantId;
     };
-type SpellConcentrationOrStoredDurationExpiration =
+export type SpellConcentrationOrStoredDurationExpiration =
   | (Extract<
       BattleActiveEffectExpiration,
       { readonly kind: "concentration" }
@@ -328,209 +326,6 @@ export type GlyphDurableOccurrenceAnchor =
       readonly kind: "closeableObject";
       readonly objectId: BattleObjectId;
     };
-type GlyphStoredConcentrationSaveGatedConditionInvocation = Extract<
-  SupportedSpellInvocation,
-  { readonly procedure: "saveGatedCondition" }
-> & {
-  readonly spell: SpellRecord & {
-    readonly mechanics: SpellRecord["mechanics"] & {
-      readonly duration: Extract<
-        SpellRecord["mechanics"]["duration"],
-        { readonly kind: "concentration" }
-      >;
-    };
-  };
-};
-type GlyphStoredNonConcentrationSpellRecord = SpellRecord & {
-  readonly mechanics: SpellRecord["mechanics"] & {
-    readonly duration: Exclude<
-      SpellRecord["mechanics"]["duration"],
-      { readonly kind: "concentration" }
-    >;
-  };
-};
-type GlyphStoredReadiedSpellInvocation = ReadiedSpellInvocation & {
-  readonly spell: GlyphStoredNonConcentrationSpellRecord;
-};
-type GlyphStoredSingleCreatureTargeting =
-  | Extract<SpellTargeting, { readonly kind: "singleCombatant" }>
-  | Extract<SpellTargeting, { readonly kind: "singleCreatureOrObject" }>
-  | (Extract<SpellTargeting, { readonly kind: "targetList" }> & {
-      readonly minTargets: 1;
-      readonly maxTargets: 1;
-    });
-type GlyphStoredConcentrationSaveGatedDamageInvocation = Extract<
-  ReadiedSpellInvocation,
-  { readonly procedure: "saveGatedDamage" }
-> & {
-  readonly spell: SpellRecord & {
-    readonly mechanics: SpellRecord["mechanics"] & {
-      readonly duration: Extract<
-        SpellRecord["mechanics"]["duration"],
-        { readonly kind: "concentration" }
-      >;
-    };
-  };
-  readonly targeting: GlyphStoredSingleCreatureTargeting;
-};
-type GlyphStoredGreaseGroundHazardInvocation = Extract<
-  SupportedSpellInvocation,
-  { readonly procedure: "greaseGroundHazard" }
-> & {
-  readonly spell: GlyphStoredNonConcentrationSpellRecord;
-};
-type GlyphStoredConcentrationHarmfulObjectInvocation = Extract<
-  SupportedSpellInvocation,
-  { readonly procedure: "spiritualWeaponAttackProxy" }
-> & {
-  readonly spell: SpellRecord & {
-    readonly mechanics: SpellRecord["mechanics"] & {
-      readonly duration: Extract<
-        SpellRecord["mechanics"]["duration"],
-        { readonly kind: "concentration" }
-      >;
-    };
-  };
-};
-export const GLYPH_STORED_AREA_ONGOING_PROCEDURES = [
-  "fogCloudObscurement",
-  "magicalDarknessPointOrigin",
-  "flamingSphere",
-  "spikeGrowthMovementHazard",
-  "moonbeam",
-  "webRestraintHazard",
-  "gustOfWindLine",
-] as const satisfies ReadonlyArray<SupportedSpellInvocation["procedure"]>;
-export type GlyphStoredAreaOngoingProcedure =
-  (typeof GLYPH_STORED_AREA_ONGOING_PROCEDURES)[number];
-export const GLYPH_STORED_AREA_CONTROL_PROCEDURES = [
-  "hypnoticPattern",
-] as const satisfies ReadonlyArray<SupportedSpellInvocation["procedure"]>;
-export type GlyphStoredAreaControlProcedure =
-  (typeof GLYPH_STORED_AREA_CONTROL_PROCEDURES)[number];
-export const GLYPH_STORED_SINGLE_CREATURE_ACTIVE_EFFECT_PROCEDURES = [
-  "scalarBuff",
-  "rollModifier",
-  "creatureSizeIncrease",
-  "creatureSizeDecrease",
-  "levitatedCreature",
-  "directCondition",
-  "hastePositive",
-  "creatureTypeProtection",
-  "conditionImmunityAndTurnStartTemporaryHitPoints",
-] as const satisfies ReadonlyArray<SupportedSpellInvocation["procedure"]>;
-export type GlyphStoredSingleCreatureActiveEffectProcedure =
-  (typeof GLYPH_STORED_SINGLE_CREATURE_ACTIVE_EFFECT_PROCEDURES)[number];
-export const GLYPH_STORED_SELF_TRANSFORMATION_PROCEDURES = [
-  "selfTransformationMode",
-] as const satisfies ReadonlyArray<SupportedSpellInvocation["procedure"]>;
-export type GlyphStoredSelfTransformationProcedure =
-  (typeof GLYPH_STORED_SELF_TRANSFORMATION_PROCEDURES)[number];
-type SupportedSpellInvocationForProcedure<
-  P extends SupportedSpellInvocation["procedure"],
-  I extends SupportedSpellInvocation = SupportedSpellInvocation,
-> = I extends { readonly procedure: infer Procedure }
-  ? P extends Procedure
-    ? I & { readonly procedure: P }
-    : never
-  : never;
-type GlyphStoredConcentrationSingleCreatureActiveEffectInvocationFor<
-  P extends GlyphStoredSingleCreatureActiveEffectProcedure,
-> = SupportedSpellInvocationForProcedure<P> & {
-  readonly access: PreparedSpellAccess;
-  readonly resource: SpellSlotInvocationResource;
-  readonly spell: SpellRecord & {
-    readonly mechanics: SpellRecord["mechanics"] & {
-      readonly duration: Extract<
-        SpellRecord["mechanics"]["duration"],
-        { readonly kind: "concentration" }
-      >;
-    };
-  };
-  readonly targeting: GlyphStoredSingleCreatureTargeting;
-};
-type GlyphStoredAreaOngoingInvocation = Extract<
-  SupportedSpellInvocation,
-  { readonly procedure: GlyphStoredAreaOngoingProcedure }
-> & {
-  readonly spell: SpellRecord & {
-    readonly mechanics: SpellRecord["mechanics"] & {
-      readonly duration: Extract<
-        SpellRecord["mechanics"]["duration"],
-        { readonly kind: "concentration" }
-      >;
-    };
-  };
-};
-export type GlyphStoredAreaControlInvocation = Extract<
-  SupportedSpellInvocation,
-  { readonly procedure: GlyphStoredAreaControlProcedure }
-> & {
-  readonly spell: SpellRecord & {
-    readonly mechanics: SpellRecord["mechanics"] & {
-      readonly duration: Extract<
-        SpellRecord["mechanics"]["duration"],
-        { readonly kind: "concentration" }
-      >;
-    };
-  };
-};
-export type GlyphStoredConcentrationSingleCreatureActiveEffectInvocation = {
-  readonly [P in GlyphStoredSingleCreatureActiveEffectProcedure]: GlyphStoredConcentrationSingleCreatureActiveEffectInvocationFor<P>;
-}[GlyphStoredSingleCreatureActiveEffectProcedure];
-export type GlyphStoredConcentrationSelfTransformationInvocation =
-  SupportedSpellInvocationForProcedure<GlyphStoredSelfTransformationProcedure> & {
-    readonly access: PreparedSpellAccess;
-    readonly resource: SpellSlotInvocationResource;
-    readonly spell: SpellRecord & {
-      readonly mechanics: SpellRecord["mechanics"] & {
-        readonly duration: Extract<
-          SpellRecord["mechanics"]["duration"],
-          { readonly kind: "concentration" }
-        >;
-      };
-    };
-  };
-type GlyphStoredSpellInvocationCandidateWithSpellTargeting = Extract<
-  | ReadiedSpellInvocation
-  | Extract<
-      SupportedSpellInvocation,
-      {
-        readonly procedure:
-          | "greaseGroundHazard"
-          | "saveGatedCondition"
-          | "spiritualWeaponAttackProxy"
-          | GlyphStoredAreaOngoingProcedure
-          | GlyphStoredAreaControlProcedure;
-      }
-    >,
-  {
-    readonly access: PreparedSpellAccess;
-    readonly resource: SpellSlotInvocationResource;
-    readonly targeting: SpellTargeting;
-  }
->;
-export type GlyphStoredSpellInvocationCandidate =
-  | GlyphStoredSpellInvocationCandidateWithSpellTargeting
-  | GlyphStoredConcentrationSingleCreatureActiveEffectInvocation
-  | GlyphStoredConcentrationSelfTransformationInvocation;
-export type GlyphStoredSpellInvocation =
-  | Extract<
-      | GlyphStoredReadiedSpellInvocation
-      | GlyphStoredGreaseGroundHazardInvocation
-      | GlyphStoredConcentrationSaveGatedDamageInvocation
-      | GlyphStoredConcentrationSaveGatedConditionInvocation
-      | GlyphStoredConcentrationHarmfulObjectInvocation
-      | GlyphStoredAreaOngoingInvocation
-      | GlyphStoredAreaControlInvocation,
-      {
-        readonly access: PreparedSpellAccess;
-        readonly resource: SpellSlotInvocationResource;
-        readonly targeting: SpellTargeting;
-      }
-    >
-  | GlyphStoredConcentrationSingleCreatureActiveEffectInvocation
-  | GlyphStoredConcentrationSelfTransformationInvocation;
 export type GlyphDurableOccurrenceRelease =
   | {
       readonly kind: "explosiveRune";
@@ -538,7 +333,7 @@ export type GlyphDurableOccurrenceRelease =
     }
   | {
       readonly kind: "spellGlyph";
-      readonly storedProcedure: SpellProcedureExecution<GlyphStoredSpellInvocation>;
+      readonly storedProcedure: GlyphStoredSpellProcedureExecution;
     };
 export type GlyphDurableOccurrenceActiveEffect = BattleSpellEffectBase & {
   readonly kind: "glyphDurableOccurrence";
@@ -592,7 +387,7 @@ export type BattleActiveEffect =
     })
   | (BattleUnitFeatureEffectBase & {
       readonly kind: "druidWildShapeForm";
-      readonly formStatBlockId: BattleDruidWildShapeKnownForm["id"];
+      readonly formStatBlockId: string;
       readonly formLimbs: WildShapeFormLimbObjectHandlingWitness;
       readonly equipmentDisposition: readonly ActiveWildShapeEquipmentDisposition[];
       readonly expiresAt: Extract<
@@ -688,7 +483,7 @@ export type BattleActiveEffect =
     })
   | (BattleSpellEffectBase & {
       readonly kind: "spellBaseArmorClass";
-      readonly base: number;
+      readonly base: ArmorClass;
       readonly ability: "dex";
     } & (
         | {
@@ -1313,3 +1108,18 @@ export type BattleActiveEffect =
         { readonly kind: "startOfTurn" }
       >;
     };
+
+export type SpellMarkedDamageRider = Extract<
+  BattleActiveEffect,
+  { readonly kind: "spellMarkedDamageRider" }
+>;
+
+export type DirectConditionSpellActiveEffectTemplate = Omit<
+  BattleSpellActiveEffectTemplate<
+    Extract<
+      BattleActiveEffect,
+      { readonly kind: "targetActionEndedSpellCondition" }
+    >
+  >,
+  "conditionHadNonSpellSource"
+>;

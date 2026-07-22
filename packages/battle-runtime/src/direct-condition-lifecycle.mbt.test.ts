@@ -57,7 +57,7 @@ import type {
   SupportedSpellInvocation,
 } from "./index.ts";
 import type { BattleExecutableSpellInvocation } from "./battle-reducer.ts";
-import { spellProcedureExecution } from "./character-execution.ts";
+import { spellProcedureExecution } from "./character-execution-admission.ts";
 
 type DirectConditionSpellInvocation = Extract<
   SupportedSpellInvocation,

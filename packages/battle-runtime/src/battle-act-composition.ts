@@ -41,7 +41,7 @@ import {
   spellInvocationMatchesExecution,
   type BattleSpellProcedureExecution,
   type SpellProcedureExecution,
-} from "./character-execution.ts";
+} from "./character-execution-admission.ts";
 import { characterUnitProcedureRefsForAuthoredSelection } from "./battle-composition-admission.ts";
 import { isCharacterBattleCreatureState } from "./battle-reducer/creature-state.ts";
 

@@ -46,7 +46,7 @@ import { admitRegisteredSpellProcedureProfiles } from "./spell-procedure-profile
 import { spellAdmissionContextFor } from "./spell-procedure-profiles/profile.ts";
 import { activeOngoingFeaturesPreventSpellInvocation } from "./spells-invocation-guards.ts";
 import { isCharacterBattleCreatureState } from "./creature-state.ts";
-import { characterSpellProcedure } from "../character-execution.ts";
+import { characterSpellProcedure } from "../character-execution-admission.ts";
 
 export function admittedSpellActs(
   actor: BattleCreatureState,

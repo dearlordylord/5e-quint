@@ -56,7 +56,7 @@ import {
   type BattleResourcePoolExecutionRef,
 } from "./identity.ts";
 import {
-  persistentArmorEffectSpellProfileForSpell,
+  admitPersistentArmorEffectSpell,
   type PersistentArmorEffectSpellRecord,
 } from "./procedure-admission/persistent-armor-effect-facts.ts";
 
@@ -472,8 +472,8 @@ export function parseCharacterBattleInvocationSpellAccesses(
   const parsed: CharacterBattleInvocationSpellAccessState[] = [];
   for (const access of invocationSpellAccesses) {
     if (access.tag === "armorOfShadowsMageArmor") {
-      const profile = persistentArmorEffectSpellProfileForSpell(access.spell);
-      if (profile === null) {
+      const admission = admitPersistentArmorEffectSpell(access.spell);
+      if (admission === null) {
         return {
           tag: "issue",
           message: "Armor of Shadows Spell Access must grant Mage Armor.",
@@ -481,7 +481,7 @@ export function parseCharacterBattleInvocationSpellAccesses(
       }
       parsed.push({
         tag: access.tag,
-        spell: profile.spell,
+        spell: admission.authoredSpell,
       });
       continue;
     }

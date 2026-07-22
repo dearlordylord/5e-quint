@@ -21,7 +21,7 @@ import {
 } from "./battle-reducer/dispatcher.ts";
 import { invalidResult } from "./battle-reducer/result-helpers.ts";
 import { spellInvocationIsSpellcasting } from "./battle-reducer/spell-turn-resources.ts";
-import { characterSpellProcedure } from "./character-execution.ts";
+import { characterSpellProcedure } from "./character-execution-admission.ts";
 import type { BattleSubject } from "./battle-subjects.ts";
 import { findFamiliarCompanionEntryForOwner } from "./find-familiar-state.ts";
 import type { BattleProcedureExecutionRef, CombatantId } from "./identity.ts";

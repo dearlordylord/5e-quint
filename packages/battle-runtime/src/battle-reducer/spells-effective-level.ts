@@ -1,27 +1,12 @@
-import { Schema } from "effect";
 import type { RuntimeSpellProcedureExecution } from "../character-execution.ts";
-
-const BATTLE_SPELL_EFFECT_LEVEL_MIN = 0;
-const BATTLE_SPELL_EFFECT_LEVEL_MAX = 9;
-
-export const BattleSpellEffectLevel = Schema.Number.pipe(
-  Schema.int(),
-  Schema.greaterThanOrEqualTo(BATTLE_SPELL_EFFECT_LEVEL_MIN),
-  Schema.lessThanOrEqualTo(BATTLE_SPELL_EFFECT_LEVEL_MAX),
-  Schema.brand("BattleSpellEffectLevel"),
-);
-export type BattleSpellEffectLevel = typeof BattleSpellEffectLevel.Type;
-
-export function parseBattleSpellEffectLevel(
-  value: number,
-): BattleSpellEffectLevel | null {
-  return Number.isInteger(value) &&
-    value >= BATTLE_SPELL_EFFECT_LEVEL_MIN &&
-    value <= BATTLE_SPELL_EFFECT_LEVEL_MAX
-    ? // Brands are erased at runtime; the predicate above enforces the schema range.
-      (value as BattleSpellEffectLevel)
-    : null;
-}
+import {
+  parseBattleSpellEffectLevel,
+  type BattleSpellEffectLevel,
+} from "../procedure-execution/spell-effect-level.ts";
+export {
+  BattleSpellEffectLevel,
+  parseBattleSpellEffectLevel,
+} from "../procedure-execution/spell-effect-level.ts";
 
 // Supported invocations carry either a branded Spell Slot level or a
 // schema-parsed spell level, so this asserts an internal invariant.

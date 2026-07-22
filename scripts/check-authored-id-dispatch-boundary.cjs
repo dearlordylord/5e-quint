@@ -360,13 +360,15 @@ function assertBattleReplayExecutionBoundary() {
       sliceEnd: "const BattleReadiedSpellSnapshotSchema",
     },
     {
-      relativePath: "packages/battle-runtime/src/character-execution.ts",
+      relativePath:
+        "packages/battle-runtime/src/character-execution-admission.ts",
       patterns: [/readonly (?:unitId|invocation|occurrence):/],
       sliceStart: "export type CharacterProcedureBindingSnapshot =",
       sliceEnd: "type CharacterExecutionStateData =",
     },
     {
-      relativePath: "packages/battle-runtime/src/character-execution.ts",
+      relativePath:
+        "packages/battle-runtime/src/character-execution-admission.ts",
       patterns: [
         GENERIC_SPELL_EXECUTION_PROJECTION_PATTERN,
         SHALLOW_UNIT_EXECUTION_PROJECTION_PATTERN,
@@ -375,7 +377,8 @@ function assertBattleReplayExecutionBoundary() {
       sliceEnd: "export type UnitSupportProcedureExecutionContext",
     },
     {
-      relativePath: "packages/battle-runtime/src/character-execution.ts",
+      relativePath:
+        "packages/battle-runtime/src/character-execution-admission.ts",
       patterns: [
         /readonly unitId:/,
         /readonly unit:/,
@@ -398,7 +401,8 @@ function assertBattleReplayExecutionBoundary() {
       patterns: [/BattleActDiscoverySubject as BattleSubject/],
     },
     {
-      relativePath: "packages/battle-runtime/src/character-execution.ts",
+      relativePath:
+        "packages/battle-runtime/src/character-execution-admission.ts",
       patterns: [
         /Object\.entries\([^)]*\)[\s\S]{0,500}sourceProcedureRef/,
         /sourceProcedureRef:\s*(?:spell|invocation\.spell)\.id/,
@@ -1289,7 +1293,7 @@ function battleReplayAstViolations(sourceText, relativePath) {
 function assertBattleReplayAstBoundary() {
   const roots = [
     "packages/battle-runtime/src/identity.ts",
-    "packages/battle-runtime/src/character-execution.ts",
+    "packages/battle-runtime/src/character-execution-admission.ts",
     "packages/battle-runtime/src/battle-reducer.ts",
     "packages/battle-runtime/src/battle-reducer",
     "packages/mcp/src/admin-mirror-presentation-timeline.ts",

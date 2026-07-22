@@ -16,7 +16,7 @@ import {
   resolveBattleSubject,
   characterAttackSubjectForTest,
 } from "./battle-runtime-test-support.ts";
-import { characterSpellProcedureExecution } from "./character-execution.ts";
+import { characterSpellProcedureExecution } from "./character-execution-admission.ts";
 
 import {
   canSpendAction,

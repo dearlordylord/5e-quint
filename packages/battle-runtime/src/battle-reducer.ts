@@ -1,3 +1,67 @@
+import type {
+  AbilityCheckRollModeSpellEffect,
+  BattleLightEmission,
+  BattleThunderwaveAudibleBoom,
+  CantripSpellAttackSequenceTargeting,
+  ConditionImmunityActiveEffectTemplate,
+  CreatureTypeProtectionSpellTargeting,
+  HealingSpellActionCost,
+  HealingSpellTargeting,
+  HeldLightHurlMechanicalFacts,
+  MarkedDamageRiderCastAbilityCheckBehavior,
+  PreparedSpellAttackSequenceTargeting,
+  RollModifierSpellTargeting,
+  ScalarBuffSpellEffect,
+  ScalarBuffSpellTargeting,
+  SpellAttackDamagePayload,
+  SpellAttackDamageTargeting,
+  SpellAttackMissDamage,
+  SpellComponent,
+  SpellFailedSaveConditionEffect,
+  SpellFailedSaveConditionEffectBase,
+  SpellFailedSaveConditionEndTurnSaveLifecycle,
+  SpellFailedSaveConditionNoRepeatLifecycle,
+  SpellFailedSavePostDamageRider,
+  SpellObjectHitEffect,
+  SpellPostDamageRider,
+  SpellPostSaveAreaEffect,
+  SpellSavingThrowRollModeRule,
+  SpellTargetListTargeting,
+} from "./procedure-execution/spell-execution-vocabulary.ts";
+export type {
+  AbilityCheckRollModeSpellEffect,
+  BattleLightEmission,
+  BattleThunderwaveAudibleBoom,
+  CantripSpellAttackSequenceTargeting,
+  ConditionImmunityActiveEffectTemplate,
+  CreatureTypeProtectionSpellTargeting,
+  HealingSpellActionCost,
+  HealingSpellTargeting,
+  HeldLightHurlMechanicalFacts,
+  MarkedDamageRiderCastAbilityCheckBehavior,
+  PreparedSpellAttackSequenceTargeting,
+  RollModifierSpellTargeting,
+  ScalarBuffSpellEffect,
+  ScalarBuffSpellTargeting,
+  SpellAttackDamagePayload,
+  SpellAttackDamageTargeting,
+  SpellAttackMissDamage,
+  SpellComponent,
+  SpellConditionCountedRepeatSave,
+  SpellFailedSaveConditionChoiceEffect,
+  SpellFailedSaveConditionEffect,
+  SpellFailedSaveConditionEffectBase,
+  SpellFailedSaveConditionEndTurnSaveLifecycle,
+  SpellFailedSaveConditionExpiration,
+  SpellFailedSaveConditionNoRepeatLifecycle,
+  SpellFailedSaveFixedConditionEffect,
+  SpellFailedSavePostDamageRider,
+  SpellObjectHitEffect,
+  SpellPostDamageRider,
+  SpellPostSaveAreaEffect,
+  SpellSavingThrowRollModeRule,
+  SpellTargetListTargeting,
+} from "./procedure-execution/spell-execution-vocabulary.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.retaliation-reaction-attack
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.initiative-proficiency-and-swap
@@ -92,9 +156,7 @@ import {
   DieRollResult,
   DifficultyClass,
   Hp,
-  MovementDeltaFeet,
   MovementFeet,
-  SpellSlotLevel,
   movementFeet,
   type Condition,
   type DamageDieSize,
@@ -170,7 +232,39 @@ import type {
   SpellExecutableExecutionOf,
   SpellProcedureExecution,
   UnitFeatureProcedureExecution,
-} from "./character-execution.ts";
+} from "./character-execution-admission.ts";
+import type {
+  PreparedSpellAccess,
+  SpellSlotInvocationResource,
+  SpellTargeting,
+} from "./procedure-execution/spell-invocation-vocabulary.ts";
+import type {
+  BattleAntimagicFieldAuraMembership,
+  BattleAntimagicFieldOngoingSpellEffectRef,
+  BattleCommandOption,
+  BattleOngoingSpellEffectRef,
+  MagicWeaponEnhancementBonus,
+  SpellAttackKind,
+  SpellConditionRepeatSave,
+} from "./active-effect/execution-vocabulary.ts";
+export {
+  MAGIC_WEAPON_ENHANCEMENT_BONUSES,
+  type BattleAntimagicFieldAuraMembership,
+  type BattleAntimagicFieldOngoingSpellEffectRef,
+  type BattleCommandOption,
+  type BattleD20RollModifierDelta,
+  type BattleDancingLight,
+  type BattleDancingLightList,
+  type BattleOngoingSpellEffectRef,
+  type MagicWeaponEnhancementBonus,
+  type SpellAttackKind,
+  type SpellConditionRepeatSave,
+} from "./active-effect/execution-vocabulary.ts";
+export type {
+  PreparedSpellAccess,
+  SpellSlotInvocationResource,
+  SpellTargeting,
+} from "./procedure-execution/spell-invocation-vocabulary.ts";
 import type { CharacterBattleClassLevels } from "./character-class-level.ts";
 import type {
   BattleCompanionPlacement,
@@ -187,10 +281,10 @@ import type {
   BattleUnitFeatureEffectBase,
   MarkedDamageRiderRetargetTiming,
   SelfTransformationNaturalWeaponFacts,
-  SpellConditionEscape,
   SpellCreatedHeldObjectActiveEffect,
   SpellLevitatedCreatureActiveEffect,
   SpellObjectContactDamageActiveEffect,
+  SpellMarkedDamageRider,
   SpellTurnEndDamage,
   SpellTurnStartDamage,
   SpellTurnStartDamageSave,
@@ -208,18 +302,14 @@ import type {
 } from "./battle-reducer/wild-shape-equipment.ts";
 import {
   BATTLE_ATTACK_RANGE_BANDS,
-  type BattleD20RollModifierDieSize,
   type BlurAttackRollBypassSense,
-  COMMAND_OPTIONS,
   CRITICAL_HIT_THRESHOLDS,
   DIRECT_CONDITION_REMOVAL_CONDITIONS,
-  type EldritchBlastBeamCount,
   HUNTERS_MARK_FINDING_SKILLS,
   type MirrorImageDuplicateCount,
   type MirrorImageUnaffectedSense,
   OPEN_HAND_TECHNIQUE_DECISION_CHOICES,
   type OpenHandTechniqueDecisionChoice,
-  type ScorchingRayRayCount,
   type SelfTransformationModeKind,
   THAUMATURGY_MAX_ACTIVE_ONE_MINUTE_EFFECTS,
   type BattleAntimagicFieldOngoingSpellEffectSourceKind,
@@ -611,24 +701,7 @@ export {
   BATTLE_D20_ROLL_MODIFIER_KINDS,
   type BattleD20RollModifierKind,
 } from "./battle-reducer/domain-constants.ts";
-export const MAGIC_WEAPON_ENHANCEMENT_BONUSES = [
-  1, 2, 3,
-] as const satisfies ReadonlyArray<number>;
-export type MagicWeaponEnhancementBonus =
-  (typeof MAGIC_WEAPON_ENHANCEMENT_BONUSES)[number];
 export type CriticalHitThreshold = (typeof CRITICAL_HIT_THRESHOLDS)[number];
-export type BattleD20RollModifierDelta = {
-  readonly sign: "+" | "-";
-} & (
-  | {
-      readonly kind: "fixedNumber";
-      readonly amount: number;
-    }
-  | {
-      readonly dice: number;
-      readonly dieSize: BattleD20RollModifierDieSize;
-    }
-);
 export type BattlePassiveSpeedProfile =
   | BattlePassiveSpeedBonusSupportProfile
   | BattlePassiveSpeedKindGrantsSupportProfile;
@@ -677,16 +750,6 @@ export type BattleObjectOutline = BattleSpellEffectBase & {
     { readonly kind: "concentration" }
   >;
 };
-export type BattleLightEmission =
-  | {
-      readonly kind: "dim";
-      readonly radiusFeet: MovementFeet;
-    }
-  | {
-      readonly kind: "brightAndDim";
-      readonly brightRadiusFeet: MovementFeet;
-      readonly dimAdditionalFeet: MovementFeet;
-    };
 export type BattleLightEmitterAttachment =
   | {
       readonly kind: "combatant";
@@ -750,27 +813,6 @@ export type BattleStoredLightEmitter =
 export type BattleLightEmitter =
   | BattleStoredLightEmitter
   | BattleUnitFeatureLightEmitter;
-export type BattleOngoingSpellEffectRef =
-  | {
-      readonly kind: "spellLightEmitter";
-      readonly sourceEffectId: BattleSpellEffectOccurrenceId;
-    }
-  | {
-      readonly kind: "spellActiveEffect";
-      readonly activeEffectKind: "spellObjectContactDamage" | "spiritualWeapon";
-      readonly effectRef: BattleActiveEffectExecutionRef;
-    }
-  | {
-      readonly kind: "antimagicFieldAura";
-      readonly areaId: BattleAreaId;
-      readonly sourceCombatantId: CombatantId;
-    };
-export type BattleAntimagicFieldOngoingSpellEffectRef =
-  | Extract<BattleOngoingSpellEffectRef, { readonly kind: "spellLightEmitter" }>
-  | Extract<
-      BattleOngoingSpellEffectRef,
-      { readonly kind: "spellActiveEffect" }
-    >;
 export type BattleOngoingSpellTarget =
   | {
       readonly kind: "combatant";
@@ -841,10 +883,6 @@ export type BattleObscurementZone =
   | BattleSpellObscurementZone
   | BattleMagicalDarknessZone;
 export type BattleDancingLightsForm = "separateLights" | "combinedMediumForm";
-export type BattleDancingLight = {
-  readonly lightId: BattleDancingLightId;
-  readonly positionId: BattleTablePositionId;
-};
 export type BattleIllumination = "brightLight" | "dimLight" | "darkness";
 export type BattleSightObscurement =
   | "unobscured"
@@ -1477,7 +1515,6 @@ export type BattleInterruptCheckpointFrame = Extract<
   BattleInterruptFrame,
   { readonly kind: "interruptCheckpoint" }
 >;
-export type SpellComponent = "V" | "S" | "M";
 export type BattleSpellCastingTimeResource =
   | { readonly kind: "magicAction" }
   | { readonly kind: "bonusAction" }
@@ -2258,10 +2295,6 @@ export type BattleTeleportOutcome = {
   readonly provokesOpportunityAttacks: false;
   readonly transportsWornAndCarriedEquipment: true;
 };
-export type BattleThunderwaveAudibleBoom = {
-  readonly sound: "thunderous boom";
-  readonly audibleRadiusFeet: MovementFeet;
-};
 export type BattleAbilityCheckSpatialFact = Extract<
   BattleTargetSpatialFact,
   { readonly kind: "spellRestraintEscapeActorWithinTargetReach" }
@@ -2279,17 +2312,11 @@ export type BattleResolvedMovement = {
   readonly jumpMovementReplacement?: BattleJumpMovementReplacementFact;
   readonly levitatedMovement?: BattleLevitatedMovementFact;
 };
-export type HealingSpellActionCost = "magicAction" | "bonusAction";
-export type PreparedSpellAccess = { readonly tag: "prepared" };
 type ClassCantripSpellAccess = { readonly tag: "classCantrip" };
 type ArmorOfShadowsSpellAccess = { readonly tag: "armorOfShadows" };
 type SpellEffectSpellAccess = {
   readonly tag: "spellEffect";
   readonly sourceCombatantId: CombatantId;
-};
-export type SpellSlotInvocationResource = {
-  readonly tag: "spellSlot";
-  readonly slotLevel: SpellSlotLevel;
 };
 type NoSpellInvocationResource = { readonly tag: "none" };
 export type ClassFeatureFreeCastInvocationResource = {
@@ -2319,75 +2346,14 @@ export type SpellActivationPhase = Extract<
   SpellRecord["mechanics"],
   { readonly family: "activation" }
 >["phases"][number];
-export type SpellAttackKind = Extract<
-  SpellActivationPhase,
-  { readonly kind: "attack_roll" }
->["attackKind"];
 export type SpellAttackHitEffect = Extract<
   SpellActivationPhase,
   { readonly kind: "attack_roll" }
 >["onHit"][number];
-export type SpellObjectHitEffect =
-  | { readonly kind: "none" }
-  | { readonly kind: "igniteFlammableUnattended" };
 export type SaveGateFailureEffect = Extract<
   SpellActivationPhase,
   { readonly kind: "save_gate" }
 >["onFail"];
-export type SpellTargeting =
-  | {
-      readonly kind: "singleCombatant";
-    }
-  | {
-      readonly kind: "singleCreatureOrObject";
-    }
-  | {
-      readonly kind: "targetList";
-      readonly minTargets: 1;
-      readonly maxTargets: number;
-    }
-  | {
-      readonly kind: "pointOriginSphere";
-      readonly radiusFeet: MovementFeet;
-    }
-  | {
-      readonly kind: "pointOriginSphereDiameter";
-      readonly diameterFeet: MovementFeet;
-    }
-  | {
-      readonly kind: "pointOriginCylinder";
-      readonly radiusFeet: MovementFeet;
-      readonly heightFeet: MovementFeet;
-    }
-  | {
-      readonly kind: "pointOriginCubeExcludingCaster";
-      readonly sideFeet: MovementFeet;
-    }
-  | {
-      readonly kind: "pointOriginCube";
-      readonly sideFeet: MovementFeet;
-    }
-  | {
-      readonly kind: "selfOriginCube";
-      readonly sideFeet: MovementFeet;
-    }
-  | {
-      readonly kind: "selfOriginCone";
-      readonly lengthFeet: MovementFeet;
-    }
-  | {
-      readonly kind: "selfOriginLine";
-      readonly lengthFeet: MovementFeet;
-      readonly widthFeet: MovementFeet;
-    }
-  | {
-      readonly kind: "selfOriginEmanation";
-      readonly radiusFeet: MovementFeet;
-    }
-  | {
-      readonly kind: "primaryTargetOriginEmanation";
-      readonly radiusFeet: MovementFeet;
-    };
 export type BattleFogCloudAreaChoice = Extract<
   BattleSpellAreaIdentityChoice,
   { readonly kind: "fogCloudArea" }
@@ -2412,11 +2378,6 @@ export type BattleAntimagicFieldAffectedOngoingSpellEffect = {
   readonly kind: "antimagicFieldAffectedOngoingSpellEffect";
   readonly effect: BattleAntimagicFieldOngoingSpellEffectRef;
   readonly sourceKind: BattleAntimagicFieldOngoingSpellEffectSourceKind;
-};
-export type BattleAntimagicFieldAuraMembership = {
-  readonly kind: "antimagicFieldAuraMembership";
-  readonly originIncluded: boolean;
-  readonly nonOriginCombatantIds: readonly CombatantId[];
 };
 export type BattleAntimagicFieldTransitWitness = {
   readonly kind: "antimagicFieldTransit";
@@ -2516,38 +2477,6 @@ export type BattleSpellAreaIdentityChoice =
       readonly areaId: BattleAreaId;
       readonly directionId: BattleLineDirectionId;
     };
-export type SpellPostDamageRider =
-  | {
-      readonly kind: "speedDelta";
-      readonly deltaFeet: MovementDeltaFeet;
-    }
-  | {
-      readonly kind: "condition";
-      readonly condition: Condition;
-      readonly expiresAt: "endOfCasterNextTurn";
-    }
-  | {
-      readonly kind: "opportunityAttackDenied";
-      readonly expiresAt: "startOfTargetNextTurn";
-    }
-  | {
-      readonly kind: "nextAttackRollAgainstTarget";
-      readonly mode: "advantage";
-      readonly expiresAt: "endOfCasterNextTurn";
-    }
-  | {
-      readonly kind: "hitPointRegainPrevented";
-      readonly expiresAt: "endOfCasterNextTurn";
-    }
-  | {
-      readonly kind: "invisibleBenefitDenied";
-      readonly expiresAt: "endOfCasterNextTurn";
-    }
-  | {
-      readonly kind: "lightEmission";
-      readonly emission: Extract<BattleLightEmission, { readonly kind: "dim" }>;
-      readonly expiresAt: "endOfCasterNextTurn";
-    };
 export type SpellActiveEffectPostDamageRider = Exclude<
   SpellPostDamageRider,
   { readonly kind: "lightEmission" }
@@ -2560,97 +2489,6 @@ export type SpellPostDamageRiderExpiration = Exclude<
   SpellActiveEffectPostDamageRider,
   { readonly kind: "speedDelta" }
 >["expiresAt"];
-export type SpellFailedSavePostDamageRider =
-  | {
-      readonly kind: "nextAttackRollByTarget";
-      readonly mode: "disadvantage";
-      readonly expiresAt: "endOfTargetNextTurn";
-    }
-  | {
-      readonly kind: "forcedReactionMovement";
-      readonly direction: "awayFromCaster";
-      readonly route: "safest";
-      readonly distance: "asFarAsPossible";
-      readonly cost: "targetReactionIfAvailable";
-    };
-export type SpellPostSaveAreaEffect =
-  | {
-      readonly kind: "fireballObjectIgnition";
-    }
-  | {
-      readonly kind: "shatterObjectDamage";
-    }
-  | {
-      readonly kind: "thunderwave";
-      readonly creaturePush: {
-        readonly distanceFeet: MovementFeet;
-        readonly originDirection: "away_from_caster";
-      };
-      readonly unsecuredObjectPush: {
-        readonly distanceFeet: MovementFeet;
-        readonly originDirection: "away_from_caster";
-        readonly objectLocation: "entirely_within_area";
-      };
-      readonly audibleBoom: BattleThunderwaveAudibleBoom;
-    };
-export type SpellFailedSaveConditionExpiration =
-  | "endOfCasterNextTurn"
-  | "concentration"
-  | {
-      readonly kind: "concentration";
-      readonly durationTicks: ElapsedTimeTicks;
-    }
-  | {
-      readonly kind: "duration";
-      readonly durationTicks: ElapsedTimeTicks;
-    };
-export type SpellConditionRepeatSave = {
-  readonly ability: Ability;
-  readonly dc: DcSource;
-};
-export type SpellConditionCountedRepeatSave = {
-  readonly kind: "counted";
-  readonly save: SpellConditionRepeatSave;
-  readonly successThreshold: number;
-  readonly failureThreshold: number;
-  readonly savingThrowDisadvantageAbilities: readonly [Ability, ...Ability[]];
-};
-type SpellFailedSaveConditionEffectBase = {
-  readonly expiresAt: SpellFailedSaveConditionExpiration;
-};
-type SpellFailedSaveConditionNoRepeatLifecycle = {
-  readonly escape: SpellConditionEscape | null;
-  readonly turnStartDamage: SpellTurnStartDamage | null;
-  readonly repeatSave: null;
-};
-type SpellFailedSaveConditionEndTurnSaveLifecycle = {
-  readonly escape: null;
-  readonly turnStartDamage: null;
-  readonly repeatSave:
-    | SpellConditionRepeatSave
-    | SpellConditionCountedRepeatSave;
-};
-export type SpellFailedSaveFixedConditionEffect =
-  SpellFailedSaveConditionEffectBase &
-    (
-      | SpellFailedSaveConditionNoRepeatLifecycle
-      | SpellFailedSaveConditionEndTurnSaveLifecycle
-    ) & {
-      readonly kind: "fixed";
-      readonly condition: Condition;
-    };
-export type SpellFailedSaveConditionChoiceEffect =
-  SpellFailedSaveConditionEffectBase &
-    (
-      | SpellFailedSaveConditionNoRepeatLifecycle
-      | SpellFailedSaveConditionEndTurnSaveLifecycle
-    ) & {
-      readonly kind: "choice";
-      readonly choices: readonly [Condition, ...Condition[]];
-    };
-export type SpellFailedSaveConditionEffect =
-  | SpellFailedSaveFixedConditionEffect
-  | SpellFailedSaveConditionChoiceEffect;
 export type SpellSelectedFailedSaveConditionEffect =
   SpellFailedSaveConditionEffectBase &
     (
@@ -2658,16 +2496,6 @@ export type SpellSelectedFailedSaveConditionEffect =
       | SpellFailedSaveConditionEndTurnSaveLifecycle
     ) & {
       readonly condition: Condition;
-    };
-export type SpellSavingThrowRollModeRule =
-  | {
-      readonly kind: "hostileTarget";
-      readonly mode: "advantage";
-    }
-  | {
-      readonly kind: "creatureType";
-      readonly creatureType: CreatureType;
-      readonly mode: "disadvantage";
     };
 export type SpellFailedSaveAttackRollEffect = BattleSpellActiveEffectTemplate<
   Extract<BattleActiveEffect, { readonly kind: "faerieFireOutline" }>
@@ -2684,23 +2512,6 @@ export type WardingBondSpellInvocation = {
   readonly rangeFeet: MovementFeet;
   readonly connectionRangeFeet: MovementFeet;
 };
-export type SpellTargetListTargeting = {
-  readonly kind: "targetList";
-  readonly minTargets: 1;
-  readonly maxTargets: number;
-};
-export type CreatureTypeProtectionSpellTargeting =
-  | { readonly kind: "self" }
-  | (SpellTargetListTargeting & {
-      readonly requiredTargetDisposition: "willing";
-    });
-export type ScalarBuffSpellTargeting =
-  | {
-      readonly kind: "self";
-    }
-  | (SpellTargetListTargeting & {
-      readonly requiredTargetDisposition: "unrestricted" | "willing";
-    });
 type SpellTargetListTargetingKind =
   | "targetList"
   | "pointOriginSphereTargetList"
@@ -2726,54 +2537,8 @@ export type TargetListSpellInvocationOf<Invocation> = Invocation extends {
 
 export type TargetListSpellInvocation =
   TargetListSpellInvocationOf<SupportedSpellInvocation>;
-export type ScalarBuffSpellEffect =
-  | {
-      readonly kind: "temporaryHitPoints";
-      readonly amount: { readonly expr: DiceExpr };
-    }
-  | {
-      readonly kind: "activeEffect";
-      readonly activeEffect: BattleSpellActiveEffectTemplate<
-        Extract<
-          BattleActiveEffect,
-          {
-            readonly kind:
-              | "speedDelta"
-              | "specialSpeedGrant"
-              | "spellArmorClassBonus"
-              | "spellArmorClassFloor";
-          }
-        >
-      >;
-    }
-  | {
-      readonly kind: "hitPointMaximumIncrease";
-      readonly activeEffect: BattleSpellActiveEffectTemplate<
-        Extract<
-          BattleActiveEffect,
-          { readonly kind: "hitPointMaximumIncrease" }
-        >
-      >;
-    };
-export type RollModifierSpellTargeting =
-  | {
-      readonly kind: "targetList";
-      readonly minTargets: 1;
-      readonly maxTargets: number | "allLegalTargets";
-      readonly requiredTargetDisposition: "unrestricted" | "willing";
-    }
-  | {
-      readonly kind: "selfAndChosenLegalTargets";
-      readonly minTargets: 1;
-    };
 export type D20RollModifierSpellEffect = BattleSpellActiveEffectTemplate<
   Extract<BattleActiveEffect, { readonly kind: "d20RollModifier" }>
->;
-export type AbilityCheckRollModeSpellEffect = Omit<
-  BattleSpellActiveEffectTemplate<
-    Extract<BattleActiveEffect, { readonly kind: "abilityCheckRollMode" }>
-  >,
-  "ability"
 >;
 export type RollModifierSpellEffect =
   | D20RollModifierSpellEffect
@@ -2961,12 +2726,6 @@ export type DamageReductionSpellInvocation = {
   readonly expiresAt: BattleActiveEffectExpiration;
   readonly rangeFeet: MovementFeet;
 };
-export type ConditionImmunityActiveEffectTemplate = Omit<
-  BattleSpellActiveEffectTemplate<
-    Extract<BattleActiveEffect, { readonly kind: "conditionImmunity" }>
-  >,
-  "conditionHadNonSpellSource"
->;
 export type ConditionImmunityAndTurnStartTemporaryHitPointsSpellInvocation = {
   readonly access: PreparedSpellAccess;
   readonly resource: SpellSlotInvocationResource;
@@ -3241,19 +3000,6 @@ export type MarkedDamageRiderSpellInvocation =
         { readonly kind: "spellMarkedDamageRider" }
       >;
     };
-export type HeldLightHurlMechanicalFacts = {
-  readonly targeting: Extract<
-    SpellTargeting,
-    { readonly kind: "singleCreatureOrObject" }
-  >;
-  readonly damage: {
-    readonly expr: DiceExpr;
-    readonly damageType: DamageType;
-  };
-  readonly rangeFeet: MovementFeet;
-  readonly attackKind: Extract<SpellAttackKind, "ranged_spell_attack">;
-  readonly attackBonus: AttackBonus;
-};
 export type HeldLightSpellInvocation = {
   readonly access: ClassCantripSpellAccess;
   readonly resource: NoSpellInvocationResource;
@@ -3446,20 +3192,6 @@ export type SpiritualWeaponRepeatAttackSpellInvocation = {
   readonly forceReachFeet: MovementFeet;
   readonly repeatMoveMaxFeet: MovementFeet;
 };
-export type SpellAttackDamageTargeting = Extract<
-  SpellTargeting,
-  { readonly kind: "singleCombatant" | "singleCreatureOrObject" }
->;
-export type CantripSpellAttackSequenceTargeting = {
-  readonly kind: "spellAttackSequenceCreatureOrObject";
-  readonly countSource: "characterLevel";
-  readonly attackCount: EldritchBlastBeamCount;
-};
-export type PreparedSpellAttackSequenceTargeting = {
-  readonly kind: "spellAttackSequenceCreatureOrObject";
-  readonly countSource: "spellSlotLevel";
-  readonly attackCount: ScorchingRayRayCount;
-};
 export type SpellAttackSequenceTargeting =
   | CantripSpellAttackSequenceTargeting
   | PreparedSpellAttackSequenceTargeting;
@@ -3515,24 +3247,6 @@ export type PersistentArmorSpellInvocation =
         Extract<BattleActiveEffect, { readonly kind: "spellBaseArmorClass" }>
       >;
     };
-export type SpellAttackDamagePayload =
-  | {
-      readonly kind: "fixedSpellAttackDamage";
-      readonly expr: DiceExpr;
-      readonly damageType: DamageType;
-    }
-  | {
-      readonly kind: "sorcerousBurstDamageTypeChoice";
-      readonly expr: DiceExpr;
-      readonly damageTypeChoices: readonly [DamageType, ...DamageType[]];
-      readonly maxDieAdditionalDiceLimit: number;
-    }
-  | {
-      readonly kind: "selectedSorcerousBurstDamage";
-      readonly expr: DiceExpr;
-      readonly damageType: DamageType;
-      readonly maxDieAdditionalDiceLimit: number;
-    };
 
 export type ResolvedSpellAttackDamagePayload = Extract<
   SpellAttackDamagePayload,
@@ -3540,7 +3254,6 @@ export type ResolvedSpellAttackDamagePayload = Extract<
     readonly kind: "fixedSpellAttackDamage" | "selectedSorcerousBurstDamage";
   }
 >;
-export type SpellAttackMissDamage = "none" | "halfInitialOnly";
 
 export function spellAttackDamagePayloadIsResolved(
   damage: SpellAttackDamagePayload,
@@ -4173,22 +3886,6 @@ export function isBattleExecutableSpellInvocation<
   );
 }
 
-export type HealingSpellTargeting =
-  | {
-      readonly kind: "targetList";
-      readonly minTargets: 1;
-      readonly maxTargets: number;
-    }
-  | {
-      readonly kind: "pointOriginSphereTargetList";
-      readonly minTargets: 1;
-      readonly maxTargets: number;
-      readonly area: {
-        readonly kind: "pointOriginSphere";
-        readonly radiusFeet: MovementFeet;
-      };
-    };
-
 type AnySupportedDamageSpellInvocation = Exclude<
   SupportedSpellInvocation,
   {
@@ -4422,21 +4119,10 @@ export type MarkedDamageRiderFindingAdvantage = {
   readonly ability: Extract<Ability, "wis">;
   readonly skills: typeof HUNTERS_MARK_FINDING_SKILLS;
 };
-export type MarkedDamageRiderCastAbilityCheckBehavior =
-  | { readonly kind: "none" }
-  | {
-      readonly kind: "chosenAbilityDisadvantage";
-      readonly choices: readonly Ability[];
-    }
-  | MarkedDamageRiderFindingAdvantage;
-export type MarkedDamageRiderAbilityCheckBehavior =
-  | { readonly kind: "none" }
-  | { readonly kind: "abilityDisadvantage"; readonly ability: Ability }
-  | MarkedDamageRiderFindingAdvantage;
-export type SpellMarkedDamageRider = Extract<
-  BattleActiveEffect,
-  { readonly kind: "spellMarkedDamageRider" }
->;
+export type {
+  MarkedDamageRiderAbilityCheckBehavior,
+  SpellMarkedDamageRider,
+} from "./active-effect/types.ts";
 export type AttackDamageRiderUsage = {
   readonly attackerId: CombatantId;
   readonly procedureRef: BattleProcedureExecutionRef;
@@ -5959,7 +5645,6 @@ export type BattleThaumaturgyActiveOneMinuteEffectCountHole = {
   readonly maximumActiveOneMinuteEffects: typeof THAUMATURGY_MAX_ACTIVE_ONE_MINUTE_EFFECTS;
   readonly requiresTableSpellEffectCount: true;
 };
-export type BattleCommandOption = (typeof COMMAND_OPTIONS)[number];
 export type BattleCommandOptionChoiceHole = {
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly holeInstanceKey: HoleInstanceKey;
@@ -5989,16 +5674,6 @@ export type BattleDancingLightRepositionPlacement =
     readonly lightId: BattleDancingLightId;
     readonly moveDistanceFeet: MovementFeet;
   };
-export type BattleDancingLightList =
-  | readonly [BattleDancingLight]
-  | readonly [BattleDancingLight, BattleDancingLight]
-  | readonly [BattleDancingLight, BattleDancingLight, BattleDancingLight]
-  | readonly [
-      BattleDancingLight,
-      BattleDancingLight,
-      BattleDancingLight,
-      BattleDancingLight,
-    ];
 export type BattleDancingLightCastPlacementList =
   readonly BattleDancingLightCastPlacement[];
 export type BattleDancingLightRepositionPlacementList =
@@ -7586,9 +7261,12 @@ export type { BattleAttackExecutionSelection } from "./battle-subjects.ts";
 export type {
   GlyphDurableOccurrenceActiveEffect,
   GlyphDurableOccurrenceAnchor,
+} from "./active-effect/types.ts";
+
+export type {
   GlyphStoredSpellInvocation,
   GlyphStoredSpellInvocationCandidate,
-} from "./active-effect/types.ts";
+} from "./procedure-admission/glyph-stored-spell.ts";
 
 export type {
   ActiveWildShapeEquipmentDisposition,

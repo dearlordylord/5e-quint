@@ -1,6 +1,5 @@
 // KERNEL-COVERAGE: runtime-owner SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE
-import { Brand, Match, Schema } from "effect";
-import { ABILITIES, Integer } from "@dnd/shared/types";
+import { Match } from "effect";
 import type {
   Ability,
   HandUse,
@@ -12,41 +11,24 @@ import type {
   ArmorTrainingCategory,
   UnitRecord,
 } from "@dnd/surface/surface/types";
-
-export type ArmorClass = Integer & Brand.Brand<"ArmorClass">;
-const ArmorClass = Brand.all(Integer, Brand.nominal<ArmorClass>());
-export const ArmorClassSchema = Schema.Number.pipe(
-  Schema.int(),
-  Schema.greaterThanOrEqualTo(1),
-  Schema.brand("Integer"),
-  Schema.brand("ArmorClass"),
-);
-
-export function armorClass(value: number): ArmorClass {
-  return ArmorClass(Math.max(1, Math.floor(value)));
-}
-
-export type ArmorClassDelta = Integer & Brand.Brand<"ArmorClassDelta">;
-const ArmorClassDelta = Brand.all(Integer, Brand.nominal<ArmorClassDelta>());
-
-export function armorClassDelta(value: number): ArmorClassDelta {
-  return ArmorClassDelta(Math.floor(value));
-}
-
-export type AbilityModifier = Integer & Brand.Brand<"AbilityModifier">;
-const AbilityModifier = Brand.all(Integer, Brand.nominal<AbilityModifier>());
-
-export function abilityModifier(value: number): AbilityModifier {
-  return AbilityModifier(Math.floor(value));
-}
-
-export type AbilityModifierBlock = Readonly<Record<Ability, AbilityModifier>>;
-
-export function zeroAbilityModifiers(): AbilityModifierBlock {
-  return Object.fromEntries(
-    ABILITIES.map((ability) => [ability, abilityModifier(0)]),
-  ) as AbilityModifierBlock;
-}
+import {
+  armorClass,
+  zeroAbilityModifiers,
+  type AbilityModifierBlock,
+  type ArmorClass,
+  type ArmorClassDelta,
+} from "./armor-class-values.ts";
+export {
+  ArmorClassSchema,
+  abilityModifier,
+  armorClass,
+  armorClassDelta,
+  zeroAbilityModifiers,
+  type AbilityModifier,
+  type AbilityModifierBlock,
+  type ArmorClass,
+  type ArmorClassDelta,
+} from "./armor-class-values.ts";
 
 export type ArmorClassBaseSource =
   | {
