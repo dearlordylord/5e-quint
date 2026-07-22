@@ -24,7 +24,7 @@ import { DurationBattleActiveEffectExpirationSchema } from "../../active-effect/
 //   - The Armor of Shadows Spell Access parser stays in
 //     character-battle-resources.ts.
 
-import { movementFeet, spellSlotLevel } from "@dnd/shared/types";
+import { spellSlotLevel } from "@dnd/shared/types";
 import { ArmorClassSchema } from "@dnd/shared-algebras/armor-class-values";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Match } from "effect";
@@ -39,6 +39,7 @@ import {
 } from "../../battle-reducer.ts";
 import {
   admitPersistentArmorEffectSpell,
+  type PersistentArmorEffectAdmission,
   type PersistentArmorEffectExecutionFacts,
 } from "../../procedure-admission/persistent-armor-effect-facts.ts";
 import type { CharacterBattleInvocationSpellAccessState } from "../../character-battle-resources.ts";
@@ -105,32 +106,31 @@ function persistentArmorEffectShape(
   executionFacts: PersistentArmorEffectExecutionFacts,
 ): Pick<PersistentArmorInvocation, "rangeFeet" | "activeEffect"> {
   return {
-    rangeFeet: movementFeet(5),
+    rangeFeet: executionFacts.rangeFeet,
     activeEffect: {
       kind: "spellBaseArmorClass",
       sourceCombatantId: actorId,
       base: executionFacts.baseArmorClass,
-      ability: "dex",
+      ability: executionFacts.ability,
       expiresAt: {
         kind: "duration",
         durationTicks: executionFacts.durationTicks,
       },
-      earlyEnds: [{ kind: "targetDonsArmor" }],
+      earlyEnds: executionFacts.earlyEnds,
     },
   };
 }
 
 function buildPersistentArmorEffectInvocation(
   actorId: CombatantId,
-  spell: SpellRecord,
-  executionFacts: PersistentArmorEffectExecutionFacts,
+  admission: PersistentArmorEffectAdmission,
   source: PersistentArmorSpellSource,
 ): PersistentArmorInvocation {
   return {
     ...source,
     procedure: "persistentArmorEffect",
-    spell,
-    ...persistentArmorEffectShape(actorId, executionFacts),
+    spell: admission.authoredSpell,
+    ...persistentArmorEffectShape(actorId, admission.executionFacts),
   };
 }
 
@@ -142,15 +142,10 @@ function admitPersistentArmorEffect(
   return admission === null
     ? []
     : [
-        buildPersistentArmorEffectInvocation(
-          ctx.actor.combatantId,
-          admission.authoredSpell,
-          admission.executionFacts,
-          {
-            access: { tag: "prepared" },
-            resource: { tag: "spellSlot", slotLevel: spellSlotLevel(1) },
-          },
-        ),
+        buildPersistentArmorEffectInvocation(ctx.actor.combatantId, admission, {
+          access: { tag: "prepared" },
+          resource: { tag: "spellSlot", slotLevel: spellSlotLevel(1) },
+        }),
       ];
 }
 
@@ -160,15 +155,10 @@ export function admitPersistentArmorEffectInvocationSpellAccess(
 ): readonly PersistentArmorInvocation[] {
   return Match.value(access).pipe(
     Match.when({ tag: "armorOfShadowsMageArmor" }, (armorOfShadows) => [
-      buildPersistentArmorEffectInvocation(
-        actorId,
-        armorOfShadows.admission.authoredSpell,
-        armorOfShadows.admission.executionFacts,
-        {
-          access: { tag: "armorOfShadows" },
-          resource: { tag: "none" },
-        },
-      ),
+      buildPersistentArmorEffectInvocation(actorId, armorOfShadows.admission, {
+        access: { tag: "armorOfShadows" },
+        resource: { tag: "none" },
+      }),
     ]),
     Match.when({ tag: "pactOfTheChainFindFamiliar" }, () => []),
     Match.exhaustive,

@@ -7,6 +7,7 @@ import {
   ArmorClassSchema,
   type ArmorClass,
 } from "@dnd/shared-algebras/armor-class-values";
+import { movementFeet, type MovementFeet } from "@dnd/shared/types";
 import type {
   OngoingEffectMechanics,
   SpellRecord,
@@ -15,8 +16,11 @@ import { Brand, Either, Schema } from "effect";
 
 /** Authored-free facts projected at the persistent-armor admission boundary. */
 export type PersistentArmorEffectExecutionFacts = {
+  readonly rangeFeet: MovementFeet;
   readonly baseArmorClass: ArmorClass;
+  readonly ability: "dex";
   readonly durationTicks: ElapsedTimeTicks;
+  readonly earlyEnds: readonly [{ readonly kind: "targetDonsArmor" }];
 };
 
 type OngoingEffectSpellRecord = SpellRecord & {
@@ -71,8 +75,11 @@ export function admitPersistentArmorEffectSpell(
   return PersistentArmorEffectAdmission({
     authoredSpell: { ...spell, mechanics: spell.mechanics },
     executionFacts: {
+      rangeFeet: movementFeet(5),
       baseArmorClass: baseArmorClass.right,
+      ability: "dex",
       durationTicks: durationTicks.right,
+      earlyEnds: [{ kind: "targetDonsArmor" }],
     },
   });
 }
