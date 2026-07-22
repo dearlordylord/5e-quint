@@ -1,7 +1,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.creature-space-movement-permission
 
 import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
-import type { BattleCreatureSpaceTraversalMovementFact } from "../battle-reducer.ts";
+import type { BattleCreatureSpaceTraversalMovementFact } from "../battle-state-execution.ts";
 import type { BattleTablePositionId, CombatantId } from "../identity.ts";
 
 const BATTLE_CREATURE_SPACE_SIZE_RELATIONS_TO_MOVER = [

@@ -62,7 +62,7 @@ import {
   type SpellMarkedDamageRider,
   type SpellAttackDamageComponent,
   type StatBlockMultiattackActionResource,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 import { attackDamageDieFloorChoiceProcedureRefs } from "./attack-damage-die-floor-choice.ts";
 import {
   damageAllowsKnockOut,

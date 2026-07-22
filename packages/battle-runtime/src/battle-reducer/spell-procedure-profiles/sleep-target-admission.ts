@@ -22,7 +22,7 @@ import {
   type BattleState,
   type SpellTargeting,
   type SupportedSpellInvocation,
-} from "../../battle-reducer.ts";
+} from "../../battle-state-execution.ts";
 import { type CombatantId } from "../../identity.ts";
 import { readiedSpellAct } from "../spells-discovery.ts";
 import { resolveSleepTargetAdmissionSpellAct } from "../spells-resolve-save-gates.ts";
@@ -216,7 +216,7 @@ function discoverSleepTargetAdmissionCastAct(
 
 function sleepTargetAdmissionCastAct(
   actorId: CombatantId,
-  invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<SleepTargetAdmissionSpellInvocation>,
+  invocation: import("../../battle-state-execution.ts").BattleExecutableSpellInvocation<SleepTargetAdmissionSpellInvocation>,
   initialHoles: readonly BattleHole[],
 ): BattleActDiscoveryCandidate {
   return {

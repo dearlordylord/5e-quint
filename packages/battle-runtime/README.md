@@ -74,6 +74,13 @@ Newly isolated procedure owners use `src/procedure-admission/`,
 extracted, `src/act-presentation/`. `battle-act-composition.ts` and
 `battle-runtime-context.ts` are the current presentation owners.
 
+`battle-session-execution.ts` is the outer orchestration boundary for a
+selected act. It admits character procedure references, preserves the admitted
+runtime context while state advances, and delegates only admitted inputs to the
+state-only dispatcher. Reaction attack subjects receive their projected
+execution selection from the owning state query before dispatcher execution;
+the dispatcher does not project authored action-option records.
+
 The gate protects the clean `procedure-execution` territory and the
 weapon-override admission tracer. Protected admission roots may depend on
 authored admission facts and protected execution facts, but cannot reach
@@ -1340,8 +1347,12 @@ For BA5 action-economy overlap, promoted runtime divergence from old root
   Stat Block attack option shapes plus Stat Block resource snapshots/state.
 - `src/battle-init.ts` - caller-supplied battle initialization contracts for
   character-origin and stat-block-origin combatants.
-- `src/battle-reducer.ts` - reducer implementation retained as the current
-  orchestration authority while domain modules are extracted.
+- `src/battle-state-execution.ts` - canonical state execution owner for battle
+  reducer state transitions and state-only procedure dispatch.
+- `src/battle-session-execution.ts` - outer session orchestration owner for
+  procedure admission, replay, interrupts, and route-event integration.
+- `src/battle-reducer.ts` - compatibility surface that re-exports the state and
+  session execution APIs.
 - `src/unit-feature-support.ts` - Unit feature support-profile boundary:
   profile types, support gates, and parsers that classify authored Surface
   mechanics into battle-runtime procedure families.

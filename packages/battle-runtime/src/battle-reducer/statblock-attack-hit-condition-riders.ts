@@ -2,7 +2,10 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.ATTACK_CONTROL
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 
-import type { BattleCreatureState, BattleState } from "../battle-reducer.ts";
+import type {
+  BattleCreatureState,
+  BattleState,
+} from "../battle-state-execution.ts";
 import type { SupportedAttackActionOption } from "../battle-action-options.ts";
 import type { CombatantId } from "../identity.ts";
 import {

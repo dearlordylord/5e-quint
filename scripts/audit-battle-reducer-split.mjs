@@ -9,6 +9,8 @@ import { fileURLToPath } from "node:url";
 const __filename = fileURLToPath(import.meta.url);
 const repoRoot = path.resolve(path.dirname(__filename), "..");
 const reducerPath = "packages/battle-runtime/src/battle-reducer.ts";
+const stateExecutionPath =
+  "packages/battle-runtime/src/battle-state-execution.ts";
 const splitDirPath = "packages/battle-runtime/src/battle-reducer";
 const baseRef = process.argv[2] ?? "master";
 
@@ -37,7 +39,10 @@ function findAncestorGitDir(start) {
 
 function readBaseReducer() {
   const commonGitDir = findAncestorGitDir(path.dirname(repoRoot));
-  const env = commonGitDir === null ? process.env : { ...process.env, GIT_DIR: commonGitDir };
+  const env =
+    commonGitDir === null
+      ? process.env
+      : { ...process.env, GIT_DIR: commonGitDir };
   return execFileSync("git", ["show", `${baseRef}:${reducerPath}`], {
     cwd: repoRoot,
     env,
@@ -47,8 +52,9 @@ function readBaseReducer() {
 
 function currentReducerFiles() {
   const reducerFile = path.join(repoRoot, reducerPath);
+  const stateExecutionFile = path.join(repoRoot, stateExecutionPath);
   const splitDir = path.join(repoRoot, splitDirPath);
-  const files = [reducerFile];
+  const files = [reducerFile, stateExecutionFile];
   if (existsSync(splitDir)) {
     for (const name of readdirSync(splitDir).sort()) {
       if (name.endsWith(".ts")) {
@@ -60,17 +66,29 @@ function currentReducerFiles() {
 }
 
 function extractFunctionImplementations(source, file) {
-  const sourceFile = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true);
+  const sourceFile = ts.createSourceFile(
+    file,
+    source,
+    ts.ScriptTarget.Latest,
+    true,
+  );
   const implementations = [];
 
   function visit(node) {
-    if (ts.isFunctionDeclaration(node) && node.body !== undefined && node.name !== undefined) {
+    if (
+      ts.isFunctionDeclaration(node) &&
+      node.body !== undefined &&
+      node.name !== undefined
+    ) {
       const text = source.slice(node.getStart(sourceFile), node.end);
       const normalized = text
         .replace(/^export\s+/, "")
         .replace(/\s+/g, " ")
         .trim();
-      const hash = createHash("sha256").update(normalized).digest("hex").slice(0, 16);
+      const hash = createHash("sha256")
+        .update(normalized)
+        .digest("hex")
+        .slice(0, 16);
       implementations.push({
         name: node.name.text,
         file: path.relative(repoRoot, file),
@@ -111,7 +129,9 @@ function exportedBarrelModules() {
 
   return {
     missingFromBarrel: tsFiles.filter((file) => !barrelExports.includes(file)),
-    barrelPointsAtMissing: barrelExports.filter((file) => !tsFiles.includes(file)),
+    barrelPointsAtMissing: barrelExports.filter(
+      (file) => !tsFiles.includes(file),
+    ),
   };
 }
 
@@ -141,8 +161,12 @@ for (const [name, baseGroup] of baseByName) {
     continue;
   }
 
-  const baseHashes = new Set(baseGroup.map((implementation) => implementation.hash));
-  const currentHashes = new Set(currentGroup.map((implementation) => implementation.hash));
+  const baseHashes = new Set(
+    baseGroup.map((implementation) => implementation.hash),
+  );
+  const currentHashes = new Set(
+    currentGroup.map((implementation) => implementation.hash),
+  );
   const hasMatchingImplementation = [...baseHashes].some((hash) =>
     currentHashes.has(hash),
   );
@@ -173,6 +197,7 @@ for (const [name, currentGroup] of currentByName) {
 const report = {
   baseRef,
   reducerPath,
+  stateExecutionPath,
   splitDirPath,
   implementations: {
     base: baseImplementations.length,

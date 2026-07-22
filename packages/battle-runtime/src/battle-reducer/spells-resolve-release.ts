@@ -33,7 +33,7 @@ import {
   type SpiritualWeaponRepeatTargeting,
   type SupportedDamageSpellInvocation,
   type SpellMarkedDamageRider,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 import type { BattleSubject } from "../battle-subjects.ts";
 import type { BattleTablePositionId, CombatantId } from "../identity.ts";
 import {

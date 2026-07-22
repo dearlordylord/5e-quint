@@ -43,17 +43,16 @@ function importsTestSupport(relativePath, source) {
     ts.ScriptTarget.Latest,
     true,
   );
-  let found = false;
-  const visit = (node) => {
-    if (found) return;
+  const pending = [sourceFile];
+  while (pending.length > 0) {
+    const node = pending.pop();
     if (
       (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) &&
       node.moduleSpecifier !== undefined &&
       ts.isStringLiteral(node.moduleSpecifier) &&
       isTestSupportSpecifier(node.moduleSpecifier.text)
     ) {
-      found = true;
-      return;
+      return true;
     }
     if (
       ts.isCallExpression(node) &&
@@ -62,13 +61,13 @@ function importsTestSupport(relativePath, source) {
       ts.isStringLiteral(node.arguments[0]) &&
       isTestSupportSpecifier(node.arguments[0].text)
     ) {
-      found = true;
-      return;
+      return true;
     }
-    ts.forEachChild(node, visit);
-  };
-  visit(sourceFile);
-  return found;
+    ts.forEachChild(node, (child) => {
+      pending.push(child);
+    });
+  }
+  return false;
 }
 
 function violationFor(relativePath, source) {

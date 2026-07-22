@@ -22,7 +22,7 @@ import type {
   BattleState,
   BattleUnitFeatureDecisionHole,
   BattleUnitFeatureSavingThrowOutcomeHole,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
 import {
   STUNNING_STRIKE_DECISION_HOLE_ID,

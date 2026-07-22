@@ -1,7 +1,7 @@
 import type {
   BattleExecutableSpellInvocation,
   BattleState,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 import type { CombatantId } from "../identity.ts";
 import { revealHidden } from "./hole-helpers.ts";
 import { battleStateAfterTargetActionEarlyEndForActor } from "./sanctuary-targeting-interdiction.ts";

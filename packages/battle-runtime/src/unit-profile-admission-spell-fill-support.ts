@@ -15,7 +15,7 @@ import {
   type BattleInsectPlagueAreaHazardTrigger,
   type BattleSleetStormAreaHazardTrigger,
   type BattleSpellTargetListRelationshipFact,
-} from "./battle-reducer.ts";
+} from "./battle-state-execution.ts";
 import {
   battleAreaId,
   battleActSpellPresentation,

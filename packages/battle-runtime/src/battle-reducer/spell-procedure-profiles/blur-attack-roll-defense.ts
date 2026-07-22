@@ -35,7 +35,7 @@ import {
   type BattleResolutionResult,
   type BattleState,
   type BlurAttackRollDefenseSpellInvocation,
-} from "../../battle-reducer.ts";
+} from "../../battle-state-execution.ts";
 import { type CombatantId } from "../../identity.ts";
 import { BlurredActiveEffectTemplateSchema } from "../../active-effect/codecs.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";

@@ -13,7 +13,7 @@ import {
   type SpellMarkedDamageRider,
   type ResolvedSpellAttackDamagePayload,
   type SupportedDamageSpellInvocation,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 import type {
   SpellExecutableExecutionOf,
   SpellProcedureExecution,

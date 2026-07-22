@@ -92,7 +92,7 @@ import { thaumaturgyBoomingVoiceProfile } from "./thaumaturgy-booming-voice.ts";
 import { wardingBondProfile } from "./warding-bond.ts";
 import { weaponAttackOverrideProfile } from "./weapon-attack-override.ts";
 import { weaponDamageRiderProfile } from "./weapon-damage-rider.ts";
-import type { SupportedSpellInvocation } from "../../battle-reducer.ts";
+import type { SupportedSpellInvocation } from "../../battle-state-execution.ts";
 import type {
   RegisteredSpellProcedureExecution,
   SpellProcedureExecutionRegistry,

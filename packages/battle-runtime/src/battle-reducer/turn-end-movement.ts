@@ -324,7 +324,7 @@ import type {
   BattleSavingThrowFlatBonusProjection,
   BattleSavingThrowRollModeProjection,
   SpellTurnStartDamage,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 import { UNIT_FEATURE_CONDITION_END_TURN_SAVE_HOLE_KEY_PREFIX } from "./domain-constants.ts";
 import {
   DEATH_SAVING_THROW_HOLE_ID,
@@ -332,7 +332,7 @@ import {
   MOVEMENT_HOLE_INSTANCE,
   STAT_BLOCK_RECHARGE_ROLL_HOLE_ID,
   validateRolledDiceFillForDiceExpr,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 export function resolveEndTurn(
   state: BattleState,
   deathSavingThrowRoll?: DieRollResult,

@@ -27,7 +27,7 @@ import {
   type BattleState,
   type BonusActionSpellBattleResolutionInput,
   type SupportedSpellInvocation,
-} from "../../battle-reducer.ts";
+} from "../../battle-state-execution.ts";
 import { CombatantId } from "../../identity.ts";
 import { DurationBattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
 import { needsHolesResult } from "../hole-helpers.ts";

@@ -36,7 +36,7 @@ import type {
   BattleExecutableSpellInvocation,
   BattleState,
   BattleTargetSpatialFact,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 
 export { shieldReactionSpellMatchesTrigger } from "./shield-reaction-trigger.ts";
 

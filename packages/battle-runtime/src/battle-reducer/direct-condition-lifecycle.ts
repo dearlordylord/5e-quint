@@ -15,7 +15,7 @@ import type {
   BattleCreatureState,
   BattleExecutableSpellInvocation,
   BattleState,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 import type { CombatantId } from "../identity.ts";
 import {
   combatantsAfterConcentrationSpellEffectsEndedIfNoEffects,

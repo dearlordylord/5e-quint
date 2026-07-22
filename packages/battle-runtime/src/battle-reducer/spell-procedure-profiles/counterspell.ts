@@ -36,7 +36,7 @@ import {
   type BattleState,
   type BattleTurnResources,
   type SupportedSpellInvocation,
-} from "../../battle-reducer.ts";
+} from "../../battle-state-execution.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
 import { counterspellReactionSpellMatchesTrigger } from "../reaction-triggered-spells.ts";
 import { invalidResult } from "../result-helpers.ts";

@@ -32,7 +32,7 @@ import {
   type BattleResolutionResult,
   type BattleState,
   type SupportedSpellInvocation,
-} from "../../battle-reducer.ts";
+} from "../../battle-state-execution.ts";
 import { type CombatantId } from "../../identity.ts";
 import {
   DcSourceSchema,
@@ -234,7 +234,7 @@ function insectPlagueSaveGateDamageAmount(
 function discoverInsectPlagueAreaHazardCastAct(
   _state: BattleState,
   actorId: CombatantId,
-  invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<InsectPlagueAreaHazardSpellInvocation>,
+  invocation: import("../../battle-state-execution.ts").BattleExecutableSpellInvocation<InsectPlagueAreaHazardSpellInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   return [
     {

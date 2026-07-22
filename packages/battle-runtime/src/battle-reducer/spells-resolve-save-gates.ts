@@ -141,7 +141,7 @@ import {
   type BattleThunderwavePushDisposition,
   type BonusActionSpellBattleResolutionInput,
   type SaveDamageResult,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 
 type SaveMetamagicSelectionState =
   | {

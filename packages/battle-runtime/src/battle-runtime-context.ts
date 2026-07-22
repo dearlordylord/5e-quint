@@ -4,7 +4,7 @@ import type {
   CharacterBattleSpellcastingState,
 } from "./character-battle-resources.ts";
 import type { CharacterUnitProcedureOwnership } from "./character-execution-admission.ts";
-import type { BattleSelectedSpellInvocation } from "./battle-reducer.ts";
+import type { BattleSelectedSpellInvocation } from "./battle-state-execution.ts";
 import type { BattleProcedureExecutionRef, CombatantId } from "./identity.ts";
 
 export type CharacterSpellPresentationSource = {
@@ -44,14 +44,14 @@ class RuntimeSession {
   readonly #sessionIdentity = undefined;
 
   private constructor(
-    readonly state: import("./battle-reducer.ts").BattleState,
+    readonly state: import("./battle-state-execution.ts").BattleState,
     readonly context: BattleRuntimeContext,
   ) {
     void this.#sessionIdentity;
   }
 
   static fromAdmittedContext(
-    state: import("./battle-reducer.ts").BattleState,
+    state: import("./battle-state-execution.ts").BattleState,
     context: BattleRuntimeContext,
   ): RuntimeSession {
     return new RuntimeSession(state, context);
@@ -66,7 +66,7 @@ export type BattleRuntimeSession = RuntimeSession;
 
 /** Package-internal construction after state/context admission. */
 export function battleRuntimeSessionFromAdmittedContext(
-  state: import("./battle-reducer.ts").BattleState,
+  state: import("./battle-state-execution.ts").BattleState,
   context: BattleRuntimeContext,
 ): BattleRuntimeSession {
   return RuntimeSession.fromAdmittedContext(state, context);
@@ -75,7 +75,7 @@ export function battleRuntimeSessionFromAdmittedContext(
 /** Preserve the admitted context while advancing only the reducer state. */
 export function battleRuntimeSessionWithState(
   session: BattleRuntimeSession,
-  state: import("./battle-reducer.ts").BattleState,
+  state: import("./battle-state-execution.ts").BattleState,
 ): BattleRuntimeSession {
   return RuntimeSession.fromAdmittedContext(state, session.context);
 }

@@ -54,7 +54,7 @@ import {
   type BattleState,
   type SpellCreatedHeldObjectActiveEffect,
   type SupportedSpellInvocation,
-} from "../../battle-reducer.ts";
+} from "../../battle-state-execution.ts";
 import {
   BattleActiveEffectExecutionRef,
   BattleProcedureExecutionRef,
@@ -433,7 +433,7 @@ function spellCreatedHeldObjectDamageExpr(
 function discoverSpellCreatedHeldObjectCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<SpellCreatedHeldObjectInvocation>,
+  invocation: import("../../battle-state-execution.ts").BattleExecutableSpellInvocation<SpellCreatedHeldObjectInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   if (!spellCreatedHeldObjectHasFreeHand(state, actorId)) {
     return [];
@@ -486,7 +486,7 @@ function discoverSpellCreatedHeldObjectAttackCastAct(
 function discoverSpellCreatedHeldObjectReEvokeCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<SpellCreatedHeldObjectReEvokeInvocation>,
+  invocation: import("../../battle-state-execution.ts").BattleExecutableSpellInvocation<SpellCreatedHeldObjectReEvokeInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   if (!spellCreatedHeldObjectHasFreeHand(state, actorId)) {
     return [];

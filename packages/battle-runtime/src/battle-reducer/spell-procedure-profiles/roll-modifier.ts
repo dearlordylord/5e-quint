@@ -48,7 +48,7 @@ import {
   type BattleState,
   type SelectedRollModifierSpellEffect,
   type SupportedSpellInvocation,
-} from "../../battle-reducer.ts";
+} from "../../battle-state-execution.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";
 import { maybeOpenInterruptWindow } from "../dispatcher.ts";
 import { needsHolesResult } from "../hole-helpers.ts";

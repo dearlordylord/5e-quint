@@ -35,7 +35,7 @@ import {
   type BattleResolutionResult,
   type BattleState,
   type SupportedSpellInvocation,
-} from "../../battle-reducer.ts";
+} from "../../battle-state-execution.ts";
 import { persistentArmorEffectExecutionFactsForSpell } from "../../procedure-admission/persistent-armor-effect-facts.ts";
 import type { CharacterBattleInvocationSpellAccessState } from "../../character-battle-resources.ts";
 import { CombatantId } from "../../identity.ts";

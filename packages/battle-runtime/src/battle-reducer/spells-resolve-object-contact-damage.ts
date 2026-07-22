@@ -35,7 +35,7 @@ import {
   type BonusActionSpellBattleResolutionInput,
   type ObjectContactPenaltyActiveEffect,
   type SupportedSpellInvocation,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 import type { BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
 import {
   type BattleActiveEffectExecutionRef,

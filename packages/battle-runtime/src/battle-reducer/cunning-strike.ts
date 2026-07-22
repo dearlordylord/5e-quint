@@ -22,7 +22,7 @@ import type {
   BattleState,
   BattleToolPossessionFactsHole,
   BattleUnitFeatureSavingThrowOutcomeHole,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 import type { CombatantId } from "../identity.ts";
 import type {
   CunningStrikeEquipmentGatedConditionSaveEffect,

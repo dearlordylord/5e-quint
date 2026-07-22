@@ -14,7 +14,7 @@ import type {
   BattleState,
   BattleTargetSpatialFact,
   SpellLevitatedCreatureActiveEffect,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 import {
   LEVITATE_ALTITUDE_CHANGE_HOLE_ID,
   LEVITATE_ALTITUDE_CHANGE_HOLE_INSTANCE,

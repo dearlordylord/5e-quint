@@ -16,8 +16,8 @@ import type {
   BattleRolledDiceFill,
   BattleState,
   BattleTargetSpatialFact,
-} from "../battle-reducer.ts";
-import { validateRolledDiceFillForDiceExpr } from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
+import { validateRolledDiceFillForDiceExpr } from "../battle-state-execution.ts";
 import {
   MIRROR_IMAGE_DUPLICATE_COUNTS,
   MIRROR_IMAGE_DUPLICATE_DIE_SIZE,

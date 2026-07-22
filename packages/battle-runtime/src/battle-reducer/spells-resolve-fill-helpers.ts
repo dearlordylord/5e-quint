@@ -3,7 +3,7 @@
 import type {
   BattleConcentrationSavingThrowHole,
   BattleFill,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 
 export function concentrationSavingThrowFillFor(
   fills: readonly Extract<

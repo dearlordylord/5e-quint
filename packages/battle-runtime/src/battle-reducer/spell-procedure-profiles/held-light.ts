@@ -38,7 +38,7 @@ import {
   type BattleState,
   type BattleExecutableSpellInvocation,
   type SupportedSpellInvocation,
-} from "../../battle-reducer.ts";
+} from "../../battle-state-execution.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
@@ -64,7 +64,7 @@ import {
 } from "../codec-building-blocks.ts";
 import { DiceExprSchema } from "@dnd/surface/surface/schema";
 import { supportedDamageAmountExpr } from "../spells-profile-shared.ts";
-import type { HeldLightHurlMechanicalFacts } from "../../battle-reducer.ts";
+import type { HeldLightHurlMechanicalFacts } from "../../battle-state-execution.ts";
 import {
   characterExecutionWithHeldLightHurl,
   type HeldLightHurlSpellProcedureExecution,

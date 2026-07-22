@@ -58,7 +58,7 @@ import {
   type BattleState,
   type ReadiedSpellInvocation,
   type SupportedSpellInvocation,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 import {
   actorCanOfferQuickenedSpellMetamagic,
   admitSpellMetamagicApplications,
@@ -727,7 +727,7 @@ export function targetListSpellUsesTargetListHole<
 >(
   invocation: Invocation,
 ): invocation is Invocation &
-  import("../battle-reducer.ts").TargetListSpellInvocationOf<Invocation> {
+  import("../battle-state-execution.ts").TargetListSpellInvocationOf<Invocation> {
   if (
     invocation.targeting.kind !== "targetList" &&
     invocation.targeting.kind !== "pointOriginSphereTargetList" &&

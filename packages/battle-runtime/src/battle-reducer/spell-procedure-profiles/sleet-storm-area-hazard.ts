@@ -35,7 +35,7 @@ import {
   type BattleResolutionResult,
   type BattleState,
   type SupportedSpellInvocation,
-} from "../../battle-reducer.ts";
+} from "../../battle-state-execution.ts";
 import { type CombatantId } from "../../identity.ts";
 import {
   DcSourceSchema,
@@ -245,7 +245,7 @@ function isSleetStormAreaHazardSaveGate(
 function discoverSleetStormAreaHazardCastAct(
   _state: BattleState,
   actorId: CombatantId,
-  invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<SleetStormAreaHazardSpellInvocation>,
+  invocation: import("../../battle-state-execution.ts").BattleExecutableSpellInvocation<SleetStormAreaHazardSpellInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   return [
     {

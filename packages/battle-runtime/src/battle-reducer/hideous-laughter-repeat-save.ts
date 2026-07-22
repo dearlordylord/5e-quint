@@ -9,7 +9,7 @@ import type {
   BattleSavingThrowFlatBonusProjection,
   BattleSavingThrowRollModeProjection,
   BattleSavingThrowOutcomeValue,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 import type { CombatantId } from "../identity.ts";
 import { HIDEOUS_LAUGHTER_REPEAT_SAVE_HOLE_KEY_PREFIX } from "./domain-constants.ts";
 import { uniqueSavingThrowRollModeProjections } from "./saving-throw-roll-mode-projections.ts";

@@ -37,7 +37,7 @@ import {
   type BattleResolutionResult,
   type BattleState,
   type MirrorImageHitInterceptionSpellInvocation,
-} from "../../battle-reducer.ts";
+} from "../../battle-state-execution.ts";
 import { CombatantId } from "../../identity.ts";
 import {
   MIRROR_IMAGE_DUPLICATE_DIE_SIZE,

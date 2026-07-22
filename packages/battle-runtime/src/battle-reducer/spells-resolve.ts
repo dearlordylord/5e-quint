@@ -55,14 +55,6 @@ import {
 import { damageAmount as toDamageAmount } from "@dnd/shared/types";
 import { Either, Match } from "effect";
 import {
-  ATTACK_ROLL_HOLE_ID,
-  ATTACK_TARGET_HOLE_ID,
-  activeOngoingFeaturesPreventSpellInvocation,
-  attackRollIsCriticalHit,
-  maybeOpenInterruptWindow,
-  snapshotBattle,
-  spellAttackRerollUnsupportedIssue,
-  spellDamageRerollUnsupportedIssue,
   type AdmittedActionSpellBattleResolutionInput,
   type AdmittedBonusActionDashSpellBattleResolutionInput,
   type AdmittedBonusActionSpellBattleResolutionInput,
@@ -76,7 +68,18 @@ import {
   type BonusActionSpellBattleResolutionInput,
   type SpellMarkedDamageRider,
   type SupportedSpellInvocation,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
+import {
+  ATTACK_ROLL_HOLE_ID,
+  ATTACK_TARGET_HOLE_ID,
+} from "./battle-runtime-protocol.ts";
+import { activeOngoingFeaturesPreventSpellInvocation } from "./spells-invocation-guards.ts";
+import { attackRollIsCriticalHit } from "./attack-resolution.ts";
+import { maybeOpenInterruptWindow, snapshotBattle } from "./dispatcher.ts";
+import {
+  spellAttackRerollUnsupportedIssue,
+  spellDamageRerollUnsupportedIssue,
+} from "./spell-reroll-issues.ts";
 import type { CombatantId } from "../identity.ts";
 import {
   characterUnitProcedureBindings,

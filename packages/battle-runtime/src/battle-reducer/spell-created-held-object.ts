@@ -5,7 +5,7 @@ import type {
   BattleCreatureState,
   BattleHand,
   BattleState,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 import type { CombatantId } from "../identity.ts";
 import { combatantHandUses } from "./creature-state-leaves.ts";
 

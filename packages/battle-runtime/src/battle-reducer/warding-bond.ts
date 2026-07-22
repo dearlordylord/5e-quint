@@ -9,7 +9,7 @@ import type {
   BattleTargetSpatialFact,
   BattleWardingBondSeparationFactsHole,
   SupportedSpellInvocation,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 import { allocateBattleActiveEffectRef } from "../active-effect/execution-ref.ts";
 import type { CombatantId } from "../identity.ts";
 import {

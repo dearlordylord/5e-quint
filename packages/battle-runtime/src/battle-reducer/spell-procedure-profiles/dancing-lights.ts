@@ -37,7 +37,7 @@ import {
   type BattleResolutionResult,
   type BattleState,
   type SupportedSpellInvocation,
-} from "../../battle-reducer.ts";
+} from "../../battle-state-execution.ts";
 import {
   BattleActiveEffectExecutionRef,
   BattleProcedureExecutionRef,
@@ -255,7 +255,7 @@ function dancingLightsSpell(
 function discoverDancingLightsCastAct(
   _state: BattleState,
   actorId: CombatantId,
-  invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<DancingLightsCastInvocation>,
+  invocation: import("../../battle-state-execution.ts").BattleExecutableSpellInvocation<DancingLightsCastInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   return [
     {

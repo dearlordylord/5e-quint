@@ -29,7 +29,7 @@ import {
   type BattleExecutableSpellInvocation,
   type BattleState,
   type SupportedSpellInvocation,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 import type { CharacterBattleSpellcastingState } from "../character-battle-resources.ts";
 import type { CharacterBattleResourceOwnership } from "../character-battle-resources.ts";
 import {

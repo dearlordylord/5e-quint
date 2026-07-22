@@ -38,7 +38,7 @@ import {
   type BattleResolutionResult,
   type BattleState,
   type SupportedSpellInvocation,
-} from "../../battle-reducer.ts";
+} from "../../battle-state-execution.ts";
 import { type CombatantId } from "../../identity.ts";
 import { spellAreaChoiceHole } from "../spells-holes-fills.ts";
 import { resolveSpikeGrowthMovementHazardSpellAct } from "../spells-resolve-area-effects.ts";
@@ -189,7 +189,7 @@ function spikeGrowthMovementHazardSpell(
 function discoverSpikeGrowthMovementHazardCastAct(
   _state: BattleState,
   actorId: CombatantId,
-  invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<SpikeGrowthMovementHazardSpellInvocation>,
+  invocation: import("../../battle-state-execution.ts").BattleExecutableSpellInvocation<SpikeGrowthMovementHazardSpellInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   return [
     {

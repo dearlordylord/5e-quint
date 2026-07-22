@@ -8,7 +8,7 @@ import type {
   BattleInterruptCheckpoint,
   BattleResolutionInputForSubject,
   BattleState,
-} from "../../battle-reducer.ts";
+} from "../../battle-state-execution.ts";
 import type { BattleInterruptTrigger } from "../../battle-interrupt-triggers.ts";
 import type { BattleSubject } from "../../battle-subjects.ts";
 import type { CharacterBattleMetamagicOptionFact } from "../../character-battle-resources.ts";

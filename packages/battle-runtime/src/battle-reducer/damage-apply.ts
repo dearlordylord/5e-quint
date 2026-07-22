@@ -76,7 +76,7 @@ import {
   type BattleTargetSpatialFact,
   type WeaponDamageDiceRollChoiceFill,
   type WeaponDamageDiceRollChoiceUsage,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 import {
   resourceHasUsesRemaining,
   spendCharacterResourceUse,
@@ -1222,7 +1222,7 @@ export function applyHpDamage(
     : applyDropToZeroHpLifecycle(damaged);
 }
 
-import type { HpDamageProjection } from "../battle-reducer.ts";
+import type { HpDamageProjection } from "../battle-state-execution.ts";
 
 export function hpDamageProjection(
   combatant: BattleCreatureState,

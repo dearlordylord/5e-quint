@@ -29,7 +29,7 @@ import {
   type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
   type BattleState,
-} from "../../battle-reducer.ts";
+} from "../../battle-state-execution.ts";
 import { type CombatantId } from "../../identity.ts";
 import {
   readiedSpellAct,

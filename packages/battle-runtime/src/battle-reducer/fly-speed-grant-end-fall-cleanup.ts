@@ -3,7 +3,7 @@ import type {
   BattleFlySpeedGrantEndFallCleanupFrame,
   BattleState,
   EndedFlySpeedGrant,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 import type { CombatantId } from "../identity.ts";
 
 export type FlySpeedGrantEndFallCleanupFramesResult<T> = {

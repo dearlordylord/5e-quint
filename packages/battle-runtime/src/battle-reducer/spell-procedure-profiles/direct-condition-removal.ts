@@ -17,7 +17,7 @@ import {
   type BattleState,
   type BonusActionSpellBattleResolutionInput,
   type DirectConditionRemovalSpellInvocation,
-} from "../../battle-reducer.ts";
+} from "../../battle-state-execution.ts";
 import { type CombatantId } from "../../identity.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
 import { invalidResult } from "../result-helpers.ts";

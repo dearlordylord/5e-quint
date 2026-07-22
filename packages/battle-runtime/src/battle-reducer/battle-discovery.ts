@@ -143,11 +143,9 @@ import {
   isWardingBondEffect,
   wardingBondSeparationFactsHole,
 } from "./warding-bond.ts";
-import {
-  SELF_TRANSFORMATION_MODE_KINDS,
-  SUPPORTED_STAT_BLOCK_BONUS_ACTION_STANDARD_ACTIONS,
-  discoverLegendaryActionActs,
-} from "../battle-reducer.ts";
+import { SELF_TRANSFORMATION_MODE_KINDS } from "./domain-constants.ts";
+import { SUPPORTED_STAT_BLOCK_BONUS_ACTION_STANDARD_ACTIONS } from "./battle-runtime-protocol.ts";
+import { discoverLegendaryActionActs } from "./unit-features.ts";
 import { characterSpellProcedure } from "../character-execution-admission.ts";
 import {
   activeSelfTransformationModeEffect,
@@ -170,7 +168,7 @@ import type {
   StatBlockBattleCreatureState,
   StatBlockMultiattackActionResource,
   SupportedStatBlockBonusActionStandardAction,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 
 type FogCloudObscurementEffect = Extract<
   BattleActiveEffect,

@@ -7,7 +7,7 @@ import {
   type BattleInvalidReasonCode,
   type BattleResolutionResult,
   type BattleState,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 
 export function invalidResult(
   state: BattleState,

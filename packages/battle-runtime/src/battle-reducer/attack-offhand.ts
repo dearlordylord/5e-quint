@@ -119,11 +119,11 @@ import type {
   BattleState,
   MartialArtsBonusUnarmedStrikeBattleResolutionInput,
   OffHandAttackBattleResolutionInput,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 import {
   ATTACK_ROLL_HOLE_ID,
   spellAttackRerollUnsupportedIssue,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 import {
   boundAttackExecutionSelectionMatchesOption,
   type BoundSupportedAttackActionOption,

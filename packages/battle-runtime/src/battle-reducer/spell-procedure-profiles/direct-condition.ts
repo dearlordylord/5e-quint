@@ -22,7 +22,7 @@ import {
   type BattleResolutionResult,
   type BattleState,
   type DirectConditionSpellInvocation,
-} from "../../battle-reducer.ts";
+} from "../../battle-state-execution.ts";
 import { CombatantId } from "../../identity.ts";
 import { applyDirectConditionSpellEffects } from "../direct-condition-lifecycle.ts";
 import { needsHolesResult } from "../hole-helpers.ts";

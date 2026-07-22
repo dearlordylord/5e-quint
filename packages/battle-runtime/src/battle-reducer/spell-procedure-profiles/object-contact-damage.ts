@@ -45,7 +45,7 @@ import {
   type BattleState,
   type SpellObjectContactDamageActiveEffect,
   type SupportedSpellInvocation,
-} from "../../battle-reducer.ts";
+} from "../../battle-state-execution.ts";
 import {
   BattleActiveEffectExecutionRef,
   BattleProcedureExecutionRef,
@@ -404,7 +404,7 @@ function isSupportedObjectContactHoldingOrWearingSave(
 function discoverObjectContactDamageCastAct(
   _state: BattleState,
   actorId: CombatantId,
-  invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<ObjectContactDamageInvocation>,
+  invocation: import("../../battle-state-execution.ts").BattleExecutableSpellInvocation<ObjectContactDamageInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   return [
     {
@@ -422,7 +422,7 @@ function discoverObjectContactDamageCastAct(
 function discoverObjectContactDamageRepeatCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<ObjectContactDamageRepeatInvocation>,
+  invocation: import("../../battle-state-execution.ts").BattleExecutableSpellInvocation<ObjectContactDamageRepeatInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   if (
     currentActorId(state) === invocation.activeEffect.startedOn.actorId &&

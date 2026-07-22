@@ -7,7 +7,7 @@ import type {
   BattleHole,
   BattleInvalidReasonCode,
   BattleResolutionResult,
-} from "./battle-reducer.ts";
+} from "./battle-state-execution.ts";
 
 export const BATTLE_TRACE_HOLE_KINDS = [
   "helpAttackAllyDecision",

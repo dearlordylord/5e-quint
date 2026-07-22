@@ -2,7 +2,7 @@ import type {
   BattleExecutableSpellInvocation,
   BattleInterruptCheckpointInput,
   SupportedSpellInvocation,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 
 export function shieldReactionSpellMatchesTrigger(
   invocation: BattleExecutableSpellInvocation<

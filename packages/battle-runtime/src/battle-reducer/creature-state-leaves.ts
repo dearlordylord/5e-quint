@@ -21,7 +21,7 @@ import {
   type BattleCreatureState,
   type BattleGrappleLink,
   type BattleState,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 import type { CombatantId } from "../identity.ts";
 
 export function combatantCanSee(

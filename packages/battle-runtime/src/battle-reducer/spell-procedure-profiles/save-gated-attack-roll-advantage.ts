@@ -20,7 +20,7 @@ import {
   type BattleResolutionResult,
   type BattleState,
   type SupportedSpellInvocation,
-} from "../../battle-reducer.ts";
+} from "../../battle-state-execution.ts";
 import { CombatantId } from "../../identity.ts";
 import { supportedPreparedSaveGateAttackRollAdvantageProfile } from "./_save-gate-helpers.ts";
 import { resolveSaveGateAttackRollAdvantageSpellAct } from "../spells-resolve-save-gates.ts";
@@ -152,7 +152,7 @@ function saveGatedAttackRollAdvantageMetamagicCastActs(input: {
 
 function saveGatedAttackRollAdvantageCastAct(
   actorId: CombatantId,
-  invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<SaveGatedAttackRollAdvantageSpellInvocation>,
+  invocation: import("../../battle-state-execution.ts").BattleExecutableSpellInvocation<SaveGatedAttackRollAdvantageSpellInvocation>,
   initialHoles: readonly BattleHole[],
 ): BattleActDiscoveryCandidate {
   return {

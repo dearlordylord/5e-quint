@@ -7,7 +7,7 @@ import type {
   BattleSpellEffectEarlyEnd,
   BattleTurnAnchor,
 } from "./active-effect/types.ts";
-import type { SpellTargeting } from "./battle-reducer.ts";
+import type { SpellTargeting } from "./battle-state-execution.ts";
 import type {
   BattleActiveEffectExecutionRef,
   BattleProcedureExecutionRef,

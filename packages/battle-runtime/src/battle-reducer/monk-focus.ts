@@ -34,7 +34,7 @@ import type {
   BattleUnitFeatureRollHole,
   CharacterBattleCreatureState,
   MonkFocusOptionBattleResolutionInput,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 import { SIZES } from "@dnd/shared/types";
 import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
 import type { UnitSupportProcedureExecution } from "../character-execution-admission.ts";

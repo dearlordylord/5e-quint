@@ -34,7 +34,7 @@ import {
   type BattleResolutionResult,
   type BattleState,
   type HastePositiveSpellInvocation,
-} from "../../battle-reducer.ts";
+} from "../../battle-state-execution.ts";
 import { CombatantId } from "../../identity.ts";
 import { allocateBattleActiveEffectRef } from "../../active-effect/execution-ref.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";

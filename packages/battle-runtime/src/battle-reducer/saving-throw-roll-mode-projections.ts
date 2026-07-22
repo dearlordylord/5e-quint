@@ -1,4 +1,4 @@
-import type { BattleSavingThrowRollModeProjection } from "../battle-reducer.ts";
+import type { BattleSavingThrowRollModeProjection } from "../battle-state-execution.ts";
 import type { CombatantId } from "../identity.ts";
 
 export function uniqueSavingThrowRollModeProjections(

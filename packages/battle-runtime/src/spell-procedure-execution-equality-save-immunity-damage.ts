@@ -4,7 +4,7 @@ import type {
   SpellFailedSavePostDamageRider,
   SpellPostSaveAreaEffect,
   SpellSavingThrowRollModeRule,
-} from "./battle-reducer.ts";
+} from "./battle-state-execution.ts";
 import type {
   SaveGatedConditionImmunitySpellProcedureExecution,
   SpellProcedureExecutionByProcedure,

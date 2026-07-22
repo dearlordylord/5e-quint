@@ -31,7 +31,7 @@ import {
   type BattleState,
   type CharacterBattleCreatureState,
   type SpellHostedWeaponAttackInvocation,
-} from "../../battle-reducer.ts";
+} from "../../battle-state-execution.ts";
 import { type CombatantId } from "../../identity.ts";
 import { resolveSelectedAttackProcedure } from "../attack-main.ts";
 import { isCharacterBattleCreatureState } from "../creature-state.ts";
@@ -236,7 +236,7 @@ function weaponMatchesProficiency(
 function discoverSpellHostedWeaponAttackCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<SpellHostedWeaponAttackInvocation>,
+  invocation: import("../../battle-state-execution.ts").BattleExecutableSpellInvocation<SpellHostedWeaponAttackInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const componentWeapon = spellHostedWeaponAttackForExecution(
     state,

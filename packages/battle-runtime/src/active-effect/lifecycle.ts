@@ -12,7 +12,7 @@ import {
 } from "@dnd/shared-algebras/conditions-algebra";
 import type { Condition, HandUse } from "@dnd/shared/types";
 import type { BattleActiveEffect } from "./types.ts";
-import type { BattleCreatureState } from "../battle-reducer.ts";
+import type { BattleCreatureState } from "../battle-state-execution.ts";
 
 const HIDEOUS_LAUGHTER_CONDITIONS = [
   "prone",

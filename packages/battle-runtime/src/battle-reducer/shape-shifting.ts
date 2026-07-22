@@ -13,7 +13,7 @@ import type {
   BattleActiveEffect,
   BattleCreatureState,
   BattleState,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
 import {
   activeDruidWildShape,

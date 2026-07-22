@@ -79,7 +79,7 @@ import {
   type SpellAttackDamageComponent,
   type SpellMarkedDamageRider,
   type SupportedSpellInvocation,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 import type {
   RuntimeSpellProcedureExecution,
   UnitFeatureProcedureExecution,

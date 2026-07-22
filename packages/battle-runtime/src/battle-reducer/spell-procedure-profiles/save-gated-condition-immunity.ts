@@ -25,7 +25,7 @@ import {
   type BattleResolutionResult,
   type BattleState,
   type SupportedSpellInvocation,
-} from "../../battle-reducer.ts";
+} from "../../battle-state-execution.ts";
 import { CombatantId } from "../../identity.ts";
 import { supportedPreparedSaveGateConditionImmunityProfile } from "./_save-gate-helpers.ts";
 import { resolveSaveGateConditionImmunitySpellAct } from "../spells-resolve-save-gates.ts";
@@ -159,7 +159,7 @@ function saveGatedConditionImmunityMetamagicCastActs(input: {
 
 function saveGatedConditionImmunityCastAct(
   actorId: CombatantId,
-  invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<SaveGatedConditionImmunitySpellInvocation>,
+  invocation: import("../../battle-state-execution.ts").BattleExecutableSpellInvocation<SaveGatedConditionImmunitySpellInvocation>,
   initialHoles: readonly BattleHole[],
 ): BattleActDiscoveryCandidate {
   return {

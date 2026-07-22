@@ -9,7 +9,10 @@ import type {
   BattleActiveEffect,
   BattleActiveEffectExpiration,
 } from "../active-effect/types.ts";
-import type { BattleCreatureState, BattleState } from "../battle-reducer.ts";
+import type {
+  BattleCreatureState,
+  BattleState,
+} from "../battle-state-execution.ts";
 import type { CombatantId } from "../identity.ts";
 import { currentActorId } from "./creature-state-leaves.ts";
 import { conditionHadNonSpellSourceBeforeSpellEffect } from "./spell-condition-effects-helpers.ts";

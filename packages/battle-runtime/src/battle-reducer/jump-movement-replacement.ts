@@ -1,6 +1,9 @@
 import { MovementFeet, movementFeet } from "@dnd/shared/types";
 
-import type { BattleActiveEffect, BattleState } from "../battle-reducer.ts";
+import type {
+  BattleActiveEffect,
+  BattleState,
+} from "../battle-state-execution.ts";
 import { CombatantId } from "../identity.ts";
 
 import { currentActorId } from "./creature-state-leaves.ts";

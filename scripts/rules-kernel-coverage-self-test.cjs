@@ -82,7 +82,13 @@ function runSelfTest() {
     ].join("\n") + "\n",
   );
   writeFile(
-    path.join(root, "packages", "battle-runtime", "src", "battle-reducer.ts"),
+    path.join(
+      root,
+      "packages",
+      "battle-runtime",
+      "src",
+      "battle-state-execution.ts",
+    ),
     [
       "export type BattleTargetChoiceHole = { readonly kind: 'targetChoice'; };",
       "export type BattleHole = BattleTargetChoiceHole;",
@@ -1279,7 +1285,7 @@ function runSelfTest() {
     "packages",
     "battle-runtime",
     "src",
-    "battle-reducer.ts",
+    "battle-state-execution.ts",
   );
   const sampleBattleReducerText = fs.readFileSync(
     sampleBattleReducerPath,

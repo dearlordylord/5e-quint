@@ -45,7 +45,7 @@ import type {
   BattleCreatureState,
   BattleState,
   CharacterBattleCreatureState,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 import type { BattleDruidWildShapeKnownFormSupportProfile } from "../unit-feature-support.ts";
 import type {
   BattleProcedureExecutionRef,

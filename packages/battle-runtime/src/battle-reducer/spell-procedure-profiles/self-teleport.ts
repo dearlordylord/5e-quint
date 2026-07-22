@@ -33,7 +33,7 @@ import {
   type BattleTeleportDestination,
   type BattleTeleportDestinationFact,
   type SupportedSpellInvocation,
-} from "../../battle-reducer.ts";
+} from "../../battle-state-execution.ts";
 import { type CombatantId } from "../../identity.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
 import { invalidResult } from "../result-helpers.ts";
@@ -123,7 +123,7 @@ function selfTeleportSpellProjection(
 function discoverSelfTeleportCastAct(
   _state: BattleState,
   actorId: CombatantId,
-  invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<SelfTeleportInvocation>,
+  invocation: import("../../battle-state-execution.ts").BattleExecutableSpellInvocation<SelfTeleportInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   return [
     {

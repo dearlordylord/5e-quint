@@ -52,7 +52,7 @@ import {
   type BattleState,
   type HealingSpellActionCost,
   type SupportedSpellInvocation,
-} from "../../battle-reducer.ts";
+} from "../../battle-state-execution.ts";
 import { CombatantId } from "../../identity.ts";
 import { BattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
 import { battleCreatureWithSpellActiveEffects } from "../../active-effect/lifecycle.ts";
@@ -319,7 +319,7 @@ function scalarBuffSubtleMetamagicCastActs(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
   readonly invocation: BattleExecutableSpellInvocation<
-    import("../../battle-reducer.ts").BattleExecutableSpellInvocation<ScalarBuffInvocation>
+    import("../../battle-state-execution.ts").BattleExecutableSpellInvocation<ScalarBuffInvocation>
   >;
   readonly initialHoles: readonly BattleHole[];
 }): readonly BattleActDiscoveryCandidate[] {

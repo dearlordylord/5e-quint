@@ -49,8 +49,8 @@ import type {
   BattleResolutionResult,
   BattleResolvedMovement,
   BattleState,
-} from "../battle-reducer.ts";
-import { MOVEMENT_HOLE_ID } from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
+import { MOVEMENT_HOLE_ID } from "../battle-state-execution.ts";
 import { characterSpellProcedure } from "../character-execution-admission.ts";
 import { isReadiedSpellInvocation } from "./spells-discovery.ts";
 

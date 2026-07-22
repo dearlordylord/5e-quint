@@ -53,12 +53,12 @@ import type {
   BattleInterruptProcedureChoice,
   BattleRolledDiceFill,
   BattleState,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 import {
   REACTION_MODIFIER_ROLL_HOLE_ID,
   REACTION_MODIFIER_ROLL_HOLE_INSTANCE,
   validateRolledDiceFillForDiceExpr,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 
 type ReactionRollOrDamageReductionExecution = Extract<
   UnitFeatureProcedureExecution,

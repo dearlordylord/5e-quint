@@ -34,7 +34,7 @@ import {
   type BattleResolutionResult,
   type BattleState,
   type SupportedSpellInvocation,
-} from "../../battle-reducer.ts";
+} from "../../battle-state-execution.ts";
 import { type CombatantId } from "../../identity.ts";
 import {
   DcSourceSchema,
@@ -226,7 +226,7 @@ function cloudkillSaveGateDamageAmount(
 function discoverCloudkillAreaHazardCastAct(
   _state: BattleState,
   actorId: CombatantId,
-  invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<CloudkillAreaHazardSpellInvocation>,
+  invocation: import("../../battle-state-execution.ts").BattleExecutableSpellInvocation<CloudkillAreaHazardSpellInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   return [
     {

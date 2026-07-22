@@ -30,7 +30,7 @@ import {
   type BattleState,
   type SpellTargeting,
   type SupportedSpellInvocation,
-} from "../../battle-reducer.ts";
+} from "../../battle-state-execution.ts";
 import { type CombatantId } from "../../identity.ts";
 import { oneAdditionalTargetPerSpellSlotAboveBaseLevel } from "./_save-gate-helpers.ts";
 import { resolveCommandSpellAct } from "../spells-resolve-save-gates.ts";
@@ -292,7 +292,7 @@ function commandMetamagicCastActs(input: {
 
 function commandCastAct(
   actorId: CombatantId,
-  invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<CommandSpellInvocation>,
+  invocation: import("../../battle-state-execution.ts").BattleExecutableSpellInvocation<CommandSpellInvocation>,
   initialHoles: readonly BattleHole[],
 ): BattleActDiscoveryCandidate {
   return {

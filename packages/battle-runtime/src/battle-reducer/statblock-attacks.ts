@@ -55,7 +55,7 @@ import {
   type SpellAttackDamageComponent,
   type AttackDamageDieFloorChoiceFill,
   type WeaponDamageDiceRollChoiceFill,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 import { currentActorId } from "./creature-state-leaves.ts";
 import {
   isCharacterBattleCreatureState,

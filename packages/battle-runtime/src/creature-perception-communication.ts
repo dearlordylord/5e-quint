@@ -7,7 +7,7 @@ import type {
   StatBlockRecord,
 } from "@dnd/surface/surface/types";
 
-import type { BattleCreatureState } from "./battle-reducer.ts";
+import type { BattleCreatureState } from "./battle-state-execution.ts";
 import {
   activeDruidWildShapeForm,
   combatantSkillModifier,

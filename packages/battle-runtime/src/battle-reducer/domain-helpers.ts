@@ -9,7 +9,7 @@ import { difficultyClass, type DifficultyClass } from "@dnd/shared/types";
 import type {
   BattleCreatureState,
   BattleStateInitIssue,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 
 export function scoreModifier(score: number): number {
   return Math.floor((score - 10) / 2);

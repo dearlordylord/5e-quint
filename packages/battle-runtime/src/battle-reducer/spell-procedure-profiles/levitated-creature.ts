@@ -25,7 +25,7 @@ import {
   type BattleResolutionResult,
   type BattleState,
   type LevitatedCreatureSpellInvocation,
-} from "../../battle-reducer.ts";
+} from "../../battle-state-execution.ts";
 import { CombatantId } from "../../identity.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";
 import { allocateBattleActiveEffectRef } from "../../active-effect/execution-ref.ts";

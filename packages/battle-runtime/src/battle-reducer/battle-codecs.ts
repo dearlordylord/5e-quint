@@ -172,7 +172,7 @@ import type {
   BattleHole,
   WildShapeEquipmentDispositionChoice,
   WildShapeLoadoutObjectRef,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 const FindFamiliarFormSelectionSchema = Schema.Union(
   Schema.Struct({
     tag: Schema.Literal("normalNamedForm"),

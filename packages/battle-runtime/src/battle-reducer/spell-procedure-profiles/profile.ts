@@ -21,7 +21,7 @@ import type {
   BattleCreatureState,
   BattleState,
   SupportedSpellInvocation,
-} from "../../battle-reducer.ts";
+} from "../../battle-state-execution.ts";
 export { SpellRuleExecutionFactsSchema } from "../../procedure-execution/spell-rule-facts.ts";
 import type { CombatantId } from "../../identity.ts";
 import type {

@@ -10,7 +10,7 @@ import type { BattleSubject } from "../battle-subjects.ts";
 import type {
   BattleAntimagicFieldAuraMembership,
   BattleState,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 import type {
   RuntimeSpellProcedureExecution,
   SpellProcedureExecution,

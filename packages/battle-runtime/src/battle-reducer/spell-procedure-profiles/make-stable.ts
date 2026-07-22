@@ -31,7 +31,7 @@ import {
   type BattleResolutionResult,
   type BattleState,
   type SupportedSpellInvocation,
-} from "../../battle-reducer.ts";
+} from "../../battle-state-execution.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";

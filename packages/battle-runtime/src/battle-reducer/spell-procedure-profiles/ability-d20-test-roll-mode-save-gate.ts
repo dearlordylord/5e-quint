@@ -22,7 +22,7 @@ import {
   type BattleResolutionResult,
   type BattleState,
   type SupportedSpellInvocation,
-} from "../../battle-reducer.ts";
+} from "../../battle-state-execution.ts";
 import { CombatantId } from "../../identity.ts";
 import { ElapsedTimeTicksSchema } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { readiedSpellAct } from "../spells-discovery.ts";
@@ -111,7 +111,7 @@ function discoverAbilityD20TestRollModeSaveGateCastAct(
 
 function abilityD20TestRollModeSaveGateCastAct(
   actorId: CombatantId,
-  invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<AbilityD20TestRollModeSaveGateSpellInvocation>,
+  invocation: import("../../battle-state-execution.ts").BattleExecutableSpellInvocation<AbilityD20TestRollModeSaveGateSpellInvocation>,
   initialHoles: readonly BattleHole[],
 ): BattleActDiscoveryCandidate {
   return {

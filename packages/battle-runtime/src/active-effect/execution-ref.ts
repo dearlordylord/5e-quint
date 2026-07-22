@@ -7,7 +7,10 @@ import {
   battleActiveEffectExecutionRef,
   battleActiveEffectExecutionOrdinal,
 } from "../identity.ts";
-import type { BattleCreatureState, BattleState } from "../battle-reducer.ts";
+import type {
+  BattleCreatureState,
+  BattleState,
+} from "../battle-state-execution.ts";
 
 export type ReplayAddressableSpellActiveEffect = Extract<
   BattleActiveEffect,

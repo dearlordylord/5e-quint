@@ -30,7 +30,7 @@ import {
   type BattleResolutionResult,
   type BattleState,
   type SupportedSpellInvocation,
-} from "../../battle-reducer.ts";
+} from "../../battle-state-execution.ts";
 import { type CombatantId } from "../../identity.ts";
 import { spellAreaChoiceHole } from "../spells-holes-fills.ts";
 import { resolveFogCloudObscurementSpellAct } from "../spells-resolve-area-effects.ts";
@@ -165,7 +165,7 @@ function fogCloudObscurementSpell(
 function discoverFogCloudObscurementCastAct(
   _state: BattleState,
   actorId: CombatantId,
-  invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<FogCloudObscurementSpellInvocation>,
+  invocation: import("../../battle-state-execution.ts").BattleExecutableSpellInvocation<FogCloudObscurementSpellInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   return [
     {

@@ -27,7 +27,7 @@ import {
   type BattleState,
   type SpellTargeting,
   type SupportedSpellInvocation,
-} from "../../battle-reducer.ts";
+} from "../../battle-state-execution.ts";
 import { type CombatantId } from "../../identity.ts";
 import { readiedSpellAct } from "../spells-discovery.ts";
 import { oneAdditionalTargetPerSpellSlotAboveBaseLevel } from "./_save-gate-helpers.ts";
@@ -277,7 +277,7 @@ function hideousLaughterMetamagicCastActs(input: {
 
 function hideousLaughterCastAct(
   actorId: CombatantId,
-  invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<HideousLaughterSpellInvocation>,
+  invocation: import("../../battle-state-execution.ts").BattleExecutableSpellInvocation<HideousLaughterSpellInvocation>,
   initialHoles: readonly BattleHole[],
 ): BattleActDiscoveryCandidate {
   return {

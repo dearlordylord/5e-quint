@@ -38,7 +38,7 @@ import {
   type BattleState,
   type BattleExecutableSpellInvocation,
   type SupportedSpellInvocation,
-} from "../../battle-reducer.ts";
+} from "../../battle-state-execution.ts";
 import type { CharacterBattleSpellcastingState } from "../../character-battle-resources.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
 import { invalidResult } from "../result-helpers.ts";

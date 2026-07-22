@@ -37,7 +37,7 @@ import {
   type BattleState,
   type BattleExecutableSpellInvocation,
   type SupportedSpellInvocation,
-} from "../../battle-reducer.ts";
+} from "../../battle-state-execution.ts";
 import { battleCreatureWithSpellActiveEffects } from "../../active-effect/lifecycle.ts";
 import { type CombatantId } from "../../identity.ts";
 import {

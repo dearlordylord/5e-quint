@@ -56,11 +56,11 @@ import type {
   BattleResolutionResult,
   BattleSpellAreaChoice,
   BattleState,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 import {
   snapshotBattle,
   validateRolledDiceFillForDiceExpr,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 
 type DragonsBreathEffect = Extract<
   BattleCreatureState["activeEffects"][number],

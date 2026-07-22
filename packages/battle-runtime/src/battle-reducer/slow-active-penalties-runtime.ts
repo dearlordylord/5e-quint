@@ -20,7 +20,7 @@ import type {
   BattleTurnResources,
   BonusActionDashSpellBattleResolutionInput,
   BonusActionSpellBattleResolutionInput,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 import type { CombatantId } from "../identity.ts";
 import { SLOW_ACTIVE_PENALTIES_SOMATIC_FAILURE_PERCENT } from "./domain-constants.ts";
 import { needsHolesResult } from "./hole-helpers.ts";

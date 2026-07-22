@@ -10,7 +10,7 @@ import {
   spellSlotInvocationRef,
   type SpellInvocationRef,
 } from "../battle-subjects.ts";
-import type { SupportedSpellInvocation } from "../battle-reducer.ts";
+import type { SupportedSpellInvocation } from "../battle-state-execution.ts";
 import { Match } from "effect";
 
 export function supportedSpellInvocationRef(

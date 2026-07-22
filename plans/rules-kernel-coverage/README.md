@@ -91,7 +91,7 @@ duplicate their profile lists; generated reports derive those lists from
 
 `battle-hole-frontier.jsonl` is the single source of truth for the current
 BattleHole/BattleFill/BattleSubject protocol inventory. The checker parses
-`packages/battle-runtime/src/battle-reducer.ts` and requires one
+`packages/battle-runtime/src/battle-state-execution.ts` and requires one
 `battle-hole-family` row for every `BattleHole` union member, one
 `battle-fill-kind` row for every `BattleFill` discriminant, and one
 `battle-subject-kind` row for every procedure-family fold over the

@@ -96,7 +96,7 @@ import {
   type BattleResolutionResult,
   type BattleState,
   type BattleTargetChoiceHole,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 import {
   creatureSizeIsLargerThanSelf,
   grappleLinkForTarget,

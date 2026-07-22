@@ -112,7 +112,7 @@ import {
   type SpellPostDamageRiderExpiration,
   type SupportedSpellInvocation,
   type BattleWebRestraintTrigger,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 import {
   antimagicFieldSuppressedOngoingSpellEffectKeys,
   isTrackedOngoingSpellLightEmitter,

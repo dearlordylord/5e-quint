@@ -35,7 +35,7 @@ import {
   type BattleResolutionResult,
   type BattleState,
   type CreatureSizeChangeSpellInvocation,
-} from "../../battle-reducer.ts";
+} from "../../battle-state-execution.ts";
 import { CombatantId } from "../../identity.ts";
 import type {
   CreatureSizeDecreaseSpellProcedureExecution,

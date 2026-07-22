@@ -41,7 +41,7 @@ import {
   type ScalarBuffSpellEffect,
   type ScalarBuffSpellTargeting,
   type ThaumaturgyBoomingVoiceSpellInvocation,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 import type { CombatantId } from "../identity.ts";
 import {
   BATTLE_D20_ROLL_MODIFIER_DIE_SIZES,

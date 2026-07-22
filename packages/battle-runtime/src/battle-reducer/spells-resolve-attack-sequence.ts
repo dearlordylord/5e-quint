@@ -29,7 +29,7 @@ import {
   type BonusActionSpellBattleResolutionInput,
   type SpellDamageReductionRoll,
   type BattleExecutableSpellInvocation,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 import { damageAmount as toDamageAmount } from "@dnd/shared/types";
 import type { CombatantId } from "../identity.ts";
 import {

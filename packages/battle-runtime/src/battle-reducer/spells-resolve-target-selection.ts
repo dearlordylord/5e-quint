@@ -12,7 +12,7 @@ import {
   type BattleExecutableSpellInvocation,
   type BonusActionSpellBattleResolutionInput,
   type SupportedSpellInvocation,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 import type { CombatantId } from "../identity.ts";
 import {
   sameCombatantIdSet,

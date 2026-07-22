@@ -14,7 +14,7 @@ import type {
   BattleSanctuaryInterdictionOutcomeHole,
   BattleState,
   SanctuaryTargetingInterdictionSpellInvocation,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
 import { battleCreatureWithSpellActiveEffects } from "../active-effect/lifecycle.ts";
 import { battleStateAfterDirectConditionTargetActionEarlyEndForActor } from "./direct-condition-lifecycle.ts";

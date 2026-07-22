@@ -6,7 +6,7 @@ import type {
 import type {
   CharacterBattleCreatureState,
   OngoingFeatureSourceKey,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 import type { UnitFeatureProcedureExecution } from "../character-execution-admission.ts";
 import { ongoingFeatureProfileForSourceKey } from "./creature-state.ts";
 

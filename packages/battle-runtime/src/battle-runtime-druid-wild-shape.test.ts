@@ -20,6 +20,7 @@ import type { SpellRecord, StatBlockRecord } from "@dnd/surface/surface/types";
 import { Schema } from "effect";
 import * as Either from "effect/Either";
 import { expect, test } from "vitest";
+import { resolveReplayContinuationFromState } from "./battle-reducer/dispatcher.ts";
 
 type CharacterSeedInput = Parameters<typeof characterSeed>[0];
 
@@ -99,6 +100,34 @@ const packAllyId = combatantId("wild-shape-pack-ally");
 const incapacitatedPackAllyId = combatantId(
   "wild-shape-incapacitated-pack-ally",
 );
+
+test("replay rejects a Wild Shape subject bound to an unrelated procedure", () => {
+  const state = druidWildShapeBattle();
+  const subject = wildShapeSubject(state, {
+    action: "assumeForm",
+    formStatBlockId: ridingHorseId,
+  });
+  const actor = requireCharacter(state, druidId);
+  const unrelatedProcedureRef = actor.origin.execution.procedureBindings.find(
+    (binding) => binding.procedureRef !== subject.procedureRef,
+  )?.procedureRef;
+  if (unrelatedProcedureRef === undefined) {
+    throw new Error("Expected an unrelated Druid procedure binding.");
+  }
+
+  expect(
+    resolveReplayContinuationFromState(
+      state,
+      {
+        kind: "replay",
+        subject: { ...subject, procedureRef: unrelatedProcedureRef },
+        fills: [],
+      },
+      "attackHit",
+      [],
+    ),
+  ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
+});
 
 test("assumes, reuses, and dismisses a known Beast Wild Shape form", () => {
   const initial = druidWildShapeBattle();

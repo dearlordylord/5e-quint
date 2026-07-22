@@ -4,7 +4,7 @@ import type {
   BattleFill,
   BattleAttackRollRelationshipFact,
   BattleSpellTargetListRelationshipFact,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
 
 type TargetChoiceFill = Extract<BattleFill, { readonly kind: "targetChoice" }>;

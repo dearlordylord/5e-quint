@@ -40,7 +40,7 @@ import {
   type BattleTargetSpatialFact,
   type BattleState,
   type SpellTargeting,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 import type { RuntimeSpellProcedureExecution } from "../character-execution.ts";
 import type {
   BattleObjectId,

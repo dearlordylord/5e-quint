@@ -17,7 +17,7 @@ import type {
   BattleState,
   EndOfTurnOngoingFeatureExpiration,
   OngoingFeatureExpiration,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 
 type OngoingFeatureExecution = Extract<
   UnitFeatureProcedureExecution,

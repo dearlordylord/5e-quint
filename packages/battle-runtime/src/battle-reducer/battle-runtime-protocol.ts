@@ -30,7 +30,7 @@ import type {
   BattleFill,
   BattleRolledDiceFill,
   BattleTargetSpatialFact,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 import type { CombatantId } from "../identity.ts";
 import type { DamageRelationshipDecisionsByHole } from "./damage-relationship-decisions.ts";
 

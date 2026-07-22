@@ -32,7 +32,7 @@ import {
   type BattleState,
   type DragonsBreathInitialSpellInvocation,
   type SupportedSpellInvocation,
-} from "../../battle-reducer.ts";
+} from "../../battle-state-execution.ts";
 import { CombatantId } from "../../identity.ts";
 import { spellSaveDcForCaster } from "../attack-resolution.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";

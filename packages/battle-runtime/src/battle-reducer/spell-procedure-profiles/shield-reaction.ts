@@ -23,7 +23,7 @@ import {
   type AvailableBattleAct,
   type BattleResolutionResult,
   type SupportedSpellInvocation,
-} from "../../battle-reducer.ts";
+} from "../../battle-state-execution.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { stateAfterSpellCastDeclared } from "../spell-cast-declaration.ts";
 import { expendSpellSlot } from "../spell-effects.ts";

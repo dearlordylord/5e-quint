@@ -635,16 +635,16 @@ function topLevelKindLiterals(typeNode, aliases) {
 }
 
 function extractBattleFrontierSource(rootPath) {
-  const battleReducerPath = path.join(
+  const battleStateExecutionPath = path.join(
     rootPath,
     "packages",
     "battle-runtime",
     "src",
-    "battle-reducer.ts",
+    "battle-state-execution.ts",
   );
-  const text = fs.readFileSync(battleReducerPath, "utf8");
+  const text = fs.readFileSync(battleStateExecutionPath, "utf8");
   const sourceFile = ts.createSourceFile(
-    battleReducerPath,
+    battleStateExecutionPath,
     text,
     ts.ScriptTarget.Latest,
     true,
@@ -904,7 +904,12 @@ function declaresParityRunTarget(rootPath, witness, witnessText, helperTexts) {
   );
   if (!helperRunsDeclaredStep) return false;
   return [witnessText, ...helperTexts].some((text) =>
-    witnessNamesSpecPath(rootPath, witness.ownerPath, text, witness.qntSpecPath),
+    witnessNamesSpecPath(
+      rootPath,
+      witness.ownerPath,
+      text,
+      witness.qntSpecPath,
+    ),
   );
 }
 
@@ -1831,10 +1836,7 @@ function qntOwnerPaths(obligations) {
 
 function qntRegistryExemptionMap(registryExemptions) {
   return new Map(
-    registryExemptions.map((exemption) => [
-      exemption.ownerPath,
-      exemption,
-    ]),
+    registryExemptions.map((exemption) => [exemption.ownerPath, exemption]),
   );
 }
 

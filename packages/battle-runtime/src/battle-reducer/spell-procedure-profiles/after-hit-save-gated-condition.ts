@@ -45,7 +45,7 @@ import {
   type BattleSpellSavingThrowOutcomeHole,
   type BattleSpellSavingThrowOutcomeValue,
   type BattleState,
-} from "../../battle-reducer.ts";
+} from "../../battle-state-execution.ts";
 import type { BattleSubject } from "../../battle-subjects.ts";
 import { type CombatantId } from "../../identity.ts";
 import { combatantEffectiveSize } from "../druid-wild-shape.ts";

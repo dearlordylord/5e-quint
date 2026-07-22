@@ -69,8 +69,8 @@ import type {
   BattleRolledDiceFill,
   BattleState,
   BattleTargetSpatialFact,
-} from "../battle-reducer.ts";
-import { zeroHpLifecycleIsTerminal } from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
+import { zeroHpLifecycleIsTerminal } from "../battle-state-execution.ts";
 import {
   extendSavingThrowOngoingFeatures,
   ongoingFeatureEnemyRelationshipDecisionRequired,

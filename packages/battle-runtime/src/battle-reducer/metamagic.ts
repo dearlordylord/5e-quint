@@ -21,7 +21,7 @@ import type {
   BattleSpellAttackRerollOption,
   BattleState,
   SupportedSpellInvocation,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 import type {
   BattleSubject,
   SpellMetamagicSelection,

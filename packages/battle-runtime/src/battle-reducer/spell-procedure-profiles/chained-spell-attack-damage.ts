@@ -22,7 +22,7 @@ import {
   type BattleResolutionResult,
   type BattleState,
   type SupportedSpellInvocation,
-} from "../../battle-reducer.ts";
+} from "../../battle-state-execution.ts";
 import { type CombatantId } from "../../identity.ts";
 import { spellDamageTypeChoiceHole } from "../spells-damage-fills.ts";
 import {
@@ -79,7 +79,7 @@ function admitChainedSpellAttackDamage(
 function discoverChainedSpellAttackDamageCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<ChainedSpellAttackDamageInvocation>,
+  invocation: import("../../battle-state-execution.ts").BattleExecutableSpellInvocation<ChainedSpellAttackDamageInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const castActs = [
     {

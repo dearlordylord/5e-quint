@@ -7,6 +7,7 @@ import { abilityModifier } from "@dnd/shared/types";
 import { battleActUnitPresentation } from "./battle-act-composition.ts";
 import { describe, expect, test } from "vitest";
 import { deriveCreatureSpaceTraversalMovementFactFromTableRoute } from "./battle-reducer/creature-space-table-route.ts";
+import { resolveReplayContinuationFromState } from "./battle-reducer/dispatcher.ts";
 import {
   grappleDragCostExempt,
   targetIsNoMoreThanOneSizeLarger,
@@ -2903,7 +2904,11 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
       combatants: [
         characterSeed({
           initiative: 20,
-          classLevels: [{ className: "fighter", level: 1 }],
+          classLevels: [
+            { className: "fighter", level: 1 },
+            { className: "barbarian", level: 1 },
+          ],
+          resources: [rageResource()],
           characterUnitRefs: [
             {
               unit: unitLibrary.requireUnit("rogue_cunning_action"),
@@ -2943,6 +2948,35 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
       hideAct === undefined
     )
       throw new Error("Expected Cunning Action acts.");
+    if (dashAct.subject.tag !== "bonusActionStandardAction") {
+      throw new Error("Expected a Bonus Action Dash subject.");
+    }
+    const dashSubject = dashAct.subject;
+    const actor = state.combatants.get(fighterId);
+    if (actor?.origin.kind !== "character") {
+      throw new Error("Expected the Cunning Action actor to be a character.");
+    }
+    const unrelatedProcedureRef = actor.origin.execution.procedureBindings.find(
+      (binding) => binding.procedureRef !== dashSubject.procedureRef,
+    )?.procedureRef;
+    if (unrelatedProcedureRef === undefined) {
+      throw new Error("Expected an unrelated character procedure binding.");
+    }
+    expect(
+      resolveReplayContinuationFromState(
+        state,
+        {
+          kind: "replay",
+          subject: {
+            ...dashSubject,
+            procedureRef: unrelatedProcedureRef,
+          },
+          fills: [],
+        },
+        "attackHit",
+        [],
+      ),
+    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
     expect(dashAct.summary).toBe("Dash as a Bonus Action.");
     expect(disengageAct.summary).toBe("Disengage as a Bonus Action.");
 

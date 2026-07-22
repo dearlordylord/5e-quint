@@ -220,7 +220,7 @@ import type {
   StatBlockBonusActionOptionBattleResolutionInput,
   StatBlockMultiattackActionResource,
   WeaponDamageDiceRollChoiceFill,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 import {
   ATTACK_ONLY_ACTION_RESOURCE_EXCLUDED_ACTIONS,
   ESCAPE_GRAPPLE_OUTCOME_HOLE_ID,
@@ -248,7 +248,7 @@ import {
   spellDamageRerollUnsupportedIssue,
   supportedStatBlockBonusActionStandardAction,
   zeroHpLifecycleIsTerminal,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 export function battleCreatureInitFromStatBlock(
   input: StatBlockBattleInitInput,
 ): BattleCreatureInit {

@@ -32,7 +32,7 @@ import {
   type SpellPostDamageRider,
   type SpellTargeting,
   type SupportedSpellInvocation,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 import type { CharacterBattleSpellcastingState } from "../character-battle-resources.ts";
 import {
   CHROMATIC_ORB_CONTINUATION_LIMIT_KINDS,

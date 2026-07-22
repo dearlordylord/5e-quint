@@ -22,7 +22,7 @@ import {
   discoverBattleActCandidates,
   resolveBattleSubject,
 } from "./index.ts";
-import type { BattleActDiscoveryCandidate } from "./battle-reducer.ts";
+import type { BattleActDiscoveryCandidate } from "./battle-state-execution.ts";
 import {
   attackRollFill,
   battleProcedureExecutionRefForSpellHoleForTest,

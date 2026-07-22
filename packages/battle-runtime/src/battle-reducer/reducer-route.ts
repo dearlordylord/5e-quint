@@ -19,7 +19,7 @@ import type {
   BattleResolutionResult,
   BattleState,
   SupportedSpellInvocation,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
 import { battleCreatureType } from "./domain-helpers.ts";
 import {

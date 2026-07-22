@@ -1,4 +1,4 @@
-import type { TargetListSpellInvocation } from "../battle-reducer.ts";
+import type { TargetListSpellInvocation } from "../battle-state-execution.ts";
 
 export type BattleSpellTargetListInvocation = TargetListSpellInvocation;
 

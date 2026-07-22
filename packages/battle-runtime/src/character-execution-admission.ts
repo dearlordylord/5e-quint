@@ -39,7 +39,7 @@ import type {
   BattleSelectedSpellInvocation,
   ClassFeatureFreeCastInvocationResource,
   SupportedSpellInvocation,
-} from "./battle-reducer.ts";
+} from "./battle-state-execution.ts";
 import type { BattleUnitRef } from "./battle-init.ts";
 import { Brand, Match, Schema } from "effect";
 import type { SpellExecutionFacts } from "./battle-reducer/spell-execution-facts.ts";

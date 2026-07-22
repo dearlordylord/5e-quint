@@ -2,7 +2,7 @@ import { Match } from "effect";
 import type {
   BattleFill,
   BattleSpellCastReactionFact,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 import type { BattleFillAfterSlowSomaticSpellFailureOutcome } from "./slow-active-penalties-runtime.ts";
 import { parseSpellCastReactionFactsFill } from "./spells-resolve-fill-set.ts";
 

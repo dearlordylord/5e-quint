@@ -49,7 +49,7 @@ import {
   type BattleResolutionResult,
   type BattleState,
   type SupportedSpellInvocation,
-} from "../../battle-reducer.ts";
+} from "../../battle-state-execution.ts";
 import {
   BattleActiveEffectExecutionRef,
   BattleProcedureExecutionRef,

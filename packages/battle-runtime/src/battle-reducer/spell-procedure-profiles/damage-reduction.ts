@@ -33,7 +33,7 @@ import {
   type BattleState,
   type BattleExecutableSpellInvocation,
   type DamageReductionSpellInvocation,
-} from "../../battle-reducer.ts";
+} from "../../battle-state-execution.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";
 import { maybeOpenInterruptWindow } from "../dispatcher.ts";
 import { needsHolesResult } from "../hole-helpers.ts";

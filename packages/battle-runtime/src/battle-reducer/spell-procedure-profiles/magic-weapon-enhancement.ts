@@ -26,7 +26,7 @@ import {
   type BattleState,
   type MagicWeaponEnhancementBonus,
   type SupportedSpellInvocation,
-} from "../../battle-reducer.ts";
+} from "../../battle-state-execution.ts";
 import type { CombatantId } from "../../identity.ts";
 import { battleWeaponItemHasMagicWeaponEnhancement } from "../attack-damage-apply.ts";
 import { activeDruidWildShapeEffect } from "../druid-wild-shape.ts";
@@ -198,7 +198,7 @@ function isMagicWeaponEnhancementBonus(
 function discoverMagicWeaponEnhancementCastAct(
   _state: BattleState,
   actorId: CombatantId,
-  invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<MagicWeaponEnhancementInvocation>,
+  invocation: import("../../battle-state-execution.ts").BattleExecutableSpellInvocation<MagicWeaponEnhancementInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   return [
     {

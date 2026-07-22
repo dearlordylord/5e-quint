@@ -33,7 +33,7 @@ import type {
   BattleSpellSavingThrowOutcomeValue,
   BattleState,
   SupportedSpellInvocation,
-} from "../../battle-reducer.ts";
+} from "../../battle-state-execution.ts";
 import {
   GLYPH_STORED_AREA_CONTROL_PROCEDURES,
   type GlyphStoredAreaControlInvocation,
@@ -42,7 +42,7 @@ import {
 import {
   maybeOpenInterruptWindow,
   snapshotBattle,
-} from "../../battle-reducer.ts";
+} from "../../battle-state-execution.ts";
 import type { CharacterBattleMetamagicOptionFact } from "../../character-battle-resources.ts";
 import { type CombatantId } from "../../identity.ts";
 import { battleCreatureWithSpellActiveEffects } from "../../active-effect/lifecycle.ts";
@@ -331,7 +331,7 @@ function discoverHypnoticPatternCastAct(
 
 function hypnoticPatternCastAct(
   actorId: CombatantId,
-  invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<HypnoticPatternSpellInvocation>,
+  invocation: import("../../battle-state-execution.ts").BattleExecutableSpellInvocation<HypnoticPatternSpellInvocation>,
   initialHoles: readonly BattleHole[],
 ): BattleActDiscoveryCandidate {
   return {

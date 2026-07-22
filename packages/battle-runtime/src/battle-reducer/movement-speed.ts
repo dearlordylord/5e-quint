@@ -38,6 +38,7 @@ import {
   type BattleSpecialSpeedKind,
 } from "../battle-subjects.ts";
 import {
+  attackExecutionSelectionForOption,
   attackExecutionSelectionIdentitiesEqual,
   boundAttackExecutionSelectionMatchesOption,
   type BoundSupportedAttackActionOption,
@@ -63,7 +64,7 @@ import {
   type BattleResolvedMovement,
   type BattleState,
   type BattleTargetSpatialFact,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 import { attackTargetConstraint } from "./statblock-attacks.ts";
 import { attackActionOptionsForActor } from "./attack-damage-apply.ts";
 import { combatantHasGrapplerSupportProfile } from "./grappler-support-profile.ts";
@@ -552,6 +553,23 @@ export function opportunityAttackOptionForReactor(
   });
 }
 
+export function opportunityAttackSelectionForReactor(
+  state: BattleState,
+  reactorId: CombatantId,
+  targetId: CombatantId,
+  selection: BattleOpportunityAttackSelection,
+): BattleInterruptAttackExecutionSelection | undefined {
+  const attack = opportunityAttackOptionForReactor(
+    state,
+    reactorId,
+    targetId,
+    selection,
+  );
+  return attack === undefined
+    ? undefined
+    : attackExecutionSelectionForOption(attack);
+}
+
 export function attackExecutionSelectionMatchesOption(
   selection: BattleAttackExecutionSelection,
   attack: SupportedAttackActionOption,
@@ -602,6 +620,26 @@ export function meleeWeaponOrUnarmedStrikeOptionForReactor(
       constraint.kind === "meleeReach" &&
       state.combatants.has(targetId)
     );
+  });
+}
+
+export function meleeWeaponOrUnarmedStrikeSelectionsForReactor(
+  state: BattleState,
+  reactorId: CombatantId,
+  targetId: CombatantId,
+): readonly BattleInterruptAttackExecutionSelection[] {
+  return attackActionOptionsForActor(state, reactorId).flatMap((attack) => {
+    if (attack.kind !== "weapon" && attack.kind !== "unarmedStrike") return [];
+    const selection = attackExecutionSelectionForOption(attack);
+    return attackTargetConstraint(attack).kind === "meleeReach" &&
+      meleeWeaponOrUnarmedStrikeOptionForReactor(
+        state,
+        reactorId,
+        targetId,
+        selection,
+      ) !== undefined
+      ? [selection]
+      : [];
   });
 }
 

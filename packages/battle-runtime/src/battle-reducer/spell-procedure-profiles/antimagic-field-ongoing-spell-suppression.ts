@@ -41,7 +41,7 @@ import {
   type BattleState,
   type BattleExecutableSpellInvocation,
   type SupportedSpellInvocation,
-} from "../../battle-reducer.ts";
+} from "../../battle-state-execution.ts";
 import { type BattleAreaId, type CombatantId } from "../../identity.ts";
 import {
   antimagicFieldOngoingSpellEffectRefForActiveEffect,

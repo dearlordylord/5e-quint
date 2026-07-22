@@ -36,7 +36,7 @@ import {
   type BattleTargetChoiceHole,
   type BattleTargetSpatialFact,
   type TargetListSpellInvocation,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 import type { RuntimeSpellProcedureExecution } from "../character-execution.ts";
 import { COMMAND_OPTIONS } from "./domain-constants.ts";
 import {
@@ -101,7 +101,7 @@ type SingleObjectSpellInvocation =
     >;
 
 type MechanicalTargetListSpellInvocation =
-  import("../battle-reducer.ts").TargetListSpellInvocationOf<RuntimeSpellProcedure>;
+  import("../battle-state-execution.ts").TargetListSpellInvocationOf<RuntimeSpellProcedure>;
 type MagicWeaponEnhancementSpellExecution = Extract<
   RuntimeSpellProcedure,
   { readonly procedure: "magicWeaponEnhancement" }

@@ -6,7 +6,7 @@ import type {
   BattleDamageRelationshipDecision,
   BattleState,
   BattleTargetSpatialFact,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
 import type { CharacterBattleClassLevel } from "../character-class-level.ts";
 import type { UnitFeatureProcedureExecution } from "../character-execution-admission.ts";

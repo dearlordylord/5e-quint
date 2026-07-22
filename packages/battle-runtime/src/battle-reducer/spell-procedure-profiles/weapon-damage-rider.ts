@@ -21,7 +21,7 @@ import {
   type BattleResolutionResult,
   type BattleState,
   type SupportedSpellInvocation,
-} from "../../battle-reducer.ts";
+} from "../../battle-state-execution.ts";
 import { SpellWeaponDamageRiderTemplateSchema } from "../../active-effect/codecs.ts";
 import { type CombatantId } from "../../identity.ts";
 import { invalidResult } from "../result-helpers.ts";
@@ -146,7 +146,7 @@ function weaponDamageRiderDamage(
 function discoverWeaponDamageRiderCastAct(
   _state: BattleState,
   actorId: CombatantId,
-  invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<WeaponDamageRiderInvocation>,
+  invocation: import("../../battle-state-execution.ts").BattleExecutableSpellInvocation<WeaponDamageRiderInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   return [
     {

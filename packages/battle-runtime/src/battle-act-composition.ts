@@ -5,7 +5,7 @@ import type {
   BattleState,
   CharacterBattleCreatureState,
   AvailableBattleAct,
-} from "./battle-reducer.ts";
+} from "./battle-state-execution.ts";
 import type { BattleUnitRef } from "./battle-init.ts";
 import { Match } from "effect";
 import { isCharacterProcedureBattleSubject } from "./battle-subjects.ts";

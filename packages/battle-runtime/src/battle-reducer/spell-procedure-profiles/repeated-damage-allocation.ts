@@ -28,7 +28,7 @@ import {
   type BattleResolutionResult,
   type BattleState,
   type SupportedSpellInvocation,
-} from "../../battle-reducer.ts";
+} from "../../battle-state-execution.ts";
 import { type CombatantId } from "../../identity.ts";
 import {
   readiedSpellAct,
@@ -137,7 +137,7 @@ function admitRepeatedDamageAllocation(
 function discoverRepeatedDamageAllocationCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<RepeatedDamageAllocationInvocation>,
+  invocation: import("../../battle-state-execution.ts").BattleExecutableSpellInvocation<RepeatedDamageAllocationInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const targetAllocationHole = spellTargetAllocationHole(
     state,

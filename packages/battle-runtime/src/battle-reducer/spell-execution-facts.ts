@@ -2,7 +2,7 @@ import type {
   BattleExecutableSpellInvocation,
   ReadiedSpellInvocation,
   SupportedSpellInvocation,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 import type {
   RuntimeSpellProcedureExecution,
   SpellProcedureExecution,

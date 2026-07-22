@@ -308,19 +308,19 @@ function assertBattleReplayExecutionBoundary() {
       ],
     },
     {
-      relativePath: "packages/battle-runtime/src/battle-reducer.ts",
+      relativePath: "packages/battle-runtime/src/battle-state-execution.ts",
       patterns: [/readonly unitId: UnitRecord\["id"\];/],
       sliceStart: "export type BattleCharacterResourceSnapshot",
       sliceEnd: "export type CharacterBattleCreatureState",
     },
     {
-      relativePath: "packages/battle-runtime/src/battle-reducer.ts",
+      relativePath: "packages/battle-runtime/src/battle-state-execution.ts",
       patterns: [/readonly (?:spell|unit|unitFeature):/],
       sliceStart: "export type BattleSpellAreaChoiceHole",
       sliceEnd: "export type BattleFill =",
     },
     {
-      relativePath: "packages/battle-runtime/src/battle-reducer.ts",
+      relativePath: "packages/battle-runtime/src/battle-state-execution.ts",
       patterns: [
         /BattleActDiscoveryText/,
         /readonly (?:label|summary|presentation):/,
@@ -329,7 +329,7 @@ function assertBattleReplayExecutionBoundary() {
       sliceEnd: "export type BattleActExecutionCandidate",
     },
     {
-      relativePath: "packages/battle-runtime/src/battle-reducer.ts",
+      relativePath: "packages/battle-runtime/src/battle-state-execution.ts",
       patterns: [/readonly (?:invocation|spell|unit):/],
       sliceStart: "export type BattleReadiedSpell =",
       sliceEnd: "export type BattleReadiedMovement =",
@@ -439,13 +439,13 @@ function assertBattleReplayExecutionBoundary() {
       sliceEnd: "export function seekingSpellRerollApplicationForAttackRoll",
     },
     {
-      relativePath: "packages/battle-runtime/src/battle-reducer.ts",
+      relativePath: "packages/battle-runtime/src/battle-state-execution.ts",
       patterns: [REDUNDANT_SPELL_TARGET_LIST_TYPE_PROCEDURE_PATTERN],
       sliceStart: "export type BattleSpellTargetListHole",
       sliceEnd: "export type BattleAttackRollHole",
     },
     {
-      relativePath: "packages/battle-runtime/src/battle-reducer.ts",
+      relativePath: "packages/battle-runtime/src/battle-state-execution.ts",
       patterns: [POSITIONAL_DAMAGE_DIE_REROLL_FIELD_PATTERN],
       sliceStart: "export type BattleSpellDamageDieReroll",
       sliceEnd: "export type BattleSpellDamageRerollDecision",
@@ -515,7 +515,7 @@ function assertBattleReplayExecutionBoundary() {
       ],
     },
     {
-      relativePath: "packages/battle-runtime/src/battle-reducer.ts",
+      relativePath: "packages/battle-runtime/src/battle-state-execution.ts",
       patterns: [
         /export type AttackDamageRider[\s\S]{0,90}readonly unitId:/,
         /export type BattleCunningStrikeSelectedOption[\s\S]{0,500}readonly unitId:/,
@@ -595,7 +595,10 @@ function assertNoReducerOwnedActPresentation(options = {}) {
     ...(options.includeRepository === false
       ? []
       : [
-          path.join(REPO_ROOT, "packages/battle-runtime/src/battle-reducer.ts"),
+          path.join(
+            REPO_ROOT,
+            "packages/battle-runtime/src/battle-state-execution.ts",
+          ),
           ...listFiles(reducerRoot),
         ]),
     ...(options.sources ?? []).map((source) => source.file),
@@ -1294,7 +1297,7 @@ function assertBattleReplayAstBoundary() {
   const roots = [
     "packages/battle-runtime/src/identity.ts",
     "packages/battle-runtime/src/character-execution-admission.ts",
-    "packages/battle-runtime/src/battle-reducer.ts",
+    "packages/battle-runtime/src/battle-state-execution.ts",
     "packages/battle-runtime/src/battle-reducer",
     "packages/mcp/src/admin-mirror-presentation-timeline.ts",
   ];

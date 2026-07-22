@@ -7,7 +7,7 @@ import type {
 } from "@dnd/surface/surface/types";
 
 import type { SpellRuleExecutionFacts } from "./character-execution.ts";
-import type { SupportedSpellInvocation } from "./battle-reducer.ts";
+import type { SupportedSpellInvocation } from "./battle-state-execution.ts";
 import { samePrimitiveSet, sameSetByKey } from "./mechanical-equality.ts";
 
 type SpellAccess = SupportedSpellInvocation["access"];

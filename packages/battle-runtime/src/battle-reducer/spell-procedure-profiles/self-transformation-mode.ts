@@ -37,7 +37,7 @@ import {
   type SelfTransformationModeKind,
   type SelfTransformationModeSpellInvocation,
   type SupportedSpellInvocation,
-} from "../../battle-reducer.ts";
+} from "../../battle-state-execution.ts";
 import { CombatantId } from "../../identity.ts";
 import { allocateBattleActiveEffectRef } from "../../active-effect/execution-ref.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";
@@ -314,7 +314,7 @@ function uniqueDamageTypeChoices(
 function discoverSelfTransformationModeCastAct(
   _state: BattleState,
   actorId: CombatantId,
-  invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<SelfTransformationModeInvocation>,
+  invocation: import("../../battle-state-execution.ts").BattleExecutableSpellInvocation<SelfTransformationModeInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   return [
     {

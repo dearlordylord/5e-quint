@@ -194,7 +194,7 @@ import {
   ATTACK_TARGET_HOLE_ID,
   spellAttackRerollUnsupportedIssue,
   spellDamageRerollUnsupportedIssue,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 import type {
   AttackBattleResolutionInput,
   BattleAttackHostSubject,
@@ -211,7 +211,7 @@ import type {
   BattleTargetSpatialFact,
   BattleUnitFeatureDecisionHole,
   AttackFillSet,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 import type {
   BoundSupportedAttackActionOption,
   SupportedAttackActionOption,

@@ -36,7 +36,7 @@ import {
   type BattleResolutionResult,
   type BattleState,
   type SeeInvisibleObserverSightSpellInvocation,
-} from "../../battle-reducer.ts";
+} from "../../battle-state-execution.ts";
 import { CombatantId } from "../../identity.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";

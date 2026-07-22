@@ -23,7 +23,7 @@ import type {
   BattleHole,
   BattleResolutionInput,
   BattleState,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 
 export type CreatureAttackState = {
   readonly creatureAHp: number;

@@ -66,7 +66,7 @@ import type {
   GlyphStoredSpellInvocation,
   GlyphStoredSpellInvocationCandidate,
   BattleResolutionResult,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 import { isTargetListSpellInvocation } from "./spells-invocation-guards.ts";
 import type { SpellProcedureExecutionRegistry } from "./spell-procedure-profiles/execution-registry.ts";
 import {

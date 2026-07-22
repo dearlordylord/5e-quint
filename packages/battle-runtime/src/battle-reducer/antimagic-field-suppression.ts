@@ -7,7 +7,7 @@ import type {
   BattleOngoingSpellEffectRef,
   BattleState,
   BattleTrackedOngoingSpellLightEmitter,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 import type { BattleAreaId, CombatantId } from "../identity.ts";
 
 type TrackedOngoingSpellActiveEffect = Extract<

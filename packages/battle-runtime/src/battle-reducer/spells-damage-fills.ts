@@ -114,7 +114,7 @@ import {
   type SpellFailedSaveConditionChoiceEffect,
   type SupportedDamageSpellInvocation,
   validateRolledDiceFillForDiceExpr,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 import {
   characterUnitProcedureBindings,
   type RuntimeSpellProcedureExecution,

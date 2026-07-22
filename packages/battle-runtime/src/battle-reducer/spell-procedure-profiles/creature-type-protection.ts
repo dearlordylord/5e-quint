@@ -22,7 +22,7 @@ import {
   type BattleResolutionResult,
   type BattleState,
   type CreatureTypeProtectionSpellInvocation,
-} from "../../battle-reducer.ts";
+} from "../../battle-state-execution.ts";
 import { CombatantId } from "../../identity.ts";
 import { BattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";

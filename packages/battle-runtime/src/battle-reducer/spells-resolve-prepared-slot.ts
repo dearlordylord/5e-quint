@@ -19,7 +19,7 @@ import {
   type BattleSpellTargetAllocationSpatialFact,
   type BattleTargetSpatialFact,
   type BattleExecutableSpellInvocation,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 import type { CombatantId } from "../identity.ts";
 import {
   damageDispositionFillFor,

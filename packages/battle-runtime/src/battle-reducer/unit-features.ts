@@ -153,11 +153,11 @@ import type {
   SuccessfulAbilityCheckReactionReductionResolutionResult,
   UnitFeatureBattleResolutionInput,
   UnitFeatureRolledDiceFill,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 import {
   spellAttackRerollUnsupportedIssue,
   validateRolledDiceFillForDiceExpr,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 import {
   attackSubjectPart,
   statBlockAttackProcedureSection,

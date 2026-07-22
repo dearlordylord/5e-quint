@@ -2,7 +2,7 @@
 
 import { Match } from "effect";
 import type { BattleSubject } from "./battle-subjects.ts";
-import type { BattleFill } from "./battle-reducer.ts";
+import type { BattleFill } from "./battle-state-execution.ts";
 
 const byBattleFillKind = Match.discriminator("kind");
 const byBattleSubjectTag = Match.discriminator("tag");

@@ -11,7 +11,7 @@ import type {
   BattleCompanionReappearancePlacementHole,
   BattleFindFamiliarConnectionHole,
   BattleHeldObjectFactsHole,
-} from "./battle-reducer.ts";
+} from "./battle-state-execution.ts";
 import { FIND_FAMILIAR_TELEPATHY_RANGE_FEET } from "./find-familiar-telepathy.ts";
 import type { CombatantId } from "./identity.ts";
 

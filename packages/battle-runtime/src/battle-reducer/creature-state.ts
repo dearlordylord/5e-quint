@@ -142,7 +142,7 @@ import {
   type KnockedOutOneHp as KnockedOutOneHpT,
   type OngoingFeatureSourceKey,
   type StatBlockBattleCreatureState,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 import { battleStateInitIssue } from "./domain-helpers.ts";
 import {
   SLOW_ACTIVE_PENALTIES_ARMOR_CLASS_DELTA,

@@ -5,7 +5,7 @@ import type {
   BattleCreatureState,
   CreatureSizeChangeSpellInvocation,
   SpellAttackDamageComponent,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 import type { SupportedAttackActionOption } from "../battle-action-options.ts";
 import { attackDamage } from "./statblock-attacks.ts";
 

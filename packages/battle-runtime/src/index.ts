@@ -235,13 +235,16 @@ export {
 
 export {
   FIND_FAMILIAR_TELEPATHY_RANGE_FEET,
-  deliverTouchSpellThroughFindFamiliar,
   findFamiliarTelepathicConnection,
-  shareFindFamiliarSenses,
   type FindFamiliarSharedSensesEffect,
   type FindFamiliarTelepathicConnection,
   type FindFamiliarWithin100FeetFact,
 } from "./find-familiar-telepathy.ts";
+
+export {
+  deliverTouchSpellThroughFindFamiliar,
+  shareFindFamiliarSenses,
+} from "./battle-reducer/dispatcher.ts";
 
 export type { PactOfTheChainFamiliarAttackSubject } from "./find-familiar-pact-chain.ts";
 
@@ -368,12 +371,10 @@ export {
   combatantKnockedOutUnconscious,
   concentrationSavingThrowDc,
   discoverBattleActCandidates,
-  endBattleRuntimeTurn,
   endTurn,
   FEATHER_FALL_DESCENT_RATE_CAP_FEET_PER_ROUND,
   openBattleInterruptWindow,
   openCreatureFallsInterruptWindow,
-  openCreatureFallsRuntimeInterruptWindow,
   removeBattleRuntimeCombatants,
   resolveBattleConcentrationDamage,
   resolveFallDamageLanding,
@@ -383,9 +384,6 @@ export {
   requiredInitiativeRollModeForCombatant,
   resolveSuccessfulAbilityCheckReactionReduction,
   resolveBattleInterrupt,
-  resolveBattleRuntimeInterrupt,
-  resolveBattleRuntimeSubject,
-  resolveBattleSubject,
   resolveBardicInspirationFailedD20Test,
   scoreModifier,
   SELF_TRANSFORMATION_MODE_KINDS,
@@ -496,8 +494,6 @@ export {
   type BattleResolutionCandidateInput,
   type BattleResolutionInput,
   type BattleResolutionResult,
-  type BattleRuntimeResolutionInput,
-  type BattleRuntimeResolutionResult,
   type BattleRolledDiceFill,
   type BattleSavingThrowOutcome,
   type BattleSavingThrowRollModeProjection,
@@ -552,7 +548,17 @@ export {
   type WildShapeEquipmentDispositionChoice,
   type WildShapeEquipmentDispositionFillValue,
   type WildShapeLoadoutObjectRef,
-} from "./battle-reducer.ts";
+} from "./battle-state-execution.ts";
+
+export {
+  endBattleRuntimeTurn,
+  openCreatureFallsRuntimeInterruptWindow,
+  resolveBattleRuntimeInterrupt,
+  resolveBattleRuntimeSubject,
+  resolveBattleSubject,
+  type BattleRuntimeResolutionInput,
+  type BattleRuntimeResolutionResult,
+} from "./battle-session-execution.ts";
 
 export {
   resolveBattlePossessionAttempt,

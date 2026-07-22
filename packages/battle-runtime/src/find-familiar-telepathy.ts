@@ -8,18 +8,13 @@ import * as Either from "effect/Either";
 import type {
   BattleActiveEffect,
   BattleFill,
+  BattleInvalidReasonCode,
   BattleResolutionInput,
-  BattleResolutionResult,
   BattleState,
   BattleTargetSpatialFact,
-} from "./battle-reducer.ts";
+} from "./battle-state-execution.ts";
 import { currentActorId } from "./battle-reducer/creature-state-leaves.ts";
 import { combatantCanTakeReactions } from "./battle-reducer/creature-state.ts";
-import {
-  resolveBattleSubject,
-  snapshotBattle,
-} from "./battle-reducer/dispatcher.ts";
-import { invalidResult } from "./battle-reducer/result-helpers.ts";
 import { spellInvocationIsSpellcasting } from "./battle-reducer/spell-turn-resources.ts";
 import { characterSpellProcedure } from "./character-execution-admission.ts";
 import type { BattleSubject } from "./battle-subjects.ts";
@@ -46,6 +41,21 @@ export type FindFamiliarSharedSensesEffect = Extract<
   { readonly kind: "findFamiliarSharedSenses" }
 >;
 
+export type FindFamiliarMechanicalTransition =
+  | { readonly tag: "resolved"; readonly state: BattleState }
+  | {
+      readonly tag: "invalid";
+      readonly reason: BattleInvalidReasonCode;
+      readonly message: string;
+    };
+
+function invalidTransition(
+  reason: BattleInvalidReasonCode,
+  message: string,
+): Extract<FindFamiliarMechanicalTransition, { readonly tag: "invalid" }> {
+  return { tag: "invalid", reason, message };
+}
+
 export function findFamiliarTelepathicConnection(
   state: BattleState,
   fact: FindFamiliarWithin100FeetFact,
@@ -69,18 +79,16 @@ export function shareFindFamiliarSenses(input: {
   readonly state: BattleState;
   readonly casterId: CombatantId;
   readonly fact: FindFamiliarWithin100FeetFact;
-}): BattleResolutionResult {
+}): FindFamiliarMechanicalTransition {
   const connection = findFamiliarTelepathicConnection(input.state, input.fact);
   if (connection === null || connection.ownerId !== input.casterId) {
-    return invalidResult(
-      input.state,
+    return invalidTransition(
       "invalidFill",
       "Find Familiar shared senses require a present familiar within 100 feet of its caster.",
     );
   }
   if (currentActorId(input.state) !== input.casterId) {
-    return invalidResult(
-      input.state,
+    return invalidTransition(
       "staleSubject",
       "Find Familiar shared senses are available only on the caster's turn.",
     );
@@ -88,15 +96,13 @@ export function shareFindFamiliarSenses(input: {
   const caster = input.state.combatants.get(input.casterId);
   const familiar = input.state.combatants.get(connection.familiarId);
   if (caster === undefined || familiar === undefined) {
-    return invalidResult(
-      input.state,
+    return invalidTransition(
       "missingCombatant",
       "Find Familiar shared senses require caster and familiar combatants.",
     );
   }
   if (familiar.origin.kind !== "statBlock") {
-    return invalidResult(
-      input.state,
+    return invalidTransition(
       "invalidFill",
       "Find Familiar shared senses require a familiar Stat Block.",
     );
@@ -105,8 +111,7 @@ export function shareFindFamiliarSenses(input: {
     kind: "bonusAction",
   });
   if (Either.isLeft(spent)) {
-    return invalidResult(
-      input.state,
+    return invalidTransition(
       "staleSubject",
       "Find Familiar shared senses require an available Bonus Action.",
     );
@@ -133,11 +138,17 @@ export function shareFindFamiliarSenses(input: {
   return {
     tag: "resolved",
     state: nextState,
-    snapshot: snapshotBattle(nextState),
   };
 }
 
-export function deliverTouchSpellThroughFindFamiliar(input: {
+export type PreparedFindFamiliarTouchSpellDelivery = {
+  readonly tag: "prepared";
+  readonly fills: BattleResolutionInput["fills"];
+  readonly familiarId: CombatantId;
+  readonly targetChoiceCount: number;
+};
+
+export function prepareTouchSpellDeliveryThroughFindFamiliar(input: {
   readonly state: BattleState;
   readonly subject: Extract<
     BattleSubject,
@@ -145,7 +156,9 @@ export function deliverTouchSpellThroughFindFamiliar(input: {
   >;
   readonly fills: BattleResolutionInput["fills"];
   readonly fact: FindFamiliarWithin100FeetFact;
-}): BattleResolutionResult {
+}):
+  | PreparedFindFamiliarTouchSpellDelivery
+  | Exclude<FindFamiliarMechanicalTransition, { readonly tag: "resolved" }> {
   const actor = input.state.combatants.get(input.subject.actorId);
   const procedure =
     actor?.origin.kind === "character"
@@ -160,31 +173,27 @@ export function deliverTouchSpellThroughFindFamiliar(input: {
     procedure === undefined ||
     !spellInvocationIsSpellcasting(procedure)
   ) {
-    return invalidResult(
-      input.state,
+    return invalidTransition(
       "unsupportedActOption",
       "Find Familiar touch delivery requires a supported spell invocation.",
     );
   }
   if (procedure.spellRuleFacts.range.kind !== "touch") {
-    return invalidResult(
-      input.state,
+    return invalidTransition(
       "invalidFill",
       "Find Familiar can deliver only spells with a range of Touch.",
     );
   }
   const connection = findFamiliarTelepathicConnection(input.state, input.fact);
   if (connection === null || connection.ownerId !== input.subject.actorId) {
-    return invalidResult(
-      input.state,
+    return invalidTransition(
       "invalidFill",
       "Find Familiar touch delivery requires a present familiar within 100 feet of its caster.",
     );
   }
   const familiar = input.state.combatants.get(connection.familiarId);
   if (!combatantCanTakeReactions(familiar)) {
-    return invalidResult(
-      input.state,
+    return invalidTransition(
       "staleSubject",
       "Find Familiar touch delivery requires the familiar's available Reaction.",
     );
@@ -196,55 +205,17 @@ export function deliverTouchSpellThroughFindFamiliar(input: {
     sourceProcedureRef: procedure.sourceProcedureRef,
   });
   if (deliveryFills.tag === "invalid") {
-    return invalidResult(input.state, "invalidFill", deliveryFills.message);
-  }
-  const cast = resolveBattleSubject({
-    state: input.state,
-    subject: input.subject,
-    fills: deliveryFills.fills,
-  });
-  if (cast.tag === "invalid") {
-    return {
-      ...cast,
-      snapshot: snapshotBattle(input.state),
-    };
-  }
-  if (cast.tag !== "resolved") {
-    return cast;
-  }
-  if (!cast.state.combatants.has(connection.familiarId)) {
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      "Find Familiar touch delivery requires the familiar to remain present.",
-    );
-  }
-  if (deliveryFills.targetChoiceCount === 0) {
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      "Find Familiar touch delivery currently supports exactly one selected target choice.",
-    );
-  }
-  const stateWithSpentReaction = spendFindFamiliarTouchDeliveryReaction({
-    state: cast.state,
-    familiarId: connection.familiarId,
-  });
-  if (stateWithSpentReaction.tag === "invalid") {
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      stateWithSpentReaction.message,
-    );
+    return invalidTransition("invalidFill", deliveryFills.message);
   }
   return {
-    tag: "resolved",
-    state: stateWithSpentReaction.state,
-    snapshot: snapshotBattle(stateWithSpentReaction.state),
+    tag: "prepared",
+    fills: deliveryFills.fills,
+    familiarId: connection.familiarId,
+    targetChoiceCount: deliveryFills.targetChoiceCount,
   };
 }
 
-function spendFindFamiliarTouchDeliveryReaction(input: {
+export function spendFindFamiliarTouchDeliveryReaction(input: {
   readonly state: BattleState;
   readonly familiarId: CombatantId;
 }):

@@ -15,7 +15,7 @@ import type {
   BattleResolutionResult,
   BattleState,
   BattleUnitFeatureDecisionHole,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 import { isCharacterBattleCreatureState } from "./creature-state.ts";
 import {
   REMARKABLE_ATHLETE_CRITICAL_HIT_MOVEMENT_DECISION_HOLE_ID,

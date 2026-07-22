@@ -18,7 +18,7 @@ import type {
 import {
   type BattleState,
   type StatBlockBattleCreatureState,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 import {
   statBlockAttackActionOptions as executionStatBlockAttackActionOptions,
   statBlockProcedureBinding,

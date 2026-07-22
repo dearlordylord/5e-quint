@@ -18,7 +18,7 @@ import type {
   BattleSpellAttackRollHole,
   BattleD20TestRollReplacement,
   BattleSavingThrowOutcome,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 import { characterUnitProcedureBindings } from "../character-execution-admission.ts";
 
 export const D20_TEST_NATURAL_ONE_REROLL_UNAVAILABLE_MESSAGE =

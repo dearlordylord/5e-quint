@@ -35,7 +35,7 @@ import {
   type BattleResolutionResult,
   type BattleState,
   type SupportedSpellInvocation,
-} from "../../battle-reducer.ts";
+} from "../../battle-state-execution.ts";
 import { type CombatantId } from "../../identity.ts";
 import { ThaumaturgyBoomingVoiceTemplateSchema } from "../../active-effect/codecs.ts";
 import { needsHolesResult } from "../hole-helpers.ts";

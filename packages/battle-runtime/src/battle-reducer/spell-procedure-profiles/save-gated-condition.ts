@@ -28,7 +28,7 @@ import {
   type BattleResolutionResult,
   type BattleState,
   type SupportedSpellInvocation,
-} from "../../battle-reducer.ts";
+} from "../../battle-state-execution.ts";
 import { type CombatantId } from "../../identity.ts";
 import { ElapsedTimeTicksSchema } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { DamageTypeSchema, DiceExprSchema } from "@dnd/surface/surface/schema";
@@ -240,7 +240,7 @@ function discoverAreaSaveGatedConditionCastActs(
 }
 
 function saveGatedConditionChoiceHoles(
-  invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<SaveGatedConditionSpellInvocation>,
+  invocation: import("../../battle-state-execution.ts").BattleExecutableSpellInvocation<SaveGatedConditionSpellInvocation>,
 ): readonly BattleHole[] {
   return saveGatedConditionHasConditionChoice(invocation)
     ? [spellConditionChoiceHole(invocation)]

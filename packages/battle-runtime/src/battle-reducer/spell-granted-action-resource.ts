@@ -11,7 +11,7 @@ import type {
   BattleCreatureState,
   BattleState,
   BattleTurnResources,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 import type { CombatantId } from "../identity.ts";
 import { currentActorId } from "./creature-state-leaves.ts";
 

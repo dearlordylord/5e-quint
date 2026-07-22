@@ -32,8 +32,8 @@ import type {
   BattleSavingThrowOutcomeValue,
   BattleState,
   ProtectionFromEvilAndGoodPreventedCondition,
-} from "../battle-reducer.ts";
-import { KnockedOutConditionState as KnockedOutConditionStateBrand } from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
+import { KnockedOutConditionState as KnockedOutConditionStateBrand } from "../battle-state-execution.ts";
 import { battleCreatureType } from "./domain-helpers.ts";
 import { wardingBondSavingThrowFlatBonusProjectionsForTarget } from "./warding-bond.ts";
 

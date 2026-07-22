@@ -12,7 +12,7 @@ import type {
   BattleCreatureState,
   BattleTurnResources,
   BattleTurnSpellSlotUse,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 import { resourceHasUsesRemaining } from "../character-battle-resources.ts";
 import type { CombatantId } from "../identity.ts";
 import type { RuntimeSpellProcedureExecution } from "../character-execution.ts";

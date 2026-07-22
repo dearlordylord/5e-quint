@@ -6,7 +6,7 @@ import type {
   BattleResolutionResult,
   BattleState,
   BattleResolutionInputForSubject,
-} from "./battle-reducer.ts";
+} from "./battle-state-execution.ts";
 import type { BattleSubject } from "./battle-subjects.ts";
 import type {
   StatBlockAttackActionOption,

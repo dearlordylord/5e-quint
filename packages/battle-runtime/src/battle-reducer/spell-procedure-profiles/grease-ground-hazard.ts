@@ -28,7 +28,7 @@ import {
   type BattleState,
   type SpellTargeting,
   type SupportedSpellInvocation,
-} from "../../battle-reducer.ts";
+} from "../../battle-state-execution.ts";
 import { type CombatantId } from "../../identity.ts";
 import { hasSaveGateRepeatSaves } from "./_save-gate-helpers.ts";
 import { resolveGreaseGroundHazardSpellAct } from "../spells-resolve-save-gates.ts";
@@ -259,7 +259,7 @@ function greaseGroundHazardMetamagicCastActs(input: {
 
 function greaseGroundHazardCastAct(
   actorId: CombatantId,
-  invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<GreaseGroundHazardSpellInvocation>,
+  invocation: import("../../battle-state-execution.ts").BattleExecutableSpellInvocation<GreaseGroundHazardSpellInvocation>,
   initialHoles: readonly BattleHole[],
 ): BattleActDiscoveryCandidate {
   return {

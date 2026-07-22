@@ -5,7 +5,7 @@ import type {
   SpellSlotInvocationResource,
   SpellTargeting,
   SupportedSpellInvocation,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 import {
   GLYPH_STORED_AREA_CONTROL_PROCEDURES,
   GLYPH_STORED_AREA_ONGOING_PROCEDURES,

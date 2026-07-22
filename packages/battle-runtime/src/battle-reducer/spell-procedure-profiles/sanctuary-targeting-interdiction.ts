@@ -29,7 +29,7 @@ import {
   type BattleState,
   type SanctuaryTargetingInterdictionSpellInvocation,
   type SupportedSpellInvocation,
-} from "../../battle-reducer.ts";
+} from "../../battle-state-execution.ts";
 import { CombatantId } from "../../identity.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
 import { invalidResult } from "../result-helpers.ts";

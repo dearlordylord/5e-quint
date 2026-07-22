@@ -3,7 +3,7 @@ import type {
   BattleActDiscoveryCandidate,
   BattleResolutionResult,
   BattleState,
-} from "../../battle-reducer.ts";
+} from "../../battle-state-execution.ts";
 import type {
   BattleSpellProcedureExecution,
   SpellProcedureExecutionByProcedure,

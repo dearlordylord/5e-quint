@@ -3,7 +3,7 @@
 import type {
   BattleCreatureState,
   CharacterBattleCreatureState,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 
 export function combatantHasGrapplerSupportProfile(
   combatant: BattleCreatureState | undefined,

@@ -14,7 +14,7 @@ import type {
   BattleState,
   BattleUnitFeatureDecisionHole,
   BattleUnitFeatureSavingThrowOutcomeHole,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 import type { BattleActiveEffect } from "../active-effect/types.ts";
 import type { MonkFocusFlurryOfBlowsStrikeSubject } from "../battle-subjects.ts";
 import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";

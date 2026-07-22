@@ -1,5 +1,5 @@
 import type { SpellRecord } from "@dnd/surface/surface/types";
-import type { SupportedSpellInvocation } from "../../battle-reducer.ts";
+import type { SupportedSpellInvocation } from "../../battle-state-execution.ts";
 import {
   type AnySpellProcedureAdmission,
   type SpellAdmissionContext,

@@ -27,7 +27,7 @@ import {
   type BattleResolutionResult,
   type BattleState,
   type SupportedSpellInvocation,
-} from "../../battle-reducer.ts";
+} from "../../battle-state-execution.ts";
 import { CombatantId } from "../../identity.ts";
 import { allocateBattleActiveEffectRef } from "../../active-effect/execution-ref.ts";
 import { applyDashToActor } from "../attack-resolution.ts";
@@ -150,7 +150,7 @@ function expeditiousRetreatDashActiveEffect(
 function discoverExpeditiousRetreatDashCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<ExpeditiousRetreatDashInvocation>,
+  invocation: import("../../battle-state-execution.ts").BattleExecutableSpellInvocation<ExpeditiousRetreatDashInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const actor = state.combatants.get(actorId);
   if (actor === undefined) {

@@ -6,7 +6,7 @@
 // boundary consumes the shared aura-membership witness owned by Antimagic Field
 // suppression; table geometry remains outside this owner.
 
-import type { BattleState } from "../battle-reducer.ts";
+import type { BattleState } from "../battle-state-execution.ts";
 import type { CombatantId } from "../identity.ts";
 import { combatantInsideActiveAntimagicFieldAura } from "./antimagic-field-action-interdiction.ts";
 

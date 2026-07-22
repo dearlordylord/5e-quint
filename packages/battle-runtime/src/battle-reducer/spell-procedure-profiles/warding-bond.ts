@@ -21,7 +21,7 @@ import {
   type BattleResolutionResult,
   type BattleState,
   type WardingBondSpellInvocation,
-} from "../../battle-reducer.ts";
+} from "../../battle-state-execution.ts";
 import { type CombatantId } from "../../identity.ts";
 import {
   WARDING_BOND_ARMOR_CLASS_BONUS,

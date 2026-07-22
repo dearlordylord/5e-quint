@@ -42,7 +42,7 @@ import {
   type BattleState,
   type BattleTrackedOngoingSpellLightEmitter,
   type SupportedSpellInvocation,
-} from "../../battle-reducer.ts";
+} from "../../battle-state-execution.ts";
 import {
   type BattleProcedureExecutionRef,
   type CombatantId,

@@ -27,7 +27,7 @@ import { Either } from "effect";
 import {
   isTargetListSpellInvocation,
   type BattleCreatureState,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 import type { RuntimeSpellProcedureExecution } from "../character-execution.ts";
 import type {
   BattleSubject,

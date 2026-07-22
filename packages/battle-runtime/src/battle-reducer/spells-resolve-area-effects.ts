@@ -29,7 +29,7 @@ import type {
   BattleState,
   BattleTrackedOngoingSpellLightEmitter,
   SupportedSpellInvocation,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 import {
   GLYPH_STORED_AREA_ONGOING_PROCEDURES,
   type GlyphStoredAreaOngoingProcedure,

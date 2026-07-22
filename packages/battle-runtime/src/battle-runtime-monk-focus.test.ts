@@ -5,6 +5,7 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.monk-focus-battle-options
 import { describe, expect, test } from "vitest";
 import { Either, Schema } from "effect";
+import { resolveReplayContinuationFromState } from "./battle-reducer/dispatcher.ts";
 import {
   actionSurgeResource,
   applyCondition,
@@ -85,12 +86,20 @@ describe("battle runtime: Monk's Focus battle options", () => {
       throw new Error("Expected a distinct Unit feature procedure binding.");
     }
 
+    const mismatchedSubject = {
+      ...subject,
+      procedureRef: unrelatedProcedureRef,
+    };
     expect(
-      resolveBattleSubject({
+      resolveBattleSubject({ state, subject: mismatchedSubject, fills: [] }),
+    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
+    expect(
+      resolveReplayContinuationFromState(
         state,
-        subject: { ...subject, procedureRef: unrelatedProcedureRef },
-        fills: [],
-      }),
+        { kind: "replay", subject: mismatchedSubject, fills: [] },
+        "attackHit",
+        [],
+      ),
     ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
   });
 

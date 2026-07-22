@@ -36,7 +36,7 @@ import {
   type BattleResolutionResult,
   type BattleState,
   type SupportedSpellInvocation,
-} from "../../battle-reducer.ts";
+} from "../../battle-state-execution.ts";
 import { type CombatantId } from "../../identity.ts";
 import { resolveGustOfWindLineSpellAct } from "../spells-resolve-area-effects.ts";
 import type {
@@ -309,7 +309,7 @@ function gustOfWindLineMetamagicCastActs(input: {
 
 function gustOfWindLineCastAct(
   actorId: CombatantId,
-  invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<GustOfWindLineSpellInvocation>,
+  invocation: import("../../battle-state-execution.ts").BattleExecutableSpellInvocation<GustOfWindLineSpellInvocation>,
   initialHoles: readonly BattleHole[],
 ): BattleActDiscoveryCandidate {
   return {

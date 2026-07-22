@@ -52,7 +52,7 @@ import {
   type BattleResolutionResult,
   type BattleState,
   type SupportedSpellInvocation,
-} from "../../battle-reducer.ts";
+} from "../../battle-state-execution.ts";
 import {
   CAREFUL_METAMAGIC_EFFECT_KIND,
   discoverSpellMetamagicSelections,
@@ -219,7 +219,7 @@ function saveGatedDamageMetamagicCastActs(input: {
 
 function saveGatedDamageCastAct(
   actorId: CombatantId,
-  invocation: import("../../battle-reducer.ts").BattleExecutableSpellInvocation<SaveGatedDamageSpellInvocation>,
+  invocation: import("../../battle-state-execution.ts").BattleExecutableSpellInvocation<SaveGatedDamageSpellInvocation>,
   initialHoles: readonly BattleHole[],
 ): BattleActDiscoveryCandidate {
   return {

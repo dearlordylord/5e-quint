@@ -72,8 +72,11 @@ import type {
   BattleState,
   BattleStateInitIssue,
   CharacterBattleCreatureState,
-} from "../battle-reducer.ts";
-import { INITIAL_ROUND, INITIAL_TURN_RESOURCES } from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
+import {
+  INITIAL_ROUND,
+  INITIAL_TURN_RESOURCES,
+} from "../battle-state-execution.ts";
 
 const InitialInitiativeSetupBrand: unique symbol = Symbol(
   "InitialInitiativeSetup",

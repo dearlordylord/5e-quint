@@ -1,7 +1,7 @@
 import {
   type BattleState,
   type BattleExecutableSpellInvocation,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 import type { CombatantId } from "../identity.ts";
 import { combatantCanTakeReactions } from "./creature-state.ts";
 import {

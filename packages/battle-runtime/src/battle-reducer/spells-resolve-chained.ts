@@ -33,7 +33,7 @@ import {
   type BattleExecutableSpellInvocation,
   snapshotBattle,
   validateRolledDiceFillForDiceExpr,
-} from "../battle-reducer.ts";
+} from "../battle-state-execution.ts";
 import type { CharacterBattleMetamagicOptionFact } from "../character-battle-resources.ts";
 import type { CombatantId } from "../identity.ts";
 import {
