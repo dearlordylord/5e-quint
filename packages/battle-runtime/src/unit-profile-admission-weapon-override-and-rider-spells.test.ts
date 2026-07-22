@@ -18,6 +18,7 @@ import {
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-weapon-attack-override spell.invocation-weapon-damage-rider spell.invocation-magic-weapon-enhancement
 import { describe, expect, test } from "vitest";
 import {
+  counterspellUnitId,
   divineFavorDurationTicks,
   divineFavorUnitId,
   magicWeaponDurationTicks,
@@ -57,6 +58,8 @@ import {
   discoverBattleActs,
   elapsedTimeTicks,
   endTurn,
+  movementFeet,
+  proficiencyBonus,
   resolveBattleSubject,
   spellSlotInvocationRef,
 } from "./unit-profile-admission-test-support.ts";
@@ -213,6 +216,70 @@ describe("SRDINV84H deterministic Shillelagh weapon override admission", () => {
         ],
       }),
     ).toMatchObject({ tag: "resolved" });
+  });
+
+  test("shillelagh waits for a populated spell-cast Reaction window before committing", () => {
+    const session = spellBattle({
+      cantrips: [spellRecord(shillelaghUnitId)],
+      attack: zeroAbilityWeaponAttack("weapon_quarterstaff"),
+      casterClassLevels: [{ className: "druid", level: 1 }],
+      targetSpellcasting: {
+        sourceClassName: "wizard",
+        spellcastingAbilityModifier: abilityModifier(3),
+        proficiencyBonus: proficiencyBonus(2),
+        canCastSpells: true,
+        cantrips: [],
+        preparedSpells: [spellRecord(counterspellUnitId)],
+        featurePreparedSpells: [],
+        spellbookRitualSpellAccesses: [],
+        invocationSpellAccesses: [],
+        spellSlots: [{ spellLevel: 3, count: 1 }],
+      },
+    });
+    const act = bonusSpellAct({
+      session,
+      spellId: shillelaghUnitId,
+    });
+
+    const awaitingReaction = resolveBattleSubject({
+      state: session.state,
+      subject: act.subject,
+      fills: [
+        {
+          kind: "targetSpatialFacts",
+          holeId: SPELL_CAST_REACTION_FACTS_HOLE_ID,
+          spatialFacts: [
+            {
+              kind: "counterspellTriggerCasterVisibleWithinRange",
+              reactorId: spellTargetId,
+              casterId: spellCasterId,
+              sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
+                session,
+                spellTargetId,
+                spellSlotInvocationRef(counterspellUnitId, 3, "counterspell"),
+              ),
+              rangeFeet: movementFeet(60),
+            },
+          ],
+        },
+      ],
+    });
+
+    expect(awaitingReaction).toMatchObject({
+      tag: "needsHoles",
+      snapshot: {
+        pendingInterrupt: { trigger: "spellCast" },
+        turn: { bonusActionAvailable: true },
+      },
+    });
+    if (awaitingReaction.tag !== "needsHoles") {
+      throw new Error("Expected Shillelagh to open a Reaction window.");
+    }
+    expect(
+      requireCombatant(awaitingReaction.state, spellCasterId).activeEffects,
+    ).not.toContainEqual(
+      expect.objectContaining({ kind: "spellWeaponAttackOverride" }),
+    );
   });
 
   test("presentation rejects a context invocation that contradicts committed execution", () => {

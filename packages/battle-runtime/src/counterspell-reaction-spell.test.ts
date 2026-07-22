@@ -68,6 +68,30 @@ const counterspellerId = combatantId("counterspell-reactor");
 const secondCounterspellerId = combatantId("counterspell-second-reactor");
 
 describe("Counterspell Reaction spell", () => {
+  test("an inherited attack trigger does not suppress the distinct spell-cast window", () => {
+    const session = battleWithCounterspell();
+
+    expect(
+      startMagicMissile({
+        session,
+        state: session.state,
+        slotLevel: 1,
+        targetId: counterspellerId,
+        handledInterruptTrigger: "attackHit",
+        counterspellFacts: [
+          counterspellTriggerFact({
+            session,
+            reactorId: counterspellerId,
+            casterId,
+          }),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "needsHoles",
+      snapshot: { pendingInterrupt: { trigger: "spellCast" } },
+    });
+  });
+
   test("ends a lower-level spell automatically without expending the triggering slot", () => {
     const session = battleWithCounterspell();
     const state = session.state;
@@ -998,6 +1022,7 @@ function startMagicMissile(input: {
   readonly state: BattleState;
   readonly slotLevel: number;
   readonly targetId: CombatantId;
+  readonly handledInterruptTrigger?: "attackHit";
   readonly counterspellFacts: readonly CounterspellTriggerFact[];
 }): StartedMagicMissile {
   const subject = magicMissileSubject(input.session, input.slotLevel);
@@ -1022,6 +1047,9 @@ function startMagicMissile(input: {
   const result = resolveBattleSubject({
     state: input.state,
     subject,
+    ...(input.handledInterruptTrigger === undefined
+      ? {}
+      : { handledInterruptTrigger: input.handledInterruptTrigger }),
     fills: [
       targetAllocationFill,
       spellCastReactionFactsFill(

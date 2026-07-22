@@ -40,8 +40,16 @@ type SlowSomaticSpellFailureSubject =
   | BonusActionSpellBattleResolutionInput["subject"]
   | BonusActionDashSpellBattleResolutionInput["subject"];
 
+export type BattleFillAfterSlowSomaticSpellFailureOutcome = Exclude<
+  BattleFill,
+  { readonly kind: "slowSomaticSpellFailureOutcome" }
+>;
+
 type SlowSomaticSpellFailureResolution =
-  | { readonly tag: "continue"; readonly fills: readonly BattleFill[] }
+  | {
+      readonly tag: "continue";
+      readonly fills: readonly BattleFillAfterSlowSomaticSpellFailureOutcome[];
+    }
   | BattleResolutionResult;
 
 export function combatantHasSlowActivePenalties(
@@ -122,9 +130,10 @@ export function resolveSlowSomaticSpellFailure(input: {
       { readonly kind: "slowSomaticSpellFailureOutcome" }
     > => fill.kind === "slowSomaticSpellFailureOutcome",
   );
+  const remainingFills = fillsAfterSlowSomaticSpellFailureOutcome(input.fills);
   if (hole === null) {
     return fills.length === 0
-      ? { tag: "continue", fills: input.fills }
+      ? { tag: "continue", fills: remainingFills }
       : invalidResult(
           input.state,
           "invalidFill",
@@ -163,7 +172,16 @@ export function resolveSlowSomaticSpellFailure(input: {
           ? {}
           : { metamagicApplications: input.metamagicApplications }),
       })
-    : { tag: "continue", fills: input.fills };
+    : { tag: "continue", fills: remainingFills };
+}
+
+export function fillsAfterSlowSomaticSpellFailureOutcome(
+  fills: readonly BattleFill[],
+): readonly BattleFillAfterSlowSomaticSpellFailureOutcome[] {
+  return fills.filter(
+    (fill): fill is BattleFillAfterSlowSomaticSpellFailureOutcome =>
+      fill.kind !== "slowSomaticSpellFailureOutcome",
+  );
 }
 
 function slowActivePenaltiesEffects(

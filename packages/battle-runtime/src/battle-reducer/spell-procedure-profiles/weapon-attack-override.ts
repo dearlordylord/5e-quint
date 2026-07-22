@@ -14,8 +14,9 @@
 //     Type, and Weapon Property.
 
 import {
-  maybeOpenInterruptWindow,
+  interruptWindowProgress,
   snapshotBattle,
+  type BattleInterruptWindowProgress,
   type BonusActionSpellBattleResolutionInput,
 } from "../../battle-reducer.ts";
 import {
@@ -26,18 +27,86 @@ import { activeDruidWildShapeEffect } from "../druid-wild-shape.ts";
 import { loadoutWeaponItemIsUsableDuringWildShape } from "../wild-shape-equipment.ts";
 import {
   discoverWeaponAttackOverrideCastAct,
-  resolveWeaponAttackOverride,
+  weaponAttackOverrideExecutor,
   WeaponAttackOverrideExecutionSchema,
 } from "../../procedure-execution/weapon-attack-override.ts";
 import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
+import type { WeaponAttackOverrideFillInput } from "../weapon-attack-override-fill-input.ts";
 import type { SpellProcedureProfile } from "./profile.ts";
 
-export const weaponAttackOverrideProfile: SpellProcedureProfile<
+type WeaponAttackOverrideProfile = SpellProcedureProfile<
   "weaponAttackOverride",
   WeaponAttackOverrideInvocation,
-  BonusActionSpellBattleResolutionInput
-> = {
+  BonusActionSpellBattleResolutionInput,
+  WeaponAttackOverrideFillInput
+>;
+
+type WeaponAttackOverrideOpenedInterruptResult = Extract<
+  BattleInterruptWindowProgress,
+  { readonly tag: "windowOpened" }
+>["result"];
+type WeaponAttackOverrideCheckpointFailureResult = Extract<
+  BattleInterruptWindowProgress,
+  { readonly tag: "checkpointPreparationFailed" }
+>["result"];
+
+const resolveWeaponAttackOverride = weaponAttackOverrideExecutor<
+  WeaponAttackOverrideOpenedInterruptResult,
+  WeaponAttackOverrideCheckpointFailureResult
+>();
+
+function resolveWeaponAttackOverrideProfile(
+  input: Parameters<WeaponAttackOverrideProfile["resolve"]>[0],
+) {
+  const continuation = {
+    kind: "replay",
+    subject: input.input.subject,
+    fills: input.input.fills,
+  } as const;
+  return resolveWeaponAttackOverride(
+    {
+      input: {
+        state: input.input.state,
+        subject: input.input.subject,
+        ...(input.input.handledInterruptTrigger === undefined
+          ? {}
+          : {
+              handledInterruptTrigger: input.input.handledInterruptTrigger,
+            }),
+      },
+      invocation: input.invocation,
+      fillInput: input.fillSet,
+      continuation,
+    },
+    {
+      snapshot: snapshotBattle,
+      activeDruidWildShapeEffect,
+      loadoutWeaponItemIsUsableDuringWildShape,
+      spellCastInterruptFrame,
+      interruptWindowProgress,
+      commitWeaponAttackOverrideEffect: ({ authorization, activeEffects }) => ({
+        ...authorization.execution.state,
+        combatants: new Map(authorization.execution.state.combatants).set(
+          authorization.execution.caster.combatantId,
+          {
+            ...authorization.execution.caster,
+            activeEffects,
+          },
+        ),
+      }),
+      spendSpellCastResources: ({ state, execution, errorState }) =>
+        spendSpellCastResources({
+          state,
+          actorId: execution.caster.combatantId,
+          invocation: execution.invocation,
+          errorState,
+        }),
+    },
+  );
+}
+
+export const weaponAttackOverrideProfile: WeaponAttackOverrideProfile = {
   procedure: "weaponAttackOverride",
   executionSchema: WeaponAttackOverrideExecutionSchema,
   metamagicCompatibility: "notActionSpellCasting",
@@ -53,20 +122,5 @@ export const weaponAttackOverrideProfile: SpellProcedureProfile<
       activeDruidWildShapeEffect,
       loadoutWeaponItemIsUsableDuringWildShape,
     }),
-  resolve: (input) =>
-    resolveWeaponAttackOverride(input, {
-      snapshot: snapshotBattle,
-      activeDruidWildShapeEffect,
-      loadoutWeaponItemIsUsableDuringWildShape,
-      spellCastInterruptFrame,
-      maybeOpenInterruptWindow,
-      replaceActorActiveEffects: (state, actorId, actor, activeEffects) => ({
-        ...state,
-        combatants: new Map(state.combatants).set(actorId, {
-          ...actor,
-          activeEffects,
-        }),
-      }),
-      spendSpellCastResources,
-    }),
+  resolve: resolveWeaponAttackOverrideProfile,
 };
