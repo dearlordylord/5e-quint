@@ -17,7 +17,6 @@ import {
   interruptWindowProgress,
   snapshotBattle,
   type BattleInterruptWindowProgress,
-  type BonusActionSpellBattleResolutionInput,
 } from "../../battle-reducer.ts";
 import {
   admitWeaponAttackOverride,
@@ -32,14 +31,11 @@ import {
 } from "../../procedure-execution/weapon-attack-override.ts";
 import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
-import type { WeaponAttackOverrideFillInput } from "../weapon-attack-override-fill-input.ts";
-import type { SpellProcedureProfile } from "./profile.ts";
+import type { SpellProcedureDeclaration } from "./profile.ts";
 
-type WeaponAttackOverrideProfile = SpellProcedureProfile<
+type WeaponAttackOverrideProfile = SpellProcedureDeclaration<
   "weaponAttackOverride",
-  WeaponAttackOverrideInvocation,
-  BonusActionSpellBattleResolutionInput,
-  WeaponAttackOverrideFillInput
+  WeaponAttackOverrideInvocation
 >;
 
 type WeaponAttackOverrideOpenedInterruptResult = Extract<
@@ -110,8 +106,6 @@ export const weaponAttackOverrideProfile: WeaponAttackOverrideProfile = {
   procedure: "weaponAttackOverride",
   executionSchema: WeaponAttackOverrideExecutionSchema,
   metamagicCompatibility: "notActionSpellCasting",
-  targetListInvocation: { kind: "none" },
-  isReadiedSpellCompatible: false,
   admit: (spell, ctx) =>
     admitWeaponAttackOverride(spell, {
       actor: ctx.actor,

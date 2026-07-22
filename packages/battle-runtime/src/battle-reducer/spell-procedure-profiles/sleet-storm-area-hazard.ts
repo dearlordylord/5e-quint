@@ -31,7 +31,6 @@ import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either, Schema } from "effect";
 
 import {
-  type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
   type BattleResolutionResult,
   type BattleState,
@@ -48,7 +47,7 @@ import { spellAreaChoiceHole } from "../spells-holes-fills.ts";
 import { resolveSleetStormAreaHazardSpellAct } from "../spells-resolve-area-effects.ts";
 import type {
   SpellAdmissionContext,
-  SpellProcedureProfile,
+  SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import {
@@ -60,10 +59,8 @@ type SleetStormAreaHazardSpellInvocation = Extract<
   SupportedSpellInvocation,
   { readonly procedure: "sleetStormAreaHazard" }
 >;
-type SleetStormAreaHazardResolveInput = SpellProcedureProfileResolveInput<
-  SleetStormAreaHazardSpellInvocation,
-  ActionSpellBattleResolutionInput
->;
+type SleetStormAreaHazardResolveInput =
+  SpellProcedureProfileResolveInput<SleetStormAreaHazardSpellInvocation>;
 type OngoingMechanics = Extract<
   SpellRecord["mechanics"],
   { readonly family: "ongoing_effect" }
@@ -296,13 +293,10 @@ export const sleetStormAreaHazardProfile = {
   procedure: "sleetStormAreaHazard",
   executionSchema: SleetStormAreaHazardInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  targetListInvocation: { kind: "none" },
-  isReadiedSpellCompatible: false,
   admit: admitSleetStormAreaHazard,
   discoverCastAct: discoverSleetStormAreaHazardCastAct,
   resolve: resolveSleetStormAreaHazard,
-} satisfies SpellProcedureProfile<
+} satisfies SpellProcedureDeclaration<
   "sleetStormAreaHazard",
-  SleetStormAreaHazardSpellInvocation,
-  ActionSpellBattleResolutionInput
+  SleetStormAreaHazardSpellInvocation
 >;

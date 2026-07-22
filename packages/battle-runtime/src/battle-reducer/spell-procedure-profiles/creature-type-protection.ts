@@ -46,9 +46,8 @@ import {
 } from "../spells-resolve-resources.ts";
 import type {
   SpellAdmissionContext,
-  SpellProcedureProfile,
+  SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
-  SpellProcedureStoredGlyphReleaseOptions,
 } from "./profile.ts";
 import { Schema } from "effect";
 import {
@@ -279,11 +278,7 @@ function discoverCreatureTypeProtectionCastAct(
 }
 
 function resolveCreatureTypeProtection(
-  input: SpellProcedureProfileResolveInput<
-    CreatureTypeProtectionSpellInvocation,
-    ActionSpellBattleResolutionInput
-  > &
-    SpellProcedureStoredGlyphReleaseOptions,
+  input: SpellProcedureProfileResolveInput<CreatureTypeProtectionSpellInvocation>,
 ): BattleResolutionResult {
   if (
     input.fillSet.attackRoll !== undefined ||
@@ -318,7 +313,7 @@ function resolveCreatureTypeProtection(
     );
   }
 
-  if (input.opensSpellCastReactionWindow !== false) {
+  if (input.storedGlyphRelease === undefined) {
     const spellCastReactionWindow = maybeOpenInterruptWindow(
       input.input.state,
       spellCastInterruptFrame({
@@ -341,7 +336,7 @@ function resolveCreatureTypeProtection(
   }
 
   const concentrationBase =
-    input.startsOrdinaryConcentration === false
+    input.storedGlyphRelease !== undefined
       ? input.input.state
       : spellRequiresConcentration(input.invocation)
         ? breakBattleConcentration(input.input.state, input.actorId)
@@ -352,7 +347,7 @@ function resolveCreatureTypeProtection(
     targetSelection.targetIds,
     input.invocation,
   );
-  if (input.spendsCastResources === false) {
+  if (input.storedGlyphRelease !== undefined) {
     return {
       tag: "resolved",
       state: effected,
@@ -364,7 +359,7 @@ function resolveCreatureTypeProtection(
     actorId: input.actorId,
     invocation: input.invocation,
     errorState: input.input.state,
-    ...(input.startsOrdinaryConcentration === false
+    ...(input.storedGlyphRelease !== undefined
       ? { startConcentration: false }
       : {}),
   });
@@ -490,18 +485,13 @@ const CreatureTypeProtectionInvocationSchema = spellProcedureExecutionSchema(
     rangeFeet: MovementFeet,
   }),
 );
-export const creatureTypeProtectionProfile: SpellProcedureProfile<
+export const creatureTypeProtectionProfile: SpellProcedureDeclaration<
   "creatureTypeProtection",
   CreatureTypeProtectionSpellInvocation
 > = {
   procedure: "creatureTypeProtection",
   executionSchema: CreatureTypeProtectionInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  targetListInvocation: {
-    kind: "byTargetingKind",
-    targetingKind: "targetList",
-  },
-  isReadiedSpellCompatible: false,
   admit: admitCreatureTypeProtection,
   discoverCastAct: discoverCreatureTypeProtectionCastAct,
   resolve: resolveCreatureTypeProtection,

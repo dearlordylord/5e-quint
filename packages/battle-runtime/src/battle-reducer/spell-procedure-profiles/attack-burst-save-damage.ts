@@ -25,14 +25,11 @@ import { DiceExprSchema } from "@dnd/surface/surface/schema";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 
 import {
-  type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
   type BattleState,
-  type BonusActionSpellBattleResolutionInput,
 } from "../../battle-reducer.ts";
-import type { SpellMetamagicApplicationFact } from "../metamagic-support.ts";
 import { type CombatantId } from "../../identity.ts";
 import {
   readiedSpellAct,
@@ -46,7 +43,7 @@ import { resolveAttackBurstSaveDamageSpellAct } from "../spells-resolve-attack-b
 import { spellTargetHole } from "../spells-targeting.ts";
 import type {
   SpellAdmissionContext,
-  SpellProcedureProfile,
+  SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
@@ -64,13 +61,8 @@ import {
   SpellSlotInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 
-type AttackBurstSaveDamageResolveInput = SpellProcedureProfileResolveInput<
-  AttackBurstSaveDamageInvocation,
-  ActionSpellBattleResolutionInput | BonusActionSpellBattleResolutionInput
-> & {
-  readonly actionCostOverride?: "magicAction" | "bonusAction";
-  readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
-};
+type AttackBurstSaveDamageResolveInput =
+  SpellProcedureProfileResolveInput<AttackBurstSaveDamageInvocation>;
 
 function admitAttackBurstSaveDamage(
   spell: SpellRecord,
@@ -151,15 +143,13 @@ const AttackBurstSaveDamageInvocationSchema = spellProcedureExecutionSchema(
     rangeFeet: MovementFeet,
   }),
 );
-export const attackBurstSaveDamageProfile: SpellProcedureProfile<
+export const attackBurstSaveDamageProfile: SpellProcedureDeclaration<
   "attackBurstSaveDamage",
   AttackBurstSaveDamageInvocation
 > = {
   procedure: "attackBurstSaveDamage",
   executionSchema: AttackBurstSaveDamageInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  targetListInvocation: { kind: "none" },
-  isReadiedSpellCompatible: false,
   admit: admitAttackBurstSaveDamage,
   discoverCastAct: discoverAttackBurstSaveDamageCastAct,
   resolve: resolveAttackBurstSaveDamage,

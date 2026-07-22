@@ -51,7 +51,7 @@ import { sameStringSet } from "../spells-profile-shared.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
 import type {
   SpellAdmissionContext,
-  SpellProcedureProfile,
+  SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
@@ -286,15 +286,13 @@ const MirrorImageHitInterceptionInvocationSchema =
       }),
     }),
   );
-export const mirrorImageHitInterceptionProfile: SpellProcedureProfile<
+export const mirrorImageHitInterceptionProfile: SpellProcedureDeclaration<
   "mirrorImageHitInterception",
   MirrorImageHitInterceptionSpellInvocation
 > = {
   procedure: "mirrorImageHitInterception",
   executionSchema: MirrorImageHitInterceptionInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  targetListInvocation: { kind: "none" },
-  isReadiedSpellCompatible: false,
   admit: admitMirrorImageHitInterception,
   discoverCastAct: discoverMirrorImageHitInterceptionCastAct,
   resolve: resolveMirrorImageHitInterception,

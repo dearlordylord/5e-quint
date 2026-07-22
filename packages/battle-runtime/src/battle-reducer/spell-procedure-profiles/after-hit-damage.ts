@@ -35,17 +35,11 @@ import type {
 } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
-import type { BattleInterruptTrigger } from "../../battle-interrupt-triggers.ts";
-import { type BattleSubject } from "../../battle-subjects.ts";
 import {
   snapshotBattle,
   type AfterHitDamageSpellInvocation,
   type AttackSpellDamageAddition,
   type AvailableBattleAct,
-  type BattleCreatureState,
-  type BattleInterruptedProcedure,
-  type BattleInterruptCheckpoint,
-  type BattleResolutionInputForSubject,
   type BattleResolutionResult,
   type BattleState,
 } from "../../battle-reducer.ts";
@@ -76,9 +70,8 @@ import {
   type SpellCastResourceSpendResult,
 } from "../spells-resolve-resources.ts";
 import type {
-  OkSpellFillSet,
   SpellAdmissionContext,
-  SpellProcedureProfile,
+  SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
@@ -94,35 +87,8 @@ import {
 } from "../codec-building-blocks.ts";
 
 type AfterHitDamageInvocation = AfterHitDamageSpellInvocation;
-type AttackHitBonusActionSpellCommandSubject = Extract<
-  BattleSubject,
-  {
-    readonly tag: "runtimeCommand";
-    readonly command: "castAttackHitBonusActionSpell";
-  }
->;
-type AttackHitDamageReplayFrame = Extract<
-  BattleInterruptCheckpoint,
-  { readonly trigger: "attackHit" }
-> & {
-  readonly continuation: Extract<
-    BattleInterruptedProcedure,
-    {
-      readonly kind: "replay";
-      readonly glyphStoredSpellReleaseReplay?: never;
-    }
-  >;
-};
-type AfterHitDamageBattleResolutionInput =
-  BattleResolutionInputForSubject<AttackHitBonusActionSpellCommandSubject> & {
-    readonly frame: AttackHitDamageReplayFrame;
-    readonly target: BattleCreatureState;
-    readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
-  };
-type AfterHitDamageResolveInput = SpellProcedureProfileResolveInput<
-  AfterHitDamageInvocation,
-  AfterHitDamageBattleResolutionInput
->;
+type AfterHitDamageResolveInput =
+  SpellProcedureProfileResolveInput<AfterHitDamageInvocation>;
 
 function admitAfterHitDamage(
   spell: SpellRecord,
@@ -440,14 +406,10 @@ export const afterHitDamageProfile = {
   procedure: "afterHitDamage",
   executionSchema: AfterHitDamageInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
-  targetListInvocation: { kind: "none" },
-  isReadiedSpellCompatible: false,
   admit: admitAfterHitDamage,
   discoverCastAct: discoverAfterHitDamageCastAct,
   resolve: resolveAfterHitDamage,
-} satisfies SpellProcedureProfile<
+} satisfies SpellProcedureDeclaration<
   "afterHitDamage",
-  AfterHitDamageInvocation,
-  AfterHitDamageBattleResolutionInput,
-  OkSpellFillSet
+  AfterHitDamageInvocation
 >;

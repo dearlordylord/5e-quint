@@ -30,7 +30,6 @@ import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either, Schema } from "effect";
 
 import {
-  type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
   type BattleResolutionResult,
   type BattleState,
@@ -42,7 +41,7 @@ import { supportedDamageAmountExpr } from "../spells-profile-shared.ts";
 import { resolveMoonbeamSpellAct } from "../spells-resolve-area-effects.ts";
 import type {
   SpellAdmissionContext,
-  SpellProcedureProfile,
+  SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import {
@@ -60,10 +59,8 @@ type MoonbeamSpellInvocation = Extract<
   SupportedSpellInvocation,
   { readonly procedure: "moonbeam" }
 >;
-type MoonbeamResolveInput = SpellProcedureProfileResolveInput<
-  MoonbeamSpellInvocation,
-  ActionSpellBattleResolutionInput
->;
+type MoonbeamResolveInput =
+  SpellProcedureProfileResolveInput<MoonbeamSpellInvocation>;
 
 type OngoingOperationEffect = Extract<
   SpellRecord["mechanics"],
@@ -340,13 +337,7 @@ export const moonbeamProfile = {
   procedure: "moonbeam",
   executionSchema: MoonbeamInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  targetListInvocation: { kind: "none" },
-  isReadiedSpellCompatible: false,
   admit: admitMoonbeam,
   discoverCastAct: discoverMoonbeamCastAct,
   resolve: resolveMoonbeam,
-} satisfies SpellProcedureProfile<
-  "moonbeam",
-  MoonbeamSpellInvocation,
-  ActionSpellBattleResolutionInput
->;
+} satisfies SpellProcedureDeclaration<"moonbeam", MoonbeamSpellInvocation>;

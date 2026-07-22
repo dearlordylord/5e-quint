@@ -34,9 +34,11 @@ import {
 } from "./spell-turn-resources.ts";
 import { supportedSpellActs } from "./spells-profiles.ts";
 import {
-  registeredSpellProcedureProfile,
-  registeredSpellProcedureProfileRegistry,
-} from "./spell-procedure-profiles/registry.ts";
+  spellProcedureExecutionFor,
+  type RegisteredSpellProcedure,
+  type SpellProcedureExecutionRegistry,
+} from "./spell-procedure-profiles/execution-registry.ts";
+import { spellInvocationHasReadiedSpellExecutionShape } from "./spell-execution-facts.ts";
 import { spellCastReactionFactsHole } from "./spell-cast-interrupt-frame.ts";
 import {
   combatantInsideActiveAntimagicFieldAura,
@@ -74,197 +76,177 @@ import type {
   SpellProcedureExecution,
 } from "../character-execution.ts";
 
-type SpellProcedureDiscoveryRegistry = {
-  readonly [Procedure in SupportedSpellInvocation["procedure"]]: {
-    readonly discoverCastAct: (
-      state: BattleState,
-      actorId: CombatantId,
-      invocation: Extract<
-        BattleExecutableSpellInvocation,
-        { readonly procedure: Procedure }
-      >,
-    ) => readonly BattleActDiscoveryCandidate[];
-  };
-};
-
-let spellProcedureDiscoveryRegistryCache:
-  | SpellProcedureDiscoveryRegistry
-  | undefined;
-
-function spellProcedureDiscoveryRegistry(): SpellProcedureDiscoveryRegistry {
-  spellProcedureDiscoveryRegistryCache ??=
-    registeredSpellProcedureProfileRegistry();
-  return spellProcedureDiscoveryRegistryCache;
-}
-
 function discoverRegisteredSpellProcedureCastAct(
+  executionRegistry: SpellProcedureExecutionRegistry,
   state: BattleState,
   actorId: CombatantId,
   invocation: BattleExecutableSpellInvocation,
 ): readonly BattleActDiscoveryCandidate[] {
-  const registry = spellProcedureDiscoveryRegistry();
+  const executionFor = <Procedure extends RegisteredSpellProcedure>(
+    procedure: Procedure,
+  ) => spellProcedureExecutionFor(executionRegistry, procedure);
   return Match.value(invocation).pipe(
     Match.discriminatorsExhaustive("procedure")({
       damageReduction: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       rollModifier: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       makeStable: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       heldLight: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       heldLightHurl: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       objectLight: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       thaumaturgyBoomingVoice: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       blurAttackRollDefense: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       seeInvisibleObserverSight: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       mirrorImageHitInterception: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       persistentArmorEffect: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       magicWeaponEnhancement: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       wardingBond: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       creatureTypeProtection: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       conditionRemovalProtection: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       chosenDamageResistance: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       hastePositive: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       directCondition: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       directConditionRemoval: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       conditionImmunityAndTurnStartTemporaryHitPoints: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       creatureSizeIncrease: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       creatureSizeDecrease: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       levitatedCreature: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       scalarBuff: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       directHitPointRestoration: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       expeditiousRetreatDash: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       jumpMovementReplacement: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       featherFallMitigation: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       selfTeleport: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       selfTransformationMode: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       dragonsBreathInitial: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       sanctuaryTargetingInterdiction: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       markedDamageRider: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       weaponDamageRider: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       afterHitDamage: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       afterHitSaveGatedCondition: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       afterHitTimedDamageAndSave: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       afterHitDamageAndIllumination: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       weaponAttackOverride: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       spellHostedWeaponAttack: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       saveGatedDamage: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       saveGatedCondition: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       saveGatedConditionImmunity: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       saveGatedAttackRollAdvantage: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       abilityD20TestRollModeSaveGate: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       sleepTargetAdmission: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       hideousLaughter: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       hypnoticPattern: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       slowActivePenalties: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       greaseGroundHazard: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       gustOfWindLine: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       flamingSphere: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       moonbeam: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       fogCloudObscurement: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       spikeGrowthMovementHazard: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       webRestraintHazard: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       sleetStormAreaHazard: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       insectPlagueAreaHazard: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       cloudkillAreaHazard: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       magicalDarknessPointOrigin: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       antimagicFieldOngoingSpellSuppression: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       command: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       counterspell: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       shieldReaction: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       spellAttackDamage: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       spellAttackSequence: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       spellCreatedHeldObject: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       spellCreatedHeldObjectAttack: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       spellCreatedHeldObjectReEvoke: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       spiritualWeaponAttackProxy: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       spiritualWeaponRepeatAttack: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       objectContactDamage: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       objectContactDamageRepeat: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       ongoingSpellEnd: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       chainedSpellAttackDamage: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       attackBurstSaveDamage: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       repeatedDamageAllocation: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       dancingLightsSeparateCast: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       dancingLightsCombinedCast: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
       dancingLightsReposition: (value) =>
-        registry[value.procedure].discoverCastAct(state, actorId, value),
+        executionFor(value.procedure).discoverCastAct(state, actorId, value),
     }),
   );
 }
@@ -272,6 +254,7 @@ function discoverRegisteredSpellProcedureCastAct(
 export function discoverSupportedSpellInvocations(
   state: BattleState,
   actorId: CombatantId,
+  executionRegistry: SpellProcedureExecutionRegistry,
 ): readonly BattleActDiscoveryCandidate[] {
   const actor = state.combatants.get(actorId);
   if (actor?.origin.kind !== "character") {
@@ -309,17 +292,24 @@ export function discoverSupportedSpellInvocations(
         executionInvocation,
       );
       const quickenedTurnResourceAvailable =
-        spellInvocationSupportsQuickenedActionRewrite(executionInvocation) &&
-        actorCanOfferQuickenedSpellMetamagic({
-          state,
-          actor,
-          actorId,
-          invocation: executionInvocation,
-        });
+        spellInvocationSupportsQuickenedActionRewrite(
+          executionInvocation,
+          executionRegistry,
+        ) &&
+        actorCanOfferQuickenedSpellMetamagic(
+          {
+            state,
+            actor,
+            actorId,
+            invocation: executionInvocation,
+          },
+          executionRegistry,
+        );
       if (!naturalTurnResourceAvailable && !quickenedTurnResourceAvailable) {
         return [];
       }
       return discoverRegisteredSpellProcedureCastAct(
+        executionRegistry,
         state,
         actorId,
         executionInvocation,
@@ -334,6 +324,7 @@ export function discoverSupportedSpellInvocations(
         actor,
         actorId,
         invocations: executionInvocations,
+        executionRegistry,
       }),
     )
     .flatMap((act) =>
@@ -350,10 +341,12 @@ export function discoverSupportedSpellInvocations(
         actor,
         actorId,
         invocations: executionInvocations,
+        executionRegistry,
       }),
     )
     .map((act) =>
       spellCastReactionFactsAct(
+        executionRegistry,
         state,
         actor,
         actorId,
@@ -370,6 +363,7 @@ function spellActWithQuickenedRewrite(input: {
   readonly actor: BattleCreatureState;
   readonly actorId: CombatantId;
   readonly invocations: readonly BattleExecutableSpellInvocation[];
+  readonly executionRegistry: SpellProcedureExecutionRegistry;
 }): readonly BattleActDiscoveryCandidate[] {
   const subject = input.act.subject;
   if (subject.tag !== "actionSpell") {
@@ -392,13 +386,19 @@ function spellActWithQuickenedRewrite(input: {
     return naturalActs;
   }
   const quickenedActs =
-    spellInvocationSupportsQuickenedActionRewrite(invocation) &&
-    actorCanOfferQuickenedSpellMetamagic({
-      state: input.state,
-      actor: input.actor,
-      actorId: input.actorId,
+    spellInvocationSupportsQuickenedActionRewrite(
       invocation,
-    })
+      input.executionRegistry,
+    ) &&
+    actorCanOfferQuickenedSpellMetamagic(
+      {
+        state: input.state,
+        actor: input.actor,
+        actorId: input.actorId,
+        invocation,
+      },
+      input.executionRegistry,
+    )
       ? [
           {
             ...input.act,
@@ -455,6 +455,7 @@ function spellActWithTwinnedTargetCount(input: {
   readonly actor: BattleCreatureState;
   readonly actorId: CombatantId;
   readonly invocations: readonly BattleExecutableSpellInvocation[];
+  readonly executionRegistry: SpellProcedureExecutionRegistry;
 }): readonly BattleActDiscoveryCandidate[] {
   const subject = input.act.subject;
   if (
@@ -479,6 +480,7 @@ function spellActWithTwinnedTargetCount(input: {
       spellMetamagicApplications(input.actor, metamagic),
     );
     return discoverRegisteredSpellProcedureCastAct(
+      input.executionRegistry,
       input.state,
       input.actorId,
       twinnedInvocation,
@@ -504,6 +506,7 @@ function spellActWithTwinnedTargetCount(input: {
 }
 
 function spellCastReactionFactsAct(
+  executionRegistry: SpellProcedureExecutionRegistry,
   state: BattleState,
   actor: BattleCreatureState,
   actorId: CombatantId,
@@ -528,6 +531,7 @@ function spellCastReactionFactsAct(
     : {
         ...act,
         initialHoles: spellCastInitialHoles(
+          executionRegistry,
           state,
           actor,
           subject,
@@ -540,6 +544,7 @@ function spellCastReactionFactsAct(
 }
 
 function spellCastInitialHoles(
+  executionRegistry: SpellProcedureExecutionRegistry,
   state: BattleState,
   actor: BattleCreatureState,
   subject: Extract<
@@ -555,13 +560,16 @@ function spellCastInitialHoles(
 ): readonly BattleHole[] {
   const metamagicApplications =
     subject.tag === "actionSpell" || subject.tag === "bonusActionSpell"
-      ? admittedSpellMetamagicApplications({
-          state,
-          actor,
-          actorId,
-          invocation,
-          subject,
-        })
+      ? admittedSpellMetamagicApplications(
+          {
+            state,
+            actor,
+            actorId,
+            invocation,
+            subject,
+          },
+          executionRegistry,
+        )
       : [];
   const slowHole = slowSomaticSpellFailureOutcomeHole({
     state,
@@ -583,17 +591,20 @@ function spellCastInitialHoles(
   ];
 }
 
-function admittedSpellMetamagicApplications(input: {
-  readonly state: BattleState;
-  readonly actor: BattleCreatureState;
-  readonly actorId: CombatantId;
-  readonly invocation: BattleExecutableSpellInvocation;
-  readonly subject: Extract<
-    CharacterProcedureBattleSubject,
-    { readonly tag: "actionSpell" | "bonusActionSpell" }
-  >;
-}) {
-  const admission = admitSpellMetamagicApplications(input);
+function admittedSpellMetamagicApplications(
+  input: {
+    readonly state: BattleState;
+    readonly actor: BattleCreatureState;
+    readonly actorId: CombatantId;
+    readonly invocation: BattleExecutableSpellInvocation;
+    readonly subject: Extract<
+      CharacterProcedureBattleSubject,
+      { readonly tag: "actionSpell" | "bonusActionSpell" }
+    >;
+  },
+  executionRegistry: SpellProcedureExecutionRegistry,
+) {
+  const admission = admitSpellMetamagicApplications(input, executionRegistry);
   return admission.tag === "ok" ? admission.applications : [];
 }
 
@@ -686,22 +697,7 @@ export function isReadiedSpellInvocation<
 >(
   invocation: I,
 ): invocation is I & SpellProcedureExecution<ReadiedSpellInvocation> {
-  const profile = registeredSpellProcedureProfile(invocation.procedure);
-  return (
-    profile?.isReadiedSpellCompatible === true &&
-    readiedSpellInvocationHasReleaseReadyShape(invocation)
-  );
-}
-
-function readiedSpellInvocationHasReleaseReadyShape(
-  invocation: SupportedSpellInvocation | RuntimeSpellProcedureExecution,
-): boolean {
-  // A readied spell release replays spellAttackDamage after any damage-type
-  // choice has already been selected by the original cast.
-  return (
-    invocation.procedure !== "spellAttackDamage" ||
-    invocation.damage.kind !== "sorcerousBurstDamageTypeChoice"
-  );
+  return spellInvocationHasReadiedSpellExecutionShape(invocation);
 }
 
 export function readiedSpellAct(

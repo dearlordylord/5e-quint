@@ -29,7 +29,6 @@ import { movementFeet } from "@dnd/shared/types";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 import {
-  type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
   type BattleCreatureState,
@@ -42,7 +41,7 @@ import { type CombatantId } from "../../identity.ts";
 import { resolveGustOfWindLineSpellAct } from "../spells-resolve-area-effects.ts";
 import type {
   SpellAdmissionContext,
-  SpellProcedureProfile,
+  SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
@@ -61,7 +60,6 @@ import {
   discoverSpellMetamagicSelections,
   HEIGHTENED_METAMAGIC_EFFECT_KIND,
   spellMetamagicApplications,
-  type SpellMetamagicApplicationFact,
 } from "../metamagic-support.ts";
 import {
   carefulSpellProtectedTargetsHole,
@@ -74,12 +72,8 @@ type GustOfWindLineSpellInvocation = Extract<
   SupportedSpellInvocation,
   { readonly procedure: "gustOfWindLine" }
 >;
-type GustOfWindLineResolveInput = SpellProcedureProfileResolveInput<
-  GustOfWindLineSpellInvocation,
-  ActionSpellBattleResolutionInput
-> & {
-  readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
-};
+type GustOfWindLineResolveInput =
+  SpellProcedureProfileResolveInput<GustOfWindLineSpellInvocation>;
 
 type OngoingOperationEffect = Extract<
   SpellRecord["mechanics"],
@@ -397,13 +391,11 @@ export const gustOfWindLineProfile = {
   procedure: "gustOfWindLine",
   executionSchema: GustOfWindLineInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  targetListInvocation: { kind: "none" },
-  isReadiedSpellCompatible: false,
   admit: admitGustOfWindLine,
   discoverCastAct: discoverGustOfWindLineCastAct,
   resolve: resolveGustOfWindLine,
-} satisfies SpellProcedureProfile<
+} satisfies SpellProcedureDeclaration<
   "gustOfWindLine",
-  GustOfWindLineSpellInvocation,
-  ActionSpellBattleResolutionInput
+  GustOfWindLineSpellInvocation
 >;
+import type { SpellMetamagicApplicationFact } from "../metamagic-support.ts";

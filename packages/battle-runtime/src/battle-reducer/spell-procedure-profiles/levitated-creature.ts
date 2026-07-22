@@ -52,9 +52,8 @@ import {
 } from "../spells-resolve-resources.ts";
 import type {
   SpellAdmissionContext,
-  SpellProcedureProfile,
+  SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
-  SpellProcedureStoredGlyphReleaseOptions,
 } from "./profile.ts";
 import { Schema } from "effect";
 import {
@@ -68,11 +67,8 @@ import {
 } from "../codec-building-blocks.ts";
 
 type LevitatedCreatureInvocation = LevitatedCreatureSpellInvocation;
-type LevitatedCreatureResolveInput = SpellProcedureProfileResolveInput<
-  LevitatedCreatureInvocation,
-  ActionSpellBattleResolutionInput
-> &
-  SpellProcedureStoredGlyphReleaseOptions;
+type LevitatedCreatureResolveInput =
+  SpellProcedureProfileResolveInput<LevitatedCreatureInvocation>;
 
 function admitLevitatedCreature(
   spell: SpellRecord,
@@ -275,7 +271,7 @@ function resolveLevitatedCreature(
     );
   }
 
-  if (input.opensSpellCastReactionWindow !== false) {
+  if (input.storedGlyphRelease === undefined) {
     const spellCastReactionWindow = maybeOpenInterruptWindow(
       input.input.state,
       spellCastInterruptFrame({
@@ -341,7 +337,7 @@ function resolveLevitatedCreature(
           "Successful Levitate creature saves are unaffected and do not use an initial-rise fill.",
         );
       }
-      if (input.spendsCastResources === false) {
+      if (input.storedGlyphRelease !== undefined) {
         return {
           tag: "resolved",
           state: input.input.state,
@@ -376,7 +372,7 @@ function resolveLevitatedCreature(
   }
 
   const concentrationBase =
-    input.startsOrdinaryConcentration === false
+    input.storedGlyphRelease !== undefined
       ? input.input.state
       : spellRequiresConcentration(input.invocation)
         ? breakBattleConcentration(input.input.state, input.actorId)
@@ -389,7 +385,7 @@ function resolveLevitatedCreature(
     input.fillSet.levitateInitialRiseFeet,
     input.input.subject.procedureRef,
   );
-  if (input.spendsCastResources === false) {
+  if (input.storedGlyphRelease !== undefined) {
     return {
       tag: "resolved",
       state: effected,
@@ -401,7 +397,7 @@ function resolveLevitatedCreature(
     actorId: input.actorId,
     invocation: input.invocation,
     errorState: input.input.state,
-    ...(input.startsOrdinaryConcentration === false
+    ...(input.storedGlyphRelease !== undefined
       ? { startConcentration: false }
       : {}),
   });
@@ -502,16 +498,13 @@ const LevitatedCreatureInvocationSchema = spellProcedureExecutionSchema(
     rangeFeet: MovementFeet,
   }),
 );
-export const levitatedCreatureProfile: SpellProcedureProfile<
+export const levitatedCreatureProfile: SpellProcedureDeclaration<
   "levitatedCreature",
-  LevitatedCreatureInvocation,
-  ActionSpellBattleResolutionInput
+  LevitatedCreatureInvocation
 > = {
   procedure: "levitatedCreature",
   executionSchema: LevitatedCreatureInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  targetListInvocation: { kind: "always" },
-  isReadiedSpellCompatible: false,
   admit: admitLevitatedCreature,
   discoverCastAct: discoverLevitatedCreatureCastAct,
   resolve: resolveLevitatedCreature,

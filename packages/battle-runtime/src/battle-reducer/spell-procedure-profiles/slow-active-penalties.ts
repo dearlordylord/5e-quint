@@ -30,7 +30,6 @@ import { Either, Schema } from "effect";
 import {
   maybeOpenInterruptWindow,
   snapshotBattle,
-  type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
   type BattleHole,
   type BattleResolutionResult,
@@ -68,7 +67,7 @@ import { currentActorId } from "../creature-state-leaves.ts";
 import { slowActionOrBonusActionTurnResources } from "../slow-active-penalties-runtime.ts";
 import type {
   SpellAdmissionContext,
-  SpellProcedureProfile,
+  SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import {
@@ -80,7 +79,6 @@ import {
   discoverSpellMetamagicSelections,
   HEIGHTENED_METAMAGIC_EFFECT_KIND,
   spellMetamagicApplications,
-  type SpellMetamagicApplicationFact,
 } from "../metamagic-support.ts";
 import {
   carefulSpellProtectedTargetsHole,
@@ -114,12 +112,8 @@ type SlowActivePenaltiesPhase = Extract<
   };
 };
 
-type SlowActivePenaltiesResolveInput = SpellProcedureProfileResolveInput<
-  SlowActivePenaltiesSpellInvocation,
-  ActionSpellBattleResolutionInput
-> & {
-  readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
-};
+type SlowActivePenaltiesResolveInput =
+  SpellProcedureProfileResolveInput<SlowActivePenaltiesSpellInvocation>;
 
 type SlowActivePenaltiesProfileShape = {
   readonly phase: SlowActivePenaltiesPhase;
@@ -668,13 +662,11 @@ export const slowActivePenaltiesProfile = {
   procedure: "slowActivePenalties",
   executionSchema: SlowActivePenaltiesInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  targetListInvocation: { kind: "none" },
-  isReadiedSpellCompatible: false,
   admit: admitSlowActivePenalties,
   discoverCastAct: discoverSlowActivePenaltiesCastAct,
   resolve: resolveSlowActivePenalties,
-} satisfies SpellProcedureProfile<
+} satisfies SpellProcedureDeclaration<
   "slowActivePenalties",
-  SlowActivePenaltiesSpellInvocation,
-  ActionSpellBattleResolutionInput
+  SlowActivePenaltiesSpellInvocation
 >;
+import type { SpellMetamagicApplicationFact } from "../metamagic-support.ts";

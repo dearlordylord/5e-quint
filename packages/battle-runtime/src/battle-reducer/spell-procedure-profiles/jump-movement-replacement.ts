@@ -45,7 +45,7 @@ import {
 } from "../spells-targeting.ts";
 import type {
   SpellAdmissionContext,
-  SpellProcedureProfile,
+  SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
@@ -63,10 +63,8 @@ type JumpMovementReplacementInvocation = Extract<
   SupportedSpellInvocation,
   { readonly procedure: "jumpMovementReplacement" }
 >;
-type JumpMovementReplacementResolveInput = SpellProcedureProfileResolveInput<
-  JumpMovementReplacementInvocation,
-  BonusActionSpellBattleResolutionInput
->;
+type JumpMovementReplacementResolveInput =
+  SpellProcedureProfileResolveInput<JumpMovementReplacementInvocation>;
 
 function admitJumpMovementReplacement(
   spell: SpellRecord,
@@ -362,13 +360,10 @@ export const jumpMovementReplacementProfile = {
   procedure: "jumpMovementReplacement",
   executionSchema: JumpMovementReplacementInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
-  targetListInvocation: { kind: "always" },
-  isReadiedSpellCompatible: false,
   admit: admitJumpMovementReplacement,
   discoverCastAct: discoverJumpMovementReplacementCastAct,
   resolve: resolveJumpMovementReplacement,
-} satisfies SpellProcedureProfile<
+} satisfies SpellProcedureDeclaration<
   "jumpMovementReplacement",
-  JumpMovementReplacementInvocation,
-  BonusActionSpellBattleResolutionInput
+  JumpMovementReplacementInvocation
 >;

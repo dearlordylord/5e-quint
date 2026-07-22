@@ -254,6 +254,7 @@ import {
   resolveBonusActionSpellAct,
   resolveSpellAct,
 } from "./spells-resolve.ts";
+import { spellProcedureExecutionRegistry } from "./spell-procedure-profiles/execution-composition.ts";
 import { resolveReleaseSpellCreatedHeldObjectCommand } from "./spells-resolve-release.ts";
 import { resolveDragonsBreathExhaleCommand } from "./dragons-breath.ts";
 import {
@@ -1643,28 +1644,37 @@ export function resolveBattleSubjectInternal(
       return resolveFindFamiliarTouchSpellSubject({ ...input, subject });
     }
     if (subject.tag === "actionSpell") {
-      return resolveSpellAct({
-        ...input,
-        subject,
-        handledInterruptTrigger: options.handledInterruptTrigger,
-        replayingInterruptedProcedure: options.replayingInterruptedProcedure,
-        pendingAttackDamageReductions: options.pendingAttackDamageReductions,
-        pendingAttackDamageAdditions: options.pendingAttackDamageAdditions,
-      });
+      return resolveSpellAct(
+        {
+          ...input,
+          subject,
+          handledInterruptTrigger: options.handledInterruptTrigger,
+          replayingInterruptedProcedure: options.replayingInterruptedProcedure,
+          pendingAttackDamageReductions: options.pendingAttackDamageReductions,
+          pendingAttackDamageAdditions: options.pendingAttackDamageAdditions,
+        },
+        spellProcedureExecutionRegistry(),
+      );
     }
     if (subject.tag === "bonusActionSpell") {
-      return resolveBonusActionSpellAct({
-        ...input,
-        subject,
-        handledInterruptTrigger: options.handledInterruptTrigger,
-      });
+      return resolveBonusActionSpellAct(
+        {
+          ...input,
+          subject,
+          handledInterruptTrigger: options.handledInterruptTrigger,
+        },
+        spellProcedureExecutionRegistry(),
+      );
     }
     if (subject.tag === "bonusActionDashSpell") {
-      return resolveBonusActionDashSpellAct({
-        ...input,
-        subject,
-        handledInterruptTrigger: options.handledInterruptTrigger,
-      });
+      return resolveBonusActionDashSpellAct(
+        {
+          ...input,
+          subject,
+          handledInterruptTrigger: options.handledInterruptTrigger,
+        },
+        spellProcedureExecutionRegistry(),
+      );
     }
     if (subject.tag === "unitFeature") {
       return resolveUnitFeature({ ...input, subject });
@@ -5751,6 +5761,7 @@ function resolveGlyphStoredSpellReplayContinuationFromState(
   const result = releaseGlyphStoredSpell({
     state,
     profile: replay.profile,
+    executionRegistry: spellProcedureExecutionRegistry(),
     witness: {
       ...replay.witness,
       fills,

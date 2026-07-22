@@ -35,22 +35,16 @@ import type {
 } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
-import type { BattleInterruptTrigger } from "../../battle-interrupt-triggers.ts";
 import {
   snapshotBattle,
   type AfterHitDamageAndIlluminationSpellInvocation,
   type AttackSpellDamageAddition,
   type BattleActDiscoveryCandidate,
-  type BattleCreatureState,
   type BattleExecutableSpellInvocation,
-  type BattleInterruptedProcedure,
-  type BattleInterruptCheckpoint,
-  type BattleResolutionInputForSubject,
   type BattleResolutionResult,
   type BattleState,
 } from "../../battle-reducer.ts";
 import type { BattleSpellProcedureExecution } from "../../character-execution.ts";
-import type { BattleSubject } from "../../battle-subjects.ts";
 import { CombatantId } from "../../identity.ts";
 import {
   maybeOpenPostCastReadySpellCastWindow,
@@ -67,9 +61,8 @@ import {
 import { spellFillSetContainsOnlySpellCastReactionFacts } from "../spells-resolve-fill-set.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
 import type {
-  OkSpellFillSet,
   SpellAdmissionContext,
-  SpellProcedureProfile,
+  SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
@@ -95,36 +88,8 @@ const ShiningSmiteIlluminationEffectSchema = Schema.Struct({
     durationTicks: ElapsedTimeTicksSchema,
   }),
 });
-type AttackHitBonusActionSpellCommandSubject = Extract<
-  BattleSubject,
-  {
-    readonly tag: "runtimeCommand";
-    readonly command: "castAttackHitBonusActionSpell";
-  }
->;
-type AttackHitDamageReplayFrame = Extract<
-  BattleInterruptCheckpoint,
-  { readonly trigger: "attackHit" }
-> & {
-  readonly continuation: Extract<
-    BattleInterruptedProcedure,
-    {
-      readonly kind: "replay";
-      readonly glyphStoredSpellReleaseReplay?: never;
-    }
-  >;
-};
-type AfterHitDamageAndIlluminationBattleResolutionInput =
-  BattleResolutionInputForSubject<AttackHitBonusActionSpellCommandSubject> & {
-    readonly frame: AttackHitDamageReplayFrame;
-    readonly target: BattleCreatureState;
-    readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
-  };
 type AfterHitDamageAndIlluminationResolveInput =
-  SpellProcedureProfileResolveInput<
-    AfterHitDamageAndIlluminationInvocation,
-    AfterHitDamageAndIlluminationBattleResolutionInput
-  >;
+  SpellProcedureProfileResolveInput<AfterHitDamageAndIlluminationInvocation>;
 
 function admitAfterHitDamageAndIllumination(
   spell: SpellRecord,
@@ -408,14 +373,10 @@ export const afterHitDamageAndIlluminationProfile = {
   procedure: "afterHitDamageAndIllumination",
   executionSchema: AfterHitDamageAndIlluminationInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
-  targetListInvocation: { kind: "none" },
-  isReadiedSpellCompatible: false,
   admit: admitAfterHitDamageAndIllumination,
   discoverCastAct: discoverAfterHitDamageAndIlluminationCastAct,
   resolve: resolveAfterHitDamageAndIllumination,
-} satisfies SpellProcedureProfile<
+} satisfies SpellProcedureDeclaration<
   "afterHitDamageAndIllumination",
-  AfterHitDamageAndIlluminationInvocation,
-  AfterHitDamageAndIlluminationBattleResolutionInput,
-  OkSpellFillSet
+  AfterHitDamageAndIlluminationInvocation
 >;

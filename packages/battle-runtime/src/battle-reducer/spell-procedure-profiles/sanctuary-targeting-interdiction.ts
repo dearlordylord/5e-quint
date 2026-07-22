@@ -27,7 +27,6 @@ import {
   type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
   type BattleState,
-  type BonusActionSpellBattleResolutionInput,
   type SanctuaryTargetingInterdictionSpellInvocation,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
@@ -46,7 +45,7 @@ import {
 } from "../spells-targeting.ts";
 import type {
   SpellAdmissionContext,
-  SpellProcedureProfile,
+  SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
@@ -76,10 +75,7 @@ type SanctuaryTargetingInterdictionInvocation = Extract<
   { readonly procedure: "sanctuaryTargetingInterdiction" }
 >;
 type SanctuaryTargetingInterdictionResolveInput =
-  SpellProcedureProfileResolveInput<
-    SanctuaryTargetingInterdictionInvocation,
-    BonusActionSpellBattleResolutionInput
-  >;
+  SpellProcedureProfileResolveInput<SanctuaryTargetingInterdictionInvocation>;
 
 function admitSanctuaryTargetingInterdiction(
   spell: SpellRecord,
@@ -271,13 +267,10 @@ export const sanctuaryTargetingInterdictionProfile = {
   procedure: "sanctuaryTargetingInterdiction",
   executionSchema: SanctuaryTargetingInterdictionInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
-  targetListInvocation: { kind: "always" },
-  isReadiedSpellCompatible: false,
   admit: admitSanctuaryTargetingInterdiction,
   discoverCastAct: discoverSanctuaryTargetingInterdictionCastAct,
   resolve: resolveSanctuaryTargetingInterdiction,
-} satisfies SpellProcedureProfile<
+} satisfies SpellProcedureDeclaration<
   "sanctuaryTargetingInterdiction",
-  SanctuaryTargetingInterdictionInvocation,
-  BonusActionSpellBattleResolutionInput
+  SanctuaryTargetingInterdictionInvocation
 >;

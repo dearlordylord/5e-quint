@@ -24,7 +24,6 @@ import type {
 import { Match } from "effect";
 import type { BoundCharacterWeaponAttackActionOption } from "../../battle-action-options.ts";
 import {
-  type ActionSpellBattleResolutionInput,
   type AttackSpellDamageAddition,
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
@@ -48,7 +47,7 @@ import { invalidResult } from "../result-helpers.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
 import type {
   SpellAdmissionContext,
-  SpellProcedureProfile,
+  SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
@@ -70,10 +69,8 @@ const DAMAGE_TYPE_CHOICES = [
   "weapon_normal",
 ] as const satisfies readonly string[];
 
-type SpellHostedWeaponAttackResolveInput = SpellProcedureProfileResolveInput<
-  SpellHostedWeaponAttackInvocation,
-  ActionSpellBattleResolutionInput
->;
+type SpellHostedWeaponAttackResolveInput =
+  SpellProcedureProfileResolveInput<SpellHostedWeaponAttackInvocation>;
 
 function admitSpellHostedWeaponAttack(
   spell: SpellRecord,
@@ -429,16 +426,13 @@ export const SpellHostedWeaponAttackInvocationSchema =
       ),
     }),
   );
-export const spellHostedWeaponAttackProfile: SpellProcedureProfile<
+export const spellHostedWeaponAttackProfile: SpellProcedureDeclaration<
   "spellHostedWeaponAttack",
-  SpellHostedWeaponAttackInvocation,
-  ActionSpellBattleResolutionInput
+  SpellHostedWeaponAttackInvocation
 > = {
   procedure: "spellHostedWeaponAttack",
   executionSchema: SpellHostedWeaponAttackInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  targetListInvocation: { kind: "none" },
-  isReadiedSpellCompatible: false,
   admit: admitSpellHostedWeaponAttack,
   discoverCastAct: discoverSpellHostedWeaponAttackCastAct,
   resolve: resolveSpellHostedWeaponAttack,

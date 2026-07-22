@@ -105,6 +105,7 @@ import {
   spellRestraintEffectEntries,
 } from "./spell-condition-effects-helpers.ts";
 import { discoverSupportedSpellInvocations } from "./spells-discovery.ts";
+import { spellProcedureExecutionRegistry } from "./spell-procedure-profiles/execution-composition.ts";
 import { spellInvocationIsSpellcasting } from "./spell-turn-resources.ts";
 import { supportedSpellActs } from "./spells-profiles.ts";
 import { combatantInsideActiveAntimagicFieldAura } from "./antimagic-field-action-interdiction.ts";
@@ -558,7 +559,11 @@ function discoverBattleActsWithoutRouteEvents(
   acts.push(...statBlockBonusActionOptionActs(state, actorId));
   acts.push(...supportedUnitFeatureActs(state, actorId));
   const spellActs = combatantCanTakeActions(state.combatants.get(actorId))
-    ? discoverSupportedSpellInvocations(state, actorId)
+    ? discoverSupportedSpellInvocations(
+        state,
+        actorId,
+        spellProcedureExecutionRegistry(),
+      )
     : [];
   acts.push(...companionProtocolActs(state, actorId, spellActs));
   acts.push(...spellActs);

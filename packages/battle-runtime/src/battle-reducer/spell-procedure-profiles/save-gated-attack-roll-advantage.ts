@@ -13,7 +13,6 @@
 
 import { BattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
 import {
-  type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
   type BattleCreatureState,
@@ -27,7 +26,7 @@ import { supportedPreparedSaveGateAttackRollAdvantageProfile } from "./_save-gat
 import { resolveSaveGateAttackRollAdvantageSpellAct } from "../spells-resolve-save-gates.ts";
 import type {
   SpellAdmissionContext,
-  SpellProcedureProfile,
+  SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
@@ -53,7 +52,6 @@ import {
   discoverSpellMetamagicSelections,
   HEIGHTENED_METAMAGIC_EFFECT_KIND,
   spellMetamagicApplications,
-  type SpellMetamagicApplicationFact,
 } from "../metamagic-support.ts";
 import {
   carefulSpellProtectedTargetsHole,
@@ -68,12 +66,7 @@ type SaveGatedAttackRollAdvantageSpellInvocation = Extract<
 >;
 
 type SaveGatedAttackRollAdvantageResolveInput =
-  SpellProcedureProfileResolveInput<
-    SaveGatedAttackRollAdvantageSpellInvocation,
-    ActionSpellBattleResolutionInput
-  > & {
-    readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
-  };
+  SpellProcedureProfileResolveInput<SaveGatedAttackRollAdvantageSpellInvocation>;
 
 function admitSaveGatedAttackRollAdvantage(
   spell: SaveGatedAttackRollAdvantageSpellInvocation["spell"],
@@ -238,13 +231,11 @@ export const saveGatedAttackRollAdvantageProfile = {
   procedure: "saveGatedAttackRollAdvantage",
   executionSchema: SaveGatedAttackRollAdvantageInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  targetListInvocation: { kind: "none" },
-  isReadiedSpellCompatible: false,
   admit: admitSaveGatedAttackRollAdvantage,
   discoverCastAct: discoverSaveGatedAttackRollAdvantageCastAct,
   resolve: resolveSaveGatedAttackRollAdvantage,
-} satisfies SpellProcedureProfile<
+} satisfies SpellProcedureDeclaration<
   "saveGatedAttackRollAdvantage",
-  SaveGatedAttackRollAdvantageSpellInvocation,
-  ActionSpellBattleResolutionInput
+  SaveGatedAttackRollAdvantageSpellInvocation
 >;
+import type { SpellMetamagicApplicationFact } from "../metamagic-support.ts";

@@ -32,7 +32,6 @@ import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
 import {
-  type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
   type BattleResolutionResult,
   type BattleState,
@@ -43,7 +42,7 @@ import { spellAreaChoiceHole } from "../spells-holes-fills.ts";
 import { resolveWebRestraintHazardSpellAct } from "../spells-resolve-area-effects.ts";
 import type {
   SpellAdmissionContext,
-  SpellProcedureProfile,
+  SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
@@ -62,10 +61,8 @@ type WebRestraintHazardSpellInvocation = Extract<
   SupportedSpellInvocation,
   { readonly procedure: "webRestraintHazard" }
 >;
-type WebRestraintHazardResolveInput = SpellProcedureProfileResolveInput<
-  WebRestraintHazardSpellInvocation,
-  ActionSpellBattleResolutionInput
->;
+type WebRestraintHazardResolveInput =
+  SpellProcedureProfileResolveInput<WebRestraintHazardSpellInvocation>;
 type OngoingOperationEffect = Extract<
   SpellRecord["mechanics"],
   { readonly family: "ongoing_effect" }
@@ -289,13 +286,10 @@ export const webRestraintHazardProfile = {
   procedure: "webRestraintHazard",
   executionSchema: WebRestraintHazardInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  targetListInvocation: { kind: "none" },
-  isReadiedSpellCompatible: false,
   admit: admitWebRestraintHazard,
   discoverCastAct: discoverWebRestraintHazardCastAct,
   resolve: resolveWebRestraintHazard,
-} satisfies SpellProcedureProfile<
+} satisfies SpellProcedureDeclaration<
   "webRestraintHazard",
-  WebRestraintHazardSpellInvocation,
-  ActionSpellBattleResolutionInput
+  WebRestraintHazardSpellInvocation
 >;

@@ -48,12 +48,10 @@ import { characterSpellProcedureRefsForProcedure } from "../../character-executi
 import {
   maybeOpenInterruptWindow,
   snapshotBattle,
-  type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
   type BattleState,
-  type BonusActionSpellBattleResolutionInput,
   type SpellCreatedHeldObjectActiveEffect,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
@@ -70,12 +68,13 @@ import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
 import { spellCreatedHeldObjectHasFreeHand } from "../spell-created-held-object.ts";
 import { spellTargetHole } from "../spells-targeting.ts";
 import { resolveSpellAttackDamageAct } from "../spells-resolve.ts";
+import type { SpellProcedureExecutionRegistry } from "./execution-registry.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
 import { sameStringSet } from "../spells-profile-shared.ts";
 import type {
   OkSpellFillSet,
   SpellAdmissionContext,
-  SpellProcedureProfile,
+  SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import {
@@ -160,20 +159,12 @@ type SpellCreatedHeldObjectLightOperation =
     >;
   };
 
-type SpellCreatedHeldObjectResolveInput = SpellProcedureProfileResolveInput<
-  SpellCreatedHeldObjectInvocation,
-  BonusActionSpellBattleResolutionInput
->;
+type SpellCreatedHeldObjectResolveInput =
+  SpellProcedureProfileResolveInput<SpellCreatedHeldObjectInvocation>;
 type SpellCreatedHeldObjectAttackResolveInput =
-  SpellProcedureProfileResolveInput<
-    SpellCreatedHeldObjectAttackInvocation,
-    ActionSpellBattleResolutionInput
-  >;
+  SpellProcedureProfileResolveInput<SpellCreatedHeldObjectAttackInvocation>;
 type SpellCreatedHeldObjectReEvokeResolveInput =
-  SpellProcedureProfileResolveInput<
-    SpellCreatedHeldObjectReEvokeInvocation,
-    BonusActionSpellBattleResolutionInput
-  >;
+  SpellProcedureProfileResolveInput<SpellCreatedHeldObjectReEvokeInvocation>;
 
 function admitSpellCreatedHeldObject(
   spell: SpellRecord,
@@ -613,6 +604,7 @@ function resolveSpellCreatedHeldObject(
 
 function resolveSpellCreatedHeldObjectAttack(
   input: SpellCreatedHeldObjectAttackResolveInput,
+  executionRegistry: SpellProcedureExecutionRegistry,
 ): BattleResolutionResult {
   if (input.fillSet.reactionSpellTargetFacts.length > 0) {
     return invalidResult(
@@ -621,7 +613,7 @@ function resolveSpellCreatedHeldObjectAttack(
       "Spell-created held object attacks are not spell casts and do not accept spell-cast Reaction facts.",
     );
   }
-  return resolveSpellAttackDamageAct(input);
+  return resolveSpellAttackDamageAct(input, executionRegistry);
 }
 
 function resolveSpellCreatedHeldObjectReEvoke(
@@ -806,46 +798,37 @@ const SpellCreatedHeldObjectReEvokeInvocationSchema =
       sourceHeldObjectProcedureRef: BattleProcedureExecutionRef,
     }),
   );
-export const spellCreatedHeldObjectProfile: SpellProcedureProfile<
+export const spellCreatedHeldObjectProfile: SpellProcedureDeclaration<
   "spellCreatedHeldObject",
-  SpellCreatedHeldObjectInvocation,
-  BonusActionSpellBattleResolutionInput
+  SpellCreatedHeldObjectInvocation
 > = {
   procedure: "spellCreatedHeldObject",
   executionSchema: SpellCreatedHeldObjectInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
-  targetListInvocation: { kind: "none" },
-  isReadiedSpellCompatible: false,
   admit: admitSpellCreatedHeldObject,
   discoverCastAct: discoverSpellCreatedHeldObjectCastAct,
   resolve: resolveSpellCreatedHeldObject,
 };
 
-export const spellCreatedHeldObjectAttackProfile: SpellProcedureProfile<
+export const spellCreatedHeldObjectAttackProfile: SpellProcedureDeclaration<
   "spellCreatedHeldObjectAttack",
-  SpellCreatedHeldObjectAttackInvocation,
-  ActionSpellBattleResolutionInput
+  SpellCreatedHeldObjectAttackInvocation
 > = {
   procedure: "spellCreatedHeldObjectAttack",
   executionSchema: SpellCreatedHeldObjectAttackInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
-  targetListInvocation: { kind: "none" },
-  isReadiedSpellCompatible: false,
   admit: admitSpellCreatedHeldObjectAttack,
   discoverCastAct: discoverSpellCreatedHeldObjectAttackCastAct,
   resolve: resolveSpellCreatedHeldObjectAttack,
 };
 
-export const spellCreatedHeldObjectReEvokeProfile: SpellProcedureProfile<
+export const spellCreatedHeldObjectReEvokeProfile: SpellProcedureDeclaration<
   "spellCreatedHeldObjectReEvoke",
-  SpellCreatedHeldObjectReEvokeInvocation,
-  BonusActionSpellBattleResolutionInput
+  SpellCreatedHeldObjectReEvokeInvocation
 > = {
   procedure: "spellCreatedHeldObjectReEvoke",
   executionSchema: SpellCreatedHeldObjectReEvokeInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
-  targetListInvocation: { kind: "none" },
-  isReadiedSpellCompatible: false,
   admit: admitSpellCreatedHeldObjectReEvoke,
   discoverCastAct: discoverSpellCreatedHeldObjectReEvokeCastAct,
   resolve: resolveSpellCreatedHeldObjectReEvoke,

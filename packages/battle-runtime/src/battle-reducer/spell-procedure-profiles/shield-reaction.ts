@@ -21,12 +21,9 @@ import { Either } from "effect";
 import {
   snapshotBattle,
   type AvailableBattleAct,
-  type BattleInterruptCheckpoint,
-  type BattleResolutionInputForSubject,
   type BattleResolutionResult,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
-import type { BattleSubject } from "../../battle-subjects.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { stateAfterSpellCastDeclared } from "../spell-cast-declaration.ts";
 import { expendSpellSlot } from "../spell-effects.ts";
@@ -41,7 +38,7 @@ import { markSpellSlotExpendedThisTurn } from "../spell-turn-resources.ts";
 import { shieldReactionSpellMatchesTrigger } from "../shield-reaction-trigger.ts";
 import type {
   SpellAdmissionContext,
-  SpellProcedureProfile,
+  SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 
@@ -63,21 +60,8 @@ type ShieldReactionInvocation = Extract<
   SupportedSpellInvocation,
   { readonly procedure: "shieldReaction" }
 >;
-type ShieldReactionBattleResolutionInput = BattleResolutionInputForSubject<
-  Extract<
-    BattleSubject,
-    {
-      readonly tag: "runtimeCommand";
-      readonly command: "castTriggeredReactionSpell";
-    }
-  >
-> & {
-  readonly frame: BattleInterruptCheckpoint;
-};
-type ShieldReactionResolveInput = SpellProcedureProfileResolveInput<
-  ShieldReactionInvocation,
-  ShieldReactionBattleResolutionInput
->;
+type ShieldReactionResolveInput =
+  SpellProcedureProfileResolveInput<ShieldReactionInvocation>;
 
 function admitShieldReaction(
   spell: SpellRecord,
@@ -237,13 +221,10 @@ export const shieldReactionProfile = {
   procedure: "shieldReaction",
   executionSchema: ShieldReactionInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
-  targetListInvocation: { kind: "none" },
-  isReadiedSpellCompatible: false,
   admit: admitShieldReaction,
   discoverCastAct: discoverShieldReactionCastAct,
   resolve: resolveShieldReaction,
-} satisfies SpellProcedureProfile<
+} satisfies SpellProcedureDeclaration<
   "shieldReaction",
-  ShieldReactionInvocation,
-  ShieldReactionBattleResolutionInput
+  ShieldReactionInvocation
 >;

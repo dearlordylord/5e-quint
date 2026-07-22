@@ -38,7 +38,7 @@ import type { SpellFillSet } from "../spells-resolve-fill-set.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
 import type {
   SpellAdmissionContext,
-  SpellProcedureProfile,
+  SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
@@ -158,10 +158,7 @@ function discoverDirectConditionRemovalCastAct(
 }
 
 function resolveDirectConditionRemoval(
-  input: SpellProcedureProfileResolveInput<
-    DirectConditionRemovalSpellInvocation,
-    BonusActionSpellBattleResolutionInput
-  >,
+  input: SpellProcedureProfileResolveInput<DirectConditionRemovalSpellInvocation>,
 ): BattleResolutionResult {
   if (
     input.fillSet.objectTarget !== undefined ||
@@ -349,16 +346,13 @@ const DirectConditionRemovalInvocationSchema = spellProcedureExecutionSchema(
     rangeFeet: MovementFeet,
   }),
 );
-export const directConditionRemovalProfile: SpellProcedureProfile<
+export const directConditionRemovalProfile: SpellProcedureDeclaration<
   "directConditionRemoval",
-  DirectConditionRemovalSpellInvocation,
-  BonusActionSpellBattleResolutionInput
+  DirectConditionRemovalSpellInvocation
 > = {
   procedure: "directConditionRemoval",
   executionSchema: DirectConditionRemovalInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  targetListInvocation: { kind: "always" },
-  isReadiedSpellCompatible: false,
   admit: admitDirectConditionRemoval,
   discoverCastAct: discoverDirectConditionRemovalCastAct,
   resolve: resolveDirectConditionRemoval,

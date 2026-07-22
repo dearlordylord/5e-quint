@@ -43,7 +43,7 @@ import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
 import type {
   SpellAdmissionContext,
-  SpellProcedureProfile,
+  SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
@@ -269,15 +269,13 @@ const SeeInvisibleObserverSightInvocationSchema = spellProcedureExecutionSchema(
     activeEffect: SeeInvisibleAndEtherealEffectSchema,
   }),
 );
-export const seeInvisibleObserverSightProfile: SpellProcedureProfile<
+export const seeInvisibleObserverSightProfile: SpellProcedureDeclaration<
   "seeInvisibleObserverSight",
   SeeInvisibleObserverSightSpellInvocation
 > = {
   procedure: "seeInvisibleObserverSight",
   executionSchema: SeeInvisibleObserverSightInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  targetListInvocation: { kind: "none" },
-  isReadiedSpellCompatible: false,
   admit: admitSeeInvisibleObserverSight,
   discoverCastAct: discoverSeeInvisibleObserverSightCastAct,
   resolve: resolveSeeInvisibleObserverSight,

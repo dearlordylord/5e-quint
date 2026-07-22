@@ -40,7 +40,7 @@ import { spendSpellCastResources } from "../spells-resolve-resources.ts";
 import { spellTargetHole, spellTargetIsLegal } from "../spells-targeting.ts";
 import type {
   SpellAdmissionContext,
-  SpellProcedureProfile,
+  SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
@@ -270,15 +270,13 @@ const MakeStableInvocationSchema = spellProcedureExecutionSchema(
     rangeFeet: MovementFeet,
   }),
 );
-export const makeStableProfile: SpellProcedureProfile<
+export const makeStableProfile: SpellProcedureDeclaration<
   "makeStable",
   MakeStableInvocation
 > = {
   procedure: "makeStable",
   executionSchema: MakeStableInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  targetListInvocation: { kind: "none" },
-  isReadiedSpellCompatible: false,
   admit: admitMakeStable,
   discoverCastAct: discoverMakeStableCastAct,
   resolve: resolveMakeStable,

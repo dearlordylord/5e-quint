@@ -45,9 +45,8 @@ import type { SpellFillSet } from "../spells-resolve-fill-set.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
 import type {
   SpellAdmissionContext,
-  SpellProcedureProfile,
+  SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
-  SpellProcedureStoredGlyphReleaseOptions,
 } from "./profile.ts";
 import { Schema } from "effect";
 import {
@@ -217,11 +216,7 @@ function discoverConditionImmunityAndTurnStartTemporaryHitPointsCastAct(
 }
 
 function resolveConditionImmunityAndTurnStartTemporaryHitPoints(
-  input: SpellProcedureProfileResolveInput<
-    ConditionImmunityAndTurnStartTemporaryHitPointsSpellInvocation,
-    ActionSpellBattleResolutionInput
-  > &
-    SpellProcedureStoredGlyphReleaseOptions,
+  input: SpellProcedureProfileResolveInput<ConditionImmunityAndTurnStartTemporaryHitPointsSpellInvocation>,
 ): BattleResolutionResult {
   if (
     input.fillSet.objectTarget !== undefined ||
@@ -269,7 +264,7 @@ function resolveConditionImmunityAndTurnStartTemporaryHitPoints(
     );
   }
 
-  if (input.opensSpellCastReactionWindow !== false) {
+  if (input.storedGlyphRelease === undefined) {
     const spellCastReactionWindow = maybeOpenInterruptWindow(
       input.input.state,
       spellCastInterruptFrame({
@@ -292,7 +287,7 @@ function resolveConditionImmunityAndTurnStartTemporaryHitPoints(
   }
 
   const concentrationBase =
-    input.startsOrdinaryConcentration === false
+    input.storedGlyphRelease !== undefined
       ? input.input.state
       : breakBattleConcentration(input.input.state, input.actorId);
   const effected = applyConditionImmunityAndTurnStartTemporaryHitPointsEffects(
@@ -301,7 +296,7 @@ function resolveConditionImmunityAndTurnStartTemporaryHitPoints(
     targetSelection.targetIds,
     input.invocation,
   );
-  if (input.spendsCastResources === false) {
+  if (input.storedGlyphRelease !== undefined) {
     return {
       tag: "resolved",
       state: effected,
@@ -313,7 +308,7 @@ function resolveConditionImmunityAndTurnStartTemporaryHitPoints(
     actorId: input.actorId,
     invocation: input.invocation,
     errorState: input.input.state,
-    ...(input.startsOrdinaryConcentration === false
+    ...(input.storedGlyphRelease !== undefined
       ? { startConcentration: false }
       : {}),
   });
@@ -476,7 +471,7 @@ const ConditionImmunityAndTurnStartTemporaryHitPointsInvocationSchema =
       rangeFeet: MovementFeet,
     }),
   );
-export const conditionImmunityAndTurnStartTemporaryHitPointsProfile: SpellProcedureProfile<
+export const conditionImmunityAndTurnStartTemporaryHitPointsProfile: SpellProcedureDeclaration<
   "conditionImmunityAndTurnStartTemporaryHitPoints",
   ConditionImmunityAndTurnStartTemporaryHitPointsSpellInvocation
 > = {
@@ -484,8 +479,6 @@ export const conditionImmunityAndTurnStartTemporaryHitPointsProfile: SpellProced
   executionSchema:
     ConditionImmunityAndTurnStartTemporaryHitPointsInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  targetListInvocation: { kind: "always" },
-  isReadiedSpellCompatible: false,
   admit: admitConditionImmunityAndTurnStartTemporaryHitPoints,
   discoverCastAct:
     discoverConditionImmunityAndTurnStartTemporaryHitPointsCastAct,

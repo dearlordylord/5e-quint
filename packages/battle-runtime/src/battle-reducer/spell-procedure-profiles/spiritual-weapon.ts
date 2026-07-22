@@ -48,7 +48,6 @@ import {
   type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
   type BattleState,
-  type BonusActionSpellBattleResolutionInput,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
 import {
@@ -65,11 +64,12 @@ import {
   spellTargetHole,
 } from "../spells-targeting.ts";
 import { resolveBonusActionSpellAttackProxyAct } from "../spells-resolve.ts";
+import type { SpellProcedureExecutionRegistry } from "./execution-registry.ts";
 import { currentActorId } from "../creature-state-leaves.ts";
 import { supportedDamageAmountExpr } from "../spells-profile-shared.ts";
 import type {
   SpellAdmissionContext,
-  SpellProcedureProfile,
+  SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
@@ -97,10 +97,8 @@ type SpiritualWeaponRepeatAttackInvocation = Extract<
 type SpiritualWeaponInvocation =
   | SpiritualWeaponAttackProxyInvocation
   | SpiritualWeaponRepeatAttackInvocation;
-type SpiritualWeaponResolveInput = SpellProcedureProfileResolveInput<
-  SpiritualWeaponInvocation,
-  BonusActionSpellBattleResolutionInput
->;
+type SpiritualWeaponResolveInput =
+  SpellProcedureProfileResolveInput<SpiritualWeaponInvocation>;
 type LinearPerLevelDiceAmount = Extract<
   DiceAmount,
   { readonly kind: "linear_per_level" }
@@ -475,8 +473,9 @@ function discoverSpiritualWeaponRepeatAttackCastAct(
 
 function resolveSpiritualWeapon(
   input: SpiritualWeaponResolveInput,
+  executionRegistry: SpellProcedureExecutionRegistry,
 ): BattleResolutionResult {
-  return resolveBonusActionSpellAttackProxyAct(input.input);
+  return resolveBonusActionSpellAttackProxyAct(input.input, executionRegistry);
 }
 
 const SpiritualWeaponAttackProxyInvocationSchema =
@@ -513,31 +512,25 @@ const SpiritualWeaponRepeatAttackInvocationSchema =
       activeEffectSourceProcedureRef: BattleProcedureExecutionRef,
     }),
   );
-export const spiritualWeaponAttackProxyProfile: SpellProcedureProfile<
+export const spiritualWeaponAttackProxyProfile: SpellProcedureDeclaration<
   "spiritualWeaponAttackProxy",
-  SpiritualWeaponAttackProxyInvocation,
-  BonusActionSpellBattleResolutionInput
+  SpiritualWeaponAttackProxyInvocation
 > = {
   procedure: "spiritualWeaponAttackProxy",
   executionSchema: SpiritualWeaponAttackProxyInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  targetListInvocation: { kind: "none" },
-  isReadiedSpellCompatible: false,
   admit: admitSpiritualWeaponAttackProxy,
   discoverCastAct: discoverSpiritualWeaponAttackProxyCastAct,
   resolve: resolveSpiritualWeapon,
 };
 
-export const spiritualWeaponRepeatAttackProfile: SpellProcedureProfile<
+export const spiritualWeaponRepeatAttackProfile: SpellProcedureDeclaration<
   "spiritualWeaponRepeatAttack",
-  SpiritualWeaponRepeatAttackInvocation,
-  BonusActionSpellBattleResolutionInput
+  SpiritualWeaponRepeatAttackInvocation
 > = {
   procedure: "spiritualWeaponRepeatAttack",
   executionSchema: SpiritualWeaponRepeatAttackInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
-  targetListInvocation: { kind: "none" },
-  isReadiedSpellCompatible: false,
   admit: admitSpiritualWeaponRepeatAttack,
   discoverCastAct: discoverSpiritualWeaponRepeatAttackCastAct,
   resolve: resolveSpiritualWeapon,

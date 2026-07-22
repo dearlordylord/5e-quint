@@ -21,14 +21,12 @@ import {
 
 import {
   isTargetListSpellInvocation,
-  type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
   type BattleCreatureState,
   type BattleHole,
   type BattleResolutionResult,
   type BattleState,
-  type BonusActionSpellBattleResolutionInput,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
 import { type CombatantId } from "../../identity.ts";
@@ -38,7 +36,7 @@ import { supportedPreparedSaveGateConditionProfile } from "./_save-gate-helpers.
 import { resolveSaveGateConditionSpellAct } from "../spells-resolve-save-gates.ts";
 import type {
   SpellAdmissionContext,
-  SpellProcedureProfile,
+  SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
@@ -118,7 +116,6 @@ import {
   discoverSpellMetamagicSelections,
   HEIGHTENED_METAMAGIC_EFFECT_KIND,
   spellMetamagicApplications,
-  type SpellMetamagicApplicationFact,
 } from "../metamagic-support.ts";
 import {
   carefulSpellProtectedTargetsHole,
@@ -136,13 +133,8 @@ type SaveGatedConditionSpellInvocation = Extract<
   { readonly procedure: "saveGatedCondition" }
 >;
 
-type SaveGatedConditionResolveInput = SpellProcedureProfileResolveInput<
-  SaveGatedConditionSpellInvocation,
-  ActionSpellBattleResolutionInput | BonusActionSpellBattleResolutionInput
-> & {
-  readonly actionCostOverride?: "magicAction" | "bonusAction";
-  readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
-};
+type SaveGatedConditionResolveInput =
+  SpellProcedureProfileResolveInput<SaveGatedConditionSpellInvocation>;
 
 function admitSaveGatedCondition(
   spell: SaveGatedConditionSpellInvocation["spell"],
@@ -400,16 +392,11 @@ export const saveGatedConditionProfile = {
   procedure: "saveGatedCondition",
   executionSchema: SaveGatedConditionInvocationSchema,
   metamagicCompatibility: "bonusActionRewrite",
-  targetListInvocation: {
-    kind: "byTargetingKind",
-    targetingKind: "targetList",
-  },
-  isReadiedSpellCompatible: false,
   admit: admitSaveGatedCondition,
   discoverCastAct: discoverSaveGatedConditionCastAct,
   resolve: resolveSaveGatedCondition,
-} satisfies SpellProcedureProfile<
+} satisfies SpellProcedureDeclaration<
   "saveGatedCondition",
-  SaveGatedConditionSpellInvocation,
-  ActionSpellBattleResolutionInput | BonusActionSpellBattleResolutionInput
+  SaveGatedConditionSpellInvocation
 >;
+import type { SpellMetamagicApplicationFact } from "../metamagic-support.ts";

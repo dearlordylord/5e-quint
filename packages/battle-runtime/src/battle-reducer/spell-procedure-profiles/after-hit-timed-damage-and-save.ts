@@ -37,22 +37,16 @@ import type {
   SpellRecord,
 } from "@dnd/surface/surface/types";
 
-import type { BattleInterruptTrigger } from "../../battle-interrupt-triggers.ts";
 import {
   snapshotBattle,
   type AfterHitTimedDamageAndSaveSpellInvocation,
   type AttackSpellDamageAddition,
   type BattleActDiscoveryCandidate,
-  type BattleCreatureState,
   type BattleExecutableSpellInvocation,
-  type BattleInterruptedProcedure,
-  type BattleInterruptCheckpoint,
-  type BattleResolutionInputForSubject,
   type BattleResolutionResult,
   type BattleState,
 } from "../../battle-reducer.ts";
 import type { BattleSpellProcedureExecution } from "../../character-execution.ts";
-import type { BattleSubject } from "../../battle-subjects.ts";
 import { CombatantId } from "../../identity.ts";
 import {
   maybeOpenPostCastReadySpellCastWindow,
@@ -66,9 +60,8 @@ import { scalarBuffActiveEffectExpiration } from "../spells-profiles-support.ts"
 import { spellFillSetContainsOnlySpellCastReactionFacts } from "../spells-resolve-fill-set.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
 import type {
-  OkSpellFillSet,
   SpellAdmissionContext,
-  SpellProcedureProfile,
+  SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
@@ -103,35 +96,8 @@ const SpellTurnStartDamageAndSaveEffectSchema = Schema.Struct({
   }),
   expiresAt: BattleActiveEffectExpirationSchema,
 });
-type AttackHitBonusActionSpellCommandSubject = Extract<
-  BattleSubject,
-  {
-    readonly tag: "runtimeCommand";
-    readonly command: "castAttackHitBonusActionSpell";
-  }
->;
-type AttackHitDamageReplayFrame = Extract<
-  BattleInterruptCheckpoint,
-  { readonly trigger: "attackHit" }
-> & {
-  readonly continuation: Extract<
-    BattleInterruptedProcedure,
-    {
-      readonly kind: "replay";
-      readonly glyphStoredSpellReleaseReplay?: never;
-    }
-  >;
-};
-type AfterHitTimedDamageAndSaveBattleResolutionInput =
-  BattleResolutionInputForSubject<AttackHitBonusActionSpellCommandSubject> & {
-    readonly frame: AttackHitDamageReplayFrame;
-    readonly target: BattleCreatureState;
-    readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
-  };
-type AfterHitTimedDamageAndSaveResolveInput = SpellProcedureProfileResolveInput<
-  AfterHitTimedDamageAndSaveInvocation,
-  AfterHitTimedDamageAndSaveBattleResolutionInput
->;
+type AfterHitTimedDamageAndSaveResolveInput =
+  SpellProcedureProfileResolveInput<AfterHitTimedDamageAndSaveInvocation>;
 
 function admitAfterHitTimedDamageAndSave(
   spell: SpellRecord,
@@ -429,14 +395,10 @@ export const afterHitTimedDamageAndSaveProfile = {
   procedure: "afterHitTimedDamageAndSave",
   executionSchema: AfterHitTimedDamageAndSaveInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
-  targetListInvocation: { kind: "none" },
-  isReadiedSpellCompatible: false,
   admit: admitAfterHitTimedDamageAndSave,
   discoverCastAct: discoverAfterHitTimedDamageAndSaveCastAct,
   resolve: resolveAfterHitTimedDamageAndSave,
-} satisfies SpellProcedureProfile<
+} satisfies SpellProcedureDeclaration<
   "afterHitTimedDamageAndSave",
-  AfterHitTimedDamageAndSaveInvocation,
-  AfterHitTimedDamageAndSaveBattleResolutionInput,
-  OkSpellFillSet
+  AfterHitTimedDamageAndSaveInvocation
 >;

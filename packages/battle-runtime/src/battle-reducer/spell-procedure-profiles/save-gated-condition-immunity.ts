@@ -18,14 +18,12 @@ import { BattleActiveEffectExpirationSchema } from "../../active-effect/codecs.t
 //     and Spell Invocation.
 
 import {
-  type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
   type BattleCreatureState,
   type BattleHole,
   type BattleResolutionResult,
   type BattleState,
-  type BonusActionSpellBattleResolutionInput,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
 import { CombatantId } from "../../identity.ts";
@@ -33,7 +31,7 @@ import { supportedPreparedSaveGateConditionImmunityProfile } from "./_save-gate-
 import { resolveSaveGateConditionImmunitySpellAct } from "../spells-resolve-save-gates.ts";
 import type {
   SpellAdmissionContext,
-  SpellProcedureProfile,
+  SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
@@ -61,7 +59,6 @@ import {
   discoverSpellMetamagicSelections,
   HEIGHTENED_METAMAGIC_EFFECT_KIND,
   spellMetamagicApplications,
-  type SpellMetamagicApplicationFact,
 } from "../metamagic-support.ts";
 import {
   carefulSpellProtectedTargetsHole,
@@ -75,13 +72,8 @@ type SaveGatedConditionImmunitySpellInvocation = Extract<
   { readonly procedure: "saveGatedConditionImmunity" }
 >;
 
-type SaveGatedConditionImmunityResolveInput = SpellProcedureProfileResolveInput<
-  SaveGatedConditionImmunitySpellInvocation,
-  ActionSpellBattleResolutionInput | BonusActionSpellBattleResolutionInput
-> & {
-  readonly actionCostOverride?: "magicAction" | "bonusAction";
-  readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
-};
+type SaveGatedConditionImmunityResolveInput =
+  SpellProcedureProfileResolveInput<SaveGatedConditionImmunitySpellInvocation>;
 
 function admitSaveGatedConditionImmunity(
   spell: SaveGatedConditionImmunitySpellInvocation["spell"],
@@ -252,13 +244,11 @@ export const saveGatedConditionImmunityProfile = {
   procedure: "saveGatedConditionImmunity",
   executionSchema: SaveGatedConditionImmunityInvocationSchema,
   metamagicCompatibility: "bonusActionRewrite",
-  targetListInvocation: { kind: "none" },
-  isReadiedSpellCompatible: false,
   admit: admitSaveGatedConditionImmunity,
   discoverCastAct: discoverSaveGatedConditionImmunityCastAct,
   resolve: resolveSaveGatedConditionImmunity,
-} satisfies SpellProcedureProfile<
+} satisfies SpellProcedureDeclaration<
   "saveGatedConditionImmunity",
-  SaveGatedConditionImmunitySpellInvocation,
-  ActionSpellBattleResolutionInput | BonusActionSpellBattleResolutionInput
+  SaveGatedConditionImmunitySpellInvocation
 >;
+import type { SpellMetamagicApplicationFact } from "../metamagic-support.ts";

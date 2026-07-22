@@ -5,6 +5,7 @@ import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-after-hit-damage spell.invocation-marked-damage-rider
 import { describe, expect, test } from "vitest";
 import { markedDamageRiderProfile } from "./battle-reducer/spell-procedure-profiles/marked-damage-rider.ts";
+import { spellProcedureExecutionRegistry } from "./battle-reducer/spell-procedure-profiles/execution-composition.ts";
 import { characterSpellProcedure } from "./character-execution-admission.ts";
 import type {
   BattleRuntimeSession,
@@ -281,16 +282,19 @@ describe("battle runtime: Favored Enemy", () => {
       throw new Error(fillSet.message);
     }
 
-    const result = markedDamageRiderProfile.resolve({
-      input: {
-        state: staleState,
-        subject: act.subject,
-        fills,
+    const result = markedDamageRiderProfile.resolve(
+      {
+        input: {
+          state: staleState,
+          subject: act.subject,
+          fills,
+        },
+        actorId: fighterId,
+        invocation,
+        fillSet,
       },
-      actorId: fighterId,
-      invocation,
-      fillSet,
-    });
+      spellProcedureExecutionRegistry(),
+    );
 
     expect(result).toMatchObject({ tag: "invalid", reason: "staleSubject" });
     expect(result.snapshot).toEqual(staleSnapshot);

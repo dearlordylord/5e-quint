@@ -68,7 +68,7 @@ import { spellActTurnResourceAvailable } from "../spell-turn-resources.ts";
 import { supportedDamageAmountExpr } from "../spells-profile-shared.ts";
 import type {
   SpellAdmissionContext,
-  SpellProcedureProfile,
+  SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
@@ -102,11 +102,8 @@ type AfterHitSaveGatedConditionFillSet = Extract<
   SpellFillSet,
   { readonly tag: "ok" }
 >;
-type AfterHitSaveGatedConditionResolveInput = SpellProcedureProfileResolveInput<
-  AfterHitSaveGatedConditionInvocation,
-  AfterHitSaveGatedConditionBattleResolutionInput,
-  readonly BattleFill[]
->;
+type AfterHitSaveGatedConditionResolveInput =
+  SpellProcedureProfileResolveInput<AfterHitSaveGatedConditionInvocation>;
 
 function admitAfterHitSaveGatedCondition(
   spell: SpellRecord,
@@ -481,14 +478,10 @@ export const afterHitSaveGatedConditionProfile = {
   procedure: "afterHitSaveGatedCondition",
   executionSchema: AfterHitSaveGatedConditionInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
-  targetListInvocation: { kind: "none" },
-  isReadiedSpellCompatible: false,
   admit: admitAfterHitSaveGatedCondition,
   discoverCastAct: discoverAfterHitSaveGatedConditionCastAct,
   resolve: resolveAfterHitSaveGatedCondition,
-} satisfies SpellProcedureProfile<
+} satisfies SpellProcedureDeclaration<
   "afterHitSaveGatedCondition",
-  AfterHitSaveGatedConditionInvocation,
-  AfterHitSaveGatedConditionBattleResolutionInput,
-  readonly BattleFill[]
+  AfterHitSaveGatedConditionInvocation
 >;

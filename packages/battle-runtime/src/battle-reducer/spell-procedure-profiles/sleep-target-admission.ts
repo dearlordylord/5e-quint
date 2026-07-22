@@ -15,7 +15,6 @@ import { movementFeet, MovementFeet } from "@dnd/shared/types";
 import type { ActivationPhase } from "@dnd/surface/surface/types";
 import {
   SUPPORTED_POINT_SPHERE_SAVE_GATE_RADIUS_FEET,
-  type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
   type BattleHole,
@@ -29,7 +28,7 @@ import { readiedSpellAct } from "../spells-discovery.ts";
 import { resolveSleepTargetAdmissionSpellAct } from "../spells-resolve-save-gates.ts";
 import type {
   SpellAdmissionContext,
-  SpellProcedureProfile,
+  SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
@@ -68,10 +67,8 @@ type SleepTargetAdmissionPhase = Extract<
   };
 };
 
-type SleepTargetAdmissionResolveInput = SpellProcedureProfileResolveInput<
-  SleepTargetAdmissionSpellInvocation,
-  ActionSpellBattleResolutionInput
->;
+type SleepTargetAdmissionResolveInput =
+  SpellProcedureProfileResolveInput<SleepTargetAdmissionSpellInvocation>;
 
 function admitSleepTargetAdmission(
   spell: SleepTargetAdmissionSpellInvocation["spell"],
@@ -263,13 +260,10 @@ export const sleepTargetAdmissionProfile = {
   procedure: "sleepTargetAdmission",
   executionSchema: SleepTargetAdmissionInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  targetListInvocation: { kind: "none" },
-  isReadiedSpellCompatible: false,
   admit: admitSleepTargetAdmission,
   discoverCastAct: discoverSleepTargetAdmissionCastAct,
   resolve: resolveSleepTargetAdmission,
-} satisfies SpellProcedureProfile<
+} satisfies SpellProcedureDeclaration<
   "sleepTargetAdmission",
-  SleepTargetAdmissionSpellInvocation,
-  ActionSpellBattleResolutionInput
+  SleepTargetAdmissionSpellInvocation
 >;

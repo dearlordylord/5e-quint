@@ -24,7 +24,6 @@ import {
   type BattleMagicWeaponTargetItemFact,
   type BattleResolutionResult,
   type BattleState,
-  type BonusActionSpellBattleResolutionInput,
   type MagicWeaponEnhancementBonus,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
@@ -40,7 +39,7 @@ import type { SpellFillSet } from "../spells-resolve-fill-set.ts";
 import { magicWeaponTargetItemHole } from "../spells-targeting.ts";
 import type {
   SpellAdmissionContext,
-  SpellProcedureProfile,
+  SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
@@ -215,10 +214,7 @@ function discoverMagicWeaponEnhancementCastAct(
 }
 
 function resolveMagicWeaponEnhancement(
-  input: SpellProcedureProfileResolveInput<
-    MagicWeaponEnhancementInvocation,
-    BonusActionSpellBattleResolutionInput
-  >,
+  input: SpellProcedureProfileResolveInput<MagicWeaponEnhancementInvocation>,
 ): BattleResolutionResult {
   if (magicWeaponEnhancementFillSetHasDisallowedFills(input.fillSet)) {
     return invalidResult(
@@ -425,16 +421,13 @@ export const MagicWeaponEnhancementInvocationSchema =
       durationTicks: ElapsedTimeTicksSchema,
     }),
   );
-export const magicWeaponEnhancementProfile: SpellProcedureProfile<
+export const magicWeaponEnhancementProfile: SpellProcedureDeclaration<
   "magicWeaponEnhancement",
-  MagicWeaponEnhancementInvocation,
-  BonusActionSpellBattleResolutionInput
+  MagicWeaponEnhancementInvocation
 > = {
   procedure: "magicWeaponEnhancement",
   executionSchema: MagicWeaponEnhancementInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
-  targetListInvocation: { kind: "none" },
-  isReadiedSpellCompatible: false,
   admit: admitMagicWeaponEnhancement,
   discoverCastAct: discoverMagicWeaponEnhancementCastAct,
   resolve: resolveMagicWeaponEnhancement,

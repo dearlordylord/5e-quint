@@ -1,6 +1,8 @@
-// A Spell Procedure Profile bundles every layer the runtime needs to handle
+// A Spell Procedure Declaration bundles every layer the runtime needs to handle
 // one class of spell behavior — admission, discovery, dispatch, codec, and
-// classification — into a single typed declaration. Today each profile is
+// classification — into a single procedure-keyed source. Registry views narrow
+// that declaration for authored admission traversal or authored-free execution.
+// Today each declaration is
 // scattered across ~11 modules (predicates in spells-profiles-support.ts,
 // resolvers in spells-resolve-support-effects.ts, applyEffect in
 // spells-active-effects.ts, codec in battle-codecs.ts, discovery branches in
@@ -14,23 +16,12 @@
 import { currentActing } from "@dnd/shared-algebras/initiative-algebra";
 import type { CharacterLevel } from "@dnd/shared/types";
 import type { SpellRecord } from "@dnd/surface/surface/types";
-import { Schema } from "effect";
 import type {
-  ActionSpellBattleResolutionInput,
-  BattleActDiscoveryCandidate,
   BattleAntimagicFieldOngoingSpellEffectRef,
   BattleCreatureState,
-  BattleResolutionResult,
   BattleState,
-  ReadiedSpellInvocation,
   SupportedSpellInvocation,
-  TargetListSpellInvocation,
-  TargetListSpellInvocationOf,
 } from "../../battle-reducer.ts";
-import type {
-  BattleSpellProcedureExecution,
-  SpellProcedureExecution,
-} from "../../character-execution.ts";
 export { SpellRuleExecutionFactsSchema } from "../../procedure-execution/spell-rule-facts.ts";
 import type { CombatantId } from "../../identity.ts";
 import type {
@@ -42,7 +33,8 @@ import {
   ongoingSpellEffectRefKey,
 } from "../antimagic-field-suppression.ts";
 import { characterBattleLevel } from "../../character-class-level.ts";
-import type { SpellFillSet } from "../spells-resolve-fill-set.ts";
+import type { SpellProcedureExecutionDeclaration } from "./execution-profile.ts";
+export * from "./execution-profile.ts";
 
 // Context handed to admit() at discovery time. Profiles use only what they
 // need, with character actor facts kept canonical on `actor`.
@@ -75,7 +67,7 @@ export type SpellAdmissionContext = {
 // Registry admission is existential over each profile's concrete invocation.
 // This common view preserves the shared input contract while projecting each
 // concrete result to the supported-invocation union covariantly.
-export type SpellProcedureAdmissionProfile = {
+export type AnySpellProcedureAdmission = {
   readonly admit: (
     spell: SpellRecord,
     ctx: SpellAdmissionContext,
@@ -145,34 +137,6 @@ export function spellAdmissionCharacterLevel(
   return characterBattleLevel(ctx.actor.origin.classLevels);
 }
 
-// Each profile carries its own metamagic classification so dispatch tables can
-// project the compatibility from the registry instead of duplicating it.
-export type SpellProcedureMetamagicCompatibility =
-  | "actionSpellResolverNotRewritten"
-  | "bonusActionRewrite"
-  | "notActionSpellCasting";
-
-export type OkSpellFillSet = Extract<SpellFillSet, { readonly tag: "ok" }>;
-
-export type SpellProcedureProfileResolveInput<
-  I extends SupportedSpellInvocation,
-  Input = ActionSpellBattleResolutionInput,
-  FillSet = OkSpellFillSet,
-> = {
-  readonly input: Input;
-  readonly actorId: CombatantId;
-  readonly invocation: BattleSpellProcedureExecution<I>;
-  readonly fillSet: FillSet;
-};
-
-// Stored spell glyph releases reuse profile reducers after storage-time casting
-// has already paid the normal spell costs. Omitted flags mean ordinary casting.
-export type SpellProcedureStoredGlyphReleaseOptions = {
-  readonly opensSpellCastReactionWindow?: false;
-  readonly spendsCastResources?: false;
-  readonly startsOrdinaryConcentration?: false;
-};
-
 export type SpellInvocationAdmittedByRegisteredProcedure<
   P extends SupportedSpellInvocation["procedure"],
 > = {
@@ -181,96 +145,26 @@ export type SpellInvocationAdmittedByRegisteredProcedure<
     : never;
 }[SupportedSpellInvocation["procedure"]];
 
-export type SpellProcedureAnyTargetListInvocationClassifier =
-  | { readonly kind: "always" }
-  | { readonly kind: "none" }
-  | { readonly kind: "byTargetingKind"; readonly targetingKind: "targetList" };
-
-export type SpellProcedureTargetListInvocationClassifier<
-  I extends SupportedSpellInvocation,
-> = [I] extends [TargetListSpellInvocation]
-  ? { readonly kind: "always" }
-  : TargetListSpellInvocationOf<I> extends never
-    ? { readonly kind: "none" }
-    :
-        | { readonly kind: "none" }
-        | {
-            readonly kind: "byTargetingKind";
-            readonly targetingKind: "targetList";
-          };
-
-export type SpellProcedureReadiedSpellCompatibility<
-  I extends SupportedSpellInvocation,
-> =
-  Extract<
-    ReadiedSpellInvocation,
-    { readonly procedure: I["procedure"] }
-  > extends never
-    ? false
-    : boolean;
-
 // One profile per spell-procedure registration. Generic in the registered
 // procedure literal and the narrowed invocation/input types so admit/resolve
 // stay type-checked against the right shape. Most profiles register the same
 // literal their invocation carries; a combined profile may register one literal
 // while accepting an invocation whose procedure field admits that literal.
-export type SpellProcedureProfile<
+export type SpellProcedureAdmissionDeclaration<
   P extends SupportedSpellInvocation["procedure"],
   I extends SpellInvocationAdmittedByRegisteredProcedure<P>,
-  Input = ActionSpellBattleResolutionInput,
-  FillSet = OkSpellFillSet,
 > = {
-  readonly procedure: P;
-
-  // Static classification that used to live as scattered negative-list
-  // membership checks across several modules.
-  readonly metamagicCompatibility: SpellProcedureMetamagicCompatibility;
-  readonly targetListInvocation: SpellProcedureTargetListInvocationClassifier<I>;
-  readonly isReadiedSpellCompatible: SpellProcedureReadiedSpellCompatibility<I>;
-
   // Discovery: enumerate every currently-admissible invocation of this
-  // profile for the given actor + spell. Returns [] if the spell does not
-  // fit this profile's shape.
+  // procedure for the given actor + spell. Returns [] if the spell does not
+  // fit this procedure's shape.
   readonly admit: (
     spell: SpellRecord,
     ctx: SpellAdmissionContext,
   ) => readonly I[];
-
-  // Discovery: build the cast act(s) and their initial holes.
-  readonly discoverCastAct: (
-    state: BattleState,
-    actorId: CombatantId,
-    invocation: BattleSpellProcedureExecution<I>,
-  ) => readonly BattleActDiscoveryCandidate[];
-
-  // Runtime codec for the exact mechanical execution shape owned by this
-  // profile. Authored spell payloads are joined outside reducer execution.
-  readonly executionSchema: {
-    readonly Type: SpellProcedureExecution<I>;
-  };
-
-  // Dispatch entry: consume a fill set, produce a resolution result.
-  readonly resolve: (
-    input: SpellProcedureProfileResolveInput<I, Input, FillSet>,
-  ) => BattleResolutionResult;
 };
 
-export function spellProcedureExecutionSchema<
-  S extends Schema.Schema.AnyNoContext,
->(schema: S): S {
-  return schema;
-}
-
-// Existential wrapper for a heterogeneous registry. Distributes over the
-// procedure literal so the registry holds a UNION of profile instantiations
-// rather than collapsing into a single contravariant profile that would
-// require all methods to accept any invocation. Each member of the union
-// has its own narrowed methods.
-export type AnySpellProcedureProfile = {
-  readonly [P in SupportedSpellInvocation["procedure"]]: SpellProcedureProfile<
-    P,
-    SpellInvocationAdmittedByRegisteredProcedure<P>,
-    never,
-    never
-  >;
-}[SupportedSpellInvocation["procedure"]];
+export type SpellProcedureDeclaration<
+  P extends SupportedSpellInvocation["procedure"],
+  I extends SpellInvocationAdmittedByRegisteredProcedure<P>,
+> = SpellProcedureAdmissionDeclaration<P, I> &
+  SpellProcedureExecutionDeclaration<P>;

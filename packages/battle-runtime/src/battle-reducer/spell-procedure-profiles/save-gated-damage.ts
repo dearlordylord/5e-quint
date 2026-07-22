@@ -27,7 +27,7 @@ import {
 import { resolveSaveGateDamageSpellAct } from "../spells-resolve-save-gates.ts";
 import type {
   SpellAdmissionContext,
-  SpellProcedureProfile,
+  SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
@@ -45,14 +45,12 @@ import {
 } from "../codec-building-blocks.ts";
 import { SpellFailedSaveConditionEffectExecutionSchema } from "./save-gated-condition.ts";
 import {
-  type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
   type BattleCreatureState,
   type BattleExecutableSpellInvocation,
   type BattleHole,
   type BattleResolutionResult,
   type BattleState,
-  type BonusActionSpellBattleResolutionInput,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
 import {
@@ -60,7 +58,6 @@ import {
   discoverSpellMetamagicSelections,
   HEIGHTENED_METAMAGIC_EFFECT_KIND,
   spellMetamagicApplications,
-  type SpellMetamagicApplicationFact,
 } from "../metamagic-support.ts";
 import {
   carefulSpellProtectedTargetsHole,
@@ -81,13 +78,8 @@ type SaveGatedDamageSpellInvocation = Extract<
   { readonly procedure: "saveGatedDamage" }
 >;
 
-type SaveGatedDamageResolveInput = SpellProcedureProfileResolveInput<
-  SaveGatedDamageSpellInvocation,
-  ActionSpellBattleResolutionInput | BonusActionSpellBattleResolutionInput
-> & {
-  readonly actionCostOverride?: "magicAction" | "bonusAction";
-  readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
-};
+type SaveGatedDamageResolveInput =
+  SpellProcedureProfileResolveInput<SaveGatedDamageSpellInvocation>;
 
 function admitSaveGatedDamage(
   spell: SaveGatedDamageSpellInvocation["spell"],
@@ -457,13 +449,11 @@ export const saveGatedDamageProfile = {
   procedure: "saveGatedDamage",
   executionSchema: SaveGatedDamageInvocationSchema,
   metamagicCompatibility: "bonusActionRewrite",
-  targetListInvocation: { kind: "none" },
-  isReadiedSpellCompatible: true,
   admit: admitSaveGatedDamage,
   discoverCastAct: discoverSaveGatedDamageCastAct,
   resolve: resolveSaveGatedDamage,
-} satisfies SpellProcedureProfile<
+} satisfies SpellProcedureDeclaration<
   "saveGatedDamage",
-  SaveGatedDamageSpellInvocation,
-  ActionSpellBattleResolutionInput | BonusActionSpellBattleResolutionInput
+  SaveGatedDamageSpellInvocation
 >;
+import type { SpellMetamagicApplicationFact } from "../metamagic-support.ts";

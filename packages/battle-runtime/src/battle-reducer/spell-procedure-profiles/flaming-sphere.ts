@@ -28,7 +28,6 @@ import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
 import {
-  type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
   type BattleResolutionResult,
   type BattleState,
@@ -40,7 +39,7 @@ import { supportedDamageAmountExpr } from "../spells-profile-shared.ts";
 import { resolveFlamingSphereSpellAct } from "../spells-resolve-area-effects.ts";
 import type {
   SpellAdmissionContext,
-  SpellProcedureProfile,
+  SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
@@ -59,10 +58,8 @@ type FlamingSphereSpellInvocation = Extract<
   SupportedSpellInvocation,
   { readonly procedure: "flamingSphere" }
 >;
-type FlamingSphereResolveInput = SpellProcedureProfileResolveInput<
-  FlamingSphereSpellInvocation,
-  ActionSpellBattleResolutionInput
->;
+type FlamingSphereResolveInput =
+  SpellProcedureProfileResolveInput<FlamingSphereSpellInvocation>;
 
 type OngoingOperationEffect = Extract<
   SpellRecord["mechanics"],
@@ -311,13 +308,10 @@ export const flamingSphereProfile = {
   procedure: "flamingSphere",
   executionSchema: FlamingSphereInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  targetListInvocation: { kind: "none" },
-  isReadiedSpellCompatible: false,
   admit: admitFlamingSphere,
   discoverCastAct: discoverFlamingSphereCastAct,
   resolve: resolveFlamingSphere,
-} satisfies SpellProcedureProfile<
+} satisfies SpellProcedureDeclaration<
   "flamingSphere",
-  FlamingSphereSpellInvocation,
-  ActionSpellBattleResolutionInput
+  FlamingSphereSpellInvocation
 >;

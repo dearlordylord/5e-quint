@@ -15,15 +15,12 @@ import { DiceExprSchema } from "@dnd/surface/surface/schema";
 
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import {
-  type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
   type BattleState,
-  type BonusActionSpellBattleResolutionInput,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
-import type { SpellMetamagicApplicationFact } from "../metamagic-support.ts";
 import { type CombatantId } from "../../identity.ts";
 import { spellCastSelectionSubject } from "../spells-discovery.ts";
 import {
@@ -38,7 +35,7 @@ import {
 } from "../spells-targeting.ts";
 import type {
   SpellAdmissionContext,
-  SpellProcedureProfile,
+  SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
@@ -59,13 +56,8 @@ import {
   spellProcedureExecutionSchema,
 } from "./profile.ts";
 
-type SpellAttackSequenceResolveInput = SpellProcedureProfileResolveInput<
-  SpellAttackSequenceInvocation,
-  ActionSpellBattleResolutionInput | BonusActionSpellBattleResolutionInput
-> & {
-  readonly actionCostOverride?: "magicAction" | "bonusAction";
-  readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
-};
+type SpellAttackSequenceResolveInput =
+  SpellProcedureProfileResolveInput<SpellAttackSequenceInvocation>;
 
 function admitSpellAttackSequence(
   spell: SpellRecord,
@@ -157,19 +149,16 @@ const SpellAttackSequenceInvocationSchema = spellProcedureExecutionSchema(
     }),
   ),
 );
-export const spellAttackSequenceProfile: SpellProcedureProfile<
+export const spellAttackSequenceProfile: SpellProcedureDeclaration<
   "spellAttackSequence",
   Extract<
     SupportedSpellInvocation,
     { readonly procedure: "spellAttackSequence" }
-  >,
-  ActionSpellBattleResolutionInput | BonusActionSpellBattleResolutionInput
+  >
 > = {
   procedure: "spellAttackSequence",
   executionSchema: SpellAttackSequenceInvocationSchema,
   metamagicCompatibility: "bonusActionRewrite",
-  targetListInvocation: { kind: "none" },
-  isReadiedSpellCompatible: false,
   admit: admitSpellAttackSequence,
   discoverCastAct: discoverSpellAttackSequenceCastAct,
   resolve: resolveSpellAttackSequence,

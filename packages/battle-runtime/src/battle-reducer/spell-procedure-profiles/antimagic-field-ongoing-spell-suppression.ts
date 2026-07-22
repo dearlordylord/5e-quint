@@ -54,11 +54,10 @@ import { needsHolesResult } from "../hole-helpers.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { sameStringSet } from "../spells-profile-shared.ts";
 import { spellAreaChoiceHole } from "../spells-holes-fills.ts";
-import type { SpellFillSet } from "../spells-resolve-fill-set.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
 import type {
   SpellAdmissionContext,
-  SpellProcedureProfile,
+  SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
@@ -77,10 +76,7 @@ type AntimagicFieldOngoingSpellSuppressionInvocation = Extract<
   { readonly procedure: "antimagicFieldOngoingSpellSuppression" }
 >;
 type AntimagicFieldOngoingSpellSuppressionResolveInput =
-  SpellProcedureProfileResolveInput<
-    AntimagicFieldOngoingSpellSuppressionInvocation,
-    ActionSpellBattleResolutionInput
-  >;
+  SpellProcedureProfileResolveInput<AntimagicFieldOngoingSpellSuppressionInvocation>;
 type AntimagicFieldOngoingSpellSuppressionProfileShape = {
   readonly radiusFeet: number;
   readonly durationTicks: ElapsedTimeTicks;
@@ -385,14 +381,10 @@ export const antimagicFieldOngoingSpellSuppressionProfile = {
   procedure: "antimagicFieldOngoingSpellSuppression",
   executionSchema: AntimagicFieldOngoingSpellSuppressionInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  targetListInvocation: { kind: "none" },
-  isReadiedSpellCompatible: false,
   admit: admitAntimagicFieldOngoingSpellSuppression,
   discoverCastAct: discoverAntimagicFieldOngoingSpellSuppressionCastAct,
   resolve: resolveAntimagicFieldOngoingSpellSuppression,
-} satisfies SpellProcedureProfile<
+} satisfies SpellProcedureDeclaration<
   "antimagicFieldOngoingSpellSuppression",
-  AntimagicFieldOngoingSpellSuppressionInvocation,
-  ActionSpellBattleResolutionInput,
-  Extract<SpellFillSet, { readonly tag: "ok" }>
+  AntimagicFieldOngoingSpellSuppressionInvocation
 >;

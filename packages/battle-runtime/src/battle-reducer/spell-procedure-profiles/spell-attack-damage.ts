@@ -24,15 +24,12 @@
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { DamageTypeSchema, DiceExprSchema } from "@dnd/surface/surface/schema";
 import {
-  type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
   type BattleState,
-  type BonusActionSpellBattleResolutionInput,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
-import type { SpellMetamagicApplicationFact } from "../metamagic-support.ts";
 import { type CombatantId } from "../../identity.ts";
 import { spellDamageTypeChoiceHole } from "../spells-damage-fills.ts";
 import {
@@ -45,9 +42,10 @@ import {
 } from "../spells-profiles-attack-damage.ts";
 import { spellObjectTargetHole, spellTargetHole } from "../spells-targeting.ts";
 import { resolveSpellAttackDamageAct } from "../spells-resolve.ts";
+import type { SpellProcedureExecutionRegistry } from "./execution-registry.ts";
 import type {
   SpellAdmissionContext,
-  SpellProcedureProfile,
+  SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
@@ -95,13 +93,8 @@ const SpellAttackDamagePayloadExecutionSchema = Schema.Union(
   }),
 );
 
-type SpellAttackDamageResolveInput = SpellProcedureProfileResolveInput<
-  SpellAttackDamageInvocation,
-  ActionSpellBattleResolutionInput | BonusActionSpellBattleResolutionInput
-> & {
-  readonly actionCostOverride?: "magicAction" | "bonusAction";
-  readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
-};
+type SpellAttackDamageResolveInput =
+  SpellProcedureProfileResolveInput<SpellAttackDamageInvocation>;
 
 function admitSpellAttackDamage(
   spell: SpellRecord,
@@ -177,8 +170,9 @@ function discoverSpellAttackDamageCastAct(
 
 function resolveSpellAttackDamage(
   input: SpellAttackDamageResolveInput,
+  executionRegistry: SpellProcedureExecutionRegistry,
 ): BattleResolutionResult {
-  return resolveSpellAttackDamageAct(input);
+  return resolveSpellAttackDamageAct(input, executionRegistry);
 }
 
 export const SpellAttackDamageInvocationSchema = spellProcedureExecutionSchema(
@@ -225,19 +219,13 @@ export const SpellAttackDamageInvocationSchema = spellProcedureExecutionSchema(
     }),
   ),
 );
-export const spellAttackDamageProfile: SpellProcedureProfile<
+export const spellAttackDamageProfile: SpellProcedureDeclaration<
   "spellAttackDamage",
-  Extract<
-    SupportedSpellInvocation,
-    { readonly procedure: "spellAttackDamage" }
-  >,
-  ActionSpellBattleResolutionInput | BonusActionSpellBattleResolutionInput
+  Extract<SupportedSpellInvocation, { readonly procedure: "spellAttackDamage" }>
 > = {
   procedure: "spellAttackDamage",
   executionSchema: SpellAttackDamageInvocationSchema,
   metamagicCompatibility: "bonusActionRewrite",
-  targetListInvocation: { kind: "none" },
-  isReadiedSpellCompatible: true,
   admit: admitSpellAttackDamage,
   discoverCastAct: discoverSpellAttackDamageCastAct,
   resolve: resolveSpellAttackDamage,

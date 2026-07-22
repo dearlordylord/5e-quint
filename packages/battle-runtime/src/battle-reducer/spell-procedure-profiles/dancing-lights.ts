@@ -31,13 +31,11 @@ import { Either } from "effect";
 import { characterSpellProcedureRefsForProcedure } from "../../character-execution-admission.ts";
 
 import {
-  type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
   type BattleActiveEffect,
   type BattleResolutionResult,
   type BattleState,
-  type BonusActionSpellBattleResolutionInput,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
 import {
@@ -56,7 +54,7 @@ import {
 import { spellDancingLightsPlacementHole } from "../spells-targeting.ts";
 import type {
   SpellAdmissionContext,
-  SpellProcedureProfile,
+  SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
@@ -95,14 +93,10 @@ type DancingLightsRepositionInvocation = Extract<
 type DancingLightsCastInvocation =
   | DancingLightsSeparateCastInvocation
   | DancingLightsCombinedCastInvocation;
-type DancingLightsCastResolveInput = SpellProcedureProfileResolveInput<
-  DancingLightsCastInvocation,
-  ActionSpellBattleResolutionInput
->;
-type DancingLightsRepositionResolveInput = SpellProcedureProfileResolveInput<
-  DancingLightsRepositionInvocation,
-  BonusActionSpellBattleResolutionInput
->;
+type DancingLightsCastResolveInput =
+  SpellProcedureProfileResolveInput<DancingLightsCastInvocation>;
+type DancingLightsRepositionResolveInput =
+  SpellProcedureProfileResolveInput<DancingLightsRepositionInvocation>;
 
 function admitDancingLightsSeparateCast(
   spell: SpellRecord,
@@ -387,46 +381,37 @@ const DancingLightsRepositionInvocationSchema = spellProcedureExecutionSchema(
     spacingFeet: MovementFeet,
   }),
 );
-export const dancingLightsSeparateCastProfile: SpellProcedureProfile<
+export const dancingLightsSeparateCastProfile: SpellProcedureDeclaration<
   "dancingLightsSeparateCast",
-  DancingLightsSeparateCastInvocation,
-  ActionSpellBattleResolutionInput
+  DancingLightsSeparateCastInvocation
 > = {
   procedure: "dancingLightsSeparateCast",
   executionSchema: DancingLightsSeparateCastInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  targetListInvocation: { kind: "none" },
-  isReadiedSpellCompatible: false,
   admit: admitDancingLightsSeparateCast,
   discoverCastAct: discoverDancingLightsCastAct,
   resolve: resolveDancingLightsCast,
 };
 
-export const dancingLightsCombinedCastProfile: SpellProcedureProfile<
+export const dancingLightsCombinedCastProfile: SpellProcedureDeclaration<
   "dancingLightsCombinedCast",
-  DancingLightsCombinedCastInvocation,
-  ActionSpellBattleResolutionInput
+  DancingLightsCombinedCastInvocation
 > = {
   procedure: "dancingLightsCombinedCast",
   executionSchema: DancingLightsCombinedCastInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  targetListInvocation: { kind: "none" },
-  isReadiedSpellCompatible: false,
   admit: admitDancingLightsCombinedCast,
   discoverCastAct: discoverDancingLightsCastAct,
   resolve: resolveDancingLightsCast,
 };
 
-export const dancingLightsRepositionProfile: SpellProcedureProfile<
+export const dancingLightsRepositionProfile: SpellProcedureDeclaration<
   "dancingLightsReposition",
-  DancingLightsRepositionInvocation,
-  BonusActionSpellBattleResolutionInput
+  DancingLightsRepositionInvocation
 > = {
   procedure: "dancingLightsReposition",
   executionSchema: DancingLightsRepositionInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
-  targetListInvocation: { kind: "none" },
-  isReadiedSpellCompatible: false,
   admit: admitDancingLightsReposition,
   discoverCastAct: discoverDancingLightsRepositionAct,
   resolve: resolveDancingLightsReposition,

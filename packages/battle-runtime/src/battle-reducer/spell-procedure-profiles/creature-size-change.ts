@@ -29,14 +29,12 @@ import type {
 import { Either } from "effect";
 import {
   snapshotBattle,
-  type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
   type BattleCreatureState,
   type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
   type BattleState,
   type CreatureSizeChangeSpellInvocation,
-  type BonusActionSpellBattleResolutionInput,
 } from "../../battle-reducer.ts";
 import { CombatantId } from "../../identity.ts";
 import type {
@@ -74,9 +72,8 @@ import {
 } from "../spells-targeting.ts";
 import type {
   SpellAdmissionContext,
-  SpellProcedureProfile,
+  SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
-  SpellProcedureStoredGlyphReleaseOptions,
 } from "./profile.ts";
 import { Schema } from "effect";
 import {
@@ -92,7 +89,6 @@ import {
 import {
   discoverExtendedSpellMetamagicSelections,
   extendedSpellDurationModifierForApplications,
-  type SpellMetamagicApplicationFact,
 } from "../metamagic-support.ts";
 
 type CreatureSizeChangeInvocation = CreatureSizeChangeSpellInvocation;
@@ -378,13 +374,7 @@ function discoverCreatureSizeChangeCastAct(
 }
 
 function resolveCreatureSizeChange(
-  input: SpellProcedureProfileResolveInput<
-    CreatureSizeChangeInvocation,
-    ActionSpellBattleResolutionInput | BonusActionSpellBattleResolutionInput
-  > & {
-    readonly actionCostOverride?: "magicAction" | "bonusAction";
-    readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
-  } & SpellProcedureStoredGlyphReleaseOptions,
+  input: SpellProcedureProfileResolveInput<CreatureSizeChangeInvocation>,
 ): BattleResolutionResult {
   if (
     input.fillSet.objectTarget !== undefined ||
@@ -448,7 +438,7 @@ function resolveCreatureSizeChange(
     );
   }
 
-  if (input.opensSpellCastReactionWindow !== false) {
+  if (input.storedGlyphRelease === undefined) {
     const spellCastReactionWindow = maybeOpenInterruptWindow(
       input.input.state,
       spellCastInterruptFrame({
@@ -515,7 +505,7 @@ function resolveCreatureSizeChange(
     }
     const outcome = input.fillSet.savingThrowOutcomes.outcomes[0];
     if (outcome?.succeeded === true) {
-      if (input.spendsCastResources === false) {
+      if (input.storedGlyphRelease !== undefined) {
         return {
           tag: "resolved",
           state: input.input.state,
@@ -546,7 +536,7 @@ function resolveCreatureSizeChange(
   }
 
   const concentrationBase =
-    input.startsOrdinaryConcentration === false
+    input.storedGlyphRelease !== undefined
       ? input.input.state
       : spellRequiresConcentration(input.invocation)
         ? breakBattleConcentration(input.input.state, input.actorId)
@@ -558,7 +548,7 @@ function resolveCreatureSizeChange(
     input.invocation,
     input.metamagicApplications,
   );
-  if (input.spendsCastResources === false) {
+  if (input.storedGlyphRelease !== undefined) {
     return {
       tag: "resolved",
       state: effected,
@@ -570,7 +560,7 @@ function resolveCreatureSizeChange(
     actorId: input.actorId,
     invocation: input.invocation,
     errorState: input.input.state,
-    ...(input.startsOrdinaryConcentration === false
+    ...(input.storedGlyphRelease !== undefined
       ? { startConcentration: false }
       : {}),
     ...(input.actionCostOverride === undefined
@@ -741,32 +731,27 @@ const CreatureSizeDecreaseInvocationSchema = spellProcedureExecutionSchema(
     procedure: Schema.Literal("creatureSizeDecrease"),
   }),
 );
-export const creatureSizeChangeProfile: SpellProcedureProfile<
+export const creatureSizeChangeProfile: SpellProcedureDeclaration<
   "creatureSizeIncrease",
-  CreatureSizeIncreaseInvocation,
-  ActionSpellBattleResolutionInput | BonusActionSpellBattleResolutionInput
+  CreatureSizeIncreaseInvocation
 > = {
   procedure: "creatureSizeIncrease",
   executionSchema: CreatureSizeIncreaseInvocationSchema,
   metamagicCompatibility: "bonusActionRewrite",
-  targetListInvocation: { kind: "always" },
-  isReadiedSpellCompatible: false,
   admit: admitCreatureSizeChange,
   discoverCastAct: discoverCreatureSizeChangeCastAct,
   resolve: resolveCreatureSizeChange,
 };
 
-export const creatureSizeDecreaseProfile: SpellProcedureProfile<
+export const creatureSizeDecreaseProfile: SpellProcedureDeclaration<
   "creatureSizeDecrease",
-  CreatureSizeDecreaseInvocation,
-  ActionSpellBattleResolutionInput | BonusActionSpellBattleResolutionInput
+  CreatureSizeDecreaseInvocation
 > = {
   procedure: "creatureSizeDecrease",
   executionSchema: CreatureSizeDecreaseInvocationSchema,
   metamagicCompatibility: "bonusActionRewrite",
-  targetListInvocation: { kind: "always" },
-  isReadiedSpellCompatible: false,
   admit: admitCreatureSizeDecrease,
   discoverCastAct: discoverCreatureSizeChangeCastAct,
   resolve: resolveCreatureSizeChange,
 };
+import type { SpellMetamagicApplicationFact } from "../metamagic-support.ts";

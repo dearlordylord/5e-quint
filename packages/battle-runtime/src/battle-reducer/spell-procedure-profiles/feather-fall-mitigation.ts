@@ -31,13 +31,10 @@ import { Either } from "effect";
 import {
   snapshotBattle,
   type AvailableBattleAct,
-  type BattleInterruptCheckpoint,
-  type BattleResolutionInputForSubject,
   type BattleResolutionResult,
   type BattleState,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
-import type { BattleSubject } from "../../battle-subjects.ts";
 import { CombatantId } from "../../identity.ts";
 import { DurationBattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
 import { invalidResult } from "../result-helpers.ts";
@@ -53,7 +50,7 @@ import { featherFallReactionSpellMatchesTrigger } from "../reaction-triggered-sp
 import { needsHolesResult } from "../hole-helpers.ts";
 import type {
   SpellAdmissionContext,
-  SpellProcedureProfile,
+  SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
@@ -71,22 +68,8 @@ type FeatherFallMitigationInvocation = Extract<
   SupportedSpellInvocation,
   { readonly procedure: "featherFallMitigation" }
 >;
-type FeatherFallMitigationBattleResolutionInput =
-  BattleResolutionInputForSubject<
-    Extract<
-      BattleSubject,
-      {
-        readonly tag: "runtimeCommand";
-        readonly command: "castTriggeredReactionSpell";
-      }
-    >
-  > & {
-    readonly frame: BattleInterruptCheckpoint;
-  };
-type FeatherFallMitigationResolveInput = SpellProcedureProfileResolveInput<
-  FeatherFallMitigationInvocation,
-  FeatherFallMitigationBattleResolutionInput
->;
+type FeatherFallMitigationResolveInput =
+  SpellProcedureProfileResolveInput<FeatherFallMitigationInvocation>;
 
 function admitFeatherFallMitigation(
   spell: SpellRecord,
@@ -315,13 +298,10 @@ export const featherFallMitigationProfile = {
   procedure: "featherFallMitigation",
   executionSchema: FeatherFallMitigationInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
-  targetListInvocation: { kind: "always" },
-  isReadiedSpellCompatible: false,
   admit: admitFeatherFallMitigation,
   discoverCastAct: discoverFeatherFallMitigationCastAct,
   resolve: resolveFeatherFallMitigation,
-} satisfies SpellProcedureProfile<
+} satisfies SpellProcedureDeclaration<
   "featherFallMitigation",
-  FeatherFallMitigationInvocation,
-  FeatherFallMitigationBattleResolutionInput
+  FeatherFallMitigationInvocation
 >;

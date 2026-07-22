@@ -65,13 +65,14 @@ import { invalidResult } from "../result-helpers.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
 import type {
   SpellAdmissionContext,
-  SpellProcedureProfile,
+  SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import {
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
 } from "./profile.ts";
+import type { HypnoticPatternStoredGlyphRelease } from "./resolution-contract.ts";
 import {
   DcSourceSchema,
   MovementFeet,
@@ -113,22 +114,8 @@ type HypnoticPatternPhase = Extract<
   };
 };
 
-type HypnoticPatternResolveInput = SpellProcedureProfileResolveInput<
-  HypnoticPatternSpellInvocation,
-  ActionSpellBattleResolutionInput
-> & {
-  readonly metamagicApplications?: readonly CharacterBattleMetamagicOptionFact[];
-  readonly releaseResource?: HypnoticPatternReleaseResource;
-};
-type HypnoticPatternReleaseResource =
-  | {
-      readonly kind: "ordinarySpellCast";
-      readonly metamagicApplications?: readonly CharacterBattleMetamagicOptionFact[];
-    }
-  | {
-      readonly kind: "storedGlyphSpellRelease";
-      readonly selfOriginAreaAnchorId: CombatantId;
-    };
+type HypnoticPatternResolveInput =
+  SpellProcedureProfileResolveInput<HypnoticPatternSpellInvocation>;
 
 export function isGlyphStoredAreaControlSpellInvocation(
   invocation: SupportedSpellInvocation,
@@ -179,7 +166,7 @@ export function resolveStoredGlyphAreaControlSpellRelease(input: {
       input.input.subject.procedureRef,
     ),
     fillSet: input.fillSet,
-    releaseResource: {
+    storedGlyphRelease: {
       kind: "storedGlyphSpellRelease",
       selfOriginAreaAnchorId: input.selfOriginAreaAnchorId,
     },
@@ -383,24 +370,15 @@ function hypnoticPatternMetamagicInitialHoles(
   return holes;
 }
 
-function ordinaryHypnoticPatternReleaseResource(
-  metamagicApplications:
-    | readonly CharacterBattleMetamagicOptionFact[]
-    | undefined = undefined,
-): HypnoticPatternReleaseResource {
-  return metamagicApplications === undefined
-    ? { kind: "ordinarySpellCast" }
-    : { kind: "ordinarySpellCast", metamagicApplications };
-}
-
 function hypnoticPatternReleaseResourceState(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
   readonly invocation: HypnoticPatternResolveInput["invocation"];
   readonly errorState: BattleState;
-  readonly resource: HypnoticPatternReleaseResource;
+  readonly metamagicApplications: readonly CharacterBattleMetamagicOptionFact[];
+  readonly storedGlyphRelease: HypnoticPatternStoredGlyphRelease | undefined;
 }): Extract<BattleResolutionResult, { readonly tag: "resolved" | "invalid" }> {
-  if (input.resource.kind === "storedGlyphSpellRelease") {
+  if (input.storedGlyphRelease !== undefined) {
     return {
       tag: "resolved",
       state: input.state,
@@ -413,30 +391,28 @@ function hypnoticPatternReleaseResourceState(input: {
     invocation: input.invocation,
     errorState: input.errorState,
     startConcentration: false,
-    ...(input.resource.metamagicApplications === undefined
-      ? {}
-      : { metamagicApplications: input.resource.metamagicApplications }),
+    metamagicApplications: input.metamagicApplications,
   });
 }
 
 function storedGlyphAreaControlReleaseUsesOrdinaryConcentration(
-  releaseResource: HypnoticPatternReleaseResource | undefined,
+  storedGlyphRelease: HypnoticPatternStoredGlyphRelease | undefined,
 ): boolean {
-  return releaseResource?.kind !== "storedGlyphSpellRelease";
+  return storedGlyphRelease === undefined;
 }
 
 function invalidStoredGlyphAreaCenterResult(input: {
   readonly state: BattleState;
   readonly savingThrowOutcomes: BattleSpellSavingThrowOutcomeValue;
-  readonly releaseResource: HypnoticPatternReleaseResource | undefined;
+  readonly storedGlyphRelease: HypnoticPatternStoredGlyphRelease | undefined;
 }): Extract<BattleResolutionResult, { readonly tag: "invalid" }> | null {
-  if (input.releaseResource?.kind !== "storedGlyphSpellRelease") {
+  if (input.storedGlyphRelease === undefined) {
     return null;
   }
   if (
     "area" in input.savingThrowOutcomes &&
     input.savingThrowOutcomes.area.originAnchorId ===
-      input.releaseResource.selfOriginAreaAnchorId
+      input.storedGlyphRelease.selfOriginAreaAnchorId
   ) {
     return null;
   }
@@ -450,6 +426,8 @@ function invalidStoredGlyphAreaCenterResult(input: {
 function resolveHypnoticPattern(
   input: HypnoticPatternResolveInput,
 ): BattleResolutionResult {
+  const metamagicApplications =
+    input.storedGlyphRelease === undefined ? input.metamagicApplications : [];
   if (
     input.fillSet.targetId !== undefined ||
     input.fillSet.targetList !== undefined ||
@@ -469,7 +447,7 @@ function resolveHypnoticPattern(
     actorId: input.actorId,
     invocation: input.invocation,
     fills: input.input.fills,
-    metamagicApplications: input.metamagicApplications,
+    metamagicApplications,
     targetId: undefined,
   });
   if (metamagicSelections.tag === "invalid") {
@@ -527,7 +505,7 @@ function resolveHypnoticPattern(
   const invalidStoredGlyphCenter = invalidStoredGlyphAreaCenterResult({
     state: input.input.state,
     savingThrowOutcomes: input.fillSet.savingThrowOutcomes,
-    releaseResource: input.releaseResource,
+    storedGlyphRelease: input.storedGlyphRelease,
   });
   if (invalidStoredGlyphCenter !== null) {
     return invalidStoredGlyphCenter;
@@ -573,9 +551,8 @@ function resolveHypnoticPattern(
     actorId: input.actorId,
     invocation: input.invocation,
     errorState: input.input.state,
-    resource:
-      input.releaseResource ??
-      ordinaryHypnoticPatternReleaseResource(input.metamagicApplications),
+    metamagicApplications,
+    storedGlyphRelease: input.storedGlyphRelease,
   });
   if (resourced.tag === "invalid") {
     return resourced;
@@ -589,7 +566,7 @@ function resolveHypnoticPattern(
   const concentrationState =
     effected.appliedTargetIds.length === 0 ||
     !storedGlyphAreaControlReleaseUsesOrdinaryConcentration(
-      input.releaseResource,
+      input.storedGlyphRelease,
     )
       ? effected.state
       : startSpellEffectConcentration(
@@ -753,13 +730,10 @@ export const hypnoticPatternProfile = {
   procedure: "hypnoticPattern",
   executionSchema: HypnoticPatternInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  targetListInvocation: { kind: "none" },
-  isReadiedSpellCompatible: false,
   admit: admitHypnoticPattern,
   discoverCastAct: discoverHypnoticPatternCastAct,
   resolve: resolveHypnoticPattern,
-} satisfies SpellProcedureProfile<
+} satisfies SpellProcedureDeclaration<
   "hypnoticPattern",
-  HypnoticPatternSpellInvocation,
-  ActionSpellBattleResolutionInput
+  HypnoticPatternSpellInvocation
 >;

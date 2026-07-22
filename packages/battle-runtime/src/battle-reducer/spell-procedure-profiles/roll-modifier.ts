@@ -42,16 +42,13 @@ import { BattleProcedureExecutionRef, CombatantId } from "../../identity.ts";
 import { BattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
 import {
   snapshotBattle,
-  type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
   type BattleState,
-  type BonusActionSpellBattleResolutionInput,
   type SelectedRollModifierSpellEffect,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
-import type { SpellMetamagicApplicationFact } from "../metamagic-support.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";
 import { maybeOpenInterruptWindow } from "../dispatcher.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
@@ -83,9 +80,8 @@ import {
 import { spellTargetHole, spellTargetListHole } from "../spells-targeting.ts";
 import type {
   SpellAdmissionContext,
-  SpellProcedureProfile,
+  SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
-  SpellProcedureStoredGlyphReleaseOptions,
 } from "./profile.ts";
 import { Schema } from "effect";
 import {
@@ -139,13 +135,8 @@ type RollModifierInvocation = Extract<
   SupportedSpellInvocation,
   { readonly procedure: "rollModifier" }
 >;
-type RollModifierResolveInput = SpellProcedureProfileResolveInput<
-  RollModifierInvocation,
-  ActionSpellBattleResolutionInput | BonusActionSpellBattleResolutionInput
-> & {
-  readonly actionCostOverride?: "magicAction" | "bonusAction";
-  readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
-} & SpellProcedureStoredGlyphReleaseOptions;
+type RollModifierResolveInput =
+  SpellProcedureProfileResolveInput<RollModifierInvocation>;
 
 function admitRollModifier(
   spell: SpellRecord,
@@ -370,7 +361,7 @@ function resolveRollModifier(
     );
   }
 
-  if (input.opensSpellCastReactionWindow !== false) {
+  if (input.storedGlyphRelease === undefined) {
     const spellCastReactionWindow = maybeOpenInterruptWindow(
       input.input.state,
       spellCastInterruptFrame({
@@ -414,7 +405,7 @@ function resolveRollModifier(
   }
 
   const concentrationBase =
-    input.startsOrdinaryConcentration === false
+    input.storedGlyphRelease !== undefined
       ? input.input.state
       : spellRequiresConcentration(input.invocation)
         ? breakBattleConcentration(input.input.state, input.actorId)
@@ -435,7 +426,7 @@ function resolveRollModifier(
           ),
           input.invocation.sourceProcedureRef,
         );
-  if (input.spendsCastResources === false) {
+  if (input.storedGlyphRelease !== undefined) {
     return {
       tag: "resolved",
       state: effected,
@@ -447,7 +438,7 @@ function resolveRollModifier(
     actorId: input.actorId,
     invocation: input.invocation,
     errorState: input.input.state,
-    ...(input.startsOrdinaryConcentration === false
+    ...(input.storedGlyphRelease !== undefined
       ? { startConcentration: false }
       : {}),
     ...(input.actionCostOverride === undefined
@@ -514,15 +505,12 @@ const RollModifierInvocationSchema = spellProcedureExecutionSchema(
     }),
   ),
 );
-export const rollModifierProfile: SpellProcedureProfile<
+export const rollModifierProfile: SpellProcedureDeclaration<
   "rollModifier",
-  RollModifierInvocation,
-  ActionSpellBattleResolutionInput | BonusActionSpellBattleResolutionInput
+  RollModifierInvocation
 > = {
   procedure: "rollModifier",
   metamagicCompatibility: "bonusActionRewrite",
-  targetListInvocation: { kind: "always" },
-  isReadiedSpellCompatible: false,
   admit: admitRollModifier,
 
   discoverCastAct: discoverRollModifierCastAct,

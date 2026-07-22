@@ -16,7 +16,6 @@
 //     spell effects.
 
 import {
-  type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
   type BattleHole,
@@ -31,7 +30,7 @@ import { supportedPreparedAbilityD20TestRollModeSaveGateProfile } from "./_save-
 import { resolveAbilityD20TestRollModeSaveGateSpellAct } from "../spells-resolve-save-gates.ts";
 import type {
   SpellAdmissionContext,
-  SpellProcedureProfile,
+  SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
@@ -54,10 +53,7 @@ type AbilityD20TestRollModeSaveGateSpellInvocation = Extract<
 >;
 
 type AbilityD20TestRollModeSaveGateResolveInput =
-  SpellProcedureProfileResolveInput<
-    AbilityD20TestRollModeSaveGateSpellInvocation,
-    ActionSpellBattleResolutionInput
-  >;
+  SpellProcedureProfileResolveInput<AbilityD20TestRollModeSaveGateSpellInvocation>;
 
 function admitAbilityD20TestRollModeSaveGate(
   spell: AbilityD20TestRollModeSaveGateSpellInvocation["spell"],
@@ -199,13 +195,10 @@ export const abilityD20TestRollModeSaveGateProfile = {
   procedure: "abilityD20TestRollModeSaveGate",
   executionSchema: AbilityD20TestRollModeSaveGateInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  targetListInvocation: { kind: "always" },
-  isReadiedSpellCompatible: false,
   admit: admitAbilityD20TestRollModeSaveGate,
   discoverCastAct: discoverAbilityD20TestRollModeSaveGateCastAct,
   resolve: resolveAbilityD20TestRollModeSaveGate,
-} satisfies SpellProcedureProfile<
+} satisfies SpellProcedureDeclaration<
   "abilityD20TestRollModeSaveGate",
-  AbilityD20TestRollModeSaveGateSpellInvocation,
-  ActionSpellBattleResolutionInput
+  AbilityD20TestRollModeSaveGateSpellInvocation
 >;

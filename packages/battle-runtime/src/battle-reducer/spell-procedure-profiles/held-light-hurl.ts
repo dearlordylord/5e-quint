@@ -20,7 +20,6 @@ import { DiceExprSchema } from "@dnd/surface/surface/schema";
 
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import {
-  type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
@@ -36,13 +35,14 @@ import { characterSpellProcedureExecution } from "../../character-execution-admi
 import { spellCastSelectionSubject } from "../spells-discovery.ts";
 import { spellObjectTargetHole, spellTargetHole } from "../spells-targeting.ts";
 import { resolveSpellAttackDamageAct } from "../spells-resolve.ts";
+import type { SpellProcedureExecutionRegistry } from "./execution-registry.ts";
 import {
   heldLightHurlMechanicalFacts,
   isProduceFlameOngoingEffectSpell,
 } from "./held-light.ts";
 import type {
   SpellAdmissionContext,
-  SpellProcedureProfile,
+  SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
@@ -64,10 +64,8 @@ type HeldLightHurlInvocation = Extract<
   { readonly procedure: "heldLightHurl" }
 >;
 
-type HeldLightHurlResolveInput = SpellProcedureProfileResolveInput<
-  HeldLightHurlInvocation,
-  ActionSpellBattleResolutionInput
->;
+type HeldLightHurlResolveInput =
+  SpellProcedureProfileResolveInput<HeldLightHurlInvocation>;
 
 function admitHeldLightHurl(
   spell: SpellRecord,
@@ -125,8 +123,9 @@ function discoverHeldLightHurlCastAct(
 
 function resolveHeldLightHurl(
   input: HeldLightHurlResolveInput,
+  executionRegistry: SpellProcedureExecutionRegistry,
 ): BattleResolutionResult {
-  return resolveSpellAttackDamageAct(input);
+  return resolveSpellAttackDamageAct(input, executionRegistry);
 }
 
 const HeldLightHurlInvocationSchema = spellProcedureExecutionSchema(
@@ -147,15 +146,13 @@ const HeldLightHurlInvocationSchema = spellProcedureExecutionSchema(
     attackBonus: AttackBonus,
   }),
 );
-export const heldLightHurlProfile: SpellProcedureProfile<
+export const heldLightHurlProfile: SpellProcedureDeclaration<
   "heldLightHurl",
   HeldLightHurlInvocation
 > = {
   procedure: "heldLightHurl",
   executionSchema: HeldLightHurlInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  targetListInvocation: { kind: "none" },
-  isReadiedSpellCompatible: false,
   admit: admitHeldLightHurl,
   discoverCastAct: discoverHeldLightHurlCastAct,
   resolve: resolveHeldLightHurl,

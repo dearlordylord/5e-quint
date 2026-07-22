@@ -38,17 +38,14 @@ import { Match, Schema } from "effect";
 import { characterUnitProcedureBindings } from "../../character-execution-admission.ts";
 import {
   maybeOpenInterruptWindow,
-  type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
   type BattleState,
-  type BonusActionSpellBattleResolutionInput,
   type HealingSpellActionCost,
   type HealingSpellTargeting,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
-import type { SpellMetamagicApplicationFact } from "../metamagic-support.ts";
 import { type CombatantId } from "../../identity.ts";
 import { applyHpHealing } from "../damage-apply.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
@@ -71,7 +68,7 @@ import { healingSpellTargetSelection } from "../spells-resolve-target-selection.
 import { spellTargetHole, spellTargetListHole } from "../spells-targeting.ts";
 import type {
   SpellAdmissionContext,
-  SpellProcedureProfile,
+  SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import {
@@ -88,13 +85,8 @@ type DirectHitPointRestorationInvocation = Extract<
   SupportedSpellInvocation,
   { readonly procedure: "directHitPointRestoration" }
 >;
-type DirectHitPointRestorationResolveInput = SpellProcedureProfileResolveInput<
-  DirectHitPointRestorationInvocation,
-  ActionSpellBattleResolutionInput | BonusActionSpellBattleResolutionInput
-> & {
-  readonly actionCostOverride?: "magicAction" | "bonusAction";
-  readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
-};
+type DirectHitPointRestorationResolveInput =
+  SpellProcedureProfileResolveInput<DirectHitPointRestorationInvocation>;
 
 function admitDirectHitPointRestoration(
   spell: SpellRecord,
@@ -450,13 +442,10 @@ export const directHitPointRestorationProfile = {
   procedure: "directHitPointRestoration",
   executionSchema: DirectHitPointRestorationInvocationSchema,
   metamagicCompatibility: "bonusActionRewrite",
-  targetListInvocation: { kind: "always" },
-  isReadiedSpellCompatible: false,
   admit: admitDirectHitPointRestoration,
   discoverCastAct: discoverDirectHitPointRestorationCastAct,
   resolve: resolveDirectHitPointRestoration,
-} satisfies SpellProcedureProfile<
+} satisfies SpellProcedureDeclaration<
   "directHitPointRestoration",
-  DirectHitPointRestorationInvocation,
-  ActionSpellBattleResolutionInput | BonusActionSpellBattleResolutionInput
+  DirectHitPointRestorationInvocation
 >;

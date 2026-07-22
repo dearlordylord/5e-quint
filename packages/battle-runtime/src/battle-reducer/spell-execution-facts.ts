@@ -1,8 +1,12 @@
 import type {
   BattleExecutableSpellInvocation,
+  ReadiedSpellInvocation,
   SupportedSpellInvocation,
 } from "../battle-reducer.ts";
-import type { SpellProcedureExecution } from "../character-execution.ts";
+import type {
+  RuntimeSpellProcedureExecution,
+  SpellProcedureExecution,
+} from "../character-execution.ts";
 import { spellInvocationIsSpellcasting } from "./spell-turn-resources.ts";
 import { isTriggeredReactionSpellInvocation } from "./spell-interrupt-procedure-kinds.ts";
 import { Match, Schema } from "effect";
@@ -31,7 +35,7 @@ const SPELL_EXECUTION_CLASSES = [
   "triggeredReactionOrActionCast",
   "attackHitBonusAction",
 ] as const;
-type SpellExecutionClass = (typeof SPELL_EXECUTION_CLASSES)[number];
+export type SpellExecutionClass = (typeof SPELL_EXECUTION_CLASSES)[number];
 
 const SPELL_EXECUTION_CLASS_BY_PROCEDURE = {
   abilityD20TestRollModeSaveGate: "actionCast",
@@ -119,6 +123,38 @@ const SPELL_EXECUTION_CLASS_BY_PROCEDURE = {
   SpellExecutionClass
 >;
 
+export type SpellExecutionClassForProcedure<
+  P extends SupportedSpellInvocation["procedure"],
+> = (typeof SPELL_EXECUTION_CLASS_BY_PROCEDURE)[P];
+
+// ReadiedSpellInvocation is the wider mechanical release-shape union. This
+// list is the single admission boundary for procedures whose reducers are
+// implemented by the runtime's Readied Spell lane.
+const READIED_SPELL_RUNTIME_LANE_PROCEDURES = [
+  "chainedSpellAttackDamage",
+  "repeatedDamageAllocation",
+  "saveGatedDamage",
+  "spellAttackDamage",
+] as const satisfies ReadonlyArray<ReadiedSpellInvocation["procedure"]>;
+const READIED_SPELL_RUNTIME_LANE_PROCEDURE_SET: ReadonlySet<
+  SpellProcedureExecution["procedure"]
+> = new Set(READIED_SPELL_RUNTIME_LANE_PROCEDURES);
+
+export function spellInvocationHasReadiedSpellExecutionShape(
+  invocation:
+    | SupportedSpellInvocation
+    | RuntimeSpellProcedureExecution
+    | SpellProcedureExecution,
+): boolean {
+  if (!READIED_SPELL_RUNTIME_LANE_PROCEDURE_SET.has(invocation.procedure)) {
+    return false;
+  }
+  if (invocation.procedure !== "spellAttackDamage") {
+    return true;
+  }
+  return invocation.damage.kind !== "sorcerousBurstDamageTypeChoice";
+}
+
 function executionClassForInvocation(
   invocation: Pick<SupportedSpellInvocation, "procedure">,
 ): SpellExecutionClass {
@@ -149,7 +185,6 @@ export function spellSubjectTagForInvocation(
 
 export function spellExecutionFacts(
   invocation: SpellProcedureExecution,
-  readiedSpellCompatible: boolean,
 ): SpellExecutionFacts {
   const executionClass = executionClassForInvocation(invocation);
   if (
@@ -170,6 +205,11 @@ export function spellExecutionFacts(
     "spellRuleFacts" in invocation &&
     invocation.spellRuleFacts.range.kind === "touch";
   return kind === "actionSpell"
-    ? { kind, familiarTouchDelivery, readiedSpellCompatible }
+    ? {
+        kind,
+        familiarTouchDelivery,
+        readiedSpellCompatible:
+          spellInvocationHasReadiedSpellExecutionShape(invocation),
+      }
     : { kind, familiarTouchDelivery };
 }

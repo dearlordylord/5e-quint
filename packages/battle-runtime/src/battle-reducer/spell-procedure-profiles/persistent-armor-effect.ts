@@ -35,7 +35,6 @@ import {
   type BattleResolutionResult,
   type BattleState,
   type SupportedSpellInvocation,
-  type ActionSpellBattleResolutionInput,
 } from "../../battle-reducer.ts";
 import { persistentArmorEffectExecutionFactsForSpell } from "../../procedure-admission/persistent-armor-effect-facts.ts";
 import type { CharacterBattleInvocationSpellAccessState } from "../../character-battle-resources.ts";
@@ -47,7 +46,7 @@ import { spendSpellCastResources } from "../spells-resolve-resources.ts";
 import { spellTargetHole, spellTargetIsLegal } from "../spells-targeting.ts";
 import type {
   SpellAdmissionContext,
-  SpellProcedureProfile,
+  SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
@@ -78,9 +77,6 @@ const PersistentArmorEffectSchema = Schema.Struct({
   ),
   expiresAt: DurationBattleActiveEffectExpirationSchema,
 });
-type PersistentArmorEffectResolutionInput = ActionSpellBattleResolutionInput & {
-  readonly castingState: BattleState;
-};
 type PersistentArmorSpellSource =
   | Pick<
       Extract<
@@ -223,10 +219,7 @@ function applyPersistentArmorEffect(
 }
 
 function resolvePersistentArmorEffect(
-  input: SpellProcedureProfileResolveInput<
-    PersistentArmorInvocation,
-    PersistentArmorEffectResolutionInput
-  >,
+  input: SpellProcedureProfileResolveInput<PersistentArmorInvocation>,
 ): BattleResolutionResult {
   const originalState = input.input.state;
   const castingState = input.input.castingState;
@@ -328,16 +321,13 @@ const PersistentArmorEffectInvocationSchema = spellProcedureExecutionSchema(
     }),
   ),
 );
-export const persistentArmorEffectProfile: SpellProcedureProfile<
+export const persistentArmorEffectProfile: SpellProcedureDeclaration<
   "persistentArmorEffect",
-  PersistentArmorInvocation,
-  PersistentArmorEffectResolutionInput
+  PersistentArmorInvocation
 > = {
   procedure: "persistentArmorEffect",
   executionSchema: PersistentArmorEffectInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  targetListInvocation: { kind: "none" },
-  isReadiedSpellCompatible: false,
   admit: admitPersistentArmorEffect,
   discoverCastAct: discoverPersistentArmorEffectCastAct,
   resolve: resolvePersistentArmorEffect,

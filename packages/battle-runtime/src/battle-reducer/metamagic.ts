@@ -40,9 +40,11 @@ import type {
 } from "../character-execution.ts";
 import { combatantHasLevelOnePlusSpellCastThisTurn } from "./spell-turn-resources.ts";
 import {
-  registeredSpellProcedureProfile,
-  type RegisteredSpellProcedureProfiles,
-} from "./spell-procedure-profiles/registry.ts";
+  registeredSpellProcedureClassification,
+  type RegisteredSpellProcedure,
+  type RegisteredSpellProcedureExecution,
+  type SpellProcedureExecutionRegistry,
+} from "./spell-procedure-profiles/execution-registry.ts";
 import {
   DISTANT_METAMAGIC_EFFECT_KIND,
   distantSpellRangeModifierFact,
@@ -133,7 +135,7 @@ type QuickenedActionRewriteProcedureDisposition =
   | "notActionSpellCasting";
 
 type QuickenedActionRewriteProcedureDispositions = {
-  readonly [Procedure in keyof RegisteredSpellProcedureProfiles]: RegisteredSpellProcedureProfiles[Procedure]["metamagicCompatibility"];
+  readonly [Procedure in RegisteredSpellProcedure]: RegisteredSpellProcedureExecution<Procedure>["metamagicCompatibility"];
 } & Record<
   SupportedSpellInvocation["procedure"],
   QuickenedActionRewriteProcedureDisposition
@@ -162,13 +164,16 @@ type SpellMetamagicSubject = Pick<
   "tag" | "mode" | "metamagic"
 >;
 
-export function admitSpellMetamagicApplications(input: {
-  readonly state: BattleState;
-  readonly actor: BattleCreatureState;
-  readonly actorId: CombatantId;
-  readonly invocation: RuntimeSpellProcedure;
-  readonly subject: SpellMetamagicSubject;
-}): SpellMetamagicAdmission {
+export function admitSpellMetamagicApplications(
+  input: {
+    readonly state: BattleState;
+    readonly actor: BattleCreatureState;
+    readonly actorId: CombatantId;
+    readonly invocation: RuntimeSpellProcedure;
+    readonly subject: SpellMetamagicSubject;
+  },
+  executionRegistry: SpellProcedureExecutionRegistry,
+): SpellMetamagicAdmission {
   const selections = input.subject.metamagic ?? [];
   if (selections.length === 0) {
     return { tag: "ok", applications: [] };
@@ -215,11 +220,14 @@ export function admitSpellMetamagicApplications(input: {
   if (stackingIssue !== null) {
     return metamagicIssue(stackingIssue);
   }
-  const supportIssue = spellMetamagicSupportIssue({
-    applications: knownApplications,
-    invocation: input.invocation,
-    subject: input.subject,
-  });
+  const supportIssue = spellMetamagicSupportIssue(
+    {
+      applications: knownApplications,
+      invocation: input.invocation,
+      subject: input.subject,
+    },
+    executionRegistry,
+  );
   if (supportIssue !== null) {
     return metamagicIssue(supportIssue);
   }
@@ -244,12 +252,15 @@ export function admitSpellMetamagicApplications(input: {
     : metamagicIssue(sorceryPointIssue);
 }
 
-export function actorCanOfferQuickenedSpellMetamagic(input: {
-  readonly state: BattleState;
-  readonly actor: BattleCreatureState;
-  readonly actorId: CombatantId;
-  readonly invocation: RuntimeSpellProcedure;
-}): boolean {
+export function actorCanOfferQuickenedSpellMetamagic(
+  input: {
+    readonly state: BattleState;
+    readonly actor: BattleCreatureState;
+    readonly actorId: CombatantId;
+    readonly invocation: RuntimeSpellProcedure;
+  },
+  executionRegistry: SpellProcedureExecutionRegistry,
+): boolean {
   if (input.actor.origin.kind !== "character") {
     return false;
   }
@@ -262,7 +273,12 @@ export function actorCanOfferQuickenedSpellMetamagic(input: {
   if (!spellInvocationHasMagicActionCastingTime(input.invocation)) {
     return false;
   }
-  if (!spellInvocationSupportsQuickenedActionRewrite(input.invocation)) {
+  if (
+    !spellInvocationSupportsQuickenedActionRewrite(
+      input.invocation,
+      executionRegistry,
+    )
+  ) {
     return false;
   }
   if (!canSpendBonusAction(input.state.currentTurnResources)) {
@@ -630,13 +646,16 @@ export function spellInvocationHasMagicActionCastingTime(
 
 export function spellInvocationSupportsQuickenedActionRewrite(
   invocation: RuntimeSpellProcedure,
+  executionRegistry: SpellProcedureExecutionRegistry,
 ): invocation is Extract<
   SpellProcedureExecution,
   { readonly procedure: QuickenedActionRewriteProcedure }
 > {
   return (
-    quickenedActionRewriteProcedureDisposition(invocation) ===
-    "bonusActionRewrite"
+    quickenedActionRewriteProcedureDisposition(
+      invocation,
+      executionRegistry,
+    ) === "bonusActionRewrite"
   );
 }
 
@@ -720,11 +739,14 @@ function metamagicStackingIssue(
     : "A spell can use only one Metamagic option unless one selected option explicitly combines with a different Metamagic option.";
 }
 
-function spellMetamagicSupportIssue(input: {
-  readonly applications: readonly SpellMetamagicApplicationFact[];
-  readonly invocation: RuntimeSpellProcedure;
-  readonly subject: Pick<SpellMetamagicSubject, "tag" | "mode">;
-}): string | null {
+function spellMetamagicSupportIssue(
+  input: {
+    readonly applications: readonly SpellMetamagicApplicationFact[];
+    readonly invocation: RuntimeSpellProcedure;
+    readonly subject: Pick<SpellMetamagicSubject, "tag" | "mode">;
+  },
+  executionRegistry: SpellProcedureExecutionRegistry,
+): string | null {
   const effectKinds = new Set(
     input.applications.map((option) => option.effectKind),
   );
@@ -739,6 +761,7 @@ function spellMetamagicSupportIssue(input: {
     }
     const quickenedSupportIssue = quickenedActionRewriteSupportIssue(
       input.invocation,
+      executionRegistry,
     );
     if (quickenedSupportIssue !== null) {
       return quickenedSupportIssue;
@@ -782,15 +805,22 @@ function spellMetamagicSupportIssue(input: {
 
 function quickenedActionRewriteProcedureDisposition(
   invocation: RuntimeSpellProcedure,
+  executionRegistry: SpellProcedureExecutionRegistry,
 ): QuickenedActionRewriteProcedureDisposition {
-  return registeredSpellProcedureProfile(invocation.procedure)
-    .metamagicCompatibility;
+  return registeredSpellProcedureClassification(
+    executionRegistry,
+    invocation.procedure,
+  ).metamagicCompatibility;
 }
 
 function quickenedActionRewriteSupportIssue(
   invocation: RuntimeSpellProcedure,
+  executionRegistry: SpellProcedureExecutionRegistry,
 ): string | null {
-  const disposition = quickenedActionRewriteProcedureDisposition(invocation);
+  const disposition = quickenedActionRewriteProcedureDisposition(
+    invocation,
+    executionRegistry,
+  );
   if (disposition === "bonusActionRewrite") {
     return null;
   }

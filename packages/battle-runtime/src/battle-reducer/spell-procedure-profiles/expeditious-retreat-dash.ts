@@ -26,7 +26,6 @@ import {
   type BattleActDiscoveryCandidate,
   type BattleResolutionResult,
   type BattleState,
-  type BonusActionDashSpellBattleResolutionInput,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
 import { CombatantId } from "../../identity.ts";
@@ -47,7 +46,7 @@ import {
 import { spellFillSetContainsOnlySpellCastReactionFacts } from "../spells-resolve-fill-set.ts";
 import type {
   SpellAdmissionContext,
-  SpellProcedureProfile,
+  SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
@@ -70,10 +69,8 @@ const SpellDashBonusActionEffectSchema = Schema.Struct({
   sourceCombatantId: CombatantId,
   expiresAt: ConcentrationBattleActiveEffectExpirationSchema,
 });
-type ExpeditiousRetreatDashResolveInput = SpellProcedureProfileResolveInput<
-  ExpeditiousRetreatDashInvocation,
-  BonusActionDashSpellBattleResolutionInput
->;
+type ExpeditiousRetreatDashResolveInput =
+  SpellProcedureProfileResolveInput<ExpeditiousRetreatDashInvocation>;
 
 function admitExpeditiousRetreatDash(
   spell: SpellRecord,
@@ -351,13 +348,10 @@ export const expeditiousRetreatDashProfile = {
   procedure: "expeditiousRetreatDash",
   executionSchema: ExpeditiousRetreatDashInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
-  targetListInvocation: { kind: "none" },
-  isReadiedSpellCompatible: false,
   admit: admitExpeditiousRetreatDash,
   discoverCastAct: discoverExpeditiousRetreatDashCastAct,
   resolve: resolveExpeditiousRetreatDash,
-} satisfies SpellProcedureProfile<
+} satisfies SpellProcedureDeclaration<
   "expeditiousRetreatDash",
-  ExpeditiousRetreatDashInvocation,
-  BonusActionDashSpellBattleResolutionInput
+  ExpeditiousRetreatDashInvocation
 >;

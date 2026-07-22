@@ -56,9 +56,8 @@ import {
 } from "../codec-building-blocks.ts";
 import type {
   SpellAdmissionContext,
-  SpellProcedureProfile,
+  SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
-  SpellProcedureStoredGlyphReleaseOptions,
 } from "./profile.ts";
 import {
   SpellRuleExecutionFactsSchema,
@@ -343,11 +342,7 @@ function discoverHastePositiveCastAct(
 }
 
 function resolveHastePositive(
-  input: SpellProcedureProfileResolveInput<
-    HastePositiveSpellInvocation,
-    ActionSpellBattleResolutionInput
-  > &
-    SpellProcedureStoredGlyphReleaseOptions,
+  input: SpellProcedureProfileResolveInput<HastePositiveSpellInvocation>,
 ): BattleResolutionResult {
   if (hasNonHastePositiveFill(input.fillSet)) {
     return invalidResult(
@@ -371,7 +366,7 @@ function resolveHastePositive(
     );
   }
 
-  if (input.opensSpellCastReactionWindow !== false) {
+  if (input.storedGlyphRelease === undefined) {
     const spellCastReactionWindow = maybeOpenInterruptWindow(
       input.input.state,
       spellCastInterruptFrame({
@@ -394,7 +389,7 @@ function resolveHastePositive(
   }
 
   const concentrationBase =
-    input.startsOrdinaryConcentration === false
+    input.storedGlyphRelease !== undefined
       ? input.input.state
       : spellRequiresConcentration(input.invocation)
         ? breakBattleConcentration(input.input.state, input.actorId)
@@ -405,7 +400,7 @@ function resolveHastePositive(
     targetSelection.targetIds,
     input.invocation,
   );
-  if (input.spendsCastResources === false) {
+  if (input.storedGlyphRelease !== undefined) {
     const resolvedState =
       battleStateWithCurrentActorSpellGrantedActionResourcesForTargets(
         effected,
@@ -422,7 +417,7 @@ function resolveHastePositive(
     actorId: input.actorId,
     invocation: input.invocation,
     errorState: input.input.state,
-    ...(input.startsOrdinaryConcentration === false
+    ...(input.storedGlyphRelease !== undefined
       ? { startConcentration: false }
       : {}),
   });
@@ -652,12 +647,10 @@ export const hastePositiveProfile = {
   procedure: "hastePositive",
   executionSchema: HastePositiveInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  targetListInvocation: { kind: "always" },
-  isReadiedSpellCompatible: false,
   admit: admitHastePositive,
   discoverCastAct: discoverHastePositiveCastAct,
   resolve: resolveHastePositive,
-} satisfies SpellProcedureProfile<
+} satisfies SpellProcedureDeclaration<
   "hastePositive",
   HastePositiveSpellInvocation
 >;

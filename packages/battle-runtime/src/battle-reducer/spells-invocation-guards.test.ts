@@ -11,17 +11,19 @@ type GuardRelevantInvocationShape = {
 function guardRelevantInvocation(
   invocation: GuardRelevantInvocationShape,
 ): SupportedSpellInvocation {
-  // Cast justification: isTargetListSpellInvocation is deliberately a
-  // registry/profile classifier over procedure plus targeting.kind, so these
-  // tests construct only the fields that classifier is allowed to read.
+  // Cast justification: these tests construct only the structural
+  // `targeting.kind` projection read by isTargetListSpellInvocation.
   return invocation as SupportedSpellInvocation;
 }
 
 describe("spell invocation guards", () => {
-  test("isTargetListSpellInvocation derives procedure classification from registered profiles", () => {
+  test("isTargetListSpellInvocation derives classification from targeting shape", () => {
     expect(
       isTargetListSpellInvocation(
-        guardRelevantInvocation({ procedure: "levitatedCreature" }),
+        guardRelevantInvocation({
+          procedure: "levitatedCreature",
+          targeting: { kind: "targetList" },
+        }),
       ),
     ).toBe(true);
     expect(

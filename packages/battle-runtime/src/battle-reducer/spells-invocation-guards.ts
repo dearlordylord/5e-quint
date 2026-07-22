@@ -28,8 +28,6 @@ import {
   characterUnitProcedure,
 } from "../character-execution-admission.ts";
 import { spellInvocationIsSpellcasting } from "./spell-turn-resources.ts";
-import type { SpellProcedureAnyTargetListInvocationClassifier } from "./spell-procedure-profiles/profile.ts";
-import { registeredSpellProcedureProfile } from "./spell-procedure-profiles/registry.ts";
 import {
   DRUID_BEAST_SPELLS_CLASS_LEVEL,
   DRUID_WILD_SHAPE_KNOWN_FORM_SUPPORT_PROFILE,
@@ -80,30 +78,11 @@ export function isTargetListSpellInvocation<
 >(
   invocation: Invocation,
 ): invocation is Invocation & TargetListSpellInvocation {
-  const profile = registeredSpellProcedureProfile(invocation.procedure);
-  if (profile === null) {
-    return false;
-  }
-
-  return targetListInvocationClassifierMatches(
-    profile.targetListInvocation,
-    invocation,
-  );
-}
-
-function targetListInvocationClassifierMatches(
-  classifier: SpellProcedureAnyTargetListInvocationClassifier,
-  invocation: RuntimeSpellProcedure,
-): invocation is RuntimeSpellProcedure & TargetListSpellInvocation {
-  if (classifier.kind === "none") {
-    return false;
-  }
-  if (classifier.kind === "always") {
-    return true;
-  }
   return (
     "targeting" in invocation &&
-    invocation.targeting.kind === classifier.targetingKind
+    (invocation.targeting.kind === "targetList" ||
+      invocation.targeting.kind === "pointOriginSphereTargetList" ||
+      invocation.targeting.kind === "selfAndChosenLegalTargets")
   );
 }
 

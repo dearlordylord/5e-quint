@@ -42,7 +42,7 @@ import { hasSaveGateRepeatSaves } from "./spell-procedure-profiles/_save-gate-he
 export * from "./spells-profiles-attack-damage.ts";
 
 import { admitPersistentArmorEffectInvocationSpellAccess } from "./spell-procedure-profiles/persistent-armor-effect.ts";
-import { admitRegisteredSpellProcedureProfiles } from "./spell-procedure-profiles/registry.ts";
+import { admitRegisteredSpellProcedures } from "./spell-procedure-profiles/admission-registry.ts";
 import { spellAdmissionContextFor } from "./spell-procedure-profiles/profile.ts";
 import { activeOngoingFeaturesPreventSpellInvocation } from "./spells-invocation-guards.ts";
 import { isCharacterBattleCreatureState } from "./creature-state.ts";
@@ -72,7 +72,7 @@ export function admittedSpellActs(
   }
 
   const profileAdmissions = [...preparedSpells, ...cantrips].flatMap((spell) =>
-    admitRegisteredSpellProcedureProfiles(spell, admissionContext),
+    admitRegisteredSpellProcedures(spell, admissionContext),
   );
 
   const admittedInvocations = [

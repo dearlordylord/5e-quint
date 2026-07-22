@@ -18,14 +18,11 @@ import { DiceExprSchema } from "@dnd/surface/surface/schema";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 
 import {
-  type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
   type BattleResolutionResult,
   type BattleState,
-  type BonusActionSpellBattleResolutionInput,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
-import type { SpellMetamagicApplicationFact } from "../metamagic-support.ts";
 import { type CombatantId } from "../../identity.ts";
 import { spellDamageTypeChoiceHole } from "../spells-damage-fills.ts";
 import {
@@ -33,13 +30,10 @@ import {
   spellCastSelectionSubject,
 } from "../spells-discovery.ts";
 import { supportedPreparedChainedSpellAttackDamageProfile } from "../spells-profiles-attack-damage.ts";
-import {
-  resolveChainedSpellAttackDamageAct,
-  type ChainedSpellFillSet,
-} from "../spells-resolve-chained.ts";
+import { resolveChainedSpellAttackDamageAct } from "../spells-resolve-chained.ts";
 import type {
   SpellAdmissionContext,
-  SpellProcedureProfile,
+  SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
@@ -60,14 +54,8 @@ type ChainedSpellAttackDamageInvocation = Extract<
   { readonly procedure: "chainedSpellAttackDamage" }
 >;
 
-type ChainedSpellAttackDamageResolveInput = SpellProcedureProfileResolveInput<
-  ChainedSpellAttackDamageInvocation,
-  ActionSpellBattleResolutionInput | BonusActionSpellBattleResolutionInput,
-  ChainedSpellFillSet
-> & {
-  readonly actionCostOverride?: "magicAction" | "bonusAction";
-  readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
-};
+type ChainedSpellAttackDamageResolveInput =
+  SpellProcedureProfileResolveInput<ChainedSpellAttackDamageInvocation>;
 
 function isChainedSpellAttackDamageInvocation(
   invocation: SupportedSpellInvocation,
@@ -139,17 +127,13 @@ export const ChainedSpellAttackDamageInvocationSchema =
       attackBonus: AttackBonus,
     }),
   );
-export const chainedSpellAttackDamageProfile: SpellProcedureProfile<
+export const chainedSpellAttackDamageProfile: SpellProcedureDeclaration<
   "chainedSpellAttackDamage",
-  ChainedSpellAttackDamageInvocation,
-  ActionSpellBattleResolutionInput,
-  ChainedSpellFillSet
+  ChainedSpellAttackDamageInvocation
 > = {
   procedure: "chainedSpellAttackDamage",
   executionSchema: ChainedSpellAttackDamageInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  targetListInvocation: { kind: "none" },
-  isReadiedSpellCompatible: true,
   admit: admitChainedSpellAttackDamage,
   discoverCastAct: discoverChainedSpellAttackDamageCastAct,
   resolve: resolveChainedSpellAttackDamage,

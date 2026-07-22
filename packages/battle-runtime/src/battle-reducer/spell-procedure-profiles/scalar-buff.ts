@@ -44,18 +44,15 @@ import { BATTLE_SPECIAL_SPEED_KINDS } from "../../battle-subjects.ts";
 import {
   maybeOpenInterruptWindow,
   snapshotBattle,
-  type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
   type BattleFill,
   type BattleHole,
   type BattleResolutionResult,
   type BattleState,
-  type BonusActionSpellBattleResolutionInput,
   type HealingSpellActionCost,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
-import type { SpellMetamagicApplicationFact } from "../metamagic-support.ts";
 import { CombatantId } from "../../identity.ts";
 import { BattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
 import { battleCreatureWithSpellActiveEffects } from "../../active-effect/lifecycle.ts";
@@ -99,9 +96,8 @@ import { scalarBuffSpellTargetSelection } from "../spells-resolve-target-selecti
 import { spellTargetHole, spellTargetListHole } from "../spells-targeting.ts";
 import type {
   SpellAdmissionContext,
-  SpellProcedureProfile,
+  SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
-  SpellProcedureStoredGlyphReleaseOptions,
 } from "./profile.ts";
 import { Schema } from "effect";
 import {
@@ -171,13 +167,8 @@ const HitPointMaximumIncreaseTemplateSchema = Schema.Struct({
   amount: Schema.Number,
   expiresAt: BattleActiveEffectExpirationSchema,
 });
-type ScalarBuffResolveInput = SpellProcedureProfileResolveInput<
-  ScalarBuffInvocation,
-  ActionSpellBattleResolutionInput | BonusActionSpellBattleResolutionInput
-> & {
-  readonly actionCostOverride?: "magicAction" | "bonusAction";
-  readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
-} & SpellProcedureStoredGlyphReleaseOptions;
+type ScalarBuffResolveInput =
+  SpellProcedureProfileResolveInput<ScalarBuffInvocation>;
 
 function admitScalarBuff(
   spell: SpellRecord,
@@ -455,7 +446,7 @@ function resolveScalarBuff(
     );
   }
 
-  if (input.opensSpellCastReactionWindow !== false) {
+  if (input.storedGlyphRelease === undefined) {
     const spellCastReactionWindow = maybeOpenInterruptWindow(
       input.input.state,
       spellCastInterruptFrame({
@@ -506,7 +497,7 @@ function resolveScalarBuff(
   }
 
   const concentrationBase =
-    input.startsOrdinaryConcentration === false
+    input.storedGlyphRelease !== undefined
       ? input.input.state
       : spellRequiresConcentration(input.invocation)
         ? breakBattleConcentration(input.input.state, input.actorId)
@@ -518,7 +509,7 @@ function resolveScalarBuff(
     input.invocation,
     input.fillSet.healingRoll,
   );
-  if (input.spendsCastResources === false) {
+  if (input.storedGlyphRelease !== undefined) {
     return {
       tag: "resolved",
       state: effected,
@@ -530,7 +521,7 @@ function resolveScalarBuff(
     actorId: input.actorId,
     invocation: input.invocation,
     errorState: input.input.state,
-    ...(input.startsOrdinaryConcentration === false
+    ...(input.storedGlyphRelease !== undefined
       ? { startConcentration: false }
       : {}),
     ...(input.actionCostOverride === undefined
@@ -590,16 +581,7 @@ export const scalarBuffProfile = {
   procedure: "scalarBuff",
   executionSchema: ScalarBuffInvocationSchema,
   metamagicCompatibility: "bonusActionRewrite",
-  targetListInvocation: {
-    kind: "byTargetingKind",
-    targetingKind: "targetList",
-  },
-  isReadiedSpellCompatible: false,
   admit: admitScalarBuff,
   discoverCastAct: discoverScalarBuffCastAct,
   resolve: resolveScalarBuff,
-} satisfies SpellProcedureProfile<
-  "scalarBuff",
-  ScalarBuffInvocation,
-  ActionSpellBattleResolutionInput | BonusActionSpellBattleResolutionInput
->;
+} satisfies SpellProcedureDeclaration<"scalarBuff", ScalarBuffInvocation>;

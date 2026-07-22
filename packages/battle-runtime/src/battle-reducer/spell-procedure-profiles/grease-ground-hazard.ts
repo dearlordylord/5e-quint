@@ -20,7 +20,6 @@ import {
 import { movementFeet, MovementFeet } from "@dnd/shared/types";
 import type { ActivationPhase } from "@dnd/surface/surface/types";
 import {
-  type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
   type BattleCreatureState,
@@ -35,7 +34,7 @@ import { hasSaveGateRepeatSaves } from "./_save-gate-helpers.ts";
 import { resolveGreaseGroundHazardSpellAct } from "../spells-resolve-save-gates.ts";
 import type {
   SpellAdmissionContext,
-  SpellProcedureProfile,
+  SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import {
@@ -53,7 +52,6 @@ import {
   discoverSpellMetamagicSelections,
   HEIGHTENED_METAMAGIC_EFFECT_KIND,
   spellMetamagicApplications,
-  type SpellMetamagicApplicationFact,
 } from "../metamagic-support.ts";
 import {
   carefulSpellProtectedTargetsHole,
@@ -85,12 +83,8 @@ type GreaseGroundHazardPhase = Extract<
   };
 };
 
-type GreaseGroundHazardResolveInput = SpellProcedureProfileResolveInput<
-  GreaseGroundHazardSpellInvocation,
-  ActionSpellBattleResolutionInput
-> & {
-  readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
-};
+type GreaseGroundHazardResolveInput =
+  SpellProcedureProfileResolveInput<GreaseGroundHazardSpellInvocation>;
 
 function admitGreaseGroundHazard(
   spell: GreaseGroundHazardSpellInvocation["spell"],
@@ -341,13 +335,11 @@ export const greaseGroundHazardProfile = {
   procedure: "greaseGroundHazard",
   executionSchema: GreaseGroundHazardInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  targetListInvocation: { kind: "none" },
-  isReadiedSpellCompatible: false,
   admit: admitGreaseGroundHazard,
   discoverCastAct: discoverGreaseGroundHazardCastAct,
   resolve: resolveGreaseGroundHazard,
-} satisfies SpellProcedureProfile<
+} satisfies SpellProcedureDeclaration<
   "greaseGroundHazard",
-  GreaseGroundHazardSpellInvocation,
-  ActionSpellBattleResolutionInput
+  GreaseGroundHazardSpellInvocation
 >;
+import type { SpellMetamagicApplicationFact } from "../metamagic-support.ts";

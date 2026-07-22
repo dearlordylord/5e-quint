@@ -97,7 +97,6 @@ import {
   type UnitFeatureProcedureExecution,
 } from "../character-execution-admission.ts";
 import { spellExecutionFacts } from "./spell-execution-facts.ts";
-import { registeredSpellProcedureProfile } from "./spell-procedure-profiles/registry.ts";
 import {
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
   ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SUPPORT_PROFILE,
@@ -781,14 +780,7 @@ export function combatantOriginSnapshot(
         nextProcedureOrdinal: origin.execution.nextProcedureOrdinal,
         procedureBindings: characterProcedureBindingSnapshots(
           origin.execution,
-          (invocation) =>
-            spellExecutionFacts(
-              invocation,
-              registeredSpellProcedureProfile(invocation.procedure)
-                ?.isReadiedSpellCompatible === true &&
-                (invocation.procedure !== "spellAttackDamage" ||
-                  invocation.damage.kind !== "sorcerousBurstDamageTypeChoice"),
-            ),
+          (invocation) => spellExecutionFacts(invocation),
         ),
       },
       attackExecution: {

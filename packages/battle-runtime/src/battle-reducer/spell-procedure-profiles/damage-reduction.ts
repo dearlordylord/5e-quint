@@ -48,7 +48,7 @@ import { scalarBuffActiveEffectExpiration } from "../spells-profiles-support.ts"
 import { spellTargetHole, spellTargetIsLegal } from "../spells-targeting.ts";
 import type {
   SpellAdmissionContext,
-  SpellProcedureProfile,
+  SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import {
@@ -347,14 +347,12 @@ export const DamageReductionInvocationSchema = spellProcedureExecutionSchema(
     rangeFeet: MovementFeet,
   }),
 );
-export const damageReductionProfile: SpellProcedureProfile<
+export const damageReductionProfile: SpellProcedureDeclaration<
   "damageReduction",
   DamageReductionSpellInvocation
 > = {
   procedure: "damageReduction",
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  targetListInvocation: { kind: "always" },
-  isReadiedSpellCompatible: false,
   admit: admitDamageReduction,
   discoverCastAct: discoverDamageReductionCastAct,
   executionSchema: DamageReductionInvocationSchema,

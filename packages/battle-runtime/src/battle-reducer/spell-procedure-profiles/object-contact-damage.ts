@@ -40,11 +40,9 @@ import type {
 } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 import {
-  type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
   type BattleResolutionResult,
   type BattleState,
-  type BonusActionSpellBattleResolutionInput,
   type SpellObjectContactDamageActiveEffect,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
@@ -72,7 +70,7 @@ import {
 } from "../spells-profile-shared.ts";
 import type {
   SpellAdmissionContext,
-  SpellProcedureProfile,
+  SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
@@ -96,14 +94,10 @@ type ObjectContactDamageRepeatInvocation = Extract<
   SupportedSpellInvocation,
   { readonly procedure: "objectContactDamageRepeat" }
 >;
-type ObjectContactDamageResolveInput = SpellProcedureProfileResolveInput<
-  ObjectContactDamageInvocation,
-  ActionSpellBattleResolutionInput
->;
-type ObjectContactDamageRepeatResolveInput = SpellProcedureProfileResolveInput<
-  ObjectContactDamageRepeatInvocation,
-  BonusActionSpellBattleResolutionInput
->;
+type ObjectContactDamageResolveInput =
+  SpellProcedureProfileResolveInput<ObjectContactDamageInvocation>;
+type ObjectContactDamageRepeatResolveInput =
+  SpellProcedureProfileResolveInput<ObjectContactDamageRepeatInvocation>;
 
 type OngoingEffectSpellMechanics = Extract<
   SpellRecord["mechanics"],
@@ -509,31 +503,25 @@ const ObjectContactDamageRepeatInvocationSchema = spellProcedureExecutionSchema(
     activeEffectSourceProcedureRef: BattleProcedureExecutionRef,
   }),
 );
-export const objectContactDamageProfile: SpellProcedureProfile<
+export const objectContactDamageProfile: SpellProcedureDeclaration<
   "objectContactDamage",
-  ObjectContactDamageInvocation,
-  ActionSpellBattleResolutionInput
+  ObjectContactDamageInvocation
 > = {
   procedure: "objectContactDamage",
   executionSchema: ObjectContactDamageInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  targetListInvocation: { kind: "none" },
-  isReadiedSpellCompatible: false,
   admit: admitObjectContactDamage,
   discoverCastAct: discoverObjectContactDamageCastAct,
   resolve: resolveObjectContactDamage,
 };
 
-export const objectContactDamageRepeatProfile: SpellProcedureProfile<
+export const objectContactDamageRepeatProfile: SpellProcedureDeclaration<
   "objectContactDamageRepeat",
-  ObjectContactDamageRepeatInvocation,
-  BonusActionSpellBattleResolutionInput
+  ObjectContactDamageRepeatInvocation
 > = {
   procedure: "objectContactDamageRepeat",
   executionSchema: ObjectContactDamageRepeatInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
-  targetListInvocation: { kind: "none" },
-  isReadiedSpellCompatible: false,
   admit: admitObjectContactDamageRepeat,
   discoverCastAct: discoverObjectContactDamageRepeatCastAct,
   resolve: resolveObjectContactDamageRepeat,

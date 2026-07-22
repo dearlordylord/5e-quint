@@ -1,29 +1,20 @@
-# Spell Procedure Profiles
+# Spell Procedure Declarations
 
 Engine implementation note for the battle-runtime package. Not domain
 vocabulary — see `UBIQUITOUS_LANGUAGE.md` for the D&D 5e terms (Spell
 Definition, Spell Access, Spell Invocation, Spell Effect).
 
-## What a Spell Procedure Profile is
+## What a Spell Procedure Declaration is
 
-A **Spell Procedure Profile** is one class of spell behavior the battle
-runtime knows how to handle end-to-end. The registry currently assembles:
+A **Spell Procedure Declaration** is the canonical procedure-keyed composition
+for one class of spell behavior. It joins two independently consumed views:
 
-- **admit** — inspect a Spell Definition for a given actor context, return
-  the list of Spell Invocations that profile contributes (or `[]` if the
-  definition does not fit the profile's shape).
-- **discoverCastAct** — build the discoverable cast act and its initial
-  holes for one Spell Invocation.
-- **castSummary** — short human-readable label for a cast act.
-- **invocationRef** — reference projection used to address the invocation
-  across snapshots and continuations.
-- **resolve** — dispatcher entry: consume a fill set, produce a resolution
-  result.
-- Static classification metadata: metamagic compatibility, whether the
-  invocation is target-list-shaped, whether it admits a Readied Spell, and
-  the spell-id allow-list for known-willing targets.
+- **admission** — authored Spell Definition traversal through `admit`.
+- **execution** — codecs, discovery, resolution, and metamagic compatibility.
+  Target-list and Readied Spell classification are derived from their typed
+  mechanical invocation shapes outside the authored declaration contract.
 
-A profile is an engine seam, not an SRD concept:
+A declaration is an engine seam, not an SRD concept:
 
 - Multiple unrelated SRD spells share one profile. Bless, Bane, Guidance,
   Resistance and Shield of Faith all use `rollModifier`.
@@ -43,34 +34,42 @@ builders in `spells-invocation-ref.ts`, etc. The only thing binding the
 pieces was the string literal `"damageReduction"` (or similar) appearing
 across all of them.
 
-Consolidating each profile behind the `SpellProcedureProfile<P, I>` type made
-the procedure discriminant and completeness checks local. It did not make the
-combined module an execution-safe owner: authored admission, reducer execution,
-and presentation have different dependency rules. Profiles are now migrated by
-keeping their typed registry entry while moving authored parsing to
-`src/procedure-admission/` and authored-free execution facts to
-`src/procedure-execution/`. `weaponAttackOverride` is the first tracer split.
+`registry.ts` is the only procedure-keyed declaration table. The admission and
+execution registry modules derive narrowed runtime values from it; neither view
+maintains a second key list or repeats procedure metadata. Resolution imports
+the execution view and its authored-free contract, while authored traversal
+imports the admission view.
 
 ## Glossary used by this module
 
 These terms live here, not in `UBIQUITOUS_LANGUAGE.md`, because they
 describe engine internals rather than the game domain:
 
-- **Spell Procedure Profile** — the registered declaration above.
+- **Spell Procedure Declaration** — the registered composition above.
 - **Procedure (discriminator)** — the string tag identifying which profile
   a Spell Invocation belongs to (`damageReduction`, `rollModifier`, …).
   Carried on `SupportedSpellInvocation`.
 - **Admit** (verb) — discovery-time admission of a Spell Definition into
   zero or more Spell Invocations of one profile.
-- **Profile Registry** — the typed table in `registry.ts`.
+- **Declaration Registry** — the typed table in `registry.ts`.
+- **Admission Registry** — the authored traversal projection in
+  `admission-registry.ts`.
+- **Execution Registry** — the authored-free lookup projection in
+  `execution-composition.ts`, exposed to execution code through the port in
+  `execution-registry.ts`.
 
 ## File layout
 
 ```
 spell-procedure-profiles/
   README.md            (this file)
-  profile.ts           SpellProcedureProfile<P, I> type and supporting types
-  registry.ts          REGISTERED_SPELL_PROCEDURE_PROFILES array + lookup
+  profile.ts           Admission context and combined declaration contract
+  execution-profile.ts Authored-free execution contract
+  resolution-contract.ts Procedure-keyed authored-free resolution inputs
+  registry.ts          Canonical procedure-keyed declarations
+  admission-registry.ts Authored traversal projection
+  execution-registry.ts Authored-free execution port and lookup helpers
+  execution-composition.ts Canonical declaration-to-execution projection
   damage-reduction.ts  one file per migrated profile
   roll-modifier.ts
   ...

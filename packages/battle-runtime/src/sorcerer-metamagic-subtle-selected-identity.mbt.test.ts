@@ -19,6 +19,7 @@ import {
   SUBTLE_METAMAGIC_EFFECT_KIND,
   subtleSpellComponentProjectionForApplications,
 } from "./battle-reducer/metamagic.ts";
+import { spellProcedureExecutionRegistry } from "./battle-reducer/spell-procedure-profiles/execution-composition.ts";
 import { supportedSpellActs } from "./battle-reducer/spells-profiles.ts";
 import {
   characterBattleResourceIsPointPool,
@@ -215,13 +216,16 @@ function resolveSubtleFalseLife(): {
   const act = subtleFalseLifeAct(state);
   const subject = act.subject;
   const falseLifeSpell = spellRecord(falseLifeUnitId);
-  const admitted = admitSpellMetamagicApplications({
-    state: state.state,
-    actor,
-    actorId: spellCasterId,
-    invocation: supportedFalseLifeInvocation(state),
-    subject,
-  });
+  const admitted = admitSpellMetamagicApplications(
+    {
+      state: state.state,
+      actor,
+      actorId: spellCasterId,
+      invocation: supportedFalseLifeInvocation(state),
+      subject,
+    },
+    spellProcedureExecutionRegistry(),
+  );
   if (admitted.tag !== "ok") {
     throw new Error(`Expected Subtle Spell admission: ${admitted.message}`);
   }

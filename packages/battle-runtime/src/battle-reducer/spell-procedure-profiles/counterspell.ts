@@ -32,7 +32,6 @@ import {
   type BattleActDiscoveryCandidate,
   type BattleInterruptCheckpoint,
   type BattleInterruptCheckpointFrame,
-  type BattleResolutionInputForSubject,
   type BattleResolutionResult,
   type BattleState,
   type BattleTurnResources,
@@ -59,12 +58,11 @@ import {
   PreparedSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
-import type { BattleSubject } from "../../battle-subjects.ts";
 import {
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
   type SpellAdmissionContext,
-  type SpellProcedureProfile,
+  type SpellProcedureDeclaration,
   type SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 
@@ -72,21 +70,8 @@ type CounterspellInvocation = Extract<
   SupportedSpellInvocation,
   { readonly procedure: "counterspell" }
 >;
-type CounterspellBattleResolutionInput = BattleResolutionInputForSubject<
-  Extract<
-    BattleSubject,
-    {
-      readonly tag: "runtimeCommand";
-      readonly command: "castTriggeredReactionSpell";
-    }
-  >
-> & {
-  readonly frame: BattleInterruptCheckpoint;
-};
-type CounterspellResolveInput = SpellProcedureProfileResolveInput<
-  CounterspellInvocation,
-  CounterspellBattleResolutionInput
->;
+type CounterspellResolveInput =
+  SpellProcedureProfileResolveInput<CounterspellInvocation>;
 
 function admitCounterspell(
   spell: SpellRecord,
@@ -390,13 +375,7 @@ export const counterspellProfile = {
   procedure: "counterspell",
   executionSchema: CounterspellInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
-  targetListInvocation: { kind: "none" },
-  isReadiedSpellCompatible: false,
   admit: admitCounterspell,
   discoverCastAct: discoverCounterspellCastAct,
   resolve: resolveCounterspell,
-} satisfies SpellProcedureProfile<
-  "counterspell",
-  CounterspellInvocation,
-  CounterspellBattleResolutionInput
->;
+} satisfies SpellProcedureDeclaration<"counterspell", CounterspellInvocation>;

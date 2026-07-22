@@ -32,7 +32,6 @@ import {
   type BattleState,
   type BattleTeleportDestination,
   type BattleTeleportDestinationFact,
-  type BonusActionSpellBattleResolutionInput,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
 import { type CombatantId } from "../../identity.ts";
@@ -47,7 +46,7 @@ import {
 import { antimagicFieldTransitInvalidReason } from "../antimagic-field-transit-blocking.ts";
 import type {
   SpellAdmissionContext,
-  SpellProcedureProfile,
+  SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
@@ -65,10 +64,8 @@ type SelfTeleportInvocation = Extract<
   SupportedSpellInvocation,
   { readonly procedure: "selfTeleport" }
 >;
-type SelfTeleportResolveInput = SpellProcedureProfileResolveInput<
-  SelfTeleportInvocation,
-  BonusActionSpellBattleResolutionInput
->;
+type SelfTeleportResolveInput =
+  SpellProcedureProfileResolveInput<SelfTeleportInvocation>;
 
 function admitSelfTeleport(
   spell: SpellRecord,
@@ -300,13 +297,7 @@ export const selfTeleportProfile = {
   procedure: "selfTeleport",
   executionSchema: SelfTeleportInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
-  targetListInvocation: { kind: "none" },
-  isReadiedSpellCompatible: false,
   admit: admitSelfTeleport,
   discoverCastAct: discoverSelfTeleportCastAct,
   resolve: resolveSelfTeleport,
-} satisfies SpellProcedureProfile<
-  "selfTeleport",
-  SelfTeleportInvocation,
-  BonusActionSpellBattleResolutionInput
->;
+} satisfies SpellProcedureDeclaration<"selfTeleport", SelfTeleportInvocation>;

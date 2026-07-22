@@ -47,7 +47,7 @@ import { spendSpellCastResources } from "../spells-resolve-resources.ts";
 import { THAUMATURGY_MAX_ACTIVE_ONE_MINUTE_EFFECTS } from "../domain-constants.ts";
 import type {
   SpellAdmissionContext,
-  SpellProcedureProfile,
+  SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
@@ -280,15 +280,13 @@ const ThaumaturgyBoomingVoiceInvocationSchema = spellProcedureExecutionSchema(
     rangeFeet: MovementFeet,
   }),
 );
-export const thaumaturgyBoomingVoiceProfile: SpellProcedureProfile<
+export const thaumaturgyBoomingVoiceProfile: SpellProcedureDeclaration<
   "thaumaturgyBoomingVoice",
   ThaumaturgyBoomingVoiceInvocation
 > = {
   procedure: "thaumaturgyBoomingVoice",
   executionSchema: ThaumaturgyBoomingVoiceInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  targetListInvocation: { kind: "none" },
-  isReadiedSpellCompatible: false,
   admit: admitThaumaturgyBoomingVoice,
   discoverCastAct: discoverThaumaturgyBoomingVoiceCastAct,
   resolve: resolveThaumaturgyBoomingVoice,

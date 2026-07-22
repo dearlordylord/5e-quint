@@ -49,7 +49,7 @@ import {
 } from "../spells-resolve-resources.ts";
 import type {
   SpellAdmissionContext,
-  SpellProcedureProfile,
+  SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
@@ -274,15 +274,13 @@ const BlurAttackRollDefenseInvocationSchema = spellProcedureExecutionSchema(
     activeEffect: BlurredActiveEffectTemplateSchema,
   }),
 );
-export const blurAttackRollDefenseProfile: SpellProcedureProfile<
+export const blurAttackRollDefenseProfile: SpellProcedureDeclaration<
   "blurAttackRollDefense",
   BlurAttackRollDefenseSpellInvocation
 > = {
   procedure: "blurAttackRollDefense",
   executionSchema: BlurAttackRollDefenseInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  targetListInvocation: { kind: "none" },
-  isReadiedSpellCompatible: false,
   admit: admitBlurAttackRollDefense,
   discoverCastAct: discoverBlurAttackRollDefenseCastAct,
   resolve: resolveBlurAttackRollDefense,

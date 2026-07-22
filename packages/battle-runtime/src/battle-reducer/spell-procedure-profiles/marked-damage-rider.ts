@@ -52,7 +52,6 @@ import {
   type BattleResolutionResult,
   type BattleState,
   type BattleExecutableSpellInvocation,
-  type BonusActionSpellBattleResolutionInput,
   type MarkedDamageRiderCastAbilityCheckBehavior,
   type MarkedDamageRiderRetargetTiming,
   type MarkedDamageRiderTransferState,
@@ -90,7 +89,7 @@ import { clearPendingAttackRollMissToHitReplacementSelection } from "../statbloc
 import type {
   SpellAdmissionBattleTurn,
   SpellAdmissionContext,
-  SpellProcedureProfile,
+  SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
@@ -119,10 +118,8 @@ type MarkedDamageRiderCastInvocation = Extract<
   MarkedDamageRiderInvocation,
   { readonly action: "cast" }
 >;
-type MarkedDamageRiderResolveInput = SpellProcedureProfileResolveInput<
-  MarkedDamageRiderInvocation,
-  BonusActionSpellBattleResolutionInput
->;
+type MarkedDamageRiderResolveInput =
+  SpellProcedureProfileResolveInput<MarkedDamageRiderInvocation>;
 
 function admitMarkedDamageRider(
   spell: SpellRecord,
@@ -887,16 +884,13 @@ const MarkedDamageRiderInvocationSchema = spellProcedureExecutionSchema(
     }),
   ),
 );
-export const markedDamageRiderProfile: SpellProcedureProfile<
+export const markedDamageRiderProfile: SpellProcedureDeclaration<
   "markedDamageRider",
-  MarkedDamageRiderInvocation,
-  BonusActionSpellBattleResolutionInput
+  MarkedDamageRiderInvocation
 > = {
   procedure: "markedDamageRider",
   executionSchema: MarkedDamageRiderInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
-  targetListInvocation: { kind: "none" },
-  isReadiedSpellCompatible: false,
   admit: admitMarkedDamageRider,
   discoverCastAct: discoverMarkedDamageRiderCastAct,
   resolve: resolveMarkedDamageRider,

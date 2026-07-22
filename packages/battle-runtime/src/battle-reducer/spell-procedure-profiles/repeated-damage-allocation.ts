@@ -24,7 +24,6 @@ import { movementFeet } from "@dnd/shared/types";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 
 import {
-  type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
   type BattleResolutionResult,
   type BattleState,
@@ -43,7 +42,7 @@ import { resolvePreparedSlotSpellAct } from "../spells-resolve-prepared-slot.ts"
 import { spellTargetAllocationHole } from "../spells-targeting.ts";
 import type {
   SpellAdmissionContext,
-  SpellProcedureProfile,
+  SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
@@ -63,10 +62,8 @@ type RepeatedDamageAllocationInvocation = Extract<
   { readonly procedure: "repeatedDamageAllocation" }
 >;
 
-type RepeatedDamageAllocationResolveInput = SpellProcedureProfileResolveInput<
-  RepeatedDamageAllocationInvocation,
-  ActionSpellBattleResolutionInput
->;
+type RepeatedDamageAllocationResolveInput =
+  SpellProcedureProfileResolveInput<RepeatedDamageAllocationInvocation>;
 
 function admitRepeatedDamageAllocation(
   spell: SpellRecord,
@@ -182,15 +179,13 @@ const RepeatedDamageAllocationInvocationSchema = spellProcedureExecutionSchema(
     rangeFeet: MovementFeet,
   }),
 );
-export const repeatedDamageAllocationProfile: SpellProcedureProfile<
+export const repeatedDamageAllocationProfile: SpellProcedureDeclaration<
   "repeatedDamageAllocation",
   RepeatedDamageAllocationInvocation
 > = {
   procedure: "repeatedDamageAllocation",
   executionSchema: RepeatedDamageAllocationInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  targetListInvocation: { kind: "none" },
-  isReadiedSpellCompatible: true,
   admit: admitRepeatedDamageAllocation,
   discoverCastAct: discoverRepeatedDamageAllocationCastAct,
   resolve: resolveRepeatedDamageAllocation,

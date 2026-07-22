@@ -66,7 +66,7 @@ import { spendSpellCastResources } from "../spells-resolve-resources.ts";
 import { effectiveD20TestNaturalOneRerollAbilityCheckValue } from "../d20-test-natural-one-reroll.ts";
 import type {
   SpellAdmissionContext,
-  SpellProcedureProfile,
+  SpellProcedureDeclaration,
 } from "./profile.ts";
 import { Schema } from "effect";
 import {
@@ -871,14 +871,10 @@ export const ongoingSpellEndProfile = {
   procedure: "ongoingSpellEnd",
   executionSchema: OngoingSpellEndInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
-  targetListInvocation: { kind: "none" },
-  isReadiedSpellCompatible: false,
   admit: admitOngoingSpellEnd,
   discoverCastAct: discoverOngoingSpellEndCastAct,
   resolve: resolveOngoingSpellEndSpellAct,
-} satisfies SpellProcedureProfile<
+} satisfies SpellProcedureDeclaration<
   "ongoingSpellEnd",
-  OngoingSpellEndInvocation,
-  ActionSpellBattleResolutionInput,
-  Extract<SpellFillSet, { readonly tag: "ok" }>
+  OngoingSpellEndInvocation
 >;

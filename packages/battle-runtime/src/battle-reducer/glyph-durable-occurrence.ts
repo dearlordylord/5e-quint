@@ -68,6 +68,7 @@ import type {
   BattleResolutionResult,
 } from "../battle-reducer.ts";
 import { isTargetListSpellInvocation } from "./spells-invocation-guards.ts";
+import type { SpellProcedureExecutionRegistry } from "./spell-procedure-profiles/execution-registry.ts";
 import {
   bindStoredSpellProcedureExecutionFacts,
   spellProcedureExecution,
@@ -1001,6 +1002,7 @@ export function releaseGlyphStoredSpell(input: {
   readonly state: BattleState;
   readonly profile: GlyphStoredSpellReleaseProfile;
   readonly witness: GlyphStoredSpellReleaseWitness;
+  readonly executionRegistry: SpellProcedureExecutionRegistry;
   readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
 }): ReleaseGlyphStoredSpellResult {
   const sourceEffectId = input.witness.triggerOccurrence.sourceEffectId;
@@ -1054,6 +1056,7 @@ export function releaseGlyphStoredSpell(input: {
     profile: input.profile,
     effect: ref.effect,
     witness: input.witness,
+    executionRegistry: input.executionRegistry,
     handledInterruptTrigger: input.handledInterruptTrigger,
   });
   if (resolved.tag === "needsHoles") {
@@ -1823,6 +1826,7 @@ function resolveStoredSpellGlyphRelease(input: {
   readonly profile: GlyphStoredSpellReleaseProfile;
   readonly effect: GlyphStoredSpellOccurrenceActiveEffect;
   readonly witness: GlyphStoredSpellReleaseWitness;
+  readonly executionRegistry: SpellProcedureExecutionRegistry;
   readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
 }): BattleResolutionResult {
   const storedInvocation = input.effect.release.storedProcedure;
@@ -1984,6 +1988,7 @@ function resolveStoredSpellGlyphRelease(input: {
       effect: input.effect,
       witness: input.witness,
       invocation,
+      executionRegistry: input.executionRegistry,
       handledInterruptTrigger: input.handledInterruptTrigger,
     });
   }
@@ -2034,6 +2039,7 @@ function resolveStoredGlyphSingleCreatureActiveEffectSpellRelease(input: {
   readonly effect: GlyphStoredSpellOccurrenceActiveEffect;
   readonly witness: GlyphStoredSpellReleaseWitness;
   readonly invocation: SpellProcedureExecution<GlyphStoredConcentrationSingleCreatureActiveEffectInvocation>;
+  readonly executionRegistry: SpellProcedureExecutionRegistry;
   readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
 }): BattleResolutionResult {
   const procedureRef = glyphStoredSpellProcedureRef(input.state, input.effect);
@@ -2070,9 +2076,7 @@ function resolveStoredGlyphSingleCreatureActiveEffectSpellRelease(input: {
     },
     actorId: input.effect.sourceCombatantId,
     fillSet,
-    opensSpellCastReactionWindow: false,
-    spendsCastResources: false,
-    startsOrdinaryConcentration: false,
+    storedGlyphRelease: { kind: "storedGlyphSpellRelease" },
   } as const;
   const invocation = { ...input.invocation, sourceProcedureRef: procedureRef };
   return Match.value(invocation).pipe(
@@ -2080,33 +2084,54 @@ function resolveStoredGlyphSingleCreatureActiveEffectSpellRelease(input: {
       scalarBuffProfile.resolve({ ...releaseInput, invocation }),
     ),
     byStoredActiveEffectProcedure("rollModifier", (invocation) =>
-      rollModifierProfile.resolve({ ...releaseInput, invocation }),
+      rollModifierProfile.resolve(
+        { ...releaseInput, invocation },
+        input.executionRegistry,
+      ),
     ),
     byStoredActiveEffectProcedure("creatureSizeIncrease", (invocation) =>
-      creatureSizeChangeProfile.resolve({ ...releaseInput, invocation }),
+      creatureSizeChangeProfile.resolve(
+        { ...releaseInput, invocation },
+        input.executionRegistry,
+      ),
     ),
     byStoredActiveEffectProcedure("creatureSizeDecrease", (invocation) =>
-      creatureSizeDecreaseProfile.resolve({ ...releaseInput, invocation }),
+      creatureSizeDecreaseProfile.resolve(
+        { ...releaseInput, invocation },
+        input.executionRegistry,
+      ),
     ),
     byStoredActiveEffectProcedure("levitatedCreature", (invocation) =>
-      levitatedCreatureProfile.resolve({ ...releaseInput, invocation }),
+      levitatedCreatureProfile.resolve(
+        { ...releaseInput, invocation },
+        input.executionRegistry,
+      ),
     ),
     byStoredActiveEffectProcedure("directCondition", (invocation) =>
-      directConditionProfile.resolve({ ...releaseInput, invocation }),
+      directConditionProfile.resolve(
+        { ...releaseInput, invocation },
+        input.executionRegistry,
+      ),
     ),
     byStoredActiveEffectProcedure("hastePositive", (invocation) =>
       hastePositiveProfile.resolve({ ...releaseInput, invocation }),
     ),
     byStoredActiveEffectProcedure("creatureTypeProtection", (invocation) =>
-      creatureTypeProtectionProfile.resolve({ ...releaseInput, invocation }),
+      creatureTypeProtectionProfile.resolve(
+        { ...releaseInput, invocation },
+        input.executionRegistry,
+      ),
     ),
     byStoredActiveEffectProcedure(
       "conditionImmunityAndTurnStartTemporaryHitPoints",
       (invocation) =>
-        conditionImmunityAndTurnStartTemporaryHitPointsProfile.resolve({
-          ...releaseInput,
-          invocation,
-        }),
+        conditionImmunityAndTurnStartTemporaryHitPointsProfile.resolve(
+          {
+            ...releaseInput,
+            invocation,
+          },
+          input.executionRegistry,
+        ),
     ),
     Match.exhaustive,
   );

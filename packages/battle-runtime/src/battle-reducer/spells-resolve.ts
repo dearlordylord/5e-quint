@@ -127,10 +127,16 @@ import { invalidResult } from "./result-helpers.ts";
 import { mirrorImageHitInterceptionCheck } from "./mirror-image-hit-interception.ts";
 import { resolveRemarkableAthleteCriticalHitMovement } from "./remarkable-athlete-critical-movement.ts";
 import {
-  spellProcedureProfileFor,
+  spellProcedureExecutionFor,
   type RegisteredSpellProcedure,
-  type RegisteredSpellProcedureProfiles,
-} from "./spell-procedure-profiles/registry.ts";
+  type RegisteredSpellProcedureExecution,
+  type SpellProcedureExecutionRegistry,
+} from "./spell-procedure-profiles/execution-registry.ts";
+import {
+  ACTION_OR_BONUS_ACTION_SPELL_RESOLUTION_PROCEDURES,
+  ACTION_SPELL_RESOLUTION_INCOMPATIBLE_PROCEDURES,
+  BONUS_ACTION_ONLY_SPELL_RESOLUTION_PROCEDURES,
+} from "./spell-procedure-profiles/resolution-contract.ts";
 import { isTriggeredReactionSpellInvocation } from "./spell-interrupt-procedure-kinds.ts";
 import {
   applySpiritualWeaponAttackProxyEffect,
@@ -290,7 +296,7 @@ import { spellFillSet, type SpellFillSet } from "./spells-resolve-fill-set.ts";
 
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
 import { resolveReadySpellAct } from "./spells-resolve-release.ts";
-import type { SpellProcedureProfileResolveInput } from "./spell-procedure-profiles/profile.ts";
+import type { SpellProcedureProfileResolveInput } from "./spell-procedure-profiles/execution-profile.ts";
 import { clearPendingAttackRollMissToHitReplacementSelection } from "./statblock-attacks.ts";
 
 type SpellAttackDamageInvocation = Extract<
@@ -344,7 +350,7 @@ function spellActLane(input: SpellActInternalInput): SpellActLane {
 type SpellProcedureActionCostOverride = "magicAction" | "bonusAction";
 
 type SpellProcedureResolveInputFor<Procedure extends RegisteredSpellProcedure> =
-  Parameters<RegisteredSpellProcedureProfiles[Procedure]["resolve"]>[0];
+  Parameters<RegisteredSpellProcedureExecution<Procedure>["resolve"]>[0];
 
 type SpellProcedureResolveDispatchInput = {
   readonly [Procedure in RegisteredSpellProcedure]: {
@@ -404,173 +410,13 @@ function procedureIsIn(
   return procedures.includes(procedure);
 }
 
-function resolveRegisteredSpellProcedureProfile(
+function resolveRegisteredSpellProcedureExecution(
+  executionRegistry: SpellProcedureExecutionRegistry,
   input: SpellProcedureResolveDispatchInput,
 ): BattleResolutionResult {
-  return Match.value(input).pipe(
-    Match.discriminatorsExhaustive("procedure")({
-      damageReduction: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      rollModifier: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      makeStable: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      heldLight: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      heldLightHurl: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      objectLight: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      thaumaturgyBoomingVoice: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      blurAttackRollDefense: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      seeInvisibleObserverSight: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      mirrorImageHitInterception: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      persistentArmorEffect: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      magicWeaponEnhancement: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      wardingBond: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      creatureTypeProtection: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      conditionRemovalProtection: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      chosenDamageResistance: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      hastePositive: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      directCondition: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      directConditionRemoval: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      conditionImmunityAndTurnStartTemporaryHitPoints: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      creatureSizeIncrease: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      creatureSizeDecrease: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      levitatedCreature: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      scalarBuff: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      directHitPointRestoration: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      expeditiousRetreatDash: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      jumpMovementReplacement: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      featherFallMitigation: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      selfTeleport: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      selfTransformationMode: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      dragonsBreathInitial: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      sanctuaryTargetingInterdiction: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      markedDamageRider: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      weaponDamageRider: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      afterHitDamage: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      afterHitSaveGatedCondition: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      afterHitTimedDamageAndSave: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      afterHitDamageAndIllumination: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      weaponAttackOverride: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      spellHostedWeaponAttack: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      saveGatedDamage: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      saveGatedCondition: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      saveGatedConditionImmunity: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      saveGatedAttackRollAdvantage: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      abilityD20TestRollModeSaveGate: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      sleepTargetAdmission: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      hideousLaughter: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      hypnoticPattern: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      slowActivePenalties: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      greaseGroundHazard: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      gustOfWindLine: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      flamingSphere: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      moonbeam: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      fogCloudObscurement: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      spikeGrowthMovementHazard: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      webRestraintHazard: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      sleetStormAreaHazard: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      insectPlagueAreaHazard: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      cloudkillAreaHazard: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      magicalDarknessPointOrigin: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      antimagicFieldOngoingSpellSuppression: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      command: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      counterspell: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      shieldReaction: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      spellAttackDamage: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      spellAttackSequence: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      spellCreatedHeldObject: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      spellCreatedHeldObjectAttack: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      spellCreatedHeldObjectReEvoke: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      spiritualWeaponAttackProxy: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      spiritualWeaponRepeatAttack: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      objectContactDamage: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      objectContactDamageRepeat: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      ongoingSpellEnd: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      chainedSpellAttackDamage: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      attackBurstSaveDamage: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      repeatedDamageAllocation: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      dancingLightsSeparateCast: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      dancingLightsCombinedCast: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-      dancingLightsReposition: (value) =>
-        spellProcedureProfileFor(value.procedure).resolve(value.resolution),
-    }),
-  );
+  return executionRegistry
+    .executionFor(input.procedure)
+    .resolve(input.resolution);
 }
 
 function actionSpellProfileResolutionInput(
@@ -588,67 +434,15 @@ type OrdinaryProfileInvocation = Exclude<
   { readonly procedure: "chainedSpellAttackDamage" }
 >;
 
-const ACTION_SPELL_PROFILE_INCOMPATIBLE_PROCEDURES = [
-  "heldLight",
-  "magicWeaponEnhancement",
-  "directConditionRemoval",
-  "expeditiousRetreatDash",
-  "jumpMovementReplacement",
-  "featherFallMitigation",
-  "selfTeleport",
-  "dragonsBreathInitial",
-  "sanctuaryTargetingInterdiction",
-  "markedDamageRider",
-  "weaponDamageRider",
-  "afterHitDamage",
-  "afterHitSaveGatedCondition",
-  "afterHitTimedDamageAndSave",
-  "afterHitDamageAndIllumination",
-  "weaponAttackOverride",
-  "counterspell",
-  "shieldReaction",
-  "spellCreatedHeldObject",
-  "spellCreatedHeldObjectReEvoke",
-  "spiritualWeaponAttackProxy",
-  "spiritualWeaponRepeatAttack",
-  "objectContactDamageRepeat",
-  "dancingLightsReposition",
-] as const satisfies ReadonlyArray<OrdinaryProfileInvocation["procedure"]>;
-
 const BONUS_ACTION_SPELL_PROFILE_PROCEDURES = [
-  "directHitPointRestoration",
-  "markedDamageRider",
-  "weaponAttackOverride",
-  "magicWeaponEnhancement",
-  "rollModifier",
-  "saveGatedDamage",
-  "weaponDamageRider",
-  "dancingLightsReposition",
-  "spellCreatedHeldObjectReEvoke",
-  "objectContactDamageRepeat",
-  "directConditionRemoval",
-  "jumpMovementReplacement",
-  "heldLight",
-  "spiritualWeaponAttackProxy",
-  "selfTeleport",
-  "scalarBuff",
-  "dragonsBreathInitial",
-  "saveGatedConditionImmunity",
-  "spiritualWeaponRepeatAttack",
-  "saveGatedCondition",
-  "directCondition",
-  "creatureSizeIncrease",
-  "creatureSizeDecrease",
-  "spellAttackDamage",
-  "spellAttackSequence",
-  "spellCreatedHeldObject",
-  "sanctuaryTargetingInterdiction",
+  ...ACTION_OR_BONUS_ACTION_SPELL_RESOLUTION_PROCEDURES,
+  ...BONUS_ACTION_ONLY_SPELL_RESOLUTION_PROCEDURES,
 ] as const satisfies ReadonlyArray<OrdinaryProfileInvocation["procedure"]>;
 
 type ActionSpellProfileInvocation = Exclude<
   OrdinaryProfileInvocation,
   {
-    readonly procedure: (typeof ACTION_SPELL_PROFILE_INCOMPATIBLE_PROCEDURES)[number];
+    readonly procedure: (typeof ACTION_SPELL_RESOLUTION_INCOMPATIBLE_PROCEDURES)[number];
   }
 >;
 
@@ -681,7 +475,7 @@ function invocationProcedureIsIn<
 
 type SpellProcedureResolutionOptions = {
   readonly actionCostOverride?: SpellProcedureActionCostOverride;
-  readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
+  readonly metamagicApplications: readonly SpellMetamagicApplicationFact[];
 };
 
 function actionSpellProcedureResolveDispatchInput(
@@ -703,11 +497,6 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
         }),
       rollModifier: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -718,11 +507,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
+          metamagicApplications: resolutionOptions.metamagicApplications,
         }),
       makeStable: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -733,11 +518,6 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
         }),
       heldLightHurl: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -748,11 +528,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
+          metamagicApplications: resolutionOptions.metamagicApplications,
         }),
       objectLight: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -763,11 +539,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
+          metamagicApplications: resolutionOptions.metamagicApplications,
         }),
       thaumaturgyBoomingVoice: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -778,11 +550,6 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
         }),
       blurAttackRollDefense: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -793,11 +560,6 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
         }),
       seeInvisibleObserverSight: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -808,11 +570,6 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
         }),
       mirrorImageHitInterception: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -823,11 +580,6 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
         }),
       persistentArmorEffect: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -838,11 +590,6 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
         }),
       wardingBond: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -853,11 +600,6 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
         }),
       creatureTypeProtection: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -868,11 +610,6 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
         }),
       conditionRemovalProtection: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -883,11 +620,6 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
         }),
       chosenDamageResistance: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -898,11 +630,6 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
         }),
       hastePositive: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -913,11 +640,6 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
         }),
       directCondition: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -928,11 +650,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
+          metamagicApplications: resolutionOptions.metamagicApplications,
         }),
       conditionImmunityAndTurnStartTemporaryHitPoints: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -943,11 +661,6 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
         }),
       creatureSizeIncrease: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -958,11 +671,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
+          metamagicApplications: resolutionOptions.metamagicApplications,
         }),
       creatureSizeDecrease: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -973,11 +682,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
+          metamagicApplications: resolutionOptions.metamagicApplications,
         }),
       levitatedCreature: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -988,11 +693,6 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
         }),
       scalarBuff: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -1003,11 +703,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
+          metamagicApplications: resolutionOptions.metamagicApplications,
         }),
       directHitPointRestoration: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -1018,11 +714,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
+          metamagicApplications: resolutionOptions.metamagicApplications,
         }),
       selfTransformationMode: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -1033,11 +725,6 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
         }),
       spellHostedWeaponAttack: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -1048,11 +735,6 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
         }),
       saveGatedDamage: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -1063,11 +745,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
+          metamagicApplications: resolutionOptions.metamagicApplications,
         }),
       saveGatedCondition: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -1078,11 +756,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
+          metamagicApplications: resolutionOptions.metamagicApplications,
         }),
       saveGatedConditionImmunity: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -1093,11 +767,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
+          metamagicApplications: resolutionOptions.metamagicApplications,
         }),
       saveGatedAttackRollAdvantage: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -1108,11 +778,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
+          metamagicApplications: resolutionOptions.metamagicApplications,
         }),
       abilityD20TestRollModeSaveGate: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -1123,11 +789,6 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
         }),
       sleepTargetAdmission: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -1138,11 +799,6 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
         }),
       hideousLaughter: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -1153,11 +809,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
+          metamagicApplications: resolutionOptions.metamagicApplications,
         }),
       hypnoticPattern: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -1168,11 +820,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
+          metamagicApplications: resolutionOptions.metamagicApplications,
         }),
       slowActivePenalties: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -1183,11 +831,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
+          metamagicApplications: resolutionOptions.metamagicApplications,
         }),
       greaseGroundHazard: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -1198,11 +842,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
+          metamagicApplications: resolutionOptions.metamagicApplications,
         }),
       gustOfWindLine: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -1213,11 +853,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
+          metamagicApplications: resolutionOptions.metamagicApplications,
         }),
       flamingSphere: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -1228,11 +864,6 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
         }),
       moonbeam: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -1243,11 +874,6 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
         }),
       fogCloudObscurement: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -1258,11 +884,6 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
         }),
       spikeGrowthMovementHazard: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -1273,11 +894,6 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
         }),
       webRestraintHazard: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -1288,11 +904,6 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
         }),
       sleetStormAreaHazard: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -1303,11 +914,6 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
         }),
       insectPlagueAreaHazard: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -1318,11 +924,6 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
         }),
       cloudkillAreaHazard: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -1333,11 +934,6 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
         }),
       magicalDarknessPointOrigin: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -1348,11 +944,6 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
         }),
       antimagicFieldOngoingSpellSuppression: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -1363,11 +954,6 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
         }),
       command: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -1378,11 +964,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
+          metamagicApplications: resolutionOptions.metamagicApplications,
         }),
       spellAttackDamage: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -1393,11 +975,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
+          metamagicApplications: resolutionOptions.metamagicApplications,
         }),
       spellAttackSequence: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -1408,11 +986,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
+          metamagicApplications: resolutionOptions.metamagicApplications,
         }),
       spellCreatedHeldObjectAttack: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -1423,11 +997,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
+          metamagicApplications: resolutionOptions.metamagicApplications,
         }),
       objectContactDamage: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -1438,11 +1008,6 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
         }),
       ongoingSpellEnd: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -1453,11 +1018,6 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
         }),
       attackBurstSaveDamage: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -1468,11 +1028,7 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
+          metamagicApplications: resolutionOptions.metamagicApplications,
         }),
       repeatedDamageAllocation: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -1483,11 +1039,6 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
         }),
       dancingLightsSeparateCast: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -1498,11 +1049,6 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
         }),
       dancingLightsCombinedCast: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -1513,11 +1059,6 @@ function actionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
         }),
     }),
   );
@@ -1542,11 +1083,7 @@ function bonusActionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
+          metamagicApplications: resolutionOptions.metamagicApplications,
         }),
       heldLight: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -1557,11 +1094,6 @@ function bonusActionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
         }),
       magicWeaponEnhancement: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -1572,11 +1104,6 @@ function bonusActionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
         }),
       directCondition: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -1587,11 +1114,7 @@ function bonusActionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
+          metamagicApplications: resolutionOptions.metamagicApplications,
         }),
       creatureSizeIncrease: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -1602,11 +1125,7 @@ function bonusActionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
+          metamagicApplications: resolutionOptions.metamagicApplications,
         }),
       creatureSizeDecrease: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -1617,11 +1136,7 @@ function bonusActionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
+          metamagicApplications: resolutionOptions.metamagicApplications,
         }),
       directConditionRemoval: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -1632,11 +1147,6 @@ function bonusActionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
         }),
       scalarBuff: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -1647,11 +1157,7 @@ function bonusActionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
+          metamagicApplications: resolutionOptions.metamagicApplications,
         }),
       directHitPointRestoration: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -1662,11 +1168,7 @@ function bonusActionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
+          metamagicApplications: resolutionOptions.metamagicApplications,
         }),
       jumpMovementReplacement: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -1677,11 +1179,6 @@ function bonusActionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
         }),
       selfTeleport: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -1692,11 +1189,6 @@ function bonusActionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
         }),
       dragonsBreathInitial: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -1707,11 +1199,6 @@ function bonusActionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
         }),
       sanctuaryTargetingInterdiction: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -1722,11 +1209,6 @@ function bonusActionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
         }),
       markedDamageRider: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -1737,11 +1219,6 @@ function bonusActionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
         }),
       weaponDamageRider: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -1752,11 +1229,6 @@ function bonusActionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
         }),
       saveGatedDamage: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -1767,11 +1239,7 @@ function bonusActionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
+          metamagicApplications: resolutionOptions.metamagicApplications,
         }),
       saveGatedCondition: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -1782,11 +1250,7 @@ function bonusActionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
+          metamagicApplications: resolutionOptions.metamagicApplications,
         }),
       saveGatedConditionImmunity: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -1797,11 +1261,7 @@ function bonusActionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
+          metamagicApplications: resolutionOptions.metamagicApplications,
         }),
       spellAttackDamage: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -1812,11 +1272,7 @@ function bonusActionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
+          metamagicApplications: resolutionOptions.metamagicApplications,
         }),
       spellAttackSequence: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -1827,11 +1283,7 @@ function bonusActionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
+          metamagicApplications: resolutionOptions.metamagicApplications,
         }),
       spellCreatedHeldObject: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -1842,11 +1294,6 @@ function bonusActionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
         }),
       spellCreatedHeldObjectReEvoke: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -1857,11 +1304,6 @@ function bonusActionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
         }),
       spiritualWeaponAttackProxy: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -1872,11 +1314,6 @@ function bonusActionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
         }),
       spiritualWeaponRepeatAttack: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -1887,11 +1324,6 @@ function bonusActionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
         }),
       objectContactDamageRepeat: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -1902,11 +1334,6 @@ function bonusActionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
         }),
       dancingLightsReposition: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
@@ -1917,11 +1344,6 @@ function bonusActionSpellProcedureResolveDispatchInput(
           ...(resolutionOptions.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
         }),
     }),
   );
@@ -2144,8 +1566,9 @@ function spellDamageHoleWithEmpoweredOption(
 
 export function resolveSpellAct(
   input: AdmittedActionSpellBattleResolutionInput,
+  executionRegistry: SpellProcedureExecutionRegistry,
 ): BattleResolutionResult {
-  return resolveSpellActInternal(input);
+  return resolveSpellActInternal(input, executionRegistry);
 }
 
 export function resolveSpellAttackDamageAct(
@@ -2155,14 +1578,11 @@ export function resolveSpellAttackDamageAct(
     | Extract<
         SupportedSpellInvocation,
         { readonly procedure: "spellCreatedHeldObjectAttack" }
-      >,
-    ActionSpellBattleResolutionInput | BonusActionSpellBattleResolutionInput
-  > & {
-    readonly actionCostOverride?: SpellProcedureActionCostOverride;
-    readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
-  },
+      >
+  >,
+  executionRegistry: SpellProcedureExecutionRegistry,
 ): BattleResolutionResult {
-  return resolveSpellActInternal(input.input, {
+  return resolveSpellActInternal(input.input, executionRegistry, {
     useSharedSpellAttackDamageResolver: true,
     ...(input.actionCostOverride === undefined
       ? {}
@@ -2175,6 +1595,7 @@ export function resolveSpellAttackDamageAct(
 
 function resolveSpellActInternal(
   unresolvedInput: SpellActInternalInput,
+  executionRegistry: SpellProcedureExecutionRegistry,
   options: ResolveSpellActInternalOptions = {},
 ): BattleResolutionResult {
   const lane = spellActLane(unresolvedInput);
@@ -2226,13 +1647,16 @@ function resolveSpellActInternal(
       "Action-time spell act requires a supported prepared spell or cantrip.",
     );
   }
-  const metamagicAdmission = admitSpellMetamagicApplications({
-    state: input.state,
-    actor,
-    actorId: subject.actorId,
-    invocation,
-    subject,
-  });
+  const metamagicAdmission = admitSpellMetamagicApplications(
+    {
+      state: input.state,
+      actor,
+      actorId: subject.actorId,
+      invocation,
+      subject,
+    },
+    executionRegistry,
+  );
   if (metamagicAdmission.tag !== "ok") {
     return invalidResult(
       input.state,
@@ -2471,12 +1895,14 @@ function resolveSpellActInternal(
     if (fillSet.tag === "invalid") {
       return invalidResult(input.state, "invalidFill", fillSet.message);
     }
-    return resolveRegisteredSpellProcedureProfile(
+    return resolveRegisteredSpellProcedureExecution(
+      executionRegistry,
       spellProcedureResolveDispatchInput(invocation.procedure, {
         input: { ...lane.input, state: castingState },
         actorId: subject.actorId,
         invocation,
         fillSet,
+        metamagicApplications: metamagicAdmission.applications,
       }),
     );
   }
@@ -2502,7 +1928,7 @@ function resolveSpellActInternal(
     if (
       invocationProcedureIsIn(
         invocation,
-        ACTION_SPELL_PROFILE_INCOMPATIBLE_PROCEDURES,
+        ACTION_SPELL_RESOLUTION_INCOMPATIBLE_PROCEDURES,
       )
     ) {
       return invalidResult(
@@ -2511,7 +1937,8 @@ function resolveSpellActInternal(
         "This spell procedure does not use the Action spell resolution lane.",
       );
     }
-    return resolveRegisteredSpellProcedureProfile(
+    return resolveRegisteredSpellProcedureExecution(
+      executionRegistry,
       actionSpellProcedureResolveDispatchInput(
         lane.input,
         castingState,
@@ -2523,7 +1950,7 @@ function resolveSpellActInternal(
           ACTION_SPELL_METAMAGIC_RESOLUTION_PROCEDURES,
         )
           ? { metamagicApplications: metamagicAdmission.applications }
-          : {},
+          : { metamagicApplications: [] },
       ),
     );
   }
@@ -2814,6 +2241,7 @@ function resolveSpellActInternal(
               ),
           ],
         },
+        executionRegistry,
         options,
       );
     }
@@ -4535,6 +3963,7 @@ function resolveSpellAttackDamageObjectTarget(input: {
 
 export function resolveBonusActionSpellAct(
   input: AdmittedBonusActionSpellBattleResolutionInput,
+  executionRegistry: SpellProcedureExecutionRegistry,
 ): BattleResolutionResult {
   const subject = input.subject;
   const actor = input.state.combatants.get(subject.actorId);
@@ -4560,13 +3989,16 @@ export function resolveBonusActionSpellAct(
       "Bonus Action spell act requires a supported Bonus Action spell.",
     );
   }
-  const metamagicAdmission = admitSpellMetamagicApplications({
-    state: input.state,
-    actor,
-    actorId: subject.actorId,
-    invocation,
-    subject,
-  });
+  const metamagicAdmission = admitSpellMetamagicApplications(
+    {
+      state: input.state,
+      actor,
+      actorId: subject.actorId,
+      invocation,
+      subject,
+    },
+    executionRegistry,
+  );
   if (metamagicAdmission.tag !== "ok") {
     return invalidResult(
       input.state,
@@ -4825,7 +4257,8 @@ export function resolveBonusActionSpellAct(
     if (slowSomaticSpellFailure.tag !== "continue") {
       return slowSomaticSpellFailure;
     }
-    return resolveRegisteredSpellProcedureProfile(
+    return resolveRegisteredSpellProcedureExecution(
+      executionRegistry,
       spellProcedureResolveDispatchInput(invocation.procedure, {
         input: { ...input, state: castingState },
         actorId: subject.actorId,
@@ -4857,7 +4290,8 @@ export function resolveBonusActionSpellAct(
       "This spell procedure does not use the Bonus Action spell resolution lane.",
     );
   }
-  return resolveRegisteredSpellProcedureProfile(
+  return resolveRegisteredSpellProcedureExecution(
+    executionRegistry,
     bonusActionSpellProcedureResolveDispatchInput(
       input,
       castingState,
@@ -4865,10 +4299,11 @@ export function resolveBonusActionSpellAct(
       invocation,
       fillSet,
       {
-        ...(spellProcedureProfileFor(invocation.procedure)
-          .metamagicCompatibility === "bonusActionRewrite"
-          ? { metamagicApplications: metamagicAdmission.applications }
-          : {}),
+        metamagicApplications:
+          spellProcedureExecutionFor(executionRegistry, invocation.procedure)
+            .metamagicCompatibility === "bonusActionRewrite"
+            ? metamagicAdmission.applications
+            : [],
         ...(actionCostOverride === undefined ? {} : { actionCostOverride }),
       },
     ),
@@ -4877,6 +4312,7 @@ export function resolveBonusActionSpellAct(
 
 export function resolveBonusActionSpellAttackProxyAct(
   input: BonusActionSpellBattleResolutionInput,
+  executionRegistry: SpellProcedureExecutionRegistry,
 ): BattleResolutionResult {
   const result = resolveSpellActInternal(
     {
@@ -4886,6 +4322,7 @@ export function resolveBonusActionSpellAttackProxyAct(
         tag: "actionSpell",
       },
     },
+    executionRegistry,
     { allowBonusActionInvocation: true },
   );
   return result.tag === "needsHoles"
@@ -4960,6 +4397,7 @@ function invocationRefHasAntimagicSuppressedRepeatResolverGuard(
 
 export function resolveBonusActionDashSpellAct(
   input: AdmittedBonusActionDashSpellBattleResolutionInput,
+  executionRegistry: SpellProcedureExecutionRegistry,
 ): BattleResolutionResult {
   const subject = input.subject;
   const actor = input.state.combatants.get(subject.actorId);
@@ -5007,7 +4445,8 @@ export function resolveBonusActionDashSpellAct(
   if (fillSet.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", fillSet.message);
   }
-  return resolveRegisteredSpellProcedureProfile(
+  return resolveRegisteredSpellProcedureExecution(
+    executionRegistry,
     spellProcedureResolveDispatchInput(invocation.procedure, {
       input: { ...input, state: castingState },
       actorId: subject.actorId,

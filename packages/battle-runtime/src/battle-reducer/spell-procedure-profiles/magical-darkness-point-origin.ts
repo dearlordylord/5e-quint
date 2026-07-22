@@ -29,7 +29,6 @@ import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
 import {
-  type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
   type BattleResolutionResult,
   type BattleState,
@@ -44,7 +43,7 @@ import { spellAreaChoiceHole } from "../spells-holes-fills.ts";
 import { resolveMagicalDarknessPointOriginSpellAct } from "../spells-resolve-area-effects.ts";
 import type {
   SpellAdmissionContext,
-  SpellProcedureProfile,
+  SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
@@ -62,10 +61,8 @@ type MagicalDarknessPointOriginSpellInvocation = Extract<
   SupportedSpellInvocation,
   { readonly procedure: "magicalDarknessPointOrigin" }
 >;
-type MagicalDarknessPointOriginResolveInput = SpellProcedureProfileResolveInput<
-  MagicalDarknessPointOriginSpellInvocation,
-  ActionSpellBattleResolutionInput
->;
+type MagicalDarknessPointOriginResolveInput =
+  SpellProcedureProfileResolveInput<MagicalDarknessPointOriginSpellInvocation>;
 type MagicalDarknessPointOriginProfileShape = {
   readonly durationTicks: ElapsedTimeTicks;
   readonly rangeFeet: number;
@@ -224,13 +221,10 @@ export const magicalDarknessPointOriginProfile = {
   procedure: "magicalDarknessPointOrigin",
   executionSchema: MagicalDarknessPointOriginInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  targetListInvocation: { kind: "none" },
-  isReadiedSpellCompatible: false,
   admit: admitMagicalDarknessPointOrigin,
   discoverCastAct: discoverMagicalDarknessPointOriginCastAct,
   resolve: resolveMagicalDarknessPointOrigin,
-} satisfies SpellProcedureProfile<
+} satisfies SpellProcedureDeclaration<
   "magicalDarknessPointOrigin",
-  MagicalDarknessPointOriginSpellInvocation,
-  ActionSpellBattleResolutionInput
+  MagicalDarknessPointOriginSpellInvocation
 >;

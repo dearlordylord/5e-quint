@@ -52,7 +52,7 @@ import {
 } from "../spells-targeting.ts";
 import type {
   SpellAdmissionContext,
-  SpellProcedureProfile,
+  SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
@@ -69,10 +69,7 @@ import {
   SizeSchema,
   SpellSlotInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
-import {
-  discoverDistantSpellMetamagicSelections,
-  type SpellMetamagicApplicationFact,
-} from "../metamagic-support.ts";
+import { discoverDistantSpellMetamagicSelections } from "../metamagic-support.ts";
 
 const LIGHT_OBJECT_MAX_SIZE = "large" as const;
 
@@ -415,9 +412,7 @@ function objectLightSpellEffectOccurrenceId(
 }
 
 function resolveObjectLight(
-  input: SpellProcedureProfileResolveInput<ObjectLightInvocation> & {
-    readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
-  },
+  input: SpellProcedureProfileResolveInput<ObjectLightInvocation>,
 ): BattleResolutionResult {
   if (
     input.fillSet.targetId !== undefined ||
@@ -560,15 +555,13 @@ const ObjectLightInvocationSchema = spellProcedureExecutionSchema(
     }),
   ),
 );
-export const objectLightProfile: SpellProcedureProfile<
+export const objectLightProfile: SpellProcedureDeclaration<
   "objectLight",
   ObjectLightInvocation
 > = {
   procedure: "objectLight",
   executionSchema: ObjectLightInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  targetListInvocation: { kind: "none" },
-  isReadiedSpellCompatible: false,
   admit: admitObjectLight,
   discoverCastAct: discoverObjectLightCastAct,
   resolve: resolveObjectLight,

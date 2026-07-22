@@ -74,6 +74,7 @@ import {
   type GlyphStoredSpellReleaseProfile,
 } from "./battle-reducer/glyph-durable-occurrence.ts";
 import { effectiveWalkSpeed } from "./battle-reducer/movement-speed.ts";
+import { spellProcedureExecutionRegistry } from "./battle-reducer/spell-procedure-profiles/execution-composition.ts";
 import { tickDurationEffects } from "./battle-reducer/turn-end-movement.ts";
 import {
   D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
@@ -180,6 +181,8 @@ import {
   characterBattleFeatureInitForTest,
   requireCharacterUnitProcedureRefForTest,
 } from "./battle-runtime-test-support.ts";
+
+const executionRegistry = spellProcedureExecutionRegistry();
 
 type GlyphDurableOccurrenceEffect = Extract<
   BattleActiveEffect,
@@ -996,6 +999,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     );
     expect(
       releaseGlyphStoredSpell({
+        executionRegistry,
         state,
         profile: requireGlyphStoredSpellProfile(),
         witness: storedSingleCreatureReleaseWitness([], spellCasterId),
@@ -1005,6 +1009,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       reason: "triggerCreatureTargetMismatch",
     });
     const needsAttackRoll = releaseGlyphStoredSpell({
+      executionRegistry,
       state,
       profile: requireGlyphStoredSpellProfile(),
       witness: storedSingleCreatureReleaseWitness([], spellTargetId, []),
@@ -1018,6 +1023,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       battleProcedureExecutionRefForSpellHoleForTest(attackRoll),
     ).toBeDefined();
     const needsDamageRoll = releaseGlyphStoredSpell({
+      executionRegistry,
       state,
       profile: requireGlyphStoredSpellProfile(),
       witness: storedSingleCreatureReleaseWitness(
@@ -1031,6 +1037,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     if (needsDamageRoll.tag !== "needsHoles") return;
     const damageRoll = requireReleaseHole(needsDamageRoll.holes, "rolledDice");
     const released = releaseGlyphStoredSpell({
+      executionRegistry,
       state,
       profile: requireGlyphStoredSpellProfile(),
       witness: storedSingleCreatureReleaseWitness(
@@ -1097,6 +1104,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     ).toBe(originalRef);
 
     const release = releaseGlyphStoredSpell({
+      executionRegistry,
       state: unavailableState,
       profile: requireGlyphStoredSpellProfile(),
       witness: storedSingleCreatureReleaseWitness([], spellTargetId, []),
@@ -1139,6 +1147,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       effectKind: "readiedSpell" as const,
     };
     const needsSave = releaseGlyphStoredSpell({
+      executionRegistry,
       state,
       profile: requireGlyphStoredSpellProfile(),
       witness: storedSingleCreatureReleaseWitness(
@@ -1158,6 +1167,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       "savingThrowOutcome",
     );
     const released = releaseGlyphStoredSpell({
+      executionRegistry,
       state,
       profile: requireGlyphStoredSpellProfile(),
       witness: storedSingleCreatureReleaseWitness(
@@ -1249,6 +1259,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     };
 
     const needsSave = releaseGlyphStoredSpell({
+      executionRegistry,
       state,
       profile: requireGlyphStoredSpellProfile(),
       witness: storedSingleCreatureReleaseWitness(
@@ -1268,6 +1279,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       "savingThrowOutcome",
     );
     const needsDamageRoll = releaseGlyphStoredSpell({
+      executionRegistry,
       state,
       profile: requireGlyphStoredSpellProfile(),
       witness: storedSingleCreatureReleaseWitness(
@@ -1288,6 +1300,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     if (needsDamageRoll.tag !== "needsHoles") return;
     const damageRoll = requireReleaseHole(needsDamageRoll.holes, "rolledDice");
     const released = releaseGlyphStoredSpell({
+      executionRegistry,
       state,
       profile: requireGlyphStoredSpellProfile(),
       witness: storedSingleCreatureReleaseWitness(
@@ -1354,6 +1367,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     );
 
     const needsSave = releaseGlyphStoredSpell({
+      executionRegistry,
       state,
       profile: requireGlyphStoredSpellProfile(),
       witness: storedSingleCreatureReleaseWitness(
@@ -1373,6 +1387,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       "savingThrowOutcome",
     );
     const needsDamageRoll = releaseGlyphStoredSpell({
+      executionRegistry,
       state,
       profile: requireGlyphStoredSpellProfile(),
       witness: storedSingleCreatureReleaseWitness(
@@ -1393,6 +1408,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     if (needsDamageRoll.tag !== "needsHoles") return;
     const damageRoll = requireReleaseHole(needsDamageRoll.holes, "rolledDice");
     const released = releaseGlyphStoredSpell({
+      executionRegistry,
       state,
       profile: requireGlyphStoredSpellProfile(),
       witness: storedSingleCreatureReleaseWitness(
@@ -1554,6 +1570,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       );
       const readiedBefore = state.readiedSpells.get(spellCasterId);
       const initialRelease = releaseGlyphStoredSpell({
+        executionRegistry,
         state,
         profile: requireGlyphStoredSpellProfile(),
         witness: storedSingleCreatureReleaseWitness(
@@ -1566,6 +1583,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
         releaseCase.fillsFromHoles === undefined
           ? initialRelease
           : releaseGlyphStoredSpell({
+              executionRegistry,
               state,
               profile: requireGlyphStoredSpellProfile(),
               witness: storedSingleCreatureReleaseWitness(
@@ -1662,6 +1680,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     const priorExpended = casterSpellSlotExpended(state, 2);
     const readiedBefore = state.readiedSpells.get(spellCasterId);
     const initialRelease = releaseGlyphStoredSpell({
+      executionRegistry,
       state,
       profile: requireGlyphStoredSpellProfile(),
       witness: storedSingleCreatureReleaseWitness([], spellTargetId, []),
@@ -1672,6 +1691,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     );
 
     const released = releaseGlyphStoredSpell({
+      executionRegistry,
       state,
       profile: requireGlyphStoredSpellProfile(),
       witness: storedSingleCreatureReleaseWitness(
@@ -1755,6 +1775,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       }),
     );
     const initialRelease = releaseGlyphStoredSpell({
+      executionRegistry,
       state,
       profile: requireGlyphStoredSpellProfile(),
       witness: storedSingleCreatureReleaseWitness([], spellTargetId, []),
@@ -1764,6 +1785,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       "selfTransformationModeChoice",
     );
     const modeOnly = releaseGlyphStoredSpell({
+      executionRegistry,
       state,
       profile: requireGlyphStoredSpellProfile(),
       witness: storedSingleCreatureReleaseWitness(
@@ -1789,6 +1811,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     ]);
 
     const released = releaseGlyphStoredSpell({
+      executionRegistry,
       state,
       profile: requireGlyphStoredSpellProfile(),
       witness: storedSingleCreatureReleaseWitness(
@@ -1876,6 +1899,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       );
       const readiedBefore = state.readiedSpells.get(spellCasterId);
       const needsAreaWitness = releaseGlyphStoredSpell({
+        executionRegistry,
         state,
         profile: requireGlyphStoredSpellProfile(),
         witness: storedAreaReleaseWitness({
@@ -1887,6 +1911,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       expect(needsAreaWitness.tag).toBe("needsHoles");
       if (needsAreaWitness.tag !== "needsHoles") return;
       const released = releaseGlyphStoredSpell({
+        executionRegistry,
         state,
         profile: requireGlyphStoredSpellProfile(),
         witness: storedAreaReleaseWitness({
@@ -1949,6 +1974,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
         }),
       );
       const needsAreaWitness = releaseGlyphStoredSpell({
+        executionRegistry,
         state,
         profile: requireGlyphStoredSpellProfile(),
         witness: storedAreaReleaseWitness({
@@ -1964,6 +1990,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
         glyphStoredWrongAreaOriginAnchor,
       ] as const) {
         const rejected = releaseGlyphStoredSpell({
+          executionRegistry,
           state,
           profile: requireGlyphStoredSpellProfile(),
           witness: storedAreaReleaseWitness({
@@ -2049,6 +2076,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       effectKind: "readiedSpell" as const,
     };
     const needsAreaSave = releaseGlyphStoredSpell({
+      executionRegistry,
       state,
       profile: requireGlyphStoredSpellProfile(),
       witness: storedAreaReleaseWitness({
@@ -2070,6 +2098,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
 
     expect(
       releaseGlyphStoredSpell({
+        executionRegistry,
         state,
         profile: requireGlyphStoredSpellProfile(),
         witness: storedAreaReleaseWitness({
@@ -2089,6 +2118,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     });
 
     const released = releaseGlyphStoredSpell({
+      executionRegistry,
       state,
       profile: requireGlyphStoredSpellProfile(),
       witness: storedAreaReleaseWitness({
@@ -2207,6 +2237,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       effectKind: "readiedSpell" as const,
     };
     const needsAreaSave = releaseGlyphStoredSpell({
+      executionRegistry,
       state,
       profile: requireGlyphStoredSpellProfile(),
       witness: storedAreaReleaseWitness({
@@ -2222,6 +2253,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       "savingThrowOutcome",
     );
     const awaitingSaveFailedReaction = releaseGlyphStoredSpell({
+      executionRegistry,
       state,
       profile: requireGlyphStoredSpellProfile(),
       witness: storedAreaReleaseWitness({
@@ -2355,6 +2387,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
 
     expect(
       releaseGlyphStoredSpell({
+        executionRegistry,
         state,
         profile: requireGlyphStoredSpellProfile(),
         witness: storedAreaReleaseWitness({
@@ -2367,6 +2400,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       reason: "areaCenterMismatch",
     });
     const needsAreaSave = releaseGlyphStoredSpell({
+      executionRegistry,
       state,
       profile: requireGlyphStoredSpellProfile(),
       witness: storedAreaReleaseWitness({
@@ -2401,6 +2435,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       [],
     );
     const needsDamageRoll = releaseGlyphStoredSpell({
+      executionRegistry,
       state,
       profile: requireGlyphStoredSpellProfile(),
       witness: storedAreaReleaseWitness({
@@ -2413,6 +2448,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     if (needsDamageRoll.tag !== "needsHoles") return;
     const damageRoll = requireReleaseHole(needsDamageRoll.holes, "rolledDice");
     const released = releaseGlyphStoredSpell({
+      executionRegistry,
       state,
       profile: requireGlyphStoredSpellProfile(),
       witness: storedAreaReleaseWitness({
@@ -2454,6 +2490,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       }),
     );
     const needsAreaSave = releaseGlyphStoredSpell({
+      executionRegistry,
       state,
       profile: requireGlyphStoredSpellProfile(),
       witness: storedAreaReleaseWitness({
@@ -2478,6 +2515,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       { targetId: thunderwaveSecondTargetId, succeeded: true },
     ]);
     const needsDamageRoll = releaseGlyphStoredSpell({
+      executionRegistry,
       state,
       profile: requireGlyphStoredSpellProfile(),
       witness: storedAreaReleaseWitness({
@@ -2490,6 +2528,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     if (needsDamageRoll.tag !== "needsHoles") return;
     const damageRoll = requireReleaseHole(needsDamageRoll.holes, "rolledDice");
     const released = releaseGlyphStoredSpell({
+      executionRegistry,
       state,
       profile: requireGlyphStoredSpellProfile(),
       witness: storedAreaReleaseWitness({
@@ -2531,6 +2570,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
 
     expect(
       releaseGlyphStoredSpell({
+        executionRegistry,
         state,
         profile: requireGlyphStoredSpellProfile(),
         witness: storedAreaReleaseWitness({
@@ -2546,6 +2586,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       reason: "hostilePlacementRequired",
     });
     const needsSavingThrow = releaseGlyphStoredSpell({
+      executionRegistry,
       state,
       profile: requireGlyphStoredSpellProfile(),
       witness: storedAreaReleaseWitness({
@@ -2571,6 +2612,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
 
     expect(
       releaseGlyphStoredSpell({
+        executionRegistry,
         state,
         profile: requireGlyphStoredSpellProfile(),
         witness: storedAreaReleaseWitness({
@@ -2589,6 +2631,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       reason: "hostilePlacementAreaMismatch",
     });
     const released = releaseGlyphStoredSpell({
+      executionRegistry,
       state,
       profile: requireGlyphStoredSpellProfile(),
       witness: storedAreaReleaseWitness({
@@ -2672,6 +2715,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
 
     expect(
       releaseGlyphStoredSpell({
+        executionRegistry,
         state,
         profile: requireGlyphStoredSpellProfile(),
         witness: storedSingleCreatureReleaseWitness(
@@ -2687,6 +2731,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     });
     expect(
       releaseGlyphStoredSpell({
+        executionRegistry,
         state,
         profile: requireGlyphStoredSpellProfile(),
         witness: storedSingleCreatureReleaseWitness(
@@ -2702,6 +2747,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     });
 
     const needsForcePosition = releaseGlyphStoredSpell({
+      executionRegistry,
       state,
       profile: requireGlyphStoredSpellProfile(),
       witness: storedSingleCreatureReleaseWitness(
@@ -2729,6 +2775,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
 
     expect(
       releaseGlyphStoredSpell({
+        executionRegistry,
         state,
         profile: requireGlyphStoredSpellProfile(),
         witness: storedSingleCreatureReleaseWitness(
@@ -2744,6 +2791,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     });
     expect(
       releaseGlyphStoredSpell({
+        executionRegistry,
         state,
         profile: requireGlyphStoredSpellProfile(),
         witness: storedSingleCreatureReleaseWitness(
@@ -2762,6 +2810,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     });
 
     const needsAttackRoll = releaseGlyphStoredSpell({
+      executionRegistry,
       state,
       profile: requireGlyphStoredSpellProfile(),
       witness: storedSingleCreatureReleaseWitness(
@@ -2780,6 +2829,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       battleProcedureExecutionRefForSpellHoleForTest(attackRoll),
     ).toBeDefined();
     const needsDamageRoll = releaseGlyphStoredSpell({
+      executionRegistry,
       state,
       profile: requireGlyphStoredSpellProfile(),
       witness: storedSingleCreatureReleaseWitness(
@@ -2797,6 +2847,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     if (needsDamageRoll.tag !== "needsHoles") return;
     const damageRoll = requireReleaseHole(needsDamageRoll.holes, "rolledDice");
     const released = releaseGlyphStoredSpell({
+      executionRegistry,
       state,
       profile: requireGlyphStoredSpellProfile(),
       witness: storedSingleCreatureReleaseWitness(
@@ -2926,6 +2977,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
 
     expect(
       releaseGlyphStoredSpell({
+        executionRegistry,
         state,
         profile: requireGlyphStoredSpellProfile(),
         witness: storedAreaReleaseWitness({
@@ -2938,6 +2990,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       reason: "areaCenterMismatch",
     });
     const needsAreaSave = releaseGlyphStoredSpell({
+      executionRegistry,
       state,
       profile: requireGlyphStoredSpellProfile(),
       witness: storedAreaReleaseWitness({

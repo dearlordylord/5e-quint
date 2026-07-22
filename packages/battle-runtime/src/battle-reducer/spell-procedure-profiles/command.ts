@@ -22,7 +22,6 @@ import type {
   TargetSelection,
 } from "@dnd/surface/surface/types";
 import {
-  type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
   type BattleCreatureState,
@@ -37,7 +36,7 @@ import { oneAdditionalTargetPerSpellSlotAboveBaseLevel } from "./_save-gate-help
 import { resolveCommandSpellAct } from "../spells-resolve-save-gates.ts";
 import type {
   SpellAdmissionContext,
-  SpellProcedureProfile,
+  SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
@@ -55,7 +54,6 @@ import {
   discoverSpellMetamagicSelections,
   HEIGHTENED_METAMAGIC_EFFECT_KIND,
   spellMetamagicApplications,
-  type SpellMetamagicApplicationFact,
 } from "../metamagic-support.ts";
 import {
   carefulSpellProtectedTargetsHole,
@@ -110,12 +108,8 @@ type CommandPhase = Extract<ActivationPhase, { readonly kind: "save_gate" }> & {
   };
 };
 
-type CommandResolveInput = SpellProcedureProfileResolveInput<
-  CommandSpellInvocation,
-  ActionSpellBattleResolutionInput
-> & {
-  readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
-};
+type CommandResolveInput =
+  SpellProcedureProfileResolveInput<CommandSpellInvocation>;
 
 function admitCommand(
   spell: CommandSpellInvocation["spell"],
@@ -372,13 +366,8 @@ export const commandProfile = {
   procedure: "command",
   executionSchema: CommandInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  targetListInvocation: { kind: "always" },
-  isReadiedSpellCompatible: false,
   admit: admitCommand,
   discoverCastAct: discoverCommandCastAct,
   resolve: resolveCommand,
-} satisfies SpellProcedureProfile<
-  "command",
-  CommandSpellInvocation,
-  ActionSpellBattleResolutionInput
->;
+} satisfies SpellProcedureDeclaration<"command", CommandSpellInvocation>;
+import type { SpellMetamagicApplicationFact } from "../metamagic-support.ts";

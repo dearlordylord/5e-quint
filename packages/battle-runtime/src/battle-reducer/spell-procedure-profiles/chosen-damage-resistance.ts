@@ -14,7 +14,6 @@ import { Either, Schema } from "effect";
 
 import {
   snapshotBattle,
-  type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
   type BattleActiveEffect,
   type BattleResolutionResult,
@@ -42,7 +41,7 @@ import {
 } from "../codec-building-blocks.ts";
 import type {
   SpellAdmissionContext,
-  SpellProcedureProfile,
+  SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import {
@@ -58,10 +57,8 @@ const CHOSEN_ENERGY_RESISTANCE_DAMAGE_TYPES = [
   "thunder",
 ] as const satisfies ReadonlyArray<DamageType>;
 
-type ChosenDamageResistanceResolveInput = SpellProcedureProfileResolveInput<
-  ChosenDamageResistanceSpellInvocation,
-  ActionSpellBattleResolutionInput
->;
+type ChosenDamageResistanceResolveInput =
+  SpellProcedureProfileResolveInput<ChosenDamageResistanceSpellInvocation>;
 
 function admitChosenDamageResistance(
   spell: SpellRecord,
@@ -399,15 +396,13 @@ export const ChosenDamageResistanceInvocationSchema =
     }),
   );
 
-export const chosenDamageResistanceProfile: SpellProcedureProfile<
+export const chosenDamageResistanceProfile: SpellProcedureDeclaration<
   "chosenDamageResistance",
   ChosenDamageResistanceSpellInvocation
 > = {
   procedure: "chosenDamageResistance",
   executionSchema: ChosenDamageResistanceInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  targetListInvocation: { kind: "always" },
-  isReadiedSpellCompatible: false,
   admit: admitChosenDamageResistance,
   discoverCastAct: discoverChosenDamageResistanceCastAct,
   resolve: resolveChosenDamageResistance,

@@ -30,7 +30,6 @@ import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either, Schema } from "effect";
 
 import {
-  type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
   type BattleResolutionResult,
   type BattleState,
@@ -48,7 +47,7 @@ import { supportedDamageAmountExpr } from "../spells-profile-shared.ts";
 import { resolveCloudkillAreaHazardSpellAct } from "../spells-resolve-area-effects.ts";
 import type {
   SpellAdmissionContext,
-  SpellProcedureProfile,
+  SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import {
@@ -60,10 +59,8 @@ type CloudkillAreaHazardSpellInvocation = Extract<
   SupportedSpellInvocation,
   { readonly procedure: "cloudkillAreaHazard" }
 >;
-type CloudkillAreaHazardResolveInput = SpellProcedureProfileResolveInput<
-  CloudkillAreaHazardSpellInvocation,
-  ActionSpellBattleResolutionInput
->;
+type CloudkillAreaHazardResolveInput =
+  SpellProcedureProfileResolveInput<CloudkillAreaHazardSpellInvocation>;
 type CloudkillMechanics = Extract<
   SpellRecord["mechanics"],
   { readonly family: "ongoing_effect" }
@@ -280,13 +277,10 @@ export const cloudkillAreaHazardProfile = {
   procedure: "cloudkillAreaHazard",
   executionSchema: CloudkillAreaHazardInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  targetListInvocation: { kind: "none" },
-  isReadiedSpellCompatible: false,
   admit: admitCloudkillAreaHazard,
   discoverCastAct: discoverCloudkillAreaHazardCastAct,
   resolve: resolveCloudkillAreaHazard,
-} satisfies SpellProcedureProfile<
+} satisfies SpellProcedureDeclaration<
   "cloudkillAreaHazard",
-  CloudkillAreaHazardSpellInvocation,
-  ActionSpellBattleResolutionInput
+  CloudkillAreaHazardSpellInvocation
 >;

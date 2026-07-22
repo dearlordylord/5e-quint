@@ -55,7 +55,7 @@ import { selfTransformationModeChoiceHole } from "../spells-targeting.ts";
 import type {
   OkSpellFillSet,
   SpellAdmissionContext,
-  SpellProcedureProfile,
+  SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
@@ -76,10 +76,8 @@ type SelfTransformationModeInvocation = Extract<
   SupportedSpellInvocation,
   { readonly procedure: "selfTransformationMode" }
 >;
-type SelfTransformationModeResolveInput = SpellProcedureProfileResolveInput<
-  SelfTransformationModeInvocation,
-  ActionSpellBattleResolutionInput
->;
+type SelfTransformationModeResolveInput =
+  SpellProcedureProfileResolveInput<SelfTransformationModeInvocation>;
 
 type SpellActivationPhase = Extract<
   SpellRecord["mechanics"],
@@ -635,12 +633,10 @@ export const selfTransformationModeProfile = {
   procedure: "selfTransformationMode",
   executionSchema: SelfTransformationModeInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  targetListInvocation: { kind: "none" },
-  isReadiedSpellCompatible: false,
   admit: admitSelfTransformationMode,
   discoverCastAct: discoverSelfTransformationModeCastAct,
   resolve: resolveSelfTransformationMode,
-} satisfies SpellProcedureProfile<
+} satisfies SpellProcedureDeclaration<
   "selfTransformationMode",
   SelfTransformationModeInvocation
 >;

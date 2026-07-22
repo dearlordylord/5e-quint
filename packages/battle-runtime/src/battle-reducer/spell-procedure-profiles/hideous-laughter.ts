@@ -19,7 +19,6 @@ import type {
   TargetSelection,
 } from "@dnd/surface/surface/types";
 import {
-  type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
   type BattleCreatureState,
@@ -35,7 +34,7 @@ import { oneAdditionalTargetPerSpellSlotAboveBaseLevel } from "./_save-gate-help
 import { resolveHideousLaughterSpellAct } from "../spells-resolve-save-gates.ts";
 import type {
   SpellAdmissionContext,
-  SpellProcedureProfile,
+  SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
@@ -54,7 +53,6 @@ import {
   discoverSpellMetamagicSelections,
   HEIGHTENED_METAMAGIC_EFFECT_KIND,
   spellMetamagicApplications,
-  type SpellMetamagicApplicationFact,
 } from "../metamagic-support.ts";
 import {
   carefulSpellProtectedTargetsHole,
@@ -81,12 +79,8 @@ type HideousLaughterPhase = Extract<
   };
 };
 
-type HideousLaughterResolveInput = SpellProcedureProfileResolveInput<
-  HideousLaughterSpellInvocation,
-  ActionSpellBattleResolutionInput
-> & {
-  readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
-};
+type HideousLaughterResolveInput =
+  SpellProcedureProfileResolveInput<HideousLaughterSpellInvocation>;
 
 function admitHideousLaughter(
   spell: HideousLaughterSpellInvocation["spell"],
@@ -357,13 +351,11 @@ export const hideousLaughterProfile = {
   procedure: "hideousLaughter",
   executionSchema: HideousLaughterInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  targetListInvocation: { kind: "always" },
-  isReadiedSpellCompatible: false,
   admit: admitHideousLaughter,
   discoverCastAct: discoverHideousLaughterCastAct,
   resolve: resolveHideousLaughter,
-} satisfies SpellProcedureProfile<
+} satisfies SpellProcedureDeclaration<
   "hideousLaughter",
-  HideousLaughterSpellInvocation,
-  ActionSpellBattleResolutionInput
+  HideousLaughterSpellInvocation
 >;
+import type { SpellMetamagicApplicationFact } from "../metamagic-support.ts";

@@ -16,7 +16,6 @@ import { WardingBondActiveEffectTemplateSchema } from "../../active-effect/codec
 import {
   maybeOpenInterruptWindow,
   snapshotBattle,
-  type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
@@ -47,7 +46,7 @@ import {
 } from "../spells-holes-fills.ts";
 import type {
   SpellAdmissionContext,
-  SpellProcedureProfile,
+  SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
@@ -415,16 +414,13 @@ const WardingBondInvocationSchema = spellProcedureExecutionSchema(
     connectionRangeFeet: MovementFeet,
   }),
 );
-export const wardingBondProfile: SpellProcedureProfile<
+export const wardingBondProfile: SpellProcedureDeclaration<
   "wardingBond",
-  WardingBondSpellInvocation,
-  ActionSpellBattleResolutionInput
+  WardingBondSpellInvocation
 > = {
   procedure: "wardingBond",
   executionSchema: WardingBondInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  targetListInvocation: { kind: "none" },
-  isReadiedSpellCompatible: false,
   admit: admitWardingBond,
   discoverCastAct: discoverWardingBondCastAct,
   resolve: resolveWardingBond,

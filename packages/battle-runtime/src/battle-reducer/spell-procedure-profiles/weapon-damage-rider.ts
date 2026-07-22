@@ -20,7 +20,6 @@ import {
   type BattleActiveEffectExpiration,
   type BattleResolutionResult,
   type BattleState,
-  type BonusActionSpellBattleResolutionInput,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
 import { SpellWeaponDamageRiderTemplateSchema } from "../../active-effect/codecs.ts";
@@ -33,7 +32,7 @@ import { spendSpellCastResources } from "../spells-resolve-resources.ts";
 import type {
   OkSpellFillSet,
   SpellAdmissionContext,
-  SpellProcedureProfile,
+  SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
@@ -50,10 +49,8 @@ type WeaponDamageRiderInvocation = Extract<
   SupportedSpellInvocation,
   { readonly procedure: "weaponDamageRider" }
 >;
-type WeaponDamageRiderResolveInput = SpellProcedureProfileResolveInput<
-  WeaponDamageRiderInvocation,
-  BonusActionSpellBattleResolutionInput
->;
+type WeaponDamageRiderResolveInput =
+  SpellProcedureProfileResolveInput<WeaponDamageRiderInvocation>;
 
 function admitWeaponDamageRider(
   spell: SpellRecord,
@@ -268,16 +265,13 @@ const WeaponDamageRiderInvocationSchema = spellProcedureExecutionSchema(
     activeEffect: SpellWeaponDamageRiderTemplateSchema,
   }),
 );
-export const weaponDamageRiderProfile: SpellProcedureProfile<
+export const weaponDamageRiderProfile: SpellProcedureDeclaration<
   "weaponDamageRider",
-  WeaponDamageRiderInvocation,
-  BonusActionSpellBattleResolutionInput
+  WeaponDamageRiderInvocation
 > = {
   procedure: "weaponDamageRider",
   executionSchema: WeaponDamageRiderInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
-  targetListInvocation: { kind: "none" },
-  isReadiedSpellCompatible: false,
   admit: admitWeaponDamageRider,
   discoverCastAct: discoverWeaponDamageRiderCastAct,
   resolve: resolveWeaponDamageRider,

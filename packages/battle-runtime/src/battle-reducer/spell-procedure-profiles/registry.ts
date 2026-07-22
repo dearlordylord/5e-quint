@@ -1,6 +1,6 @@
-// Central registry of Spell Procedure Profiles. Admission, discovery, and
-// resolution use this same typed procedure vocabulary; profile order and
-// completeness are maintained here rather than in parallel dispatch lists.
+// Canonical procedure-keyed declarations. Admission and execution registries
+// project their own views from this table so procedure keys and completeness
+// cannot drift into parallel sources of truth.
 
 import { damageReductionProfile } from "./damage-reduction.ts";
 import { abilityD20TestRollModeSaveGateProfile } from "./ability-d20-test-roll-mode-save-gate.ts";
@@ -92,214 +92,312 @@ import { thaumaturgyBoomingVoiceProfile } from "./thaumaturgy-booming-voice.ts";
 import { wardingBondProfile } from "./warding-bond.ts";
 import { weaponAttackOverrideProfile } from "./weapon-attack-override.ts";
 import { weaponDamageRiderProfile } from "./weapon-damage-rider.ts";
-import type {
-  SpellAdmissionContext,
-  SpellProcedureAdmissionProfile,
-  SpellProcedureAnyTargetListInvocationClassifier,
-  SpellProcedureMetamagicCompatibility,
-} from "./profile.ts";
-import type { SpellRecord } from "@dnd/surface/surface/types";
 import type { SupportedSpellInvocation } from "../../battle-reducer.ts";
-import type { SpellProcedureExecutionByProcedure } from "../../character-execution.ts";
+import type {
+  RegisteredSpellProcedureExecution,
+  SpellProcedureExecutionRegistry,
+} from "./execution-registry.ts";
+import type { SpellProcedureExecutionDeclaration } from "./execution-profile.ts";
+import type {
+  SpellInvocationAdmittedByRegisteredProcedure,
+  SpellProcedureAdmissionDeclaration,
+  SpellProcedureDeclaration,
+} from "./profile.ts";
 
-export function registeredSpellProcedureProfileRegistry() {
+type RegisteredSpellProcedureDeclaration<
+  P extends SupportedSpellInvocation["procedure"],
+> = {
+  readonly procedure: P;
+  readonly admission: SpellProcedureAdmissionDeclaration<
+    P,
+    SpellInvocationAdmittedByRegisteredProcedure<P>
+  >;
+  readonly execution: SpellProcedureExecutionDeclaration<P>;
+};
+
+export type RegisteredSpellProcedureDeclarations = {
+  readonly [P in SupportedSpellInvocation["procedure"]]: RegisteredSpellProcedureDeclaration<P>;
+};
+
+function registeredSpellProcedureDeclaration<
+  P extends SupportedSpellInvocation["procedure"],
+>(
+  declaration: SpellProcedureDeclaration<
+    P,
+    SpellInvocationAdmittedByRegisteredProcedure<P>
+  >,
+): RegisteredSpellProcedureDeclaration<P> {
   return {
-    damageReduction: damageReductionProfile,
-    rollModifier: rollModifierProfile,
-    makeStable: makeStableProfile,
-    heldLight: heldLightProfile,
-    heldLightHurl: heldLightHurlProfile,
-    objectLight: objectLightProfile,
-    thaumaturgyBoomingVoice: thaumaturgyBoomingVoiceProfile,
-    blurAttackRollDefense: blurAttackRollDefenseProfile,
-    seeInvisibleObserverSight: seeInvisibleObserverSightProfile,
-    mirrorImageHitInterception: mirrorImageHitInterceptionProfile,
-    persistentArmorEffect: persistentArmorEffectProfile,
-    magicWeaponEnhancement: magicWeaponEnhancementProfile,
-    wardingBond: wardingBondProfile,
-    creatureTypeProtection: creatureTypeProtectionProfile,
-    conditionRemovalProtection: conditionRemovalProtectionProfile,
-    chosenDamageResistance: chosenDamageResistanceProfile,
-    hastePositive: hastePositiveProfile,
-    directCondition: directConditionProfile,
-    directConditionRemoval: directConditionRemovalProfile,
+    procedure: declaration.procedure,
+    admission: { admit: declaration.admit },
+    execution: {
+      procedure: declaration.procedure,
+      metamagicCompatibility: declaration.metamagicCompatibility,
+      discoverCastAct: declaration.discoverCastAct,
+      executionSchema: declaration.executionSchema,
+      resolve: declaration.resolve,
+    },
+  };
+}
+
+export function registeredSpellProcedureDeclarations(): RegisteredSpellProcedureDeclarations {
+  return {
+    damageReduction: registeredSpellProcedureDeclaration(
+      damageReductionProfile,
+    ),
+    rollModifier: registeredSpellProcedureDeclaration(rollModifierProfile),
+    makeStable: registeredSpellProcedureDeclaration(makeStableProfile),
+    heldLight: registeredSpellProcedureDeclaration(heldLightProfile),
+    heldLightHurl: registeredSpellProcedureDeclaration(heldLightHurlProfile),
+    objectLight: registeredSpellProcedureDeclaration(objectLightProfile),
+    thaumaturgyBoomingVoice: registeredSpellProcedureDeclaration(
+      thaumaturgyBoomingVoiceProfile,
+    ),
+    blurAttackRollDefense: registeredSpellProcedureDeclaration(
+      blurAttackRollDefenseProfile,
+    ),
+    seeInvisibleObserverSight: registeredSpellProcedureDeclaration(
+      seeInvisibleObserverSightProfile,
+    ),
+    mirrorImageHitInterception: registeredSpellProcedureDeclaration(
+      mirrorImageHitInterceptionProfile,
+    ),
+    persistentArmorEffect: registeredSpellProcedureDeclaration(
+      persistentArmorEffectProfile,
+    ),
+    magicWeaponEnhancement: registeredSpellProcedureDeclaration(
+      magicWeaponEnhancementProfile,
+    ),
+    wardingBond: registeredSpellProcedureDeclaration(wardingBondProfile),
+    creatureTypeProtection: registeredSpellProcedureDeclaration(
+      creatureTypeProtectionProfile,
+    ),
+    conditionRemovalProtection: registeredSpellProcedureDeclaration(
+      conditionRemovalProtectionProfile,
+    ),
+    chosenDamageResistance: registeredSpellProcedureDeclaration(
+      chosenDamageResistanceProfile,
+    ),
+    hastePositive: registeredSpellProcedureDeclaration(hastePositiveProfile),
+    directCondition: registeredSpellProcedureDeclaration(
+      directConditionProfile,
+    ),
+    directConditionRemoval: registeredSpellProcedureDeclaration(
+      directConditionRemovalProfile,
+    ),
     conditionImmunityAndTurnStartTemporaryHitPoints:
-      conditionImmunityAndTurnStartTemporaryHitPointsProfile,
-    creatureSizeIncrease: creatureSizeChangeProfile,
-    creatureSizeDecrease: creatureSizeDecreaseProfile,
-    levitatedCreature: levitatedCreatureProfile,
-    scalarBuff: scalarBuffProfile,
-    directHitPointRestoration: directHitPointRestorationProfile,
-    expeditiousRetreatDash: expeditiousRetreatDashProfile,
-    jumpMovementReplacement: jumpMovementReplacementProfile,
-    featherFallMitigation: featherFallMitigationProfile,
-    selfTeleport: selfTeleportProfile,
-    selfTransformationMode: selfTransformationModeProfile,
-    dragonsBreathInitial: dragonsBreathInitialProfile,
-    sanctuaryTargetingInterdiction: sanctuaryTargetingInterdictionProfile,
-    markedDamageRider: markedDamageRiderProfile,
-    weaponDamageRider: weaponDamageRiderProfile,
-    afterHitDamage: afterHitDamageProfile,
-    afterHitSaveGatedCondition: afterHitSaveGatedConditionProfile,
-    afterHitTimedDamageAndSave: afterHitTimedDamageAndSaveProfile,
-    afterHitDamageAndIllumination: afterHitDamageAndIlluminationProfile,
-    weaponAttackOverride: weaponAttackOverrideProfile,
-    spellHostedWeaponAttack: spellHostedWeaponAttackProfile,
-    saveGatedDamage: saveGatedDamageProfile,
-    saveGatedCondition: saveGatedConditionProfile,
-    saveGatedConditionImmunity: saveGatedConditionImmunityProfile,
-    saveGatedAttackRollAdvantage: saveGatedAttackRollAdvantageProfile,
-    abilityD20TestRollModeSaveGate: abilityD20TestRollModeSaveGateProfile,
-    sleepTargetAdmission: sleepTargetAdmissionProfile,
-    hideousLaughter: hideousLaughterProfile,
-    hypnoticPattern: hypnoticPatternProfile,
-    slowActivePenalties: slowActivePenaltiesProfile,
-    greaseGroundHazard: greaseGroundHazardProfile,
-    gustOfWindLine: gustOfWindLineProfile,
-    flamingSphere: flamingSphereProfile,
-    moonbeam: moonbeamProfile,
-    fogCloudObscurement: fogCloudObscurementProfile,
-    spikeGrowthMovementHazard: spikeGrowthMovementHazardProfile,
-    webRestraintHazard: webRestraintHazardProfile,
-    sleetStormAreaHazard: sleetStormAreaHazardProfile,
-    insectPlagueAreaHazard: insectPlagueAreaHazardProfile,
-    cloudkillAreaHazard: cloudkillAreaHazardProfile,
-    magicalDarknessPointOrigin: magicalDarknessPointOriginProfile,
-    antimagicFieldOngoingSpellSuppression:
+      registeredSpellProcedureDeclaration(
+        conditionImmunityAndTurnStartTemporaryHitPointsProfile,
+      ),
+    creatureSizeIncrease: registeredSpellProcedureDeclaration(
+      creatureSizeChangeProfile,
+    ),
+    creatureSizeDecrease: registeredSpellProcedureDeclaration(
+      creatureSizeDecreaseProfile,
+    ),
+    levitatedCreature: registeredSpellProcedureDeclaration(
+      levitatedCreatureProfile,
+    ),
+    scalarBuff: registeredSpellProcedureDeclaration(scalarBuffProfile),
+    directHitPointRestoration: registeredSpellProcedureDeclaration(
+      directHitPointRestorationProfile,
+    ),
+    expeditiousRetreatDash: registeredSpellProcedureDeclaration(
+      expeditiousRetreatDashProfile,
+    ),
+    jumpMovementReplacement: registeredSpellProcedureDeclaration(
+      jumpMovementReplacementProfile,
+    ),
+    featherFallMitigation: registeredSpellProcedureDeclaration(
+      featherFallMitigationProfile,
+    ),
+    selfTeleport: registeredSpellProcedureDeclaration(selfTeleportProfile),
+    selfTransformationMode: registeredSpellProcedureDeclaration(
+      selfTransformationModeProfile,
+    ),
+    dragonsBreathInitial: registeredSpellProcedureDeclaration(
+      dragonsBreathInitialProfile,
+    ),
+    sanctuaryTargetingInterdiction: registeredSpellProcedureDeclaration(
+      sanctuaryTargetingInterdictionProfile,
+    ),
+    markedDamageRider: registeredSpellProcedureDeclaration(
+      markedDamageRiderProfile,
+    ),
+    weaponDamageRider: registeredSpellProcedureDeclaration(
+      weaponDamageRiderProfile,
+    ),
+    afterHitDamage: registeredSpellProcedureDeclaration(afterHitDamageProfile),
+    afterHitSaveGatedCondition: registeredSpellProcedureDeclaration(
+      afterHitSaveGatedConditionProfile,
+    ),
+    afterHitTimedDamageAndSave: registeredSpellProcedureDeclaration(
+      afterHitTimedDamageAndSaveProfile,
+    ),
+    afterHitDamageAndIllumination: registeredSpellProcedureDeclaration(
+      afterHitDamageAndIlluminationProfile,
+    ),
+    weaponAttackOverride: registeredSpellProcedureDeclaration(
+      weaponAttackOverrideProfile,
+    ),
+    spellHostedWeaponAttack: registeredSpellProcedureDeclaration(
+      spellHostedWeaponAttackProfile,
+    ),
+    saveGatedDamage: registeredSpellProcedureDeclaration(
+      saveGatedDamageProfile,
+    ),
+    saveGatedCondition: registeredSpellProcedureDeclaration(
+      saveGatedConditionProfile,
+    ),
+    saveGatedConditionImmunity: registeredSpellProcedureDeclaration(
+      saveGatedConditionImmunityProfile,
+    ),
+    saveGatedAttackRollAdvantage: registeredSpellProcedureDeclaration(
+      saveGatedAttackRollAdvantageProfile,
+    ),
+    abilityD20TestRollModeSaveGate: registeredSpellProcedureDeclaration(
+      abilityD20TestRollModeSaveGateProfile,
+    ),
+    sleepTargetAdmission: registeredSpellProcedureDeclaration(
+      sleepTargetAdmissionProfile,
+    ),
+    hideousLaughter: registeredSpellProcedureDeclaration(
+      hideousLaughterProfile,
+    ),
+    hypnoticPattern: registeredSpellProcedureDeclaration(
+      hypnoticPatternProfile,
+    ),
+    slowActivePenalties: registeredSpellProcedureDeclaration(
+      slowActivePenaltiesProfile,
+    ),
+    greaseGroundHazard: registeredSpellProcedureDeclaration(
+      greaseGroundHazardProfile,
+    ),
+    gustOfWindLine: registeredSpellProcedureDeclaration(gustOfWindLineProfile),
+    flamingSphere: registeredSpellProcedureDeclaration(flamingSphereProfile),
+    moonbeam: registeredSpellProcedureDeclaration(moonbeamProfile),
+    fogCloudObscurement: registeredSpellProcedureDeclaration(
+      fogCloudObscurementProfile,
+    ),
+    spikeGrowthMovementHazard: registeredSpellProcedureDeclaration(
+      spikeGrowthMovementHazardProfile,
+    ),
+    webRestraintHazard: registeredSpellProcedureDeclaration(
+      webRestraintHazardProfile,
+    ),
+    sleetStormAreaHazard: registeredSpellProcedureDeclaration(
+      sleetStormAreaHazardProfile,
+    ),
+    insectPlagueAreaHazard: registeredSpellProcedureDeclaration(
+      insectPlagueAreaHazardProfile,
+    ),
+    cloudkillAreaHazard: registeredSpellProcedureDeclaration(
+      cloudkillAreaHazardProfile,
+    ),
+    magicalDarknessPointOrigin: registeredSpellProcedureDeclaration(
+      magicalDarknessPointOriginProfile,
+    ),
+    antimagicFieldOngoingSpellSuppression: registeredSpellProcedureDeclaration(
       antimagicFieldOngoingSpellSuppressionProfile,
-    command: commandProfile,
-    counterspell: counterspellProfile,
-    shieldReaction: shieldReactionProfile,
-    spellAttackDamage: spellAttackDamageProfile,
-    spellAttackSequence: spellAttackSequenceProfile,
-    spellCreatedHeldObject: spellCreatedHeldObjectProfile,
-    spellCreatedHeldObjectAttack: spellCreatedHeldObjectAttackProfile,
-    spellCreatedHeldObjectReEvoke: spellCreatedHeldObjectReEvokeProfile,
-    spiritualWeaponAttackProxy: spiritualWeaponAttackProxyProfile,
-    spiritualWeaponRepeatAttack: spiritualWeaponRepeatAttackProfile,
-    objectContactDamage: objectContactDamageProfile,
-    objectContactDamageRepeat: objectContactDamageRepeatProfile,
-    ongoingSpellEnd: ongoingSpellEndProfile,
-    chainedSpellAttackDamage: chainedSpellAttackDamageProfile,
-    attackBurstSaveDamage: attackBurstSaveDamageProfile,
-    repeatedDamageAllocation: repeatedDamageAllocationProfile,
-    dancingLightsSeparateCast: dancingLightsSeparateCastProfile,
-    dancingLightsCombinedCast: dancingLightsCombinedCastProfile,
-    dancingLightsReposition: dancingLightsRepositionProfile,
-  } satisfies Record<
-    SupportedSpellInvocation["procedure"],
-    { readonly procedure: SupportedSpellInvocation["procedure"] }
-  >;
+    ),
+    command: registeredSpellProcedureDeclaration(commandProfile),
+    counterspell: registeredSpellProcedureDeclaration(counterspellProfile),
+    shieldReaction: registeredSpellProcedureDeclaration(shieldReactionProfile),
+    spellAttackDamage: registeredSpellProcedureDeclaration(
+      spellAttackDamageProfile,
+    ),
+    spellAttackSequence: registeredSpellProcedureDeclaration(
+      spellAttackSequenceProfile,
+    ),
+    spellCreatedHeldObject: registeredSpellProcedureDeclaration(
+      spellCreatedHeldObjectProfile,
+    ),
+    spellCreatedHeldObjectAttack: registeredSpellProcedureDeclaration(
+      spellCreatedHeldObjectAttackProfile,
+    ),
+    spellCreatedHeldObjectReEvoke: registeredSpellProcedureDeclaration(
+      spellCreatedHeldObjectReEvokeProfile,
+    ),
+    spiritualWeaponAttackProxy: registeredSpellProcedureDeclaration(
+      spiritualWeaponAttackProxyProfile,
+    ),
+    spiritualWeaponRepeatAttack: registeredSpellProcedureDeclaration(
+      spiritualWeaponRepeatAttackProfile,
+    ),
+    objectContactDamage: registeredSpellProcedureDeclaration(
+      objectContactDamageProfile,
+    ),
+    objectContactDamageRepeat: registeredSpellProcedureDeclaration(
+      objectContactDamageRepeatProfile,
+    ),
+    ongoingSpellEnd: registeredSpellProcedureDeclaration(
+      ongoingSpellEndProfile,
+    ),
+    chainedSpellAttackDamage: registeredSpellProcedureDeclaration(
+      chainedSpellAttackDamageProfile,
+    ),
+    attackBurstSaveDamage: registeredSpellProcedureDeclaration(
+      attackBurstSaveDamageProfile,
+    ),
+    repeatedDamageAllocation: registeredSpellProcedureDeclaration(
+      repeatedDamageAllocationProfile,
+    ),
+    dancingLightsSeparateCast: registeredSpellProcedureDeclaration(
+      dancingLightsSeparateCastProfile,
+    ),
+    dancingLightsCombinedCast: registeredSpellProcedureDeclaration(
+      dancingLightsCombinedCastProfile,
+    ),
+    dancingLightsReposition: registeredSpellProcedureDeclaration(
+      dancingLightsRepositionProfile,
+    ),
+  };
 }
 
-export type RegisteredSpellProcedureProfiles = ReturnType<
-  typeof registeredSpellProcedureProfileRegistry
->;
-
-// A profile schema intentionally may be narrower than the full source
-// invocation variant: it decodes only the mechanical facts that the profile's
-// admission constructor can produce. Completeness is therefore keyed by the
-// procedure discriminant, while soundness requires every decoded value to be
-// a valid execution for that key.
-type InvalidRegisteredExecutionSchemaVariants = {
-  [Procedure in keyof RegisteredSpellProcedureProfiles]: Exclude<
-    RegisteredSpellProcedureProfiles[Procedure]["executionSchema"]["Type"],
-    SpellProcedureExecutionByProcedure[Procedure]
-  >;
-}[keyof RegisteredSpellProcedureProfiles];
-
-type RegisteredExecutionSchemaWithAny = {
-  [Procedure in keyof RegisteredSpellProcedureProfiles]: 0 extends 1 &
-    RegisteredSpellProcedureProfiles[Procedure]["executionSchema"]["Type"]
-    ? Procedure
-    : never;
-}[keyof RegisteredSpellProcedureProfiles];
-
-type RegisteredProfileProcedureMismatch = {
-  [Procedure in keyof RegisteredSpellProcedureProfiles]:
+type RegisteredDeclarationProcedureMismatch = {
+  [Procedure in keyof RegisteredSpellProcedureDeclarations]:
     | Exclude<
-        RegisteredSpellProcedureProfiles[Procedure]["procedure"],
+        RegisteredSpellProcedureDeclarations[Procedure]["procedure"],
         Procedure
       >
     | Exclude<
         Procedure,
-        RegisteredSpellProcedureProfiles[Procedure]["procedure"]
+        RegisteredSpellProcedureDeclarations[Procedure]["procedure"]
       >;
-}[keyof RegisteredSpellProcedureProfiles];
+}[keyof RegisteredSpellProcedureDeclarations];
 
-type RegisteredExecutionSchemaProcedureMismatch = {
-  [Procedure in keyof RegisteredSpellProcedureProfiles]:
-    | Exclude<
-        RegisteredSpellProcedureProfiles[Procedure]["executionSchema"]["Type"]["procedure"],
-        Procedure
-      >
-    | Exclude<
-        Procedure,
-        RegisteredSpellProcedureProfiles[Procedure]["executionSchema"]["Type"]["procedure"]
-      >;
-}[keyof RegisteredSpellProcedureProfiles];
+export type RegisteredSpellProcedure =
+  keyof RegisteredSpellProcedureDeclarations;
 
-type AssertRegisteredExecutionSchemasAreKeyed<T extends never> = T;
-export type RegisteredSpellProcedureExecutionSchemaCompletenessCheck =
-  AssertRegisteredExecutionSchemasAreKeyed<
-    | Exclude<
-        SupportedSpellInvocation["procedure"],
-        keyof RegisteredSpellProcedureProfiles
-      >
-    | Exclude<
-        keyof RegisteredSpellProcedureProfiles,
-        SupportedSpellInvocation["procedure"]
-      >
-    | InvalidRegisteredExecutionSchemaVariants
-    | RegisteredExecutionSchemaWithAny
-    | RegisteredProfileProcedureMismatch
-    | RegisteredExecutionSchemaProcedureMismatch
-  >;
-
-export function registeredSpellProcedureProfiles() {
-  return Object.values(registeredSpellProcedureProfileRegistry());
+function registeredSpellProcedureExecution<P extends RegisteredSpellProcedure>(
+  declaration: SpellProcedureExecutionDeclaration<P>,
+  registry: SpellProcedureExecutionRegistry,
+): RegisteredSpellProcedureExecution<P> {
+  return {
+    procedure: declaration.procedure,
+    metamagicCompatibility: declaration.metamagicCompatibility,
+    executionSchema: declaration.executionSchema,
+    discoverCastAct: declaration.discoverCastAct,
+    resolve: (resolution) => declaration.resolve(resolution, registry),
+  };
 }
 
-export type RegisteredSpellProcedure = keyof RegisteredSpellProcedureProfiles;
+export function registeredSpellProcedureExecutions(): SpellProcedureExecutionRegistry {
+  const declarations = registeredSpellProcedureDeclarations();
+  const registry: SpellProcedureExecutionRegistry = {
+    executionFor: (procedure) =>
+      registeredSpellProcedureExecution(
+        declarations[procedure].execution,
+        registry,
+      ),
+  };
+  return registry;
+}
 
 type AssertNoMissingSpellProcedure<T extends never> = T;
 export type RegisteredSpellProcedureCompletenessCheck =
   AssertNoMissingSpellProcedure<
-    Exclude<SupportedSpellInvocation["procedure"], RegisteredSpellProcedure>
+    | Exclude<SupportedSpellInvocation["procedure"], RegisteredSpellProcedure>
+    | Exclude<RegisteredSpellProcedure, SupportedSpellInvocation["procedure"]>
+    | RegisteredDeclarationProcedureMismatch
   >;
-
-export type RegisteredSpellProcedureClassification = {
-  readonly metamagicCompatibility: SpellProcedureMetamagicCompatibility;
-  readonly targetListInvocation: SpellProcedureAnyTargetListInvocationClassifier;
-  readonly isReadiedSpellCompatible: boolean;
-};
-
-export function registeredSpellProcedureProfile(
-  procedure: SupportedSpellInvocation["procedure"],
-): RegisteredSpellProcedureClassification {
-  return registeredSpellProcedureProfileRegistry()[procedure];
-}
-
-export function admitRegisteredSpellProcedureProfiles(
-  spell: SpellRecord,
-  ctx: SpellAdmissionContext,
-): readonly SupportedSpellInvocation[] {
-  return registeredSpellProcedureProfiles().flatMap((profile) =>
-    admissionProfileFor(profile).admit(spell, ctx),
-  );
-}
-
-function admissionProfileFor(
-  profile: SpellProcedureAdmissionProfile,
-): SpellProcedureAdmissionProfile {
-  return profile;
-}
-
-// Typed lookup for callers that have already narrowed by procedure literal.
-// Returns the profile with its concrete procedure, invocation, and resolve
-// input types preserved.
-export function spellProcedureProfileFor<P extends RegisteredSpellProcedure>(
-  procedure: P,
-): RegisteredSpellProcedureProfiles[P] {
-  return registeredSpellProcedureProfileRegistry()[procedure];
-}

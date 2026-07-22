@@ -34,7 +34,6 @@ import type {
 import { Either } from "effect";
 
 import {
-  type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
   type BattleResolutionResult,
   type BattleState,
@@ -45,7 +44,7 @@ import { spellAreaChoiceHole } from "../spells-holes-fills.ts";
 import { resolveSpikeGrowthMovementHazardSpellAct } from "../spells-resolve-area-effects.ts";
 import type {
   SpellAdmissionContext,
-  SpellProcedureProfile,
+  SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
@@ -63,10 +62,8 @@ type SpikeGrowthMovementHazardSpellInvocation = Extract<
   SupportedSpellInvocation,
   { readonly procedure: "spikeGrowthMovementHazard" }
 >;
-type SpikeGrowthMovementHazardResolveInput = SpellProcedureProfileResolveInput<
-  SpikeGrowthMovementHazardSpellInvocation,
-  ActionSpellBattleResolutionInput
->;
+type SpikeGrowthMovementHazardResolveInput =
+  SpellProcedureProfileResolveInput<SpikeGrowthMovementHazardSpellInvocation>;
 
 type SpikeGrowthMovementHazardProfileShape = {
   readonly durationTicks: ElapsedTimeTicks;
@@ -241,13 +238,10 @@ export const spikeGrowthMovementHazardProfile = {
   procedure: "spikeGrowthMovementHazard",
   executionSchema: SpikeGrowthMovementHazardInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  targetListInvocation: { kind: "none" },
-  isReadiedSpellCompatible: false,
   admit: admitSpikeGrowthMovementHazard,
   discoverCastAct: discoverSpikeGrowthMovementHazardCastAct,
   resolve: resolveSpikeGrowthMovementHazard,
-} satisfies SpellProcedureProfile<
+} satisfies SpellProcedureDeclaration<
   "spikeGrowthMovementHazard",
-  SpikeGrowthMovementHazardSpellInvocation,
-  ActionSpellBattleResolutionInput
+  SpikeGrowthMovementHazardSpellInvocation
 >;

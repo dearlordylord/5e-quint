@@ -37,7 +37,6 @@ import {
   type BattleResolutionResult,
   type BattleState,
   type BattleExecutableSpellInvocation,
-  type BonusActionSpellBattleResolutionInput,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
 import { invalidResult } from "../result-helpers.ts";
@@ -45,7 +44,7 @@ import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
 import type {
   SpellAdmissionContext,
-  SpellProcedureProfile,
+  SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { spellAdmissionCharacterLevel } from "./profile.ts";
@@ -282,10 +281,7 @@ function applyHeldLightEffect(
 }
 
 function resolveHeldLight(
-  input: SpellProcedureProfileResolveInput<
-    HeldLightInvocation,
-    BonusActionSpellBattleResolutionInput
-  >,
+  input: SpellProcedureProfileResolveInput<HeldLightInvocation>,
 ): BattleResolutionResult {
   if (
     input.fillSet.targetId !== undefined ||
@@ -373,16 +369,13 @@ const HeldLightInvocationSchema = spellProcedureExecutionSchema(
     expiresAt: BattleActiveEffectExpirationSchema,
   }),
 );
-export const heldLightProfile: SpellProcedureProfile<
+export const heldLightProfile: SpellProcedureDeclaration<
   "heldLight",
-  HeldLightInvocation,
-  BonusActionSpellBattleResolutionInput
+  HeldLightInvocation
 > = {
   procedure: "heldLight",
   executionSchema: HeldLightInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  targetListInvocation: { kind: "none" },
-  isReadiedSpellCompatible: false,
   admit: admitHeldLight,
   discoverCastAct: discoverHeldLightCastAct,
   resolve: resolveHeldLight,

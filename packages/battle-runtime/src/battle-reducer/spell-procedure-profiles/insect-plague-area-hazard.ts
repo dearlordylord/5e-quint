@@ -28,7 +28,6 @@ import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either, Schema } from "effect";
 
 import {
-  type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
   type BattleResolutionResult,
   type BattleState,
@@ -46,7 +45,7 @@ import { supportedDamageAmountExpr } from "../spells-profile-shared.ts";
 import { resolveInsectPlagueAreaHazardSpellAct } from "../spells-resolve-area-effects.ts";
 import type {
   SpellAdmissionContext,
-  SpellProcedureProfile,
+  SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import {
@@ -58,10 +57,8 @@ type InsectPlagueAreaHazardSpellInvocation = Extract<
   SupportedSpellInvocation,
   { readonly procedure: "insectPlagueAreaHazard" }
 >;
-type InsectPlagueAreaHazardResolveInput = SpellProcedureProfileResolveInput<
-  InsectPlagueAreaHazardSpellInvocation,
-  ActionSpellBattleResolutionInput
->;
+type InsectPlagueAreaHazardResolveInput =
+  SpellProcedureProfileResolveInput<InsectPlagueAreaHazardSpellInvocation>;
 type InsectPlagueMechanics = Extract<
   SpellRecord["mechanics"],
   { readonly family: "ongoing_effect" }
@@ -288,13 +285,10 @@ export const insectPlagueAreaHazardProfile = {
   procedure: "insectPlagueAreaHazard",
   executionSchema: InsectPlagueAreaHazardInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  targetListInvocation: { kind: "none" },
-  isReadiedSpellCompatible: false,
   admit: admitInsectPlagueAreaHazard,
   discoverCastAct: discoverInsectPlagueAreaHazardCastAct,
   resolve: resolveInsectPlagueAreaHazard,
-} satisfies SpellProcedureProfile<
+} satisfies SpellProcedureDeclaration<
   "insectPlagueAreaHazard",
-  InsectPlagueAreaHazardSpellInvocation,
-  ActionSpellBattleResolutionInput
+  InsectPlagueAreaHazardSpellInvocation
 >;

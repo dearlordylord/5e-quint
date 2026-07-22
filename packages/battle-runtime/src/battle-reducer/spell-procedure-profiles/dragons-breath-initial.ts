@@ -30,7 +30,6 @@ import {
   type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
   type BattleState,
-  type BonusActionSpellBattleResolutionInput,
   type DragonsBreathInitialSpellInvocation,
   type SupportedSpellInvocation,
 } from "../../battle-reducer.ts";
@@ -50,7 +49,7 @@ import {
 } from "../spells-targeting.ts";
 import type {
   SpellAdmissionContext,
-  SpellProcedureProfile,
+  SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
@@ -69,10 +68,8 @@ type DragonsBreathInitialInvocation = Extract<
   SupportedSpellInvocation,
   { readonly procedure: "dragonsBreathInitial" }
 >;
-type DragonsBreathInitialResolveInput = SpellProcedureProfileResolveInput<
-  DragonsBreathInitialInvocation,
-  BonusActionSpellBattleResolutionInput
->;
+type DragonsBreathInitialResolveInput =
+  SpellProcedureProfileResolveInput<DragonsBreathInitialInvocation>;
 
 function admitDragonsBreathInitial(
   spell: SpellRecord,
@@ -374,13 +371,10 @@ export const dragonsBreathInitialProfile = {
   procedure: "dragonsBreathInitial",
   executionSchema: DragonsBreathInitialInvocationSchema,
   metamagicCompatibility: "notActionSpellCasting",
-  targetListInvocation: { kind: "always" },
-  isReadiedSpellCompatible: false,
   admit: admitDragonsBreathInitial,
   discoverCastAct: discoverDragonsBreathInitialCastAct,
   resolve: resolveDragonsBreathInitial,
-} satisfies SpellProcedureProfile<
+} satisfies SpellProcedureDeclaration<
   "dragonsBreathInitial",
-  DragonsBreathInitialInvocation,
-  BonusActionSpellBattleResolutionInput
+  DragonsBreathInitialInvocation
 >;

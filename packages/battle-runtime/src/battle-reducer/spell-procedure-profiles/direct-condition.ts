@@ -17,15 +17,12 @@ import { Either } from "effect";
 import {
   maybeOpenInterruptWindow,
   snapshotBattle,
-  type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
   type BattleState,
-  type BonusActionSpellBattleResolutionInput,
   type DirectConditionSpellInvocation,
 } from "../../battle-reducer.ts";
-import type { SpellMetamagicApplicationFact } from "../metamagic-support.ts";
 import { CombatantId } from "../../identity.ts";
 import { applyDirectConditionSpellEffects } from "../direct-condition-lifecycle.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
@@ -45,9 +42,8 @@ import {
 } from "../spells-targeting.ts";
 import type {
   SpellAdmissionContext,
-  SpellProcedureProfile,
+  SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
-  SpellProcedureStoredGlyphReleaseOptions,
 } from "./profile.ts";
 import { Schema } from "effect";
 import {
@@ -60,13 +56,8 @@ import {
   SpellSlotInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 
-type DirectConditionResolveInput = SpellProcedureProfileResolveInput<
-  DirectConditionSpellInvocation,
-  ActionSpellBattleResolutionInput | BonusActionSpellBattleResolutionInput
-> & {
-  readonly actionCostOverride?: "magicAction" | "bonusAction";
-  readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
-} & SpellProcedureStoredGlyphReleaseOptions;
+type DirectConditionResolveInput =
+  SpellProcedureProfileResolveInput<DirectConditionSpellInvocation>;
 
 const DIRECT_CONDITION_EARLY_END_KINDS = [
   "target_makes_attack_roll",
@@ -247,7 +238,7 @@ function resolveDirectCondition(
     return invalidResult(input.input.state, "invalidFill", validation);
   }
 
-  if (input.opensSpellCastReactionWindow !== false) {
+  if (input.storedGlyphRelease === undefined) {
     const spellCastReactionWindow = maybeOpenInterruptWindow(
       input.input.state,
       spellCastInterruptFrame({
@@ -276,7 +267,7 @@ function resolveDirectCondition(
     }
   }
 
-  if (input.spendsCastResources === false) {
+  if (input.storedGlyphRelease !== undefined) {
     const effected = applyDirectConditionSpellEffects(
       input.input.state,
       input.actorId,
@@ -294,7 +285,7 @@ function resolveDirectCondition(
     actorId: input.actorId,
     invocation: input.invocation,
     errorState: input.input.state,
-    ...(input.startsOrdinaryConcentration === false
+    ...(input.storedGlyphRelease !== undefined
       ? { startConcentration: false }
       : {}),
     ...(input.actionCostOverride === undefined
@@ -345,16 +336,13 @@ const DirectConditionInvocationSchema = spellProcedureExecutionSchema(
     rangeFeet: MovementFeet,
   }),
 );
-export const directConditionProfile: SpellProcedureProfile<
+export const directConditionProfile: SpellProcedureDeclaration<
   "directCondition",
-  DirectConditionSpellInvocation,
-  ActionSpellBattleResolutionInput | BonusActionSpellBattleResolutionInput
+  DirectConditionSpellInvocation
 > = {
   procedure: "directCondition",
   executionSchema: DirectConditionInvocationSchema,
   metamagicCompatibility: "bonusActionRewrite",
-  targetListInvocation: { kind: "always" },
-  isReadiedSpellCompatible: false,
   admit: admitDirectCondition,
   discoverCastAct: discoverDirectConditionCastAct,
   resolve: resolveDirectCondition,

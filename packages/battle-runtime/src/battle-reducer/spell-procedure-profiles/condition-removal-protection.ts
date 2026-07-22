@@ -36,7 +36,7 @@ import {
 } from "../spells-resolve-resources.ts";
 import type {
   SpellAdmissionContext,
-  SpellProcedureProfile,
+  SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
@@ -197,10 +197,7 @@ function discoverConditionRemovalProtectionCastAct(
 }
 
 function resolveConditionRemovalProtection(
-  input: SpellProcedureProfileResolveInput<
-    ConditionRemovalProtectionSpellInvocation,
-    ActionSpellBattleResolutionInput
-  >,
+  input: SpellProcedureProfileResolveInput<ConditionRemovalProtectionSpellInvocation>,
 ): BattleResolutionResult {
   if (
     input.fillSet.objectTarget !== undefined ||
@@ -405,15 +402,13 @@ const ConditionRemovalProtectionInvocationSchema =
       rangeFeet: MovementFeet,
     }),
   );
-export const conditionRemovalProtectionProfile: SpellProcedureProfile<
+export const conditionRemovalProtectionProfile: SpellProcedureDeclaration<
   "conditionRemovalProtection",
   ConditionRemovalProtectionSpellInvocation
 > = {
   procedure: "conditionRemovalProtection",
   executionSchema: ConditionRemovalProtectionInvocationSchema,
   metamagicCompatibility: "actionSpellResolverNotRewritten",
-  targetListInvocation: { kind: "always" },
-  isReadiedSpellCompatible: false,
   admit: admitConditionRemovalProtection,
   discoverCastAct: discoverConditionRemovalProtectionCastAct,
   resolve: resolveConditionRemovalProtection,
