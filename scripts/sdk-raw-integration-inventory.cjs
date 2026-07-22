@@ -6285,6 +6285,19 @@ function renderInventory(inventory) {
   ].join("\n")}`;
 }
 
-const inventory = buildInventory();
-writeSdkRawArtifact(paths.json, `${JSON.stringify(inventory, null, 2)}\n`);
-writeSdkRawArtifact(paths.report, renderInventory(inventory));
+async function checkOrWriteGeneratedArtifacts() {
+  const { format } = await import("prettier");
+  const inventory = buildInventory();
+  const [json, report] = await Promise.all([
+    format(JSON.stringify(inventory, null, 2), { filepath: paths.json }),
+    format(renderInventory(inventory), { filepath: paths.report }),
+  ]);
+
+  writeSdkRawArtifact(paths.json, json);
+  writeSdkRawArtifact(paths.report, report);
+}
+
+checkOrWriteGeneratedArtifacts().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});
