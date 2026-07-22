@@ -481,6 +481,7 @@ export {
   interruptCheckpointFrame,
   interruptChoices,
   interruptDecisionHole,
+  interruptWindowProgress,
   interruptTriggerLabel,
   interruptedProcedureSubject,
   isReleaseGrappleSubject,
@@ -525,6 +526,7 @@ export {
   type FlySpeedGrantEndFallWitnessResult,
   type BattleRuntimeResolutionInput,
   type BattleRuntimeResolutionResult,
+  type BattleInterruptWindowProgress,
 } from "./battle-reducer/dispatcher.ts";
 
 export { zeroHpLifecycleIsTerminal } from "./battle-reducer/creature-state-leaves.ts";

@@ -74,5 +74,9 @@
     "onlyBuiltDependencies": [
       "esbuild"
     ]
+  },
+  "lint-staged": {
+    "*.{cjs,css,cts,html,js,jsx,json,md,mjs,mts,scss,ts,tsx}": "prettier --write",
+    "!(*pnpm-lock).{yaml,yml}": "prettier --write"
   }
 }

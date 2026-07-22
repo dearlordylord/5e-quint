@@ -6780,21 +6780,72 @@ export function unofferedEligibleResponders(
   );
 }
 
+export type BattleOpenedInterruptWindowResult = Extract<
+  BattleResolutionResult,
+  { readonly tag: "needsHoles" }
+> & {
+  readonly holes: readonly [BattleHole, ...BattleHole[]];
+};
+
+export type BattleInterruptWindowProgress =
+  | {
+      readonly tag: "checkpointPreparationFailed";
+      readonly result: Extract<
+        BattleResolutionResult,
+        { readonly tag: "invalid" }
+      >;
+    }
+  | { readonly tag: "interruptionsCleared" }
+  | {
+      readonly tag: "windowOpened";
+      readonly result: BattleOpenedInterruptWindowResult;
+    };
+
+export function interruptWindowProgress(
+  state: BattleState,
+  frame: BattleInterruptCheckpointInput,
+  handledInterruptTrigger: BattleInterruptTrigger | undefined,
+): BattleInterruptWindowProgress {
+  if (frame.trigger === handledInterruptTrigger) {
+    return { tag: "interruptionsCleared" };
+  }
+  const checkpointState = stateForOpeningInterruptCheckpoint(state, frame);
+  if (checkpointState === null) {
+    return {
+      tag: "checkpointPreparationFailed",
+      result: invalidResult(
+        state,
+        "staleSubject",
+        "The interrupt checkpoint could not reserve its pending spell resource.",
+      ),
+    };
+  }
+  const choices = nonEmptyInterruptChoices(
+    interruptChoices(checkpointState, frame),
+  );
+  return choices === null
+    ? { tag: "interruptionsCleared" }
+    : {
+        tag: "windowOpened",
+        result: openPreparedInterruptWindowWithChoices(
+          checkpointState,
+          frame,
+          choices,
+        ),
+      };
+}
+
 export function maybeOpenInterruptWindow(
   state: BattleState,
   frame: BattleInterruptCheckpointInput,
   handledInterruptTrigger: BattleInterruptTrigger | undefined,
 ): Extract<BattleResolutionResult, { readonly tag: "needsHoles" }> | null {
-  const checkpointState = stateForOpeningInterruptCheckpoint(state, frame);
-  if (checkpointState === null) {
-    return null;
-  }
-  return maybeOpenInterruptWindowWithChoices(
-    checkpointState,
+  const progress = interruptWindowProgress(
+    state,
     frame,
     handledInterruptTrigger,
-    interruptChoices(checkpointState, frame),
   );
+  return progress.tag === "windowOpened" ? progress.result : null;
 }
 
 export function maybeOpenSpellCastInterruptWindowWithTriggeredSpellChoices(
@@ -6802,17 +6853,16 @@ export function maybeOpenSpellCastInterruptWindowWithTriggeredSpellChoices(
   frame: BattleInterruptCheckpointInput,
   handledInterruptTrigger: BattleInterruptTrigger | undefined,
 ): Extract<BattleResolutionResult, { readonly tag: "needsHoles" }> | null {
-  const spellCastCheckpointState =
-    handledInterruptTrigger === undefined
-      ? stateForOpeningInterruptCheckpoint(state, frame)
-      : null;
-  return spellCastCheckpointState === null
+  if (frame.trigger === handledInterruptTrigger) {
+    return null;
+  }
+  const checkpointState = stateForOpeningInterruptCheckpoint(state, frame);
+  return checkpointState === null
     ? null
-    : maybeOpenInterruptWindowWithChoices(
-        spellCastCheckpointState,
+    : openPreparedInterruptWindowWithOptionalChoices(
+        checkpointState,
         frame,
-        handledInterruptTrigger,
-        triggeredReactionSpellChoices(spellCastCheckpointState, frame),
+        triggeredReactionSpellChoices(checkpointState, frame),
       );
 }
 
@@ -6829,9 +6879,49 @@ function maybeOpenInterruptWindowWithChoices(
   if (checkpointState === null) {
     return null;
   }
-  if (choices.length === 0) {
+  return openPreparedInterruptWindowWithOptionalChoices(
+    checkpointState,
+    frame,
+    choices,
+  );
+}
+
+function openPreparedInterruptWindowWithOptionalChoices(
+  checkpointState: BattleState,
+  frame: BattleInterruptCheckpointInput,
+  choices: readonly BattleInterruptProcedureChoice[],
+): Extract<BattleResolutionResult, { readonly tag: "needsHoles" }> | null {
+  const nonEmptyChoices = nonEmptyInterruptChoices(choices);
+  if (nonEmptyChoices === null) {
     return null;
   }
+  return openPreparedInterruptWindowWithChoices(
+    checkpointState,
+    frame,
+    nonEmptyChoices,
+  );
+}
+
+function nonEmptyInterruptChoices(
+  choices: readonly BattleInterruptProcedureChoice[],
+):
+  | readonly [
+      BattleInterruptProcedureChoice,
+      ...BattleInterruptProcedureChoice[],
+    ]
+  | null {
+  const first = choices[0];
+  return first === undefined ? null : [first, ...choices.slice(1)];
+}
+
+function openPreparedInterruptWindowWithChoices(
+  checkpointState: BattleState,
+  frame: BattleInterruptCheckpointInput,
+  choices: readonly [
+    BattleInterruptProcedureChoice,
+    ...BattleInterruptProcedureChoice[],
+  ],
+): BattleOpenedInterruptWindowResult {
   const eligibleResponders = [
     ...new Set(choices.map((choice) => choice.reactorId)),
   ];

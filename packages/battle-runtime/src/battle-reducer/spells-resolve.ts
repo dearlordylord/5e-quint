@@ -280,7 +280,11 @@ import {
   spellCastInterruptFrame,
   spellCastMetamagicApplicationsInput,
 } from "./spell-cast-interrupt-frame.ts";
-import { resolveSlowSomaticSpellFailure } from "./slow-active-penalties-runtime.ts";
+import {
+  fillsAfterSlowSomaticSpellFailureOutcome,
+  resolveSlowSomaticSpellFailure,
+} from "./slow-active-penalties-runtime.ts";
+import { parseWeaponAttackOverrideFillInput } from "./weapon-attack-override-fill-input.ts";
 
 import { spellFillSet, type SpellFillSet } from "./spells-resolve-fill-set.ts";
 
@@ -653,6 +657,11 @@ type BonusActionSpellProfileInvocation = Extract<
   {
     readonly procedure: (typeof BONUS_ACTION_SPELL_PROFILE_PROCEDURES)[number];
   }
+>;
+
+type OrdinaryBonusActionSpellProfileInvocation = Exclude<
+  BonusActionSpellProfileInvocation,
+  { readonly procedure: "weaponAttackOverride" }
 >;
 
 function invocationProcedureIsIn<
@@ -1518,7 +1527,7 @@ function bonusActionSpellProcedureResolveDispatchInput(
   input: BonusActionSpellBattleResolutionInput,
   castingState: BattleState,
   actorId: CombatantId,
-  invocation: BonusActionSpellProfileInvocation,
+  invocation: OrdinaryBonusActionSpellProfileInvocation,
   fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>,
   resolutionOptions: SpellProcedureResolutionOptions,
 ): SpellProcedureResolveDispatchInput {
@@ -1735,21 +1744,6 @@ function bonusActionSpellProcedureResolveDispatchInput(
               }),
         }),
       weaponDamageRider: (value) =>
-        spellProcedureResolveDispatchInput(value.procedure, {
-          input: { ...input, state: castingState },
-          actorId,
-          invocation: value,
-          fillSet,
-          ...(resolutionOptions.actionCostOverride === undefined
-            ? {}
-            : { actionCostOverride: resolutionOptions.actionCostOverride }),
-          ...(resolutionOptions.metamagicApplications === undefined
-            ? {}
-            : {
-                metamagicApplications: resolutionOptions.metamagicApplications,
-              }),
-        }),
-      weaponAttackOverride: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
           input: { ...input, state: castingState },
           actorId,
@@ -4809,16 +4803,38 @@ export function resolveBonusActionSpellAct(
     invocation.spellRuleFacts.components.verbal
       ? revealHidden(input.state, subject.actorId)
       : input.state;
-  const slowSomaticSpellFailure = resolveSlowSomaticSpellFailure({
-    state: input.state,
-    castingState,
-    subject,
-    actorId: subject.actorId,
-    invocation,
-    fills: input.fills,
-    ...(actionCostOverride === undefined ? {} : { actionCostOverride }),
-    metamagicApplications: metamagicAdmission.applications,
-  });
+  const resolveSlowSomaticFailurePhase = () =>
+    resolveSlowSomaticSpellFailure({
+      state: input.state,
+      castingState,
+      subject,
+      actorId: subject.actorId,
+      invocation,
+      fills: input.fills,
+      ...(actionCostOverride === undefined ? {} : { actionCostOverride }),
+      metamagicApplications: metamagicAdmission.applications,
+    });
+  if (invocation.procedure === "weaponAttackOverride") {
+    const parsedFillInput = parseWeaponAttackOverrideFillInput(
+      fillsAfterSlowSomaticSpellFailureOutcome(input.fills),
+    );
+    if (parsedFillInput.tag === "invalid") {
+      return invalidResult(input.state, "invalidFill", parsedFillInput.message);
+    }
+    const slowSomaticSpellFailure = resolveSlowSomaticFailurePhase();
+    if (slowSomaticSpellFailure.tag !== "continue") {
+      return slowSomaticSpellFailure;
+    }
+    return resolveRegisteredSpellProcedureProfile(
+      spellProcedureResolveDispatchInput(invocation.procedure, {
+        input: { ...input, state: castingState },
+        actorId: subject.actorId,
+        invocation,
+        fillSet: parsedFillInput.input,
+      }),
+    );
+  }
+  const slowSomaticSpellFailure = resolveSlowSomaticFailurePhase();
   if (slowSomaticSpellFailure.tag !== "continue") {
     return slowSomaticSpellFailure;
   }
