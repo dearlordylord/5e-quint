@@ -201,7 +201,7 @@ describe("SRDINV95 deterministic Flame Blade admission", () => {
         resource: { tag: "none" },
         procedure: "spellCreatedHeldObjectAttack",
         sourceProcedureRef: attackAct.subject.procedureRef,
-        spell,
+        spellRuleFacts: expect.objectContaining({ spellId: spell.id }),
         targeting: { kind: "singleCombatant" },
         damage: {
           expr: { dice: 3, dieSize: 6, flat: 3 },

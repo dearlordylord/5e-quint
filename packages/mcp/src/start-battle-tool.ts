@@ -1,6 +1,6 @@
 import {
   battleTablePositionId,
-  battleSnapshotProjection,
+  battlePresentedSnapshot,
   battleAdmittedSpellPresentations,
   discoverBattleActs,
   battleCreatureInitFromStatBlock,
@@ -30,6 +30,7 @@ import { StartBattleOutputSchema } from "./battle-tool-output.ts";
 import { schemaJsonContent, type ToolError } from "./schema-codec.ts";
 import { mcpSessionSummary } from "./session-snapshot-output.ts";
 import { errorContent } from "./tool-content.ts";
+import { battleSnapshotPresentationIssueContent } from "./battle-tool-payloads.ts";
 
 type StartableCharacterSessionCombatant = {
   readonly character: InitialCharacterSessionCombatantToolInput;
@@ -108,9 +109,12 @@ export function handleStartBattleToolCall(
   }
   publishAdminProjectionBestEffort(root);
 
-  const projection = battleSnapshotProjection(admittedSession.state);
+  const snapshot = battlePresentedSnapshot(admittedSession);
+  if (Either.isLeft(snapshot)) {
+    return battleSnapshotPresentationIssueContent(snapshot.left);
+  }
   return schemaJsonContent(StartBattleOutputSchema, {
-    snapshot: projection.snapshot,
+    snapshot: snapshot.right,
     availableActs: discoverBattleActs(admittedSession),
     admittedSpellPresentations:
       battleAdmittedSpellPresentations(admittedSession),

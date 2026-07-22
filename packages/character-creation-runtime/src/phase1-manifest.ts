@@ -1,3 +1,4 @@
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import {
   creationChoiceOptionId,
   type BackgroundAbilityScoreIncreaseSelection,
@@ -51,101 +52,109 @@ export const INITIAL_CHARACTER_DRAFT_PATHS = [
 // intentionally gated to the support profile: selected class facts, selected
 // Background origin facts, SRD species admission, and the remaining
 // manifest-owned languages/alignment/equipment projections.
-export const PHASE1_CLASS_FIGHTER_UNIT_ID = "class_fighter";
-export const SRD_BARD_CLASS_UNIT_ID = "class_bard";
-export const SRD_CLERIC_CLASS_UNIT_ID = "class_cleric";
-export const SRD_DRUID_CLASS_UNIT_ID = "class_druid";
-export const SRD_MONK_CLASS_UNIT_ID = "class_monk";
-export const WIDTH_CLASS_WIZARD_UNIT_ID = "class_wizard";
-export const SRD_ROGUE_CLASS_UNIT_ID = "class_rogue";
-export const SRD_SORCERER_CLASS_UNIT_ID = "class_sorcerer";
-export const SRD_PALADIN_CLASS_UNIT_ID = "class_paladin";
-export const SRD_RANGER_CLASS_UNIT_ID = "class_ranger";
+export const PHASE1_CLASS_FIGHTER_UNIT_ID = authoredUnitId("class_fighter");
+export const SRD_BARD_CLASS_UNIT_ID = authoredUnitId("class_bard");
+export const SRD_CLERIC_CLASS_UNIT_ID = authoredUnitId("class_cleric");
+export const SRD_DRUID_CLASS_UNIT_ID = authoredUnitId("class_druid");
+export const SRD_MONK_CLASS_UNIT_ID = authoredUnitId("class_monk");
+export const WIDTH_CLASS_WIZARD_UNIT_ID = authoredUnitId("class_wizard");
+export const SRD_ROGUE_CLASS_UNIT_ID = authoredUnitId("class_rogue");
+export const SRD_SORCERER_CLASS_UNIT_ID = authoredUnitId("class_sorcerer");
+export const SRD_PALADIN_CLASS_UNIT_ID = authoredUnitId("class_paladin");
+export const SRD_RANGER_CLASS_UNIT_ID = authoredUnitId("class_ranger");
 export const SRD_LEVEL_ONE_CLASS_UNIT_IDS = [
-  "class_barbarian",
-  SRD_BARD_CLASS_UNIT_ID,
-  SRD_CLERIC_CLASS_UNIT_ID,
-  SRD_DRUID_CLASS_UNIT_ID,
-  PHASE1_CLASS_FIGHTER_UNIT_ID,
-  SRD_MONK_CLASS_UNIT_ID,
-  SRD_PALADIN_CLASS_UNIT_ID,
-  SRD_RANGER_CLASS_UNIT_ID,
-  SRD_ROGUE_CLASS_UNIT_ID,
-  SRD_SORCERER_CLASS_UNIT_ID,
-  "class_warlock",
-  WIDTH_CLASS_WIZARD_UNIT_ID,
+  authoredUnitId("class_barbarian"),
+  authoredUnitId(SRD_BARD_CLASS_UNIT_ID),
+  authoredUnitId(SRD_CLERIC_CLASS_UNIT_ID),
+  authoredUnitId(SRD_DRUID_CLASS_UNIT_ID),
+  authoredUnitId(PHASE1_CLASS_FIGHTER_UNIT_ID),
+  authoredUnitId(SRD_MONK_CLASS_UNIT_ID),
+  authoredUnitId(SRD_PALADIN_CLASS_UNIT_ID),
+  authoredUnitId(SRD_RANGER_CLASS_UNIT_ID),
+  authoredUnitId(SRD_ROGUE_CLASS_UNIT_ID),
+  authoredUnitId(SRD_SORCERER_CLASS_UNIT_ID),
+  authoredUnitId("class_warlock"),
+  authoredUnitId(WIDTH_CLASS_WIZARD_UNIT_ID),
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
 export const SRD_LEVEL_THREE_SUBCLASS_UNIT_IDS = [
-  "subclass_barbarian_path_of_the_berserker",
-  "subclass_bard_college_of_lore",
-  "subclass_cleric_life_domain",
-  "subclass_druid_circle_of_the_land",
-  "subclass_fighter_champion",
-  "subclass_monk_warrior_of_the_open_hand",
-  "subclass_paladin_oath_of_devotion",
-  "subclass_ranger_hunter",
-  "subclass_rogue_thief",
-  "subclass_sorcerer_draconic_sorcery",
-  "subclass_warlock_fiend_patron",
-  "subclass_wizard_evoker",
+  authoredUnitId("subclass_barbarian_path_of_the_berserker"),
+  authoredUnitId("subclass_bard_college_of_lore"),
+  authoredUnitId("subclass_cleric_life_domain"),
+  authoredUnitId("subclass_druid_circle_of_the_land"),
+  authoredUnitId("subclass_fighter_champion"),
+  authoredUnitId("subclass_monk_warrior_of_the_open_hand"),
+  authoredUnitId("subclass_paladin_oath_of_devotion"),
+  authoredUnitId("subclass_ranger_hunter"),
+  authoredUnitId("subclass_rogue_thief"),
+  authoredUnitId("subclass_sorcerer_draconic_sorcery"),
+  authoredUnitId("subclass_warlock_fiend_patron"),
+  authoredUnitId("subclass_wizard_evoker"),
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
-export const PHASE1_BACKGROUND_SOLDIER_UNIT_ID = "background_soldier";
+export const PHASE1_BACKGROUND_SOLDIER_UNIT_ID =
+  authoredUnitId("background_soldier");
 export const SRD_CHARACTER_ADMISSION_BACKGROUND_UNIT_IDS = [
-  "background_acolyte",
-  "background_criminal",
-  "background_sage",
-  PHASE1_BACKGROUND_SOLDIER_UNIT_ID,
+  authoredUnitId("background_acolyte"),
+  authoredUnitId("background_criminal"),
+  authoredUnitId("background_sage"),
+  authoredUnitId(PHASE1_BACKGROUND_SOLDIER_UNIT_ID),
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
-export const PHASE1_SPECIES_ORC_UNIT_ID = "species_orc";
-export const SRD_GNOME_SPECIES_UNIT_ID = "species_gnome";
+export const PHASE1_SPECIES_ORC_UNIT_ID = authoredUnitId("species_orc");
+export const SRD_GNOME_SPECIES_UNIT_ID = authoredUnitId("species_gnome");
 export const SRD_CHARACTER_ADMISSION_SPECIES_UNIT_IDS = [
-  "species_dragonborn",
-  "species_dwarf",
-  "species_elf",
-  SRD_GNOME_SPECIES_UNIT_ID,
-  "species_halfling",
-  "species_human",
-  "species_goliath",
-  PHASE1_SPECIES_ORC_UNIT_ID,
-  "species_tiefling",
+  authoredUnitId("species_dragonborn"),
+  authoredUnitId("species_dwarf"),
+  authoredUnitId("species_elf"),
+  authoredUnitId(SRD_GNOME_SPECIES_UNIT_ID),
+  authoredUnitId("species_halfling"),
+  authoredUnitId("species_human"),
+  authoredUnitId("species_goliath"),
+  authoredUnitId(PHASE1_SPECIES_ORC_UNIT_ID),
+  authoredUnitId("species_tiefling"),
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
-export const PHASE1_ARMOR_CHAIN_MAIL_UNIT_ID = "armor_chain_mail";
-export const PHASE1_WEAPON_LONGSWORD_UNIT_ID = "weapon_longsword";
-export const PHASE1_WEAPON_DAGGER_UNIT_ID = "weapon_dagger";
-export const PHASE1_WEAPON_SPEAR_UNIT_ID = "weapon_spear";
-export const PHASE1_WEAPON_FLAIL_UNIT_ID = "weapon_flail";
-export const PHASE1_WEAPON_QUARTERSTAFF_UNIT_ID = "weapon_quarterstaff";
-export const PHASE1_WEAPON_SHORTSWORD_UNIT_ID = "weapon_shortsword";
-export const PHASE1_SHIELD_UNIT_ID = "equipment_shield";
-export const PHASE1_FIGHTING_STYLE_DEFENSE_UNIT_ID = "defense";
-export const PHASE1_FIGHTING_STYLE_ARCHERY_UNIT_ID = "feat_archery";
+export const PHASE1_ARMOR_CHAIN_MAIL_UNIT_ID =
+  authoredUnitId("armor_chain_mail");
+export const PHASE1_WEAPON_LONGSWORD_UNIT_ID =
+  authoredUnitId("weapon_longsword");
+export const PHASE1_WEAPON_DAGGER_UNIT_ID = authoredUnitId("weapon_dagger");
+export const PHASE1_WEAPON_SPEAR_UNIT_ID = authoredUnitId("weapon_spear");
+export const PHASE1_WEAPON_FLAIL_UNIT_ID = authoredUnitId("weapon_flail");
+export const PHASE1_WEAPON_QUARTERSTAFF_UNIT_ID = authoredUnitId(
+  "weapon_quarterstaff",
+);
+export const PHASE1_WEAPON_SHORTSWORD_UNIT_ID =
+  authoredUnitId("weapon_shortsword");
+export const PHASE1_SHIELD_UNIT_ID = authoredUnitId("equipment_shield");
+export const PHASE1_FIGHTING_STYLE_DEFENSE_UNIT_ID = authoredUnitId("defense");
+export const PHASE1_FIGHTING_STYLE_ARCHERY_UNIT_ID =
+  authoredUnitId("feat_archery");
 export const PHASE1_FIGHTING_STYLE_GREAT_WEAPON_FIGHTING_UNIT_ID =
-  "feat_great_weapon_fighting";
-export const PHASE1_FIGHTING_STYLE_TWO_WEAPON_FIGHTING_UNIT_ID =
-  "feat_two_weapon_fighting";
+  authoredUnitId("feat_great_weapon_fighting");
+export const PHASE1_FIGHTING_STYLE_TWO_WEAPON_FIGHTING_UNIT_ID = authoredUnitId(
+  "feat_two_weapon_fighting",
+);
 export const SUPPORTED_FIGHTING_STYLE_UNIT_IDS = [
-  PHASE1_FIGHTING_STYLE_DEFENSE_UNIT_ID,
-  PHASE1_FIGHTING_STYLE_ARCHERY_UNIT_ID,
-  PHASE1_FIGHTING_STYLE_GREAT_WEAPON_FIGHTING_UNIT_ID,
-  PHASE1_FIGHTING_STYLE_TWO_WEAPON_FIGHTING_UNIT_ID,
+  authoredUnitId(PHASE1_FIGHTING_STYLE_DEFENSE_UNIT_ID),
+  authoredUnitId(PHASE1_FIGHTING_STYLE_ARCHERY_UNIT_ID),
+  authoredUnitId(PHASE1_FIGHTING_STYLE_GREAT_WEAPON_FIGHTING_UNIT_ID),
+  authoredUnitId(PHASE1_FIGHTING_STYLE_TWO_WEAPON_FIGHTING_UNIT_ID),
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
 
 export const SUPPORTED_BACKGROUND_UNIT_IDS =
   SRD_CHARACTER_ADMISSION_BACKGROUND_UNIT_IDS;
 export const SUPPORTED_PURCHASE_UNIT_IDS = [
-  PHASE1_ARMOR_CHAIN_MAIL_UNIT_ID,
-  PHASE1_WEAPON_LONGSWORD_UNIT_ID,
-  PHASE1_WEAPON_DAGGER_UNIT_ID,
-  PHASE1_WEAPON_QUARTERSTAFF_UNIT_ID,
-  PHASE1_WEAPON_FLAIL_UNIT_ID,
-  PHASE1_SHIELD_UNIT_ID,
+  authoredUnitId(PHASE1_ARMOR_CHAIN_MAIL_UNIT_ID),
+  authoredUnitId(PHASE1_WEAPON_LONGSWORD_UNIT_ID),
+  authoredUnitId(PHASE1_WEAPON_DAGGER_UNIT_ID),
+  authoredUnitId(PHASE1_WEAPON_QUARTERSTAFF_UNIT_ID),
+  authoredUnitId(PHASE1_WEAPON_FLAIL_UNIT_ID),
+  authoredUnitId(PHASE1_SHIELD_UNIT_ID),
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
 export const SUPPORTED_COIN_GRANT_PURCHASE_UNIT_IDS = [
-  PHASE1_WEAPON_LONGSWORD_UNIT_ID,
-  PHASE1_WEAPON_DAGGER_UNIT_ID,
-  PHASE1_SHIELD_UNIT_ID,
-  PHASE1_WEAPON_FLAIL_UNIT_ID,
-  PHASE1_WEAPON_QUARTERSTAFF_UNIT_ID,
+  authoredUnitId(PHASE1_WEAPON_LONGSWORD_UNIT_ID),
+  authoredUnitId(PHASE1_WEAPON_DAGGER_UNIT_ID),
+  authoredUnitId(PHASE1_SHIELD_UNIT_ID),
+  authoredUnitId(PHASE1_WEAPON_FLAIL_UNIT_ID),
+  authoredUnitId(PHASE1_WEAPON_QUARTERSTAFF_UNIT_ID),
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
 export function progressionOptionId(
   progression: CharacterProgression,
@@ -189,11 +198,11 @@ export const SUPPORTED_FIGHTING_STYLE_OPTION_IDS = [
   ...SUPPORTED_FIGHTING_STYLE_UNIT_IDS.map(creationChoiceOptionId),
 ] as const satisfies ReadonlyArray<CreationChoiceOptionId>;
 export const PHASE1_WEAPON_MASTERY_UNIT_IDS = [
-  PHASE1_WEAPON_LONGSWORD_UNIT_ID,
-  PHASE1_WEAPON_DAGGER_UNIT_ID,
-  PHASE1_WEAPON_SHORTSWORD_UNIT_ID,
-  PHASE1_WEAPON_SPEAR_UNIT_ID,
-  PHASE1_WEAPON_FLAIL_UNIT_ID,
+  authoredUnitId(PHASE1_WEAPON_LONGSWORD_UNIT_ID),
+  authoredUnitId(PHASE1_WEAPON_DAGGER_UNIT_ID),
+  authoredUnitId(PHASE1_WEAPON_SHORTSWORD_UNIT_ID),
+  authoredUnitId(PHASE1_WEAPON_SPEAR_UNIT_ID),
+  authoredUnitId(PHASE1_WEAPON_FLAIL_UNIT_ID),
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
 export const SUPPORTED_WEAPON_MASTERY_OPTION_IDS = [
   ...PHASE1_WEAPON_MASTERY_UNIT_IDS.map(creationChoiceOptionId),

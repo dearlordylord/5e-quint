@@ -1,3 +1,4 @@
+import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-condition-immunity-turn-start-temporary-hit-points
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-glyph-stored-concentration-full-duration
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS
@@ -9,14 +10,11 @@
 import { movementFeet, type AbilityModifier } from "@dnd/shared/types";
 import type {
   DiceAmount as SurfaceDiceAmount,
-  SpellRecord,
   TargetSelection,
 } from "@dnd/surface/surface/types";
 
 import { battleCreatureWithSpellActiveEffects } from "../../active-effect/lifecycle.ts";
 import {
-  maybeOpenInterruptWindow,
-  snapshotBattle,
   type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
@@ -25,6 +23,7 @@ import {
   type BattleState,
   type ConditionImmunityAndTurnStartTemporaryHitPointsSpellInvocation,
 } from "../../battle-state-execution.ts";
+import { maybeOpenInterruptWindow, snapshotBattle } from "../dispatcher.ts";
 import { CombatantId } from "../../identity.ts";
 import { BattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";
@@ -33,7 +32,7 @@ import { needsHolesResult } from "../hole-helpers.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
 import { conditionHadNonSpellSourceBeforeSpellEffect } from "../spell-condition-effects-helpers.ts";
-import { scalarBuffSpellTargetCount } from "../spells-profile-shared.ts";
+import { scalarBuffSpellTargetCount } from "../spells-execution-facts.ts";
 import { scalarBuffActiveEffectExpiration } from "../spells-profiles-support.ts";
 import {
   spellTargetHole,
@@ -65,7 +64,7 @@ type ConditionImmunityAndTurnStartTemporaryHitPointsTargetSelection =
   | { readonly tag: "invalid"; readonly message: string };
 
 function admitConditionImmunityAndTurnStartTemporaryHitPoints(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly ConditionImmunityAndTurnStartTemporaryHitPointsSpellInvocation[] {
   const projection =
@@ -113,7 +112,7 @@ function admitConditionImmunityAndTurnStartTemporaryHitPoints(
 
 function conditionImmunityAndTurnStartTemporaryHitPointsSpellProjection(
   actorId: CombatantId,
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   spellcastingAbilityModifier: AbilityModifier,
 ): {
   readonly targetSelection: TargetSelection;

@@ -1,3 +1,4 @@
+import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-after-hit-timed-damage-save
 import {
   AbilitySchema,
@@ -34,11 +35,9 @@ import { BattleActiveEffectExpirationSchema } from "../../active-effect/codecs.t
 import type {
   DamageType,
   DiceAmount as SurfaceDiceAmount,
-  SpellRecord,
 } from "@dnd/surface/surface/types";
 
 import {
-  snapshotBattle,
   type AfterHitTimedDamageAndSaveSpellInvocation,
   type AttackSpellDamageAddition,
   type BattleActDiscoveryCandidate,
@@ -46,6 +45,7 @@ import {
   type BattleResolutionResult,
   type BattleState,
 } from "../../battle-state-execution.ts";
+import { snapshotBattle } from "../dispatcher.ts";
 import type { BattleSpellProcedureExecution } from "../../character-execution.ts";
 import { CombatantId } from "../../identity.ts";
 import {
@@ -55,7 +55,7 @@ import {
 } from "../dispatcher.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
-import { supportedDamageAmountExpr } from "../spells-profile-shared.ts";
+import { supportedDamageAmountExpr } from "../spells-execution-facts.ts";
 import { scalarBuffActiveEffectExpiration } from "../spells-profiles-support.ts";
 import { spellFillSetContainsOnlySpellCastReactionFacts } from "../spells-resolve-fill-set.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
@@ -100,7 +100,7 @@ type AfterHitTimedDamageAndSaveResolveInput =
   SpellProcedureProfileResolveInput<AfterHitTimedDamageAndSaveInvocation>;
 
 function admitAfterHitTimedDamageAndSave(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly AfterHitTimedDamageAndSaveInvocation[] {
   const projection = afterHitTimedDamageAndSaveSpellProjection(
@@ -162,7 +162,7 @@ function admitAfterHitTimedDamageAndSave(
 
 function afterHitTimedDamageAndSaveSpellProjection(
   actorId: CombatantId,
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
 ): {
   readonly immediateDamageAmount: SurfaceDiceAmount;
   readonly turnStartDamageAmount: SurfaceDiceAmount;

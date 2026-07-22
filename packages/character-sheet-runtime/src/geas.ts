@@ -1,5 +1,6 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.geas-session-invocation
 // UNIT-PROFILE-COVERAGE: runtime-owner table-caller.geas-command-compliance
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import {
   timeSpanDuration,
   type TimeSpanDuration,
@@ -71,7 +72,7 @@ export function castGeas(input: {
 function geasSpell(
   unitLibrary: UnitCatalog,
 ): Either.Either<SpellRecord, CharacterSheetIssue> {
-  const unit = getRequiredUnit(unitLibrary, GEAS_SPELL_ID);
+  const unit = getRequiredUnit(unitLibrary, authoredUnitId(GEAS_SPELL_ID));
   if (Either.isLeft(unit)) return Either.left(unit.left);
   if (unit.right.kind !== "spell") {
     return characterSheetIssue("Geas requires a Spell record.");

@@ -20,7 +20,7 @@ import { expect, it } from "vitest";
 
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
-import { ATTACK_TARGET_HOLE_ID } from "./battle-state-execution.ts";
+import { ATTACK_TARGET_HOLE_ID } from "./battle-reducer/battle-runtime-protocol.ts";
 import {
   characterCreature,
   requireHole,
@@ -636,7 +636,7 @@ function projectBattleCompanionState(
     formId:
       familiar === null || familiar.status === "dismissedForever"
         ? "none"
-        : formSelectionProjection(familiar.formSelection),
+        : resolvedFormProjection(state, familiar),
     familiarCombatantPresent: state.combatants.has(familiarId),
     replacementCombatantPresent: state.combatants.has(replacementFamiliarId),
     familiarReactionAvailable:
@@ -653,13 +653,24 @@ function projectBattleCompanionState(
   };
 }
 
-function formSelectionProjection(
-  selection: Exclude<
+function resolvedFormProjection(
+  state: BattleState,
+  familiar: Exclude<
     BattleCompanionState,
     { readonly status: "dismissedForever" }
-  >["formSelection"],
+  >,
 ): string {
-  if (selection.tag === "challengeRatingZeroBeast")
-    return selection.statBlockId;
-  return selection.formId;
+  const combatant =
+    familiar.status === "present"
+      ? state.combatants.get(familiar.combatantId)
+      : undefined;
+  const resolvedStatBlockId =
+    familiar.status === "present"
+      ? combatant?.origin.kind === "statBlock"
+        ? combatant.origin.statBlockId
+        : undefined
+      : familiar.resolvedStatBlockId;
+  if (resolvedStatBlockId === "stat_block_cat") return "cat";
+  if (resolvedStatBlockId === "stat_block_rat") return "rat";
+  return resolvedStatBlockId ?? "none";
 }

@@ -1,3 +1,4 @@
+import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import {
   startBattleRight,
   startBattleSessionRight,
@@ -106,7 +107,10 @@ describe("battle runtime: attack rolls and damage", () => {
     expect(result).toMatchObject({
       tag: "needsHoles",
       holes: [
-        { kind: "rolledDice", label: "Longsword damage (2d8+3-slashing)" },
+        {
+          kind: "rolledDice",
+          label: "weapon_longsword damage (2d8+3-slashing)",
+        },
       ],
       snapshot: {
         turn: {
@@ -307,7 +311,7 @@ describe("battle runtime: attack rolls and damage", () => {
 
     expect(damageHole).toMatchObject({
       critical: true,
-      label: "Longsword damage (2d8+3-slashing)",
+      label: "weapon_longsword damage (2d8+3-slashing)",
     });
     const dispositionHole = attackDamageDispositionHoleAfterFills(
       state,
@@ -625,11 +629,11 @@ describe("battle runtime: attack rolls and damage", () => {
         selectedLoadout: {
           armor: {
             itemId: "armor:equipment_chain_mail",
-            unitId: "equipment_chain_mail",
+            unitId: parseSharedUnitId("equipment_chain_mail"),
           },
           weapon: {
             itemId: "main:weapon_dagger",
-            unitId: "weapon_dagger",
+            unitId: parseSharedUnitId("weapon_dagger"),
             grip: "one_handed" as const,
           },
         },
@@ -640,7 +644,7 @@ describe("battle runtime: attack rolls and damage", () => {
         selectedLoadout: {
           shield: {
             itemId: "shield:equipment_shield",
-            unitId: "equipment_shield",
+            unitId: parseSharedUnitId("equipment_shield"),
           },
         },
         armorClass: {
@@ -655,7 +659,7 @@ describe("battle runtime: attack rolls and damage", () => {
         selectedLoadout: {
           weapon: {
             itemId: "main:weapon_longsword",
-            unitId: "weapon_longsword",
+            unitId: parseSharedUnitId("weapon_longsword"),
             grip: "one_handed" as const,
           },
         },
@@ -720,7 +724,7 @@ describe("battle runtime: attack rolls and damage", () => {
 
     expect(damageHole).toMatchObject({
       critical: false,
-      label: "Longsword damage (1d8+3-slashing)",
+      label: "weapon_longsword damage (1d8+3-slashing)",
     });
   });
 

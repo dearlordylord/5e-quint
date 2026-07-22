@@ -7,6 +7,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-prepared-spell-access
 // UNIT-PROFILE-COVERAGE: runtime-owner character-creation.grappler-general-feat character-creation.wizard-spellbook-learning-choice character-creation.origin-feat-proficiency-choice character-creation.species-trait-proficiency-choice character-creation.species-origin-feat-choice character-creation.species-origin-feat-proficiency-choice
 // UNIT-PROFILE-COVERAGE: runtime-owner character-creation.hit-point-maximum-projection unit-feature.hunters-prey character-creation.species-lineage-choice
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { Either, Match, Option } from "effect";
 import { isValidAbilityScoreAssignment } from "@dnd/shared-algebras/ability-score-algebra";
 import { traverseValidation } from "@dnd/shared-algebras/validation-algebra";
@@ -269,11 +270,7 @@ export function finalizeCharacterDraft(input: {
   if (selections == null) {
     return {
       tag: "invalid",
-      issues: [
-        illegalFinalizationIssue(
-          { tag: "draftIncomplete" },
-        ),
-      ],
+      issues: [illegalFinalizationIssue({ tag: "draftIncomplete" })],
     };
   }
 
@@ -481,10 +478,7 @@ export function executableSupportIssues(
       startingClassUnitId(selections.progression),
     )
       ? expectedValueIssue(
-          selectedPreparedSpellsAreInSelectedSpellbook(
-            selections,
-            unitLibrary,
-          ),
+          selectedPreparedSpellsAreInSelectedSpellbook(selections, unitLibrary),
           { tag: "preparedSpellSelectionMismatch" },
         )
       : []),
@@ -508,7 +502,10 @@ type ExecutableSupportDependencies = {
     ProjectionIssues
   >;
   readonly species: Either.Either<
-    { readonly speciesFacts: SpeciesCreationFacts; readonly speciesUnit: UnitRecord },
+    {
+      readonly speciesFacts: SpeciesCreationFacts;
+      readonly speciesUnit: UnitRecord;
+    },
     ProjectionIssues
   >;
   readonly classFactsByUnitId: SupportDependencyCollection<ClassFactsByUnitId>;
@@ -586,7 +583,10 @@ function speciesSupportDependencies(
   selections: FinalizedCharacterSelections,
   unitLibrary: UnitCatalog,
 ): Either.Either<
-  { readonly speciesFacts: SpeciesCreationFacts; readonly speciesUnit: UnitRecord },
+  {
+    readonly speciesFacts: SpeciesCreationFacts;
+    readonly speciesUnit: UnitRecord;
+  },
   ProjectionIssues
 > {
   const speciesUnit = unitForFinalization(
@@ -850,12 +850,10 @@ function finalizedSpeciesChoiceFacts(
   }
   if (draconicSource !== undefined && lineageSource.right !== undefined) {
     return Either.left([
-      illegalFinalizationIssue(
-        {
-          tag: "conflictingSpeciesChoiceSources",
-          speciesUnitId: species.id,
-        },
-      ),
+      illegalFinalizationIssue({
+        tag: "conflictingSpeciesChoiceSources",
+        speciesUnitId: species.id,
+      }),
     ]);
   }
   if (draconicSource !== undefined) {
@@ -872,12 +870,10 @@ function finalizedSpeciesChoiceFacts(
   return selections.draconicAncestry === undefined
     ? Either.right(undefined)
     : Either.left([
-        illegalFinalizationIssue(
-          {
-            tag: "missingDraconicAncestrySource",
-            speciesUnitId: species.id,
-          },
-        ),
+        illegalFinalizationIssue({
+          tag: "missingDraconicAncestrySource",
+          speciesUnitId: species.id,
+        }),
       ]);
 }
 
@@ -891,12 +887,10 @@ function finalizedDraconicAncestryChoiceFacts(
   );
   if (selected === undefined || selections.draconicAncestry === undefined) {
     return Either.left([
-      illegalFinalizationIssue(
-        {
-          tag: "invalidDraconicAncestrySelection",
-          speciesUnitId: species.id,
-        },
-      ),
+      illegalFinalizationIssue({
+        tag: "invalidDraconicAncestrySelection",
+        speciesUnitId: species.id,
+      }),
     ]);
   }
 
@@ -938,12 +932,10 @@ function speciesLineageChoiceSource(
   });
   if (sources.length > 1) {
     return Either.left([
-      illegalFinalizationIssue(
-        {
-          tag: "multipleSpeciesLineageSources",
-          speciesUnitId: species.id,
-        },
-      ),
+      illegalFinalizationIssue({
+        tag: "multipleSpeciesLineageSources",
+        speciesUnitId: species.id,
+      }),
     ]);
   }
 
@@ -961,12 +953,10 @@ function finalizedGnomishLineageChoiceFacts(
   );
   if (lineageId === undefined || spellcastingAbility === undefined) {
     return Either.left([
-      illegalFinalizationIssue(
-        {
-          tag: "invalidGnomishLineageSelection",
-          traitUnitId: source.traitUnitId,
-        },
-      ),
+      illegalFinalizationIssue({
+        tag: "invalidGnomishLineageSelection",
+        traitUnitId: source.traitUnitId,
+      }),
     ]);
   }
 
@@ -1278,9 +1268,8 @@ function characterBuildProjectionCauseMessage(
       { tag: "unknownUnit" },
       ({ role, unitId }) => `Cannot find ${role} Unit: ${unitId}.`,
     ),
-    Match.when(
-      { tag: "abilityScoreCapExceeded" },
-      (cap) => abilityScoreCapExceededMessage(cap),
+    Match.when({ tag: "abilityScoreCapExceeded" }, (cap) =>
+      abilityScoreCapExceededMessage(cap),
     ),
     Match.when(
       { tag: "unsupportedToolProficiency" },
@@ -1381,10 +1370,7 @@ function surfaceReadIssueCauseMessage(
   >["issues"][number],
 ): string {
   return Match.value(issue).pipe(
-    Match.when(
-      { code: "unsupportedUnitKind" },
-      () => "unsupported Unit kind",
-    ),
+    Match.when({ code: "unsupportedUnitKind" }, () => "unsupported Unit kind"),
     Match.exhaustive,
   );
 }
@@ -1516,13 +1502,11 @@ export function buildCharacterBuild(input: {
   const classFacts = classFactsByUnitId.right.get(selectedClassUnitId);
   if (classFacts == null) {
     return Either.left([
-      characterBuildProjectionIssue(
-        {
-          tag: "missingStartingClassFacts",
-          projection: "characterBuild",
-          classUnitId: selectedClassUnitId,
-        },
-      ),
+      characterBuildProjectionIssue({
+        tag: "missingStartingClassFacts",
+        projection: "characterBuild",
+        classUnitId: selectedClassUnitId,
+      }),
     ]);
   }
   const backgroundUnit = unitForFinalization(
@@ -1694,13 +1678,11 @@ export function characterBuildHitPoints(
   );
   if (startingClassFacts == null) {
     return Either.left([
-      characterBuildProjectionIssue(
-        {
-          tag: "missingStartingClassFacts",
-          projection: "hitPoints",
-          classUnitId: startingClassUnitId(build.progression),
-        },
-      ),
+      characterBuildProjectionIssue({
+        tag: "missingStartingClassFacts",
+        projection: "hitPoints",
+        classUnitId: startingClassUnitId(build.progression),
+      }),
     ]);
   }
 
@@ -1756,17 +1738,17 @@ function classFeatureHitPointMaximumBonus(
     const unit = unitLibrary.getUnit(featureUnitId);
     if (Option.isNone(unit)) {
       issues.push(
-        characterBuildProjectionIssue(
-          {
-            tag: "missingHitPointMaximumBonusFeatureUnit",
-            featureUnitId,
-          },
-        ),
+        characterBuildProjectionIssue({
+          tag: "missingHitPointMaximumBonusFeatureUnit",
+          featureUnitId,
+        }),
       );
       continue;
     }
     if (unit.value.kind !== "class_feature") continue;
-    const classUnit = classUnitId(`class_${unit.value.className}`);
+    const classUnit = classUnitId(
+      authoredUnitId(`class_${unit.value.className}`),
+    );
     const classLevel = classLevelForUnit(build.progression, classUnit);
     const components: PassiveMechanics[] =
       unit.value.mechanics.family === "composite"
@@ -1788,12 +1770,10 @@ function classFeatureHitPointMaximumBonus(
         );
         if (bonus === undefined) {
           issues.push(
-            characterBuildProjectionIssue(
-              {
-                tag: "nonDeterministicHitPointMaximumBonus",
-                featureUnitId,
-              },
-            ),
+            characterBuildProjectionIssue({
+              tag: "nonDeterministicHitPointMaximumBonus",
+              featureUnitId,
+            }),
           );
           continue;
         }
@@ -1861,13 +1841,11 @@ export function characterBuildProficiencies(
   );
   if (startingClassFacts == null) {
     return Either.left([
-      characterBuildProjectionIssue(
-        {
-          tag: "missingStartingClassFacts",
-          projection: "proficiencies",
-          classUnitId: startingClassUnitId(build.progression),
-        },
-      ),
+      characterBuildProjectionIssue({
+        tag: "missingStartingClassFacts",
+        projection: "proficiencies",
+        classUnitId: startingClassUnitId(build.progression),
+      }),
     ]);
   }
 
@@ -1961,13 +1939,11 @@ export function characterBuildArmorTraining(
   );
   if (startingClassFacts == null) {
     return Either.left([
-      characterBuildProjectionIssue(
-        {
-          tag: "missingStartingClassFacts",
-          projection: "armorTraining",
-          classUnitId: startingClassUnitId(build.progression),
-        },
-      ),
+      characterBuildProjectionIssue({
+        tag: "missingStartingClassFacts",
+        projection: "armorTraining",
+        classUnitId: startingClassUnitId(build.progression),
+      }),
     ]);
   }
 
@@ -2094,26 +2070,22 @@ function finalizedClassFeatureLanguages(
         const language = languageFromSurfaceLanguageId(grant.languageId);
         if (Either.isLeft(language)) {
           issues.push(
-            characterBuildProjectionIssue(
-              {
-                tag: "unsupportedClassFeatureLanguage",
-                featureUnitId: unitId,
-                languageId: grant.languageId,
-              },
-            ),
+            characterBuildProjectionIssue({
+              tag: "unsupportedClassFeatureLanguage",
+              featureUnitId: unitId,
+              languageId: grant.languageId,
+            }),
           );
           continue;
         }
 
         if (knownLanguages.has(language.right)) {
           issues.push(
-            characterBuildProjectionIssue(
-              {
-                tag: "duplicateClassFeatureLanguage",
-                featureUnitId: unitId,
-                language: language.right,
-              },
-            ),
+            characterBuildProjectionIssue({
+              tag: "duplicateClassFeatureLanguage",
+              featureUnitId: unitId,
+              language: language.right,
+            }),
           );
           continue;
         }
@@ -2137,42 +2109,36 @@ function finalizedClassFeatureLanguages(
       );
       if (selection === undefined) {
         issues.push(
-          characterBuildProjectionIssue(
-            {
-              tag: "missingClassFeatureLanguageChoice",
-              featureUnitId: unitId,
-            },
-          ),
+          characterBuildProjectionIssue({
+            tag: "missingClassFeatureLanguageChoice",
+            featureUnitId: unitId,
+          }),
         );
         continue;
       }
 
       if (selection.options.length !== grant.count) {
         issues.push(
-          characterBuildProjectionIssue(
-            {
-              tag: "classFeatureLanguageChoiceCountMismatch",
-              featureUnitId: unitId,
-              mismatch:
-                selection.options.length < grant.count
-                  ? {
-                      tag: "missing",
-                      receivedCount: NonNegativeInteger(
-                        selection.options.length,
-                      ),
-                      missingCount: PositiveInteger(
-                        grant.count - selection.options.length,
-                      ),
-                    }
-                  : {
-                      tag: "extra",
-                      expectedCount: PositiveInteger(grant.count),
-                      extraCount: PositiveInteger(
-                        selection.options.length - grant.count,
-                      ),
-                    },
-            },
-          ),
+          characterBuildProjectionIssue({
+            tag: "classFeatureLanguageChoiceCountMismatch",
+            featureUnitId: unitId,
+            mismatch:
+              selection.options.length < grant.count
+                ? {
+                    tag: "missing",
+                    receivedCount: NonNegativeInteger(selection.options.length),
+                    missingCount: PositiveInteger(
+                      grant.count - selection.options.length,
+                    ),
+                  }
+                : {
+                    tag: "extra",
+                    expectedCount: PositiveInteger(grant.count),
+                    extraCount: PositiveInteger(
+                      selection.options.length - grant.count,
+                    ),
+                  },
+          }),
         );
         continue;
       }
@@ -2184,26 +2150,22 @@ function finalizedClassFeatureLanguages(
         const language = option.language;
         if (Either.isLeft(language)) {
           issues.push(
-            characterBuildProjectionIssue(
-              {
-                tag: "unsupportedClassFeatureLanguageChoice",
-                featureUnitId: unitId,
-                optionId: option.optionId,
-              },
-            ),
+            characterBuildProjectionIssue({
+              tag: "unsupportedClassFeatureLanguageChoice",
+              featureUnitId: unitId,
+              optionId: option.optionId,
+            }),
           );
           continue;
         }
 
         if (knownLanguages.has(language.right)) {
           issues.push(
-            characterBuildProjectionIssue(
-              {
-                tag: "duplicateClassFeatureLanguageChoice",
-                featureUnitId: unitId,
-                language: language.right,
-              },
-            ),
+            characterBuildProjectionIssue({
+              tag: "duplicateClassFeatureLanguageChoice",
+              featureUnitId: unitId,
+              language: language.right,
+            }),
           );
           continue;
         }
@@ -3206,7 +3168,9 @@ function speciesTraitUnitIds(
   const unit = unitLibrary.getUnit(build.species);
   if (Option.isNone(unit)) return [];
   const facts = readSpeciesCreationFacts(unit.value);
-  return facts.tag === "readable" ? Object.values(facts.value.traits) : [];
+  return facts.tag === "readable"
+    ? Object.values(facts.value.traits).map(authoredUnitId)
+    : [];
 }
 
 export function finalizedClassChoiceFeatures(
@@ -3301,13 +3265,11 @@ function finalizedClassFeatureAcquisitionAbilityCheckBonusFeatures(
         );
         if (projected === undefined) {
           issues.push(
-            characterBuildProjectionIssue(
-              {
-                tag: "unprojectableAbilityCheckBonus",
-                featureUnitId: selection.source.unitId,
-                optionId: option.id,
-              },
-            ),
+            characterBuildProjectionIssue({
+              tag: "unprojectableAbilityCheckBonus",
+              featureUnitId: selection.source.unitId,
+              optionId: option.id,
+            }),
           );
           continue;
         }
@@ -3436,9 +3398,10 @@ function finalizedBuildEquipmentForSupportedLoadoutChoices(
       const itemUnitId = characterEquipmentItemUnitId(unitId);
       return Either.isLeft(itemUnitId)
         ? Either.left(
-            characterBuildProjectionIssue(
-              { tag: "unsupportedEquipmentUnitId", equipmentUnitId: unitId },
-            ),
+            characterBuildProjectionIssue({
+              tag: "unsupportedEquipmentUnitId",
+              equipmentUnitId: unitId,
+            }),
           )
         : Either.right({
             itemId: characterEquipmentItemId({
@@ -3695,9 +3658,7 @@ function singleSpellcastingSlotPool(
   }
 
   return Either.left(
-    illegalFinalizationIssue(
-      { tag: "multipleSpellcastingSlotPools" },
-    ),
+    illegalFinalizationIssue({ tag: "multipleSpellcastingSlotPools" }),
   );
 }
 
@@ -3721,9 +3682,7 @@ function singlePactMagicSlotPool(
   }
 
   return Either.left(
-    illegalFinalizationIssue(
-      { tag: "multiplePactMagicSlotPools" },
-    ),
+    illegalFinalizationIssue({ tag: "multiplePactMagicSlotPools" }),
   );
 }
 
@@ -3833,11 +3792,18 @@ function readableForFinalization<T>(
 
 function surfaceReadIssueCause(
   issue: SurfaceReadIssue,
-): Extract<CharacterBuildProjectionCause, { tag: "unreadableUnit" }>["issues"][number] {
+): Extract<
+  CharacterBuildProjectionCause,
+  { tag: "unreadableUnit" }
+>["issues"][number] {
   return Match.value(issue).pipe(
     Match.when({ code: "unsupportedUnitKind" }, (unsupported) => {
-      const { code, unitId: _unitId, message: _message, ...unprojected } =
-        unsupported;
+      const {
+        code,
+        unitId: _unitId,
+        message: _message,
+        ...unprojected
+      } = unsupported;
       noUnprojectedSurfaceReadIssueFields(unprojected);
       return { code };
     }),
@@ -3932,17 +3898,15 @@ function applyClassFeatureAbilityScoreIncreases(
     const currentScore = scores[delta.ability];
     if (currentScore + delta.increase > delta.maxScore) {
       capIssues.push(
-        characterBuildProjectionIssue(
-          {
-            tag: "abilityScoreCapExceeded",
-            source: "classFeature",
-            ability: delta.ability,
-            maximum: delta.maxScore,
-            excess: PositiveInteger(
-              currentScore + delta.increase - delta.maxScore,
-            ),
-          },
-        ),
+        characterBuildProjectionIssue({
+          tag: "abilityScoreCapExceeded",
+          source: "classFeature",
+          ability: delta.ability,
+          maximum: delta.maxScore,
+          excess: PositiveInteger(
+            currentScore + delta.increase - delta.maxScore,
+          ),
+        }),
       );
       continue;
     }
@@ -4016,18 +3980,16 @@ function backgroundAbilityScoreIncreaseCapIssue(
     return undefined;
   }
 
-  return characterBuildProjectionIssue(
-    {
-      tag: "abilityScoreCapExceeded",
-      source: "background",
-      ability: overCapDelta.ability,
-      excess: PositiveInteger(
-        baseScores[overCapDelta.ability] +
-          overCapDelta.increase -
-          BACKGROUND_ABILITY_SCORE_INCREASE_MAX_SCORE,
-      ),
-    },
-  );
+  return characterBuildProjectionIssue({
+    tag: "abilityScoreCapExceeded",
+    source: "background",
+    ability: overCapDelta.ability,
+    excess: PositiveInteger(
+      baseScores[overCapDelta.ability] +
+        overCapDelta.increase -
+        BACKGROUND_ABILITY_SCORE_INCREASE_MAX_SCORE,
+    ),
+  });
 }
 
 export function abilityModifier(score: number): number {
@@ -4133,13 +4095,11 @@ function finalizedBuildToolProficiencies(
     for (const optionId of choiceSelectionOptionIds(toolSelection)) {
       if (!isCharacterBuildToolProficiencyId(String(optionId))) {
         return Either.left([
-          characterBuildProjectionIssue(
-            {
-              tag: "unsupportedToolProficiency",
-              source: "background",
-              toolId: String(optionId),
-            },
-          ),
+          characterBuildProjectionIssue({
+            tag: "unsupportedToolProficiency",
+            source: "background",
+            toolId: String(optionId),
+          }),
         ]);
       }
       const parsed = parseToolProficiencyId(String(optionId));
@@ -4161,13 +4121,11 @@ function finalizedBuildSurfaceToolProficiencyIds(
     if (subject.kind !== "tool") continue;
     if (!isCharacterBuildToolProficiencyId(subject.toolId)) {
       return Either.left([
-        characterBuildProjectionIssue(
-          {
-            tag: "unsupportedToolProficiency",
-            source: "surfaceGrant",
-            toolId: subject.toolId,
-          },
-        ),
+        characterBuildProjectionIssue({
+          tag: "unsupportedToolProficiency",
+          source: "surfaceGrant",
+          toolId: subject.toolId,
+        }),
       ]);
     }
     const parsed = parseToolProficiencyId(subject.toolId);

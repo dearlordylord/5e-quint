@@ -1,4 +1,5 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.passive-defense-projection
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import {
   characterBuildFeatureUnitIds,
   type CharacterBuild,
@@ -34,11 +35,15 @@ import {
 } from "./sheet-types.ts";
 import { isRecord, recordHasExactKeys } from "./stored-sheet-parser.ts";
 
-const FIENDISH_RESILIENCE_UNIT_ID = "warlock_fiendish_resilience" as const;
-const NATURES_WARD_UNIT_ID = "druid_natures_ward" as const;
-const AURA_OF_COURAGE_UNIT_ID = "paladin_aura_of_courage" as const;
-const SELF_RESTORATION_UNIT_ID = "monk_self_restoration" as const;
-const EMPOWERED_EVOCATION_UNIT_ID = "wizard_empowered_evocation" as const;
+const FIENDISH_RESILIENCE_UNIT_ID = authoredUnitId(
+  "warlock_fiendish_resilience",
+);
+const NATURES_WARD_UNIT_ID = authoredUnitId("druid_natures_ward");
+const AURA_OF_COURAGE_UNIT_ID = authoredUnitId("paladin_aura_of_courage");
+const SELF_RESTORATION_UNIT_ID = authoredUnitId("monk_self_restoration");
+const EMPOWERED_EVOCATION_UNIT_ID = authoredUnitId(
+  "wizard_empowered_evocation",
+);
 const NATURES_WARD_CONDITION_IMMUNITIES = ["poisoned"] as const;
 const AURA_OF_COURAGE_CONDITION_IMMUNITIES = ["frightened"] as const;
 const SELF_RESTORATION_CONDITION_CHOICES = [
@@ -66,7 +71,10 @@ export function fiendishResilienceFromInput(
   CharacterSheetFiendishResilience | undefined,
   CharacterSheetIssue
 > {
-  const featureOwned = ownedClassFeature(input, FIENDISH_RESILIENCE_UNIT_ID);
+  const featureOwned = ownedClassFeature(
+    input,
+    authoredUnitId(FIENDISH_RESILIENCE_UNIT_ID),
+  );
   if (Either.isLeft(featureOwned)) return Either.left(featureOwned.left);
   if (featureOwned.right === undefined) {
     return input.fiendishResilience === undefined
@@ -203,7 +211,7 @@ export function empoweredEvocationDamageRollModifier(input: {
 }): Either.Either<CharacterSheetEmpoweredEvocation, CharacterSheetIssue> {
   const featureOwned = ownedClassFeature(
     { build: input.sheet.build, unitLibrary: input.unitLibrary },
-    EMPOWERED_EVOCATION_UNIT_ID,
+    authoredUnitId(EMPOWERED_EVOCATION_UNIT_ID),
   );
   if (Either.isLeft(featureOwned)) return Either.left(featureOwned.left);
   if (featureOwned.right === undefined) {
@@ -282,7 +290,7 @@ function fiendishResilienceForSheet(input: {
 > {
   const featureOwned = ownedClassFeature(
     { build: input.sheet.build, unitLibrary: input.unitLibrary },
-    FIENDISH_RESILIENCE_UNIT_ID,
+    authoredUnitId(FIENDISH_RESILIENCE_UNIT_ID),
   );
   if (Either.isLeft(featureOwned)) return Either.left(featureOwned.left);
   if (featureOwned.right === undefined) {
@@ -306,7 +314,7 @@ function naturesWardForSheet(input: {
 }): Either.Either<CharacterSheetNatureWard | undefined, CharacterSheetIssue> {
   const featureOwned = ownedClassFeature(
     { build: input.sheet.build, unitLibrary: input.unitLibrary },
-    NATURES_WARD_UNIT_ID,
+    authoredUnitId(NATURES_WARD_UNIT_ID),
   );
   if (Either.isLeft(featureOwned)) return Either.left(featureOwned.left);
   if (featureOwned.right === undefined) return Either.right(undefined);
@@ -335,7 +343,7 @@ function auraOfCourageForSheet(input: {
 > {
   const featureOwned = ownedClassFeature(
     { build: input.sheet.build, unitLibrary: input.unitLibrary },
-    AURA_OF_COURAGE_UNIT_ID,
+    authoredUnitId(AURA_OF_COURAGE_UNIT_ID),
   );
   if (Either.isLeft(featureOwned)) return Either.left(featureOwned.left);
   if (featureOwned.right === undefined) return Either.right(undefined);
@@ -358,7 +366,7 @@ function selfRestorationForSheet(input: {
 > {
   const featureOwned = ownedClassFeature(
     { build: input.sheet.build, unitLibrary: input.unitLibrary },
-    SELF_RESTORATION_UNIT_ID,
+    authoredUnitId(SELF_RESTORATION_UNIT_ID),
   );
   if (Either.isLeft(featureOwned)) return Either.left(featureOwned.left);
   if (featureOwned.right === undefined) return Either.right(undefined);
@@ -379,7 +387,7 @@ function fiendishResilienceAfterRestSelection(input: {
 > {
   const featureOwned = ownedClassFeature(
     { build: input.sheet.build, unitLibrary: input.unitLibrary },
-    FIENDISH_RESILIENCE_UNIT_ID,
+    authoredUnitId(FIENDISH_RESILIENCE_UNIT_ID),
   );
   if (Either.isLeft(featureOwned)) return Either.left(featureOwned.left);
   if (

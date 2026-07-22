@@ -19,11 +19,9 @@ import {
   characterAttackSubjectForTest,
   concentrationSavingThrowFill,
 } from "./battle-runtime-test-support.ts";
-import {
-  attackDamageInterruptionFrame,
-  resumeInterruptedProcedure,
-  type BattleInterruptedProcedure,
-} from "./battle-state-execution.ts";
+import { type BattleInterruptedProcedure } from "./battle-state-execution.ts";
+import { resumeInterruptedProcedure } from "./battle-reducer/dispatcher.ts";
+import { attackDamageInterruptionFrame } from "./battle-reducer/attack-damage-events.ts";
 import {
   burningHandsUnitId,
   hideousLaughterDurationTicks,

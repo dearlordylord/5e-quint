@@ -1,3 +1,4 @@
+import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magic-weapon-enhancement
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 //
@@ -7,16 +8,10 @@ import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
 import type { SpellSlotLevel } from "@dnd/shared/types";
-import type {
-  Attachment,
-  EffectAtom,
-  SpellRecord,
-} from "@dnd/surface/surface/types";
+import type { Attachment, EffectAtom } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
 import {
-  maybeOpenInterruptWindow,
-  snapshotBattle,
   MAGIC_WEAPON_ENHANCEMENT_BONUSES,
   type BattleActDiscoveryCandidate,
   type BattleActiveEffect,
@@ -27,6 +22,7 @@ import {
   type MagicWeaponEnhancementBonus,
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
+import { maybeOpenInterruptWindow, snapshotBattle } from "../dispatcher.ts";
 import type { CombatantId } from "../../identity.ts";
 import { battleWeaponItemHasMagicWeaponEnhancement } from "../attack-damage-apply.ts";
 import { activeDruidWildShapeEffect } from "../druid-wild-shape.ts";
@@ -69,7 +65,7 @@ type MagicWeaponEnhancementProjection = {
 };
 
 function admitMagicWeaponEnhancement(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly MagicWeaponEnhancementInvocation[] {
   const projection = magicWeaponEnhancementProjection(spell);
@@ -103,7 +99,7 @@ function admitMagicWeaponEnhancement(
 }
 
 function magicWeaponEnhancementProjection(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
 ): MagicWeaponEnhancementProjection | null {
   if (
     spell.mechanics.family !== "ongoing_effect" ||
@@ -146,7 +142,7 @@ function magicWeaponAttachmentIsSupported(attachment: Attachment): boolean {
 
 function magicWeaponDurationEarlyEndIsSupported(
   duration: Extract<
-    SpellRecord["mechanics"]["duration"],
+    BattleSpellAdmissionSource["mechanics"]["duration"],
     { readonly kind: "timed" }
   >,
 ): boolean {

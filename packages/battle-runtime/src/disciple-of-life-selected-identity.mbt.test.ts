@@ -1,3 +1,4 @@
+import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.spell-slot-healing-modifier
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3PUTB-03 cleric_disciple_of_life
@@ -228,7 +229,7 @@ function syntheticHealingCantrip(): ReturnType<typeof spellRecord> {
   const cureWounds = spellRecord(cureWoundsUnitId);
   return {
     ...cureWounds,
-    id: syntheticHealingCantripUnitId,
+    id: parseSharedUnitId(syntheticHealingCantripUnitId),
     name: "Synthetic Healing Cantrip",
     mechanics: {
       ...cureWounds.mechanics,
@@ -362,7 +363,7 @@ function requireDiscipleOfLifeSupport(): Exclude<
 function requireDiscipleOfLifeUnitRef(): BattleUnitRef {
   const support = requireDiscipleOfLifeSupport();
   const unitRef = battleUnitRefWithSupportProfiles({
-    unitRef: { unitId: clericDiscipleOfLifeUnitId },
+    unitRef: { unitId: parseSharedUnitId(clericDiscipleOfLifeUnitId) },
     unit: discipleOfLifeUnit,
   });
   if (unitRef._tag === "Left") {

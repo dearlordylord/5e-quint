@@ -1,3 +1,4 @@
+import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-self-transformation-mode spell.invocation-glyph-stored-concentration-full-duration
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SELF_TRANSFORMATION_MODE BATTLE.SPELL.GLYPH_STORED_CONCENTRATION_FULL_DURATION
 //
@@ -18,26 +19,21 @@ import {
   AbilityModifier,
   type ProficiencyBonus as ProficiencyBonusType,
 } from "@dnd/shared/types";
-import type {
-  DamageType,
-  EffectAtom,
-  SpellRecord,
-} from "@dnd/surface/surface/types";
+import type { DamageType, EffectAtom } from "@dnd/surface/surface/types";
 import { Either, Match } from "effect";
 
 import {
-  maybeOpenInterruptWindow,
-  snapshotBattle,
   type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
   type BattleFill,
   type BattleResolutionResult,
   type BattleState,
   type SelfTransformationModeEffectPayload,
-  type SelfTransformationModeKind,
   type SelfTransformationModeSpellInvocation,
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
+import { maybeOpenInterruptWindow, snapshotBattle } from "../dispatcher.ts";
+import { type SelfTransformationModeKind } from "../domain-constants.ts";
 import { CombatantId } from "../../identity.ts";
 import { allocateBattleActiveEffectRef } from "../../active-effect/execution-ref.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";
@@ -80,7 +76,7 @@ type SelfTransformationModeResolveInput =
   SpellProcedureProfileResolveInput<SelfTransformationModeInvocation>;
 
 type SpellActivationPhase = Extract<
-  SpellRecord["mechanics"],
+  BattleSpellAdmissionSource["mechanics"],
   { readonly family: "activation" }
 >["phases"][number];
 type DirectActivationPhase = Extract<
@@ -91,7 +87,7 @@ type CastTimeEffectModeChoice = NonNullable<DirectActivationPhase["mode"]>;
 type CastTimeEffectModeOption = CastTimeEffectModeChoice["options"][number];
 
 function admitSelfTransformationMode(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly SelfTransformationModeInvocation[] {
   const projection = selfTransformationModeSpellProjection({
@@ -125,7 +121,7 @@ function admitSelfTransformationMode(
 
 function selfTransformationModeSpellProjection(input: {
   readonly actorId: CombatantId;
-  readonly spell: SpellRecord;
+  readonly spell: BattleSpellAdmissionSource;
   readonly spellcastingAbilityModifier: AbilityModifier;
   readonly proficiencyBonus: ProficiencyBonusType;
 }): Pick<

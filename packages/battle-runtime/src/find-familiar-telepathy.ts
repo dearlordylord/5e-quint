@@ -14,9 +14,9 @@ import type {
   BattleTargetSpatialFact,
 } from "./battle-state-execution.ts";
 import { currentActorId } from "./battle-reducer/creature-state-leaves.ts";
-import { combatantCanTakeReactions } from "./battle-reducer/creature-state.ts";
+import { combatantCanTakeReactions } from "./battle-reducer/creature-state-execution.ts";
 import { spellInvocationIsSpellcasting } from "./battle-reducer/spell-turn-resources.ts";
-import { characterSpellProcedure } from "./character-execution-admission.ts";
+import { characterSpellProcedure } from "./character-execution-queries.ts";
 import type { BattleSubject } from "./battle-subjects.ts";
 import { findFamiliarCompanionEntryForOwner } from "./find-familiar-state.ts";
 import type { BattleProcedureExecutionRef, CombatantId } from "./identity.ts";
@@ -119,7 +119,7 @@ export function shareFindFamiliarSenses(input: {
   const effect = findFamiliarSharedSensesEffect({
     casterId: input.casterId,
     familiarId: connection.familiarId,
-    familiarSenses: familiar.origin.statBlock.statBlock.senses ?? [],
+    familiarSenses: familiar.origin.mechanics.specialSenses,
   });
   const nextCaster = {
     ...caster,

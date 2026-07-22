@@ -1,4 +1,5 @@
-import { snapshotBattle } from "@dnd/battle-runtime"
+import { battlePresentedSnapshot } from "@dnd/battle-runtime"
+import { Either } from "effect"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import { EventLog, type EventLogEntry } from "#/components/EventLog.tsx"
@@ -28,10 +29,16 @@ export function BattlePage({
   const headerRef = useRef<HTMLDivElement | null>(null)
   const step = steps[cursor] ?? steps[FIRST_STEP]
   const lastStep = steps.length - 1
-  const snapshot = useMemo(() => snapshotBattle(step.state), [step.state])
-  const projection = useMemo(
-    () => computeWizardBattleScene({ meta, snapshot, step, stepIndex: cursor }),
-    [cursor, meta, snapshot, step]
+  const presentedSnapshot = useMemo(() => battlePresentedSnapshot(step.session), [step.session])
+  const projectionResult = useMemo(
+    () =>
+      Either.flatMap(presentedSnapshot, (snapshot) =>
+        Either.mapLeft(
+          computeWizardBattleScene({ meta, snapshot, step, stepIndex: cursor }),
+          (issue) => [issue] as const
+        )
+      ),
+    [cursor, meta, presentedSnapshot, step]
   )
   const logEntries: ReadonlyArray<EventLogEntry> = useMemo(
     () => steps.map((entry) => ({ detail: entry.detail, label: entry.title })),
@@ -101,6 +108,21 @@ export function BattlePage({
     window.addEventListener("keydown", handler)
     return () => window.removeEventListener("keydown", handler)
   }, [cursor, lastStep, stepTo])
+
+  if (Either.isLeft(projectionResult)) {
+    return (
+      <PageShell title="Battle Visualizer">
+        <ul role="alert">
+          {projectionResult.left.map((issue) => (
+            <li key={`${issue.combatantId}:${issue.reason}`}>
+              {`Battle presentation is unavailable for combatant ${issue.combatantId}: ${issue.reason}.`}
+            </li>
+          ))}
+        </ul>
+      </PageShell>
+    )
+  }
+  const projection = projectionResult.right
 
   return (
     <PageShell title="Battle Visualizer">

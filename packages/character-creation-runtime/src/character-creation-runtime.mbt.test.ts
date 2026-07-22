@@ -1,4 +1,5 @@
 // KERNEL-COVERAGE: parity-witness CREATION.DRAFT.FILL_BATCH_SLICE_REPLAY CREATION.CHOICE_DISCOVERY_CARDINALITY
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
@@ -47,7 +48,7 @@ if (unitCatalogResult.tag !== "ok") {
 const unitLibrary = unitCatalogResult.catalog;
 
 function loadoutEquipmentUnitIdRight(value: string) {
-  const result = loadoutEquipmentUnitId(value);
+  const result = loadoutEquipmentUnitId(authoredUnitId(value));
   if (Either.isLeft(result)) {
     throw new Error(`Invalid MBT loadout equipment Unit id: ${value}`);
   }
@@ -898,9 +899,7 @@ const rejectedFillBatchSteps: ReadonlyArray<RejectedFillBatchStep> = [
   },
   {
     name: "doRejectUnsupportedLanguage",
-    fills: (holes) => [
-      choiceFill(holes, "HLanguages", ["Dwarvish", "Elvish"]),
-    ],
+    fills: (holes) => [choiceFill(holes, "HLanguages", ["Dwarvish", "Elvish"])],
     expectedBatchIssueCodes: [],
     expectedFillIssues: [
       { fillIndex: 0, hole: "HLanguages", code: "unsupportedChoice" },

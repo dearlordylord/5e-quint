@@ -11,12 +11,12 @@ import { currentActorId } from "./creature-state-leaves.ts";
 import {
   combatantCanTakeReactions,
   isCharacterBattleCreatureState,
-} from "./creature-state.ts";
+} from "./creature-state-execution.ts";
 import {
   combatantHasSpellSlotUseThisTurn,
   spellHasAvailableSpend,
 } from "./spell-turn-resources.ts";
-import { supportedSpellActs } from "./spells-profiles.ts";
+import { supportedSpellActs } from "./supported-spell-acts.ts";
 import { shieldReactionSpellMatchesTrigger } from "./shield-reaction-trigger.ts";
 import {
   spellDamageHole,

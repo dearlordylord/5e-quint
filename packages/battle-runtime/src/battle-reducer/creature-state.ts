@@ -8,43 +8,28 @@
 // creature-state-leaves.ts to break the cluster_state ↔ movement_speed cycle.
 
 import { Either, Match } from "effect";
-import {
-  Hp,
-  movementFeet,
-  type Condition,
-  type ReadonlyNonEmptyArray,
-} from "@dnd/shared/types";
+import { movementFeet, type ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import type { HandUse } from "@dnd/shared/types";
 import {
   applyCondition,
   EMPTY_CONDITION_STATE,
   hasCondition,
-  isIncapacitated,
 } from "@dnd/shared-algebras/conditions-algebra";
 import type { ConditionState } from "@dnd/shared-algebras/conditions-algebra";
-import {
-  armorClass,
-  armorClassDelta,
-  currentArmorClass,
-  statBlockArmorClassState,
-} from "@dnd/shared-algebras/armor-class-algebra";
-import type { ArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
+import { statBlockArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import {
   resetDeathSaveRuntimeState,
   validDeathSaveRuntimeState,
 } from "@dnd/shared-algebras/death-saves-algebra";
 import { initiativeEntries } from "@dnd/shared-algebras/initiative-algebra";
-import { CONDITIONS as ALL_CONDITIONS } from "@dnd/shared/types";
 import type {
   StatBlockRecord,
-  StatBlockValue,
   Size,
   UnitRecord,
 } from "@dnd/surface/surface/types";
 import type { ZeroHpLifecycle } from "../zero-hp-lifecycle.ts";
 import {
   battleActiveEffectExecutionOrdinal,
-  battleAttackExecutionScopeRefForProcedureRef,
   battleExecutionScopeOrdinal,
   type BattleId,
   type BattleExecutionScopeOrdinal,
@@ -62,10 +47,8 @@ import {
   characterBattleMetamagicInitIssue,
   characterBattleMetamagicState,
   admitCharacterBattleResources,
-  characterBattleResourceIsPointPool,
   characterBattleSpellbookRitualSpellAccessInitIssue,
   characterBattleResourceInitIssue,
-  characterBattleResourceUsage,
   characterSpellcastingExecutionState,
   characterSpellcastingState,
   parseCharacterBattleInvocationSpellAccesses,
@@ -73,22 +56,17 @@ import {
   type CharacterBattleFeatureInit,
   type CharacterBattleResourceInit,
   type CharacterBattleResourceOwnership,
-  type CharacterBattleResourceState,
   type CharacterBattleSpellcastingStateInit,
 } from "../character-battle-resources.ts";
-import type { CharacterBattleRuntimeContext } from "../battle-runtime-context.ts";
+import type {
+  BattleStatBlockPresentationSource,
+  CharacterBattleRuntimeContext,
+} from "../battle-runtime-context.ts";
 import type {
   CharacterBattleClassLevel,
   CharacterBattleClassLevels,
 } from "../character-class-level.ts";
-import {
-  CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
-  characterUnitProcedure,
-  characterExecutionFromUnits,
-  characterProcedureBindingSnapshots,
-  type UnitFeatureProcedureExecution,
-} from "../character-execution-admission.ts";
-import { spellExecutionFacts } from "./spell-execution-facts.ts";
+import { characterExecutionFromUnits } from "../character-execution-admission.ts";
 import {
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
   ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SUPPORT_PROFILE,
@@ -112,58 +90,59 @@ import {
   type BattleUnitSupportProfileIssue,
   type SupportedUnitFeatureProfile,
 } from "../unit-feature-support.ts";
-import type { BattleSubject } from "../battle-subjects.ts";
 import {
-  KnockedOutOneHp,
-  KnockedOutConditionState,
-  zeroHpLifecycleIsTerminal,
-  type ActiveOngoingFeatureOccurrence,
-  type BattleActiveEffect,
-  type BattleCharacterResourceSnapshot,
   type BattleCreatureKnockOutLifecycle,
-  type BattleCreatureOriginSnapshot,
-  type BattleCreatureSnapshot,
   type BattleCreatureState,
-  type BattleCreatureZeroHpLifecycleSnapshot,
   type BattleHidePrerequisite,
   type BattleState,
   type BattleStateInitIssue,
   type CharacterBattleCreatureState,
-  type HpDamageProjection,
-  type KnockedOutConditionState as KnockedOutConditionStateT,
-  type KnockedOutOneHp as KnockedOutOneHpT,
-  type OngoingFeatureSourceKey,
   type StatBlockBattleCreatureState,
 } from "../battle-state-execution.ts";
+import {
+  KnockedOutOneHp,
+  KnockedOutConditionState,
+} from "./knocked-out-state.ts";
 import { battleStateInitIssue } from "./domain-helpers.ts";
 import {
-  SLOW_ACTIVE_PENALTIES_ARMOR_CLASS_DELTA,
-  WARDING_BOND_ARMOR_CLASS_BONUS,
-} from "./domain-constants.ts";
-import {
-  applyInitialZeroHpLifecycle,
-  effectiveHitPointMaximum,
-} from "./damage-apply.ts";
-import { battleMovementBudgetForActor } from "./movement-speed.ts";
-import {
-  combatantInvisibleBenefitDenied,
-  combatantWearingArmorCategory,
-  currentActorId,
-  grappledBy,
-} from "./creature-state-leaves.ts";
-import {
-  statBlockExecutionAdmissionCohort,
-  statBlockExecutionSnapshot,
-} from "../stat-block-execution.ts";
-import {
-  activeDruidWildShapeEffect,
-  combatantDruidWildShapeArmorClassState,
-  combatantEffectiveSize,
-  druidWildShapeAvailableFormsIssueForProfile,
-  removeEndedDruidWildShapeEffects,
-} from "./druid-wild-shape.ts";
-import { wildShapeCanUseWornLoadoutObject } from "./wild-shape-equipment.ts";
+  isCharacterBattleCreatureState,
+  literalStatBlockNumber,
+} from "./creature-state-execution.ts";
+export {
+  activeConditions,
+  activeEffectArmorClass,
+  activeOngoingFeatureOccurrencesForCombatant,
+  battleCreatureStateWithDamageProjection,
+  battleCreatureStateWithKnockOutPreservedConditions,
+  battleCreatureStateWithoutKnockOut,
+  battleSubjectActorId,
+  characterResourceSnapshot,
+  closeLegendaryActionWindow,
+  combatantCanTakeActions,
+  combatantCanTakeReactions,
+  combatantOriginSnapshot,
+  combatantSnapshot,
+  combatantZeroHpLifecycleSnapshot,
+  consumeLegendaryActionWindow,
+  isCharacterBattleCreatureState,
+  isLegendaryAttackSubject,
+  knockedOutConditionState,
+  knockedOutOneHp,
+  literalStatBlockNumber,
+  nonKnockOutLifecycleFields,
+  normalizeEarlyEndedOngoingFeatures,
+  ongoingFeatureProfileForSourceKey,
+  statBlockLegendaryActionWindowIsOpen,
+} from "./creature-state-execution.ts";
+import { applyInitialZeroHpLifecycle } from "./damage-apply.ts";
+import { statBlockExecutionAdmissionCohort } from "../stat-block-execution.ts";
+import { druidWildShapeAvailableFormsIssueForProfile } from "./druid-wild-shape.ts";
 import { admitCharacterAttackExecution } from "../attack-execution.ts";
+import { admitBattleStatBlockCombatant } from "../stat-block-combatant-admission.ts";
+import {
+  statBlockLanguagePresentation,
+  statBlockProcedurePresentations,
+} from "../stat-block-presentation.ts";
 
 export function assertCurrentHpWithinMaxHp(
   creatureInit: BattleCreatureInit["creatureInit"],
@@ -171,12 +150,6 @@ export function assertCurrentHpWithinMaxHp(
   if (creatureInit.currentHp > creatureInit.maxHp) {
     throw new Error("Battle initialization current HP exceeds max HP.");
   }
-}
-
-export function isCharacterBattleCreatureState(
-  actor: BattleCreatureState | undefined,
-): actor is CharacterBattleCreatureState {
-  return actor?.origin.kind === "character";
 }
 
 function isStatBlockBattleCreatureState(
@@ -200,6 +173,7 @@ export function battleCreatureStateAdmissionFromInit(
       readonly tag: "admitted";
       readonly creature: StatBlockBattleCreatureState;
       readonly nextScopeOrdinal: BattleExecutionScopeOrdinal;
+      readonly statBlockPresentation: BattleStatBlockPresentationSource;
     }
   | {
       readonly tag: "invalid";
@@ -217,7 +191,6 @@ export function battleCreatureStateAdmissionFromInit(
       : EMPTY_CONDITION_STATE;
   const base = {
     combatantId: input.combatantId,
-    displayName: input.displayName,
     initiative: input.initiative,
     maxHp: creatureInit.maxHp,
     tempHp: creatureInit.tempHp,
@@ -367,6 +340,7 @@ export function battleCreatureStateAdmissionFromInit(
       origin: {
         kind: "character",
         characterId: creatureInit.characterId,
+        displayName: input.displayName,
         execution: execution.right.execution,
         classLevels,
         knownLanguages: creatureInit.knownLanguages,
@@ -418,15 +392,22 @@ export function battleCreatureStateAdmissionFromInit(
     };
   }
 
-  const executionCohort = statBlockExecutionAdmissionCohort(
+  const admission = admitBattleStatBlockCombatant({
     battleId,
-    input.combatantId,
-    [creatureInit.statBlock],
+    combatantId: input.combatantId,
+    statBlock: creatureInit.statBlock,
     startingScopeOrdinal,
-  );
-  const admission = executionCohort.admissions[0];
-  if (admission === undefined) {
-    throw new Error("A stat block init always admits its one stat block.");
+  });
+  if (Either.isLeft(admission)) {
+    return {
+      tag: "invalid",
+      issues: [
+        {
+          tag: "battleUnitSupportProfileIssue",
+          message: admission.left.message,
+        },
+      ],
+    };
   }
   const admittedCreature = applyInitialZeroHpLifecycle({
     ...base,
@@ -436,7 +417,7 @@ export function battleCreatureStateAdmissionFromInit(
     size: literalCreatureSize(creatureInit.statBlock.statBlock.size),
     origin: {
       kind: "statBlock",
-      ...admission,
+      ...admission.right.origin,
     },
   });
   if (!isStatBlockBattleCreatureState(admittedCreature)) {
@@ -447,7 +428,15 @@ export function battleCreatureStateAdmissionFromInit(
   return {
     tag: "admitted",
     creature: admittedCreature,
-    nextScopeOrdinal: executionCohort.nextScopeOrdinal,
+    nextScopeOrdinal: admission.right.cursorTransition.to,
+    statBlockPresentation: {
+      displayName: input.displayName,
+      languages: statBlockLanguagePresentation(creatureInit.statBlock),
+      procedures: statBlockProcedurePresentations({
+        statBlock: creatureInit.statBlock,
+        execution: admission.right.origin.execution,
+      }),
+    },
   };
 }
 
@@ -606,308 +595,6 @@ export function combatantInitiativeInsertionIndex(
   return firstTie + tieIndex;
 }
 
-export function activeOngoingFeatureOccurrencesForCombatant(
-  combatant: BattleCreatureState,
-): ReadonlyMap<OngoingFeatureSourceKey, ActiveOngoingFeatureOccurrence> {
-  return new Map(
-    [...combatant.activeOngoingFeatureOccurrences].filter(([key]) => {
-      const profile = ongoingFeatureProfileForSourceKey(combatant, key);
-      return (
-        profile !== null &&
-        !profile.lifecycle.earlyEndConditions.some((condition) =>
-          hasCondition(combatant.conditions, condition),
-        ) &&
-        !profile.lifecycle.earlyEndArmorCategories.some((category) =>
-          combatantWearingArmorCategory(combatant, category),
-        )
-      );
-    }),
-  );
-}
-
-export function ongoingFeatureProfileForSourceKey(
-  combatant: BattleCreatureState,
-  key: OngoingFeatureSourceKey,
-): Extract<
-  UnitFeatureProcedureExecution,
-  { readonly kind: "ongoingFeature" }
-> | null {
-  if (!isCharacterBattleCreatureState(combatant)) {
-    return null;
-  }
-  const procedure = characterUnitProcedure(
-    combatant.origin.execution,
-    key,
-    CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
-  );
-  return procedure?.kind === "unitFeature" &&
-    procedure.execution.kind === "ongoingFeature"
-    ? procedure.execution
-    : null;
-}
-
-export function normalizeEarlyEndedOngoingFeatures(
-  state: BattleState,
-): BattleState {
-  const combatants = new Map<CombatantId, BattleCreatureState>();
-  let changed = false;
-  for (const [id, combatant] of state.combatants) {
-    const activeOngoingFeatureOccurrences =
-      activeOngoingFeatureOccurrencesForCombatant(combatant);
-    const activeEffects =
-      activeEffectsWithoutDetachedBoundHeldWeaponEffects(combatant);
-    if (
-      activeOngoingFeatureOccurrences.size !==
-        combatant.activeOngoingFeatureOccurrences.size ||
-      activeEffects.length !== combatant.activeEffects.length
-    ) {
-      changed = true;
-      combatants.set(id, {
-        ...combatant,
-        activeEffects,
-        activeOngoingFeatureOccurrences,
-      });
-    } else {
-      combatants.set(id, combatant);
-    }
-  }
-  return changed ? { ...state, combatants } : state;
-}
-
-function activeEffectsWithoutDetachedBoundHeldWeaponEffects(
-  combatant: BattleCreatureState,
-): BattleCreatureState["activeEffects"] {
-  if (!isCharacterBattleCreatureState(combatant)) {
-    return removeEndedDruidWildShapeEffects(combatant);
-  }
-  return removeEndedDruidWildShapeEffects(combatant).filter((effect) => {
-    const boundWeaponItemId = activeEffectBoundHeldWeaponItemId(effect);
-    return (
-      boundWeaponItemId === null ||
-      combatantCanStillHoldBoundWeaponItem(combatant, boundWeaponItemId)
-    );
-  });
-}
-
-function combatantCanStillHoldBoundWeaponItem(
-  combatant: CharacterBattleCreatureState,
-  itemId: string,
-): boolean {
-  const activeWildShape = activeDruidWildShapeEffect(combatant);
-  const main = combatant.origin.selectedLoadout.weapon;
-  const offHand = combatant.origin.selectedLoadout.offHandWeapon;
-  if (activeWildShape === null) {
-    return main?.itemId === itemId || offHand?.itemId === itemId;
-  }
-  return (
-    (main?.itemId === itemId &&
-      wildShapeCanUseWornLoadoutObject({
-        loadout: combatant.origin.selectedLoadout,
-        formLimbs: activeWildShape.formLimbs,
-        equipmentDisposition: activeWildShape.equipmentDisposition,
-        objectKind: "mainWeapon",
-        unitId: main.unitId,
-      })) ||
-    (offHand?.itemId === itemId &&
-      wildShapeCanUseWornLoadoutObject({
-        loadout: combatant.origin.selectedLoadout,
-        formLimbs: activeWildShape.formLimbs,
-        equipmentDisposition: activeWildShape.equipmentDisposition,
-        objectKind: "offHandWeapon",
-        unitId: offHand.unitId,
-      }))
-  );
-}
-
-function activeEffectBoundHeldWeaponItemId(
-  effect: BattleActiveEffect,
-): string | null {
-  return effect.kind === "spellWeaponAttackOverride" ||
-    effect.kind === "paladinSacredWeapon"
-    ? effect.weaponItemId
-    : null;
-}
-
-export function combatantSnapshot(
-  state: BattleState,
-  combatant: BattleCreatureState,
-): BattleCreatureSnapshot {
-  const sourceGrapple = grappledBy(state, combatant.combatantId) ?? null;
-  return {
-    combatantId: combatant.combatantId,
-    displayName: combatant.displayName,
-    initiative: combatant.initiative,
-    origin: combatantOriginSnapshot(combatant),
-    hp: combatant.hp,
-    maxHp: effectiveHitPointMaximum(combatant),
-    tempHp: combatant.tempHp,
-    nextActiveEffectOrdinal: combatant.nextActiveEffectOrdinal,
-    activeEffectRefs: combatant.activeEffects.flatMap((effect) =>
-      "effectRef" in effect ? [effect.effectRef] : [],
-    ),
-    armorClass: currentArmorClass(activeEffectArmorClass(combatant)),
-    size: combatantEffectiveSize(combatant),
-    zeroHpLifecycle: combatantZeroHpLifecycleSnapshot(combatant),
-    conditions: activeConditions(
-      combatant.conditions,
-      sourceGrapple !== null,
-      combatant.hidden !== null && !combatantInvisibleBenefitDenied(combatant),
-    ),
-    concentrating: combatant.concentration !== null,
-    dodging: combatant.dodging,
-    reactionAvailable: combatant.reactionAvailable,
-    movement: battleMovementBudgetForActor(state, combatant.combatantId),
-  };
-}
-
-export function combatantOriginSnapshot(
-  combatant: BattleCreatureState,
-): BattleCreatureOriginSnapshot {
-  return Match.value(combatant.origin).pipe(
-    Match.when({ kind: "character" }, (origin) => ({
-      kind: "character" as const,
-      characterId: origin.characterId,
-      execution: {
-        scopeRef: origin.execution.scopeRef,
-        nextProcedureOrdinal: origin.execution.nextProcedureOrdinal,
-        procedureBindings: characterProcedureBindingSnapshots(
-          origin.execution,
-          (invocation) => spellExecutionFacts(invocation),
-        ),
-      },
-      attackExecution: {
-        scopeRef: battleAttackExecutionScopeRefForProcedureRef(
-          origin.unarmedStrike.procedureRef,
-        ),
-        attackProcedureRef: origin.attack?.procedureRef ?? null,
-        unarmedStrikeProcedureRef: origin.unarmedStrike.procedureRef,
-        offHandAttackProcedureRef: origin.offHandAttack?.procedureRef ?? null,
-      },
-      resources: origin.resources.map(characterResourceSnapshot),
-      druidWildShapeAvailableForms: (
-        origin.druidWildShapeAvailableForms ?? []
-      ).map((admission) => ({
-        statBlockId: admission.statBlock.id,
-        execution: statBlockExecutionSnapshot(admission.execution),
-      })),
-      spellcasting:
-        origin.spellcasting === undefined
-          ? null
-          : { spellSlots: origin.spellcasting.spellSlots },
-    })),
-    Match.when({ kind: "statBlock" }, (origin) => ({
-      kind: "statBlock" as const,
-      statBlockId: origin.statBlock.id,
-      execution: statBlockExecutionSnapshot(origin.execution),
-    })),
-    Match.exhaustive,
-  );
-}
-
-export function characterResourceSnapshot(
-  resource: CharacterBattleResourceState,
-): BattleCharacterResourceSnapshot {
-  if (characterBattleResourceIsPointPool(resource)) {
-    return {
-      resourcePoolRef: resource.resourcePoolRef,
-      usage: "pointPool",
-      pointsRemaining: resource.pointsRemaining,
-    };
-  }
-  const common = {
-    resourcePoolRef: resource.resourcePoolRef,
-    usedThisTurn: resource.usedThisTurn,
-  };
-  const usage = characterBattleResourceUsage(resource);
-  const usesRemaining =
-    "usesRemaining" in resource ? resource.usesRemaining : undefined;
-  if (usage === "unlimited" || usesRemaining === undefined) {
-    return {
-      ...common,
-      usage: "unlimited",
-    };
-  }
-  return {
-    ...common,
-    usage: "limited",
-    usesRemaining,
-  };
-}
-
-export function activeEffectArmorClass(
-  combatant: BattleCreatureState,
-): ArmorClassState {
-  const baseArmorClassEffect = combatant.activeEffects.find(
-    (effect) => effect.kind === "spellBaseArmorClass",
-  );
-  const baseArmorClass =
-    combatantDruidWildShapeArmorClassState(combatant) ?? combatant.armorClass;
-  const withBase =
-    baseArmorClassEffect === undefined || baseArmorClass.base.kind === "armor"
-      ? baseArmorClass
-      : {
-          ...baseArmorClass,
-          base: {
-            kind: "ability_sum" as const,
-            base: armorClass(baseArmorClassEffect.base),
-            abilityModifiers: [baseArmorClassEffect.ability] as const,
-            source: "spell_base_plus_ability" as const,
-          },
-        };
-  const spellArmorClassBonuses = combatant.activeEffects.flatMap((effect) =>
-    effect.kind === "spellArmorClassBonus"
-      ? [
-          {
-            kind: "flat" as const,
-            bonus: armorClassDelta(effect.bonus),
-          },
-        ]
-      : effect.kind === "wardingBond"
-        ? [
-            {
-              kind: "flat" as const,
-              bonus: armorClassDelta(WARDING_BOND_ARMOR_CLASS_BONUS),
-            },
-          ]
-        : [],
-  );
-  const slowActivePenaltyEffect = combatant.activeEffects.find(
-    (effect) => effect.kind === "slowActivePenalties",
-  );
-  const armorClassBonuses =
-    slowActivePenaltyEffect === undefined
-      ? spellArmorClassBonuses
-      : [
-          ...spellArmorClassBonuses,
-          {
-            kind: "flat" as const,
-            bonus: armorClassDelta(SLOW_ACTIVE_PENALTIES_ARMOR_CLASS_DELTA),
-          },
-        ];
-  const withBonuses =
-    armorClassBonuses.length === 0
-      ? withBase
-      : {
-          ...withBase,
-          bonuses: [...withBase.bonuses, ...armorClassBonuses],
-        };
-  const spellArmorClassFloors = combatant.activeEffects.flatMap((effect) =>
-    effect.kind === "spellArmorClassFloor"
-      ? [
-          {
-            floor: effect.floor,
-          },
-        ]
-      : [],
-  );
-  return spellArmorClassFloors.length === 0
-    ? withBonuses
-    : {
-        ...withBonuses,
-        floors: [...withBonuses.floors, ...spellArmorClassFloors],
-      };
-}
-
 export function initialZeroHpLifecycleForCreatureOrigin(
   creatureInit: BattleCreatureInit["creatureInit"],
 ): ZeroHpLifecycle {
@@ -935,24 +622,6 @@ export function initialZeroHpLifecycleForCreatureOrigin(
       }
       return zeroHpLifecycle;
     }),
-    Match.exhaustive,
-  );
-}
-
-export function combatantZeroHpLifecycleSnapshot(
-  combatant: BattleCreatureState,
-): BattleCreatureZeroHpLifecycleSnapshot {
-  return Match.value(combatant.zeroHpLifecycle).pipe(
-    Match.when({ policy: "diesAtZeroHp" }, (lifecycle) => ({
-      policy: lifecycle.policy,
-      dead: combatant.hp === 0,
-    })),
-    Match.when({ policy: "usesDeathSavingThrows" }, (lifecycle) => ({
-      policy: lifecycle.policy,
-      deathSaves: lifecycle.deathSaves.deathSaves,
-      stable: lifecycle.deathSaves.stable,
-      dead: lifecycle.deathSaves.dead,
-    })),
     Match.exhaustive,
   );
 }
@@ -1099,67 +768,6 @@ function requireCharacterSpellcastingStateInit(
   };
 }
 
-export function knockedOutOneHp(): KnockedOutOneHpT {
-  return KnockedOutOneHp(Hp(1));
-}
-
-export function knockedOutConditionState(
-  conditions: ConditionState,
-): KnockedOutConditionStateT {
-  return KnockedOutConditionState(applyCondition(conditions, "unconscious"));
-}
-
-export function battleCreatureStateWithKnockOutPreservedConditions(
-  combatant: BattleCreatureState,
-  conditions: ConditionState,
-): BattleCreatureState {
-  if (combatant.positiveHpUnconscious !== null) {
-    return {
-      ...combatant,
-      conditions: knockedOutConditionState(conditions),
-    };
-  }
-
-  return { ...combatant, conditions };
-}
-
-export function nonKnockOutLifecycleFields(
-  hp: Hp,
-  conditions: ConditionState,
-): BattleCreatureKnockOutLifecycle {
-  return { hp, conditions, positiveHpUnconscious: null };
-}
-
-export function battleCreatureStateWithoutKnockOut(
-  combatant: BattleCreatureState,
-  hp: Hp,
-  conditions: ConditionState,
-): BattleCreatureState {
-  return { ...combatant, ...nonKnockOutLifecycleFields(hp, conditions) };
-}
-
-export function battleCreatureStateWithDamageProjection(
-  combatant: BattleCreatureState,
-  projection: HpDamageProjection,
-): BattleCreatureState {
-  const tempHp = Hp(projection.currentTempHp - projection.tempHpAbsorbed);
-  if (
-    combatant.positiveHpUnconscious !== null &&
-    Number(projection.nextHp) === 1
-  ) {
-    return { ...combatant, hp: knockedOutOneHp(), tempHp };
-  }
-
-  return {
-    ...battleCreatureStateWithoutKnockOut(
-      combatant,
-      projection.nextHp,
-      combatant.conditions,
-    ),
-    tempHp,
-  };
-}
-
 export function initialKnockOutLifecycleFields(
   creatureInit: BattleCreatureInit["creatureInit"],
   conditions: ConditionState,
@@ -1195,97 +803,6 @@ export function combatantKnockedOutUnconscious(
     );
   }
   return Either.right(combatant.positiveHpUnconscious);
-}
-
-export function combatantCanTakeActions(
-  combatant: BattleCreatureState | undefined,
-): combatant is BattleCreatureState {
-  return (
-    combatant != null &&
-    !isIncapacitated(combatant.conditions) &&
-    !zeroHpLifecycleIsTerminal(combatant)
-  );
-}
-
-export function combatantCanTakeReactions(
-  combatant: BattleCreatureState | undefined,
-): boolean {
-  return (
-    combatantCanTakeActions(combatant) &&
-    combatant.reactionAvailable &&
-    !combatant.activeEffects.some(
-      (effect) => effect.kind === "slowActivePenalties",
-    )
-  );
-}
-
-export function activeConditions(
-  state: ConditionState,
-  includeGrappled = false,
-  includeHiddenInvisible = false,
-): readonly Condition[] {
-  return ALL_CONDITIONS.filter(
-    (condition) =>
-      hasCondition(state, condition) ||
-      (condition === "grappled" && includeGrappled) ||
-      (condition === "invisible" && includeHiddenInvisible),
-  );
-}
-
-export function battleSubjectActorId(subject: BattleSubject): CombatantId {
-  return subject.actorId;
-}
-
-export function isLegendaryAttackSubject(
-  state: BattleState,
-  subject: BattleSubject,
-): boolean {
-  if (
-    subject.tag !== "action" ||
-    subject.action !== "attack" ||
-    subject.procedureRef === undefined
-  ) {
-    return false;
-  }
-  const actor = state.combatants.get(subject.actorId);
-  if (actor?.origin.kind !== "statBlock") return false;
-  const binding = actor.origin.execution.procedureBindings.find(
-    (candidate) => candidate.procedureRef === subject.procedureRef,
-  );
-  return (
-    binding?.procedure.kind === "attack" &&
-    binding.procedure.section === "legendaryActions"
-  );
-}
-
-export function statBlockLegendaryActionWindowIsOpen(
-  state: BattleState,
-  actorId: CombatantId,
-): boolean {
-  return (
-    state.legendaryActionWindow !== null &&
-    !state.legendaryActionWindow.consumed &&
-    actorId !== state.legendaryActionWindow.afterTurnActorId &&
-    actorId !== currentActorId(state)
-  );
-}
-
-export function closeLegendaryActionWindow(state: BattleState): BattleState {
-  return state.legendaryActionWindow === null
-    ? state
-    : { ...state, legendaryActionWindow: null };
-}
-
-export function consumeLegendaryActionWindow(state: BattleState): BattleState {
-  return state.legendaryActionWindow === null
-    ? state
-    : {
-        ...state,
-        legendaryActionWindow: {
-          ...state.legendaryActionWindow,
-          consumed: true,
-        },
-      };
 }
 
 function characterSupportedUnitFeatureProfiles(
@@ -1839,13 +1356,4 @@ export function unitRefSupportsProfileKind(
           typeof profile === "object" && profile.kind === supportProfileKind,
       ),
   );
-}
-
-export function literalStatBlockNumber(value: StatBlockValue): number {
-  if (value.kind !== "literal") {
-    throw new Error(
-      "Battle runtime initialization requires literal Stat Block numeric values.",
-    );
-  }
-  return value.value;
 }

@@ -43,7 +43,7 @@ import {
   webAreaId,
   webUnitId,
 } from "./unit-profile-admission-catalog-support.ts";
-import { EMPOWERED_SPELL_REROLL_UNSUPPORTED_DAMAGE_ROLL_OWNER_MESSAGE } from "./battle-state-execution.ts";
+import { EMPOWERED_SPELL_REROLL_UNSUPPORTED_DAMAGE_ROLL_OWNER_MESSAGE } from "./battle-reducer/spell-reroll-issues.ts";
 import {
   battleActiveEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
@@ -264,7 +264,7 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
     expect(spellHoleInvocation(state, [area])).toEqual(
       expect.objectContaining({
         procedure: "spikeGrowthMovementHazard",
-        spell,
+        spellRuleFacts: expect.objectContaining({ spellId: spell.id }),
         resource: { tag: "spellSlot", slotLevel: 2 },
         targeting: { kind: "pointOriginSphere", radiusFeet: movementFeet(20) },
         durationTicks: spikeGrowthDurationTicks,

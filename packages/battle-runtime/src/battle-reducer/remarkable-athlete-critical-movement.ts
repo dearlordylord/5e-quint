@@ -7,7 +7,7 @@ import type {
   BattleSubject,
 } from "../battle-subjects.ts";
 import type { CombatantId } from "../identity.ts";
-import type { UnitFeatureProcedureExecution } from "../character-execution-admission.ts";
+import type { UnitFeatureProcedureExecution } from "../character-execution-vocabulary.ts";
 import type {
   BattleCreatureState,
   BattleFill,
@@ -16,7 +16,7 @@ import type {
   BattleState,
   BattleUnitFeatureDecisionHole,
 } from "../battle-state-execution.ts";
-import { isCharacterBattleCreatureState } from "./creature-state.ts";
+import { isCharacterBattleCreatureState } from "./creature-state-execution.ts";
 import {
   REMARKABLE_ATHLETE_CRITICAL_HIT_MOVEMENT_DECISION_HOLE_ID,
   REMARKABLE_ATHLETE_CRITICAL_HIT_MOVEMENT_DECISION_HOLE_INSTANCE,

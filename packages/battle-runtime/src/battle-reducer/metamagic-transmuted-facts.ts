@@ -1,5 +1,5 @@
 import type { DamageType } from "@dnd/surface/surface/types";
-import type { CharacterBattleMetamagicEffectKind } from "../character-battle-resources.ts";
+import type { CharacterBattleMetamagicEffectKind } from "../character-battle-resource-execution.ts";
 
 export const TRANSMUTED_METAMAGIC_EFFECT_KIND =
   "damage_type_substitution" satisfies CharacterBattleMetamagicEffectKind;

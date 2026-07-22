@@ -1,4 +1,4 @@
-import { BattleSnapshotSchema } from "@dnd/battle-runtime";
+import { BattlePresentedSnapshotSchema } from "@dnd/battle-runtime";
 import { Schema } from "effect";
 
 import { CharacterSessionRowSchema } from "./character-tool-output.ts";
@@ -41,7 +41,7 @@ export type AdminMirrorSessionSummary =
 
 export const AdminSessionProjectionSchema = Schema.Struct({
   session: AdminMirrorSessionSummarySchema,
-  battle: Schema.Union(BattleSnapshotSchema, Schema.Null),
+  battle: Schema.Union(BattlePresentedSnapshotSchema, Schema.Null),
   characters: Schema.Array(CharacterSessionRowSchema),
 });
 export type AdminSessionProjection = typeof AdminSessionProjectionSchema.Type;

@@ -2385,7 +2385,7 @@ function runSelfTest(root) {
       "const selectedUnitIdentityReplays = [",
       "  {",
       '    taskId: "QMBT10",',
-      '    unitId: "fixture_unit",',
+      '    unitId: authoredUnitId("fixture_unit"),',
       '    actions: ["doReachableAction"],',
       "    sequences: [],",
       "  },",
@@ -2596,7 +2596,7 @@ function runSelfTest(root) {
       "packages/battle-runtime/src/unreachable-selected-identity.mbt.test.ts",
     );
     const selectedReplayText = [
-      'const fixtureUnitId = "fixture_unit";',
+      'const fixtureUnitId = authoredUnitId("fixture_unit");',
       "const selectedUnitIdentityReplays = [",
       "  {",
       '    taskId: "QMBT10",',

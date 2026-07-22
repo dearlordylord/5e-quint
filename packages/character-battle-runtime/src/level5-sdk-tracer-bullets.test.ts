@@ -1,3 +1,5 @@
+import { statBlockId as authoredStatBlockId } from "@dnd/shared/game-facts";
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import {
   battleActSpellPresentation,
   battleActSpellSlotPresentation,
@@ -375,9 +377,9 @@ describe("level 5 SDK tracer bullets", () => {
       actorId: extraAttackBarbarianId,
       battleIdText: "battle:l5-tracer-extra-attack-barbarian",
       characterIdText: "character:l5-tracer-extra-attack-barbarian",
-      classUnitId: "class_barbarian",
-      sourceUnitId: barbarianExtraAttackUnitId,
-      weaponUnitId: "weapon_longsword",
+      classUnitId: authoredUnitId("class_barbarian"),
+      sourceUnitId: authoredUnitId(barbarianExtraAttackUnitId),
+      weaponUnitId: authoredUnitId("weapon_longsword"),
       attackName: "Longsword",
       abilityScores: {
         str: 16,
@@ -395,9 +397,9 @@ describe("level 5 SDK tracer bullets", () => {
       actorId: extraAttackFighterId,
       battleIdText: "battle:l5-tracer-extra-attack-fighter",
       characterIdText: "character:l5-tracer-extra-attack-fighter",
-      classUnitId: "class_fighter",
-      sourceUnitId: fighterExtraAttackUnitId,
-      weaponUnitId: "weapon_longsword",
+      classUnitId: authoredUnitId("class_fighter"),
+      sourceUnitId: authoredUnitId(fighterExtraAttackUnitId),
+      weaponUnitId: authoredUnitId("weapon_longsword"),
       attackName: "Longsword",
       abilityScores: {
         str: 16,
@@ -415,10 +417,10 @@ describe("level 5 SDK tracer bullets", () => {
       actorId: legalExtraAttackFighterId,
       battleIdText: "battle:l5-tracer-legal-extra-attack-fighter",
       characterIdText: "character:l5-tracer-legal-extra-attack-fighter",
-      classUnitId: "class_fighter",
+      classUnitId: authoredUnitId("class_fighter"),
       build: levelFiveLegalFighterBuild(),
-      sourceUnitId: fighterExtraAttackUnitId,
-      weaponUnitId: "weapon_longsword",
+      sourceUnitId: authoredUnitId(fighterExtraAttackUnitId),
+      weaponUnitId: authoredUnitId("weapon_longsword"),
       attackName: "Longsword",
     });
   });
@@ -428,9 +430,9 @@ describe("level 5 SDK tracer bullets", () => {
       actorId: extraAttackPaladinId,
       battleIdText: "battle:l5-tracer-extra-attack-paladin",
       characterIdText: "character:l5-tracer-extra-attack-paladin",
-      classUnitId: "class_paladin",
-      sourceUnitId: paladinExtraAttackUnitId,
-      weaponUnitId: "weapon_longsword",
+      classUnitId: authoredUnitId("class_paladin"),
+      sourceUnitId: authoredUnitId(paladinExtraAttackUnitId),
+      weaponUnitId: authoredUnitId("weapon_longsword"),
       attackName: "Longsword",
       abilityScores: {
         str: 16,
@@ -448,9 +450,9 @@ describe("level 5 SDK tracer bullets", () => {
       actorId: extraAttackRangerId,
       battleIdText: "battle:l5-tracer-extra-attack-ranger",
       characterIdText: "character:l5-tracer-extra-attack-ranger",
-      classUnitId: "class_ranger",
-      sourceUnitId: rangerExtraAttackUnitId,
-      weaponUnitId: "weapon_longsword",
+      classUnitId: authoredUnitId("class_ranger"),
+      sourceUnitId: authoredUnitId(rangerExtraAttackUnitId),
+      weaponUnitId: authoredUnitId("weapon_longsword"),
       attackName: "Longsword",
       abilityScores: {
         str: 16,
@@ -468,9 +470,9 @@ describe("level 5 SDK tracer bullets", () => {
       actorId: extraAttackMonkId,
       battleIdText: "battle:l5-tracer-extra-attack",
       characterIdText: "character:l5-tracer-extra-attack",
-      classUnitId: "class_monk",
-      sourceUnitId: monkExtraAttackUnitId,
-      weaponUnitId: "weapon_dagger",
+      classUnitId: authoredUnitId("class_monk"),
+      sourceUnitId: authoredUnitId(monkExtraAttackUnitId),
+      weaponUnitId: authoredUnitId("weapon_dagger"),
       attackName: "Dagger",
       abilityScores: {
         str: 10,
@@ -490,8 +492,8 @@ describe("level 5 SDK tracer bullets", () => {
         characterSheet({
           characterIdText: "character:l5-tracer-stunning-strike",
           build: levelFiveMartialBuild({
-            classUnitId: "class_monk",
-            weaponUnitId: "weapon_dagger",
+            classUnitId: authoredUnitId("class_monk"),
+            weaponUnitId: authoredUnitId("weapon_dagger"),
             abilityScores: {
               str: 10,
               dex: 16,
@@ -506,7 +508,11 @@ describe("level 5 SDK tracer bullets", () => {
         }),
       ],
       monsters: [
-        monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
+        monsterBattleInput(
+          monsterId,
+          10,
+          srdStatBlock(authoredStatBlockId("stat_block_skeleton")),
+        ),
       ],
     });
     const state = session.state;
@@ -621,8 +627,8 @@ describe("level 5 SDK tracer bullets", () => {
         characterSheet({
           characterIdText: "character:l5-tracer-cunning-strike",
           build: levelFiveMartialBuild({
-            classUnitId: "class_rogue",
-            weaponUnitId: "weapon_dagger",
+            classUnitId: authoredUnitId("class_rogue"),
+            weaponUnitId: authoredUnitId("weapon_dagger"),
             abilityScores: {
               str: 10,
               dex: 16,
@@ -638,17 +644,22 @@ describe("level 5 SDK tracer bullets", () => {
         characterSheet({
           characterIdText: "character:l5-tracer-cunning-strike-ally",
           build: levelFiveMartialBuild({
-            classUnitId: "class_fighter",
-            weaponUnitId: "weapon_longsword",
+            classUnitId: authoredUnitId("class_fighter"),
+            weaponUnitId: authoredUnitId("weapon_longsword"),
           }),
           combatantId: rogueAllyId,
           initiative: 15,
         }),
       ],
       monsters: [
-        monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton"), {
-          tempHp: 40,
-        }),
+        monsterBattleInput(
+          monsterId,
+          10,
+          srdStatBlock(authoredStatBlockId("stat_block_skeleton")),
+          {
+            tempHp: 40,
+          },
+        ),
       ],
     });
     const state = session.state;
@@ -767,8 +778,8 @@ describe("level 5 SDK tracer bullets", () => {
         characterSheet({
           characterIdText: "character:l5-tracer-uncanny-dodge",
           build: levelFiveMartialBuild({
-            classUnitId: "class_rogue",
-            weaponUnitId: "weapon_dagger",
+            classUnitId: authoredUnitId("class_rogue"),
+            weaponUnitId: authoredUnitId("weapon_dagger"),
             abilityScores: {
               str: 10,
               dex: 16,
@@ -786,7 +797,7 @@ describe("level 5 SDK tracer bullets", () => {
         monsterBattleInput(
           monsterId,
           20,
-          srdStatBlock("stat_block_goblin_warrior"),
+          srdStatBlock(authoredStatBlockId("stat_block_goblin_warrior")),
         ),
       ],
     });
@@ -885,16 +896,18 @@ describe("level 5 SDK tracer bullets", () => {
   test("Haste casts from a level-5 spellcaster sheet and projects speed, AC, Dexterity save, action, slot, and lethargy behavior", () => {
     const hasteCases = [
       {
-        sourceUnitId: "class_sorcerer",
+        sourceUnitId: authoredUnitId("class_sorcerer"),
         casterId: hasteSorcererId,
         build: levelFiveSorcererBuild({
-          preparedSpells: [hasteSpellId],
+          preparedSpells: [authoredUnitId(hasteSpellId)],
         }),
       },
       {
-        sourceUnitId: "class_wizard",
+        sourceUnitId: authoredUnitId("class_wizard"),
         casterId: wizardId,
-        build: levelFiveWizardBuild({ preparedSpells: [hasteSpellId] }),
+        build: levelFiveWizardBuild({
+          preparedSpells: [authoredUnitId(hasteSpellId)],
+        }),
       },
     ] as const satisfies ReadonlyArray<HasteClassAccessCase>;
 
@@ -915,7 +928,7 @@ describe("level 5 SDK tracer bullets", () => {
           monsterBattleInput(
             monsterId,
             10,
-            srdStatBlock("stat_block_skeleton"),
+            srdStatBlock(authoredStatBlockId("stat_block_skeleton")),
           ),
         ],
       });
@@ -1032,26 +1045,26 @@ describe("level 5 SDK tracer bullets", () => {
   test("Protection from Energy projects Cleric, Druid, and Sorcerer access while the Wizard seed halves only the chosen damage type", () => {
     const protectionFromEnergyCases = [
       {
-        sourceUnitId: "class_cleric",
+        sourceUnitId: authoredUnitId("class_cleric"),
         casterId: protectionFromEnergyClericId,
         build: levelFiveClericBuild({
-          preparedSpells: [protectionFromEnergySpellId],
+          preparedSpells: [authoredUnitId(protectionFromEnergySpellId)],
         }),
       },
       {
-        sourceUnitId: "class_druid",
+        sourceUnitId: authoredUnitId("class_druid"),
         casterId: protectionFromEnergyDruidId,
         build: levelFiveDruidBuild({
-          preparedSpells: [protectionFromEnergySpellId],
+          preparedSpells: [authoredUnitId(protectionFromEnergySpellId)],
         }),
         druidWildShapeKnownFormStatBlockIds:
           levelFiveDruidWildShapeKnownFormStatBlockIds,
       },
       {
-        sourceUnitId: "class_sorcerer",
+        sourceUnitId: authoredUnitId("class_sorcerer"),
         casterId: protectionFromEnergySorcererId,
         build: levelFiveSorcererBuild({
-          preparedSpells: [protectionFromEnergySpellId],
+          preparedSpells: [authoredUnitId(protectionFromEnergySpellId)],
         }),
       },
     ] as const satisfies ReadonlyArray<ProtectionFromEnergyClassAccessCase>;
@@ -1084,26 +1097,26 @@ describe("level 5 SDK tracer bullets", () => {
   test("Sleet Storm projects Druid, Sorcerer, and Wizard access and applies caller-supplied Cylinder hazards", () => {
     const sleetStormCases: readonly SleetStormClassAccessCase[] = [
       {
-        sourceUnitId: "class_druid",
+        sourceUnitId: authoredUnitId("class_druid"),
         casterId: sleetStormDruidId,
         build: levelFiveDruidBuild({
-          preparedSpells: [sleetStormSpellId],
+          preparedSpells: [authoredUnitId(sleetStormSpellId)],
         }),
         druidWildShapeKnownFormStatBlockIds:
           levelFiveDruidWildShapeKnownFormStatBlockIds,
       },
       {
-        sourceUnitId: "class_sorcerer",
+        sourceUnitId: authoredUnitId("class_sorcerer"),
         casterId: sleetStormSorcererId,
         build: levelFiveSorcererBuild({
-          preparedSpells: [sleetStormSpellId],
+          preparedSpells: [authoredUnitId(sleetStormSpellId)],
         }),
       },
       {
-        sourceUnitId: "class_wizard",
+        sourceUnitId: authoredUnitId("class_wizard"),
         casterId: sleetStormWizardId,
         build: levelFiveWizardBuild({
-          preparedSpells: [sleetStormSpellId],
+          preparedSpells: [authoredUnitId(sleetStormSpellId)],
         }),
       },
     ];
@@ -1133,7 +1146,7 @@ describe("level 5 SDK tracer bullets", () => {
           monsterBattleInput(
             sleetStormTargetId,
             10,
-            srdStatBlock("stat_block_sphinx_of_wonder"),
+            srdStatBlock(authoredStatBlockId("stat_block_sphinx_of_wonder")),
           ),
         ],
       });
@@ -1357,24 +1370,24 @@ describe("level 5 SDK tracer bullets", () => {
   test("Slow projects Bard, Sorcerer, and Wizard access and applies failed-save active penalties", () => {
     const slowCases = [
       {
-        sourceUnitId: "class_bard",
+        sourceUnitId: authoredUnitId("class_bard"),
         casterId: slowBardId,
         build: levelFiveBardBuild({
-          preparedSpells: [slowSpellId],
+          preparedSpells: [authoredUnitId(slowSpellId)],
         }),
       },
       {
-        sourceUnitId: "class_sorcerer",
+        sourceUnitId: authoredUnitId("class_sorcerer"),
         casterId: slowSorcererId,
         build: levelFiveSorcererBuild({
-          preparedSpells: [slowSpellId],
+          preparedSpells: [authoredUnitId(slowSpellId)],
         }),
       },
       {
-        sourceUnitId: "class_wizard",
+        sourceUnitId: authoredUnitId("class_wizard"),
         casterId: slowWizardId,
         build: levelFiveWizardBuild({
-          preparedSpells: [slowSpellId],
+          preparedSpells: [authoredUnitId(slowSpellId)],
         }),
       },
     ] as const satisfies ReadonlyArray<SlowClassAccessCase>;
@@ -1396,12 +1409,12 @@ describe("level 5 SDK tracer bullets", () => {
           monsterBattleInput(
             slowFailedSaveTargetId,
             10,
-            srdStatBlock("stat_block_skeleton"),
+            srdStatBlock(authoredStatBlockId("stat_block_skeleton")),
           ),
           monsterBattleInput(
             slowSuccessfulSaveTargetId,
             9,
-            srdStatBlock("stat_block_skeleton"),
+            srdStatBlock(authoredStatBlockId("stat_block_skeleton")),
           ),
         ],
       });
@@ -1568,24 +1581,24 @@ describe("level 5 SDK tracer bullets", () => {
   test("Counterspell projects Sorcerer, Warlock, and Wizard access and interrupts a spell-cast Reaction", () => {
     const counterspellCases = [
       {
-        sourceUnitId: "class_sorcerer",
+        sourceUnitId: authoredUnitId("class_sorcerer"),
         reactorId: counterspellSorcererId,
         build: levelFiveSorcererBuild({
-          preparedSpells: [counterspellSpellId],
+          preparedSpells: [authoredUnitId(counterspellSpellId)],
         }),
       },
       {
-        sourceUnitId: "class_warlock",
+        sourceUnitId: authoredUnitId("class_warlock"),
         reactorId: counterspellWarlockId,
         build: levelFiveWarlockBuild({
-          preparedSpells: [counterspellSpellId],
+          preparedSpells: [authoredUnitId(counterspellSpellId)],
         }),
       },
       {
-        sourceUnitId: "class_wizard",
+        sourceUnitId: authoredUnitId("class_wizard"),
         reactorId: counterspellWizardId,
         build: levelFiveWizardBuild({
-          preparedSpells: [counterspellSpellId],
+          preparedSpells: [authoredUnitId(counterspellSpellId)],
         }),
       },
     ] as const satisfies ReadonlyArray<CounterspellClassAccessCase>;
@@ -1599,7 +1612,7 @@ describe("level 5 SDK tracer bullets", () => {
           characterSheet({
             characterIdText: `character:l5-tracer-counterspell-trigger-${counterspellCase.sourceUnitId}`,
             build: levelFiveWizardBuild({
-              preparedSpells: [magicMissileSpellId],
+              preparedSpells: [authoredUnitId(magicMissileSpellId)],
             }),
             combatantId: counterspellTriggeringWizardId,
             initiative: 20,
@@ -1681,41 +1694,47 @@ describe("level 5 SDK tracer bullets", () => {
   test("Dispel Magic projects Bard, Cleric, Druid, Sorcerer, Warlock, and Wizard access and ends a tracked ongoing spell effect", () => {
     const dispelMagicCases: readonly DispelMagicClassAccessCase[] = [
       {
-        sourceUnitId: "class_bard",
+        sourceUnitId: authoredUnitId("class_bard"),
         casterId: dispelMagicBardId,
-        build: levelFiveBardBuild({ preparedSpells: [dispelMagicSpellId] }),
+        build: levelFiveBardBuild({
+          preparedSpells: [authoredUnitId(dispelMagicSpellId)],
+        }),
       },
       {
-        sourceUnitId: "class_cleric",
+        sourceUnitId: authoredUnitId("class_cleric"),
         casterId: dispelMagicClericId,
-        build: levelFiveClericBuild({ preparedSpells: [dispelMagicSpellId] }),
+        build: levelFiveClericBuild({
+          preparedSpells: [authoredUnitId(dispelMagicSpellId)],
+        }),
       },
       {
-        sourceUnitId: "class_druid",
+        sourceUnitId: authoredUnitId("class_druid"),
         casterId: dispelMagicDruidId,
-        build: levelFiveDruidBuild({ preparedSpells: [dispelMagicSpellId] }),
+        build: levelFiveDruidBuild({
+          preparedSpells: [authoredUnitId(dispelMagicSpellId)],
+        }),
         druidWildShapeKnownFormStatBlockIds:
           levelFiveDruidWildShapeKnownFormStatBlockIds,
       },
       {
-        sourceUnitId: "class_sorcerer",
+        sourceUnitId: authoredUnitId("class_sorcerer"),
         casterId: dispelMagicSorcererId,
         build: levelFiveSorcererBuild({
-          preparedSpells: [dispelMagicSpellId],
+          preparedSpells: [authoredUnitId(dispelMagicSpellId)],
         }),
       },
       {
-        sourceUnitId: "class_warlock",
+        sourceUnitId: authoredUnitId("class_warlock"),
         casterId: dispelMagicWarlockId,
         build: levelFiveWarlockBuild({
-          preparedSpells: [dispelMagicSpellId],
+          preparedSpells: [authoredUnitId(dispelMagicSpellId)],
         }),
       },
       {
-        sourceUnitId: "class_wizard",
+        sourceUnitId: authoredUnitId("class_wizard"),
         casterId: dispelMagicWizardId,
         build: levelFiveWizardBuild({
-          preparedSpells: [dispelMagicSpellId],
+          preparedSpells: [authoredUnitId(dispelMagicSpellId)],
         }),
       },
     ];
@@ -1809,17 +1828,17 @@ describe("level 5 SDK tracer bullets", () => {
   test("Fireball projects Sorcerer and Wizard access and resolves point-origin Sphere Fire damage with unattended object ignition", () => {
     const fireballCases = [
       {
-        sourceUnitId: "class_sorcerer",
+        sourceUnitId: authoredUnitId("class_sorcerer"),
         casterId: fireballSorcererId,
         build: levelFiveSorcererBuild({
-          preparedSpells: [fireballSpellId],
+          preparedSpells: [authoredUnitId(fireballSpellId)],
         }),
       },
       {
-        sourceUnitId: "class_wizard",
+        sourceUnitId: authoredUnitId("class_wizard"),
         casterId: fireballWizardId,
         build: levelFiveWizardBuild({
-          preparedSpells: [fireballSpellId],
+          preparedSpells: [authoredUnitId(fireballSpellId)],
         }),
       },
     ] as const satisfies ReadonlyArray<FireballClassAccessCase>;
@@ -1841,7 +1860,7 @@ describe("level 5 SDK tracer bullets", () => {
           monsterBattleInput(
             fireballTargetId,
             10,
-            srdStatBlock("stat_block_sphinx_of_wonder"),
+            srdStatBlock(authoredStatBlockId("stat_block_sphinx_of_wonder")),
           ),
         ],
       });
@@ -1957,24 +1976,24 @@ describe("level 5 SDK tracer bullets", () => {
   test("Fly projects Sorcerer, Warlock, and Wizard access and grants a fixed hovering Fly Speed", () => {
     const flyCases = [
       {
-        sourceUnitId: "class_sorcerer",
+        sourceUnitId: authoredUnitId("class_sorcerer"),
         casterId: flySorcererId,
         build: levelFiveSorcererBuild({
-          preparedSpells: [flySpellId],
+          preparedSpells: [authoredUnitId(flySpellId)],
         }),
       },
       {
-        sourceUnitId: "class_warlock",
+        sourceUnitId: authoredUnitId("class_warlock"),
         casterId: flyWarlockId,
         build: levelFiveWarlockBuild({
-          preparedSpells: [flySpellId],
+          preparedSpells: [authoredUnitId(flySpellId)],
         }),
       },
       {
-        sourceUnitId: "class_wizard",
+        sourceUnitId: authoredUnitId("class_wizard"),
         casterId: flyWizardId,
         build: levelFiveWizardBuild({
-          preparedSpells: [flySpellId],
+          preparedSpells: [authoredUnitId(flySpellId)],
         }),
       },
     ] as const satisfies ReadonlyArray<FlyClassAccessCase>;
@@ -2067,24 +2086,24 @@ describe("level 5 SDK tracer bullets", () => {
   test("Glyph of Warding projects Bard, Cleric, and Wizard access while one-hour creation stays outside Magic Action discovery", () => {
     const glyphOfWardingCases = [
       {
-        sourceUnitId: "class_bard",
+        sourceUnitId: authoredUnitId("class_bard"),
         casterId: glyphOfWardingBardId,
         build: levelFiveBardBuild({
-          preparedSpells: [glyphOfWardingSpellId],
+          preparedSpells: [authoredUnitId(glyphOfWardingSpellId)],
         }),
       },
       {
-        sourceUnitId: "class_cleric",
+        sourceUnitId: authoredUnitId("class_cleric"),
         casterId: glyphOfWardingClericId,
         build: levelFiveClericBuild({
-          preparedSpells: [glyphOfWardingSpellId],
+          preparedSpells: [authoredUnitId(glyphOfWardingSpellId)],
         }),
       },
       {
-        sourceUnitId: "class_wizard",
+        sourceUnitId: authoredUnitId("class_wizard"),
         casterId: glyphOfWardingWizardId,
         build: levelFiveWizardBuild({
-          preparedSpells: [glyphOfWardingSpellId],
+          preparedSpells: [authoredUnitId(glyphOfWardingSpellId)],
         }),
       },
     ] as const satisfies ReadonlyArray<GlyphOfWardingClassAccessCase>;
@@ -2121,31 +2140,31 @@ describe("level 5 SDK tracer bullets", () => {
   test("Hypnotic Pattern projects Bard, Sorcerer, Warlock, and Wizard access and applies failed-save control", () => {
     const hypnoticPatternCases = [
       {
-        sourceUnitId: "class_bard",
+        sourceUnitId: authoredUnitId("class_bard"),
         casterId: hypnoticPatternBardId,
         build: levelFiveBardBuild({
-          preparedSpells: [hypnoticPatternSpellId],
+          preparedSpells: [authoredUnitId(hypnoticPatternSpellId)],
         }),
       },
       {
-        sourceUnitId: "class_sorcerer",
+        sourceUnitId: authoredUnitId("class_sorcerer"),
         casterId: hypnoticPatternSorcererId,
         build: levelFiveSorcererBuild({
-          preparedSpells: [hypnoticPatternSpellId],
+          preparedSpells: [authoredUnitId(hypnoticPatternSpellId)],
         }),
       },
       {
-        sourceUnitId: "class_warlock",
+        sourceUnitId: authoredUnitId("class_warlock"),
         casterId: hypnoticPatternWarlockId,
         build: levelFiveWarlockBuild({
-          preparedSpells: [hypnoticPatternSpellId],
+          preparedSpells: [authoredUnitId(hypnoticPatternSpellId)],
         }),
       },
       {
-        sourceUnitId: "class_wizard",
+        sourceUnitId: authoredUnitId("class_wizard"),
         casterId: hypnoticPatternWizardId,
         build: levelFiveWizardBuild({
-          preparedSpells: [hypnoticPatternSpellId],
+          preparedSpells: [authoredUnitId(hypnoticPatternSpellId)],
         }),
       },
     ] as const satisfies ReadonlyArray<HypnoticPatternClassAccessCase>;
@@ -2167,7 +2186,7 @@ describe("level 5 SDK tracer bullets", () => {
           monsterBattleInput(
             monsterId,
             10,
-            srdStatBlock("stat_block_goblin_warrior"),
+            srdStatBlock(authoredStatBlockId("stat_block_goblin_warrior")),
           ),
         ],
       });
@@ -2271,17 +2290,17 @@ describe("level 5 SDK tracer bullets", () => {
   test("Lightning Bolt projects Sorcerer and Wizard access and resolves self-origin Line Lightning damage", () => {
     const lightningBoltCases = [
       {
-        sourceUnitId: "class_sorcerer",
+        sourceUnitId: authoredUnitId("class_sorcerer"),
         casterId: lightningBoltSorcererId,
         build: levelFiveSorcererBuild({
-          preparedSpells: [lightningBoltSpellId],
+          preparedSpells: [authoredUnitId(lightningBoltSpellId)],
         }),
       },
       {
-        sourceUnitId: "class_wizard",
+        sourceUnitId: authoredUnitId("class_wizard"),
         casterId: lightningBoltWizardId,
         build: levelFiveWizardBuild({
-          preparedSpells: [lightningBoltSpellId],
+          preparedSpells: [authoredUnitId(lightningBoltSpellId)],
         }),
       },
     ] as const satisfies ReadonlyArray<LightningBoltClassAccessCase>;
@@ -2303,12 +2322,12 @@ describe("level 5 SDK tracer bullets", () => {
           monsterBattleInput(
             lightningBoltFailedSaveTargetId,
             10,
-            srdStatBlock("stat_block_sphinx_of_wonder"),
+            srdStatBlock(authoredStatBlockId("stat_block_sphinx_of_wonder")),
           ),
           monsterBattleInput(
             lightningBoltSuccessfulSaveTargetId,
             9,
-            srdStatBlock("stat_block_sphinx_of_wonder"),
+            srdStatBlock(authoredStatBlockId("stat_block_sphinx_of_wonder")),
           ),
         ],
       });
@@ -2433,17 +2452,17 @@ describe("level 5 SDK tracer bullets", () => {
   test("Mass Healing Word projects Bard and Cleric access and restores a visible target list as a Bonus Action", () => {
     const massHealingWordCases = [
       {
-        sourceUnitId: "class_bard",
+        sourceUnitId: authoredUnitId("class_bard"),
         casterId: massHealingWordBardId,
         build: levelFiveBardBuild({
-          preparedSpells: [massHealingWordSpellId],
+          preparedSpells: [authoredUnitId(massHealingWordSpellId)],
         }),
       },
       {
-        sourceUnitId: "class_cleric",
+        sourceUnitId: authoredUnitId("class_cleric"),
         casterId: massHealingWordClericId,
         build: levelFiveClericBuild({
-          preparedSpells: [massHealingWordSpellId],
+          preparedSpells: [authoredUnitId(massHealingWordSpellId)],
         }),
       },
     ] as const satisfies ReadonlyArray<MassHealingWordClassAccessCase>;
@@ -2463,8 +2482,8 @@ describe("level 5 SDK tracer bullets", () => {
           characterSheet({
             characterIdText: `character:l5-tracer-mass-healing-word-target-a-${massHealingWordCase.sourceUnitId}`,
             build: levelFiveMartialBuild({
-              classUnitId: "class_fighter",
-              weaponUnitId: "weapon_longsword",
+              classUnitId: authoredUnitId("class_fighter"),
+              weaponUnitId: authoredUnitId("weapon_longsword"),
             }),
             combatantId: massHealingWordTargetAId,
             initiative: 15,
@@ -2473,8 +2492,8 @@ describe("level 5 SDK tracer bullets", () => {
           characterSheet({
             characterIdText: `character:l5-tracer-mass-healing-word-target-b-${massHealingWordCase.sourceUnitId}`,
             build: levelFiveMartialBuild({
-              classUnitId: "class_fighter",
-              weaponUnitId: "weapon_longsword",
+              classUnitId: authoredUnitId("class_fighter"),
+              weaponUnitId: authoredUnitId("weapon_longsword"),
             }),
             combatantId: massHealingWordTargetBId,
             initiative: 10,
@@ -2624,7 +2643,7 @@ describe("level 5 SDK tracer bullets", () => {
         resourceExpenditures: [
           {
             tag: "pointPoolResource",
-            unitId: sorcererFontOfMagicUnitId,
+            unitId: authoredUnitId(sorcererFontOfMagicUnitId),
             expended: resourceCount(4),
           },
         ],
@@ -3586,7 +3605,7 @@ function interruptDecisionFill(
 }
 
 function elementalTouchStatBlock(damageType: "fire" | "cold"): StatBlockRecord {
-  const base = srdStatBlock("stat_block_goblin_warrior");
+  const base = srdStatBlock(authoredStatBlockId("stat_block_goblin_warrior"));
   const scimitar = base.statBlock.actions?.attacks?.find(
     (attack) => attack.name === "Scimitar",
   );
@@ -3596,7 +3615,9 @@ function elementalTouchStatBlock(damageType: "fire" | "cold"): StatBlockRecord {
   const displayDamageType = damageType === "fire" ? "Fire" : "Cold";
   return {
     ...base,
-    id: `stat_block_synthetic_l5_tracer_${damageType}_touch`,
+    id: authoredStatBlockId(
+      `stat_block_synthetic_l5_tracer_${damageType}_touch`,
+    ),
     name: `Synthetic ${displayDamageType} Touch`,
     provenance: {
       kind: "xphb",
@@ -3640,7 +3661,7 @@ function protectionFromEnergyDamageScenario(damageType: "fire" | "cold"): {
       characterSheet({
         characterIdText: `character:l5-tracer-protection-from-energy-caster-${damageType}`,
         build: levelFiveWizardBuild({
-          preparedSpells: [protectionFromEnergySpellId],
+          preparedSpells: [authoredUnitId(protectionFromEnergySpellId)],
         }),
         combatantId: wizardId,
         initiative: 20,
@@ -3648,8 +3669,8 @@ function protectionFromEnergyDamageScenario(damageType: "fire" | "cold"): {
       characterSheet({
         characterIdText: `character:l5-tracer-protection-from-energy-warded-${damageType}`,
         build: levelFiveMartialBuild({
-          classUnitId: "class_fighter",
-          weaponUnitId: "weapon_longsword",
+          classUnitId: authoredUnitId("class_fighter"),
+          weaponUnitId: authoredUnitId("weapon_longsword"),
         }),
         combatantId: wardedId,
         initiative: 5,
@@ -3751,8 +3772,8 @@ function assertLevelFiveFastMovementHandoff(): void {
       characterSheet({
         characterIdText: "character:l5-tracer-fast-movement-barbarian",
         build: levelFiveMartialBuild({
-          classUnitId: "class_barbarian",
-          weaponUnitId: "weapon_longsword",
+          classUnitId: authoredUnitId("class_barbarian"),
+          weaponUnitId: authoredUnitId("weapon_longsword"),
           abilityScores: {
             str: 16,
             dex: 10,
@@ -3767,7 +3788,11 @@ function assertLevelFiveFastMovementHandoff(): void {
       }),
     ],
     monsters: [
-      monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
+      monsterBattleInput(
+        monsterId,
+        10,
+        srdStatBlock(authoredStatBlockId("stat_block_skeleton")),
+      ),
     ],
   });
 
@@ -3863,7 +3888,11 @@ function assertLevelFiveExtraAttackHandoff(input: {
       }),
     ],
     monsters: [
-      monsterBattleInput(monsterId, 10, srdStatBlock("stat_block_skeleton")),
+      monsterBattleInput(
+        monsterId,
+        10,
+        srdStatBlock(authoredStatBlockId("stat_block_skeleton")),
+      ),
     ],
   });
   expect(

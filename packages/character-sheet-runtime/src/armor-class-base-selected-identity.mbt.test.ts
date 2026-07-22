@@ -2,6 +2,7 @@
 // UNIT-IDENTITY-REPLAY: armor-class-base-formula barbarian_unarmored_defense doSelectBarbarianUnarmoredDefense doSelectBarbarianUnarmoredDefenseWithShield
 // UNIT-IDENTITY-REPLAY: armor-class-base-formula monk_unarmored_defense doSelectMonkUnarmoredDefense
 // KERNEL-COVERAGE: parity-witness SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
@@ -455,7 +456,7 @@ function selectedBarbarianUnarmoredDefenseProjection(input: {
         unitLibrary,
         baseChoice: {
           kind: "class_feature",
-          unitId: BARBARIAN_UNARMORED_DEFENSE_UNIT_ID,
+          unitId: authoredUnitId(BARBARIAN_UNARMORED_DEFENSE_UNIT_ID),
         },
       }),
     ),
@@ -475,7 +476,7 @@ function selectedMonkUnarmoredDefenseProjection(): SelectedMonkProjection {
         unitLibrary,
         baseChoice: {
           kind: "class_feature",
-          unitId: MONK_UNARMORED_DEFENSE_UNIT_ID,
+          unitId: authoredUnitId(MONK_UNARMORED_DEFENSE_UNIT_ID),
         },
       }),
     ),
@@ -660,27 +661,29 @@ function armorClassBuild(input: {
       ? undefined
       : characterEquipmentItemId({
           slot: "armor",
-          unitId: requireRight(characterEquipmentItemUnitId(input.armor)),
+          unitId: requireRight(
+            characterEquipmentItemUnitId(authoredUnitId(input.armor)),
+          ),
         });
   const shieldItemId =
     input.shield === true
       ? characterEquipmentItemId({
           slot: "shield",
           unitId: requireRight(
-            characterEquipmentItemUnitId("equipment_shield"),
+            characterEquipmentItemUnitId(authoredUnitId("equipment_shield")),
           ),
         })
       : undefined;
   return {
     progression: {
-      startingClass: classUnitId(input.startingClass),
+      startingClass: classUnitId(authoredUnitId(input.startingClass)),
       advancements: (input.advancements ?? []).map((classId) => ({
-        classUnitId: classUnitId(classId),
+        classUnitId: classUnitId(authoredUnitId(classId)),
         hitPointRule: { tag: "fixedHigherLevelGain" },
       })),
     },
-    background: "background_soldier",
-    species: "species_orc",
+    background: authoredUnitId("background_soldier"),
+    species: authoredUnitId("species_orc"),
     originLanguages: ["Common", "Dwarvish", "Goblin"],
     classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
@@ -700,10 +703,15 @@ function armorClassBuild(input: {
       owned: [
         ...(armorItemId === undefined || input.armor === undefined
           ? []
-          : [{ itemId: armorItemId, unitId: input.armor }]),
+          : [{ itemId: armorItemId, unitId: authoredUnitId(input.armor) }]),
         ...(shieldItemId === undefined
           ? []
-          : [{ itemId: shieldItemId, unitId: "equipment_shield" }]),
+          : [
+              {
+                itemId: shieldItemId,
+                unitId: authoredUnitId("equipment_shield"),
+              },
+            ]),
       ],
       loadout: {
         ...(armorItemId === undefined ? {} : { armor: armorItemId }),

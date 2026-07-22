@@ -5,9 +5,12 @@ import {
 } from "@dnd/surface/surface/schema";
 import type { Duration, Range, SpellLevel } from "@dnd/surface/surface/types";
 import { Schema } from "effect";
+import { SpellId } from "../identity.ts";
+import type { SpellId as SpellIdType } from "../identity.ts";
 
 /** Mechanical Spell Definition facts retained for reducer execution. */
 export type SpellRuleExecutionFacts = {
+  readonly spellId: SpellIdType;
   readonly level: SpellLevel;
   readonly range: Range;
   readonly duration: Duration;
@@ -23,22 +26,22 @@ export type SpellRuleExecutionFacts = {
   } | null;
 };
 
-export const SpellRuleExecutionFactsSchema: Schema.Schema<SpellRuleExecutionFacts> =
-  Schema.Struct({
-    level: SpellLevelSchema,
-    range: RangeSchema,
-    duration: DurationSchema,
-    components: Schema.Struct({
-      verbal: Schema.Boolean,
-      somatic: Schema.Boolean,
-      hasMaterial: Schema.Boolean,
-      hasPricedOrConsumedMaterial: Schema.Boolean,
+export const SpellRuleExecutionFactsSchema = Schema.Struct({
+  spellId: SpellId,
+  level: SpellLevelSchema,
+  range: RangeSchema,
+  duration: DurationSchema,
+  components: Schema.Struct({
+    verbal: Schema.Boolean,
+    somatic: Schema.Boolean,
+    hasMaterial: Schema.Boolean,
+    hasPricedOrConsumedMaterial: Schema.Boolean,
+  }),
+  twinnedTargetCount: Schema.Union(
+    Schema.Struct({
+      base: Schema.Number,
+      baseLevel: Schema.Number,
     }),
-    twinnedTargetCount: Schema.Union(
-      Schema.Struct({
-        base: Schema.Number,
-        baseLevel: Schema.Number,
-      }),
-      Schema.Null,
-    ),
-  });
+    Schema.Null,
+  ),
+});

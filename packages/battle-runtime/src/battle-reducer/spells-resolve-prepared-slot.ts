@@ -7,9 +7,6 @@ import { damageAmount as toDamageAmount } from "@dnd/shared/types";
 import type { DamageType } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 import {
-  maybeOpenInterruptWindow,
-  openAfterDamageSequenceInterruptWindow,
-  snapshotBattle,
   type ActionSpellBattleResolutionInput,
   type BattleAfterDamageEvent,
   type BattleCreatureState,
@@ -20,6 +17,11 @@ import {
   type BattleTargetSpatialFact,
   type BattleExecutableSpellInvocation,
 } from "../battle-state-execution.ts";
+import {
+  maybeOpenInterruptWindow,
+  openAfterDamageSequenceInterruptWindow,
+} from "./interrupt-execution.ts";
+import { snapshotBattle } from "./battle-snapshot.ts";
 import type { CombatantId } from "../identity.ts";
 import {
   damageDispositionFillFor,

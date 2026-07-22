@@ -2,6 +2,7 @@ import { existsSync } from "node:fs";
 
 import { Either, Option, Schema } from "effect";
 import { describe, expect, test } from "vitest";
+import { UnitId as UnitIdSchema } from "@dnd/shared/game-facts";
 
 import findFamiliarInput from "../../content/find_familiar.json";
 import flyInput from "../../content/fly.json";
@@ -8339,7 +8340,11 @@ describe("SRD Unit catalog boundary", () => {
     {
       coinsGp: 16,
       expectedItems: [
-        { kind: "unit_ref", unitId: "weapon_dagger", quantity: 2 },
+        {
+          kind: "unit_ref",
+          unitId: UnitIdSchema.make("weapon_dagger"),
+          quantity: 2,
+        },
         { kind: "selected_tool_proficiency" },
         { itemName: "Crowbar", kind: "draft_owned_item" },
         { itemName: "Pouches", kind: "draft_owned_item", quantity: 2 },
@@ -8350,7 +8355,10 @@ describe("SRD Unit catalog boundary", () => {
     {
       coinsGp: 8,
       expectedItems: [
-        { kind: "unit_ref", unitId: "weapon_quarterstaff" },
+        {
+          kind: "unit_ref",
+          unitId: UnitIdSchema.make("weapon_quarterstaff"),
+        },
         { kind: "selected_tool_proficiency" },
         { itemName: "Book (history)", kind: "draft_owned_item" },
         { itemName: "Parchment", kind: "draft_owned_item", quantity: 8 },
@@ -8361,8 +8369,8 @@ describe("SRD Unit catalog boundary", () => {
     {
       coinsGp: 14,
       expectedItems: [
-        { kind: "unit_ref", unitId: "weapon_spear" },
-        { kind: "unit_ref", unitId: "weapon_shortbow" },
+        { kind: "unit_ref", unitId: UnitIdSchema.make("weapon_spear") },
+        { kind: "unit_ref", unitId: UnitIdSchema.make("weapon_shortbow") },
         { itemName: "Arrows", kind: "draft_owned_item", quantity: 20 },
         { itemName: "Healer's Kit", kind: "draft_owned_item" },
         { itemName: "Quiver", kind: "draft_owned_item" },
@@ -9286,7 +9294,7 @@ describe("SRD Unit catalog boundary", () => {
     }
     const duplicateBard = {
       ...bard,
-      id: "class_bard_duplicate",
+      id: UnitIdSchema.make("class_bard_duplicate"),
     } satisfies Srd521Unit;
     const duplicate = buildUnitCatalog({
       collections: [

@@ -1,5 +1,5 @@
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
-import type { BattleDruidWildShapeKnownFormSupportProfile } from "./unit-feature-support.ts";
+import type { BattleDruidWildShapeKnownFormSupportProfile } from "./druid-wild-shape-support-execution.ts";
 
 export const WILD_SHAPE_KNOWN_FORM_ELIGIBILITY_ISSUE_CODES = [
   "creatureType",

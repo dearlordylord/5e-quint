@@ -1,16 +1,16 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form
 // KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.ATTACK_CONTROL
 import { SIZES } from "@dnd/shared/types";
-import type { CreatureNamedAttackRoll, Size } from "@dnd/surface/surface/types";
 import type {
-  SupportedCreatureAttackRollMechanics,
-  SupportedCreatureNamedAttackRoll,
-} from "./battle-action-options.ts";
+  CreatureAttackRollMechanics,
+  Size,
+} from "@dnd/surface/surface/types";
+import type { SupportedCreatureAttackRollMechanics } from "./battle-action-options.ts";
 
-type CreatureAttackHitEffects = Pick<CreatureNamedAttackRoll, "onHit">;
+type CreatureAttackHitEffects = Pick<CreatureAttackRollMechanics, "onHit">;
 
 export type StatBlockAttackHitTargetSizeConditionRiderEffect = Extract<
-  CreatureNamedAttackRoll["onHit"][number],
+  CreatureAttackRollMechanics["onHit"][number],
   { readonly kind: "apply_condition_if_target_size_at_most" }
 > & {
   readonly condition: "prone";
@@ -27,7 +27,7 @@ export type StatBlockAttackHitTargetSizeConditionRider = {
 };
 
 export function supportedStatBlockAttackHitConditionRiderEffect(
-  effect: CreatureNamedAttackRoll["onHit"][number],
+  effect: CreatureAttackRollMechanics["onHit"][number],
 ): StatBlockAttackHitTargetSizeConditionRiderEffect | null {
   if (
     effect.kind !== "apply_condition_if_target_size_at_most" ||
@@ -42,9 +42,6 @@ export function supportedStatBlockAttackHitConditionRiderEffect(
   };
 }
 
-export function supportedStatBlockAttackHitConditionRiders(
-  attack: SupportedCreatureNamedAttackRoll,
-): readonly StatBlockAttackHitTargetSizeConditionRider[];
 export function supportedStatBlockAttackHitConditionRiders(
   attack: SupportedCreatureAttackRollMechanics,
 ): readonly StatBlockAttackHitTargetSizeConditionRider[];
@@ -86,7 +83,7 @@ export function creatureSizeIsAtMost(
 }
 
 function statBlockAttackHitEffectIsConditionRider(
-  effect: CreatureNamedAttackRoll["onHit"][number],
+  effect: CreatureAttackRollMechanics["onHit"][number],
 ): boolean {
   return (
     effect.kind === "apply_condition_if_target_size_at_most" ||

@@ -3,6 +3,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L19E-02-L5-SAVE-CONDITION-CONTROL telekinesis
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L19E-02-L5-SAVE-CONDITION-CONTROL telekinesis
 // UNIT-IDENTITY-REPLAY: L19E-02-L5-SAVE-CONDITION-CONTROL telekinesis doCastTelekinesis
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, it, test } from "vitest";
 
 import {
@@ -296,11 +297,15 @@ function telekinesisWizardSheet(input: {
         spellcasting: {
           sources: [
             {
-              sourceUnitId: "class_wizard",
+              sourceUnitId: authoredUnitId("class_wizard"),
               spellcastingAbility: "int",
-              cantrips: ["fire_bolt", "light", "mage_hand"],
-              spellbook: ["telekinesis"],
-              preparedSpells: input.preparedSpells,
+              cantrips: [
+                authoredUnitId("fire_bolt"),
+                authoredUnitId("light"),
+                authoredUnitId("mage_hand"),
+              ],
+              spellbook: [authoredUnitId("telekinesis")],
+              preparedSpells: input.preparedSpells.map(authoredUnitId),
               spellcastingFocuses: ["arcane_focus"],
             },
           ],

@@ -1,3 +1,4 @@
+import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3-FOLLOWUP-HALFLING-LUCK-RUNTIME species_halfling_luck
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3-FOLLOWUP-D20-TEST-ROLLED-DIE-REROLL-CHOICE species_halfling_luck
@@ -16,13 +17,13 @@ import {
 import { Schema } from "effect";
 import { describe, expect, test } from "vitest";
 import {
-  BattleFillSchema,
   D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
   type BattleFill,
   type BattleHole,
   type BattleResolutionResult,
   type BattleTrackedOngoingSpellLightEmitter,
 } from "./battle-state-execution.ts";
+import { BattleFillSchema } from "./battle-reducer/battle-codecs.ts";
 import {
   D20_TEST_NATURAL_ONE_REROLL_DIE_FACE_REQUIRED_MESSAGE,
   D20_TEST_NATURAL_ONE_REROLL_DIE_SELECTION_REQUIRED_MESSAGE,
@@ -483,12 +484,12 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
           selectedLoadout: {
             weapon: {
               itemId: "main:weapon_shortsword",
-              unitId: "weapon_shortsword",
+              unitId: parseSharedUnitId("weapon_shortsword"),
               grip: "one_handed",
             },
             offHandWeapon: {
               itemId: "off:weapon_dagger",
-              unitId: "weapon_dagger",
+              unitId: parseSharedUnitId("weapon_dagger"),
             },
           },
         }),
@@ -1111,7 +1112,7 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
         },
       ],
       casterMetamagic: {
-        sorceryPointResourceUnitId: "sorcerer_font_of_magic",
+        sorceryPointResourceUnitId: parseSharedUnitId("sorcerer_font_of_magic"),
         spellUseLimit: "one_per_spell_unless_option_allows_stacking",
         knownOptions: [seekingMetamagicOption()],
       },

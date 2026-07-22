@@ -14,11 +14,6 @@ import {
   holeInstanceKey,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import {
-  attackRollIsCriticalHit,
-  maybeOpenInterruptWindow,
-  openAfterDamageSequenceInterruptWindow,
-  snapshotBattle,
-  spellAttackRerollUnsupportedIssue,
   type ActionSpellBattleResolutionInput,
   type BattleAfterDamageEvent,
   type BattleConcentrationSavingThrowHole,
@@ -30,6 +25,13 @@ import {
   type SpellDamageReductionRoll,
   type BattleExecutableSpellInvocation,
 } from "../battle-state-execution.ts";
+import { attackRollIsCriticalHit } from "./attack-resolution.ts";
+import {
+  maybeOpenInterruptWindow,
+  openAfterDamageSequenceInterruptWindow,
+} from "./interrupt-execution.ts";
+import { snapshotBattle } from "./battle-snapshot.ts";
+import { spellAttackRerollUnsupportedIssue } from "./spell-reroll-issues.ts";
 import { damageAmount as toDamageAmount } from "@dnd/shared/types";
 import type { CombatantId } from "../identity.ts";
 import {
@@ -47,7 +49,7 @@ import {
   requiredSpellObjectTargetAttackRollMode,
   requiredSpellAttackRollMode,
 } from "./attack-roll.ts";
-import { activeEffectArmorClass } from "./creature-state.ts";
+import { activeEffectArmorClass } from "./creature-state-execution.ts";
 import { needsHolesResult } from "./hole-helpers.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { resolveRemarkableAthleteCriticalHitMovement } from "./remarkable-athlete-critical-movement.ts";
@@ -86,8 +88,8 @@ import {
   recordAttackRollMissToHitReplacementUsed,
   selectedAttackRollMissToHitReplacement,
 } from "./statblock-attacks.ts";
-import { spellAttackKindForRedirect } from "./spells-profiles.ts";
-import { spellAttackSequencePartName } from "./spells-profile-shared.ts";
+import { spellAttackKindForRedirect } from "./spells-profiles-attack-damage.ts";
+import { spellAttackSequencePartName } from "./spells-execution-facts.ts";
 import {
   applySpellDamage,
   spellAttackSequencePartAttackRollHole,

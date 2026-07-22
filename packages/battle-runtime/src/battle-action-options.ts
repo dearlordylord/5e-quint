@@ -6,13 +6,13 @@ import type {
 } from "@dnd/shared/types";
 import type {
   Ability,
-  CreatureNamedAttackRoll,
+  CreatureAttackRollMechanics,
   DamageType,
   DiceExpr,
   StatBlockValue,
   WeaponDamage,
-  WeaponRecord,
 } from "@dnd/surface/surface/types";
+import type { CharacterWeaponAttackExecutionWeapon } from "./character-weapon-execution-schema.ts";
 import type { AttackDamageAbilityModifierChoice } from "./battle-reducer/attack-damage-ability-modifier-choice.ts";
 import type {
   BattleAttackProcedureExecutionRef,
@@ -39,9 +39,11 @@ export type CharacterWeaponAttackDamageTypeChoices = readonly [
   ...DamageType[],
 ];
 
+export type { CharacterWeaponAttackExecutionWeapon } from "./character-weapon-execution-schema.ts";
+
 export type CharacterWeaponAttackActionOption = {
   readonly kind: "weapon";
-  readonly weapon: WeaponRecord;
+  readonly weapon: CharacterWeaponAttackExecutionWeapon;
   readonly ability: Ability;
   readonly abilityModifier: AbilityModifier;
   readonly attackBonus?: AttackBonus;
@@ -111,7 +113,7 @@ type LiteralStatBlockValue = Extract<
 >;
 
 type SupportedStatBlockBaseDamageEffect = Extract<
-  CreatureNamedAttackRoll["onHit"][number],
+  CreatureAttackRollMechanics["onHit"][number],
   { readonly kind: "damage" }
 > & {
   readonly amount: {
@@ -123,7 +125,7 @@ type SupportedStatBlockBaseDamageEffect = Extract<
 };
 
 type SupportedStatBlockAdvantageBonusDamageEffect = Extract<
-  CreatureNamedAttackRoll["onHit"][number],
+  CreatureAttackRollMechanics["onHit"][number],
   { readonly kind: "conditional_bonus_damage" }
 > & {
   readonly when: { readonly kind: "attack_roll_had_advantage" };
@@ -136,7 +138,7 @@ type SupportedStatBlockAdvantageBonusDamageEffect = Extract<
 };
 
 type SupportedStatBlockAttackHitTargetSizeConditionEffect = Extract<
-  CreatureNamedAttackRoll["onHit"][number],
+  CreatureAttackRollMechanics["onHit"][number],
   { readonly kind: "apply_condition_if_target_size_at_most" }
 > & {
   readonly condition: "prone";
@@ -198,8 +200,8 @@ type SupportedStaticStatBlockAttackEffectList =
       SupportedStatBlockAttackHitTargetSizeConditionEffect,
     ];
 
-export type SupportedCreatureNamedAttackRoll = Omit<
-  CreatureNamedAttackRoll,
+export type SupportedCreatureAttackRollMechanics = Omit<
+  CreatureAttackRollMechanics,
   | "attackBonus"
   | "multiattackCount"
   | "onHit"
@@ -223,25 +225,10 @@ export type SupportedCreatureNamedAttackRoll = Omit<
       }
   );
 
-export type SupportedStaticDamageCreatureNamedAttackRoll =
-  SupportedCreatureNamedAttackRoll & {
+export type SupportedStaticDamageCreatureAttackRollMechanics =
+  SupportedCreatureAttackRollMechanics & {
     readonly onHit: SupportedStaticStatBlockAttackEffectList;
   };
-
-export type CreatureAttackRollMechanics = Omit<
-  CreatureNamedAttackRoll,
-  "name" | "description" | "limitedUse"
->;
-
-export type SupportedCreatureAttackRollMechanics = Omit<
-  SupportedCreatureNamedAttackRoll,
-  "name" | "description" | "limitedUse"
->;
-
-export type SupportedStaticDamageCreatureAttackRollMechanics = Omit<
-  SupportedStaticDamageCreatureNamedAttackRoll,
-  "name" | "description" | "limitedUse"
->;
 
 export const STAT_BLOCK_ATTACK_ROLL_ADVANTAGE_PREDICATES = [
   "nonIncapacitatedAllyWithin5FeetOfTarget",

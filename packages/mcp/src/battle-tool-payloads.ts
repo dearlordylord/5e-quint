@@ -1,17 +1,36 @@
 import {
   battleAdmittedSpellPresentations,
+  battlePresentedSnapshot,
   battleSnapshotProjection,
   battleSubjectPresentation,
   discoverBattleActs,
   type BattleRuntimeResolutionResult,
   type BattleRuntimeSession,
+  type BattlePresentedSnapshot,
+  type BattleSnapshotPresentationIssues,
   type BattleSubject,
 } from "@dnd/battle-runtime";
-import { Match } from "effect";
+import { Either, Match } from "effect";
 
 import type { McpCompositionRoot } from "./composition-root.ts";
 import type { BattleFillSession } from "./session-store.ts";
 import { errorContent } from "./tool-content.ts";
+
+type BattlePayloadPresentationIssues = BattleSnapshotPresentationIssues;
+
+type BattlePresentationProjection = {
+  readonly snapshot: BattlePresentedSnapshot | null;
+  readonly availableActs: ReturnType<typeof discoverBattleActs>;
+  readonly admittedSpellPresentations: ReturnType<
+    typeof battleAdmittedSpellPresentations
+  >;
+  readonly presentedInterruptChoices: ReturnType<
+    typeof presentedInterruptChoices
+  >;
+};
+type ActiveBattlePresentationProjection = BattlePresentationProjection & {
+  readonly snapshot: BattlePresentedSnapshot;
+};
 
 export function unknownStatBlockContent(statBlockId: string, error: unknown) {
   return errorContent(`Unknown Stat Block: ${statBlockId}`, {
@@ -41,42 +60,71 @@ export function battleSessionPayload(
   root: McpCompositionRoot,
   session: BattleRuntimeSession | null,
 ) {
-  return {
-    ...battlePresentationProjection(session),
+  const presentation = battlePresentationProjection(session);
+  return Either.map(presentation, (value) => ({
+    ...value,
     session: root.sessionStore.snapshot(),
-  };
+  }));
 }
 
 export function battleResolutionPayload(
   root: McpCompositionRoot,
   result: BattleRuntimeResolutionResult,
+  session: BattleRuntimeSession,
 ) {
-  const session = root.sessionStore.battleSession;
   const presentation = battlePresentationProjection(session);
-  return {
-    result: battleResolutionResultPayload(result),
-    ...presentation,
-    snapshot: presentation.snapshot ?? result.snapshot,
+  return Either.map(presentation, (value) => ({
+    result: battleResolutionResultPayload(result, value.snapshot),
+    ...value,
+    snapshot: value.snapshot,
     session: root.sessionStore.snapshot(),
-  };
+  }));
 }
 
-function battlePresentationProjection(session: BattleRuntimeSession | null) {
+function battlePresentationProjection(
+  session: BattleRuntimeSession,
+): Either.Either<
+  ActiveBattlePresentationProjection,
+  BattleSnapshotPresentationIssues
+>;
+function battlePresentationProjection(
+  session: BattleRuntimeSession | null,
+): Either.Either<
+  BattlePresentationProjection,
+  BattleSnapshotPresentationIssues
+>;
+function battlePresentationProjection(
+  session: BattleRuntimeSession | null,
+): Either.Either<
+  BattlePresentationProjection,
+  BattleSnapshotPresentationIssues
+> {
   if (session === null) {
-    return {
+    return Either.right({
       snapshot: null,
-      availableActs: [],
-      admittedSpellPresentations: [],
-      presentedInterruptChoices: [],
-    };
+      availableActs: [] as const,
+      admittedSpellPresentations: [] as const,
+      presentedInterruptChoices: [] as const,
+    });
   }
-  const snapshot = battleSnapshotProjection(session.state).snapshot;
-  return {
+  return Either.map(battlePresentedSnapshot(session), (snapshot) => ({
     snapshot,
     availableActs: discoverBattleActs(session),
     admittedSpellPresentations: battleAdmittedSpellPresentations(session),
-    presentedInterruptChoices: presentedInterruptChoices(session, snapshot),
-  };
+    presentedInterruptChoices: presentedInterruptChoices(
+      session,
+      battleSnapshotProjection(session.state).snapshot,
+    ),
+  }));
+}
+
+export function battleSnapshotPresentationIssueContent(
+  issues: BattlePayloadPresentationIssues,
+) {
+  return errorContent("Battle presentation context is incomplete.", {
+    code: "BATTLE_SNAPSHOT_PRESENTATION_INCOMPLETE",
+    issues,
+  });
 }
 
 function presentedInterruptChoices(
@@ -102,11 +150,14 @@ function presentedInterruptChoices(
   });
 }
 
-function battleResolutionResultPayload(result: BattleRuntimeResolutionResult) {
+function battleResolutionResultPayload(
+  result: BattleRuntimeResolutionResult,
+  snapshot: BattlePresentedSnapshot,
+) {
   if (result.tag === "resolved") {
     return {
       tag: result.tag,
-      snapshot: result.snapshot,
+      snapshot,
       ...(result.objectDamages === undefined
         ? {}
         : { objectDamages: result.objectDamages }),
@@ -126,7 +177,7 @@ function battleResolutionResultPayload(result: BattleRuntimeResolutionResult) {
       tag: result.tag,
       subject: result.subject,
       holes: result.holes,
-      snapshot: result.snapshot,
+      snapshot,
     };
   }
 
@@ -134,6 +185,6 @@ function battleResolutionResultPayload(result: BattleRuntimeResolutionResult) {
     tag: result.tag,
     reason: result.reason,
     message: result.message,
-    snapshot: result.snapshot,
+    snapshot,
   };
 }

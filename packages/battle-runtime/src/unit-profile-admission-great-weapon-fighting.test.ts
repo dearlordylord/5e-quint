@@ -1,3 +1,4 @@
+import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME feat_great_weapon_fighting
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME feat_great_weapon_fighting
@@ -80,7 +81,10 @@ describe("L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME deterministic profile slice"
     const state = withTargetSlashingResistance(
       greatWeaponFightingBattle({
         attack,
-        selectedLoadout: mainWeaponLoadout("weapon_greataxe", "two_handed"),
+        selectedLoadout: mainWeaponLoadout(
+          parseSharedUnitId("weapon_greataxe"),
+          "two_handed",
+        ),
       }),
     );
 
@@ -106,7 +110,10 @@ describe("L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME deterministic profile slice"
     const attack = zeroAbilityWeaponAttack("weapon_greatsword");
     const state = greatWeaponFightingBattle({
       attack,
-      selectedLoadout: mainWeaponLoadout("weapon_greatsword", "two_handed"),
+      selectedLoadout: mainWeaponLoadout(
+        parseSharedUnitId("weapon_greatsword"),
+        "two_handed",
+      ),
     });
 
     expect(
@@ -131,7 +138,10 @@ describe("L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME deterministic profile slice"
     const attack = zeroAbilityWeaponAttack("weapon_greatsword");
     const state = greatWeaponFightingBattle({
       attack,
-      selectedLoadout: mainWeaponLoadout("weapon_greatsword", "two_handed"),
+      selectedLoadout: mainWeaponLoadout(
+        parseSharedUnitId("weapon_greatsword"),
+        "two_handed",
+      ),
     });
 
     expect(
@@ -156,7 +166,10 @@ describe("L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME deterministic profile slice"
     const attack = zeroAbilityWeaponAttack("weapon_longsword");
     const state = greatWeaponFightingBattle({
       attack,
-      selectedLoadout: mainWeaponLoadout("weapon_longsword", "two_handed"),
+      selectedLoadout: mainWeaponLoadout(
+        parseSharedUnitId("weapon_longsword"),
+        "two_handed",
+      ),
     });
 
     expect(
@@ -181,7 +194,10 @@ describe("L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME deterministic profile slice"
     const attack = zeroAbilityWeaponAttack("weapon_greataxe");
     const state = greatWeaponFightingBattle({
       attack,
-      selectedLoadout: mainWeaponLoadout("weapon_greataxe", "two_handed"),
+      selectedLoadout: mainWeaponLoadout(
+        parseSharedUnitId("weapon_greataxe"),
+        "two_handed",
+      ),
     });
 
     expect(
@@ -202,7 +218,10 @@ describe("L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME deterministic profile slice"
     const attack = zeroAbilityWeaponAttack("weapon_longsword");
     const state = greatWeaponFightingBattle({
       attack,
-      selectedLoadout: mainWeaponLoadout("weapon_longsword", "one_handed"),
+      selectedLoadout: mainWeaponLoadout(
+        parseSharedUnitId("weapon_longsword"),
+        "one_handed",
+      ),
     });
 
     expect(
@@ -222,7 +241,10 @@ describe("L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME deterministic profile slice"
     const attack = zeroAbilityWeaponAttack("weapon_shortbow");
     const state = greatWeaponFightingBattle({
       attack,
-      selectedLoadout: mainWeaponLoadout("weapon_shortbow", "two_handed"),
+      selectedLoadout: mainWeaponLoadout(
+        parseSharedUnitId("weapon_shortbow"),
+        "two_handed",
+      ),
     });
 
     expect(
@@ -242,7 +264,10 @@ describe("L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME deterministic profile slice"
     const attack = zeroAbilityWeaponAttack("weapon_dagger");
     const state = greatWeaponFightingBattle({
       attack,
-      selectedLoadout: mainWeaponLoadout("weapon_dagger", "two_handed"),
+      selectedLoadout: mainWeaponLoadout(
+        parseSharedUnitId("weapon_dagger"),
+        "two_handed",
+      ),
     });
 
     expect(
@@ -462,7 +487,7 @@ defineSelectedIdentityReplayWitness({
             const state = greatWeaponFightingBattle({
               attack,
               selectedLoadout: mainWeaponLoadout(
-                "weapon_greatsword",
+                parseSharedUnitId("weapon_greatsword"),
                 "two_handed",
               ),
             });

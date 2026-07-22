@@ -1,3 +1,4 @@
+import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-ALERT-INITIATIVE-RUNTIME alert
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.initiative-proficiency-and-swap
 import { describe, expect, test } from "vitest";
@@ -72,7 +73,7 @@ describe("L12G deterministic Alert Initiative admission", () => {
     const unit = unitLibrary.requireUnit(alertUnitId);
     const syntheticUnit: UnitRecord = {
       ...unit,
-      id: "synthetic_initiative_training",
+      id: parseSharedUnitId("synthetic_initiative_training"),
       name: "Synthetic Initiative Training",
     };
 
@@ -97,22 +98,27 @@ describe("L12G deterministic Alert Initiative admission", () => {
       );
     }
     const adjacentUnits = [
-      alertShapedUnitWithMechanics("synthetic_initiative_training_with_count", {
-        ...mechanics,
-        grants: [
-          left.kind === "modify_roll_numeric" ? { ...left, count: 1 } : left,
-          right.kind === "modify_roll_numeric" ? { ...right, count: 1 } : right,
-        ],
-      }),
       alertShapedUnitWithMechanics(
-        "synthetic_initiative_training_with_condition",
+        parseSharedUnitId("synthetic_initiative_training_with_count"),
+        {
+          ...mechanics,
+          grants: [
+            left.kind === "modify_roll_numeric" ? { ...left, count: 1 } : left,
+            right.kind === "modify_roll_numeric"
+              ? { ...right, count: 1 }
+              : right,
+          ],
+        },
+      ),
+      alertShapedUnitWithMechanics(
+        parseSharedUnitId("synthetic_initiative_training_with_condition"),
         {
           ...mechanics,
           condition: { kind: "always" },
         },
       ),
       alertShapedUnitWithMechanics(
-        "synthetic_initiative_training_with_suppressor",
+        parseSharedUnitId("synthetic_initiative_training_with_suppressor"),
         {
           ...mechanics,
           suppressedBy: [
@@ -121,7 +127,7 @@ describe("L12G deterministic Alert Initiative admission", () => {
         },
       ),
       alertShapedUnitWithMechanics(
-        "synthetic_initiative_training_with_operation",
+        parseSharedUnitId("synthetic_initiative_training_with_operation"),
         {
           ...mechanics,
           operations: [

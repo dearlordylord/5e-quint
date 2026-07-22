@@ -1,3 +1,4 @@
+import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 import { DiceExprSchema } from "@dnd/surface/surface/schema";
@@ -36,7 +37,6 @@ import type {
   DiceExpr,
   DiceExprDelta,
   EffectAtom,
-  SpellRecord,
 } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 import {
@@ -67,7 +67,7 @@ import {
 import {
   sameStringSet,
   supportedDamageAmountExpr,
-} from "../spells-profile-shared.ts";
+} from "../spells-execution-facts.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
@@ -100,7 +100,7 @@ type ObjectContactDamageRepeatResolveInput =
   SpellProcedureProfileResolveInput<ObjectContactDamageRepeatInvocation>;
 
 type OngoingEffectSpellMechanics = Extract<
-  SpellRecord["mechanics"],
+  BattleSpellAdmissionSource["mechanics"],
   { readonly family: "ongoing_effect" }
 >;
 type OngoingOperationEffect =
@@ -113,7 +113,7 @@ type OngoingInitialEffect = NonNullable<
 >[number];
 
 function admitObjectContactDamage(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly ObjectContactDamageInvocation[] {
   const profile = objectContactDamageSpell(spell);
@@ -154,7 +154,7 @@ function admitObjectContactDamage(
 }
 
 function admitObjectContactDamageRepeat(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly ObjectContactDamageRepeatInvocation[] {
   if (objectContactDamageSpell(spell) === null) {
@@ -202,7 +202,7 @@ function objectContactDamageRepeatIsDiscoverable(
   );
 }
 
-function objectContactDamageSpell(spell: SpellRecord): {
+function objectContactDamageSpell(spell: BattleSpellAdmissionSource): {
   readonly damageAmount: DiceAmount;
   readonly damageType: Extract<DamageType, "fire">;
   readonly durationTicks: ElapsedTimeTicks;

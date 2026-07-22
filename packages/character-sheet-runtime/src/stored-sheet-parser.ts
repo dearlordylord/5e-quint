@@ -1,3 +1,4 @@
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import {
   ALIGNMENT_MORALITIES,
   ALIGNMENT_ORDERS,
@@ -507,7 +508,7 @@ function parseUseCountResourceExpenditureUnitId(
       "Character Sheet use-count expenditure requires a supported class feature Unit id.",
     );
   }
-  return Either.right(expenditure.unitId);
+  return Either.right(authoredUnitId(expenditure.unitId));
 }
 
 function parsePointPoolResourceExpenditureUnitId(
@@ -515,13 +516,13 @@ function parsePointPoolResourceExpenditureUnitId(
 ): Either.Either<CharacterSheetPointPoolResourceUnitId, CharacterSheetIssue> {
   if (
     typeof expenditure.unitId !== "string" ||
-    !isCharacterSheetPointPoolResourceUnitId(expenditure.unitId)
+    !isCharacterSheetPointPoolResourceUnitId(authoredUnitId(expenditure.unitId))
   ) {
     return characterSheetIssue(
       "Character Sheet point-pool expenditure requires a supported class feature Unit id.",
     );
   }
-  return Either.right(expenditure.unitId);
+  return Either.right(authoredUnitId(expenditure.unitId));
 }
 
 export function parseResourceCount(
@@ -574,7 +575,7 @@ export function parseCharacterBuild(
     return Either.left(proficiencyChoices.left);
   }
   const speciesChoiceFacts = parseStoredSpeciesChoiceFacts(
-    value.species,
+    authoredUnitId(value.species),
     value.speciesChoiceFacts,
     unitLibrary,
   );
@@ -604,8 +605,8 @@ export function parseCharacterBuild(
 
   const build: CharacterBuild = {
     progression: progression.right,
-    background: value.background,
-    species: value.species,
+    background: authoredUnitId(value.background),
+    species: authoredUnitId(value.species),
     originLanguages: originLanguages.right,
     classFeatureLanguages: classFeatureLanguages.right,
     alignment: alignment.right,
@@ -833,7 +834,7 @@ function parseStoredProgression(
       );
     }
     advancements.push({
-      classUnitId: classUnitId(advancement.classUnitId),
+      classUnitId: classUnitId(authoredUnitId(advancement.classUnitId)),
       hitPointRule: { tag: "fixedHigherLevelGain" as const },
     });
   }
@@ -842,7 +843,7 @@ function parseStoredProgression(
     return characterSheetIssue("Character Build progression is invalid.");
   }
   return Either.right({
-    startingClass: classUnitId(value.startingClass),
+    startingClass: classUnitId(authoredUnitId(value.startingClass)),
     advancements,
   });
 }
@@ -1064,7 +1065,7 @@ function parseStoredClassFeatureLanguages(input: {
     }
     const languageFact: StoredClassFeatureLanguageFact = {
       kind: item.kind,
-      sourceUnitId: item.sourceUnitId,
+      sourceUnitId: authoredUnitId(item.sourceUnitId),
       language: item.language,
     };
 
@@ -1358,8 +1359,8 @@ function parseStoredFeatures(
     ) {
       features.push({
         kind: "selectedClassChoice" as const,
-        unitId: feature.unitId,
-        selectedFromUnitId: feature.selectedFromUnitId,
+        unitId: authoredUnitId(feature.unitId),
+        selectedFromUnitId: authoredUnitId(feature.selectedFromUnitId),
       });
     } else if (
       feature.kind === "selectedEldritchInvocation" &&
@@ -1375,7 +1376,7 @@ function parseStoredFeatures(
       features.push({
         kind: "selectedEldritchInvocation" as const,
         selection: selection.right,
-        selectedFromUnitId: feature.selectedFromUnitId,
+        selectedFromUnitId: authoredUnitId(feature.selectedFromUnitId),
       });
     } else if (
       feature.kind === "selectedSorcererMetamagicOption" &&
@@ -1390,7 +1391,7 @@ function parseStoredFeatures(
       features.push({
         kind: "selectedSorcererMetamagicOption" as const,
         optionId: optionId.right,
-        selectedFromUnitId: feature.selectedFromUnitId,
+        selectedFromUnitId: authoredUnitId(feature.selectedFromUnitId),
       });
     } else if (feature.kind === "abilityCheckBonus") {
       const abilityCheckBonus = parseStoredAbilityCheckBonusFeature({
@@ -1483,13 +1484,13 @@ function parseStoredEldritchInvocationRepeatableChoice(
   ) {
     return Either.right({
       kind: "knownWarlockCantrip",
-      cantripId: value.cantripId,
+      cantripId: authoredUnitId(value.cantripId),
     });
   }
   if (value.kind === "originFeat" && typeof value.featUnitId === "string") {
     return Either.right({
       kind: "originFeat",
-      featUnitId: value.featUnitId,
+      featUnitId: authoredUnitId(value.featUnitId),
     });
   }
   return characterSheetIssue(
@@ -1523,7 +1524,7 @@ function parseStoredAbilityCheckBonusFeature(input: {
       ability: feature.bonus.ability,
       minimum: feature.bonus.minimum,
     },
-    selectedFromUnitId: input.selectedFromUnitId,
+    selectedFromUnitId: authoredUnitId(input.selectedFromUnitId),
   });
 }
 
@@ -1577,11 +1578,11 @@ function parseStoredSpellcastingSource(
     return Either.left(bookOfShadows.left);
   }
   return Either.right({
-    sourceUnitId: value.sourceUnitId,
+    sourceUnitId: authoredUnitId(value.sourceUnitId),
     spellcastingAbility: value.spellcastingAbility,
-    cantrips: value.cantrips,
-    spellbook: value.spellbook,
-    preparedSpells: value.preparedSpells,
+    cantrips: value.cantrips.map(authoredUnitId),
+    spellbook: value.spellbook.map(authoredUnitId),
+    preparedSpells: value.preparedSpells.map(authoredUnitId),
     spellcastingFocuses:
       value.spellcastingFocuses as readonly CharacterBuildSpellcastingFocus[],
     ...(bookOfShadows === undefined
@@ -1667,7 +1668,11 @@ function parseStoredBookOfShadowsCantripIds(
       "Character Build Book of Shadows requires exactly three cantrips.",
     );
   }
-  return Either.right([first, second, third]);
+  return Either.right([
+    authoredUnitId(first),
+    authoredUnitId(second),
+    authoredUnitId(third),
+  ]);
 }
 
 function parseStoredBookOfShadowsRitualSpellIds(
@@ -1687,7 +1692,7 @@ function parseStoredBookOfShadowsRitualSpellIds(
       "Character Build Book of Shadows requires exactly two Ritual spells.",
     );
   }
-  return Either.right([first, second]);
+  return Either.right([authoredUnitId(first), authoredUnitId(second)]);
 }
 
 function parseStoredSpellSlotPools(

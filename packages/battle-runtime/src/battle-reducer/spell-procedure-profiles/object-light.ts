@@ -1,3 +1,4 @@
+import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-light
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-range-increase
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE
@@ -23,7 +24,6 @@
 
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
-import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 import {
   battleSpellEffectOccurrenceId,
@@ -31,15 +31,14 @@ import {
   type CombatantId,
 } from "../../identity.ts";
 import {
-  maybeOpenInterruptWindow,
-  snapshotBattle,
   type BattleActDiscoveryCandidate,
   type BattleResolutionResult,
   type BattleState,
   type BattleExecutableSpellInvocation,
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
-import type { CharacterBattleSpellcastingState } from "../../character-battle-resources.ts";
+import { maybeOpenInterruptWindow, snapshotBattle } from "../dispatcher.ts";
+import type { CharacterBattleSpellcastingExecutionState } from "../../character-battle-resource-execution.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
@@ -74,7 +73,7 @@ import { discoverDistantSpellMetamagicSelections } from "../metamagic-support.ts
 const LIGHT_OBJECT_MAX_SIZE = "large" as const;
 
 type ActivationPhase = Extract<
-  SpellRecord["mechanics"],
+  BattleSpellAdmissionSource["mechanics"],
   { readonly family: "activation" }
 >["phases"][number];
 type LightCantripObjectLightDirectPhase = Extract<
@@ -112,9 +111,11 @@ type ObjectLightInvocation = Extract<
   { readonly procedure: "objectLight" }
 >;
 
-function isLightObjectSpell(spell: SpellRecord): spell is SpellRecord & {
+function isLightObjectSpell(
+  spell: BattleSpellAdmissionSource,
+): spell is BattleSpellAdmissionSource & {
   readonly mechanics: Extract<
-    SpellRecord["mechanics"],
+    BattleSpellAdmissionSource["mechanics"],
     { family: "activation" }
   >;
 } {
@@ -150,7 +151,7 @@ function isObjectLightDirectPhase(
 }
 
 function admitCantripObjectLight(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
 ): readonly ObjectLightInvocation[] {
   if (!isLightObjectSpell(spell)) {
     return [];
@@ -205,10 +206,10 @@ function admitCantripObjectLight(
 }
 
 function isContinualFlameObjectSpell(
-  spell: SpellRecord,
-): spell is SpellRecord & {
+  spell: BattleSpellAdmissionSource,
+): spell is BattleSpellAdmissionSource & {
   readonly mechanics: Extract<
-    SpellRecord["mechanics"],
+    BattleSpellAdmissionSource["mechanics"],
     { family: "activation" }
   >;
 } {
@@ -249,8 +250,8 @@ function isTouchedObjectLightDirectPhase(
 }
 
 function admitPreparedObjectLight(
-  spell: SpellRecord,
-  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
+  spell: BattleSpellAdmissionSource,
+  spellSlots: CharacterBattleSpellcastingExecutionState["spellSlots"],
 ): readonly ObjectLightInvocation[] {
   if (!isContinualFlameObjectSpell(spell)) {
     return [];
@@ -301,7 +302,7 @@ function admitPreparedObjectLight(
 }
 
 function admitObjectLight(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly ObjectLightInvocation[] {
   return [

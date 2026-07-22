@@ -14,9 +14,9 @@ import {
   isFixedDistancePointRange,
   type Attachment,
   type DamageType,
-  type SpellRecord,
   type TargetSelection,
 } from "@dnd/surface/surface/types";
+import type { BattleSpellAdmissionSource } from "../battle-state-execution.ts";
 import { Match } from "effect";
 import {
   SUPPORTED_POINT_SPHERE_SAVE_GATE_RADIUS_FEET,
@@ -34,8 +34,7 @@ import {
   type SpellTargeting,
   type SupportedSpellInvocation,
 } from "../battle-state-execution.ts";
-import type { CharacterBattleSpellcastingState } from "../character-battle-resources.ts";
-import { singleTargetSpellRangeFeet } from "../procedure-admission/spell-range-facts.ts";
+import type { CharacterBattleSpellcastingExecutionState } from "../character-battle-resource-execution.ts";
 import {
   CHROMATIC_ORB_CONTINUATION_LIMIT_KINDS,
   CHROMATIC_ORB_DAMAGE_TYPES,
@@ -48,8 +47,9 @@ import {
 import {
   sameDiceExpr,
   sameStringSet,
+  singleTargetSpellRangeFeet,
   supportedDamageAmountExpr,
-} from "./spells-profile-shared.ts";
+} from "./spells-execution-facts.ts";
 
 export type SpellAttackDamageInvocation = Extract<
   SupportedSpellInvocation,
@@ -99,7 +99,7 @@ export function spellAttackKindForRedirect(
 }
 
 export function supportedSpellPostDamageRiders(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   phase: Extract<SpellActivationPhase, { readonly kind: "attack_roll" }>,
   effects: readonly SpellAttackHitEffect[],
 ): readonly SpellPostDamageRider[] | null {
@@ -240,14 +240,14 @@ function supportedSpellAttackLaterDamage(
 }
 
 export function isStarryWispInvisibleBenefitDenialRiderShape(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   phase: Extract<SpellActivationPhase, { readonly kind: "attack_roll" }>,
 ): boolean {
   return isStarryWispDimLightRiderShape(spell, phase);
 }
 
 export function isStarryWispDimLightRiderShape(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   phase: Extract<SpellActivationPhase, { readonly kind: "attack_roll" }>,
 ): boolean {
   return (
@@ -258,7 +258,7 @@ export function isStarryWispDimLightRiderShape(
 }
 
 export function isChillTouchHitPointRegainPreventionRiderShape(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   phase: Extract<SpellActivationPhase, { readonly kind: "attack_roll" }>,
 ): boolean {
   return (
@@ -269,7 +269,7 @@ export function isChillTouchHitPointRegainPreventionRiderShape(
 }
 
 export function isRayOfSicknessPoisonedRiderShape(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   phase: Extract<SpellActivationPhase, { readonly kind: "attack_roll" }>,
 ): boolean {
   return (
@@ -280,7 +280,7 @@ export function isRayOfSicknessPoisonedRiderShape(
 }
 
 export function isShockingGraspOpportunityAttackRiderShape(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   phase: Extract<SpellActivationPhase, { readonly kind: "attack_roll" }>,
 ): boolean {
   return (
@@ -291,7 +291,7 @@ export function isShockingGraspOpportunityAttackRiderShape(
 }
 
 export function isGuidingBoltNextAttackRiderShape(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   phase: Extract<SpellActivationPhase, { readonly kind: "attack_roll" }>,
 ): boolean {
   return (
@@ -304,8 +304,8 @@ export function isGuidingBoltNextAttackRiderShape(
 }
 
 export function supportedPreparedSpellAttackSequenceProfile(
-  spell: SpellRecord,
-  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
+  spell: BattleSpellAdmissionSource,
+  spellSlots: CharacterBattleSpellcastingExecutionState["spellSlots"],
   spellcastingAbilityModifier: AbilityModifier,
   proficiencyBonus: ProficiencyBonusType,
 ): readonly SpellAttackSequenceInvocation[] {
@@ -376,8 +376,8 @@ export function supportedPreparedSpellAttackSequenceProfile(
 }
 
 export function supportedPreparedChainedSpellAttackDamageProfile(
-  spell: SpellRecord,
-  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
+  spell: BattleSpellAdmissionSource,
+  spellSlots: CharacterBattleSpellcastingExecutionState["spellSlots"],
   spellcastingAbilityModifier: AbilityModifier,
   proficiencyBonus: ProficiencyBonusType,
 ): readonly SupportedSpellInvocation[] {
@@ -498,8 +498,8 @@ export function isChromaticOrbContinuationLimitSetShape(
 }
 
 export function supportedPreparedAttackBurstSaveDamageProfile(
-  spell: SpellRecord,
-  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
+  spell: BattleSpellAdmissionSource,
+  spellSlots: CharacterBattleSpellcastingExecutionState["spellSlots"],
   spellcastingAbilityModifier: AbilityModifier,
   proficiencyBonus: ProficiencyBonusType,
 ): readonly AttackBurstSaveDamageInvocation[] {
@@ -522,7 +522,7 @@ export function supportedPreparedAttackBurstSaveDamageProfile(
 
 export function supportedAttackBurstSaveDamageProfile(
   input: {
-    readonly spell: SpellRecord;
+    readonly spell: BattleSpellAdmissionSource;
     readonly spellcastingAbilityModifier: AbilityModifier;
     readonly proficiencyBonus: ProficiencyBonusType;
     readonly slotLevel: SpellSlotLevel;
@@ -622,7 +622,7 @@ export function supportedAttackBurstSaveDamageProfile(
 
 export function supportedSpellAttackDamageProfile(
   input: {
-    readonly spell: SpellRecord;
+    readonly spell: BattleSpellAdmissionSource;
     readonly spellcastingAbilityModifier: AbilityModifier;
     readonly proficiencyBonus: ProficiencyBonusType;
     readonly slotLevel?: SpellSlotLevel;
@@ -795,7 +795,7 @@ export function supportedSpellAttackDamageProfile(
 }
 
 function supportedSorcerousBurstProjection(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   damageEffect: SpellAttackHitEffect,
   spellcastingAbilityModifier: AbilityModifier,
 ): {
@@ -828,7 +828,7 @@ function supportedSorcerousBurstProjection(
 }
 
 export function supportedCantripSpellAttackSequenceProfile(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   spellcastingAbilityModifier: AbilityModifier,
   proficiencyBonus: ProficiencyBonusType,
   characterLevel: number,
@@ -1024,7 +1024,7 @@ function eldritchBlastBeamCount(
 }
 
 function supportedSpellObjectHitEffect(input: {
-  readonly spell: SpellRecord;
+  readonly spell: BattleSpellAdmissionSource;
   readonly phase: Extract<
     SpellActivationPhase,
     { readonly kind: "attack_roll" }
@@ -1052,7 +1052,7 @@ function supportedSpellObjectHitEffect(input: {
 }
 
 function isFireDamageObjectIgnitionShape(input: {
-  readonly spell: SpellRecord;
+  readonly spell: BattleSpellAdmissionSource;
   readonly phase: Extract<
     SpellActivationPhase,
     { readonly kind: "attack_roll" }
@@ -1095,7 +1095,7 @@ export function spellAttackDamageTargeting(
 
 export function singleSpellAttackDamageRangeFeet(
   targeting: SpellAttackDamageTargeting | null,
-  range: SpellRecord["mechanics"]["range"],
+  range: BattleSpellAdmissionSource["mechanics"]["range"],
 ): ReturnType<typeof singleTargetSpellRangeFeet> {
   if (targeting === null) {
     return null;

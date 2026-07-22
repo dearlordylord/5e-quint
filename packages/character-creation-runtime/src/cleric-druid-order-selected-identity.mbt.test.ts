@@ -2,6 +2,7 @@
 // UNIT-IDENTITY-REPLAY: L1D2-CLERIC-DRUID-ORDER cleric_divine_order doSelectClericProtectorOrder doSelectClericThaumaturgeOrder
 // UNIT-IDENTITY-REPLAY: L1D2-CLERIC-DRUID-ORDER druid_primal_order doSelectDruidMagicianOrder doSelectDruidWardenOrder
 // KERNEL-COVERAGE: parity-witness CREATION.CLASS_FEATURE_OPTION.PROJECTION
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
@@ -595,10 +596,8 @@ function orderOptionSelectionPolicy(
       ...(extraCantripOptionIds.length === 0
         ? {}
         : {
-            [orderChoiceSourceKey(
-              input.orderUnitId,
-              CLASS_CANTRIP_CHOICE_KEY,
-            )]: extraCantripOptionIds,
+            [orderChoiceSourceKey(input.orderUnitId, CLASS_CANTRIP_CHOICE_KEY)]:
+              extraCantripOptionIds,
           }),
     },
     excludedOptionIdsBySource:
@@ -664,8 +663,7 @@ function supportProfileFillForHole(
         : hole.source.tag === "unitChoice"
           ? (optionSelectionPolicy.preferredOptionIdsBySource[
               unitChoiceSourceKey(hole.source)
-            ] ??
-            soldierBackgroundFixtureOptionIds(hole.source))
+            ] ?? soldierBackgroundFixtureOptionIds(hole.source))
           : undefined;
   const defaultOptionIds = hole.options
     .map((option) => option.optionId)
@@ -755,10 +753,10 @@ function orderBuildFacts(
         feature.kind === "selectedClassChoice" &&
         feature.selectedFromUnitId === input.orderUnitId,
     ).length,
-    orderUnitRefPresent: unitRefIds.includes(input.orderUnitId),
+    orderUnitRefPresent: unitRefIds.includes(authoredUnitId(input.orderUnitId)),
     extraCantripUnitRefPresent:
       input.extraCantripUnitId !== "none" &&
-      unitRefIds.includes(input.extraCantripUnitId),
+      unitRefIds.includes(authoredUnitId(input.extraCantripUnitId)),
     martialWeaponProficiencyPresent: proficiencies.weapon.includes("martial"),
     heavyArmorTrainingPresent: armorTraining.includes("heavy"),
     mediumArmorTrainingPresent: armorTraining.includes("medium"),
@@ -839,7 +837,7 @@ function levelOneProgression(
   classId: typeof CLERIC_CLASS_UNIT_ID | typeof DRUID_CLASS_UNIT_ID,
 ): CharacterProgression {
   return {
-    startingClass: classUnitId(classId),
+    startingClass: classUnitId(authoredUnitId(classId)),
     advancements: [],
   };
 }
@@ -864,7 +862,7 @@ function orderChoiceSourceKey(
 ): string {
   return unitChoiceSourceKey({
     tag: "unitChoice",
-    unitId: expectRight(unitChoiceSourceUnitId(unitId)),
+    unitId: expectRight(unitChoiceSourceUnitId(authoredUnitId(unitId))),
     choiceKey: expectRight(unitChoiceKey(choiceKey)),
   });
 }

@@ -1,3 +1,4 @@
+import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV70B light
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-CONTINUAL-FLAME continual_flame
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L14G-D03-SORCERER-METAMAGIC-PARTIAL-PROFILE sorcerer_metamagic
@@ -518,7 +519,7 @@ describe("SRDINV70B deterministic object-light Spell Unit admission", () => {
         },
       ],
       casterMetamagic: {
-        sorceryPointResourceUnitId: "sorcerer_font_of_magic",
+        sorceryPointResourceUnitId: parseSharedUnitId("sorcerer_font_of_magic"),
         spellUseLimit: "one_per_spell_unless_option_allows_stacking",
         knownOptions: [distantMetamagicOption()],
       },
@@ -603,7 +604,7 @@ describe("SRDINV70B deterministic object-light Spell Unit admission", () => {
         },
       ],
       casterMetamagic: {
-        sorceryPointResourceUnitId: "sorcerer_font_of_magic",
+        sorceryPointResourceUnitId: parseSharedUnitId("sorcerer_font_of_magic"),
         spellUseLimit: "one_per_spell_unless_option_allows_stacking",
         knownOptions: [distantMetamagicOption()],
       },

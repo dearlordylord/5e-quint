@@ -45,6 +45,7 @@ import {
   type CharacterBuildSpellcasting,
 } from "@dnd/character-creation-runtime";
 import { elapsedTimeTicks } from "@dnd/shared/elapsed-time";
+import { statBlockId, unitId } from "@dnd/shared/game-facts";
 import { Hp, resourceCount, spellSlotLevel } from "@dnd/shared/types";
 import type { AbilityScoreAssignment as RawAbilityScoreAssignment } from "@dnd/shared-algebras/ability-score-algebra";
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
@@ -87,6 +88,7 @@ import {
   buildStatBlockCatalog,
   defineSrdStatBlockCollection,
 } from "@dnd/surface/surface/stat-block-catalog";
+import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 
 function testAbilityScoreAssignment(scores: RawAbilityScoreAssignment) {
   const parsed = abilityScoreAssignment(scores);
@@ -152,11 +154,11 @@ function testWizardSpellcasting(input: {
   return {
     sources: [
       {
-        sourceUnitId: input.sourceUnitId ?? "class_wizard",
+        sourceUnitId: unitId(input.sourceUnitId ?? "class_wizard"),
         spellcastingAbility: input.spellcastingAbility ?? "int",
-        cantrips: input.cantrips,
-        spellbook: input.spellbook ?? input.preparedSpells,
-        preparedSpells: input.preparedSpells,
+        cantrips: input.cantrips.map(unitId),
+        spellbook: (input.spellbook ?? input.preparedSpells).map(unitId),
+        preparedSpells: input.preparedSpells.map(unitId),
         spellcastingFocuses: ["spellbook"],
       },
     ],
@@ -275,7 +277,7 @@ describe("MCP server route", () => {
   test("builds SRD catalogs and keeps selected Stat Block state identity-only", () => {
     const root = createMcpCompositionRoot();
     const selected = root.sessionStore.selectStatBlock(
-      "stat_block_goblin_warrior",
+      statBlockId("stat_block_goblin_warrior"),
     );
 
     expect(root.unitLibrary.listUnits().length).toBeGreaterThan(0);
@@ -347,12 +349,14 @@ describe("MCP server route", () => {
         },
         {
           combatantId: goblinId,
-          displayName: "Goblin Warrior",
           hp: 10,
           armorClass: 15,
         },
       ],
     });
+    expect(snapshotBattle(state).combatants[1]).not.toHaveProperty(
+      "displayName",
+    );
     expect(state.combatants.get(fighterId)?.initiative).toBe(12);
     expect(state.combatants.get(goblinId)?.initiative).toBe(11);
     expect(root.sessionStore.snapshot().activeBattle).toEqual({
@@ -524,7 +528,7 @@ describe("MCP server route", () => {
       supportProfiles: [WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE],
     });
 
-    const unsupportedCriticalRangeUnit: UnitRecord = {
+    const unsupportedCriticalRangeUnit = decodeUnitRecordSync({
       ...improvedCriticalUnit,
       id: "fighter_unsupported_critical_range",
       mechanics: {
@@ -537,7 +541,12 @@ describe("MCP server route", () => {
           },
         ],
       },
-    };
+    });
+    if (unsupportedCriticalRangeUnit.kind !== "class_feature") {
+      throw new Error(
+        "Expected unsupported critical-range class-feature Unit.",
+      );
+    }
     const unsupportedLibrary = fighterUnitLibraryWithClassFeatureGrant(
       root.unitLibrary,
       unsupportedCriticalRangeUnit,
@@ -887,13 +896,13 @@ describe("MCP server route", () => {
           ...build.features,
           {
             kind: "selectedClassChoice",
-            unitId: "missing_feature_one",
-            selectedFromUnitId: "fighter_fighting_style",
+            unitId: unitId("missing_feature_one"),
+            selectedFromUnitId: unitId("fighter_fighting_style"),
           },
           {
             kind: "selectedClassChoice",
-            unitId: "missing_feature_two",
-            selectedFromUnitId: "fighter_fighting_style",
+            unitId: unitId("missing_feature_two"),
+            selectedFromUnitId: unitId("fighter_fighting_style"),
           },
         ],
       },
@@ -1265,10 +1274,12 @@ describe("MCP server route", () => {
     expect(
       root.sessionStore.battleSession?.state.combatants.get(goblinId),
     ).toMatchObject({
-      displayName: "Goblin Warrior",
       initiative: 7,
       hp: 0,
     });
+    expect(
+      root.sessionStore.battleSession?.state.combatants.get(goblinId),
+    ).not.toHaveProperty("displayName");
     expect(started).toMatchObject({
       snapshot: {
         battleId: "battle:mcp-shell",
@@ -2105,13 +2116,13 @@ describe("MCP server route", () => {
     const allyId = combatantId("sneak-attack-ally");
     const battleState = root.sessionStore.battleSession;
     const rogue = battleState.state.combatants.get(fighterId);
-    if (rogue === undefined) {
+    if (rogue === undefined || rogue.origin.kind !== "character") {
       throw new Error("Expected rogue combatant in MCP Sneak Attack fixture.");
     }
     const combatants = new Map(battleState.state.combatants).set(allyId, {
       ...rogue,
       combatantId: allyId,
-      displayName: "Sneak Attack Ally",
+      origin: { ...rogue.origin, displayName: "Sneak Attack Ally" },
     });
     root.sessionStore.battleSession = battleRuntimeSessionForTest({
       ...battleState,
@@ -2383,8 +2394,14 @@ describe("MCP server route", () => {
       currentActorId: "first-goblin",
       turnOrder: ["first-goblin", "second-goblin"],
       combatants: [
-        { combatantId: "first-goblin", displayName: "Goblin Warrior" },
-        { combatantId: "second-goblin", displayName: "Goblin Warrior" },
+        {
+          combatantId: "first-goblin",
+          displayName: "Goblin Warrior",
+        },
+        {
+          combatantId: "second-goblin",
+          displayName: "Goblin Warrior",
+        },
       ],
     });
     expect(root.sessionStore.snapshot()).toMatchObject({
@@ -2443,7 +2460,8 @@ describe("MCP server route", () => {
         {
           ownerId: "wizard",
           companionId: "wizard-familiar",
-          formSelection: { tag: "normalNamedForm", formId: "cat" },
+          formAccess: "findFamiliar",
+          resolvedStatBlockId: "stat_block_cat",
           creatureTypeOverride: "fey",
         },
       ],
@@ -2809,7 +2827,8 @@ describe("MCP server route", () => {
         {
           ownerId: "wizard",
           companionId: "wizard-familiar",
-          formSelection: { tag: "normalNamedForm", formId: "owl" },
+          formAccess: "findFamiliar",
+          resolvedStatBlockId: "stat_block_owl",
         },
       ],
     });
@@ -5851,7 +5870,7 @@ function goblinWarriorMultiattackStatBlock(
   // Multiattack, but this keeps the fixture small while exercising the tool path.
   return {
     ...base,
-    id: "stat_block_goblin_warrior_mcp_multiattack",
+    id: statBlockId("stat_block_goblin_warrior_mcp_multiattack"),
     name: "Upgraded Goblin Warrior",
     statBlock: {
       ...base.statBlock,
@@ -5934,10 +5953,22 @@ function characterUnitRef(
 function fighterTwoLightWeaponBuild(
   unitLibrary: ReturnType<typeof createMcpCompositionRoot>["unitLibrary"],
 ): CharacterBuild {
+  const fighter = fighterCharacterBuild(unitLibrary);
   return {
-    ...fighterCharacterBuild(unitLibrary),
+    ...fighter,
     equipment: {
-      ...fighterCharacterBuild(unitLibrary).equipment,
+      ...fighter.equipment,
+      owned: [
+        ...fighter.equipment.owned,
+        {
+          itemId: testCharacterEquipmentItemId("main", "weapon_shortsword"),
+          unitId: unitId("weapon_shortsword"),
+        },
+        {
+          itemId: testCharacterEquipmentItemId("off", "weapon_dagger"),
+          unitId: unitId("weapon_dagger"),
+        },
+      ],
       loadout: {
         armor: testCharacterEquipmentItemId("armor", "armor_chain_mail"),
         weapon: {
@@ -6088,7 +6119,7 @@ function retainedFamiliarCompanionInput(
         tag: "embodiedOutsideBattle",
         selectedForm: { tag: "normalNamedForm", formId },
         creatureTypeOverride: "fey",
-        resolvedStatBlockId: `stat_block_${formId}`,
+        resolvedStatBlockId: statBlockId(`stat_block_${formId}`),
         hitPoints: {
           // Cast evidence: retainedFamiliarCompanionInput is a test fixture
           // helper; tests pass zero explicitly only when asserting rejection.
@@ -6497,15 +6528,23 @@ function rogueCharacterBuild(
   } = {},
 ): CharacterBuild {
   const classUnit = rogueClassUnit(unitLibrary);
+  const fighter = fighterCharacterBuild(unitLibrary);
   return {
     ...characterBuildForClassProgression({
-      base: fighterCharacterBuild(unitLibrary),
+      base: fighter,
       classUnit,
       level: input.level ?? 1,
       keepClassChoices: false,
     }),
     equipment: {
-      ...fighterCharacterBuild(unitLibrary).equipment,
+      ...fighter.equipment,
+      owned: [
+        ...fighter.equipment.owned,
+        {
+          itemId: testCharacterEquipmentItemId("main", "weapon_dagger"),
+          unitId: unitId("weapon_dagger"),
+        },
+      ],
       loadout: {
         weapon: {
           itemId: testCharacterEquipmentItemId("main", "weapon_dagger"),
@@ -6553,15 +6592,15 @@ function rogueClassUnit(
     fighter;
   return {
     ...fighterWithoutSpellcasting,
-    id: "class_rogue",
+    id: unitId("class_rogue"),
     name: "Rogue",
     className: "rogue",
     hitPointDie: 8,
     featureGrants: [
-      { level: 1, unitId: "rogue_sneak_attack" },
-      { level: 2, unitId: "rogue_cunning_action" },
-      { level: 5, unitId: "rogue_uncanny_dodge" },
-      { level: 7, unitId: "rogue_evasion" },
+      { level: 1, unitId: unitId("rogue_sneak_attack") },
+      { level: 2, unitId: unitId("rogue_cunning_action") },
+      { level: 5, unitId: unitId("rogue_uncanny_dodge") },
+      { level: 7, unitId: unitId("rogue_evasion") },
     ],
   };
 }
@@ -6606,14 +6645,16 @@ function unitLibraryWithOverrides(
 
   return {
     ...unitLibrary,
-    getUnit: (unitId: string) => {
-      const unit = unitById.get(unitId);
+    getUnit: (requestedUnitId) => {
+      const unit = unitById.get(unitId(requestedUnitId));
       return unit === undefined ? Option.none() : Option.some(unit);
     },
     listUnits: () => [...unitById.values()],
-    requireUnit: (unitId: string) => {
-      const unit = unitById.get(unitId);
-      return unit === undefined ? unitLibrary.requireUnit(unitId) : unit;
+    requireUnit: (requestedUnitId) => {
+      const unit = unitById.get(unitId(requestedUnitId));
+      return unit === undefined
+        ? unitLibrary.requireUnit(requestedUnitId)
+        : unit;
     },
   };
 }

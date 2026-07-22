@@ -3,6 +3,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L19E-08-L5-TELEPORT-TRAVEL teleportation_circle
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L19E-08-L5-TELEPORT-TRAVEL teleportation_circle
 // UNIT-IDENTITY-REPLAY: L19E-08-L5-TELEPORT-TRAVEL teleportation_circle doCastTeleportationCircle
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, it, test } from "vitest";
 
 import {
@@ -243,11 +244,15 @@ function teleportationCircleBardSheet(input: {
         spellcasting: {
           sources: [
             {
-              sourceUnitId: "class_bard",
+              sourceUnitId: authoredUnitId("class_bard"),
               spellcastingAbility: "cha",
-              cantrips: ["mage_hand", "minor_illusion", "vicious_mockery"],
+              cantrips: [
+                authoredUnitId("mage_hand"),
+                authoredUnitId("minor_illusion"),
+                authoredUnitId("vicious_mockery"),
+              ],
               spellbook: [],
-              preparedSpells: input.preparedSpells,
+              preparedSpells: input.preparedSpells.map(authoredUnitId),
               spellcastingFocuses: ["musical_instrument"],
             },
           ],

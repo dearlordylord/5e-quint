@@ -553,6 +553,15 @@ export function settleCharacterSheetFromBattle(input: {
     sheet: settledCharacter.right,
     state: input.state,
     ownerCombatantId: input.combatant.combatantId,
+    unitLibrary: input.unitLibrary,
+    ...(runtimeContext.retainedCompanionSelection === undefined
+      ? {}
+      : {
+          retainedCompanionSelection: runtimeContext.retainedCompanionSelection,
+        }),
+    ...(input.statBlockCatalog === undefined
+      ? {}
+      : { statBlockCatalog: input.statBlockCatalog }),
   });
 }
 

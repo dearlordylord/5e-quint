@@ -1,3 +1,4 @@
+import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.creature-type-protection-and-charm
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-glyph-stored-concentration-full-duration
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION
@@ -10,11 +11,8 @@
 
 import { movementFeet } from "@dnd/shared/types";
 import { CreatureTypeSchema } from "@dnd/surface/surface/schema";
-import type { SpellRecord } from "@dnd/surface/surface/types";
 
 import {
-  maybeOpenInterruptWindow,
-  snapshotBattle,
   type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
@@ -23,6 +21,7 @@ import {
   type BattleState,
   type CreatureTypeProtectionSpellInvocation,
 } from "../../battle-state-execution.ts";
+import { maybeOpenInterruptWindow, snapshotBattle } from "../dispatcher.ts";
 import { CombatantId } from "../../identity.ts";
 import { BattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";
@@ -66,7 +65,7 @@ type CreatureTypeProtectionTargetSelection =
   | { readonly tag: "invalid"; readonly message: string };
 
 function admitCreatureTypeProtection(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly CreatureTypeProtectionSpellInvocation[] {
   const projection = creatureTypeProtectionSpellProjection(
@@ -95,7 +94,7 @@ function admitCreatureTypeProtection(
 
 function creatureTypeProtectionSpellProjection(
   actorId: CombatantId,
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
 ): Pick<
   CreatureTypeProtectionSpellInvocation,
   "activeEffect" | "rangeFeet" | "targeting"
@@ -110,7 +109,7 @@ function creatureTypeProtectionSpellProjection(
 
 function protectionFromEvilAndGoodSpellProjection(
   actorId: CombatantId,
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
 ): Pick<
   CreatureTypeProtectionSpellInvocation,
   "activeEffect" | "rangeFeet" | "targeting"
@@ -182,7 +181,7 @@ function protectionFromEvilAndGoodSpellProjection(
 
 function dispelEvilAndGoodProtectionSpellProjection(
   actorId: CombatantId,
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
 ): Pick<
   CreatureTypeProtectionSpellInvocation,
   "activeEffect" | "rangeFeet" | "targeting"

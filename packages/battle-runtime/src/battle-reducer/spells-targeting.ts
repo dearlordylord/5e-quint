@@ -13,8 +13,6 @@ import {
 import { SIZES } from "@dnd/shared/types";
 import { battleCreatureType } from "./domain-helpers.ts";
 import {
-  ATTACK_TARGET_HOLE_ID,
-  ATTACK_TARGET_HOLE_INSTANCE,
   type BattleObjectContactTargetsHole,
   type BattleExecutableSpellInvocation,
   type BattleHoleId,
@@ -37,6 +35,10 @@ import {
   type BattleTargetSpatialFact,
   type TargetListSpellInvocation,
 } from "../battle-state-execution.ts";
+import {
+  ATTACK_TARGET_HOLE_ID,
+  ATTACK_TARGET_HOLE_INSTANCE,
+} from "./battle-runtime-protocol.ts";
 import type { RuntimeSpellProcedureExecution } from "../character-execution.ts";
 import { COMMAND_OPTIONS } from "./domain-constants.ts";
 import {
@@ -58,7 +60,7 @@ import {
   type CombatantId,
 } from "../identity.ts";
 import { combatantWearingArmor } from "./creature-state-leaves.ts";
-import { spellAttackSequencePartName } from "./spells-profile-shared.ts";
+import { spellAttackSequencePartName } from "./spells-execution-facts.ts";
 import {
   SPELL_MAGICAL_EFFECT_SOURCE,
   magicalEffectTargetsInterdictionMessage,

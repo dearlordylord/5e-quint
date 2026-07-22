@@ -14,6 +14,7 @@
 // UNIT-IDENTITY-REPLAY: B6-CLASS-FEATURE-IDENTITY-BATCH-3 warlock_pact_magic doProjectWarlockPactMagic
 // UNIT-IDENTITY-REPLAY: B6-CLASS-FEATURE-IDENTITY-BATCH-3 wizard_scholar doSelectWizardScholar
 // UNIT-IDENTITY-REPLAY: B6-CLASS-FEATURE-IDENTITY-BATCH-3 wizard_evocation_savant doSelectWizardEvocationSavant
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import * as path from "node:path";
 
 import {
@@ -501,7 +502,7 @@ function bardExpertiseProjection(): ClassFeatureSelectedIdentityProjection {
   const draft = completeBardExpertiseDraft();
   const selectedExpertiseSkills = selectedSkillsFromChoice(
     draft,
-    BARD_EXPERTISE_UNIT_ID,
+    authoredUnitId(BARD_EXPERTISE_UNIT_ID),
     CLASS_FEATURE_PROFICIENCY_CHOICE_KEY,
   );
   if (!sameSkillList(selectedExpertiseSkills, BARD_EXPERTISE_SKILLS)) {
@@ -546,7 +547,7 @@ function completeBardExpertiseDraft(): CharacterDraft {
     unitLibrary,
     draftId: characterDraftId("bard-expertise-selected-identity"),
   });
-  const progression = classProgression(BARD_CLASS_UNIT_ID, 2);
+  const progression = classProgression(authoredUnitId(BARD_CLASS_UNIT_ID), 2);
   const preferredOptionIdsBySource = {
     [choiceSourceKey(BARD_CLASS_UNIT_ID, CLASS_SKILL_PROFICIENCY_CHOICE_KEY)]:
       BARD_SKILL_PROFICIENCIES.map(creationChoiceOptionId),
@@ -592,7 +593,7 @@ function completeBardExpertiseDraft(): CharacterDraft {
 function completePaladinFightingStyleDraft(): CharacterDraft {
   return completeClassFeatureDraft({
     draftId: "paladin-fighting-style-selected-identity",
-    progression: classProgression(PALADIN_CLASS_UNIT_ID, 2),
+    progression: classProgression(authoredUnitId(PALADIN_CLASS_UNIT_ID), 2),
     preferredOptionIdsBySource: {
       [choiceSourceKey(
         PALADIN_FIGHTING_STYLE_UNIT_ID,
@@ -609,7 +610,7 @@ function completePaladinFightingStyleDraft(): CharacterDraft {
 function completeRangerDeftExplorerDraft(): CharacterDraft {
   return completeClassFeatureDraft({
     draftId: "ranger-deft-explorer-selected-identity",
-    progression: classProgression(RANGER_CLASS_UNIT_ID, 2),
+    progression: classProgression(authoredUnitId(RANGER_CLASS_UNIT_ID), 2),
     preferredOptionIdsBySource: rangerDeftExplorerOptionIds(),
   });
 }
@@ -617,7 +618,7 @@ function completeRangerDeftExplorerDraft(): CharacterDraft {
 function completeRangerFightingStyleDraft(): CharacterDraft {
   return completeClassFeatureDraft({
     draftId: "ranger-fighting-style-selected-identity",
-    progression: classProgression(RANGER_CLASS_UNIT_ID, 2),
+    progression: classProgression(authoredUnitId(RANGER_CLASS_UNIT_ID), 2),
     preferredOptionIdsBySource: {
       ...rangerDeftExplorerOptionIds(),
       [choiceSourceKey(
@@ -638,7 +639,7 @@ function completeRangerFightingStyleDraft(): CharacterDraft {
 function completeWarlockPactMagicDraft(): CharacterDraft {
   return completeClassFeatureDraft({
     draftId: "warlock-pact-magic-selected-identity",
-    progression: classProgression(WARLOCK_CLASS_UNIT_ID, 1),
+    progression: classProgression(authoredUnitId(WARLOCK_CLASS_UNIT_ID), 1),
     preferredOptionIdsBySource: {
       [choiceSourceKey(WARLOCK_CLASS_UNIT_ID, CLASS_CANTRIP_CHOICE_KEY)]: [
         creationChoiceOptionId("eldritch_blast"),
@@ -671,7 +672,7 @@ function rangerDeftExplorerOptionIds(): PreferredOptionIdsBySource {
 function completeWizardScholarDraft(): CharacterDraft {
   return completeClassFeatureDraft({
     draftId: "wizard-scholar-selected-identity",
-    progression: classProgression(WIZARD_CLASS_UNIT_ID, 2),
+    progression: classProgression(authoredUnitId(WIZARD_CLASS_UNIT_ID), 2),
     preferredOptionIdsBySource: {
       [choiceSourceKey(
         WIZARD_CLASS_UNIT_ID,
@@ -688,7 +689,7 @@ function completeWizardScholarDraft(): CharacterDraft {
 function completeWizardEvocationSavantDraft(): CharacterDraft {
   return completeClassFeatureDraft({
     draftId: "wizard-evocation-savant-selected-identity",
-    progression: classProgression(WIZARD_CLASS_UNIT_ID, 3),
+    progression: classProgression(authoredUnitId(WIZARD_CLASS_UNIT_ID), 3),
     preferredOptionIdsBySource: {
       [choiceSourceKey(
         WIZARD_CLASS_UNIT_ID,
@@ -777,7 +778,10 @@ function completeClassFeatureDraft(input: {
 }
 
 function clericChannelDivinityProjection(): ClassFeatureSelectedIdentityProjection {
-  const build = classBuild({ startingClass: "class_cleric", totalLevel: 2 });
+  const build = classBuild({
+    startingClass: authoredUnitId("class_cleric"),
+    totalLevel: 2,
+  });
   const resource = requiredBuildResource(
     build,
     CLERIC_CHANNEL_DIVINITY_UNIT_ID,
@@ -819,7 +823,10 @@ function clericChannelDivinityProjection(): ClassFeatureSelectedIdentityProjecti
 }
 
 function druidWildShapeProjection(): ClassFeatureSelectedIdentityProjection {
-  const build = classBuild({ startingClass: "class_druid", totalLevel: 2 });
+  const build = classBuild({
+    startingClass: authoredUnitId("class_druid"),
+    totalLevel: 2,
+  });
   const facts = requireDefined(
     requireRight(characterBuildDruidWildShapeFacts({ build, unitLibrary })),
     "Expected Druid Wild Shape facts.",
@@ -841,7 +848,10 @@ function druidWildShapeProjection(): ClassFeatureSelectedIdentityProjection {
 }
 
 function druidWildCompanionProjection(): ClassFeatureSelectedIdentityProjection {
-  const build = classBuild({ startingClass: "class_druid", totalLevel: 2 });
+  const build = classBuild({
+    startingClass: authoredUnitId("class_druid"),
+    totalLevel: 2,
+  });
   const featureUnitId = requiredBuildFeatureUnitId(
     build,
     DRUID_WILD_COMPANION_UNIT_ID,
@@ -862,7 +872,7 @@ function druidWildCompanionProjection(): ClassFeatureSelectedIdentityProjection 
   return {
     outcome: "druid-wild-companion",
     featureUnitId,
-    linkedUnitId: linkedSpend.resourceUnitId,
+    linkedUnitId: authoredUnitId(linkedSpend.resourceUnitId),
     choiceCount: unit.mechanics.spendOptions.length,
     resourceMaximum: 0,
     knownFormCount: 0,
@@ -876,7 +886,10 @@ function monksFocusProjection(): ClassFeatureSelectedIdentityProjection {
   const facts = requireDefined(
     requireRight(
       characterBuildMonksFocusFacts({
-        build: classBuild({ startingClass: MONK_CLASS_UNIT_ID, totalLevel: 2 }),
+        build: classBuild({
+          startingClass: authoredUnitId(MONK_CLASS_UNIT_ID),
+          totalLevel: 2,
+        }),
         unitLibrary,
       }),
     ),
@@ -885,7 +898,7 @@ function monksFocusProjection(): ClassFeatureSelectedIdentityProjection {
   return {
     outcome: "monk-monks-focus",
     featureUnitId: expectedClassFeatureUnitId(
-      facts.unitId,
+      authoredUnitId(facts.unitId),
       MONK_MONKS_FOCUS_UNIT_ID,
     ),
     linkedUnitId: "none",
@@ -902,7 +915,10 @@ function monkUncannyMetabolismProjection(): ClassFeatureSelectedIdentityProjecti
   const facts = requireDefined(
     requireRight(
       characterBuildMonkUncannyMetabolismFacts({
-        build: classBuild({ startingClass: MONK_CLASS_UNIT_ID, totalLevel: 2 }),
+        build: classBuild({
+          startingClass: authoredUnitId(MONK_CLASS_UNIT_ID),
+          totalLevel: 2,
+        }),
         unitLibrary,
       }),
     ),
@@ -911,10 +927,10 @@ function monkUncannyMetabolismProjection(): ClassFeatureSelectedIdentityProjecti
   return {
     outcome: "monk-uncanny-metabolism",
     featureUnitId: expectedClassFeatureUnitId(
-      facts.unitId,
+      authoredUnitId(facts.unitId),
       MONK_UNCANNY_METABOLISM_UNIT_ID,
     ),
-    linkedUnitId: facts.focusRecovery.resourceUnitId,
+    linkedUnitId: authoredUnitId(facts.focusRecovery.resourceUnitId),
     choiceCount: 0,
     resourceMaximum: 0,
     knownFormCount: facts.healing.martialArtsDie.dieSize,
@@ -929,12 +945,12 @@ function paladinFightingStyleProjection(): ClassFeatureSelectedIdentityProjectio
   const draft = completePaladinFightingStyleDraft();
   const selectedBranch = selectedChoiceOptionIds(
     draft,
-    PALADIN_FIGHTING_STYLE_UNIT_ID,
+    authoredUnitId(PALADIN_FIGHTING_STYLE_UNIT_ID),
     PALADIN_FIGHTING_STYLE_CHOICE_KEY,
   );
   const selectedFeat = selectedChoiceOptionIds(
     draft,
-    PALADIN_FIGHTING_STYLE_UNIT_ID,
+    authoredUnitId(PALADIN_FIGHTING_STYLE_UNIT_ID),
     CLASS_FEATURE_FEAT_CHOICE_KEY,
   );
   if (
@@ -945,7 +961,9 @@ function paladinFightingStyleProjection(): ClassFeatureSelectedIdentityProjectio
   }
   const finalized = finalizeReadyBuild(draft, PALADIN_FIGHTING_STYLE_UNIT_ID);
   if (
-    !characterBuildFeatureUnitIds(finalized, unitLibrary).includes("defense")
+    !characterBuildFeatureUnitIds(finalized, unitLibrary).includes(
+      authoredUnitId("defense"),
+    )
   ) {
     throw new Error("Expected Paladin Fighting Style to grant Defense.");
   }
@@ -956,7 +974,7 @@ function paladinFightingStyleProjection(): ClassFeatureSelectedIdentityProjectio
       PALADIN_FIGHTING_STYLE_UNIT_ID,
       PALADIN_FIGHTING_STYLE_CHOICE_KEY,
     ),
-    linkedUnitId: "defense",
+    linkedUnitId: authoredUnitId("defense"),
     choiceCount: selectedBranch.length + selectedFeat.length,
     resourceMaximum: 0,
     knownFormCount: 0,
@@ -970,7 +988,7 @@ function rangerDeftExplorerProjection(): ClassFeatureSelectedIdentityProjection 
   const draft = completeRangerDeftExplorerDraft();
   const selectedExpertise = selectedSkillsFromChoice(
     draft,
-    RANGER_DEFT_EXPLORER_UNIT_ID,
+    authoredUnitId(RANGER_DEFT_EXPLORER_UNIT_ID),
     CLASS_FEATURE_PROFICIENCY_CHOICE_KEY,
   );
   if (!sameSkillList(selectedExpertise, ["athletics"])) {
@@ -978,7 +996,7 @@ function rangerDeftExplorerProjection(): ClassFeatureSelectedIdentityProjection 
   }
   const selectedLanguages = selectedChoiceOptionIds(
     draft,
-    RANGER_DEFT_EXPLORER_UNIT_ID,
+    authoredUnitId(RANGER_DEFT_EXPLORER_UNIT_ID),
     CLASS_FEATURE_LANGUAGE_CHOICE_KEY,
   );
   const finalized = finalizeReadyBuild(draft, RANGER_DEFT_EXPLORER_UNIT_ID);
@@ -1009,12 +1027,12 @@ function rangerFightingStyleProjection(): ClassFeatureSelectedIdentityProjection
   const draft = completeRangerFightingStyleDraft();
   const selectedBranch = selectedChoiceOptionIds(
     draft,
-    RANGER_FIGHTING_STYLE_UNIT_ID,
+    authoredUnitId(RANGER_FIGHTING_STYLE_UNIT_ID),
     RANGER_FIGHTING_STYLE_CHOICE_KEY,
   );
   const selectedCantrips = selectedChoiceOptionIds(
     draft,
-    RANGER_FIGHTING_STYLE_UNIT_ID,
+    authoredUnitId(RANGER_FIGHTING_STYLE_UNIT_ID),
     CLASS_CANTRIP_CHOICE_KEY,
   );
   if (
@@ -1032,7 +1050,7 @@ function rangerFightingStyleProjection(): ClassFeatureSelectedIdentityProjection
       RANGER_FIGHTING_STYLE_UNIT_ID,
       RANGER_FIGHTING_STYLE_CHOICE_KEY,
     ),
-    linkedUnitId: "guidance",
+    linkedUnitId: authoredUnitId("guidance"),
     choiceCount: selectedBranch.length + selectedCantrips.length,
     resourceMaximum: 0,
     knownFormCount: 0,
@@ -1046,7 +1064,7 @@ function wizardScholarProjection(): ClassFeatureSelectedIdentityProjection {
   const draft = completeWizardScholarDraft();
   const selectedExpertise = selectedSkillsFromChoice(
     draft,
-    WIZARD_SCHOLAR_UNIT_ID,
+    authoredUnitId(WIZARD_SCHOLAR_UNIT_ID),
     CLASS_FEATURE_PROFICIENCY_CHOICE_KEY,
   );
   if (!sameSkillList(selectedExpertise, ["arcana"])) {
@@ -1080,7 +1098,7 @@ function wizardEvocationSavantProjection(): ClassFeatureSelectedIdentityProjecti
   const draft = completeWizardEvocationSavantDraft();
   const selectedSpellbookSpells = selectedChoiceOptionIds(
     draft,
-    WIZARD_EVOCATION_SAVANT_UNIT_ID,
+    authoredUnitId(WIZARD_EVOCATION_SAVANT_UNIT_ID),
     WIZARD_SPELLBOOK_CHOICE_KEY,
   );
   if (selectedSpellbookSpells.join(",") !== "continual_flame,shatter") {
@@ -1092,8 +1110,8 @@ function wizardEvocationSavantProjection(): ClassFeatureSelectedIdentityProjecti
       (source) => source.sourceUnitId === WIZARD_CLASS_UNIT_ID,
     )?.spellbook ?? [];
   if (
-    !spellbook.includes("continual_flame") ||
-    !spellbook.includes("shatter")
+    !spellbook.includes(authoredUnitId("continual_flame")) ||
+    !spellbook.includes(authoredUnitId("shatter"))
   ) {
     throw new Error("Expected Evocation Savant spells in Wizard spellbook.");
   }
@@ -1104,7 +1122,7 @@ function wizardEvocationSavantProjection(): ClassFeatureSelectedIdentityProjecti
       WIZARD_EVOCATION_SAVANT_UNIT_ID,
       WIZARD_SPELLBOOK_CHOICE_KEY,
     ),
-    linkedUnitId: "shatter",
+    linkedUnitId: authoredUnitId("shatter"),
     choiceCount: selectedSpellbookSpells.length,
     resourceMaximum: 0,
     knownFormCount: 0,
@@ -1118,12 +1136,12 @@ function warlockPactMagicProjection(): ClassFeatureSelectedIdentityProjection {
   const draft = completeWarlockPactMagicDraft();
   const selectedCantrips = selectedChoiceOptionIds(
     draft,
-    WARLOCK_CLASS_UNIT_ID,
+    authoredUnitId(WARLOCK_CLASS_UNIT_ID),
     CLASS_CANTRIP_CHOICE_KEY,
   );
   const selectedPreparedSpells = selectedChoiceOptionIds(
     draft,
-    WARLOCK_CLASS_UNIT_ID,
+    authoredUnitId(WARLOCK_CLASS_UNIT_ID),
     CLASS_PREPARED_SPELL_CHOICE_KEY,
   );
   if (selectedCantrips.join(",") !== "eldritch_blast,poison_spray") {
@@ -1210,8 +1228,8 @@ function classBuild(input: {
         hitPointRule: { tag: "fixedHigherLevelGain" as const },
       })),
     },
-    background: "background_soldier",
-    species: "species_orc",
+    background: authoredUnitId("background_soldier"),
+    species: authoredUnitId("species_orc"),
     originLanguages: ["Common", "Dwarvish", "Goblin"],
     classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
@@ -1427,7 +1445,9 @@ function normalizeClassFeatureSelectedIdentityQuintState(
   return {
     outcome: outcomeField(state["outcome"]),
     featureUnitId: featureUnitIdField(state["featureUnitId"]),
-    linkedUnitId: stringField(state["linkedUnitId"], "qState.linkedUnitId"),
+    linkedUnitId: authoredUnitId(
+      stringField(state["linkedUnitId"], "qState.linkedUnitId"),
+    ),
     choiceCount: numberFromQuintInt(state["choiceCount"], "qState.choiceCount"),
     resourceMaximum: numberFromQuintInt(
       state["resourceMaximum"],

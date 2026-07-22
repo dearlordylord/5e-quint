@@ -5,6 +5,7 @@
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L19C-04-CONTACT-PATRON-SHEET-SESSION warlock_contact_patron contact_other_plane
 // UNIT-IDENTITY-REPLAY: L19C-04-CONTACT-PATRON-SHEET-SESSION warlock_contact_patron doCastWarlockContactPatron
 // UNIT-IDENTITY-REPLAY: L19C-04-CONTACT-PATRON-SHEET-SESSION contact_other_plane doCastContactOtherPlaneThroughContactPatron
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, it, test } from "vitest";
 
 import {
@@ -113,29 +114,33 @@ describe("Character Sheet runtime / Contact Patron", () => {
             features: [
               {
                 kind: "selectedClassChoice",
-                selectedFromUnitId: "class_warlock",
-                unitId: "subclass_warlock_fiend_patron",
+                selectedFromUnitId: authoredUnitId("class_warlock"),
+                unitId: authoredUnitId("subclass_warlock_fiend_patron"),
               },
             ],
           }),
           spellcasting: {
             sources: [
               {
-                sourceUnitId: "class_warlock",
+                sourceUnitId: authoredUnitId("class_warlock"),
                 spellcastingAbility: "cha",
-                cantrips: ["chill_touch", "eldritch_blast", "minor_illusion"],
+                cantrips: [
+                  authoredUnitId("chill_touch"),
+                  authoredUnitId("eldritch_blast"),
+                  authoredUnitId("minor_illusion"),
+                ],
                 spellbook: [],
                 preparedSpells: [
-                  "charm_person",
-                  "hellish_rebuke",
-                  "hex",
-                  "hold_person",
-                  "invisibility",
-                  "mirror_image",
-                  "counterspell",
-                  "dispel_magic",
-                  "fear",
-                  "fly",
+                  authoredUnitId("charm_person"),
+                  authoredUnitId("hellish_rebuke"),
+                  authoredUnitId("hex"),
+                  authoredUnitId("hold_person"),
+                  authoredUnitId("invisibility"),
+                  authoredUnitId("mirror_image"),
+                  authoredUnitId("counterspell"),
+                  authoredUnitId("dispel_magic"),
+                  authoredUnitId("fear"),
+                  authoredUnitId("fly"),
                 ],
                 spellcastingFocuses: ["arcane_focus"],
               },
@@ -163,7 +168,7 @@ describe("Character Sheet runtime / Contact Patron", () => {
     ).toEqual(
       expect.arrayContaining([
         {
-          sourceUnitId: "warlock_contact_patron",
+          sourceUnitId: authoredUnitId("warlock_contact_patron"),
           spellIds: ["contact_other_plane"],
         },
       ]),
@@ -172,7 +177,7 @@ describe("Character Sheet runtime / Contact Patron", () => {
       _tag: "Right",
       right: expect.arrayContaining([
         {
-          unitId: "warlock_contact_patron",
+          unitId: authoredUnitId("warlock_contact_patron"),
           tag: "contactPatronContactOtherPlaneFreeCast",
           count: 1,
           expended: 0,
@@ -228,8 +233,9 @@ describe("Character Sheet runtime / Contact Patron", () => {
       completeLongRest({ sheet: result.sheet, unitLibrary }),
     );
     expect(rested.resourceExpenditures).toEqual([]);
-    expect(Either.isRight(castContactPatron({ sheet: rested, unitLibrary })))
-      .toBe(true);
+    expect(
+      Either.isRight(castContactPatron({ sheet: rested, unitLibrary })),
+    ).toBe(true);
   });
 });
 
@@ -252,10 +258,11 @@ function projectContactPatronInvocation(): ContactPatronSelectedIdentityProjecti
     spellId: result.invocation.spellId,
     featureUnitId: result.invocation.featureUnitId,
     spellSlotCost: result.invocation.spellSlotCost.kind,
-    resourceExpended: result.sheet.resourceExpenditures.find(
-      (expenditure) =>
-        expenditure.tag === result.invocation.freeCastResourceTag,
-    )?.expended ?? 0,
+    resourceExpended:
+      result.sheet.resourceExpenditures.find(
+        (expenditure) =>
+          expenditure.tag === result.invocation.freeCastResourceTag,
+      )?.expended ?? 0,
     savingThrowOutcome: result.invocation.savingThrow.outcome,
     questionCount: result.invocation.questions.count,
   };
@@ -283,29 +290,33 @@ function contactPatronWarlockSheet() {
           features: [
             {
               kind: "selectedClassChoice",
-              selectedFromUnitId: "class_warlock",
-              unitId: "subclass_warlock_fiend_patron",
+              selectedFromUnitId: authoredUnitId("class_warlock"),
+              unitId: authoredUnitId("subclass_warlock_fiend_patron"),
             },
           ],
         }),
         spellcasting: {
           sources: [
             {
-              sourceUnitId: "class_warlock",
+              sourceUnitId: authoredUnitId("class_warlock"),
               spellcastingAbility: "cha",
-              cantrips: ["chill_touch", "eldritch_blast", "minor_illusion"],
+              cantrips: [
+                authoredUnitId("chill_touch"),
+                authoredUnitId("eldritch_blast"),
+                authoredUnitId("minor_illusion"),
+              ],
               spellbook: [],
               preparedSpells: [
-                "charm_person",
-                "hellish_rebuke",
-                "hex",
-                "hold_person",
-                "invisibility",
-                "mirror_image",
-                "counterspell",
-                "dispel_magic",
-                "fear",
-                "fly",
+                authoredUnitId("charm_person"),
+                authoredUnitId("hellish_rebuke"),
+                authoredUnitId("hex"),
+                authoredUnitId("hold_person"),
+                authoredUnitId("invisibility"),
+                authoredUnitId("mirror_image"),
+                authoredUnitId("counterspell"),
+                authoredUnitId("dispel_magic"),
+                authoredUnitId("fear"),
+                authoredUnitId("fly"),
               ],
               spellcastingFocuses: ["arcane_focus"],
             },

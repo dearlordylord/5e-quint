@@ -39,7 +39,6 @@ import {
 
 import {
   DifficultyClass,
-  Hp,
   difficultyClass,
   movementFeet,
 } from "@dnd/shared/types";
@@ -48,7 +47,7 @@ import { Match } from "effect";
 import {
   characterProcedureBinding,
   type CharacterUnitProcedureExecution,
-} from "../character-execution-admission.ts";
+} from "../character-execution-queries.ts";
 import type {
   BattleProcedureExecutionRef,
   BattleResourcePoolExecutionRef,
@@ -58,11 +57,6 @@ import * as Either from "effect/Either";
 
 import type { SupportedAttackActionOption } from "../battle-action-options.ts";
 
-import type {
-  BattleCreatureInit,
-  StatBlockBattleInitInput,
-} from "../battle-init.ts";
-
 import {
   type BattleMovementSpeedKind,
   type BattleSubject,
@@ -71,14 +65,14 @@ import {
 import {
   resourceHasUsesRemaining,
   spendCharacterResourceUse,
-} from "../character-battle-resources.ts";
+} from "../character-battle-resource-execution.ts";
 
 import { CombatantId } from "../identity.ts";
 
 import {
   ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE,
   type BattleAttackActionAdditionalAttacks,
-} from "../unit-feature-support.ts";
+} from "../unit-feature-execution-constants.ts";
 
 import {
   attackDamageHoleId,
@@ -103,9 +97,8 @@ import {
   combatantCanTakeActions,
   activeOngoingFeatureOccurrencesForCombatant,
   isCharacterBattleCreatureState,
-  literalStatBlockNumber,
   ongoingFeatureProfileForSourceKey,
-} from "./creature-state.ts";
+} from "./creature-state-execution.ts";
 
 import {
   applyTemporaryHitPoints,
@@ -119,10 +112,8 @@ import {
 } from "./cunning-strike.ts";
 import { effectiveD20TestNaturalOneRerollAbilityCheckValue } from "./d20-test-natural-one-reroll.ts";
 
-import {
-  attackDamageContinuationConcentrationFrame,
-  snapshotBattle,
-} from "./dispatcher.ts";
+import { attackDamageContinuationConcentrationFrame } from "./interrupt-execution.ts";
+import { snapshotBattle } from "./battle-snapshot.ts";
 
 import {
   canHideInCurrentCircumstances,
@@ -177,7 +168,7 @@ import {
 import {
   statBlockProcedureBinding,
   statBlockProcedureResourcesAvailable,
-} from "../stat-block-execution.ts";
+} from "../stat-block-execution-state.ts";
 
 import type {
   AttackDamageRider,
@@ -206,19 +197,21 @@ import type {
   EscapeGrappleBattleResolutionInput,
   EscapeSpellRestraintBattleResolutionInput,
   GrappleBattleResolutionInput,
-  GrappleFillSet,
   HideBattleResolutionInput,
   MultiattackBattleResolutionInput,
   SearchBattleResolutionInput,
   ShoveBattleResolutionInput,
-  ShoveFillSet,
   SpellMarkedDamageRider,
   SpellAttackDamageComponent,
   StatBlockBattleCreatureState,
   StatBlockBonusActionOptionBattleResolutionInput,
-  StatBlockMultiattackActionResource,
   WeaponDamageDiceRollChoiceFill,
 } from "../battle-state-execution.ts";
+import type {
+  GrappleFillSet,
+  ShoveFillSet,
+  StatBlockMultiattackActionResource,
+} from "./battle-runtime-protocol.ts";
 import {
   ATTACK_ONLY_ACTION_RESOURCE_EXCLUDED_ACTIONS,
   ESCAPE_GRAPPLE_OUTCOME_HOLE_ID,
@@ -237,34 +230,18 @@ import {
   SHOVE_TARGET_HOLE_ID,
   HYPNOTIC_PATTERN_SHAKE_AWAKE_TARGET_HOLE_ID,
   SLEEP_SHAKE_AWAKE_TARGET_HOLE_ID,
+} from "./battle-runtime-protocol.ts";
+import {
   actorHasClassFeatureExtraAttackActionResource,
   actorHasStatBlockMultiattackActionResource,
   isClassFeatureExtraAttackActionResource,
   isStatBlockBattleCreatureState,
   isStatBlockMultiattackActionResource,
   spendTurnAction,
-  spellDamageRerollUnsupportedIssue,
   supportedStatBlockBonusActionStandardAction,
-  zeroHpLifecycleIsTerminal,
-} from "../battle-state-execution.ts";
-export function battleCreatureInitFromStatBlock(
-  input: StatBlockBattleInitInput,
-): BattleCreatureInit {
-  const maxHp = Hp(literalStatBlockNumber(input.statBlock.statBlock.hp));
-  return {
-    combatantId: input.combatantId,
-    displayName: input.statBlock.statBlock.displayName,
-    initiative: input.initiative,
-    creatureInit: {
-      kind: "statBlock",
-      statBlock: input.statBlock,
-      currentHp: input.currentHp ?? maxHp,
-      maxHp,
-      tempHp: input.tempHp ?? Hp(0),
-    },
-  };
-}
-
+} from "./battle-discovery.ts";
+import { spellDamageRerollUnsupportedIssue } from "./spell-reroll-issues.ts";
+import { zeroHpLifecycleIsTerminal } from "./creature-state-leaves.ts";
 export function needsAttackDamageConcentrationResult(input: {
   readonly state: BattleState;
   readonly subject: BattleAttackHostSubject;

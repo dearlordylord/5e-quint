@@ -1,3 +1,4 @@
+import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-direct-condition-removal
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION
 //
@@ -5,10 +6,8 @@
 // spell that touches one creature and ends one chosen condition on it.
 
 import { movementFeet } from "@dnd/shared/types";
-import type { SpellRecord } from "@dnd/surface/surface/types";
 
 import {
-  maybeOpenInterruptWindow,
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
   type BattleCreatureState,
@@ -18,6 +17,7 @@ import {
   type BonusActionSpellBattleResolutionInput,
   type DirectConditionRemovalSpellInvocation,
 } from "../../battle-state-execution.ts";
+import { maybeOpenInterruptWindow } from "../dispatcher.ts";
 import { type CombatantId } from "../../identity.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
 import { invalidResult } from "../result-helpers.ts";
@@ -28,7 +28,7 @@ import {
   concentrationSpellEffectSourcesDirectlyApplyingCondition,
 } from "../spell-condition-effects-helpers.ts";
 import { DIRECT_CONDITION_REMOVAL_CONDITIONS } from "../domain-constants.ts";
-import { sameStringSet } from "../spells-profile-shared.ts";
+import { sameStringSet } from "../spells-execution-facts.ts";
 import {
   spellConditionChoiceHole,
   spellTargetHole,
@@ -61,7 +61,7 @@ type DirectConditionRemovalSpellTargetSelection =
   | { readonly tag: "invalid"; readonly message: string };
 
 function admitDirectConditionRemoval(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly DirectConditionRemovalSpellInvocation[] {
   const projection = directConditionRemovalProjection(spell);
@@ -86,7 +86,7 @@ function admitDirectConditionRemoval(
 }
 
 function directConditionRemovalProjection(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
 ): Pick<
   DirectConditionRemovalSpellInvocation,
   "conditionChoices" | "rangeFeet" | "targeting"

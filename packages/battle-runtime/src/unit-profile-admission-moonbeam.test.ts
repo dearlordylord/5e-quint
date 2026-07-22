@@ -69,7 +69,7 @@ import {
   statBlockCatalog,
   unitLibrary,
 } from "./unit-profile-admission-catalog-support.ts";
-import { EMPOWERED_SPELL_REROLL_UNSUPPORTED_DAMAGE_ROLL_OWNER_MESSAGE } from "./battle-state-execution.ts";
+import { EMPOWERED_SPELL_REROLL_UNSUPPORTED_DAMAGE_ROLL_OWNER_MESSAGE } from "./battle-reducer/spell-reroll-issues.ts";
 
 describe("L12G deterministic Moonbeam admission", () => {
   test("moonbeam is admitted as a movable Cylinder CON-save radiant hazard", () => {
@@ -119,7 +119,7 @@ describe("L12G deterministic Moonbeam admission", () => {
     expect(spellHoleInvocation(state, [area])).toEqual(
       expect.objectContaining({
         procedure: "moonbeam",
-        spell,
+        spellRuleFacts: expect.objectContaining({ spellId: spell.id }),
         resource: { tag: "spellSlot", slotLevel: 2 },
         ability: "con",
         dc: { kind: "caster_spell_save_dc" },

@@ -1,11 +1,11 @@
-import type { SpellRecord } from "@dnd/surface/surface/types";
+import type { SpellMechanics } from "@dnd/surface/surface/types";
 import type {
   PreparedSpellAccess,
   ReadiedSpellInvocation,
   SpellSlotInvocationResource,
   SpellTargeting,
   SupportedSpellInvocation,
-} from "../battle-state-execution.ts";
+} from "./battle-state-execution.ts";
 import {
   GLYPH_STORED_AREA_CONTROL_PROCEDURES,
   GLYPH_STORED_AREA_ONGOING_PROCEDURES,
@@ -15,7 +15,7 @@ import {
   type GlyphStoredAreaOngoingProcedure,
   type GlyphStoredSelfTransformationProcedure,
   type GlyphStoredSingleCreatureActiveEffectProcedure,
-} from "../procedure-execution/glyph-stored-spell.ts";
+} from "./procedure-execution/glyph-stored-spell.ts";
 
 export {
   GLYPH_STORED_AREA_CONTROL_PROCEDURES,
@@ -30,29 +30,34 @@ export type {
   GlyphStoredSingleCreatureActiveEffectProcedure,
 };
 
-type GlyphStoredConcentrationSaveGatedConditionInvocation = Extract<
-  SupportedSpellInvocation,
-  { readonly procedure: "saveGatedCondition" }
-> & {
-  readonly spell: SpellRecord & {
-    readonly mechanics: SpellRecord["mechanics"] & {
+type GlyphStoredSpellExecutionSource = SupportedSpellInvocation["spell"];
+type GlyphStoredConcentrationSpellExecutionSource =
+  GlyphStoredSpellExecutionSource & {
+    readonly mechanics: SpellMechanics & {
       readonly duration: Extract<
-        SpellRecord["mechanics"]["duration"],
+        SpellMechanics["duration"],
         { readonly kind: "concentration" }
       >;
     };
   };
-};
-type GlyphStoredNonConcentrationSpellRecord = SpellRecord & {
-  readonly mechanics: SpellRecord["mechanics"] & {
-    readonly duration: Exclude<
-      SpellRecord["mechanics"]["duration"],
-      { readonly kind: "concentration" }
-    >;
+type GlyphStoredNonConcentrationSpellExecutionSource =
+  GlyphStoredSpellExecutionSource & {
+    readonly mechanics: SpellMechanics & {
+      readonly duration: Exclude<
+        SpellMechanics["duration"],
+        { readonly kind: "concentration" }
+      >;
+    };
   };
+
+type GlyphStoredConcentrationSaveGatedConditionInvocation = Extract<
+  SupportedSpellInvocation,
+  { readonly procedure: "saveGatedCondition" }
+> & {
+  readonly spell: GlyphStoredConcentrationSpellExecutionSource;
 };
 type GlyphStoredReadiedSpellInvocation = ReadiedSpellInvocation & {
-  readonly spell: GlyphStoredNonConcentrationSpellRecord;
+  readonly spell: GlyphStoredNonConcentrationSpellExecutionSource;
 };
 type GlyphStoredSingleCreatureTargeting =
   | Extract<SpellTargeting, { readonly kind: "singleCombatant" }>
@@ -65,34 +70,20 @@ type GlyphStoredConcentrationSaveGatedDamageInvocation = Extract<
   ReadiedSpellInvocation,
   { readonly procedure: "saveGatedDamage" }
 > & {
-  readonly spell: SpellRecord & {
-    readonly mechanics: SpellRecord["mechanics"] & {
-      readonly duration: Extract<
-        SpellRecord["mechanics"]["duration"],
-        { readonly kind: "concentration" }
-      >;
-    };
-  };
+  readonly spell: GlyphStoredConcentrationSpellExecutionSource;
   readonly targeting: GlyphStoredSingleCreatureTargeting;
 };
 type GlyphStoredGreaseGroundHazardInvocation = Extract<
   SupportedSpellInvocation,
   { readonly procedure: "greaseGroundHazard" }
 > & {
-  readonly spell: GlyphStoredNonConcentrationSpellRecord;
+  readonly spell: GlyphStoredNonConcentrationSpellExecutionSource;
 };
 type GlyphStoredConcentrationHarmfulObjectInvocation = Extract<
   SupportedSpellInvocation,
   { readonly procedure: "spiritualWeaponAttackProxy" }
 > & {
-  readonly spell: SpellRecord & {
-    readonly mechanics: SpellRecord["mechanics"] & {
-      readonly duration: Extract<
-        SpellRecord["mechanics"]["duration"],
-        { readonly kind: "concentration" }
-      >;
-    };
-  };
+  readonly spell: GlyphStoredConcentrationSpellExecutionSource;
 };
 type SupportedSpellInvocationForProcedure<
   P extends SupportedSpellInvocation["procedure"],
@@ -107,41 +98,20 @@ type GlyphStoredConcentrationSingleCreatureActiveEffectInvocationFor<
 > = SupportedSpellInvocationForProcedure<P> & {
   readonly access: PreparedSpellAccess;
   readonly resource: SpellSlotInvocationResource;
-  readonly spell: SpellRecord & {
-    readonly mechanics: SpellRecord["mechanics"] & {
-      readonly duration: Extract<
-        SpellRecord["mechanics"]["duration"],
-        { readonly kind: "concentration" }
-      >;
-    };
-  };
+  readonly spell: GlyphStoredConcentrationSpellExecutionSource;
   readonly targeting: GlyphStoredSingleCreatureTargeting;
 };
 type GlyphStoredAreaOngoingInvocation = Extract<
   SupportedSpellInvocation,
   { readonly procedure: GlyphStoredAreaOngoingProcedure }
 > & {
-  readonly spell: SpellRecord & {
-    readonly mechanics: SpellRecord["mechanics"] & {
-      readonly duration: Extract<
-        SpellRecord["mechanics"]["duration"],
-        { readonly kind: "concentration" }
-      >;
-    };
-  };
+  readonly spell: GlyphStoredConcentrationSpellExecutionSource;
 };
 export type GlyphStoredAreaControlInvocation = Extract<
   SupportedSpellInvocation,
   { readonly procedure: GlyphStoredAreaControlProcedure }
 > & {
-  readonly spell: SpellRecord & {
-    readonly mechanics: SpellRecord["mechanics"] & {
-      readonly duration: Extract<
-        SpellRecord["mechanics"]["duration"],
-        { readonly kind: "concentration" }
-      >;
-    };
-  };
+  readonly spell: GlyphStoredConcentrationSpellExecutionSource;
 };
 export type GlyphStoredConcentrationSingleCreatureActiveEffectInvocation = {
   readonly [P in GlyphStoredSingleCreatureActiveEffectProcedure]: GlyphStoredConcentrationSingleCreatureActiveEffectInvocationFor<P>;
@@ -150,14 +120,7 @@ export type GlyphStoredConcentrationSelfTransformationInvocation =
   SupportedSpellInvocationForProcedure<GlyphStoredSelfTransformationProcedure> & {
     readonly access: PreparedSpellAccess;
     readonly resource: SpellSlotInvocationResource;
-    readonly spell: SpellRecord & {
-      readonly mechanics: SpellRecord["mechanics"] & {
-        readonly duration: Extract<
-          SpellRecord["mechanics"]["duration"],
-          { readonly kind: "concentration" }
-        >;
-      };
-    };
+    readonly spell: GlyphStoredConcentrationSpellExecutionSource;
   };
 type GlyphStoredSpellInvocationCandidateWithSpellTargeting = Extract<
   | ReadiedSpellInvocation

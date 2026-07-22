@@ -1,3 +1,4 @@
+import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-chosen-damage-resistance
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 import { CombatantId } from "../../identity.ts";
@@ -9,11 +10,10 @@ import { CombatantId } from "../../identity.ts";
 
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
-import type { DamageType, SpellRecord } from "@dnd/surface/surface/types";
+import type { DamageType } from "@dnd/surface/surface/types";
 import { Either, Schema } from "effect";
 
 import {
-  snapshotBattle,
   type BattleActDiscoveryCandidate,
   type BattleActiveEffect,
   type BattleResolutionResult,
@@ -21,13 +21,14 @@ import {
   type BattleExecutableSpellInvocation,
   type ChosenDamageResistanceSpellInvocation,
 } from "../../battle-state-execution.ts";
+import { snapshotBattle } from "../dispatcher.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";
 import { maybeOpenInterruptWindow } from "../dispatcher.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
 import { spellDamageTypeChoiceHole } from "../spells-damage-fills.ts";
-import { sameStringSet } from "../spells-profile-shared.ts";
+import { sameStringSet } from "../spells-execution-facts.ts";
 import { spellTargetHole, spellTargetIsLegal } from "../spells-targeting.ts";
 import {
   spellRequiresConcentration,
@@ -61,7 +62,7 @@ type ChosenDamageResistanceResolveInput =
   SpellProcedureProfileResolveInput<ChosenDamageResistanceSpellInvocation>;
 
 function admitChosenDamageResistance(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly ChosenDamageResistanceSpellInvocation[] {
   const projection = chosenDamageResistanceSpellProjection(
@@ -90,7 +91,7 @@ function admitChosenDamageResistance(
 
 function chosenDamageResistanceSpellProjection(
   actorId: CombatantId,
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
 ): Pick<
   ChosenDamageResistanceSpellInvocation,
   "damageTypeChoices" | "expiresAt" | "rangeFeet" | "targeting"

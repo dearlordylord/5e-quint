@@ -1,4 +1,5 @@
 import type { ClassicNonSrdMechanicsUnit } from "./unit-feature-support.ts";
+import { unitId } from "@dnd/shared/game-facts";
 
 export const myceliumStepUnitId = "mycelium_step";
 
@@ -33,7 +34,7 @@ export function mechanicsOnlyMyceliumStepUnit(
   }
 
   return {
-    id: myceliumStepUnitId,
+    id: unitId(myceliumStepUnitId),
     syntheticLabel: "Mycelium Step",
     provenance: { kind: "classic-2024-mechanics-source-lane" },
     kind: "class_feature",

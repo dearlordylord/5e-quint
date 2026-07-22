@@ -1,3 +1,4 @@
+import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE
@@ -28,7 +29,6 @@ import {
   type ElapsedTimeTicks,
 } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
-import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
 import {
@@ -64,11 +64,11 @@ type WebRestraintHazardSpellInvocation = Extract<
 type WebRestraintHazardResolveInput =
   SpellProcedureProfileResolveInput<WebRestraintHazardSpellInvocation>;
 type OngoingOperationEffect = Extract<
-  SpellRecord["mechanics"],
+  BattleSpellAdmissionSource["mechanics"],
   { readonly family: "ongoing_effect" }
 >["operations"][number]["effect"];
 type OngoingOperation = Extract<
-  SpellRecord["mechanics"],
+  BattleSpellAdmissionSource["mechanics"],
   { readonly family: "ongoing_effect" }
 >["operations"][number];
 type OngoingSaveGateEffect = Extract<
@@ -94,7 +94,7 @@ const WEB_OPERATION_COUNT = 7;
 const WEB_CUBE_SIDE_FEET = 20;
 
 function admitWebRestraintHazard(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly WebRestraintHazardSpellInvocation[] {
   const web = webRestraintHazardSpell(spell);
@@ -128,7 +128,7 @@ function admitWebRestraintHazard(
 }
 
 function webRestraintHazardSpell(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
 ): WebRestraintHazardProfileShape | null {
   if (spell.mechanics.family !== "ongoing_effect") {
     return null;

@@ -1,3 +1,4 @@
+import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { Schema } from "effect";
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
@@ -7,7 +8,9 @@ import {
   BattleSnapshotSchema,
   BattleSubjectSchema,
   discoverBattleActs,
+  emptyBattleRuntimeContext,
   snapshotBattle,
+  startBattle,
 } from "./index.ts";
 import {
   attackExecutionSelectionForSubjectForTest,
@@ -34,29 +37,32 @@ import {
   battleProcedureExecutionRefBelongsToScope,
 } from "./identity.ts";
 import { boundAttackExecutionSelectionKey } from "./battle-action-options.ts";
+import { unitLibrary } from "./unit-profile-admission-catalog-support.ts";
+import { attackActionOptionPresentationName } from "./stat-block-presentation.ts";
 
 function identicalDaggerSession(name = "Dagger") {
   const attack = testDaggerAttack();
-  const renamedAttack = {
-    ...attack,
-    weapon: { ...attack.weapon, name },
-  };
+  const dagger = unitLibrary.requireUnit("weapon_dagger");
+  if (dagger.kind !== "weapon") {
+    throw new Error("Expected Dagger weapon Unit.");
+  }
   return startBattleSessionRight({
     battleId: battleId("battle-character-attack-execution-references"),
     combatants: [
       characterSeed({
         initiative: 20,
-        attack: renamedAttack,
-        offHandAttack: renamedAttack,
+        attack,
+        offHandAttack: attack,
+        characterUnitRefs: [{ unit: { ...dagger, name }, supportProfiles: [] }],
         selectedLoadout: {
           weapon: {
             itemId: "main:weapon_dagger",
-            unitId: "weapon_dagger",
+            unitId: parseSharedUnitId("weapon_dagger"),
             grip: "one_handed",
           },
           offHandWeapon: {
             itemId: "off:weapon_dagger",
-            unitId: "weapon_dagger",
+            unitId: parseSharedUnitId("weapon_dagger"),
           },
         },
       }),
@@ -84,6 +90,33 @@ function fighterAttackScope(state: ReturnType<typeof identicalDaggerBattle>) {
 }
 
 describe("character attack execution references", () => {
+  test("battle admission rejects a weapon without an authored presentation source", () => {
+    const character = characterSeed({ initiative: 20 });
+    if (character.creatureInit.kind !== "character") {
+      throw new Error("Expected character fixture.");
+    }
+    const result = startBattle({
+      battleId: battleId("missing-weapon-presentation-source"),
+      combatants: [
+        {
+          ...character,
+          creatureInit: {
+            ...character.creatureInit,
+            characterUnitRefs: [],
+          },
+        },
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    expect(result).toEqual(
+      Either.left({
+        tag: "battleStateInitIssue",
+        message:
+          "Character fighter weapon weapon_longsword has missing authored presentation source.",
+      }),
+    );
+  });
+
   test("allocates deterministic, distinct references for identical attack occurrences", () => {
     const first = identicalDaggerBattle();
     const second = identicalDaggerBattle();
@@ -97,8 +130,10 @@ describe("character attack execution references", () => {
 
     expect(references.every((reference) => reference !== undefined)).toBe(true);
     expect(new Set(references).size).toBe(3);
-    expect(firstOrigin.attack?.weapon.id).toBe("weapon_dagger");
-    expect(firstOrigin.offHandAttack?.weapon.id).toBe("weapon_dagger");
+    expect(firstOrigin.attack?.weapon.weaponUnitId).toBe("weapon_dagger");
+    expect(firstOrigin.offHandAttack?.weapon.weaponUnitId).toBe(
+      "weapon_dagger",
+    );
     expect(fighterAttackScope(first)).toBe(fighterAttackScope(second));
     expect(firstOrigin.attack?.procedureRef).toBe(
       secondOrigin.attack?.procedureRef,
@@ -147,7 +182,18 @@ describe("character attack execution references", () => {
       canonicalOrigin.offHandAttack?.procedureRef,
     );
 
-    const subject = fighterAttackSubject(renamed, "Synthetic Needle");
+    const procedureRef = renamedOrigin.attack?.procedureRef;
+    if (procedureRef === undefined) {
+      throw new Error("Expected renamed attack procedure reference.");
+    }
+    const subject = {
+      tag: "action" as const,
+      actorId: fighterId,
+      action: "attack" as const,
+      procedureRef,
+      attackAbility: "str" as const,
+      attackDamageType: "piercing" as const,
+    };
     expect(subject).toEqual({
       tag: "action",
       actorId: fighterId,
@@ -172,6 +218,22 @@ describe("character attack execution references", () => {
       throw new Error("Expected target choice hole.");
     }
     expect(act?.summary).toBe("Take the Attack action with Synthetic Needle.");
+    if (renamedOrigin.attack === null) {
+      throw new Error("Expected renamed attack execution.");
+    }
+    expect(
+      attackActionOptionPresentationName(
+        renamed,
+        emptyBattleRuntimeContext(),
+        fighterId,
+        renamedOrigin.attack,
+      ),
+    ).toEqual(
+      Either.left({
+        tag: "attackPresentationJoinIssue",
+        reason: "characterContextMissing",
+      }),
+    );
     expect(target.attack?.selection).toEqual({
       procedureRef: subject.procedureRef,
       attackAbility: "str",

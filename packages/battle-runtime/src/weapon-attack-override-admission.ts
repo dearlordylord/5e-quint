@@ -5,26 +5,26 @@ import {
   type CharacterLevel,
   type DamageDieSize,
 } from "@dnd/shared/types";
-import type { SpellRecord, WeaponRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
-import type { BoundCharacterWeaponAttackActionOption } from "../battle-action-options.ts";
-import type { CharacterBattleLoadoutRef } from "../battle-init.ts";
-import type { CharacterBattleSpellcastingState } from "../character-battle-resources.ts";
+import type { BattleSpellAdmissionSource } from "./battle-state-execution.ts";
+import type { BoundCharacterWeaponAttackActionOption } from "./battle-action-options.ts";
+import type { CharacterBattleLoadoutRef } from "./character-creature-execution-facts.ts";
+import type { CharacterBattleSpellcastingExecutionState } from "./character-battle-resource-execution.ts";
 import {
   characterBattleLevel,
   type CharacterBattleClassLevels,
-} from "../character-class-level.ts";
+} from "./character-class-level.ts";
 import {
   battleObjectId,
   type BattleObjectId,
   type CombatantId,
-} from "../identity.ts";
-import type { WeaponAttackOverrideProcedureFacts } from "../procedure-facts/weapon-attack-override.ts";
-import { sameStringSet } from "../battle-reducer/spells-profile-shared.ts";
+} from "./identity.ts";
+import type { WeaponAttackOverrideProcedureFacts } from "./procedure-facts/weapon-attack-override.ts";
+import { sameStringSet } from "./battle-reducer/spells-execution-facts.ts";
 import {
   loadoutWeaponItemIsUsableDuringWildShape,
   wildShapeCanUseWornLoadoutObject,
-} from "../battle-reducer/wild-shape-equipment.ts";
+} from "./battle-reducer/wild-shape-equipment.ts";
 
 type WeaponAttackOverrideAdmissionActor = {
   readonly combatantId: CombatantId;
@@ -34,7 +34,7 @@ type WeaponAttackOverrideAdmissionActor = {
     readonly offHandAttack?: BoundCharacterWeaponAttackActionOption;
     readonly selectedLoadout: CharacterBattleLoadoutRef;
     readonly classLevels: CharacterBattleClassLevels;
-    readonly spellcasting: CharacterBattleSpellcastingState & {
+    readonly spellcasting: CharacterBattleSpellcastingExecutionState & {
       readonly canCastSpells: true;
     };
   };
@@ -50,7 +50,7 @@ export type WeaponAttackOverrideAdmissionContext = {
 
 export type WeaponAttackOverrideInvocation =
   WeaponAttackOverrideProcedureFacts & {
-    readonly spell: SpellRecord;
+    readonly spell: BattleSpellAdmissionSource;
     readonly attachedWeapon: {
       readonly attack: BoundCharacterWeaponAttackActionOption;
     };
@@ -62,7 +62,7 @@ type WeaponAttackOverrideProjection = {
 };
 
 export function admitWeaponAttackOverride(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   ctx: WeaponAttackOverrideAdmissionContext,
 ): readonly WeaponAttackOverrideInvocation[] {
   const projection = weaponAttackOverrideProjection(
@@ -99,7 +99,7 @@ export function admitWeaponAttackOverride(
 }
 
 function weaponAttackOverrideProjection(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   characterLevel: CharacterLevel,
 ): WeaponAttackOverrideProjection | null {
   if (
@@ -194,10 +194,10 @@ function attachedWeaponAttacksEligibleForOverride(
     ): held is {
       readonly itemId: BattleObjectId;
       readonly attack: BoundCharacterWeaponAttackActionOption;
-      readonly unitId: WeaponRecord["id"];
+      readonly unitId: import("@dnd/shared/game-facts").UnitId;
     } =>
       held.attack.weapon.usage === "melee" &&
-      held.unitId === held.attack.weapon.id &&
+      held.unitId === held.attack.weapon.weaponUnitId &&
       held.attack.weapon.attachedWeaponAttackOverrideEligibility?.kind ===
         "clubOrQuarterstaff",
   );

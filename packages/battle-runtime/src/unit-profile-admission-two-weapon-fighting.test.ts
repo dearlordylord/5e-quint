@@ -1,3 +1,4 @@
+import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME feat_two_weapon_fighting
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3-FOLLOWUP-TWO-WEAPON-FIGHTING-DECLINE-RUNTIME feat_two_weapon_fighting
@@ -79,7 +80,7 @@ describe("L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME deterministic profile slice", 
     });
 
     expect(result.damage).toMatchObject({
-      label: "Dagger damage (1d4-piercing)",
+      label: "weapon_dagger damage (1d4-piercing)",
     });
     expect(result.resolved).toMatchObject({
       tag: "resolved",
@@ -105,7 +106,7 @@ describe("L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME deterministic profile slice", 
     });
 
     expect(result.damage).toMatchObject({
-      label: "Dagger damage (1d4-piercing)",
+      label: "weapon_dagger damage (1d4-piercing)",
     });
     expect(result.resolved).toMatchObject({
       tag: "resolved",
@@ -129,7 +130,7 @@ describe("L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME deterministic profile slice", 
     });
 
     expect(result.damage).toMatchObject({
-      label: "Dagger damage (1d4-piercing)",
+      label: "weapon_dagger damage (1d4-piercing)",
       attackDamageAbilityModifierChoice: {
         procedureRefs: [
           requireCharacterUnitProcedureRefForTest(
@@ -164,7 +165,7 @@ describe("L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME deterministic profile slice", 
     });
 
     expect(result.damage).toMatchObject({
-      label: "Dagger damage (1d4-piercing)",
+      label: "weapon_dagger damage (1d4-piercing)",
       attackDamageAbilityModifierChoice: {
         procedureRefs: [
           requireCharacterUnitProcedureRefForTest(
@@ -199,7 +200,7 @@ describe("L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME deterministic profile slice", 
     });
 
     expect(result.damage).toMatchObject({
-      label: "Dagger (Dexterity) damage (1d4-piercing)",
+      label: "weapon_dagger damage (1d4-piercing)",
       attackDamageAbilityModifierChoice: {
         procedureRefs: [
           requireCharacterUnitProcedureRefForTest(
@@ -236,7 +237,7 @@ describe("L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME deterministic profile slice", 
     });
 
     expect(result.damage).toMatchObject({
-      label: "Dagger (Dexterity) damage (1d4-piercing)",
+      label: "weapon_dagger damage (1d4-piercing)",
       attackDamageAbilityModifierChoice: {
         procedureRefs: [
           requireCharacterUnitProcedureRefForTest(
@@ -293,7 +294,7 @@ describe("L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME deterministic profile slice", 
     });
 
     expect(result.damage).toMatchObject({
-      label: "Dagger damage (1d4+2-piercing)",
+      label: "weapon_dagger damage (1d4+2-piercing)",
     });
     expect(result.damage).not.toHaveProperty(
       "attackDamageAbilityModifierChoice",
@@ -323,7 +324,7 @@ describe("L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME deterministic profile slice", 
     });
 
     expect(result.damage).toMatchObject({
-      label: "Dagger damage (1d4-1-piercing)",
+      label: "weapon_dagger damage (1d4-1-piercing)",
     });
     expect(result.damage).not.toHaveProperty(
       "attackDamageAbilityModifierChoice",
@@ -413,12 +414,12 @@ function lightAttackBattle(input: {
         selectedLoadout: {
           weapon: {
             itemId: "main:weapon_shortsword",
-            unitId: "weapon_shortsword",
+            unitId: parseSharedUnitId("weapon_shortsword"),
             grip: "one_handed",
           },
           offHandWeapon: {
             itemId: "off:weapon_dagger",
-            unitId: "weapon_dagger",
+            unitId: parseSharedUnitId("weapon_dagger"),
           },
         },
       }),

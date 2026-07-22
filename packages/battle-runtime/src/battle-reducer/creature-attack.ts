@@ -12,7 +12,7 @@ import type { CombatantId } from "../identity.ts";
 import {
   activeEffectArmorClass,
   combatantCanTakeActions,
-} from "./creature-state.ts";
+} from "./creature-state-execution.ts";
 import { currentActorId } from "./creature-state-leaves.ts";
 import { applyBattleHitPointDamage } from "./damage-apply.ts";
 import type {
@@ -24,6 +24,7 @@ import type {
   BattleResolutionInput,
   BattleState,
 } from "../battle-state-execution.ts";
+import { statBlockAttackActionOptions } from "../stat-block-execution-state.ts";
 
 export type CreatureAttackState = {
   readonly creatureAHp: number;
@@ -125,7 +126,7 @@ export function creatureAttackPilotActor(
 ): boolean {
   return (
     combatant.origin.kind === "statBlock" &&
-    combatant.origin.statBlock.statBlock.actions === undefined
+    statBlockAttackActionOptions(combatant.origin.execution).length === 0
   );
 }
 

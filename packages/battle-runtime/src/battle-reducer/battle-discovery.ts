@@ -72,7 +72,7 @@ import { dragonsBreathExhaleActs } from "./dragons-breath.ts";
 import {
   combatantCanTakeActions,
   combatantCanTakeReactions,
-} from "./creature-state.ts";
+} from "./creature-state-execution.ts";
 import {
   attackTargetChoices,
   attackTargetHole,
@@ -105,14 +105,14 @@ import {
 import { discoverSupportedSpellInvocations } from "./spells-discovery.ts";
 import { spellProcedureExecutionRegistry } from "./spell-procedure-profiles/execution-composition.ts";
 import { spellInvocationIsSpellcasting } from "./spell-turn-resources.ts";
-import { supportedSpellActs } from "./spells-profiles.ts";
+import { supportedSpellActs } from "./supported-spell-acts.ts";
 import { combatantInsideActiveAntimagicFieldAura } from "./antimagic-field-action-interdiction.ts";
 import {
   statBlockBonusActionOptionBindings,
   statBlockMultiattackBindings,
-  statBlockProcedurePresentations,
   statBlockProcedureResourcesAvailable,
-} from "../stat-block-execution.ts";
+  statBlockAttackActionOptions,
+} from "../stat-block-execution-state.ts";
 import {
   greaseGroundHazardSavingThrowOutcomeHole,
   webRestraintSavingThrowOutcomeHole,
@@ -144,7 +144,7 @@ import {
 import { SELF_TRANSFORMATION_MODE_KINDS } from "./domain-constants.ts";
 import { SUPPORTED_STAT_BLOCK_BONUS_ACTION_STANDARD_ACTIONS } from "./battle-runtime-protocol.ts";
 import { discoverLegendaryActionActs } from "./unit-features.ts";
-import { characterSpellProcedure } from "../character-execution-admission.ts";
+import { characterSpellProcedure } from "../character-execution-queries.ts";
 import {
   activeSelfTransformationModeEffect,
   spellCreatedHeldObjectEffectsForActor,
@@ -152,7 +152,6 @@ import {
 import {
   attackActionOptionIsOrdinaryAttackAction,
   attackSubjectPart,
-  statBlockAttackActionOptions,
   statBlockAttackProcedureSection,
 } from "./statblock.ts";
 import type {
@@ -161,12 +160,14 @@ import type {
   BattleCreatureState,
   BattleExecutableSpellInvocation,
   BattleState,
-  ClassFeatureExtraAttackActionResource,
-  SelfTransformationModeKind,
   StatBlockBattleCreatureState,
+} from "../battle-state-execution.ts";
+import type {
+  ClassFeatureExtraAttackActionResource,
   StatBlockMultiattackActionResource,
   SupportedStatBlockBonusActionStandardAction,
-} from "../battle-state-execution.ts";
+} from "./battle-runtime-protocol.ts";
+import type { SelfTransformationModeKind } from "./domain-constants.ts";
 
 type FogCloudObscurementEffect = Extract<
   BattleActiveEffect,
@@ -897,36 +898,36 @@ function pactOfTheChainFamiliarAttackActs(
   ) {
     return [];
   }
-  return statBlockAttackActionOptions(familiarCombatant.origin).flatMap(
-    (attack) => {
-      if (
-        statBlockAttackProcedureSection(
-          state,
-          familiarId,
-          attack.procedureRef,
-        ) !== "actions"
-      ) {
-        return [];
-      }
-      const targetHole = attackTargetHole(state, familiarId, attack);
-      return targetHole.choices.length === 0
-        ? []
-        : [
-            {
-              subject: {
-                tag: "pactOfTheChainFamiliarAttack" as const,
-                actorId,
-                familiarId,
-                procedureRef: attack.procedureRef,
-                ...(attack.damageNotation === "static"
-                  ? { statBlockDamageNotation: "static" as const }
-                  : {}),
-              },
-              initialHoles: [targetHole],
+  return statBlockAttackActionOptions(
+    familiarCombatant.origin.execution,
+  ).flatMap((attack) => {
+    if (
+      statBlockAttackProcedureSection(
+        state,
+        familiarId,
+        attack.procedureRef,
+      ) !== "actions"
+    ) {
+      return [];
+    }
+    const targetHole = attackTargetHole(state, familiarId, attack);
+    return targetHole.choices.length === 0
+      ? []
+      : [
+          {
+            subject: {
+              tag: "pactOfTheChainFamiliarAttack" as const,
+              actorId,
+              familiarId,
+              procedureRef: attack.procedureRef,
+              ...(attack.damageNotation === "static"
+                ? { statBlockDamageNotation: "static" as const }
+                : {}),
             },
-          ];
-    },
-  );
+            initialHoles: [targetHole],
+          },
+        ];
+  });
 }
 
 function endTurnAct(actorId: CombatantId): BattleActDiscoveryCandidate {
@@ -1638,7 +1639,6 @@ export function statBlockMultiattackActs(
     return [];
   }
   const origin = actor.origin;
-  const presentations = statBlockProcedurePresentations(origin);
   return statBlockMultiattackBindings(origin.execution).flatMap((binding) => {
     if (
       !binding.procedure.dispatchProcedureRefs.every((procedureRef) =>
@@ -1647,12 +1647,6 @@ export function statBlockMultiattackActs(
     ) {
       return [];
     }
-    const presentation = presentations.find(
-      (candidate) =>
-        candidate.kind === "multiattack" &&
-        candidate.procedureRef === binding.procedureRef,
-    );
-    if (presentation?.kind !== "multiattack") return [];
     return [
       {
         subject: {
@@ -1680,8 +1674,6 @@ export function statBlockBonusActionOptionActs(
     return [];
   }
   const origin = actor.origin;
-  const presentations = statBlockProcedurePresentations(origin);
-
   return statBlockBonusActionOptionBindings(origin.execution).flatMap(
     (binding) =>
       binding.procedure.standardActions.flatMap((standardAction) => {
@@ -1699,12 +1691,6 @@ export function statBlockBonusActionOptionActs(
         ) {
           return [];
         }
-        const presentation = presentations.find(
-          (candidate) =>
-            candidate.kind === "bonusActionOption" &&
-            candidate.procedureRef === binding.procedureRef,
-        );
-        if (presentation?.kind !== "bonusActionOption") return [];
         return [
           {
             subject: {

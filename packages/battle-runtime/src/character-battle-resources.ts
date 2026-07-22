@@ -59,6 +59,34 @@ import {
   admitPersistentArmorEffectSpell,
   type PersistentArmorEffectAdmission,
 } from "./procedure-admission/persistent-armor-effect-facts.ts";
+import {
+  characterBattleResourceIsPointPool,
+  type CharacterBattleActivationResource,
+  type CharacterBattlePointPoolResourceState,
+  type CharacterBattleMetamagicOptionFact,
+  type CharacterBattleMetamagicState,
+  type CharacterBattleResourceExecutionFacts,
+  type CharacterBattleResourceState,
+  type LimitedUseCountActivationResource,
+  type SupportedPointPoolResource,
+  type UnlimitedActivationResource,
+} from "./character-battle-resource-execution.ts";
+export {
+  characterBattleResourceIsPointPool,
+  characterBattleResourceIsUnlimited,
+  characterBattleResourceIsUseCount,
+  characterBattleResourceUsage,
+  resourceHasUsesRemaining,
+  spendCharacterResourceUse,
+  type CharacterBattlePointPoolResourceState,
+  type CharacterBattleMetamagicEffectKind,
+  type CharacterBattleMetamagicOptionFact,
+  type CharacterBattleMetamagicState,
+  type CharacterBattleResourceExecutionFacts,
+  type CharacterBattleResourceState,
+  type CharacterBattleUseCountResourceState,
+  type CharacterBattleUseCountResourceStateBase,
+} from "./character-battle-resource-execution.ts";
 
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.attack-action-area-save-damage-replacement unit-feature.magic-action-healing-pool
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.metamagic-battle-resource-bridge unit-feature.failed-saving-throw-reroll unit-feature.paladin-sacred-weapon
@@ -91,67 +119,12 @@ type SorcererMetamagicMechanics = Extract<
   ClassFeatureRecord["mechanics"],
   { readonly family: "metamagic_options" }
 >;
-type SorcererMetamagicOption = SorcererMetamagicMechanics["options"][number];
-
-export type CharacterBattleMetamagicOptionFact = {
-  readonly effectKind: SorcererMetamagicOption["effectKind"];
-  readonly stackingMode: SorcererMetamagicOption["stackingMode"];
-  readonly sorceryPointCost: ResourceCount;
-};
-export type CharacterBattleMetamagicEffectKind =
-  CharacterBattleMetamagicOptionFact["effectKind"];
-
 export type CharacterBattleMetamagicInit = {
   readonly sorceryPointResourceUnitId: UnitRecord["id"];
   readonly spellUseLimit: SorcererMetamagicMechanics["spellUseLimit"]["kind"];
   readonly knownOptions: readonly CharacterBattleMetamagicOptionFact[];
 };
 
-export type CharacterBattleMetamagicState = {
-  readonly sorceryPointResourcePoolRef: BattleResourcePoolExecutionRef;
-  readonly spellUseLimit: SorcererMetamagicMechanics["spellUseLimit"]["kind"];
-  readonly knownOptions: readonly CharacterBattleMetamagicOptionFact[];
-};
-
-type UseCountActivationResource = Extract<
-  ActivationResource,
-  { readonly kind: "use_count" }
->;
-type SupportedUseCountActivationResource = UseCountActivationResource & {
-  readonly cap: Extract<
-    UseCountActivationResource["cap"],
-    | { readonly kind: "fixed" }
-    | { readonly kind: "proficiency_bonus" }
-    | { readonly kind: "linear_per_level" }
-    | { readonly kind: "threshold_tiers" }
-    | { readonly kind: "ability_modifier" }
-    | { readonly kind: "unlimited" }
-  >;
-};
-type LimitedUseCountActivationResource = SupportedUseCountActivationResource & {
-  readonly cap: Exclude<
-    SupportedUseCountActivationResource["cap"],
-    { readonly kind: "unlimited" }
-  >;
-};
-type UnlimitedActivationResource = SupportedUseCountActivationResource & {
-  readonly cap: { readonly kind: "unlimited" };
-};
-type CharacterBattleActivationResource =
-  | LimitedUseCountActivationResource
-  | UnlimitedActivationResource;
-type SupportedPointPoolResource = PointPoolResource & {
-  readonly cap: Extract<
-    PointPoolResource["cap"],
-    | { readonly kind: "fixed" }
-    | { readonly kind: "proficiency_bonus" }
-    | { readonly kind: "linear_per_level" }
-    | { readonly kind: "threshold_tiers" }
-  >;
-};
-export type CharacterBattleResourceExecutionFacts =
-  | CharacterBattleActivationResource
-  | SupportedPointPoolResource;
 type SpellAccessGrant = Extract<
   EffectAtom,
   { readonly kind: "grant_spell_access" }
@@ -184,10 +157,6 @@ type PactOfTheChainFindFamiliarSpellProfileParseResult =
     }
   | { readonly tag: "missingFamiliarFormCatalog" }
   | { readonly tag: "unsupported" };
-
-type CharacterBattleResourceStateBase = {
-  readonly resourcePoolRef: BattleResourcePoolExecutionRef;
-};
 
 /**
  * Composition-owned authored provenance for a mechanical battle resource.
@@ -223,37 +192,6 @@ export function admitCharacterBattleResources(
     ownership: admitted.map(({ ownership }) => ownership),
   };
 }
-
-export type CharacterBattleUseCountResourceStateBase =
-  CharacterBattleResourceStateBase & {
-    readonly usedThisTurn: boolean;
-  };
-
-export type CharacterBattleResourceState =
-  | (CharacterBattleUseCountResourceStateBase & {
-      readonly resource: LimitedUseCountActivationResource;
-      readonly usesRemaining: ResourceCount;
-    })
-  | (CharacterBattleUseCountResourceStateBase & {
-      readonly resource: UnlimitedActivationResource;
-      readonly usesRemaining?: never;
-    })
-  | (CharacterBattleResourceStateBase & {
-      readonly resource: SupportedPointPoolResource;
-      readonly pointsRemaining: ResourceCount;
-      readonly usesRemaining?: never;
-      readonly usedThisTurn?: never;
-    });
-
-export type CharacterBattleUseCountResourceState = Extract<
-  CharacterBattleResourceState,
-  { readonly usedThisTurn: boolean }
->;
-
-export type CharacterBattlePointPoolResourceState = Extract<
-  CharacterBattleResourceState,
-  { readonly pointsRemaining: ResourceCount }
->;
 
 export type CharacterBattlePointPoolSpendIssue = {
   readonly tag: "characterBattlePointPoolSpendIssue";
@@ -872,39 +810,6 @@ function classFeatureSpellFreeCastProfileForUnit(
   return supportedClassFeatureSpellFreeCastGrantsForUnit(unit)?.profile ?? null;
 }
 
-export function characterBattleResourceUsage(
-  resource: CharacterBattleResourceState,
-): "limited" | "unlimited" | "pointPool" {
-  if (characterBattleResourceIsPointPool(resource)) {
-    return "pointPool";
-  }
-  return characterBattleResourceIsUnlimited(resource) ? "unlimited" : "limited";
-}
-
-export function characterBattleResourceIsUnlimited(
-  resource: CharacterBattleResourceState,
-): resource is CharacterBattleUseCountResourceStateBase & {
-  readonly resource: UnlimitedActivationResource;
-  readonly usesRemaining?: never;
-} {
-  return (
-    resource.resource.kind === "use_count" &&
-    resource.resource.cap.kind === "unlimited"
-  );
-}
-
-export function characterBattleResourceIsUseCount(
-  resource: CharacterBattleResourceState,
-): resource is CharacterBattleUseCountResourceState {
-  return resource.resource.kind === "use_count";
-}
-
-export function characterBattleResourceIsPointPool(
-  resource: CharacterBattleResourceState,
-): resource is CharacterBattlePointPoolResourceState {
-  return resource.resource.kind === "point_pool";
-}
-
 function activationResourceIsUnlimited(
   resource: ActivationResource,
 ): resource is UnlimitedActivationResource {
@@ -977,28 +882,6 @@ function unitHasSupportedAbilityModifierBattleResourceProfile(
     (failedSavingThrowRerollSupport !== null &&
       failedSavingThrowRerollSupport !== "unsupported")
   );
-}
-
-export function resourceHasUsesRemaining(
-  resource: CharacterBattleResourceState,
-): resource is CharacterBattleUseCountResourceState {
-  if (!characterBattleResourceIsUseCount(resource)) {
-    return false;
-  }
-  return (
-    characterBattleResourceIsUnlimited(resource) || resource.usesRemaining > 0
-  );
-}
-
-export function spendCharacterResourceUse(
-  resource: CharacterBattleUseCountResourceState,
-): CharacterBattleUseCountResourceState {
-  return characterBattleResourceIsUnlimited(resource)
-    ? resource
-    : {
-        ...resource,
-        usesRemaining: resourceCount(Number(resource.usesRemaining) - 1),
-      };
 }
 
 export function spendCharacterPointPoolResource(input: {

@@ -1,3 +1,4 @@
+import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-creature-size-change
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-glyph-stored-concentration-full-duration
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-duration-and-concentration
@@ -21,14 +22,9 @@ import {
   type ElapsedTimeTicks,
 } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
-import type {
-  EffectAtom,
-  OngoingEffect,
-  SpellRecord,
-} from "@dnd/surface/surface/types";
+import type { EffectAtom, OngoingEffect } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 import {
-  snapshotBattle,
   type BattleActDiscoveryCandidate,
   type BattleCreatureState,
   type BattleExecutableSpellInvocation,
@@ -36,6 +32,7 @@ import {
   type BattleState,
   type CreatureSizeChangeSpellInvocation,
 } from "../../battle-state-execution.ts";
+import { snapshotBattle } from "../dispatcher.ts";
 import { CombatantId } from "../../identity.ts";
 import type {
   CreatureSizeDecreaseSpellProcedureExecution,
@@ -52,7 +49,7 @@ import { breakBattleConcentration } from "../damage-apply.ts";
 import { maybeOpenInterruptWindow } from "../dispatcher.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
 import { invalidResult } from "../result-helpers.ts";
-import { sameStringSet } from "../spells-profile-shared.ts";
+import { sameStringSet } from "../spells-execution-facts.ts";
 import {
   spellCastInterruptFrame,
   spellCastMetamagicApplicationsInput,
@@ -103,7 +100,7 @@ type CreatureSizeChangeExecution =
   | CreatureSizeDecreaseSpellProcedureExecution;
 
 function admitCreatureSizeChange(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly CreatureSizeIncreaseInvocation[] {
   return admitCreatureSizeChangeForProcedure(
@@ -114,7 +111,7 @@ function admitCreatureSizeChange(
 }
 
 function admitCreatureSizeDecrease(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly CreatureSizeDecreaseInvocation[] {
   return admitCreatureSizeChangeForProcedure(
@@ -127,7 +124,7 @@ function admitCreatureSizeDecrease(
 function admitCreatureSizeChangeForProcedure<
   Procedure extends CreatureSizeChangeInvocation["procedure"],
 >(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
   procedure: Procedure,
 ): readonly (CreatureSizeChangeInvocation & {
@@ -163,7 +160,7 @@ function admitCreatureSizeChangeForProcedure<
 
 function creatureSizeChangeSpellProjection(
   actorId: CombatantId,
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
 ): readonly Pick<
   CreatureSizeChangeInvocation,
   "procedure" | "ability" | "dc" | "targeting" | "activeEffect" | "rangeFeet"
@@ -251,7 +248,7 @@ function creatureSizeChangeSpellProjection(
 
 function creatureSizeChangeActiveEffect(
   actorId: CombatantId,
-  _spell: SpellRecord,
+  _spell: BattleSpellAdmissionSource,
   effects: readonly OngoingEffect[],
   durationTicks: ElapsedTimeTicks,
 ): CreatureSizeChangeInvocation["activeEffect"] | null {

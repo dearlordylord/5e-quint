@@ -1,4 +1,5 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
+import { unitId } from "@dnd/shared/game-facts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import type { BattleProcedureExecutionRef } from "./index.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30A false_life longstrider shield_of_faith
@@ -2077,7 +2078,7 @@ function shieldOfFaithWithObjectTarget(): ReturnType<typeof spellRecord> {
   }
   return {
     ...spell,
-    id: "shield_of_faith_object_target",
+    id: unitId("shield_of_faith_object_target"),
     mechanics: {
       ...spell.mechanics,
       phases: [

@@ -1,6 +1,7 @@
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1D2-ROGUE-EXPERTISE rogue_expertise
 // UNIT-IDENTITY-REPLAY: L1D2-ROGUE-EXPERTISE rogue_expertise doSelectLevelOneOwnedSkillExpertise doSelectLevelSixAdditionalOwnedSkillExpertise
 // KERNEL-COVERAGE: parity-witness CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
@@ -460,7 +461,7 @@ function completeRogueDraft(
 function rogueProgression(totalLevel: 1 | 6): CharacterProgression {
   const parsedClassUnitId = classUnitIdFromUnitId({
     unitLibrary,
-    classUnitId: SRD_ROGUE_CLASS_UNIT_ID,
+    classUnitId: authoredUnitId(SRD_ROGUE_CLASS_UNIT_ID),
   });
   if (Either.isLeft(parsedClassUnitId)) {
     throw new Error(
@@ -584,7 +585,7 @@ function rogueExpertiseFacts(input: {
 }): RogueExpertiseFacts {
   const selectedClassSkills = selectedSkillsFromChoice(
     input.draft,
-    SRD_ROGUE_CLASS_UNIT_ID,
+    authoredUnitId(SRD_ROGUE_CLASS_UNIT_ID),
     CLASS_SKILL_PROFICIENCY_CHOICE_KEY,
   );
   if (
@@ -597,7 +598,7 @@ function rogueExpertiseFacts(input: {
 
   const selectedExpertiseSkills = selectedSkillsFromChoice(
     input.draft,
-    ROGUE_EXPERTISE_UNIT_ID,
+    authoredUnitId(ROGUE_EXPERTISE_UNIT_ID),
     CLASS_FEATURE_PROFICIENCY_CHOICE_KEY,
   );
   if (
@@ -631,7 +632,9 @@ function rogueExpertiseFacts(input: {
     selectedExpertiseChoiceCount: selectedExpertiseSkills.length,
     buildExpertiseCount: proficiencies.expertise.length,
     ownedSkillProficiencyCount: proficiencies.skills.length,
-    rogueExpertiseUnitRefPresent: unitRefIds.includes(ROGUE_EXPERTISE_UNIT_ID),
+    rogueExpertiseUnitRefPresent: unitRefIds.includes(
+      authoredUnitId(ROGUE_EXPERTISE_UNIT_ID),
+    ),
     totalLevel: computeTotalLevel(input.build.progression),
   };
 }

@@ -101,7 +101,7 @@ describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
     expect(spellActInvocation(session, act)).toEqual(
       expect.objectContaining({
         procedure: "directCondition",
-        spell,
+        spellRuleFacts: expect.objectContaining({ spellId: spell.id }),
         targeting: { kind: "targetList", minTargets: 1, maxTargets: 2 },
         activeEffect: expect.objectContaining({
           kind: "targetActionEndedSpellCondition",

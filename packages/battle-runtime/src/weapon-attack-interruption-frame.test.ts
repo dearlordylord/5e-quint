@@ -1,10 +1,10 @@
 import { damageAmount, DieRollResult } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
 
-import {
-  parseAttackDamageInterruptionFrame,
-  type BattleAttackDamageInterruptionBoundaryInput,
-  type BattleAttackDamageInterruptionFrame,
+import { parseAttackDamageInterruptionFrame } from "./battle-reducer/attack-damage-events.ts";
+import type {
+  BattleAttackDamageInterruptionBoundaryInput,
+  BattleAttackDamageInterruptionFrame,
 } from "./battle-state-execution.ts";
 import {
   fighterAttackSubject,

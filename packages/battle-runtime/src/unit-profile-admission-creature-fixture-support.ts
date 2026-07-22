@@ -15,6 +15,7 @@ import type {
   WeaponProficiency,
 } from "@dnd/surface/surface/types";
 import { expect } from "vitest";
+import { statBlockId, unitId as parseUnitId } from "@dnd/shared/game-facts";
 import weaponClubInput from "../../surface/content/weapon_club.json";
 import weaponGreatswordInput from "../../surface/content/weapon_greatsword.json";
 import {
@@ -34,8 +35,8 @@ import {
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
+import { admitCharacterWeaponAttackExecutionWeapon } from "./character-weapon-execution-admission.ts";
 import { attackActionOptionForSubject } from "./battle-reducer/attack-damage-apply.ts";
-import { attackActionOptionPresentationName } from "./battle-reducer/statblock.ts";
 import {
   spellCasterId,
   spellTargetId,
@@ -55,8 +56,11 @@ const testUnitRecordsById: ReadonlyMap<UnitRecord["id"], UnitRecord> = new Map(
   ]),
 );
 
-function requireTestOrCatalogUnit(unitId: UnitRecord["id"]): UnitRecord {
-  return testUnitRecordsById.get(unitId) ?? unitLibrary.requireUnit(unitId);
+function requireTestOrCatalogUnit(unitId: string): UnitRecord {
+  return (
+    testUnitRecordsById.get(parseUnitId(unitId)) ??
+    unitLibrary.requireUnit(unitId)
+  );
 }
 
 export function characterCreature(input: {
@@ -119,11 +123,28 @@ export function characterCreature(input: {
       ? {}
       : {
           weapon: {
-            itemId: `main:${attack.weapon.id}`,
-            unitId: attack.weapon.id,
+            itemId: `main:${attack.weapon.weaponUnitId}`,
+            unitId: attack.weapon.weaponUnitId,
             grip: "one_handed" as const,
           },
         });
+  const weaponPresentationUnitRefs = [attack, input.offHandAttack].flatMap(
+    (candidate) => {
+      if (candidate === null || candidate === undefined) return [];
+      const unit = [...unitLibrary.listUnits(), ...testUnitRecords].find(
+        (entry) =>
+          entry.kind === "weapon" && entry.id === candidate.weapon.weaponUnitId,
+      );
+      return unit?.kind === "weapon" ? [{ unit, supportProfiles: [] }] : [];
+    },
+  );
+  const characterUnitRefs = [
+    ...new Map(
+      [...weaponPresentationUnitRefs, ...(input.characterUnitRefs ?? [])].map(
+        (ref) => [ref.unit.id, ref],
+      ),
+    ).values(),
+  ];
   return {
     combatantId: input.combatantId,
     displayName: input.displayName,
@@ -131,7 +152,7 @@ export function characterCreature(input: {
     creatureInit: {
       kind: "character",
       characterId: characterId(`${input.combatantId}-character`),
-      characterUnitRefs: input.characterUnitRefs ?? [],
+      characterUnitRefs,
       classLevels: input.classLevels ?? [{ className: "wizard", level: 1 }],
       knownLanguages: ["Common"],
       d20Statistics: testCharacterD20Statistics(),
@@ -194,7 +215,7 @@ export function statBlockWithCreatureType(
   const base = statBlockCatalog.requireStatBlock("stat_block_goblin_warrior");
   return {
     ...base,
-    id: `stat_block_test_${creatureType}`,
+    id: statBlockId(`stat_block_test_${creatureType}`),
     name: `Test ${creatureType}`,
     statBlock: {
       ...base.statBlock,
@@ -214,7 +235,7 @@ export function legendaryActionStatBlock(): StatBlockRecord {
   }
   return {
     ...base,
-    id: "stat_block_command_legendary",
+    id: statBlockId("stat_block_command_legendary"),
     name: "Command Legendary",
     statBlock: {
       ...base.statBlock,
@@ -300,7 +321,7 @@ export function statBlockAttackAct(
 }
 
 export function zeroAbilityWeaponAttack(
-  unitId: Extract<UnitRecord, { readonly kind: "weapon" }>["id"],
+  unitId: string,
 ): NonNullable<
   Extract<
     BattleCreatureInit["creatureInit"],
@@ -313,7 +334,7 @@ export function zeroAbilityWeaponAttack(
   }
   return {
     kind: "weapon",
-    weapon,
+    weapon: admitCharacterWeaponAttackExecutionWeapon(weapon),
     ability: "str",
     abilityModifier: abilityModifier(0),
   };
@@ -328,12 +349,12 @@ export function sameClubMainAndOffHandLoadout(): NonNullable<
   return {
     weapon: {
       itemId: "main:weapon_club",
-      unitId: "weapon_club",
+      unitId: parseUnitId("weapon_club"),
       grip: "one_handed",
     },
     offHandWeapon: {
       itemId: "off:weapon_club",
-      unitId: "weapon_club",
+      unitId: parseUnitId("weapon_club"),
     },
   };
 }
@@ -498,9 +519,10 @@ export function singleCharacterWeaponAttackSubject(
         return [];
       }
       const attack = attackActionOptionForSubject(state, subject);
-      return attack !== undefined &&
-        attackActionOptionPresentationName(state, subject.actorId, attack) ===
-          attackName
+      const expectedWeaponUnitId =
+        attackName === "Longsword" ? "weapon_longsword" : "weapon_shortbow";
+      return attack?.kind === "weapon" &&
+        attack.weapon.weaponUnitId === expectedWeaponUnitId
         ? [subject]
         : [];
     },

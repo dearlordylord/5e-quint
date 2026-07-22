@@ -29,6 +29,7 @@ import { handleStartBattleToolCall } from "./start-battle-tool.ts";
 import {
   battleResolutionPayload,
   battleSessionPayload,
+  battleSnapshotPresentationIssueContent,
   noStoredBattleContent,
   pendingBattleFillsContent,
   unknownStatBlockContent,
@@ -74,16 +75,10 @@ export function handleBattleToolCall(
       handleStartBattleToolCall(root, matched.args),
     ),
     Match.when({ name: battleToolNames.readBattleState }, () =>
-      schemaJsonContent(
-        BattleSessionOutputSchema,
-        battleSessionPayload(root, root.sessionStore.battleSession),
-      ),
+      battleSessionContent(root),
     ),
     Match.when({ name: battleToolNames.discoverBattleActs }, () =>
-      schemaJsonContent(
-        BattleSessionOutputSchema,
-        battleSessionPayload(root, root.sessionStore.battleSession),
-      ),
+      battleSessionContent(root),
     ),
     Match.when({ name: battleToolNames.fillBattleHole }, (matched) => {
       const visibleSession = root.sessionStore.battleSession;
@@ -136,10 +131,7 @@ export function handleBattleToolCall(
       if (storeBattleResolution(root, result, pendingTransaction)) {
         publishAdminProjectionBestEffort(root);
       }
-      return schemaJsonContent(
-        BattleResolutionOutputSchema,
-        battleResolutionPayload(root, result),
-      );
+      return battleResolutionContent(root, result);
     }),
     Match.when({ name: battleToolNames.resolveBattleAct }, (matched) => {
       const state = activeBattleWithoutPendingFills(
@@ -172,10 +164,7 @@ export function handleBattleToolCall(
         ) {
           publishAdminProjectionBestEffort(root);
         }
-        return schemaJsonContent(
-          BattleResolutionOutputSchema,
-          battleResolutionPayload(root, result),
-        );
+        return battleResolutionContent(root, result);
       }
       const availableAct = discoverBattleActs(state.right).find((act) =>
         sameBattleSubject(act.subject, matched.args.subject),
@@ -214,10 +203,7 @@ export function handleBattleToolCall(
       ) {
         publishAdminProjectionBestEffort(root);
       }
-      return schemaJsonContent(
-        BattleResolutionOutputSchema,
-        battleResolutionPayload(root, result),
-      );
+      return battleResolutionContent(root, result);
     }),
     Match.when({ name: battleToolNames.endTurn }, (matched) => {
       const state = activeBattleWithoutPendingFills(
@@ -255,10 +241,7 @@ export function handleBattleToolCall(
       ) {
         publishAdminProjectionBestEffort(root);
       }
-      return schemaJsonContent(
-        BattleResolutionOutputSchema,
-        battleResolutionPayload(root, result),
-      );
+      return battleResolutionContent(root, result);
     }),
     Match.when({ name: battleToolNames.endBattle }, () => {
       const state = activeBattleWithoutPendingFills(
@@ -286,6 +269,25 @@ export function handleBattleToolCall(
     }),
     Match.exhaustive,
   );
+}
+
+function battleSessionContent(root: McpCompositionRoot): BattleToolResult {
+  const payload = battleSessionPayload(root, root.sessionStore.battleSession);
+  return Either.isLeft(payload)
+    ? battleSnapshotPresentationIssueContent(payload.left)
+    : schemaJsonContent(BattleSessionOutputSchema, payload.right);
+}
+
+function battleResolutionContent(
+  root: McpCompositionRoot,
+  result: BattleRuntimeResolutionResult,
+): BattleToolResult {
+  const session = root.sessionStore.battleSession;
+  if (session === null) return noStoredBattleContent();
+  const payload = battleResolutionPayload(root, result, session);
+  return Either.isLeft(payload)
+    ? battleSnapshotPresentationIssueContent(payload.left)
+    : schemaJsonContent(BattleResolutionOutputSchema, payload.right);
 }
 
 function storeBattleResolution(

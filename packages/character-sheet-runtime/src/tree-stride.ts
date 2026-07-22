@@ -1,5 +1,6 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.tree-stride-session-invocation
 // UNIT-PROFILE-COVERAGE: runtime-owner table-caller.tree-stride-travel
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { timeSpanDuration } from "@dnd/shared/elapsed-time";
 import { spellSlotLevel } from "@dnd/shared/types";
 import type { UnitCatalog } from "@dnd/character-creation-runtime";
@@ -92,7 +93,10 @@ export function resolveTreeStrideTransit(
 function treeStrideSpell(
   unitLibrary: UnitCatalog,
 ): Either.Either<SpellRecord, CharacterSheetIssue> {
-  const unit = getRequiredUnit(unitLibrary, TREE_STRIDE_SPELL_ID);
+  const unit = getRequiredUnit(
+    unitLibrary,
+    authoredUnitId(TREE_STRIDE_SPELL_ID),
+  );
   if (Either.isLeft(unit)) return Either.left(unit.left);
   if (unit.right.kind !== "spell") {
     return characterSheetIssue("Tree Stride requires a Spell record.");

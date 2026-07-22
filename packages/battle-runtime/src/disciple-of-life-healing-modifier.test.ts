@@ -1,3 +1,4 @@
+import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.spell-slot-healing-modifier
 import { describe, expect, test } from "vitest";
 
@@ -221,7 +222,7 @@ function syntheticHealingCantrip(): ReturnType<typeof spellRecord> {
   const cureWounds = spellRecord(cureWoundsUnitId);
   return {
     ...cureWounds,
-    id: syntheticHealingCantripUnitId,
+    id: parseSharedUnitId(syntheticHealingCantripUnitId),
     name: "Synthetic Healing Cantrip",
     mechanics: {
       ...cureWounds.mechanics,
@@ -303,7 +304,7 @@ function requireDiscipleOfLifeSupport(): Exclude<
 function requireDiscipleOfLifeUnitRef(): BattleUnitRef {
   const support = requireDiscipleOfLifeSupport();
   const unitRef = battleUnitRefWithSupportProfiles({
-    unitRef: { unitId: clericDiscipleOfLifeUnitId },
+    unitRef: { unitId: parseSharedUnitId(clericDiscipleOfLifeUnitId) },
     unit: discipleOfLifeUnit,
   });
   if (unitRef._tag === "Left") {

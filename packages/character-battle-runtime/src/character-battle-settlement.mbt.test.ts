@@ -1,4 +1,6 @@
 // KERNEL-COVERAGE: parity-witness CHARACTER.BATTLE.HANDOFF.SETTLEMENT CHARACTER.BATTLE.HANDOFF.IDENTITY_CONFLICTS
+import { statBlockId as authoredStatBlockId } from "@dnd/shared/game-facts";
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import * as path from "node:path";
 
 import {
@@ -221,7 +223,9 @@ function settleHitPointsConditionsSlotsAndPreservedSheetState(): BattleSettlemen
     spellSlotExpenditures: [
       { spellLevel: spellSlotLevel(1), expended: resourceCount(1) },
     ],
-    spentHitDice: [{ classUnitId: "class_wizard", spent: resourceCount(1) }],
+    spentHitDice: [
+      { classUnitId: authoredUnitId("class_wizard"), spent: resourceCount(1) },
+    ],
     restFeatureUses: [{ tag: "arcaneRecovery", usedSinceLongRest: true }],
   });
   const battle = startCharacterBattle({
@@ -1030,7 +1034,7 @@ function wizardSpellcastingBuild(): CharacterBuild {
     spellcasting: {
       sources: [
         {
-          sourceUnitId: "class_wizard",
+          sourceUnitId: authoredUnitId("class_wizard"),
           spellcastingAbility: "int",
           cantrips: [],
           spellbook: [],
@@ -1054,7 +1058,7 @@ function warlockPactMagicBuild(): CharacterBuild {
     spellcasting: {
       sources: [
         {
-          sourceUnitId: "class_warlock",
+          sourceUnitId: authoredUnitId("class_warlock"),
           spellcastingAbility: "cha",
           cantrips: [],
           spellbook: [],
@@ -1128,7 +1132,7 @@ function sorcererFontOfMagicBuild(input: {
     spellcasting: {
       sources: [
         {
-          sourceUnitId: "class_sorcerer",
+          sourceUnitId: authoredUnitId("class_sorcerer"),
           spellcastingAbility: "cha",
           cantrips: [],
           spellbook: [],
@@ -1159,14 +1163,14 @@ function sorcererMetamagicBuild(): CharacterBuild {
     features: [
       {
         kind: "selectedSorcererMetamagicOption",
-        selectedFromUnitId: "sorcerer_metamagic",
+        selectedFromUnitId: authoredUnitId("sorcerer_metamagic"),
         optionId: requireRight(
           sorcererMetamagicOptionId("sorcerer_empowered_spell"),
         ),
       },
       {
         kind: "selectedSorcererMetamagicOption",
-        selectedFromUnitId: "sorcerer_metamagic",
+        selectedFromUnitId: authoredUnitId("sorcerer_metamagic"),
         optionId: requireRight(
           sorcererMetamagicOptionId("sorcerer_heightened_spell"),
         ),
@@ -1181,14 +1185,14 @@ function baseBuild(input: {
 }): CharacterBuild {
   return {
     progression: {
-      startingClass: classUnitId(input.startingClass),
+      startingClass: classUnitId(authoredUnitId(input.startingClass)),
       advancements: (input.advancements ?? []).map((classId) => ({
-        classUnitId: classUnitId(classId),
+        classUnitId: classUnitId(authoredUnitId(classId)),
         hitPointRule: { tag: "fixedHigherLevelGain" },
       })),
     },
-    background: "background_soldier",
-    species: "species_orc",
+    background: authoredUnitId("background_soldier"),
+    species: authoredUnitId("species_orc"),
     originLanguages: ["Common", "Dwarvish", "Goblin"],
     classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
@@ -1212,10 +1216,10 @@ function baseBuild(input: {
 }
 
 const DRUID_WILD_SHAPE_KNOWN_FORM_IDS = [
-  "stat_block_rat",
-  "stat_block_riding_horse",
-  "stat_block_lizard",
-  "stat_block_cat",
+  authoredStatBlockId("stat_block_rat"),
+  authoredStatBlockId("stat_block_riding_horse"),
+  authoredStatBlockId("stat_block_lizard"),
+  authoredStatBlockId("stat_block_cat"),
 ] as const;
 
 function druidWildShapeBuild(): CharacterBuild {

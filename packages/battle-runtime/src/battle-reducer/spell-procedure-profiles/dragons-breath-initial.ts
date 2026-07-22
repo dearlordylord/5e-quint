@@ -1,3 +1,4 @@
+import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-dragons-breath-initial
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE
 //
@@ -21,11 +22,9 @@ import {
   ElapsedTimeTicksSchema,
 } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet, SpellSlotLevel } from "@dnd/shared/types";
-import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
 import {
-  maybeOpenInterruptWindow,
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
@@ -33,6 +32,7 @@ import {
   type DragonsBreathInitialSpellInvocation,
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
+import { maybeOpenInterruptWindow } from "../dispatcher.ts";
 import { CombatantId } from "../../identity.ts";
 import { spellSaveDcForCaster } from "../attack-resolution.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";
@@ -41,7 +41,7 @@ import { invalidResult } from "../result-helpers.ts";
 import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
 import { applyDragonsBreathInitialSpellEffect } from "../spells-active-effects.ts";
 import { spellDamageTypeChoiceHole } from "../spells-damage-fills.ts";
-import { sameStringSet } from "../spells-profile-shared.ts";
+import { sameStringSet } from "../spells-execution-facts.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
 import {
   spellTargetListHole,
@@ -72,7 +72,7 @@ type DragonsBreathInitialResolveInput =
   SpellProcedureProfileResolveInput<DragonsBreathInitialInvocation>;
 
 function admitDragonsBreathInitial(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly DragonsBreathInitialInvocation[] {
   return ctx.actor.origin.spellcasting.spellSlots.flatMap(
@@ -108,7 +108,7 @@ function admitDragonsBreathInitial(
 
 function dragonsBreathInitialSpellProjection(
   actorId: CombatantId,
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   slotLevel: SpellSlotLevel,
 ): Pick<
   DragonsBreathInitialSpellInvocation,

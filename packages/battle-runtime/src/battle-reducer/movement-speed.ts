@@ -25,8 +25,8 @@ import {
   type SpeedChange,
 } from "@dnd/shared-algebras/speed-algebra";
 import type { SpeedType } from "@dnd/shared/game-facts";
-import type { Size, StatBlockRecord } from "@dnd/surface/surface/types";
-import type { BattleDruidWildShapeKnownForm } from "../battle-init.ts";
+import type { Size } from "@dnd/surface/surface/types";
+import type { BattleDruidWildShapeKnownForm } from "../druid-wild-shape-known-form-execution.ts";
 import type { CombatantId } from "../identity.ts";
 import {
   BATTLE_MOVEMENT_SPEED_KINDS,
@@ -46,9 +46,8 @@ import {
   PASSIVE_SPEED_KIND_GRANT_KINDS,
   type PassiveSpeedBonusCondition,
   type PassiveSpeedKindGrantKind,
-} from "../unit-feature-support.ts";
+} from "../unit-feature-execution-constants.ts";
 import {
-  zeroHpLifecycleIsTerminal,
   type BattleAttackHitTriggerKind,
   type BattleAttackExecutionSelection,
   type BattleAttackKindForRedirect,
@@ -63,6 +62,7 @@ import {
   type BattleState,
   type BattleTargetSpatialFact,
 } from "../battle-state-execution.ts";
+import { zeroHpLifecycleIsTerminal } from "./creature-state-leaves.ts";
 import { attackTargetConstraint } from "./statblock-attacks.ts";
 import { attackActionOptionsForActor } from "./attack-damage-apply.ts";
 import { combatantHasGrapplerSupportProfile } from "./grappler-support-profile.ts";
@@ -209,15 +209,20 @@ export function baseWalkSpeed(combatant: BattleCreatureState): number {
   if (combatant.origin.kind === "character") {
     return Number(combatant.origin.speed.walkFeet);
   }
-  return literalWalkSpeed(combatant.origin.statBlock);
+  return literalWalkSpeed(combatant.origin.mechanics.speeds);
 }
 
 function druidWildShapeWalkSpeed(form: BattleDruidWildShapeKnownForm): number {
   return form.statBlock.speeds[0].feet.value;
 }
 
-function literalWalkSpeed(statBlock: StatBlockRecord): number {
-  const walkSpeed = statBlock.statBlock.speeds.find(
+function literalWalkSpeed(
+  speeds: Extract<
+    BattleCreatureState["origin"],
+    { readonly kind: "statBlock" }
+  >["mechanics"]["speeds"],
+): number {
+  const walkSpeed = speeds.find(
     (speed) => speed.kind === "walk" && speed.feet.kind === "literal",
   );
   return walkSpeed?.feet.kind === "literal" ? walkSpeed.feet.value : 0;
@@ -289,11 +294,14 @@ export function battleSpecialSpeedCandidates(
   for (const speedType of activeSpecialSpeedGrantKinds(combatant)) {
     candidates.push(speedType);
   }
-  const statBlockSpeedSource =
-    activeDruidWildShapeForm(combatant) ??
-    (combatant.origin.kind === "statBlock" ? combatant.origin.statBlock : null);
-  if (statBlockSpeedSource !== null) {
-    for (const speed of statBlockSpeedSource.statBlock.speeds) {
+  const activeForm = activeDruidWildShapeForm(combatant);
+  const statBlockSpeeds =
+    activeForm?.statBlock.speeds ??
+    (combatant.origin.kind === "statBlock"
+      ? combatant.origin.mechanics.speeds
+      : null);
+  if (statBlockSpeeds !== null) {
+    for (const speed of statBlockSpeeds) {
       if (isBattleLiteralSpecialSpeed(speed)) {
         candidates.push({
           kind: "fixed",
@@ -337,11 +345,14 @@ export function representedMovementSpeedKinds(
   for (const candidate of activeSpecialSpeedGrantKinds(combatant)) {
     kinds.add(candidate.speedType);
   }
-  const statBlockSpeedSource =
-    activeDruidWildShapeForm(combatant) ??
-    (combatant.origin.kind === "statBlock" ? combatant.origin.statBlock : null);
-  if (statBlockSpeedSource !== null) {
-    for (const speed of statBlockSpeedSource.statBlock.speeds) {
+  const activeForm = activeDruidWildShapeForm(combatant);
+  const statBlockSpeeds =
+    activeForm?.statBlock.speeds ??
+    (combatant.origin.kind === "statBlock"
+      ? combatant.origin.mechanics.speeds
+      : null);
+  if (statBlockSpeeds !== null) {
+    for (const speed of statBlockSpeeds) {
       if (isBattleLiteralSpecialSpeed(speed)) {
         kinds.add(speed.kind);
       }

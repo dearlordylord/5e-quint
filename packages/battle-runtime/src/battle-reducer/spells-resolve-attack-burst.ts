@@ -13,13 +13,6 @@ import {
 } from "@dnd/shared-algebras/attack-roll-algebra";
 import { damageAmount as toDamageAmount } from "@dnd/shared/types";
 import {
-  ATTACK_ROLL_HOLE_ID,
-  ATTACK_TARGET_HOLE_ID,
-  attackRollIsCriticalHit,
-  maybeOpenInterruptWindow,
-  openAfterDamageSequenceInterruptWindow,
-  snapshotBattle,
-  spellAttackRerollUnsupportedIssue,
   type ActionSpellBattleResolutionInput,
   type BattleAfterDamageEvent,
   type BattleFill,
@@ -28,7 +21,18 @@ import {
   type BonusActionSpellBattleResolutionInput,
   type BattleExecutableSpellInvocation,
 } from "../battle-state-execution.ts";
-import type { CharacterBattleMetamagicOptionFact } from "../character-battle-resources.ts";
+import {
+  ATTACK_ROLL_HOLE_ID,
+  ATTACK_TARGET_HOLE_ID,
+} from "./battle-runtime-protocol.ts";
+import { attackRollIsCriticalHit } from "./attack-resolution.ts";
+import {
+  maybeOpenInterruptWindow,
+  openAfterDamageSequenceInterruptWindow,
+} from "./interrupt-execution.ts";
+import { snapshotBattle } from "./battle-snapshot.ts";
+import { spellAttackRerollUnsupportedIssue } from "./spell-reroll-issues.ts";
+import type { CharacterBattleMetamagicOptionFact } from "../character-battle-resource-execution.ts";
 import type { CombatantId } from "../identity.ts";
 import {
   damageDispositionFillFor,
@@ -43,7 +47,7 @@ import {
   recordAttackRollOngoingFeatures,
   requiredSpellAttackRollMode,
 } from "./attack-roll.ts";
-import { activeEffectArmorClass } from "./creature-state.ts";
+import { activeEffectArmorClass } from "./creature-state-execution.ts";
 import {
   damageLifecycleConcentrationSavingThrowHoles,
   damageLifecycleHideousLaughterDamageRepeatSaveFillCheck,
@@ -89,7 +93,7 @@ import {
   validateSpellBurstDamageFill,
   validateSpellDamageFill,
 } from "./spells-holes-fills.ts";
-import { spellAttackKindForRedirect } from "./spells-profiles.ts";
+import { spellAttackKindForRedirect } from "./spells-profiles-attack-damage.ts";
 import {
   recordAttackRollMissToHitReplacementUsed,
   selectedAttackRollMissToHitReplacement,

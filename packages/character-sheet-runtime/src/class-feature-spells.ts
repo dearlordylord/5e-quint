@@ -1,5 +1,6 @@
 // KERNEL-COVERAGE: runtime-owner SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-prepared-spell-access
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import {
   characterBuildFeatureUnitIds,
   classLevelForUnit,
@@ -108,7 +109,7 @@ function preparedSpellIdsForClassFeatureGrant(
   classLevel: number,
 ): readonly UnitRecord["id"][] {
   if (grant.kind === "grant_spell_access" && grant.mode === "prepared") {
-    return [grant.spellId];
+    return [authoredUnitId(grant.spellId)];
   }
   if (grant.kind === "grant_class_level_prepared_spell_access") {
     return classLevelPreparedSpellAccessSpellIds(grant, classLevel);
@@ -122,7 +123,7 @@ function classLevelPreparedSpellAccessSpellIds(
 ): readonly UnitRecord["id"][] {
   return grant.tiers
     .filter((tier) => tier.minimumClassLevel <= classLevel)
-    .flatMap((tier) => tier.spellIds);
+    .flatMap((tier) => tier.spellIds.map(authoredUnitId));
 }
 
 export function featurePreparedSpellIdsForBuild(

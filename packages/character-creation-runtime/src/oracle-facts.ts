@@ -6,6 +6,7 @@ import {
   ALIGNMENT_ORDERS,
   LANGUAGES,
   STANDARD_LANGUAGES,
+  UnitId as SharedUnitIdSchema,
   type CharacterStartingLanguages,
 } from "@dnd/shared/game-facts";
 import { AbilityScore } from "@dnd/shared/types";
@@ -41,7 +42,7 @@ import {
 } from "./types.ts";
 import { holeIdForSource } from "./hole-factories.ts";
 
-const UnitIdSchema = Schema.NonEmptyTrimmedString;
+const UnitIdSchema = SharedUnitIdSchema;
 const AbilitySchema = Schema.Literal(...ABILITIES);
 const CreationChoiceOptionIdSchema = Schema.String.pipe(
   Schema.brand("CreationChoiceOptionId"),
@@ -108,16 +109,12 @@ const ChoiceHoleSourceSchema = Schema.Union(
   }),
   Schema.Struct({
     tag: Schema.Literal("unitChoice"),
-    unitId: Schema.NonEmptyTrimmedString.pipe(
-      Schema.brand("UnitChoiceSourceUnitId"),
-    ),
+    unitId: UnitIdSchema.pipe(Schema.brand("UnitChoiceSourceUnitId")),
     choiceKey: Schema.Literal(...UNIT_CHOICE_KEYS),
   }),
   Schema.Struct({
     tag: Schema.Literal("loadout"),
-    equipmentUnitId: Schema.NonEmptyTrimmedString.pipe(
-      Schema.brand("LoadoutEquipmentUnitId"),
-    ),
+    equipmentUnitId: UnitIdSchema.pipe(Schema.brand("LoadoutEquipmentUnitId")),
     slot: Schema.Literal(...LOADOUT_SLOTS),
   }),
 );
@@ -502,11 +499,7 @@ const CreationChoiceOptionDecodeCauseFactSchema = Schema.Union(
   Schema.Struct({
     tag: Schema.Literal("invalidAbilityScoreIncreaseValue"),
     field: Schema.Literal("maximum"),
-    reason: Schema.Literal(
-      "nonPositive",
-      "unsafeInteger",
-      "maximumOutOfRange",
-    ),
+    reason: Schema.Literal("nonPositive", "unsafeInteger", "maximumOutOfRange"),
   }),
   Schema.Struct({ tag: Schema.Literal("invalidAbilityScoreIncreaseEncoding") }),
   Schema.Struct({ tag: Schema.Literal("unsupportedWeaponCategory") }),
@@ -1514,20 +1507,14 @@ function classFeatureLanguageChoiceCountMismatchFact(
   mismatch: ClassFeatureLanguageChoiceCountMismatch,
 ): ClassFeatureLanguageChoiceCountMismatchFact {
   return Match.value(mismatch).pipe(
-    byTag(
-      "missing",
-      ({ tag, receivedCount, missingCount, ...unprojected }) => {
-        noUnprojectedFields(unprojected);
-        return { tag, receivedCount, missingCount };
-      },
-    ),
-    byTag(
-      "extra",
-      ({ tag, expectedCount, extraCount, ...unprojected }) => {
-        noUnprojectedFields(unprojected);
-        return { tag, expectedCount, extraCount };
-      },
-    ),
+    byTag("missing", ({ tag, receivedCount, missingCount, ...unprojected }) => {
+      noUnprojectedFields(unprojected);
+      return { tag, receivedCount, missingCount };
+    }),
+    byTag("extra", ({ tag, expectedCount, extraCount, ...unprojected }) => {
+      noUnprojectedFields(unprojected);
+      return { tag, expectedCount, extraCount };
+    }),
     Match.exhaustive,
   );
 }
@@ -1609,10 +1596,7 @@ function characterBuildProjectionCauseFactRemaining(
       noUnprojectedFields(unprojected);
       return { tag, role, unitId };
     }),
-    byTag(
-      "abilityScoreCapExceeded",
-      abilityScoreCapExceededFact,
-    ),
+    byTag("abilityScoreCapExceeded", abilityScoreCapExceededFact),
     byTag(
       "unsupportedToolProficiency",
       ({ tag, source, toolId, ...unprojected }) => {
@@ -1679,26 +1663,24 @@ function creationChoiceOptionDecodeCauseFact(
       noUnprojectedFields(unprojected);
       return { tag };
     }),
-    byTag(
-      "invalidAbilityScoreIncreaseValue",
-      (invalidValue) =>
-        Match.value(invalidValue).pipe(
-          Match.when(
-            { field: "increase" },
-            ({ tag, field, reason, ...unprojected }) => {
-              noUnprojectedFields(unprojected);
-              return { tag, field, reason };
-            },
-          ),
-          Match.when(
-            { field: "maximum" },
-            ({ tag, field, reason, ...unprojected }) => {
-              noUnprojectedFields(unprojected);
-              return { tag, field, reason };
-            },
-          ),
-          Match.exhaustive,
+    byTag("invalidAbilityScoreIncreaseValue", (invalidValue) =>
+      Match.value(invalidValue).pipe(
+        Match.when(
+          { field: "increase" },
+          ({ tag, field, reason, ...unprojected }) => {
+            noUnprojectedFields(unprojected);
+            return { tag, field, reason };
+          },
         ),
+        Match.when(
+          { field: "maximum" },
+          ({ tag, field, reason, ...unprojected }) => {
+            noUnprojectedFields(unprojected);
+            return { tag, field, reason };
+          },
+        ),
+        Match.exhaustive,
+      ),
     ),
     byTag("invalidAbilityScoreIncreaseEncoding", ({ tag, ...unprojected }) => {
       noUnprojectedFields(unprojected);

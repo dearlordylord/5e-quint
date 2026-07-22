@@ -5,6 +5,7 @@
 // UNIT-IDENTITY-REPLAY: L1D2-WEAPON-MASTERY-CONTAINERS paladin_weapon_mastery doFinalizePaladinWeaponMastery
 // UNIT-IDENTITY-REPLAY: L1D2-WEAPON-MASTERY-CONTAINERS ranger_weapon_mastery doFinalizeRangerWeaponMastery
 // UNIT-IDENTITY-REPLAY: L1D2-WEAPON-MASTERY-CONTAINERS rogue_weapon_mastery doFinalizeRogueWeaponMastery
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
@@ -60,18 +61,18 @@ const WEAPON_MASTERY_CONTAINER_RESULTS = [
   "rogueFinalized",
 ] as const;
 const WEAPON_MASTERY_CONTAINER_FEATURE_UNIT_IDS = [
-  "fighter_weapon_mastery",
-  "barbarian_weapon_mastery",
-  "paladin_weapon_mastery",
-  "ranger_weapon_mastery",
-  "rogue_weapon_mastery",
+  authoredUnitId("fighter_weapon_mastery"),
+  authoredUnitId("barbarian_weapon_mastery"),
+  authoredUnitId("paladin_weapon_mastery"),
+  authoredUnitId("ranger_weapon_mastery"),
+  authoredUnitId("rogue_weapon_mastery"),
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
 const WEAPON_MASTERY_CONTAINER_CLASS_UNIT_IDS = [
-  "class_fighter",
-  "class_barbarian",
-  "class_paladin",
-  "class_ranger",
-  "class_rogue",
+  authoredUnitId("class_fighter"),
+  authoredUnitId("class_barbarian"),
+  authoredUnitId("class_paladin"),
+  authoredUnitId("class_ranger"),
+  authoredUnitId("class_rogue"),
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
 
 type WeaponMasteryContainerResult =
@@ -133,11 +134,11 @@ const weaponMasteryContainerSelectedIdentityDriverSchema = {
   step: {},
 } as const;
 const featureUnitIdByDriverAction = {
-  doFinalizeFighterWeaponMastery: "fighter_weapon_mastery",
-  doFinalizeBarbarianWeaponMastery: "barbarian_weapon_mastery",
-  doFinalizePaladinWeaponMastery: "paladin_weapon_mastery",
-  doFinalizeRangerWeaponMastery: "ranger_weapon_mastery",
-  doFinalizeRogueWeaponMastery: "rogue_weapon_mastery",
+  doFinalizeFighterWeaponMastery: authoredUnitId("fighter_weapon_mastery"),
+  doFinalizeBarbarianWeaponMastery: authoredUnitId("barbarian_weapon_mastery"),
+  doFinalizePaladinWeaponMastery: authoredUnitId("paladin_weapon_mastery"),
+  doFinalizeRangerWeaponMastery: authoredUnitId("ranger_weapon_mastery"),
+  doFinalizeRogueWeaponMastery: authoredUnitId("rogue_weapon_mastery"),
 } as const satisfies Record<
   WeaponMasteryContainerSelectedIdentityDriverAction,
   WeaponMasteryContainerFeatureUnitId
@@ -265,104 +266,120 @@ const unitLibrary = unitCatalogResult.catalog;
 
 const weaponMasteryContainerProfiles = [
   {
-    classUnitId: "class_fighter",
-    featureUnitId: "fighter_weapon_mastery",
+    classUnitId: authoredUnitId("class_fighter"),
+    featureUnitId: authoredUnitId("fighter_weapon_mastery"),
     result: "fighterFinalized",
-    selectedWeaponUnitIds: ["weapon_longsword", "weapon_spear", "weapon_flail"],
+    selectedWeaponUnitIds: [
+      authoredUnitId("weapon_longsword"),
+      authoredUnitId("weapon_spear"),
+      authoredUnitId("weapon_flail"),
+    ],
   },
   {
-    classUnitId: "class_barbarian",
-    featureUnitId: "barbarian_weapon_mastery",
+    classUnitId: authoredUnitId("class_barbarian"),
+    featureUnitId: authoredUnitId("barbarian_weapon_mastery"),
     result: "barbarianFinalized",
-    selectedWeaponUnitIds: ["weapon_longsword", "weapon_dagger"],
+    selectedWeaponUnitIds: [
+      authoredUnitId("weapon_longsword"),
+      authoredUnitId("weapon_dagger"),
+    ],
   },
   {
-    classUnitId: "class_paladin",
-    featureUnitId: "paladin_weapon_mastery",
+    classUnitId: authoredUnitId("class_paladin"),
+    featureUnitId: authoredUnitId("paladin_weapon_mastery"),
     result: "paladinFinalized",
-    selectedWeaponUnitIds: ["weapon_longsword", "weapon_dagger"],
+    selectedWeaponUnitIds: [
+      authoredUnitId("weapon_longsword"),
+      authoredUnitId("weapon_dagger"),
+    ],
   },
   {
-    classUnitId: "class_ranger",
-    featureUnitId: "ranger_weapon_mastery",
+    classUnitId: authoredUnitId("class_ranger"),
+    featureUnitId: authoredUnitId("ranger_weapon_mastery"),
     result: "rangerFinalized",
-    selectedWeaponUnitIds: ["weapon_longsword", "weapon_dagger"],
+    selectedWeaponUnitIds: [
+      authoredUnitId("weapon_longsword"),
+      authoredUnitId("weapon_dagger"),
+    ],
   },
   {
-    classUnitId: "class_rogue",
-    featureUnitId: "rogue_weapon_mastery",
+    classUnitId: authoredUnitId("class_rogue"),
+    featureUnitId: authoredUnitId("rogue_weapon_mastery"),
     result: "rogueFinalized",
-    selectedWeaponUnitIds: ["weapon_dagger", "weapon_shortsword"],
+    selectedWeaponUnitIds: [
+      authoredUnitId("weapon_dagger"),
+      authoredUnitId("weapon_shortsword"),
+    ],
   },
 ] as const satisfies ReadonlyArray<WeaponMasteryContainerProfile>;
 
 const selectedUnitIdentityReplays = [
   {
     taskId: "L1D2-WEAPON-MASTERY-CONTAINERS",
-    unitId: "fighter_weapon_mastery",
+    unitId: authoredUnitId("fighter_weapon_mastery"),
     actions: ["doFinalizeFighterWeaponMastery"],
     sequences: [
       {
         name: "fighter-finalizes-three-selected-weapon-mastery-refs",
         actions: ["doFinalizeFighterWeaponMastery"],
         expected: projectionForProfile(
-          weaponMasteryProfile("fighter_weapon_mastery"),
+          weaponMasteryProfile(authoredUnitId("fighter_weapon_mastery")),
         ),
       },
     ],
   },
   {
     taskId: "L1D2-WEAPON-MASTERY-CONTAINERS",
-    unitId: "barbarian_weapon_mastery",
+    unitId: authoredUnitId("barbarian_weapon_mastery"),
     actions: ["doFinalizeBarbarianWeaponMastery"],
     sequences: [
       {
         name: "barbarian-finalizes-two-selected-melee-weapon-mastery-refs",
         actions: ["doFinalizeBarbarianWeaponMastery"],
         expected: projectionForProfile(
-          weaponMasteryProfile("barbarian_weapon_mastery"),
+          weaponMasteryProfile(authoredUnitId("barbarian_weapon_mastery")),
         ),
       },
     ],
   },
   {
     taskId: "L1D2-WEAPON-MASTERY-CONTAINERS",
-    unitId: "paladin_weapon_mastery",
+    unitId: authoredUnitId("paladin_weapon_mastery"),
     actions: ["doFinalizePaladinWeaponMastery"],
     sequences: [
       {
         name: "paladin-finalizes-two-selected-weapon-mastery-refs",
         actions: ["doFinalizePaladinWeaponMastery"],
         expected: projectionForProfile(
-          weaponMasteryProfile("paladin_weapon_mastery"),
+          weaponMasteryProfile(authoredUnitId("paladin_weapon_mastery")),
         ),
       },
     ],
   },
   {
     taskId: "L1D2-WEAPON-MASTERY-CONTAINERS",
-    unitId: "ranger_weapon_mastery",
+    unitId: authoredUnitId("ranger_weapon_mastery"),
     actions: ["doFinalizeRangerWeaponMastery"],
     sequences: [
       {
         name: "ranger-finalizes-two-selected-weapon-mastery-refs",
         actions: ["doFinalizeRangerWeaponMastery"],
         expected: projectionForProfile(
-          weaponMasteryProfile("ranger_weapon_mastery"),
+          weaponMasteryProfile(authoredUnitId("ranger_weapon_mastery")),
         ),
       },
     ],
   },
   {
     taskId: "L1D2-WEAPON-MASTERY-CONTAINERS",
-    unitId: "rogue_weapon_mastery",
+    unitId: authoredUnitId("rogue_weapon_mastery"),
     actions: ["doFinalizeRogueWeaponMastery"],
     sequences: [
       {
         name: "rogue-finalizes-two-selected-weapon-mastery-refs",
         actions: ["doFinalizeRogueWeaponMastery"],
         expected: projectionForProfile(
-          weaponMasteryProfile("rogue_weapon_mastery"),
+          weaponMasteryProfile(authoredUnitId("rogue_weapon_mastery")),
         ),
       },
     ],

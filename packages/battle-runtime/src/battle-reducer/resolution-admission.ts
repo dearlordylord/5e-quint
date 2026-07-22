@@ -5,13 +5,13 @@ import {
 import {
   characterSpellProcedure,
   characterUnitProcedure,
-} from "../character-execution-admission.ts";
+} from "../character-execution-queries.ts";
 import type { CharacterProcedureBattleSubject } from "../battle-subjects.ts";
 import type {
   AdmittedBattleResolutionInput,
   BattleResolutionInput,
 } from "../battle-state-execution.ts";
-import { isCharacterBattleCreatureState } from "./creature-state.ts";
+import { isCharacterBattleCreatureState } from "./creature-state-execution.ts";
 import { Match } from "effect";
 
 export type BattleResolutionAdmission =

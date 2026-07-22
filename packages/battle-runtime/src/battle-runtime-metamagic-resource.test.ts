@@ -1,3 +1,4 @@
+import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
   battleActiveEffectExecutionRefForTest,
@@ -30,7 +31,7 @@ import type {
 import {
   EMPOWERED_SPELL_REROLL_UNSUPPORTED_DAMAGE_ROLL_OWNER_MESSAGE,
   SEEKING_SPELL_REROLL_UNSUPPORTED_ATTACK_ROLL_OWNER_MESSAGE,
-} from "./battle-state-execution.ts";
+} from "./battle-reducer/spell-reroll-issues.ts";
 import {
   admitSpellMetamagicApplications,
   CAREFUL_METAMAGIC_EFFECT_KIND,
@@ -118,7 +119,9 @@ describe("battle runtime: Sorcerer Metamagic resource bridge", () => {
             },
           ],
           metamagic: {
-            sorceryPointResourceUnitId: "sorcerer_font_of_magic",
+            sorceryPointResourceUnitId: parseSharedUnitId(
+              "sorcerer_font_of_magic",
+            ),
             spellUseLimit: "one_per_spell_unless_option_allows_stacking",
             knownOptions: [
               {
@@ -3768,7 +3771,9 @@ function metamagicBattle(input?: {
           },
         ],
         metamagic: {
-          sorceryPointResourceUnitId: "sorcerer_font_of_magic",
+          sorceryPointResourceUnitId: parseSharedUnitId(
+            "sorcerer_font_of_magic",
+          ),
           spellUseLimit: "one_per_spell_unless_option_allows_stacking",
           knownOptions: input?.knownOptions ?? [
             quickenedMetamagicOption(),
@@ -3828,7 +3833,9 @@ function saveMetamagicBattle(input: {
           },
         ],
         metamagic: {
-          sorceryPointResourceUnitId: "sorcerer_font_of_magic",
+          sorceryPointResourceUnitId: parseSharedUnitId(
+            "sorcerer_font_of_magic",
+          ),
           spellUseLimit: "one_per_spell_unless_option_allows_stacking",
           knownOptions: input.knownOptions,
         },
@@ -3896,7 +3903,9 @@ function quickenedProfileBattle(input: {
           },
         ],
         metamagic: {
-          sorceryPointResourceUnitId: "sorcerer_font_of_magic",
+          sorceryPointResourceUnitId: parseSharedUnitId(
+            "sorcerer_font_of_magic",
+          ),
           spellUseLimit: "one_per_spell_unless_option_allows_stacking",
           knownOptions: [quickenedMetamagicOption()],
         },
@@ -3945,7 +3954,9 @@ function twinnedTargetCountBattle(
           },
         ],
         metamagic: {
-          sorceryPointResourceUnitId: "sorcerer_font_of_magic",
+          sorceryPointResourceUnitId: parseSharedUnitId(
+            "sorcerer_font_of_magic",
+          ),
           spellUseLimit: "one_per_spell_unless_option_allows_stacking",
           knownOptions: [twinnedMetamagicOption()],
         },
@@ -3999,7 +4010,9 @@ function commandMetamagicBattle(input: {
           },
         ],
         metamagic: {
-          sorceryPointResourceUnitId: "sorcerer_font_of_magic",
+          sorceryPointResourceUnitId: parseSharedUnitId(
+            "sorcerer_font_of_magic",
+          ),
           spellUseLimit: "one_per_spell_unless_option_allows_stacking",
           knownOptions: input.knownOptions,
         },
@@ -4060,7 +4073,9 @@ function repeatSaveMetamagicBattle(input: {
           },
         ],
         metamagic: {
-          sorceryPointResourceUnitId: "sorcerer_font_of_magic",
+          sorceryPointResourceUnitId: parseSharedUnitId(
+            "sorcerer_font_of_magic",
+          ),
           spellUseLimit: "one_per_spell_unless_option_allows_stacking",
           knownOptions: input.knownOptions,
         },
@@ -4102,7 +4117,9 @@ function sleepMetamagicBattle(input: {
           },
         ],
         metamagic: {
-          sorceryPointResourceUnitId: "sorcerer_font_of_magic",
+          sorceryPointResourceUnitId: parseSharedUnitId(
+            "sorcerer_font_of_magic",
+          ),
           spellUseLimit: "one_per_spell_unless_option_allows_stacking",
           knownOptions: input.knownOptions,
         },

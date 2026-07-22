@@ -33,7 +33,7 @@ import type {
   BattleState,
   ProtectionFromEvilAndGoodPreventedCondition,
 } from "../battle-state-execution.ts";
-import { KnockedOutConditionState as KnockedOutConditionStateBrand } from "../battle-state-execution.ts";
+import { KnockedOutConditionState as KnockedOutConditionStateBrand } from "./knocked-out-state.ts";
 import { battleCreatureType } from "./domain-helpers.ts";
 import { wardingBondSavingThrowFlatBonusProjectionsForTarget } from "./warding-bond.ts";
 

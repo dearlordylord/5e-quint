@@ -1,6 +1,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.bard-magical-secrets-spell-access character-creation.class-feature-feat-choice
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L110C-02-MAGICAL-SECRETS-SPELL-ACCESS bard_magical_secrets
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L110B-03-SUBCLASS-GRANTS-AND-REPEATED-FEATURES rogue_ability_score_improvement_l10
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, test } from "vitest";
 import {
   buildUnitCatalog,
@@ -67,13 +68,13 @@ describe("Level 10 character support", () => {
       unitLibrary,
       levelGain: {
         tag: "classLevelGainWithListPreparedSpellcasting",
-        classUnitId: classUnitId("class_bard"),
+        classUnitId: classUnitId(authoredUnitId("class_bard")),
         hitPointRule: { tag: "fixedHigherLevelGain" },
         preparedSpellcasting: {
-          gainedPreparedSpells: ["fireball"],
+          gainedPreparedSpells: [authoredUnitId("fireball")],
           preparedSpellReplacement: {
-            replaceSpellId: "charm_person",
-            selectedSpellId: "revivify",
+            replaceSpellId: authoredUnitId("charm_person"),
+            selectedSpellId: authoredUnitId("revivify"),
           },
         },
       },
@@ -86,10 +87,7 @@ describe("Level 10 character support", () => {
           sources: [
             expect.objectContaining({
               sourceUnitId: "class_bard",
-              preparedSpells: expect.arrayContaining([
-                "fireball",
-                "revivify",
-              ]),
+              preparedSpells: expect.arrayContaining(["fireball", "revivify"]),
             }),
           ],
           slotPools: {
@@ -121,10 +119,10 @@ describe("Level 10 character support", () => {
       unitLibrary,
       levelGain: {
         tag: "classLevelGainWithListPreparedSpellcasting",
-        classUnitId: classUnitId("class_bard"),
+        classUnitId: classUnitId(authoredUnitId("class_bard")),
         hitPointRule: { tag: "fixedHigherLevelGain" },
         preparedSpellcasting: {
-          gainedPreparedSpells: ["hex"],
+          gainedPreparedSpells: [authoredUnitId("hex")],
         },
       },
     });
@@ -138,30 +136,30 @@ describe("Level 10 character support", () => {
   test(rogueAbilityScoreImprovementLevelTenTestName, () => {
     const draft = completeSupportedProgressionDraft({
       draftId: "draft:srd-level-10-rogue-asi",
-      progression: testProgression("class_rogue", 10),
+      progression: testProgression(authoredUnitId("class_rogue"), 10),
       preferredOptionIdsBySource: {
         [testUnitChoiceSourceKey(
-          "rogue_ability_score_improvement_l4",
+          authoredUnitId("rogue_ability_score_improvement_l4"),
           CLASS_FEATURE_FEAT_CHOICE_KEY,
         )]: [creationChoiceOptionId("feat_ability_score_improvement")],
         [testUnitChoiceSourceKey(
-          "rogue_ability_score_improvement_l4",
+          authoredUnitId("rogue_ability_score_improvement_l4"),
           CLASS_FEATURE_ABILITY_SCORE_INCREASE_CHOICE_KEY,
         )]: [creationChoiceOptionId("ability_score:str:+2:max20")],
         [testUnitChoiceSourceKey(
-          "rogue_ability_score_improvement_l8",
+          authoredUnitId("rogue_ability_score_improvement_l8"),
           CLASS_FEATURE_FEAT_CHOICE_KEY,
         )]: [creationChoiceOptionId("feat_ability_score_improvement")],
         [testUnitChoiceSourceKey(
-          "rogue_ability_score_improvement_l8",
+          authoredUnitId("rogue_ability_score_improvement_l8"),
           CLASS_FEATURE_ABILITY_SCORE_INCREASE_CHOICE_KEY,
         )]: [creationChoiceOptionId("ability_score:dex:+2:max20")],
         [testUnitChoiceSourceKey(
-          "rogue_ability_score_improvement_l10",
+          authoredUnitId("rogue_ability_score_improvement_l10"),
           CLASS_FEATURE_FEAT_CHOICE_KEY,
         )]: [creationChoiceOptionId("feat_ability_score_improvement")],
         [testUnitChoiceSourceKey(
-          "rogue_ability_score_improvement_l10",
+          authoredUnitId("rogue_ability_score_improvement_l10"),
           CLASS_FEATURE_ABILITY_SCORE_INCREASE_CHOICE_KEY,
         )]: [creationChoiceOptionId("ability_score:wis:+2:max20")],
       },
@@ -190,14 +188,14 @@ describe("Level 10 character support", () => {
 function bardLevelNineBuild(): CharacterBuild {
   return {
     progression: {
-      startingClass: classUnitId("class_bard"),
+      startingClass: classUnitId(authoredUnitId("class_bard")),
       advancements: Array.from({ length: 8 }, () => ({
-        classUnitId: classUnitId("class_bard"),
+        classUnitId: classUnitId(authoredUnitId("class_bard")),
         hitPointRule: { tag: "fixedHigherLevelGain" as const },
       })),
     },
-    background: "background_soldier",
-    species: "species_orc",
+    background: authoredUnitId("background_soldier"),
+    species: authoredUnitId("species_orc"),
     originLanguages: ["Common", "Dwarvish", "Goblin"],
     classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
@@ -215,37 +213,41 @@ function bardLevelNineBuild(): CharacterBuild {
     features: [
       {
         kind: "selectedClassChoice",
-        selectedFromUnitId: "class_bard",
-        unitId: "subclass_bard_college_of_lore",
+        selectedFromUnitId: authoredUnitId("class_bard"),
+        unitId: authoredUnitId("subclass_bard_college_of_lore"),
       },
       {
         kind: "selectedClassChoice",
-        selectedFromUnitId: "class_bard",
-        unitId: "bard_magical_secrets",
+        selectedFromUnitId: authoredUnitId("class_bard"),
+        unitId: authoredUnitId("bard_magical_secrets"),
       },
     ],
     spellcasting: {
       sources: [
         {
-          sourceUnitId: "class_bard",
+          sourceUnitId: authoredUnitId("class_bard"),
           spellcastingAbility: "cha",
-          cantrips: ["light", "minor_illusion", "vicious_mockery"],
+          cantrips: [
+            authoredUnitId("light"),
+            authoredUnitId("minor_illusion"),
+            authoredUnitId("vicious_mockery"),
+          ],
           spellbook: [],
           preparedSpells: [
-            "charm_person",
-            "color_spray",
-            "cure_wounds",
-            "dissonant_whispers",
-            "healing_word",
-            "heroism",
-            "invisibility",
-            "shatter",
-            "dispel_magic",
-            "fear",
-            "hypnotic_pattern",
-            "slow",
-            "sending",
-            "speak_with_dead",
+            authoredUnitId("charm_person"),
+            authoredUnitId("color_spray"),
+            authoredUnitId("cure_wounds"),
+            authoredUnitId("dissonant_whispers"),
+            authoredUnitId("healing_word"),
+            authoredUnitId("heroism"),
+            authoredUnitId("invisibility"),
+            authoredUnitId("shatter"),
+            authoredUnitId("dispel_magic"),
+            authoredUnitId("fear"),
+            authoredUnitId("hypnotic_pattern"),
+            authoredUnitId("slow"),
+            authoredUnitId("sending"),
+            authoredUnitId("speak_with_dead"),
           ],
           spellcastingFocuses: ["musical_instrument"],
         },
@@ -274,7 +276,9 @@ function completeSupportedProgressionDraft(input: {
     Record<string, readonly CreationChoiceOptionId[]>
   >;
 }): CharacterDraft {
-  let draft = createCharacterDraft({ draftId: characterDraftId(input.draftId) });
+  let draft = createCharacterDraft({
+    draftId: characterDraftId(input.draftId),
+  });
   draft = requireAcceptedBatch(
     fillCreationHoles({
       draft,
@@ -329,7 +333,9 @@ function supportedFillForHole(
   if (supportedOptionIds === undefined) {
     throw new Error(`No supported options for discovered hole ${hole.holeId}.`);
   }
-  const holeOptionIdSet = new Set(hole.options.map((option) => option.optionId));
+  const holeOptionIdSet = new Set(
+    hole.options.map((option) => option.optionId),
+  );
   const supportedOptionIdSet = new Set(supportedOptionIds);
   const preferredOptionIds =
     hole.source.tag === "unitChoice"
@@ -342,7 +348,9 @@ function supportedFillForHole(
     .filter((optionId) => holeOptionIdSet.has(optionId))
     .filter((optionId) => supportedOptionIdSet.has(optionId))
     .slice(0, choiceCardinalityBounds(hole.cardinality).max);
-  if (selectedOptionIds.length < choiceCardinalityBounds(hole.cardinality).max) {
+  if (
+    selectedOptionIds.length < choiceCardinalityBounds(hole.cardinality).max
+  ) {
     throw new Error(`Not enough supported options for hole ${hole.holeId}.`);
   }
 
@@ -353,7 +361,10 @@ function initialManifestFills(
   selectedProgressionOptionId: string,
 ): readonly CreationFill[] {
   return [
-    choiceFill("cc:draft:draft.progression.initial", selectedProgressionOptionId),
+    choiceFill(
+      "cc:draft:draft.progression.initial",
+      selectedProgressionOptionId,
+    ),
     choiceFill("cc:draft:draft.background", "background_soldier"),
     choiceFill("cc:draft:draft.species", "species_orc"),
     {

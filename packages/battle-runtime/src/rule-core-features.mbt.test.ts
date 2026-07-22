@@ -1,7 +1,9 @@
+import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import {
   battleProcedureExecutionRefForTest,
   characterBattleFeatureInitForTest,
 } from "./battle-runtime-test-support.ts";
+import { admitCharacterWeaponAttackExecutionWeapon } from "./character-weapon-execution-admission.ts";
 // RAW-COVERAGE: verification-owner:focused-mbt RAW-QCORE9-UNIT-FEATURE-PROFILES-001
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-damage-rider unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS BATTLE.DAMAGE.ATTACK_BRANCHES BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP
@@ -2145,7 +2147,7 @@ function featureActor(input: {
           : {
               weapon: {
                 itemId: "main:feature-weapon",
-                unitId: attack.weapon.id,
+                unitId: attack.weapon.weaponUnitId,
                 grip: "one_handed" as const,
               },
             },
@@ -2201,7 +2203,7 @@ function zeroAbilityWeaponAttack(
   }
   return {
     kind: "weapon",
-    weapon,
+    weapon: admitCharacterWeaponAttackExecutionWeapon(weapon),
     ability: "str",
     abilityModifier: abilityModifier(0),
   };
@@ -2827,7 +2829,7 @@ function dexHalfDamageCantrip(): SpellRecord {
   const phase = singleSaveGateActivationPhase(mechanics);
   return {
     ...acidSplash,
-    id: "dex_half_cantrip",
+    id: parseSharedUnitId("dex_half_cantrip"),
     name: "Dex Half Cantrip",
     mechanics: {
       ...mechanics,

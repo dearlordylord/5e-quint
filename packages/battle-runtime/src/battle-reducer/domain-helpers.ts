@@ -33,6 +33,6 @@ export function battleCreatureType(
   if (combatant.origin.kind !== "statBlock") {
     return "humanoid";
   }
-  const creatureType = combatant.origin.statBlock.statBlock.creatureType;
+  const creatureType = combatant.origin.mechanics.creatureType;
   return typeof creatureType === "string" ? creatureType : null;
 }

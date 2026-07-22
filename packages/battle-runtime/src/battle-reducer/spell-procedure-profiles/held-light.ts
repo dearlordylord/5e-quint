@@ -1,3 +1,4 @@
+import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-held-light-emitter
 //
 // The heldLight Spell Procedure Profile: a cantrip-access spell (today Produce
@@ -25,20 +26,18 @@
 
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { attackBonus, movementFeet } from "@dnd/shared/types";
-import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 import { allocateBattleActiveEffectRef } from "../../active-effect/execution-ref.ts";
 
 import type { CombatantId } from "../../identity.ts";
 import {
-  maybeOpenInterruptWindow,
-  snapshotBattle,
   type BattleActDiscoveryCandidate,
   type BattleResolutionResult,
   type BattleState,
   type BattleExecutableSpellInvocation,
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
+import { maybeOpenInterruptWindow, snapshotBattle } from "../dispatcher.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
@@ -63,12 +62,10 @@ import {
   SingleCreatureOrObjectSpellTargetingSchema,
 } from "../codec-building-blocks.ts";
 import { DiceExprSchema } from "@dnd/surface/surface/schema";
-import { supportedDamageAmountExpr } from "../spells-profile-shared.ts";
+import { supportedDamageAmountExpr } from "../spells-execution-facts.ts";
 import type { HeldLightHurlMechanicalFacts } from "../../battle-state-execution.ts";
-import {
-  characterExecutionWithHeldLightHurl,
-  type HeldLightHurlSpellProcedureExecution,
-} from "../../character-execution-admission.ts";
+import { characterExecutionWithHeldLightHurl } from "../../character-execution-queries.ts";
+import type { HeldLightHurlSpellProcedureExecution } from "../../character-execution.ts";
 
 type HeldLightInvocation = Extract<
   SupportedSpellInvocation,
@@ -76,10 +73,10 @@ type HeldLightInvocation = Extract<
 >;
 
 export function isProduceFlameOngoingEffectSpell(
-  spell: SpellRecord,
-): spell is SpellRecord & {
+  spell: BattleSpellAdmissionSource,
+): spell is BattleSpellAdmissionSource & {
   readonly mechanics: Extract<
-    SpellRecord["mechanics"],
+    BattleSpellAdmissionSource["mechanics"],
     { family: "ongoing_effect" }
   >;
 } {
@@ -102,7 +99,7 @@ export function isProduceFlameOngoingEffectSpell(
 }
 
 function admitHeldLight(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly HeldLightInvocation[] {
   if (!isProduceFlameOngoingEffectSpell(spell)) {
@@ -151,7 +148,7 @@ function admitHeldLight(
 }
 
 export function heldLightHurlMechanicalFacts(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): HeldLightHurlMechanicalFacts | null {
   if (!isProduceFlameOngoingEffectSpell(spell)) return null;

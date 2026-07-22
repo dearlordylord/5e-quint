@@ -6,7 +6,6 @@ import type {
   CharacterAttackExecutionSelection,
   StatBlockAttackExecutionSelection,
   BoundSupportedAttackActionOption,
-  StatBlockAttackActionOption,
   StatBlockAttackSection,
   SupportedAttackActionOption,
 } from "../battle-action-options.ts";
@@ -20,23 +19,14 @@ import {
   type StatBlockBattleCreatureState,
 } from "../battle-state-execution.ts";
 import {
-  statBlockAttackActionOptions as executionStatBlockAttackActionOptions,
   statBlockProcedureBinding,
-  statBlockProcedurePresentations,
   spendStatBlockProcedureResources,
-  type StatBlockExecutionAdmission,
-} from "../stat-block-execution.ts";
+} from "../stat-block-execution-state.ts";
+export { statBlockAttackActionOptions } from "../stat-block-execution-state.ts";
 import {
   activeDruidWildShape,
   spendActiveDruidWildShapeProcedureResources,
 } from "./druid-wild-shape.ts";
-import { attackActionOptionName } from "./statblock-attacks.ts";
-
-export function statBlockAttackActionOptions(
-  admission: StatBlockExecutionAdmission,
-): readonly StatBlockAttackActionOption[] {
-  return executionStatBlockAttackActionOptions(admission);
-}
 
 export function attackActionOptionIsOrdinaryAttackAction(
   state: BattleState,
@@ -65,33 +55,6 @@ export function statBlockAttackProcedureSection(
   return binding?.procedure.kind === "attack"
     ? binding.procedure.section
     : null;
-}
-
-export function attackActionOptionPresentationName(
-  state: BattleState,
-  actorId: CombatantId,
-  attack: SupportedAttackActionOption,
-): string {
-  if (attack.kind !== "statBlockAttack") return attackActionOptionName(attack);
-  const admission = activeStatBlockExecutionAdmission(state, actorId);
-  if (admission === null) return attackActionOptionName(attack);
-  const presentation = statBlockProcedurePresentations(admission).find(
-    (candidate) =>
-      candidate.kind === "attack" &&
-      candidate.procedureRef === attack.procedureRef,
-  );
-  return presentation?.kind === "attack"
-    ? presentation.name
-    : attackActionOptionName(attack);
-}
-
-function activeStatBlockExecutionAdmission(
-  state: BattleState,
-  actorId: CombatantId,
-): StatBlockExecutionAdmission | null {
-  const actor = state.combatants.get(actorId);
-  if (actor?.origin.kind === "statBlock") return actor.origin;
-  return activeDruidWildShape(actor)?.admission ?? null;
 }
 
 export function spendStatBlockAttackResources(input: {

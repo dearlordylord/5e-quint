@@ -1,3 +1,4 @@
+import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
@@ -593,7 +594,7 @@ function preserveLifeDistributionFill(
 
 function preserveLifeUnitRefWithSupport() {
   const unitRef = battleUnitRefWithSupportProfiles({
-    unitRef: { unitId: clericPreserveLifeUnitId },
+    unitRef: { unitId: parseSharedUnitId(clericPreserveLifeUnitId) },
     unit: preserveLifeUnit,
     classLevels: [{ className: "cleric", level: classLevel(3) }],
   });

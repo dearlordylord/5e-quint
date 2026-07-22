@@ -1,3 +1,4 @@
+import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import {
@@ -52,7 +53,7 @@ import { describe, expect, test } from "vitest";
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { classLevel } from "@dnd/shared/types";
 import { sourceDamageRollPenaltyRollHole } from "./battle-reducer/damage-helpers.ts";
-import { battleFillEquals } from "./battle-state-execution.ts";
+import { battleFillEquals } from "./battle-reducer/dispatcher.ts";
 import { BattleStatBlockProcedureExecutionRef } from "./identity.ts";
 
 function goblinOpportunityAttackThreat(state: BattleState) {
@@ -87,12 +88,12 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
           selectedLoadout: {
             weapon: {
               itemId: "main:weapon_shortsword",
-              unitId: "weapon_shortsword",
+              unitId: parseSharedUnitId("weapon_shortsword"),
               grip: "one_handed",
             },
             offHandWeapon: {
               itemId: "off:weapon_dagger",
-              unitId: "weapon_dagger",
+              unitId: parseSharedUnitId("weapon_dagger"),
             },
           },
         }),
@@ -170,7 +171,7 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
     );
 
     expect(damage).toMatchObject({
-      label: "Dagger damage (1d4-piercing)",
+      label: "weapon_dagger damage (1d4-piercing)",
     });
     expect(
       resolveBattleSubject({
@@ -204,12 +205,12 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
           selectedLoadout: {
             weapon: {
               itemId: "main:weapon_shortsword",
-              unitId: "weapon_shortsword",
+              unitId: parseSharedUnitId("weapon_shortsword"),
               grip: "one_handed",
             },
             offHandWeapon: {
               itemId: "off:weapon_dagger",
-              unitId: "weapon_dagger",
+              unitId: parseSharedUnitId("weapon_dagger"),
             },
           },
         }),
@@ -343,12 +344,12 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
           selectedLoadout: {
             weapon: {
               itemId: "main:weapon_shortsword",
-              unitId: "weapon_shortsword",
+              unitId: parseSharedUnitId("weapon_shortsword"),
               grip: "one_handed",
             },
             offHandWeapon: {
               itemId: "off:weapon_dagger",
-              unitId: "weapon_dagger",
+              unitId: parseSharedUnitId("weapon_dagger"),
             },
           },
         }),
@@ -496,12 +497,12 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
           selectedLoadout: {
             weapon: {
               itemId: "main:weapon_shortsword",
-              unitId: "weapon_shortsword",
+              unitId: parseSharedUnitId("weapon_shortsword"),
               grip: "one_handed",
             },
             offHandWeapon: {
               itemId: "off:weapon_dagger",
-              unitId: "weapon_dagger",
+              unitId: parseSharedUnitId("weapon_dagger"),
             },
           },
         }),
@@ -569,7 +570,7 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
 
     expect(damage).toMatchObject({
       critical: true,
-      label: "Dagger damage (2d4-piercing)",
+      label: "weapon_dagger damage (2d4-piercing)",
     });
     expect(
       resolveBattleSubject({
@@ -602,12 +603,12 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
           selectedLoadout: {
             weapon: {
               itemId: "main:dagger-1",
-              unitId: "weapon_dagger",
+              unitId: parseSharedUnitId("weapon_dagger"),
               grip: "one_handed",
             },
             offHandWeapon: {
               itemId: "off:dagger-2",
-              unitId: "weapon_dagger",
+              unitId: parseSharedUnitId("weapon_dagger"),
             },
           },
         }),
@@ -1153,7 +1154,7 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
     if (reactor?.origin.kind !== "statBlock") {
       throw new Error("Expected the synthetic Stat Block reactor.");
     }
-    const procedureRefs = statBlockAttackActionOptions(reactor.origin)
+    const procedureRefs = statBlockAttackActionOptions(reactor.origin.execution)
       .filter(
         (attack) =>
           attack.damageNotation === "rolled" &&

@@ -1,3 +1,7 @@
+import {
+  statBlockId as authoredStatBlockId,
+  unitId as authoredUnitId,
+} from "@dnd/shared/game-facts";
 import type { CharacterBuild } from "@dnd/character-creation-runtime";
 import {
   abilityScoreAssignment,
@@ -26,6 +30,7 @@ import {
   Hp,
   resourceCount,
   spellSlotLevel,
+  type ReadonlyNonEmptyArray,
 } from "@dnd/shared/types";
 import {
   buildUnitCatalog,
@@ -424,10 +429,10 @@ export const secondStoryWorkProjectionTestName =
 export const primalKnowledgeAbilitySubstitutionProjectionTestName =
   "Primal Knowledge offers Strength for listed Ability Checks only while Rage is active";
 export const druidWildShapeFixtureKnownFormStatBlockIds = [
-  "stat_block_rat",
-  "stat_block_riding_horse",
-  "stat_block_spider",
-  "stat_block_wolf",
+  authoredStatBlockId("stat_block_rat"),
+  authoredStatBlockId("stat_block_riding_horse"),
+  authoredStatBlockId("stat_block_spider"),
+  authoredStatBlockId("stat_block_wolf"),
 ] as const;
 
 type CharacterSheetTestInput = Omit<
@@ -644,18 +649,20 @@ export function spellbookRitualSheet(input: {
           ? {}
           : {
               progression: {
-                startingClass: classUnitId(input.startingClass),
+                startingClass: classUnitId(authoredUnitId(input.startingClass)),
                 advancements: [],
               },
             }),
         spellcasting: {
           sources: [
             {
-              sourceUnitId: input.spellcastingSourceUnitId ?? "class_wizard",
+              sourceUnitId: authoredUnitId(
+                input.spellcastingSourceUnitId ?? "class_wizard",
+              ),
               spellcastingAbility: "int",
               cantrips: [],
-              spellbook: input.spellbook,
-              preparedSpells: input.preparedSpells ?? [],
+              spellbook: input.spellbook.map(authoredUnitId),
+              preparedSpells: (input.preparedSpells ?? []).map(authoredUnitId),
               spellcastingFocuses: ["spellbook"],
             },
           ],
@@ -721,12 +728,18 @@ export function prayerOfHealingUnitLibraryWith(
   }
   const replacement = transform(base);
   return {
-    getUnit: (id: UnitRecord["id"]) =>
-      id === replacement.id
+    getUnit: (id: string) => {
+      const parsedId = authoredUnitId(id);
+      return parsedId === replacement.id
         ? Option.some(replacement)
-        : unitLibrary.getUnit(id),
-    requireUnit: (id: UnitRecord["id"]) =>
-      id === replacement.id ? replacement : unitLibrary.requireUnit(id),
+        : unitLibrary.getUnit(parsedId);
+    },
+    requireUnit: (id: string) => {
+      const parsedId = authoredUnitId(id);
+      return parsedId === replacement.id
+        ? replacement
+        : unitLibrary.requireUnit(parsedId);
+    },
     listUnits: () =>
       unitLibrary
         .listUnits()
@@ -787,8 +800,8 @@ export function weaponMasteryBuild(input: {
     }),
     features: input.selectedWeaponUnitIds.map((unitId) => ({
       kind: "selectedClassChoice" as const,
-      selectedFromUnitId: input.featureUnitId,
-      unitId,
+      selectedFromUnitId: authoredUnitId(input.featureUnitId),
+      unitId: authoredUnitId(unitId),
     })),
   };
 }
@@ -796,13 +809,20 @@ export function weaponMasteryBuild(input: {
 export function selectedClassChoiceUnitIds(
   build: CharacterBuild,
   featureUnitId: string,
-): readonly string[] {
+): readonly UnitRecord["id"][] {
   return build.features.flatMap((feature) =>
     feature.kind === "selectedClassChoice" &&
     feature.selectedFromUnitId === featureUnitId
       ? [feature.unitId]
       : [],
   );
+}
+
+export function authoredNonEmptyUnitIds(
+  values: ReadonlyNonEmptyArray<string>,
+): ReadonlyNonEmptyArray<UnitRecord["id"]> {
+  const [first, ...rest] = values;
+  return [authoredUnitId(first), ...rest.map(authoredUnitId)];
 }
 
 export function bardJackOfAllTradesBuild(input: {
@@ -827,7 +847,7 @@ export function druidLanguageBuild(): CharacterBuild {
     classFeatureLanguages: [
       {
         kind: "classFeatureLanguageGrant",
-        sourceUnitId: "druid_druidic",
+        sourceUnitId: authoredUnitId("druid_druidic"),
         language: "Druidic",
       },
     ],
@@ -848,21 +868,21 @@ export function druidCircleLandBuild(input: {
     classFeatureLanguages: [
       {
         kind: "classFeatureLanguageGrant",
-        sourceUnitId: "druid_druidic",
+        sourceUnitId: authoredUnitId("druid_druidic"),
         language: "Druidic",
       },
     ],
     features: [
       {
         kind: "selectedClassChoice",
-        selectedFromUnitId: "class_druid",
-        unitId: "subclass_druid_circle_of_the_land",
+        selectedFromUnitId: authoredUnitId("class_druid"),
+        unitId: authoredUnitId("subclass_druid_circle_of_the_land"),
       },
     ],
     spellcasting: {
       sources: [
         {
-          sourceUnitId: "class_druid",
+          sourceUnitId: authoredUnitId("class_druid"),
           spellcastingAbility: "wis",
           cantrips: [],
           spellbook: [],
@@ -887,7 +907,7 @@ export function druidWarlockCircleLandBookBuild(): CharacterBuild {
       ...druidCircleLandBuild({ druidLevel: 3 }).features,
       {
         kind: "selectedEldritchInvocation",
-        selectedFromUnitId: "warlock_eldritch_invocations",
+        selectedFromUnitId: authoredUnitId("warlock_eldritch_invocations"),
         selection: {
           kind: "nonRepeatable",
           invocationId: eldritchInvocationId("pact_of_the_tome"),
@@ -897,7 +917,7 @@ export function druidWarlockCircleLandBookBuild(): CharacterBuild {
     spellcasting: {
       sources: [
         {
-          sourceUnitId: "class_druid",
+          sourceUnitId: authoredUnitId("class_druid"),
           spellcastingAbility: "wis",
           cantrips: [],
           spellbook: [],
@@ -905,7 +925,7 @@ export function druidWarlockCircleLandBookBuild(): CharacterBuild {
           spellcastingFocuses: ["druidic_focus"],
         },
         {
-          sourceUnitId: "class_warlock",
+          sourceUnitId: authoredUnitId("class_warlock"),
           spellcastingAbility: "cha",
           cantrips: [],
           spellbook: [],
@@ -913,8 +933,15 @@ export function druidWarlockCircleLandBookBuild(): CharacterBuild {
           spellcastingFocuses: ["arcane_focus"],
           bookOfShadows: {
             tag: "bookOfShadows",
-            cantrips: ["fire_bolt", "minor_illusion", "spare_the_dying"],
-            ritualSpells: ["detect_magic", "detect_poison_and_disease"],
+            cantrips: [
+              authoredUnitId("fire_bolt"),
+              authoredUnitId("minor_illusion"),
+              authoredUnitId("spare_the_dying"),
+            ],
+            ritualSpells: [
+              authoredUnitId("detect_magic"),
+              authoredUnitId("detect_poison_and_disease"),
+            ],
             spellcastingFocus: "book_of_shadows",
           },
         },
@@ -942,12 +969,12 @@ export function rogueLanguageBuild(
     classFeatureLanguages: [
       {
         kind: "classFeatureLanguageGrant",
-        sourceUnitId: "rogue_thieves_cant",
+        sourceUnitId: authoredUnitId("rogue_thieves_cant"),
         language: "Thieves' Cant",
       },
       {
         kind: "classFeatureLanguageChoice",
-        sourceUnitId: "rogue_thieves_cant",
+        sourceUnitId: authoredUnitId("rogue_thieves_cant"),
         language: extraLanguage,
       },
     ],
@@ -966,25 +993,29 @@ export function armorClassBuild(input: {
       ? undefined
       : characterEquipmentItemId({
           slot: "armor",
-          unitId: expectRight(characterEquipmentItemUnitId(input.armor)),
+          unitId: expectRight(
+            characterEquipmentItemUnitId(authoredUnitId(input.armor)),
+          ),
         });
   const shieldItemId =
     input.shield === true
       ? characterEquipmentItemId({
           slot: "shield",
-          unitId: expectRight(characterEquipmentItemUnitId("equipment_shield")),
+          unitId: expectRight(
+            characterEquipmentItemUnitId(authoredUnitId("equipment_shield")),
+          ),
         })
       : undefined;
   return {
     progression: {
-      startingClass: classUnitId(input.startingClass),
+      startingClass: classUnitId(authoredUnitId(input.startingClass)),
       advancements: (input.advancements ?? []).map((classId) => ({
-        classUnitId: classUnitId(classId),
+        classUnitId: classUnitId(authoredUnitId(classId)),
         hitPointRule: { tag: "fixedHigherLevelGain" },
       })),
     },
-    background: "background_soldier",
-    species: "species_orc",
+    background: authoredUnitId("background_soldier"),
+    species: authoredUnitId("species_orc"),
     originLanguages: ["Common", "Dwarvish", "Goblin"],
     classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
@@ -1004,10 +1035,15 @@ export function armorClassBuild(input: {
       owned: [
         ...(armorItemId === undefined || input.armor === undefined
           ? []
-          : [{ itemId: armorItemId, unitId: input.armor }]),
+          : [{ itemId: armorItemId, unitId: authoredUnitId(input.armor) }]),
         ...(shieldItemId === undefined
           ? []
-          : [{ itemId: shieldItemId, unitId: "equipment_shield" }]),
+          : [
+              {
+                itemId: shieldItemId,
+                unitId: authoredUnitId("equipment_shield"),
+              },
+            ]),
       ],
       loadout: {
         ...(armorItemId === undefined ? {} : { armor: armorItemId }),
@@ -1052,11 +1088,18 @@ export function sorcererFontOfMagicBuild(
     spellcasting: {
       sources: [
         {
-          sourceUnitId: "class_sorcerer",
+          sourceUnitId: authoredUnitId("class_sorcerer"),
           spellcastingAbility: "cha",
-          cantrips: ["light", "prestidigitation", "shocking_grasp"],
+          cantrips: [
+            authoredUnitId("light"),
+            authoredUnitId("prestidigitation"),
+            authoredUnitId("shocking_grasp"),
+          ],
           spellbook: [],
-          preparedSpells: ["burning_hands", "detect_magic"],
+          preparedSpells: [
+            authoredUnitId("burning_hands"),
+            authoredUnitId("detect_magic"),
+          ],
           spellcastingFocuses: ["arcane_focus"],
         },
       ],
@@ -1080,9 +1123,9 @@ export function warlockSpellcastingWithCantrips(
   return {
     sources: [
       {
-        sourceUnitId: "class_warlock",
+        sourceUnitId: authoredUnitId("class_warlock"),
         spellcastingAbility: "cha",
-        cantrips,
+        cantrips: cantrips.map(authoredUnitId),
         spellbook: [],
         preparedSpells: [],
         spellcastingFocuses: ["arcane_focus"],
@@ -1114,7 +1157,7 @@ export function warlockMagicalCunningBuild(input: {
     spellcasting: {
       sources: [
         {
-          sourceUnitId: "class_warlock",
+          sourceUnitId: authoredUnitId("class_warlock"),
           spellcastingAbility: "cha",
           cantrips: [],
           spellbook: [],
@@ -1147,7 +1190,7 @@ export function wizardBuild(input: {
     spellcasting: {
       sources: [
         {
-          sourceUnitId: "class_wizard",
+          sourceUnitId: authoredUnitId("class_wizard"),
           spellcastingAbility: "int",
           cantrips: [],
           spellbook: [],
@@ -1200,11 +1243,11 @@ export function prayerOfHealingClericBuild(): CharacterBuild {
     spellcasting: {
       sources: [
         {
-          sourceUnitId: "class_cleric",
+          sourceUnitId: authoredUnitId("class_cleric"),
           spellcastingAbility: "wis",
           cantrips: [],
           spellbook: [],
-          preparedSpells: ["prayer_of_healing"],
+          preparedSpells: [authoredUnitId("prayer_of_healing")],
           spellcastingFocuses: ["holy_symbol"],
         },
       ],

@@ -1,3 +1,4 @@
+import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // A Spell Procedure Declaration bundles every layer the runtime needs to handle
 // one class of spell behavior — admission, discovery, dispatch, codec, and
 // classification — into a single procedure-keyed source. Registry views narrow
@@ -15,7 +16,7 @@
 
 import { currentActing } from "@dnd/shared-algebras/initiative-algebra";
 import type { CharacterLevel } from "@dnd/shared/types";
-import type { SpellRecord } from "@dnd/surface/surface/types";
+import type { UnitId } from "@dnd/shared/game-facts";
 import type {
   BattleAntimagicFieldOngoingSpellEffectRef,
   BattleCreatureState,
@@ -24,10 +25,8 @@ import type {
 } from "../../battle-state-execution.ts";
 export { SpellRuleExecutionFactsSchema } from "../../procedure-execution/spell-rule-facts.ts";
 import type { CombatantId } from "../../identity.ts";
-import type {
-  CharacterBattleResourceOwnership,
-  CharacterBattleSpellcastingState,
-} from "../../character-battle-resources.ts";
+import type { CharacterBattleSpellcastingExecutionState } from "../../character-battle-resource-execution.ts";
+import type { BattleResourcePoolExecutionRef } from "../../identity.ts";
 import {
   antimagicFieldSuppressedOngoingSpellEffectKeys,
   ongoingSpellEffectRefKey,
@@ -43,7 +42,7 @@ export type SpellAdmissionActor = BattleCreatureState & {
     BattleCreatureState["origin"],
     { readonly kind: "character" }
   > & {
-    readonly spellcasting: CharacterBattleSpellcastingState & {
+    readonly spellcasting: CharacterBattleSpellcastingExecutionState & {
       readonly canCastSpells: true;
     };
   };
@@ -61,7 +60,9 @@ export type SpellAdmissionBattleProjection = {
 export type SpellAdmissionContext = {
   readonly actor: SpellAdmissionActor;
   readonly battle: SpellAdmissionBattleProjection | undefined;
-  readonly resourceOwnership: readonly CharacterBattleResourceOwnership[];
+  readonly availableClassFeatureFreeCastResourcePoolRefsForSpell: (
+    spellId: UnitId,
+  ) => readonly BattleResourcePoolExecutionRef[];
 };
 
 // Registry admission is existential over each profile's concrete invocation.
@@ -69,35 +70,10 @@ export type SpellAdmissionContext = {
 // concrete result to the supported-invocation union covariantly.
 export type AnySpellProcedureAdmission = {
   readonly admit: (
-    spell: SpellRecord,
+    spell: BattleSpellAdmissionSource,
     ctx: SpellAdmissionContext,
   ) => readonly SupportedSpellInvocation[];
 };
-
-function isSpellAdmissionActor(
-  actor: BattleCreatureState,
-): actor is SpellAdmissionActor {
-  return (
-    actor.origin.kind === "character" &&
-    actor.origin.spellcasting !== undefined &&
-    actor.origin.spellcasting.canCastSpells
-  );
-}
-
-export function spellAdmissionContextFor(
-  actor: BattleCreatureState,
-  state: BattleState | undefined,
-  resourceOwnership: readonly CharacterBattleResourceOwnership[],
-): SpellAdmissionContext | null {
-  if (!isSpellAdmissionActor(actor)) {
-    return null;
-  }
-  return {
-    actor,
-    battle: spellAdmissionBattleProjection(state),
-    resourceOwnership,
-  };
-}
 
 export function spellAdmissionBattleTurn(
   ctx: SpellAdmissionContext,
@@ -116,7 +92,7 @@ export function spellAdmissionOngoingSpellEffectSuppressed(
   );
 }
 
-function spellAdmissionBattleProjection(
+export function spellAdmissionBattleProjection(
   state: BattleState | undefined,
 ): SpellAdmissionBattleProjection | undefined {
   return state === undefined
@@ -158,7 +134,7 @@ export type SpellProcedureAdmissionDeclaration<
   // procedure for the given actor + spell. Returns [] if the spell does not
   // fit this procedure's shape.
   readonly admit: (
-    spell: SpellRecord,
+    spell: BattleSpellAdmissionSource,
     ctx: SpellAdmissionContext,
   ) => readonly I[];
 };

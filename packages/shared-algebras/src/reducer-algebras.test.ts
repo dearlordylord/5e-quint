@@ -1,7 +1,7 @@
-import { Either, Option, Schema } from "effect";
+import { Brand, Either, Option, Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
-import type { ActionRestriction, UnitRecord } from "@dnd/surface/surface/types";
+import type { ActionRestriction } from "@dnd/surface/surface/types";
 import {
   CreatureId as CreatureIdSchema,
   type BattleActiveEffectExecutionRef,
@@ -49,10 +49,16 @@ import {
 } from "./initiative-algebra.ts";
 
 const sourceOwnerId = Schema.decodeUnknownSync(CreatureIdSchema)("owner-a");
-const unitActionId: UnitRecord["id"] = "unit-action-a";
-const unitActionProcedureRef = unitActionId as BattleProcedureExecutionRef;
-const spellEffectRef =
-  "synthetic-active-effect-ref-a" as BattleActiveEffectExecutionRef;
+const battleProcedureExecutionRef =
+  Brand.nominal<BattleProcedureExecutionRef>();
+const battleActiveEffectExecutionRef =
+  Brand.nominal<BattleActiveEffectExecutionRef>();
+const unitActionProcedureRef = battleProcedureExecutionRef(
+  "unit-action-procedure-a",
+);
+const spellEffectRef = battleActiveEffectExecutionRef(
+  "synthetic-active-effect-ref-a",
+);
 const attackOnlyRestriction: ActionRestriction = {
   kind: "exclude",
   actions: ["magic"],

@@ -32,7 +32,7 @@ import {
   type CharacterBattleMetamagicEffectKind,
   type CharacterBattleMetamagicOptionFact,
   type CharacterBattlePointPoolResourceState,
-} from "../character-battle-resources.ts";
+} from "../character-battle-resource-execution.ts";
 import type { CombatantId } from "../identity.ts";
 import type {
   RuntimeSpellProcedureExecution,

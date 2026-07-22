@@ -1,4 +1,5 @@
 // KERNEL-COVERAGE: runtime-owner CREATION.CLASS_FEATURE_RESOURCE.PROJECTION
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { Either, Option } from "effect";
 import {
   resourceCount,
@@ -21,8 +22,9 @@ import {
 import type { CharacterBuild } from "./types.ts";
 import { characterBuildClassFeatureOwnerLevel } from "./class-feature-facts.ts";
 
-export const SORCERER_FONT_OF_MAGIC_UNIT_ID =
-  "sorcerer_font_of_magic" as const satisfies UnitRecord["id"];
+export const SORCERER_FONT_OF_MAGIC_UNIT_ID = authoredUnitId(
+  "sorcerer_font_of_magic",
+);
 
 type SorcererFontOfMagicSpellSlotCreationOperation = Extract<
   ResourcePoolOperation,
@@ -69,7 +71,7 @@ export function characterBuildSorcererFontOfMagicFacts(input: {
 > {
   if (
     !characterBuildFeatureUnitIds(input.build, input.unitLibrary).includes(
-      SORCERER_FONT_OF_MAGIC_UNIT_ID,
+      authoredUnitId(SORCERER_FONT_OF_MAGIC_UNIT_ID),
     )
   ) {
     return Either.right(undefined);

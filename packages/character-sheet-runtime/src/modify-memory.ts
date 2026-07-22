@@ -1,5 +1,6 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.modify-memory-session-invocation
 // UNIT-PROFILE-COVERAGE: runtime-owner table-caller.modify-memory-edit-contract
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { timeSpanDuration } from "@dnd/shared/elapsed-time";
 import { spellSlotLevel } from "@dnd/shared/types";
 import type { UnitCatalog } from "@dnd/character-creation-runtime";
@@ -69,7 +70,10 @@ export function castModifyMemory(input: {
 function modifyMemorySpell(
   unitLibrary: UnitCatalog,
 ): Either.Either<SpellRecord, CharacterSheetIssue> {
-  const unit = getRequiredUnit(unitLibrary, MODIFY_MEMORY_SPELL_ID);
+  const unit = getRequiredUnit(
+    unitLibrary,
+    authoredUnitId(MODIFY_MEMORY_SPELL_ID),
+  );
   if (Either.isLeft(unit)) return Either.left(unit.left);
   if (unit.right.kind !== "spell") {
     return characterSheetIssue("Modify Memory requires a Spell record.");

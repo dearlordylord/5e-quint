@@ -2,6 +2,7 @@
 // UNIT-IDENTITY-REPLAY: B6-CLASS-FEATURE-IDENTITY-BATCH-3 warlock_magical_cunning doMagicalCunningRecoversPactSlots doRejectMagicalCunningWithoutExpendedPactSlots
 // KERNEL-COVERAGE: parity-witness SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS
 // KERNEL-COVERAGE: parity-witness SHEET.SPELL_SLOTS.TABLE_DERIVATION
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
@@ -600,7 +601,7 @@ function wizardSlotBuild(input: {
     spellcasting: {
       sources: [
         {
-          sourceUnitId: "class_wizard",
+          sourceUnitId: authoredUnitId("class_wizard"),
           spellcastingAbility: "int",
           cantrips: [],
           spellbook: [],
@@ -630,7 +631,7 @@ function wizardWarlockSlotBuild(): CharacterBuild {
     spellcasting: {
       sources: [
         {
-          sourceUnitId: "class_wizard",
+          sourceUnitId: authoredUnitId("class_wizard"),
           spellcastingAbility: "int",
           cantrips: [],
           spellbook: [],
@@ -638,7 +639,7 @@ function wizardWarlockSlotBuild(): CharacterBuild {
           spellcastingFocuses: ["arcane_focus"],
         },
         {
-          sourceUnitId: "class_warlock",
+          sourceUnitId: authoredUnitId("class_warlock"),
           spellcastingAbility: "cha",
           cantrips: [],
           spellbook: [],
@@ -671,7 +672,7 @@ function wizard4BuildWithPactSlots(): CharacterBuild {
     spellcasting: {
       sources: [
         {
-          sourceUnitId: "class_wizard",
+          sourceUnitId: authoredUnitId("class_wizard"),
           spellcastingAbility: "int",
           cantrips: [],
           spellbook: [],
@@ -679,7 +680,7 @@ function wizard4BuildWithPactSlots(): CharacterBuild {
           spellcastingFocuses: ["arcane_focus"],
         },
         {
-          sourceUnitId: "class_warlock",
+          sourceUnitId: authoredUnitId("class_warlock"),
           spellcastingAbility: "cha",
           cantrips: [],
           spellbook: [],
@@ -718,7 +719,7 @@ function warlockMagicalCunningBuild(input: {
     spellcasting: {
       sources: [
         {
-          sourceUnitId: "class_warlock",
+          sourceUnitId: authoredUnitId("class_warlock"),
           spellcastingAbility: "cha",
           cantrips: [],
           spellbook: [],
@@ -747,7 +748,7 @@ function sorcererWarlockSlotBuild(): CharacterBuild {
     spellcasting: {
       sources: [
         {
-          sourceUnitId: "class_sorcerer",
+          sourceUnitId: authoredUnitId("class_sorcerer"),
           spellcastingAbility: "cha",
           cantrips: [],
           spellbook: [],
@@ -755,7 +756,7 @@ function sorcererWarlockSlotBuild(): CharacterBuild {
           spellcastingFocuses: ["arcane_focus"],
         },
         {
-          sourceUnitId: "class_warlock",
+          sourceUnitId: authoredUnitId("class_warlock"),
           spellcastingAbility: "cha",
           cantrips: [],
           spellbook: [],
@@ -784,14 +785,14 @@ function baseBuild(input: {
 }): CharacterBuild {
   return {
     progression: {
-      startingClass: classUnitId(input.startingClass),
+      startingClass: classUnitId(authoredUnitId(input.startingClass)),
       advancements: (input.advancements ?? []).map((classId) => ({
-        classUnitId: classUnitId(classId),
+        classUnitId: classUnitId(authoredUnitId(classId)),
         hitPointRule: { tag: "fixedHigherLevelGain" },
       })),
     },
-    background: "background_soldier",
-    species: "species_orc",
+    background: authoredUnitId("background_soldier"),
+    species: authoredUnitId("species_orc"),
     originLanguages: ["Common", "Dwarvish", "Goblin"],
     classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },

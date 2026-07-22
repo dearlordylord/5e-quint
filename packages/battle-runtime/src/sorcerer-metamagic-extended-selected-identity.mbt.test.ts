@@ -1,3 +1,4 @@
+import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.metamagic-cast-duration-and-concentration
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3MMETA-16-EXTENDED-CAST-DURATION-CONCENTRATION-SLICE sorcerer_metamagic
@@ -181,7 +182,7 @@ function resolveExtendedCreatureSizeIncreaseSubject() {
       },
     ],
     casterMetamagic: {
-      sorceryPointResourceUnitId: "sorcerer_font_of_magic",
+      sorceryPointResourceUnitId: parseSharedUnitId("sorcerer_font_of_magic"),
       spellUseLimit: "one_per_spell_unless_option_allows_stacking",
       knownOptions: [extendedMetamagicOption()],
     },

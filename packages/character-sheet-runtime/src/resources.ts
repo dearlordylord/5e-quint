@@ -6,6 +6,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.monk-uncanny-metabolism-initiative-recovery
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.sorcerous-restoration-sorcery-point-recovery
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.ranger-tireless
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import {
   characterBuildFeatureUnitIds,
   characterBuildMonkUncannyMetabolismFacts,
@@ -830,7 +831,7 @@ export function recoverSorceryPointsWithSorcerousRestoration(
     ...input.sheet,
     resourceExpenditures: replacePointPoolResourceExpenditure({
       expenditures: input.sheet.resourceExpenditures,
-      unitId: sorceryPointResourceUnitId,
+      unitId: authoredUnitId(sorceryPointResourceUnitId),
       expended: resourceCount(
         sorceryPoints.expended - input.recoverSorceryPoints,
       ),

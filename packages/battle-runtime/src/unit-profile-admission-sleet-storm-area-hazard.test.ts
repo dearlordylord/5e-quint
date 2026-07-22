@@ -9,6 +9,7 @@ import {
 } from "./battle-act-composition.ts";
 import { describe, expect, test } from "vitest";
 import type { SpellRecord } from "@dnd/surface/surface/types";
+import { spellId } from "./identity.ts";
 import {
   requireCombatant,
   requireHole,
@@ -159,7 +160,8 @@ function expectSpellNotAdmitted(spell: SpellRecord): void {
     discoverBattleActs(state).some(
       (act) =>
         act.subject.tag === "actionSpell" &&
-        battleActSpellPresentation(act)?.invocation.spellId === spell.id,
+        battleActSpellPresentation(act)?.invocation.spellId ===
+          spellId(spell.id),
     ),
   ).toBe(false);
 }
@@ -225,7 +227,7 @@ describe("Task 11 deterministic Sleet Storm area-hazard admission", () => {
     expect(spellHoleInvocation(state, [area])).toEqual(
       expect.objectContaining({
         procedure: "sleetStormAreaHazard",
-        spell,
+        spellRuleFacts: expect.objectContaining({ spellId: spell.id }),
         resource: { tag: "spellSlot", slotLevel: 3 },
         ability: "dex",
         dc: { kind: "caster_spell_save_dc" },

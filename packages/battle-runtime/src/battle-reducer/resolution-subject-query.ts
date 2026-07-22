@@ -5,7 +5,7 @@ import {
   DRUID_WILD_SHAPE_PROCEDURE_QUERY,
   MONK_FOCUS_PROCEDURE_QUERY,
   type CharacterUnitProcedureQuery,
-} from "../character-execution-admission.ts";
+} from "../character-execution-queries.ts";
 import { Match } from "effect";
 
 export type UnitProcedureSubject = Extract<

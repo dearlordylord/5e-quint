@@ -19,6 +19,8 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRUID-WILD-SHAPE-SENSE-LANGUAGE-PROJECTION druid_wild_shape
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRUID-WILD-SHAPE-BEAST-SPELLS-CASTING druid_wild_shape
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-HALFLING-BRAVE-RUNTIME species_halfling_brave
+import { statBlockId as authoredStatBlockId } from "@dnd/shared/game-facts";
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import type {
   BattleFill,
   BattleCreatureState,
@@ -42,12 +44,14 @@ import {
   battleActDruidWildShapePresentation,
   battleActUnitPresentation,
   battleCreatureInitFromStatBlock,
+  battleCreaturePresentationDisplayName,
   battleId,
   characterBattleResourceIsPointPool,
   characterBattleResourceForUnit,
   characterId,
   combatantId,
   castFindFamiliar,
+  castRetainedFindFamiliarRuntime,
   discoverBattleActs,
   initiativeScore,
   parseCharacterBattleClassLevels,
@@ -147,10 +151,10 @@ if (unitCatalogResult.tag !== "ok" || statBlockCatalogResult.tag !== "ok") {
 const unitLibrary = unitCatalogResult.catalog;
 const statBlockCatalog = statBlockCatalogResult.catalog;
 const DRUID_WILD_SHAPE_KNOWN_FORM_IDS = [
-  "stat_block_rat",
-  "stat_block_riding_horse",
-  "stat_block_lizard",
-  "stat_block_cat",
+  authoredStatBlockId("stat_block_rat"),
+  authoredStatBlockId("stat_block_riding_horse"),
+  authoredStatBlockId("stat_block_lizard"),
+  authoredStatBlockId("stat_block_cat"),
 ] as const;
 
 type CharacterSheetTestInput = Omit<
@@ -267,7 +271,7 @@ describe("Character Sheet battle handoff", () => {
     const result = characterBattleInitiativeScore({
       build: {
         ...defenseBuild({ wearingArmor: false }),
-        background: "background_criminal",
+        background: authoredUnitId("background_criminal"),
       },
       unitLibrary,
       rollTotal: 14,
@@ -470,10 +474,10 @@ describe("Character Sheet battle handoff", () => {
         companionId: retainedCompanionId("companion:wild-cat"),
         source: {
           tag: "classFeatureSpellCast",
-          featureUnitId: "druid_wild_companion",
+          featureUnitId: authoredUnitId("druid_wild_companion"),
           spend: {
             tag: "useCountResource",
-            resourceUnitId: "druid_wild_shape",
+            resourceUnitId: authoredUnitId("druid_wild_shape"),
           },
         },
         selectedForm: { tag: "normalNamedForm", formId: "cat" },
@@ -512,11 +516,11 @@ describe("Character Sheet battle handoff", () => {
           spellcasting: {
             sources: [
               {
-                sourceUnitId: "class_wizard",
+                sourceUnitId: authoredUnitId("class_wizard"),
                 spellcastingAbility: "int",
-                cantrips: ["true_strike"],
-                spellbook: ["find_familiar"],
-                preparedSpells: ["find_familiar"],
+                cantrips: [authoredUnitId("true_strike")],
+                spellbook: [authoredUnitId("find_familiar")],
+                preparedSpells: [authoredUnitId("find_familiar")],
                 spellcastingFocuses: ["spellbook"],
               },
             ],
@@ -542,7 +546,7 @@ describe("Character Sheet battle handoff", () => {
         companionId: retainedCompanionId("companion:slot-cat"),
         source: {
           tag: "spellSlotSpellCast",
-          spellId: "find_familiar",
+          spellId: authoredUnitId("find_familiar"),
           spellLevel: spellSlotLevel(1),
         },
         selectedForm: { tag: "normalNamedForm", formId: "cat" },
@@ -586,7 +590,10 @@ describe("Character Sheet battle handoff", () => {
         unitLibrary,
         statBlockCatalog,
         companionId: retainedCompanionId("companion:recast-embodied"),
-        source: { tag: "ritualSpell", spellId: "find_familiar" },
+        source: {
+          tag: "ritualSpell",
+          spellId: authoredUnitId("find_familiar"),
+        },
         selectedForm: { tag: "normalNamedForm", formId: "bat" },
         creatureTypeOverrideChoiceId: "fey",
       }),
@@ -602,6 +609,119 @@ describe("Character Sheet battle handoff", () => {
           selectedForm: { tag: "normalNamedForm", formId: "bat" },
           resolvedStatBlockId: "stat_block_bat",
           hitPoints: { currentHp: 1, tempHp: 1 },
+        },
+      },
+    });
+  });
+
+  test("recasting an admitted retained cat as a rat settles the battle-owned selection", () => {
+    const sheet = retainedOrdinaryCompanionSheet({
+      characterIdValue: "character:retained-battle-recast",
+      companionIdValue: "companion:retained-battle-recast",
+      selectedForm: { tag: "normalNamedForm", formId: "cat" },
+      currentHp: Hp(2),
+      tempHp: Hp(0),
+    });
+    const ownerId = combatantId("retained-battle-recast-owner");
+    const companionId = combatantId("retained-battle-recast-companion");
+    const ownerInit = expectRight(
+      characterSheetBattleInit({
+        sheet,
+        unitLibrary,
+        statBlockCatalog,
+        combatantId: ownerId,
+        displayName: "Owner",
+        initiative: initiativeScore(12),
+      }),
+    );
+    const started = expectRight(
+      startBattle({
+        battleId: battleId("retained-battle-recast"),
+        combatants: [ownerInit],
+      }),
+    );
+    const admitted = expectRight(
+      admitCharacterSheetCompanionToBattle({
+        sheet,
+        session: started,
+        unitLibrary,
+        ownerCombatantId: ownerId,
+        companionCombatantId: companionId,
+        initiative: initiativeScore(14),
+        placement: { kind: "unoccupiedSpaceWithinSpellRange" },
+        initialCombatantOrder: new Map([
+          [ownerId, 0],
+          [companionId, 1],
+        ]),
+        statBlockCatalog,
+      }),
+    );
+    expect(admitted.state.combatants.get(companionId)).not.toHaveProperty(
+      "displayName",
+    );
+    expect(
+      battleCreaturePresentationDisplayName(
+        admitted.state,
+        admitted.context,
+        companionId,
+      ),
+    ).toBe("Cat");
+    const findFamiliarUnit = unitLibrary.requireUnit("find_familiar");
+    if (findFamiliarUnit.kind !== "spell") {
+      throw new Error("Find Familiar fixture must be a Spell.");
+    }
+    const eligibility = findFamiliarFormEligibilityForSpell(findFamiliarUnit);
+    if (eligibility === null) {
+      throw new Error("Find Familiar fixture must expose form eligibility.");
+    }
+    const recast = castRetainedFindFamiliarRuntime({
+      session: admitted,
+      casterId: ownerId,
+      familiarId: companionId,
+      catalog: statBlockCatalog,
+      eligibility,
+      selection: { tag: "normalNamedForm", formId: "rat" },
+      creatureTypeOverrideChoiceId: "fey",
+      initiative: initiativeScore(14),
+      placement: { kind: "unoccupiedSpaceWithinSpellRange" },
+    });
+    expect(recast.tag).toBe("resolved");
+    if (recast.tag !== "resolved") return;
+    expect(recast.session.state.combatants.get(companionId)).not.toHaveProperty(
+      "displayName",
+    );
+    expect(
+      recast.snapshot.combatants.find(
+        (combatant) => combatant.combatantId === companionId,
+      ),
+    ).not.toHaveProperty("displayName");
+    expect(
+      battleCreaturePresentationDisplayName(
+        recast.session.state,
+        recast.session.context,
+        companionId,
+      ),
+    ).toBe("Rat");
+
+    const settled = expectRight(
+      settleCharacterSheetFromBattle({
+        sheet,
+        state: recast.session.state,
+        context: recast.session.context,
+        combatant: requireCombatant(recast.session.state, ownerId),
+        unitLibrary,
+        statBlockCatalog,
+      }),
+    );
+
+    expect(characterSheetCompanion(settled)).toMatchObject({
+      tag: "retainedOneAtATime",
+      companion: {
+        companionId: "companion:retained-battle-recast",
+        manifestation: {
+          tag: "embodiedOutsideBattle",
+          selectedForm: { tag: "normalNamedForm", formId: "rat" },
+          resolvedStatBlockId: "stat_block_rat",
         },
       },
     });
@@ -634,7 +754,10 @@ describe("Character Sheet battle handoff", () => {
         unitLibrary,
         statBlockCatalog,
         companionId: retainedCompanionId("companion:recast-dismissed"),
-        source: { tag: "ritualSpell", spellId: "find_familiar" },
+        source: {
+          tag: "ritualSpell",
+          spellId: authoredUnitId("find_familiar"),
+        },
         selectedForm: { tag: "normalNamedForm", formId: "bat" },
         creatureTypeOverrideChoiceId: "fey",
       }),
@@ -678,7 +801,10 @@ describe("Character Sheet battle handoff", () => {
         unitLibrary,
         statBlockCatalog,
         companionId: retainedCompanionId("companion:recast-disappeared"),
-        source: { tag: "ritualSpell", spellId: "find_familiar" },
+        source: {
+          tag: "ritualSpell",
+          spellId: authoredUnitId("find_familiar"),
+        },
         selectedForm: { tag: "normalNamedForm", formId: "cat" },
         creatureTypeOverrideChoiceId: "fey",
       }),
@@ -712,7 +838,7 @@ describe("Character Sheet battle handoff", () => {
       unitLibrary,
       statBlockCatalog,
       companionId: retainedCompanionId("companion:replacement"),
-      source: { tag: "ritualSpell", spellId: "find_familiar" },
+      source: { tag: "ritualSpell", spellId: authoredUnitId("find_familiar") },
       selectedForm: { tag: "normalNamedForm", formId: "bat" },
       creatureTypeOverrideChoiceId: "fey",
     });
@@ -735,10 +861,10 @@ describe("Character Sheet battle handoff", () => {
           spellcasting: {
             sources: [
               {
-                sourceUnitId: "class_wizard",
+                sourceUnitId: authoredUnitId("class_wizard"),
                 spellcastingAbility: "int",
-                cantrips: ["true_strike"],
-                spellbook: ["find_familiar"],
+                cantrips: [authoredUnitId("true_strike")],
+                spellbook: [authoredUnitId("find_familiar")],
                 preparedSpells: [],
                 spellcastingFocuses: ["spellbook"],
               },
@@ -762,7 +888,10 @@ describe("Character Sheet battle handoff", () => {
         unitLibrary,
         statBlockCatalog,
         companionId: retainedCompanionId("companion:forged-form"),
-        source: { tag: "ritualSpell", spellId: "find_familiar" },
+        source: {
+          tag: "ritualSpell",
+          spellId: authoredUnitId("find_familiar"),
+        },
         selectedForm: { tag: "normalNamedForm", formId: "cat" },
         creatureTypeOverrideChoiceId: "fey",
       }),
@@ -783,7 +912,9 @@ describe("Character Sheet battle handoff", () => {
                 tag: "normalNamedForm",
                 formId: "goblin_warrior",
               },
-              resolvedStatBlockId: "stat_block_goblin_warrior",
+              resolvedStatBlockId: authoredStatBlockId(
+                "stat_block_goblin_warrior",
+              ),
             },
           },
         },
@@ -836,10 +967,10 @@ describe("Character Sheet battle handoff", () => {
           spellcasting: {
             sources: [
               {
-                sourceUnitId: "class_wizard",
+                sourceUnitId: authoredUnitId("class_wizard"),
                 spellcastingAbility: "int",
-                cantrips: ["true_strike"],
-                spellbook: ["find_familiar"],
+                cantrips: [authoredUnitId("true_strike")],
+                spellbook: [authoredUnitId("find_familiar")],
                 preparedSpells: [],
                 spellcastingFocuses: ["spellbook"],
               },
@@ -863,10 +994,13 @@ describe("Character Sheet battle handoff", () => {
         unitLibrary,
         statBlockCatalog,
         companionId: retainedCompanionId("companion:forged-cr0-beast"),
-        source: { tag: "ritualSpell", spellId: "find_familiar" },
+        source: {
+          tag: "ritualSpell",
+          spellId: authoredUnitId("find_familiar"),
+        },
         selectedForm: {
           tag: "challengeRatingZeroBeast",
-          statBlockId: "stat_block_cat",
+          statBlockId: authoredStatBlockId("stat_block_cat"),
         },
         creatureTypeOverrideChoiceId: "fey",
       }),
@@ -885,9 +1019,11 @@ describe("Character Sheet battle handoff", () => {
               ...retainedCompanion.companion.manifestation,
               selectedForm: {
                 tag: "challengeRatingZeroBeast",
-                statBlockId: "stat_block_goblin_warrior",
+                statBlockId: authoredStatBlockId("stat_block_goblin_warrior"),
               },
-              resolvedStatBlockId: "stat_block_goblin_warrior",
+              resolvedStatBlockId: authoredStatBlockId(
+                "stat_block_goblin_warrior",
+              ),
             },
           },
         },
@@ -938,7 +1074,7 @@ describe("Character Sheet battle handoff", () => {
       companionIdValue: "companion:retained-multiple-form-catalogs",
       selectedForm: {
         tag: "challengeRatingZeroBeast",
-        statBlockId: "stat_block_cat",
+        statBlockId: authoredStatBlockId("stat_block_cat"),
       },
       currentHp: Hp(2),
       tempHp: Hp(0),
@@ -1177,10 +1313,10 @@ describe("Character Sheet battle handoff", () => {
         unitLibrary,
         statBlockCatalog,
         druidWildShapeKnownFormStatBlockIds: [
-          "stat_block_rat",
-          "stat_block_riding_horse",
-          "stat_block_spider",
-          "stat_block_wolf",
+          authoredStatBlockId("stat_block_rat"),
+          authoredStatBlockId("stat_block_riding_horse"),
+          authoredStatBlockId("stat_block_spider"),
+          authoredStatBlockId("stat_block_wolf"),
         ],
       }),
     );
@@ -1300,12 +1436,12 @@ describe("Character Sheet battle handoff", () => {
           classFeatureLanguages: [
             {
               kind: "classFeatureLanguageGrant",
-              sourceUnitId: "synthetic_language_feature",
+              sourceUnitId: authoredUnitId("synthetic_language_feature"),
               language: "Druidic",
             },
             {
               kind: "classFeatureLanguageChoice",
-              sourceUnitId: "synthetic_language_choice_feature",
+              sourceUnitId: authoredUnitId("synthetic_language_choice_feature"),
               language: "Goblin",
             },
           ],
@@ -1874,7 +2010,12 @@ describe("Character Sheet battle handoff", () => {
       currentHp: Hp(7),
       tempHp: Hp(0),
       unitLibrary,
-      spentHitDice: [{ classUnitId: "class_wizard", spent: resourceCount(1) }],
+      spentHitDice: [
+        {
+          classUnitId: authoredUnitId("class_wizard"),
+          spent: resourceCount(1),
+        },
+      ],
       spellSlotExpenditures: [
         { spellLevel: spellSlotLevel(1), expended: resourceCount(1) },
       ],
@@ -2569,7 +2710,7 @@ describe("Character Sheet battle handoff", () => {
         resourceExpenditures: [
           {
             tag: "pointPoolResource",
-            unitId: "sorcerer_font_of_magic",
+            unitId: authoredUnitId("sorcerer_font_of_magic"),
             expended: resourceCount(1),
           },
         ],
@@ -2845,7 +2986,7 @@ describe("Character Sheet battle handoff", () => {
       resourceExpenditures: [
         {
           tag: "useCountResource",
-          unitId: "monk_monks_focus",
+          unitId: authoredUnitId("monk_monks_focus"),
           expended: resourceCount(1),
         },
       ],
@@ -3301,7 +3442,7 @@ describe("Character Build battle projection", () => {
         unitLibrary,
         armorClassBaseChoice: {
           kind: "class_feature",
-          unitId: "monk_unarmored_defense",
+          unitId: authoredUnitId("monk_unarmored_defense"),
         },
       }),
     );
@@ -3570,8 +3711,8 @@ describe("Character Build battle projection", () => {
           extraFeatures: [
             {
               kind: "selectedClassChoice",
-              selectedFromUnitId: "class_ranger",
-              unitId: "ranger_favored_enemy",
+              selectedFromUnitId: authoredUnitId("class_ranger"),
+              unitId: authoredUnitId("ranger_favored_enemy"),
             },
           ],
           bookOfShadowsCantrips: [
@@ -3954,7 +4095,10 @@ describe("Character Build battle projection", () => {
       ability: "dex",
       abilityModifier: abilityModifier(3),
       damageAbilityModifier: abilityModifier(3),
-      weapon: { id: "weapon_dagger", damage: { dice: 1, dieSize: 6 } },
+      weapon: {
+        weaponUnitId: "weapon_dagger",
+        damage: { dice: 1, dieSize: 6 },
+      },
     });
     expect(init.creatureInit.unarmedStrike).toMatchObject({
       kind: "unarmedStrike",
@@ -3973,7 +4117,7 @@ describe("Character Build battle projection", () => {
   });
 
   test("projects Pact of the Blade onto the bonded melee weapon only", () => {
-    const build = pactBladeInvocationBuild("weapon_longsword");
+    const build = pactBladeInvocationBuild(authoredUnitId("weapon_longsword"));
     const bondedItemId = build.equipment.loadout.weapon?.itemId;
     if (bondedItemId === undefined) {
       throw new Error("Expected Pact of the Blade test weapon.");
@@ -4007,12 +4151,12 @@ describe("Character Build battle projection", () => {
         },
       ],
       damageTypeChoices: ["slashing", "necrotic", "psychic", "radiant"],
-      weapon: { id: "weapon_longsword" },
+      weapon: { weaponUnitId: "weapon_longsword" },
     });
   });
 
   test("keeps Pact of the Blade Charisma selectable when the normal ability is better", () => {
-    const build = pactBladeInvocationBuild("weapon_longsword", {
+    const build = pactBladeInvocationBuild(authoredUnitId("weapon_longsword"), {
       str: 18,
       cha: 14,
     });
@@ -4055,7 +4199,7 @@ describe("Character Build battle projection", () => {
   test("applies selected Pact of the Blade alternate damage in Attack action damage", () => {
     const actorId = combatantId("pact-blade-necrotic-attacker");
     const targetId = combatantId("pact-blade-necrotic-target");
-    const build = pactBladeInvocationBuild("weapon_longsword");
+    const build = pactBladeInvocationBuild(authoredUnitId("weapon_longsword"));
     const bondedItemId = build.equipment.loadout.weapon?.itemId;
     if (bondedItemId === undefined) {
       throw new Error("Expected Pact of the Blade test weapon.");
@@ -4081,7 +4225,7 @@ describe("Character Build battle projection", () => {
         unitLibrary,
       }),
     );
-    const attackName = "Longsword (Charisma) (necrotic)";
+    const attackName = "Longsword (Charisma, necrotic)";
     const subject = requireDiscoveredAttackSubject(
       state,
       actorId,
@@ -4094,10 +4238,10 @@ describe("Character Build battle projection", () => {
         "Take the Attack action with Longsword (necrotic).",
         "Take the Attack action with Longsword (psychic).",
         "Take the Attack action with Longsword (radiant).",
-        "Take the Attack action with Longsword (Charisma) (slashing).",
-        "Take the Attack action with Longsword (Charisma) (necrotic).",
-        "Take the Attack action with Longsword (Charisma) (psychic).",
-        "Take the Attack action with Longsword (Charisma) (radiant).",
+        "Take the Attack action with Longsword (Charisma, slashing).",
+        "Take the Attack action with Longsword (Charisma, necrotic).",
+        "Take the Attack action with Longsword (Charisma, psychic).",
+        "Take the Attack action with Longsword (Charisma, radiant).",
       ]),
     );
     const target = requireHole(
@@ -4123,9 +4267,7 @@ describe("Character Build battle projection", () => {
       }),
       "rolledDice",
     );
-    expect(damageRoll.label).toBe(
-      "Longsword (Charisma) (necrotic) damage (1d8+3-necrotic)",
-    );
+    expect(damageRoll.label).toBe("weapon_longsword damage (1d8+3-necrotic)");
     const hit = requireResolvedBattleSubject(
       resolveBattleSubject({
         state: state.state,
@@ -4144,9 +4286,12 @@ describe("Character Build battle projection", () => {
   test("applies selected Pact of the Blade alternate damage for a bonded off-hand weapon", () => {
     const actorId = combatantId("pact-blade-offhand-attacker");
     const targetId = combatantId("pact-blade-offhand-target");
-    const build = pactBladeInvocationBuild("weapon_shortsword", {
-      offHandWeaponUnitId: "weapon_dagger",
-    });
+    const build = pactBladeInvocationBuild(
+      authoredUnitId("weapon_shortsword"),
+      {
+        offHandWeaponUnitId: authoredUnitId("weapon_dagger"),
+      },
+    );
     const bondedItemId = build.equipment.loadout.offHandWeapon?.itemId;
     if (bondedItemId === undefined) {
       throw new Error("Expected Pact of the Blade off-hand test weapon.");
@@ -4205,7 +4350,7 @@ describe("Character Build battle projection", () => {
       }),
     ).state;
 
-    const offHandAttackName = "Dagger (Charisma) (radiant)";
+    const offHandAttackName = "Dagger (Charisma, radiant)";
     const afterMainAttackSession = battleRuntimeSessionForTest({
       state: afterMainAttack,
       context: state.context,
@@ -4225,7 +4370,7 @@ describe("Character Build battle projection", () => {
       expect.arrayContaining([
         "Make the Light property Bonus Action attack with Dagger (piercing).",
         "Make the Light property Bonus Action attack with Dagger (radiant).",
-        "Make the Light property Bonus Action attack with Dagger (Charisma) (piercing).",
+        "Make the Light property Bonus Action attack with Dagger (Charisma, piercing).",
         `Make the Light property Bonus Action attack with ${offHandAttackName}.`,
       ]),
     );
@@ -4256,9 +4401,7 @@ describe("Character Build battle projection", () => {
       }),
       "rolledDice",
     );
-    expect(offHandDamage.label).toBe(
-      "Dagger (Charisma) (radiant) damage (1d4-radiant)",
-    );
+    expect(offHandDamage.label).toBe("weapon_dagger damage (1d4-radiant)");
     const offHandHit = requireResolvedBattleSubject(
       resolveBattleSubject({
         state: afterMainAttack,
@@ -4274,7 +4417,9 @@ describe("Character Build battle projection", () => {
   });
 
   test("keeps non-bonded Pact of the Blade weapons as ordinary attacks", () => {
-    const meleeBuild = pactBladeInvocationBuild("weapon_longsword");
+    const meleeBuild = pactBladeInvocationBuild(
+      authoredUnitId("weapon_longsword"),
+    );
     const meleeInit = expectRight(
       battleCreatureInitFromCharacterBuild({
         combatantId: combatantId("pact-blade-unbonded"),
@@ -4299,9 +4444,12 @@ describe("Character Build battle projection", () => {
   });
 
   test("rejects impossible Pact of the Blade bond inputs", () => {
-    const noInvocationBuild = pactBladeInvocationBuild("weapon_longsword", {
-      pactOfTheBlade: false,
-    });
+    const noInvocationBuild = pactBladeInvocationBuild(
+      authoredUnitId("weapon_longsword"),
+      {
+        pactOfTheBlade: false,
+      },
+    );
     const noInvocationItemId =
       noInvocationBuild.equipment.loadout.weapon?.itemId;
     if (noInvocationItemId === undefined) {
@@ -4321,7 +4469,9 @@ describe("Character Build battle projection", () => {
       ),
     ).toBe(true);
 
-    const rangedBuild = pactBladeInvocationBuild("weapon_shortbow");
+    const rangedBuild = pactBladeInvocationBuild(
+      authoredUnitId("weapon_shortbow"),
+    );
     const rangedItemId = rangedBuild.equipment.loadout.weapon?.itemId;
     if (rangedItemId === undefined) {
       throw new Error("Expected Pact of the Blade ranged test weapon.");
@@ -4342,7 +4492,9 @@ describe("Character Build battle projection", () => {
 
     const arbitraryItemId = characterEquipmentItemId({
       slot: "main",
-      unitId: expectRight(characterEquipmentItemUnitId("weapon_dagger")),
+      unitId: expectRight(
+        characterEquipmentItemUnitId(authoredUnitId("weapon_dagger")),
+      ),
     });
     expect(
       Either.isLeft(
@@ -4350,7 +4502,7 @@ describe("Character Build battle projection", () => {
           combatantId: combatantId("pact-blade-not-loadout"),
           characterId: characterId("character:pact-blade-not-loadout"),
           displayName: "Invalid Bond Character",
-          build: pactBladeInvocationBuild("weapon_longsword"),
+          build: pactBladeInvocationBuild(authoredUnitId("weapon_longsword")),
           initiative: initiativeScore(10),
           unitLibrary,
           pactBladeBondedWeaponItemId: arbitraryItemId,
@@ -4365,7 +4517,7 @@ describe("Character Build battle projection", () => {
         combatantId: combatantId("pact-blade-shortbow"),
         characterId: characterId("character:pact-blade-shortbow"),
         displayName: "Ranged Blade Warlock",
-        build: pactBladeInvocationBuild("weapon_shortbow"),
+        build: pactBladeInvocationBuild(authoredUnitId("weapon_shortbow")),
         initiative: initiativeScore(10),
         unitLibrary,
       }),
@@ -4377,7 +4529,7 @@ describe("Character Build battle projection", () => {
       kind: "weapon",
       ability: "str",
       abilityModifier: abilityModifier(-1),
-      weapon: { id: "weapon_shortbow" },
+      weapon: { weaponUnitId: "weapon_shortbow" },
     });
     expect(rangedInit.creatureInit.attack).not.toHaveProperty(
       "damageTypeChoices",
@@ -4414,7 +4566,10 @@ describe("Character Build battle projection", () => {
         ability: "dex",
         abilityModifier: abilityModifier(3),
         damageAbilityModifier: abilityModifier(3),
-        weapon: { id: "weapon_dagger", damage: { dice: 1, dieSize } },
+        weapon: {
+          weaponUnitId: "weapon_dagger",
+          damage: { dice: 1, dieSize },
+        },
       });
       expect(init.creatureInit.unarmedStrike).toMatchObject({
         kind: "unarmedStrike",
@@ -4614,7 +4769,9 @@ function monkBuild(input: {
       ? undefined
       : characterEquipmentItemId({
           slot: "main",
-          unitId: expectRight(characterEquipmentItemUnitId(input.weaponUnitId)),
+          unitId: expectRight(
+            characterEquipmentItemUnitId(authoredUnitId(input.weaponUnitId)),
+          ),
         });
   const offHandWeaponItemId =
     input.offHandWeaponUnitId === undefined
@@ -4622,37 +4779,43 @@ function monkBuild(input: {
       : characterEquipmentItemId({
           slot: "off",
           unitId: expectRight(
-            characterEquipmentItemUnitId(input.offHandWeaponUnitId),
+            characterEquipmentItemUnitId(
+              authoredUnitId(input.offHandWeaponUnitId),
+            ),
           ),
         });
   const armorItemId =
     input.armor === true
       ? characterEquipmentItemId({
           slot: "armor",
-          unitId: expectRight(characterEquipmentItemUnitId("armor_leather")),
+          unitId: expectRight(
+            characterEquipmentItemUnitId(authoredUnitId("armor_leather")),
+          ),
         })
       : undefined;
   const shieldItemId =
     input.shield === true
       ? characterEquipmentItemId({
           slot: "shield",
-          unitId: expectRight(characterEquipmentItemUnitId("equipment_shield")),
+          unitId: expectRight(
+            characterEquipmentItemUnitId(authoredUnitId("equipment_shield")),
+          ),
         })
       : undefined;
 
   return {
     progression: {
-      startingClass: classUnitId("class_monk"),
+      startingClass: classUnitId(authoredUnitId("class_monk")),
       advancements: Array.from(
         { length: Math.max(0, (input.level ?? 1) - 1) },
         () => ({
-          classUnitId: classUnitId("class_monk"),
+          classUnitId: classUnitId(authoredUnitId("class_monk")),
           hitPointRule: { tag: "fixedHigherLevelGain" as const },
         }),
       ),
     },
-    background: "background_soldier",
-    species: "species_orc",
+    background: authoredUnitId("background_soldier"),
+    species: authoredUnitId("species_orc"),
     originLanguages: ["Common", "Dwarvish", "Goblin"],
     classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
@@ -4672,22 +4835,32 @@ function monkBuild(input: {
       owned: [
         ...(weaponItemId === undefined || input.weaponUnitId === undefined
           ? []
-          : [{ itemId: weaponItemId, unitId: input.weaponUnitId }]),
+          : [
+              {
+                itemId: weaponItemId,
+                unitId: authoredUnitId(input.weaponUnitId),
+              },
+            ]),
         ...(offHandWeaponItemId === undefined ||
         input.offHandWeaponUnitId === undefined
           ? []
           : [
               {
                 itemId: offHandWeaponItemId,
-                unitId: input.offHandWeaponUnitId,
+                unitId: authoredUnitId(input.offHandWeaponUnitId),
               },
             ]),
         ...(armorItemId === undefined
           ? []
-          : [{ itemId: armorItemId, unitId: "armor_leather" }]),
+          : [{ itemId: armorItemId, unitId: authoredUnitId("armor_leather") }]),
         ...(shieldItemId === undefined
           ? []
-          : [{ itemId: shieldItemId, unitId: "equipment_shield" }]),
+          : [
+              {
+                itemId: shieldItemId,
+                unitId: authoredUnitId("equipment_shield"),
+              },
+            ]),
       ],
       loadout: {
         ...(weaponItemId === undefined
@@ -4727,11 +4900,11 @@ function pactBladeInvocationBuild(
         });
   return {
     progression: {
-      startingClass: classUnitId("class_fighter"),
+      startingClass: classUnitId(authoredUnitId("class_fighter")),
       advancements: [],
     },
-    background: "background_soldier",
-    species: "species_orc",
+    background: authoredUnitId("background_soldier"),
+    species: authoredUnitId("species_orc"),
     originLanguages: ["Common", "Dwarvish", "Goblin"],
     classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
@@ -4752,7 +4925,9 @@ function pactBladeInvocationBuild(
         : [
             {
               kind: "selectedEldritchInvocation",
-              selectedFromUnitId: "warlock_eldritch_invocations",
+              selectedFromUnitId: authoredUnitId(
+                "warlock_eldritch_invocations",
+              ),
               selection: {
                 kind: "nonRepeatable",
                 invocationId: eldritchInvocationId("pact_of_the_blade"),
@@ -5039,16 +5214,16 @@ function rolledDiceFill(
 function multiclassUnarmoredDefenseBuild(): CharacterBuild {
   return {
     progression: {
-      startingClass: classUnitId("class_barbarian"),
+      startingClass: classUnitId(authoredUnitId("class_barbarian")),
       advancements: [
         {
-          classUnitId: classUnitId("class_monk"),
+          classUnitId: classUnitId(authoredUnitId("class_monk")),
           hitPointRule: { tag: "fixedHigherLevelGain" },
         },
       ],
     },
-    background: "background_soldier",
-    species: "species_orc",
+    background: authoredUnitId("background_soldier"),
+    species: authoredUnitId("species_orc"),
     originLanguages: ["Common", "Dwarvish", "Goblin"],
     classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
@@ -5076,16 +5251,18 @@ function defenseBuild(input: {
 }): CharacterBuild {
   const armorItemId = characterEquipmentItemId({
     slot: "armor",
-    unitId: expectRight(characterEquipmentItemUnitId("armor_chain_mail")),
+    unitId: expectRight(
+      characterEquipmentItemUnitId(authoredUnitId("armor_chain_mail")),
+    ),
   });
 
   return {
     progression: {
-      startingClass: classUnitId("class_fighter"),
+      startingClass: classUnitId(authoredUnitId("class_fighter")),
       advancements: [],
     },
-    background: "background_soldier",
-    species: "species_orc",
+    background: authoredUnitId("background_soldier"),
+    species: authoredUnitId("species_orc"),
     originLanguages: ["Common", "Dwarvish", "Goblin"],
     classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
@@ -5102,13 +5279,15 @@ function defenseBuild(input: {
     proficiencyChoices: [],
     features: [
       {
-        selectedFromUnitId: "fighter_fighting_style",
+        selectedFromUnitId: authoredUnitId("fighter_fighting_style"),
         kind: "selectedClassChoice",
-        unitId: "defense",
+        unitId: authoredUnitId("defense"),
       },
     ],
     equipment: {
-      owned: [{ itemId: armorItemId, unitId: "armor_chain_mail" }],
+      owned: [
+        { itemId: armorItemId, unitId: authoredUnitId("armor_chain_mail") },
+      ],
       loadout: input.wearingArmor ? { armor: armorItemId } : {},
     },
   };
@@ -5123,7 +5302,7 @@ function dragonbornFighterBuild(
       : (input.draconicAncestry ?? "red");
   return {
     ...defenseBuild({ wearingArmor: false }),
-    species: "species_dragonborn",
+    species: authoredUnitId("species_dragonborn"),
     ...(draconicAncestry === undefined
       ? {}
       : {
@@ -5146,7 +5325,7 @@ function dragonbornFighterBuild(
 function dwarfFighterBuild(): CharacterBuild {
   return {
     ...defenseBuild({ wearingArmor: false }),
-    species: "species_dwarf",
+    species: authoredUnitId("species_dwarf"),
     originLanguages: ["Common", "Dwarvish", "Draconic"],
     features: [],
     equipment: {
@@ -5159,7 +5338,7 @@ function dwarfFighterBuild(): CharacterBuild {
 function halflingFighterBuild(): CharacterBuild {
   return {
     ...defenseBuild({ wearingArmor: false }),
-    species: "species_halfling",
+    species: authoredUnitId("species_halfling"),
     originLanguages: ["Common", "Halfling", "Dwarvish"],
     features: [],
     equipment: {
@@ -5172,20 +5351,24 @@ function halflingFighterBuild(): CharacterBuild {
 function weaponMasteryLongswordFighterBuild(): CharacterBuild {
   const longswordItemId = characterEquipmentItemId({
     slot: "main",
-    unitId: expectRight(characterEquipmentItemUnitId("weapon_longsword")),
+    unitId: expectRight(
+      characterEquipmentItemUnitId(authoredUnitId("weapon_longsword")),
+    ),
   });
 
   return {
     ...defenseBuild({ wearingArmor: false }),
     features: [
       {
-        selectedFromUnitId: "fighter_weapon_mastery",
+        selectedFromUnitId: authoredUnitId("fighter_weapon_mastery"),
         kind: "selectedClassChoice",
-        unitId: "weapon_longsword",
+        unitId: authoredUnitId("weapon_longsword"),
       },
     ],
     equipment: {
-      owned: [{ itemId: longswordItemId, unitId: "weapon_longsword" }],
+      owned: [
+        { itemId: longswordItemId, unitId: authoredUnitId("weapon_longsword") },
+      ],
       loadout: {
         weapon: {
           itemId: longswordItemId,
@@ -5200,9 +5383,9 @@ function weaponMasteryLongswordLevel9FighterBuild(): CharacterBuild {
   return {
     ...weaponMasteryLongswordFighterBuild(),
     progression: {
-      startingClass: classUnitId("class_fighter"),
+      startingClass: classUnitId(authoredUnitId("class_fighter")),
       advancements: Array.from({ length: 8 }, () => ({
-        classUnitId: classUnitId("class_fighter"),
+        classUnitId: classUnitId(authoredUnitId("class_fighter")),
         hitPointRule: { tag: "fixedHigherLevelGain" as const },
       })),
     },
@@ -5212,20 +5395,27 @@ function weaponMasteryLongswordLevel9FighterBuild(): CharacterBuild {
 function weaponMasteryQuarterstaffFighterBuild(): CharacterBuild {
   const quarterstaffItemId = characterEquipmentItemId({
     slot: "main",
-    unitId: expectRight(characterEquipmentItemUnitId("weapon_quarterstaff")),
+    unitId: expectRight(
+      characterEquipmentItemUnitId(authoredUnitId("weapon_quarterstaff")),
+    ),
   });
 
   return {
     ...defenseBuild({ wearingArmor: false }),
     features: [
       {
-        selectedFromUnitId: "fighter_weapon_mastery",
+        selectedFromUnitId: authoredUnitId("fighter_weapon_mastery"),
         kind: "selectedClassChoice",
-        unitId: "weapon_quarterstaff",
+        unitId: authoredUnitId("weapon_quarterstaff"),
       },
     ],
     equipment: {
-      owned: [{ itemId: quarterstaffItemId, unitId: "weapon_quarterstaff" }],
+      owned: [
+        {
+          itemId: quarterstaffItemId,
+          unitId: authoredUnitId("weapon_quarterstaff"),
+        },
+      ],
       loadout: {
         weapon: {
           itemId: quarterstaffItemId,
@@ -5239,20 +5429,24 @@ function weaponMasteryQuarterstaffFighterBuild(): CharacterBuild {
 function weaponMasteryGreataxeFighterBuild(): CharacterBuild {
   const greataxeItemId = characterEquipmentItemId({
     slot: "main",
-    unitId: expectRight(characterEquipmentItemUnitId("weapon_greataxe")),
+    unitId: expectRight(
+      characterEquipmentItemUnitId(authoredUnitId("weapon_greataxe")),
+    ),
   });
 
   return {
     ...defenseBuild({ wearingArmor: false }),
     features: [
       {
-        selectedFromUnitId: "fighter_weapon_mastery",
+        selectedFromUnitId: authoredUnitId("fighter_weapon_mastery"),
         kind: "selectedClassChoice",
-        unitId: "weapon_greataxe",
+        unitId: authoredUnitId("weapon_greataxe"),
       },
     ],
     equipment: {
-      owned: [{ itemId: greataxeItemId, unitId: "weapon_greataxe" }],
+      owned: [
+        { itemId: greataxeItemId, unitId: authoredUnitId("weapon_greataxe") },
+      ],
       loadout: {
         weapon: {
           itemId: greataxeItemId,
@@ -5268,11 +5462,11 @@ function trueStrikeWizardBuild(): CharacterBuild {
 
   return {
     progression: {
-      startingClass: classUnitId("class_wizard"),
+      startingClass: classUnitId(authoredUnitId("class_wizard")),
       advancements: [],
     },
-    background: "background_soldier",
-    species: "species_orc",
+    background: authoredUnitId("background_soldier"),
+    species: authoredUnitId("species_orc"),
     originLanguages: ["Common", "Dwarvish", "Goblin"],
     classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
@@ -5289,7 +5483,9 @@ function trueStrikeWizardBuild(): CharacterBuild {
     proficiencyChoices: [],
     features: [],
     equipment: {
-      owned: [{ itemId: daggerItemId, unitId: "weapon_dagger" }],
+      owned: [
+        { itemId: daggerItemId, unitId: authoredUnitId("weapon_dagger") },
+      ],
       loadout: {
         weapon: {
           itemId: daggerItemId,
@@ -5300,9 +5496,9 @@ function trueStrikeWizardBuild(): CharacterBuild {
     spellcasting: {
       sources: [
         {
-          sourceUnitId: "class_wizard",
+          sourceUnitId: authoredUnitId("class_wizard"),
           spellcastingAbility: "int",
-          cantrips: ["true_strike"],
+          cantrips: [authoredUnitId("true_strike")],
           spellbook: [],
           preparedSpells: [],
           spellcastingFocuses: ["arcane_focus"],
@@ -5316,11 +5512,11 @@ function trueStrikeWizardBuild(): CharacterBuild {
 function favoredEnemyRangerBuild(): CharacterBuild {
   return {
     progression: {
-      startingClass: classUnitId("class_ranger"),
+      startingClass: classUnitId(authoredUnitId("class_ranger")),
       advancements: [],
     },
-    background: "background_soldier",
-    species: "species_orc",
+    background: authoredUnitId("background_soldier"),
+    species: authoredUnitId("species_orc"),
     originLanguages: ["Common", "Dwarvish", "Goblin"],
     classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
@@ -5343,7 +5539,7 @@ function favoredEnemyRangerBuild(): CharacterBuild {
     spellcasting: {
       sources: [
         {
-          sourceUnitId: "class_ranger",
+          sourceUnitId: authoredUnitId("class_ranger"),
           spellcastingAbility: "wis",
           cantrips: [],
           spellbook: [],
@@ -5365,14 +5561,14 @@ function hunterRangerHordeBreakerBuild(): CharacterBuild {
   return {
     ...favoredEnemyRangerBuild(),
     progression: {
-      startingClass: classUnitId("class_ranger"),
+      startingClass: classUnitId(authoredUnitId("class_ranger")),
       advancements: [
         {
-          classUnitId: classUnitId("class_ranger"),
+          classUnitId: classUnitId(authoredUnitId("class_ranger")),
           hitPointRule: { tag: "fixedHigherLevelGain" },
         },
         {
-          classUnitId: classUnitId("class_ranger"),
+          classUnitId: classUnitId(authoredUnitId("class_ranger")),
           hitPointRule: { tag: "fixedHigherLevelGain" },
         },
       ],
@@ -5380,13 +5576,13 @@ function hunterRangerHordeBreakerBuild(): CharacterBuild {
     features: [
       {
         kind: "selectedClassChoice",
-        selectedFromUnitId: "class_ranger",
-        unitId: "subclass_ranger_hunter",
+        selectedFromUnitId: authoredUnitId("class_ranger"),
+        unitId: authoredUnitId("subclass_ranger_hunter"),
       },
       {
         kind: "selectedClassChoice",
-        selectedFromUnitId: "ranger_hunters_prey",
-        unitId: "ranger_hunters_prey",
+        selectedFromUnitId: authoredUnitId("ranger_hunters_prey"),
+        unitId: authoredUnitId("ranger_hunters_prey"),
         selectedOption: {
           kind: "huntersPrey",
           selection: "nearbyDifferentTargetSameWeaponAttack",
@@ -5399,11 +5595,11 @@ function hunterRangerHordeBreakerBuild(): CharacterBuild {
 function favoredEnemyRangerResourceBuild(): CharacterBuild {
   return {
     progression: {
-      startingClass: classUnitId("class_ranger"),
+      startingClass: classUnitId(authoredUnitId("class_ranger")),
       advancements: [],
     },
-    background: "background_soldier",
-    species: "species_orc",
+    background: authoredUnitId("background_soldier"),
+    species: authoredUnitId("species_orc"),
     originLanguages: ["Common", "Dwarvish", "Goblin"],
     classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
@@ -5429,16 +5625,16 @@ function favoredEnemyRangerResourceBuild(): CharacterBuild {
 function paladinsSmitePaladinBuild(): CharacterBuild {
   return {
     progression: {
-      startingClass: classUnitId("class_paladin"),
+      startingClass: classUnitId(authoredUnitId("class_paladin")),
       advancements: [
         {
-          classUnitId: classUnitId("class_paladin"),
+          classUnitId: classUnitId(authoredUnitId("class_paladin")),
           hitPointRule: { tag: "fixedHigherLevelGain" },
         },
       ],
     },
-    background: "background_soldier",
-    species: "species_orc",
+    background: authoredUnitId("background_soldier"),
+    species: authoredUnitId("species_orc"),
     originLanguages: ["Common", "Dwarvish", "Goblin"],
     classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
@@ -5461,7 +5657,7 @@ function paladinsSmitePaladinBuild(): CharacterBuild {
     spellcasting: {
       sources: [
         {
-          sourceUnitId: "class_paladin",
+          sourceUnitId: authoredUnitId("class_paladin"),
           spellcastingAbility: "cha",
           cantrips: [],
           spellbook: [],
@@ -5583,7 +5779,7 @@ function armorOfShadowsWarlockBuild(
       : [
           {
             kind: "selectedEldritchInvocation" as const,
-            selectedFromUnitId: "warlock_eldritch_invocations",
+            selectedFromUnitId: authoredUnitId("warlock_eldritch_invocations"),
             selection: {
               kind: "nonRepeatable" as const,
               invocationId: eldritchInvocationId("armor_of_shadows"),
@@ -5593,11 +5789,11 @@ function armorOfShadowsWarlockBuild(
   ];
   return {
     progression: {
-      startingClass: classUnitId("class_warlock"),
+      startingClass: classUnitId(authoredUnitId("class_warlock")),
       advancements: [],
     },
-    background: "background_soldier",
-    species: "species_orc",
+    background: authoredUnitId("background_soldier"),
+    species: authoredUnitId("species_orc"),
     originLanguages: ["Common", "Dwarvish", "Goblin"],
     classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
@@ -5620,7 +5816,7 @@ function armorOfShadowsWarlockBuild(
     spellcasting: {
       sources: [
         {
-          sourceUnitId: "class_warlock",
+          sourceUnitId: authoredUnitId("class_warlock"),
           spellcastingAbility: "cha",
           cantrips: [],
           spellbook: [],
@@ -5648,7 +5844,7 @@ function warlockInvocationBuild(input: {
       : [
           {
             kind: "selectedEldritchInvocation" as const,
-            selectedFromUnitId: "warlock_eldritch_invocations",
+            selectedFromUnitId: authoredUnitId("warlock_eldritch_invocations"),
             selection: {
               kind: "nonRepeatable" as const,
               invocationId: eldritchInvocationId("pact_of_the_chain"),
@@ -5679,9 +5875,10 @@ function pactOfTheTomeWarlockBuild(input?: {
         : [
             {
               kind: "selectedEldritchInvocation" as const,
-              selectedFromUnitId:
+              selectedFromUnitId: authoredUnitId(
                 input?.pactOfTheTomeSelectedFromUnitId ??
-                "warlock_eldritch_invocations",
+                  "warlock_eldritch_invocations",
+              ),
               selection: {
                 kind: "nonRepeatable" as const,
                 invocationId: eldritchInvocationId("pact_of_the_tome"),
@@ -5693,24 +5890,32 @@ function pactOfTheTomeWarlockBuild(input?: {
     spellcasting: {
       sources: [
         {
-          sourceUnitId: input?.spellcastingSourceUnitId ?? "class_warlock",
+          sourceUnitId: authoredUnitId(
+            input?.spellcastingSourceUnitId ?? "class_warlock",
+          ),
           spellcastingAbility: "cha",
           cantrips: [],
           spellbook: [],
           preparedSpells:
-            input?.alreadyPrepared === undefined ? [] : [input.alreadyPrepared],
+            input?.alreadyPrepared === undefined
+              ? []
+              : [authoredUnitId(input.alreadyPrepared)],
           spellcastingFocuses: ["arcane_focus"],
           bookOfShadows: {
             tag: "bookOfShadows",
-            cantrips: input?.bookOfShadowsCantrips ?? [
-              "fire_bolt",
-              "spare_the_dying",
-              "minor_illusion",
-            ],
-            ritualSpells: input?.bookOfShadowsRitualSpells ?? [
-              "detect_magic",
-              "detect_poison_and_disease",
-            ],
+            cantrips: authoredUnitIdTriple(
+              input?.bookOfShadowsCantrips ?? [
+                "fire_bolt",
+                "spare_the_dying",
+                "minor_illusion",
+              ],
+            ),
+            ritualSpells: authoredUnitIdPair(
+              input?.bookOfShadowsRitualSpells ?? [
+                "detect_magic",
+                "detect_poison_and_disease",
+              ],
+            ),
             spellcastingFocus: "book_of_shadows",
           },
         },
@@ -5726,15 +5931,31 @@ function pactOfTheTomeWarlockBuild(input?: {
   };
 }
 
+function authoredUnitIdTriple(
+  values: readonly [string, string, string],
+): readonly [UnitRecord["id"], UnitRecord["id"], UnitRecord["id"]] {
+  return [
+    authoredUnitId(values[0]),
+    authoredUnitId(values[1]),
+    authoredUnitId(values[2]),
+  ];
+}
+
+function authoredUnitIdPair(
+  values: readonly [string, string],
+): readonly [UnitRecord["id"], UnitRecord["id"]] {
+  return [authoredUnitId(values[0]), authoredUnitId(values[1])];
+}
+
 function eldritchMindInvocationBuild(): CharacterBuild {
   return {
-    ...pactBladeInvocationBuild("weapon_longsword", {
+    ...pactBladeInvocationBuild(authoredUnitId("weapon_longsword"), {
       pactOfTheBlade: false,
     }),
     features: [
       {
         kind: "selectedEldritchInvocation",
-        selectedFromUnitId: "warlock_eldritch_invocations",
+        selectedFromUnitId: authoredUnitId("warlock_eldritch_invocations"),
         selection: {
           kind: "nonRepeatable",
           invocationId: eldritchInvocationId("eldritch_mind"),
@@ -5747,11 +5968,11 @@ function eldritchMindInvocationBuild(): CharacterBuild {
 function druidDruidicBuild(): CharacterBuild {
   return {
     progression: {
-      startingClass: classUnitId("class_druid"),
+      startingClass: classUnitId(authoredUnitId("class_druid")),
       advancements: [],
     },
-    background: "background_soldier",
-    species: "species_orc",
+    background: authoredUnitId("background_soldier"),
+    species: authoredUnitId("species_orc"),
     originLanguages: ["Common", "Dwarvish", "Goblin"],
     classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
@@ -5774,7 +5995,7 @@ function druidDruidicBuild(): CharacterBuild {
     spellcasting: {
       sources: [
         {
-          sourceUnitId: "class_druid",
+          sourceUnitId: authoredUnitId("class_druid"),
           spellcastingAbility: "wis",
           cantrips: [],
           spellbook: [],
@@ -5804,9 +6025,9 @@ function druidWildShapeBuildAtLevel(level: number): CharacterBuild {
   return {
     ...base,
     progression: {
-      startingClass: classUnitId("class_druid"),
+      startingClass: classUnitId(authoredUnitId("class_druid")),
       advancements: Array.from({ length: level - 1 }, () => ({
-        classUnitId: classUnitId("class_druid"),
+        classUnitId: classUnitId(authoredUnitId("class_druid")),
         hitPointRule: { tag: "fixedHigherLevelGain" },
       })),
     },
@@ -5825,7 +6046,9 @@ function druidWildShapeBuildAtLevel(level: number): CharacterBuild {
 function trueStrikeDaggerItemId() {
   return characterEquipmentItemId({
     slot: "main",
-    unitId: expectRight(characterEquipmentItemUnitId("weapon_dagger")),
+    unitId: expectRight(
+      characterEquipmentItemUnitId(authoredUnitId("weapon_dagger")),
+    ),
   });
 }
 
@@ -5894,11 +6117,11 @@ function wizardSpellcastingBuild(): CharacterBuild {
 function wizardWarlockBuild(): CharacterBuild {
   return {
     progression: {
-      startingClass: classUnitId("class_wizard"),
+      startingClass: classUnitId(authoredUnitId("class_wizard")),
       advancements: [],
     },
-    background: "background_soldier",
-    species: "species_orc",
+    background: authoredUnitId("background_soldier"),
+    species: authoredUnitId("species_orc"),
     originLanguages: ["Common", "Dwarvish", "Goblin"],
     classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
@@ -5921,7 +6144,7 @@ function wizardWarlockBuild(): CharacterBuild {
     spellcasting: {
       sources: [
         {
-          sourceUnitId: "class_wizard",
+          sourceUnitId: authoredUnitId("class_wizard"),
           spellcastingAbility: "int",
           cantrips: [],
           spellbook: [],
@@ -5947,28 +6170,28 @@ function wizardWarlockBuild(): CharacterBuild {
 function sorcererFontOfMagicBuild(): CharacterBuild {
   return {
     progression: {
-      startingClass: classUnitId("class_sorcerer"),
+      startingClass: classUnitId(authoredUnitId("class_sorcerer")),
       advancements: [
         {
-          classUnitId: classUnitId("class_sorcerer"),
+          classUnitId: classUnitId(authoredUnitId("class_sorcerer")),
           hitPointRule: { tag: "fixedHigherLevelGain" },
         },
         {
-          classUnitId: classUnitId("class_sorcerer"),
+          classUnitId: classUnitId(authoredUnitId("class_sorcerer")),
           hitPointRule: { tag: "fixedHigherLevelGain" },
         },
         {
-          classUnitId: classUnitId("class_sorcerer"),
+          classUnitId: classUnitId(authoredUnitId("class_sorcerer")),
           hitPointRule: { tag: "fixedHigherLevelGain" },
         },
         {
-          classUnitId: classUnitId("class_sorcerer"),
+          classUnitId: classUnitId(authoredUnitId("class_sorcerer")),
           hitPointRule: { tag: "fixedHigherLevelGain" },
         },
       ],
     },
-    background: "background_soldier",
-    species: "species_orc",
+    background: authoredUnitId("background_soldier"),
+    species: authoredUnitId("species_orc"),
     originLanguages: ["Common", "Dwarvish", "Goblin"],
     classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
@@ -5991,7 +6214,7 @@ function sorcererFontOfMagicBuild(): CharacterBuild {
     spellcasting: {
       sources: [
         {
-          sourceUnitId: "class_sorcerer",
+          sourceUnitId: authoredUnitId("class_sorcerer"),
           spellcastingAbility: "cha",
           cantrips: [],
           spellbook: [],
@@ -6019,12 +6242,12 @@ function sorcererMetamagicBuild(): CharacterBuild {
     features: [
       {
         kind: "selectedSorcererMetamagicOption",
-        selectedFromUnitId: "sorcerer_metamagic",
+        selectedFromUnitId: authoredUnitId("sorcerer_metamagic"),
         optionId: testSorcererMetamagicOptionId("sorcerer_empowered_spell"),
       },
       {
         kind: "selectedSorcererMetamagicOption",
-        selectedFromUnitId: "sorcerer_metamagic",
+        selectedFromUnitId: authoredUnitId("sorcerer_metamagic"),
         optionId: testSorcererMetamagicOptionId("sorcerer_heightened_spell"),
       },
     ],
@@ -6034,11 +6257,11 @@ function sorcererMetamagicBuild(): CharacterBuild {
 function paladinBuild(): CharacterBuild {
   return {
     progression: {
-      startingClass: classUnitId("class_paladin"),
+      startingClass: classUnitId(authoredUnitId("class_paladin")),
       advancements: [],
     },
-    background: "background_soldier",
-    species: "species_orc",
+    background: authoredUnitId("background_soldier"),
+    species: authoredUnitId("species_orc"),
     originLanguages: ["Common", "Dwarvish", "Goblin"],
     classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
@@ -6067,9 +6290,9 @@ function fighterWithLayOnHandsResourceBuild(): CharacterBuild {
     features: [
       ...build.features,
       {
-        selectedFromUnitId: "class_paladin",
+        selectedFromUnitId: authoredUnitId("class_paladin"),
         kind: "selectedClassChoice",
-        unitId: "paladin_lay_on_hands",
+        unitId: authoredUnitId("paladin_lay_on_hands"),
       },
     ],
   };
@@ -6106,11 +6329,11 @@ function retainedOrdinaryCompanionSheet(input: {
         spellcasting: {
           sources: [
             {
-              sourceUnitId: "class_wizard",
+              sourceUnitId: authoredUnitId("class_wizard"),
               spellcastingAbility: "int",
-              cantrips: ["true_strike"],
-              spellbook: ["find_familiar"],
-              preparedSpells: ["find_familiar"],
+              cantrips: [authoredUnitId("true_strike")],
+              spellbook: [authoredUnitId("find_familiar")],
+              preparedSpells: [authoredUnitId("find_familiar")],
               spellcastingFocuses: ["spellbook"],
             },
           ],
@@ -6133,7 +6356,7 @@ function retainedOrdinaryCompanionSheet(input: {
       unitLibrary,
       statBlockCatalog,
       companionId: retainedCompanionId(input.companionIdValue),
-      source: { tag: "ritualSpell", spellId: "find_familiar" },
+      source: { tag: "ritualSpell", spellId: authoredUnitId("find_familiar") },
       selectedForm: input.selectedForm,
       creatureTypeOverrideChoiceId: "fey",
     }),
@@ -6189,7 +6412,7 @@ function unitLibraryWithSyntheticFamiliarFormCatalog(): UnitCatalog {
   }
   const syntheticCatalog = {
     ...findFamiliarUnit,
-    id: "synthetic_familiar_form_catalog",
+    id: authoredUnitId("synthetic_familiar_form_catalog"),
     name: "Synthetic Familiar Form Catalog",
     provenance: {
       ...findFamiliarUnit.provenance,

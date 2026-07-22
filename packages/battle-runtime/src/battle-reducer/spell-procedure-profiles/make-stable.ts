@@ -1,3 +1,4 @@
+import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-make-stable
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MAKE_STABLE_LIFECYCLE
 //
@@ -22,23 +23,20 @@
 
 import { resetDeathSaveRuntimeState } from "@dnd/shared-algebras/death-saves-algebra";
 import { movementFeet, MovementFeet } from "@dnd/shared/types";
-import {
-  isThresholdTierPointRange,
-  type SpellRecord,
-} from "@dnd/surface/surface/types";
+import { isThresholdTierPointRange } from "@dnd/surface/surface/types";
 import type { CombatantId } from "../../identity.ts";
 import {
-  maybeOpenInterruptWindow,
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
   type BattleState,
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
+import { maybeOpenInterruptWindow } from "../dispatcher.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
-import { sameStringSet } from "../spells-profile-shared.ts";
+import { sameStringSet } from "../spells-execution-facts.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
 import { spellTargetHole, spellTargetIsLegal } from "../spells-targeting.ts";
 import type {
@@ -63,7 +61,7 @@ type MakeStableInvocation = Extract<
 >;
 
 function spareTheDyingRangeFeet(
-  range: SpellRecord["mechanics"]["range"],
+  range: BattleSpellAdmissionSource["mechanics"]["range"],
   characterLevel: number,
 ): MovementFeet | null {
   if (!isThresholdTierPointRange(range) || range.feet.axis !== "character") {
@@ -79,7 +77,7 @@ function spareTheDyingRangeFeet(
 }
 
 function admitMakeStable(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly MakeStableInvocation[] {
   if (

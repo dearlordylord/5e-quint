@@ -24,7 +24,7 @@ import {
 } from "./enemy-zero-hit-point-temporary-hit-points.ts";
 import { damageRelationshipQuestionId } from "./damage-relationship-question-id.ts";
 import { applyHpDamage } from "./damage-apply.ts";
-import { isCharacterBattleCreatureState } from "./creature-state.ts";
+import { isCharacterBattleCreatureState } from "./creature-state-execution.ts";
 
 export type DamageRelationshipDecisionParseResult =
   | {

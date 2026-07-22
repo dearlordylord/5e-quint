@@ -1,19 +1,24 @@
 import { Match } from "effect";
+import * as Either from "effect/Either";
 import type { BattleReducerRouteEvents } from "./battle-reducer/reducer-route.ts";
 import { battleReducerRouteForResolution } from "./battle-reducer/reducer-route.ts";
 import {
   endTurn,
   openCreatureFallsInterruptWindow,
+  resolveAdmittedFindFamiliarReappearanceSubject,
   resolveAdmittedBattleSubject,
   resolveBattleInterrupt,
   snapshotBattle,
 } from "./battle-reducer/dispatcher.ts";
 import { admitBattleResolutionInput } from "./battle-reducer/resolution-admission.ts";
 import {
+  battleRuntimeSessionWithStatBlockPresentation,
   battleRuntimeSessionWithState,
+  type BattleStatBlockPresentationSource,
   type BattleRuntimeSession,
 } from "./battle-runtime-context.ts";
 import type { CombatantId } from "./identity.ts";
+import type { BattleSubject } from "./battle-subjects.ts";
 import type {
   BattleFill,
   BattleResolutionInput,
@@ -21,12 +26,14 @@ import type {
   BattleSnapshot,
   BattleTargetSpatialFact,
 } from "./battle-state-execution.ts";
+import type { BattleStatBlockExecutionCatalog } from "./battle-state-execution.ts";
+import { admitFindFamiliarReappearance } from "./find-familiar-admission.ts";
 
 export type BattleRuntimeResolutionInput = {
   readonly session: BattleRuntimeSession;
-  readonly subject: BattleResolutionInput["subject"];
+  readonly subject: BattleSubject;
   readonly fills: BattleResolutionInput["fills"];
-  readonly statBlockCatalog?: BattleResolutionInput["statBlockCatalog"];
+  readonly statBlockCatalog?: BattleStatBlockExecutionCatalog;
 };
 
 type ResolvedBattleResult = Extract<
@@ -75,15 +82,87 @@ const byBattleResolutionTag = Match.discriminator("tag");
 export function resolveBattleRuntimeSubject(
   input: BattleRuntimeResolutionInput,
 ): BattleRuntimeResolutionResult {
-  const result = resolveBattleSubject({
-    state: input.session.state,
-    subject: input.subject,
-    fills: input.fills,
-    ...(input.statBlockCatalog === undefined
-      ? {}
-      : { statBlockCatalog: input.statBlockCatalog }),
-  });
-  return battleRuntimeResolutionFromMechanical(input.session, result);
+  if (
+    input.subject.tag === "companionLifecycle" &&
+    input.subject.action === "reappear"
+  ) {
+    if (input.statBlockCatalog === undefined) {
+      return {
+        tag: "invalid",
+        session: input.session,
+        reason: "invalidFill",
+        message: "Familiar reappearance requires a Stat Block catalog.",
+        snapshot: snapshotBattle(input.session.state),
+      };
+    }
+    const admission = admitFindFamiliarReappearance({
+      state: input.session.state,
+      casterId: input.subject.actorId,
+      catalog: input.statBlockCatalog,
+    });
+    if (Either.isLeft(admission)) {
+      return {
+        tag: "invalid",
+        session: input.session,
+        reason: "invalidFill",
+        message: admission.left.message,
+        snapshot: snapshotBattle(input.session.state),
+      };
+    }
+    const result = resolveAdmittedFindFamiliarReappearanceSubject({
+      state: input.session.state,
+      subject: { ...input.subject, action: "reappear" },
+      fills: input.fills,
+      admission: admission.right.mechanics,
+    });
+    return battleRuntimeResolutionWithFamiliarPresentation(
+      input.session,
+      result,
+      admission.right.mechanics.combatantAdmission.combatantId,
+      admission.right.presentation,
+    );
+  }
+  return battleRuntimeResolutionFromMechanical(
+    input.session,
+    resolveBattleSubject({
+      state: input.session.state,
+      subject: input.subject,
+      fills: input.fills,
+    }),
+  );
+}
+
+function battleRuntimeResolutionWithFamiliarPresentation(
+  session: BattleRuntimeSession,
+  result: BattleResolutionResult,
+  combatantId: CombatantId,
+  presentation: BattleStatBlockPresentationSource,
+): BattleRuntimeResolutionResult {
+  if (result.tag !== "resolved") {
+    return battleRuntimeResolutionFromMechanical(session, result);
+  }
+  const combatant = result.state.combatants.get(combatantId);
+  if (combatant === undefined) {
+    return {
+      tag: "invalid",
+      session,
+      reason: "invalidFill",
+      message:
+        "Resolved familiar reappearance did not create its admitted combatant.",
+      snapshot: snapshotBattle(session.state),
+    };
+  }
+  const { state: _mechanicalState, ...outcome } = result;
+  return {
+    ...outcome,
+    snapshot: snapshotBattle(result.state),
+    session: battleRuntimeSessionWithStatBlockPresentation(
+      session,
+      result.state,
+      combatantId,
+      presentation,
+    ),
+  };
 }
 
 function battleRuntimeResolutionFromMechanical(

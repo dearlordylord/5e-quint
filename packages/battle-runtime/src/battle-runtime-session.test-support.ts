@@ -1,6 +1,7 @@
 import type {
   BattleRuntimeContext,
   BattleRuntimeSession,
+  BattleStatBlockPresentationSource,
   CharacterBattleRuntimeContext,
 } from "./battle-runtime-context.ts";
 import {
@@ -24,6 +25,10 @@ export function battleRuntimeSessionForTest(input: {
 
 export function battleRuntimeContextForTest(
   characters: ReadonlyMap<CombatantId, CharacterBattleRuntimeContext>,
+  statBlocks: ReadonlyMap<
+    CombatantId,
+    BattleStatBlockPresentationSource
+  > = new Map(),
 ): BattleRuntimeContext {
-  return battleRuntimeContextFromCharacterAdmission(characters);
+  return battleRuntimeContextFromCharacterAdmission(characters, statBlocks);
 }

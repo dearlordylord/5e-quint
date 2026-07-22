@@ -1,3 +1,4 @@
+import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.rogue-steady-aim
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.brutal-strike
@@ -1443,11 +1444,11 @@ describe("battle runtime: class action features", () => {
           selectedLoadout: {
             armor: {
               itemId: "armor:armor_chain_mail",
-              unitId: "armor_chain_mail",
+              unitId: parseSharedUnitId("armor_chain_mail"),
             },
             weapon: {
               itemId: "main:weapon_longsword",
-              unitId: "weapon_longsword",
+              unitId: parseSharedUnitId("weapon_longsword"),
               grip: "one_handed",
             },
           },

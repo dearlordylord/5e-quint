@@ -1,0 +1,76 @@
+import { Hp, type Size } from "@dnd/shared/types";
+import type {
+  DamageType,
+  StatBlockId,
+  StatBlockMechanics,
+} from "@dnd/surface/surface/types";
+import type { Brand } from "effect";
+
+import type {
+  BattleExecutionScopeCursor,
+  BattleExecutionScopeOrdinal,
+  BattleId,
+  CombatantId,
+} from "./identity.ts";
+import type { StatBlockExecutionState } from "./stat-block-execution-state.ts";
+
+/** Authored-free mechanical facts queried after a Stat Block combatant commits. */
+export type BattleStatBlockCombatantMechanics = {
+  readonly creatureType: import("@dnd/shared/game-facts").CreatureType;
+  readonly speeds: StatBlockMechanics["speeds"];
+  readonly abilityScores: StatBlockMechanics["abilityScores"];
+  readonly savingThrowModifiers: ReadonlyArray<
+    NonNullable<StatBlockMechanics["savingThrowModifiers"]>[number]
+  >;
+  readonly skillModifiers: ReadonlyArray<
+    NonNullable<StatBlockMechanics["skillModifiers"]>[number]
+  >;
+  readonly vulnerabilities: readonly DamageType[];
+  readonly resistances: readonly DamageType[];
+  readonly immunities: {
+    readonly damageTypes: readonly DamageType[];
+    readonly conditions: ReadonlyArray<
+      NonNullable<
+        NonNullable<StatBlockMechanics["immunities"]>["conditions"]
+      >[number]
+    >;
+  };
+  readonly specialSenses: ReadonlyArray<
+    NonNullable<StatBlockMechanics["senses"]>[number]
+  >;
+};
+
+/** Durable Stat Block battle projection retained after admission is consumed. */
+export type StatBlockBattleOrigin = {
+  readonly statBlockId: StatBlockId;
+  readonly mechanics: BattleStatBlockCombatantMechanics;
+  readonly execution: StatBlockExecutionState;
+};
+
+export type BattleStatBlockCombatantInitialization = {
+  readonly armorClass: number;
+  readonly maxHp: Hp;
+  readonly size: Size;
+};
+
+/**
+ * Admission-owned transition capability for one Stat Block combatant. It is
+ * bound to a battle, combatant, execution scope, and cursor transition and
+ * contains no authored presentation source.
+ */
+export type AdmittedBattleStatBlockCombatant = {
+  readonly battleId: BattleId;
+  readonly combatantId: CombatantId;
+  readonly origin: StatBlockBattleOrigin;
+  readonly initialization: BattleStatBlockCombatantInitialization;
+  readonly cursorTransition: {
+    readonly from: BattleExecutionScopeOrdinal;
+    readonly to: BattleExecutionScopeCursor;
+  };
+} & Brand.Brand<"AdmittedBattleStatBlockCombatant">;
+
+export function admittedBattleStatBlockCombatantMaxHp(
+  admission: AdmittedBattleStatBlockCombatant,
+): Hp {
+  return admission.initialization.maxHp;
+}

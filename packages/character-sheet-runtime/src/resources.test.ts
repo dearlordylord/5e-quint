@@ -9,6 +9,8 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-CHARACTER-FACTS monk_uncanny_metabolism
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-SORCERER-FONT-RESOURCE-FACTS sorcerer_font_of_magic
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L5-A10-SORCERER-SORCEROUS-RESTORATION sorcerer_sorcerous_restoration
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
+import { statBlockId as authoredStatBlockId } from "@dnd/shared/game-facts";
 import { describe, expect, test } from "vitest";
 import type { CharacterSheetResourceExpenditure } from "./index.ts";
 import type { CharacterBuild } from "./test-support.ts";
@@ -74,7 +76,7 @@ describe("Character Sheet runtime / resources", () => {
           }),
         ),
         resource: {
-          unitId: "paladin_lay_on_hands",
+          unitId: authoredUnitId("paladin_lay_on_hands"),
           count: 5,
           expended: 0,
         },
@@ -90,7 +92,7 @@ describe("Character Sheet runtime / resources", () => {
           }),
         ),
         resource: {
-          unitId: "ranger_favored_enemy",
+          unitId: authoredUnitId("ranger_favored_enemy"),
           count: 2,
           expended: 0,
         },
@@ -107,10 +109,10 @@ describe("Character Sheet runtime / resources", () => {
             tempHp: Hp(0),
             unitLibrary,
             druidWildShapeKnownFormStatBlockIds: [
-              "stat_block_rat",
-              "stat_block_riding_horse",
-              "stat_block_spider",
-              "stat_block_wolf",
+              authoredStatBlockId("stat_block_rat"),
+              authoredStatBlockId("stat_block_riding_horse"),
+              authoredStatBlockId("stat_block_spider"),
+              authoredStatBlockId("stat_block_wolf"),
             ],
           }),
         ),
@@ -260,7 +262,9 @@ describe("Character Sheet runtime / resources", () => {
           ? {}
           : {
               druidWildShapeKnownFormStatBlockIds:
-                input.druidWildShapeKnownFormStatBlockIds,
+                input.druidWildShapeKnownFormStatBlockIds.map(
+                  authoredStatBlockId,
+                ),
             }),
         resourceExpenditures: input.resourceExpenditures,
       });
@@ -404,26 +408,26 @@ describe("Character Sheet runtime / resources", () => {
       message:
         "Character Sheet keyed resource expenditure must contain exactly tag, Unit id, and expended count.",
     },
-  ])("rejects stored $name resource expenditure records with extra keys", ({
-    expenditure,
-    message,
-  }) => {
-    const sheet = parseCharacterSheet(
-      {
-        ...storedAvailableSheetInput({
-          characterId: `character:stale-${expenditure.tag}`,
-          build: armorClassBuild({ startingClass: "class_paladin" }),
-        }),
-        resourceExpenditures: [expenditure],
-      },
-      unitLibrary,
-    );
+  ])(
+    "rejects stored $name resource expenditure records with extra keys",
+    ({ expenditure, message }) => {
+      const sheet = parseCharacterSheet(
+        {
+          ...storedAvailableSheetInput({
+            characterId: `character:stale-${expenditure.tag}`,
+            build: armorClassBuild({ startingClass: "class_paladin" }),
+          }),
+          resourceExpenditures: [expenditure],
+        },
+        unitLibrary,
+      );
 
-    expect(sheet).toMatchObject({
-      _tag: "Left",
-      left: { message },
-    });
-  });
+      expect(sheet).toMatchObject({
+        _tag: "Left",
+        left: { message },
+      });
+    },
+  );
 
   test("Long Rest restores the Favored Enemy Hunter's Mark free-cast pool", () => {
     const spent = requireRight(
@@ -446,7 +450,7 @@ describe("Character Sheet runtime / resources", () => {
       _tag: "Right",
       right: [
         {
-          unitId: "ranger_favored_enemy",
+          unitId: authoredUnitId("ranger_favored_enemy"),
           count: 2,
           expended: 1,
         },
@@ -462,7 +466,7 @@ describe("Character Sheet runtime / resources", () => {
       _tag: "Right",
       right: [
         {
-          unitId: "ranger_favored_enemy",
+          unitId: authoredUnitId("ranger_favored_enemy"),
           count: 2,
           expended: 0,
         },
@@ -494,7 +498,7 @@ describe("Character Sheet runtime / resources", () => {
       _tag: "Right",
       right: expect.arrayContaining([
         expect.objectContaining({
-          unitId: "paladin_paladins_smite",
+          unitId: authoredUnitId("paladin_paladins_smite"),
           count: 1,
           expended: 1,
         }),
@@ -510,7 +514,7 @@ describe("Character Sheet runtime / resources", () => {
       _tag: "Right",
       right: expect.arrayContaining([
         expect.objectContaining({
-          unitId: "paladin_paladins_smite",
+          unitId: authoredUnitId("paladin_paladins_smite"),
           count: 1,
           expended: 0,
         }),

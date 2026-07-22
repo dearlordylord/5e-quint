@@ -3,6 +3,7 @@
 // UNIT-IDENTITY-REPLAY: L1D2-WEAPON-MASTERY-CONTAINERS ranger_weapon_mastery doSelectRangerWeaponMastery doReselectRangerWeaponMasteryOnLongRest
 // UNIT-IDENTITY-REPLAY: L1D2-WEAPON-MASTERY-CONTAINERS rogue_weapon_mastery doSelectRogueWeaponMastery doReselectRogueWeaponMasteryOnLongRest
 // KERNEL-COVERAGE: parity-witness SHEET.WEAPON_MASTERY.RESELECTION
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import * as path from "node:path";
 
 import {
@@ -48,14 +49,14 @@ const WEAPON_MASTERY_CONTAINER_SELECTED_IDENTITY_RESULTS = [
   "tooManyChangesRejected",
 ] as const;
 const WEAPON_MASTERY_CONTAINER_FEATURE_UNIT_IDS = [
-  "paladin_weapon_mastery",
-  "ranger_weapon_mastery",
-  "rogue_weapon_mastery",
+  authoredUnitId("paladin_weapon_mastery"),
+  authoredUnitId("ranger_weapon_mastery"),
+  authoredUnitId("rogue_weapon_mastery"),
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
 const WEAPON_MASTERY_CONTAINER_CLASS_UNIT_IDS = [
-  "class_paladin",
-  "class_ranger",
-  "class_rogue",
+  authoredUnitId("class_paladin"),
+  authoredUnitId("class_ranger"),
+  authoredUnitId("class_rogue"),
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
 
 type WeaponMasteryContainerSelectedIdentityResult =
@@ -191,28 +192,46 @@ const qntStepByDriverAction = {
 >;
 
 const PALADIN_WEAPON_MASTERY_PROFILE = {
-  classUnitId: "class_paladin",
-  featureUnitId: "paladin_weapon_mastery",
+  classUnitId: authoredUnitId("class_paladin"),
+  featureUnitId: authoredUnitId("paladin_weapon_mastery"),
   selectedResult: "paladinSelected",
   reselectedResult: "paladinReselected",
-  selectedWeaponUnitIds: ["weapon_longsword", "weapon_dagger"],
-  reselectedWeaponUnitIds: ["weapon_spear", "weapon_flail"],
+  selectedWeaponUnitIds: [
+    authoredUnitId("weapon_longsword"),
+    authoredUnitId("weapon_dagger"),
+  ],
+  reselectedWeaponUnitIds: [
+    authoredUnitId("weapon_spear"),
+    authoredUnitId("weapon_flail"),
+  ],
 } as const satisfies WeaponMasteryContainerProfile;
 const RANGER_WEAPON_MASTERY_PROFILE = {
-  classUnitId: "class_ranger",
-  featureUnitId: "ranger_weapon_mastery",
+  classUnitId: authoredUnitId("class_ranger"),
+  featureUnitId: authoredUnitId("ranger_weapon_mastery"),
   selectedResult: "rangerSelected",
   reselectedResult: "rangerReselected",
-  selectedWeaponUnitIds: ["weapon_longsword", "weapon_dagger"],
-  reselectedWeaponUnitIds: ["weapon_spear", "weapon_flail"],
+  selectedWeaponUnitIds: [
+    authoredUnitId("weapon_longsword"),
+    authoredUnitId("weapon_dagger"),
+  ],
+  reselectedWeaponUnitIds: [
+    authoredUnitId("weapon_spear"),
+    authoredUnitId("weapon_flail"),
+  ],
 } as const satisfies WeaponMasteryContainerProfile;
 const ROGUE_WEAPON_MASTERY_PROFILE = {
-  classUnitId: "class_rogue",
-  featureUnitId: "rogue_weapon_mastery",
+  classUnitId: authoredUnitId("class_rogue"),
+  featureUnitId: authoredUnitId("rogue_weapon_mastery"),
   selectedResult: "rogueSelected",
   reselectedResult: "rogueReselected",
-  selectedWeaponUnitIds: ["weapon_dagger", "weapon_shortbow"],
-  reselectedWeaponUnitIds: ["weapon_spear", "weapon_shortsword"],
+  selectedWeaponUnitIds: [
+    authoredUnitId("weapon_dagger"),
+    authoredUnitId("weapon_shortbow"),
+  ],
+  reselectedWeaponUnitIds: [
+    authoredUnitId("weapon_spear"),
+    authoredUnitId("weapon_shortsword"),
+  ],
 } as const satisfies WeaponMasteryContainerProfile;
 const WEAPON_MASTERY_CONTAINER_PROFILES = [
   PALADIN_WEAPON_MASTERY_PROFILE,
@@ -248,7 +267,7 @@ function completeLongRest(
 const selectedUnitIdentityReplays = [
   {
     taskId: "L1D2-WEAPON-MASTERY-CONTAINERS",
-    unitId: "paladin_weapon_mastery",
+    unitId: authoredUnitId("paladin_weapon_mastery"),
     actions: [
       "doSelectPaladinWeaponMastery",
       "doReselectPaladinWeaponMasteryOnLongRest",
@@ -272,7 +291,7 @@ const selectedUnitIdentityReplays = [
   },
   {
     taskId: "L1D2-WEAPON-MASTERY-CONTAINERS",
-    unitId: "ranger_weapon_mastery",
+    unitId: authoredUnitId("ranger_weapon_mastery"),
     actions: [
       "doSelectRangerWeaponMastery",
       "doReselectRangerWeaponMasteryOnLongRest",
@@ -296,7 +315,7 @@ const selectedUnitIdentityReplays = [
   },
   {
     taskId: "L1D2-WEAPON-MASTERY-CONTAINERS",
-    unitId: "rogue_weapon_mastery",
+    unitId: authoredUnitId("rogue_weapon_mastery"),
     actions: [
       "doSelectRogueWeaponMastery",
       "doReselectRogueWeaponMasteryOnLongRest",
@@ -329,12 +348,12 @@ describe("Character Sheet Weapon Mastery container selected identity replay", ()
   it("audits Surface-derived eligibility and selected-ref sheet storage", () => {
     for (const profile of WEAPON_MASTERY_CONTAINER_PROFILES) {
       const sheet = weaponMasterySheet({
-        classUnitId: profile.classUnitId,
-        featureUnitId: profile.featureUnitId,
+        classUnitId: authoredUnitId(profile.classUnitId),
+        featureUnitId: authoredUnitId(profile.featureUnitId),
         selectedWeaponUnitIds: profile.selectedWeaponUnitIds,
       });
       const surfaceProfile = requireWeaponMasteryChoiceProfile(
-        profile.featureUnitId,
+        authoredUnitId(profile.featureUnitId),
       );
 
       expect(surfaceProfile.feature.id).toBe(profile.featureUnitId);
@@ -347,7 +366,10 @@ describe("Character Sheet Weapon Mastery container selected identity replay", ()
       );
       expectNoSheetLocalWeaponMasteryState(sheet);
       expectSelectedWeaponPair(
-        selectedClassChoiceUnitIds(sheet.build, profile.featureUnitId),
+        selectedClassChoiceUnitIds(
+          sheet.build,
+          authoredUnitId(profile.featureUnitId),
+        ),
         profile.selectedWeaponUnitIds,
       );
 
@@ -357,7 +379,7 @@ describe("Character Sheet Weapon Mastery container selected identity replay", ()
           unitLibrary,
           weaponMasteryReselections: [
             {
-              featureUnitId: profile.featureUnitId,
+              featureUnitId: authoredUnitId(profile.featureUnitId),
               selectedWeaponUnitIds: profile.reselectedWeaponUnitIds,
             },
           ],
@@ -370,7 +392,10 @@ describe("Character Sheet Weapon Mastery container selected identity replay", ()
       );
       expectNoSheetLocalWeaponMasteryState(rested);
       expectSelectedWeaponPair(
-        selectedClassChoiceUnitIds(rested.build, profile.featureUnitId),
+        selectedClassChoiceUnitIds(
+          rested.build,
+          authoredUnitId(profile.featureUnitId),
+        ),
         profile.reselectedWeaponUnitIds,
       );
     }
@@ -724,8 +749,8 @@ function weaponMasteryBuild(input: {
       startingClass: classUnitId(input.classUnitId),
       advancements: [],
     },
-    background: "background_soldier",
-    species: "species_orc",
+    background: authoredUnitId("background_soldier"),
+    species: authoredUnitId("species_orc"),
     originLanguages: ["Common", "Dwarvish", "Goblin"],
     classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },

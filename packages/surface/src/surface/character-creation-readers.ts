@@ -91,11 +91,7 @@ export const MAGIC_INITIATE_SELECTED_CANTRIPS = {
 } as const;
 
 export const MAGIC_INITIATE_SELECTED_LEVEL_ONE_SPELL = {
-  access: [
-    "always_prepared",
-    "one_free_cast_per_long_rest",
-    "spell_slot_cast",
-  ],
+  access: ["always_prepared", "one_free_cast_per_long_rest", "spell_slot_cast"],
   count: 1,
   spellLevel: 1,
 } as const;

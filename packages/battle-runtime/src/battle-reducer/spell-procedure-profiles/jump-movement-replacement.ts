@@ -1,3 +1,4 @@
+import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-jump-movement-replacement
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE
 //
@@ -16,11 +17,9 @@
 
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet, type SpellSlotLevel } from "@dnd/shared/types";
-import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
 import {
-  maybeOpenInterruptWindow,
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
@@ -28,6 +27,7 @@ import {
   type BonusActionSpellBattleResolutionInput,
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
+import { maybeOpenInterruptWindow } from "../dispatcher.ts";
 import { CombatantId } from "../../identity.ts";
 import { DurationBattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
@@ -36,7 +36,7 @@ import { allocateBattleActiveEffectRef } from "../../active-effect/execution-ref
 import {
   sameStringSet,
   scalarBuffSpellTargetCount,
-} from "../spells-profile-shared.ts";
+} from "../spells-execution-facts.ts";
 import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
 import {
@@ -67,7 +67,7 @@ type JumpMovementReplacementResolveInput =
   SpellProcedureProfileResolveInput<JumpMovementReplacementInvocation>;
 
 function admitJumpMovementReplacement(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly JumpMovementReplacementInvocation[] {
   const projection = jumpMovementReplacementSpellProjection(
@@ -109,7 +109,7 @@ function admitJumpMovementReplacement(
 
 function jumpMovementReplacementSpellProjection(
   actorId: CombatantId,
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
 ): Pick<
   JumpMovementReplacementInvocation,
   "activeEffect" | "rangeFeet"
@@ -171,7 +171,7 @@ function jumpMovementReplacementSpellProjection(
 }
 
 function jumpMovementReplacementTargetCount(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   slotLevel: SpellSlotLevel,
 ): number | null {
   if (spell.mechanics.family !== "activation") {

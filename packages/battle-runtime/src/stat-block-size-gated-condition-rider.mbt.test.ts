@@ -1,3 +1,4 @@
+import { statBlockId as parseSharedStatBlockId } from "@dnd/shared/game-facts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt stat-block.attack-control
 // KERNEL-COVERAGE: parity-witness BATTLE.STAT_BLOCK.ATTACK_CONTROL
 import { isDeepStrictEqual } from "node:util";
@@ -480,7 +481,9 @@ function sizeGatedConditionRiderAttackerStatBlock(): StatBlockRecord {
   const base = statBlockRecord();
   return {
     ...base,
-    id: "stat_block_size_gated_condition_rider_mbt_attacker",
+    id: parseSharedStatBlockId(
+      "stat_block_size_gated_condition_rider_mbt_attacker",
+    ),
     name: "Stat Block Size-Gated Condition Attacker",
     provenance: {
       kind: "srd-5.2.1",
@@ -534,12 +537,18 @@ function sizeGatedConditionRiderTargetStatBlockId(
   targetSizeGate: TargetSizeGate,
 ): StatBlockRecord["id"] {
   if (targetSizeGate === "mediumOrSmaller") {
-    return "stat_block_medium_size_gated_condition_rider_mbt_target";
+    return parseSharedStatBlockId(
+      "stat_block_medium_size_gated_condition_rider_mbt_target",
+    );
   }
   if (targetSizeGate === "mediumOrSmallerProneImmune") {
-    return "stat_block_prone_immune_size_gated_condition_rider_mbt_target";
+    return parseSharedStatBlockId(
+      "stat_block_prone_immune_size_gated_condition_rider_mbt_target",
+    );
   }
-  return "stat_block_large_size_gated_condition_rider_mbt_target";
+  return parseSharedStatBlockId(
+    "stat_block_large_size_gated_condition_rider_mbt_target",
+  );
 }
 
 function biteAttack(): StatBlockAttack {

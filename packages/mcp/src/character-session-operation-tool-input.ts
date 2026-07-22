@@ -1,13 +1,14 @@
+import { StatBlockId, UnitId } from "@dnd/shared/game-facts";
 import { Schema } from "effect";
 
 const RetainedCompanionNormalFormSelectionArgsSchema = Schema.Struct({
   tag: Schema.Literal("normalNamedForm"),
-  formId: Schema.NonEmptyTrimmedString,
+  formId: UnitId,
 });
 const RetainedCompanionChallengeRatingZeroBeastSelectionArgsSchema =
   Schema.Struct({
     tag: Schema.Literal("challengeRatingZeroBeast"),
-    statBlockId: Schema.NonEmptyTrimmedString,
+    statBlockId: StatBlockId,
   });
 const RetainedCompanionSpecialFormSelectionArgsSchema = Schema.Struct({
   tag: Schema.Literal("pactOfTheChainSpecialForm"),
@@ -21,7 +22,7 @@ const RetainedCompanionFormSelectionArgsSchema = Schema.Union(
 const RetainedCompanionSourceArgsSchema = Schema.Union(
   Schema.Struct({
     tag: Schema.Literal("spellSlotSpellCast"),
-    spellId: Schema.NonEmptyTrimmedString,
+    spellId: UnitId,
     spellLevel: Schema.Number.pipe(
       Schema.int(),
       Schema.greaterThanOrEqualTo(1),
@@ -30,15 +31,15 @@ const RetainedCompanionSourceArgsSchema = Schema.Union(
   }),
   Schema.Struct({
     tag: Schema.Literal("ritualSpell"),
-    spellId: Schema.NonEmptyTrimmedString,
+    spellId: UnitId,
   }),
   Schema.Struct({
     tag: Schema.Literal("invocationSpellAccess"),
-    spellId: Schema.NonEmptyTrimmedString,
+    spellId: UnitId,
   }),
   Schema.Struct({
     tag: Schema.Literal("classFeatureSpellCast"),
-    featureUnitId: Schema.NonEmptyTrimmedString,
+    featureUnitId: UnitId,
     spend: Schema.Union(
       Schema.Struct({
         tag: Schema.Literal("spellSlot"),
@@ -50,7 +51,7 @@ const RetainedCompanionSourceArgsSchema = Schema.Union(
       }),
       Schema.Struct({
         tag: Schema.Literal("useCountResource"),
-        resourceUnitId: Schema.NonEmptyTrimmedString,
+        resourceUnitId: UnitId,
       }),
     ),
   }),

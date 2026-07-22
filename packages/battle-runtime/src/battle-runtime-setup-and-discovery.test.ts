@@ -32,6 +32,15 @@ import {
   snapshotBattle,
   startBattle,
 } from "./battle-runtime-test-support.ts";
+import { battleCreaturePresentationDisplayName } from "./stat-block-presentation.ts";
+import {
+  battlePresentedSnapshot,
+  BattlePresentedSnapshotSchema,
+} from "./index.ts";
+import {
+  battleRuntimeContextForTest,
+  battleRuntimeSessionForTest,
+} from "./battle-runtime-session.test-support.ts";
 import { describe, expect, test } from "vitest";
 import fc from "fast-check";
 import {
@@ -53,13 +62,14 @@ describe("battle runtime: setup and discovery", () => {
   });
 
   test("startBattle creates sorted Initiative state and the MCP snapshot contract", () => {
-    const state = startBattleRight({
+    const session = startBattleSessionRight({
       battleId: battleId("battle-1"),
       combatants: [
         characterSeed({ initiative: 12 }),
         statBlockCreatureInit({ initiative: 16, currentHp: 0 }),
       ],
     });
+    const state = session.state;
 
     expect(snapshotBattle(state)).toMatchObject({
       battleId: battleId("battle-1"),
@@ -69,7 +79,6 @@ describe("battle runtime: setup and discovery", () => {
       combatants: [
         {
           combatantId: goblinId,
-          displayName: "Goblin Warrior",
           hp: 0,
           maxHp: 10,
           tempHp: 0,
@@ -118,6 +127,74 @@ describe("battle runtime: setup and discovery", () => {
         disengaged: false,
       },
     });
+    expect(snapshotBattle(state).combatants[0]).not.toHaveProperty(
+      "displayName",
+    );
+    const presented = battlePresentedSnapshot(session);
+    expect(Either.isRight(presented)).toBe(true);
+    if (Either.isLeft(presented)) return;
+    expect(presented.right.combatants[0]?.displayName).toBe("Goblin Warrior");
+    expect(Schema.is(BattlePresentedSnapshotSchema)(presented.right)).toBe(
+      true,
+    );
+    const missingPresentedName = {
+      ...presented.right,
+      combatants: presented.right.combatants.map(
+        ({ displayName: _displayName, ...combatant }) => combatant,
+      ),
+    };
+    expect(Schema.is(BattlePresentedSnapshotSchema)(missingPresentedName)).toBe(
+      false,
+    );
+    expect(
+      Schema.is(BattlePresentedSnapshotSchema)({
+        ...presented.right,
+        combatants: [
+          presented.right.combatants[0],
+          ...presented.right.combatants,
+        ],
+      }),
+    ).toBe(false);
+    const missingContext = battlePresentedSnapshot(
+      battleRuntimeSessionForTest({
+        state,
+        context: battleRuntimeContextForTest(session.context.characters),
+      }),
+    );
+    expect(missingContext).toEqual(
+      Either.left([
+        {
+          tag: "battleSnapshotPresentationIssue",
+          reason: "missingStatBlockPresentation",
+          combatantId: goblinId,
+        },
+      ]),
+    );
+    const goblinPresentation = session.context.statBlocks.get(goblinId);
+    expect(goblinPresentation).toBeDefined();
+    if (goblinPresentation === undefined) return;
+    const invalidDisplayName = battlePresentedSnapshot(
+      battleRuntimeSessionForTest({
+        state,
+        context: battleRuntimeContextForTest(
+          session.context.characters,
+          new Map([[goblinId, { ...goblinPresentation, displayName: "   " }]]),
+        ),
+      }),
+    );
+    expect(invalidDisplayName).toEqual(
+      Either.left([
+        {
+          tag: "battleSnapshotPresentationIssue",
+          reason: "invalidDisplayName",
+          combatantId: goblinId,
+        },
+      ]),
+    );
+
+    expect(
+      battleCreaturePresentationDisplayName(state, session.context, goblinId),
+    ).toBe("Goblin Warrior");
 
     expect(
       Schema.encodeSync(BattleSnapshotSchema)(snapshotBattle(state)),
@@ -137,6 +214,52 @@ describe("battle runtime: setup and discovery", () => {
       helpAttackMarkers: [],
       pendingInterrupt: null,
     });
+  });
+
+  test("presented snapshots collect every independent roster issue regardless of Initiative order", () => {
+    for (const [index, initiatives] of [
+      { goblin: 18, skeleton: 8 },
+      { goblin: 8, skeleton: 18 },
+    ].entries()) {
+      const session = startBattleSessionRight({
+        battleId: battleId(`battle-presentation-issues-${index}`),
+        combatants: [
+          statBlockCreatureInit({ initiative: initiatives.goblin }),
+          statBlockCreatureInit({
+            combatantId: skeletonId,
+            initiative: initiatives.skeleton,
+          }),
+        ],
+      });
+      const skeletonPresentation = session.context.statBlocks.get(skeletonId);
+      expect(skeletonPresentation).toBeDefined();
+      if (skeletonPresentation === undefined) return;
+
+      const result = battlePresentedSnapshot(
+        battleRuntimeSessionForTest({
+          state: session.state,
+          context: battleRuntimeContextForTest(
+            session.context.characters,
+            new Map([
+              [skeletonId, { ...skeletonPresentation, displayName: "   " }],
+            ]),
+          ),
+        }),
+      );
+      expect(Either.isLeft(result)).toBe(true);
+      if (Either.isRight(result)) return;
+      expect(result.left).toHaveLength(2);
+      expect(
+        new Set(
+          result.left.map((issue) => `${issue.combatantId}:${issue.reason}`),
+        ),
+      ).toEqual(
+        new Set([
+          `${goblinId}:missingStatBlockPresentation`,
+          `${skeletonId}:invalidDisplayName`,
+        ]),
+      );
+    }
   });
 
   test("prepared spell attack hole codec preserves discriminated spell damage payload", () => {

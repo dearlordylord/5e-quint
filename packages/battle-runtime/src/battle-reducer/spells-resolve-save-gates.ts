@@ -21,7 +21,7 @@ import { Either } from "effect";
 import type { BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
 import type { BattleSubject } from "../battle-subjects.ts";
 import type { CombatantId } from "../identity.ts";
-import { characterUnitProcedureBindings } from "../character-execution-admission.ts";
+import { characterUnitProcedureBindings } from "../character-execution-queries.ts";
 import {
   damageDispositionFillFor,
   damageDispositionFillsValidation,
@@ -29,7 +29,7 @@ import {
   zeroHitPointReplacementDispositionHole,
 } from "./attack-damage-apply.ts";
 import { extendSavingThrowOngoingFeatures } from "./attack-roll.ts";
-import { combatantCanTakeReactions } from "./creature-state.ts";
+import { combatantCanTakeReactions } from "./creature-state-execution.ts";
 import {
   applyAvailableSpellDamageReduction,
   applyAvailableSourceDamageRollPenalty,
@@ -108,7 +108,7 @@ import {
   magicalEffectTargetsInterdictionMessage,
 } from "./antimagic-field-magical-effect-interdiction.ts";
 import { spellFillSet, type SpellFillSet } from "./spells-resolve-fill-set.ts";
-import type { CharacterBattleMetamagicOptionFact } from "../character-battle-resources.ts";
+import type { CharacterBattleMetamagicOptionFact } from "../character-battle-resource-execution.ts";
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
 import {
   parseBattleMovement,
@@ -116,12 +116,6 @@ import {
   readiedMovementBudgetForActor,
 } from "./turn-end-movement.ts";
 import {
-  ATTACK_TARGET_HOLE_ID,
-  isTargetListSpellInvocation,
-  maybeOpenInterruptWindow,
-  openAfterDamageSequenceInterruptWindow,
-  snapshotBattle,
-  spendReaction,
   type ActionSpellBattleResolutionInput,
   type BattleActiveEffect,
   type BattleAfterDamageEvent,
@@ -142,6 +136,14 @@ import {
   type BonusActionSpellBattleResolutionInput,
   type SaveDamageResult,
 } from "../battle-state-execution.ts";
+import { ATTACK_TARGET_HOLE_ID } from "./battle-runtime-protocol.ts";
+import { isTargetListSpellInvocation } from "./spells-invocation-guards.ts";
+import {
+  maybeOpenInterruptWindow,
+  openAfterDamageSequenceInterruptWindow,
+  spendReaction,
+} from "./interrupt-execution.ts";
+import { snapshotBattle } from "./battle-snapshot.ts";
 
 type SaveMetamagicSelectionState =
   | {
@@ -3834,8 +3836,7 @@ function sleepTargetHasExhaustionImmunity(
   const target = state.combatants.get(targetId);
   return (
     target?.origin.kind === "statBlock" &&
-    target.origin.statBlock.statBlock.immunities?.conditions?.includes(
-      "exhaustion",
-    ) === true
+    target.origin.mechanics.immunities.conditions.includes("exhaustion") ===
+      true
   );
 }

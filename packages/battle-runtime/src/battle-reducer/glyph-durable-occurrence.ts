@@ -36,15 +36,33 @@ import type {
   GlyphWardingOccurrence,
   GlyphWardingSpellGlyphBranch,
   GlyphWardingTrigger,
-  SpellRecord,
+  SpellMechanics,
 } from "@dnd/surface/surface/types";
 import { Either, Match } from "effect";
+import {
+  GLYPH_OF_WARDING_BASE_LEVEL,
+  GLYPH_STORED_SPELL_HOSTILE_PLACEMENT_SUBJECTS,
+  GLYPH_STORED_SPELL_TARGET_SHAPES,
+  type GlyphStoredSpellReleaseProfile,
+  type GlyphStoredSpellReleaseWitness,
+  type GlyphStoredSpellSingleCreatureRetargetingWitness,
+  type GlyphTriggerOccurrenceWitness,
+} from "../glyph-durable-occurrence-execution-types.ts";
+export type {
+  GlyphStoredSpellAreaCenteringWitness,
+  GlyphStoredSpellHostilePlacementWitness,
+  GlyphStoredSpellReleaseProfile,
+  GlyphStoredSpellReleaseTargetingWitness,
+  GlyphStoredSpellReleaseWitness,
+  GlyphStoredSpellSingleCreatureRetargetingWitness,
+  GlyphTriggerOccurrenceWitness,
+} from "../glyph-durable-occurrence-execution-types.ts";
 import {
   GLYPH_STORED_SINGLE_CREATURE_ACTIVE_EFFECT_PROCEDURES,
   GLYPH_STORED_SELF_TRANSFORMATION_PROCEDURES,
   type GlyphStoredConcentrationSingleCreatureActiveEffectInvocation,
   type GlyphStoredConcentrationSelfTransformationInvocation,
-} from "../procedure-admission/glyph-stored-spell.ts";
+} from "../glyph-stored-spell-invocation.ts";
 import type {
   BattleActiveEffect,
   BattleActiveEffectExpiration,
@@ -59,7 +77,6 @@ import type {
   BattleSpellDamageReductionRollHole,
   BattleSpellTargetListSpatialFact,
   BattleState,
-  BattleTargetSpatialFact,
   GlyphStoredSpellReleaseReplayContext,
   GlyphDurableOccurrenceActiveEffect,
   GlyphDurableOccurrenceAnchor,
@@ -71,9 +88,9 @@ import { isTargetListSpellInvocation } from "./spells-invocation-guards.ts";
 import type { SpellProcedureExecutionRegistry } from "./spell-procedure-profiles/execution-registry.ts";
 import {
   bindStoredSpellProcedureExecutionFacts,
-  spellProcedureExecution,
-  type SpellProcedureExecution,
-} from "../character-execution-admission.ts";
+  characterStoredExecutionProcedureRef,
+} from "../character-execution-queries.ts";
+import type { SpellProcedureExecution } from "../character-execution.ts";
 import { glyphStoredSpellProcedureExecution } from "../procedure-execution/glyph-stored-spell.ts";
 import type {
   BattleAreaId,
@@ -115,10 +132,9 @@ import {
   savingThrowFlatBonusProjections,
   savingThrowRollModeProjections,
 } from "./spells-damage-fills.ts";
-import { sameStringSet } from "./spells-profile-shared.ts";
+import { sameStringSet } from "./spells-execution-facts.ts";
 import { spellTargetHole, spellTargetListHole } from "./spells-holes-fills.ts";
 import { resolveSpellRelease } from "./spells-resolve.ts";
-import { characterStoredSpellProcedureRef } from "../character-execution-admission.ts";
 import { spellFillSet } from "./spells-resolve-fill-set.ts";
 import {
   resolveGreaseGroundHazardSpellAct,
@@ -153,7 +169,6 @@ import {
   effectiveD20TestNaturalOneRerollSavingThrowOutcomes,
 } from "./d20-test-natural-one-reroll.ts";
 
-const GLYPH_OF_WARDING_BASE_LEVEL = 3;
 const GLYPH_OF_WARDING_CASTING_HOURS = 1;
 const GLYPH_MAX_COVERED_DIAMETER_FEET = 10;
 const GLYPH_MOVEMENT_INVALIDATION_MORE_THAN_FEET = 10;
@@ -167,12 +182,6 @@ const GLYPH_EXPLOSIVE_RUNE_DAMAGE_TYPES = [
   "lightning",
   "thunder",
 ] as const satisfies ReadonlyArray<DamageType>;
-const GLYPH_STORED_SPELL_TARGET_SHAPES = ["singleCreature", "area"] as const;
-const GLYPH_STORED_SPELL_HOSTILE_PLACEMENT_SUBJECTS = [
-  "summoned_hostile_creatures",
-  "harmful_objects",
-  "traps",
-] as const;
 const GLYPH_SURFACE_COMMON_EVENTS = [
   "touching_glyph",
   "stepping_on_glyph",
@@ -297,34 +306,6 @@ export type GlyphExplosiveRuneReleaseProfile = {
   };
 };
 
-export type GlyphStoredSpellReleaseProfile = {
-  readonly kind: "glyphStoredSpellReleaseProfile";
-  readonly storage: {
-    readonly spellAccess: "prepared_spell";
-    readonly castAsPartOfCreatingGlyph: true;
-    readonly immediateEffect: "none";
-    readonly baseMaxStoredSpellLevel: typeof GLYPH_OF_WARDING_BASE_LEVEL;
-    readonly upcastMaxStoredSpellLevel: "same_as_cast_slot_level";
-    readonly targetShapes: typeof GLYPH_STORED_SPELL_TARGET_SHAPES;
-  };
-  readonly release: {
-    readonly when: "glyph_triggered";
-    readonly retargeting: {
-      readonly singleCreatureSpellTarget: "triggering_creature";
-      readonly areaSpellOrigin: "centered_on_triggering_creature";
-    };
-    readonly hostilePlacement: {
-      readonly appliesTo: typeof GLYPH_STORED_SPELL_HOSTILE_PLACEMENT_SUBJECTS;
-      readonly placement: "as_close_as_possible_to_triggering_creature";
-      readonly attackTarget: "triggering_creature";
-    };
-    readonly concentration: {
-      readonly ifStoredSpellRequiresConcentration: "lasts_full_duration";
-      readonly owner: "duration";
-    };
-  };
-};
-
 export type GlyphExplosiveRuneDamageRollHole =
   BattleGlyphExplosiveRuneDamageRollHole;
 
@@ -338,54 +319,6 @@ export type CompletedGlyphInscriptionWitness = {
   readonly anchor: GlyphDurableOccurrenceAnchor;
   readonly coveredAreaId: BattleAreaId;
   readonly castLocationId: BattleTablePositionId;
-};
-
-export type GlyphTriggerOccurrenceWitness = {
-  readonly kind: "tableWitnessedGlyphTriggerOccurrence";
-  readonly sourceEffectId: BattleSpellEffectOccurrenceId;
-};
-
-export type GlyphStoredSpellSingleCreatureRetargetingWitness = {
-  readonly kind: "storedSpellTargetsTriggeringCreature";
-  readonly targetId: CombatantId;
-  readonly targetSpatialFacts: readonly BattleTargetSpatialFact[];
-};
-
-export type GlyphStoredSpellAreaCenteringWitness = {
-  readonly kind: "storedSpellAreaCenteredOnTriggeringCreature";
-  readonly originAnchorId: CombatantId;
-};
-
-export type GlyphStoredSpellReleaseTargetingWitness =
-  | GlyphStoredSpellSingleCreatureRetargetingWitness
-  | GlyphStoredSpellAreaCenteringWitness;
-
-export type GlyphStoredSpellHostilePlacementWitness =
-  | {
-      readonly kind: "storedSpellHostilePlacementNotApplicable";
-    }
-  | {
-      readonly kind: "storedSpellHostilePlacement";
-      readonly subject: "traps";
-      readonly areaId: BattleAreaId;
-      readonly placement: "as_close_as_possible_to_triggering_creature";
-      readonly attackTargetId: CombatantId;
-    }
-  | {
-      readonly kind: "storedSpellHostilePlacement";
-      readonly subject: "harmful_objects";
-      readonly positionId: BattleTablePositionId;
-      readonly placement: "as_close_as_possible_to_triggering_creature";
-      readonly attackTargetId: CombatantId;
-    };
-
-export type GlyphStoredSpellReleaseWitness = {
-  readonly kind: "tableWitnessedGlyphStoredSpellRelease";
-  readonly triggerOccurrence: GlyphTriggerOccurrenceWitness;
-  readonly triggeringCreatureId: CombatantId;
-  readonly targeting: GlyphStoredSpellReleaseTargetingWitness;
-  readonly hostilePlacement: GlyphStoredSpellHostilePlacementWitness;
-  readonly fills: readonly BattleFill[];
 };
 
 export type GlyphExplosiveRuneAreaMembership =
@@ -654,8 +587,13 @@ type GlyphStoredSpellReleaseWitnessValidationFailure =
   | "hostilePlacementReachMismatch"
   | "storedSpellResolutionInvalid";
 
+type GlyphWardingAdmissionSource = {
+  readonly kind: "spell";
+  readonly mechanics: SpellMechanics;
+};
+
 export function glyphDurableOccurrenceProfileForSpell(
-  spell: SpellRecord,
+  spell: GlyphWardingAdmissionSource,
 ): GlyphDurableOccurrenceProfile | null {
   const explosiveRune = glyphExplosiveRuneReleaseProfileForSpell(spell);
   const spellGlyph = glyphStoredSpellReleaseProfileForSpell(spell);
@@ -706,7 +644,7 @@ export function glyphDurableOccurrenceProfileForSpell(
 }
 
 export function glyphExplosiveRuneReleaseProfileForSpell(
-  spell: SpellRecord,
+  spell: GlyphWardingAdmissionSource,
 ): GlyphExplosiveRuneReleaseProfile | null {
   if (
     spell.kind !== "spell" ||
@@ -744,7 +682,7 @@ export function glyphExplosiveRuneReleaseProfileForSpell(
 }
 
 export function glyphStoredSpellReleaseProfileForSpell(
-  spell: SpellRecord,
+  spell: GlyphWardingAdmissionSource,
 ): GlyphStoredSpellReleaseProfile | null {
   if (
     spell.kind !== "spell" ||
@@ -783,9 +721,12 @@ export function glyphStoredSpellReleaseProfileForSpell(
   };
 }
 
-export function glyphDurableOccurrenceEffectFromCompletedInscription(input: {
+export function glyphDurableOccurrenceEffectFromCompletedInscriptionWithProjection(input: {
   readonly profile: GlyphDurableOccurrenceProfile;
   readonly witness: CompletedGlyphInscriptionWitness;
+  readonly projectStoredInvocation: (
+    invocation: GlyphStoredSpellInvocationCandidate,
+  ) => SpellProcedureExecution | undefined;
 }): GlyphDurableOccurrenceEffectFromCompletedInscriptionResult {
   if (
     Number(input.witness.sourceSpellLevel) <
@@ -802,6 +743,7 @@ export function glyphDurableOccurrenceEffectFromCompletedInscription(input: {
       profile: input.profile,
       release: input.witness.release,
       sourceSpellLevel: input.witness.sourceSpellLevel,
+      projectStoredInvocation: input.projectStoredInvocation,
     });
   if (releaseValidation.tag !== "valid") {
     return releaseValidation;
@@ -1348,6 +1290,9 @@ function glyphDurableOccurrenceReleaseFromCompletedInscription(input: {
   readonly profile: GlyphDurableOccurrenceProfile;
   readonly release: GlyphDurableOccurrenceCompletedInscriptionRelease;
   readonly sourceSpellLevel: BattleSpellEffectLevel;
+  readonly projectStoredInvocation: (
+    invocation: GlyphStoredSpellInvocationCandidate,
+  ) => SpellProcedureExecution | undefined;
 }): GlyphDurableOccurrenceReleaseValidationResult {
   if (input.release.kind === "explosiveRune") {
     return glyphExplosiveRuneDamageTypeSupported(
@@ -1368,9 +1313,11 @@ function glyphDurableOccurrenceReleaseFromCompletedInscription(input: {
     sourceSpellLevel: input.sourceSpellLevel,
   });
   if (storedSpell.tag !== "valid") return storedSpell;
-  const storedProcedure = glyphStoredSpellProcedureExecution(
-    spellProcedureExecution(storedSpell.storedInvocation),
-  );
+  const projected = input.projectStoredInvocation(storedSpell.storedInvocation);
+  const storedProcedure =
+    projected === undefined
+      ? null
+      : glyphStoredSpellProcedureExecution(projected);
   return storedProcedure === null
     ? {
         tag: "storedSpellProcedureUnsupported",
@@ -2146,7 +2093,7 @@ function glyphStoredSpellProcedureRef(
   }
   const source = state.combatants.get(effect.sourceCombatantId);
   return source?.origin.kind === "character"
-    ? characterStoredSpellProcedureRef(
+    ? characterStoredExecutionProcedureRef(
         source.origin.execution,
         effect.release.storedProcedure,
       )

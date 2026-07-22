@@ -8,20 +8,17 @@ import type {
   StatBlockRecord,
 } from "@dnd/surface/surface/types";
 import { CONDITIONS } from "@dnd/surface/surface/types";
-import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
-import type {
-  CreatureAttackRollMechanics,
-  StatBlockTraitAttackRollMode,
-  SupportedCreatureAttackRollMechanics,
-  SupportedCreatureNamedAttackRoll,
-} from "./battle-action-options.ts";
-import type { BattleDruidWildShapeKnownFormSupportProfile } from "./unit-feature-support.ts";
+import type { StatBlockTraitAttackRollMode } from "./battle-action-options.ts";
+import type { BattleDruidWildShapeKnownFormSupportProfile } from "./druid-wild-shape-support-execution.ts";
 import { statBlockIsWildShapeKnownFormEligible } from "./druid-wild-shape-form-eligibility.ts";
-import { supportedStatBlockAttackDamage } from "./statblock-attack-damage-support.ts";
-import {
-  supportedStatBlockAttackHitConditionRiderEffect,
-  supportedStatBlockAttackHitConditionRiders,
-} from "./statblock-attack-hit-condition-support.ts";
+import { supportedStatBlockAttackHitConditionRiderEffect } from "./statblock-attack-hit-condition-support.ts";
+export {
+  creatureActionSectionIsSupported,
+  creatureAttackRollMechanicsAreSupported,
+  creatureNamedAttackRollIsSupported,
+  statBlockActionSurfaceIsSupported,
+  supportedStatBlockTraitAttackRollModes,
+} from "./statblock-action-execution-support.ts";
 
 const WILD_SHAPE_FORM_EXECUTABLE_ACTION_SURFACE_CATEGORIES = [
   "simpleLiteralAttackSingleDamage",
@@ -167,74 +164,6 @@ type WildShapeFormActionSurfaceInventoryEntryInput = {
   readonly category: WildShapeFormActionSurfaceCategory;
   readonly exampleStatBlockIds: readonly StatBlockRecord["id"][];
 };
-
-export function statBlockActionSurfaceIsSupported(
-  statBlock: StatBlockRecord["statBlock"],
-): boolean {
-  return (
-    creatureActionSectionIsSupported(statBlock.actions) &&
-    creatureTraitsAreSupported(statBlock.traits) &&
-    statBlock.bonusActions === undefined &&
-    statBlock.reactions === undefined &&
-    statBlock.legendaryActions === undefined
-  );
-}
-
-export function creatureActionSectionIsSupported(
-  actions: CreatureActions | undefined,
-): boolean {
-  return (
-    actions === undefined ||
-    (actions.multiattacks === undefined &&
-      actions.saves === undefined &&
-      actions.supports === undefined &&
-      actions.actionOptions === undefined &&
-      actions.specials === undefined &&
-      (actions.attacks ?? []).every(creatureNamedAttackRollIsSupported))
-  );
-}
-
-export function creatureNamedAttackRollIsSupported(
-  attack: CreatureNamedAttackRoll,
-): attack is SupportedCreatureNamedAttackRoll {
-  return (
-    attack.description === undefined &&
-    creatureAttackRollMechanicsAreSupported(attack)
-  );
-}
-
-export function creatureAttackRollMechanicsAreSupported(
-  attack: CreatureAttackRollMechanics,
-): attack is SupportedCreatureAttackRollMechanics {
-  return (
-    attack.multiattackCount === undefined &&
-    attack.attackBonus.kind === "literal" &&
-    creatureNamedAttackDamageIsSupported(attack) &&
-    creatureNamedAttackHitConditionRidersAreSupported(attack) &&
-    creatureNamedAttackTargetIsSupported(attack)
-  );
-}
-
-function creatureNamedAttackDamageIsSupported(
-  attack: CreatureAttackRollMechanics,
-): boolean {
-  return supportedStatBlockAttackDamage(attack) !== null;
-}
-
-function creatureNamedAttackHitConditionRidersAreSupported(
-  attack: CreatureAttackRollMechanics,
-): boolean {
-  return supportedStatBlockAttackHitConditionRiders(attack) !== null;
-}
-
-function creatureNamedAttackTargetIsSupported(
-  attack: CreatureAttackRollMechanics,
-): boolean {
-  return (
-    (attack.attackType === "melee" && attack.reachFeet !== undefined) ||
-    (attack.attackType === "ranged" && attack.rangeFeet !== undefined)
-  );
-}
 
 export function wildShapeFormActionSurfaceInventory(input: {
   readonly forms: readonly StatBlockRecord[];
@@ -464,30 +393,6 @@ function mentionsAttackRollAdvantage(description: string): boolean {
     lowerDescription.includes("advantage") &&
     lowerDescription.includes("attack roll")
   );
-}
-
-function creatureTraitsAreSupported(
-  traits: StatBlockRecord["statBlock"]["traits"],
-): boolean {
-  return (
-    traits === undefined ||
-    traits.every(
-      (trait) =>
-        statBlockTraitAttackRollMode(trait) !== null ||
-        !mentionsAttackRollAdvantage(trait.description),
-    )
-  );
-}
-
-export function supportedStatBlockTraitAttackRollModes(
-  traits: StatBlockRecord["statBlock"]["traits"],
-): ReadonlyNonEmptyArray<StatBlockTraitAttackRollMode> | undefined {
-  const modes = (traits ?? []).flatMap((trait) => {
-    const mode = statBlockTraitAttackRollMode(trait);
-    return mode === null ? [] : [mode];
-  });
-  const [firstMode, ...restModes] = modes;
-  return firstMode === undefined ? undefined : [firstMode, ...restModes];
 }
 
 function statBlockTraitAttackRollMode(

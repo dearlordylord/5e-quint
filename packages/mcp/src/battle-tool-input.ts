@@ -9,7 +9,10 @@ import {
   type CombatantId,
 } from "@dnd/battle-runtime";
 import { movementFeet } from "@dnd/shared/types";
-import type { StatBlockId } from "@dnd/surface/surface/stat-block-catalog";
+import {
+  StatBlockId,
+  type StatBlockId as StatBlockIdType,
+} from "@dnd/shared/game-facts";
 import { Either, Match, Schema } from "effect";
 
 import {
@@ -27,7 +30,7 @@ const CombatantIdTextSchema = Schema.NonEmptyTrimmedString.annotations({
   description: "Combatant id from the current battle snapshot.",
 });
 const SelectStatBlockArgsSchema = Schema.Struct({
-  statBlockId: Schema.NonEmptyTrimmedString.annotations({
+  statBlockId: StatBlockId.annotations({
     description: "SRD Stat Block id from list_stat_blocks.",
   }),
 });
@@ -105,7 +108,7 @@ export const BATTLE_TOOL_NAMES = [
 export type BattleToolName = (typeof BATTLE_TOOL_NAMES)[number];
 
 type SelectStatBlockToolInput = {
-  readonly statBlockId: StatBlockId;
+  readonly statBlockId: StatBlockIdType;
 };
 
 type BattleActorToolInput = {

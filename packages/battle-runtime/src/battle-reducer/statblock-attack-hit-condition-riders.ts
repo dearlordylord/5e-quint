@@ -12,7 +12,7 @@ import {
   creatureSizeIsAtMost,
   supportedStatBlockAttackHitConditionRiders,
 } from "../statblock-attack-hit-condition-support.ts";
-import { battleCreatureStateWithKnockOutPreservedConditions } from "./creature-state.ts";
+import { battleCreatureStateWithKnockOutPreservedConditions } from "./creature-state-execution.ts";
 import { combatantEffectiveSize } from "./druid-wild-shape.ts";
 import { conditionApplicationPreventedByConditionImmunity } from "./spell-condition-effects-helpers.ts";
 
@@ -77,8 +77,7 @@ function statBlockAttackHitConditionPrevented(
   return (
     conditionApplicationPreventedByConditionImmunity(target, condition) ||
     (target.origin.kind === "statBlock" &&
-      target.origin.statBlock.statBlock.immunities?.conditions?.includes(
-        condition,
-      ) === true)
+      target.origin.mechanics.immunities.conditions.includes(condition) ===
+        true)
   );
 }

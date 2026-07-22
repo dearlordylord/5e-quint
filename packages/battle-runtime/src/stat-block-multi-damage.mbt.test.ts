@@ -1,3 +1,4 @@
+import { statBlockId as parseSharedStatBlockId } from "@dnd/shared/game-facts";
 import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt stat-block.attack-control
 // KERNEL-COVERAGE: parity-witness BATTLE.STAT_BLOCK.ATTACK_CONTROL
@@ -475,7 +476,7 @@ function poisonImmuneTargetStatBlock(): StatBlockRecord {
 
 function baseStatBlockRecord(id: string): StatBlockRecord {
   return {
-    id,
+    id: parseSharedStatBlockId(id),
     kind: "statBlock",
     name: id,
     challengeRating: 0.25,

@@ -5,6 +5,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV91B wizard_arcane_recovery
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection AT-L1-04 fighter_weapon_mastery barbarian_weapon_mastery paladin_weapon_mastery ranger_weapon_mastery rogue_weapon_mastery
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-AUTHOR-WARLOCK-MAGICAL-CUNNING warlock_magical_cunning
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { Option } from "effect";
 import { describe, expect, test } from "vitest";
 import {
@@ -16,6 +17,7 @@ import {
   DieRollResult,
   Hp,
   abilityScoreAssignment,
+  authoredNonEmptyUnitIds,
   armorClassBuild,
   build,
   characterSheetCurrentHp,
@@ -219,7 +221,10 @@ describe("Character Sheet runtime / rests", () => {
         hitPointMaximumReduction: Hp(4),
         unitLibrary,
         spentHitDice: [
-          { classUnitId: "class_wizard", spent: resourceCount(1) },
+          {
+            classUnitId: authoredUnitId("class_wizard"),
+            spent: resourceCount(1),
+          },
         ],
         spellSlotExpenditures: [
           { spellLevel: spellSlotLevel(1), expended: resourceCount(2) },
@@ -259,7 +264,7 @@ describe("Character Sheet runtime / rests", () => {
   test("Long Rest grants Heroic Inspiration from retained rest-triggered feature facts", () => {
     const humanBuild: CharacterBuild = {
       ...armorClassBuild({ startingClass: "class_fighter" }),
-      species: "species_human",
+      species: authoredUnitId("species_human"),
       speciesSize: "medium",
     };
 
@@ -315,7 +320,7 @@ describe("Character Sheet runtime / rests", () => {
   test("Long Rest reports unknown retained Heroic Inspiration Unit refs", () => {
     const humanBuild: CharacterBuild = {
       ...armorClassBuild({ startingClass: "class_fighter" }),
-      species: "species_human",
+      species: authoredUnitId("species_human"),
       speciesSize: "medium",
     };
     const sheet = requireRight(
@@ -349,7 +354,7 @@ describe("Character Sheet runtime / rests", () => {
           "weapon_spear",
         ],
       }),
-      species: "species_human",
+      species: authoredUnitId("species_human"),
       speciesSize: "medium",
     };
     const sheet = requireRight(
@@ -371,11 +376,11 @@ describe("Character Sheet runtime / rests", () => {
       unitLibrary: missingResourcefulUnitLibrary,
       weaponMasteryReselections: [
         {
-          featureUnitId: "fighter_weapon_mastery",
+          featureUnitId: authoredUnitId("fighter_weapon_mastery"),
           selectedWeaponUnitIds: [
-            "weapon_longsword",
-            "weapon_dagger",
-            "weapon_shortsword",
+            authoredUnitId("weapon_longsword"),
+            authoredUnitId("weapon_dagger"),
+            authoredUnitId("weapon_shortsword"),
           ],
         },
       ],
@@ -440,8 +445,8 @@ describe("Character Sheet runtime / rests", () => {
         }),
       );
       const reselection = {
-        featureUnitId: testCase.featureUnitId,
-        selectedWeaponUnitIds: testCase.after,
+        featureUnitId: authoredUnitId(testCase.featureUnitId),
+        selectedWeaponUnitIds: authoredNonEmptyUnitIds(testCase.after),
       } satisfies CharacterSheetWeaponMasteryReselection;
 
       const rested = requireRight(
@@ -486,11 +491,11 @@ describe("Character Sheet runtime / rests", () => {
       unitLibrary,
       weaponMasteryReselections: [
         {
-          featureUnitId: "fighter_weapon_mastery",
+          featureUnitId: authoredUnitId("fighter_weapon_mastery"),
           selectedWeaponUnitIds: [
-            "weapon_longsword",
-            "weapon_shortsword",
-            "weapon_flail",
+            authoredUnitId("weapon_longsword"),
+            authoredUnitId("weapon_shortsword"),
+            authoredUnitId("weapon_flail"),
           ],
         },
       ],
@@ -532,12 +537,12 @@ describe("Character Sheet runtime / rests", () => {
         unitLibrary,
         weaponMasteryReselections: [
           {
-            featureUnitId: "fighter_weapon_mastery",
+            featureUnitId: authoredUnitId("fighter_weapon_mastery"),
             selectedWeaponUnitIds: [
-              "weapon_longsword",
-              "weapon_dagger",
-              "weapon_spear",
-              "weapon_flail",
+              authoredUnitId("weapon_longsword"),
+              authoredUnitId("weapon_dagger"),
+              authoredUnitId("weapon_spear"),
+              authoredUnitId("weapon_flail"),
             ],
           },
         ],
@@ -598,7 +603,12 @@ describe("Character Sheet runtime / rests", () => {
       completeShortRest({
         sheet,
         unitLibrary,
-        spendHitDice: [{ classUnitId: "class_wizard", roll: DieRollResult(4) }],
+        spendHitDice: [
+          {
+            classUnitId: authoredUnitId("class_wizard"),
+            roll: DieRollResult(4),
+          },
+        ],
       }),
     );
 
@@ -668,7 +678,12 @@ describe("Character Sheet runtime / rests", () => {
         ),
         interruption: "takeDamage",
         interruptionsIncludingThisOne: resourceCount(1),
-        spendHitDice: [{ classUnitId: "class_wizard", roll: DieRollResult(4) }],
+        spendHitDice: [
+          {
+            classUnitId: authoredUnitId("class_wizard"),
+            roll: DieRollResult(4),
+          },
+        ],
       }),
     ).toMatchObject({
       _tag: "Left",
@@ -727,7 +742,12 @@ describe("Character Sheet runtime / rests", () => {
           durationTicks: CHARACTER_SHEET_SHORT_REST_TICKS,
         },
         interruptionsIncludingThisOne: resourceCount(1),
-        spendHitDice: [{ classUnitId: "class_wizard", roll: DieRollResult(4) }],
+        spendHitDice: [
+          {
+            classUnitId: authoredUnitId("class_wizard"),
+            roll: DieRollResult(4),
+          },
+        ],
       }),
     );
 
@@ -790,8 +810,14 @@ describe("Character Sheet runtime / rests", () => {
         sheet,
         unitLibrary,
         spendHitDice: [
-          { classUnitId: "class_wizard", roll: DieRollResult(1) },
-          { classUnitId: "class_wizard", roll: DieRollResult(1) },
+          {
+            classUnitId: authoredUnitId("class_wizard"),
+            roll: DieRollResult(1),
+          },
+          {
+            classUnitId: authoredUnitId("class_wizard"),
+            roll: DieRollResult(1),
+          },
         ],
       }),
     );
@@ -815,7 +841,10 @@ describe("Character Sheet runtime / rests", () => {
         tempHp: Hp(0),
         unitLibrary,
         spentHitDice: [
-          { classUnitId: "class_wizard", spent: resourceCount(1) },
+          {
+            classUnitId: authoredUnitId("class_wizard"),
+            spent: resourceCount(1),
+          },
         ],
       }),
     );
@@ -824,7 +853,12 @@ describe("Character Sheet runtime / rests", () => {
       completeShortRest({
         sheet,
         unitLibrary,
-        spendHitDice: [{ classUnitId: "class_wizard", roll: DieRollResult(4) }],
+        spendHitDice: [
+          {
+            classUnitId: authoredUnitId("class_wizard"),
+            roll: DieRollResult(4),
+          },
+        ],
       }),
     ).toMatchObject({
       _tag: "Left",
@@ -886,16 +920,16 @@ describe("Character Sheet runtime / rests", () => {
   test("Arcane Recovery route wrapper reports Feature Resource owner for use lockout rejection", () => {
     const sheet = requireRight(
       rebuildCharacterSheetFixture({
-        characterId: characterSheetId("character:arcane-recovery-route-lockout"),
+        characterId: characterSheetId(
+          "character:arcane-recovery-route-lockout",
+        ),
         build: wizardBuild({ wizardAdvancements: 3 }),
         tempHp: Hp(0),
         unitLibrary,
         spellSlotExpenditures: [
           { spellLevel: spellSlotLevel(1), expended: resourceCount(1) },
         ],
-        restFeatureUses: [
-          { tag: "arcaneRecovery", usedSinceLongRest: true },
-        ],
+        restFeatureUses: [{ tag: "arcaneRecovery", usedSinceLongRest: true }],
       }),
     );
 

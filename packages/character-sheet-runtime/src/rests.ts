@@ -9,6 +9,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.sorcerous-restoration-sorcery-point-recovery
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.passive-defense-projection
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.ranger-tireless
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import {
   characterBuildFeatureUnitIds,
   classLevelForUnit,
@@ -246,7 +247,7 @@ function shortRestExhaustionLevelAfterTireless(input: {
   return characterBuildFeatureUnitIds(
     input.sheet.build,
     input.unitLibrary,
-  ).includes(RANGER_TIRELESS_UNIT_ID)
+  ).includes(authoredUnitId(RANGER_TIRELESS_UNIT_ID))
     ? decreaseExhaustionLevel(input.sheet.exhaustionLevel)
     : input.sheet.exhaustionLevel;
 }
@@ -551,7 +552,10 @@ function characterSheetHasLongRestHeroicInspirationGrant(input: {
     return Either.right(false);
   }
   for (const traitUnitId of Object.values(speciesFacts.value.traits)) {
-    const trait = getRequiredUnit(input.unitLibrary, traitUnitId);
+    const trait = getRequiredUnit(
+      input.unitLibrary,
+      authoredUnitId(traitUnitId),
+    );
     if (Either.isLeft(trait)) {
       return Either.left(trait.left);
     }

@@ -70,6 +70,16 @@ describe("SRD Surface publication schema", () => {
     expect(Either.isLeft(recordResult)).toBe(true);
   });
 
+  test("rejects empty or whitespace-only Unit ids", () => {
+    const firstUnit = srdSurface.units[0];
+    expect(
+      Either.isLeft(decodeUnitRecordEither({ ...firstUnit, id: "" })),
+    ).toBe(true);
+    expect(
+      Either.isLeft(decodeUnitRecordEither({ ...firstUnit, id: "   " })),
+    ).toBe(true);
+  });
+
   test("rejects empty catalog collections", () => {
     const result = decodeSrdSurfaceEither({
       ...srdSurface,

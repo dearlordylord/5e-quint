@@ -2,6 +2,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L10-SHEET-RANGER-TIRELESS ranger_tireless
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L10-SHEET-RANGER-TIRELESS ranger_tireless
 // UNIT-IDENTITY-REPLAY: L10-SHEET-RANGER-TIRELESS ranger_tireless doUseRangerTireless
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, it, test } from "vitest";
 
 import {
@@ -77,9 +78,7 @@ describe("Character Sheet runtime / Ranger Tireless", () => {
         new Set<RangerTirelessSelectedIdentityDriverAction>();
 
       for (const sequence of replay.sequences) {
-        let projection:
-          | RangerTirelessSelectedIdentityProjection
-          | undefined;
+        let projection: RangerTirelessSelectedIdentityProjection | undefined;
 
         for (const actionName of sequence.actions) {
           replayedActions.add(actionName);
@@ -119,7 +118,7 @@ describe("Character Sheet runtime / Ranger Tireless", () => {
     expect(used.hitPoints.tempHp).toBe(Hp(5));
     expect(used.resourceExpenditures).toContainEqual({
       tag: "useCountResource",
-      unitId: "ranger_tireless",
+      unitId: authoredUnitId("ranger_tireless"),
       expended: resourceCount(1),
     });
 
@@ -149,7 +148,7 @@ describe("Character Sheet runtime / Ranger Tireless", () => {
         resourceExpenditures: [
           {
             tag: "useCountResource",
-            unitId: "ranger_tireless",
+            unitId: authoredUnitId("ranger_tireless"),
             expended: resourceCount(3),
           },
         ],
@@ -166,7 +165,7 @@ describe("Character Sheet runtime / Ranger Tireless", () => {
     expect(shortRested.exhaustionLevel).toBe(1);
     expect(shortRested.resourceExpenditures).toContainEqual({
       tag: "useCountResource",
-      unitId: "ranger_tireless",
+      unitId: authoredUnitId("ranger_tireless"),
       expended: resourceCount(3),
     });
 
@@ -182,7 +181,7 @@ describe("Character Sheet runtime / Ranger Tireless", () => {
     expect(longRested.resourceExpenditures).not.toContainEqual(
       expect.objectContaining({
         tag: "useCountResource",
-        unitId: "ranger_tireless",
+        unitId: authoredUnitId("ranger_tireless"),
       }),
     );
   });
@@ -209,7 +208,9 @@ const rangerTirelessSelectedIdentityActions = {
         tirelessRoll: DieRollResult(1),
       }),
     );
-    const rested = requireRight(completeShortRest({ sheet: used, unitLibrary }));
+    const rested = requireRight(
+      completeShortRest({ sheet: used, unitLibrary }),
+    );
     return {
       unitId: "ranger_tireless",
       tempHp: Number(used.hitPoints.tempHp),

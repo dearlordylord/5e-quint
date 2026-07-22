@@ -1,3 +1,4 @@
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
@@ -95,10 +96,10 @@ describe("Wizard Scholar", () => {
   test("finalizes one listed owned skill as Scholar Expertise", () => {
     const wizard = completeSupportedProgressionDraft({
       draftId: "draft:srd-level-2-wizard-scholar",
-      progression: testProgression("class_wizard", 2),
+      progression: testProgression(authoredUnitId("class_wizard"), 2),
       preferredOptionIdsBySource: {
         [testUnitChoiceSourceKey(
-          "class_wizard",
+          authoredUnitId("class_wizard"),
           CLASS_SKILL_PROFICIENCY_CHOICE_KEY,
         )]: [
           creationChoiceOptionId("insight"),
@@ -108,7 +109,7 @@ describe("Wizard Scholar", () => {
     });
     const selectedScholarExpertise = selectedChoiceOptionIds(
       wizard,
-      "wizard_scholar",
+      authoredUnitId("wizard_scholar"),
       CLASS_FEATURE_PROFICIENCY_CHOICE_KEY,
     );
 
@@ -146,10 +147,10 @@ describe("Wizard Scholar", () => {
   test("rejects Scholar Expertise outside the listed skills", () => {
     const wizard = completeSupportedProgressionDraft({
       draftId: "draft:srd-level-2-wizard-invalid-scholar",
-      progression: testProgression("class_wizard", 2),
+      progression: testProgression(authoredUnitId("class_wizard"), 2),
       preferredOptionIdsBySource: {
         [testUnitChoiceSourceKey(
-          "class_wizard",
+          authoredUnitId("class_wizard"),
           CLASS_SKILL_PROFICIENCY_CHOICE_KEY,
         )]: [
           creationChoiceOptionId("insight"),
@@ -189,17 +190,17 @@ describe("Wizard Scholar", () => {
     const wizard = completeSupportedProgressionDraft({
       unitLibrary: expertWizardUnitLibrary,
       draftId: "draft:srd-level-2-wizard-duplicate-scholar-expertise",
-      progression: testProgression("class_wizard", 2),
+      progression: testProgression(authoredUnitId("class_wizard"), 2),
       preferredOptionIdsBySource: {
         [testUnitChoiceSourceKey(
-          "class_wizard",
+          authoredUnitId("class_wizard"),
           CLASS_SKILL_PROFICIENCY_CHOICE_KEY,
         )]: [
           creationChoiceOptionId("arcana"),
           creationChoiceOptionId("history"),
         ],
         [testUnitChoiceSourceKey(
-          "wizard_scholar",
+          authoredUnitId("wizard_scholar"),
           CLASS_FEATURE_PROFICIENCY_CHOICE_KEY,
         )]: [creationChoiceOptionId("history")],
       },
@@ -265,7 +266,7 @@ describe("Wizard Scholar", () => {
   });
 
   test("does not reuse lower Wizard spellcasting progression rows", () => {
-    const classFacts = readableClassFacts("class_wizard");
+    const classFacts = readableClassFacts(authoredUnitId("class_wizard"));
     if (
       !("spellcasting" in classFacts) ||
       classFacts.spellcasting.kind !== "wizard_spellcasting_creation"
@@ -290,40 +291,43 @@ describe("Wizard Scholar", () => {
   test("discovers and finalizes Evocation Savant spellbook choices", () => {
     const wizard = completeSupportedProgressionDraft({
       draftId: "draft:srd-level-3-wizard-evocation-savant",
-      progression: testProgression("class_wizard", 3),
+      progression: testProgression(authoredUnitId("class_wizard"), 3),
       preferredOptionIdsBySource: {
         [testUnitChoiceSourceKey(
-          "class_wizard",
+          authoredUnitId("class_wizard"),
           CLASS_SKILL_PROFICIENCY_CHOICE_KEY,
         )]: [
           creationChoiceOptionId("insight"),
           creationChoiceOptionId("arcana"),
         ],
-        [testUnitChoiceSourceKey("class_wizard", CLASS_SUBCLASS_CHOICE_KEY)]: [
-          creationChoiceOptionId("subclass_wizard_evoker"),
-        ],
-        [testUnitChoiceSourceKey("class_wizard", WIZARD_SPELLBOOK_CHOICE_KEY)]:
-          [
-            creationChoiceOptionId("detect_magic"),
-            creationChoiceOptionId("feather_fall"),
-            creationChoiceOptionId("mage_armor"),
-            creationChoiceOptionId("magic_missile"),
-            creationChoiceOptionId("shield"),
-            creationChoiceOptionId("sleep"),
-            creationChoiceOptionId("thunderwave"),
-            creationChoiceOptionId("chromatic_orb"),
-            creationChoiceOptionId("mirror_image"),
-            creationChoiceOptionId("misty_step"),
-          ],
         [testUnitChoiceSourceKey(
-          "wizard_evocation_savant",
+          authoredUnitId("class_wizard"),
+          CLASS_SUBCLASS_CHOICE_KEY,
+        )]: [creationChoiceOptionId("subclass_wizard_evoker")],
+        [testUnitChoiceSourceKey(
+          authoredUnitId("class_wizard"),
+          WIZARD_SPELLBOOK_CHOICE_KEY,
+        )]: [
+          creationChoiceOptionId("detect_magic"),
+          creationChoiceOptionId("feather_fall"),
+          creationChoiceOptionId("mage_armor"),
+          creationChoiceOptionId("magic_missile"),
+          creationChoiceOptionId("shield"),
+          creationChoiceOptionId("sleep"),
+          creationChoiceOptionId("thunderwave"),
+          creationChoiceOptionId("chromatic_orb"),
+          creationChoiceOptionId("mirror_image"),
+          creationChoiceOptionId("misty_step"),
+        ],
+        [testUnitChoiceSourceKey(
+          authoredUnitId("wizard_evocation_savant"),
           WIZARD_SPELLBOOK_CHOICE_KEY,
         )]: [
           creationChoiceOptionId("continual_flame"),
           creationChoiceOptionId("shatter"),
         ],
         [testUnitChoiceSourceKey(
-          "class_wizard",
+          authoredUnitId("class_wizard"),
           WIZARD_PREPARED_SPELL_CHOICE_KEY,
         )]: [
           creationChoiceOptionId("magic_missile"),
@@ -339,7 +343,7 @@ describe("Wizard Scholar", () => {
     expect(
       selectedChoiceOptionIds(
         wizard,
-        "wizard_evocation_savant",
+        authoredUnitId("wizard_evocation_savant"),
         WIZARD_SPELLBOOK_CHOICE_KEY,
       ),
     ).toEqual([
@@ -396,17 +400,17 @@ describe("Wizard Scholar", () => {
   test("rejects duplicate Evocation Savant spellbook selections", () => {
     const wizard = completeSupportedProgressionDraft({
       draftId: "draft:srd-level-3-wizard-duplicate-evocation-savant",
-      progression: testProgression("class_wizard", 3),
+      progression: testProgression(authoredUnitId("class_wizard"), 3),
       preferredOptionIdsBySource: {
         [testUnitChoiceSourceKey(
-          "class_wizard",
+          authoredUnitId("class_wizard"),
           CLASS_SKILL_PROFICIENCY_CHOICE_KEY,
         )]: [
           creationChoiceOptionId("insight"),
           creationChoiceOptionId("arcana"),
         ],
         [testUnitChoiceSourceKey(
-          "class_wizard",
+          authoredUnitId("class_wizard"),
           WIZARD_SPELLBOOK_CHOICE_KEY,
         )]: [
           creationChoiceOptionId("detect_magic"),
@@ -421,7 +425,7 @@ describe("Wizard Scholar", () => {
           creationChoiceOptionId("misty_step"),
         ],
         [testUnitChoiceSourceKey(
-          "wizard_evocation_savant",
+          authoredUnitId("wizard_evocation_savant"),
           WIZARD_SPELLBOOK_CHOICE_KEY,
         )]: [
           creationChoiceOptionId("continual_flame"),
@@ -506,12 +510,12 @@ function projectWizardEvocationSavantLevel3Creation(): WizardEvocationSavantGran
   );
   const wizard = completeSupportedProgressionDraft({
     draftId: "draft:srd-level-3-wizard-evocation-savant-qnt-replay",
-    progression: testProgression("class_wizard", 3),
+    progression: testProgression(authoredUnitId("class_wizard"), 3),
     preferredOptionIdsBySource,
   });
   const selectedSpellbookSpells = selectedChoiceOptionIds(
     wizard,
-    WIZARD_EVOCATION_SAVANT_UNIT_ID,
+    authoredUnitId(WIZARD_EVOCATION_SAVANT_UNIT_ID),
     WIZARD_SPELLBOOK_CHOICE_KEY,
   );
   const wizardBuild = finalizeCharacterDraft({ draft: wizard, unitLibrary });
@@ -546,7 +550,7 @@ function firstLaterWizardSlotAccessAfterLevel(level: number): {
   readonly characterLevel: number;
   readonly newSlotLevel: number;
 } {
-  const classFacts = readableClassFacts("class_wizard");
+  const classFacts = readableClassFacts(authoredUnitId("class_wizard"));
   if (classFacts.spellcasting?.kind !== "wizard_spellcasting_creation") {
     throw new Error("Expected Wizard spellcasting creation facts.");
   }
@@ -602,7 +606,7 @@ function evocationSavantCreationHoleChoiceCount(
       "draft:srd-level-3-wizard-evocation-savant-hole-count",
     ),
   });
-  const progression = testProgression("class_wizard", 3);
+  const progression = testProgression(authoredUnitId("class_wizard"), 3);
   const progressionOption = progressionOptionId(progression);
 
   for (let pass = 0; pass < 8; pass += 1) {
@@ -648,13 +652,17 @@ function evocationSavantCreationHoleChoiceCount(
 function evocationSavantPreferredOptions(): PreferredSupportedFillOptionIdsBySource {
   return {
     [testUnitChoiceSourceKey(
-      "class_wizard",
+      authoredUnitId("class_wizard"),
       CLASS_SKILL_PROFICIENCY_CHOICE_KEY,
     )]: [creationChoiceOptionId("insight"), creationChoiceOptionId("arcana")],
-    [testUnitChoiceSourceKey("class_wizard", CLASS_SUBCLASS_CHOICE_KEY)]: [
-      creationChoiceOptionId("subclass_wizard_evoker"),
-    ],
-    [testUnitChoiceSourceKey("class_wizard", WIZARD_SPELLBOOK_CHOICE_KEY)]: [
+    [testUnitChoiceSourceKey(
+      authoredUnitId("class_wizard"),
+      CLASS_SUBCLASS_CHOICE_KEY,
+    )]: [creationChoiceOptionId("subclass_wizard_evoker")],
+    [testUnitChoiceSourceKey(
+      authoredUnitId("class_wizard"),
+      WIZARD_SPELLBOOK_CHOICE_KEY,
+    )]: [
       creationChoiceOptionId("detect_magic"),
       creationChoiceOptionId("feather_fall"),
       creationChoiceOptionId("mage_armor"),
@@ -667,21 +675,23 @@ function evocationSavantPreferredOptions(): PreferredSupportedFillOptionIdsBySou
       creationChoiceOptionId("misty_step"),
     ],
     [testUnitChoiceSourceKey(
-      WIZARD_EVOCATION_SAVANT_UNIT_ID,
+      authoredUnitId(WIZARD_EVOCATION_SAVANT_UNIT_ID),
       WIZARD_SPELLBOOK_CHOICE_KEY,
     )]: [
       creationChoiceOptionId("continual_flame"),
       creationChoiceOptionId("shatter"),
     ],
-    [testUnitChoiceSourceKey("class_wizard", WIZARD_PREPARED_SPELL_CHOICE_KEY)]:
-      [
-        creationChoiceOptionId("magic_missile"),
-        creationChoiceOptionId("shield"),
-        creationChoiceOptionId("thunderwave"),
-        creationChoiceOptionId("chromatic_orb"),
-        creationChoiceOptionId("continual_flame"),
-        creationChoiceOptionId("shatter"),
-      ],
+    [testUnitChoiceSourceKey(
+      authoredUnitId("class_wizard"),
+      WIZARD_PREPARED_SPELL_CHOICE_KEY,
+    )]: [
+      creationChoiceOptionId("magic_missile"),
+      creationChoiceOptionId("shield"),
+      creationChoiceOptionId("thunderwave"),
+      creationChoiceOptionId("chromatic_orb"),
+      creationChoiceOptionId("continual_flame"),
+      creationChoiceOptionId("shatter"),
+    ],
   };
 }
 
@@ -691,7 +701,9 @@ function normalizeWizardEvocationSavantGrantQuintState(
   const state = recordField(quintStateRecord(raw), "qState");
   return {
     outcome: outcomeField(state["outcome"]),
-    featureUnitId: stringField(state["featureUnitId"], "qState.featureUnitId"),
+    featureUnitId: authoredUnitId(
+      stringField(state["featureUnitId"], "qState.featureUnitId"),
+    ),
     acquisitionChoiceCount: numberFromQuintInt(
       state["acquisitionChoiceCount"],
       "qState.acquisitionChoiceCount",
@@ -1022,7 +1034,7 @@ function unitCatalogWithWizardPriorExpertise(): UnitCatalog {
       featureGrants: [
         {
           level: 1,
-          unitId: "rogue_expertise",
+          unitId: authoredUnitId("rogue_expertise"),
         },
         ...wizard.featureGrants,
       ],
@@ -1042,7 +1054,7 @@ function unitCatalogWithReplacementUnits(
 
   return {
     getUnit: (id) => {
-      const replacement = replacementById.get(id);
+      const replacement = replacementById.get(authoredUnitId(id));
       return replacement === undefined
         ? unitLibrary.getUnit(id)
         : Option.some(replacement);
@@ -1053,7 +1065,8 @@ function unitCatalogWithReplacementUnits(
         .map((unit) => replacementById.get(unit.id) ?? unit),
       ...replacements.filter((unit) => !originalUnitIds.has(unit.id)),
     ],
-    requireUnit: (id) => replacementById.get(id) ?? unitLibrary.requireUnit(id),
+    requireUnit: (id) =>
+      replacementById.get(authoredUnitId(id)) ?? unitLibrary.requireUnit(id),
   };
 }
 

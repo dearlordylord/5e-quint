@@ -1,3 +1,4 @@
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, test } from "vitest";
 import { Either } from "effect";
 import {
@@ -56,10 +57,10 @@ describe("Bard Expertise", () => {
   test("finalizes two owned skills as Bard level-2 Expertise", () => {
     const bard = completeSupportedProgressionDraft({
       draftId: "draft:srd-level-2-bard-expertise",
-      progression: testProgression("class_bard", 2),
+      progression: testProgression(authoredUnitId("class_bard"), 2),
       preferredOptionIdsBySource: {
         [testUnitChoiceSourceKey(
-          "bard_expertise",
+          authoredUnitId("bard_expertise"),
           CLASS_FEATURE_PROFICIENCY_CHOICE_KEY,
         )]: [
           creationChoiceOptionId("athletics"),
@@ -69,7 +70,7 @@ describe("Bard Expertise", () => {
     });
     const selectedExpertise = selectedChoiceOptionIds(
       bard,
-      "bard_expertise",
+      authoredUnitId("bard_expertise"),
       CLASS_FEATURE_PROFICIENCY_CHOICE_KEY,
     );
 
@@ -104,10 +105,10 @@ describe("Bard Expertise", () => {
   test("rejects Bard Expertise choices that are not owned skill proficiencies", () => {
     const bard = completeSupportedProgressionDraft({
       draftId: "draft:srd-level-2-bard-invalid-expertise",
-      progression: testProgression("class_bard", 2),
+      progression: testProgression(authoredUnitId("class_bard"), 2),
       preferredOptionIdsBySource: {
         [testUnitChoiceSourceKey(
-          "class_bard",
+          authoredUnitId("class_bard"),
           CLASS_SKILL_PROFICIENCY_CHOICE_KEY,
         )]: [
           creationChoiceOptionId("performance"),
@@ -146,17 +147,21 @@ describe("Bard Expertise", () => {
   });
 
   test("discovers Bard level-9 Expertise as one four-skill owned-proficiency choice", () => {
-    const holes = classFeatureGrantChoiceHoles("bard_expertise", unitLibrary, {
-      classLevel: 9,
-      ownedSkillProficiencies: [
-        "athletics",
-        "intimidation",
-        "performance",
-        "persuasion",
-        "stealth",
-      ],
-      ownedSkillExpertise: ["stealth"],
-    });
+    const holes = classFeatureGrantChoiceHoles(
+      authoredUnitId("bard_expertise"),
+      unitLibrary,
+      {
+        classLevel: 9,
+        ownedSkillProficiencies: [
+          "athletics",
+          "intimidation",
+          "performance",
+          "persuasion",
+          "stealth",
+        ],
+        ownedSkillExpertise: ["stealth"],
+      },
+    );
 
     expect(holes).toHaveLength(1);
     const [hole] = holes;

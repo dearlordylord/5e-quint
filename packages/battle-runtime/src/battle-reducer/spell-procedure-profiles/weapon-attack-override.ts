@@ -17,11 +17,11 @@ import {
   interruptWindowProgress,
   snapshotBattle,
   type BattleInterruptWindowProgress,
-} from "../../battle-state-execution.ts";
+} from "../dispatcher.ts";
 import {
   admitWeaponAttackOverride,
   type WeaponAttackOverrideInvocation,
-} from "../../procedure-admission/weapon-attack-override.ts";
+} from "../../weapon-attack-override-admission.ts";
 import { activeDruidWildShapeEffect } from "../druid-wild-shape.ts";
 import { loadoutWeaponItemIsUsableDuringWildShape } from "../wild-shape-equipment.ts";
 import {

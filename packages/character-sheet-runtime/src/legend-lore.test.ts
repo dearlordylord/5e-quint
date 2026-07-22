@@ -3,6 +3,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L19E-07-L5-DIVINATION-SOCIAL-EXPLORATION legend_lore
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L19E-07-L5-DIVINATION-SOCIAL-EXPLORATION legend_lore
 // UNIT-IDENTITY-REPLAY: L19E-07-L5-DIVINATION-SOCIAL-EXPLORATION legend_lore doCastLegendLore
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, it, test } from "vitest";
 
 import {
@@ -258,11 +259,15 @@ function legendLoreClericSheet(input: {
         spellcasting: {
           sources: [
             {
-              sourceUnitId: "class_cleric",
+              sourceUnitId: authoredUnitId("class_cleric"),
               spellcastingAbility: "wis",
-              cantrips: ["guidance", "sacred_flame", "thaumaturgy"],
+              cantrips: [
+                authoredUnitId("guidance"),
+                authoredUnitId("sacred_flame"),
+                authoredUnitId("thaumaturgy"),
+              ],
               spellbook: [],
-              preparedSpells: input.preparedSpells,
+              preparedSpells: input.preparedSpells.map(authoredUnitId),
               spellcastingFocuses: ["holy_symbol"],
             },
           ],

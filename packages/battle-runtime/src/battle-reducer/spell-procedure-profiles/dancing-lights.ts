@@ -1,3 +1,4 @@
+import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-dancing-lights-movable-dim-light
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE
 //
@@ -26,9 +27,8 @@ import {
   type ElapsedTimeTicks,
 } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { MovementFeet, movementFeet } from "@dnd/shared/types";
-import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
-import { characterSpellProcedureRefsForProcedure } from "../../character-execution-admission.ts";
+import { characterSpellProcedureRefsForProcedure } from "../../character-execution-queries.ts";
 
 import {
   type BattleActDiscoveryCandidate,
@@ -99,7 +99,7 @@ type DancingLightsRepositionResolveInput =
   SpellProcedureProfileResolveInput<DancingLightsRepositionInvocation>;
 
 function admitDancingLightsSeparateCast(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly DancingLightsSeparateCastInvocation[] {
   const profile = dancingLightsSpell(spell);
@@ -121,7 +121,7 @@ function admitDancingLightsSeparateCast(
 }
 
 function admitDancingLightsCombinedCast(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly DancingLightsCombinedCastInvocation[] {
   const profile = dancingLightsSpell(spell);
@@ -143,7 +143,7 @@ function admitDancingLightsCombinedCast(
 }
 
 function admitDancingLightsReposition(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly DancingLightsRepositionInvocation[] {
   const profile = dancingLightsSpell(spell);
@@ -179,7 +179,7 @@ function admitDancingLightsReposition(
 }
 
 function dancingLightsCantripBase(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   profile: DancingLightsSpellProfile,
 ) {
   return {
@@ -202,7 +202,7 @@ type DancingLightsSpellProfile = {
 };
 
 function dancingLightsSpell(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
 ): DancingLightsSpellProfile | null {
   if (
     spell.mechanics.family !== "ongoing_effect" ||

@@ -1,3 +1,4 @@
+import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-chained-attack-damage spell.invocation-warding-bond-linked-effect
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE
 import * as Either from "effect/Either";
@@ -22,6 +23,7 @@ import {
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
+import { spellId } from "./identity.ts";
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import {
@@ -80,7 +82,7 @@ describe("Chromatic Orb chained spell attack", () => {
 
     const noncanonicalLookalike = {
       ...chromaticOrb,
-      id: "chained_spell_attack_fixture",
+      id: parseSharedUnitId("chained_spell_attack_fixture"),
       name: "Chained Spell Attack Fixture",
       provenance: {
         kind: "xphb",
@@ -96,7 +98,7 @@ describe("Chromatic Orb chained spell attack", () => {
         (candidate) =>
           candidate.subject.tag === "actionSpell" &&
           battleActSpellPresentation(candidate)?.invocation.spellId ===
-            noncanonicalLookalike.id &&
+            spellId(noncanonicalLookalike.id) &&
           battleActSpellPresentation(candidate)?.invocation.procedure ===
             "chainedSpellAttackDamage",
       ),

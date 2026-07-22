@@ -1,3 +1,4 @@
+import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING
 //
@@ -9,19 +10,17 @@
 // cast resolution.
 
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
-import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
 import { WardingBondActiveEffectTemplateSchema } from "../../active-effect/codecs.ts";
 import {
-  maybeOpenInterruptWindow,
-  snapshotBattle,
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
   type BattleState,
   type WardingBondSpellInvocation,
 } from "../../battle-state-execution.ts";
+import { maybeOpenInterruptWindow, snapshotBattle } from "../dispatcher.ts";
 import { type CombatantId } from "../../identity.ts";
 import {
   WARDING_BOND_ARMOR_CLASS_BONUS,
@@ -31,7 +30,7 @@ import {
 } from "../domain-constants.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
 import { invalidResult } from "../result-helpers.ts";
-import { sameStringSet } from "../spells-profile-shared.ts";
+import { sameStringSet } from "../spells-execution-facts.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
 import type { SpellFillSet } from "../spells-resolve-fill-set.ts";
 import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
@@ -61,7 +60,7 @@ import {
 } from "../codec-building-blocks.ts";
 
 function admitWardingBond(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly WardingBondSpellInvocation[] {
   const projection = wardingBondSpellProjection(ctx.actor.combatantId, spell);
@@ -87,7 +86,7 @@ function admitWardingBond(
 
 function wardingBondSpellProjection(
   actorId: CombatantId,
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
 ): Pick<
   WardingBondSpellInvocation,
   "activeEffect" | "rangeFeet" | "connectionRangeFeet"
@@ -136,7 +135,9 @@ function wardingBondSpellProjection(
       };
 }
 
-function wardingBondMaterialComponentIsSupported(spell: SpellRecord): boolean {
+function wardingBondMaterialComponentIsSupported(
+  spell: BattleSpellAdmissionSource,
+): boolean {
   if (!("components" in spell.mechanics)) {
     return false;
   }
@@ -171,7 +172,7 @@ function wardingBondEarlyEndsAreSupported(
 
 function wardingBondOperationsAreSupported(
   operations: Extract<
-    SpellRecord["mechanics"],
+    BattleSpellAdmissionSource["mechanics"],
     { readonly family: "ongoing_effect" }
   >["operations"],
 ): boolean {
@@ -186,7 +187,7 @@ function wardingBondOperationsAreSupported(
 
 function wardingBondOperationHasAttachedBondWithinRangePredicate(
   operation: Extract<
-    SpellRecord["mechanics"],
+    BattleSpellAdmissionSource["mechanics"],
     { readonly family: "ongoing_effect" }
   >["operations"][number],
 ): boolean {
@@ -195,7 +196,7 @@ function wardingBondOperationHasAttachedBondWithinRangePredicate(
 
 function wardingBondArmorClassOperationIsSupported(
   operation: Extract<
-    SpellRecord["mechanics"],
+    BattleSpellAdmissionSource["mechanics"],
     { readonly family: "ongoing_effect" }
   >["operations"][number],
 ): boolean {
@@ -213,7 +214,7 @@ function wardingBondArmorClassOperationIsSupported(
 
 function wardingBondSavingThrowOperationIsSupported(
   operation: Extract<
-    SpellRecord["mechanics"],
+    BattleSpellAdmissionSource["mechanics"],
     { readonly family: "ongoing_effect" }
   >["operations"][number],
 ): boolean {
@@ -232,7 +233,7 @@ function wardingBondSavingThrowOperationIsSupported(
 
 function wardingBondResistanceOperationIsSupported(
   operation: Extract<
-    SpellRecord["mechanics"],
+    BattleSpellAdmissionSource["mechanics"],
     { readonly family: "ongoing_effect" }
   >["operations"][number],
 ): boolean {
@@ -249,7 +250,7 @@ function wardingBondResistanceOperationIsSupported(
 
 function wardingBondDamageShareOperationIsSupported(
   operation: Extract<
-    SpellRecord["mechanics"],
+    BattleSpellAdmissionSource["mechanics"],
     { readonly family: "ongoing_effect" }
   >["operations"][number],
 ): boolean {

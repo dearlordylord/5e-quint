@@ -12,14 +12,17 @@ const BATTLE_RUNTIME_SRC = "packages/battle-runtime/src";
 const EXECUTION_ROOT_DIRECTORIES = [
   `${BATTLE_RUNTIME_SRC}/procedure-execution`,
 ];
+const MIGRATION_CANDIDATES = [
+  `${BATTLE_RUNTIME_SRC}/battle-reducer/battle-discovery.ts`,
+  `${BATTLE_RUNTIME_SRC}/battle-reducer/reducer-route.ts`,
+  `${BATTLE_RUNTIME_SRC}/battle-reducer/spells-resolve.ts`,
+  `${BATTLE_RUNTIME_SRC}/battle-reducer/dispatcher.ts`,
+];
 const EXECUTION_ROOT_FILES = [
   `${BATTLE_RUNTIME_SRC}/character-execution.ts`,
   `${BATTLE_RUNTIME_SRC}/active-effect/codecs.ts`,
   `${BATTLE_RUNTIME_SRC}/active-effect/types.ts`,
-];
-
-const ADMISSION_ROOT_FILES = [
-  `${BATTLE_RUNTIME_SRC}/procedure-admission/weapon-attack-override.ts`,
+  ...MIGRATION_CANDIDATES,
 ];
 
 const FORBIDDEN_OWNERS = [
@@ -28,7 +31,9 @@ const FORBIDDEN_OWNERS = [
     paths: [
       `${BATTLE_RUNTIME_SRC}/procedure-admission`,
       `${BATTLE_RUNTIME_SRC}/battle-composition-admission.ts`,
-      `${BATTLE_RUNTIME_SRC}/battle-reducer/spell-procedure-profiles`,
+      `${BATTLE_RUNTIME_SRC}/stat-block-combatant-admission.ts`,
+      `${BATTLE_RUNTIME_SRC}/stat-block-execution.ts`,
+      `${BATTLE_RUNTIME_SRC}/statblock-action-execution-support.ts`,
     ],
   },
   {
@@ -37,15 +42,9 @@ const FORBIDDEN_OWNERS = [
       `${BATTLE_RUNTIME_SRC}/act-presentation`,
       `${BATTLE_RUNTIME_SRC}/battle-act-composition.ts`,
       `${BATTLE_RUNTIME_SRC}/battle-runtime-context.ts`,
+      `${BATTLE_RUNTIME_SRC}/stat-block-presentation.ts`,
     ],
   },
-];
-
-const MIGRATION_CANDIDATES = [
-  `${BATTLE_RUNTIME_SRC}/battle-reducer/battle-discovery.ts`,
-  `${BATTLE_RUNTIME_SRC}/battle-reducer/reducer-route.ts`,
-  `${BATTLE_RUNTIME_SRC}/battle-reducer/spells-resolve.ts`,
-  `${BATTLE_RUNTIME_SRC}/battle-reducer/dispatcher.ts`,
 ];
 
 const authoredSurfaceOwnerCache = new Map();
@@ -55,10 +54,63 @@ const SURFACE_TYPES_MODULE = path.join(SURFACE_SOURCE_ROOT, "surface/types");
 
 function isAuthoredSurfaceSymbol(name) {
   return (
+    name.startsWith("Authored") ||
+    name.startsWith("CreatureNamed") ||
     name.includes("Record") ||
     name.includes("SrdSurface") ||
     name.includes("Provenance")
   );
+}
+
+const PROTECTED_EXECUTION_SHAPES = new Map([
+  [
+    "CharacterWeaponAttackExecutionWeapon",
+    new Set([
+      "id",
+      "name",
+      "description",
+      "provenance",
+      "kind",
+      "weightPounds",
+    ]),
+  ],
+]);
+
+function protectedExecutionShapeLaundering(file) {
+  const source = fs.readFileSync(file, "utf8");
+  const sourceFile = ts.createSourceFile(
+    file,
+    source,
+    ts.ScriptTarget.Latest,
+    false,
+  );
+  const violations = [];
+  for (const statement of sourceFile.statements) {
+    const shapeName =
+      ts.isInterfaceDeclaration(statement) ||
+      ts.isTypeAliasDeclaration(statement)
+        ? statement.name.text
+        : undefined;
+    const forbiddenFields = PROTECTED_EXECUTION_SHAPES.get(shapeName);
+    if (forbiddenFields === undefined) continue;
+    const members = ts.isInterfaceDeclaration(statement)
+      ? statement.members
+      : ts.isTypeLiteralNode(statement.type)
+        ? statement.type.members
+        : [];
+    for (const member of members) {
+      if (!ts.isPropertySignature(member) || member.name === undefined)
+        continue;
+      const field =
+        ts.isIdentifier(member.name) || ts.isStringLiteralLike(member.name)
+          ? member.name.text
+          : undefined;
+      if (field !== undefined && forbiddenFields.has(field)) {
+        violations.push({ shapeName, field });
+      }
+    }
+  }
+  return violations;
 }
 
 function withoutSourceExtension(file) {
@@ -155,12 +207,12 @@ function executionRoots() {
   ].sort();
 }
 
-function admissionRoots() {
-  return ADMISSION_ROOT_FILES.map((file) => {
+function migrationCandidateRoots() {
+  return MIGRATION_CANDIDATES.map((file) => {
     const root = normalizedRepoPath(file);
     if (!fs.existsSync(root)) {
       throw new Error(
-        `Declared battle-runtime admission root is missing: ${file}.`,
+        `Declared battle-runtime migration candidate is missing: ${file}.`,
       );
     }
     return root;
@@ -417,6 +469,7 @@ function runSelfTests() {
     const fixtureHelper = path.join(fixtureRoot, "helper.ts");
     const fixtureForbidden = path.join(fixtureRoot, "forbidden.ts");
     const fixtureAuthored = path.join(fixtureRoot, "authored.ts");
+    const fixtureLaundered = path.join(fixtureRoot, "laundered.ts");
     fs.writeFileSync(fixtureExecution, 'import "./helper.ts";\n');
     fs.writeFileSync(fixtureHelper, 'export * from "./forbidden.ts";\n');
     fs.writeFileSync(fixtureForbidden, "export const forbidden = true;\n");
@@ -440,6 +493,36 @@ function runSelfTests() {
         path: [fixtureExecution, fixtureHelper, fixtureForbidden],
       },
     );
+    assert.equal(importsAuthoredSurfaceSymbol(fixtureAuthored), true);
+    fs.writeFileSync(
+      fixtureAuthored,
+      'import type { CreatureNamedAttackRoll } from "@dnd/surface/surface/types";\nexport type Fixture = CreatureNamedAttackRoll;\n',
+    );
+    authoredSurfaceOwnerCache.delete(fixtureAuthored);
+    assert.equal(importsAuthoredSurfaceSymbol(fixtureAuthored), true);
+    fs.writeFileSync(
+      fixtureAuthored,
+      'import type { CreatureAttackRollMechanics } from "@dnd/surface/surface/types";\nexport type Fixture = CreatureAttackRollMechanics;\n',
+    );
+    authoredSurfaceOwnerCache.delete(fixtureAuthored);
+    assert.equal(importsAuthoredSurfaceSymbol(fixtureAuthored), false);
+    fs.writeFileSync(
+      fixtureLaundered,
+      "export type CharacterWeaponAttackExecutionWeapon = { readonly name: string; readonly usage: 'melee' };\n",
+    );
+    assert.deepEqual(protectedExecutionShapeLaundering(fixtureLaundered), [
+      { shapeName: "CharacterWeaponAttackExecutionWeapon", field: "name" },
+    ]);
+    fs.writeFileSync(
+      fixtureLaundered,
+      "export type CharacterWeaponAttackExecutionWeapon = { readonly weaponUnitId: string; readonly usage: 'melee' };\n",
+    );
+    assert.deepEqual(protectedExecutionShapeLaundering(fixtureLaundered), []);
+    fs.writeFileSync(
+      fixtureAuthored,
+      'import type { AuthoredSpellSource, AuthoredUnitSource } from "@dnd/surface/surface/types";\nexport type Fixture = AuthoredSpellSource | AuthoredUnitSource;\n',
+    );
+    authoredSurfaceOwnerCache.delete(fixtureAuthored);
     assert.equal(importsAuthoredSurfaceSymbol(fixtureAuthored), true);
     fs.writeFileSync(
       fixtureAuthored,
@@ -564,6 +647,53 @@ function runSelfTests() {
       assert.equal(result?.path.at(-1), "forbidden-short-0");
     }
   }
+
+  assert.notDeepEqual(
+    executionRoots().map(toRepoPath),
+    migrationCandidateRoots().map(toRepoPath),
+    "Default enforcement and candidate audit must retain distinct root sets.",
+  );
+  assert.equal(
+    forbiddenOwner(
+      normalizedRepoPath(`${BATTLE_RUNTIME_SRC}/stat-block-presentation.ts`),
+      "presentation",
+    )?.zone,
+    "presentation",
+  );
+  assert.equal(
+    forbiddenOwner(
+      normalizedRepoPath(`${BATTLE_RUNTIME_SRC}/stat-block-execution-state.ts`),
+    ),
+    undefined,
+  );
+  assert.equal(
+    forbiddenOwner(
+      normalizedRepoPath(`${BATTLE_RUNTIME_SRC}/stat-block-execution.ts`),
+      "presentation",
+    ),
+    undefined,
+    "Stat Block execution allocation must not be classified as presentation.",
+  );
+  assert.equal(
+    forbiddenOwner(
+      normalizedRepoPath(
+        `${BATTLE_RUNTIME_SRC}/statblock-action-execution-support.ts`,
+      ),
+      "admission",
+    )?.zone,
+    "admission",
+    "Named Stat Block action support is an admission owner.",
+  );
+  for (const formerPortal of [
+    `${BATTLE_RUNTIME_SRC}/stat-block-execution.ts`,
+    `${BATTLE_RUNTIME_SRC}/statblock-action-execution-support.ts`,
+  ]) {
+    assert.equal(
+      forbiddenOwner(normalizedRepoPath(formerPortal), "admission")?.zone,
+      "admission",
+      `Former reducer portal must remain forbidden: ${formerPortal}.`,
+    );
+  }
 }
 
 function formatViolation(root, violation) {
@@ -588,24 +718,54 @@ function checkRoots(roots, failOnViolation, forbiddenZones = [undefined]) {
       return violation === undefined ? [] : [{ root, violation }];
     }),
   );
+  const launderingViolations = [...graph.keys()].flatMap((file) =>
+    protectedExecutionShapeLaundering(file).map((violation) => ({
+      file,
+      ...violation,
+    })),
+  );
   const elapsedMs = Number(process.hrtime.bigint() - startedAt) / 1_000_000;
   for (const { root, violation } of violations) {
     console.error(formatViolation(root, violation));
   }
+  for (const violation of launderingViolations) {
+    console.error(
+      `${toRepoPath(violation.file)} launders forbidden field ${violation.field} into protected execution shape ${violation.shapeName}.`,
+    );
+  }
   console.log(
     `Battle-runtime import ownership: ${roots.length} root(s), ${graph.size} transitive module(s), ${elapsedMs.toFixed(1)}ms.`,
   );
-  if (failOnViolation && violations.length > 0) process.exitCode = 1;
+  if (
+    failOnViolation &&
+    (violations.length > 0 || launderingViolations.length > 0)
+  ) {
+    process.exitCode = 1;
+  }
   return violations;
+}
+
+const cliArguments = process.argv.slice(2);
+const supportedArguments = new Set(["--self-test", "--audit-candidates"]);
+const unknownArguments = cliArguments.filter(
+  (argument) => !supportedArguments.has(argument),
+);
+if (unknownArguments.length > 0) {
+  throw new Error(
+    `Unknown battle-runtime import ownership argument(s): ${unknownArguments.join(", ")}.`,
+  );
+}
+if (cliArguments.length > 1) {
+  throw new Error("Choose exactly one battle-runtime import ownership mode.");
 }
 
 runSelfTests();
 
-if (process.argv.includes("--self-test")) {
+if (cliArguments.includes("--self-test")) {
   console.log("Battle-runtime import ownership synthetic tests passed.");
-} else if (process.argv.includes("--audit-candidates")) {
+} else if (cliArguments.includes("--audit-candidates")) {
   checkRoots(
-    MIGRATION_CANDIDATES.map(normalizedRepoPath).filter(fs.existsSync),
+    migrationCandidateRoots(),
     false,
     FORBIDDEN_OWNERS.map((owner) => owner.zone),
   );
@@ -615,5 +775,4 @@ if (process.argv.includes("--self-test")) {
     throw new Error("No battle-runtime procedure-execution roots were found.");
   }
   checkRoots(roots, true);
-  checkRoots(admissionRoots(), true, ["presentation"]);
 }

@@ -3,6 +3,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L19E-07-L5-DIVINATION-SOCIAL-EXPLORATION commune
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L19E-07-L5-DIVINATION-SOCIAL-EXPLORATION commune
 // UNIT-IDENTITY-REPLAY: L19E-07-L5-DIVINATION-SOCIAL-EXPLORATION commune doCastCommune doCastCommuneRepeatedBeforeLongRest
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, it, test } from "vitest";
 
 import {
@@ -236,20 +237,24 @@ function communeClericSheet() {
         spellcasting: {
           sources: [
             {
-              sourceUnitId: "class_cleric",
+              sourceUnitId: authoredUnitId("class_cleric"),
               spellcastingAbility: "wis",
-              cantrips: ["guidance", "sacred_flame", "thaumaturgy"],
+              cantrips: [
+                authoredUnitId("guidance"),
+                authoredUnitId("sacred_flame"),
+                authoredUnitId("thaumaturgy"),
+              ],
               spellbook: [],
               preparedSpells: [
-                "bless",
-                "cure_wounds",
-                "guiding_bolt",
-                "spiritual_weapon",
-                "lesser_restoration",
-                "beacon_of_hope",
-                "dispel_magic",
-                "death_ward",
-                "commune",
+                authoredUnitId("bless"),
+                authoredUnitId("cure_wounds"),
+                authoredUnitId("guiding_bolt"),
+                authoredUnitId("spiritual_weapon"),
+                authoredUnitId("lesser_restoration"),
+                authoredUnitId("beacon_of_hope"),
+                authoredUnitId("dispel_magic"),
+                authoredUnitId("death_ward"),
+                authoredUnitId("commune"),
               ],
               spellcastingFocuses: ["holy_symbol"],
             },

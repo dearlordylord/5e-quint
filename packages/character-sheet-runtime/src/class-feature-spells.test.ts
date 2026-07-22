@@ -1,4 +1,5 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.class-feature-prepared-spell-access
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, test } from "vitest";
 import {
   Either,
@@ -8,7 +9,7 @@ import {
   storedAvailableSheetInput,
   subclassPreparedSpellAccessBlocksBookOfShadowsDuplicateTestName,
   subclassPreparedSpellAccessProgressionTestName,
-  unitLibrary
+  unitLibrary,
 } from "./test-support.ts";
 
 describe("Character Sheet runtime / class feature prepared spells", () => {
@@ -24,12 +25,14 @@ describe("Character Sheet runtime / class feature prepared spells", () => {
           features: [
             {
               kind: "selectedClassChoice",
-              selectedFromUnitId: "class_warlock",
-              unitId: "subclass_warlock_fiend_patron",
+              selectedFromUnitId: authoredUnitId("class_warlock"),
+              unitId: authoredUnitId("subclass_warlock_fiend_patron"),
             },
             {
               kind: "selectedEldritchInvocation",
-              selectedFromUnitId: "warlock_eldritch_invocations",
+              selectedFromUnitId: authoredUnitId(
+                "warlock_eldritch_invocations",
+              ),
               selection: {
                 kind: "nonRepeatable",
                 invocationId: "pact_of_the_tome",
@@ -39,7 +42,7 @@ describe("Character Sheet runtime / class feature prepared spells", () => {
           spellcasting: {
             sources: [
               {
-                sourceUnitId: "class_warlock",
+                sourceUnitId: authoredUnitId("class_warlock"),
                 spellcastingAbility: "cha",
                 cantrips: [],
                 spellbook: [],
@@ -88,8 +91,8 @@ describe("Character Sheet runtime / class feature prepared spells", () => {
           features: [
             {
               kind: "selectedClassChoice",
-              selectedFromUnitId: input.startingClass,
-              unitId: input.subclassUnitId,
+              selectedFromUnitId: authoredUnitId(input.startingClass),
+              unitId: authoredUnitId(input.subclassUnitId),
             },
           ],
         }),

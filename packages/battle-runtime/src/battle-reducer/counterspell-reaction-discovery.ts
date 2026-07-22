@@ -3,12 +3,12 @@ import {
   type BattleExecutableSpellInvocation,
 } from "../battle-state-execution.ts";
 import type { CombatantId } from "../identity.ts";
-import { combatantCanTakeReactions } from "./creature-state.ts";
+import { combatantCanTakeReactions } from "./creature-state-execution.ts";
 import {
   combatantHasSpellSlotUseThisTurn,
   spellHasAvailableSpend,
 } from "./spell-turn-resources.ts";
-import { supportedSpellActs } from "./spells-profiles.ts";
+import { supportedSpellActs } from "./supported-spell-acts.ts";
 import { spellComponents } from "./spell-cast-interrupt-frame.ts";
 
 type CounterspellInvocation = Extract<

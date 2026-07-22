@@ -10,7 +10,7 @@ import {
   type CreationChoiceOptionId,
 } from "@dnd/character-creation-runtime";
 import { Either } from "effect";
-import type { Skill } from "@dnd/shared/game-facts";
+import { unitId, type Skill } from "@dnd/shared/game-facts";
 import { characterIdFromDraftId } from "../src/session-store.ts";
 import { characterProgressionEntry } from "../../character-creation-runtime/src/character-progression-types.ts";
 import { CHARACTER_CREATION_SUPPORT_PROFILE } from "../../character-creation-runtime/src/support-gates.ts";
@@ -3223,7 +3223,7 @@ function sameClassProgression(
   classUnitIdText: string,
   totalLevel: number,
 ): CharacterProgression {
-  const parsedClassUnitId = classUnitId(classUnitIdText);
+  const parsedClassUnitId = classUnitId(unitId(classUnitIdText));
   const advancements = Array.from({ length: totalLevel - 1 }, (_, index) => {
     const entry = characterProgressionEntry({
       classUnitId: parsedClassUnitId,

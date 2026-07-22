@@ -1,4 +1,4 @@
-import { snapshotBattle } from "@dnd/battle-runtime";
+import { battlePresentedSnapshot } from "@dnd/battle-runtime";
 import { Effect, Either, Schema } from "effect";
 
 import { characterListRows } from "./character-session-rows.ts";
@@ -122,14 +122,20 @@ export function enabledAdminMirrorPublication(input: {
 
 function adminProjection(
   root: McpCompositionRoot,
-): Either.Either<AdminSessionProjection, string> {
+): Either.Either<
+  AdminSessionProjection,
+  string | import("@dnd/battle-runtime").BattleSnapshotPresentationIssues
+> {
   const characters = characterListRows(root);
   if (Either.isLeft(characters)) return Either.left(characters.left);
+  const battle = root.sessionStore.battleSession;
+  const presentedBattle =
+    battle === null ? Either.right(null) : battlePresentedSnapshot(battle);
+  if (Either.isLeft(presentedBattle)) {
+    return Either.left(presentedBattle.left);
+  }
   return Either.right({
-    battle:
-      root.sessionStore.battleSession === null
-        ? null
-        : snapshotBattle(root.sessionStore.battleSession.state),
+    battle: presentedBattle.right,
     characters: characters.right,
     session: adminMirrorSessionSummary(root.sessionStore.snapshot()),
   });

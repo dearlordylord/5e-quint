@@ -1,3 +1,4 @@
+import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT37 fighter_extra_attack paladin_extra_attack ranger_extra_attack
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L5-A01-BARBARIAN-EXTRA-ATTACK barbarian_extra_attack
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L5-A06-MONK-EXTRA-ATTACK monk_extra_attack
@@ -408,7 +409,7 @@ describe("QMBT37 deterministic Extra Attack admission", () => {
     }
     const adjacentUnit: UnitRecord = {
       ...unit,
-      id: "test_extra_attack_additional_4",
+      id: parseSharedUnitId("test_extra_attack_additional_4"),
       mechanics: {
         ...unit.mechanics,
         grants: [{ kind: "scale_attack_count", additional: 4 }],
@@ -460,7 +461,7 @@ function syntheticExtraAttackUnit(
   }
   return {
     ...unit,
-    id: `test_synthetic_attack_count_${additionalAttacks}`,
+    id: parseSharedUnitId(`test_synthetic_attack_count_${additionalAttacks}`),
     name: `Synthetic Attack Count ${additionalAttacks}`,
     description: `Synthetic fixture for ${additionalAttacks} additional Attack action attack(s).`,
     provenance: {
@@ -616,7 +617,7 @@ describe("QMBT40 deterministic Fast Movement admission", () => {
     const adjacentSpeedUnits = [
       {
         ...unit,
-        id: "test_fast_movement_wrong_delta",
+        id: parseSharedUnitId("test_fast_movement_wrong_delta"),
         mechanics: {
           ...unit.mechanics,
           grants: [{ ...effect, delta: 5 }],
@@ -624,7 +625,7 @@ describe("QMBT40 deterministic Fast Movement admission", () => {
       },
       {
         ...unit,
-        id: "test_fast_movement_multiple_grants",
+        id: parseSharedUnitId("test_fast_movement_multiple_grants"),
         mechanics: {
           ...unit.mechanics,
           grants: [effect, effect],
@@ -632,7 +633,7 @@ describe("QMBT40 deterministic Fast Movement admission", () => {
       },
       {
         ...unit,
-        id: "test_fast_movement_missing_heavy_predicate",
+        id: parseSharedUnitId("test_fast_movement_missing_heavy_predicate"),
         mechanics: mechanicsWithoutCondition,
       },
     ] as const satisfies readonly UnitRecord[];
@@ -640,7 +641,7 @@ describe("QMBT40 deterministic Fast Movement admission", () => {
     for (const adjacentUnit of adjacentSpeedUnits) {
       expect(
         battleUnitRefWithSupportProfiles({
-          unitRef: { unitId: adjacentUnit.id },
+          unitRef: { unitId: parseSharedUnitId(adjacentUnit.id) },
           unit: adjacentUnit,
         }),
       ).toEqual(
@@ -769,7 +770,9 @@ describe("L12G-AUTHOR-MONK-UNARMORED-MOVEMENT deterministic admission", () => {
     const adjacentSpeedUnits = [
       {
         ...unit,
-        id: "test_unarmored_movement_missing_shield_predicate",
+        id: parseSharedUnitId(
+          "test_unarmored_movement_missing_shield_predicate",
+        ),
         mechanics: {
           ...unit.mechanics,
           condition: {
@@ -780,7 +783,9 @@ describe("L12G-AUTHOR-MONK-UNARMORED-MOVEMENT deterministic admission", () => {
       },
       {
         ...unit,
-        id: "test_unarmored_movement_heavy_only_with_shield_predicate",
+        id: parseSharedUnitId(
+          "test_unarmored_movement_heavy_only_with_shield_predicate",
+        ),
         mechanics: {
           ...unit.mechanics,
           condition: {
@@ -797,7 +802,7 @@ describe("L12G-AUTHOR-MONK-UNARMORED-MOVEMENT deterministic admission", () => {
     for (const adjacentUnit of adjacentSpeedUnits) {
       expect(
         battleUnitRefWithSupportProfiles({
-          unitRef: { unitId: adjacentUnit.id },
+          unitRef: { unitId: parseSharedUnitId(adjacentUnit.id) },
           unit: adjacentUnit,
         }),
       ).toEqual(
@@ -1244,7 +1249,7 @@ describe("QMBT44 deterministic Roving admission", () => {
     const adjacentUnits = [
       {
         ...unit,
-        id: "test_roving_fixed_swim",
+        id: parseSharedUnitId("test_roving_fixed_swim"),
         mechanics: {
           ...unit.mechanics,
           parts: [
@@ -1258,7 +1263,7 @@ describe("QMBT44 deterministic Roving admission", () => {
       },
       {
         ...unit,
-        id: "test_roving_wrong_delta",
+        id: parseSharedUnitId("test_roving_wrong_delta"),
         mechanics: {
           ...unit.mechanics,
           parts: [

@@ -1,6 +1,8 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.druid-circle-land-spell-access
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRUID-WILD-SHAPE-CHARACTER-FACTS druid_wild_shape
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRUID-CIRCLE-LAND-SPELL-ACCESS druid_circle_of_the_land_spells
+import { statBlockId as authoredStatBlockId } from "@dnd/shared/game-facts";
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, test } from "vitest";
 import {
   DRUID_WILD_SHAPE_UNIT_ID,
@@ -41,8 +43,8 @@ describe("Character Sheet runtime / druid features", () => {
         unitLibrary,
         druidWildShapeKnownFormStatBlockIds: [
           ...druidWildShapeFixtureKnownFormStatBlockIds,
-          "stat_block_cat",
-          "stat_block_frog",
+          authoredStatBlockId("stat_block_cat"),
+          authoredStatBlockId("stat_block_frog"),
         ],
         druidCircleLand: { land: "temperate" },
       }),
@@ -116,8 +118,8 @@ describe("Character Sheet runtime / druid features", () => {
         features: [
           {
             kind: "selectedClassChoice",
-            selectedFromUnitId: "class_druid",
-            unitId: "subclass_druid_circle_of_the_land",
+            selectedFromUnitId: authoredUnitId("class_druid"),
+            unitId: authoredUnitId("subclass_druid_circle_of_the_land"),
           },
         ],
       },
@@ -284,8 +286,8 @@ describe("Character Sheet runtime / druid features", () => {
         sheet: shortRested,
         unitLibrary,
         druidWildShapeKnownFormReplacement: {
-          replaceStatBlockId: "stat_block_rat",
-          selectedStatBlockId: "stat_block_cat",
+          replaceStatBlockId: authoredStatBlockId("stat_block_rat"),
+          selectedStatBlockId: authoredStatBlockId("stat_block_cat"),
         },
       }),
     );

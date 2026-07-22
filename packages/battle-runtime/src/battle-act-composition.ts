@@ -1,13 +1,13 @@
 import type {
   BattleActDiscoveryCandidate,
   BattleActPresentation,
-  BattleSelectedSpellInvocation,
   BattleState,
   CharacterBattleCreatureState,
   AvailableBattleAct,
 } from "./battle-state-execution.ts";
+import type { AuthoredSelectedSpellInvocation } from "./character-execution-admission.ts";
 import type { BattleUnitRef } from "./battle-init.ts";
-import { Match } from "effect";
+import { Either, Match } from "effect";
 import { isCharacterProcedureBattleSubject } from "./battle-subjects.ts";
 import { discoverBattleActCandidates } from "./battle-reducer/battle-discovery.ts";
 import { battleReducerRouteEventsForDiscoveredAct } from "./battle-reducer/reducer-route.ts";
@@ -19,9 +19,9 @@ import {
   attackActionOptionsForActor,
   offHandAttackActionOptionsForActor,
 } from "./battle-reducer/attack-damage-apply.ts";
-import { attackActionOptionPresentationName } from "./battle-reducer/statblock.ts";
+import { attackActionOptionPresentationName } from "./stat-block-presentation.ts";
 import { maxJumpMovementReplacementDistanceFeet } from "./battle-reducer/jump-movement-replacement.ts";
-import { statBlockProcedurePresentations } from "./stat-block-execution.ts";
+import { statBlockProcedurePresentationsForActor } from "./stat-block-presentation.ts";
 import type {
   BattleSubject,
   CharacterProcedureBattleSubject,
@@ -223,7 +223,7 @@ function intrinsicActPresentation(
       },
     };
   }
-  const presentation = intrinsicSubjectPresentation(state, subject);
+  const presentation = intrinsicSubjectPresentation(state, context, subject);
   if (presentation === undefined) return undefined;
   if (
     presentation.kind === "attack" &&
@@ -247,6 +247,7 @@ function intrinsicActPresentation(
 
 function intrinsicSubjectPresentation(
   state: BattleState,
+  context: BattleRuntimeContext,
   subject: IntrinsicBattleSubject,
 ): BattleActPresentation | undefined {
   if (
@@ -257,16 +258,19 @@ function intrinsicSubjectPresentation(
     const attack = attackActionOptionsForActor(state, subject.reactorId).find(
       (candidate) => candidate.procedureRef === subject.procedureRef,
     );
-    return attack === undefined
-      ? undefined
+    if (attack === undefined) return undefined;
+    const name = attackActionOptionPresentationName(
+      state,
+      context,
+      subject.reactorId,
+      attack,
+    );
+    return Either.isLeft(name)
+      ? { kind: "presentationIssue", issue: name.left }
       : {
           kind: "attack",
           procedureRef: subject.procedureRef,
-          name: attackActionOptionPresentationName(
-            state,
-            subject.reactorId,
-            attack,
-          ),
+          name: name.right,
         };
   }
   const attackSubject =
@@ -285,13 +289,17 @@ function intrinsicSubjectPresentation(
     if (attack !== undefined) {
       const name = attackActionOptionPresentationName(
         state,
+        context,
         attackSubject.actorId,
         attack,
       );
+      if (Either.isLeft(name)) {
+        return { kind: "presentationIssue", issue: name.left };
+      }
       return {
         kind: "attack",
         procedureRef: attackSubject.procedureRef,
-        name,
+        name: name.right,
       };
     }
     return undefined;
@@ -355,9 +363,11 @@ function intrinsicActPresentationText(
   ) {
     const actor = state.combatants.get(subject.actorId);
     if (actor?.origin.kind === "statBlock") {
-      const presentation = statBlockProcedurePresentations(actor.origin).find(
-        (candidate) => candidate.procedureRef === subject.procedureRef,
-      );
+      const presentation = statBlockProcedurePresentationsForActor(
+        state,
+        context,
+        subject.actorId,
+      )?.find((candidate) => candidate.procedureRef === subject.procedureRef);
       if (presentation !== undefined && presentation.kind !== "attack") {
         return {
           label: presentation.label,
@@ -492,8 +502,15 @@ function characterProcedurePresentationJoin(
       procedureRef,
     );
     if (invocation === undefined) return undefined;
+    const presentationText = spellProcedurePresentationText(
+      state,
+      context,
+      invocation,
+      subject,
+    );
+    if (presentationText === undefined) return undefined;
     return {
-      ...spellProcedurePresentationText(invocation, subject),
+      ...presentationText,
       presentation: {
         kind: "spell",
         procedureRef,
@@ -617,7 +634,9 @@ function characterProcedurePresentationJoin(
 }
 
 function spellProcedurePresentationText(
-  invocation: BattleSelectedSpellInvocation,
+  state: BattleState,
+  context: BattleRuntimeContext,
+  invocation: AuthoredSelectedSpellInvocation,
   subject: Extract<
     CharacterProcedureBattleSubject,
     {
@@ -628,7 +647,7 @@ function spellProcedurePresentationText(
         | "findFamiliarTouchSpell";
     }
   >,
-): { readonly label: string; readonly summary: string } {
+): { readonly label: string; readonly summary: string } | undefined {
   if (subject.tag === "findFamiliarTouchSpell") {
     const label = `Familiar Delivery: ${invocation.spell.name}`;
     return {
@@ -651,10 +670,16 @@ function spellProcedurePresentationText(
     return { label, summary: `Make the ${label}.` };
   }
   if (invocation.procedure === "spellHostedWeaponAttack") {
-    const weaponName = invocation.componentWeapon.attack.weapon.name;
+    const weaponName = attackActionOptionPresentationName(
+      state,
+      context,
+      subject.actorId,
+      invocation.componentWeapon.attack,
+    );
+    if (Either.isLeft(weaponName)) return undefined;
     return {
-      label: `${invocation.spell.name} (${weaponName})`,
-      summary: `Cast ${invocation.spell.name} as a cantrip using ${weaponName}.`,
+      label: `${invocation.spell.name} (${weaponName.right})`,
+      summary: `Cast ${invocation.spell.name} as a cantrip using ${weaponName.right}.`,
     };
   }
   if (invocation.procedure === "spellCreatedHeldObjectReEvoke") {
@@ -798,7 +823,7 @@ export function battleSelectedSpellInvocationForProcedure(
   session: BattleRuntimeSession,
   actorId: CombatantId,
   procedureRef: BattleProcedureExecutionRef,
-): BattleSelectedSpellInvocation | undefined {
+): AuthoredSelectedSpellInvocation | undefined {
   const actor = session.state.combatants.get(actorId);
   if (
     !isCharacterBattleCreatureState(actor) ||
@@ -820,7 +845,7 @@ function spellPresentationInvocationForProcedure(
   context: BattleRuntimeContext,
   actorId: CombatantId,
   procedureRef: BattleProcedureExecutionRef,
-): BattleSelectedSpellInvocation | undefined {
+): AuthoredSelectedSpellInvocation | undefined {
   const actor = state.combatants.get(actorId);
   if (!isCharacterBattleCreatureState(actor)) return undefined;
   const direct = spellPresentationSourceForCharacter(
@@ -900,7 +925,7 @@ function dynamicSpellPresentationInvocation(
   context: BattleRuntimeContext,
   procedureRef: BattleProcedureExecutionRef,
   execution: DynamicSpellPresentationExecution,
-): BattleSelectedSpellInvocation | undefined {
+): AuthoredSelectedSpellInvocation | undefined {
   return Match.value(execution).pipe(
     Match.discriminatorsExhaustive("procedure")({
       heldLightHurl: (value) => {
@@ -1027,7 +1052,7 @@ function spellCreatedHeldObjectPresentationInvocation(
         | "spellCreatedHeldObjectReEvoke";
     }
   >,
-): BattleSelectedSpellInvocation | undefined {
+): AuthoredSelectedSpellInvocation | undefined {
   const sourceExecution = characterSpellProcedureExecution(
     actor.origin.execution,
     execution.sourceHeldObjectProcedureRef,

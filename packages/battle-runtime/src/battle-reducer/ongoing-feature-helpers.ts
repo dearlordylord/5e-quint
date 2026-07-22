@@ -7,8 +7,8 @@ import type { CombatantId } from "../identity.ts";
 import type {
   OngoingFeatureExtensionTrigger,
   OngoingFeatureLifecycleProfile,
-} from "../unit-feature-support.ts";
-import type { UnitFeatureProcedureExecution } from "../character-execution-admission.ts";
+} from "../unit-feature-execution-constants.ts";
+import type { UnitFeatureProcedureExecution } from "../character-execution-queries.ts";
 import type {
   ActiveOngoingFeatureOccurrence,
   BattleState,

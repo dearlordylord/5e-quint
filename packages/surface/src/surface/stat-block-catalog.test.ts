@@ -113,6 +113,11 @@ describe("Stat Block catalog boundary", () => {
     ).toBe(true);
     expect(
       Either.isLeft(
+        decodeStatBlockRecordEither({ ...goblinWarriorInput, id: "   " }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
         decodeStatBlockRecordEither({ ...goblinWarriorInput, name: "   " }),
       ),
     ).toBe(true);

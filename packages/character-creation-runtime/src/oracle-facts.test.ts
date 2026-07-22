@@ -1,3 +1,4 @@
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { Either } from "effect";
 import { describe, expect, test } from "vitest";
 
@@ -9,6 +10,7 @@ import {
 
 import {
   characterBuildFact,
+  classUnitId,
   characterDraftId,
   characterCreationBatchFact,
   characterEquipmentItemId,
@@ -63,9 +65,12 @@ function syntheticChoiceHole(): Extract<CreationHole, { kind: "choice" }> {
 
 function syntheticBuild(): CharacterBuild {
   return {
-    progression: { startingClass: "class_synthetic", advancements: [] },
-    background: "background_synthetic_guard",
-    species: "species_synthetic",
+    progression: {
+      startingClass: classUnitId(authoredUnitId("class_synthetic")),
+      advancements: [],
+    },
+    background: authoredUnitId("background_synthetic_guard"),
+    species: authoredUnitId("species_synthetic"),
     originLanguages: ["Common", "Dwarvish", "Elvish"],
     classFeatureLanguages: [],
     alignment: { order: "neutral", morality: "neutral" },
@@ -440,7 +445,7 @@ describe("Character Creation owner facts", () => {
             tag: "characterBuildProjection",
             cause: {
               tag: "classFeatureLanguageChoiceCountMismatch",
-              featureUnitId: "synthetic_feature",
+              featureUnitId: authoredUnitId("synthetic_feature"),
               mismatch: mismatchWithPresentation,
             },
           },
@@ -475,7 +480,7 @@ describe("Character Creation owner facts", () => {
             cause: {
               tag: "unreadableUnit",
               role: "class",
-              unitId: "synthetic_class",
+              unitId: authoredUnitId("synthetic_class"),
               issues: [
                 { code: "unsupportedUnitKind" },
                 { code: "unsupportedUnitKind" },
@@ -515,7 +520,9 @@ describe("Character Creation owner facts", () => {
 
   test("projects owned equipment once through its canonical item identity", () => {
     const build = syntheticBuild();
-    const equipmentUnitId = characterEquipmentItemUnitId("weapon_synthetic");
+    const equipmentUnitId = characterEquipmentItemUnitId(
+      authoredUnitId("weapon_synthetic"),
+    );
     if (equipmentUnitId._tag === "Left") {
       throw new Error("Expected the synthetic equipment Unit id to parse.");
     }

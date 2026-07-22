@@ -4,6 +4,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.sorcerous-restoration-sorcery-point-recovery
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV91B paladin_lay_on_hands
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-PRAYER-OF-HEALING-CHARACTER-SHEET-REST prayer_of_healing
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, test } from "vitest";
 import {
   DieRollResult,
@@ -86,7 +87,7 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
       _tag: "Right",
       right: expect.arrayContaining([
         expect.objectContaining({
-          unitId: "paladin_lay_on_hands",
+          unitId: authoredUnitId("paladin_lay_on_hands"),
           count: 10,
           expended: 7,
         }),
@@ -151,7 +152,7 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
       _tag: "Right",
       right: [
         {
-          unitId: "paladin_lay_on_hands",
+          unitId: authoredUnitId("paladin_lay_on_hands"),
           count: 5,
           expended: 0,
         },
@@ -214,7 +215,7 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
     const result = requireRight(
       applyCharacterSheetSpellRestBenefit({
         caster,
-        spellId: "prayer_of_healing",
+        spellId: authoredUnitId("prayer_of_healing"),
         unitLibrary,
         castLevel: spellSlotLevel(2),
         recipients: [
@@ -222,7 +223,10 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
             sheet: woundedWizard,
             eligibility: { remainedWithinRangeForEntireCasting: true },
             spendHitDice: [
-              { classUnitId: "class_wizard", roll: DieRollResult(4) },
+              {
+                classUnitId: authoredUnitId("class_wizard"),
+                roll: DieRollResult(4),
+              },
             ],
             healingRolls: [DieRollResult(7), DieRollResult(6)],
           },
@@ -322,7 +326,7 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
     expect(
       applyCharacterSheetSpellRestBenefit({
         caster: result.caster,
-        spellId: "prayer_of_healing",
+        spellId: authoredUnitId("prayer_of_healing"),
         unitLibrary,
         castLevel: spellSlotLevel(2),
         recipients: [
@@ -413,7 +417,7 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
       expect(
         applyCharacterSheetSpellRestBenefit({
           caster,
-          spellId: "prayer_of_healing",
+          spellId: authoredUnitId("prayer_of_healing"),
           unitLibrary: malformedUnitLibrary,
           castLevel: spellSlotLevel(2),
           recipients: [

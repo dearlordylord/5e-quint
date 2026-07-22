@@ -1,5 +1,6 @@
 // KERNEL-COVERAGE: runtime-owner CREATION.CHOICE_DISCOVERY_CARDINALITY CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE CREATION.WIZARD_SPELLBOOK_LEARNING.CHOICE_FINALIZATION
 // UNIT-PROFILE-COVERAGE: runtime-owner character-creation.wizard-spellbook-learning-choice unit-feature.hunters-prey character-creation.origin-feat-proficiency-choice character-creation.species-trait-proficiency-choice character-creation.species-origin-feat-choice character-creation.species-origin-feat-proficiency-choice character-creation.species-lineage-choice
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { Either, Match, Option } from "effect";
 import {
   ALIGNMENT_CHOICES,
@@ -331,7 +332,7 @@ export function classSpellcastingChoiceHoles(
               options: spellcasting.cantripAccess.spellIds.map((spellId) => ({
                 optionId: creationChoiceOptionId(spellId),
                 label: spellId,
-                unitRef: { unitId: spellId },
+                unitRef: { unitId: authoredUnitId(spellId) },
               })),
             }),
           ]),
@@ -341,7 +342,7 @@ export function classSpellcastingChoiceHoles(
         options: preparedSpells.map((spell) => ({
           optionId: creationChoiceOptionId(spell.spellId),
           label: spell.spellId,
-          unitRef: { unitId: spell.spellId },
+          unitRef: { unitId: authoredUnitId(spell.spellId) },
         })),
       }),
     ]);
@@ -357,7 +358,7 @@ export function classSpellcastingChoiceHoles(
         options: spellcasting.cantripAccess.spellIds.map((spellId) => ({
           optionId: creationChoiceOptionId(spellId),
           label: spellId,
-          unitRef: { unitId: spellId },
+          unitRef: { unitId: authoredUnitId(spellId) },
         })),
       }),
       choiceHole({
@@ -366,7 +367,7 @@ export function classSpellcastingChoiceHoles(
         options: preparedSpells.map((spell) => ({
           optionId: creationChoiceOptionId(spell.spellId),
           label: spell.spellId,
-          unitRef: { unitId: spell.spellId },
+          unitRef: { unitId: authoredUnitId(spell.spellId) },
         })),
       }),
     ]);
@@ -388,7 +389,7 @@ export function classSpellcastingChoiceHoles(
       options: spellcasting.cantripAccess.spellIds.map((spellId) => ({
         optionId: creationChoiceOptionId(spellId),
         label: spellId,
-        unitRef: { unitId: spellId },
+        unitRef: { unitId: authoredUnitId(spellId) },
       })),
     }),
     choiceHole({
@@ -397,7 +398,7 @@ export function classSpellcastingChoiceHoles(
       options: wizardSpellbookSpells.map((spell) => ({
         optionId: creationChoiceOptionId(spell.spellId),
         label: spell.spellId,
-        unitRef: { unitId: spell.spellId },
+        unitRef: { unitId: authoredUnitId(spell.spellId) },
       })),
     }),
     choiceHole({
@@ -408,7 +409,7 @@ export function classSpellcastingChoiceHoles(
         .map((spellId) => ({
           optionId: creationChoiceOptionId(spellId),
           label: spellId,
-          unitRef: { unitId: spellId },
+          unitRef: { unitId: authoredUnitId(spellId) },
         })),
     }),
   ]);

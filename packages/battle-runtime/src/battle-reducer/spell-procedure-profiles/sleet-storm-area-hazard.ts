@@ -1,3 +1,4 @@
+import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-sleet-storm-area-hazard
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE
@@ -27,7 +28,6 @@ import {
   type ElapsedTimeTicks,
 } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
-import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either, Schema } from "effect";
 
 import {
@@ -62,7 +62,7 @@ type SleetStormAreaHazardSpellInvocation = Extract<
 type SleetStormAreaHazardResolveInput =
   SpellProcedureProfileResolveInput<SleetStormAreaHazardSpellInvocation>;
 type OngoingMechanics = Extract<
-  SpellRecord["mechanics"],
+  BattleSpellAdmissionSource["mechanics"],
   { readonly family: "ongoing_effect" }
 >;
 type OngoingOperationEffect = OngoingMechanics["operations"][number]["effect"];
@@ -91,7 +91,7 @@ const SLEET_STORM_RADIUS_FEET = 20;
 const SLEET_STORM_HEIGHT_FEET = 40;
 
 function admitSleetStormAreaHazard(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly SleetStormAreaHazardSpellInvocation[] {
   const sleetStorm = sleetStormAreaHazardSpell(spell);
@@ -126,7 +126,7 @@ function admitSleetStormAreaHazard(
 }
 
 function sleetStormAreaHazardSpell(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
 ): SleetStormAreaHazardProfileShape | null {
   if (spell.mechanics.family !== "ongoing_effect") {
     return null;

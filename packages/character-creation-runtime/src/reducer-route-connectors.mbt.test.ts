@@ -1,3 +1,4 @@
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
@@ -165,11 +166,11 @@ const ELDRITCH_BLAST_CANTRIP_UNIT_ID = "eldritch_blast";
 const POISON_SPRAY_CANTRIP_UNIT_ID = "poison_spray";
 const ELDRITCH_BLAST_CHOICE = {
   kind: "knownWarlockCantrip",
-  cantripId: ELDRITCH_BLAST_CANTRIP_UNIT_ID,
+  cantripId: authoredUnitId(ELDRITCH_BLAST_CANTRIP_UNIT_ID),
 } as const satisfies CharacterBuildEldritchInvocationRepeatableChoice;
 const POISON_SPRAY_CHOICE = {
   kind: "knownWarlockCantrip",
-  cantripId: POISON_SPRAY_CANTRIP_UNIT_ID,
+  cantripId: authoredUnitId(POISON_SPRAY_CANTRIP_UNIT_ID),
 } as const satisfies CharacterBuildEldritchInvocationRepeatableChoice;
 
 const HOLE_BY_TAG = {
@@ -373,13 +374,17 @@ const routeStateCheck = stateCheck(
 );
 
 describe("character creation reducer route connector MBT", () => {
-  it("routes draft fill batches through the creation reducer surface", async () => {
-    await runRouteMbt({
-      specFileName: "character-creation-runtime.route.mbt.qnt",
-      driver: createRuntimeRouteDriver(),
-      maxSteps: focusedMbtMaxSteps(6),
-    });
-  }, MBT_TEST_TIMEOUT_MS);
+  it(
+    "routes draft fill batches through the creation reducer surface",
+    async () => {
+      await runRouteMbt({
+        specFileName: "character-creation-runtime.route.mbt.qnt",
+        driver: createRuntimeRouteDriver(),
+        maxSteps: focusedMbtMaxSteps(6),
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 
   it("routes language and equipment fill rejections to draft or support-profile owners", () => {
     const rejectedLanguageRouteCases = [
@@ -535,169 +540,201 @@ describe("character creation reducer route connector MBT", () => {
     );
   });
 
-  it("routes class-feature build projections through the creation reducer surface", async () => {
-    await runRouteMbt({
-      specFileName: "character-creation-class-feature-projections.route.mbt.qnt",
-      driver: createCompletedReducerRouteDriver(
-        classFeatureProjectionRouteDriverSchema,
-        "cc:route-class-feature-projection",
-        {
-          doProjectMonkFocusAndUncannyMetabolism:
-            projectMonkFocusAndUncannyMetabolismBuildFactsRoute,
-          doProjectSorcererFontAndMetamagic:
-            projectSorcererFontAndMetamagicBuildFactsRoute,
-        },
-      ),
-      maxSteps: focusedMbtMaxSteps(2),
-    });
-  }, MBT_TEST_TIMEOUT_MS);
+  it(
+    "routes class-feature build projections through the creation reducer surface",
+    async () => {
+      await runRouteMbt({
+        specFileName:
+          "character-creation-class-feature-projections.route.mbt.qnt",
+        driver: createCompletedReducerRouteDriver(
+          classFeatureProjectionRouteDriverSchema,
+          "cc:route-class-feature-projection",
+          {
+            doProjectMonkFocusAndUncannyMetabolism:
+              projectMonkFocusAndUncannyMetabolismBuildFactsRoute,
+            doProjectSorcererFontAndMetamagic:
+              projectSorcererFontAndMetamagicBuildFactsRoute,
+          },
+        ),
+        maxSteps: focusedMbtMaxSteps(2),
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 
-  it("routes class-feature selected references through the creation reducer surface", async () => {
-    await runRouteMbt({
-      specFileName:
-        "character-creation-class-feature-selected-identity.route.mbt.qnt",
-      driver: createCompletedReducerRouteDriver(
-        classFeatureSelectedIdentityRouteDriverSchema,
-        "cc:route-class-feature-selected-identity",
-        {
-          doSelectBardExpertise: retainSelectedReferenceWithFactsRoute,
-          doProjectClericChannelDivinity:
-            projectSelectedReferenceWithFactsRoute,
-          doProjectDruidWildShape: projectSelectedReferenceWithFactsRoute,
-          doProjectDruidWildCompanion: projectSelectedReferenceWithFactsRoute,
-          doProjectMonksFocus: projectSelectedReferenceWithFactsRoute,
-          doProjectMonkUncannyMetabolism:
-            projectSelectedReferenceWithFactsRoute,
-          doSelectPaladinFightingStyle: retainSelectedReferenceWithFactsRoute,
-          doSelectRangerDeftExplorer: retainSelectedReferenceWithFactsRoute,
-          doSelectRangerFightingStyle: retainSelectedReferenceWithFactsRoute,
-          doProjectWarlockPactMagic: projectSelectedReferenceWithFactsRoute,
-          doSelectWizardScholar: retainSelectedReferenceWithFactsRoute,
-          doSelectWizardEvocationSavant: retainSelectedReferenceWithFactsRoute,
-        },
-      ),
-      maxSteps: focusedMbtMaxSteps(1),
-    });
-  }, MBT_TEST_TIMEOUT_MS);
+  it(
+    "routes class-feature selected references through the creation reducer surface",
+    async () => {
+      await runRouteMbt({
+        specFileName:
+          "character-creation-class-feature-selected-identity.route.mbt.qnt",
+        driver: createCompletedReducerRouteDriver(
+          classFeatureSelectedIdentityRouteDriverSchema,
+          "cc:route-class-feature-selected-identity",
+          {
+            doSelectBardExpertise: retainSelectedReferenceWithFactsRoute,
+            doProjectClericChannelDivinity:
+              projectSelectedReferenceWithFactsRoute,
+            doProjectDruidWildShape: projectSelectedReferenceWithFactsRoute,
+            doProjectDruidWildCompanion: projectSelectedReferenceWithFactsRoute,
+            doProjectMonksFocus: projectSelectedReferenceWithFactsRoute,
+            doProjectMonkUncannyMetabolism:
+              projectSelectedReferenceWithFactsRoute,
+            doSelectPaladinFightingStyle: retainSelectedReferenceWithFactsRoute,
+            doSelectRangerDeftExplorer: retainSelectedReferenceWithFactsRoute,
+            doSelectRangerFightingStyle: retainSelectedReferenceWithFactsRoute,
+            doProjectWarlockPactMagic: projectSelectedReferenceWithFactsRoute,
+            doSelectWizardScholar: retainSelectedReferenceWithFactsRoute,
+            doSelectWizardEvocationSavant:
+              retainSelectedReferenceWithFactsRoute,
+          },
+        ),
+        maxSteps: focusedMbtMaxSteps(1),
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 
-  it("routes Cleric and Druid order selections through the creation reducer surface", async () => {
-    await runRouteMbt({
-      specFileName:
-        "character-creation-cleric-druid-order-selected-identity.route.mbt.qnt",
-      driver: createCompletedReducerRouteDriver(
-        clericDruidOrderRouteDriverSchema,
-        "cc:route-cleric-druid-order",
-        {
-          doSelectClericProtectorOrder: retainAndProjectSelectedReferenceRoute,
-          doSelectClericThaumaturgeOrder: retainAndProjectSelectedReferenceRoute,
-          doSelectDruidMagicianOrder: retainAndProjectSelectedReferenceRoute,
-          doSelectDruidWardenOrder: retainAndProjectSelectedReferenceRoute,
-        },
-      ),
-      maxSteps: focusedMbtMaxSteps(1),
-    });
-  }, MBT_TEST_TIMEOUT_MS);
+  it(
+    "routes Cleric and Druid order selections through the creation reducer surface",
+    async () => {
+      await runRouteMbt({
+        specFileName:
+          "character-creation-cleric-druid-order-selected-identity.route.mbt.qnt",
+        driver: createCompletedReducerRouteDriver(
+          clericDruidOrderRouteDriverSchema,
+          "cc:route-cleric-druid-order",
+          {
+            doSelectClericProtectorOrder:
+              retainAndProjectSelectedReferenceRoute,
+            doSelectClericThaumaturgeOrder:
+              retainAndProjectSelectedReferenceRoute,
+            doSelectDruidMagicianOrder: retainAndProjectSelectedReferenceRoute,
+            doSelectDruidWardenOrder: retainAndProjectSelectedReferenceRoute,
+          },
+        ),
+        maxSteps: focusedMbtMaxSteps(1),
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 
-  it("routes Fighter Fighting Style selections through the creation reducer surface", async () => {
-    await runRouteMbt({
-      specFileName:
-        "character-creation-fighter-fighting-style-selected-identity.route.mbt.qnt",
-      driver: createCompletedReducerRouteDriver(
-        fighterFightingStyleRouteDriverSchema,
-        "cc:route-fighter-fighting-style",
-        {
-          doSelectDefenseFightingStyle: retainSelectedReferenceRoute,
-          doSelectArcheryFightingStyle: retainSelectedReferenceRoute,
-          doSelectGreatWeaponFightingStyle: retainSelectedReferenceRoute,
-          doSelectTwoWeaponFightingStyle: retainSelectedReferenceRoute,
-          doReplaceArcheryWithDefenseOnFighterLevelGain:
-            replaceFighterFightingStyleSelectedReferenceRoute({
-              initialFeatUnitId: PHASE1_FIGHTING_STYLE_ARCHERY_UNIT_ID,
-              selectedFeatUnitId: PHASE1_FIGHTING_STYLE_DEFENSE_UNIT_ID,
-            }),
-          doReplaceDefenseWithArcheryOnFighterLevelGain:
-            replaceFighterFightingStyleSelectedReferenceRoute({
-              initialFeatUnitId: PHASE1_FIGHTING_STYLE_DEFENSE_UNIT_ID,
-              selectedFeatUnitId: PHASE1_FIGHTING_STYLE_ARCHERY_UNIT_ID,
-            }),
-          doReplaceDefenseWithGreatWeaponFightingOnFighterLevelGain:
-            replaceFighterFightingStyleSelectedReferenceRoute({
-              initialFeatUnitId: PHASE1_FIGHTING_STYLE_DEFENSE_UNIT_ID,
-              selectedFeatUnitId:
-                PHASE1_FIGHTING_STYLE_GREAT_WEAPON_FIGHTING_UNIT_ID,
-            }),
-          doReplaceDefenseWithTwoWeaponFightingOnFighterLevelGain:
-            replaceFighterFightingStyleSelectedReferenceRoute({
-              initialFeatUnitId: PHASE1_FIGHTING_STYLE_DEFENSE_UNIT_ID,
-              selectedFeatUnitId:
-                PHASE1_FIGHTING_STYLE_TWO_WEAPON_FIGHTING_UNIT_ID,
-            }),
-        },
-      ),
-      maxSteps: focusedMbtMaxSteps(1),
-    });
-  }, MBT_TEST_TIMEOUT_MS);
+  it(
+    "routes Fighter Fighting Style selections through the creation reducer surface",
+    async () => {
+      await runRouteMbt({
+        specFileName:
+          "character-creation-fighter-fighting-style-selected-identity.route.mbt.qnt",
+        driver: createCompletedReducerRouteDriver(
+          fighterFightingStyleRouteDriverSchema,
+          "cc:route-fighter-fighting-style",
+          {
+            doSelectDefenseFightingStyle: retainSelectedReferenceRoute,
+            doSelectArcheryFightingStyle: retainSelectedReferenceRoute,
+            doSelectGreatWeaponFightingStyle: retainSelectedReferenceRoute,
+            doSelectTwoWeaponFightingStyle: retainSelectedReferenceRoute,
+            doReplaceArcheryWithDefenseOnFighterLevelGain:
+              replaceFighterFightingStyleSelectedReferenceRoute({
+                initialFeatUnitId: PHASE1_FIGHTING_STYLE_ARCHERY_UNIT_ID,
+                selectedFeatUnitId: PHASE1_FIGHTING_STYLE_DEFENSE_UNIT_ID,
+              }),
+            doReplaceDefenseWithArcheryOnFighterLevelGain:
+              replaceFighterFightingStyleSelectedReferenceRoute({
+                initialFeatUnitId: PHASE1_FIGHTING_STYLE_DEFENSE_UNIT_ID,
+                selectedFeatUnitId: PHASE1_FIGHTING_STYLE_ARCHERY_UNIT_ID,
+              }),
+            doReplaceDefenseWithGreatWeaponFightingOnFighterLevelGain:
+              replaceFighterFightingStyleSelectedReferenceRoute({
+                initialFeatUnitId: PHASE1_FIGHTING_STYLE_DEFENSE_UNIT_ID,
+                selectedFeatUnitId:
+                  PHASE1_FIGHTING_STYLE_GREAT_WEAPON_FIGHTING_UNIT_ID,
+              }),
+            doReplaceDefenseWithTwoWeaponFightingOnFighterLevelGain:
+              replaceFighterFightingStyleSelectedReferenceRoute({
+                initialFeatUnitId: PHASE1_FIGHTING_STYLE_DEFENSE_UNIT_ID,
+                selectedFeatUnitId:
+                  PHASE1_FIGHTING_STYLE_TWO_WEAPON_FIGHTING_UNIT_ID,
+              }),
+          },
+        ),
+        maxSteps: focusedMbtMaxSteps(1),
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 
-  it("routes Rogue Expertise selections through the creation reducer surface", async () => {
-    await runRouteMbt({
-      specFileName:
-        "character-creation-rogue-expertise-selected-identity.route.mbt.qnt",
-      driver: createRogueExpertiseReducerRouteDriver(),
-      maxSteps: focusedMbtMaxSteps(1),
-    });
-  }, MBT_TEST_TIMEOUT_MS);
+  it(
+    "routes Rogue Expertise selections through the creation reducer surface",
+    async () => {
+      await runRouteMbt({
+        specFileName:
+          "character-creation-rogue-expertise-selected-identity.route.mbt.qnt",
+        driver: createRogueExpertiseReducerRouteDriver(),
+        maxSteps: focusedMbtMaxSteps(1),
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 
-  it("routes Warlock invocation selections through the creation reducer surface", async () => {
-    await runRouteMbt({
-      specFileName:
-        "character-creation-warlock-eldritch-invocations-selected-identity.route.mbt.qnt",
-      driver: createCompletedReducerRouteDriver(
-        warlockInvocationRouteDriverSchema,
-        "cc:route-warlock-invocations",
-        {
-          doSelectLevelOneArmorOfShadows:
-            retainAndProjectWarlockLevelOneInvocationRoute,
-          doGainLevelTwoInvocations: warlockLevelGainSelectedReferenceRoute(
-            levelTwoInvocationGain(),
-          ),
-          doReplaceArmorWithEldritchMindOnWarlockLevelGain:
-            warlockLevelGainSelectedReferenceRoute(
-              levelThreeNonRepeatableInvocationReplacement(),
-              levelTwoNonRepeatableInvocationBuild(),
+  it(
+    "routes Warlock invocation selections through the creation reducer surface",
+    async () => {
+      await runRouteMbt({
+        specFileName:
+          "character-creation-warlock-eldritch-invocations-selected-identity.route.mbt.qnt",
+        driver: createCompletedReducerRouteDriver(
+          warlockInvocationRouteDriverSchema,
+          "cc:route-warlock-invocations",
+          {
+            doSelectLevelOneArmorOfShadows:
+              retainAndProjectWarlockLevelOneInvocationRoute,
+            doGainLevelTwoInvocations: warlockLevelGainSelectedReferenceRoute(
+              levelTwoInvocationGain(),
             ),
-          doReplaceRepeatableInvocationByChoice:
-            warlockLevelGainSelectedReferenceRoute(
-              levelThreeRepeatableInvocationReplacement(),
-              levelTwoRepeatableInvocationBuild(),
-            ),
-          doRejectPrerequisiteRetainedInvocationReplacement:
-            rejectedPrerequisiteRetainedInvocationReplacementRoute,
-          doRejectDuplicateInvocationSelections:
-            rejectedDuplicateInvocationSelectionsRoute,
-        },
-      ),
-      maxSteps: focusedMbtMaxSteps(1),
-    });
-  }, MBT_TEST_TIMEOUT_MS);
+            doReplaceArmorWithEldritchMindOnWarlockLevelGain:
+              warlockLevelGainSelectedReferenceRoute(
+                levelThreeNonRepeatableInvocationReplacement(),
+                levelTwoNonRepeatableInvocationBuild(),
+              ),
+            doReplaceRepeatableInvocationByChoice:
+              warlockLevelGainSelectedReferenceRoute(
+                levelThreeRepeatableInvocationReplacement(),
+                levelTwoRepeatableInvocationBuild(),
+              ),
+            doRejectPrerequisiteRetainedInvocationReplacement:
+              rejectedPrerequisiteRetainedInvocationReplacementRoute,
+            doRejectDuplicateInvocationSelections:
+              rejectedDuplicateInvocationSelectionsRoute,
+          },
+        ),
+        maxSteps: focusedMbtMaxSteps(1),
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 
-  it("routes Weapon Mastery selected weapon refs through the creation reducer surface", async () => {
-    await runRouteMbt({
-      specFileName:
-        "character-creation-weapon-mastery-containers-selected-identity.route.mbt.qnt",
-      driver: createCompletedReducerRouteDriver(
-        weaponMasteryRouteDriverSchema,
-        "cc:route-weapon-mastery",
-        {
-          doFinalizeFighterWeaponMastery: retainSelectedReferenceRoute,
-          doFinalizeBarbarianWeaponMastery: retainSelectedReferenceRoute,
-          doFinalizePaladinWeaponMastery: retainSelectedReferenceRoute,
-          doFinalizeRangerWeaponMastery: retainSelectedReferenceRoute,
-          doFinalizeRogueWeaponMastery: retainSelectedReferenceRoute,
-        },
-      ),
-      maxSteps: focusedMbtMaxSteps(1),
-    });
-  }, MBT_TEST_TIMEOUT_MS);
+  it(
+    "routes Weapon Mastery selected weapon refs through the creation reducer surface",
+    async () => {
+      await runRouteMbt({
+        specFileName:
+          "character-creation-weapon-mastery-containers-selected-identity.route.mbt.qnt",
+        driver: createCompletedReducerRouteDriver(
+          weaponMasteryRouteDriverSchema,
+          "cc:route-weapon-mastery",
+          {
+            doFinalizeFighterWeaponMastery: retainSelectedReferenceRoute,
+            doFinalizeBarbarianWeaponMastery: retainSelectedReferenceRoute,
+            doFinalizePaladinWeaponMastery: retainSelectedReferenceRoute,
+            doFinalizeRangerWeaponMastery: retainSelectedReferenceRoute,
+            doFinalizeRogueWeaponMastery: retainSelectedReferenceRoute,
+          },
+        ),
+        maxSteps: focusedMbtMaxSteps(1),
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 });
 
 function createRuntimeRouteDriver() {
@@ -772,10 +809,10 @@ function createRuntimeRouteDriver() {
       doRejectUnsupportedLanguage: () => {
         submitCreationFillBatch(session, {
           fills: [
-            choiceFill(choiceHoleByDraftPath(session.holes, "draft.languages"), [
-              "Dwarvish",
-              "Elvish",
-            ]),
+            choiceFill(
+              choiceHoleByDraftPath(session.holes, "draft.languages"),
+              ["Dwarvish", "Elvish"],
+            ),
           ],
           owner: "creationSupportProfileAdmission",
         });
@@ -783,10 +820,10 @@ function createRuntimeRouteDriver() {
       doRejectDuplicateLanguage: () => {
         submitCreationFillBatch(session, {
           fills: [
-            choiceFill(choiceHoleByDraftPath(session.holes, "draft.languages"), [
-              "Dwarvish",
-              "Dwarvish",
-            ]),
+            choiceFill(
+              choiceHoleByDraftPath(session.holes, "draft.languages"),
+              ["Dwarvish", "Dwarvish"],
+            ),
           ],
           owner: "characterDraft",
         });
@@ -800,9 +837,10 @@ function createRuntimeRouteDriver() {
       doRejectTooFewLanguages: () => {
         submitCreationFillBatch(session, {
           fills: [
-            choiceFill(choiceHoleByDraftPath(session.holes, "draft.languages"), [
-              "Dwarvish",
-            ]),
+            choiceFill(
+              choiceHoleByDraftPath(session.holes, "draft.languages"),
+              ["Dwarvish"],
+            ),
           ],
           owner: "characterDraft",
         });
@@ -810,11 +848,10 @@ function createRuntimeRouteDriver() {
       doRejectTooManyLanguages: () => {
         submitCreationFillBatch(session, {
           fills: [
-            choiceFill(choiceHoleByDraftPath(session.holes, "draft.languages"), [
-              "Dwarvish",
-              "Goblin",
-              "Elvish",
-            ]),
+            choiceFill(
+              choiceHoleByDraftPath(session.holes, "draft.languages"),
+              ["Dwarvish", "Goblin", "Elvish"],
+            ),
           ],
           owner: "characterDraft",
         });
@@ -862,11 +899,9 @@ function createRuntimeRouteDriver() {
   });
 }
 
-function createCompletedReducerRouteDriver<const Schema extends RouteDriverSchema>(
-  schema: Schema,
-  draftId: string,
-  actionRoutes: RouteActionMap<Schema>,
-) {
+function createCompletedReducerRouteDriver<
+  const Schema extends RouteDriverSchema,
+>(schema: Schema, draftId: string, actionRoutes: RouteActionMap<Schema>) {
   return defineDriver(schema, () => {
     let route = completedReducerSurfaceRoute(draftId);
     const handlers: Partial<Record<keyof Schema, () => void>> = {};
@@ -1018,9 +1053,7 @@ function appendCreationFactRoute(
   session.route = [...session.route, recordCreationFacts(input)];
 }
 
-function lastRouteEventOfKind<
-  Kind extends CharacterCreationRouteEvent["kind"],
->(
+function lastRouteEventOfKind<Kind extends CharacterCreationRouteEvent["kind"]>(
   route: readonly CharacterCreationRouteEvent[],
   kind: Kind,
 ): Extract<CharacterCreationRouteEvent, { readonly kind: Kind }> | undefined {
@@ -1037,9 +1070,7 @@ function lastRouteEventOfKind<
   return undefined;
 }
 
-function isRouteEventOfKind<
-  Kind extends CharacterCreationRouteEvent["kind"],
->(
+function isRouteEventOfKind<Kind extends CharacterCreationRouteEvent["kind"]>(
   event: CharacterCreationRouteEvent | undefined,
   kind: Kind,
 ): event is Extract<CharacterCreationRouteEvent, { readonly kind: Kind }> {
@@ -1101,7 +1132,9 @@ function initialManifestFills(
   return [
     choiceFill(choiceHoleByDraftPath(holes, "draft.progression.initial"), [
       progressionOptionId({
-        startingClass: classUnitId(PHASE1_CLASS_FIGHTER_UNIT_ID),
+        startingClass: classUnitId(
+          authoredUnitId(PHASE1_CLASS_FIGHTER_UNIT_ID),
+        ),
         advancements: [],
       }),
     ]),
@@ -1128,7 +1161,9 @@ function initialChoicesOnlyFills(
   return [
     choiceFill(choiceHoleByDraftPath(holes, "draft.progression.initial"), [
       progressionOptionId({
-        startingClass: classUnitId(PHASE1_CLASS_FIGHTER_UNIT_ID),
+        startingClass: classUnitId(
+          authoredUnitId(PHASE1_CLASS_FIGHTER_UNIT_ID),
+        ),
         advancements: [],
       }),
     ]),
@@ -1171,7 +1206,9 @@ function closedInitialProgressionHoleFills(): readonly CreationFill[] {
       holeId: creationHoleId("cc:draft:draft.progression.initial"),
       optionIds: [
         progressionOptionId({
-          startingClass: classUnitId(PHASE1_CLASS_FIGHTER_UNIT_ID),
+          startingClass: classUnitId(
+            authoredUnitId(PHASE1_CLASS_FIGHTER_UNIT_ID),
+          ),
           advancements: [],
         }),
       ],
@@ -1294,7 +1331,7 @@ function levelOneRogueExpertiseInitialManifestFills(
   return [
     choiceFill(choiceHoleByDraftPath(holes, "draft.progression.initial"), [
       progressionOptionId({
-        startingClass: classUnitId(SRD_ROGUE_CLASS_UNIT_ID),
+        startingClass: classUnitId(authoredUnitId(SRD_ROGUE_CLASS_UNIT_ID)),
         advancements: [],
       }),
     ]),
@@ -1326,9 +1363,7 @@ function supportedRogueExpertiseFillForHole(hole: CreationHole): CreationFill {
       `No support-profile options for Rogue Expertise route hole ${hole.holeId}.`,
     );
   }
-  const holeOptionIds = new Set(
-    hole.options.map((option) => option.optionId),
-  );
+  const holeOptionIds = new Set(hole.options.map((option) => option.optionId));
   const supportedOptionIdSet = new Set(supportedOptionIds);
   const optionIds = (
     preferredOptionIds ?? hole.options.map((option) => option.optionId)
@@ -1366,9 +1401,7 @@ function preferredRogueExpertiseOptionIds(
     hole.source.unitId === ROGUE_WEAPON_MASTERY_UNIT_ID &&
     hole.source.choiceKey === WEAPON_MASTERY_OPTIONS_CHOICE_KEY
   ) {
-    return LEVEL_ONE_ROGUE_WEAPON_MASTERY_UNIT_IDS.map(
-      creationChoiceOptionId,
-    );
+    return LEVEL_ONE_ROGUE_WEAPON_MASTERY_UNIT_IDS.map(creationChoiceOptionId);
   }
   return undefined;
 }
@@ -1435,11 +1468,15 @@ function choiceHoleByPredicate(
   label: string,
 ): Extract<CreationHole, { readonly kind: "choice" }> {
   const hole = holes.find(
-    (candidate): candidate is Extract<CreationHole, { readonly kind: "choice" }> =>
+    (
+      candidate,
+    ): candidate is Extract<CreationHole, { readonly kind: "choice" }> =>
       candidate.kind === "choice" && predicate(candidate),
   );
   if (hole === undefined) {
-    throw new Error(`Expected reducer-discovered creation choice hole ${label}.`);
+    throw new Error(
+      `Expected reducer-discovered creation choice hole ${label}.`,
+    );
   }
   return hole;
 }
@@ -1462,10 +1499,9 @@ function standardArrayFill(
   path: Extract<CreationHole["source"], { readonly tag: "draft" }>["path"],
 ): CreationFill {
   const hole = holes.find(
-    (candidate): candidate is Extract<
-      CreationHole,
-      { readonly kind: "abilityScores" }
-    > =>
+    (
+      candidate,
+    ): candidate is Extract<CreationHole, { readonly kind: "abilityScores" }> =>
       candidate.kind === "abilityScores" &&
       candidate.source.tag === "draft" &&
       candidate.source.path === path,
@@ -1517,7 +1553,9 @@ function wrongKindAbilityScoreFill(
 function choiceFillForKnownProtocolLoadoutArmor(
   optionIds: readonly string[],
 ): CreationFill {
-  const equipmentUnitId = loadoutEquipmentUnitId(PHASE1_ARMOR_CHAIN_MAIL_UNIT_ID);
+  const equipmentUnitId = loadoutEquipmentUnitId(
+    authoredUnitId(PHASE1_ARMOR_CHAIN_MAIL_UNIT_ID),
+  );
   if (Either.isLeft(equipmentUnitId)) {
     throw new Error("Known route MBT loadout armor Unit id must parse.");
   }
@@ -1562,14 +1600,14 @@ function projectSorcererFontAndMetamagicBuildFactsRoute(
         features: [
           {
             kind: "selectedSorcererMetamagicOption",
-            selectedFromUnitId: "sorcerer_metamagic",
+            selectedFromUnitId: authoredUnitId("sorcerer_metamagic"),
             optionId: requireRight(
               sorcererMetamagicOptionId("sorcerer_empowered_spell"),
             ),
           },
           {
             kind: "selectedSorcererMetamagicOption",
-            selectedFromUnitId: "sorcerer_metamagic",
+            selectedFromUnitId: authoredUnitId("sorcerer_metamagic"),
             optionId: requireRight(
               sorcererMetamagicOptionId("sorcerer_heightened_spell"),
             ),
@@ -1601,10 +1639,12 @@ function observeMonkFocusAndUncannyMetabolismBuildFacts(
     "Expected Monk 2 build to project Uncanny Metabolism facts.",
   );
 
-  expect(build.progression.startingClass).toBe(classUnitId("class_monk"));
+  expect(build.progression.startingClass).toBe(
+    classUnitId(authoredUnitId("class_monk")),
+  );
   expect(build.progression.advancements).toEqual([
     {
-      classUnitId: classUnitId("class_monk"),
+      classUnitId: classUnitId(authoredUnitId("class_monk")),
       hitPointRule: { tag: "fixedHigherLevelGain" },
     },
   ]);
@@ -1647,10 +1687,12 @@ function observeSorcererFontAndMetamagicBuildFacts(
     "sorcerer_heightened_spell",
   );
 
-  expect(build.progression.startingClass).toBe(classUnitId("class_sorcerer"));
+  expect(build.progression.startingClass).toBe(
+    classUnitId(authoredUnitId("class_sorcerer")),
+  );
   expect(build.progression.advancements).toEqual([
     {
-      classUnitId: classUnitId("class_sorcerer"),
+      classUnitId: classUnitId(authoredUnitId("class_sorcerer")),
       hitPointRule: { tag: "fixedHigherLevelGain" },
     },
   ]);
@@ -1692,14 +1734,14 @@ function classFeatureProjectionBuild(input: {
 }): CharacterBuild {
   return {
     progression: {
-      startingClass: classUnitId(input.startingClass),
+      startingClass: classUnitId(authoredUnitId(input.startingClass)),
       advancements: Array.from({ length: input.totalLevel - 1 }, () => ({
-        classUnitId: classUnitId(input.startingClass),
+        classUnitId: classUnitId(authoredUnitId(input.startingClass)),
         hitPointRule: { tag: "fixedHigherLevelGain" as const },
       })),
     },
-    background: "background_soldier",
-    species: "species_orc",
+    background: authoredUnitId("background_soldier"),
+    species: authoredUnitId("species_orc"),
     originLanguages: ["Common", "Dwarvish", "Goblin"],
     classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
@@ -1726,9 +1768,7 @@ function requiredBuildResource(
   resources: readonly CharacterBuildResource[],
   unitId: string,
 ): CharacterBuildResource {
-  const resource = resources.find(
-    (candidate) => candidate.unitId === unitId,
-  );
+  const resource = resources.find((candidate) => candidate.unitId === unitId);
   if (resource !== undefined) return resource;
   throw new Error(`Expected CharacterBuild resource ${unitId}.`);
 }
@@ -1825,7 +1865,7 @@ function retainLevelOneRogueExpertiseSelectedReferenceRoute(): readonly Characte
   );
 
   expect(replay.build.progression).toEqual({
-    startingClass: classUnitId(SRD_ROGUE_CLASS_UNIT_ID),
+    startingClass: classUnitId(authoredUnitId(SRD_ROGUE_CLASS_UNIT_ID)),
     advancements: [],
   });
   expect(proficiencies.expertise).toEqual(LEVEL_ONE_ROGUE_EXPERTISE_SKILLS);
@@ -1957,15 +1997,15 @@ function fightingStyleSelectedReferenceFeature(
 ): SelectedClassChoiceFeature {
   return {
     kind: "selectedClassChoice",
-    selectedFromUnitId: FIGHTER_FIGHTING_STYLE_UNIT_ID,
-    unitId: selectedFeatUnitId,
+    selectedFromUnitId: authoredUnitId(FIGHTER_FIGHTING_STYLE_UNIT_ID),
+    unitId: authoredUnitId(selectedFeatUnitId),
   };
 }
 
 function fighterLevelOneWeaponMasterySelectedReferenceFeatures(): readonly SelectedClassChoiceFeature[] {
   return FIGHTER_LEVEL_ONE_WEAPON_MASTERY_UNIT_IDS.map((unitId) => ({
     kind: "selectedClassChoice",
-    selectedFromUnitId: FIGHTER_WEAPON_MASTERY_UNIT_ID,
+    selectedFromUnitId: authoredUnitId(FIGHTER_WEAPON_MASTERY_UNIT_ID),
     unitId,
   }));
 }
@@ -1991,9 +2031,9 @@ function replaceFighterFightingStyleSelectedReferenceRoute(input: {
     const levelGain = requireRight(
       fighterLevelGainWithFightingStyleReplacement({
         unitLibrary,
-        classUnitId: classUnitId(PHASE1_CLASS_FIGHTER_UNIT_ID),
+        classUnitId: classUnitId(authoredUnitId(PHASE1_CLASS_FIGHTER_UNIT_ID)),
         hitPointRule: { tag: "fixedHigherLevelGain" },
-        selectedFeatUnitId: input.selectedFeatUnitId,
+        selectedFeatUnitId: authoredUnitId(input.selectedFeatUnitId),
       }),
     );
     const replacement = requireRight(
@@ -2017,7 +2057,9 @@ function replaceFighterFightingStyleSelectedReferenceRoute(input: {
         replacement.build,
         FIGHTER_FIGHTING_STYLE_UNIT_ID,
       ),
-    ).toEqual([fightingStyleSelectedReferenceFeature(input.selectedFeatUnitId)]);
+    ).toEqual([
+      fightingStyleSelectedReferenceFeature(input.selectedFeatUnitId),
+    ]);
     expect(
       selectedClassChoiceFeaturesFor(
         replacement.build,
@@ -2026,7 +2068,7 @@ function replaceFighterFightingStyleSelectedReferenceRoute(input: {
     ).toEqual(FIGHTER_LEVEL_ONE_WEAPON_MASTERY_UNIT_IDS);
     expect(replacement.build.progression.advancements).toEqual([
       {
-        classUnitId: classUnitId(PHASE1_CLASS_FIGHTER_UNIT_ID),
+        classUnitId: classUnitId(authoredUnitId(PHASE1_CLASS_FIGHTER_UNIT_ID)),
         hitPointRule: { tag: "fixedHigherLevelGain" },
       },
     ]);
@@ -2095,7 +2137,9 @@ function rejectedPrerequisiteRetainedInvocationReplacementRoute(
     }),
   );
   if (rejected.tag !== "rejected") {
-    throw new Error("Expected locked Eldritch Invocation replacement rejection.");
+    throw new Error(
+      "Expected locked Eldritch Invocation replacement rejection.",
+    );
   }
   expect(rejected.issue.code).toBe("lockedEldritchInvocationReplacement");
   expect(selectedWarlockInvocationCount(rejected.build)).toBe(5);
@@ -2238,25 +2282,27 @@ function warlockBuild(input: {
       totalLevel: 1,
       features: input.invocations.map((selection) => ({
         kind: "selectedEldritchInvocation",
-        selectedFromUnitId: WARLOCK_ELDRITCH_INVOCATIONS_UNIT_ID,
+        selectedFromUnitId: authoredUnitId(
+          WARLOCK_ELDRITCH_INVOCATIONS_UNIT_ID,
+        ),
         selection: parseWarlockInvocationSelection(selection),
       })),
     }),
     progression: {
-      startingClass: classUnitId(WARLOCK_CLASS_UNIT_ID),
+      startingClass: classUnitId(authoredUnitId(WARLOCK_CLASS_UNIT_ID)),
       advancements: Array.from({ length: input.totalLevel - 1 }, () => ({
-        classUnitId: classUnitId(WARLOCK_CLASS_UNIT_ID),
+        classUnitId: classUnitId(authoredUnitId(WARLOCK_CLASS_UNIT_ID)),
         hitPointRule: { tag: "fixedHigherLevelGain" as const },
       })),
     },
     spellcasting: {
       sources: [
         {
-          sourceUnitId: WARLOCK_CLASS_UNIT_ID,
+          sourceUnitId: authoredUnitId(WARLOCK_CLASS_UNIT_ID),
           spellcastingAbility: "cha",
-          cantrips: input.cantrips,
+          cantrips: input.cantrips.map(authoredUnitId),
           spellbook: [],
-          preparedSpells: input.preparedSpells,
+          preparedSpells: input.preparedSpells.map(authoredUnitId),
           spellcastingFocuses: ["arcane_focus"],
         },
       ],
@@ -2285,7 +2331,10 @@ function levelTwoRepeatableInvocationGain(): CharacterBuildWarlockLevelGain {
   return parsedWarlockLevelGain({
     gainedPreparedSpells: ["hellish_rebuke"],
     gainedInvocations: [
-      repeatableInvocation(REPELLING_BLAST_INVOCATION_ID, ELDRITCH_BLAST_CHOICE),
+      repeatableInvocation(
+        REPELLING_BLAST_INVOCATION_ID,
+        ELDRITCH_BLAST_CHOICE,
+      ),
       repeatableInvocation(REPELLING_BLAST_INVOCATION_ID, POISON_SPRAY_CHOICE),
     ],
   });
@@ -2296,7 +2345,9 @@ function levelThreeNonRepeatableInvocationReplacement(): CharacterBuildWarlockLe
     gainedPreparedSpells: ["mirror_image"],
     gainedInvocations: [],
     replacement: {
-      replaceInvocation: nonRepeatableInvocation(ARMOR_OF_SHADOWS_INVOCATION_ID),
+      replaceInvocation: nonRepeatableInvocation(
+        ARMOR_OF_SHADOWS_INVOCATION_ID,
+      ),
       selectedInvocation: nonRepeatableInvocation(ELDRITCH_MIND_INVOCATION_ID),
     },
   });
@@ -2321,8 +2372,12 @@ function levelSixLockedInvocationReplacement(): CharacterBuildWarlockLevelGain {
     gainedPreparedSpells: ["hideous_laughter"],
     gainedInvocations: [],
     replacement: {
-      replaceInvocation: nonRepeatableInvocation(PACT_OF_THE_BLADE_INVOCATION_ID),
-      selectedInvocation: nonRepeatableInvocation(PACT_OF_THE_CHAIN_INVOCATION_ID),
+      replaceInvocation: nonRepeatableInvocation(
+        PACT_OF_THE_BLADE_INVOCATION_ID,
+      ),
+      selectedInvocation: nonRepeatableInvocation(
+        PACT_OF_THE_CHAIN_INVOCATION_ID,
+      ),
     },
   });
 }
@@ -2341,8 +2396,14 @@ function levelTwoDuplicateRepeatableInvocations(): CharacterBuildWarlockLevelGai
   return parsedWarlockLevelGain({
     gainedPreparedSpells: ["hellish_rebuke"],
     gainedInvocations: [
-      repeatableInvocation(REPELLING_BLAST_INVOCATION_ID, ELDRITCH_BLAST_CHOICE),
-      repeatableInvocation(REPELLING_BLAST_INVOCATION_ID, ELDRITCH_BLAST_CHOICE),
+      repeatableInvocation(
+        REPELLING_BLAST_INVOCATION_ID,
+        ELDRITCH_BLAST_CHOICE,
+      ),
+      repeatableInvocation(
+        REPELLING_BLAST_INVOCATION_ID,
+        ELDRITCH_BLAST_CHOICE,
+      ),
     ],
   });
 }
@@ -2358,11 +2419,11 @@ function parsedWarlockLevelGain(input: {
   return requireRight(
     warlockLevelGain({
       unitLibrary,
-      classUnitId: classUnitId(WARLOCK_CLASS_UNIT_ID),
+      classUnitId: classUnitId(authoredUnitId(WARLOCK_CLASS_UNIT_ID)),
       hitPointRule: { tag: "fixedHigherLevelGain" },
       pactMagic: {
         gainedCantrips: [],
-        gainedPreparedSpells: input.gainedPreparedSpells,
+        gainedPreparedSpells: input.gainedPreparedSpells.map(authoredUnitId),
       },
       gainedInvocations: input.gainedInvocations,
       ...(input.replacement === undefined
@@ -2528,7 +2589,9 @@ function numberFromEnv(name: string, fallback: number): number {
   return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
 }
 
-function normalizeCharacterCreationRouteQuintState(raw: unknown): RouteProjection {
+function normalizeCharacterCreationRouteQuintState(
+  raw: unknown,
+): RouteProjection {
   const root = quintStateRecord(raw);
   const state = Object.hasOwn(root, "qState")
     ? quintRecordField(root, "qState")
@@ -2645,11 +2708,7 @@ function routeFills(raw: unknown): readonly CharacterCreationRouteFill[] {
 function mappedVariant<
   const Value extends string,
   const Mapping extends Readonly<Record<string, Value>>,
->(
-  raw: unknown,
-  mapping: Mapping,
-  label: string,
-): Value {
+>(raw: unknown, mapping: Mapping, label: string): Value {
   const tag = quintVariantTag(raw, label);
   if (hasOwnKey(mapping, tag)) {
     return mapping[tag];
@@ -2714,7 +2773,9 @@ function quintVariantValue(
   ) {
     return raw["value"];
   }
-  throw new Error(`Expected Quint ${expectedTag} variant value field ${field}.`);
+  throw new Error(
+    `Expected Quint ${expectedTag} variant value field ${field}.`,
+  );
 }
 
 function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {

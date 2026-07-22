@@ -3,6 +3,7 @@
 // KERNEL-COVERAGE: parity-witness CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION
 // KERNEL-COVERAGE: parity-witness CREATION.ADVANCEMENT.CLASS_FEATURE_REPLACEMENT
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt character-creation.fighter-fighting-style-advancement-replacement
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
@@ -470,7 +471,7 @@ function replacedFightingStyleProjection(input: {
   const fighterClassUnitId = expectRight(
     classUnitIdFromUnitId({
       unitLibrary,
-      classUnitId: PHASE1_CLASS_FIGHTER_UNIT_ID,
+      classUnitId: authoredUnitId(PHASE1_CLASS_FIGHTER_UNIT_ID),
     }),
   );
   const levelGain = expectRight(
@@ -478,7 +479,7 @@ function replacedFightingStyleProjection(input: {
       unitLibrary,
       classUnitId: fighterClassUnitId,
       hitPointRule: { tag: "fixedHigherLevelGain" },
-      selectedFeatUnitId: input.selectedFeatUnitId,
+      selectedFeatUnitId: authoredUnitId(input.selectedFeatUnitId),
     }),
   );
   const build = expectRight(
@@ -554,7 +555,7 @@ function requiredFightingStyleBuildFacts(build: CharacterBuild): {
   );
   return {
     fighterFightingStyleUnitRefPresent: unitRefIds.includes(
-      FIGHTER_FIGHTING_STYLE_UNIT_ID,
+      authoredUnitId(FIGHTER_FIGHTING_STYLE_UNIT_ID),
     ),
     selectedFeatUnitRefCount: fightingStyleUnitRefIds.filter(
       (unitId) => unitId === selectedFightingStyleFeature.unitId,
@@ -643,7 +644,9 @@ function characterChoiceFills(
   return [
     choiceFill(choiceHoleByDraftPath(holes, "draft.progression.initial"), [
       progressionOptionId({
-        startingClass: classUnitId(PHASE1_CLASS_FIGHTER_UNIT_ID),
+        startingClass: classUnitId(
+          authoredUnitId(PHASE1_CLASS_FIGHTER_UNIT_ID),
+        ),
         advancements: [],
       }),
     ]),

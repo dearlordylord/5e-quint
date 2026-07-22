@@ -1,3 +1,4 @@
+import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import {
   battleProcedureExecutionRefForTest,
   characterBattleFeatureInitForTest,
@@ -424,7 +425,7 @@ function channelDivinityUsesRemaining(state: BattleState): number {
 
 function requirePreserveLifeUnitRef() {
   const unitRef = battleUnitRefWithSupportProfiles({
-    unitRef: { unitId: clericPreserveLifeUnitId },
+    unitRef: { unitId: parseSharedUnitId(clericPreserveLifeUnitId) },
     unit: preserveLifeUnit,
     classLevels: [{ className: "cleric", level: classLevel(3) }],
   });

@@ -1,3 +1,4 @@
+import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-damage-save-or-attack spell.invocation-acid-arrow-attack-timing
 // KERNEL-COVERAGE: runtime-owner BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES BATTLE.SPELL.ACID_ARROW_ATTACK_TIMING BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING
 //
@@ -21,7 +22,6 @@
 // spiritual weapon attacks, object-contact repeats, and spellAttackDamage share
 // one damage lifecycle. The profile owns dispatch into that shared lifecycle.
 
-import type { SpellRecord } from "@dnd/surface/surface/types";
 import { DamageTypeSchema, DiceExprSchema } from "@dnd/surface/surface/schema";
 import {
   type BattleActDiscoveryCandidate,
@@ -97,7 +97,7 @@ type SpellAttackDamageResolveInput =
   SpellProcedureProfileResolveInput<SpellAttackDamageInvocation>;
 
 function admitSpellAttackDamage(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly SpellAttackDamageInvocation[] {
   const spellcasting = ctx.actor.origin.spellcasting;

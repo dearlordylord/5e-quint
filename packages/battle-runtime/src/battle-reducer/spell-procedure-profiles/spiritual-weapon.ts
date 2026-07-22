@@ -1,3 +1,4 @@
+import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spiritual-weapon-attack-proxy
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 import { DiceExprSchema } from "@dnd/surface/surface/schema";
@@ -39,7 +40,6 @@ import type {
   DiceExpr,
   DiceExprDelta,
   EffectAtom,
-  SpellRecord,
 } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 import {
@@ -66,7 +66,7 @@ import {
 import { resolveBonusActionSpellAttackProxyAct } from "../spells-resolve.ts";
 import type { SpellProcedureExecutionRegistry } from "./execution-registry.ts";
 import { currentActorId } from "../creature-state-leaves.ts";
-import { supportedDamageAmountExpr } from "../spells-profile-shared.ts";
+import { supportedDamageAmountExpr } from "../spells-execution-facts.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
@@ -128,7 +128,7 @@ type SupportedSpiritualWeaponDamageEffect = Extract<
 };
 
 function admitSpiritualWeaponAttackProxy(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly SpiritualWeaponAttackProxyInvocation[] {
   const proxy = spiritualWeaponSpell(spell);
@@ -182,7 +182,7 @@ function admitSpiritualWeaponAttackProxy(
 }
 
 function admitSpiritualWeaponRepeatAttack(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly SpiritualWeaponRepeatAttackInvocation[] {
   if (spiritualWeaponSpell(spell) === null) {
@@ -245,7 +245,7 @@ function spiritualWeaponRepeatIsLaterTurn(
   );
 }
 
-function spiritualWeaponSpell(spell: SpellRecord) {
+function spiritualWeaponSpell(spell: BattleSpellAdmissionSource) {
   if (spell.mechanics.family !== "ongoing_effect") {
     return null;
   }

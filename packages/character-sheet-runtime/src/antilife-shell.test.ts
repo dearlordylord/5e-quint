@@ -3,6 +3,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L19E-04-L5-BARRIER-WALL antilife_shell
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L19E-04-L5-BARRIER-WALL antilife_shell
 // UNIT-IDENTITY-REPLAY: L19E-04-L5-BARRIER-WALL antilife_shell doCastAntilifeShell
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, it, test } from "vitest";
 import {
   abilityScoreAssignment,
@@ -243,18 +244,22 @@ function antilifeShellDruidSheet(input: {
       classFeatureLanguages: [
         {
           kind: "classFeatureLanguageGrant",
-          sourceUnitId: "druid_druidic",
+          sourceUnitId: authoredUnitId("druid_druidic"),
           language: "Druidic",
         },
       ],
       spellcasting: {
         sources: [
           {
-            sourceUnitId: "class_druid",
+            sourceUnitId: authoredUnitId("class_druid"),
             spellcastingAbility: "wis",
-            cantrips: ["druidcraft", "guidance", "produce_flame"],
+            cantrips: [
+              authoredUnitId("druidcraft"),
+              authoredUnitId("guidance"),
+              authoredUnitId("produce_flame"),
+            ],
             spellbook: [],
-            preparedSpells: input.preparedSpells,
+            preparedSpells: input.preparedSpells.map(authoredUnitId),
             spellcastingFocuses: ["druidic_focus"],
           },
         ],
@@ -290,14 +295,14 @@ function armorClassBuild(input: {
 }): CharacterBuild {
   return {
     progression: {
-      startingClass: classUnitId(input.startingClass),
+      startingClass: classUnitId(authoredUnitId(input.startingClass)),
       advancements: (input.advancements ?? []).map((classId) => ({
-        classUnitId: classUnitId(classId),
+        classUnitId: classUnitId(authoredUnitId(classId)),
         hitPointRule: { tag: "fixedHigherLevelGain" },
       })),
     },
-    background: "background_soldier",
-    species: "species_orc",
+    background: authoredUnitId("background_soldier"),
+    species: authoredUnitId("species_orc"),
     originLanguages: ["Common", "Dwarvish", "Goblin"],
     classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
@@ -337,10 +342,10 @@ function requireRight<R, L>(result: Either.Either<R, L>): R {
 function minimalUnitCatalog(units: readonly UnitRecord[]): UnitCatalog {
   const records = new Map(units.map((unit) => [unit.id, unit]));
   return {
-    getUnit: (id) => Option.fromNullable(records.get(id)),
+    getUnit: (id) => Option.fromNullable(records.get(authoredUnitId(id))),
     listUnits: () => [...records.values()],
     requireUnit: (id) => {
-      const unit = records.get(id);
+      const unit = records.get(authoredUnitId(id));
       if (unit === undefined) {
         throw new Error(`Missing test Unit: ${id}`);
       }

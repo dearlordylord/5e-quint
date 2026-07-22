@@ -1,3 +1,4 @@
+import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-insect-plague-area-hazard
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 import { DiceExprSchema } from "@dnd/surface/surface/schema";
@@ -24,7 +25,6 @@ import {
   type ElapsedTimeTicks,
 } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
-import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either, Schema } from "effect";
 
 import {
@@ -41,7 +41,7 @@ import {
   SpellSlotInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import { spellAreaChoiceHole } from "../spells-holes-fills.ts";
-import { supportedDamageAmountExpr } from "../spells-profile-shared.ts";
+import { supportedDamageAmountExpr } from "../spells-execution-facts.ts";
 import { resolveInsectPlagueAreaHazardSpellAct } from "../spells-resolve-area-effects.ts";
 import type {
   SpellAdmissionContext,
@@ -60,7 +60,7 @@ type InsectPlagueAreaHazardSpellInvocation = Extract<
 type InsectPlagueAreaHazardResolveInput =
   SpellProcedureProfileResolveInput<InsectPlagueAreaHazardSpellInvocation>;
 type InsectPlagueMechanics = Extract<
-  SpellRecord["mechanics"],
+  BattleSpellAdmissionSource["mechanics"],
   { readonly family: "ongoing_effect" }
 >;
 type InsectPlagueSaveGate = Extract<
@@ -87,7 +87,7 @@ const INSECT_PLAGUE_DAMAGE_DIE_SIZE = 10;
 const INSECT_PLAGUE_DAMAGE_DICE_PER_SLOT_LEVEL = 1;
 
 function admitInsectPlagueAreaHazard(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly InsectPlagueAreaHazardSpellInvocation[] {
   const insectPlague = insectPlagueAreaHazardSpell(spell);
@@ -130,7 +130,7 @@ function admitInsectPlagueAreaHazard(
 }
 
 function insectPlagueAreaHazardSpell(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
 ): InsectPlagueProfileShape | null {
   if (spell.mechanics.family !== "ongoing_effect") {
     return null;

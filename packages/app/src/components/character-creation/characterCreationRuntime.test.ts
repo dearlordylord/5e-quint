@@ -13,6 +13,7 @@ import {
   SUPPORTED_LANGUAGE_OPTION_IDS
 } from "@dnd/character-creation-runtime"
 import { type CharacterSheet, characterSheetDruidWildShapeKnownForms } from "@dnd/character-sheet-runtime"
+import { statBlockId, unitId } from "@dnd/shared/game-facts"
 import { Hp } from "@dnd/shared/types"
 import { Either } from "effect"
 import { describe, expect, test } from "vitest"
@@ -28,10 +29,10 @@ import {
 
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.class-feature-use-count-resource
 const DRUID_WILD_SHAPE_KNOWN_FORM_IDS = [
-  "stat_block_rat",
-  "stat_block_riding_horse",
-  "stat_block_spider",
-  "stat_block_wolf"
+  statBlockId("stat_block_rat"),
+  statBlockId("stat_block_riding_horse"),
+  statBlockId("stat_block_spider"),
+  statBlockId("stat_block_wolf")
 ] as const
 
 describe("character creation runtime", () => {
@@ -97,10 +98,10 @@ function completeSupportedDruidTwoDraft(): CharacterDraft {
     draftId: createStoredDraftId("app:test:druid-wild-shape")
   })
   const progressionOption = progressionOptionId({
-    startingClass: classUnitId("class_druid"),
+    startingClass: classUnitId(unitId("class_druid")),
     advancements: [
       {
-        classUnitId: classUnitId("class_druid"),
+        classUnitId: classUnitId(unitId("class_druid")),
         hitPointRule: { tag: "fixedHigherLevelGain" }
       }
     ]

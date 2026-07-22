@@ -1,4 +1,5 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.cleric-divine-intervention-session-invocation
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import {
   DRUID_WILD_SHAPE_UNIT_ID,
   DRUID_WILD_SHAPE_KNOWN_FORM_ISSUE_CODES,
@@ -103,9 +104,9 @@ export const CHARACTER_SHEET_USE_COUNT_RESOURCE_UNIT_IDS = [
   DRUID_WILD_SHAPE_UNIT_ID,
   MONK_MONKS_FOCUS_UNIT_ID,
   // authored-id-dispatch-allow: character-sheet-resource-support-admission-boundary
-  "cleric_divine_intervention",
+  authoredUnitId("cleric_divine_intervention"),
   // authored-id-dispatch-allow: character-sheet-resource-support-admission-boundary
-  "ranger_tireless",
+  authoredUnitId("ranger_tireless"),
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
 export type CharacterSheetUseCountResourceUnitId =
   (typeof CHARACTER_SHEET_USE_COUNT_RESOURCE_UNIT_IDS)[number];

@@ -37,14 +37,14 @@ import type {
 } from "../battle-state-execution.ts";
 import { SIZES } from "@dnd/shared/types";
 import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
-import type { UnitSupportProcedureExecution } from "../character-execution-admission.ts";
-import type { CharacterBattleUseCountResourceState } from "../character-battle-resources.ts";
+import type { UnitSupportProcedureExecution } from "../character-execution-queries.ts";
 import {
   characterBattleResourceIsUseCount,
   resourceHasUsesRemaining,
   spendCharacterResourceUse,
-} from "../character-battle-resources.ts";
-import { martialArtsSrdDieSizeAtClassLevel } from "../unit-feature-support.ts";
+  type CharacterBattleUseCountResourceState,
+} from "../character-battle-resource-execution.ts";
+import { martialArtsSrdDieSizeAtClassLevel } from "../unit-feature-execution-constants.ts";
 
 import type { MonkFocusFlurryOfBlowsActionResource } from "./battle-runtime-protocol.ts";
 import { attackActionOptionsForActor } from "./attack-damage-apply.ts";
@@ -52,7 +52,7 @@ import { applyDashToActor, applyDisengage } from "./attack-resolution.ts";
 import {
   combatantCanTakeActions,
   isCharacterBattleCreatureState,
-} from "./creature-state.ts";
+} from "./creature-state-execution.ts";
 import {
   attackTargetChoices,
   attackTargetHole,
@@ -61,7 +61,7 @@ import {
 import { representedMovementSpeedKinds } from "./movement-speed.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { resolveSelectedAttackProcedure } from "./attack-main.ts";
-import { snapshotBattle } from "./dispatcher.ts";
+import { snapshotBattle } from "./battle-snapshot.ts";
 import { applyTemporaryHitPoints } from "./damage-apply.ts";
 import { combatantEffectiveSize } from "./druid-wild-shape.ts";
 import { clearPendingAttackRollMissToHitReplacementSelection } from "./statblock-attacks.ts";

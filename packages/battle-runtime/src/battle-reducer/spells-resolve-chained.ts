@@ -13,10 +13,6 @@ import { rolledDiceTotal } from "@dnd/shared-algebras/runtime-dice-algebra";
 import { damageAmount as toDamageAmount } from "@dnd/shared/types";
 import type { DamageType } from "@dnd/surface/surface/types";
 import {
-  attackRollIsCriticalHit,
-  maybeOpenInterruptWindow,
-  openAfterDamageSequenceInterruptWindow,
-  spellAttackRerollUnsupportedIssue,
   type ActionSpellBattleResolutionInput,
   type BattleAfterDamageEvent,
   type BattleAttackDamageDisposition,
@@ -31,10 +27,16 @@ import {
   type BattleTargetSpatialFact,
   type BonusActionSpellBattleResolutionInput,
   type BattleExecutableSpellInvocation,
-  snapshotBattle,
   validateRolledDiceFillForDiceExpr,
 } from "../battle-state-execution.ts";
-import type { CharacterBattleMetamagicOptionFact } from "../character-battle-resources.ts";
+import { attackRollIsCriticalHit } from "./attack-resolution.ts";
+import {
+  maybeOpenInterruptWindow,
+  openAfterDamageSequenceInterruptWindow,
+} from "./interrupt-execution.ts";
+import { snapshotBattle } from "./battle-snapshot.ts";
+import { spellAttackRerollUnsupportedIssue } from "./spell-reroll-issues.ts";
+import type { CharacterBattleMetamagicOptionFact } from "../character-battle-resource-execution.ts";
 import type { CombatantId } from "../identity.ts";
 import {
   damageDispositionFillFor,
@@ -54,7 +56,7 @@ import {
   DamageRelationshipDecisionsByHole,
   damageRelationshipDecisionFillCheck,
 } from "./damage-relationship-decisions.ts";
-import { activeEffectArmorClass } from "./creature-state.ts";
+import { activeEffectArmorClass } from "./creature-state-execution.ts";
 import {
   applyBattleHitPointDamage,
   concentrationSavingThrowHole,
@@ -106,7 +108,7 @@ import {
   spellDamageTypeChoiceHole,
   spellTargetIsLegal,
 } from "./spells-holes-fills.ts";
-import { spellAttackKindForRedirect } from "./spells-profiles.ts";
+import { spellAttackKindForRedirect } from "./spells-profiles-attack-damage.ts";
 import {
   recordAttackRollMissToHitReplacementUsed,
   selectedAttackRollMissToHitReplacement,

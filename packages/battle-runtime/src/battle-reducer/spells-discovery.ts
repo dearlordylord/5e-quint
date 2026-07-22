@@ -16,7 +16,6 @@
 // variant for each cast act.
 //
 // KERNEL-COVERAGE: runtime-owner BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES BATTLE.COMMAND.OPTION_AND_NEXT_TURN
-import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Match } from "effect";
 import type { CombatantId } from "../identity.ts";
 import { BATTLE_READIED_SPELL_TRIGGERS } from "../battle-interrupt-triggers.ts";
@@ -26,7 +25,7 @@ import {
   spellActTurnResourceAvailable,
   spellHasAvailableSpend,
 } from "./spell-turn-resources.ts";
-import { supportedSpellActs } from "./spells-profiles.ts";
+import { supportedSpellActs } from "./supported-spell-acts.ts";
 import {
   spellProcedureExecutionFor,
   type RegisteredSpellProcedure,
@@ -48,6 +47,7 @@ import {
   type BattleActDiscoveryCandidate,
   type BattleCreatureState,
   type BattleExecutableSpellInvocation,
+  type BattleSpellAdmissionSource,
   type BattleHole,
   type BattleState,
   type ReadiedSpellInvocation,
@@ -682,7 +682,9 @@ export function spellInvocationCasterPrerequisiteIsMet(
   );
 }
 
-export function spellRequiresVerbal(spell: SpellRecord): boolean {
+export function spellRequiresVerbal(
+  spell: BattleSpellAdmissionSource,
+): boolean {
   return "components" in spell.mechanics && spell.mechanics.components.v;
 }
 

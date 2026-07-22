@@ -1,5 +1,6 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.wall-of-stone-session-invocation
 // UNIT-PROFILE-COVERAGE: runtime-owner table-caller.wall-of-stone-object-barrier-contract
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { timeSpanDuration } from "@dnd/shared/elapsed-time";
 import { spellSlotLevel } from "@dnd/shared/types";
 import type { UnitCatalog } from "@dnd/character-creation-runtime";
@@ -75,7 +76,10 @@ export function castWallOfStone(input: {
 function wallOfStoneSpell(
   unitLibrary: UnitCatalog,
 ): Either.Either<SpellRecord, CharacterSheetIssue> {
-  const unit = getRequiredUnit(unitLibrary, WALL_OF_STONE_SPELL_ID);
+  const unit = getRequiredUnit(
+    unitLibrary,
+    authoredUnitId(WALL_OF_STONE_SPELL_ID),
+  );
   if (Either.isLeft(unit)) return Either.left(unit.left);
   if (unit.right.kind !== "spell") {
     return characterSheetIssue("Wall of Stone requires a Spell record.");

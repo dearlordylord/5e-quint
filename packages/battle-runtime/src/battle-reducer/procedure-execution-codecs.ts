@@ -6,6 +6,7 @@ import {
   CREATURE_TYPES,
 } from "@dnd/shared/game-facts";
 import { ClassLevel } from "@dnd/shared/types";
+import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 import {
   AbilitySchema,
   ActionRestrictionSchema,
@@ -15,7 +16,7 @@ import {
   BATTLE_CUNNING_STRIKE_OPTION_SELECTION_IDS,
   DRACONIC_ANCESTRY_DAMAGE_TYPES,
   DRACONIC_ANCESTRY_DAMAGE_TYPE_HOLE_ID,
-} from "../unit-feature-support.ts";
+} from "../unit-feature-execution-constants.ts";
 import {
   BattleProcedureExecutionRef,
   BattleResourcePoolExecutionRef,
@@ -807,6 +808,24 @@ const AttackDamageReductionZeroDamageRedirectProcedureExecutionSchema =
     }),
   });
 
+const AttackDamageReductionProcedureExecutionFields = {
+  kind: Schema.Literal("attackDamageReduction"),
+  requiresVisibleAttacker: Schema.optionalWith(Schema.Literal(true), {
+    exact: true,
+  }),
+  damageIncludes: Schema.optionalWith(Schema.Array(DamageTypeSchema), {
+    exact: true,
+  }),
+  reduction: Schema.Union(
+    Schema.Struct({ kind: Schema.Literal("halfDamage") }),
+    Schema.Struct({
+      kind: Schema.Literal("dicePlusAbilityModifierPlusClassLevel"),
+      dieSize: Schema.Literal(10),
+      ability: Schema.Literal("dex"),
+    }),
+  ),
+} as const;
+
 const ReactionRollOrDamageReductionModifierProcedureExecutionSchema =
   Schema.Union(
     Schema.Struct({
@@ -827,26 +846,11 @@ const ReactionRollOrDamageReductionModifierProcedureExecutionSchema =
       requiresVisibleCreature: Schema.Literal(true),
       reduction: ResourceDieReductionProcedureExecutionSchema,
     }),
+    Schema.Struct(AttackDamageReductionProcedureExecutionFields),
     Schema.Struct({
-      kind: Schema.Literal("attackDamageReduction"),
-      requiresVisibleAttacker: Schema.optionalWith(Schema.Literal(true), {
-        exact: true,
-      }),
-      damageIncludes: Schema.optionalWith(Schema.Array(DamageTypeSchema), {
-        exact: true,
-      }),
-      reduction: Schema.Union(
-        Schema.Struct({ kind: Schema.Literal("halfDamage") }),
-        Schema.Struct({
-          kind: Schema.Literal("dicePlusAbilityModifierPlusClassLevel"),
-          dieSize: Schema.Literal(10),
-          ability: Schema.Literal("dex"),
-        }),
-      ),
-      zeroDamageRedirect: Schema.optionalWith(
+      ...AttackDamageReductionProcedureExecutionFields,
+      zeroDamageRedirect:
         AttackDamageReductionZeroDamageRedirectProcedureExecutionSchema,
-        { exact: true },
-      ),
     }),
     Schema.Struct({
       kind: Schema.Literal("fallDamageReduction"),
@@ -952,7 +956,7 @@ export const BardicInspirationGrantProcedureExecutionSchema = Schema.Struct({
   kind: Schema.Literal("bardicInspirationGrant"),
   rangeFeet: MovementFeet,
   dieSize: DamageDieSizeSchema,
-  durationTicks: Schema.Number,
+  durationTicks: ElapsedTimeTicksSchema,
   spends: MechanicalSingleResourceSpendSchema,
 });
 
@@ -1092,7 +1096,7 @@ export const MagicActionSaveGatedConditionProcedureExecutionSchema =
       }),
       onFail: Schema.Struct({
         condition: Schema.Literal("frightened"),
-        durationTicks: Schema.Number,
+        durationTicks: ElapsedTimeTicksSchema,
         earlyEnd: Schema.Literal("targetTakesAnyDamage"),
         turnRestriction: Schema.Literal("moveActionOrBonusAction"),
       }),
@@ -1182,7 +1186,7 @@ const CunningStrikeEffectSchema = Schema.Union(
     onFail: Schema.Struct({
       kind: Schema.Literal("applyCondition"),
       condition: Schema.Literal("poisoned"),
-      durationTicks: Schema.Number,
+      durationTicks: ElapsedTimeTicksSchema,
       repeatSave: Schema.Struct({
         cadence: Schema.Literal("endOfTargetTurn"),
         onSuccess: Schema.Literal("endCondition"),

@@ -1,6 +1,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.armor-class-base-formula
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV91B barbarian_unarmored_defense monk_unarmored_defense
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L13UG-A15 sorcerer_draconic_resilience
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, test } from "vitest";
 import {
   Either,
@@ -12,7 +13,7 @@ import {
   draconicResilienceArmorClassProjectionTestName,
   expectRight,
   requireRight,
-  unitLibrary
+  unitLibrary,
 } from "./test-support.ts";
 
 describe("Character Sheet runtime / armor class", () => {
@@ -45,7 +46,7 @@ describe("Character Sheet runtime / armor class", () => {
     expect(state.base).toMatchObject({
       kind: "ability_sum",
       source: "unarmored_defense",
-      sourceUnitId: "barbarian_unarmored_defense",
+      sourceUnitId: authoredUnitId("barbarian_unarmored_defense"),
     });
     expect(currentArmorClass(state)).toBe(15);
   });
@@ -85,8 +86,8 @@ describe("Character Sheet runtime / armor class", () => {
           features: [
             {
               kind: "selectedClassChoice",
-              selectedFromUnitId: "class_sorcerer",
-              unitId: "subclass_sorcerer_draconic_sorcery",
+              selectedFromUnitId: authoredUnitId("class_sorcerer"),
+              unitId: authoredUnitId("subclass_sorcerer_draconic_sorcery"),
             },
           ],
         },
@@ -97,7 +98,7 @@ describe("Character Sheet runtime / armor class", () => {
     expect(state.base).toMatchObject({
       kind: "ability_sum",
       source: "class_feature_base_plus_ability",
-      sourceUnitId: "sorcerer_draconic_resilience",
+      sourceUnitId: authoredUnitId("sorcerer_draconic_resilience"),
       abilityModifiers: ["dex", "cha"],
     });
     expect(currentArmorClass(state)).toBe(15);
@@ -137,8 +138,8 @@ describe("Character Sheet runtime / armor class", () => {
         features: [
           {
             kind: "selectedClassChoice",
-            selectedFromUnitId: "class_fighter",
-            unitId: "missing_unarmored_defense",
+            selectedFromUnitId: authoredUnitId("class_fighter"),
+            unitId: authoredUnitId("missing_unarmored_defense"),
           },
         ],
       },
@@ -161,7 +162,7 @@ describe("Character Sheet runtime / armor class", () => {
         unitLibrary,
         baseChoice: {
           kind: "class_feature",
-          unitId: "monk_unarmored_defense",
+          unitId: authoredUnitId("monk_unarmored_defense"),
         },
       }),
     );
@@ -174,19 +175,19 @@ describe("Character Sheet runtime / armor class", () => {
         unitLibrary,
         baseChoice: {
           kind: "class_feature",
-          unitId: "barbarian_unarmored_defense",
+          unitId: authoredUnitId("barbarian_unarmored_defense"),
         },
       }),
     );
 
     expect(monkState.base).toMatchObject({
       source: "unarmored_defense",
-      sourceUnitId: "monk_unarmored_defense",
+      sourceUnitId: authoredUnitId("monk_unarmored_defense"),
     });
     expect(currentArmorClass(monkState)).toBe(15);
     expect(barbarianState.base).toMatchObject({
       source: "unarmored_defense",
-      sourceUnitId: "barbarian_unarmored_defense",
+      sourceUnitId: authoredUnitId("barbarian_unarmored_defense"),
     });
     expect(currentArmorClass(barbarianState)).toBe(13);
   });
@@ -220,7 +221,7 @@ describe("Character Sheet runtime / armor class", () => {
         unitLibrary,
         baseChoice: {
           kind: "class_feature",
-          unitId: "barbarian_unarmored_defense",
+          unitId: authoredUnitId("barbarian_unarmored_defense"),
         },
       }),
     );

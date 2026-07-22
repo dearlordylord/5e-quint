@@ -15,13 +15,12 @@ import {
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { isMonkWeapon } from "@dnd/shared-algebras/martial-arts-algebra";
 import type { HoleInstanceKey } from "@dnd/shared-algebras/runtime-hole-algebra";
-import type { WeaponRecord } from "@dnd/surface/surface/types";
 import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
 import type { BattleSubject } from "../battle-subjects.ts";
 import {
   CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
   characterUnitProcedure,
-} from "../character-execution-admission.ts";
+} from "../character-execution-queries.ts";
 import { isPresentFindFamiliarCombatant } from "../find-familiar-state.ts";
 import {
   attackExecutionSelectionForOption,
@@ -41,11 +40,8 @@ import { attackDamageAbilityModifierChoiceProcedureRefs } from "./attack-damage-
 import {
   LIGHT_EXTRA_ATTACK_DAMAGE_ABILITY_MODIFIER_SUPPORT_PROFILE,
   MARTIAL_ARTS_ATTACK_PROJECTION_SUPPORT_PROFILE,
-} from "../unit-feature-support.ts";
+} from "../unit-feature-execution-constants.ts";
 import {
-  ATTACK_DAMAGE_DISPOSITION_HOLE_ID,
-  ATTACK_DAMAGE_DISPOSITION_HOLE_INSTANCE,
-  isStatBlockMultiattackActionResource,
   type AttackDamageRider,
   type BattleAttackDamageDisposition,
   type BattleActiveEffect,
@@ -59,8 +55,13 @@ import {
   type MagicWeaponEnhancementBonus,
   type SpellMarkedDamageRider,
   type SpellAttackDamageComponent,
-  type StatBlockMultiattackActionResource,
 } from "../battle-state-execution.ts";
+import {
+  ATTACK_DAMAGE_DISPOSITION_HOLE_ID,
+  ATTACK_DAMAGE_DISPOSITION_HOLE_INSTANCE,
+  type StatBlockMultiattackActionResource,
+} from "./battle-runtime-protocol.ts";
+import { isStatBlockMultiattackActionResource } from "./battle-discovery.ts";
 import { attackDamageDieFloorChoiceProcedureRefs } from "./attack-damage-die-floor-choice.ts";
 import {
   damageAllowsKnockOut,
@@ -76,7 +77,7 @@ import {
 import { activeSelfTransformationNaturalWeaponsEffect } from "./spells-active-effects.ts";
 import { scoreModifier } from "./domain-helpers.ts";
 import { statBlockAttackActionOptions } from "./statblock.ts";
-import { statBlockProcedureResourcesAvailable } from "../stat-block-execution.ts";
+import { statBlockProcedureResourcesAvailable } from "../stat-block-execution-state.ts";
 import {
   activeDruidWildShape,
   activeDruidWildShapeEffect,
@@ -401,11 +402,12 @@ export function attackActionOptionsForActor(
     const wildShape = activeDruidWildShape(actor);
     if (wildShape !== null) {
       return [
-        ...statBlockAttackActionOptions(wildShape.admission).filter((option) =>
-          statBlockProcedureResourcesAvailable(
-            wildShape.admission.execution,
-            option.procedureRef,
-          ),
+        ...statBlockAttackActionOptions(wildShape.admission.execution).filter(
+          (option) =>
+            statBlockProcedureResourcesAvailable(
+              wildShape.admission.execution,
+              option.procedureRef,
+            ),
         ),
         ...wildShapeWornWeaponAttackOptions(state, actor, wildShape.effect),
       ];
@@ -441,7 +443,7 @@ export function attackActionOptionsForActor(
     const multiattackAttackProcedureRefs = multiattackResources.map(
       (resource) => resource.attackProcedureRef,
     );
-    return statBlockAttackActionOptions(origin).filter(
+    return statBlockAttackActionOptions(origin.execution).filter(
       (option) =>
         option.procedureRef !== undefined &&
         statBlockProcedureResourcesAvailable(
@@ -622,7 +624,7 @@ function wildShapeWornLoadoutWeaponObjectForAttack(
     formLimbs: effect.formLimbs,
     equipmentDisposition: effect.equipmentDisposition,
     objectKind,
-    unitId: attack.weapon.id,
+    unitId: attack.weapon.weaponUnitId,
   });
 }
 
@@ -1137,7 +1139,7 @@ function mainHandWeaponItemIdForAttack(
   }
   const mainHandWeapon = actor.origin.selectedLoadout.weapon;
   return mainHandWeapon !== undefined &&
-    mainHandWeapon.unitId === attack.weapon.id
+    mainHandWeapon.unitId === attack.weapon.weaponUnitId
     ? mainHandWeapon.itemId
     : undefined;
 }
@@ -1154,7 +1156,7 @@ function offHandWeaponItemIdForAttack(
   }
   const offHandWeapon = actor.origin.selectedLoadout.offHandWeapon;
   return offHandWeapon !== undefined &&
-    offHandWeapon.unitId === attack.weapon.id
+    offHandWeapon.unitId === attack.weapon.weaponUnitId
     ? offHandWeapon.itemId
     : undefined;
 }
@@ -1362,19 +1364,25 @@ export function heldWeaponItemIdForAttack(
   attack: CharacterWeaponAttackActionOption,
 ): string {
   const actor = state.combatants.get(actorId);
-  if (actor?.origin.kind !== "character") return attack.weapon.id;
+  if (actor?.origin.kind !== "character") return attack.weapon.weaponUnitId;
   if (
     actor.origin.attack?.kind === "weapon" &&
-    actor.origin.attack.weapon.id === attack.weapon.id
+    actor.origin.attack.weapon.weaponUnitId === attack.weapon.weaponUnitId
   ) {
-    return actor.origin.selectedLoadout.weapon?.itemId ?? attack.weapon.id;
-  }
-  if (actor.origin.offHandAttack?.weapon.id === attack.weapon.id) {
     return (
-      actor.origin.selectedLoadout.offHandWeapon?.itemId ?? attack.weapon.id
+      actor.origin.selectedLoadout.weapon?.itemId ?? attack.weapon.weaponUnitId
     );
   }
-  return attack.weapon.id;
+  if (
+    actor.origin.offHandAttack?.weapon.weaponUnitId ===
+    attack.weapon.weaponUnitId
+  ) {
+    return (
+      actor.origin.selectedLoadout.offHandWeapon?.itemId ??
+      attack.weapon.weaponUnitId
+    );
+  }
+  return attack.weapon.weaponUnitId;
 }
 
 export function offHandWeaponItemIdForActor(
@@ -1386,15 +1394,17 @@ export function offHandWeaponItemIdForActor(
   if (actor?.origin.kind !== "character") return undefined;
   const offHandWeapon = actor.origin.selectedLoadout.offHandWeapon;
   return offHandWeapon !== undefined &&
-    offHandWeapon.unitId === offHand.weapon.id
+    offHandWeapon.unitId === offHand.weapon.weaponUnitId
     ? offHandWeapon.itemId
     : undefined;
 }
 
-export function isLightMeleeWeapon(weapon: WeaponRecord): boolean {
+export function isLightMeleeWeapon(
+  weapon: CharacterWeaponAttackActionOption["weapon"],
+): boolean {
   return (
     weapon.usage === "melee" &&
-    (weapon.properties ?? []).some((property) => property.kind === "light")
+    weapon.properties.some((property) => property.kind === "light")
   );
 }
 
@@ -1427,12 +1437,13 @@ function martialArtsLoadoutEligible(
   const mainWeaponEligible =
     loadout.weapon === undefined ||
     (origin.attack !== null &&
-      loadout.weapon.unitId === origin.attack.weapon.id &&
+      loadout.weapon.unitId === origin.attack.weapon.weaponUnitId &&
       isMonkWeapon(origin.attack.weapon));
   const offHandWeaponEligible =
     loadout.offHandWeapon === undefined ||
     (origin.offHandAttack !== undefined &&
-      loadout.offHandWeapon.unitId === origin.offHandAttack.weapon.id &&
+      loadout.offHandWeapon.unitId ===
+        origin.offHandAttack.weapon.weaponUnitId &&
       isMonkWeapon(origin.offHandAttack.weapon));
   return mainWeaponEligible && offHandWeaponEligible;
 }

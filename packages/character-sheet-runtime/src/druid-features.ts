@@ -344,7 +344,7 @@ function druidCircleLandPreparedSpellAccessForBuild(input: {
   }
   const spellIds = grant.grant.spellsByLand[input.circleLand.land]
     .filter((tier) => tier.minimumClassLevel <= druidLevel)
-    .flatMap((tier) => tier.spellIds);
+    .flatMap((tier) => tier.spellIds.map(authoredUnitId));
   return Either.right({
     sourceUnitId: grant.sourceUnitId,
     spellcastingSourceUnitId: druidSourceUnitId.right,
@@ -462,3 +462,4 @@ export function storedBookOfShadowsDruidCircleLandSelectionIssue(input: {
   }
   return Either.right(undefined);
 }
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";

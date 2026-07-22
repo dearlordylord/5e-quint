@@ -15,10 +15,8 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE
 import { Match } from "effect";
-import {
-  bindStoredSpellProcedureExecutionFacts,
-  type SpellProcedureExecution,
-} from "../character-execution-admission.ts";
+import { bindStoredSpellProcedureExecutionFacts } from "../character-execution-queries.ts";
+import type { SpellProcedureExecution } from "../character-execution.ts";
 import type {
   ActionSpellBattleResolutionInput,
   BattleMagicalDarknessAreaChoice,
@@ -33,7 +31,7 @@ import type {
 import {
   GLYPH_STORED_AREA_ONGOING_PROCEDURES,
   type GlyphStoredAreaOngoingProcedure,
-} from "../procedure-admission/glyph-stored-spell.ts";
+} from "../glyph-stored-spell-invocation.ts";
 import type { CombatantId } from "../identity.ts";
 import { needsHolesResult } from "./hole-helpers.ts";
 import { invalidResult } from "./result-helpers.ts";
@@ -52,7 +50,8 @@ import {
 import { spellSavingThrowOutcomeHole } from "./spells-damage-fills.ts";
 import { spellAreaChoiceHole } from "./spells-holes-fills.ts";
 import { spendSpellCastResources } from "./spells-resolve-resources.ts";
-import { maybeOpenInterruptWindow, snapshotBattle } from "./dispatcher.ts";
+import { maybeOpenInterruptWindow } from "./interrupt-execution.ts";
+import { snapshotBattle } from "./battle-snapshot.ts";
 import {
   saveMetamagicSelectionState,
   validateGustOfWindLineAreaPushFacts,
@@ -60,7 +59,7 @@ import {
 } from "./spells-resolve-save-gates.ts";
 import type { SpellFillSet } from "./spells-resolve-fill-set.ts";
 import { isTrackedOngoingSpellLightEmitter } from "./antimagic-field-suppression.ts";
-import type { CharacterBattleMetamagicOptionFact } from "../character-battle-resources.ts";
+import type { CharacterBattleMetamagicOptionFact } from "../character-battle-resource-execution.ts";
 
 const byProcedure = Match.discriminator("procedure");
 

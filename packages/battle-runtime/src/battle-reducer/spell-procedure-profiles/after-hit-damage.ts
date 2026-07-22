@@ -1,3 +1,4 @@
+import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-after-hit-damage
 import {
   CreatureTypeSchema,
@@ -31,26 +32,21 @@ import type {
   DamageType,
   DiceAmount as SurfaceDiceAmount,
   DiceExpr,
-  SpellRecord,
 } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
 import {
-  snapshotBattle,
   type AfterHitDamageSpellInvocation,
   type AttackSpellDamageAddition,
   type AvailableBattleAct,
   type BattleResolutionResult,
   type BattleState,
 } from "../../battle-state-execution.ts";
+import { snapshotBattle } from "../dispatcher.ts";
 import {
   type BattleResourcePoolExecutionRef,
   type CombatantId,
 } from "../../identity.ts";
-import {
-  characterResourceIsClassFeatureFreeCastForSpell,
-  resourceHasUsesRemaining,
-} from "../../character-battle-resources.ts";
 import {
   maybeOpenPostCastReadySpellCastWindow,
   maybeOpenSpellCastInterruptWindowWithTriggeredSpellChoices,
@@ -62,7 +58,7 @@ import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
 import {
   sameStringSet,
   supportedDamageAmountExpr,
-} from "../spells-profile-shared.ts";
+} from "../spells-execution-facts.ts";
 import { spellFillSetContainsOnlySpellCastReactionFacts } from "../spells-resolve-fill-set.ts";
 import {
   spendClassFeatureFreeCastResource,
@@ -91,7 +87,7 @@ type AfterHitDamageResolveInput =
   SpellProcedureProfileResolveInput<AfterHitDamageInvocation>;
 
 function admitAfterHitDamage(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly AfterHitDamageInvocation[] {
   const projection = afterHitDamageSpellProjection(spell);
@@ -107,42 +103,26 @@ function admitAfterHitDamage(
   const freeCastInvocations: readonly AfterHitDamageInvocation[] =
     freeCastDamageExpr === null
       ? []
-      : ctx.resourceOwnership.flatMap(
-          (owner): readonly AfterHitDamageInvocation[] => {
-            const resource = ctx.actor.origin.resources.find(
-              (candidate) =>
-                candidate.resourcePoolRef === owner.resourcePoolRef,
-            );
-            return resource !== undefined &&
-              characterResourceIsClassFeatureFreeCastForSpell(
-                owner,
-                spell.id,
-              ) &&
-              resourceHasUsesRemaining(resource)
-              ? [
-                  {
-                    access: { tag: "prepared" },
-                    resource: {
-                      tag: "classFeatureFreeCast",
-                      resourcePoolRef: resource.resourcePoolRef,
-                    },
-                    procedure: "afterHitDamage",
-                    spell,
-                    actionCost: "bonusAction",
-                    damage: {
-                      expr: freeCastDamageExpr,
-                      damageType: projection.damageType,
-                    },
-                    conditionalBonusDamage: {
-                      targetCreatureTypes:
-                        projection.conditionalBonusTargetTypes,
-                      expr: projection.conditionalBonusExpr,
-                      damageType: projection.conditionalBonusDamageType,
-                    },
-                  },
-                ]
-              : [];
-          },
+      : ctx.availableClassFeatureFreeCastResourcePoolRefsForSpell(spell.id).map(
+          (resourcePoolRef): AfterHitDamageInvocation => ({
+            access: { tag: "prepared" },
+            resource: {
+              tag: "classFeatureFreeCast",
+              resourcePoolRef,
+            },
+            procedure: "afterHitDamage",
+            spell,
+            actionCost: "bonusAction",
+            damage: {
+              expr: freeCastDamageExpr,
+              damageType: projection.damageType,
+            },
+            conditionalBonusDamage: {
+              targetCreatureTypes: projection.conditionalBonusTargetTypes,
+              expr: projection.conditionalBonusExpr,
+              damageType: projection.conditionalBonusDamageType,
+            },
+          }),
         );
   const slotInvocations = ctx.actor.origin.spellcasting.spellSlots.flatMap(
     (slot): readonly AfterHitDamageInvocation[] => {
@@ -180,7 +160,7 @@ function admitAfterHitDamage(
   return [...freeCastInvocations, ...slotInvocations];
 }
 
-function afterHitDamageSpellProjection(spell: SpellRecord): {
+function afterHitDamageSpellProjection(spell: BattleSpellAdmissionSource): {
   readonly damageAmount: SurfaceDiceAmount;
   readonly damageType: DamageType;
   readonly conditionalBonusTargetTypes: readonly CreatureType[];

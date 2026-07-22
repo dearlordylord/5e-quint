@@ -1,4 +1,4 @@
-import { attackDamageInterruptionFrame } from "./battle-state-execution.ts";
+import { attackDamageInterruptionFrame } from "./battle-reducer/attack-damage-events.ts";
 import {
   classLevel,
   DieRollResult,

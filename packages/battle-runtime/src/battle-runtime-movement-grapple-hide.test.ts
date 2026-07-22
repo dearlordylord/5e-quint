@@ -1,3 +1,7 @@
+import {
+  unitId as parseSharedUnitId,
+  statBlockId as parseSharedStatBlockId,
+} from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.creature-space-movement-permission unit-feature.grappler
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-GRAPPLER-RUNTIME feat_grappler
@@ -1689,7 +1693,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
           initiative: 20,
           statBlock: {
             ...base,
-            id: "stat_block_unequal_speed_climber",
+            id: parseSharedStatBlockId("stat_block_unequal_speed_climber"),
             name: "Unequal Speed Climber",
             statBlock: {
               ...base.statBlock,
@@ -1838,11 +1842,11 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
           selectedLoadout: {
             shield: {
               itemId: "shield:equipment_shield",
-              unitId: "equipment_shield",
+              unitId: parseSharedUnitId("equipment_shield"),
             },
             weapon: {
               itemId: "main:weapon_longsword",
-              unitId: "weapon_longsword",
+              unitId: parseSharedUnitId("weapon_longsword"),
               grip: "one_handed",
             },
           },
@@ -1882,7 +1886,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
           initiative: 10,
           statBlock: {
             ...baseTarget,
-            id: "stat_block_huge_grapple_target",
+            id: parseSharedStatBlockId("stat_block_huge_grapple_target"),
             name: "Huge Grapple Target",
             statBlock: {
               ...baseTarget.statBlock,

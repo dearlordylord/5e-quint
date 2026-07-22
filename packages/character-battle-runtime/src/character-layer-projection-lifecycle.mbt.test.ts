@@ -1,4 +1,5 @@
 // KERNEL-COVERAGE: parity-witness CHARACTER.LIFECYCLE.LAYER_PROJECTION
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import * as path from "node:path";
 
 import {
@@ -704,7 +705,7 @@ function draftHoleId(
 function unitChoiceHoleId(unitId: string, choiceKey: string): string {
   return unitChoiceSourceHoleIdText({
     tag: "unitChoice",
-    unitId: requireRight(unitChoiceSourceUnitId(unitId)),
+    unitId: requireRight(unitChoiceSourceUnitId(authoredUnitId(unitId))),
     choiceKey: requireRight(unitChoiceKey(choiceKey)),
   });
 }
@@ -712,7 +713,9 @@ function unitChoiceHoleId(unitId: string, choiceKey: string): string {
 function loadoutHoleId(equipmentUnitId: string, slot: LoadoutSlot): string {
   return loadoutSourceHoleIdText({
     tag: "loadout",
-    equipmentUnitId: requireRight(loadoutEquipmentUnitId(equipmentUnitId)),
+    equipmentUnitId: requireRight(
+      loadoutEquipmentUnitId(authoredUnitId(equipmentUnitId)),
+    ),
     slot,
   });
 }

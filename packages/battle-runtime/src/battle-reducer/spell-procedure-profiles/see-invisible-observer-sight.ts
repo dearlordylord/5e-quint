@@ -1,3 +1,4 @@
+import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-see-invisible-observer-sight
 import { DurationBattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SEE_INVISIBILITY_OBSERVER_SIGHT
@@ -24,19 +25,17 @@ import { DurationBattleActiveEffectExpirationSchema } from "../../active-effect/
 //   - Duration expiry stays in the shared active-effect lifecycle.
 
 import { elapsedTimeTicksFromHours } from "@dnd/shared-algebras/elapsed-time-algebra";
-import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
 import { battleCreatureWithSpellActiveEffects } from "../../active-effect/lifecycle.ts";
 import {
-  maybeOpenInterruptWindow,
-  snapshotBattle,
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
   type BattleState,
   type SeeInvisibleObserverSightSpellInvocation,
 } from "../../battle-state-execution.ts";
+import { maybeOpenInterruptWindow, snapshotBattle } from "../dispatcher.ts";
 import { CombatantId } from "../../identity.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
@@ -58,7 +57,7 @@ import {
 
 function seeInvisibleObserverSightShape(
   actorId: CombatantId,
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
 ): Pick<SeeInvisibleObserverSightSpellInvocation, "activeEffect"> | null {
   if (
     spell.mechanics.family !== "activation" ||
@@ -106,7 +105,7 @@ const SeeInvisibleAndEtherealEffectSchema = Schema.Struct({
 });
 
 function admitSeeInvisibleObserverSight(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly SeeInvisibleObserverSightSpellInvocation[] {
   const shape = seeInvisibleObserverSightShape(ctx.actor.combatantId, spell);

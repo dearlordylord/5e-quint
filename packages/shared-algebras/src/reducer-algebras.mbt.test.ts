@@ -3,15 +3,16 @@ import * as path from "node:path";
 // KERNEL-COVERAGE: parity-witness BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
-import { Either, Option, Schema } from "effect";
+import { Brand, Either, Option, Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
-import type { ActionRestriction, UnitRecord } from "@dnd/surface/surface/types";
+import type { ActionRestriction } from "@dnd/surface/surface/types";
 import {
   CreatureId as CreatureIdSchema,
   Index,
   Initiative,
   Round,
+  type BattleProcedureExecutionRef,
 } from "@dnd/shared/types";
 
 import {
@@ -48,7 +49,7 @@ import {
 
 type ActionEconomyProjection = {
   readonly turnActionAvailable: boolean;
-  readonly restrictedUnitActionIds: readonly UnitRecord["id"][];
+  readonly restrictedUnitActionProcedureRefs: readonly BattleProcedureExecutionRef[];
   readonly hasBonusAction: boolean;
 };
 
@@ -146,8 +147,10 @@ const initiativeDriverSchema = {
 } as const;
 
 const unitOwnerId = Schema.decodeUnknownSync(CreatureIdSchema)("algebra-owner");
-const unitActionA: UnitRecord["id"] = "unit-action-a";
-const unitActionB: UnitRecord["id"] = "unit-action-b";
+const battleProcedureExecutionRef =
+  Brand.nominal<BattleProcedureExecutionRef>();
+const unitActionA = battleProcedureExecutionRef("unit-action-a");
+const unitActionB = battleProcedureExecutionRef("unit-action-b");
 const magicExcludedRestriction: ActionRestriction = {
   kind: "exclude",
   actions: ["magic"],
@@ -161,11 +164,13 @@ function createActionEconomyDriver() {
       state = initialActionEconomyState();
     }
 
-    function grantUnitAction(sourceUnitId: UnitRecord["id"]): void {
+    function grantUnitAction(
+      sourceProcedureRef: BattleProcedureExecutionRef,
+    ): void {
       const result = grantUnitActionResource(
         state,
         unitOwnerId,
-        sourceUnitId,
+        sourceProcedureRef,
         magicExcludedRestriction,
       );
       if (Either.isRight(result)) {
@@ -445,17 +450,19 @@ function projectActionEconomy(
     turnActionAvailable: state.actionResources.some(
       (resource) => resource.source === "turn",
     ),
-    restrictedUnitActionIds: restrictedUnitActionIds(state.actionResources),
+    restrictedUnitActionProcedureRefs: restrictedUnitActionProcedureRefs(
+      state.actionResources,
+    ),
     hasBonusAction: state.currentHasBonusAction,
   };
 }
 
-function restrictedUnitActionIds(
+function restrictedUnitActionProcedureRefs(
   resources: ReadonlyArray<RuntimeActionResource>,
-): readonly UnitRecord["id"][] {
+): readonly BattleProcedureExecutionRef[] {
   return resources
     .filter((resource) => resource.source === "unit")
-    .map((resource) => resource.sourceProcedureRef as UnitRecord["id"]);
+    .map((resource) => resource.sourceProcedureRef);
 }
 
 function projectConditions(state: ConditionState): ConditionsProjection {
@@ -541,16 +548,16 @@ function normalizeActionEconomySpecState(
   const state = quintStateRecord(raw);
   return {
     turnActionAvailable: booleanField(state, "qTurnActionAvailable"),
-    restrictedUnitActionIds: quintRestrictedUnitActionIds(
+    restrictedUnitActionProcedureRefs: quintRestrictedUnitActionProcedureRefs(
       numberField(state, "qRestrictedUnitActionOrder"),
     ),
     hasBonusAction: booleanField(state, "qHasBonusAction"),
   };
 }
 
-function quintRestrictedUnitActionIds(
+function quintRestrictedUnitActionProcedureRefs(
   order: number,
-): readonly UnitRecord["id"][] {
+): readonly BattleProcedureExecutionRef[] {
   if (order === 0) return [];
   if (order === 1) return [unitActionA];
   if (order === 2) return [unitActionB];

@@ -77,7 +77,7 @@ import type { WeaponAttackOverrideSpellProcedureExecution } from "./weapon-attac
 
 type SurfaceSkill = Skill;
 
-type SpellRuleExecutionFactsOwner = {
+export type SpellRuleExecutionFactsOwner = {
   readonly spellRuleFacts: SpellRuleExecutionFacts;
 };
 

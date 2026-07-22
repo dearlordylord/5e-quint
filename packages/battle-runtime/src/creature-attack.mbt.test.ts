@@ -1,3 +1,4 @@
+import { statBlockId as parseSharedStatBlockId } from "@dnd/shared/game-facts";
 import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.ATTACK.MINIMAL_RESOLUTION
 import { describe, expect, it } from "vitest";
@@ -675,7 +676,7 @@ function updateCreatureAttackCombatant(
 
 function creatureAttackStatBlock(id: string): StatBlockRecord {
   return {
-    id,
+    id: parseSharedStatBlockId(id),
     kind: "statBlock",
     name: id,
     challengeRating: 0,

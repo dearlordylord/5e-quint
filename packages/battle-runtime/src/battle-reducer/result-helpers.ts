@@ -2,11 +2,11 @@
 // reducer need the same invalid-result envelope.
 
 import {
-  snapshotBattle,
   type BattleInvalidReasonCode,
   type BattleResolutionResult,
   type BattleState,
 } from "../battle-state-execution.ts";
+import { snapshotBattle } from "./battle-snapshot.ts";
 
 export function invalidResult(
   state: BattleState,

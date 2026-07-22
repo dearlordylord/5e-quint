@@ -1,3 +1,4 @@
+import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-roll-modifier
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-glyph-stored-concentration-full-duration
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS
@@ -36,12 +37,10 @@
 //   - The metamagic table entry — same migration story as damageReduction.
 
 import { spellSlotLevel } from "@dnd/shared/types";
-import type { SpellRecord } from "@dnd/surface/surface/types";
 
 import { BattleProcedureExecutionRef, CombatantId } from "../../identity.ts";
 import { BattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
 import {
-  snapshotBattle,
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
@@ -49,6 +48,7 @@ import {
   type SelectedRollModifierSpellEffect,
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
+import { snapshotBattle } from "../dispatcher.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";
 import { maybeOpenInterruptWindow } from "../dispatcher.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
@@ -139,7 +139,7 @@ type RollModifierResolveInput =
   SpellProcedureProfileResolveInput<RollModifierInvocation>;
 
 function admitRollModifier(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly RollModifierInvocation[] {
   const out: RollModifierInvocation[] = [];
@@ -195,7 +195,7 @@ function admitRollModifier(
 // supportedCantripRollModifierSpellProfile / supportedPreparedRollModifier
 // SpellProfile predicates one-for-one.
 function buildRollModifierInvocation(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   access: RollModifierInvocation["access"],
   resource: RollModifierInvocation["resource"],
   projection: NonNullable<ReturnType<typeof rollModifierSpellProjection>>,

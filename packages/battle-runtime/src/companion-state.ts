@@ -2,13 +2,10 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE
 import type { RetainedCompanionProtocol } from "@dnd/shared-algebras/companion-protocol-algebra";
 import { Hp, type PositiveInteger } from "@dnd/shared/types";
-
 import type {
   FindFamiliarCreatureTypeOverride,
-  FindFamiliarFormSelection,
-  PactOfTheChainFindFamiliarFormSelection,
-} from "@dnd/surface/surface/find-familiar-forms";
-import type { StatBlockRecord } from "@dnd/surface/surface/types";
+  StatBlockId,
+} from "@dnd/shared/game-facts";
 import type {
   BattleTablePositionId,
   CombatantId,
@@ -36,29 +33,19 @@ export type BattleCompanionPlacement =
       readonly positionId?: BattleTablePositionId;
     };
 
-export type BattleCompanionSelectedForm =
+export type BattleCompanionStoredForm =
   | {
       readonly formAccess: "findFamiliar";
-      readonly formSelection: FindFamiliarFormSelection;
+      readonly resolvedStatBlockId: StatBlockId;
     }
   | {
       readonly formAccess: "pactOfTheChain";
-      readonly formSelection: PactOfTheChainFindFamiliarFormSelection;
+      readonly resolvedStatBlockId: StatBlockId;
     };
 
-export type BattleCompanionStoredForm =
-  | (Extract<
-      BattleCompanionSelectedForm,
-      { readonly formAccess: "findFamiliar" }
-    > & {
-      readonly resolvedStatBlockId: StatBlockRecord["id"];
-    })
-  | (Extract<
-      BattleCompanionSelectedForm,
-      { readonly formAccess: "pactOfTheChain" }
-    > & {
-      readonly resolvedStatBlockId: StatBlockRecord["id"];
-    });
+export type BattleCompanionFormAccess =
+  | { readonly formAccess: "findFamiliar" }
+  | { readonly formAccess: "pactOfTheChain" };
 
 export type BattleCompanionCurrentHitPoints = Hp & PositiveInteger;
 
@@ -74,7 +61,7 @@ export type BattleCompanionProtocolState = {
   readonly creatureTypeOverride: FindFamiliarCreatureTypeOverride;
 };
 
-export type BattleCompanionPresentState = BattleCompanionSelectedForm &
+export type BattleCompanionPresentState = BattleCompanionFormAccess &
   BattleCompanionProtocolState & {
     readonly status: "present";
     readonly combatantId: CombatantId;
@@ -116,26 +103,12 @@ export type BattleCompanionState =
 
 type BattleCompanionPresentSnapshotFields = {
   readonly companionId: CombatantId;
-  readonly resolvedStatBlockId: StatBlockRecord["id"];
+  readonly resolvedStatBlockId: StatBlockId;
   readonly initiative: InitiativeScore;
 };
 
 export type BattleCompanionSnapshot =
-  | (Omit<
-      Extract<
-        BattleCompanionPresentState,
-        { readonly formAccess: "findFamiliar" }
-      >,
-      "combatantId"
-    > &
-      BattleCompanionPresentSnapshotFields)
-  | (Omit<
-      Extract<
-        BattleCompanionPresentState,
-        { readonly formAccess: "pactOfTheChain" }
-      >,
-      "combatantId"
-    > &
+  | (Omit<BattleCompanionPresentState, "combatantId"> &
       BattleCompanionPresentSnapshotFields)
   | BattleCompanionAbsentState;
 

@@ -1,3 +1,4 @@
+import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV29B color_spray
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV29C entangle
@@ -129,7 +130,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     expect(spellHoleInvocation(session, [targetHole])).toEqual(
       expect.objectContaining({
         procedure: "saveGatedCondition",
-        spell,
+        spellRuleFacts: expect.objectContaining({ spellId: spell.id }),
         resource: { tag: "spellSlot", slotLevel: 3 },
         ability: "wis",
         targeting: { kind: "targetList", minTargets: 1, maxTargets: 2 },
@@ -649,7 +650,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     expect(spellHoleInvocation(session, [targetHole])).toEqual(
       expect.objectContaining({
         procedure: "saveGatedCondition",
-        spell,
+        spellRuleFacts: expect.objectContaining({ spellId: spell.id }),
         resource: { tag: "spellSlot", slotLevel: 5 },
         ability: "wis",
         targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 },
@@ -724,7 +725,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     expect(spellHoleInvocation(session, [abilityHole])).toEqual(
       expect.objectContaining({
         procedure: "saveGatedDamage",
-        spell,
+        spellRuleFacts: expect.objectContaining({ spellId: spell.id }),
         resource: { tag: "spellSlot", slotLevel: 5 },
         castingTime: { kind: "action" },
         ability: "con",
@@ -970,7 +971,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     expect(spellHoleInvocation(session, [targetHole])).toEqual(
       expect.objectContaining({
         procedure: "saveGatedCondition",
-        spell,
+        spellRuleFacts: expect.objectContaining({ spellId: spell.id }),
         resource: { tag: "spellSlot", slotLevel: 2 },
         ability: "con",
         targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 },
@@ -1123,7 +1124,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     expect(spellHoleInvocation(session, [savingThrow])).toEqual(
       expect.objectContaining({
         procedure: "saveGatedCondition",
-        spell,
+        spellRuleFacts: expect.objectContaining({ spellId: spell.id }),
         resource: { tag: "spellSlot", slotLevel: 1 },
         ability: "con",
         targeting: { kind: "selfOriginCone", lengthFeet: 15 },
@@ -1177,7 +1178,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     expect(spellHoleInvocation(session, [savingThrow])).toEqual(
       expect.objectContaining({
         procedure: "saveGatedCondition",
-        spell,
+        spellRuleFacts: expect.objectContaining({ spellId: spell.id }),
         resource: { tag: "spellSlot", slotLevel: 1 },
         ability: "str",
         targeting: { kind: "pointOriginCubeExcludingCaster", sideFeet: 20 },
@@ -1237,7 +1238,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     expect(spellHoleInvocation(session, [savingThrow])).toEqual(
       expect.objectContaining({
         procedure: "sleepTargetAdmission",
-        spell,
+        spellRuleFacts: expect.objectContaining({ spellId: spell.id }),
         resource: { tag: "spellSlot", slotLevel: 1 },
         ability: "wis",
         targeting: { kind: "pointOriginSphere", radiusFeet: 5 },
@@ -1374,7 +1375,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     expect(spellHoleInvocation(session, [conditionHole])).toEqual(
       expect.objectContaining({
         procedure: "directConditionRemoval",
-        spell,
+        spellRuleFacts: expect.objectContaining({ spellId: spell.id }),
         actionCost: "bonusAction",
         resource: { tag: "spellSlot", slotLevel: 2 },
         targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 },
@@ -1527,7 +1528,7 @@ function castHeightenedHoldPerson(input: {
       },
     ],
     casterMetamagic: {
-      sorceryPointResourceUnitId: "sorcerer_font_of_magic",
+      sorceryPointResourceUnitId: parseSharedUnitId("sorcerer_font_of_magic"),
       spellUseLimit: "one_per_spell_unless_option_allows_stacking",
       knownOptions: [
         {

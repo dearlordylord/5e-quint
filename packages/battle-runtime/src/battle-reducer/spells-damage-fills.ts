@@ -43,7 +43,7 @@ import type {
   BattleProcedureExecutionRef,
   CombatantId,
 } from "../identity.ts";
-import type { PassiveSavingThrowRollModeProfile } from "../unit-feature-support.ts";
+import type { PassiveSavingThrowRollModeProfile } from "../unit-feature-execution-constants.ts";
 import {
   scalarBuffTemporaryHitPointsExpression,
   spellBurstDamageExpression,
@@ -74,11 +74,8 @@ import { spellTargetIsHostileToCaster } from "./roll-trigger-relationship-facts.
 import { battleCreatureType } from "./domain-helpers.ts";
 import { uniqueSavingThrowRollModeProjections } from "./saving-throw-roll-mode-projections.ts";
 import {
-  ATTACK_ROLL_HOLE_ID,
-  ATTACK_ROLL_HOLE_INSTANCE,
   attackDamageAbilityModifierChoiceUnsupportedIssue,
   attackDamageDieFloorChoiceUnsupportedIssue,
-  spellDamageRerollUnsupportedIssue,
   type BattleActiveEffect,
   type BattleAttackDamageDisposition,
   type BattleCreatureState,
@@ -116,17 +113,22 @@ import {
   validateRolledDiceFillForDiceExpr,
 } from "../battle-state-execution.ts";
 import {
+  ATTACK_ROLL_HOLE_ID,
+  ATTACK_ROLL_HOLE_INSTANCE,
+} from "./battle-runtime-protocol.ts";
+import { spellDamageRerollUnsupportedIssue } from "./spell-reroll-issues.ts";
+import {
   characterUnitProcedureBindings,
-  type RuntimeSpellProcedureExecution,
   type UnitFeatureProcedureExecution,
-} from "../character-execution-admission.ts";
+} from "../character-execution-queries.ts";
+import type { RuntimeSpellProcedureExecution } from "../character-execution.ts";
 import {
   SLOW_ACTIVE_PENALTIES_DEX_SAVE_DELTA,
   THAUMATURGY_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_ID,
   THAUMATURGY_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_INSTANCE,
   THAUMATURGY_MAX_ACTIVE_ONE_MINUTE_EFFECTS,
 } from "./domain-constants.ts";
-import { spellAttackSequencePartName } from "./spells-profile-shared.ts";
+import { spellAttackSequencePartName } from "./spells-execution-facts.ts";
 import { wardingBondSavingThrowFlatBonusProjectionsForTarget } from "./warding-bond.ts";
 import {
   activeCreatureSizeChangeEffect,

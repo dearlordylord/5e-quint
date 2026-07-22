@@ -4,6 +4,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.linked-speed-grant-projection
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-CLASS-BARD-JACK-OF-ALL-TRADES bard_jack_of_all_trades
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L13UG-A15 barbarian_primal_knowledge rogue_second_story_work
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, test } from "vitest";
 import {
   CHARACTER_SHEET_NO_OTHER_PROFICIENCY_BONUS,
@@ -21,7 +22,7 @@ import {
   requireRight,
   secondStoryWorkProjectionTestName,
   skillProficiencyOverridesJackOfAllTradesTestName,
-  unitLibrary
+  unitLibrary,
 } from "./test-support.ts";
 
 function expectSecondStoryWorkProjection() {
@@ -34,23 +35,21 @@ function expectSecondStoryWorkProjection() {
     features: [
       {
         kind: "selectedClassChoice",
-        selectedFromUnitId: "class_rogue",
-        unitId: "subclass_rogue_thief",
+        selectedFromUnitId: authoredUnitId("class_rogue"),
+        unitId: authoredUnitId("subclass_rogue_thief"),
       },
     ],
   } as const;
 
   expect(
-    requireRight(
-      characterSheetLinkedSpeedGrants(baseRogueBuild, unitLibrary),
-    ),
+    requireRight(characterSheetLinkedSpeedGrants(baseRogueBuild, unitLibrary)),
   ).toEqual([]);
 
   expect(
     requireRight(characterSheetLinkedSpeedGrants(rogueBuild, unitLibrary)),
   ).toEqual([
     {
-      sourceUnitId: "rogue_second_story_work",
+      sourceUnitId: authoredUnitId("rogue_second_story_work"),
       speedKind: "climb",
       feet: { kind: "walk_speed" },
     },
@@ -69,7 +68,7 @@ function expectSecondStoryWorkProjection() {
       {
         ability: "dex",
         replaces: "str",
-        sourceUnitId: "rogue_second_story_work",
+        sourceUnitId: authoredUnitId("rogue_second_story_work"),
       },
     ],
   });
@@ -98,7 +97,7 @@ describe("Character Sheet runtime / ability checks", () => {
 
     expect(result).toEqual({
       tag: "jackOfAllTrades",
-      sourceUnitId: "bard_jack_of_all_trades",
+      sourceUnitId: authoredUnitId("bard_jack_of_all_trades"),
       skill: "performance",
       bonus: 1,
     });
@@ -193,7 +192,7 @@ describe("Character Sheet runtime / ability checks", () => {
           unitLibrary,
           skill: "stealth",
           defaultAbility: "dex",
-          activeFeatureUnitIds: ["barbarian_rage"],
+          activeFeatureUnitIds: [authoredUnitId("barbarian_rage")],
         }),
       ),
     ).toEqual({
@@ -201,7 +200,7 @@ describe("Character Sheet runtime / ability checks", () => {
       optionalSubstitutions: [
         {
           ability: "str",
-          sourceUnitId: "barbarian_primal_knowledge",
+          sourceUnitId: authoredUnitId("barbarian_primal_knowledge"),
           requiredActiveFeatureUnitId: "barbarian_rage",
         },
       ],
@@ -213,7 +212,7 @@ describe("Character Sheet runtime / ability checks", () => {
           unitLibrary,
           skill: "athletics",
           defaultAbility: "str",
-          activeFeatureUnitIds: ["barbarian_rage"],
+          activeFeatureUnitIds: [authoredUnitId("barbarian_rage")],
         }),
       ),
     ).toEqual({ defaultAbility: "str", optionalSubstitutions: [] });

@@ -22,13 +22,13 @@ import {
   resourceHasUsesRemaining,
   spendCharacterResourceUse,
   type CharacterBattleMetamagicOptionFact,
-} from "../character-battle-resources.ts";
+} from "../character-battle-resource-execution.ts";
 import type {
   BattleResourcePoolExecutionRef,
   CombatantId,
 } from "../identity.ts";
 import { breakBattleConcentration } from "./damage-apply.ts";
-import { snapshotBattle } from "./dispatcher.ts";
+import { snapshotBattle } from "./battle-snapshot.ts";
 import {
   metamagicApplicationsIncludeQuickened,
   spendSpellMetamagicSorceryPoints,

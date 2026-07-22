@@ -7,6 +7,9 @@ import type {
   UseCountResource,
 } from "./types.ts";
 import { isEffectAtom, isStatBlockTransformTargetEffect } from "./types.ts";
+import { druidWildShapeDurationHoursForClassLevel } from "@dnd/shared/wild-shape";
+
+export { druidWildShapeDurationHoursForClassLevel };
 
 export type DruidWildShapeFeatureRecord = ClassFeatureRecord & {
   readonly className: "druid";
@@ -75,12 +78,6 @@ export function isDruidWildShapeFeatureRecord(
     druidWildShapeKnownFormRosterFromPhase(phase) !== undefined &&
     phase.effects.some((effect) => druidWildShapeTemporaryHitPoints(effect))
   );
-}
-
-export function druidWildShapeDurationHoursForClassLevel(
-  classLevel: number,
-): number {
-  return Math.floor(classLevel / 2);
 }
 
 export function druidWildShapeKnownFormRosterFromPhase(

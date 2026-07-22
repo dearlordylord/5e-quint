@@ -1,5 +1,6 @@
 // KERNEL-COVERAGE: parity-witness CREATION.WEAPON_MASTERY.CLASS_LEVEL_ADVANCEMENT
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt character-creation.weapon-mastery-level-gain
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
@@ -58,31 +59,31 @@ const BARBARIAN_CLASS_UNIT_ID = "class_barbarian" as const;
 const FIGHTER_WEAPON_MASTERY_UNIT_ID = "fighter_weapon_mastery" as const;
 const BARBARIAN_WEAPON_MASTERY_UNIT_ID = "barbarian_weapon_mastery" as const;
 const FIGHTER_LEVEL_THREE_WEAPON_UNIT_IDS = [
-  "weapon_longsword",
-  "weapon_spear",
-  "weapon_flail",
+  authoredUnitId("weapon_longsword"),
+  authoredUnitId("weapon_spear"),
+  authoredUnitId("weapon_flail"),
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
 const FIGHTER_LEVEL_FOUR_WEAPON_UNIT_IDS = [
   ...FIGHTER_LEVEL_THREE_WEAPON_UNIT_IDS,
-  "weapon_shortsword",
+  authoredUnitId("weapon_shortsword"),
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
 const FIGHTER_OVER_COUNT_WEAPON_UNIT_IDS = [
   ...FIGHTER_LEVEL_FOUR_WEAPON_UNIT_IDS,
-  "weapon_shortbow",
+  authoredUnitId("weapon_shortbow"),
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
 const FIGHTER_DUPLICATE_WEAPON_UNIT_IDS = [
-  "weapon_longsword",
-  "weapon_spear",
-  "weapon_flail",
-  "weapon_longsword",
+  authoredUnitId("weapon_longsword"),
+  authoredUnitId("weapon_spear"),
+  authoredUnitId("weapon_flail"),
+  authoredUnitId("weapon_longsword"),
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
 const BARBARIAN_LEVEL_THREE_WEAPON_UNIT_IDS = [
-  "weapon_longsword",
-  "weapon_dagger",
+  authoredUnitId("weapon_longsword"),
+  authoredUnitId("weapon_dagger"),
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
 const BARBARIAN_LEVEL_FOUR_WEAPON_UNIT_IDS = [
   ...BARBARIAN_LEVEL_THREE_WEAPON_UNIT_IDS,
-  "weapon_spear",
+  authoredUnitId("weapon_spear"),
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
 
 type WeaponMasteryLevelGainResult =
@@ -483,8 +484,8 @@ function fighterLevelFourAcceptedProjection(): WeaponMasteryLevelGainProjection 
       build,
       unitLibrary,
       levelGain: weaponMasteryGain({
-        classUnitId: FIGHTER_CLASS_UNIT_ID,
-        featureUnitId: FIGHTER_WEAPON_MASTERY_UNIT_ID,
+        classUnitId: authoredUnitId(FIGHTER_CLASS_UNIT_ID),
+        featureUnitId: authoredUnitId(FIGHTER_WEAPON_MASTERY_UNIT_ID),
         selectedWeaponUnitIds: FIGHTER_LEVEL_FOUR_WEAPON_UNIT_IDS,
       }),
     }),
@@ -493,8 +494,8 @@ function fighterLevelFourAcceptedProjection(): WeaponMasteryLevelGainProjection 
   return projectionFromBuild({
     outcome: "fighterLevelFourAccepted",
     build: advanced,
-    classUnitId: FIGHTER_CLASS_UNIT_ID,
-    featureUnitId: FIGHTER_WEAPON_MASTERY_UNIT_ID,
+    classUnitId: authoredUnitId(FIGHTER_CLASS_UNIT_ID),
+    featureUnitId: authoredUnitId(FIGHTER_WEAPON_MASTERY_UNIT_ID),
     currentClassLevel: 3,
     nextClassLevel: 4,
     currentChoiceCount: FIGHTER_LEVEL_THREE_WEAPON_UNIT_IDS.length,
@@ -515,8 +516,8 @@ function barbarianLevelFourAcceptedProjection(): WeaponMasteryLevelGainProjectio
       build,
       unitLibrary,
       levelGain: weaponMasteryGain({
-        classUnitId: BARBARIAN_CLASS_UNIT_ID,
-        featureUnitId: BARBARIAN_WEAPON_MASTERY_UNIT_ID,
+        classUnitId: authoredUnitId(BARBARIAN_CLASS_UNIT_ID),
+        featureUnitId: authoredUnitId(BARBARIAN_WEAPON_MASTERY_UNIT_ID),
         selectedWeaponUnitIds: BARBARIAN_LEVEL_FOUR_WEAPON_UNIT_IDS,
       }),
     }),
@@ -525,8 +526,8 @@ function barbarianLevelFourAcceptedProjection(): WeaponMasteryLevelGainProjectio
   return projectionFromBuild({
     outcome: "barbarianLevelFourAccepted",
     build: advanced,
-    classUnitId: BARBARIAN_CLASS_UNIT_ID,
-    featureUnitId: BARBARIAN_WEAPON_MASTERY_UNIT_ID,
+    classUnitId: authoredUnitId(BARBARIAN_CLASS_UNIT_ID),
+    featureUnitId: authoredUnitId(BARBARIAN_WEAPON_MASTERY_UNIT_ID),
     currentClassLevel: 3,
     nextClassLevel: 4,
     currentChoiceCount: BARBARIAN_LEVEL_THREE_WEAPON_UNIT_IDS.length,
@@ -546,8 +547,8 @@ function fighterOverCountRejectedProjection(): WeaponMasteryLevelGainProjection 
     build,
     unitLibrary,
     levelGain: weaponMasteryGain({
-      classUnitId: FIGHTER_CLASS_UNIT_ID,
-      featureUnitId: FIGHTER_WEAPON_MASTERY_UNIT_ID,
+      classUnitId: authoredUnitId(FIGHTER_CLASS_UNIT_ID),
+      featureUnitId: authoredUnitId(FIGHTER_WEAPON_MASTERY_UNIT_ID),
       selectedWeaponUnitIds: FIGHTER_OVER_COUNT_WEAPON_UNIT_IDS,
     }),
   });
@@ -556,8 +557,8 @@ function fighterOverCountRejectedProjection(): WeaponMasteryLevelGainProjection 
   return projectionFromBuild({
     outcome: "fighterOverCountRejected",
     build,
-    classUnitId: FIGHTER_CLASS_UNIT_ID,
-    featureUnitId: FIGHTER_WEAPON_MASTERY_UNIT_ID,
+    classUnitId: authoredUnitId(FIGHTER_CLASS_UNIT_ID),
+    featureUnitId: authoredUnitId(FIGHTER_WEAPON_MASTERY_UNIT_ID),
     currentClassLevel: 3,
     nextClassLevel: 4,
     currentChoiceCount: FIGHTER_LEVEL_THREE_WEAPON_UNIT_IDS.length,
@@ -577,8 +578,8 @@ function fighterDuplicateRejectedProjection(): WeaponMasteryLevelGainProjection 
     build,
     unitLibrary,
     levelGain: weaponMasteryGain({
-      classUnitId: FIGHTER_CLASS_UNIT_ID,
-      featureUnitId: FIGHTER_WEAPON_MASTERY_UNIT_ID,
+      classUnitId: authoredUnitId(FIGHTER_CLASS_UNIT_ID),
+      featureUnitId: authoredUnitId(FIGHTER_WEAPON_MASTERY_UNIT_ID),
       selectedWeaponUnitIds: FIGHTER_DUPLICATE_WEAPON_UNIT_IDS,
     }),
   });
@@ -587,8 +588,8 @@ function fighterDuplicateRejectedProjection(): WeaponMasteryLevelGainProjection 
   return projectionFromBuild({
     outcome: "fighterDuplicateRejected",
     build,
-    classUnitId: FIGHTER_CLASS_UNIT_ID,
-    featureUnitId: FIGHTER_WEAPON_MASTERY_UNIT_ID,
+    classUnitId: authoredUnitId(FIGHTER_CLASS_UNIT_ID),
+    featureUnitId: authoredUnitId(FIGHTER_WEAPON_MASTERY_UNIT_ID),
     currentClassLevel: 3,
     nextClassLevel: 4,
     currentChoiceCount: FIGHTER_LEVEL_THREE_WEAPON_UNIT_IDS.length,
@@ -651,9 +652,9 @@ function projectionFromBuild(input: {
 function fighterLevelThreeBuild(): CharacterBuild {
   return finalizedBuild({
     draftId: "weapon-mastery-level-gain:fighter-3",
-    classUnitId: FIGHTER_CLASS_UNIT_ID,
+    classUnitId: authoredUnitId(FIGHTER_CLASS_UNIT_ID),
     classLevel: 3,
-    featureUnitId: FIGHTER_WEAPON_MASTERY_UNIT_ID,
+    featureUnitId: authoredUnitId(FIGHTER_WEAPON_MASTERY_UNIT_ID),
     selectedWeaponUnitIds: FIGHTER_LEVEL_THREE_WEAPON_UNIT_IDS,
   });
 }
@@ -661,9 +662,9 @@ function fighterLevelThreeBuild(): CharacterBuild {
 function barbarianLevelThreeBuild(): CharacterBuild {
   return finalizedBuild({
     draftId: "weapon-mastery-level-gain:barbarian-3",
-    classUnitId: BARBARIAN_CLASS_UNIT_ID,
+    classUnitId: authoredUnitId(BARBARIAN_CLASS_UNIT_ID),
     classLevel: 3,
-    featureUnitId: BARBARIAN_WEAPON_MASTERY_UNIT_ID,
+    featureUnitId: authoredUnitId(BARBARIAN_WEAPON_MASTERY_UNIT_ID),
     selectedWeaponUnitIds: BARBARIAN_LEVEL_THREE_WEAPON_UNIT_IDS,
   });
 }

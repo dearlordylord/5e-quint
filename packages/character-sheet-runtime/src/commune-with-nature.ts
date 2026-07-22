@@ -1,5 +1,6 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.commune-with-nature-session-invocation
 // UNIT-PROFILE-COVERAGE: runtime-owner table-caller.nature-exploration-facts
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { PositiveInteger, spellSlotLevel } from "@dnd/shared/types";
 import type { UnitCatalog } from "@dnd/character-creation-runtime";
 import type { SpellRecord } from "@dnd/surface/surface/types";
@@ -51,7 +52,10 @@ export function castCommuneWithNature(input: {
 function communeWithNatureSpell(
   unitLibrary: UnitCatalog,
 ): Either.Either<SpellRecord, CharacterSheetIssue> {
-  const unit = getRequiredUnit(unitLibrary, COMMUNE_WITH_NATURE_SPELL_ID);
+  const unit = getRequiredUnit(
+    unitLibrary,
+    authoredUnitId(COMMUNE_WITH_NATURE_SPELL_ID),
+  );
   if (Either.isLeft(unit)) return Either.left(unit.left);
   if (unit.right.kind !== "spell") {
     return characterSheetIssue("Commune with Nature requires a Spell record.");

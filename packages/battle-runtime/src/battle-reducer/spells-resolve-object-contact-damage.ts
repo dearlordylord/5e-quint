@@ -12,14 +12,9 @@ import {
 import { damageAmount as toDamageAmount } from "@dnd/shared/types";
 import { Either } from "effect";
 import { allocateBattleActiveEffectRef } from "../active-effect/execution-ref.ts";
+import { characterExecutionWithObjectContactDamageRepeat } from "../character-execution-queries.ts";
+import type { ObjectContactDamageRepeatSpellProcedureExecution } from "../character-execution.ts";
 import {
-  characterExecutionWithObjectContactDamageRepeat,
-  type ObjectContactDamageRepeatSpellProcedureExecution,
-} from "../character-execution-admission.ts";
-import {
-  maybeOpenInterruptWindow,
-  openAfterDamageSequenceInterruptWindow,
-  snapshotBattle,
   type ActionSpellBattleResolutionInput,
   type BattleAfterDamageEvent,
   type BattleActiveEffect,
@@ -36,6 +31,11 @@ import {
   type ObjectContactPenaltyActiveEffect,
   type SupportedSpellInvocation,
 } from "../battle-state-execution.ts";
+import {
+  maybeOpenInterruptWindow,
+  openAfterDamageSequenceInterruptWindow,
+} from "./interrupt-execution.ts";
+import { snapshotBattle } from "./battle-snapshot.ts";
 import type { BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
 import {
   type BattleActiveEffectExecutionRef,

@@ -1,5 +1,6 @@
 // KERNEL-COVERAGE: runtime-owner SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE
 import { Option } from "effect";
+import { UnitId as UnitIdSchema } from "@dnd/shared/game-facts";
 
 // Content JSON is generated from the matching content/*.dhall source.
 // Keep authoring changes in Dhall, then regenerate JSON and trace output.
@@ -423,9 +424,9 @@ export type SrdUnitCollection = {
 };
 
 export type UnitCatalog = {
-  readonly getUnit: (id: UnitId) => Option.Option<UnitRecord>;
+  readonly getUnit: (id: string) => Option.Option<UnitRecord>;
   readonly listUnits: () => readonly UnitRecord[];
-  readonly requireUnit: (id: UnitId) => UnitRecord;
+  readonly requireUnit: (id: string) => UnitRecord;
 };
 
 export type ClassSpellListName = SpellcastingClassRecord["className"];
@@ -454,8 +455,13 @@ function classSpellListFromRecord(
       : spellcasting.preparedAccess.spells;
 
   return {
-    cantrips: spellcasting.cantripAccess?.spellIds ?? [],
-    leveled,
+    cantrips:
+      spellcasting.cantripAccess?.spellIds.map((id) => UnitIdSchema.make(id)) ??
+      [],
+    leveled: leveled.map((spell) => ({
+      ...spell,
+      spellId: UnitIdSchema.make(spell.spellId),
+    })),
   };
 }
 
@@ -1072,9 +1078,9 @@ export function buildUnitCatalog(input: {
   return {
     tag: "ok",
     catalog: {
-      getUnit: (id) => Option.fromNullable(records.get(id)),
+      getUnit: (id) => Option.fromNullable(records.get(UnitIdSchema.make(id))),
       listUnits: () => Array.from(records.values()),
-      requireUnit: (id) => records.get(id)!,
+      requireUnit: (id) => records.get(UnitIdSchema.make(id))!,
     },
   };
 }
@@ -1088,7 +1094,8 @@ function findInvalidSpeciesTraitRefs(
   }
 
   const issues: UnitCatalogBuildIssue[] = [];
-  for (const traitUnitId of Object.values(unit.traits)) {
+  for (const rawTraitUnitId of Object.values(unit.traits)) {
+    const traitUnitId = UnitIdSchema.make(rawTraitUnitId);
     const referenced = records.get(traitUnitId);
     if (referenced == null) {
       issues.push({
@@ -1159,7 +1166,8 @@ function findInvalidSubclassChoiceRefs(
 
   return unit.subclassChoices.flatMap((choice) =>
     choice.options.flatMap(
-      (subclassUnitId): readonly UnitCatalogBuildIssue[] => {
+      (rawSubclassUnitId): readonly UnitCatalogBuildIssue[] => {
+        const subclassUnitId = UnitIdSchema.make(rawSubclassUnitId);
         const referenced = records.get(subclassUnitId);
         if (referenced == null) {
           return [

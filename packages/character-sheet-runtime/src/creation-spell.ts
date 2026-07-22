@@ -1,5 +1,6 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.creation-session-invocation
 // UNIT-PROFILE-COVERAGE: runtime-owner table-caller.creation-object-lifecycle
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import {
   timeSpanDuration,
   type SurfaceTimeSpanDurationValue,
@@ -92,7 +93,7 @@ export function castCreation(input: {
 function creationSpell(
   unitLibrary: UnitCatalog,
 ): Either.Either<SpellRecord, CharacterSheetIssue> {
-  const unit = getRequiredUnit(unitLibrary, CREATION_SPELL_ID);
+  const unit = getRequiredUnit(unitLibrary, authoredUnitId(CREATION_SPELL_ID));
   if (Either.isLeft(unit)) return Either.left(unit.left);
   if (unit.right.kind !== "spell") {
     return characterSheetIssue("Creation requires a Spell record.");

@@ -1,3 +1,4 @@
+import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-held-light-emitter
 import { DiceExprSchema } from "@dnd/surface/surface/schema";
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE
@@ -18,7 +19,6 @@ import { DiceExprSchema } from "@dnd/surface/surface/schema";
 // in spells-resolve.ts because held-light hurls share the spell attack damage
 // lifecycle with ordinary spell attacks and object target adjudication.
 
-import type { SpellRecord } from "@dnd/surface/surface/types";
 import {
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
@@ -31,7 +31,7 @@ import {
   BattleProcedureExecutionRef,
   type CombatantId,
 } from "../../identity.ts";
-import { characterSpellProcedureExecution } from "../../character-execution-admission.ts";
+import { characterSpellProcedureExecution } from "../../character-execution-queries.ts";
 import { spellCastSelectionSubject } from "../spells-discovery.ts";
 import { spellObjectTargetHole, spellTargetHole } from "../spells-targeting.ts";
 import { resolveSpellAttackDamageAct } from "../spells-resolve.ts";
@@ -68,7 +68,7 @@ type HeldLightHurlResolveInput =
   SpellProcedureProfileResolveInput<HeldLightHurlInvocation>;
 
 function admitHeldLightHurl(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly HeldLightHurlInvocation[] {
   if (!isProduceFlameOngoingEffectSpell(spell)) {

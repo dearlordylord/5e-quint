@@ -3,6 +3,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.ability-check-ability-substitution
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.jump-distance-ability-substitution
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.linked-speed-grant-projection
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import {
   characterBuildFeatureUnitIds,
   characterBuildProficiencies,
@@ -153,7 +154,9 @@ export function characterSheetAbilityCheckAbility(
       }
       if (
         grant.requiredActiveFeature !== undefined &&
-        !activeFeatureUnitIds.has(grant.requiredActiveFeature.unitId)
+        !activeFeatureUnitIds.has(
+          authoredUnitId(grant.requiredActiveFeature.unitId),
+        )
       ) {
         continue;
       }
@@ -163,7 +166,9 @@ export function characterSheetAbilityCheckAbility(
         ...(grant.requiredActiveFeature === undefined
           ? {}
           : {
-              requiredActiveFeatureUnitId: grant.requiredActiveFeature.unitId,
+              requiredActiveFeatureUnitId: authoredUnitId(
+                grant.requiredActiveFeature.unitId,
+              ),
             }),
       });
     }

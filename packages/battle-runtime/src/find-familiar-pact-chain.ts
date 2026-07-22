@@ -12,7 +12,7 @@ import type {
   StatBlockAttackActionOption,
   SupportedAttackActionOption,
 } from "./battle-action-options.ts";
-import { combatantCanTakeReactions } from "./battle-reducer/creature-state.ts";
+import { combatantCanTakeReactions } from "./battle-reducer/creature-state-execution.ts";
 import { snapshotBattle, spendReaction } from "./battle-reducer/dispatcher.ts";
 import { invalidResult } from "./battle-reducer/result-helpers.ts";
 import { resolveSelectedAttackProcedure } from "./battle-reducer/attack-main.ts";
@@ -126,7 +126,7 @@ function pactFamiliarAttackActionOptionForInput(
     return null;
   }
   return (
-    statBlockAttackActionOptions(actor.origin).find(
+    statBlockAttackActionOptions(actor.origin.execution).find(
       (attack): attack is StatBlockAttackActionOption =>
         statBlockAttackProcedureSection(
           input.state,

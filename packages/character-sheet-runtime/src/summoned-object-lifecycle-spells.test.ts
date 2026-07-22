@@ -12,6 +12,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L19E-05-L5-SUMMONED-OBJECT-LIFECYCLE planar_binding
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L19E-05-L5-SUMMONED-OBJECT-LIFECYCLE planar_binding
 // UNIT-IDENTITY-REPLAY: L19E-05-L5-SUMMONED-OBJECT-LIFECYCLE planar_binding doCastPlanarBinding
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, it, test } from "vitest";
 
 import {
@@ -494,16 +495,20 @@ function lifecycleWizardSheet(input: {
         spellcasting: {
           sources: [
             {
-              sourceUnitId: "class_wizard",
+              sourceUnitId: authoredUnitId("class_wizard"),
               spellcastingAbility: "int",
-              cantrips: ["fire_bolt", "light", "mage_hand"],
-              spellbook: [
-                "animate_objects",
-                "conjure_elemental",
-                "summon_dragon",
-                "planar_binding",
+              cantrips: [
+                authoredUnitId("fire_bolt"),
+                authoredUnitId("light"),
+                authoredUnitId("mage_hand"),
               ],
-              preparedSpells: input.preparedSpells,
+              spellbook: [
+                authoredUnitId("animate_objects"),
+                authoredUnitId("conjure_elemental"),
+                authoredUnitId("summon_dragon"),
+                authoredUnitId("planar_binding"),
+              ],
+              preparedSpells: input.preparedSpells.map(authoredUnitId),
               spellcastingFocuses: ["arcane_focus"],
             },
           ],

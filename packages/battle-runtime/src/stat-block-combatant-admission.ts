@@ -1,0 +1,100 @@
+import { Hp } from "@dnd/shared/types";
+import { Brand } from "effect";
+import * as Either from "effect/Either";
+
+import type { BattleStateInitIssue } from "./battle-state-execution.ts";
+import {
+  battleExecutionScopeCursor,
+  battleExecutionScopeOrdinal,
+  type BattleExecutionScopeOrdinal,
+  type CombatantId,
+} from "./identity.ts";
+import type { AdmittedBattleStatBlockCombatant } from "./stat-block-combatant-execution-state.ts";
+import type { BattleStatBlockExecutionSource } from "./stat-block-execution-state.ts";
+import { statBlockExecutionAdmissionCohort } from "./stat-block-execution.ts";
+
+const AdmittedBattleStatBlockCombatant =
+  Brand.nominal<AdmittedBattleStatBlockCombatant>();
+
+export function admitBattleStatBlockCombatant(input: {
+  readonly battleId: Parameters<typeof statBlockExecutionAdmissionCohort>[0];
+  readonly combatantId: CombatantId;
+  readonly statBlock: BattleStatBlockExecutionSource;
+  readonly startingScopeOrdinal?: BattleExecutionScopeOrdinal;
+}): Either.Either<AdmittedBattleStatBlockCombatant, BattleStateInitIssue> {
+  const { statBlock } = input;
+  if (statBlock.statBlock.ac.kind !== "literal") {
+    return issue("Battle runtime requires literal Stat Block Armor Class.");
+  }
+  if (statBlock.statBlock.hp.kind !== "literal") {
+    return issue("Battle runtime requires literal Stat Block maximum HP.");
+  }
+  if (
+    !Number.isInteger(statBlock.statBlock.hp.value) ||
+    statBlock.statBlock.hp.value < 1
+  ) {
+    return issue(
+      "Battle runtime requires Stat Block maximum HP to be a positive integer.",
+    );
+  }
+  if (typeof statBlock.statBlock.size !== "string") {
+    return issue("Battle runtime requires a concrete creature Size.");
+  }
+  if (typeof statBlock.statBlock.creatureType !== "string") {
+    return issue("Battle runtime requires a concrete creature type.");
+  }
+  if (statBlock.statBlock.resistances?.kind === "choose_one_from") {
+    return issue(
+      "Battle runtime requires Stat Block resistance choices to be resolved before admission.",
+    );
+  }
+  const from = input.startingScopeOrdinal ?? battleExecutionScopeOrdinal(0);
+  const cohort = statBlockExecutionAdmissionCohort(
+    input.battleId,
+    input.combatantId,
+    [statBlock],
+    from,
+  );
+  const allocation = cohort.admissions[0];
+  if (allocation === undefined) {
+    return issue("Stat Block execution admission is missing.");
+  }
+  return Either.right(
+    AdmittedBattleStatBlockCombatant({
+      battleId: input.battleId,
+      combatantId: input.combatantId,
+      origin: {
+        statBlockId: statBlock.id,
+        mechanics: {
+          creatureType: statBlock.statBlock.creatureType,
+          speeds: statBlock.statBlock.speeds,
+          abilityScores: statBlock.statBlock.abilityScores,
+          savingThrowModifiers: statBlock.statBlock.savingThrowModifiers ?? [],
+          skillModifiers: statBlock.statBlock.skillModifiers ?? [],
+          vulnerabilities:
+            statBlock.statBlock.vulnerabilities?.damageTypes ?? [],
+          resistances: statBlock.statBlock.resistances?.damageTypes ?? [],
+          immunities: {
+            damageTypes: statBlock.statBlock.immunities?.damageTypes ?? [],
+            conditions: statBlock.statBlock.immunities?.conditions ?? [],
+          },
+          specialSenses: statBlock.statBlock.senses ?? [],
+        },
+        execution: allocation.execution,
+      },
+      initialization: {
+        armorClass: statBlock.statBlock.ac.value,
+        maxHp: Hp(statBlock.statBlock.hp.value),
+        size: statBlock.statBlock.size,
+      },
+      cursorTransition: {
+        from,
+        to: battleExecutionScopeCursor(cohort.nextScopeOrdinal),
+      },
+    }),
+  );
+}
+
+function issue(message: string): Either.Either<never, BattleStateInitIssue> {
+  return Either.left({ tag: "battleStateInitIssue", message });
+}

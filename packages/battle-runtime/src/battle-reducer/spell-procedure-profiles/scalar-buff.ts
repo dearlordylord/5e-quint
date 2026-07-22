@@ -1,3 +1,4 @@
+import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.scalar-buff
 import { DiceExprSchema } from "@dnd/surface/surface/schema";
 import { ArmorClassSchema } from "@dnd/shared-algebras/armor-class-algebra";
@@ -38,12 +39,9 @@ import type {
   Attachment,
   EffectAtom,
   OngoingEffect,
-  SpellRecord,
 } from "@dnd/surface/surface/types";
 import { BATTLE_SPECIAL_SPEED_KINDS } from "../../battle-subjects.ts";
 import {
-  maybeOpenInterruptWindow,
-  snapshotBattle,
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
   type BattleFill,
@@ -53,6 +51,7 @@ import {
   type HealingSpellActionCost,
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
+import { maybeOpenInterruptWindow, snapshotBattle } from "../dispatcher.ts";
 import { CombatantId } from "../../identity.ts";
 import { BattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
 import { battleCreatureWithSpellActiveEffects } from "../../active-effect/lifecycle.ts";
@@ -171,7 +170,7 @@ type ScalarBuffResolveInput =
   SpellProcedureProfileResolveInput<ScalarBuffInvocation>;
 
 function admitScalarBuff(
-  spell: SpellRecord,
+  spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly ScalarBuffInvocation[] {
   const projection = scalarBuffSpellProjection(spell);
@@ -215,11 +214,11 @@ function admitScalarBuff(
   );
 }
 
-function scalarBuffSpellProjection(spell: SpellRecord): {
+function scalarBuffSpellProjection(spell: BattleSpellAdmissionSource): {
   readonly actionCost: HealingSpellActionCost;
   readonly rangeFeet: ScalarBuffInvocation["rangeFeet"];
   readonly attachment: Attachment;
-  readonly duration: SpellRecord["mechanics"]["duration"];
+  readonly duration: BattleSpellAdmissionSource["mechanics"]["duration"];
   readonly effect: EffectAtom | OngoingEffect;
 } | null {
   const castingTime = topLevelSpellCastingTime(spell.mechanics);

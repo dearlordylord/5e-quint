@@ -4,6 +4,7 @@
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L110C-03-DIVINE-INTERVENTION-SESSION cleric_divine_intervention flame_strike
 // UNIT-IDENTITY-REPLAY: L110C-03-DIVINE-INTERVENTION-SESSION cleric_divine_intervention doUseClericDivineIntervention
 // UNIT-IDENTITY-REPLAY: L110C-03-DIVINE-INTERVENTION-SESSION flame_strike doCastFlameStrikeThroughDivineIntervention
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, it, test } from "vitest";
 import { classSpellListPreparedSpellLevel } from "@dnd/surface/surface/unit-catalog";
 
@@ -110,7 +111,7 @@ describe("Character Sheet runtime / Divine Intervention", () => {
     expect(requireRight(characterSheetResources(sheet, unitLibrary))).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          unitId: "cleric_divine_intervention",
+          unitId: authoredUnitId("cleric_divine_intervention"),
           tag: "useCountResource",
           count: 1,
           expended: 0,
@@ -122,7 +123,7 @@ describe("Character Sheet runtime / Divine Intervention", () => {
       castDivineIntervention({
         sheet,
         unitLibrary,
-        spellId: "flame_strike",
+        spellId: authoredUnitId("flame_strike"),
       }),
     );
 
@@ -148,7 +149,7 @@ describe("Character Sheet runtime / Divine Intervention", () => {
     expect(result.sheet.resourceExpenditures).toEqual([
       {
         tag: "useCountResource",
-        unitId: "cleric_divine_intervention",
+        unitId: authoredUnitId("cleric_divine_intervention"),
         expended: 1,
       },
     ]);
@@ -156,7 +157,7 @@ describe("Character Sheet runtime / Divine Intervention", () => {
     const secondUse = castDivineIntervention({
       sheet: result.sheet,
       unitLibrary,
-      spellId: "flame_strike",
+      spellId: authoredUnitId("flame_strike"),
     });
     expect(Either.isLeft(secondUse)).toBe(true);
     if (Either.isLeft(secondUse)) {
@@ -174,7 +175,7 @@ describe("Character Sheet runtime / Divine Intervention", () => {
         castDivineIntervention({
           sheet: rested,
           unitLibrary,
-          spellId: "flame_strike",
+          spellId: authoredUnitId("flame_strike"),
         }),
       ),
     ).toBe(true);
@@ -184,7 +185,7 @@ describe("Character Sheet runtime / Divine Intervention", () => {
     expect(
       classSpellListPreparedSpellLevel({
         className: "cleric",
-        spellId: "contagion",
+        spellId: authoredUnitId("contagion"),
         unitLibrary,
       }),
     ).toBe(5);
@@ -193,7 +194,7 @@ describe("Character Sheet runtime / Divine Intervention", () => {
       castDivineIntervention({
         sheet: divineInterventionClericSheet(),
         unitLibrary,
-        spellId: "contagion",
+        spellId: authoredUnitId("contagion"),
       }),
     ).invocation;
 
@@ -210,7 +211,7 @@ describe("Character Sheet runtime / Divine Intervention", () => {
     const nonActionClericSpell = castDivineIntervention({
       sheet,
       unitLibrary,
-      spellId: "raise_dead",
+      spellId: authoredUnitId("raise_dead"),
     });
     expect(Either.isLeft(nonActionClericSpell)).toBe(true);
     if (Either.isLeft(nonActionClericSpell)) {
@@ -222,7 +223,7 @@ describe("Character Sheet runtime / Divine Intervention", () => {
     const nonClericReactionSpell = castDivineIntervention({
       sheet,
       unitLibrary,
-      spellId: "counterspell",
+      spellId: authoredUnitId("counterspell"),
     });
     expect(Either.isLeft(nonClericReactionSpell)).toBe(true);
     if (Either.isLeft(nonClericReactionSpell)) {
@@ -247,7 +248,7 @@ function projectDivineInterventionInvocation(): DivineInterventionSelectedIdenti
     castDivineIntervention({
       sheet: divineInterventionClericSheet(),
       unitLibrary,
-      spellId: "flame_strike",
+      spellId: authoredUnitId("flame_strike"),
     }),
   );
   return {
@@ -290,17 +291,20 @@ function divineInterventionClericSheet() {
         spellcasting: {
           sources: [
             {
-              sourceUnitId: "class_cleric",
+              sourceUnitId: authoredUnitId("class_cleric"),
               spellcastingAbility: "wis",
               cantrips: [
-                "guidance",
-                "light",
-                "mending",
-                "resistance",
-                "sacred_flame",
+                authoredUnitId("guidance"),
+                authoredUnitId("light"),
+                authoredUnitId("mending"),
+                authoredUnitId("resistance"),
+                authoredUnitId("sacred_flame"),
               ],
               spellbook: [],
-              preparedSpells: ["bless", "spirit_guardians"],
+              preparedSpells: [
+                authoredUnitId("bless"),
+                authoredUnitId("spirit_guardians"),
+              ],
               spellcastingFocuses: ["holy_symbol"],
             },
           ],

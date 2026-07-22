@@ -1,3 +1,4 @@
+import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay weapon-mastery-properties mastery_sap mastery_topple mastery_cleave
 // UNIT-IDENTITY-REPLAY: weapon-mastery-properties mastery_sap doResolveSapMasteryPropertyHit
 // UNIT-IDENTITY-REPLAY: weapon-mastery-properties mastery_topple doResolveToppleMasteryPropertyFailedSavingThrow
@@ -18,6 +19,7 @@ import {
   resolveBattleSubject,
   characterAttackSubjectForTest,
 } from "./battle-runtime-test-support.ts";
+import { admitCharacterWeaponAttackExecutionWeapon } from "./character-weapon-execution-admission.ts";
 
 import {
   defineDriver,
@@ -772,7 +774,9 @@ function weaponMasteryAttackerInit(
           supportProfiles: [scenario.supportProfile],
         },
       ],
-      weaponMasteries: [{ weaponUnitId: scenario.weaponUnitId }],
+      weaponMasteries: [
+        { weaponUnitId: parseSharedUnitId(scenario.weaponUnitId) },
+      ],
       classLevels: [{ className: "fighter", level: 1 }],
       knownLanguages: ["Common"],
       d20Statistics: testCharacterD20Statistics({ str: 16 }),
@@ -788,7 +792,7 @@ function weaponMasteryAttackerInit(
       selectedLoadout: {
         weapon: {
           itemId: `main:${scenario.weaponUnitId}`,
-          unitId: scenario.weaponUnitId,
+          unitId: parseSharedUnitId(scenario.weaponUnitId),
           grip: scenario.grip,
         },
       },
@@ -841,7 +845,7 @@ function weaponAttack(
   }
   return {
     kind: "weapon",
-    weapon,
+    weapon: admitCharacterWeaponAttackExecutionWeapon(weapon),
     ability: "str",
     abilityModifier: abilityModifier(3),
   };

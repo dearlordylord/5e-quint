@@ -1,3 +1,7 @@
+import {
+  unitId as parseSharedUnitId,
+  statBlockId as parseSharedStatBlockId,
+} from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.druid-wild-shape-known-form
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE
@@ -54,6 +58,7 @@ import {
   unitLibrary,
   wizardSpellcasting,
 } from "./battle-runtime-test-support.ts";
+import { admitCharacterWeaponAttackExecutionWeapon } from "./character-weapon-execution-admission.ts";
 import {
   activeDruidWildShapeEffect,
   activeDruidWildShapeForm,
@@ -82,7 +87,7 @@ import {
   type WildShapeEquipmentDispositionChoice,
   type WildShapeLoadoutObjectRef,
 } from "./index.ts";
-import { statBlockProcedurePresentations } from "./stat-block-execution.ts";
+import { statBlockProcedurePresentations } from "./stat-block-presentation.ts";
 import type { BattleRuntimeSession } from "./battle-runtime-context.ts";
 import { DRUID_BEAST_SPELLS_CLASS_LEVEL } from "./unit-feature-support.ts";
 
@@ -219,7 +224,7 @@ test("re-assuming a Wild Shape form preserves its committed Stat Block resources
   }
   const limitedForm: StatBlockRecord = {
     ...baseForm,
-    id: limitedFormId,
+    id: parseSharedStatBlockId(limitedFormId),
     name: "Synthetic Limited Wild Shape Form",
     provenance: {
       kind: "synthetic-test",
@@ -522,11 +527,11 @@ test("projects practical worn Wild Shape equipment into the effective loadout", 
     selectedLoadout: {
       shield: {
         itemId: "shield:equipment_shield",
-        unitId: "equipment_shield",
+        unitId: parseSharedUnitId("equipment_shield"),
       },
       weapon: {
         itemId: "main:weapon_quarterstaff",
-        unitId: "weapon_quarterstaff",
+        unitId: parseSharedUnitId("weapon_quarterstaff"),
         grip: "one_handed",
       },
     },
@@ -592,7 +597,7 @@ test("uses a practical worn Wild Shape weapon when form limbs can handle objects
     selectedLoadout: {
       weapon: {
         itemId: "main:weapon_longsword",
-        unitId: "weapon_longsword",
+        unitId: parseSharedUnitId("weapon_longsword"),
         grip: "one_handed",
       },
     },
@@ -666,11 +671,11 @@ test("uses a practical worn Wild Shape weapon when form limbs can handle objects
     fills: [targetChoice],
   });
   if (needsAttackRoll.tag !== "needsHoles") {
-    throw new Error("Expected Longsword attack roll hole.");
+    throw new Error("Expected weapon_longsword attack roll hole.");
   }
   const attackRoll = findHole(needsAttackRoll.holes, "attackRoll");
   if (attackRoll.kind !== "attackRoll") {
-    throw new Error("Expected Longsword attack roll hole.");
+    throw new Error("Expected weapon_longsword attack roll hole.");
   }
   if (!("attack" in attackRoll)) {
     throw new Error("Expected weapon attack roll hole.");
@@ -693,13 +698,13 @@ test("uses a practical worn Wild Shape weapon when form limbs can handle objects
     ],
   });
   if (needsDamage.tag !== "needsHoles") {
-    throw new Error("Expected Longsword damage hole.");
+    throw new Error("Expected weapon_longsword damage hole.");
   }
   const damage = findHole(needsDamage.holes, "rolledDice");
   if (damage.kind !== "rolledDice") {
-    throw new Error("Expected Longsword damage hole.");
+    throw new Error("Expected weapon_longsword damage hole.");
   }
-  expect(damage.label).toBe("Longsword damage (1d8+3-slashing)");
+  expect(damage.label).toBe("weapon_longsword damage (1d8+3-slashing)");
 });
 
 test("keeps worn Wild Shape off-hand weapons in the Light-property Bonus Action lane with form statistics", () => {
@@ -709,12 +714,12 @@ test("keeps worn Wild Shape off-hand weapons in the Light-property Bonus Action 
     selectedLoadout: {
       weapon: {
         itemId: "main:weapon_shortsword",
-        unitId: "weapon_shortsword",
+        unitId: parseSharedUnitId("weapon_shortsword"),
         grip: "one_handed",
       },
       offHandWeapon: {
         itemId: "offhand:weapon_dagger",
-        unitId: "weapon_dagger",
+        unitId: parseSharedUnitId("weapon_dagger"),
       },
     },
   });
@@ -853,11 +858,11 @@ test("keeps worn Wild Shape off-hand weapons in the Light-property Bonus Action 
     fills: [daggerTargetChoice],
   });
   if (needsDaggerAttackRoll.tag !== "needsHoles") {
-    throw new Error("Expected Dagger attack roll hole.");
+    throw new Error("Expected weapon_dagger attack roll hole.");
   }
   const daggerAttackRoll = findHole(needsDaggerAttackRoll.holes, "attackRoll");
   if (daggerAttackRoll.kind !== "attackRoll") {
-    throw new Error("Expected Dagger attack roll hole.");
+    throw new Error("Expected weapon_dagger attack roll hole.");
   }
   if (!("attack" in daggerAttackRoll)) {
     throw new Error("Expected weapon attack roll hole.");
@@ -880,13 +885,13 @@ test("keeps worn Wild Shape off-hand weapons in the Light-property Bonus Action 
     ],
   });
   if (needsDamage.tag !== "needsHoles") {
-    throw new Error("Expected Dagger damage hole.");
+    throw new Error("Expected weapon_dagger damage hole.");
   }
   const damage = findHole(needsDamage.holes, "rolledDice");
   if (damage.kind !== "rolledDice") {
-    throw new Error("Expected Dagger damage hole.");
+    throw new Error("Expected weapon_dagger damage hole.");
   }
-  expect(damage.label).toBe("Dagger damage (1d4-piercing)");
+  expect(damage.label).toBe("weapon_dagger damage (1d4-piercing)");
   expect(
     resolveBattleSubject({
       state: afterQualifyingAttack,
@@ -905,7 +910,7 @@ test("blocks worn Wild Shape weapon use when form limbs cannot handle objects", 
     selectedLoadout: {
       weapon: {
         itemId: "main:weapon_longsword",
-        unitId: "weapon_longsword",
+        unitId: parseSharedUnitId("weapon_longsword"),
         grip: "one_handed",
       },
     },
@@ -960,7 +965,7 @@ test("projects practical worn Wild Shape armor into the effective loadout", () =
     selectedLoadout: {
       armor: {
         itemId: "armor:equipment_chain_mail",
-        unitId: "equipment_chain_mail",
+        unitId: parseSharedUnitId("equipment_chain_mail"),
       },
     },
   });
@@ -1008,7 +1013,7 @@ test("returns Wild Shape fallen equipment at the explicit object boundary", () =
     selectedLoadout: {
       shield: {
         itemId: "shield:equipment_shield",
-        unitId: "equipment_shield",
+        unitId: parseSharedUnitId("equipment_shield"),
       },
     },
   });
@@ -1065,11 +1070,11 @@ test("rejects invalid Wild Shape equipment disposition choices and converts impo
   const candidates = wildShapeLoadoutObjectRefs({
     armor: {
       itemId: "armor:equipment_leather",
-      unitId: "equipment_leather",
+      unitId: parseSharedUnitId("equipment_leather"),
     },
     shield: {
       itemId: "shield:equipment_shield",
-      unitId: "equipment_shield",
+      unitId: parseSharedUnitId("equipment_shield"),
     },
   });
   const armor = candidates.find(isWildShapeArmorLoadoutObjectRef);
@@ -1200,7 +1205,7 @@ test("rejects invalid Wild Shape equipment disposition choices and converts impo
   const [mainWeapon] = wildShapeLoadoutObjectRefs({
     weapon: {
       itemId: "main:weapon_quarterstaff",
-      unitId: "weapon_quarterstaff",
+      unitId: parseSharedUnitId("weapon_quarterstaff"),
       grip: "one_handed",
     },
   });
@@ -1572,7 +1577,7 @@ test("filters untyped trait-derived attack-roll advantage from battle-available 
   const baseForm = statBlockCatalog.requireStatBlock(ridingHorseId);
   const traitAdvantageForm = {
     ...baseForm,
-    id: "synthetic_untyped_coordinated_shape",
+    id: parseSharedStatBlockId("synthetic_untyped_coordinated_shape"),
     statBlock: {
       ...baseForm.statBlock,
       traits: [
@@ -1868,7 +1873,7 @@ function syntheticProseProneForm(): StatBlockRecord {
   }
   return {
     ...base,
-    id: syntheticProseProneFormId,
+    id: parseSharedStatBlockId(syntheticProseProneFormId),
     name: "Synthetic Prose Prone Form",
     statBlock: {
       ...base.statBlock,
@@ -1895,7 +1900,7 @@ function syntheticActionSectionForm(): StatBlockRecord {
   }
   return {
     ...base,
-    id: syntheticActionSectionFormId,
+    id: parseSharedStatBlockId(syntheticActionSectionFormId),
     name: "Synthetic Action Section Form",
     statBlock: {
       ...base.statBlock,
@@ -2130,7 +2135,7 @@ test("Beast Spells exposes Shillelagh only while its attached weapon remains usa
     selectedLoadout: {
       weapon: {
         itemId: "main:weapon_quarterstaff",
-        unitId: "weapon_quarterstaff",
+        unitId: parseSharedUnitId("weapon_quarterstaff"),
         grip: "one_handed",
       },
     },
@@ -2438,7 +2443,7 @@ function weakTrueFormWeaponAttack(
   }
   return {
     kind: "weapon",
-    weapon,
+    weapon: admitCharacterWeaponAttackExecutionWeapon(weapon),
     ability: "str",
     abilityModifier: abilityModifier(-1),
     attackBonus: attackBonus(1),
@@ -2473,7 +2478,7 @@ function syntheticCoordinatedShape(): StatBlockRecord {
   const baseForm = statBlockCatalog.requireStatBlock(ridingHorseId);
   return {
     ...baseForm,
-    id: syntheticCoordinatedShapeId,
+    id: parseSharedStatBlockId(syntheticCoordinatedShapeId),
     name: "Synthetic Coordinated Shape",
     statBlock: {
       ...baseForm.statBlock,
@@ -2618,20 +2623,20 @@ function wildShapeSelectedLoadout(): CharacterBattleCreatureState["origin"]["sel
   return {
     armor: {
       itemId: "armor:equipment_leather",
-      unitId: "equipment_leather",
+      unitId: parseSharedUnitId("equipment_leather"),
     },
     shield: {
       itemId: "shield:equipment_shield",
-      unitId: "equipment_shield",
+      unitId: parseSharedUnitId("equipment_shield"),
     },
     weapon: {
       itemId: "main:weapon_quarterstaff",
-      unitId: "weapon_quarterstaff",
+      unitId: parseSharedUnitId("weapon_quarterstaff"),
       grip: "two_handed",
     },
     offHandWeapon: {
       itemId: "offhand:weapon_dagger",
-      unitId: "weapon_dagger",
+      unitId: parseSharedUnitId("weapon_dagger"),
     },
   };
 }
@@ -2640,15 +2645,15 @@ function wildShapeBattleSelectedLoadout(): CharacterBattleCreatureState["origin"
   return {
     armor: {
       itemId: "armor:equipment_leather",
-      unitId: "equipment_leather",
+      unitId: parseSharedUnitId("equipment_leather"),
     },
     shield: {
       itemId: "shield:equipment_shield",
-      unitId: "equipment_shield",
+      unitId: parseSharedUnitId("equipment_shield"),
     },
     weapon: {
       itemId: "main:weapon_quarterstaff",
-      unitId: "weapon_quarterstaff",
+      unitId: parseSharedUnitId("weapon_quarterstaff"),
       grip: "one_handed",
     },
   };

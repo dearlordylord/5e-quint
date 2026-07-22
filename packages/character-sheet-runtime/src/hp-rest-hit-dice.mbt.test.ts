@@ -1,4 +1,5 @@
 // KERNEL-COVERAGE: parity-witness SHEET.HP_REST_HIT_DICE.TRANSITIONS
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
@@ -305,7 +306,9 @@ function spendShortRestHitPointDieProjection(): HpRestHitDiceProjection {
     completeShortRest({
       completion: shortRestCompletionForSheet(sheet),
       unitLibrary,
-      spendHitDice: [{ classUnitId: "class_wizard", roll: DieRollResult(4) }],
+      spendHitDice: [
+        { classUnitId: authoredUnitId("class_wizard"), roll: DieRollResult(4) },
+      ],
     }),
   );
   return projectAccepted({
@@ -322,8 +325,8 @@ function spendShortRestHitPointDiceSequentiallyProjection(): HpRestHitDiceProjec
       completion: shortRestCompletionForSheet(sheet),
       unitLibrary,
       spendHitDice: [
-        { classUnitId: "class_wizard", roll: DieRollResult(4) },
-        { classUnitId: "class_wizard", roll: DieRollResult(3) },
+        { classUnitId: authoredUnitId("class_wizard"), roll: DieRollResult(4) },
+        { classUnitId: authoredUnitId("class_wizard"), roll: DieRollResult(3) },
       ],
     }),
   );
@@ -422,7 +425,9 @@ function interruptLongRestWithShortRestBenefitsProjection(): HpRestHitDiceProjec
       unitLibrary,
       restedTicks: CHARACTER_SHEET_SHORT_REST_TICKS,
       interruption: "rollInitiative",
-      spendHitDice: [{ classUnitId: "class_wizard", roll: DieRollResult(4) }],
+      spendHitDice: [
+        { classUnitId: authoredUnitId("class_wizard"), roll: DieRollResult(4) },
+      ],
     }),
   );
   return projectAccepted({
@@ -579,7 +584,7 @@ function sheetFixture(input: {
           ? []
           : [
               {
-                classUnitId: "class_wizard",
+                classUnitId: authoredUnitId("class_wizard"),
                 spent: resourceCount(input.spentHitDice),
               },
             ],
@@ -593,7 +598,7 @@ function wizardBuild(): CharacterBuild {
     spellcasting: {
       sources: [
         {
-          sourceUnitId: "class_wizard",
+          sourceUnitId: authoredUnitId("class_wizard"),
           spellcastingAbility: "int",
           cantrips: [],
           spellbook: [],
@@ -617,14 +622,14 @@ function baseBuild(
 ): CharacterBuild {
   return {
     progression: {
-      startingClass: classUnitId(startingClass),
+      startingClass: classUnitId(authoredUnitId(startingClass)),
       advancements: advancements.map((classId) => ({
-        classUnitId: classUnitId(classId),
+        classUnitId: classUnitId(authoredUnitId(classId)),
         hitPointRule: { tag: "fixedHigherLevelGain" },
       })),
     },
-    background: "background_soldier",
-    species: "species_orc",
+    background: authoredUnitId("background_soldier"),
+    species: authoredUnitId("species_orc"),
     originLanguages: ["Common", "Dwarvish", "Goblin"],
     classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },

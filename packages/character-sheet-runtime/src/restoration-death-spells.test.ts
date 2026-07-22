@@ -4,6 +4,10 @@
 // UNIT-IDENTITY-REPLAY: L19E-06-L5-RESTORATION-DEATH greater_restoration doCastGreaterRestorationCharmed
 // UNIT-IDENTITY-REPLAY: L19E-06-L5-RESTORATION-DEATH raise_dead doCastRaiseDead
 // UNIT-IDENTITY-REPLAY: L19E-06-L5-RESTORATION-DEATH reincarnate doCastReincarnate
+import {
+  statBlockId as authoredStatBlockId,
+  unitId as authoredUnitId,
+} from "@dnd/shared/game-facts";
 import { describe, expect, it, test } from "vitest";
 import type { CharacterSheet } from "./index.ts";
 
@@ -176,7 +180,7 @@ describe("Character Sheet runtime / restoration and death spells", () => {
         caster,
         target,
         unitLibrary,
-        spellId: "greater_restoration",
+        spellId: authoredUnitId("greater_restoration"),
         castLevel: spellSlotLevel(5),
         casting: {
           ...completedTouchCasting,
@@ -222,7 +226,7 @@ describe("Character Sheet runtime / restoration and death spells", () => {
         caster,
         target,
         unitLibrary,
-        spellId: "raise_dead",
+        spellId: authoredUnitId("raise_dead"),
         castLevel: spellSlotLevel(5),
         casting: completedTouchCasting,
         eligibility: {
@@ -261,7 +265,7 @@ describe("Character Sheet runtime / restoration and death spells", () => {
         caster,
         target,
         unitLibrary,
-        spellId: "reincarnate",
+        spellId: authoredUnitId("reincarnate"),
         castLevel: spellSlotLevel(5),
         casting: {
           ...completedTouchCasting,
@@ -314,7 +318,7 @@ describe("Character Sheet runtime / restoration and death spells", () => {
       }),
       target: reincarnateTargetSheet(),
       unitLibrary,
-      spellId: "reincarnate",
+      spellId: authoredUnitId("reincarnate"),
       castLevel: spellSlotLevel(5),
       casting: {
         ...completedTouchCasting,
@@ -347,7 +351,7 @@ describe("Character Sheet runtime / restoration and death spells", () => {
       }),
       target: reincarnateTargetSheet(),
       unitLibrary,
-      spellId: "reincarnate",
+      spellId: authoredUnitId("reincarnate"),
       castLevel: spellSlotLevel(5),
       casting: {
         ...completedTouchCasting,
@@ -393,7 +397,7 @@ function projectGreaterRestoration(): RestorationDeathSelectedIdentityProjection
       caster,
       target,
       unitLibrary,
-      spellId: "greater_restoration",
+      spellId: authoredUnitId("greater_restoration"),
       castLevel: spellSlotLevel(5),
       casting: {
         ...completedTouchCasting,
@@ -420,7 +424,7 @@ function projectRaiseDead(): RestorationDeathSelectedIdentityProjection {
       caster,
       target,
       unitLibrary,
-      spellId: "raise_dead",
+      spellId: authoredUnitId("raise_dead"),
       castLevel: spellSlotLevel(5),
       casting: completedTouchCasting,
       eligibility: {
@@ -445,7 +449,7 @@ function projectReincarnate(): RestorationDeathSelectedIdentityProjection {
       caster,
       target,
       unitLibrary,
-      spellId: "reincarnate",
+      spellId: authoredUnitId("reincarnate"),
       castLevel: spellSlotLevel(5),
       casting: {
         ...completedTouchCasting,
@@ -555,11 +559,11 @@ function restorationCasterSheet(input: {
         spellcasting: {
           sources: [
             {
-              sourceUnitId: classUnitId,
+              sourceUnitId: authoredUnitId(classUnitId),
               spellcastingAbility: "wis",
               cantrips: [],
               spellbook: [],
-              preparedSpells: [input.spellId],
+              preparedSpells: [authoredUnitId(input.spellId)],
               spellcastingFocuses: [spellcastingFocus],
             },
           ],
@@ -577,10 +581,10 @@ function restorationCasterSheet(input: {
         ? {
             druidWildShapeKnownFormStatBlockIds: [
               ...druidWildShapeFixtureKnownFormStatBlockIds,
-              "stat_block_cat",
-              "stat_block_frog",
-              "stat_block_bat",
-              "stat_block_owl",
+              authoredStatBlockId("stat_block_cat"),
+              authoredStatBlockId("stat_block_frog"),
+              authoredStatBlockId("stat_block_bat"),
+              authoredStatBlockId("stat_block_owl"),
             ],
           }
         : {}),

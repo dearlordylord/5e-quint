@@ -1,3 +1,4 @@
+import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
   battleActiveEffectExecutionRefForTest,
@@ -135,7 +136,7 @@ function extendedCreatureSizeAct(
       },
     ],
     casterMetamagic: {
-      sorceryPointResourceUnitId: "sorcerer_font_of_magic",
+      sorceryPointResourceUnitId: parseSharedUnitId("sorcerer_font_of_magic"),
       spellUseLimit: "one_per_spell_unless_option_allows_stacking",
       knownOptions: [extendedMetamagicOption()],
     },
@@ -178,7 +179,7 @@ function quickenedCreatureSizeAct(input?: {
       },
     ],
     casterMetamagic: {
-      sorceryPointResourceUnitId: "sorcerer_font_of_magic",
+      sorceryPointResourceUnitId: parseSharedUnitId("sorcerer_font_of_magic"),
       spellUseLimit: "one_per_spell_unless_option_allows_stacking",
       knownOptions: [quickenedMetamagicOption()],
     },

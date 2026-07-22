@@ -29,7 +29,7 @@ import type {
 import {
   CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
   characterUnitProcedure,
-} from "../character-execution-admission.ts";
+} from "../character-execution-queries.ts";
 import type {
   CharacterUnarmedStrikeActionOption,
   CharacterWeaponAttackActionOption,
@@ -40,7 +40,7 @@ import { spellInvocationIsSpellcasting } from "./spell-turn-resources.ts";
 import type {
   OngoingFeatureDamageModifier,
   OngoingFeatureRollModifier,
-} from "../unit-feature-support.ts";
+} from "../unit-feature-execution-constants.ts";
 import {
   HUNTERS_PREY_SUPPORT_PROFILE,
   TACTICAL_MASTER_REPLACEMENT_DECISION_CHOICES,
@@ -50,12 +50,9 @@ import {
   WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE,
   WEAPON_MASTERY_PUSH_SUPPORT_PROFILE,
   WEAPON_MASTERY_SLOW_SUPPORT_PROFILE,
-  type BattleUnitSupportProfile,
   type TacticalMasterReplacementMasteryProperty,
-} from "../unit-feature-support.ts";
+} from "../unit-feature-execution-constants.ts";
 import {
-  ATTACK_ROLL_HOLE_ID,
-  ATTACK_ROLL_HOLE_INSTANCE,
   type AttackDamageRider,
   type AttackRollFeatureActivation,
   type BattleActiveEffect,
@@ -78,10 +75,12 @@ import {
   type SpellMarkedDamageRider,
   type SupportedSpellInvocation,
 } from "../battle-state-execution.ts";
-import type {
-  RuntimeSpellProcedureExecution,
-  UnitFeatureProcedureExecution,
-} from "../character-execution-admission.ts";
+import {
+  ATTACK_ROLL_HOLE_ID,
+  ATTACK_ROLL_HOLE_INSTANCE,
+} from "./battle-runtime-protocol.ts";
+import type { UnitFeatureProcedureExecution } from "../character-execution-queries.ts";
+import type { RuntimeSpellProcedureExecution } from "../character-execution.ts";
 
 type RuntimeSpellProcedure =
   | SupportedSpellInvocation
@@ -91,7 +90,7 @@ import {
   battleCreatureStateWithKnockOutPreservedConditions,
   isCharacterBattleCreatureState,
   ongoingFeatureProfileForSourceKey,
-} from "./creature-state.ts";
+} from "./creature-state-execution.ts";
 import { combatantHasGrapplerSupportProfile } from "./grappler-support-profile.ts";
 import { attackDamageDieFloorChoiceProcedureRefs } from "./attack-damage-die-floor-choice.ts";
 import {
@@ -176,7 +175,7 @@ const WEAPON_MASTERY_PROPERTIES_BY_SUPPORT_PROFILE = [
     property: "cleave",
   },
 ] as const satisfies ReadonlyArray<{
-  readonly supportProfile: BattleUnitSupportProfile;
+  readonly supportProfile: string;
   readonly property: CharacterWeaponAttackActionOption["weapon"]["mastery"];
 }>;
 type WeaponMasteryPropertySupportProfile =
@@ -1713,7 +1712,7 @@ function tacticalMasterReplacementSelection(
   }
   if (
     !attacker.origin.weaponMasteries.some(
-      (mastery) => mastery.weaponUnitId === attack.weapon.id,
+      (mastery) => mastery.weaponUnitId === attack.weapon.weaponUnitId,
     )
   ) {
     return null;
@@ -1789,7 +1788,7 @@ function selectedWeaponMasteryProperty(input: {
   }
   if (
     !attacker.origin.weaponMasteries.some(
-      (mastery) => mastery.weaponUnitId === attack.weapon.id,
+      (mastery) => mastery.weaponUnitId === attack.weapon.weaponUnitId,
     )
   ) {
     return null;
@@ -1805,7 +1804,7 @@ function selectedWeaponMasteryProperty(input: {
 }
 
 function weaponMasteryPropertyForSupportProfile(
-  supportProfile: BattleUnitSupportProfile,
+  supportProfile: WeaponMasteryPropertySupportProfile,
 ): CharacterWeaponAttackActionOption["weapon"]["mastery"] | null {
   for (const entry of WEAPON_MASTERY_PROPERTIES_BY_SUPPORT_PROFILE) {
     if (entry.supportProfile === supportProfile) return entry.property;
