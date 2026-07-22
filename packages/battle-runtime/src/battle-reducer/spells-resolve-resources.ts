@@ -47,6 +47,26 @@ export type SpellCastResourceSpendResult =
   | { readonly tag: "resolved"; readonly state: BattleState }
   | Extract<BattleResolutionResult, { readonly tag: "invalid" }>;
 
+export function spendSpellCastMetamagicResources(input: {
+  readonly state: BattleState;
+  readonly actorId: CombatantId;
+  readonly applications: readonly CharacterBattleMetamagicOptionFact[];
+}): Either.Either<BattleState, string> {
+  const stateWithQuickenedCommitment = {
+    ...input.state,
+    currentTurnResources: markQuickenedLevelOnePlusSpellCastForApplications(
+      input.state.currentTurnResources,
+      input.actorId,
+      input.applications,
+    ),
+  };
+  return spendSpellMetamagicSorceryPoints({
+    state: stateWithQuickenedCommitment,
+    actorId: input.actorId,
+    applications: input.applications,
+  });
+}
+
 export function spellCastActionCost(input: {
   readonly invocation: RuntimeSpellProcedureExecution;
   readonly actionCostOverride?: "magicAction" | "bonusAction" | undefined;
@@ -109,19 +129,15 @@ export function spendSpellCastResources(input: {
     const resourced = {
       ...afterPriorConcentration,
       currentTurnResources: clearPendingAttackRollMissToHitReplacementSelection(
-        markQuickenedLevelOnePlusSpellCastForApplications(
-          markInvocationLevelOnePlusSpellCastThisTurn(
-            spent.right,
-            input.actorId,
-            input.invocation,
-          ),
+        markInvocationLevelOnePlusSpellCastThisTurn(
+          spent.right,
           input.actorId,
-          metamagicApplications,
+          input.invocation,
         ),
         input.actorId,
       ),
     };
-    const metamagicSpend = spendSpellMetamagicSorceryPoints({
+    const metamagicSpend = spendSpellCastMetamagicResources({
       state: resourced,
       actorId: input.actorId,
       applications: metamagicApplications,
@@ -175,15 +191,11 @@ export function spendSpellCastResources(input: {
   const resourced = {
     ...slotted,
     currentTurnResources: clearPendingAttackRollMissToHitReplacementSelection(
-      markQuickenedLevelOnePlusSpellCastForApplications(
-        slotTurnResources.right,
-        input.actorId,
-        metamagicApplications,
-      ),
+      slotTurnResources.right,
       input.actorId,
     ),
   };
-  const metamagicSpend = spendSpellMetamagicSorceryPoints({
+  const metamagicSpend = spendSpellCastMetamagicResources({
     state: resourced,
     actorId: input.actorId,
     applications: metamagicApplications,

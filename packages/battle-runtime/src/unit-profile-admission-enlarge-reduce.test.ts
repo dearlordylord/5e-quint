@@ -2,37 +2,56 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 import {
   battleActiveEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
+  characterSpellInvocationRefForProcedureRefForTest,
+  requireCharacterSpellProcedureRefForTest,
 } from "./battle-runtime-test-support.ts";
 import {
   battleActSpellPresentation,
   battleActSpellSlotPresentation,
 } from "./battle-act-composition.ts";
+import { battleRuntimeSessionWithState } from "./battle-runtime-context.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-ENLARGE-REDUCE-CREATURE-RUNTIME enlarge_reduce
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L14G-D03-SORCERER-METAMAGIC-PARTIAL-PROFILE sorcerer_metamagic
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-creature-size-change
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.metamagic-cast-duration-and-concentration
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.metamagic-cast-governor-quickened
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION
+// KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR
 import { abilityModifier } from "@dnd/shared-algebras/armor-class-algebra";
-import { proficiencyBonus, resourceCount } from "@dnd/shared/types";
+import { canSpendAction } from "@dnd/shared-algebras/action-economy-algebra";
+import {
+  movementFeet,
+  proficiencyBonus,
+  resourceCount,
+} from "@dnd/shared/types";
 import type { Size } from "@dnd/surface/surface/types";
 import { describe, expect, test } from "vitest";
 import { INITIAL_TURN_RESOURCES } from "./battle-reducer/battle-runtime-protocol.ts";
 import { concentrationSavingThrowHole } from "./battle-reducer/damage-apply.ts";
 import { combatantEffectiveSize } from "./battle-reducer/druid-wild-shape.ts";
 import { requiredAbilityCheckRollMode } from "./battle-reducer/hole-helpers.ts";
-import { EXTENDED_METAMAGIC_EFFECT_KIND } from "./battle-reducer/metamagic.ts";
+import {
+  EXTENDED_METAMAGIC_EFFECT_KIND,
+  QUICKENED_METAMAGIC_EFFECT_KIND,
+} from "./battle-reducer/metamagic.ts";
 import { savingThrowRollModeProjections } from "./battle-reducer/spells-damage-fills.ts";
 import {
   characterBattleResourceIsPointPool,
   type CharacterBattleMetamagicOptionFact,
 } from "./character-battle-resources.ts";
 import {
+  SPELL_CAST_REACTION_FACTS_HOLE_ID,
+  type BattleFill,
+  type BattleInterruptProcedureChoice,
+} from "./index.ts";
+import {
   enlargeReduceUnitId,
   spellCasterId,
   spellTargetId,
   unitLibrary,
   type ActionSpellAct,
+  type BonusActionSpellAct,
 } from "./unit-profile-admission-catalog-support.ts";
 import {
   attackRollFill,
@@ -41,6 +60,7 @@ import {
   requireCombatant,
   requireHole,
   requireResultHole,
+  interruptDecisionFill,
   weaponAttackSubject,
   zeroAbilityWeaponAttack,
 } from "./unit-profile-admission-creature-fixture-support.ts";
@@ -55,6 +75,7 @@ import {
   breakBattleConcentration,
   discoverBattleActs,
   elapsedTimeTicks,
+  resolveBattleInterrupt,
   resolveBattleSubject,
   spellId,
   spellSlotInvocationRef,
@@ -138,7 +159,313 @@ function extendedCreatureSizeAct(
   return { session, act };
 }
 
+function quickenedCreatureSizeAct(input?: {
+  readonly targetCanCounterspell?: true;
+  readonly castSlotLevel?: 2 | 4;
+}): {
+  readonly session: ReturnType<typeof spellBattle>;
+  readonly act: BonusActionSpellAct;
+} {
+  const spell = spellRecord(enlargeReduceUnitId);
+  const session = spellBattle({
+    preparedSpells: [spell],
+    spellSlots: [{ spellLevel: input?.castSlotLevel ?? 2, count: 1 }],
+    casterClassLevels: [{ className: "sorcerer", level: 2 }],
+    casterResources: [
+      {
+        unit: unitLibrary.requireUnit("sorcerer_font_of_magic"),
+        pointsRemaining: resourceCount(2),
+      },
+    ],
+    casterMetamagic: {
+      sorceryPointResourceUnitId: "sorcerer_font_of_magic",
+      spellUseLimit: "one_per_spell_unless_option_allows_stacking",
+      knownOptions: [quickenedMetamagicOption()],
+    },
+    ...(input?.targetCanCounterspell === true
+      ? {
+          targetSpellcasting: {
+            sourceClassName: "wizard",
+            spellcastingAbilityModifier: abilityModifier(3),
+            proficiencyBonus: proficiencyBonus(2),
+            canCastSpells: true,
+            cantrips: [],
+            preparedSpells: [spellRecord("counterspell")],
+            featurePreparedSpells: [],
+            spellbookRitualSpellAccesses: [],
+            invocationSpellAccesses: [],
+            spellSlots: [{ spellLevel: 3, count: 1 }],
+          },
+        }
+      : {}),
+  });
+  const act = discoverBattleActs(session).find(
+    (candidate): candidate is BonusActionSpellAct =>
+      candidate.subject.tag === "bonusActionSpell" &&
+      battleActSpellPresentation(candidate)?.invocation.spellId ===
+        enlargeReduceUnitId &&
+      battleActSpellPresentation(candidate)?.invocation.procedure ===
+        "creatureSizeIncrease" &&
+      candidate.subject.metamagic?.some(
+        (selection) => selection.effectKind === QUICKENED_METAMAGIC_EFFECT_KIND,
+      ) === true,
+  );
+  expect(act).toBeDefined();
+  if (act === undefined) {
+    throw new Error("Expected Quickened Enlarge spell act.");
+  }
+  return { session, act };
+}
+
 describe("L12G deterministic Enlarge/Reduce creature admission", () => {
+  test("Quickened Enlarge spends the Bonus Action, Spell Slot, and shared Sorcery Points without spending the Magic Action", () => {
+    const { session, act } = quickenedCreatureSizeAct();
+    const target = requireHole(act.initialHoles, "targetChoice");
+
+    const resolved = resolveBattleSubject({
+      state: session.state,
+      subject: act.subject,
+      fills: [
+        knownWillingSpellTargetFill(
+          target,
+          enlargeReduceUnitId,
+          spellCasterId,
+          spellTargetId,
+        ),
+      ],
+    });
+
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Quickened Enlarge cast to resolve.");
+    }
+    expect(resolved.state.currentTurnResources.currentHasBonusAction).toBe(
+      false,
+    );
+    expect(canSpendAction(resolved.state.currentTurnResources, "magic")).toBe(
+      true,
+    );
+    expect(
+      resolved.state.currentTurnResources.spellSlotUsesThisTurn,
+    ).toContainEqual({ kind: "committed", combatantId: spellCasterId });
+    expect(
+      resolved.state.currentTurnResources
+        .quickenedLevelOnePlusSpellCastsThisTurn,
+    ).toContain(spellCasterId);
+    expect(sorceryPointsRemaining(resolved.state)).toBe(0);
+    expect(
+      combatantEffectiveSize(requireCombatant(resolved.state, spellTargetId)),
+    ).toBe("large");
+  });
+
+  test("countered Quickened Enlarge spends its Bonus Action and Sorcery Points and records the same-turn governor without expending its Spell Slot", () => {
+    const { session, act } = quickenedCreatureSizeAct({
+      targetCanCounterspell: true,
+    });
+    const castingSession = withExistingCreatureSizeConcentration(session);
+    const target = requireHole(act.initialHoles, "targetChoice");
+    const awaitingCounterspell = resolveBattleSubject({
+      state: castingSession.state,
+      subject: act.subject,
+      fills: [
+        knownWillingSpellTargetFill(
+          target,
+          enlargeReduceUnitId,
+          spellCasterId,
+          spellTargetId,
+        ),
+        spellCastReactionFactsFill([
+          counterspellTriggerFact(castingSession, spellTargetId, spellCasterId),
+        ]),
+      ],
+    });
+    expect(awaitingCounterspell).toMatchObject({ tag: "needsHoles" });
+    if (awaitingCounterspell.tag !== "needsHoles") {
+      throw new Error("Expected Quickened Enlarge Counterspell window.");
+    }
+    expect(
+      requireCombatant(awaitingCounterspell.state, spellCasterId).concentration,
+    ).toBeNull();
+    expect(
+      sizeChangeEffects(awaitingCounterspell.state, spellCasterId),
+    ).toEqual([]);
+    const choice = requireCounterspellChoice(
+      awaitingCounterspell,
+      battleRuntimeSessionWithState(castingSession, awaitingCounterspell.state),
+    );
+    const save = requireHole(choice.initialHoles, "savingThrowOutcome");
+    const countered = resolveBattleInterrupt({
+      state: awaitingCounterspell.state,
+      fill: interruptDecisionFill(
+        requireHole(awaitingCounterspell.holes, "interruptDecision"),
+        {
+          kind: "resolve",
+          responderId: spellTargetId,
+          choice: {
+            kind: "castTriggeredReactionSpell",
+            procedureRef: choice.subject.procedureRef,
+            fills: [
+              savingThrowOutcomeFill(save, [
+                { targetId: spellCasterId, succeeded: false },
+              ]),
+            ],
+          },
+        },
+      ),
+    });
+
+    expect(countered).toMatchObject({ tag: "resolved" });
+    if (countered.tag !== "resolved") {
+      throw new Error("Expected Counterspell to end Quickened Enlarge.");
+    }
+    expect(countered.state.currentTurnResources.currentHasBonusAction).toBe(
+      false,
+    );
+    expect(canSpendAction(countered.state.currentTurnResources, "magic")).toBe(
+      true,
+    );
+    expect(
+      countered.state.currentTurnResources.spellSlotUsesThisTurn,
+    ).not.toContainEqual({ kind: "committed", combatantId: spellCasterId });
+    expect(
+      countered.state.currentTurnResources.spellSlotUsesThisTurn,
+    ).toContainEqual({ kind: "committed", combatantId: spellTargetId });
+    expect(
+      countered.state.currentTurnResources
+        .quickenedLevelOnePlusSpellCastsThisTurn,
+    ).toContain(spellCasterId);
+    expect(sorceryPointsRemaining(countered.state)).toBe(0);
+    expect(
+      combatantEffectiveSize(requireCombatant(countered.state, spellTargetId)),
+    ).toBe("medium");
+  });
+
+  test("declining Counterspell replays Quickened Enlarge and commits its resources once", () => {
+    const { session, act } = quickenedCreatureSizeAct({
+      targetCanCounterspell: true,
+    });
+    const target = requireHole(act.initialHoles, "targetChoice");
+    const awaitingCounterspell = resolveBattleSubject({
+      state: session.state,
+      subject: act.subject,
+      fills: [
+        knownWillingSpellTargetFill(
+          target,
+          enlargeReduceUnitId,
+          spellCasterId,
+          spellTargetId,
+        ),
+        spellCastReactionFactsFill([
+          counterspellTriggerFact(session, spellTargetId, spellCasterId),
+        ]),
+      ],
+    });
+    if (awaitingCounterspell.tag !== "needsHoles") {
+      throw new Error("Expected Quickened Enlarge Counterspell window.");
+    }
+    const resolved = resolveBattleInterrupt({
+      state: awaitingCounterspell.state,
+      fill: interruptDecisionFill(
+        requireHole(awaitingCounterspell.holes, "interruptDecision"),
+        { kind: "decline", responderId: spellTargetId },
+      ),
+    });
+
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected declined Counterspell replay to resolve.");
+    }
+    expect(resolved.state.currentTurnResources.currentHasBonusAction).toBe(
+      false,
+    );
+    expect(canSpendAction(resolved.state.currentTurnResources, "magic")).toBe(
+      true,
+    );
+    expect(
+      resolved.state.currentTurnResources.spellSlotUsesThisTurn,
+    ).toContainEqual({ kind: "committed", combatantId: spellCasterId });
+    expect(
+      resolved.state.currentTurnResources
+        .quickenedLevelOnePlusSpellCastsThisTurn,
+    ).toEqual([spellCasterId]);
+    expect(sorceryPointsRemaining(resolved.state)).toBe(0);
+    expect(
+      combatantEffectiveSize(requireCombatant(resolved.state, spellTargetId)),
+    ).toBe("large");
+  });
+
+  test("a failed lower-level Counterspell replays Quickened Enlarge with its rewrite and Metamagic commitment", () => {
+    const { session, act } = quickenedCreatureSizeAct({
+      targetCanCounterspell: true,
+      castSlotLevel: 4,
+    });
+    const target = requireHole(act.initialHoles, "targetChoice");
+    const awaitingCounterspell = resolveBattleSubject({
+      state: session.state,
+      subject: act.subject,
+      fills: [
+        knownWillingSpellTargetFill(
+          target,
+          enlargeReduceUnitId,
+          spellCasterId,
+          spellTargetId,
+        ),
+        spellCastReactionFactsFill([
+          counterspellTriggerFact(session, spellTargetId, spellCasterId),
+        ]),
+      ],
+    });
+    if (awaitingCounterspell.tag !== "needsHoles") {
+      throw new Error("Expected Quickened Enlarge Counterspell window.");
+    }
+    const choice = requireCounterspellChoice(
+      awaitingCounterspell,
+      battleRuntimeSessionWithState(session, awaitingCounterspell.state),
+    );
+    const save = requireHole(choice.initialHoles, "savingThrowOutcome");
+    const resolved = resolveBattleInterrupt({
+      state: awaitingCounterspell.state,
+      fill: interruptDecisionFill(
+        requireHole(awaitingCounterspell.holes, "interruptDecision"),
+        {
+          kind: "resolve",
+          responderId: spellTargetId,
+          choice: {
+            kind: "castTriggeredReactionSpell",
+            procedureRef: choice.subject.procedureRef,
+            fills: [
+              savingThrowOutcomeFill(save, [
+                { targetId: spellCasterId, succeeded: true },
+              ]),
+            ],
+          },
+        },
+      ),
+    });
+
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected failed Counterspell replay to resolve.");
+    }
+    expect(resolved.state.currentTurnResources.currentHasBonusAction).toBe(
+      false,
+    );
+    expect(canSpendAction(resolved.state.currentTurnResources, "magic")).toBe(
+      true,
+    );
+    expect(
+      resolved.state.currentTurnResources.spellSlotUsesThisTurn,
+    ).toContainEqual({ kind: "committed", combatantId: spellCasterId });
+    expect(
+      resolved.state.currentTurnResources
+        .quickenedLevelOnePlusSpellCastsThisTurn,
+    ).toEqual([spellCasterId]);
+    expect(sorceryPointsRemaining(resolved.state)).toBe(0);
+    expect(
+      combatantEffectiveSize(requireCombatant(resolved.state, spellTargetId)),
+    ).toBe("large");
+  });
+
   test("admits only creature size increase and decrease spell-slot acts from the creature-or-object Surface target", () => {
     const { session } = creatureSizeAct("creatureSizeIncrease");
     const procedures = discoverBattleActs(session).flatMap((act) => {
@@ -1116,6 +1443,124 @@ function extendedMetamagicOption(): CharacterBattleMetamagicOptionFact {
     stackingMode: "one_per_spell",
     sorceryPointCost: resourceCount(1),
   };
+}
+
+function quickenedMetamagicOption(): CharacterBattleMetamagicOptionFact {
+  return {
+    effectKind: QUICKENED_METAMAGIC_EFFECT_KIND,
+    stackingMode: "one_per_spell",
+    sorceryPointCost: resourceCount(2),
+  };
+}
+
+function withExistingCreatureSizeConcentration(
+  session: BattleRuntimeSession,
+): BattleRuntimeSession {
+  const act = creatureSizeActInSession(session, "creatureSizeIncrease");
+  const target = requireHole(act.initialHoles, "targetChoice");
+  const priorCast = resolveBattleSubject({
+    state: session.state,
+    subject: act.subject,
+    fills: [
+      knownWillingSpellTargetFill(
+        target,
+        enlargeReduceUnitId,
+        spellCasterId,
+        spellCasterId,
+      ),
+    ],
+  });
+  if (priorCast.tag !== "resolved") {
+    throw new Error("Expected prior Enlarge concentration fixture to resolve.");
+  }
+  const caster = requireCombatant(session.state, spellCasterId);
+  const priorCaster = requireCombatant(priorCast.state, spellCasterId);
+  return battleRuntimeSessionWithState(session, {
+    ...session.state,
+    combatants: new Map(session.state.combatants).set(spellCasterId, {
+      ...caster,
+      concentration: priorCaster.concentration,
+      activeEffects: priorCaster.activeEffects,
+    }),
+  });
+}
+
+type CounterspellTriggerFact = Extract<
+  Extract<
+    BattleFill,
+    { readonly kind: "targetSpatialFacts" }
+  >["spatialFacts"][number],
+  { readonly kind: "counterspellTriggerCasterVisibleWithinRange" }
+>;
+
+function counterspellTriggerFact(
+  session: BattleRuntimeSession,
+  reactorId: typeof spellTargetId,
+  casterId: typeof spellCasterId,
+): CounterspellTriggerFact {
+  return {
+    kind: "counterspellTriggerCasterVisibleWithinRange",
+    reactorId,
+    casterId,
+    sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
+      session,
+      reactorId,
+      spellSlotInvocationRef("counterspell", 3, "counterspell"),
+    ),
+    rangeFeet: movementFeet(60),
+  };
+}
+
+function spellCastReactionFactsFill(
+  facts: readonly CounterspellTriggerFact[],
+): Extract<BattleFill, { readonly kind: "targetSpatialFacts" }> {
+  return {
+    kind: "targetSpatialFacts",
+    holeId: SPELL_CAST_REACTION_FACTS_HOLE_ID,
+    spatialFacts: facts,
+  };
+}
+
+function requireCounterspellChoice(
+  result: Extract<
+    ReturnType<typeof resolveBattleSubject>,
+    { readonly tag: "needsHoles" }
+  >,
+  session: BattleRuntimeSession,
+): Extract<
+  BattleInterruptProcedureChoice,
+  { readonly kind: "castTriggeredReactionSpell" }
+> {
+  const choice = result.snapshot.pendingInterrupt?.choices.find(
+    (
+      candidate,
+    ): candidate is Extract<
+      BattleInterruptProcedureChoice,
+      { readonly kind: "castTriggeredReactionSpell" }
+    > => {
+      if (
+        candidate.kind !== "castTriggeredReactionSpell" ||
+        candidate.reactorId !== spellTargetId
+      ) {
+        return false;
+      }
+      const invocation = characterSpellInvocationRefForProcedureRefForTest(
+        session,
+        candidate.reactorId,
+        candidate.subject.procedureRef,
+      );
+      return (
+        invocation.tag === "spellSlot" &&
+        invocation.spellId === "counterspell" &&
+        invocation.procedure === "counterspell" &&
+        Number(invocation.slotLevel) === 3
+      );
+    },
+  );
+  if (choice === undefined) {
+    throw new Error("Expected Counterspell Reaction choice.");
+  }
+  return choice;
 }
 
 function sorceryPointsRemaining(state: BattleState): number {

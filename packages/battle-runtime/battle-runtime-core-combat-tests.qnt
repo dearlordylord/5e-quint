@@ -1,7 +1,10 @@
 // -*- mode: Bluespec; -*-
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.reaction-counterspell
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.find-familiar-lifecycle
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.light-extra-attack-damage-ability-modifier spell.find-familiar-lifecycle spell.reaction-counterspell
 
 module battleRuntimeCoreCombatTests {
+  import battleRuntimeFighterRageFacts.* from "./battle-runtime-fighter-rage-facts"
   import attackDamageComposition.* from "../shared-algebras/proofs/rule-core/attack-damage-composition"
   import attackActionAdditionalAttacks.* from "../shared-algebras/proofs/rule-core/attack-action-additional-attacks"
   import hitPointDamage.* from "../shared-algebras/proofs/rule-core/hit-point-damage"
@@ -11,9 +14,11 @@ module battleRuntimeCoreCombatTests {
   import battleRuntimeInterruptBridge.* from "./battle-runtime-interrupt-bridge"
   import battleRuntimeStatBlockBridge.* from "./battle-runtime-stat-block-bridge"
   import battleRuntimeFeatureBridge.* from "./battle-runtime-feature-bridge"
-  import battleRuntimeSpellBridge.* from "./battle-runtime-spell-bridge"
+
   import spellInvocationResourceCore.* from "../shared-algebras/proofs/rule-core/spell-invocation-resource-core"
   import battleRuntimeModel.* from "./battle-runtime-model"
+  import battleRuntimeMagicMissileArithmetic.* from "./battle-runtime-magic-missile-arithmetic"
+  import battleRuntimeSpellcastingFacts.* from "./battle-runtime-spellcasting-facts"
   import battleRuntimeFindFamiliar.* from "./battle-runtime-find-familiar"
   import battleRuntimeLight.* from "./battle-runtime-light"
   import battleRuntimeCreatureTypeProtection.* from "./battle-runtime-creature-type-protection"
@@ -23,14 +28,15 @@ module battleRuntimeCoreCombatTests {
   import battleRuntimeHitPoints.* from "./battle-runtime-hit-points"
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
   import battleRuntimeDamageAdjustments.* from "./battle-runtime-damage-adjustments"
-  import battleRuntimeSpellInvocation.* from "./battle-runtime-spell-invocation"
+  import battleRuntimeSpellCastResources.* from "./battle-runtime-spell-cast-resources"
+  import battleRuntimeSpellSlotClassification.* from "./battle-runtime-spell-slot-classification"
   import battleRuntimeReactionWindow.* from "./battle-runtime-reaction-window"
   import battleRuntimeReactionResolution.* from "./battle-runtime-reaction-resolution"
   import battleRuntimeCombatHoles.* from "./battle-runtime-combat-holes"
   import battleRuntimeLegendaryActions.* from "./battle-runtime-legendary-actions"
-  import battleRuntimeSpellAttack.* from "./battle-runtime-spell-attack"
+  import battleRuntimeSpellAttackDirectResolution.* from "./battle-runtime-spell-attack-direct-resolution"
   import battleRuntimeChainedSpellAttack.* from "./battle-runtime-chained-spell-attack"
-  import battleRuntimeSaveGatedSpell.* from "./battle-runtime-save-gated-spell"
+  import battleRuntimeSaveGatedDamageResolution.* from "./battle-runtime-save-gated-damage-resolution"
   import battleRuntimeMarkedRiders.* from "./battle-runtime-marked-riders"
   import battleRuntimeMarkedSpells.* from "./battle-runtime-marked-spells"
   import battleRuntimeReactionWindow.* from "./battle-runtime-reaction-window"
@@ -993,7 +999,7 @@ module battleRuntimeCoreCombatTests {
     assert(resolveReactionOffer(awaiting, Fighter) == awaiting)
   }
 
-  run test_counterspell_reaction_spell_ends_spell_cast_window_and_wastes_casting_action = {
+  run test_counterspell_reaction_spell_failed_save_ends_spell_cast_window_and_wastes_casting_action = {
     val awaiting = openReactionWindow(initialState, {
       trigger: SpellCast,
       procedure: CounterspellReactionProcedure({
@@ -1002,7 +1008,7 @@ module battleRuntimeCoreCombatTests {
         triggeringSpellLevel: 1,
         triggeringSpellUsesSlot: true,
         counterspellSlotLevel: 3,
-        triggeringCasterConSaveSucceeded: true,
+        triggeringCasterConSaveSucceeded: false,
         counterspellSpellCastReaction: CounterspellSpellCastNotCountered,
       }),
       eligibleReactors: Set(Goblin),
@@ -1020,13 +1026,13 @@ module battleRuntimeCoreCombatTests {
     }
   }
 
-  run test_counterspell_reaction_spell_failed_save_gate_resumes_triggering_spell = {
+  run test_counterspell_reaction_spell_successful_save_resumes_lower_level_triggering_spell = {
     val awaiting = openReactionWindow(initialState, {
       trigger: SpellCast,
       procedure: CounterspellReactionProcedure({
         triggeringCaster: Fighter,
         triggeringCastingResource: CounterspellMagicAction,
-        triggeringSpellLevel: 4,
+        triggeringSpellLevel: 1,
         triggeringSpellUsesSlot: true,
         counterspellSlotLevel: 3,
         triggeringCasterConSaveSucceeded: true,
@@ -1060,7 +1066,7 @@ module battleRuntimeCoreCombatTests {
         counterspellSpellCastReaction: CounterspellSpellCastCounteredByReaction({
           reactor: Fighter,
           counterspellSlotLevel: 3,
-          counterspellCasterConSaveSucceeded: true,
+          counterspellCasterConSaveSucceeded: false,
         }),
       }),
       eligibleReactors: Set(Goblin),
@@ -1108,7 +1114,7 @@ module battleRuntimeCoreCombatTests {
       assert(resolved.interruptStack == []),
       assert(not(resolved.fighter.reactionAvailable)),
       assert(not(resolved.goblin.reactionAvailable)),
-      assert(not(battleActorHasSpellSlotUse(resolved, Fighter))),
+      assert(battleActorHasCommittedSpellSlotUse(resolved, Fighter)),
       assert(battleActorHasCommittedSpellSlotUse(resolved, Goblin)),
     }
   }

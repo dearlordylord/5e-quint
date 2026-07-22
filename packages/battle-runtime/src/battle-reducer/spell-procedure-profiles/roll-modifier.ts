@@ -56,7 +56,10 @@ import { breakBattleConcentration } from "../damage-apply.ts";
 import { maybeOpenInterruptWindow } from "../dispatcher.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
 import { invalidResult } from "../result-helpers.ts";
-import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
+import {
+  spellCastInterruptFrame,
+  spellCastMetamagicApplicationsInput,
+} from "../spell-cast-interrupt-frame.ts";
 import {
   rollModifierUsesTargetAbilityChoices,
   spellRollModifierAbilityChoiceHole,
@@ -380,6 +383,9 @@ function resolveRollModifier(
           input.input.subject.tag === "bonusActionSpell"
             ? { kind: "bonusAction" }
             : { kind: "magicAction" },
+        ...spellCastMetamagicApplicationsInput(
+          input.metamagicApplications ?? [],
+        ),
         continuation: {
           kind: "replay",
           subject: input.input.subject,

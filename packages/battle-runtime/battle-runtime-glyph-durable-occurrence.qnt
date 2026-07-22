@@ -1,4 +1,8 @@
 // -*- mode: Bluespec; -*-
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-glyph-explosive-rune-release
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-glyph-stored-spell-release
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-glyph-stored-concentration-full-duration
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-glyph-stored-summon-object-placement
 // KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.GLYPH_DURABLE_OCCURRENCE_LIFECYCLE BATTLE.SPELL.GLYPH_EXPLOSIVE_RUNE_RELEASE BATTLE.SPELL.GLYPH_STORED_SPELL_RELEASE BATTLE.SPELL.GLYPH_STORED_CONCENTRATION_FULL_DURATION
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-glyph-durable-occurrence spell.invocation-glyph-explosive-rune-release spell.invocation-glyph-stored-spell-release spell.invocation-glyph-stored-concentration-full-duration spell.invocation-glyph-stored-summon-object-placement
 //

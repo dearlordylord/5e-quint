@@ -83,8 +83,8 @@
     },
     "rulesKernelCoveredProfileCoverage": {
       "denominator": 187,
-      "numerator": 185,
-      "percent": "98.9%"
+      "numerator": 162,
+      "percent": "86.6%"
     },
     "rulesKernelProfileJoinCoverage": {
       "denominator": 187,
@@ -93,8 +93,8 @@
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 201,
-      "numerator": 201,
-      "percent": "100%"
+      "numerator": 169,
+      "percent": "84.1%"
     },
     "runtimeMappingCoverage": {
       "denominator": 149,
@@ -1751,7 +1751,9 @@
       "id": "spell.invocation-condition-save",
       "profileKind": "spell-invocation",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-save-gated-spell.qnt"
+        "packages/battle-runtime/battle-runtime-save-gated-facts.qnt",
+        "packages/battle-runtime/battle-runtime-save-condition-target-list-resolution.qnt",
+        "packages/battle-runtime/battle-runtime-save-condition-targeting-facts.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer.ts"
@@ -1776,6 +1778,10 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-save-condition-spells.test.ts"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-and-rider-facts-tests.qnt"
         }
       ]
     },
@@ -2591,12 +2597,12 @@
       "title": "Spell invocation creates a chosen damage-type reduction with a once-per-turn use marker",
       "verificationOwners": [
         {
-          "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-spell-facts-tests.qnt"
-        },
-        {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-and-rider-facts-tests.qnt"
         }
       ]
     },
@@ -2778,7 +2784,7 @@
       "id": "spell.invocation-independent-attack-sequence",
       "profileKind": "spell-invocation",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-spell-attack.qnt"
+        "packages/battle-runtime/battle-runtime-spell-attack-independent-sequence.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer.ts"
@@ -2789,10 +2795,6 @@
       ],
       "title": "Spell invocation resolves independent creature-or-object ranged spell attack sequences",
       "verificationOwners": [
-        {
-          "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-tests.qnt"
-        },
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/battle-runtime-test-support.ts"
@@ -2808,6 +2810,10 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/eldritch-blast.mbt.test.ts"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-procedure-tests.qnt"
         }
       ]
     },
@@ -2957,12 +2963,12 @@
       "title": "Spell invocation applies concentration d20 roll modifiers or chosen-ability Ability Check roll modes from target-list, area-selected, or skill-choice spell effects",
       "verificationOwners": [
         {
-          "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-spell-facts-tests.qnt"
-        },
-        {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-spellcasting-and-utility-facts-tests.qnt"
         }
       ]
     },
@@ -2988,12 +2994,12 @@
       "title": "Spell invocation applies a creature size change with Strength roll modes and attack-hit damage adjustment",
       "verificationOwners": [
         {
-          "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-spell-facts-tests.qnt"
-        },
-        {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-enlarge-reduce.test.ts"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-spellcasting-and-utility-facts-tests.qnt"
         }
       ]
     },
@@ -3038,7 +3044,8 @@
       "id": "spell.invocation-attack-roll-advantage-save",
       "profileKind": "spell-invocation",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-save-gated-spell.qnt"
+        "packages/battle-runtime/battle-runtime-save-condition-faerie-fire.qnt",
+        "packages/battle-runtime/battle-runtime-spell-attack-facts.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer.ts"
@@ -3060,6 +3067,10 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-faerie-fire.test.ts"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-and-rider-facts-tests.qnt"
         }
       ]
     },
@@ -3091,7 +3102,8 @@
       "id": "spell.invocation-save-gated-condition-immunity",
       "profileKind": "spell-invocation",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-save-gated-spell.qnt"
+        "packages/battle-runtime/battle-runtime-save-condition-calm-emotions.qnt",
+        "packages/battle-runtime/battle-runtime-metamagic-quickened-condition-immunity.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer.ts"
@@ -3109,6 +3121,10 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-calm-emotions.test.ts"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-quickened-save-condition-tests.qnt"
         }
       ]
     },
@@ -3571,12 +3587,12 @@
       "title": "Spell invocation creates a self Spell Effect that projects Ability Check Advantage from caller-supplied witnesses",
       "verificationOwners": [
         {
-          "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-spell-facts-tests.qnt"
-        },
-        {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/thaumaturgy-booming-voice.test.ts"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-spellcasting-and-utility-facts-tests.qnt"
         }
       ]
     },
@@ -4412,16 +4428,26 @@
       "id": "unit-feature.metamagic-cast-governor-quickened",
       "profileKind": "bonus-action",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-metamagic.qnt"
+        "packages/battle-runtime/battle-runtime-metamagic-quickened-common.qnt",
+        "packages/battle-runtime/battle-runtime-metamagic-quickened-restoration-buffs.qnt",
+        "packages/battle-runtime/battle-runtime-metamagic-quickened-roll-modifier.qnt",
+        "packages/battle-runtime/battle-runtime-metamagic-quickened-save-condition.qnt",
+        "packages/battle-runtime/battle-runtime-metamagic-quickened-spell-attack.qnt",
+        "packages/battle-runtime/battle-runtime-metamagic-quickened-condition-immunity.qnt",
+        "packages/battle-runtime/battle-runtime-metamagic-quickened-direct-condition.qnt",
+        "packages/battle-runtime/battle-runtime-metamagic-quickened-save-damage.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer/metamagic.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-cast-interrupt-frame.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/counterspell.ts",
         "packages/battle-runtime/src/battle-reducer/spells-discovery.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-resources.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/creature-size-change.ts",
         "packages/battle-runtime/src/battle-subjects.ts"
       ],
-      "sourceBoundary": "The runtime consumes Character Battle Metamagic effectKind, stackingMode, Sorcery Point cost facts, and the existing Font of Magic point-pool resource. It admits selected Quickened Spell facts for supported direct Hit Point restoration, scalar buff, save-gated damage, save-gated condition/immunity, direct condition, roll modifier, and direct spell-attack damage action-casting Spell Invocation shapes, enforces known-option and Sorcery Point affordability gates, enforces one-option-per-spell before option-specific support, rejects unsupported second-option effects instead of charging inert Metamagic, spends Bonus Action, Sorcery Points, and required Spell Slots where applicable, and applies the same-turn level-1-plus spell-cast prohibition through a level-1-plus spell turn fact rather than a Spell Slot-only proxy. Standalone damage, control, ongoing-effect, and other Quickened action-casting spell procedures remain tracked by L12G-FOLLOWUP-SORCERER-METAMAGIC-QUICKENED-ALL-ACTION-SPELLS until their owners add typed resource-threading and parity witnesses, and this profile does not claim Sorcery Incarnate, Arcane Apotheosis, or non-Quickened option effects.",
+      "sourceBoundary": "The runtime consumes Character Battle Metamagic effectKind, stackingMode, Sorcery Point cost facts, and the existing Font of Magic point-pool resource. It admits selected Quickened Spell facts for supported direct Hit Point restoration, scalar buff, save-gated damage, save-gated condition/immunity, direct condition, roll modifier, direct spell-attack damage, independent spell-attack sequence, and creature size-change action-casting Spell Invocation shapes, enforces known-option and Sorcery Point affordability gates, enforces one-option-per-spell before option-specific support, rejects unsupported second-option effects instead of charging inert Metamagic, spends Bonus Action, Sorcery Points, and required Spell Slots where applicable, and applies the same-turn level-1-plus spell-cast prohibition through a level-1-plus spell turn fact rather than a Spell Slot-only proxy. Standalone damage, control, ongoing-effect, and other Quickened action-casting spell procedures remain tracked by L12G-FOLLOWUP-SORCERER-METAMAGIC-QUICKENED-ALL-ACTION-SPELLS until their owners add typed resource-threading and parity witnesses, and this profile does not claim Sorcery Incarnate, Arcane Apotheosis, or non-Quickened option effects.",
       "taskRefs": [
         "L12G-FOLLOWUP-SORCERER-METAMAGIC-CAST-GOVERNOR-QUICKENED"
       ],
@@ -4429,11 +4455,19 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-metamagic.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-options-and-quickened-restoration-tests.qnt"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-quickened-save-condition-tests.qnt"
         },
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/battle-runtime-metamagic-resource.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-enlarge-reduce.test.ts"
         },
         {
           "kind": "focused-mbt",
@@ -4445,7 +4479,8 @@
       "id": "unit-feature.metamagic-careful-save-protection",
       "profileKind": "resource",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-metamagic.qnt"
+        "packages/battle-runtime/battle-runtime-metamagic-save-common.qnt",
+        "packages/battle-runtime/battle-runtime-metamagic-careful.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer/metamagic.ts",
@@ -4463,16 +4498,16 @@
       "title": "Unit feature protects selected spell targets with Careful Spell saving throw success",
       "verificationOwners": [
         {
-          "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-tests.qnt"
-        },
-        {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/battle-runtime-metamagic-resource.test.ts"
         },
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-careful-selected-identity.mbt.test.ts"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-options-and-quickened-restoration-tests.qnt"
         }
       ]
     },
@@ -4480,7 +4515,8 @@
       "id": "unit-feature.metamagic-heightened-save-disadvantage",
       "profileKind": "resource",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-metamagic.qnt"
+        "packages/battle-runtime/battle-runtime-metamagic-save-common.qnt",
+        "packages/battle-runtime/battle-runtime-metamagic-heightened.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer/metamagic.ts",
@@ -4507,16 +4543,16 @@
       "title": "Unit feature gives one selected spell target Heightened Spell Saving Throw Disadvantage",
       "verificationOwners": [
         {
-          "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-tests.qnt"
-        },
-        {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/battle-runtime-metamagic-resource.test.ts"
         },
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-heightened-selected-identity.mbt.test.ts"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-options-and-quickened-restoration-tests.qnt"
         }
       ]
     },
@@ -4524,7 +4560,7 @@
       "id": "unit-feature.metamagic-damage-type-substitution",
       "profileKind": "resource",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-metamagic.qnt"
+        "packages/battle-runtime/battle-runtime-metamagic-transmuted.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer/metamagic.ts",
@@ -4542,16 +4578,16 @@
       "title": "Unit feature substitutes listed spell damage types with Transmuted Spell",
       "verificationOwners": [
         {
-          "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-tests.qnt"
-        },
-        {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/battle-runtime-metamagic-resource.test.ts"
         },
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-transmuted-selected-identity.mbt.test.ts"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-options-and-quickened-restoration-tests.qnt"
         }
       ]
     },
@@ -4559,7 +4595,7 @@
       "id": "unit-feature.metamagic-effective-level-extra-target",
       "profileKind": "resource",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-metamagic.qnt"
+        "packages/battle-runtime/battle-runtime-metamagic-twinned.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer/metamagic.ts",
@@ -4574,16 +4610,16 @@
       "title": "Unit feature increases effective spell level for Twinned Spell target projection",
       "verificationOwners": [
         {
-          "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-tests.qnt"
-        },
-        {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/battle-runtime-metamagic-resource.test.ts"
         },
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-twinned-selected-identity.mbt.test.ts"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-options-and-quickened-restoration-tests.qnt"
         }
       ]
     },
@@ -4591,7 +4627,7 @@
       "id": "unit-feature.metamagic-cast-range-increase",
       "profileKind": "resource",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-metamagic.qnt"
+        "packages/battle-runtime/battle-runtime-metamagic-distant.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer/metamagic.ts",
@@ -4607,16 +4643,16 @@
       "title": "Unit feature applies Distant Spell cast-local range increase to promoted target witnesses",
       "verificationOwners": [
         {
-          "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-tests.qnt"
-        },
-        {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-object-light-spells.test.ts"
         },
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-distant-selected-identity.mbt.test.ts"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-options-and-quickened-restoration-tests.qnt"
         }
       ]
     },
@@ -4624,7 +4660,7 @@
       "id": "unit-feature.metamagic-cast-duration-and-concentration",
       "profileKind": "resource",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-metamagic.qnt"
+        "packages/battle-runtime/battle-runtime-metamagic-extended.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer.ts",
@@ -4641,16 +4677,16 @@
       "title": "Unit feature applies Extended Spell cast-local duration extension and Concentration save Advantage to promoted duration witnesses",
       "verificationOwners": [
         {
-          "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-tests.qnt"
-        },
-        {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-enlarge-reduce.test.ts"
         },
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-extended-selected-identity.mbt.test.ts"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-options-and-quickened-restoration-tests.qnt"
         }
       ]
     },
@@ -4658,7 +4694,7 @@
       "id": "unit-feature.metamagic-cast-component-suppression",
       "profileKind": "resource",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-metamagic.qnt"
+        "packages/battle-runtime/battle-runtime-metamagic-subtle.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer/metamagic.ts",
@@ -4671,12 +4707,12 @@
       "title": "Unit feature applies Subtle Spell cast-local component suppression projection",
       "verificationOwners": [
         {
-          "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-tests.qnt"
-        },
-        {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/battle-runtime-metamagic-resource.test.ts"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-options-and-quickened-restoration-tests.qnt"
         }
       ]
     },
@@ -4868,11 +4904,11 @@
       "profileKind": "spell-invocation",
       "qntOwners": [
         "packages/battle-runtime/battle-runtime-model.qnt",
-        "packages/battle-runtime/battle-runtime-save-gated-spell.qnt",
-        "packages/battle-runtime/battle-runtime-spell-attack.qnt",
         "packages/battle-runtime/battle-runtime-timed-effects.qnt",
         "packages/battle-runtime/battle-runtime-concentration.qnt",
-        "packages/battle-runtime/battle-runtime-armor-class.qnt"
+        "packages/battle-runtime/battle-runtime-armor-class.qnt",
+        "packages/battle-runtime/battle-runtime-ray-of-enfeeblement-facts.qnt",
+        "packages/battle-runtime/battle-runtime-ray-of-enfeeblement.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer.ts",
@@ -4889,16 +4925,16 @@
       "title": "Spell save gate applies Ray of Enfeeblement D20 Test lifecycle effects",
       "verificationOwners": [
         {
-          "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-spell-facts-tests.qnt"
-        },
-        {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/ray-of-enfeeblement-lifecycle.mbt.test.ts"
         },
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-ray-of-enfeeblement.test.ts"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-and-rider-facts-tests.qnt"
         }
       ]
     },
@@ -4906,7 +4942,8 @@
       "id": "spell.invocation-ray-of-enfeeblement-damage-penalty",
       "profileKind": "spell-invocation",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-save-gated-spell.qnt"
+        "packages/battle-runtime/battle-runtime-ray-of-enfeeblement.qnt",
+        "packages/battle-runtime/battle-runtime-save-gated-damage-resolution.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/active-effect/types.ts",
@@ -4936,10 +4973,6 @@
       "title": "Ray of Enfeeblement failed save subtracts 1d8 from source damage rolls",
       "verificationOwners": [
         {
-          "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-spell-facts-tests.qnt"
-        },
-        {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/ray-of-enfeeblement-lifecycle.mbt.test.ts"
         },
@@ -4950,6 +4983,10 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/battle-runtime-ice-knife.test.ts"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-and-rider-facts-tests.qnt"
         }
       ]
     },
@@ -5745,7 +5782,7 @@
       "id": "unit-feature.metamagic-missed-spell-attack-reroll",
       "profileKind": "resource",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-metamagic.qnt"
+        "packages/battle-runtime/battle-runtime-metamagic-seeking.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer.ts",
@@ -5760,16 +5797,16 @@
       "title": "Unit feature applies Seeking Spell missed spell attack reroll",
       "verificationOwners": [
         {
-          "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-tests.qnt"
-        },
-        {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/battle-runtime-metamagic-resource.test.ts"
         },
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-seeking-selected-identity.mbt.test.ts"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-options-and-quickened-restoration-tests.qnt"
         }
       ]
     },
@@ -5777,7 +5814,7 @@
       "id": "unit-feature.metamagic-damage-dice-reroll",
       "profileKind": "resource",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-metamagic.qnt"
+        "packages/battle-runtime/battle-runtime-metamagic-empowered.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer.ts",
@@ -5793,16 +5830,16 @@
       "title": "Unit feature applies Empowered Spell damage dice reroll",
       "verificationOwners": [
         {
-          "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-tests.qnt"
-        },
-        {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/battle-runtime-metamagic-resource.test.ts"
         },
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-empowered-selected-identity.mbt.test.ts"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-options-and-quickened-restoration-tests.qnt"
         }
       ]
     },
@@ -7158,12 +7195,12 @@
     }
   ],
   "rulesKernelProfileJoin": {
-    "denominatorRule": "profile records with rules-kernel profile kinds and either QNT owners or explicit profile-obligation mappings",
+    "denominatorRule": "profile records with rules-kernel profile kinds and either QNT owners or explicit profile-obligation mappings; covered joins require every mapped obligation to have a semantic-core QNT owner",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
         "denominator": 187,
-        "numerator": 185,
-        "percent": "98.9%"
+        "numerator": 162,
+        "percent": "86.6%"
       },
       "rulesKernelProfileJoinCoverage": {
         "denominator": 187,
@@ -7220,7 +7257,7 @@
         ]
       },
       {
-        "joinStatus": "covered",
+        "joinStatus": "mapped-open",
         "obligations": [
           {
             "obligationId": "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE",
@@ -8034,7 +8071,9 @@
         "profileId": "spell.invocation-condition-save",
         "profileKind": "spell-invocation",
         "qntOwners": [
-          "packages/battle-runtime/battle-runtime-save-gated-spell.qnt"
+          "packages/battle-runtime/battle-runtime-save-condition-target-list-resolution.qnt",
+          "packages/battle-runtime/battle-runtime-save-condition-targeting-facts.qnt",
+          "packages/battle-runtime/battle-runtime-save-gated-facts.qnt"
         ]
       },
       {
@@ -8582,7 +8621,7 @@
         "profileId": "spell.invocation-independent-attack-sequence",
         "profileKind": "spell-invocation",
         "qntOwners": [
-          "packages/battle-runtime/battle-runtime-spell-attack.qnt"
+          "packages/battle-runtime/battle-runtime-spell-attack-independent-sequence.qnt"
         ]
       },
       {
@@ -8724,7 +8763,8 @@
         "profileId": "spell.invocation-attack-roll-advantage-save",
         "profileKind": "spell-invocation",
         "qntOwners": [
-          "packages/battle-runtime/battle-runtime-save-gated-spell.qnt"
+          "packages/battle-runtime/battle-runtime-save-condition-faerie-fire.qnt",
+          "packages/battle-runtime/battle-runtime-spell-attack-facts.qnt"
         ]
       },
       {
@@ -8762,7 +8802,8 @@
         "profileId": "spell.invocation-save-gated-condition-immunity",
         "profileKind": "spell-invocation",
         "qntOwners": [
-          "packages/battle-runtime/battle-runtime-save-gated-spell.qnt"
+          "packages/battle-runtime/battle-runtime-metamagic-quickened-condition-immunity.qnt",
+          "packages/battle-runtime/battle-runtime-save-condition-calm-emotions.qnt"
         ]
       },
       {
@@ -8876,7 +8917,7 @@
         ]
       },
       {
-        "joinStatus": "covered",
+        "joinStatus": "mapped-open",
         "obligations": [
           {
             "obligationId": "CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION",
@@ -8890,7 +8931,7 @@
         "qntOwners": []
       },
       {
-        "joinStatus": "covered",
+        "joinStatus": "mapped-open",
         "obligations": [
           {
             "obligationId": "CREATION.ADVANCEMENT.CLASS_FEATURE_REPLACEMENT",
@@ -8904,7 +8945,7 @@
         "qntOwners": []
       },
       {
-        "joinStatus": "covered",
+        "joinStatus": "mapped-open",
         "obligations": [
           {
             "obligationId": "CREATION.ADVANCEMENT.CLASS_FEATURE_REPLACEMENT",
@@ -8918,7 +8959,7 @@
         "qntOwners": []
       },
       {
-        "joinStatus": "covered",
+        "joinStatus": "mapped-open",
         "obligations": [
           {
             "obligationId": "CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION",
@@ -8932,7 +8973,7 @@
         "qntOwners": []
       },
       {
-        "joinStatus": "covered",
+        "joinStatus": "mapped-open",
         "obligations": [
           {
             "obligationId": "CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION",
@@ -8962,7 +9003,7 @@
         ]
       },
       {
-        "joinStatus": "covered",
+        "joinStatus": "mapped-open",
         "obligations": [
           {
             "obligationId": "CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE",
@@ -8976,7 +9017,7 @@
         "qntOwners": []
       },
       {
-        "joinStatus": "covered",
+        "joinStatus": "mapped-open",
         "obligations": [
           {
             "obligationId": "CREATION.CLASS_FEATURE_OPTION.PROJECTION",
@@ -8990,7 +9031,7 @@
         "qntOwners": []
       },
       {
-        "joinStatus": "covered",
+        "joinStatus": "mapped-open",
         "obligations": [
           {
             "obligationId": "CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION",
@@ -9004,7 +9045,7 @@
         "qntOwners": []
       },
       {
-        "joinStatus": "covered",
+        "joinStatus": "mapped-open",
         "obligations": [
           {
             "obligationId": "CREATION.CLASS_FEATURE_RESOURCE.PROJECTION",
@@ -9018,7 +9059,7 @@
         "qntOwners": []
       },
       {
-        "joinStatus": "covered",
+        "joinStatus": "mapped-open",
         "obligations": [
           {
             "obligationId": "CREATION.CLASS_FEATURE_SOURCE_FACT.PROJECTION",
@@ -9032,7 +9073,7 @@
         "qntOwners": []
       },
       {
-        "joinStatus": "covered",
+        "joinStatus": "mapped-open",
         "obligations": [
           {
             "obligationId": "CREATION.WIZARD_SPELLBOOK_LEARNING.CHOICE_FINALIZATION",
@@ -9215,7 +9256,7 @@
         ]
       },
       {
-        "joinStatus": "covered",
+        "joinStatus": "mapped-open",
         "obligations": [
           {
             "obligationId": "BATTLE.SPELL.ANTIMAGIC_FIELD_TRANSIT_BLOCKING",
@@ -9525,7 +9566,14 @@
         "profileId": "unit-feature.metamagic-cast-governor-quickened",
         "profileKind": "bonus-action",
         "qntOwners": [
-          "packages/battle-runtime/battle-runtime-metamagic.qnt"
+          "packages/battle-runtime/battle-runtime-metamagic-quickened-common.qnt",
+          "packages/battle-runtime/battle-runtime-metamagic-quickened-condition-immunity.qnt",
+          "packages/battle-runtime/battle-runtime-metamagic-quickened-direct-condition.qnt",
+          "packages/battle-runtime/battle-runtime-metamagic-quickened-restoration-buffs.qnt",
+          "packages/battle-runtime/battle-runtime-metamagic-quickened-roll-modifier.qnt",
+          "packages/battle-runtime/battle-runtime-metamagic-quickened-save-condition.qnt",
+          "packages/battle-runtime/battle-runtime-metamagic-quickened-save-damage.qnt",
+          "packages/battle-runtime/battle-runtime-metamagic-quickened-spell-attack.qnt"
         ]
       },
       {
@@ -9541,7 +9589,8 @@
         "profileId": "unit-feature.metamagic-careful-save-protection",
         "profileKind": "resource",
         "qntOwners": [
-          "packages/battle-runtime/battle-runtime-metamagic.qnt"
+          "packages/battle-runtime/battle-runtime-metamagic-careful.qnt",
+          "packages/battle-runtime/battle-runtime-metamagic-save-common.qnt"
         ]
       },
       {
@@ -9557,7 +9606,8 @@
         "profileId": "unit-feature.metamagic-heightened-save-disadvantage",
         "profileKind": "resource",
         "qntOwners": [
-          "packages/battle-runtime/battle-runtime-metamagic.qnt"
+          "packages/battle-runtime/battle-runtime-metamagic-heightened.qnt",
+          "packages/battle-runtime/battle-runtime-metamagic-save-common.qnt"
         ]
       },
       {
@@ -9573,7 +9623,7 @@
         "profileId": "unit-feature.metamagic-damage-type-substitution",
         "profileKind": "resource",
         "qntOwners": [
-          "packages/battle-runtime/battle-runtime-metamagic.qnt"
+          "packages/battle-runtime/battle-runtime-metamagic-transmuted.qnt"
         ]
       },
       {
@@ -9589,7 +9639,7 @@
         "profileId": "unit-feature.metamagic-effective-level-extra-target",
         "profileKind": "resource",
         "qntOwners": [
-          "packages/battle-runtime/battle-runtime-metamagic.qnt"
+          "packages/battle-runtime/battle-runtime-metamagic-twinned.qnt"
         ]
       },
       {
@@ -9605,7 +9655,7 @@
         "profileId": "unit-feature.metamagic-cast-range-increase",
         "profileKind": "resource",
         "qntOwners": [
-          "packages/battle-runtime/battle-runtime-metamagic.qnt"
+          "packages/battle-runtime/battle-runtime-metamagic-distant.qnt"
         ]
       },
       {
@@ -9621,7 +9671,7 @@
         "profileId": "unit-feature.metamagic-cast-duration-and-concentration",
         "profileKind": "resource",
         "qntOwners": [
-          "packages/battle-runtime/battle-runtime-metamagic.qnt"
+          "packages/battle-runtime/battle-runtime-metamagic-extended.qnt"
         ]
       },
       {
@@ -9637,7 +9687,7 @@
         "profileId": "unit-feature.metamagic-cast-component-suppression",
         "profileKind": "resource",
         "qntOwners": [
-          "packages/battle-runtime/battle-runtime-metamagic.qnt"
+          "packages/battle-runtime/battle-runtime-metamagic-subtle.qnt"
         ]
       },
       {
@@ -9673,7 +9723,7 @@
         ]
       },
       {
-        "joinStatus": "covered",
+        "joinStatus": "mapped-open",
         "obligations": [
           {
             "obligationId": "BATTLE.SPELL.ANTIMAGIC_FIELD_ACTION_INTERDICTION",
@@ -9689,7 +9739,7 @@
         ]
       },
       {
-        "joinStatus": "covered",
+        "joinStatus": "mapped-open",
         "obligations": [
           {
             "obligationId": "BATTLE.SPELL.ANTIMAGIC_FIELD_MAGICAL_EFFECT_INTERDICTION",
@@ -9705,7 +9755,7 @@
         ]
       },
       {
-        "joinStatus": "covered",
+        "joinStatus": "mapped-open",
         "obligations": [
           {
             "obligationId": "BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD",
@@ -9758,8 +9808,8 @@
           "packages/battle-runtime/battle-runtime-armor-class.qnt",
           "packages/battle-runtime/battle-runtime-concentration.qnt",
           "packages/battle-runtime/battle-runtime-model.qnt",
-          "packages/battle-runtime/battle-runtime-save-gated-spell.qnt",
-          "packages/battle-runtime/battle-runtime-spell-attack.qnt",
+          "packages/battle-runtime/battle-runtime-ray-of-enfeeblement-facts.qnt",
+          "packages/battle-runtime/battle-runtime-ray-of-enfeeblement.qnt",
           "packages/battle-runtime/battle-runtime-timed-effects.qnt"
         ]
       },
@@ -9776,7 +9826,8 @@
         "profileId": "spell.invocation-ray-of-enfeeblement-damage-penalty",
         "profileKind": "spell-invocation",
         "qntOwners": [
-          "packages/battle-runtime/battle-runtime-save-gated-spell.qnt"
+          "packages/battle-runtime/battle-runtime-ray-of-enfeeblement.qnt",
+          "packages/battle-runtime/battle-runtime-save-gated-damage-resolution.qnt"
         ]
       },
       {
@@ -9812,7 +9863,7 @@
         ]
       },
       {
-        "joinStatus": "covered",
+        "joinStatus": "mapped-open",
         "obligations": [
           {
             "obligationId": "SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION",
@@ -9826,7 +9877,7 @@
         "qntOwners": []
       },
       {
-        "joinStatus": "covered",
+        "joinStatus": "mapped-open",
         "obligations": [
           {
             "obligationId": "SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION",
@@ -10044,7 +10095,7 @@
         "profileId": "unit-feature.metamagic-missed-spell-attack-reroll",
         "profileKind": "resource",
         "qntOwners": [
-          "packages/battle-runtime/battle-runtime-metamagic.qnt"
+          "packages/battle-runtime/battle-runtime-metamagic-seeking.qnt"
         ]
       },
       {
@@ -10060,7 +10111,7 @@
         "profileId": "unit-feature.metamagic-damage-dice-reroll",
         "profileKind": "resource",
         "qntOwners": [
-          "packages/battle-runtime/battle-runtime-metamagic.qnt"
+          "packages/battle-runtime/battle-runtime-metamagic-empowered.qnt"
         ]
       },
       {
@@ -10151,7 +10202,7 @@
         ]
       },
       {
-        "joinStatus": "covered",
+        "joinStatus": "mapped-open",
         "obligations": [
           {
             "obligationId": "BATTLE.SPELL.HASTE_LETHARGY_LIFECYCLE",
@@ -10180,7 +10231,7 @@
         ]
       },
       {
-        "joinStatus": "covered",
+        "joinStatus": "mapped-open",
         "obligations": [
           {
             "obligationId": "BATTLE.SPELL.GLYPH_DURABLE_OCCURRENCE_LIFECYCLE",
@@ -10196,7 +10247,7 @@
         ]
       },
       {
-        "joinStatus": "covered",
+        "joinStatus": "mapped-open",
         "obligations": [
           {
             "obligationId": "BATTLE.SPELL.GLYPH_EXPLOSIVE_RUNE_RELEASE",
@@ -10212,7 +10263,7 @@
         ]
       },
       {
-        "joinStatus": "covered",
+        "joinStatus": "mapped-open",
         "obligations": [
           {
             "obligationId": "BATTLE.SPELL.GLYPH_STORED_SPELL_RELEASE",
@@ -10228,7 +10279,7 @@
         ]
       },
       {
-        "joinStatus": "covered",
+        "joinStatus": "mapped-open",
         "obligations": [
           {
             "obligationId": "BATTLE.SPELL.GLYPH_STORED_CONCENTRATION_FULL_DURATION",
@@ -10356,8 +10407,8 @@
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
           "denominator": 201,
-          "numerator": 201,
-          "percent": "100%"
+          "numerator": 169,
+          "percent": "84.1%"
         }
       },
       "units": [
@@ -10663,10 +10714,10 @@
           "unitId": "barbarian_frenzy"
         },
         {
-          "joinStatus": "covered",
+          "joinStatus": "mapped-open",
           "profiles": [
             {
-              "joinStatus": "covered",
+              "joinStatus": "mapped-open",
               "obligations": [
                 {
                   "obligationId": "CREATION.CLASS_FEATURE_SOURCE_FACT.PROJECTION",
@@ -10769,10 +10820,10 @@
           "unitId": "barbarian_unarmored_defense"
         },
         {
-          "joinStatus": "covered",
+          "joinStatus": "mapped-open",
           "profiles": [
             {
-              "joinStatus": "covered",
+              "joinStatus": "mapped-open",
               "obligations": [
                 {
                   "obligationId": "CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION",
@@ -10889,10 +10940,10 @@
           "unitId": "bard_cutting_words"
         },
         {
-          "joinStatus": "covered",
+          "joinStatus": "mapped-open",
           "profiles": [
             {
-              "joinStatus": "covered",
+              "joinStatus": "mapped-open",
               "obligations": [
                 {
                   "obligationId": "CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION",
@@ -10988,7 +11039,9 @@
               "profileId": "spell.invocation-condition-save",
               "profileKind": "spell-invocation",
               "qntOwners": [
-                "packages/battle-runtime/battle-runtime-save-gated-spell.qnt"
+                "packages/battle-runtime/battle-runtime-save-condition-target-list-resolution.qnt",
+                "packages/battle-runtime/battle-runtime-save-condition-targeting-facts.qnt",
+                "packages/battle-runtime/battle-runtime-save-gated-facts.qnt"
               ]
             }
           ],
@@ -11164,10 +11217,10 @@
           "unitId": "chromatic_orb"
         },
         {
-          "joinStatus": "covered",
+          "joinStatus": "mapped-open",
           "profiles": [
             {
-              "joinStatus": "covered",
+              "joinStatus": "mapped-open",
               "obligations": [
                 {
                   "obligationId": "CREATION.CLASS_FEATURE_RESOURCE.PROJECTION",
@@ -11206,10 +11259,10 @@
           "unitId": "cleric_disciple_of_life"
         },
         {
-          "joinStatus": "covered",
+          "joinStatus": "mapped-open",
           "profiles": [
             {
-              "joinStatus": "covered",
+              "joinStatus": "mapped-open",
               "obligations": [
                 {
                   "obligationId": "CREATION.CLASS_FEATURE_OPTION.PROJECTION",
@@ -11226,10 +11279,10 @@
           "unitId": "cleric_divine_order"
         },
         {
-          "joinStatus": "covered",
+          "joinStatus": "mapped-open",
           "profiles": [
             {
-              "joinStatus": "covered",
+              "joinStatus": "mapped-open",
               "obligations": [
                 {
                   "obligationId": "SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION",
@@ -11283,7 +11336,9 @@
               "profileId": "spell.invocation-condition-save",
               "profileKind": "spell-invocation",
               "qntOwners": [
-                "packages/battle-runtime/battle-runtime-save-gated-spell.qnt"
+                "packages/battle-runtime/battle-runtime-save-condition-target-list-resolution.qnt",
+                "packages/battle-runtime/battle-runtime-save-condition-targeting-facts.qnt",
+                "packages/battle-runtime/battle-runtime-save-gated-facts.qnt"
               ]
             }
           ],
@@ -11620,10 +11675,10 @@
           "unitId": "dragons_breath"
         },
         {
-          "joinStatus": "covered",
+          "joinStatus": "mapped-open",
           "profiles": [
             {
-              "joinStatus": "covered",
+              "joinStatus": "mapped-open",
               "obligations": [
                 {
                   "obligationId": "SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION",
@@ -11662,10 +11717,10 @@
           "unitId": "druid_lands_aid"
         },
         {
-          "joinStatus": "covered",
+          "joinStatus": "mapped-open",
           "profiles": [
             {
-              "joinStatus": "covered",
+              "joinStatus": "mapped-open",
               "obligations": [
                 {
                   "obligationId": "CREATION.CLASS_FEATURE_OPTION.PROJECTION",
@@ -11736,7 +11791,7 @@
               "profileId": "spell.invocation-independent-attack-sequence",
               "profileKind": "spell-invocation",
               "qntOwners": [
-                "packages/battle-runtime/battle-runtime-spell-attack.qnt"
+                "packages/battle-runtime/battle-runtime-spell-attack-independent-sequence.qnt"
               ]
             }
           ],
@@ -11802,7 +11857,9 @@
               "profileId": "spell.invocation-condition-save",
               "profileKind": "spell-invocation",
               "qntOwners": [
-                "packages/battle-runtime/battle-runtime-save-gated-spell.qnt"
+                "packages/battle-runtime/battle-runtime-save-condition-target-list-resolution.qnt",
+                "packages/battle-runtime/battle-runtime-save-condition-targeting-facts.qnt",
+                "packages/battle-runtime/battle-runtime-save-gated-facts.qnt"
               ]
             }
           ],
@@ -11852,7 +11909,8 @@
               "profileId": "spell.invocation-attack-roll-advantage-save",
               "profileKind": "spell-invocation",
               "qntOwners": [
-                "packages/battle-runtime/battle-runtime-save-gated-spell.qnt"
+                "packages/battle-runtime/battle-runtime-save-condition-faerie-fire.qnt",
+                "packages/battle-runtime/battle-runtime-spell-attack-facts.qnt"
               ]
             }
           ],
@@ -12086,10 +12144,10 @@
           "unitId": "fighter_extra_attack"
         },
         {
-          "joinStatus": "covered",
+          "joinStatus": "mapped-open",
           "profiles": [
             {
-              "joinStatus": "covered",
+              "joinStatus": "mapped-open",
               "obligations": [
                 {
                   "obligationId": "CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION",
@@ -12103,7 +12161,7 @@
               "qntOwners": []
             },
             {
-              "joinStatus": "covered",
+              "joinStatus": "mapped-open",
               "obligations": [
                 {
                   "obligationId": "CREATION.ADVANCEMENT.CLASS_FEATURE_REPLACEMENT",
@@ -12230,10 +12288,10 @@
           "unitId": "fighter_tactical_mind"
         },
         {
-          "joinStatus": "covered",
+          "joinStatus": "mapped-open",
           "profiles": [
             {
-              "joinStatus": "covered",
+              "joinStatus": "mapped-open",
               "obligations": [
                 {
                   "obligationId": "CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION",
@@ -12569,10 +12627,10 @@
           "unitId": "guiding_bolt"
         },
         {
-          "joinStatus": "covered",
+          "joinStatus": "mapped-open",
           "profiles": [
             {
-              "joinStatus": "covered",
+              "joinStatus": "mapped-open",
               "obligations": [
                 {
                   "obligationId": "BATTLE.SPELL.HASTE_LETHARGY_LIFECYCLE",
@@ -12779,7 +12837,9 @@
               "profileId": "spell.invocation-condition-save",
               "profileKind": "spell-invocation",
               "qntOwners": [
-                "packages/battle-runtime/battle-runtime-save-gated-spell.qnt"
+                "packages/battle-runtime/battle-runtime-save-condition-target-list-resolution.qnt",
+                "packages/battle-runtime/battle-runtime-save-condition-targeting-facts.qnt",
+                "packages/battle-runtime/battle-runtime-save-gated-facts.qnt"
               ]
             }
           ],
@@ -12801,7 +12861,9 @@
               "profileId": "spell.invocation-condition-save",
               "profileKind": "spell-invocation",
               "qntOwners": [
-                "packages/battle-runtime/battle-runtime-save-gated-spell.qnt"
+                "packages/battle-runtime/battle-runtime-save-condition-target-list-resolution.qnt",
+                "packages/battle-runtime/battle-runtime-save-condition-targeting-facts.qnt",
+                "packages/battle-runtime/battle-runtime-save-gated-facts.qnt"
               ]
             }
           ],
@@ -13354,10 +13416,10 @@
           "unitId": "mirror_image"
         },
         {
-          "joinStatus": "covered",
+          "joinStatus": "mapped-open",
           "profiles": [
             {
-              "joinStatus": "covered",
+              "joinStatus": "mapped-open",
               "obligations": [
                 {
                   "obligationId": "BATTLE.SPELL.ANTIMAGIC_FIELD_TRANSIT_BLOCKING",
@@ -13616,10 +13678,10 @@
           "unitId": "monk_unarmored_movement"
         },
         {
-          "joinStatus": "covered",
+          "joinStatus": "mapped-open",
           "profiles": [
             {
-              "joinStatus": "covered",
+              "joinStatus": "mapped-open",
               "obligations": [
                 {
                   "obligationId": "CREATION.CLASS_FEATURE_SOURCE_FACT.PROJECTION",
@@ -13762,10 +13824,10 @@
           "unitId": "paladin_abjure_foes"
         },
         {
-          "joinStatus": "covered",
+          "joinStatus": "mapped-open",
           "profiles": [
             {
-              "joinStatus": "covered",
+              "joinStatus": "mapped-open",
               "obligations": [
                 {
                   "obligationId": "CREATION.CLASS_FEATURE_RESOURCE.PROJECTION",
@@ -13805,10 +13867,10 @@
           "unitId": "paladin_extra_attack"
         },
         {
-          "joinStatus": "covered",
+          "joinStatus": "mapped-open",
           "profiles": [
             {
-              "joinStatus": "covered",
+              "joinStatus": "mapped-open",
               "obligations": [
                 {
                   "obligationId": "CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION",
@@ -13822,7 +13884,7 @@
               "qntOwners": []
             },
             {
-              "joinStatus": "covered",
+              "joinStatus": "mapped-open",
               "obligations": [
                 {
                   "obligationId": "CREATION.CLASS_FEATURE_OPTION.PROJECTION",
@@ -13864,10 +13926,10 @@
           "unitId": "paladin_lay_on_hands"
         },
         {
-          "joinStatus": "covered",
+          "joinStatus": "mapped-open",
           "profiles": [
             {
-              "joinStatus": "covered",
+              "joinStatus": "mapped-open",
               "obligations": [
                 {
                   "obligationId": "SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION",
@@ -13928,10 +13990,10 @@
           "unitId": "paladin_sacred_weapon"
         },
         {
-          "joinStatus": "covered",
+          "joinStatus": "mapped-open",
           "profiles": [
             {
-              "joinStatus": "covered",
+              "joinStatus": "mapped-open",
               "obligations": [
                 {
                   "obligationId": "CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION",
@@ -14126,10 +14188,10 @@
           "unitId": "protection_from_poison"
         },
         {
-          "joinStatus": "covered",
+          "joinStatus": "mapped-open",
           "profiles": [
             {
-              "joinStatus": "covered",
+              "joinStatus": "mapped-open",
               "obligations": [
                 {
                   "obligationId": "CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION",
@@ -14146,10 +14208,10 @@
           "unitId": "ranger_ability_score_improvement_l8"
         },
         {
-          "joinStatus": "covered",
+          "joinStatus": "mapped-open",
           "profiles": [
             {
-              "joinStatus": "covered",
+              "joinStatus": "mapped-open",
               "obligations": [
                 {
                   "obligationId": "CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION",
@@ -14166,10 +14228,10 @@
           "unitId": "ranger_deft_explorer"
         },
         {
-          "joinStatus": "covered",
+          "joinStatus": "mapped-open",
           "profiles": [
             {
-              "joinStatus": "covered",
+              "joinStatus": "mapped-open",
               "obligations": [
                 {
                   "obligationId": "CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION",
@@ -14209,10 +14271,10 @@
           "unitId": "ranger_extra_attack"
         },
         {
-          "joinStatus": "covered",
+          "joinStatus": "mapped-open",
           "profiles": [
             {
-              "joinStatus": "covered",
+              "joinStatus": "mapped-open",
               "obligations": [
                 {
                   "obligationId": "CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION",
@@ -14226,7 +14288,7 @@
               "qntOwners": []
             },
             {
-              "joinStatus": "covered",
+              "joinStatus": "mapped-open",
               "obligations": [
                 {
                   "obligationId": "CREATION.CLASS_FEATURE_OPTION.PROJECTION",
@@ -14287,10 +14349,10 @@
           "unitId": "ranger_roving"
         },
         {
-          "joinStatus": "covered",
+          "joinStatus": "mapped-open",
           "profiles": [
             {
-              "joinStatus": "covered",
+              "joinStatus": "mapped-open",
               "obligations": [
                 {
                   "obligationId": "CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION",
@@ -14342,8 +14404,8 @@
                 "packages/battle-runtime/battle-runtime-armor-class.qnt",
                 "packages/battle-runtime/battle-runtime-concentration.qnt",
                 "packages/battle-runtime/battle-runtime-model.qnt",
-                "packages/battle-runtime/battle-runtime-save-gated-spell.qnt",
-                "packages/battle-runtime/battle-runtime-spell-attack.qnt",
+                "packages/battle-runtime/battle-runtime-ray-of-enfeeblement-facts.qnt",
+                "packages/battle-runtime/battle-runtime-ray-of-enfeeblement.qnt",
                 "packages/battle-runtime/battle-runtime-timed-effects.qnt"
               ]
             },
@@ -14360,7 +14422,8 @@
               "profileId": "spell.invocation-ray-of-enfeeblement-damage-penalty",
               "profileKind": "spell-invocation",
               "qntOwners": [
-                "packages/battle-runtime/battle-runtime-save-gated-spell.qnt"
+                "packages/battle-runtime/battle-runtime-ray-of-enfeeblement.qnt",
+                "packages/battle-runtime/battle-runtime-save-gated-damage-resolution.qnt"
               ]
             }
           ],
@@ -14491,10 +14554,10 @@
           "unitId": "resistance"
         },
         {
-          "joinStatus": "covered",
+          "joinStatus": "mapped-open",
           "profiles": [
             {
-              "joinStatus": "covered",
+              "joinStatus": "mapped-open",
               "obligations": [
                 {
                   "obligationId": "CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION",
@@ -14577,10 +14640,10 @@
           "unitId": "rogue_evasion"
         },
         {
-          "joinStatus": "covered",
+          "joinStatus": "mapped-open",
           "profiles": [
             {
-              "joinStatus": "covered",
+              "joinStatus": "mapped-open",
               "obligations": [
                 {
                   "obligationId": "CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION",
@@ -14695,10 +14758,10 @@
           "unitId": "rogue_uncanny_dodge"
         },
         {
-          "joinStatus": "covered",
+          "joinStatus": "mapped-open",
           "profiles": [
             {
-              "joinStatus": "covered",
+              "joinStatus": "mapped-open",
               "obligations": [
                 {
                   "obligationId": "CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION",
@@ -14820,7 +14883,7 @@
               "profileId": "spell.invocation-independent-attack-sequence",
               "profileKind": "spell-invocation",
               "qntOwners": [
-                "packages/battle-runtime/battle-runtime-spell-attack.qnt"
+                "packages/battle-runtime/battle-runtime-spell-attack-independent-sequence.qnt"
               ]
             }
           ],
@@ -15089,10 +15152,10 @@
           "unitId": "sleep"
         },
         {
-          "joinStatus": "covered",
+          "joinStatus": "mapped-open",
           "profiles": [
             {
-              "joinStatus": "covered",
+              "joinStatus": "mapped-open",
               "obligations": [
                 {
                   "obligationId": "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE",
@@ -15131,10 +15194,10 @@
           "unitId": "sorcerer_draconic_resilience"
         },
         {
-          "joinStatus": "covered",
+          "joinStatus": "mapped-open",
           "profiles": [
             {
-              "joinStatus": "covered",
+              "joinStatus": "mapped-open",
               "obligations": [
                 {
                   "obligationId": "SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION",
@@ -15507,10 +15570,10 @@
           "unitId": "warding_bond"
         },
         {
-          "joinStatus": "covered",
+          "joinStatus": "mapped-open",
           "profiles": [
             {
-              "joinStatus": "covered",
+              "joinStatus": "mapped-open",
               "obligations": [
                 {
                   "obligationId": "SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION",
@@ -15549,10 +15612,10 @@
           "unitId": "warlock_dark_ones_blessing"
         },
         {
-          "joinStatus": "covered",
+          "joinStatus": "mapped-open",
           "profiles": [
             {
-              "joinStatus": "covered",
+              "joinStatus": "mapped-open",
               "obligations": [
                 {
                   "obligationId": "CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE",
@@ -15566,7 +15629,7 @@
               "qntOwners": []
             },
             {
-              "joinStatus": "covered",
+              "joinStatus": "mapped-open",
               "obligations": [
                 {
                   "obligationId": "CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION",
@@ -15583,10 +15646,10 @@
           "unitId": "warlock_eldritch_invocations"
         },
         {
-          "joinStatus": "covered",
+          "joinStatus": "mapped-open",
           "profiles": [
             {
-              "joinStatus": "covered",
+              "joinStatus": "mapped-open",
               "obligations": [
                 {
                   "obligationId": "SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION",
@@ -15623,10 +15686,10 @@
           "unitId": "warlock_magical_cunning"
         },
         {
-          "joinStatus": "covered",
+          "joinStatus": "mapped-open",
           "profiles": [
             {
-              "joinStatus": "covered",
+              "joinStatus": "mapped-open",
               "obligations": [
                 {
                   "obligationId": "CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION",
@@ -15730,10 +15793,10 @@
           "unitId": "wizard_ritual_adept"
         },
         {
-          "joinStatus": "covered",
+          "joinStatus": "mapped-open",
           "profiles": [
             {
-              "joinStatus": "covered",
+              "joinStatus": "mapped-open",
               "obligations": [
                 {
                   "obligationId": "CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION",
@@ -26881,7 +26944,7 @@
           "Character Creation consumes the Metamagic class-level replacement fact in the Sorcerer level-gain workflow, replacing exactly one currently known Metamagic option with one currently unknown option while preserving the known-option count, and derives Sorcerer level 10 and 17 option gains from the installed Surface choice-count thresholds without duplicating class progression or option roster state",
           "Character Sheet parsing preserves the selected CharacterBuild Metamagic option facts and rejects stored Metamagic option selections that do not match the retained feature and Sorcerer-level option count",
           "Character Battle projects selected Metamagic option facts into battle as typed effectKind, stackingMode, and Sorcery Point cost facts, links them to the shared Font of Magic point-pool resource, and hands battle point-pool spending back through Character Sheet resourceExpenditures without dispatching on option authored identity",
-          "The Metamagic Spell Invocation boundary admits selected typed effectKind facts from known options, enforces affordability against the shared Sorcery Point pool, enforces one option per spell before option-specific support, rejects unsupported second-option effects instead of charging inert Metamagic, and promotes Quickened Spell for supported direct Hit Point restoration, scalar buff, save-gated damage, save-gated condition, save-gated condition-immunity, direct condition, roll modifier, and direct spell-attack damage action-casting Spell Invocation shapes by discovering and resolving a Bonus Action subject that spends the Bonus Action, Sorcery Points, and any required Spell Slot while rejecting prior level-1-plus spell casts and committing the Quickened same-turn level-1-plus spell lock for later casts",
+          "The Metamagic Spell Invocation boundary admits selected typed effectKind facts from known options, enforces affordability against the shared Sorcery Point pool, enforces one option per spell before option-specific support, rejects unsupported second-option effects instead of charging inert Metamagic, and promotes Quickened Spell for supported direct Hit Point restoration, scalar buff, save-gated damage, save-gated condition, save-gated condition-immunity, direct condition, roll modifier, direct spell-attack damage, independent spell-attack sequence, and creature size-change action-casting Spell Invocation shapes by discovering and resolving a Bonus Action subject that spends the Bonus Action, Sorcery Points, and any required Spell Slot while rejecting prior level-1-plus spell casts and committing the Quickened same-turn level-1-plus spell lock for later casts",
           "The Metamagic Spell Invocation boundary promotes Careful Spell for supported action-time Saving Throw spell procedures by consuming selected protected-target facts, enforcing Charisma-modifier target limits and affected-target membership, spending 1 Sorcery Point from the shared Font of Magic point pool, making protected non-caster targets succeed on the relevant Saving Throw, suppressing successful-save half damage for protected targets, and preserving base successful-save no-effect behavior for save-gated non-damage procedures.",
           "The Metamagic Spell Invocation boundary promotes Heightened Spell for supported action-time Saving Throw spell procedures by consuming one selected affected target fact, spending 2 Sorcery Points from the shared Font of Magic point pool, applying target-specific Disadvantage to that target's Saving Throw through the shared roll-mode projection, preserving ordinary save outcomes for all affected targets, rejecting non-affected selected targets before resource spending, and carrying the selected target through combatant-owned Hideous Laughter, occurrence-local Grease and Gust of Wind Line area, and combatant-owned repeating save-gated condition repeat-save lifecycles without duplicating spell occurrence state.",
           "The Metamagic Spell Invocation boundary promotes Transmuted Spell for supported action-time spell damage procedures by consuming one selected replacement damage type from the RAW Acid, Cold, Fire, Lightning, Poison, and Thunder set, spending 1 Sorcery Point from the shared Font of Magic point pool, projecting the replacement through existing damage resolution facts, preserving authored spell identity and damage dice, and rejecting missing-replacement, non-listed, same-source-target, and unsupported-procedure selections before resource spending.",
@@ -27090,16 +27153,26 @@
           "id": "unit-feature.metamagic-cast-governor-quickened",
           "profileKind": "bonus-action",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-metamagic.qnt"
+            "packages/battle-runtime/battle-runtime-metamagic-quickened-common.qnt",
+            "packages/battle-runtime/battle-runtime-metamagic-quickened-restoration-buffs.qnt",
+            "packages/battle-runtime/battle-runtime-metamagic-quickened-roll-modifier.qnt",
+            "packages/battle-runtime/battle-runtime-metamagic-quickened-save-condition.qnt",
+            "packages/battle-runtime/battle-runtime-metamagic-quickened-spell-attack.qnt",
+            "packages/battle-runtime/battle-runtime-metamagic-quickened-condition-immunity.qnt",
+            "packages/battle-runtime/battle-runtime-metamagic-quickened-direct-condition.qnt",
+            "packages/battle-runtime/battle-runtime-metamagic-quickened-save-damage.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer/metamagic.ts",
+            "packages/battle-runtime/src/battle-reducer/spell-cast-interrupt-frame.ts",
+            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/counterspell.ts",
             "packages/battle-runtime/src/battle-reducer/spells-discovery.ts",
             "packages/battle-runtime/src/battle-reducer/spells-resolve.ts",
             "packages/battle-runtime/src/battle-reducer/spells-resolve-resources.ts",
+            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/creature-size-change.ts",
             "packages/battle-runtime/src/battle-subjects.ts"
           ],
-          "sourceBoundary": "The runtime consumes Character Battle Metamagic effectKind, stackingMode, Sorcery Point cost facts, and the existing Font of Magic point-pool resource. It admits selected Quickened Spell facts for supported direct Hit Point restoration, scalar buff, save-gated damage, save-gated condition/immunity, direct condition, roll modifier, and direct spell-attack damage action-casting Spell Invocation shapes, enforces known-option and Sorcery Point affordability gates, enforces one-option-per-spell before option-specific support, rejects unsupported second-option effects instead of charging inert Metamagic, spends Bonus Action, Sorcery Points, and required Spell Slots where applicable, and applies the same-turn level-1-plus spell-cast prohibition through a level-1-plus spell turn fact rather than a Spell Slot-only proxy. Standalone damage, control, ongoing-effect, and other Quickened action-casting spell procedures remain tracked by L12G-FOLLOWUP-SORCERER-METAMAGIC-QUICKENED-ALL-ACTION-SPELLS until their owners add typed resource-threading and parity witnesses, and this profile does not claim Sorcery Incarnate, Arcane Apotheosis, or non-Quickened option effects.",
+          "sourceBoundary": "The runtime consumes Character Battle Metamagic effectKind, stackingMode, Sorcery Point cost facts, and the existing Font of Magic point-pool resource. It admits selected Quickened Spell facts for supported direct Hit Point restoration, scalar buff, save-gated damage, save-gated condition/immunity, direct condition, roll modifier, direct spell-attack damage, independent spell-attack sequence, and creature size-change action-casting Spell Invocation shapes, enforces known-option and Sorcery Point affordability gates, enforces one-option-per-spell before option-specific support, rejects unsupported second-option effects instead of charging inert Metamagic, spends Bonus Action, Sorcery Points, and required Spell Slots where applicable, and applies the same-turn level-1-plus spell-cast prohibition through a level-1-plus spell turn fact rather than a Spell Slot-only proxy. Standalone damage, control, ongoing-effect, and other Quickened action-casting spell procedures remain tracked by L12G-FOLLOWUP-SORCERER-METAMAGIC-QUICKENED-ALL-ACTION-SPELLS until their owners add typed resource-threading and parity witnesses, and this profile does not claim Sorcery Incarnate, Arcane Apotheosis, or non-Quickened option effects.",
           "taskRefs": [
             "L12G-FOLLOWUP-SORCERER-METAMAGIC-CAST-GOVERNOR-QUICKENED"
           ],
@@ -27107,11 +27180,19 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-metamagic.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-options-and-quickened-restoration-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-quickened-save-condition-tests.qnt"
             },
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/battle-runtime-metamagic-resource.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-enlarge-reduce.test.ts"
             },
             {
               "kind": "focused-mbt",
@@ -27123,7 +27204,8 @@
           "id": "unit-feature.metamagic-careful-save-protection",
           "profileKind": "resource",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-metamagic.qnt"
+            "packages/battle-runtime/battle-runtime-metamagic-save-common.qnt",
+            "packages/battle-runtime/battle-runtime-metamagic-careful.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer/metamagic.ts",
@@ -27141,16 +27223,16 @@
           "title": "Unit feature protects selected spell targets with Careful Spell saving throw success",
           "verificationOwners": [
             {
-              "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-tests.qnt"
-            },
-            {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/battle-runtime-metamagic-resource.test.ts"
             },
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-careful-selected-identity.mbt.test.ts"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-options-and-quickened-restoration-tests.qnt"
             }
           ]
         },
@@ -27158,7 +27240,8 @@
           "id": "unit-feature.metamagic-heightened-save-disadvantage",
           "profileKind": "resource",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-metamagic.qnt"
+            "packages/battle-runtime/battle-runtime-metamagic-save-common.qnt",
+            "packages/battle-runtime/battle-runtime-metamagic-heightened.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer/metamagic.ts",
@@ -27185,16 +27268,16 @@
           "title": "Unit feature gives one selected spell target Heightened Spell Saving Throw Disadvantage",
           "verificationOwners": [
             {
-              "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-tests.qnt"
-            },
-            {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/battle-runtime-metamagic-resource.test.ts"
             },
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-heightened-selected-identity.mbt.test.ts"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-options-and-quickened-restoration-tests.qnt"
             }
           ]
         },
@@ -27202,7 +27285,7 @@
           "id": "unit-feature.metamagic-damage-type-substitution",
           "profileKind": "resource",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-metamagic.qnt"
+            "packages/battle-runtime/battle-runtime-metamagic-transmuted.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer/metamagic.ts",
@@ -27220,16 +27303,16 @@
           "title": "Unit feature substitutes listed spell damage types with Transmuted Spell",
           "verificationOwners": [
             {
-              "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-tests.qnt"
-            },
-            {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/battle-runtime-metamagic-resource.test.ts"
             },
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-transmuted-selected-identity.mbt.test.ts"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-options-and-quickened-restoration-tests.qnt"
             }
           ]
         },
@@ -27237,7 +27320,7 @@
           "id": "unit-feature.metamagic-effective-level-extra-target",
           "profileKind": "resource",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-metamagic.qnt"
+            "packages/battle-runtime/battle-runtime-metamagic-twinned.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer/metamagic.ts",
@@ -27252,16 +27335,16 @@
           "title": "Unit feature increases effective spell level for Twinned Spell target projection",
           "verificationOwners": [
             {
-              "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-tests.qnt"
-            },
-            {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/battle-runtime-metamagic-resource.test.ts"
             },
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-twinned-selected-identity.mbt.test.ts"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-options-and-quickened-restoration-tests.qnt"
             }
           ]
         },
@@ -27269,7 +27352,7 @@
           "id": "unit-feature.metamagic-cast-range-increase",
           "profileKind": "resource",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-metamagic.qnt"
+            "packages/battle-runtime/battle-runtime-metamagic-distant.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer/metamagic.ts",
@@ -27285,16 +27368,16 @@
           "title": "Unit feature applies Distant Spell cast-local range increase to promoted target witnesses",
           "verificationOwners": [
             {
-              "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-tests.qnt"
-            },
-            {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-object-light-spells.test.ts"
             },
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-distant-selected-identity.mbt.test.ts"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-options-and-quickened-restoration-tests.qnt"
             }
           ]
         },
@@ -27302,7 +27385,7 @@
           "id": "unit-feature.metamagic-cast-duration-and-concentration",
           "profileKind": "resource",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-metamagic.qnt"
+            "packages/battle-runtime/battle-runtime-metamagic-extended.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer.ts",
@@ -27319,16 +27402,16 @@
           "title": "Unit feature applies Extended Spell cast-local duration extension and Concentration save Advantage to promoted duration witnesses",
           "verificationOwners": [
             {
-              "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-tests.qnt"
-            },
-            {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-enlarge-reduce.test.ts"
             },
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-extended-selected-identity.mbt.test.ts"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-options-and-quickened-restoration-tests.qnt"
             }
           ]
         },
@@ -27336,7 +27419,7 @@
           "id": "unit-feature.metamagic-cast-component-suppression",
           "profileKind": "resource",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-metamagic.qnt"
+            "packages/battle-runtime/battle-runtime-metamagic-subtle.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer/metamagic.ts",
@@ -27349,12 +27432,12 @@
           "title": "Unit feature applies Subtle Spell cast-local component suppression projection",
           "verificationOwners": [
             {
-              "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-tests.qnt"
-            },
-            {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/battle-runtime-metamagic-resource.test.ts"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-options-and-quickened-restoration-tests.qnt"
             }
           ]
         },
@@ -27362,7 +27445,7 @@
           "id": "unit-feature.metamagic-missed-spell-attack-reroll",
           "profileKind": "resource",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-metamagic.qnt"
+            "packages/battle-runtime/battle-runtime-metamagic-seeking.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer.ts",
@@ -27377,16 +27460,16 @@
           "title": "Unit feature applies Seeking Spell missed spell attack reroll",
           "verificationOwners": [
             {
-              "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-tests.qnt"
-            },
-            {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/battle-runtime-metamagic-resource.test.ts"
             },
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-seeking-selected-identity.mbt.test.ts"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-options-and-quickened-restoration-tests.qnt"
             }
           ]
         },
@@ -27394,7 +27477,7 @@
           "id": "unit-feature.metamagic-damage-dice-reroll",
           "profileKind": "resource",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-metamagic.qnt"
+            "packages/battle-runtime/battle-runtime-metamagic-empowered.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer.ts",
@@ -27410,16 +27493,16 @@
           "title": "Unit feature applies Empowered Spell damage dice reroll",
           "verificationOwners": [
             {
-              "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-tests.qnt"
-            },
-            {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/battle-runtime-metamagic-resource.test.ts"
             },
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-empowered-selected-identity.mbt.test.ts"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-options-and-quickened-restoration-tests.qnt"
             }
           ]
         }
@@ -33461,7 +33544,9 @@
           "id": "spell.invocation-condition-save",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-save-gated-spell.qnt"
+            "packages/battle-runtime/battle-runtime-save-gated-facts.qnt",
+            "packages/battle-runtime/battle-runtime-save-condition-target-list-resolution.qnt",
+            "packages/battle-runtime/battle-runtime-save-condition-targeting-facts.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer.ts"
@@ -33486,6 +33571,10 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-save-condition-spells.test.ts"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-and-rider-facts-tests.qnt"
             }
           ]
         }
@@ -33543,12 +33632,12 @@
           "title": "Spell invocation applies concentration d20 roll modifiers or chosen-ability Ability Check roll modes from target-list, area-selected, or skill-choice spell effects",
           "verificationOwners": [
             {
-              "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-spell-facts-tests.qnt"
-            },
-            {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-spellcasting-and-utility-facts-tests.qnt"
             }
           ]
         }
@@ -33629,12 +33718,12 @@
           "title": "Spell invocation applies concentration d20 roll modifiers or chosen-ability Ability Check roll modes from target-list, area-selected, or skill-choice spell effects",
           "verificationOwners": [
             {
-              "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-spell-facts-tests.qnt"
-            },
-            {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-spellcasting-and-utility-facts-tests.qnt"
             }
           ]
         }
@@ -33910,7 +33999,8 @@
           "id": "spell.invocation-save-gated-condition-immunity",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-save-gated-spell.qnt"
+            "packages/battle-runtime/battle-runtime-save-condition-calm-emotions.qnt",
+            "packages/battle-runtime/battle-runtime-metamagic-quickened-condition-immunity.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer.ts"
@@ -33928,6 +34018,10 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-calm-emotions.test.ts"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-quickened-save-condition-tests.qnt"
             }
           ]
         }
@@ -34274,7 +34368,9 @@
           "id": "spell.invocation-condition-save",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-save-gated-spell.qnt"
+            "packages/battle-runtime/battle-runtime-save-gated-facts.qnt",
+            "packages/battle-runtime/battle-runtime-save-condition-target-list-resolution.qnt",
+            "packages/battle-runtime/battle-runtime-save-condition-targeting-facts.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer.ts"
@@ -34299,6 +34395,10 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-save-condition-spells.test.ts"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-and-rider-facts-tests.qnt"
             }
           ]
         }
@@ -35135,7 +35235,9 @@
           "id": "spell.invocation-condition-save",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-save-gated-spell.qnt"
+            "packages/battle-runtime/battle-runtime-save-gated-facts.qnt",
+            "packages/battle-runtime/battle-runtime-save-condition-target-list-resolution.qnt",
+            "packages/battle-runtime/battle-runtime-save-condition-targeting-facts.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer.ts"
@@ -35160,6 +35262,10 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-save-condition-spells.test.ts"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-and-rider-facts-tests.qnt"
             }
           ]
         }
@@ -36454,12 +36560,12 @@
           "title": "Spell invocation applies concentration d20 roll modifiers or chosen-ability Ability Check roll modes from target-list, area-selected, or skill-choice spell effects",
           "verificationOwners": [
             {
-              "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-spell-facts-tests.qnt"
-            },
-            {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-spellcasting-and-utility-facts-tests.qnt"
             }
           ]
         }
@@ -36538,12 +36644,12 @@
           "title": "Spell invocation applies a creature size change with Strength roll modes and attack-hit damage adjustment",
           "verificationOwners": [
             {
-              "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-spell-facts-tests.qnt"
-            },
-            {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-enlarge-reduce.test.ts"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-spellcasting-and-utility-facts-tests.qnt"
             }
           ]
         }
@@ -36645,7 +36751,9 @@
           "id": "spell.invocation-condition-save",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-save-gated-spell.qnt"
+            "packages/battle-runtime/battle-runtime-save-gated-facts.qnt",
+            "packages/battle-runtime/battle-runtime-save-condition-target-list-resolution.qnt",
+            "packages/battle-runtime/battle-runtime-save-condition-targeting-facts.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer.ts"
@@ -36670,6 +36778,10 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-save-condition-spells.test.ts"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-and-rider-facts-tests.qnt"
             }
           ]
         }
@@ -36745,12 +36857,12 @@
           "title": "Spell invocation applies concentration d20 roll modifiers or chosen-ability Ability Check roll modes from target-list, area-selected, or skill-choice spell effects",
           "verificationOwners": [
             {
-              "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-spell-facts-tests.qnt"
-            },
-            {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-spellcasting-and-utility-facts-tests.qnt"
             }
           ]
         }
@@ -36863,7 +36975,8 @@
           "id": "spell.invocation-attack-roll-advantage-save",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-save-gated-spell.qnt"
+            "packages/battle-runtime/battle-runtime-save-condition-faerie-fire.qnt",
+            "packages/battle-runtime/battle-runtime-spell-attack-facts.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer.ts"
@@ -36885,6 +36998,10 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-faerie-fire.test.ts"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-and-rider-facts-tests.qnt"
             }
           ]
         }
@@ -37838,12 +37955,12 @@
           "title": "Spell invocation applies concentration d20 roll modifiers or chosen-ability Ability Check roll modes from target-list, area-selected, or skill-choice spell effects",
           "verificationOwners": [
             {
-              "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-spell-facts-tests.qnt"
-            },
-            {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-spellcasting-and-utility-facts-tests.qnt"
             }
           ]
         }
@@ -40479,12 +40596,12 @@
           "title": "Spell invocation applies concentration d20 roll modifiers or chosen-ability Ability Check roll modes from target-list, area-selected, or skill-choice spell effects",
           "verificationOwners": [
             {
-              "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-spell-facts-tests.qnt"
-            },
-            {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-spellcasting-and-utility-facts-tests.qnt"
             }
           ]
         }
@@ -41214,11 +41331,11 @@
           "profileKind": "spell-invocation",
           "qntOwners": [
             "packages/battle-runtime/battle-runtime-model.qnt",
-            "packages/battle-runtime/battle-runtime-save-gated-spell.qnt",
-            "packages/battle-runtime/battle-runtime-spell-attack.qnt",
             "packages/battle-runtime/battle-runtime-timed-effects.qnt",
             "packages/battle-runtime/battle-runtime-concentration.qnt",
-            "packages/battle-runtime/battle-runtime-armor-class.qnt"
+            "packages/battle-runtime/battle-runtime-armor-class.qnt",
+            "packages/battle-runtime/battle-runtime-ray-of-enfeeblement-facts.qnt",
+            "packages/battle-runtime/battle-runtime-ray-of-enfeeblement.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer.ts",
@@ -41235,16 +41352,16 @@
           "title": "Spell save gate applies Ray of Enfeeblement D20 Test lifecycle effects",
           "verificationOwners": [
             {
-              "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-spell-facts-tests.qnt"
-            },
-            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/ray-of-enfeeblement-lifecycle.mbt.test.ts"
             },
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-ray-of-enfeeblement.test.ts"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-and-rider-facts-tests.qnt"
             }
           ]
         },
@@ -41252,7 +41369,8 @@
           "id": "spell.invocation-ray-of-enfeeblement-damage-penalty",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-save-gated-spell.qnt"
+            "packages/battle-runtime/battle-runtime-ray-of-enfeeblement.qnt",
+            "packages/battle-runtime/battle-runtime-save-gated-damage-resolution.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/active-effect/types.ts",
@@ -41282,10 +41400,6 @@
           "title": "Ray of Enfeeblement failed save subtracts 1d8 from source damage rolls",
           "verificationOwners": [
             {
-              "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-spell-facts-tests.qnt"
-            },
-            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/ray-of-enfeeblement-lifecycle.mbt.test.ts"
             },
@@ -41296,6 +41410,10 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/battle-runtime-ice-knife.test.ts"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-and-rider-facts-tests.qnt"
             }
           ]
         }
@@ -41743,12 +41861,12 @@
           "title": "Spell invocation creates a chosen damage-type reduction with a once-per-turn use marker",
           "verificationOwners": [
             {
-              "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-spell-facts-tests.qnt"
-            },
-            {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-and-rider-facts-tests.qnt"
             }
           ]
         }
@@ -42111,7 +42229,7 @@
           "id": "spell.invocation-independent-attack-sequence",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-spell-attack.qnt"
+            "packages/battle-runtime/battle-runtime-spell-attack-independent-sequence.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer.ts"
@@ -42122,10 +42240,6 @@
           ],
           "title": "Spell invocation resolves independent creature-or-object ranged spell attack sequences",
           "verificationOwners": [
-            {
-              "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-tests.qnt"
-            },
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/battle-runtime-test-support.ts"
@@ -42141,6 +42255,10 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/eldritch-blast.mbt.test.ts"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-procedure-tests.qnt"
             }
           ]
         }
@@ -43113,12 +43231,12 @@
           "title": "Spell invocation creates a self Spell Effect that projects Ability Check Advantage from caller-supplied witnesses",
           "verificationOwners": [
             {
-              "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-spell-facts-tests.qnt"
-            },
-            {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/thaumaturgy-booming-voice.test.ts"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-spellcasting-and-utility-facts-tests.qnt"
             }
           ]
         }
@@ -46124,7 +46242,7 @@
           "id": "spell.invocation-independent-attack-sequence",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-spell-attack.qnt"
+            "packages/battle-runtime/battle-runtime-spell-attack-independent-sequence.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer.ts"
@@ -46135,10 +46253,6 @@
           ],
           "title": "Spell invocation resolves independent creature-or-object ranged spell attack sequences",
           "verificationOwners": [
-            {
-              "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-tests.qnt"
-            },
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/battle-runtime-test-support.ts"
@@ -46154,6 +46268,10 @@
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/eldritch-blast.mbt.test.ts"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-procedure-tests.qnt"
             }
           ]
         }
@@ -46756,7 +46874,9 @@
           "id": "spell.invocation-condition-save",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-save-gated-spell.qnt"
+            "packages/battle-runtime/battle-runtime-save-gated-facts.qnt",
+            "packages/battle-runtime/battle-runtime-save-condition-target-list-resolution.qnt",
+            "packages/battle-runtime/battle-runtime-save-condition-targeting-facts.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer.ts"
@@ -46781,6 +46901,10 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-save-condition-spells.test.ts"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-and-rider-facts-tests.qnt"
             }
           ]
         }
@@ -46831,7 +46955,9 @@
           "id": "spell.invocation-condition-save",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-save-gated-spell.qnt"
+            "packages/battle-runtime/battle-runtime-save-gated-facts.qnt",
+            "packages/battle-runtime/battle-runtime-save-condition-target-list-resolution.qnt",
+            "packages/battle-runtime/battle-runtime-save-condition-targeting-facts.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer.ts"
@@ -46856,6 +46982,10 @@
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-save-condition-spells.test.ts"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-and-rider-facts-tests.qnt"
             }
           ]
         }

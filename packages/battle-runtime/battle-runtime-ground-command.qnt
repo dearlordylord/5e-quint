@@ -4,14 +4,15 @@
 // KERNEL-COVERAGE: qnt-owner BATTLE.COMMAND.OPTION_AND_NEXT_TURN
 // KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE BATTLE.SPELL.INSECT_PLAGUE_AREA_HAZARD_LIFECYCLE BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE
 module battleRuntimeGroundCommand {
+  import battleRuntimeSavingThrowRollMode.* from "./battle-runtime-saving-throw-roll-mode"
   import battleRuntimeAreaTriggerTiming.* from "./battle-runtime-area-trigger-timing"
   import battleRuntimeMovementBridge.* from "./battle-runtime-movement-bridge"
   import battleRuntimeCommandChoice.* from "./battle-runtime-command-choice"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
-  import battleRuntimeSpellInvocation.* from "./battle-runtime-spell-invocation"
+  import battleRuntimeSpellCastResources.* from "./battle-runtime-spell-cast-resources"
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"
-  import battleRuntimeFighterOngoingFeatures.* from "./battle-runtime-fighter-ongoing-features"
+  import battleRuntimeFighterRageFacts.* from "./battle-runtime-fighter-rage-facts"
   import battleRuntimeMovement.* from "./battle-runtime-movement"
   import battleRuntimeReactionWindow.* from "./battle-runtime-reaction-window"
   import battleRuntimeTurnAdvancement.* from "./battle-runtime-turn-advancement"

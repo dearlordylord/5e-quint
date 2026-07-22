@@ -1,0 +1,131 @@
+name: QNT proofs
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - ".github/workflows/qnt-proofs.yml"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "packages/**/*.qnt"
+      - "packages/**/package.json"
+      - "packages/**/src/**/*qnt-proof*.ts"
+      - "scripts/**/*qnt*.cjs"
+      - "scripts/**/*qnt*.ts"
+  pull_request:
+    paths:
+      - ".github/workflows/qnt-proofs.yml"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "packages/**/*.qnt"
+      - "packages/**/package.json"
+      - "packages/**/src/**/*qnt-proof*.ts"
+      - "scripts/**/*qnt*.cjs"
+      - "scripts/**/*qnt*.ts"
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+
+concurrency:
+  group: qnt-proofs-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  proofs:
+    name: Bounded QNT proof lane
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Quint CLI
+        run: |
+          pnpm add --global @informalsystems/quint@0.31.0
+          pnpm exec quint --version
+
+      - name: Download previous successful timing artifact
+        id: previous
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p proof-artifacts/previous
+          for comparison_branch in \
+            "${GITHUB_HEAD_REF:-}" \
+            "${GITHUB_BASE_REF:-}" \
+            "${GITHUB_REF_NAME:-}"; do
+            if test -z "$comparison_branch"; then
+              continue
+            fi
+            if ! previous_run_id="$(
+              gh api "repos/$GITHUB_REPOSITORY/actions/runs" \
+                --method GET \
+                -f branch="$comparison_branch" \
+                -f status=success \
+                -f per_page=100 \
+                --jq '[.workflow_runs[] | select(.name == "QNT proofs")][0].id // empty'
+            )"; then
+              echo "::warning::Could not query prior QNT proof timings for $comparison_branch."
+              continue
+            fi
+            if test -n "$previous_run_id" && \
+              gh run download "$previous_run_id" \
+                --name qnt-proof-timings \
+                --dir proof-artifacts/previous; then
+              echo "run_id=$previous_run_id" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          done
+          echo "run_id=" >> "$GITHUB_OUTPUT"
+
+      - name: Run bounded proof lane
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p proof-artifacts/current
+          pnpm proof:qnt \
+            2> >(tee proof-artifacts/current/qnt-proof-events.log >&2)
+
+      - name: Build timing comparison
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          report_args=(
+            --events proof-artifacts/current/qnt-proof-events.log
+            --out proof-artifacts/current/qnt-proof-timings.json
+          )
+          if test -f proof-artifacts/previous/qnt-proof-timings.json; then
+            report_args+=(
+              --previous proof-artifacts/previous/qnt-proof-timings.json
+            )
+          fi
+          node scripts/qnt-proof-timing-report.cjs "${report_args[@]}" \
+            | tee proof-artifacts/current/qnt-proof-timings.md
+          cat proof-artifacts/current/qnt-proof-timings.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload proof events and timings
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: qnt-proof-timings
+          path: proof-artifacts/current/
+          if-no-files-found: warn
+          retention-days: 30

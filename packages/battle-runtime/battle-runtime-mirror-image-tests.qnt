@@ -4,8 +4,8 @@
 module battleRuntimeMirrorImageTests {
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeMirrorImage.* from "./battle-runtime-mirror-image"
-  import battleRuntimeSaveGatedSpell.* from "./battle-runtime-save-gated-spell"
-  import battleRuntimeSpellInvocation.* from "./battle-runtime-spell-invocation"
+  import battleRuntimeSaveGatedDamageResolution.* from "./battle-runtime-save-gated-damage-resolution"
+  import battleRuntimeSpellCastResources.* from "./battle-runtime-spell-cast-resources"
 
   run test_mirror_image_intercepts_ice_knife_attack_damage_before_burst = {
     val mirroredGoblin = {

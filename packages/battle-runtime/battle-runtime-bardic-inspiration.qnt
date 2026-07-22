@@ -1,4 +1,5 @@
 // -*- mode: Bluespec; -*-
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.bardic-inspiration-failed-d20-test
 // KERNEL-COVERAGE: qnt-owner BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
 // UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.bardic-inspiration-grant unit-feature.bardic-inspiration-failed-d20-test
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.bardic-inspiration-grant unit-feature.bardic-inspiration-failed-d20-test

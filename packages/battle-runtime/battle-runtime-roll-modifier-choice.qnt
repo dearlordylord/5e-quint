@@ -6,8 +6,8 @@
 module battleRuntimeRollModifierChoice {
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"
-  import battleRuntimeFighterOngoingFeatures.* from "./battle-runtime-fighter-ongoing-features"
-  import battleRuntimeSpellInvocation.* from "./battle-runtime-spell-invocation"
+  import battleRuntimeFighterRageFacts.* from "./battle-runtime-fighter-rage-facts"
+  import battleRuntimeSpellCastResources.* from "./battle-runtime-spell-cast-resources"
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
 
   pure def rollModifierChoiceActiveEffect(

@@ -22,8 +22,8 @@ Strict level-9 final support blockers: 0.
 | Strict level-9 final support | 225/225 (100%) |
 | SRD authored product readiness | 105/105 (100%) |
 | Rules-kernel profile join | 108/108 (100%) |
-| Rules-kernel covered profile join | 108/108 (100%) |
-| Supported Unit rules-kernel chain | 146/146 (100%) |
+| Rules-kernel covered profile join | 96/108 (88.9%) |
+| Supported Unit rules-kernel chain | 121/146 (82.9%) |
 
 These metrics are lower-layer accounting views. They are not, by themselves, a valid full-support claim.
 
@@ -135,7 +135,31 @@ This gate checks authored records and retained Unit references that must resolve
 
 | Unit | Status | Profiles Needing Attention | Follow-up tasks |
 | --- | --- | --- | --- |
-| _none_ | _none_ | _none_ | _none_ |
+| `barbarian_primal_knowledge` | mapped-open | `character-creation.class-feature-source-fact-projection` (mapped-open: `CREATION.CLASS_FEATURE_SOURCE_FACT.PROJECTION` (covered)) | _plan-update-required_ |
+| `barbarian_weapon_mastery` | mapped-open | `character-creation.weapon-mastery-choice` (mapped-open: `CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION` (covered)) | _plan-update-required_ |
+| `bard_expertise` | mapped-open | `character-creation.skill-expertise-choice` (mapped-open: `CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION` (covered)) | _plan-update-required_ |
+| `cleric_channel_divinity` | mapped-open | `character-creation.class-feature-resource-projection` (mapped-open: `CREATION.CLASS_FEATURE_RESOURCE.PROJECTION` (covered)) | _plan-update-required_ |
+| `cleric_divine_order` | mapped-open | `character-creation.class-feature-option-projection` (mapped-open: `CREATION.CLASS_FEATURE_OPTION.PROJECTION` (covered)) | _plan-update-required_ |
+| `cleric_life_domain_spells` | mapped-open | `character-sheet.class-feature-prepared-spell-access` (mapped-open: `SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION` (covered)) | _plan-update-required_ |
+| `druid_circle_of_the_land_spells` | mapped-open | `character-sheet.druid-circle-land-spell-access` (mapped-open: `SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION` (covered)) | _plan-update-required_ |
+| `druid_primal_order` | mapped-open | `character-creation.class-feature-option-projection` (mapped-open: `CREATION.CLASS_FEATURE_OPTION.PROJECTION` (covered)) | _plan-update-required_ |
+| `fighter_fighting_style` | mapped-open | `character-creation.class-feature-feat-choice` (mapped-open: `CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION` (covered)); `character-creation.fighter-fighting-style-advancement-replacement` (mapped-open: `CREATION.ADVANCEMENT.CLASS_FEATURE_REPLACEMENT` (covered)) | _plan-update-required_ |
+| `fighter_weapon_mastery` | mapped-open | `character-creation.weapon-mastery-choice` (mapped-open: `CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION` (covered)) | _plan-update-required_ |
+| `misty_step` | mapped-open | `spell.invocation-self-teleport` (mapped-open: `BATTLE.SPELL.ANTIMAGIC_FIELD_TRANSIT_BLOCKING` (covered), `BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE` (covered)) | _plan-update-required_ |
+| `monk_uncanny_metabolism` | mapped-open | `character-creation.class-feature-source-fact-projection` (mapped-open: `CREATION.CLASS_FEATURE_SOURCE_FACT.PROJECTION` (covered)) | _plan-update-required_ |
+| `paladin_channel_divinity` | mapped-open | `character-creation.class-feature-resource-projection` (mapped-open: `CREATION.CLASS_FEATURE_RESOURCE.PROJECTION` (covered)) | _plan-update-required_ |
+| `paladin_fighting_style` | mapped-open | `character-creation.class-feature-feat-choice` (mapped-open: `CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION` (covered)); `character-creation.class-feature-option-projection` (mapped-open: `CREATION.CLASS_FEATURE_OPTION.PROJECTION` (covered)) | _plan-update-required_ |
+| `paladin_oath_of_devotion_spells` | mapped-open | `character-sheet.class-feature-prepared-spell-access` (mapped-open: `SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION` (covered)) | _plan-update-required_ |
+| `paladin_weapon_mastery` | mapped-open | `character-creation.weapon-mastery-choice` (mapped-open: `CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION` (covered)) | _plan-update-required_ |
+| `ranger_deft_explorer` | mapped-open | `character-creation.skill-expertise-choice` (mapped-open: `CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION` (covered)) | _plan-update-required_ |
+| `ranger_fighting_style` | mapped-open | `character-creation.class-feature-feat-choice` (mapped-open: `CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION` (covered)); `character-creation.class-feature-option-projection` (mapped-open: `CREATION.CLASS_FEATURE_OPTION.PROJECTION` (covered)) | _plan-update-required_ |
+| `ranger_weapon_mastery` | mapped-open | `character-creation.weapon-mastery-choice` (mapped-open: `CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION` (covered)) | _plan-update-required_ |
+| `rogue_expertise` | mapped-open | `character-creation.skill-expertise-choice` (mapped-open: `CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION` (covered)) | _plan-update-required_ |
+| `rogue_weapon_mastery` | mapped-open | `character-creation.weapon-mastery-choice` (mapped-open: `CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION` (covered)) | _plan-update-required_ |
+| `sorcerer_draconic_spells` | mapped-open | `character-sheet.class-feature-prepared-spell-access` (mapped-open: `SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION` (covered)) | _plan-update-required_ |
+| `warlock_eldritch_invocations` | mapped-open | `character-creation.eldritch-invocation-choice` (mapped-open: `CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE` (covered)); `character-creation.warlock-pact-magic-advancement` (mapped-open: `CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION` (covered)) | _plan-update-required_ |
+| `warlock_fiend_spells` | mapped-open | `character-sheet.class-feature-prepared-spell-access` (mapped-open: `SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION` (covered)) | _plan-update-required_ |
+| `wizard_scholar` | mapped-open | `character-creation.skill-expertise-choice` (mapped-open: `CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION` (covered)) | _plan-update-required_ |
 
 ## Non-Supported Frontier Detail
 

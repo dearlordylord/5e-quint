@@ -3,12 +3,12 @@
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-direct-condition-removal
 
 module battleRuntimeDirectConditionRemoval {
-  import battleRuntimeFighterOngoingFeatures.* from "./battle-runtime-fighter-ongoing-features"
+  import battleRuntimeFighterRageFacts.* from "./battle-runtime-fighter-rage-facts"
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeMovement.* from "./battle-runtime-movement"
   import battleRuntimeSanctuary.* from "./battle-runtime-sanctuary"
-  import battleRuntimeSpellInvocation.* from "./battle-runtime-spell-invocation"
+  import battleRuntimeSpellCastResources.* from "./battle-runtime-spell-cast-resources"
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
 
   // SRD 5.2.1, Spells/Descriptions-E-L.md Lesser Restoration: Bonus Action,

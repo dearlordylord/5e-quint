@@ -9,7 +9,7 @@ module battleRuntimeHitPoints {
   import hitPointRecovery.* from "../shared-algebras/proofs/rule-core/hit-point-recovery"
   import zeroHitPointLifecycle.* from "../shared-algebras/proofs/rule-core/zero-hit-point-lifecycle"
   import battleRuntimeModel.* from "./battle-runtime-model"
-  import battleRuntimeSpellBridge.* from "./battle-runtime-spell-bridge"
+  import battleRuntimeSpellLifecycleBridge.* from "./battle-runtime-spell-lifecycle-bridge"
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"
 
   // Rule-core CreatureKind is the HP lifecycle policy, not source provenance.

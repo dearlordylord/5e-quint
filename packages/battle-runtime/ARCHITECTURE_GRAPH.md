@@ -23,9 +23,13 @@ QNT modules, such as `battle-runtime-find-familiar.qnt`,
 `battle-runtime-armor-spell-resolution.qnt`, `battle-runtime-thaumaturgy.qnt`,
 and `battle-runtime-bardic-inspiration.qnt`, and `battle-runtime-hit-points.qnt`,
 `battle-runtime-turn-order.qnt`, and `battle-runtime-damage-adjustments.qnt`,
-`battle-runtime-spell-invocation.qnt`, `battle-runtime-spell-attack.qnt`,
+`battle-runtime-spell-cast-resources.qnt`,
+`battle-runtime-spell-attack-facts.qnt`,
+`battle-runtime-spell-attack-direct-resolution.qnt`, and
 `battle-runtime-chained-spell-attack.qnt`, and
-`battle-runtime-save-gated-spell.qnt`, `battle-runtime-marked-riders.qnt`, and
+`battle-runtime-save-gated-facts.qnt`,
+`battle-runtime-save-gated-damage-resolution.qnt`,
+`battle-runtime-marked-riders.qnt`, and
 `battle-runtime-marked-spells.qnt`,
 `battle-runtime-reaction-window.qnt`, `battle-runtime-concentration.qnt`,
 `battle-runtime-actor-combatants.qnt`, and
@@ -49,6 +53,10 @@ architectural center.
 The opt-in proof lane (`test:qnt-proofs`) discovers every `run`-block `.qnt` by
 content and runs each as its own bounded `quint test`, so a runaway proof fails
 that one module instead of hanging the suite (see CLAUDE.md "QNT proof lane").
+`check:qnt-proof-closure` discovers that same root set and caps replacement
+closures at 60 counted files and 12,500 physical lines. Import-free vocabulary
+leaves are excluded only from the file count; established larger integration
+proofs have non-growing executable ceilings.
 
 The promoted MBT strategy is selective. MBT proves reducer facts after Surface
 decode/projection; it must not enumerate all Surface-authored content multiplied

@@ -7,9 +7,9 @@
 module battleRuntimeLevitateCreature {
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
-  import battleRuntimeSpellInvocation.* from "./battle-runtime-spell-invocation"
+  import battleRuntimeSpellCastResources.* from "./battle-runtime-spell-cast-resources"
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"
-  import battleRuntimeFighterOngoingFeatures.* from "./battle-runtime-fighter-ongoing-features"
+  import battleRuntimeFighterRageFacts.* from "./battle-runtime-fighter-rage-facts"
   import battleRuntimeTimedEffects.* from "./battle-runtime-timed-effects"
 
   pure val levitateInitialRiseMaxFeet = 20

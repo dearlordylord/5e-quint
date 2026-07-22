@@ -1,5 +1,8 @@
 {
-  "blockedScopeIds": [],
+  "blockedScopeIds": [
+    "level-1",
+    "level-1-2"
+  ],
   "criteria": {
     "noRuntimeBehavior": "This gate is checker/report evidence only and does not change feature reducers, Surface admission, or QNT semantics.",
     "profileIdPrefix": "unit-feature.",
@@ -16,8 +19,8 @@
       "metrics": {
         "evidenceRows": {
           "denominator": 7,
-          "numerator": 7,
-          "percent": "100%"
+          "numerator": 5,
+          "percent": "71.4%"
         },
         "featureProcedureProfiles": {
           "denominator": 7,
@@ -26,8 +29,8 @@
         },
         "openGapRows": {
           "denominator": 7,
-          "numerator": 0,
-          "percent": "0%"
+          "numerator": 2,
+          "percent": "28.6%"
         },
         "supportedFeatureUnits": {
           "denominator": 6,
@@ -35,7 +38,328 @@
           "percent": "100%"
         }
       },
-      "openGapRows": [],
+      "openGapRows": [
+        {
+          "evidenceStatus": "gap",
+          "gaps": [
+            {
+              "detail": "Unit profile owner evidence has no semantic-core QNT owner; bridge and proof owners are traceability evidence only.",
+              "kind": "missing-semantic-core-qnt-owner"
+            }
+          ],
+          "joinStatus": "covered",
+          "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+          "obligationQntMbtWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/extra-attack-count.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-extra-attack.mbt.qnt",
+              "stepAction": "stepSpendAllSlots"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rogue-steady-aim.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-rogue-steady-aim.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/dark-ones-blessing-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-dark-ones-blessing.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/disciple-of-life-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-disciple-of-life.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/preserve-life-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-preserve-life.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-open-hand-technique.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
+          "obligationStatus": "covered",
+          "obligationTitle": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes",
+          "parityWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/extra-attack-count.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-extra-attack.mbt.qnt",
+              "stepAction": "stepSpendAllSlots"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rogue-steady-aim.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-rogue-steady-aim.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/dark-ones-blessing-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-dark-ones-blessing.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/disciple-of-life-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-disciple-of-life.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/preserve-life-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-preserve-life.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-open-hand-technique.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
+          "profileId": "unit-feature.bardic-inspiration-failed-d20-test",
+          "profileKind": "resource",
+          "qntOwners": [
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-bardic-inspiration.qnt",
+              "role": "proof-only"
+            }
+          ],
+          "runtime": "battle",
+          "tag": "obligation-evidence",
+          "unitId": "bard_bardic_inspiration"
+        },
+        {
+          "evidenceStatus": "gap",
+          "gaps": [
+            {
+              "detail": "Unit profile owner evidence has no semantic-core QNT owner; bridge and proof owners are traceability evidence only.",
+              "kind": "missing-semantic-core-qnt-owner"
+            }
+          ],
+          "joinStatus": "covered",
+          "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+          "obligationQntMbtWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/extra-attack-count.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-extra-attack.mbt.qnt",
+              "stepAction": "stepSpendAllSlots"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rogue-steady-aim.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-rogue-steady-aim.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/dark-ones-blessing-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-dark-ones-blessing.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/disciple-of-life-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-disciple-of-life.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/preserve-life-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-preserve-life.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-open-hand-technique.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
+          "obligationStatus": "covered",
+          "obligationTitle": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes",
+          "parityWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/extra-attack-count.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-extra-attack.mbt.qnt",
+              "stepAction": "stepSpendAllSlots"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rogue-steady-aim.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-rogue-steady-aim.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/dark-ones-blessing-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-dark-ones-blessing.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/disciple-of-life-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-disciple-of-life.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/preserve-life-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-preserve-life.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-open-hand-technique.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
+          "profileId": "unit-feature.bardic-inspiration-grant",
+          "profileKind": "bonus-action",
+          "qntOwners": [
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-bardic-inspiration.qnt",
+              "role": "proof-only"
+            }
+          ],
+          "runtime": "battle",
+          "tag": "obligation-evidence",
+          "unitId": "bard_bardic_inspiration"
+        }
+      ],
       "rows": [
         {
           "evidenceStatus": "evidence-present",
@@ -193,8 +517,13 @@
           "unitId": "barbarian_rage"
         },
         {
-          "evidenceStatus": "evidence-present",
-          "gaps": [],
+          "evidenceStatus": "gap",
+          "gaps": [
+            {
+              "detail": "Unit profile owner evidence has no semantic-core QNT owner; bridge and proof owners are traceability evidence only.",
+              "kind": "missing-semantic-core-qnt-owner"
+            }
+          ],
           "joinStatus": "covered",
           "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
           "obligationQntMbtWitnesses": [
@@ -348,8 +677,13 @@
           "unitId": "bard_bardic_inspiration"
         },
         {
-          "evidenceStatus": "evidence-present",
-          "gaps": [],
+          "evidenceStatus": "gap",
+          "gaps": [
+            {
+              "detail": "Unit profile owner evidence has no semantic-core QNT owner; bridge and proof owners are traceability evidence only.",
+              "kind": "missing-semantic-core-qnt-owner"
+            }
+          ],
           "joinStatus": "covered",
           "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
           "obligationQntMbtWitnesses": [
@@ -1128,7 +1462,7 @@
         }
       ],
       "scopeId": "level-1",
-      "status": "pass",
+      "status": "blocked",
       "title": "Character Level 1"
     },
     {
@@ -1136,8 +1470,8 @@
       "metrics": {
         "evidenceRows": {
           "denominator": 13,
-          "numerator": 13,
-          "percent": "100%"
+          "numerator": 11,
+          "percent": "84.6%"
         },
         "featureProcedureProfiles": {
           "denominator": 13,
@@ -1146,8 +1480,8 @@
         },
         "openGapRows": {
           "denominator": 13,
-          "numerator": 0,
-          "percent": "0%"
+          "numerator": 2,
+          "percent": "15.4%"
         },
         "supportedFeatureUnits": {
           "denominator": 12,
@@ -1155,7 +1489,328 @@
           "percent": "100%"
         }
       },
-      "openGapRows": [],
+      "openGapRows": [
+        {
+          "evidenceStatus": "gap",
+          "gaps": [
+            {
+              "detail": "Unit profile owner evidence has no semantic-core QNT owner; bridge and proof owners are traceability evidence only.",
+              "kind": "missing-semantic-core-qnt-owner"
+            }
+          ],
+          "joinStatus": "covered",
+          "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+          "obligationQntMbtWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/extra-attack-count.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-extra-attack.mbt.qnt",
+              "stepAction": "stepSpendAllSlots"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rogue-steady-aim.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-rogue-steady-aim.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/dark-ones-blessing-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-dark-ones-blessing.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/disciple-of-life-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-disciple-of-life.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/preserve-life-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-preserve-life.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-open-hand-technique.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
+          "obligationStatus": "covered",
+          "obligationTitle": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes",
+          "parityWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/extra-attack-count.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-extra-attack.mbt.qnt",
+              "stepAction": "stepSpendAllSlots"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rogue-steady-aim.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-rogue-steady-aim.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/dark-ones-blessing-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-dark-ones-blessing.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/disciple-of-life-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-disciple-of-life.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/preserve-life-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-preserve-life.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-open-hand-technique.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
+          "profileId": "unit-feature.bardic-inspiration-failed-d20-test",
+          "profileKind": "resource",
+          "qntOwners": [
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-bardic-inspiration.qnt",
+              "role": "proof-only"
+            }
+          ],
+          "runtime": "battle",
+          "tag": "obligation-evidence",
+          "unitId": "bard_bardic_inspiration"
+        },
+        {
+          "evidenceStatus": "gap",
+          "gaps": [
+            {
+              "detail": "Unit profile owner evidence has no semantic-core QNT owner; bridge and proof owners are traceability evidence only.",
+              "kind": "missing-semantic-core-qnt-owner"
+            }
+          ],
+          "joinStatus": "covered",
+          "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+          "obligationQntMbtWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/extra-attack-count.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-extra-attack.mbt.qnt",
+              "stepAction": "stepSpendAllSlots"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rogue-steady-aim.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-rogue-steady-aim.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/dark-ones-blessing-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-dark-ones-blessing.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/disciple-of-life-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-disciple-of-life.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/preserve-life-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-preserve-life.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-open-hand-technique.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
+          "obligationStatus": "covered",
+          "obligationTitle": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes",
+          "parityWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/extra-attack-count.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-extra-attack.mbt.qnt",
+              "stepAction": "stepSpendAllSlots"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rogue-steady-aim.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-rogue-steady-aim.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/dark-ones-blessing-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-dark-ones-blessing.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/disciple-of-life-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-disciple-of-life.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/preserve-life-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-preserve-life.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-open-hand-technique.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
+          "profileId": "unit-feature.bardic-inspiration-grant",
+          "profileKind": "bonus-action",
+          "qntOwners": [
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-bardic-inspiration.qnt",
+              "role": "proof-only"
+            }
+          ],
+          "runtime": "battle",
+          "tag": "obligation-evidence",
+          "unitId": "bard_bardic_inspiration"
+        }
+      ],
       "rows": [
         {
           "evidenceStatus": "evidence-present",
@@ -1623,8 +2278,13 @@
           "unitId": "barbarian_reckless_attack"
         },
         {
-          "evidenceStatus": "evidence-present",
-          "gaps": [],
+          "evidenceStatus": "gap",
+          "gaps": [
+            {
+              "detail": "Unit profile owner evidence has no semantic-core QNT owner; bridge and proof owners are traceability evidence only.",
+              "kind": "missing-semantic-core-qnt-owner"
+            }
+          ],
           "joinStatus": "covered",
           "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
           "obligationQntMbtWitnesses": [
@@ -1778,8 +2438,13 @@
           "unitId": "bard_bardic_inspiration"
         },
         {
-          "evidenceStatus": "evidence-present",
-          "gaps": [],
+          "evidenceStatus": "gap",
+          "gaps": [
+            {
+              "detail": "Unit profile owner evidence has no semantic-core QNT owner; bridge and proof owners are traceability evidence only.",
+              "kind": "missing-semantic-core-qnt-owner"
+            }
+          ],
           "joinStatus": "covered",
           "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
           "obligationQntMbtWitnesses": [
@@ -3178,7 +3843,7 @@
         }
       ],
       "scopeId": "level-1-2",
-      "status": "pass",
+      "status": "blocked",
       "title": "Character Levels 1-2"
     }
   ],
@@ -3188,5 +3853,5 @@
     "profileObligations": "plans/rules-kernel-coverage/profile-obligations.jsonl",
     "rulesKernelMatrix": "plans/rules-kernel-coverage/matrix.json"
   },
-  "status": "pass"
+  "status": "blocked"
 }

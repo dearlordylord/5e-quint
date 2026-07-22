@@ -7,9 +7,9 @@ module battleRuntimeModel {
   // bridges' rule-core closure: every simulated *.mbt.qnt driver imports this
   // module, and a driver pays a per-trace cost proportional to its import closure.
   // The only names this module needs from the bridges are four plain enums, which
-  // live in these leaves. Do NOT import battle-runtime-interrupt-bridge or
-  // battle-runtime-spell-bridge here — that re-attaches the 30-file closure and
-  // makes every model-importing driver ~100x slower (see the leaf headers).
+  // live in these leaves. Do NOT import battle-runtime-interrupt-bridge or a
+  // focused spell procedure bridge here — that re-attaches a behavioural
+  // closure and makes every model-importing driver dramatically slower.
   import attackActionAdditionalAttacks.* from "../shared-algebras/proofs/rule-core/attack-action-additional-attacks"
   import battleRuntimeReactionKinds.* from "./battle-runtime-reaction-kinds"
   import battleRuntimeSorcerousBurstDamageChoice.* from "./battle-runtime-sorcerous-burst-damage-choice"
@@ -181,7 +181,6 @@ module battleRuntimeModel {
   type PreventedProtectionCondition = PreventedCharmed | PreventedFrightened
   type PossessionAttemptDisposition = PossessionPreventedByCreatureTypeProtection | PossessionUnprevented
   type SpellAttackRollMode = NormalSpellAttackRoll | AdvantageSpellAttackRoll | DisadvantageSpellAttackRoll
-  type SavingThrowRollMode = NormalSavingThrow | AdvantageSavingThrow | DisadvantageSavingThrow
   type AbilityCheckRollMode = NormalAbilityCheck | AdvantageAbilityCheck | DisadvantageAbilityCheck
   type SpellSourceClass = SorcererSpellSource | NonSorcererSpellSource
   type RuntimeCreatureType = HumanoidCreature | BeastCreature | AberrationCreature | CelestialCreature | ElementalCreature | FeyCreature | FiendCreature | UndeadCreature

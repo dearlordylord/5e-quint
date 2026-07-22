@@ -70,7 +70,10 @@ import {
 } from "../fly-speed-grant-end-fall-cleanup.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
 import { invalidResult } from "../result-helpers.ts";
-import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
+import {
+  spellCastInterruptFrame,
+  spellCastMetamagicApplicationsInput,
+} from "../spell-cast-interrupt-frame.ts";
 import { scalarBuffTemporaryHitPointsAmount } from "../spell-effects.ts";
 import {
   readiedSpellAct,
@@ -465,6 +468,9 @@ function resolveScalarBuff(
           input.input.subject.tag === "bonusActionSpell"
             ? { kind: "bonusAction" }
             : { kind: "magicAction" },
+        ...spellCastMetamagicApplicationsInput(
+          input.metamagicApplications ?? [],
+        ),
         continuation: {
           kind: "replay",
           subject: input.input.subject,

@@ -28,6 +28,7 @@ import { Either } from "effect"
 
 import {
   counterspellDecision,
+  counterspellSavingThrowOutcomeFill,
   counterspellTriggerFact,
   damageRollFillWithGroups,
   deathSavingThrowFill,
@@ -738,6 +739,11 @@ function resolveCounterspellChain(
       spellId: counterspellUnitId
     })
     const nextLink = chain.at(index + 1)
+    const counterspellSave = counterspellSavingThrowOutcomeFill(
+      requireHole(choice.initialHoles, "savingThrowOutcome"),
+      link.interruptedCasterId,
+      false
+    )
     const reactionResult = resolveBattleRuntimeInterrupt({
       session: pendingInterrupt.session,
       fill: interruptDecisionFill(
@@ -746,8 +752,9 @@ function resolveCounterspellChain(
           link.reactorId,
           choice,
           nextLink === undefined
-            ? []
+            ? [counterspellSave]
             : [
+                counterspellSave,
                 spellCastReactionFactsFill([
                   counterspellFactForLink(pendingInterrupt.session.context, nextLink, link.reactorId)
                 ])

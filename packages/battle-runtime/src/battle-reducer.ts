@@ -157,6 +157,7 @@ import {
   type MonkFocusFlurryOfBlowsStrikeSubject,
 } from "./battle-subjects.ts";
 import {
+  type CharacterBattleMetamagicOptionFact,
   type CharacterBattleMetamagicState,
   type CharacterBattleResourceState,
   type CharacterBattleSpellcastingState,
@@ -1420,6 +1421,8 @@ export type BattleInterruptCheckpoint =
       readonly components: readonly SpellComponent[];
       readonly castingResource: BattleSpellCastingTimeResource;
       readonly spellSlotCommitment: BattleSpellCastSlotCommitment;
+      readonly metamagicCommitment: BattleSpellCastMetamagicCommitment;
+      readonly concentrationCommitment: BattleSpellCastConcentrationCommitment;
       readonly targetIds: readonly CombatantId[];
       readonly reactionSpellTargetFacts: readonly BattleSpellCastReactionFact[];
     })
@@ -1487,6 +1490,18 @@ export type SpellInvocationCastingTime =
 export type BattleSpellCastSlotCommitment =
   | { readonly kind: "none" }
   | { readonly kind: "pendingCasterSpellSlot" };
+export type BattleSpellCastMetamagicCommitment =
+  | { readonly kind: "none" }
+  | {
+      readonly kind: "applications";
+      readonly applications: readonly [
+        CharacterBattleMetamagicOptionFact,
+        ...CharacterBattleMetamagicOptionFact[],
+      ];
+    };
+export type BattleSpellCastConcentrationCommitment =
+  | { readonly kind: "none" }
+  | { readonly kind: "breakExisting" };
 export type BattleReplayContinuationFrame = {
   readonly kind: "replayContinuation";
   readonly continuation: Extract<

@@ -3641,11 +3641,16 @@ function stateForOpeningInterruptCheckpoint(
   state: BattleState,
   frame: BattleInterruptCheckpointInput,
 ): BattleState | null {
-  const castingState =
+  const actionDeclaredState =
     frame.trigger === "spellCast" &&
     frame.castingResource.kind !== "alreadySpent"
       ? battleStateAfterTargetActionEarlyEndForActor(state, frame.casterId)
       : state;
+  const castingState =
+    frame.trigger === "spellCast" &&
+    frame.concentrationCommitment.kind === "breakExisting"
+      ? breakBattleConcentration(actionDeclaredState, frame.casterId)
+      : actionDeclaredState;
   if (
     frame.trigger !== "spellCast" ||
     frame.spellSlotCommitment.kind === "none"
@@ -4784,6 +4789,8 @@ export function maybeOpenPostCastReadySpellCastWindow(input: {
           components: [],
           castingResource: { kind: "alreadySpent" },
           spellSlotCommitment: { kind: "none" },
+          metamagicCommitment: { kind: "none" },
+          concentrationCommitment: { kind: "none" },
           targetIds: input.targetIds,
           reactionSpellTargetFacts: [],
           continuation: {

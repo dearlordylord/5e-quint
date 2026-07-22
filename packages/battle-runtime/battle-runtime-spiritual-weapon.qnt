@@ -9,7 +9,7 @@
 module battleRuntimeSpiritualWeapon {
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
-  import battleRuntimeFighterOngoingFeatures.* from "./battle-runtime-fighter-ongoing-features"
+  import battleRuntimeFighterRageFacts.* from "./battle-runtime-fighter-rage-facts"
   import battleRuntimeHitPoints.* from "./battle-runtime-hit-points"
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"
   import battleRuntimeOngoingSpellDispel.* from "./battle-runtime-ongoing-spell-dispel"

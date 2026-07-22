@@ -1,12 +1,13 @@
 // -*- mode: Bluespec; -*-
 
 module battleRuntimeSeeInvisibilityTests {
+  import battleRuntimeSpellAttackRollAndVisibilityFacts.* from "./battle-runtime-spell-attack-roll-and-visibility-facts"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeTimedEffects.* from "./battle-runtime-timed-effects"
   import battleRuntimeSeeInvisibility.* from "./battle-runtime-see-invisibility"
   import battleRuntimeSeeInvisibilityConstants.* from "./battle-runtime-see-invisibility-constants"
   import battleRuntimeSanctuary.* from "./battle-runtime-sanctuary"
-  import battleRuntimeSpellAttack.* from "./battle-runtime-spell-attack"
+  import battleRuntimeSpellAttackFacts.* from "./battle-runtime-spell-attack-facts"
 
   run test_see_invisibility_spends_magic_action_and_spell_slot_for_timed_self_effect = {
     val result = resolveSeeInvisibilitySpell(initialState, 2)

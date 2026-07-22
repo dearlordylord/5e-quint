@@ -50,12 +50,12 @@ Surface shape:
 
 QNT witness/proof ownership:
 
-- `packages/battle-runtime/battle-runtime-save-gated-spell.qnt` includes the
+- `packages/battle-runtime/battle-runtime-save-gated-object-facts.qnt` owns the
   `saveGatedAreaObjectIgnitionOutcomes` rule for Fireball. It emits
   `ObjectStartsBurning` only for `ObjectFlammableUnattended`.
-- `packages/battle-runtime/battle-runtime-spell-facts-tests.qnt` proves the
-  Fireball flammable-unattended object branch emits one starts-burning outcome
-  and the worn-or-carried branch emits none.
+- `packages/battle-runtime/battle-runtime-spell-save-and-rider-facts-tests.qnt`
+  proves the Fireball flammable-unattended object branch emits one
+  starts-burning outcome and the worn-or-carried branch emits none.
 
 Production reducer reachability:
 

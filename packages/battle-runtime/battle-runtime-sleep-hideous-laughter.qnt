@@ -3,14 +3,15 @@
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-hideous-laughter-repeat-save-lifecycle spell.invocation-hypnotic-pattern-control spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission
 
 module battleRuntimeSleepHideousLaughter {
-  import battleRuntimeSpellBridge.* from "./battle-runtime-spell-bridge"
+  import battleRuntimeSpellSaveBridge.* from "./battle-runtime-spell-save-bridge"
+  import battleRuntimeSpellLifecycleBridge.* from "./battle-runtime-spell-lifecycle-bridge"
   import battleRuntimeModel.* from "./battle-runtime-model"
+  import battleRuntimeSavingThrowRollMode.* from "./battle-runtime-saving-throw-roll-mode"
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"
-  import battleRuntimeSpellInvocation.* from "./battle-runtime-spell-invocation"
-  import battleRuntimeFighterOngoingFeatures.* from "./battle-runtime-fighter-ongoing-features"
+  import battleRuntimeSpellCastResources.* from "./battle-runtime-spell-cast-resources"
+  import battleRuntimeFighterRageFacts.* from "./battle-runtime-fighter-rage-facts"
   import battleRuntimeTurnAdvancement.* from "./battle-runtime-turn-advancement"
-  import battleRuntimeMetamagic.* from "./battle-runtime-metamagic"
 
   pure def actorHasTurnLaterThisRound(state: BattleState, actor: Actor): bool =
     actor != currentActor(state) and initiativeStillToActCount(state.initiative) > 1

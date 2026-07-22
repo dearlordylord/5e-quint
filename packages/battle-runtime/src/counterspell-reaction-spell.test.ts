@@ -92,7 +92,7 @@ describe("Counterspell Reaction spell", () => {
     });
   });
 
-  test("ends a lower-level spell automatically without expending the triggering slot", () => {
+  test("ends a lower-level spell on a failed Constitution save without expending the triggering slot", () => {
     const session = battleWithCounterspell();
     const state = session.state;
     const awaitingReaction = startMagicMissile({
@@ -114,13 +114,15 @@ describe("Counterspell Reaction spell", () => {
       3,
       session,
     );
-    expect(choice.initialHoles).toHaveLength(0);
-
     const resolved = resolveBattleInterrupt({
       state: awaitingReaction.state,
       fill: interruptDecisionFill(
         requireHole(awaitingReaction.holes, "interruptDecision"),
-        counterspellDecision(counterspellerId, choice, []),
+        counterspellDecision(
+          counterspellerId,
+          choice,
+          counterspellSavingThrowFills(choice, casterId, false),
+        ),
       ),
     });
 
@@ -190,7 +192,11 @@ describe("Counterspell Reaction spell", () => {
       state: awaitingReaction.state,
       fill: interruptDecisionFill(
         requireHole(awaitingReaction.holes, "interruptDecision"),
-        counterspellDecision(counterspellerId, choice, []),
+        counterspellDecision(
+          counterspellerId,
+          choice,
+          counterspellSavingThrowFills(choice, casterId, false),
+        ),
       ),
     });
 
@@ -233,17 +239,15 @@ describe("Counterspell Reaction spell", () => {
       3,
       session,
     );
-    const save = requireHole(choice.initialHoles, "savingThrowOutcome");
-
     const afterCounterspell = resolveBattleInterrupt({
       state: awaitingReaction.state,
       fill: interruptDecisionFill(
         requireHole(awaitingReaction.holes, "interruptDecision"),
-        counterspellDecision(counterspellerId, choice, [
-          savingThrowOutcomeFill(save, [
-            { targetId: casterId, succeeded: true },
-          ]),
-        ]),
+        counterspellDecision(
+          counterspellerId,
+          choice,
+          counterspellSavingThrowFills(choice, casterId, true),
+        ),
       ),
     });
     expect(afterCounterspell).toMatchObject({
@@ -315,17 +319,15 @@ describe("Counterspell Reaction spell", () => {
       3,
       session,
     );
-    const save = requireHole(choice.initialHoles, "savingThrowOutcome");
-
     const resolved = resolveBattleInterrupt({
       state: awaitingReaction.state,
       fill: interruptDecisionFill(
         requireHole(awaitingReaction.holes, "interruptDecision"),
-        counterspellDecision(counterspellerId, choice, [
-          savingThrowOutcomeFill(save, [
-            { targetId: casterId, succeeded: false },
-          ]),
-        ]),
+        counterspellDecision(
+          counterspellerId,
+          choice,
+          counterspellSavingThrowFills(choice, casterId, false),
+        ),
       ),
     });
 
@@ -401,15 +403,19 @@ describe("Counterspell Reaction spell", () => {
       state: awaitingFirstCounterspell.state,
       fill: interruptDecisionFill(
         requireHole(awaitingFirstCounterspell.holes, "interruptDecision"),
-        counterspellDecision(counterspellerId, firstChoice, [
-          spellCastReactionFactsFill([
-            counterspellTriggerFact({
-              session,
-              reactorId: secondCounterspellerId,
-              casterId: counterspellerId,
-            }),
+        counterspellDecision(
+          counterspellerId,
+          firstChoice,
+          counterspellSavingThrowFills(firstChoice, casterId, false, [
+            spellCastReactionFactsFill([
+              counterspellTriggerFact({
+                session,
+                reactorId: secondCounterspellerId,
+                casterId: counterspellerId,
+              }),
+            ]),
           ]),
-        ]),
+        ),
       ),
     });
     expect(awaitingSecondCounterspell).toMatchObject({
@@ -430,7 +436,11 @@ describe("Counterspell Reaction spell", () => {
       state: awaitingSecondCounterspell.state,
       fill: interruptDecisionFill(
         requireHole(awaitingSecondCounterspell.holes, "interruptDecision"),
-        counterspellDecision(secondCounterspellerId, secondChoice, []),
+        counterspellDecision(
+          secondCounterspellerId,
+          secondChoice,
+          counterspellSavingThrowFills(secondChoice, counterspellerId, false),
+        ),
       ),
     });
     expect(afterSecondCounterspell).toMatchObject({
@@ -542,7 +552,15 @@ describe("Counterspell Reaction spell", () => {
       state: awaitingCounterspell.state,
       fill: interruptDecisionFill(
         requireHole(awaitingCounterspell.holes, "interruptDecision"),
-        counterspellDecision(secondCounterspellerId, counterspellChoice, []),
+        counterspellDecision(
+          secondCounterspellerId,
+          counterspellChoice,
+          counterspellSavingThrowFills(
+            counterspellChoice,
+            counterspellerId,
+            false,
+          ),
+        ),
       ),
     });
     expect(afterCounterspell).toMatchObject({
@@ -638,7 +656,11 @@ describe("Counterspell Reaction spell", () => {
       state: awaitingReaction.state,
       fill: interruptDecisionFill(
         requireHole(awaitingReaction.holes, "interruptDecision"),
-        counterspellDecision(counterspellerId, choice, []),
+        counterspellDecision(
+          counterspellerId,
+          choice,
+          counterspellSavingThrowFills(choice, casterId, false),
+        ),
       ),
     });
 
@@ -714,7 +736,11 @@ describe("Counterspell Reaction spell", () => {
       state: awaitingReaction.state,
       fill: interruptDecisionFill(
         requireHole(awaitingReaction.holes, "interruptDecision"),
-        counterspellDecision(counterspellerId, choice, []),
+        counterspellDecision(
+          counterspellerId,
+          choice,
+          counterspellSavingThrowFills(choice, casterId, false),
+        ),
       ),
     });
 
@@ -828,7 +854,11 @@ describe("Counterspell Reaction spell", () => {
       state: awaitingReaction.state,
       fill: interruptDecisionFill(
         requireHole(awaitingReaction.holes, "interruptDecision"),
-        counterspellDecision(counterspellerId, choice, []),
+        counterspellDecision(
+          counterspellerId,
+          choice,
+          counterspellSavingThrowFills(choice, casterId, false),
+        ),
       ),
     });
 
@@ -1269,6 +1299,24 @@ function counterspellDecision(
   fills: readonly BattleFill[],
 ): Extract<BattleFill, { readonly kind: "interruptDecision" }>["value"] {
   return triggeredReactionSpellDecision(reactorId, choice, fills);
+}
+
+function counterspellSavingThrowFills(
+  choice: Extract<
+    BattleInterruptProcedureChoice,
+    { readonly kind: "castTriggeredReactionSpell" }
+  >,
+  triggeringCasterId: CombatantId,
+  succeeded: boolean,
+  additionalFills: readonly BattleFill[] = [],
+): readonly BattleFill[] {
+  return [
+    ...additionalFills,
+    savingThrowOutcomeFill(
+      requireHole(choice.initialHoles, "savingThrowOutcome"),
+      [{ targetId: triggeringCasterId, succeeded }],
+    ),
+  ];
 }
 
 function triggeredReactionSpellDecision(

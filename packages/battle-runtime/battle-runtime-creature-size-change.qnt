@@ -3,11 +3,12 @@
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-creature-size-change
 
 module battleRuntimeCreatureSizeChange {
+  import battleRuntimeSavingThrowRollMode.* from "./battle-runtime-saving-throw-roll-mode"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
-  import battleRuntimeSpellInvocation.* from "./battle-runtime-spell-invocation"
+  import battleRuntimeSpellCastResources.* from "./battle-runtime-spell-cast-resources"
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"
-  import battleRuntimeFighterOngoingFeatures.* from "./battle-runtime-fighter-ongoing-features"
+  import battleRuntimeFighterRageFacts.* from "./battle-runtime-fighter-rage-facts"
 
   type CreatureSizeChangeAttackKind =
     | SizeChangeWeaponAttack

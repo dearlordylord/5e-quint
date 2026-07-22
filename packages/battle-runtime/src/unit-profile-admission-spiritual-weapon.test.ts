@@ -28,6 +28,7 @@ import type {
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
   bonusSpellAct,
+  savingThrowOutcomeFill,
   spiritualWeaponForcePositionFill,
   spiritualWeaponTargetFill,
   spellHoleInvocation,
@@ -389,11 +390,16 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
       procedure: "counterspell",
       slotLevel: 3,
     });
+    const save = requireHole(choice.initialHoles, "savingThrowOutcome");
     const countered = resolveBattleInterrupt({
       state: awaitingCounterspell.state,
       fill: interruptDecisionFill(
         requireHole(awaitingCounterspell.holes, "interruptDecision"),
-        triggeredReactionSpellDecision(spellTargetId, choice, []),
+        triggeredReactionSpellDecision(spellTargetId, choice, [
+          savingThrowOutcomeFill(save, [
+            { targetId: spellCasterId, succeeded: false },
+          ]),
+        ]),
       ),
     });
 

@@ -25,6 +25,7 @@ describe("spell attack ordering MBT", () => {
         step: "step",
         driver: createSpellAttackOrderingDriver(),
         backend: "typescript",
+        seed: process.env["QUINT_SEED"],
         nTraces: mbtTraceCount(),
         maxSteps: focusedMbtMaxSteps(5),
         stateCheck: spellAttackOrderingStateCheck,

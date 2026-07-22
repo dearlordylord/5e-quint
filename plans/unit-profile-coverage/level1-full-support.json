@@ -1178,8 +1178,8 @@
     },
     "rulesKernelCoveredProfileJoin": {
       "denominator": 60,
-      "numerator": 60,
-      "percent": "100%"
+      "numerator": 53,
+      "percent": "88.3%"
     },
     "rulesKernelProfileJoin": {
       "denominator": 60,
@@ -1188,8 +1188,8 @@
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 80,
-      "numerator": 80,
-      "percent": "100%"
+      "numerator": 70,
+      "percent": "87.5%"
     },
     "strictFinalSupport": {
       "denominator": 107,
@@ -4841,8 +4841,8 @@
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
         "denominator": 80,
-        "numerator": 80,
-        "percent": "100%"
+        "numerator": 70,
+        "percent": "87.5%"
       }
     },
     "units": [
@@ -4984,10 +4984,10 @@
         "unitId": "barbarian_unarmored_defense"
       },
       {
-        "joinStatus": "covered",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
-            "joinStatus": "covered",
+            "joinStatus": "mapped-open",
             "obligations": [
               {
                 "obligationId": "CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION",
@@ -5243,10 +5243,10 @@
         "unitId": "chromatic_orb"
       },
       {
-        "joinStatus": "covered",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
-            "joinStatus": "covered",
+            "joinStatus": "mapped-open",
             "obligations": [
               {
                 "obligationId": "CREATION.CLASS_FEATURE_OPTION.PROJECTION",
@@ -5278,7 +5278,9 @@
             "profileId": "spell.invocation-condition-save",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime-save-gated-spell.qnt"
+              "packages/battle-runtime/battle-runtime-save-condition-target-list-resolution.qnt",
+              "packages/battle-runtime/battle-runtime-save-condition-targeting-facts.qnt",
+              "packages/battle-runtime/battle-runtime-save-gated-facts.qnt"
             ]
           }
         ],
@@ -5499,10 +5501,10 @@
         "unitId": "divine_smite"
       },
       {
-        "joinStatus": "covered",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
-            "joinStatus": "covered",
+            "joinStatus": "mapped-open",
             "obligations": [
               {
                 "obligationId": "CREATION.CLASS_FEATURE_OPTION.PROJECTION",
@@ -5534,7 +5536,7 @@
             "profileId": "spell.invocation-independent-attack-sequence",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime-spell-attack.qnt"
+              "packages/battle-runtime/battle-runtime-spell-attack-independent-sequence.qnt"
             ]
           }
         ],
@@ -5578,7 +5580,9 @@
             "profileId": "spell.invocation-condition-save",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime-save-gated-spell.qnt"
+              "packages/battle-runtime/battle-runtime-save-condition-target-list-resolution.qnt",
+              "packages/battle-runtime/battle-runtime-save-condition-targeting-facts.qnt",
+              "packages/battle-runtime/battle-runtime-save-gated-facts.qnt"
             ]
           }
         ],
@@ -5628,7 +5632,8 @@
             "profileId": "spell.invocation-attack-roll-advantage-save",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime-save-gated-spell.qnt"
+              "packages/battle-runtime/battle-runtime-save-condition-faerie-fire.qnt",
+              "packages/battle-runtime/battle-runtime-spell-attack-facts.qnt"
             ]
           }
         ],
@@ -5685,10 +5690,10 @@
         "unitId": "feather_fall"
       },
       {
-        "joinStatus": "covered",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
-            "joinStatus": "covered",
+            "joinStatus": "mapped-open",
             "obligations": [
               {
                 "obligationId": "CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION",
@@ -5702,7 +5707,7 @@
             "qntOwners": []
           },
           {
-            "joinStatus": "covered",
+            "joinStatus": "mapped-open",
             "obligations": [
               {
                 "obligationId": "CREATION.ADVANCEMENT.CLASS_FEATURE_REPLACEMENT",
@@ -5741,10 +5746,10 @@
         "unitId": "fighter_second_wind"
       },
       {
-        "joinStatus": "covered",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
-            "joinStatus": "covered",
+            "joinStatus": "mapped-open",
             "obligations": [
               {
                 "obligationId": "CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION",
@@ -6424,10 +6429,10 @@
         "unitId": "paladin_lay_on_hands"
       },
       {
-        "joinStatus": "covered",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
-            "joinStatus": "covered",
+            "joinStatus": "mapped-open",
             "obligations": [
               {
                 "obligationId": "CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION",
@@ -6578,10 +6583,10 @@
         "unitId": "protection_from_evil_and_good"
       },
       {
-        "joinStatus": "covered",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
-            "joinStatus": "covered",
+            "joinStatus": "mapped-open",
             "obligations": [
               {
                 "obligationId": "CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION",
@@ -6739,10 +6744,10 @@
         "unitId": "resistance"
       },
       {
-        "joinStatus": "covered",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
-            "joinStatus": "covered",
+            "joinStatus": "mapped-open",
             "obligations": [
               {
                 "obligationId": "CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION",
@@ -6782,10 +6787,10 @@
         "unitId": "rogue_sneak_attack"
       },
       {
-        "joinStatus": "covered",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
-            "joinStatus": "covered",
+            "joinStatus": "mapped-open",
             "obligations": [
               {
                 "obligationId": "CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION",
@@ -7277,10 +7282,10 @@
         "unitId": "vicious_mockery"
       },
       {
-        "joinStatus": "covered",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
-            "joinStatus": "covered",
+            "joinStatus": "mapped-open",
             "obligations": [
               {
                 "obligationId": "CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE",
@@ -7294,7 +7299,7 @@
             "qntOwners": []
           },
           {
-            "joinStatus": "covered",
+            "joinStatus": "mapped-open",
             "obligations": [
               {
                 "obligationId": "CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION",

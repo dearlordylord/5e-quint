@@ -55,7 +55,10 @@ import { invalidResult } from "./result-helpers.ts";
 import { applyBattleMovement } from "./readied-release.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
 import { sanctuaryTargetingInterdictionCheck } from "./sanctuary-targeting-interdiction.ts";
-import { spellCastInterruptFrame } from "./spell-cast-interrupt-frame.ts";
+import {
+  spellCastInterruptFrame,
+  spellCastMetamagicApplicationsInput,
+} from "./spell-cast-interrupt-frame.ts";
 import {
   applyCommandPendingEffects,
   applyFailedSaveAttackRollAdvantageEffects,
@@ -1277,6 +1280,9 @@ export function resolveSaveGateDamageSpellAct(input: {
           input.input.subject.tag === "bonusActionSpell"
             ? { kind: "bonusAction" }
             : { kind: "magicAction" },
+        ...spellCastMetamagicApplicationsInput(
+          input.metamagicApplications ?? [],
+        ),
         continuation: {
           kind: "replay",
           subject: input.input.subject,

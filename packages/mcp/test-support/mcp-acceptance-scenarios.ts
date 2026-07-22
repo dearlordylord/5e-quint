@@ -609,7 +609,7 @@ export async function verifyBaselineVertical(client: Client) {
     "Attack",
     "Attack",
     ...GENERIC_COMBAT_ACTION_LABELS_WITH_SHOVE,
-    "Adrenaline Rush",
+    "Adrenaline Rush: Dash",
     "Second Wind",
     "Move",
     "End Turn",
@@ -784,7 +784,7 @@ export async function verifyWidthVertical(client: Client) {
     "Attack",
     "Attack",
     ...GENERIC_COMBAT_ACTION_LABELS_WITH_HELP_AND_SHOVE,
-    "Adrenaline Rush",
+    "Adrenaline Rush: Dash",
     "Second Wind",
     "Action Surge",
     "Move",
@@ -837,31 +837,30 @@ export async function verifyWidthVertical(client: Client) {
   const wizardActs = await callTool(client, "discover_battle_acts", {});
   assert.ok(actionLabels(wizardActs).includes("Magic Missile"));
   assert.ok(actionLabels(wizardActs).includes("Ray of Frost"));
-  const rayOfFrostSubject = actionSubjectFromActs(
-    wizardActs,
-    "wizard",
-    "Ray of Frost",
+  const rayOfFrostAct = battleActByLabel(wizardActs, "Ray of Frost");
+  assert.ok(rayOfFrostAct, "Missing Ray of Frost act");
+  const rayOfFrostSubject = rayOfFrostAct.subject;
+  const rayOfFrostTargetHole = singleInitialHoleOfKind(
+    rayOfFrostAct,
+    "targetChoice",
   );
-  const magicMissileSubject = actionSubjectFromActs(
-    wizardActs,
-    "wizard",
-    "Magic Missile",
-  );
-
-  await callTool(client, "fill_battle_hole", {
+  const afterRayTarget = await callTool(client, "fill_battle_hole", {
     subject: rayOfFrostSubject,
-    fill: targetFill("skeleton-b"),
+    fill: targetFill(rayOfFrostTargetHole, "skeleton-b"),
   });
-  await callTool(client, "fill_battle_hole", {
+  assert.equal(get(afterRayTarget, "result.tag"), "needsHoles");
+  const rayAttackHole = resultHole(afterRayTarget, "attackRoll");
+  const afterRayAttack = await callTool(client, "fill_battle_hole", {
     subject: rayOfFrostSubject,
-    fill: attackRollFill(18, 15),
+    fill: battleAttackRollFill(rayAttackHole.holeId, 18, 15),
   });
+  assert.equal(get(afterRayAttack, "result.tag"), "needsHoles");
+  const rayDamageHole = resultHole(afterRayAttack, "rolledDice");
   const afterRayDamage = await callTool(client, "fill_battle_hole", {
     subject: rayOfFrostSubject,
-    fill: rolledDiceFill("battle:spell:damage-result:ray_of_frost:1d8-cold", [
-      [4],
-    ]),
+    fill: rolledDiceFill(rayDamageHole.holeId, [[4]]),
   });
+  assert.equal(get(afterRayDamage, "result.tag"), "resolved");
   assert.deepEqual(wizardSpellSlots(afterRayDamage), [
     { count: 3, expended: 0, spellLevel: 1 },
   ]);
@@ -924,28 +923,40 @@ export async function verifyWidthVertical(client: Client) {
     "wizard",
   );
 
-  await callTool(client, "fill_battle_hole", {
+  const nextWizardActs = await callTool(client, "discover_battle_acts", {});
+  const magicMissileAct = battleActByLabel(nextWizardActs, "Magic Missile");
+  assert.ok(magicMissileAct, "Missing Magic Missile act");
+  const magicMissileSubject = magicMissileAct.subject;
+  const magicMissileTargetHole = singleInitialHoleOfKind(
+    magicMissileAct,
+    "spellTargetAllocation",
+  );
+
+  const afterMagicMissileTargets = await callTool(client, "fill_battle_hole", {
     subject: magicMissileSubject,
     fill: {
       kind: "spellTargetAllocation",
-      holeId: "battle:spell:target-allocation:magic_missile",
+      holeId: magicMissileTargetHole.holeId,
       value: { allocations: [{ targetId: "skeleton-b", count: 3 }] },
       spatialFacts: [
         {
           kind: "spellTarget",
           casterId: "wizard",
           targetId: "skeleton-b",
-          spellId: "magic_missile",
+          sourceProcedureRef:
+            sourceProcedureRefFromSubject(magicMissileSubject),
         },
       ],
     },
   });
+  assert.equal(get(afterMagicMissileTargets, "result.tag"), "needsHoles");
+  const magicMissileDamageHole = resultHole(
+    afterMagicMissileTargets,
+    "rolledDice",
+  );
   const afterMagicMissile = await callTool(client, "fill_battle_hole", {
     subject: magicMissileSubject,
-    fill: rolledDiceFill(
-      "battle:spell:damage-result:magic_missile:3d4+3-force",
-      [[2, 2, 2]],
-    ),
+    fill: rolledDiceFill(magicMissileDamageHole.holeId, [[2, 2, 2]]),
   });
   assert.equal(get(afterMagicMissile, "result.tag"), "resolved");
   assert.equal(combatantHp(afterMagicMissile, "skeleton-b"), 0);
@@ -1056,8 +1067,8 @@ export async function verifyLevelThreeWizardVertical(client: Client) {
       fill: spellTargetFill(
         hole.holeId,
         "wizard-level-3",
-        "scorching_ray",
         "sphinx",
+        sourceProcedureRefFromHole(hole),
       ),
     });
   }
@@ -1065,7 +1076,6 @@ export async function verifyLevelThreeWizardVertical(client: Client) {
   let next = await fillAttackSequencePart(client, {
     subject: scorchingRaySubject,
     pending: pendingScorchingRay,
-    partIndex: 0,
     attackTotal: 18,
     naturalD20: 13,
     damageRolls: [3, 4],
@@ -1074,7 +1084,6 @@ export async function verifyLevelThreeWizardVertical(client: Client) {
   next = await fillAttackSequencePart(client, {
     subject: scorchingRaySubject,
     pending: next,
-    partIndex: 1,
     attackTotal: 17,
     naturalD20: 12,
     damageRolls: [2, 3],
@@ -1083,7 +1092,6 @@ export async function verifyLevelThreeWizardVertical(client: Client) {
   next = await fillAttackSequencePart(client, {
     subject: scorchingRaySubject,
     pending: next,
-    partIndex: 2,
     attackTotal: 16,
     naturalD20: 11,
     damageRolls: [1, 1],
@@ -1491,8 +1499,8 @@ export async function verifyWizardIceKnifeBattleHandoff(client: Client) {
     fill: spellTargetFill(
       targetHole.holeId,
       iceKnifeCasterCombatantId,
-      "ice_knife",
       iceKnifePrimaryCombatantId,
+      sourceProcedureRefFromHole(targetHole),
     ),
   });
   assert.equal(get(afterTarget, "result.tag"), "needsHoles");
@@ -1714,7 +1722,6 @@ export async function verifyLevelSixRogueSteadyAimBattleHandoff(
     {
       tag: "unitFeature",
       actorId: levelSixRogueExpertiseCombatantId,
-      unitId: levelSixRogueSteadyAimUnitId,
     },
   );
   assert.equal(typeof steadyAimAct.subject.procedureRef, "string");
@@ -3487,7 +3494,7 @@ function statBlockCombatant(
   };
 }
 
-function targetFill(value: string) {
+function targetFill(hole: JsonObject, value: string) {
   return {
     kind: "targetChoice",
     holeId: "battle:attack:target",
@@ -3497,13 +3504,7 @@ function targetFill(value: string) {
         kind: "spellTarget",
         casterId: "wizard",
         targetId: value,
-        spellId: "ray_of_frost",
-      },
-      {
-        kind: "spellTarget",
-        casterId: "wizard",
-        targetId: value,
-        spellId: "magic_missile",
+        sourceProcedureRef: sourceProcedureRefFromHole(hole),
       },
     ],
   };
@@ -3512,8 +3513,8 @@ function targetFill(value: string) {
 function spellTargetFill(
   holeId: string,
   casterId: string,
-  spellId: string,
   targetId: string,
+  sourceProcedureRef: string,
 ) {
   return {
     kind: "targetChoice",
@@ -3524,10 +3525,29 @@ function spellTargetFill(
         kind: "spellTarget",
         casterId,
         targetId,
-        spellId,
+        sourceProcedureRef,
       },
     ],
   };
+}
+
+function sourceProcedureRefFromHole(hole: JsonObject): string {
+  if (typeof hole.procedureRef === "string") return hole.procedureRef;
+  if (typeof hole.sourceProcedureRef === "string") {
+    return hole.sourceProcedureRef;
+  }
+  const request = hole.spellTargetSpatialFactRequest;
+  if (isJsonObject(request)) {
+    return parseString(
+      request.sourceProcedureRef,
+      "spell target request sourceProcedureRef",
+    );
+  }
+  assert.fail("Expected an execution-bound spell target hole");
+}
+
+function sourceProcedureRefFromSubject(subject: JsonObject): string {
+  return parseString(subject.procedureRef, "battle subject procedureRef");
 }
 
 function attackRollFill(total: number, naturalD20: number, rollMode?: string) {
@@ -3561,17 +3581,12 @@ async function fillAttackSequencePart(
   input: {
     readonly subject: JsonObject;
     readonly pending: JsonObject;
-    readonly partIndex: number;
     readonly attackTotal: number;
     readonly naturalD20: number;
     readonly damageRolls: readonly number[];
   },
 ) {
   const attackRollHole = resultHole(input.pending, "attackRoll");
-  assert.equal(
-    attackRollHole.holeId,
-    `battle:spell:attack-sequence-part-attack-roll:scorching_ray:${input.partIndex}`,
-  );
   const attackResult = await callTool(client, "fill_battle_hole", {
     subject: input.subject,
     fill: battleAttackRollFill(
@@ -3581,10 +3596,6 @@ async function fillAttackSequencePart(
     ),
   });
   const damageHole = resultHole(attackResult, "rolledDice");
-  assert.equal(
-    damageHole.holeId,
-    `battle:spell:attack-sequence-part-damage:scorching_ray:${input.partIndex}:normal`,
-  );
   return callTool(client, "fill_battle_hole", {
     subject: input.subject,
     fill: rolledDiceFill(damageHole.holeId, [input.damageRolls]),
@@ -3690,14 +3701,16 @@ function initialHolesOfKind(
   act: { readonly initialHoles: readonly JsonObject[] },
   kind: string,
 ) {
-  const matchingHoles: Array<{
-    readonly kind: string;
-    readonly holeId: string;
-  }> = [];
+  const matchingHoles: Array<
+    JsonObject & {
+      readonly kind: string;
+      readonly holeId: string;
+    }
+  > = [];
   for (const hole of act.initialHoles) {
     if (hole.kind !== kind) continue;
     const holeId = parseString(hole.holeId, `${kind} holeId`);
-    matchingHoles.push({ kind, holeId });
+    matchingHoles.push({ ...hole, kind, holeId });
   }
   return matchingHoles;
 }

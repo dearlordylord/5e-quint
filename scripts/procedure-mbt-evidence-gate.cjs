@@ -134,6 +134,14 @@ function obligationGaps({
         kind: "missing-qnt-owner-role",
         detail: `${owner.ownerPath} has no qnt-owner-roles row.`,
       })),
+    ...(qntOwners.some((owner) => owner.role === "semantic-core")
+      ? []
+      : [
+          {
+            kind: "missing-semantic-core-qnt-owner",
+            detail: `${qntOwnerEvidenceLabel} has no semantic-core QNT owner; bridge and proof owners are traceability evidence only.`,
+          },
+        ]),
     ...(parityWitnesses.length === 0
       ? [
           {
@@ -157,9 +165,7 @@ function obligationGaps({
 function procedureProfiles(levelReport, selectProfile) {
   return (levelReport.rulesKernelSupportedUnitJoin?.units ?? []).flatMap(
     (unit) =>
-      unit.profiles
-        .filter(selectProfile)
-        .map((profile) => ({ unit, profile })),
+      unit.profiles.filter(selectProfile).map((profile) => ({ unit, profile })),
   );
 }
 
@@ -283,7 +289,10 @@ function buildScope({
         uniqueProfileIds.length,
         uniqueProfileIds.length,
       ),
-      evidenceRows: countCoverage(rows.length - openGapRows.length, rows.length),
+      evidenceRows: countCoverage(
+        rows.length - openGapRows.length,
+        rows.length,
+      ),
       openGapRows: countCoverage(openGapRows.length, rows.length),
     },
     openGapRows,

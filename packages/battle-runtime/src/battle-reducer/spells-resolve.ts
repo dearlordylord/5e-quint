@@ -276,7 +276,10 @@ import {
   sanctuaryTargetingInterdictionCheck,
   targetChoiceFillAfterSanctuaryAttackRollReplacement,
 } from "./sanctuary-targeting-interdiction.ts";
-import { spellCastInterruptFrame } from "./spell-cast-interrupt-frame.ts";
+import {
+  spellCastInterruptFrame,
+  spellCastMetamagicApplicationsInput,
+} from "./spell-cast-interrupt-frame.ts";
 import {
   fillsAfterSlowSomaticSpellFailureOutcome,
   resolveSlowSomaticSpellFailure,
@@ -390,18 +393,6 @@ const ACTION_SPELL_METAMAGIC_RESOLUTION_PROCEDURES = [
   "objectLight",
   "creatureSizeIncrease",
   "creatureSizeDecrease",
-  "spellAttackDamage",
-  "spellAttackSequence",
-] as const satisfies ReadonlyArray<SupportedSpellInvocation["procedure"]>;
-
-const BONUS_ACTION_METAMAGIC_RESOLUTION_PROCEDURES = [
-  "scalarBuff",
-  "directHitPointRestoration",
-  "directCondition",
-  "rollModifier",
-  "saveGatedDamage",
-  "saveGatedCondition",
-  "saveGatedConditionImmunity",
   "spellAttackDamage",
   "spellAttackSequence",
 ] as const satisfies ReadonlyArray<SupportedSpellInvocation["procedure"]>;
@@ -593,7 +584,7 @@ function actionSpellProfileResolutionInput(
 }
 
 type OrdinaryProfileInvocation = Exclude<
-  BattleExecutableSpellInvocation,
+  BattleSpellProcedureExecution,
   { readonly procedure: "chainedSpellAttackDamage" }
 >;
 
@@ -646,6 +637,8 @@ const BONUS_ACTION_SPELL_PROFILE_PROCEDURES = [
   "spiritualWeaponRepeatAttack",
   "saveGatedCondition",
   "directCondition",
+  "creatureSizeIncrease",
+  "creatureSizeDecrease",
   "spellAttackDamage",
   "spellAttackSequence",
   "spellCreatedHeldObject",
@@ -672,14 +665,15 @@ type OrdinaryBonusActionSpellProfileInvocation = Exclude<
 >;
 
 function invocationProcedureIsIn<
+  Invocation extends BattleSpellProcedureExecution,
   const Procedures extends ReadonlyArray<
-    OrdinaryProfileInvocation["procedure"]
+    BattleSpellProcedureExecution["procedure"]
   >,
 >(
-  invocation: OrdinaryProfileInvocation,
+  invocation: Invocation,
   procedures: Procedures,
 ): invocation is Extract<
-  OrdinaryProfileInvocation,
+  Invocation,
   { readonly procedure: Procedures[number] }
 > {
   return procedures.includes(invocation.procedure);
@@ -1585,6 +1579,36 @@ function bonusActionSpellProcedureResolveDispatchInput(
               }),
         }),
       directCondition: (value) =>
+        spellProcedureResolveDispatchInput(value.procedure, {
+          input: { ...input, state: castingState },
+          actorId,
+          invocation: value,
+          fillSet,
+          ...(resolutionOptions.actionCostOverride === undefined
+            ? {}
+            : { actionCostOverride: resolutionOptions.actionCostOverride }),
+          ...(resolutionOptions.metamagicApplications === undefined
+            ? {}
+            : {
+                metamagicApplications: resolutionOptions.metamagicApplications,
+              }),
+        }),
+      creatureSizeIncrease: (value) =>
+        spellProcedureResolveDispatchInput(value.procedure, {
+          input: { ...input, state: castingState },
+          actorId,
+          invocation: value,
+          fillSet,
+          ...(resolutionOptions.actionCostOverride === undefined
+            ? {}
+            : { actionCostOverride: resolutionOptions.actionCostOverride }),
+          ...(resolutionOptions.metamagicApplications === undefined
+            ? {}
+            : {
+                metamagicApplications: resolutionOptions.metamagicApplications,
+              }),
+        }),
+      creatureSizeDecrease: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
           input: { ...input, state: castingState },
           actorId,
@@ -2811,6 +2835,9 @@ function resolveSpellActInternal(
               ? {}
               : { actionCostOverride: options.actionCostOverride }),
           }),
+          ...spellCastMetamagicApplicationsInput(
+            metamagicApplicationsForResolution ?? [],
+          ),
           continuation: {
             kind: "replay",
             subject: input.subject,
@@ -4206,6 +4233,7 @@ function resolveSpellAttackDamageObjectTarget(input: {
           ? {}
           : { actionCostOverride: input.actionCostOverride }),
       }),
+      ...spellCastMetamagicApplicationsInput(input.metamagicApplications ?? []),
       continuation: {
         kind: "replay",
         subject: input.input.subject,
@@ -4553,173 +4581,175 @@ export function resolveBonusActionSpellAct(
   const actionCostOverride = metamagicActionCostOverride(
     metamagicAdmission.applications,
   );
-  if (invocation.procedure === "heldLight") {
-    if (invocation.actionCost !== "bonusAction") {
-      return invalidResult(
-        input.state,
-        "unsupportedSubject",
-        "Bonus Action spell subject requires a supported Bonus Action spell act.",
-      );
-    }
-  } else if (invocation.procedure === "dancingLightsReposition") {
-    if (invocation.actionCost !== "bonusAction") {
-      return invalidResult(
-        input.state,
-        "unsupportedSubject",
-        "Bonus Action spell subject requires a supported Bonus Action spell act.",
-      );
-    }
-  } else if (invocation.procedure === "objectContactDamageRepeat") {
-    if (invocation.actionCost !== "bonusAction") {
-      return invalidResult(
-        input.state,
-        "unsupportedSubject",
-        "Bonus Action spell subject requires a supported Bonus Action spell act.",
-      );
-    }
-  } else if (
-    invocation.procedure === "spiritualWeaponAttackProxy" ||
-    invocation.procedure === "spiritualWeaponRepeatAttack"
-  ) {
-    if (invocation.actionCost !== "bonusAction") {
-      return invalidResult(
-        input.state,
-        "unsupportedSubject",
-        "Bonus Action spell subject requires a supported Bonus Action spell act.",
-      );
-    }
-  } else if (
-    invocation.procedure === "spellCreatedHeldObject" ||
-    invocation.procedure === "spellCreatedHeldObjectReEvoke"
-  ) {
-    if (invocation.actionCost !== "bonusAction") {
-      return invalidResult(
-        input.state,
-        "unsupportedSubject",
-        "Bonus Action spell subject requires a supported Bonus Action spell act.",
-      );
-    }
-  } else if (
-    invocation.procedure === "scalarBuff" ||
-    invocation.procedure === "directCondition" ||
-    invocation.procedure === "rollModifier" ||
-    invocation.procedure === "saveGatedCondition" ||
-    invocation.procedure === "saveGatedConditionImmunity"
-  ) {
-    const isQuickenedActionSpellRewrite =
-      actionCostOverride === "bonusAction" &&
-      spellInvocationHasMagicActionCastingTime(invocation);
-    const isNativeBonusActionSpell =
-      "actionCost" in invocation && invocation.actionCost === "bonusAction";
-    if (!isNativeBonusActionSpell && !isQuickenedActionSpellRewrite) {
-      return invalidResult(
-        input.state,
-        "unsupportedSubject",
-        "Bonus Action spell subject requires a supported Bonus Action spell act.",
-      );
-    }
-  } else if (
-    invocation.procedure === "weaponDamageRider" ||
-    invocation.procedure === "weaponAttackOverride" ||
-    invocation.procedure === "magicWeaponEnhancement"
-  ) {
-    if (invocation.actionCost !== "bonusAction") {
-      return invalidResult(
-        input.state,
-        "unsupportedSubject",
-        "Bonus Action spell subject requires a supported Bonus Action spell act.",
-      );
-    }
-  } else if (invocation.procedure === "markedDamageRider") {
-    if (invocation.actionCost !== "bonusAction") {
-      return invalidResult(
-        input.state,
-        "unsupportedSubject",
-        "Bonus Action spell subject requires a supported Bonus Action spell act.",
-      );
-    }
-  } else if (invocation.procedure === "jumpMovementReplacement") {
-    if (invocation.actionCost !== "bonusAction") {
-      return invalidResult(
-        input.state,
-        "unsupportedSubject",
-        "Bonus Action spell subject requires a supported Bonus Action spell act.",
-      );
-    }
-  } else if (invocation.procedure === "dragonsBreathInitial") {
-    if (invocation.actionCost !== "bonusAction") {
-      return invalidResult(
-        input.state,
-        "unsupportedSubject",
-        "Bonus Action spell subject requires a supported Bonus Action spell act.",
-      );
-    }
-  } else if (invocation.procedure === "selfTeleport") {
-    if (invocation.actionCost !== "bonusAction") {
-      return invalidResult(
-        input.state,
-        "unsupportedSubject",
-        "Bonus Action spell subject requires a supported Bonus Action spell act.",
-      );
-    }
-  } else if (invocation.procedure === "sanctuaryTargetingInterdiction") {
-    if (invocation.actionCost !== "bonusAction") {
-      return invalidResult(
-        input.state,
-        "unsupportedSubject",
-        "Bonus Action spell subject requires a supported Bonus Action spell act.",
-      );
-    }
-  } else if (invocation.procedure === "directConditionRemoval") {
-    if (invocation.actionCost !== "bonusAction") {
-      return invalidResult(
-        input.state,
-        "unsupportedSubject",
-        "Bonus Action spell subject requires a supported Bonus Action spell act.",
-      );
-    }
-  } else if (invocation.procedure === "directHitPointRestoration") {
-    if (
-      invocation.actionCost !== "bonusAction" &&
-      actionCostOverride !== "bonusAction"
+  const isQuickenedActionSpellRewrite =
+    actionCostOverride === "bonusAction" &&
+    spellInvocationHasMagicActionCastingTime(invocation);
+  if (!isQuickenedActionSpellRewrite) {
+    if (invocation.procedure === "heldLight") {
+      if (invocation.actionCost !== "bonusAction") {
+        return invalidResult(
+          input.state,
+          "unsupportedSubject",
+          "Bonus Action spell subject requires a supported Bonus Action spell act.",
+        );
+      }
+    } else if (invocation.procedure === "dancingLightsReposition") {
+      if (invocation.actionCost !== "bonusAction") {
+        return invalidResult(
+          input.state,
+          "unsupportedSubject",
+          "Bonus Action spell subject requires a supported Bonus Action spell act.",
+        );
+      }
+    } else if (invocation.procedure === "objectContactDamageRepeat") {
+      if (invocation.actionCost !== "bonusAction") {
+        return invalidResult(
+          input.state,
+          "unsupportedSubject",
+          "Bonus Action spell subject requires a supported Bonus Action spell act.",
+        );
+      }
+    } else if (
+      invocation.procedure === "spiritualWeaponAttackProxy" ||
+      invocation.procedure === "spiritualWeaponRepeatAttack"
     ) {
-      return invalidResult(
-        input.state,
-        "unsupportedSubject",
-        "Bonus Action spell subject requires a supported Bonus Action spell act.",
-      );
-    }
-  } else if (invocation.procedure === "saveGatedDamage") {
-    if (
-      actionCostOverride !== "bonusAction" ||
-      !spellInvocationHasMagicActionCastingTime(invocation)
+      if (invocation.actionCost !== "bonusAction") {
+        return invalidResult(
+          input.state,
+          "unsupportedSubject",
+          "Bonus Action spell subject requires a supported Bonus Action spell act.",
+        );
+      }
+    } else if (
+      invocation.procedure === "spellCreatedHeldObject" ||
+      invocation.procedure === "spellCreatedHeldObjectReEvoke"
     ) {
-      return invalidResult(
-        input.state,
-        "unsupportedSubject",
-        "Bonus Action spell subject requires a supported Bonus Action spell act.",
-      );
-    }
-  } else if (
-    invocation.procedure === "spellAttackDamage" ||
-    invocation.procedure === "spellAttackSequence"
-  ) {
-    if (
-      actionCostOverride !== "bonusAction" ||
-      !spellInvocationHasMagicActionCastingTime(invocation)
+      if (invocation.actionCost !== "bonusAction") {
+        return invalidResult(
+          input.state,
+          "unsupportedSubject",
+          "Bonus Action spell subject requires a supported Bonus Action spell act.",
+        );
+      }
+    } else if (
+      invocation.procedure === "scalarBuff" ||
+      invocation.procedure === "directCondition" ||
+      invocation.procedure === "rollModifier" ||
+      invocation.procedure === "saveGatedCondition" ||
+      invocation.procedure === "saveGatedConditionImmunity"
     ) {
+      const isNativeBonusActionSpell =
+        "actionCost" in invocation && invocation.actionCost === "bonusAction";
+      if (!isNativeBonusActionSpell) {
+        return invalidResult(
+          input.state,
+          "unsupportedSubject",
+          "Bonus Action spell subject requires a supported Bonus Action spell act.",
+        );
+      }
+    } else if (
+      invocation.procedure === "weaponDamageRider" ||
+      invocation.procedure === "weaponAttackOverride" ||
+      invocation.procedure === "magicWeaponEnhancement"
+    ) {
+      if (invocation.actionCost !== "bonusAction") {
+        return invalidResult(
+          input.state,
+          "unsupportedSubject",
+          "Bonus Action spell subject requires a supported Bonus Action spell act.",
+        );
+      }
+    } else if (invocation.procedure === "markedDamageRider") {
+      if (invocation.actionCost !== "bonusAction") {
+        return invalidResult(
+          input.state,
+          "unsupportedSubject",
+          "Bonus Action spell subject requires a supported Bonus Action spell act.",
+        );
+      }
+    } else if (invocation.procedure === "jumpMovementReplacement") {
+      if (invocation.actionCost !== "bonusAction") {
+        return invalidResult(
+          input.state,
+          "unsupportedSubject",
+          "Bonus Action spell subject requires a supported Bonus Action spell act.",
+        );
+      }
+    } else if (invocation.procedure === "dragonsBreathInitial") {
+      if (invocation.actionCost !== "bonusAction") {
+        return invalidResult(
+          input.state,
+          "unsupportedSubject",
+          "Bonus Action spell subject requires a supported Bonus Action spell act.",
+        );
+      }
+    } else if (invocation.procedure === "selfTeleport") {
+      if (invocation.actionCost !== "bonusAction") {
+        return invalidResult(
+          input.state,
+          "unsupportedSubject",
+          "Bonus Action spell subject requires a supported Bonus Action spell act.",
+        );
+      }
+    } else if (invocation.procedure === "sanctuaryTargetingInterdiction") {
+      if (invocation.actionCost !== "bonusAction") {
+        return invalidResult(
+          input.state,
+          "unsupportedSubject",
+          "Bonus Action spell subject requires a supported Bonus Action spell act.",
+        );
+      }
+    } else if (invocation.procedure === "directConditionRemoval") {
+      if (invocation.actionCost !== "bonusAction") {
+        return invalidResult(
+          input.state,
+          "unsupportedSubject",
+          "Bonus Action spell subject requires a supported Bonus Action spell act.",
+        );
+      }
+    } else if (invocation.procedure === "directHitPointRestoration") {
+      if (
+        invocation.actionCost !== "bonusAction" &&
+        actionCostOverride !== "bonusAction"
+      ) {
+        return invalidResult(
+          input.state,
+          "unsupportedSubject",
+          "Bonus Action spell subject requires a supported Bonus Action spell act.",
+        );
+      }
+    } else if (invocation.procedure === "saveGatedDamage") {
+      if (
+        actionCostOverride !== "bonusAction" ||
+        !spellInvocationHasMagicActionCastingTime(invocation)
+      ) {
+        return invalidResult(
+          input.state,
+          "unsupportedSubject",
+          "Bonus Action spell subject requires a supported Bonus Action spell act.",
+        );
+      }
+    } else if (
+      invocation.procedure === "spellAttackDamage" ||
+      invocation.procedure === "spellAttackSequence"
+    ) {
+      if (
+        actionCostOverride !== "bonusAction" ||
+        !spellInvocationHasMagicActionCastingTime(invocation)
+      ) {
+        return invalidResult(
+          input.state,
+          "unsupportedSubject",
+          "Bonus Action spell subject requires a supported Bonus Action spell act.",
+        );
+      }
+    } else {
       return invalidResult(
         input.state,
         "unsupportedSubject",
         "Bonus Action spell subject requires a supported Bonus Action spell act.",
       );
     }
-  } else {
-    return invalidResult(
-      input.state,
-      "unsupportedSubject",
-      "Bonus Action spell subject requires a supported Bonus Action spell act.",
-    );
   }
   const spiritualWeaponCommitAlreadyApplied =
     spiritualWeaponResolutionCommitAlreadyApplied({
@@ -4835,10 +4865,8 @@ export function resolveBonusActionSpellAct(
       invocation,
       fillSet,
       {
-        ...(procedureIsIn(
-          invocation.procedure,
-          BONUS_ACTION_METAMAGIC_RESOLUTION_PROCEDURES,
-        )
+        ...(spellProcedureProfileFor(invocation.procedure)
+          .metamagicCompatibility === "bonusActionRewrite"
           ? { metamagicApplications: metamagicAdmission.applications }
           : {}),
         ...(actionCostOverride === undefined ? {} : { actionCostOverride }),

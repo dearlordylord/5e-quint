@@ -25,6 +25,7 @@ describe("save-gated spell ordering MBT", () => {
         step: "step",
         driver: createSaveGatedSpellOrderingDriver(),
         backend: "typescript",
+        seed: process.env["QUINT_SEED"],
         nTraces: mbtTraceCount(),
         maxSteps: focusedMbtMaxSteps(5),
         stateCheck: saveGatedSpellOrderingStateCheck,

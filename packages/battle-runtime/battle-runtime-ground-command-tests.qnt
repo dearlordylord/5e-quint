@@ -5,6 +5,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-spike-growth-movement-hazard
 
 module battleRuntimeGroundCommandTests {
+  import battleRuntimeSavingThrowRollMode.* from "./battle-runtime-saving-throw-roll-mode"
   import battleRuntimeFlamingSphereHazardRam.* from "./battle-runtime-flaming-sphere-hazard-ram"
   import attackDamageComposition.* from "../shared-algebras/proofs/rule-core/attack-damage-composition"
   import hitPointDamage.* from "../shared-algebras/proofs/rule-core/hit-point-damage"
@@ -14,8 +15,9 @@ module battleRuntimeGroundCommandTests {
   import battleRuntimeInterruptBridge.* from "./battle-runtime-interrupt-bridge"
   import battleRuntimeStatBlockBridge.* from "./battle-runtime-stat-block-bridge"
   import battleRuntimeFeatureBridge.* from "./battle-runtime-feature-bridge"
-  import battleRuntimeSpellBridge.* from "./battle-runtime-spell-bridge"
+
   import battleRuntimeModel.* from "./battle-runtime-model"
+  import battleRuntimeSpellcastingFacts.* from "./battle-runtime-spellcasting-facts"
   import battleRuntimeFindFamiliar.* from "./battle-runtime-find-familiar"
   import battleRuntimeLight.* from "./battle-runtime-light"
   import battleRuntimeCreatureTypeProtection.* from "./battle-runtime-creature-type-protection"
@@ -25,11 +27,11 @@ module battleRuntimeGroundCommandTests {
   import battleRuntimeHitPoints.* from "./battle-runtime-hit-points"
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
   import battleRuntimeDamageAdjustments.* from "./battle-runtime-damage-adjustments"
-  import battleRuntimeSpellInvocation.* from "./battle-runtime-spell-invocation"
+  import battleRuntimeSpellCastResources.* from "./battle-runtime-spell-cast-resources"
   import battleRuntimeReactionWindow.* from "./battle-runtime-reaction-window"
-  import battleRuntimeSpellAttack.* from "./battle-runtime-spell-attack"
+
   import battleRuntimeChainedSpellAttack.* from "./battle-runtime-chained-spell-attack"
-  import battleRuntimeSaveGatedSpell.* from "./battle-runtime-save-gated-spell"
+
   import battleRuntimeMarkedRiders.* from "./battle-runtime-marked-riders"
   import battleRuntimeMarkedSpells.* from "./battle-runtime-marked-spells"
   import battleRuntimeReactionWindow.* from "./battle-runtime-reaction-window"

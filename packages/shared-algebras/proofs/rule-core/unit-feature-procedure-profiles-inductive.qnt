@@ -1,4 +1,25 @@
 // -*- mode: Bluespec; -*-
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.action-surge-resource
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.attack-action-attack-count-scaling
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.martial-arts-attack-projection
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.attack-damage-reduction-zero-damage-redirect
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.attack-damage-rider
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.bonus-action-dash-temporary-hit-points
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.bonus-action-ongoing-rage
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.failed-ability-check-resource-boost
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.first-attack-roll-reckless-advantage
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.passive-armor-class-bonus
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.passive-ranged-attack-roll-bonus
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.passive-saving-throw-roll-mode
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.attack-roll-miss-to-hit-replacement
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.passive-speed-bonus
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.passive-speed-kind-grants
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.weapon-damage-dice-roll-choice
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.zero-hit-point-replacement
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.reaction-roll-or-damage-reduction
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.save-damage-replacement
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.self-bonus-action-healing
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.weapon-critical-range-19
 // RAW-COVERAGE: verification-owner:qnt-proof RAW-QCORE9-UNIT-FEATURE-PROFILES-001
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.martial-arts-attack-projection unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-saving-throw-roll-mode unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement
 
