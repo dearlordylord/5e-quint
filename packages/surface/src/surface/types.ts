@@ -321,6 +321,29 @@ export type CastingTime = Schema.Schema.Type<
   typeof SurfaceSchema.CastingTimeSchema
 >;
 export type Range = Schema.Schema.Type<typeof SurfaceSchema.RangeSchema>;
+export type PointRange = Extract<Range, { readonly kind: "point" }>;
+export type FixedDistancePointRange = Omit<PointRange, "feet"> & {
+  readonly feet: number;
+};
+export type ThresholdTierPointRange = Omit<PointRange, "feet"> & {
+  readonly feet: ThresholdTiers<number>;
+};
+
+export function isFixedDistancePointRange(
+  range: Range,
+): range is FixedDistancePointRange {
+  return range.kind === "point" && typeof range.feet === "number";
+}
+
+export function isThresholdTierPointRange(
+  range: Range,
+): range is ThresholdTierPointRange {
+  return (
+    range.kind === "point" &&
+    typeof range.feet !== "number" &&
+    range.feet.kind === "threshold_tiers"
+  );
+}
 export type Components = Schema.Schema.Type<
   typeof SurfaceSchema.ComponentsSchema
 >;

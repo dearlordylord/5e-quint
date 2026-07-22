@@ -57,7 +57,7 @@ import {
 } from "./identity.ts";
 import {
   admitPersistentArmorEffectSpell,
-  type PersistentArmorEffectSpellRecord,
+  type PersistentArmorEffectAdmission,
 } from "./procedure-admission/persistent-armor-effect-facts.ts";
 
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.attack-action-area-save-damage-replacement unit-feature.magic-action-healing-pool
@@ -301,7 +301,7 @@ export type CharacterBattleBookOfShadowsPresence =
 export type CharacterBattleInvocationSpellAccessState =
   | {
       readonly tag: "armorOfShadowsMageArmor";
-      readonly spell: PersistentArmorEffectSpellRecord;
+      readonly admission: PersistentArmorEffectAdmission;
     }
   | {
       readonly tag: "pactOfTheChainFindFamiliar";
@@ -481,7 +481,7 @@ export function parseCharacterBattleInvocationSpellAccesses(
       }
       parsed.push({
         tag: access.tag,
-        spell: admission.authoredSpell,
+        admission,
       });
       continue;
     }

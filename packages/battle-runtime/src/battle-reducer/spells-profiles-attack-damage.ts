@@ -10,11 +10,12 @@ import {
   type ProficiencyBonus as ProficiencyBonusType,
   type SpellSlotLevel,
 } from "@dnd/shared/types";
-import type {
-  Attachment,
-  DamageType,
-  SpellRecord,
-  TargetSelection,
+import {
+  isFixedDistancePointRange,
+  type Attachment,
+  type DamageType,
+  type SpellRecord,
+  type TargetSelection,
 } from "@dnd/surface/surface/types";
 import { Match } from "effect";
 import {
@@ -34,6 +35,7 @@ import {
   type SupportedSpellInvocation,
 } from "../battle-state-execution.ts";
 import type { CharacterBattleSpellcastingState } from "../character-battle-resources.ts";
+import { singleTargetSpellRangeFeet } from "../procedure-admission/spell-range-facts.ts";
 import {
   CHROMATIC_ORB_CONTINUATION_LIMIT_KINDS,
   CHROMATIC_ORB_DAMAGE_TYPES,
@@ -46,7 +48,6 @@ import {
 import {
   sameDiceExpr,
   sameStringSet,
-  singleTargetSpellRangeFeet,
   supportedDamageAmountExpr,
 } from "./spells-profile-shared.ts";
 
@@ -386,8 +387,7 @@ export function supportedPreparedChainedSpellAttackDamageProfile(
     spell.mechanics.level !== 1 ||
     spell.mechanics.castingTime.kind !== "action" ||
     spell.mechanics.duration.kind !== "instantaneous" ||
-    range.kind !== "point" ||
-    typeof range.feet !== "number" ||
+    !isFixedDistancePointRange(range) ||
     spell.mechanics.phases.length !== 1
   ) {
     return [];

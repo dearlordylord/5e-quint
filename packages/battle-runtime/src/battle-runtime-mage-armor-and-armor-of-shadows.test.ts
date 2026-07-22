@@ -1,6 +1,7 @@
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { describe, expect, test } from "vitest";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
+import { parseCharacterBattleInvocationSpellAccesses } from "./character-battle-resources.ts";
 import { admitPersistentArmorEffectSpell } from "./procedure-admission/persistent-armor-effect-facts.ts";
 import {
   abilityModifier,
@@ -685,6 +686,34 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
     };
 
     expect(admitPersistentArmorEffectSpell(invalidBaseArmorClass)).toBeNull();
+  });
+
+  test("Armor of Shadows retains the admitted persistent-armor projection", () => {
+    const mageArmor = spellRecord("mage_armor");
+
+    expect(
+      parseCharacterBattleInvocationSpellAccesses([
+        { tag: "armorOfShadowsMageArmor", spell: mageArmor },
+      ]),
+    ).toMatchObject({
+      tag: "parsed",
+      invocationSpellAccesses: [
+        {
+          tag: "armorOfShadowsMageArmor",
+          admission: {
+            authoredSpell: { id: mageArmor.id },
+            executionFacts: {
+              rangeFeet: 5,
+              slotLevel: 1,
+              baseArmorClass: 13,
+              ability: "dex",
+              durationTicks: requireElapsedHours(8),
+              earlyEnds: [{ kind: "targetDonsArmor" }],
+            },
+          },
+        },
+      ],
+    });
   });
 
   test("Armor of Shadows rejects armored self before spending resources", () => {

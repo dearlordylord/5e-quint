@@ -7,26 +7,38 @@ import {
   ArmorClassSchema,
   type ArmorClass,
 } from "@dnd/shared-algebras/armor-class-values";
+import {
+  spellSlotLevel,
+  type MovementFeet,
+  type SpellSlotLevel,
+} from "@dnd/shared/types";
 import type {
   OngoingEffectMechanics,
   SpellRecord,
 } from "@dnd/surface/surface/types";
-import { Either, Schema } from "effect";
+import { Brand, Either, Schema } from "effect";
+import { singleTargetSpellRangeFeet } from "./spell-range-facts.ts";
 
 /** Authored-free facts projected at the persistent-armor admission boundary. */
 export type PersistentArmorEffectExecutionFacts = {
+  readonly rangeFeet: MovementFeet;
+  readonly slotLevel: SpellSlotLevel;
   readonly baseArmorClass: ArmorClass;
+  readonly ability: "dex";
   readonly durationTicks: ElapsedTimeTicks;
+  readonly earlyEnds: readonly [{ readonly kind: "targetDonsArmor" }];
 };
 
-export type PersistentArmorEffectSpellRecord = SpellRecord & {
+type OngoingEffectSpellRecord = SpellRecord & {
   readonly mechanics: OngoingEffectMechanics;
 };
 
 export type PersistentArmorEffectAdmission = {
-  readonly authoredSpell: PersistentArmorEffectSpellRecord;
+  readonly authoredSpell: OngoingEffectSpellRecord;
   readonly executionFacts: PersistentArmorEffectExecutionFacts;
-};
+} & Brand.Brand<"PersistentArmorEffectAdmission">;
+const PersistentArmorEffectAdmission =
+  Brand.nominal<PersistentArmorEffectAdmission>();
 
 export function admitPersistentArmorEffectSpell(
   spell: SpellRecord,
@@ -58,25 +70,25 @@ export function admitPersistentArmorEffectSpell(
   const baseArmorClass = Schema.decodeUnknownEither(ArmorClassSchema)(
     operation.effect.formula.base,
   );
+  const rangeFeet = singleTargetSpellRangeFeet(spell.mechanics.range);
   if (
     Either.isLeft(durationTicks) ||
     Either.isLeft(requiredDurationTicks) ||
     Either.isLeft(baseArmorClass) ||
+    rangeFeet === null ||
     Number(durationTicks.right) !== Number(requiredDurationTicks.right)
   ) {
     return null;
   }
-  return {
+  return PersistentArmorEffectAdmission({
     authoredSpell: { ...spell, mechanics: spell.mechanics },
     executionFacts: {
+      rangeFeet,
+      slotLevel: spellSlotLevel(spell.mechanics.level),
       baseArmorClass: baseArmorClass.right,
+      ability: "dex",
       durationTicks: durationTicks.right,
+      earlyEnds: [{ kind: "targetDonsArmor" }],
     },
-  };
-}
-
-export function persistentArmorEffectExecutionFactsForSpell(
-  spell: SpellRecord,
-): PersistentArmorEffectExecutionFacts | null {
-  return admitPersistentArmorEffectSpell(spell)?.executionFacts ?? null;
+  });
 }

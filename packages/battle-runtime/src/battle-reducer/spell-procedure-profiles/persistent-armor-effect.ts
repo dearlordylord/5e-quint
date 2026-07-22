@@ -24,7 +24,6 @@ import { DurationBattleActiveEffectExpirationSchema } from "../../active-effect/
 //   - The Armor of Shadows Spell Access parser stays in
 //     character-battle-resources.ts.
 
-import { movementFeet, spellSlotLevel } from "@dnd/shared/types";
 import { ArmorClassSchema } from "@dnd/shared-algebras/armor-class-values";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Match } from "effect";
@@ -36,7 +35,11 @@ import {
   type BattleState,
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
-import { persistentArmorEffectExecutionFactsForSpell } from "../../procedure-admission/persistent-armor-effect-facts.ts";
+import {
+  admitPersistentArmorEffectSpell,
+  type PersistentArmorEffectAdmission,
+  type PersistentArmorEffectExecutionFacts,
+} from "../../procedure-admission/persistent-armor-effect-facts.ts";
 import type { CharacterBattleInvocationSpellAccessState } from "../../character-battle-resources.ts";
 import { CombatantId } from "../../identity.ts";
 import { combatantWearingArmor } from "../creature-state-leaves.ts";
@@ -95,56 +98,53 @@ type PersistentArmorSpellSource =
 
 function persistentArmorEffectShape(
   actorId: CombatantId,
-  spell: SpellRecord,
-): Pick<PersistentArmorInvocation, "rangeFeet" | "activeEffect"> | null {
-  const executionFacts = persistentArmorEffectExecutionFactsForSpell(spell);
-  if (executionFacts === null) {
-    return null;
-  }
-
+  executionFacts: PersistentArmorEffectExecutionFacts,
+): Pick<PersistentArmorInvocation, "rangeFeet" | "activeEffect"> {
   return {
-    rangeFeet: movementFeet(5),
+    rangeFeet: executionFacts.rangeFeet,
     activeEffect: {
       kind: "spellBaseArmorClass",
       sourceCombatantId: actorId,
       base: executionFacts.baseArmorClass,
-      ability: "dex",
+      ability: executionFacts.ability,
       expiresAt: {
         kind: "duration",
         durationTicks: executionFacts.durationTicks,
       },
-      earlyEnds: [{ kind: "targetDonsArmor" }],
+      earlyEnds: executionFacts.earlyEnds,
     },
   };
 }
 
 function buildPersistentArmorEffectInvocation(
   actorId: CombatantId,
-  spell: SpellRecord,
+  admission: PersistentArmorEffectAdmission,
   source: PersistentArmorSpellSource,
-): readonly PersistentArmorInvocation[] {
-  const shape = persistentArmorEffectShape(actorId, spell);
-  if (shape === null) {
-    return [];
-  }
-  return [
-    {
-      ...source,
-      procedure: "persistentArmorEffect",
-      spell,
-      ...shape,
-    },
-  ];
+): PersistentArmorInvocation {
+  return {
+    ...source,
+    procedure: "persistentArmorEffect",
+    spell: admission.authoredSpell,
+    ...persistentArmorEffectShape(actorId, admission.executionFacts),
+  };
 }
 
 function admitPersistentArmorEffect(
   spell: SpellRecord,
   ctx: SpellAdmissionContext,
 ): readonly PersistentArmorInvocation[] {
-  return buildPersistentArmorEffectInvocation(ctx.actor.combatantId, spell, {
-    access: { tag: "prepared" },
-    resource: { tag: "spellSlot", slotLevel: spellSlotLevel(1) },
-  });
+  const admission = admitPersistentArmorEffectSpell(spell);
+  return admission === null
+    ? []
+    : [
+        buildPersistentArmorEffectInvocation(ctx.actor.combatantId, admission, {
+          access: { tag: "prepared" },
+          resource: {
+            tag: "spellSlot",
+            slotLevel: admission.executionFacts.slotLevel,
+          },
+        }),
+      ];
 }
 
 export function admitPersistentArmorEffectInvocationSpellAccess(
@@ -152,12 +152,12 @@ export function admitPersistentArmorEffectInvocationSpellAccess(
   access: CharacterBattleInvocationSpellAccessState,
 ): readonly PersistentArmorInvocation[] {
   return Match.value(access).pipe(
-    Match.when({ tag: "armorOfShadowsMageArmor" }, (armorOfShadows) =>
-      buildPersistentArmorEffectInvocation(actorId, armorOfShadows.spell, {
+    Match.when({ tag: "armorOfShadowsMageArmor" }, (armorOfShadows) => [
+      buildPersistentArmorEffectInvocation(actorId, armorOfShadows.admission, {
         access: { tag: "armorOfShadows" },
         resource: { tag: "none" },
       }),
-    ),
+    ]),
     Match.when({ tag: "pactOfTheChainFindFamiliar" }, () => []),
     Match.exhaustive,
   );

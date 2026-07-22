@@ -23,7 +23,10 @@ import type {
   SpellRecord,
   TargetSelection,
 } from "@dnd/surface/surface/types";
-import { topLevelSpellCastingTime } from "@dnd/surface/surface/types";
+import {
+  isFixedDistancePointRange,
+  topLevelSpellCastingTime,
+} from "@dnd/surface/surface/types";
 import { Either, Match } from "effect";
 import {
   COLOR_SPRAY_FAILED_SAVE_CONDITION,
@@ -46,11 +49,11 @@ import {
 } from "../../battle-state-execution.ts";
 import type { CharacterBattleSpellcastingState } from "../../character-battle-resources.ts";
 import type { CombatantId } from "../../identity.ts";
+import { singleTargetSpellRangeFeet } from "../../procedure-admission/spell-range-facts.ts";
 import {
   sameStringSet,
   scalarBuffSpellTargetCount,
   scalarBuffSpellTargetCountBySlot,
-  singleTargetSpellRangeFeet,
   supportedDamageAmountExpr,
 } from "../spells-profile-shared.ts";
 
@@ -1445,9 +1448,7 @@ export function areaSaveGateSpellRangeFeet(
 function fixedPointRangeFeet(
   range: SpellRecord["mechanics"]["range"],
 ): MovementFeet | null {
-  return range.kind === "point" && typeof range.feet === "number"
-    ? movementFeet(range.feet)
-    : null;
+  return isFixedDistancePointRange(range) ? movementFeet(range.feet) : null;
 }
 
 export function supportedSaveGateFailedSaveEffects(

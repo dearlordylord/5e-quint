@@ -1,12 +1,7 @@
-import {
-  movementFeet,
-  type MovementFeet,
-  type SpellSlotLevel,
-} from "@dnd/shared/types";
+import { type SpellSlotLevel } from "@dnd/shared/types";
 import type {
   DiceAmount as SurfaceDiceAmount,
   DiceExpr,
-  SpellRecord,
   TargetSelection,
 } from "@dnd/surface/surface/types";
 
@@ -70,18 +65,6 @@ export function targetCountBySlot(
   return (slotLevel) =>
     count.base +
     Math.max(0, Number(slotLevel) - baseLevel) * count.perSlotAboveBase;
-}
-
-export function singleTargetSpellRangeFeet(
-  range: SpellRecord["mechanics"]["range"],
-): MovementFeet | null {
-  if (range.kind === "point" && typeof range.feet === "number") {
-    return movementFeet(range.feet);
-  }
-  if (range.kind === "touch") {
-    return movementFeet(5);
-  }
-  return null;
 }
 
 type ExplodingMaxDieThresholdTier = {

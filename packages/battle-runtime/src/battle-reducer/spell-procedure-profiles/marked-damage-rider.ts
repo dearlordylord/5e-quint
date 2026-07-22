@@ -29,12 +29,13 @@ import {
   spellSlotLevel,
   type SpellSlotLevel,
 } from "@dnd/shared/types";
-import type {
-  Ability,
-  DamageType,
-  DiceExpr,
-  EffectAtom,
-  SpellRecord,
+import {
+  isFixedDistancePointRange,
+  type Ability,
+  type DamageType,
+  type DiceExpr,
+  type EffectAtom,
+  type SpellRecord,
 } from "@dnd/surface/surface/types";
 import { Either, Match } from "effect";
 import { allocateBattleActiveEffectRef } from "../../active-effect/execution-ref.ts";
@@ -325,8 +326,7 @@ function markedDamageRiderDamageProjection(
   const mechanics = spell.mechanics;
   if (
     mechanics.family !== "ongoing_effect" ||
-    mechanics.range.kind !== "point" ||
-    typeof mechanics.range.feet !== "number"
+    !isFixedDistancePointRange(mechanics.range)
   ) {
     return null;
   }

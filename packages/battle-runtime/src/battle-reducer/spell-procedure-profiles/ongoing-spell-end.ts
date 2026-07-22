@@ -24,7 +24,10 @@ import {
   holeInstanceKey,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { difficultyClass, movementFeet } from "@dnd/shared/types";
-import type { SpellRecord } from "@dnd/surface/surface/types";
+import {
+  isFixedDistancePointRange,
+  type SpellRecord,
+} from "@dnd/surface/surface/types";
 import {
   maybeOpenInterruptWindow,
   snapshotBattle,
@@ -125,9 +128,7 @@ function ongoingSpellEndSpellRangeFeet(spell: SpellRecord): number | null {
   const range =
     spell.mechanics.family === "activation" ? spell.mechanics.range : null;
   const rangeFeet =
-    range?.kind === "point" && typeof range.feet === "number"
-      ? range.feet
-      : null;
+    range !== null && isFixedDistancePointRange(range) ? range.feet : null;
   if (
     spell.mechanics.family !== "activation" ||
     range === null ||
