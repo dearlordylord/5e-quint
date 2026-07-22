@@ -3,7 +3,13 @@ import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 
 import { addBattleStatBlockCombatant } from "./battle-reducer/stat-block-combatant-execution.ts";
-import { battleId, combatantId, initiativeScore } from "./identity.ts";
+import { battleCreatureInitFromStatBlock } from "./battle-init.ts";
+import {
+  battleExecutionScopeOrdinal,
+  battleId,
+  combatantId,
+  initiativeScore,
+} from "./identity.ts";
 import { admitBattleStatBlockCombatant } from "./stat-block-combatant-admission.ts";
 import {
   characterSeed,
@@ -21,6 +27,7 @@ describe("Stat Block combatant admission capability", () => {
       battleId: admittedBattleId,
       combatantId: admittedCombatantId,
       statBlock: source,
+      startingScopeOrdinal: battleExecutionScopeOrdinal(0),
     });
     if (Either.isLeft(admission)) throw new Error(admission.left.message);
     return { admission: admission.right, source };
@@ -45,6 +52,7 @@ describe("Stat Block combatant admission capability", () => {
           resistances: { kind: "choose_one_from", options: ["fire"] },
         },
       },
+      startingScopeOrdinal: battleExecutionScopeOrdinal(0),
     });
 
     expect(Either.isLeft(admission) ? admission.left.message : "admitted").toBe(
@@ -64,11 +72,31 @@ describe("Stat Block combatant admission capability", () => {
           hp: { kind: "literal", value: 1.5 },
         },
       },
+      startingScopeOrdinal: battleExecutionScopeOrdinal(0),
     });
 
     expect(Either.isLeft(admission) ? admission.left.message : "admitted").toBe(
       "Battle runtime requires Stat Block maximum HP to be a positive integer.",
     );
+  });
+
+  test("returns a typed issue for nonliteral Stat Block initialization facts", () => {
+    const source = statBlockRecord();
+    const initialized = battleCreatureInitFromStatBlock({
+      combatantId: admittedCombatantId,
+      initiative: initiativeScore(10),
+      statBlock: {
+        ...source,
+        statBlock: {
+          ...source.statBlock,
+          ac: { kind: "caster_derived", source: "spell_save_dc" },
+        },
+      },
+    });
+
+    expect(
+      Either.isLeft(initialized) ? initialized.left.message : "initialized",
+    ).toBe("Battle runtime requires literal Stat Block Armor Class.");
   });
 
   test("retains only authored-free mechanics and execution bindings", () => {

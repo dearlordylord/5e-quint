@@ -266,9 +266,10 @@ export function statBlockCreature(input: {
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "statBlock",
-      statBlock: input.statBlock,
+      source: Either.getOrThrow(
+        battleStatBlockCombatantSource(input.statBlock),
+      ),
       currentHp: Hp(statBlockLiteralNumber(input.statBlock.statBlock.hp)),
-      maxHp: Hp(statBlockLiteralNumber(input.statBlock.statBlock.hp)),
       tempHp: Hp(0),
     },
   };
@@ -823,3 +824,5 @@ export function rolledDiceGroup(
     results: [DieRollResult(firstResult), ...restResults.map(DieRollResult)],
   };
 }
+import { Either } from "effect";
+import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";

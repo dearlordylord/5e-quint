@@ -1,5 +1,6 @@
 import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 import { Either } from "effect";
+import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";
 import { describe, expect, test } from "vitest";
 
 import { DieRollResult, Hp } from "@dnd/shared/types";
@@ -236,9 +237,8 @@ function statBlockCreatureInit(input: {
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "statBlock",
-      statBlock,
+      source: Either.getOrThrow(battleStatBlockCombatantSource(statBlock)),
       currentHp: Hp(statBlock.statBlock.hp.value),
-      maxHp: Hp(statBlock.statBlock.hp.value),
       tempHp: Hp(0),
     },
   };

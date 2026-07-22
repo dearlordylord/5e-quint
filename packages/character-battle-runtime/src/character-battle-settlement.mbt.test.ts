@@ -4,7 +4,7 @@ import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import * as path from "node:path";
 
 import {
-  battleCreatureInitFromStatBlock,
+  battleCreatureInitFromStatBlock as parseBattleCreatureInitFromStatBlock,
   battleId,
   characterBattleResourceIsPointPool,
   characterId,
@@ -60,6 +60,12 @@ import {
   settleCharacterSheetFromBattle,
 } from "./index.ts";
 import { battleProcedureExecutionRefForTest } from "./sdk-integration-test-support.ts";
+
+function battleCreatureInitFromStatBlock(
+  input: Parameters<typeof parseBattleCreatureInitFromStatBlock>[0],
+) {
+  return requireRight(parseBattleCreatureInitFromStatBlock(input));
+}
 
 const settlementScenarios = [
   "init",

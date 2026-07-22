@@ -4,7 +4,7 @@ import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import * as path from "node:path";
 
 import {
-  battleCreatureInitFromStatBlock,
+  battleCreatureInitFromStatBlock as parseBattleCreatureInitFromStatBlock,
   battleId,
   characterBattleResourceIsPointPool,
   combatantId,
@@ -67,6 +67,12 @@ import {
   characterSheetBattleInit,
   settleCharacterSheetFromBattle,
 } from "./index.ts";
+
+function battleCreatureInitFromStatBlock(
+  input: Parameters<typeof parseBattleCreatureInitFromStatBlock>[0],
+) {
+  return requireRight(parseBattleCreatureInitFromStatBlock(input));
+}
 
 const featureResourceScenarios = [
   "init",

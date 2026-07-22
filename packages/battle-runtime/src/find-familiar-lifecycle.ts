@@ -87,6 +87,7 @@ import type {
   CombatantId,
   InitiativeScore,
 } from "./identity.ts";
+import { battleExecutionScopeInitialOrNextOrdinal } from "./identity.ts";
 import {
   companionEntries,
   findCompanionByOwner,
@@ -550,9 +551,9 @@ function withAdmittedFindFamiliarCombatant(
     battleId: input.state.battleId,
     combatantId: input.familiarId,
     statBlock: input.statBlock,
-    ...(allocation === undefined
-      ? {}
-      : { startingScopeOrdinal: allocation.nextScopeOrdinal }),
+    startingScopeOrdinal: battleExecutionScopeInitialOrNextOrdinal(
+      allocation?.nextScopeOrdinal,
+    ),
   });
   if (Either.isLeft(combatantAdmission)) {
     return invalidFindFamiliarResult(

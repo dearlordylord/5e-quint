@@ -5,6 +5,7 @@ import { statBlockId as parseSharedStatBlockId } from "@dnd/shared/game-facts";
 // UNIT-IDENTITY-REPLAY: L1H-PROTECTION-EVIL-GOOD protection_from_evil_and_good doResolveProtectionFromEvilAndGoodKnownWillingTargetProtection doProjectProtectionFromEvilAndGoodScopedAttackDisadvantage doPreventProtectionFromEvilAndGoodScopedCharmAndPossession doResolveProtectionFromEvilAndGoodRelevantCharmSaveAdvantage
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION
 import { Either } from "effect";
+import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";
 import { describe, expect, it } from "vitest";
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
@@ -1400,9 +1401,10 @@ function statBlockCreature(input: {
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "statBlock",
-      statBlock: input.statBlock,
+      source: Either.getOrThrow(
+        battleStatBlockCombatantSource(input.statBlock),
+      ),
       currentHp: Hp(statBlockLiteralNumber(input.statBlock.statBlock.hp)),
-      maxHp: Hp(statBlockLiteralNumber(input.statBlock.statBlock.hp)),
       tempHp: Hp(0),
     },
   };

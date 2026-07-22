@@ -3,7 +3,7 @@ import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import * as path from "node:path";
 
 import {
-  battleCreatureInitFromStatBlock,
+  battleCreatureInitFromStatBlock as parseBattleCreatureInitFromStatBlock,
   battleActSpellPresentation,
   battleId,
   combatantId,
@@ -57,6 +57,12 @@ import {
   settleCharacterSheetFromBattle,
 } from "./index.ts";
 import { battleProcedureExecutionRefForHole } from "./sdk-integration-test-support.ts";
+
+function battleCreatureInitFromStatBlock(
+  input: Parameters<typeof parseBattleCreatureInitFromStatBlock>[0],
+) {
+  return expectRight(parseBattleCreatureInitFromStatBlock(input));
+}
 
 const sheetDerivedOutcomes = [
   "init",

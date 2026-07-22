@@ -21,6 +21,7 @@ import {
   ITFVariant,
 } from "@firfi/quint-connect/effect";
 import { Either, Match, Schema } from "effect";
+import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";
 import { expect } from "vitest";
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import { ABILITIES, SURFACE_SKILLS } from "@dnd/shared/game-facts";
@@ -18117,9 +18118,10 @@ function skeletonCreatureInit(input: {
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "statBlock",
-      statBlock: skeletonMultiattackStatBlock(),
+      source: Either.getOrThrow(
+        battleStatBlockCombatantSource(skeletonMultiattackStatBlock()),
+      ),
       currentHp: Hp(13),
-      maxHp: Hp(13),
       tempHp: Hp(0),
     },
   };

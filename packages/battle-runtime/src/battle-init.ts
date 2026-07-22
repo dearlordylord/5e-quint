@@ -35,7 +35,11 @@ import type {
   LiteralWalkStatBlockSpeed,
 } from "./druid-wild-shape-known-form-execution.ts";
 export type { BattleDruidWildShapeKnownForm } from "./druid-wild-shape-known-form-execution.ts";
-import { literalStatBlockNumber } from "./battle-reducer/creature-state-execution.ts";
+import type { BattleStateInitIssue } from "./battle-state-execution.ts";
+import {
+  battleStatBlockCombatantSource,
+  type BattleStatBlockCombatantSource,
+} from "./stat-block-combatant-admission.ts";
 import type { CharacterZeroHpLifecycleInit } from "./zero-hp-lifecycle.ts";
 import { statBlockActionSurfaceIsSupported } from "./statblock-action-support.ts";
 import {
@@ -242,9 +246,8 @@ export type StatBlockBattleInitInput = {
 
 export type StatBlockBattleCreatureInit = {
   readonly kind: "statBlock";
-  readonly statBlock: BattleStatBlockExecutionSource;
+  readonly source: BattleStatBlockCombatantSource;
   readonly currentHp: Hp;
-  readonly maxHp: Hp;
   readonly tempHp: Hp;
 };
 
@@ -261,18 +264,19 @@ export type BattleCreatureInit = {
 
 export function battleCreatureInitFromStatBlock(
   input: StatBlockBattleInitInput,
-): BattleCreatureInit {
-  const maxHp = toHp(literalStatBlockNumber(input.statBlock.statBlock.hp));
-  return {
+): Either.Either<BattleCreatureInit, BattleStateInitIssue> {
+  const source = battleStatBlockCombatantSource(input.statBlock);
+  if (Either.isLeft(source)) return Either.left(source.left);
+  const maxHp = toHp(source.right.statBlock.hp.value);
+  return Either.right({
     combatantId: input.combatantId,
     displayName: input.statBlock.statBlock.displayName,
     initiative: input.initiative,
     creatureInit: {
       kind: "statBlock",
-      statBlock: input.statBlock,
+      source: source.right,
       currentHp: input.currentHp ?? maxHp,
-      maxHp,
       tempHp: input.tempHp ?? toHp(0),
     },
-  };
+  });
 }

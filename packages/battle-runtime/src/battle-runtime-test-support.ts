@@ -14,6 +14,7 @@ import {
 } from "@dnd/surface/surface/find-familiar-forms";
 import { Match, Schema } from "effect";
 import * as Either from "effect/Either";
+import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";
 import * as Option from "effect/Option";
 import { attackActionOptionName } from "./battle-reducer/statblock-attacks.ts";
 import { statBlockAttackProcedureSection } from "./battle-reducer/statblock.ts";
@@ -3819,9 +3820,8 @@ export function statBlockCreatureInit(input: {
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "statBlock",
-      statBlock,
+      source: Either.getOrThrow(battleStatBlockCombatantSource(statBlock)),
       currentHp: Hp(input.currentHp ?? maxHp),
-      maxHp: Hp(maxHp),
       tempHp: Hp(input.tempHp ?? 0),
     },
   };
@@ -3992,9 +3992,12 @@ export function skeletonCreatureInit(input: {
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "statBlock",
-      statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+      source: Either.getOrThrow(
+        battleStatBlockCombatantSource(
+          statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+        ),
+      ),
       currentHp: Hp(13),
-      maxHp: Hp(13),
       tempHp: Hp(0),
     },
   };
@@ -4015,16 +4018,17 @@ export function resistantSkeletonCreatureInit(input: {
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "statBlock",
-      statBlock: {
-        id: statBlockId("stat_block_slashing_resistant_skeleton"),
-        statBlock: {
-          ...statBlockWithoutDamageModifiers,
-          displayName: "Slashing Resistant Skeleton",
-          resistances: { kind: "fixed", damageTypes: ["slashing"] },
-        },
-      },
+      source: Either.getOrThrow(
+        battleStatBlockCombatantSource({
+          id: statBlockId("stat_block_slashing_resistant_skeleton"),
+          statBlock: {
+            ...statBlockWithoutDamageModifiers,
+            displayName: "Slashing Resistant Skeleton",
+            resistances: { kind: "fixed", damageTypes: ["slashing"] },
+          },
+        }),
+      ),
       currentHp: Hp(13),
-      maxHp: Hp(13),
       tempHp: Hp(0),
     },
   };

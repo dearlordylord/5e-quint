@@ -43,7 +43,7 @@ import {
   PASSIVE_SAVING_THROW_ROLL_MODE_SUPPORT_PROFILE,
   battleActDruidWildShapePresentation,
   battleActUnitPresentation,
-  battleCreatureInitFromStatBlock,
+  battleCreatureInitFromStatBlock as parseBattleCreatureInitFromStatBlock,
   battleCreaturePresentationDisplayName,
   battleId,
   characterBattleResourceIsPointPool,
@@ -136,6 +136,12 @@ import {
   startBattleFromCharacterBuildAndStatBlock,
   startBattleFromCharacterSheetAndStatBlock,
 } from "./index.ts";
+
+function battleCreatureInitFromStatBlock(
+  input: Parameters<typeof parseBattleCreatureInitFromStatBlock>[0],
+) {
+  return expectRight(parseBattleCreatureInitFromStatBlock(input));
+}
 
 const build = defenseBuild({ wearingArmor: false });
 
@@ -1401,6 +1407,8 @@ describe("Character Sheet battle handoff", () => {
       }),
     );
 
+    expect(init.creatureInit.kind).toBe("character");
+    if (init.creatureInit.kind !== "character") return;
     expect(init.creatureInit.maxHp).toBe(sheetMaximumHp(sheet.right));
     expect(init.creatureInit.currentHp).toBe(7);
   });

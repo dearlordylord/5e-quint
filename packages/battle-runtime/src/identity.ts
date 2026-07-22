@@ -211,6 +211,12 @@ export const battleExecutionScopeOrdinal: (
   value: number,
 ) => BattleExecutionScopeOrdinal = BattleExecutionScopeOrdinal.make;
 
+export function battleExecutionScopeInitialOrNextOrdinal(
+  nextScopeOrdinal: BattleExecutionScopeOrdinal | undefined,
+): BattleExecutionScopeOrdinal {
+  return nextScopeOrdinal ?? battleExecutionScopeOrdinal(0);
+}
+
 export const BattleExecutionScopeCursor = BattleExecutionScopeOrdinal.pipe(
   Schema.greaterThan(0),
   Schema.brand("BattleExecutionScopeCursor"),

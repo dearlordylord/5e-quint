@@ -1,11 +1,12 @@
-import { Hp } from "@dnd/shared/types";
+import { armorClass } from "@dnd/shared-algebras/armor-class-algebra";
+import { Hp, type Size } from "@dnd/shared/types";
+import type { StatBlockMechanics } from "@dnd/surface/surface/types";
 import { Brand } from "effect";
 import * as Either from "effect/Either";
 
 import type { BattleStateInitIssue } from "./battle-state-execution.ts";
 import {
   battleExecutionScopeCursor,
-  battleExecutionScopeOrdinal,
   type BattleExecutionScopeOrdinal,
   type CombatantId,
 } from "./identity.ts";
@@ -16,30 +17,47 @@ import { statBlockExecutionAdmissionCohort } from "./stat-block-execution.ts";
 const AdmittedBattleStatBlockCombatant =
   Brand.nominal<AdmittedBattleStatBlockCombatant>();
 
+export type BattleStatBlockCombatantSource = {
+  readonly id: BattleStatBlockExecutionSource["id"];
+  readonly statBlock: Omit<StatBlockMechanics, "ac" | "hp" | "size"> & {
+    readonly ac: Extract<
+      StatBlockMechanics["ac"],
+      { readonly kind: "literal" }
+    >;
+    readonly hp: Extract<
+      StatBlockMechanics["hp"],
+      { readonly kind: "literal" }
+    >;
+    readonly size: Size;
+  };
+} & Brand.Brand<"BattleStatBlockCombatantSource">;
+
+const BattleStatBlockCombatantSource =
+  Brand.nominal<BattleStatBlockCombatantSource>();
+
 export function admitBattleStatBlockCombatant(input: {
   readonly battleId: Parameters<typeof statBlockExecutionAdmissionCohort>[0];
   readonly combatantId: CombatantId;
   readonly statBlock: BattleStatBlockExecutionSource;
-  readonly startingScopeOrdinal?: BattleExecutionScopeOrdinal;
+  readonly startingScopeOrdinal: BattleExecutionScopeOrdinal;
 }): Either.Either<AdmittedBattleStatBlockCombatant, BattleStateInitIssue> {
-  const { statBlock } = input;
-  if (statBlock.statBlock.ac.kind !== "literal") {
-    return issue("Battle runtime requires literal Stat Block Armor Class.");
-  }
-  if (statBlock.statBlock.hp.kind !== "literal") {
-    return issue("Battle runtime requires literal Stat Block maximum HP.");
-  }
-  if (
-    !Number.isInteger(statBlock.statBlock.hp.value) ||
-    statBlock.statBlock.hp.value < 1
-  ) {
-    return issue(
-      "Battle runtime requires Stat Block maximum HP to be a positive integer.",
-    );
-  }
-  if (typeof statBlock.statBlock.size !== "string") {
-    return issue("Battle runtime requires a concrete creature Size.");
-  }
+  const source = battleStatBlockCombatantSource(input.statBlock);
+  if (Either.isLeft(source)) return Either.left(source.left);
+  return admitBattleStatBlockCombatantSource({
+    battleId: input.battleId,
+    combatantId: input.combatantId,
+    source: source.right,
+    startingScopeOrdinal: input.startingScopeOrdinal,
+  });
+}
+
+export function admitBattleStatBlockCombatantSource(input: {
+  readonly battleId: Parameters<typeof statBlockExecutionAdmissionCohort>[0];
+  readonly combatantId: CombatantId;
+  readonly source: BattleStatBlockCombatantSource;
+  readonly startingScopeOrdinal: BattleExecutionScopeOrdinal;
+}): Either.Either<AdmittedBattleStatBlockCombatant, BattleStateInitIssue> {
+  const statBlock = input.source;
   if (typeof statBlock.statBlock.creatureType !== "string") {
     return issue("Battle runtime requires a concrete creature type.");
   }
@@ -48,7 +66,7 @@ export function admitBattleStatBlockCombatant(input: {
       "Battle runtime requires Stat Block resistance choices to be resolved before admission.",
     );
   }
-  const from = input.startingScopeOrdinal ?? battleExecutionScopeOrdinal(0);
+  const from = input.startingScopeOrdinal;
   const cohort = statBlockExecutionAdmissionCohort(
     input.battleId,
     input.combatantId,
@@ -83,13 +101,46 @@ export function admitBattleStatBlockCombatant(input: {
         execution: allocation.execution,
       },
       initialization: {
-        armorClass: statBlock.statBlock.ac.value,
+        armorClass: armorClass(statBlock.statBlock.ac.value),
         maxHp: Hp(statBlock.statBlock.hp.value),
         size: statBlock.statBlock.size,
       },
       cursorTransition: {
         from,
         to: battleExecutionScopeCursor(cohort.nextScopeOrdinal),
+      },
+    }),
+  );
+}
+
+export function battleStatBlockCombatantSource(
+  statBlock: BattleStatBlockExecutionSource,
+): Either.Either<BattleStatBlockCombatantSource, BattleStateInitIssue> {
+  if (statBlock.statBlock.ac.kind !== "literal") {
+    return issue("Battle runtime requires literal Stat Block Armor Class.");
+  }
+  if (statBlock.statBlock.hp.kind !== "literal") {
+    return issue("Battle runtime requires literal Stat Block maximum HP.");
+  }
+  if (
+    !Number.isInteger(statBlock.statBlock.hp.value) ||
+    statBlock.statBlock.hp.value < 1
+  ) {
+    return issue(
+      "Battle runtime requires Stat Block maximum HP to be a positive integer.",
+    );
+  }
+  if (typeof statBlock.statBlock.size !== "string") {
+    return issue("Battle runtime requires a concrete creature Size.");
+  }
+  return Either.right(
+    BattleStatBlockCombatantSource({
+      ...statBlock,
+      statBlock: {
+        ...statBlock.statBlock,
+        ac: statBlock.statBlock.ac,
+        hp: statBlock.statBlock.hp,
+        size: statBlock.statBlock.size,
       },
     }),
   );

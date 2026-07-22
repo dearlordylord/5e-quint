@@ -200,7 +200,7 @@ export function battleSessionFromSheets(input: {
       combatants: [
         ...characterInits,
         ...input.monsters.map((monster) =>
-          battleCreatureInitFromStatBlock(monster),
+          requireRight(battleCreatureInitFromStatBlock(monster)),
         ),
       ],
     }),

@@ -254,21 +254,27 @@ function startableBattleCombatant(input: {
           }),
         );
       }
+      const creatureInit = battleCreatureInitFromStatBlock({
+        combatantId: statBlockCombatant.combatantId,
+        statBlock: statBlock.value,
+        initiative: statBlockCombatant.initiative,
+        ...(encounterCombatant.currentHp === undefined
+          ? {}
+          : { currentHp: encounterCombatant.currentHp }),
+        ...(encounterCombatant.tempHp === undefined
+          ? {}
+          : { tempHp: encounterCombatant.tempHp }),
+      });
+      if (Either.isLeft(creatureInit)) {
+        return Either.left(
+          errorContent(creatureInit.left.message, {
+            code: "STAT_BLOCK_BATTLE_INIT_INVALID",
+          }),
+        );
+      }
       return Either.right({
         tag: "encounterCombatant" as const,
-        creatureInit: {
-          ...battleCreatureInitFromStatBlock({
-            combatantId: statBlockCombatant.combatantId,
-            statBlock: statBlock.value,
-            initiative: statBlockCombatant.initiative,
-            ...(encounterCombatant.currentHp === undefined
-              ? {}
-              : { currentHp: encounterCombatant.currentHp }),
-            ...(encounterCombatant.tempHp === undefined
-              ? {}
-              : { tempHp: encounterCombatant.tempHp }),
-          }),
-        },
+        creatureInit: creatureInit.right,
       });
     }),
     Match.exhaustive,

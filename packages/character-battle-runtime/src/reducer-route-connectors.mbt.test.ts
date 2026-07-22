@@ -9,7 +9,7 @@ import {
   type BattleHole,
   type BattleResolutionResult,
   type BattleRuntimeSession,
-  battleCreatureInitFromStatBlock,
+  battleCreatureInitFromStatBlock as parseBattleCreatureInitFromStatBlock,
   battleId,
   combatantId,
   discoverBattleActs,
@@ -116,6 +116,12 @@ import {
   type CharacterBattleSettlementRouteAction,
   type CharacterSessionSheetDerivedBattleActsRouteAction,
 } from "./index.ts";
+
+function battleCreatureInitFromStatBlock(
+  input: Parameters<typeof parseBattleCreatureInitFromStatBlock>[0],
+) {
+  return expectRight(parseBattleCreatureInitFromStatBlock(input));
+}
 
 const MBT_TEST_TIMEOUT_MS = 120_000;
 const CRIMINAL_BACKGROUND_UNIT_ID = "background_criminal";

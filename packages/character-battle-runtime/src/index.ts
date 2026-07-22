@@ -357,12 +357,18 @@ export function startBattleFromCharacterSheetAndStatBlock(input: {
       routeEvents: characterInit.left.routeEvents,
     });
   }
+  const statBlockInit = battleCreatureInitFromStatBlock(
+    input.statBlockBattleInput,
+  );
+  if (Either.isLeft(statBlockInit)) {
+    return Either.left({
+      issue: statBlockInit.left,
+      routeEvents: characterInit.right.routeEvents,
+    });
+  }
   const session = startBattle({
     battleId: input.battleId,
-    combatants: [
-      characterInit.right.init,
-      battleCreatureInitFromStatBlock(input.statBlockBattleInput),
-    ],
+    combatants: [characterInit.right.init, statBlockInit.right],
   });
   if (Either.isLeft(session)) {
     return Either.left({

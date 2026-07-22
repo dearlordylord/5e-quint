@@ -17,7 +17,10 @@ import {
   familiarStatBlockWithCreatureTypeOverride,
   findFamiliarIdentityIssue,
 } from "./find-familiar-lifecycle-execution.ts";
-import type { CombatantId } from "./identity.ts";
+import {
+  battleExecutionScopeInitialOrNextOrdinal,
+  type CombatantId,
+} from "./identity.ts";
 import { admitBattleStatBlockCombatant } from "./stat-block-combatant-admission.ts";
 import type { BattleStatBlockExecutionSource } from "./stat-block-execution-state.ts";
 import {
@@ -80,9 +83,9 @@ export function admitFindFamiliarReappearance(input: {
     battleId: input.state.battleId,
     combatantId: familiar.reappearanceCombatantId,
     statBlock,
-    ...(allocation === undefined
-      ? {}
-      : { startingScopeOrdinal: allocation.nextScopeOrdinal }),
+    startingScopeOrdinal: battleExecutionScopeInitialOrNextOrdinal(
+      allocation?.nextScopeOrdinal,
+    ),
   });
   if (Either.isLeft(combatantAdmission)) {
     return issue(input.state, combatantAdmission.left.message);

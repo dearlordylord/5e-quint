@@ -1,3 +1,4 @@
+import type { ArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import { Hp, type Size } from "@dnd/shared/types";
 import type {
   DamageType,
@@ -48,7 +49,7 @@ export type StatBlockBattleOrigin = {
 };
 
 export type BattleStatBlockCombatantInitialization = {
-  readonly armorClass: number;
+  readonly armorClass: ArmorClass;
   readonly maxHp: Hp;
   readonly size: Size;
 };

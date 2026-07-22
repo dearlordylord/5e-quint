@@ -10,6 +10,7 @@ import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { removeBattleCombatants } from "./battle-reducer/api-lifecycle.ts";
 import * as Either from "effect/Either";
 import { Schema } from "effect";
+import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";
 import { describe, expect, test } from "vitest";
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import {
@@ -207,9 +208,8 @@ function startFixtureBattle(
         initiative: initiativeScore(12),
         creatureInit: {
           kind: "statBlock",
-          statBlock: skeleton,
+          source: Either.getOrThrow(battleStatBlockCombatantSource(skeleton)),
           currentHp: maxHp,
-          maxHp,
           tempHp: Hp(0),
         },
       },
@@ -221,9 +221,10 @@ function startFixtureBattle(
               initiative: initiativeScore(10),
               creatureInit: {
                 kind: "statBlock" as const,
-                statBlock: skeleton,
+                source: Either.getOrThrow(
+                  battleStatBlockCombatantSource(skeleton),
+                ),
                 currentHp: maxHp,
-                maxHp,
                 tempHp: Hp(0),
               },
             },
@@ -238,9 +239,10 @@ function startFixtureBattle(
               initiative: initiativeScore(10),
               creatureInit: {
                 kind: "statBlock" as const,
-                statBlock: skeleton,
+                source: Either.getOrThrow(
+                  battleStatBlockCombatantSource(skeleton),
+                ),
                 currentHp: maxHp,
-                maxHp,
                 tempHp: Hp(0),
               },
             },

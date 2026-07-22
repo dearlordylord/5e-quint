@@ -8,7 +8,11 @@
 // creature-state-leaves.ts to break the cluster_state ↔ movement_speed cycle.
 
 import { Either, Match } from "effect";
-import { movementFeet, type ReadonlyNonEmptyArray } from "@dnd/shared/types";
+import {
+  Hp,
+  movementFeet,
+  type ReadonlyNonEmptyArray,
+} from "@dnd/shared/types";
 import type { HandUse } from "@dnd/shared/types";
 import {
   applyCondition,
@@ -22,11 +26,7 @@ import {
   validDeathSaveRuntimeState,
 } from "@dnd/shared-algebras/death-saves-algebra";
 import { initiativeEntries } from "@dnd/shared-algebras/initiative-algebra";
-import type {
-  StatBlockRecord,
-  Size,
-  UnitRecord,
-} from "@dnd/surface/surface/types";
+import type { UnitRecord } from "@dnd/surface/surface/types";
 import type { ZeroHpLifecycle } from "../zero-hp-lifecycle.ts";
 import {
   battleActiveEffectExecutionOrdinal,
@@ -104,10 +104,7 @@ import {
   KnockedOutConditionState,
 } from "./knocked-out-state.ts";
 import { battleStateInitIssue } from "./domain-helpers.ts";
-import {
-  isCharacterBattleCreatureState,
-  literalStatBlockNumber,
-} from "./creature-state-execution.ts";
+import { isCharacterBattleCreatureState } from "./creature-state-execution.ts";
 export {
   activeConditions,
   activeEffectArmorClass,
@@ -128,7 +125,6 @@ export {
   isLegendaryAttackSubject,
   knockedOutConditionState,
   knockedOutOneHp,
-  literalStatBlockNumber,
   nonKnockOutLifecycleFields,
   normalizeEarlyEndedOngoingFeatures,
   ongoingFeatureProfileForSourceKey,
@@ -138,19 +134,11 @@ import { applyInitialZeroHpLifecycle } from "./damage-apply.ts";
 import { statBlockExecutionAdmissionCohort } from "../stat-block-execution.ts";
 import { druidWildShapeAvailableFormsIssueForProfile } from "./druid-wild-shape.ts";
 import { admitCharacterAttackExecution } from "../attack-execution.ts";
-import { admitBattleStatBlockCombatant } from "../stat-block-combatant-admission.ts";
+import { admitBattleStatBlockCombatantSource } from "../stat-block-combatant-admission.ts";
 import {
   statBlockLanguagePresentation,
   statBlockProcedurePresentations,
 } from "../stat-block-presentation.ts";
-
-export function assertCurrentHpWithinMaxHp(
-  creatureInit: BattleCreatureInit["creatureInit"],
-): void {
-  if (creatureInit.currentHp > creatureInit.maxHp) {
-    throw new Error("Battle initialization current HP exceeds max HP.");
-  }
-}
 
 function isStatBlockBattleCreatureState(
   actor: BattleCreatureState,
@@ -177,10 +165,26 @@ export function battleCreatureStateAdmissionFromInit(
     }
   | {
       readonly tag: "invalid";
-      readonly issues: ReadonlyNonEmptyArray<BattleUnitSupportProfileIssue>;
+      readonly issues: ReadonlyNonEmptyArray<
+        BattleUnitSupportProfileIssue | BattleStateInitIssue
+      >;
     } {
   const creatureInit = input.creatureInit;
-  assertCurrentHpWithinMaxHp(creatureInit);
+  const maxHp =
+    creatureInit.kind === "character"
+      ? creatureInit.maxHp
+      : Hp(creatureInit.source.statBlock.hp.value);
+  if (creatureInit.currentHp > maxHp) {
+    return {
+      tag: "invalid",
+      issues: [
+        {
+          tag: "battleStateInitIssue",
+          message: "Battle initialization current HP exceeds max HP.",
+        },
+      ],
+    };
+  }
   const zeroHpLifecycle = initialZeroHpLifecycleForCreatureOrigin(creatureInit);
   const initialConditions =
     creatureInit.kind === "character"
@@ -192,7 +196,7 @@ export function battleCreatureStateAdmissionFromInit(
   const base = {
     combatantId: input.combatantId,
     initiative: input.initiative,
-    maxHp: creatureInit.maxHp,
+    maxHp,
     tempHp: creatureInit.tempHp,
     ...initialKnockOutLifecycleFields(creatureInit, initialConditions),
     activeEffects: [],
@@ -392,29 +396,24 @@ export function battleCreatureStateAdmissionFromInit(
     };
   }
 
-  const admission = admitBattleStatBlockCombatant({
+  const admission = admitBattleStatBlockCombatantSource({
     battleId,
     combatantId: input.combatantId,
-    statBlock: creatureInit.statBlock,
+    source: creatureInit.source,
     startingScopeOrdinal,
   });
   if (Either.isLeft(admission)) {
     return {
       tag: "invalid",
-      issues: [
-        {
-          tag: "battleUnitSupportProfileIssue",
-          message: admission.left.message,
-        },
-      ],
+      issues: [admission.left],
     };
   }
   const admittedCreature = applyInitialZeroHpLifecycle({
     ...base,
     armorClass: statBlockArmorClassState(
-      literalStatBlockNumber(creatureInit.statBlock.statBlock.ac),
+      admission.right.initialization.armorClass,
     ),
-    size: literalCreatureSize(creatureInit.statBlock.statBlock.size),
+    size: admission.right.initialization.size,
     origin: {
       kind: "statBlock",
       ...admission.right.origin,
@@ -431,9 +430,9 @@ export function battleCreatureStateAdmissionFromInit(
     nextScopeOrdinal: admission.right.cursorTransition.to,
     statBlockPresentation: {
       displayName: input.displayName,
-      languages: statBlockLanguagePresentation(creatureInit.statBlock),
+      languages: statBlockLanguagePresentation(creatureInit.source),
       procedures: statBlockProcedurePresentations({
-        statBlock: creatureInit.statBlock,
+        statBlock: creatureInit.source,
         execution: admission.right.origin.execution,
       }),
     },
@@ -556,15 +555,6 @@ export function assertCharacterBattleLoadoutMatchesHands(
   if (weapon?.grip === "two_handed") {
     return;
   }
-}
-
-export function literalCreatureSize(
-  creatureSize: StatBlockRecord["statBlock"]["size"],
-): Size {
-  if (typeof creatureSize !== "string") {
-    throw new Error("Battle runtime requires a concrete creature Size.");
-  }
-  return creatureSize;
 }
 
 export function combatantInitiativeInsertionIndex(

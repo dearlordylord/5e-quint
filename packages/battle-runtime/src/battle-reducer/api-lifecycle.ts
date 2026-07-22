@@ -36,6 +36,7 @@ import {
   CombatantId,
   battleAttackExecutionScopeRefForProcedureRef,
   battleExecutionScopeCursor,
+  battleExecutionScopeInitialOrNextOrdinal,
   battleExecutionScopeOrdinal,
 } from "../identity.ts";
 import type { BattleCompanionState } from "../companion-state.ts";
@@ -569,8 +570,10 @@ function admitBattleCombatant(input: AddBattleCombatantInput): Either.Either<
   const admission = battleCreatureStateAdmissionFromInit(
     input.state.battleId,
     input.combatant,
-    input.state.executionScopeCursors.get(input.combatant.combatantId)
-      ?.nextScopeOrdinal ?? battleExecutionScopeOrdinal(0),
+    battleExecutionScopeInitialOrNextOrdinal(
+      input.state.executionScopeCursors.get(input.combatant.combatantId)
+        ?.nextScopeOrdinal,
+    ),
   );
   if (admission.tag === "invalid") {
     return battleStateInitIssue(

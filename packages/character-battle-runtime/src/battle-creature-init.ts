@@ -192,13 +192,14 @@ export function startBattleFromCharacterBuildAndStatBlock(input: {
   if (Either.isLeft(characterInit)) {
     return battleCreatureInitIssue(characterInit.left.message);
   }
+  const statBlockInit = battleCreatureInitFromStatBlock(
+    input.statBlockBattleInput,
+  );
+  if (Either.isLeft(statBlockInit)) return Either.left(statBlockInit.left);
 
   return startBattle({
     battleId: input.battleId,
-    combatants: [
-      characterInit.right,
-      battleCreatureInitFromStatBlock(input.statBlockBattleInput),
-    ],
+    combatants: [characterInit.right, statBlockInit.right],
   });
 }
 

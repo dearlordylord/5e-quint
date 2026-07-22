@@ -2,6 +2,7 @@ import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-chained-attack-damage spell.invocation-warding-bond-linked-effect
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE
 import * as Either from "effect/Either";
+import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";
 import { describe, expect, test } from "vitest";
 import {
   battleId,
@@ -944,9 +945,12 @@ function poisonImmuneSkeletonCreature(input: {
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "statBlock",
-      statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+      source: Either.getOrThrow(
+        battleStatBlockCombatantSource(
+          statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+        ),
+      ),
       currentHp: Hp(13),
-      maxHp: Hp(13),
       tempHp: Hp(0),
     },
   };

@@ -5,6 +5,7 @@ import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 import { isDeepStrictEqual } from "node:util";
 
 import { Either } from "effect";
+import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";
 import { describe, it } from "vitest";
 
 import { DieRollResult, Hp } from "@dnd/shared/types";
@@ -440,9 +441,10 @@ function statBlockCreature(input: {
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "statBlock",
-      statBlock: input.statBlock,
+      source: Either.getOrThrow(
+        battleStatBlockCombatantSource(input.statBlock),
+      ),
       currentHp: Hp(12),
-      maxHp: Hp(12),
       tempHp: Hp(0),
     },
   };

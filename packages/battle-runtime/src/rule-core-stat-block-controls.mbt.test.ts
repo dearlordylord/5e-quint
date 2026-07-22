@@ -26,6 +26,7 @@ import {
   withRuleCoreComponentRoute,
 } from "./rule-core-component-route.ts";
 import { Either } from "effect";
+import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";
 import { describe, it } from "vitest";
 
 import { Hp, DieRollResult, movementFeet } from "@dnd/shared/types";
@@ -326,9 +327,10 @@ function statBlockCreature(input: {
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "statBlock",
-      statBlock: input.statBlock,
+      source: Either.getOrThrow(
+        battleStatBlockCombatantSource(input.statBlock),
+      ),
       currentHp: Hp(12),
-      maxHp: Hp(12),
       tempHp: Hp(0),
     },
   };

@@ -3,7 +3,7 @@ import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import * as path from "node:path";
 
 import {
-  battleCreatureInitFromStatBlock,
+  battleCreatureInitFromStatBlock as parseBattleCreatureInitFromStatBlock,
   battleId,
   characterId,
   combatantId,
@@ -46,6 +46,12 @@ import {
   battleCreatureInitFromCharacterBuild,
   characterSheetBattleInit,
 } from "./index.ts";
+
+function battleCreatureInitFromStatBlock(
+  input: Parameters<typeof parseBattleCreatureInitFromStatBlock>[0],
+) {
+  return expectRight(parseBattleCreatureInitFromStatBlock(input));
+}
 
 const battleInitProjectionScenarios = [
   "init",

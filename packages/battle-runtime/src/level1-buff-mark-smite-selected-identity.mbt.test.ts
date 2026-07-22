@@ -28,6 +28,7 @@ import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-REPLAY: L1E-SHILLELAGH shillelagh doShillelaghWeaponAttackOverride
 // UNIT-IDENTITY-REPLAY: L1E-TRUE-STRIKE true_strike doTrueStrikeSpellHostedWeaponAttack
 import { Either } from "effect";
+import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";
 import { describe, expect, it } from "vitest";
 import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 import { admitCharacterWeaponAttackExecutionWeapon } from "./character-weapon-execution-admission.ts";
@@ -2715,9 +2716,8 @@ function level1BuffMarkSmiteStatBlockCreature(input: {
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "statBlock",
-      statBlock,
+      source: Either.getOrThrow(battleStatBlockCombatantSource(statBlock)),
       currentHp: maxHp,
-      maxHp,
       tempHp: Hp(0),
     },
   };

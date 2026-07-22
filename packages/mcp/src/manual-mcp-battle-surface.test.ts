@@ -7,6 +7,7 @@ import {
   WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE,
   WEAPON_MASTERY_SAP_SUPPORT_PROFILE,
   WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE,
+  battleCreatureInitFromStatBlock,
   battleId,
   admitCharacterWeaponAttackExecutionWeapon,
   characterId,
@@ -1120,18 +1121,16 @@ function statBlock(
             creatureType: input.creatureType,
           },
         };
-  return {
-    combatantId: input.combatantId,
-    displayName: input.displayName ?? battleStatBlock.statBlock.displayName,
-    initiative: initiativeScore(input.initiative),
-    creatureInit: {
-      kind: "statBlock",
+  const init = Either.getOrThrow(
+    battleCreatureInitFromStatBlock({
+      combatantId: input.combatantId,
       statBlock: battleStatBlock,
+      initiative: initiativeScore(input.initiative),
       currentHp: Hp(10),
-      maxHp: Hp(10),
       tempHp: Hp(0),
-    },
-  };
+    }),
+  );
+  return { ...init, displayName: input.displayName ?? init.displayName };
 }
 
 function character(

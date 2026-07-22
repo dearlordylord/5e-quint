@@ -12,17 +12,14 @@ const BATTLE_RUNTIME_SRC = "packages/battle-runtime/src";
 const EXECUTION_ROOT_DIRECTORIES = [
   `${BATTLE_RUNTIME_SRC}/procedure-execution`,
 ];
-const MIGRATION_CANDIDATES = [
-  `${BATTLE_RUNTIME_SRC}/battle-reducer/battle-discovery.ts`,
-  `${BATTLE_RUNTIME_SRC}/battle-reducer/reducer-route.ts`,
-  `${BATTLE_RUNTIME_SRC}/battle-reducer/spells-resolve.ts`,
-  `${BATTLE_RUNTIME_SRC}/battle-reducer/dispatcher.ts`,
-];
 const EXECUTION_ROOT_FILES = [
   `${BATTLE_RUNTIME_SRC}/character-execution.ts`,
   `${BATTLE_RUNTIME_SRC}/active-effect/codecs.ts`,
   `${BATTLE_RUNTIME_SRC}/active-effect/types.ts`,
-  ...MIGRATION_CANDIDATES,
+  `${BATTLE_RUNTIME_SRC}/battle-reducer/battle-discovery.ts`,
+  `${BATTLE_RUNTIME_SRC}/battle-reducer/reducer-route.ts`,
+  `${BATTLE_RUNTIME_SRC}/battle-reducer/spells-resolve.ts`,
+  `${BATTLE_RUNTIME_SRC}/battle-reducer/dispatcher.ts`,
 ];
 
 const FORBIDDEN_OWNERS = [
@@ -199,24 +196,42 @@ function isRepoLocalSpecifier(specifier) {
 }
 
 function executionRoots() {
+  const declaredFiles = EXECUTION_ROOT_FILES.map(normalizedRepoPath);
+  assertDeclaredRootsExist(declaredFiles);
   return [
-    ...EXECUTION_ROOT_DIRECTORIES.flatMap((directory) =>
-      listTypeScriptFiles(normalizedRepoPath(directory)),
+    ...declaredDirectoryRoots(
+      EXECUTION_ROOT_DIRECTORIES.map(normalizedRepoPath),
     ),
-    ...EXECUTION_ROOT_FILES.map(normalizedRepoPath).filter(fs.existsSync),
+    ...declaredFiles,
   ].sort();
 }
 
-function migrationCandidateRoots() {
-  return MIGRATION_CANDIDATES.map((file) => {
-    const root = normalizedRepoPath(file);
-    if (!fs.existsSync(root)) {
+function declaredDirectoryRoots(directories) {
+  return directories.flatMap((directory) => {
+    if (!fs.existsSync(directory) || !fs.statSync(directory).isDirectory()) {
       throw new Error(
-        `Declared battle-runtime migration candidate is missing: ${file}.`,
+        `Declared battle-runtime execution root directory does not exist: ${toRepoPath(directory)}`,
       );
     }
-    return root;
+    const roots = listTypeScriptFiles(directory);
+    if (roots.length === 0) {
+      throw new Error(
+        `Declared battle-runtime execution root directory has no TypeScript roots: ${toRepoPath(directory)}`,
+      );
+    }
+    return roots;
   });
+}
+
+function assertDeclaredRootsExist(files) {
+  const missing = files.filter((file) => !fs.existsSync(file));
+  if (missing.length > 0) {
+    throw new Error(
+      `Declared battle-runtime execution root(s) do not exist:\n${missing
+        .map(toRepoPath)
+        .join("\n")}`,
+    );
+  }
 }
 
 function forbiddenOwner(file, zone) {
@@ -443,6 +458,10 @@ function shortestForbiddenPath(graph, root, classifyForbidden) {
 }
 
 function runSelfTests() {
+  assert.throws(
+    () => assertDeclaredRootsExist([path.join(ROOT, "missing-root.ts")]),
+    /Declared battle-runtime execution root\(s\) do not exist/,
+  );
   const graph = new Map([
     ["execution", ["long-a", "short-helper"]],
     ["long-a", ["long-b"]],
@@ -465,6 +484,14 @@ function runSelfTests() {
     path.join(os.tmpdir(), "battle-import-ownership-"),
   );
   try {
+    assert.throws(
+      () => declaredDirectoryRoots([path.join(fixtureRoot, "missing")]),
+      /execution root directory does not exist/,
+    );
+    assert.throws(
+      () => declaredDirectoryRoots([fixtureRoot]),
+      /execution root directory has no TypeScript roots/,
+    );
     const fixtureExecution = path.join(fixtureRoot, "execution.ts");
     const fixtureHelper = path.join(fixtureRoot, "helper.ts");
     const fixtureForbidden = path.join(fixtureRoot, "forbidden.ts");
@@ -648,11 +675,6 @@ function runSelfTests() {
     }
   }
 
-  assert.notDeepEqual(
-    executionRoots().map(toRepoPath),
-    migrationCandidateRoots().map(toRepoPath),
-    "Default enforcement and candidate audit must retain distinct root sets.",
-  );
   assert.equal(
     forbiddenOwner(
       normalizedRepoPath(`${BATTLE_RUNTIME_SRC}/stat-block-presentation.ts`),
@@ -746,7 +768,7 @@ function checkRoots(roots, failOnViolation, forbiddenZones = [undefined]) {
 }
 
 const cliArguments = process.argv.slice(2);
-const supportedArguments = new Set(["--self-test", "--audit-candidates"]);
+const supportedArguments = new Set(["--self-test"]);
 const unknownArguments = cliArguments.filter(
   (argument) => !supportedArguments.has(argument),
 );
@@ -763,12 +785,6 @@ runSelfTests();
 
 if (cliArguments.includes("--self-test")) {
   console.log("Battle-runtime import ownership synthetic tests passed.");
-} else if (cliArguments.includes("--audit-candidates")) {
-  checkRoots(
-    migrationCandidateRoots(),
-    false,
-    FORBIDDEN_OWNERS.map((owner) => owner.zone),
-  );
 } else {
   const roots = executionRoots();
   if (roots.length === 0) {

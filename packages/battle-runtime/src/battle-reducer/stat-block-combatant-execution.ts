@@ -10,6 +10,7 @@ import * as Either from "effect/Either";
 import {
   battleActiveEffectExecutionOrdinal,
   battleExecutionScopeCursor,
+  battleExecutionScopeInitialOrNextOrdinal,
   battleStatBlockExecutionScopeRefBelongsToBattle,
   battleStatBlockExecutionScopeRefBelongsToCombatant,
   type CombatantId,
@@ -35,7 +36,6 @@ export function addBattleStatBlockCombatant(input: {
     readonly currentHp: Hp;
     readonly tempHp: Hp;
   };
-  readonly tieOrderIndex?: number;
 }): Either.Either<BattleState, BattleStateInitIssue> {
   const { combatant } = input;
   if (input.state.combatants.has(combatant.combatantId)) {
@@ -70,7 +70,9 @@ export function addBattleStatBlockCombatant(input: {
   const allocation = input.state.executionScopeCursors.get(
     combatant.combatantId,
   );
-  const currentScopeOrdinal = allocation?.nextScopeOrdinal ?? 0;
+  const currentScopeOrdinal = battleExecutionScopeInitialOrNextOrdinal(
+    allocation?.nextScopeOrdinal,
+  );
   if (currentScopeOrdinal !== combatant.admission.cursorTransition.from) {
     return battleStateInitIssue(
       "Stat Block combatant admission does not match the current execution-scope cursor.",
@@ -113,21 +115,16 @@ export function addBattleStatBlockCombatant(input: {
   const firstTie = entries.findIndex(
     (entry) => entry.initiative === combatant.initiative,
   );
-  let insertionIndex = orderedIndex;
-  if (firstTie !== -1) {
-    let tieLength = 0;
-    while (
-      firstTie + tieLength < entries.length &&
-      entries[firstTie + tieLength]?.initiative === combatant.initiative
-    ) {
-      tieLength += 1;
-    }
-    const tieIndex =
-      input.tieOrderIndex === undefined
-        ? tieLength
-        : Math.max(0, Math.min(input.tieOrderIndex, tieLength));
-    insertionIndex = firstTie + tieIndex;
-  }
+  const tieLength =
+    firstTie === -1
+      ? 0
+      : entries
+          .slice(firstTie)
+          .findIndex((entry) => entry.initiative !== combatant.initiative);
+  const insertionIndex =
+    firstTie === -1
+      ? orderedIndex
+      : firstTie + (tieLength === -1 ? entries.length - firstTie : tieLength);
   const executionScopeCursors = new Map(input.state.executionScopeCursors);
   executionScopeCursors.set(combatant.combatantId, {
     kind: "active",
