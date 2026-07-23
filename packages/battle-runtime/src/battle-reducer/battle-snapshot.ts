@@ -2,6 +2,7 @@ import { canSpendBonusAction } from "@dnd/shared-algebras/action-economy-algebra
 import { initiativeOrder } from "@dnd/shared-algebras/initiative-algebra";
 import { Match } from "effect";
 import { type BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
+import type { BattleSubject } from "../battle-subjects.ts";
 import type { BattleCompanionSnapshot } from "../companion-state.ts";
 import { battleCompanionEntries } from "../find-familiar-state.ts";
 import { CombatantId, battleReplayStackDepth } from "../identity.ts";
@@ -14,7 +15,11 @@ import {
   battleLightEmitters,
   battleObscurementZones,
 } from "./spells-holes-fills.ts";
-import { discoverBattleActCandidates } from "./battle-discovery.ts";
+import {
+  discoverBattleActCandidatesWithExecutionRegistry,
+  discoverBattleActCandidatesWithoutSpellProcedures,
+} from "./battle-discovery.ts";
+import type { SpellProcedureExecutionRegistry } from "./spell-procedure-profiles/execution-registry.ts";
 import {
   INTERRUPT_DECISION_HOLE_ID,
   INTERRUPT_DECISION_HOLE_INSTANCE,
@@ -23,6 +28,7 @@ import type {
   BattleInterruptFrame,
   BattleInterruptDecisionHole,
   BattleInterruptCheckpoint,
+  BattleHole,
   BattleSnapshot,
   BattleState,
   BattleTurnSnapshot,
@@ -31,12 +37,37 @@ import type {
 export function battleSnapshotProjection(state: BattleState): {
   readonly snapshot: BattleSnapshot;
 } {
+  return battleSnapshotProjectionFromActs(
+    state,
+    discoverBattleActCandidatesWithoutSpellProcedures,
+  );
+}
+
+export function battleSnapshotProjectionWithExecutionRegistry(
+  state: BattleState,
+  executionRegistry: SpellProcedureExecutionRegistry,
+): { readonly snapshot: BattleSnapshot } {
+  return battleSnapshotProjectionFromActs(state, (snapshotState) =>
+    discoverBattleActCandidatesWithExecutionRegistry(
+      snapshotState,
+      executionRegistry,
+    ),
+  );
+}
+
+function battleSnapshotProjectionFromActs(
+  state: BattleState,
+  discoverActs: (state: BattleState) => readonly {
+    readonly subject: BattleSubject;
+    readonly initialHoles: readonly BattleHole[];
+  }[],
+): { readonly snapshot: BattleSnapshot } {
   const normalizedState = normalizeEarlyEndedOngoingFeatures(state);
   if (normalizedState !== state) {
-    return battleSnapshotProjection(normalizedState);
+    return battleSnapshotProjectionFromActs(normalizedState, discoverActs);
   }
   const turnOrder = [...initiativeOrder(state.initiative)];
-  const availableActs = discoverBattleActCandidates(state);
+  const availableActs = discoverActs(state);
   const executionScopeCursorEntries = [...state.executionScopeCursors];
 
   const snapshot: BattleSnapshot = {
@@ -120,6 +151,14 @@ export function battleSnapshotProjection(state: BattleState): {
 
 export function snapshotBattle(state: BattleState): BattleSnapshot {
   return battleSnapshotProjection(state).snapshot;
+}
+
+export function snapshotBattleWithExecutionRegistry(
+  state: BattleState,
+  executionRegistry: SpellProcedureExecutionRegistry,
+): BattleSnapshot {
+  return battleSnapshotProjectionWithExecutionRegistry(state, executionRegistry)
+    .snapshot;
 }
 
 export function battleTurnSnapshot(state: BattleState): BattleTurnSnapshot {

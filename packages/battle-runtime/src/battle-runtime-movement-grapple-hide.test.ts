@@ -11,7 +11,7 @@ import { abilityModifier } from "@dnd/shared/types";
 import { battleActUnitPresentation } from "./battle-act-composition.ts";
 import { describe, expect, test } from "vitest";
 import { deriveCreatureSpaceTraversalMovementFactFromTableRoute } from "./battle-reducer/creature-space-table-route.ts";
-import { resolveReplayContinuationFromState } from "./battle-reducer/dispatcher.ts";
+import { resolveReplayContinuationFromState } from "./battle-execution-composition.ts";
 import {
   grappleDragCostExempt,
   targetIsNoMoreThanOneSizeLarger,

@@ -40,7 +40,7 @@ import {
   spellActTurnResourceAvailable,
   spellHasAvailableSpend,
 } from "./spell-turn-resources.ts";
-import { discoverBattleActCandidates } from "./battle-discovery.ts";
+import { discoverBattleActCandidatesWithoutSpellProcedures } from "./battle-discovery.ts";
 import {
   INTERRUPT_DECISION_HOLE_ID,
   INTERRUPT_DECISION_HOLE_INSTANCE,
@@ -245,7 +245,8 @@ export function battleSnapshotProjection(state: BattleState): {
     return battleSnapshotProjection(normalizedState);
   }
   const turnOrder = [...initiativeOrder(state.initiative)];
-  const availableActs = discoverBattleActCandidates(state);
+  const availableActs =
+    discoverBattleActCandidatesWithoutSpellProcedures(state);
   const executionScopeCursorEntries = [...state.executionScopeCursors];
 
   const snapshot: BattleSnapshot = {

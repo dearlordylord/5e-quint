@@ -4,8 +4,8 @@ import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-CLASS-PALADINS-SMITE paladin_paladins_smite
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-after-hit-damage spell.invocation-marked-damage-rider
 import { describe, expect, test } from "vitest";
-import { markedDamageRiderProfile } from "./battle-reducer/spell-procedure-profiles/marked-damage-rider.ts";
 import { spellProcedureExecutionRegistry } from "./battle-reducer/spell-procedure-profiles/execution-composition.ts";
+import { spellProcedureExecutionFor } from "./battle-reducer/spell-procedure-profiles/execution-registry.ts";
 import { characterSpellProcedure } from "./character-execution-admission.ts";
 import type {
   BattleRuntimeSession,
@@ -282,19 +282,20 @@ describe("battle runtime: Favored Enemy", () => {
       throw new Error(fillSet.message);
     }
 
-    const result = markedDamageRiderProfile.resolve(
-      {
-        input: {
-          state: staleState,
-          subject: act.subject,
-          fills,
-        },
-        actorId: fighterId,
-        invocation,
-        fillSet,
+    const executionRegistry = spellProcedureExecutionRegistry();
+    const result = spellProcedureExecutionFor(
+      executionRegistry,
+      invocation.procedure,
+    ).resolve({
+      input: {
+        state: staleState,
+        subject: act.subject,
+        fills,
       },
-      spellProcedureExecutionRegistry(),
-    );
+      actorId: fighterId,
+      invocation,
+      fillSet,
+    });
 
     expect(result).toMatchObject({ tag: "invalid", reason: "staleSubject" });
     expect(result.snapshot).toEqual(staleSnapshot);

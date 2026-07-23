@@ -85,7 +85,10 @@ import type {
   BattleResolutionResult,
 } from "../battle-state-execution.ts";
 import { isTargetListSpellInvocation } from "./spells-invocation-guards.ts";
-import type { SpellProcedureExecutionRegistry } from "./spell-procedure-profiles/execution-registry.ts";
+import {
+  spellProcedureExecutionFor,
+  type SpellProcedureExecutionRegistry,
+} from "./spell-procedure-profiles/execution-registry.ts";
 import {
   bindStoredSpellProcedureExecutionFacts,
   characterStoredExecutionProcedureRef,
@@ -150,17 +153,6 @@ import {
   isGlyphStoredAreaControlSpellInvocation,
   resolveStoredGlyphAreaControlSpellRelease,
 } from "./spell-procedure-profiles/hypnotic-pattern.ts";
-import { conditionImmunityAndTurnStartTemporaryHitPointsProfile } from "./spell-procedure-profiles/condition-immunity-turn-start-temporary-hit-points.ts";
-import {
-  creatureSizeChangeProfile,
-  creatureSizeDecreaseProfile,
-} from "./spell-procedure-profiles/creature-size-change.ts";
-import { creatureTypeProtectionProfile } from "./spell-procedure-profiles/creature-type-protection.ts";
-import { directConditionProfile } from "./spell-procedure-profiles/direct-condition.ts";
-import { hastePositiveProfile } from "./spell-procedure-profiles/haste-positive.ts";
-import { levitatedCreatureProfile } from "./spell-procedure-profiles/levitated-creature.ts";
-import { rollModifierProfile } from "./spell-procedure-profiles/roll-modifier.ts";
-import { scalarBuffProfile } from "./spell-procedure-profiles/scalar-buff.ts";
 import { resolveStoredGlyphSelfTransformationModeSpellRelease } from "./spell-procedure-profiles/self-transformation-mode.ts";
 import { invalidResult } from "./result-helpers.ts";
 import {
@@ -2028,57 +2020,63 @@ function resolveStoredGlyphSingleCreatureActiveEffectSpellRelease(input: {
   const invocation = { ...input.invocation, sourceProcedureRef: procedureRef };
   return Match.value(invocation).pipe(
     byStoredActiveEffectProcedure("scalarBuff", (invocation) =>
-      scalarBuffProfile.resolve({ ...releaseInput, invocation }),
+      spellProcedureExecutionFor(
+        input.executionRegistry,
+        invocation.procedure,
+      ).resolve({ ...releaseInput, invocation }),
     ),
     byStoredActiveEffectProcedure("rollModifier", (invocation) =>
-      rollModifierProfile.resolve(
-        { ...releaseInput, invocation },
+      spellProcedureExecutionFor(
         input.executionRegistry,
-      ),
+        invocation.procedure,
+      ).resolve({ ...releaseInput, invocation }),
     ),
     byStoredActiveEffectProcedure("creatureSizeIncrease", (invocation) =>
-      creatureSizeChangeProfile.resolve(
-        { ...releaseInput, invocation },
+      spellProcedureExecutionFor(
         input.executionRegistry,
-      ),
+        invocation.procedure,
+      ).resolve({ ...releaseInput, invocation }),
     ),
     byStoredActiveEffectProcedure("creatureSizeDecrease", (invocation) =>
-      creatureSizeDecreaseProfile.resolve(
-        { ...releaseInput, invocation },
+      spellProcedureExecutionFor(
         input.executionRegistry,
-      ),
+        invocation.procedure,
+      ).resolve({ ...releaseInput, invocation }),
     ),
     byStoredActiveEffectProcedure("levitatedCreature", (invocation) =>
-      levitatedCreatureProfile.resolve(
-        { ...releaseInput, invocation },
+      spellProcedureExecutionFor(
         input.executionRegistry,
-      ),
+        invocation.procedure,
+      ).resolve({ ...releaseInput, invocation }),
     ),
     byStoredActiveEffectProcedure("directCondition", (invocation) =>
-      directConditionProfile.resolve(
-        { ...releaseInput, invocation },
+      spellProcedureExecutionFor(
         input.executionRegistry,
-      ),
+        invocation.procedure,
+      ).resolve({ ...releaseInput, invocation }),
     ),
     byStoredActiveEffectProcedure("hastePositive", (invocation) =>
-      hastePositiveProfile.resolve({ ...releaseInput, invocation }),
+      spellProcedureExecutionFor(
+        input.executionRegistry,
+        invocation.procedure,
+      ).resolve({ ...releaseInput, invocation }),
     ),
     byStoredActiveEffectProcedure("creatureTypeProtection", (invocation) =>
-      creatureTypeProtectionProfile.resolve(
-        { ...releaseInput, invocation },
+      spellProcedureExecutionFor(
         input.executionRegistry,
-      ),
+        invocation.procedure,
+      ).resolve({ ...releaseInput, invocation }),
     ),
     byStoredActiveEffectProcedure(
       "conditionImmunityAndTurnStartTemporaryHitPoints",
       (invocation) =>
-        conditionImmunityAndTurnStartTemporaryHitPointsProfile.resolve(
-          {
-            ...releaseInput,
-            invocation,
-          },
+        spellProcedureExecutionFor(
           input.executionRegistry,
-        ),
+          invocation.procedure,
+        ).resolve({
+          ...releaseInput,
+          invocation,
+        }),
     ),
     Match.exhaustive,
   );

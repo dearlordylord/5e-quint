@@ -9,7 +9,7 @@ import type { AuthoredSelectedSpellInvocation } from "./character-execution-admi
 import type { BattleUnitRef } from "./battle-init.ts";
 import { Either, Match } from "effect";
 import { isCharacterProcedureBattleSubject } from "./battle-subjects.ts";
-import { discoverBattleActCandidates } from "./battle-reducer/battle-discovery.ts";
+import { discoverBattleActCandidates } from "./battle-execution-composition.ts";
 import { battleReducerRouteEventsForDiscoveredAct } from "./battle-reducer/reducer-route.ts";
 import { supportedSpellInvocationRef } from "./battle-reducer/spells-invocation-ref.ts";
 import type { BattleProcedureExecutionRef, CombatantId } from "./identity.ts";

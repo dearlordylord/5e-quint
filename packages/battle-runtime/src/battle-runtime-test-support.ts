@@ -117,7 +117,7 @@ import { characterUnitProcedureRefsForAuthoredSelection } from "./battle-composi
 import { combatantCanSee } from "./battle-reducer/creature-state-leaves.ts";
 import { isCharacterBattleCreatureState } from "./battle-reducer/creature-state.ts";
 import { applyBattleHitPointDamage } from "./battle-reducer/damage-apply.ts";
-import { discoverBattleActCandidates } from "./battle-reducer/battle-discovery.ts";
+import { discoverBattleActCandidates } from "./battle-execution-composition.ts";
 import { requiredAbilityCheckRollMode } from "./battle-reducer/hole-helpers.ts";
 import { supportedSpellInvocationRef } from "./battle-reducer/spells-invocation-ref.ts";
 import { supportedSpellActs } from "./battle-reducer/spells-profiles.ts";

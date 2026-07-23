@@ -22,10 +22,19 @@ export function isTriggeredReactionSpellInvocation<
   },
 >(
   invocation: TInvocation,
-): invocation is Extract<
-  TInvocation,
-  { readonly procedure: TriggeredReactionSpellProcedureCandidate }
-> {
+): invocation is
+  | Extract<
+      TInvocation,
+      {
+        readonly procedure: Exclude<
+          TriggeredReactionSpellProcedureCandidate,
+          "saveGatedDamage"
+        >;
+      }
+    >
+  | (Extract<TInvocation, { readonly procedure: "saveGatedDamage" }> & {
+      readonly castingTime: { readonly kind: "reaction" };
+    }) {
   if (invocation.procedure === "saveGatedDamage") {
     return invocation.castingTime?.kind === "reaction";
   }

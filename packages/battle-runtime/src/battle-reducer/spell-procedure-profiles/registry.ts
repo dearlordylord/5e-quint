@@ -103,6 +103,7 @@ import type {
   SpellProcedureAdmissionDeclaration,
   SpellProcedureDeclaration,
 } from "./profile.ts";
+import { snapshotBattleWithExecutionRegistry } from "../battle-snapshot.ts";
 
 type RegisteredSpellProcedureDeclaration<
   P extends SupportedSpellInvocation["procedure"],
@@ -378,7 +379,15 @@ function registeredSpellProcedureExecution<P extends RegisteredSpellProcedure>(
     metamagicCompatibility: declaration.metamagicCompatibility,
     executionSchema: declaration.executionSchema,
     discoverCastAct: declaration.discoverCastAct,
-    resolve: (resolution) => declaration.resolve(resolution, registry),
+    resolve: (resolution) => {
+      const result = declaration.resolve(resolution, registry);
+      const snapshotState =
+        result.tag === "invalid" ? resolution.input.state : result.state;
+      return {
+        ...result,
+        snapshot: snapshotBattleWithExecutionRegistry(snapshotState, registry),
+      };
+    },
   };
 }
 

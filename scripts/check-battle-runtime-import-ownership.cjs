@@ -21,6 +21,12 @@ const EXECUTION_ROOT_FILES = [
   `${BATTLE_RUNTIME_SRC}/battle-reducer/spells-resolve.ts`,
   `${BATTLE_RUNTIME_SRC}/battle-reducer/dispatcher.ts`,
 ];
+const SPELL_EXECUTION_DISPATCH_FILES = [
+  `${BATTLE_RUNTIME_SRC}/battle-reducer/dispatcher.ts`,
+  `${BATTLE_RUNTIME_SRC}/battle-reducer/glyph-durable-occurrence.ts`,
+];
+const SPELL_EXECUTION_COMPOSITION_MODULE = `${BATTLE_RUNTIME_SRC}/battle-reducer/spell-procedure-profiles/execution-composition.ts`;
+const SPELL_DECLARATION_REGISTRY_MODULE = `${BATTLE_RUNTIME_SRC}/battle-reducer/spell-procedure-profiles/registry.ts`;
 
 const FORBIDDEN_OWNERS = [
   {
@@ -457,6 +463,37 @@ function shortestForbiddenPath(graph, root, classifyForbidden) {
   return undefined;
 }
 
+function spellExecutionBoundaryViolations(graph) {
+  const dispatcher = normalizedRepoPath(
+    `${BATTLE_RUNTIME_SRC}/battle-reducer/dispatcher.ts`,
+  );
+  const forbiddenCompositionModules = new Set([
+    normalizedRepoPath(SPELL_EXECUTION_COMPOSITION_MODULE),
+    normalizedRepoPath(SPELL_DECLARATION_REGISTRY_MODULE),
+  ]);
+  const compositionPath = shortestForbiddenPath(graph, dispatcher, (file) =>
+    forbiddenCompositionModules.has(file)
+      ? { zone: "spell execution composition" }
+      : undefined,
+  );
+  const directResolutionViolations = SPELL_EXECUTION_DISPATCH_FILES.flatMap(
+    (repoPath) => {
+      const file = normalizedRepoPath(repoPath);
+      const source = fs.readFileSync(file, "utf8");
+      return [...source.matchAll(/\b[A-Za-z]\w*Profile\.resolve\s*\(/g)].map(
+        (match) => ({
+          file,
+          call: match[0].replace(/\s+/g, ""),
+        }),
+      );
+    },
+  );
+  return {
+    compositionPath,
+    directResolutionViolations,
+  };
+}
+
 function runSelfTests() {
   assert.throws(
     () => assertDeclaredRootsExist([path.join(ROOT, "missing-root.ts")]),
@@ -746,6 +783,7 @@ function checkRoots(roots, failOnViolation, forbiddenZones = [undefined]) {
       ...violation,
     })),
   );
+  const spellExecutionViolations = spellExecutionBoundaryViolations(graph);
   const elapsedMs = Number(process.hrtime.bigint() - startedAt) / 1_000_000;
   for (const { root, violation } of violations) {
     console.error(formatViolation(root, violation));
@@ -755,16 +793,38 @@ function checkRoots(roots, failOnViolation, forbiddenZones = [undefined]) {
       `${toRepoPath(violation.file)} launders forbidden field ${violation.field} into protected execution shape ${violation.shapeName}.`,
     );
   }
+  if (spellExecutionViolations.compositionPath !== undefined) {
+    console.error(
+      formatViolation(
+        dispatcherRoot(),
+        spellExecutionViolations.compositionPath,
+      ),
+    );
+  }
+  for (const violation of spellExecutionViolations.directResolutionViolations) {
+    console.error(
+      `${toRepoPath(violation.file)} bypasses the spell execution registry with ${violation.call}.`,
+    );
+  }
   console.log(
     `Battle-runtime import ownership: ${roots.length} root(s), ${graph.size} transitive module(s), ${elapsedMs.toFixed(1)}ms.`,
   );
   if (
     failOnViolation &&
-    (violations.length > 0 || launderingViolations.length > 0)
+    (violations.length > 0 ||
+      launderingViolations.length > 0 ||
+      spellExecutionViolations.compositionPath !== undefined ||
+      spellExecutionViolations.directResolutionViolations.length > 0)
   ) {
     process.exitCode = 1;
   }
   return violations;
+}
+
+function dispatcherRoot() {
+  return normalizedRepoPath(
+    `${BATTLE_RUNTIME_SRC}/battle-reducer/dispatcher.ts`,
+  );
 }
 
 const cliArguments = process.argv.slice(2);

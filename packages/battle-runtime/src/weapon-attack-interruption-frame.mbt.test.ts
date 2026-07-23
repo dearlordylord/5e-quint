@@ -32,7 +32,7 @@ import {
   interruptDecisionHole,
 } from "./battle-reducer/interrupt-execution.ts";
 import { attackDamageEventAmountBeforeTargetAdjustments } from "./battle-reducer/attack-damage-events.ts";
-import { resolveBattleInterrupt } from "./battle-reducer/dispatcher.ts";
+import { resolveBattleInterrupt } from "./battle-execution-composition.ts";
 import { resolveBattleSubject } from "./battle-session-execution.ts";
 import type { BattleSubject } from "./battle-subjects.ts";
 import {

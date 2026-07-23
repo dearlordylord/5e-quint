@@ -103,7 +103,7 @@ import {
   spellRestraintEffectEntries,
 } from "./spell-condition-effects-helpers.ts";
 import { discoverSupportedSpellInvocations } from "./spells-discovery.ts";
-import { spellProcedureExecutionRegistry } from "./spell-procedure-profiles/execution-composition.ts";
+import type { SpellProcedureExecutionRegistry } from "./spell-procedure-profiles/execution-registry.ts";
 import { spellInvocationIsSpellcasting } from "./spell-turn-resources.ts";
 import { supportedSpellActs } from "./supported-spell-acts.ts";
 import { combatantInsideActiveAntimagicFieldAura } from "./antimagic-field-action-interdiction.ts";
@@ -177,14 +177,29 @@ type CloudkillAreaHazardEffect = Extract<
   BattleActiveEffect,
   { readonly kind: "cloudkillAreaHazard" }
 >;
-export function discoverBattleActCandidates(
+export function discoverBattleActCandidatesWithExecutionRegistry(
+  state: BattleState,
+  executionRegistry: SpellProcedureExecutionRegistry,
+): readonly BattleActDiscoveryCandidate[] {
+  return discoverBattleActCandidatesInternal(state, executionRegistry);
+}
+
+export function discoverBattleActCandidatesWithoutSpellProcedures(
   state: BattleState,
 ): readonly BattleActDiscoveryCandidate[] {
-  return discoverBattleActsWithoutRouteEvents(state);
+  return discoverBattleActCandidatesInternal(state, null);
+}
+
+function discoverBattleActCandidatesInternal(
+  state: BattleState,
+  executionRegistry: SpellProcedureExecutionRegistry | null,
+): readonly BattleActDiscoveryCandidate[] {
+  return discoverBattleActsWithoutRouteEvents(state, executionRegistry);
 }
 
 function discoverBattleActsWithoutRouteEvents(
   state: BattleState,
+  executionRegistry: SpellProcedureExecutionRegistry | null,
 ): readonly BattleActDiscoveryCandidate[] {
   const actorId = currentActorId(state);
   const hasOpenStatBlockMultiattackDispatch =
@@ -555,13 +570,11 @@ function discoverBattleActsWithoutRouteEvents(
   acts.push(...monkFocusActs(state, actorId));
   acts.push(...statBlockBonusActionOptionActs(state, actorId));
   acts.push(...supportedUnitFeatureActs(state, actorId));
-  const spellActs = combatantCanTakeActions(state.combatants.get(actorId))
-    ? discoverSupportedSpellInvocations(
-        state,
-        actorId,
-        spellProcedureExecutionRegistry(),
-      )
-    : [];
+  const spellActs =
+    executionRegistry !== null &&
+    combatantCanTakeActions(state.combatants.get(actorId))
+      ? discoverSupportedSpellInvocations(state, actorId, executionRegistry)
+      : [];
   acts.push(...companionProtocolActs(state, actorId, spellActs));
   acts.push(...spellActs);
   acts.push(...spellCreatedHeldObjectReleaseActs(state, actorId));

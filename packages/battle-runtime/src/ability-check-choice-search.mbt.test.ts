@@ -3,7 +3,7 @@
 import { describe, expect, it } from "vitest";
 
 import { requiredAbilityCheckRollMode } from "./battle-reducer/hole-helpers.ts";
-import { discoverBattleActCandidates } from "./battle-reducer/battle-discovery.ts";
+import { discoverBattleActCandidates } from "./battle-execution-composition.ts";
 import {
   MBT_TEST_TIMEOUT_MS,
   booleanValue,

@@ -3,13 +3,15 @@ import * as Either from "effect/Either";
 import type { BattleReducerRouteEvents } from "./battle-reducer/reducer-route.ts";
 import { battleReducerRouteForResolution } from "./battle-reducer/reducer-route.ts";
 import {
-  endTurn,
   openCreatureFallsInterruptWindow,
   resolveAdmittedFindFamiliarReappearanceSubject,
+} from "./battle-reducer/dispatcher.ts";
+import {
+  endTurn,
   resolveAdmittedBattleSubject,
   resolveBattleInterrupt,
   snapshotBattle,
-} from "./battle-reducer/dispatcher.ts";
+} from "./battle-execution-composition.ts";
 import { admitBattleResolutionInput } from "./battle-reducer/resolution-admission.ts";
 import {
   battleRuntimeSessionWithStatBlockPresentation,

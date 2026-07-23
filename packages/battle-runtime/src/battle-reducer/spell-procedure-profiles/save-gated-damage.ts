@@ -26,11 +26,13 @@ import {
   supportedPreparedSaveGateDamageProfile,
 } from "./_save-gate-helpers.ts";
 import { resolveSaveGateDamageSpellAct } from "../spells-resolve-save-gates.ts";
+import { resolveTriggeredReactionSaveGatedDamage } from "../dispatcher.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import type { TriggeredReactionSaveGatedDamageResolution } from "./resolution-contract.ts";
 import { Schema } from "effect";
 import {
   AbilitySchema,
@@ -294,6 +296,12 @@ function readiedSaveGatedDamageActs(
 function resolveSaveGatedDamage(
   input: SaveGatedDamageResolveInput,
 ): BattleResolutionResult {
+  if (isTriggeredReactionSaveGatedDamageResolution(input)) {
+    return resolveTriggeredReactionSaveGatedDamage(
+      { ...input.input, invocation: input.invocation },
+      input.fillSet,
+    );
+  }
   return resolveSaveGateDamageSpellAct({
     input: input.input,
     actorId: input.actorId,
@@ -306,6 +314,15 @@ function resolveSaveGatedDamage(
       ? {}
       : { metamagicApplications: input.metamagicApplications }),
   });
+}
+
+function isTriggeredReactionSaveGatedDamageResolution(
+  input: SaveGatedDamageResolveInput,
+): input is TriggeredReactionSaveGatedDamageResolution {
+  return (
+    input.input.subject.tag === "runtimeCommand" &&
+    input.input.subject.command === "castTriggeredReactionSpell"
+  );
 }
 
 const ActionSpellInvocationCastingTimeSchema = Schema.Struct({

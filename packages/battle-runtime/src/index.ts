@@ -246,10 +246,8 @@ export {
   type FindFamiliarWithin100FeetFact,
 } from "./find-familiar-telepathy.ts";
 
-export {
-  deliverTouchSpellThroughFindFamiliar,
-  shareFindFamiliarSenses,
-} from "./battle-reducer/dispatcher.ts";
+export { shareFindFamiliarSenses } from "./battle-reducer/dispatcher.ts";
+export { deliverTouchSpellThroughFindFamiliar } from "./battle-execution-composition.ts";
 
 export type { PactOfTheChainFamiliarAttackSubject } from "./find-familiar-pact-chain.ts";
 
@@ -549,21 +547,23 @@ export {
   concentrationSavingThrowDc,
   scoreModifier,
 } from "./battle-reducer/domain-helpers.ts";
-export { discoverBattleActCandidates } from "./battle-reducer/battle-discovery.ts";
+export { discoverBattleActCandidates } from "./battle-execution-composition.ts";
 export {
-  endTurn,
   openBattleInterruptWindow,
   openCreatureFallsInterruptWindow,
   resolveFallDamageLanding,
   resolveFeatherFallLanding,
   resolveFlySpeedGrantEndFallCleanup,
-  resolveBattleInterrupt,
-  battleSnapshotProjection,
-  snapshotBattle,
   type FlyEndCanStopFallReason,
   type FlySpeedGrantEndFallWitness,
   type FlySpeedGrantEndFallWitnessResult,
 } from "./battle-reducer/dispatcher.ts";
+export {
+  battleSnapshotProjection,
+  endTurn,
+  resolveBattleInterrupt,
+  snapshotBattle,
+} from "./battle-execution-composition.ts";
 export {
   resolveFailedAbilityCheckResourceBoost,
   resolveSuccessfulAbilityCheckReactionReduction,

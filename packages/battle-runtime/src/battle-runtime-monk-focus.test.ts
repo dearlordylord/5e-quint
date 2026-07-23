@@ -5,7 +5,7 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.monk-focus-battle-options
 import { describe, expect, test } from "vitest";
 import { Either, Schema } from "effect";
-import { resolveReplayContinuationFromState } from "./battle-reducer/dispatcher.ts";
+import { resolveReplayContinuationFromState } from "./battle-execution-composition.ts";
 import {
   actionSurgeResource,
   applyCondition,

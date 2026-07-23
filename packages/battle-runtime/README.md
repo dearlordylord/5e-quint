@@ -76,8 +76,12 @@ extracted, `src/act-presentation/`. `battle-act-composition.ts` and
 
 `battle-session-execution.ts` is the outer orchestration boundary for a
 selected act. It admits character procedure references, preserves the admitted
-runtime context while state advances, and delegates only admitted inputs to the
-state-only dispatcher. Reaction attack subjects receive their projected
+runtime context while state advances, and delegates only admitted inputs through
+`battle-execution-composition.ts`. That composition boundary constructs one
+authored-free Spell Procedure Execution Registry per operation and carries it
+through the state-only dispatcher, nested interrupts, replay, stored-glyph
+release, and final snapshot discovery. The registry is an execution dependency;
+it is never Battle State or session state. Reaction attack subjects receive their projected
 execution selection from the owning state query before dispatcher execution;
 the dispatcher does not project authored action-option records.
 

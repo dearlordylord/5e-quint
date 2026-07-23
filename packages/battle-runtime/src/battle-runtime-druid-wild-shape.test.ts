@@ -24,7 +24,7 @@ import type { SpellRecord, StatBlockRecord } from "@dnd/surface/surface/types";
 import { Schema } from "effect";
 import * as Either from "effect/Either";
 import { expect, test } from "vitest";
-import { resolveReplayContinuationFromState } from "./battle-reducer/dispatcher.ts";
+import { resolveReplayContinuationFromState } from "./battle-execution-composition.ts";
 
 type CharacterSeedInput = Parameters<typeof characterSeed>[0];
 

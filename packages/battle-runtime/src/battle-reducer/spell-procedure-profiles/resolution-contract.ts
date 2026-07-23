@@ -241,7 +241,7 @@ export type SpellProcedureResolutionFillSet<P extends SpellProcedureKey> =
         ? ChainedSpellFillSet
         : OkSpellFillSet;
 
-type SpellProcedureExecutionResolutionFor<P extends SpellProcedureKey> =
+type OrdinarySpellProcedureExecutionResolution<P extends SpellProcedureKey> =
   SpellProcedureResolutionOptions<P> & {
     readonly input: SpellProcedureResolutionInput<P>;
     readonly actorId: CombatantId;
@@ -250,6 +250,27 @@ type SpellProcedureExecutionResolutionFor<P extends SpellProcedureKey> =
     >;
     readonly fillSet: SpellProcedureResolutionFillSet<P>;
   };
+
+type TriggeredReactionSaveGatedDamageExecution =
+  SpellProcedureExecutionByProcedure["saveGatedDamage"] & {
+    readonly access: { readonly tag: "prepared" };
+    readonly castingTime: { readonly kind: "reaction" };
+    readonly resource: { readonly tag: "spellSlot" };
+  };
+
+export type TriggeredReactionSaveGatedDamageResolution = {
+  readonly input: TriggeredReactionSpellResolutionInput;
+  readonly actorId: CombatantId;
+  readonly invocation: BattleSpellProcedureExecution<TriggeredReactionSaveGatedDamageExecution>;
+  readonly fillSet: OkSpellFillSet;
+};
+
+type SpellProcedureExecutionResolutionFor<P extends SpellProcedureKey> =
+  P extends "saveGatedDamage"
+    ?
+        | OrdinarySpellProcedureExecutionResolution<P>
+        | TriggeredReactionSaveGatedDamageResolution
+    : OrdinarySpellProcedureExecutionResolution<P>;
 
 export type SpellProcedureExecutionResolution<
   P extends SpellProcedureKey = SpellProcedureKey,
