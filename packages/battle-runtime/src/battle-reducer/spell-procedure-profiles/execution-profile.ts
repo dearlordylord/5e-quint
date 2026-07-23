@@ -11,12 +11,8 @@ import type {
 } from "../../character-execution.ts";
 import type { CombatantId } from "../../identity.ts";
 import type { SpellFillSet } from "../spells-resolve-fill-set.ts";
-import type {
-  SpellProcedureExecutionRegistry,
-  SpellProcedureMetamagicCompatibility,
-} from "./execution-registry.ts";
+import type { SpellProcedureExecutionRegistry } from "./execution-registry.ts";
 import type { SpellProcedureDeclarationResolution } from "./resolution-contract.ts";
-export type { SpellProcedureMetamagicCompatibility } from "./execution-registry.ts";
 
 export type OkSpellFillSet = Extract<SpellFillSet, { readonly tag: "ok" }>;
 
@@ -26,7 +22,6 @@ export type SpellProcedureProfileResolveInput<
 
 export type SpellProcedureExecutionDeclaration<P extends SpellProcedureKey> = {
   readonly procedure: P;
-  readonly metamagicCompatibility: SpellProcedureMetamagicCompatibility;
   readonly discoverCastAct: (
     state: BattleState,
     actorId: CombatantId,

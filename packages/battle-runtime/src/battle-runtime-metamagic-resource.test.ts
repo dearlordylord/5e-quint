@@ -52,7 +52,6 @@ import {
   TWINNED_METAMAGIC_EFFECT_KIND,
   twinnedSpellTargetCountInvocation,
 } from "./battle-reducer/metamagic.ts";
-import { spellProcedureExecutionRegistry } from "./battle-reducer/spell-procedure-profiles/execution-composition.ts";
 import { supportedSpellActs } from "./battle-reducer/spells-profiles.ts";
 import { battleFillEquals } from "./battle-reducer/dispatcher.ts";
 import {
@@ -1322,20 +1321,17 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
     const actor = requireBattleCreature(state, wizardId);
 
     expect(
-      admitSpellMetamagicApplications(
-        {
-          state,
-          actor,
-          actorId: wizardId,
-          invocation: healingWord,
-          subject: {
-            tag: "bonusActionSpell",
-            mode: { tag: "cast" },
-            metamagic: [{ effectKind: SUBTLE_METAMAGIC_EFFECT_KIND }],
-          },
+      admitSpellMetamagicApplications({
+        state,
+        actor,
+        actorId: wizardId,
+        invocation: healingWord,
+        subject: {
+          tag: "bonusActionSpell",
+          mode: { tag: "cast" },
+          metamagic: [{ effectKind: SUBTLE_METAMAGIC_EFFECT_KIND }],
         },
-        spellProcedureExecutionRegistry(),
-      ),
+      }),
     ).toEqual({
       tag: "spellMetamagicAdmissionIssue",
       message: "Subtle Spell is supported only for action-time spell casts.",
@@ -3597,20 +3593,17 @@ function admittedSubtleProjection(
   if (invocation.resource.tag !== "spellSlot") {
     throw new Error("Expected Spell Slot invocation.");
   }
-  const admission = admitSpellMetamagicApplications(
-    {
-      state,
-      actor: requireBattleCreature(state, wizardId),
-      actorId: wizardId,
-      invocation,
-      subject: {
-        tag: "actionSpell",
-        mode: { tag: "cast" },
-        metamagic: [{ effectKind: SUBTLE_METAMAGIC_EFFECT_KIND }],
-      },
+  const admission = admitSpellMetamagicApplications({
+    state,
+    actor: requireBattleCreature(state, wizardId),
+    actorId: wizardId,
+    invocation,
+    subject: {
+      tag: "actionSpell",
+      mode: { tag: "cast" },
+      metamagic: [{ effectKind: SUBTLE_METAMAGIC_EFFECT_KIND }],
     },
-    spellProcedureExecutionRegistry(),
-  );
+  });
   if (admission.tag !== "ok") {
     throw new Error(`Expected admitted Subtle Spell: ${admission.message}`);
   }

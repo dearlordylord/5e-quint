@@ -342,7 +342,6 @@ export const directConditionProfile: SpellProcedureDeclaration<
 > = {
   procedure: "directCondition",
   executionSchema: DirectConditionInvocationSchema,
-  metamagicCompatibility: "bonusActionRewrite",
   admit: admitDirectCondition,
   discoverCastAct: discoverDirectConditionCastAct,
   resolve: resolveDirectCondition,

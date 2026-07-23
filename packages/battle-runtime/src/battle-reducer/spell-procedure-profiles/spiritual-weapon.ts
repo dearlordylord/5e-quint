@@ -518,7 +518,6 @@ export const spiritualWeaponAttackProxyProfile: SpellProcedureDeclaration<
 > = {
   procedure: "spiritualWeaponAttackProxy",
   executionSchema: SpiritualWeaponAttackProxyInvocationSchema,
-  metamagicCompatibility: "actionSpellResolverNotRewritten",
   admit: admitSpiritualWeaponAttackProxy,
   discoverCastAct: discoverSpiritualWeaponAttackProxyCastAct,
   resolve: resolveSpiritualWeapon,
@@ -530,7 +529,6 @@ export const spiritualWeaponRepeatAttackProfile: SpellProcedureDeclaration<
 > = {
   procedure: "spiritualWeaponRepeatAttack",
   executionSchema: SpiritualWeaponRepeatAttackInvocationSchema,
-  metamagicCompatibility: "notActionSpellCasting",
   admit: admitSpiritualWeaponRepeatAttack,
   discoverCastAct: discoverSpiritualWeaponRepeatAttackCastAct,
   resolve: resolveSpiritualWeapon,

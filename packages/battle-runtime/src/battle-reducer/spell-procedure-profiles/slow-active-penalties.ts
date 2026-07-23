@@ -660,7 +660,6 @@ const SlowActivePenaltiesInvocationSchema = spellProcedureExecutionSchema(
 export const slowActivePenaltiesProfile = {
   procedure: "slowActivePenalties",
   executionSchema: SlowActivePenaltiesInvocationSchema,
-  metamagicCompatibility: "actionSpellResolverNotRewritten",
   admit: admitSlowActivePenalties,
   discoverCastAct: discoverSlowActivePenaltiesCastAct,
   resolve: resolveSlowActivePenalties,

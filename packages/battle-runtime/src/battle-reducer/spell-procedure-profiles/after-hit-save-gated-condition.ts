@@ -479,7 +479,6 @@ const AfterHitSaveGatedConditionInvocationSchema =
 export const afterHitSaveGatedConditionProfile = {
   procedure: "afterHitSaveGatedCondition",
   executionSchema: AfterHitSaveGatedConditionInvocationSchema,
-  metamagicCompatibility: "notActionSpellCasting",
   admit: admitAfterHitSaveGatedCondition,
   discoverCastAct: discoverAfterHitSaveGatedConditionCastAct,
   resolve: resolveAfterHitSaveGatedCondition,

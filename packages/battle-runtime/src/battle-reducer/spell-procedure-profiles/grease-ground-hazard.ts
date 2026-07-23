@@ -334,7 +334,6 @@ const GreaseGroundHazardInvocationSchema = spellProcedureExecutionSchema(
 export const greaseGroundHazardProfile = {
   procedure: "greaseGroundHazard",
   executionSchema: GreaseGroundHazardInvocationSchema,
-  metamagicCompatibility: "actionSpellResolverNotRewritten",
   admit: admitGreaseGroundHazard,
   discoverCastAct: discoverGreaseGroundHazardCastAct,
   resolve: resolveGreaseGroundHazard,

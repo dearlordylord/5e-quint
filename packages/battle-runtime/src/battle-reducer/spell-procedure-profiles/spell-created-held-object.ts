@@ -803,7 +803,6 @@ export const spellCreatedHeldObjectProfile: SpellProcedureDeclaration<
 > = {
   procedure: "spellCreatedHeldObject",
   executionSchema: SpellCreatedHeldObjectInvocationSchema,
-  metamagicCompatibility: "notActionSpellCasting",
   admit: admitSpellCreatedHeldObject,
   discoverCastAct: discoverSpellCreatedHeldObjectCastAct,
   resolve: resolveSpellCreatedHeldObject,
@@ -815,7 +814,6 @@ export const spellCreatedHeldObjectAttackProfile: SpellProcedureDeclaration<
 > = {
   procedure: "spellCreatedHeldObjectAttack",
   executionSchema: SpellCreatedHeldObjectAttackInvocationSchema,
-  metamagicCompatibility: "notActionSpellCasting",
   admit: admitSpellCreatedHeldObjectAttack,
   discoverCastAct: discoverSpellCreatedHeldObjectAttackCastAct,
   resolve: resolveSpellCreatedHeldObjectAttack,
@@ -827,7 +825,6 @@ export const spellCreatedHeldObjectReEvokeProfile: SpellProcedureDeclaration<
 > = {
   procedure: "spellCreatedHeldObjectReEvoke",
   executionSchema: SpellCreatedHeldObjectReEvokeInvocationSchema,
-  metamagicCompatibility: "notActionSpellCasting",
   admit: admitSpellCreatedHeldObjectReEvoke,
   discoverCastAct: discoverSpellCreatedHeldObjectReEvokeCastAct,
   resolve: resolveSpellCreatedHeldObjectReEvoke,

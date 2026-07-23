@@ -421,7 +421,6 @@ export const wardingBondProfile: SpellProcedureDeclaration<
 > = {
   procedure: "wardingBond",
   executionSchema: WardingBondInvocationSchema,
-  metamagicCompatibility: "actionSpellResolverNotRewritten",
   admit: admitWardingBond,
   discoverCastAct: discoverWardingBondCastAct,
   resolve: resolveWardingBond,

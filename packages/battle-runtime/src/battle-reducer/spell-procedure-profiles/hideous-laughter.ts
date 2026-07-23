@@ -350,7 +350,6 @@ const HideousLaughterInvocationSchema = spellProcedureExecutionSchema(
 export const hideousLaughterProfile = {
   procedure: "hideousLaughter",
   executionSchema: HideousLaughterInvocationSchema,
-  metamagicCompatibility: "actionSpellResolverNotRewritten",
   admit: admitHideousLaughter,
   discoverCastAct: discoverHideousLaughterCastAct,
   resolve: resolveHideousLaughter,

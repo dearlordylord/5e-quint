@@ -724,7 +724,6 @@ const HypnoticPatternInvocationSchema = spellProcedureExecutionSchema(
 export const hypnoticPatternProfile = {
   procedure: "hypnoticPattern",
   executionSchema: HypnoticPatternInvocationSchema,
-  metamagicCompatibility: "actionSpellResolverNotRewritten",
   admit: admitHypnoticPattern,
   discoverCastAct: discoverHypnoticPatternCastAct,
   resolve: resolveHypnoticPattern,

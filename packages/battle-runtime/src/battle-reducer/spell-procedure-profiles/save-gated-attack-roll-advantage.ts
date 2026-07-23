@@ -231,7 +231,6 @@ const SaveGatedAttackRollAdvantageInvocationSchema =
 export const saveGatedAttackRollAdvantageProfile = {
   procedure: "saveGatedAttackRollAdvantage",
   executionSchema: SaveGatedAttackRollAdvantageInvocationSchema,
-  metamagicCompatibility: "actionSpellResolverNotRewritten",
   admit: admitSaveGatedAttackRollAdvantage,
   discoverCastAct: discoverSaveGatedAttackRollAdvantageCastAct,
   resolve: resolveSaveGatedAttackRollAdvantage,

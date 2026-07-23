@@ -510,7 +510,6 @@ export const rollModifierProfile: SpellProcedureDeclaration<
   RollModifierInvocation
 > = {
   procedure: "rollModifier",
-  metamagicCompatibility: "bonusActionRewrite",
   admit: admitRollModifier,
 
   discoverCastAct: discoverRollModifierCastAct,

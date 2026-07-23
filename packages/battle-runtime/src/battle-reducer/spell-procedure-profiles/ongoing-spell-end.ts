@@ -870,7 +870,6 @@ const OngoingSpellEndInvocationSchema = spellProcedureExecutionSchema(
 export const ongoingSpellEndProfile = {
   procedure: "ongoingSpellEnd",
   executionSchema: OngoingSpellEndInvocationSchema,
-  metamagicCompatibility: "notActionSpellCasting",
   admit: admitOngoingSpellEnd,
   discoverCastAct: discoverOngoingSpellEndCastAct,
   resolve: resolveOngoingSpellEndSpellAct,

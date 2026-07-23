@@ -432,7 +432,6 @@ export const spellHostedWeaponAttackProfile: SpellProcedureDeclaration<
 > = {
   procedure: "spellHostedWeaponAttack",
   executionSchema: SpellHostedWeaponAttackInvocationSchema,
-  metamagicCompatibility: "actionSpellResolverNotRewritten",
   admit: admitSpellHostedWeaponAttack,
   discoverCastAct: discoverSpellHostedWeaponAttackCastAct,
   resolve: resolveSpellHostedWeaponAttack,

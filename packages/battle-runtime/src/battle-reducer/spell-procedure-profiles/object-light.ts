@@ -562,7 +562,6 @@ export const objectLightProfile: SpellProcedureDeclaration<
 > = {
   procedure: "objectLight",
   executionSchema: ObjectLightInvocationSchema,
-  metamagicCompatibility: "actionSpellResolverNotRewritten",
   admit: admitObjectLight,
   discoverCastAct: discoverObjectLightCastAct,
   resolve: resolveObjectLight,

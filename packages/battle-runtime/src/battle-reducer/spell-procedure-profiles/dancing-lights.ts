@@ -387,7 +387,6 @@ export const dancingLightsSeparateCastProfile: SpellProcedureDeclaration<
 > = {
   procedure: "dancingLightsSeparateCast",
   executionSchema: DancingLightsSeparateCastInvocationSchema,
-  metamagicCompatibility: "actionSpellResolverNotRewritten",
   admit: admitDancingLightsSeparateCast,
   discoverCastAct: discoverDancingLightsCastAct,
   resolve: resolveDancingLightsCast,
@@ -399,7 +398,6 @@ export const dancingLightsCombinedCastProfile: SpellProcedureDeclaration<
 > = {
   procedure: "dancingLightsCombinedCast",
   executionSchema: DancingLightsCombinedCastInvocationSchema,
-  metamagicCompatibility: "actionSpellResolverNotRewritten",
   admit: admitDancingLightsCombinedCast,
   discoverCastAct: discoverDancingLightsCastAct,
   resolve: resolveDancingLightsCast,
@@ -411,7 +409,6 @@ export const dancingLightsRepositionProfile: SpellProcedureDeclaration<
 > = {
   procedure: "dancingLightsReposition",
   executionSchema: DancingLightsRepositionInvocationSchema,
-  metamagicCompatibility: "notActionSpellCasting",
   admit: admitDancingLightsReposition,
   discoverCastAct: discoverDancingLightsRepositionAct,
   resolve: resolveDancingLightsReposition,

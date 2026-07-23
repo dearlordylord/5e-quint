@@ -372,7 +372,6 @@ export const heldLightProfile: SpellProcedureDeclaration<
 > = {
   procedure: "heldLight",
   executionSchema: HeldLightInvocationSchema,
-  metamagicCompatibility: "actionSpellResolverNotRewritten",
   admit: admitHeldLight,
   discoverCastAct: discoverHeldLightCastAct,
   resolve: resolveHeldLight,

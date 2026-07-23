@@ -373,7 +373,6 @@ const CounterspellInvocationSchema = spellProcedureExecutionSchema(
 export const counterspellProfile = {
   procedure: "counterspell",
   executionSchema: CounterspellInvocationSchema,
-  metamagicCompatibility: "notActionSpellCasting",
   admit: admitCounterspell,
   discoverCastAct: discoverCounterspellCastAct,
   resolve: resolveCounterspell,

@@ -392,7 +392,6 @@ const SaveGatedConditionInvocationSchema = spellProcedureExecutionSchema(
 export const saveGatedConditionProfile = {
   procedure: "saveGatedCondition",
   executionSchema: SaveGatedConditionInvocationSchema,
-  metamagicCompatibility: "bonusActionRewrite",
   admit: admitSaveGatedCondition,
   discoverCastAct: discoverSaveGatedConditionCastAct,
   resolve: resolveSaveGatedCondition,

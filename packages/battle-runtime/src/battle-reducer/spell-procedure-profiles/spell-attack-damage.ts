@@ -225,7 +225,6 @@ export const spellAttackDamageProfile: SpellProcedureDeclaration<
 > = {
   procedure: "spellAttackDamage",
   executionSchema: SpellAttackDamageInvocationSchema,
-  metamagicCompatibility: "bonusActionRewrite",
   admit: admitSpellAttackDamage,
   discoverCastAct: discoverSpellAttackDamageCastAct,
   resolve: resolveSpellAttackDamage,

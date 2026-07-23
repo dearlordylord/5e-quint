@@ -13,7 +13,15 @@ import type {
 import type { BattleInterruptTrigger } from "../../battle-interrupt-triggers.ts";
 import type { BattleSubject } from "../../battle-subjects.ts";
 import type { CharacterBattleMetamagicOptionFact } from "../../character-battle-resource-execution.ts";
-import type { SpellExecutionClassForProcedure } from "../spell-execution-facts.ts";
+import type {
+  SpellExecutionClassForProcedure,
+  SpellProcedureActionCost,
+  SpellProcedureAcceptingActionCostOverride,
+  SpellProcedureAcceptingMetamagicApplications,
+  SpellProcedureExecutionsWithActionCost,
+  SpellProcedureExecutionsWithoutActionCost,
+  SpellProcedureWithQuickenedActionCostRewrite,
+} from "../spell-execution-facts.ts";
 import type {
   BattleSpellProcedureExecution,
   SpellProcedureExecutionByProcedure,
@@ -82,102 +90,24 @@ type TriggeredReactionSpellResolutionInput = BattleResolutionInputForSubject<
   readonly frame: BattleInterruptCheckpoint;
 };
 
-export const ACTION_OR_BONUS_ACTION_SPELL_RESOLUTION_PROCEDURES = [
-  "rollModifier",
-  "directCondition",
-  "creatureSizeIncrease",
-  "creatureSizeDecrease",
-  "scalarBuff",
-  "directHitPointRestoration",
-  "saveGatedDamage",
-  "saveGatedCondition",
-  "saveGatedConditionImmunity",
-  "spellAttackDamage",
-  "spellAttackSequence",
-] as const satisfies ReadonlyArray<SpellProcedureKey>;
+type SpellProcedureActionCostResolutionInput<P extends SpellProcedureKey> = [
+  Exclude<SpellProcedureActionCost<P>, "magicAction" | "bonusAction">,
+] extends [never]
+  ?
+      | ([Extract<SpellProcedureActionCost<P>, "magicAction">] extends [never]
+          ? never
+          : ActionSpellBattleResolutionInput)
+      | ([Extract<SpellProcedureActionCost<P>, "bonusAction">] extends [never]
+          ? never
+          : BonusActionSpellBattleResolutionInput)
+  : never;
 
-export const BONUS_ACTION_ONLY_SPELL_RESOLUTION_PROCEDURES = [
-  "heldLight",
-  "magicWeaponEnhancement",
-  "directConditionRemoval",
-  "jumpMovementReplacement",
-  "selfTeleport",
-  "dragonsBreathInitial",
-  "sanctuaryTargetingInterdiction",
-  "markedDamageRider",
-  "weaponDamageRider",
-  "weaponAttackOverride",
-  "spellCreatedHeldObject",
-  "spellCreatedHeldObjectReEvoke",
-  "spiritualWeaponAttackProxy",
-  "spiritualWeaponRepeatAttack",
-  "objectContactDamageRepeat",
-  "dancingLightsReposition",
-] as const satisfies ReadonlyArray<SpellProcedureKey>;
-
-export const ACTION_SPELL_RESOLUTION_INCOMPATIBLE_PROCEDURES = [
-  ...BONUS_ACTION_ONLY_SPELL_RESOLUTION_PROCEDURES,
-  "expeditiousRetreatDash",
-  "featherFallMitigation",
-  "afterHitDamage",
-  "afterHitSaveGatedCondition",
-  "afterHitTimedDamageAndSave",
-  "afterHitDamageAndIllumination",
-  "counterspell",
-  "shieldReaction",
-] as const satisfies ReadonlyArray<SpellProcedureKey>;
-
-type ActionOrBonusActionProcedure =
-  (typeof ACTION_OR_BONUS_ACTION_SPELL_RESOLUTION_PROCEDURES)[number];
-type BonusActionProcedure =
-  (typeof BONUS_ACTION_ONLY_SPELL_RESOLUTION_PROCEDURES)[number];
-const ACTION_COST_OVERRIDE_PROCEDURES = [
-  "attackBurstSaveDamage",
-  "chainedSpellAttackDamage",
-  "creatureSizeIncrease",
-  "creatureSizeDecrease",
-  "directCondition",
-  "directHitPointRestoration",
-  "heldLightHurl",
-  "rollModifier",
-  "saveGatedCondition",
-  "saveGatedConditionImmunity",
-  "saveGatedDamage",
-  "scalarBuff",
-  "spellAttackDamage",
-  "spellAttackSequence",
-  "spellCreatedHeldObjectAttack",
-] as const satisfies ReadonlyArray<SpellProcedureKey>;
-
-const METAMAGIC_APPLICATION_PROCEDURES = [
-  ...ACTION_COST_OVERRIDE_PROCEDURES,
-  "command",
-  "greaseGroundHazard",
-  "gustOfWindLine",
-  "hideousLaughter",
-  "objectLight",
-  "saveGatedAttackRollAdvantage",
-  "slowActivePenalties",
-] as const satisfies ReadonlyArray<SpellProcedureKey>;
-
-const STORED_GLYPH_RELEASE_PROCEDURES = [
-  "conditionImmunityAndTurnStartTemporaryHitPoints",
-  "creatureSizeIncrease",
-  "creatureSizeDecrease",
-  "creatureTypeProtection",
-  "directCondition",
-  "hastePositive",
-  "levitatedCreature",
-  "rollModifier",
-  "scalarBuff",
-] as const satisfies ReadonlyArray<SpellProcedureKey>;
-
-type ActionCostOverrideProcedure =
-  (typeof ACTION_COST_OVERRIDE_PROCEDURES)[number];
-type MetamagicApplicationProcedure =
-  (typeof METAMAGIC_APPLICATION_PROCEDURES)[number];
-type StoredGlyphReleaseProcedure =
-  (typeof STORED_GLYPH_RELEASE_PROCEDURES)[number];
+type SpellProcedureExecutionClassResolutionInput<P extends SpellProcedureKey> =
+  SpellExecutionClassForProcedure<P> extends "bonusActionCast"
+    ? BonusActionSpellBattleResolutionInput
+    : SpellExecutionClassForProcedure<P> extends "actionCast" | "actionCostCast"
+      ? ActionSpellBattleResolutionInput
+      : never;
 
 export type HypnoticPatternStoredGlyphRelease = {
   readonly kind: "storedGlyphSpellRelease";
@@ -185,14 +115,14 @@ export type HypnoticPatternStoredGlyphRelease = {
 };
 
 type OrdinarySpellProcedureResolutionOptions<P extends SpellProcedureKey> =
-  (P extends ActionCostOverrideProcedure
+  (P extends SpellProcedureAcceptingActionCostOverride
     ? { readonly actionCostOverride?: "magicAction" | "bonusAction" }
-    : object) &
-    (P extends MetamagicApplicationProcedure
+    : { readonly actionCostOverride?: never }) &
+    (P extends SpellProcedureAcceptingMetamagicApplications
       ? {
           readonly metamagicApplications: readonly SpellMetamagicApplicationFact[];
         }
-      : object);
+      : { readonly metamagicApplications?: never });
 
 type SpellProcedureResolutionOptions<P extends SpellProcedureKey> =
   P extends "hypnoticPattern"
@@ -205,7 +135,7 @@ type SpellProcedureResolutionOptions<P extends SpellProcedureKey> =
             readonly metamagicApplications?: never;
             readonly storedGlyphRelease: HypnoticPatternStoredGlyphRelease;
           }
-    : P extends StoredGlyphReleaseProcedure
+    : P extends GlyphStoredSingleCreatureActiveEffectProcedure
       ?
           | (OrdinarySpellProcedureResolutionOptions<P> & {
               readonly storedGlyphRelease?: never;
@@ -233,19 +163,19 @@ export type SpellProcedureResolutionInput<P extends SpellProcedureKey> =
           ? AttackHitSaveGatedConditionResolutionInput
           : P extends "expeditiousRetreatDash"
             ? BonusActionDashSpellBattleResolutionInput
-            : P extends ActionOrBonusActionProcedure
+            : P extends SpellProcedureWithQuickenedActionCostRewrite
               ?
                   | ActionSpellBattleResolutionInput
                   | BonusActionSpellBattleResolutionInput
-              : P extends BonusActionProcedure
-                ? BonusActionSpellBattleResolutionInput
-                : SpellExecutionClassForProcedure<P> extends "bonusActionCast"
-                  ? BonusActionSpellBattleResolutionInput
-                  : SpellExecutionClassForProcedure<P> extends
-                        | "actionCast"
-                        | "actionCostCast"
-                    ? ActionSpellBattleResolutionInput
-                    : never;
+              : [SpellProcedureExecutionsWithActionCost<P>] extends [never]
+                ? SpellProcedureExecutionClassResolutionInput<P>
+                :
+                    | SpellProcedureActionCostResolutionInput<P>
+                    | ([SpellProcedureExecutionsWithoutActionCost<P>] extends [
+                        never,
+                      ]
+                        ? never
+                        : SpellProcedureExecutionClassResolutionInput<P>);
 
 export type SpellProcedureResolutionFillSet<P extends SpellProcedureKey> =
   P extends "afterHitSaveGatedCondition"

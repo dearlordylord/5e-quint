@@ -185,7 +185,6 @@ export const repeatedDamageAllocationProfile: SpellProcedureDeclaration<
 > = {
   procedure: "repeatedDamageAllocation",
   executionSchema: RepeatedDamageAllocationInvocationSchema,
-  metamagicCompatibility: "actionSpellResolverNotRewritten",
   admit: admitRepeatedDamageAllocation,
   discoverCastAct: discoverRepeatedDamageAllocationCastAct,
   resolve: resolveRepeatedDamageAllocation,

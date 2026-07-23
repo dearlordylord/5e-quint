@@ -352,7 +352,6 @@ export const directConditionRemovalProfile: SpellProcedureDeclaration<
 > = {
   procedure: "directConditionRemoval",
   executionSchema: DirectConditionRemovalInvocationSchema,
-  metamagicCompatibility: "actionSpellResolverNotRewritten",
   admit: admitDirectConditionRemoval,
   discoverCastAct: discoverDirectConditionRemovalCastAct,
   resolve: resolveDirectConditionRemoval,

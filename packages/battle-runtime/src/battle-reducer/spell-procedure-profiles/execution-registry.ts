@@ -15,20 +15,11 @@ import type {
 } from "./resolution-contract.ts";
 export type { SpellProcedureExecutionResolution } from "./resolution-contract.ts";
 
-export type SpellProcedureMetamagicCompatibility =
-  | "actionSpellResolverNotRewritten"
-  | "bonusActionRewrite"
-  | "notActionSpellCasting";
-
 export type RegisteredSpellProcedure = SpellProcedureKey;
-
-export type RegisteredSpellProcedureClassification = {
-  readonly metamagicCompatibility: SpellProcedureMetamagicCompatibility;
-};
 
 export type RegisteredSpellProcedureExecution<
   Procedure extends RegisteredSpellProcedure,
-> = RegisteredSpellProcedureClassification & {
+> = {
   readonly procedure: Procedure;
   readonly executionSchema: {
     readonly Type: SpellProcedureExecutionByProcedure[Procedure];
@@ -63,13 +54,6 @@ export function spellProcedureExecutionFor<
   registry: SpellProcedureExecutionRegistry,
   procedure: Procedure,
 ): RegisteredSpellProcedureExecution<Procedure> {
-  return registry.executionFor(procedure);
-}
-
-export function registeredSpellProcedureClassification(
-  registry: SpellProcedureExecutionRegistry,
-  procedure: RegisteredSpellProcedure,
-): RegisteredSpellProcedureClassification {
   return registry.executionFor(procedure);
 }
 

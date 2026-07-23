@@ -284,7 +284,6 @@ const InsectPlagueAreaHazardInvocationSchema = spellProcedureExecutionSchema(
 export const insectPlagueAreaHazardProfile = {
   procedure: "insectPlagueAreaHazard",
   executionSchema: InsectPlagueAreaHazardInvocationSchema,
-  metamagicCompatibility: "actionSpellResolverNotRewritten",
   admit: admitInsectPlagueAreaHazard,
   discoverCastAct: discoverInsectPlagueAreaHazardCastAct,
   resolve: resolveInsectPlagueAreaHazard,

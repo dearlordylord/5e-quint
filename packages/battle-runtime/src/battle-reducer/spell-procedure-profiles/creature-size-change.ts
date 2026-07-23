@@ -734,7 +734,6 @@ export const creatureSizeChangeProfile: SpellProcedureDeclaration<
 > = {
   procedure: "creatureSizeIncrease",
   executionSchema: CreatureSizeIncreaseInvocationSchema,
-  metamagicCompatibility: "bonusActionRewrite",
   admit: admitCreatureSizeChange,
   discoverCastAct: discoverCreatureSizeChangeCastAct,
   resolve: resolveCreatureSizeChange,
@@ -746,7 +745,6 @@ export const creatureSizeDecreaseProfile: SpellProcedureDeclaration<
 > = {
   procedure: "creatureSizeDecrease",
   executionSchema: CreatureSizeDecreaseInvocationSchema,
-  metamagicCompatibility: "bonusActionRewrite",
   admit: admitCreatureSizeDecrease,
   discoverCastAct: discoverCreatureSizeChangeCastAct,
   resolve: resolveCreatureSizeChange,

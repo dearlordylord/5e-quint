@@ -291,7 +291,6 @@ export const mirrorImageHitInterceptionProfile: SpellProcedureDeclaration<
 > = {
   procedure: "mirrorImageHitInterception",
   executionSchema: MirrorImageHitInterceptionInvocationSchema,
-  metamagicCompatibility: "actionSpellResolverNotRewritten",
   admit: admitMirrorImageHitInterception,
   discoverCastAct: discoverMirrorImageHitInterceptionCastAct,
   resolve: resolveMirrorImageHitInterception,

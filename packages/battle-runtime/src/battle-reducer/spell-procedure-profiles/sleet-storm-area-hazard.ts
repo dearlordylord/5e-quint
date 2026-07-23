@@ -292,7 +292,6 @@ const SleetStormAreaHazardInvocationSchema = spellProcedureExecutionSchema(
 export const sleetStormAreaHazardProfile = {
   procedure: "sleetStormAreaHazard",
   executionSchema: SleetStormAreaHazardInvocationSchema,
-  metamagicCompatibility: "actionSpellResolverNotRewritten",
   admit: admitSleetStormAreaHazard,
   discoverCastAct: discoverSleetStormAreaHazardCastAct,
   resolve: resolveSleetStormAreaHazard,

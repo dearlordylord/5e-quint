@@ -333,7 +333,6 @@ export const persistentArmorEffectProfile: SpellProcedureDeclaration<
 > = {
   procedure: "persistentArmorEffect",
   executionSchema: PersistentArmorEffectInvocationSchema,
-  metamagicCompatibility: "actionSpellResolverNotRewritten",
   admit: admitPersistentArmorEffect,
   discoverCastAct: discoverPersistentArmorEffectCastAct,
   resolve: resolvePersistentArmorEffect,

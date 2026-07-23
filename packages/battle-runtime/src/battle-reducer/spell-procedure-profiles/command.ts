@@ -365,7 +365,6 @@ const CommandInvocationSchema = spellProcedureExecutionSchema(
 export const commandProfile = {
   procedure: "command",
   executionSchema: CommandInvocationSchema,
-  metamagicCompatibility: "actionSpellResolverNotRewritten",
   admit: admitCommand,
   discoverCastAct: discoverCommandCastAct,
   resolve: resolveCommand,

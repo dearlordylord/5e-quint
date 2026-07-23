@@ -628,7 +628,6 @@ export const SelfTransformationModeInvocationSchema =
 export const selfTransformationModeProfile = {
   procedure: "selfTransformationMode",
   executionSchema: SelfTransformationModeInvocationSchema,
-  metamagicCompatibility: "actionSpellResolverNotRewritten",
   admit: admitSelfTransformationMode,
   discoverCastAct: discoverSelfTransformationModeCastAct,
   resolve: resolveSelfTransformationMode,

@@ -407,7 +407,6 @@ export const conditionRemovalProtectionProfile: SpellProcedureDeclaration<
 > = {
   procedure: "conditionRemovalProtection",
   executionSchema: ConditionRemovalProtectionInvocationSchema,
-  metamagicCompatibility: "actionSpellResolverNotRewritten",
   admit: admitConditionRemovalProtection,
   discoverCastAct: discoverConditionRemovalProtectionCastAct,
   resolve: resolveConditionRemovalProtection,

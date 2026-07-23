@@ -158,7 +158,6 @@ export const spellAttackSequenceProfile: SpellProcedureDeclaration<
 > = {
   procedure: "spellAttackSequence",
   executionSchema: SpellAttackSequenceInvocationSchema,
-  metamagicCompatibility: "bonusActionRewrite",
   admit: admitSpellAttackSequence,
   discoverCastAct: discoverSpellAttackSequenceCastAct,
   resolve: resolveSpellAttackSequence,

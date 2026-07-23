@@ -286,19 +286,13 @@ export function discoverSupportedSpellInvocations(
         executionInvocation,
       );
       const quickenedTurnResourceAvailable =
-        spellInvocationSupportsQuickenedActionRewrite(
-          executionInvocation,
-          executionRegistry,
-        ) &&
-        actorCanOfferQuickenedSpellMetamagic(
-          {
-            state,
-            actor,
-            actorId,
-            invocation: executionInvocation,
-          },
-          executionRegistry,
-        );
+        spellInvocationSupportsQuickenedActionRewrite(executionInvocation) &&
+        actorCanOfferQuickenedSpellMetamagic({
+          state,
+          actor,
+          actorId,
+          invocation: executionInvocation,
+        });
       if (!naturalTurnResourceAvailable && !quickenedTurnResourceAvailable) {
         return [];
       }
@@ -340,7 +334,6 @@ export function discoverSupportedSpellInvocations(
     )
     .map((act) =>
       spellCastReactionFactsAct(
-        executionRegistry,
         state,
         actor,
         actorId,
@@ -380,19 +373,13 @@ function spellActWithQuickenedRewrite(input: {
     return naturalActs;
   }
   const quickenedActs =
-    spellInvocationSupportsQuickenedActionRewrite(
+    spellInvocationSupportsQuickenedActionRewrite(invocation) &&
+    actorCanOfferQuickenedSpellMetamagic({
+      state: input.state,
+      actor: input.actor,
+      actorId: input.actorId,
       invocation,
-      input.executionRegistry,
-    ) &&
-    actorCanOfferQuickenedSpellMetamagic(
-      {
-        state: input.state,
-        actor: input.actor,
-        actorId: input.actorId,
-        invocation,
-      },
-      input.executionRegistry,
-    )
+    })
       ? [
           {
             ...input.act,
@@ -500,7 +487,6 @@ function spellActWithTwinnedTargetCount(input: {
 }
 
 function spellCastReactionFactsAct(
-  executionRegistry: SpellProcedureExecutionRegistry,
   state: BattleState,
   actor: BattleCreatureState,
   actorId: CombatantId,
@@ -525,7 +511,6 @@ function spellCastReactionFactsAct(
     : {
         ...act,
         initialHoles: spellCastInitialHoles(
-          executionRegistry,
           state,
           actor,
           subject,
@@ -538,7 +523,6 @@ function spellCastReactionFactsAct(
 }
 
 function spellCastInitialHoles(
-  executionRegistry: SpellProcedureExecutionRegistry,
   state: BattleState,
   actor: BattleCreatureState,
   subject: Extract<
@@ -554,16 +538,13 @@ function spellCastInitialHoles(
 ): readonly BattleHole[] {
   const metamagicApplications =
     subject.tag === "actionSpell" || subject.tag === "bonusActionSpell"
-      ? admittedSpellMetamagicApplications(
-          {
-            state,
-            actor,
-            actorId,
-            invocation,
-            subject,
-          },
-          executionRegistry,
-        )
+      ? admittedSpellMetamagicApplications({
+          state,
+          actor,
+          actorId,
+          invocation,
+          subject,
+        })
       : [];
   const slowHole = slowSomaticSpellFailureOutcomeHole({
     state,
@@ -585,20 +566,17 @@ function spellCastInitialHoles(
   ];
 }
 
-function admittedSpellMetamagicApplications(
-  input: {
-    readonly state: BattleState;
-    readonly actor: BattleCreatureState;
-    readonly actorId: CombatantId;
-    readonly invocation: BattleExecutableSpellInvocation;
-    readonly subject: Extract<
-      CharacterProcedureBattleSubject,
-      { readonly tag: "actionSpell" | "bonusActionSpell" }
-    >;
-  },
-  executionRegistry: SpellProcedureExecutionRegistry,
-) {
-  const admission = admitSpellMetamagicApplications(input, executionRegistry);
+function admittedSpellMetamagicApplications(input: {
+  readonly state: BattleState;
+  readonly actor: BattleCreatureState;
+  readonly actorId: CombatantId;
+  readonly invocation: BattleExecutableSpellInvocation;
+  readonly subject: Extract<
+    CharacterProcedureBattleSubject,
+    { readonly tag: "actionSpell" | "bonusActionSpell" }
+  >;
+}) {
+  const admission = admitSpellMetamagicApplications(input);
   return admission.tag === "ok" ? admission.applications : [];
 }
 

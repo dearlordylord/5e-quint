@@ -372,7 +372,6 @@ const AfterHitDamageAndIlluminationInvocationSchema =
 export const afterHitDamageAndIlluminationProfile = {
   procedure: "afterHitDamageAndIllumination",
   executionSchema: AfterHitDamageAndIlluminationInvocationSchema,
-  metamagicCompatibility: "notActionSpellCasting",
   admit: admitAfterHitDamageAndIllumination,
   discoverCastAct: discoverAfterHitDamageAndIlluminationCastAct,
   resolve: resolveAfterHitDamageAndIllumination,

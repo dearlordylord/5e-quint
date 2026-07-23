@@ -244,7 +244,6 @@ const SaveGatedConditionImmunityInvocationSchema =
 export const saveGatedConditionImmunityProfile = {
   procedure: "saveGatedConditionImmunity",
   executionSchema: SaveGatedConditionImmunityInvocationSchema,
-  metamagicCompatibility: "bonusActionRewrite",
   admit: admitSaveGatedConditionImmunity,
   discoverCastAct: discoverSaveGatedConditionImmunityCastAct,
   resolve: resolveSaveGatedConditionImmunity,

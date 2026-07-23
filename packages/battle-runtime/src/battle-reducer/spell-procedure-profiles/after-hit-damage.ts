@@ -385,7 +385,6 @@ const AfterHitDamageInvocationSchema = spellProcedureExecutionSchema(
 export const afterHitDamageProfile = {
   procedure: "afterHitDamage",
   executionSchema: AfterHitDamageInvocationSchema,
-  metamagicCompatibility: "notActionSpellCasting",
   admit: admitAfterHitDamage,
   discoverCastAct: discoverAfterHitDamageCastAct,
   resolve: resolveAfterHitDamage,

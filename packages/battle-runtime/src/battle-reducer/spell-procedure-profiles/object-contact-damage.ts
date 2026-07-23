@@ -509,7 +509,6 @@ export const objectContactDamageProfile: SpellProcedureDeclaration<
 > = {
   procedure: "objectContactDamage",
   executionSchema: ObjectContactDamageInvocationSchema,
-  metamagicCompatibility: "actionSpellResolverNotRewritten",
   admit: admitObjectContactDamage,
   discoverCastAct: discoverObjectContactDamageCastAct,
   resolve: resolveObjectContactDamage,
@@ -521,7 +520,6 @@ export const objectContactDamageRepeatProfile: SpellProcedureDeclaration<
 > = {
   procedure: "objectContactDamageRepeat",
   executionSchema: ObjectContactDamageRepeatInvocationSchema,
-  metamagicCompatibility: "notActionSpellCasting",
   admit: admitObjectContactDamageRepeat,
   discoverCastAct: discoverObjectContactDamageRepeatCastAct,
   resolve: resolveObjectContactDamageRepeat,

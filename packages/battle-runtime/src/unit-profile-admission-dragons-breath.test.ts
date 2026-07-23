@@ -5,6 +5,8 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
+import { spellExecutionFacts } from "./battle-reducer/spell-execution-facts.ts";
+import { supportedSpellActs } from "./battle-reducer/spells-profiles.ts";
 import { describe, expect, test } from "vitest";
 import dragonsBreathInput from "../../surface/content/dragons_breath.json";
 import {
@@ -69,14 +71,23 @@ describe("Dragon's Breath initial cast admission", () => {
     });
     const targetHole = requireHole(act.initialHoles, "spellTargetList");
     const damageTypeHole = requireHole(act.initialHoles, "damageTypeChoice");
+    const invocationPresentation = battleActSpellPresentation(act)?.invocation;
+    const invocation = supportedSpellActs(
+      requireCombatant(state, spellCasterId),
+    ).find(
+      (candidate) => candidate.sourceProcedureRef === act.subject.procedureRef,
+    );
     const expectedSpellSaveDc = spellSaveDcForCaster(state, spellCasterId);
     if (expectedSpellSaveDc === null) {
       throw new Error("Expected fixture caster Spell Save DC.");
     }
+    if (invocation === undefined) {
+      throw new Error("Expected Dragon's Breath runtime invocation.");
+    }
 
     expect({
       ...act.subject,
-      invocation: battleActSpellPresentation(act)?.invocation,
+      invocation: invocationPresentation,
     }).toMatchObject({
       tag: "bonusActionSpell",
       actorId: spellCasterId,
@@ -87,6 +98,7 @@ describe("Dragon's Breath initial cast admission", () => {
       ),
       mode: { tag: "cast" },
     });
+    expect(spellExecutionFacts(invocation).kind).toBe("bonusActionSpell");
     expect(damageTypeHole.choices).toEqual([
       "acid",
       "cold",

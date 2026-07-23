@@ -579,7 +579,6 @@ const ScalarBuffInvocationSchema = spellProcedureExecutionSchema(
 export const scalarBuffProfile = {
   procedure: "scalarBuff",
   executionSchema: ScalarBuffInvocationSchema,
-  metamagicCompatibility: "bonusActionRewrite",
   admit: admitScalarBuff,
   discoverCastAct: discoverScalarBuffCastAct,
   resolve: resolveScalarBuff,

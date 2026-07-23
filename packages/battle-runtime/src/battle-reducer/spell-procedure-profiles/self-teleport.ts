@@ -295,7 +295,6 @@ const SelfTeleportInvocationSchema = spellProcedureExecutionSchema(
 export const selfTeleportProfile = {
   procedure: "selfTeleport",
   executionSchema: SelfTeleportInvocationSchema,
-  metamagicCompatibility: "notActionSpellCasting",
   admit: admitSelfTeleport,
   discoverCastAct: discoverSelfTeleportCastAct,
   resolve: resolveSelfTeleport,

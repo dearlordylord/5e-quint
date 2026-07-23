@@ -278,7 +278,6 @@ export const blurAttackRollDefenseProfile: SpellProcedureDeclaration<
 > = {
   procedure: "blurAttackRollDefense",
   executionSchema: BlurAttackRollDefenseInvocationSchema,
-  metamagicCompatibility: "actionSpellResolverNotRewritten",
   admit: admitBlurAttackRollDefense,
   discoverCastAct: discoverBlurAttackRollDefenseCastAct,
   resolve: resolveBlurAttackRollDefense,

@@ -490,7 +490,6 @@ export const creatureTypeProtectionProfile: SpellProcedureDeclaration<
 > = {
   procedure: "creatureTypeProtection",
   executionSchema: CreatureTypeProtectionInvocationSchema,
-  metamagicCompatibility: "actionSpellResolverNotRewritten",
   admit: admitCreatureTypeProtection,
   discoverCastAct: discoverCreatureTypeProtectionCastAct,
   resolve: resolveCreatureTypeProtection,

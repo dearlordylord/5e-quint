@@ -423,7 +423,6 @@ export const magicWeaponEnhancementProfile: SpellProcedureDeclaration<
 > = {
   procedure: "magicWeaponEnhancement",
   executionSchema: MagicWeaponEnhancementInvocationSchema,
-  metamagicCompatibility: "notActionSpellCasting",
   admit: admitMagicWeaponEnhancement,
   discoverCastAct: discoverMagicWeaponEnhancementCastAct,
   resolve: resolveMagicWeaponEnhancement,

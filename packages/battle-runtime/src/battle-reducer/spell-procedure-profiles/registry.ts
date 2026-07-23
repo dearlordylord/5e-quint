@@ -134,7 +134,6 @@ function registeredSpellProcedureDeclaration<
     admission: { admit: declaration.admit },
     execution: {
       procedure: declaration.procedure,
-      metamagicCompatibility: declaration.metamagicCompatibility,
       discoverCastAct: declaration.discoverCastAct,
       executionSchema: declaration.executionSchema,
       resolve: declaration.resolve,
@@ -377,7 +376,6 @@ function registeredSpellProcedureExecution<P extends RegisteredSpellProcedure>(
 ): RegisteredSpellProcedureExecution<P> {
   return {
     procedure: declaration.procedure,
-    metamagicCompatibility: declaration.metamagicCompatibility,
     executionSchema: declaration.executionSchema,
     discoverCastAct: declaration.discoverCastAct,
     resolve: (resolution) => {
