@@ -289,6 +289,23 @@ type StoredGlyphSaveGatedDamageInvocation = Extract<
 >;
 type StoredGlyphSaveGatedDamageExecution =
   BattleSpellProcedureExecution<StoredGlyphSaveGatedDamageInvocation>;
+type StoredGlyphSaveGatedDamageDuration =
+  StoredGlyphSaveGatedDamageExecution["spellRuleFacts"]["duration"];
+type StoredGlyphConcentrationDuration = Extract<
+  StoredGlyphSaveGatedDamageDuration,
+  { readonly kind: "concentration" }
+>;
+type StoredGlyphNonConcentrationDuration = Exclude<
+  StoredGlyphSaveGatedDamageDuration,
+  StoredGlyphConcentrationDuration
+>;
+type StoredGlyphSaveGatedDamageExecutionWithDuration<
+  Duration extends StoredGlyphSaveGatedDamageDuration,
+> = StoredGlyphSaveGatedDamageExecution & {
+  readonly spellRuleFacts: StoredGlyphSaveGatedDamageExecution["spellRuleFacts"] & {
+    readonly duration: Duration;
+  };
+};
 type StoredGlyphAreaSaveGatedDamageTargeting = Extract<
   StoredGlyphSaveGatedDamageExecution["targeting"],
   {
@@ -306,15 +323,28 @@ type StoredGlyphAreaSaveGatedDamageTargeting = Extract<
   }
 >;
 export type StoredGlyphReadiedAreaSaveGatedDamageExecution =
-  StoredGlyphSaveGatedDamageExecution & {
+  StoredGlyphSaveGatedDamageExecutionWithDuration<StoredGlyphNonConcentrationDuration> & {
     readonly targeting: StoredGlyphAreaSaveGatedDamageTargeting;
   };
-export type StoredGlyphReadiedCreatureSaveGatedDamageExecution =
-  StoredGlyphSaveGatedDamageExecution & {
-    readonly targeting: Exclude<
+type StoredGlyphSingleCreatureSaveGatedDamageTargeting =
+  | Extract<
       StoredGlyphSaveGatedDamageExecution["targeting"],
-      StoredGlyphAreaSaveGatedDamageTargeting
-    >;
+      { readonly kind: "singleCombatant" | "singleCreatureOrObject" }
+    >
+  | (Extract<
+      StoredGlyphSaveGatedDamageExecution["targeting"],
+      { readonly kind: "targetList" }
+    > & {
+      readonly minTargets: 1;
+      readonly maxTargets: 1;
+    });
+export type StoredGlyphReadiedCreatureSaveGatedDamageExecution =
+  StoredGlyphSaveGatedDamageExecutionWithDuration<StoredGlyphNonConcentrationDuration> & {
+    readonly targeting: StoredGlyphSingleCreatureSaveGatedDamageTargeting;
+  };
+export type StoredGlyphConcentrationSaveGatedDamageExecution =
+  StoredGlyphSaveGatedDamageExecutionWithDuration<StoredGlyphConcentrationDuration> & {
+    readonly targeting: StoredGlyphSingleCreatureSaveGatedDamageTargeting;
   };
 
 export type StoredGlyphSpellReleasePlan =
@@ -350,13 +380,8 @@ export type StoredGlyphSpellReleasePlan =
       >;
     }
   | {
-      readonly kind: "saveGatedDamage";
-      readonly invocation: StoredGlyphExecution<
-        Extract<
-          GlyphStoredSpellInvocation,
-          { readonly procedure: "saveGatedDamage" }
-        >
-      >;
+      readonly kind: "fullDurationSaveGatedDamage";
+      readonly invocation: StoredGlyphConcentrationSaveGatedDamageExecution;
     }
   | {
       readonly kind: "singleCreatureActiveEffect";

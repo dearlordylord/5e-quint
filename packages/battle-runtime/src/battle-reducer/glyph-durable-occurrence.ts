@@ -90,6 +90,7 @@ import {
   type SpellProcedureExecutionRegistry,
 } from "./spell-procedure-profiles/execution-registry.ts";
 import type {
+  StoredGlyphConcentrationSaveGatedDamageExecution,
   StoredGlyphReadiedAreaSaveGatedDamageExecution,
   StoredGlyphReadiedCreatureSaveGatedDamageExecution,
   StoredGlyphSpellReleasePlan,
@@ -1862,8 +1863,8 @@ function storedGlyphSpellReleasePlan(
     return { kind: "saveGatedCondition", invocation };
   }
   if (invocation.procedure === "saveGatedDamage") {
-    if (glyphStoredSpellInvocationRequiresFullDurationOwner(invocation)) {
-      return { kind: "saveGatedDamage", invocation };
+    if (isStoredGlyphConcentrationSaveGatedDamageExecution(invocation)) {
+      return { kind: "fullDurationSaveGatedDamage", invocation };
     }
     if (isStoredGlyphReadiedAreaSaveGatedDamageExecution(invocation)) {
       return {
@@ -1899,6 +1900,20 @@ function storedGlyphSpellReleasePlan(
     invocation,
     targetId: triggeringCreatureId,
   };
+}
+
+function isStoredGlyphConcentrationSaveGatedDamageExecution(
+  invocation: BattleSpellProcedureExecution<GlyphStoredSpellInvocation>,
+): invocation is StoredGlyphConcentrationSaveGatedDamageExecution {
+  return (
+    invocation.procedure === "saveGatedDamage" &&
+    invocation.spellRuleFacts.duration.kind === "concentration" &&
+    (invocation.targeting.kind === "singleCombatant" ||
+      invocation.targeting.kind === "singleCreatureOrObject" ||
+      (invocation.targeting.kind === "targetList" &&
+        invocation.targeting.minTargets === 1 &&
+        invocation.targeting.maxTargets === 1))
+  );
 }
 
 function isStoredGlyphReadiedAreaSaveGatedDamageExecution(

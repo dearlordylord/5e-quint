@@ -63,7 +63,7 @@ export function executeStoredGlyphSpellProcedure(
         spendsCastResources: false,
       }),
     ),
-    byReleaseKind("saveGatedDamage", (release) =>
+    byReleaseKind("fullDurationSaveGatedDamage", (release) =>
       resolveSaveGateDamageSpellRelease({
         input,
         actorId,
