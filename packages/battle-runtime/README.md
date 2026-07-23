@@ -246,6 +246,13 @@ If a new package/file needs allowlisting, update
 `scripts/check-authored-id-dispatch-boundary.cjs` with a narrow path rule and a
 boundary reason. Do not add broad wildcards.
 
+The current inventory of inert authored identity still retained in Battle state,
+snapshots, active effects, companions, and execution-facing projections is
+recorded in
+[`plans/224_BATTLE_RUNTIME_INERT_AUTHORED_IDENTITY_INVENTORY.md`](../plans/224_BATTLE_RUNTIME_INERT_AUTHORED_IDENTITY_INVENTORY.md).
+Add new retained identity fields to that inventory and document their domain
+owner, actual consumer, and proof that they do not drive execution behavior.
+
 ### Invocation Spell Access
 
 Character composition may project selected invocation ownership into concrete

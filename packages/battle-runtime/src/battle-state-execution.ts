@@ -3903,7 +3903,11 @@ type BattleCreatureStateCommon = {
   readonly origin:
     | {
         readonly kind: "character";
+        // Authored identity retained for settlement / catalog reference. The
+        // reducer never dispatches on characterId.
         readonly characterId: CharacterId;
+        // Presentation label retained as a snapshot convenience. Not used by
+        // reducer execution; see #224 inventory.
         readonly displayName: string;
         readonly execution: CharacterExecutionState;
         readonly classLevels: CharacterBattleClassLevels;
@@ -3922,6 +3926,9 @@ type BattleCreatureStateCommon = {
         readonly metamagic?: CharacterBattleMetamagicState;
         readonly spellcasting?: CharacterBattleSpellcastingExecutionState;
       }
+    // Authored identity retained for companion settlement and snapshot
+    // restoration. Mechanics are taken from StatBlockBattleOrigin.mechanics;
+    // the reducer never dispatches on statBlockId.
     | ({ readonly kind: "statBlock" } & StatBlockBattleOrigin);
 };
 
@@ -6806,6 +6813,8 @@ export type BattleHelpAttackSnapshot = BattleHelpAttack;
 export type BattleCreatureOriginSnapshot =
   | {
       readonly kind: "character";
+      // Authored identity retained for settlement / catalog reference. Not an
+      // execution or replay key. See #224 inventory.
       readonly characterId: CharacterId;
       readonly execution: {
         readonly scopeRef: BattleCharacterExecutionScopeRef;
@@ -6829,6 +6838,8 @@ export type BattleCreatureOriginSnapshot =
     }
   | {
       readonly kind: "statBlock";
+      // Authored identity retained for settlement / companion reappearance. Not
+      // an execution or replay key. See #224 inventory.
       readonly statBlockId: string;
       readonly execution: StatBlockExecutionSnapshot;
     };

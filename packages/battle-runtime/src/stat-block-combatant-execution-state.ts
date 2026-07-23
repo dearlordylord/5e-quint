@@ -43,6 +43,9 @@ export type BattleStatBlockCombatantMechanics = {
 
 /** Durable Stat Block battle projection retained after admission is consumed. */
 export type StatBlockBattleOrigin = {
+  // Authored identity retained for companion settlement and snapshot catalog
+  // reference. Mechanics are taken from `mechanics`; the reducer never dispatches
+  // on `statBlockId`. See #224 inventory.
   readonly statBlockId: StatBlockId;
   readonly mechanics: BattleStatBlockCombatantMechanics;
   readonly execution: StatBlockExecutionState;
