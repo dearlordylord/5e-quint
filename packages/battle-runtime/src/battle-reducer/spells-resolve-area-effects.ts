@@ -63,7 +63,7 @@ import type { CharacterBattleMetamagicOptionFact } from "../character-battle-res
 
 const byProcedure = Match.discriminator("procedure");
 
-type StoredGlyphAreaOngoingSpellInvocation = Extract<
+export type StoredGlyphAreaOngoingSpellInvocation = Extract<
   SpellProcedureExecution,
   { readonly procedure: GlyphStoredAreaOngoingProcedure }
 >;

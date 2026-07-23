@@ -89,11 +89,19 @@ import {
   resolveStoredGlyphSpellProcedure,
   type SpellProcedureExecutionRegistry,
 } from "./spell-procedure-profiles/execution-registry.ts";
+import type {
+  StoredGlyphReadiedAreaSaveGatedDamageExecution,
+  StoredGlyphReadiedCreatureSaveGatedDamageExecution,
+  StoredGlyphSpellReleasePlan,
+} from "./spell-procedure-profiles/resolution-contract.ts";
 import {
   bindStoredSpellProcedureExecutionFacts,
   characterStoredExecutionProcedureRef,
 } from "../character-execution-queries.ts";
-import type { SpellProcedureExecution } from "../character-execution.ts";
+import type {
+  BattleSpellProcedureExecution,
+  SpellProcedureExecution,
+} from "../character-execution.ts";
 import { glyphStoredSpellProcedureExecution } from "../procedure-execution/glyph-stored-spell.ts";
 import type {
   BattleAreaId,
@@ -1484,13 +1492,23 @@ function glyphStoredSpellInvocationHasAreaRelease(
 }
 
 function glyphStoredSpellInvocationHasSaveGatedAreaRelease(
+  invocation: BattleSpellProcedureExecution<GlyphStoredSpellInvocation>,
+): invocation is StoredGlyphReadiedAreaSaveGatedDamageExecution;
+function glyphStoredSpellInvocationHasSaveGatedAreaRelease(
   invocation: GlyphStoredSpellFacts,
 ): invocation is Extract<
   GlyphStoredSpellFacts,
   { readonly procedure: "saveGatedDamage" }
-> {
+>;
+function glyphStoredSpellInvocationHasSaveGatedAreaRelease(
+  invocation:
+    | GlyphStoredSpellFacts
+    | BattleSpellProcedureExecution<GlyphStoredSpellInvocation>,
+): boolean {
   return (
     invocation.procedure === "saveGatedDamage" &&
+    (!("spellRuleFacts" in invocation) ||
+      invocation.spellRuleFacts.duration.kind !== "concentration") &&
     (invocation.targeting.kind === "pointOriginSphere" ||
       invocation.targeting.kind === "pointOriginSphereDiameter" ||
       invocation.targeting.kind === "pointOriginCylinder" ||
@@ -1793,6 +1811,14 @@ function resolveStoredSpellGlyphRelease(input: {
   if (fillSet.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", fillSet.message);
   }
+  const release = storedGlyphSpellReleasePlan(invocation, input);
+  if (release === null) {
+    return invalidResult(
+      input.state,
+      "unsupportedSubject",
+      "Stored spell glyph release target shape is unsupported.",
+    );
+  }
   return resolveStoredGlyphSpellProcedure(input.executionRegistry, {
     input: {
       state: input.state,
@@ -1801,24 +1827,102 @@ function resolveStoredSpellGlyphRelease(input: {
       handledInterruptTrigger: input.handledInterruptTrigger,
     },
     actorId: input.effect.sourceCombatantId,
-    invocation,
     fillSet,
-    storedGlyphRelease: {
-      kind: "storedGlyphSpellRelease",
-      target:
-        input.witness.targeting.kind ===
-        "storedSpellAreaCenteredOnTriggeringCreature"
-          ? {
-              kind: "areaCenteredOnTriggeringCreature",
-              anchorId: input.witness.triggeringCreatureId,
-              replayContext: glyphStoredSpellReleaseReplayContext(input),
-            }
-          : {
-              kind: "triggeringCreature",
-              targetId: input.witness.triggeringCreatureId,
-            },
-    },
+    release,
   });
+}
+
+function storedGlyphSpellReleasePlan(
+  invocation: BattleSpellProcedureExecution<GlyphStoredSpellInvocation>,
+  input: {
+    readonly profile: GlyphStoredSpellReleaseProfile;
+    readonly witness: GlyphStoredSpellReleaseWitness;
+  },
+): StoredGlyphSpellReleasePlan | null {
+  const triggeringCreatureId = input.witness.triggeringCreatureId;
+  if (isGlyphStoredAreaOngoingSpellInvocation(invocation)) {
+    return {
+      kind: "areaOngoing",
+      invocation,
+      anchorId: triggeringCreatureId,
+    };
+  }
+  if (isGlyphStoredAreaControlSpellInvocation(invocation)) {
+    return {
+      kind: "areaControl",
+      invocation,
+      anchorId: triggeringCreatureId,
+      replayContext: glyphStoredSpellReleaseReplayContext(input),
+    };
+  }
+  if (invocation.procedure === "greaseGroundHazard") {
+    return { kind: "greaseGroundHazard", invocation };
+  }
+  if (invocation.procedure === "saveGatedCondition") {
+    return { kind: "saveGatedCondition", invocation };
+  }
+  if (invocation.procedure === "saveGatedDamage") {
+    if (glyphStoredSpellInvocationRequiresFullDurationOwner(invocation)) {
+      return { kind: "saveGatedDamage", invocation };
+    }
+    if (isStoredGlyphReadiedAreaSaveGatedDamageExecution(invocation)) {
+      return {
+        kind: "ordinaryArea",
+        invocation,
+        anchorId: triggeringCreatureId,
+      };
+    }
+    return isStoredGlyphReadiedCreatureSaveGatedDamageExecution(invocation)
+      ? {
+          kind: "ordinaryTriggeringCreature",
+          invocation,
+          targetId: triggeringCreatureId,
+        }
+      : null;
+  }
+  if (isGlyphStoredSingleCreatureActiveEffectSpellInvocation(invocation)) {
+    return {
+      kind: "singleCreatureActiveEffect",
+      invocation,
+      targetId: triggeringCreatureId,
+    };
+  }
+  if (isGlyphStoredSelfTransformationModeSpellInvocation(invocation)) {
+    return {
+      kind: "selfTransformation",
+      invocation,
+      targetId: triggeringCreatureId,
+    };
+  }
+  return {
+    kind: "ordinaryTriggeringCreature",
+    invocation,
+    targetId: triggeringCreatureId,
+  };
+}
+
+function isStoredGlyphReadiedAreaSaveGatedDamageExecution(
+  invocation: BattleSpellProcedureExecution<GlyphStoredSpellInvocation>,
+): invocation is StoredGlyphReadiedAreaSaveGatedDamageExecution {
+  return (
+    invocation.procedure === "saveGatedDamage" &&
+    invocation.spellRuleFacts.duration.kind !== "concentration" &&
+    glyphStoredSpellInvocationHasSaveGatedAreaRelease(invocation)
+  );
+}
+
+function isStoredGlyphReadiedCreatureSaveGatedDamageExecution(
+  invocation: BattleSpellProcedureExecution<GlyphStoredSpellInvocation>,
+): invocation is StoredGlyphReadiedCreatureSaveGatedDamageExecution {
+  return (
+    invocation.procedure === "saveGatedDamage" &&
+    invocation.spellRuleFacts.duration.kind !== "concentration" &&
+    (invocation.targeting.kind === "singleCombatant" ||
+      invocation.targeting.kind === "singleCreatureOrObject" ||
+      (invocation.targeting.kind === "targetList" &&
+        invocation.targeting.minTargets === 1 &&
+        invocation.targeting.maxTargets === 1))
+  );
 }
 
 function glyphStoredSpellProcedureRef(

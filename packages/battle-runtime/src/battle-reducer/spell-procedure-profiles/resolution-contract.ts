@@ -19,12 +19,25 @@ import type {
   SpellProcedureExecutionByProcedure,
   SpellProcedureKey,
 } from "../../character-execution.ts";
-import type { CombatantId } from "../../identity.ts";
+import type {
+  BattleProcedureExecutionRef,
+  CombatantId,
+} from "../../identity.ts";
 import type { SpellMetamagicApplicationFact } from "../metamagic-support.ts";
 import type { ChainedSpellFillSet } from "../spells-resolve-chained.ts";
 import type { SpellFillSet } from "../spells-resolve-fill-set.ts";
 import type { WeaponAttackOverrideFillInput } from "../weapon-attack-override-fill-input.ts";
-import type { GlyphStoredSpellInvocation } from "../../glyph-stored-spell-invocation.ts";
+import type {
+  GlyphStoredAreaControlInvocation,
+  GlyphStoredAreaControlProcedure,
+  GlyphStoredAreaOngoingProcedure,
+  GlyphStoredConcentrationSelfTransformationInvocation,
+  GlyphStoredConcentrationSingleCreatureActiveEffectInvocation,
+  GlyphStoredSelfTransformationProcedure,
+  GlyphStoredSingleCreatureActiveEffectProcedure,
+  GlyphStoredSpellInvocation,
+} from "../../glyph-stored-spell-invocation.ts";
+import type { StoredGlyphAreaOngoingSpellInvocation } from "../spells-resolve-area-effects.ts";
 
 type OkSpellFillSet = Extract<SpellFillSet, { readonly tag: "ok" }>;
 type AttackHitBonusActionSpellCommandSubject = Extract<
@@ -166,17 +179,6 @@ type MetamagicApplicationProcedure =
 type StoredGlyphReleaseProcedure =
   (typeof STORED_GLYPH_RELEASE_PROCEDURES)[number];
 
-export type StoredGlyphSpellReleaseTarget =
-  | {
-      readonly kind: "areaCenteredOnTriggeringCreature";
-      readonly anchorId: CombatantId;
-      readonly replayContext: GlyphStoredSpellReleaseReplayContext;
-    }
-  | {
-      readonly kind: "triggeringCreature";
-      readonly targetId: CombatantId;
-    };
-
 export type HypnoticPatternStoredGlyphRelease = {
   readonly kind: "storedGlyphSpellRelease";
   readonly selfOriginAreaAnchorId: CombatantId;
@@ -264,15 +266,126 @@ type OrdinarySpellProcedureExecutionResolution<P extends SpellProcedureKey> =
     readonly fillSet: SpellProcedureResolutionFillSet<P>;
   };
 
+type StoredGlyphExecution<Invocation extends GlyphStoredSpellInvocation> =
+  BattleSpellProcedureExecution<Invocation>;
+
+type StoredGlyphOrdinaryReleaseInvocation = Exclude<
+  GlyphStoredSpellInvocation,
+  {
+    readonly procedure:
+      | GlyphStoredAreaControlProcedure
+      | GlyphStoredAreaOngoingProcedure
+      | GlyphStoredSelfTransformationProcedure
+      | GlyphStoredSingleCreatureActiveEffectProcedure
+      | "saveGatedDamage"
+      | "saveGatedCondition"
+      | "greaseGroundHazard";
+  }
+>;
+
+type StoredGlyphSaveGatedDamageInvocation = Extract<
+  GlyphStoredSpellInvocation,
+  { readonly procedure: "saveGatedDamage" }
+>;
+type StoredGlyphSaveGatedDamageExecution =
+  BattleSpellProcedureExecution<StoredGlyphSaveGatedDamageInvocation>;
+type StoredGlyphAreaSaveGatedDamageTargeting = Extract<
+  StoredGlyphSaveGatedDamageExecution["targeting"],
+  {
+    readonly kind:
+      | "pointOriginSphere"
+      | "pointOriginSphereDiameter"
+      | "pointOriginCylinder"
+      | "pointOriginCubeExcludingCaster"
+      | "pointOriginCube"
+      | "selfOriginCube"
+      | "selfOriginCone"
+      | "selfOriginLine"
+      | "selfOriginEmanation"
+      | "primaryTargetOriginEmanation";
+  }
+>;
+export type StoredGlyphReadiedAreaSaveGatedDamageExecution =
+  StoredGlyphSaveGatedDamageExecution & {
+    readonly targeting: StoredGlyphAreaSaveGatedDamageTargeting;
+  };
+export type StoredGlyphReadiedCreatureSaveGatedDamageExecution =
+  StoredGlyphSaveGatedDamageExecution & {
+    readonly targeting: Exclude<
+      StoredGlyphSaveGatedDamageExecution["targeting"],
+      StoredGlyphAreaSaveGatedDamageTargeting
+    >;
+  };
+
+export type StoredGlyphSpellReleasePlan =
+  | {
+      readonly kind: "areaOngoing";
+      readonly invocation: StoredGlyphAreaOngoingSpellInvocation & {
+        readonly sourceProcedureRef: BattleProcedureExecutionRef;
+      };
+      readonly anchorId: CombatantId;
+    }
+  | {
+      readonly kind: "areaControl";
+      readonly invocation: BattleSpellProcedureExecution<GlyphStoredAreaControlInvocation>;
+      readonly anchorId: CombatantId;
+      readonly replayContext: GlyphStoredSpellReleaseReplayContext;
+    }
+  | {
+      readonly kind: "greaseGroundHazard";
+      readonly invocation: StoredGlyphExecution<
+        Extract<
+          GlyphStoredSpellInvocation,
+          { readonly procedure: "greaseGroundHazard" }
+        >
+      >;
+    }
+  | {
+      readonly kind: "saveGatedCondition";
+      readonly invocation: StoredGlyphExecution<
+        Extract<
+          GlyphStoredSpellInvocation,
+          { readonly procedure: "saveGatedCondition" }
+        >
+      >;
+    }
+  | {
+      readonly kind: "saveGatedDamage";
+      readonly invocation: StoredGlyphExecution<
+        Extract<
+          GlyphStoredSpellInvocation,
+          { readonly procedure: "saveGatedDamage" }
+        >
+      >;
+    }
+  | {
+      readonly kind: "singleCreatureActiveEffect";
+      readonly invocation: StoredGlyphExecution<GlyphStoredConcentrationSingleCreatureActiveEffectInvocation>;
+      readonly targetId: CombatantId;
+    }
+  | {
+      readonly kind: "selfTransformation";
+      readonly invocation: StoredGlyphExecution<GlyphStoredConcentrationSelfTransformationInvocation>;
+      readonly targetId: CombatantId;
+    }
+  | {
+      readonly kind: "ordinaryTriggeringCreature";
+      readonly invocation:
+        | StoredGlyphExecution<StoredGlyphOrdinaryReleaseInvocation>
+        | StoredGlyphReadiedCreatureSaveGatedDamageExecution;
+      readonly targetId: CombatantId;
+    }
+  | {
+      readonly kind: "ordinaryArea";
+      readonly invocation: StoredGlyphReadiedAreaSaveGatedDamageExecution;
+      readonly anchorId: CombatantId;
+    };
+
 export type StoredGlyphSpellProcedureResolution = {
   readonly input: ActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
-  readonly invocation: BattleSpellProcedureExecution<GlyphStoredSpellInvocation>;
   readonly fillSet: OkSpellFillSet;
-  readonly storedGlyphRelease: {
-    readonly kind: "storedGlyphSpellRelease";
-    readonly target: StoredGlyphSpellReleaseTarget;
-  };
+  readonly release: StoredGlyphSpellReleasePlan;
 };
 
 type TriggeredReactionSaveGatedDamageExecution =

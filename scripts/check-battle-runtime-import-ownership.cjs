@@ -535,18 +535,19 @@ function spellExecutionBoundaryViolations(graph) {
   const protectedReducerRoot = normalizedRepoPath(
     `${BATTLE_RUNTIME_SRC}/battle-reducer`,
   );
-  const procedureProfilesRoot = normalizedRepoPath(
-    `${BATTLE_RUNTIME_SRC}/battle-reducer/spell-procedure-profiles`,
+  const canonicalRegistry = normalizedRepoPath(
+    SPELL_DECLARATION_REGISTRY_MODULE,
   );
   const directResolutionViolations = [
     ...reachableFiles(graph, [dispatcher, glyphDispatcher]),
   ]
+    .filter((file) => isWithin(file, protectedReducerRoot))
+    .flatMap((file) => directResolveCalls(file))
     .filter(
-      (file) =>
-        isWithin(file, protectedReducerRoot) &&
-        !isWithin(file, procedureProfilesRoot),
-    )
-    .flatMap((file) => directResolveCalls(file));
+      (violation) =>
+        violation.file !== canonicalRegistry ||
+        violation.call !== "declaration.resolve(resolution, registry)",
+    );
   return {
     compositionPath,
     directResolutionViolations,
