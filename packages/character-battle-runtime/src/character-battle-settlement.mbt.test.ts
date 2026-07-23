@@ -5,7 +5,9 @@ import * as path from "node:path";
 
 import {
   battleCreatureInitFromStatBlock as parseBattleCreatureInitFromStatBlock,
+  battleExecutionScopeOrdinal,
   battleId,
+  battleStatBlockExecutionScopeRef,
   characterBattleResourceIsPointPool,
   characterId,
   combatantId,
@@ -577,7 +579,11 @@ function rejectActiveWildShapeHandoff(): BattleSettlementProjection {
           "settlement-active-wild-shape",
         ),
         sourceCombatantId: combatant.combatantId,
-        formStatBlockId: "stat_block_cat",
+        formScopeRef: battleStatBlockExecutionScopeRef(
+          battleId("battle:settlement-active-wild-shape"),
+          combatant.combatantId,
+          battleExecutionScopeOrdinal(1),
+        ),
         formLimbs: { kind: "cannotHandleObjects" },
         equipmentDisposition: [],
         expiresAt: {

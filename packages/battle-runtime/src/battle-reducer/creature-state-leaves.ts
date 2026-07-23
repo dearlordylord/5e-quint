@@ -232,17 +232,10 @@ function combatantDruidWildShapeEquipmentWearsKind(
   ) {
     return false;
   }
-  const origin = combatant.origin;
   return combatant.activeEffects.some(
     (effect) =>
       effect.kind === "druidWildShapeForm" &&
-      wildShapeEquipmentDispositionWearsKind(
-        effect.equipmentDisposition,
-        kind,
-      ) &&
-      origin.druidWildShapeAvailableForms?.some(
-        (form) => form.statBlock.id === effect.formStatBlockId,
-      ) === true,
+      wildShapeEquipmentDispositionWearsKind(effect.equipmentDisposition, kind),
   );
 }
 

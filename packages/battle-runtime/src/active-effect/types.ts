@@ -77,6 +77,7 @@ import type {
   BattleLineDirectionId,
   BattleObjectId,
   BattleSpellEffectOccurrenceId,
+  BattleStatBlockExecutionScopeRef,
   BattleTablePositionId,
   CombatantId,
 } from "../identity.ts";
@@ -387,12 +388,10 @@ export type BattleActiveEffect =
     })
   | (BattleUnitFeatureEffectBase & {
       readonly kind: "druidWildShapeForm";
-      // Authored form identity retained to match the selected Wild Shape form
-      // admission. The reducer uses this id to select which admitted mechanical
-      // facts apply (size, AC, abilities, skills, saves); it is therefore
-      // behavior-driving at the composition/admission boundary, not inert.
-      // See #224 inventory.
-      readonly formStatBlockId: string;
+      // Execution-scope reference to the admitted Wild Shape form. The reducer
+      // resolves the form's mechanical facts through this scope ref, never by
+      // authored Stat Block identity. See #224 inventory.
+      readonly formScopeRef: BattleStatBlockExecutionScopeRef;
       readonly formLimbs: WildShapeFormLimbObjectHandlingWitness;
       readonly equipmentDisposition: readonly ActiveWildShapeEquipmentDisposition[];
       readonly expiresAt: Extract<

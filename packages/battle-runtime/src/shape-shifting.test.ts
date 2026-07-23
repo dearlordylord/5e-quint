@@ -19,6 +19,10 @@ import {
   startBattleRight,
   statBlockCreatureInit,
 } from "./battle-runtime-test-support.ts";
+import {
+  battleExecutionScopeOrdinal,
+  battleStatBlockExecutionScopeRef,
+} from "./identity.ts";
 import { battleCreatureWithSpellActiveEffects } from "./active-effect/lifecycle.ts";
 
 const spellShapeCasterId = combatantId("synthetic-shape-spell-caster");
@@ -32,7 +36,11 @@ const syntheticDruidWildShapeEffect: Extract<
   sourceProcedureRef: battleProcedureExecutionRefForTest(
     "synthetic_wild_shape_feature",
   ),
-  formStatBlockId: "synthetic_beast_form",
+  formScopeRef: battleStatBlockExecutionScopeRef(
+    battleId("synthetic-shape-battle"),
+    combatantId("synthetic-shape-druid"),
+    battleExecutionScopeOrdinal(1),
+  ),
   formLimbs: { kind: "cannotHandleObjects" },
   equipmentDisposition: [],
   expiresAt: { kind: "duration", durationTicks: elapsedTimeTicks(10) },

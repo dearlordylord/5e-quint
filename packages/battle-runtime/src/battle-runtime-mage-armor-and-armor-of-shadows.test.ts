@@ -38,6 +38,10 @@ import {
   wizardId,
   wizardSpellcasting,
 } from "./battle-runtime-test-support.ts";
+import {
+  battleExecutionScopeOrdinal,
+  battleStatBlockExecutionScopeRef,
+} from "./identity.ts";
 
 describe("battle runtime: Mage Armor and Armor of Shadows", () => {
   test("Mage Armor creates a persistent base AC spell effect with typed early end", () => {
@@ -328,6 +332,15 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
     if (druid === undefined) {
       throw new Error("Expected Druid target.");
     }
+    if (druid.origin.kind !== "character") {
+      throw new Error("Expected character-origin Druid.");
+    }
+    const catFormScopeRef = druid.origin.druidWildShapeAvailableForms?.find(
+      (form) => form.statBlock.id === "stat_block_cat",
+    )?.execution.scopeRef;
+    if (catFormScopeRef === undefined) {
+      throw new Error("Expected cat form admission.");
+    }
     const wildShapeProcedureRef = requireCharacterUnitProcedureRefForTest(
       session,
       druidId,
@@ -343,7 +356,7 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
             kind: "druidWildShapeForm" as const,
             sourceProcedureRef: wildShapeProcedureRef,
             sourceCombatantId: druidId,
-            formStatBlockId: "stat_block_cat",
+            formScopeRef: catFormScopeRef,
             formLimbs: { kind: "cannotHandleObjects" },
             equipmentDisposition: [],
             expiresAt: {
@@ -440,6 +453,9 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
     if (druid === undefined) {
       throw new Error("Expected Druid target.");
     }
+    if (druid.origin.kind !== "character") {
+      throw new Error("Expected character-origin Druid.");
+    }
     const wildShapeProcedureRef = requireCharacterUnitProcedureRefForTest(
       session,
       druidId,
@@ -455,7 +471,11 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
             kind: "druidWildShapeForm" as const,
             sourceProcedureRef: wildShapeProcedureRef,
             sourceCombatantId: druidId,
-            formStatBlockId: "missing_wild_shape_form",
+            formScopeRef: battleStatBlockExecutionScopeRef(
+              battleId("battle-mage-armor-stale-wild-shape-target"),
+              druidId,
+              battleExecutionScopeOrdinal(999),
+            ),
             formLimbs: { kind: "cannotHandleObjects" },
             equipmentDisposition: [],
             expiresAt: {

@@ -49,6 +49,10 @@ import {
 } from "./unit-profile-admission-spell-fill-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 import {
+  battleExecutionScopeOrdinal,
+  battleStatBlockExecutionScopeRef,
+} from "./identity.ts";
+import {
   battleId,
   breakBattleConcentration,
   DieRollResult,
@@ -851,7 +855,11 @@ const syntheticDruidWildShapeEffect: Extract<
   sourceProcedureRef: battleProcedureExecutionRefForTest(
     "synthetic_wild_shape_feature",
   ),
-  formStatBlockId: "synthetic_beast_form",
+  formScopeRef: battleStatBlockExecutionScopeRef(
+    battleId("battle-moonbeam-shape-shift-rider"),
+    spellTargetId,
+    battleExecutionScopeOrdinal(1),
+  ),
   formLimbs: { kind: "cannotHandleObjects" },
   equipmentDisposition: [],
   expiresAt: { kind: "duration", durationTicks: elapsedTimeTicks(10) },

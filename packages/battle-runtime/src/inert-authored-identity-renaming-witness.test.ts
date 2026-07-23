@@ -2,66 +2,112 @@ import { describe, expect, test } from "vitest";
 import { initiativeOrder } from "@dnd/shared-algebras/initiative-algebra";
 import type { ConditionState } from "@dnd/shared-algebras/conditions-algebra";
 import { characterId, combatantId, type CombatantId } from "./identity.ts";
-import type { BattleState } from "./battle-state-execution.ts";
-import { KnockedOutConditionState } from "./battle-reducer/knocked-out-state.ts";
+import type {
+  BattleCreatureSnapshot,
+  BattleSnapshot,
+  BattleState,
+  BattleCreatureState,
+} from "./battle-state-execution.ts";
+import type { Condition } from "@dnd/shared/types";
+import { currentActorId } from "./battle-reducer/creature-state-leaves.ts";
+import { discoverBattleActCandidatesWithoutSpellProcedures } from "./battle-reducer/battle-discovery.ts";
+import { endTurn } from "./battle-execution-composition.ts";
+import { snapshotBattle } from "./battle-reducer/battle-snapshot.ts";
 import { fighterVsGoblinBattle } from "./battle-runtime-test-support.ts";
 
 /**
  * Synthetic-renaming witness for inert authored identity fields.
  *
  * This test demonstrates that the fields classified as "inert" in the #224
- * inventory do not affect reducer-visible mechanical outcomes. It is
- * intentionally narrow: behavior-driving identity fields (e.g. weaponUnitId
- * for mastery, formStatBlockId for Wild Shape, spellId for class-feature free
- * casts) are excluded because renaming them currently changes outcomes.
+ * inventory do not affect reducer-visible mechanical outcomes. It exercises
+ * real consumers — act discovery, snapshot production, and the end-of-turn
+ * reducer — and compares their outputs. The only differences permitted are the
+ * renamed identity fields themselves.
+ *
+ * Behavior-driving identity fields (e.g. weaponUnitId for mastery, loadout
+ * unitId for Wild Shape equipment, spellId in SpellRuleExecutionFacts) are
+ * excluded because renaming them currently changes outcomes.
  */
 
-type MechanicalProjection = {
-  readonly initiativeOrder: readonly CombatantId[];
-  readonly combatants: ReadonlyMap<
-    CombatantId,
-    {
-      readonly hp: number;
-      readonly maxHp: number;
-      readonly armorClassState: unknown;
-      readonly size: string;
-      readonly movementSpentFeet: number;
-      readonly reactionAvailable: boolean;
-      readonly activeConditionCount: number;
-    }
-  >;
-};
-
-function activeConditionCount(
-  conditions: ConditionState | KnockedOutConditionState,
-): number {
-  const flags = conditions as ConditionState;
+function activeConditionStateCount(conditions: ConditionState): number {
   return (
-    Object.entries(flags).filter(
+    Object.entries(conditions).filter(
       ([key, value]) => key !== "directIncapacitated" && value,
-    ).length + (flags.directIncapacitated ? 1 : 0)
+    ).length + (conditions.directIncapacitated ? 1 : 0)
   );
 }
 
-function mechanicalProjection(state: BattleState): MechanicalProjection {
-  const combatants = new Map(
+function activeConditionListCount(conditions: readonly Condition[]): number {
+  return conditions.length;
+}
+
+function combatantMechanicalProjection(combatant: BattleCreatureState) {
+  return {
+    hp: Number(combatant.hp),
+    maxHp: Number(combatant.maxHp),
+    tempHp: Number(combatant.tempHp),
+    armorClass: combatant.armorClass,
+    size: combatant.size,
+    movementSpentFeet: Number(combatant.movementSpentFeet),
+    reactionAvailable: combatant.reactionAvailable,
+    activeConditionCount: activeConditionStateCount(combatant.conditions),
+    concentrating: combatant.concentration !== null,
+    dodging: combatant.dodging,
+  };
+}
+
+function stateMechanicalProjection(state: BattleState) {
+  const combatants = new Map<
+    CombatantId,
+    ReturnType<typeof combatantMechanicalProjection>
+  >(
     Array.from(state.combatants.entries()).map(([id, combatant]) => [
       id,
-      {
-        hp: Number(combatant.hp),
-        maxHp: Number(combatant.maxHp),
-        armorClassState: combatant.armorClass,
-        size: combatant.size,
-        movementSpentFeet: Number(combatant.movementSpentFeet),
-        reactionAvailable: combatant.reactionAvailable,
-        activeConditionCount: activeConditionCount(combatant.conditions),
-      },
+      combatantMechanicalProjection(combatant),
     ]),
   );
   return {
     initiativeOrder: initiativeOrder(state.initiative),
     combatants,
   };
+}
+
+function snapshotCombatantMechanicalProjection(
+  combatant: BattleCreatureSnapshot,
+) {
+  return {
+    combatantId: combatant.combatantId,
+    initiative: combatant.initiative,
+    hp: Number(combatant.hp),
+    maxHp: Number(combatant.maxHp),
+    tempHp: Number(combatant.tempHp),
+    armorClass: combatant.armorClass,
+    size: combatant.size,
+    reactionAvailable: combatant.reactionAvailable,
+    movementSpentFeet: Number(combatant.movement.spentFeet),
+    activeConditionCount: activeConditionListCount(combatant.conditions),
+    concentrating: combatant.concentrating,
+    dodging: combatant.dodging,
+  };
+}
+
+function snapshotMechanicalProjection(snapshot: BattleSnapshot) {
+  return {
+    battleId: snapshot.battleId,
+    turnOrder: snapshot.turnOrder,
+    combatants: snapshot.combatants.map((combatant) =>
+      snapshotCombatantMechanicalProjection(combatant),
+    ),
+  };
+}
+
+function actExecutionProjection(state: BattleState) {
+  return discoverBattleActCandidatesWithoutSpellProcedures(state).map(
+    (act) => ({
+      subject: act.subject,
+      initialHoles: act.initialHoles,
+    }),
+  );
 }
 
 function renameInertIdentityFields(state: BattleState): BattleState {
@@ -91,13 +137,41 @@ function renameInertIdentityFields(state: BattleState): BattleState {
 }
 
 describe("inert authored identity renaming witness (#224)", () => {
-  test("renaming characterId and displayName does not change mechanical projection", () => {
+  test("renaming characterId and displayName does not change discovery, snapshot, or state mechanics", () => {
     const state = fighterVsGoblinBattle();
+    const renamed = renameInertIdentityFields(state);
 
-    const original = mechanicalProjection(state);
-    const renamed = mechanicalProjection(renameInertIdentityFields(state));
+    expect(stateMechanicalProjection(renamed)).toEqual(
+      stateMechanicalProjection(state),
+    );
+    expect(snapshotMechanicalProjection(snapshotBattle(renamed))).toEqual(
+      snapshotMechanicalProjection(snapshotBattle(state)),
+    );
+    expect(actExecutionProjection(renamed)).toEqual(
+      actExecutionProjection(state),
+    );
+  });
 
-    expect(renamed).toEqual(original);
+  test("renaming characterId and displayName does not change reducer transitions", () => {
+    const state = fighterVsGoblinBattle();
+    const renamed = renameInertIdentityFields(state);
+    const actorId = currentActorId(state);
+
+    const originalResult = endTurn({ state, actorId });
+    const renamedResult = endTurn({ state: renamed, actorId });
+
+    expect(originalResult.tag).toBe("resolved");
+    expect(renamedResult.tag).toBe("resolved");
+    if (originalResult.tag !== "resolved" || renamedResult.tag !== "resolved") {
+      return;
+    }
+
+    expect(stateMechanicalProjection(renamedResult.state)).toEqual(
+      stateMechanicalProjection(originalResult.state),
+    );
+    expect(snapshotMechanicalProjection(renamedResult.snapshot)).toEqual(
+      snapshotMechanicalProjection(originalResult.snapshot),
+    );
   });
 
   test("the witness actually mutates the inert fields", () => {

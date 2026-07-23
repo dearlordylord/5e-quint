@@ -19,6 +19,7 @@ export {
   battleCharacterExecutionScopeRef,
   battleExecutionScopeOrdinal,
   battleProcedureExecutionRef,
+  battleStatBlockExecutionScopeRef,
   battleResourcePoolExecutionRef,
   battleDancingLightId,
   battleId,

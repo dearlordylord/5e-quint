@@ -135,7 +135,7 @@ export function activeDruidWildShape(
   for (const effect of combatant.activeEffects) {
     if (effect.kind !== "druidWildShapeForm") continue;
     const admission = combatant.origin.druidWildShapeAvailableForms?.find(
-      (candidate) => candidate.statBlock.id === effect.formStatBlockId,
+      (candidate) => candidate.execution.scopeRef === effect.formScopeRef,
     );
     if (admission !== undefined) {
       return { effect, admission };
@@ -362,7 +362,7 @@ export function assumeDruidWildShapeForm(input: {
         kind: "druidWildShapeForm",
         sourceProcedureRef: input.procedureRef,
         sourceCombatantId: input.actor.combatantId,
-        formStatBlockId: input.form.id,
+        formScopeRef: selectedAdmission.execution.scopeRef,
         formLimbs: input.formLimbs,
         equipmentDisposition: input.equipmentDisposition,
         expiresAt: { kind: "duration", durationTicks: durationTicks.right },
