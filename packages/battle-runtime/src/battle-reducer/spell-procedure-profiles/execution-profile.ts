@@ -15,14 +15,14 @@ import type {
   SpellProcedureExecutionRegistry,
   SpellProcedureMetamagicCompatibility,
 } from "./execution-registry.ts";
-import type { SpellProcedureExecutionResolution } from "./resolution-contract.ts";
+import type { SpellProcedureDeclarationResolution } from "./resolution-contract.ts";
 export type { SpellProcedureMetamagicCompatibility } from "./execution-registry.ts";
 
 export type OkSpellFillSet = Extract<SpellFillSet, { readonly tag: "ok" }>;
 
 export type SpellProcedureProfileResolveInput<
   I extends { readonly procedure: SpellProcedureKey },
-> = SpellProcedureExecutionResolution<I["procedure"]>;
+> = SpellProcedureDeclarationResolution<I["procedure"]>;
 
 export type SpellProcedureExecutionDeclaration<P extends SpellProcedureKey> = {
   readonly procedure: P;
@@ -38,7 +38,7 @@ export type SpellProcedureExecutionDeclaration<P extends SpellProcedureKey> = {
     readonly Type: SpellProcedureExecutionByProcedure[P];
   };
   readonly resolve: (
-    input: SpellProcedureExecutionResolution<P>,
+    input: SpellProcedureDeclarationResolution<P>,
     executionRegistry: SpellProcedureExecutionRegistry,
   ) => BattleResolutionResult;
 };

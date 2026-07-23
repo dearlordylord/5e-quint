@@ -38,7 +38,7 @@ import type {
   GlyphWardingTrigger,
   SpellMechanics,
 } from "@dnd/surface/surface/types";
-import { Either, Match } from "effect";
+import { Either } from "effect";
 import {
   GLYPH_OF_WARDING_BASE_LEVEL,
   GLYPH_STORED_SPELL_HOSTILE_PLACEMENT_SUBJECTS,
@@ -86,7 +86,7 @@ import type {
 } from "../battle-state-execution.ts";
 import { isTargetListSpellInvocation } from "./spells-invocation-guards.ts";
 import {
-  spellProcedureExecutionFor,
+  resolveStoredGlyphSpellProcedure,
   type SpellProcedureExecutionRegistry,
 } from "./spell-procedure-profiles/execution-registry.ts";
 import {
@@ -137,23 +137,12 @@ import {
 } from "./spells-damage-fills.ts";
 import { sameStringSet } from "./spells-execution-facts.ts";
 import { spellTargetHole, spellTargetListHole } from "./spells-holes-fills.ts";
-import { resolveSpellRelease } from "./spells-resolve.ts";
 import { spellFillSet } from "./spells-resolve-fill-set.ts";
-import {
-  resolveGreaseGroundHazardSpellAct,
-  resolveSaveGateDamageSpellRelease,
-  resolveSaveGateConditionSpellAct,
-} from "./spells-resolve-save-gates.ts";
-import {
-  isGlyphStoredAreaOngoingSpellInvocation,
-  resolveStoredGlyphAreaOngoingSpellRelease,
-} from "./spells-resolve-area-effects.ts";
+import { isGlyphStoredAreaOngoingSpellInvocation } from "./spells-resolve-area-effects.ts";
 import {
   isGlyphStoredAreaControlProcedure,
   isGlyphStoredAreaControlSpellInvocation,
-  resolveStoredGlyphAreaControlSpellRelease,
 } from "./spell-procedure-profiles/hypnotic-pattern.ts";
-import { resolveStoredGlyphSelfTransformationModeSpellRelease } from "./spell-procedure-profiles/self-transformation-mode.ts";
 import { invalidResult } from "./result-helpers.ts";
 import {
   d20TestNaturalOneRerollOutcomeDecisionRequired,
@@ -184,7 +173,6 @@ const GLYPH_CLOSEABLE_OBJECT_COMMON_EVENTS = [
   "opening_object",
   "seeing_glyph",
 ] as const;
-const byStoredActiveEffectProcedure = Match.discriminator("procedure");
 type GlyphExplosiveRuneDamageType =
   (typeof GLYPH_EXPLOSIVE_RUNE_DAMAGE_TYPES)[number];
 type GlyphStoredSpellTargetShape =
@@ -1795,210 +1783,9 @@ function resolveStoredSpellGlyphRelease(input: {
       "Stored Concentration spell glyph full-duration owner is unsupported.",
     );
   }
-  if (isGlyphStoredAreaOngoingSpellInvocation(invocation)) {
-    const fillSet = spellFillSet(
-      fills,
-      invocation,
-      procedureRef,
-      input.effect.sourceCombatantId,
-      input.state,
-    );
-    if (fillSet.tag === "invalid") {
-      return invalidResult(input.state, "invalidFill", fillSet.message);
-    }
-    return resolveStoredGlyphAreaOngoingSpellRelease({
-      input: {
-        state: input.state,
-        subject,
-        fills,
-        handledInterruptTrigger: input.handledInterruptTrigger,
-      },
-      actorId: input.effect.sourceCombatantId,
-      invocation,
-      fillSet,
-      selfOriginAreaAnchorId: input.witness.triggeringCreatureId,
-    });
-  }
-  if (isGlyphStoredAreaControlSpellInvocation(invocation)) {
-    const fillSet = spellFillSet(
-      fills,
-      invocation,
-      procedureRef,
-      input.effect.sourceCombatantId,
-      input.state,
-    );
-    if (fillSet.tag === "invalid") {
-      return invalidResult(input.state, "invalidFill", fillSet.message);
-    }
-    return resolveStoredGlyphAreaControlSpellRelease({
-      input: {
-        state: input.state,
-        subject,
-        fills,
-        handledInterruptTrigger: input.handledInterruptTrigger,
-        glyphStoredSpellReleaseReplay:
-          glyphStoredSpellReleaseReplayContext(input),
-      },
-      actorId: input.effect.sourceCombatantId,
-      invocation,
-      fillSet,
-      selfOriginAreaAnchorId: input.witness.triggeringCreatureId,
-    });
-  }
-  if (invocation.procedure === "greaseGroundHazard") {
-    const fillSet = spellFillSet(
-      fills,
-      invocation,
-      procedureRef,
-      input.effect.sourceCombatantId,
-      input.state,
-    );
-    if (fillSet.tag === "invalid") {
-      return invalidResult(input.state, "invalidFill", fillSet.message);
-    }
-    return resolveGreaseGroundHazardSpellAct({
-      input: {
-        state: input.state,
-        subject,
-        fills,
-        handledInterruptTrigger: input.handledInterruptTrigger,
-      },
-      actorId: input.effect.sourceCombatantId,
-      invocation,
-      fillSet,
-      spendsCastResources: false,
-    });
-  }
-  if (invocation.procedure === "saveGatedCondition") {
-    const fillSet = spellFillSet(
-      fills,
-      invocation,
-      procedureRef,
-      input.effect.sourceCombatantId,
-      input.state,
-    );
-    if (fillSet.tag === "invalid") {
-      return invalidResult(input.state, "invalidFill", fillSet.message);
-    }
-    return resolveSaveGateConditionSpellAct({
-      input: {
-        state: input.state,
-        subject,
-        fills,
-        handledInterruptTrigger: input.handledInterruptTrigger,
-      },
-      actorId: input.effect.sourceCombatantId,
-      invocation,
-      fillSet,
-      spendsCastResources: false,
-    });
-  }
-  if (
-    invocation.procedure === "saveGatedDamage" &&
-    glyphStoredSpellInvocationRequiresFullDurationOwner(invocation)
-  ) {
-    const fillSet = spellFillSet(
-      fills,
-      invocation,
-      procedureRef,
-      input.effect.sourceCombatantId,
-      input.state,
-    );
-    if (fillSet.tag === "invalid") {
-      return invalidResult(input.state, "invalidFill", fillSet.message);
-    }
-    return resolveSaveGateDamageSpellRelease({
-      input: {
-        state: input.state,
-        subject,
-        fills,
-        handledInterruptTrigger: input.handledInterruptTrigger,
-      },
-      actorId: input.effect.sourceCombatantId,
-      invocation,
-      fillSet,
-      opensSpellCastReactionWindow: false,
-      startsOrdinaryConcentration: false,
-    });
-  }
-  if (isGlyphStoredSingleCreatureActiveEffectSpellInvocation(invocation)) {
-    return resolveStoredGlyphSingleCreatureActiveEffectSpellRelease({
-      state: input.state,
-      effect: input.effect,
-      witness: input.witness,
-      invocation,
-      executionRegistry: input.executionRegistry,
-      handledInterruptTrigger: input.handledInterruptTrigger,
-    });
-  }
-  if (isGlyphStoredSelfTransformationModeSpellInvocation(invocation)) {
-    const fillSet = spellFillSet(
-      fills,
-      invocation,
-      procedureRef,
-      input.effect.sourceCombatantId,
-      input.state,
-    );
-    if (fillSet.tag === "invalid") {
-      return invalidResult(input.state, "invalidFill", fillSet.message);
-    }
-    return resolveStoredGlyphSelfTransformationModeSpellRelease({
-      state: input.state,
-      subject,
-      targetId: input.witness.triggeringCreatureId,
-      sourceCombatantId: input.effect.sourceCombatantId,
-      invocation,
-      fillSet,
-    });
-  }
-  return resolveSpellRelease(
-    {
-      state: input.state,
-      subject,
-      fills,
-      handledInterruptTrigger: input.handledInterruptTrigger,
-    },
-    invocation,
-    input.witness.targeting.kind ===
-      "storedSpellAreaCenteredOnTriggeringCreature"
-      ? {
-          selfOriginAreaAnchorId: input.witness.triggeringCreatureId,
-          opensSpellCastReactionWindow: false,
-        }
-      : {
-          storedGlyphTriggeringCreatureTargetId:
-            input.witness.triggeringCreatureId,
-          opensSpellCastReactionWindow: false,
-        },
-  );
-}
-
-function resolveStoredGlyphSingleCreatureActiveEffectSpellRelease(input: {
-  readonly state: BattleState;
-  readonly effect: GlyphStoredSpellOccurrenceActiveEffect;
-  readonly witness: GlyphStoredSpellReleaseWitness;
-  readonly invocation: SpellProcedureExecution<GlyphStoredConcentrationSingleCreatureActiveEffectInvocation>;
-  readonly executionRegistry: SpellProcedureExecutionRegistry;
-  readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
-}): BattleResolutionResult {
-  const procedureRef = glyphStoredSpellProcedureRef(input.state, input.effect);
-  if (procedureRef === undefined) {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "The stored spell procedure is no longer bound to its source character.",
-    );
-  }
-  const subject = {
-    tag: "actionSpell" as const,
-    actorId: input.effect.sourceCombatantId,
-    procedureRef,
-    mode: { tag: "cast" as const },
-  };
-  const fills = glyphStoredSpellReleaseFills(input);
   const fillSet = spellFillSet(
     fills,
-    input.invocation,
+    invocation,
     procedureRef,
     input.effect.sourceCombatantId,
     input.state,
@@ -2006,7 +1793,7 @@ function resolveStoredGlyphSingleCreatureActiveEffectSpellRelease(input: {
   if (fillSet.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", fillSet.message);
   }
-  const releaseInput = {
+  return resolveStoredGlyphSpellProcedure(input.executionRegistry, {
     input: {
       state: input.state,
       subject,
@@ -2014,72 +1801,24 @@ function resolveStoredGlyphSingleCreatureActiveEffectSpellRelease(input: {
       handledInterruptTrigger: input.handledInterruptTrigger,
     },
     actorId: input.effect.sourceCombatantId,
+    invocation,
     fillSet,
-    storedGlyphRelease: { kind: "storedGlyphSpellRelease" },
-  } as const;
-  const invocation = { ...input.invocation, sourceProcedureRef: procedureRef };
-  return Match.value(invocation).pipe(
-    byStoredActiveEffectProcedure("scalarBuff", (invocation) =>
-      spellProcedureExecutionFor(
-        input.executionRegistry,
-        invocation.procedure,
-      ).resolve({ ...releaseInput, invocation }),
-    ),
-    byStoredActiveEffectProcedure("rollModifier", (invocation) =>
-      spellProcedureExecutionFor(
-        input.executionRegistry,
-        invocation.procedure,
-      ).resolve({ ...releaseInput, invocation }),
-    ),
-    byStoredActiveEffectProcedure("creatureSizeIncrease", (invocation) =>
-      spellProcedureExecutionFor(
-        input.executionRegistry,
-        invocation.procedure,
-      ).resolve({ ...releaseInput, invocation }),
-    ),
-    byStoredActiveEffectProcedure("creatureSizeDecrease", (invocation) =>
-      spellProcedureExecutionFor(
-        input.executionRegistry,
-        invocation.procedure,
-      ).resolve({ ...releaseInput, invocation }),
-    ),
-    byStoredActiveEffectProcedure("levitatedCreature", (invocation) =>
-      spellProcedureExecutionFor(
-        input.executionRegistry,
-        invocation.procedure,
-      ).resolve({ ...releaseInput, invocation }),
-    ),
-    byStoredActiveEffectProcedure("directCondition", (invocation) =>
-      spellProcedureExecutionFor(
-        input.executionRegistry,
-        invocation.procedure,
-      ).resolve({ ...releaseInput, invocation }),
-    ),
-    byStoredActiveEffectProcedure("hastePositive", (invocation) =>
-      spellProcedureExecutionFor(
-        input.executionRegistry,
-        invocation.procedure,
-      ).resolve({ ...releaseInput, invocation }),
-    ),
-    byStoredActiveEffectProcedure("creatureTypeProtection", (invocation) =>
-      spellProcedureExecutionFor(
-        input.executionRegistry,
-        invocation.procedure,
-      ).resolve({ ...releaseInput, invocation }),
-    ),
-    byStoredActiveEffectProcedure(
-      "conditionImmunityAndTurnStartTemporaryHitPoints",
-      (invocation) =>
-        spellProcedureExecutionFor(
-          input.executionRegistry,
-          invocation.procedure,
-        ).resolve({
-          ...releaseInput,
-          invocation,
-        }),
-    ),
-    Match.exhaustive,
-  );
+    storedGlyphRelease: {
+      kind: "storedGlyphSpellRelease",
+      target:
+        input.witness.targeting.kind ===
+        "storedSpellAreaCenteredOnTriggeringCreature"
+          ? {
+              kind: "areaCenteredOnTriggeringCreature",
+              anchorId: input.witness.triggeringCreatureId,
+              replayContext: glyphStoredSpellReleaseReplayContext(input),
+            }
+          : {
+              kind: "triggeringCreature",
+              targetId: input.witness.triggeringCreatureId,
+            },
+    },
+  });
 }
 
 function glyphStoredSpellProcedureRef(

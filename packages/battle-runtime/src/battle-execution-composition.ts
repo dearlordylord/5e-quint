@@ -5,15 +5,22 @@ import type {
   BattleInterruptedProcedure,
   BattleResolutionInput,
   BattleResolutionResult,
+  BattleSnapshot,
   BattleState,
 } from "./battle-state-execution.ts";
 import type { BattleSubject } from "./battle-subjects.ts";
 import {
   deliverTouchSpellThroughFindFamiliar as deliverTouchSpellThroughFindFamiliarWithRegistry,
   endTurn as endTurnWithRegistry,
+  openCreatureFallsInterruptWindow as openCreatureFallsInterruptWindowStateOnly,
   resolveAdmittedBattleSubject as resolveAdmittedBattleSubjectWithRegistry,
+  resolveAdmittedFindFamiliarReappearanceSubject as resolveAdmittedFindFamiliarReappearanceSubjectStateOnly,
   resolveBattleInterrupt as resolveBattleInterruptWithRegistry,
+  resolveFallDamageLanding as resolveFallDamageLandingStateOnly,
+  resolveFeatherFallLanding as resolveFeatherFallLandingStateOnly,
+  resolveFlySpeedGrantEndFallCleanup as resolveFlySpeedGrantEndFallCleanupStateOnly,
   resolveReplayContinuationFromState as resolveReplayContinuationFromStateWithRegistry,
+  shareFindFamiliarSenses as shareFindFamiliarSensesStateOnly,
 } from "./battle-reducer/dispatcher.ts";
 import type { BattleInterruptTrigger } from "./battle-interrupt-triggers.ts";
 import { spellProcedureExecutionRegistry } from "./battle-reducer/spell-procedure-profiles/execution-composition.ts";
@@ -48,6 +55,19 @@ export function resolveBattleInterrupt(input: {
   );
 }
 
+export function resolveAdmittedFindFamiliarReappearanceSubject(
+  input: Parameters<
+    typeof resolveAdmittedFindFamiliarReappearanceSubjectStateOnly
+  >[0],
+): BattleResolutionResult {
+  const executionRegistry = spellProcedureExecutionRegistry();
+  return battleResolutionWithExecutionSnapshot(
+    input.state,
+    resolveAdmittedFindFamiliarReappearanceSubjectStateOnly(input),
+    executionRegistry,
+  );
+}
+
 export function endTurn(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
@@ -74,6 +94,58 @@ export function deliverTouchSpellThroughFindFamiliar(input: {
   return battleResolutionWithExecutionSnapshot(
     input.state,
     deliverTouchSpellThroughFindFamiliarWithRegistry(input, executionRegistry),
+    executionRegistry,
+  );
+}
+
+export function shareFindFamiliarSenses(
+  input: Parameters<typeof shareFindFamiliarSensesStateOnly>[0],
+): BattleResolutionResult {
+  const executionRegistry = spellProcedureExecutionRegistry();
+  return battleResolutionWithExecutionSnapshot(
+    input.state,
+    shareFindFamiliarSensesStateOnly(input),
+    executionRegistry,
+  );
+}
+
+export function openCreatureFallsInterruptWindow(
+  input: Parameters<typeof openCreatureFallsInterruptWindowStateOnly>[0],
+): BattleResolutionResult {
+  const executionRegistry = spellProcedureExecutionRegistry();
+  return battleResolutionWithExecutionSnapshot(
+    input.state,
+    openCreatureFallsInterruptWindowStateOnly(input),
+    executionRegistry,
+  );
+}
+
+export function resolveFeatherFallLanding(
+  input: Parameters<typeof resolveFeatherFallLandingStateOnly>[0],
+): ReturnType<typeof resolveFeatherFallLandingStateOnly> {
+  const executionRegistry = spellProcedureExecutionRegistry();
+  return resultWithExecutionSnapshot(
+    resolveFeatherFallLandingStateOnly(input),
+    executionRegistry,
+  );
+}
+
+export function resolveFallDamageLanding(
+  input: Parameters<typeof resolveFallDamageLandingStateOnly>[0],
+): ReturnType<typeof resolveFallDamageLandingStateOnly> {
+  const executionRegistry = spellProcedureExecutionRegistry();
+  return resultWithExecutionSnapshot(
+    resolveFallDamageLandingStateOnly(input),
+    executionRegistry,
+  );
+}
+
+export function resolveFlySpeedGrantEndFallCleanup(
+  input: Parameters<typeof resolveFlySpeedGrantEndFallCleanupStateOnly>[0],
+): ReturnType<typeof resolveFlySpeedGrantEndFallCleanupStateOnly> {
+  const executionRegistry = spellProcedureExecutionRegistry();
+  return resultWithExecutionSnapshot(
+    resolveFlySpeedGrantEndFallCleanupStateOnly(input),
     executionRegistry,
   );
 }
@@ -138,6 +210,24 @@ function battleResolutionWithExecutionSnapshot(
     ...result,
     snapshot: snapshotBattleWithExecutionRegistry(
       snapshotState,
+      executionRegistry,
+    ),
+  };
+}
+
+function resultWithExecutionSnapshot<
+  Result extends {
+    readonly state: BattleState;
+    readonly snapshot: BattleSnapshot;
+  },
+>(
+  result: Result,
+  executionRegistry: ReturnType<typeof spellProcedureExecutionRegistry>,
+): Result {
+  return {
+    ...result,
+    snapshot: snapshotBattleWithExecutionRegistry(
+      result.state,
       executionRegistry,
     ),
   };

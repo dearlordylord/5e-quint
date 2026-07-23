@@ -104,6 +104,7 @@ import type {
   SpellProcedureDeclaration,
 } from "./profile.ts";
 import { snapshotBattleWithExecutionRegistry } from "../battle-snapshot.ts";
+import { executeStoredGlyphSpellProcedure } from "./stored-glyph-resolution.ts";
 
 type RegisteredSpellProcedureDeclaration<
   P extends SupportedSpellInvocation["procedure"],
@@ -381,13 +382,28 @@ function registeredSpellProcedureExecution<P extends RegisteredSpellProcedure>(
     discoverCastAct: declaration.discoverCastAct,
     resolve: (resolution) => {
       const result = declaration.resolve(resolution, registry);
-      const snapshotState =
-        result.tag === "invalid" ? resolution.input.state : result.state;
-      return {
-        ...result,
-        snapshot: snapshotBattleWithExecutionRegistry(snapshotState, registry),
-      };
+      return executionResultWithSnapshot(
+        result,
+        resolution.input.state,
+        registry,
+      );
     },
+  };
+}
+
+function executionResultWithSnapshot(
+  result: ReturnType<
+    RegisteredSpellProcedureExecution<RegisteredSpellProcedure>["resolve"]
+  >,
+  errorState: Parameters<
+    RegisteredSpellProcedureExecution<RegisteredSpellProcedure>["resolve"]
+  >[0]["input"]["state"],
+  registry: SpellProcedureExecutionRegistry,
+) {
+  const snapshotState = result.tag === "invalid" ? errorState : result.state;
+  return {
+    ...result,
+    snapshot: snapshotBattleWithExecutionRegistry(snapshotState, registry),
   };
 }
 
@@ -397,6 +413,12 @@ export function registeredSpellProcedureExecutions(): SpellProcedureExecutionReg
     executionFor: (procedure) =>
       registeredSpellProcedureExecution(
         declarations[procedure].execution,
+        registry,
+      ),
+    resolveStoredGlyph: (resolution) =>
+      executionResultWithSnapshot(
+        executeStoredGlyphSpellProcedure(resolution, registry),
+        resolution.input.state,
         registry,
       ),
   };

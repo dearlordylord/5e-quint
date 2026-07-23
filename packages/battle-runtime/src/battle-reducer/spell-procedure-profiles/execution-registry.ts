@@ -9,7 +9,10 @@ import type {
   SpellProcedureKey,
 } from "../../character-execution.ts";
 import type { CombatantId } from "../../identity.ts";
-import type { SpellProcedureExecutionResolution } from "./resolution-contract.ts";
+import type {
+  SpellProcedureExecutionResolution,
+  StoredGlyphSpellProcedureResolution,
+} from "./resolution-contract.ts";
 export type { SpellProcedureExecutionResolution } from "./resolution-contract.ts";
 
 export type SpellProcedureMetamagicCompatibility =
@@ -49,6 +52,9 @@ export type SpellProcedureExecutionRegistry = {
   readonly executionFor: <Procedure extends RegisteredSpellProcedure>(
     procedure: Procedure,
   ) => RegisteredSpellProcedureExecution<Procedure>;
+  readonly resolveStoredGlyph: (
+    resolution: StoredGlyphSpellProcedureResolution,
+  ) => BattleResolutionResult;
 };
 
 export function spellProcedureExecutionFor<
@@ -65,4 +71,11 @@ export function registeredSpellProcedureClassification(
   procedure: RegisteredSpellProcedure,
 ): RegisteredSpellProcedureClassification {
   return registry.executionFor(procedure);
+}
+
+export function resolveStoredGlyphSpellProcedure(
+  registry: SpellProcedureExecutionRegistry,
+  resolution: StoredGlyphSpellProcedureResolution,
+): BattleResolutionResult {
+  return registry.resolveStoredGlyph(resolution);
 }

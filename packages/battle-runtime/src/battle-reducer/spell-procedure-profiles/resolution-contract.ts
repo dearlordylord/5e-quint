@@ -8,6 +8,7 @@ import type {
   BattleInterruptCheckpoint,
   BattleResolutionInputForSubject,
   BattleState,
+  GlyphStoredSpellReleaseReplayContext,
 } from "../../battle-state-execution.ts";
 import type { BattleInterruptTrigger } from "../../battle-interrupt-triggers.ts";
 import type { BattleSubject } from "../../battle-subjects.ts";
@@ -23,6 +24,7 @@ import type { SpellMetamagicApplicationFact } from "../metamagic-support.ts";
 import type { ChainedSpellFillSet } from "../spells-resolve-chained.ts";
 import type { SpellFillSet } from "../spells-resolve-fill-set.ts";
 import type { WeaponAttackOverrideFillInput } from "../weapon-attack-override-fill-input.ts";
+import type { GlyphStoredSpellInvocation } from "../../glyph-stored-spell-invocation.ts";
 
 type OkSpellFillSet = Extract<SpellFillSet, { readonly tag: "ok" }>;
 type AttackHitBonusActionSpellCommandSubject = Extract<
@@ -164,6 +166,17 @@ type MetamagicApplicationProcedure =
 type StoredGlyphReleaseProcedure =
   (typeof STORED_GLYPH_RELEASE_PROCEDURES)[number];
 
+export type StoredGlyphSpellReleaseTarget =
+  | {
+      readonly kind: "areaCenteredOnTriggeringCreature";
+      readonly anchorId: CombatantId;
+      readonly replayContext: GlyphStoredSpellReleaseReplayContext;
+    }
+  | {
+      readonly kind: "triggeringCreature";
+      readonly targetId: CombatantId;
+    };
+
 export type HypnoticPatternStoredGlyphRelease = {
   readonly kind: "storedGlyphSpellRelease";
   readonly selfOriginAreaAnchorId: CombatantId;
@@ -251,6 +264,17 @@ type OrdinarySpellProcedureExecutionResolution<P extends SpellProcedureKey> =
     readonly fillSet: SpellProcedureResolutionFillSet<P>;
   };
 
+export type StoredGlyphSpellProcedureResolution = {
+  readonly input: ActionSpellBattleResolutionInput;
+  readonly actorId: CombatantId;
+  readonly invocation: BattleSpellProcedureExecution<GlyphStoredSpellInvocation>;
+  readonly fillSet: OkSpellFillSet;
+  readonly storedGlyphRelease: {
+    readonly kind: "storedGlyphSpellRelease";
+    readonly target: StoredGlyphSpellReleaseTarget;
+  };
+};
+
 type TriggeredReactionSaveGatedDamageExecution =
   SpellProcedureExecutionByProcedure["saveGatedDamage"] & {
     readonly access: { readonly tag: "prepared" };
@@ -265,13 +289,17 @@ export type TriggeredReactionSaveGatedDamageResolution = {
   readonly fillSet: OkSpellFillSet;
 };
 
-type SpellProcedureExecutionResolutionFor<P extends SpellProcedureKey> =
+type SpellProcedureDeclarationResolutionFor<P extends SpellProcedureKey> =
   P extends "saveGatedDamage"
     ?
         | OrdinarySpellProcedureExecutionResolution<P>
         | TriggeredReactionSaveGatedDamageResolution
     : OrdinarySpellProcedureExecutionResolution<P>;
 
+export type SpellProcedureDeclarationResolution<
+  P extends SpellProcedureKey = SpellProcedureKey,
+> = { [Procedure in P]: SpellProcedureDeclarationResolutionFor<Procedure> }[P];
+
 export type SpellProcedureExecutionResolution<
   P extends SpellProcedureKey = SpellProcedureKey,
-> = { [Procedure in P]: SpellProcedureExecutionResolutionFor<Procedure> }[P];
+> = SpellProcedureDeclarationResolution<P>;

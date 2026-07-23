@@ -81,9 +81,12 @@ runtime context while state advances, and delegates only admitted inputs through
 authored-free Spell Procedure Execution Registry per operation and carries it
 through the state-only dispatcher, nested interrupts, replay, stored-glyph
 release, and final snapshot discovery. The registry is an execution dependency;
-it is never Battle State or session state. Reaction attack subjects receive their projected
-execution selection from the owning state query before dispatcher execution;
-the dispatcher does not project authored action-option records.
+it is never Battle State or session state. Stored-glyph release enters the
+registry once with its typed release target; the registry owns any
+procedure-specific release routing and reuses itself for nested execution.
+Reaction attack subjects receive their projected execution selection from the
+owning state query before dispatcher execution; the dispatcher does not project
+authored action-option records.
 
 The gate protects the clean `procedure-execution` territory plus battle act
 discovery, reducer routing, spell resolution, and dispatcher execution roots.
@@ -113,6 +116,10 @@ Unresolved repository-local imports and non-literal dynamic loading fail the
 gate so the transitive closure cannot be silently incomplete.
 
 The default command enforces the complete protected execution-root set.
+The gate also scans the complete reducer closure for direct `.resolve` calls:
+only calls on an execution-registry entry are allowed. Its self-tests cover
+direct, aliased, and bracket-property bypass attempts.
+
 `node scripts/check-battle-runtime-import-ownership.cjs --audit-candidates`
 audits only the smaller migration-candidate root set and reports violations
 without weakening the default gate. The two modes intentionally discover

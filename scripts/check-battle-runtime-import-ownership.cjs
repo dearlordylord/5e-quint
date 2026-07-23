@@ -21,10 +21,6 @@ const EXECUTION_ROOT_FILES = [
   `${BATTLE_RUNTIME_SRC}/battle-reducer/spells-resolve.ts`,
   `${BATTLE_RUNTIME_SRC}/battle-reducer/dispatcher.ts`,
 ];
-const SPELL_EXECUTION_DISPATCH_FILES = [
-  `${BATTLE_RUNTIME_SRC}/battle-reducer/dispatcher.ts`,
-  `${BATTLE_RUNTIME_SRC}/battle-reducer/glyph-durable-occurrence.ts`,
-];
 const SPELL_EXECUTION_COMPOSITION_MODULE = `${BATTLE_RUNTIME_SRC}/battle-reducer/spell-procedure-profiles/execution-composition.ts`;
 const SPELL_DECLARATION_REGISTRY_MODULE = `${BATTLE_RUNTIME_SRC}/battle-reducer/spell-procedure-profiles/registry.ts`;
 
@@ -463,9 +459,69 @@ function shortestForbiddenPath(graph, root, classifyForbidden) {
   return undefined;
 }
 
+function reachableFiles(graph, roots) {
+  const reachable = new Set(roots);
+  const queue = [...roots];
+  while (queue.length > 0) {
+    const current = queue.shift();
+    for (const dependency of graph.get(current) ?? []) {
+      if (reachable.has(dependency)) continue;
+      reachable.add(dependency);
+      queue.push(dependency);
+    }
+  }
+  return reachable;
+}
+
+function isWithin(file, directory) {
+  return file === directory || file.startsWith(`${directory}${path.sep}`);
+}
+
+function directResolveCalls(file, source = fs.readFileSync(file, "utf8")) {
+  const sourceFile = ts.createSourceFile(
+    file,
+    source,
+    ts.ScriptTarget.Latest,
+    false,
+  );
+  const violations = [];
+  const visit = (node) => {
+    if (ts.isCallExpression(node)) {
+      const callee = node.expression;
+      const receiver =
+        ts.isPropertyAccessExpression(callee) && callee.name.text === "resolve"
+          ? callee.expression
+          : ts.isElementAccessExpression(callee) &&
+              ts.isStringLiteralLike(callee.argumentExpression) &&
+              callee.argumentExpression.text === "resolve"
+            ? callee.expression
+            : undefined;
+      const isExecutionRegistryEntry =
+        receiver !== undefined &&
+        ts.isCallExpression(receiver) &&
+        ((ts.isIdentifier(receiver.expression) &&
+          receiver.expression.text === "spellProcedureExecutionFor") ||
+          (ts.isPropertyAccessExpression(receiver.expression) &&
+            receiver.expression.name.text === "executionFor"));
+      if (receiver !== undefined && !isExecutionRegistryEntry) {
+        violations.push({
+          file,
+          call: node.getText(sourceFile).replace(/\s+/g, " "),
+        });
+      }
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(sourceFile);
+  return violations;
+}
+
 function spellExecutionBoundaryViolations(graph) {
   const dispatcher = normalizedRepoPath(
     `${BATTLE_RUNTIME_SRC}/battle-reducer/dispatcher.ts`,
+  );
+  const glyphDispatcher = normalizedRepoPath(
+    `${BATTLE_RUNTIME_SRC}/battle-reducer/glyph-durable-occurrence.ts`,
   );
   const forbiddenCompositionModules = new Set([
     normalizedRepoPath(SPELL_EXECUTION_COMPOSITION_MODULE),
@@ -476,18 +532,21 @@ function spellExecutionBoundaryViolations(graph) {
       ? { zone: "spell execution composition" }
       : undefined,
   );
-  const directResolutionViolations = SPELL_EXECUTION_DISPATCH_FILES.flatMap(
-    (repoPath) => {
-      const file = normalizedRepoPath(repoPath);
-      const source = fs.readFileSync(file, "utf8");
-      return [...source.matchAll(/\b[A-Za-z]\w*Profile\.resolve\s*\(/g)].map(
-        (match) => ({
-          file,
-          call: match[0].replace(/\s+/g, ""),
-        }),
-      );
-    },
+  const protectedReducerRoot = normalizedRepoPath(
+    `${BATTLE_RUNTIME_SRC}/battle-reducer`,
   );
+  const procedureProfilesRoot = normalizedRepoPath(
+    `${BATTLE_RUNTIME_SRC}/battle-reducer/spell-procedure-profiles`,
+  );
+  const directResolutionViolations = [
+    ...reachableFiles(graph, [dispatcher, glyphDispatcher]),
+  ]
+    .filter(
+      (file) =>
+        isWithin(file, protectedReducerRoot) &&
+        !isWithin(file, procedureProfilesRoot),
+    )
+    .flatMap((file) => directResolveCalls(file));
   return {
     compositionPath,
     directResolutionViolations,
@@ -495,6 +554,33 @@ function spellExecutionBoundaryViolations(graph) {
 }
 
 function runSelfTests() {
+  assert.deepEqual(
+    directResolveCalls("direct.ts", "counterspellProfile.resolve(input)"),
+    [
+      {
+        file: "direct.ts",
+        call: "counterspellProfile.resolve(input)",
+      },
+    ],
+  );
+  assert.equal(
+    directResolveCalls(
+      "registry.ts",
+      "spellProcedureExecutionFor(registry, procedure).resolve(input)",
+    ).length,
+    0,
+  );
+  assert.equal(
+    directResolveCalls(
+      "alias.ts",
+      "const resolver = profile; resolver.resolve(input)",
+    ).length,
+    1,
+  );
+  assert.equal(
+    directResolveCalls("bracket.ts", 'profile["resolve"](input)').length,
+    1,
+  );
   assert.throws(
     () => assertDeclaredRootsExist([path.join(ROOT, "missing-root.ts")]),
     /Declared battle-runtime execution root\(s\) do not exist/,
