@@ -255,13 +255,6 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
         },
       };
     };
-    const withoutSpellIdentity = ({
-      spellRuleFacts: { spellId: _spellId, ...ruleFacts },
-      ...procedureFacts
-    }: Extract<
-      ReturnType<typeof spellActInvocation>,
-      { readonly procedure: "spellAttackDamage" }
-    >) => ({ ...procedureFacts, spellRuleFacts: ruleFacts });
     const admittedInvocation = (
       spell: ReturnType<typeof syntheticRay>,
     ): Extract<
@@ -320,9 +313,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     const coldInvocationA = admittedInvocation(coldA);
     const coldInvocationB = admittedInvocation(coldB);
 
-    expect(withoutSpellIdentity(coldInvocationA)).toEqual(
-      withoutSpellIdentity(coldInvocationB),
-    );
+    expect(coldInvocationA).toEqual(coldInvocationB);
     expect(coldInvocationA).toEqual(
       expect.objectContaining({
         procedure: "spellAttackDamage",
@@ -330,15 +321,11 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       }),
     );
 
-    const baselineFacts = withoutSpellIdentity(coldInvocationA);
+    const baselineFacts = coldInvocationA;
     fc.assert(
       fc.property(identityArbitrary, (identity) => {
         expect(
-          withoutSpellIdentity(
-            admittedInvocation(
-              syntheticRay({ ...identity, damageType: "cold" }),
-            ),
-          ),
+          admittedInvocation(syntheticRay({ ...identity, damageType: "cold" })),
         ).toEqual(baselineFacts);
       }),
       { numRuns: 20 },
@@ -528,7 +515,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     expect(spellHoleInvocation(state, [attackRoll])).toEqual(
       expect.objectContaining({
         procedure: "spellAttackDamage",
-        spellRuleFacts: expect.objectContaining({ spellId: spell.id }),
+        spellRuleFacts: expect.objectContaining({}),
         attackKind: "ranged_spell_attack",
         damage: {
           kind: "fixedSpellAttackDamage",
@@ -755,7 +742,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     expect(spellHoleInvocation(state, [attackRoll])).toEqual(
       expect.objectContaining({
         procedure: "spellAttackDamage",
-        spellRuleFacts: expect.objectContaining({ spellId: spell.id }),
+        spellRuleFacts: expect.objectContaining({}),
         targeting: { kind: "singleCombatant" },
         damage: {
           kind: "fixedSpellAttackDamage",
@@ -808,7 +795,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     expect(spellHoleInvocation(state, [attackRoll])).toEqual(
       expect.objectContaining({
         procedure: "spellAttackDamage",
-        spellRuleFacts: expect.objectContaining({ spellId: spell.id }),
+        spellRuleFacts: expect.objectContaining({}),
         targeting: { kind: "singleCreatureOrObject" },
         damage: {
           kind: "fixedSpellAttackDamage",
@@ -875,7 +862,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     expect(spellHoleInvocation(state, [attackRoll])).toEqual(
       expect.objectContaining({
         procedure: "spellAttackDamage",
-        spellRuleFacts: expect.objectContaining({ spellId: spell.id }),
+        spellRuleFacts: expect.objectContaining({}),
         attackKind: "melee_spell_attack",
         damage: {
           kind: "fixedSpellAttackDamage",
@@ -930,7 +917,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     expect(spellHoleInvocation(state, [attackRoll])).toEqual(
       expect.objectContaining({
         procedure: "spellAttackDamage",
-        spellRuleFacts: expect.objectContaining({ spellId: spell.id }),
+        spellRuleFacts: expect.objectContaining({}),
         attackKind: "ranged_spell_attack",
         damage: {
           kind: "fixedSpellAttackDamage",
@@ -986,7 +973,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     expect(spellHoleInvocation(state, [attackRoll])).toEqual(
       expect.objectContaining({
         procedure: "spellAttackDamage",
-        spellRuleFacts: expect.objectContaining({ spellId: spell.id }),
+        spellRuleFacts: expect.objectContaining({}),
         attackKind: "ranged_spell_attack",
         damage: {
           kind: "fixedSpellAttackDamage",
@@ -1041,7 +1028,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     expect(spellHoleInvocation(state, [savingThrow])).toEqual(
       expect.objectContaining({
         procedure: "saveGatedDamage",
-        spellRuleFacts: expect.objectContaining({ spellId: spell.id }),
+        spellRuleFacts: expect.objectContaining({}),
         ability: "wis",
         targeting: { kind: "singleCombatant" },
         damage: {
@@ -1188,7 +1175,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     expect(spellHoleInvocation(state, [savingThrow])).toEqual(
       expect.objectContaining({
         procedure: "saveGatedDamage",
-        spellRuleFacts: expect.objectContaining({ spellId: spell.id }),
+        spellRuleFacts: expect.objectContaining({}),
         ability: "dex",
         targeting: { kind: "singleCombatant" },
         damage: {
@@ -1252,7 +1239,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     expect(spellHoleInvocation(state, [savingThrow])).toEqual(
       expect.objectContaining({
         procedure: "saveGatedDamage",
-        spellRuleFacts: expect.objectContaining({ spellId: spell.id }),
+        spellRuleFacts: expect.objectContaining({}),
         resource: { tag: "spellSlot", slotLevel: 3 },
         ability: "con",
         targeting: { kind: "singleCombatant" },
@@ -1313,7 +1300,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     expect(spellHoleInvocation(state, [savingThrow])).toEqual(
       expect.objectContaining({
         procedure: "saveGatedDamage",
-        spellRuleFacts: expect.objectContaining({ spellId: spell.id }),
+        spellRuleFacts: expect.objectContaining({}),
         resource: { tag: "spellSlot", slotLevel: 3 },
         ability: "wis",
         targeting: { kind: "singleCombatant" },
@@ -1703,7 +1690,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     expect(spellHoleInvocation(state, [savingThrow])).toEqual(
       expect.objectContaining({
         procedure: "saveGatedDamage",
-        spellRuleFacts: expect.objectContaining({ spellId: spell.id }),
+        spellRuleFacts: expect.objectContaining({}),
         resource: { tag: "spellSlot", slotLevel: 2 },
         ability: "dex",
         targeting: { kind: "selfOriginCone", lengthFeet: 15 },
@@ -1758,7 +1745,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     expect(spellHoleInvocation(state, [savingThrow])).toEqual(
       expect.objectContaining({
         procedure: "saveGatedDamage",
-        spellRuleFacts: expect.objectContaining({ spellId: spell.id }),
+        spellRuleFacts: expect.objectContaining({}),
         resource: { tag: "spellSlot", slotLevel: 4 },
         ability: "dex",
         targeting: { kind: "selfOriginLine", lengthFeet: 100, widthFeet: 5 },
@@ -1814,7 +1801,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     expect(spellHoleInvocation(state, [savingThrow])).toEqual(
       expect.objectContaining({
         procedure: "saveGatedDamage",
-        spellRuleFacts: expect.objectContaining({ spellId: spell.id }),
+        spellRuleFacts: expect.objectContaining({}),
         resource: { tag: "spellSlot", slotLevel: 5 },
         ability: "con",
         targeting: { kind: "selfOriginCone", lengthFeet: 60 },
@@ -1870,7 +1857,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     expect(spellHoleInvocation(state, [savingThrow])).toEqual(
       expect.objectContaining({
         procedure: "saveGatedDamage",
-        spellRuleFacts: expect.objectContaining({ spellId: spell.id }),
+        spellRuleFacts: expect.objectContaining({}),
         resource: { tag: "spellSlot", slotLevel: 5 },
         ability: "dex",
         targeting: {
@@ -2058,7 +2045,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     expect(spellHoleInvocation(state, [savingThrow])).toEqual(
       expect.objectContaining({
         procedure: "saveGatedDamage",
-        spellRuleFacts: expect.objectContaining({ spellId: spell.id }),
+        spellRuleFacts: expect.objectContaining({}),
         resource: { tag: "spellSlot", slotLevel: 4 },
         ability: "dex",
         targeting: { kind: "pointOriginSphere", radiusFeet: 20 },
@@ -2250,7 +2237,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     expect(spellHoleInvocation(state, [savingThrow])).toEqual(
       expect.objectContaining({
         procedure: "saveGatedDamage",
-        spellRuleFacts: expect.objectContaining({ spellId: spell.id }),
+        spellRuleFacts: expect.objectContaining({}),
         resource: { tag: "spellSlot", slotLevel: 3 },
         ability: "con",
         targeting: { kind: "pointOriginSphere", radiusFeet: 10 },

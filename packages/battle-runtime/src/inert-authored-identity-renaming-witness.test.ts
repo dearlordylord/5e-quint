@@ -7,6 +7,8 @@ import type {
   BattleSnapshot,
   BattleState,
   BattleCreatureState,
+  BattleActiveEffect,
+  BattleTurnResources,
 } from "./battle-state-execution.ts";
 import type { Condition } from "@dnd/shared/types";
 import { currentActorId } from "./battle-reducer/creature-state-leaves.ts";
@@ -25,7 +27,7 @@ import { fighterVsGoblinBattle } from "./battle-runtime-test-support.ts";
  * renamed identity fields themselves.
  *
  * Behavior-driving identity fields (e.g. weaponUnitId for mastery, loadout
- * unitId for Wild Shape equipment, spellId in SpellRuleExecutionFacts) are
+ * unitId for Wild Shape equipment, paladinSacredWeapon.weaponItemId) are
  * excluded because renaming them currently changes outcomes.
  */
 
@@ -41,6 +43,39 @@ function activeConditionListCount(conditions: readonly Condition[]): number {
   return conditions.length;
 }
 
+function activeEffectKindCounts(
+  effects: readonly BattleActiveEffect[],
+): ReadonlyArray<readonly [string, number]> {
+  const counts = new Map<string, number>();
+  for (const effect of effects) {
+    counts.set(effect.kind, (counts.get(effect.kind) ?? 0) + 1);
+  }
+  return Array.from(counts.entries()).sort(([a], [b]) => a.localeCompare(b));
+}
+
+function actionEconomyProjection(turnResources: BattleTurnResources) {
+  return {
+    actionResourceCount: turnResources.actionResources.length,
+    currentHasBonusAction: turnResources.currentHasBonusAction,
+    actionOrBonusActionExclusion: turnResources.actionOrBonusActionExclusion,
+    movementActionBonusActionExclusion:
+      turnResources.movementActionBonusActionExclusion,
+  };
+}
+
+function turnResourcesProjection(turnResources: BattleTurnResources) {
+  return {
+    ...actionEconomyProjection(turnResources),
+    attackRollMadeThisTurn: turnResources.attackRollMadeThisTurn,
+    lightWeaponAttackMade: turnResources.lightWeaponAttackMade !== undefined,
+    dashMovementBonusFeet: Number(turnResources.dashMovementBonusFeet),
+    disengaged: turnResources.disengaged,
+    pendingAttackRollMissToHitReplacementSelection:
+      turnResources.pendingAttackRollMissToHitReplacementSelection !==
+      undefined,
+  };
+}
+
 function combatantMechanicalProjection(combatant: BattleCreatureState) {
   return {
     hp: Number(combatant.hp),
@@ -51,7 +86,17 @@ function combatantMechanicalProjection(combatant: BattleCreatureState) {
     movementSpentFeet: Number(combatant.movementSpentFeet),
     reactionAvailable: combatant.reactionAvailable,
     activeConditionCount: activeConditionStateCount(combatant.conditions),
-    concentrating: combatant.concentration !== null,
+    activeEffectKindCounts: activeEffectKindCounts(combatant.activeEffects),
+    concentration:
+      combatant.concentration === null
+        ? null
+        : {
+            effectKind: combatant.concentration.effectKind,
+            hasMaintenanceAdvantage:
+              combatant.concentration.maintenanceSavingThrowRollMode ===
+              "advantage",
+          },
+    hidden: combatant.hidden !== null,
     dodging: combatant.dodging,
   };
 }
@@ -69,6 +114,14 @@ function stateMechanicalProjection(state: BattleState) {
   return {
     initiativeOrder: initiativeOrder(state.initiative),
     combatants,
+    turnResources: turnResourcesProjection(state.currentTurnResources),
+    interruptStack: state.interruptStack.map((frame) => frame.kind),
+    readiedSpellCount: state.readiedSpells.size,
+    readiedMovementCount: state.readiedMovements.size,
+    helpAttackCount: state.helpAttacks.length,
+    grappleCount: state.grapples.length,
+    legendaryActionWindowConsumed:
+      state.legendaryActionWindow?.consumed ?? null,
   };
 }
 
@@ -86,6 +139,7 @@ function snapshotCombatantMechanicalProjection(
     reactionAvailable: combatant.reactionAvailable,
     movementSpentFeet: Number(combatant.movement.spentFeet),
     activeConditionCount: activeConditionListCount(combatant.conditions),
+    activeEffectRefCount: combatant.activeEffectRefs.length,
     concentrating: combatant.concentrating,
     dodging: combatant.dodging,
   };

@@ -838,7 +838,6 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       secondInvocation,
     ]).filter((ref) => ref !== undefined);
     const storedBindings = JSON.stringify(duplicated.procedureBindings);
-    expect(storedBindings).toContain(firstInvocation.spell.id);
     expect(storedBindings).not.toContain(guidingBolt.name);
     expect(storedBindings).not.toContain(guidingBolt.description);
     expect(storedBindings).not.toContain(guidingBolt.provenance.section);

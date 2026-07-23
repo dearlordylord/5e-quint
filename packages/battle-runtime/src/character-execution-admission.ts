@@ -54,7 +54,6 @@ import {
   battleProcedureExecutionCursor,
   battleProcedureExecutionRef,
   battleResourcePoolExecutionRef,
-  spellId,
 } from "./identity.ts";
 import {
   type BattleUnitSupportProfile,
@@ -2784,11 +2783,10 @@ export function characterSpellProcedureRefs(
 }
 
 function spellRuleExecutionFacts(
-  spell: Pick<BattleSpellAdmissionSource, "id" | "mechanics">,
+  spell: Pick<BattleSpellAdmissionSource, "mechanics">,
 ): SpellRuleExecutionFacts {
   const mechanics = spell.mechanics;
   return {
-    spellId: spellId(spell.id),
     level: mechanics.level,
     range: mechanics.range,
     duration: mechanics.duration,

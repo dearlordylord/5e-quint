@@ -39,7 +39,13 @@ import {
   wizardSpellcasting,
 } from "./battle-runtime-test-support.ts";
 import {
+  combatantWearingArmor,
+  combatantWieldingShield,
+} from "./battle-reducer/creature-state-leaves.ts";
+import { unitId } from "@dnd/shared/game-facts";
+import {
   battleExecutionScopeOrdinal,
+  battleObjectId,
   battleStatBlockExecutionScopeRef,
 } from "./identity.ts";
 
@@ -357,7 +363,7 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
             sourceProcedureRef: wildShapeProcedureRef,
             sourceCombatantId: druidId,
             formScopeRef: catFormScopeRef,
-            formLimbs: { kind: "cannotHandleObjects" },
+            formLimbs: { kind: "cannotHandleObjects" } as const,
             equipmentDisposition: [],
             expiresAt: {
               kind: "duration" as const,
@@ -408,7 +414,7 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
     expect(Number(druidSnapshot?.armorClass)).toBe(15);
   });
 
-  test("Mage Armor treats unresolved Wild Shape effects as still wearing armor", () => {
+  test("Mage Armor ignores unresolved Wild Shape effects and uses base form armor rules", () => {
     const armored = {
       ...defaultArmorClassState(),
       base: {
@@ -476,8 +482,21 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
               druidId,
               battleExecutionScopeOrdinal(999),
             ),
-            formLimbs: { kind: "cannotHandleObjects" },
-            equipmentDisposition: [],
+            formLimbs: { kind: "cannotHandleObjects" } as const,
+            // Stale effect claims armor is worn. With the fix, base form rules
+            // apply instead, so the armored druid remains armored and Mage
+            // Armor is illegal. Without the fix, this disposition would also
+            // make the druid appear armored, masking the stale-reference bug.
+            equipmentDisposition: [
+              {
+                item: {
+                  kind: "armor" as const,
+                  objectId: battleObjectId("synthetic-stale-armor"),
+                  unitId: unitId("synthetic-stale-armor-unit"),
+                },
+                disposition: "worn" as const,
+              },
+            ],
             expiresAt: {
               kind: "duration" as const,
               durationTicks: elapsedTimeTicks(600),
@@ -499,17 +518,95 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
       throw new Error("Expected targetChoice hole.");
     }
 
-    expect(target.choices).toContain(druidId);
-    expect(
-      resolveBattleSubject({
-        state: staleWildShapeState,
-        subject,
-        fills: [targetFill(target, druidId)],
-      }),
-    ).toMatchObject({
-      tag: "invalid",
-      reason: "invalidFill",
+    // The druid is armored in base form; the stale Wild Shape effect must not
+    // change that. Mage Armor therefore excludes the armored druid from its
+    // target choices entirely.
+    expect(target.choices).not.toContain(druidId);
+  });
+
+  test("unresolved Wild Shape effects cannot force base-form creatures to appear armored", () => {
+    const unarmoredDex = {
+      ...defaultArmorClassState(),
+      abilityModifiers: {
+        ...defaultArmorClassState().abilityModifiers,
+        dex: abilityModifier(2),
+      },
+    };
+    const druidId = combatantId("mage-armor-stale-wild-shape-unarmored-druid");
+    const session = startBattleSessionRight({
+      battleId: battleId("battle-mage-armor-stale-wild-shape-unarmored"),
+      combatants: [
+        characterSeed({
+          combatantId: druidId,
+          displayName: "Stale Wild Shape Druid",
+          initiative: 10,
+          attack: null,
+          armorClass: unarmoredDex,
+          classLevels: [{ className: "druid", level: 2 }],
+          resources: [{ unit: unitLibrary.requireUnit("druid_wild_shape") }],
+          druidWildShapeAvailableForms: [
+            statBlockCatalog.requireStatBlock("stat_block_cat"),
+          ],
+        }),
+      ],
     });
+    const state = session.state;
+    const druid = state.combatants.get(druidId);
+    if (druid === undefined) {
+      throw new Error("Expected Druid target.");
+    }
+    if (druid.origin.kind !== "character") {
+      throw new Error("Expected character-origin Druid.");
+    }
+    const wildShapeProcedureRef = requireCharacterUnitProcedureRefForTest(
+      session,
+      druidId,
+      "druid_wild_shape",
+    );
+    const staleDruid = {
+      ...druid,
+      activeEffects: [
+        ...druid.activeEffects,
+        {
+          kind: "druidWildShapeForm" as const,
+          sourceProcedureRef: wildShapeProcedureRef,
+          sourceCombatantId: druidId,
+          formScopeRef: battleStatBlockExecutionScopeRef(
+            battleId("battle-mage-armor-stale-wild-shape-unarmored"),
+            druidId,
+            battleExecutionScopeOrdinal(999),
+          ),
+          formLimbs: { kind: "cannotHandleObjects" } as const,
+          // Stale effect claims armor and shield are worn. Base form rules must
+          // win, so the unarmored, shieldless druid remains unarmored.
+          equipmentDisposition: [
+            {
+              item: {
+                kind: "armor" as const,
+                objectId: battleObjectId("synthetic-stale-armor"),
+                unitId: unitId("synthetic-stale-armor-unit"),
+              },
+              disposition: "worn" as const,
+            },
+            {
+              item: {
+                kind: "shield" as const,
+                objectId: battleObjectId("synthetic-stale-shield"),
+                unitId: unitId("synthetic-stale-shield-unit"),
+              },
+              disposition: "worn" as const,
+            },
+          ],
+          expiresAt: {
+            kind: "duration" as const,
+            durationTicks: elapsedTimeTicks(600),
+          },
+        },
+      ],
+    };
+
+    expect(combatantWearingArmor(staleDruid)).toBe(false);
+    expect(combatantWieldingShield(staleDruid)).toBe(false);
   });
 
   test("Armor of Shadows casts self-only Mage Armor without expending a Spell Slot", () => {

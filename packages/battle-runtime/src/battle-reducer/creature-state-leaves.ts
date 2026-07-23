@@ -15,6 +15,7 @@ import {
   wildShapeFormLimbsCanHandleObjects,
 } from "./wild-shape-equipment.ts";
 import {
+  type BattleActiveEffect,
   type BattleSeeInvisibleEtherealWitness,
   type BattleSeeInvisibleObjectWitness,
   type BattleCreatureState,
@@ -22,6 +23,8 @@ import {
   type BattleState,
 } from "../battle-state-execution.ts";
 import type { CombatantId } from "../identity.ts";
+import type { BattleDruidWildShapeKnownForm } from "../druid-wild-shape-known-form-execution.ts";
+import type { StatBlockExecutionAdmission } from "../stat-block-execution-state.ts";
 
 export function combatantCanSee(
   state: BattleState,
@@ -103,7 +106,7 @@ export function combatantWearingArmorCategory(
   category: ArmorCategory,
 ): boolean {
   if (
-    combatantHasUnendedDruidWildShapeEffect(combatant) &&
+    combatantActiveDruidWildShape(combatant) !== null &&
     !combatantDruidWildShapeEquipmentWearsKind(combatant, "armor")
   ) {
     return false;
@@ -116,7 +119,7 @@ export function combatantWearingArmorCategory(
 
 export function combatantWearingArmor(combatant: BattleCreatureState): boolean {
   if (
-    combatantHasUnendedDruidWildShapeEffect(combatant) &&
+    combatantActiveDruidWildShape(combatant) !== null &&
     !combatantDruidWildShapeEquipmentWearsKind(combatant, "armor")
   ) {
     return false;
@@ -128,7 +131,7 @@ export function combatantWieldingShield(
   combatant: BattleCreatureState,
 ): boolean {
   if (
-    combatantHasUnendedDruidWildShapeEffect(combatant) &&
+    combatantActiveDruidWildShape(combatant) !== null &&
     !combatantDruidWildShapeEquipmentWearsKind(combatant, "shield")
   ) {
     return false;
@@ -182,13 +185,9 @@ function combatantWildShapeEffectiveHandUse(
   combatant: BattleCreatureState,
   handUse: HandUse,
 ): HandUse {
-  if (!combatantHasUnendedDruidWildShapeEffect(combatant)) return handUse;
-  const wildShapeEffect =
-    combatant.origin.kind === "character"
-      ? combatant.activeEffects.find(
-          (effect) => effect.kind === "druidWildShapeForm",
-        )
-      : undefined;
+  const activeForm = combatantActiveDruidWildShape(combatant);
+  if (activeForm === null) return handUse;
+  const wildShapeEffect = activeForm.effect;
   return Match.value(handUse).pipe(
     Match.when("shield", () =>
       combatantDruidWildShapeEquipmentWearsKind(combatant, "shield")
@@ -196,7 +195,6 @@ function combatantWildShapeEffectiveHandUse(
         : "free",
     ),
     Match.when("mainWeapon", () =>
-      wildShapeEffect !== undefined &&
       wildShapeFormLimbsCanHandleObjects(wildShapeEffect.formLimbs) &&
       wildShapeEquipmentDispositionWearsKind(
         wildShapeEffect.equipmentDisposition,
@@ -206,7 +204,6 @@ function combatantWildShapeEffectiveHandUse(
         : "free",
     ),
     Match.when("offWeapon", () =>
-      wildShapeEffect !== undefined &&
       wildShapeFormLimbsCanHandleObjects(wildShapeEffect.formLimbs) &&
       wildShapeEquipmentDispositionWearsKind(
         wildShapeEffect.equipmentDisposition,
@@ -222,20 +219,45 @@ function combatantWildShapeEffectiveHandUse(
   );
 }
 
+export function combatantActiveDruidWildShape(
+  combatant: BattleCreatureState | undefined,
+): {
+  readonly effect: Extract<
+    BattleActiveEffect,
+    { readonly kind: "druidWildShapeForm" }
+  >;
+  readonly admission: StatBlockExecutionAdmission<BattleDruidWildShapeKnownForm>;
+} | null {
+  if (
+    combatant === undefined ||
+    combatant.origin.kind !== "character" ||
+    !combatantHasUnendedDruidWildShapeEffect(combatant)
+  ) {
+    return null;
+  }
+  for (const effect of combatant.activeEffects) {
+    if (effect.kind !== "druidWildShapeForm") continue;
+    const admission = combatant.origin.druidWildShapeAvailableForms?.find(
+      (candidate) => candidate.execution.scopeRef === effect.formScopeRef,
+    );
+    if (admission !== undefined) {
+      return { effect, admission };
+    }
+  }
+  return null;
+}
+
 function combatantDruidWildShapeEquipmentWearsKind(
   combatant: BattleCreatureState,
   kind: WildShapeArmorClassWornKind,
 ): boolean {
-  if (
-    !combatantHasUnendedDruidWildShapeEffect(combatant) ||
-    combatant.origin.kind !== "character"
-  ) {
+  const activeForm = combatantActiveDruidWildShape(combatant);
+  if (activeForm === null) {
     return false;
   }
-  return combatant.activeEffects.some(
-    (effect) =>
-      effect.kind === "druidWildShapeForm" &&
-      wildShapeEquipmentDispositionWearsKind(effect.equipmentDisposition, kind),
+  return wildShapeEquipmentDispositionWearsKind(
+    activeForm.effect.equipmentDisposition,
+    kind,
   );
 }
 

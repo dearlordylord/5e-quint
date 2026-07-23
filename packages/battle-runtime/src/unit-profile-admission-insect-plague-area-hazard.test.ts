@@ -153,7 +153,7 @@ function resolveInsectPlagueSave(input: {
 
 describe("L19E deterministic Insect Plague area-hazard admission", () => {
   test("insect plague is admitted as a ten-minute point-origin Sphere hazard", () => {
-    const { spell, session, act } = castInsectPlague();
+    const { session, act } = castInsectPlague();
 
     expect({
       ...act.subject,
@@ -178,7 +178,7 @@ describe("L19E deterministic Insect Plague area-hazard admission", () => {
     expect(spellHoleInvocation(session, [area])).toEqual(
       expect.objectContaining({
         procedure: "insectPlagueAreaHazard",
-        spellRuleFacts: expect.objectContaining({ spellId: spell.id }),
+        spellRuleFacts: expect.objectContaining({}),
         resource: { tag: "spellSlot", slotLevel: 5 },
         ability: "con",
         targeting: { kind: "pointOriginSphere", radiusFeet: movementFeet(20) },

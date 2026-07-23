@@ -227,7 +227,7 @@ describe("Task 11 deterministic Sleet Storm area-hazard admission", () => {
     expect(spellHoleInvocation(state, [area])).toEqual(
       expect.objectContaining({
         procedure: "sleetStormAreaHazard",
-        spellRuleFacts: expect.objectContaining({ spellId: spell.id }),
+        spellRuleFacts: expect.objectContaining({}),
         resource: { tag: "spellSlot", slotLevel: 3 },
         ability: "dex",
         dc: { kind: "caster_spell_save_dc" },

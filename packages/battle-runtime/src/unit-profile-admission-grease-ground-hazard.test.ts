@@ -91,7 +91,7 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
     expect(spellHoleInvocation(session, [savingThrow])).toEqual(
       expect.objectContaining({
         procedure: "greaseGroundHazard",
-        spellRuleFacts: expect.objectContaining({ spellId: spell.id }),
+        spellRuleFacts: expect.objectContaining({}),
         resource: { tag: "spellSlot", slotLevel: 1 },
         ability: "dex",
         targeting: { kind: "pointOriginCube", sideFeet: 10 },

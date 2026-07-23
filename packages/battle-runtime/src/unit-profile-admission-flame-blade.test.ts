@@ -149,7 +149,6 @@ describe("SRDINV95 deterministic Flame Blade admission", () => {
   });
 
   test("held flame_blade admits a Magic Action melee spell attack without a second Spell Slot spend", () => {
-    const spell = spellRecord(flameBladeUnitId);
     const state = flameBladeBattle({ targetHp: 20, targetMaxHp: 20 });
     const cast = castFlameBlade(state);
     const attackAct = spellAct({
@@ -201,7 +200,7 @@ describe("SRDINV95 deterministic Flame Blade admission", () => {
         resource: { tag: "none" },
         procedure: "spellCreatedHeldObjectAttack",
         sourceProcedureRef: attackAct.subject.procedureRef,
-        spellRuleFacts: expect.objectContaining({ spellId: spell.id }),
+        spellRuleFacts: expect.objectContaining({}),
         targeting: { kind: "singleCombatant" },
         damage: {
           expr: { dice: 3, dieSize: 6, flat: 3 },

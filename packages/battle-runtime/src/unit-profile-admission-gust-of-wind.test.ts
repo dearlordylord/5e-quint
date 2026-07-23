@@ -94,7 +94,7 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
     expect(spellHoleInvocation(state, [savingThrow])).toEqual(
       expect.objectContaining({
         procedure: "gustOfWindLine",
-        spellRuleFacts: expect.objectContaining({ spellId: spell.id }),
+        spellRuleFacts: expect.objectContaining({}),
         resource: { tag: "spellSlot", slotLevel: 2 },
         ability: "str",
         targeting: {

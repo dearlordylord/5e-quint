@@ -203,8 +203,6 @@ describe("Stat Block execution references", () => {
     const liveCharacterBindings = JSON.stringify(
       wizard.origin.execution.procedureBindings,
     );
-    expect(liveCharacterBindings).toContain('"spellId":"magic_missile"');
-    expect(liveCharacterBindings).toContain('"spellId":"ray_of_frost"');
     expect(liveCharacterBindings).not.toContain("Magic Missile");
     expect(liveCharacterBindings).not.toContain("Ray of Frost");
     expect(liveCharacterBindings).not.toContain('"provenance"');

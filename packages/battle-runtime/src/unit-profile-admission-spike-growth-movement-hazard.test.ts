@@ -264,7 +264,7 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
     expect(spellHoleInvocation(state, [area])).toEqual(
       expect.objectContaining({
         procedure: "spikeGrowthMovementHazard",
-        spellRuleFacts: expect.objectContaining({ spellId: spell.id }),
+        spellRuleFacts: expect.objectContaining({}),
         resource: { tag: "spellSlot", slotLevel: 2 },
         targeting: { kind: "pointOriginSphere", radiusFeet: movementFeet(20) },
         durationTicks: spikeGrowthDurationTicks,

@@ -48,7 +48,10 @@ import type {
   BattleStatBlockProcedureExecutionRef,
   CombatantId,
 } from "../identity.ts";
-import { combatantHasUnendedDruidWildShapeEffect } from "./creature-state-leaves.ts";
+import {
+  combatantActiveDruidWildShape,
+  combatantHasUnendedDruidWildShapeEffect,
+} from "./creature-state-leaves.ts";
 import {
   activeCreatureSizeChangeEffect,
   type SpellCreatureSizeChangeEffect,
@@ -125,23 +128,7 @@ export function activeDruidWildShapeForm(
 export function activeDruidWildShape(
   combatant: BattleCreatureState | undefined,
 ): ActiveDruidWildShape | null {
-  if (
-    combatant === undefined ||
-    combatant.origin.kind !== "character" ||
-    !combatantHasUnendedDruidWildShapeEffect(combatant)
-  ) {
-    return null;
-  }
-  for (const effect of combatant.activeEffects) {
-    if (effect.kind !== "druidWildShapeForm") continue;
-    const admission = combatant.origin.druidWildShapeAvailableForms?.find(
-      (candidate) => candidate.execution.scopeRef === effect.formScopeRef,
-    );
-    if (admission !== undefined) {
-      return { effect, admission };
-    }
-  }
-  return null;
+  return combatantActiveDruidWildShape(combatant);
 }
 
 export function combatantEffectiveSize(combatant: BattleCreatureState): Size {

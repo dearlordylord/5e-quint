@@ -79,7 +79,7 @@ describe("QMBT25 deterministic Spell Unit admission re-triage", () => {
     expect(spellHoleInvocation(state, awaitingHealingRoll.holes)).toEqual(
       expect.objectContaining({
         procedure: "directHitPointRestoration",
-        spellRuleFacts: expect.objectContaining({ spellId: spell.id }),
+        spellRuleFacts: expect.objectContaining({}),
         resource: { tag: "spellSlot", slotLevel: 1 },
         healing: {
           expr: { dice: 2, dieSize: 4, flat: 3 },
@@ -132,7 +132,7 @@ describe("QMBT32 deterministic direct Hit Point restoration spell admission", ()
     expect(spellHoleInvocation(state, awaitingHealingRoll.holes)).toEqual(
       expect.objectContaining({
         procedure: "directHitPointRestoration",
-        spellRuleFacts: expect.objectContaining({ spellId: spell.id }),
+        spellRuleFacts: expect.objectContaining({}),
         actionCost: "magicAction",
         targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 },
         resource: { tag: "spellSlot", slotLevel: 1 },
@@ -261,7 +261,7 @@ describe("QMBT32 deterministic direct Hit Point restoration spell admission", ()
     expect(spellHoleInvocation(state, act.initialHoles)).toEqual(
       expect.objectContaining({
         procedure: "directHitPointRestoration",
-        spellRuleFacts: expect.objectContaining({ spellId: spell.id }),
+        spellRuleFacts: expect.objectContaining({}),
         actionCost: "magicAction",
         targeting: {
           kind: "pointOriginSphereTargetList",

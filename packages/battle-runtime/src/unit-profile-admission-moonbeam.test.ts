@@ -123,7 +123,7 @@ describe("L12G deterministic Moonbeam admission", () => {
     expect(spellHoleInvocation(state, [area])).toEqual(
       expect.objectContaining({
         procedure: "moonbeam",
-        spellRuleFacts: expect.objectContaining({ spellId: spell.id }),
+        spellRuleFacts: expect.objectContaining({}),
         resource: { tag: "spellSlot", slotLevel: 2 },
         ability: "con",
         dc: { kind: "caster_spell_save_dc" },

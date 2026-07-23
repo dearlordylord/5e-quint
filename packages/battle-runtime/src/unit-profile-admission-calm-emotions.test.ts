@@ -73,7 +73,7 @@ describe("L12G deterministic Calm Emotions Spell Unit admission", () => {
     expect(spellHoleInvocation(session, [savingThrow])).toEqual(
       expect.objectContaining({
         procedure: "saveGatedConditionImmunity",
-        spellRuleFacts: expect.objectContaining({ spellId: spell.id }),
+        spellRuleFacts: expect.objectContaining({}),
         resource: { tag: "spellSlot", slotLevel: 2 },
         ability: "cha",
         targeting: { kind: "pointOriginSphere", radiusFeet: 20 },
