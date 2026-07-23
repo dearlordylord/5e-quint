@@ -403,7 +403,6 @@ export const chosenDamageResistanceProfile: SpellProcedureDeclaration<
 > = {
   procedure: "chosenDamageResistance",
   executionSchema: ChosenDamageResistanceInvocationSchema,
-  metamagicCompatibility: "actionSpellResolverNotRewritten",
   admit: admitChosenDamageResistance,
   discoverCastAct: discoverChosenDamageResistanceCastAct,
   resolve: resolveChosenDamageResistance,

@@ -394,7 +394,6 @@ const AfterHitTimedDamageAndSaveInvocationSchema =
 export const afterHitTimedDamageAndSaveProfile = {
   procedure: "afterHitTimedDamageAndSave",
   executionSchema: AfterHitTimedDamageAndSaveInvocationSchema,
-  metamagicCompatibility: "notActionSpellCasting",
   admit: admitAfterHitTimedDamageAndSave,
   discoverCastAct: discoverAfterHitTimedDamageAndSaveCastAct,
   resolve: resolveAfterHitTimedDamageAndSave,

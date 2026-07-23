@@ -259,7 +259,6 @@ const SleepTargetAdmissionInvocationSchema = spellProcedureExecutionSchema(
 export const sleepTargetAdmissionProfile = {
   procedure: "sleepTargetAdmission",
   executionSchema: SleepTargetAdmissionInvocationSchema,
-  metamagicCompatibility: "actionSpellResolverNotRewritten",
   admit: admitSleepTargetAdmission,
   discoverCastAct: discoverSleepTargetAdmissionCastAct,
   resolve: resolveSleepTargetAdmission,

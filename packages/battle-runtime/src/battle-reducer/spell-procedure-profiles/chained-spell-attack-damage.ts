@@ -132,7 +132,6 @@ export const chainedSpellAttackDamageProfile: SpellProcedureDeclaration<
 > = {
   procedure: "chainedSpellAttackDamage",
   executionSchema: ChainedSpellAttackDamageInvocationSchema,
-  metamagicCompatibility: "actionSpellResolverNotRewritten",
   admit: admitChainedSpellAttackDamage,
   discoverCastAct: discoverChainedSpellAttackDamageCastAct,
   resolve: resolveChainedSpellAttackDamage,

@@ -220,7 +220,6 @@ const MagicalDarknessPointOriginInvocationSchema =
 export const magicalDarknessPointOriginProfile = {
   procedure: "magicalDarknessPointOrigin",
   executionSchema: MagicalDarknessPointOriginInvocationSchema,
-  metamagicCompatibility: "actionSpellResolverNotRewritten",
   admit: admitMagicalDarknessPointOrigin,
   discoverCastAct: discoverMagicalDarknessPointOriginCastAct,
   resolve: resolveMagicalDarknessPointOrigin,

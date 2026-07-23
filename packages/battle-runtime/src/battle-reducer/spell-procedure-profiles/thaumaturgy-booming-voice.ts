@@ -284,7 +284,6 @@ export const thaumaturgyBoomingVoiceProfile: SpellProcedureDeclaration<
 > = {
   procedure: "thaumaturgyBoomingVoice",
   executionSchema: ThaumaturgyBoomingVoiceInvocationSchema,
-  metamagicCompatibility: "actionSpellResolverNotRewritten",
   admit: admitThaumaturgyBoomingVoice,
   discoverCastAct: discoverThaumaturgyBoomingVoiceCastAct,
   resolve: resolveThaumaturgyBoomingVoice,

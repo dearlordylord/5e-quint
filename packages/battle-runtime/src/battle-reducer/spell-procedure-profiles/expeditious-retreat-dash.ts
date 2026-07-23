@@ -346,7 +346,6 @@ const ExpeditiousRetreatDashInvocationSchema = spellProcedureExecutionSchema(
 export const expeditiousRetreatDashProfile = {
   procedure: "expeditiousRetreatDash",
   executionSchema: ExpeditiousRetreatDashInvocationSchema,
-  metamagicCompatibility: "notActionSpellCasting",
   admit: admitExpeditiousRetreatDash,
   discoverCastAct: discoverExpeditiousRetreatDashCastAct,
   resolve: resolveExpeditiousRetreatDash,

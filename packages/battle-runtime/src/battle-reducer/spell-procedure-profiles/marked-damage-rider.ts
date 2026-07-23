@@ -878,7 +878,6 @@ export const markedDamageRiderProfile: SpellProcedureDeclaration<
 > = {
   procedure: "markedDamageRider",
   executionSchema: MarkedDamageRiderInvocationSchema,
-  metamagicCompatibility: "notActionSpellCasting",
   admit: admitMarkedDamageRider,
   discoverCastAct: discoverMarkedDamageRiderCastAct,
   resolve: resolveMarkedDamageRider,

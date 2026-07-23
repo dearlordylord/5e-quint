@@ -477,7 +477,6 @@ export const conditionImmunityAndTurnStartTemporaryHitPointsProfile: SpellProced
   procedure: "conditionImmunityAndTurnStartTemporaryHitPoints",
   executionSchema:
     ConditionImmunityAndTurnStartTemporaryHitPointsInvocationSchema,
-  metamagicCompatibility: "actionSpellResolverNotRewritten",
   admit: admitConditionImmunityAndTurnStartTemporaryHitPoints,
   discoverCastAct:
     discoverConditionImmunityAndTurnStartTemporaryHitPointsCastAct,

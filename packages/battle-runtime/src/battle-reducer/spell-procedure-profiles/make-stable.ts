@@ -272,7 +272,6 @@ export const makeStableProfile: SpellProcedureDeclaration<
 > = {
   procedure: "makeStable",
   executionSchema: MakeStableInvocationSchema,
-  metamagicCompatibility: "actionSpellResolverNotRewritten",
   admit: admitMakeStable,
   discoverCastAct: discoverMakeStableCastAct,
   resolve: resolveMakeStable,

@@ -359,7 +359,6 @@ const JumpMovementReplacementInvocationSchema = spellProcedureExecutionSchema(
 export const jumpMovementReplacementProfile = {
   procedure: "jumpMovementReplacement",
   executionSchema: JumpMovementReplacementInvocationSchema,
-  metamagicCompatibility: "notActionSpellCasting",
   admit: admitJumpMovementReplacement,
   discoverCastAct: discoverJumpMovementReplacementCastAct,
   resolve: resolveJumpMovementReplacement,

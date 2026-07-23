@@ -105,7 +105,6 @@ function resolveWeaponAttackOverrideProfile(
 export const weaponAttackOverrideProfile: WeaponAttackOverrideProfile = {
   procedure: "weaponAttackOverride",
   executionSchema: WeaponAttackOverrideExecutionSchema,
-  metamagicCompatibility: "notActionSpellCasting",
   admit: (spell, ctx) =>
     admitWeaponAttackOverride(spell, {
       actor: ctx.actor,

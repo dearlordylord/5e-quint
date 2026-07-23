@@ -390,7 +390,6 @@ const GustOfWindLineInvocationSchema = spellProcedureExecutionSchema(
 export const gustOfWindLineProfile = {
   procedure: "gustOfWindLine",
   executionSchema: GustOfWindLineInvocationSchema,
-  metamagicCompatibility: "actionSpellResolverNotRewritten",
   admit: admitGustOfWindLine,
   discoverCastAct: discoverGustOfWindLineCastAct,
   resolve: resolveGustOfWindLine,

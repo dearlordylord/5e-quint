@@ -220,7 +220,6 @@ const ShieldReactionInvocationSchema = spellProcedureExecutionSchema(
 export const shieldReactionProfile = {
   procedure: "shieldReaction",
   executionSchema: ShieldReactionInvocationSchema,
-  metamagicCompatibility: "notActionSpellCasting",
   admit: admitShieldReaction,
   discoverCastAct: discoverShieldReactionCastAct,
   resolve: resolveShieldReaction,

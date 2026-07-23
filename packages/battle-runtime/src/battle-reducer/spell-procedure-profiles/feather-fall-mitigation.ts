@@ -297,7 +297,6 @@ const FeatherFallMitigationInvocationSchema = spellProcedureExecutionSchema(
 export const featherFallMitigationProfile = {
   procedure: "featherFallMitigation",
   executionSchema: FeatherFallMitigationInvocationSchema,
-  metamagicCompatibility: "notActionSpellCasting",
   admit: admitFeatherFallMitigation,
   discoverCastAct: discoverFeatherFallMitigationCastAct,
   resolve: resolveFeatherFallMitigation,

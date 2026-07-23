@@ -443,7 +443,6 @@ const DirectHitPointRestorationInvocationSchema = spellProcedureExecutionSchema(
 export const directHitPointRestorationProfile = {
   procedure: "directHitPointRestoration",
   executionSchema: DirectHitPointRestorationInvocationSchema,
-  metamagicCompatibility: "bonusActionRewrite",
   admit: admitDirectHitPointRestoration,
   discoverCastAct: discoverDirectHitPointRestorationCastAct,
   resolve: resolveDirectHitPointRestoration,

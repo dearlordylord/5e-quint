@@ -307,7 +307,6 @@ const FlamingSphereInvocationSchema = spellProcedureExecutionSchema(
 export const flamingSphereProfile = {
   procedure: "flamingSphere",
   executionSchema: FlamingSphereInvocationSchema,
-  metamagicCompatibility: "actionSpellResolverNotRewritten",
   admit: admitFlamingSphere,
   discoverCastAct: discoverFlamingSphereCastAct,
   resolve: resolveFlamingSphere,

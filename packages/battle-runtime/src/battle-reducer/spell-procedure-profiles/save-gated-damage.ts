@@ -466,7 +466,6 @@ const SaveGatedDamageInvocationSchema = spellProcedureExecutionSchema(
 export const saveGatedDamageProfile = {
   procedure: "saveGatedDamage",
   executionSchema: SaveGatedDamageInvocationSchema,
-  metamagicCompatibility: "bonusActionRewrite",
   admit: admitSaveGatedDamage,
   discoverCastAct: discoverSaveGatedDamageCastAct,
   resolve: resolveSaveGatedDamage,

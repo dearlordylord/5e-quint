@@ -234,7 +234,6 @@ const SpikeGrowthMovementHazardInvocationSchema = spellProcedureExecutionSchema(
 export const spikeGrowthMovementHazardProfile = {
   procedure: "spikeGrowthMovementHazard",
   executionSchema: SpikeGrowthMovementHazardInvocationSchema,
-  metamagicCompatibility: "actionSpellResolverNotRewritten",
   admit: admitSpikeGrowthMovementHazard,
   discoverCastAct: discoverSpikeGrowthMovementHazardCastAct,
   resolve: resolveSpikeGrowthMovementHazard,

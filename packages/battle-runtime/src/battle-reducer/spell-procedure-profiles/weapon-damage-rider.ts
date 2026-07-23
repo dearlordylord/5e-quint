@@ -269,7 +269,6 @@ export const weaponDamageRiderProfile: SpellProcedureDeclaration<
 > = {
   procedure: "weaponDamageRider",
   executionSchema: WeaponDamageRiderInvocationSchema,
-  metamagicCompatibility: "notActionSpellCasting",
   admit: admitWeaponDamageRider,
   discoverCastAct: discoverWeaponDamageRiderCastAct,
   resolve: resolveWeaponDamageRider,

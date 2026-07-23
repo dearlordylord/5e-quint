@@ -285,7 +285,6 @@ const WebRestraintHazardInvocationSchema = spellProcedureExecutionSchema(
 export const webRestraintHazardProfile = {
   procedure: "webRestraintHazard",
   executionSchema: WebRestraintHazardInvocationSchema,
-  metamagicCompatibility: "actionSpellResolverNotRewritten",
   admit: admitWebRestraintHazard,
   discoverCastAct: discoverWebRestraintHazardCastAct,
   resolve: resolveWebRestraintHazard,

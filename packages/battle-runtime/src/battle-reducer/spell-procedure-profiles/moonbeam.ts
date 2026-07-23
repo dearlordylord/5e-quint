@@ -338,7 +338,6 @@ const MoonbeamInvocationSchema = spellProcedureExecutionSchema(
 export const moonbeamProfile = {
   procedure: "moonbeam",
   executionSchema: MoonbeamInvocationSchema,
-  metamagicCompatibility: "actionSpellResolverNotRewritten",
   admit: admitMoonbeam,
   discoverCastAct: discoverMoonbeamCastAct,
   resolve: resolveMoonbeam,

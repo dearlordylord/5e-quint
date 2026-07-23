@@ -266,7 +266,6 @@ const SanctuaryTargetingInterdictionInvocationSchema =
 export const sanctuaryTargetingInterdictionProfile = {
   procedure: "sanctuaryTargetingInterdiction",
   executionSchema: SanctuaryTargetingInterdictionInvocationSchema,
-  metamagicCompatibility: "notActionSpellCasting",
   admit: admitSanctuaryTargetingInterdiction,
   discoverCastAct: discoverSanctuaryTargetingInterdictionCastAct,
   resolve: resolveSanctuaryTargetingInterdiction,

@@ -645,7 +645,6 @@ const HastePositiveInvocationSchema = spellProcedureExecutionSchema(
 export const hastePositiveProfile = {
   procedure: "hastePositive",
   executionSchema: HastePositiveInvocationSchema,
-  metamagicCompatibility: "actionSpellResolverNotRewritten",
   admit: admitHastePositive,
   discoverCastAct: discoverHastePositiveCastAct,
   resolve: resolveHastePositive,

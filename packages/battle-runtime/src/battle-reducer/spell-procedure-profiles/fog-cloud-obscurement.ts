@@ -209,7 +209,6 @@ const FogCloudObscurementInvocationSchema = spellProcedureExecutionSchema(
 export const fogCloudObscurementProfile = {
   procedure: "fogCloudObscurement",
   executionSchema: FogCloudObscurementInvocationSchema,
-  metamagicCompatibility: "actionSpellResolverNotRewritten",
   admit: admitFogCloudObscurement,
   discoverCastAct: discoverFogCloudObscurementCastAct,
   resolve: resolveFogCloudObscurement,

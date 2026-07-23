@@ -20,7 +20,6 @@ import type {
   BattleSpellDamageRerollOption,
   BattleSpellAttackRerollOption,
   BattleState,
-  SupportedSpellInvocation,
 } from "../battle-state-execution.ts";
 import type {
   BattleSubject,
@@ -40,11 +39,10 @@ import type {
 } from "../character-execution.ts";
 import { combatantHasLevelOnePlusSpellCastThisTurn } from "./spell-turn-resources.ts";
 import {
-  registeredSpellProcedureClassification,
-  type RegisteredSpellProcedure,
-  type RegisteredSpellProcedureExecution,
-  type SpellProcedureExecutionRegistry,
-} from "./spell-procedure-profiles/execution-registry.ts";
+  spellExecutionClassForProcedure,
+  spellProcedureHasQuickenedActionCostRewrite,
+  type SpellProcedureWithQuickenedActionCostRewrite,
+} from "./spell-execution-facts.ts";
 import {
   DISTANT_METAMAGIC_EFFECT_KIND,
   distantSpellRangeModifierFact,
@@ -129,24 +127,6 @@ type EmpoweredSpellApplicationFact = CharacterBattleMetamagicOptionFact & {
   readonly effectKind: typeof EMPOWERED_METAMAGIC_EFFECT_KIND;
 };
 
-type QuickenedActionRewriteProcedureDisposition =
-  | "bonusActionRewrite"
-  | "actionSpellResolverNotRewritten"
-  | "notActionSpellCasting";
-
-type QuickenedActionRewriteProcedureDispositions = {
-  readonly [Procedure in RegisteredSpellProcedure]: RegisteredSpellProcedureExecution<Procedure>["metamagicCompatibility"];
-} & Record<
-  SupportedSpellInvocation["procedure"],
-  QuickenedActionRewriteProcedureDisposition
->;
-
-type QuickenedActionRewriteProcedure = {
-  [Procedure in keyof QuickenedActionRewriteProcedureDispositions]: QuickenedActionRewriteProcedureDispositions[Procedure] extends "bonusActionRewrite"
-    ? Procedure
-    : never;
-}[keyof QuickenedActionRewriteProcedureDispositions];
-
 export type SpellMetamagicAdmissionIssue = {
   readonly tag: "spellMetamagicAdmissionIssue";
   readonly message: string;
@@ -164,16 +144,13 @@ type SpellMetamagicSubject = Pick<
   "tag" | "mode" | "metamagic"
 >;
 
-export function admitSpellMetamagicApplications(
-  input: {
-    readonly state: BattleState;
-    readonly actor: BattleCreatureState;
-    readonly actorId: CombatantId;
-    readonly invocation: RuntimeSpellProcedure;
-    readonly subject: SpellMetamagicSubject;
-  },
-  executionRegistry: SpellProcedureExecutionRegistry,
-): SpellMetamagicAdmission {
+export function admitSpellMetamagicApplications(input: {
+  readonly state: BattleState;
+  readonly actor: BattleCreatureState;
+  readonly actorId: CombatantId;
+  readonly invocation: RuntimeSpellProcedure;
+  readonly subject: SpellMetamagicSubject;
+}): SpellMetamagicAdmission {
   const selections = input.subject.metamagic ?? [];
   if (selections.length === 0) {
     return { tag: "ok", applications: [] };
@@ -220,14 +197,11 @@ export function admitSpellMetamagicApplications(
   if (stackingIssue !== null) {
     return metamagicIssue(stackingIssue);
   }
-  const supportIssue = spellMetamagicSupportIssue(
-    {
-      applications: knownApplications,
-      invocation: input.invocation,
-      subject: input.subject,
-    },
-    executionRegistry,
-  );
+  const supportIssue = spellMetamagicSupportIssue({
+    applications: knownApplications,
+    invocation: input.invocation,
+    subject: input.subject,
+  });
   if (supportIssue !== null) {
     return metamagicIssue(supportIssue);
   }
@@ -252,15 +226,12 @@ export function admitSpellMetamagicApplications(
     : metamagicIssue(sorceryPointIssue);
 }
 
-export function actorCanOfferQuickenedSpellMetamagic(
-  input: {
-    readonly state: BattleState;
-    readonly actor: BattleCreatureState;
-    readonly actorId: CombatantId;
-    readonly invocation: RuntimeSpellProcedure;
-  },
-  executionRegistry: SpellProcedureExecutionRegistry,
-): boolean {
+export function actorCanOfferQuickenedSpellMetamagic(input: {
+  readonly state: BattleState;
+  readonly actor: BattleCreatureState;
+  readonly actorId: CombatantId;
+  readonly invocation: RuntimeSpellProcedure;
+}): boolean {
   if (input.actor.origin.kind !== "character") {
     return false;
   }
@@ -273,12 +244,7 @@ export function actorCanOfferQuickenedSpellMetamagic(
   if (!spellInvocationHasMagicActionCastingTime(input.invocation)) {
     return false;
   }
-  if (
-    !spellInvocationSupportsQuickenedActionRewrite(
-      input.invocation,
-      executionRegistry,
-    )
-  ) {
+  if (!spellInvocationSupportsQuickenedActionRewrite(input.invocation)) {
     return false;
   }
   if (!canSpendBonusAction(input.state.currentTurnResources)) {
@@ -646,17 +612,11 @@ export function spellInvocationHasMagicActionCastingTime(
 
 export function spellInvocationSupportsQuickenedActionRewrite(
   invocation: RuntimeSpellProcedure,
-  executionRegistry: SpellProcedureExecutionRegistry,
 ): invocation is Extract<
   SpellProcedureExecution,
-  { readonly procedure: QuickenedActionRewriteProcedure }
+  { readonly procedure: SpellProcedureWithQuickenedActionCostRewrite }
 > {
-  return (
-    quickenedActionRewriteProcedureDisposition(
-      invocation,
-      executionRegistry,
-    ) === "bonusActionRewrite"
-  );
+  return spellProcedureHasQuickenedActionCostRewrite(invocation.procedure);
 }
 
 export function spendSpellMetamagicSorceryPoints(input: {
@@ -739,14 +699,11 @@ function metamagicStackingIssue(
     : "A spell can use only one Metamagic option unless one selected option explicitly combines with a different Metamagic option.";
 }
 
-function spellMetamagicSupportIssue(
-  input: {
-    readonly applications: readonly SpellMetamagicApplicationFact[];
-    readonly invocation: RuntimeSpellProcedure;
-    readonly subject: Pick<SpellMetamagicSubject, "tag" | "mode">;
-  },
-  executionRegistry: SpellProcedureExecutionRegistry,
-): string | null {
+function spellMetamagicSupportIssue(input: {
+  readonly applications: readonly SpellMetamagicApplicationFact[];
+  readonly invocation: RuntimeSpellProcedure;
+  readonly subject: Pick<SpellMetamagicSubject, "tag" | "mode">;
+}): string | null {
   const effectKinds = new Set(
     input.applications.map((option) => option.effectKind),
   );
@@ -761,7 +718,6 @@ function spellMetamagicSupportIssue(
     }
     const quickenedSupportIssue = quickenedActionRewriteSupportIssue(
       input.invocation,
-      executionRegistry,
     );
     if (quickenedSupportIssue !== null) {
       return quickenedSupportIssue;
@@ -803,28 +759,14 @@ function spellMetamagicSupportIssue(
   });
 }
 
-function quickenedActionRewriteProcedureDisposition(
-  invocation: RuntimeSpellProcedure,
-  executionRegistry: SpellProcedureExecutionRegistry,
-): QuickenedActionRewriteProcedureDisposition {
-  return registeredSpellProcedureClassification(
-    executionRegistry,
-    invocation.procedure,
-  ).metamagicCompatibility;
-}
-
 function quickenedActionRewriteSupportIssue(
   invocation: RuntimeSpellProcedure,
-  executionRegistry: SpellProcedureExecutionRegistry,
 ): string | null {
-  const disposition = quickenedActionRewriteProcedureDisposition(
-    invocation,
-    executionRegistry,
-  );
-  if (disposition === "bonusActionRewrite") {
+  if (spellProcedureHasQuickenedActionCostRewrite(invocation.procedure)) {
     return null;
   }
-  if (disposition === "actionSpellResolverNotRewritten") {
+  const executionClass = spellExecutionClassForProcedure(invocation.procedure);
+  if (executionClass === "actionCast" || executionClass === "actionCostCast") {
     return QUICKENED_ACTION_SPELL_PROCEDURE_UNSUPPORTED_MESSAGE;
   }
   return QUICKENED_ACTION_CASTING_TIME_REQUIRED_MESSAGE;

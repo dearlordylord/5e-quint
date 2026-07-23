@@ -274,7 +274,6 @@ export const seeInvisibleObserverSightProfile: SpellProcedureDeclaration<
 > = {
   procedure: "seeInvisibleObserverSight",
   executionSchema: SeeInvisibleObserverSightInvocationSchema,
-  metamagicCompatibility: "actionSpellResolverNotRewritten",
   admit: admitSeeInvisibleObserverSight,
   discoverCastAct: discoverSeeInvisibleObserverSightCastAct,
   resolve: resolveSeeInvisibleObserverSight,

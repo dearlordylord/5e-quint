@@ -276,7 +276,6 @@ const CloudkillAreaHazardInvocationSchema = spellProcedureExecutionSchema(
 export const cloudkillAreaHazardProfile = {
   procedure: "cloudkillAreaHazard",
   executionSchema: CloudkillAreaHazardInvocationSchema,
-  metamagicCompatibility: "actionSpellResolverNotRewritten",
   admit: admitCloudkillAreaHazard,
   discoverCastAct: discoverCloudkillAreaHazardCastAct,
   resolve: resolveCloudkillAreaHazard,

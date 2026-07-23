@@ -195,7 +195,6 @@ const AbilityD20TestRollModeSaveGateInvocationSchema =
 export const abilityD20TestRollModeSaveGateProfile = {
   procedure: "abilityD20TestRollModeSaveGate",
   executionSchema: AbilityD20TestRollModeSaveGateInvocationSchema,
-  metamagicCompatibility: "actionSpellResolverNotRewritten",
   admit: admitAbilityD20TestRollModeSaveGate,
   discoverCastAct: discoverAbilityD20TestRollModeSaveGateCastAct,
   resolve: resolveAbilityD20TestRollModeSaveGate,

@@ -380,7 +380,6 @@ const AntimagicFieldOngoingSpellSuppressionInvocationSchema =
 export const antimagicFieldOngoingSpellSuppressionProfile = {
   procedure: "antimagicFieldOngoingSpellSuppression",
   executionSchema: AntimagicFieldOngoingSpellSuppressionInvocationSchema,
-  metamagicCompatibility: "actionSpellResolverNotRewritten",
   admit: admitAntimagicFieldOngoingSpellSuppression,
   discoverCastAct: discoverAntimagicFieldOngoingSpellSuppressionCastAct,
   resolve: resolveAntimagicFieldOngoingSpellSuppression,

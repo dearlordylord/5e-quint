@@ -148,7 +148,6 @@ export const attackBurstSaveDamageProfile: SpellProcedureDeclaration<
 > = {
   procedure: "attackBurstSaveDamage",
   executionSchema: AttackBurstSaveDamageInvocationSchema,
-  metamagicCompatibility: "actionSpellResolverNotRewritten",
   admit: admitAttackBurstSaveDamage,
   discoverCastAct: discoverAttackBurstSaveDamageCastAct,
   resolve: resolveAttackBurstSaveDamage,

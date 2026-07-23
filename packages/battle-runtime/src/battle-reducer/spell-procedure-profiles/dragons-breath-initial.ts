@@ -370,7 +370,6 @@ export const DragonsBreathInitialInvocationSchema =
 export const dragonsBreathInitialProfile = {
   procedure: "dragonsBreathInitial",
   executionSchema: DragonsBreathInitialInvocationSchema,
-  metamagicCompatibility: "notActionSpellCasting",
   admit: admitDragonsBreathInitial,
   discoverCastAct: discoverDragonsBreathInitialCastAct,
   resolve: resolveDragonsBreathInitial,

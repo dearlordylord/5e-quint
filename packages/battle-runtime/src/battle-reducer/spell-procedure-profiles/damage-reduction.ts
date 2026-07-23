@@ -353,7 +353,6 @@ export const damageReductionProfile: SpellProcedureDeclaration<
   DamageReductionSpellInvocation
 > = {
   procedure: "damageReduction",
-  metamagicCompatibility: "actionSpellResolverNotRewritten",
   admit: admitDamageReduction,
   discoverCastAct: discoverDamageReductionCastAct,
   executionSchema: DamageReductionInvocationSchema,

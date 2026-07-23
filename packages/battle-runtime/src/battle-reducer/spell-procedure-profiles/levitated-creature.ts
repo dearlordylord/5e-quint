@@ -503,7 +503,6 @@ export const levitatedCreatureProfile: SpellProcedureDeclaration<
 > = {
   procedure: "levitatedCreature",
   executionSchema: LevitatedCreatureInvocationSchema,
-  metamagicCompatibility: "actionSpellResolverNotRewritten",
   admit: admitLevitatedCreature,
   discoverCastAct: discoverLevitatedCreatureCastAct,
   resolve: resolveLevitatedCreature,

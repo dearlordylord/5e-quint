@@ -152,7 +152,6 @@ export const heldLightHurlProfile: SpellProcedureDeclaration<
 > = {
   procedure: "heldLightHurl",
   executionSchema: HeldLightHurlInvocationSchema,
-  metamagicCompatibility: "actionSpellResolverNotRewritten",
   admit: admitHeldLightHurl,
   discoverCastAct: discoverHeldLightHurlCastAct,
   resolve: resolveHeldLightHurl,
