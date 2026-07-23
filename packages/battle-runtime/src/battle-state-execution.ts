@@ -3907,7 +3907,8 @@ type BattleCreatureStateCommon = {
         // reducer never dispatches on characterId.
         readonly characterId: CharacterId;
         // Presentation label retained as a snapshot convenience. Not used by
-        // reducer execution; see #224 inventory.
+        // reducer execution; documented as inert presentation identity in #224
+        // inventory.
         readonly displayName: string;
         readonly execution: CharacterExecutionState;
         readonly classLevels: CharacterBattleClassLevels;

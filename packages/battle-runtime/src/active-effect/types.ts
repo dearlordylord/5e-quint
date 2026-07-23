@@ -388,8 +388,10 @@ export type BattleActiveEffect =
   | (BattleUnitFeatureEffectBase & {
       readonly kind: "druidWildShapeForm";
       // Authored form identity retained to match the selected Wild Shape form
-      // admission and project its procedure labels. The reducer derives mechanics
-      // from the admission, never from the id itself. See #224 inventory.
+      // admission. The reducer uses this id to select which admitted mechanical
+      // facts apply (size, AC, abilities, skills, saves); it is therefore
+      // behavior-driving at the composition/admission boundary, not inert.
+      // See #224 inventory.
       readonly formStatBlockId: string;
       readonly formLimbs: WildShapeFormLimbObjectHandlingWitness;
       readonly equipmentDisposition: readonly ActiveWildShapeEquipmentDisposition[];
