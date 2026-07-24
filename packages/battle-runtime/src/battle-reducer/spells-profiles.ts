@@ -48,7 +48,6 @@ import { activeOngoingFeaturesPreventSpellInvocation } from "./spells-invocation
 export function admittedSpellActs(
   actor: BattleCreatureState,
   state: BattleState | undefined,
-  _resourceOwnership: readonly unknown[],
   spellcasting: CharacterBattleSpellcastingState | undefined,
 ): readonly SupportedSpellInvocation[] {
   if (actor.origin.kind !== "character") {

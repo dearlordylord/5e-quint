@@ -61,7 +61,6 @@ import {
 } from "./procedure-admission/persistent-armor-effect-facts.ts";
 import {
   characterBattleResourceIsPointPool,
-  resourceHasUsesRemaining,
   type CharacterBattleActivationResource,
   type CharacterBattlePointPoolResourceState,
   type CharacterBattleMetamagicOptionFact,
@@ -78,7 +77,6 @@ export {
   characterBattleResourceIsUnlimited,
   characterBattleResourceIsUseCount,
   characterBattleResourceUsage,
-  resourceHasUsesRemaining,
   spendCharacterResourceUse,
   type CharacterBattlePointPoolResourceState,
   type CharacterBattleMetamagicEffectKind,
@@ -356,8 +354,7 @@ export function effectiveCharacterBattleCantrips(
     ...bookOfShadowsOnPersonAccesses(spellcasting).flatMap((access) =>
       access.cantrips.map((spell) => ({
         spell,
-        classFeatureFreeCastResourcePoolRefs:
-          [] as readonly BattleResourcePoolExecutionRef[],
+        classFeatureFreeCastResourcePoolRefs: [],
       })),
     ),
   ]);
@@ -374,8 +371,7 @@ export function effectiveCharacterBattlePreparedSpells(
     ...bookOfShadowsOnPersonAccesses(spellcasting).flatMap((access) =>
       access.ritualSpells.map((spell) => ({
         spell,
-        classFeatureFreeCastResourcePoolRefs:
-          [] as readonly BattleResourcePoolExecutionRef[],
+        classFeatureFreeCastResourcePoolRefs: [],
       })),
     ),
   ]);
@@ -984,8 +980,7 @@ function admittedSpellWithFreeCastRefs(
         (candidate) => candidate.resourcePoolRef === owner.resourcePoolRef,
       );
       return resource !== undefined &&
-        characterResourceIsClassFeatureFreeCastForSpell(owner, spell.id) &&
-        resourceHasUsesRemaining(resource)
+        characterResourceIsClassFeatureFreeCastForSpell(owner, spell.id)
         ? [resource.resourcePoolRef]
         : [];
     }),

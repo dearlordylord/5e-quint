@@ -10,7 +10,7 @@ import {
   resourceHasUsesRemaining,
   spendCharacterResourceUse,
   type CharacterBattleUseCountResourceState,
-} from "../character-battle-resources.ts";
+} from "../character-battle-resource-execution.ts";
 import type { UnitFeatureProcedureExecution } from "../character-execution-admission.ts";
 
 export type FailedSavingThrowRerollIssueReason =

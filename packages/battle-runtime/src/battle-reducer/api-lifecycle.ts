@@ -492,7 +492,6 @@ function admitCharacterSpellExecution(input: {
   const admitted = admittedSpellActs(
     input.combatant,
     input.state,
-    input.runtimeContext.resourceOwnership,
     input.runtimeContext.spellcastingPresentationSource,
   );
   const execution = characterExecutionWithSpellInvocations(

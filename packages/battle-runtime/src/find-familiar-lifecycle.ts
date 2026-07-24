@@ -41,7 +41,7 @@ import type {
 import {
   resourceHasUsesRemaining,
   spendCharacterResourceUse,
-} from "./character-battle-resources.ts";
+} from "./character-battle-resource-execution.ts";
 import {
   characterUnitProcedureBindings,
   type CharacterExecutionState,

@@ -324,13 +324,9 @@ function sameLoadoutObject(
   left: WildShapeLoadoutObjectRef,
   right: WildShapeLoadoutObjectRef,
 ): boolean {
-  return (
-    left.kind === right.kind &&
-    left.objectId === right.objectId &&
-    left.unitId === right.unitId
-  );
+  return left.kind === right.kind && left.objectId === right.objectId;
 }
 
 function wildShapeLoadoutObjectKey(item: WildShapeLoadoutObjectRef): string {
-  return `${item.kind}:${item.objectId}:${item.unitId}`;
+  return `${item.kind}:${item.objectId}`;
 }

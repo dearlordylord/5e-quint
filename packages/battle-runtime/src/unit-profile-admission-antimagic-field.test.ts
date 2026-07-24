@@ -549,7 +549,6 @@ function antimagicFieldBattle(input?: {
     admittedSpellActs(
       casterWithEffects,
       provisionalState,
-      characterContext.resourceOwnership,
       characterContext.spellcastingPresentationSource,
     ),
   );

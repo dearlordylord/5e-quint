@@ -1368,25 +1368,22 @@ export function heldWeaponItemIdForAttack(
   attack: CharacterWeaponAttackActionOption,
 ): string {
   const actor = state.combatants.get(actorId);
-  if (actor?.origin.kind !== "character") return attack.weapon.weaponUnitId;
+  if (actor?.origin.kind !== "character") return attack.weapon.weaponObjectId;
+  const mainWeapon = actor.origin.selectedLoadout.weapon;
   if (
-    actor.origin.attack?.kind === "weapon" &&
-    actor.origin.attack.weapon.weaponUnitId === attack.weapon.weaponUnitId
+    mainWeapon !== undefined &&
+    battleObjectId(mainWeapon.itemId) === attack.weapon.weaponObjectId
   ) {
-    return (
-      actor.origin.selectedLoadout.weapon?.itemId ?? attack.weapon.weaponUnitId
-    );
+    return mainWeapon.itemId;
   }
+  const offHandWeapon = actor.origin.selectedLoadout.offHandWeapon;
   if (
-    actor.origin.offHandAttack?.weapon.weaponUnitId ===
-    attack.weapon.weaponUnitId
+    offHandWeapon !== undefined &&
+    battleObjectId(offHandWeapon.itemId) === attack.weapon.weaponObjectId
   ) {
-    return (
-      actor.origin.selectedLoadout.offHandWeapon?.itemId ??
-      attack.weapon.weaponUnitId
-    );
+    return offHandWeapon.itemId;
   }
-  return attack.weapon.weaponUnitId;
+  return attack.weapon.weaponObjectId;
 }
 
 export function offHandWeaponItemIdForActor(
@@ -1398,7 +1395,7 @@ export function offHandWeaponItemIdForActor(
   if (actor?.origin.kind !== "character") return undefined;
   const offHandWeapon = actor.origin.selectedLoadout.offHandWeapon;
   return offHandWeapon !== undefined &&
-    offHandWeapon.unitId === offHand.weapon.weaponUnitId
+    battleObjectId(offHandWeapon.itemId) === offHand.weapon.weaponObjectId
     ? offHandWeapon.itemId
     : undefined;
 }
@@ -1441,13 +1438,14 @@ function martialArtsLoadoutEligible(
   const mainWeaponEligible =
     loadout.weapon === undefined ||
     (origin.attack !== null &&
-      loadout.weapon.unitId === origin.attack.weapon.weaponUnitId &&
+      battleObjectId(loadout.weapon.itemId) ===
+        origin.attack.weapon.weaponObjectId &&
       isMonkWeapon(origin.attack.weapon));
   const offHandWeaponEligible =
     loadout.offHandWeapon === undefined ||
     (origin.offHandAttack !== undefined &&
-      loadout.offHandWeapon.unitId ===
-        origin.offHandAttack.weapon.weaponUnitId &&
+      battleObjectId(loadout.offHandWeapon.itemId) ===
+        origin.offHandAttack.weapon.weaponObjectId &&
       isMonkWeapon(origin.offHandAttack.weapon));
   return mainWeaponEligible && offHandWeaponEligible;
 }

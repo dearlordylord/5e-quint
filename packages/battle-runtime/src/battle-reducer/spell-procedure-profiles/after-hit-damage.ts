@@ -52,6 +52,7 @@ import {
   maybeOpenSpellCastInterruptWindowWithTriggeredSpellChoices,
   interruptCheckpointFrame,
 } from "../dispatcher.ts";
+import { resourceHasUsesRemaining } from "../../character-battle-resource-execution.ts";
 import { battleCreatureType } from "../domain-helpers.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
@@ -103,27 +104,34 @@ function admitAfterHitDamage(
   const freeCastInvocations: readonly AfterHitDamageInvocation[] =
     freeCastDamageExpr === null
       ? []
-      : spell.classFeatureFreeCastResourcePoolRefs.map(
-          (resourcePoolRef): AfterHitDamageInvocation => ({
-            access: { tag: "prepared" },
-            resource: {
-              tag: "classFeatureFreeCast",
-              resourcePoolRef,
-            },
-            procedure: "afterHitDamage",
-            spell,
-            actionCost: "bonusAction",
-            damage: {
-              expr: freeCastDamageExpr,
-              damageType: projection.damageType,
-            },
-            conditionalBonusDamage: {
-              targetCreatureTypes: projection.conditionalBonusTargetTypes,
-              expr: projection.conditionalBonusExpr,
-              damageType: projection.conditionalBonusDamageType,
-            },
-          }),
-        );
+      : spell.classFeatureFreeCastResourcePoolRefs
+          .filter((resourcePoolRef) => {
+            const resource = ctx.actor.origin.resources.find(
+              (candidate) => candidate.resourcePoolRef === resourcePoolRef,
+            );
+            return resource !== undefined && resourceHasUsesRemaining(resource);
+          })
+          .map(
+            (resourcePoolRef): AfterHitDamageInvocation => ({
+              access: { tag: "prepared" },
+              resource: {
+                tag: "classFeatureFreeCast",
+                resourcePoolRef,
+              },
+              procedure: "afterHitDamage",
+              spell,
+              actionCost: "bonusAction",
+              damage: {
+                expr: freeCastDamageExpr,
+                damageType: projection.damageType,
+              },
+              conditionalBonusDamage: {
+                targetCreatureTypes: projection.conditionalBonusTargetTypes,
+                expr: projection.conditionalBonusExpr,
+                damageType: projection.conditionalBonusDamageType,
+              },
+            }),
+          );
   const slotInvocations = ctx.actor.origin.spellcasting.spellSlots.flatMap(
     (slot): readonly AfterHitDamageInvocation[] => {
       if (Number(slot.spellLevel) < spell.mechanics.level) {

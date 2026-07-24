@@ -45,8 +45,10 @@ import {
  * Covered inert fields:
  *   - `BattleCreatureState.origin.kind === "character"`: `characterId`, `displayName`
  *   - `BattleCreatureOriginSnapshot.kind === "statBlock"`: `statBlockId`
- *   - `SpellInvocationRef.spellId` (in `BattleRuntimeContext`)
- *   - Presentation-context labels (`BattleStatBlockPresentationSource` display names and procedure labels)
+ *   - Spell presentation source identity (`SpellInvocationRef.spellId` derived
+ *     from `BattleRuntimeContext` character spell presentation sources)
+ *   - Stat Block presentation source labels (`BattleStatBlockPresentationSource`
+ *     display names and procedure labels)
  *
  * Behavior-driving identity fields (e.g. weaponUnitId for mastery, loadout
  * unitId for Wild Shape equipment, paladinSacredWeapon.weaponItemId) are
@@ -444,7 +446,7 @@ describe("inert authored identity renaming witness (#224)", () => {
     expect(renamedFighter.origin.displayName).toBe("Synthetic Witness Name");
   });
 
-  test("renaming SpellInvocationRef.spellId does not change spell act execution structure", () => {
+  test("renaming spell presentation source identity does not change spell act execution structure", () => {
     const session = spellBattle({
       preparedSpells: [spellRecord("magic_missile")],
       spellSlots: [{ spellLevel: 1, count: 1 }],
@@ -480,12 +482,12 @@ describe("inert authored identity renaming witness (#224)", () => {
       })),
     );
 
-    // Presentation labels must differ because the SpellInvocationRef identity changed.
+    // Presentation labels must differ because the spell presentation source identity changed.
     expect(executionProjection(renamedActs)).not.toEqual(
       executionProjection(originalActs),
     );
 
-    // The spell act's invocation carries the synthetic identity in presentation.
+    // The spell act's presentation carries the synthetic identity from the context source.
     const renamedSpellAct = renamedActs.find(
       (act) => act.presentation.kind === "spell",
     );
