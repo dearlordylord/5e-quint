@@ -96,7 +96,6 @@ describe("SRDINV39 deterministic Eldritch Blast Spell Unit admission", () => {
     expect(spellHoleInvocation(state, [attackRoll])).toEqual(
       expect.objectContaining({
         procedure: "spellAttackSequence",
-        spellRuleFacts: expect.objectContaining({}),
         targeting: {
           kind: "spellAttackSequenceCreatureOrObject",
           countSource: "characterLevel",

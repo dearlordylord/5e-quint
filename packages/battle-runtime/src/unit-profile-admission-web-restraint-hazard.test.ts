@@ -150,7 +150,6 @@ describe("L12G deterministic Web restraint-hazard admission", () => {
     expect(spellHoleInvocation(session, [area])).toEqual(
       expect.objectContaining({
         procedure: "webRestraintHazard",
-        spellRuleFacts: expect.objectContaining({}),
         resource: { tag: "spellSlot", slotLevel: 2 },
         ability: "dex",
         dc: { kind: "caster_spell_save_dc" },

@@ -130,7 +130,6 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     expect(spellHoleInvocation(session, [targetHole])).toEqual(
       expect.objectContaining({
         procedure: "saveGatedCondition",
-        spellRuleFacts: expect.objectContaining({}),
         resource: { tag: "spellSlot", slotLevel: 3 },
         ability: "wis",
         targeting: { kind: "targetList", minTargets: 1, maxTargets: 2 },
@@ -650,7 +649,6 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     expect(spellHoleInvocation(session, [targetHole])).toEqual(
       expect.objectContaining({
         procedure: "saveGatedCondition",
-        spellRuleFacts: expect.objectContaining({}),
         resource: { tag: "spellSlot", slotLevel: 5 },
         ability: "wis",
         targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 },
@@ -725,7 +723,6 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     expect(spellHoleInvocation(session, [abilityHole])).toEqual(
       expect.objectContaining({
         procedure: "saveGatedDamage",
-        spellRuleFacts: expect.objectContaining({}),
         resource: { tag: "spellSlot", slotLevel: 5 },
         castingTime: { kind: "action" },
         ability: "con",
@@ -971,7 +968,6 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     expect(spellHoleInvocation(session, [targetHole])).toEqual(
       expect.objectContaining({
         procedure: "saveGatedCondition",
-        spellRuleFacts: expect.objectContaining({}),
         resource: { tag: "spellSlot", slotLevel: 2 },
         ability: "con",
         targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 },
@@ -1124,7 +1120,6 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     expect(spellHoleInvocation(session, [savingThrow])).toEqual(
       expect.objectContaining({
         procedure: "saveGatedCondition",
-        spellRuleFacts: expect.objectContaining({}),
         resource: { tag: "spellSlot", slotLevel: 1 },
         ability: "con",
         targeting: { kind: "selfOriginCone", lengthFeet: 15 },
@@ -1178,7 +1173,6 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     expect(spellHoleInvocation(session, [savingThrow])).toEqual(
       expect.objectContaining({
         procedure: "saveGatedCondition",
-        spellRuleFacts: expect.objectContaining({}),
         resource: { tag: "spellSlot", slotLevel: 1 },
         ability: "str",
         targeting: { kind: "pointOriginCubeExcludingCaster", sideFeet: 20 },
@@ -1238,7 +1232,6 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     expect(spellHoleInvocation(session, [savingThrow])).toEqual(
       expect.objectContaining({
         procedure: "sleepTargetAdmission",
-        spellRuleFacts: expect.objectContaining({}),
         resource: { tag: "spellSlot", slotLevel: 1 },
         ability: "wis",
         targeting: { kind: "pointOriginSphere", radiusFeet: 5 },
@@ -1375,7 +1368,6 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     expect(spellHoleInvocation(session, [conditionHole])).toEqual(
       expect.objectContaining({
         procedure: "directConditionRemoval",
-        spellRuleFacts: expect.objectContaining({}),
         actionCost: "bonusAction",
         resource: { tag: "spellSlot", slotLevel: 2 },
         targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 },

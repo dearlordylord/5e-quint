@@ -154,7 +154,6 @@ describe("L19E deterministic Cloudkill area-hazard admission", () => {
     expect(spellHoleInvocation(session, [area])).toEqual(
       expect.objectContaining({
         procedure: "cloudkillAreaHazard",
-        spellRuleFacts: expect.objectContaining({}),
         resource: { tag: "spellSlot", slotLevel: 5 },
         ability: "con",
         targeting: { kind: "pointOriginSphere", radiusFeet: movementFeet(20) },

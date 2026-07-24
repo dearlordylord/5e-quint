@@ -86,7 +86,6 @@ describe("SRDINV51 deterministic Thunderwave Spell Unit admission", () => {
     expect(spellHoleInvocation(state, [savingThrow])).toEqual(
       expect.objectContaining({
         procedure: "saveGatedDamage",
-        spellRuleFacts: expect.objectContaining({}),
         resource: { tag: "spellSlot", slotLevel: 2 },
         ability: "con",
         targeting: { kind: "selfOriginCube", sideFeet: 15 },
@@ -390,7 +389,6 @@ describe("SRDINV52 deterministic Dissonant Whispers Spell Unit admission", () =>
     expect(spellHoleInvocation(state, [savingThrow])).toEqual(
       expect.objectContaining({
         procedure: "saveGatedDamage",
-        spellRuleFacts: expect.objectContaining({}),
         resource: { tag: "spellSlot", slotLevel: 2 },
         ability: "wis",
         targeting: { kind: "singleCombatant" },

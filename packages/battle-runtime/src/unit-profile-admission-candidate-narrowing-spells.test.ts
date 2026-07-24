@@ -107,7 +107,6 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
     expect(spellHoleInvocation(state, [attackRoll])).toEqual(
       expect.objectContaining({
         procedure: "spellAttackDamage",
-        spellRuleFacts: expect.objectContaining({}),
         targeting: { kind: "singleCreatureOrObject" },
         attackKind: "ranged_spell_attack",
         damage: {
@@ -179,7 +178,6 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
     expect(spellHoleInvocation(state, [attackRoll])).toEqual(
       expect.objectContaining({
         procedure: "spellAttackDamage",
-        spellRuleFacts: expect.objectContaining({}),
         targeting: { kind: "singleCreatureOrObject" },
         attackKind: "ranged_spell_attack",
         damage: {

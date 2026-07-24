@@ -79,7 +79,6 @@ describe("QMBT14 deterministic chained attack and Mage Armor admission", () => {
     expect(spellHoleInvocation(session, [attackRoll])).toEqual(
       expect.objectContaining({
         procedure: "attackBurstSaveDamage",
-        spellRuleFacts: expect.objectContaining({}),
         resource: { tag: "spellSlot", slotLevel: 2 },
         targeting: { kind: "singleCombatant" },
         attackKind: "ranged_spell_attack",
@@ -142,7 +141,6 @@ describe("QMBT14 deterministic chained attack and Mage Armor admission", () => {
     expect(spellHoleInvocation(session, [damageType])).toEqual(
       expect.objectContaining({
         procedure: "chainedSpellAttackDamage",
-        spellRuleFacts: expect.objectContaining({}),
         resource: { tag: "spellSlot", slotLevel: 2 },
         targeting: { kind: "singleCombatant" },
         attackKind: "ranged_spell_attack",

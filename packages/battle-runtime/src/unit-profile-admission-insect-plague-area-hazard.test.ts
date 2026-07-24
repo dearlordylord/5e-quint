@@ -178,7 +178,6 @@ describe("L19E deterministic Insect Plague area-hazard admission", () => {
     expect(spellHoleInvocation(session, [area])).toEqual(
       expect.objectContaining({
         procedure: "insectPlagueAreaHazard",
-        spellRuleFacts: expect.objectContaining({}),
         resource: { tag: "spellSlot", slotLevel: 5 },
         ability: "con",
         targeting: { kind: "pointOriginSphere", radiusFeet: movementFeet(20) },

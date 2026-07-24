@@ -15,7 +15,19 @@ import { currentActorId } from "./battle-reducer/creature-state-leaves.ts";
 import { discoverBattleActCandidatesWithoutSpellProcedures } from "./battle-reducer/battle-discovery.ts";
 import { endTurn } from "./battle-execution-composition.ts";
 import { snapshotBattle } from "./battle-reducer/battle-snapshot.ts";
-import { fighterVsGoblinBattle } from "./battle-runtime-test-support.ts";
+import {
+  battleId,
+  characterSeed,
+  fighterVsGoblinBattle,
+  goblinId,
+  startBattleSessionRight,
+  statBlockCreatureInit,
+} from "./battle-runtime-test-support.ts";
+import { discoverBattleActs } from "./battle-act-composition.ts";
+import type { BattleRuntimeContext } from "./battle-runtime-context.ts";
+import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 
 /**
  * Synthetic-renaming witness for inert authored identity fields.
@@ -25,6 +37,12 @@ import { fighterVsGoblinBattle } from "./battle-runtime-test-support.ts";
  * real consumers — act discovery, snapshot production, and the end-of-turn
  * reducer — and compares their outputs. The only differences permitted are the
  * renamed identity fields themselves.
+ *
+ * Covered inert fields:
+ *   - `BattleCreatureState.origin.kind === "character"`: `characterId`, `displayName`
+ *   - `BattleCreatureOriginSnapshot.kind === "statBlock"`: `statBlockId`
+ *   - `SpellInvocationRef.spellId` (in `BattleRuntimeContext`)
+ *   - Presentation-context labels (`BattleStatBlockPresentationSource` display names and procedure labels)
  *
  * Behavior-driving identity fields (e.g. weaponUnitId for mastery, loadout
  * unitId for Wild Shape equipment, paladinSacredWeapon.weaponItemId) are
@@ -155,6 +173,21 @@ function snapshotMechanicalProjection(snapshot: BattleSnapshot) {
   };
 }
 
+function snapshotIdentityProjection(snapshot: BattleSnapshot) {
+  return snapshot.combatants.map((combatant) => ({
+    combatantId: combatant.combatantId,
+    originKind: combatant.origin.kind,
+    characterId:
+      combatant.origin.kind === "character"
+        ? combatant.origin.characterId
+        : undefined,
+    statBlockId:
+      combatant.origin.kind === "statBlock"
+        ? combatant.origin.statBlockId
+        : undefined,
+  }));
+}
+
 function actExecutionProjection(state: BattleState) {
   return discoverBattleActCandidatesWithoutSpellProcedures(state).map(
     (act) => ({
@@ -190,8 +223,83 @@ function renameInertIdentityFields(state: BattleState): BattleState {
   return { ...state, combatants: renamedCombatants };
 }
 
+function renameSnapshotInertIdentityFields(
+  snapshot: BattleSnapshot,
+): BattleSnapshot {
+  const syntheticStatBlockId = "synthetic-stat-block-id-witness";
+
+  return {
+    ...snapshot,
+    combatants: snapshot.combatants.map((combatant) => {
+      if (combatant.origin.kind !== "statBlock") {
+        return combatant;
+      }
+      return {
+        ...combatant,
+        origin: {
+          ...combatant.origin,
+          statBlockId: syntheticStatBlockId,
+        },
+      };
+    }),
+  };
+}
+
+function renameContextInertIdentityFields(
+  context: BattleRuntimeContext,
+): BattleRuntimeContext {
+  const syntheticSpellId = "synthetic-spell-id-witness";
+  const syntheticSpellName = "Synthetic Spell";
+  const syntheticStatBlockDisplayName = "Synthetic Stat Block";
+  const syntheticProcedureLabel = "Synthetic Procedure";
+
+  const characters = new Map(
+    Array.from(context.characters.entries()).map(([id, character]) => [
+      id,
+      {
+        ...character,
+        spellPresentationSources: character.spellPresentationSources.map(
+          (source) => ({
+            ...source,
+            invocation: {
+              ...source.invocation,
+              spell: {
+                ...source.invocation.spell,
+                id: syntheticSpellId,
+                name: syntheticSpellName,
+              },
+            },
+          }),
+        ),
+      },
+    ]),
+  );
+
+  const statBlocks = new Map(
+    Array.from(context.statBlocks.entries()).map(([id, source]) => [
+      id,
+      {
+        ...source,
+        displayName: syntheticStatBlockDisplayName,
+        procedures: source.procedures.map((procedure) => ({
+          ...procedure,
+          ...(procedure.kind === "attack"
+            ? { name: syntheticProcedureLabel }
+            : { label: syntheticProcedureLabel }),
+        })),
+      },
+    ]),
+  );
+
+  return {
+    ...context,
+    characters,
+    statBlocks,
+  } as unknown as BattleRuntimeContext;
+}
+
 describe("inert authored identity renaming witness (#224)", () => {
-  test("renaming characterId and displayName does not change discovery, snapshot, or state mechanics", () => {
+  test("renaming characterId and displayName does not change discovery, snapshot mechanics, or state mechanics", () => {
     const state = fighterVsGoblinBattle();
     const renamed = renameInertIdentityFields(state);
 
@@ -203,6 +311,62 @@ describe("inert authored identity renaming witness (#224)", () => {
     );
     expect(actExecutionProjection(renamed)).toEqual(
       actExecutionProjection(state),
+    );
+  });
+
+  test("renaming characterId and displayName changes only those identity fields in the snapshot", () => {
+    const state = fighterVsGoblinBattle();
+    const originalSnapshot = snapshotBattle(state);
+    const renamedSnapshot = snapshotBattle(renameInertIdentityFields(state));
+
+    expect(snapshotMechanicalProjection(renamedSnapshot)).toEqual(
+      snapshotMechanicalProjection(originalSnapshot),
+    );
+
+    const fighterOriginal = originalSnapshot.combatants.find(
+      (c) => c.combatantId === combatantId("fighter"),
+    );
+    const fighterRenamed = renamedSnapshot.combatants.find(
+      (c) => c.combatantId === combatantId("fighter"),
+    );
+    expect(fighterOriginal?.origin.kind).toBe("character");
+    expect(fighterRenamed?.origin.kind).toBe("character");
+    if (fighterRenamed === undefined) {
+      return;
+    }
+    expect(fighterRenamed.origin.kind).toBe("character");
+    if (fighterRenamed.origin.kind !== "character") {
+      return;
+    }
+    expect(fighterRenamed.origin.characterId).toBe(
+      characterId("synthetic-character-id-witness"),
+    );
+    const renamedCharacterSnapshot = fighterRenamed as Extract<
+      BattleCreatureSnapshot,
+      { readonly origin: { readonly kind: "character" } }
+    >;
+    expect(renamedCharacterSnapshot.displayName).toBe("Synthetic Witness Name");
+  });
+
+  test("renaming snapshot statBlockId does not change snapshot mechanics", () => {
+    const state = fighterVsGoblinBattle();
+    const snapshot = snapshotBattle(state);
+    const renamedSnapshot = renameSnapshotInertIdentityFields(snapshot);
+
+    expect(snapshotIdentityProjection(renamedSnapshot)).not.toEqual(
+      snapshotIdentityProjection(snapshot),
+    );
+    expect(snapshotMechanicalProjection(renamedSnapshot)).toEqual(
+      snapshotMechanicalProjection(snapshot),
+    );
+
+    const goblinRenamed = renamedSnapshot.combatants.find(
+      (c) => c.combatantId === combatantId("goblin"),
+    );
+    expect(goblinRenamed?.origin.kind).toBe("statBlock");
+    if (goblinRenamed?.origin.kind !== "statBlock") return;
+    expect(goblinRenamed.origin.statBlockId).toBe(
+      "synthetic-stat-block-id-witness",
     );
   });
 
@@ -228,7 +392,7 @@ describe("inert authored identity renaming witness (#224)", () => {
     );
   });
 
-  test("the witness actually mutates the inert fields", () => {
+  test("the state witness actually mutates the inert fields", () => {
     const state = fighterVsGoblinBattle();
     const fighter = state.combatants.get(combatantId("fighter"));
     expect(fighter?.origin.kind).toBe("character");
@@ -243,5 +407,114 @@ describe("inert authored identity renaming witness (#224)", () => {
       characterId("synthetic-character-id-witness"),
     );
     expect(renamedFighter.origin.displayName).toBe("Synthetic Witness Name");
+  });
+
+  test("renaming SpellInvocationRef.spellId does not change spell act execution structure", () => {
+    const session = spellBattle({
+      preparedSpells: [spellRecord("magic_missile")],
+      spellSlots: [{ spellLevel: 1, count: 1 }],
+    });
+
+    const renamedContext = renameContextInertIdentityFields(session.context);
+    const renamedSession = battleRuntimeSessionForTest({
+      state: session.state,
+      context: renamedContext,
+    });
+
+    const originalActs = discoverBattleActs(session);
+    const renamedActs = discoverBattleActs(renamedSession);
+
+    const executionProjection = (acts: typeof originalActs) =>
+      acts.map((act) => ({
+        subject: act.subject,
+        initialHoles: act.initialHoles,
+        label: act.label,
+        summary: act.summary,
+      }));
+
+    // Execution structure (subjects and holes) must be identical.
+    expect(
+      renamedActs.map((act) => ({
+        subject: act.subject,
+        initialHoles: act.initialHoles,
+      })),
+    ).toEqual(
+      originalActs.map((act) => ({
+        subject: act.subject,
+        initialHoles: act.initialHoles,
+      })),
+    );
+
+    // Presentation labels must differ because the SpellInvocationRef identity changed.
+    expect(executionProjection(renamedActs)).not.toEqual(
+      executionProjection(originalActs),
+    );
+
+    // The spell act's invocation carries the synthetic identity in presentation.
+    const renamedSpellAct = renamedActs.find(
+      (act) => act.presentation.kind === "spell",
+    );
+    expect(renamedSpellAct).toBeDefined();
+    if (renamedSpellAct?.presentation.kind !== "spell") return;
+    expect(renamedSpellAct.presentation.invocation.spellId).toBe(
+      "synthetic-spell-id-witness",
+    );
+  });
+
+  test("renaming Stat Block presentation labels does not change stat block act execution structure", () => {
+    const session = startBattleSessionRight({
+      battleId: battleId("stat-block-witness"),
+      combatants: [
+        statBlockCreatureInit({ combatantId: goblinId, initiative: 20 }),
+        characterSeed({ initiative: 10 }),
+      ],
+    });
+
+    const renamedContext = renameContextInertIdentityFields(session.context);
+    const renamedSession = battleRuntimeSessionForTest({
+      state: session.state,
+      context: renamedContext,
+    });
+
+    const originalActs = discoverBattleActs(session);
+    const renamedActs = discoverBattleActs(renamedSession);
+
+    const executionProjection = (acts: typeof originalActs) =>
+      acts.map((act) => ({
+        subject: act.subject,
+        initialHoles: act.initialHoles,
+        label: act.label,
+        summary: act.summary,
+      }));
+
+    // Execution structure (subjects and holes) must be identical.
+    expect(
+      renamedActs.map((act) => ({
+        subject: act.subject,
+        initialHoles: act.initialHoles,
+      })),
+    ).toEqual(
+      originalActs.map((act) => ({
+        subject: act.subject,
+        initialHoles: act.initialHoles,
+      })),
+    );
+
+    // Presentation labels must differ because Stat Block display name and procedure labels changed.
+    expect(executionProjection(renamedActs)).not.toEqual(
+      executionProjection(originalActs),
+    );
+
+    // The Stat Block act's presentation carries the renamed procedure label.
+    const renamedStatBlockAct = renamedActs.find(
+      (act) => act.presentation.kind === "attack",
+    );
+    expect(renamedStatBlockAct).toBeDefined();
+    if (renamedStatBlockAct?.presentation.kind !== "attack") {
+      return;
+    }
+    expect(renamedStatBlockAct.label + renamedStatBlockAct.summary).toContain(
+      "Synthetic Procedure",
+    );
   });
 });

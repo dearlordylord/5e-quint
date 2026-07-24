@@ -45,7 +45,7 @@ Not covered (outside Battle runtime or already removed):
 
 ## Inert identity
 
-Fields in this section have no execution behavior dependence. Renaming them synthetically (while keeping their owning records consistent) changes no reducer outcome.
+Fields in this section have no execution behavior dependence inside a single battle. Renaming them synthetically (while keeping their owning records consistent) changes no reducer outcome during battle execution.
 
 ### 1. Character identity on the character-origin branch of `BattleCreatureState`
 
@@ -74,25 +74,16 @@ Fields in this section have no execution behavior dependence. Renaming them synt
 | Execution use | None. The snapshot is produced from state, never read by the reducer.                                                                                                                                                                      |
 | Verdict       | Keep — settlement/catalog reference. Mirrors the execution-state field at the durable-snapshot boundary.                                                                                                                                   |
 
-### 4. Stat Block identity in `StatBlockBattleOrigin`
-
-| Field         | `StatBlockBattleOrigin.statBlockId: StatBlockId`                                                                                                                                                                                                                                                                                                               |
-| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Domain owner  | Settlement / companion reappearance / catalog reference.                                                                                                                                                                                                                                                                                                       |
-| Consumer      | `stat-block-combatant-admission.ts` admits it from the authored Stat Block record; `battle-reducer/battle-snapshot.ts` and `battle-reducer/interrupt-execution.ts` copy it through; `find-familiar-lifecycle-execution.ts` reads it to re-materialize a dismissed or zero-HP familiar; companion tests and settlement handoffs re-fetch the source Stat Block. |
-| Execution use | **Behavior-driving at settlement/reappearance.** The reducer never dispatches on `statBlockId` during a single battle, but the stored ID selects which Stat Block's mechanics are used when a familiar reappears or is re-materialized across battles. Renaming the source Stat Block therefore changes future familiar mechanics.                             |
-| Verdict       | Keep — settlement/catalog reference, but **not inert**. The ID is required for SRD Find Familiar/Pact of the Chain reappearance and cross-battle settlement; it cannot be inert because it selects the source record for mechanics.                                                                                                                            |
-
-### 5. Stat Block identity in `BattleCreatureOriginSnapshot`
+### 4. Stat Block identity in `BattleCreatureOriginSnapshot`
 
 | Field         | `BattleCreatureOriginSnapshot.kind === "statBlock"`.`statBlockId: string`                                |
 | ------------- | -------------------------------------------------------------------------------------------------------- |
 | Domain owner  | Settlement / catalog reference.                                                                          |
 | Consumer      | Snapshot consumers use it to re-associate the combatant with the source Stat Block record.               |
-| Execution use | None.                                                                                                    |
+| Execution use | None. The snapshot is produced from state, never read by the reducer.                                    |
 | Verdict       | Keep — settlement/catalog reference. Mirrors the execution-state field at the durable-snapshot boundary. |
 
-### 6. Spell identity in `SpellInvocationRef`
+### 5. Spell identity in `SpellInvocationRef`
 
 | Field         | `SpellInvocationRef.spellId: SpellId`                                                                                                                                                                                                                                                               |
 | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -101,7 +92,7 @@ Fields in this section have no execution behavior dependence. Renaming them synt
 | Execution use | None. The reducer dispatches by `procedure` (e.g., `"spellAttackDamage"`, `"saveGatedCondition"`) and by admitted mechanics, never by `spellId`. `check-authored-id-dispatch-boundary.cjs` enforces that authored `spell.name`/`id` keys do not appear in reducer execution files.                  |
 | Verdict       | Keep — presentation. The Spell Invocation Ref is a composition/selection record that joins back to the authored Spell record for labels and traceability; it is rejected as a replay or execution key.                                                                                              |
 
-### 7. Unit and Stat Block references in presentation context
+### 6. Unit and Stat Block references in presentation context
 
 | Field         | `CharacterBattleRuntimeContext.unitPresentationSources: readonly BattleUnitRef[]` and `BattleStatBlockPresentationSource` / `BattleStatBlockProcedurePresentation` records carried in `BattleRuntimeContext.statBlocks`.                                                              |
 | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -110,7 +101,7 @@ Fields in this section have no execution behavior dependence. Renaming them synt
 | Execution use | None. The reducer receives only the authored-free `BattleState`; `BattleRuntimeContext` is consumed by presentation and composition helpers after discovery.                                                                                                                          |
 | Verdict       | Keep — presentation. These references are explicitly outside reducer execution and are the canonical place where authored identity is joined back to execution facts for labels.                                                                                                      |
 
-### 9. Rejected identity fields in `BattleSubject`
+### 7. Rejected identity fields in `BattleSubject`
 
 | Field         | `unitId`, `sourceUnitId`, `resourceUnitId`, `componentWeaponItemId`, `sourceSpellId`, `formStatBlockId`, `attackName`, `statBlockSection`, `statBlockDamageNotation` on `BattleSubject` variants. |
 | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -118,6 +109,28 @@ Fields in this section have no execution behavior dependence. Renaming them synt
 | Consumer      | `battle-subjects.ts` schemas set these fields to `Schema.optionalWith(Schema.Never, { exact: true })`, proving they are not admitted as replay/execution keys.                                    |
 | Execution use | None by design.                                                                                                                                                                                   |
 | Verdict       | Keep — inert. They document the boundary: authored identity is not a replay key.                                                                                                                  |
+
+## Settlement/catalog reference (not inert)
+
+Fields in this section are retained authored IDs required to re-associate execution state with an authored record across snapshot or settlement boundaries. They do not drive reducer execution inside a single battle, but they are **not inert** because renaming the source record changes which mechanics are admitted on reappearance or settlement.
+
+### 8. Stat Block identity in `StatBlockBattleOrigin`
+
+| Field         | `StatBlockBattleOrigin.statBlockId: StatBlockId`                                                                                                                                                                                                                                                                                                               |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Domain owner  | Settlement / companion reappearance / catalog reference.                                                                                                                                                                                                                                                                                                       |
+| Consumer      | `stat-block-combatant-admission.ts` admits it from the authored Stat Block record; `battle-reducer/battle-snapshot.ts` and `battle-reducer/interrupt-execution.ts` copy it through; `find-familiar-lifecycle-execution.ts` reads it to re-materialize a dismissed or zero-HP familiar; companion tests and settlement handoffs re-fetch the source Stat Block. |
+| Execution use | **Behavior-driving at settlement/reappearance.** The reducer never dispatches on `statBlockId` during a single battle, but the stored ID selects which Stat Block's mechanics are used when a familiar reappears or is re-materialized across battles. Renaming the source Stat Block therefore changes future familiar mechanics.                             |
+| Verdict       | Keep — settlement/catalog reference, but **not inert**. The ID is required for SRD Find Familiar/Pact of the Chain reappearance and cross-battle settlement; it cannot be inert because it selects the source record for mechanics.                                                                                                                            |
+
+### 9. Companion/familiar resolved Stat Block identity
+
+| Field         | `BattleCompanionStoredForm.resolvedStatBlockId: StatBlockId` and `BattleCompanionPresentSnapshotFields.resolvedStatBlockId: StatBlockId`.                                                                                                                                                                                                                                                               |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Domain owner  | Companion settlement / reappearance.                                                                                                                                                                                                                                                                                                                                                                    |
+| Consumer      | `find-familiar-admission.ts::resolveStoredFindFamiliarReappearanceForm` uses the stored ID to fetch the Stat Block that supplies mechanics for reappearance. `find-familiar-lifecycle.ts` and `find-familiar-lifecycle-execution.ts` use it to re-materialize a dismissed or zero-HP familiar. `battle-reducer/battle-snapshot.ts` and `battle-reducer/interrupt-execution.ts` include it in snapshots. |
+| Execution use | **Behavior-driving at settlement/reappearance.** The stored ID selects which Stat Block's mechanics are used when the familiar reappears. Once the familiar is present, reducer execution uses the admitted `mechanics`, not the ID. This is the companion-specific copy of the `StatBlockBattleOrigin.statBlockId` identity documented in item 8.                                                      |
+| Verdict       | Keep — settlement/catalog reference, but **not inert**. The ID is required for SRD Find Familiar/Pact of the Chain reappearance and cross-battle settlement; it cannot be inert because it selects the source record for mechanics.                                                                                                                                                                     |
 
 ## Composition/admission boundary identity
 
@@ -172,16 +185,7 @@ Fields in this section are retained authored IDs that currently choose mechanics
 | Execution use | **Behavior-driving inside reducer execution.** Equipment disposition and Wild Shape worn-object usability branch on `unitId` equality.                                                                                                                                                                                                           |
 | Verdict       | Cleanup. Wild Shape equipment disposition should reference typed execution objects or parsed mechanical facts rather than authored unit ids.                                                                                                                                                                                                     |
 
-### 15. Companion/familiar resolved Stat Block identity
-
-| Field         | `BattleCompanionStoredForm.resolvedStatBlockId: StatBlockId` and `BattleCompanionPresentSnapshotFields.resolvedStatBlockId: StatBlockId`.                                                                                                                                                                                                                                                               |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Domain owner  | Companion settlement / reappearance.                                                                                                                                                                                                                                                                                                                                                                    |
-| Consumer      | `find-familiar-admission.ts::resolveStoredFindFamiliarReappearanceForm` uses the stored ID to fetch the Stat Block that supplies mechanics for reappearance. `find-familiar-lifecycle.ts` and `find-familiar-lifecycle-execution.ts` use it to re-materialize a dismissed or zero-HP familiar. `battle-reducer/battle-snapshot.ts` and `battle-reducer/interrupt-execution.ts` include it in snapshots. |
-| Execution use | **Behavior-driving at settlement/reappearance.** The stored ID selects which Stat Block's mechanics are used when the familiar reappears. Once the familiar is present, reducer execution uses the admitted `mechanics`, not the ID. This is the companion-specific copy of the `StatBlockBattleOrigin.statBlockId` identity documented in item 4.                                                      |
-| Verdict       | Keep — settlement/catalog reference, but **not inert**. The ID is required for SRD Find Familiar/Pact of the Chain reappearance and cross-battle settlement; it cannot be inert because it selects the source record for mechanics.                                                                                                                                                                     |
-
-### 16. Active-effect weapon identity for Magic Weapon enhancement
+### 15. Active-effect weapon identity for Magic Weapon enhancement
 
 | Field         | `BattleActiveEffect` of kind `spellMagicWeaponEnhancement`.`weaponItemId: string`                                                                                                                                       |
 | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -190,7 +194,7 @@ Fields in this section are retained authored IDs that currently choose mechanics
 | Execution use | **Behavior-driving inside reducer execution.** Attack damage bonus eligibility branches on whether the attack's weapon matches the effect's stored `weaponItemId`.                                                      |
 | Verdict       | Cleanup. The bound weapon should be represented by a typed execution reference rather than an authored item id.                                                                                                         |
 
-### 17. Weapon-override procedure facts weapon identity
+### 16. Weapon-override procedure facts weapon identity
 
 | Field         | `SpellWeaponAttackOverrideTemplate.weaponItemId: BattleObjectId` and `WeaponAttackOverrideProcedureFacts.activeEffect.weaponItemId: BattleObjectId`. |
 | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -199,14 +203,23 @@ Fields in this section are retained authored IDs that currently choose mechanics
 | Execution use | **Behavior-driving inside reducer execution.** The override attack targets a specific authored weapon by id.                                         |
 | Verdict       | Cleanup. The bound weapon should be represented by a typed execution reference rather than an authored item id.                                      |
 
-### 18. Turn-state light-weapon-attack identity
+### 17. Turn-state light-weapon-attack identity
 
-| Field         | `BattleTurnState.lightWeaponAttackMade.weaponItemId: string`                                                                                                                      |
-| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Domain owner  | Two-weapon fighting eligibility tracking.                                                                                                                                         |
-| Consumer      | `battle-reducer/attack-damage-apply.ts` uses the stored `weaponItemId` to enforce two-weapon-fighting restrictions (e.g., the off-hand attack must use a different light weapon). |
-| Execution use | **Behavior-driving inside reducer execution.** Action economy and bonus-action attack eligibility branch on authored weapon identity.                                             |
-| Verdict       | Cleanup. The prior light attack should be tracked by a typed execution reference to the weapon, not its authored item id.                                                         |
+| Field         | `BattleTurnResources.lightWeaponAttackMade.weaponItemId: string` and the mirrored `BattleTurnSnapshot.lightWeaponAttackMade?.weaponItemId: string`.                                                                                                                                                                    |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Domain owner  | Two-weapon fighting eligibility tracking.                                                                                                                                                                                                                                                                              |
+| Consumer      | `battle-reducer/attack-damage-apply.ts` uses the stored `weaponItemId` to enforce two-weapon-fighting restrictions (e.g., the off-hand attack must use a different light weapon). Both `battle-reducer/battle-snapshot.ts` and `battle-reducer/interrupt-execution.ts` copy the field through to `BattleTurnSnapshot`. |
+| Execution use | **Behavior-driving inside reducer execution.** Action economy and bonus-action attack eligibility branch on authored weapon identity.                                                                                                                                                                                  |
+| Verdict       | Cleanup. The prior light attack should be tracked by a typed execution reference to the weapon, not its authored item id.                                                                                                                                                                                              |
+
+### 18. BattleSubject held-weapon Unit feature activation weapon identity
+
+| Field         | `BattleSubject` of tag `unitFeatureHeldWeaponActivation`.`weaponItemId: string` (admitted at `battle-subjects.ts:729`).                                                                    |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Domain owner  | Composition / selection → held-weapon targeting settlement.                                                                                                                                |
+| Consumer      | `battle-reducer/unit-features.ts` matches `input.subject.weaponItemId` against held weapon `itemId` to validate and execute the Paladin Sacred Weapon held-weapon Unit feature activation. |
+| Execution use | **Behavior-driving inside reducer execution.** Activation eligibility and the targeted weapon branch on authored weapon identity.                                                          |
+| Verdict       | Cleanup. The held-weapon selection should be represented by a typed execution reference rather than an authored item id.                                                                   |
 
 ## Presentation identity in `BattleActPresentation`
 
@@ -221,7 +234,7 @@ Fields in this section are retained authored IDs that currently choose mechanics
 
 - `pnpm check:authored-id-dispatch` passes with the existing narrow allowlist (catalog, composition-selection, test-fixture, character-creation, character-sheet-companion, battle-runtime unit-profile admission test support). No broader allowlisting was added.
 - `pnpm check:battle-runtime-import-ownership` passes for the protected execution-root set.
-- The inert fields documented above have no reducer execution consumer.
+- The inert fields documented in the first section have no reducer execution consumer.
 - `SpellRuleExecutionFacts.spellId` was removed; it had no production consumer and was explicitly ignored by execution equality.
 - The behavior-driving fields documented above are flagged for future cleanup; their current use is admitted as existing code, not approved as a permanent pattern.
 - Druid Wild Shape reducer mechanics are resolved through `formScopeRef`; authored `formStatBlockId` is no longer read inside reducer execution. Stale unresolved `druidWildShapeForm` effects do not apply their equipment disposition.

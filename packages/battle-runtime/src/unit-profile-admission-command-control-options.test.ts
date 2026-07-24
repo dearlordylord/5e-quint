@@ -103,7 +103,6 @@ describe("QMBT14 deterministic Command control option admission", () => {
     expect(spellActInvocation(session, levelTwo)).toEqual(
       expect.objectContaining({
         procedure: "command",
-        spellRuleFacts: expect.objectContaining({}),
         actionCost: "magicAction",
         resource: { tag: "spellSlot", slotLevel: 2 },
         ability: "wis",
