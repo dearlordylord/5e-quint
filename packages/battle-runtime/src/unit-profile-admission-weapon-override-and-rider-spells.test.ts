@@ -396,7 +396,7 @@ describe("SRDINV84H deterministic Shillelagh weapon override admission", () => {
       expect.objectContaining({
         kind: "spellWeaponAttackOverride",
         sourceProcedureRef: expect.any(String),
-        weaponItemId: "main:weapon_quarterstaff",
+        weaponItemId: battleObjectId("main:weapon_quarterstaff"),
         spellcastingAbilityModifier: abilityModifier(3),
         attackBonus: attackBonus(5),
         damage: { expr: { dice: 2, dieSize: 6 } },
@@ -512,7 +512,7 @@ describe("SRDINV84H deterministic Shillelagh weapon override admission", () => {
       expect.objectContaining({
         kind: "spellWeaponAttackOverride",
         sourceProcedureRef: expect.any(String),
-        weaponItemId: "main:weapon_club",
+        weaponItemId: battleObjectId("main:weapon_club"),
         damage: { expr: { dice: 1, dieSize: 10 } },
         damageTypeChoices: ["force", "bludgeoning"],
       }),

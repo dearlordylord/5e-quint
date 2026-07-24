@@ -1056,6 +1056,15 @@ function projectWeaponMasteryState(input: {
     (combatant) => combatant.combatantId === secondTargetId,
   );
   const primaryTargetState = input.state.combatants.get(primaryTargetId);
+  const attacker = input.state.combatants.get(attackerId);
+  const sapProcedureRef =
+    attacker?.origin.kind === "character"
+      ? attacker.origin.execution.procedureBindings.find(
+          (binding) =>
+            binding.procedure.kind === "unitSupportProfile" &&
+            binding.procedure.execution === WEAPON_MASTERY_SAP_SUPPORT_PROFILE,
+        )?.procedureRef
+      : undefined;
   if (
     primaryTarget === undefined ||
     secondTarget === undefined ||
@@ -1072,8 +1081,8 @@ function projectWeaponMasteryState(input: {
     primaryTargetHasSapEffect: primaryTargetState.activeEffects.some(
       (effect) =>
         effect.kind === "nextAttackRollBySelf" &&
-        effect.sourceCombatantId === attackerId &&
-        effect.mode === "disadvantage",
+        "sourceProcedureRef" in effect &&
+        effect.sourceProcedureRef === sapProcedureRef,
     ),
     primaryTargetProne: primaryTarget.conditions.includes("prone"),
     cleaveUsed:
