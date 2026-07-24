@@ -810,7 +810,7 @@ function weaponMasteryAttackerInit(
       tempHp: Hp(0),
       selectedLoadout: {
         weapon: {
-          itemId: `main:${scenario.weaponUnitId}`,
+          itemId: battleObjectId(`main:${scenario.weaponUnitId}`),
           unitId: parseSharedUnitId(scenario.weaponUnitId),
           grip: scenario.grip,
         },

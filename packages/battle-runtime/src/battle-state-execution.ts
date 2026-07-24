@@ -4414,7 +4414,7 @@ export type BattleCompanionReappearanceInitiativeHole = {
 export type BattleMagicWeaponTargetItemFact = {
   readonly kind: "nonmagicalWeaponItem";
   readonly holderCombatantId: CombatantId;
-  readonly itemId: string;
+  readonly itemId: BattleObjectId;
 };
 export type BattleMagicWeaponTargetItemHole = {
   readonly sourceProcedureRef: BattleProcedureExecutionRef;

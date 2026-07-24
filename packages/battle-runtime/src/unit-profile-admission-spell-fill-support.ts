@@ -222,7 +222,7 @@ export function magicWeaponTargetItemFill(
   hole: Extract<BattleHole, { readonly kind: "magicWeaponTargetItem" }>,
   target: {
     readonly holderCombatantId: CombatantId;
-    readonly itemId: string;
+    readonly itemId: BattleObjectId;
   },
 ): Extract<BattleFill, { readonly kind: "magicWeaponTargetItem" }> {
   return {

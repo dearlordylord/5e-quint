@@ -5,21 +5,25 @@ import type {
   SixAbilityScores,
   Skill,
 } from "@dnd/surface/surface/types";
+import type { BattleObjectId } from "./identity.ts";
 
 export type CharacterBattleInvocationFeature = {
   readonly tag: "eldritchMind";
 };
 
 export type CharacterBattleLoadoutRef = {
-  readonly armor?: { readonly itemId: string; readonly unitId: UnitId };
-  readonly shield?: { readonly itemId: string; readonly unitId: UnitId };
+  readonly armor?: { readonly itemId: BattleObjectId; readonly unitId: UnitId };
+  readonly shield?: {
+    readonly itemId: BattleObjectId;
+    readonly unitId: UnitId;
+  };
   readonly weapon?: {
-    readonly itemId: string;
+    readonly itemId: BattleObjectId;
     readonly unitId: UnitId;
     readonly grip: "one_handed" | "two_handed";
   };
   readonly offHandWeapon?: {
-    readonly itemId: string;
+    readonly itemId: BattleObjectId;
     readonly unitId: UnitId;
   };
 };

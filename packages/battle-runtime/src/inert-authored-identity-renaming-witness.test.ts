@@ -37,10 +37,11 @@ import {
  * This test demonstrates that the fields classified as inert authored identity
  * do not affect reducer-visible mechanical outcomes. It exercises real
  * consumers — act discovery, snapshot production, and the end-of-turn reducer —
- * and compares their outputs using full mechanical payloads (combatant state,
- * active effects, resources, procedure bindings, attacks, loadout, class
- * levels, snapshot state, and turn resources). The only differences permitted
- * are the renamed identity fields themselves.
+ * and compares their outputs using full mechanical payloads: combatant state
+ * (including zero-HP lifecycle and hidden-state prerequisites), active effects,
+ * resources, procedure bindings, attacks, loadout, class levels, snapshot state,
+ * and turn resources. The only differences permitted are the renamed identity
+ * fields themselves.
  *
  * Renamed inert fields:
  *   - `BattleCreatureState.origin.kind === "character"`: `characterId`, `displayName`
@@ -105,8 +106,9 @@ function combatantMechanicalProjection(combatant: BattleCreatureState) {
     attackRollMissToHitReplacementsUsedSinceTurnStart:
       combatant.attackRollMissToHitReplacementsUsedSinceTurnStart,
     concentration: combatant.concentration,
-    hidden: combatant.hidden !== null,
+    hidden: combatant.hidden,
     dodging: combatant.dodging,
+    zeroHpLifecycle: combatant.zeroHpLifecycle,
   };
   if (combatant.origin.kind !== "character") {
     return {

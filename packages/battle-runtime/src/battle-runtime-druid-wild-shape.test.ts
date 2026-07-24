@@ -55,6 +55,7 @@ import {
   statBlockCatalog,
   statBlockCreatureInit,
   targetFill,
+  testCharacterWeaponAttackForUnit,
   unitLibrary,
   wizardSpellcasting,
 } from "./battle-runtime-test-support.ts";
@@ -84,6 +85,7 @@ import {
   type BattleSubject,
   type CharacterBattleCreatureState,
   type CharacterBattleD20Statistics,
+  type CharacterWeaponAttackActionOption,
   type WildShapeEquipmentDispositionChoice,
   type WildShapeLoadoutObjectRef,
 } from "./index.ts";
@@ -522,11 +524,11 @@ test("projects practical worn Wild Shape equipment into the effective loadout", 
     armorClass: shieldArmorClassState({ rightHandUse: "mainWeapon" }),
     selectedLoadout: {
       shield: {
-        itemId: "shield:equipment_shield",
+        itemId: battleObjectId("shield:equipment_shield"),
         unitId: parseSharedUnitId("equipment_shield"),
       },
       weapon: {
-        itemId: "main:weapon_quarterstaff",
+        itemId: battleObjectId("main:weapon_quarterstaff"),
         unitId: parseSharedUnitId("weapon_quarterstaff"),
         grip: "one_handed",
       },
@@ -592,7 +594,7 @@ test("uses a practical worn Wild Shape weapon when form limbs can handle objects
     attack: weakTrueFormLongswordAttack(),
     selectedLoadout: {
       weapon: {
-        itemId: "main:weapon_longsword",
+        itemId: battleObjectId("main:weapon_longsword"),
         unitId: parseSharedUnitId("weapon_longsword"),
         grip: "one_handed",
       },
@@ -709,12 +711,12 @@ test("keeps worn Wild Shape off-hand weapons in the Light-property Bonus Action 
     offHandAttack: weakTrueFormDaggerAttack(),
     selectedLoadout: {
       weapon: {
-        itemId: "main:weapon_shortsword",
+        itemId: battleObjectId("main:weapon_shortsword"),
         unitId: parseSharedUnitId("weapon_shortsword"),
         grip: "one_handed",
       },
       offHandWeapon: {
-        itemId: "offhand:weapon_dagger",
+        itemId: battleObjectId("offhand:weapon_dagger"),
         unitId: parseSharedUnitId("weapon_dagger"),
       },
     },
@@ -905,7 +907,7 @@ test("blocks worn Wild Shape weapon use when form limbs cannot handle objects", 
   const initial = druidWildShapeBattle({
     selectedLoadout: {
       weapon: {
-        itemId: "main:weapon_longsword",
+        itemId: battleObjectId("main:weapon_longsword"),
         unitId: parseSharedUnitId("weapon_longsword"),
         grip: "one_handed",
       },
@@ -960,7 +962,7 @@ test("projects practical worn Wild Shape armor into the effective loadout", () =
     armorClass: heavyArmorClassState(),
     selectedLoadout: {
       armor: {
-        itemId: "armor:equipment_chain_mail",
+        itemId: battleObjectId("armor:equipment_chain_mail"),
         unitId: parseSharedUnitId("equipment_chain_mail"),
       },
     },
@@ -1008,7 +1010,7 @@ test("returns Wild Shape fallen equipment at the explicit object boundary", () =
   const initial = druidWildShapeBattle({
     selectedLoadout: {
       shield: {
-        itemId: "shield:equipment_shield",
+        itemId: battleObjectId("shield:equipment_shield"),
         unitId: parseSharedUnitId("equipment_shield"),
       },
     },
@@ -1065,11 +1067,11 @@ test("returns Wild Shape fallen equipment at the explicit object boundary", () =
 test("rejects invalid Wild Shape equipment disposition choices and converts impossible worn choices to RAW fallback", () => {
   const candidates = wildShapeLoadoutObjectRefs({
     armor: {
-      itemId: "armor:equipment_leather",
+      itemId: battleObjectId("armor:equipment_leather"),
       unitId: parseSharedUnitId("equipment_leather"),
     },
     shield: {
-      itemId: "shield:equipment_shield",
+      itemId: battleObjectId("shield:equipment_shield"),
       unitId: parseSharedUnitId("equipment_shield"),
     },
   });
@@ -1199,7 +1201,7 @@ test("rejects invalid Wild Shape equipment disposition choices and converts impo
 
   const [mainWeapon] = wildShapeLoadoutObjectRefs({
     weapon: {
-      itemId: "main:weapon_quarterstaff",
+      itemId: battleObjectId("main:weapon_quarterstaff"),
       unitId: parseSharedUnitId("weapon_quarterstaff"),
       grip: "one_handed",
     },
@@ -2129,7 +2131,7 @@ test("Beast Spells exposes Shillelagh only while its attached weapon remains usa
     attack: weakTrueFormWeaponAttack("weapon_quarterstaff"),
     selectedLoadout: {
       weapon: {
-        itemId: "main:weapon_quarterstaff",
+        itemId: battleObjectId("main:weapon_quarterstaff"),
         unitId: parseSharedUnitId("weapon_quarterstaff"),
         grip: "one_handed",
       },
@@ -2363,7 +2365,13 @@ function druidWildShapeCreatureInit(input?: {
     ...(input?.armorClass === undefined
       ? {}
       : { armorClass: input.armorClass }),
-    ...(input?.attack === undefined ? {} : { attack: input.attack }),
+    attack:
+      input?.attack ??
+      (input?.selectedLoadout?.weapon === undefined
+        ? null
+        : testCharacterWeaponAttackForUnit(
+            input.selectedLoadout.weapon.unitId,
+          )),
     ...(input?.offHandAttack === undefined
       ? {}
       : { offHandAttack: input.offHandAttack }),
@@ -2431,7 +2439,7 @@ function weakTrueFormWeaponAttack(
     | "weapon_shortsword"
     | "weapon_dagger"
     | "weapon_quarterstaff",
-): NonNullable<CharacterSeedInput["attack"]> {
+): CharacterWeaponAttackActionOption {
   const weapon = unitLibrary.requireUnit(unitId);
   if (weapon.kind !== "weapon") {
     throw new Error("Expected weapon Unit.");
@@ -2621,20 +2629,20 @@ function resolveDruidWildShapeWithoutLoadoutEquipment(
 function wildShapeSelectedLoadout(): CharacterBattleCreatureState["origin"]["selectedLoadout"] {
   return {
     armor: {
-      itemId: "armor:equipment_leather",
+      itemId: battleObjectId("armor:equipment_leather"),
       unitId: parseSharedUnitId("equipment_leather"),
     },
     shield: {
-      itemId: "shield:equipment_shield",
+      itemId: battleObjectId("shield:equipment_shield"),
       unitId: parseSharedUnitId("equipment_shield"),
     },
     weapon: {
-      itemId: "main:weapon_quarterstaff",
+      itemId: battleObjectId("main:weapon_quarterstaff"),
       unitId: parseSharedUnitId("weapon_quarterstaff"),
       grip: "two_handed",
     },
     offHandWeapon: {
-      itemId: "offhand:weapon_dagger",
+      itemId: battleObjectId("offhand:weapon_dagger"),
       unitId: parseSharedUnitId("weapon_dagger"),
     },
   };
@@ -2643,15 +2651,15 @@ function wildShapeSelectedLoadout(): CharacterBattleCreatureState["origin"]["sel
 function wildShapeBattleSelectedLoadout(): CharacterBattleCreatureState["origin"]["selectedLoadout"] {
   return {
     armor: {
-      itemId: "armor:equipment_leather",
+      itemId: battleObjectId("armor:equipment_leather"),
       unitId: parseSharedUnitId("equipment_leather"),
     },
     shield: {
-      itemId: "shield:equipment_shield",
+      itemId: battleObjectId("shield:equipment_shield"),
       unitId: parseSharedUnitId("equipment_shield"),
     },
     weapon: {
-      itemId: "main:weapon_quarterstaff",
+      itemId: battleObjectId("main:weapon_quarterstaff"),
       unitId: parseSharedUnitId("weapon_quarterstaff"),
       grip: "one_handed",
     },

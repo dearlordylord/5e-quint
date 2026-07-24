@@ -4408,7 +4408,7 @@ export const BattleFillSchema: Schema.Schema<
       value: Schema.Struct({
         kind: Schema.Literal("nonmagicalWeaponItem"),
         holderCombatantId: CombatantId,
-        itemId: Schema.NonEmptyTrimmedString,
+        itemId: BattleObjectId,
       }),
     }),
     Schema.Struct({

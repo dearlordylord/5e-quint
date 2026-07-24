@@ -1,3 +1,4 @@
+import { battleObjectId } from "./identity.ts";
 import {
   statBlockId as parseSharedStatBlockId,
   unitId,
@@ -978,12 +979,12 @@ function cunningStrikeBattle(
               offHandAttack: testDaggerAttack(),
               selectedLoadout: {
                 weapon: {
-                  itemId: "main:weapon_shortsword",
+                  itemId: battleObjectId("main:weapon_shortsword"),
                   unitId: unitId("weapon_shortsword"),
                   grip: "one_handed" as const,
                 },
                 offHandWeapon: {
-                  itemId: "off:weapon_dagger",
+                  itemId: battleObjectId("off:weapon_dagger"),
                   unitId: unitId("weapon_dagger"),
                 },
               },

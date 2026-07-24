@@ -1,3 +1,4 @@
+import { battleObjectId } from "./identity.ts";
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME feat_great_weapon_fighting
@@ -335,7 +336,7 @@ function mainWeaponLoadout(
 ): CharacterSelectedLoadout {
   return {
     weapon: {
-      itemId: `main:${unitId}`,
+      itemId: battleObjectId(`main:${unitId}`),
       unitId,
       grip,
     },

@@ -90,7 +90,6 @@ import { attackExecutionSelectionKey } from "../battle-action-options.ts";
 import { type BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
 
 import {
-  battleObjectId,
   type BattleAreaId,
   type BattleObjectId,
   type BattleProcedureExecutionRef,
@@ -1732,15 +1731,11 @@ export function canonicalHeldObjectIdsForActor(
   }
   const loadout = actor.origin.selectedLoadout;
   return [
-    ...(loadout.weapon === undefined
-      ? []
-      : [battleObjectId(loadout.weapon.itemId)]),
+    ...(loadout.weapon === undefined ? [] : [loadout.weapon.itemId]),
     ...(loadout.offHandWeapon === undefined
       ? []
-      : [battleObjectId(loadout.offHandWeapon.itemId)]),
-    ...(loadout.shield === undefined
-      ? []
-      : [battleObjectId(loadout.shield.itemId)]),
+      : [loadout.offHandWeapon.itemId]),
+    ...(loadout.shield === undefined ? [] : [loadout.shield.itemId]),
   ];
 }
 

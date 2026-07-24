@@ -1,3 +1,4 @@
+import { battleObjectId } from "./identity.ts";
 import {
   unitId as parseSharedUnitId,
   statBlockId as parseSharedStatBlockId,
@@ -1841,11 +1842,11 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
           initiative: 20,
           selectedLoadout: {
             shield: {
-              itemId: "shield:equipment_shield",
+              itemId: battleObjectId("shield:equipment_shield"),
               unitId: parseSharedUnitId("equipment_shield"),
             },
             weapon: {
-              itemId: "main:weapon_longsword",
+              itemId: battleObjectId("main:weapon_longsword"),
               unitId: parseSharedUnitId("weapon_longsword"),
               grip: "one_handed",
             },

@@ -1068,7 +1068,7 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
       fills: [
         magicWeaponTargetItemFill(targetHole, {
           holderCombatantId: spellCasterId,
-          itemId: "main:weapon_longsword",
+          itemId: battleObjectId("main:weapon_longsword"),
         }),
       ],
     });
@@ -1138,7 +1138,7 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
       fills: [
         magicWeaponTargetItemFill(targetHole, {
           holderCombatantId: spellCasterId,
-          itemId: "main:weapon_longsword",
+          itemId: battleObjectId("main:weapon_longsword"),
         }),
       ],
     });
@@ -1261,7 +1261,7 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
       fills: [
         magicWeaponTargetItemFill(targetHole, {
           holderCombatantId: spellTargetId,
-          itemId: "main:weapon_longsword",
+          itemId: battleObjectId("main:weapon_longsword"),
         }),
       ],
     });
@@ -1350,7 +1350,7 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
       fills: [
         magicWeaponTargetItemFill(targetHole, {
           holderCombatantId: spellCasterId,
-          itemId: "main:weapon_longsword",
+          itemId: battleObjectId("main:weapon_longsword"),
         }),
       ],
     });
@@ -1422,7 +1422,7 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
         fills: [
           magicWeaponTargetItemFill(rejectedHole, {
             holderCombatantId: spellCasterId,
-            itemId: "main:weapon_longsword",
+            itemId: battleObjectId("main:weapon_longsword"),
           }),
         ],
       }),
@@ -1443,7 +1443,7 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
       fills: [
         magicWeaponTargetItemFill(targetHole, {
           holderCombatantId: spellCasterId,
-          itemId: "main:weapon_longsword",
+          itemId: battleObjectId("main:weapon_longsword"),
         }),
       ],
     });

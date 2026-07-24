@@ -163,6 +163,7 @@ import {
   type CharacterUnitProcedureQuery,
 } from "./character-execution-admission.ts";
 import { admitCharacterWeaponAttackExecutionWeapon } from "./character-weapon-execution-admission.ts";
+import type { CharacterWeaponAttackActionOption } from "./battle-action-options.ts";
 import {
   armorOfShadowsSpellInvocationRef,
   ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SUPPORT_PROFILE,
@@ -803,15 +804,7 @@ type DamageRollValue = Extract<
   BattleFill,
   { readonly kind: "rolledDice" }
 >["value"];
-type TestCharacterWeaponAttack = Extract<
-  NonNullable<
-    Extract<
-      BattleCreatureInit["creatureInit"],
-      { readonly kind: "character" }
-    >["attack"]
-  >,
-  { readonly kind: "weapon" }
->;
+type TestCharacterWeaponAttack = CharacterWeaponAttackActionOption;
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
 });
@@ -3460,36 +3453,34 @@ export function characterSeed(input: {
   >["spellcasting"];
   readonly size?: Size;
 }): BattleCreatureInit {
-  const attack =
-    input.attack === undefined ? testLongswordAttack() : input.attack;
   const selectedLoadout =
     input.selectedLoadout ??
-    (attack === null
+    (input.attack === null
       ? {}
       : {
           weapon: {
-            itemId: `main:${attack.weapon.weaponUnitId}`,
-            unitId: attack.weapon.weaponUnitId,
+            itemId: battleObjectId(
+              `main:${
+                input.attack === undefined
+                  ? "weapon_longsword"
+                  : input.attack.weapon.weaponUnitId
+              }`,
+            ),
+            unitId:
+              input.attack === undefined
+                ? parseUnitId("weapon_longsword")
+                : input.attack.weapon.weaponUnitId,
             grip: "one_handed" as const,
           },
         });
-  const weaponMasteries = input.weaponMasteries;
-  const reconciledAttack =
-    attack === null
-      ? attack
-      : reconcileCharacterSeedWeaponAttack(
-          attack,
-          selectedLoadout.weapon,
-          weaponMasteries,
-        );
-  const reconciledOffHandAttack =
-    input.offHandAttack === undefined
-      ? input.offHandAttack
-      : reconcileCharacterSeedWeaponAttack(
-          input.offHandAttack,
-          selectedLoadout.offHandWeapon,
-          weaponMasteries,
-        );
+  const attack =
+    input.attack === undefined
+      ? input.selectedLoadout !== undefined
+        ? selectedLoadout.weapon === undefined
+          ? null
+          : testCharacterWeaponAttackForUnit(selectedLoadout.weapon.unitId)
+        : testLongswordAttack()
+      : input.attack;
   const classLevels = input.classLevels ?? [
     {
       className: input.spellcasting?.sourceClassName ?? "fighter",
@@ -3542,19 +3533,19 @@ export function characterSeed(input: {
     }
     return { unit: resource.unit, supportProfiles: supportProfiles.right };
   });
-  const weaponPresentationUnitRefs = [
-    reconciledAttack,
-    reconciledOffHandAttack,
-  ].flatMap((candidate) => {
-    if (candidate === null || candidate === undefined) return [];
-    const unit = unitLibrary
-      .listUnits()
-      .find(
-        (entry) =>
-          entry.kind === "weapon" && entry.id === candidate.weapon.weaponUnitId,
-      );
-    return unit?.kind === "weapon" ? [{ unit, supportProfiles: [] }] : [];
-  });
+  const weaponPresentationUnitRefs = [attack, input.offHandAttack].flatMap(
+    (candidate) => {
+      if (candidate === null || candidate === undefined) return [];
+      const unit = unitLibrary
+        .listUnits()
+        .find(
+          (entry) =>
+            entry.kind === "weapon" &&
+            entry.id === candidate.weapon.weaponUnitId,
+        );
+      return unit?.kind === "weapon" ? [{ unit, supportProfiles: [] }] : [];
+    },
+  );
   const characterUnitRefs = [
     ...new Map(
       [
@@ -3596,11 +3587,11 @@ export function characterSeed(input: {
       ...(input.weaponMasteries === undefined
         ? {}
         : { weaponMasteries: input.weaponMasteries }),
-      attack: reconciledAttack,
+      attack,
       unarmedStrike: input.unarmedStrike ?? testUnarmedStrikeDamageAttack(),
-      ...(reconciledOffHandAttack === undefined
+      ...(input.offHandAttack === undefined
         ? {}
-        : { offHandAttack: reconciledOffHandAttack }),
+        : { offHandAttack: input.offHandAttack }),
       ...(input.unitFeatures === undefined
         ? {}
         : { unitFeatures: input.unitFeatures }),
@@ -3616,45 +3607,6 @@ export function characterSeed(input: {
         ? {}
         : { spellcasting: input.spellcasting }),
     },
-  };
-}
-
-function reconcileCharacterSeedWeaponAttack(
-  attack: NonNullable<
-    Extract<
-      BattleCreatureInit["creatureInit"],
-      { readonly kind: "character" }
-    >["attack"]
-  >,
-  loadoutWeapon:
-    | { readonly itemId: string; readonly unitId: UnitRecord["id"] }
-    | undefined,
-  weaponMasteries:
-    | Extract<
-        BattleCreatureInit["creatureInit"],
-        { readonly kind: "character" }
-      >["weaponMasteries"]
-    | undefined,
-): NonNullable<
-  Extract<
-    BattleCreatureInit["creatureInit"],
-    { readonly kind: "character" }
-  >["attack"]
-> {
-  const loadoutObjectId =
-    loadoutWeapon === undefined
-      ? attack.weaponObjectId
-      : battleObjectId(loadoutWeapon.itemId);
-  const hasWeaponMastery =
-    weaponMasteries === undefined
-      ? attack.hasWeaponMastery
-      : weaponMasteries.some(
-          (mastery) => mastery.weaponUnitId === attack.weapon.weaponUnitId,
-        );
-  return {
-    ...attack,
-    weaponObjectId: loadoutObjectId,
-    hasWeaponMastery,
   };
 }
 
@@ -3691,10 +3643,12 @@ export function heavyArmorClassState(): ReturnType<
   };
 }
 
-export function testLongswordAttack(): TestCharacterWeaponAttack {
-  const weapon = unitLibrary.requireUnit("weapon_longsword");
+export function testCharacterWeaponAttackForUnit(
+  unitId: UnitRecord["id"],
+): TestCharacterWeaponAttack {
+  const weapon = unitLibrary.requireUnit(unitId);
   if (weapon.kind !== "weapon") {
-    throw new Error("Expected Longsword weapon Unit.");
+    throw new Error(`Expected weapon Unit, got ${weapon.kind}.`);
   }
 
   return {
@@ -3707,6 +3661,10 @@ export function testLongswordAttack(): TestCharacterWeaponAttack {
     ability: "str",
     abilityModifier: battleAbilityModifier(3),
   };
+}
+
+export function testLongswordAttack(): TestCharacterWeaponAttack {
+  return testCharacterWeaponAttackForUnit(parseUnitId("weapon_longsword"));
 }
 
 export function testUnarmedStrikeDamageAttack(): Extract<

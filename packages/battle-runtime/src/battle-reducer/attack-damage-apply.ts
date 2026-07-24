@@ -16,7 +16,6 @@ import {
 import { isMonkWeapon } from "@dnd/shared-algebras/martial-arts-algebra";
 import type { HoleInstanceKey } from "@dnd/shared-algebras/runtime-hole-algebra";
 import {
-  battleObjectId,
   type BattleObjectId,
   type BattleProcedureExecutionRef,
   type CombatantId,
@@ -1144,8 +1143,8 @@ function mainHandWeaponItemIdForAttack(
   }
   const mainHandWeapon = actor.origin.selectedLoadout.weapon;
   return mainHandWeapon !== undefined &&
-    battleObjectId(mainHandWeapon.itemId) === attack.weaponObjectId
-    ? battleObjectId(mainHandWeapon.itemId)
+    mainHandWeapon.itemId === attack.weaponObjectId
+    ? mainHandWeapon.itemId
     : undefined;
 }
 
@@ -1161,8 +1160,8 @@ function offHandWeaponItemIdForAttack(
   }
   const offHandWeapon = actor.origin.selectedLoadout.offHandWeapon;
   return offHandWeapon !== undefined &&
-    battleObjectId(offHandWeapon.itemId) === attack.weaponObjectId
-    ? battleObjectId(offHandWeapon.itemId)
+    offHandWeapon.itemId === attack.weaponObjectId
+    ? offHandWeapon.itemId
     : undefined;
 }
 
@@ -1371,18 +1370,15 @@ export function heldWeaponItemIdForAttack(
   const actor = state.combatants.get(actorId);
   if (actor?.origin.kind !== "character") return attack.weaponObjectId;
   const mainWeapon = actor.origin.selectedLoadout.weapon;
-  if (
-    mainWeapon !== undefined &&
-    battleObjectId(mainWeapon.itemId) === attack.weaponObjectId
-  ) {
-    return battleObjectId(mainWeapon.itemId);
+  if (mainWeapon !== undefined && mainWeapon.itemId === attack.weaponObjectId) {
+    return mainWeapon.itemId;
   }
   const offHandWeapon = actor.origin.selectedLoadout.offHandWeapon;
   if (
     offHandWeapon !== undefined &&
-    battleObjectId(offHandWeapon.itemId) === attack.weaponObjectId
+    offHandWeapon.itemId === attack.weaponObjectId
   ) {
-    return battleObjectId(offHandWeapon.itemId);
+    return offHandWeapon.itemId;
   }
   return attack.weaponObjectId;
 }
@@ -1396,8 +1392,8 @@ export function offHandWeaponItemIdForActor(
   if (actor?.origin.kind !== "character") return undefined;
   const offHandWeapon = actor.origin.selectedLoadout.offHandWeapon;
   return offHandWeapon !== undefined &&
-    battleObjectId(offHandWeapon.itemId) === offHand.weaponObjectId
-    ? battleObjectId(offHandWeapon.itemId)
+    offHandWeapon.itemId === offHand.weaponObjectId
+    ? offHandWeapon.itemId
     : undefined;
 }
 
@@ -1439,13 +1435,12 @@ function martialArtsLoadoutEligible(
   const mainWeaponEligible =
     loadout.weapon === undefined ||
     (origin.attack !== null &&
-      battleObjectId(loadout.weapon.itemId) === origin.attack.weaponObjectId &&
+      loadout.weapon.itemId === origin.attack.weaponObjectId &&
       isMonkWeapon(origin.attack.weapon));
   const offHandWeaponEligible =
     loadout.offHandWeapon === undefined ||
     (origin.offHandAttack !== undefined &&
-      battleObjectId(loadout.offHandWeapon.itemId) ===
-        origin.offHandAttack.weaponObjectId &&
+      loadout.offHandWeapon.itemId === origin.offHandAttack.weaponObjectId &&
       isMonkWeapon(origin.offHandAttack.weapon));
   return mainWeaponEligible && offHandWeaponEligible;
 }

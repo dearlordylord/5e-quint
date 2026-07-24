@@ -1,3 +1,4 @@
+import { battleObjectId } from "./identity.ts";
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import {
   startBattleRight,
@@ -628,11 +629,11 @@ describe("battle runtime: attack rolls and damage", () => {
         armorClass: heavyArmorClassState(),
         selectedLoadout: {
           armor: {
-            itemId: "armor:equipment_chain_mail",
+            itemId: battleObjectId("armor:equipment_chain_mail"),
             unitId: parseSharedUnitId("equipment_chain_mail"),
           },
           weapon: {
-            itemId: "main:weapon_dagger",
+            itemId: battleObjectId("main:weapon_dagger"),
             unitId: parseSharedUnitId("weapon_dagger"),
             grip: "one_handed" as const,
           },
@@ -643,7 +644,7 @@ describe("battle runtime: attack rolls and damage", () => {
         name: "shield",
         selectedLoadout: {
           shield: {
-            itemId: "shield:equipment_shield",
+            itemId: battleObjectId("shield:equipment_shield"),
             unitId: parseSharedUnitId("equipment_shield"),
           },
         },
@@ -658,7 +659,7 @@ describe("battle runtime: attack rolls and damage", () => {
         armorClass: undefined,
         selectedLoadout: {
           weapon: {
-            itemId: "main:weapon_longsword",
+            itemId: battleObjectId("main:weapon_longsword"),
             unitId: parseSharedUnitId("weapon_longsword"),
             grip: "one_handed" as const,
           },

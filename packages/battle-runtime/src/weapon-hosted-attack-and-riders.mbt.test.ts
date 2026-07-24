@@ -958,7 +958,7 @@ function routeWeaponEnhancementItemTarget(): readonly ReducerRouteEvent[] {
       fills: [
         magicWeaponTargetItemFill(target, {
           holderCombatantId: spellCasterId,
-          itemId: "main:weapon_longsword",
+          itemId: battleObjectId("main:weapon_longsword"),
         }),
       ],
     }),
@@ -1592,7 +1592,7 @@ function fillMagicWeaponTarget(
       fills: [
         magicWeaponTargetItemFill(target, {
           holderCombatantId: spellCasterId,
-          itemId: "main:weapon_longsword",
+          itemId: battleObjectId("main:weapon_longsword"),
         }),
       ],
     }),

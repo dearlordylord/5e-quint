@@ -2679,7 +2679,7 @@ function level1BuffMarkSmiteCreature(input: {
           ? {}
           : {
               weapon: {
-                itemId: `main:${attack.weapon.weaponUnitId}`,
+                itemId: battleObjectId(`main:${attack.weapon.weaponUnitId}`),
                 unitId: attack.weapon.weaponUnitId,
                 grip: "one_handed" as const,
               },

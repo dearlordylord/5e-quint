@@ -1,3 +1,4 @@
+import { battleObjectId } from "./identity.ts";
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { Schema } from "effect";
 import * as Either from "effect/Either";
@@ -56,12 +57,12 @@ function identicalDaggerSession(name = "Dagger") {
         characterUnitRefs: [{ unit: { ...dagger, name }, supportProfiles: [] }],
         selectedLoadout: {
           weapon: {
-            itemId: "main:weapon_dagger",
+            itemId: battleObjectId("main:weapon_dagger"),
             unitId: parseSharedUnitId("weapon_dagger"),
             grip: "one_handed",
           },
           offHandWeapon: {
-            itemId: "off:weapon_dagger",
+            itemId: battleObjectId("off:weapon_dagger"),
             unitId: parseSharedUnitId("weapon_dagger"),
           },
         },

@@ -1,3 +1,4 @@
+import { battleObjectId } from "./identity.ts";
 import {
   abilityModifier,
   armorClassDelta,
@@ -992,7 +993,7 @@ export function shieldLoadout(): Extract<
 >["selectedLoadout"] {
   return {
     shield: {
-      itemId: "shield:equipment_shield",
+      itemId: battleObjectId("shield:equipment_shield"),
       unitId: unitId("equipment_shield"),
     },
   };

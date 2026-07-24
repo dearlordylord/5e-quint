@@ -206,15 +206,22 @@ export function characterBattleLoadoutFromBuild(
   return {
     ...(loadout.armor == null || armorUnitId == null
       ? {}
-      : { armor: { itemId: loadout.armor, unitId: armorUnitId } }),
+      : {
+          armor: { itemId: battleObjectId(loadout.armor), unitId: armorUnitId },
+        }),
     ...(loadout.shield == null || shieldUnitId == null
       ? {}
-      : { shield: { itemId: loadout.shield, unitId: shieldUnitId } }),
+      : {
+          shield: {
+            itemId: battleObjectId(loadout.shield),
+            unitId: shieldUnitId,
+          },
+        }),
     ...(loadout.weapon == null || weaponUnitId == null
       ? {}
       : {
           weapon: {
-            itemId: loadout.weapon.itemId,
+            itemId: battleObjectId(loadout.weapon.itemId),
             unitId: weaponUnitId,
             grip: loadout.weapon.grip,
           },
@@ -223,7 +230,7 @@ export function characterBattleLoadoutFromBuild(
       ? {}
       : {
           offHandWeapon: {
-            itemId: loadout.offHandWeapon.itemId,
+            itemId: battleObjectId(loadout.offHandWeapon.itemId),
             unitId: offHandWeaponUnitId,
           },
         }),

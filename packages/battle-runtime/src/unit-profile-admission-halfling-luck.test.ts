@@ -483,12 +483,12 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
           unitFeatures: [characterBattleFeatureInitForTest(unit)],
           selectedLoadout: {
             weapon: {
-              itemId: "main:weapon_shortsword",
+              itemId: battleObjectId("main:weapon_shortsword"),
               unitId: parseSharedUnitId("weapon_shortsword"),
               grip: "one_handed",
             },
             offHandWeapon: {
-              itemId: "off:weapon_dagger",
+              itemId: battleObjectId("off:weapon_dagger"),
               unitId: parseSharedUnitId("weapon_dagger"),
             },
           },

@@ -17296,7 +17296,7 @@ function rogueCreatureInit(input: {
       tempHp: Hp(0),
       selectedLoadout: {
         weapon: {
-          itemId: "main:weapon_dagger",
+          itemId: battleObjectId("main:weapon_dagger"),
           unitId: parseSharedUnitId("weapon_dagger"),
           grip: "one_handed",
         },
@@ -17401,7 +17401,7 @@ function rogueSteadyAimCreatureInit(input: {
       tempHp: Hp(0),
       selectedLoadout: {
         weapon: {
-          itemId: "main:weapon_dagger",
+          itemId: battleObjectId("main:weapon_dagger"),
           unitId: parseSharedUnitId("weapon_dagger"),
           grip: "one_handed",
         },
@@ -17458,7 +17458,7 @@ function extraAttackCreatureInit(input: {
       tempHp: Hp(0),
       selectedLoadout: {
         weapon: {
-          itemId: "main:weapon_dagger",
+          itemId: battleObjectId("main:weapon_dagger"),
           unitId: parseSharedUnitId("weapon_dagger"),
           grip: "one_handed",
         },

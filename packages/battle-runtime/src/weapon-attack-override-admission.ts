@@ -14,11 +14,7 @@ import {
   characterBattleLevel,
   type CharacterBattleClassLevels,
 } from "./character-class-level.ts";
-import {
-  battleObjectId,
-  type BattleObjectId,
-  type CombatantId,
-} from "./identity.ts";
+import { type BattleObjectId, type CombatantId } from "./identity.ts";
 import type { WeaponAttackOverrideProcedureFacts } from "./procedure-facts/weapon-attack-override.ts";
 import { sameStringSet } from "./battle-reducer/spells-execution-facts.ts";
 import {
@@ -163,12 +159,12 @@ function attachedWeaponAttacksEligibleForOverride(
     !loadoutWeaponItemIsUsableDuringWildShape({
       loadout: origin.selectedLoadout,
       activeWildShape,
-      itemId: battleObjectId(origin.selectedLoadout.weapon.itemId),
+      itemId: origin.selectedLoadout.weapon.itemId,
     })
       ? []
       : [
           {
-            itemId: battleObjectId(origin.selectedLoadout.weapon.itemId),
+            itemId: origin.selectedLoadout.weapon.itemId,
             attack: origin.attack,
           },
         ]),
@@ -177,12 +173,12 @@ function attachedWeaponAttacksEligibleForOverride(
     !loadoutWeaponItemIsUsableDuringWildShape({
       loadout: origin.selectedLoadout,
       activeWildShape,
-      itemId: battleObjectId(origin.selectedLoadout.offHandWeapon.itemId),
+      itemId: origin.selectedLoadout.offHandWeapon.itemId,
     })
       ? []
       : [
           {
-            itemId: battleObjectId(origin.selectedLoadout.offHandWeapon.itemId),
+            itemId: origin.selectedLoadout.offHandWeapon.itemId,
             attack: origin.offHandAttack,
           },
         ]),

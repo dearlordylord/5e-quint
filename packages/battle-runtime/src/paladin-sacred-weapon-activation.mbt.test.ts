@@ -660,7 +660,7 @@ function withMainWeaponItemId(state: BattleState, itemId: string): BattleState {
         ...actor.origin,
         selectedLoadout: {
           ...actor.origin.selectedLoadout,
-          weapon: { ...weapon, itemId },
+          weapon: { ...weapon, itemId: battleObjectId(itemId) },
         },
         attack: updatedAttack,
       },

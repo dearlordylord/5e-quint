@@ -1,3 +1,4 @@
+import { battleObjectId } from "./identity.ts";
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME feat_two_weapon_fighting
@@ -413,12 +414,12 @@ function lightAttackBattle(input: {
         characterUnitRefs: input.characterUnitRefs ?? [],
         selectedLoadout: {
           weapon: {
-            itemId: "main:weapon_shortsword",
+            itemId: battleObjectId("main:weapon_shortsword"),
             unitId: parseSharedUnitId("weapon_shortsword"),
             grip: "one_handed",
           },
           offHandWeapon: {
-            itemId: "off:weapon_dagger",
+            itemId: battleObjectId("off:weapon_dagger"),
             unitId: parseSharedUnitId("weapon_dagger"),
           },
         },

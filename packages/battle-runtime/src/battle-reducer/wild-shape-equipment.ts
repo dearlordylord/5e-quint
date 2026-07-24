@@ -1,5 +1,5 @@
 import type { CharacterBattleLoadoutRef } from "../character-creature-execution-facts.ts";
-import { battleObjectId, type BattleObjectId } from "../identity.ts";
+import type { BattleObjectId } from "../identity.ts";
 import {
   WILD_SHAPE_EFFECTIVE_LOADOUT_WORN_KINDS,
   type ActiveWildShapeEquipmentDisposition,
@@ -41,7 +41,7 @@ export function wildShapeLoadoutObjectRefs(
       : [
           {
             kind: "armor" as const,
-            objectId: battleObjectId(loadout.armor.itemId),
+            objectId: loadout.armor.itemId,
           },
         ]),
     ...(loadout.shield === undefined
@@ -49,7 +49,7 @@ export function wildShapeLoadoutObjectRefs(
       : [
           {
             kind: "shield" as const,
-            objectId: battleObjectId(loadout.shield.itemId),
+            objectId: loadout.shield.itemId,
           },
         ]),
     ...(loadout.weapon === undefined
@@ -57,7 +57,7 @@ export function wildShapeLoadoutObjectRefs(
       : [
           {
             kind: "mainWeapon" as const,
-            objectId: battleObjectId(loadout.weapon.itemId),
+            objectId: loadout.weapon.itemId,
           },
         ]),
     ...(loadout.offHandWeapon === undefined
@@ -65,7 +65,7 @@ export function wildShapeLoadoutObjectRefs(
       : [
           {
             kind: "offHandWeapon" as const,
-            objectId: battleObjectId(loadout.offHandWeapon.itemId),
+            objectId: loadout.offHandWeapon.itemId,
           },
         ]),
   ];
@@ -276,7 +276,7 @@ export function loadoutWeaponItemIsUsableDuringWildShape(input: {
       formLimbs: input.activeWildShape.formLimbs,
       equipmentDisposition: input.activeWildShape.equipmentDisposition,
       objectKind: heldWeapon.objectKind,
-      objectId: battleObjectId(heldWeapon.itemId),
+      objectId: heldWeapon.itemId,
     })
   );
 }

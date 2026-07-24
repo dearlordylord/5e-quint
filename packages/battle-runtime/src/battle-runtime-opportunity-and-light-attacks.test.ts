@@ -1,3 +1,4 @@
+import { battleObjectId } from "./identity.ts";
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
@@ -87,12 +88,12 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
           offHandAttack: testDaggerAttack(),
           selectedLoadout: {
             weapon: {
-              itemId: "main:weapon_shortsword",
+              itemId: battleObjectId("main:weapon_shortsword"),
               unitId: parseSharedUnitId("weapon_shortsword"),
               grip: "one_handed",
             },
             offHandWeapon: {
-              itemId: "off:weapon_dagger",
+              itemId: battleObjectId("off:weapon_dagger"),
               unitId: parseSharedUnitId("weapon_dagger"),
             },
           },
@@ -204,12 +205,12 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
           offHandAttack: testDaggerAttack(),
           selectedLoadout: {
             weapon: {
-              itemId: "main:weapon_shortsword",
+              itemId: battleObjectId("main:weapon_shortsword"),
               unitId: parseSharedUnitId("weapon_shortsword"),
               grip: "one_handed",
             },
             offHandWeapon: {
-              itemId: "off:weapon_dagger",
+              itemId: battleObjectId("off:weapon_dagger"),
               unitId: parseSharedUnitId("weapon_dagger"),
             },
           },
@@ -343,12 +344,12 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
           offHandAttack: testDaggerAttack(),
           selectedLoadout: {
             weapon: {
-              itemId: "main:weapon_shortsword",
+              itemId: battleObjectId("main:weapon_shortsword"),
               unitId: parseSharedUnitId("weapon_shortsword"),
               grip: "one_handed",
             },
             offHandWeapon: {
-              itemId: "off:weapon_dagger",
+              itemId: battleObjectId("off:weapon_dagger"),
               unitId: parseSharedUnitId("weapon_dagger"),
             },
           },
@@ -496,12 +497,12 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
           offHandAttack: testDaggerAttack(),
           selectedLoadout: {
             weapon: {
-              itemId: "main:weapon_shortsword",
+              itemId: battleObjectId("main:weapon_shortsword"),
               unitId: parseSharedUnitId("weapon_shortsword"),
               grip: "one_handed",
             },
             offHandWeapon: {
-              itemId: "off:weapon_dagger",
+              itemId: battleObjectId("off:weapon_dagger"),
               unitId: parseSharedUnitId("weapon_dagger"),
             },
           },
@@ -602,12 +603,12 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
           offHandAttack: testDaggerAttack(),
           selectedLoadout: {
             weapon: {
-              itemId: "main:dagger-1",
+              itemId: battleObjectId("main:dagger-1"),
               unitId: parseSharedUnitId("weapon_dagger"),
               grip: "one_handed",
             },
             offHandWeapon: {
-              itemId: "off:dagger-2",
+              itemId: battleObjectId("off:dagger-2"),
               unitId: parseSharedUnitId("weapon_dagger"),
             },
           },

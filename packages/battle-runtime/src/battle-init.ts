@@ -52,6 +52,14 @@ export type BattleUnitRef = {
   readonly supportProfiles: readonly BattleUnitSupportProfile[];
 };
 
+// Init-time weapon attack facts omit the execution references and derived
+// mastery flag; those are computed from the selected loadout and mastery
+// selections so the init contract cannot carry mismatched derived state.
+export type CharacterBattleCreatureInitWeaponAttack = Omit<
+  CharacterWeaponAttackActionOption,
+  "weaponObjectId" | "hasWeaponMastery"
+>;
+
 import type {
   BattleWalkSpeed,
   CharacterBattleD20Statistics,
@@ -225,9 +233,9 @@ export type CharacterBattleCreatureInit = {
   readonly zeroHpLifecycle?: CharacterZeroHpLifecycleInit;
   readonly selectedLoadout: CharacterBattleLoadoutRef;
   readonly weaponMasteries?: readonly CharacterBattleWeaponMasterySelection[];
-  readonly attack: CharacterWeaponAttackActionOption | null;
+  readonly attack: CharacterBattleCreatureInitWeaponAttack | null;
   readonly unarmedStrike: CharacterUnarmedStrikeActionOption;
-  readonly offHandAttack?: CharacterWeaponAttackActionOption | undefined;
+  readonly offHandAttack?: CharacterBattleCreatureInitWeaponAttack | undefined;
   readonly unitFeatures?: readonly CharacterBattleFeatureInit[];
   readonly invocationFeatures?: readonly CharacterBattleInvocationFeature[];
   readonly resources?: readonly CharacterBattleResourceInit[];

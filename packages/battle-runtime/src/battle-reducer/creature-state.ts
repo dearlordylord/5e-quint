@@ -26,6 +26,7 @@ import {
   validDeathSaveRuntimeState,
 } from "@dnd/shared-algebras/death-saves-algebra";
 import { initiativeEntries } from "@dnd/shared-algebras/initiative-algebra";
+import type { UnitId } from "@dnd/shared/game-facts";
 import type { UnitRecord } from "@dnd/surface/surface/types";
 import type { ZeroHpLifecycle } from "../zero-hp-lifecycle.ts";
 import {
@@ -33,6 +34,7 @@ import {
   battleExecutionScopeOrdinal,
   type BattleId,
   type BattleExecutionScopeOrdinal,
+  type BattleObjectId,
   type CombatantId,
   type InitiativeScore,
 } from "../identity.ts";
@@ -41,7 +43,9 @@ import type {
   BattlePositiveHpUnconscious,
   BattleUnitRef,
   CharacterBattleCreatureInit,
+  CharacterBattleCreatureInitWeaponAttack,
 } from "../battle-init.ts";
+import type { CharacterWeaponAttackActionOption } from "../battle-action-options.ts";
 import {
   characterBattleInvocationSpellAccessInitIssue,
   characterBattleMetamagicInitIssue,
@@ -146,6 +150,49 @@ function isStatBlockBattleCreatureState(
   return actor.origin.kind === "statBlock";
 }
 
+function characterInitWeaponAttackExecutionRefs(
+  attack: CharacterBattleCreatureInitWeaponAttack,
+  loadoutWeapon:
+    | { readonly itemId: BattleObjectId; readonly unitId: UnitId }
+    | undefined,
+  weaponMasteries: CharacterBattleCreatureInit["weaponMasteries"],
+): {
+  readonly weaponObjectId: BattleObjectId;
+  readonly hasWeaponMastery: boolean;
+} {
+  if (
+    loadoutWeapon === undefined ||
+    loadoutWeapon.unitId !== attack.weapon.weaponUnitId
+  ) {
+    throw new Error(
+      "Character battle init weapon attack must match the selected loadout weapon.",
+    );
+  }
+  return {
+    weaponObjectId: loadoutWeapon.itemId,
+    hasWeaponMastery: (weaponMasteries ?? []).some(
+      (mastery) => mastery.weaponUnitId === attack.weapon.weaponUnitId,
+    ),
+  };
+}
+
+function characterInitWeaponAttackWithExecutionRefs(
+  attack: CharacterBattleCreatureInitWeaponAttack,
+  loadoutWeapon:
+    | { readonly itemId: BattleObjectId; readonly unitId: UnitId }
+    | undefined,
+  weaponMasteries: CharacterBattleCreatureInit["weaponMasteries"],
+): CharacterWeaponAttackActionOption {
+  return {
+    ...attack,
+    ...characterInitWeaponAttackExecutionRefs(
+      attack,
+      loadoutWeapon,
+      weaponMasteries,
+    ),
+  };
+}
+
 export function battleCreatureStateAdmissionFromInit(
   battleId: BattleId,
   input: BattleCreatureInit,
@@ -216,15 +263,31 @@ export function battleCreatureStateAdmissionFromInit(
     const attackScopeOrdinal = battleExecutionScopeOrdinal(
       Number(characterScopeOrdinal) + 1,
     );
+    const initAttack =
+      creatureInit.attack === null
+        ? null
+        : characterInitWeaponAttackWithExecutionRefs(
+            creatureInit.attack,
+            creatureInit.selectedLoadout.weapon,
+            creatureInit.weaponMasteries,
+          );
+    const initOffHandAttack =
+      creatureInit.offHandAttack === undefined
+        ? undefined
+        : characterInitWeaponAttackWithExecutionRefs(
+            creatureInit.offHandAttack,
+            creatureInit.selectedLoadout.offHandWeapon,
+            creatureInit.weaponMasteries,
+          );
     const attackExecution = admitCharacterAttackExecution({
       battleId,
       combatantId: input.combatantId,
       startingScopeOrdinal: attackScopeOrdinal,
-      attack: creatureInit.attack,
+      attack: initAttack,
       unarmedStrike: creatureInit.unarmedStrike,
-      ...(creatureInit.offHandAttack === undefined
+      ...(initOffHandAttack === undefined
         ? {}
-        : { offHandAttack: creatureInit.offHandAttack }),
+        : { offHandAttack: initOffHandAttack }),
     });
     const executionCohort = statBlockExecutionAdmissionCohort(
       battleId,

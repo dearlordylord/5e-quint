@@ -23,7 +23,7 @@ import {
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
 import { maybeOpenInterruptWindow, snapshotBattle } from "../dispatcher.ts";
-import { battleObjectId, type CombatantId } from "../../identity.ts";
+import type { CombatantId } from "../../identity.ts";
 import { battleWeaponItemHasMagicWeaponEnhancement } from "../attack-damage-apply.ts";
 import { activeDruidWildShapeEffect } from "../druid-wild-shape.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
@@ -236,7 +236,7 @@ function resolveMagicWeaponEnhancement(
     battleWeaponItemHasMagicWeaponEnhancement(
       input.input.state,
       targetItem.holderCombatantId,
-      battleObjectId(targetItem.itemId),
+      targetItem.itemId,
       {
         exceptSourceCombatantId: input.actorId,
         exceptSourceProcedureRef: input.invocation.sourceProcedureRef,
@@ -292,7 +292,7 @@ function resolveMagicWeaponEnhancement(
       sourceProcedureRef: input.invocation.sourceProcedureRef,
       sourceCombatantId: input.actorId,
       holderCombatantId: targetItem.holderCombatantId,
-      weaponItemId: battleObjectId(targetItem.itemId),
+      weaponItemId: targetItem.itemId,
       bonus: input.invocation.bonus,
       expiresAt: {
         kind: "duration",
@@ -342,7 +342,7 @@ function battleMagicWeaponTargetItemIsHeldWeapon(
           formLimbs: activeWildShape.formLimbs,
           equipmentDisposition: activeWildShape.equipmentDisposition,
           objectKind: "mainWeapon",
-          objectId: battleObjectId(main.itemId),
+          objectId: main.itemId,
         })) ||
       (offHand !== undefined &&
         offHand.itemId === targetItem.itemId &&
@@ -351,7 +351,7 @@ function battleMagicWeaponTargetItemIsHeldWeapon(
           formLimbs: activeWildShape.formLimbs,
           equipmentDisposition: activeWildShape.equipmentDisposition,
           objectKind: "offHandWeapon",
-          objectId: battleObjectId(offHand.itemId),
+          objectId: offHand.itemId,
         }))
     );
   }

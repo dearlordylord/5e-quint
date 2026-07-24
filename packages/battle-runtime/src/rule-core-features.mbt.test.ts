@@ -2147,7 +2147,7 @@ function featureActor(input: {
           ? {}
           : {
               weapon: {
-                itemId: "main:feature-weapon",
+                itemId: battleObjectId("main:feature-weapon"),
                 unitId: attack.weapon.weaponUnitId,
                 grip: "one_handed" as const,
               },

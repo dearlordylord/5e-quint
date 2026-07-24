@@ -1,6 +1,7 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleActiveEffectExecutionRefForTest } from "./battle-runtime-test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
+import { battleObjectId } from "./identity.ts";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -682,7 +683,7 @@ describe("weapon-hosted reducer route call segments", () => {
     );
     const magicFill = magicWeaponTargetItemFill(magicTarget, {
       holderCombatantId: spellCasterId,
-      itemId: "main:weapon_longsword",
+      itemId: battleObjectId("main:weapon_longsword"),
     });
     const magicResolution = requireResolved(
       resolveBattleSubject({

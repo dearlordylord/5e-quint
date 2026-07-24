@@ -53,7 +53,6 @@ import {
   type CharacterBattleResourceState,
 } from "../character-battle-resource-execution.ts";
 import {
-  battleObjectId,
   CombatantId,
   type BattleObjectId,
   type BattleProcedureExecutionRef,
@@ -502,7 +501,7 @@ function magicActionSaveGatedConditionActs(
 }
 
 type SacredWeaponHeldMeleeWeapon = {
-  readonly itemId: string;
+  readonly itemId: BattleObjectId;
   readonly attackName: string;
 };
 
@@ -540,7 +539,7 @@ function paladinSacredWeaponActs(
         tag: "unitFeatureHeldWeaponActivation" as const,
         actorId: actor.combatantId,
         procedureRef,
-        weaponItemId: battleObjectId(weapon.itemId),
+        weaponItemId: weapon.itemId,
       },
       initialHoles: [],
     }));
@@ -589,12 +588,12 @@ function sacredWeaponHeldMeleeWeapons(
   if (
     main !== undefined &&
     actor.origin.attack?.kind === "weapon" &&
-    actor.origin.attack.weaponObjectId === battleObjectId(main.itemId) &&
+    actor.origin.attack.weaponObjectId === main.itemId &&
     wildShapeCanUseLoadoutWeaponObject({
       loadout: actor.origin.selectedLoadout,
       activeWildShape,
       objectKind: "mainWeapon",
-      objectId: battleObjectId(main.itemId),
+      objectId: main.itemId,
     }) &&
     actor.origin.attack.weapon.usage === "melee"
   ) {
@@ -607,13 +606,12 @@ function sacredWeaponHeldMeleeWeapons(
   if (
     offHand !== undefined &&
     actor.origin.offHandAttack?.kind === "weapon" &&
-    actor.origin.offHandAttack.weaponObjectId ===
-      battleObjectId(offHand.itemId) &&
+    actor.origin.offHandAttack.weaponObjectId === offHand.itemId &&
     wildShapeCanUseLoadoutWeaponObject({
       loadout: actor.origin.selectedLoadout,
       activeWildShape,
       objectKind: "offHandWeapon",
-      objectId: battleObjectId(offHand.itemId),
+      objectId: offHand.itemId,
     }) &&
     actor.origin.offHandAttack.weapon.usage === "melee"
   ) {
@@ -913,7 +911,7 @@ export function resolveUnitFeatureHeldWeaponActivation(
   const unitFeature = procedure.execution;
   if (
     !sacredWeaponHeldMeleeWeapons(actor).some(
-      (weapon) => battleObjectId(weapon.itemId) === input.subject.weaponItemId,
+      (weapon) => weapon.itemId === input.subject.weaponItemId,
     )
   ) {
     return invalidResult(
