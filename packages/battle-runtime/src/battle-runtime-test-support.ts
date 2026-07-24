@@ -163,6 +163,7 @@ import {
   type CharacterUnitProcedureQuery,
 } from "./character-execution-admission.ts";
 import { admitCharacterWeaponAttackExecutionWeapon } from "./character-weapon-execution-admission.ts";
+import { characterBattleCreatureInitWeaponAttack } from "./battle-init.ts";
 import type { CharacterWeaponAttackActionOption } from "./battle-action-options.ts";
 import {
   armorOfShadowsSpellInvocationRef,
@@ -3481,6 +3482,8 @@ export function characterSeed(input: {
           : testCharacterWeaponAttackForUnit(selectedLoadout.weapon.unitId)
         : testLongswordAttack()
       : input.attack;
+  const initAttack =
+    attack === null ? null : characterBattleCreatureInitWeaponAttack(attack);
   const classLevels = input.classLevels ?? [
     {
       className: input.spellcasting?.sourceClassName ?? "fighter",
@@ -3587,11 +3590,15 @@ export function characterSeed(input: {
       ...(input.weaponMasteries === undefined
         ? {}
         : { weaponMasteries: input.weaponMasteries }),
-      attack,
+      attack: initAttack,
       unarmedStrike: input.unarmedStrike ?? testUnarmedStrikeDamageAttack(),
       ...(input.offHandAttack === undefined
         ? {}
-        : { offHandAttack: input.offHandAttack }),
+        : {
+            offHandAttack: characterBattleCreatureInitWeaponAttack(
+              input.offHandAttack,
+            ),
+          }),
       ...(input.unitFeatures === undefined
         ? {}
         : { unitFeatures: input.unitFeatures }),

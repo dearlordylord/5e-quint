@@ -10,27 +10,33 @@ export type CharacterWeaponAttackExecutionAdmission = {
   readonly hasWeaponMastery: boolean;
 };
 
+export function admitCharacterWeaponExecutionWeapon(
+  weapon: WeaponRecord,
+): CharacterWeaponAttackExecutionWeapon {
+  return {
+    weaponUnitId: weapon.id,
+    ...(weapon.attachedWeaponAttackOverrideEligibility === undefined
+      ? {}
+      : {
+          attachedWeaponAttackOverrideEligibility:
+            weapon.attachedWeaponAttackOverrideEligibility,
+        }),
+    category: weapon.category,
+    usage: weapon.usage,
+    damage: weapon.damage,
+    properties: weapon.properties ?? [],
+    mastery: weapon.mastery,
+    costGp: weapon.costGp,
+  };
+}
+
 export function admitCharacterWeaponAttackExecutionWeapon(
   weapon: WeaponRecord,
   objectId: BattleObjectId,
   weaponMasteries: readonly { readonly weaponUnitId: UnitId }[],
 ): CharacterWeaponAttackExecutionAdmission {
   return {
-    weapon: {
-      weaponUnitId: weapon.id,
-      ...(weapon.attachedWeaponAttackOverrideEligibility === undefined
-        ? {}
-        : {
-            attachedWeaponAttackOverrideEligibility:
-              weapon.attachedWeaponAttackOverrideEligibility,
-          }),
-      category: weapon.category,
-      usage: weapon.usage,
-      damage: weapon.damage,
-      properties: weapon.properties ?? [],
-      mastery: weapon.mastery,
-      costGp: weapon.costGp,
-    },
+    weapon: admitCharacterWeaponExecutionWeapon(weapon),
     weaponObjectId: objectId,
     hasWeaponMastery: weaponMasteries.some(
       (mastery) => mastery.weaponUnitId === weapon.id,

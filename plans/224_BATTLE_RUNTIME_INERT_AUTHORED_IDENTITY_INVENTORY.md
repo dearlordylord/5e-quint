@@ -149,7 +149,7 @@ Fields in this section are owned by composition/selection. They select which mec
 
 | Field | `CharacterBattleWeaponMasterySelection.weaponUnitId: UnitId` selects which weapons the character has mastery with at composition time. The admitted execution weapon carries `hasWeaponMastery: boolean`. |
 | Domain owner | Composition / selection (player-chosen mastery weapons). |
-| Consumer | `character-weapon-execution-admission.ts::admitCharacterWeaponAttackExecutionWeapon` computes `hasWeaponMastery` from the selected masteries and the weapon Unit. `battle-reducer/attack-roll.ts::tacticalMasterReplacementSelection` reads `attack.weapon.hasWeaponMastery`. |
+| Consumer | `character-weapon-execution-admission.ts::admitCharacterWeaponAttackExecutionWeapon` computes `hasWeaponMastery` from the selected masteries and the weapon Unit. `battle-reducer/attack-roll.ts::tacticalMasterReplacementSelection` reads `attack.hasWeaponMastery`. |
 | Execution use | The authored `weaponUnitId` is used only at admission to compute the boolean mastery eligibility fact on the attack weapon. The reducer no longer branches on authored Unit identity for mastery or Tactical Master. |
 | Verdict | Keep — composition boundary. The selection uses authored identity, but reducer execution uses the parsed `hasWeaponMastery` fact. |
 

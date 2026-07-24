@@ -156,24 +156,27 @@ function characterInitWeaponAttackExecutionRefs(
     | { readonly itemId: BattleObjectId; readonly unitId: UnitId }
     | undefined,
   weaponMasteries: CharacterBattleCreatureInit["weaponMasteries"],
-): {
-  readonly weaponObjectId: BattleObjectId;
-  readonly hasWeaponMastery: boolean;
-} {
+): Either.Either<
+  {
+    readonly weaponObjectId: BattleObjectId;
+    readonly hasWeaponMastery: boolean;
+  },
+  BattleStateInitIssue
+> {
   if (
     loadoutWeapon === undefined ||
     loadoutWeapon.unitId !== attack.weapon.weaponUnitId
   ) {
-    throw new Error(
+    return battleStateInitIssue(
       "Character battle init weapon attack must match the selected loadout weapon.",
     );
   }
-  return {
+  return Either.right({
     weaponObjectId: loadoutWeapon.itemId,
     hasWeaponMastery: (weaponMasteries ?? []).some(
       (mastery) => mastery.weaponUnitId === attack.weapon.weaponUnitId,
     ),
-  };
+  });
 }
 
 function characterInitWeaponAttackWithExecutionRefs(
@@ -182,15 +185,20 @@ function characterInitWeaponAttackWithExecutionRefs(
     | { readonly itemId: BattleObjectId; readonly unitId: UnitId }
     | undefined,
   weaponMasteries: CharacterBattleCreatureInit["weaponMasteries"],
-): CharacterWeaponAttackActionOption {
-  return {
+): Either.Either<CharacterWeaponAttackActionOption, BattleStateInitIssue> {
+  const refs = characterInitWeaponAttackExecutionRefs(
+    attack,
+    loadoutWeapon,
+    weaponMasteries,
+  );
+  if (Either.isLeft(refs)) {
+    return battleStateInitIssue(refs.left.message);
+  }
+  return Either.right({
     ...attack,
-    ...characterInitWeaponAttackExecutionRefs(
-      attack,
-      loadoutWeapon,
-      weaponMasteries,
-    ),
-  };
+    weaponObjectId: refs.right.weaponObjectId,
+    hasWeaponMastery: refs.right.hasWeaponMastery,
+  });
 }
 
 export function battleCreatureStateAdmissionFromInit(
@@ -263,22 +271,40 @@ export function battleCreatureStateAdmissionFromInit(
     const attackScopeOrdinal = battleExecutionScopeOrdinal(
       Number(characterScopeOrdinal) + 1,
     );
-    const initAttack =
+    const initAttackEither =
       creatureInit.attack === null
-        ? null
+        ? Either.right(null)
         : characterInitWeaponAttackWithExecutionRefs(
             creatureInit.attack,
             creatureInit.selectedLoadout.weapon,
             creatureInit.weaponMasteries,
           );
-    const initOffHandAttack =
+    const initOffHandAttackEither =
       creatureInit.offHandAttack === undefined
-        ? undefined
+        ? Either.right(undefined)
         : characterInitWeaponAttackWithExecutionRefs(
             creatureInit.offHandAttack,
             creatureInit.selectedLoadout.offHandWeapon,
             creatureInit.weaponMasteries,
           );
+    if (
+      Either.isLeft(initAttackEither) ||
+      Either.isLeft(initOffHandAttackEither)
+    ) {
+      const issues = [
+        ...(Either.isLeft(initAttackEither) ? [initAttackEither.left] : []),
+        ...(Either.isLeft(initOffHandAttackEither)
+          ? [initOffHandAttackEither.left]
+          : []),
+      ];
+      const [firstIssue, ...remainingIssues] = issues;
+      return {
+        tag: "invalid",
+        issues: [firstIssue, ...remainingIssues],
+      };
+    }
+    const initAttack = initAttackEither.right;
+    const initOffHandAttack = initOffHandAttackEither.right;
     const attackExecution = admitCharacterAttackExecution({
       battleId,
       combatantId: input.combatantId,

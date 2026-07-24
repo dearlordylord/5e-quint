@@ -301,7 +301,6 @@ export function battleCreatureInitFromCharacterBuild(
     input.unitLibrary,
     classLevels.right,
     pactBladeBondedWeaponItemId.right,
-    weaponMasteries.right,
   );
   if (Either.isLeft(attack))
     return battleCreatureInitIssue(attack.left.message);
@@ -310,7 +309,6 @@ export function battleCreatureInitFromCharacterBuild(
     input.unitLibrary,
     classLevels.right,
     pactBladeBondedWeaponItemId.right,
-    weaponMasteries.right,
   );
   if (Either.isLeft(offHandAttack)) {
     return battleCreatureInitIssue(offHandAttack.left.message);

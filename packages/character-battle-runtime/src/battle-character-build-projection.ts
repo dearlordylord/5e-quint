@@ -15,13 +15,15 @@ import {
   type CharacterWeaponAttackDamageTypeChoices,
   type BattleCreatureInit,
   type CharacterBattleLoadoutRef,
+  type CharacterBattleCreatureInitWeaponAttack,
   martialArtsAttackProjectionProfileForUnit,
   passiveArmorClassBonusProfileForUnit,
   unitIsSupportedClassFeatureSpellFreeCastResource,
-  admitCharacterWeaponAttackExecutionWeapon,
+  admitCharacterWeaponExecutionWeapon,
   battleObjectId,
+  characterBattleCreatureInitWeaponAttack,
 } from "@dnd/battle-runtime";
-import { type UnitId } from "@dnd/shared/game-facts";
+
 import {
   characterBuildArmorTraining,
   characterCreationIssueMessage,
@@ -122,9 +124,8 @@ export function characterAttackActionOption(
   unitLibrary: UnitCatalog,
   classLevels: readonly CharacterBattleClassLevelInit[] = [],
   pactBladeBondedWeaponItemId?: CharacterEquipmentItemId,
-  weaponMasteries: readonly { readonly weaponUnitId: UnitId }[] = [],
 ): Either.Either<
-  CharacterWeaponAttackActionOption | null,
+  CharacterBattleCreatureInitWeaponAttack | null,
   BattleCreatureInitIssue
 > {
   const loadoutWeapon = build.equipment.loadout.weapon;
@@ -146,7 +147,6 @@ export function characterAttackActionOption(
     unitLibrary,
     classLevels,
     pactBladeBondedWeaponItemId,
-    weaponMasteries,
   );
 }
 
@@ -155,9 +155,8 @@ export function characterOffHandAttackActionOption(
   unitLibrary: UnitCatalog,
   classLevels: readonly CharacterBattleClassLevelInit[] = [],
   pactBladeBondedWeaponItemId?: CharacterEquipmentItemId,
-  weaponMasteries: readonly { readonly weaponUnitId: UnitId }[] = [],
 ): Either.Either<
-  CharacterWeaponAttackActionOption | undefined,
+  CharacterBattleCreatureInitWeaponAttack | undefined,
   BattleCreatureInitIssue
 > {
   const loadoutWeapon = build.equipment.loadout.offHandWeapon;
@@ -179,7 +178,6 @@ export function characterOffHandAttackActionOption(
     unitLibrary,
     classLevels,
     pactBladeBondedWeaponItemId,
-    weaponMasteries,
   );
   return Either.isLeft(option)
     ? battleCreatureInitIssue(option.left.message)
@@ -325,9 +323,8 @@ function characterWeaponAttackActionOption(
   unitLibrary: UnitCatalog,
   classLevels: readonly CharacterBattleClassLevelInit[],
   pactBladeBondedWeaponItemId: CharacterEquipmentItemId | undefined,
-  weaponMasteries: readonly { readonly weaponUnitId: UnitId }[],
 ): Either.Either<
-  CharacterWeaponAttackActionOption | null,
+  CharacterBattleCreatureInitWeaponAttack | null,
   BattleCreatureInitIssue
 > {
   const unit = getRequiredUnit(unitLibrary, unitId);
@@ -338,18 +335,14 @@ function characterWeaponAttackActionOption(
     return Either.right(null);
   }
 
-  const baseAttack = {
+  const baseAttack = characterBattleCreatureInitWeaponAttack({
     kind: "weapon",
-    ...admitCharacterWeaponAttackExecutionWeapon(
-      unit.right,
-      battleObjectId(itemId),
-      weaponMasteries,
-    ),
+    weapon: admitCharacterWeaponExecutionWeapon(unit.right),
     ability: "str",
     abilityModifier: battleAbilityModifier(
       scoreModifier(build.abilityScores.str),
     ),
-  } as const satisfies CharacterWeaponAttackActionOption;
+  });
   const martialArts = martialArtsAttackProjectionForBuild({
     build,
     unitLibrary,
@@ -454,11 +447,11 @@ function pactBladeDamageTypeChoices(
 }
 
 function pactBladeWeaponAttack(
-  attack: CharacterWeaponAttackActionOption,
+  attack: CharacterBattleCreatureInitWeaponAttack,
   build: CharacterBuild,
   itemId: CharacterEquipmentItemId,
   pactBladeBondedWeaponItemId: CharacterEquipmentItemId | undefined,
-): CharacterWeaponAttackActionOption {
+): CharacterBattleCreatureInitWeaponAttack {
   if (
     pactBladeBondedWeaponItemId !== itemId ||
     attack.weapon.usage !== "melee" ||
@@ -599,10 +592,10 @@ function martialArtsLoadoutConditionHolds(input: {
 }
 
 function martialArtsWeaponAttack(
-  attack: CharacterWeaponAttackActionOption,
+  attack: CharacterBattleCreatureInitWeaponAttack,
   build: CharacterBuild,
   projection: MartialArtsAttackProjection,
-): CharacterWeaponAttackActionOption {
+): CharacterBattleCreatureInitWeaponAttack {
   const chosen = martialArtsChosenAbility(
     build,
     attack.ability,

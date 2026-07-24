@@ -325,6 +325,7 @@ export type {
   BattleUnitRef,
   BattleWalkSpeed,
   CharacterBattleCreatureInit,
+  CharacterBattleCreatureInitWeaponAttack,
   CharacterBattleD20Statistics,
   CharacterBattleInvocationFeature,
   CharacterBattleLoadoutRef,
@@ -336,6 +337,7 @@ export type {
 export {
   KNOCKED_OUT_UNCONSCIOUS,
   battleAvailableDruidWildShapeKnownForms,
+  characterBattleCreatureInitWeaponAttack,
 } from "./battle-init.ts";
 
 export {
@@ -820,4 +822,7 @@ export {
   type SpellShapeShiftedFormActiveEffect,
 } from "./battle-reducer/shape-shifting.ts";
 
-export { admitCharacterWeaponAttackExecutionWeapon } from "./character-weapon-execution-admission.ts";
+export {
+  admitCharacterWeaponAttackExecutionWeapon,
+  admitCharacterWeaponExecutionWeapon,
+} from "./character-weapon-execution-admission.ts";

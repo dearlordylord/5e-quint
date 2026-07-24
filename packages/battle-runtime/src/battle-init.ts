@@ -1,17 +1,27 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.hunters-prey
 import type { ArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
-import type { Condition, Hp, ReadonlyNonEmptyArray } from "@dnd/shared/types";
+import type {
+  AbilityModifier,
+  AttackBonus,
+  Condition,
+  Hp,
+  ReadonlyNonEmptyArray,
+} from "@dnd/shared/types";
 import { Hp as toHp } from "@dnd/shared/types";
 import type { Language } from "@dnd/shared/game-facts";
 import type {
+  Ability,
   Size,
   StatBlockRecord,
   WeaponProficiency,
 } from "@dnd/surface/surface/types";
 import * as Either from "effect/Either";
 import type {
+  AttackDamageAbilityModifierChoice,
   CharacterUnarmedStrikeActionOption,
-  CharacterWeaponAttackActionOption,
+  CharacterWeaponAttackAbilityChoice,
+  CharacterWeaponAttackDamageTypeChoices,
+  CharacterWeaponAttackExecutionWeapon,
 } from "./battle-action-options.ts";
 import type {
   CharacterBattleFeatureInit,
@@ -55,10 +65,50 @@ export type BattleUnitRef = {
 // Init-time weapon attack facts omit the execution references and derived
 // mastery flag; those are computed from the selected loadout and mastery
 // selections so the init contract cannot carry mismatched derived state.
-export type CharacterBattleCreatureInitWeaponAttack = Omit<
-  CharacterWeaponAttackActionOption,
-  "weaponObjectId" | "hasWeaponMastery"
->;
+export type CharacterBattleCreatureInitWeaponAttack = {
+  readonly kind: "weapon";
+  readonly weapon: CharacterWeaponAttackExecutionWeapon;
+  readonly ability: Ability;
+  readonly abilityModifier: AbilityModifier;
+  readonly attackBonus?: AttackBonus;
+  readonly damageAbilityModifier?: AbilityModifier;
+  readonly attackDamageAbilityModifierChoice?: AttackDamageAbilityModifierChoice;
+  readonly damageBonus?: number;
+  readonly damageTypeChoices?: CharacterWeaponAttackDamageTypeChoices;
+  readonly alternateAbilityChoices?: ReadonlyNonEmptyArray<CharacterWeaponAttackAbilityChoice>;
+};
+
+export function characterBattleCreatureInitWeaponAttack(
+  fields: CharacterBattleCreatureInitWeaponAttack,
+): CharacterBattleCreatureInitWeaponAttack {
+  return {
+    kind: fields.kind,
+    weapon: fields.weapon,
+    ability: fields.ability,
+    abilityModifier: fields.abilityModifier,
+    ...(fields.attackBonus === undefined
+      ? {}
+      : { attackBonus: fields.attackBonus }),
+    ...(fields.damageAbilityModifier === undefined
+      ? {}
+      : { damageAbilityModifier: fields.damageAbilityModifier }),
+    ...(fields.attackDamageAbilityModifierChoice === undefined
+      ? {}
+      : {
+          attackDamageAbilityModifierChoice:
+            fields.attackDamageAbilityModifierChoice,
+        }),
+    ...(fields.damageBonus === undefined
+      ? {}
+      : { damageBonus: fields.damageBonus }),
+    ...(fields.damageTypeChoices === undefined
+      ? {}
+      : { damageTypeChoices: fields.damageTypeChoices }),
+    ...(fields.alternateAbilityChoices === undefined
+      ? {}
+      : { alternateAbilityChoices: fields.alternateAbilityChoices }),
+  };
+}
 
 import type {
   BattleWalkSpeed,

@@ -89,6 +89,8 @@ function turnResourcesProjection(turnResources: BattleTurnResources) {
 
 function combatantMechanicalProjection(combatant: BattleCreatureState) {
   const base = {
+    combatantId: combatant.combatantId,
+    initiative: combatant.initiative,
     hp: Number(combatant.hp),
     maxHp: Number(combatant.maxHp),
     tempHp: Number(combatant.tempHp),
@@ -155,12 +157,14 @@ function stateMechanicalProjection(state: BattleState) {
     ]),
   );
   return {
+    battleId: state.battleId,
     initiativeOrder: initiativeOrder(state.initiative),
     combatants,
     executionScopeCursors: Array.from(state.executionScopeCursors.entries()),
     companions: state.companions,
     objectOutlines: state.objectOutlines,
     lightEmitters: state.lightEmitters,
+    hidePrerequisites: Array.from(state.hidePrerequisites.entries()),
     turnResources: turnResourcesProjection(state.currentTurnResources),
     readiedSpells: Array.from(state.readiedSpells.entries()),
     readiedMovements: Array.from(state.readiedMovements.entries()),
@@ -198,9 +202,11 @@ function snapshotOriginMechanicalProjection(
   origin: BattleCreatureSnapshot["origin"],
 ) {
   if (origin.kind === "character") {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { characterId: _characterId, ...rest } = origin;
     return rest;
   }
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { statBlockId: _statBlockId, ...rest } = origin;
   return rest;
 }

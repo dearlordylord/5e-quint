@@ -32,6 +32,7 @@ import {
 import type { BattleSubject } from "../battle-subjects.ts";
 import {
   battleAttackExecutionScopeRefForProcedureRef,
+  type BattleObjectId,
   type CombatantId,
 } from "../identity.ts";
 import { statBlockExecutionSnapshot } from "../stat-block-execution-state.ts";
@@ -230,7 +231,7 @@ function activeEffectsWithoutDetachedBoundHeldWeaponEffects(
 
 function combatantCanStillHoldBoundWeaponItem(
   combatant: CharacterBattleCreatureState,
-  itemId: string,
+  itemId: BattleObjectId,
 ): boolean {
   const activeWildShape = activeDruidWildShapeEffect(combatant);
   const main = combatant.origin.selectedLoadout.weapon;
@@ -260,7 +261,7 @@ function combatantCanStillHoldBoundWeaponItem(
 
 function activeEffectBoundHeldWeaponItemId(
   effect: BattleActiveEffect,
-): string | null {
+): BattleObjectId | null {
   return effect.kind === "spellWeaponAttackOverride" ||
     effect.kind === "paladinSacredWeapon"
     ? effect.weaponItemId

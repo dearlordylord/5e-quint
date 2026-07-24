@@ -14,6 +14,7 @@ import type {
 } from "@dnd/surface/surface/types";
 import type { CharacterWeaponAttackExecutionWeapon } from "./character-weapon-execution-schema.ts";
 import type { AttackDamageAbilityModifierChoice } from "./battle-reducer/attack-damage-ability-modifier-choice.ts";
+export type { AttackDamageAbilityModifierChoice };
 import type {
   BattleAttackProcedureExecutionRef,
   BattleObjectId,
