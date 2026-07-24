@@ -32,6 +32,7 @@ import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission
 import { describe, expect, it } from "vitest";
 import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
 import { admitCharacterWeaponAttackExecutionWeapon } from "./character-weapon-execution-admission.ts";
+import { battleObjectId } from "./identity.ts";
 
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
@@ -214,7 +215,8 @@ type ShillelaghForceAttackName =
 const trueStrikeDaggerUnitId = "weapon_dagger";
 type TrueStrikeDaggerUnitId = typeof trueStrikeDaggerUnitId;
 const trueStrikeDaggerItemId = `main:${trueStrikeDaggerUnitId}`;
-type TrueStrikeDaggerItemId = typeof trueStrikeDaggerItemId;
+const trueStrikeDaggerObjectId = battleObjectId(trueStrikeDaggerItemId);
+type TrueStrikeDaggerObjectId = typeof trueStrikeDaggerObjectId;
 const trueStrikeDaggerAttackName = "Dagger";
 type TrueStrikeDaggerAttackName = typeof trueStrikeDaggerAttackName | "none";
 type HeroismFrightenedImmunityEffect = Extract<
@@ -445,7 +447,7 @@ type TrueStrikeSpellHostedWeaponAttackProjection =
       readonly sourceProcedureRef: ReturnType<
         typeof battleProcedureExecutionRefForTest
       >;
-      readonly componentWeaponItemId: TrueStrikeDaggerItemId;
+      readonly componentWeaponObjectId: TrueStrikeDaggerObjectId;
       readonly weaponUnitId: TrueStrikeDaggerUnitId;
       readonly attackName: Exclude<TrueStrikeDaggerAttackName, "none">;
       readonly attackBonus: number;
@@ -836,7 +838,7 @@ const selectedUnitIdentityReplays = [
             sourceProcedureRef: battleProcedureExecutionRefForTest(
               String(trueStrikeUnitId),
             ),
-            componentWeaponItemId: trueStrikeDaggerItemId,
+            componentWeaponObjectId: trueStrikeDaggerObjectId,
             weaponUnitId: trueStrikeDaggerUnitId,
             attackName: trueStrikeDaggerAttackName,
             attackBonus: 5,
@@ -2888,7 +2890,10 @@ function zeroAbilityWeaponAttack(
   }
   return {
     kind: "weapon",
-    weapon: admitCharacterWeaponAttackExecutionWeapon(weapon),
+    weapon: admitCharacterWeaponAttackExecutionWeapon(
+      weapon,
+      `main:${weapon.id}`,
+    ),
     ability: "str",
     abilityModifier: abilityModifier(0),
   };
@@ -3621,7 +3626,7 @@ function trueStrikeSpellHostedWeaponAttackProjection(input: {
     sourceProcedureRef: battleProcedureExecutionRefForTest(
       String(trueStrikeRequiredSourceSpellId(input.act)),
     ),
-    componentWeaponItemId: trueStrikeComponentWeaponItemId(
+    componentWeaponObjectId: trueStrikeComponentWeaponObjectId(
       input.state,
       input.act,
     ),
@@ -3645,10 +3650,10 @@ function trueStrikeRequiredSourceSpellId(
   );
 }
 
-function trueStrikeComponentWeaponItemId(
+function trueStrikeComponentWeaponObjectId(
   state: BattleState,
   act: ActionSpellAct,
-): TrueStrikeDaggerItemId {
+): TrueStrikeDaggerObjectId {
   const actor = state.combatants.get(act.subject.actorId);
   const binding =
     actor?.origin.kind === "character"
@@ -3656,26 +3661,26 @@ function trueStrikeComponentWeaponItemId(
           (candidate) => candidate.procedureRef === act.subject.procedureRef,
         )
       : undefined;
-  const componentWeaponItemId =
+  const componentWeaponObjectId =
     binding?.procedure.kind === "spellInvocation" &&
     binding.procedure.execution.procedure === "spellHostedWeaponAttack"
-      ? binding.procedure.execution.componentWeaponItemId
+      ? binding.procedure.execution.componentWeaponObjectId
       : undefined;
-  if (componentWeaponItemId === trueStrikeDaggerItemId) {
-    return trueStrikeDaggerItemId;
+  if (componentWeaponObjectId === trueStrikeDaggerObjectId) {
+    return trueStrikeDaggerObjectId;
   }
   throw new Error(
-    `Unexpected True Strike component weapon item ${componentWeaponItemId}.`,
+    `Unexpected True Strike component weapon object ${componentWeaponObjectId}.`,
   );
 }
 
 function trueStrikeWeaponUnitId(
   state: BattleState,
-  act: ActionSpellAct,
+  _act: ActionSpellAct,
 ): TrueStrikeDaggerUnitId {
   const selectedWeaponUnitId = selectedLoadoutWeaponUnitIdForItem({
     state,
-    itemId: trueStrikeComponentWeaponItemId(state, act),
+    itemId: trueStrikeDaggerItemId,
     sourceName: "True Strike",
   });
   if (selectedWeaponUnitId === trueStrikeDaggerUnitId) {
@@ -5106,7 +5111,7 @@ function trueStrikeSpellHostedWeaponAttackFromQuint(
     sourceProcedureRef: battleProcedureExecutionRefForTest(
       String(trueStrikeRequiredSourceSpellIdFromQuint(source)),
     ),
-    componentWeaponItemId: trueStrikeComponentWeaponItemIdFromQuint(
+    componentWeaponObjectId: trueStrikeComponentWeaponObjectIdFromQuint(
       state["qTrueStrikeComponentWeaponItemId"],
     ),
     weaponUnitId: trueStrikeWeaponUnitIdFromQuint(
@@ -5171,11 +5176,11 @@ function trueStrikeRequiredSourceSpellIdFromQuint(
   throw new Error(`Unexpected True Strike source spell id ${String(raw)}.`);
 }
 
-function trueStrikeComponentWeaponItemIdFromQuint(
+function trueStrikeComponentWeaponObjectIdFromQuint(
   raw: unknown,
-): TrueStrikeDaggerItemId {
+): TrueStrikeDaggerObjectId {
   if (raw === trueStrikeDaggerItemId) {
-    return trueStrikeDaggerItemId;
+    return trueStrikeDaggerObjectId;
   }
   throw new Error(
     `Unexpected True Strike component weapon item ${String(raw)}.`,

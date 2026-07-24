@@ -694,7 +694,7 @@ export const BattleSubjectSchema = Schema.Union(
     metamagic: Schema.optionalWith(SpellMetamagicSelectionsSchema, {
       exact: true,
     }),
-    componentWeaponItemId: Schema.optionalWith(Schema.Never, { exact: true }),
+    componentWeaponObjectId: Schema.optionalWith(Schema.Never, { exact: true }),
   }),
   Schema.Struct({
     tag: Schema.Literal("bonusActionSpell"),
@@ -707,7 +707,7 @@ export const BattleSubjectSchema = Schema.Union(
     metamagic: Schema.optionalWith(SpellMetamagicSelectionsSchema, {
       exact: true,
     }),
-    componentWeaponItemId: Schema.optionalWith(Schema.Never, { exact: true }),
+    componentWeaponObjectId: Schema.optionalWith(Schema.Never, { exact: true }),
   }),
   Schema.Struct({
     tag: Schema.Literal("bonusActionDashSpell"),
@@ -773,7 +773,7 @@ export const BattleSubjectSchema = Schema.Union(
     metamagic: Schema.optionalWith(SpellMetamagicSelectionsSchema, {
       exact: true,
     }),
-    componentWeaponItemId: Schema.optionalWith(Schema.Never, { exact: true }),
+    componentWeaponObjectId: Schema.optionalWith(Schema.Never, { exact: true }),
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),

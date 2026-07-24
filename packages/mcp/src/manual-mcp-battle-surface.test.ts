@@ -1265,7 +1265,10 @@ function weaponAttack(
     throw new Error(`Expected weapon Unit: ${weaponId}`);
   return {
     kind: "weapon",
-    weapon: admitCharacterWeaponAttackExecutionWeapon(weapon),
+    weapon: admitCharacterWeaponAttackExecutionWeapon(
+      weapon,
+      `main:${weapon.id}`,
+    ),
     ability,
     abilityModifier: abilityModifier(mod),
     attackBonus: attackBonus(mod + 2),

@@ -538,18 +538,18 @@ describe("SRDINV84H deterministic Shillelagh weapon override admission", () => {
     const mainHandProcedureRef = bonusSpellActForItem({
       session,
       spellId: shillelaghUnitId,
-      componentWeaponItemId: "main:weapon_club",
+      componentWeaponObjectId: battleObjectId("main:weapon_club"),
     }).subject.procedureRef;
     const offHandProcedureRef = bonusSpellActForItem({
       session,
       spellId: shillelaghUnitId,
-      componentWeaponItemId: "off:weapon_club",
+      componentWeaponObjectId: battleObjectId("off:weapon_club"),
     }).subject.procedureRef;
     expect(mainHandProcedureRef).not.toBe(offHandProcedureRef);
     const offHandCastAct = bonusSpellActForItem({
       session,
       spellId: shillelaghUnitId,
-      componentWeaponItemId: "off:weapon_club",
+      componentWeaponObjectId: battleObjectId("off:weapon_club"),
     });
     const cast = resolveBattleSubject({
       state: session.state,

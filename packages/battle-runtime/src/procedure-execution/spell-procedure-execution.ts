@@ -15,6 +15,7 @@ import type {
 } from "@dnd/surface/surface/types";
 import type {
   BattleActiveEffectExecutionRef,
+  BattleObjectId,
   BattleProcedureExecutionRef,
   CombatantId,
 } from "../identity.ts";
@@ -1293,7 +1294,7 @@ export type SpellHostedWeaponAttackSpellProcedureExecution =
       readonly expr: DiceExpr;
       readonly damageType: DamageType;
     } | null;
-    readonly componentWeaponItemId: string;
+    readonly componentWeaponObjectId: BattleObjectId;
     readonly damageTypeChoices: readonly DamageType[];
     readonly procedure: "spellHostedWeaponAttack";
     readonly resource: NoSpellInvocationResource;

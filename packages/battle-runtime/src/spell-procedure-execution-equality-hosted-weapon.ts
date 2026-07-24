@@ -20,7 +20,7 @@ export function sameSpellHostedWeaponAttackExecution(
     sameSpellAccess(left.access, right.access) &&
     sameSpellResource(left.resource, right.resource) &&
     left.actionCost === right.actionCost &&
-    left.componentWeaponItemId === right.componentWeaponItemId &&
+    left.componentWeaponObjectId === right.componentWeaponObjectId &&
     left.spellcastingAbilityModifier === right.spellcastingAbilityModifier &&
     left.attackBonus === right.attackBonus &&
     samePrimitiveSet(left.damageTypeChoices, right.damageTypeChoices) &&

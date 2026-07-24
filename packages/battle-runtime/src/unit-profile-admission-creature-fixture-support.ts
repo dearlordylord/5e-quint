@@ -335,7 +335,10 @@ export function zeroAbilityWeaponAttack(
   }
   return {
     kind: "weapon",
-    weapon: admitCharacterWeaponAttackExecutionWeapon(weapon),
+    weapon: admitCharacterWeaponAttackExecutionWeapon(
+      weapon,
+      `main:${weapon.id}`,
+    ),
     ability: "str",
     abilityModifier: abilityModifier(0),
   };

@@ -16,7 +16,6 @@ import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts
 
 import { currentActing } from "@dnd/shared-algebras/initiative-algebra";
 import type { CharacterLevel } from "@dnd/shared/types";
-import type { UnitId } from "@dnd/shared/game-facts";
 import type {
   BattleAntimagicFieldOngoingSpellEffectRef,
   BattleCreatureState,
@@ -26,7 +25,6 @@ import type {
 export { SpellRuleExecutionFactsSchema } from "../../procedure-execution/spell-rule-facts.ts";
 import type { CombatantId } from "../../identity.ts";
 import type { CharacterBattleSpellcastingExecutionState } from "../../character-battle-resource-execution.ts";
-import type { BattleResourcePoolExecutionRef } from "../../identity.ts";
 import {
   antimagicFieldSuppressedOngoingSpellEffectKeys,
   ongoingSpellEffectRefKey,
@@ -60,9 +58,6 @@ export type SpellAdmissionBattleProjection = {
 export type SpellAdmissionContext = {
   readonly actor: SpellAdmissionActor;
   readonly battle: SpellAdmissionBattleProjection | undefined;
-  readonly availableClassFeatureFreeCastResourcePoolRefsForSpell: (
-    spellId: UnitId,
-  ) => readonly BattleResourcePoolExecutionRef[];
 };
 
 // Registry admission is existential over each profile's concrete invocation.

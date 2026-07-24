@@ -31,7 +31,7 @@ import {
   type CharacterBattleCreatureState,
   type SpellHostedWeaponAttackInvocation,
 } from "../../battle-state-execution.ts";
-import { type CombatantId } from "../../identity.ts";
+import { BattleObjectId, type CombatantId } from "../../identity.ts";
 import { resolveSelectedAttackProcedure } from "../attack-main.ts";
 import { isCharacterBattleCreatureState } from "../creature-state-execution.ts";
 import { activeDruidWildShapeEffect } from "../druid-wild-shape.ts";
@@ -92,13 +92,13 @@ function admitSpellHostedWeaponAttack(
       ),
     )
     .map(
-      ({ itemId, attack }): SpellHostedWeaponAttackInvocation => ({
+      ({ objectId, attack }): SpellHostedWeaponAttackInvocation => ({
         access: { tag: "classCantrip" },
         resource: { tag: "none" },
         procedure: "spellHostedWeaponAttack",
         spell,
         actionCost: "magicAction",
-        componentWeapon: { itemId, attack },
+        componentWeapon: { objectId, attack },
         spellcastingAbilityModifier: spellcasting.spellcastingAbilityModifier,
         attackBonus: attackBonus(
           Number(spellcasting.spellcastingAbilityModifier) +
@@ -163,7 +163,7 @@ function spellHostedWeaponAttackProjection(
 function spellHostedWeaponAttacks(
   actor: CharacterBattleCreatureState,
 ): readonly {
-  readonly itemId: string;
+  readonly objectId: BattleObjectId;
   readonly attack: BoundCharacterWeaponAttackActionOption;
 }[] {
   const origin = actor.origin;
@@ -182,9 +182,7 @@ function spellHostedWeaponAttacks(
       ? []
       : [
           {
-            itemId:
-              origin.selectedLoadout.weapon?.itemId ??
-              origin.attack.weapon.weaponUnitId,
+            objectId: origin.attack.weapon.weaponObjectId,
             attack: origin.attack,
           },
         ]),
@@ -201,9 +199,7 @@ function spellHostedWeaponAttacks(
       ? []
       : [
           {
-            itemId:
-              origin.selectedLoadout.offHandWeapon?.itemId ??
-              origin.offHandAttack.weapon.weaponUnitId,
+            objectId: origin.offHandAttack.weapon.weaponObjectId,
             attack: origin.offHandAttack,
           },
         ]),
@@ -241,7 +237,7 @@ function discoverSpellHostedWeaponAttackCastAct(
   const componentWeapon = spellHostedWeaponAttackForExecution(
     state,
     actorId,
-    invocation.componentWeaponItemId,
+    invocation.componentWeaponObjectId,
   );
   if (componentWeapon === undefined) {
     return [];
@@ -268,7 +264,7 @@ function resolveSpellHostedWeaponAttack(
   const componentWeapon = spellHostedWeaponAttackForExecution(
     input.input.state,
     input.actorId,
-    input.invocation.componentWeaponItemId,
+    input.invocation.componentWeaponObjectId,
   );
   if (componentWeapon === undefined) {
     return invalidResult(
@@ -372,10 +368,10 @@ function spellHostedWeaponAttack(
 function spellHostedWeaponAttackForExecution(
   state: BattleState,
   actorId: CombatantId,
-  componentWeaponItemId: string,
+  componentWeaponObjectId: BattleObjectId,
 ):
   | {
-      readonly itemId: string;
+      readonly objectId: BattleObjectId;
       readonly attack: BoundCharacterWeaponAttackActionOption;
     }
   | undefined {
@@ -384,7 +380,7 @@ function spellHostedWeaponAttackForExecution(
     return undefined;
   }
   return spellHostedWeaponAttacks(actor).find(
-    ({ itemId }) => itemId === componentWeaponItemId,
+    ({ objectId }) => objectId === componentWeaponObjectId,
   );
 }
 
@@ -414,7 +410,7 @@ export const SpellHostedWeaponAttackInvocationSchema =
       procedure: Schema.Literal("spellHostedWeaponAttack"),
       spellRuleFacts: SpellRuleExecutionFactsSchema,
       actionCost: Schema.Literal("magicAction"),
-      componentWeaponItemId: Schema.String,
+      componentWeaponObjectId: BattleObjectId,
       spellcastingAbilityModifier: AbilityModifier,
       attackBonus: AttackBonus,
       damageTypeChoices: Schema.Array(DamageTypeSchema),

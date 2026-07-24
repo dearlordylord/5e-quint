@@ -103,7 +103,7 @@ function admitAfterHitDamage(
   const freeCastInvocations: readonly AfterHitDamageInvocation[] =
     freeCastDamageExpr === null
       ? []
-      : ctx.availableClassFeatureFreeCastResourcePoolRefsForSpell(spell.id).map(
+      : (spell.classFeatureFreeCastResourcePoolRefs ?? []).map(
           (resourcePoolRef): AfterHitDamageInvocation => ({
             access: { tag: "prepared" },
             resource: {

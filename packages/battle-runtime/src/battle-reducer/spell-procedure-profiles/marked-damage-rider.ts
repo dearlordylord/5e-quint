@@ -168,7 +168,7 @@ function admitMarkedDamageRider(
       : [];
   }
   const favoredEnemyResourcePoolRef =
-    ctx.availableClassFeatureFreeCastResourcePoolRefsForSpell(spell.id)[0];
+    (spell.classFeatureFreeCastResourcePoolRefs ?? [])[0];
   const favoredEnemyExpiresAt = markedDamageRiderConcentrationExpirationForSlot(
     ctx.actor.combatantId,
     spell,

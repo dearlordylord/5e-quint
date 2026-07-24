@@ -1,5 +1,6 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
+import { battleObjectId } from "./identity.ts";
 import {
   battleProcedureExecutionRefForTest,
   startBattleSessionRight,
@@ -908,7 +909,7 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
             procedureRef: battleProcedureExecutionRefForTest(
               "hosted-weapon-procedure",
             ),
-            componentWeaponItemId: "main:synthetic-weapon",
+            componentWeaponObjectId: battleObjectId("main:synthetic-weapon"),
           }),
         ),
       ).toBe(true);

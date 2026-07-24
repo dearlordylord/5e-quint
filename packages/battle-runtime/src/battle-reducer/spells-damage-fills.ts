@@ -412,7 +412,7 @@ export function spellDamageTypeChoiceHole(
 ): BattleSpellDamageTypeChoiceHole {
   const protocolId =
     invocation.procedure === "spellHostedWeaponAttack"
-      ? `battle:spell:damage-type:${invocation.procedure}:${invocation.componentWeaponItemId}`
+      ? `battle:spell:damage-type:${invocation.procedure}:${invocation.componentWeaponObjectId}`
       : `battle:spell:damage-type:${invocation.procedure}`;
   const choices =
     invocation.procedure === "selfTransformationMode"

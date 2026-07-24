@@ -326,7 +326,7 @@ function characterWeaponAttackActionOption(
 
   const baseAttack = {
     kind: "weapon",
-    weapon: admitCharacterWeaponAttackExecutionWeapon(unit.right),
+    weapon: admitCharacterWeaponAttackExecutionWeapon(unit.right, itemId),
     ability: "str",
     abilityModifier: battleAbilityModifier(
       scoreModifier(build.abilityScores.str),

@@ -3796,7 +3796,7 @@ export function spellProcedureExecution(
         actionCost: value.actionCost,
         attackBonus: value.attackBonus,
         bonusDamage: value.bonusDamage,
-        componentWeaponItemId: value.componentWeapon.itemId,
+        componentWeaponObjectId: value.componentWeapon.objectId,
         damageTypeChoices: value.damageTypeChoices,
         procedure: value.procedure,
         resource: value.resource,

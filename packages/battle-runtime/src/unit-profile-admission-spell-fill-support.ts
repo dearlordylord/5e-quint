@@ -32,6 +32,7 @@ import {
   type BattleHole,
   type BattleLineDirectionId,
   type BattleRuntimeSession,
+  type BattleObjectId,
   type BattleObjectDamageDisposition,
   type BattleObjectIgnitionDisposition,
   type BattleProcedureExecutionRef,
@@ -174,7 +175,7 @@ export function maybeBonusSpellAct(input: {
 export function bonusSpellActForItem(input: {
   readonly session: BattleRuntimeSession;
   readonly spellId: string;
-  readonly componentWeaponItemId: string;
+  readonly componentWeaponObjectId: BattleObjectId;
 }): BonusActionSpellAct {
   const act = discoverBattleActs(input.session).find(
     (candidate): candidate is BonusActionSpellAct => {
@@ -185,24 +186,24 @@ export function bonusSpellActForItem(input: {
       return (
         candidate.subject.tag === "bonusActionSpell" &&
         invocation?.spellId === input.spellId &&
-        characterSpellProcedureItemId(input.session.state, candidate) ===
-          input.componentWeaponItemId
+        characterSpellProcedureObjectId(input.session.state, candidate) ===
+          input.componentWeaponObjectId
       );
     },
   );
   expect(act).toBeDefined();
   if (act === undefined) {
     throw new Error(
-      `Expected ${input.spellId} Bonus Action spell act for ${input.componentWeaponItemId}.`,
+      `Expected ${input.spellId} Bonus Action spell act for ${input.componentWeaponObjectId}.`,
     );
   }
   return act;
 }
 
-function characterSpellProcedureItemId(
+function characterSpellProcedureObjectId(
   state: BattleState,
   act: AvailableBattleAct,
-): string | undefined {
+): BattleObjectId | undefined {
   if (!("procedureRef" in act.subject)) return undefined;
   const actor = state.combatants.get(act.subject.actorId);
   if (actor?.origin.kind !== "character") return undefined;
@@ -213,7 +214,7 @@ function characterSpellProcedureItemId(
   return procedure?.procedure === "weaponAttackOverride"
     ? procedure.activeEffect.weaponItemId
     : procedure?.procedure === "spellHostedWeaponAttack"
-      ? procedure.componentWeaponItemId
+      ? procedure.componentWeaponObjectId
       : undefined;
 }
 

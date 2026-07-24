@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import { initiativeOrder } from "@dnd/shared-algebras/initiative-algebra";
 import type { ConditionState } from "@dnd/shared-algebras/conditions-algebra";
 import { characterId, combatantId, type CombatantId } from "./identity.ts";
+import { unitId } from "@dnd/shared/game-facts";
 import type {
   BattleCreatureSnapshot,
   BattleSnapshot,
@@ -10,7 +11,9 @@ import type {
   BattleActiveEffect,
   BattleTurnResources,
 } from "./battle-state-execution.ts";
+import type { CharacterProcedureBinding } from "./character-execution-vocabulary.ts";
 import type { Condition } from "@dnd/shared/types";
+import { Match } from "effect";
 import { currentActorId } from "./battle-reducer/creature-state-leaves.ts";
 import { discoverBattleActCandidatesWithoutSpellProcedures } from "./battle-reducer/battle-discovery.ts";
 import { endTurn } from "./battle-execution-composition.ts";
@@ -27,7 +30,10 @@ import { discoverBattleActs } from "./battle-act-composition.ts";
 import type { BattleRuntimeContext } from "./battle-runtime-context.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
-import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
+import {
+  battleRuntimeContextForTest,
+  battleRuntimeSessionForTest,
+} from "./battle-runtime-session.test-support.ts";
 
 /**
  * Synthetic-renaming witness for inert authored identity fields.
@@ -48,6 +54,15 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
  * unitId for Wild Shape equipment, paladinSacredWeapon.weaponItemId) are
  * excluded because renaming them currently changes outcomes.
  */
+
+function isCharacterSnapshot(
+  snapshot: BattleCreatureSnapshot,
+): snapshot is Extract<
+  BattleCreatureSnapshot,
+  { readonly origin: { readonly kind: "character" } }
+> {
+  return snapshot.origin.kind === "character";
+}
 
 function activeConditionStateCount(conditions: ConditionState): number {
   return (
@@ -71,6 +86,41 @@ function activeEffectKindCounts(
   return Array.from(counts.entries()).sort(([a], [b]) => a.localeCompare(b));
 }
 
+const ACTIVE_EFFECT_IDENTITY_KEYS = [
+  "sourceProcedureRef",
+  "sourceCombatantId",
+  "activeEffectRef",
+  "effectRef",
+] as const satisfies ReadonlyArray<string>;
+
+function activeEffectMechanicalProjection(
+  effect: BattleActiveEffect,
+): Record<string, unknown> {
+  const projection: Record<string, unknown> = { kind: effect.kind };
+  for (const [key, value] of Object.entries(effect)) {
+    if ((ACTIVE_EFFECT_IDENTITY_KEYS as ReadonlyArray<string>).includes(key)) {
+      continue;
+    }
+    projection[key] = value;
+  }
+  return projection;
+}
+
+function procedureBindingProjection(binding: CharacterProcedureBinding) {
+  const procedure = binding.procedure;
+  return Match.value(procedure).pipe(
+    Match.when({ kind: "spellInvocation" }, (spellInvocation) => ({
+      kind: "spellInvocation" as const,
+      executionProcedure: spellInvocation.execution.procedure,
+    })),
+    Match.when({ kind: "unavailableSpellInvocation" }, (unavailable) => ({
+      kind: "unavailableSpellInvocation" as const,
+      executionProcedure: unavailable.execution.procedure,
+    })),
+    Match.orElse((unitProcedure) => ({ kind: unitProcedure.kind })),
+  );
+}
+
 function actionEconomyProjection(turnResources: BattleTurnResources) {
   return {
     actionResourceCount: turnResources.actionResources.length,
@@ -91,6 +141,16 @@ function turnResourcesProjection(turnResources: BattleTurnResources) {
     pendingAttackRollMissToHitReplacementSelection:
       turnResources.pendingAttackRollMissToHitReplacementSelection !==
       undefined,
+    commandHalt: turnResources.commandHalt?.kind ?? null,
+    jumpDistanceMultiplier:
+      turnResources.jumpDistanceMultiplier?.multiplier ?? null,
+    spellSlotUseCount: turnResources.spellSlotUsesThisTurn.length,
+    levelOnePlusSpellCastCount:
+      turnResources.levelOnePlusSpellCastsThisTurn.length,
+    quickenedLevelOnePlusSpellCastCount:
+      turnResources.quickenedLevelOnePlusSpellCastsThisTurn.length,
+    carriedCreatureCount:
+      turnResources.heightenedStepOfTheWindCarriedCreatures.length,
   };
 }
 
@@ -104,6 +164,9 @@ function combatantMechanicalProjection(combatant: BattleCreatureState) {
     movementSpentFeet: Number(combatant.movementSpentFeet),
     reactionAvailable: combatant.reactionAvailable,
     activeConditionCount: activeConditionStateCount(combatant.conditions),
+    activeEffectMechanicalProjections: combatant.activeEffects.map(
+      activeEffectMechanicalProjection,
+    ),
     activeEffectKindCounts: activeEffectKindCounts(combatant.activeEffects),
     concentration:
       combatant.concentration === null
@@ -116,6 +179,15 @@ function combatantMechanicalProjection(combatant: BattleCreatureState) {
           },
     hidden: combatant.hidden !== null,
     dodging: combatant.dodging,
+    ...(combatant.origin.kind === "character"
+      ? {
+          procedureBindingSummaries:
+            combatant.origin.execution.procedureBindings.map(
+              procedureBindingProjection,
+            ),
+          characterResourceCount: combatant.origin.resources.length,
+        }
+      : {}),
   };
 }
 
@@ -265,7 +337,7 @@ function renameContextInertIdentityFields(
               ...source.invocation,
               spell: {
                 ...source.invocation.spell,
-                id: syntheticSpellId,
+                id: unitId(syntheticSpellId),
                 name: syntheticSpellName,
               },
             },
@@ -291,11 +363,7 @@ function renameContextInertIdentityFields(
     ]),
   );
 
-  return {
-    ...context,
-    characters,
-    statBlocks,
-  } as unknown as BattleRuntimeContext;
+  return battleRuntimeContextForTest(characters, statBlocks);
 }
 
 describe("inert authored identity renaming witness (#224)", () => {
@@ -331,21 +399,13 @@ describe("inert authored identity renaming witness (#224)", () => {
     );
     expect(fighterOriginal?.origin.kind).toBe("character");
     expect(fighterRenamed?.origin.kind).toBe("character");
-    if (fighterRenamed === undefined) {
-      return;
-    }
-    expect(fighterRenamed.origin.kind).toBe("character");
-    if (fighterRenamed.origin.kind !== "character") {
+    if (fighterRenamed === undefined || !isCharacterSnapshot(fighterRenamed)) {
       return;
     }
     expect(fighterRenamed.origin.characterId).toBe(
       characterId("synthetic-character-id-witness"),
     );
-    const renamedCharacterSnapshot = fighterRenamed as Extract<
-      BattleCreatureSnapshot,
-      { readonly origin: { readonly kind: "character" } }
-    >;
-    expect(renamedCharacterSnapshot.displayName).toBe("Synthetic Witness Name");
+    expect(fighterRenamed.displayName).toBe("Synthetic Witness Name");
   });
 
   test("renaming snapshot statBlockId does not change snapshot mechanics", () => {

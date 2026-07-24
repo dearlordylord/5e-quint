@@ -88,11 +88,7 @@ function rayOfEnfeeblementInvocation(
   if (resourceOwnership === undefined) {
     throw new Error("Expected spell caster runtime ownership context.");
   }
-  const admissionContext = spellAdmissionContextFor(
-    actor,
-    state,
-    resourceOwnership,
-  );
+  const admissionContext = spellAdmissionContextFor(actor, state);
   if (admissionContext === null) {
     throw new Error("Expected spell caster admission actor.");
   }

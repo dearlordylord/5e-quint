@@ -1711,8 +1711,8 @@ function tacticalMasterReplacementSelection(
     return null;
   }
   if (
-    !attacker.origin.weaponMasteries.some(
-      (mastery) => mastery.weaponUnitId === attack.weapon.weaponUnitId,
+    !attacker.origin.weaponMasteryObjectIds.includes(
+      attack.weapon.weaponObjectId,
     )
   ) {
     return null;
@@ -1787,8 +1787,8 @@ function selectedWeaponMasteryProperty(input: {
     return null;
   }
   if (
-    !attacker.origin.weaponMasteries.some(
-      (mastery) => mastery.weaponUnitId === attack.weapon.weaponUnitId,
+    !attacker.origin.weaponMasteryObjectIds.includes(
+      attack.weapon.weaponObjectId,
     )
   ) {
     return null;

@@ -2443,7 +2443,10 @@ function weakTrueFormWeaponAttack(
   }
   return {
     kind: "weapon",
-    weapon: admitCharacterWeaponAttackExecutionWeapon(weapon),
+    weapon: admitCharacterWeaponAttackExecutionWeapon(
+      weapon,
+      `main:${weapon.id}`,
+    ),
     ability: "str",
     abilityModifier: abilityModifier(-1),
     attackBonus: attackBonus(1),

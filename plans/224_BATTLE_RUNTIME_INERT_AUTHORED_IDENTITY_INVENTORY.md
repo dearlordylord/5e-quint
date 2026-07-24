@@ -67,30 +67,30 @@ Fields in this section have no execution behavior dependence inside a single bat
 
 ### 3. Character identity in `BattleCreatureOriginSnapshot`
 
-| Field         | `BattleCreatureOriginSnapshot.kind === "character"`.`characterId: CharacterId`                                                                                                                                                             |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Domain owner  | Settlement / catalog reference.                                                                                                                                                                                                            |
-| Consumer      | Snapshot consumers (`battle-reducer/battle-snapshot.ts`, `battle-reducer/interrupt-execution.ts`) copy it through. Settlement consumers (`character-battle-runtime`) use it to re-associate the combatant with the source Character Build. |
-| Execution use | None. The snapshot is produced from state, never read by the reducer.                                                                                                                                                                      |
-| Verdict       | Keep — settlement/catalog reference. Mirrors the execution-state field at the durable-snapshot boundary.                                                                                                                                   |
+| Field         | `BattleCreatureOriginSnapshot.kind === "character"`.`characterId: CharacterId`                                                                                                                                                                                                               |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Domain owner  | Settlement / catalog reference mirror.                                                                                                                                                                                                                                                       |
+| Consumer      | Snapshot consumers (`battle-reducer/battle-snapshot.ts`, `battle-reducer/interrupt-execution.ts`) copy it through. Settlement reads `BattleCreatureState.origin.characterId`, not the snapshot field; the snapshot value mirrors the execution-state field at the durable-snapshot boundary. |
+| Execution use | None. The snapshot is produced from state, never read by the reducer. No production consumer reads the snapshot `characterId`.                                                                                                                                                               |
+| Verdict       | Keep — settlement/catalog reference mirror. The snapshot field exists only to preserve the identity across serialization; it is not independently consumed.                                                                                                                                  |
 
 ### 4. Stat Block identity in `BattleCreatureOriginSnapshot`
 
-| Field         | `BattleCreatureOriginSnapshot.kind === "statBlock"`.`statBlockId: string`                                |
-| ------------- | -------------------------------------------------------------------------------------------------------- |
-| Domain owner  | Settlement / catalog reference.                                                                          |
-| Consumer      | Snapshot consumers use it to re-associate the combatant with the source Stat Block record.               |
-| Execution use | None. The snapshot is produced from state, never read by the reducer.                                    |
-| Verdict       | Keep — settlement/catalog reference. Mirrors the execution-state field at the durable-snapshot boundary. |
+| Field         | `BattleCreatureOriginSnapshot.kind === "statBlock"`.`statBlockId: string`                                                                                                                                                                                 |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Domain owner  | Settlement / catalog reference mirror.                                                                                                                                                                                                                    |
+| Consumer      | Snapshot consumers (`battle-reducer/battle-snapshot.ts`, `battle-reducer/interrupt-execution.ts`) copy it through. No production consumer reads the snapshot `statBlockId` independently; Stat Block presentation uses `BattleRuntimeContext.statBlocks`. |
+| Execution use | None. The snapshot is produced from state, never read by the reducer.                                                                                                                                                                                     |
+| Verdict       | Keep — settlement/catalog reference mirror. The snapshot field exists only to preserve the identity across serialization; it is not independently consumed.                                                                                               |
 
 ### 5. Spell identity in `SpellInvocationRef`
 
-| Field         | `SpellInvocationRef.spellId: SpellId`                                                                                                                                                                                                                                                               |
-| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Domain owner  | Presentation join / composition reference.                                                                                                                                                                                                                                                          |
-| Consumer      | `battle-runtime-context.ts` stores `CharacterSpellPresentationSource` (which includes the `SpellInvocationRef`) so presentation can label cast/readied spells. Battle subjects carry `invocation: SpellInvocationRef` only through the explicit presentation-ref path (`spells-invocation-ref.ts`). |
-| Execution use | None. The reducer dispatches by `procedure` (e.g., `"spellAttackDamage"`, `"saveGatedCondition"`) and by admitted mechanics, never by `spellId`. `check-authored-id-dispatch-boundary.cjs` enforces that authored `spell.name`/`id` keys do not appear in reducer execution files.                  |
-| Verdict       | Keep — presentation. The Spell Invocation Ref is a composition/selection record that joins back to the authored Spell record for labels and traceability; it is rejected as a replay or execution key.                                                                                              |
+| Field         | `SpellInvocationRef.spellId: SpellId`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Domain owner  | Presentation join / composition reference.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| Consumer      | `battle-runtime-context.ts` stores `CharacterSpellPresentationSource` (which includes the `SpellInvocationRef`) so presentation can label cast/readied spells. Battle subjects carry `invocation: SpellInvocationRef` only through the explicit presentation-ref path (`spells-invocation-ref.ts`). Free-cast resource allocation (e.g., `afterHitDamage`, `markedDamageRider`) now consumes `BattleSpellAdmissionSource.classFeatureFreeCastResourcePoolRefs`, which are precomputed at admission; it no longer derives pool eligibility from `spellId`. |
+| Execution use | None. The reducer dispatches by `procedure` (e.g., `"spellAttackDamage"`, `"saveGatedCondition"`) and by admitted mechanics, never by `spellId`. `check-authored-id-dispatch-boundary.cjs` enforces that authored `spell.name`/`id` keys do not appear in reducer execution files.                                                                                                                                                                                                                                                                        |
+| Verdict       | Keep — presentation. The Spell Invocation Ref is a composition/selection record that joins back to the authored Spell record for labels and traceability; it is rejected as a replay or execution key.                                                                                                                                                                                                                                                                                                                                                    |
 
 ### 6. Unit and Stat Block references in presentation context
 
@@ -103,12 +103,12 @@ Fields in this section have no execution behavior dependence inside a single bat
 
 ### 7. Rejected identity fields in `BattleSubject`
 
-| Field         | `unitId`, `sourceUnitId`, `resourceUnitId`, `componentWeaponItemId`, `sourceSpellId`, `formStatBlockId`, `attackName`, `statBlockSection`, `statBlockDamageNotation` on `BattleSubject` variants. |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Domain owner  | Execution boundary enforcement.                                                                                                                                                                   |
-| Consumer      | `battle-subjects.ts` schemas set these fields to `Schema.optionalWith(Schema.Never, { exact: true })`, proving they are not admitted as replay/execution keys.                                    |
-| Execution use | None by design.                                                                                                                                                                                   |
-| Verdict       | Keep — inert. They document the boundary: authored identity is not a replay key.                                                                                                                  |
+| Field         | `unitId`, `sourceUnitId`, `resourceUnitId`, `componentWeaponObjectId`, `sourceSpellId`, `formStatBlockId`, `attackName`, `statBlockSection`, `statBlockDamageNotation` on `BattleSubject` variants.                                               |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Domain owner  | Execution boundary enforcement.                                                                                                                                                                                                                   |
+| Consumer      | `battle-subjects.ts` schemas set these fields to `Schema.optionalWith(Schema.Never, { exact: true })`, proving they are not admitted as replay/execution keys. `componentWeaponObjectId` is a runtime `BattleObjectId`, not an authored identity. |
+| Execution use | None by design.                                                                                                                                                                                                                                   |
+| Verdict       | Keep — inert. They document the boundary: authored identity is not a replay key.                                                                                                                                                                  |
 
 ## Settlement/catalog reference (not inert)
 
@@ -145,27 +145,26 @@ Fields in this section are owned by composition/selection. They select which mec
 | Execution use | **Behavior-driving at admission only.** The form identity selects which admitted mechanical facts apply. Once admitted, the active effect carries a typed execution-scope reference; reducer execution resolves mechanics through that scope ref, not through authored Stat Block identity.                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | Verdict       | Keep — composition boundary. The form identity is the composition boundary's record of which Stat Block the player selected. It is **not inert**, but it no longer drives reducer execution: the active effect uses `formScopeRef` to resolve mechanical facts.                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 
+### 11. Weapon Mastery composition selection
+
+| Field | `CharacterBattleWeaponMasterySelection.weaponUnitId: UnitId` is admitted into battle state as `BattleCreatureState.origin.weaponMasteryObjectIds: readonly BattleObjectId[]`. |
+| Domain owner | Composition / selection (player-chosen mastery weapons). |
+| Consumer | `battle-reducer/creature-state.ts::characterBattleWeaponMasteryObjectIds` maps selected mastery `weaponUnitId`s to the corresponding loadout `BattleObjectId`s. `battle-reducer/attack-roll.ts::tacticalMasterReplacementSelection` checks `weaponMasteryObjectIds.includes(attack.weapon.weaponObjectId)`. |
+| Execution use | The authored `weaponUnitId` is used only at admission to compute the runtime `weaponMasteryObjectIds`. The reducer no longer branches on authored Unit identity for mastery or Tactical Master. |
+| Verdict | Keep — composition boundary. The selection uses authored identity, but reducer execution uses typed execution references. |
+
 ## Behavior-driving identity inside reducer execution
 
 Fields in this section are retained authored IDs that currently choose mechanics or alter outcomes inside reducer execution. They are documented as cleanup targets.
 
-### 11. Character loadout authored IDs
+### 12. Character loadout authored IDs
 
-| Field         | `CharacterBattleLoadoutRef`: `armor.itemId`/`unitId`, `shield.itemId`/`unitId`, `weapon.itemId`/`unitId`, `offHandWeapon.itemId`/`unitId`; also mirrored in `BoundCharacterWeaponAttackActionOption.weapon.weaponUnitId`.                                                                                                                                                                           |
-| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Domain owner  | Composition / selection → equipment settlement.                                                                                                                                                                                                                                                                                                                                                     |
-| Consumer      | `battle-reducer/wild-shape-equipment.ts` builds `WildShapeLoadoutObjectRef`s from the loadout IDs for Wild Shape equipment disposition. `battle-reducer/attack-damage-apply.ts` matches `weaponUnitId` against loadout entries to decide damage-type override, weapon property, and off-hand behavior. `battle-reducer/attack-roll.ts` uses `weaponUnitId` to determine Weapon Mastery eligibility. |
-| Execution use | **Behavior-driving inside reducer execution.** Weapon matching, mastery eligibility, Wild Shape equipment disposition, and damage-type overrides all branch on these IDs.                                                                                                                                                                                                                           |
-| Verdict       | Cleanup. These IDs should be replaced with typed execution references or parsed mechanical facts where possible. `itemId` is closer to catalog reference; `unitId`/`weaponUnitId` are actively used for equality checks that determine outcomes.                                                                                                                                                    |
-
-### 12. Weapon Mastery selection Unit IDs
-
-| Field         | `CharacterBattleWeaponMasterySelection.weaponUnitId: UnitId`                                                                                                                                                                                                                |
-| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Domain owner  | Composition / selection (player-chosen mastery weapons).                                                                                                                                                                                                                    |
-| Consumer      | `battle-reducer/attack-roll.ts::tacticalMasterReplacementSelection` checks `weaponUnitId` against `attack.weapon.weaponUnitId` to decide whether Tactical Master replacement is available. `battle-reducer/creature-state.ts` validates uniqueness of selected mastery IDs. |
-| Execution use | **Behavior-driving inside reducer execution.** A weapon's mastery property riders (Sap, Topple, Cleave, etc.) are gated by this ID match.                                                                                                                                   |
-| Verdict       | Cleanup. Mastery eligibility should be carried as a parsed mechanical fact on the attack or weapon rather than an authored-ID equality check.                                                                                                                               |
+| Field         | `CharacterBattleLoadoutRef`: `armor.itemId`/`unitId`, `shield.itemId`/`unitId`, `weapon.itemId`/`unitId`, `offHandWeapon.itemId`/`unitId`; `BoundCharacterWeaponAttackActionOption.weapon.weaponUnitId` mirrors the Unit identity for presentation-source lookup.                                                                                                                                                               |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Domain owner  | Composition / selection → equipment settlement.                                                                                                                                                                                                                                                                                                                                                                                 |
+| Consumer      | `battle-reducer/wild-shape-equipment.ts` builds `WildShapeLoadoutObjectRef`s from the loadout IDs for Wild Shape equipment disposition. `battle-reducer/attack-damage-apply.ts` matches `weaponUnitId` against loadout entries to decide damage-type override, weapon property, and off-hand behavior. Weapon Mastery eligibility now uses `attack.weapon.weaponObjectId` against `weaponMasteryObjectIds`, not `weaponUnitId`. |
+| Execution use | **Behavior-driving inside reducer execution** for loadout matching, damage-type override, off-hand behavior, and Wild Shape equipment disposition. Weapon Mastery no longer branches on these authored IDs.                                                                                                                                                                                                                     |
+| Verdict       | Cleanup. Loadout `itemId`/`unitId` should be replaced with typed execution references or parsed mechanical facts where possible. `weaponUnitId` on the execution weapon is retained only for presentation-source lookup.                                                                                                                                                                                                        |
 
 ### 13. Active-effect weapon identity for Paladin Sacred Weapon
 
@@ -194,16 +193,7 @@ Fields in this section are retained authored IDs that currently choose mechanics
 | Execution use | **Behavior-driving inside reducer execution.** Attack damage bonus eligibility branches on whether the attack's weapon matches the effect's stored `weaponItemId`.                                                      |
 | Verdict       | Cleanup. The bound weapon should be represented by a typed execution reference rather than an authored item id.                                                                                                         |
 
-### 16. Weapon-override procedure facts weapon identity
-
-| Field         | `SpellWeaponAttackOverrideTemplate.weaponItemId: BattleObjectId` and `WeaponAttackOverrideProcedureFacts.activeEffect.weaponItemId: BattleObjectId`. |
-| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Domain owner  | Composition / selection → weapon-targeting settlement.                                                                                               |
-| Consumer      | `procedure-execution/weapon-attack-override.ts` and `battle-reducer/attack-damage-apply.ts` resolve the weapon-override attack through this id.      |
-| Execution use | **Behavior-driving inside reducer execution.** The override attack targets a specific authored weapon by id.                                         |
-| Verdict       | Cleanup. The bound weapon should be represented by a typed execution reference rather than an authored item id.                                      |
-
-### 17. Turn-state light-weapon-attack identity
+### 16. Turn-state light-weapon-attack identity
 
 | Field         | `BattleTurnResources.lightWeaponAttackMade.weaponItemId: string` and the mirrored `BattleTurnSnapshot.lightWeaponAttackMade?.weaponItemId: string`.                                                                                                                                                                    |
 | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -212,7 +202,7 @@ Fields in this section are retained authored IDs that currently choose mechanics
 | Execution use | **Behavior-driving inside reducer execution.** Action economy and bonus-action attack eligibility branch on authored weapon identity.                                                                                                                                                                                  |
 | Verdict       | Cleanup. The prior light attack should be tracked by a typed execution reference to the weapon, not its authored item id.                                                                                                                                                                                              |
 
-### 18. BattleSubject held-weapon Unit feature activation weapon identity
+### 17. BattleSubject held-weapon Unit feature activation weapon identity
 
 | Field         | `BattleSubject` of tag `unitFeatureHeldWeaponActivation`.`weaponItemId: string` (admitted at `battle-subjects.ts:729`).                                                                    |
 | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -220,6 +210,28 @@ Fields in this section are retained authored IDs that currently choose mechanics
 | Consumer      | `battle-reducer/unit-features.ts` matches `input.subject.weaponItemId` against held weapon `itemId` to validate and execute the Paladin Sacred Weapon held-weapon Unit feature activation. |
 | Execution use | **Behavior-driving inside reducer execution.** Activation eligibility and the targeted weapon branch on authored weapon identity.                                                          |
 | Verdict       | Cleanup. The held-weapon selection should be represented by a typed execution reference rather than an authored item id.                                                                   |
+
+## Runtime object references used by reducer execution (not authored identity)
+
+These fields are typed execution references (`BattleObjectId`) that select a runtime object inside reducer execution. They are **not authored identity** and are therefore outside the strict scope of this inventory, but they are recorded here to avoid confusing them with the authored-identity fields above.
+
+### A. Weapon-override procedure facts weapon object reference
+
+| Field         | `SpellWeaponAttackOverrideTemplate.weaponItemId: BattleObjectId` and `WeaponAttackOverrideProcedureFacts.activeEffect.weaponItemId: BattleObjectId`.                                                                                          |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Domain owner  | Composition / selection → runtime object reference.                                                                                                                                                                                           |
+| Consumer      | `weapon-attack-override-admission.ts` maps the selected loadout item to a `BattleObjectId`; `procedure-execution/weapon-attack-override.ts` and `battle-reducer/attack-damage-apply.ts` resolve the weapon-override attack by that object id. |
+| Execution use | Selects a runtime weapon object inside reducer execution. Because the reference is an execution `BattleObjectId` rather than an authored item id, it is not an authored-identity dependency.                                                  |
+| Verdict       | Keep — runtime object reference. Not authored identity.                                                                                                                                                                                       |
+
+### B. Spell-hosted weapon component object reference
+
+| Field         | `SpellHostedWeaponAttackSpellProcedureExecution.componentWeaponObjectId: BattleObjectId` (and the corresponding `componentWeapon.objectId` on `SpellHostedWeaponAttackInvocation`).                                                                                   |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Domain owner  | Composition / selection → runtime object reference.                                                                                                                                                                                                                   |
+| Consumer      | `battle-reducer/spell-procedure-profiles/spell-hosted-weapon-attack.ts` resolves the component weapon by `componentWeaponObjectId` against the caster's held weapons. `character-execution-admission.ts` maps the admitted `componentWeapon.objectId` into execution. |
+| Execution use | Selects a runtime weapon object inside reducer execution. Because the reference is an execution `BattleObjectId` rather than an authored item id, it is not an authored-identity dependency.                                                                          |
+| Verdict       | Keep — runtime object reference. Not authored identity.                                                                                                                                                                                                               |
 
 ## Presentation identity in `BattleActPresentation`
 
@@ -236,7 +248,9 @@ Fields in this section are retained authored IDs that currently choose mechanics
 - `pnpm check:battle-runtime-import-ownership` passes for the protected execution-root set.
 - The inert fields documented in the first section have no reducer execution consumer.
 - `SpellRuleExecutionFacts.spellId` was removed; it had no production consumer and was explicitly ignored by execution equality.
-- The behavior-driving fields documented above are flagged for future cleanup; their current use is admitted as existing code, not approved as a permanent pattern.
+- Free-cast resource allocation no longer depends on `BattleSpellAdmissionSource.id`; it uses precomputed `classFeatureFreeCastResourcePoolRefs` populated at admission.
+- Spell-hosted weapon execution no longer depends on a raw `componentWeaponItemId`; it uses `componentWeaponObjectId`, a runtime `BattleObjectId`.
+- Weapon Mastery and Tactical Master execution no longer depend on authored `weaponUnitId`; they use `weaponMasteryObjectIds` (runtime `BattleObjectId`s) and `attack.weapon.weaponObjectId`.
 - Druid Wild Shape reducer mechanics are resolved through `formScopeRef`; authored `formStatBlockId` is no longer read inside reducer execution. Stale unresolved `druidWildShapeForm` effects do not apply their equipment disposition.
 
 ## Notes

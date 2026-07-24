@@ -22,18 +22,25 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE
 
 import { movementFeet } from "@dnd/shared/types";
+import type { SpellRecord } from "@dnd/surface/surface/types";
 import {
   type BattleCreatureState,
   type BattleSpellAdmissionSource,
   type BattleState,
+  type CharacterBattleCreatureState,
   type SupportedSpellInvocation,
 } from "../battle-state-execution.ts";
-import type { CharacterBattleSpellcastingState } from "../character-battle-resources.ts";
-import type { CharacterBattleResourceOwnership } from "../character-battle-resources.ts";
+import type {
+  CharacterBattleResourceOwnership,
+  CharacterBattleSpellcastingState,
+} from "../character-battle-resources.ts";
 import {
+  characterResourceIsClassFeatureFreeCastForSpell,
   effectiveCharacterBattleCantrips,
   effectiveCharacterBattlePreparedSpells,
 } from "../character-battle-resources.ts";
+import { resourceHasUsesRemaining } from "../character-battle-resource-execution.ts";
+import type { BattleResourcePoolExecutionRef } from "../identity.ts";
 
 import { supportedDamageAmountExpr } from "./spells-execution-facts.ts";
 import { hasSaveGateRepeatSaves } from "./spell-procedure-profiles/_save-gate-helpers.ts";
@@ -44,6 +51,42 @@ import { admitRegisteredSpellProcedures } from "./spell-procedure-profiles/admis
 import { spellAdmissionContextFor } from "./spell-procedure-profiles/admission-context.ts";
 import { activeOngoingFeaturesPreventSpellInvocation } from "./spells-invocation-guards.ts";
 import type { AuthoredSupportedSpellInvocation } from "../character-execution-admission.ts";
+
+function classFeatureFreeCastResourcePoolRefsForSpell(
+  spell: BattleSpellAdmissionSource,
+  actor: CharacterBattleCreatureState,
+  resourceOwnership: readonly CharacterBattleResourceOwnership[],
+): readonly BattleResourcePoolExecutionRef[] {
+  return resourceOwnership.flatMap((owner) => {
+    const resource = actor.origin.resources.find(
+      (candidate) => candidate.resourcePoolRef === owner.resourcePoolRef,
+    );
+    return resource !== undefined &&
+      characterResourceIsClassFeatureFreeCastForSpell(owner, spell.id) &&
+      resourceHasUsesRemaining(resource)
+      ? [resource.resourcePoolRef]
+      : [];
+  });
+}
+
+type SpellWithClassFeatureFreeCastRefs = SpellRecord &
+  Pick<BattleSpellAdmissionSource, "classFeatureFreeCastResourcePoolRefs">;
+
+function spellWithClassFeatureFreeCastRefs(
+  spell: SpellRecord,
+  actor: CharacterBattleCreatureState,
+  resourceOwnership: readonly CharacterBattleResourceOwnership[],
+): SpellWithClassFeatureFreeCastRefs {
+  return {
+    ...spell,
+    classFeatureFreeCastResourcePoolRefs:
+      classFeatureFreeCastResourcePoolRefsForSpell(
+        spell,
+        actor,
+        resourceOwnership,
+      ),
+  };
+}
 
 export function admittedSpellActs(
   actor: BattleCreatureState,
@@ -59,16 +102,17 @@ export function admittedSpellActs(
   }
   const preparedSpells = effectiveCharacterBattlePreparedSpells(spellcasting);
   const cantrips = effectiveCharacterBattleCantrips(spellcasting);
-  const admissionContext = spellAdmissionContextFor(
-    actor,
-    state,
-    resourceOwnership,
-  );
+  const admissionContext = spellAdmissionContextFor(actor, state);
   if (admissionContext === null) {
     return [];
   }
 
-  const profileAdmissions = [...preparedSpells, ...cantrips].flatMap((spell) =>
+  const characterActor = actor as CharacterBattleCreatureState;
+  const spells = [...preparedSpells, ...cantrips].map((spell) =>
+    spellWithClassFeatureFreeCastRefs(spell, characterActor, resourceOwnership),
+  );
+
+  const profileAdmissions = spells.flatMap((spell) =>
     admitRegisteredSpellProcedures(spell, admissionContext),
   );
 

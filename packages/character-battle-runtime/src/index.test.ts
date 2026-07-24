@@ -46,6 +46,7 @@ import {
   battleCreatureInitFromStatBlock as parseBattleCreatureInitFromStatBlock,
   battleCreaturePresentationDisplayName,
   battleId,
+  battleObjectId,
   characterBattleResourceIsPointPool,
   characterBattleResourceForUnit,
   characterId,
@@ -3818,9 +3819,15 @@ describe("Character Build battle projection", () => {
       }),
     );
     const fighter = state.state.combatants.get(fighterId);
+    const longswordItemId = characterEquipmentItemId({
+      slot: "main",
+      unitId: expectRight(
+        characterEquipmentItemUnitId(authoredUnitId("weapon_longsword")),
+      ),
+    });
     expect(fighter?.origin).toMatchObject({
       kind: "character",
-      weaponMasteries: [{ weaponUnitId: "weapon_longsword" }],
+      weaponMasteryObjectIds: [battleObjectId(longswordItemId)],
     });
     expect(
       state.context.characters.get(fighterId)?.unitPresentationSources,
@@ -3948,9 +3955,15 @@ describe("Character Build battle projection", () => {
       }),
     );
     const fighter = state.state.combatants.get(fighterId);
+    const quarterstaffItemId = characterEquipmentItemId({
+      slot: "main",
+      unitId: expectRight(
+        characterEquipmentItemUnitId(authoredUnitId("weapon_quarterstaff")),
+      ),
+    });
     expect(fighter?.origin).toMatchObject({
       kind: "character",
-      weaponMasteries: [{ weaponUnitId: "weapon_quarterstaff" }],
+      weaponMasteryObjectIds: [battleObjectId(quarterstaffItemId)],
     });
     expect(
       state.context.characters.get(fighterId)?.unitPresentationSources,
@@ -4022,9 +4035,15 @@ describe("Character Build battle projection", () => {
       }),
     );
     const fighter = state.state.combatants.get(fighterId);
+    const greataxeItemId = characterEquipmentItemId({
+      slot: "main",
+      unitId: expectRight(
+        characterEquipmentItemUnitId(authoredUnitId("weapon_greataxe")),
+      ),
+    });
     expect(fighter?.origin).toMatchObject({
       kind: "character",
-      weaponMasteries: [{ weaponUnitId: "weapon_greataxe" }],
+      weaponMasteryObjectIds: [battleObjectId(greataxeItemId)],
     });
     expect(
       state.context.characters.get(fighterId)?.unitPresentationSources,

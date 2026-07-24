@@ -3643,7 +3643,10 @@ export function testLongswordAttack(): TestCharacterWeaponAttack {
 
   return {
     kind: "weapon",
-    weapon: admitCharacterWeaponAttackExecutionWeapon(weapon),
+    weapon: admitCharacterWeaponAttackExecutionWeapon(
+      weapon,
+      `main:${weapon.id}`,
+    ),
     ability: "str",
     abilityModifier: battleAbilityModifier(3),
   };
@@ -3696,7 +3699,10 @@ export function testDaggerAttack(): TestCharacterWeaponAttack {
 
   return {
     kind: "weapon",
-    weapon: admitCharacterWeaponAttackExecutionWeapon(weapon),
+    weapon: admitCharacterWeaponAttackExecutionWeapon(
+      weapon,
+      `main:${weapon.id}`,
+    ),
     ability: "str",
     abilityModifier: battleAbilityModifier(3),
   };
@@ -3710,7 +3716,10 @@ export function testShortswordAttack(): TestCharacterWeaponAttack {
 
   return {
     kind: "weapon",
-    weapon: admitCharacterWeaponAttackExecutionWeapon(weapon),
+    weapon: admitCharacterWeaponAttackExecutionWeapon(
+      weapon,
+      `main:${weapon.id}`,
+    ),
     ability: "str",
     abilityModifier: battleAbilityModifier(3),
   };
@@ -3724,7 +3733,10 @@ export function testQuarterstaffAttack(): TestCharacterWeaponAttack {
 
   return {
     kind: "weapon",
-    weapon: admitCharacterWeaponAttackExecutionWeapon(weapon),
+    weapon: admitCharacterWeaponAttackExecutionWeapon(
+      weapon,
+      `main:${weapon.id}`,
+    ),
     ability: "str",
     abilityModifier: battleAbilityModifier(3),
   };
@@ -3740,7 +3752,10 @@ export function testGreataxeAttack(
 
   return {
     kind: "weapon",
-    weapon: admitCharacterWeaponAttackExecutionWeapon(weapon),
+    weapon: admitCharacterWeaponAttackExecutionWeapon(
+      weapon,
+      `main:${weapon.id}`,
+    ),
     ability: "str",
     abilityModifier: ability,
   };
@@ -3753,7 +3768,7 @@ export function testRangedCleaveLongbowAttack(): TestCharacterWeaponAttack {
   }
   return {
     kind: "weapon",
-    weapon: admitCharacterWeaponAttackExecutionWeapon(unit),
+    weapon: admitCharacterWeaponAttackExecutionWeapon(unit, `main:${unit.id}`),
     ability: "dex",
     abilityModifier: battleAbilityModifier(3),
   };
@@ -3782,7 +3797,10 @@ export function testLightHammerAttack(): TestCharacterWeaponAttack {
 
   return {
     kind: "weapon",
-    weapon: admitCharacterWeaponAttackExecutionWeapon(weapon),
+    weapon: admitCharacterWeaponAttackExecutionWeapon(
+      weapon,
+      `main:${weapon.id}`,
+    ),
     ability: "str",
     abilityModifier: battleAbilityModifier(3),
   };

@@ -10,7 +10,10 @@ describe("character weapon execution admission", () => {
     const { properties: _omitted, ...withoutProperties } = weapon;
 
     expect(
-      admitCharacterWeaponAttackExecutionWeapon(withoutProperties).properties,
+      admitCharacterWeaponAttackExecutionWeapon(
+        withoutProperties,
+        "test:weapon",
+      ).properties,
     ).toEqual([]);
   });
 });

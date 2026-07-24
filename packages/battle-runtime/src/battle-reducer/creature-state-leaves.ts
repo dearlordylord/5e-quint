@@ -15,7 +15,6 @@ import {
   wildShapeFormLimbsCanHandleObjects,
 } from "./wild-shape-equipment.ts";
 import {
-  type BattleActiveEffect,
   type BattleSeeInvisibleEtherealWitness,
   type BattleSeeInvisibleObjectWitness,
   type BattleCreatureState,
@@ -23,8 +22,7 @@ import {
   type BattleState,
 } from "../battle-state-execution.ts";
 import type { CombatantId } from "../identity.ts";
-import type { BattleDruidWildShapeKnownForm } from "../druid-wild-shape-known-form-execution.ts";
-import type { StatBlockExecutionAdmission } from "../stat-block-execution-state.ts";
+import type { ActiveDruidWildShape } from "./druid-wild-shape.ts";
 
 export function combatantCanSee(
   state: BattleState,
@@ -221,13 +219,7 @@ function combatantWildShapeEffectiveHandUse(
 
 export function combatantActiveDruidWildShape(
   combatant: BattleCreatureState | undefined,
-): {
-  readonly effect: Extract<
-    BattleActiveEffect,
-    { readonly kind: "druidWildShapeForm" }
-  >;
-  readonly admission: StatBlockExecutionAdmission<BattleDruidWildShapeKnownForm>;
-} | null {
+): ActiveDruidWildShape | null {
   if (
     combatant === undefined ||
     combatant.origin.kind !== "character" ||

@@ -8816,7 +8816,7 @@ function spellProcedureComponentWeaponItemId(
   return execution.procedure === "weaponAttackOverride"
     ? execution.activeEffect.weaponItemId
     : execution.procedure === "spellHostedWeaponAttack"
-      ? execution.componentWeaponItemId
+      ? execution.componentWeaponObjectId
       : undefined;
 }
 

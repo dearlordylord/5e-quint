@@ -185,6 +185,14 @@ import type {
 export type BattleSpellAdmissionSource = {
   readonly id: UnitId;
   readonly mechanics: SpellMechanics;
+  /**
+   * Resource pool refs that can free-cast this spell through a class feature.
+   * Populated at spell-admission time so reducer execution does not need to
+   * dispatch on the spell's authored id.
+   */
+  readonly classFeatureFreeCastResourcePoolRefs?:
+    | readonly BattleResourcePoolExecutionRef[]
+    | undefined;
 };
 import type {
   AttackDamageDieFloorChoiceFill,
@@ -199,7 +207,6 @@ import type {
   CharacterBattleInvocationFeature,
   BattleWalkSpeed,
   CharacterBattleLoadoutRef,
-  CharacterBattleWeaponMasterySelection,
 } from "./character-creature-execution-facts.ts";
 import type { BattleDruidWildShapeKnownForm } from "./druid-wild-shape-known-form-execution.ts";
 import type { BattlePositiveHpUnconscious } from "./positive-hp-unconscious.ts";
@@ -2880,7 +2887,7 @@ export type SpellHostedWeaponAttackInvocation = {
   readonly spell: BattleSpellAdmissionSource;
   readonly actionCost: "magicAction";
   readonly componentWeapon: {
-    readonly itemId: string;
+    readonly objectId: BattleObjectId;
     readonly attack: BoundCharacterWeaponAttackActionOption;
   };
   readonly spellcastingAbilityModifier: AbilityModifier;
@@ -3917,7 +3924,7 @@ type BattleCreatureStateCommon = {
         readonly druidWildShapeAvailableForms?: readonly StatBlockExecutionAdmission<BattleDruidWildShapeKnownForm>[];
         readonly weaponProficiencies: readonly WeaponProficiency[];
         readonly selectedLoadout: CharacterBattleLoadoutRef;
-        readonly weaponMasteries: readonly CharacterBattleWeaponMasterySelection[];
+        readonly weaponMasteryObjectIds: readonly BattleObjectId[];
         readonly invocationFeatures: readonly CharacterBattleInvocationFeature[];
         readonly speed: BattleWalkSpeed;
         readonly attack: BoundCharacterWeaponAttackActionOption | null;
