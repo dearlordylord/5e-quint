@@ -38,7 +38,7 @@ import {
   type EffectAtom,
 } from "@dnd/surface/surface/types";
 import { Either, Match } from "effect";
-import { resourceHasUsesRemaining } from "../../character-battle-resource-execution.ts";
+import { characterBattleResourcePoolRefHasUsesRemaining } from "../../character-battle-resource-execution.ts";
 import { allocateBattleActiveEffectRef } from "../../active-effect/execution-ref.ts";
 import { BattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
 import {
@@ -169,12 +169,12 @@ function admitMarkedDamageRider(
       : [];
   }
   const favoredEnemyResourcePoolRef =
-    spell.classFeatureFreeCastResourcePoolRefs.find((resourcePoolRef) => {
-      const resource = ctx.actor.origin.resources.find(
-        (candidate) => candidate.resourcePoolRef === resourcePoolRef,
-      );
-      return resource !== undefined && resourceHasUsesRemaining(resource);
-    });
+    spell.classFeatureFreeCastResourcePoolRefs.find((resourcePoolRef) =>
+      characterBattleResourcePoolRefHasUsesRemaining(
+        ctx.actor.origin.resources,
+        resourcePoolRef,
+      ),
+    );
   const favoredEnemyExpiresAt = markedDamageRiderConcentrationExpirationForSlot(
     ctx.actor.combatantId,
     spell,

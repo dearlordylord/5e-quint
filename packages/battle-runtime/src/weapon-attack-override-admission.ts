@@ -170,7 +170,6 @@ function attachedWeaponAttacksEligibleForOverride(
           {
             itemId: battleObjectId(origin.selectedLoadout.weapon.itemId),
             attack: origin.attack,
-            unitId: origin.selectedLoadout.weapon.unitId,
           },
         ]),
     ...(origin.offHandAttack === undefined ||
@@ -185,7 +184,6 @@ function attachedWeaponAttacksEligibleForOverride(
           {
             itemId: battleObjectId(origin.selectedLoadout.offHandWeapon.itemId),
             attack: origin.offHandAttack,
-            unitId: origin.selectedLoadout.offHandWeapon.unitId,
           },
         ]),
   ].filter(
@@ -194,10 +192,9 @@ function attachedWeaponAttacksEligibleForOverride(
     ): held is {
       readonly itemId: BattleObjectId;
       readonly attack: BoundCharacterWeaponAttackActionOption;
-      readonly unitId: import("@dnd/shared/game-facts").UnitId;
     } =>
       held.attack.weapon.usage === "melee" &&
-      held.unitId === held.attack.weapon.weaponUnitId &&
+      held.itemId === held.attack.weapon.weaponObjectId &&
       held.attack.weapon.attachedWeaponAttackOverrideEligibility?.kind ===
         "clubOrQuarterstaff",
   );

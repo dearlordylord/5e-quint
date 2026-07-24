@@ -12,22 +12,18 @@ export type WildShapeLoadoutObjectRef =
   | {
       readonly kind: "armor";
       readonly objectId: BattleObjectId;
-      readonly unitId: string;
     }
   | {
       readonly kind: "shield";
       readonly objectId: BattleObjectId;
-      readonly unitId: string;
     }
   | {
       readonly kind: "mainWeapon";
       readonly objectId: BattleObjectId;
-      readonly unitId: string;
     }
   | {
       readonly kind: "offHandWeapon";
       readonly objectId: BattleObjectId;
-      readonly unitId: string;
     };
 
 export const WILD_SHAPE_FORM_LIMB_OBJECT_HANDLING_WITNESSES = [

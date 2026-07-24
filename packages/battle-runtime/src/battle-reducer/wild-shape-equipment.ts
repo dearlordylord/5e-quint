@@ -42,7 +42,6 @@ export function wildShapeLoadoutObjectRefs(
           {
             kind: "armor" as const,
             objectId: battleObjectId(loadout.armor.itemId),
-            unitId: loadout.armor.unitId,
           },
         ]),
     ...(loadout.shield === undefined
@@ -51,7 +50,6 @@ export function wildShapeLoadoutObjectRefs(
           {
             kind: "shield" as const,
             objectId: battleObjectId(loadout.shield.itemId),
-            unitId: loadout.shield.unitId,
           },
         ]),
     ...(loadout.weapon === undefined
@@ -60,7 +58,6 @@ export function wildShapeLoadoutObjectRefs(
           {
             kind: "mainWeapon" as const,
             objectId: battleObjectId(loadout.weapon.itemId),
-            unitId: loadout.weapon.unitId,
           },
         ]),
     ...(loadout.offHandWeapon === undefined
@@ -69,7 +66,6 @@ export function wildShapeLoadoutObjectRefs(
           {
             kind: "offHandWeapon" as const,
             objectId: battleObjectId(loadout.offHandWeapon.itemId),
-            unitId: loadout.offHandWeapon.unitId,
           },
         ]),
   ];

@@ -50,9 +50,9 @@ import {
  *   - Stat Block presentation source labels (`BattleStatBlockPresentationSource`
  *     display names and procedure labels)
  *
- * Behavior-driving identity fields (e.g. weaponUnitId for mastery, loadout
- * unitId for Wild Shape equipment, paladinSacredWeapon.weaponItemId) are
- * excluded because renaming them currently changes outcomes.
+ * Behavior-driving identity fields (e.g. weaponUnitId for Weapon Mastery
+ * admission, paladinSacredWeapon.weaponItemId) are excluded because renaming
+ * them currently changes outcomes.
  */
 
 function isCharacterSnapshot(

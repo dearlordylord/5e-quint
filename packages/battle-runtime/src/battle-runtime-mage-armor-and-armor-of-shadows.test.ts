@@ -42,7 +42,6 @@ import {
   combatantWearingArmor,
   combatantWieldingShield,
 } from "./battle-reducer/creature-state-leaves.ts";
-import { unitId } from "@dnd/shared/game-facts";
 import {
   battleExecutionScopeOrdinal,
   battleObjectId,
@@ -492,7 +491,6 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
                 item: {
                   kind: "armor" as const,
                   objectId: battleObjectId("synthetic-stale-armor"),
-                  unitId: unitId("synthetic-stale-armor-unit"),
                 },
                 disposition: "worn" as const,
               },
@@ -584,7 +582,6 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
               item: {
                 kind: "armor" as const,
                 objectId: battleObjectId("synthetic-stale-armor"),
-                unitId: unitId("synthetic-stale-armor-unit"),
               },
               disposition: "worn" as const,
             },
@@ -592,7 +589,6 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
               item: {
                 kind: "shield" as const,
                 objectId: battleObjectId("synthetic-stale-shield"),
-                unitId: unitId("synthetic-stale-shield-unit"),
               },
               disposition: "worn" as const,
             },

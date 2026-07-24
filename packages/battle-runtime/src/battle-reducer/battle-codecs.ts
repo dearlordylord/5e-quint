@@ -313,27 +313,22 @@ const D20TestNaturalOneRerollHoleOptionsSchema = {
 } as const;
 
 // Effect Schema infers branded ids as their encoded string representation;
-// these local schemas brand objectId before runtime use and leave unitId as
-// the UnitRecord id string used by loadout references.
+// these local schemas brand objectId before runtime use.
 const WildShapeArmorLoadoutObjectRefSchema = Schema.Struct({
   kind: Schema.Literal("armor"),
   objectId: BattleObjectId,
-  unitId: Schema.String,
 });
 const WildShapeShieldLoadoutObjectRefSchema = Schema.Struct({
   kind: Schema.Literal("shield"),
   objectId: BattleObjectId,
-  unitId: Schema.String,
 });
 const WildShapeMainWeaponLoadoutObjectRefSchema = Schema.Struct({
   kind: Schema.Literal("mainWeapon"),
   objectId: BattleObjectId,
-  unitId: Schema.String,
 });
 const WildShapeOffHandWeaponLoadoutObjectRefSchema = Schema.Struct({
   kind: Schema.Literal("offHandWeapon"),
   objectId: BattleObjectId,
-  unitId: Schema.String,
 });
 
 const WildShapeWornLoadoutObjectRefSchema: Schema.Schema<WildShapeWornLoadoutObjectRef> =

@@ -200,6 +200,16 @@ export function resourceHasUsesRemaining(
   );
 }
 
+export function characterBattleResourcePoolRefHasUsesRemaining(
+  resources: readonly CharacterBattleResourceState[],
+  resourcePoolRef: BattleResourcePoolExecutionRef,
+): boolean {
+  const resource = resources.find(
+    (candidate) => candidate.resourcePoolRef === resourcePoolRef,
+  );
+  return resource !== undefined && resourceHasUsesRemaining(resource);
+}
+
 export function spendCharacterResourceUse(
   resource: CharacterBattleUseCountResourceState,
 ): CharacterBattleUseCountResourceState {

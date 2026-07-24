@@ -312,22 +312,18 @@ test("derives Wild Shape equipment disposition candidates from selected loadout 
     {
       kind: "armor",
       objectId: "armor:equipment_leather",
-      unitId: "equipment_leather",
     },
     {
       kind: "shield",
       objectId: "shield:equipment_shield",
-      unitId: "equipment_shield",
     },
     {
       kind: "mainWeapon",
       objectId: "main:weapon_quarterstaff",
-      unitId: "weapon_quarterstaff",
     },
     {
       kind: "offHandWeapon",
       objectId: "offhand:weapon_dagger",
-      unitId: "weapon_dagger",
     },
   ]);
   expect(wildShapeLoadoutObjectRefs({})).toEqual([]);
@@ -1109,7 +1105,6 @@ test("rejects invalid Wild Shape equipment disposition choices and converts impo
   const unknown = {
     kind: "mainWeapon",
     objectId: battleObjectId("main:weapon_synthetic"),
-    unitId: "weapon_synthetic",
   } as const satisfies WildShapeLoadoutObjectRef;
   expect(
     validateWildShapeEquipmentDispositionFill({

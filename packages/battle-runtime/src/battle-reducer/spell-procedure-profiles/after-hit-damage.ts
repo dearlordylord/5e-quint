@@ -52,7 +52,7 @@ import {
   maybeOpenSpellCastInterruptWindowWithTriggeredSpellChoices,
   interruptCheckpointFrame,
 } from "../dispatcher.ts";
-import { resourceHasUsesRemaining } from "../../character-battle-resource-execution.ts";
+import { characterBattleResourcePoolRefHasUsesRemaining } from "../../character-battle-resource-execution.ts";
 import { battleCreatureType } from "../domain-helpers.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
@@ -105,12 +105,12 @@ function admitAfterHitDamage(
     freeCastDamageExpr === null
       ? []
       : spell.classFeatureFreeCastResourcePoolRefs
-          .filter((resourcePoolRef) => {
-            const resource = ctx.actor.origin.resources.find(
-              (candidate) => candidate.resourcePoolRef === resourcePoolRef,
-            );
-            return resource !== undefined && resourceHasUsesRemaining(resource);
-          })
+          .filter((resourcePoolRef) =>
+            characterBattleResourcePoolRefHasUsesRemaining(
+              ctx.actor.origin.resources,
+              resourcePoolRef,
+            ),
+          )
           .map(
             (resourcePoolRef): AfterHitDamageInvocation => ({
               access: { tag: "prepared" },
