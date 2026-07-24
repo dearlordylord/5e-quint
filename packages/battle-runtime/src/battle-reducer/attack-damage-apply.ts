@@ -15,7 +15,11 @@ import {
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { isMonkWeapon } from "@dnd/shared-algebras/martial-arts-algebra";
 import type { HoleInstanceKey } from "@dnd/shared-algebras/runtime-hole-algebra";
-import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
+import {
+  battleObjectId,
+  type BattleProcedureExecutionRef,
+  type CombatantId,
+} from "../identity.ts";
 import type { BattleSubject } from "../battle-subjects.ts";
 import {
   CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
@@ -624,7 +628,7 @@ function wildShapeWornLoadoutWeaponObjectForAttack(
     formLimbs: effect.formLimbs,
     equipmentDisposition: effect.equipmentDisposition,
     objectKind,
-    unitId: attack.weapon.weaponUnitId,
+    objectId: attack.weapon.weaponObjectId,
   });
 }
 
@@ -1139,7 +1143,7 @@ function mainHandWeaponItemIdForAttack(
   }
   const mainHandWeapon = actor.origin.selectedLoadout.weapon;
   return mainHandWeapon !== undefined &&
-    mainHandWeapon.unitId === attack.weapon.weaponUnitId
+    battleObjectId(mainHandWeapon.itemId) === attack.weapon.weaponObjectId
     ? mainHandWeapon.itemId
     : undefined;
 }
@@ -1156,7 +1160,7 @@ function offHandWeaponItemIdForAttack(
   }
   const offHandWeapon = actor.origin.selectedLoadout.offHandWeapon;
   return offHandWeapon !== undefined &&
-    offHandWeapon.unitId === attack.weapon.weaponUnitId
+    battleObjectId(offHandWeapon.itemId) === attack.weapon.weaponObjectId
     ? offHandWeapon.itemId
     : undefined;
 }

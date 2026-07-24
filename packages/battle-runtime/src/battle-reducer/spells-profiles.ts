@@ -22,78 +22,35 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE
 
 import { movementFeet } from "@dnd/shared/types";
-import type { SpellRecord } from "@dnd/surface/surface/types";
 import {
   type BattleCreatureState,
   type BattleSpellAdmissionSource,
   type BattleState,
-  type CharacterBattleCreatureState,
   type SupportedSpellInvocation,
 } from "../battle-state-execution.ts";
-import type {
-  CharacterBattleResourceOwnership,
-  CharacterBattleSpellcastingState,
-} from "../character-battle-resources.ts";
+import type { CharacterBattleSpellcastingState } from "../character-battle-resources.ts";
 import {
-  characterResourceIsClassFeatureFreeCastForSpell,
+  admittedSpellToAdmissionSource,
   effectiveCharacterBattleCantrips,
   effectiveCharacterBattlePreparedSpells,
+  spellRecordToAdmissionSource,
 } from "../character-battle-resources.ts";
-import { resourceHasUsesRemaining } from "../character-battle-resource-execution.ts";
-import type { BattleResourcePoolExecutionRef } from "../identity.ts";
 
 import { supportedDamageAmountExpr } from "./spells-execution-facts.ts";
 import { hasSaveGateRepeatSaves } from "./spell-procedure-profiles/_save-gate-helpers.ts";
 export * from "./spells-profiles-attack-damage.ts";
 
 import { admitPersistentArmorEffectInvocationSpellAccess } from "./spell-procedure-profiles/persistent-armor-effect.ts";
-import {
-  type SpellWithClassFeatureFreeCastRefs,
-  admitRegisteredSpellProcedures,
-} from "./spell-procedure-profiles/admission-registry.ts";
+import { admitRegisteredSpellProcedures } from "./spell-procedure-profiles/admission-registry.ts";
 import { spellAdmissionContextFor } from "./spell-procedure-profiles/admission-context.ts";
 import { activeOngoingFeaturesPreventSpellInvocation } from "./spells-invocation-guards.ts";
-import type { AuthoredSupportedSpellInvocation } from "../character-execution-admission.ts";
-
-function classFeatureFreeCastResourcePoolRefsForSpell(
-  spell: BattleSpellAdmissionSource,
-  actor: CharacterBattleCreatureState,
-  resourceOwnership: readonly CharacterBattleResourceOwnership[],
-): readonly BattleResourcePoolExecutionRef[] {
-  return resourceOwnership.flatMap((owner) => {
-    const resource = actor.origin.resources.find(
-      (candidate) => candidate.resourcePoolRef === owner.resourcePoolRef,
-    );
-    return resource !== undefined &&
-      characterResourceIsClassFeatureFreeCastForSpell(owner, spell.id) &&
-      resourceHasUsesRemaining(resource)
-      ? [resource.resourcePoolRef]
-      : [];
-  });
-}
-
-function spellWithClassFeatureFreeCastRefs(
-  spell: SpellRecord,
-  actor: CharacterBattleCreatureState,
-  resourceOwnership: readonly CharacterBattleResourceOwnership[],
-): SpellWithClassFeatureFreeCastRefs {
-  return {
-    ...spell,
-    classFeatureFreeCastResourcePoolRefs:
-      classFeatureFreeCastResourcePoolRefsForSpell(
-        spell,
-        actor,
-        resourceOwnership,
-      ),
-  };
-}
 
 export function admittedSpellActs(
   actor: BattleCreatureState,
   state: BattleState | undefined,
-  resourceOwnership: readonly CharacterBattleResourceOwnership[],
+  _resourceOwnership: readonly unknown[],
   spellcasting: CharacterBattleSpellcastingState | undefined,
-): readonly AuthoredSupportedSpellInvocation[] {
+): readonly SupportedSpellInvocation[] {
   if (actor.origin.kind !== "character") {
     return [];
   }
@@ -107,13 +64,11 @@ export function admittedSpellActs(
     return [];
   }
 
-  // Cast is safe: the guard above ensures `actor.origin.kind === "character"`.
-  const characterActor = actor as CharacterBattleCreatureState;
-  const spells = [...preparedSpells, ...cantrips].map((spell) =>
-    spellWithClassFeatureFreeCastRefs(spell, characterActor, resourceOwnership),
+  const admittedSpellSources = [...preparedSpells, ...cantrips].map(
+    admittedSpellToAdmissionSource,
   );
 
-  const profileAdmissions = spells.flatMap((spell) =>
+  const profileAdmissions = admittedSpellSources.flatMap((spell) =>
     admitRegisteredSpellProcedures(spell, admissionContext),
   );
 
@@ -122,15 +77,15 @@ export function admittedSpellActs(
     ...spellcasting.invocationSpellAccesses.flatMap((access) =>
       access.tag === "armorOfShadowsMageArmor"
         ? admitPersistentArmorEffectInvocationSpellAccess(actor.combatantId, {
-            spell: access.admission.authoredSpell,
+            spell: spellRecordToAdmissionSource(access.admission.authoredSpell),
             executionFacts: access.admission.executionFacts,
           }).map((invocation) => ({
             ...invocation,
-            spell: access.admission.authoredSpell,
+            spell: spellRecordToAdmissionSource(access.admission.authoredSpell),
           }))
         : [],
     ),
-    ...preparedSpells.flatMap((spell) =>
+    ...admittedSpellSources.flatMap((spell) =>
       supportedPreparedHellishRebukeReactionSpellProfile(
         spell,
         spellcasting.spellSlots,

@@ -31,10 +31,8 @@ import type { ZeroHpLifecycle } from "../zero-hp-lifecycle.ts";
 import {
   battleActiveEffectExecutionOrdinal,
   battleExecutionScopeOrdinal,
-  battleObjectId,
   type BattleId,
   type BattleExecutionScopeOrdinal,
-  type BattleObjectId,
   type CombatantId,
   type InitiativeScore,
 } from "../identity.ts";
@@ -338,6 +336,8 @@ export function battleCreatureStateAdmissionFromInit(
               ...(creatureInit.resources ?? []),
               ...(creatureInit.unitFeatures ?? []),
             ],
+            resources,
+            resourceOwnership,
           );
     const admittedCreature = applyInitialZeroHpLifecycle({
       ...base,
@@ -358,10 +358,6 @@ export function battleCreatureStateAdmissionFromInit(
             }),
         weaponProficiencies: creatureInit.weaponProficiencies ?? [],
         selectedLoadout: creatureInit.selectedLoadout,
-        weaponMasteryObjectIds: characterBattleWeaponMasteryObjectIds(
-          creatureInit.weaponMasteries ?? [],
-          creatureInit.selectedLoadout,
-        ),
         invocationFeatures: creatureInit.invocationFeatures ?? [],
         speed: creatureInit.speed,
         attack: attackExecution.execution.attack,
@@ -522,41 +518,6 @@ export function assertCharacterBattleWeaponMasteriesHaveUniqueWeapons(
     }
     seen.add(weaponMastery.weaponUnitId);
   }
-}
-
-function characterBattleWeaponMasteryObjectIds(
-  weaponMasteries: readonly NonNullable<
-    CharacterBattleCreatureInit["weaponMasteries"]
-  >[number][],
-  selectedLoadout: CharacterBattleCreatureInit["selectedLoadout"],
-): readonly BattleObjectId[] {
-  const loadoutWeaponEntries = [
-    ...(selectedLoadout.weapon === undefined
-      ? []
-      : [
-          {
-            unitId: selectedLoadout.weapon.unitId,
-            itemId: selectedLoadout.weapon.itemId,
-          },
-        ]),
-    ...(selectedLoadout.offHandWeapon === undefined
-      ? []
-      : [
-          {
-            unitId: selectedLoadout.offHandWeapon.unitId,
-            itemId: selectedLoadout.offHandWeapon.itemId,
-          },
-        ]),
-  ];
-  const objectIds = new Set<BattleObjectId>();
-  for (const mastery of weaponMasteries) {
-    for (const entry of loadoutWeaponEntries) {
-      if (entry.unitId === mastery.weaponUnitId) {
-        objectIds.add(battleObjectId(entry.itemId));
-      }
-    }
-  }
-  return Array.from(objectIds);
 }
 
 export function assertCharacterBattleLoadoutMatchesHands(

@@ -1,4 +1,7 @@
-import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
+import {
+  unitId as parseSharedUnitId,
+  type UnitId,
+} from "@dnd/shared/game-facts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay weapon-mastery-properties mastery_sap mastery_topple mastery_cleave
 // UNIT-IDENTITY-REPLAY: weapon-mastery-properties mastery_sap doResolveSapMasteryPropertyHit
 // UNIT-IDENTITY-REPLAY: weapon-mastery-properties mastery_topple doResolveToppleMasteryPropertyFailedSavingThrow
@@ -20,6 +23,7 @@ import {
   characterAttackSubjectForTest,
 } from "./battle-runtime-test-support.ts";
 import { admitCharacterWeaponAttackExecutionWeapon } from "./character-weapon-execution-admission.ts";
+import { battleObjectId } from "./identity.ts";
 
 import {
   defineDriver,
@@ -796,7 +800,9 @@ function weaponMasteryAttackerInit(
           grip: scenario.grip,
         },
       },
-      attack: weaponAttack(scenario.weaponUnitId),
+      attack: weaponAttack(scenario.weaponUnitId, [
+        { weaponUnitId: parseSharedUnitId(scenario.weaponUnitId) },
+      ]),
       unarmedStrike: baseUnarmedStrike(),
     },
   };
@@ -833,6 +839,7 @@ function targetCreatureInit(
 
 function weaponAttack(
   weaponUnitId: (typeof weaponMasteryPropertyScenarios)[WeaponMasteryPropertyUnitId]["weaponUnitId"],
+  weaponMasteries: readonly { readonly weaponUnitId: UnitId }[],
 ): NonNullable<
   Extract<
     BattleCreatureInit["creatureInit"],
@@ -847,7 +854,8 @@ function weaponAttack(
     kind: "weapon",
     weapon: admitCharacterWeaponAttackExecutionWeapon(
       weapon,
-      `main:${weapon.id}`,
+      battleObjectId(`main:${weapon.id}`),
+      weaponMasteries,
     ),
     ability: "str",
     abilityModifier: abilityModifier(3),

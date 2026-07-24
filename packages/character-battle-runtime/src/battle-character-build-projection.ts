@@ -19,7 +19,9 @@ import {
   passiveArmorClassBonusProfileForUnit,
   unitIsSupportedClassFeatureSpellFreeCastResource,
   admitCharacterWeaponAttackExecutionWeapon,
+  battleObjectId,
 } from "@dnd/battle-runtime";
+import { type UnitId } from "@dnd/shared/game-facts";
 import {
   characterBuildArmorTraining,
   characterCreationIssueMessage,
@@ -120,6 +122,7 @@ export function characterAttackActionOption(
   unitLibrary: UnitCatalog,
   classLevels: readonly CharacterBattleClassLevelInit[] = [],
   pactBladeBondedWeaponItemId?: CharacterEquipmentItemId,
+  weaponMasteries: readonly { readonly weaponUnitId: UnitId }[] = [],
 ): Either.Either<
   CharacterWeaponAttackActionOption | null,
   BattleCreatureInitIssue
@@ -143,6 +146,7 @@ export function characterAttackActionOption(
     unitLibrary,
     classLevels,
     pactBladeBondedWeaponItemId,
+    weaponMasteries,
   );
 }
 
@@ -151,6 +155,7 @@ export function characterOffHandAttackActionOption(
   unitLibrary: UnitCatalog,
   classLevels: readonly CharacterBattleClassLevelInit[] = [],
   pactBladeBondedWeaponItemId?: CharacterEquipmentItemId,
+  weaponMasteries: readonly { readonly weaponUnitId: UnitId }[] = [],
 ): Either.Either<
   CharacterWeaponAttackActionOption | undefined,
   BattleCreatureInitIssue
@@ -174,6 +179,7 @@ export function characterOffHandAttackActionOption(
     unitLibrary,
     classLevels,
     pactBladeBondedWeaponItemId,
+    weaponMasteries,
   );
   return Either.isLeft(option)
     ? battleCreatureInitIssue(option.left.message)
@@ -312,6 +318,7 @@ function characterWeaponAttackActionOption(
   unitLibrary: UnitCatalog,
   classLevels: readonly CharacterBattleClassLevelInit[],
   pactBladeBondedWeaponItemId: CharacterEquipmentItemId | undefined,
+  weaponMasteries: readonly { readonly weaponUnitId: UnitId }[],
 ): Either.Either<
   CharacterWeaponAttackActionOption | null,
   BattleCreatureInitIssue
@@ -326,7 +333,11 @@ function characterWeaponAttackActionOption(
 
   const baseAttack = {
     kind: "weapon",
-    weapon: admitCharacterWeaponAttackExecutionWeapon(unit.right, itemId),
+    weapon: admitCharacterWeaponAttackExecutionWeapon(
+      unit.right,
+      battleObjectId(itemId),
+      weaponMasteries,
+    ),
     ability: "str",
     abilityModifier: battleAbilityModifier(
       scoreModifier(build.abilityScores.str),

@@ -3473,6 +3473,23 @@ export function characterSeed(input: {
             grip: "one_handed" as const,
           },
         });
+  const weaponMasteries = input.weaponMasteries;
+  const reconciledAttack =
+    attack === null
+      ? attack
+      : reconcileCharacterSeedWeaponAttack(
+          attack,
+          selectedLoadout.weapon,
+          weaponMasteries,
+        );
+  const reconciledOffHandAttack =
+    input.offHandAttack === undefined
+      ? input.offHandAttack
+      : reconcileCharacterSeedWeaponAttack(
+          input.offHandAttack,
+          selectedLoadout.offHandWeapon,
+          weaponMasteries,
+        );
   const classLevels = input.classLevels ?? [
     {
       className: input.spellcasting?.sourceClassName ?? "fighter",
@@ -3525,19 +3542,19 @@ export function characterSeed(input: {
     }
     return { unit: resource.unit, supportProfiles: supportProfiles.right };
   });
-  const weaponPresentationUnitRefs = [attack, input.offHandAttack].flatMap(
-    (candidate) => {
-      if (candidate === null || candidate === undefined) return [];
-      const unit = unitLibrary
-        .listUnits()
-        .find(
-          (entry) =>
-            entry.kind === "weapon" &&
-            entry.id === candidate.weapon.weaponUnitId,
-        );
-      return unit?.kind === "weapon" ? [{ unit, supportProfiles: [] }] : [];
-    },
-  );
+  const weaponPresentationUnitRefs = [
+    reconciledAttack,
+    reconciledOffHandAttack,
+  ].flatMap((candidate) => {
+    if (candidate === null || candidate === undefined) return [];
+    const unit = unitLibrary
+      .listUnits()
+      .find(
+        (entry) =>
+          entry.kind === "weapon" && entry.id === candidate.weapon.weaponUnitId,
+      );
+    return unit?.kind === "weapon" ? [{ unit, supportProfiles: [] }] : [];
+  });
   const characterUnitRefs = [
     ...new Map(
       [
@@ -3579,11 +3596,11 @@ export function characterSeed(input: {
       ...(input.weaponMasteries === undefined
         ? {}
         : { weaponMasteries: input.weaponMasteries }),
-      attack,
+      attack: reconciledAttack,
       unarmedStrike: input.unarmedStrike ?? testUnarmedStrikeDamageAttack(),
-      ...(input.offHandAttack === undefined
+      ...(reconciledOffHandAttack === undefined
         ? {}
-        : { offHandAttack: input.offHandAttack }),
+        : { offHandAttack: reconciledOffHandAttack }),
       ...(input.unitFeatures === undefined
         ? {}
         : { unitFeatures: input.unitFeatures }),
@@ -3598,6 +3615,48 @@ export function characterSeed(input: {
       ...(input.spellcasting === undefined
         ? {}
         : { spellcasting: input.spellcasting }),
+    },
+  };
+}
+
+function reconcileCharacterSeedWeaponAttack(
+  attack: NonNullable<
+    Extract<
+      BattleCreatureInit["creatureInit"],
+      { readonly kind: "character" }
+    >["attack"]
+  >,
+  loadoutWeapon:
+    | { readonly itemId: string; readonly unitId: UnitRecord["id"] }
+    | undefined,
+  weaponMasteries:
+    | Extract<
+        BattleCreatureInit["creatureInit"],
+        { readonly kind: "character" }
+      >["weaponMasteries"]
+    | undefined,
+): NonNullable<
+  Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["attack"]
+> {
+  const loadoutObjectId =
+    loadoutWeapon === undefined
+      ? attack.weapon.weaponObjectId
+      : battleObjectId(loadoutWeapon.itemId);
+  const hasWeaponMastery =
+    weaponMasteries === undefined
+      ? attack.weapon.hasWeaponMastery
+      : weaponMasteries.some(
+          (mastery) => mastery.weaponUnitId === attack.weapon.weaponUnitId,
+        );
+  return {
+    ...attack,
+    weapon: {
+      ...attack.weapon,
+      weaponObjectId: loadoutObjectId,
+      hasWeaponMastery,
     },
   };
 }
@@ -3645,7 +3704,8 @@ export function testLongswordAttack(): TestCharacterWeaponAttack {
     kind: "weapon",
     weapon: admitCharacterWeaponAttackExecutionWeapon(
       weapon,
-      `main:${weapon.id}`,
+      battleObjectId(`main:${weapon.id}`),
+      [],
     ),
     ability: "str",
     abilityModifier: battleAbilityModifier(3),
@@ -3701,7 +3761,8 @@ export function testDaggerAttack(): TestCharacterWeaponAttack {
     kind: "weapon",
     weapon: admitCharacterWeaponAttackExecutionWeapon(
       weapon,
-      `main:${weapon.id}`,
+      battleObjectId(`main:${weapon.id}`),
+      [],
     ),
     ability: "str",
     abilityModifier: battleAbilityModifier(3),
@@ -3718,7 +3779,8 @@ export function testShortswordAttack(): TestCharacterWeaponAttack {
     kind: "weapon",
     weapon: admitCharacterWeaponAttackExecutionWeapon(
       weapon,
-      `main:${weapon.id}`,
+      battleObjectId(`main:${weapon.id}`),
+      [],
     ),
     ability: "str",
     abilityModifier: battleAbilityModifier(3),
@@ -3735,7 +3797,8 @@ export function testQuarterstaffAttack(): TestCharacterWeaponAttack {
     kind: "weapon",
     weapon: admitCharacterWeaponAttackExecutionWeapon(
       weapon,
-      `main:${weapon.id}`,
+      battleObjectId(`main:${weapon.id}`),
+      [],
     ),
     ability: "str",
     abilityModifier: battleAbilityModifier(3),
@@ -3754,7 +3817,8 @@ export function testGreataxeAttack(
     kind: "weapon",
     weapon: admitCharacterWeaponAttackExecutionWeapon(
       weapon,
-      `main:${weapon.id}`,
+      battleObjectId(`main:${weapon.id}`),
+      [],
     ),
     ability: "str",
     abilityModifier: ability,
@@ -3768,7 +3832,11 @@ export function testRangedCleaveLongbowAttack(): TestCharacterWeaponAttack {
   }
   return {
     kind: "weapon",
-    weapon: admitCharacterWeaponAttackExecutionWeapon(unit, `main:${unit.id}`),
+    weapon: admitCharacterWeaponAttackExecutionWeapon(
+      unit,
+      battleObjectId(`main:${unit.id}`),
+      [],
+    ),
     ability: "dex",
     abilityModifier: battleAbilityModifier(3),
   };
@@ -3799,7 +3867,8 @@ export function testLightHammerAttack(): TestCharacterWeaponAttack {
     kind: "weapon",
     weapon: admitCharacterWeaponAttackExecutionWeapon(
       weapon,
-      `main:${weapon.id}`,
+      battleObjectId(`main:${weapon.id}`),
+      [],
     ),
     ability: "str",
     abilityModifier: battleAbilityModifier(3),

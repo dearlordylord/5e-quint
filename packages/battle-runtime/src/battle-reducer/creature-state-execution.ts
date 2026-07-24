@@ -32,6 +32,7 @@ import {
 import type { BattleSubject } from "../battle-subjects.ts";
 import {
   battleAttackExecutionScopeRefForProcedureRef,
+  battleObjectId,
   type CombatantId,
 } from "../identity.ts";
 import { statBlockExecutionSnapshot } from "../stat-block-execution-state.ts";
@@ -245,7 +246,7 @@ function combatantCanStillHoldBoundWeaponItem(
         formLimbs: activeWildShape.formLimbs,
         equipmentDisposition: activeWildShape.equipmentDisposition,
         objectKind: "mainWeapon",
-        unitId: main.unitId,
+        objectId: battleObjectId(main.itemId),
       })) ||
     (offHand?.itemId === itemId &&
       wildShapeCanUseWornLoadoutObject({
@@ -253,7 +254,7 @@ function combatantCanStillHoldBoundWeaponItem(
         formLimbs: activeWildShape.formLimbs,
         equipmentDisposition: activeWildShape.equipmentDisposition,
         objectKind: "offHandWeapon",
-        unitId: offHand.unitId,
+        objectId: battleObjectId(offHand.itemId),
       }))
   );
 }

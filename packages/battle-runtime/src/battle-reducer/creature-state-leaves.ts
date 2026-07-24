@@ -22,7 +22,7 @@ import {
   type BattleState,
 } from "../battle-state-execution.ts";
 import type { CombatantId } from "../identity.ts";
-import type { ActiveDruidWildShape } from "./druid-wild-shape.ts";
+import type { ActiveDruidWildShape } from "./druid-wild-shape-types.ts";
 
 export function combatantCanSee(
   state: BattleState,

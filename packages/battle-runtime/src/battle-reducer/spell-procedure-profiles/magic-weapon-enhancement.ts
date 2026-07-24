@@ -23,7 +23,7 @@ import {
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
 import { maybeOpenInterruptWindow, snapshotBattle } from "../dispatcher.ts";
-import type { CombatantId } from "../../identity.ts";
+import { battleObjectId, type CombatantId } from "../../identity.ts";
 import { battleWeaponItemHasMagicWeaponEnhancement } from "../attack-damage-apply.ts";
 import { activeDruidWildShapeEffect } from "../druid-wild-shape.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
@@ -342,7 +342,7 @@ function battleMagicWeaponTargetItemIsHeldWeapon(
           formLimbs: activeWildShape.formLimbs,
           equipmentDisposition: activeWildShape.equipmentDisposition,
           objectKind: "mainWeapon",
-          unitId: main.unitId,
+          objectId: battleObjectId(main.itemId),
         })) ||
       (offHand !== undefined &&
         offHand.itemId === targetItem.itemId &&
@@ -351,7 +351,7 @@ function battleMagicWeaponTargetItemIsHeldWeapon(
           formLimbs: activeWildShape.formLimbs,
           equipmentDisposition: activeWildShape.equipmentDisposition,
           objectKind: "offHandWeapon",
-          unitId: offHand.unitId,
+          objectId: battleObjectId(offHand.itemId),
         }))
     );
   }

@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 
 import { admitCharacterWeaponAttackExecutionWeapon } from "./character-weapon-execution-admission.ts";
+import { battleObjectId } from "./identity.ts";
 import { unitLibrary } from "./battle-runtime-test-support.ts";
 
 describe("character weapon execution admission", () => {
@@ -12,7 +13,8 @@ describe("character weapon execution admission", () => {
     expect(
       admitCharacterWeaponAttackExecutionWeapon(
         withoutProperties,
-        "test:weapon",
+        battleObjectId("test:weapon"),
+        [],
       ).properties,
     ).toEqual([]);
   });

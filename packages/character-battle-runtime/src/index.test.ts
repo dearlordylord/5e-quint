@@ -46,7 +46,6 @@ import {
   battleCreatureInitFromStatBlock as parseBattleCreatureInitFromStatBlock,
   battleCreaturePresentationDisplayName,
   battleId,
-  battleObjectId,
   characterBattleResourceIsPointPool,
   characterBattleResourceForUnit,
   characterId,
@@ -3819,16 +3818,10 @@ describe("Character Build battle projection", () => {
       }),
     );
     const fighter = state.state.combatants.get(fighterId);
-    const longswordItemId = characterEquipmentItemId({
-      slot: "main",
-      unitId: expectRight(
-        characterEquipmentItemUnitId(authoredUnitId("weapon_longsword")),
-      ),
-    });
-    expect(fighter?.origin).toMatchObject({
-      kind: "character",
-      weaponMasteryObjectIds: [battleObjectId(longswordItemId)],
-    });
+    expect(
+      fighter?.origin.kind === "character" &&
+        fighter.origin.attack?.weapon.hasWeaponMastery,
+    ).toBe(true);
     expect(
       state.context.characters.get(fighterId)?.unitPresentationSources,
     ).toEqual(
@@ -3955,16 +3948,10 @@ describe("Character Build battle projection", () => {
       }),
     );
     const fighter = state.state.combatants.get(fighterId);
-    const quarterstaffItemId = characterEquipmentItemId({
-      slot: "main",
-      unitId: expectRight(
-        characterEquipmentItemUnitId(authoredUnitId("weapon_quarterstaff")),
-      ),
-    });
-    expect(fighter?.origin).toMatchObject({
-      kind: "character",
-      weaponMasteryObjectIds: [battleObjectId(quarterstaffItemId)],
-    });
+    expect(
+      fighter?.origin.kind === "character" &&
+        fighter.origin.attack?.weapon.hasWeaponMastery,
+    ).toBe(true);
     expect(
       state.context.characters.get(fighterId)?.unitPresentationSources,
     ).toEqual(
@@ -4035,16 +4022,10 @@ describe("Character Build battle projection", () => {
       }),
     );
     const fighter = state.state.combatants.get(fighterId);
-    const greataxeItemId = characterEquipmentItemId({
-      slot: "main",
-      unitId: expectRight(
-        characterEquipmentItemUnitId(authoredUnitId("weapon_greataxe")),
-      ),
-    });
-    expect(fighter?.origin).toMatchObject({
-      kind: "character",
-      weaponMasteryObjectIds: [battleObjectId(greataxeItemId)],
-    });
+    expect(
+      fighter?.origin.kind === "character" &&
+        fighter.origin.attack?.weapon.hasWeaponMastery,
+    ).toBe(true);
     expect(
       state.context.characters.get(fighterId)?.unitPresentationSources,
     ).toEqual(

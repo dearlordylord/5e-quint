@@ -52,7 +52,10 @@ import {
   spellTargetFill,
   spellTargetListFill,
 } from "./unit-profile-admission-spell-fill-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+import {
+  spellAdmissionSource,
+  spellRecord,
+} from "./unit-profile-admission-spell-record-support.ts";
 import {
   BattleFillSchema,
   BattleHoleSchema,
@@ -1256,7 +1259,10 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     ];
 
     expect(
-      supportedPreparedSaveGateConditionProfile(spell, spellSlots),
+      supportedPreparedSaveGateConditionProfile(
+        spellAdmissionSource(spell),
+        spellSlots,
+      ),
     ).toEqual([]);
     expect(
       supportedPreparedSleepTargetAdmissionProfile(spell, spellSlots),

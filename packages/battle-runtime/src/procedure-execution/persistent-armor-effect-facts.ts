@@ -27,7 +27,7 @@ export type PersistentArmorEffectExecutionFacts = {
 };
 
 export function persistentArmorEffectExecutionFactsForSpell(
-  spell: BattleSpellAdmissionSource,
+  spell: Pick<BattleSpellAdmissionSource, "mechanics">,
 ): PersistentArmorEffectExecutionFacts | null {
   if (
     spell.mechanics.family !== "ongoing_effect" ||

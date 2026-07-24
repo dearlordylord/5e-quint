@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { Either } from "effect";
+import { Brand, Either } from "effect";
 
 import {
   BARDIC_INSPIRATION_GRANT_SUPPORT_PROFILE,
@@ -9,6 +9,7 @@ import {
   WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE,
   battleCreatureInitFromStatBlock,
   battleId,
+  battleObjectId,
   admitCharacterWeaponAttackExecutionWeapon,
   characterId,
   combatantId,
@@ -1166,6 +1167,14 @@ function character(
             grip: "one_handed",
           },
         });
+  const reconciledAttack =
+    attack === null
+      ? attack
+      : reconcileMcpCharacterWeaponAttack(
+          attack,
+          selectedLoadout.weapon,
+          input.weaponMasteries,
+        );
   const ac = {
     ...(input.armorClass ?? defaultArmorClassState()),
     rightHandUse:
@@ -1229,7 +1238,7 @@ function character(
       tempHp: Hp(0),
       selectedLoadout,
       weaponMasteries: input.weaponMasteries ?? [],
-      attack,
+      attack: reconciledAttack,
       unarmedStrike: {
         kind: "unarmedStrike",
         effect: {
@@ -1267,12 +1276,46 @@ function weaponAttack(
     kind: "weapon",
     weapon: admitCharacterWeaponAttackExecutionWeapon(
       weapon,
-      `main:${weapon.id}`,
+      battleObjectId(`main:${weapon.id}`),
+      [],
     ),
     ability,
     abilityModifier: abilityModifier(mod),
     attackBonus: attackBonus(mod + 2),
     damageAbilityModifier: abilityModifier(mod),
+  };
+}
+
+function reconcileMcpCharacterWeaponAttack(
+  attack: CharacterWeaponAttackActionOption,
+  loadoutWeapon:
+    | {
+        readonly itemId: string;
+        readonly unitId: string & Brand.Brand<"UnitId">;
+        readonly grip: "one_handed" | "two_handed";
+      }
+    | undefined,
+  weaponMasteries:
+    | readonly { readonly weaponUnitId: string & Brand.Brand<"UnitId"> }[]
+    | undefined,
+): CharacterWeaponAttackActionOption {
+  const loadoutObjectId =
+    loadoutWeapon === undefined
+      ? attack.weapon.weaponObjectId
+      : battleObjectId(loadoutWeapon.itemId);
+  const hasWeaponMastery =
+    weaponMasteries === undefined
+      ? attack.weapon.hasWeaponMastery
+      : weaponMasteries.some(
+          (mastery) => mastery.weaponUnitId === attack.weapon.weaponUnitId,
+        );
+  return {
+    ...attack,
+    weapon: {
+      ...attack.weapon,
+      weaponObjectId: loadoutObjectId,
+      hasWeaponMastery,
+    },
   };
 }
 

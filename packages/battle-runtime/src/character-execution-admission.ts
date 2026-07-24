@@ -87,14 +87,7 @@ export type {
 } from "./character-execution-vocabulary.ts";
 
 /** Authored spell admission retained only until execution projection. */
-export type AuthoredSupportedSpellInvocation =
-  SupportedSpellInvocation extends infer Invocation
-    ? Invocation extends {
-        readonly spell: unknown;
-      }
-      ? Omit<Invocation, "spell"> & { readonly spell: AuthoredSpellSource }
-      : never
-    : never;
+export type AuthoredSupportedSpellInvocation = SupportedSpellInvocation;
 
 export type AuthoredSelectedSpellInvocation<
   I extends AuthoredSupportedSpellInvocation = AuthoredSupportedSpellInvocation,

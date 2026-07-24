@@ -177,7 +177,7 @@ function spellHostedWeaponAttacks(
           formLimbs: activeWildShape.formLimbs,
           equipmentDisposition: activeWildShape.equipmentDisposition,
           objectKind: "mainWeapon",
-          unitId: origin.selectedLoadout.weapon.unitId,
+          objectId: origin.attack.weapon.weaponObjectId,
         })))
       ? []
       : [
@@ -194,7 +194,7 @@ function spellHostedWeaponAttacks(
           formLimbs: activeWildShape.formLimbs,
           equipmentDisposition: activeWildShape.equipmentDisposition,
           objectKind: "offHandWeapon",
-          unitId: origin.selectedLoadout.offHandWeapon.unitId,
+          objectId: origin.offHandAttack.weapon.weaponObjectId,
         })))
       ? []
       : [

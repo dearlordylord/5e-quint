@@ -31,7 +31,6 @@ import {
   applyStatBlockRechargeRolls,
   refreshStatBlockStartTurnExecution,
   spendStatBlockProcedureResources,
-  type StatBlockExecutionAdmission,
   type StatBlockExecutionState,
 } from "../stat-block-execution-state.ts";
 import type { BattleDruidWildShapeKnownForm } from "../druid-wild-shape-known-form-execution.ts";
@@ -61,6 +60,8 @@ import type {
   WildShapeFormLimbObjectHandlingWitness,
 } from "./wild-shape-equipment.ts";
 import { wildShapeEquipmentDispositionWearsKind } from "./wild-shape-equipment.ts";
+import type { ActiveDruidWildShape } from "./druid-wild-shape-types.ts";
+export type { ActiveDruidWildShape } from "./druid-wild-shape-types.ts";
 
 const WILD_SHAPE_BEAST_ABILITY_SCORE_ABILITIES = [
   "str",
@@ -88,14 +89,6 @@ const SKILL_ABILITIES = {
   stealth: "dex",
   survival: "wis",
 } as const satisfies Record<Skill, Ability>;
-
-export type ActiveDruidWildShape = {
-  readonly effect: Extract<
-    BattleActiveEffect,
-    { readonly kind: "druidWildShapeForm" }
-  >;
-  readonly admission: StatBlockExecutionAdmission<BattleDruidWildShapeKnownForm>;
-};
 
 export function druidWildShapeAvailableFormsIssueForProfile(
   forms: readonly BattleDruidWildShapeKnownForm[] | undefined,

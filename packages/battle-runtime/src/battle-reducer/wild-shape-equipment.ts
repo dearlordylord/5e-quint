@@ -244,7 +244,7 @@ export function wildShapeCanUseWornLoadoutObject(input: {
   readonly formLimbs: WildShapeFormLimbObjectHandlingWitness;
   readonly equipmentDisposition: readonly ActiveWildShapeEquipmentDisposition[];
   readonly objectKind: WildShapeEffectiveLoadoutWornKind;
-  readonly unitId: WildShapeLoadoutObjectRef["unitId"];
+  readonly objectId: BattleObjectId;
 }): boolean {
   return wildShapeWornLoadoutObjectForUse(input) !== undefined;
 }
@@ -280,7 +280,7 @@ export function loadoutWeaponItemIsUsableDuringWildShape(input: {
       formLimbs: input.activeWildShape.formLimbs,
       equipmentDisposition: input.activeWildShape.equipmentDisposition,
       objectKind: heldWeapon.objectKind,
-      unitId: heldWeapon.unitId,
+      objectId: battleObjectId(heldWeapon.itemId),
     })
   );
 }
@@ -290,14 +290,15 @@ export function wildShapeWornLoadoutObjectForUse(input: {
   readonly formLimbs: WildShapeFormLimbObjectHandlingWitness;
   readonly equipmentDisposition: readonly ActiveWildShapeEquipmentDisposition[];
   readonly objectKind: WildShapeEffectiveLoadoutWornKind;
-  readonly unitId: WildShapeLoadoutObjectRef["unitId"];
+  readonly objectId: BattleObjectId;
 }): WildShapeWornLoadoutObjectRef | undefined {
   if (!wildShapeFormLimbsCanHandleObjects(input.formLimbs)) {
     return undefined;
   }
   const item = wildShapeLoadoutObjectRefs(input.loadout).find(
     (candidate): candidate is WildShapeWornLoadoutObjectRef =>
-      candidate.kind === input.objectKind && candidate.unitId === input.unitId,
+      candidate.kind === input.objectKind &&
+      candidate.objectId === input.objectId,
   );
   return item !== undefined &&
     wildShapeEquipmentDispositionWearsObject(input.equipmentDisposition, item)

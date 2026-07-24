@@ -52,7 +52,10 @@ import { spellAdmissionContextFor } from "./battle-reducer/spell-procedure-profi
 import { spellFillSet } from "./battle-reducer/spells-resolve-fill-set.ts";
 import { spellTargetListHole } from "./battle-reducer/spells-holes-fills.ts";
 import { spellProcedureExecution } from "./character-execution-admission.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+import {
+  spellAdmissionSource,
+  spellRecord,
+} from "./unit-profile-admission-spell-record-support.ts";
 import { endTurn } from "./unit-profile-admission-test-support.ts";
 import {
   battleObjectId,
@@ -93,7 +96,7 @@ function rayOfEnfeeblementInvocation(
     throw new Error("Expected spell caster admission actor.");
   }
   const invocation = abilityD20TestRollModeSaveGateProfile.admit(
-    spell,
+    spellAdmissionSource(spell),
     admissionContext,
   )[0];
   expect(invocation).toBeDefined();

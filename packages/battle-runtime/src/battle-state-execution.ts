@@ -184,15 +184,14 @@ import type {
 
 export type BattleSpellAdmissionSource = {
   readonly id: UnitId;
+  readonly name: string;
   readonly mechanics: SpellMechanics;
   /**
    * Resource pool refs that can free-cast this spell through a class feature.
    * Populated at spell-admission time so reducer execution does not need to
    * dispatch on the spell's authored id.
    */
-  readonly classFeatureFreeCastResourcePoolRefs?:
-    | readonly BattleResourcePoolExecutionRef[]
-    | undefined;
+  readonly classFeatureFreeCastResourcePoolRefs: readonly BattleResourcePoolExecutionRef[];
 };
 import type {
   AttackDamageDieFloorChoiceFill,
@@ -3540,7 +3539,7 @@ export type SupportedSpellInvocation = {
       ? Procedure extends Invocation["procedure"]
         ? Omit<Invocation, "spell" | "procedure"> & {
             readonly procedure: Procedure;
-            readonly spell: Pick<Spell, "id" | "mechanics">;
+            readonly spell: Pick<Spell, "id" | "name" | "mechanics">;
           }
         : never
       : never
@@ -3924,7 +3923,6 @@ type BattleCreatureStateCommon = {
         readonly druidWildShapeAvailableForms?: readonly StatBlockExecutionAdmission<BattleDruidWildShapeKnownForm>[];
         readonly weaponProficiencies: readonly WeaponProficiency[];
         readonly selectedLoadout: CharacterBattleLoadoutRef;
-        readonly weaponMasteryObjectIds: readonly BattleObjectId[];
         readonly invocationFeatures: readonly CharacterBattleInvocationFeature[];
         readonly speed: BattleWalkSpeed;
         readonly attack: BoundCharacterWeaponAttackActionOption | null;

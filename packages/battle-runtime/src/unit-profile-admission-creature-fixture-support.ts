@@ -36,6 +36,7 @@ import {
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import { admitCharacterWeaponAttackExecutionWeapon } from "./character-weapon-execution-admission.ts";
+import { battleObjectId } from "./identity.ts";
 import { attackActionOptionForSubject } from "./battle-reducer/attack-damage-apply.ts";
 import {
   spellCasterId,
@@ -128,16 +129,28 @@ export function characterCreature(input: {
             grip: "one_handed" as const,
           },
         });
-  const weaponPresentationUnitRefs = [attack, input.offHandAttack].flatMap(
-    (candidate) => {
-      if (candidate === null || candidate === undefined) return [];
-      const unit = [...unitLibrary.listUnits(), ...testUnitRecords].find(
-        (entry) =>
-          entry.kind === "weapon" && entry.id === candidate.weapon.weaponUnitId,
-      );
-      return unit?.kind === "weapon" ? [{ unit, supportProfiles: [] }] : [];
-    },
-  );
+  const reconciledAttack =
+    attack === null
+      ? attack
+      : reconcileCharacterCreatureWeaponAttack(attack, selectedLoadout.weapon);
+  const reconciledOffHandAttack =
+    input.offHandAttack === undefined
+      ? input.offHandAttack
+      : reconcileCharacterCreatureWeaponAttack(
+          input.offHandAttack,
+          selectedLoadout.offHandWeapon,
+        );
+  const weaponPresentationUnitRefs = [
+    reconciledAttack,
+    reconciledOffHandAttack,
+  ].flatMap((candidate) => {
+    if (candidate === null || candidate === undefined) return [];
+    const unit = [...unitLibrary.listUnits(), ...testUnitRecords].find(
+      (entry) =>
+        entry.kind === "weapon" && entry.id === candidate.weapon.weaponUnitId,
+    );
+    return unit?.kind === "weapon" ? [{ unit, supportProfiles: [] }] : [];
+  });
   const characterUnitRefs = [
     ...new Map(
       [...weaponPresentationUnitRefs, ...(input.characterUnitRefs ?? [])].map(
@@ -179,10 +192,10 @@ export function characterCreature(input: {
       maxHp: Hp(input.maxHp ?? 12),
       tempHp: Hp(input.tempHp ?? 0),
       selectedLoadout,
-      attack,
-      ...(input.offHandAttack === undefined
+      attack: reconciledAttack,
+      ...(reconciledOffHandAttack === undefined
         ? {}
-        : { offHandAttack: input.offHandAttack }),
+        : { offHandAttack: reconciledOffHandAttack }),
       ...(input.unitFeatures === undefined
         ? {}
         : { unitFeatures: input.unitFeatures }),
@@ -205,6 +218,38 @@ export function characterCreature(input: {
       ...(input.spellcasting === undefined
         ? {}
         : { spellcasting: input.spellcasting }),
+    },
+  };
+}
+
+function reconcileCharacterCreatureWeaponAttack(
+  attack: NonNullable<
+    Extract<
+      BattleCreatureInit["creatureInit"],
+      { readonly kind: "character" }
+    >["attack"]
+  >,
+  loadoutWeapon:
+    | Extract<
+        BattleCreatureInit["creatureInit"],
+        { readonly kind: "character" }
+      >["selectedLoadout"]["offHandWeapon"]
+    | undefined,
+): NonNullable<
+  Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["attack"]
+> {
+  const loadoutObjectId =
+    loadoutWeapon === undefined
+      ? attack.weapon.weaponObjectId
+      : battleObjectId(loadoutWeapon.itemId);
+  return {
+    ...attack,
+    weapon: {
+      ...attack.weapon,
+      weaponObjectId: loadoutObjectId,
     },
   };
 }
@@ -337,7 +382,8 @@ export function zeroAbilityWeaponAttack(
     kind: "weapon",
     weapon: admitCharacterWeaponAttackExecutionWeapon(
       weapon,
-      `main:${weapon.id}`,
+      battleObjectId(`main:${weapon.id}`),
+      [],
     ),
     ability: "str",
     abilityModifier: abilityModifier(0),

@@ -61,6 +61,7 @@ import {
 } from "./procedure-admission/persistent-armor-effect-facts.ts";
 import {
   characterBattleResourceIsPointPool,
+  resourceHasUsesRemaining,
   type CharacterBattleActivationResource,
   type CharacterBattlePointPoolResourceState,
   type CharacterBattleMetamagicOptionFact,
@@ -71,6 +72,7 @@ import {
   type SupportedPointPoolResource,
   type UnlimitedActivationResource,
 } from "./character-battle-resource-execution.ts";
+import type { BattleSpellAdmissionSource } from "./battle-state-execution.ts";
 export {
   characterBattleResourceIsPointPool,
   characterBattleResourceIsUnlimited,
@@ -275,6 +277,11 @@ export type CharacterBattleSpellSlotState = {
   readonly expended: ResourceCount;
 };
 
+export type CharacterBattleAdmittedSpell = {
+  readonly spell: SpellRecord;
+  readonly classFeatureFreeCastResourcePoolRefs: readonly BattleResourcePoolExecutionRef[];
+};
+
 export type CharacterBattleSpellcastingInit = {
   readonly sourceClassName: ClassName;
   readonly spellcastingAbilityModifier: number;
@@ -293,6 +300,8 @@ export type CharacterBattleSpellcastingInit = {
 export type CharacterBattleSpellcastingState = Omit<
   CharacterBattleSpellcastingInit,
   | "spellcastingAbilityModifier"
+  | "cantrips"
+  | "preparedSpells"
   | "featurePreparedSpells"
   | "spellbookRitualSpellAccesses"
   | "bookOfShadowsSpellAccesses"
@@ -301,6 +310,8 @@ export type CharacterBattleSpellcastingState = Omit<
   | "spellSlotExpenditures"
 > & {
   readonly spellcastingAbilityModifier: AbilityModifier;
+  readonly cantrips: readonly CharacterBattleAdmittedSpell[];
+  readonly preparedSpells: readonly CharacterBattleAdmittedSpell[];
   readonly spellbookRitualSpellAccesses: readonly CharacterBattleSpellbookRitualSpellAccessInit[];
   readonly bookOfShadowsSpellAccesses: readonly CharacterBattleBookOfShadowsSpellAccessInit[];
   readonly invocationSpellAccesses: readonly CharacterBattleInvocationSpellAccessState[];
@@ -339,11 +350,15 @@ export function effectiveCharacterBattleCantrips(
     CharacterBattleSpellcastingState,
     "bookOfShadowsSpellAccesses" | "cantrips"
   >,
-): readonly SpellRecord[] {
-  return distinctSpellsById([
+): readonly CharacterBattleAdmittedSpell[] {
+  return distinctAdmittedSpellsById([
     ...spellcasting.cantrips,
-    ...bookOfShadowsOnPersonAccesses(spellcasting).flatMap(
-      (access) => access.cantrips,
+    ...bookOfShadowsOnPersonAccesses(spellcasting).flatMap((access) =>
+      access.cantrips.map((spell) => ({
+        spell,
+        classFeatureFreeCastResourcePoolRefs:
+          [] as readonly BattleResourcePoolExecutionRef[],
+      })),
     ),
   ]);
 }
@@ -353,13 +368,53 @@ export function effectiveCharacterBattlePreparedSpells(
     CharacterBattleSpellcastingState,
     "bookOfShadowsSpellAccesses" | "preparedSpells"
   >,
-): readonly SpellRecord[] {
-  return distinctSpellsById([
+): readonly CharacterBattleAdmittedSpell[] {
+  return distinctAdmittedSpellsById([
     ...spellcasting.preparedSpells,
-    ...bookOfShadowsOnPersonAccesses(spellcasting).flatMap(
-      (access) => access.ritualSpells,
+    ...bookOfShadowsOnPersonAccesses(spellcasting).flatMap((access) =>
+      access.ritualSpells.map((spell) => ({
+        spell,
+        classFeatureFreeCastResourcePoolRefs:
+          [] as readonly BattleResourcePoolExecutionRef[],
+      })),
     ),
   ]);
+}
+
+function distinctAdmittedSpellsById(
+  spells: readonly CharacterBattleAdmittedSpell[],
+): readonly CharacterBattleAdmittedSpell[] {
+  const seen = new Set<SpellRecord["id"]>();
+  const result: CharacterBattleAdmittedSpell[] = [];
+  for (const spell of spells) {
+    if (seen.has(spell.spell.id)) continue;
+    seen.add(spell.spell.id);
+    result.push(spell);
+  }
+  return result;
+}
+
+export function admittedSpellToAdmissionSource(
+  admitted: CharacterBattleAdmittedSpell,
+): BattleSpellAdmissionSource {
+  return {
+    id: admitted.spell.id,
+    name: admitted.spell.name,
+    mechanics: admitted.spell.mechanics,
+    classFeatureFreeCastResourcePoolRefs:
+      admitted.classFeatureFreeCastResourcePoolRefs,
+  };
+}
+
+export function spellRecordToAdmissionSource(
+  spell: SpellRecord,
+): BattleSpellAdmissionSource {
+  return {
+    id: spell.id,
+    name: spell.name,
+    mechanics: spell.mechanics,
+    classFeatureFreeCastResourcePoolRefs: [],
+  };
 }
 
 function bookOfShadowsOnPersonAccesses(
@@ -917,6 +972,26 @@ export function spendCharacterPointPoolResource(input: {
   });
 }
 
+function admittedSpellWithFreeCastRefs(
+  spell: SpellRecord,
+  resources: readonly CharacterBattleResourceState[],
+  resourceOwnership: readonly CharacterBattleResourceOwnership[],
+): CharacterBattleAdmittedSpell {
+  return {
+    spell,
+    classFeatureFreeCastResourcePoolRefs: resourceOwnership.flatMap((owner) => {
+      const resource = resources.find(
+        (candidate) => candidate.resourcePoolRef === owner.resourcePoolRef,
+      );
+      return resource !== undefined &&
+        characterResourceIsClassFeatureFreeCastForSpell(owner, spell.id) &&
+        resourceHasUsesRemaining(resource)
+        ? [resource.resourcePoolRef]
+        : [];
+    }),
+  };
+}
+
 export function characterSpellcastingState(
   input: CharacterBattleSpellcastingStateInit,
   classLevels: readonly CharacterBattleClassLevel[],
@@ -924,6 +999,8 @@ export function characterSpellcastingState(
     | CharacterBattleResourceInit
     | CharacterBattleFeatureInit
   )[],
+  resources: readonly CharacterBattleResourceState[],
+  resourceOwnership: readonly CharacterBattleResourceOwnership[],
 ): CharacterBattleSpellcastingState {
   const spellSlotLevels = new Set<number>();
   for (const slot of input.spellSlots) {
@@ -1000,10 +1077,14 @@ export function characterSpellcastingState(
     ),
     proficiencyBonus: input.proficiencyBonus,
     canCastSpells: input.canCastSpells,
-    cantrips: input.cantrips,
+    cantrips: input.cantrips.map((spell) =>
+      admittedSpellWithFreeCastRefs(spell, resources, resourceOwnership),
+    ),
     preparedSpells: preparedSpellsWithFeatureAccess(
       input.preparedSpells,
       input.featurePreparedSpells,
+    ).map((spell) =>
+      admittedSpellWithFreeCastRefs(spell, resources, resourceOwnership),
     ),
     spellbookRitualSpellAccesses: input.spellbookRitualSpellAccesses,
     bookOfShadowsSpellAccesses: input.bookOfShadowsSpellAccesses ?? [],

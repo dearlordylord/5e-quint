@@ -52,7 +52,12 @@ import {
   spendCharacterResourceUse,
   type CharacterBattleResourceState,
 } from "../character-battle-resource-execution.ts";
-import { CombatantId, type BattleProcedureExecutionRef } from "../identity.ts";
+import {
+  battleObjectId,
+  CombatantId,
+  type BattleObjectId,
+  type BattleProcedureExecutionRef,
+} from "../identity.ts";
 import {
   combatantCanSee,
   currentActorId,
@@ -584,12 +589,12 @@ function sacredWeaponHeldMeleeWeapons(
   if (
     main !== undefined &&
     actor.origin.attack?.kind === "weapon" &&
-    actor.origin.attack.weapon.weaponUnitId === main.unitId &&
+    actor.origin.attack.weapon.weaponObjectId === battleObjectId(main.itemId) &&
     wildShapeCanUseLoadoutWeaponObject({
       loadout: actor.origin.selectedLoadout,
       activeWildShape,
       objectKind: "mainWeapon",
-      unitId: main.unitId,
+      objectId: battleObjectId(main.itemId),
     }) &&
     actor.origin.attack.weapon.usage === "melee"
   ) {
@@ -602,12 +607,13 @@ function sacredWeaponHeldMeleeWeapons(
   if (
     offHand !== undefined &&
     actor.origin.offHandAttack?.kind === "weapon" &&
-    actor.origin.offHandAttack.weapon.weaponUnitId === offHand.unitId &&
+    actor.origin.offHandAttack.weapon.weaponObjectId ===
+      battleObjectId(offHand.itemId) &&
     wildShapeCanUseLoadoutWeaponObject({
       loadout: actor.origin.selectedLoadout,
       activeWildShape,
       objectKind: "offHandWeapon",
-      unitId: offHand.unitId,
+      objectId: battleObjectId(offHand.itemId),
     }) &&
     actor.origin.offHandAttack.weapon.usage === "melee"
   ) {
@@ -626,7 +632,7 @@ function wildShapeCanUseLoadoutWeaponObject(input: {
     WildShapeLoadoutObjectRef["kind"],
     "mainWeapon" | "offHandWeapon"
   >;
-  readonly unitId: WildShapeLoadoutObjectRef["unitId"];
+  readonly objectId: BattleObjectId;
 }): boolean {
   if (input.activeWildShape === null) return true;
   return wildShapeCanUseWornLoadoutObject({
@@ -634,7 +640,7 @@ function wildShapeCanUseLoadoutWeaponObject(input: {
     formLimbs: input.activeWildShape.formLimbs,
     equipmentDisposition: input.activeWildShape.equipmentDisposition,
     objectKind: input.objectKind,
-    unitId: input.unitId,
+    objectId: input.objectId,
   });
 }
 

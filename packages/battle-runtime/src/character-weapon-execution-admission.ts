@@ -1,15 +1,20 @@
+import { type UnitId } from "@dnd/shared/game-facts";
 import type { WeaponRecord } from "@dnd/surface/surface/types";
 
-import { battleObjectId } from "./identity.ts";
+import type { BattleObjectId } from "./identity.ts";
 import type { CharacterWeaponAttackExecutionWeapon } from "./battle-action-options.ts";
 
 export function admitCharacterWeaponAttackExecutionWeapon(
   weapon: WeaponRecord,
-  itemId: string,
+  objectId: BattleObjectId,
+  weaponMasteries: readonly { readonly weaponUnitId: UnitId }[],
 ): CharacterWeaponAttackExecutionWeapon {
   return {
     weaponUnitId: weapon.id,
-    weaponObjectId: battleObjectId(itemId),
+    weaponObjectId: objectId,
+    hasWeaponMastery: weaponMasteries.some(
+      (mastery) => mastery.weaponUnitId === weapon.id,
+    ),
     ...(weapon.attachedWeaponAttackOverrideEligibility === undefined
       ? {}
       : {

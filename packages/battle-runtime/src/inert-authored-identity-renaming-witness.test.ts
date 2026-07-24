@@ -1,6 +1,5 @@
 import { describe, expect, test } from "vitest";
 import { initiativeOrder } from "@dnd/shared-algebras/initiative-algebra";
-import type { ConditionState } from "@dnd/shared-algebras/conditions-algebra";
 import { characterId, combatantId, type CombatantId } from "./identity.ts";
 import { unitId } from "@dnd/shared/game-facts";
 import type {
@@ -12,8 +11,7 @@ import type {
   BattleTurnResources,
 } from "./battle-state-execution.ts";
 import type { CharacterProcedureBinding } from "./character-execution-vocabulary.ts";
-import type { Condition } from "@dnd/shared/types";
-import { Match } from "effect";
+
 import { currentActorId } from "./battle-reducer/creature-state-leaves.ts";
 import { discoverBattleActCandidatesWithoutSpellProcedures } from "./battle-reducer/battle-discovery.ts";
 import { endTurn } from "./battle-execution-composition.ts";
@@ -64,18 +62,6 @@ function isCharacterSnapshot(
   return snapshot.origin.kind === "character";
 }
 
-function activeConditionStateCount(conditions: ConditionState): number {
-  return (
-    Object.entries(conditions).filter(
-      ([key, value]) => key !== "directIncapacitated" && value,
-    ).length + (conditions.directIncapacitated ? 1 : 0)
-  );
-}
-
-function activeConditionListCount(conditions: readonly Condition[]): number {
-  return conditions.length;
-}
-
 function activeEffectKindCounts(
   effects: readonly BattleActiveEffect[],
 ): ReadonlyArray<readonly [string, number]> {
@@ -86,21 +72,19 @@ function activeEffectKindCounts(
   return Array.from(counts.entries()).sort(([a], [b]) => a.localeCompare(b));
 }
 
-const ACTIVE_EFFECT_IDENTITY_KEYS = [
+const ACTIVE_EFFECT_IDENTITY_KEYS = new Set<string>([
   "sourceProcedureRef",
   "sourceCombatantId",
   "activeEffectRef",
   "effectRef",
-] as const satisfies ReadonlyArray<string>;
+]);
 
 function activeEffectMechanicalProjection(
   effect: BattleActiveEffect,
 ): Record<string, unknown> {
   const projection: Record<string, unknown> = { kind: effect.kind };
   for (const [key, value] of Object.entries(effect)) {
-    // Widening to `ReadonlyArray<string>` lets `includes` accept any runtime
-    // key string; the tuple type alone only accepts its literal members.
-    if ((ACTIVE_EFFECT_IDENTITY_KEYS as ReadonlyArray<string>).includes(key)) {
+    if (ACTIVE_EFFECT_IDENTITY_KEYS.has(key)) {
       continue;
     }
     projection[key] = value;
@@ -109,56 +93,19 @@ function activeEffectMechanicalProjection(
 }
 
 function procedureBindingProjection(binding: CharacterProcedureBinding) {
-  const procedure = binding.procedure;
-  const byKind = Match.discriminator("kind");
-  return Match.value(procedure).pipe(
-    byKind("spellInvocation", (spellInvocation) => ({
-      kind: "spellInvocation" as const,
-      executionProcedure: spellInvocation.execution.procedure,
-    })),
-    byKind("unavailableSpellInvocation", (unavailable) => ({
-      kind: "unavailableSpellInvocation" as const,
-      executionProcedure: unavailable.execution.procedure,
-    })),
-    byKind("unitFeature", () => ({ kind: "unitFeature" as const })),
-    byKind("unitSupportProfile", () => ({
-      kind: "unitSupportProfile" as const,
-    })),
-    Match.exhaustive,
-  );
-}
-
-function actionEconomyProjection(turnResources: BattleTurnResources) {
+  // Include the full procedure payload; the procedureRef is an execution key,
+  // not an authored identity field, and is identical between original and
+  // renamed states for this witness.
   return {
-    actionResourceCount: turnResources.actionResources.length,
-    currentHasBonusAction: turnResources.currentHasBonusAction,
-    actionOrBonusActionExclusion: turnResources.actionOrBonusActionExclusion,
-    movementActionBonusActionExclusion:
-      turnResources.movementActionBonusActionExclusion,
+    procedureRef: binding.procedureRef,
+    procedure: binding.procedure,
   };
 }
 
 function turnResourcesProjection(turnResources: BattleTurnResources) {
-  return {
-    ...actionEconomyProjection(turnResources),
-    attackRollMadeThisTurn: turnResources.attackRollMadeThisTurn,
-    lightWeaponAttackMade: turnResources.lightWeaponAttackMade !== undefined,
-    dashMovementBonusFeet: Number(turnResources.dashMovementBonusFeet),
-    disengaged: turnResources.disengaged,
-    pendingAttackRollMissToHitReplacementSelection:
-      turnResources.pendingAttackRollMissToHitReplacementSelection !==
-      undefined,
-    commandHalt: turnResources.commandHalt?.kind ?? null,
-    jumpDistanceMultiplier:
-      turnResources.jumpDistanceMultiplier?.multiplier ?? null,
-    spellSlotUseCount: turnResources.spellSlotUsesThisTurn.length,
-    levelOnePlusSpellCastCount:
-      turnResources.levelOnePlusSpellCastsThisTurn.length,
-    quickenedLevelOnePlusSpellCastCount:
-      turnResources.quickenedLevelOnePlusSpellCastsThisTurn.length,
-    carriedCreatureCount:
-      turnResources.heightenedStepOfTheWindCarriedCreatures.length,
-  };
+  // Include the full turn resources; none of these fields are the authored
+  // identity fields being renamed.
+  return { ...turnResources };
 }
 
 function combatantMechanicalProjection(combatant: BattleCreatureState) {
@@ -170,29 +117,23 @@ function combatantMechanicalProjection(combatant: BattleCreatureState) {
     size: combatant.size,
     movementSpentFeet: Number(combatant.movementSpentFeet),
     reactionAvailable: combatant.reactionAvailable,
-    activeConditionCount: activeConditionStateCount(combatant.conditions),
+    conditions: combatant.conditions,
     activeEffectMechanicalProjections: combatant.activeEffects.map(
       activeEffectMechanicalProjection,
     ),
     activeEffectKindCounts: activeEffectKindCounts(combatant.activeEffects),
-    concentration:
-      combatant.concentration === null
-        ? null
-        : {
-            effectKind: combatant.concentration.effectKind,
-            hasMaintenanceAdvantage:
-              combatant.concentration.maintenanceSavingThrowRollMode ===
-              "advantage",
-          },
+    concentration: combatant.concentration,
     hidden: combatant.hidden !== null,
     dodging: combatant.dodging,
     ...(combatant.origin.kind === "character"
       ? {
-          procedureBindingSummaries:
-            combatant.origin.execution.procedureBindings.map(
-              procedureBindingProjection,
-            ),
-          characterResourceCount: combatant.origin.resources.length,
+          procedureBindings: combatant.origin.execution.procedureBindings.map(
+            procedureBindingProjection,
+          ),
+          characterResources: combatant.origin.resources,
+          spellcasting: combatant.origin.spellcasting,
+          druidWildShapeAvailableForms:
+            combatant.origin.druidWildShapeAvailableForms,
         }
       : {}),
   };
@@ -211,14 +152,17 @@ function stateMechanicalProjection(state: BattleState) {
   return {
     initiativeOrder: initiativeOrder(state.initiative),
     combatants,
+    executionScopeCursors: Array.from(state.executionScopeCursors.entries()),
+    companions: state.companions,
+    objectOutlines: state.objectOutlines,
+    lightEmitters: state.lightEmitters,
     turnResources: turnResourcesProjection(state.currentTurnResources),
-    interruptStack: state.interruptStack.map((frame) => frame.kind),
-    readiedSpellCount: state.readiedSpells.size,
-    readiedMovementCount: state.readiedMovements.size,
-    helpAttackCount: state.helpAttacks.length,
-    grappleCount: state.grapples.length,
-    legendaryActionWindowConsumed:
-      state.legendaryActionWindow?.consumed ?? null,
+    readiedSpells: Array.from(state.readiedSpells.entries()),
+    readiedMovements: Array.from(state.readiedMovements.entries()),
+    helpAttacks: state.helpAttacks,
+    grapples: state.grapples,
+    interruptStack: state.interruptStack,
+    legendaryActionWindow: state.legendaryActionWindow,
   };
 }
 
@@ -231,24 +175,48 @@ function snapshotCombatantMechanicalProjection(
     hp: Number(combatant.hp),
     maxHp: Number(combatant.maxHp),
     tempHp: Number(combatant.tempHp),
+    nextActiveEffectOrdinal: combatant.nextActiveEffectOrdinal,
+    activeEffectRefs: combatant.activeEffectRefs,
     armorClass: combatant.armorClass,
     size: combatant.size,
-    reactionAvailable: combatant.reactionAvailable,
-    movementSpentFeet: Number(combatant.movement.spentFeet),
-    activeConditionCount: activeConditionListCount(combatant.conditions),
-    activeEffectRefCount: combatant.activeEffectRefs.length,
+    zeroHpLifecycle: combatant.zeroHpLifecycle,
+    conditions: combatant.conditions,
     concentrating: combatant.concentrating,
     dodging: combatant.dodging,
+    reactionAvailable: combatant.reactionAvailable,
+    movement: combatant.movement,
+    origin: snapshotOriginMechanicalProjection(combatant.origin),
   };
+}
+
+function snapshotOriginMechanicalProjection(
+  origin: BattleCreatureSnapshot["origin"],
+) {
+  if (origin.kind === "character") {
+    const { characterId: _characterId, ...rest } = origin;
+    return rest;
+  }
+  const { statBlockId: _statBlockId, ...rest } = origin;
+  return rest;
 }
 
 function snapshotMechanicalProjection(snapshot: BattleSnapshot) {
   return {
     battleId: snapshot.battleId,
+    executionScopeCursors: snapshot.executionScopeCursors,
+    retiredExecutionScopeAllocations: snapshot.retiredExecutionScopeAllocations,
+    round: snapshot.round,
+    currentActorId: snapshot.currentActorId,
     turnOrder: snapshot.turnOrder,
     combatants: snapshot.combatants.map((combatant) =>
       snapshotCombatantMechanicalProjection(combatant),
     ),
+    companions: snapshot.companions,
+    lightEmitters: snapshot.lightEmitters,
+    obscurementZones: snapshot.obscurementZones,
+    acts: snapshot.acts,
+    turn: snapshot.turn,
+    readiedResponses: snapshot.readiedResponses,
   };
 }
 

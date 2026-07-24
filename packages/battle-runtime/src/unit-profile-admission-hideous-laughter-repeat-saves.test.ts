@@ -36,6 +36,7 @@ import {
 } from "./unit-profile-admission-spell-fill-support.ts";
 import {
   hideousLaughterWithPhase,
+  spellAdmissionSource,
   spellRecord,
   spellWithSaveGateRepeatSaves,
 } from "./unit-profile-admission-spell-record-support.ts";
@@ -762,20 +763,20 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
 
     expect(
       supportedPreparedSaveGateConditionProfile(
-        colorSprayWithRepeatSave,
+        spellAdmissionSource(colorSprayWithRepeatSave),
         spellSlots,
       ),
     ).toEqual([]);
     expect(
       supportedPreparedSaveGateAttackRollAdvantageProfile(
         spellCasterId,
-        faerieFireWithRepeatSave,
+        spellAdmissionSource(faerieFireWithRepeatSave),
         spellSlots,
       ),
     ).toEqual([]);
     expect(
       supportedPreparedHellishRebukeReactionSpellProfile(
-        hellishRebukeWithRepeatSave,
+        spellAdmissionSource(hellishRebukeWithRepeatSave),
         spellSlots,
       ),
     ).toEqual([]);
