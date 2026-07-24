@@ -98,6 +98,8 @@ function activeEffectMechanicalProjection(
 ): Record<string, unknown> {
   const projection: Record<string, unknown> = { kind: effect.kind };
   for (const [key, value] of Object.entries(effect)) {
+    // Widening to `ReadonlyArray<string>` lets `includes` accept any runtime
+    // key string; the tuple type alone only accepts its literal members.
     if ((ACTIVE_EFFECT_IDENTITY_KEYS as ReadonlyArray<string>).includes(key)) {
       continue;
     }
@@ -108,16 +110,21 @@ function activeEffectMechanicalProjection(
 
 function procedureBindingProjection(binding: CharacterProcedureBinding) {
   const procedure = binding.procedure;
+  const byKind = Match.discriminator("kind");
   return Match.value(procedure).pipe(
-    Match.when({ kind: "spellInvocation" }, (spellInvocation) => ({
+    byKind("spellInvocation", (spellInvocation) => ({
       kind: "spellInvocation" as const,
       executionProcedure: spellInvocation.execution.procedure,
     })),
-    Match.when({ kind: "unavailableSpellInvocation" }, (unavailable) => ({
+    byKind("unavailableSpellInvocation", (unavailable) => ({
       kind: "unavailableSpellInvocation" as const,
       executionProcedure: unavailable.execution.procedure,
     })),
-    Match.orElse((unitProcedure) => ({ kind: unitProcedure.kind })),
+    byKind("unitFeature", () => ({ kind: "unitFeature" as const })),
+    byKind("unitSupportProfile", () => ({
+      kind: "unitSupportProfile" as const,
+    })),
+    Match.exhaustive,
   );
 }
 

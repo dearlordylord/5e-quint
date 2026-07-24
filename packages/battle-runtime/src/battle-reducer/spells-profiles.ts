@@ -47,7 +47,10 @@ import { hasSaveGateRepeatSaves } from "./spell-procedure-profiles/_save-gate-he
 export * from "./spells-profiles-attack-damage.ts";
 
 import { admitPersistentArmorEffectInvocationSpellAccess } from "./spell-procedure-profiles/persistent-armor-effect.ts";
-import { admitRegisteredSpellProcedures } from "./spell-procedure-profiles/admission-registry.ts";
+import {
+  type SpellWithClassFeatureFreeCastRefs,
+  admitRegisteredSpellProcedures,
+} from "./spell-procedure-profiles/admission-registry.ts";
 import { spellAdmissionContextFor } from "./spell-procedure-profiles/admission-context.ts";
 import { activeOngoingFeaturesPreventSpellInvocation } from "./spells-invocation-guards.ts";
 import type { AuthoredSupportedSpellInvocation } from "../character-execution-admission.ts";
@@ -68,9 +71,6 @@ function classFeatureFreeCastResourcePoolRefsForSpell(
       : [];
   });
 }
-
-type SpellWithClassFeatureFreeCastRefs = SpellRecord &
-  Pick<BattleSpellAdmissionSource, "classFeatureFreeCastResourcePoolRefs">;
 
 function spellWithClassFeatureFreeCastRefs(
   spell: SpellRecord,
@@ -107,6 +107,7 @@ export function admittedSpellActs(
     return [];
   }
 
+  // Cast is safe: the guard above ensures `actor.origin.kind === "character"`.
   const characterActor = actor as CharacterBattleCreatureState;
   const spells = [...preparedSpells, ...cantrips].map((spell) =>
     spellWithClassFeatureFreeCastRefs(spell, characterActor, resourceOwnership),
