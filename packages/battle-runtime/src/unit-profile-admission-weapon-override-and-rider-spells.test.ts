@@ -581,7 +581,9 @@ describe("SRDINV84H deterministic Shillelagh weapon override admission", () => {
         currentTurnResources: {
           ...castSession.state.currentTurnResources,
           currentHasBonusAction: true,
-          lightWeaponAttackMade: { weaponItemId: "main:weapon_club" },
+          lightWeaponAttackMade: {
+            weaponItemId: battleObjectId("main:weapon_club"),
+          },
         },
       },
     });
@@ -1093,7 +1095,7 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
         sourceProcedureRef: expect.any(String),
         sourceCombatantId: spellCasterId,
         holderCombatantId: spellCasterId,
-        weaponItemId: "main:weapon_longsword",
+        weaponItemId: battleObjectId("main:weapon_longsword"),
         bonus: 1,
         expiresAt: {
           kind: "duration",
@@ -1105,14 +1107,14 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
       battleWeaponItemHasMagicWeaponEnhancement(
         cast.state,
         spellCasterId,
-        "main:weapon_longsword",
+        battleObjectId("main:weapon_longsword"),
       ),
     ).toBe(true);
     expect(
       battleWeaponItemMagicWeaponEnhancementBonus(
         cast.state,
         spellCasterId,
-        "main:weapon_longsword",
+        battleObjectId("main:weapon_longsword"),
       ),
     ).toBe(1);
   });
@@ -1208,7 +1210,7 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
             sourceProcedureRef: act.subject.procedureRef,
             sourceCombatantId: spellCasterId,
             holderCombatantId: spellCasterId,
-            weaponItemId: "other:weapon_longsword",
+            weaponItemId: battleObjectId("other:weapon_longsword"),
             bonus: 3,
             expiresAt: {
               kind: "duration",
@@ -1325,7 +1327,7 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
               }).subject.procedureRef,
               sourceCombatantId: spellCasterId,
               holderCombatantId: spellCasterId,
-              weaponItemId: "prior:weapon_longsword",
+              weaponItemId: battleObjectId("prior:weapon_longsword"),
               bonus: 1,
               expiresAt: {
                 kind: "duration",
@@ -1364,7 +1366,7 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
     expect(effects).toEqual([
       expect.objectContaining({
         holderCombatantId: spellCasterId,
-        weaponItemId: "main:weapon_longsword",
+        weaponItemId: battleObjectId("main:weapon_longsword"),
         bonus: 2,
       }),
     ]);
@@ -1393,7 +1395,7 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
               ),
               sourceCombatantId: spellTargetId,
               holderCombatantId: spellCasterId,
-              weaponItemId: "main:weapon_longsword",
+              weaponItemId: battleObjectId("main:weapon_longsword"),
               bonus: 1,
               expiresAt: {
                 kind: "duration",
@@ -1484,7 +1486,7 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
       battleWeaponItemHasMagicWeaponEnhancement(
         expired.state,
         spellCasterId,
-        "main:weapon_longsword",
+        battleObjectId("main:weapon_longsword"),
       ),
     ).toBe(false);
   });

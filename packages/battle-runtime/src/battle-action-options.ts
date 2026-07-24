@@ -16,6 +16,7 @@ import type { CharacterWeaponAttackExecutionWeapon } from "./character-weapon-ex
 import type { AttackDamageAbilityModifierChoice } from "./battle-reducer/attack-damage-ability-modifier-choice.ts";
 import type {
   BattleAttackProcedureExecutionRef,
+  BattleObjectId,
   BattleProcedureExecutionRef,
   BattleStatBlockProcedureExecutionRef,
 } from "./identity.ts";
@@ -44,6 +45,8 @@ export type { CharacterWeaponAttackExecutionWeapon } from "./character-weapon-ex
 export type CharacterWeaponAttackActionOption = {
   readonly kind: "weapon";
   readonly weapon: CharacterWeaponAttackExecutionWeapon;
+  readonly weaponObjectId: BattleObjectId;
+  readonly hasWeaponMastery: boolean;
   readonly ability: Ability;
   readonly abilityModifier: AbilityModifier;
   readonly attackBonus?: AttackBonus;

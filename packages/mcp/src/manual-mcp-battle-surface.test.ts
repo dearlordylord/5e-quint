@@ -1274,7 +1274,7 @@ function weaponAttack(
     throw new Error(`Expected weapon Unit: ${weaponId}`);
   return {
     kind: "weapon",
-    weapon: admitCharacterWeaponAttackExecutionWeapon(
+    ...admitCharacterWeaponAttackExecutionWeapon(
       weapon,
       battleObjectId(`main:${weapon.id}`),
       [],
@@ -1301,21 +1301,18 @@ function reconcileMcpCharacterWeaponAttack(
 ): CharacterWeaponAttackActionOption {
   const loadoutObjectId =
     loadoutWeapon === undefined
-      ? attack.weapon.weaponObjectId
+      ? attack.weaponObjectId
       : battleObjectId(loadoutWeapon.itemId);
   const hasWeaponMastery =
     weaponMasteries === undefined
-      ? attack.weapon.hasWeaponMastery
+      ? attack.hasWeaponMastery
       : weaponMasteries.some(
           (mastery) => mastery.weaponUnitId === attack.weapon.weaponUnitId,
         );
   return {
     ...attack,
-    weapon: {
-      ...attack.weapon,
-      weaponObjectId: loadoutObjectId,
-      hasWeaponMastery,
-    },
+    weaponObjectId: loadoutObjectId,
+    hasWeaponMastery,
   };
 }
 

@@ -243,14 +243,11 @@ function reconcileCharacterCreatureWeaponAttack(
 > {
   const loadoutObjectId =
     loadoutWeapon === undefined
-      ? attack.weapon.weaponObjectId
+      ? attack.weaponObjectId
       : battleObjectId(loadoutWeapon.itemId);
   return {
     ...attack,
-    weapon: {
-      ...attack.weapon,
-      weaponObjectId: loadoutObjectId,
-    },
+    weaponObjectId: loadoutObjectId,
   };
 }
 
@@ -380,7 +377,7 @@ export function zeroAbilityWeaponAttack(
   }
   return {
     kind: "weapon",
-    weapon: admitCharacterWeaponAttackExecutionWeapon(
+    ...admitCharacterWeaponAttackExecutionWeapon(
       weapon,
       battleObjectId(`main:${weapon.id}`),
       [],

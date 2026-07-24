@@ -194,7 +194,7 @@ function attachedWeaponAttacksEligibleForOverride(
       readonly attack: BoundCharacterWeaponAttackActionOption;
     } =>
       held.attack.weapon.usage === "melee" &&
-      held.itemId === held.attack.weapon.weaponObjectId &&
+      held.itemId === held.attack.weaponObjectId &&
       held.attack.weapon.attachedWeaponAttackOverrideEligibility?.kind ===
         "clubOrQuarterstaff",
   );

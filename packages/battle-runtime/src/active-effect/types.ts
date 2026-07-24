@@ -390,7 +390,7 @@ export type BattleActiveEffect =
       readonly kind: "druidWildShapeForm";
       // Execution-scope reference to the admitted Wild Shape form. The reducer
       // resolves the form's mechanical facts through this scope ref, never by
-      // authored Stat Block identity. See #224 inventory.
+      // authored Stat Block identity.
       readonly formScopeRef: BattleStatBlockExecutionScopeRef;
       readonly formLimbs: WildShapeFormLimbObjectHandlingWitness;
       readonly equipmentDisposition: readonly ActiveWildShapeEquipmentDisposition[];
@@ -401,7 +401,7 @@ export type BattleActiveEffect =
     })
   | (BattleUnitFeatureEffectBase & {
       readonly kind: "paladinSacredWeapon";
-      readonly weaponItemId: string;
+      readonly weaponItemId: BattleObjectId;
       readonly expiresAt: Extract<
         BattleActiveEffectExpiration,
         { readonly kind: "duration" }
@@ -999,7 +999,7 @@ export type BattleActiveEffect =
   | (BattleSpellEffectBase & {
       readonly kind: "spellMagicWeaponEnhancement";
       readonly holderCombatantId: CombatantId;
-      readonly weaponItemId: string;
+      readonly weaponItemId: BattleObjectId;
       readonly bonus: MagicWeaponEnhancementBonus;
       readonly expiresAt: Extract<
         BattleActiveEffectExpiration,

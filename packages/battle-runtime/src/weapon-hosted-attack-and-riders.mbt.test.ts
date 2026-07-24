@@ -39,6 +39,7 @@ import {
   zeroAbilityWeaponAttack,
 } from "./unit-profile-admission-creature-fixture-support.ts";
 import { attackActionOptionForSubject } from "./battle-reducer/attack-damage-apply.ts";
+import { battleObjectId } from "./identity.ts";
 import {
   divineFavorUnitId,
   magicWeaponUnitId,
@@ -1601,14 +1602,14 @@ function fillMagicWeaponTarget(
     battleWeaponItemHasMagicWeaponEnhancement(
       cast.state,
       spellCasterId,
-      "main:weapon_longsword",
+      battleObjectId("main:weapon_longsword"),
     ),
   ).toBe(true);
   expect(
     battleWeaponItemMagicWeaponEnhancementBonus(
       cast.state,
       spellCasterId,
-      "main:weapon_longsword",
+      battleObjectId("main:weapon_longsword"),
     ),
   ).toBe(1);
   return {
@@ -1691,7 +1692,7 @@ function weaponHostedProjection(
       battleWeaponItemMagicWeaponEnhancementBonus(
         state.battle.state,
         spellCasterId,
-        "main:weapon_longsword",
+        battleObjectId("main:weapon_longsword"),
       ) ?? 0,
     holes: battleHolesToWeaponHostedHoles(state.holes, state.pending),
     lastResult: state.lastResult,
@@ -1721,7 +1722,7 @@ function activeEffectPresent(
     return battleWeaponItemHasMagicWeaponEnhancement(
       battle,
       spellCasterId,
-      "main:weapon_longsword",
+      battleObjectId("main:weapon_longsword"),
     );
   }
   return false;

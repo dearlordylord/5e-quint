@@ -22,6 +22,7 @@ import { SKILLS as SURFACE_SKILLS } from "@dnd/surface/surface/types";
 import { Schema } from "effect";
 import {
   BattleAttackProcedureExecutionRef,
+  BattleObjectId,
   BattleProcedureExecutionRef,
   BattleResourcePoolExecutionRef,
   BattleStatBlockProcedureExecutionRef,
@@ -173,6 +174,8 @@ const AttackDamageAbilityModifierChoiceSchema = Schema.Struct({
 export const CharacterWeaponAttackActionOptionSchema = Schema.Struct({
   kind: Schema.Literal("weapon"),
   weapon: CharacterWeaponAttackExecutionWeaponSchema,
+  weaponObjectId: BattleObjectId,
+  hasWeaponMastery: Schema.Boolean,
   ability: AbilitySchema,
   abilityModifier: AbilityModifier,
   attackBonus: Schema.optionalWith(AttackBonus, {

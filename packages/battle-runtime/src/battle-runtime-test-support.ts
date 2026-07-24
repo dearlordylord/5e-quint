@@ -3643,21 +3643,18 @@ function reconcileCharacterSeedWeaponAttack(
 > {
   const loadoutObjectId =
     loadoutWeapon === undefined
-      ? attack.weapon.weaponObjectId
+      ? attack.weaponObjectId
       : battleObjectId(loadoutWeapon.itemId);
   const hasWeaponMastery =
     weaponMasteries === undefined
-      ? attack.weapon.hasWeaponMastery
+      ? attack.hasWeaponMastery
       : weaponMasteries.some(
           (mastery) => mastery.weaponUnitId === attack.weapon.weaponUnitId,
         );
   return {
     ...attack,
-    weapon: {
-      ...attack.weapon,
-      weaponObjectId: loadoutObjectId,
-      hasWeaponMastery,
-    },
+    weaponObjectId: loadoutObjectId,
+    hasWeaponMastery,
   };
 }
 
@@ -3702,7 +3699,7 @@ export function testLongswordAttack(): TestCharacterWeaponAttack {
 
   return {
     kind: "weapon",
-    weapon: admitCharacterWeaponAttackExecutionWeapon(
+    ...admitCharacterWeaponAttackExecutionWeapon(
       weapon,
       battleObjectId(`main:${weapon.id}`),
       [],
@@ -3759,7 +3756,7 @@ export function testDaggerAttack(): TestCharacterWeaponAttack {
 
   return {
     kind: "weapon",
-    weapon: admitCharacterWeaponAttackExecutionWeapon(
+    ...admitCharacterWeaponAttackExecutionWeapon(
       weapon,
       battleObjectId(`main:${weapon.id}`),
       [],
@@ -3777,7 +3774,7 @@ export function testShortswordAttack(): TestCharacterWeaponAttack {
 
   return {
     kind: "weapon",
-    weapon: admitCharacterWeaponAttackExecutionWeapon(
+    ...admitCharacterWeaponAttackExecutionWeapon(
       weapon,
       battleObjectId(`main:${weapon.id}`),
       [],
@@ -3795,7 +3792,7 @@ export function testQuarterstaffAttack(): TestCharacterWeaponAttack {
 
   return {
     kind: "weapon",
-    weapon: admitCharacterWeaponAttackExecutionWeapon(
+    ...admitCharacterWeaponAttackExecutionWeapon(
       weapon,
       battleObjectId(`main:${weapon.id}`),
       [],
@@ -3815,7 +3812,7 @@ export function testGreataxeAttack(
 
   return {
     kind: "weapon",
-    weapon: admitCharacterWeaponAttackExecutionWeapon(
+    ...admitCharacterWeaponAttackExecutionWeapon(
       weapon,
       battleObjectId(`main:${weapon.id}`),
       [],
@@ -3832,7 +3829,7 @@ export function testRangedCleaveLongbowAttack(): TestCharacterWeaponAttack {
   }
   return {
     kind: "weapon",
-    weapon: admitCharacterWeaponAttackExecutionWeapon(
+    ...admitCharacterWeaponAttackExecutionWeapon(
       unit,
       battleObjectId(`main:${unit.id}`),
       [],
@@ -3865,7 +3862,7 @@ export function testLightHammerAttack(): TestCharacterWeaponAttack {
 
   return {
     kind: "weapon",
-    weapon: admitCharacterWeaponAttackExecutionWeapon(
+    ...admitCharacterWeaponAttackExecutionWeapon(
       weapon,
       battleObjectId(`main:${weapon.id}`),
       [],

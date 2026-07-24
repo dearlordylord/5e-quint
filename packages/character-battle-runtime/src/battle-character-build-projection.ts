@@ -333,7 +333,7 @@ function characterWeaponAttackActionOption(
 
   const baseAttack = {
     kind: "weapon",
-    weapon: admitCharacterWeaponAttackExecutionWeapon(
+    ...admitCharacterWeaponAttackExecutionWeapon(
       unit.right,
       battleObjectId(itemId),
       weaponMasteries,

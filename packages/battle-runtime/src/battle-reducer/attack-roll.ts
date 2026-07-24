@@ -1710,7 +1710,7 @@ function tacticalMasterReplacementSelection(
   if (!isCharacterBattleCreatureState(attacker)) {
     return null;
   }
-  if (!attack.weapon.hasWeaponMastery) {
+  if (!attack.hasWeaponMastery) {
     return null;
   }
   const binding = attacker.origin.execution.procedureBindings.find(
@@ -1782,7 +1782,7 @@ function selectedWeaponMasteryProperty(input: {
   if (!isCharacterBattleCreatureState(attacker)) {
     return null;
   }
-  if (!attack.weapon.hasWeaponMastery) {
+  if (!attack.hasWeaponMastery) {
     return null;
   }
   const binding = attacker.origin.execution.procedureBindings.find(

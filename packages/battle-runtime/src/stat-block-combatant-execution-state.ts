@@ -45,7 +45,7 @@ export type BattleStatBlockCombatantMechanics = {
 export type StatBlockBattleOrigin = {
   // Authored identity retained for companion settlement and snapshot catalog
   // reference. Mechanics are taken from `mechanics`; the reducer never dispatches
-  // on `statBlockId`. See #224 inventory.
+  // on `statBlockId`.
   readonly statBlockId: StatBlockId;
   readonly mechanics: BattleStatBlockCombatantMechanics;
   readonly execution: StatBlockExecutionState;

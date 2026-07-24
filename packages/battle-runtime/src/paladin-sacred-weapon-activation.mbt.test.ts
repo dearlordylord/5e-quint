@@ -7,10 +7,8 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.paladin-sacred-weapon
 import { describe, expect, test } from "vitest";
 import { classLevel } from "@dnd/shared/types";
-import {
-  characterAttackSubjectForTest,
-  characterBattleFeatureInitForTest,
-} from "./battle-runtime-test-support.ts";
+import { characterBattleFeatureInitForTest } from "./battle-runtime-test-support.ts";
+import { battleObjectId } from "./identity.ts";
 
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
@@ -182,12 +180,28 @@ describe("Sacred Weapon activation", () => {
       .map((act) => act.summary);
     expect(attackSummaries).toEqual(
       expect.arrayContaining([
-        "Take the Attack action with Longsword (slashing).",
+        "Take the Attack action with Longsword.",
         "Take the Attack action with Longsword (radiant).",
       ]),
     );
 
-    const attackRoll = sacredWeaponAttackRoll(activated, "Longsword (radiant)");
+    const radiantAct = discoverBattleActs(
+      battleRuntimeSessionForTest({
+        ...session,
+        state: activated,
+      }),
+    ).find(
+      (act) =>
+        act.summary === "Take the Attack action with Longsword (radiant).",
+    );
+    if (
+      radiantAct === undefined ||
+      radiantAct.subject.tag !== "action" ||
+      radiantAct.subject.action !== "attack"
+    ) {
+      throw new Error("Expected radiant Longsword attack act.");
+    }
+    const attackRoll = sacredWeaponAttackRoll(activated, radiantAct.subject);
     expect(Number(attackRoll.attackBonus)).toBe(1);
     if (!("attack" in attackRoll)) {
       throw new Error("Expected weapon attack roll hole.");
@@ -204,7 +218,7 @@ describe("Sacred Weapon activation", () => {
     expect(snapshotBattle(activated).lightEmitters).toEqual([
       expect.objectContaining({
         kind: "unitFeatureLightEmitter",
-        sourceUnitId: paladinSacredWeaponUnitId,
+        sourceProcedureRef: expect.any(String),
         sourceCombatantId: paladinId,
         attachment: { kind: "combatant", combatantId: paladinId },
         emission: {
@@ -212,6 +226,8 @@ describe("Sacred Weapon activation", () => {
           brightRadiusFeet: 20,
           dimAdditionalFeet: 20,
         },
+        opaqueCoverInteraction: { kind: "doesNotBlockEmission" },
+        expiresAt: { kind: "duration", durationTicks: 100 },
       }),
     ]);
   });
@@ -434,11 +450,14 @@ function sacredWeaponSession(input: {
         attack: zeroAbilityWeaponAttack(
           input.weaponUnitId ?? "weapon_longsword",
         ),
-        unitFeatures: [
-          characterBattleFeatureInitForTest(sacredWeapon, [
-            { className: "paladin", level: classLevel(3) },
-          ]),
-        ],
+        unitFeatures:
+          input.selectedProfile === false
+            ? []
+            : [
+                characterBattleFeatureInitForTest(sacredWeapon, [
+                  { className: "paladin", level: classLevel(3) },
+                ]),
+              ],
         resources: [
           {
             unit: channelDivinity,
@@ -535,9 +554,11 @@ function resolveSacredWeapon(
 
 function sacredWeaponAttackRoll(
   state: BattleState,
-  attackName: "Longsword (slashing)" | "Longsword (radiant)",
+  subject: Extract<
+    BattleSubject,
+    { readonly tag: "action"; readonly action: "attack" }
+  >,
 ): Extract<BattleHole, { readonly kind: "attackRoll" }> {
-  const subject = characterAttackSubjectForTest(state, paladinId, attackName);
   const target = requireResultHole(
     resolveBattleSubject({ state, subject, fills: [] }),
     "targetChoice",
@@ -546,7 +567,9 @@ function sacredWeaponAttackRoll(
     resolveBattleSubject({
       state,
       subject,
-      fills: [attackTargetFill(target, paladinId, targetId, attackName)],
+      fills: [
+        attackTargetFill(target, paladinId, targetId, "Longsword (radiant)"),
+      ],
     }),
     "attackRoll",
   );
@@ -596,12 +619,11 @@ function sacredWeaponResourcePoolRef(state: BattleState) {
   for (const binding of actor.origin.execution.procedureBindings) {
     const procedure = binding.procedure;
     if (
-      procedure.kind === "unitSupportProfile" &&
+      procedure.kind === "unitFeature" &&
       typeof procedure.execution !== "string" &&
-      procedure.execution.kind === "paladinSacredWeapon" &&
-      procedure.source.kind === "resourcePool"
+      procedure.execution.kind === "paladinSacredWeapon"
     ) {
-      return procedure.source.resourcePoolRef;
+      return procedure.execution.sacredWeapon.spends.resourcePoolRef;
     }
   }
   throw new Error("Expected resource-backed Sacred Weapon procedure.");
@@ -625,6 +647,11 @@ function withMainWeaponItemId(state: BattleState, itemId: string): BattleState {
   if (weapon === undefined) {
     throw new Error("Expected selected main weapon.");
   }
+  const attack = actor.origin.attack;
+  const updatedAttack =
+    attack !== null && attack.kind === "weapon"
+      ? { ...attack, weaponObjectId: battleObjectId(itemId) }
+      : attack;
   return {
     ...state,
     combatants: new Map(state.combatants).set(paladinId, {
@@ -635,6 +662,7 @@ function withMainWeaponItemId(state: BattleState, itemId: string): BattleState {
           ...actor.origin.selectedLoadout,
           weapon: { ...weapon, itemId },
         },
+        attack: updatedAttack,
       },
     }),
   };

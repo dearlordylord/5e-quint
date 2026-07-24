@@ -15,7 +15,7 @@ describe("character weapon execution admission", () => {
         withoutProperties,
         battleObjectId("test:weapon"),
         [],
-      ).properties,
+      ).weapon.properties,
     ).toEqual([]);
   });
 });

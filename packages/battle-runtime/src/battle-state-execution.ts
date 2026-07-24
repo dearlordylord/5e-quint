@@ -3726,7 +3726,7 @@ export type BattleTurnResources = ActionEconomyState & {
   readonly grapplerPunchAndGrabUsedThisTurn: readonly CombatantId[];
   readonly pendingAttackRollMissToHitReplacementSelection?: PendingAttackRollMissToHitReplacementSelection;
   readonly lightWeaponAttackMade?: {
-    readonly weaponItemId: string;
+    readonly weaponItemId: BattleObjectId;
   };
   readonly dashMovementBonusFeet: MovementFeet;
   readonly disengaged: boolean;
@@ -3913,8 +3913,7 @@ type BattleCreatureStateCommon = {
         // reducer never dispatches on characterId.
         readonly characterId: CharacterId;
         // Presentation label retained as a snapshot convenience. Not used by
-        // reducer execution; documented as inert presentation identity in #224
-        // inventory.
+        // reducer execution.
         readonly displayName: string;
         readonly execution: CharacterExecutionState;
         readonly classLevels: CharacterBattleClassLevels;
@@ -6800,7 +6799,7 @@ export type BattleTurnSnapshot = {
   readonly huntersPreyHordeBreakerUsedThisTurn: readonly AttackDamageRiderUsage[];
   readonly grapplerPunchAndGrabUsedThisTurn: readonly CombatantId[];
   readonly lightWeaponAttackMade?: {
-    readonly weaponItemId: string;
+    readonly weaponItemId: BattleObjectId;
   };
   readonly dashMovementBonusFeet: MovementFeet;
   readonly disengaged: boolean;
@@ -6820,7 +6819,7 @@ export type BattleCreatureOriginSnapshot =
   | {
       readonly kind: "character";
       // Authored identity retained for settlement / catalog reference. Not an
-      // execution or replay key. See #224 inventory.
+      // execution or replay key.
       readonly characterId: CharacterId;
       readonly execution: {
         readonly scopeRef: BattleCharacterExecutionScopeRef;
@@ -6845,7 +6844,7 @@ export type BattleCreatureOriginSnapshot =
   | {
       readonly kind: "statBlock";
       // Authored identity retained for settlement / companion reappearance. Not
-      // an execution or replay key. See #224 inventory.
+      // an execution or replay key.
       readonly statBlockId: string;
       readonly execution: StatBlockExecutionSnapshot;
     };

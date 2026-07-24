@@ -21,6 +21,8 @@ import { it } from "vitest";
 import {
   resolveBattleSubject,
   characterAttackSubjectForTest,
+  attackExecutionSelectionForSubjectForTest,
+  attackTargetSpatialFact,
 } from "./battle-runtime-test-support.ts";
 import { admitCharacterWeaponAttackExecutionWeapon } from "./character-weapon-execution-admission.ts";
 import { battleObjectId } from "./identity.ts";
@@ -34,8 +36,9 @@ import {
   run,
 } from "./battle-runtime-mbt-driver-kit.ts";
 import { Either } from "effect";
-
+import { battleReducerRouteEventsForDiscoveredAct } from "./battle-reducer/reducer-route.ts";
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
+
 import {
   abilityModifier,
   attackBonus,
@@ -436,7 +439,11 @@ function cleaveRouteWalk(): {
     targetId: secondTargetId,
     attackName: scenario.attackName,
     spatialFacts: [
-      attackTargetInMeleeReachFact(secondTarget, secondTargetId),
+      attackTargetSpatialFact(
+        attackerId,
+        secondTargetId,
+        attackExecutionSelectionForSubjectForTest(walk.subject),
+      ),
       {
         kind: "cleaveSecondTargetWithin5FeetOfFirstTarget",
         attackerId,
@@ -542,7 +549,7 @@ function initialWeaponMasteryRouteWalk(
     awaitingAttackRoll,
     route: [
       battleReducerStartRouteEvent(),
-      ...(act.routeEvents ?? []),
+      ...(battleReducerRouteEventsForDiscoveredAct(state, act) ?? []),
       ...(awaitingAttackRoll.routeEvents ?? []),
     ],
   };
@@ -661,7 +668,11 @@ function resolveCleaveMasteryPropertySecondTargetHit(): WeaponMasteryProjection 
     targetId: secondTargetId,
     attackName: scenario.attackName,
     spatialFacts: [
-      attackTargetInMeleeReachFact(secondTarget, secondTargetId),
+      attackTargetSpatialFact(
+        attackerId,
+        secondTargetId,
+        attackExecutionSelectionForSubjectForTest(subject),
+      ),
       {
         kind: "cleaveSecondTargetWithin5FeetOfFirstTarget",
         attackerId,
@@ -774,6 +785,10 @@ function weaponMasteryAttackerInit(
       characterId: characterId(`character:${unitId}`),
       characterUnitRefs: [
         {
+          unit: unitLibrary.requireUnit(scenario.weaponUnitId),
+          supportProfiles: [],
+        },
+        {
           unit: unitLibrary.requireUnit(unitId),
           supportProfiles: [scenario.supportProfile],
         },
@@ -852,7 +867,7 @@ function weaponAttack(
   }
   return {
     kind: "weapon",
-    weapon: admitCharacterWeaponAttackExecutionWeapon(
+    ...admitCharacterWeaponAttackExecutionWeapon(
       weapon,
       battleObjectId(`main:${weapon.id}`),
       weaponMasteries,
@@ -1057,8 +1072,8 @@ function projectWeaponMasteryState(input: {
     primaryTargetHasSapEffect: primaryTargetState.activeEffects.some(
       (effect) =>
         effect.kind === "nextAttackRollBySelf" &&
-        "sourceUnitId" in effect &&
-        effect.sourceUnitId === "mastery_sap",
+        effect.sourceCombatantId === attackerId &&
+        effect.mode === "disadvantage",
     ),
     primaryTargetProne: primaryTarget.conditions.includes("prone"),
     cleaveUsed:

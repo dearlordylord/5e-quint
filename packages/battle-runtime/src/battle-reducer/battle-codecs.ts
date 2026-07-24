@@ -5357,7 +5357,7 @@ const BattleTurnSnapshotSchema = Schema.Struct({
   ),
   grapplerPunchAndGrabUsedThisTurn: Schema.Array(CombatantId),
   lightWeaponAttackMade: Schema.optionalWith(
-    Schema.Struct({ weaponItemId: Schema.String }),
+    Schema.Struct({ weaponItemId: BattleObjectId }),
     { exact: true },
   ),
   jumpDistanceMultiplier: Schema.NullOr(

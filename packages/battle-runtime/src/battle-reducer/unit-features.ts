@@ -540,7 +540,7 @@ function paladinSacredWeaponActs(
         tag: "unitFeatureHeldWeaponActivation" as const,
         actorId: actor.combatantId,
         procedureRef,
-        weaponItemId: weapon.itemId,
+        weaponItemId: battleObjectId(weapon.itemId),
       },
       initialHoles: [],
     }));
@@ -589,7 +589,7 @@ function sacredWeaponHeldMeleeWeapons(
   if (
     main !== undefined &&
     actor.origin.attack?.kind === "weapon" &&
-    actor.origin.attack.weapon.weaponObjectId === battleObjectId(main.itemId) &&
+    actor.origin.attack.weaponObjectId === battleObjectId(main.itemId) &&
     wildShapeCanUseLoadoutWeaponObject({
       loadout: actor.origin.selectedLoadout,
       activeWildShape,
@@ -607,7 +607,7 @@ function sacredWeaponHeldMeleeWeapons(
   if (
     offHand !== undefined &&
     actor.origin.offHandAttack?.kind === "weapon" &&
-    actor.origin.offHandAttack.weapon.weaponObjectId ===
+    actor.origin.offHandAttack.weaponObjectId ===
       battleObjectId(offHand.itemId) &&
     wildShapeCanUseLoadoutWeaponObject({
       loadout: actor.origin.selectedLoadout,
@@ -913,7 +913,7 @@ export function resolveUnitFeatureHeldWeaponActivation(
   const unitFeature = procedure.execution;
   if (
     !sacredWeaponHeldMeleeWeapons(actor).some(
-      (weapon) => weapon.itemId === input.subject.weaponItemId,
+      (weapon) => battleObjectId(weapon.itemId) === input.subject.weaponItemId,
     )
   ) {
     return invalidResult(

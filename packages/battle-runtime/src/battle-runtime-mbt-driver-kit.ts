@@ -17274,6 +17274,10 @@ function rogueCreatureInit(input: {
       characterId: characterId("fighter-character"),
       characterUnitRefs: [
         {
+          unit: unitLibrary.requireUnit("weapon_dagger"),
+          supportProfiles: [],
+        },
+        {
           unit: unitLibrary.requireUnit("rogue_sneak_attack"),
           supportProfiles: [ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE],
         },
@@ -17376,7 +17380,13 @@ function rogueSteadyAimCreatureInit(input: {
     creatureInit: {
       kind: "character",
       characterId: characterId("steady-aim-rogue-character"),
-      characterUnitRefs: [rogueSteadyAimUnitRef(steadyAim)],
+      characterUnitRefs: [
+        {
+          unit: unitLibrary.requireUnit("weapon_dagger"),
+          supportProfiles: [],
+        },
+        rogueSteadyAimUnitRef(steadyAim),
+      ],
       classLevels: [{ className: "rogue", level: 3 }],
       knownLanguages: ["Common"],
       d20Statistics: testCharacterD20Statistics({ str: 16 }),
@@ -17422,7 +17432,13 @@ function extraAttackCreatureInit(input: {
     creatureInit: {
       kind: "character",
       characterId: characterId(`extra-attack-${unit.className}-character`),
-      characterUnitRefs: [extraAttackUnitRef(unit)],
+      characterUnitRefs: [
+        {
+          unit: unitLibrary.requireUnit("weapon_dagger"),
+          supportProfiles: [],
+        },
+        extraAttackUnitRef(unit),
+      ],
       classLevels: [
         {
           className: unit.className,
@@ -18086,7 +18102,7 @@ function daggerAttack(): NonNullable<
 
   return {
     kind: "weapon",
-    weapon: admitCharacterWeaponAttackExecutionWeapon(
+    ...admitCharacterWeaponAttackExecutionWeapon(
       weapon,
       battleObjectId(`main:${weapon.id}`),
       [],

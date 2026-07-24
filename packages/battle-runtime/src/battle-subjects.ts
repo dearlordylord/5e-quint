@@ -25,6 +25,7 @@ import {
   BattleActiveEffectExecutionRef,
   BattleAttackProcedureExecutionRef,
   BattleLineDirectionId,
+  BattleObjectId,
   BattleProcedureExecutionRef,
   BattleResourcePoolExecutionRef,
   CombatantId,
@@ -730,7 +731,7 @@ export const BattleSubjectSchema = Schema.Union(
     actorId: CombatantId,
     procedureRef: BattleProcedureExecutionRef,
     unitId: Schema.optionalWith(Schema.Never, { exact: true }),
-    weaponItemId: BattleSubjectTextSchema,
+    weaponItemId: BattleObjectId,
   }),
   Schema.Struct({
     tag: Schema.Literal("druidWildShape"),

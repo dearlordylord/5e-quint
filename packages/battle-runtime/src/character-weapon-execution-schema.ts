@@ -7,12 +7,9 @@ import {
   WeaponUsageSchema,
 } from "@dnd/surface/surface/schema";
 import { Schema } from "effect";
-import { BattleObjectId } from "./identity.ts";
 
 export const CharacterWeaponAttackExecutionWeaponSchema = Schema.Struct({
   weaponUnitId: UnitId,
-  weaponObjectId: BattleObjectId,
-  hasWeaponMastery: Schema.Boolean,
   attachedWeaponAttackOverrideEligibility: Schema.optionalWith(
     Schema.Struct({ kind: Schema.Literal("clubOrQuarterstaff") }),
     { exact: true },

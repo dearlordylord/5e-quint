@@ -10,8 +10,6 @@ import type {
   BattleActiveEffect,
   BattleTurnResources,
 } from "./battle-state-execution.ts";
-import type { CharacterProcedureBinding } from "./character-execution-vocabulary.ts";
-
 import { currentActorId } from "./battle-reducer/creature-state-leaves.ts";
 import { discoverBattleActCandidatesWithoutSpellProcedures } from "./battle-reducer/battle-discovery.ts";
 import { endTurn } from "./battle-execution-composition.ts";
@@ -36,23 +34,32 @@ import {
 /**
  * Synthetic-renaming witness for inert authored identity fields.
  *
- * This test demonstrates that the fields classified as "inert" in the #224
- * inventory do not affect reducer-visible mechanical outcomes. It exercises
- * real consumers — act discovery, snapshot production, and the end-of-turn
- * reducer — and compares their outputs. The only differences permitted are the
- * renamed identity fields themselves.
+ * This test demonstrates that the fields classified as inert authored identity
+ * do not affect reducer-visible mechanical outcomes. It exercises real
+ * consumers — act discovery, snapshot production, and the end-of-turn reducer —
+ * and compares their outputs using full mechanical payloads (combatant state,
+ * active effects, resources, procedure bindings, attacks, loadout, class
+ * levels, snapshot state, and turn resources). The only differences permitted
+ * are the renamed identity fields themselves.
  *
- * Covered inert fields:
+ * Renamed inert fields:
  *   - `BattleCreatureState.origin.kind === "character"`: `characterId`, `displayName`
  *   - `BattleCreatureOriginSnapshot.kind === "statBlock"`: `statBlockId`
- *   - Spell presentation source identity (`SpellInvocationRef.spellId` derived
- *     from `BattleRuntimeContext` character spell presentation sources)
+ *   - Spell presentation source identity (`AuthoredSelectedSpellInvocation.spell.id`
+ *     and `spell.name` derived from `BattleRuntimeContext` character spell
+ *     presentation sources)
  *   - Stat Block presentation source labels (`BattleStatBlockPresentationSource`
  *     display names and procedure labels)
  *
- * Behavior-driving identity fields (e.g. weaponUnitId for Weapon Mastery
- * admission, paladinSacredWeapon.weaponItemId) are excluded because renaming
- * them currently changes outcomes.
+ * Excluded fields:
+ *   - Authored Unit identity such as `weaponUnitId` used at composition time for
+ *     Weapon Mastery / Tactical Master eligibility. These are admitted as
+ *     parsed mechanical facts (`hasWeaponMastery`) and are identical between
+ *     original and renamed states; the underlying Unit ids are not renamed by
+ *     this witness because doing so would change which mechanical facts are
+ *     admitted at composition time.
+ *   - Other presentation-only authored identity not renamed by this witness
+ *     (e.g., Stat Block form ids in `BattleRuntimeContext`).
  */
 
 function isCharacterSnapshot(
@@ -64,44 +71,13 @@ function isCharacterSnapshot(
   return snapshot.origin.kind === "character";
 }
 
-function activeEffectKindCounts(
-  effects: readonly BattleActiveEffect[],
-): ReadonlyArray<readonly [string, number]> {
-  const counts = new Map<string, number>();
-  for (const effect of effects) {
-    counts.set(effect.kind, (counts.get(effect.kind) ?? 0) + 1);
-  }
-  return Array.from(counts.entries()).sort(([a], [b]) => a.localeCompare(b));
-}
-
-const ACTIVE_EFFECT_IDENTITY_KEYS = new Set<string>([
-  "sourceProcedureRef",
-  "sourceCombatantId",
-  "activeEffectRef",
-  "effectRef",
-]);
-
 function activeEffectMechanicalProjection(
   effect: BattleActiveEffect,
-): Record<string, unknown> {
-  const projection: Record<string, unknown> = { kind: effect.kind };
-  for (const [key, value] of Object.entries(effect)) {
-    if (ACTIVE_EFFECT_IDENTITY_KEYS.has(key)) {
-      continue;
-    }
-    projection[key] = value;
-  }
-  return projection;
-}
-
-function procedureBindingProjection(binding: CharacterProcedureBinding) {
-  // Include the full procedure payload; the procedureRef is an execution key,
-  // not an authored identity field, and is identical between original and
-  // renamed states for this witness.
-  return {
-    procedureRef: binding.procedureRef,
-    procedure: binding.procedure,
-  };
+): BattleActiveEffect {
+  // Include the full active-effect payload. Execution references such as
+  // sourceProcedureRef / sourceCombatantId / activeEffectRef are not authored
+  // identity and are identical between original and renamed states.
+  return effect;
 }
 
 function turnResourcesProjection(turnResources: BattleTurnResources) {
@@ -111,7 +87,7 @@ function turnResourcesProjection(turnResources: BattleTurnResources) {
 }
 
 function combatantMechanicalProjection(combatant: BattleCreatureState) {
-  return {
+  const base = {
     hp: Number(combatant.hp),
     maxHp: Number(combatant.maxHp),
     tempHp: Number(combatant.tempHp),
@@ -120,24 +96,49 @@ function combatantMechanicalProjection(combatant: BattleCreatureState) {
     movementSpentFeet: Number(combatant.movementSpentFeet),
     reactionAvailable: combatant.reactionAvailable,
     conditions: combatant.conditions,
-    activeEffectMechanicalProjections: combatant.activeEffects.map(
+    activeEffects: combatant.activeEffects.map(
       activeEffectMechanicalProjection,
     ),
-    activeEffectKindCounts: activeEffectKindCounts(combatant.activeEffects),
+    activeOngoingFeatureOccurrences: Array.from(
+      combatant.activeOngoingFeatureOccurrences.entries(),
+    ),
+    attackRollMissToHitReplacementsUsedSinceTurnStart:
+      combatant.attackRollMissToHitReplacementsUsedSinceTurnStart,
     concentration: combatant.concentration,
     hidden: combatant.hidden !== null,
     dodging: combatant.dodging,
-    ...(combatant.origin.kind === "character"
-      ? {
-          procedureBindings: combatant.origin.execution.procedureBindings.map(
-            procedureBindingProjection,
-          ),
-          characterResources: combatant.origin.resources,
-          spellcasting: combatant.origin.spellcasting,
-          druidWildShapeAvailableForms:
-            combatant.origin.druidWildShapeAvailableForms,
-        }
-      : {}),
+  };
+  if (combatant.origin.kind !== "character") {
+    return {
+      ...base,
+      origin: {
+        kind: combatant.origin.kind,
+        mechanics: combatant.origin.mechanics,
+        execution: combatant.origin.execution,
+      },
+    };
+  }
+  return {
+    ...base,
+    origin: {
+      kind: combatant.origin.kind,
+      execution: combatant.origin.execution,
+      classLevels: combatant.origin.classLevels,
+      knownLanguages: combatant.origin.knownLanguages,
+      d20Statistics: combatant.origin.d20Statistics,
+      weaponProficiencies: combatant.origin.weaponProficiencies,
+      selectedLoadout: combatant.origin.selectedLoadout,
+      invocationFeatures: combatant.origin.invocationFeatures,
+      speed: combatant.origin.speed,
+      attack: combatant.origin.attack,
+      unarmedStrike: combatant.origin.unarmedStrike,
+      offHandAttack: combatant.origin.offHandAttack,
+      resources: combatant.origin.resources,
+      metamagic: combatant.origin.metamagic,
+      spellcasting: combatant.origin.spellcasting,
+      druidWildShapeAvailableForms:
+        combatant.origin.druidWildShapeAvailableForms,
+    },
   };
 }
 

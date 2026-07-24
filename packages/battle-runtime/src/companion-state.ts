@@ -37,13 +37,13 @@ export type BattleCompanionStoredForm =
   | {
       readonly formAccess: "findFamiliar";
       // Authored identity retained for familiar reappearance / settlement. Not
-      // used to select reducer behavior. See #224 inventory.
+      // used to select reducer behavior.
       readonly resolvedStatBlockId: StatBlockId;
     }
   | {
       readonly formAccess: "pactOfTheChain";
       // Authored identity retained for familiar reappearance / settlement. Not
-      // used to select reducer behavior. See #224 inventory.
+      // used to select reducer behavior.
       readonly resolvedStatBlockId: StatBlockId;
     };
 

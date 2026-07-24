@@ -17,6 +17,7 @@ import { isMonkWeapon } from "@dnd/shared-algebras/martial-arts-algebra";
 import type { HoleInstanceKey } from "@dnd/shared-algebras/runtime-hole-algebra";
 import {
   battleObjectId,
+  type BattleObjectId,
   type BattleProcedureExecutionRef,
   type CombatantId,
 } from "../identity.ts";
@@ -628,7 +629,7 @@ function wildShapeWornLoadoutWeaponObjectForAttack(
     formLimbs: effect.formLimbs,
     equipmentDisposition: effect.equipmentDisposition,
     objectKind,
-    objectId: attack.weapon.weaponObjectId,
+    objectId: attack.weaponObjectId,
   });
 }
 
@@ -734,19 +735,19 @@ function weaponAttackWithActiveSpellEffects(
   state: BattleState,
   actor: BattleCreatureState,
   attack: BoundCharacterWeaponAttackActionOption,
-  attachedWeaponItemId: string | undefined,
+  attachedWeaponItemId: BattleObjectId | undefined,
 ): BoundCharacterWeaponAttackActionOption;
 function weaponAttackWithActiveSpellEffects(
   state: BattleState,
   actor: BattleCreatureState,
   attack: CharacterWeaponAttackActionOption,
-  attachedWeaponItemId: string | undefined,
+  attachedWeaponItemId: BattleObjectId | undefined,
 ): CharacterWeaponAttackActionOption;
 function weaponAttackWithActiveSpellEffects(
   state: BattleState,
   actor: BattleCreatureState,
   attack: CharacterWeaponAttackActionOption,
-  attachedWeaponItemId: string | undefined,
+  attachedWeaponItemId: BattleObjectId | undefined,
 ): CharacterWeaponAttackActionOption {
   return weaponAttackWithMagicWeaponEnhancement(
     state,
@@ -763,17 +764,17 @@ function weaponAttackWithActiveSpellEffects(
 function weaponAttackWithActiveSacredWeapon(
   actor: BattleCreatureState,
   attack: BoundCharacterWeaponAttackActionOption,
-  attachedWeaponItemId: string | undefined,
+  attachedWeaponItemId: BattleObjectId | undefined,
 ): BoundCharacterWeaponAttackActionOption;
 function weaponAttackWithActiveSacredWeapon(
   actor: BattleCreatureState,
   attack: CharacterWeaponAttackActionOption,
-  attachedWeaponItemId: string | undefined,
+  attachedWeaponItemId: BattleObjectId | undefined,
 ): CharacterWeaponAttackActionOption;
 function weaponAttackWithActiveSacredWeapon(
   actor: BattleCreatureState,
   attack: CharacterWeaponAttackActionOption,
-  attachedWeaponItemId: string | undefined,
+  attachedWeaponItemId: BattleObjectId | undefined,
 ): CharacterWeaponAttackActionOption {
   if (
     actor.origin.kind !== "character" ||
@@ -868,17 +869,17 @@ function sacredWeaponAbilityChoice(
 function weaponAttackWithActiveSpellOverride(
   actor: BattleCreatureState,
   attack: BoundCharacterWeaponAttackActionOption,
-  attachedWeaponItemId: string | undefined,
+  attachedWeaponItemId: BattleObjectId | undefined,
 ): BoundCharacterWeaponAttackActionOption;
 function weaponAttackWithActiveSpellOverride(
   actor: BattleCreatureState,
   attack: CharacterWeaponAttackActionOption,
-  attachedWeaponItemId: string | undefined,
+  attachedWeaponItemId: BattleObjectId | undefined,
 ): CharacterWeaponAttackActionOption;
 function weaponAttackWithActiveSpellOverride(
   actor: BattleCreatureState,
   attack: CharacterWeaponAttackActionOption,
-  attachedWeaponItemId: string | undefined,
+  attachedWeaponItemId: BattleObjectId | undefined,
 ): CharacterWeaponAttackActionOption {
   if (
     attachedWeaponItemId === undefined ||
@@ -969,7 +970,7 @@ function weaponAttackCanUseActiveSpellOverride(
 
 function activeSpellWeaponAttackOverrideEffectForWeapon(
   actor: BattleCreatureState,
-  attachedWeaponItemId: string,
+  attachedWeaponItemId: BattleObjectId,
 ):
   | Extract<BattleActiveEffect, { readonly kind: "spellWeaponAttackOverride" }>
   | undefined {
@@ -990,19 +991,19 @@ function weaponAttackWithMagicWeaponEnhancement(
   state: BattleState,
   holderCombatantId: CombatantId,
   attack: BoundCharacterWeaponAttackActionOption,
-  attachedWeaponItemId: string | undefined,
+  attachedWeaponItemId: BattleObjectId | undefined,
 ): BoundCharacterWeaponAttackActionOption;
 function weaponAttackWithMagicWeaponEnhancement(
   state: BattleState,
   holderCombatantId: CombatantId,
   attack: CharacterWeaponAttackActionOption,
-  attachedWeaponItemId: string | undefined,
+  attachedWeaponItemId: BattleObjectId | undefined,
 ): CharacterWeaponAttackActionOption;
 function weaponAttackWithMagicWeaponEnhancement(
   state: BattleState,
   holderCombatantId: CombatantId,
   attack: CharacterWeaponAttackActionOption,
-  attachedWeaponItemId: string | undefined,
+  attachedWeaponItemId: BattleObjectId | undefined,
 ): CharacterWeaponAttackActionOption {
   if (attachedWeaponItemId === undefined) {
     return attack;
@@ -1077,7 +1078,7 @@ type MagicWeaponEnhancementExclusion = {
 export function battleWeaponItemHasMagicWeaponEnhancement(
   state: BattleState,
   holderCombatantId: CombatantId,
-  weaponItemId: string,
+  weaponItemId: BattleObjectId,
   exclusion: MagicWeaponEnhancementExclusion = {},
 ): boolean {
   return (
@@ -1093,7 +1094,7 @@ export function battleWeaponItemHasMagicWeaponEnhancement(
 export function battleWeaponItemMagicWeaponEnhancementBonus(
   state: BattleState,
   holderCombatantId: CombatantId,
-  weaponItemId: string,
+  weaponItemId: BattleObjectId,
   exclusion: MagicWeaponEnhancementExclusion = {},
 ): MagicWeaponEnhancementBonus | null {
   const bonuses = [...state.combatants.values()].flatMap((combatant) =>
@@ -1133,7 +1134,7 @@ function spellMagicWeaponEnhancementEffectExcluded(
 function mainHandWeaponItemIdForAttack(
   actor: BattleCreatureState,
   attack: CharacterWeaponAttackActionOption,
-): string | undefined {
+): BattleObjectId | undefined {
   if (
     actor.origin.kind !== "character" ||
     actor.origin.attack?.kind !== "weapon" ||
@@ -1143,15 +1144,15 @@ function mainHandWeaponItemIdForAttack(
   }
   const mainHandWeapon = actor.origin.selectedLoadout.weapon;
   return mainHandWeapon !== undefined &&
-    battleObjectId(mainHandWeapon.itemId) === attack.weapon.weaponObjectId
-    ? mainHandWeapon.itemId
+    battleObjectId(mainHandWeapon.itemId) === attack.weaponObjectId
+    ? battleObjectId(mainHandWeapon.itemId)
     : undefined;
 }
 
 function offHandWeaponItemIdForAttack(
   actor: BattleCreatureState,
   attack: CharacterWeaponAttackActionOption,
-): string | undefined {
+): BattleObjectId | undefined {
   if (
     actor.origin.kind !== "character" ||
     actor.origin.offHandAttack !== attack
@@ -1160,8 +1161,8 @@ function offHandWeaponItemIdForAttack(
   }
   const offHandWeapon = actor.origin.selectedLoadout.offHandWeapon;
   return offHandWeapon !== undefined &&
-    battleObjectId(offHandWeapon.itemId) === attack.weapon.weaponObjectId
-    ? offHandWeapon.itemId
+    battleObjectId(offHandWeapon.itemId) === attack.weaponObjectId
+    ? battleObjectId(offHandWeapon.itemId)
     : undefined;
 }
 
@@ -1366,37 +1367,37 @@ export function heldWeaponItemIdForAttack(
   state: BattleState,
   actorId: CombatantId,
   attack: CharacterWeaponAttackActionOption,
-): string {
+): BattleObjectId {
   const actor = state.combatants.get(actorId);
-  if (actor?.origin.kind !== "character") return attack.weapon.weaponObjectId;
+  if (actor?.origin.kind !== "character") return attack.weaponObjectId;
   const mainWeapon = actor.origin.selectedLoadout.weapon;
   if (
     mainWeapon !== undefined &&
-    battleObjectId(mainWeapon.itemId) === attack.weapon.weaponObjectId
+    battleObjectId(mainWeapon.itemId) === attack.weaponObjectId
   ) {
-    return mainWeapon.itemId;
+    return battleObjectId(mainWeapon.itemId);
   }
   const offHandWeapon = actor.origin.selectedLoadout.offHandWeapon;
   if (
     offHandWeapon !== undefined &&
-    battleObjectId(offHandWeapon.itemId) === attack.weapon.weaponObjectId
+    battleObjectId(offHandWeapon.itemId) === attack.weaponObjectId
   ) {
-    return offHandWeapon.itemId;
+    return battleObjectId(offHandWeapon.itemId);
   }
-  return attack.weapon.weaponObjectId;
+  return attack.weaponObjectId;
 }
 
 export function offHandWeaponItemIdForActor(
   state: BattleState,
   actorId: CombatantId,
   offHand: CharacterWeaponAttackActionOption,
-): string | undefined {
+): BattleObjectId | undefined {
   const actor = state.combatants.get(actorId);
   if (actor?.origin.kind !== "character") return undefined;
   const offHandWeapon = actor.origin.selectedLoadout.offHandWeapon;
   return offHandWeapon !== undefined &&
-    battleObjectId(offHandWeapon.itemId) === offHand.weapon.weaponObjectId
-    ? offHandWeapon.itemId
+    battleObjectId(offHandWeapon.itemId) === offHand.weaponObjectId
+    ? battleObjectId(offHandWeapon.itemId)
     : undefined;
 }
 
@@ -1438,14 +1439,13 @@ function martialArtsLoadoutEligible(
   const mainWeaponEligible =
     loadout.weapon === undefined ||
     (origin.attack !== null &&
-      battleObjectId(loadout.weapon.itemId) ===
-        origin.attack.weapon.weaponObjectId &&
+      battleObjectId(loadout.weapon.itemId) === origin.attack.weaponObjectId &&
       isMonkWeapon(origin.attack.weapon));
   const offHandWeaponEligible =
     loadout.offHandWeapon === undefined ||
     (origin.offHandAttack !== undefined &&
       battleObjectId(loadout.offHandWeapon.itemId) ===
-        origin.offHandAttack.weapon.weaponObjectId &&
+        origin.offHandAttack.weaponObjectId &&
       isMonkWeapon(origin.offHandAttack.weapon));
   return mainWeaponEligible && offHandWeaponEligible;
 }

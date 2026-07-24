@@ -236,7 +236,7 @@ function resolveMagicWeaponEnhancement(
     battleWeaponItemHasMagicWeaponEnhancement(
       input.input.state,
       targetItem.holderCombatantId,
-      targetItem.itemId,
+      battleObjectId(targetItem.itemId),
       {
         exceptSourceCombatantId: input.actorId,
         exceptSourceProcedureRef: input.invocation.sourceProcedureRef,
@@ -292,7 +292,7 @@ function resolveMagicWeaponEnhancement(
       sourceProcedureRef: input.invocation.sourceProcedureRef,
       sourceCombatantId: input.actorId,
       holderCombatantId: targetItem.holderCombatantId,
-      weaponItemId: targetItem.itemId,
+      weaponItemId: battleObjectId(targetItem.itemId),
       bonus: input.invocation.bonus,
       expiresAt: {
         kind: "duration",

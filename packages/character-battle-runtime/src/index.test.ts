@@ -3820,7 +3820,7 @@ describe("Character Build battle projection", () => {
     const fighter = state.state.combatants.get(fighterId);
     expect(
       fighter?.origin.kind === "character" &&
-        fighter.origin.attack?.weapon.hasWeaponMastery,
+        fighter.origin.attack?.hasWeaponMastery,
     ).toBe(true);
     expect(
       state.context.characters.get(fighterId)?.unitPresentationSources,
@@ -3950,7 +3950,7 @@ describe("Character Build battle projection", () => {
     const fighter = state.state.combatants.get(fighterId);
     expect(
       fighter?.origin.kind === "character" &&
-        fighter.origin.attack?.weapon.hasWeaponMastery,
+        fighter.origin.attack?.hasWeaponMastery,
     ).toBe(true);
     expect(
       state.context.characters.get(fighterId)?.unitPresentationSources,
@@ -4024,7 +4024,7 @@ describe("Character Build battle projection", () => {
     const fighter = state.state.combatants.get(fighterId);
     expect(
       fighter?.origin.kind === "character" &&
-        fighter.origin.attack?.weapon.hasWeaponMastery,
+        fighter.origin.attack?.hasWeaponMastery,
     ).toBe(true);
     expect(
       state.context.characters.get(fighterId)?.unitPresentationSources,
