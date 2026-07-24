@@ -331,6 +331,8 @@ const WildShapeOffHandWeaponLoadoutObjectRefSchema = Schema.Struct({
   objectId: BattleObjectId,
 });
 
+// Effect Schema's `Union` of branded structs does not infer the exact branded
+// union type, so the schema is built concretely and cast to the expected type.
 const WildShapeWornLoadoutObjectRefSchema: Schema.Schema<WildShapeWornLoadoutObjectRef> =
   Schema.Union(
     WildShapeArmorLoadoutObjectRefSchema,
