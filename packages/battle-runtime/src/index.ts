@@ -461,6 +461,7 @@ export {
   type BattleStatBlockRechargeRollResult,
   type BattleState,
   type BattleStateInitIssue,
+  type BattleStateInitLeafIssue,
   type BattleSuccessfulAbilityCheckFacts,
   type BattleTargetChoiceHole,
   type BattleTargetSpatialFact,

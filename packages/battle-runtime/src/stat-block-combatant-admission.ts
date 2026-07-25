@@ -4,7 +4,7 @@ import type { StatBlockMechanics } from "@dnd/surface/surface/types";
 import { Brand } from "effect";
 import * as Either from "effect/Either";
 
-import type { BattleStateInitIssue } from "./battle-state-execution.ts";
+import type { BattleStateInitLeafIssue } from "./battle-state-execution.ts";
 import {
   battleExecutionScopeCursor,
   type BattleExecutionScopeOrdinal,
@@ -40,7 +40,7 @@ export function admitBattleStatBlockCombatant(input: {
   readonly combatantId: CombatantId;
   readonly statBlock: BattleStatBlockExecutionSource;
   readonly startingScopeOrdinal: BattleExecutionScopeOrdinal;
-}): Either.Either<AdmittedBattleStatBlockCombatant, BattleStateInitIssue> {
+}): Either.Either<AdmittedBattleStatBlockCombatant, BattleStateInitLeafIssue> {
   const source = battleStatBlockCombatantSource(input.statBlock);
   if (Either.isLeft(source)) return Either.left(source.left);
   return admitBattleStatBlockCombatantSource({
@@ -56,7 +56,7 @@ export function admitBattleStatBlockCombatantSource(input: {
   readonly combatantId: CombatantId;
   readonly source: BattleStatBlockCombatantSource;
   readonly startingScopeOrdinal: BattleExecutionScopeOrdinal;
-}): Either.Either<AdmittedBattleStatBlockCombatant, BattleStateInitIssue> {
+}): Either.Either<AdmittedBattleStatBlockCombatant, BattleStateInitLeafIssue> {
   const statBlock = input.source;
   if (typeof statBlock.statBlock.creatureType !== "string") {
     return issue("Battle runtime requires a concrete creature type.");
@@ -115,7 +115,7 @@ export function admitBattleStatBlockCombatantSource(input: {
 
 export function battleStatBlockCombatantSource(
   statBlock: BattleStatBlockExecutionSource,
-): Either.Either<BattleStatBlockCombatantSource, BattleStateInitIssue> {
+): Either.Either<BattleStatBlockCombatantSource, BattleStateInitLeafIssue> {
   if (statBlock.statBlock.ac.kind !== "literal") {
     return issue("Battle runtime requires literal Stat Block Armor Class.");
   }
@@ -146,6 +146,8 @@ export function battleStatBlockCombatantSource(
   );
 }
 
-function issue(message: string): Either.Either<never, BattleStateInitIssue> {
+function issue(
+  message: string,
+): Either.Either<never, BattleStateInitLeafIssue> {
   return Either.left({ tag: "battleStateInitIssue", message });
 }

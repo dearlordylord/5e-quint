@@ -7,6 +7,7 @@ import { difficultyClass, type DifficultyClass } from "@dnd/shared/types";
 import type {
   BattleCreatureState,
   BattleStateInitIssue,
+  BattleStateInitLeafIssue,
 } from "../battle-state-execution.ts";
 
 export function scoreModifier(score: number): number {
@@ -23,7 +24,7 @@ export function concentrationSavingThrowDc(
 
 export function battleStateInitIssue(
   message: string,
-): Either.Either<never, BattleStateInitIssue> {
+): Either.Either<never, BattleStateInitLeafIssue> {
   return Either.left({ tag: "battleStateInitIssue", message });
 }
 
@@ -44,18 +45,22 @@ export function battleStateInitIssueMessage(
 }
 
 export function battleStateInitIssues(
-  first: BattleStateInitIssue,
-  ...rest: ReadonlyArray<BattleStateInitIssue>
-): Either.Either<never, BattleStateInitIssue> {
+  first: BattleStateInitLeafIssue,
+  second: BattleStateInitLeafIssue,
+  ...rest: ReadonlyArray<BattleStateInitLeafIssue>
+): Either.Either<
+  never,
+  Extract<BattleStateInitIssue, { tag: "battleStateInitIssues" }>
+> {
   return Either.left({
     tag: "battleStateInitIssues",
-    issues: [first, ...rest],
+    issues: [first, second, ...rest],
   });
 }
 
 export function weaponLoadoutMismatchIssue(
   slot: "main-hand" | "off-hand",
-): Either.Either<never, BattleStateInitIssue> {
+): Either.Either<never, BattleStateInitLeafIssue> {
   return Either.left({
     tag: "weaponLoadoutMismatch",
     slot,

@@ -79,6 +79,7 @@ import type {
   BattleHidePrerequisite,
   BattleState,
   BattleStateInitIssue,
+  BattleStateInitLeafIssue,
   CharacterBattleCreatureState,
 } from "../battle-state-execution.ts";
 import {
@@ -87,11 +88,12 @@ import {
 } from "./battle-runtime-protocol.ts";
 
 function admissionIssueToInitIssue(
-  issue: BattleStateInitIssue | BattleUnitSupportProfileIssue,
-): BattleStateInitIssue {
-  if (issue.tag === "weaponLoadoutMismatch") return issue;
-  if (issue.tag === "battleStateInitIssues") return issue;
-  return { tag: "battleStateInitIssue", message: issue.message };
+  issue: BattleStateInitLeafIssue | BattleUnitSupportProfileIssue,
+): BattleStateInitLeafIssue {
+  if (issue.tag === "battleUnitSupportProfileIssue") {
+    return { tag: "battleStateInitIssue", message: issue.message };
+  }
+  return issue;
 }
 
 const InitialInitiativeSetupBrand: unique symbol = Symbol(
@@ -224,10 +226,11 @@ export function startBattle(
     );
     if (admission.tag === "invalid") {
       const issues = admission.issues.map(admissionIssueToInitIssue);
-      const [firstIssue, ...remainingIssues] = issues;
-      return remainingIssues.length === 0
-        ? Either.left(firstIssue)
-        : battleStateInitIssues(firstIssue, ...remainingIssues);
+      const [firstIssue, secondIssue, ...remainingIssues] = issues;
+      if (secondIssue === undefined) {
+        return Either.left(firstIssue);
+      }
+      return battleStateInitIssues(firstIssue, secondIssue, ...remainingIssues);
     }
     combatants.set(combatant.combatantId, admission.creature);
     if ("runtimeContext" in admission) {
@@ -590,10 +593,11 @@ function admitBattleCombatant(input: AddBattleCombatantInput): Either.Either<
   );
   if (admission.tag === "invalid") {
     const issues = admission.issues.map(admissionIssueToInitIssue);
-    const [firstIssue, ...remainingIssues] = issues;
-    return remainingIssues.length === 0
-      ? Either.left(firstIssue)
-      : battleStateInitIssues(firstIssue, ...remainingIssues);
+    const [firstIssue, secondIssue, ...remainingIssues] = issues;
+    if (secondIssue === undefined) {
+      return Either.left(firstIssue);
+    }
+    return battleStateInitIssues(firstIssue, secondIssue, ...remainingIssues);
   }
   const combatantsWithAdmission = new Map(input.state.combatants).set(
     input.combatant.combatantId,

@@ -4078,7 +4078,7 @@ export type SuccessfulAbilityCheckReactionReductionResolutionResult =
     })
   | Extract<BattleResolutionResult, { readonly tag: "invalid" }>;
 
-export type BattleStateInitIssue =
+export type BattleStateInitLeafIssue =
   | {
       readonly tag: "battleStateInitIssue";
       readonly message: string;
@@ -4086,10 +4086,17 @@ export type BattleStateInitIssue =
   | {
       readonly tag: "weaponLoadoutMismatch";
       readonly slot: "main-hand" | "off-hand";
-    }
+    };
+
+export type BattleStateInitIssue =
+  | BattleStateInitLeafIssue
   | {
       readonly tag: "battleStateInitIssues";
-      readonly issues: ReadonlyNonEmptyArray<BattleStateInitIssue>;
+      readonly issues: readonly [
+        BattleStateInitLeafIssue,
+        BattleStateInitLeafIssue,
+        ...BattleStateInitLeafIssue[],
+      ];
     };
 
 // battleStateInitIssue and battleStateInitIssueMessage moved to ./battle-reducer/domain-helpers.ts

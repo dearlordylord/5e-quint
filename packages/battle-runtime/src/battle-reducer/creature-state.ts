@@ -104,6 +104,7 @@ import {
   type BattleHidePrerequisite,
   type BattleState,
   type BattleStateInitIssue,
+  type BattleStateInitLeafIssue,
   type CharacterBattleCreatureState,
   type StatBlockBattleCreatureState,
 } from "../battle-state-execution.ts";
@@ -170,7 +171,7 @@ function characterInitWeaponAttackExecutionRefs(
     readonly weaponObjectId: BattleObjectId;
     readonly hasWeaponMastery: boolean;
   },
-  BattleStateInitIssue
+  BattleStateInitLeafIssue
 > {
   if (
     loadoutWeapon === undefined ||
@@ -194,7 +195,7 @@ function characterInitWeaponAttackWithExecutionRefs(
     | { readonly itemId: BattleObjectId; readonly unitId: UnitId }
     | undefined,
   weaponMasteries: readonly CharacterBattleWeaponMasterySelection[],
-): Either.Either<CharacterWeaponAttackActionOption, BattleStateInitIssue> {
+): Either.Either<CharacterWeaponAttackActionOption, BattleStateInitLeafIssue> {
   const refs = characterInitWeaponAttackExecutionRefs(
     slot,
     attack,
@@ -231,7 +232,7 @@ export function battleCreatureStateAdmissionFromInit(
   | {
       readonly tag: "invalid";
       readonly issues: ReadonlyNonEmptyArray<
-        BattleUnitSupportProfileIssue | BattleStateInitIssue
+        BattleUnitSupportProfileIssue | BattleStateInitLeafIssue
       >;
     } {
   const creatureInit = input.creatureInit;
@@ -742,7 +743,7 @@ export function positiveHpUnconsciousInitIssue(
 export function characterResourceInitIssue(
   creatureInit: CharacterBattleCreatureInit,
   classLevels: CharacterBattleClassLevels,
-): Either.Either<never, BattleStateInitIssue> | null {
+): Either.Either<never, BattleStateInitLeafIssue> | null {
   for (const resource of creatureInit.resources ?? []) {
     const issue = characterBattleResourceInitIssue(resource, classLevels);
     if (issue !== null) {
@@ -762,7 +763,7 @@ export function characterResourceInitIssue(
 export function characterDruidWildShapeAvailableFormsInitIssue(
   creatureInit: CharacterBattleCreatureInit,
   classLevels: CharacterBattleClassLevels,
-): Either.Either<never, BattleStateInitIssue> | null {
+): Either.Either<never, BattleStateInitLeafIssue> | null {
   const wildShapeProfiles = (creatureInit.resources ?? []).flatMap(
     (resource) => {
       const profile = parseSupportedUnitFeatureProfile(
@@ -795,7 +796,7 @@ export function characterDruidWildShapeAvailableFormsInitIssue(
 export function characterSpellcastingInitIssue(
   creatureInit: CharacterBattleCreatureInit,
   classLevels: CharacterBattleClassLevels,
-): Either.Either<never, BattleStateInitIssue> | null {
+): Either.Either<never, BattleStateInitLeafIssue> | null {
   if (creatureInit.spellcasting === undefined) {
     return null;
   }
