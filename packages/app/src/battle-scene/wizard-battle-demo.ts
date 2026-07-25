@@ -60,7 +60,7 @@ const wizardSpellcastingAbilityModifier = 4
 const wizardProficiencyBonus = 3
 const fireballAreaRadiusFeet = 20
 const shatterAreaRadiusFeet = 10
-const deathSaveStabilizeThreshold = 10
+const deathSaveSuccessThreshold = 10
 const fireballDamageRollResults = [4, 4, 4, 4, 3, 3, 3, 3] as const
 const shatterDamageRollResults = [5, 5, 4] as const
 const laserWizardId = combatantId("A")
@@ -886,7 +886,7 @@ function passCurrentTurn(
         {
           combatantId: deathSave.targetId,
           text: deathSaveText(deathSave.roll),
-          tone: deathSave.roll >= deathSaveStabilizeThreshold ? "positive" : "negative"
+          tone: deathSave.roll >= deathSaveSuccessThreshold ? "positive" : "negative"
         }
       ]
     }
@@ -1028,7 +1028,7 @@ function damageSummary(plan: AreaSpellPlan): string {
 
 function deathSaveText(roll: number): string {
   if (roll === 1) return "Nat 1"
-  if (roll >= deathSaveStabilizeThreshold) return "Success"
+  if (roll >= deathSaveSuccessThreshold) return "Success"
   return "Failure"
 }
 

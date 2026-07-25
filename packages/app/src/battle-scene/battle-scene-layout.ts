@@ -138,11 +138,10 @@ const FULL_BAR_RATIO = 1
 const PRESENTATION_METRICS = {
   bar: {
     gapFromToken: 4,
-    betweenBars: 2
+    betweenBars: 2,
+    contentGap: 2
   },
   label: {
-    gapFromHpBar: 2,
-    gapFromTempHpBar: 4,
     offset: 8
   },
   slotRows: {
@@ -277,13 +276,7 @@ function computeCreatureLayout(
     justBecameUnconscious: false,
     label: combatant.displayName,
     labelTone: floatingLabel?.tone ?? "negative",
-    labelY:
-      hpBarY +
-      config.barHeight +
-      (tempHpBar === null
-        ? PRESENTATION_METRICS.label.gapFromHpBar
-        : config.barHeight + PRESENTATION_METRICS.label.gapFromTempHpBar) +
-      PRESENTATION_METRICS.label.offset,
+    labelY: contentYAfterHealthBars(hpBarY, tempHpBar, config) + PRESENTATION_METRICS.label.offset,
     opacity: dead ? PRESENTATION_METRICS.opacity.dead : unconscious ? PRESENTATION_METRICS.opacity.unconscious : 1,
     slotJustSpent: step.cue.spell?.casterId === combatant.combatantId,
     slotRows: slotRows(combatant, barX, hpBarY, tempHpBar, config),
@@ -325,14 +318,15 @@ function slotRows(
     total: Number(slot.count),
     x: barX,
     y:
-      hpBarY +
-      config.barHeight +
-      (tempHpBar === null
-        ? PRESENTATION_METRICS.label.gapFromHpBar
-        : config.barHeight + PRESENTATION_METRICS.label.gapFromTempHpBar) +
+      contentYAfterHealthBars(hpBarY, tempHpBar, config) +
       PRESENTATION_METRICS.slotRows.startOffset +
       index * PRESENTATION_METRICS.slotRows.spacing
   }))
+}
+
+function contentYAfterHealthBars(hpBarY: number, tempHpBar: BarLayout | null, config: LayoutConfig): number {
+  const healthBarsBottom = tempHpBar === null ? hpBarY + config.barHeight : tempHpBar.y + tempHpBar.height
+  return healthBarsBottom + PRESENTATION_METRICS.bar.contentGap
 }
 
 function initiativeCreatureSnapshot(
