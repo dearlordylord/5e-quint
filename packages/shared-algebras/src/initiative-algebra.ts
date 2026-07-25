@@ -1,10 +1,11 @@
-import { isEmptyReadonlyArray, isNonEmptyReadonlyArray } from "effect/Array";
+import * as EffectArray from "effect/Array";
 import * as Either from "effect/Either";
 import * as Option from "effect/Option";
 
 import type {
   Index,
   Initiative,
+  NonEmptyArray,
   ReadonlyNonEmptyArray,
   Round,
 } from "@dnd/shared/types";
@@ -28,12 +29,9 @@ export const nextInitiative = <T>(
   s0: InitiativeStack<T>,
 ): InitiativeStack<T> => {
   const [current, ...remaining] = s0.stillToAct;
-  const acted = [
-    ...s0.alreadyActed,
-    current,
-  ] as unknown as ReadonlyNonEmptyArray<InitiativeEntry<T>>;
+  const acted = EffectArray.appendAll(s0.alreadyActed, EffectArray.of(current));
 
-  if (isEmptyReadonlyArray(remaining)) {
+  if (!EffectArray.isNonEmptyReadonlyArray(remaining)) {
     return {
       round: (s0.round + 1) as Round,
       alreadyActed: [],
@@ -44,9 +42,7 @@ export const nextInitiative = <T>(
   return {
     round: s0.round,
     alreadyActed: acted,
-    stillToAct: remaining as unknown as ReadonlyNonEmptyArray<
-      InitiativeEntry<T>
-    >,
+    stillToAct: remaining,
   };
 };
 
@@ -97,7 +93,7 @@ export const swapInitialInitiativeScores = <T>(
     )
     .map(({ entry }) => entry);
 
-  return isNonEmptyReadonlyArray(swappedOrder)
+  return EffectArray.isNonEmptyReadonlyArray(swappedOrder)
     ? Option.some(createInitiativeStack(swappedOrder, stack.round))
     : Option.none();
 };
@@ -126,14 +122,14 @@ export const insertAtOrderIndex = <T>(
   }
 
   const stillIndex = normalizedIndex - actedCount;
+  const stillToAct = EffectArray.appendAll(
+    stack.stillToAct.slice(0, stillIndex),
+    EffectArray.prepend(stack.stillToAct.slice(stillIndex), value),
+  );
   return {
     round: stack.round,
     alreadyActed: stack.alreadyActed,
-    stillToAct: [
-      ...stack.stillToAct.slice(0, stillIndex),
-      value,
-      ...stack.stillToAct.slice(stillIndex),
-    ] as unknown as ReadonlyNonEmptyArray<InitiativeEntry<T>>,
+    stillToAct,
   };
 };
 
@@ -148,11 +144,11 @@ export const removeFromInitiative = <T>(
     (entry) => !predicate(entry.creature),
   );
 
-  if (isNonEmptyReadonlyArray(stillToAct)) {
+  if (EffectArray.isNonEmptyReadonlyArray(stillToAct)) {
     return Option.some({ round: stack.round, alreadyActed: acted, stillToAct });
   }
 
-  if (isNonEmptyReadonlyArray(acted)) {
+  if (EffectArray.isNonEmptyReadonlyArray(acted)) {
     return Option.some({
       round: (stack.round + 1) as Round,
       alreadyActed: [],
@@ -229,7 +225,7 @@ export const insertByInitiative = <T>(
   }
 
   const tieStart = order[firstEqualIndex]!;
-  const tiedEntries: Array<InitiativeEntry<T>> = [tieStart];
+  const tiedEntries: NonEmptyArray<InitiativeEntry<T>> = [tieStart];
   let tieIndex = firstEqualIndex + 1;
   while (
     tieIndex < order.length &&
@@ -238,9 +234,7 @@ export const insertByInitiative = <T>(
     tiedEntries.push(order[tieIndex]!);
     tieIndex += 1;
   }
-  const tie = tiedEntries.map(
-    (current) => current.creature,
-  ) as unknown as ReadonlyNonEmptyArray<T>;
+  const tie = EffectArray.map(tiedEntries, (current) => current.creature);
 
   if (decision != null) {
     const [decisionTie, decisionIndex] = decision;

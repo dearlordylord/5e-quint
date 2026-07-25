@@ -1,8 +1,9 @@
-import { Brand, Schema } from "effect";
+import { Array as EffectArray, Brand, Schema } from "effect";
 import {
   difficultyClass,
   type AbilityModifier,
   type DifficultyClass,
+  type ReadonlyNonEmptyArray,
 } from "./types.ts";
 
 /** Dependency-safe authored identity vocabulary for execution projections. */
@@ -144,9 +145,8 @@ export function surfaceSkillId(skill: Skill): SurfaceSkill {
     : (skill as SurfaceSkill);
 }
 
-export const SURFACE_SKILLS = SKILLS.map(
-  surfaceSkillId,
-) as unknown as readonly [SurfaceSkill, ...SurfaceSkill[]];
+export const SURFACE_SKILLS: ReadonlyNonEmptyArray<SurfaceSkill> =
+  EffectArray.map(SKILLS, surfaceSkillId);
 export type SurfaceSkill =
   | Exclude<Skill, "animalHandling" | "sleightOfHand">
   | "animal_handling"
@@ -294,13 +294,17 @@ export function alignmentOptionId(alignment: Alignment): AlignmentOptionId {
   return `${alignment.order}_${alignment.morality}`;
 }
 
-export const ALIGNMENTS = ALIGNMENT_MORALITIES.flatMap((morality) =>
-  ALIGNMENT_ORDERS.map((order) => alignmentAbbreviation({ order, morality })),
-) as unknown as readonly [AlignmentAbbreviation, ...AlignmentAbbreviation[]];
+export const ALIGNMENTS: ReadonlyNonEmptyArray<AlignmentAbbreviation> =
+  EffectArray.flatMap(ALIGNMENT_MORALITIES, (morality) =>
+    EffectArray.map(ALIGNMENT_ORDERS, (order) =>
+      alignmentAbbreviation({ order, morality }),
+    ),
+  );
 
-export const ALIGNMENT_CHOICES = ALIGNMENT_MORALITIES.flatMap((morality) =>
-  ALIGNMENT_ORDERS.map((order) => ({ order, morality })),
-) as unknown as readonly [Alignment, ...Alignment[]];
+export const ALIGNMENT_CHOICES: ReadonlyNonEmptyArray<Alignment> =
+  EffectArray.flatMap(ALIGNMENT_MORALITIES, (morality) =>
+    EffectArray.map(ALIGNMENT_ORDERS, (order) => ({ order, morality })),
+  );
 
 export function alignmentFromAbbreviation(
   abbreviation: AlignmentAbbreviation,
