@@ -135,6 +135,31 @@ const DEFAULT_LAYOUT_CONFIG: LayoutConfig = {
 const TEAM_COLORS = { blue: "#3b82f6", red: "#ef4444" } as const
 const FEET_PER_GRID_SQUARE = 5
 const FULL_BAR_RATIO = 1
+const PRESENTATION_METRICS = {
+  bar: {
+    gapFromToken: 4,
+    betweenBars: 2
+  },
+  label: {
+    gapFromHpBar: 2,
+    gapFromTempHpBar: 4,
+    offset: 8
+  },
+  slotRows: {
+    startOffset: 13,
+    spacing: 6
+  },
+  hpColorThresholds: {
+    healthy: 0.5,
+    wounded: 0.25
+  },
+  opacity: {
+    dead: 0.3,
+    unconscious: 0.7,
+    interruptOverlay: 0.95,
+    aoeZone: 0.25
+  }
+} as const
 
 export function computeWizardBattleScene(input: {
   readonly snapshot: BattlePresentedSnapshot
@@ -170,7 +195,7 @@ export function computeWizardBattleScene(input: {
       gridLines: computeGridLines(config),
       interruptOverlay: {
         label: input.step.cue.reactingId === undefined ? null : "COUNTERSPELL WINDOW",
-        opacity: input.step.cue.reactingId === undefined ? 0 : 0.95
+        opacity: input.step.cue.reactingId === undefined ? 0 : PRESENTATION_METRICS.opacity.interruptOverlay
       },
       spellAnnouncement:
         input.step.cue.spell === undefined
@@ -196,7 +221,7 @@ function computeCreatureLayout(
   const gridPosition = combatantMeta?.gridPosition ?? { col: 0, row: 0 }
   const { cx, cy } = gridToPixel(gridPosition, config)
   const barX = cx - config.barWidth / 2
-  const hpBarY = cy + config.tokenRadius + 4
+  const hpBarY = cy + config.tokenRadius + PRESENTATION_METRICS.bar.gapFromToken
   const hpRatio = Number(combatant.maxHp) > 0 ? Number(combatant.hp) / Number(combatant.maxHp) : 0
   const tempHp = Number(combatant.tempHp)
   const unconscious = combatant.conditions.includes("unconscious")
@@ -211,7 +236,7 @@ function computeCreatureLayout(
           height: config.barHeight,
           totalWidth: config.barWidth,
           x: barX,
-          y: hpBarY + config.barHeight + 2
+          y: hpBarY + config.barHeight + PRESENTATION_METRICS.bar.betweenBars
         }
       : null
 
@@ -224,7 +249,7 @@ function computeCreatureLayout(
             height: config.barHeight,
             totalWidth: config.barWidth,
             x: barX,
-            y: cy - config.tokenRadius - config.barHeight - 4
+            y: cy - config.tokenRadius - config.barHeight - PRESENTATION_METRICS.bar.gapFromToken
           }
         : null,
     castingGlow: step.cue.spell?.casterId === combatant.combatantId,
@@ -234,7 +259,12 @@ function computeCreatureLayout(
     deathSaves: deathSavesLayout(combatant, unconscious, barX, hpBarY, config),
     floatingLabel: floatingLabel?.text ?? null,
     hpBar: {
-      color: hpRatio > 0.5 ? "#22c55e" : hpRatio > 0.25 ? "#eab308" : "#ef4444",
+      color:
+        hpRatio > PRESENTATION_METRICS.hpColorThresholds.healthy
+          ? "#22c55e"
+          : hpRatio > PRESENTATION_METRICS.hpColorThresholds.wounded
+            ? "#eab308"
+            : "#ef4444",
       fillWidth: config.barWidth * Math.max(0, Math.min(FULL_BAR_RATIO, hpRatio)),
       height: config.barHeight,
       totalWidth: config.barWidth,
@@ -247,8 +277,14 @@ function computeCreatureLayout(
     justBecameUnconscious: false,
     label: combatant.displayName,
     labelTone: floatingLabel?.tone ?? "negative",
-    labelY: hpBarY + config.barHeight + (tempHpBar === null ? 2 : config.barHeight + 4) + 8,
-    opacity: dead ? 0.3 : unconscious ? 0.7 : 1,
+    labelY:
+      hpBarY +
+      config.barHeight +
+      (tempHpBar === null
+        ? PRESENTATION_METRICS.label.gapFromHpBar
+        : config.barHeight + PRESENTATION_METRICS.label.gapFromTempHpBar) +
+      PRESENTATION_METRICS.label.offset,
+    opacity: dead ? PRESENTATION_METRICS.opacity.dead : unconscious ? PRESENTATION_METRICS.opacity.unconscious : 1,
     slotJustSpent: step.cue.spell?.casterId === combatant.combatantId,
     slotRows: slotRows(combatant, barX, hpBarY, tempHpBar, config),
     sprite: combatantMeta?.sprite ?? null,
@@ -271,7 +307,7 @@ function deathSavesLayout(
     failures: combatant.zeroHpLifecycle.deathSaves.failures,
     successes: combatant.zeroHpLifecycle.deathSaves.successes,
     x: barX,
-    y: hpBarY + config.barHeight + 2
+    y: hpBarY + config.barHeight + PRESENTATION_METRICS.bar.betweenBars
   }
 }
 
@@ -288,7 +324,14 @@ function slotRows(
     level: Number(slot.spellLevel),
     total: Number(slot.count),
     x: barX,
-    y: hpBarY + config.barHeight + (tempHpBar === null ? 2 : config.barHeight + 4) + 13 + index * 6
+    y:
+      hpBarY +
+      config.barHeight +
+      (tempHpBar === null
+        ? PRESENTATION_METRICS.label.gapFromHpBar
+        : config.barHeight + PRESENTATION_METRICS.label.gapFromTempHpBar) +
+      PRESENTATION_METRICS.slotRows.startOffset +
+      index * PRESENTATION_METRICS.slotRows.spacing
   }))
 }
 
@@ -355,7 +398,7 @@ function computeAoEZones(
       color: spell.color,
       cx,
       cy,
-      opacity: 0.25,
+      opacity: PRESENTATION_METRICS.opacity.aoeZone,
       r: ((spell.areaRadiusFeet ?? 20) / FEET_PER_GRID_SQUARE) * config.cellSize,
       spellName: spell.name,
       zoneId: `${stepIndex}:${spell.name}`

@@ -325,6 +325,9 @@ export const AlternateActionCostSchema = Schema.Struct({
 
 export const CLASS_NAMES = SHARED_CLASS_NAMES;
 
+const [firstClassName, ...rawClassNameTail] = CLASS_NAMES;
+const classNameTail: ReadonlyArray<ClassName> = rawClassNameTail;
+
 type NonEmptyReadonlyArray<T> = readonly [T, ...T[]];
 
 export const LIST_PREPARED_SPELLCASTING_CLASS_NAMES = [
@@ -355,15 +358,23 @@ export const NON_SPELLCASTING_CLASS_NAMES = [
   Exclude<ClassName, (typeof CLASS_SPELLCASTING_CLASS_NAMES)[number]>
 >;
 
-export const NON_FIGHTER_NON_WIZARD_CLASS_NAMES = CLASS_NAMES.filter(
-  (className): className is Exclude<ClassName, "fighter" | "wizard"> =>
-    className !== "fighter" && className !== "wizard",
-) as unknown as NonEmptyReadonlyArray<Exclude<ClassName, "fighter" | "wizard">>;
+export const NON_FIGHTER_NON_WIZARD_CLASS_NAMES = [
+  firstClassName,
+  ...classNameTail.filter(
+    (className): className is Exclude<ClassName, "fighter" | "wizard"> =>
+      className !== "fighter" && className !== "wizard",
+  ),
+] as const satisfies NonEmptyReadonlyArray<
+  Exclude<ClassName, "fighter" | "wizard">
+>;
 
-export const NON_WIZARD_CLASS_NAMES = CLASS_NAMES.filter(
-  (className): className is Exclude<ClassName, "wizard"> =>
-    className !== "wizard",
-) as unknown as NonEmptyReadonlyArray<Exclude<ClassName, "wizard">>;
+export const NON_WIZARD_CLASS_NAMES = [
+  firstClassName,
+  ...classNameTail.filter(
+    (className): className is Exclude<ClassName, "wizard"> =>
+      className !== "wizard",
+  ),
+] as const satisfies NonEmptyReadonlyArray<Exclude<ClassName, "wizard">>;
 
 export const ClassNameSchema = Schema.Literal(...CLASS_NAMES);
 

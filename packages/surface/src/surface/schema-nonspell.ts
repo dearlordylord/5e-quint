@@ -117,6 +117,11 @@ const FontOfMagicCreatedSpellSlotLevelSchema = Schema.Literal(
   ...FONT_OF_MAGIC_CREATED_SPELL_SLOT_LEVELS,
 );
 
+type NonEmptyReadonlyArray<T> = readonly [T, ...T[]];
+
+const [firstClassName, ...rawClassNameTail] = CLASS_NAMES;
+const classNameTail: ReadonlyArray<ClassName> = rawClassNameTail;
+
 const CLASS_FEATURE_RECORD_WITH_SPECIFIC_MECHANICS_CLASS_NAMES = [
   "bard",
   "cleric",
@@ -133,25 +138,23 @@ const CLASS_FEATURE_RECORD_WITH_SPECIFIC_MECHANICS_CLASS_NAMES = [
 type ClassFeatureRecordWithSpecificMechanicsClassName =
   (typeof CLASS_FEATURE_RECORD_WITH_SPECIFIC_MECHANICS_CLASS_NAMES)[number];
 
-const GENERAL_CLASS_FEATURE_RECORD_CLASS_NAMES = CLASS_NAMES.filter(
-  (
-    className,
-  ): className is Exclude<
-    ClassName,
-    ClassFeatureRecordWithSpecificMechanicsClassName
-  > =>
-    !(
-      CLASS_FEATURE_RECORD_WITH_SPECIFIC_MECHANICS_CLASS_NAMES as ReadonlyArray<string>
-    ).includes(className),
-  // Brands and literal unions are erased at runtime; the filter above removes
-  // exactly the excluded class names, and Schema.Literal requires a non-empty
-  // tuple rather than a narrowed readonly array.
-) as unknown as readonly [
-  Exclude<ClassName, ClassFeatureRecordWithSpecificMechanicsClassName>,
-  ...Array<
-    Exclude<ClassName, ClassFeatureRecordWithSpecificMechanicsClassName>
-  >,
-];
+const GENERAL_CLASS_FEATURE_RECORD_CLASS_NAMES = [
+  firstClassName,
+  ...classNameTail.filter(
+    (
+      className,
+    ): className is Exclude<
+      ClassName,
+      ClassFeatureRecordWithSpecificMechanicsClassName
+    > =>
+      // Widen the literal tuple so ReadonlyArray.includes accepts any ClassName.
+      !(
+        CLASS_FEATURE_RECORD_WITH_SPECIFIC_MECHANICS_CLASS_NAMES as ReadonlyArray<ClassName>
+      ).includes(className),
+  ),
+] as const satisfies NonEmptyReadonlyArray<
+  Exclude<ClassName, ClassFeatureRecordWithSpecificMechanicsClassName>
+>;
 
 const CLASS_CONTAINER_WITHOUT_SPELL_ACCESS_CLASS_NAMES = [
   ...LIST_PREPARED_SPELLCASTING_CLASS_NAMES,

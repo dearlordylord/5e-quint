@@ -57,6 +57,9 @@ const wizardHp = 50
 const unarmedStrikeAttackBonus = 2
 const wizardSpellcastingAbilityModifier = 4
 const wizardProficiencyBonus = 3
+const fireballAreaRadiusFeet = 20
+const shatterAreaRadiusFeet = 10
+const deathSaveStabilizeThreshold = 10
 const fireballDamageRollResults = [4, 4, 4, 4, 3, 3, 3, 3] as const
 const shatterDamageRollResults = [5, 5, 4] as const
 const laserWizardId = combatantId("A")
@@ -161,7 +164,7 @@ type AreaSpellDefinition =
       readonly id: typeof fireballUnitId
       readonly name: "Fireball"
       readonly slotLevel: typeof fireballSlotLevel
-      readonly areaRadiusFeet: 20
+      readonly areaRadiusFeet: typeof fireballAreaRadiusFeet
       readonly color: "#f97316"
       readonly damageRollResults: typeof fireballDamageRollResults
     }
@@ -170,7 +173,7 @@ type AreaSpellDefinition =
       readonly id: typeof shatterUnitId
       readonly name: "Shatter"
       readonly slotLevel: typeof shatterSlotLevel
-      readonly areaRadiusFeet: 10
+      readonly areaRadiusFeet: typeof shatterAreaRadiusFeet
       readonly color: "#38bdf8"
       readonly damageRollResults: typeof shatterDamageRollResults
     }
@@ -305,7 +308,7 @@ const fireballSpellDefinition = {
   id: fireballUnitId,
   name: "Fireball",
   slotLevel: fireballSlotLevel,
-  areaRadiusFeet: 20,
+  areaRadiusFeet: fireballAreaRadiusFeet,
   color: "#f97316",
   damageRollResults: fireballDamageRollResults
 } as const satisfies AreaSpellDefinition
@@ -315,7 +318,7 @@ const shatterSpellDefinition = {
   id: shatterUnitId,
   name: "Shatter",
   slotLevel: shatterSlotLevel,
-  areaRadiusFeet: 10,
+  areaRadiusFeet: shatterAreaRadiusFeet,
   color: "#38bdf8",
   damageRollResults: shatterDamageRollResults
 } as const satisfies AreaSpellDefinition
@@ -882,7 +885,7 @@ function passCurrentTurn(
         {
           combatantId: deathSave.targetId,
           text: deathSaveText(deathSave.roll),
-          tone: deathSave.roll >= 10 ? "positive" : "negative"
+          tone: deathSave.roll >= deathSaveStabilizeThreshold ? "positive" : "negative"
         }
       ]
     }
@@ -1024,7 +1027,7 @@ function damageSummary(plan: AreaSpellPlan): string {
 
 function deathSaveText(roll: number): string {
   if (roll === 1) return "Nat 1"
-  if (roll >= 10) return "Success"
+  if (roll >= deathSaveStabilizeThreshold) return "Success"
   return "Failure"
 }
 
