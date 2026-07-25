@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { initiativeOrder } from "@dnd/shared-algebras/initiative-algebra";
 import { characterId, combatantId, type CombatantId } from "./identity.ts";
-import { unitId } from "@dnd/shared/game-facts";
+import { statBlockId, unitId } from "@dnd/shared/game-facts";
 import type {
   BattleCreatureSnapshot,
   BattleSnapshot,
@@ -19,6 +19,7 @@ import {
   characterSeed,
   fighterVsGoblinBattle,
   goblinId,
+  resolveBattleSubject,
   startBattleSessionRight,
   statBlockCatalog,
   statBlockCreatureInit,
@@ -34,6 +35,7 @@ import {
   battleRuntimeContextForTest,
   battleRuntimeSessionForTest,
 } from "./battle-runtime-session.test-support.ts";
+import type { BattleFill, BattleHole, BattleSubject } from "./index.ts";
 
 /**
  * Synthetic-renaming witness for inert authored identity fields.
@@ -96,6 +98,28 @@ function turnResourcesProjection(turnResources: BattleTurnResources) {
   return { ...turnResources };
 }
 
+function wildShapeAvailableFormsMechanicalProjection(
+  forms:
+    | readonly StatBlockExecutionAdmission<BattleDruidWildShapeKnownForm>[]
+    | undefined,
+) {
+  if (forms === undefined) return undefined;
+  // Strip presentation-only identity from each admitted form. Mechanical facts
+  // (support profile, AC, size, speeds, procedures) remain compared.
+  return forms.map((admission) => {
+    const { id: _id, ...statBlockWithoutId } = admission.statBlock;
+    const { displayName: _displayName, ...innerStatBlockWithoutDisplayName } =
+      statBlockWithoutId.statBlock;
+    return {
+      ...admission,
+      statBlock: {
+        ...statBlockWithoutId,
+        statBlock: innerStatBlockWithoutDisplayName,
+      },
+    };
+  });
+}
+
 function combatantMechanicalProjection(combatant: BattleCreatureState) {
   const base = {
     combatantId: combatant.combatantId,
@@ -151,8 +175,9 @@ function combatantMechanicalProjection(combatant: BattleCreatureState) {
       resources: combatant.origin.resources,
       metamagic: combatant.origin.metamagic,
       spellcasting: combatant.origin.spellcasting,
-      druidWildShapeAvailableForms:
+      druidWildShapeAvailableForms: wildShapeAvailableFormsMechanicalProjection(
         combatant.origin.druidWildShapeAvailableForms,
+      ),
     },
   };
 }
@@ -214,7 +239,15 @@ function snapshotOriginMechanicalProjection(
 ) {
   if (origin.kind === "character") {
     const { characterId: _characterId, ...rest } = origin;
-    return rest;
+    return {
+      ...rest,
+      druidWildShapeAvailableForms: origin.druidWildShapeAvailableForms.map(
+        (form) => {
+          const { statBlockId: _statBlockId, ...formRest } = form;
+          return formRest;
+        },
+      ),
+    };
   }
   const { statBlockId: _statBlockId, ...rest } = origin;
   return rest;
@@ -314,14 +347,16 @@ function renameSnapshotInertIdentityFields(
 
 function wildShapeFormAdmissionWithRenamedPresentationIdentity(
   admission: StatBlockExecutionAdmission<BattleDruidWildShapeKnownForm>,
-  id: string,
+  id: ReturnType<typeof statBlockId>,
   displayName: string,
 ): StatBlockExecutionAdmission<BattleDruidWildShapeKnownForm> {
-  // Local evidence for the branded casts: all mechanical facts (support profile,
-  // parsed stat block mechanics, AC/size/speeds) and the admitted execution state
-  // are preserved unchanged. Only presentation identity (`statBlock.id` and nested
-  // `statBlock.statBlock.displayName`) is rewritten, so eligibility and reducer
-  // behavior remain identical.
+  // Justification for the type assertions: the admission's mechanical facts
+  // (support profile, parsed stat block mechanics, AC/size/speeds) and its
+  // admitted execution state are preserved unchanged. Only presentation identity
+  // (`statBlock.id` and nested `statBlock.statBlock.displayName`) is rewritten,
+  // so eligibility and reducer behavior remain identical. The assertions restore
+  // the nominal brands that TypeScript cannot infer from a spread, mirroring the
+  // production `battleDruidWildShapeKnownForm` constructor in `battle-init.ts`.
   return {
     ...admission,
     statBlock: {
@@ -335,10 +370,58 @@ function wildShapeFormAdmissionWithRenamedPresentationIdentity(
   } as StatBlockExecutionAdmission<BattleDruidWildShapeKnownForm>;
 }
 
+function requireWildShapeEquipmentDispositionHole(
+  holes: readonly BattleHole[],
+): Extract<BattleHole, { readonly kind: "wildShapeEquipmentDisposition" }> {
+  const hole = holes.find(
+    (
+      candidate,
+    ): candidate is Extract<
+      BattleHole,
+      { readonly kind: "wildShapeEquipmentDisposition" }
+    > => candidate.kind === "wildShapeEquipmentDisposition",
+  );
+  if (hole === undefined) {
+    throw new Error("Expected Wild Shape equipment disposition hole.");
+  }
+  return hole;
+}
+
+function wildShapeEquipmentDispositionFill(
+  hole: Extract<BattleHole, { readonly kind: "wildShapeEquipmentDisposition" }>,
+): BattleFill {
+  return {
+    kind: "wildShapeEquipmentDisposition",
+    holeId: hole.holeId,
+    value: {
+      formLimbs: { kind: "canHandleObjects" },
+      choices: [],
+    },
+  };
+}
+
+function resolveDruidWildShapeWithoutLoadoutEquipment(
+  state: BattleState,
+  subject: Extract<BattleSubject, { readonly tag: "druidWildShape" }>,
+) {
+  const needsDisposition = resolveBattleSubject({ state, subject, fills: [] });
+  if (needsDisposition.tag !== "needsHoles") {
+    throw new Error("Expected Wild Shape equipment disposition hole.");
+  }
+  const hole = requireWildShapeEquipmentDispositionHole(needsDisposition.holes);
+  return resolveBattleSubject({
+    state,
+    subject,
+    fills: [wildShapeEquipmentDispositionFill(hole)],
+  });
+}
+
 function renameFormStatBlockIdPresentationFields(
   state: BattleState,
 ): BattleState {
-  const syntheticFormStatBlockId = "synthetic-form-stat-block-id-witness";
+  const syntheticFormStatBlockId = statBlockId(
+    "synthetic-form-stat-block-id-witness",
+  );
   const syntheticFormDisplayName = "Synthetic Form";
 
   const renamedCombatants = new Map(
@@ -646,6 +729,8 @@ describe("inert authored identity renaming witness (#224)", () => {
           initiative: 20,
           classLevels: [{ className: "druid", level: 2 }],
           resources: [{ unit: unitLibrary.requireUnit("druid_wild_shape") }],
+          selectedLoadout: {},
+          attack: null,
           druidWildShapeAvailableForms: [
             statBlockCatalog.requireStatBlock("stat_block_cat"),
           ],
@@ -701,15 +786,50 @@ describe("inert authored identity renaming witness (#224)", () => {
       return;
     }
 
+    if (
+      originalFormAct.subject.tag !== "druidWildShape" ||
+      renamedFormAct.subject.tag !== "druidWildShape"
+    ) {
+      throw new Error("Expected Wild Shape subject.");
+    }
+
     // formExecutionRef is unchanged; only the presentation identity and label changed.
     expect(renamedFormAct.presentation.formExecutionRef).toBe(
       originalFormAct.presentation.formExecutionRef,
     );
     expect(renamedFormAct.presentation.formStatBlockId).toBe(
-      "synthetic-form-stat-block-id-witness",
+      statBlockId("synthetic-form-stat-block-id-witness"),
     );
     expect(renamedFormAct.label + renamedFormAct.summary).toContain(
       "Synthetic Form",
+    );
+
+    // Resolving the Wild Shape act in both sessions produces identical mechanical
+    // state, proving the renamed presentation identity does not alter reducer
+    // behavior.
+    const originalResolved = resolveDruidWildShapeWithoutLoadoutEquipment(
+      session.state,
+      originalFormAct.subject,
+    );
+    const renamedResolved = resolveDruidWildShapeWithoutLoadoutEquipment(
+      renamedSession.state,
+      renamedFormAct.subject,
+    );
+    expect(originalResolved.tag).toBe("resolved");
+    expect(renamedResolved.tag).toBe("resolved");
+    if (
+      originalResolved.tag !== "resolved" ||
+      renamedResolved.tag !== "resolved"
+    ) {
+      return;
+    }
+    expect(stateMechanicalProjection(renamedResolved.state)).toEqual(
+      stateMechanicalProjection(originalResolved.state),
+    );
+    expect(
+      snapshotMechanicalProjection(snapshotBattle(renamedResolved.state)),
+    ).toEqual(
+      snapshotMechanicalProjection(snapshotBattle(originalResolved.state)),
     );
   });
 });
