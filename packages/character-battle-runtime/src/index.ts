@@ -22,6 +22,7 @@ import {
   type CharacterBattleRuntimeContext,
   type CharacterZeroHpLifecycleInit,
   type StatBlockBattleInitInput,
+  battleStateInitIssueMessage,
 } from "@dnd/battle-runtime";
 import { characterBuildDruidWildShapeFacts } from "@dnd/character-creation-runtime";
 import {
@@ -94,6 +95,14 @@ import {
   type CharacterBattleRouteEvent,
 } from "./character-battle-route.ts";
 import { settleCompanionFromBattle } from "./companion-handoff.ts";
+
+export function characterBattleRuntimeIssueMessage(
+  issue: BattleCreatureInitIssue | BattleStateInitIssue,
+): string {
+  return issue.tag === "battleCreatureInitIssue"
+    ? issue.message
+    : battleStateInitIssueMessage(issue);
+}
 
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-use-count-resource
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.monk-uncanny-metabolism-initiative-recovery
@@ -626,7 +635,9 @@ function settleBattleCombatantIntoCharacterSheet(input: {
   }
   const knockedOut = combatantKnockedOutUnconscious(input.combatant);
   if (Either.isLeft(knockedOut)) {
-    return characterSheetBattleHandoffIssue(knockedOut.left.message);
+    return characterSheetBattleHandoffIssue(
+      battleStateInitIssueMessage(knockedOut.left),
+    );
   }
   const pactSlots = characterSheetPactSlots(input.sheet);
   const resourceExpenditures = characterResourceExpendituresFromBattle(input);

@@ -25,6 +25,7 @@ import {
   unitLibrary,
 } from "./unit-profile-admission-test-support.ts";
 import { characterCreature } from "./unit-profile-admission-creature-fixture-support.ts";
+import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import {
   characterAttackSubjectForTest,
   characterBattleFeatureInitForTest,
@@ -154,7 +155,7 @@ function remarkableAthleteBattle(): BattleState {
     ],
   });
   if (Either.isLeft(state)) {
-    throw new Error(state.left.message);
+    throw new Error(battleStateInitIssueMessage(state.left));
   }
   return state.right.state;
 }

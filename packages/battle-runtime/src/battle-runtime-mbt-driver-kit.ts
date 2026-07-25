@@ -95,6 +95,7 @@ import {
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 import type { CharacterProcedureBattleSubject } from "./battle-subjects.ts";
+import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import {
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
   BATTLE_INVALID_REASON_CODES,
@@ -1791,7 +1792,7 @@ function startBattleSessionRight(
 ): BattleRuntimeSession {
   const result = startBattle(input);
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(battleStateInitIssueMessage(result.left));
   }
   return result.right;
 }

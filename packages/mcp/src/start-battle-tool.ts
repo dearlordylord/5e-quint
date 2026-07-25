@@ -5,6 +5,7 @@ import {
   discoverBattleActs,
   battleCreatureInitFromStatBlock,
   startBattle,
+  battleStateInitIssueMessage,
   type BattleCreatureInit,
   type BattleRuntimeSession,
   type CombatantId,
@@ -85,7 +86,7 @@ export function handleStartBattleToolCall(
   if (Either.isLeft(session)) {
     return errorContent("Battle session start failed.", {
       code: "BATTLE_START_FAILED",
-      message: session.left.message,
+      message: battleStateInitIssueMessage(session.left),
     });
   }
   const admittedState = admitCompanionAdmissions({
@@ -267,7 +268,7 @@ function startableBattleCombatant(input: {
       });
       if (Either.isLeft(creatureInit)) {
         return Either.left(
-          errorContent(creatureInit.left.message, {
+          errorContent(battleStateInitIssueMessage(creatureInit.left), {
             code: "STAT_BLOCK_BATTLE_INIT_INVALID",
           }),
         );

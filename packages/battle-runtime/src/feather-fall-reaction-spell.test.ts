@@ -37,6 +37,7 @@ import {
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import { spellSlotInvocationRef } from "./battle-subjects.ts";
+import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import {
   battleProcedureExecutionRefForSpellHoleForTest,
   characterSpellInvocationRefForProcedureRefForTest,
@@ -341,7 +342,7 @@ function battleWithFeatherFall(): BattleRuntimeSession {
   });
   expect(Either.isRight(result)).toBe(true);
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(battleStateInitIssueMessage(result.left));
   }
   return result.right;
 }

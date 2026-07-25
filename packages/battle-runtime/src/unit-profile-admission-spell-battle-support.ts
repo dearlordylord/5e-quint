@@ -8,6 +8,7 @@ import type {
 } from "@dnd/surface/surface/types";
 import * as Either from "effect/Either";
 import { expect } from "vitest";
+import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import {
   battleId,
   resolveBattleSubject,
@@ -252,7 +253,7 @@ export function spellBattle(input: {
   });
   expect(Either.isRight(result)).toBe(true);
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(battleStateInitIssueMessage(result.left));
   }
   return result.right;
 }

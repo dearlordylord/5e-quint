@@ -38,6 +38,7 @@ import {
   type BattleState,
 } from "./index.ts";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
+import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 
 type BardicInspirationProjection = {
   readonly bonusActionAvailable: boolean;
@@ -142,7 +143,7 @@ function bardicInspirationBattle(): BattleRuntimeSession {
     combatants: [bardicInspirationBard(), targetCreature()],
   });
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(battleStateInitIssueMessage(result.left));
   }
   return result.right;
 }

@@ -39,6 +39,7 @@ import {
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
+import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import {
   resolveBattleSubject,
   characterSpellInvocationRefForProcedureRefForTest,
@@ -593,7 +594,7 @@ function spellBattle(input: {
   });
   expect(Either.isRight(result)).toBe(true);
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(battleStateInitIssueMessage(result.left));
   }
   return result.right;
 }
@@ -630,7 +631,7 @@ function battleWithShieldReactionSpell(
   });
   expect(Either.isRight(result)).toBe(true);
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(battleStateInitIssueMessage(result.left));
   }
   return result.right;
 }
@@ -678,7 +679,7 @@ function battleWithAttackers(input: {
   });
   expect(Either.isRight(result)).toBe(true);
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(battleStateInitIssueMessage(result.left));
   }
   return result.right;
 }
@@ -728,7 +729,7 @@ function battleWithSpellAttack(input: {
   });
   expect(Either.isRight(result)).toBe(true);
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(battleStateInitIssueMessage(result.left));
   }
   return result.right;
 }
@@ -778,7 +779,7 @@ function battleWithMagicMissile(input: {
   });
   expect(Either.isRight(result)).toBe(true);
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(battleStateInitIssueMessage(result.left));
   }
   return result.right;
 }

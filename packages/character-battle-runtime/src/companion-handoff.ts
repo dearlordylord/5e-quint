@@ -15,6 +15,7 @@ import {
   type RetainedCompanionBattleSelection,
   type CombatantId,
   type InitiativeScore,
+  battleStateInitIssueMessage,
 } from "@dnd/battle-runtime";
 import {
   characterSheetCompanion,
@@ -120,7 +121,9 @@ export function admitCharacterSheetCompanionToBattle(
         session: input.session,
       });
       return Either.isLeft(admitted)
-        ? characterSheetBattleHandoffIssue(admitted.left.message)
+        ? characterSheetBattleHandoffIssue(
+            battleStateInitIssueMessage(admitted.left),
+          )
         : Either.right(admitted.right);
     }
     const admitted = admitCompanionToBattle({
@@ -128,7 +131,9 @@ export function admitCharacterSheetCompanionToBattle(
       state: input.state,
     });
     return Either.isLeft(admitted)
-      ? characterSheetBattleHandoffIssue(admitted.left.message)
+      ? characterSheetBattleHandoffIssue(
+          battleStateInitIssueMessage(admitted.left),
+        )
       : Either.right(admitted.right);
   }
   const admission = {
@@ -141,7 +146,9 @@ export function admitCharacterSheetCompanionToBattle(
       session: input.session,
     });
     return Either.isLeft(admitted)
-      ? characterSheetBattleHandoffIssue(admitted.left.message)
+      ? characterSheetBattleHandoffIssue(
+          battleStateInitIssueMessage(admitted.left),
+        )
       : Either.right(admitted.right);
   }
   const admitted = admitCompanionToBattle({
@@ -149,7 +156,9 @@ export function admitCharacterSheetCompanionToBattle(
     state: input.state,
   });
   return Either.isLeft(admitted)
-    ? characterSheetBattleHandoffIssue(admitted.left.message)
+    ? characterSheetBattleHandoffIssue(
+        battleStateInitIssueMessage(admitted.left),
+      )
     : Either.right(admitted.right);
 }
 

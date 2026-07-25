@@ -23,6 +23,7 @@ import {
 } from "./identity.ts";
 import { admitBattleStatBlockCombatant } from "./stat-block-combatant-admission.ts";
 import type { BattleStatBlockExecutionSource } from "./stat-block-execution-state.ts";
+import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import {
   statBlockLanguagePresentation,
   statBlockProcedurePresentations,
@@ -88,7 +89,10 @@ export function admitFindFamiliarReappearance(input: {
     ),
   });
   if (Either.isLeft(combatantAdmission)) {
-    return issue(input.state, combatantAdmission.left.message);
+    return issue(
+      input.state,
+      battleStateInitIssueMessage(combatantAdmission.left),
+    );
   }
   return Either.right({
     mechanics: AdmittedFindFamiliarReappearance({

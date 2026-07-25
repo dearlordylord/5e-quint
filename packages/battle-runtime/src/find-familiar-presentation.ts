@@ -19,6 +19,7 @@ import {
 } from "./find-familiar-lifecycle.ts";
 import { resolveFindFamiliarForm } from "@dnd/surface/surface/find-familiar-forms";
 import { snapshotBattle } from "./battle-reducer/battle-snapshot.ts";
+import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import {
   statBlockLanguagePresentation,
   statBlockProcedurePresentations,
@@ -172,7 +173,7 @@ export function castRetainedFindFamiliarRuntime(
       tag: "invalid",
       session: input.session,
       reason: "invalidFill",
-      message: presentation.left.message,
+      message: battleStateInitIssueMessage(presentation.left),
       snapshot: snapshotBattle(input.session.state),
     };
   }

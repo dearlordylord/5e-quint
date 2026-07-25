@@ -23,6 +23,7 @@ import {
 } from "@dnd/surface/surface/unit-catalog";
 
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
+import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import {
   battleProcedureExecutionRefForTest,
   battleProcedureExecutionRefForSpellHoleForTest,
@@ -652,7 +653,7 @@ function battleWithHellishRebuke(
   });
   expect(Either.isRight(result)).toBe(true);
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(battleStateInitIssueMessage(result.left));
   }
   return result.right;
 }
@@ -689,7 +690,7 @@ function battleWithHellishRebukeOnCasterTurn(
   });
   expect(Either.isRight(result)).toBe(true);
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(battleStateInitIssueMessage(result.left));
   }
   return result.right;
 }

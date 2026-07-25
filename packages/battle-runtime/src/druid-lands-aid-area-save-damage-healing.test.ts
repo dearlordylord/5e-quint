@@ -5,6 +5,7 @@ import { describe, expect, test } from "vitest";
 
 import { DieRollResult, movementFeet } from "@dnd/shared/types";
 import * as Either from "effect/Either";
+import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 
 import {
   type BattleFill,
@@ -397,7 +398,7 @@ function landsAidBattle(
     ],
   });
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(battleStateInitIssueMessage(result.left));
   }
   return result.right.state;
 }

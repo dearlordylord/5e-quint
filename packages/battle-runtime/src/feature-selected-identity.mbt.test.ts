@@ -44,6 +44,7 @@ import {
   type CombatantId,
 } from "./index.ts";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
+import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 
 type InnateSorcerySpellAttackRollMode = "none" | "advantage" | "disadvantage";
 type InnateSorcerySelectedIdentityLastResult =
@@ -348,7 +349,7 @@ function startBattleRight(
 ): BattleState {
   const result = startBattle(input);
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(battleStateInitIssueMessage(result.left));
   }
   return result.right.state;
 }

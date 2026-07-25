@@ -60,6 +60,7 @@ import {
   spellTargetFill,
 } from "./unit-profile-admission-spell-fill-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import {
   attackExecutionSelectionForSubjectForTest,
   characterBattleFeatureInitForTest,
@@ -108,7 +109,7 @@ function remarkableAthleteRuntimeSession(input: {
   });
   expect(Either.isRight(state)).toBe(true);
   if (Either.isLeft(state)) {
-    throw new Error(state.left.message);
+    throw new Error(battleStateInitIssueMessage(state.left));
   }
   return state.right;
 }
@@ -543,7 +544,7 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
     });
     expect(Either.isRight(state)).toBe(true);
     if (Either.isLeft(state)) {
-      throw new Error(state.left.message);
+      throw new Error(battleStateInitIssueMessage(state.left));
     }
 
     expect(
@@ -606,7 +607,7 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
     });
     expect(Either.isRight(state)).toBe(true);
     if (Either.isLeft(state)) {
-      throw new Error(state.left.message);
+      throw new Error(battleStateInitIssueMessage(state.left));
     }
 
     expect(

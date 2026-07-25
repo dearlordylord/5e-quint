@@ -60,7 +60,10 @@ import {
 } from "./server.ts";
 import type { BattleToolResult } from "./battle-tools.ts";
 import type { CharacterToolResult } from "./character-tools.ts";
-import { characterUnitRefsWithBattleSupportProfiles } from "@dnd/character-battle-runtime";
+import {
+  characterBattleRuntimeIssueMessage,
+  characterUnitRefsWithBattleSupportProfiles,
+} from "@dnd/character-battle-runtime";
 import {
   availableCharacterSession,
   characterIdFromDraftId,
@@ -121,7 +124,7 @@ function startBattleFromCharacterBuildAndStatBlockRight(
 ): BattleRuntimeSession {
   const result = startBattleFromCharacterBuildAndStatBlock(input);
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(characterBattleRuntimeIssueMessage(result.left));
   }
   return result.right;
 }

@@ -113,6 +113,7 @@ import {
 } from "./knocked-out-state.ts";
 import {
   battleStateInitIssue,
+  battleStateInitIssueMessage,
   weaponLoadoutMismatchIssue,
 } from "./domain-helpers.ts";
 import { isCharacterBattleCreatureState } from "./creature-state-execution.ts";
@@ -364,11 +365,11 @@ export function battleCreatureStateAdmissionFromInit(
         issues: [
           {
             tag: "battleUnitSupportProfileIssue",
-            message: firstIssue!.message,
+            message: battleStateInitIssueMessage(firstIssue!),
           },
           ...remainingIssues.map((issue) => ({
             tag: "battleUnitSupportProfileIssue" as const,
-            message: issue.message,
+            message: battleStateInitIssueMessage(issue),
           })),
         ],
       };

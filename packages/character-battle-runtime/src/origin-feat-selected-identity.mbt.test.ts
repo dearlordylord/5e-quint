@@ -43,6 +43,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   characterBattleInitiativeScore,
+  characterBattleRuntimeIssueMessage,
   characterSheetBattleInitWithRoute,
   startBattleFromCharacterSheetAndStatBlock,
   type CharacterBattleRouteEvent,
@@ -397,7 +398,7 @@ function publicStartBattleSelectedReferenceRuntimeRoute(
     },
   });
   if (Either.isLeft(entry)) {
-    throw new Error(entry.left.issue.message);
+    throw new Error(characterBattleRuntimeIssueMessage(entry.left.issue));
   }
 
   return selectedReferenceRouteEvents(entry.right.initProjectionRouteEvents);

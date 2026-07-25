@@ -73,6 +73,7 @@ import {
   type CombatantId,
 } from "./index.ts";
 import { battleMagicActionHealingPoolSupportForUnit } from "./unit-feature-support.ts";
+import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 
 const antimagicFieldAreaId = battleAreaId(
   "unit-profile-antimagic-action-interdiction-area",
@@ -322,7 +323,7 @@ describe("Antimagic Field action interdiction", () => {
 
     expect(Either.isRight(removed)).toBe(true);
     if (Either.isLeft(removed)) {
-      throw new Error(removed.left.message);
+      throw new Error(battleStateInitIssueMessage(removed.left));
     }
     expect(
       removed.right.combatants.get(spellCasterId)?.activeEffects,
@@ -642,7 +643,7 @@ function preserveLifeBattle(): BattleRuntimeSession {
     ],
   });
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(battleStateInitIssueMessage(result.left));
   }
   return result.right;
 }

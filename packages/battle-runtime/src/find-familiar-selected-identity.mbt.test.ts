@@ -21,6 +21,7 @@ import { expect, it } from "vitest";
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import { ATTACK_TARGET_HOLE_ID } from "./battle-reducer/battle-runtime-protocol.ts";
+import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import {
   characterCreature,
   requireHole,
@@ -458,7 +459,7 @@ function startSpellcasterFixtureSession(): BattleRuntimeSession {
     ],
   });
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(battleStateInitIssueMessage(result.left));
   }
   return result.right;
 }

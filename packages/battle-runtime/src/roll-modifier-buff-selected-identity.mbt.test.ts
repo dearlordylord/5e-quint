@@ -65,6 +65,7 @@ import {
 } from "./battle-runtime-mbt-driver-kit.ts";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import { damageTypeChoiceFill } from "./unit-profile-admission-spell-fill-support.ts";
+import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 
 const rollModifierBuffSpellIds = [
   "bless",
@@ -490,7 +491,7 @@ function rollModifierBuffBattle(
     ],
   });
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(battleStateInitIssueMessage(result.left));
   }
   return result.right.state;
 }

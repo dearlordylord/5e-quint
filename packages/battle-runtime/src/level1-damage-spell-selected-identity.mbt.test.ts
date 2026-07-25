@@ -59,6 +59,7 @@ import {
   type CombatantId,
 } from "./index.ts";
 import type { BattleActDiscoveryCandidate } from "./battle-state-execution.ts";
+import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 
 type Level1DamageSpellUnitId =
   | "burning_hands"
@@ -1164,7 +1165,7 @@ function level1DamageSpellBattle(spell: SpellRecord): BattleState {
     ],
   });
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(battleStateInitIssueMessage(result.left));
   }
   return result.right.state;
 }

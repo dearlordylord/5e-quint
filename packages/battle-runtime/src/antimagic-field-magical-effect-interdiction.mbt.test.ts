@@ -56,6 +56,7 @@ import {
   type CombatantId,
 } from "./index.ts";
 import { battleMagicActionHealingPoolSupportForUnit } from "./unit-feature-support.ts";
+import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import {
   MBT_TEST_TIMEOUT_MS,
   booleanField,
@@ -544,7 +545,7 @@ function preserveLifeBattle(): BattleRuntimeSession {
     ],
   });
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(battleStateInitIssueMessage(result.left));
   }
   return result.right;
 }

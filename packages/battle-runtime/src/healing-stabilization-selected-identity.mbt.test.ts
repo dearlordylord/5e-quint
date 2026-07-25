@@ -57,6 +57,7 @@ import {
 } from "./index.ts";
 import type { BattleActDiscoveryCandidate } from "./battle-state-execution.ts";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
+import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 
 type HealingStabilizationProjection = {
   readonly targetHp: number;
@@ -267,7 +268,7 @@ function spareTheDyingBattle(): BattleState {
     ],
   });
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(battleStateInitIssueMessage(result.left));
   }
   return result.right.state;
 }

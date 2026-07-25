@@ -119,6 +119,7 @@ import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics
 import type { CharacterBattleResourceState } from "./character-battle-resources.ts";
 import { parseSupportedUnitFeatureProfile } from "./unit-feature-support.ts";
 import { mechanicsOnlyMyceliumStepUnit } from "./classic-non-srd-mechanics-test-fixtures.ts";
+import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 
 const ruleCoreFeatureMbtHoles = [
   "DamageRoll",
@@ -1672,7 +1673,7 @@ function startBattleRight(
 ): BattleState {
   const result = startBattle(input);
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(battleStateInitIssueMessage(result.left));
   }
   return result.right.state;
 }

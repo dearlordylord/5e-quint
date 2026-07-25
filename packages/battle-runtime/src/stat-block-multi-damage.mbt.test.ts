@@ -10,6 +10,7 @@ import { describe, it } from "vitest";
 
 import { DieRollResult, Hp } from "@dnd/shared/types";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
+import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 
 import {
   MBT_TEST_TIMEOUT_MS,
@@ -418,7 +419,7 @@ function startBattleRight(
 ): BattleState {
   const result = startBattle(input);
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(battleStateInitIssueMessage(result.left));
   }
   return result.right.state;
 }

@@ -4086,7 +4086,6 @@ export type BattleStateInitIssue =
   | {
       readonly tag: "weaponLoadoutMismatch";
       readonly slot: "main-hand" | "off-hand";
-      readonly message: string;
     };
 
 // battleStateInitIssue moved to ./battle-reducer/domain-helpers.ts

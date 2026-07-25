@@ -350,13 +350,9 @@ function wildShapeFormAdmissionWithRenamedPresentationIdentity(
   id: ReturnType<typeof statBlockId>,
   displayName: string,
 ): StatBlockExecutionAdmission<BattleDruidWildShapeKnownForm> {
-  // Justification for the type assertions: the admission's mechanical facts
-  // (support profile, parsed stat block mechanics, AC/size/speeds) and its
-  // admitted execution state are preserved unchanged. Only presentation identity
-  // (`statBlock.id` and nested `statBlock.statBlock.displayName`) is rewritten,
-  // so eligibility and reducer behavior remain identical. The assertions restore
-  // the nominal brands that TypeScript cannot infer from a spread, mirroring the
-  // production `battleDruidWildShapeKnownForm` constructor in `battle-init.ts`.
+  // Only presentation identity (`statBlock.id` and nested
+  // `statBlock.statBlock.displayName`) is rewritten. Mechanical facts and
+  // eligibility remain identical, so no type assertions are required.
   return {
     ...admission,
     statBlock: {
@@ -366,8 +362,8 @@ function wildShapeFormAdmissionWithRenamedPresentationIdentity(
         ...admission.statBlock.statBlock,
         displayName,
       },
-    } as BattleDruidWildShapeKnownForm,
-  } as StatBlockExecutionAdmission<BattleDruidWildShapeKnownForm>;
+    },
+  };
 }
 
 function requireWildShapeEquipmentDispositionHole(
@@ -389,12 +385,12 @@ function requireWildShapeEquipmentDispositionHole(
 
 function wildShapeEquipmentDispositionFill(
   hole: Extract<BattleHole, { readonly kind: "wildShapeEquipmentDisposition" }>,
-): BattleFill {
+): Extract<BattleFill, { readonly kind: "wildShapeEquipmentDisposition" }> {
   return {
     kind: "wildShapeEquipmentDisposition",
     holeId: hole.holeId,
     value: {
-      formLimbs: { kind: "canHandleObjects" },
+      formLimbs: { kind: "cannotHandleObjects" },
       choices: [],
     },
   };

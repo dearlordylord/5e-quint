@@ -11,6 +11,7 @@ import {
   initiativeScore,
 } from "./identity.ts";
 import { admitBattleStatBlockCombatant } from "./stat-block-combatant-admission.ts";
+import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import {
   characterSeed,
   startBattleRight,
@@ -29,7 +30,8 @@ describe("Stat Block combatant admission capability", () => {
       statBlock: source,
       startingScopeOrdinal: battleExecutionScopeOrdinal(0),
     });
-    if (Either.isLeft(admission)) throw new Error(admission.left.message);
+    if (Either.isLeft(admission))
+      throw new Error(battleStateInitIssueMessage(admission.left));
     return { admission: admission.right, source };
   }
 
@@ -55,7 +57,11 @@ describe("Stat Block combatant admission capability", () => {
       startingScopeOrdinal: battleExecutionScopeOrdinal(0),
     });
 
-    expect(Either.isLeft(admission) ? admission.left.message : "admitted").toBe(
+    expect(
+      Either.isLeft(admission)
+        ? battleStateInitIssueMessage(admission.left)
+        : "admitted",
+    ).toBe(
       "Battle runtime requires Stat Block resistance choices to be resolved before admission.",
     );
   });
@@ -75,7 +81,11 @@ describe("Stat Block combatant admission capability", () => {
       startingScopeOrdinal: battleExecutionScopeOrdinal(0),
     });
 
-    expect(Either.isLeft(admission) ? admission.left.message : "admitted").toBe(
+    expect(
+      Either.isLeft(admission)
+        ? battleStateInitIssueMessage(admission.left)
+        : "admitted",
+    ).toBe(
       "Battle runtime requires Stat Block maximum HP to be a positive integer.",
     );
   });
@@ -95,7 +105,9 @@ describe("Stat Block combatant admission capability", () => {
     });
 
     expect(
-      Either.isLeft(initialized) ? initialized.left.message : "initialized",
+      Either.isLeft(initialized)
+        ? battleStateInitIssueMessage(initialized.left)
+        : "initialized",
     ).toBe("Battle runtime requires literal Stat Block Armor Class.");
   });
 
@@ -180,9 +192,11 @@ describe("Stat Block combatant admission capability", () => {
       },
     });
 
-    expect(Either.isLeft(added) ? added.left.message : "resolved").toBe(
-      "Stat Block combatant admission belongs to a different battle.",
-    );
+    expect(
+      Either.isLeft(added)
+        ? battleStateInitIssueMessage(added.left)
+        : "resolved",
+    ).toBe("Stat Block combatant admission belongs to a different battle.");
   });
 
   test("rejects replay into a different combatant execution scope", () => {
@@ -199,8 +213,10 @@ describe("Stat Block combatant admission capability", () => {
       },
     });
 
-    expect(Either.isLeft(added) ? added.left.message : "resolved").toBe(
-      "Stat Block combatant admission belongs to a different combatant.",
-    );
+    expect(
+      Either.isLeft(added)
+        ? battleStateInitIssueMessage(added.left)
+        : "resolved",
+    ).toBe("Stat Block combatant admission belongs to a different combatant.");
   });
 });

@@ -100,6 +100,7 @@ import type { BattleActDiscoveryCandidate } from "./battle-state-execution.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
+import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 
 type Level1SpatialWitnessSelectedIdentityProjection = {
   readonly lightEmitterCount: number;
@@ -3075,7 +3076,7 @@ function dancingLightsBattle(): BattleState {
     ],
   });
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(battleStateInitIssueMessage(result.left));
   }
   return result.right.state;
 }
@@ -3111,7 +3112,7 @@ function faerieFireBattle(): BattleState {
     ],
   });
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(battleStateInitIssueMessage(result.left));
   }
   return result.right.state;
 }
@@ -3151,7 +3152,7 @@ function featherFallBattle(): BattleState {
     ],
   });
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(battleStateInitIssueMessage(result.left));
   }
   return result.right.state;
 }
@@ -3186,7 +3187,7 @@ function fogCloudBattle(): BattleState {
     ],
   });
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(battleStateInitIssueMessage(result.left));
   }
   return result.right.state;
 }
@@ -3226,7 +3227,7 @@ function greaseBattle(): BattleState {
     ],
   });
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(battleStateInitIssueMessage(result.left));
   }
   return result.right.state;
 }
@@ -3261,7 +3262,7 @@ function jumpBattle(): BattleState {
     ],
   });
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(battleStateInitIssueMessage(result.left));
   }
   return result.right.state;
 }
@@ -3296,7 +3297,7 @@ function lightBattle(): BattleState {
     ],
   });
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(battleStateInitIssueMessage(result.left));
   }
   return result.right.state;
 }
@@ -3345,7 +3346,7 @@ function produceFlameBattle(): BattleState {
     ],
   });
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(battleStateInitIssueMessage(result.left));
   }
   return result.right.state;
 }
@@ -3408,7 +3409,7 @@ function thunderwaveBattle(): BattleState {
     ],
   });
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(battleStateInitIssueMessage(result.left));
   }
   return result.right.state;
 }

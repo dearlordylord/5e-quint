@@ -48,7 +48,10 @@ import {
 } from "./character-execution-admission.ts";
 import { findFamiliarCompanionLifecycleRouteEvents } from "./battle-reducer/reducer-route.ts";
 import { createInitialInitiativeForCombatants } from "./battle-reducer/api-lifecycle.ts";
-import { battleStateInitIssue } from "./battle-reducer/domain-helpers.ts";
+import {
+  battleStateInitIssue,
+  battleStateInitIssueMessage,
+} from "./battle-reducer/domain-helpers.ts";
 import { admitBattleStatBlockCombatant } from "./stat-block-combatant-admission.ts";
 import { admitFindFamiliarReappearance } from "./find-familiar-admission.ts";
 import type { BattleStatBlockExecutionCatalog } from "./battle-state-execution.ts";
@@ -559,7 +562,7 @@ function withAdmittedFindFamiliarCombatant(
     return invalidFindFamiliarResult(
       input.state,
       "invalidFill",
-      combatantAdmission.left.message,
+      battleStateInitIssueMessage(combatantAdmission.left),
     );
   }
   return withFindFamiliarCombatant({

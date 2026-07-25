@@ -31,6 +31,7 @@ import {
   type BattleCompanionTemporarilyDismissedState,
 } from "./companion-state.ts";
 import type { FindFamiliarCreatureTypeOverride } from "@dnd/shared/game-facts";
+import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 
 type FindFamiliarCombatantRemoval =
   | { readonly tag: "resolved"; readonly state: BattleState }
@@ -461,7 +462,7 @@ export function withFindFamiliarCombatant(input: {
     return invalidFindFamiliarResult(
       input.state,
       "invalidFill",
-      added.left.message,
+      battleStateInitIssueMessage(added.left),
     );
   }
   return {
@@ -486,7 +487,11 @@ function withoutPresentFindFamiliarCombatant(
     combatantIds: [familiarId],
   });
   return Either.isLeft(removed)
-    ? invalidFindFamiliarResult(state, "invalidFill", removed.left.message)
+    ? invalidFindFamiliarResult(
+        state,
+        "invalidFill",
+        battleStateInitIssueMessage(removed.left),
+      )
     : { tag: "resolved", state: { ...removed.right, companions } };
 }
 

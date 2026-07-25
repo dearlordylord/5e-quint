@@ -88,6 +88,7 @@ import {
   spellSlotLevel,
 } from "@dnd/shared/types";
 import type { SpellRecord, StatBlockRecord } from "@dnd/surface/surface/types";
+import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 const casterId = combatantId("caster");
 const familiarId = combatantId("caster-familiar");
 const otherCombatantId = combatantId("other-combatant");
@@ -250,7 +251,7 @@ function startFixtureBattle(
     ],
   });
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(battleStateInitIssueMessage(result.left));
   }
   return result.right.state;
 }
@@ -286,7 +287,7 @@ function startSpellcasterFixtureBattle(): BattleRuntimeSession {
     ],
   });
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(battleStateInitIssueMessage(result.left));
   }
   return result.right;
 }
@@ -362,7 +363,7 @@ function startPactWarlockFixtureBattle(
     ],
   });
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(battleStateInitIssueMessage(result.left));
   }
   return result.right;
 }
@@ -425,7 +426,7 @@ function startWildCompanionDruidFixtureBattle(input: {
     ],
   });
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(battleStateInitIssueMessage(result.left));
   }
   return result.right;
 }
@@ -472,7 +473,7 @@ function startWrongOwnerPactFixtureBattle(): BattleRuntimeSession {
     ],
   });
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(battleStateInitIssueMessage(result.left));
   }
   return result.right;
 }
@@ -513,7 +514,7 @@ function startFindFamiliarSpellcasterFixtureBattle(): BattleRuntimeSession {
     ],
   });
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(battleStateInitIssueMessage(result.left));
   }
   return result.right;
 }
@@ -1068,7 +1069,7 @@ describe("Find Familiar lifecycle", () => {
 
     expect(Either.isLeft(collision)).toBe(true);
     if (Either.isRight(collision)) return;
-    expect(collision.left.message).toBe(
+    expect(battleStateInitIssueMessage(collision.left)).toBe(
       "Companion admission identity is already used by another companion.",
     );
     expect(firstAdmission.right.companions.get(casterId)).toMatchObject({
@@ -1181,7 +1182,7 @@ describe("Find Familiar lifecycle", () => {
 
     expect(Either.isLeft(admitted)).toBe(true);
     if (Either.isRight(admitted)) return;
-    expect(admitted.left.message).toBe(
+    expect(battleStateInitIssueMessage(admitted.left)).toBe(
       "Companion admission requires durable id.",
     );
   });
@@ -1227,7 +1228,7 @@ describe("Find Familiar lifecycle", () => {
 
     expect(Either.isLeft(admitted)).toBe(true);
     if (Either.isRight(admitted)) return;
-    expect(admitted.left.message).toBe(
+    expect(battleStateInitIssueMessage(admitted.left)).toBe(
       "Retained familiar form proof resolved Stat Block mismatch: stat_block_owl.",
     );
   });
@@ -1278,7 +1279,7 @@ describe("Find Familiar lifecycle", () => {
 
     expect(Either.isLeft(admitted)).toBe(true);
     if (Either.isRight(admitted)) return;
-    expect(admitted.left.message).toBe(
+    expect(battleStateInitIssueMessage(admitted.left)).toBe(
       "Retained familiar Challenge Rating 0 Beast form must resolve to a CR 0 Beast Stat Block: stat_block_goblin_warrior.",
     );
   });
@@ -1662,7 +1663,7 @@ describe("Find Familiar lifecycle", () => {
 
     expect(Either.isLeft(admitted)).toBe(true);
     if (Either.isRight(admitted)) return;
-    expect(admitted.left.message).toBe(
+    expect(battleStateInitIssueMessage(admitted.left)).toBe(
       "Find Familiar familiar identity must not identify an ordinary combatant.",
     );
   });

@@ -57,6 +57,7 @@ import {
   type ReducerRouteEvent,
 } from "./battle-runtime-mbt-driver-kit.ts";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
+import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import {
   damageRollFillWithGroups,
   requireResultHole,
@@ -1184,7 +1185,7 @@ function battleWithSanctuary(): BattleState {
     ],
   });
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(battleStateInitIssueMessage(result.left));
   }
   return result.right.state;
 }

@@ -39,6 +39,7 @@ import {
   PASSIVE_SPEED_KIND_GRANTS_SUPPORT_PROFILE,
 } from "./unit-feature-support.ts";
 import type { PassiveFeatUnit } from "./unit-profile-admission-catalog-support.ts";
+import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import {
   archerySupportProfile,
   archeryUnitId,
@@ -106,7 +107,7 @@ export function archeryBattle(input: {
   });
   expect(Either.isRight(result)).toBe(true);
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(battleStateInitIssueMessage(result.left));
   }
   return result.right;
 }
@@ -162,7 +163,7 @@ export function savageAttackerBattle(input: {
   });
   expect(Either.isRight(result)).toBe(true);
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(battleStateInitIssueMessage(result.left));
   }
   return result.right;
 }
@@ -197,7 +198,7 @@ export function greatWeaponFightingBattle(input: {
   });
   expect(Either.isRight(result)).toBe(true);
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(battleStateInitIssueMessage(result.left));
   }
   return result.right;
 }
@@ -261,7 +262,7 @@ export function combatProwessBattle(input: {
   });
   expect(Either.isRight(result)).toBe(true);
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(battleStateInitIssueMessage(result.left));
   }
   return result.right;
 }
@@ -292,7 +293,7 @@ export function extraAttackBattle(
   });
   expect(Either.isRight(result)).toBe(true);
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(battleStateInitIssueMessage(result.left));
   }
   return result.right.state;
 }
@@ -327,7 +328,7 @@ export function fastMovementBattle(
   });
   expect(Either.isRight(result)).toBe(true);
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(battleStateInitIssueMessage(result.left));
   }
   return result.right.state;
 }
@@ -362,7 +363,7 @@ export function rovingBattle(
   });
   expect(Either.isRight(result)).toBe(true);
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(battleStateInitIssueMessage(result.left));
   }
   return result.right.state;
 }
@@ -404,7 +405,7 @@ export function monkUnarmoredMovementBattle(
   });
   expect(Either.isRight(result)).toBe(true);
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(battleStateInitIssueMessage(result.left));
   }
   return result.right.state;
 }
@@ -446,7 +447,7 @@ export function relentlessEnduranceBattle(input: {
   });
   expect(Either.isRight(result)).toBe(true);
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(battleStateInitIssueMessage(result.left));
   }
   return result.right;
 }
@@ -480,7 +481,7 @@ export function adrenalineRushBattle(
   });
   expect(Either.isRight(result)).toBe(true);
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(battleStateInitIssueMessage(result.left));
   }
   return result.right;
 }

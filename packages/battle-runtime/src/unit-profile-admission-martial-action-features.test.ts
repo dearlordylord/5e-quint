@@ -95,6 +95,7 @@ import {
   targetFill,
 } from "./battle-runtime-test-support.ts";
 import type { UnitRecord } from "./unit-profile-admission-test-support.ts";
+import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 
 const speciesGoliathPowerfulBuildUnitId = "species_goliath_powerful_build";
 const speciesHalflingNimblenessUnitId = "species_halfling_nimbleness";
@@ -529,7 +530,7 @@ describe("L3MSPEC species battle support", () => {
     });
     expect(Either.isRight(result)).toBe(true);
     if (Either.isLeft(result)) {
-      throw new Error(result.left.message);
+      throw new Error(battleStateInitIssueMessage(result.left));
     }
     const target = result.right.state.combatants.get(targetId);
     if (target === undefined) {
@@ -868,7 +869,7 @@ function powerfulBuildEscapeGrappleHole(input: {
   });
   expect(Either.isRight(state)).toBe(true);
   if (Either.isLeft(state)) {
-    throw new Error(state.left.message);
+    throw new Error(battleStateInitIssueMessage(state.left));
   }
   const grappleSubject = {
     tag: "action",
@@ -949,7 +950,7 @@ function dwarvenResilienceBattle() {
   });
   expect(Either.isRight(result)).toBe(true);
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(battleStateInitIssueMessage(result.left));
   }
   return result.right.state;
 }
@@ -984,7 +985,7 @@ function halflingBraveBattle() {
   });
   expect(Either.isRight(result)).toBe(true);
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(battleStateInitIssueMessage(result.left));
   }
   return result.right.state;
 }

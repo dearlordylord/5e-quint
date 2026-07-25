@@ -68,6 +68,7 @@ import {
   type CombatantId,
 } from "./index.ts";
 import { tickDurationEffects } from "./battle-reducer/turn-end-movement.ts";
+import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 
 describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
   test("invisibility admits as a touch target-list condition spell with slot-scaled targets", () => {
@@ -663,7 +664,7 @@ function invisibilityReactionBattle(input: {
   });
   expect(Either.isRight(result)).toBe(true);
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(battleStateInitIssueMessage(result.left));
   }
   return result.right;
 }

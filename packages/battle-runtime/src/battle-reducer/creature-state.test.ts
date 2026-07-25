@@ -11,6 +11,7 @@ import {
   characterSeed,
   testCharacterWeaponAttackForUnit,
 } from "../battle-runtime-test-support.ts";
+import { weaponLoadoutMismatchMessage } from "./domain-helpers.ts";
 import { battleCreatureStateAdmissionFromInit } from "./creature-state.ts";
 
 describe("battleCreatureStateAdmissionFromInit", () => {
@@ -52,8 +53,6 @@ describe("battleCreatureStateAdmissionFromInit", () => {
     expect(result.issues[0]).toMatchObject({
       tag: "weaponLoadoutMismatch",
       slot: "main-hand",
-      message:
-        "Character battle init main-hand weapon attack must match the selected loadout weapon.",
     });
   });
 
@@ -90,8 +89,6 @@ describe("battleCreatureStateAdmissionFromInit", () => {
     expect(result.issues[0]).toMatchObject({
       tag: "weaponLoadoutMismatch",
       slot: "off-hand",
-      message:
-        "Character battle init off-hand weapon attack must match the selected loadout weapon.",
     });
   });
 
@@ -136,14 +133,19 @@ describe("battleCreatureStateAdmissionFromInit", () => {
     expect(result.issues[0]).toMatchObject({
       tag: "weaponLoadoutMismatch",
       slot: "main-hand",
-      message:
-        "Character battle init main-hand weapon attack must match the selected loadout weapon.",
     });
     expect(result.issues[1]).toMatchObject({
       tag: "weaponLoadoutMismatch",
       slot: "off-hand",
-      message:
-        "Character battle init off-hand weapon attack must match the selected loadout weapon.",
     });
+  });
+
+  it("derives a presentation message from the structured mismatch slot", () => {
+    expect(weaponLoadoutMismatchMessage("main-hand")).toBe(
+      "Character battle init main-hand weapon attack must match the selected loadout weapon.",
+    );
+    expect(weaponLoadoutMismatchMessage("off-hand")).toBe(
+      "Character battle init off-hand weapon attack must match the selected loadout weapon.",
+    );
   });
 });

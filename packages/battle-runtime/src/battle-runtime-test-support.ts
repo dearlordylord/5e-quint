@@ -167,6 +167,7 @@ import {
 import { admitCharacterWeaponAttackExecutionWeapon } from "./character-weapon-execution-admission.ts";
 import { characterBattleCreatureInitWeaponAttack } from "./battle-init.ts";
 import type { CharacterWeaponAttackActionOption } from "./battle-action-options.ts";
+import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import {
   armorOfShadowsSpellInvocationRef,
   ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SUPPORT_PROFILE,
@@ -724,7 +725,7 @@ export function startBattleRight(
 ): BattleState {
   const result = startBattle(input);
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(battleStateInitIssueMessage(result.left));
   }
   registerStatBlockPresentationsForTest(result.right);
   return result.right.state;
@@ -735,7 +736,7 @@ export function startBattleSessionRight(
 ): BattleRuntimeSession {
   const result = startBattle(input);
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(battleStateInitIssueMessage(result.left));
   }
   registerStatBlockPresentationsForTest(result.right);
   return result.right;
@@ -780,7 +781,7 @@ export function addBattleCombatantRight(
 ): BattleState {
   const result = addBattleCombatant(input);
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(battleStateInitIssueMessage(result.left));
   }
   return result.right;
 }
@@ -790,7 +791,7 @@ export function removeBattleCombatantsRight(
 ): BattleState {
   const result = removeBattleCombatants(input);
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(battleStateInitIssueMessage(result.left));
   }
   return result.right;
 }

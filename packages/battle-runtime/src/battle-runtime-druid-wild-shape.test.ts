@@ -92,6 +92,7 @@ import {
 import { statBlockProcedurePresentations } from "./stat-block-presentation.ts";
 import type { BattleRuntimeSession } from "./battle-runtime-context.ts";
 import { DRUID_BEAST_SPELLS_CLASS_LEVEL } from "./unit-feature-support.ts";
+import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 
 const druidId = combatantId("wild-shape-druid");
 const ratId = "stat_block_rat";
@@ -1439,7 +1440,7 @@ test("rejects omitted Wild Shape available-form subset for a direct battle init"
 
   expect(Either.isLeft(result)).toBe(true);
   if (Either.isLeft(result)) {
-    expect(result.left.message).toBe(
+    expect(battleStateInitIssueMessage(result.left)).toBe(
       "Druid Wild Shape battle initialization requires an available known-form subset.",
     );
   }

@@ -75,6 +75,7 @@ import {
   type ReducerRouteEvent,
 } from "./battle-runtime-mbt-driver-kit.ts";
 import type { ReplayAddressableSpellActiveEffect } from "./active-effect/execution-ref.ts";
+import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import {
   battleActiveEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
@@ -1035,7 +1036,7 @@ function animalFriendshipBattle(): BattleState {
     ],
   });
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(battleStateInitIssueMessage(result.left));
   }
   return result.right.state;
 }
@@ -1087,7 +1088,7 @@ function protectionFromEvilAndGoodBattle(): BattleState {
     ],
   });
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(battleStateInitIssueMessage(result.left));
   }
   return result.right.state;
 }

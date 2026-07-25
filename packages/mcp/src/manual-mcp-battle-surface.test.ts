@@ -15,6 +15,7 @@ import {
   combatantId,
   initiativeScore,
   startBattle,
+  battleStateInitIssueMessage,
   type BattleCreatureInit,
   type BattleRuntimeSession,
   type BattleUnitRef,
@@ -56,7 +57,7 @@ describe("manual MCP battle surface coverage", () => {
 
     expect(Either.isLeft(result)).toBe(true);
     if (Either.isRight(result)) return;
-    expect(result.left.message).toBe(
+    expect(battleStateInitIssueMessage(result.left)).toBe(
       "Character fighter weapon weapon_longsword has missing authored presentation source.",
     );
   });
@@ -1100,7 +1101,8 @@ function startBattleRight(
     battleId: battleId(`battle:${crypto.randomUUID()}`),
     combatants,
   });
-  if (Either.isLeft(result)) throw new Error(result.left.message);
+  if (Either.isLeft(result))
+    throw new Error(battleStateInitIssueMessage(result.left));
   return result.right;
 }
 

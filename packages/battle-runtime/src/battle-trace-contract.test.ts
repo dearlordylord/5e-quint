@@ -9,6 +9,7 @@ import {
   srdStatBlockCollection,
 } from "@dnd/surface/surface/stat-block-catalog";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
+import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 
 import {
   battleActTraceCheckpoint,
@@ -133,7 +134,7 @@ function startBattleRight(): BattleRuntimeSession {
     ],
   });
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(battleStateInitIssueMessage(result.left));
   }
   return result.right;
 }

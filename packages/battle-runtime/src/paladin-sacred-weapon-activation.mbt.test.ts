@@ -42,6 +42,7 @@ import {
   zeroAbilityWeaponAttack,
 } from "./unit-profile-admission-creature-fixture-support.ts";
 import { normalizeEarlyEndedOngoingFeatures } from "./battle-reducer/creature-state.ts";
+import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 
 type SacredWeaponProjection = {
   readonly activationOffered: boolean;
@@ -473,7 +474,7 @@ function sacredWeaponSession(input: {
     ],
   });
   if (Either.isLeft(state)) {
-    throw new Error(state.left.message);
+    throw new Error(battleStateInitIssueMessage(state.left));
   }
   return input.charismaScore === undefined
     ? state.right

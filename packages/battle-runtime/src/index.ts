@@ -549,6 +549,7 @@ export {
 } from "./battle-reducer/damage-apply.ts";
 export { combatantKnockedOutUnconscious } from "./battle-reducer/creature-state.ts";
 export {
+  battleStateInitIssueMessage,
   concentrationSavingThrowDc,
   scoreModifier,
 } from "./battle-reducer/domain-helpers.ts";

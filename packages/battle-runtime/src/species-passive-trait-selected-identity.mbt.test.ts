@@ -55,6 +55,7 @@ import {
 } from "./unit-profile-admission-catalog-support.ts";
 import { characterCreature } from "./unit-profile-admission-creature-fixture-support.ts";
 import { battleUnitRefWithSupportProfiles } from "./unit-profile-admission-test-support.ts";
+import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import {
   resolveBattleSubject,
   attackRollFill,
@@ -265,7 +266,7 @@ function dragonbornDamageResistanceBattle(): BattleState {
     ],
   });
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(battleStateInitIssueMessage(result.left));
   }
   return result.right.state;
 }
@@ -324,7 +325,7 @@ function dwarvenResilienceBattle(): BattleState {
     ],
   });
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(battleStateInitIssueMessage(result.left));
   }
   return result.right.state;
 }
@@ -356,7 +357,7 @@ function poisonedDwarvenResilienceEndTurnBattle(): BattleState {
     ],
   });
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(battleStateInitIssueMessage(result.left));
   }
   const target = result.right.state.combatants.get(
     poisonedDwarvenResilienceTargetId,
@@ -456,7 +457,7 @@ function halflingBraveBattle(): BattleState {
     ],
   });
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(battleStateInitIssueMessage(result.left));
   }
   return result.right.state;
 }
@@ -539,7 +540,7 @@ function escapeGrappleRollMode(input: {
     ],
   });
   if (Either.isLeft(state)) {
-    throw new Error(state.left.message);
+    throw new Error(battleStateInitIssueMessage(state.left));
   }
   const grappleSubject = {
     tag: "action",
@@ -1007,7 +1008,7 @@ function goliathPowerfulBuildBattle(): BattleState {
     ],
   });
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(battleStateInitIssueMessage(result.left));
   }
   return result.right.state;
 }
@@ -1052,7 +1053,7 @@ function halflingNimblenessSubstrateBattle(input: {
     ],
   });
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(battleStateInitIssueMessage(result.left));
   }
   return result.right.state;
 }

@@ -61,6 +61,7 @@ import {
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import { zeroAbilityWeaponAttack } from "./unit-profile-admission-creature-fixture-support.ts";
+import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 
 const ruleCoreReactionMbtHoles = ["ReactionDecision", "DamageRoll"] as const;
 type RuleCoreReactionMbtHole = (typeof ruleCoreReactionMbtHoles)[number];
@@ -432,7 +433,7 @@ function startBattleRight(
 ): BattleState {
   const result = startBattle(input);
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(battleStateInitIssueMessage(result.left));
   }
   return result.right.state;
 }

@@ -32,6 +32,7 @@ import {
   unitLibrary,
 } from "./unit-profile-admission-test-support.ts";
 import { characterCreature } from "./unit-profile-admission-creature-fixture-support.ts";
+import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import type {
   BattleActiveEffect,
   BattleRuntimeSession,
@@ -239,7 +240,7 @@ function dangerSenseBattle(): BattleRuntimeSession {
   });
   expect(Either.isRight(result)).toBe(true);
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(battleStateInitIssueMessage(result.left));
   }
   return result.right;
 }

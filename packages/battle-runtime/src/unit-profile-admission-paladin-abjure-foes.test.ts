@@ -54,6 +54,7 @@ import {
   startBattle,
 } from "./unit-profile-admission-test-support.ts";
 import { battleMagicActionSaveGatedConditionSupportForUnit } from "./unit-feature-support.ts";
+import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 
 const paladinAbjureFoesUnitId = "paladin_abjure_foes";
 const abjureFoesUnit = unitLibrary.requireUnit(paladinAbjureFoesUnitId);
@@ -247,7 +248,7 @@ function abjureFoesBattle(
     ],
   });
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(battleStateInitIssueMessage(result.left));
   }
   return result.right;
 }

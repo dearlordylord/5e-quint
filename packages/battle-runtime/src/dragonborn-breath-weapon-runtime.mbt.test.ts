@@ -47,6 +47,7 @@ import {
 import { extraAttackBattleUnitRef } from "./unit-profile-admission-feature-fixture-support.ts";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
+import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 
 type BreathWeaponLastResult =
   | "init"
@@ -518,7 +519,7 @@ function breathWeaponBattle(
     ],
   });
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(battleStateInitIssueMessage(result.left));
   }
   return result.right;
 }

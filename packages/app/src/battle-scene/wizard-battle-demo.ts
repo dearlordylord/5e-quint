@@ -17,7 +17,8 @@ import {
   resolveBattleRuntimeInterrupt,
   resolveBattleRuntimeSubject,
   snapshotBattle,
-  startBattle
+  startBattle,
+  battleStateInitIssueMessage
 } from "@dnd/battle-runtime"
 import { attackBonus, Hp, movementFeet, proficiencyBonus } from "@dnd/shared/types"
 import { abilityModifier, defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra"
@@ -1056,7 +1057,7 @@ function requireInitialSession(spellsById: Readonly<Record<string, SpellRecord>>
     )
   })
   if (Either.isLeft(session)) {
-    throw new Error(`Wizard battle demo fixture is invalid: ${session.left.message}`)
+    throw new Error(`Wizard battle demo fixture is invalid: ${battleStateInitIssueMessage(session.left)}`)
   }
   return session.right
 }

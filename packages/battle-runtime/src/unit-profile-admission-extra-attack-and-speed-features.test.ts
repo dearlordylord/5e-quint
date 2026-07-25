@@ -77,6 +77,7 @@ import type {
   UnitRecord,
 } from "./unit-profile-admission-test-support.ts";
 import { characterBattleFeatureInitForTest } from "./battle-runtime-test-support.ts";
+import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 
 const syntheticExtraAttackCounts = [1, 2, 3] as const;
 type SyntheticExtraAttackCount = (typeof syntheticExtraAttackCounts)[number];
@@ -1353,7 +1354,7 @@ function acrobaticMovementBattle(
   });
   expect(Either.isRight(result)).toBe(true);
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(battleStateInitIssueMessage(result.left));
   }
   return result.right.state;
 }
@@ -1424,7 +1425,7 @@ function secondStoryWorkBattle(): BattleState {
   });
   expect(Either.isRight(result)).toBe(true);
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(battleStateInitIssueMessage(result.left));
   }
   return result.right.state;
 }

@@ -17,6 +17,7 @@ import {
   unitLibrary,
 } from "./unit-profile-admission-test-support.ts";
 import { characterCreature } from "./unit-profile-admission-creature-fixture-support.ts";
+import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import type {
   BattleState,
   CombatantId,
@@ -176,7 +177,7 @@ describe("L12G deterministic Alert Initiative admission", () => {
 
     expect(Either.isRight(result)).toBe(true);
     if (Either.isLeft(result)) {
-      throw new Error(result.left.message);
+      throw new Error(battleStateInitIssueMessage(result.left));
     }
     const state = finishInitialInitiativeSetup(result.right);
     expect(initiativeOrder(state.state)).toEqual([
@@ -221,7 +222,7 @@ describe("L12G deterministic Alert Initiative admission", () => {
 
     expect(Either.isRight(firstSwap)).toBe(true);
     if (Either.isLeft(firstSwap)) {
-      throw new Error(firstSwap.left.message);
+      throw new Error(battleStateInitIssueMessage(firstSwap.left));
     }
     expect(firstSwap.right).toBe(setup);
     expect(
@@ -365,7 +366,7 @@ function alertBattleSetup(
   });
   expect(Either.isRight(result)).toBe(true);
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(battleStateInitIssueMessage(result.left));
   }
   return result.right;
 }

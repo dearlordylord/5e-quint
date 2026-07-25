@@ -103,6 +103,7 @@ import {
   characterSheetBattleInitWithRoute,
   settleCharacterSheetFromBattle,
   startBattleFromCharacterSheetAndStatBlock,
+  characterBattleRuntimeIssueMessage,
   type CharacterBattleFeatureResourceRouteObservation,
   type CharacterBattleEncounterCompositionRouteAction,
   type CharacterBattleInitProjectionRouteAction,
@@ -1425,7 +1426,7 @@ function originFeatSelectedReferenceInitiativeHandoffRoute(): readonly Character
     },
   });
   if (Either.isLeft(entry)) {
-    throw new Error(entry.left.issue.message);
+    throw new Error(characterBattleRuntimeIssueMessage(entry.left.issue));
   }
   return selectedReferenceRouteEvents(entry.right.initProjectionRouteEvents);
 }

@@ -63,6 +63,7 @@ import massHealingWordInput from "../../surface/content/mass_healing_word.json";
 import rayOfFrostInput from "../../surface/content/ray_of_frost.json";
 import { repeatedDamageAllocationAdmissionFacts } from "./battle-reducer/spell-procedure-profiles/repeated-damage-allocation-facts.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
+import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import {
   battleAreaId,
   type BattleCreatureInit,
@@ -1686,7 +1687,7 @@ function startBattleRight(
 ): BattleState {
   const result = startBattle(input);
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(battleStateInitIssueMessage(result.left));
   }
   return result.right.state;
 }

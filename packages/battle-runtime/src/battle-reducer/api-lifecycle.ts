@@ -64,7 +64,10 @@ import {
 } from "./creature-state.ts";
 import { admittedSpellActs } from "./spells-profiles.ts";
 
-import { battleStateInitIssue } from "./domain-helpers.ts";
+import {
+  battleStateInitIssue,
+  weaponLoadoutMismatchMessage,
+} from "./domain-helpers.ts";
 
 import { resetBattleTurnResources } from "./turn-end-movement.ts";
 
@@ -212,7 +215,13 @@ export function startBattle(
     );
     if (admission.tag === "invalid") {
       return battleStateInitIssue(
-        admission.issues.map((issue) => issue.message).join("; "),
+        admission.issues
+          .map((issue) =>
+            issue.tag === "weaponLoadoutMismatch"
+              ? weaponLoadoutMismatchMessage(issue.slot)
+              : issue.message,
+          )
+          .join("; "),
       );
     }
     combatants.set(combatant.combatantId, admission.creature);
@@ -576,7 +585,13 @@ function admitBattleCombatant(input: AddBattleCombatantInput): Either.Either<
   );
   if (admission.tag === "invalid") {
     return battleStateInitIssue(
-      admission.issues.map((issue) => issue.message).join("; "),
+      admission.issues
+        .map((issue) =>
+          issue.tag === "weaponLoadoutMismatch"
+            ? weaponLoadoutMismatchMessage(issue.slot)
+            : issue.message,
+        )
+        .join("; "),
     );
   }
   const combatantsWithAdmission = new Map(input.state.combatants).set(

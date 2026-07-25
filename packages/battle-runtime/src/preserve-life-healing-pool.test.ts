@@ -24,6 +24,7 @@ import {
   requireHole,
 } from "./unit-profile-admission-creature-fixture-support.ts";
 import { characterBattleFeatureInitForTest } from "./battle-runtime-test-support.ts";
+import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import {
   battleMagicActionHealingPoolSupportForUnit,
   battleId,
@@ -300,7 +301,7 @@ function preserveLifeBattle(
     ],
   });
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(battleStateInitIssueMessage(result.left));
   }
   return result.right.state;
 }

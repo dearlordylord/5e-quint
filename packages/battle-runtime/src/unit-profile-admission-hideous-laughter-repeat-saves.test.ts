@@ -29,6 +29,7 @@ import {
   zeroAbilityWeaponAttack,
 } from "./unit-profile-admission-creature-fixture-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
+import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import {
   savingThrowOutcomeFill,
   spellAct,
@@ -562,7 +563,7 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
     });
     expect(Either.isRight(baseStateResult)).toBe(true);
     if (Either.isLeft(baseStateResult)) {
-      throw new Error(baseStateResult.left.message);
+      throw new Error(battleStateInitIssueMessage(baseStateResult.left));
     }
     const baseState = baseStateResult.right;
     const target = requireCombatant(baseState.state, spellTargetId);

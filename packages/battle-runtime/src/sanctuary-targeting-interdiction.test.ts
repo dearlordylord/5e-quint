@@ -41,6 +41,7 @@ import {
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import { applyBattleHitPointDamage } from "./battle-reducer/damage-apply.ts";
+import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import {
   resolveBattleSubject,
   attackExecutionSelectionForSubjectForTest,
@@ -1022,7 +1023,7 @@ function battleWithSanctuary(
   });
   expect(Either.isRight(result)).toBe(true);
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(battleStateInitIssueMessage(result.left));
   }
   return result.right;
 }

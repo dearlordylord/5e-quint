@@ -569,7 +569,7 @@ function chromaticOrbSession(input: {
     ],
   });
   if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+    throw new Error(battleStateInitIssueMessage(result.left));
   }
   return result.right;
 }
@@ -1005,3 +1005,4 @@ function characterCreature(input: {
   };
 }
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
+import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";

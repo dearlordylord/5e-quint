@@ -43,6 +43,7 @@ import {
 } from "./battle-runtime-session.test-support.ts";
 import { describe, expect, test } from "vitest";
 import fc from "fast-check";
+import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import {
   characterBattleLevel,
   parseCharacterBattleClassLevels,
@@ -436,9 +437,11 @@ describe("battle runtime: setup and discovery", () => {
           statBlockCreatureInit({ initiative: 10 }),
         ],
       });
-      expect(Either.isLeft(result) ? result.left.message : "admitted").toBe(
-        "fighter class level must be an integer from 1 to 20.",
-      );
+      expect(
+        Either.isLeft(result)
+          ? battleStateInitIssueMessage(result.left)
+          : "admitted",
+      ).toBe("fighter class level must be an integer from 1 to 20.");
     }
   });
 
@@ -456,9 +459,11 @@ describe("battle runtime: setup and discovery", () => {
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
-    expect(Either.isLeft(result) ? result.left.message : "admitted").toBe(
-      "Character class levels duplicate fighter.",
-    );
+    expect(
+      Either.isLeft(result)
+        ? battleStateInitIssueMessage(result.left)
+        : "admitted",
+    ).toBe("Character class levels duplicate fighter.");
   });
 
   test("startBattle rejects multiclass totals above level 20", () => {
@@ -475,9 +480,11 @@ describe("battle runtime: setup and discovery", () => {
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
-    expect(Either.isLeft(result) ? result.left.message : "admitted").toBe(
-      "Total character level must not exceed 20.",
-    );
+    expect(
+      Either.isLeft(result)
+        ? battleStateInitIssueMessage(result.left)
+        : "admitted",
+    ).toBe("Total character level must not exceed 20.");
   });
 
   test("startBattle reports independent class-level parse issues together", () => {
@@ -495,7 +502,11 @@ describe("battle runtime: setup and discovery", () => {
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
-    expect(Either.isLeft(result) ? result.left.message : "admitted").toBe(
+    expect(
+      Either.isLeft(result)
+        ? battleStateInitIssueMessage(result.left)
+        : "admitted",
+    ).toBe(
       "fighter class level must be an integer from 1 to 20.; Character class levels duplicate fighter.; wizard class level must be an integer from 1 to 20.",
     );
   });
