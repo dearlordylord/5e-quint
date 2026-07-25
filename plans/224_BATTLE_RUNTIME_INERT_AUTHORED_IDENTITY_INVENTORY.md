@@ -245,7 +245,7 @@ These fields are typed execution references (`BattleObjectId`) that select a run
 | Domain owner  | Presentation join / composition reference.                                                                                                                                                                                                                                                    |
 | Consumer      | `battle-act-composition.ts` and caller-facing discovery output use these to label available acts.                                                                                                                                                                                             |
 | Execution use | None by design. `AvailableBattleAct` includes both execution references (`procedureRef`) and presentation (`presentation`); only the execution references are replayed.                                                                                                                       |
-| Verdict       | Keep — presentation. The presentation branch is explicitly separate from reducer execution.                                                                                                                                                                                                   |
+| Verdict       | Keep — presentation. The presentation branch is explicitly separate from reducer execution. Synthetic-renaming invariance for `druidWildShapeForm.formStatBlockId` is demonstrated by the dedicated Wild Shape act witness while holding `formExecutionRef` fixed.                            |
 
 ## Verification
 
@@ -262,6 +262,7 @@ These fields are typed execution references (`BattleObjectId`) that select a run
 - Druid Wild Shape reducer mechanics are resolved through `formScopeRef`; authored `formStatBlockId` is no longer read inside reducer execution. Stale unresolved `druidWildShapeForm` effects do not apply their equipment disposition.
 - The `ActiveDruidWildShape` product type was moved to `druid-wild-shape-types.ts` to break the type-level import cycle between `druid-wild-shape.ts` and `creature-state-leaves.ts`.
 - The synthetic-renaming witness now compares full mechanical payloads (resources, procedure bindings, active-effect payloads, turn resources, snapshot state) instead of selective counts.
+- A dedicated Wild Shape act witness proves that renaming `BattleActPresentation.formStatBlockId` (and the underlying known-form `statBlock.id`) while keeping `formExecutionRef` fixed does not change act execution structure; only the presentation label changes.
 
 ## Notes
 

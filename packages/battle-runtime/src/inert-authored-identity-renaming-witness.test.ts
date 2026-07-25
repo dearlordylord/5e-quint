@@ -20,10 +20,13 @@ import {
   fighterVsGoblinBattle,
   goblinId,
   startBattleSessionRight,
+  statBlockCatalog,
   statBlockCreatureInit,
+  unitLibrary,
 } from "./battle-runtime-test-support.ts";
 import { discoverBattleActs } from "./battle-act-composition.ts";
 import type { BattleRuntimeContext } from "./battle-runtime-context.ts";
+import type { BattleDruidWildShapeKnownForm } from "./druid-wild-shape-known-form-execution.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 import {
@@ -60,10 +63,12 @@ import {
  *     this witness because doing so would change which mechanical facts are
  *     admitted at composition time.
  *   - Other composition-boundary authored identity not renamed by this witness
- *     (e.g., Stat Block form ids in `BattleRuntimeContext`). Renaming these
- *     would select a different admitted form and therefore change reducer
- *     mechanics; they are inventory composition boundaries, not inert
- *     presentation-only identity.
+ *     (e.g., Stat Block form ids in `BattleRuntimeContext` used to admit a
+ *     specific Wild Shape form). Renaming those would select a different
+ *     admitted form and therefore change reducer mechanics; they are inventory
+ *     composition boundaries. The separate presentation-only
+ *     `BattleActPresentation.formStatBlockId` is covered by its own dedicated
+ *     witness below.
  */
 
 function isCharacterSnapshot(
@@ -304,6 +309,50 @@ function renameSnapshotInertIdentityFields(
       };
     }),
   };
+}
+
+function renameFormStatBlockIdPresentationFields(
+  state: BattleState,
+): BattleState {
+  const syntheticFormStatBlockId = "synthetic-form-stat-block-id-witness";
+  const syntheticFormDisplayName = "Synthetic Form";
+
+  const renamedCombatants = new Map(
+    Array.from(state.combatants.entries()).map(([id, combatant]) => {
+      if (
+        combatant.origin.kind !== "character" ||
+        combatant.origin.druidWildShapeAvailableForms === undefined ||
+        combatant.origin.druidWildShapeAvailableForms.length === 0
+      ) {
+        return [id, combatant];
+      }
+      const renamedForms = combatant.origin.druidWildShapeAvailableForms.map(
+        (admission) => ({
+          ...admission,
+          statBlock: {
+            ...admission.statBlock,
+            id: syntheticFormStatBlockId,
+            statBlock: {
+              ...admission.statBlock.statBlock,
+              displayName: syntheticFormDisplayName,
+            },
+          } as BattleDruidWildShapeKnownForm,
+        }),
+      );
+      return [
+        id,
+        {
+          ...combatant,
+          origin: {
+            ...combatant.origin,
+            druidWildShapeAvailableForms: renamedForms,
+          },
+        },
+      ];
+    }),
+  );
+
+  return { ...state, combatants: renamedCombatants };
 }
 
 function renameContextInertIdentityFields(
@@ -564,6 +613,84 @@ describe("inert authored identity renaming witness (#224)", () => {
     }
     expect(renamedStatBlockAct.label + renamedStatBlockAct.summary).toContain(
       "Synthetic Procedure",
+    );
+  });
+
+  test("renaming BattleActPresentation.formStatBlockId does not change Wild Shape act execution structure", () => {
+    const druidCombatantId = combatantId("form-id-witness-druid");
+    const session = startBattleSessionRight({
+      battleId: battleId("form-id-witness"),
+      combatants: [
+        characterSeed({
+          combatantId: druidCombatantId,
+          displayName: "Druid",
+          initiative: 20,
+          classLevels: [{ className: "druid", level: 2 }],
+          resources: [{ unit: unitLibrary.requireUnit("druid_wild_shape") }],
+          druidWildShapeAvailableForms: [
+            statBlockCatalog.requireStatBlock("stat_block_cat"),
+          ],
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+
+    const renamedState = renameFormStatBlockIdPresentationFields(session.state);
+    const renamedSession = battleRuntimeSessionForTest({
+      state: renamedState,
+      context: session.context,
+    });
+
+    const originalActs = discoverBattleActs(session);
+    const renamedActs = discoverBattleActs(renamedSession);
+
+    // Execution structure (subjects and holes) must be identical.
+    expect(
+      renamedActs.map((act) => ({
+        subject: act.subject,
+        initialHoles: act.initialHoles,
+      })),
+    ).toEqual(
+      originalActs.map((act) => ({
+        subject: act.subject,
+        initialHoles: act.initialHoles,
+      })),
+    );
+
+    // Presentation labels must differ because the form display name changed.
+    const labelProjection = (acts: typeof originalActs) =>
+      acts.map((act) => ({
+        label: act.label,
+        summary: act.summary,
+      }));
+    expect(labelProjection(renamedActs)).not.toEqual(
+      labelProjection(originalActs),
+    );
+
+    const originalFormAct = originalActs.find(
+      (act) => act.presentation.kind === "druidWildShapeForm",
+    );
+    const renamedFormAct = renamedActs.find(
+      (act) => act.presentation.kind === "druidWildShapeForm",
+    );
+    expect(originalFormAct).toBeDefined();
+    expect(renamedFormAct).toBeDefined();
+    if (
+      originalFormAct?.presentation.kind !== "druidWildShapeForm" ||
+      renamedFormAct?.presentation.kind !== "druidWildShapeForm"
+    ) {
+      return;
+    }
+
+    // formExecutionRef is unchanged; only the presentation identity and label changed.
+    expect(renamedFormAct.presentation.formExecutionRef).toBe(
+      originalFormAct.presentation.formExecutionRef,
+    );
+    expect(renamedFormAct.presentation.formStatBlockId).toBe(
+      "synthetic-form-stat-block-id-witness",
+    );
+    expect(renamedFormAct.label + renamedFormAct.summary).toContain(
+      "Synthetic Form",
     );
   });
 });

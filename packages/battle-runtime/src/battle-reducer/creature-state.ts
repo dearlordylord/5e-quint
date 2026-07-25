@@ -47,7 +47,7 @@ import type {
 } from "../battle-init.ts";
 import type { CharacterWeaponAttackActionOption } from "../battle-action-options.ts";
 import {
-  hasWeaponMasteryForUnit,
+  weaponMasteryIsSelectedForWeapon,
   type CharacterBattleWeaponMasterySelection,
 } from "../character-creature-execution-facts.ts";
 import {
@@ -155,6 +155,7 @@ function isStatBlockBattleCreatureState(
 }
 
 function characterInitWeaponAttackExecutionRefs(
+  slot: "main-hand" | "off-hand",
   attack: CharacterBattleCreatureInitWeaponAttack,
   loadoutWeapon:
     | { readonly itemId: BattleObjectId; readonly unitId: UnitId }
@@ -172,12 +173,12 @@ function characterInitWeaponAttackExecutionRefs(
     loadoutWeapon.unitId !== attack.weapon.weaponUnitId
   ) {
     return battleStateInitIssue(
-      "Character battle init weapon attack must match the selected loadout weapon.",
+      `Character battle init ${slot} weapon attack must match the selected loadout weapon.`,
     );
   }
   return Either.right({
     weaponObjectId: loadoutWeapon.itemId,
-    hasWeaponMastery: hasWeaponMasteryForUnit(
+    hasWeaponMastery: weaponMasteryIsSelectedForWeapon(
       attack.weapon.weaponUnitId,
       weaponMasteries,
     ),
@@ -185,6 +186,7 @@ function characterInitWeaponAttackExecutionRefs(
 }
 
 function characterInitWeaponAttackWithExecutionRefs(
+  slot: "main-hand" | "off-hand",
   attack: CharacterBattleCreatureInitWeaponAttack,
   loadoutWeapon:
     | { readonly itemId: BattleObjectId; readonly unitId: UnitId }
@@ -192,6 +194,7 @@ function characterInitWeaponAttackWithExecutionRefs(
   weaponMasteries: readonly CharacterBattleWeaponMasterySelection[],
 ): Either.Either<CharacterWeaponAttackActionOption, BattleStateInitIssue> {
   const refs = characterInitWeaponAttackExecutionRefs(
+    slot,
     attack,
     loadoutWeapon,
     weaponMasteries,
@@ -280,6 +283,7 @@ export function battleCreatureStateAdmissionFromInit(
       creatureInit.attack === null
         ? Either.right(null)
         : characterInitWeaponAttackWithExecutionRefs(
+            "main-hand",
             creatureInit.attack,
             creatureInit.selectedLoadout.weapon,
             creatureInit.weaponMasteries,
@@ -288,6 +292,7 @@ export function battleCreatureStateAdmissionFromInit(
       creatureInit.offHandAttack === undefined
         ? Either.right(undefined)
         : characterInitWeaponAttackWithExecutionRefs(
+            "off-hand",
             creatureInit.offHandAttack,
             creatureInit.selectedLoadout.offHandWeapon,
             creatureInit.weaponMasteries,

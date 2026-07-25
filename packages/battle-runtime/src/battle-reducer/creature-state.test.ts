@@ -27,13 +27,13 @@ describe("battleCreatureStateAdmissionFromInit", () => {
       creatureInit: {
         ...characterInit,
         attack: characterBattleCreatureInitWeaponAttack(
-          testCharacterWeaponAttackForUnit(unitId("weapon_longsword")),
+          testCharacterWeaponAttackForUnit(unitId("weapon_dagger")),
         ),
         selectedLoadout: {
           ...characterInit.selectedLoadout,
           weapon: {
-            itemId: battleObjectId("main:weapon_greataxe"),
-            unitId: unitId("weapon_greataxe"),
+            itemId: battleObjectId("main:weapon_longsword"),
+            unitId: unitId("weapon_longsword"),
             grip: "one_handed" as const,
           },
         },
@@ -52,7 +52,7 @@ describe("battleCreatureStateAdmissionFromInit", () => {
     expect(result.issues[0]).toMatchObject({
       tag: "battleStateInitIssue",
       message:
-        "Character battle init weapon attack must match the selected loadout weapon.",
+        "Character battle init main-hand weapon attack must match the selected loadout weapon.",
     });
   });
 
@@ -89,7 +89,7 @@ describe("battleCreatureStateAdmissionFromInit", () => {
     expect(result.issues[0]).toMatchObject({
       tag: "battleStateInitIssue",
       message:
-        "Character battle init weapon attack must match the selected loadout weapon.",
+        "Character battle init off-hand weapon attack must match the selected loadout weapon.",
     });
   });
 
@@ -102,7 +102,7 @@ describe("battleCreatureStateAdmissionFromInit", () => {
       creatureInit: {
         ...characterInit,
         attack: characterBattleCreatureInitWeaponAttack(
-          testCharacterWeaponAttackForUnit(unitId("weapon_longsword")),
+          testCharacterWeaponAttackForUnit(unitId("weapon_dagger")),
         ),
         offHandAttack: characterBattleCreatureInitWeaponAttack(
           testCharacterWeaponAttackForUnit(unitId("weapon_longsword")),
@@ -110,8 +110,8 @@ describe("battleCreatureStateAdmissionFromInit", () => {
         selectedLoadout: {
           ...characterInit.selectedLoadout,
           weapon: {
-            itemId: battleObjectId("main:weapon_greataxe"),
-            unitId: unitId("weapon_greataxe"),
+            itemId: battleObjectId("main:weapon_longsword"),
+            unitId: unitId("weapon_longsword"),
             grip: "one_handed" as const,
           },
           offHandWeapon: {
@@ -131,12 +131,15 @@ describe("battleCreatureStateAdmissionFromInit", () => {
     expect(result.tag).toBe("invalid");
     if (result.tag !== "invalid") return;
     expect(result.issues).toHaveLength(2);
-    for (const issue of result.issues) {
-      expect(issue).toMatchObject({
-        tag: "battleStateInitIssue",
-        message:
-          "Character battle init weapon attack must match the selected loadout weapon.",
-      });
-    }
+    expect(result.issues[0]).toMatchObject({
+      tag: "battleStateInitIssue",
+      message:
+        "Character battle init main-hand weapon attack must match the selected loadout weapon.",
+    });
+    expect(result.issues[1]).toMatchObject({
+      tag: "battleStateInitIssue",
+      message:
+        "Character battle init off-hand weapon attack must match the selected loadout weapon.",
+    });
   });
 });

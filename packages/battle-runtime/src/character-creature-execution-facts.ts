@@ -32,7 +32,7 @@ export type CharacterBattleWeaponMasterySelection = {
   readonly weaponUnitId: UnitId;
 };
 
-export function hasWeaponMasteryForUnit(
+export function weaponMasteryIsSelectedForWeapon(
   weaponUnitId: UnitId,
   weaponMasteries: readonly CharacterBattleWeaponMasterySelection[],
 ): boolean {

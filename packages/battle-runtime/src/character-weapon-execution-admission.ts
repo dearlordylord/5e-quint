@@ -3,7 +3,7 @@ import type { WeaponRecord } from "@dnd/surface/surface/types";
 import type { BattleObjectId } from "./identity.ts";
 import type { CharacterWeaponAttackExecutionWeapon } from "./battle-action-options.ts";
 import {
-  hasWeaponMasteryForUnit,
+  weaponMasteryIsSelectedForWeapon,
   type CharacterBattleWeaponMasterySelection,
 } from "./character-creature-execution-facts.ts";
 
@@ -41,6 +41,9 @@ export function admitCharacterWeaponAttackExecutionWeapon(
   return {
     weapon: admitCharacterWeaponExecutionWeapon(weapon),
     weaponObjectId: objectId,
-    hasWeaponMastery: hasWeaponMasteryForUnit(weapon.id, weaponMasteries),
+    hasWeaponMastery: weaponMasteryIsSelectedForWeapon(
+      weapon.id,
+      weaponMasteries,
+    ),
   };
 }
