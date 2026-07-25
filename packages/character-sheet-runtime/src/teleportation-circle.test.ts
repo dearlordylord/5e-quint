@@ -21,12 +21,8 @@ import {
 } from "./test-support.ts";
 import { type CharacterSheetTeleportationCircleDestination } from "./sheet-types.ts";
 
-const teleportationCircleSelectedIdentityDriverSchema = {
-  doCastTeleportationCircle: {},
-} as const;
-
 type TeleportationCircleSelectedIdentityDriverAction =
-  keyof typeof teleportationCircleSelectedIdentityDriverSchema;
+  "doCastTeleportationCircle";
 
 type TeleportationCircleSelectedIdentityProjection = {
   readonly spellId: string;

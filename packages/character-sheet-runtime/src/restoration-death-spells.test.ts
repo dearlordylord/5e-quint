@@ -40,14 +40,10 @@ const completedTouchCasting = {
   },
 } as const;
 
-const restorationDeathSelectedIdentityDriverSchema = {
-  doCastGreaterRestorationCharmed: {},
-  doCastRaiseDead: {},
-  doCastReincarnate: {},
-} as const;
-
 type RestorationDeathSelectedIdentityDriverAction =
-  keyof typeof restorationDeathSelectedIdentityDriverSchema;
+  | "doCastGreaterRestorationCharmed"
+  | "doCastRaiseDead"
+  | "doCastReincarnate";
 
 type RestorationDeathSelectedIdentityProjection = {
   readonly spellId: string;

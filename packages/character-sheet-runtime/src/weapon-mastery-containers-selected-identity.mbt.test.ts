@@ -35,36 +35,18 @@ import {
   type CharacterSheetWeaponMasteryReselection,
 } from "./index.ts";
 
-const TASK_ID = "L1D2-WEAPON-MASTERY-CONTAINERS";
-
-const WEAPON_MASTERY_CONTAINER_SELECTED_IDENTITY_RESULTS = [
-  "init",
-  "paladinSelected",
-  "paladinReselected",
-  "rangerSelected",
-  "rangerReselected",
-  "rogueSelected",
-  "rogueReselected",
-  "oneChangeAccepted",
-  "tooManyChangesRejected",
-] as const;
-const WEAPON_MASTERY_CONTAINER_FEATURE_UNIT_IDS = [
-  authoredUnitId("paladin_weapon_mastery"),
-  authoredUnitId("ranger_weapon_mastery"),
-  authoredUnitId("rogue_weapon_mastery"),
-] as const satisfies ReadonlyArray<UnitRecord["id"]>;
-const WEAPON_MASTERY_CONTAINER_CLASS_UNIT_IDS = [
-  authoredUnitId("class_paladin"),
-  authoredUnitId("class_ranger"),
-  authoredUnitId("class_rogue"),
-] as const satisfies ReadonlyArray<UnitRecord["id"]>;
-
 type WeaponMasteryContainerSelectedIdentityResult =
-  (typeof WEAPON_MASTERY_CONTAINER_SELECTED_IDENTITY_RESULTS)[number];
-type WeaponMasteryContainerFeatureUnitId =
-  (typeof WEAPON_MASTERY_CONTAINER_FEATURE_UNIT_IDS)[number];
-type WeaponMasteryContainerClassUnitId =
-  (typeof WEAPON_MASTERY_CONTAINER_CLASS_UNIT_IDS)[number];
+  | "init"
+  | "paladinSelected"
+  | "paladinReselected"
+  | "rangerSelected"
+  | "rangerReselected"
+  | "rogueSelected"
+  | "rogueReselected"
+  | "oneChangeAccepted"
+  | "tooManyChangesRejected";
+type WeaponMasteryContainerFeatureUnitId = UnitRecord["id"];
+type WeaponMasteryContainerClassUnitId = UnitRecord["id"];
 type WeaponMasteryWeaponPair = readonly [UnitRecord["id"], UnitRecord["id"]];
 type WeaponMasteryContainerProfile = {
   readonly classUnitId: WeaponMasteryContainerClassUnitId;
@@ -154,7 +136,7 @@ type SelectedUnitIdentityReplaySequence = {
   readonly expected: WeaponMasteryContainerSelectedIdentityProjection;
 };
 type SelectedUnitIdentityReplay = {
-  readonly taskId: typeof TASK_ID;
+  readonly taskId: "L1D2-WEAPON-MASTERY-CONTAINERS";
   readonly unitId: WeaponMasteryContainerFeatureUnitId;
   readonly actions: readonly WeaponMasteryContainerSelectedIdentityDriverAction[];
   readonly sequences: readonly SelectedUnitIdentityReplaySequence[];

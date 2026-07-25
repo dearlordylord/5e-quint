@@ -30,24 +30,16 @@ import {
   type RuleCoreComponentRoutedProjection,
 } from "./rule-core-component-route.ts";
 
-const concentrationHazardExactDamageScenarios = [
-  "fresh",
-  "failedSaveFullHitPointDamage",
-  "successfulSaveHalfHitPointDamage",
-] as const;
 type ConcentrationHazardExactDamageScenario =
-  (typeof concentrationHazardExactDamageScenarios)[number];
+  | "fresh"
+  | "failedSaveFullHitPointDamage"
+  | "successfulSaveHalfHitPointDamage";
 
-const concentrationHazardDamageTypes = ["fire", "radiant"] as const;
-type ConcentrationHazardDamageType =
-  (typeof concentrationHazardDamageTypes)[number];
+type ConcentrationHazardDamageType = "fire" | "radiant";
 
-const concentrationHazardSaveSuccessDamagePolicies = [
-  "noDamageOnSuccessfulSave",
-  "halfDamageOnSuccessfulSave",
-] as const;
 type ConcentrationHazardSaveSuccessDamagePolicy =
-  (typeof concentrationHazardSaveSuccessDamagePolicies)[number];
+  | "noDamageOnSuccessfulSave"
+  | "halfDamageOnSuccessfulSave";
 
 type ConcentrationHazardExactDamageFacts = {
   readonly damageType: ConcentrationHazardDamageType;

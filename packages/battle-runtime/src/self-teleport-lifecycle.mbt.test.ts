@@ -66,13 +66,11 @@ import {
   spellTargetId,
 } from "./unit-profile-admission-catalog-support.ts";
 
-const LAST_RESULTS = [
-  "init",
-  "destinationWitnessRequired",
-  "selfTeleported",
-  "antimagicTransitBlocked",
-] as const;
-type LastResult = (typeof LAST_RESULTS)[number];
+type LastResult =
+  | "init"
+  | "destinationWitnessRequired"
+  | "selfTeleported"
+  | "antimagicTransitBlocked";
 const SCENARIO_OUTCOME_BY_TAG = {
   Init: "init",
   DestinationWitnessRequired: "destinationWitnessRequired",

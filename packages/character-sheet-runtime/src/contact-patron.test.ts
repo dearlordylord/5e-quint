@@ -23,13 +23,9 @@ import {
   unitLibrary,
 } from "./test-support.ts";
 
-const contactPatronSelectedIdentityDriverSchema = {
-  doCastWarlockContactPatron: {},
-  doCastContactOtherPlaneThroughContactPatron: {},
-} as const;
-
 type ContactPatronSelectedIdentityDriverAction =
-  keyof typeof contactPatronSelectedIdentityDriverSchema;
+  | "doCastWarlockContactPatron"
+  | "doCastContactOtherPlaneThroughContactPatron";
 
 type ContactPatronSelectedIdentityProjection = {
   readonly spellId: string;

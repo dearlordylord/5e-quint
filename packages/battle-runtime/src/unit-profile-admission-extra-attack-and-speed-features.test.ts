@@ -503,9 +503,7 @@ function resolveWeaponAttackMiss(
     resolveBattleSubject({
       state,
       subject,
-      fills: [
-        attackTargetFill(target, spellCasterId, spellTargetId, "Longsword"),
-      ],
+      fills: [attackTargetFill(target, spellCasterId, spellTargetId)],
     }),
     "attackRoll",
   );
@@ -513,7 +511,7 @@ function resolveWeaponAttackMiss(
     state,
     subject,
     fills: [
-      attackTargetFill(target, spellCasterId, spellTargetId, "Longsword"),
+      attackTargetFill(target, spellCasterId, spellTargetId),
       attackRollFill(attackRoll, { total: 1, naturalD20: 1 }),
     ],
   });

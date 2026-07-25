@@ -23,12 +23,7 @@ import {
   type CharacterSheetWallOfForceShape,
 } from "./sheet-types.ts";
 
-const wallOfForceSelectedIdentityDriverSchema = {
-  doCastWallOfForce: {},
-} as const;
-
-type WallOfForceSelectedIdentityDriverAction =
-  keyof typeof wallOfForceSelectedIdentityDriverSchema;
+type WallOfForceSelectedIdentityDriverAction = "doCastWallOfForce";
 
 type WallOfForceSelectedIdentityProjection = {
   readonly spellId: string;

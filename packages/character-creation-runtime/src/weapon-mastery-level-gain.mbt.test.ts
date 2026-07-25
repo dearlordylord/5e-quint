@@ -47,13 +47,12 @@ import { CLASS_FEATURE_PROFICIENCY_CHOICE_KEY } from "./phase1-manifest.ts";
 import { supportedHoleOptionIds } from "./support-gates.ts";
 import { soldierBackgroundFixtureOptionIds } from "./background-fixture.test-support.ts";
 
-const WEAPON_MASTERY_LEVEL_GAIN_RESULTS = [
-  "init",
-  "fighterLevelFourAccepted",
-  "barbarianLevelFourAccepted",
-  "fighterOverCountRejected",
-  "fighterDuplicateRejected",
-] as const;
+type WeaponMasteryLevelGainResult =
+  | "init"
+  | "fighterLevelFourAccepted"
+  | "barbarianLevelFourAccepted"
+  | "fighterOverCountRejected"
+  | "fighterDuplicateRejected";
 const FIGHTER_CLASS_UNIT_ID = "class_fighter" as const;
 const BARBARIAN_CLASS_UNIT_ID = "class_barbarian" as const;
 const FIGHTER_WEAPON_MASTERY_UNIT_ID = "fighter_weapon_mastery" as const;
@@ -85,9 +84,6 @@ const BARBARIAN_LEVEL_FOUR_WEAPON_UNIT_IDS = [
   ...BARBARIAN_LEVEL_THREE_WEAPON_UNIT_IDS,
   authoredUnitId("weapon_spear"),
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
-
-type WeaponMasteryLevelGainResult =
-  (typeof WEAPON_MASTERY_LEVEL_GAIN_RESULTS)[number];
 type WeaponMasteryLevelGainDriverAction = Exclude<
   keyof typeof weaponMasteryLevelGainDriverSchema,
   "init" | "step"

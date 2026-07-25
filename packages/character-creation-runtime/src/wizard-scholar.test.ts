@@ -65,12 +65,9 @@ if (unitCatalogResult.tag !== "ok") {
 const unitLibrary = unitCatalogResult.catalog;
 
 const WIZARD_EVOCATION_SAVANT_UNIT_ID = "wizard_evocation_savant";
-const wizardEvocationSavantGrantReplayScenarios = [
-  "init",
-  "wizard-evocation-savant-level3-creation",
-] as const;
 type WizardEvocationSavantGrantReplayScenario =
-  (typeof wizardEvocationSavantGrantReplayScenarios)[number];
+  | "init"
+  | "wizard-evocation-savant-level3-creation";
 type WizardEvocationSavantGrantProjection = {
   readonly outcome: WizardEvocationSavantGrantReplayScenario;
   readonly featureUnitId: UnitRecord["id"] | "none";

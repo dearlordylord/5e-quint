@@ -29,12 +29,7 @@ import {
   type CharacterSheetDominatePersonTarget,
 } from "./sheet-types.ts";
 
-const dominatePersonSelectedIdentityDriverSchema = {
-  doCastDominatePerson: {},
-} as const;
-
-type DominatePersonSelectedIdentityDriverAction =
-  keyof typeof dominatePersonSelectedIdentityDriverSchema;
+type DominatePersonSelectedIdentityDriverAction = "doCastDominatePerson";
 
 type DominatePersonSelectedIdentityProjection = {
   readonly spellId: string;

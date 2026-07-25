@@ -370,12 +370,7 @@ function resolveTargetDamage(
   );
   const attack = targetLongswordAct(state.battle);
   const targetHole = requireHole(attack.initialHoles, "targetChoice");
-  const targetFill = attackTargetFill(
-    targetHole,
-    spellTargetId,
-    spellCasterId,
-    "Longsword",
-  );
+  const targetFill = attackTargetFill(targetHole, spellTargetId, spellCasterId);
   const attackRoll = requireResultHole(
     resolveBattleSubject({
       state: state.battle.state,

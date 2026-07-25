@@ -22,12 +22,7 @@ import {
 import type { CharacterSheet } from "./index.ts";
 import { type CharacterSheetArcaneHandSpace } from "./sheet-types.ts";
 
-const arcaneHandSelectedIdentityDriverSchema = {
-  doCastArcaneHand: {},
-} as const;
-
-type ArcaneHandSelectedIdentityDriverAction =
-  keyof typeof arcaneHandSelectedIdentityDriverSchema;
+type ArcaneHandSelectedIdentityDriverAction = "doCastArcaneHand";
 
 type ArcaneHandSelectedIdentityProjection = {
   readonly spellId: string;

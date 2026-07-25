@@ -65,6 +65,7 @@ import {
   characterSpellInvocationForProcedureRefForTest,
   characterSpellInvocationRefForProcedureRefForTest,
   startBattleSessionRight,
+  type MembersOf,
   wizardSpellcasting,
 } from "./battle-runtime-test-support.ts";
 import {
@@ -84,31 +85,27 @@ import {
   type BattleSubject,
 } from "./index.ts";
 
-const AFTER_HIT_SCENARIOS = [
-  "divineSmiteSlot",
-  "divineSmiteFreeCast",
-  "ensnaringStrikeFailedSave",
-  "ensnaringStrikeSuccessfulSave",
-  "searingSmiteHit",
-  "shiningSmiteHit",
-  "done",
-] as const;
-type AfterHitScenario = (typeof AFTER_HIT_SCENARIOS)[number];
+type AfterHitScenario =
+  | "divineSmiteSlot"
+  | "divineSmiteFreeCast"
+  | "ensnaringStrikeFailedSave"
+  | "ensnaringStrikeSuccessfulSave"
+  | "searingSmiteHit"
+  | "shiningSmiteHit"
+  | "done";
 
-const AFTER_HIT_PHASES = [
-  "fresh",
-  "targetChoiceNeeded",
-  "attackRollNeeded",
-  "afterHitChoiceNeeded",
-  "ensnaringSaveNeeded",
-  "attackDamageNeeded",
-  "afterDamage",
-  "turnStartDamageNeeded",
-  "turnStartDamageSaveNeeded",
-  "escapeCheckNeeded",
-  "cleaned",
-] as const;
-type AfterHitPhase = (typeof AFTER_HIT_PHASES)[number];
+type AfterHitPhase =
+  | "fresh"
+  | "targetChoiceNeeded"
+  | "attackRollNeeded"
+  | "afterHitChoiceNeeded"
+  | "ensnaringSaveNeeded"
+  | "attackDamageNeeded"
+  | "afterDamage"
+  | "turnStartDamageNeeded"
+  | "turnStartDamageSaveNeeded"
+  | "escapeCheckNeeded"
+  | "cleaned";
 
 const AFTER_HIT_HOLES = [
   "TargetChoice",
@@ -231,27 +228,25 @@ type AfterHitRuntimeState = {
 
 const AFTER_HIT_TARGET_INITIAL_HP = 30;
 
-const AFTER_HIT_ROUTE_SURFACES = [
-  "fresh",
-  "interruptDecision",
-  "saveGatedInterruptDecision",
-  "slotSpend",
-  "freeCastSpend",
-  "saveGatedSlotAndActionEconomySpend",
-  "attackDamage",
-  "saveGatedCondition",
-  "saveGatedConcentration",
-  "turnStartDamage",
-  "turnStartSaveCleanup",
-  "escapeCheck",
-  "escapeConditionCleanup",
-  "escapeConcentrationCleanup",
-  "illuminationEffect",
-  "illuminationConcentration",
-  "illuminationConcentrationBreak",
-  "illuminationEffectCleanup",
-] as const;
-type AfterHitRouteSurface = (typeof AFTER_HIT_ROUTE_SURFACES)[number];
+type AfterHitRouteSurface =
+  | "fresh"
+  | "interruptDecision"
+  | "saveGatedInterruptDecision"
+  | "slotSpend"
+  | "freeCastSpend"
+  | "saveGatedSlotAndActionEconomySpend"
+  | "attackDamage"
+  | "saveGatedCondition"
+  | "saveGatedConcentration"
+  | "turnStartDamage"
+  | "turnStartSaveCleanup"
+  | "escapeCheck"
+  | "escapeConditionCleanup"
+  | "escapeConcentrationCleanup"
+  | "illuminationEffect"
+  | "illuminationConcentration"
+  | "illuminationConcentrationBreak"
+  | "illuminationEffectCleanup";
 
 type AfterHitRouteState = {
   readonly surface: AfterHitRouteSurface;
@@ -328,13 +323,10 @@ const AFTER_HIT_ROUTE_STEP_ACTIONS = [
   "doRouteIlluminationEffectCleanup",
 ] as const satisfies ReadonlyArray<AfterHitRouteStepAction>;
 
-const AFTER_HIT_ROUTE_HOLES = [
-  "abilityCheck",
-  "interruptDecision",
-  "rolledDice",
-  "savingThrowOutcome",
-] as const satisfies ReadonlyArray<BattleHole["kind"]>;
-type AfterHitRouteHole = (typeof AFTER_HIT_ROUTE_HOLES)[number];
+type AfterHitRouteHole = MembersOf<
+  BattleHole["kind"],
+  "abilityCheck" | "interruptDecision" | "rolledDice" | "savingThrowOutcome"
+>;
 type RouteHole = { readonly kind: AfterHitRouteHole };
 
 function routeHoles(
@@ -1338,7 +1330,6 @@ function fillTargetChoice(state: AfterHitRuntimeState): AfterHitRuntimeState {
     requireHole(state.holes, "targetChoice"),
     spellCasterId,
     spellTargetId,
-    "Longsword",
   );
   const result = resolveBattleSubject({
     state: state.battle.state,

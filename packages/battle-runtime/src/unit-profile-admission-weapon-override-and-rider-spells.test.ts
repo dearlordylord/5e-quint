@@ -413,14 +413,7 @@ describe("SRDINV84H deterministic Shillelagh weapon override admission", () => {
     const needsAttackRoll = resolveBattleSubject({
       state: cast.state,
       subject: forceAttack.subject,
-      fills: [
-        attackTargetFill(
-          target,
-          spellCasterId,
-          spellTargetId,
-          "Quarterstaff (force)",
-        ),
-      ],
+      fills: [attackTargetFill(target, spellCasterId, spellTargetId)],
     });
     const attackRoll = requireResultHole(needsAttackRoll, "attackRoll");
     expect(attackRoll.attackBonus).toBe(attackBonus(5));
@@ -429,12 +422,7 @@ describe("SRDINV84H deterministic Shillelagh weapon override admission", () => {
       state: cast.state,
       subject: forceAttack.subject,
       fills: [
-        attackTargetFill(
-          target,
-          spellCasterId,
-          spellTargetId,
-          "Quarterstaff (force)",
-        ),
+        attackTargetFill(target, spellCasterId, spellTargetId),
         attackRollFill(attackRoll, { total: 15, naturalD20: 10 }),
       ],
     });
@@ -785,12 +773,7 @@ describe("SRDINV31A deterministic weapon damage rider Spell Unit admission", () 
       resolveBattleSubject({ state: castSession.state, subject, fills: [] }),
       "targetChoice",
     );
-    const targetFill = attackTargetFill(
-      target,
-      spellCasterId,
-      spellTargetId,
-      "Longsword",
-    );
+    const targetFill = attackTargetFill(target, spellCasterId, spellTargetId);
     const roll = requireResultHole(
       resolveBattleSubject({
         state: cast.state,
@@ -981,12 +964,7 @@ describe("SRDINV31A deterministic weapon damage rider Spell Unit admission", () 
       }),
       "targetChoice",
     );
-    const targetFill = attackTargetFill(
-      target,
-      spellCasterId,
-      spellTargetId,
-      "Longsword",
-    );
+    const targetFill = attackTargetFill(target, spellCasterId, spellTargetId);
     const roll = requireResultHole(
       resolveBattleSubject({
         state: nextRound.state,
@@ -1155,12 +1133,7 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
       resolveBattleSubject({ state: cast.state, subject, fills: [] }),
       "targetChoice",
     );
-    const targetFill = attackTargetFill(
-      target,
-      spellCasterId,
-      spellTargetId,
-      "Longsword",
-    );
+    const targetFill = attackTargetFill(target, spellCasterId, spellTargetId);
     const roll = requireResultHole(
       resolveBattleSubject({
         state: cast.state,
@@ -1228,7 +1201,6 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
       otherTarget,
       spellCasterId,
       spellTargetId,
-      "Longsword",
     );
     const otherRoll = requireResultHole(
       resolveBattleSubject({

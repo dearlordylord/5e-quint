@@ -20,12 +20,7 @@ import {
 } from "./test-support.ts";
 import { type CharacterSheetCreationObject } from "./sheet-types.ts";
 
-const creationSelectedIdentityDriverSchema = {
-  doCastCreation: {},
-} as const;
-
-type CreationSelectedIdentityDriverAction =
-  keyof typeof creationSelectedIdentityDriverSchema;
+type CreationSelectedIdentityDriverAction = "doCastCreation";
 
 type CreationSelectedIdentityProjection = {
   readonly spellId: string;

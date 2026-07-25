@@ -92,7 +92,10 @@ const SKILL_ABILITIES = {
 
 export function druidWildShapeAvailableFormsIssueForProfile(
   forms: readonly BattleDruidWildShapeKnownForm[] | undefined,
-  _profile: BattleDruidWildShapeKnownFormSupportProfile,
+  profile: BattleDruidWildShapeKnownFormSupportProfile,
+): string | null;
+export function druidWildShapeAvailableFormsIssueForProfile(
+  forms: readonly BattleDruidWildShapeKnownForm[] | undefined,
 ): string | null {
   if (forms === undefined) {
     return "Druid Wild Shape battle initialization requires an available known-form subset.";

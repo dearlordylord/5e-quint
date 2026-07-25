@@ -27,12 +27,7 @@ import {
   type CharacterSheetScryingTarget,
 } from "./sheet-types.ts";
 
-const scryingSelectedIdentityDriverSchema = {
-  doCastScrying: {},
-} as const;
-
-type ScryingSelectedIdentityDriverAction =
-  keyof typeof scryingSelectedIdentityDriverSchema;
+type ScryingSelectedIdentityDriverAction = "doCastScrying";
 
 type ScryingSelectedIdentityProjection = {
   readonly spellId: string;

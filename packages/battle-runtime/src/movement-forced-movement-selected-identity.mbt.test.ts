@@ -74,20 +74,14 @@ import {
 } from "./battle-runtime-mbt-driver-kit.ts";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 
-const movementForcedMovementSpellIds = [
-  "dissonant_whispers",
-  "command",
-  "expeditious_retreat",
-] as const;
 type MovementForcedMovementSpellId =
-  (typeof movementForcedMovementSpellIds)[number];
-const movementForcedMovementFeatureIds = [
-  "ranger_roving",
-  "barbarian_fast_movement",
-  "monk_unarmored_movement",
-] as const;
+  | "dissonant_whispers"
+  | "command"
+  | "expeditious_retreat";
 type MovementForcedMovementFeatureId =
-  (typeof movementForcedMovementFeatureIds)[number];
+  | "ranger_roving"
+  | "barbarian_fast_movement"
+  | "monk_unarmored_movement";
 
 type MovementForcedMovementSelectedIdentityProjection = {
   readonly casterSpeedFeet: number;
@@ -263,41 +257,29 @@ type MovementForcedMovementRouteProjection = {
   readonly route: readonly ReducerRouteEvent[];
 };
 
-const MOVEMENT_PRESENTATION_RESOURCE_FACTS = [
-  "movementReplacementFixedBudgetSpend",
-  "movementReplacementDistanceProjection",
-  "forcedMovementNoOwnMovementResource",
-  "forcedMovementDistanceProjection",
-] as const;
 type MovementPresentationResourceFact =
-  (typeof MOVEMENT_PRESENTATION_RESOURCE_FACTS)[number];
+  | "movementReplacementFixedBudgetSpend"
+  | "movementReplacementDistanceProjection"
+  | "forcedMovementNoOwnMovementResource"
+  | "forcedMovementDistanceProjection";
 
-const MOVEMENT_PRESENTATION_TABLE_FACTS = [
-  "tableSuppliedMovementPathWitness",
-  "landingSpacePresentationWitness",
-  "directionAwayFromSourcePresentationWitness",
-  "areaGeometryPresentationWitness",
-  "audibleEffectPresentationWitness",
-] as const;
 type MovementPresentationTableFact =
-  (typeof MOVEMENT_PRESENTATION_TABLE_FACTS)[number];
+  | "tableSuppliedMovementPathWitness"
+  | "landingSpacePresentationWitness"
+  | "directionAwayFromSourcePresentationWitness"
+  | "areaGeometryPresentationWitness"
+  | "audibleEffectPresentationWitness";
 
-const MOVEMENT_PRESENTATION_OBJECT_BOUNDARY_FACTS = [
-  "objectUnsecuredBoundary",
-  "objectEntirelyWithinAreaBoundary",
-  "objectPushProjection",
-] as const;
 type MovementPresentationObjectBoundaryFact =
-  (typeof MOVEMENT_PRESENTATION_OBJECT_BOUNDARY_FACTS)[number];
+  | "objectUnsecuredBoundary"
+  | "objectEntirelyWithinAreaBoundary"
+  | "objectPushProjection";
 
-const MOVEMENT_REPLACEMENT_LANDING_OUTCOME_FACTS = [
-  "landingAcceptedNoCheck",
-  "landingAcceptedDifficultTerrainAcrobaticsPassed",
-  "landingAcceptedDifficultTerrainAcrobaticsFailedProne",
-  "landingRejectedIllegal",
-] as const;
 type MovementReplacementLandingOutcomeFact =
-  (typeof MOVEMENT_REPLACEMENT_LANDING_OUTCOME_FACTS)[number];
+  | "landingAcceptedNoCheck"
+  | "landingAcceptedDifficultTerrainAcrobaticsPassed"
+  | "landingAcceptedDifficultTerrainAcrobaticsFailedProne"
+  | "landingRejectedIllegal";
 
 type MovementPresentationRouteFact =
   | {

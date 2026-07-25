@@ -869,7 +869,11 @@ export function escapeGrappleOutcomeHole(
 export function attackTargetChoices(
   state: BattleState,
   actorId: CombatantId,
-  _attack: SupportedAttackActionOption,
+  attack: SupportedAttackActionOption,
+): readonly CombatantId[];
+export function attackTargetChoices(
+  state: BattleState,
+  actorId: CombatantId,
 ): readonly CombatantId[] {
   return [...state.combatants.keys()].filter(
     (id) => id !== actorId && state.combatants.has(id),

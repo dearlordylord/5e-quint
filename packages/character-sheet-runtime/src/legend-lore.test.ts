@@ -19,12 +19,7 @@ import {
   unitLibrary,
 } from "./test-support.ts";
 
-const legendLoreSelectedIdentityDriverSchema = {
-  doCastLegendLore: {},
-} as const;
-
-type LegendLoreSelectedIdentityDriverAction =
-  keyof typeof legendLoreSelectedIdentityDriverSchema;
+type LegendLoreSelectedIdentityDriverAction = "doCastLegendLore";
 
 type LegendLoreSelectedIdentityProjection = {
   readonly spellId: string;

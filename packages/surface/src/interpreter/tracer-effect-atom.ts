@@ -137,13 +137,7 @@ export function traceEffectAtom(
     case "block_travel":
     case "end_if_created_in_occupied_space":
     case "allow_designated_creatures_safe_passage":
-      return traceActionAndRollEffectAtom(
-        e,
-        nodes,
-        ids,
-        edges,
-        traceEffectAtom,
-      );
+      return traceActionAndRollEffectAtom(e, nodes, ids);
     case "object_immune_to_all_damage":
     case "object_destroyed_by_spell":
     case "cannot_be_dispelled_by_spell":
@@ -190,13 +184,7 @@ export function traceEffectAtom(
     case "modify_ability_score":
     case "modify_proficiency_bonus":
     case "create_extradimensional_space":
-      return traceObjectAndBarrierEffectAtom(
-        e,
-        nodes,
-        ids,
-        edges,
-        traceEffectAtom,
-      );
+      return traceObjectAndBarrierEffectAtom(e, nodes, ids);
     case "teleport":
     case "transport_exile":
     case "ethereal_phase":

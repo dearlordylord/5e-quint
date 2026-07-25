@@ -291,14 +291,12 @@ function statBlockSummary(record: StatBlockRecord) {
     statBlockId: record.id,
     displayName: statBlock.displayName,
     creatureType: stringCreatureType(record),
-    armorClass: literalNumber(statBlock.ac, `${record.id}.statBlock.ac`),
-    hitPoints: literalNumber(statBlock.hp, `${record.id}.statBlock.hp`),
+    armorClass: literalNumber(statBlock.ac),
+    hitPoints: literalNumber(statBlock.hp),
     ...(statBlock.initiativeModifier === undefined
       ? {}
       : { initiativeModifier: statBlock.initiativeModifier }),
-    attacks: (statBlock.actions?.attacks ?? []).map((attack) =>
-      attackSummary(record, attack),
-    ),
+    attacks: (statBlock.actions?.attacks ?? []).map(attackSummary),
     damageVulnerabilities: damageModifierTypes(statBlock.vulnerabilities),
     damageResistances: damageModifierTypes(statBlock.resistances),
     damageResistanceChoices: damageResistanceChoices(statBlock.resistances),
@@ -309,14 +307,11 @@ function statBlockSummary(record: StatBlockRecord) {
   };
 }
 
-function attackSummary(statBlock: StatBlockRecord, attack: StatBlockAttack) {
+function attackSummary(attack: StatBlockAttack) {
   return {
     attackName: attack.name,
     attackType: attack.attackType,
-    attackBonus: literalNumber(
-      attack.attackBonus,
-      `${statBlock.id}.actions.${attack.name}.attackBonus`,
-    ),
+    attackBonus: literalNumber(attack.attackBonus),
     ...(typeof attack.reachFeet === "number"
       ? { reachFeet: attack.reachFeet }
       : {}),
@@ -345,7 +340,6 @@ function literalNumber(
     | NonNullable<
         NonNullable<StatBlockRecord["statBlock"]["actions"]>["attacks"]
       >[number]["attackBonus"],
-  _field: string,
 ): number | null {
   if (value.kind === "literal") {
     return value.value;

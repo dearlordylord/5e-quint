@@ -4,7 +4,7 @@ import {
   requireRight,
   stableSheet,
   timePassed,
-  timeSpanDuration
+  timeSpanDuration,
 } from "./test-support.ts";
 
 describe("Character Sheet runtime / time passage", () => {

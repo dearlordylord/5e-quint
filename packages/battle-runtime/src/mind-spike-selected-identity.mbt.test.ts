@@ -56,20 +56,20 @@ import {
   requireCharacterSpellProcedureRefForTest,
 } from "./battle-runtime-test-support.ts";
 
-const driverSchema = {
-  init: {},
-  step: {},
-  doResolveMindSpikeFailedSaveConcentrationDuration: {},
-  doResolveMindSpikeSuccessfulSaveHalfDamage: {},
-} as const;
+type DriverActionName =
+  | "init"
+  | "step"
+  | "doResolveMindSpikeFailedSaveConcentrationDuration"
+  | "doResolveMindSpikeSuccessfulSaveHalfDamage";
+type MindSpikeSelectedIdentityAction = Exclude<
+  DriverActionName,
+  "init" | "step"
+>;
 
-const mindSpikeSelectedIdentityResults = [
-  "init",
-  "mindSpikeFailedSaveConcentrationDuration",
-  "mindSpikeSuccessfulSaveHalfDamage",
-] as const;
 type MindSpikeSelectedIdentityResult =
-  (typeof mindSpikeSelectedIdentityResults)[number];
+  | "init"
+  | "mindSpikeFailedSaveConcentrationDuration"
+  | "mindSpikeSuccessfulSaveHalfDamage";
 const MIND_SPIKE_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG: Readonly<
   Record<string, MindSpikeSelectedIdentityResult>
 > = {
@@ -87,11 +87,7 @@ type MindSpikeSelectedIdentityProjection = {
   readonly targetActiveEffectCount: number;
   readonly lastResult: MindSpikeSelectedIdentityResult;
 };
-type DriverActionName = keyof typeof driverSchema;
-type MindSpikeSelectedIdentityAction = Exclude<
-  DriverActionName,
-  "init" | "step"
->;
+
 type SelectedUnitIdentityReplaySequence = {
   readonly name: string;
   readonly actions: readonly MindSpikeSelectedIdentityAction[];

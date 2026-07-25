@@ -24,12 +24,7 @@ export const rangerTirelessTemporaryHitPointsTestName =
 export const rangerTirelessRestRecoveryTestName =
   "Tireless recovers uses on Long Rest and reduces Exhaustion on Short Rest";
 
-const rangerTirelessSelectedIdentityDriverSchema = {
-  doUseRangerTireless: {},
-} as const;
-
-type RangerTirelessSelectedIdentityDriverAction =
-  keyof typeof rangerTirelessSelectedIdentityDriverSchema;
+type RangerTirelessSelectedIdentityDriverAction = "doUseRangerTireless";
 
 type RangerTirelessSelectedIdentityProjection = {
   readonly unitId: "ranger_tireless";

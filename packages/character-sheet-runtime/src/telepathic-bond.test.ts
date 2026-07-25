@@ -20,12 +20,7 @@ import {
 } from "./test-support.ts";
 import { type CharacterSheetTelepathicBondTarget } from "./sheet-types.ts";
 
-const telepathicBondSelectedIdentityDriverSchema = {
-  doCastTelepathicBond: {},
-} as const;
-
-type TelepathicBondSelectedIdentityDriverAction =
-  keyof typeof telepathicBondSelectedIdentityDriverSchema;
+type TelepathicBondSelectedIdentityDriverAction = "doCastTelepathicBond";
 
 type TelepathicBondSelectedIdentityProjection = {
   readonly spellId: string;

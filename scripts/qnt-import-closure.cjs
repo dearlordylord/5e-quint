@@ -1,7 +1,7 @@
 const fs = require("node:fs");
 const path = require("node:path");
 
-const IMPORT_RE = /from "((?:\.\/|\.\.\/)[A-Za-z0-9/\-]+)"/g;
+const IMPORT_RE = /from "((?:\.\/|\.\.\/)[A-Za-z0-9/-]+)"/g;
 const RUN_RE = /^\s*run\s+([A-Za-z_][A-Za-z0-9_]*)\b/gm;
 
 function toRepoPath(root, file) {
@@ -19,7 +19,8 @@ function listQntFiles(directory, options = {}) {
   for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
     if (entry.name === "node_modules" || entry.name === ".worktrees") continue;
     const full = path.join(directory, entry.name);
-    if (entry.isDirectory() && recursive) files.push(...listQntFiles(full, options));
+    if (entry.isDirectory() && recursive)
+      files.push(...listQntFiles(full, options));
     if (entry.isFile() && entry.name.endsWith(".qnt")) files.push(full);
   }
   return files.sort((left, right) => left.localeCompare(right));
@@ -65,8 +66,11 @@ function runNames(source, prefix) {
 }
 
 function discoverRunBlockRoots(directory, options = {}) {
-  return listQntFiles(directory, { recursive: options.recursive ?? false }).filter(
-    (file) => runNames(fs.readFileSync(file, "utf8"), options.prefix).length > 0,
+  return listQntFiles(directory, {
+    recursive: options.recursive ?? false,
+  }).filter(
+    (file) =>
+      runNames(fs.readFileSync(file, "utf8"), options.prefix).length > 0,
   );
 }
 
@@ -74,14 +78,20 @@ function pureVocabularyLeafIssues(root, relativePath, rationale) {
   const file = repoPathToFile(root, relativePath);
   const issues = [];
   if (!rationale || rationale.trim().length === 0) {
-    issues.push(`${relativePath}: pure vocabulary leaf entry must include a rationale.`);
+    issues.push(
+      `${relativePath}: pure vocabulary leaf entry must include a rationale.`,
+    );
   }
   if (!fs.existsSync(file)) {
-    issues.push(`${relativePath}: configured pure vocabulary leaf does not exist.`);
+    issues.push(
+      `${relativePath}: configured pure vocabulary leaf does not exist.`,
+    );
     return issues;
   }
   if (dependenciesOf(file).length > 0) {
-    issues.push(`${relativePath}: pure vocabulary leaf must not import other modules.`);
+    issues.push(
+      `${relativePath}: pure vocabulary leaf must not import other modules.`,
+    );
   }
   const source = fs.readFileSync(file, "utf8");
   for (const [label, pattern] of [
@@ -90,7 +100,9 @@ function pureVocabularyLeafIssues(root, relativePath, rationale) {
     ["run", /^\s*run\b/m],
   ]) {
     if (pattern.test(source)) {
-      issues.push(`${relativePath}: pure vocabulary leaf must not contain ${label} declarations.`);
+      issues.push(
+        `${relativePath}: pure vocabulary leaf must not contain ${label} declarations.`,
+      );
     }
   }
   return issues;

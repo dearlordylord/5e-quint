@@ -344,7 +344,6 @@ function assertMetricDefinitionCoverage(matrixMetrics) {
 function metrics({
   inventory,
   authoredSurfaceUnits,
-  profiles,
   unitClaims,
   unitEvidence,
   executableProfiles,
@@ -813,7 +812,6 @@ function buildMatrix(
   const matrixMetrics = metrics({
     inventory,
     authoredSurfaceUnits,
-    profiles,
     unitClaims,
     unitEvidence,
     executableProfiles,

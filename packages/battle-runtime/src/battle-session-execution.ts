@@ -152,7 +152,7 @@ function battleRuntimeResolutionWithFamiliarPresentation(
       snapshot: snapshotBattle(session.state),
     };
   }
-  const { state: _mechanicalState, ...outcome } = result;
+  const { state: _state, ...outcome } = result;
   return {
     ...outcome,
     snapshot: snapshotBattle(result.state),

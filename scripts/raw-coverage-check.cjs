@@ -20,12 +20,6 @@ const paths = {
   activePlan: path.join(root, "plans/ACTIVE_PLAN.md"),
 };
 
-const executableClassifications = new Set([
-  "rule-procedure",
-  "rule-guard",
-  "rule-consequence",
-  "table-caller-responsibility",
-]);
 const domainClassifications = new Set([
   "definition",
   "rule-procedure",
@@ -33,9 +27,6 @@ const domainClassifications = new Set([
   "rule-consequence",
   "authored-data",
   "table-caller-responsibility",
-]);
-const closedOutOfScopeClassifications = new Set([
-  "unsupported-out-of-promoted-scope",
 ]);
 const rawCoverageClaimKinds = new Set([
   "qnt-owner",
@@ -71,7 +62,9 @@ function readJsonl(filePath) {
       try {
         return JSON.parse(line);
       } catch (error) {
-        fail(`${path.relative(root, filePath)}:${index + 1} is not valid JSON: ${error.message}`);
+        fail(
+          `${path.relative(root, filePath)}:${index + 1} is not valid JSON: ${error.message}`,
+        );
       }
     });
 }
@@ -108,10 +101,17 @@ function markdownFiles(dirPath) {
 }
 
 function sectionPathId(sourcePath) {
-  return slug(sourcePath.replace(/^\.references\/srd-5\.2\.1\//, "").replace(/\.md$/, ""));
+  return slug(
+    sourcePath.replace(/^\.references\/srd-5\.2\.1\//, "").replace(/\.md$/, ""),
+  );
 }
 
-function generatedSectionForHeading(sourcePath, headingPath, headingLine, lineNumber) {
+function generatedSectionForHeading(
+  sourcePath,
+  headingPath,
+  headingLine,
+  lineNumber,
+) {
   const fileSlug = sectionPathId(sourcePath);
   const reactionTracer =
     sourcePath === ".references/srd-5.2.1/Playing-the-Game.md" &&
@@ -162,13 +162,20 @@ function readSections() {
 }
 
 function splitSentences(text) {
-  return text.match(/[^.!?]+[.!?](?=$| )/g)?.map((span) => span.trim()) ?? [text.trim()];
+  return (
+    text.match(/[^.!?]+[.!?](?=$| )/g)?.map((span) => span.trim()) ?? [
+      text.trim(),
+    ]
+  );
 }
 
 function generateSectionSpans(section) {
   const sourcePath = path.join(root, section.path);
   const lines = fs.readFileSync(sourcePath, "utf8").split("\n");
-  const startIndex = lines.findIndex((line, index) => index + 1 >= section.startLine && line === section.headingLine);
+  const startIndex = lines.findIndex(
+    (line, index) =>
+      index + 1 >= section.startLine && line === section.headingLine,
+  );
   if (startIndex === -1) {
     fail(`Could not find heading ${section.headingLine} in ${section.path}.`);
   }
@@ -218,7 +225,11 @@ function generateSectionSpans(section) {
 function stable(value) {
   if (Array.isArray(value)) return value.map(stable);
   if (value && typeof value === "object") {
-    return Object.fromEntries(Object.keys(value).sort().map((key) => [key, stable(value[key])]));
+    return Object.fromEntries(
+      Object.keys(value)
+        .sort()
+        .map((key) => [key, stable(value[key])]),
+    );
   }
   return value;
 }
@@ -227,7 +238,9 @@ function assertDeepEqual(actual, expected, label) {
   const actualJson = JSON.stringify(stable(actual), null, 2);
   const expectedJson = JSON.stringify(stable(expected), null, 2);
   if (actualJson !== expectedJson) {
-    fail(`${label} is stale. Run node scripts/raw-coverage-check.cjs --write to refresh it.`);
+    fail(
+      `${label} is stale. Run node scripts/raw-coverage-check.cjs --write to refresh it.`,
+    );
   }
 }
 
@@ -246,7 +259,11 @@ function walkClaimCandidateFiles(dirPath, scanRoot = root, files = []) {
   for (const entry of fs.readdirSync(dirPath, { withFileTypes: true })) {
     if (entry.isDirectory()) {
       if (!skippedClaimScanDirs.has(entry.name)) {
-        walkClaimCandidateFiles(path.join(dirPath, entry.name), scanRoot, files);
+        walkClaimCandidateFiles(
+          path.join(dirPath, entry.name),
+          scanRoot,
+          files,
+        );
       }
       continue;
     }
@@ -262,11 +279,15 @@ function parseRawCoverageClaimsFromText(text, ownerPath) {
     const kind = match[1];
     const requirementIds = match[2].trim().split(/\s+/);
     if (!rawCoverageClaimKinds.has(kind)) {
-      fail(`${ownerPath}:${lineIndex + 1} uses unknown RAW-COVERAGE claim kind ${kind}.`);
+      fail(
+        `${ownerPath}:${lineIndex + 1} uses unknown RAW-COVERAGE claim kind ${kind}.`,
+      );
     }
     return requirementIds.map((requirementId) => {
       if (!/^RAW-[A-Z0-9]+(?:-[A-Z0-9]+)*$/.test(requirementId)) {
-        fail(`${ownerPath}:${lineIndex + 1} has invalid RAW requirement id ${requirementId}.`);
+        fail(
+          `${ownerPath}:${lineIndex + 1} has invalid RAW requirement id ${requirementId}.`,
+        );
       }
       return { ownerPath, line: lineIndex + 1, kind, requirementId };
     });
@@ -274,11 +295,16 @@ function parseRawCoverageClaimsFromText(text, ownerPath) {
 }
 
 function scanRawCoverageClaims(scanRoot = root) {
-  const sourceDirs = ["packages", "plans"].map((name) => path.join(scanRoot, name));
+  const sourceDirs = ["packages", "plans"].map((name) =>
+    path.join(scanRoot, name),
+  );
   return sourceDirs.flatMap((sourceDir) =>
     walkClaimCandidateFiles(sourceDir, scanRoot).flatMap((filePath) => {
       const text = fs.readFileSync(filePath, "utf8");
-      return parseRawCoverageClaimsFromText(text, toRepoPath(filePath, scanRoot));
+      return parseRawCoverageClaimsFromText(
+        text,
+        toRepoPath(filePath, scanRoot),
+      );
     }),
   );
 }
@@ -288,7 +314,8 @@ function claimKey(ownerPath, kind, requirementId) {
 }
 
 function requirementIdsForAnnotation(annotation) {
-  if (annotation.closure?.tag === "requirement") return annotation.closure.requirementIds ?? [];
+  if (annotation.closure?.tag === "requirement")
+    return annotation.closure.requirementIds ?? [];
   return annotation.requirementIds ?? [];
 }
 
@@ -304,7 +331,8 @@ function annotationOutOfScopeReason(annotation) {
 }
 
 function annotationAssumptionId(annotation) {
-  if (annotation.closure?.tag === "closed-by-assumption") return annotation.closure.assumptionId;
+  if (annotation.closure?.tag === "closed-by-assumption")
+    return annotation.closure.assumptionId;
   return annotation.assumptionId;
 }
 
@@ -316,37 +344,51 @@ function annotationNeedsAssumption(annotation) {
 }
 
 function validateRawCoverageOwnerClaims(requirements, scanRoot = root) {
-  const requirementsById = new Map(requirements.map((requirement) => [requirement.id, requirement]));
+  const requirementsById = new Map(
+    requirements.map((requirement) => [requirement.id, requirement]),
+  );
   const claims = scanRawCoverageClaims(scanRoot);
   const claimsByKey = new Set(
-    claims.map((claim) => claimKey(claim.ownerPath, claim.kind, claim.requirementId)),
+    claims.map((claim) =>
+      claimKey(claim.ownerPath, claim.kind, claim.requirementId),
+    ),
   );
 
   for (const claim of claims) {
     const requirement = requirementsById.get(claim.requirementId);
     if (!requirement) {
-      fail(`${claim.ownerPath}:${claim.line} cites unknown RAW requirement ${claim.requirementId}.`);
+      fail(
+        `${claim.ownerPath}:${claim.line} cites unknown RAW requirement ${claim.requirementId}.`,
+      );
     }
     if (
       claim.kind === "qnt-owner" &&
       !(requirement.qntOwners ?? []).includes(claim.ownerPath)
     ) {
-      fail(`${claim.ownerPath}:${claim.line} cites ${claim.requirementId} as qnt-owner, but requirements.jsonl does not list that owner.`);
+      fail(
+        `${claim.ownerPath}:${claim.line} cites ${claim.requirementId} as qnt-owner, but requirements.jsonl does not list that owner.`,
+      );
     }
     if (
       claim.kind === "runtime-owner" &&
       !(requirement.runtimeOwners ?? []).includes(claim.ownerPath)
     ) {
-      fail(`${claim.ownerPath}:${claim.line} cites ${claim.requirementId} as runtime-owner, but requirements.jsonl does not list that owner.`);
+      fail(
+        `${claim.ownerPath}:${claim.line} cites ${claim.requirementId} as runtime-owner, but requirements.jsonl does not list that owner.`,
+      );
     }
     if (claim.kind.startsWith("verification-owner:")) {
       const verificationKind = claim.kind.slice("verification-owner:".length);
       if (
         !(requirement.verificationOwners ?? []).some(
-          (owner) => owner.kind === verificationKind && owner.ownerPath === claim.ownerPath,
+          (owner) =>
+            owner.kind === verificationKind &&
+            owner.ownerPath === claim.ownerPath,
         )
       ) {
-        fail(`${claim.ownerPath}:${claim.line} cites ${claim.requirementId} as ${claim.kind}, but requirements.jsonl does not list that verification owner.`);
+        fail(
+          `${claim.ownerPath}:${claim.line} cites ${claim.requirementId} as ${claim.kind}, but requirements.jsonl does not list that verification owner.`,
+        );
       }
     }
   }
@@ -354,18 +396,26 @@ function validateRawCoverageOwnerClaims(requirements, scanRoot = root) {
   for (const requirement of requirements) {
     for (const ownerPath of requirement.qntOwners ?? []) {
       if (!claimsByKey.has(claimKey(ownerPath, "qnt-owner", requirement.id))) {
-        fail(`${requirement.id} lists qnt owner ${ownerPath}, but that artifact does not cite it with RAW-COVERAGE: qnt-owner.`);
+        fail(
+          `${requirement.id} lists qnt owner ${ownerPath}, but that artifact does not cite it with RAW-COVERAGE: qnt-owner.`,
+        );
       }
     }
     for (const ownerPath of requirement.runtimeOwners ?? []) {
-      if (!claimsByKey.has(claimKey(ownerPath, "runtime-owner", requirement.id))) {
-        fail(`${requirement.id} lists runtime owner ${ownerPath}, but that artifact does not cite it with RAW-COVERAGE: runtime-owner.`);
+      if (
+        !claimsByKey.has(claimKey(ownerPath, "runtime-owner", requirement.id))
+      ) {
+        fail(
+          `${requirement.id} lists runtime owner ${ownerPath}, but that artifact does not cite it with RAW-COVERAGE: runtime-owner.`,
+        );
       }
     }
     for (const owner of requirement.verificationOwners ?? []) {
       const kind = `verification-owner:${owner.kind}`;
       if (!claimsByKey.has(claimKey(owner.ownerPath, kind, requirement.id))) {
-        fail(`${requirement.id} lists ${owner.kind} verification owner ${owner.ownerPath}, but that artifact does not cite it with RAW-COVERAGE: ${kind}.`);
+        fail(
+          `${requirement.id} lists ${owner.kind} verification owner ${owner.ownerPath}, but that artifact does not cite it with RAW-COVERAGE: ${kind}.`,
+        );
       }
     }
   }
@@ -390,31 +440,51 @@ function buildMatrix() {
   const taskClaims = readJsonl(paths.taskClaims);
   const generatedSpans = sections.flatMap(generateSectionSpans);
 
-  const sectionsById = new Map(sections.map((section) => [section.sectionId, section]));
-  const generatedById = new Map(generatedSpans.map((span) => [span.spanId, span]));
-  const annotationsById = new Map(annotations.map((span) => [span.spanId, span]));
-  const requirementsById = new Map(requirements.map((requirement) => [requirement.id, requirement]));
-  const rawReviewsBySectionId = new Map(rawReviews.map((review) => [review.sectionId, review]));
+  const sectionsById = new Map(
+    sections.map((section) => [section.sectionId, section]),
+  );
+  const generatedById = new Map(
+    generatedSpans.map((span) => [span.spanId, span]),
+  );
+  const annotationsById = new Map(
+    annotations.map((span) => [span.spanId, span]),
+  );
+  const requirementsById = new Map(
+    requirements.map((requirement) => [requirement.id, requirement]),
+  );
+  const rawReviewsBySectionId = new Map(
+    rawReviews.map((review) => [review.sectionId, review]),
+  );
   const taskStatuses = activePlanTaskStatuses();
 
   for (const section of sections) {
-    if (!section.spanIdPrefix) fail(`Section ${section.sectionId} must define spanIdPrefix.`);
+    if (!section.spanIdPrefix)
+      fail(`Section ${section.sectionId} must define spanIdPrefix.`);
     const review = rawReviewsBySectionId.get(section.sectionId);
     if (!review) fail(`Section ${section.sectionId} is missing a RAW review.`);
     if (review.reviewer !== "raw-review-agent") {
-      fail(`Section ${section.sectionId} RAW review must be recorded by raw-review-agent.`);
+      fail(
+        `Section ${section.sectionId} RAW review must be recorded by raw-review-agent.`,
+      );
     }
     if (review.verdict !== "pass") {
       fail(`Section ${section.sectionId} RAW review verdict must be pass.`);
     }
-    if (!Array.isArray(review.sourcesChecked) || !review.sourcesChecked.includes(section.path)) {
-      fail(`Section ${section.sectionId} RAW review must cite ${section.path}.`);
+    if (
+      !Array.isArray(review.sourcesChecked) ||
+      !review.sourcesChecked.includes(section.path)
+    ) {
+      fail(
+        `Section ${section.sectionId} RAW review must cite ${section.path}.`,
+      );
     }
     if (
       !Array.isArray(review.sourcesChecked) ||
       !review.sourcesChecked.includes("UBIQUITOUS_LANGUAGE.md")
     ) {
-      fail(`Section ${section.sectionId} RAW review must cite UBIQUITOUS_LANGUAGE.md.`);
+      fail(
+        `Section ${section.sectionId} RAW review must cite UBIQUITOUS_LANGUAGE.md.`,
+      );
     }
   }
 
@@ -426,9 +496,14 @@ function buildMatrix() {
 
   for (const generated of generatedSpans) {
     const annotation = annotationsById.get(generated.spanId);
-    if (!annotation) fail(`Generated span is unclassified: ${generated.spanId}`);
+    if (!annotation)
+      fail(`Generated span is unclassified: ${generated.spanId}`);
     if (annotation.source) {
-      assertDeepEqual(annotation.source, generated.source, `Annotation source for ${generated.spanId}`);
+      assertDeepEqual(
+        annotation.source,
+        generated.source,
+        `Annotation source for ${generated.spanId}`,
+      );
     }
     if (annotation.text && annotation.text !== generated.text) {
       fail(`Annotation text drifted for ${generated.spanId}.`);
@@ -448,8 +523,12 @@ function buildMatrix() {
   }
 
   for (const annotation of annotations) {
-    if (!generatedById.has(annotation.spanId)) fail(`Annotation references unknown generated span: ${annotation.spanId}`);
-    if (!annotation.classification) fail(`Annotation ${annotation.spanId} has no classification.`);
+    if (!generatedById.has(annotation.spanId))
+      fail(
+        `Annotation references unknown generated span: ${annotation.spanId}`,
+      );
+    if (!annotation.classification)
+      fail(`Annotation ${annotation.spanId} has no classification.`);
     const requirementIds = requirementIdsForAnnotation(annotation);
     if (domainClassifications.has(annotation.classification)) {
       if (
@@ -458,67 +537,106 @@ function buildMatrix() {
         !annotationAssumptionId(annotation) &&
         !annotationNeedsAssumption(annotation)
       ) {
-        fail(`Domain span ${annotation.spanId} must cite requirements or carry a closure disposition.`);
+        fail(
+          `Domain span ${annotation.spanId} must cite requirements or carry a closure disposition.`,
+        );
       }
     }
-    if (annotationIsOutOfScope(annotation) && typeof annotationOutOfScopeReason(annotation) !== "string") {
-      fail(`Out-of-promoted-scope span ${annotation.spanId} must carry a reason.`);
+    if (
+      annotationIsOutOfScope(annotation) &&
+      typeof annotationOutOfScopeReason(annotation) !== "string"
+    ) {
+      fail(
+        `Out-of-promoted-scope span ${annotation.spanId} must carry a reason.`,
+      );
     }
     if (annotation.classification === "fluff" && requirementIds.length > 0) {
       fail(`Fluff span ${annotation.spanId} must not cite requirements.`);
     }
     for (const requirementId of requirementIds) {
       if (!requirementsById.has(requirementId)) {
-        fail(`Annotation ${annotation.spanId} references unknown requirement ${requirementId}.`);
+        fail(
+          `Annotation ${annotation.spanId} references unknown requirement ${requirementId}.`,
+        );
       }
     }
   }
 
   for (const requirement of requirements) {
-    if (!Array.isArray(requirement.sourceSpanIds) || requirement.sourceSpanIds.length === 0) {
+    if (
+      !Array.isArray(requirement.sourceSpanIds) ||
+      requirement.sourceSpanIds.length === 0
+    ) {
       fail(`Requirement ${requirement.id} must cite source spans.`);
     }
     for (const spanId of requirement.sourceSpanIds) {
       const annotation = annotationsById.get(spanId);
-      if (!annotation) fail(`Requirement ${requirement.id} references unknown span ${spanId}.`);
+      if (!annotation)
+        fail(
+          `Requirement ${requirement.id} references unknown span ${spanId}.`,
+        );
       if (!requirementIdsForAnnotation(annotation).includes(requirement.id)) {
-        fail(`Requirement ${requirement.id} source span ${spanId} does not cite it back.`);
+        fail(
+          `Requirement ${requirement.id} source span ${spanId} does not cite it back.`,
+        );
       }
     }
-    for (const ownerPath of requirement.qntOwners ?? []) validateOwnerPath(ownerPath, requirement.id);
-    for (const ownerPath of requirement.runtimeOwners ?? []) validateOwnerPath(ownerPath, requirement.id);
-    for (const owner of requirement.verificationOwners ?? []) validateOwnerPath(owner.ownerPath, requirement.id);
+    for (const ownerPath of requirement.qntOwners ?? [])
+      validateOwnerPath(ownerPath, requirement.id);
+    for (const ownerPath of requirement.runtimeOwners ?? [])
+      validateOwnerPath(ownerPath, requirement.id);
+    for (const owner of requirement.verificationOwners ?? [])
+      validateOwnerPath(owner.ownerPath, requirement.id);
   }
   validateRawCoverageOwnerClaims(requirements);
 
   for (const taskClaim of taskClaims) {
     if (!taskStatuses.has(taskClaim.taskId)) {
-      fail(`Task claim references unknown ACTIVE_PLAN task ${taskClaim.taskId}.`);
+      fail(
+        `Task claim references unknown ACTIVE_PLAN task ${taskClaim.taskId}.`,
+      );
     }
     for (const requirementId of taskClaim.requirementIds) {
       if (!requirementsById.has(requirementId)) {
-        fail(`Task claim ${taskClaim.taskId} references unknown requirement ${requirementId}.`);
+        fail(
+          `Task claim ${taskClaim.taskId} references unknown requirement ${requirementId}.`,
+        );
       }
     }
-    for (const evidence of taskClaim.evidence ?? []) validateOwnerPath(evidence.ownerPath, taskClaim.taskId);
+    for (const evidence of taskClaim.evidence ?? [])
+      validateOwnerPath(evidence.ownerPath, taskClaim.taskId);
   }
 
-  const executableRequirements = requirements.filter((requirement) => requirement.coverageKind === "executable");
-  const qntModeled = executableRequirements.filter((requirement) => requirement.qntOwners.length > 0);
+  const executableRequirements = requirements.filter(
+    (requirement) => requirement.coverageKind === "executable",
+  );
+  const qntModeled = executableRequirements.filter(
+    (requirement) => requirement.qntOwners.length > 0,
+  );
   const qntProved = executableRequirements.filter((requirement) =>
     requirement.verificationOwners.some((owner) => owner.kind === "qnt-proof"),
   );
-  const runtimeMapped = executableRequirements.filter((requirement) => requirement.runtimeOwners.length > 0);
-  const runtimeParityCovered = executableRequirements.filter((requirement) =>
-    requirement.verificationOwners.some((owner) => owner.kind === "focused-mbt" || owner.kind === "runtime-test"),
+  const runtimeMapped = executableRequirements.filter(
+    (requirement) => requirement.runtimeOwners.length > 0,
   );
-  const nonFluffAnnotations = annotations.filter((annotation) => annotation.classification !== "fluff");
+  const runtimeParityCovered = executableRequirements.filter((requirement) =>
+    requirement.verificationOwners.some(
+      (owner) => owner.kind === "focused-mbt" || owner.kind === "runtime-test",
+    ),
+  );
+  const nonFluffAnnotations = annotations.filter(
+    (annotation) => annotation.classification !== "fluff",
+  );
   const outOfScopeAnnotations = annotations.filter(annotationIsOutOfScope);
   const ambiguousAnnotations = annotations.filter(annotationNeedsAssumption);
   const closedNonFluffAnnotations = nonFluffAnnotations.filter((annotation) => {
     if (requirementIdsForAnnotation(annotation).length > 0) return true;
     if (annotationAssumptionId(annotation)) return true;
-    if (annotationIsOutOfScope(annotation) && annotationOutOfScopeReason(annotation)) return true;
+    if (
+      annotationIsOutOfScope(annotation) &&
+      annotationOutOfScopeReason(annotation)
+    )
+      return true;
     return false;
   });
 
@@ -534,7 +652,9 @@ function buildMatrix() {
     summary: {
       generatedSpans: generatedSpans.length,
       classifiedSpans: annotations.length,
-      fluffSpans: annotations.filter((annotation) => annotation.classification === "fluff").length,
+      fluffSpans: annotations.filter(
+        (annotation) => annotation.classification === "fluff",
+      ).length,
       nonFluffSpans: nonFluffAnnotations.length,
       closedNonFluffSpans: closedNonFluffAnnotations.length,
       requirements: requirements.length,
@@ -545,7 +665,9 @@ function buildMatrix() {
       runtimeParityCovered: runtimeParityCovered.length,
       outOfScopeSpans: outOfScopeAnnotations.length,
       ambiguousSpans: ambiguousAnnotations.length,
-      rawReviewedSections: rawReviews.filter((review) => review.verdict === "pass").length,
+      rawReviewedSections: rawReviews.filter(
+        (review) => review.verdict === "pass",
+      ).length,
     },
     rawReviews: rawReviews.map((review) => ({
       sectionId: review.sectionId,
@@ -564,13 +686,18 @@ function buildMatrix() {
       coverageKind: requirement.coverageKind,
       sourceSpanIds: requirement.sourceSpanIds,
       qntModeled: requirement.qntOwners.length > 0,
-      qntProved: requirement.verificationOwners.some((owner) => owner.kind === "qnt-proof"),
+      qntProved: requirement.verificationOwners.some(
+        (owner) => owner.kind === "qnt-proof",
+      ),
       runtimeMapped: requirement.runtimeOwners.length > 0,
       runtimeParityCovered: requirement.verificationOwners.some(
-        (owner) => owner.kind === "focused-mbt" || owner.kind === "runtime-test",
+        (owner) =>
+          owner.kind === "focused-mbt" || owner.kind === "runtime-test",
       ),
       activePlanTasks: taskClaims
-        .filter((taskClaim) => taskClaim.requirementIds.includes(requirement.id))
+        .filter((taskClaim) =>
+          taskClaim.requirementIds.includes(requirement.id),
+        )
         .map((taskClaim) => taskClaim.taskId),
     })),
     outOfScope: outOfScopeAnnotations.map((annotation) => ({
@@ -605,9 +732,13 @@ function renderReport(matrix) {
     "",
     "## Tracer Scope",
     "",
-    ...matrix.tracer.source.slice(0, 200).map((source) => `- ${renderSource(source)}`),
+    ...matrix.tracer.source
+      .slice(0, 200)
+      .map((source) => `- ${renderSource(source)}`),
     ...(matrix.tracer.source.length > 200
-      ? [`- ... ${matrix.tracer.source.length - 200} additional sections omitted from the Markdown report; see matrix.json.`]
+      ? [
+          `- ... ${matrix.tracer.source.length - 200} additional sections omitted from the Markdown report; see matrix.json.`,
+        ]
       : []),
     "",
     "## Summary",
@@ -640,7 +771,8 @@ function renderReport(matrix) {
     "| Task | Status | Requirements |",
     "| --- | --- | --- |",
     ...matrix.activePlanTasks.map(
-      (task) => `| ${task.taskId} | ${task.status} | ${task.requirementIds.join(", ")} |`,
+      (task) =>
+        `| ${task.taskId} | ${task.status} | ${task.requirementIds.join(", ")} |`,
     ),
     "",
     "## Requirement Rows",
@@ -658,24 +790,26 @@ function renderReport(matrix) {
     "",
     "## Out Of Promoted Scope",
     "",
-    ...matrix.outOfScope.slice(0, 200).map(
-      (span) =>
-        `- ${span.spanId} (${span.source.path} > ${span.source.headingPath.join(" > ")}): ${span.reason}`,
-    ),
+    ...matrix.outOfScope
+      .slice(0, 200)
+      .map(
+        (span) =>
+          `- ${span.spanId} (${span.source.path} > ${span.source.headingPath.join(" > ")}): ${span.reason}`,
+      ),
     ...(matrix.outOfScope.length > 200
-      ? [`- ... ${matrix.outOfScope.length - 200} additional out-of-scope spans omitted from the Markdown report; see matrix.json.`]
+      ? [
+          `- ... ${matrix.outOfScope.length - 200} additional out-of-scope spans omitted from the Markdown report; see matrix.json.`,
+        ]
       : []),
     "",
     "## Ambiguous",
     "",
-    ...(
-      matrix.ambiguous.length === 0
-        ? ["- None"]
-        : matrix.ambiguous.map(
-            (span) =>
-              `- ${span.spanId} (${span.source.path} > ${span.source.headingPath.join(" > ")}): ${span.assumptionId}`,
-          )
-    ),
+    ...(matrix.ambiguous.length === 0
+      ? ["- None"]
+      : matrix.ambiguous.map(
+          (span) =>
+            `- ${span.spanId} (${span.source.path} > ${span.source.headingPath.join(" > ")}): ${span.assumptionId}`,
+        )),
     "",
   ];
   return `${lines.join("\n")}`;
@@ -692,10 +826,16 @@ function assertThrowsWith(label, fn, expectedMessage) {
 }
 
 function withFixtureRoot(fn) {
-  const fixtureRoot = fs.mkdtempSync(path.join(root, ".raw-coverage-check-fixture-"));
+  const fixtureRoot = fs.mkdtempSync(
+    path.join(root, ".raw-coverage-check-fixture-"),
+  );
   try {
-    fs.mkdirSync(path.join(fixtureRoot, "packages/proofs"), { recursive: true });
-    fs.mkdirSync(path.join(fixtureRoot, "packages/runtime/src"), { recursive: true });
+    fs.mkdirSync(path.join(fixtureRoot, "packages/proofs"), {
+      recursive: true,
+    });
+    fs.mkdirSync(path.join(fixtureRoot, "packages/runtime/src"), {
+      recursive: true,
+    });
     fn(fixtureRoot);
   } finally {
     fs.rmSync(fixtureRoot, { recursive: true, force: true });
@@ -708,7 +848,10 @@ function runSelfTests() {
     qntOwners: ["packages/proofs/owner.qnt"],
     runtimeOwners: ["packages/runtime/src/owner.ts"],
     verificationOwners: [
-      { kind: "focused-mbt", ownerPath: "packages/runtime/src/owner.mbt.test.ts" },
+      {
+        kind: "focused-mbt",
+        ownerPath: "packages/runtime/src/owner.mbt.test.ts",
+      },
     ],
   };
 
@@ -741,9 +884,13 @@ function runSelfTests() {
       path.join(fixtureRoot, "packages/runtime/src/owner.mbt.test.ts"),
       "// RAW-COVERAGE: verification-owner:focused-mbt RAW-FIXTURE-001\n",
     );
-    assertThrowsWith("unknown requirement claim", () => {
-      validateRawCoverageOwnerClaims([baseRequirement], fixtureRoot);
-    }, "unknown RAW requirement RAW-FIXTURE-MISSING");
+    assertThrowsWith(
+      "unknown requirement claim",
+      () => {
+        validateRawCoverageOwnerClaims([baseRequirement], fixtureRoot);
+      },
+      "unknown RAW requirement RAW-FIXTURE-MISSING",
+    );
   });
 
   withFixtureRoot((fixtureRoot) => {
@@ -756,9 +903,13 @@ function runSelfTests() {
       path.join(fixtureRoot, "packages/runtime/src/owner.mbt.test.ts"),
       "// RAW-COVERAGE: verification-owner:focused-mbt RAW-FIXTURE-001\n",
     );
-    assertThrowsWith("missing reverse qnt claim", () => {
-      validateRawCoverageOwnerClaims([baseRequirement], fixtureRoot);
-    }, "does not cite it with RAW-COVERAGE: qnt-owner");
+    assertThrowsWith(
+      "missing reverse qnt claim",
+      () => {
+        validateRawCoverageOwnerClaims([baseRequirement], fixtureRoot);
+      },
+      "does not cite it with RAW-COVERAGE: qnt-owner",
+    );
   });
 }
 
@@ -776,10 +927,16 @@ try {
     fs.writeFileSync(paths.matrix, `${JSON.stringify(matrix, null, 2)}\n`);
     fs.writeFileSync(paths.report, report);
   } else {
-    assertDeepEqual(readJson(paths.matrix), matrix, "plans/raw-coverage/matrix.json");
+    assertDeepEqual(
+      readJson(paths.matrix),
+      matrix,
+      "plans/raw-coverage/matrix.json",
+    );
     const existingReport = fs.readFileSync(paths.report, "utf8");
     if (existingReport !== report) {
-      fail("plans/raw-coverage/REPORT.md is stale. Run node scripts/raw-coverage-check.cjs --write to refresh it.");
+      fail(
+        "plans/raw-coverage/REPORT.md is stale. Run node scripts/raw-coverage-check.cjs --write to refresh it.",
+      );
     }
   }
 

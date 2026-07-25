@@ -61,19 +61,17 @@ import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 import { spellSlotInvocationRef } from "./unit-profile-admission-test-support.ts";
 
 const rayOfEnfeeblementUnitId = "ray_of_enfeeblement";
-const level2DamageSpellUnitIds = [
-  acidArrowUnitId,
-  dragonsBreathUnitId,
-  flameBladeUnitId,
-  flamingSphereUnitId,
-  heatMetalUnitId,
-  moonbeamUnitId,
-  rayOfEnfeeblementUnitId,
-  scorchingRayUnitId,
-  shatterUnitId,
-  spiritualWeaponUnitId,
-] as const;
-type Level2DamageSpellUnitId = (typeof level2DamageSpellUnitIds)[number];
+type Level2DamageSpellUnitId =
+  | typeof acidArrowUnitId
+  | typeof dragonsBreathUnitId
+  | typeof flameBladeUnitId
+  | typeof flamingSphereUnitId
+  | typeof heatMetalUnitId
+  | typeof moonbeamUnitId
+  | typeof rayOfEnfeeblementUnitId
+  | typeof scorchingRayUnitId
+  | typeof shatterUnitId
+  | typeof spiritualWeaponUnitId;
 type Level2DamageSpellSelectedIdentityResult =
   | "init"
   | "acidArrowAttackTiming"

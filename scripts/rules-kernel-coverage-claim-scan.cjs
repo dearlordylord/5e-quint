@@ -20,7 +20,10 @@ function scanClaimFiles(root) {
         }
         continue;
       }
-      if (!entry.isFile() || !/\.(md|qnt|ts|tsx|js|cjs|mjs)$/.test(entry.name)) {
+      if (
+        !entry.isFile() ||
+        !/\.(md|qnt|ts|tsx|js|cjs|mjs)$/.test(entry.name)
+      ) {
         continue;
       }
       const filePath = path.join(dirPath, entry.name);

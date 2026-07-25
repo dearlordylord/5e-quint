@@ -268,10 +268,9 @@ describe("Surface authored string role traversal", () => {
   it("matches refinement-sensitive union reachability", () => {
     const schema = Schema.Union(
       Schema.Struct({
-        text: surfaceSchemaRole(
-          Schema.String.pipe(Schema.minLength(2)),
-          { category: "prose" },
-        ),
+        text: surfaceSchemaRole(Schema.String.pipe(Schema.minLength(2)), {
+          category: "prose",
+        }),
       }),
       Schema.Struct({
         text: surfaceSchemaRole(Schema.String, {
@@ -382,9 +381,7 @@ describe("Surface authored string role traversal", () => {
   });
 
   it("keeps recursive competing branches decoder-compatible", () => {
-    let proseRecursive: Schema.Schema.Any;
-    let identityRecursive: Schema.Schema.Any;
-    proseRecursive = Schema.suspend(() =>
+    const proseRecursive: Schema.Schema.Any = Schema.suspend(() =>
       Schema.Union(
         Schema.Struct({
           kind: Schema.Literal("leaf"),
@@ -396,7 +393,7 @@ describe("Surface authored string role traversal", () => {
         }),
       ),
     );
-    identityRecursive = Schema.suspend(() =>
+    const identityRecursive: Schema.Schema.Any = Schema.suspend(() =>
       Schema.Union(
         Schema.Struct({
           kind: Schema.Literal("leaf"),
@@ -459,9 +456,9 @@ describe("Surface authored string role traversal", () => {
         encode: (value) => value.text,
       },
     );
-    expect(() => traversal.walkSchemaShape(schema.ast, "Synthetic", () => {})).toThrow(
-      /no role/,
-    );
+    expect(() =>
+      traversal.walkSchemaShape(schema.ast, "Synthetic", () => {}),
+    ).toThrow(/no role/);
   });
 
   it("selects competing transformation unions by decoded shape", () => {

@@ -3813,9 +3813,8 @@ function surfaceReadIssueCause(
 
 function noUnprojectedSurfaceReadIssueFields(
   fields: Readonly<Record<PropertyKey, never>>,
-): void {
-  void fields;
-}
+): void;
+function noUnprojectedSurfaceReadIssueFields(): void {}
 
 function unitForFinalization(
   unitLibrary: UnitCatalog,

@@ -115,26 +115,24 @@ const INVALID_KINDS = [
 type InvalidKind = (typeof INVALID_KINDS)[number];
 const INVALID_KIND_SET: ReadonlySet<string> = new Set(INVALID_KINDS);
 
-const LAST_RESULTS = [
-  "init",
-  "resolvedQuickenedRestoration",
-  "resolvedQuickenedSaveGatedCondition",
-  "resolvedQuickenedSaveGatedConditionImmunity",
-  "resolvedQuickenedDirectCondition",
-  "resolvedQuickenedRollModifier",
-  "resolvedQuickenedCreatureSizeChange",
-  "resolvedAfterMagicActionSpent",
-  "counteredQuickenedConcentration",
-  "counteredQuickenedNonConcentrationWithPriorConcentration",
-  "resolvedQuickenedConcentrationAfterCounterspellDeclined",
-  "resolvedQuickenedConcentrationAfterCounterspellFailed",
-  "rejectedUnaffordable",
-  "rejectedUnknownOption",
-  "rejectedUnsupportedSecondOption",
-  "rejectedOnePerSpell",
-  "rejectedPriorLevelOnePlusSpell",
-] as const;
-type LastResult = (typeof LAST_RESULTS)[number];
+type LastResult =
+  | "init"
+  | "resolvedQuickenedRestoration"
+  | "resolvedQuickenedSaveGatedCondition"
+  | "resolvedQuickenedSaveGatedConditionImmunity"
+  | "resolvedQuickenedDirectCondition"
+  | "resolvedQuickenedRollModifier"
+  | "resolvedQuickenedCreatureSizeChange"
+  | "resolvedAfterMagicActionSpent"
+  | "counteredQuickenedConcentration"
+  | "counteredQuickenedNonConcentrationWithPriorConcentration"
+  | "resolvedQuickenedConcentrationAfterCounterspellDeclined"
+  | "resolvedQuickenedConcentrationAfterCounterspellFailed"
+  | "rejectedUnaffordable"
+  | "rejectedUnknownOption"
+  | "rejectedUnsupportedSecondOption"
+  | "rejectedOnePerSpell"
+  | "rejectedPriorLevelOnePlusSpell";
 const LAST_RESULT_BY_SCENARIO_OUTCOME_TAG = {
   Init: "init",
   ResolvedQuickenedRestoration: "resolvedQuickenedRestoration",
@@ -203,8 +201,7 @@ const HIGH_SORCERY_POINTS = 5;
 const UNAFFORDABLE_SORCERY_POINTS = 1;
 const INITIAL_TARGET_HP = 4;
 const QUICKENED_HEALING_RESULT_HP = 14;
-const COUNTERSPELL_OUTCOMES = ["success", "decline", "failure"] as const;
-type CounterspellOutcome = (typeof COUNTERSPELL_OUTCOMES)[number];
+type CounterspellOutcome = "success" | "decline" | "failure";
 const CONCENTRATION_COUNTERSPELL_LAST_RESULT = {
   success: "counteredQuickenedConcentration",
   decline: "resolvedQuickenedConcentrationAfterCounterspellDeclined",

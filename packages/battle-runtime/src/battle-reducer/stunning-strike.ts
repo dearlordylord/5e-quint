@@ -99,7 +99,7 @@ export function resolveStunningStrikeAfterHit(input: {
   if (input.decision === undefined) {
     return {
       tag: "needsHoles",
-      holes: [stunningStrikeDecisionHole(hit)],
+      holes: [stunningStrikeDecisionHole()],
     };
   }
   if (input.decision.holeId !== STUNNING_STRIKE_DECISION_HOLE_ID) {
@@ -197,9 +197,7 @@ function resolveStunningStrikeAttempt(
   };
 }
 
-function stunningStrikeDecisionHole(
-  _hit: StunningStrikeHit,
-): BattleUnitFeatureDecisionHole {
+function stunningStrikeDecisionHole(): BattleUnitFeatureDecisionHole {
   return {
     kind: "unitFeatureDecision",
     holeId: STUNNING_STRIKE_DECISION_HOLE_ID,

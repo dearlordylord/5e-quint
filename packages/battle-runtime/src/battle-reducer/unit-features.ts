@@ -365,11 +365,7 @@ function magicActionHealingPoolActs(
           candidate.resourcePoolRef ===
           unitFeature.healingPool.spends.resourcePoolRef,
       );
-      const choices = magicActionHealingPoolTargetChoices(
-        state,
-        actor.combatantId,
-        unitFeature,
-      );
+      const choices = magicActionHealingPoolTargetChoices(state);
       return procedureRef !== undefined &&
         resource !== undefined &&
         resourceHasUsesRemaining(resource) &&
@@ -812,11 +808,7 @@ export function resolveUnitFeature(
     }
 
     if (unitFeature.kind === "paladinSacredWeapon") {
-      return resolvePaladinSacredWeaponDismissUnitFeature(
-        input,
-        actor,
-        unitFeature,
-      );
+      return resolvePaladinSacredWeaponDismissUnitFeature(input, actor);
     }
     if (unitFeature.kind === "rogueSteadyAim") {
       return resolveRogueSteadyAimUnitFeature(input, actor, unitFeature);
@@ -1007,7 +999,6 @@ export function resolveUnitFeatureHeldWeaponActivation(
 function resolvePaladinSacredWeaponDismissUnitFeature(
   input: UnitFeatureBattleResolutionInput,
   actor: CharacterBattleCreatureState,
-  _unitFeature: MechanicalUnitFeature<"paladinSacredWeapon">,
 ): BattleResolutionResult {
   if (input.fills.length > 0) {
     return invalidResult(
@@ -2334,7 +2325,7 @@ function magicActionHealingPoolDistributionHole(
       ),
       perTargetCap: unitFeature.healingPool.perTargetCap,
     },
-    choices: magicActionHealingPoolTargetChoices(state, actorId, unitFeature),
+    choices: magicActionHealingPoolTargetChoices(state),
   };
 }
 
@@ -2360,8 +2351,6 @@ function magicActionHealingPoolDistributionProtocolId(
 
 function magicActionHealingPoolTargetChoices(
   state: BattleState,
-  _actorId: CombatantId,
-  _unitFeature: MechanicalUnitFeature<"magicActionHealingPool">,
 ): readonly CombatantId[] {
   return [...state.combatants.values()]
     .filter(combatantIsBloodied)
@@ -4097,7 +4086,7 @@ export function resolveSelfBonusActionHealingUnitFeature(
     return invalidResult(
       input.state,
       "staleSubject",
-      selfBonusActionHealingStaleMessage(unitFeature),
+      selfBonusActionHealingStaleMessage(),
     );
   }
 
@@ -4118,7 +4107,7 @@ export function resolveSelfBonusActionHealingUnitFeature(
     return invalidResult(
       input.state,
       "staleSubject",
-      selfBonusActionHealingStaleMessage(unitFeature),
+      selfBonusActionHealingStaleMessage(),
     );
   }
 
@@ -4296,7 +4285,7 @@ export function selfBonusActionHealingRollFill(
   for (const fill of fills) {
     if (
       fill.kind === "rolledDice" &&
-      fill.holeId === selfBonusActionHealingRollHoleId(unitFeature)
+      fill.holeId === selfBonusActionHealingRollHoleId()
     ) {
       if (healingRoll !== undefined) {
         return {
@@ -4332,34 +4321,26 @@ export function selfBonusActionHealingRollHole(
 ): BattleUnitFeatureRollHole {
   return {
     kind: "rolledDice",
-    holeId: selfBonusActionHealingRollHoleId(unitFeature),
-    holeInstanceKey: selfBonusActionHealingRollHoleInstanceKey(unitFeature),
+    holeId: selfBonusActionHealingRollHoleId(),
+    holeInstanceKey: selfBonusActionHealingRollHoleInstanceKey(),
     label: `Self-healing (${unitFeature.dice}d${unitFeature.dieSize})`,
   };
 }
 
-export function selfBonusActionHealingStaleMessage(
-  _unitFeature: MechanicalUnitFeature<"selfBonusActionHealing">,
-): string {
+export function selfBonusActionHealingStaleMessage(): string {
   return "Self-healing is no longer available for the current actor.";
 }
 
-export function selfBonusActionHealingRollProtocolId(
-  _unitFeature: MechanicalUnitFeature<"selfBonusActionHealing">,
-): string {
+export function selfBonusActionHealingRollProtocolId(): string {
   return "battle:unit-feature:self-bonus-action-healing:healing-roll";
 }
 
-export function selfBonusActionHealingRollHoleId(
-  unitFeature: MechanicalUnitFeature<"selfBonusActionHealing">,
-): BattleHoleId {
-  return holeId(selfBonusActionHealingRollProtocolId(unitFeature));
+export function selfBonusActionHealingRollHoleId(): BattleHoleId {
+  return holeId(selfBonusActionHealingRollProtocolId());
 }
 
-export function selfBonusActionHealingRollHoleInstanceKey(
-  unitFeature: MechanicalUnitFeature<"selfBonusActionHealing">,
-): HoleInstanceKey {
-  return holeInstanceKey(selfBonusActionHealingRollProtocolId(unitFeature));
+export function selfBonusActionHealingRollHoleInstanceKey(): HoleInstanceKey {
+  return holeInstanceKey(selfBonusActionHealingRollProtocolId());
 }
 
 export function selfBonusActionHealingAmount(

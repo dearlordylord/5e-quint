@@ -202,7 +202,7 @@ function admitSpellCreatedHeldObjectAttack(
   spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly SpellCreatedHeldObjectAttackInvocation[] {
-  return spellCreatedHeldObjectEffectsForSpell(ctx, spell).flatMap(
+  return spellCreatedHeldObjectEffectsForSpell(ctx).flatMap(
     (effect): readonly SpellCreatedHeldObjectAttackInvocation[] =>
       effect.objectState.kind === "held"
         ? [
@@ -231,7 +231,7 @@ function admitSpellCreatedHeldObjectReEvoke(
   spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly SpellCreatedHeldObjectReEvokeInvocation[] {
-  return spellCreatedHeldObjectEffectsForSpell(ctx, spell).flatMap(
+  return spellCreatedHeldObjectEffectsForSpell(ctx).flatMap(
     (effect): readonly SpellCreatedHeldObjectReEvokeInvocation[] =>
       effect.objectState.kind === "notHeld"
         ? [
@@ -254,7 +254,6 @@ function admitSpellCreatedHeldObjectReEvoke(
 
 function spellCreatedHeldObjectEffectsForSpell(
   ctx: SpellAdmissionContext,
-  _spell: BattleSpellAdmissionSource,
 ): readonly SpellCreatedHeldObjectActiveEffect[] {
   const selectedExecutionRefs = new Set(
     characterSpellProcedureRefsForProcedure(

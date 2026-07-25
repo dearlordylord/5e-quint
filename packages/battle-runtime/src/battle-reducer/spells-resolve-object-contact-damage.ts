@@ -1166,7 +1166,10 @@ function objectContactSavingThrowOutcomeHoleKey(input: {
 }
 
 function objectContactSavingThrowFillValidation(input: {
-  readonly fill: Extract<OkSpellFillSet["objectContactSavingThrowOutcome"], {}>;
+  readonly fill: Extract<
+    OkSpellFillSet["objectContactSavingThrowOutcome"],
+    object
+  >;
   readonly hole: BattleObjectContactSavingThrowOutcomeHole;
 }): string | null {
   if (input.fill.holeId !== input.hole.holeId) {
@@ -1219,7 +1222,7 @@ function objectDropResolutionHoleKey(input: {
 }
 
 function objectDropResolutionFillValidation(input: {
-  readonly fill: Extract<OkSpellFillSet["objectDropResolution"], {}>;
+  readonly fill: Extract<OkSpellFillSet["objectDropResolution"], object>;
   readonly hole: BattleObjectDropResolutionHole;
 }): string | null {
   if (input.fill.holeId !== input.hole.holeId) {

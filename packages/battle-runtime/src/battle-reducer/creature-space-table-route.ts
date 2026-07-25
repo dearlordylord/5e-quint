@@ -4,20 +4,12 @@ import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import type { BattleCreatureSpaceTraversalMovementFact } from "../battle-state-execution.ts";
 import type { BattleTablePositionId, CombatantId } from "../identity.ts";
 
-const BATTLE_CREATURE_SPACE_SIZE_RELATIONS_TO_MOVER = [
-  "larger",
-  "notLarger",
-] as const;
-export type BattleCreatureSpaceSizeRelationToMover =
-  (typeof BATTLE_CREATURE_SPACE_SIZE_RELATIONS_TO_MOVER)[number];
+export type BattleCreatureSpaceSizeRelationToMover = "larger" | "notLarger";
 
-const BATTLE_CREATURE_SPACE_TABLE_ROUTE_DERIVATION_INVALID_REASONS = [
-  "duplicateCreatureFootprint",
-  "occupiedRouteIncludesMoverFootprint",
-  "occupiedRouteCreatureIsNotLarger",
-] as const;
 export type BattleCreatureSpaceTableRouteDerivationInvalidReason =
-  (typeof BATTLE_CREATURE_SPACE_TABLE_ROUTE_DERIVATION_INVALID_REASONS)[number];
+  | "duplicateCreatureFootprint"
+  | "occupiedRouteIncludesMoverFootprint"
+  | "occupiedRouteCreatureIsNotLarger";
 
 type OccupiedCreatureSpaceWitness =
   BattleCreatureSpaceTraversalMovementFact["occupiedSpaces"][number];

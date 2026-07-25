@@ -226,25 +226,19 @@ const lightUnitId = "light";
 const produceFlameUnitId = "produce_flame";
 const thunderwaveUnitId = "thunderwave";
 const starryWispUnitId = "starry_wisp";
-const level1SpatialWitnessSelectedUnitIds = [
-  dancingLightsUnitId,
-  faerieFireUnitId,
-  featherFallUnitId,
-  fogCloudUnitId,
-  greaseUnitId,
-  jumpUnitId,
-  lightUnitId,
-  produceFlameUnitId,
-  thunderwaveUnitId,
-] as const;
 type Level1SpatialWitnessSelectedUnitId =
-  (typeof level1SpatialWitnessSelectedUnitIds)[number];
-const level1SpatialWitnessCatalogSpellIds = [
-  ...level1SpatialWitnessSelectedUnitIds,
-  starryWispUnitId,
-] as const;
+  | typeof dancingLightsUnitId
+  | typeof faerieFireUnitId
+  | typeof featherFallUnitId
+  | typeof fogCloudUnitId
+  | typeof greaseUnitId
+  | typeof jumpUnitId
+  | typeof lightUnitId
+  | typeof produceFlameUnitId
+  | typeof thunderwaveUnitId;
 type Level1SpatialWitnessCatalogSpellId =
-  (typeof level1SpatialWitnessCatalogSpellIds)[number];
+  | Level1SpatialWitnessSelectedUnitId
+  | typeof starryWispUnitId;
 type SelectedUnitIdentityReplaySequence = {
   readonly name: string;
   readonly actions: readonly Level1SpatialWitnessSelectedIdentityAction[];

@@ -1,5 +1,8 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
-import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
+import {
+  resolveBattleSubject,
+  type MembersOf,
+} from "./battle-runtime-test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-dragons-breath-granted-action
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION
@@ -72,8 +75,10 @@ import {
 
 type DragonsBreathTurnRole = "caster" | "target";
 type DragonsBreathSlotLevel = 2 | 3;
-type DragonsBreathLegalDamageType =
-  (typeof DRAGONS_BREATH_DAMAGE_TYPES)[number];
+type DragonsBreathLegalDamageType = MembersOf<
+  DamageType,
+  "acid" | "cold" | "fire" | "lightning" | "poison"
+>;
 type DragonsBreathDamageType = DragonsBreathLegalDamageType | "none";
 type DragonsBreathSaveOutcome = "none" | "success" | "failure";
 type DragonsBreathHole =
@@ -136,14 +141,6 @@ type DragonsBreathEffect = Extract<
   BattleActiveEffect,
   { readonly kind: "dragonsBreath" }
 >;
-
-const DRAGONS_BREATH_DAMAGE_TYPES = [
-  "acid",
-  "cold",
-  "fire",
-  "lightning",
-  "poison",
-] as const satisfies ReadonlyArray<DamageType>;
 
 const DRAGONS_BREATH_DAMAGE_ROLLS = {
   2: [[2, 2, 2]],

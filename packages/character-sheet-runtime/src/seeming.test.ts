@@ -25,12 +25,7 @@ import {
   type CharacterSheetSeemingWillingTarget,
 } from "./sheet-types.ts";
 
-const seemingSelectedIdentityDriverSchema = {
-  doCastSeeming: {},
-} as const;
-
-type SeemingSelectedIdentityDriverAction =
-  keyof typeof seemingSelectedIdentityDriverSchema;
+type SeemingSelectedIdentityDriverAction = "doCastSeeming";
 
 type SeemingSelectedIdentityProjection = {
   readonly spellId: string;

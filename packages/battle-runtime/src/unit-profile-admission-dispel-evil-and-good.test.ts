@@ -111,9 +111,7 @@ describe("L19E-02 Dispel Evil and Good creature-type protection subset", () => {
       resolveBattleSubject({
         state: undeadTurn.state,
         subject: undeadAttack.subject,
-        fills: [
-          attackTargetFill(undeadTarget, undeadId, spellCasterId, "Scimitar"),
-        ],
+        fills: [attackTargetFill(undeadTarget, undeadId, spellCasterId)],
       }),
       "attackRoll",
     );
@@ -148,12 +146,7 @@ describe("L19E-02 Dispel Evil and Good creature-type protection subset", () => {
         state: aberrationTurn.state,
         subject: aberrationAttack.subject,
         fills: [
-          attackTargetFill(
-            aberrationTarget,
-            aberrationId,
-            spellCasterId,
-            "Scimitar",
-          ),
+          attackTargetFill(aberrationTarget, aberrationId, spellCasterId),
         ],
       }),
       "attackRoll",

@@ -923,10 +923,7 @@ function arcaneRecoverySpellSlotRefund(input: {
     };
   });
   const ordinarySlotsByLevel = new Map(
-    ordinarySpellSlotStates(input.sheet).map((slot) => [
-      slot.spellLevel,
-      slot,
-    ]),
+    ordinarySpellSlotStates(input.sheet).map((slot) => [slot.spellLevel, slot]),
   );
   for (const [spellLevel, refundCount] of refundByLevel.entries()) {
     const ordinarySlot = ordinarySlotsByLevel.get(spellLevel);

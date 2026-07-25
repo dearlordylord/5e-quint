@@ -55,9 +55,7 @@ export type CharacterBuildClassFeatureFactsProjection = {
   readonly sorcererFontOfMagic:
     | CharacterBuildSorcererFontOfMagicFacts
     | undefined;
-  readonly sorcererMetamagic:
-    | CharacterBuildSorcererMetamagicFacts
-    | undefined;
+  readonly sorcererMetamagic: CharacterBuildSorcererMetamagicFacts | undefined;
 };
 
 export type CharacterBuildClassFeatureFactsProjectionIssue =
@@ -66,17 +64,21 @@ export type CharacterBuildClassFeatureFactsProjectionIssue =
   | CharacterBuildSorcererFontOfMagicFactsIssue
   | CharacterBuildSorcererMetamagicFactsIssue;
 
-export type CharacterBuildClassFeatureFactsProjectionRoute<
-  RouteEvent,
-> = {
+export type CharacterBuildClassFeatureFactsProjectionRoute<RouteEvent> = {
   readonly build: CharacterBuild;
   readonly facts: CharacterBuildClassFeatureFactsProjection;
-  readonly route: readonly (RouteEvent | CharacterCreationBuildProjectionRouteEvent)[];
+  readonly route: readonly (
+    | RouteEvent
+    | CharacterCreationBuildProjectionRouteEvent
+  )[];
 };
 
 export type CharacterBuildProjectionRoute<RouteEvent> = {
   readonly build: CharacterBuild;
-  readonly route: readonly (RouteEvent | CharacterCreationBuildProjectionRouteEvent)[];
+  readonly route: readonly (
+    | RouteEvent
+    | CharacterCreationBuildProjectionRouteEvent
+  )[];
 };
 
 export function characterBuildProjectionWithRoute<RouteEvent>(input: {
@@ -89,20 +91,19 @@ export function characterBuildProjectionWithRoute<RouteEvent>(input: {
   };
 }
 
-export function characterBuildClassFeatureFactsProjectionWithRoute<RouteEvent>(
-  input: {
-    readonly build: CharacterBuild;
-    readonly unitLibrary: UnitCatalog;
-    readonly route: readonly RouteEvent[];
-  },
-): Either.Either<
+export function characterBuildClassFeatureFactsProjectionWithRoute<
+  RouteEvent,
+>(input: {
+  readonly build: CharacterBuild;
+  readonly unitLibrary: UnitCatalog;
+  readonly route: readonly RouteEvent[];
+}): Either.Either<
   CharacterBuildClassFeatureFactsProjectionRoute<RouteEvent>,
   CharacterBuildClassFeatureFactsProjectionIssue
 > {
   const monksFocus = characterBuildMonksFocusFacts(input);
   if (Either.isLeft(monksFocus)) return Either.left(monksFocus.left);
-  const monkUncannyMetabolism =
-    characterBuildMonkUncannyMetabolismFacts(input);
+  const monkUncannyMetabolism = characterBuildMonkUncannyMetabolismFacts(input);
   if (Either.isLeft(monkUncannyMetabolism)) {
     return Either.left(monkUncannyMetabolism.left);
   }

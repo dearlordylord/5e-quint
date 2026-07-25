@@ -207,11 +207,9 @@ function snapshotOriginMechanicalProjection(
   origin: BattleCreatureSnapshot["origin"],
 ) {
   if (origin.kind === "character") {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { characterId: _characterId, ...rest } = origin;
     return rest;
   }
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { statBlockId: _statBlockId, ...rest } = origin;
   return rest;
 }

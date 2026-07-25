@@ -1,4 +1,7 @@
-import type { ActivationResource, UnitRecord } from "@dnd/surface/surface/types";
+import type {
+  ActivationResource,
+  UnitRecord,
+} from "@dnd/surface/surface/types";
 
 export const ZERO_HIT_POINT_REPLACEMENT_RESOURCE = {
   kind: "use_count",

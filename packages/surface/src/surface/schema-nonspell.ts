@@ -692,17 +692,17 @@ export const FeatureChoiceMechanicsSchema = Schema.Union(
   }),
 );
 
-const MetamagicChoiceLevelSchema = Schema.Struct({
-  atLevel: PositiveIntegerSchema,
-  total: PositiveIntegerSchema,
-});
+type MetamagicChoiceLevelSchema = Schema.Struct<{
+  atLevel: typeof PositiveIntegerSchema;
+  total: typeof PositiveIntegerSchema;
+}>;
 
 const METAMAGIC_CHOICE_LEVELS = [
   { atLevel: 2, total: 2 },
   { atLevel: 10, total: 4 },
   { atLevel: 17, total: 6 },
 ] as const satisfies ReadonlyArray<
-  Schema.Schema.Type<typeof MetamagicChoiceLevelSchema>
+  Schema.Schema.Type<MetamagicChoiceLevelSchema>
 >;
 
 const metamagicChoiceCountMatchesSorcererTable = (

@@ -83,24 +83,22 @@ const CHAINED_HOLE_NAMES = [
 
 const CHAINED_TARGET_LABELS = ["first", "second", "third"] as const;
 
-const CHAINED_LAST_RESULTS = [
-  "init",
-  "awaitingDamageType",
-  "awaitingInitialTarget",
-  "awaitingStep0Attack",
-  "awaitingStep0Damage",
-  "step0NoLeapComplete",
-  "awaitingFirstLeapTarget",
-  "awaitingStep1Attack",
-  "awaitingStep1Damage",
-  "slot1LeapLimitComplete",
-  "awaitingSecondLeapTarget",
-] as const;
-
 type ChainedDamageType = (typeof CHAINED_DAMAGE_TYPES)[number];
 type ChainedDamageTypeState = ChainedDamageType | "none";
 type ChainedHole = (typeof CHAINED_HOLE_NAMES)[number];
-type ChainedLastResult = (typeof CHAINED_LAST_RESULTS)[number];
+
+type ChainedLastResult =
+  | "init"
+  | "awaitingDamageType"
+  | "awaitingInitialTarget"
+  | "awaitingStep0Attack"
+  | "awaitingStep0Damage"
+  | "step0NoLeapComplete"
+  | "awaitingFirstLeapTarget"
+  | "awaitingStep1Attack"
+  | "awaitingStep1Damage"
+  | "slot1LeapLimitComplete"
+  | "awaitingSecondLeapTarget";
 const CHAINED_ATTACK_SEQUENCE_SCENARIO_OUTCOME_BY_TAG: Readonly<
   Record<string, ChainedLastResult>
 > = {

@@ -1263,12 +1263,7 @@ function resolveAttackHitHp(
     resolveBattleSubject({ state, subject, fills: [] }),
     "targetChoice",
   );
-  const targetFill = attackTargetFill(
-    target,
-    spellCasterId,
-    spellTargetId,
-    attackName,
-  );
+  const targetFill = attackTargetFill(target, spellCasterId, spellTargetId);
   const roll = requireResultHole(
     resolveBattleSubject({ state, subject, fills: [targetFill] }),
     "attackRoll",

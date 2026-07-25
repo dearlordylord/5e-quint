@@ -26,12 +26,7 @@ import {
   type CharacterSheetDreamTarget,
 } from "./sheet-types.ts";
 
-const dreamSelectedIdentityDriverSchema = {
-  doCastDream: {},
-} as const;
-
-type DreamSelectedIdentityDriverAction =
-  keyof typeof dreamSelectedIdentityDriverSchema;
+type DreamSelectedIdentityDriverAction = "doCastDream";
 
 type DreamSelectedIdentityProjection = {
   readonly spellId: string;

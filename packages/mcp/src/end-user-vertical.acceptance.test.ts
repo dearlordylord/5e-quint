@@ -1862,9 +1862,9 @@ type BattleActView = {
 
 type BattleSubjectView =
   | BoundAttackSubjectView
-  | ReturnType<typeof cantripSubject>
-  | ReturnType<typeof spellSlotSubject>
-  | ReturnType<typeof unitFeatureSubject>;
+  | CantripSubject
+  | SpellSlotSubject
+  | UnitFeatureSubject;
 
 type BoundAttackSubjectView = {
   readonly tag: "action";
@@ -2303,45 +2303,38 @@ function endTurn(
   });
 }
 
-function cantripSubject(actorId: string, spellId: string, procedure: string) {
-  return {
-    tag: "actionSpell",
-    actorId,
-    invocation: { tag: "cantrip", spellId, procedure },
-    mode: { tag: "cast" },
-  };
-}
+type CantripSubject = {
+  tag: "actionSpell";
+  actorId: string;
+  invocation: { tag: "cantrip"; spellId: string; procedure: string };
+  mode: { tag: "cast" };
+};
 
-function spellSlotSubject(
-  actorId: string,
-  spellId: string,
-  slotLevel: number,
-  procedure: string,
-) {
-  return {
-    tag: "actionSpell",
-    actorId,
-    invocation: {
-      tag: "spellSlot",
-      spellId,
-      slotLevel,
-      procedure,
-    },
-    mode: { tag: "cast" },
+type SpellSlotSubject = {
+  tag: "actionSpell";
+  actorId: string;
+  invocation: {
+    tag: "spellSlot";
+    spellId: string;
+    slotLevel: number;
+    procedure: string;
   };
-}
+  mode: { tag: "cast" };
+};
 
-function unitFeatureSubject(actorId: string, unitId: string) {
-  return { tag: "unitFeature", actorId, unitId };
-}
+type UnitFeatureSubject = {
+  tag: "unitFeature";
+  actorId: string;
+  unitId: string;
+};
 
 function fillBattleSubject(
   root: ReturnType<typeof createMcpCompositionRoot>,
   subject:
     | BoundAttackSubjectView
-    | ReturnType<typeof cantripSubject>
-    | ReturnType<typeof spellSlotSubject>
-    | ReturnType<typeof unitFeatureSubject>,
+    | CantripSubject
+    | SpellSlotSubject
+    | UnitFeatureSubject,
   fill: {
     readonly kind:
       | "targetChoice"

@@ -107,12 +107,8 @@ function failedSavingThrowRerollExecutionForTest(
   };
 }
 
-const indomitableSelectedIdentityDriverSchema = {
-  doResolveIndomitableFailedSavingThrowReroll: {},
-} as const;
-
 type IndomitableSelectedIdentityDriverAction =
-  keyof typeof indomitableSelectedIdentityDriverSchema;
+  "doResolveIndomitableFailedSavingThrowReroll";
 
 type IndomitableSelectedIdentityProjection = {
   readonly unitId: "fighter_indomitable";

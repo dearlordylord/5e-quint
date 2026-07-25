@@ -1,5 +1,8 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
-import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
+import {
+  resolveBattleSubject,
+  type MembersOf,
+} from "./battle-runtime-test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-dragons-breath-initial
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE
 // RAW trace:
@@ -66,8 +69,10 @@ import {
 } from "./unit-profile-admission-spell-fill-support.ts";
 
 type DragonsBreathTurnRole = "caster" | "target";
-type DragonsBreathLegalDamageType =
-  (typeof DRAGONS_BREATH_DAMAGE_TYPES)[number];
+type DragonsBreathLegalDamageType = MembersOf<
+  DamageType,
+  "acid" | "cold" | "fire" | "lightning" | "poison"
+>;
 type DragonsBreathDamageType = DragonsBreathLegalDamageType | "none";
 type DragonsBreathLastResult =
   | "init"
@@ -109,14 +114,6 @@ type DragonsBreathEffect = Extract<
 >;
 
 const DRAGONS_BREATH_DURATION_TICKS = 10;
-const DRAGONS_BREATH_DAMAGE_TYPES = [
-  "acid",
-  "cold",
-  "fire",
-  "lightning",
-  "poison",
-] as const satisfies ReadonlyArray<DamageType>;
-
 const driverSchema = {
   init: {},
   doCastDragonsBreath: {

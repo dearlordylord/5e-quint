@@ -68,12 +68,7 @@ import {
 } from "./index.ts";
 import { requireCombatant } from "./unit-profile-admission-creature-fixture-support.ts";
 
-const zeroHitPointMidResolutionScenarios = [
-  "init",
-  "spellAttackSequenceResolved",
-] as const;
-type ZeroHitPointMidResolutionScenario =
-  (typeof zeroHitPointMidResolutionScenarios)[number];
+type ZeroHitPointMidResolutionScenario = "init" | "spellAttackSequenceResolved";
 const zeroHitPointRouteSurfaceByTag = {
   FreshRouteSurface: "fresh",
   SpellAttackSequenceResolvedRouteSurface: "spellAttackSequenceResolved",

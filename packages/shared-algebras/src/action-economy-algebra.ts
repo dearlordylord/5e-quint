@@ -59,20 +59,10 @@ export type RuntimeActionResource =
       readonly sourceProcedureRef: BattleProcedureExecutionRef;
     };
 
-const ACTION_OR_BONUS_ACTION_EXCLUSION_CHOICES = [
-  "notChosen",
-  "action",
-  "bonusAction",
-] as const;
-const MOVEMENT_ACTION_BONUS_ACTION_EXCLUSION_CHOICES = [
-  "notChosen",
-  "movement",
-  "action",
-  "bonusAction",
-] as const;
-
 export type ActionOrBonusActionExclusionChoice =
-  (typeof ACTION_OR_BONUS_ACTION_EXCLUSION_CHOICES)[number];
+  | "notChosen"
+  | "action"
+  | "bonusAction";
 
 export type ActionOrBonusActionExclusion =
   | { readonly kind: "notRestricted" }
@@ -81,7 +71,10 @@ export type ActionOrBonusActionExclusion =
       readonly choice: ActionOrBonusActionExclusionChoice;
     };
 export type MovementActionBonusActionExclusionChoice =
-  (typeof MOVEMENT_ACTION_BONUS_ACTION_EXCLUSION_CHOICES)[number];
+  | "notChosen"
+  | "movement"
+  | "action"
+  | "bonusAction";
 export type MovementActionBonusActionExclusion =
   | { readonly kind: "notRestricted" }
   | {

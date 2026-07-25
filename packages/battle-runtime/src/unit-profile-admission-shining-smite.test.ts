@@ -55,12 +55,7 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
       resolveBattleSubject({ state, subject, fills: [] }),
       "targetChoice",
     );
-    const targetFill = attackTargetFill(
-      target,
-      spellCasterId,
-      spellTargetId,
-      "Longsword",
-    );
+    const targetFill = attackTargetFill(target, spellCasterId, spellTargetId);
     const roll = requireResultHole(
       resolveBattleSubject({ state, subject, fills: [targetFill] }),
       "attackRoll",
@@ -245,14 +240,7 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
       resolveBattleSubject({
         state: afterTargetTurn.state,
         subject: unarmedSubject,
-        fills: [
-          attackTargetFill(
-            unarmedTarget,
-            spellCasterId,
-            spellTargetId,
-            "Unarmed Strike",
-          ),
-        ],
+        fills: [attackTargetFill(unarmedTarget, spellCasterId, spellTargetId)],
       }),
       "attackRoll",
     );
@@ -263,19 +251,13 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
         state: afterTargetTurn.state,
         subject: unarmedSubject,
         fills: [
-          attackTargetFill(
-            unarmedTarget,
-            spellCasterId,
-            spellTargetId,
-            "Unarmed Strike",
-            [
-              {
-                kind: "attackAttackerCannotSeeTarget",
-                attackerId: spellCasterId,
-                targetId: spellTargetId,
-              },
-            ],
-          ),
+          attackTargetFill(unarmedTarget, spellCasterId, spellTargetId, [
+            {
+              kind: "attackAttackerCannotSeeTarget",
+              attackerId: spellCasterId,
+              targetId: spellTargetId,
+            },
+          ]),
         ],
       }),
       "attackRoll",
@@ -320,7 +302,6 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
       unarmedTarget,
       spellCasterId,
       spellTargetId,
-      "Unarmed Strike",
     );
     const unarmedRoll = requireResultHole(
       resolveBattleSubject({
@@ -382,7 +363,6 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
       rangedTarget,
       spellCasterId,
       spellTargetId,
-      "Shortbow",
     );
     const rangedRoll = requireResultHole(
       resolveBattleSubject({

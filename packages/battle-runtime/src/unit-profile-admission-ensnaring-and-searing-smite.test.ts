@@ -76,12 +76,7 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
       resolveBattleSubject({ state: state.state, subject, fills: [] }),
       "targetChoice",
     );
-    const targetFill = attackTargetFill(
-      target,
-      spellCasterId,
-      spellTargetId,
-      "Shortbow",
-    );
+    const targetFill = attackTargetFill(target, spellCasterId, spellTargetId);
     const roll = requireResultHole(
       resolveBattleSubject({
         state: state.state,
@@ -290,12 +285,7 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
       resolveBattleSubject({ state: state.state, subject, fills: [] }),
       "targetChoice",
     );
-    const targetFill = attackTargetFill(
-      target,
-      spellCasterId,
-      spellTargetId,
-      "Longsword",
-    );
+    const targetFill = attackTargetFill(target, spellCasterId, spellTargetId);
     const roll = requireResultHole(
       resolveBattleSubject({
         state: state.state,
@@ -581,12 +571,7 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
       resolveBattleSubject({ state: casterTurn.state, subject, fills: [] }),
       "targetChoice",
     );
-    const targetFill = attackTargetFill(
-      target,
-      spellCasterId,
-      spellTargetId,
-      "Shortbow",
-    );
+    const targetFill = attackTargetFill(target, spellCasterId, spellTargetId);
     const roll = requireResultHole(
       resolveBattleSubject({
         state: casterTurn.state,
@@ -724,12 +709,7 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
       resolveBattleSubject({ state: casterTurn.state, subject, fills: [] }),
       "targetChoice",
     );
-    const targetFill = attackTargetFill(
-      target,
-      spellCasterId,
-      spellTargetId,
-      "Shortbow",
-    );
+    const targetFill = attackTargetFill(target, spellCasterId, spellTargetId);
     const roll = requireResultHole(
       resolveBattleSubject({
         state: casterTurn.state,
@@ -898,12 +878,7 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
       resolveBattleSubject({ state: casterTurn.state, subject, fills: [] }),
       "targetChoice",
     );
-    const targetFill = attackTargetFill(
-      target,
-      spellCasterId,
-      spellTargetId,
-      "Shortbow",
-    );
+    const targetFill = attackTargetFill(target, spellCasterId, spellTargetId);
     const roll = requireResultHole(
       resolveBattleSubject({
         state: casterTurn.state,

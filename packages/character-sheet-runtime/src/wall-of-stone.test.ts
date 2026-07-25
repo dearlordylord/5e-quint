@@ -31,12 +31,7 @@ import {
   type CharacterSheetWallOfStoneShape,
 } from "./sheet-types.ts";
 
-const wallOfStoneSelectedIdentityDriverSchema = {
-  doCastWallOfStone: {},
-} as const;
-
-type WallOfStoneSelectedIdentityDriverAction =
-  keyof typeof wallOfStoneSelectedIdentityDriverSchema;
+type WallOfStoneSelectedIdentityDriverAction = "doCastWallOfStone";
 
 type WallOfStoneSelectedIdentityProjection = {
   readonly spellId: string;

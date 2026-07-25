@@ -50,6 +50,10 @@ export default [
       ...js.configs.recommended.languageOptions,
       globals: globals.node,
     },
+    rules: {
+      ...js.configs.recommended.rules,
+      "no-unused-vars": ["error", { ignoreRestSiblings: true }],
+    },
   },
   ...tseslint.configs.recommended.map((config) => ({
     ...config,
@@ -63,6 +67,10 @@ export default [
       },
     },
     rules: {
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        { ignoreRestSiblings: true },
+      ],
       "no-restricted-syntax": ["error", doubleAssertionSelector],
     },
   },

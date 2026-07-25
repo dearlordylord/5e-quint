@@ -567,9 +567,7 @@ function sacredWeaponAttackRoll(
     resolveBattleSubject({
       state,
       subject,
-      fills: [
-        attackTargetFill(target, paladinId, targetId, "Longsword (radiant)"),
-      ],
+      fills: [attackTargetFill(target, paladinId, targetId)],
     }),
     "attackRoll",
   );

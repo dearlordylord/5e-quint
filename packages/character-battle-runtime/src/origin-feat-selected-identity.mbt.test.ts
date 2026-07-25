@@ -48,17 +48,13 @@ import {
   type CharacterBattleRouteEvent,
 } from "./index.ts";
 
-const TASK_ID = "B7-FEAT-IDENTITY-BATCH";
 const ALERT_UNIT_ID = "alert";
 const CRIMINAL_BACKGROUND_UNIT_ID = "background_criminal";
 
-const originFeatSelectedIdentityResults = [
-  "init",
-  "criminal-alert-origin-feat",
-  "alert-initiative-handoff",
-] as const;
 type OriginFeatSelectedIdentityResult =
-  (typeof originFeatSelectedIdentityResults)[number];
+  | "init"
+  | "criminal-alert-origin-feat"
+  | "alert-initiative-handoff";
 type OriginFeatSelectedIdentityProjection = {
   readonly outcome: OriginFeatSelectedIdentityResult;
   readonly originFeatUnitId: typeof ALERT_UNIT_ID | "none";
@@ -75,7 +71,7 @@ type SelectedUnitIdentityReplaySequence = {
   readonly expected: OriginFeatSelectedIdentityProjection;
 };
 type SelectedUnitIdentityReplay = {
-  readonly taskId: typeof TASK_ID;
+  readonly taskId: "B7-FEAT-IDENTITY-BATCH";
   readonly unitId: typeof ALERT_UNIT_ID;
   readonly actions: readonly OriginFeatSelectedIdentityDriverAction[];
   readonly sequences: readonly SelectedUnitIdentityReplaySequence[];

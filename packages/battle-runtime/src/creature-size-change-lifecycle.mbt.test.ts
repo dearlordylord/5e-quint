@@ -88,18 +88,16 @@ const ROLL_MODES = ["normal", "advantage", "disadvantage"] as const;
 type RollMode = (typeof ROLL_MODES)[number];
 const ROLL_MODE_SET: ReadonlySet<string> = new Set(ROLL_MODES);
 
-const LAST_RESULTS = [
-  "init",
-  "needsHoles",
-  "unwillingSaveSucceeded",
-  "unwillingSaveFailed",
-  "willingEnlarge",
-  "willingReduce",
-  "attackDamageAdjusted",
-  "concentrationBroken",
-  "durationExpired",
-] as const;
-type LastResult = (typeof LAST_RESULTS)[number];
+type LastResult =
+  | "init"
+  | "needsHoles"
+  | "unwillingSaveSucceeded"
+  | "unwillingSaveFailed"
+  | "willingEnlarge"
+  | "willingReduce"
+  | "attackDamageAdjusted"
+  | "concentrationBroken"
+  | "durationExpired";
 const CREATURE_SIZE_CHANGE_LIFECYCLE_SCENARIO_OUTCOME_BY_TAG: Readonly<
   Record<string, LastResult>
 > = {
@@ -441,12 +439,7 @@ function resolveAffectedWeaponHitDamage(
     resolveBattleSubject({ state: readyState, subject, fills: [] }),
     "targetChoice",
   );
-  const targetFill = attackTargetFill(
-    target,
-    spellTargetId,
-    spellCasterId,
-    "Longsword",
-  );
+  const targetFill = attackTargetFill(target, spellTargetId, spellCasterId);
   const roll = requireResultHole(
     resolveBattleSubject({ state: readyState, subject, fills: [targetFill] }),
     "attackRoll",

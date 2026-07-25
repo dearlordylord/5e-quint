@@ -49,20 +49,12 @@ import {
 } from "./battle-runtime-test-support.ts";
 import type { BattleResolutionResult } from "./index.ts";
 
-const sizeGatedConditionRiderHoles = [
-  "TargetChoice",
-  "AttackRoll",
-  "DamageRoll",
-] as const;
-type SizeGatedConditionRiderHole =
-  (typeof sizeGatedConditionRiderHoles)[number];
+type SizeGatedConditionRiderHole = "TargetChoice" | "AttackRoll" | "DamageRoll";
 
-const targetSizeGates = [
-  "mediumOrSmaller",
-  "larger",
-  "mediumOrSmallerProneImmune",
-] as const;
-type TargetSizeGate = (typeof targetSizeGates)[number];
+type TargetSizeGate =
+  | "mediumOrSmaller"
+  | "larger"
+  | "mediumOrSmallerProneImmune";
 
 type SizeGatedConditionRiderProjection = {
   readonly targetHp: number;

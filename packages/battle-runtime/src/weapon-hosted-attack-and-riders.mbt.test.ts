@@ -733,7 +733,6 @@ function routeSpellHostedTargetChoice(): readonly ReducerRouteEvent[] {
     requireHole(damageTypeResult.holes, "targetChoice"),
     spellCasterId,
     spellTargetId,
-    "Dagger",
   );
   const result = requireNeedsHoles(
     resolveBattleSubject({
@@ -1143,12 +1142,7 @@ function fillTrueStrikeRadiantTarget(
   }
   const damageType = requireHole(state.holes, "damageTypeChoice");
   const target = requireHole(state.holes, "targetChoice");
-  const targetFill = attackTargetFill(
-    target,
-    spellCasterId,
-    spellTargetId,
-    "Dagger",
-  );
+  const targetFill = attackTargetFill(target, spellCasterId, spellTargetId);
   const damageTypeFill: Extract<
     BattleFill,
     { readonly kind: "damageTypeChoice" }
@@ -1344,7 +1338,6 @@ function fillWeaponTarget(
     requireHole(state.holes, "targetChoice"),
     spellCasterId,
     spellTargetId,
-    state.pending.attackName,
   );
   const attack = requireResultHole(
     resolveBattleSubject({

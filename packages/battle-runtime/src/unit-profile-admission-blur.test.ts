@@ -230,12 +230,7 @@ function attackTargetFillWithFacts(input: {
   readonly targetId: CombatantId;
   readonly extraFacts: readonly BattleTargetSpatialFact[];
 }): Extract<BattleFill, { readonly kind: "targetChoice" }> {
-  const base = attackTargetFill(
-    input.hole,
-    input.attackerId,
-    input.targetId,
-    "Scimitar",
-  );
+  const base = attackTargetFill(input.hole, input.attackerId, input.targetId);
   return {
     ...base,
     spatialFacts: [...(base.spatialFacts ?? []), ...input.extraFacts],

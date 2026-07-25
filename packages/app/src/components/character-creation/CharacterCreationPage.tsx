@@ -19,6 +19,10 @@ import {
 } from "#/components/character-creation/CharacterCreationStepContent.tsx"
 import { PageShell } from "#/components/PageShell.tsx"
 
+const PREVIOUS_STEP_OFFSET = -1
+const NEXT_STEP_OFFSET = 1
+type StepOffset = typeof PREVIOUS_STEP_OFFSET | typeof NEXT_STEP_OFFSET
+
 function currentStepIndex(step: StepId): number {
   return STEP_ORDER.indexOf(step)
 }
@@ -36,7 +40,7 @@ export function CharacterCreationPage() {
   const [lastSheetIssue, setLastSheetIssue] = useState<string | null>(null)
   const assessment = assessCharacterDraft(draft)
 
-  const goToStep = useCallback((offset: -1 | 1) => {
+  const goToStep = useCallback((offset: StepOffset) => {
     setCurrentStep((step) => {
       const nextIndex = currentStepIndex(step) + offset
       if (nextIndex < 0 || nextIndex >= STEP_ORDER.length) return step
@@ -50,8 +54,8 @@ export function CharacterCreationPage() {
         const tag = event.target.tagName
         if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || event.target.isContentEditable) return
       }
-      if (event.key === "ArrowLeft") goToStep(-1)
-      else if (event.key === "ArrowRight") goToStep(1)
+      if (event.key === "ArrowLeft") goToStep(PREVIOUS_STEP_OFFSET)
+      else if (event.key === "ArrowRight") goToStep(NEXT_STEP_OFFSET)
     }
     window.addEventListener("keydown", handleKey)
     return () => window.removeEventListener("keydown", handleKey)
@@ -229,7 +233,7 @@ export function CharacterCreationPage() {
                 aria-label="Previous step"
                 className="rounded-md border border-gray-700 px-4 py-2 text-sm text-gray-200 transition hover:border-amber-400 hover:text-amber-300 disabled:cursor-not-allowed disabled:opacity-40"
                 disabled={currentStep === "class"}
-                onClick={() => goToStep(-1)}
+                onClick={() => goToStep(PREVIOUS_STEP_OFFSET)}
                 type="button"
               >
                 <span aria-hidden="true">←</span> Previous
@@ -241,7 +245,7 @@ export function CharacterCreationPage() {
                 aria-label="Next step"
                 className="rounded-md border border-amber-500 px-4 py-2 text-sm text-amber-200 transition hover:bg-amber-500/10 disabled:cursor-not-allowed disabled:opacity-40"
                 disabled={currentStep === "review"}
-                onClick={() => goToStep(1)}
+                onClick={() => goToStep(NEXT_STEP_OFFSET)}
                 type="button"
               >
                 Next <span aria-hidden="true">→</span>

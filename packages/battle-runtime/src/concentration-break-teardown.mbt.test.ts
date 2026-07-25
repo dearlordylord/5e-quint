@@ -63,16 +63,13 @@ import {
   type BattleSubject,
 } from "./index.ts";
 
-const concentrationBreakTeardownScenarios = [
-  "init",
-  "concentrationSpellCast",
-  "damageSaveNeeded",
-  "damageFailedTeardownBeforeNextCommand",
-  "voluntaryEndTeardown",
-  "replacementTeardownBeforeNewEffect",
-] as const;
 type ConcentrationBreakTeardownScenario =
-  (typeof concentrationBreakTeardownScenarios)[number];
+  | "init"
+  | "concentrationSpellCast"
+  | "damageSaveNeeded"
+  | "damageFailedTeardownBeforeNextCommand"
+  | "voluntaryEndTeardown"
+  | "replacementTeardownBeforeNewEffect";
 
 const concentrationBreakTeardownScenarioByQuintTag = {
   Init: "init",
@@ -87,12 +84,9 @@ const concentrationBreakTeardownScenarioByTag: Readonly<
   Record<string, ConcentrationBreakTeardownScenario>
 > = concentrationBreakTeardownScenarioByQuintTag;
 
-const concentrationBreakTeardownHoles = [
-  "concentrationSavingThrow",
-  "concentrationBreakTeardown",
-] as const;
 type ConcentrationBreakTeardownHole =
-  (typeof concentrationBreakTeardownHoles)[number];
+  | "concentrationSavingThrow"
+  | "concentrationBreakTeardown";
 
 type ConcentrationBreakTeardownProjection = {
   readonly scenario: ConcentrationBreakTeardownScenario;
@@ -443,12 +437,7 @@ function damageRequestsConcentrationSave(
     }),
     "targetChoice",
   );
-  const targetFill = attackTargetFill(
-    target,
-    attackerId,
-    spellCasterId,
-    "Scimitar",
-  );
+  const targetFill = attackTargetFill(target, attackerId, spellCasterId);
   const attackRoll = requireResultHole(
     resolveBattleSubject({
       state: attackerTurn,

@@ -5725,16 +5725,19 @@ const BattleCreatureSnapshotCommonFields = {
   }),
 };
 
-const BattleCreatureSnapshotInvariantShapeSchema = Schema.Struct({
-  ...BattleCreatureSnapshotCommonFields,
-  origin: Schema.Union(
-    CharacterBattleCreatureOriginSnapshotSchema,
-    StatBlockBattleCreatureOriginSnapshotSchema,
-  ),
-});
+type BattleCreatureSnapshotInvariantShapeSchema = Schema.Struct<
+  typeof BattleCreatureSnapshotCommonFields & {
+    origin: Schema.Union<
+      [
+        typeof CharacterBattleCreatureOriginSnapshotSchema,
+        typeof StatBlockBattleCreatureOriginSnapshotSchema,
+      ]
+    >;
+  }
+>;
 
 type BattleCreatureSnapshotInvariantInput =
-  typeof BattleCreatureSnapshotInvariantShapeSchema.Type;
+  Schema.Schema.Type<BattleCreatureSnapshotInvariantShapeSchema>;
 
 function battleCreatureSnapshotInvariantsHold(
   snapshot: BattleCreatureSnapshotInvariantInput,
@@ -7554,13 +7557,14 @@ const BattleSnapshotCommonFields = {
   ),
 };
 
-const BattleSnapshotInvariantShapeSchema = Schema.Struct({
-  ...BattleSnapshotCommonFields,
-  combatants: Schema.Array(BattleCreatureSnapshotInvariantShapeSchema),
-});
+type BattleSnapshotInvariantShapeSchema = Schema.Struct<
+  typeof BattleSnapshotCommonFields & {
+    combatants: Schema.Array$<BattleCreatureSnapshotInvariantShapeSchema>;
+  }
+>;
 
 type BattleSnapshotInvariantInput =
-  typeof BattleSnapshotInvariantShapeSchema.Type;
+  Schema.Schema.Type<BattleSnapshotInvariantShapeSchema>;
 
 function battleSnapshotInvariantsHold(
   snapshot: BattleSnapshotInvariantInput,

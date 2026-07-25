@@ -101,7 +101,6 @@ describe("weapon-hosted reducer route call segments", () => {
       requireHole(damageTypeResult.holes, "targetChoice"),
       spellCasterId,
       spellTargetId,
-      "Dagger",
     );
     const targetResult = requireNeedsHoles(
       resolveBattleSubject({
@@ -310,7 +309,6 @@ describe("weapon-hosted reducer route call segments", () => {
       requireHole(quarterstaff.initialHoles, "targetChoice"),
       spellCasterId,
       spellTargetId,
-      "Quarterstaff (force)",
     );
     const quarterstaffTargetResult = requireNeedsHoles(
       resolveBattleSubject({
@@ -435,7 +433,6 @@ describe("weapon-hosted reducer route call segments", () => {
       requireHole(unarmed.initialHoles, "targetChoice"),
       spellCasterId,
       spellTargetId,
-      "Unarmed Strike",
     );
     const unarmedTargetResult = requireNeedsHoles(
       resolveBattleSubject({
@@ -526,7 +523,6 @@ describe("weapon-hosted reducer route call segments", () => {
       requireHole(targetHoleResult.holes, "targetChoice"),
       spellCasterId,
       spellTargetId,
-      "Longsword",
     );
     const longswordTargetResult = requireNeedsHoles(
       resolveBattleSubject({
@@ -640,7 +636,6 @@ describe("weapon-hosted reducer route call segments", () => {
       requireHole(unarmedAct.initialHoles, "targetChoice"),
       spellCasterId,
       spellTargetId,
-      "Unarmed Strike",
     );
     const unarmedTargetResult = requireNeedsHoles(
       resolveBattleSubject({
@@ -784,7 +779,6 @@ describe("weapon-hosted reducer route call segments", () => {
       requireHole(attack.initialHoles, "targetChoice"),
       spellCasterId,
       spellTargetId,
-      "Quarterstaff (force)",
     );
     const targetResult = requireNeedsHoles(
       resolveBattleSubject({

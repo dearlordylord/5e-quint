@@ -1840,7 +1840,7 @@ function qntRegistryExemptionMap(registryExemptions) {
   );
 }
 
-function validateQntRegistryExemption(exemption, index, rootPath) {
+function validateQntRegistryExemption(exemption, index) {
   const issues = [];
   const context = `qnt registry exemption ${index + 1}`;
   if (!isRecord(exemption)) return [`${context} must be an object.`];
@@ -1900,7 +1900,7 @@ function validateQntRegistryClosure(
         );
       }
     }
-    issues.push(...validateQntRegistryExemption(exemption, index, rootPath));
+    issues.push(...validateQntRegistryExemption(exemption, index));
   }
   for (const ownerPath of qntPaths) {
     if (

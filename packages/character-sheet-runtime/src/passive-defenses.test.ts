@@ -54,13 +54,9 @@ export const selfRestorationConditionCleanupTestName =
 export const empoweredEvocationDamageModifierProjectionTestName =
   "Empowered Evocation projects Intelligence modifier for Wizard Evocation spell damage";
 
-const passiveDefenseSelectedIdentityDriverSchema = {
-  doProjectDruidNaturesWard: {},
-  doSelectWarlockFiendishResilience: {},
-} as const;
-
 type PassiveDefenseSelectedIdentityDriverAction =
-  keyof typeof passiveDefenseSelectedIdentityDriverSchema;
+  | "doProjectDruidNaturesWard"
+  | "doSelectWarlockFiendishResilience";
 
 type PassiveDefenseSelectedIdentityProjection =
   | {

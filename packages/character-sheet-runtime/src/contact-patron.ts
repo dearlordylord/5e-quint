@@ -116,7 +116,8 @@ function contactPatronFreeCastResource(input: {
   if (Either.isLeft(resources)) return Either.left(resources.left);
   const resource = resources.right.find(
     (candidate): candidate is ContactPatronFreeCastResource =>
-      candidate.tag === CONTACT_PATRON_CONTACT_OTHER_PLANE_FREE_CAST_RESOURCE_TAG,
+      candidate.tag ===
+      CONTACT_PATRON_CONTACT_OTHER_PLANE_FREE_CAST_RESOURCE_TAG,
   );
   if (resource === undefined) {
     return characterSheetIssue(
@@ -164,7 +165,8 @@ function contactPatronInvocationFromSpell(input: {
     spellId: input.spell.id,
     spellLevel: input.spell.mechanics.level,
     featureUnitId: input.featureUnitId,
-    freeCastResourceTag: CONTACT_PATRON_CONTACT_OTHER_PLANE_FREE_CAST_RESOURCE_TAG,
+    freeCastResourceTag:
+      CONTACT_PATRON_CONTACT_OTHER_PLANE_FREE_CAST_RESOURCE_TAG,
     spellSlotCost: { kind: "none" },
     preparationRequirement: "prepared",
     requiredSpellAccess: "class_feature",

@@ -831,11 +831,7 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
       needsSanctuary.tag === "needsHoles" ? needsSanctuary.holes : [],
       "sanctuaryInterdictionOutcome",
     );
-    const sanctuaryRetarget = sanctuaryRetargetFill(
-      sanctuaryHole,
-      fighterId,
-      "ray_of_frost",
-    );
+    const sanctuaryRetarget = sanctuaryRetargetFill(sanctuaryHole, fighterId);
     const awaitingAttackRoll = resolveBattleSubject({
       state,
       subject: act.subject,
@@ -894,12 +890,10 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
     const originalTarget = spellAttackSequenceTargetFill(
       targetHoles[0]!,
       skeletonId,
-      "eldritch_blast",
     );
     const secondTarget = spellAttackSequenceTargetFill(
       targetHoles[1]!,
       fighterId,
-      "eldritch_blast",
     );
     const needsSanctuary = resolveBattleSubject({
       state,
@@ -910,11 +904,7 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
       needsSanctuary.tag === "needsHoles" ? needsSanctuary.holes : [],
       "sanctuaryInterdictionOutcome",
     );
-    const sanctuaryRetarget = sanctuaryRetargetFill(
-      sanctuaryHole,
-      fighterId,
-      "eldritch_blast",
-    );
+    const sanctuaryRetarget = sanctuaryRetargetFill(sanctuaryHole, fighterId);
     const fills: BattleFill[] = [
       originalTarget,
       secondTarget,
@@ -1219,9 +1209,7 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
       "cure_wounds",
       "directHitPointRestoration",
     );
-    expect(
-      admittedSubtleProjection(state, cureWounds, "directHitPointRestoration"),
-    ).toEqual({
+    expect(admittedSubtleProjection(state, cureWounds)).toEqual({
       suppressedComponents: [{ kind: "verbal" }, { kind: "somatic" }],
       preservedComponents: [],
     });
@@ -1232,7 +1220,7 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
       "scalarBuff",
     );
     const falseLifeComponents = falseLife.spellRuleFacts.components;
-    expect(admittedSubtleProjection(state, falseLife, "scalarBuff")).toEqual({
+    expect(admittedSubtleProjection(state, falseLife)).toEqual({
       suppressedComponents: [
         { kind: "verbal" },
         { kind: "somatic" },
@@ -1247,9 +1235,7 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
       "chromatic_orb",
       "chainedSpellAttackDamage",
     );
-    expect(
-      admittedSubtleProjection(state, chromaticOrb, "chainedSpellAttackDamage"),
-    ).toEqual({
+    expect(admittedSubtleProjection(state, chromaticOrb)).toEqual({
       suppressedComponents: [{ kind: "verbal" }, { kind: "somatic" }],
       preservedComponents: [
         {
@@ -1264,13 +1250,7 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
       "protection_from_evil_and_good",
       "creatureTypeProtection",
     );
-    expect(
-      admittedSubtleProjection(
-        state,
-        protectionFromEvilAndGood,
-        "creatureTypeProtection",
-      ),
-    ).toEqual({
+    expect(admittedSubtleProjection(state, protectionFromEvilAndGood)).toEqual({
       suppressedComponents: [{ kind: "verbal" }, { kind: "somatic" }],
       preservedComponents: [
         {
@@ -1299,9 +1279,7 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
         { effectKind: SUBTLE_METAMAGIC_EFFECT_KIND },
       ]),
     ).toEqual([]);
-    expect(
-      admittedSubtleProjection(state, cureWounds, "directHitPointRestoration"),
-    ).toEqual({
+    expect(admittedSubtleProjection(state, cureWounds)).toEqual({
       suppressedComponents: [{ kind: "verbal" }, { kind: "somatic" }],
       preservedComponents: [],
     });
@@ -2175,9 +2153,7 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
     const act = actionScorchingRayAct(session);
     const fills: BattleFill[] = [];
     for (const target of targetChoiceHoles(act.initialHoles)) {
-      fills.push(
-        spellAttackSequenceTargetFill(target, skeletonId, "scorching_ray"),
-      );
+      fills.push(spellAttackSequenceTargetFill(target, skeletonId));
     }
     const attack = nextSpellHole(state, act.subject, fills, "attackRoll");
     const attackRoll = attackRollFill(attack, { total: 15, naturalD20: 10 });
@@ -2558,9 +2534,7 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
     const act = actionScorchingRayAct(session);
     const fills: BattleFill[] = [];
     for (const target of targetChoiceHoles(act.initialHoles)) {
-      fills.push(
-        spellAttackSequenceTargetFill(target, skeletonId, "scorching_ray"),
-      );
+      fills.push(spellAttackSequenceTargetFill(target, skeletonId));
     }
     const attack = nextSpellHole(state, act.subject, fills, "attackRoll");
 
@@ -3588,7 +3562,6 @@ function supportedInvocationFor(
 function admittedSubtleProjection(
   state: BattleState,
   invocation: ReturnType<typeof supportedSpellActs>[number],
-  _procedure: SpellSlotInvocationRefProcedure,
 ) {
   if (invocation.resource.tag !== "spellSlot") {
     throw new Error("Expected Spell Slot invocation.");
@@ -3687,7 +3660,6 @@ function withActiveEffect(
 function sanctuaryRetargetFill(
   hole: BattleHole,
   targetId: ReturnType<typeof combatantId>,
-  _spellId: "eldritch_blast" | "ray_of_frost",
 ): Extract<BattleFill, { readonly kind: "sanctuaryInterdictionOutcome" }> {
   if (hole.kind !== "sanctuaryInterdictionOutcome") {
     throw new Error("Expected Sanctuary interdiction outcome hole.");
@@ -4668,16 +4640,8 @@ function resolveQuickenedEldritchBlast(
   const state = session.state;
   const act = quickenedEldritchBlastAct(session);
   const targets = targetChoiceHoles(act.initialHoles);
-  const firstTarget = spellAttackSequenceTargetFill(
-    targets[0]!,
-    skeletonId,
-    "eldritch_blast",
-  );
-  const secondTarget = spellAttackSequenceTargetFill(
-    targets[1]!,
-    skeletonId,
-    "eldritch_blast",
-  );
+  const firstTarget = spellAttackSequenceTargetFill(targets[0]!, skeletonId);
+  const secondTarget = spellAttackSequenceTargetFill(targets[1]!, skeletonId);
   const fills: BattleFill[] = [firstTarget, secondTarget];
 
   const firstAttack = nextSpellHole(state, act.subject, fills, "attackRoll");
@@ -4702,7 +4666,7 @@ function resolveQuickenedScorchingRay(
 ): BattleState {
   const state = session.state;
   const fills: BattleFill[] = targetChoiceHoles(act.initialHoles).map((hole) =>
-    spellAttackSequenceTargetFill(hole, skeletonId, "scorching_ray"),
+    spellAttackSequenceTargetFill(hole, skeletonId),
   );
 
   for (let rayIndex = 0; rayIndex < 3; rayIndex += 1) {
@@ -4724,7 +4688,6 @@ function resolveQuickenedScorchingRay(
 function spellAttackSequenceTargetFill(
   hole: BattleHole,
   targetId: ReturnType<typeof combatantId>,
-  _spellId: "eldritch_blast" | "scorching_ray",
 ): BattleFill {
   return targetFill(hole, targetId);
 }

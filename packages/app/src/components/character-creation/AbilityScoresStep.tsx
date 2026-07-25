@@ -87,10 +87,11 @@ export function AbilityScoresStep({
                   onChange={(event) => {
                     const raw = event.target.value
                     setScores((current) => {
-                      const next = { ...current }
-                      if (raw === "") delete next[ability]
-                      else next[ability] = Number(raw)
-                      return next
+                      if (raw !== "") {
+                        return { ...current, [ability]: Number(raw) }
+                      }
+                      const { [ability]: _removedScore, ...remainingScores } = current
+                      return remainingScores
                     })
                   }}
                   type="number"

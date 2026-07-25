@@ -29,12 +29,7 @@ import { characterSheetAntilifeShellBarrierId } from "./sheet-types.ts";
 import type { CharacterSheet } from "./index.ts";
 import { type CharacterSheetAntilifeShellBarrierPlacement } from "./sheet-types.ts";
 
-const antilifeShellSelectedIdentityDriverSchema = {
-  doCastAntilifeShell: {},
-} as const;
-
-type AntilifeShellSelectedIdentityDriverAction =
-  keyof typeof antilifeShellSelectedIdentityDriverSchema;
+type AntilifeShellSelectedIdentityDriverAction = "doCastAntilifeShell";
 
 type AntilifeShellSelectedIdentityProjection = {
   readonly spellId: string;

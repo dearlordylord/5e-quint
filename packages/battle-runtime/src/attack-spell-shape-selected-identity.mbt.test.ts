@@ -51,14 +51,12 @@ import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 
-const attackSpellShapeSpellIds = [
-  "fire_bolt",
-  "chill_touch",
-  "guiding_bolt",
-  "inflict_wounds",
-  "shocking_grasp",
-] as const;
-type AttackSpellShapeSpellId = (typeof attackSpellShapeSpellIds)[number];
+type AttackSpellShapeSpellId =
+  | "fire_bolt"
+  | "chill_touch"
+  | "guiding_bolt"
+  | "inflict_wounds"
+  | "shocking_grasp";
 type AttackSpellShapeActiveEffectKind =
   | "none"
   | "hitPointRegainPrevented"

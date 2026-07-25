@@ -84,23 +84,21 @@ const LEVITATE_CREATURE_HOLE_SET: ReadonlySet<string> = new Set(
   LEVITATE_CREATURE_HOLES,
 );
 
-const LAST_RESULTS = [
-  "init",
-  "needsSave",
-  "unwillingSaveSucceeded",
-  "unwillingSaveFailed",
-  "needsWillingInitialRise",
-  "willingLevitated",
-  "needsTargetMovement",
-  "missingWitnessRejected",
-  "targetMoved",
-  "needsCasterControl",
-  "outOfRangeRejected",
-  "casterControlled",
-  "concentrationBroken",
-  "durationExpired",
-] as const;
-type LastResult = (typeof LAST_RESULTS)[number];
+type LastResult =
+  | "init"
+  | "needsSave"
+  | "unwillingSaveSucceeded"
+  | "unwillingSaveFailed"
+  | "needsWillingInitialRise"
+  | "willingLevitated"
+  | "needsTargetMovement"
+  | "missingWitnessRejected"
+  | "targetMoved"
+  | "needsCasterControl"
+  | "outOfRangeRejected"
+  | "casterControlled"
+  | "concentrationBroken"
+  | "durationExpired";
 const LEVITATED_CREATURE_LIFECYCLE_SCENARIO_OUTCOME_BY_TAG: Readonly<
   Record<string, LastResult>
 > = {

@@ -58,15 +58,13 @@ import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import { knownWillingSpellTargetFill } from "./unit-profile-admission-spell-fill-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 
-const hasteLethargyScenarios = [
-  "init",
-  "concentrationEnded",
-  "durationExpired",
-  "recastReplacement",
-  "targetConcentrationBroken",
-  "targetTurnCleanupPreserved",
-] as const;
-type HasteLethargyScenario = (typeof hasteLethargyScenarios)[number];
+type HasteLethargyScenario =
+  | "init"
+  | "concentrationEnded"
+  | "durationExpired"
+  | "recastReplacement"
+  | "targetConcentrationBroken"
+  | "targetTurnCleanupPreserved";
 
 const hasteLethargyScenarioByQuintTag = {
   Init: "init",

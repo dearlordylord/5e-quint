@@ -46,7 +46,6 @@ import {
   type BattleState,
 } from "../../battle-state-execution.ts";
 import { snapshotBattle } from "../dispatcher.ts";
-import type { BattleSpellProcedureExecution } from "../../character-execution.ts";
 import { CombatantId } from "../../identity.ts";
 import {
   maybeOpenPostCastReadySpellCastWindow,
@@ -241,11 +240,7 @@ function afterHitTimedDamageAndSaveSpellProjection(
   };
 }
 
-function discoverAfterHitTimedDamageAndSaveCastAct(
-  _state: BattleState,
-  _actorId: CombatantId,
-  _invocation: BattleSpellProcedureExecution<AfterHitTimedDamageAndSaveInvocation>,
-): readonly BattleActDiscoveryCandidate[] {
+function discoverAfterHitTimedDamageAndSaveCastAct(): readonly BattleActDiscoveryCandidate[] {
   return [];
 }
 

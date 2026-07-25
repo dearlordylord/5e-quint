@@ -611,7 +611,6 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
       targetHole,
       spellCasterId,
       spellTargetId,
-      "Longsword",
     );
     const attackRollHole = requireResultHole(
       resolveBattleSubject({ state, subject, fills: [targetFill] }),

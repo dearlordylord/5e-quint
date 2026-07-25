@@ -72,23 +72,17 @@ import {
 } from "./index.ts";
 import type { UnitFeatureProcedureExecution } from "./character-execution-admission.ts";
 
-const turnBoundaryLifecycleScenarios = [
-  "init",
-  "targetStartTurnResolved",
-  "sourceNextTurnResolved",
-] as const;
 type TurnBoundaryLifecycleScenario =
-  (typeof turnBoundaryLifecycleScenarios)[number];
+  | "init"
+  | "targetStartTurnResolved"
+  | "sourceNextTurnResolved";
 
-const turnBoundaryActors = ["sourceTurn", "targetTurn"] as const;
-type TurnBoundaryActor = (typeof turnBoundaryActors)[number];
+type TurnBoundaryActor = "sourceTurn" | "targetTurn";
 
-const turnBoundaryHoleOrders = [
-  "noBoundaryHoles",
-  "turnStartDamageThenSave",
-  "turnEndDamageOnly",
-] as const;
-type TurnBoundaryHoleOrder = (typeof turnBoundaryHoleOrders)[number];
+type TurnBoundaryHoleOrder =
+  | "noBoundaryHoles"
+  | "turnStartDamageThenSave"
+  | "turnEndDamageOnly";
 
 const scenarioByQuintTag = {
   Init: "init",

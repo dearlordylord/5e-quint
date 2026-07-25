@@ -30,14 +30,11 @@ const exactDamageProjectionScenarios = [
 type ExactDamageProjectionScenario =
   (typeof exactDamageProjectionScenarios)[number];
 
-const damageTypes = ["acid", "cold", "fire", "force"] as const;
-type DamageType = (typeof damageTypes)[number];
+type DamageType = "acid" | "cold" | "fire" | "force";
 
-const saveSuccessDamagePolicies = [
-  "noDamageOnSuccessfulSave",
-  "halfDamageOnSuccessfulSave",
-] as const;
-type SaveSuccessDamagePolicy = (typeof saveSuccessDamagePolicies)[number];
+type SaveSuccessDamagePolicy =
+  | "noDamageOnSuccessfulSave"
+  | "halfDamageOnSuccessfulSave";
 
 type Projection = RuleCoreComponentRoutedProjection & {
   readonly scenario: ExactDamageProjectionScenario;

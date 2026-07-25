@@ -22,9 +22,7 @@ export function availableSpellSlotLevels(
   slots: readonly { readonly count: number; readonly spellLevel: number }[],
 ): ReadonlySet<number> {
   return new Set(
-    slots
-      .filter((slot) => slot.count > 0)
-      .map((slot) => slot.spellLevel),
+    slots.filter((slot) => slot.count > 0).map((slot) => slot.spellLevel),
   );
 }
 

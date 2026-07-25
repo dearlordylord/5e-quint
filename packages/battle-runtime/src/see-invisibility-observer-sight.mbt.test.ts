@@ -48,8 +48,7 @@ import {
   difficultyClass,
 } from "./unit-profile-admission-test-support.ts";
 
-const WITNESS_PLANES = ["material", "ethereal"] as const;
-type SeeInvisibilityWitnessPlane = (typeof WITNESS_PLANES)[number];
+type SeeInvisibilityWitnessPlane = "material" | "ethereal";
 
 type SeeInvisibilityObserverEffect =
   | { readonly tag: "absent" }

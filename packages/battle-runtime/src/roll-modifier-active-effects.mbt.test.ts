@@ -128,25 +128,23 @@ const ROLL_MODIFIER_HOLE_SET: ReadonlySet<string> = new Set(
   ROLL_MODIFIER_HOLES,
 );
 
-const LAST_RESULTS = [
-  "init",
-  "needsBaneSave",
-  "baneFailedTarget",
-  "blessTarget",
-  "needsGuidanceSkill",
-  "guidanceStealth",
-  "passWithoutTraceStealth",
-  "needsEnhanceAbility",
-  "enhanceDex",
-  "needsEnhanceTargetAbilities",
-  "enhancePerTarget",
-  "enthrallPerception",
-  "needsThaumaturgyCount",
-  "thaumaturgyBoomingVoice",
-  "thaumaturgyCancelled",
-  "concentrationBroken",
-] as const;
-type LastResult = (typeof LAST_RESULTS)[number];
+type LastResult =
+  | "init"
+  | "needsBaneSave"
+  | "baneFailedTarget"
+  | "blessTarget"
+  | "needsGuidanceSkill"
+  | "guidanceStealth"
+  | "passWithoutTraceStealth"
+  | "needsEnhanceAbility"
+  | "enhanceDex"
+  | "needsEnhanceTargetAbilities"
+  | "enhancePerTarget"
+  | "enthrallPerception"
+  | "needsThaumaturgyCount"
+  | "thaumaturgyBoomingVoice"
+  | "thaumaturgyCancelled"
+  | "concentrationBroken";
 const LAST_RESULT_BY_SCENARIO_OUTCOME_TAG = {
   Init: "init",
   NeedsBaneSave: "needsBaneSave",

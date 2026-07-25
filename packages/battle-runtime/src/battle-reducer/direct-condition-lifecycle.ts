@@ -25,13 +25,10 @@ import {
 
 const byTag = Match.discriminator("tag");
 
-const DIRECT_CONDITION_EARLY_END_TRIGGERS = [
-  "attackRoll",
-  "damage",
-  "spellCast",
-] as const;
 export type DirectConditionEarlyEndTrigger =
-  (typeof DIRECT_CONDITION_EARLY_END_TRIGGERS)[number];
+  | "attackRoll"
+  | "damage"
+  | "spellCast";
 
 export const DIRECT_CONDITION_MINIMUM_SLOT_LEVEL = 2;
 export const DIRECT_CONDITION_MAXIMUM_SLOT_LEVEL = 9;
@@ -156,7 +153,10 @@ export function beginDirectConditionLaterTurn(
 
 export function resolveDirectConditionEarlyEnd(
   state: DirectConditionLifecycleState,
-  _trigger: DirectConditionEarlyEndTrigger,
+  trigger: DirectConditionEarlyEndTrigger,
+): DirectConditionLifecycleState;
+export function resolveDirectConditionEarlyEnd(
+  state: DirectConditionLifecycleState,
 ): DirectConditionLifecycleState {
   return {
     ...state,

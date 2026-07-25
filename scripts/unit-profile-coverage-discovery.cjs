@@ -4,7 +4,7 @@ const { surfaceUnitKinds } = require("./unit-profile-coverage-config.cjs");
 const { fail, readJson } = require("./unit-profile-coverage-io.cjs");
 
 function hasExecutableMechanics(record) {
-  if (Boolean(record.mechanics)) return true;
+  if (record.mechanics) return true;
   return hasVariantMagicMechanics(record);
 }
 

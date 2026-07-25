@@ -69,17 +69,15 @@ const ATTACK_ROLL_MODES = ["normal", "advantage", "disadvantage"] as const;
 type AttackRollMode = (typeof ATTACK_ROLL_MODES)[number];
 const ATTACK_ROLL_MODE_SET: ReadonlySet<string> = new Set(ATTACK_ROLL_MODES);
 
-const LAST_RESULTS = [
-  "init",
-  "blurCast",
-  "blindsightBypass",
-  "truesightBypass",
-  "noBypass",
-  "otherAdvantage",
-  "noOtherAdvantage",
-  "concentrationBroken",
-] as const;
-type LastResult = (typeof LAST_RESULTS)[number];
+type LastResult =
+  | "init"
+  | "blurCast"
+  | "blindsightBypass"
+  | "truesightBypass"
+  | "noBypass"
+  | "otherAdvantage"
+  | "noOtherAdvantage"
+  | "concentrationBroken";
 const BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE_SCENARIO_OUTCOME_BY_TAG: Readonly<
   Record<string, LastResult>
 > = {
@@ -478,12 +476,7 @@ function attackTargetFillWithFacts(input: {
   readonly targetId: CombatantId;
   readonly extraFacts: readonly BattleTargetSpatialFact[];
 }): Extract<BattleFill, { readonly kind: "targetChoice" }> {
-  const base = attackTargetFill(
-    input.hole,
-    input.attackerId,
-    input.targetId,
-    "Scimitar",
-  );
+  const base = attackTargetFill(input.hole, input.attackerId, input.targetId);
   return {
     ...base,
     spatialFacts: [...(base.spatialFacts ?? []), ...input.extraFacts],

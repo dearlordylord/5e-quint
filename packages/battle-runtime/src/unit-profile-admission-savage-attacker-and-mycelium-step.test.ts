@@ -82,9 +82,7 @@ describe("QMBT31 deterministic Savage Attacker profile slice", () => {
       resolveBattleSubject({
         state,
         subject,
-        fills: [
-          attackTargetFill(target, spellCasterId, spellTargetId, "Longsword"),
-        ],
+        fills: [attackTargetFill(target, spellCasterId, spellTargetId)],
       }),
       "attackRoll",
     );
@@ -93,7 +91,7 @@ describe("QMBT31 deterministic Savage Attacker profile slice", () => {
         state,
         subject,
         fills: [
-          attackTargetFill(target, spellCasterId, spellTargetId, "Longsword"),
+          attackTargetFill(target, spellCasterId, spellTargetId),
           attackRollFill(roll, { total: 15, naturalD20: 10 }),
         ],
       }),
@@ -115,7 +113,7 @@ describe("QMBT31 deterministic Savage Attacker profile slice", () => {
       state,
       subject,
       fills: [
-        attackTargetFill(target, spellCasterId, spellTargetId, "Longsword"),
+        attackTargetFill(target, spellCasterId, spellTargetId),
         attackRollFill(roll, { total: 15, naturalD20: 10 }),
         damageRollFillWithGroups(damage, [[8]], undefined, {
           procedureRef: requireCharacterUnitProcedureRefForTest(
@@ -164,9 +162,7 @@ describe("QMBT31 deterministic Savage Attacker profile slice", () => {
       resolveBattleSubject({
         state,
         subject,
-        fills: [
-          attackTargetFill(target, spellCasterId, spellTargetId, "Longsword"),
-        ],
+        fills: [attackTargetFill(target, spellCasterId, spellTargetId)],
       }),
       "attackRoll",
     );
@@ -175,7 +171,7 @@ describe("QMBT31 deterministic Savage Attacker profile slice", () => {
         state,
         subject,
         fills: [
-          attackTargetFill(target, spellCasterId, spellTargetId, "Longsword"),
+          attackTargetFill(target, spellCasterId, spellTargetId),
           attackRollFill(roll, { total: 20, naturalD20: 20 }),
         ],
       }),
@@ -197,7 +193,7 @@ describe("QMBT31 deterministic Savage Attacker profile slice", () => {
       state,
       subject,
       fills: [
-        attackTargetFill(target, spellCasterId, spellTargetId, "Longsword"),
+        attackTargetFill(target, spellCasterId, spellTargetId),
         attackRollFill(roll, { total: 20, naturalD20: 20 }),
         damageRollFillWithGroups(damage, [[2, 3]], undefined, {
           procedureRef: requireCharacterUnitProcedureRefForTest(
@@ -258,9 +254,7 @@ describe("QMBT31 deterministic Savage Attacker profile slice", () => {
       resolveBattleSubject({
         state,
         subject,
-        fills: [
-          attackTargetFill(target, spellCasterId, spellTargetId, "Shortbow"),
-        ],
+        fills: [attackTargetFill(target, spellCasterId, spellTargetId)],
       }),
       "attackRoll",
     );
@@ -269,7 +263,7 @@ describe("QMBT31 deterministic Savage Attacker profile slice", () => {
         state,
         subject,
         fills: [
-          attackTargetFill(target, spellCasterId, spellTargetId, "Shortbow"),
+          attackTargetFill(target, spellCasterId, spellTargetId),
           attackRollFill(roll, {
             total: 15,
             naturalD20: 10,
@@ -307,7 +301,7 @@ describe("QMBT31 deterministic Savage Attacker profile slice", () => {
       state,
       subject,
       fills: [
-        attackTargetFill(target, spellCasterId, spellTargetId, "Shortbow"),
+        attackTargetFill(target, spellCasterId, spellTargetId),
         attackRollFill(roll, {
           total: 15,
           naturalD20: 10,
@@ -382,9 +376,7 @@ describe("QMBT31 deterministic Savage Attacker profile slice", () => {
       resolveBattleSubject({
         state: weaponState,
         subject,
-        fills: [
-          attackTargetFill(target, spellCasterId, spellTargetId, "Longsword"),
-        ],
+        fills: [attackTargetFill(target, spellCasterId, spellTargetId)],
       }),
       "attackRoll",
     );
@@ -393,7 +385,7 @@ describe("QMBT31 deterministic Savage Attacker profile slice", () => {
         state: weaponState,
         subject,
         fills: [
-          attackTargetFill(target, spellCasterId, spellTargetId, "Longsword"),
+          attackTargetFill(target, spellCasterId, spellTargetId),
           attackRollFill(roll, { total: 15, naturalD20: 10 }),
         ],
       }),
@@ -405,7 +397,7 @@ describe("QMBT31 deterministic Savage Attacker profile slice", () => {
         state: weaponState,
         subject,
         fills: [
-          attackTargetFill(target, spellCasterId, spellTargetId, "Longsword"),
+          attackTargetFill(target, spellCasterId, spellTargetId),
           attackRollFill(roll, { total: 1, naturalD20: 2 }),
           damageRollFillWithGroups(hitDamage, [[8]], undefined, {
             procedureRef: requireCharacterUnitProcedureRefForTest(
@@ -442,14 +434,7 @@ describe("QMBT31 deterministic Savage Attacker profile slice", () => {
       resolveBattleSubject({
         state: unarmedState,
         subject: unarmedSubject,
-        fills: [
-          attackTargetFill(
-            unarmedTarget,
-            spellCasterId,
-            spellTargetId,
-            "Unarmed Strike",
-          ),
-        ],
+        fills: [attackTargetFill(unarmedTarget, spellCasterId, spellTargetId)],
       }),
       "attackRoll",
     );
@@ -457,12 +442,7 @@ describe("QMBT31 deterministic Savage Attacker profile slice", () => {
       state: unarmedState,
       subject: unarmedSubject,
       fills: [
-        attackTargetFill(
-          unarmedTarget,
-          spellCasterId,
-          spellTargetId,
-          "Unarmed Strike",
-        ),
+        attackTargetFill(unarmedTarget, spellCasterId, spellTargetId),
         attackRollFill(unarmedRoll, { total: 15, naturalD20: 10 }),
       ],
     });
@@ -515,9 +495,7 @@ describe("QMBT31 deterministic Savage Attacker profile slice", () => {
       resolveBattleSubject({
         state,
         subject,
-        fills: [
-          attackTargetFill(target, spellCasterId, spellTargetId, "Longsword"),
-        ],
+        fills: [attackTargetFill(target, spellCasterId, spellTargetId)],
       }),
       "attackRoll",
     );
@@ -526,7 +504,7 @@ describe("QMBT31 deterministic Savage Attacker profile slice", () => {
         state,
         subject,
         fills: [
-          attackTargetFill(target, spellCasterId, spellTargetId, "Longsword"),
+          attackTargetFill(target, spellCasterId, spellTargetId),
           attackRollFill(roll, { total: 15, naturalD20: 10 }),
         ],
       }),

@@ -177,9 +177,7 @@ describe("SRDINV30C deterministic Protection from Evil and Good admission", () =
       resolveBattleSubject({
         state: undeadTurn.state,
         subject: undeadAttack.subject,
-        fills: [
-          attackTargetFill(undeadTarget, undeadId, spellTargetId, "Scimitar"),
-        ],
+        fills: [attackTargetFill(undeadTarget, undeadId, spellTargetId)],
       }),
       "attackRoll",
     );
@@ -210,14 +208,7 @@ describe("SRDINV30C deterministic Protection from Evil and Good admission", () =
       resolveBattleSubject({
         state: humanoidTurn.state,
         subject: humanoidAttack.subject,
-        fills: [
-          attackTargetFill(
-            humanoidTarget,
-            humanoidId,
-            spellTargetId,
-            "Scimitar",
-          ),
-        ],
+        fills: [attackTargetFill(humanoidTarget, humanoidId, spellTargetId)],
       }),
       "attackRoll",
     );

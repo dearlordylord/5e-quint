@@ -21,13 +21,12 @@ import {
   type CharacterSheet,
 } from "./test-support.ts";
 
-const WEAPON_MASTERY_CLASS_LEVEL_RESELECTION_RESULTS = [
-  "init",
-  "fighterLevelFourOneChangeAccepted",
-  "barbarianLevelFourOneChangeAccepted",
-  "fighterLevelFourUnchangedPreserved",
-  "fighterLevelFourTooManyChangesRejected",
-] as const;
+type WeaponMasteryClassLevelReselectionResult =
+  | "init"
+  | "fighterLevelFourOneChangeAccepted"
+  | "barbarianLevelFourOneChangeAccepted"
+  | "fighterLevelFourUnchangedPreserved"
+  | "fighterLevelFourTooManyChangesRejected";
 const FIGHTER_CLASS_UNIT_ID = "class_fighter" as const;
 const BARBARIAN_CLASS_UNIT_ID = "class_barbarian" as const;
 const FIGHTER_WEAPON_MASTERY_UNIT_ID = "fighter_weapon_mastery" as const;
@@ -64,9 +63,6 @@ const NO_REJECTED_FLAGS = {
   tooManyChangesRejected: false,
   rejectedWithoutStateChange: false,
 } as const;
-
-type WeaponMasteryClassLevelReselectionResult =
-  (typeof WEAPON_MASTERY_CLASS_LEVEL_RESELECTION_RESULTS)[number];
 type WeaponMasteryClassUnitId =
   | typeof FIGHTER_CLASS_UNIT_ID
   | typeof BARBARIAN_CLASS_UNIT_ID;

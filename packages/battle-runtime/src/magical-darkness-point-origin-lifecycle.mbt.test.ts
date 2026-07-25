@@ -69,13 +69,11 @@ import {
 } from "./index.ts";
 import { tickDurationEffects } from "./battle-reducer/turn-end-movement.ts";
 
-const LAST_RESULTS = [
-  "init",
-  "castWithAreaAndLightWitnesses",
-  "concentrationCleaned",
-  "durationCleaned",
-] as const;
-type LastResult = (typeof LAST_RESULTS)[number];
+type LastResult =
+  | "init"
+  | "castWithAreaAndLightWitnesses"
+  | "concentrationCleaned"
+  | "durationCleaned";
 const MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE_SCENARIO_OUTCOME_BY_TAG: Readonly<
   Record<string, LastResult>
 > = {

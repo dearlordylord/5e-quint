@@ -21,12 +21,7 @@ import {
 } from "./test-support.ts";
 import { type CharacterSheetAwakenTarget } from "./sheet-types.ts";
 
-const awakenSelectedIdentityDriverSchema = {
-  doCastAwaken: {},
-} as const;
-
-type AwakenSelectedIdentityDriverAction =
-  keyof typeof awakenSelectedIdentityDriverSchema;
+type AwakenSelectedIdentityDriverAction = "doCastAwaken";
 
 type AwakenSelectedIdentityProjection = {
   readonly spellId: string;

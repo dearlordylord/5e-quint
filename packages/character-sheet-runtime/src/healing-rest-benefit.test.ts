@@ -373,7 +373,7 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
     const malformedLibraries = [
       prayerOfHealingUnitLibraryWith((spell) =>
         replacePrayerOfHealingDirectPhase(spell, (phase) => {
-          const { castingRequirement: _omitted, ...selection } =
+          const { castingRequirement: _castingRequirement, ...selection } =
             phase.attachment.value.selection;
           return {
             ...phase,

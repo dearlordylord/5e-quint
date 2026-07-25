@@ -364,14 +364,7 @@ function resolveWeaponHit(input: {
     resolveBattleSubject({
       state: input.state.state,
       subject,
-      fills: [
-        attackTargetFill(
-          target,
-          spellCasterId,
-          spellTargetId,
-          input.attackName,
-        ),
-      ],
+      fills: [attackTargetFill(target, spellCasterId, spellTargetId)],
     }),
     "attackRoll",
   );
@@ -380,12 +373,7 @@ function resolveWeaponHit(input: {
       state: input.state.state,
       subject,
       fills: [
-        attackTargetFill(
-          target,
-          spellCasterId,
-          spellTargetId,
-          input.attackName,
-        ),
+        attackTargetFill(target, spellCasterId, spellTargetId),
         attackRollFill(roll, { total: 15, naturalD20: 10 }),
       ],
     }),
@@ -413,7 +401,7 @@ function resolveWeaponHit(input: {
     state: input.state.state,
     subject,
     fills: [
-      attackTargetFill(target, spellCasterId, spellTargetId, input.attackName),
+      attackTargetFill(target, spellCasterId, spellTargetId),
       attackRollFill(roll, { total: 15, naturalD20: 10 }),
       damageRollFillWithGroups(
         damage,

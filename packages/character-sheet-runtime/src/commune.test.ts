@@ -19,13 +19,9 @@ import {
   unitLibrary,
 } from "./test-support.ts";
 
-const communeSelectedIdentityDriverSchema = {
-  doCastCommune: {},
-  doCastCommuneRepeatedBeforeLongRest: {},
-} as const;
-
 type CommuneSelectedIdentityDriverAction =
-  keyof typeof communeSelectedIdentityDriverSchema;
+  | "doCastCommune"
+  | "doCastCommuneRepeatedBeforeLongRest";
 
 type CommuneSelectedIdentityProjection = {
   readonly spellId: string;

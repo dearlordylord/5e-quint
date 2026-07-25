@@ -127,12 +127,11 @@ function ChoiceHolePicker({
                 checked={checked}
                 disabled={disabled}
                 onChange={(event) => {
-                  setSelected((current) => {
-                    const next = new Set(current)
-                    if (event.target.checked) next.add(option.optionId)
-                    else next.delete(option.optionId)
-                    return next
-                  })
+                  setSelected((current) =>
+                    event.target.checked
+                      ? new Set([...current, option.optionId])
+                      : new Set([...current].filter((optionId) => optionId !== option.optionId))
+                  )
                 }}
                 type="checkbox"
               />

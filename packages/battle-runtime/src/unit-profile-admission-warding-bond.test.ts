@@ -1024,7 +1024,7 @@ function wardingBondClubBattle(): BattleRuntimeSession {
 function attackTargetFillForClub(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
-  return attackTargetFill(hole, spellCasterId, spellTargetId, "Club");
+  return attackTargetFill(hole, spellCasterId, spellTargetId);
 }
 
 function wardingBondSpellTargetFillWithoutWilling(

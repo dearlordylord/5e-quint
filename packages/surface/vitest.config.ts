@@ -1,4 +1,4 @@
-import { defineConfig } from "vitest/config"
+import { defineConfig } from "vitest/config";
 
 // Surface schema tests load the full authored catalog and may compile its
 // generated JSON Schema. Running multiple workers duplicates that large object
@@ -10,4 +10,4 @@ export default defineConfig({
     maxWorkers: 1,
     pool: "threads",
   },
-})
+});

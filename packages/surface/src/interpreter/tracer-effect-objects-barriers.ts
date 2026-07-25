@@ -1,5 +1,5 @@
 import type { AreaDirectEffectAtom } from "../surface/types.ts";
-import type { TraceEdge, TraceNode } from "./tracer-model.ts";
+import type { TraceNode } from "./tracer-model.ts";
 import {
   describeAbilityScoreBounds,
   describeClassLevelChoiceCount,
@@ -16,7 +16,6 @@ import {
   describeSpellAccessMode,
 } from "./tracer-rule-labels.ts";
 import type { IdGen } from "./tracer-rule-labels.ts";
-import type { TraceEffectAtomFn } from "./tracer-effect-types.ts";
 
 export type ObjectAndBarrierEffectAtom = Extract<
   AreaDirectEffectAtom,
@@ -84,8 +83,6 @@ export function traceObjectAndBarrierEffectAtom(
   e: ObjectAndBarrierEffectAtom,
   nodes: TraceNode[],
   ids: IdGen,
-  _edges: TraceEdge[] | undefined,
-  _traceEffectAtom: TraceEffectAtomFn,
 ): string | null {
   switch (e.kind) {
     case "object_immune_to_all_damage": {

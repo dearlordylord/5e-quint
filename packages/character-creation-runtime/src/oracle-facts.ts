@@ -790,9 +790,8 @@ export const decodeCharacterCreationBatchFact = Schema.decodeUnknownEither(
 
 function noUnprojectedFields(
   fields: Readonly<Record<PropertyKey, never>>,
-): void {
-  void fields;
-}
+): void;
+function noUnprojectedFields(): void {}
 
 function mapNonEmpty<A, B>(
   values: NonEmptyReadonlyArray<A>,

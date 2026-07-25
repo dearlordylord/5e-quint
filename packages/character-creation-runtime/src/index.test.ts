@@ -181,11 +181,9 @@ import { soldierBackgroundFixtureOptionIds } from "./background-fixture.test-sup
 
 const SRD_SORCERY_POINTS_POOL_ID = "sorcery_points";
 const SRD_GNOMISH_LINEAGE_TRAIT_UNIT_ID = "species_gnome_gnomish_lineage";
-const driverSchema = {
-  doReplayGnomishLineageChoice: {},
-  doReplayGnomishLineageTraitProjection: {},
-} as const;
-type GnomishLineageReplayAction = keyof typeof driverSchema;
+type GnomishLineageReplayAction =
+  | "doReplayGnomishLineageChoice"
+  | "doReplayGnomishLineageTraitProjection";
 const selectedUnitIdentityReplays = [
   {
     taskId: "LT4-B02-GNOMISH-LINEAGE-CHOICE-OWNER",

@@ -23,12 +23,7 @@ import {
   type CharacterSheetModifyMemoryTarget,
 } from "./sheet-types.ts";
 
-const modifyMemorySelectedIdentityDriverSchema = {
-  doCastModifyMemory: {},
-} as const;
-
-type ModifyMemorySelectedIdentityDriverAction =
-  keyof typeof modifyMemorySelectedIdentityDriverSchema;
+type ModifyMemorySelectedIdentityDriverAction = "doCastModifyMemory";
 
 type ModifyMemorySelectedIdentityProjection = {
   readonly spellId: string;

@@ -72,15 +72,13 @@ import {
   type CharacterBattleCreatureState,
 } from "./index.ts";
 
-const LAST_RESULTS = [
-  "init",
-  "needsHigherLevelCheck",
-  "failedHigherLevelCheck",
-  "succeededHigherLevelCheck",
-  "upcastAutoEnded",
-  "antimagicAuraUnaffected",
-] as const;
-type LastResult = (typeof LAST_RESULTS)[number];
+type LastResult =
+  | "init"
+  | "needsHigherLevelCheck"
+  | "failedHigherLevelCheck"
+  | "succeededHigherLevelCheck"
+  | "upcastAutoEnded"
+  | "antimagicAuraUnaffected";
 const DISPEL_MAGIC_ONGOING_SPELL_ENDING_SCENARIO_OUTCOME_BY_TAG: Readonly<
   Record<string, LastResult>
 > = {

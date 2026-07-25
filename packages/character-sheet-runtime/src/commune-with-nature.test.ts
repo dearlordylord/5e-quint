@@ -20,12 +20,7 @@ import {
   unitLibrary,
 } from "./test-support.ts";
 
-const communeWithNatureSelectedIdentityDriverSchema = {
-  doCastCommuneWithNature: {},
-} as const;
-
-type CommuneWithNatureSelectedIdentityDriverAction =
-  keyof typeof communeWithNatureSelectedIdentityDriverSchema;
+type CommuneWithNatureSelectedIdentityDriverAction = "doCastCommuneWithNature";
 
 type CommuneWithNatureSelectedIdentityProjection = {
   readonly spellId: string;

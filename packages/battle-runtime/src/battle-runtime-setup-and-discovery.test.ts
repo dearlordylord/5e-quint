@@ -139,9 +139,11 @@ describe("battle runtime: setup and discovery", () => {
     );
     const missingPresentedName = {
       ...presented.right,
-      combatants: presented.right.combatants.map(
-        ({ displayName: _displayName, ...combatant }) => combatant,
-      ),
+      combatants: presented.right.combatants.map((combatant) => {
+        const { displayName: _displayName, ...combatantWithoutDisplayName } =
+          combatant;
+        return combatantWithoutDisplayName;
+      }),
     };
     expect(Schema.is(BattlePresentedSnapshotSchema)(missingPresentedName)).toBe(
       false,

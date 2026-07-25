@@ -222,8 +222,6 @@ async function runProofProcess(
     readonly stderr: string;
   }>((resolve) => {
     let timedOut = false;
-    let deadline: ReturnType<typeof setTimeout> | undefined;
-    let heartbeat: ReturnType<typeof setInterval> | undefined;
     const child = execFile(
       "pnpm",
       ["exec", "quint", ...config.args],
@@ -246,10 +244,10 @@ async function runProofProcess(
     );
     childPid = child.pid;
     logProofProgress(config, "start", startedAtMs, childPid);
-    heartbeat = setInterval(() => {
+    const heartbeat: ReturnType<typeof setInterval> = setInterval(() => {
       logProofProgress(config, "heartbeat", startedAtMs, childPid);
     }, proofProgressIntervalMs);
-    deadline = setTimeout(() => {
+    const deadline: ReturnType<typeof setTimeout> = setTimeout(() => {
       timedOut = true;
       logProofProgress(config, "timeout", startedAtMs, childPid);
       if (childPid !== undefined) killProcessTree(childPid);

@@ -88,15 +88,13 @@ const FAMILIAR_FORMS = ["none", "cat", "rat"] as const;
 type FamiliarForm = (typeof FAMILIAR_FORMS)[number];
 const CREATURE_TYPE_OVERRIDES = ["none", "fey"] as const;
 type CreatureTypeOverride = (typeof CREATURE_TYPE_OVERRIDES)[number];
-const LAST_RESULTS = [
-  "init",
-  "createdCat",
-  "replacedRat",
-  "sharedSenses",
-  "touchDelivered",
-  "pactAttack",
-] as const;
-type LastResult = (typeof LAST_RESULTS)[number];
+type LastResult =
+  | "init"
+  | "createdCat"
+  | "replacedRat"
+  | "sharedSenses"
+  | "touchDelivered"
+  | "pactAttack";
 const FIND_FAMILIAR_COMPANION_LIFECYCLE_SCENARIO_OUTCOME_BY_TAG: Readonly<
   Record<string, LastResult>
 > = {

@@ -409,7 +409,11 @@ function groupRowsByReadyStatus(rows) {
   );
 }
 
-function unitRefRowsFromStartingEquipment(record, ownerUnitId, matrixUnitsById) {
+function unitRefRowsFromStartingEquipment(
+  record,
+  ownerUnitId,
+  matrixUnitsById,
+) {
   return (record.startingEquipment ?? []).flatMap((choice) =>
     (choice.items ?? [])
       .filter((item) => item.kind === "unit_ref")
@@ -474,14 +478,17 @@ function srdRecordsOfKind(matrixUnitsById, kind) {
     .sort((left, right) => left.unitId.localeCompare(right.unitId));
 }
 
-function buildSrdAuthoredProductReadiness(matrixUnitsById, scope, options = {}) {
+function buildSrdAuthoredProductReadiness(
+  matrixUnitsById,
+  scope,
+  options = {},
+) {
   const root = options.root;
-  const backgroundRows = srdAuthoredCharacterCreationOptionGroups[0].unitIds.map(
-    (unitId) => {
+  const backgroundRows =
+    srdAuthoredCharacterCreationOptionGroups[0].unitIds.map((unitId) => {
       const readiness = catalogReadinessForUnit(unitId, matrixUnitsById);
       return stable({ unitId, ...readiness });
-    },
-  );
+    });
   const backgroundRecords = backgroundRows
     .map((row) => representativeMatrixRow(row.unitId, matrixUnitsById))
     .filter(Boolean)
@@ -516,7 +523,12 @@ function buildSrdAuthoredProductReadiness(matrixUnitsById, scope, options = {}) 
   const speciesTraitRows = uniqueRowsByKey(
     speciesRecords.flatMap((record) =>
       Object.entries(record.traits ?? {}).map(([traitKey, unitId]) =>
-        dependencyRow(record.id, `species.traits.${traitKey}`, unitId, matrixUnitsById),
+        dependencyRow(
+          record.id,
+          `species.traits.${traitKey}`,
+          unitId,
+          matrixUnitsById,
+        ),
       ),
     ),
     (row) => `${row.ownerUnitId}:${row.relation}:${row.unitId}`,
@@ -808,9 +820,8 @@ function inScopeLaterLevelOpenReason(claim, scope) {
 
   const levels = Array.from(
     new Set(
-      entries.map(
-        (entry) =>
-          laterLevelFirstTriggerCharacterLevel(entry.battleReadinessClosure),
+      entries.map((entry) =>
+        laterLevelFirstTriggerCharacterLevel(entry.battleReadinessClosure),
       ),
     ),
   ).sort((left, right) => left - right);
@@ -827,9 +838,7 @@ function inScopeLaterLevelOpenReason(claim, scope) {
   const levelLabel = levels.length === 1 ? "level" : "levels";
   const taskLabel = taskIds.length === 1 ? "task" : "tasks";
   const taskText =
-    taskIds.length > 0
-      ? ` Follow-up ${taskLabel}: ${taskIds.join(", ")}.`
-      : "";
+    taskIds.length > 0 ? ` Follow-up ${taskLabel}: ${taskIds.join(", ")}.` : "";
   return `Later-level residuals first trigger within ${scope.title} at character ${levelLabel} ${levels.join(", ")}, so they are open in this scope.${taskText}`;
 }
 
@@ -842,10 +851,7 @@ function laterLevelClosureReasonForClaim(claim) {
 
 function hasOnlyLaterLevelResiduals(claim, scope) {
   if (claim?.tag === "unsupported-profile") {
-    return isLaterLevelClosureBeyondScope(
-      claim.battleReadinessClosure,
-      scope,
-    );
+    return isLaterLevelClosureBeyondScope(claim.battleReadinessClosure, scope);
   }
   return (
     claim?.tag === "profile-subset-supported" &&
@@ -884,7 +890,8 @@ function hasOnlySelectionGrantContainerResiduals(claim) {
     claim.deferredMechanics.length > 0 &&
     claim.deferredMechanics.every(
       (entry) =>
-        entry.battleReadinessClosure?.kind === selectionGrantContainerClosureKind,
+        entry.battleReadinessClosure?.kind ===
+        selectionGrantContainerClosureKind,
     )
   );
 }
@@ -1366,7 +1373,11 @@ function strictFinalSupportBlockerForNoMatrixRow(row, scope) {
   });
 }
 
-function buildStrictFinalSupportBlockers(strictRows, outsideDenominator, scope) {
+function buildStrictFinalSupportBlockers(
+  strictRows,
+  outsideDenominator,
+  scope,
+) {
   if (scope.maxCharacterLevel < 9) return [];
   return [
     ...strictRows
@@ -2017,7 +2028,9 @@ function renderStrictFullSupport(report, scope) {
     "",
     "| Group | Owner Unit | Relation | Blocking Unit | Status |",
     "| --- | --- | --- | --- | --- |",
-    ...renderReadinessBlockerRows(report.srdAuthoredProductReadiness.blockerRows),
+    ...renderReadinessBlockerRows(
+      report.srdAuthoredProductReadiness.blockerRows,
+    ),
     "",
     "## Legacy SRD-Authored Character Creation Catalog",
     "",

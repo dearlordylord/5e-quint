@@ -379,7 +379,6 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
       targetHole,
       spellTargetId,
       spellCasterId,
-      "Longsword",
     );
     const attackRoll = requireResultHole(
       resolveBattleSubject({
@@ -541,7 +540,6 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
       targetHole,
       spellTargetId,
       spellCasterId,
-      "Longsword",
     );
     const attackRoll = requireResultHole(
       resolveBattleSubject({

@@ -38,14 +38,11 @@ import {
   type CharacterSheetSummonDragonSpirit,
 } from "./sheet-types.ts";
 
-const selectedLifecycleDriverSchema = {
-  doCastAnimateObjects: {},
-  doCastConjureElemental: {},
-  doCastSummonDragon: {},
-  doCastPlanarBinding: {},
-} as const;
-
-type LifecycleDriverAction = keyof typeof selectedLifecycleDriverSchema;
+type LifecycleDriverAction =
+  | "doCastAnimateObjects"
+  | "doCastConjureElemental"
+  | "doCastSummonDragon"
+  | "doCastPlanarBinding";
 
 type LifecycleProjection = {
   readonly spellId: string;

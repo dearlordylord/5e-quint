@@ -86,12 +86,7 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
     });
     expect(damageType.choices).toEqual(["radiant", "piercing"]);
 
-    const targetFill = attackTargetFill(
-      target,
-      spellCasterId,
-      spellTargetId,
-      "Dagger",
-    );
+    const targetFill = attackTargetFill(target, spellCasterId, spellTargetId);
     const targetFirstDamageType = requireResultHole(
       resolveBattleSubject({
         state: state.state,
@@ -257,12 +252,7 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
       resolveBattleSubject({ state: state.state, subject, fills: [] }),
       "targetChoice",
     );
-    const targetFill = attackTargetFill(
-      target,
-      spellCasterId,
-      spellTargetId,
-      "Unarmed Strike",
-    );
+    const targetFill = attackTargetFill(target, spellCasterId, spellTargetId);
     const roll = requireResultHole(
       resolveBattleSubject({
         state: state.state,
@@ -322,7 +312,6 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
       target,
       spellCasterId,
       skeletonTargetId,
-      "Unarmed Strike",
     );
     const roll = requireResultHole(
       resolveBattleSubject({
@@ -417,12 +406,7 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
       resolveBattleSubject({ state: state.state, subject, fills: [] }),
       "targetChoice",
     );
-    const targetFill = attackTargetFill(
-      target,
-      spellCasterId,
-      spellTargetId,
-      "Shortbow",
-    );
+    const targetFill = attackTargetFill(target, spellCasterId, spellTargetId);
     const roll = requireResultHole(
       resolveBattleSubject({
         state: state.state,
@@ -453,12 +437,7 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
       resolveBattleSubject({ state: state.state, subject, fills: [] }),
       "targetChoice",
     );
-    const targetFill = attackTargetFill(
-      target,
-      spellCasterId,
-      spellTargetId,
-      "Longsword",
-    );
+    const targetFill = attackTargetFill(target, spellCasterId, spellTargetId);
     const roll = requireResultHole(
       resolveBattleSubject({
         state: state.state,
@@ -627,12 +606,7 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
       resolveBattleSubject({ state: casterTurn.state, subject, fills: [] }),
       "targetChoice",
     );
-    const targetFill = attackTargetFill(
-      target,
-      spellCasterId,
-      spellTargetId,
-      "Longsword",
-    );
+    const targetFill = attackTargetFill(target, spellCasterId, spellTargetId);
     const roll = requireResultHole(
       resolveBattleSubject({
         state: casterTurn.state,
@@ -820,12 +794,7 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
       resolveBattleSubject({ state: state.state, subject, fills: [] }),
       "targetChoice",
     );
-    const targetFill = attackTargetFill(
-      target,
-      spellCasterId,
-      spellTargetId,
-      "Longsword",
-    );
+    const targetFill = attackTargetFill(target, spellCasterId, spellTargetId);
     const roll = requireResultHole(
       resolveBattleSubject({
         state: state.state,
@@ -912,12 +881,7 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
       resolveBattleSubject({ state: state.state, subject, fills: [] }),
       "targetChoice",
     );
-    const targetFill = attackTargetFill(
-      target,
-      spellCasterId,
-      undeadId,
-      "Longsword",
-    );
+    const targetFill = attackTargetFill(target, spellCasterId, undeadId);
     const roll = requireResultHole(
       resolveBattleSubject({
         state: state.state,

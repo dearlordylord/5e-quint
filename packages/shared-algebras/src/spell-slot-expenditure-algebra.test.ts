@@ -66,9 +66,9 @@ describe("spell slot expenditure algebra", () => {
   test("leveled spellcasting is rejected after a slot was already used this turn", () => {
     const state = slotState({ slotSpellCastThisTurn: true });
 
-    expect(canExpendSpellSlot(state, spellSlotExpenditureRequired(level1))).toBe(
-      false,
-    );
+    expect(
+      canExpendSpellSlot(state, spellSlotExpenditureRequired(level1)),
+    ).toBe(false);
     const result = applySpellSlotExpenditure(
       state,
       spellSlotExpenditureRequired(level1),
@@ -96,29 +96,59 @@ describe("spell slot expenditure algebra", () => {
 
   test("capacity projection spends the existing slot state without adding another ledger", () => {
     const slots = [
-      { spellLevel: level1, count: resourceCount(2), expended: resourceCount(1) },
-      { spellLevel: level2, count: resourceCount(1), expended: resourceCount(1) },
+      {
+        spellLevel: level1,
+        count: resourceCount(2),
+        expended: resourceCount(1),
+      },
+      {
+        spellLevel: level2,
+        count: resourceCount(1),
+        expended: resourceCount(1),
+      },
     ];
 
-    expect(spellSlotCapacitySlotsRemaining(slots[0])).toEqual(
-      resourceCount(1),
-    );
+    expect(spellSlotCapacitySlotsRemaining(slots[0])).toEqual(resourceCount(1));
     expect(expendSpellSlotInCapacities(slots, level1)).toEqual([
-      { spellLevel: level1, count: resourceCount(2), expended: resourceCount(2) },
-      { spellLevel: level2, count: resourceCount(1), expended: resourceCount(1) },
+      {
+        spellLevel: level1,
+        count: resourceCount(2),
+        expended: resourceCount(2),
+      },
+      {
+        spellLevel: level2,
+        count: resourceCount(1),
+        expended: resourceCount(1),
+      },
     ]);
     expect(expendSpellSlotInCapacities(slots, level2)).toEqual(slots);
   });
 
   test("capacity projection spends one matching slot level when duplicate capacities are supplied", () => {
     const slots = [
-      { spellLevel: level1, count: resourceCount(2), expended: resourceCount(0) },
-      { spellLevel: level1, count: resourceCount(2), expended: resourceCount(0) },
+      {
+        spellLevel: level1,
+        count: resourceCount(2),
+        expended: resourceCount(0),
+      },
+      {
+        spellLevel: level1,
+        count: resourceCount(2),
+        expended: resourceCount(0),
+      },
     ];
 
     expect(expendSpellSlotInCapacities(slots, level1)).toEqual([
-      { spellLevel: level1, count: resourceCount(2), expended: resourceCount(1) },
-      { spellLevel: level1, count: resourceCount(2), expended: resourceCount(0) },
+      {
+        spellLevel: level1,
+        count: resourceCount(2),
+        expended: resourceCount(1),
+      },
+      {
+        spellLevel: level1,
+        count: resourceCount(2),
+        expended: resourceCount(0),
+      },
     ]);
   });
 });

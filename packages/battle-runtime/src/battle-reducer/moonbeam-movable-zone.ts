@@ -22,13 +22,11 @@ import {
 
 const byTag = Match.discriminator("tag");
 
-const MOONBEAM_SAVE_TRIGGERS = [
-  "appearsInArea",
-  "areaMovesIntoSpace",
-  "entersArea",
-  "endsTurnInArea",
-] as const;
-export type MoonbeamSaveTrigger = (typeof MOONBEAM_SAVE_TRIGGERS)[number];
+export type MoonbeamSaveTrigger =
+  | "appearsInArea"
+  | "areaMovesIntoSpace"
+  | "entersArea"
+  | "endsTurnInArea";
 
 export const MOONBEAM_DURATION_TICKS = 10;
 export const MOONBEAM_REPOSITION_MAX_MOVE_FEET = 60;

@@ -849,9 +849,7 @@ function createRuleCoreFeatureDriver(
         resolveBattleSubject({
           state: input.state,
           subject,
-          fills: [
-            attackTargetFill(target, subject.actorId, targetId, attackName),
-          ],
+          fills: [attackTargetFill(target, subject.actorId, targetId)],
         }),
         "attackRoll",
       );
@@ -876,7 +874,7 @@ function createRuleCoreFeatureDriver(
           state: input.state,
           subject,
           fills: [
-            attackTargetFill(target, subject.actorId, targetId, attackName),
+            attackTargetFill(target, subject.actorId, targetId),
             attackRollFill(attackRoll, rollValue),
           ],
         }),
@@ -886,7 +884,7 @@ function createRuleCoreFeatureDriver(
         state: input.state,
         subject,
         fills: [
-          attackTargetFill(target, subject.actorId, targetId, attackName),
+          attackTargetFill(target, subject.actorId, targetId),
           attackRollFill(attackRoll, rollValue),
           damageRollFillWithGroups(
             damage,
@@ -1077,12 +1075,7 @@ function createRuleCoreFeatureDriver(
           resolveBattleSubject({ state, subject, fills: [] }),
           "targetChoice",
         );
-        const targetFill = attackTargetFill(
-          target,
-          actorId,
-          targetId,
-          "Longsword",
-        );
+        const targetFill = attackTargetFill(target, actorId, targetId);
         const attackRoll = requireHole(
           resolveBattleSubject({ state, subject, fills: [targetFill] }),
           "attackRoll",
@@ -1238,7 +1231,7 @@ function createRuleCoreFeatureDriver(
           resolveBattleSubject({
             state,
             subject,
-            fills: [attackTargetFill(target, actorId, targetId, "Shortbow")],
+            fills: [attackTargetFill(target, actorId, targetId)],
           }),
         );
         const attackRoll = requireHoleFromList(holes, "attackRoll");
@@ -1251,7 +1244,7 @@ function createRuleCoreFeatureDriver(
             state,
             subject,
             fills: [
-              attackTargetFill(target, actorId, targetId, "Shortbow"),
+              attackTargetFill(target, actorId, targetId),
               attackRollFill(attackRoll, {
                 total: 9,
                 naturalD20: 10,
@@ -1402,12 +1395,12 @@ function createRuleCoreFeatureDriver(
         resolveBattleSubject({
           state,
           subject,
-          fills: [attackTargetFill(target, targetId, actorId, "Shortsword")],
+          fills: [attackTargetFill(target, targetId, actorId)],
         }),
         "attackRoll",
       );
       const prefixFills = [
-        attackTargetFill(target, targetId, actorId, "Shortsword"),
+        attackTargetFill(target, targetId, actorId),
         attackRollFill(attackRoll, { total: 20, naturalD20: 15 }),
       ];
       const afterHit = resolveBattleSubject({
@@ -2358,7 +2351,6 @@ function attackTargetFill(
   hole: BattleHole,
   attackerId: CombatantId,
   defenderId: CombatantId,
-  _attackName: string,
 ): BattleFill {
   if (hole.kind !== "targetChoice" || hole.attack === undefined) {
     throw new Error("Expected bound targetChoice attack selection.");
@@ -2748,7 +2740,7 @@ function incomingAttackAdvantage(state: BattleState): boolean {
   const roll = resolveBattleSubject({
     state,
     subject,
-    fills: [attackTargetFill(targetHole, targetId, actorId, "Scimitar")],
+    fills: [attackTargetFill(targetHole, targetId, actorId)],
   });
   if (roll.tag !== "needsHoles") return false;
   return roll.holes.some(

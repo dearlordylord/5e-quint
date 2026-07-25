@@ -86,9 +86,7 @@ describe("QMBT56 deterministic Combat Prowess profile slice", () => {
       resolveBattleSubject({
         state: state.state,
         subject,
-        fills: [
-          attackTargetFill(target, spellCasterId, spellTargetId, "Longsword"),
-        ],
+        fills: [attackTargetFill(target, spellCasterId, spellTargetId)],
       }),
       "attackRoll",
     );
@@ -103,7 +101,7 @@ describe("QMBT56 deterministic Combat Prowess profile slice", () => {
       state: state.state,
       subject,
       fills: [
-        attackTargetFill(target, spellCasterId, spellTargetId, "Longsword"),
+        attackTargetFill(target, spellCasterId, spellTargetId),
         attackRollFill(roll, {
           total: 1,
           naturalD20: 2,
@@ -119,7 +117,7 @@ describe("QMBT56 deterministic Combat Prowess profile slice", () => {
       state: awaitingDamage.state,
       subject,
       fills: [
-        attackTargetFill(target, spellCasterId, spellTargetId, "Longsword"),
+        attackTargetFill(target, spellCasterId, spellTargetId),
         attackRollFill(roll, {
           total: 1,
           naturalD20: 2,
@@ -162,9 +160,7 @@ describe("QMBT56 deterministic Combat Prowess profile slice", () => {
       resolveBattleSubject({
         state: state.state,
         subject,
-        fills: [
-          attackTargetFill(target, spellCasterId, spellTargetId, "Longsword"),
-        ],
+        fills: [attackTargetFill(target, spellCasterId, spellTargetId)],
       }),
       "attackRoll",
     );
@@ -172,7 +168,7 @@ describe("QMBT56 deterministic Combat Prowess profile slice", () => {
       state: state.state,
       subject,
       fills: [
-        attackTargetFill(target, spellCasterId, spellTargetId, "Longsword"),
+        attackTargetFill(target, spellCasterId, spellTargetId),
         attackRollFill(roll, {
           total: 1,
           naturalD20: 2,
@@ -227,7 +223,7 @@ describe("QMBT56 deterministic Combat Prowess profile slice", () => {
       state: afterShield.state,
       subject,
       fills: [
-        attackTargetFill(target, spellCasterId, spellTargetId, "Longsword"),
+        attackTargetFill(target, spellCasterId, spellTargetId),
         attackRollFill(roll, {
           total: 1,
           naturalD20: 2,
@@ -271,9 +267,7 @@ describe("QMBT56 deterministic Combat Prowess profile slice", () => {
       resolveBattleSubject({
         state: state.state,
         subject,
-        fills: [
-          attackTargetFill(target, spellCasterId, spellTargetId, "Longsword"),
-        ],
+        fills: [attackTargetFill(target, spellCasterId, spellTargetId)],
       }),
       "attackRoll",
     );
@@ -281,7 +275,7 @@ describe("QMBT56 deterministic Combat Prowess profile slice", () => {
       state: state.state,
       subject,
       fills: [
-        attackTargetFill(target, spellCasterId, spellTargetId, "Longsword"),
+        attackTargetFill(target, spellCasterId, spellTargetId),
         attackRollFill(roll, {
           total: 1,
           naturalD20: 2,
@@ -368,9 +362,7 @@ describe("QMBT56 deterministic Combat Prowess profile slice", () => {
       resolveBattleSubject({
         state: state.state,
         subject,
-        fills: [
-          attackTargetFill(target, spellCasterId, spellTargetId, "Longsword"),
-        ],
+        fills: [attackTargetFill(target, spellCasterId, spellTargetId)],
       }),
       "attackRoll",
     );
@@ -380,7 +372,7 @@ describe("QMBT56 deterministic Combat Prowess profile slice", () => {
         state: state.state,
         subject,
         fills: [
-          attackTargetFill(target, spellCasterId, spellTargetId, "Longsword"),
+          attackTargetFill(target, spellCasterId, spellTargetId),
           attackRollFill(roll, { total: 1, naturalD20: 2 }),
         ],
       }),
@@ -523,9 +515,7 @@ describe("QMBT56 deterministic Combat Prowess profile slice", () => {
       resolveBattleSubject({
         state: state.state,
         subject,
-        fills: [
-          attackTargetFill(target, spellCasterId, spellTargetId, "Longsword"),
-        ],
+        fills: [attackTargetFill(target, spellCasterId, spellTargetId)],
       }),
       "attackRoll",
     );
@@ -534,7 +524,7 @@ describe("QMBT56 deterministic Combat Prowess profile slice", () => {
         state: state.state,
         subject,
         fills: [
-          attackTargetFill(target, spellCasterId, spellTargetId, "Longsword"),
+          attackTargetFill(target, spellCasterId, spellTargetId),
           attackRollFill(roll, {
             total: 1,
             naturalD20: 2,
@@ -548,7 +538,7 @@ describe("QMBT56 deterministic Combat Prowess profile slice", () => {
       state: state.state,
       subject,
       fills: [
-        attackTargetFill(target, spellCasterId, spellTargetId, "Longsword"),
+        attackTargetFill(target, spellCasterId, spellTargetId),
         attackRollFill(roll, {
           total: 1,
           naturalD20: 2,

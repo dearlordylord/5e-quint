@@ -64,20 +64,18 @@ function battleCreatureInitFromStatBlock(
   return expectRight(parseBattleCreatureInitFromStatBlock(input));
 }
 
-const sheetDerivedOutcomes = [
-  "init",
-  "missing-wielded-weapon-rejected",
-  "missing-selected-spell-rejected",
-  "weapon-attack-capability-projected",
-  "resource-backed-spell-attack-capability-projected",
-  "early-spell-fill-rejected-without-spend",
-  "accepted-spell-invocation-spent-one-slot",
-  "stale-open-action-rejected-after-invocation",
-  "stale-spell-fill-rejected-without-second-spend",
-  "spell-slot-expenditure-settled",
-  "exhausted-slots-rejected-rediscovery",
-] as const;
-type SheetDerivedOutcome = (typeof sheetDerivedOutcomes)[number];
+type SheetDerivedOutcome =
+  | "init"
+  | "missing-wielded-weapon-rejected"
+  | "missing-selected-spell-rejected"
+  | "weapon-attack-capability-projected"
+  | "resource-backed-spell-attack-capability-projected"
+  | "early-spell-fill-rejected-without-spend"
+  | "accepted-spell-invocation-spent-one-slot"
+  | "stale-open-action-rejected-after-invocation"
+  | "stale-spell-fill-rejected-without-second-spend"
+  | "spell-slot-expenditure-settled"
+  | "exhausted-slots-rejected-rediscovery";
 
 const sheetDerivedOutcomeByVariant = {
   SheetDerivedBattleActsInit: "init",

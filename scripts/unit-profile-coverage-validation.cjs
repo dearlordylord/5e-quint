@@ -5,7 +5,6 @@ const {
   claimTags,
   collectionIds,
   completedRuntimeParityKinds,
-  deterministicAdmissionProjectionEvidenceTag,
   executableProfileKinds,
   fungiTerms,
   nearCanonicalDenyList,

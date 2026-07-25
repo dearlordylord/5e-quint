@@ -1047,6 +1047,10 @@ describe("manual MCP battle surface coverage", () => {
 });
 
 type Root = ReturnType<typeof createMcpCompositionRoot>;
+type CharacterCreatureInit = Extract<
+  BattleCreatureInit["creatureInit"],
+  { readonly kind: "character" }
+>;
 type Json = Record<string, any>;
 
 function requireTriggeredSpellChoice(
@@ -1146,9 +1150,9 @@ function character(
     readonly selectedLoadout?: any;
     readonly armorClass?: ReturnType<typeof defaultArmorClassState>;
     readonly attack?: CharacterWeaponAttackActionOption | null;
-    readonly resources?: any;
+    readonly resources?: CharacterCreatureInit["resources"];
     readonly spellcasting?: any;
-    readonly invocationFeatures?: any;
+    readonly invocationFeatures?: CharacterCreatureInit["invocationFeatures"];
     readonly omitWeaponPresentationSources?: boolean;
   },
 ): BattleCreatureInit {

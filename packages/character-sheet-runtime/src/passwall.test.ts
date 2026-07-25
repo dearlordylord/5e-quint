@@ -23,12 +23,7 @@ import {
   type CharacterSheetPasswallSurface,
 } from "./sheet-types.ts";
 
-const passwallSelectedIdentityDriverSchema = {
-  doCastPasswall: {},
-} as const;
-
-type PasswallSelectedIdentityDriverAction =
-  keyof typeof passwallSelectedIdentityDriverSchema;
+type PasswallSelectedIdentityDriverAction = "doCastPasswall";
 
 type PasswallSelectedIdentityProjection = {
   readonly spellId: string;

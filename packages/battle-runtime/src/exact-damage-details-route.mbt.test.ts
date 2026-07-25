@@ -40,16 +40,11 @@ const exactDamageRouteBridgeScenarios = [
 type ExactDamageRouteBridgeScenario =
   (typeof exactDamageRouteBridgeScenarios)[number];
 
-const exactDamageBridgeDamageTypes = ["acid", "cold", "fire", "force"] as const;
-type ExactDamageBridgeDamageType =
-  (typeof exactDamageBridgeDamageTypes)[number];
+type ExactDamageBridgeDamageType = "acid" | "cold" | "fire" | "force";
 
-const exactDamageBridgeSaveSuccessPolicies = [
-  "noDamageOnSuccessfulSave",
-  "halfDamageOnSuccessfulSave",
-] as const;
 type ExactDamageBridgeSaveSuccessPolicy =
-  (typeof exactDamageBridgeSaveSuccessPolicies)[number];
+  | "noDamageOnSuccessfulSave"
+  | "halfDamageOnSuccessfulSave";
 
 type ExactDamageRouteBridgeProjection = RuleCoreComponentRoutedProjection & {
   readonly scenario: ExactDamageRouteBridgeScenario;

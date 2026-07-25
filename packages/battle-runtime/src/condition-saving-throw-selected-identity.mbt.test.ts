@@ -81,18 +81,15 @@ type ConditionSavingThrowSelectedIdentityProjection = {
   readonly fifthLevelSlotsExpended: number;
   readonly lastResult: "init" | "resolved";
 };
-const conditionSavingThrowSpellUnitIds = [
-  "blindness_deafness",
-  "color_spray",
-  "entangle",
-  "hold_monster",
-  "hold_person",
-  "hideous_laughter",
-  "hypnotic_pattern",
-  "sleep",
-] as const;
 type ConditionSavingThrowSpellUnitId =
-  (typeof conditionSavingThrowSpellUnitIds)[number];
+  | "blindness_deafness"
+  | "color_spray"
+  | "entangle"
+  | "hold_monster"
+  | "hold_person"
+  | "hideous_laughter"
+  | "hypnotic_pattern"
+  | "sleep";
 
 type ActionSpellAct = AvailableBattleAct & {
   readonly subject: Extract<

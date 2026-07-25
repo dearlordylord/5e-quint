@@ -61,7 +61,6 @@ export const shiningSmiteSelectedIdentityReplay = {
               target,
               spellCasterId,
               spellTargetId,
-              "Longsword",
             );
             const roll = requireResultHole(
               resolveBattleSubject({

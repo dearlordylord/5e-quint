@@ -3924,7 +3924,6 @@ function resolveSpellAttackDamageObjectTarget(input: {
   const objectDamageByType = spellObjectDamageByType(
     damageInvocation,
     input.fillSet.damageRoll,
-    critical,
   );
   const objectDamageSource = postRemarkableAthleteMovementState.combatants.get(
     input.actorId,

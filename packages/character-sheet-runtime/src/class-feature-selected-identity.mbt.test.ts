@@ -40,8 +40,6 @@ import {
   createFreshCharacterSheet,
 } from "./index.ts";
 
-const TASK_ID_B4 = "B4-CLASS-FEATURE-IDENTITY-BATCH-1";
-const TASK_ID_B5 = "B5-CLASS-FEATURE-IDENTITY-BATCH-2";
 const BARD_JACK_OF_ALL_TRADES_UNIT_ID = "bard_jack_of_all_trades";
 const CLERIC_LIFE_DOMAIN_SPELLS_UNIT_ID = "cleric_life_domain_spells";
 const DRUID_CIRCLE_LAND_SPELLS_UNIT_ID = "druid_circle_of_the_land_spells";
@@ -64,19 +62,16 @@ const DRUID_WILD_SHAPE_KNOWN_FORM_STAT_BLOCK_IDS = [
   authoredStatBlockId("stat_block_wolf"),
 ] as const;
 
-const classFeatureSelectedIdentityResults = [
-  "init",
-  "bard-jack-of-all-trades",
-  "cleric-life-domain-spells",
-  "druid-circle-land-spells",
-  "paladin-oath-devotion-spells",
-  "paladins-smite",
-  "ranger-favored-enemy",
-  "sorcerer-draconic-spells",
-  "warlock-fiend-spells",
-] as const;
 type ClassFeatureSelectedIdentityResult =
-  (typeof classFeatureSelectedIdentityResults)[number];
+  | "init"
+  | "bard-jack-of-all-trades"
+  | "cleric-life-domain-spells"
+  | "druid-circle-land-spells"
+  | "paladin-oath-devotion-spells"
+  | "paladins-smite"
+  | "ranger-favored-enemy"
+  | "sorcerer-draconic-spells"
+  | "warlock-fiend-spells";
 type ClassFeatureSelectedIdentityUnitId =
   | typeof BARD_JACK_OF_ALL_TRADES_UNIT_ID
   | typeof CLERIC_LIFE_DOMAIN_SPELLS_UNIT_ID
@@ -107,8 +102,8 @@ type SelectedUnitIdentityReplaySequence = {
 };
 type SelectedUnitIdentityReplay = {
   readonly taskId:
-    | typeof TASK_ID_B4
-    | typeof TASK_ID_B5
+    | "B4-CLASS-FEATURE-IDENTITY-BATCH-1"
+    | "B5-CLASS-FEATURE-IDENTITY-BATCH-2"
     | "B6-CLASS-FEATURE-IDENTITY-BATCH-3";
   readonly unitId: ClassFeatureSelectedIdentityUnitId;
   readonly actions: readonly ClassFeatureSelectedIdentityDriverAction[];

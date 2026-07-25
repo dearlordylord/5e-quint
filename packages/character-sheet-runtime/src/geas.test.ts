@@ -24,12 +24,7 @@ import {
   type CharacterSheetGeasTarget,
 } from "./sheet-types.ts";
 
-const geasSelectedIdentityDriverSchema = {
-  doCastGeas: {},
-} as const;
-
-type GeasSelectedIdentityDriverAction =
-  keyof typeof geasSelectedIdentityDriverSchema;
+type GeasSelectedIdentityDriverAction = "doCastGeas";
 
 type GeasSelectedIdentityProjection = {
   readonly spellId: string;

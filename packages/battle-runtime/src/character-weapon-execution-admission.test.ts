@@ -8,7 +8,7 @@ describe("character weapon execution admission", () => {
   test("normalizes an omitted Surface property list to one canonical empty list", () => {
     const weapon = unitLibrary.requireUnit("weapon_dagger");
     if (weapon.kind !== "weapon") throw new Error("Expected weapon fixture.");
-    const { properties: _omitted, ...withoutProperties } = weapon;
+    const { properties: _properties, ...withoutProperties } = weapon;
 
     expect(
       admitCharacterWeaponAttackExecutionWeapon(

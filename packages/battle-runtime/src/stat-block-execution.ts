@@ -165,7 +165,7 @@ function admitStatBlock(
     for (const attack of sectionAttacks) {
       if (!creatureNamedAttackRollIsSupported(attack)) continue;
       const {
-        name,
+        name: _name,
         description: _description,
         limitedUse,
         ...attackMechanics

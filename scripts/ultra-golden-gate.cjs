@@ -161,10 +161,7 @@ const mcpScopeAuditDecisionFields = new Set([
   "reusedFlowIds",
   "requiredEvidence",
 ]);
-const mcpRequiredEvidenceFields = new Set([
-  "scenarioGoal",
-  "inputs",
-]);
+const mcpRequiredEvidenceFields = new Set(["scenarioGoal", "inputs"]);
 const mcpAuditDecisionResults = new Set([
   "new-scenario-required",
   "reuse-existing-evidence",
@@ -390,8 +387,7 @@ function validateMcpScopeAuditDecisions(manifest, context) {
       );
     }
     if (
-      (decision.scopeId === "level-1-9" ||
-        decision.scopeId === "level-1-10") &&
+      (decision.scopeId === "level-1-9" || decision.scopeId === "level-1-10") &&
       decision.result === "reuse-existing-evidence"
     ) {
       issues.push(
@@ -833,9 +829,7 @@ function buildMcpScenarioEvidenceLayer(scopeId, mcpScenarioEvidence) {
   const auditDecision = (mcpScenarioEvidence.scopeAuditDecisions ?? []).find(
     (decision) => decision.scopeId === scopeId,
   );
-  const { flowIdsByCoveredScope } = mcpFlowCoverageByScope(
-    mcpScenarioEvidence,
-  );
+  const { flowIdsByCoveredScope } = mcpFlowCoverageByScope(mcpScenarioEvidence);
   const coveredFlowIds =
     flowIdsByCoveredScope.get(scopeId) ??
     new Set(evidenceRows.map((row) => row.flowId));
@@ -930,7 +924,8 @@ function profileScopedParityWitnessJoinRows(unit) {
     if (
       profile.profileKind !== "battle-admission" &&
       profile.profileKind !== "battle-procedure"
-    ) return [];
+    )
+      return [];
     const qntOwners = profile.qntOwners ?? [];
     const parityWitnesses = (profile.verificationOwners ?? [])
       .filter((owner) => owner.kind === "focused-mbt")
@@ -1040,8 +1035,7 @@ function buildSelectedIdentityAuditRow({
         obligationId: row.obligationId,
         profileId: row.profileId,
         witnessKinds: uniqueSorted(
-          row.parityWitnesses
-            .map((witness) => witness.kind),
+          row.parityWitnesses.map((witness) => witness.kind),
         ),
       })),
       unitProfileJoinRowCount: parityWitnessRows.length,
@@ -1080,7 +1074,9 @@ function buildSelectedIdentityEvidenceAuditScope({
     .map((unitId) => requireAuditUnit(unitsById, unitId))
     .flatMap((unit) =>
       (unit.evidence ?? [])
-        .filter((evidence) => evidence.tag === selectedIdentityReplayEvidenceTag)
+        .filter(
+          (evidence) => evidence.tag === selectedIdentityReplayEvidenceTag,
+        )
         .map((evidence) =>
           buildSelectedIdentityAuditRow({
             coveredMcpFlowIds,
@@ -1344,7 +1340,9 @@ function renderList(values) {
 function renderSelectedIdentityAuditRows(scope) {
   return scope.rows.map((row) => {
     const profiles = renderList(row.profileIds);
-    const qntOwners = renderList(row.parityWitnessJoin.unitProfileWitnessOwners);
+    const qntOwners = renderList(
+      row.parityWitnessJoin.unitProfileWitnessOwners,
+    );
     const requiredMcpFlows = renderList(row.mcpScenarioJoin.requiredFlowIds);
     const missingMcpFlows = renderList(row.mcpScenarioJoin.missingFlowIds);
     return `| ${scope.scopeId} | ${code(row.unitId)} | ${md(row.kind)} | ${code(row.evidence.taskId)} | ${code(row.evidence.ownerPath)} | ${md(row.parityWitnessJoin.status)} | ${qntOwners} | ${md(row.mcpScenarioJoin.status)} | ${requiredMcpFlows} | ${missingMcpFlows} | ${profiles} |`;
@@ -1356,16 +1354,14 @@ function renderMcpScenarioEvidenceRow({ flow, includeScope, mcpLayer, scope }) {
     (row) => row.flowId === flow.flowId,
   );
   const isAuditCovered = flow.coverageKind === "scope-audit-decision";
-  const scenarioIds =
-    isAuditCovered
-      ? "_reused by audit decision_"
-      : evidenceRows.length === 0
+  const scenarioIds = isAuditCovered
+    ? "_reused by audit decision_"
+    : evidenceRows.length === 0
       ? "_missing_"
       : evidenceRows.map((row) => `\`${row.scenarioId}\``).join(", ");
-  const witnessKinds =
-    isAuditCovered
-      ? "_audit decision_"
-      : evidenceRows.length === 0
+  const witnessKinds = isAuditCovered
+    ? "_audit decision_"
+    : evidenceRows.length === 0
       ? "_missing_"
       : evidenceRows.map((row) => `\`${row.kind}\``).join(", ");
   const followUp =

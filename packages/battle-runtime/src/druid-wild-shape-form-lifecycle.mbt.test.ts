@@ -84,16 +84,14 @@ const ACTIVE_FORMS = ["trueForm", "ridingHorse", "cat"] as const;
 type ActiveForm = (typeof ACTIVE_FORMS)[number];
 const CREATURE_SIZES = ["tiny", "medium", "large"] as const;
 type CreatureSize = (typeof CREATURE_SIZES)[number];
-const LAST_RESULTS = [
-  "init",
-  "assumedRidingHorse",
-  "nextTurn",
-  "reusedCat",
-  "dismissed",
-  "incapacitated",
-  "dead",
-] as const;
-type LastResult = (typeof LAST_RESULTS)[number];
+type LastResult =
+  | "init"
+  | "assumedRidingHorse"
+  | "nextTurn"
+  | "reusedCat"
+  | "dismissed"
+  | "incapacitated"
+  | "dead";
 const DRUID_STATUSES = ["able", "incapacitated", "dead"] as const;
 type DruidStatus = (typeof DRUID_STATUSES)[number];
 

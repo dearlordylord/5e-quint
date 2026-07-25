@@ -450,14 +450,7 @@ export function weaponAttackRollHole(input: {
     resolveBattleSubject({
       state: input.session.state,
       subject,
-      fills: [
-        attackTargetFill(
-          targetHole,
-          input.actorId,
-          input.targetId,
-          input.attackName,
-        ),
-      ],
+      fills: [attackTargetFill(targetHole, input.actorId, input.targetId)],
     }),
     "attackRoll",
   );
@@ -551,9 +544,7 @@ export function resolveWeaponAttack(
     resolveBattleSubject({
       state,
       subject,
-      fills: [
-        attackTargetFill(target, spellCasterId, spellTargetId, attackName),
-      ],
+      fills: [attackTargetFill(target, spellCasterId, spellTargetId)],
     }),
     "attackRoll",
   );
@@ -562,7 +553,7 @@ export function resolveWeaponAttack(
       state,
       subject,
       fills: [
-        attackTargetFill(target, spellCasterId, spellTargetId, attackName),
+        attackTargetFill(target, spellCasterId, spellTargetId),
         attackRollFill(roll, { total: 15, naturalD20: 10 }),
       ],
     }),
@@ -572,7 +563,7 @@ export function resolveWeaponAttack(
     state,
     subject,
     fills: [
-      attackTargetFill(target, spellCasterId, spellTargetId, attackName),
+      attackTargetFill(target, spellCasterId, spellTargetId),
       attackRollFill(roll, { total: 15, naturalD20: 10 }),
       damageRollFillWithGroups(damage, [[4]]),
     ],
@@ -588,12 +579,7 @@ export function completedWeaponDamageInput(state: BattleState): {
     resolveBattleSubject({ state, subject, fills: [] }),
     "targetChoice",
   );
-  const targetFill = attackTargetFill(
-    target,
-    spellCasterId,
-    spellTargetId,
-    "Longsword",
-  );
+  const targetFill = attackTargetFill(target, spellCasterId, spellTargetId);
   const attack = requireResultHole(
     resolveBattleSubject({ state, subject, fills: [targetFill] }),
     "attackRoll",
@@ -620,7 +606,6 @@ export function attackTargetFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
   actorId: CombatantId,
   targetId: CombatantId,
-  _attackName = "Unarmed Strike",
   extraSpatialFacts: Extract<
     BattleFill,
     { readonly kind: "targetChoice" }

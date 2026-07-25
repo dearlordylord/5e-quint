@@ -49,15 +49,9 @@ import {
   type CombatantId,
 } from "./index.ts";
 
-const statBlockMultiDamageHoles = [
-  "TargetChoice",
-  "AttackRoll",
-  "DamageRoll",
-] as const;
-type StatBlockMultiDamageHole = (typeof statBlockMultiDamageHoles)[number];
+type StatBlockMultiDamageHole = "TargetChoice" | "AttackRoll" | "DamageRoll";
 
-const statBlockMultiDamageModes = ["rolled", "static"] as const;
-type StatBlockMultiDamageMode = (typeof statBlockMultiDamageModes)[number];
+type StatBlockMultiDamageMode = "rolled" | "static";
 
 type StatBlockMultiDamageProjection = {
   readonly targetHp: number;

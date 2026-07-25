@@ -22,12 +22,7 @@ export const fighterHeroicWarriorCombatTurnStartTestName =
 export const fighterHeroicWarriorCombatTurnStartGateTestName =
   "Heroic Warrior rejects missing feature ownership and existing Heroic Inspiration";
 
-const fighterHeroicWarriorSelectedIdentityDriverSchema = {
-  doUseHeroicWarrior: {},
-} as const;
-
-type FighterHeroicWarriorSelectedIdentityDriverAction =
-  keyof typeof fighterHeroicWarriorSelectedIdentityDriverSchema;
+type FighterHeroicWarriorSelectedIdentityDriverAction = "doUseHeroicWarrior";
 
 type FighterHeroicWarriorSelectedIdentityProjection = {
   readonly unitId: "fighter_heroic_warrior";

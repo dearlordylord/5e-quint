@@ -23,13 +23,9 @@ import {
   unitLibrary,
 } from "./test-support.ts";
 
-const divineInterventionSelectedIdentityDriverSchema = {
-  doUseClericDivineIntervention: {},
-  doCastFlameStrikeThroughDivineIntervention: {},
-} as const;
-
 type DivineInterventionSelectedIdentityDriverAction =
-  keyof typeof divineInterventionSelectedIdentityDriverSchema;
+  | "doUseClericDivineIntervention"
+  | "doCastFlameStrikeThroughDivineIntervention";
 
 type DivineInterventionSelectedIdentityProjection = {
   readonly spellId: string;

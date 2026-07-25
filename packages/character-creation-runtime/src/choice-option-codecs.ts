@@ -102,10 +102,9 @@ export function decodeAbilityScoreIncreaseOptionId(
   if (oneScore != null) {
     const ability = oneScore[1];
     if (!isOneOf(SURFACE_ABILITIES, ability)) {
-      return choiceOptionCodecIssue(
-        optionIdText,
-        { tag: "unsupportedAbility" },
-      );
+      return choiceOptionCodecIssue(optionIdText, {
+        tag: "unsupportedAbility",
+      });
     }
     const increase = decodePositiveAbilityScoreIncreaseValue(
       oneScore[2],
@@ -113,10 +112,7 @@ export function decodeAbilityScoreIncreaseOptionId(
       "increase",
     );
     if (Either.isLeft(increase)) return Either.left(increase.left);
-    const maximum = decodeAbilityScoreMaximum(
-      oneScore[3],
-      optionIdText,
-    );
+    const maximum = decodeAbilityScoreMaximum(oneScore[3], optionIdText);
     if (Either.isLeft(maximum)) return Either.left(maximum.left);
 
     return Either.right([
@@ -138,16 +134,14 @@ export function decodeAbilityScoreIncreaseOptionId(
       !isOneOf(SURFACE_ABILITIES, primary) ||
       !isOneOf(SURFACE_ABILITIES, secondary)
     ) {
-      return choiceOptionCodecIssue(
-        optionIdText,
-        { tag: "unsupportedAbility" },
-      );
+      return choiceOptionCodecIssue(optionIdText, {
+        tag: "unsupportedAbility",
+      });
     }
     if (primary === secondary) {
-      return choiceOptionCodecIssue(
-        optionIdText,
-        { tag: "duplicateAbilities" },
-      );
+      return choiceOptionCodecIssue(optionIdText, {
+        tag: "duplicateAbilities",
+      });
     }
     const primaryIncrease = decodePositiveAbilityScoreIncreaseValue(
       twoScores[2],
@@ -165,10 +159,7 @@ export function decodeAbilityScoreIncreaseOptionId(
     if (Either.isLeft(secondaryIncrease)) {
       return Either.left(secondaryIncrease.left);
     }
-    const maximum = decodeAbilityScoreMaximum(
-      twoScores[5],
-      optionIdText,
-    );
+    const maximum = decodeAbilityScoreMaximum(twoScores[5], optionIdText);
     if (Either.isLeft(maximum)) return Either.left(maximum.left);
 
     return Either.right([
@@ -185,10 +176,9 @@ export function decodeAbilityScoreIncreaseOptionId(
     ]);
   }
 
-  return choiceOptionCodecIssue(
-    optionIdText,
-    { tag: "invalidAbilityScoreIncreaseEncoding" },
-  );
+  return choiceOptionCodecIssue(optionIdText, {
+    tag: "invalidAbilityScoreIncreaseEncoding",
+  });
 }
 
 function decodePositiveAbilityScoreIncreaseValue(
@@ -225,14 +215,11 @@ function decodeAbilityScoreMaximum(
   if (Either.isLeft(positive)) return Either.left(positive.left);
   return positive.right <= 30
     ? Either.right(abilityScore(positive.right))
-    : invalidAbilityScoreIncreaseValueIssue(
-        optionId,
-        {
-          tag: "invalidAbilityScoreIncreaseValue",
-          field: "maximum",
-          reason: "maximumOutOfRange",
-        },
-      );
+    : invalidAbilityScoreIncreaseValueIssue(optionId, {
+        tag: "invalidAbilityScoreIncreaseValue",
+        field: "maximum",
+        reason: "maximumOutOfRange",
+      });
 }
 
 function invalidPositiveAbilityScoreIncreaseValueIssue(
@@ -344,10 +331,9 @@ export function decodeProficiencyGrantSubjectOptionId(
           kind: "weapon_category",
           category,
         })
-      : choiceOptionCodecIssue(
-          optionIdText,
-          { tag: "unsupportedWeaponCategory" },
-        );
+      : choiceOptionCodecIssue(optionIdText, {
+          tag: "unsupportedWeaponCategory",
+        });
   }
 
   if (optionIdText.startsWith("armor_category:")) {
@@ -357,20 +343,18 @@ export function decodeProficiencyGrantSubjectOptionId(
           kind: "armor_category",
           category,
         })
-      : choiceOptionCodecIssue(
-          optionIdText,
-          { tag: "unsupportedArmorCategory" },
-        );
+      : choiceOptionCodecIssue(optionIdText, {
+          tag: "unsupportedArmorCategory",
+        });
   }
 
   if (optionIdText.startsWith("tool:")) {
     const toolId = optionIdText.slice("tool:".length);
     const parsedToolId = parseToolProficiencyId(toolId);
     if (Either.isLeft(parsedToolId)) {
-      return choiceOptionCodecIssue(
-        optionIdText,
-        { tag: "unsupportedToolProficiencyId" },
-      );
+      return choiceOptionCodecIssue(optionIdText, {
+        tag: "unsupportedToolProficiencyId",
+      });
     }
 
     return Either.right({
@@ -379,10 +363,9 @@ export function decodeProficiencyGrantSubjectOptionId(
     });
   }
 
-  return choiceOptionCodecIssue(
-    optionIdText,
-    { tag: "invalidProficiencyEncoding" },
-  );
+  return choiceOptionCodecIssue(optionIdText, {
+    tag: "invalidProficiencyEncoding",
+  });
 }
 
 export function toolProficiencyIdsFromProficiencyChoiceOptionIds(
@@ -423,10 +406,9 @@ export function parseToolProficiencyId(
 ): Either.Either<ToolProficiencyId, ChoiceOptionCodecIssue> {
   return isCharacterBuildToolProficiencyId(value)
     ? Either.right(toolProficiencyId(value))
-    : choiceOptionCodecIssue(
-        value,
-        { tag: "unsupportedCharacterBuildToolProficiencyId" },
-      );
+    : choiceOptionCodecIssue(value, {
+        tag: "unsupportedCharacterBuildToolProficiencyId",
+      });
 }
 
 function isOneOf<T extends string>(

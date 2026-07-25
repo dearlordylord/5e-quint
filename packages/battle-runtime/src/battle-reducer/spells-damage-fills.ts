@@ -2294,7 +2294,6 @@ export function spellObjectDamageOutcome(input: {
   const rolledDamage = spellObjectRolledDamage(
     input.invocation,
     input.damageRoll,
-    input.critical,
   );
   const damageType = input.invocation.damage.damageType;
   return Match.value(input.disposition).pipe(
@@ -2329,12 +2328,11 @@ export function spellObjectDamageOutcome(input: {
 export function spellObjectDamageByType(
   invocation: SpellObjectDamageInvocation,
   damageRoll: Extract<BattleFill, { readonly kind: "rolledDice" }>,
-  critical: boolean,
 ): ReadonlyMap<DamageType, number> {
   return addDamageAmountForType(
     new Map(),
     invocation.damage.damageType,
-    spellObjectRolledDamage(invocation, damageRoll, critical),
+    spellObjectRolledDamage(invocation, damageRoll),
   );
 }
 
@@ -2383,7 +2381,6 @@ export function spellObjectDamageOutcomeFromDamageByType(input: {
 export function spellObjectRolledDamage(
   invocation: SpellObjectDamageInvocation,
   damageRoll: Extract<BattleFill, { readonly kind: "rolledDice" }>,
-  _critical: boolean,
 ): number {
   const diceTotal = damageRoll.value.reduce(
     (total: number, group: RolledDiceGroup): number =>

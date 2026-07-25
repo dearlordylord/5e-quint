@@ -71,8 +71,6 @@ import {
 } from "./phase1-manifest.ts";
 import { supportedHoleOptionIds } from "./support-gates.ts";
 
-const TASK_ID_B4 = "B4-CLASS-FEATURE-IDENTITY-BATCH-1";
-const TASK_ID_B5 = "B5-CLASS-FEATURE-IDENTITY-BATCH-2";
 const BARD_EXPERTISE_UNIT_ID = "bard_expertise";
 const CLERIC_CHANNEL_DIVINITY_UNIT_ID = "cleric_channel_divinity";
 const DRUID_WILD_SHAPE_UNIT_ID = "druid_wild_shape";
@@ -106,23 +104,20 @@ const RANGER_SKILL_PROFICIENCIES = [
   "survival",
 ] as const satisfies ReadonlyArray<Skill>;
 
-const classFeatureSelectedIdentityResults = [
-  "init",
-  "bard-expertise",
-  "cleric-channel-divinity",
-  "druid-wild-shape",
-  "druid-wild-companion",
-  "monk-monks-focus",
-  "monk-uncanny-metabolism",
-  "paladin-fighting-style",
-  "ranger-deft-explorer",
-  "ranger-fighting-style",
-  "warlock-pact-magic",
-  "wizard-scholar",
-  "wizard-evocation-savant",
-] as const;
 type ClassFeatureSelectedIdentityResult =
-  (typeof classFeatureSelectedIdentityResults)[number];
+  | "init"
+  | "bard-expertise"
+  | "cleric-channel-divinity"
+  | "druid-wild-shape"
+  | "druid-wild-companion"
+  | "monk-monks-focus"
+  | "monk-uncanny-metabolism"
+  | "paladin-fighting-style"
+  | "ranger-deft-explorer"
+  | "ranger-fighting-style"
+  | "warlock-pact-magic"
+  | "wizard-scholar"
+  | "wizard-evocation-savant";
 type ClassFeatureSelectedIdentityUnitId =
   | typeof BARD_EXPERTISE_UNIT_ID
   | typeof CLERIC_CHANNEL_DIVINITY_UNIT_ID
@@ -158,8 +153,8 @@ type SelectedUnitIdentityReplaySequence = {
 };
 type SelectedUnitIdentityReplay = {
   readonly taskId:
-    | typeof TASK_ID_B4
-    | typeof TASK_ID_B5
+    | "B4-CLASS-FEATURE-IDENTITY-BATCH-1"
+    | "B5-CLASS-FEATURE-IDENTITY-BATCH-2"
     | "B6-CLASS-FEATURE-IDENTITY-BATCH-3";
   readonly unitId: ClassFeatureSelectedIdentityUnitId;
   readonly actions: readonly ClassFeatureSelectedIdentityDriverAction[];

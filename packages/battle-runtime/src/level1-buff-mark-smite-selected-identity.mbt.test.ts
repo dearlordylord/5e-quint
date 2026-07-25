@@ -2,6 +2,7 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 import {
   battleProcedureExecutionRefForTest,
   characterSpellProcedureRefMatchesSpellForTest,
+  type MembersOf,
 } from "./battle-runtime-test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS
@@ -148,27 +149,24 @@ const longstriderUnitId = "longstrider";
 const searingSmiteUnitId = "searing_smite";
 const shillelaghUnitId = "shillelagh";
 const trueStrikeUnitId = "true_strike";
-const level1BuffMarkSmiteSpellIds = [
-  divineFavorUnitId,
-  divineSmiteUnitId,
-  ensnaringStrikeUnitId,
-  falseLifeUnitId,
-  heroismUnitId,
-  huntersMarkUnitId,
-  hexUnitId,
-  longstriderUnitId,
-  searingSmiteUnitId,
-  shillelaghUnitId,
-  trueStrikeUnitId,
-] as const;
-type Level1BuffMarkSmiteSpellId = (typeof level1BuffMarkSmiteSpellIds)[number];
-const spellWeaponDamageRiderSourceSpellIds = [
-  divineFavorUnitId,
-  divineSmiteUnitId,
-  searingSmiteUnitId,
-] as const satisfies ReadonlyArray<Level1BuffMarkSmiteSpellId>;
-type SpellWeaponDamageRiderSourceSpellId =
-  (typeof spellWeaponDamageRiderSourceSpellIds)[number];
+type Level1BuffMarkSmiteSpellId =
+  | typeof divineFavorUnitId
+  | typeof divineSmiteUnitId
+  | typeof ensnaringStrikeUnitId
+  | typeof falseLifeUnitId
+  | typeof heroismUnitId
+  | typeof huntersMarkUnitId
+  | typeof hexUnitId
+  | typeof longstriderUnitId
+  | typeof searingSmiteUnitId
+  | typeof shillelaghUnitId
+  | typeof trueStrikeUnitId;
+type SpellWeaponDamageRiderSourceSpellId = MembersOf<
+  Level1BuffMarkSmiteSpellId,
+  | typeof divineFavorUnitId
+  | typeof divineSmiteUnitId
+  | typeof searingSmiteUnitId
+>;
 const damageRiderSourceSpellIds = [
   divineFavorUnitId,
   divineSmiteUnitId,
@@ -176,32 +174,35 @@ const damageRiderSourceSpellIds = [
 type DamageRiderSourceSpellId =
   | (typeof damageRiderSourceSpellIds)[number]
   | "none";
-const hexDamageHoleSourceSpellIds = [
-  hexUnitId,
-] as const satisfies ReadonlyArray<Level1BuffMarkSmiteSpellId>;
-type HexSourceSpellId = (typeof hexDamageHoleSourceSpellIds)[number] | "none";
-const markedDamageRiderSourceSpellIds = [
-  huntersMarkUnitId,
-  hexUnitId,
-] as const satisfies ReadonlyArray<Level1BuffMarkSmiteSpellId>;
-type MarkedDamageRiderSourceSpellId =
-  (typeof markedDamageRiderSourceSpellIds)[number];
+type HexSourceSpellId =
+  | MembersOf<Level1BuffMarkSmiteSpellId, typeof hexUnitId>
+  | "none";
+type MarkedDamageRiderSourceSpellId = MembersOf<
+  Level1BuffMarkSmiteSpellId,
+  typeof huntersMarkUnitId | typeof hexUnitId
+>;
 type HuntersMarkSourceSpellId = typeof huntersMarkUnitId | "none";
 type EnsnaringStrikeSourceSpellId = typeof ensnaringStrikeUnitId | "none";
-type BonusActionCastSpellId =
+type BonusActionCastSpellId = MembersOf<
+  Level1BuffMarkSmiteSpellId,
   | typeof divineFavorUnitId
   | typeof huntersMarkUnitId
   | typeof hexUnitId
-  | typeof shillelaghUnitId;
-type AttackHitBonusActionSpellId =
+  | typeof shillelaghUnitId
+>;
+type AttackHitBonusActionSpellId = MembersOf<
+  Level1BuffMarkSmiteSpellId,
   | typeof divineSmiteUnitId
   | typeof ensnaringStrikeUnitId
-  | typeof searingSmiteUnitId;
-type ActionCastSpellId =
+  | typeof searingSmiteUnitId
+>;
+type ActionCastSpellId = MembersOf<
+  Level1BuffMarkSmiteSpellId,
   | typeof falseLifeUnitId
   | typeof heroismUnitId
   | typeof longstriderUnitId
-  | typeof trueStrikeUnitId;
+  | typeof trueStrikeUnitId
+>;
 type TemporaryHitPointsSourceSpellId = typeof falseLifeUnitId | "none";
 type HeroismSourceSpellId = typeof heroismUnitId | "none";
 type LongstriderSourceSpellId = typeof longstriderUnitId | "none";
@@ -2068,10 +2069,8 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
         deathFailuresAtZeroHp: 1,
         damageSourceId: casterId,
       });
-      huntersMarkTransferVisibleOnDropTurn = markedDamageTransferActVisible(
-        state,
-        huntersMarkUnitId,
-      );
+      huntersMarkTransferVisibleOnDropTurn =
+        markedDamageTransferActVisible(state);
       huntersMarkTransferKindOnDropTurn = huntersMarkActiveMarkTransferKind(
         huntersMarkActiveMarkEffect(state),
       );
@@ -2161,10 +2160,7 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
         deathFailuresAtZeroHp: 1,
         damageSourceId: casterId,
       });
-      hexTransferVisibleOnDropTurn = markedDamageTransferActVisible(
-        state,
-        hexUnitId,
-      );
+      hexTransferVisibleOnDropTurn = markedDamageTransferActVisible(state);
       hexTransferKindOnDropTurn = hexActiveMarkTransferKind(
         hexActiveMarkEffect(state),
       );
@@ -2361,7 +2357,7 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
       const damageType = requireHole(act.initialHoles, "damageTypeChoice");
       const target = requireHole(act.initialHoles, "targetChoice");
       const damageTypeFill = damageTypeChoiceFill(damageType, "radiant");
-      const targetFill = attackTargetFill(target, trueStrikeDaggerAttackName);
+      const targetFill = attackTargetFill(target);
       const awaitingTargetChoice = resolveBattleSubject({
         state,
         subject: act.subject,
@@ -2833,7 +2829,7 @@ function resolveWeaponHitWithAttackRoll(input: {
   const act = weaponAttackAct(input.state, input.attackName);
   const subject = act.subject;
   const target = requireHole(act.initialHoles, "targetChoice");
-  const targetFill = attackTargetFill(target, input.attackName);
+  const targetFill = attackTargetFill(target);
   const awaitingAttackRoll = resolveBattleSubject({
     state: input.state,
     subject,
@@ -2936,7 +2932,6 @@ function weaponAttackAct(
 
 function attackTargetFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
-  _attackName: Level1WeaponAttackName,
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
   if (hole.attack === undefined) {
     throw new Error("Expected bound level-1 weapon attack selection.");
@@ -3235,12 +3230,9 @@ function requireResolvedResult(
   return result;
 }
 
-function markedDamageTransferActVisible(
-  state: BattleState,
-  spellId: MarkedDamageRiderSourceSpellId,
-): boolean {
+function markedDamageTransferActVisible(state: BattleState): boolean {
   return discoverBattleActCandidates(state).some((candidate) =>
-    isMarkedDamageTransferAct(candidate, spellId),
+    isMarkedDamageTransferAct(candidate),
   );
 }
 
@@ -3249,7 +3241,7 @@ function markedDamageTransferAct(
   spellId: MarkedDamageRiderSourceSpellId,
 ): MechanicalBonusActionSpellAct {
   const act = discoverBattleActCandidates(state).find((candidate) =>
-    isMarkedDamageTransferAct(candidate, spellId),
+    isMarkedDamageTransferAct(candidate),
   );
   if (act === undefined) {
     throw new Error(`Expected ${spellId} marked damage transfer act.`);
@@ -3259,7 +3251,6 @@ function markedDamageTransferAct(
 
 function isMarkedDamageTransferAct(
   candidate: ReturnType<typeof discoverBattleActCandidates>[number],
-  _spellId: MarkedDamageRiderSourceSpellId,
 ): candidate is MechanicalBonusActionSpellAct {
   return candidate.subject.tag === "bonusActionSpell";
 }
@@ -3632,7 +3623,7 @@ function trueStrikeSpellHostedWeaponAttackProjection(input: {
       input.state,
       input.act,
     ),
-    weaponUnitId: trueStrikeWeaponUnitId(input.state, input.act),
+    weaponUnitId: trueStrikeWeaponUnitId(input.state),
     ...trueStrikeRadiantAttackProjection(input.attackRoll, input.damage),
   };
 }
@@ -3676,10 +3667,7 @@ function trueStrikeComponentWeaponObjectId(
   );
 }
 
-function trueStrikeWeaponUnitId(
-  state: BattleState,
-  _act: ActionSpellAct,
-): TrueStrikeDaggerUnitId {
+function trueStrikeWeaponUnitId(state: BattleState): TrueStrikeDaggerUnitId {
   const selectedWeaponUnitId = selectedLoadoutWeaponUnitIdForItem({
     state,
     itemId: trueStrikeDaggerItemId,

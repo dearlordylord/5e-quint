@@ -208,7 +208,9 @@ function extractCreationChoiceIdsFromArray(source, constName, constants) {
   for (const match of body.matchAll(/creationChoiceOptionId\("([^"]+)"\)/g)) {
     ids.push(match[1]);
   }
-  for (const match of body.matchAll(/creationChoiceOptionId\(([A-Z0-9_]+)\)/g)) {
+  for (const match of body.matchAll(
+    /creationChoiceOptionId\(([A-Z0-9_]+)\)/g,
+  )) {
     const resolved = constants.get(match[1]);
     if (resolved !== undefined) ids.push(resolved);
   }
@@ -560,7 +562,11 @@ function runSelfTest() {
   `;
   const constants = extractStringConstants(source);
   const values = extractUnitIdsFromArray(source, "VALUES", constants);
-  const choices = extractCreationChoiceIdsFromArray(source, "CHOICES", constants);
+  const choices = extractCreationChoiceIdsFromArray(
+    source,
+    "CHOICES",
+    constants,
+  );
   const issues = [];
   if (values.join(",") !== "alpha,beta") {
     issues.push(`expected VALUES alpha,beta; received ${values.join(",")}`);

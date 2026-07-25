@@ -1,5 +1,5 @@
 import type { AbilityFilter, AreaDirectEffectAtom } from "../surface/types.ts";
-import type { TraceEdge, TraceNode } from "./tracer-model.ts";
+import type { TraceNode } from "./tracer-model.ts";
 import {
   describeCriticalRangeAttackFilter,
   describeDc,
@@ -10,7 +10,6 @@ import {
   describeWeaponFilter,
 } from "./tracer-rule-labels.ts";
 import type { IdGen } from "./tracer-rule-labels.ts";
-import type { TraceEffectAtomFn } from "./tracer-effect-types.ts";
 
 export type ActionAndRollEffectAtom = Extract<
   AreaDirectEffectAtom,
@@ -73,8 +72,6 @@ export function traceActionAndRollEffectAtom(
   e: ActionAndRollEffectAtom,
   nodes: TraceNode[],
   ids: IdGen,
-  _edges: TraceEdge[] | undefined,
-  _traceEffectAtom: TraceEffectAtomFn,
 ): string | null {
   switch (e.kind) {
     case "take_standard_action": {

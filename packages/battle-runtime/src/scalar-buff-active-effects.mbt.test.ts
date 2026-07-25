@@ -76,15 +76,13 @@ import {
 } from "./unit-profile-admission-spell-fill-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 
-const LAST_RESULTS = [
-  "init",
-  "shieldOfFaith",
-  "longstrider",
-  "spiderClimb",
-  "aid",
-  "falseLife",
-] as const;
-type LastResult = (typeof LAST_RESULTS)[number];
+type LastResult =
+  | "init"
+  | "shieldOfFaith"
+  | "longstrider"
+  | "spiderClimb"
+  | "aid"
+  | "falseLife";
 const SCENARIO_OUTCOME_BY_TAG = {
   Init: "init",
   ShieldOfFaith: "shieldOfFaith",

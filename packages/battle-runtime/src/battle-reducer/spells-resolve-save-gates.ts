@@ -1499,7 +1499,7 @@ export function resolveSaveGateDamageSpellAct(input: {
   const objectDamageByType =
     objectDamageFacts.length === 0
       ? undefined
-      : spellObjectDamageByType(damageInvocation, damageRoll, false);
+      : spellObjectDamageByType(damageInvocation, damageRoll);
   const sourceCombatant = stateAfterCastConcentrationBreak.combatants.get(
     input.actorId,
   );

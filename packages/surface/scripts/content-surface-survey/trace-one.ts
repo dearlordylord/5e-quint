@@ -4,7 +4,10 @@ import { traceUnit } from "../../src/interpreter/tracer.ts";
 import { decodeUnitRecordSync } from "../../src/surface/schema.ts";
 
 const path = process.argv[2];
-if (!path) { console.error("usage: trace-one.ts <json>"); process.exit(1); }
+if (!path) {
+  console.error("usage: trace-one.ts <json>");
+  process.exit(1);
+}
 const unit = decodeUnitRecordSync(JSON.parse(readFileSync(path, "utf8")));
 const trace = traceUnit(unit);
 const kinds = Array.from(new Set(trace.nodes.map((n) => n.atomKind))).sort();

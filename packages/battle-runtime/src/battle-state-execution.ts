@@ -5457,8 +5457,7 @@ export type BattleUnitFeatureSavingThrowOutcomeValue = {
 export type BattleSavingThrowOutcomeValue =
   | BattleSpellSavingThrowOutcomeValue
   | BattleUnitFeatureSavingThrowOutcomeValue;
-const SAVE_DAMAGE_RESULTS = ["none", "half", "full"] as const;
-export type SaveDamageResult = (typeof SAVE_DAMAGE_RESULTS)[number];
+export type SaveDamageResult = "none" | "half" | "full";
 export type BattleSpellAreaChoice = {
   readonly originAnchorId: CombatantId;
   readonly affectedTargetIds: readonly CombatantId[];

@@ -1246,7 +1246,6 @@ function resolveSpellAttackSequenceObjectPart(input: {
   const objectDamageByType = spellObjectDamageByType(
     input.invocation,
     input.partFill.damageRoll,
-    critical,
   );
   const sourceDamageRollPenaltyRoll = sourceDamageRollPenaltyRollForDamageRoll(
     input.fillSet.sourceDamageRollPenaltyRolls,

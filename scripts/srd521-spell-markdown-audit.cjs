@@ -303,7 +303,9 @@ function fiveToolsText(spell) {
 
 function buildStructuredSources() {
   const open5e = readJson(open5ePath).map((row) => row.fields);
-  const fiveTools = readJson(fiveToolsPath).spell.filter((spell) => spell.srd52);
+  const fiveTools = readJson(fiveToolsPath).spell.filter(
+    (spell) => spell.srd52,
+  );
 
   return {
     open5eBySrdName: new Map(open5e.map((spell) => [spell.name, spell])),
@@ -362,7 +364,9 @@ function classifyIssue(
 
 function buildAudit() {
   const markdownSpells = parseMarkdownSpells();
-  const byMarkdownName = new Map(markdownSpells.map((spell) => [spell.name, spell]));
+  const byMarkdownName = new Map(
+    markdownSpells.map((spell) => [spell.name, spell]),
+  );
   const { open5eBySrdName, fiveToolsBySrdName, aliasCount } =
     buildStructuredSources();
   const issues = [];
@@ -445,7 +449,8 @@ function buildAudit() {
   }
 
   const lowLevelIssues = issues.filter(
-    (issue) => issue.level !== undefined && issue.level <= lowLevelMaxSpellLevel,
+    (issue) =>
+      issue.level !== undefined && issue.level <= lowLevelMaxSpellLevel,
   );
   const higherLevelIssues = issues.filter(
     (issue) => issue.level !== undefined && issue.level > lowLevelMaxSpellLevel,
@@ -531,12 +536,15 @@ function renderIssueTable(issues) {
 
 function renderMarkdownReport(audit) {
   const lowLevelIssues = audit.issues.filter(
-    (issue) => issue.level !== undefined && issue.level <= lowLevelMaxSpellLevel,
+    (issue) =>
+      issue.level !== undefined && issue.level <= lowLevelMaxSpellLevel,
   );
   const higherLevelIssues = audit.issues.filter(
     (issue) => issue.level !== undefined && issue.level > lowLevelMaxSpellLevel,
   );
-  const unlevelledIssues = audit.issues.filter((issue) => issue.level === undefined);
+  const unlevelledIssues = audit.issues.filter(
+    (issue) => issue.level === undefined,
+  );
   const openLowLevelIssues = lowLevelIssues.filter(
     (issue) => issue.reviewStatus === "open",
   );
@@ -596,9 +604,7 @@ function renderMarkdownReport(audit) {
     "### Level <= 2 Manual PDF Review Notes",
     "",
     ...lowLevelIssues.flatMap((issue) =>
-      issue.manualEvidence
-        ? [`- ${issue.name}: ${issue.manualEvidence}`]
-        : [],
+      issue.manualEvidence ? [`- ${issue.name}: ${issue.manualEvidence}`] : [],
     ),
     "",
     "## Level > 2 Findings",

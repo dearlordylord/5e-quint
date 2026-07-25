@@ -30,7 +30,8 @@ function buildSpellProcedureMbtEvidenceGate({
     missingProfileObligationDetail:
       "Supported spell procedure profile has no profile-obligations row.",
     rulesKernelMatrix,
-    selectProfile: (profile) => profile.profileKind === spellProcedureProfileKind,
+    selectProfile: (profile) =>
+      profile.profileKind === spellProcedureProfileKind,
   });
 }
 

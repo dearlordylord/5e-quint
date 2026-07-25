@@ -27,13 +27,9 @@ import {
   type CharacterSheetTreeStrideTree,
 } from "./sheet-types.ts";
 
-const treeStrideSelectedIdentityDriverSchema = {
-  doCastTreeStride: {},
-  doResolveTreeStrideTransit: {},
-} as const;
-
 type TreeStrideSelectedIdentityDriverAction =
-  keyof typeof treeStrideSelectedIdentityDriverSchema;
+  | "doCastTreeStride"
+  | "doResolveTreeStrideTransit";
 
 type TreeStrideSelectedIdentityProjection = {
   readonly spellId: string;

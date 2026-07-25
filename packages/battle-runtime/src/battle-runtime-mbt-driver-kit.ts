@@ -24,7 +24,7 @@ import { Either, Match, Schema } from "effect";
 import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";
 import { expect } from "vitest";
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
-import { ABILITIES, SURFACE_SKILLS } from "@dnd/shared/game-facts";
+import { type Ability, type SurfaceSkill } from "@dnd/shared/game-facts";
 import {
   DieRollResult,
   Hp,
@@ -808,8 +808,7 @@ type HitPointRestorationOrderingProjection = {
   readonly featureTargetHp: number;
   readonly featureTargetZeroHpLifecycleCleared: boolean;
 };
-const DEATH_SAVING_THROW_MBT_HOLES = ["DeathSavingThrow"] as const;
-type DeathSavingThrowMbtHole = (typeof DEATH_SAVING_THROW_MBT_HOLES)[number];
+type DeathSavingThrowMbtHole = "DeathSavingThrow";
 const DEATH_SAVING_THROW_MBT_TURN_ROLES = ["actor", "target"] as const;
 type DeathSavingThrowMbtTurnRole =
   (typeof DEATH_SAVING_THROW_MBT_TURN_ROLES)[number];
@@ -825,16 +824,13 @@ type DeathSavingThrowProjection = {
   readonly lastResult: MbtLastResult;
   readonly lastInvalidReason: MbtLastInvalidReason;
 };
-const CONCENTRATION_BREAK_TEARDOWN_SCENARIOS = [
-  "init",
-  "concentrationSpellCast",
-  "damageSaveNeeded",
-  "damageFailedTeardownBeforeNextCommand",
-  "voluntaryEndTeardown",
-  "replacementTeardownBeforeNewEffect",
-] as const;
 type ConcentrationBreakTeardownScenario =
-  (typeof CONCENTRATION_BREAK_TEARDOWN_SCENARIOS)[number];
+  | "init"
+  | "concentrationSpellCast"
+  | "damageSaveNeeded"
+  | "damageFailedTeardownBeforeNextCommand"
+  | "voluntaryEndTeardown"
+  | "replacementTeardownBeforeNewEffect";
 type ConcentrationBreakTeardownProjection = {
   readonly scenario: ConcentrationBreakTeardownScenario;
   readonly damageTaken: number;
@@ -871,207 +867,196 @@ type BattleCombatantState =
   BattleState["combatants"] extends ReadonlyMap<CombatantId, infer Combatant>
     ? Combatant
     : never;
-const REDUCER_ROUTE_SUBJECT_FAMILIES = [
-  "battleAction",
-  "abilityCheckSearch",
-  "slotSpell",
-  "saveGatedSpell",
-  "hitPointRestoration",
-  "weaponAttack",
-  "weaponMasteryProperty",
-  "attackActionAreaSaveDamageReplacement",
-  "spellAttack",
-  "spellAttackProcedure",
-  "spellHostedWeaponAttack",
-  "weaponDamageRider",
-  "heldWeaponActiveEffect",
-  "weaponEnhancementItemTarget",
-  "weaponHostedSpellEffectCleanup",
-  "afterHitDamageRider",
-  "statBlockAction",
-  "creatureAttack",
-  "deathSavingThrow",
-  "zeroHitPointStabilization",
-  "concentrationTeardown",
-  "commandEffect",
-  "reactionSpell",
-  "reactionArmorClassEffect",
-  "reactionAfterDamageEffect",
-  "reactionSpellInterruption",
-  "reactionFallMitigation",
-  "interruptStackResume",
-  "rollModifierEffect",
-  "spellDamageReduction",
-  "scalarBuffEffect",
-  "repeatSaveConditionEffect",
-  "turnBoundaryEffectLifecycle",
-  "zeroHitPointSpellEffectTeardown",
-  "unitFeatureBonusAction",
-  "activeFeatureSpellSaveDc",
-  "activeFeatureSpellAttackRollMode",
-  "companionLifecycle",
-  "companionSharedSenses",
-  "companionTouchDelivery",
-  "companionReactionAttack",
-  "objectTargetSpellAttack",
-  "passiveDamageAdjustment",
-  "passiveSavingThrowRollMode",
-  "passiveAbilityCheckRollMode",
-  "creatureSpaceMovementPermission",
-  "creatureStatProjection",
-  "movementResource",
-  "specialSpeedProjection",
-  "forcedMovement",
-  "movementPresentation",
-  "activeFormLifecycle",
-  "creatureTypeTargetAdmission",
-  "protectionCharmActiveEffect",
-  "charmSourceDamageBreak",
-  "wardedTargetInterdiction",
-  "metamagicSpellGovernor",
-  "metamagicBonusActionCastingTime",
-  "metamagicSavingThrowProtection",
-  "metamagicSavingThrowRollMode",
-  "metamagicDamageTypeSubstitution",
-  "metamagicEffectiveSpellLevel",
-  "metamagicSpellRangeProjection",
-  "metamagicSpellDurationProjection",
-  "metamagicSpellComponentProjection",
-  "metamagicMissedSpellAttackReroll",
-  "metamagicDamageDiceReroll",
-  "spellBaseArmorClassEffect",
-  "hitPointRegainPrevention",
-  "nextAttackRollMode",
-  "reactionInterdiction",
-  "conditionRider",
-  "objectLightRider",
-  "spatialEffect",
-  "mixedTargetOutcomeSpell",
-  "markedDamageRiderEffect",
-  "conditionImmunityTemporaryHitPointEffect",
-] as const;
 type ReducerRouteSubjectFamily =
-  (typeof REDUCER_ROUTE_SUBJECT_FAMILIES)[number];
-const REDUCER_ROUTE_OWNER_GROUPS = [
-  "battleActionEconomy",
-  "battleSpellSlotAndActionEconomy",
-  "battleHoleFrontier",
-  "battleTargetSelection",
-  "battleAttackRoll",
-  "battleAttackActionProcedure",
-  "battleSpellAttackProcedure",
-  "battleAbilityCheck",
-  "battleHitPoint",
-  "battleDamageRoll",
-  "battleDamageType",
-  "battleHitPointAndZeroHpLifecycle",
-  "battleConditionLifecycle",
-  "battleStatBlockAction",
-  "battleConcentration",
-  "battleActiveEffect",
-  "battleItemTargetBoundary",
-  "battleMovementResource",
-  "battleInterruptStack",
-  "battleFeatureResource",
-  "battleTemporaryHitPoint",
-  "battleTurnBoundary",
-  "battleCompanion",
-  "battleObjectTargetBoundary",
-  "battleAreaShape",
-  "battleSavingThrowOutcome",
-  "battleDamageAdjustment",
-  "battleSavingThrowRollMode",
-  "battleAbilityCheckRollMode",
-  "battleAttackRollMode",
-  "battleCreatureSpaceMovement",
-  "battleCreatureState",
-  "battleArmorClass",
-  "battleLightProjection",
-  "battleSightProjection",
-  "battleObscurementProjection",
-  "battleAreaHazard",
-  "battleSpellInvocation",
-  "battleTablePresentation",
-] as const;
-type ReducerRouteOwnerGroup = (typeof REDUCER_ROUTE_OWNER_GROUPS)[number];
-const REDUCER_ROUTE_HOLES = [
-  "abilityCheck",
-  "abilityChoice",
-  "attackDamageDisposition",
-  "attackRoll",
-  "commandOptionChoice",
-  "companionReappearanceInitiative",
-  "concentrationSavingThrow",
-  "conditionChoice",
-  "damageTypeChoice",
-  "deathSavingThrow",
-  "grappleOutcome",
-  "gustOfWindLineDirectionChoice",
-  "hitPointHealingDistribution",
-  "interruptDecision",
-  "levitateAltitudeChange",
-  "levitateInitialRise",
-  "movement",
-  "objectDropResolution",
-  "ongoingSpellTargetChoice",
-  "rolledDice",
-  "sanctuaryInterdictionOutcome",
-  "savingThrowOutcome",
-  "selfTransformationModeChoice",
-  "shoveOutcome",
-  "skillChoice",
-  "slowSomaticSpellFailureOutcome",
-  "spellcastingAbilityCheck",
-  "spellTargetAllocation",
-  "spellTargetList",
-  "statBlockRechargeRoll",
-  "targetAbilityChoices",
-  "targetChoice",
-  "unitFeatureDecision",
-  "wildShapeEquipmentDisposition",
-] as const;
-type ReducerRouteHole = (typeof REDUCER_ROUTE_HOLES)[number];
-const REDUCER_ROUTE_FILLS = [
-  "abilityCheck",
-  "abilityChoice",
-  "attackDamageDisposition",
-  "attackRoll",
-  "commandOptionChoice",
-  "companionReappearanceInitiative",
-  "concentrationSavingThrow",
-  "conditionChoice",
-  "damageTypeChoice",
-  "deathSavingThrow",
-  "grappleOutcome",
-  "gustOfWindLineDirectionChoice",
-  "hitPointHealingDistribution",
-  "interruptDecision",
-  "levitateAltitudeChange",
-  "levitateInitialRise",
-  "magicWeaponTargetItem",
-  "movement",
-  "objectDropResolution",
-  "ongoingSpellTargetChoice",
-  "rolledDice",
-  "sanctuaryInterdictionOutcome",
-  "savingThrowOutcome",
-  "selfTransformationModeChoice",
-  "shoveOutcome",
-  "skillChoice",
-  "slowSomaticSpellFailureOutcome",
-  "spellTargetAllocation",
-  "spellTargetList",
-  "statBlockRechargeRoll",
-  "targetAbilityChoices",
-  "targetChoice",
-  "unitFeatureDecision",
-  "wildShapeEquipmentDisposition",
-] as const;
-type ReducerRouteFillKind = (typeof REDUCER_ROUTE_FILLS)[number];
-const REDUCER_ROUTE_ABILITIES = ABILITIES;
-type ReducerRouteAbilityChoice = (typeof REDUCER_ROUTE_ABILITIES)[number];
-const REDUCER_ROUTE_SKILLS = SURFACE_SKILLS;
-type ReducerRouteSkillChoice = (typeof REDUCER_ROUTE_SKILLS)[number];
+  | "battleAction"
+  | "abilityCheckSearch"
+  | "slotSpell"
+  | "saveGatedSpell"
+  | "hitPointRestoration"
+  | "weaponAttack"
+  | "weaponMasteryProperty"
+  | "attackActionAreaSaveDamageReplacement"
+  | "spellAttack"
+  | "spellAttackProcedure"
+  | "spellHostedWeaponAttack"
+  | "weaponDamageRider"
+  | "heldWeaponActiveEffect"
+  | "weaponEnhancementItemTarget"
+  | "weaponHostedSpellEffectCleanup"
+  | "afterHitDamageRider"
+  | "statBlockAction"
+  | "creatureAttack"
+  | "deathSavingThrow"
+  | "zeroHitPointStabilization"
+  | "concentrationTeardown"
+  | "commandEffect"
+  | "reactionSpell"
+  | "reactionArmorClassEffect"
+  | "reactionAfterDamageEffect"
+  | "reactionSpellInterruption"
+  | "reactionFallMitigation"
+  | "interruptStackResume"
+  | "rollModifierEffect"
+  | "spellDamageReduction"
+  | "scalarBuffEffect"
+  | "repeatSaveConditionEffect"
+  | "turnBoundaryEffectLifecycle"
+  | "zeroHitPointSpellEffectTeardown"
+  | "unitFeatureBonusAction"
+  | "activeFeatureSpellSaveDc"
+  | "activeFeatureSpellAttackRollMode"
+  | "companionLifecycle"
+  | "companionSharedSenses"
+  | "companionTouchDelivery"
+  | "companionReactionAttack"
+  | "objectTargetSpellAttack"
+  | "passiveDamageAdjustment"
+  | "passiveSavingThrowRollMode"
+  | "passiveAbilityCheckRollMode"
+  | "creatureSpaceMovementPermission"
+  | "creatureStatProjection"
+  | "movementResource"
+  | "specialSpeedProjection"
+  | "forcedMovement"
+  | "movementPresentation"
+  | "activeFormLifecycle"
+  | "creatureTypeTargetAdmission"
+  | "protectionCharmActiveEffect"
+  | "charmSourceDamageBreak"
+  | "wardedTargetInterdiction"
+  | "metamagicSpellGovernor"
+  | "metamagicBonusActionCastingTime"
+  | "metamagicSavingThrowProtection"
+  | "metamagicSavingThrowRollMode"
+  | "metamagicDamageTypeSubstitution"
+  | "metamagicEffectiveSpellLevel"
+  | "metamagicSpellRangeProjection"
+  | "metamagicSpellDurationProjection"
+  | "metamagicSpellComponentProjection"
+  | "metamagicMissedSpellAttackReroll"
+  | "metamagicDamageDiceReroll"
+  | "spellBaseArmorClassEffect"
+  | "hitPointRegainPrevention"
+  | "nextAttackRollMode"
+  | "reactionInterdiction"
+  | "conditionRider"
+  | "objectLightRider"
+  | "spatialEffect"
+  | "mixedTargetOutcomeSpell"
+  | "markedDamageRiderEffect"
+  | "conditionImmunityTemporaryHitPointEffect";
+type ReducerRouteOwnerGroup =
+  | "battleActionEconomy"
+  | "battleSpellSlotAndActionEconomy"
+  | "battleHoleFrontier"
+  | "battleTargetSelection"
+  | "battleAttackRoll"
+  | "battleAttackActionProcedure"
+  | "battleSpellAttackProcedure"
+  | "battleAbilityCheck"
+  | "battleHitPoint"
+  | "battleDamageRoll"
+  | "battleDamageType"
+  | "battleHitPointAndZeroHpLifecycle"
+  | "battleConditionLifecycle"
+  | "battleStatBlockAction"
+  | "battleConcentration"
+  | "battleActiveEffect"
+  | "battleItemTargetBoundary"
+  | "battleMovementResource"
+  | "battleInterruptStack"
+  | "battleFeatureResource"
+  | "battleTemporaryHitPoint"
+  | "battleTurnBoundary"
+  | "battleCompanion"
+  | "battleObjectTargetBoundary"
+  | "battleAreaShape"
+  | "battleSavingThrowOutcome"
+  | "battleDamageAdjustment"
+  | "battleSavingThrowRollMode"
+  | "battleAbilityCheckRollMode"
+  | "battleAttackRollMode"
+  | "battleCreatureSpaceMovement"
+  | "battleCreatureState"
+  | "battleArmorClass"
+  | "battleLightProjection"
+  | "battleSightProjection"
+  | "battleObscurementProjection"
+  | "battleAreaHazard"
+  | "battleSpellInvocation"
+  | "battleTablePresentation";
+type ReducerRouteHole =
+  | "abilityCheck"
+  | "abilityChoice"
+  | "attackDamageDisposition"
+  | "attackRoll"
+  | "commandOptionChoice"
+  | "companionReappearanceInitiative"
+  | "concentrationSavingThrow"
+  | "conditionChoice"
+  | "damageTypeChoice"
+  | "deathSavingThrow"
+  | "grappleOutcome"
+  | "gustOfWindLineDirectionChoice"
+  | "hitPointHealingDistribution"
+  | "interruptDecision"
+  | "levitateAltitudeChange"
+  | "levitateInitialRise"
+  | "movement"
+  | "objectDropResolution"
+  | "ongoingSpellTargetChoice"
+  | "rolledDice"
+  | "sanctuaryInterdictionOutcome"
+  | "savingThrowOutcome"
+  | "selfTransformationModeChoice"
+  | "shoveOutcome"
+  | "skillChoice"
+  | "slowSomaticSpellFailureOutcome"
+  | "spellcastingAbilityCheck"
+  | "spellTargetAllocation"
+  | "spellTargetList"
+  | "statBlockRechargeRoll"
+  | "targetAbilityChoices"
+  | "targetChoice"
+  | "unitFeatureDecision"
+  | "wildShapeEquipmentDisposition";
+type ReducerRouteFillKind =
+  | "abilityCheck"
+  | "abilityChoice"
+  | "attackDamageDisposition"
+  | "attackRoll"
+  | "commandOptionChoice"
+  | "companionReappearanceInitiative"
+  | "concentrationSavingThrow"
+  | "conditionChoice"
+  | "damageTypeChoice"
+  | "deathSavingThrow"
+  | "grappleOutcome"
+  | "gustOfWindLineDirectionChoice"
+  | "hitPointHealingDistribution"
+  | "interruptDecision"
+  | "levitateAltitudeChange"
+  | "levitateInitialRise"
+  | "magicWeaponTargetItem"
+  | "movement"
+  | "objectDropResolution"
+  | "ongoingSpellTargetChoice"
+  | "rolledDice"
+  | "sanctuaryInterdictionOutcome"
+  | "savingThrowOutcome"
+  | "selfTransformationModeChoice"
+  | "shoveOutcome"
+  | "skillChoice"
+  | "slowSomaticSpellFailureOutcome"
+  | "spellTargetAllocation"
+  | "spellTargetList"
+  | "statBlockRechargeRoll"
+  | "targetAbilityChoices"
+  | "targetChoice"
+  | "unitFeatureDecision"
+  | "wildShapeEquipmentDisposition";
+type ReducerRouteAbilityChoice = Ability;
+type ReducerRouteSkillChoice = SurfaceSkill;
 type ReducerRouteFill =
   | ReducerRouteFillKind
   | {
@@ -1158,44 +1143,28 @@ type ReducerRoutedSpellBaseArmorClassEffectProjection = {
 type ReducerRoutedHitPointRegainPreventionProjection = {
   readonly route: readonly ReducerRouteEvent[];
 };
-const NEXT_ATTACK_ROLL_MODE_SOURCES = [
-  "hostAttackHitDamageOutcome",
-  "hostSaveEffectOutcome",
-  "hostAssistActionOutcome",
-  "hostBonusActionFeatureOutcome",
-] as const;
-type NextAttackRollModeSource = (typeof NEXT_ATTACK_ROLL_MODE_SOURCES)[number];
-const NEXT_ATTACK_ROLL_MODE_CARRIERS = [
-  "hostOutcomeTargetCarrier",
-  "distractedEnemyCarrier",
-  "actingBeneficiaryCarrier",
-] as const;
+type NextAttackRollModeSource =
+  | "hostAttackHitDamageOutcome"
+  | "hostSaveEffectOutcome"
+  | "hostAssistActionOutcome"
+  | "hostBonusActionFeatureOutcome";
 type NextAttackRollModeCarrier =
-  (typeof NEXT_ATTACK_ROLL_MODE_CARRIERS)[number];
-const NEXT_ATTACK_ROLL_MODE_ATTACKERS = [
-  "sourceAttacker",
-  "affectedTargetAttacker",
-  "sourceAllyAttacker",
-] as const;
+  | "hostOutcomeTargetCarrier"
+  | "distractedEnemyCarrier"
+  | "actingBeneficiaryCarrier";
 type NextAttackRollModeAttacker =
-  (typeof NEXT_ATTACK_ROLL_MODE_ATTACKERS)[number];
-const NEXT_ATTACK_ROLL_MODE_TARGET_SCOPES = [
-  "attackAgainstAffectedTargetOnly",
-  "attackAgainstAnyTarget",
-] as const;
+  | "sourceAttacker"
+  | "affectedTargetAttacker"
+  | "sourceAllyAttacker";
 type NextAttackRollModeTargetScope =
-  (typeof NEXT_ATTACK_ROLL_MODE_TARGET_SCOPES)[number];
-const NEXT_ATTACK_ROLL_MODE_EXPIRATION_BOUNDARIES = [
-  "beforeSourceNextTurnStarts",
-  "beforeSourceNextTurnEnds",
-  "beforeBeneficiaryCurrentTurnEnds",
-  "beforeAffectedTargetNextTurnEnds",
-] as const;
+  | "attackAgainstAffectedTargetOnly"
+  | "attackAgainstAnyTarget";
 type NextAttackRollModeExpirationBoundary =
-  (typeof NEXT_ATTACK_ROLL_MODE_EXPIRATION_BOUNDARIES)[number];
-const NEXT_ATTACK_ROLL_MODE_DIRECTIONS = ["advantage", "disadvantage"] as const;
-type NextAttackRollModeDirection =
-  (typeof NEXT_ATTACK_ROLL_MODE_DIRECTIONS)[number];
+  | "beforeSourceNextTurnStarts"
+  | "beforeSourceNextTurnEnds"
+  | "beforeBeneficiaryCurrentTurnEnds"
+  | "beforeAffectedTargetNextTurnEnds";
+type NextAttackRollModeDirection = "advantage" | "disadvantage";
 type NextAttackRollModeRouteFact =
   | {
       readonly kind: "source";
@@ -1230,24 +1199,12 @@ type ReducerRoutedNextAttackRollModeProjection = {
   readonly route: readonly ReducerRouteEvent[];
   readonly facts: readonly NextAttackRollModeRouteFact[];
 };
-const REACTION_INTERDICTION_SOURCES = ["hostAttackHitDamageOutcome"] as const;
-type ReactionInterdictionSource =
-  (typeof REACTION_INTERDICTION_SOURCES)[number];
-const REACTION_INTERDICTION_CARRIERS = ["hostOutcomeTargetCarrier"] as const;
-type ReactionInterdictionCarrier =
-  (typeof REACTION_INTERDICTION_CARRIERS)[number];
-const REACTION_INTERDICTION_SCOPES = ["affectedTargetReactionsOnly"] as const;
-type ReactionInterdictionScope = (typeof REACTION_INTERDICTION_SCOPES)[number];
-const REACTION_INTERDICTION_TRIGGER_FAMILIES = [
-  "opportunityAttackTriggerFamily",
-] as const;
-type ReactionInterdictionTriggerFamily =
-  (typeof REACTION_INTERDICTION_TRIGGER_FAMILIES)[number];
-const REACTION_INTERDICTION_EXPIRATION_BOUNDARIES = [
-  "untilAffectedTargetNextTurnStarts",
-] as const;
+type ReactionInterdictionSource = "hostAttackHitDamageOutcome";
+type ReactionInterdictionCarrier = "hostOutcomeTargetCarrier";
+type ReactionInterdictionScope = "affectedTargetReactionsOnly";
+type ReactionInterdictionTriggerFamily = "opportunityAttackTriggerFamily";
 type ReactionInterdictionExpirationBoundary =
-  (typeof REACTION_INTERDICTION_EXPIRATION_BOUNDARIES)[number];
+  "untilAffectedTargetNextTurnStarts";
 type ReactionInterdictionRouteFact =
   | {
       readonly kind: "source";
@@ -1278,46 +1235,32 @@ type ReducerRoutedOpportunityAttackDenialProjection = {
   readonly route: readonly ReducerRouteEvent[];
   readonly facts: readonly ReactionInterdictionRouteFact[];
 };
-const CONDITION_RIDER_HOST_OUTCOMES = [
-  "hostAttackHitDamageOutcome",
-  "hostFailedSavingThrowOutcome",
-] as const;
-type ConditionRiderHostOutcome = (typeof CONDITION_RIDER_HOST_OUTCOMES)[number];
-const CONDITION_RIDER_CARRIERS = ["affectedTargetConditionCarrier"] as const;
-type ConditionRiderCarrier = (typeof CONDITION_RIDER_CARRIERS)[number];
-const CONDITION_RIDER_CONDITION_KINDS = [
-  "poisoned",
-  "blinded",
-  "deafened",
-  "restrained",
-  "incapacitated",
-  "paralyzed",
-  "prone",
-  "unconscious",
-] as const;
+type ConditionRiderHostOutcome =
+  | "hostAttackHitDamageOutcome"
+  | "hostFailedSavingThrowOutcome";
+type ConditionRiderCarrier = "affectedTargetConditionCarrier";
 type ConditionRiderConditionKind =
-  (typeof CONDITION_RIDER_CONDITION_KINDS)[number];
-const CONDITION_RIDER_ADMISSIONS = [
-  "conditionApplied",
-  "conditionRejectedByImmunity",
-] as const;
-type ConditionRiderAdmission = (typeof CONDITION_RIDER_ADMISSIONS)[number];
-const CONDITION_RIDER_BOUNDARIES = [
-  "untilSourceNextTurnEnds",
-  "untilAffectedTargetNextTurnEnds",
-  "untilSpellEnds",
-  "affectedTargetEndTurnRepeatSave",
-] as const;
-type ConditionRiderBoundary = (typeof CONDITION_RIDER_BOUNDARIES)[number];
-const CONDITION_RIDER_ESCAPES = ["athleticsActionEscapeCheck"] as const;
-type ConditionRiderEscape = (typeof CONDITION_RIDER_ESCAPES)[number];
-const CONDITION_RIDER_CLEANUP_OWNERS = [
-  "battleTurnBoundary",
-  "battleConditionLifecycle",
-  "battleActiveEffect",
-] as const;
+  | "poisoned"
+  | "blinded"
+  | "deafened"
+  | "restrained"
+  | "incapacitated"
+  | "paralyzed"
+  | "prone"
+  | "unconscious";
+type ConditionRiderAdmission =
+  | "conditionApplied"
+  | "conditionRejectedByImmunity";
+type ConditionRiderBoundary =
+  | "untilSourceNextTurnEnds"
+  | "untilAffectedTargetNextTurnEnds"
+  | "untilSpellEnds"
+  | "affectedTargetEndTurnRepeatSave";
+type ConditionRiderEscape = "athleticsActionEscapeCheck";
 type ConditionRiderCleanupOwner =
-  (typeof CONDITION_RIDER_CLEANUP_OWNERS)[number];
+  | "battleTurnBoundary"
+  | "battleConditionLifecycle"
+  | "battleActiveEffect";
 type ConditionRiderRouteFact =
   | {
       readonly kind: "hostOutcome";
@@ -1369,49 +1312,27 @@ type ReducerRoutedConditionRiderProjection = {
   readonly route: readonly ReducerRouteEvent[];
   readonly facts: readonly ConditionRiderRouteFact[];
 };
-const OBJECT_LIGHT_EMITTER_SOURCES = [
-  "objectAttachedEmitterSource",
-  "heldEmitterSource",
-] as const;
-type ObjectLightEmitterSource = (typeof OBJECT_LIGHT_EMITTER_SOURCES)[number];
-const OBJECT_LIGHT_EMITTER_ADMISSIONS = [
-  "objectTargetAdmittedByTableWitness",
-  "objectTargetRejectedByTableWitness",
-  "emitterEffectAdmitted",
-] as const;
+type ObjectLightEmitterSource =
+  | "objectAttachedEmitterSource"
+  | "heldEmitterSource";
 type ObjectLightEmitterAdmission =
-  (typeof OBJECT_LIGHT_EMITTER_ADMISSIONS)[number];
-const OBJECT_LIGHT_EMITTER_ATTACHMENTS = [
-  "attachedToObject",
-  "heldByCaster",
-] as const;
-type ObjectLightEmitterAttachment =
-  (typeof OBJECT_LIGHT_EMITTER_ATTACHMENTS)[number];
-const OBJECT_LIGHT_PROJECTIONS = [
-  "brightLightProjection",
-  "dimLightProjection",
-] as const;
-type ObjectLightProjection = (typeof OBJECT_LIGHT_PROJECTIONS)[number];
-const OBJECT_LIGHT_CLEANUPS = [
-  "replacementCleanup",
-  "hurlCleanup",
-  "durationCleanup",
-] as const;
-type ObjectLightCleanup = (typeof OBJECT_LIGHT_CLEANUPS)[number];
-const OBJECT_LIGHT_CLEANUP_OWNERS = [
-  "battleActiveEffect",
-  "battleTurnBoundary",
-] as const;
-type ObjectLightCleanupOwner = (typeof OBJECT_LIGHT_CLEANUP_OWNERS)[number];
-const OBJECT_LIGHT_TABLE_WITNESSES = [
-  "objectValidityAdmissionWitness",
-  "objectGeometryWitness",
-  "coverGeometryWitness",
-  "opaqueBlockerGeometryWitness",
-  "colorPresentationWitness",
-  "objectDurabilityBoundaryWitness",
-] as const;
-type ObjectLightTableWitness = (typeof OBJECT_LIGHT_TABLE_WITNESSES)[number];
+  | "objectTargetAdmittedByTableWitness"
+  | "objectTargetRejectedByTableWitness"
+  | "emitterEffectAdmitted";
+type ObjectLightEmitterAttachment = "attachedToObject" | "heldByCaster";
+type ObjectLightProjection = "brightLightProjection" | "dimLightProjection";
+type ObjectLightCleanup =
+  | "replacementCleanup"
+  | "hurlCleanup"
+  | "durationCleanup";
+type ObjectLightCleanupOwner = "battleActiveEffect" | "battleTurnBoundary";
+type ObjectLightTableWitness =
+  | "objectValidityAdmissionWitness"
+  | "objectGeometryWitness"
+  | "coverGeometryWitness"
+  | "opaqueBlockerGeometryWitness"
+  | "colorPresentationWitness"
+  | "objectDurabilityBoundaryWitness";
 type ObjectLightRouteFact =
   | {
       readonly kind: "emitterSource";
@@ -1442,79 +1363,61 @@ type ReducerRoutedObjectLightProjection = {
   readonly route: readonly ReducerRouteEvent[];
   readonly facts: readonly ObjectLightRouteFact[];
 };
-const SPATIAL_EFFECT_BATTLE_EFFECTS = [
-  "movableMultiEmitterEffectAdmitted",
-  "outlineEffectAdmitted",
-  "areaObscurementEffectAdmitted",
-  "areaHazardEffectAdmitted",
-  "concentrationBackedEffect",
-] as const;
-type SpatialEffectBattleEffect = (typeof SPATIAL_EFFECT_BATTLE_EFFECTS)[number];
-const SPATIAL_EFFECT_LIGHTS = [
-  "multiEmitterDimLightProjection",
-  "emitterPositionMoved",
-  "brightLightProjection",
-  "dimLightProjection",
-] as const;
-type SpatialEffectLight = (typeof SPATIAL_EFFECT_LIGHTS)[number];
-const SPATIAL_EFFECT_GEOMETRIES = [
-  "areaShapeWitness",
-  "areaMembershipWitness",
-  "movementPathWitness",
-  "totalCoverBlockerWitness",
-  "strongWindWitness",
-] as const;
-type SpatialEffectGeometry = (typeof SPATIAL_EFFECT_GEOMETRIES)[number];
-const SPATIAL_EFFECT_PRESENTATIONS = [
-  "emitterAppearancePresentation",
-  "colorChoicePresentation",
-  "visibleOutlinePresentation",
-] as const;
-type SpatialEffectPresentation = (typeof SPATIAL_EFFECT_PRESENTATIONS)[number];
-const SPATIAL_EFFECT_OBJECTS = [
-  "outlinedObjectWitness",
-  "objectSightTargetWitness",
-  "objectInvisibleBenefitDeniedProjection",
-] as const;
-type SpatialEffectObject = (typeof SPATIAL_EFFECT_OBJECTS)[number];
-const SPATIAL_EFFECT_SIGHTS = [
-  "attackerCanSeeTargetWitness",
-  "invisibleBenefitDeniedProjection",
-  "attackRollAdvantageProjection",
-  "heavilyObscuredProjection",
-  "lightlyObscuredProjection",
-] as const;
-type SpatialEffectSight = (typeof SPATIAL_EFFECT_SIGHTS)[number];
-const SPATIAL_EFFECT_HAZARDS = [
-  "difficultTerrainProjection",
-  "areaCreatedSavingThrowTrigger",
-  "areaMovedSavingThrowTrigger",
-  "entrySavingThrowTrigger",
-  "startTurnSavingThrowTrigger",
-  "endTurnSavingThrowTrigger",
-  "saveTriggeredDamageTrigger",
-  "movementDamageTrigger",
-  "failedSaveRestraintTrigger",
-  "perTurnTriggerLimit",
-  "areaRemovedCleanup",
-] as const;
-type SpatialEffectHazard = (typeof SPATIAL_EFFECT_HAZARDS)[number];
-const SPATIAL_EFFECT_CLEANUPS = [
-  "durationCleanup",
-  "concentrationBreakCleanup",
-  "dispersalCleanup",
-  "removalCleanup",
-  "replacementCleanup",
-] as const;
-type SpatialEffectCleanup = (typeof SPATIAL_EFFECT_CLEANUPS)[number];
-const SPATIAL_EFFECT_CLEANUP_OWNERS = [
-  "battleActiveEffect",
-  "battleConcentration",
-  "battleTurnBoundary",
-  "battleObscurementProjection",
-  "battleAreaHazard",
-] as const;
-type SpatialEffectCleanupOwner = (typeof SPATIAL_EFFECT_CLEANUP_OWNERS)[number];
+type SpatialEffectBattleEffect =
+  | "movableMultiEmitterEffectAdmitted"
+  | "outlineEffectAdmitted"
+  | "areaObscurementEffectAdmitted"
+  | "areaHazardEffectAdmitted"
+  | "concentrationBackedEffect";
+type SpatialEffectLight =
+  | "multiEmitterDimLightProjection"
+  | "emitterPositionMoved"
+  | "brightLightProjection"
+  | "dimLightProjection";
+type SpatialEffectGeometry =
+  | "areaShapeWitness"
+  | "areaMembershipWitness"
+  | "movementPathWitness"
+  | "totalCoverBlockerWitness"
+  | "strongWindWitness";
+type SpatialEffectPresentation =
+  | "emitterAppearancePresentation"
+  | "colorChoicePresentation"
+  | "visibleOutlinePresentation";
+type SpatialEffectObject =
+  | "outlinedObjectWitness"
+  | "objectSightTargetWitness"
+  | "objectInvisibleBenefitDeniedProjection";
+type SpatialEffectSight =
+  | "attackerCanSeeTargetWitness"
+  | "invisibleBenefitDeniedProjection"
+  | "attackRollAdvantageProjection"
+  | "heavilyObscuredProjection"
+  | "lightlyObscuredProjection";
+type SpatialEffectHazard =
+  | "difficultTerrainProjection"
+  | "areaCreatedSavingThrowTrigger"
+  | "areaMovedSavingThrowTrigger"
+  | "entrySavingThrowTrigger"
+  | "startTurnSavingThrowTrigger"
+  | "endTurnSavingThrowTrigger"
+  | "saveTriggeredDamageTrigger"
+  | "movementDamageTrigger"
+  | "failedSaveRestraintTrigger"
+  | "perTurnTriggerLimit"
+  | "areaRemovedCleanup";
+type SpatialEffectCleanup =
+  | "durationCleanup"
+  | "concentrationBreakCleanup"
+  | "dispersalCleanup"
+  | "removalCleanup"
+  | "replacementCleanup";
+type SpatialEffectCleanupOwner =
+  | "battleActiveEffect"
+  | "battleConcentration"
+  | "battleTurnBoundary"
+  | "battleObscurementProjection"
+  | "battleAreaHazard";
 export type SpatialEffectRouteFact =
   | {
       readonly kind: "battleEffect";
@@ -1553,15 +1456,12 @@ type ReducerRoutedSpatialEffectProjection = {
   readonly route: readonly ReducerRouteEvent[];
   readonly facts: readonly SpatialEffectRouteFact[];
 };
-const SELECTED_CONCENTRATION_HAZARD_ROWS = [
-  "none",
-  "flamingSphereHazard",
-  "moonbeamMovableZone",
-  "spikeGrowthMovementHazard",
-  "webRestraintHazard",
-] as const;
 type SelectedConcentrationHazardRow =
-  (typeof SELECTED_CONCENTRATION_HAZARD_ROWS)[number];
+  | "none"
+  | "flamingSphereHazard"
+  | "moonbeamMovableZone"
+  | "spikeGrowthMovementHazard"
+  | "webRestraintHazard";
 type ReducerRoutedSelectedConcentrationHazardProjection = {
   readonly selectedRow: SelectedConcentrationHazardRow;
   readonly route: readonly ReducerRouteEvent[];
@@ -1573,50 +1473,33 @@ type ReducerRoutedLevel1SpatialCompositionProjection = {
 type ReducerRoutedLevel1WeaponHostedSelectedRouteProjection = {
   readonly route: readonly ReducerRouteEvent[];
 };
-const MIXED_TARGET_OUTCOME_TARGETS = [
-  "primaryTarget",
-  "secondaryTarget",
-  "objectTarget",
-] as const;
-type MixedTargetOutcomeTarget = (typeof MIXED_TARGET_OUTCOME_TARGETS)[number];
-const MIXED_TARGET_OUTCOME_RESOLUTIONS = [
-  "attackHit",
-  "attackMiss",
-  "savingThrowFailed",
-  "savingThrowSucceeded",
-] as const;
+type MixedTargetOutcomeTarget =
+  | "primaryTarget"
+  | "secondaryTarget"
+  | "objectTarget";
 type MixedTargetOutcomeResolution =
-  (typeof MIXED_TARGET_OUTCOME_RESOLUTIONS)[number];
-const MIXED_TARGET_OUTCOME_DAMAGE_PROJECTIONS = [
-  "attackDamage",
-  "fullSavingThrowDamage",
-  "halfSavingThrowDamage",
-  "noDamage",
-] as const;
+  | "attackHit"
+  | "attackMiss"
+  | "savingThrowFailed"
+  | "savingThrowSucceeded";
 type MixedTargetOutcomeDamageProjection =
-  (typeof MIXED_TARGET_OUTCOME_DAMAGE_PROJECTIONS)[number];
-const MIXED_TARGET_OUTCOME_SHARED_SPENDS = [
-  "sharedSpellSlotSpend",
-  "sharedCantripActionSpend",
-] as const;
+  | "attackDamage"
+  | "fullSavingThrowDamage"
+  | "halfSavingThrowDamage"
+  | "noDamage";
 type MixedTargetOutcomeSharedSpend =
-  (typeof MIXED_TARGET_OUTCOME_SHARED_SPENDS)[number];
-const MIXED_TARGET_OUTCOME_DAMAGE_ROLLS = [
-  "primaryAttackDamageRoll",
-  "sharedSavingThrowDamageRoll",
-] as const;
+  | "sharedSpellSlotSpend"
+  | "sharedCantripActionSpend";
 type MixedTargetOutcomeDamageRoll =
-  (typeof MIXED_TARGET_OUTCOME_DAMAGE_ROLLS)[number];
-const MIXED_TARGET_OUTCOME_SECONDARY_PROJECTIONS = [
-  "objectBoundary",
-  "light",
-  "condition",
-  "nextAttackRollMode",
-  "burstSavingThrow",
-  "chainedAttackTarget",
-] as const;
+  | "primaryAttackDamageRoll"
+  | "sharedSavingThrowDamageRoll";
 type MixedTargetOutcomeSecondaryProjection =
-  (typeof MIXED_TARGET_OUTCOME_SECONDARY_PROJECTIONS)[number];
+  | "objectBoundary"
+  | "light"
+  | "condition"
+  | "nextAttackRollMode"
+  | "burstSavingThrow"
+  | "chainedAttackTarget";
 type MixedTargetOutcomeRouteFact =
   | {
       readonly kind: "target";
@@ -1649,39 +1532,26 @@ type ReducerRoutedMixedTargetOutcomeProjection = {
   readonly route: readonly ReducerRouteEvent[];
   readonly facts: readonly MixedTargetOutcomeRouteFact[];
 };
-const MARKED_DAMAGE_RIDER_HOSTS = ["attackRollHitMarkedTarget"] as const;
-type MarkedDamageRiderHost = (typeof MARKED_DAMAGE_RIDER_HOSTS)[number];
-const MARKED_DAMAGE_RIDER_DAMAGE_FACTS = [
-  "extraDamageOnMarkedTargetHit",
-] as const;
-type MarkedDamageRiderDamage =
-  (typeof MARKED_DAMAGE_RIDER_DAMAGE_FACTS)[number];
-const MARKED_DAMAGE_RIDER_TRANSFERS = [
-  "transferAwaitsMarkedTargetDrop",
-  "transferAvailableAfterMarkedTargetDrops",
-  "transferAvailableOnSameTurn",
-  "transferAvailableOnLaterTurn",
-  "transferConsumesBonusAction",
-  "transferResetsAwaitingMarkedTargetDrop",
-] as const;
-type MarkedDamageRiderTransfer = (typeof MARKED_DAMAGE_RIDER_TRANSFERS)[number];
-const TARGETED_ABILITY_CHECK_ROLL_MODE_FACTS = [
-  "targetScopedSelectedAbility",
-  "matchingTargetSelectedAbilityCheckDisadvantage",
-  "nonmatchingAbilityCheckNormal",
-  "nonmarkedActorAbilityCheckNormal",
-  "concentrationCleanupRestoresNormalAbilityCheck",
-] as const;
+type MarkedDamageRiderHost = "attackRollHitMarkedTarget";
+type MarkedDamageRiderDamage = "extraDamageOnMarkedTargetHit";
+type MarkedDamageRiderTransfer =
+  | "transferAwaitsMarkedTargetDrop"
+  | "transferAvailableAfterMarkedTargetDrops"
+  | "transferAvailableOnSameTurn"
+  | "transferAvailableOnLaterTurn"
+  | "transferConsumesBonusAction"
+  | "transferResetsAwaitingMarkedTargetDrop";
 type TargetedAbilityCheckRollModeFact =
-  (typeof TARGETED_ABILITY_CHECK_ROLL_MODE_FACTS)[number];
-const MARKED_DAMAGE_RIDER_OWNER_FACTS = [
-  "markedRiderBattleActiveEffect",
-  "markedRiderBattleConcentration",
-  "markedRiderBattleAbilityCheckRollMode",
-  "markedRiderBattleActiveEffectCleanup",
-] as const;
+  | "targetScopedSelectedAbility"
+  | "matchingTargetSelectedAbilityCheckDisadvantage"
+  | "nonmatchingAbilityCheckNormal"
+  | "nonmarkedActorAbilityCheckNormal"
+  | "concentrationCleanupRestoresNormalAbilityCheck";
 type MarkedDamageRiderOwnerFact =
-  (typeof MARKED_DAMAGE_RIDER_OWNER_FACTS)[number];
+  | "markedRiderBattleActiveEffect"
+  | "markedRiderBattleConcentration"
+  | "markedRiderBattleAbilityCheckRollMode"
+  | "markedRiderBattleActiveEffectCleanup";
 type MarkedDamageRiderRouteFact =
   | {
       readonly kind: "markedHost";
@@ -1703,31 +1573,22 @@ type MarkedDamageRiderRouteFact =
       readonly kind: "markedOwner";
       readonly owner: MarkedDamageRiderOwnerFact;
     };
-const CONDITION_IMMUNITY_TEMPORARY_HIT_POINT_EFFECTS = [
-  "conditionImmunityApplied",
-  "conditionApplicationRejectedByImmunity",
-  "turnStartTemporaryHitPointGrantScheduled",
-  "turnStartTemporaryHitPointsGranted",
-  "temporaryHitPointsUseNonStackingChoice",
-  "concentrationCleanupPreventsLaterTurnStartGrant",
-] as const;
 type ConditionImmunityTemporaryHitPointEffect =
-  (typeof CONDITION_IMMUNITY_TEMPORARY_HIT_POINT_EFFECTS)[number];
-const CONDITION_IMMUNITY_TEMPORARY_HIT_POINT_CONDITIONS = [
-  "frightenedConditionImmunity",
-] as const;
+  | "conditionImmunityApplied"
+  | "conditionApplicationRejectedByImmunity"
+  | "turnStartTemporaryHitPointGrantScheduled"
+  | "turnStartTemporaryHitPointsGranted"
+  | "temporaryHitPointsUseNonStackingChoice"
+  | "concentrationCleanupPreventsLaterTurnStartGrant";
 type ConditionImmunityTemporaryHitPointCondition =
-  (typeof CONDITION_IMMUNITY_TEMPORARY_HIT_POINT_CONDITIONS)[number];
-const CONDITION_IMMUNITY_TEMPORARY_HIT_POINT_OWNERS = [
-  "battleActiveEffect",
-  "battleConditionLifecycle",
-  "battleTemporaryHitPoint",
-  "battleTurnBoundary",
-  "battleConcentration",
-  "battleActiveEffectCleanup",
-] as const;
+  "frightenedConditionImmunity";
 type ConditionImmunityTemporaryHitPointOwner =
-  (typeof CONDITION_IMMUNITY_TEMPORARY_HIT_POINT_OWNERS)[number];
+  | "battleActiveEffect"
+  | "battleConditionLifecycle"
+  | "battleTemporaryHitPoint"
+  | "battleTurnBoundary"
+  | "battleConcentration"
+  | "battleActiveEffectCleanup";
 type ConditionImmunityTemporaryHitPointRouteFact =
   | {
       readonly kind: "immunityTemporaryHitPointEffect";
@@ -1801,47 +1662,30 @@ type CommandOrderingProjection = {
   readonly reactionWindowOpen: boolean;
 };
 
-const REDUCER_SPINE_CONTRACT_STAGES = [
-  "notStarted",
-  "battleStarted",
-  "actDiscovered",
-  "subjectNeedsHoles",
-  "subjectResolved",
-  "turnAdvanced",
-] as const;
-type ReducerSpineContractStage = (typeof REDUCER_SPINE_CONTRACT_STAGES)[number];
-const REDUCER_SPINE_CONTRACT_ENTRYPOINTS = [
-  "none",
-  "startBattle",
-  "discoverBattleActs",
-  "resolveBattleSubject",
-] as const;
+type ReducerSpineContractStage =
+  | "notStarted"
+  | "battleStarted"
+  | "actDiscovered"
+  | "subjectNeedsHoles"
+  | "subjectResolved"
+  | "turnAdvanced";
 type ReducerSpineContractEntrypoint =
-  (typeof REDUCER_SPINE_CONTRACT_ENTRYPOINTS)[number];
-const REDUCER_SPINE_CONTRACT_SUBJECTS = [
-  "none",
-  "slotSpell",
-  "weaponAttack",
-  "endTurn",
-] as const;
+  | "none"
+  | "startBattle"
+  | "discoverBattleActs"
+  | "resolveBattleSubject";
 type ReducerSpineContractSubject =
-  (typeof REDUCER_SPINE_CONTRACT_SUBJECTS)[number];
-const REDUCER_SPINE_CONTRACT_ACTORS = ["none", "caster", "target"] as const;
-type ReducerSpineContractActor = (typeof REDUCER_SPINE_CONTRACT_ACTORS)[number];
-const REDUCER_SPINE_CONTRACT_SPELL_SLOT_USES = [
-  "none",
-  "pending",
-  "committed",
-] as const;
-type ReducerSpineContractSpellSlotUse =
-  (typeof REDUCER_SPINE_CONTRACT_SPELL_SLOT_USES)[number];
-const REDUCER_SPINE_CONTRACT_HOLES = [
-  "targetChoice",
-  "spellTargetAllocation",
-  "attackRoll",
-  "rolledDice",
-] as const;
-type ReducerSpineContractHole = (typeof REDUCER_SPINE_CONTRACT_HOLES)[number];
+  | "none"
+  | "slotSpell"
+  | "weaponAttack"
+  | "endTurn";
+type ReducerSpineContractActor = "none" | "caster" | "target";
+type ReducerSpineContractSpellSlotUse = "none" | "pending" | "committed";
+type ReducerSpineContractHole =
+  | "targetChoice"
+  | "spellTargetAllocation"
+  | "attackRoll"
+  | "rolledDice";
 type ReducerSpineContractProjection = {
   readonly stage: ReducerSpineContractStage;
   readonly entrypoint: ReducerSpineContractEntrypoint;
@@ -2505,23 +2349,18 @@ export type RogueSteadyAimDriverAction = Exclude<
   keyof typeof rogueSteadyAimDriverSchema,
   "init" | "step"
 >;
-const extraAttackSelectedUnitIds = [
-  "barbarian_extra_attack",
-  "fighter_extra_attack",
-  "monk_extra_attack",
-  "paladin_extra_attack",
-  "ranger_extra_attack",
-] as const;
-type ExtraAttackSelectedUnitId = (typeof extraAttackSelectedUnitIds)[number];
+type ExtraAttackSelectedUnitId =
+  | "barbarian_extra_attack"
+  | "fighter_extra_attack"
+  | "monk_extra_attack"
+  | "paladin_extra_attack"
+  | "ranger_extra_attack";
 export const extraAttackMbtAdditionalAttackCounts = [1, 2, 3] as const;
 type ExtraAttackMbtAdditionalAttackCount =
   (typeof extraAttackMbtAdditionalAttackCounts)[number];
-const syntheticExtraAttackMbtUnitIds = [
-  "test_synthetic_attack_count_2",
-  "test_synthetic_attack_count_3",
-] as const;
 type SyntheticExtraAttackMbtUnitId =
-  (typeof syntheticExtraAttackMbtUnitIds)[number];
+  | "test_synthetic_attack_count_2"
+  | "test_synthetic_attack_count_3";
 type ExtraAttackMbtUnitId =
   | ExtraAttackSelectedUnitId
   | SyntheticExtraAttackMbtUnitId;
@@ -15604,7 +15443,6 @@ function damageRequestsConcentrationSave(
     target,
     concentrationBreakAttackerId,
     fighterId,
-    "Scimitar",
   );
   const attackRoll = requireResultHole(
     resolveBattleSubject({

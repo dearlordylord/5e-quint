@@ -203,19 +203,13 @@ describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
       }),
       "targetChoice",
     );
-    const targetFill = attackTargetFill(
-      target,
-      attackerId,
-      spellCasterId,
-      "Scimitar",
-      [
-        {
-          kind: "attackTargetCannotSeeAttacker",
-          attackerId,
-          targetId: spellCasterId,
-        },
-      ],
-    );
+    const targetFill = attackTargetFill(target, attackerId, spellCasterId, [
+      {
+        kind: "attackTargetCannotSeeAttacker",
+        attackerId,
+        targetId: spellCasterId,
+      },
+    ]);
     const roll = requireResultHole(
       resolveBattleSubject({
         state: attackerTurn.state,

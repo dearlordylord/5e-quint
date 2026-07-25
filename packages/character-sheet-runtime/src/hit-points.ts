@@ -128,7 +128,10 @@ export function characterSheetHitPointMaximum(input: {
 export function characterSheetHitPointMaximumProjection(input: {
   readonly sheet: Pick<CharacterSheet, "build" | "hitPointMaximumReduction">;
   readonly unitLibrary: UnitCatalog;
-}): Either.Either<CharacterSheetHitPointMaximumProjection, CharacterSheetIssue> {
+}): Either.Either<
+  CharacterSheetHitPointMaximumProjection,
+  CharacterSheetIssue
+> {
   const normalHitPointMaximum = characterSheetBuildNormalHitPointMaximum({
     build: input.sheet.build,
     unitLibrary: input.unitLibrary,

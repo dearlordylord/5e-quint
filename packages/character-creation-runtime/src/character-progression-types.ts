@@ -137,9 +137,7 @@ export function characterProgressionWithClassLevelGain(input: {
   readonly hitPointRule: FixedHigherLevelClassHitPointRule;
 }): Either.Either<CharacterProgression, CharacterProgressionLevelIssue> {
   const nextCharacterLevel = 2 + input.progression.advancements.length;
-  if (
-    !CHARACTER_CLASS_LEVELS.some((level) => level === nextCharacterLevel)
-  ) {
+  if (!CHARACTER_CLASS_LEVELS.some((level) => level === nextCharacterLevel)) {
     return Either.left({
       code: "invalidCharacterClassLevel",
       classLevel: nextCharacterLevel,

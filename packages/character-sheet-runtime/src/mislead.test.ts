@@ -18,12 +18,7 @@ import {
   unitLibrary,
 } from "./test-support.ts";
 
-const misleadSelectedIdentityDriverSchema = {
-  doCastMislead: {},
-} as const;
-
-type MisleadSelectedIdentityDriverAction =
-  keyof typeof misleadSelectedIdentityDriverSchema;
+type MisleadSelectedIdentityDriverAction = "doCastMislead";
 
 type MisleadSelectedIdentityProjection = {
   readonly spellId: string;

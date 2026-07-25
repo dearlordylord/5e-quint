@@ -20,12 +20,7 @@ import {
 } from "./test-support.ts";
 import { type CharacterSheetTelekinesisTarget } from "./sheet-types.ts";
 
-const telekinesisSelectedIdentityDriverSchema = {
-  doCastTelekinesis: {},
-} as const;
-
-type TelekinesisSelectedIdentityDriverAction =
-  keyof typeof telekinesisSelectedIdentityDriverSchema;
+type TelekinesisSelectedIdentityDriverAction = "doCastTelekinesis";
 
 type TelekinesisSelectedIdentityProjection = {
   readonly spellId: string;

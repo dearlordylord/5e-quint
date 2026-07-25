@@ -87,15 +87,13 @@ const NATURAL_WEAPON_DAMAGE_TYPE_SET: ReadonlySet<string> = new Set(
   NATURAL_WEAPON_DAMAGE_TYPES,
 );
 
-const LAST_RESULTS = [
-  "init",
-  "aquaticCast",
-  "naturalWeaponsCast",
-  "nextCasterTurn",
-  "changeAppearanceReplacement",
-  "naturalWeaponsReplacement",
-] as const;
-type LastResult = (typeof LAST_RESULTS)[number];
+type LastResult =
+  | "init"
+  | "aquaticCast"
+  | "naturalWeaponsCast"
+  | "nextCasterTurn"
+  | "changeAppearanceReplacement"
+  | "naturalWeaponsReplacement";
 const SCENARIO_OUTCOME_BY_TAG = {
   Init: "init",
   AquaticCast: "aquaticCast",
@@ -544,14 +542,7 @@ function unarmedStrikeAttackProjection(battle: BattleRuntimeSession) {
     resolveBattleSubject({
       state: battle.state,
       subject: unarmedStrike.subject,
-      fills: [
-        attackTargetFill(
-          targetHole,
-          spellCasterId,
-          spellTargetId,
-          "Unarmed Strike",
-        ),
-      ],
+      fills: [attackTargetFill(targetHole, spellCasterId, spellTargetId)],
     }),
     "attackRoll",
   );

@@ -3042,9 +3042,7 @@ export function openCreatureFallsInterruptWindow(input: {
   return routeEvents === undefined ? result : { ...result, routeEvents };
 }
 
-const FLY_END_CAN_STOP_FALL_REASONS = ["hovering", "otherMeans"] as const;
-export type FlyEndCanStopFallReason =
-  (typeof FLY_END_CAN_STOP_FALL_REASONS)[number];
+export type FlyEndCanStopFallReason = "hovering" | "otherMeans";
 
 export type FlySpeedGrantEndFallWitness =
   | { readonly kind: "notAloft" }

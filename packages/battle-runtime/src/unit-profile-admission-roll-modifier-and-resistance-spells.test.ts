@@ -1311,12 +1311,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
       resolveBattleSubject({ state, subject, fills: [] }),
       "targetChoice",
     );
-    const targetFill = attackTargetFill(
-      target,
-      spellCasterId,
-      spellTargetId,
-      "Longsword",
-    );
+    const targetFill = attackTargetFill(target, spellCasterId, spellTargetId);
     const attack = requireResultHole(
       resolveBattleSubject({ state, subject, fills: [targetFill] }),
       "attackRoll",

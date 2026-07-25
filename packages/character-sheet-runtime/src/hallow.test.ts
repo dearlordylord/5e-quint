@@ -25,12 +25,7 @@ import {
   type CharacterSheetHallowExtraEffect,
 } from "./sheet-types.ts";
 
-const hallowSelectedIdentityDriverSchema = {
-  doCastHallow: {},
-} as const;
-
-type HallowSelectedIdentityDriverAction =
-  keyof typeof hallowSelectedIdentityDriverSchema;
+type HallowSelectedIdentityDriverAction = "doCastHallow";
 
 type HallowSelectedIdentityProjection = {
   readonly spellId: string;

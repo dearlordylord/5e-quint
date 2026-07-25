@@ -88,16 +88,18 @@ export function parseAttackDamageInterruptionFrame(
     ),
     Match.when(
       { phase: "attackDamage" },
-      ({
-        phase: _phase,
-        ...facts
-      }): Extract<
+      (
+        matched,
+      ): Extract<
         BattleAttackDamageInterruptionBoundaryResult,
         { readonly tag: "decoded" }
-      > => ({
-        tag: "decoded",
-        frame: attackDamageInterruptionFrameFromFacts(facts),
-      }),
+      > => {
+        const { phase: _phase, ...facts } = matched;
+        return {
+          tag: "decoded",
+          frame: attackDamageInterruptionFrameFromFacts(facts),
+        };
+      },
     ),
     Match.exhaustive,
   );

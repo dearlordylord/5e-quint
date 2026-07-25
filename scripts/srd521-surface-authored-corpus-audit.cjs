@@ -2,7 +2,6 @@ const fs = require("node:fs");
 const path = require("node:path");
 require("tsx/cjs");
 const { Either, Schema } = require("effect");
-const AST = require("effect/SchemaAST");
 const {
   StatBlockRecordSchema,
   UnitRecordSchema,
@@ -213,10 +212,7 @@ function buildSurfaceSchemaFieldRoles() {
 
 function unwrappedSchemaAst(ast) {
   let current = ast;
-  while (
-    current &&
-    ["Transformation", "OptionalType"].includes(current._tag)
-  ) {
+  while (current && ["Transformation", "OptionalType"].includes(current._tag)) {
     current = decodedSchemaChild(current);
   }
   return current;
@@ -271,17 +267,13 @@ function tupleElementAt(tuple, index, valueLength) {
   return tuple.rest[1 + index - postRestStart];
 }
 
-function createBranchMatchState() {
-  return { active: new WeakMap() };
-}
-
 const branchMatchCache = new WeakMap();
 
-function branchMatchStatus(ast, value, state = createBranchMatchState()) {
+function branchMatchStatus(ast, value) {
   const local = new Map();
   const pending = [{ ast, value, done: false }];
   const queued = new Map();
-  const keyFor = (branch, current) => {
+  const keyFor = (branch) => {
     let values = queued.get(branch);
     if (values === undefined) {
       values = new Map();
@@ -324,7 +316,8 @@ function branchMatchStatus(ast, value, state = createBranchMatchState()) {
   const dependencies = (schemaAst, current) => {
     const branch = unwrappedSchemaAst(schemaAst);
     if (!branch || typeof branch !== "object") return [];
-    if (branch._tag === "Refinement") return [{ ast: branch.from, value: current }];
+    if (branch._tag === "Refinement")
+      return [{ ast: branch.from, value: current }];
     if (branch._tag === "Suspend")
       return [{ ast: suspendedAst(branch), value: current }];
     if (branch._tag === "Union")
@@ -375,19 +368,27 @@ function branchMatchStatus(ast, value, state = createBranchMatchState()) {
     if (!current || typeof current !== "object" || Array.isArray(current))
       return "no-match";
     for (const property of branch.propertySignatures) {
-      if (!property.isOptional && !Object.prototype.hasOwnProperty.call(current, property.name))
+      if (
+        !property.isOptional &&
+        !Object.prototype.hasOwnProperty.call(current, property.name)
+      )
         return "no-match";
     }
     if (branch.indexSignatures.length === 0) {
-      const known = new Set(branch.propertySignatures.map((property) => String(property.name)));
-      if (Object.keys(current).some((name) => !known.has(name))) return "no-match";
+      const known = new Set(
+        branch.propertySignatures.map((property) => String(property.name)),
+      );
+      if (Object.keys(current).some((name) => !known.has(name)))
+        return "no-match";
     }
     const discriminators = branch.propertySignatures.filter(
-      (property) => !property.isOptional && isLiteralDiscriminatorProperty(property.type),
+      (property) =>
+        !property.isOptional && isLiteralDiscriminatorProperty(property.type),
     );
-    return discriminators.length > 0 && !discriminators.some((property) =>
-      Object.prototype.hasOwnProperty.call(current, property.name),
-    )
+    return discriminators.length > 0 &&
+      !discriminators.some((property) =>
+        Object.prototype.hasOwnProperty.call(current, property.name),
+      )
       ? "unknown"
       : undefined;
   };
@@ -396,14 +397,20 @@ function branchMatchStatus(ast, value, state = createBranchMatchState()) {
     const branch = unwrappedSchemaAst(task.ast);
     if (task.done) {
       const deps = dependencies(task.ast, task.value);
-      const statuses = deps.map((dependency) => getResult(dependency.ast, dependency.value) ?? "unknown");
+      const statuses = deps.map(
+        (dependency) =>
+          getResult(dependency.ast, dependency.value) ?? "unknown",
+      );
       let result = directStatus(task.ast, task.value);
       if (branch?._tag === "Refinement") {
         const underlying = statuses[0] ?? "unknown";
         if (underlying === "no-match") result = "no-match";
         else {
           try {
-            result = branch.filter(task.value, {}, branch)._tag === "Some" ? "no-match" : underlying;
+            result =
+              branch.filter(task.value, {}, branch)._tag === "Some"
+                ? "no-match"
+                : underlying;
           } catch {
             result = "unknown";
           }
@@ -434,7 +441,8 @@ function branchMatchStatus(ast, value, state = createBranchMatchState()) {
     }
     values.set("active", true);
     pending.push({ ...task, done: true });
-    for (const dependency of dependencies(task.ast, task.value)) schedule(dependency.ast, dependency.value);
+    for (const dependency of dependencies(task.ast, task.value))
+      schedule(dependency.ast, dependency.value);
     values.delete("active");
   }
   return getResult(ast, value) ?? "unknown";
@@ -496,7 +504,7 @@ function branchDiscriminatorMatches(ast, value) {
   return hasDiscriminator && hasPresentDiscriminator;
 }
 
-function matchingUnionBranches(types, value, pathName) {
+function matchingUnionBranches(types, value) {
   const taggedCandidates = types.filter(
     (type) =>
       branchHasLiteralDiscriminator(type) &&
@@ -616,11 +624,7 @@ function walkSurfaceValue(schema, value, visitString, pathName = "value") {
         });
         break;
       case "Union": {
-        for (const branch of matchingUnionBranches(
-          ast.types,
-          current,
-          currentPath,
-        )) {
+        for (const branch of matchingUnionBranches(ast.types, current)) {
           pending.push({
             ast: branch,
             current,
@@ -1128,7 +1132,7 @@ function buildAudit() {
   );
   const checks = records.flatMap((record) =>
     resolveSection(record.section, index).map((resolution) => {
-      const { value, ...recordForReport } = record;
+      const { value: _value, ...recordForReport } = record;
       return {
         ...recordForReport,
         ...resolution,

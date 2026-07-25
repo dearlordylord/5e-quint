@@ -90,17 +90,14 @@ const POISON_SPRAY_CHOICE = {
   cantripId: authoredUnitId(POISON_SPRAY_CANTRIP_UNIT_ID),
 } as const satisfies CharacterBuildEldritchInvocationRepeatableChoice;
 
-const WARLOCK_INVOCATION_SELECTED_IDENTITY_RESULTS = [
-  "init",
-  "levelOneSelected",
-  "levelTwoGained",
-  "nonRepeatableReplaced",
-  "repeatableReplaced",
-  "lockedReplacementRejected",
-  "duplicateSelectionRejected",
-] as const;
 type WarlockInvocationSelectedIdentityResult =
-  (typeof WARLOCK_INVOCATION_SELECTED_IDENTITY_RESULTS)[number];
+  | "init"
+  | "levelOneSelected"
+  | "levelTwoGained"
+  | "nonRepeatableReplaced"
+  | "repeatableReplaced"
+  | "lockedReplacementRejected"
+  | "duplicateSelectionRejected";
 type ChoiceCreationHole = Extract<CreationHole, { readonly kind: "choice" }>;
 type SelectedEldritchInvocationFeature = Extract<
   CharacterBuild["features"][number],

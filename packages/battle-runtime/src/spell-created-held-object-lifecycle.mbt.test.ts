@@ -19,7 +19,10 @@ import {
   canSpendAction,
   canSpendBonusAction,
 } from "@dnd/shared-algebras/action-economy-algebra";
-import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
+import {
+  elapsedTimeTicks,
+  type ElapsedTimeTicks,
+} from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet, type HandUse } from "@dnd/shared/types";
 import {
   assertWitnessProtocolConsistentWithScenario,
@@ -74,17 +77,15 @@ import {
   spellTargetId,
 } from "./unit-profile-admission-catalog-support.ts";
 
-const LAST_RESULTS = [
-  "init",
-  "castHeldObject",
-  "attackedHeldObject",
-  "releasedHeldObject",
-  "nextCasterTurn",
-  "reEvokedHeldObject",
-  "concentrationCleaned",
-  "durationCleaned",
-] as const;
-type LastResult = (typeof LAST_RESULTS)[number];
+type LastResult =
+  | "init"
+  | "castHeldObject"
+  | "attackedHeldObject"
+  | "releasedHeldObject"
+  | "nextCasterTurn"
+  | "reEvokedHeldObject"
+  | "concentrationCleaned"
+  | "durationCleaned";
 const SCENARIO_OUTCOME_BY_TAG = {
   Init: "init",
   CastHeldObject: "castHeldObject",
@@ -120,7 +121,6 @@ type SpellCreatedHeldObjectRuntimeState = {
 
 const INITIAL_TARGET_HP = 20;
 const HIT_TARGET_HP = 8;
-const FLAME_BLADE_DURATION_TICKS = elapsedTimeTicks(100);
 const FLAME_BLADE_BRIGHT_RADIUS_FEET = movementFeet(10);
 const FLAME_BLADE_DIM_ADDITIONAL_FEET = movementFeet(10);
 
@@ -635,7 +635,7 @@ function spellCreatedHeldObjectEffect(
 
 function withHeldObjectDurationTicks(
   state: BattleState,
-  durationTicks: typeof FLAME_BLADE_DURATION_TICKS,
+  durationTicks: ElapsedTimeTicks,
 ): BattleState {
   const caster = requireCombatant(state, spellCasterId);
   return {

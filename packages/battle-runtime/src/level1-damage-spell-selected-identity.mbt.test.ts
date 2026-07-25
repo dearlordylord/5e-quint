@@ -60,33 +60,28 @@ import {
 } from "./index.ts";
 import type { BattleActDiscoveryCandidate } from "./battle-state-execution.ts";
 
-const level1DamageSpellUnitIds = [
-  "burning_hands",
-  "chromatic_orb",
-  "ice_knife",
-  "poison_spray",
-  "ray_of_sickness",
-  "sacred_flame",
-  "sorcerous_burst",
-  "starry_wisp",
-  "vicious_mockery",
-] as const;
-type Level1DamageSpellUnitId = (typeof level1DamageSpellUnitIds)[number];
-const level1DamageSpellSelectedIdentityResults = [
-  "init",
-  "burningHandsMixedConeSavingThrows",
-  "chromaticOrbDuplicateDamageLeap",
-  "iceKnifeHitAttackDamageAndBurstSavingThrows",
-  "iceKnifeMissBurstSavingThrows",
-  "poisonSpraySpellAttackDamage",
-  "rayOfSicknessSpellAttackDamageAndPoisoned",
-  "sacredFlameDexteritySavingThrowRadiantDamage",
-  "sorcerousBurstSpellAttackDamage",
-  "starryWispObjectSpellAttackDamageAndDimLight",
-  "viciousMockeryWisdomSavingThrowPsychicDamageAndNextAttackDisadvantage",
-] as const;
+type Level1DamageSpellUnitId =
+  | "burning_hands"
+  | "chromatic_orb"
+  | "ice_knife"
+  | "poison_spray"
+  | "ray_of_sickness"
+  | "sacred_flame"
+  | "sorcerous_burst"
+  | "starry_wisp"
+  | "vicious_mockery";
 type Level1DamageSpellSelectedIdentityResult =
-  (typeof level1DamageSpellSelectedIdentityResults)[number];
+  | "init"
+  | "burningHandsMixedConeSavingThrows"
+  | "chromaticOrbDuplicateDamageLeap"
+  | "iceKnifeHitAttackDamageAndBurstSavingThrows"
+  | "iceKnifeMissBurstSavingThrows"
+  | "poisonSpraySpellAttackDamage"
+  | "rayOfSicknessSpellAttackDamageAndPoisoned"
+  | "sacredFlameDexteritySavingThrowRadiantDamage"
+  | "sorcerousBurstSpellAttackDamage"
+  | "starryWispObjectSpellAttackDamageAndDimLight"
+  | "viciousMockeryWisdomSavingThrowPsychicDamageAndNextAttackDisadvantage";
 
 type Level1DamageSpellSelectedIdentityProjection = {
   readonly actionAvailable: boolean;

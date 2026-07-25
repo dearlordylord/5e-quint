@@ -546,12 +546,7 @@ export function relentlessEnduranceDisposition(
     resolveBattleSubject({ state, subject, fills: [] }),
     "targetChoice",
   );
-  const targetFill = attackTargetFill(
-    target,
-    spellCasterId,
-    spellTargetId,
-    "Longsword",
-  );
+  const targetFill = attackTargetFill(target, spellCasterId, spellTargetId);
   const roll = requireResultHole(
     resolveBattleSubject({ state, subject, fills: [targetFill] }),
     "attackRoll",
@@ -587,12 +582,7 @@ export function relentlessEnduranceDamageResult(
     resolveBattleSubject({ state, subject, fills: [] }),
     "targetChoice",
   );
-  const targetFill = attackTargetFill(
-    target,
-    spellCasterId,
-    spellTargetId,
-    "Longsword",
-  );
+  const targetFill = attackTargetFill(target, spellCasterId, spellTargetId);
   const roll = requireResultHole(
     resolveBattleSubject({ state, subject, fills: [targetFill] }),
     "attackRoll",

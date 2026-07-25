@@ -43,12 +43,12 @@ export function languageFromCreationChoiceOptionId(
 export function characterCreationLanguageTableOptions(input: {
   readonly knownLanguages: ReadonlySet<Language>;
 }): readonly CreationChoiceOption[] {
-  return LANGUAGES.filter((language) => !input.knownLanguages.has(language)).map(
-    (language) => ({
-      optionId: creationChoiceOptionId(language),
-      label: language,
-    }),
-  );
+  return LANGUAGES.filter(
+    (language) => !input.knownLanguages.has(language),
+  ).map((language) => ({
+    optionId: creationChoiceOptionId(language),
+    label: language,
+  }));
 }
 
 function surfaceLanguageId(language: Language): string {

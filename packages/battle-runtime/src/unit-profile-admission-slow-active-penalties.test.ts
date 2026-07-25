@@ -386,7 +386,6 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
       targetHole,
       spellTargetId,
       spellCasterId,
-      "Club",
     );
     const attackRoll = requireResultHole(
       resolveBattleSubject({

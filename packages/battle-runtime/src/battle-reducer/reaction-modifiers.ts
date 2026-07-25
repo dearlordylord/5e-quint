@@ -384,7 +384,7 @@ export function reactionRollOrDamageReductionChoiceForProfile(
           initialHoles:
             modifier.reduction.kind === "halfDamage"
               ? []
-              : [reactionModifierRollHole("attackDamageReduction")],
+              : [reactionModifierRollHole()],
         },
       ];
     }
@@ -403,7 +403,7 @@ export function reactionRollOrDamageReductionChoiceForProfile(
             spends: modifier.reduction.spends,
           },
         },
-        initialHoles: [reactionModifierRollHole("attackRollReduction")],
+        initialHoles: [reactionModifierRollHole()],
       },
     ];
   }
@@ -444,7 +444,7 @@ export function reactionRollOrDamageReductionChoiceForProfile(
             spends: modifier.reduction.spends,
           },
         },
-        initialHoles: [reactionModifierRollHole("damageRollReduction")],
+        initialHoles: [reactionModifierRollHole()],
       },
     ];
   }
@@ -487,9 +487,7 @@ function reactionRollOrDamageReductionFallChoiceForProfile(
   ];
 }
 
-export function reactionModifierRollHole(
-  _modifierKind: BattleReactionModifierChoice["kind"],
-): BattleHole {
+export function reactionModifierRollHole(): BattleHole {
   return {
     kind: "rolledDice",
     holeId: REACTION_MODIFIER_ROLL_HOLE_ID,

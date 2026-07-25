@@ -78,23 +78,21 @@ import {
   monsterMultiattackStatBlock,
 } from "./battle-runtime-test-support.ts";
 
-const LAST_RESULTS = [
-  "init",
-  "failedSave",
-  "targetTurn",
-  "needsSave",
-  "saved",
-  "failedAgain",
-  "spentAction",
-  "attackedOnce",
-  "needsSomaticFailure",
-  "somaticSpellFailed",
-  "selfFailedSave",
-  "multiattackFailedSave",
-  "multiattackTargetTurn",
-  "multiattackedOnce",
-] as const;
-type LastResult = (typeof LAST_RESULTS)[number];
+type LastResult =
+  | "init"
+  | "failedSave"
+  | "targetTurn"
+  | "needsSave"
+  | "saved"
+  | "failedAgain"
+  | "spentAction"
+  | "attackedOnce"
+  | "needsSomaticFailure"
+  | "somaticSpellFailed"
+  | "selfFailedSave"
+  | "multiattackFailedSave"
+  | "multiattackTargetTurn"
+  | "multiattackedOnce";
 const SCENARIO_OUTCOME_BY_TAG = {
   Init: "init",
   FailedSave: "failedSave",
@@ -115,8 +113,7 @@ const slowMultiattackTargetId = combatantId(
   "slow-active-penalties-mbt-multiattack-target",
 );
 
-const SLOW_HOLES = ["EndTurnSave", "SomaticFailure"] as const;
-type SlowHole = (typeof SLOW_HOLES)[number];
+type SlowHole = "EndTurnSave" | "SomaticFailure";
 
 type SlowActivePenaltiesProjection = {
   readonly currentTurnRole: "caster" | "target" | "multiattackTarget";
@@ -597,12 +594,7 @@ function makeTargetAttack(
     }),
     "targetChoice",
   );
-  const targetFill = attackTargetFill(
-    targetHole,
-    spellTargetId,
-    spellCasterId,
-    "Club",
-  );
+  const targetFill = attackTargetFill(targetHole, spellTargetId, spellCasterId);
   const attackRoll = requireResultHole(
     resolveBattleSubject({
       state: state.battle.state,

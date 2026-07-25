@@ -333,7 +333,6 @@ function attackThroughRoll(input: {
     target,
     input.attackerId,
     input.targetId,
-    "Scimitar",
     input.targetFacts ?? [],
   );
   const attackRoll = requireResultHole(
@@ -394,7 +393,6 @@ function attackDamageHole(input: {
     target,
     input.attackerId,
     spellCasterId,
-    "Scimitar",
     input.targetFacts,
   );
   const attackRoll = requireResultHole(

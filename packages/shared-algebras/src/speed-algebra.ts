@@ -120,8 +120,7 @@ function changedSpeed(
   const deltaAdjustedSpeed = Number(speedFeet) + Number(change.deltaFeet);
   return movementFeet(
     Math.trunc(
-      (deltaAdjustedSpeed * change.ratioNumerator) /
-        change.ratioDenominator,
+      (deltaAdjustedSpeed * change.ratioNumerator) / change.ratioDenominator,
     ),
   );
 }
