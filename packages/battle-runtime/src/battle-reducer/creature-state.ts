@@ -111,7 +111,10 @@ import {
   KnockedOutOneHp,
   KnockedOutConditionState,
 } from "./knocked-out-state.ts";
-import { battleStateInitIssue } from "./domain-helpers.ts";
+import {
+  battleStateInitIssue,
+  weaponLoadoutMismatchIssue,
+} from "./domain-helpers.ts";
 import { isCharacterBattleCreatureState } from "./creature-state-execution.ts";
 export {
   activeConditions,
@@ -172,9 +175,7 @@ function characterInitWeaponAttackExecutionRefs(
     loadoutWeapon === undefined ||
     loadoutWeapon.unitId !== attack.weapon.weaponUnitId
   ) {
-    return battleStateInitIssue(
-      `Character battle init ${slot} weapon attack must match the selected loadout weapon.`,
-    );
+    return weaponLoadoutMismatchIssue(slot);
   }
   return Either.right({
     weaponObjectId: loadoutWeapon.itemId,
@@ -200,7 +201,7 @@ function characterInitWeaponAttackWithExecutionRefs(
     weaponMasteries,
   );
   if (Either.isLeft(refs)) {
-    return battleStateInitIssue(refs.left.message);
+    return Either.left(refs.left);
   }
   return Either.right({
     ...attack,

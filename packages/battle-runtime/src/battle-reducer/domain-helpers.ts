@@ -27,6 +27,16 @@ export function battleStateInitIssue(
   return Either.left({ tag: "battleStateInitIssue", message });
 }
 
+export function weaponLoadoutMismatchIssue(
+  slot: "main-hand" | "off-hand",
+): Either.Either<never, BattleStateInitIssue> {
+  return Either.left({
+    tag: "weaponLoadoutMismatch",
+    slot,
+    message: `Character battle init ${slot} weapon attack must match the selected loadout weapon.`,
+  });
+}
+
 export function battleCreatureType(
   combatant: BattleCreatureState,
 ): CreatureType | null {

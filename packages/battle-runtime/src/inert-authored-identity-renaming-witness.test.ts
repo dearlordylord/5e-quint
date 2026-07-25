@@ -27,6 +27,7 @@ import {
 import { discoverBattleActs } from "./battle-act-composition.ts";
 import type { BattleRuntimeContext } from "./battle-runtime-context.ts";
 import type { BattleDruidWildShapeKnownForm } from "./druid-wild-shape-known-form-execution.ts";
+import type { StatBlockExecutionAdmission } from "./stat-block-execution-state.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 import {
@@ -63,8 +64,8 @@ import {
  *     this witness because doing so would change which mechanical facts are
  *     admitted at composition time.
  *   - Other composition-boundary authored identity not renamed by this witness
- *     (e.g., Stat Block form ids in `BattleRuntimeContext` used to admit a
- *     specific Wild Shape form). Renaming those would select a different
+ *     (e.g., Stat Block form ids retained in character battle state and used to
+ *     admit a specific Wild Shape form). Renaming those would select a different
  *     admitted form and therefore change reducer mechanics; they are inventory
  *     composition boundaries. The separate presentation-only
  *     `BattleActPresentation.formStatBlockId` is covered by its own dedicated
@@ -311,6 +312,29 @@ function renameSnapshotInertIdentityFields(
   };
 }
 
+function wildShapeFormAdmissionWithRenamedPresentationIdentity(
+  admission: StatBlockExecutionAdmission<BattleDruidWildShapeKnownForm>,
+  id: string,
+  displayName: string,
+): StatBlockExecutionAdmission<BattleDruidWildShapeKnownForm> {
+  // Local evidence for the branded casts: all mechanical facts (support profile,
+  // parsed stat block mechanics, AC/size/speeds) and the admitted execution state
+  // are preserved unchanged. Only presentation identity (`statBlock.id` and nested
+  // `statBlock.statBlock.displayName`) is rewritten, so eligibility and reducer
+  // behavior remain identical.
+  return {
+    ...admission,
+    statBlock: {
+      ...admission.statBlock,
+      id,
+      statBlock: {
+        ...admission.statBlock.statBlock,
+        displayName,
+      },
+    } as BattleDruidWildShapeKnownForm,
+  } as StatBlockExecutionAdmission<BattleDruidWildShapeKnownForm>;
+}
+
 function renameFormStatBlockIdPresentationFields(
   state: BattleState,
 ): BattleState {
@@ -327,17 +351,12 @@ function renameFormStatBlockIdPresentationFields(
         return [id, combatant];
       }
       const renamedForms = combatant.origin.druidWildShapeAvailableForms.map(
-        (admission) => ({
-          ...admission,
-          statBlock: {
-            ...admission.statBlock,
-            id: syntheticFormStatBlockId,
-            statBlock: {
-              ...admission.statBlock.statBlock,
-              displayName: syntheticFormDisplayName,
-            },
-          } as BattleDruidWildShapeKnownForm,
-        }),
+        (admission) =>
+          wildShapeFormAdmissionWithRenamedPresentationIdentity(
+            admission,
+            syntheticFormStatBlockId,
+            syntheticFormDisplayName,
+          ),
       );
       return [
         id,

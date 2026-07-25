@@ -4078,10 +4078,16 @@ export type SuccessfulAbilityCheckReactionReductionResolutionResult =
     })
   | Extract<BattleResolutionResult, { readonly tag: "invalid" }>;
 
-export type BattleStateInitIssue = {
-  readonly tag: "battleStateInitIssue";
-  readonly message: string;
-};
+export type BattleStateInitIssue =
+  | {
+      readonly tag: "battleStateInitIssue";
+      readonly message: string;
+    }
+  | {
+      readonly tag: "weaponLoadoutMismatch";
+      readonly slot: "main-hand" | "off-hand";
+      readonly message: string;
+    };
 
 // battleStateInitIssue moved to ./battle-reducer/domain-helpers.ts
 

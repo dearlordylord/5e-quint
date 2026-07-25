@@ -50,7 +50,8 @@ describe("battleCreatureStateAdmissionFromInit", () => {
     if (result.tag !== "invalid") return;
     expect(result.issues).toHaveLength(1);
     expect(result.issues[0]).toMatchObject({
-      tag: "battleStateInitIssue",
+      tag: "weaponLoadoutMismatch",
+      slot: "main-hand",
       message:
         "Character battle init main-hand weapon attack must match the selected loadout weapon.",
     });
@@ -87,7 +88,8 @@ describe("battleCreatureStateAdmissionFromInit", () => {
     if (result.tag !== "invalid") return;
     expect(result.issues).toHaveLength(1);
     expect(result.issues[0]).toMatchObject({
-      tag: "battleStateInitIssue",
+      tag: "weaponLoadoutMismatch",
+      slot: "off-hand",
       message:
         "Character battle init off-hand weapon attack must match the selected loadout weapon.",
     });
@@ -132,12 +134,14 @@ describe("battleCreatureStateAdmissionFromInit", () => {
     if (result.tag !== "invalid") return;
     expect(result.issues).toHaveLength(2);
     expect(result.issues[0]).toMatchObject({
-      tag: "battleStateInitIssue",
+      tag: "weaponLoadoutMismatch",
+      slot: "main-hand",
       message:
         "Character battle init main-hand weapon attack must match the selected loadout weapon.",
     });
     expect(result.issues[1]).toMatchObject({
-      tag: "battleStateInitIssue",
+      tag: "weaponLoadoutMismatch",
+      slot: "off-hand",
       message:
         "Character battle init off-hand weapon attack must match the selected loadout weapon.",
     });
