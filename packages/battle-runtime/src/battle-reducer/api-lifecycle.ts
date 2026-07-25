@@ -21,6 +21,7 @@ import * as Option from "effect/Option";
 
 import { Match } from "effect";
 
+import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import type { BattleCreatureInit } from "../battle-init.ts";
 import {
   battleRuntimeContextFromCharacterAdmission,
@@ -41,6 +42,7 @@ import {
 } from "../identity.ts";
 import type { BattleCompanionState } from "../companion-state.ts";
 import type { BattleUnitSupportProfileIssue } from "../unit-feature-support.ts";
+
 import {
   characterUnitProcedureBindings,
   characterExecutionWithSpellInvocations,
@@ -94,6 +96,20 @@ function admissionIssueToInitIssue(
     return { tag: "battleStateInitIssue", message: issue.message };
   }
   return issue;
+}
+
+export function battleStateInitIssueFromAdmissionIssues(
+  issues: ReadonlyNonEmptyArray<
+    BattleStateInitLeafIssue | BattleUnitSupportProfileIssue
+  >,
+): Either.Either<never, BattleStateInitIssue> {
+  const first = admissionIssueToInitIssue(issues[0]);
+  if (issues.length === 1) {
+    return Either.left(first);
+  }
+  const second = admissionIssueToInitIssue(issues[1]);
+  const rest = issues.slice(2).map(admissionIssueToInitIssue);
+  return battleStateInitIssues(first, second, ...rest);
 }
 
 const InitialInitiativeSetupBrand: unique symbol = Symbol(
@@ -225,12 +241,7 @@ export function startBattle(
       battleExecutionScopeOrdinal(0),
     );
     if (admission.tag === "invalid") {
-      const issues = admission.issues.map(admissionIssueToInitIssue);
-      const [firstIssue, secondIssue, ...remainingIssues] = issues;
-      if (secondIssue === undefined) {
-        return Either.left(firstIssue);
-      }
-      return battleStateInitIssues(firstIssue, secondIssue, ...remainingIssues);
+      return battleStateInitIssueFromAdmissionIssues(admission.issues);
     }
     combatants.set(combatant.combatantId, admission.creature);
     if ("runtimeContext" in admission) {
@@ -592,12 +603,7 @@ function admitBattleCombatant(input: AddBattleCombatantInput): Either.Either<
     ),
   );
   if (admission.tag === "invalid") {
-    const issues = admission.issues.map(admissionIssueToInitIssue);
-    const [firstIssue, secondIssue, ...remainingIssues] = issues;
-    if (secondIssue === undefined) {
-      return Either.left(firstIssue);
-    }
-    return battleStateInitIssues(firstIssue, secondIssue, ...remainingIssues);
+    return battleStateInitIssueFromAdmissionIssues(admission.issues);
   }
   const combatantsWithAdmission = new Map(input.state.combatants).set(
     input.combatant.combatantId,

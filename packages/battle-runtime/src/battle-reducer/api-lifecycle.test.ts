@@ -8,7 +8,11 @@ import {
   startBattleRight,
   testCharacterWeaponAttackForUnit,
 } from "../battle-runtime-test-support.ts";
-import { addBattleCombatant, startBattle } from "./api-lifecycle.ts";
+import {
+  addBattleCombatant,
+  battleStateInitIssueFromAdmissionIssues,
+  startBattle,
+} from "./api-lifecycle.ts";
 
 describe("battle lifecycle admission issue aggregation", () => {
   const baseCombatant = characterSeed({ initiative: 20 });
@@ -111,6 +115,57 @@ describe("battle lifecycle admission issue aggregation", () => {
           { tag: "weaponLoadoutMismatch", slot: "main-hand" },
           { tag: "weaponLoadoutMismatch", slot: "off-hand" },
         ],
+      });
+    }
+  });
+
+  test("battleStateInitIssueFromAdmissionIssues returns a single leaf for one issue", () => {
+    const result = battleStateInitIssueFromAdmissionIssues([
+      { tag: "weaponLoadoutMismatch", slot: "main-hand" },
+    ]);
+
+    expect(Either.isLeft(result)).toBe(true);
+    if (Either.isLeft(result)) {
+      expect(result.left).toEqual({
+        tag: "weaponLoadoutMismatch",
+        slot: "main-hand",
+      });
+    }
+  });
+
+  test("battleStateInitIssueFromAdmissionIssues aggregates two or more issues", () => {
+    const result = battleStateInitIssueFromAdmissionIssues([
+      { tag: "weaponLoadoutMismatch", slot: "main-hand" },
+      { tag: "weaponLoadoutMismatch", slot: "off-hand" },
+      { tag: "battleStateInitIssue", message: "third issue" },
+    ]);
+
+    expect(Either.isLeft(result)).toBe(true);
+    if (Either.isLeft(result)) {
+      expect(result.left).toEqual({
+        tag: "battleStateInitIssues",
+        issues: [
+          { tag: "weaponLoadoutMismatch", slot: "main-hand" },
+          { tag: "weaponLoadoutMismatch", slot: "off-hand" },
+          { tag: "battleStateInitIssue", message: "third issue" },
+        ],
+      });
+    }
+  });
+
+  test("battleStateInitIssueFromAdmissionIssues converts support-profile issues to leaf issues", () => {
+    const result = battleStateInitIssueFromAdmissionIssues([
+      {
+        tag: "battleUnitSupportProfileIssue",
+        message: "support profile mismatch",
+      },
+    ]);
+
+    expect(Either.isLeft(result)).toBe(true);
+    if (Either.isLeft(result)) {
+      expect(result.left).toEqual({
+        tag: "battleStateInitIssue",
+        message: "support profile mismatch",
       });
     }
   });
