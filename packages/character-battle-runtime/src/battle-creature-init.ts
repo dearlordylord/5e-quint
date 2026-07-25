@@ -442,9 +442,7 @@ export function battleCreatureInitFromCharacterBuild(
         ? {}
         : { zeroHpLifecycle: input.zeroHpLifecycle }),
       selectedLoadout,
-      ...(weaponMasteries.right.length === 0
-        ? {}
-        : { weaponMasteries: weaponMasteries.right }),
+      weaponMasteries: weaponMasteries.right,
       invocationFeatures: characterInvocationFeatures(input.build),
       attack: attack.right,
       unarmedStrike: unarmedStrike.right,

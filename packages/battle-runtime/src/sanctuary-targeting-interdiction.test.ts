@@ -1402,6 +1402,7 @@ function characterCreature(
       classLevels: [{ className: "cleric", level: classLevel }],
       knownLanguages: ["Common"],
       d20Statistics: testCharacterD20Statistics(),
+      weaponMasteries: [],
       armorClass: defaultArmorClassState(),
       size: "medium",
       speed: { walkFeet: movementFeet(30) },

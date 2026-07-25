@@ -1,8 +1,11 @@
-import { type UnitId } from "@dnd/shared/game-facts";
 import type { WeaponRecord } from "@dnd/surface/surface/types";
 
 import type { BattleObjectId } from "./identity.ts";
 import type { CharacterWeaponAttackExecutionWeapon } from "./battle-action-options.ts";
+import {
+  hasWeaponMasteryForUnit,
+  type CharacterBattleWeaponMasterySelection,
+} from "./character-creature-execution-facts.ts";
 
 export type CharacterWeaponAttackExecutionAdmission = {
   readonly weapon: CharacterWeaponAttackExecutionWeapon;
@@ -33,13 +36,11 @@ export function admitCharacterWeaponExecutionWeapon(
 export function admitCharacterWeaponAttackExecutionWeapon(
   weapon: WeaponRecord,
   objectId: BattleObjectId,
-  weaponMasteries: readonly { readonly weaponUnitId: UnitId }[],
+  weaponMasteries: readonly CharacterBattleWeaponMasterySelection[],
 ): CharacterWeaponAttackExecutionAdmission {
   return {
     weapon: admitCharacterWeaponExecutionWeapon(weapon),
     weaponObjectId: objectId,
-    hasWeaponMastery: weaponMasteries.some(
-      (mastery) => mastery.weaponUnitId === weapon.id,
-    ),
+    hasWeaponMastery: hasWeaponMasteryForUnit(weapon.id, weaponMasteries),
   };
 }

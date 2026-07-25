@@ -1091,6 +1091,7 @@ function wizardCreature(input: {
       armorClass: defaultArmorClassState(),
       size: "medium",
       knownLanguages: ["Common"],
+      weaponMasteries: [],
       speed: { walkFeet: movementFeet(wizardWalkFeet) },
       currentHp: Hp(wizardHp),
       maxHp: Hp(wizardHp),

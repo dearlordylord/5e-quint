@@ -501,6 +501,7 @@ function battleCreature(input: {
       classLevels: [{ className: "wizard", level: 1 }],
       knownLanguages: ["Common"],
       d20Statistics: testCharacterD20Statistics(),
+      weaponMasteries: [],
       armorClass: input.armorClass,
       size: "medium",
       speed: { walkFeet: movementFeet(30) },

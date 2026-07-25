@@ -47,6 +47,10 @@ import type {
 } from "../battle-init.ts";
 import type { CharacterWeaponAttackActionOption } from "../battle-action-options.ts";
 import {
+  hasWeaponMasteryForUnit,
+  type CharacterBattleWeaponMasterySelection,
+} from "../character-creature-execution-facts.ts";
+import {
   characterBattleInvocationSpellAccessInitIssue,
   characterBattleMetamagicInitIssue,
   characterBattleMetamagicState,
@@ -155,7 +159,7 @@ function characterInitWeaponAttackExecutionRefs(
   loadoutWeapon:
     | { readonly itemId: BattleObjectId; readonly unitId: UnitId }
     | undefined,
-  weaponMasteries: CharacterBattleCreatureInit["weaponMasteries"],
+  weaponMasteries: readonly CharacterBattleWeaponMasterySelection[],
 ): Either.Either<
   {
     readonly weaponObjectId: BattleObjectId;
@@ -173,8 +177,9 @@ function characterInitWeaponAttackExecutionRefs(
   }
   return Either.right({
     weaponObjectId: loadoutWeapon.itemId,
-    hasWeaponMastery: (weaponMasteries ?? []).some(
-      (mastery) => mastery.weaponUnitId === attack.weapon.weaponUnitId,
+    hasWeaponMastery: hasWeaponMasteryForUnit(
+      attack.weapon.weaponUnitId,
+      weaponMasteries,
     ),
   });
 }
@@ -184,7 +189,7 @@ function characterInitWeaponAttackWithExecutionRefs(
   loadoutWeapon:
     | { readonly itemId: BattleObjectId; readonly unitId: UnitId }
     | undefined,
-  weaponMasteries: CharacterBattleCreatureInit["weaponMasteries"],
+  weaponMasteries: readonly CharacterBattleWeaponMasterySelection[],
 ): Either.Either<CharacterWeaponAttackActionOption, BattleStateInitIssue> {
   const refs = characterInitWeaponAttackExecutionRefs(
     attack,
@@ -368,7 +373,7 @@ export function battleCreatureStateAdmissionFromInit(
       creatureInit.unitFeatures ?? [],
     );
     assertCharacterBattleWeaponMasteriesHaveUniqueWeapons(
-      creatureInit.weaponMasteries ?? [],
+      creatureInit.weaponMasteries,
     );
     const characterUnits = [
       ...(creatureInit.resources ?? []).map((resource) => resource.unit),
@@ -594,9 +599,7 @@ export function assertCharacterBattleFeaturesHaveUniqueUnits(
 }
 
 export function assertCharacterBattleWeaponMasteriesHaveUniqueWeapons(
-  weaponMasteries: readonly NonNullable<
-    CharacterBattleCreatureInit["weaponMasteries"]
-  >[number][],
+  weaponMasteries: readonly CharacterBattleWeaponMasterySelection[],
 ): void {
   const seen = new Set<UnitRecord["id"]>();
   for (const weaponMastery of weaponMasteries) {

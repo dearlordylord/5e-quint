@@ -314,6 +314,7 @@ function eldritchBlastCasterCreatureInit(input: {
       classLevels: [{ className: "fighter", level: 5 }],
       knownLanguages: ["Common"],
       d20Statistics: testCharacterD20Statistics({ str: 16 }),
+      weaponMasteries: [],
       armorClass: defaultArmorClassState(),
       size: "medium",
       speed: { walkFeet: movementFeet(30) },

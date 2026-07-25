@@ -59,8 +59,11 @@ import {
  *     original and renamed states; the underlying Unit ids are not renamed by
  *     this witness because doing so would change which mechanical facts are
  *     admitted at composition time.
- *   - Other presentation-only authored identity not renamed by this witness
- *     (e.g., Stat Block form ids in `BattleRuntimeContext`).
+ *   - Other composition-boundary authored identity not renamed by this witness
+ *     (e.g., Stat Block form ids in `BattleRuntimeContext`). Renaming these
+ *     would select a different admitted form and therefore change reducer
+ *     mechanics; they are inventory composition boundaries, not inert
+ *     presentation-only identity.
  */
 
 function isCharacterSnapshot(
@@ -94,6 +97,7 @@ function combatantMechanicalProjection(combatant: BattleCreatureState) {
     hp: Number(combatant.hp),
     maxHp: Number(combatant.maxHp),
     tempHp: Number(combatant.tempHp),
+    positiveHpUnconscious: combatant.positiveHpUnconscious,
     armorClass: combatant.armorClass,
     size: combatant.size,
     movementSpentFeet: Number(combatant.movementSpentFeet),
@@ -111,6 +115,7 @@ function combatantMechanicalProjection(combatant: BattleCreatureState) {
     hidden: combatant.hidden,
     dodging: combatant.dodging,
     zeroHpLifecycle: combatant.zeroHpLifecycle,
+    nextActiveEffectOrdinal: combatant.nextActiveEffectOrdinal,
   };
   if (combatant.origin.kind !== "character") {
     return {

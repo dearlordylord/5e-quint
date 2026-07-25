@@ -282,7 +282,7 @@ export type CharacterBattleCreatureInit = {
   readonly positiveHpUnconscious?: BattlePositiveHpUnconscious;
   readonly zeroHpLifecycle?: CharacterZeroHpLifecycleInit;
   readonly selectedLoadout: CharacterBattleLoadoutRef;
-  readonly weaponMasteries?: readonly CharacterBattleWeaponMasterySelection[];
+  readonly weaponMasteries: readonly CharacterBattleWeaponMasterySelection[];
   readonly attack: CharacterBattleCreatureInitWeaponAttack | null;
   readonly unarmedStrike: CharacterUnarmedStrikeActionOption;
   readonly offHandAttack?: CharacterBattleCreatureInitWeaponAttack | undefined;

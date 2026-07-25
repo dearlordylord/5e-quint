@@ -1223,6 +1223,7 @@ function conditionSpellCreature(input: {
       classLevels: [{ className: input.className, level: 1 }],
       knownLanguages: ["Common"],
       d20Statistics: testCharacterD20Statistics(),
+      weaponMasteries: [],
       armorClass: defaultArmorClassState(),
       size: "medium",
       speed: { walkFeet: movementFeet(30) },

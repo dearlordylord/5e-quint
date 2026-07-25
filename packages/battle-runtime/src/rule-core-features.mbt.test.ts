@@ -2133,6 +2133,7 @@ function featureActor(input: {
       classLevels: input.classLevels ?? [{ className: "fighter", level: 1 }],
       knownLanguages: ["Common"],
       d20Statistics: testCharacterD20Statistics(),
+      weaponMasteries: [],
       armorClass:
         attack === null
           ? defaultArmorClassState()

@@ -32,6 +32,15 @@ export type CharacterBattleWeaponMasterySelection = {
   readonly weaponUnitId: UnitId;
 };
 
+export function hasWeaponMasteryForUnit(
+  weaponUnitId: UnitId,
+  weaponMasteries: readonly CharacterBattleWeaponMasterySelection[],
+): boolean {
+  return weaponMasteries.some(
+    (mastery) => mastery.weaponUnitId === weaponUnitId,
+  );
+}
+
 export type CharacterBattleD20Statistics = {
   readonly abilityScores: SixAbilityScores;
   readonly savingThrowProficiencies: readonly Ability[];

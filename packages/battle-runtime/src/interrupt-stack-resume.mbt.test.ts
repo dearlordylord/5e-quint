@@ -550,6 +550,7 @@ function characterCreature(input: {
       classLevels: [{ className: "wizard", level: 1 }],
       knownLanguages: ["Common"],
       d20Statistics: testCharacterD20Statistics(),
+      weaponMasteries: [],
       armorClass: defaultArmorClassState(),
       size: "medium",
       speed: { walkFeet: movementFeet(30) },

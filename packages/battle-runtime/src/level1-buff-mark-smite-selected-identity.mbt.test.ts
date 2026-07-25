@@ -2662,6 +2662,7 @@ function level1BuffMarkSmiteCreature(input: {
       classLevels: [{ className, level: 1 }],
       knownLanguages: ["Common"],
       d20Statistics: testCharacterD20Statistics(),
+      weaponMasteries: [],
       ...(input.weaponProficiencies === undefined
         ? {}
         : { weaponProficiencies: input.weaponProficiencies }),

@@ -839,6 +839,7 @@ function targetCreatureInit(
       classLevels: [{ className: "fighter", level: 1 }],
       knownLanguages: ["Common"],
       d20Statistics: testCharacterD20Statistics({ str: 16 }),
+      weaponMasteries: [],
       armorClass: defaultArmorClassState(),
       size: "medium",
       speed: { walkFeet: movementFeet(30) },

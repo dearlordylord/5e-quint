@@ -3587,9 +3587,7 @@ export function characterSeed(input: {
         ? {}
         : { zeroHpLifecycle: input.zeroHpLifecycle }),
       selectedLoadout,
-      ...(input.weaponMasteries === undefined
-        ? {}
-        : { weaponMasteries: input.weaponMasteries }),
+      weaponMasteries: input.weaponMasteries ?? [],
       attack: initAttack,
       unarmedStrike: input.unarmedStrike ?? testUnarmedStrikeDamageAttack(),
       ...(input.offHandAttack === undefined
