@@ -9,6 +9,7 @@ import {
   type BattleRuntimeResolutionResult,
   type BattleRuntimeSession,
   type BattleState,
+  battleStateInitIssueMessage,
   characterId,
   type CombatantId,
   combatantId,
@@ -17,8 +18,7 @@ import {
   resolveBattleRuntimeInterrupt,
   resolveBattleRuntimeSubject,
   snapshotBattle,
-  startBattle,
-  battleStateInitIssueMessage
+  startBattle
 } from "@dnd/battle-runtime"
 import { attackBonus, Hp, movementFeet, proficiencyBonus } from "@dnd/shared/types"
 import { abilityModifier, defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra"

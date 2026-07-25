@@ -38,7 +38,19 @@ export function battleStateInitIssueMessage(
 ): string {
   return issue.tag === "weaponLoadoutMismatch"
     ? weaponLoadoutMismatchMessage(issue.slot)
-    : issue.message;
+    : issue.tag === "battleStateInitIssues"
+      ? issue.issues.map(battleStateInitIssueMessage).join("; ")
+      : issue.message;
+}
+
+export function battleStateInitIssues(
+  first: BattleStateInitIssue,
+  ...rest: ReadonlyArray<BattleStateInitIssue>
+): Either.Either<never, BattleStateInitIssue> {
+  return Either.left({
+    tag: "battleStateInitIssues",
+    issues: [first, ...rest],
+  });
 }
 
 export function weaponLoadoutMismatchIssue(

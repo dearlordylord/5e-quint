@@ -4086,9 +4086,13 @@ export type BattleStateInitIssue =
   | {
       readonly tag: "weaponLoadoutMismatch";
       readonly slot: "main-hand" | "off-hand";
+    }
+  | {
+      readonly tag: "battleStateInitIssues";
+      readonly issues: ReadonlyNonEmptyArray<BattleStateInitIssue>;
     };
 
-// battleStateInitIssue moved to ./battle-reducer/domain-helpers.ts
+// battleStateInitIssue and battleStateInitIssueMessage moved to ./battle-reducer/domain-helpers.ts
 
 export const SUPPORTED_POINT_SPHERE_SAVE_GATE_RADIUS_FEET = movementFeet(5);
 export const SUPPORTED_SELF_CONE_SAVE_GATE_LENGTH_FEET = movementFeet(15);

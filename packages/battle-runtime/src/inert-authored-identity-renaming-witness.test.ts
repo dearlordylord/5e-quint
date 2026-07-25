@@ -104,8 +104,9 @@ function wildShapeAvailableFormsMechanicalProjection(
     | undefined,
 ) {
   if (forms === undefined) return undefined;
-  // Strip presentation-only identity from each admitted form. Mechanical facts
-  // (support profile, AC, size, speeds, procedures) remain compared.
+  // Strip composition/selection identity from each admitted form. After
+  // admission it is mechanically inert; mechanical facts (support profile, AC,
+  // size, speeds, procedures) remain compared.
   return forms.map((admission) => {
     const { id: _id, ...statBlockWithoutId } = admission.statBlock;
     const { displayName: _displayName, ...innerStatBlockWithoutDisplayName } =
@@ -350,9 +351,10 @@ function wildShapeFormAdmissionWithRenamedPresentationIdentity(
   id: ReturnType<typeof statBlockId>,
   displayName: string,
 ): StatBlockExecutionAdmission<BattleDruidWildShapeKnownForm> {
-  // Only presentation identity (`statBlock.id` and nested
-  // `statBlock.statBlock.displayName`) is rewritten. Mechanical facts and
-  // eligibility remain identical, so no type assertions are required.
+  // Only composition/selection identity (`statBlock.id` and nested
+  // `statBlock.statBlock.displayName`) is rewritten. After admission it is
+  // mechanically inert; mechanical facts and eligibility remain identical, so
+  // no type assertions are required.
   return {
     ...admission,
     statBlock: {

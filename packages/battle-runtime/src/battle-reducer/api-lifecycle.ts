@@ -40,6 +40,7 @@ import {
   battleExecutionScopeOrdinal,
 } from "../identity.ts";
 import type { BattleCompanionState } from "../companion-state.ts";
+import type { BattleUnitSupportProfileIssue } from "../unit-feature-support.ts";
 import {
   characterUnitProcedureBindings,
   characterExecutionWithSpellInvocations,
@@ -66,7 +67,7 @@ import { admittedSpellActs } from "./spells-profiles.ts";
 
 import {
   battleStateInitIssue,
-  weaponLoadoutMismatchMessage,
+  battleStateInitIssues,
 } from "./domain-helpers.ts";
 
 import { resetBattleTurnResources } from "./turn-end-movement.ts";
@@ -84,6 +85,14 @@ import {
   INITIAL_ROUND,
   INITIAL_TURN_RESOURCES,
 } from "./battle-runtime-protocol.ts";
+
+function admissionIssueToInitIssue(
+  issue: BattleStateInitIssue | BattleUnitSupportProfileIssue,
+): BattleStateInitIssue {
+  if (issue.tag === "weaponLoadoutMismatch") return issue;
+  if (issue.tag === "battleStateInitIssues") return issue;
+  return { tag: "battleStateInitIssue", message: issue.message };
+}
 
 const InitialInitiativeSetupBrand: unique symbol = Symbol(
   "InitialInitiativeSetup",
@@ -214,15 +223,11 @@ export function startBattle(
       battleExecutionScopeOrdinal(0),
     );
     if (admission.tag === "invalid") {
-      return battleStateInitIssue(
-        admission.issues
-          .map((issue) =>
-            issue.tag === "weaponLoadoutMismatch"
-              ? weaponLoadoutMismatchMessage(issue.slot)
-              : issue.message,
-          )
-          .join("; "),
-      );
+      const issues = admission.issues.map(admissionIssueToInitIssue);
+      const [firstIssue, ...remainingIssues] = issues;
+      return remainingIssues.length === 0
+        ? Either.left(firstIssue)
+        : battleStateInitIssues(firstIssue, ...remainingIssues);
     }
     combatants.set(combatant.combatantId, admission.creature);
     if ("runtimeContext" in admission) {
@@ -584,15 +589,11 @@ function admitBattleCombatant(input: AddBattleCombatantInput): Either.Either<
     ),
   );
   if (admission.tag === "invalid") {
-    return battleStateInitIssue(
-      admission.issues
-        .map((issue) =>
-          issue.tag === "weaponLoadoutMismatch"
-            ? weaponLoadoutMismatchMessage(issue.slot)
-            : issue.message,
-        )
-        .join("; "),
-    );
+    const issues = admission.issues.map(admissionIssueToInitIssue);
+    const [firstIssue, ...remainingIssues] = issues;
+    return remainingIssues.length === 0
+      ? Either.left(firstIssue)
+      : battleStateInitIssues(firstIssue, ...remainingIssues);
   }
   const combatantsWithAdmission = new Map(input.state.combatants).set(
     input.combatant.combatantId,
