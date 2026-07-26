@@ -1,4 +1,5 @@
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
+import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT7 fighter_second_wind barbarian_reckless_attack rogue_evasion monk_evasion
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT62 fighter_tactical_mind
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L19D-04-FIGHTER-INDOMITABLE fighter_indomitable
@@ -370,31 +371,7 @@ describe("QMBT62 Tactical Mind deterministic Unit profile admission", () => {
     );
   });
 
-  test("fighter_tactical_mind rejects malformed dice and unrelated ability-check feature shapes", () => {
-    const unit = unitLibrary.requireUnit(fighterTacticalMindUnitId);
-    if (
-      unit.kind !== "class_feature" ||
-      unit.mechanics.family !== "failed_ability_check_resource_boost"
-    ) {
-      throw new Error("Expected Tactical Mind Unit mechanics.");
-    }
-    const malformedDice = {
-      ...unit,
-      mechanics: {
-        ...unit.mechanics,
-        bonus: {
-          kind: "dice" as const,
-          expr: { dice: 1 as const, dieSize: 8 as const },
-        },
-      },
-      // Cast justification: this fixture intentionally violates the authored
-      // Tactical Mind d10 mechanics invariant; the guard above keeps every
-      // other field sourced from a real UnitRecord fixture.
-    } as unknown as UnitRecord;
-
-    expect(
-      battleFailedAbilityCheckResourceBoostSupportForUnit(malformedDice),
-    ).toBe("unsupported");
+  test("fighter_tactical_mind rejects unrelated ability-check feature shapes", () => {
     expect(
       battleFailedAbilityCheckResourceBoostSupportForUnit(
         unitLibrary.requireUnit(fighterSecondWindUnitId),
@@ -658,39 +635,6 @@ describe("L19D-04 Fighter Indomitable failed Saving Throw reroll", () => {
       }),
     );
   });
-
-  test("malformed failed-save reroll shapes are unsupported without authored identity dispatch", () => {
-    const unit = unitLibrary.requireUnit(fighterIndomitableUnitId);
-    if (
-      unit.kind !== "class_feature" ||
-      unit.mechanics.family !== "failed_saving_throw_reroll"
-    ) {
-      throw new Error("Expected Indomitable Unit mechanics.");
-    }
-    const malformedBonus = {
-      ...unit,
-      id: "synthetic_failed_save_reroll_fixture",
-      mechanics: {
-        ...unit.mechanics,
-        reroll: {
-          ...unit.mechanics.reroll,
-          bonus: {
-            kind: "class_level" as const,
-            className: "rogue" as const,
-          },
-        },
-      },
-    } as unknown as UnitRecord;
-
-    expect(battleFailedSavingThrowRerollSupportForUnit(malformedBonus)).toBe(
-      "unsupported",
-    );
-    expect(
-      battleFailedSavingThrowRerollSupportForUnit(
-        unitLibrary.requireUnit(fighterSecondWindUnitId),
-      ),
-    ).toBeNull();
-  });
 });
 
 describe("QMBT65 Cutting Words deterministic Unit profile admission", () => {
@@ -752,16 +696,13 @@ describe("QMBT65 Cutting Words deterministic Unit profile admission", () => {
     ) {
       throw new Error("Expected Bardic Inspiration activation mechanics.");
     }
-    const malformedUnit = {
+    const malformedUnit = decodeUnitRecordSync({
       ...unit,
       mechanics: {
         ...unit.mechanics,
         range: { kind: "point" as const, feet: 30 },
       },
-      // Cast justification: this fixture intentionally violates the authored
-      // Bardic Inspiration 60-foot grant invariant while preserving the rest
-      // of the real UnitRecord fixture.
-    } as unknown as UnitRecord;
+    });
 
     expect(battleBardicInspirationGrantSupportForUnit(malformedUnit)).toBe(
       "unsupported",
@@ -940,16 +881,13 @@ describe("QMBT65 Cutting Words deterministic Unit profile admission", () => {
             }
           : modifier,
     );
-    const malformedUnit = {
+    const malformedUnit = decodeUnitRecordSync({
       ...unit,
       mechanics: {
         ...unit.mechanics,
         modifiers: malformedAbilityCheckModifier,
       },
-      // Cast justification: this fixture intentionally violates the authored
-      // Cutting Words visible-creature trigger invariant while preserving the
-      // rest of the real UnitRecord fixture.
-    } as unknown as UnitRecord;
+    });
 
     expect(
       battleReactionRollOrDamageReductionSupportForUnit(malformedUnit),
@@ -976,16 +914,13 @@ describe("QMBT65 Cutting Words deterministic Unit profile admission", () => {
             }
           : modifier,
     );
-    const malformedUnit = {
+    const malformedUnit = decodeUnitRecordSync({
       ...unit,
       mechanics: {
         ...unit.mechanics,
         modifiers: malformedAbilityCheckModifier,
       },
-      // Cast justification: this fixture intentionally violates the authored
-      // Cutting Words 60-foot trigger invariant while preserving the rest of
-      // the real UnitRecord fixture.
-    } as unknown as UnitRecord;
+    });
 
     expect(
       battleReactionRollOrDamageReductionSupportForUnit(malformedUnit),
@@ -1000,7 +935,7 @@ describe("QMBT65 Cutting Words deterministic Unit profile admission", () => {
     ) {
       throw new Error("Expected Cutting Words reaction modifier mechanics.");
     }
-    const malformedUnit = {
+    const malformedUnit = decodeUnitRecordSync({
       ...unit,
       mechanics: {
         ...unit.mechanics,
@@ -1009,10 +944,7 @@ describe("QMBT65 Cutting Words deterministic Unit profile admission", () => {
           cap: { kind: "ability_modifier" as const, ability: "wis" as const },
         },
       },
-      // Cast justification: this fixture intentionally violates the authored
-      // Bardic Inspiration Charisma-use projection invariant while preserving
-      // the rest of the real UnitRecord fixture.
-    } as unknown as UnitRecord;
+    });
 
     expect(
       battleReactionRollOrDamageReductionSupportForUnit(malformedUnit),

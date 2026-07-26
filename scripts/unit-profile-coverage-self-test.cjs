@@ -9,7 +9,7 @@ const {
   selectedIdentityReplayEvidenceTag,
 } = require("./unit-profile-coverage-config.cjs");
 const {
-  extractDriverSchemaActionNames,
+  extractDeclaredReplayActionNames,
   extractReplayQntActionSet,
   extractSelectedUnitIdentityReplays,
 } = require("./unit-profile-coverage-claim-scan.cjs");
@@ -2424,7 +2424,7 @@ function runSelfTest(root) {
             taskId: "QMBT10",
             unitId: "fixture_unit",
             actionNames: ["doDriverOnly"],
-            declaredActions: extractDriverSchemaActionNames(testText),
+            declaredActions: extractDeclaredReplayActionNames(testText),
           },
           {
             ownerPath: "fixture/rule-core-features.mbt.test.ts",
@@ -2432,7 +2432,7 @@ function runSelfTest(root) {
             taskId: "QMBT10",
             unitId: "fixture_unit",
             actionNames: ["doReachableAction"],
-            declaredActions: extractDriverSchemaActionNames(testText),
+            declaredActions: extractDeclaredReplayActionNames(testText),
           },
           {
             ownerPath: "fixture/rule-core-features.mbt.test.ts",
@@ -2440,7 +2440,7 @@ function runSelfTest(root) {
             taskId: "QMBT10",
             unitId: "fixture_unit",
             actionNames: ["doReachableAction", "doDriverOnly"],
-            declaredActions: extractDriverSchemaActionNames(testText),
+            declaredActions: extractDeclaredReplayActionNames(testText),
           },
         ],
         unitIdentityQntReplays: [
@@ -2550,7 +2550,7 @@ function runSelfTest(root) {
     fs.mkdirSync(path.dirname(splitReplayOwnerPath), { recursive: true });
     fs.writeFileSync(splitReplayOwnerPath, splitReplayOwnerText);
     fs.writeFileSync(splitReplayDataPath, splitReplayDataText);
-    const splitDeclaredActions = extractDriverSchemaActionNames(
+    const splitDeclaredActions = extractDeclaredReplayActionNames(
       splitReplayOwnerText,
       splitReplayOwnerPath,
     );
@@ -2562,6 +2562,27 @@ function runSelfTest(root) {
     if (!splitDeclaredActions.has("doActualImportedReplay")) {
       fail(
         `Self-test failed: imported replay-data action was not scanned, got ${JSON.stringify([...splitDeclaredActions])}`,
+      );
+    }
+    const scopedActionMapText = [
+      "const ordinaryLookup = {",
+      "  doFalsePositive: () => undefined,",
+      "};",
+      "const spellSelectedIdentityActions = {",
+      "  doActualReplay: () => undefined,",
+      "};",
+      "",
+    ].join("\n");
+    const scopedDeclaredActions =
+      extractDeclaredReplayActionNames(scopedActionMapText);
+    if (scopedDeclaredActions.has("doFalsePositive")) {
+      fail(
+        `Self-test failed: an ordinary object-map key was accepted as a replay action, got ${JSON.stringify([...scopedDeclaredActions])}`,
+      );
+    }
+    if (!scopedDeclaredActions.has("doActualReplay")) {
+      fail(
+        `Self-test failed: a selected-identity action-map key was not scanned, got ${JSON.stringify([...scopedDeclaredActions])}`,
       );
     }
     const splitRows = extractSelectedUnitIdentityReplays(

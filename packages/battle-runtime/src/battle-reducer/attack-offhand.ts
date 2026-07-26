@@ -75,7 +75,7 @@ import {
   attackDamageEventWithEntries,
   attackDamageInterruptionFrame,
   attackFillsThroughAttackRoll,
-} from "./dispatcher.ts";
+} from "./attack-damage-events.ts";
 import { maybeOpenInterruptWindow } from "./interrupt-execution.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";
 

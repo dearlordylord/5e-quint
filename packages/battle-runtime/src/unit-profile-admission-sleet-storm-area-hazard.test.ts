@@ -24,7 +24,10 @@ import {
   spellAct,
   spellHoleInvocation,
 } from "./unit-profile-admission-spell-fill-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+import {
+  decodeSpellRecordForTest,
+  spellRecord,
+} from "./unit-profile-admission-spell-record-support.ts";
 import type {
   BattleActiveEffect,
   BattleState,
@@ -128,7 +131,7 @@ function sleetStormWithAreaMembershipSaveLimits(
   }
   // Test-only synthetic records keep the parsed SpellRecord shape while changing
   // usage-limit facts that the admission gate must reject.
-  return {
+  return decodeSpellRecordForTest({
     ...base,
     id,
     mechanics: {
@@ -139,7 +142,7 @@ function sleetStormWithAreaMembershipSaveLimits(
           : operation,
       ),
     },
-  } as unknown as SpellRecord;
+  });
 }
 
 function isSleetStormAreaMembershipSaveOperation(

@@ -43,7 +43,7 @@ export type FillableDamageTypeRef = ExcludeByKind<
 >;
 
 export type RolledDiceGroup = {
-  readonly results: ReadonlyNonEmptyArray<DieRollResult>;
+  readonly results: ReadonlyArray<DieRollResult>;
 };
 
 export const ATTACK_ROLL_MODES = [

@@ -59,10 +59,7 @@ import {
   BATTLE_INTERRUPT_TRIGGERS,
   BATTLE_READIED_SPELL_TRIGGERS,
 } from "../battle-interrupt-triggers.ts";
-import {
-  WILD_SHAPE_FORM_LIMB_OBJECT_HANDLING_WITNESSES,
-  type WildShapeWornLoadoutObjectRef,
-} from "./wild-shape-equipment.ts";
+import { WILD_SHAPE_FORM_LIMB_OBJECT_HANDLING_WITNESSES } from "./wild-shape-equipment.ts";
 import {
   BATTLE_MOVEMENT_SPEED_KINDS,
   BattleSubjectSchema,
@@ -109,11 +106,6 @@ import {
   BattleTablePositionId,
   CombatantId,
 } from "../identity.ts";
-import type {
-  BattleCompanionPlacement,
-  BattleCompanionDurableId,
-  BattleCompanionProtocol,
-} from "../companion-state.ts";
 import { creatureAttackRollMechanicsAreSupported } from "../statblock-action-support.ts";
 import { ATTACK_DAMAGE_ABILITY_MODIFIER_CHOICE_SELECTIONS } from "./attack-damage-ability-modifier-choice.ts";
 import { ATTACK_DAMAGE_DIE_FLOOR_CHOICE_SELECTIONS } from "./attack-damage-die-floor-choice.ts";
@@ -154,21 +146,11 @@ import {
 } from "../unit-feature-support.ts";
 import {
   ATTACK_PRESENTATION_JOIN_ISSUE_REASONS,
-  type BattleDroppedObjectOutcome,
   type BattleFill,
-  type BattleObjectIgnitionOutcome,
-  type BattleShovePushOutcome,
-  type BattleSpellAreaChoice,
-  type BattleTargetSpatialFact,
   type BattleHole,
 } from "../battle-state-execution.ts";
-import type {
-  WildShapeEquipmentDispositionChoice,
-  WildShapeLoadoutObjectRef,
-} from "./wild-shape-equipment.ts";
 const BattleCompanionResolvedStatBlockIdSchema = Schema.NonEmptyTrimmedString;
-const BattleCompanionDurableIdSchema =
-  Schema.NonEmptyTrimmedString as unknown as Schema.Schema<BattleCompanionDurableId>;
+const BattleCompanionDurableIdSchema = Schema.NonEmptyTrimmedString;
 const BattleCompanionIdentitySchema = Schema.Union(
   Schema.Struct({ tag: Schema.Literal("battleOnly") }),
   Schema.Struct({
@@ -178,7 +160,7 @@ const BattleCompanionIdentitySchema = Schema.Union(
 );
 const BattleCompanionProtocolSchema = Schema.Struct({
   tag: Schema.Literal(...RETAINED_COMPANION_PROTOCOL_TAGS),
-}) as unknown as Schema.Schema<BattleCompanionProtocol>;
+});
 const FindFamiliarCreatureTypeOverrideSchema = Schema.Literal(
   "celestial",
   "fey",
@@ -193,10 +175,10 @@ const BattleCompanionPlacementSchema = Schema.Union(
     kind: Schema.Literal("unoccupiedSpaceWithin30Feet"),
     positionId: Schema.optionalWith(BattleTablePositionId, { exact: true }),
   }),
-  // Cast evidence is local to this union: both placement variants and their
-  // optional branded position ids are parsed here. Effect Schema keeps the
-  // structure but does not infer the imported discriminated union type.
-) as unknown as Schema.Schema<BattleCompanionPlacement>;
+);
+type BattleCompanionPlacementEncoded = Schema.Schema.Encoded<
+  typeof BattleCompanionPlacementSchema
+>;
 const HpSchema = Schema.Number.pipe(
   Schema.int(),
   Schema.greaterThanOrEqualTo(0),
@@ -331,47 +313,43 @@ const WildShapeOffHandWeaponLoadoutObjectRefSchema = Schema.Struct({
   objectId: BattleObjectId,
 });
 
-// Effect Schema's `Union` of branded structs does not infer the exact branded
-// union type, so the schema is built concretely and cast to the expected type.
-const WildShapeWornLoadoutObjectRefSchema: Schema.Schema<WildShapeWornLoadoutObjectRef> =
-  Schema.Union(
-    WildShapeArmorLoadoutObjectRefSchema,
-    WildShapeShieldLoadoutObjectRefSchema,
-    WildShapeMainWeaponLoadoutObjectRefSchema,
-    WildShapeOffHandWeaponLoadoutObjectRefSchema,
-  ) as unknown as Schema.Schema<WildShapeWornLoadoutObjectRef>;
+const WildShapeWornLoadoutObjectRefSchema = Schema.Union(
+  WildShapeArmorLoadoutObjectRefSchema,
+  WildShapeShieldLoadoutObjectRefSchema,
+  WildShapeMainWeaponLoadoutObjectRefSchema,
+  WildShapeOffHandWeaponLoadoutObjectRefSchema,
+);
 
-const WildShapeLoadoutObjectRefSchema: Schema.Schema<WildShapeLoadoutObjectRef> =
-  Schema.Union(
-    WildShapeArmorLoadoutObjectRefSchema,
-    WildShapeShieldLoadoutObjectRefSchema,
-    WildShapeMainWeaponLoadoutObjectRefSchema,
-    WildShapeOffHandWeaponLoadoutObjectRefSchema,
-  ) as unknown as Schema.Schema<WildShapeLoadoutObjectRef>;
+const WildShapeLoadoutObjectRefSchema = Schema.Union(
+  WildShapeArmorLoadoutObjectRefSchema,
+  WildShapeShieldLoadoutObjectRefSchema,
+  WildShapeMainWeaponLoadoutObjectRefSchema,
+  WildShapeOffHandWeaponLoadoutObjectRefSchema,
+);
 
-const WildShapeEquipmentDispositionChoiceSchema: Schema.Schema<WildShapeEquipmentDispositionChoice> =
-  // The union schema below mirrors the discriminated choice type. The cast is
-  // only needed because Effect Schema cannot infer the nested branded refs
-  // through this union precisely.
-  Schema.Union(
-    Schema.Struct({
-      item: WildShapeLoadoutObjectRefSchema,
-      disposition: Schema.Literal("falls", "merges"),
-    }),
-    Schema.Struct({
-      item: WildShapeWornLoadoutObjectRefSchema,
-      disposition: Schema.Literal("worn"),
-      practicality: Schema.Union(
-        Schema.Struct({
-          kind: Schema.Literal("practicalToWear"),
-        }),
-        Schema.Struct({
-          kind: Schema.Literal("notPracticalToWear"),
-          fallback: Schema.Literal("falls", "merges"),
-        }),
-      ),
-    }),
-  ) as unknown as Schema.Schema<WildShapeEquipmentDispositionChoice>;
+const WildShapeEquipmentDispositionChoiceSchema = Schema.Union(
+  Schema.Struct({
+    item: WildShapeLoadoutObjectRefSchema,
+    disposition: Schema.Literal("falls", "merges"),
+  }),
+  Schema.Struct({
+    item: WildShapeWornLoadoutObjectRefSchema,
+    disposition: Schema.Literal("worn"),
+    practicality: Schema.Union(
+      Schema.Struct({
+        kind: Schema.Literal("practicalToWear"),
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("notPracticalToWear"),
+        fallback: Schema.Literal("falls", "merges"),
+      }),
+    ),
+  }),
+);
+
+type WildShapeEquipmentDispositionChoiceEncoded = Schema.Schema.Encoded<
+  typeof WildShapeEquipmentDispositionChoiceSchema
+>;
 
 const WildShapeFormLimbObjectHandlingWitnessSchema = Schema.Struct({
   kind: Schema.Literal(...WILD_SHAPE_FORM_LIMB_OBJECT_HANDLING_WITNESSES),
@@ -587,14 +565,7 @@ const BattleSpellAreaChoiceSchema = Schema.Union(
     areaId: Schema.optionalWith(Schema.Never, { exact: true }),
     sleepNonSleeperFacts: Schema.optionalWith(Schema.Never, { exact: true }),
   }),
-  // Effect Schema infers the exact-forbidden optional fields as broader
-  // output than this tagged union; the branches above enumerate every
-  // BattleSpellAreaChoice encoding shape, so the codec boundary is aligned.
-) as unknown as Schema.Schema<
-  BattleSpellAreaChoice,
-  BattleSpellAreaChoiceEncoded,
-  never
->;
+);
 
 const BattleObjectIgnitionDispositionSchema = Schema.Union(
   Schema.Struct({ kind: Schema.Literal("flammableUnattended") }),
@@ -1016,7 +987,10 @@ const BattleTargetSpatialFactSchema = Schema.Union(
     originalTargetId: CombatantId,
     secondTargetId: CombatantId,
   }),
-) as unknown as Schema.Schema<BattleTargetSpatialFact, unknown, never>;
+);
+type BattleTargetSpatialFactEncoded = Schema.Schema.Encoded<
+  typeof BattleTargetSpatialFactSchema
+>;
 const BattleTargetSpatialFactsSchema = Schema.Array(
   BattleTargetSpatialFactSchema,
 );
@@ -1120,17 +1094,13 @@ export const BattleObjectDamageOutcomeSchema = Schema.Union(
   }),
 );
 
-// Effect Schema encodes branded ids as plain strings at the JSON boundary; the
-// decoder restores the domain brands before the value reaches runtime code.
 export const BattleObjectIgnitionOutcomeSchema = Schema.Struct({
   kind: Schema.Literal("startsBurning"),
   objectId: BattleObjectId,
   sourceCombatantId: CombatantId,
   sourceProcedureRef: BattleProcedureExecutionRef,
-}) as unknown as Schema.Schema<BattleObjectIgnitionOutcome>;
+});
 
-// Effect Schema encodes branded ids as plain strings at the JSON boundary; the
-// decoder restores the domain brands before the value reaches runtime code.
 export const BattleDroppedObjectOutcomeSchema = Schema.Struct({
   kind: Schema.Literal("objectDropped"),
   actorId: CombatantId,
@@ -1142,15 +1112,18 @@ export const BattleDroppedObjectOutcomeSchema = Schema.Struct({
       sourceProcedureRef: BattleProcedureExecutionRef,
     }),
     Schema.Struct({
+      kind: Schema.Literal("companionDisappearance"),
+      ownerId: CombatantId,
+      companionId: CombatantId,
+    }),
+    Schema.Struct({
       kind: Schema.Literal("druidWildShape"),
       procedureRef: BattleProcedureExecutionRef,
       formExecutionRef: BattleStatBlockExecutionScopeRef,
     }),
   ),
-}) as unknown as Schema.Schema<BattleDroppedObjectOutcome>;
+});
 
-// Effect Schema encodes branded ids as plain strings at the JSON boundary; the
-// decoder restores the domain brands before the value reaches runtime code.
 export const BattleShovePushOutcomeSchema = Schema.Struct({
   targetId: CombatantId,
   disposition: Schema.Union(
@@ -1167,7 +1140,7 @@ export const BattleShovePushOutcomeSchema = Schema.Struct({
       provokesOpportunityAttacks: Schema.Literal(false),
     }),
   ),
-}) as unknown as Schema.Schema<BattleShovePushOutcome>;
+});
 
 const BattleSavingThrowRollModeProjectionSchema = Schema.Struct({
   targetId: CombatantId,
@@ -2832,6 +2805,9 @@ const BattleAttackRollResultSchema = Schema.Struct({
 });
 
 const BattleRolledDiceGroupSchema = Schema.Struct({
+  results: Schema.Array(BattleDieRollResultSchema),
+});
+const BattleNonEmptyRolledDiceGroupSchema = Schema.Struct({
   results: Schema.NonEmptyArray(BattleDieRollResultSchema),
 });
 
@@ -3131,7 +3107,7 @@ type BattleFillEncoded =
       readonly kind: "targetChoice";
       readonly holeId: string;
       readonly value: string;
-      readonly spatialFacts?: readonly unknown[];
+      readonly spatialFacts?: readonly BattleTargetSpatialFactEncoded[];
       readonly relationshipFacts?: BattleTargetChoiceRelationshipFactsEncoded;
     }
   | {
@@ -3145,7 +3121,7 @@ type BattleFillEncoded =
   | {
       readonly kind: "targetSpatialFacts";
       readonly holeId: string;
-      readonly spatialFacts: readonly unknown[];
+      readonly spatialFacts: readonly BattleTargetSpatialFactEncoded[];
     }
   | {
       readonly kind: "slowSomaticSpellFailureOutcome";
@@ -3263,7 +3239,7 @@ type BattleFillEncoded =
         readonly formLimbs: {
           readonly kind: "canHandleObjects" | "cannotHandleObjects";
         };
-        readonly choices: readonly WildShapeEquipmentDispositionChoice[];
+        readonly choices: readonly WildShapeEquipmentDispositionChoiceEncoded[];
       };
     }
   | {
@@ -3754,7 +3730,7 @@ type BattleFillEncoded =
           readonly hitPoints: number;
         }[];
       };
-      readonly spatialFacts: readonly unknown[];
+      readonly spatialFacts: readonly BattleTargetSpatialFactEncoded[];
     }
   | {
       readonly kind: "heldObjectFacts";
@@ -3787,7 +3763,7 @@ type BattleFillEncoded =
   | {
       readonly kind: "companionReappearancePlacement";
       readonly holeId: string;
-      readonly value: BattleCompanionPlacement;
+      readonly value: BattleCompanionPlacementEncoded;
     }
   | {
       readonly kind: "companionReappearanceInitiative";
@@ -3815,10 +3791,10 @@ type BattleFillEncoded =
       readonly attackDamageAbilityModifierChoice?: AttackDamageAbilityModifierChoiceFillEncoded;
       readonly value: readonly [
         {
-          readonly results: readonly [number, ...number[]];
+          readonly results: readonly number[];
         },
         ...{
-          readonly results: readonly [number, ...number[]];
+          readonly results: readonly number[];
         }[],
       ];
     }
@@ -3844,10 +3820,10 @@ type BattleFillEncoded =
       };
       readonly value: readonly [
         {
-          readonly results: readonly [number, ...number[]];
+          readonly results: readonly number[];
         },
         ...{
-          readonly results: readonly [number, ...number[]];
+          readonly results: readonly number[];
         }[],
       ];
     }
@@ -3909,7 +3885,7 @@ type BattleFillEncoded =
               | ({
                   readonly kind: "newTarget";
                   readonly targetId: string;
-                  readonly spatialFacts: readonly unknown[];
+                  readonly spatialFacts: readonly BattleTargetSpatialFactEncoded[];
                 } & (
                   | {
                       readonly replacementTargetKind: "attackRoll";
@@ -4109,7 +4085,7 @@ type BattleFillEncoded =
         readonly direction: "up" | "down";
         readonly distanceFeet: number;
       };
-      readonly spatialFacts: readonly unknown[];
+      readonly spatialFacts: readonly BattleTargetSpatialFactEncoded[];
     }
   | {
       readonly kind: "levitateInitialRise";
@@ -4786,8 +4762,8 @@ export const BattleFillSchema: Schema.Schema<
           unitId: Schema.optionalWith(Schema.Never, { exact: true }),
           selection: Schema.Literal("first", "second"),
           candidates: Schema.Tuple(
-            BattleRolledDiceGroupSchema,
-            BattleRolledDiceGroupSchema,
+            BattleNonEmptyRolledDiceGroupSchema,
+            BattleNonEmptyRolledDiceGroupSchema,
           ),
         }),
         { exact: true },

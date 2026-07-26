@@ -40,7 +40,10 @@ import {
   maybeSpellAct,
   spellAct,
 } from "./unit-profile-admission-spell-fill-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+import {
+  decodeSpellRecordForTest,
+  spellRecord,
+} from "./unit-profile-admission-spell-record-support.ts";
 import {
   attackBonus,
   battleAreaId,
@@ -1363,7 +1366,7 @@ function dispelMagicWithTargetContract(
   }
   // Test-only synthetic record keeps the parsed SpellRecord shape while changing
   // contract details that the admission gate must reject.
-  return {
+  return decodeSpellRecordForTest({
     ...spell,
     id: input.id,
     mechanics: {
@@ -1387,7 +1390,7 @@ function dispelMagicWithTargetContract(
         return phase;
       }),
     },
-  } as unknown as SpellRecord;
+  });
 }
 
 function dispelMagicWithExtraPhase(
@@ -1403,14 +1406,14 @@ function dispelMagicWithExtraPhase(
   }
   // Test-only synthetic record keeps the parsed SpellRecord shape while adding a
   // phase that the admission gate must reject.
-  return {
+  return decodeSpellRecordForTest({
     ...spell,
     id,
     mechanics: {
       ...spell.mechanics,
       phases: [...spell.mechanics.phases, extraPhase],
     },
-  } as unknown as SpellRecord;
+  });
 }
 
 function dispelMagicWithAbilityCheckOnFail(
@@ -1422,7 +1425,7 @@ function dispelMagicWithAbilityCheckOnFail(
   }
   // Test-only synthetic record keeps the parsed SpellRecord shape while adding
   // an on-fail branch that the admission gate must reject.
-  return {
+  return decodeSpellRecordForTest({
     ...spell,
     id,
     mechanics: {
@@ -1434,7 +1437,7 @@ function dispelMagicWithAbilityCheckOnFail(
             : phase,
       ),
     },
-  } as unknown as SpellRecord;
+  });
 }
 
 type DispelMagicTargetPhase = Extract<

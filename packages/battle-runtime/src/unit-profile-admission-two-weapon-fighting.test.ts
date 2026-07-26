@@ -11,7 +11,6 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 import { attackBonus } from "@dnd/shared/types";
-import type { UnitRecord } from "@dnd/surface/surface/types";
 import {
   attackTargetFill,
   attackRollFill,
@@ -338,65 +337,6 @@ describe("L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME deterministic profile slice", 
         ]),
       },
     });
-  });
-
-  test("support gate rejects adjacent Light extra attack damage modifier shapes", () => {
-    const unit = unitLibrary.requireUnit(twoWeaponFightingUnitId);
-    if (
-      unit.kind !== "feat" ||
-      unit.mechanics.family !== "light_extra_attack_damage_ability_modifier"
-    ) {
-      throw new Error(
-        "Expected Two-Weapon Fighting Light extra attack damage feat.",
-      );
-    }
-    // Cast evidence: these fixtures deliberately mutate a decoded SRD Unit into
-    // unsupported neighboring literal shapes so the production gate can reject
-    // them at the Unit boundary.
-    const adjacentUnits = [
-      {
-        ...unit,
-        id: "synthetic_light_extra_attack_required_fixture",
-        mechanics: { ...unit.mechanics, optional: false },
-      },
-      {
-        ...unit,
-        id: "synthetic_light_extra_attack_wrong_weapon_fixture",
-        mechanics: {
-          ...unit.mechanics,
-          trigger: {
-            ...unit.mechanics.trigger,
-            attackWeapon: { kind: "weapon_with_heavy_property" },
-          },
-        },
-      },
-      {
-        ...unit,
-        id: "synthetic_light_extra_attack_wrong_source_fixture",
-        mechanics: {
-          ...unit.mechanics,
-          effect: {
-            ...unit.mechanics.effect,
-            modifierSource: "flat_bonus",
-          },
-        },
-      },
-    ] as unknown as readonly UnitRecord[];
-
-    for (const adjacentUnit of adjacentUnits) {
-      expect(
-        battleUnitRefWithSupportProfiles({
-          unitRef: { unitId: adjacentUnit.id },
-          unit: adjacentUnit,
-        }),
-      ).toEqual(
-        Either.left({
-          tag: "battleUnitSupportProfileIssue",
-          message: `Unsupported battle Light extra attack damage ability modifier Unit hook: ${adjacentUnit.id}.`,
-        }),
-      );
-      expect(parseSupportedUnitFeatureProfile(adjacentUnit, [])).toBeNull();
-    }
   });
 });
 

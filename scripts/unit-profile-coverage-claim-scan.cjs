@@ -69,7 +69,7 @@ function scanClaimFiles(root) {
             taskId: unitIdentityReplayMatch[1],
             unitId: unitIdentityReplayMatch[2],
             actionNames: unitIdentityReplayMatch[3].trim().split(/\s+/),
-            declaredActions: extractDriverSchemaActionNames(text, filePath),
+            declaredActions: extractDeclaredReplayActionNames(text, filePath),
           });
         }
         const unitIdentityQntReplayMatch =
@@ -201,7 +201,12 @@ function hasSelectedIdentityReplayHelper(text) {
   );
 }
 
-function extractDriverSchemaActionNames(text, filePath) {
+function extractDeclaredReplayActionNames(text, filePath) {
+  const replayActionMaps = [
+    ...text.matchAll(
+      /^const\s+(selectedIdentityReplayDrivers|[A-Za-z_]\w*SelectedIdentityActions)\s*=\s*\{([\s\S]*?)^(?:\};|}\s+(?:as const\s+)?satisfies[^;]+;)/gm,
+    ),
+  ];
   return new Set([
     ...[
       ...text.matchAll(
@@ -211,6 +216,11 @@ function extractDriverSchemaActionNames(text, filePath) {
       [...schemaMatch[1].matchAll(/^\s*([A-Za-z_]\w*)\s*:\s*\{\}\s*,/gm)].map(
         (match) => match[1],
       ),
+    ),
+    ...replayActionMaps.flatMap((actionMapMatch) =>
+      [
+        ...actionMapMatch[2].matchAll(/^ {2}((?:do)[A-Z][A-Za-z0-9_]*)\s*:/gm),
+      ].map((match) => match[1]),
     ),
     ...extractSelectedIdentityWitnessActionNames(text, filePath),
   ]);
@@ -584,7 +594,7 @@ function escapeRegExp(value) {
 }
 
 module.exports = {
-  extractDriverSchemaActionNames,
+  extractDeclaredReplayActionNames,
   extractReplayQntActionSet,
   extractSelectedUnitIdentityReplays,
   hasSelectedUnitIdentityReplayConsumer,

@@ -374,7 +374,8 @@ function parseStoredRetainedCompanionHitPoints(
   }
   const currentHp = parseHp(value.currentHp);
   if (Either.isLeft(currentHp)) return Either.left(currentHp.left);
-  const positiveCurrentHp = retainedCompanionCurrentHitPoints(currentHp.right);
+  const positiveCurrentHp =
+    parseCharacterSheetRetainedCompanionCurrentHitPoints(currentHp.right);
   if (Either.isLeft(positiveCurrentHp))
     return Either.left(positiveCurrentHp.left);
   const tempHp = parseHp(value.tempHp);
@@ -746,18 +747,13 @@ function retainedCompanionRecastHitPoints(input: {
   const clampedCurrentHp = Hp(
     Math.min(Number(input.manifestation.hitPoints.currentHp), Number(maxHp)),
   );
-  if (clampedCurrentHp < Hp(1)) {
-    return characterSheetIssue(
-      "Retained companion recast current HP must be positive.",
-    );
-  }
   const carriedCurrentHp =
-    clampedCurrentHp as unknown as CharacterSheetRetainedCompanionHitPoints["currentHp"];
+    parseCharacterSheetRetainedCompanionCurrentHitPoints(clampedCurrentHp);
+  if (Either.isLeft(carriedCurrentHp)) {
+    return Either.left(carriedCurrentHp.left);
+  }
   return Either.right({
-    // Cast evidence: Hp proves non-negative integer HP, and the guard above
-    // proves the retained companion positive-current-HP alias for the carried,
-    // clamped value.
-    currentHp: carriedCurrentHp,
+    currentHp: carriedCurrentHp.right,
     tempHp: input.manifestation.hitPoints.tempHp,
   });
 }
@@ -822,7 +818,7 @@ function hasSelectedEldritchInvocation(
   );
 }
 
-function retainedCompanionCurrentHitPoints(
+export function parseCharacterSheetRetainedCompanionCurrentHitPoints(
   hp: HpType,
 ): Either.Either<
   CharacterSheetRetainedCompanionCurrentHitPoints,

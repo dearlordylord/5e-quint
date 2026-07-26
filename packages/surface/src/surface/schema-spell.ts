@@ -5368,10 +5368,7 @@ export const GlyphWardingTriggerSchema = strictStruct({
 
 export const GlyphWardingExplosiveRuneDamageTypeRefSchema = strictStruct({
   kind: Schema.Literal("hole"),
-  holeId: surfaceProtocol(
-    Schema.Literal("glyph_of_warding_explosive_rune_damage_type"),
-    "holeId",
-  ),
+  holeId: HoleIdSchema,
   label: surfaceIdentity(Schema.Literal("explosive rune damage type"), "label"),
   value: strictStruct({
     kind: Schema.Literal("choice"),

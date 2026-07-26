@@ -5,6 +5,7 @@ import {
   abilityScoreAssignment,
   characterBuildSorcererMetamagicFacts,
   characterBuildSpellcastingSlotCapacity,
+  characterEquipmentItemId,
   characterDraconicAncestrySelection,
   classLevelForUnit,
   classUnitId,
@@ -36,6 +37,8 @@ import {
   SKILLS,
   SURFACE_SKILLS,
   type Ability,
+  type CharacterStartingLanguages,
+  type StandardLanguage,
   type SurfaceSkill,
 } from "@dnd/shared/game-facts";
 import { Hp, resourceCount, spellSlotLevel } from "@dnd/shared/types";
@@ -1015,7 +1018,9 @@ function parseStoredOriginLanguages(
   ) {
     return characterSheetIssue("Character Build requires origin languages.");
   }
-  return Either.right(value as unknown as CharacterBuild["originLanguages"]);
+  return isCharacterStartingLanguages(value)
+    ? Either.right(value)
+    : characterSheetIssue("Character Build requires origin languages.");
 }
 
 function parseStoredClassFeatureLanguages(input: {
@@ -1548,8 +1553,14 @@ function parseStoredSpellcasting(
   const parsedSources = sources
     .filter(Either.isRight)
     .map((source) => source.right);
+  const [firstSource, ...remainingSources] = parsedSources;
+  if (firstSource === undefined) {
+    return characterSheetIssue(
+      "Character Build spellcasting requires sources.",
+    );
+  }
   return Either.right({
-    sources: parsedSources as unknown as CharacterBuildSpellcasting["sources"],
+    sources: [firstSource, ...remainingSources],
     slotPools: slotPools.right,
   });
 }
@@ -1787,7 +1798,7 @@ function parseStoredEquipment(
   ) {
     return characterSheetIssue("Character Build requires equipment.");
   }
-  const owned = [];
+  const owned: CharacterBuildEquipment["owned"][number][] = [];
   for (const item of value.owned) {
     if (
       !isRecord(item) ||
@@ -1804,14 +1815,19 @@ function parseStoredEquipment(
         "Character Build owned equipment item id is invalid.",
       );
     }
-    owned.push({ itemId: item.itemId, unitId: item.unitId });
+    if (parsedItemId.right.unitId !== item.unitId) {
+      return characterSheetIssue(
+        "Character Build owned equipment identity is inconsistent.",
+      );
+    }
+    owned.push({
+      itemId: characterEquipmentItemId(parsedItemId.right),
+      unitId: authoredUnitId(item.unitId),
+    });
   }
   const loadout = parseStoredLoadout(value.loadout);
   if (Either.isLeft(loadout)) return Either.left(loadout.left);
-  return Either.right({
-    owned,
-    loadout: loadout.right,
-  } as unknown as CharacterBuildEquipment);
+  return Either.right({ owned, loadout: loadout.right });
 }
 
 function parseStoredLoadout(
@@ -1901,9 +1917,7 @@ function parseOptionalEquipmentItemId(
       "Character Build equipment item slot is invalid.",
     );
   }
-  return Either.right(
-    value as CharacterBuildEquipment["owned"][number]["itemId"],
-  );
+  return Either.right(characterEquipmentItemId(parsed.right));
 }
 
 function isAbility(value: unknown): value is Ability {
@@ -1914,8 +1928,20 @@ function isSurfaceSkill(value: unknown): value is SurfaceSkill {
   return SURFACE_SKILLS.some((skill) => skill === value);
 }
 
-function isStandardLanguage(value: unknown): value is string {
+function isStandardLanguage(value: unknown): value is StandardLanguage {
   return STANDARD_LANGUAGES.some((language) => language === value);
+}
+
+function isCharacterStartingLanguages(
+  value: unknown,
+): value is CharacterStartingLanguages {
+  return (
+    Array.isArray(value) &&
+    value.length === 3 &&
+    value[0] === "Common" &&
+    value.every(isStandardLanguage) &&
+    new Set(value).size === value.length
+  );
 }
 
 function isLanguage(

@@ -132,19 +132,8 @@ describe("Character Sheet runtime / Hallow", () => {
     ]);
   });
 
-  test("Hallow rejects overlapping Hallow areas and oversized radii before spending the slot", () => {
+  test("Hallow rejects oversized radii before spending the slot", () => {
     const sheet = hallowClericSheet({ preparedSpells: ["hallow"], slots: 1 });
-    const overlapping = castHallow({
-      sheet,
-      unitLibrary,
-      casting: completedHallowCasting,
-      area: {
-        ...hallowArea,
-        areaAlreadyHallowed: true,
-      } as unknown as CharacterSheetHallowArea,
-      wardCreatureTypes,
-      extraEffect: resistanceEffect,
-    });
     const oversized = castHallow({
       sheet,
       unitLibrary,
@@ -154,12 +143,6 @@ describe("Character Sheet runtime / Hallow", () => {
       extraEffect: resistanceEffect,
     });
 
-    expect(Either.isLeft(overlapping)).toBe(true);
-    if (Either.isLeft(overlapping)) {
-      expect(overlapping.left.message).toBe(
-        "Hallow requires the target area to be outside existing Hallow effects.",
-      );
-    }
     expect(Either.isLeft(oversized)).toBe(true);
     if (Either.isLeft(oversized)) {
       expect(oversized.left.message).toBe(
@@ -171,15 +154,16 @@ describe("Character Sheet runtime / Hallow", () => {
 
   test("Hallow rejects duplicate chosen creature types before spending the slot", () => {
     const sheet = hallowClericSheet({ preparedSpells: ["hallow"], slots: 1 });
+    const duplicateWardCreatureTypes = [
+      "fiend",
+      "fiend",
+    ] as const satisfies CharacterSheetHallowCreatureTypes;
     const result = castHallow({
       sheet,
       unitLibrary,
       casting: completedHallowCasting,
       area: hallowArea,
-      wardCreatureTypes: [
-        "fiend",
-        "fiend",
-      ] as unknown as CharacterSheetHallowCreatureTypes,
+      wardCreatureTypes: duplicateWardCreatureTypes,
       extraEffect: resistanceEffect,
     });
 

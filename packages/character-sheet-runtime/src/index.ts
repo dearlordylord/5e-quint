@@ -51,6 +51,7 @@ export {
 export {
   characterSheetCompanion,
   createRetainedFamiliarLikeCompanion,
+  parseCharacterSheetRetainedCompanionCurrentHitPoints,
   replaceCharacterSheetCompanion,
 } from "./companions.ts";
 export {

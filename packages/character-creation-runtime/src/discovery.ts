@@ -119,6 +119,7 @@ import {
   type UnitChoiceKey,
 } from "./types.ts";
 import {
+  CHARACTER_CREATION_SUPPORT_PROFILE,
   supportedBackgroundUnitIds,
   supportedEquipmentPurchaseChoiceCount,
   isSupportedProgression,
@@ -127,6 +128,7 @@ import {
   supportedPurchasableEquipmentUnitIdsForClass,
   speciesUnitIdsWithSupportedTraitChoices,
   unsupportedHoleSelectionOptionId,
+  type CharacterCreationSupportProfile,
 } from "./support-gates.ts";
 import {
   classLevelForUnit,
@@ -185,6 +187,7 @@ const SRD_GAMING_SET_OPTIONS = [
 export function discoverCreationHoles(input: {
   readonly draft: CharacterDraft;
   readonly unitLibrary: UnitCatalog;
+  readonly supportProfile?: CharacterCreationSupportProfile;
 }): readonly CreationHole[] {
   return [
     ...discoverInitialDraftHoles(input),
@@ -198,12 +201,18 @@ export function discoverCreationHoles(input: {
 export function discoverInitialDraftHoles(input: {
   readonly draft: CharacterDraft;
   readonly unitLibrary: UnitCatalog;
+  readonly supportProfile?: CharacterCreationSupportProfile;
 }): readonly CreationHole[] {
   return INITIAL_CHARACTER_DRAFT_PATHS.flatMap((path) => {
     if (hasDraftSelection(input.draft.selections, path)) {
       return [];
     }
-    const hole = draftHole(path, input.unitLibrary, input.draft);
+    const hole = draftHole(
+      path,
+      input.unitLibrary,
+      input.draft,
+      input.supportProfile,
+    );
     return hole === undefined ? [] : [hole];
   });
 }
@@ -211,9 +220,13 @@ export function discoverInitialDraftHoles(input: {
 export function discoverClassGrantedHoles(input: {
   readonly draft: CharacterDraft;
   readonly unitLibrary: UnitCatalog;
+  readonly supportProfile?: CharacterCreationSupportProfile;
 }): readonly CreationHole[] {
   const progression = input.draft.selections.progression;
-  if (progression == null || !isSupportedProgression(progression)) {
+  if (
+    progression == null ||
+    !isSupportedProgression(progression, input.supportProfile)
+  ) {
     return [];
   }
   const startingUnitId = startingClassUnitId(progression);
@@ -238,8 +251,14 @@ export function discoverClassGrantedHoles(input: {
         ),
         options: facts.value.skillProficiencyChoice.options.map(skillOption),
       }),
+      input.supportProfile,
     ),
-    ...classToolProficiencyChoiceHoles(input.draft, classUnitId, facts.value),
+    ...classToolProficiencyChoiceHoles(
+      input.draft,
+      classUnitId,
+      facts.value,
+      input.supportProfile,
+    ),
     ...discoverClassFeatureGrantHolesInLevelOrder(
       facts.value.featureGrants,
       classLevel,
@@ -250,6 +269,7 @@ export function discoverClassGrantedHoles(input: {
         classUnitId,
         CLASS_SKILL_PROFICIENCY_CHOICE_KEY,
       ),
+      input.supportProfile,
     ),
     ...discoverSubclassHoles(classUnitId, classLevel, facts.value, input),
     ...discoverSelectedSubclassFeatureGrantHoles(
@@ -265,19 +285,23 @@ export function discoverClassGrantedHoles(input: {
       classFacts: facts.value,
       classLevel,
       unitLibrary: input.unitLibrary,
-    }).flatMap((hole) => unselectedUnitChoiceHole(input.draft, hole)),
+    }).flatMap((hole) =>
+      unselectedUnitChoiceHole(input.draft, hole, input.supportProfile),
+    ),
     ...unselectedUnitChoiceHole(
       input.draft,
       startingEquipmentChoiceHole(
         unitSource(classUnitId, CLASS_EQUIPMENT_CHOICE_KEY),
         facts.value.startingEquipment,
       ),
+      input.supportProfile,
     ),
     ...discoverClassSpellcastingHoles(
       classUnitId,
       classLevel,
       facts.value,
       input.draft,
+      input.supportProfile,
     ),
     ...progressionClassUnitIds(progression).flatMap((progressionClassUnitId) =>
       progressionClassUnitId === startingUnitId
@@ -287,6 +311,7 @@ export function discoverClassGrantedHoles(input: {
             classLevelForUnit(progression, progressionClassUnitId),
             input.draft,
             input.unitLibrary,
+            input.supportProfile,
           ),
     ),
   ];
@@ -301,9 +326,10 @@ function discoverClassSpellcastingHoles(
   classLevel: number,
   facts: ReadableClassCreationFacts,
   draft: CharacterDraft,
+  supportProfile?: CharacterCreationSupportProfile,
 ): readonly CreationHole[] {
   return classSpellcastingChoiceHoles(classUnitId, facts, classLevel).flatMap(
-    (hole) => unselectedUnitChoiceHole(draft, hole),
+    (hole) => unselectedUnitChoiceHole(draft, hole, supportProfile),
   );
 }
 
@@ -484,6 +510,7 @@ function discoverSubclassHoles(
   input: {
     readonly draft: CharacterDraft;
     readonly unitLibrary: UnitCatalog;
+    readonly supportProfile?: CharacterCreationSupportProfile;
   },
 ): readonly CreationHole[] {
   return facts.subclassChoices
@@ -499,6 +526,7 @@ function discoverSubclassHoles(
             return Option.isSome(unit) ? [unitOption(unit.value)] : [];
           }),
         }),
+        input.supportProfile,
       ),
     );
 }
@@ -510,6 +538,7 @@ function discoverSelectedSubclassFeatureGrantHoles(
   input: {
     readonly draft: CharacterDraft;
     readonly unitLibrary: UnitCatalog;
+    readonly supportProfile?: CharacterCreationSupportProfile;
   },
 ): readonly CreationHole[] {
   const selectedSubclassIds = input.draft.selections.choices.flatMap(
@@ -540,6 +569,11 @@ function discoverSelectedSubclassFeatureGrantHoles(
             classLevel,
             input.draft,
             input.unitLibrary,
+            {
+              ...(input.supportProfile === undefined
+                ? {}
+                : { supportProfile: input.supportProfile }),
+            },
           )
         : [],
     );
@@ -551,6 +585,7 @@ function discoverAdditionalClassGrantedHoles(
   classLevel: number,
   draft: CharacterDraft,
   unitLibrary: UnitCatalog,
+  supportProfile?: CharacterCreationSupportProfile,
 ): readonly CreationHole[] {
   const classUnit = unitLibrary.getUnit(classUnitId);
   if (Option.isNone(classUnit)) {
@@ -568,18 +603,19 @@ function discoverAdditionalClassGrantedHoles(
       draft,
       unitLibrary,
       false,
+      supportProfile,
     ),
     ...proficiencyGrantChoiceHoles(
       classUnitId,
       facts.value.multiclassProficiencies,
-    ).flatMap((hole) => unselectedUnitChoiceHole(draft, hole)),
+    ).flatMap((hole) => unselectedUnitChoiceHole(draft, hole, supportProfile)),
     ...selectedClassFeatureAcquisitionGrantChoiceHoles({
       choices: draft.selections.choices,
       classUnitId,
       classFacts: facts.value,
       classLevel,
       unitLibrary,
-    }).flatMap((hole) => unselectedUnitChoiceHole(draft, hole)),
+    }).flatMap((hole) => unselectedUnitChoiceHole(draft, hole, supportProfile)),
   ];
 }
 
@@ -589,6 +625,7 @@ function discoverClassFeatureGrantHolesInLevelOrder(
   draft: CharacterDraft,
   unitLibrary: UnitCatalog,
   deferOwnedSkillExpertiseChoices: boolean,
+  supportProfile?: CharacterCreationSupportProfile,
 ): readonly CreationHole[] {
   const holes: CreationHole[] = [];
   let deferLaterOwnedSkillExpertiseChoices = deferOwnedSkillExpertiseChoices;
@@ -606,6 +643,7 @@ function discoverClassFeatureGrantHolesInLevelOrder(
         unitLibrary,
         {
           deferOwnedSkillExpertiseChoices: deferLaterOwnedSkillExpertiseChoices,
+          ...(supportProfile === undefined ? {} : { supportProfile }),
         },
       ),
     );
@@ -804,6 +842,7 @@ export function selectedClassFeatureAcquisitionGrantChoiceHoles(input: {
 function discoverSelectedFeatAbilityScoreIncreaseHoles(input: {
   readonly draft: CharacterDraft;
   readonly unitLibrary: UnitCatalog;
+  readonly supportProfile?: CharacterCreationSupportProfile;
 }): readonly CreationHole[] {
   return input.draft.selections.choices.flatMap((selection) => {
     if (
@@ -831,6 +870,7 @@ function discoverSelectedFeatAbilityScoreIncreaseHoles(input: {
           cardinality: EXACTLY_ONE_CHOICE,
           options,
         }),
+        input.supportProfile,
       );
     });
   });
@@ -839,11 +879,15 @@ function discoverSelectedFeatAbilityScoreIncreaseHoles(input: {
 export function discoverBackgroundGrantedHoles(input: {
   readonly draft: CharacterDraft;
   readonly unitLibrary: UnitCatalog;
+  readonly supportProfile?: CharacterCreationSupportProfile;
 }): readonly CreationHole[] {
   const backgroundUnitId = input.draft.selections.background;
   if (
     backgroundUnitId == null ||
-    !isSupported(backgroundUnitId, supportedBackgroundUnitIds())
+    !isSupported(
+      backgroundUnitId,
+      supportedBackgroundUnitIds(input.supportProfile),
+    )
   ) {
     return [];
   }
@@ -875,6 +919,7 @@ export function discoverBackgroundGrantedHoles(input: {
       input.draft,
       unitSource(backgroundUnitId, BACKGROUND_TOOL_CHOICE_KEY),
       facts.value.toolProficiency,
+      input.supportProfile,
     ),
     ...unselectedUnitChoiceHole(
       input.draft,
@@ -882,6 +927,7 @@ export function discoverBackgroundGrantedHoles(input: {
         unitSource(backgroundUnitId, BACKGROUND_EQUIPMENT_CHOICE_KEY),
         facts.value.startingEquipment,
       ),
+      input.supportProfile,
     ),
   ];
 }
@@ -889,11 +935,15 @@ export function discoverBackgroundGrantedHoles(input: {
 function discoverBackgroundOriginFeatGrantHoles(input: {
   readonly draft: CharacterDraft;
   readonly unitLibrary: UnitCatalog;
+  readonly supportProfile?: CharacterCreationSupportProfile;
 }): readonly CreationHole[] {
   const backgroundUnitId = input.draft.selections.background;
   if (
     backgroundUnitId == null ||
-    !isSupported(backgroundUnitId, supportedBackgroundUnitIds())
+    !isSupported(
+      backgroundUnitId,
+      supportedBackgroundUnitIds(input.supportProfile),
+    )
   ) {
     return [];
   }
@@ -928,19 +978,22 @@ function discoverBackgroundOriginFeatGrantHoles(input: {
           selection.source.choiceKey === ORIGIN_FEAT_PROFICIENCY_CHOICE_KEY,
       ),
     },
-  ).flatMap((hole) => unselectedUnitChoiceHole(input.draft, hole));
+  ).flatMap((hole) =>
+    unselectedUnitChoiceHole(input.draft, hole, input.supportProfile),
+  );
 }
 
 function discoverSpeciesGrantedHoles(input: {
   readonly draft: CharacterDraft;
   readonly unitLibrary: UnitCatalog;
+  readonly supportProfile?: CharacterCreationSupportProfile;
 }): readonly CreationHole[] {
   return [
     ...speciesTraitGrantChoiceHoles(input).flatMap((hole) =>
-      unselectedUnitChoiceHole(input.draft, hole),
+      unselectedUnitChoiceHole(input.draft, hole, input.supportProfile),
     ),
     ...speciesSelectedOriginFeatGrantChoiceHoles(input).flatMap((hole) =>
-      unselectedUnitChoiceHole(input.draft, hole),
+      unselectedUnitChoiceHole(input.draft, hole, input.supportProfile),
     ),
   ];
 }
@@ -1089,6 +1142,7 @@ export function backgroundToolChoiceHole(
   draft: CharacterDraft,
   source: ChoiceCreationHoleSource,
   proficiency: BackgroundToolProficiency,
+  supportProfile: CharacterCreationSupportProfile = CHARACTER_CREATION_SUPPORT_PROFILE,
 ): readonly CreationHole[] {
   const spec = backgroundToolChoiceSpec(proficiency);
   return spec == null
@@ -1100,6 +1154,7 @@ export function backgroundToolChoiceHole(
           cardinality: spec.cardinality,
           options: spec.options,
         }),
+        supportProfile,
       );
 }
 
@@ -1149,6 +1204,7 @@ export function backgroundToolChoiceSpec(
 export function discoverEquipmentHoles(input: {
   readonly draft: CharacterDraft;
   readonly unitLibrary: UnitCatalog;
+  readonly supportProfile?: CharacterCreationSupportProfile;
 }): readonly CreationHole[] {
   const classUnitId =
     input.draft.selections.progression == null
@@ -1161,23 +1217,25 @@ export function discoverEquipmentHoles(input: {
     source: unitSource(classUnitId, EQUIPMENT_PURCHASE_CHOICE_KEY),
     cardinality: boundedChoiceCardinality({
       min: 1,
-      max: supportedEquipmentPurchaseChoiceCount(),
+      max: supportedEquipmentPurchaseChoiceCount(input.supportProfile),
     }),
-    options: supportedPurchasableEquipmentUnitIdsForClass(classUnitId).flatMap(
-      (unitId) => {
-        const unit = input.unitLibrary.getUnit(unitId);
-        return Option.isSome(unit) ? [unitOption(unit.value)] : [];
-      },
-    ),
+    options: supportedPurchasableEquipmentUnitIdsForClass(
+      classUnitId,
+      input.supportProfile,
+    ).flatMap((unitId) => {
+      const unit = input.unitLibrary.getUnit(unitId);
+      return Option.isSome(unit) ? [unitOption(unit.value)] : [];
+    }),
   });
   const hasValidPurchaseSelection = hasValidEquipmentPurchaseSelectionForHole(
     input.draft,
     purchaseHole,
+    input.supportProfile,
   );
 
   return [
-    ...unselectedPurchaseHole(input.draft, purchaseHole),
-    ...supportedLoadoutChoices().flatMap((loadoutChoice) =>
+    ...unselectedPurchaseHole(input.draft, purchaseHole, input.supportProfile),
+    ...supportedLoadoutChoices(input.supportProfile).flatMap((loadoutChoice) =>
       unselectedLoadoutHole(
         input.draft,
         choiceHole({
@@ -1202,6 +1260,7 @@ function classToolProficiencyChoiceHoles(
   draft: CharacterDraft,
   classUnitId: UnitRecord["id"],
   facts: ReadableClassCreationFacts,
+  supportProfile?: CharacterCreationSupportProfile,
 ): readonly CreationHole[] {
   const proficiency = facts.toolProficiencies;
   if (proficiency.kind !== "choice") {
@@ -1215,6 +1274,7 @@ function classToolProficiencyChoiceHoles(
       cardinality: exactChoiceCardinality(proficiency.count),
       options: proficiency.options.flatMap(proficiencyGrantSubjectOptions),
     }),
+    supportProfile,
   );
 }
 
@@ -1235,6 +1295,7 @@ export function startingEquipmentChoiceHole(
 export function hasSupportedCoinEquipmentPath(input: {
   readonly draft: CharacterDraft;
   readonly unitLibrary: UnitCatalog;
+  readonly supportProfile?: CharacterCreationSupportProfile;
 }): boolean {
   const draft = input.draft;
   const progression = draft.selections.progression;
@@ -1245,8 +1306,11 @@ export function hasSupportedCoinEquipmentPath(input: {
     progression == null ||
     classUnitId == null ||
     backgroundUnitId == null ||
-    !isSupportedProgression(progression) ||
-    !isSupported(backgroundUnitId, supportedBackgroundUnitIds())
+    !isSupportedProgression(progression, input.supportProfile) ||
+    !isSupported(
+      backgroundUnitId,
+      supportedBackgroundUnitIds(input.supportProfile),
+    )
   ) {
     return false;
   }
@@ -1270,6 +1334,7 @@ export function hasSupportedCoinEquipmentPath(input: {
         classFacts.value.startingEquipment,
       ),
       classFacts.value.startingEquipment,
+      input.supportProfile,
     ) != null &&
     selectedCoinGrantStartingEquipmentChoice(
       draft,
@@ -1278,6 +1343,7 @@ export function hasSupportedCoinEquipmentPath(input: {
         backgroundFacts.value.startingEquipment,
       ),
       backgroundFacts.value.startingEquipment,
+      input.supportProfile,
     ) != null
   );
 }
@@ -1286,8 +1352,14 @@ export function selectedCoinGrantStartingEquipmentChoice(
   draft: CharacterDraft,
   hole: CreationHole | undefined,
   choices: readonly StartingEquipmentChoice[],
+  supportProfile: CharacterCreationSupportProfile = CHARACTER_CREATION_SUPPORT_PROFILE,
 ): StartingEquipmentChoice | undefined {
-  const selectedChoice = selectedStartingEquipmentChoice(draft, hole, choices);
+  const selectedChoice = selectedStartingEquipmentChoice(
+    draft,
+    hole,
+    choices,
+    supportProfile,
+  );
   return selectedChoice?.kind === "coin_grant" ? selectedChoice : undefined;
 }
 
@@ -1295,12 +1367,13 @@ export function selectedStartingEquipmentChoice(
   draft: CharacterDraft,
   hole: CreationHole | undefined,
   choices: readonly StartingEquipmentChoice[],
+  supportProfile: CharacterCreationSupportProfile = CHARACTER_CREATION_SUPPORT_PROFILE,
 ): StartingEquipmentChoice | undefined {
   if (hole === undefined) {
     return undefined;
   }
   const selection = draft.selections.choices.find((candidate) =>
-    choiceSelectionMatchesHole(candidate, hole),
+    choiceSelectionMatchesHole(candidate, hole, supportProfile),
   );
   if (selection?.options.length !== 1) {
     return undefined;
@@ -1313,11 +1386,12 @@ export function selectedStartingEquipmentChoice(
 export function unselectedUnitChoiceHole(
   draft: CharacterDraft,
   hole: CreationHole | undefined,
+  supportProfile: CharacterCreationSupportProfile = CHARACTER_CREATION_SUPPORT_PROFILE,
 ): readonly CreationHole[] {
   if (hole === undefined) {
     return [];
   }
-  return hasValidSelectionForHole(draft, hole) ? [] : [hole];
+  return hasValidSelectionForHole(draft, hole, supportProfile) ? [] : [hole];
 }
 
 export function unselectedBackgroundAbilityScoreIncreaseHole(
@@ -1335,11 +1409,14 @@ export function unselectedBackgroundAbilityScoreIncreaseHole(
 export function unselectedPurchaseHole(
   draft: CharacterDraft,
   hole: CreationHole | undefined,
+  supportProfile: CharacterCreationSupportProfile = CHARACTER_CREATION_SUPPORT_PROFILE,
 ): readonly CreationHole[] {
   if (hole === undefined) {
     return [];
   }
-  return hasValidEquipmentPurchaseSelectionForHole(draft, hole) ? [] : [hole];
+  return hasValidEquipmentPurchaseSelectionForHole(draft, hole, supportProfile)
+    ? []
+    : [hole];
 }
 
 export function unselectedLoadoutHole(
@@ -1376,6 +1453,7 @@ function hasValidLoadoutSlotSelectionForHole(
 export function hasValidEquipmentPurchaseSelectionForHole(
   draft: CharacterDraft,
   hole: CreationHole | undefined,
+  supportProfile: CharacterCreationSupportProfile = CHARACTER_CREATION_SUPPORT_PROFILE,
 ): boolean {
   if (draft.selections.equipment == null || hole === undefined) {
     return false;
@@ -1386,6 +1464,7 @@ export function hasValidEquipmentPurchaseSelectionForHole(
     draft.selections.equipment.selectedUnitIds.map((unitId) =>
       creationChoiceOptionId(unitId),
     ),
+    supportProfile,
   );
 }
 
@@ -1399,15 +1478,17 @@ export function hasPurchasedUnit(
 export function hasValidSelectionForHole(
   draft: CharacterDraft,
   hole: CreationHole,
+  supportProfile: CharacterCreationSupportProfile = CHARACTER_CREATION_SUPPORT_PROFILE,
 ): boolean {
   return draft.selections.choices.some((selection) =>
-    choiceSelectionMatchesHole(selection, hole),
+    choiceSelectionMatchesHole(selection, hole, supportProfile),
   );
 }
 
 export function choiceSelectionMatchesHole(
   selection: CharacterChoiceSelection,
   hole: CreationHole,
+  supportProfile: CharacterCreationSupportProfile = CHARACTER_CREATION_SUPPORT_PROFILE,
 ): boolean {
   if (
     hole.kind !== "choice" ||
@@ -1418,7 +1499,7 @@ export function choiceSelectionMatchesHole(
 
   const optionIds = choiceSelectionOptionIds(selection);
   return (
-    choiceOptionIdsFitHole(hole, optionIds) &&
+    choiceOptionIdsFitHole(hole, optionIds, supportProfile) &&
     (selection.kind === "loadout"
       ? selection.options.every((selectedOption) =>
           loadoutSelectionOptionMatchesHole(selection, selectedOption, hole),
@@ -1446,6 +1527,7 @@ export function hasValidBackgroundAbilityScoreIncreaseSelectionForHole(
 export function choiceOptionIdsFitHole(
   hole: CreationHole,
   optionIds: readonly CreationChoiceOptionId[],
+  supportProfile: CharacterCreationSupportProfile = CHARACTER_CREATION_SUPPORT_PROFILE,
 ): boolean {
   const bounds =
     hole.kind === "choice" ? choiceCardinalityBounds(hole.cardinality) : null;
@@ -1458,7 +1540,7 @@ export function choiceOptionIdsFitHole(
     optionIds.every((optionId) =>
       hole.options.some((option) => option.optionId === optionId),
     ) &&
-    unsupportedHoleSelectionOptionId(hole, optionIds) == null
+    unsupportedHoleSelectionOptionId(hole, optionIds, supportProfile) == null
   );
 }
 
@@ -1599,6 +1681,7 @@ export function discoverClassFeatureGrantHoles(
   unitLibrary: UnitCatalog,
   input: {
     readonly deferOwnedSkillExpertiseChoices?: boolean;
+    readonly supportProfile?: CharacterCreationSupportProfile;
   } = {},
 ): readonly CreationHole[] {
   return classFeatureGrantChoiceHoles(featureUnitId, unitLibrary, {
@@ -1619,7 +1702,9 @@ export function discoverClassFeatureGrantHoles(
         selection.source.choiceKey === CLASS_FEATURE_PROFICIENCY_CHOICE_KEY,
     ),
     knownLanguages: draftKnownLanguages(draft, featureUnitId, unitLibrary),
-  }).flatMap((hole) => unselectedUnitChoiceHole(draft, hole));
+  }).flatMap((hole) =>
+    unselectedUnitChoiceHole(draft, hole, input.supportProfile),
+  );
 }
 
 export function classFeatureGrantChoiceHoles(
@@ -2635,6 +2720,7 @@ export function draftHole(
   path: (typeof INITIAL_CHARACTER_DRAFT_PATHS)[number],
   unitLibrary: UnitCatalog,
   _draft?: CharacterDraft,
+  supportProfile: CharacterCreationSupportProfile = CHARACTER_CREATION_SUPPORT_PROFILE,
 ): CreationHole | undefined {
   if (path === "draft.progression.initial") {
     return choiceHole({
@@ -2643,7 +2729,9 @@ export function draftHole(
       options: unitLibrary
         .listUnits()
         .filter((unit) => unit.kind === "class")
-        .flatMap((unit) => progressionOptionsForClassUnit(unit)),
+        .flatMap((unit) =>
+          progressionOptionsForClassUnit(unit, supportProfile),
+        ),
     });
   }
 
@@ -2771,11 +2859,12 @@ function draconicAncestryOption(
 
 function progressionOptionsForClassUnit(
   unit: UnitRecord,
+  supportProfile: CharacterCreationSupportProfile,
 ): readonly CreationChoiceOption[] {
   const optionsById = new Map<CreationChoiceOptionId, CreationChoiceOption>();
   for (const progression of [
     ...levelOneProgressionForClassUnit(unit.id),
-    ...supportedProgressionsForClass(unit.id),
+    ...supportedProgressionsForClass(unit.id, supportProfile),
   ]) {
     const optionId = progressionOptionId(progression);
     optionsById.set(optionId, {

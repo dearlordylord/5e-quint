@@ -3,17 +3,17 @@ import assert from "node:assert/strict";
 import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { characterDraftId } from "@dnd/character-creation-runtime";
 import {
+  CHARACTER_CREATION_SUPPORT_PROFILE,
   characterClassLevel,
   classUnitId,
   progressionOptionId,
   type CharacterProgression,
-  type CreationChoiceOptionId,
+  type CharacterCreationSupportProfile,
 } from "@dnd/character-creation-runtime";
 import { Either } from "effect";
 import { unitId, type Skill } from "@dnd/shared/game-facts";
 import { characterIdFromDraftId } from "../src/session-store.ts";
 import { characterProgressionEntry } from "../../character-creation-runtime/src/character-progression-types.ts";
-import { CHARACTER_CREATION_SUPPORT_PROFILE } from "../../character-creation-runtime/src/support-gates.ts";
 
 import {
   GENERIC_COMBAT_ACTION_LABELS,
@@ -132,6 +132,20 @@ const levelTenFighterProgression = sameClassProgression("class_fighter", 10);
 const levelTenFighterProgressionOptionId = progressionOptionId(
   levelTenFighterProgression,
 );
+const levelTenSupportedProgressions =
+  CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions.some(
+    (progression) =>
+      progressionOptionId(progression) === levelTenFighterProgressionOptionId,
+  )
+    ? CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions
+    : [
+        ...CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions,
+        levelTenFighterProgression,
+      ];
+export const LEVEL_TEN_FIGHTER_CHARACTER_CREATION_SUPPORT_PROFILE = {
+  ...CHARACTER_CREATION_SUPPORT_PROFILE,
+  supportedProgressions: levelTenSupportedProgressions,
+} satisfies CharacterCreationSupportProfile;
 const levelTenFighterWeaponMasteries = [
   "weapon_longsword",
   "weapon_dagger",
@@ -1893,152 +1907,145 @@ export async function verifyLevelNineRangerExpertiseBattleHandoff(
 export async function verifyLevelTenFighterChampionSheetScenario(
   client: Client,
 ) {
-  await withLevelTenFighterCreationSupport(async () => {
-    const workflow = await callTool(client, "describe_mcp_workflow", {});
-    assert.equal(get(workflow, "resultPaths.creationHoles"), "holes");
-    assert.equal(
-      get(workflow, "resultPaths.draftRevision"),
-      "draft.revision or storedDraft.revision",
-    );
+  const workflow = await callTool(client, "describe_mcp_workflow", {});
+  assert.equal(get(workflow, "resultPaths.creationHoles"), "holes");
+  assert.equal(
+    get(workflow, "resultPaths.draftRevision"),
+    "draft.revision or storedDraft.revision",
+  );
 
-    const units = await callTool(client, "list_catalog_units", {});
-    assert.ok(
-      unitSummaries(units, "class").some((unit) => unit.id === "class_fighter"),
-    );
-    assert.ok(
-      unitSummaries(units, "class_feature").some(
-        (unit) => unit.id === "fighter_heroic_warrior",
-      ),
-    );
+  const units = await callTool(client, "list_catalog_units", {});
+  assert.ok(
+    unitSummaries(units, "class").some((unit) => unit.id === "class_fighter"),
+  );
+  assert.ok(
+    unitSummaries(units, "class_feature").some(
+      (unit) => unit.id === "fighter_heroic_warrior",
+    ),
+  );
 
-    const finalizedFighter = await createAndFinalizeOrcFighterTenChampion(
-      client,
-      levelTenFighterChampionDraftId,
-    );
-    assert.equal(get(finalizedFighter, "finalization.tag"), "ready");
-    assert.equal(
-      get(finalizedFighter, "finalization.build.species"),
-      "species_orc",
-    );
-    assert.deepEqual(
-      get(finalizedFighter, "finalization.build.abilityScores"),
-      {
-        str: 19,
-        dex: 14,
-        con: 14,
-        int: 8,
-        wis: 10,
-        cha: 12,
-      },
-    );
-    assertLevelTenFighterChampionBuild(finalizedFighter, "finalization.build");
-
-    const listedBeforeBattle = await callTool(client, "list_characters", {});
-    const fighter = characterRow(
-      listedBeforeBattle,
-      testCharacterId(levelTenFighterChampionDraftId),
-    );
-    assert.equal(get(fighter, "status"), "available");
-    assert.equal(get(fighter, "displayName"), "Orc Soldier Fighter 10");
-    assert.equal(get(fighter, "hitPoints.current"), 84);
-    assert.equal(get(fighter, "hitPoints.maximum"), 84);
-    assertLevelTenFighterChampionBuild(fighter, "build");
+  const finalizedFighter = await createAndFinalizeOrcFighterTenChampion(
+    client,
+    levelTenFighterChampionDraftId,
+  );
+  assert.equal(get(finalizedFighter, "finalization.tag"), "ready");
+  assert.equal(
+    get(finalizedFighter, "finalization.build.species"),
+    "species_orc",
+  );
+  assert.deepEqual(get(finalizedFighter, "finalization.build.abilityScores"), {
+    str: 19,
+    dex: 14,
+    con: 14,
+    int: 8,
+    wis: 10,
+    cha: 12,
   });
+  assertLevelTenFighterChampionBuild(finalizedFighter, "finalization.build");
+
+  const listedBeforeBattle = await callTool(client, "list_characters", {});
+  const fighter = characterRow(
+    listedBeforeBattle,
+    testCharacterId(levelTenFighterChampionDraftId),
+  );
+  assert.equal(get(fighter, "status"), "available");
+  assert.equal(get(fighter, "displayName"), "Orc Soldier Fighter 10");
+  assert.equal(get(fighter, "hitPoints.current"), 84);
+  assert.equal(get(fighter, "hitPoints.maximum"), 84);
+  assertLevelTenFighterChampionBuild(fighter, "build");
 }
 
 export async function verifyLevelTenFighterChampionBattleHandoff(
   client: Client,
 ) {
-  await withLevelTenFighterCreationSupport(async () => {
-    const finalizedFighter = await createAndFinalizeOrcFighterTenChampion(
-      client,
-      levelTenFighterChampionDraftId,
-    );
-    assert.equal(get(finalizedFighter, "finalization.tag"), "ready");
-    const returnedCharacterIds = stringArrayAt(
-      finalizedFighter,
-      "session.characterIds",
-    );
-    assert.equal(returnedCharacterIds.length, 1);
-    const [characterId] = returnedCharacterIds;
-    assert.ok(characterId, "finalize_character must return a characterId");
+  const finalizedFighter = await createAndFinalizeOrcFighterTenChampion(
+    client,
+    levelTenFighterChampionDraftId,
+  );
+  assert.equal(get(finalizedFighter, "finalization.tag"), "ready");
+  const returnedCharacterIds = stringArrayAt(
+    finalizedFighter,
+    "session.characterIds",
+  );
+  assert.equal(returnedCharacterIds.length, 1);
+  const [characterId] = returnedCharacterIds;
+  assert.ok(characterId, "finalize_character must return a characterId");
 
-    const listedBeforeBattle = await callTool(client, "list_characters", {});
-    assertLevelTenFighterChampionBuild(
-      characterRow(listedBeforeBattle, characterId),
-      "build",
-    );
+  const listedBeforeBattle = await callTool(client, "list_characters", {});
+  assertLevelTenFighterChampionBuild(
+    characterRow(listedBeforeBattle, characterId),
+    "build",
+  );
 
-    const selected = await callTool(client, "select_stat_block", {
-      statBlockId: "stat_block_goblin_warrior",
-    });
-    assert.equal(
-      get(selected, "selectedStatBlock.statBlock.displayName"),
-      "Goblin Warrior",
-    );
-
-    const started = await callTool(client, "start_battle", {
-      battleId: levelTenFighterChampionBattleId,
-      initialCombatants: [
-        {
-          kind: "characterSession",
-          characterId,
-          combatantId: levelTenFighterChampionCombatantId,
-          initiative: 16,
-        },
-        statBlockCombatant("goblin", "stat_block_goblin_warrior", 8),
-      ],
-    });
-    assert.equal(
-      get(started, "snapshot.battleId"),
-      levelTenFighterChampionBattleId,
-    );
-    assert.deepEqual(get(started, "snapshot.turnOrder"), [
-      levelTenFighterChampionCombatantId,
-      "goblin",
-    ]);
-    assert.equal(
-      get(started, "snapshot.currentActorId"),
-      levelTenFighterChampionCombatantId,
-    );
-    assert.equal(
-      get(
-        battleCombatant(started, levelTenFighterChampionCombatantId),
-        "origin.characterId",
-      ),
-      characterId,
-    );
-
-    const fighterActs = await callTool(client, "discover_battle_acts", {});
-    assert.equal(
-      get(fighterActs, "snapshot.currentActorId"),
-      levelTenFighterChampionCombatantId,
-    );
-    assert.ok(
-      battleActByLabel(fighterActs, "Attack"),
-      "Missing Fighter Attack act",
-    );
-    assert.ok(
-      battleActByLabel(fighterActs, "Action Surge"),
-      "Missing Fighter Action Surge act",
-    );
-    assert.ok(
-      battleActByLabel(fighterActs, "Second Wind"),
-      "Missing Fighter Second Wind act",
-    );
-    assert.equal(
-      get(
-        battleCombatant(fighterActs, levelTenFighterChampionCombatantId),
-        "origin.characterId",
-      ),
-      characterId,
-    );
-    assert.equal(
-      battleActByLabel(fighterActs, "Heroic Warrior"),
-      undefined,
-      "Heroic Warrior is not currently exposed as an MCP battle act",
-    );
+  const selected = await callTool(client, "select_stat_block", {
+    statBlockId: "stat_block_goblin_warrior",
   });
+  assert.equal(
+    get(selected, "selectedStatBlock.statBlock.displayName"),
+    "Goblin Warrior",
+  );
+
+  const started = await callTool(client, "start_battle", {
+    battleId: levelTenFighterChampionBattleId,
+    initialCombatants: [
+      {
+        kind: "characterSession",
+        characterId,
+        combatantId: levelTenFighterChampionCombatantId,
+        initiative: 16,
+      },
+      statBlockCombatant("goblin", "stat_block_goblin_warrior", 8),
+    ],
+  });
+  assert.equal(
+    get(started, "snapshot.battleId"),
+    levelTenFighterChampionBattleId,
+  );
+  assert.deepEqual(get(started, "snapshot.turnOrder"), [
+    levelTenFighterChampionCombatantId,
+    "goblin",
+  ]);
+  assert.equal(
+    get(started, "snapshot.currentActorId"),
+    levelTenFighterChampionCombatantId,
+  );
+  assert.equal(
+    get(
+      battleCombatant(started, levelTenFighterChampionCombatantId),
+      "origin.characterId",
+    ),
+    characterId,
+  );
+
+  const fighterActs = await callTool(client, "discover_battle_acts", {});
+  assert.equal(
+    get(fighterActs, "snapshot.currentActorId"),
+    levelTenFighterChampionCombatantId,
+  );
+  assert.ok(
+    battleActByLabel(fighterActs, "Attack"),
+    "Missing Fighter Attack act",
+  );
+  assert.ok(
+    battleActByLabel(fighterActs, "Action Surge"),
+    "Missing Fighter Action Surge act",
+  );
+  assert.ok(
+    battleActByLabel(fighterActs, "Second Wind"),
+    "Missing Fighter Second Wind act",
+  );
+  assert.equal(
+    get(
+      battleCombatant(fighterActs, levelTenFighterChampionCombatantId),
+      "origin.characterId",
+    ),
+    characterId,
+  );
+  assert.equal(
+    battleActByLabel(fighterActs, "Heroic Warrior"),
+    undefined,
+    "Heroic Warrior is not currently exposed as an MCP battle act",
+  );
 }
 
 async function createAndFinalizeFighterTwo(client: Client, draftId: string) {
@@ -3178,45 +3185,6 @@ function choiceCardinalityMax(hole: JsonObject): number {
     return max;
   }
   assert.fail(`Unsupported choice cardinality: ${JSON.stringify(cardinality)}`);
-}
-
-type MutableCreationSupportProfile = {
-  supportedProgressions: CharacterProgression[];
-  draftOptionIdsByPath: {
-    "draft.progression.initial": CreationChoiceOptionId[];
-  };
-};
-
-async function withLevelTenFighterCreationSupport<T>(
-  runScenario: () => Promise<T>,
-): Promise<T> {
-  const profile =
-    CHARACTER_CREATION_SUPPORT_PROFILE as unknown as MutableCreationSupportProfile;
-  const originalProgressions = profile.supportedProgressions;
-  const originalProgressionOptionIds =
-    profile.draftOptionIdsByPath["draft.progression.initial"];
-  const nextProgressions = originalProgressions.some(
-    (progression) =>
-      progressionOptionId(progression) === levelTenFighterProgressionOptionId,
-  )
-    ? originalProgressions
-    : [...originalProgressions, levelTenFighterProgression];
-  const nextProgressionOptionIds = originalProgressionOptionIds.includes(
-    levelTenFighterProgressionOptionId,
-  )
-    ? originalProgressionOptionIds
-    : [...originalProgressionOptionIds, levelTenFighterProgressionOptionId];
-
-  profile.supportedProgressions = nextProgressions;
-  profile.draftOptionIdsByPath["draft.progression.initial"] =
-    nextProgressionOptionIds;
-  try {
-    return await runScenario();
-  } finally {
-    profile.supportedProgressions = originalProgressions;
-    profile.draftOptionIdsByPath["draft.progression.initial"] =
-      originalProgressionOptionIds;
-  }
 }
 
 function sameClassProgression(

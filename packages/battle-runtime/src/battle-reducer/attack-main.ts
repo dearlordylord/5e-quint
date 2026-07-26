@@ -111,9 +111,9 @@ import {
   attackDamageInterruptionFrame,
   battleAttackHostParticipantId,
   attackFillsThroughAttackRoll,
-  resolveAttackDamageReductionZeroDamageRedirectAfterReduction,
-  resumeInterruptedProcedure,
-} from "./dispatcher.ts";
+} from "./attack-damage-events.ts";
+import { resolveAttackDamageReductionZeroDamageRedirectAfterReduction } from "./attack-damage-redirect.ts";
+import { resumeInterruptedProcedure } from "./dispatcher.ts";
 import { maybeOpenInterruptWindow } from "./interrupt-execution.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";
 

@@ -1,0 +1,144 @@
+// @vitest-environment jsdom
+import { fireEvent, render, screen } from "@testing-library/react"
+import { describe, expect, it, vi } from "vitest"
+
+import { CharacterCreationPage } from "./CharacterCreationPage.tsx"
+import type * as CharacterCreationRuntime from "./characterCreationRuntime.ts"
+
+const pageFailures = vi.hoisted(() => ({
+  fillRejected: false,
+  richSummary: false,
+  sheetCreation: false,
+  sheetSummary: false
+}))
+
+vi.mock("#/components/character-creation/characterCreationRuntime.ts", async (importOriginal) => {
+  const actual = await importOriginal<typeof CharacterCreationRuntime>()
+  const { Either } = await import("effect")
+  const { Hp, resourceCount, spellSlotLevel } = await import("@dnd/shared/types")
+  return {
+    ...actual,
+    applyCharacterCreationFill: vi.fn(
+      (
+        draft: Parameters<typeof actual.applyCharacterCreationFill>[0],
+        fill: Parameters<typeof actual.applyCharacterCreationFill>[1]
+      ): ReturnType<typeof actual.applyCharacterCreationFill> => {
+        const result = actual.applyCharacterCreationFill(draft, fill)
+        return pageFailures.fillRejected && result.tag === "accepted"
+          ? {
+              tag: "rejected",
+              draft,
+              holes: result.holes,
+              issues: [
+                {
+                  tag: "illegalBatch",
+                  code: "staleRevision",
+                  message: "Synthetic rejected fill."
+                }
+              ],
+              finalization: result.finalization
+            }
+          : result
+      }
+    ),
+    characterSheetSummary: vi.fn(
+      (sheet: Parameters<typeof actual.characterSheetSummary>[0]): ReturnType<typeof actual.characterSheetSummary> => {
+        if (pageFailures.sheetSummary) {
+          return Either.left({
+            tag: "characterSheetInvalid",
+            message: "Synthetic summary failure."
+          })
+        }
+        const summary = actual.characterSheetSummary(sheet)
+        return pageFailures.richSummary && Either.isRight(summary)
+          ? Either.right({
+              ...summary.right,
+              pactSlots: {
+                count: resourceCount(2),
+                expended: resourceCount(1),
+                slotLevel: spellSlotLevel(2)
+              },
+              spellSlots: [
+                {
+                  count: resourceCount(3),
+                  expended: resourceCount(1),
+                  spellLevel: spellSlotLevel(1)
+                }
+              ],
+              tempHp: Hp(2)
+            })
+          : summary
+      }
+    ),
+    createCharacterSheetFromDraft: vi.fn(
+      (
+        draft: Parameters<typeof actual.createCharacterSheetFromDraft>[0],
+        input?: Parameters<typeof actual.createCharacterSheetFromDraft>[1]
+      ): ReturnType<typeof actual.createCharacterSheetFromDraft> =>
+        pageFailures.sheetCreation
+          ? Either.left({
+              tag: "characterSheetInvalid",
+              message: "Synthetic sheet creation failure."
+            })
+          : actual.createCharacterSheetFromDraft(draft, input)
+    )
+  }
+})
+
+describe("CharacterCreationPage failure presentation", () => {
+  it("shows a typed Character Sheet creation failure", () => {
+    pageFailures.sheetCreation = true
+    try {
+      render(<CharacterCreationPage />)
+      fireEvent.click(screen.getByRole("button", { name: "Load Orc Soldier Fighter 1" }))
+      fireEvent.click(screen.getByRole("button", { name: "Finalize Character Sheet" }))
+
+      expect(screen.getByText("Synthetic sheet creation failure.")).toBeTruthy()
+    } finally {
+      pageFailures.sheetCreation = false
+    }
+  })
+
+  it("shows typed summary failures in the sheet list and selected session", () => {
+    pageFailures.sheetSummary = true
+    try {
+      render(<CharacterCreationPage />)
+      fireEvent.click(screen.getByRole("button", { name: "Load Orc Soldier Fighter 1" }))
+      fireEvent.click(screen.getByRole("button", { name: "Finalize Character Sheet" }))
+
+      expect(screen.getAllByText("Synthetic summary failure.")).toHaveLength(2)
+    } finally {
+      pageFailures.sheetSummary = false
+    }
+  })
+
+  it("renders temporary HP and ordinary and Pact Slot projections", () => {
+    pageFailures.richSummary = true
+    try {
+      render(<CharacterCreationPage />)
+      fireEvent.click(screen.getByRole("button", { name: "Load Orc Soldier Fighter 1" }))
+      fireEvent.click(screen.getByRole("button", { name: "Finalize Character Sheet" }))
+
+      expect(screen.getByText(/2 temp/)).toBeTruthy()
+      expect(screen.getByText("Level 1: 1/3")).toBeTruthy()
+      expect(screen.getByText("Level 2: 1/2")).toBeTruthy()
+    } finally {
+      pageFailures.richSummary = false
+    }
+  })
+
+  it("renders typed rejected-fill issues", () => {
+    pageFailures.fillRejected = true
+    try {
+      render(<CharacterCreationPage />)
+      const progression = screen.getByRole("combobox", { name: /Progression\.Initial/i })
+      if (!(progression instanceof HTMLSelectElement)) throw new Error("Expected progression select.")
+      fireEvent.change(progression, { target: { value: progression.options.item(1)?.value } })
+
+      expect(screen.getByText("Last rejected fill")).toBeTruthy()
+      expect(screen.getByText("Synthetic rejected fill.")).toBeTruthy()
+    } finally {
+      pageFailures.fillRejected = false
+    }
+  })
+})

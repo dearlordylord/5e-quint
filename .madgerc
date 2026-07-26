@@ -1,7 +1,10 @@
 {
   "detectiveOptions": {
-    "ts": { "skipTypeImports": true },
-    "tsx": { "skipTypeImports": true }
-  },
-  "excludeRegExp": ["node_modules", "dist"]
+    "ts": {
+      "skipTypeImports": true
+    },
+    "tsx": {
+      "skipTypeImports": true
+    }
+  }
 }

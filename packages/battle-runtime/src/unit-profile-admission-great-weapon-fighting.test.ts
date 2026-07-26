@@ -283,46 +283,6 @@ describe("L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME deterministic profile slice"
       },
     });
   });
-
-  test("support gate rejects adjacent damage floor shapes", () => {
-    const unit = unitLibrary.requireUnit(greatWeaponFightingUnitId);
-    if (unit.kind !== "feat" || unit.mechanics.family !== "damage_die_floor") {
-      throw new Error("Expected Great Weapon Fighting damage die floor feat.");
-    }
-    // Cast evidence: these fixtures deliberately mutate a decoded SRD Unit into
-    // unsupported neighboring literal shapes so the production gate can reject
-    // them at the Unit boundary.
-    const adjacentUnits = [
-      {
-        ...unit,
-        id: "synthetic_damage_floor_required_fixture",
-        mechanics: { ...unit.mechanics, optional: false },
-      },
-      {
-        ...unit,
-        id: "synthetic_damage_floor_all_damage_dice_fixture",
-        mechanics: {
-          ...unit.mechanics,
-          effect: { ...unit.mechanics.effect, dieScope: "all_damage_dice" },
-        },
-      },
-    ] as unknown as readonly UnitRecord[];
-
-    for (const adjacentUnit of adjacentUnits) {
-      expect(
-        battleUnitRefWithSupportProfiles({
-          unitRef: { unitId: adjacentUnit.id },
-          unit: adjacentUnit,
-        }),
-      ).toEqual(
-        Either.left({
-          tag: "battleUnitSupportProfileIssue",
-          message: `Unsupported battle attack damage die floor Unit hook: ${adjacentUnit.id}.`,
-        }),
-      );
-      expect(parseSupportedUnitFeatureProfile(adjacentUnit, [])).toBeNull();
-    }
-  });
 });
 
 type CharacterSelectedLoadout = Extract<

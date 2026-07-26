@@ -10,6 +10,10 @@ import {
   type UnitCatalog,
   type UnitCatalogBuildIssue,
 } from "@dnd/surface/surface/unit-catalog";
+import {
+  CHARACTER_CREATION_SUPPORT_PROFILE,
+  type CharacterCreationSupportProfile,
+} from "@dnd/character-creation-runtime";
 
 import {
   createHttpAdminMirrorPublisher,
@@ -31,9 +35,14 @@ export type McpCompositionRoot = {
   readonly statBlockCatalog: StatBlockCatalog;
   readonly sessionStore: McpSessionStore;
   readonly adminMirrorPublication: AdminMirrorPublication;
+  readonly characterCreationSupportProfile: CharacterCreationSupportProfile;
 };
 
-export function createMcpCompositionRoot(): McpCompositionRoot {
+export function createMcpCompositionRoot(
+  input: {
+    readonly characterCreationSupportProfile?: CharacterCreationSupportProfile;
+  } = {},
+): McpCompositionRoot {
   const unitCatalog = buildUnitCatalog({
     collections: [srdUnitCollection],
   });
@@ -61,6 +70,9 @@ export function createMcpCompositionRoot(): McpCompositionRoot {
     statBlockCatalog: statBlockCatalog.catalog,
     sessionStore: createMcpSessionStore(statBlockCatalog.catalog),
     adminMirrorPublication: createAdminMirrorPublicationFromEnv(),
+    characterCreationSupportProfile:
+      input.characterCreationSupportProfile ??
+      CHARACTER_CREATION_SUPPORT_PROFILE,
   };
 }
 

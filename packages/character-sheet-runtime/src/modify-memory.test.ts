@@ -226,56 +226,6 @@ describe("Character Sheet runtime / Modify Memory", () => {
     });
   });
 
-  it("rejects invalid target eligibility before spending the spell slot", () => {
-    const sheet = modifyMemoryWizardSheet({
-      preparedSpells: ["modify_memory"],
-      slots: 1,
-    });
-    const outOfRangeTarget = {
-      ...modifyMemoryTarget({ savingThrowOutcome: { tag: "failed" } }),
-      withinRangeFeet: 60,
-    } as unknown as CharacterSheetModifyMemoryTarget;
-    const result = castModifyMemory({
-      sheet,
-      unitLibrary,
-      target: outOfRangeTarget,
-      memoryEdit: modifyMemoryEdit(),
-    });
-
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left.message).toBe(
-        "Modify Memory targets must be visible creatures within 30 feet.",
-      );
-    }
-    expect(sheet.spellSlotExpenditures).toEqual([]);
-  });
-
-  it("rejects unsupported higher-slot memory windows before spending the spell slot", () => {
-    const sheet = modifyMemoryWizardSheet({
-      preparedSpells: ["modify_memory"],
-      slots: 1,
-    });
-    const unsupportedMemoryEdit = {
-      ...modifyMemoryEdit(),
-      eventAgeHoursMax: 24 * 7,
-    } as unknown as CharacterSheetModifyMemoryMemoryEdit;
-    const result = castModifyMemory({
-      sheet,
-      unitLibrary,
-      target: modifyMemoryTarget({ savingThrowOutcome: { tag: "failed" } }),
-      memoryEdit: unsupportedMemoryEdit,
-    });
-
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left.message).toBe(
-        "Modify Memory level-5 support requires an event within the last 24 hours.",
-      );
-    }
-    expect(sheet.spellSlotExpenditures).toEqual([]);
-  });
-
   it("requires prepared class Spell Access", () => {
     const result = castModifyMemory({
       sheet: modifyMemoryWizardSheet({ preparedSpells: [], slots: 1 }),

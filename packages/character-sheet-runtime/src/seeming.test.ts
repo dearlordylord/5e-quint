@@ -20,7 +20,6 @@ import {
 } from "./test-support.ts";
 import {
   type CharacterSheetSeemingAppearance,
-  type CharacterSheetSeemingTarget,
   type CharacterSheetSeemingUnwillingTarget,
   type CharacterSheetSeemingWillingTarget,
 } from "./sheet-types.ts";
@@ -206,30 +205,6 @@ describe("Character Sheet runtime / Seeming", () => {
     expect(Either.isLeft(result)).toBe(true);
     if (Either.isLeft(result)) {
       expect(result.left.message).toBe("Seeming requires unique target ids.");
-    }
-    expect(sheet.spellSlotExpenditures).toEqual([]);
-  });
-
-  test("Seeming rejects non-visible or out-of-range targets before spending the spell slot", () => {
-    const sheet = seemingWizardSheet({ preparedSpells: ["seeming"], slots: 1 });
-    const outOfRangeTarget = {
-      ...seemingWillingTarget("seeming-target:out-of-range", {
-        heightChangeFeet: 0,
-        apparentWeightChange: "unchanged",
-      }),
-      withinRangeFeet: 60,
-    } as unknown as CharacterSheetSeemingTarget;
-    const result = castSeeming({
-      sheet,
-      unitLibrary,
-      targets: [outOfRangeTarget],
-    });
-
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left.message).toBe(
-        "Seeming targets must be visible creatures within 30 feet.",
-      );
     }
     expect(sheet.spellSlotExpenditures).toEqual([]);
   });

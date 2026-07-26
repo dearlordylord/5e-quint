@@ -2512,9 +2512,12 @@ function rolledDiceGroups(
   ];
 }
 
-function rolledDiceGroup(
-  group: readonly number[],
-): BattleRolledDiceFill["value"][number] {
+function rolledDiceGroup(group: readonly number[]): {
+  readonly results: readonly [
+    ReturnType<typeof DieRollResult>,
+    ...ReturnType<typeof DieRollResult>[],
+  ];
+} {
   const [firstRoll, ...restRolls] = group;
   if (firstRoll === undefined) {
     throw new Error("Expected at least one die result.");

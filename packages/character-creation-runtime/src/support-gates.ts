@@ -30,9 +30,10 @@ import {
   LOADOUT_ARMOR_SLOT,
   LOADOUT_SHIELD_SLOT,
   LOADOUT_WEAPON_SLOT,
-  PHASE1_ALIGNMENT_OPTION_ID,
   PHASE1_ARMOR_CHAIN_MAIL_UNIT_ID,
   PHASE1_BACKGROUND_EQUIPMENT_OPTION_ID,
+  PHASE1_CHARACTER_ALIGNMENT,
+  PHASE1_CHARACTER_STARTING_LANGUAGES,
   PHASE1_CLASS_EQUIPMENT_OPTION_ID,
   PHASE1_CLASS_FIGHTER_UNIT_ID,
   SRD_BARD_CLASS_UNIT_ID,
@@ -66,12 +67,9 @@ import {
   SRD_SORCERER_CLASS_UNIT_ID,
   SRD_CHARACTER_ADMISSION_SPECIES_UNIT_IDS,
   progressionOptionId,
-  SUPPORTED_BACKGROUND_OPTION_IDS,
   SUPPORTED_BACKGROUND_UNIT_IDS,
   SUPPORTED_FIGHTER_SKILL_OPTION_IDS,
   SUPPORTED_FIGHTING_STYLE_OPTION_IDS,
-  SUPPORTED_LANGUAGE_OPTION_IDS,
-  SUPPORTED_PURCHASE_OPTION_IDS,
   SUPPORTED_PURCHASE_UNIT_IDS,
   SUPPORTED_COIN_GRANT_PURCHASE_UNIT_IDS,
   SUPPORTED_SPECIES_OPTION_IDS,
@@ -85,7 +83,6 @@ import { SORCERER_METAMAGIC_OPTION_IDS } from "@dnd/surface/surface/schema";
 import type {
   CharacterAlignment,
   CharacterBuildLoadout,
-  CharacterDraftPath,
   CharacterStartingLanguages,
   CreationChoiceOptionId,
   CreationHole,
@@ -108,6 +105,7 @@ import {
   type CharacterProgression,
 } from "./character-progression-types.ts";
 import {
+  alignmentOptionId,
   characterClassLevel,
   LANGUAGES,
   SURFACE_SKILLS,
@@ -148,13 +146,10 @@ type SourceScopedEquipmentChoiceKey =
   | typeof BACKGROUND_EQUIPMENT_CHOICE_KEY;
 type SupportProfileUnitChoiceKey = Exclude<
   UnitChoiceKey,
-  SourceScopedEquipmentChoiceKey
+  SourceScopedEquipmentChoiceKey | typeof EQUIPMENT_PURCHASE_CHOICE_KEY
 >;
 
 export type CharacterCreationSupportProfile = {
-  readonly draftOptionIdsByPath: Partial<
-    Record<CharacterDraftPath, readonly CreationChoiceOptionId[]>
-  >;
   readonly unitOptionIdsByChoiceKey: Partial<
     Record<SupportProfileUnitChoiceKey, readonly CreationChoiceOptionId[]>
   >;
@@ -173,16 +168,6 @@ export type CharacterCreationSupportProfile = {
   readonly supportedProgressions: readonly CharacterProgression[];
   readonly characterBuildResourceUnitIds: readonly UnitRecord["id"][];
 };
-
-const SUPPORTED_DRAFT_CHOICE_PATHS = [
-  "draft.progression.initial",
-  "draft.background",
-  "draft.species",
-  "draft.speciesSize",
-  "draft.languages",
-  "draft.alignment",
-] as const satisfies ReadonlyArray<CharacterDraftPath>;
-type SupportedDraftChoicePath = (typeof SUPPORTED_DRAFT_CHOICE_PATHS)[number];
 
 const SUPPORTED_PROGRESSIONS = [
   ...SRD_LEVEL_ONE_CLASS_UNIT_IDS.map(supportedLevelOneProgression),
@@ -301,18 +286,6 @@ function supportedTwoClassSecondLevelProgression(
   };
 }
 
-const SUPPORTED_DRAFT_OPTION_IDS_BY_PATH = {
-  "draft.progression.initial": SUPPORTED_PROGRESSIONS.map(progressionOptionId),
-  "draft.background": SUPPORTED_BACKGROUND_OPTION_IDS,
-  "draft.species": SUPPORTED_SPECIES_OPTION_IDS,
-  "draft.speciesSize": SUPPORTED_SPECIES_SIZE_OPTION_IDS,
-  "draft.languages": SUPPORTED_LANGUAGE_OPTION_IDS,
-  "draft.alignment": [PHASE1_ALIGNMENT_OPTION_ID],
-} as const satisfies Record<
-  SupportedDraftChoicePath,
-  readonly CreationChoiceOptionId[]
->;
-
 const SUPPORTED_SKILL_PROFICIENCY_OPTION_IDS = SURFACE_SKILLS.map((skill) =>
   proficiencyGrantSubjectOptionId({ kind: "skill", skill }),
 );
@@ -377,7 +350,6 @@ const CHARACTER_BUILD_RESOURCE_UNIT_IDS = [
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
 
 export const CHARACTER_CREATION_SUPPORT_PROFILE = {
-  draftOptionIdsByPath: SUPPORTED_DRAFT_OPTION_IDS_BY_PATH,
   unitOptionIdsByChoiceKey: {
     [CLASS_FEATURE_FEAT_CHOICE_KEY]: [
       ...SUPPORTED_FIGHTING_STYLE_OPTION_IDS,
@@ -436,7 +408,6 @@ export const CHARACTER_CREATION_SUPPORT_PROFILE = {
       creationChoiceOptionId,
     ),
     [WEAPON_MASTERY_OPTIONS_CHOICE_KEY]: SUPPORTED_WEAPON_MASTERY_OPTION_IDS,
-    [EQUIPMENT_PURCHASE_CHOICE_KEY]: SUPPORTED_PURCHASE_OPTION_IDS,
   },
   backgroundUnitIds: SUPPORTED_BACKGROUND_UNIT_IDS,
   purchasableEquipmentUnitIds: SUPPORTED_PURCHASE_UNIT_IDS,
@@ -505,8 +476,8 @@ export const CHARACTER_CREATION_SUPPORT_PROFILE = {
     },
   ],
   manifest: {
-    languages: ["Common", "Dwarvish", "Goblin"],
-    alignment: { order: "lawful", morality: "good" },
+    languages: PHASE1_CHARACTER_STARTING_LANGUAGES,
+    alignment: PHASE1_CHARACTER_ALIGNMENT,
   },
   supportedProgressions: SUPPORTED_PROGRESSIONS,
   characterBuildResourceUnitIds: CHARACTER_BUILD_RESOURCE_UNIT_IDS,
@@ -515,8 +486,9 @@ export const CHARACTER_CREATION_SUPPORT_PROFILE = {
 export function unsupportedHoleSelectionOptionId(
   hole: CreationHole,
   optionIds: readonly CreationChoiceOptionId[],
+  supportProfile: CharacterCreationSupportProfile = CHARACTER_CREATION_SUPPORT_PROFILE,
 ): CreationChoiceOptionId | undefined {
-  const supportedOptionIds = supportedHoleOptionIdSet(hole);
+  const supportedOptionIds = supportedHoleOptionIdSet(hole, supportProfile);
   if (supportedOptionIds == null) {
     return undefined;
   }
@@ -526,17 +498,21 @@ export function unsupportedHoleSelectionOptionId(
 
 export function supportedHoleOptionIds(
   hole: CreationHole,
+  supportProfile: CharacterCreationSupportProfile = CHARACTER_CREATION_SUPPORT_PROFILE,
 ): readonly CreationChoiceOptionId[] | undefined {
   const source = hole.source;
   if (source.tag === "draft") {
     if (hole.kind === "choice" && source.path === "draft.draconicAncestry") {
       return hole.options.map((option) => option.optionId);
     }
-    return supportedDraftOptionIds(source);
+    return supportedDraftOptionIds(source, supportProfile);
   }
 
   if (source.tag === "loadout") {
-    const loadoutChoice = supportedLoadoutChoiceForSource(source);
+    const loadoutChoice = supportedLoadoutChoiceForSource(
+      source,
+      supportProfile,
+    );
     return loadoutChoice == null ? undefined : [loadoutChoice.optionId];
   }
 
@@ -579,25 +555,42 @@ export function supportedHoleOptionIds(
     return hole.options.map((option) => option.optionId);
   }
 
-  return supportedUnitOptionIdsForSource(source);
+  return supportedUnitOptionIdsForSource(source, supportProfile);
 }
 
 export function supportedDraftOptionIds(
   source: DraftCreationHoleSource,
+  supportProfile: CharacterCreationSupportProfile = CHARACTER_CREATION_SUPPORT_PROFILE,
 ): readonly CreationChoiceOptionId[] | undefined {
-  if (isSupportedDraftChoicePath(source.path)) {
-    return CHARACTER_CREATION_SUPPORT_PROFILE.draftOptionIdsByPath[source.path];
+  if (source.path === "draft.progression.initial") {
+    return supportProfile.supportedProgressions.map(progressionOptionId);
   }
 
-  return undefined;
-}
+  if (source.path === "draft.background") {
+    return supportProfile.backgroundUnitIds.map(creationChoiceOptionId);
+  }
 
-function isSupportedDraftChoicePath(
-  path: CharacterDraftPath,
-): path is SupportedDraftChoicePath {
-  return SUPPORTED_DRAFT_CHOICE_PATHS.some(
-    (supportedPath) => supportedPath === path,
-  );
+  if (source.path === "draft.languages") {
+    return supportProfile.manifest.languages
+      .filter((language) => language !== "Common")
+      .map(creationChoiceOptionId);
+  }
+
+  if (source.path === "draft.alignment") {
+    return [
+      creationChoiceOptionId(
+        alignmentOptionId(supportProfile.manifest.alignment),
+      ),
+    ];
+  }
+
+  if (source.path === "draft.species") {
+    return SUPPORTED_SPECIES_OPTION_IDS;
+  }
+
+  return source.path === "draft.speciesSize"
+    ? SUPPORTED_SPECIES_SIZE_OPTION_IDS
+    : undefined;
 }
 
 // Support-profile filter, not RAW legality. This is the character
@@ -607,23 +600,30 @@ function isSupportedDraftChoicePath(
 // character creation support widens beyond the current profile.
 export function supportedUnitOptionIds(
   choiceKey: SupportProfileUnitChoiceKey,
+  supportProfile: CharacterCreationSupportProfile = CHARACTER_CREATION_SUPPORT_PROFILE,
 ): readonly CreationChoiceOptionId[] {
   const optionIdsByChoiceKey: CharacterCreationSupportProfile["unitOptionIdsByChoiceKey"] =
-    CHARACTER_CREATION_SUPPORT_PROFILE.unitOptionIdsByChoiceKey;
+    supportProfile.unitOptionIdsByChoiceKey;
   return optionIdsByChoiceKey[choiceKey] ?? [];
 }
 
 export function supportedUnitOptionIdsForSource(
   source: UnitChoiceSource,
+  supportProfile: CharacterCreationSupportProfile = CHARACTER_CREATION_SUPPORT_PROFILE,
 ): readonly CreationChoiceOptionId[] {
   if (
     source.choiceKey === CLASS_EQUIPMENT_CHOICE_KEY ||
     source.choiceKey === BACKGROUND_EQUIPMENT_CHOICE_KEY
   ) {
     return (
-      CHARACTER_CREATION_SUPPORT_PROFILE.coinEquipmentChoiceOptionIdsByUnitId.get(
-        source.unitId,
-      ) ?? []
+      supportProfile.coinEquipmentChoiceOptionIdsByUnitId.get(source.unitId) ??
+      []
+    );
+  }
+
+  if (source.choiceKey === EQUIPMENT_PURCHASE_CHOICE_KEY) {
+    return supportProfile.purchasableEquipmentUnitIds.map(
+      creationChoiceOptionId,
     );
   }
 
@@ -635,26 +635,31 @@ export function supportedUnitOptionIdsForSource(
     return SUPPORTED_SKILL_PROFICIENCY_OPTION_IDS;
   }
 
-  return supportedUnitOptionIds(source.choiceKey);
+  return supportedUnitOptionIds(source.choiceKey, supportProfile);
 }
 
 export function supportedHoleOptionIdSet(
   hole: CreationHole,
+  supportProfile: CharacterCreationSupportProfile = CHARACTER_CREATION_SUPPORT_PROFILE,
 ): ReadonlySet<CreationChoiceOptionId> | undefined {
-  const optionIds = supportedHoleOptionIds(hole);
+  const optionIds = supportedHoleOptionIds(hole, supportProfile);
   return optionIds == null ? undefined : new Set(optionIds);
 }
 
-export function supportedClassUnitIds(): readonly UnitRecord["id"][] {
+export function supportedClassUnitIds(
+  supportProfile: CharacterCreationSupportProfile = CHARACTER_CREATION_SUPPORT_PROFILE,
+): readonly UnitRecord["id"][] {
   return uniqueValues(
-    CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions.map(
-      (progression) => startingClassUnitId(progression),
+    supportProfile.supportedProgressions.map((progression) =>
+      startingClassUnitId(progression),
     ),
   );
 }
 
-export function supportedBackgroundUnitIds(): readonly UnitRecord["id"][] {
-  return CHARACTER_CREATION_SUPPORT_PROFILE.backgroundUnitIds;
+export function supportedBackgroundUnitIds(
+  supportProfile: CharacterCreationSupportProfile = CHARACTER_CREATION_SUPPORT_PROFILE,
+): readonly UnitRecord["id"][] {
+  return supportProfile.backgroundUnitIds;
 }
 
 export function supportedSpeciesUnitIds(): readonly UnitRecord["id"][] {
@@ -669,54 +674,65 @@ export function speciesUnitIdsWithSupportedTraitChoices(): readonly UnitRecord["
   return SRD_CHARACTER_ADMISSION_SPECIES_UNIT_IDS;
 }
 
-export function supportedPurchasableEquipmentUnitIds(): readonly UnitRecord["id"][] {
-  return CHARACTER_CREATION_SUPPORT_PROFILE.purchasableEquipmentUnitIds;
+export function supportedPurchasableEquipmentUnitIds(
+  supportProfile: CharacterCreationSupportProfile = CHARACTER_CREATION_SUPPORT_PROFILE,
+): readonly UnitRecord["id"][] {
+  return supportProfile.purchasableEquipmentUnitIds;
 }
 
 export function supportedPurchasableEquipmentUnitIdsForClass(
   classUnitId: UnitRecord["id"],
+  supportProfile: CharacterCreationSupportProfile = CHARACTER_CREATION_SUPPORT_PROFILE,
 ): readonly UnitRecord["id"][] {
   return classUnitId === PHASE1_CLASS_FIGHTER_UNIT_ID
-    ? CHARACTER_CREATION_SUPPORT_PROFILE.purchasableEquipmentUnitIds
+    ? supportProfile.purchasableEquipmentUnitIds
     : SUPPORTED_COIN_GRANT_PURCHASE_UNIT_IDS;
 }
 
-export function supportedEquipmentPurchaseChoiceCount(): number {
-  return CHARACTER_CREATION_SUPPORT_PROFILE.equipmentPurchaseChoiceCount;
+export function supportedEquipmentPurchaseChoiceCount(
+  supportProfile: CharacterCreationSupportProfile = CHARACTER_CREATION_SUPPORT_PROFILE,
+): number {
+  return supportProfile.equipmentPurchaseChoiceCount;
 }
 
-export function supportedLoadoutChoices(): readonly SupportedLoadoutChoice[] {
-  return CHARACTER_CREATION_SUPPORT_PROFILE.loadoutChoices;
+export function supportedLoadoutChoices(
+  supportProfile: CharacterCreationSupportProfile = CHARACTER_CREATION_SUPPORT_PROFILE,
+): readonly SupportedLoadoutChoice[] {
+  return supportProfile.loadoutChoices;
 }
 
 export function isSupportedProgression(
   progression: CharacterProgression,
+  supportProfile: CharacterCreationSupportProfile = CHARACTER_CREATION_SUPPORT_PROFILE,
 ): boolean {
-  return CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions.some(
-    (supported) => sameProgression(supported, progression),
+  return supportProfile.supportedProgressions.some((supported) =>
+    sameProgression(supported, progression),
   );
 }
 
 export function supportedProgressionsForClass(
   classUnitId: UnitRecord["id"],
+  supportProfile: CharacterCreationSupportProfile = CHARACTER_CREATION_SUPPORT_PROFILE,
 ): readonly CharacterProgression[] {
-  return CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions.filter(
+  return supportProfile.supportedProgressions.filter(
     (progression) => startingClassUnitId(progression) === classUnitId,
   );
 }
 
 export function supportedProgressionForOptionId(
   optionId: CreationChoiceOptionId,
+  supportProfile: CharacterCreationSupportProfile = CHARACTER_CREATION_SUPPORT_PROFILE,
 ): CharacterProgression | undefined {
-  return CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions.find(
+  return supportProfile.supportedProgressions.find(
     (progression) => progressionOptionId(progression) === optionId,
   );
 }
 
 export function supportsCharacterBuildResourceUnitId(
   unitId: UnitRecord["id"],
+  supportProfile: CharacterCreationSupportProfile = CHARACTER_CREATION_SUPPORT_PROFILE,
 ): boolean {
-  return CHARACTER_CREATION_SUPPORT_PROFILE.characterBuildResourceUnitIds.some(
+  return supportProfile.characterBuildResourceUnitIds.some(
     (supportedUnitId) => supportedUnitId === unitId,
   );
 }
@@ -745,8 +761,9 @@ function sameProgression(
 
 export function supportedLoadoutChoiceForSource(
   source: LoadoutSource,
+  supportProfile: CharacterCreationSupportProfile = CHARACTER_CREATION_SUPPORT_PROFILE,
 ): SupportedLoadoutChoice | undefined {
-  return CHARACTER_CREATION_SUPPORT_PROFILE.loadoutChoices.find(
+  return supportProfile.loadoutChoices.find(
     (choice) =>
       choice.unitId === source.equipmentUnitId && choice.slot === source.slot,
   );

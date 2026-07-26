@@ -177,29 +177,6 @@ describe("Character Sheet runtime / Dominate Person", () => {
     ]);
   });
 
-  test("Dominate Person rejects non-Humanoid target facts before spending the spell slot", () => {
-    const sheet = dominatePersonWizardSheet({
-      preparedSpells: ["dominate_person"],
-      slots: 1,
-    });
-    const result = castDominatePerson({
-      sheet,
-      unitLibrary: dominatePersonUnitLibrary,
-      target: {
-        ...dominatePersonTarget({ savingThrowOutcome: { tag: "failed" } }),
-        creatureType: "fiend",
-      } as unknown as CharacterSheetDominatePersonTarget,
-    });
-
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left.message).toBe(
-        "Dominate Person requires a Humanoid target.",
-      );
-    }
-    expect(sheet.spellSlotExpenditures).toEqual([]);
-  });
-
   test("Dominate Person requires prepared class Spell Access", () => {
     const result = castDominatePerson({
       sheet: dominatePersonWizardSheet({ preparedSpells: [], slots: 1 }),

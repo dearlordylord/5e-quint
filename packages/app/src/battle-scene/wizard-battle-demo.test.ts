@@ -1,4 +1,5 @@
 import { battlePresentedSnapshot, combatantId, snapshotBattle } from "@dnd/battle-runtime"
+import { Hp } from "@dnd/shared/types"
 import { Either } from "effect"
 import { describe, expect, test } from "vitest"
 
@@ -76,5 +77,50 @@ describe("wizard battle demo", () => {
         combatantId: missingActorId
       })
     )
+  })
+
+  test("projects fallback metadata, temporary HP, zero maximum HP, and cast-line shapes", () => {
+    const step = WIZARD_BATTLE_DEMO_STEPS[0]
+    const presented = Either.getOrThrow(battlePresentedSnapshot(step.session))
+    const firstCombatant = presented.combatants[0]
+    const snapshot = {
+      ...presented,
+      combatants: [{ ...firstCombatant, hp: Hp(0), maxHp: Hp(0), tempHp: Hp(5) }, ...presented.combatants.slice(1)]
+    }
+
+    const withoutMetadata = computeWizardBattleScene({
+      meta: { combatants: {}, objectNames: {} },
+      snapshot,
+      step,
+      stepIndex: 0
+    })
+    expect(Either.getOrThrow(withoutMetadata).layout.creatures[0]?.tempHpBar).not.toBeNull()
+
+    const casterId = presented.currentActorId
+    const targetId = presented.combatants.find((combatant) => combatant.combatantId !== casterId)?.combatantId
+    if (targetId === undefined) throw new Error("Expected a demo target.")
+    const baseSpell = {
+      casterId,
+      color: "#ffffff",
+      name: "Fireball" as const
+    }
+    const cueSteps = [
+      { ...step, cue: { spell: { ...baseSpell, areaCenter: { col: 2, row: 2 }, areaRadiusFeet: 10 } } },
+      { ...step, cue: { spell: { ...baseSpell, targetId } } },
+      { ...step, cue: { spell: baseSpell } }
+    ]
+
+    for (const [stepIndex, cueStep] of cueSteps.entries()) {
+      expect(
+        Either.isRight(
+          computeWizardBattleScene({
+            meta: WIZARD_BATTLE_DEMO_META,
+            snapshot: presented,
+            step: cueStep,
+            stepIndex
+          })
+        )
+      ).toBe(true)
+    }
   })
 })

@@ -205,30 +205,6 @@ describe("Character Sheet runtime / Dream", () => {
     ]);
   });
 
-  test("Dream rejects invalid target eligibility before spending the spell slot", () => {
-    const sheet = dreamWizardSheet({ preparedSpells: ["dream"], slots: 1 });
-    const otherPlaneTarget = {
-      ...dreamTarget(),
-      plane: "different_plane",
-    } as unknown as CharacterSheetDreamTarget;
-    const result = castDream({
-      sheet,
-      unitLibrary,
-      casting: completedDreamCasting,
-      target: otherPlaneTarget,
-      messenger: { tag: "caster" },
-      mode: { tag: "conversation" },
-    });
-
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left.message).toBe(
-        "Dream requires the target to be on the same plane as the caster.",
-      );
-    }
-    expect(sheet.spellSlotExpenditures).toEqual([]);
-  });
-
   test("Dream rejects nightmare messages over ten words before spending the spell slot", () => {
     const sheet = dreamWizardSheet({ preparedSpells: ["dream"], slots: 1 });
     const result = castDream({

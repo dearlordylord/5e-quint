@@ -26,6 +26,7 @@ import {
   unitLibrary,
   warlockSpellcastingWithCantrips,
 } from "./test-support.ts";
+import { parseStoredHitPoints } from "./stored-sheet-parser.ts";
 
 export const sorcererMetamagicKnownOptionsSheetParsingRuntimeTestName =
   sorcererMetamagicKnownOptionsSheetParsingTestName;
@@ -33,6 +34,91 @@ export const sorcererMetamagicKnownOptionsGateRuntimeTestName =
   sorcererMetamagicKnownOptionsGateTestName;
 
 describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
+  test.each([
+    { value: null, expectedTag: "Left" },
+    { value: {}, expectedTag: "Left" },
+    {
+      value: { tag: "positive", currentHp: "not-hp" },
+      expectedTag: "Left",
+    },
+    {
+      value: { tag: "positive", currentHp: 2, tempHp: "not-hp" },
+      expectedTag: "Left",
+    },
+    { value: { tag: "positive", currentHp: 2 }, expectedTag: "Right" },
+    { value: { tag: "knockedOut", tempHp: 1 }, expectedTag: "Right" },
+    { value: { tag: "zero", lifecycle: null }, expectedTag: "Left" },
+    {
+      value: {
+        tag: "zero",
+        lifecycle: {
+          tag: "stable",
+          recovery: {
+            kind: "regains1HpAfter1d4Hours",
+            elapsedBeforeRecoveryRoll: 0,
+          },
+        },
+      },
+      expectedTag: "Right",
+    },
+    {
+      value: {
+        tag: "zero",
+        lifecycle: { tag: "stable", recovery: null },
+      },
+      expectedTag: "Left",
+    },
+    {
+      value: {
+        tag: "zero",
+        lifecycle: {
+          tag: "stable",
+          recovery: { kind: "unsupportedRecovery" },
+        },
+      },
+      expectedTag: "Left",
+    },
+    {
+      value: {
+        tag: "zero",
+        lifecycle: {
+          tag: "stable",
+          recovery: { kind: "regains1HpAfter", remaining: 1 },
+        },
+      },
+      expectedTag: "Right",
+    },
+    {
+      value: {
+        tag: "zero",
+        lifecycle: {
+          tag: "unstable",
+          deathSaves: { successes: 1, failures: 2 },
+        },
+      },
+      expectedTag: "Right",
+    },
+    {
+      value: {
+        tag: "zero",
+        lifecycle: {
+          tag: "dead",
+          deathSaves: { successes: 0, failures: 4 },
+        },
+      },
+      expectedTag: "Left",
+    },
+    {
+      value: {
+        tag: "zero",
+        lifecycle: { tag: "unstable", deathSaves: null },
+      },
+      expectedTag: "Left",
+    },
+  ])("parses stored Hit Point boundary case %#", ({ value, expectedTag }) => {
+    expect(parseStoredHitPoints(value)._tag).toBe(expectedTag);
+  });
+
   test("creates a fresh non-spellcasting Character Sheet at current HP", () => {
     const sheet = rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:test"),

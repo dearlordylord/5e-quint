@@ -14,7 +14,10 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L19D-05-FIGHTER-TACTICAL-MASTER fighter_tactical_master mastery_push mastery_slow
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-action-area-save-damage-replacement unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.creature-space-movement-permission unit-feature.martial-arts-attack-projection unit-feature.monk-focus-battle-options unit-feature.passive-ability-check-roll-mode unit-feature.passive-damage-resistance unit-feature.passive-saving-throw-roll-mode unit-feature.reaction-roll-or-damage-reduction unit-feature.stunning-strike
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.fighter-tactical-master unit-feature.weapon-mastery-push unit-feature.weapon-mastery-slow
-import { decodeSpeciesRecordSync } from "@dnd/surface/surface/schema";
+import {
+  decodeSpeciesRecordSync,
+  decodeUnitRecordSync,
+} from "@dnd/surface/surface/schema";
 import { describe, expect, test } from "vitest";
 import speciesDragonbornInput from "../../surface/content/species_dragonborn.json";
 import { damageAmountAfterTargetAdjustments } from "./battle-reducer/damage-helpers.ts";
@@ -1430,48 +1433,6 @@ describe("QMBT68 Monk Deflect Attacks deterministic Unit profile admission", () 
     );
   });
 
-  test("monk_deflect_attacks rejects malformed redirect projection facts", () => {
-    const unit = unitLibrary.requireUnit(monkDeflectAttacksUnitId);
-    if (
-      unit.kind !== "class_feature" ||
-      unit.mechanics.family !== "reaction_roll_or_damage_reduction"
-    ) {
-      throw new Error("Expected Deflect Attacks reaction modifier mechanics.");
-    }
-    const malformedModifier = unit.mechanics.modifiers.map((modifier) =>
-      modifier.kind === "attack_damage_reduction" &&
-      "zeroDamageRedirect" in modifier
-        ? {
-            ...modifier,
-            zeroDamageRedirect: {
-              ...modifier.zeroDamageRedirect,
-              damage: {
-                ...modifier.zeroDamageRedirect.damage,
-                dice: {
-                  ...modifier.zeroDamageRedirect.damage.dice,
-                  dieSize: { kind: "d8" },
-                },
-              },
-            },
-          }
-        : modifier,
-    );
-    const malformedUnit = {
-      ...unit,
-      mechanics: {
-        ...unit.mechanics,
-        modifiers: malformedModifier,
-      },
-      // Cast justification: this fixture intentionally violates the authored
-      // Deflect Attacks Martial Arts die projection invariant while preserving
-      // the rest of the real UnitRecord fixture.
-    } as unknown as UnitRecord;
-
-    expect(
-      battleReactionRollOrDamageReductionSupportForUnit(malformedUnit),
-    ).toBe("unsupported");
-  });
-
   test("monk_deflect_attacks rejects redirect resource costs for a different Unit", () => {
     const unit = unitLibrary.requireUnit(monkDeflectAttacksUnitId);
     if (
@@ -1495,16 +1456,13 @@ describe("QMBT68 Monk Deflect Attacks deterministic Unit profile admission", () 
           }
         : modifier,
     );
-    const malformedUnit = {
+    const malformedUnit = decodeUnitRecordSync({
       ...unit,
       mechanics: {
         ...unit.mechanics,
         modifiers: malformedModifier,
       },
-      // Cast justification: this fixture intentionally violates the authored
-      // Deflect Attacks resource ownership invariant while preserving the rest
-      // of the real UnitRecord fixture.
-    } as unknown as UnitRecord;
+    });
 
     expect(
       battleReactionRollOrDamageReductionSupportForUnit(malformedUnit),

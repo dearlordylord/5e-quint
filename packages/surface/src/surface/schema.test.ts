@@ -117,20 +117,20 @@ describe("SRD Surface publication schema", () => {
 
     visit(SrdSurfaceJsonSchema);
 
-    // JSONSchema.Root is a broad union; the preceding root-schema assertion
-    // establishes the generated aggregate's object/properties shape here.
-    const generated = SrdSurfaceJsonSchema as unknown as {
-      readonly properties: {
-        readonly units: { readonly items: Record<string, unknown> };
-        readonly statBlocks: {
-          readonly items: Record<string, unknown>;
-        };
-      };
-    };
-    expect(generated.properties.units.items.$ref).toBe(
+    const generated = requireRecord(SrdSurfaceJsonSchema, "root schema");
+    const properties = requireRecord(
+      generated.properties,
+      "root schema properties",
+    );
+    const units = requireRecord(properties.units, "units property");
+    const statBlocks = requireRecord(
+      properties.statBlocks,
+      "stat blocks property",
+    );
+    expect(requireRecord(units.items, "units items").$ref).toBe(
       "#/$defs/SrdUnitPublicationEncoded",
     );
-    expect(generated.properties.statBlocks.items.$ref).toBe(
+    expect(requireRecord(statBlocks.items, "stat blocks items").$ref).toBe(
       "#/$defs/SrdStatBlockPublicationEncoded",
     );
     expect(
@@ -139,11 +139,10 @@ describe("SRD Surface publication schema", () => {
   });
 
   test("keeps the published graph within its bounded named-reference shape", () => {
-    const schema = SrdSurfaceJsonSchema as unknown as {
-      readonly $defs: Readonly<Record<string, unknown>>;
-    };
+    const schema = requireRecord(SrdSurfaceJsonSchema, "root schema");
+    const definitions = requireRecord(schema.$defs, "root schema definitions");
 
-    expect(Object.keys(schema.$defs).length).toBe(
+    expect(Object.keys(definitions).length).toBe(
       SRD_SURFACE_SCHEMA_SIZE.definitions,
     );
     expect(SRD_SURFACE_SCHEMA_SIZE.definitions).toBeLessThan(
@@ -154,3 +153,17 @@ describe("SRD Surface publication schema", () => {
     );
   });
 });
+
+function requireRecord(
+  value: unknown,
+  label: string,
+): Readonly<Record<string, unknown>> {
+  if (!isRecord(value)) {
+    throw new Error(`Expected ${label} to be an object.`);
+  }
+  return value;
+}
+
+function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}

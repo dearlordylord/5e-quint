@@ -12,9 +12,31 @@ const TOKEN_STROKE_EMPHASIS = 3
 const TOKEN_STROKE_ACTIVE = 2.5
 const TOKEN_STROKE_IDLE = 1.5
 const TOKEN_RING_OFFSET = 4
-const ACTIVE_RING_OPACITY = [0.3, 0.8, 0.3]
-const REACTION_RING_OPACITY = [0.5, 1, 0.5]
-const UNCONSCIOUS_SCALE = [1, 1.2, 0.8, 1]
+const TOKEN_ANIMATION = {
+  activeRingRestOpacity: 0.3,
+  activeRingPeakOpacity: 0.8,
+  reactionRingRestOpacity: 0.5,
+  reactionRingPeakOpacity: 1,
+  unconsciousRestScale: 1,
+  unconsciousPeakScale: 1.2,
+  unconsciousSettleScale: 0.8
+} as const
+const ACTIVE_RING_OPACITY = [
+  TOKEN_ANIMATION.activeRingRestOpacity,
+  TOKEN_ANIMATION.activeRingPeakOpacity,
+  TOKEN_ANIMATION.activeRingRestOpacity
+]
+const REACTION_RING_OPACITY = [
+  TOKEN_ANIMATION.reactionRingRestOpacity,
+  TOKEN_ANIMATION.reactionRingPeakOpacity,
+  TOKEN_ANIMATION.reactionRingRestOpacity
+]
+const UNCONSCIOUS_SCALE = [
+  TOKEN_ANIMATION.unconsciousRestScale,
+  TOKEN_ANIMATION.unconsciousPeakScale,
+  TOKEN_ANIMATION.unconsciousSettleScale,
+  TOKEN_ANIMATION.unconsciousRestScale
+]
 const LABEL_FONT_SIZE = 8
 const FLOATING_LABEL_Y_OFFSET = 14
 const FLOATING_LABEL_FONT_SIZE = 12

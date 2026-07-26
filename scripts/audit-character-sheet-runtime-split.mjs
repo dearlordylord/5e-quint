@@ -187,6 +187,7 @@ const EXPECTED_EXPORTS = [
   "characterSheetPactSlots",
   "characterSheetProficiencyBonusForCharacterLevel",
   "characterSheetResources",
+  "parseCharacterSheetRetainedCompanionCurrentHitPoints",
   "parseCharacterSheetRetainedCompanionId",
   "characterSheetSpellInvocation",
   "characterSheetSpellSlotSourceState",
@@ -236,6 +237,11 @@ const EXPECTED_MOVED_FUNCTIONS = [
   },
 ];
 const EXPECTED_EXPORT_RECONCILIATION_REASONS = [
+  {
+    name: "parseCharacterSheetRetainedCompanionCurrentHitPoints",
+    reason:
+      "Character Sheet owns the retained-companion Hit Point boundary; exporting its positive-current-HP parser lets battle handoff callers carry the branded fact without unsafe assertions or duplicated validation.",
+  },
   {
     name: "characterSheetNormalHitPointMaximum",
     reason:

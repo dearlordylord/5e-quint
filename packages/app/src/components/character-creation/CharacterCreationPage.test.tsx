@@ -30,4 +30,61 @@ describe("CharacterCreationPage", () => {
 
     expect(progression.value).toBe(initialProgression)
   })
+
+  it("navigates with buttons and keys while ignoring form-control key events", () => {
+    render(<CharacterCreationPage />)
+
+    const previous = screen.getByRole("button", { name: "Previous step" })
+    const next = screen.getByRole("button", { name: "Next step" })
+    expect(previous).toHaveProperty("disabled", true)
+    fireEvent.keyDown(window, { key: "ArrowLeft" })
+    fireEvent.keyDown(window, { key: "Escape" })
+
+    fireEvent.click(next)
+    expect(screen.getByText("2. Determine Origin", { selector: "h2" })).toBeTruthy()
+
+    fireEvent.keyDown(window, { key: "ArrowRight" })
+    expect(screen.getByText("3. Determine Ability Scores", { selector: "h2" })).toBeTruthy()
+    const method = screen.getByRole("combobox", { name: "Generation method" })
+    fireEvent.keyDown(method, { key: "ArrowRight" })
+    fireEvent.keyDown(screen.getByRole("spinbutton", { name: "Str" }), { key: "ArrowRight" })
+    const textarea = document.createElement("textarea")
+    document.body.append(textarea)
+    fireEvent.keyDown(textarea, { key: "ArrowRight" })
+    textarea.remove()
+    const editor = document.createElement("div")
+    editor.contentEditable = "true"
+    Object.defineProperty(editor, "isContentEditable", { value: true })
+    document.body.append(editor)
+    fireEvent.keyDown(editor, { key: "ArrowRight" })
+    editor.remove()
+    expect(screen.getByText("3. Determine Ability Scores", { selector: "h2" })).toBeTruthy()
+
+    fireEvent.keyDown(window, { key: "ArrowLeft" })
+    expect(screen.getByText("2. Determine Origin", { selector: "h2" })).toBeTruthy()
+    fireEvent.click(previous)
+    expect(screen.getByText("1. Choose Class", { selector: "h2" })).toBeTruthy()
+    fireEvent.click(screen.getByRole("button", { name: "Review Character" }))
+    fireEvent.keyDown(window, { key: "ArrowRight" })
+    expect(screen.getByText("Review Character", { selector: "h2" })).toBeTruthy()
+  })
+
+  it("stores two finalized sheets, switches selection, and resets the draft", () => {
+    render(<CharacterCreationPage />)
+
+    fireEvent.click(screen.getByRole("button", { name: "Load Orc Soldier Fighter 1" }))
+    fireEvent.click(screen.getByRole("button", { name: "Finalize Character Sheet" }))
+    fireEvent.click(screen.getByRole("button", { name: "Load Orc Soldier Fighter 2" }))
+    fireEvent.click(screen.getByRole("button", { name: "Finalize Character Sheet" }))
+
+    const sheetButtons = screen.getAllByRole("button", { name: /app:character:/ })
+    expect(sheetButtons).toHaveLength(2)
+    const [firstSheetButton] = sheetButtons
+    fireEvent.click(firstSheetButton)
+    expect(firstSheetButton.className).toContain("border-emerald-500")
+
+    fireEvent.click(screen.getByRole("button", { name: "Reset Draft" }))
+    expect(screen.getByText("1. Choose Class", { selector: "h2" })).toBeTruthy()
+    expect(screen.getByText(/\d+ creation hole\(s\) remain open\./)).toBeTruthy()
+  })
 })

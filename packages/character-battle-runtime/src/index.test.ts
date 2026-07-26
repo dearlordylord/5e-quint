@@ -80,6 +80,7 @@ import {
   characterSheetHitPointMaximum,
   characterSheetResources,
   parseCharacterSheetRetainedCompanionId,
+  parseCharacterSheetRetainedCompanionCurrentHitPoints,
   characterSheetSpellSlotSourceState,
   characterSheetSpellSlots,
   characterSheetId,
@@ -93,7 +94,6 @@ import {
   type CharacterSheet,
   type CharacterSheetCompanionFormSelection,
   type CharacterSheetInput,
-  type CharacterSheetRetainedCompanionCurrentHitPoints,
   type CharacterSheetRetainedCompanionManifestation,
 } from "@dnd/character-sheet-runtime";
 import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
@@ -6379,10 +6379,9 @@ function retainedOrdinaryCompanionSheet(input: {
     return {
       ...manifestation,
       hitPoints: {
-        // Cast evidence: retainedOrdinaryCompanionSheet is a test fixture
-        // helper, and the guard above proves positive HP for recast cases.
-        currentHp:
-          input.currentHp as unknown as CharacterSheetRetainedCompanionCurrentHitPoints,
+        currentHp: expectRight(
+          parseCharacterSheetRetainedCompanionCurrentHitPoints(input.currentHp),
+        ),
         tempHp: input.tempHp,
       },
     };

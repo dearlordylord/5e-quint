@@ -977,16 +977,7 @@ function fixedDamageRollFill(
     holeId: hole.holeId,
     value: [
       {
-        // SRD familiar-form attacks such as Cat Scratch are authored as
-        // fixed 0d1+1 damage. The runtime still asks for the rolledDice hole
-        // for the fixed expression, but the shared fill type currently brands
-        // rolled dice groups as non-empty. There is no parser/generic helper
-        // for this zero-dice authored shape, so the test narrows exactly this
-        // empty dice group at the call boundary.
-        results: [] as unknown as Extract<
-          BattleFill,
-          { readonly kind: "rolledDice" }
-        >["value"][number]["results"],
+        results: [],
       },
     ],
   };

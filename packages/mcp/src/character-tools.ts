@@ -145,6 +145,7 @@ export function handleCharacterToolCall(
       const result = fillCreationHoles({
         draft,
         unitLibrary: root.unitLibrary,
+        supportProfile: root.characterCreationSupportProfile,
         expectedRevision: input.expectedRevision,
         fills: input.fills,
       });
@@ -169,6 +170,7 @@ export function handleCharacterToolCall(
       const finalization = finalizeCharacterDraft({
         draft,
         unitLibrary: root.unitLibrary,
+        supportProfile: root.characterCreationSupportProfile,
       });
       const finalizedCharacterId = characterIdFromDraftId(draftId);
       if (finalization.tag === "ready") {
@@ -260,10 +262,12 @@ function creationDraftPayload(root: McpCompositionRoot, draft: CharacterDraft) {
     holes: discoverCreationHoles({
       draft,
       unitLibrary: root.unitLibrary,
+      supportProfile: root.characterCreationSupportProfile,
     }),
     finalization: finalizeCharacterDraft({
       draft,
       unitLibrary: root.unitLibrary,
+      supportProfile: root.characterCreationSupportProfile,
     }),
     session: mcpSessionSummary(root.sessionStore.snapshot()),
   };

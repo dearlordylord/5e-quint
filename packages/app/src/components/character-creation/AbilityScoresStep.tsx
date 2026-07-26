@@ -28,7 +28,7 @@ export function AbilityScoresStep({
 }) {
   const abilityScoreHole = holes.find((hole) => hole.kind === "abilityScores")
   const backgroundIncreaseHoles = holes.filter(
-    (hole) =>
+    (hole): hole is Extract<CreationHole, { readonly kind: "choice" }> =>
       hole.kind === "choice" &&
       hole.source.tag === "unitChoice" &&
       hole.source.choiceKey === BACKGROUND_ABILITY_SCORE_INCREASE_CHOICE_KEY
@@ -112,25 +112,23 @@ export function AbilityScoresStep({
           </button>
         </>
       )}
-      {backgroundIncreaseHoles.map((hole) =>
-        hole.kind === "choice" ? (
-          <div key={hole.holeId} className="rounded-lg border border-gray-800 bg-gray-950/40 p-3">
-            <p className="text-xs uppercase tracking-wide text-gray-400">Background ability score increase</p>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {hole.options.map((option) => (
-                <button
-                  key={option.optionId}
-                  className="rounded-md border border-gray-700 px-3 py-2 text-sm text-gray-200 transition hover:border-amber-400 hover:text-amber-300"
-                  onClick={() => onFill({ kind: "choice", holeId: hole.holeId, optionIds: [option.optionId] })}
-                  type="button"
-                >
-                  {option.label}
-                </button>
-              ))}
-            </div>
+      {backgroundIncreaseHoles.map((hole) => (
+        <div key={hole.holeId} className="rounded-lg border border-gray-800 bg-gray-950/40 p-3">
+          <p className="text-xs uppercase tracking-wide text-gray-400">Background ability score increase</p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {hole.options.map((option) => (
+              <button
+                key={option.optionId}
+                className="rounded-md border border-gray-700 px-3 py-2 text-sm text-gray-200 transition hover:border-amber-400 hover:text-amber-300"
+                onClick={() => onFill({ kind: "choice", holeId: hole.holeId, optionIds: [option.optionId] })}
+                type="button"
+              >
+                {option.label}
+              </button>
+            ))}
           </div>
-        ) : null
-      )}
+        </div>
+      ))}
     </div>
   )
 }

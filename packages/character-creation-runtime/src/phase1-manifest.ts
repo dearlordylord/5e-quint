@@ -1,9 +1,15 @@
-import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
+import {
+  SURFACE_ABILITIES,
+  alignmentOptionId,
+  unitId as authoredUnitId,
+} from "@dnd/shared/game-facts";
 import {
   creationChoiceOptionId,
   type BackgroundAbilityScoreIncreaseSelection,
   CHARACTER_SPECIES_SIZE_SELECTIONS,
+  type CharacterAlignment,
   type CharacterDraftPath,
+  type CharacterStartingLanguages,
   type ChoiceCardinality,
   type ChoiceCount,
   type CreationChoiceOption,
@@ -24,7 +30,6 @@ import {
 } from "./character-progression-types.ts";
 import type { CharacterProgression } from "./character-progression-types.ts";
 import { Match } from "effect";
-import { SURFACE_ABILITIES } from "@dnd/shared/game-facts";
 import type {
   AbilityScore,
   PositiveInteger,
@@ -178,18 +183,12 @@ function progressionOptionClassPath(progression: CharacterProgression): string {
     .map((classId) => `${classId.length}:${classId}`)
     .join(optionClassPathSeparator);
 }
-export const SUPPORTED_BACKGROUND_OPTION_IDS = [
-  ...SUPPORTED_BACKGROUND_UNIT_IDS.map(creationChoiceOptionId),
-] as const satisfies ReadonlyArray<CreationChoiceOptionId>;
 export const SUPPORTED_SPECIES_OPTION_IDS = [
   ...SRD_CHARACTER_ADMISSION_SPECIES_UNIT_IDS.map(creationChoiceOptionId),
 ] as const satisfies ReadonlyArray<CreationChoiceOptionId>;
 export const SUPPORTED_SPECIES_SIZE_OPTION_IDS = [
   ...CHARACTER_SPECIES_SIZE_SELECTIONS.map(creationChoiceOptionId),
 ] as const satisfies ReadonlyArray<CreationChoiceOptionId>;
-export const SUPPORTED_PURCHASE_OPTION_IDS = SUPPORTED_PURCHASE_UNIT_IDS.map(
-  creationChoiceOptionId,
-);
 export const SUPPORTED_FIGHTER_SKILL_OPTION_IDS = [
   creationChoiceOptionId("perception"),
   creationChoiceOptionId("survival"),
@@ -207,10 +206,15 @@ export const PHASE1_WEAPON_MASTERY_UNIT_IDS = [
 export const SUPPORTED_WEAPON_MASTERY_OPTION_IDS = [
   ...PHASE1_WEAPON_MASTERY_UNIT_IDS.map(creationChoiceOptionId),
 ] as const satisfies ReadonlyArray<CreationChoiceOptionId>;
-export const SUPPORTED_LANGUAGE_OPTION_IDS = [
-  creationChoiceOptionId("Dwarvish"),
-  creationChoiceOptionId("Goblin"),
-] as const satisfies ReadonlyArray<CreationChoiceOptionId>;
+export const PHASE1_CHARACTER_STARTING_LANGUAGES = [
+  "Common",
+  "Dwarvish",
+  "Goblin",
+] as const satisfies CharacterStartingLanguages;
+export const SUPPORTED_LANGUAGE_OPTION_IDS =
+  PHASE1_CHARACTER_STARTING_LANGUAGES.filter(
+    (language) => language !== "Common",
+  ).map(creationChoiceOptionId);
 
 export const PHASE1_CLASS_EQUIPMENT_OPTION_ID =
   creationChoiceOptionId("option_c");
@@ -232,7 +236,13 @@ export const PHASE1_BACKGROUND_ABILITY_SCORE_INCREASE_OPTION_ID =
   backgroundAbilityScoreIncreaseOptionId(
     PHASE1_BACKGROUND_ABILITY_SCORE_INCREASE_SELECTION,
   );
-export const PHASE1_ALIGNMENT_OPTION_ID = creationChoiceOptionId("lawful_good");
+export const PHASE1_CHARACTER_ALIGNMENT = {
+  order: "lawful",
+  morality: "good",
+} as const satisfies CharacterAlignment;
+export const PHASE1_ALIGNMENT_OPTION_ID = creationChoiceOptionId(
+  alignmentOptionId(PHASE1_CHARACTER_ALIGNMENT),
+);
 
 export const BACKGROUND_ABILITY_SCORE_INCREASE_CHOICE_KEY =
   "background_ability_score_increase" satisfies UnitChoiceKey;

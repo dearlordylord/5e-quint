@@ -9,19 +9,8 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       reporter: ["text", "json", "html"],
-      include: ["src/**"],
-      exclude: [
-        "**/*.test.ts",
-        "**/*.test.tsx",
-        "**/*.config.ts",
-        "**/*.gen.*",
-        "src/router.tsx",
-        "src/routes/**",
-        ".tanstack/**",
-        "src/entry.tsx",
-        "src/i18n.ts",
-        "src/components/**"
-      ],
+      include: ["src/**/*.{ts,tsx}"],
+      exclude: ["**/*.test.ts", "**/*.test.tsx", "**/*.config.ts", "**/*.d.ts", "**/*.gen.*"],
       thresholds: {
         lines: 95,
         functions: 83,

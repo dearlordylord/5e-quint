@@ -11,9 +11,9 @@ import { Option } from "effect";
 
 import {
   characterSheetCompanion,
-  parseCharacterSheetRetainedCompanionId,
   createRetainedFamiliarLikeCompanion,
-  type CharacterSheet,
+  parseCharacterSheetRetainedCompanionCurrentHitPoints,
+  parseCharacterSheetRetainedCompanionId,
   type CharacterSheetCompanion,
   type CharacterSheetCompanionCreatureTypeOverride,
   type CharacterSheetCompanionFormSelection,
@@ -238,6 +238,55 @@ describe("Character Sheet runtime / companions", () => {
     });
   });
 
+  test("rejects a stored retained companion protocol with an unknown tag", () => {
+    const sheet = requireRight(
+      rebuildCharacterSheetFixture({
+        characterId: characterSheetId("character:unknown-companion-protocol"),
+        build,
+        currentHp: Hp(11),
+        tempHp: Hp(0),
+        unitLibrary,
+        companion: retainedCompanionInput({
+          protocolTag: "attackExceptionFamiliarLikeOneAtATime",
+        }),
+      }),
+    );
+    const companion = characterSheetCompanion(sheet);
+    expect(companion.tag).toBe("retainedOneAtATime");
+    if (companion.tag !== "retainedOneAtATime") return;
+
+    const storedSheet = {
+      ...sheet,
+      companion: {
+        tag: "retainedOneAtATime",
+        companion: {
+          ...companion.companion,
+          protocol: { tag: "somethingElseFamiliarLike" },
+        },
+      },
+    };
+
+    expect(parseCharacterSheet(storedSheet, unitLibrary)).toMatchObject({
+      _tag: "Left",
+      left: { message: "Expected retained companion protocol tag." },
+    });
+  });
+
+  test("parses only positive retained companion current Hit Points", () => {
+    expect(
+      parseCharacterSheetRetainedCompanionCurrentHitPoints(Hp(2)),
+    ).toMatchObject({
+      _tag: "Right",
+      right: Hp(2),
+    });
+    expect(
+      parseCharacterSheetRetainedCompanionCurrentHitPoints(Hp(0)),
+    ).toMatchObject({
+      _tag: "Left",
+      left: { message: "Retained companion current HP must be positive." },
+    });
+  });
+
   test.each([
     {
       title: "special form without attack exception",
@@ -265,40 +314,6 @@ describe("Character Sheet runtime / companions", () => {
       });
     },
   );
-
-  test("rejects a stored retained companion protocol with an unknown tag", () => {
-    const sheet = requireRight(
-      rebuildCharacterSheetFixture({
-        characterId: characterSheetId("character:unknown-companion-protocol"),
-        build,
-        currentHp: Hp(11),
-        tempHp: Hp(0),
-        unitLibrary,
-        companion: retainedCompanionInput({
-          protocolTag: "attackExceptionFamiliarLikeOneAtATime",
-        }),
-      }),
-    );
-    const companion = characterSheetCompanion(sheet);
-    expect(companion.tag).toBe("retainedOneAtATime");
-    if (companion.tag !== "retainedOneAtATime") return;
-
-    const storedSheet = {
-      ...sheet,
-      companion: {
-        tag: "retainedOneAtATime",
-        companion: {
-          ...companion.companion,
-          protocol: { tag: "somethingElseFamiliarLike" },
-        },
-      },
-    } as unknown as CharacterSheet;
-
-    expect(parseCharacterSheet(storedSheet, unitLibrary)).toMatchObject({
-      _tag: "Left",
-      left: { message: "Expected retained companion protocol tag." },
-    });
-  });
 
   test("removes owner-long-rest retained companions on Long Rest", () => {
     const sheet = requireRight(

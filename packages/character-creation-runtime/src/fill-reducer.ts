@@ -16,8 +16,10 @@ import {
   selectedChoiceOption,
 } from "./hole-factories.ts";
 import {
+  CHARACTER_CREATION_SUPPORT_PROFILE,
   supportedProgressionForOptionId,
   unsupportedHoleSelectionOptionId,
+  type CharacterCreationSupportProfile,
 } from "./support-gates.ts";
 import {
   BACKGROUND_ABILITY_SCORE_INCREASE_CHOICE_KEY,
@@ -122,6 +124,7 @@ type LoadoutSourcedChoiceCreationHole = ChoiceCreationHole & {
 export function fillCreationHoles(
   input: CreationBatchFillInput & {
     readonly unitLibrary: UnitCatalog;
+    readonly supportProfile?: CharacterCreationSupportProfile;
   },
 ): CreationBatchFillResult {
   const holes = discoverCreationHoles(input);
@@ -160,10 +163,17 @@ export function fillCreationHoles(
 function acceptedCreationBatchFillResult(
   input: CreationBatchFillInput & {
     readonly unitLibrary: UnitCatalog;
+    readonly supportProfile?: CharacterCreationSupportProfile;
   },
   draft: CharacterDraft,
 ): AcceptedCreationBatchFillResult {
-  const nextInput = { draft, unitLibrary: input.unitLibrary };
+  const nextInput = {
+    draft,
+    unitLibrary: input.unitLibrary,
+    ...(input.supportProfile === undefined
+      ? {}
+      : { supportProfile: input.supportProfile }),
+  };
 
   return {
     tag: "accepted",
@@ -181,7 +191,9 @@ export function creationFillIssues(
 }
 
 function acceptedCreationFills(
-  input: CreationBatchFillInput,
+  input: CreationBatchFillInput & {
+    readonly supportProfile?: CharacterCreationSupportProfile;
+  },
   holeIndex: CreationHoleIndex,
 ): CreationFillAcceptance {
   const batchIssues =
@@ -205,11 +217,22 @@ function acceptedCreationFills(
       return [unknownHoleIssue(fill, fillIndex)];
     }
 
-    const issues = fillIssuesForHole(fill, fillIndex, matchingHole, holeIndex);
+    const issues = fillIssuesForHole(
+      fill,
+      fillIndex,
+      matchingHole,
+      holeIndex,
+      input.supportProfile,
+    );
     const rejectedIssues = nonEmptyReadonlyArray(issues);
     if (rejectedIssues != null) return rejectedIssues;
 
-    const acceptedFill = acceptedCreationFill(matchingHole, fill, fillIndex);
+    const acceptedFill = acceptedCreationFill(
+      matchingHole,
+      fill,
+      fillIndex,
+      input.supportProfile,
+    );
     if (Either.isLeft(acceptedFill)) return [acceptedFill.left];
     acceptedFills.push({ fillIndex, acceptedFill: acceptedFill.right });
     return [];
@@ -223,6 +246,7 @@ export function fillIssuesForHole(
   fillIndex: FillIndex,
   hole: CreationHole,
   holeIndex: CreationHoleIndex = indexCreationHoles([hole]),
+  supportProfile: CharacterCreationSupportProfile = CHARACTER_CREATION_SUPPORT_PROFILE,
 ): readonly CreationFillIssue[] {
   if (!fillKindMatchesHole(fill, hole)) {
     return [wrongFillKindIssue(fill, fillIndex, hole)];
@@ -234,6 +258,7 @@ export function fillIssuesForHole(
       fillIndex,
       hole,
       requireChoiceOptionIndex(holeIndex, hole),
+      supportProfile,
     );
   }
 
@@ -259,6 +284,7 @@ export function choiceFillIssues(
   fillIndex: FillIndex,
   hole: ChoiceCreationHole,
   optionById: ReadonlyMap<CreationChoiceOptionId, CreationChoiceOption>,
+  supportProfile: CharacterCreationSupportProfile = CHARACTER_CREATION_SUPPORT_PROFILE,
 ): readonly CreationFillIssue[] {
   const optionIds = fill.optionIds;
   const bounds = choiceCardinalityBounds(hole.cardinality);
@@ -284,7 +310,11 @@ export function choiceFillIssues(
     ];
   }
 
-  const unsupportedOptionId = unsupportedHoleSelectionOptionId(hole, optionIds);
+  const unsupportedOptionId = unsupportedHoleSelectionOptionId(
+    hole,
+    optionIds,
+    supportProfile,
+  );
   return unsupportedOptionId == null
     ? cardinalityIssues
     : [
@@ -499,9 +529,15 @@ function acceptedCreationFill(
   hole: CreationHole,
   fill: CreationFill,
   fillIndex: FillIndex,
+  supportProfile: CharacterCreationSupportProfile = CHARACTER_CREATION_SUPPORT_PROFILE,
 ): ApplyCreationFillResult<AcceptedCreationFill> {
   if (isDraftSourcedCreationHole(hole)) {
-    const acceptedFill = acceptedDraftFill(hole, fill, fillIndex);
+    const acceptedFill = acceptedDraftFill(
+      hole,
+      fill,
+      fillIndex,
+      supportProfile,
+    );
     return Either.isLeft(acceptedFill)
       ? Either.left(acceptedFill.left)
       : Either.right({ tag: "draft", acceptedFill: acceptedFill.right });
@@ -528,6 +564,7 @@ function acceptedDraftFill(
   hole: DraftSourcedCreationHole,
   fill: CreationFill,
   fillIndex: FillIndex,
+  supportProfile: CharacterCreationSupportProfile,
 ): ApplyCreationFillResult<AcceptedDraftFill> {
   const path = hole.source.path;
   if (path === "draft.abilityScoreGeneration") {
@@ -550,7 +587,10 @@ function acceptedDraftFill(
     if (Either.isLeft(singleFill))
       return applyCreationFillIssue(singleFill.left);
     const optionId = singleFill.right.optionIds[0];
-    const progression = supportedProgressionForOptionId(optionId);
+    const progression = supportedProgressionForOptionId(
+      optionId,
+      supportProfile,
+    );
     return progression == null
       ? Either.left(unsupportedChoiceIssue(fill, fillIndex, optionId))
       : Either.right({

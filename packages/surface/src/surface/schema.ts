@@ -508,27 +508,8 @@ export const SrdProvenanceSchema = Schema.Struct({
 
 export type SrdProvenance = Schema.Schema.Type<typeof SrdProvenanceSchema>;
 
-// AST-derived schemas have an erased runtime type here; this local type keeps
-// the graph construction context-free while the exported schemas restore the
-// precise Unit and Stat Block types below.
-type RecordSchema = Schema.Schema.AnyNoContext;
-
-const recordVariants = (schema: RecordSchema): ReadonlyArray<RecordSchema> => {
-  if (schema.ast._tag !== "Union") return [schema];
-
-  return schema.ast.types.flatMap((ast) => {
-    // Schema.make faithfully rehydrates each existing union member AST; the
-    // cast only supplies the context-free local graph type.
-    return recordVariants(Schema.make(ast) as RecordSchema);
-  });
-};
-
-// Schema.omit's curried key constraint cannot see the fields of an AST-derived
-// union. The runtime AST still contains the established provenance field, so
-// this cast only widens the local graph-construction helper.
-const omitProvenance = Schema.omit as unknown as (
-  key: "provenance",
-) => (schema: RecordSchema) => RecordSchema;
+const recordVariantAsts = (ast: SchemaAST.AST): ReadonlyArray<SchemaAST.AST> =>
+  ast._tag === "Union" ? ast.types.flatMap(recordVariantAsts) : [ast];
 
 type AstFactorState = {
   readonly nextId: { value: number };
@@ -657,59 +638,53 @@ const SRD_FACTOR_STATE: AstFactorState = {
   suspends: new WeakMap(),
 };
 
-const specializeSrdRecordSchema = (
-  schema: RecordSchema,
+type SrdRecord<A> = A extends { readonly provenance: unknown }
+  ? Omit<A, "provenance"> & {
+      readonly provenance: SrdProvenance;
+    }
+  : never;
+
+const specializeSrdRecordSchema = <
+  A extends { readonly provenance: unknown },
+  I extends { readonly provenance: unknown },
+>(
+  schema: Schema.Schema<A, I, never>,
   identifier: string,
-): RecordSchema => {
+): Schema.Schema<SrdRecord<A>, SrdRecord<I>, never> => {
   const provenance = Schema.Struct({ provenance: SrdProvenanceSchema });
-  const variants = recordVariants(schema).map((variant, index) => {
-    // Schema.extend keeps the variant's existing fields; RecordSchema is only
-    // the erased, context-free type used while rebuilding its AST.
-    const specialized = Schema.extend(provenance)(
-      omitProvenance("provenance")(variant),
-    ) as RecordSchema;
+  const variants = recordVariantAsts(schema.ast).map((variant, index) => {
+    const recordWithoutProvenance = Schema.make<
+      Readonly<Record<string, unknown>>,
+      Readonly<Record<string, unknown>>,
+      never
+    >(SchemaAST.omit(variant, ["provenance"]));
+    const specialized = Schema.extend(provenance)(recordWithoutProvenance);
     // The rewrite preserves decoding and only adds named graph boundaries for
     // the generated JSON Schema references.
-    const factored = Schema.make(
-      factorUnionAst(specialized.ast, SRD_FACTOR_STATE),
-    ) as RecordSchema;
+    const factored = factorUnionAst(specialized.ast, SRD_FACTOR_STATE);
 
     // Effect's JSON Schema encoder emits a $defs/$ref pair for suspend nodes.
     // Naming each record variant here keeps the published graph finite without
     // maintaining a second JSON Schema representation beside this graph.
-    return Schema.suspend(() => factored).annotations({
-      identifier: `${identifier}Variant${index}`,
+    return new SchemaAST.Suspend(() => factored, {
+      [SchemaAST.IdentifierAnnotationId]: `${identifier}Variant${index}`,
     });
   });
 
-  return Schema.Union(
-    ...(variants as unknown as [RecordSchema, ...Array<RecordSchema>]),
-  ).annotations({ identifier }) as RecordSchema;
+  return Schema.make<SrdRecord<A>, SrdRecord<I>, never>(
+    SchemaAST.Union.make(variants),
+  ).annotations({ identifier });
 };
 
-// The specialization helper intentionally works over erased AST members; the
-// public boundary restores the source record type plus the fixed SRD fact.
 export const SrdUnitRecordSchema = specializeSrdRecordSchema(
   UnitRecordSchema,
   "SrdUnitRecord",
-) as unknown as Schema.Schema<
-  Schema.Schema.Type<typeof UnitRecordSchema> & {
-    readonly provenance: SrdProvenance;
-  },
-  Schema.Schema.Encoded<typeof UnitRecordSchema>,
-  never
->;
+);
 
 export const SrdStatBlockRecordSchema = specializeSrdRecordSchema(
   StatBlockRecordSchema,
   "SrdStatBlockRecord",
-) as unknown as Schema.Schema<
-  Schema.Schema.Type<typeof StatBlockRecordSchema> & {
-    readonly provenance: SrdProvenance;
-  },
-  Schema.Schema.Encoded<typeof StatBlockRecordSchema>,
-  never
->;
+);
 
 const nonEmptyPublicationArray = <S extends Schema.Schema.AnyNoContext>(
   item: S,

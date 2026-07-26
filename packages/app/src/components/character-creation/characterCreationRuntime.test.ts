@@ -24,7 +24,8 @@ import {
   characterCreationUnitLibrary,
   characterSheetSummary,
   createCharacterSheetFromDraft,
-  createStoredDraftId
+  createStoredDraftId,
+  draftHoleId
 } from "#/components/character-creation/characterCreationRuntime.ts"
 
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.class-feature-use-count-resource
@@ -90,6 +91,26 @@ describe("character creation runtime", () => {
         expended: 0
       })
     ])
+  })
+
+  test("returns a typed issue for an invalid ability-score assignment", () => {
+    expect(
+      abilityScoresFill({
+        holeId: draftHoleId("cc:draft:draft.abilityScoreGeneration"),
+        method: "standardArray",
+        scores: {
+          cha: 10,
+          con: 10,
+          dex: 10,
+          int: 10,
+          str: Number.NaN,
+          wis: 10
+        }
+      })
+    ).toMatchObject({
+      _tag: "Left",
+      left: { tag: "invalidAbilityScoreAssignment" }
+    })
   })
 })
 

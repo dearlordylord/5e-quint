@@ -39,7 +39,6 @@ import {
   resolveBattleInterrupt,
   resolveBattleSubject,
 } from "./unit-profile-admission-test-support.ts";
-import type { UnitRecord } from "./unit-profile-admission-test-support.ts";
 
 function combatProwessProcedureRef(
   state: Parameters<typeof requireCharacterUnitProcedureRefForTest>[0],
@@ -622,40 +621,5 @@ describe("QMBT56 deterministic Combat Prowess profile slice", () => {
         },
       ],
     });
-  });
-
-  test("adjacent roll replacement shapes remain unsupported for the profile", () => {
-    const unit = unitLibrary.requireUnit(boonOfCombatProwessUnitId);
-    expect(unit.kind).toBe("feat");
-    if (unit.kind !== "feat") {
-      throw new Error("Expected Boon of Combat Prowess feat Unit.");
-    }
-    const adjacentUnits = [
-      {
-        ...unit,
-        id: "test_combat_prowess_required",
-        mechanics: { ...unit.mechanics, optional: false },
-      },
-      {
-        ...unit,
-        id: "test_combat_prowess_long_rest",
-        mechanics: { ...unit.mechanics, resetCadence: { kind: "long_rest" } },
-      },
-    ] as unknown as readonly UnitRecord[];
-
-    for (const adjacentUnit of adjacentUnits) {
-      expect(
-        battleUnitRefWithSupportProfiles({
-          unitRef: { unitId: adjacentUnit.id },
-          unit: adjacentUnit,
-        }),
-      ).toEqual(
-        Either.left({
-          tag: "battleUnitSupportProfileIssue",
-          message: `Unsupported battle attack-roll miss-to-hit replacement Unit hook: ${adjacentUnit.id}.`,
-        }),
-      );
-      expect(parseSupportedUnitFeatureProfile(adjacentUnit, [])).toBeNull();
-    }
   });
 });

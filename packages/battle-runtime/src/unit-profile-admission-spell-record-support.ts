@@ -3,6 +3,7 @@ import type {
   ClassName,
   SpellRecord,
 } from "@dnd/surface/surface/types";
+import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import { expect } from "vitest";
 import { type BattleCreatureInit } from "./index.ts";
 import { unitLibrary } from "./unit-profile-admission-catalog-support.ts";
@@ -14,6 +15,14 @@ export function spellRecord(unitId: string): SpellRecord {
   const unit = unitLibrary.requireUnit(unitId);
   expect(unit.kind).toBe("spell");
   return unit as SpellRecord;
+}
+
+export function decodeSpellRecordForTest(raw: unknown): SpellRecord {
+  const unit = decodeUnitRecordSync(raw);
+  if (unit.kind !== "spell") {
+    throw new Error("Expected decoded test Unit to be a Spell.");
+  }
+  return unit;
 }
 
 export function spellAdmissionSource(

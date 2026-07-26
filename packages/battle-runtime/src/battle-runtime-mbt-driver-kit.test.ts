@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { combatantId } from "./identity.ts";
+import { fighterVsGoblinBattle } from "./battle-runtime-test-support.ts";
 
 import {
   assertWitnessProtocolConsistentWithScenario,
@@ -25,9 +26,9 @@ import {
 import type {
   BattleHole,
   BattleResolutionResult,
-  BattleSnapshot,
   BattleState,
 } from "./index.ts";
+import { snapshotBattle } from "./index.ts";
 
 describe("battle-runtime MBT driver kit", () => {
   it("reads transformed Quint state fields with precise field failures", () => {
@@ -233,9 +234,9 @@ describe("battle-runtime MBT driver kit", () => {
   });
 
   it("folds production resolution results into the configured witness protocol", () => {
-    const initialState = battleState("initial");
-    const resolvedState = battleState("resolved");
-    const needsHolesState = battleState("needs-holes");
+    const initialState = fighterVsGoblinBattle();
+    const resolvedState = fighterVsGoblinBattle();
+    const needsHolesState = fighterVsGoblinBattle();
     // This test only verifies that the recorder preserves hole object identity;
     // no Death Saving Throw hole fields are inspected.
     const hole = { kind: "deathSavingThrow" } as BattleHole;
@@ -281,9 +282,9 @@ describe("battle-runtime MBT driver kit", () => {
   });
 
   it("provides an interrupt recorder with the same witness protocol contract", () => {
-    const initialState = battleState("initial");
-    const resetState = battleState("reset");
-    const resolvedState = battleState("resolved");
+    const initialState = fighterVsGoblinBattle();
+    const resetState = fighterVsGoblinBattle();
+    const resolvedState = fighterVsGoblinBattle();
     const recorder = createBattleInterruptResolutionRecorder({
       initialState,
       noInvalidReason: "none",
@@ -340,20 +341,8 @@ describe("battle-runtime MBT driver kit", () => {
   });
 });
 
-function battleState(id: string): BattleState {
-  // Recorder folding only carries state references forward; it never reads
-  // BattleState fields in these deterministic tests.
-  return { id } as unknown as BattleState;
-}
-
-function snapshot(): BattleSnapshot {
-  // Snapshot values are required by the production result type but are only
-  // carried through untouched by the recorder test helpers.
-  return {} as BattleSnapshot;
-}
-
 function resolvedResult(state: BattleState): BattleResolutionResult {
-  return { tag: "resolved", state, snapshot: snapshot() };
+  return { tag: "resolved", state, snapshot: snapshotBattle(state) };
 }
 
 function needsHolesResult(
@@ -369,7 +358,7 @@ function needsHolesResult(
       command: "endTurn",
     },
     holes,
-    snapshot: snapshot(),
+    snapshot: snapshotBattle(state),
   };
 }
 
@@ -379,7 +368,13 @@ function invalidResult(
     { readonly tag: "invalid" }
   >["reason"],
 ): BattleResolutionResult {
-  return { tag: "invalid", reason, message: "invalid", snapshot: snapshot() };
+  const state = fighterVsGoblinBattle();
+  return {
+    tag: "invalid",
+    reason,
+    message: "invalid",
+    snapshot: snapshotBattle(state),
+  };
 }
 
 function stringLiteral<const Values extends readonly string[]>(

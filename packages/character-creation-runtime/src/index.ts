@@ -450,3 +450,7 @@ export {
   WEAPON_MASTERY_OPTIONS_CHOICE_KEY,
   progressionOptionId,
 } from "./phase1-manifest.ts";
+export {
+  CHARACTER_CREATION_SUPPORT_PROFILE,
+  type CharacterCreationSupportProfile,
+} from "./support-gates.ts";

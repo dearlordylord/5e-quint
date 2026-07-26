@@ -89,7 +89,7 @@ function subjectForKindCase(subjectKindCase: BattleSubjectKindCase) {
   return {
     tag: subjectKindCase.tag,
     ...discriminatorFields,
-  } as unknown as BattleSubject;
+  } as BattleSubject;
 }
 
 describe("battle hole family kind vocabulary", () => {
@@ -100,7 +100,7 @@ describe("battle hole family kind vocabulary", () => {
       );
       // The mapping under test reads only `kind`; full hole payloads are
       // irrelevant for this registry contract.
-      const hole = { kind: row.holeKind } as unknown as BattleHole;
+      const hole = { kind: row.holeKind } as BattleHole;
       expect(battleHoleFamilyKind(hole), row.id).toBe(row.holeKind);
     }
   });
@@ -112,7 +112,7 @@ describe("battle hole family kind vocabulary", () => {
       );
       // The mapping under test reads only `kind`; full fill payloads are
       // irrelevant for this registry contract.
-      const fill = { kind: row.fillKind } as unknown as BattleFill;
+      const fill = { kind: row.fillKind } as BattleFill;
       expect(battleFillKind(fill), row.id).toBe(row.fillKind);
     }
   });

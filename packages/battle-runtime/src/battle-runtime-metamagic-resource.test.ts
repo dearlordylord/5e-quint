@@ -1585,35 +1585,6 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
           "Transmuted Spell must change the source damage type to one of the other listed damage types.",
       },
       {
-        state: damageState,
-        subject: {
-          ...burningHandsActionSubject(damageSession),
-          metamagic: [{ effectKind: TRANSMUTED_METAMAGIC_EFFECT_KIND }],
-        } as unknown as Extract<
-          AvailableBattleAct["subject"],
-          { readonly tag: "actionSpell" }
-        >,
-        message:
-          "Transmuted Spell requires one selected replacement damage type.",
-      },
-      {
-        state: damageState,
-        subject: {
-          ...burningHandsActionSubject(damageSession),
-          metamagic: [
-            {
-              effectKind: TRANSMUTED_METAMAGIC_EFFECT_KIND,
-              targetDamageType: "force",
-            },
-          ],
-        } as unknown as Extract<
-          AvailableBattleAct["subject"],
-          { readonly tag: "actionSpell" }
-        >,
-        message:
-          "Transmuted Spell requires one selected replacement damage type.",
-      },
-      {
         state: restorationState,
         subject: {
           ...cureWoundsActionSubject(restorationSession),

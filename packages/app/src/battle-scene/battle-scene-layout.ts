@@ -136,6 +136,10 @@ const TEAM_COLORS = { blue: "#3b82f6", red: "#ef4444" } as const
 const FEET_PER_GRID_SQUARE = 5
 const FULL_BAR_RATIO = 1
 const PRESENTATION_METRICS = {
+  geometry: {
+    centerDivisor: 2,
+    defaultAreaRadiusFeet: 20
+  },
   bar: {
     gapFromToken: 4,
     betweenBars: 2,
@@ -219,7 +223,7 @@ function computeCreatureLayout(
   const combatantMeta = meta.combatants[combatant.combatantId]
   const gridPosition = combatantMeta?.gridPosition ?? { col: 0, row: 0 }
   const { cx, cy } = gridToPixel(gridPosition, config)
-  const barX = cx - config.barWidth / 2
+  const barX = cx - config.barWidth / PRESENTATION_METRICS.geometry.centerDivisor
   const hpBarY = cy + config.tokenRadius + PRESENTATION_METRICS.bar.gapFromToken
   const hpRatio = Number(combatant.maxHp) > 0 ? Number(combatant.hp) / Number(combatant.maxHp) : 0
   const tempHp = Number(combatant.tempHp)
@@ -393,7 +397,9 @@ function computeAoEZones(
       cx,
       cy,
       opacity: PRESENTATION_METRICS.opacity.aoeZone,
-      r: ((spell.areaRadiusFeet ?? 20) / FEET_PER_GRID_SQUARE) * config.cellSize,
+      r:
+        ((spell.areaRadiusFeet ?? PRESENTATION_METRICS.geometry.defaultAreaRadiusFeet) / FEET_PER_GRID_SQUARE) *
+        config.cellSize,
       spellName: spell.name,
       zoneId: `${stepIndex}:${spell.name}`
     }
@@ -419,7 +425,7 @@ function computeCastLine(
 
 function gridToPixel(position: BattleGridPosition, config: LayoutConfig): { readonly cx: number; readonly cy: number } {
   return {
-    cx: position.col * config.cellSize + config.cellSize / 2,
-    cy: position.row * config.cellSize + config.cellSize / 2
+    cx: position.col * config.cellSize + config.cellSize / PRESENTATION_METRICS.geometry.centerDivisor,
+    cy: position.row * config.cellSize + config.cellSize / PRESENTATION_METRICS.geometry.centerDivisor
   }
 }

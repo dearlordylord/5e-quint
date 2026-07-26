@@ -34,7 +34,7 @@ function issueKey(issue: CreationBatchFillIssue): string {
 export function CharacterCreationPage() {
   const [draft, setDraft] = useState<CharacterDraft>(() => createCharacterDraft({}))
   const [sheets, setSheets] = useState<ReadonlyArray<CharacterSheet>>([])
-  const [selectedSheetId, setSelectedSheetId] = useState<string | null>(() => sheets[0]?.characterId ?? null)
+  const [selectedSheetId, setSelectedSheetId] = useState<string | null>(null)
   const [currentStep, setCurrentStep] = useState<StepId>("class")
   const [lastIssues, setLastIssues] = useState<ReadonlyArray<CreationBatchFillIssue>>([])
   const [lastSheetIssue, setLastSheetIssue] = useState<string | null>(null)

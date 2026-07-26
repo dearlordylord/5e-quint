@@ -16,20 +16,20 @@ export interface EventLogProps extends EventLogData {
 
 export function EventLog({ cursor, entries, onJumpTo }: EventLogProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
-  const rowRefs = useRef<Map<number, HTMLTableRowElement>>(new Map())
 
   useEffect(() => {
-    const row = rowRefs.current.get(cursor)
     const container = scrollRef.current
-    if (row === undefined || container === null) return
+    if (container === null) return
+    const row = container.querySelector<HTMLTableRowElement>(`[data-event-index="${cursor}"]`)
+    if (row === null || typeof container.scrollTo !== "function") return
     const rowTop = row.offsetTop
-    const rowHeight = row.offsetHeight
-    const containerHeight = container.clientHeight
-    const scrollTop = container.scrollTop
-    if (rowTop < scrollTop) {
-      container.scrollTop = rowTop
-    } else if (rowTop + rowHeight > scrollTop + containerHeight) {
-      container.scrollTop = rowTop + rowHeight - containerHeight
+    const rowBottom = rowTop + row.offsetHeight
+    const visibleTop = container.scrollTop
+    const visibleBottom = visibleTop + container.clientHeight
+    if (rowTop < visibleTop) {
+      container.scrollTo({ top: rowTop })
+    } else if (rowBottom > visibleBottom) {
+      container.scrollTo({ top: rowBottom - container.clientHeight })
     }
   }, [cursor])
 
@@ -52,10 +52,7 @@ export function EventLog({ cursor, entries, onJumpTo }: EventLogProps) {
               return (
                 <tr
                   key={index}
-                  ref={(element) => {
-                    if (element === null) rowRefs.current.delete(index)
-                    else rowRefs.current.set(index, element)
-                  }}
+                  data-event-index={index}
                   className={`cursor-pointer transition-colors hover:bg-amber-400/5 ${
                     isCurrent ? "bg-amber-400/10" : isFuture ? "opacity-35" : ""
                   }`}

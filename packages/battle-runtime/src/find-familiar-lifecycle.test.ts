@@ -805,16 +805,7 @@ function damageRollFill(
     holeId: hole.holeId,
     value: [
       {
-        // SRD familiar-form attacks such as Cat Scratch are authored as
-        // fixed 0d1+1 damage. The runtime still asks for the rolledDice hole
-        // for the fixed expression, but the shared fill type currently brands
-        // rolled dice groups as non-empty. There is no parser/generic helper
-        // for this zero-dice authored shape, so the test narrows exactly this
-        // empty dice group at the call boundary.
-        results: results as unknown as Extract<
-          BattleFill,
-          { readonly kind: "rolledDice" }
-        >["value"][number]["results"],
+        results,
       },
     ],
   };
@@ -2157,7 +2148,7 @@ describe("Find Familiar lifecycle", () => {
           sourceProcedureRef: cureWoundsAct.subject.procedureRef,
         },
       ],
-    } as unknown as Parameters<typeof resolveBattleSubject>[0]["fills"][number];
+    } satisfies Parameters<typeof resolveBattleSubject>[0]["fills"][number];
 
     const bypass = resolveBattleSubject({
       state: cast.state,

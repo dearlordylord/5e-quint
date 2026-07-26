@@ -1207,14 +1207,14 @@ test("rejects invalid Wild Shape equipment disposition choices and converts impo
       grip: "one_handed",
     },
   });
-  if (mainWeapon === undefined) {
+  if (mainWeapon?.kind !== "mainWeapon") {
     throw new Error("Expected main weapon candidate.");
   }
-  const practicalWornMainWeapon = {
+  const practicalWornMainWeapon: WildShapeEquipmentDispositionChoice = {
     item: mainWeapon,
     disposition: "worn",
     practicality: { kind: "practicalToWear" },
-  } as unknown as WildShapeEquipmentDispositionChoice;
+  };
   expect(
     validateWildShapeEquipmentDispositionFill({
       candidates: [mainWeapon],

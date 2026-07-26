@@ -967,13 +967,13 @@ function validateOwnerClaims(
     for (const actionName of claim.actionNames) {
       if (!claim.declaredActions.has(actionName)) {
         issues.push(
-          `${claim.ownerPath}:${claim.line} cites Unit identity replay action ${actionName} that is not declared in driverSchema.`,
+          `${claim.ownerPath}:${claim.line} cites Unit identity replay action ${actionName} that is not declared in a replay action map or driverSchema.`,
         );
       }
     }
     if (claim.declaredActions.size === 0) {
       issues.push(
-        `${claim.ownerPath}:${claim.line} cites Unit identity replay actions in a file with no driverSchema.`,
+        `${claim.ownerPath}:${claim.line} cites Unit identity replay actions in a file with no replay action map or driverSchema.`,
       );
     }
     if (

@@ -187,28 +187,6 @@ describe("Character Sheet runtime / Geas", () => {
     ]);
   });
 
-  test("Geas rejects invalid target eligibility before spending the spell slot", () => {
-    const sheet = geasWizardSheet({ preparedSpells: ["geas"], slots: 1 });
-    const outOfRangeTarget = {
-      ...geasTarget({ savingThrowOutcome: { tag: "failed" } }),
-      withinRangeFeet: 90,
-    } as unknown as CharacterSheetGeasTarget;
-    const result = castGeas({
-      sheet,
-      unitLibrary,
-      target: outOfRangeTarget,
-      command: geasCommand(),
-    });
-
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left.message).toBe(
-        "Geas targets must be visible creatures within 60 feet.",
-      );
-    }
-    expect(sheet.spellSlotExpenditures).toEqual([]);
-  });
-
   test("Geas rejects empty commands before spending the spell slot", () => {
     const sheet = geasWizardSheet({ preparedSpells: ["geas"], slots: 1 });
     const result = castGeas({

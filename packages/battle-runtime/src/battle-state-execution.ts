@@ -3673,10 +3673,16 @@ export type ReadiedSpellInvocation =
     >;
 
 type WeaponDamageDiceRollChoiceSelection = "first" | "second";
+type WeaponDamageDiceRollCandidate = RolledDiceGroup & {
+  readonly results: ReadonlyNonEmptyArray<DieRollResult>;
+};
 export type WeaponDamageDiceRollChoiceFill = {
   readonly procedureRef: BattleProcedureExecutionRef;
   readonly selection: WeaponDamageDiceRollChoiceSelection;
-  readonly candidates: readonly [RolledDiceGroup, RolledDiceGroup];
+  readonly candidates: readonly [
+    WeaponDamageDiceRollCandidate,
+    WeaponDamageDiceRollCandidate,
+  ];
 };
 export type WeaponDamageDiceRollChoiceUsage = {
   readonly attackerId: CombatantId;

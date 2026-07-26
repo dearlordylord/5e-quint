@@ -44,6 +44,7 @@ export function requireActionSpellAct(
       battleActSpellSlotPresentation(candidate)?.invocation.spellId === selectedSpellId &&
       Number(battleActSpellSlotPresentation(candidate)?.invocation.slotLevel) === slotLevel
   )
+  /* v8 ignore next -- defensive failure after fixture-authored spell selection */
   if (act === undefined) {
     throw new Error(`Expected ${selectedSpellId} action spell act.`)
   }
@@ -73,6 +74,7 @@ export function requireCounterspellChoice(
       )
     }
   )
+  /* v8 ignore next -- defensive failure after the pending interrupt narrows available choices */
   if (choice === undefined) {
     throw new Error("Expected Counterspell Reaction choice.")
   }
@@ -134,6 +136,7 @@ export function requireCounterspellProcedureRef(
         candidate.invocation.spell.id === spellId &&
         Number(candidate.invocation.resource.slotLevel) === slotLevel
     )
+  /* v8 ignore next -- defensive failure after fixture-authored spell presentation setup */
   if (source === undefined) {
     throw new Error("Expected Counterspell procedure presentation source.")
   }
@@ -264,6 +267,7 @@ export function requireNeedsReaction(
   message: string
 ): asserts result is Extract<BattleRuntimeResolutionResult, { readonly tag: "needsHoles" }> {
   requireNeedsHoles(result, message)
+  /* v8 ignore next -- callers establish the reaction trigger before using this assertion */
   if (result.snapshot.pendingInterrupt?.trigger !== "spellCast") {
     throw new Error(message)
   }
@@ -273,6 +277,7 @@ export function requireNeedsHoles(
   result: BattleRuntimeResolutionResult,
   message: string
 ): asserts result is Extract<BattleRuntimeResolutionResult, { readonly tag: "needsHoles" }> {
+  /* v8 ignore next -- assertion failure branch; normal result variants are tested at their producers */
   if (result.tag !== "needsHoles") {
     throw new Error(message)
   }
@@ -293,6 +298,7 @@ export function requireHole<K extends BattleHole["kind"]>(
   const hole = holes.find(
     (candidate): candidate is Extract<BattleHole, { readonly kind: K }> => candidate.kind === kind
   )
+  /* v8 ignore next -- fixture callers select hole kinds exposed by the immediately preceding result */
   if (hole === undefined) {
     throw new Error(`Expected ${kind} hole.`)
   }

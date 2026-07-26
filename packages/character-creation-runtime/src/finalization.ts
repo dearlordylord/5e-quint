@@ -146,6 +146,7 @@ import {
   speciesUnitIdsWithSupportedTraitChoices,
   supportsCharacterBuildResourceUnitId,
   unitRefsForSupportedSelectedUnitChoice,
+  type CharacterCreationSupportProfile,
 } from "./support-gates.ts";
 import {
   characterEquipmentItemId,
@@ -254,8 +255,11 @@ type HitPointMaximumDelta = Extract<
 export function finalizeCharacterDraft(input: {
   readonly draft: CharacterDraft;
   readonly unitLibrary: UnitCatalog;
+  readonly supportProfile?: CharacterCreationSupportProfile;
 }): CreationFinalizationResult {
-  const holes = discoverCreationHoles(input);
+  const supportProfile =
+    input.supportProfile ?? CHARACTER_CREATION_SUPPORT_PROFILE;
+  const holes = discoverCreationHoles({ ...input, supportProfile });
   const openHoles = nonEmptyReadonlyArray(
     unfilledFinalizationHoles(input.draft, holes),
   );
@@ -277,6 +281,7 @@ export function finalizeCharacterDraft(input: {
   const supportedSelections = executableSupportSelections(
     selections,
     input.unitLibrary,
+    supportProfile,
   );
   if (Either.isLeft(supportedSelections)) {
     return {
@@ -288,6 +293,7 @@ export function finalizeCharacterDraft(input: {
   const build = buildCharacterBuild({
     supportedSelections: supportedSelections.right,
     unitLibrary: input.unitLibrary,
+    supportProfile,
   });
   if (Either.isLeft(build)) {
     return {
@@ -376,6 +382,7 @@ export function finalizedSelections(
 export function executableSupportIssues(
   selections: FinalizedCharacterSelections,
   unitLibrary: UnitCatalog,
+  supportProfile: CharacterCreationSupportProfile = CHARACTER_CREATION_SUPPORT_PROFILE,
 ): readonly CreationFinalizationIssue[] {
   const dependencies = executableSupportDependencies(selections, unitLibrary);
 
@@ -387,7 +394,9 @@ export function executableSupportIssues(
     ...(Either.isRight(dependencies.background)
       ? [
           ...expectedValueIssue(
-            supportedBackgroundUnitIds().includes(selections.background),
+            supportedBackgroundUnitIds(supportProfile).includes(
+              selections.background,
+            ),
             { tag: "unsupportedBackground" },
           ),
           ...expectedValueIssue(
@@ -424,9 +433,10 @@ export function executableSupportIssues(
         ]
       : []),
     ...(dependencies.classFactsByUnitId.issues.length === 0
-      ? expectedValueIssue(isSupportedFinalizableProgression(selections), {
-          tag: "unsupportedProgression",
-        })
+      ? expectedValueIssue(
+          isSupportedFinalizableProgression(selections, supportProfile),
+          { tag: "unsupportedProgression" },
+        )
       : []),
     ...expectedValueIssue(
       isValidAbilityScoreAssignment(
@@ -437,15 +447,14 @@ export function executableSupportIssues(
     ),
     ...expectedValueIssue(
       sameOptionIdMultiset(selections.languages, [
-        ...CHARACTER_CREATION_SUPPORT_PROFILE.manifest.languages,
+        ...supportProfile.manifest.languages,
       ]),
       { tag: "manifestLanguagesMismatch" },
     ),
     ...expectedValueIssue(
       selections.alignment.morality ===
-        CHARACTER_CREATION_SUPPORT_PROFILE.manifest.alignment.morality &&
-        selections.alignment.order ===
-          CHARACTER_CREATION_SUPPORT_PROFILE.manifest.alignment.order,
+        supportProfile.manifest.alignment.morality &&
+        selections.alignment.order === supportProfile.manifest.alignment.order,
       { tag: "manifestAlignmentMismatch" },
     ),
     ...(Either.isRight(dependencies.background) &&
@@ -453,7 +462,7 @@ export function executableSupportIssues(
     dependencies.classFactsByUnitId.issues.length === 0 &&
     dependencies.selectedFeatUnits.issues.length === 0
       ? expectedValueIssue(
-          allFinalizedChoicesSupported(selections, unitLibrary),
+          allFinalizedChoicesSupported(selections, unitLibrary, supportProfile),
           { tag: "unsupportedChoices" },
         )
       : []),
@@ -489,9 +498,10 @@ export function executableSupportIssues(
     ...(dependencies.classFactsByUnitId.value.has(
       startingClassUnitId(selections.progression),
     )
-      ? expectedValueIssue(isSupportedEquipmentSelection(selections), {
-          tag: "unsupportedEquipmentSelection",
-        })
+      ? expectedValueIssue(
+          isSupportedEquipmentSelection(selections, supportProfile),
+          { tag: "unsupportedEquipmentSelection" },
+        )
       : []),
   ];
 }
@@ -749,12 +759,13 @@ type ExecutableSupportSelections = {
 function executableSupportSelections(
   selections: FinalizedCharacterSelections,
   unitLibrary: UnitCatalog,
+  supportProfile: CharacterCreationSupportProfile,
 ): Either.Either<
   ExecutableSupportSelections,
   NonEmptyReadonlyArray<CreationFinalizationIssue>
 > {
   const issues = nonEmptyReadonlyArray([
-    ...executableSupportIssues(selections, unitLibrary),
+    ...executableSupportIssues(selections, unitLibrary, supportProfile),
   ]);
   if (issues != null) {
     return Either.left(issues);
@@ -1377,8 +1388,9 @@ function surfaceReadIssueCauseMessage(
 
 export function isSupportedFinalizableProgression(
   selections: Pick<FinalizedCharacterSelections, "progression">,
+  supportProfile: CharacterCreationSupportProfile = CHARACTER_CREATION_SUPPORT_PROFILE,
 ): boolean {
-  return isSupportedProgression(selections.progression);
+  return isSupportedProgression(selections.progression, supportProfile);
 }
 
 export function isSupportedBackgroundAbilityScoreIncrease(
@@ -1488,6 +1500,7 @@ function fixedProficiencySubjects(
 export function buildCharacterBuild(input: {
   readonly supportedSelections: ExecutableSupportSelections;
   readonly unitLibrary: UnitCatalog;
+  readonly supportProfile: CharacterCreationSupportProfile;
 }): Either.Either<CharacterBuild, FinalizationIssues> {
   const { selections } = input.supportedSelections;
   const progression = input.supportedSelections.progression;
@@ -1599,6 +1612,7 @@ export function buildCharacterBuild(input: {
     selections,
     input.supportedSelections.loadoutChoices,
     input.unitLibrary,
+    input.supportProfile,
   );
   if (Either.isLeft(buildEquipment)) {
     return Either.left(buildEquipment.left);
@@ -2220,11 +2234,12 @@ function classFeatureLanguageChoiceOptions(
 export function characterBuildResources(
   build: Pick<CharacterBuild, "progression" | "features">,
   unitLibrary: UnitCatalog,
+  supportProfile: CharacterCreationSupportProfile = CHARACTER_CREATION_SUPPORT_PROFILE,
 ): readonly CharacterBuildResource[] {
   return characterBuildFeatureUnitIds(build, unitLibrary).flatMap((unitId) => {
     const unit = unitLibrary.getUnit(unitId);
     return Option.isSome(unit)
-      ? characterBuildResourcesForUnit(unit.value)
+      ? characterBuildResourcesForUnit(unit.value, supportProfile)
       : [];
   });
 }
@@ -2238,6 +2253,7 @@ export function characterBuildSpellcastingSlotCapacity(
 export function allFinalizedChoicesSupported(
   selections: FinalizedCharacterSelections,
   unitLibrary: UnitCatalog,
+  supportProfile: CharacterCreationSupportProfile = CHARACTER_CREATION_SUPPORT_PROFILE,
 ): boolean {
   const selectedClassUnitId = startingClassUnitId(selections.progression);
   const classUnit = unitLibrary.getUnit(selectedClassUnitId);
@@ -2279,6 +2295,7 @@ export function allFinalizedChoicesSupported(
     unitLibrary,
     classEquipmentHole,
     backgroundEquipmentHole,
+    supportProfile,
   });
   const supportedUnitHolesBySource = supportedChoiceHolesBySource(
     supportedHoles.flatMap((hole) =>
@@ -2314,7 +2331,7 @@ export function allFinalizedChoicesSupported(
       );
       if (
         supportedHole == null ||
-        !choiceSelectionMatchesHole(choice, supportedHole)
+        !choiceSelectionMatchesHole(choice, supportedHole, supportProfile)
       ) {
         return false;
       }
@@ -2325,6 +2342,7 @@ export function allFinalizedChoicesSupported(
           selectedClassUnitId,
           CLASS_EQUIPMENT_CHOICE_KEY,
           classFacts.value.startingEquipment,
+          supportProfile,
         );
       }
 
@@ -2336,6 +2354,7 @@ export function allFinalizedChoicesSupported(
           selections.background,
           BACKGROUND_EQUIPMENT_CHOICE_KEY,
           backgroundFacts.value.startingEquipment,
+          supportProfile,
         );
       }
 
@@ -2350,7 +2369,7 @@ export function allFinalizedChoicesSupported(
       );
       return (
         supportedHole != null &&
-        choiceSelectionMatchesHole(choice, supportedHole)
+        choiceSelectionMatchesHole(choice, supportedHole, supportProfile)
       );
     })
   );
@@ -2443,6 +2462,7 @@ type SupportedFinalizationChoiceHoleInput = {
   readonly unitLibrary: UnitCatalog;
   readonly classEquipmentHole: UnitChoiceCreationHole;
   readonly backgroundEquipmentHole: UnitChoiceCreationHole;
+  readonly supportProfile: CharacterCreationSupportProfile;
 };
 
 function supportedFinalizationChoiceHoles(
@@ -2647,7 +2667,7 @@ function supportedFinalizationChoiceHoles(
         ])),
     input.classEquipmentHole,
     input.backgroundEquipmentHole,
-    ...supportedLoadoutChoices().flatMap((loadoutChoice) =>
+    ...supportedLoadoutChoices(input.supportProfile).flatMap((loadoutChoice) =>
       selectedEquipment.has(loadoutChoice.unitId)
         ? compact([
             requireLoadoutCreationHole(
@@ -2981,6 +3001,7 @@ function supportedStartingEquipmentCoinGrantChoice(
     | typeof CLASS_EQUIPMENT_CHOICE_KEY
     | typeof BACKGROUND_EQUIPMENT_CHOICE_KEY,
   choices: readonly StartingEquipmentChoice[],
+  supportProfile: CharacterCreationSupportProfile,
 ): boolean {
   if (
     selection.source.unitId !== unitId ||
@@ -2996,7 +3017,7 @@ function supportedStartingEquipmentCoinGrantChoice(
   if (hole === undefined) {
     return false;
   }
-  if (!choiceSelectionMatchesHole(selection, hole)) {
+  if (!choiceSelectionMatchesHole(selection, hole, supportProfile)) {
     return false;
   }
 
@@ -3009,9 +3030,11 @@ function supportedStartingEquipmentCoinGrantChoice(
 
 export function isSupportedEquipmentSelection(
   selections: FinalizedCharacterSelections,
+  supportProfile: CharacterCreationSupportProfile = CHARACTER_CREATION_SUPPORT_PROFILE,
 ): boolean {
   const supportedUnitIds = supportedPurchasableEquipmentUnitIdsForClass(
     startingClassUnitId(selections.progression),
+    supportProfile,
   );
   return selections.equipment.selectedUnitIds.every((unitId) =>
     (supportedUnitIds as readonly string[]).includes(unitId),
@@ -3331,6 +3354,7 @@ export function finalizedBuildEquipment(
     selections,
     loadoutChoiceSelections(selections),
     unitLibrary,
+    CHARACTER_CREATION_SUPPORT_PROFILE,
   );
 }
 
@@ -3338,10 +3362,14 @@ function finalizedBuildEquipmentForSupportedLoadoutChoices(
   selections: FinalizedCharacterSelections,
   loadoutChoices: readonly LoadoutChoiceSelection[],
   unitLibrary: UnitCatalog,
+  supportProfile: CharacterCreationSupportProfile,
 ): Either.Either<CharacterBuildEquipment, ProjectionIssues> {
   const loadout = loadoutChoices.reduce<CharacterBuildLoadout>(
     (equipment, selection) => {
-      const loadoutChoice = supportedLoadoutChoiceForSource(selection.source);
+      const loadoutChoice = supportedLoadoutChoiceForSource(
+        selection.source,
+        supportProfile,
+      );
       const selectedUnitId = selectedUnitIdForLoadoutChoice(
         selection,
         loadoutChoice,
@@ -4449,10 +4477,11 @@ function isMulticlassProficiencyChoiceKey(choiceKey: UnitChoiceKey): boolean {
 
 function characterBuildResourcesForUnit(
   unit: UnitRecord,
+  supportProfile: CharacterCreationSupportProfile,
 ): readonly CharacterBuildResource[] {
   if (
     unit.kind === "class_feature" &&
-    supportsCharacterBuildResourceUnitId(unit.id) &&
+    supportsCharacterBuildResourceUnitId(unit.id, supportProfile) &&
     (unit.mechanics.family === "activation" ||
       unit.mechanics.family === "resource_container" ||
       unit.mechanics.family === "resource_pool") &&

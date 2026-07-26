@@ -29,7 +29,10 @@ import {
   spellAct,
   spellHoleInvocation,
 } from "./unit-profile-admission-spell-fill-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+import {
+  decodeSpellRecordForTest,
+  spellRecord,
+} from "./unit-profile-admission-spell-record-support.ts";
 import {
   battleId,
   breakBattleConcentration,
@@ -753,8 +756,8 @@ function gustOfWindWithLineHoleId(
           },
         } as typeof operation)
       : operation;
-  }) as unknown as typeof base.mechanics.operations;
-  return {
+  });
+  return decodeSpellRecordForTest({
     ...base,
     mechanics: {
       ...base.mechanics,
@@ -765,7 +768,7 @@ function gustOfWindWithLineHoleId(
       },
       operations,
     },
-  } as ReturnType<typeof spellRecord>;
+  });
 }
 
 function withGreaseGroundHazard(state: BattleState): BattleState {

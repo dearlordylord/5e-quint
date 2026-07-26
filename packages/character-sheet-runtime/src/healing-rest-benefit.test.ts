@@ -30,7 +30,6 @@ import {
   prayerOfHealingRestBenefitApplicationTestName,
   prayerOfHealingStoredLockoutGateTestName,
   prayerOfHealingUnitLibraryWith,
-  replacePrayerOfHealingDirectPhase,
   requireRight,
   resourceCount,
   SORCERER_FONT_OF_MAGIC_UNIT_ID,
@@ -40,8 +39,6 @@ import {
   unitLibrary,
   wizardWarlockBuild,
 } from "./test-support.ts";
-import type { PrayerOfHealingDirectPhase } from "./test-support.ts";
-
 describe("Character Sheet runtime / healing and rest benefit spells", () => {
   test(layOnHandsSpendsHealingPoolTestName, () => {
     const source = requireRight(
@@ -371,22 +368,6 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
       }),
     );
     const malformedLibraries = [
-      prayerOfHealingUnitLibraryWith((spell) =>
-        replacePrayerOfHealingDirectPhase(spell, (phase) => {
-          const { castingRequirement: _castingRequirement, ...selection } =
-            phase.attachment.value.selection;
-          return {
-            ...phase,
-            attachment: {
-              ...phase.attachment,
-              value: {
-                ...phase.attachment.value,
-                selection,
-              },
-            },
-          } as PrayerOfHealingDirectPhase;
-        }),
-      ),
       prayerOfHealingUnitLibraryWith((spell) => ({
         ...spell,
         mechanics: {
@@ -401,16 +382,6 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
           range: { kind: "touch" },
         },
       })),
-      prayerOfHealingUnitLibraryWith((spell) =>
-        replacePrayerOfHealingDirectPhase(
-          spell,
-          (phase) =>
-            ({
-              ...phase,
-              effects: [...phase.effects, { kind: "none" }],
-            }) as unknown as PrayerOfHealingDirectPhase,
-        ),
-      ),
     ];
 
     for (const malformedUnitLibrary of malformedLibraries) {

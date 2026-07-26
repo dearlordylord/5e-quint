@@ -134,7 +134,7 @@ const selectedUnitIdentityReplays = [
   },
 ] as const satisfies ReadonlyArray<SelectedUnitIdentityReplay>;
 
-const mindSpikeDiscoveries = {
+const mindSpikeSelectedIdentityActions = {
   doResolveMindSpikeFailedSaveConcentrationDuration:
     resolveMindSpikeFailedSaveConcentrationDuration,
   doResolveMindSpikeSuccessfulSaveHalfDamage:
@@ -154,7 +154,7 @@ describe("Mind Spike selected identity replay", () => {
           sequence.actions,
         );
         expect(
-          mindSpikeDiscoveries[actionName](),
+          mindSpikeSelectedIdentityActions[actionName](),
           `${replay.unitId}:${sequence.name}`,
         ).toEqual(sequence.expected);
       }

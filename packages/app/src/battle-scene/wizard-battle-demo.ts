@@ -61,8 +61,27 @@ const wizardProficiencyBonus = 3
 const fireballAreaRadiusFeet = 20
 const shatterAreaRadiusFeet = 10
 const deathSaveSuccessThreshold = 10
-const fireballDamageRollResults = [4, 4, 4, 4, 3, 3, 3, 3] as const
-const shatterDamageRollResults = [5, 5, 4] as const
+const scriptedDamageDie = {
+  fireballHigh: 4,
+  fireballLow: 3,
+  shatterHigh: 5,
+  shatterLow: 4
+} as const
+const fireballDamageRollResults = [
+  scriptedDamageDie.fireballHigh,
+  scriptedDamageDie.fireballHigh,
+  scriptedDamageDie.fireballHigh,
+  scriptedDamageDie.fireballHigh,
+  scriptedDamageDie.fireballLow,
+  scriptedDamageDie.fireballLow,
+  scriptedDamageDie.fireballLow,
+  scriptedDamageDie.fireballLow
+] as const
+const shatterDamageRollResults = [
+  scriptedDamageDie.shatterHigh,
+  scriptedDamageDie.shatterHigh,
+  scriptedDamageDie.shatterLow
+] as const
 const laserWizardId = combatantId("A")
 const forestWizardId = combatantId("B")
 const bufoId = combatantId("C")
@@ -202,11 +221,18 @@ type AreaSpellPlan = {
 }
 
 type WizardBattleDemoBuilder = {
-  session: BattleRuntimeSession
-  startedTurnActorId: CombatantId | undefined
-  readonly steps: Array<WizardBattleDemoStep>
-  readonly objectIgnitions: Array<BattleObjectIgnitionOutcome>
+  readonly session: BattleRuntimeSession
+  readonly startedTurnActorId: CombatantId | undefined
+  readonly steps: ReadonlyArray<WizardBattleDemoStep>
+  readonly objectIgnitions: ReadonlyArray<BattleObjectIgnitionOutcome>
 }
+
+type WizardBattleDemoTransition<T> = {
+  readonly builder: WizardBattleDemoBuilder
+  readonly value: T
+}
+
+type WizardBattleDemoOperation = (builder: WizardBattleDemoBuilder) => WizardBattleDemoBuilder
 
 const WIZARD_BATTLE_DEMO_COMBATANTS = [
   {
@@ -373,6 +399,7 @@ function nameOf(combatantId: CombatantId): string {
 
 function requireUnitCatalog() {
   const result = buildUnitCatalog({ collections: [srdUnitCollection] })
+  /* v8 ignore next -- the checked-in SRD collection is validated by the catalog tests */
   if (result.tag !== "ok") {
     throw new Error("Wizard battle demo SRD Unit catalog is invalid.")
   }
@@ -381,6 +408,7 @@ function requireUnitCatalog() {
 
 function requireSpellRecord(unitId: string): SpellRecord {
   const unit = unitCatalog.requireUnit(unitId)
+  /* v8 ignore next -- these ids are selected from the fixture's typed spell constants */
   if (unit.kind !== "spell") {
     throw new Error(`Wizard battle demo Unit is not a spell: ${unitId}`)
   }
@@ -396,84 +424,108 @@ function requireWizardBattleDemo(): WizardBattleDemo {
     [fireballUnitId]: fireball,
     [shatterUnitId]: shatter
   })
-  const builder: WizardBattleDemoBuilder = {
+  const initialBuilder: WizardBattleDemoBuilder = {
     session: initialSession,
     startedTurnActorId: undefined,
     steps: [],
     objectIgnitions: []
   }
-
-  pushStep(builder, {
-    title: "Battle joined",
-    detail: "Six wizards hold formation across the chamber.",
-    cue: {}
-  })
-
-  castAreaSpell(builder, openingFireballPlan())
-  passCurrentTurn(builder, laserWizardId, "Laser Wizard ends the opening turn.")
-  castAreaSpell(builder, mudScampFireballPlan())
-  passCurrentTurn(builder, mudScampId, "Mud Scamp ends the answering turn.")
-  passCurrentTurn(builder, forestWizardId, "Forest Wizard keeps position after the first exchange.")
-  castAreaSpell(builder, grayElfFirstShatterPlan())
-  passCurrentTurn(builder, grayElfId, "Gray Elf leaves the blue line ringing.")
-  passCurrentTurn(builder, bufoId, "Bufo holds the last blue reaction for the next Fireball.")
-  passCurrentTurn(builder, ritualWizardId, "Ritual Wizard waits behind the red line.")
-
-  castAreaSpell(builder, secondLaserFireballPlan())
-  passCurrentTurn(builder, laserWizardId, "Laser Wizard's second Fireball drops Mud Scamp and Ritual Wizard.", {
-    roll: 5,
-    targetId: mudScampId
-  })
-  passCurrentTurn(builder, mudScampId, "Mud Scamp is dying and cannot act.")
-  passCurrentTurn(builder, forestWizardId, "Forest Wizard is battered but still on his feet.")
-  castAreaSpell(builder, grayElfSecondShatterPlan())
-  passCurrentTurn(builder, grayElfId, "Gray Elf's second Shatter knocks Forest Wizard out.")
-  castAreaSpell(builder, bufoFireballPlan())
-  passCurrentTurn(builder, bufoId, "Bufo ends the last damaging turn.", {
-    roll: 5,
-    targetId: ritualWizardId
-  })
-  passCurrentTurn(builder, ritualWizardId, "Ritual Wizard is dying and cannot act.")
-
-  passCurrentTurn(builder, laserWizardId, "Laser Wizard survives at the edge of the blast pattern.", {
-    roll: 4,
-    targetId: mudScampId
-  })
-  passCurrentTurn(builder, mudScampId, "Mud Scamp is dead.", { roll: 12, targetId: forestWizardId })
-  passCurrentTurn(builder, forestWizardId, "Forest Wizard clings to life.", { roll: 8, targetId: grayElfId })
-  passCurrentTurn(builder, grayElfId, "Gray Elf starts making death saving throws.")
-  passCurrentTurn(builder, bufoId, "Bufo keeps the field while the others bleed out.", {
-    roll: 14,
-    targetId: ritualWizardId
-  })
-  passCurrentTurn(builder, ritualWizardId, "Ritual Wizard has two failures and one success.")
-
-  passCurrentTurn(builder, laserWizardId, "Laser Wizard passes again.")
-  passCurrentTurn(builder, mudScampId, "Mud Scamp remains dead.", { roll: 1, targetId: forestWizardId })
-  passCurrentTurn(builder, forestWizardId, "Forest Wizard rolls a natural 1 and takes two failures.", {
-    roll: 15,
-    targetId: grayElfId
-  })
-  passCurrentTurn(builder, grayElfId, "Gray Elf balances a success against a failure.")
-  passCurrentTurn(builder, bufoId, "Bufo lets the round advance.", { roll: 11, targetId: ritualWizardId })
-  passCurrentTurn(builder, ritualWizardId, "Ritual Wizard is one success away from stability.")
-
-  passCurrentTurn(builder, laserWizardId, "Laser Wizard passes while the field collapses.")
-  passCurrentTurn(builder, mudScampId, "Mud Scamp remains dead.", { roll: 3, targetId: forestWizardId })
-  passCurrentTurn(builder, forestWizardId, "Forest Wizard dies on his third failed death saving throw.", {
-    roll: 14,
-    targetId: grayElfId
-  })
-  passCurrentTurn(builder, grayElfId, "Gray Elf reaches two death save successes.")
-  passCurrentTurn(builder, bufoId, "Bufo watches Ritual Wizard's last death save.", {
-    roll: 15,
-    targetId: ritualWizardId
-  })
-  passCurrentTurn(builder, ritualWizardId, "Ritual Wizard becomes stable.")
-
-  passCurrentTurn(builder, laserWizardId, "Laser Wizard passes the final active turn.")
-  passCurrentTurn(builder, mudScampId, "Mud Scamp remains dead.")
-  passCurrentTurn(builder, forestWizardId, "Forest Wizard remains dead.", { roll: 12, targetId: grayElfId })
+  const operations: ReadonlyArray<WizardBattleDemoOperation> = [
+    (builder) =>
+      pushStep(builder, {
+        title: "Battle joined",
+        detail: "Six wizards hold formation across the chamber.",
+        cue: {}
+      }),
+    (builder) => castAreaSpell(builder, openingFireballPlan()),
+    (builder) => passCurrentTurn(builder, laserWizardId, "Laser Wizard ends the opening turn."),
+    (builder) => castAreaSpell(builder, mudScampFireballPlan()),
+    (builder) => passCurrentTurn(builder, mudScampId, "Mud Scamp ends the answering turn."),
+    (builder) => passCurrentTurn(builder, forestWizardId, "Forest Wizard keeps position after the first exchange."),
+    (builder) => castAreaSpell(builder, grayElfFirstShatterPlan()),
+    (builder) => passCurrentTurn(builder, grayElfId, "Gray Elf leaves the blue line ringing."),
+    (builder) => passCurrentTurn(builder, bufoId, "Bufo holds the last blue reaction for the next Fireball."),
+    (builder) => passCurrentTurn(builder, ritualWizardId, "Ritual Wizard waits behind the red line."),
+    (builder) => castAreaSpell(builder, secondLaserFireballPlan()),
+    (builder) =>
+      passCurrentTurn(builder, laserWizardId, "Laser Wizard's second Fireball drops Mud Scamp and Ritual Wizard.", {
+        roll: 5,
+        targetId: mudScampId
+      }),
+    (builder) => passCurrentTurn(builder, mudScampId, "Mud Scamp is dying and cannot act."),
+    (builder) => passCurrentTurn(builder, forestWizardId, "Forest Wizard is battered but still on his feet."),
+    (builder) => castAreaSpell(builder, grayElfSecondShatterPlan()),
+    (builder) => passCurrentTurn(builder, grayElfId, "Gray Elf's second Shatter knocks Forest Wizard out."),
+    (builder) => castAreaSpell(builder, bufoFireballPlan()),
+    (builder) =>
+      passCurrentTurn(builder, bufoId, "Bufo ends the last damaging turn.", {
+        roll: 5,
+        targetId: ritualWizardId
+      }),
+    (builder) => passCurrentTurn(builder, ritualWizardId, "Ritual Wizard is dying and cannot act."),
+    (builder) =>
+      passCurrentTurn(builder, laserWizardId, "Laser Wizard survives at the edge of the blast pattern.", {
+        roll: 4,
+        targetId: mudScampId
+      }),
+    (builder) => passCurrentTurn(builder, mudScampId, "Mud Scamp is dead.", { roll: 12, targetId: forestWizardId }),
+    (builder) =>
+      passCurrentTurn(builder, forestWizardId, "Forest Wizard clings to life.", {
+        roll: 8,
+        targetId: grayElfId
+      }),
+    (builder) => passCurrentTurn(builder, grayElfId, "Gray Elf starts making death saving throws."),
+    (builder) =>
+      passCurrentTurn(builder, bufoId, "Bufo keeps the field while the others bleed out.", {
+        roll: 14,
+        targetId: ritualWizardId
+      }),
+    (builder) => passCurrentTurn(builder, ritualWizardId, "Ritual Wizard has two failures and one success."),
+    (builder) => passCurrentTurn(builder, laserWizardId, "Laser Wizard passes again."),
+    (builder) =>
+      passCurrentTurn(builder, mudScampId, "Mud Scamp remains dead.", {
+        roll: 1,
+        targetId: forestWizardId
+      }),
+    (builder) =>
+      passCurrentTurn(builder, forestWizardId, "Forest Wizard rolls a natural 1 and takes two failures.", {
+        roll: 15,
+        targetId: grayElfId
+      }),
+    (builder) => passCurrentTurn(builder, grayElfId, "Gray Elf balances a success against a failure."),
+    (builder) =>
+      passCurrentTurn(builder, bufoId, "Bufo lets the round advance.", {
+        roll: 11,
+        targetId: ritualWizardId
+      }),
+    (builder) => passCurrentTurn(builder, ritualWizardId, "Ritual Wizard is one success away from stability."),
+    (builder) => passCurrentTurn(builder, laserWizardId, "Laser Wizard passes while the field collapses."),
+    (builder) =>
+      passCurrentTurn(builder, mudScampId, "Mud Scamp remains dead.", {
+        roll: 3,
+        targetId: forestWizardId
+      }),
+    (builder) =>
+      passCurrentTurn(builder, forestWizardId, "Forest Wizard dies on his third failed death saving throw.", {
+        roll: 14,
+        targetId: grayElfId
+      }),
+    (builder) => passCurrentTurn(builder, grayElfId, "Gray Elf reaches two death save successes."),
+    (builder) =>
+      passCurrentTurn(builder, bufoId, "Bufo watches Ritual Wizard's last death save.", {
+        roll: 15,
+        targetId: ritualWizardId
+      }),
+    (builder) => passCurrentTurn(builder, ritualWizardId, "Ritual Wizard becomes stable."),
+    (builder) => passCurrentTurn(builder, laserWizardId, "Laser Wizard passes the final active turn."),
+    (builder) => passCurrentTurn(builder, mudScampId, "Mud Scamp remains dead."),
+    (builder) =>
+      passCurrentTurn(builder, forestWizardId, "Forest Wizard remains dead.", {
+        roll: 12,
+        targetId: grayElfId
+      })
+  ]
+  const builder = operations.reduce((state, operation) => operation(state), initialBuilder)
 
   return {
     steps: requireNonEmptySteps(builder.steps),
@@ -602,35 +654,37 @@ function shatterPlan(
   }
 }
 
-function castAreaSpell(builder: WizardBattleDemoBuilder, plan: AreaSpellPlan): void {
-  ensureTurnStarted(builder, plan.casterId)
-  requireCurrentActor(builder.session.state, plan.casterId)
-  const act = requireActionSpellAct(builder.session, plan.spell.id, plan.spell.slotLevel)
-  pushStep(builder, {
+function castAreaSpell(builder: WizardBattleDemoBuilder, plan: AreaSpellPlan): WizardBattleDemoBuilder {
+  let nextBuilder = ensureTurnStarted(builder, plan.casterId)
+  requireCurrentActor(nextBuilder.session.state, plan.casterId)
+  const act = requireActionSpellAct(nextBuilder.session, plan.spell.id, plan.spell.slotLevel)
+  nextBuilder = pushStep(nextBuilder, {
     title: plan.title,
     detail: plan.detail,
     cue: { spell: spellCue(plan) }
   })
-  pushStep(builder, {
+  nextBuilder = pushStep(nextBuilder, {
     title: "Reaction facts",
     detail: counterspellFactsDetail(plan),
     cue: { spell: spellCue(plan) }
   })
 
   const pending = resolveBattleRuntimeSubject({
-    session: builder.session,
+    session: nextBuilder.session,
     subject: act.subject,
-    fills: [spellCastReactionFactsFill(counterspellFactsForPlan(builder.session.context, plan))]
+    fills: [spellCastReactionFactsFill(counterspellFactsForPlan(nextBuilder.session.context, plan))]
   })
-  const spellReady = resolveSpellCastWindows(builder, plan, pending)
+  const spellWindow = resolveSpellCastWindows(nextBuilder, plan, pending)
+  nextBuilder = spellWindow.builder
+  const spellReady = spellWindow.value
 
-  pushStep(builder, {
+  nextBuilder = pushStep(nextBuilder, {
     title: "Area selected",
     detail: `${plan.spell.name} catches ${plan.outcomes.map((outcome) => nameOf(outcome.targetId)).join(", ")}.`,
     session: spellReady.session,
     cue: { spell: spellCue(plan) }
   })
-  pushStep(builder, {
+  nextBuilder = pushStep(nextBuilder, {
     title: `${plan.spell.name} saves`,
     detail: `${plan.spell.name} asks the table for affected creatures and Saving Throw outcomes.`,
     session: spellReady.session,
@@ -638,7 +692,7 @@ function castAreaSpell(builder: WizardBattleDemoBuilder, plan: AreaSpellPlan): v
   })
 
   for (const outcome of plan.outcomes) {
-    pushStep(builder, {
+    nextBuilder = pushStep(nextBuilder, {
       title: "Saving throw",
       detail: outcome.detail,
       session: spellReady.session,
@@ -665,7 +719,7 @@ function castAreaSpell(builder: WizardBattleDemoBuilder, plan: AreaSpellPlan): v
     }),
     "rolledDice"
   )
-  pushStep(builder, {
+  nextBuilder = pushStep(nextBuilder, {
     title: "Damage roll",
     detail: `${plan.spell.name} rolls ${plan.spell.damageRollResults.join(" + ")}.`,
     session: spellReady.session,
@@ -677,13 +731,17 @@ function castAreaSpell(builder: WizardBattleDemoBuilder, plan: AreaSpellPlan): v
     subject: spellReady.subject,
     fills: [saveFill, damageRollFillWithGroups(damageRoll, [plan.spell.damageRollResults])]
   })
+  /* v8 ignore next -- the fixture supplies every hole exposed by the preceding resolution */
   if (resolved.tag !== "resolved") {
     throw new Error(`Expected ${plan.spell.name} to resolve, got ${resolved.tag}.`)
   }
-  builder.session = resolved.session
-  builder.objectIgnitions.push(...(resolved.objectIgnitions ?? []))
+  nextBuilder = {
+    ...nextBuilder,
+    session: resolved.session,
+    objectIgnitions: [...nextBuilder.objectIgnitions, ...(resolved.objectIgnitions ?? [])]
+  }
 
-  pushStep(builder, {
+  return pushStep(nextBuilder, {
     title: "Damage",
     detail: damageSummary(plan),
     cue: {
@@ -703,7 +761,7 @@ function resolveSpellCastWindows(
   builder: WizardBattleDemoBuilder,
   plan: AreaSpellPlan,
   result: BattleRuntimeResolutionResult
-): Extract<BattleRuntimeResolutionResult, { readonly tag: "needsHoles" }> {
+): WizardBattleDemoTransition<Extract<BattleRuntimeResolutionResult, { readonly tag: "needsHoles" }>> {
   if (plan.reaction.kind === "counterspellChain") {
     return resolveCounterspellChain(builder, plan, result, plan.reaction.chain)
   }
@@ -713,7 +771,7 @@ function resolveSpellCastWindows(
   const noReaction: Extract<SpellCastReactionPlan, { readonly kind: "none" }> = plan.reaction
   void noReaction
   requireNeedsHoles(result, `Expected ${plan.spell.name} holes.`)
-  return result
+  return { builder, value: result }
 }
 
 function resolveCounterspellChain(
@@ -721,11 +779,12 @@ function resolveCounterspellChain(
   plan: AreaSpellPlan,
   result: BattleRuntimeResolutionResult,
   chain: ReadonlyNonEmptyArray<CounterspellChainLink>
-): Extract<BattleRuntimeResolutionResult, { readonly tag: "needsHoles" }> {
+): WizardBattleDemoTransition<Extract<BattleRuntimeResolutionResult, { readonly tag: "needsHoles" }>> {
   requireNeedsReaction(result, `Expected ${plan.spell.name} Counterspell window.`)
+  let nextBuilder = builder
   let pendingInterrupt = result
   for (const [index, link] of chain.entries()) {
-    pushStep(builder, {
+    nextBuilder = pushStep(nextBuilder, {
       title: "Counterspell window",
       detail: link.waitingDetail,
       session: pendingInterrupt.session,
@@ -767,13 +826,14 @@ function resolveCounterspellChain(
 
     if (nextLink === undefined) {
       requireNeedsHoles(reactionResult, `Expected ${plan.spell.name} to resume after Counterspell chain.`)
-      pushCounterspellCastStep(builder, link, reactionResult)
-      return reactionResult
+      nextBuilder = pushCounterspellCastStep(nextBuilder, link, reactionResult)
+      return { builder: nextBuilder, value: reactionResult }
     }
     requireNeedsReaction(reactionResult, `Expected ${nameOf(nextLink.reactorId)} Counterspell window.`)
-    pushCounterspellCastStep(builder, link, reactionResult)
+    nextBuilder = pushCounterspellCastStep(nextBuilder, link, reactionResult)
     pendingInterrupt = reactionResult
   }
+  /* v8 ignore next -- every finite fixture chain returns from the loop's terminal link */
   throw new Error(`Expected ${plan.spell.name} Counterspell chain to resume.`)
 }
 
@@ -781,8 +841,8 @@ function pushCounterspellCastStep(
   builder: WizardBattleDemoBuilder,
   link: CounterspellChainLink,
   result: Extract<BattleRuntimeResolutionResult, { readonly tag: "needsHoles" }>
-): void {
-  pushStep(builder, {
+): WizardBattleDemoBuilder {
+  return pushStep(builder, {
     title: "Counterspell",
     detail: link.castDetail,
     session: result.session,
@@ -799,14 +859,14 @@ function resolveDeclinedCounterspell(
   plan: AreaSpellPlan,
   result: BattleRuntimeResolutionResult,
   decline: Extract<SpellCastReactionPlan, { readonly kind: "declinedCounterspell" }>
-): Extract<BattleRuntimeResolutionResult, { readonly tag: "needsHoles" }> {
+): WizardBattleDemoTransition<Extract<BattleRuntimeResolutionResult, { readonly tag: "needsHoles" }>> {
   requireNeedsReaction(result, `Expected ${nameOf(decline.reactorId)} Counterspell window.`)
   requireCounterspellChoice(result, {
     reactorId: decline.reactorId,
     slotLevel: counterspellSlotLevel,
     spellId: counterspellUnitId
   })
-  pushStep(builder, {
+  const waitingBuilder = pushStep(builder, {
     title: "Counterspell window",
     detail: decline.detail,
     session: result.session,
@@ -828,7 +888,7 @@ function resolveDeclinedCounterspell(
     )
   })
   requireNeedsHoles(declined, `Expected ${plan.spell.name} to continue after declined Counterspell.`)
-  pushStep(builder, {
+  const declinedBuilder = pushStep(waitingBuilder, {
     title: "Counterspell declined",
     detail: `${nameOf(decline.reactorId)} declines the reaction.`,
     session: declined.session,
@@ -837,7 +897,7 @@ function resolveDeclinedCounterspell(
       labels: [{ combatantId: decline.reactorId, text: "Decline", tone: "positive" }]
     }
   })
-  return declined
+  return { builder: declinedBuilder, value: declined }
 }
 
 function passCurrentTurn(
@@ -845,25 +905,29 @@ function passCurrentTurn(
   actorId: CombatantId,
   detail: string,
   deathSave?: { readonly roll: number; readonly targetId: CombatantId }
-): void {
-  ensureTurnStarted(builder, actorId)
-  requireCurrentActor(builder.session.state, actorId)
-  pushStep(builder, {
+): WizardBattleDemoBuilder {
+  let nextBuilder = ensureTurnStarted(builder, actorId)
+  requireCurrentActor(nextBuilder.session.state, actorId)
+  nextBuilder = pushStep(nextBuilder, {
     title: "Turn passes",
     detail,
     cue: {}
   })
-  const result = endBattleRuntimeTurn({ session: builder.session, actorId })
+  const result = endBattleRuntimeTurn({ session: nextBuilder.session, actorId })
   if (result.tag === "resolved") {
+    /* v8 ignore next -- a scripted death save is supplied only for turns that expose its hole */
     if (deathSave !== undefined) {
       throw new Error(`Did not receive expected Death Saving Throw for ${nameOf(deathSave.targetId)}.`)
     }
-    builder.session = result.session
-    builder.startedTurnActorId = undefined
-    return
+    return {
+      ...nextBuilder,
+      session: result.session,
+      startedTurnActorId: undefined
+    }
   }
   requireNeedsHoles(result, "Expected End Turn to resolve or ask for a Death Saving Throw.")
   const deathSavingThrow = requireHole(result.holes, "deathSavingThrow")
+  /* v8 ignore next -- scripted death-save identity follows the immediately exposed typed hole */
   if (deathSave === undefined || deathSavingThrow.combatantId !== deathSave.targetId) {
     throw new Error("Unexpected Death Saving Throw hole while advancing the wizard battle demo.")
   }
@@ -872,13 +936,19 @@ function passCurrentTurn(
     subject: result.subject,
     fills: [deathSavingThrowFill(deathSavingThrow, deathSave.roll)]
   })
+  /* v8 ignore next -- the immediately exposed death-save hole is filled above */
   if (resolved.tag !== "resolved") {
     throw new Error(`Expected Death Saving Throw to resolve, got ${resolved.tag}.`)
   }
-  builder.session = resolved.session
-  builder.startedTurnActorId = undefined
-  ensureTurnStarted(builder, deathSave.targetId)
-  pushStep(builder, {
+  nextBuilder = ensureTurnStarted(
+    {
+      ...nextBuilder,
+      session: resolved.session,
+      startedTurnActorId: undefined
+    },
+    deathSave.targetId
+  )
+  return pushStep(nextBuilder, {
     title: "Death save",
     detail: `${nameOf(deathSave.targetId)} rolls ${deathSave.roll}: ${deathSaveText(deathSave.roll)}.`,
     cue: {
@@ -893,29 +963,30 @@ function passCurrentTurn(
   })
 }
 
-function ensureTurnStarted(builder: WizardBattleDemoBuilder, actorId: CombatantId): void {
-  if (builder.startedTurnActorId === actorId) return
+function ensureTurnStarted(builder: WizardBattleDemoBuilder, actorId: CombatantId): WizardBattleDemoBuilder {
+  if (builder.startedTurnActorId === actorId) return builder
   requireCurrentActor(builder.session.state, actorId)
-  pushStep(builder, {
+  const started = pushStep(builder, {
     title: "Turn starts",
     detail: `${nameOf(actorId)} takes the turn.`,
     cue: {}
   })
-  builder.startedTurnActorId = actorId
+  return { ...started, startedTurnActorId: actorId }
 }
 
 function pushStep(
   builder: WizardBattleDemoBuilder,
   input: Omit<WizardBattleDemoStep, "session"> & { readonly session?: BattleRuntimeSession }
-): void {
-  builder.steps.push({
-    ...input,
-    session: input.session ?? builder.session
-  })
+): WizardBattleDemoBuilder {
+  return {
+    ...builder,
+    steps: [...builder.steps, { ...input, session: input.session ?? builder.session }]
+  }
 }
 
 function requireCurrentActor(state: BattleState, actorId: CombatantId): void {
   const currentActorId = snapshotBattle(state).currentActorId
+  /* v8 ignore next -- callers advance the fixture in the battle state's turn order */
   if (currentActorId !== actorId) {
     throw new Error(`Expected current actor ${nameOf(actorId)}, got ${nameOf(currentActorId)}.`)
   }
@@ -1035,6 +1106,7 @@ function deathSaveText(roll: number): string {
 function requireNonEmptySteps(
   steps: ReadonlyArray<WizardBattleDemoStep>
 ): readonly [WizardBattleDemoStep, ...Array<WizardBattleDemoStep>] {
+  /* v8 ignore next -- the fixture builder always authors its initial step before publication */
   if (steps.length < 1) {
     throw new Error("Wizard battle demo did not produce any steps.")
   }
@@ -1056,6 +1128,7 @@ function requireInitialSession(spellsById: Readonly<Record<string, SpellRecord>>
       })
     )
   })
+  /* v8 ignore next -- battle setup inputs are checked-in typed fixture records */
   if (Either.isLeft(session)) {
     throw new Error(`Wizard battle demo fixture is invalid: ${battleStateInitIssueMessage(session.left)}`)
   }

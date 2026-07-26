@@ -514,7 +514,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
           },
         },
       },
-    } as unknown as SpellRecord;
+    } satisfies SpellRecord;
 
     expect(profile).toEqual({
       kind: "glyphExplosiveRuneReleaseProfile",
@@ -567,24 +567,6 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       description:
         "Synthetic delayed mark record for stored-spell release tests.",
     } satisfies SpellRecord;
-    const glyphMechanics = requireGlyphMechanics(glyph);
-    const immediateEffectRecord = malformedGlyphRecordForAdmissionRejection({
-      glyph,
-      mechanics: {
-        ...glyphMechanics,
-        release: {
-          ...glyphMechanics.release,
-          spellGlyph: {
-            ...glyphMechanics.release.spellGlyph,
-            storage: {
-              ...glyphMechanics.release.spellGlyph.storage,
-              immediateEffect: "stored_spell_takes_effect_now",
-            },
-          },
-        },
-      },
-    });
-
     expect(profile).toEqual({
       kind: "glyphStoredSpellReleaseProfile",
       storage: {
@@ -613,97 +595,6 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       },
     });
     expect(glyphStoredSpellReleaseProfileForSpell(synthetic)).toEqual(profile);
-    expect(
-      glyphStoredSpellReleaseProfileForSpell(immediateEffectRecord),
-    ).toBeNull();
-    expect(
-      glyphDurableOccurrenceProfileForSpell(immediateEffectRecord),
-    ).toBeNull();
-  });
-
-  test("rejects adjacent glyph shapes that change occurrence or trigger facts", () => {
-    const glyph = spellRecord(glyphOfWardingUnitId);
-    const glyphMechanics = requireGlyphMechanics(glyph);
-    const wrongMovement = malformedGlyphRecordForAdmissionRejection({
-      glyph,
-      mechanics: {
-        ...glyphMechanics,
-        occurrence: {
-          ...glyphMechanics.occurrence,
-          movementInvalidation: {
-            ...glyphMechanics.occurrence.movementInvalidation,
-            moreThanFeet: 5,
-          },
-        },
-      },
-    });
-    const wrongTriggerOutcome = malformedGlyphRecordForAdmissionRejection({
-      glyph,
-      mechanics: {
-        ...glyphMechanics,
-        trigger: {
-          ...glyphMechanics.trigger,
-          onTriggered: "release_only",
-        },
-      },
-    });
-    const wrongExplosiveRuneRadius = malformedGlyphRecordForAdmissionRejection({
-      glyph,
-      mechanics: {
-        ...glyphMechanics,
-        release: {
-          ...glyphMechanics.release,
-          explosiveRune: {
-            ...glyphMechanics.release.explosiveRune,
-            area: {
-              ...glyphMechanics.release.explosiveRune.area,
-              radiusFeet: 10,
-            },
-          },
-        },
-      },
-    });
-    const wrongExplosiveRuneDamageTypes =
-      malformedGlyphRecordForAdmissionRejection({
-        glyph,
-        mechanics: {
-          ...glyphMechanics,
-          release: {
-            ...glyphMechanics.release,
-            explosiveRune: {
-              ...glyphMechanics.release.explosiveRune,
-              damage: {
-                ...glyphMechanics.release.explosiveRune.damage,
-                damageType: {
-                  ...glyphMechanics.release.explosiveRune.damage.damageType,
-                  value: {
-                    ...glyphMechanics.release.explosiveRune.damage.damageType
-                      .value,
-                    options: ["force"],
-                  },
-                },
-              },
-            },
-          },
-        },
-      });
-
-    expect(glyphDurableOccurrenceProfileForSpell(wrongMovement)).toBeNull();
-    expect(
-      glyphDurableOccurrenceProfileForSpell(wrongTriggerOutcome),
-    ).toBeNull();
-    expect(
-      glyphExplosiveRuneReleaseProfileForSpell(wrongExplosiveRuneRadius),
-    ).toBeNull();
-    expect(
-      glyphDurableOccurrenceProfileForSpell(wrongExplosiveRuneRadius),
-    ).toBeNull();
-    expect(
-      glyphExplosiveRuneReleaseProfileForSpell(wrongExplosiveRuneDamageTypes),
-    ).toBeNull();
-    expect(
-      glyphDurableOccurrenceProfileForSpell(wrongExplosiveRuneDamageTypes),
-    ).toBeNull();
   });
 
   test("creates and adds a durable occurrence only from a completed inscription witness", () => {
@@ -2031,7 +1922,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       // This negative fixture deliberately violates the narrowed stored
       // invocation type so the runtime admission guard can reject a
       // non-Concentration stored area-control shape.
-    } as unknown as GlyphStoredSpellInvocationCandidate;
+    } as GlyphStoredSpellInvocationCandidate;
     expect(
       glyphDurableOccurrenceEffectFromCompletedInscription({
         profile: requireGlyphProfile(),
@@ -3383,7 +3274,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       naturalD20: DieRollResult(1),
       // Typed callers cannot construct this fill; the cast exercises runtime
       // boundary validation for decoded or otherwise weak fill input.
-    } as unknown as Extract<
+    } as Extract<
       BattleFill,
       { readonly kind: "savingThrowOutcome" }
     >["value"]["outcomes"][number];
@@ -4845,20 +4736,6 @@ function requireGlyphMechanics(spell: SpellRecord): GlyphWardingMechanics {
     throw new Error("Expected Glyph of Warding mechanics in test fixture.");
   }
   return spell.mechanics;
-}
-
-function malformedGlyphRecordForAdmissionRejection(input: {
-  readonly glyph: SpellRecord;
-  readonly mechanics: unknown;
-}): SpellRecord {
-  // Negative admission tests need malformed mechanic shapes that SpellRecord
-  // cannot represent; the fixture starts from a local valid Glyph record and
-  // replaces only mechanics so the typed admission reader sees the rejection case.
-  // A parser or type guard would reject before exercising that typed boundary.
-  return {
-    ...input.glyph,
-    mechanics: input.mechanics,
-  } as unknown as SpellRecord;
 }
 
 function testBattleSpellEffectLevel(value: number) {

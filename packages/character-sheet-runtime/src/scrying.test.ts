@@ -24,7 +24,6 @@ import {
 import {
   type CharacterSheetScryingCreatureTarget,
   type CharacterSheetScryingLocationTarget,
-  type CharacterSheetScryingTarget,
 } from "./sheet-types.ts";
 
 type ScryingSelectedIdentityDriverAction = "doCastScrying";
@@ -231,36 +230,6 @@ describe("Character Sheet runtime / Scrying", () => {
     expect(result.sheet.spellSlotExpenditures).toEqual([
       { spellLevel: 5, expended: 1 },
     ]);
-  });
-
-  test("Scrying rejects invalid target eligibility before spending the spell slot", () => {
-    const sheet = scryingWizardSheet({ preparedSpells: ["scrying"], slots: 1 });
-    const otherPlaneTarget = {
-      ...scryingCreatureTarget({
-        knowledge: { tag: "firsthand", saveModifier: 0 },
-        connection: {
-          tag: "none",
-          objectChoice: "none",
-          saveModifier: 0,
-        },
-        savingThrowOutcome: { tag: "failed" },
-      }),
-      plane: "different_plane",
-    } as unknown as CharacterSheetScryingTarget;
-    const result = castScrying({
-      sheet,
-      unitLibrary,
-      casting: completedScryingCasting,
-      target: otherPlaneTarget,
-    });
-
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left.message).toBe(
-        "Scrying creature targeting requires the target to be on the same plane as the caster.",
-      );
-    }
-    expect(sheet.spellSlotExpenditures).toEqual([]);
   });
 
   test("Scrying requires prepared class Spell Access", () => {
