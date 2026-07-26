@@ -3347,6 +3347,52 @@ describe("Character Sheet battle handoff", () => {
           "Class feature use-count battle capacity must match Character Sheet resource capacity.",
       },
     });
+
+    const wildShapeResource = characterBattleResourceForUnit(wildShapeUnit);
+    if (!hasLimitedCharacterBattleResourceCap(wildShapeResource)) {
+      throw new Error("Expected finite Wild Shape resource.");
+    }
+    const settleWithUsesRemaining = (usesRemaining: ResourceCount) =>
+      settleHandoffBranchToCharacterSheet({
+        sheet: sheet.right,
+        unitLibrary,
+        resourceOwnership: [{ resourcePoolRef, unit: wildShapeUnit }],
+        combatant: handoffBranchCombatant({
+          origin: {
+            kind: "character",
+            characterId: characterId("character:druid-wild-shape-drift"),
+            classLevels: parsedClassLevelsForTest("druid", 2),
+            resources: [
+              {
+                resourcePoolRef,
+                resource: wildShapeResource,
+                usedThisTurn: false,
+                usesRemaining,
+              },
+            ],
+          },
+          hp: Hp(15),
+          maxHp: Hp(15),
+          tempHp: Hp(0),
+          positiveHpUnconscious: null,
+        }),
+      });
+    expect(settleWithUsesRemaining(resourceCount(3))).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Druid Wild Shape remaining uses exceed the character resource cap during battle handoff.",
+      },
+    });
+    expect(
+      expectRight(settleWithUsesRemaining(resourceCount(2)))
+        .resourceExpenditures,
+    ).not.toContainEqual(
+      expect.objectContaining({
+        tag: "useCountResource",
+        unitId: "druid_wild_shape",
+      }),
+    );
   });
 
   test("rejects stable battle handoff when the sheet has in-progress Stable recovery time", () => {
