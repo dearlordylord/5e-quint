@@ -1,6 +1,7 @@
 import { maybeOpenSpellCastReactionWindow } from "../spell-cast-reaction-window.ts";
 import { fillsBelongToDeclaredHoles } from "../fill-hole-protocol.ts";
 import { selectSingleSpellTarget } from "../single-spell-target.ts";
+import { resolveWillingTargetSaveGate } from "../willing-target-save-gate.ts";
 import {
   ATTACK_TARGET_HOLE_ID,
   SPELL_CAST_REACTION_FACTS_HOLE_ID,
@@ -55,7 +56,6 @@ import {
 } from "../creature-size-change-effects.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";
 
-import { needsHolesResult } from "../needs-holes-result.ts";
 import {
   invalidResult,
   resolvedResult,
@@ -63,17 +63,12 @@ import {
 } from "../result-helpers.ts";
 import { sameStringSet } from "../spells-execution-facts.ts";
 import { combatantsAfterConcentrationSpellEffectsEndedIfNoEffects } from "../spell-condition-effects-helpers.ts";
-import { spellSavingThrowOutcomeHole } from "../spells-damage-fills.ts";
-import { validateSavingThrowOutcomes } from "../spells-resolve-save-gates.ts";
 import {
   spellCastingTimeResourceForSpellCast,
   spellRequiresConcentration,
   spendSpellCastResources,
 } from "../spells-resolve-resources.ts";
-import {
-  spellTargetHole,
-  spellTargetIsKnownWilling,
-} from "../spells-targeting.ts";
+import { spellTargetHole } from "../spells-targeting.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
@@ -425,65 +420,38 @@ function resolveCreatureSizeChange(
     }
   }
 
-  const targetIsWilling = spellTargetIsKnownWilling(
-    input.actorId,
-    target.combatantId,
-    input.invocation,
-    input.fillSet.targetSpatialFacts,
-  );
-  if (targetIsWilling && input.fillSet.savingThrowOutcomes !== undefined) {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
+  const saveGate = resolveWillingTargetSaveGate({
+    state: input.input.state,
+    subject: input.input.subject,
+    actorId: input.actorId,
+    targetId: target.combatantId,
+    invocation: input.invocation,
+    targetSpatialFacts: input.fillSet.targetSpatialFacts,
+    savingThrowOutcomes: input.fillSet.savingThrowOutcomes,
+    willingTargetSaveMessage:
       "Willing creature size-change targets do not make a Saving Throw.",
-    );
+  });
+  if (saveGate.tag === "resolutionRequired") {
+    return saveGate.resolution;
   }
-  const savingThrowHole = spellSavingThrowOutcomeHole(
-    input.input.state,
-    input.actorId,
-    input.invocation,
-  );
-  if (!targetIsWilling && input.fillSet.savingThrowOutcomes === undefined) {
-    return needsHolesResult(input.input.state, input.input.subject, [
-      savingThrowHole,
-    ]);
-  }
-  if (input.fillSet.savingThrowOutcomes !== undefined) {
-    const validation = validateSavingThrowOutcomes(
-      input.fillSet.savingThrowOutcomes,
-      input.invocation,
-      input.input.state,
-      input.actorId,
-      undefined,
-      [target.combatantId],
-    );
-    if (validation !== null) {
-      return invalidResult(input.input.state, "invalidFill", validation);
+  if (saveGate.tag === "unaffected") {
+    if (input.storedGlyphRelease !== undefined) {
+      return resolvedResult(input.input.state);
     }
-    const outcome = input.fillSet.savingThrowOutcomes.outcomes[0];
-    if (outcome?.succeeded === true) {
-      if (input.storedGlyphRelease !== undefined) {
-        return {
-          tag: "resolved",
-          state: input.input.state,
-          snapshot: snapshotBattle(input.input.state),
-        };
-      }
-      const resourced = spendSpellCastResources({
-        state: input.input.state,
-        actorId: input.actorId,
-        invocation: input.invocation,
-        errorState: input.input.state,
-        startConcentration: false,
-        ...(input.actionCostOverride === undefined
-          ? {}
-          : { actionCostOverride: input.actionCostOverride }),
-        ...(input.metamagicApplications === undefined
-          ? {}
-          : { metamagicApplications: input.metamagicApplications }),
-      });
-      return resolutionFromStateResult(resourced);
-    }
+    const resourced = spendSpellCastResources({
+      state: input.input.state,
+      actorId: input.actorId,
+      invocation: input.invocation,
+      errorState: input.input.state,
+      startConcentration: false,
+      ...(input.actionCostOverride === undefined
+        ? {}
+        : { actionCostOverride: input.actionCostOverride }),
+      ...(input.metamagicApplications === undefined
+        ? {}
+        : { metamagicApplications: input.metamagicApplications }),
+    });
+    return resolutionFromStateResult(resourced);
   }
 
   const concentrationBase =

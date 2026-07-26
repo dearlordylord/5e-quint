@@ -1,4 +1,4 @@
-import { maybeOpenSpellCastReactionWindow } from "../spell-cast-reaction-window.ts";
+import { resolveSpellActiveEffectCast } from "../spell-active-effect-resolution.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.creature-type-protection-and-charm
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-glyph-stored-concentration-full-duration
@@ -17,14 +17,12 @@ import {
   type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
-  type BattleHole,
   type BattleResolutionResult,
   type BattleState,
   type CreatureTypeProtectionSpellInvocation,
 } from "../../battle-state-execution.ts";
 import { CombatantId } from "../../identity.ts";
 import { BattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
-import { breakBattleConcentration } from "../damage-apply.ts";
 import {
   DISPEL_EVIL_AND_GOOD_CREATURE_TYPES,
   PROTECTION_FROM_EVIL_AND_GOOD_CREATURE_TYPES,
@@ -32,23 +30,19 @@ import {
 } from "../domain-constants.ts";
 
 import { spellSelectionResolution } from "../needs-holes-result.ts";
-import {
-  invalidResult,
-  resolvedResult,
-  resolutionFromStateResult,
-} from "../result-helpers.ts";
+import { invalidResult } from "../result-helpers.ts";
 import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
 import { ATTACK_TARGET_HOLE_ID } from "../battle-runtime-protocol.ts";
 import {
   scalarBuffActiveEffectExpiration,
   sameCreatureTypeSet,
 } from "../spells-profiles-support.ts";
-import { spellTargetHole, spellTargetIsLegal } from "../spells-holes-fills.ts";
-import type { SpellFillSet } from "../spells-resolve-fill-set.ts";
+import { spellTargetHole } from "../spells-holes-fills.ts";
 import {
-  spellRequiresConcentration,
-  spendSpellCastResources,
-} from "../spells-resolve-resources.ts";
+  spellSingleTargetSelection,
+  type SpellSingleTargetSelection,
+} from "../spells-resolve-target-selection.ts";
+import type { SpellFillSet } from "../spells-resolve-fill-set.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
@@ -64,11 +58,6 @@ import {
   PreparedSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
-
-type CreatureTypeProtectionTargetSelection =
-  | { readonly tag: "ok"; readonly targetIds: readonly [CombatantId] }
-  | { readonly tag: "needsHoles"; readonly hole: BattleHole }
-  | { readonly tag: "invalid"; readonly message: string };
 
 function admitCreatureTypeProtection(
   spell: BattleSpellAdmissionSource,
@@ -304,43 +293,18 @@ function resolveCreatureTypeProtection(
     return targetSelectionResolution.result;
   const targetSelection = targetSelectionResolution.selection;
 
-  if (input.storedGlyphRelease === undefined) {
-    const spellCastReactionWindow = maybeOpenSpellCastReactionWindow(
-      input,
-      targetSelection.targetIds,
-      { kind: "magicAction" },
-      undefined,
-    );
-    if (spellCastReactionWindow !== null) {
-      return spellCastReactionWindow;
-    }
-  }
-
-  const concentrationBase =
-    input.storedGlyphRelease !== undefined
-      ? input.input.state
-      : spellRequiresConcentration(input.invocation)
-        ? breakBattleConcentration(input.input.state, input.actorId)
-        : input.input.state;
-  const effected = applyCreatureTypeProtectionEffect(
-    concentrationBase,
-    input.actorId,
-    targetSelection.targetIds,
-    input.invocation,
-  );
-  if (input.storedGlyphRelease !== undefined) {
-    return resolvedResult(effected);
-  }
-  const resourced = spendSpellCastResources({
-    state: effected,
-    actorId: input.actorId,
-    invocation: input.invocation,
-    errorState: input.input.state,
-    ...(input.storedGlyphRelease !== undefined
-      ? { startConcentration: false }
-      : {}),
+  return resolveSpellActiveEffectCast({
+    resolution: input,
+    targetIds: targetSelection.targetIds,
+    castingResource: { kind: "magicAction" },
+    applyEffect: (state) =>
+      applyCreatureTypeProtectionEffect(
+        state,
+        input.actorId,
+        targetSelection.targetIds,
+        input.invocation,
+      ),
   });
-  return resolutionFromStateResult(resourced);
 }
 
 function creatureTypeProtectionSpellTargetSelection(input: {
@@ -348,7 +312,7 @@ function creatureTypeProtectionSpellTargetSelection(input: {
   readonly actorId: CombatantId;
   readonly invocation: BattleExecutableSpellInvocation<CreatureTypeProtectionSpellInvocation>;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
-}): CreatureTypeProtectionTargetSelection {
+}): SpellSingleTargetSelection {
   if (input.invocation.targeting.kind === "self") {
     return input.fillSet.targetId !== undefined ||
       input.fillSet.targetList !== undefined ||
@@ -360,31 +324,16 @@ function creatureTypeProtectionSpellTargetSelection(input: {
         }
       : { tag: "ok", targetIds: [input.actorId] };
   }
-  if (input.fillSet.targetList !== undefined) {
-    return {
-      tag: "invalid",
-      message: "Creature-type protection spells require one target choice.",
-    };
-  }
-  if (input.fillSet.targetId === undefined) {
-    return {
-      tag: "needsHoles",
-      hole: spellTargetHole(input.input.state, input.actorId, input.invocation),
-    };
-  }
-  return spellTargetIsLegal(
-    input.input.state,
-    input.actorId,
-    input.fillSet.targetId,
-    input.invocation,
-    input.fillSet.targetSpatialFacts,
-  )
-    ? { tag: "ok", targetIds: [input.fillSet.targetId] }
-    : {
-        tag: "invalid",
-        message:
-          "Creature-type protection spell target must be a combatant within the selected spell's supported range.",
-      };
+  return spellSingleTargetSelection({
+    state: input.input.state,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    fillSet: input.fillSet,
+    targetListMessage:
+      "Creature-type protection spells require one target choice.",
+    invalidTargetMessage:
+      "Creature-type protection spell target must be a combatant within the selected spell's supported range.",
+  });
 }
 
 function applyCreatureTypeProtectionEffect(

@@ -1,4 +1,4 @@
-import { maybeOpenSpellCastReactionWindow } from "../spell-cast-reaction-window.ts";
+import { resolveSpellActiveEffectCast } from "../spell-active-effect-resolution.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-blur-attack-roll-defense
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE
@@ -36,15 +36,10 @@ import {
 } from "../../battle-state-execution.ts";
 import { type CombatantId } from "../../identity.ts";
 import { BlurredActiveEffectTemplateSchema } from "../../active-effect/codecs.ts";
-import { breakBattleConcentration } from "../damage-apply.ts";
-import { invalidResult, resolutionFromStateResult } from "../result-helpers.ts";
+import { invalidResult } from "../result-helpers.ts";
 import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
 import { sameStringSet } from "../spells-execution-facts.ts";
 import { scalarBuffActiveEffectExpiration } from "../spells-profiles-support.ts";
-import {
-  spellRequiresConcentration,
-  spendSpellCastResources,
-} from "../spells-resolve-resources.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
@@ -193,31 +188,13 @@ function resolveBlurAttackRollDefense(
     );
   }
 
-  const spellCastReactionWindow = maybeOpenSpellCastReactionWindow(
-    input,
-    [input.actorId],
-    { kind: "magicAction" },
-    undefined,
-  );
-  if (spellCastReactionWindow !== null) {
-    return spellCastReactionWindow;
-  }
-
-  const concentrationBase = spellRequiresConcentration(input.invocation)
-    ? breakBattleConcentration(input.input.state, input.actorId)
-    : input.input.state;
-  const effected = applyBlurAttackRollDefenseEffect(
-    concentrationBase,
-    input.actorId,
-    input.invocation,
-  );
-  const resourced = spendSpellCastResources({
-    state: effected,
-    actorId: input.actorId,
-    invocation: input.invocation,
-    errorState: input.input.state,
+  return resolveSpellActiveEffectCast({
+    resolution: input,
+    targetIds: [input.actorId],
+    castingResource: { kind: "magicAction" },
+    applyEffect: (state) =>
+      applyBlurAttackRollDefenseEffect(state, input.actorId, input.invocation),
   });
-  return resolutionFromStateResult(resourced);
 }
 
 const BlurAttackRollDefenseInvocationSchema = spellProcedureExecutionSchema(

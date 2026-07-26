@@ -1,4 +1,5 @@
 import { savingThrowMetamagicHoles } from "../saving-throw-metamagic-holes.ts";
+import { actionSpellCastCandidate } from "../spell-cast-candidate.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-hypnotic-pattern-control spell.invocation-glyph-stored-concentration-full-duration
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 //
@@ -26,7 +27,6 @@ import type {
   ActionSpellBattleResolutionInput,
   BattleActDiscoveryCandidate,
   BattleExecutableSpellInvocation,
-  BattleHole,
   BattleInterruptedProcedure,
   BattleResolutionResult,
   BattleSpellSavingThrowOutcomeValue,
@@ -291,9 +291,11 @@ function discoverHypnoticPatternCastAct(
     actorId,
     invocation,
   );
-  const baseCastAct = hypnoticPatternCastAct(actorId, invocation, [
-    savingThrowHole,
-  ]);
+  const baseCastAct = actionSpellCastCandidate(
+    actorId,
+    invocation.sourceProcedureRef,
+    [savingThrowHole],
+  );
   const actor = state.combatants.get(actorId);
   if (actor === undefined) {
     return [baseCastAct];
@@ -316,22 +318,6 @@ function discoverHypnoticPatternCastAct(
       },
     ),
   ];
-}
-
-function hypnoticPatternCastAct(
-  actorId: CombatantId,
-  invocation: import("../../battle-state-execution.ts").BattleExecutableSpellInvocation<HypnoticPatternSpellInvocation>,
-  initialHoles: readonly BattleHole[],
-): BattleActDiscoveryCandidate {
-  return {
-    subject: {
-      tag: "actionSpell",
-      actorId,
-      procedureRef: invocation.sourceProcedureRef,
-      mode: { tag: "cast" },
-    },
-    initialHoles,
-  };
 }
 
 function hypnoticPatternReleaseResourceState(input: {

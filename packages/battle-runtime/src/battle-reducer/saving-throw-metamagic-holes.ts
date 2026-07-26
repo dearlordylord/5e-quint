@@ -18,9 +18,75 @@ import {
   heightenedSpellTargetChoiceHole,
   spellSavingThrowTargeting,
 } from "./spells-holes-fills.ts";
+import { actionSpellCastCandidate } from "./spell-cast-candidate.ts";
+import { spellSavingThrowOutcomeHole } from "./spells-damage-fills.ts";
 
 type SavingThrowInvocation = Parameters<typeof spellSavingThrowTargeting>[0] &
   BattleExecutableSpellInvocation;
+
+export function discoverSavingThrowSpellCastActs(
+  state: BattleState,
+  actorId: CombatantId,
+  invocation: SavingThrowInvocation,
+): readonly BattleActDiscoveryCandidate[] {
+  const savingThrowHole = spellSavingThrowOutcomeHole(
+    state,
+    actorId,
+    invocation,
+  );
+  const baseCastAct = actionSpellCastCandidate(
+    actorId,
+    invocation.sourceProcedureRef,
+    [savingThrowHole],
+  );
+  return [
+    baseCastAct,
+    ...discoverSavingThrowMetamagicCastActs({
+      state,
+      actorId,
+      actor: state.combatants.get(actorId),
+      invocation,
+      baseCastAct,
+      initialHoles: (applications) =>
+        savingThrowMetamagicHolesOr(state, actorId, invocation, applications, [
+          savingThrowHole,
+        ]),
+    }),
+  ];
+}
+
+export function discoverTargetSavingThrowSpellCastActs(input: {
+  readonly state: BattleState;
+  readonly actorId: CombatantId;
+  readonly actor: BattleCreatureState;
+  readonly invocation: SavingThrowInvocation;
+  readonly targetHole: BattleHole;
+  readonly additionalHoles?: readonly BattleHole[];
+}): readonly BattleActDiscoveryCandidate[] {
+  const additionalHoles = input.additionalHoles ?? [];
+  const baseCastAct = actionSpellCastCandidate(
+    input.actorId,
+    input.invocation.sourceProcedureRef,
+    [input.targetHole, ...additionalHoles],
+  );
+  return [
+    baseCastAct,
+    ...discoverSavingThrowMetamagicCastActs({
+      ...input,
+      baseCastAct,
+      initialHoles: (applications) => [
+        input.targetHole,
+        ...savingThrowMetamagicHoles(
+          input.state,
+          input.actorId,
+          input.invocation,
+          applications,
+        ),
+        ...additionalHoles,
+      ],
+    }),
+  ];
+}
 
 export function savingThrowMetamagicHoles(
   state: BattleState,

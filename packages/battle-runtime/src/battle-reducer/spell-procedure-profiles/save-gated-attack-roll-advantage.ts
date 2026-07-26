@@ -1,7 +1,4 @@
-import {
-  discoverSavingThrowMetamagicCastActs,
-  savingThrowMetamagicHolesOr,
-} from "../saving-throw-metamagic-holes.ts";
+import { discoverSavingThrowSpellCastActs } from "../saving-throw-metamagic-holes.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-attack-roll-advantage-save
 //
@@ -20,7 +17,6 @@ import { BattleActiveEffectExpirationSchema } from "../../active-effect/codecs.t
 import {
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
-  type BattleHole,
   type BattleResolutionResult,
   type BattleState,
   type SupportedSpellInvocation,
@@ -51,7 +47,6 @@ const FailedSaveAttackRollAdvantageEffectSchema = Schema.Struct({
   kind: Schema.Literal("faerieFireOutline"),
   expiresAt: BattleActiveEffectExpirationSchema,
 });
-import { spellSavingThrowOutcomeHole } from "../spells-holes-fills.ts";
 
 type SaveGatedAttackRollAdvantageSpellInvocation = Extract<
   SupportedSpellInvocation,
@@ -83,45 +78,7 @@ function discoverSaveGatedAttackRollAdvantageCastAct(
   actorId: CombatantId,
   invocation: BattleExecutableSpellInvocation<SaveGatedAttackRollAdvantageSpellInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
-  const actor = state.combatants.get(actorId);
-  const savingThrowHole = spellSavingThrowOutcomeHole(
-    state,
-    actorId,
-    invocation,
-  );
-  const baseCastAct = saveGatedAttackRollAdvantageCastAct(actorId, invocation, [
-    savingThrowHole,
-  ]);
-  return [
-    baseCastAct,
-    ...discoverSavingThrowMetamagicCastActs({
-      state,
-      actorId,
-      actor,
-      invocation,
-      baseCastAct,
-      initialHoles: (applications) =>
-        savingThrowMetamagicHolesOr(state, actorId, invocation, applications, [
-          savingThrowHole,
-        ]),
-    }),
-  ];
-}
-
-function saveGatedAttackRollAdvantageCastAct(
-  actorId: CombatantId,
-  invocation: import("../../battle-state-execution.ts").BattleExecutableSpellInvocation<SaveGatedAttackRollAdvantageSpellInvocation>,
-  initialHoles: readonly BattleHole[],
-): BattleActDiscoveryCandidate {
-  return {
-    subject: {
-      tag: "actionSpell",
-      actorId,
-      procedureRef: invocation.sourceProcedureRef,
-      mode: { tag: "cast" },
-    },
-    initialHoles,
-  };
+  return discoverSavingThrowSpellCastActs(state, actorId, invocation);
 }
 
 function resolveSaveGatedAttackRollAdvantage(

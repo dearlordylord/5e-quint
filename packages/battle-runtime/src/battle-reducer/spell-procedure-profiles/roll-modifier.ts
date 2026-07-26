@@ -1,4 +1,5 @@
 import { maybeOpenSpellCastReactionWindow } from "../spell-cast-reaction-window.ts";
+import { completeSpellActiveEffectCast } from "../spell-active-effect-resolution.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-roll-modifier
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-glyph-stored-concentration-full-duration
@@ -49,14 +50,9 @@ import {
   type SelectedRollModifierSpellEffect,
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
-import { breakBattleConcentration } from "../damage-apply.ts";
 
 import { spellSelectionResolution } from "../needs-holes-result.ts";
-import {
-  invalidResult,
-  resolvedResult,
-  resolutionFromStateResult,
-} from "../result-helpers.ts";
+import { invalidResult } from "../result-helpers.ts";
 import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
 import { ATTACK_TARGET_HOLE_ID } from "../battle-runtime-protocol.ts";
 import {
@@ -74,10 +70,6 @@ import {
   isD20RollModifierSpellProjection,
   rollModifierSpellProjection,
 } from "../spells-profiles-support.ts";
-import {
-  spellRequiresConcentration,
-  spendSpellCastResources,
-} from "../spells-resolve-resources.ts";
 import {
   rollModifierSpellAffectedTargets,
   rollModifierSpellEffectSelection,
@@ -386,47 +378,31 @@ function resolveRollModifier(
     return affectedTargetsResolution.result;
   const affectedTargets = affectedTargetsResolution.selection;
 
-  const concentrationBase =
-    input.storedGlyphRelease !== undefined
-      ? input.input.state
-      : spellRequiresConcentration(input.invocation)
-        ? breakBattleConcentration(input.input.state, input.actorId)
-        : input.input.state;
   const affectedTargetIds = new Set(affectedTargets.targetIds);
-  const effected =
-    effectSelection.selection.kind === "sameForTargets"
-      ? applyRollModifierEffect(
-          concentrationBase,
-          affectedTargets.targetIds,
-          effectSelection.selection.effect,
-          input.invocation.sourceProcedureRef,
-        )
-      : applyRollModifierEffectsByTarget(
-          concentrationBase,
-          effectSelection.selection.targetEffects.filter((targetEffect) =>
-            affectedTargetIds.has(targetEffect.targetId),
-          ),
-          input.invocation.sourceProcedureRef,
-        );
-  if (input.storedGlyphRelease !== undefined) {
-    return resolvedResult(effected);
-  }
-  const resourced = spendSpellCastResources({
-    state: effected,
-    actorId: input.actorId,
-    invocation: input.invocation,
-    errorState: input.input.state,
-    ...(input.storedGlyphRelease !== undefined
-      ? { startConcentration: false }
-      : {}),
+  return completeSpellActiveEffectCast({
+    resolution: input,
     ...(input.actionCostOverride === undefined
       ? {}
       : { actionCostOverride: input.actionCostOverride }),
     ...(input.metamagicApplications === undefined
       ? {}
       : { metamagicApplications: input.metamagicApplications }),
+    applyEffect: (state) =>
+      effectSelection.selection.kind === "sameForTargets"
+        ? applyRollModifierEffect(
+            state,
+            affectedTargets.targetIds,
+            effectSelection.selection.effect,
+            input.invocation.sourceProcedureRef,
+          )
+        : applyRollModifierEffectsByTarget(
+            state,
+            effectSelection.selection.targetEffects.filter((targetEffect) =>
+              affectedTargetIds.has(targetEffect.targetId),
+            ),
+            input.invocation.sourceProcedureRef,
+          ),
   });
-  return resolutionFromStateResult(resourced);
 }
 
 const RollModifierInvocationSchema = spellProcedureExecutionSchema(

@@ -1,4 +1,4 @@
-import { savingThrowMetamagicHoles } from "../saving-throw-metamagic-holes.ts";
+import { discoverSavingThrowSpellCastActs } from "../saving-throw-metamagic-holes.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties unit-feature.metamagic-heightened-save-disadvantage unit-feature.metamagic-careful-save-protection
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
@@ -30,7 +30,6 @@ import type { ActivationPhase, EffectAtom } from "@dnd/surface/surface/types";
 import { Either, Schema } from "effect";
 import {
   type BattleActDiscoveryCandidate,
-  type BattleHole,
   type BattleResolutionResult,
   type BattleSpellSavingThrowOutcomeValue,
   type BattleState,
@@ -73,11 +72,6 @@ import {
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
 } from "./profile.ts";
-import {
-  discoverSpellMetamagicSelections,
-  spellMetamagicApplications,
-} from "../metamagic-support.ts";
-import { spellSavingThrowOutcomeHole } from "../spells-holes-fills.ts";
 
 type SlowActivePenaltiesSpellInvocation = Extract<
   SupportedSpellInvocation,
@@ -304,54 +298,7 @@ function discoverSlowActivePenaltiesCastAct(
   actorId: CombatantId,
   invocation: BattleExecutableSpellInvocation<SlowActivePenaltiesSpellInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
-  const actor = state.combatants.get(actorId);
-  const savingThrowHole = spellSavingThrowOutcomeHole(
-    state,
-    actorId,
-    invocation,
-  );
-  const baseCastAct = slowActivePenaltiesCastAct(actorId, invocation, [
-    savingThrowHole,
-  ]);
-  if (actor === undefined) {
-    return [baseCastAct];
-  }
-  return [
-    baseCastAct,
-    ...discoverSpellMetamagicSelections({ actor, invocation }).map(
-      (metamagic) => {
-        const applications = spellMetamagicApplications(actor, metamagic);
-        const metamagicHoles = savingThrowMetamagicHoles(
-          state,
-          actorId,
-          invocation,
-          applications,
-        );
-        return {
-          ...baseCastAct,
-          subject: { ...baseCastAct.subject, metamagic },
-          initialHoles:
-            metamagicHoles.length === 0 ? [savingThrowHole] : metamagicHoles,
-        };
-      },
-    ),
-  ];
-}
-
-function slowActivePenaltiesCastAct(
-  actorId: CombatantId,
-  invocation: BattleExecutableSpellInvocation<SlowActivePenaltiesSpellInvocation>,
-  initialHoles: readonly BattleHole[],
-): BattleActDiscoveryCandidate {
-  return {
-    subject: {
-      tag: "actionSpell",
-      actorId,
-      procedureRef: invocation.sourceProcedureRef,
-      mode: { tag: "cast" },
-    },
-    initialHoles,
-  };
+  return discoverSavingThrowSpellCastActs(state, actorId, invocation);
 }
 
 function resolveSlowActivePenalties(

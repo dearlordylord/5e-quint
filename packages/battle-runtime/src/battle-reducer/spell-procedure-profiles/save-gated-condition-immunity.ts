@@ -1,7 +1,4 @@
-import {
-  discoverSavingThrowMetamagicCastActs,
-  savingThrowMetamagicHolesOr,
-} from "../saving-throw-metamagic-holes.ts";
+import { discoverSavingThrowSpellCastActs } from "../saving-throw-metamagic-holes.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-save-gated-condition-immunity
 import { CreatureTypeSchema } from "@dnd/surface/surface/schema";
@@ -25,7 +22,6 @@ import { BattleActiveEffectExpirationSchema } from "../../active-effect/codecs.t
 import {
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
-  type BattleHole,
   type BattleResolutionResult,
   type BattleState,
   type SupportedSpellInvocation,
@@ -58,7 +54,6 @@ const ConditionImmunityActiveEffectTemplateSchema = Schema.Struct({
   condition: BattleConditionSchema,
   expiresAt: BattleActiveEffectExpirationSchema,
 });
-import { spellSavingThrowOutcomeHole } from "../spells-holes-fills.ts";
 
 type SaveGatedConditionImmunitySpellInvocation = Extract<
   SupportedSpellInvocation,
@@ -90,45 +85,7 @@ function discoverSaveGatedConditionImmunityCastAct(
   actorId: CombatantId,
   invocation: BattleExecutableSpellInvocation<SaveGatedConditionImmunitySpellInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
-  const actor = state.combatants.get(actorId);
-  const savingThrowHole = spellSavingThrowOutcomeHole(
-    state,
-    actorId,
-    invocation,
-  );
-  const baseCastAct = saveGatedConditionImmunityCastAct(actorId, invocation, [
-    savingThrowHole,
-  ]);
-  return [
-    baseCastAct,
-    ...discoverSavingThrowMetamagicCastActs({
-      state,
-      actorId,
-      actor,
-      invocation,
-      baseCastAct,
-      initialHoles: (applications) =>
-        savingThrowMetamagicHolesOr(state, actorId, invocation, applications, [
-          savingThrowHole,
-        ]),
-    }),
-  ];
-}
-
-function saveGatedConditionImmunityCastAct(
-  actorId: CombatantId,
-  invocation: import("../../battle-state-execution.ts").BattleExecutableSpellInvocation<SaveGatedConditionImmunitySpellInvocation>,
-  initialHoles: readonly BattleHole[],
-): BattleActDiscoveryCandidate {
-  return {
-    subject: {
-      tag: "actionSpell",
-      actorId,
-      procedureRef: invocation.sourceProcedureRef,
-      mode: { tag: "cast" },
-    },
-    initialHoles,
-  };
+  return discoverSavingThrowSpellCastActs(state, actorId, invocation);
 }
 
 function resolveSaveGatedConditionImmunity(

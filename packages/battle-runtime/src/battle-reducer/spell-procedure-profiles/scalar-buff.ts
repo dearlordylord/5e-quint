@@ -1,4 +1,5 @@
 import { maybeOpenSpellCastReactionWindow } from "../spell-cast-reaction-window.ts";
+import { completeSpellActiveEffectCast } from "../spell-active-effect-resolution.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.scalar-buff
 import { DiceExprSchema } from "@dnd/surface/surface/schema";
@@ -58,7 +59,6 @@ import { battleCreatureWithSpellActiveEffects } from "../../active-effect/lifecy
 import {
   applyHitPointMaximumIncrease,
   applyTemporaryHitPoints,
-  breakBattleConcentration,
 } from "../damage-apply.ts";
 import {
   battleStateWithFlySpeedGrantEndFallCleanupFrames,
@@ -68,11 +68,7 @@ import {
   needsHolesResult,
   spellSelectionResolution,
 } from "../needs-holes-result.ts";
-import {
-  invalidResult,
-  resolvedResult,
-  resolutionFromStateResult,
-} from "../result-helpers.ts";
+import { invalidResult } from "../result-helpers.ts";
 import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
 import { ATTACK_TARGET_HOLE_ID } from "../battle-runtime-protocol.ts";
 import { scalarBuffTemporaryHitPointsAmount } from "../spell-effects.ts";
@@ -92,10 +88,6 @@ import {
   scalarBuffSpellRangeFeet,
   scalarBuffSpellTargeting,
 } from "../spells-profiles-support.ts";
-import {
-  spellRequiresConcentration,
-  spendSpellCastResources,
-} from "../spells-resolve-resources.ts";
 import { scalarBuffSpellTargetSelection } from "../spells-resolve-target-selection.ts";
 import {
   spellTargetHole,
@@ -482,38 +474,23 @@ function resolveScalarBuff(
     }
   }
 
-  const concentrationBase =
-    input.storedGlyphRelease !== undefined
-      ? input.input.state
-      : spellRequiresConcentration(input.invocation)
-        ? breakBattleConcentration(input.input.state, input.actorId)
-        : input.input.state;
-  const effected = applyScalarBuffEffect(
-    concentrationBase,
-    input.actorId,
-    targetSelection.targetIds,
-    input.invocation,
-    input.fillSet.healingRoll,
-  );
-  if (input.storedGlyphRelease !== undefined) {
-    return resolvedResult(effected);
-  }
-  const resourced = spendSpellCastResources({
-    state: effected,
-    actorId: input.actorId,
-    invocation: input.invocation,
-    errorState: input.input.state,
-    ...(input.storedGlyphRelease !== undefined
-      ? { startConcentration: false }
-      : {}),
+  return completeSpellActiveEffectCast({
+    resolution: input,
     ...(input.actionCostOverride === undefined
       ? {}
       : { actionCostOverride: input.actionCostOverride }),
     ...(input.metamagicApplications === undefined
       ? {}
       : { metamagicApplications: input.metamagicApplications }),
+    applyEffect: (state) =>
+      applyScalarBuffEffect(
+        state,
+        input.actorId,
+        targetSelection.targetIds,
+        input.invocation,
+        input.fillSet.healingRoll,
+      ),
   });
-  return resolutionFromStateResult(resourced);
 }
 
 const ScalarBuffInvocationSchema = spellProcedureExecutionSchema(

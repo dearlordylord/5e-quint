@@ -12,7 +12,6 @@ import {
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
   type BattleCreatureState,
-  type BattleHole,
   type BattleResolutionResult,
   type BattleState,
   type BonusActionSpellBattleResolutionInput,
@@ -37,8 +36,11 @@ import { sameStringSet } from "../spells-execution-facts.ts";
 import {
   spellConditionChoiceHole,
   spellTargetHole,
-  spellTargetIsLegal,
 } from "../spells-holes-fills.ts";
+import {
+  spellSingleTargetSelection,
+  type SpellSingleTargetSelection,
+} from "../spells-resolve-target-selection.ts";
 import { spellConditionChoiceHoleId } from "../spells-damage-fills.ts";
 import type { SpellFillSet } from "../spells-resolve-fill-set.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
@@ -60,11 +62,6 @@ import {
 
 type DirectConditionRemovalCondition =
   DirectConditionRemovalSpellInvocation["conditionChoices"][number];
-
-type DirectConditionRemovalSpellTargetSelection =
-  | { readonly tag: "ok"; readonly targetIds: readonly [CombatantId] }
-  | { readonly tag: "needsHoles"; readonly hole: BattleHole }
-  | { readonly tag: "invalid"; readonly message: string };
 
 function admitDirectConditionRemoval(
   spell: BattleSpellAdmissionSource,
@@ -232,32 +229,17 @@ function directConditionRemovalSpellTargetSelection(input: {
   readonly actorId: CombatantId;
   readonly invocation: BattleExecutableSpellInvocation<DirectConditionRemovalSpellInvocation>;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
-}): DirectConditionRemovalSpellTargetSelection {
-  if (input.fillSet.targetList !== undefined) {
-    return {
-      tag: "invalid",
-      message: "Direct condition-removal spells require one target choice.",
-    };
-  }
-  if (input.fillSet.targetId === undefined) {
-    return {
-      tag: "needsHoles",
-      hole: spellTargetHole(input.input.state, input.actorId, input.invocation),
-    };
-  }
-  return spellTargetIsLegal(
-    input.input.state,
-    input.actorId,
-    input.fillSet.targetId,
-    input.invocation,
-    input.fillSet.targetSpatialFacts,
-  )
-    ? { tag: "ok", targetIds: [input.fillSet.targetId] }
-    : {
-        tag: "invalid",
-        message:
-          "Direct condition-removal spell target must be a combatant within the selected spell's supported range.",
-      };
+}): SpellSingleTargetSelection {
+  return spellSingleTargetSelection({
+    state: input.input.state,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    fillSet: input.fillSet,
+    targetListMessage:
+      "Direct condition-removal spells require one target choice.",
+    invalidTargetMessage:
+      "Direct condition-removal spell target must be a combatant within the selected spell's supported range.",
+  });
 }
 
 function applyDirectConditionRemovalSpellEffect(

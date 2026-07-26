@@ -2,6 +2,7 @@ import {
   discoverSavingThrowMetamagicCastActs,
   savingThrowMetamagicHolesOr,
 } from "../saving-throw-metamagic-holes.ts";
+import { actionSpellCastCandidate } from "../spell-cast-candidate.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-damage-save-or-attack
 import {
@@ -133,10 +134,11 @@ function discoverSingleTargetSaveGatedDamageCastActs(
   if (targetHole.choices.length === 0) {
     return [];
   }
-  const baseCastAct = saveGatedDamageCastAct(actorId, invocation, [
-    targetHole,
-    ...saveGatedDamageAbilityChoiceHoles(invocation),
-  ]);
+  const baseCastAct = actionSpellCastCandidate(
+    actorId,
+    invocation.sourceProcedureRef,
+    [targetHole, ...saveGatedDamageAbilityChoiceHoles(invocation)],
+  );
   return [
     baseCastAct,
     ...discoverSavingThrowMetamagicCastActs({
@@ -169,10 +171,11 @@ function discoverAreaSaveGatedDamageCastActs(
     actorId,
     invocation,
   );
-  const baseCastAct = saveGatedDamageCastAct(actorId, invocation, [
-    savingThrowHole,
-    ...saveGatedDamageAbilityChoiceHoles(invocation),
-  ]);
+  const baseCastAct = actionSpellCastCandidate(
+    actorId,
+    invocation.sourceProcedureRef,
+    [savingThrowHole, ...saveGatedDamageAbilityChoiceHoles(invocation)],
+  );
   return [
     baseCastAct,
     ...discoverSavingThrowMetamagicCastActs({
@@ -192,22 +195,6 @@ function discoverAreaSaveGatedDamageCastActs(
         ),
     }),
   ];
-}
-
-function saveGatedDamageCastAct(
-  actorId: CombatantId,
-  invocation: import("../../battle-state-execution.ts").BattleExecutableSpellInvocation<SaveGatedDamageSpellInvocation>,
-  initialHoles: readonly BattleHole[],
-): BattleActDiscoveryCandidate {
-  return {
-    subject: {
-      tag: "actionSpell",
-      actorId,
-      procedureRef: invocation.sourceProcedureRef,
-      mode: { tag: "cast" },
-    },
-    initialHoles,
-  };
 }
 
 function saveGatedDamageAbilityChoiceHoles(

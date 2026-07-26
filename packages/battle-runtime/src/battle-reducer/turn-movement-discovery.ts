@@ -68,6 +68,41 @@ export type CommandPendingEffect = Extract<
   { readonly kind: "commandPending" }
 >;
 
+type HazardSavingThrow =
+  | GreaseGroundHazardEffect["save"]
+  | GustOfWindLineEffect["save"]
+  | MoonbeamEffect["save"];
+type SingleTargetSavingThrowProjections<Save extends HazardSavingThrow> = Pick<
+  BattleFlamingSphereSavingThrowOutcomeHole,
+  "areaChoices" | "targetRollModes" | "targetFlatBonuses"
+> & {
+  readonly ability: Save["ability"];
+  readonly dc: Save["dc"];
+};
+
+function singleTargetSavingThrowProjections<Save extends HazardSavingThrow>(
+  state: BattleState,
+  targetId: CombatantId,
+  save: Save,
+  heightenedRollMode?: BattleSavingThrowRollModeProjection,
+): SingleTargetSavingThrowProjections<Save> {
+  return {
+    ability: save.ability,
+    dc: save.dc,
+    areaChoices: [],
+    targetRollModes: savingThrowRollModeProjections(
+      state,
+      save.ability,
+      undefined,
+      heightenedRollMode,
+    ).filter((projection) => projection.targetId === targetId),
+    targetFlatBonuses: savingThrowFlatBonusProjections(
+      state,
+      save.ability,
+    ).filter((projection) => projection.targetId === targetId),
+  };
+}
+
 export function commandPendingEffectsForActor(
   state: BattleState,
   actorId: CombatantId,
@@ -158,19 +193,12 @@ export function greaseGroundHazardSavingThrowOutcomeHole(
       trigger,
       save: effect.save,
     },
-    ability: effect.save.ability,
-    dc: effect.save.dc,
-    areaChoices: [],
-    targetRollModes: savingThrowRollModeProjections(
+    ...singleTargetSavingThrowProjections(
       state,
-      effect.save.ability,
-      undefined,
+      targetId,
+      effect.save,
       greaseGroundHazardHeightenedRollModeProjection(effect, targetId),
-    ).filter((projection) => projection.targetId === targetId),
-    targetFlatBonuses: savingThrowFlatBonusProjections(
-      state,
-      effect.save.ability,
-    ).filter((projection) => projection.targetId === targetId),
+    ),
   };
 }
 
@@ -203,17 +231,7 @@ export function webRestraintSavingThrowOutcomeHole(
       trigger,
       save: effect.save,
     },
-    ability: effect.save.ability,
-    dc: effect.save.dc,
-    areaChoices: [],
-    targetRollModes: savingThrowRollModeProjections(
-      state,
-      effect.save.ability,
-    ).filter((projection) => projection.targetId === targetId),
-    targetFlatBonuses: savingThrowFlatBonusProjections(
-      state,
-      effect.save.ability,
-    ).filter((projection) => projection.targetId === targetId),
+    ...singleTargetSavingThrowProjections(state, targetId, effect.save),
   };
 }
 
@@ -239,19 +257,12 @@ export function gustOfWindLineSavingThrowOutcomeHole(
       save: effect.save,
       pushDistanceFeet: effect.pushDistanceFeet,
     },
-    ability: effect.save.ability,
-    dc: effect.save.dc,
-    areaChoices: [],
-    targetRollModes: savingThrowRollModeProjections(
+    ...singleTargetSavingThrowProjections(
       state,
-      effect.save.ability,
-      undefined,
+      targetId,
+      effect.save,
       gustOfWindLineHeightenedRollModeProjection(effect, targetId),
-    ).filter((projection) => projection.targetId === targetId),
-    targetFlatBonuses: savingThrowFlatBonusProjections(
-      state,
-      effect.save.ability,
-    ).filter((projection) => projection.targetId === targetId),
+    ),
   };
 }
 
@@ -354,17 +365,7 @@ export function flamingSphereSavingThrowOutcomeHole(
       trigger,
       save: effect.save,
     },
-    ability: effect.save.ability,
-    dc: effect.save.dc,
-    areaChoices: [],
-    targetRollModes: savingThrowRollModeProjections(
-      state,
-      effect.save.ability,
-    ).filter((projection) => projection.targetId === targetId),
-    targetFlatBonuses: savingThrowFlatBonusProjections(
-      state,
-      effect.save.ability,
-    ).filter((projection) => projection.targetId === targetId),
+    ...singleTargetSavingThrowProjections(state, targetId, effect.save),
   };
 }
 
@@ -411,17 +412,7 @@ export function moonbeamSavingThrowOutcomeHole(
       trigger,
       save: effect.save,
     },
-    ability: effect.save.ability,
-    dc: effect.save.dc,
-    areaChoices: [],
-    targetRollModes: savingThrowRollModeProjections(
-      state,
-      effect.save.ability,
-    ).filter((projection) => projection.targetId === targetId),
-    targetFlatBonuses: savingThrowFlatBonusProjections(
-      state,
-      effect.save.ability,
-    ).filter((projection) => projection.targetId === targetId),
+    ...singleTargetSavingThrowProjections(state, targetId, effect.save),
   };
 }
 

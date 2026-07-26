@@ -1,4 +1,4 @@
-import { maybeOpenSpellCastReactionWindow } from "../spell-cast-reaction-window.ts";
+import { resolveSpellActiveEffectCast } from "../spell-active-effect-resolution.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-damage-reduction
 import { BattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
@@ -35,16 +35,11 @@ import {
   type BattleExecutableSpellInvocation,
   type DamageReductionSpellInvocation,
 } from "../../battle-state-execution.ts";
-import { breakBattleConcentration } from "../damage-apply.ts";
 import { needsHolesResult } from "../needs-holes-result.ts";
-import { invalidResult, resolutionFromStateResult } from "../result-helpers.ts";
+import { invalidResult } from "../result-helpers.ts";
 import { selectSingleSpellTarget } from "../single-spell-target.ts";
 import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
 import { ATTACK_TARGET_HOLE_ID } from "../battle-runtime-protocol.ts";
-import {
-  spellRequiresConcentration,
-  spendSpellCastResources,
-} from "../spells-resolve-resources.ts";
 import { spellDamageTypeChoiceHole } from "../spells-damage-fills.ts";
 import { scalarBuffActiveEffectExpiration } from "../spells-profiles-support.ts";
 import { spellTargetHole } from "../spells-targeting.ts";
@@ -262,34 +257,21 @@ function resolveDamageReduction(
       "Damage-reduction spell damage type must be one of the selected spell's choices.",
     );
   }
+  const damageType = input.fillSet.damageTypeChoice.value;
 
-  const spellCastReactionWindow = maybeOpenSpellCastReactionWindow(
-    input,
-    [targetSelection.targetId],
-    { kind: "magicAction" },
-    undefined,
-  );
-  if (spellCastReactionWindow !== null) {
-    return spellCastReactionWindow;
-  }
-
-  const concentrationBase = spellRequiresConcentration(input.invocation)
-    ? breakBattleConcentration(input.input.state, input.actorId)
-    : input.input.state;
-  const effected = applyDamageReductionEffect(
-    concentrationBase,
-    input.actorId,
-    targetSelection.targetId,
-    input.fillSet.damageTypeChoice.value,
-    input.invocation,
-  );
-  const resourced = spendSpellCastResources({
-    state: effected,
-    actorId: input.actorId,
-    invocation: input.invocation,
-    errorState: input.input.state,
+  return resolveSpellActiveEffectCast({
+    resolution: input,
+    targetIds: [targetSelection.targetId],
+    castingResource: { kind: "magicAction" },
+    applyEffect: (state) =>
+      applyDamageReductionEffect(
+        state,
+        input.actorId,
+        targetSelection.targetId,
+        damageType,
+        input.invocation,
+      ),
   });
-  return resolutionFromStateResult(resourced);
 }
 
 export const DamageReductionInvocationSchema = spellProcedureExecutionSchema(

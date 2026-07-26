@@ -1,4 +1,4 @@
-import { savingThrowMetamagicHoles } from "../saving-throw-metamagic-holes.ts";
+import { discoverTargetSavingThrowSpellCastActs } from "../saving-throw-metamagic-holes.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-careful-save-protection
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-heightened-save-disadvantage
@@ -25,8 +25,6 @@ import type {
 import {
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
-  type BattleCreatureState,
-  type BattleHole,
   type BattleResolutionResult,
   type BattleState,
   type SpellTargeting,
@@ -50,10 +48,6 @@ import {
   PreparedSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
-import {
-  discoverSpellMetamagicSelections,
-  spellMetamagicApplications,
-} from "../metamagic-support.ts";
 import {
   commandOptionChoiceHole,
   spellTargetListHole,
@@ -237,69 +231,14 @@ function discoverCommandCastAct(
   }
 
   const commandOptionHole = commandOptionChoiceHole(invocation);
-  const baseCastAct = commandCastAct(actorId, invocation, [
-    targetHole,
-    commandOptionHole,
-  ]);
-  const metamagicCastActs = commandMetamagicCastActs({
+  return discoverTargetSavingThrowSpellCastActs({
     state,
     actorId,
     actor,
     invocation,
     targetHole,
-    commandOptionHole,
-    baseCastAct,
+    additionalHoles: [commandOptionHole],
   });
-  return [baseCastAct, ...metamagicCastActs];
-}
-
-function commandMetamagicCastActs(input: {
-  readonly state: BattleState;
-  readonly actorId: CombatantId;
-  readonly actor: BattleCreatureState;
-  readonly invocation: BattleExecutableSpellInvocation<CommandSpellInvocation>;
-  readonly targetHole: BattleHole;
-  readonly commandOptionHole: BattleHole;
-  readonly baseCastAct: BattleActDiscoveryCandidate;
-}): readonly BattleActDiscoveryCandidate[] {
-  return discoverSpellMetamagicSelections({
-    actor: input.actor,
-    invocation: input.invocation,
-  }).map((metamagic) => {
-    return {
-      ...input.baseCastAct,
-      subject: {
-        ...input.baseCastAct.subject,
-        metamagic,
-      },
-      initialHoles: [
-        input.targetHole,
-        ...savingThrowMetamagicHoles(
-          input.state,
-          input.actorId,
-          input.invocation,
-          spellMetamagicApplications(input.actor, metamagic),
-        ),
-        input.commandOptionHole,
-      ],
-    };
-  });
-}
-
-function commandCastAct(
-  actorId: CombatantId,
-  invocation: import("../../battle-state-execution.ts").BattleExecutableSpellInvocation<CommandSpellInvocation>,
-  initialHoles: readonly BattleHole[],
-): BattleActDiscoveryCandidate {
-  return {
-    subject: {
-      tag: "actionSpell",
-      actorId,
-      procedureRef: invocation.sourceProcedureRef,
-      mode: { tag: "cast" },
-    },
-    initialHoles,
-  };
 }
 
 function resolveCommand(input: CommandResolveInput): BattleResolutionResult {

@@ -1,7 +1,4 @@
-import {
-  discoverSavingThrowMetamagicCastActs,
-  savingThrowMetamagicHolesOr,
-} from "../saving-throw-metamagic-holes.ts";
+import { discoverSavingThrowSpellCastActs } from "../saving-throw-metamagic-holes.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-gust-of-wind-line unit-feature.metamagic-heightened-save-disadvantage
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
@@ -35,7 +32,6 @@ import { Either } from "effect";
 import {
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
-  type BattleHole,
   type BattleResolutionResult,
   type BattleState,
   type SupportedSpellInvocation,
@@ -58,7 +54,6 @@ import {
   PreparedSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
-import { spellSavingThrowOutcomeHole } from "../spells-holes-fills.ts";
 
 type GustOfWindLineSpellInvocation = Extract<
   SupportedSpellInvocation,
@@ -246,39 +241,7 @@ function discoverGustOfWindLineCastAct(
   actorId: CombatantId,
   invocation: BattleExecutableSpellInvocation<GustOfWindLineSpellInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
-  const actor = state.combatants.get(actorId);
-  const initialHole = spellSavingThrowOutcomeHole(state, actorId, invocation);
-  const baseCastAct = gustOfWindLineCastAct(actorId, invocation, [initialHole]);
-  return [
-    baseCastAct,
-    ...discoverSavingThrowMetamagicCastActs({
-      state,
-      actorId,
-      actor,
-      invocation,
-      baseCastAct,
-      initialHoles: (applications) =>
-        savingThrowMetamagicHolesOr(state, actorId, invocation, applications, [
-          initialHole,
-        ]),
-    }),
-  ];
-}
-
-function gustOfWindLineCastAct(
-  actorId: CombatantId,
-  invocation: import("../../battle-state-execution.ts").BattleExecutableSpellInvocation<GustOfWindLineSpellInvocation>,
-  initialHoles: readonly BattleHole[],
-): BattleActDiscoveryCandidate {
-  return {
-    subject: {
-      tag: "actionSpell",
-      actorId,
-      procedureRef: invocation.sourceProcedureRef,
-      mode: { tag: "cast" },
-    },
-    initialHoles,
-  };
+  return discoverSavingThrowSpellCastActs(state, actorId, invocation);
 }
 
 function resolveGustOfWindLine(

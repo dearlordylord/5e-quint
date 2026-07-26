@@ -2,6 +2,7 @@ import {
   discoverSavingThrowMetamagicCastActs,
   savingThrowMetamagicHoles,
 } from "../saving-throw-metamagic-holes.ts";
+import { actionSpellCastCandidate } from "../spell-cast-candidate.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-condition-save
 import {
@@ -181,10 +182,11 @@ function discoverTargetedSaveGatedConditionCastActs(
     return [];
   }
   const conditionChoiceHoles = saveGatedConditionChoiceHoles(invocation);
-  const baseCastAct = saveGatedConditionCastAct(actorId, invocation, [
-    targetHole,
-    ...conditionChoiceHoles,
-  ]);
+  const baseCastAct = actionSpellCastCandidate(
+    actorId,
+    invocation.sourceProcedureRef,
+    [targetHole, ...conditionChoiceHoles],
+  );
   return [
     baseCastAct,
     ...discoverSavingThrowMetamagicCastActs({
@@ -218,10 +220,11 @@ function discoverAreaSaveGatedConditionCastActs(
     invocation,
   );
   const conditionChoiceHoles = saveGatedConditionChoiceHoles(invocation);
-  const baseCastAct = saveGatedConditionCastAct(actorId, invocation, [
-    savingThrowHole,
-    ...conditionChoiceHoles,
-  ]);
+  const baseCastAct = actionSpellCastCandidate(
+    actorId,
+    invocation.sourceProcedureRef,
+    [savingThrowHole, ...conditionChoiceHoles],
+  );
   return [
     baseCastAct,
     ...discoverSavingThrowMetamagicCastActs({
@@ -252,22 +255,6 @@ function saveGatedConditionChoiceHoles(
   return saveGatedConditionHasConditionChoice(invocation)
     ? [spellConditionChoiceHole(invocation)]
     : [];
-}
-
-function saveGatedConditionCastAct(
-  actorId: CombatantId,
-  invocation: BattleExecutableSpellInvocation<SaveGatedConditionSpellInvocation>,
-  initialHoles: readonly BattleHole[],
-): BattleActDiscoveryCandidate {
-  return {
-    subject: {
-      tag: "actionSpell",
-      actorId,
-      procedureRef: invocation.sourceProcedureRef,
-      mode: { tag: "cast" },
-    },
-    initialHoles,
-  };
 }
 
 function resolveSaveGatedCondition(

@@ -1,4 +1,5 @@
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
+import { actionSpellCastCandidate } from "../spell-cast-candidate.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-d20-lifecycle
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 //
@@ -19,7 +20,6 @@ import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts
 import {
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
-  type BattleHole,
   type BattleResolutionResult,
   type BattleState,
   type SupportedSpellInvocation,
@@ -88,9 +88,9 @@ function discoverAbilityD20TestRollModeSaveGateCastAct(
     return [];
   }
 
-  const baseCastAct = abilityD20TestRollModeSaveGateCastAct(
+  const baseCastAct = actionSpellCastCandidate(
     actorId,
-    invocation,
+    invocation.sourceProcedureRef,
     [targetHole],
   );
   const metamagicCastActs = discoverSpellMetamagicSelections({
@@ -108,22 +108,6 @@ function discoverAbilityD20TestRollModeSaveGateCastAct(
   });
   const castActs = [baseCastAct, ...metamagicCastActs];
   return [...castActs, ...readiedSpellAct(state, actorId, invocation)];
-}
-
-function abilityD20TestRollModeSaveGateCastAct(
-  actorId: CombatantId,
-  invocation: import("../../battle-state-execution.ts").BattleExecutableSpellInvocation<AbilityD20TestRollModeSaveGateSpellInvocation>,
-  initialHoles: readonly BattleHole[],
-): BattleActDiscoveryCandidate {
-  return {
-    subject: {
-      tag: "actionSpell",
-      actorId,
-      procedureRef: invocation.sourceProcedureRef,
-      mode: { tag: "cast" },
-    },
-    initialHoles,
-  };
 }
 
 function resolveAbilityD20TestRollModeSaveGate(

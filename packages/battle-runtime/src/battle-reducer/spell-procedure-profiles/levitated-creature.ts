@@ -1,6 +1,7 @@
 import { maybeOpenSpellCastReactionWindow } from "../spell-cast-reaction-window.ts";
 import { fillsBelongToDeclaredHoles } from "../fill-hole-protocol.ts";
 import { selectSingleSpellTarget } from "../single-spell-target.ts";
+import { resolveWillingTargetSaveGate } from "../willing-target-save-gate.ts";
 import {
   ATTACK_TARGET_HOLE_ID,
   LEVITATE_INITIAL_RISE_HOLE_ID,
@@ -33,7 +34,6 @@ import {
   type BattleState,
   type LevitatedCreatureSpellInvocation,
 } from "../../battle-state-execution.ts";
-import { snapshotBattle } from "../interrupt-execution.ts";
 import { CombatantId } from "../../identity.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";
 import { allocateBattleActiveEffectRef } from "../../active-effect/execution-ref.ts";
@@ -51,12 +51,7 @@ import {
   levitateInitialRiseHole,
 } from "../levitate-creature.ts";
 import { sameStringSet } from "../spells-execution-facts.ts";
-import { spellSavingThrowOutcomeHole } from "../spells-damage-fills.ts";
-import {
-  spellTargetHole,
-  spellTargetIsKnownWilling,
-} from "../spells-targeting.ts";
-import { validateSavingThrowOutcomes } from "../spells-resolve-save-gates.ts";
+import { spellTargetHole } from "../spells-targeting.ts";
 import {
   spellRequiresConcentration,
   spendSpellCastResources,
@@ -261,66 +256,39 @@ function resolveLevitatedCreature(
     }
   }
 
-  const targetIsWilling = spellTargetIsKnownWilling(
-    input.actorId,
-    target.combatantId,
-    input.invocation,
-    input.fillSet.targetSpatialFacts,
-  );
-  if (targetIsWilling && input.fillSet.savingThrowOutcomes !== undefined) {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
+  const saveGate = resolveWillingTargetSaveGate({
+    state: input.input.state,
+    subject: input.input.subject,
+    actorId: input.actorId,
+    targetId: target.combatantId,
+    invocation: input.invocation,
+    targetSpatialFacts: input.fillSet.targetSpatialFacts,
+    savingThrowOutcomes: input.fillSet.savingThrowOutcomes,
+    willingTargetSaveMessage:
       "Willing Levitate creature targets do not make a Saving Throw.",
-    );
+  });
+  if (saveGate.tag === "resolutionRequired") {
+    return saveGate.resolution;
   }
-  const savingThrowHole = spellSavingThrowOutcomeHole(
-    input.input.state,
-    input.actorId,
-    input.invocation,
-  );
-  if (!targetIsWilling && input.fillSet.savingThrowOutcomes === undefined) {
-    return needsHolesResult(input.input.state, input.input.subject, [
-      savingThrowHole,
-    ]);
-  }
-  if (input.fillSet.savingThrowOutcomes !== undefined) {
-    const validation = validateSavingThrowOutcomes(
-      input.fillSet.savingThrowOutcomes,
-      input.invocation,
-      input.input.state,
-      input.actorId,
-      undefined,
-      [target.combatantId],
-    );
-    if (validation !== null) {
-      return invalidResult(input.input.state, "invalidFill", validation);
+  if (saveGate.tag === "unaffected") {
+    if (input.fillSet.levitateInitialRiseFeet !== undefined) {
+      return invalidResult(
+        input.input.state,
+        "invalidFill",
+        "Successful Levitate creature saves are unaffected and do not use an initial-rise fill.",
+      );
     }
-    const outcome = input.fillSet.savingThrowOutcomes.outcomes[0];
-    if (outcome?.succeeded === true) {
-      if (input.fillSet.levitateInitialRiseFeet !== undefined) {
-        return invalidResult(
-          input.input.state,
-          "invalidFill",
-          "Successful Levitate creature saves are unaffected and do not use an initial-rise fill.",
-        );
-      }
-      if (input.storedGlyphRelease !== undefined) {
-        return {
-          tag: "resolved",
-          state: input.input.state,
-          snapshot: snapshotBattle(input.input.state),
-        };
-      }
-      const resourced = spendSpellCastResources({
-        state: input.input.state,
-        actorId: input.actorId,
-        invocation: input.invocation,
-        errorState: input.input.state,
-        startConcentration: false,
-      });
-      return resolutionFromStateResult(resourced);
+    if (input.storedGlyphRelease !== undefined) {
+      return resolvedResult(input.input.state);
     }
+    const resourced = spendSpellCastResources({
+      state: input.input.state,
+      actorId: input.actorId,
+      invocation: input.invocation,
+      errorState: input.input.state,
+      startConcentration: false,
+    });
+    return resolutionFromStateResult(resourced);
   }
 
   if (input.fillSet.levitateInitialRiseFeet === undefined) {

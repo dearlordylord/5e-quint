@@ -1,4 +1,4 @@
-import { maybeOpenSpellCastReactionWindow } from "../spell-cast-reaction-window.ts";
+import { resolveSpellActiveEffectCast } from "../spell-active-effect-resolution.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-chosen-damage-resistance
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
@@ -22,19 +22,14 @@ import {
   type BattleExecutableSpellInvocation,
   type ChosenDamageResistanceSpellInvocation,
 } from "../../battle-state-execution.ts";
-import { breakBattleConcentration } from "../damage-apply.ts";
 import { needsHolesResult } from "../needs-holes-result.ts";
-import { invalidResult, resolutionFromStateResult } from "../result-helpers.ts";
+import { invalidResult } from "../result-helpers.ts";
 import { selectSingleSpellTarget } from "../single-spell-target.ts";
 import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
 import { ATTACK_TARGET_HOLE_ID } from "../battle-runtime-protocol.ts";
 import { spellDamageTypeChoiceHole } from "../spells-damage-fills.ts";
 import { sameStringSet } from "../spells-execution-facts.ts";
 import { spellTargetHole } from "../spells-targeting.ts";
-import {
-  spellRequiresConcentration,
-  spendSpellCastResources,
-} from "../spells-resolve-resources.ts";
 import {
   DamageTypeSchema,
   MovementFeet,
@@ -243,34 +238,21 @@ function resolveChosenDamageResistance(
       "Chosen damage Resistance spell damage type must be one of the selected spell's choices.",
     );
   }
+  const damageType = input.fillSet.damageTypeChoice.value;
 
-  const spellCastReactionWindow = maybeOpenSpellCastReactionWindow(
-    input,
-    [targetSelection.targetId],
-    { kind: "magicAction" },
-    undefined,
-  );
-  if (spellCastReactionWindow !== null) {
-    return spellCastReactionWindow;
-  }
-
-  const concentrationBase = spellRequiresConcentration(input.invocation)
-    ? breakBattleConcentration(input.input.state, input.actorId)
-    : input.input.state;
-  const effected = applyChosenDamageResistanceEffect({
-    state: concentrationBase,
-    actorId: input.actorId,
-    targetId: targetSelection.targetId,
-    damageType: input.fillSet.damageTypeChoice.value,
-    invocation: input.invocation,
+  return resolveSpellActiveEffectCast({
+    resolution: input,
+    targetIds: [targetSelection.targetId],
+    castingResource: { kind: "magicAction" },
+    applyEffect: (state) =>
+      applyChosenDamageResistanceEffect({
+        state,
+        actorId: input.actorId,
+        targetId: targetSelection.targetId,
+        damageType,
+        invocation: input.invocation,
+      }),
   });
-  const resourced = spendSpellCastResources({
-    state: effected,
-    actorId: input.actorId,
-    invocation: input.invocation,
-    errorState: input.input.state,
-  });
-  return resolutionFromStateResult(resourced);
 }
 
 function applyChosenDamageResistanceEffect(input: {
