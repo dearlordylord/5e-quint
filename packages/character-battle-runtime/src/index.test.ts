@@ -382,6 +382,15 @@ describe("Character Sheet battle handoff", () => {
   });
 
   test("propagates support-profile selection, source-fact, and catalog failures", () => {
+    const initBuild = (candidateBuild: CharacterBuild, catalog = unitLibrary) =>
+      battleCreatureInitFromCharacterBuild({
+        combatantId: combatantId("support-profile-propagation"),
+        characterId: characterId("character:support-profile-propagation"),
+        displayName: "Support profile propagation",
+        build: candidateBuild,
+        initiative: initiativeScore(10),
+        unitLibrary: catalog,
+      });
     const malformedMasteryBuild = {
       ...build,
       features: [
@@ -400,24 +409,27 @@ describe("Character Sheet battle handoff", () => {
         unitLibrary,
       ),
     ).toMatchObject({ _tag: "Left" });
+    expect(initBuild(malformedMasteryBuild)).toMatchObject({ _tag: "Left" });
 
+    const invalidAncestryBuild = {
+      ...dragonbornFighterBuild(),
+      speciesChoiceFacts: {
+        draconicAncestry: {
+          kind: "draconicAncestry",
+          ancestorId: characterDraconicAncestrySelection(
+            "synthetic:ancestor" as never,
+          ),
+        },
+      },
+    } satisfies CharacterBuild;
     expect(
       characterUnitRefsWithBattleSupportProfiles(
-        {
-          ...dragonbornFighterBuild(),
-          speciesChoiceFacts: {
-            draconicAncestry: {
-              kind: "draconicAncestry",
-              ancestorId: characterDraconicAncestrySelection(
-                "synthetic:ancestor" as never,
-              ),
-            },
-          },
-        },
+        invalidAncestryBuild,
         unitLibrary,
         [],
       ),
     ).toMatchObject({ _tag: "Left" });
+    expect(initBuild(invalidAncestryBuild)).toMatchObject({ _tag: "Left" });
 
     const missingBuildRefCatalog: UnitCatalog = {
       getUnit: (id) =>
@@ -457,6 +469,12 @@ describe("Character Sheet battle handoff", () => {
         build,
         missingMasteryProfileCatalog,
         [{ weaponUnitId: authoredUnitId("weapon_longsword") }],
+      ),
+    ).toMatchObject({ _tag: "Left" });
+    expect(
+      initBuild(
+        weaponMasteryLongswordFighterBuild(),
+        missingMasteryProfileCatalog,
       ),
     ).toMatchObject({ _tag: "Left" });
   });
@@ -566,6 +584,14 @@ describe("Character Sheet battle handoff", () => {
   });
 
   test("rejects non-integer Initiative totals and unreadable class projections", () => {
+    expect(
+      characterBattleInitiativeScore({
+        build,
+        unitLibrary,
+        rollTotal: 10,
+        proficiencyBonusChoice: "omit",
+      }),
+    ).toEqual(Either.right(initiativeScore(10)));
     expect(
       characterBattleInitiativeScore({
         build,
@@ -3049,6 +3075,72 @@ describe("Character Sheet battle handoff", () => {
     });
   });
 
+  test("rejects contradictory ordinary Spell Slot execution state", () => {
+    const sheet = expectRight(
+      rebuildCharacterSheetFixture({
+        characterId: characterSheetId("character:contradictory-slot-state"),
+        build: wizardSpellcastingBuild(),
+        currentHp: Hp(7),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+    const settleWithSlots = (
+      spellSlots: CharacterBattleSpellcastingExecutionState["spellSlots"],
+    ) =>
+      settleHandoffBranchToCharacterSheet({
+        sheet,
+        unitLibrary,
+        combatant: handoffBranchCombatant({
+          origin: {
+            kind: "character",
+            characterId: characterId("character:contradictory-slot-state"),
+            spellcasting: handoffSpellcastingState({ spellSlots }),
+          },
+          hp: Hp(7),
+          maxHp: sheetMaximumHp(sheet),
+          tempHp: Hp(0),
+          positiveHpUnconscious: null,
+        }),
+      });
+
+    expect(
+      settleWithSlots([
+        {
+          spellLevel: spellSlotLevel(1),
+          count: resourceCount(2),
+          expended: resourceCount(1),
+        },
+        {
+          spellLevel: spellSlotLevel(1),
+          count: resourceCount(2),
+          expended: resourceCount(1),
+        },
+      ]),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Battle handoff Spell Slot state must not duplicate spell levels.",
+      },
+    });
+    expect(
+      settleWithSlots([
+        {
+          spellLevel: spellSlotLevel(1),
+          count: resourceCount(2),
+          expended: resourceCount(3),
+        },
+      ]),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Battle handoff Spell Slot expenditure must not exceed its count.",
+      },
+    });
+  });
+
   test("rejects ordinary Spell Slot handoff when levels drift", () => {
     const sheet = expectRight(
       rebuildCharacterSheetFixture({
@@ -4433,6 +4525,24 @@ describe("Character Build battle projection", () => {
         ),
       },
     });
+    expect(
+      startBattleFromCharacterBuildAndStatBlock({
+        battleId: battleId("battle:invalid-build-boundary"),
+        character: {
+          ...init,
+          hitPointMaximum: Hp(0),
+        },
+        statBlockBattleInput: {
+          combatantId: combatantId("invalid-build-boundary-stat-block"),
+          statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+          initiative: initiativeScore(5),
+        },
+        unitLibrary,
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: { message: expect.stringContaining("max HP must be positive") },
+    });
   });
 
   test("reports missing Units referenced by armor and weapon projections", () => {
@@ -4443,6 +4553,10 @@ describe("Character Build battle projection", () => {
     });
     const missingOffHandItemId = characterEquipmentItemId({
       slot: "off",
+      unitId: expectRight(characterEquipmentItemUnitId(missingUnitId)),
+    });
+    const missingArmorItemId = characterEquipmentItemId({
+      slot: "armor",
       unitId: expectRight(characterEquipmentItemUnitId(missingUnitId)),
     });
     const missingEquipmentBuild = {
@@ -4484,6 +4598,58 @@ describe("Character Build battle projection", () => {
           ],
         },
         unitLibrary,
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: { message: expect.stringContaining("Unknown Unit") },
+    });
+
+    const init = {
+      combatantId: combatantId("missing-projection-unit"),
+      characterId: characterId("character:missing-projection-unit"),
+      displayName: "Missing projection Unit",
+      initiative: initiativeScore(10),
+      unitLibrary,
+    } as const;
+    expect(
+      battleCreatureInitFromCharacterBuild({
+        ...init,
+        build: missingEquipmentBuild,
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: { message: expect.stringContaining("Unknown Unit") },
+    });
+    expect(
+      battleCreatureInitFromCharacterBuild({
+        ...init,
+        build: {
+          ...build,
+          equipment: {
+            owned: [
+              {
+                itemId: missingOffHandItemId,
+                unitId: missingUnitId,
+              },
+            ],
+            loadout: { offHandWeapon: { itemId: missingOffHandItemId } },
+          },
+        },
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: { message: expect.stringContaining("Unknown Unit") },
+    });
+    expect(
+      battleCreatureInitFromCharacterBuild({
+        ...init,
+        build: {
+          ...build,
+          equipment: {
+            owned: [{ itemId: missingArmorItemId, unitId: missingUnitId }],
+            loadout: { armor: missingArmorItemId },
+          },
+        },
       }),
     ).toMatchObject({
       _tag: "Left",
@@ -4543,6 +4709,30 @@ describe("Character Build battle projection", () => {
           },
         },
         unitLibrary,
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: { message: expect.stringContaining("Unknown Unit") },
+    });
+    expect(
+      battleCreatureInitFromCharacterBuild({
+        combatantId: combatantId("missing-spellcasting-unit"),
+        characterId: characterId("character:missing-spellcasting-unit"),
+        displayName: "Missing spellcasting Unit",
+        initiative: initiativeScore(10),
+        unitLibrary,
+        build: {
+          ...wizard,
+          spellcasting: {
+            ...wizardSpellcasting,
+            sources: [
+              {
+                ...wizardSource,
+                cantrips: [authoredUnitId("synthetic:missing-cantrip")],
+              },
+            ],
+          },
+        },
       }),
     ).toMatchObject({
       _tag: "Left",

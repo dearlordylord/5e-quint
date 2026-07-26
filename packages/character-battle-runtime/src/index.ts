@@ -748,15 +748,9 @@ function characterSheetSpellSlotSourceStateFromBattle(input: {
       );
     }
     battleLevels.add(battleSlot.spellLevel);
-    if (
-      !Number.isInteger(battleSlot.expended) ||
-      !Number.isInteger(battleSlot.count) ||
-      battleSlot.expended < 0 ||
-      battleSlot.count < 0 ||
-      battleSlot.expended > battleSlot.count
-    ) {
+    if (battleSlot.expended > battleSlot.count) {
       return characterSheetBattleHandoffIssue(
-        "Battle handoff Spell Slot state must have nonnegative count and expenditure.",
+        "Battle handoff Spell Slot expenditure must not exceed its count.",
       );
     }
   }
