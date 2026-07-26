@@ -4435,6 +4435,121 @@ describe("Character Build battle projection", () => {
     });
   });
 
+  test("reports missing Units referenced by armor and weapon projections", () => {
+    const missingUnitId = authoredUnitId("synthetic:missing-equipment-unit");
+    const missingItemId = characterEquipmentItemId({
+      slot: "main",
+      unitId: expectRight(characterEquipmentItemUnitId(missingUnitId)),
+    });
+    const missingOffHandItemId = characterEquipmentItemId({
+      slot: "off",
+      unitId: expectRight(characterEquipmentItemUnitId(missingUnitId)),
+    });
+    const missingEquipmentBuild = {
+      ...build,
+      equipment: {
+        owned: [
+          { itemId: missingItemId, unitId: missingUnitId },
+          { itemId: missingOffHandItemId, unitId: missingUnitId },
+        ],
+        loadout: {
+          weapon: { itemId: missingItemId, grip: "one_handed" },
+          offHandWeapon: { itemId: missingOffHandItemId },
+        },
+      },
+    } satisfies CharacterBuild;
+    expect(
+      characterAttackActionOption(missingEquipmentBuild, unitLibrary),
+    ).toMatchObject({
+      _tag: "Left",
+      left: { message: expect.stringContaining("Unknown Unit") },
+    });
+    expect(
+      characterOffHandAttackActionOption(missingEquipmentBuild, unitLibrary),
+    ).toMatchObject({
+      _tag: "Left",
+      left: { message: expect.stringContaining("Unknown Unit") },
+    });
+
+    expect(
+      characterArmorClassState({
+        build: {
+          ...build,
+          features: [
+            {
+              kind: "selectedClassChoice",
+              selectedFromUnitId: authoredUnitId("fighter_fighting_style"),
+              unitId: authoredUnitId("synthetic:missing-armor-feature"),
+            },
+          ],
+        },
+        unitLibrary,
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: { message: expect.stringContaining("Unknown Unit") },
+    });
+  });
+
+  test("reports missing and contradictory spellcasting projections", () => {
+    expect(characterSpellcasting({ build, unitLibrary })).toMatchObject({
+      _tag: "Left",
+      left: { message: "Character build does not have spellcasting." },
+    });
+
+    const wizard = trueStrikeWizardBuild();
+    const wizardSpellcasting = wizard.spellcasting;
+    if (wizardSpellcasting === undefined) {
+      throw new Error("Expected Wizard spellcasting fixture.");
+    }
+    const [wizardSource] = wizardSpellcasting.sources;
+    if (wizardSource === undefined) {
+      throw new Error("Expected Wizard spellcasting source fixture.");
+    }
+    expect(
+      characterSpellcasting({
+        build: {
+          ...wizard,
+          spellcasting: {
+            ...wizardSpellcasting,
+            sources: [
+              {
+                ...wizardSource,
+                cantrips: [authoredUnitId("synthetic:missing-cantrip")],
+              },
+            ],
+          },
+        },
+        unitLibrary,
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: { message: expect.stringContaining("Unknown Unit") },
+    });
+    expect(
+      characterSpellcasting({
+        build: {
+          ...wizard,
+          spellcasting: {
+            ...wizardSpellcasting,
+            sources: [
+              {
+                ...wizardSource,
+                preparedSpells: [
+                  authoredUnitId("synthetic:missing-prepared-spell"),
+                ],
+              },
+            ],
+          },
+        },
+        unitLibrary,
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: { message: expect.stringContaining("Unknown Unit") },
+    });
+  });
+
   test("projects an empty weapon loadout as no attack option", () => {
     expect(characterAttackActionOption(build, unitLibrary)).toEqual(
       Either.right(null),
