@@ -1,14 +1,12 @@
 // Moonbeam movable Cylinder composite transition.
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE
 
-import { damageAmount } from "@dnd/shared/types";
-import {
-  spellSaveGateBranch,
-  spellSaveGateDamageAmount,
-  spellSaveGateDamageResult,
-} from "@dnd/shared-algebras/spell-save-gate-algebra";
 import { Match } from "effect";
 import { expendActionSpellSlot } from "./action-spell-slot-expenditure.ts";
+import {
+  applyDamageToPositiveHitPoints,
+  halfDamageAfterSuccessfulSave,
+} from "./focused-spell-hazard-damage.ts";
 import {
   projectShapeShiftRuntimeReversion,
   trueFormRuntimeState,
@@ -97,17 +95,7 @@ export function moonbeamDamageAfterSave(input: {
   readonly rolledDamage: number;
   readonly savingThrowSucceeded: boolean;
 }): number {
-  const branch = spellSaveGateBranch(input.savingThrowSucceeded);
-  const saveDamageResult = spellSaveGateDamageResult({
-    branch,
-    damageOnSuccess: "halfDamage",
-  });
-  return Number(
-    spellSaveGateDamageAmount(
-      damageAmount(input.rolledDamage),
-      saveDamageResult,
-    ),
-  );
+  return halfDamageAfterSuccessfulSave(input);
 }
 
 export function moonbeamDamageRollAccepted(input: {
@@ -177,7 +165,7 @@ export function resolveMoonbeamSave(
       }
       const damaged = {
         ...state,
-        targetVitals: applyResolvedDamageToPositiveHitPoints(
+        targetVitals: applyDamageToPositiveHitPoints(
           state.targetVitals,
           moonbeamDamageAfterSave(fills),
         ),
@@ -291,25 +279,4 @@ function moonbeamZoneWithSavedThisTurn(
     byTag("active", (active) => ({ ...active, savedThisTurn })),
     Match.exhaustive,
   );
-}
-
-function applyResolvedDamageToPositiveHitPoints(
-  vitals: MoonbeamMovableZoneCreatureVitals,
-  rawDamage: number,
-): MoonbeamMovableZoneCreatureVitals {
-  if (vitals.dead) return vitals;
-  const resolvedDamage = Math.max(0, Math.floor(rawDamage));
-  const absorbedByTemporaryHitPoints = Math.min(
-    vitals.temporaryHitPoints,
-    resolvedDamage,
-  );
-  const damageToHitPoints = resolvedDamage - absorbedByTemporaryHitPoints;
-  const nextHitPoints = Math.max(0, vitals.hitPoints - damageToHitPoints);
-  return {
-    ...vitals,
-    hitPoints: nextHitPoints,
-    temporaryHitPoints:
-      vitals.temporaryHitPoints - absorbedByTemporaryHitPoints,
-    dead: nextHitPoints === 0,
-  };
 }

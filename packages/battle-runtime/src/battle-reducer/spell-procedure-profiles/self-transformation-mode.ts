@@ -42,6 +42,7 @@ import { SELF_TRANSFORMATION_MODE_KINDS } from "../domain-constants.ts";
 
 import { needsHolesResult } from "../needs-holes-result.ts";
 import { invalidResult, resolutionFromStateResult } from "../result-helpers.ts";
+import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
 import { applySelfTransformationModeEffect } from "../spells-active-effects.ts";
 import { spellDamageTypeChoiceHole } from "../spells-damage-fills.ts";
 import {
@@ -329,11 +330,14 @@ function discoverSelfTransformationModeCastAct(
 function resolveSelfTransformationMode(
   input: SelfTransformationModeResolveInput,
 ): BattleResolutionResult {
-  const invalidFillMessage = selfTransformationModeInvalidFillMessage(
-    input.fillSet,
-  );
-  if (invalidFillMessage !== null) {
-    return invalidResult(input.input.state, "invalidFill", invalidFillMessage);
+  if (
+    !selfTransformationModeFillsAreAllowed(input.input.fills, input.invocation)
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Self-transformation mode spells use one mode choice fill and Natural Weapons damage type choice.",
+    );
   }
   const modeEffect = selfTransformationModeEffectPayloadFromFillSet(
     input.invocation,
@@ -409,13 +413,15 @@ export function resolveStoredGlyphSelfTransformationModeSpellRelease(input: {
   readonly targetId: CombatantId;
   readonly sourceCombatantId: CombatantId;
   readonly invocation: SelfTransformationModeResolveInput["invocation"];
+  readonly fills: readonly BattleFill[];
   readonly fillSet: OkSpellFillSet;
 }): BattleResolutionResult {
-  const invalidFillMessage = selfTransformationModeInvalidFillMessage(
-    input.fillSet,
-  );
-  if (invalidFillMessage !== null) {
-    return invalidResult(input.state, "invalidFill", invalidFillMessage);
+  if (!selfTransformationModeFillsAreAllowed(input.fills, input.invocation)) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Self-transformation mode spells use one mode choice fill and Natural Weapons damage type choice.",
+    );
   }
   const modeEffect = selfTransformationModeEffectPayloadFromFillSet(
     input.invocation,
@@ -478,37 +484,14 @@ export function resolveStoredGlyphSelfTransformationModeSpellRelease(input: {
   };
 }
 
-function selfTransformationModeInvalidFillMessage(
-  fillSet: OkSpellFillSet,
-): string | null {
-  return fillSet.targetId !== undefined ||
-    fillSet.objectTarget !== undefined ||
-    fillSet.targetSpatialFacts.length > 0 ||
-    fillSet.targetAllocation !== undefined ||
-    fillSet.targetList !== undefined ||
-    fillSet.attackSequencePartFills.length > 0 ||
-    fillSet.attackRoll !== undefined ||
-    fillSet.savingThrowOutcomes !== undefined ||
-    fillSet.skillChoice !== undefined ||
-    fillSet.targetAbilityChoices !== undefined ||
-    fillSet.abilityChoice !== undefined ||
-    fillSet.thaumaturgyActiveOneMinuteEffectCount !== undefined ||
-    fillSet.commandOptionChoice !== undefined ||
-    fillSet.conditionChoice !== undefined ||
-    fillSet.areaChoice !== undefined ||
-    fillSet.teleportDestination !== undefined ||
-    fillSet.dancingLightsPlacement !== undefined ||
-    fillSet.concentrationSavingThrows.length > 0 ||
-    fillSet.hideousLaughterDamageRepeatSaves.length > 0 ||
-    fillSet.damageDispositions.length > 0 ||
-    fillSet.damageRoll !== undefined ||
-    fillSet.mirrorImageDuplicateRoll !== undefined ||
-    fillSet.movement !== undefined ||
-    fillSet.spellDamageReductionRolls.length > 0 ||
-    fillSet.attackBurstDamageRoll !== undefined ||
-    fillSet.healingRoll !== undefined
-    ? "Self-transformation mode spells use one mode choice fill and Natural Weapons damage type choice."
-    : null;
+function selfTransformationModeFillsAreAllowed(
+  fills: readonly BattleFill[],
+  invocation: SelfTransformationModeResolveInput["invocation"],
+): boolean {
+  return fillsBelongToSpellCastHoles(fills, [
+    selfTransformationModeChoiceHole(invocation).holeId,
+    spellDamageTypeChoiceHole(invocation).holeId,
+  ]);
 }
 
 function selfTransformationModeEffectPayloadFromFillSet(

@@ -74,6 +74,25 @@ export function supportedDamageAmountExpr(input: {
   return null;
 }
 
+export function supportedSpellSlotDamageFacts(input: {
+  readonly slots: readonly { readonly spellLevel: SpellSlotLevel }[];
+  readonly amount: SurfaceDiceAmount;
+  readonly spellLevel: number;
+}): readonly {
+  readonly slotLevel: SpellSlotLevel;
+  readonly damageExpr: DiceExpr;
+}[] {
+  return input.slots.flatMap(({ spellLevel: slotLevel }) => {
+    if (Number(slotLevel) < input.spellLevel) return [];
+    const damageExpr = supportedDamageAmountExpr({
+      amount: input.amount,
+      spellLevel: input.spellLevel,
+      slotLevel,
+    });
+    return damageExpr === null ? [] : [{ slotLevel, damageExpr }];
+  });
+}
+
 export function diceExprWithDelta(
   base: DiceExpr,
   delta: {

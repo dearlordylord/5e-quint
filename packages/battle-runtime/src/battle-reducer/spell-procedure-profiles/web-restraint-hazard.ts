@@ -1,4 +1,5 @@
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
+import { ongoingConcentrationAreaSpellFacts } from "../ongoing-concentration-area-spell.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE
@@ -24,10 +25,7 @@ import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 //     Invocation, Area of Effect/Cube, Difficult Terrain, Lightly Obscured,
 //     Restrained, Saving Throw, Ability Check, Movement, and Condition.
 
-import {
-  elapsedTimeTicksFromTimeSpanDuration,
-  type ElapsedTimeTicks,
-} from "@dnd/shared-algebras/elapsed-time-algebra";
+import { type ElapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
 import { Either } from "effect";
 
@@ -127,59 +125,50 @@ function admitWebRestraintHazard(
 function webRestraintHazardSpell(
   spell: BattleSpellAdmissionSource,
 ): WebRestraintHazardProfileShape | null {
-  if (spell.mechanics.family !== "ongoing_effect") {
+  const ongoing = ongoingConcentrationAreaSpellFacts(spell);
+  if (ongoing === null) {
     return null;
   }
-  const durationTicks =
-    spell.mechanics.duration.kind === "concentration"
-      ? elapsedTimeTicksFromTimeSpanDuration(spell.mechanics.duration.upTo)
-      : null;
-  const attachment = spell.mechanics.attachment;
-  const area =
-    attachment.kind === "hole" && attachment.value.kind === "area"
-      ? attachment.value
-      : null;
-  const enterOperation = spell.mechanics.operations.find(
+  const { mechanics, duration, durationTicks, area } = ongoing;
+  const enterOperation = mechanics.operations.find(
     (operation) => operation.trigger.kind === "on_creature_enters_area",
   );
-  const startTurnOperation = spell.mechanics.operations.find(
+  const startTurnOperation = mechanics.operations.find(
     (operation) => operation.trigger.kind === "on_creature_starts_turn_in_area",
   );
-  const escapeOperation = spell.mechanics.operations.find(
+  const escapeOperation = mechanics.operations.find(
     (operation) =>
       operation.trigger.kind === "on_affected_creature_spends_action",
   );
-  const difficultTerrainOperation = spell.mechanics.operations.find(
+  const difficultTerrainOperation = mechanics.operations.find(
     (operation) =>
       operation.trigger.kind === "passive" &&
       operation.effect.kind === "area_is_difficult_terrain",
   );
-  const lightlyObscuredOperation = spell.mechanics.operations.find(
+  const lightlyObscuredOperation = mechanics.operations.find(
     (operation) =>
       operation.trigger.kind === "passive" &&
       operation.effect.kind === "area_is_lightly_obscured",
   );
-  const anchorOperation = spell.mechanics.operations.find(
+  const anchorOperation = mechanics.operations.find(
     (operation) =>
       operation.trigger.kind === "passive" &&
       operation.effect.kind === "area_anchor_or_layering_requirement",
   );
-  const burnAwayOperation = spell.mechanics.operations.find(
+  const burnAwayOperation = mechanics.operations.find(
     (operation) =>
       operation.trigger.kind === "passive" &&
       operation.effect.kind === "area_section_burns_away",
   );
 
   if (
-    spell.mechanics.level !== WEB_LEVEL ||
-    spell.mechanics.castingTime.kind !== "action" ||
-    spell.mechanics.range.kind !== "point" ||
-    spell.mechanics.range.feet !== WEB_RANGE_FEET ||
-    spell.mechanics.duration.kind !== "concentration" ||
-    spell.mechanics.duration.upTo.unit !== "hour" ||
-    spell.mechanics.duration.upTo.amount !== WEB_DURATION_HOURS ||
-    spell.mechanics.operations.length !== WEB_OPERATION_COUNT ||
-    durationTicks === null ||
+    mechanics.level !== WEB_LEVEL ||
+    mechanics.castingTime.kind !== "action" ||
+    mechanics.range.kind !== "point" ||
+    mechanics.range.feet !== WEB_RANGE_FEET ||
+    duration.upTo.unit !== "hour" ||
+    duration.upTo.amount !== WEB_DURATION_HOURS ||
+    mechanics.operations.length !== WEB_OPERATION_COUNT ||
     Either.isLeft(durationTicks) ||
     area?.kind !== "area" ||
     area.origin.kind !== "point_within_range" ||
@@ -199,7 +188,7 @@ function webRestraintHazardSpell(
 
   return {
     durationTicks: durationTicks.right,
-    rangeFeet: spell.mechanics.range.feet,
+    rangeFeet: mechanics.range.feet,
     sideFeet: area.shape.sideFeet,
   };
 }

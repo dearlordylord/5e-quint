@@ -38,6 +38,7 @@ import { Schema } from "effect";
 import {
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
+  spellProcedureResolutionContext,
 } from "./profile.ts";
 import {
   AbilitySchema,
@@ -91,18 +92,9 @@ function discoverSaveGatedConditionImmunityCastAct(
 function resolveSaveGatedConditionImmunity(
   input: SaveGatedConditionImmunityResolveInput,
 ): BattleResolutionResult {
-  return resolveSaveGateConditionImmunitySpellAct({
-    input: input.input,
-    actorId: input.actorId,
-    invocation: input.invocation,
-    fillSet: input.fillSet,
-    ...(input.actionCostOverride === undefined
-      ? {}
-      : { actionCostOverride: input.actionCostOverride }),
-    ...(input.metamagicApplications === undefined
-      ? {}
-      : { metamagicApplications: input.metamagicApplications }),
-  });
+  return resolveSaveGateConditionImmunitySpellAct(
+    spellProcedureResolutionContext(input),
+  );
 }
 
 const SaveGatedConditionImmunityInvocationSchema =

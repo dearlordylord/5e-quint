@@ -45,6 +45,7 @@ import {
   MovementFeet,
   NoSpellInvocationResourceSchema,
   PreparedSpellAccessSchema,
+  SaveGatedDamageSpellTargetingSchema,
   SpellFailedSavePostDamageRiderSchema,
   SpellPostSaveAreaEffectSchema,
   SpellSavingThrowRollModeRuleSchema,
@@ -70,6 +71,7 @@ import {
   spellAdmissionCharacterLevel,
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
+  spellProcedureResolutionContext,
 } from "./profile.ts";
 
 type SaveGatedDamageSpellInvocation = Extract<
@@ -233,18 +235,7 @@ function resolveSaveGatedDamage(
       input.fillSet,
     );
   }
-  return resolveSaveGateDamageSpellAct({
-    input: input.input,
-    actorId: input.actorId,
-    invocation: input.invocation,
-    fillSet: input.fillSet,
-    ...(input.actionCostOverride === undefined
-      ? {}
-      : { actionCostOverride: input.actionCostOverride }),
-    ...(input.metamagicApplications === undefined
-      ? {}
-      : { metamagicApplications: input.metamagicApplications }),
-  });
+  return resolveSaveGateDamageSpellAct(spellProcedureResolutionContext(input));
 }
 
 function isTriggeredReactionSaveGatedDamageResolution(
@@ -268,39 +259,7 @@ const SaveGatedDamageCommonFields = {
   spellRuleFacts: SpellRuleExecutionFactsSchema,
   ability: AbilitySchema,
   dc: DcSourceSchema,
-  targeting: Schema.Union(
-    Schema.Struct({ kind: Schema.Literal("singleCombatant") }),
-    Schema.Struct({
-      kind: Schema.Literal("targetList"),
-      minTargets: Schema.Literal(1),
-      maxTargets: Schema.Number,
-    }),
-    Schema.Struct({
-      kind: Schema.Literal("pointOriginSphere"),
-      radiusFeet: MovementFeet,
-    }),
-    Schema.Struct({
-      kind: Schema.Literal("pointOriginCubeExcludingCaster"),
-      sideFeet: MovementFeet,
-    }),
-    Schema.Struct({
-      kind: Schema.Literal("pointOriginCube"),
-      sideFeet: MovementFeet,
-    }),
-    Schema.Struct({
-      kind: Schema.Literal("selfOriginCube"),
-      sideFeet: MovementFeet,
-    }),
-    Schema.Struct({
-      kind: Schema.Literal("selfOriginCone"),
-      lengthFeet: MovementFeet,
-    }),
-    Schema.Struct({
-      kind: Schema.Literal("selfOriginLine"),
-      lengthFeet: MovementFeet,
-      widthFeet: MovementFeet,
-    }),
-  ),
+  targeting: SaveGatedDamageSpellTargetingSchema,
   damage: Schema.Struct({
     expr: DiceExprSchema,
     damageType: DamageTypeSchema,

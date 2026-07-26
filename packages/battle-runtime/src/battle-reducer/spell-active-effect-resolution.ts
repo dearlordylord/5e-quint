@@ -17,6 +17,58 @@ type SpellCastReactionResolutionContext = Parameters<
   typeof maybeOpenSpellCastReactionWindow
 >[0];
 
+export function maybeOpenConfiguredSpellCastReactionWindow(input: {
+  readonly resolution: SpellCastReactionResolutionContext & {
+    readonly storedGlyphRelease?: object | undefined;
+    readonly actionCostOverride?: "magicAction" | "bonusAction";
+    readonly metamagicApplications?:
+      | readonly CharacterBattleMetamagicOptionFact[]
+      | undefined;
+  };
+  readonly targetIds: readonly CombatantId[];
+}): BattleResolutionResult | null {
+  const { resolution } = input;
+  return resolution.storedGlyphRelease === undefined
+    ? maybeOpenSpellCastReactionWindow(
+        resolution,
+        input.targetIds,
+        resolution.actionCostOverride === "bonusAction" ||
+          resolution.input.subject.tag === "bonusActionSpell"
+          ? { kind: "bonusAction" }
+          : { kind: "magicAction" },
+        resolution.metamagicApplications ?? [],
+      )
+    : null;
+}
+
+export function spendConfiguredSpellCastResources(input: {
+  readonly resolution: SpellCastReactionResolutionContext & {
+    readonly actionCostOverride?: "magicAction" | "bonusAction";
+    readonly metamagicApplications?:
+      | readonly CharacterBattleMetamagicOptionFact[]
+      | undefined;
+  };
+  readonly state: BattleState;
+  readonly startConcentration?: boolean | undefined;
+}) {
+  const { resolution } = input;
+  return spendSpellCastResources({
+    state: input.state,
+    actorId: resolution.actorId,
+    invocation: resolution.invocation,
+    errorState: resolution.input.state,
+    ...(input.startConcentration === undefined
+      ? {}
+      : { startConcentration: input.startConcentration }),
+    ...(resolution.actionCostOverride === undefined
+      ? {}
+      : { actionCostOverride: resolution.actionCostOverride }),
+    ...(resolution.metamagicApplications === undefined
+      ? {}
+      : { metamagicApplications: resolution.metamagicApplications }),
+  });
+}
+
 /**
  * Owns the ordering shared by spells that install an active effect:
  * reaction window, prior-concentration break, effect installation, and cast

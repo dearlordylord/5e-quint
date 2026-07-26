@@ -1,8 +1,7 @@
 import {
-  completeAfterHitSpellCast,
+  completeAfterHitSpellDamageCast,
   maybeOpenAfterHitSpellCastInterrupt,
 } from "../after-hit-spell-resolution.ts";
-import { appendAfterHitSpellDamage } from "../after-hit-spell-damage.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-after-hit-damage
 import {
@@ -57,6 +56,7 @@ import { invalidResult } from "../result-helpers.ts";
 import {
   sameStringSet,
   supportedDamageAmountExpr,
+  supportedSpellSlotDamageFacts,
 } from "../spells-execution-facts.ts";
 import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
 import {
@@ -130,38 +130,27 @@ function admitAfterHitDamage(
               },
             }),
           );
-  const slotInvocations = ctx.actor.origin.spellcasting.spellSlots.flatMap(
-    (slot): readonly AfterHitDamageInvocation[] => {
-      if (Number(slot.spellLevel) < spell.mechanics.level) {
-        return [];
-      }
-      const damageExpr = supportedDamageAmountExpr({
-        amount: projection.damageAmount,
-        spellLevel: spell.mechanics.level,
-        slotLevel: slot.spellLevel,
-      });
-      if (damageExpr === null) {
-        return [];
-      }
-      return [
-        {
-          access: { tag: "prepared" },
-          resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
-          procedure: "afterHitDamage",
-          spell,
-          actionCost: "bonusAction",
-          damage: {
-            expr: damageExpr,
-            damageType: projection.damageType,
-          },
-          conditionalBonusDamage: {
-            targetCreatureTypes: projection.conditionalBonusTargetTypes,
-            expr: projection.conditionalBonusExpr,
-            damageType: projection.conditionalBonusDamageType,
-          },
-        },
-      ];
-    },
+  const slotInvocations = supportedSpellSlotDamageFacts({
+    slots: ctx.actor.origin.spellcasting.spellSlots,
+    amount: projection.damageAmount,
+    spellLevel: spell.mechanics.level,
+  }).map(
+    ({ slotLevel, damageExpr }): AfterHitDamageInvocation => ({
+      access: { tag: "prepared" },
+      resource: { tag: "spellSlot", slotLevel },
+      procedure: "afterHitDamage",
+      spell,
+      actionCost: "bonusAction",
+      damage: {
+        expr: damageExpr,
+        damageType: projection.damageType,
+      },
+      conditionalBonusDamage: {
+        targetCreatureTypes: projection.conditionalBonusTargetTypes,
+        expr: projection.conditionalBonusExpr,
+        damageType: projection.conditionalBonusDamageType,
+      },
+    }),
   );
   return [...freeCastInvocations, ...slotInvocations];
 }
@@ -291,17 +280,14 @@ function resolveAfterHitDamage(
       damageType: input.invocation.damage.damageType,
     },
   };
-  const nextFrame = appendAfterHitSpellDamage(
-    input.input.frame,
-    damageAddition,
-  );
-  return completeAfterHitSpellCast({
+  return completeAfterHitSpellDamageCast({
     state: resourced.state,
-    frame: nextFrame,
+    frame: input.input.frame,
     subject: input.input.subject,
     casterId: input.input.subject.casterId,
     invocation: input.invocation,
     targetId: input.input.target.combatantId,
+    damageAddition,
     handledInterruptTrigger: input.input.handledInterruptTrigger,
   });
 }

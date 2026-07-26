@@ -1,5 +1,7 @@
 import { resolveSpellActiveEffectCast } from "../spell-active-effect-resolution.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
+import { replaceTargetSpellActiveEffect } from "../active-effect-replacement.ts";
+import { actionSpellCastCandidate } from "../spell-cast-candidate.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-blur-attack-roll-defense
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE
 //
@@ -26,7 +28,6 @@ import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts
 //     witnesses stay in attack-roll.ts.
 //   - Concentration cleanup stays in the shared active-effect lifecycle.
 
-import { battleCreatureWithSpellActiveEffects } from "../../active-effect/lifecycle.ts";
 import {
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
@@ -130,17 +131,7 @@ function discoverBlurAttackRollDefenseCastAct(
   actorId: CombatantId,
   invocation: BattleExecutableSpellInvocation<BlurAttackRollDefenseSpellInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
-  return [
-    {
-      subject: {
-        tag: "actionSpell",
-        actorId,
-        procedureRef: invocation.sourceProcedureRef,
-        mode: { tag: "cast" },
-      },
-      initialHoles: [],
-    },
-  ];
+  return [actionSpellCastCandidate(actorId, invocation.sourceProcedureRef, [])];
 }
 
 function applyBlurAttackRollDefenseEffect(
@@ -148,33 +139,19 @@ function applyBlurAttackRollDefenseEffect(
   actorId: CombatantId,
   invocation: BattleExecutableSpellInvocation<BlurAttackRollDefenseSpellInvocation>,
 ): BattleState {
-  const actor = state.combatants.get(actorId);
-  if (actor === undefined) {
-    return state;
-  }
-  const nextEffect = {
-    ...invocation.activeEffect,
-    sourceProcedureRef: invocation.sourceProcedureRef,
-    sourceCombatantId: actorId,
-  };
-  const activeEffects = [
-    ...actor.activeEffects.filter(
-      (effect) =>
-        !(
-          effect.kind === "blurred" &&
-          effect.sourceProcedureRef === invocation.sourceProcedureRef &&
-          effect.sourceCombatantId === actorId
-        ),
-    ),
-    nextEffect,
-  ];
-  return {
-    ...state,
-    combatants: new Map(state.combatants).set(
-      actorId,
-      battleCreatureWithSpellActiveEffects(actor, activeEffects),
-    ),
-  };
+  return replaceTargetSpellActiveEffect(
+    state,
+    actorId,
+    (effect) =>
+      effect.kind === "blurred" &&
+      effect.sourceProcedureRef === invocation.sourceProcedureRef &&
+      effect.sourceCombatantId === actorId,
+    {
+      ...invocation.activeEffect,
+      sourceProcedureRef: invocation.sourceProcedureRef,
+      sourceCombatantId: actorId,
+    },
+  );
 }
 
 function resolveBlurAttackRollDefense(

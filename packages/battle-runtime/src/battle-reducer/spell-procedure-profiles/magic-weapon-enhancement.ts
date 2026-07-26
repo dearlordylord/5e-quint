@@ -1,4 +1,4 @@
-import { maybeOpenSpellCastReactionWindow } from "../spell-cast-reaction-window.ts";
+import { maybeOpenConfiguredSpellCastReactionWindow } from "../spell-active-effect-resolution.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magic-weapon-enhancement
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
@@ -15,7 +15,6 @@ import { Either } from "effect";
 import {
   MAGIC_WEAPON_ENHANCEMENT_BONUSES,
   type BattleActDiscoveryCandidate,
-  type BattleActiveEffect,
   type BattleActiveEffectExpiration,
   type BattleMagicWeaponTargetItemFact,
   type BattleResolutionResult,
@@ -29,6 +28,7 @@ import { activeDruidWildShapeEffect } from "../druid-wild-shape.ts";
 
 import { needsHolesResult } from "../needs-holes-result.ts";
 import { invalidResult, resolutionFromStateResult } from "../result-helpers.ts";
+import { replaceTargetActiveEffect } from "../active-effect-replacement.ts";
 import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
 import { wildShapeCanUseWornLoadoutObject } from "../wild-shape-equipment.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
@@ -257,12 +257,10 @@ function resolveMagicWeaponEnhancement(
     );
   }
 
-  const spellCastReactionWindow = maybeOpenSpellCastReactionWindow(
-    input,
-    [],
-    { kind: "bonusAction" },
-    undefined,
-  );
+  const spellCastReactionWindow = maybeOpenConfiguredSpellCastReactionWindow({
+    resolution: input,
+    targetIds: [],
+  });
   if (spellCastReactionWindow !== null) {
     return spellCastReactionWindow;
   }
@@ -275,15 +273,13 @@ function resolveMagicWeaponEnhancement(
       "Magic Weapon caster is not in this battle.",
     );
   }
-  const activeEffects: readonly BattleActiveEffect[] = [
-    ...actor.activeEffects.filter(
-      (effect) =>
-        !(
-          effect.kind === "spellMagicWeaponEnhancement" &&
-          effect.sourceProcedureRef === input.invocation.sourceProcedureRef &&
-          effect.sourceCombatantId === input.actorId
-        ),
-    ),
+  const effected = replaceTargetActiveEffect(
+    input.input.state,
+    input.actorId,
+    (effect) =>
+      effect.kind === "spellMagicWeaponEnhancement" &&
+      effect.sourceProcedureRef === input.invocation.sourceProcedureRef &&
+      effect.sourceCombatantId === input.actorId,
     {
       kind: "spellMagicWeaponEnhancement",
       sourceProcedureRef: input.invocation.sourceProcedureRef,
@@ -296,14 +292,7 @@ function resolveMagicWeaponEnhancement(
         durationTicks: input.invocation.durationTicks,
       },
     },
-  ];
-  const effected = {
-    ...input.input.state,
-    combatants: new Map(input.input.state.combatants).set(input.actorId, {
-      ...actor,
-      activeEffects,
-    }),
-  };
+  );
   const resourced = spendSpellCastResources({
     state: effected,
     actorId: input.actorId,

@@ -1,5 +1,6 @@
-import { maybeOpenSpellCastReactionWindow } from "../spell-cast-reaction-window.ts";
+import { resolveSpellActiveEffectCast } from "../spell-active-effect-resolution.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
+import { spellCastCandidate } from "../spell-cast-candidate.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-held-light-emitter
 //
 // The heldLight Spell Procedure Profile: a cantrip-access spell (today Produce
@@ -38,9 +39,8 @@ import {
   type BattleExecutableSpellInvocation,
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
-import { invalidResult, resolutionFromStateResult } from "../result-helpers.ts";
+import { invalidResult } from "../result-helpers.ts";
 import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
-import { spendSpellCastResources } from "../spells-resolve-resources.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
@@ -202,15 +202,12 @@ function discoverHeldLightCastAct(
   invocation: BattleExecutableSpellInvocation<HeldLightInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   return [
-    {
-      subject: {
-        tag: "bonusActionSpell",
-        actorId,
-        procedureRef: invocation.sourceProcedureRef,
-        mode: { tag: "cast" },
-      },
-      initialHoles: [],
-    },
+    spellCastCandidate(
+      "bonusActionSpell",
+      actorId,
+      invocation.sourceProcedureRef,
+      [],
+    ),
   ];
 }
 
@@ -288,28 +285,13 @@ function resolveHeldLight(
     );
   }
 
-  const spellCastReactionWindow = maybeOpenSpellCastReactionWindow(
-    input,
-    [input.actorId],
-    { kind: "bonusAction" },
-    undefined,
-  );
-  if (spellCastReactionWindow !== null) {
-    return spellCastReactionWindow;
-  }
-
-  const effected = applyHeldLightEffect(
-    input.input.state,
-    input.actorId,
-    input.invocation,
-  );
-  const resourced = spendSpellCastResources({
-    state: effected,
-    actorId: input.actorId,
-    invocation: input.invocation,
-    errorState: input.input.state,
+  return resolveSpellActiveEffectCast({
+    resolution: input,
+    targetIds: [input.actorId],
+    castingResource: { kind: "bonusAction" },
+    applyEffect: (state) =>
+      applyHeldLightEffect(state, input.actorId, input.invocation),
   });
-  return resolutionFromStateResult(resourced);
 }
 
 const HeldLightInvocationSchema = spellProcedureExecutionSchema(

@@ -147,6 +147,7 @@ export function executeStoredGlyphSpellProcedure(
         targetId: release.targetId,
         sourceCombatantId: actorId,
         invocation: release.invocation,
+        fills: input.fills,
         fillSet,
       }),
     ),

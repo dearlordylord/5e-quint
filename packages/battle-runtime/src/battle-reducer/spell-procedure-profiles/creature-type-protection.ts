@@ -1,5 +1,10 @@
 import { resolveSpellActiveEffectCast } from "../spell-active-effect-resolution.ts";
+import {
+  actionSpellCastCandidate,
+  actionSpellCastCandidatesForTargetHole,
+} from "../spell-cast-candidate.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
+import { replaceTargetActiveEffect } from "../active-effect-replacement.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.creature-type-protection-and-charm
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-glyph-stored-concentration-full-duration
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION
@@ -242,33 +247,15 @@ function discoverCreatureTypeProtectionCastAct(
 ): readonly BattleActDiscoveryCandidate[] {
   if (invocation.targeting.kind === "self") {
     return [
-      {
-        subject: {
-          tag: "actionSpell" as const,
-          actorId,
-          procedureRef: invocation.sourceProcedureRef,
-          mode: { tag: "cast" as const },
-        },
-        initialHoles: [],
-      },
+      actionSpellCastCandidate(actorId, invocation.sourceProcedureRef, []),
     ];
   }
   const targetHole = spellTargetHole(state, actorId, invocation);
-  const castActs =
-    targetHole.choices.length === 0
-      ? []
-      : [
-          {
-            subject: {
-              tag: "actionSpell" as const,
-              actorId,
-              procedureRef: invocation.sourceProcedureRef,
-              mode: { tag: "cast" as const },
-            },
-            initialHoles: [targetHole],
-          },
-        ];
-  return castActs;
+  return actionSpellCastCandidatesForTargetHole(
+    actorId,
+    invocation.sourceProcedureRef,
+    targetHole,
+  );
 }
 
 function resolveCreatureTypeProtection(
@@ -342,35 +329,23 @@ function applyCreatureTypeProtectionEffect(
   targetIds: readonly CombatantId[],
   invocation: BattleExecutableSpellInvocation<CreatureTypeProtectionSpellInvocation>,
 ): BattleState {
-  return targetIds.reduce((nextState, targetId) => {
-    const target = nextState.combatants.get(targetId);
-    if (target === undefined) {
-      return nextState;
-    }
-    const nextEffect = {
-      ...invocation.activeEffect,
-      sourceProcedureRef: invocation.sourceProcedureRef,
-      sourceCombatantId: actorId,
-    };
-    const activeEffects = [
-      ...target.activeEffects.filter(
+  return targetIds.reduce(
+    (nextState, targetId) =>
+      replaceTargetActiveEffect(
+        nextState,
+        targetId,
         (effect) =>
-          !(
-            effect.kind === "creatureTypeProtection" &&
-            effect.sourceProcedureRef === invocation.sourceProcedureRef &&
-            effect.sourceCombatantId === actorId
-          ),
+          effect.kind === "creatureTypeProtection" &&
+          effect.sourceProcedureRef === invocation.sourceProcedureRef &&
+          effect.sourceCombatantId === actorId,
+        {
+          ...invocation.activeEffect,
+          sourceProcedureRef: invocation.sourceProcedureRef,
+          sourceCombatantId: actorId,
+        },
       ),
-      nextEffect,
-    ];
-    return {
-      ...nextState,
-      combatants: new Map(nextState.combatants).set(targetId, {
-        ...target,
-        activeEffects,
-      }),
-    };
-  }, state);
+    state,
+  );
 }
 
 const CreatureTypeProtectionInvocationSchema = spellProcedureExecutionSchema(

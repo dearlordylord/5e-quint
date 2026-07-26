@@ -1,4 +1,4 @@
-import { maybeOpenSpellCastReactionWindow } from "../spell-cast-reaction-window.ts";
+import { maybeOpenConfiguredSpellCastReactionWindow } from "../spell-active-effect-resolution.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-weapon-damage-rider
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS
@@ -14,7 +14,6 @@ import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts
 
 import {
   type BattleActDiscoveryCandidate,
-  type BattleActiveEffect,
   type BattleActiveEffectExpiration,
   type BattleResolutionResult,
   type BattleState,
@@ -23,11 +22,13 @@ import {
 import { SpellWeaponDamageRiderTemplateSchema } from "../../active-effect/codecs.ts";
 import { type CombatantId } from "../../identity.ts";
 import { invalidResult, resolutionFromStateResult } from "../result-helpers.ts";
+import { replaceTargetActiveEffect } from "../active-effect-replacement.ts";
+import { spellCastCandidate } from "../spell-cast-candidate.ts";
+import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
 import { supportedDamageAmountExpr } from "../spells-execution-facts.ts";
 import { scalarBuffActiveEffectExpiration } from "../spells-profiles-support.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
 import type {
-  OkSpellFillSet,
   SpellAdmissionContext,
   SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
@@ -146,22 +147,19 @@ function discoverWeaponDamageRiderCastAct(
   invocation: import("../../battle-state-execution.ts").BattleExecutableSpellInvocation<WeaponDamageRiderInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   return [
-    {
-      subject: {
-        tag: "bonusActionSpell",
-        actorId,
-        procedureRef: invocation.sourceProcedureRef,
-        mode: { tag: "cast" },
-      },
-      initialHoles: [],
-    },
+    spellCastCandidate(
+      "bonusActionSpell",
+      actorId,
+      invocation.sourceProcedureRef,
+      [],
+    ),
   ];
 }
 
 function resolveWeaponDamageRider(
   input: WeaponDamageRiderResolveInput,
 ): BattleResolutionResult {
-  if (weaponDamageRiderFillSetHasDisallowedFills(input.fillSet)) {
+  if (!fillsBelongToSpellCastHoles(input.input.fills)) {
     return invalidResult(
       input.input.state,
       "invalidFill",
@@ -169,12 +167,10 @@ function resolveWeaponDamageRider(
     );
   }
 
-  const spellCastReactionWindow = maybeOpenSpellCastReactionWindow(
-    input,
-    [input.actorId],
-    { kind: "bonusAction" },
-    undefined,
-  );
+  const spellCastReactionWindow = maybeOpenConfiguredSpellCastReactionWindow({
+    resolution: input,
+    targetIds: [input.actorId],
+  });
   if (spellCastReactionWindow !== null) {
     return spellCastReactionWindow;
   }
@@ -187,27 +183,18 @@ function resolveWeaponDamageRider(
       "Bonus Action spell actor is not in this battle.",
     );
   }
-  const activeEffects: readonly BattleActiveEffect[] = [
-    ...actor.activeEffects.filter(
-      (effect) =>
-        !(
-          effect.kind === "spellWeaponDamageRider" &&
-          effect.sourceProcedureRef === input.invocation.sourceProcedureRef &&
-          effect.sourceCombatantId === input.actorId
-        ),
-    ),
+  const effected = replaceTargetActiveEffect(
+    input.input.state,
+    input.actorId,
+    (effect) =>
+      effect.kind === "spellWeaponDamageRider" &&
+      effect.sourceProcedureRef === input.invocation.sourceProcedureRef &&
+      effect.sourceCombatantId === input.actorId,
     {
       ...input.invocation.activeEffect,
       sourceProcedureRef: input.invocation.sourceProcedureRef,
     },
-  ];
-  const effected = {
-    ...input.input.state,
-    combatants: new Map(input.input.state.combatants).set(input.actorId, {
-      ...actor,
-      activeEffects,
-    }),
-  };
+  );
   const resourced = spendSpellCastResources({
     state: effected,
     actorId: input.actorId,
@@ -215,25 +202,6 @@ function resolveWeaponDamageRider(
     errorState: input.input.state,
   });
   return resolutionFromStateResult(resourced);
-}
-
-function weaponDamageRiderFillSetHasDisallowedFills(
-  fillSet: OkSpellFillSet,
-): boolean {
-  return (
-    fillSet.targetId !== undefined ||
-    fillSet.targetList !== undefined ||
-    fillSet.attackRoll !== undefined ||
-    fillSet.targetAllocation !== undefined ||
-    fillSet.damageRoll !== undefined ||
-    fillSet.attackBurstDamageRoll !== undefined ||
-    fillSet.healingRoll !== undefined ||
-    fillSet.damageDispositions.length > 0 ||
-    fillSet.savingThrowOutcomes !== undefined ||
-    fillSet.skillChoice !== undefined ||
-    fillSet.targetAbilityChoices !== undefined ||
-    fillSet.concentrationSavingThrows.length > 0
-  );
 }
 
 const WeaponDamageRiderInvocationSchema = spellProcedureExecutionSchema(

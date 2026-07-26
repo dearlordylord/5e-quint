@@ -2,7 +2,9 @@ import type { BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
 import type { BattleSubject } from "../battle-subjects.ts";
 import type {
   BattleExecutableSpellInvocation,
+  AttackSpellDamageAddition,
   BattleFill,
+  BattleAttackHitReplayCheckpoint,
   BattleInterruptCheckpoint,
   BattleResolutionResult,
   BattleSpellCastReactionFact,
@@ -19,6 +21,7 @@ import { fillsBelongToSpellCastHoles } from "./fill-hole-protocol.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { spellCastInterruptFrame } from "./spell-cast-interrupt-frame.ts";
 import { spendSpellCastResources } from "./spells-resolve-resources.ts";
+import { appendAfterHitSpellDamage } from "./after-hit-spell-damage.ts";
 
 type AfterHitSpellCastInterruptInput = {
   readonly input: {
@@ -56,20 +59,9 @@ export function maybeOpenAfterHitSpellCastInterrupt(
   );
 }
 
-export function prepareAfterHitSlotSpellCast(input: {
-  readonly input: {
-    readonly state: BattleState;
-    readonly subject: BattleSubject;
-    readonly fills: readonly BattleFill[];
-    readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
-  };
-  readonly invocation: BattleExecutableSpellInvocation;
-  readonly fillSet: {
-    readonly reactionSpellTargetFacts: readonly BattleSpellCastReactionFact[];
-  };
-  readonly casterId: CombatantId;
-  readonly targetId: CombatantId;
-}):
+export function prepareAfterHitSlotSpellCast(
+  input: AfterHitSpellCastInterruptInput,
+):
   | { readonly tag: "prepared"; readonly state: BattleState }
   | BattleResolutionResult {
   if (!fillsBelongToSpellCastHoles(input.input.fills)) {
@@ -126,4 +118,40 @@ export function completeAfterHitSpellCast(input: {
       snapshot: snapshotBattle(nextState),
     }
   );
+}
+
+export function completeAfterHitSpellDamageCast(input: {
+  readonly state: BattleState;
+  readonly frame: BattleAttackHitReplayCheckpoint;
+  readonly subject: BattleSubject;
+  readonly casterId: CombatantId;
+  readonly invocation: BattleExecutableSpellInvocation;
+  readonly targetId: CombatantId;
+  readonly damageAddition: AttackSpellDamageAddition;
+  readonly applyEffect?: ((state: BattleState) => BattleState) | undefined;
+  readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
+}): BattleResolutionResult {
+  return completeAfterHitSpellCast({
+    ...input,
+    state: input.applyEffect?.(input.state) ?? input.state,
+    frame: appendAfterHitSpellDamage(input.frame, input.damageAddition),
+  });
+}
+
+export function resolveAfterHitSlotSpellDamageCast(
+  input: AfterHitSpellCastInterruptInput & {
+    readonly frame: BattleAttackHitReplayCheckpoint;
+    readonly damageAddition: AttackSpellDamageAddition;
+    readonly applyEffect?: ((state: BattleState) => BattleState) | undefined;
+  },
+): BattleResolutionResult {
+  const preparation = prepareAfterHitSlotSpellCast(input);
+  return preparation.tag === "prepared"
+    ? completeAfterHitSpellDamageCast({
+        ...input,
+        state: preparation.state,
+        subject: input.input.subject,
+        handledInterruptTrigger: input.input.handledInterruptTrigger,
+      })
+    : preparation;
 }

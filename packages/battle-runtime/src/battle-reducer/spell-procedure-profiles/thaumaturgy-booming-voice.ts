@@ -1,4 +1,4 @@
-import { maybeOpenSpellCastReactionWindow } from "../spell-cast-reaction-window.ts";
+import { resolveSpellActiveEffectCast } from "../spell-active-effect-resolution.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-self-ability-check-advantage
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS
@@ -38,11 +38,10 @@ import { type CombatantId } from "../../identity.ts";
 import { ThaumaturgyBoomingVoiceTemplateSchema } from "../../active-effect/codecs.ts";
 
 import { needsHolesResult } from "../needs-holes-result.ts";
-import { invalidResult, resolutionFromStateResult } from "../result-helpers.ts";
+import { invalidResult } from "../result-helpers.ts";
 import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
 import { thaumaturgyActiveOneMinuteEffectCountHole } from "../spells-damage-fills.ts";
 import { thaumaturgyBoomingVoiceProjection } from "../spells-profiles-support.ts";
-import { spendSpellCastResources } from "../spells-resolve-resources.ts";
 import {
   THAUMATURGY_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_ID,
   THAUMATURGY_MAX_ACTIVE_ONE_MINUTE_EFFECTS,
@@ -210,28 +209,17 @@ function resolveThaumaturgyBoomingVoice(
     );
   }
 
-  const spellCastReactionWindow = maybeOpenSpellCastReactionWindow(
-    input,
-    [input.actorId],
-    { kind: "magicAction" },
-    undefined,
-  );
-  if (spellCastReactionWindow !== null) {
-    return spellCastReactionWindow;
-  }
-
-  const effected = applyThaumaturgyBoomingVoiceEffect(
-    input.input.state,
-    input.actorId,
-    input.invocation,
-  );
-  const resourced = spendSpellCastResources({
-    state: effected,
-    actorId: input.actorId,
-    invocation: input.invocation,
-    errorState: input.input.state,
+  return resolveSpellActiveEffectCast({
+    resolution: input,
+    targetIds: [input.actorId],
+    castingResource: { kind: "magicAction" },
+    applyEffect: (state) =>
+      applyThaumaturgyBoomingVoiceEffect(
+        state,
+        input.actorId,
+        input.invocation,
+      ),
   });
-  return resolutionFromStateResult(resourced);
 }
 
 const ThaumaturgyBoomingVoiceInvocationSchema = spellProcedureExecutionSchema(

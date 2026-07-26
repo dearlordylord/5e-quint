@@ -163,23 +163,13 @@ export function resolveDragonsBreathExhaleCommand(
     if (fillsValidation !== null) {
       return invalidResult(input.state, "invalidFill", fillsValidation);
     }
-    const spent = spendAction(input.state.currentTurnResources, "magic");
-    if (Either.isLeft(spent)) {
-      return invalidResult(
-        input.state,
-        "staleSubject",
-        "Magic action is no longer available for Dragon's Breath.",
-      );
-    }
-    const resolvedState = battleStateAfterTargetActionEarlyEndForActor(
-      extendSavingThrowOngoingFeatures(
-        { ...input.state, currentTurnResources: spent.right },
-        input.subject.actorId,
-        savingThrowTargetIds,
-        relationshipFacts,
-      ),
-      input.subject.actorId,
+    const spent = spendDragonsBreathMagicAction(
+      input,
+      savingThrowTargetIds,
+      relationshipFacts,
     );
+    if (spent.tag !== "spent") return spent;
+    const resolvedState = spent.state;
     return {
       tag: "resolved",
       state: resolvedState,
@@ -367,23 +357,13 @@ export function resolveDragonsBreathExhaleCommand(
     return invalidResult(input.state, "invalidFill", fillsValidation);
   }
 
-  const spent = spendAction(input.state.currentTurnResources, "magic");
-  if (Either.isLeft(spent)) {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "Magic action is no longer available for Dragon's Breath.",
-    );
-  }
-  let damaged = battleStateAfterTargetActionEarlyEndForActor(
-    extendSavingThrowOngoingFeatures(
-      { ...input.state, currentTurnResources: spent.right },
-      input.subject.actorId,
-      savingThrowTargetIds,
-      relationshipFacts,
-    ),
-    input.subject.actorId,
+  const spent = spendDragonsBreathMagicAction(
+    input,
+    savingThrowTargetIds,
+    relationshipFacts,
   );
+  if (spent.tag !== "spent") return spent;
+  let damaged = spent.state;
   for (const entry of damageEntriesByTarget) {
     const currentTarget = damaged.combatants.get(entry.targetId);
     if (currentTarget === undefined) {
@@ -450,6 +430,35 @@ export function resolveDragonsBreathExhaleCommand(
     tag: "resolved",
     state: damaged,
     snapshot: snapshotBattle(damaged),
+  };
+}
+
+function spendDragonsBreathMagicAction(
+  input: BattleResolutionInputForSubject<DragonsBreathExhaleSubject>,
+  targetIds: readonly CombatantId[],
+  relationshipFacts: Parameters<typeof extendSavingThrowOngoingFeatures>[3],
+):
+  | { readonly tag: "spent"; readonly state: BattleState }
+  | BattleResolutionResult {
+  const spent = spendAction(input.state.currentTurnResources, "magic");
+  if (Either.isLeft(spent)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Magic action is no longer available for Dragon's Breath.",
+    );
+  }
+  return {
+    tag: "spent",
+    state: battleStateAfterTargetActionEarlyEndForActor(
+      extendSavingThrowOngoingFeatures(
+        { ...input.state, currentTurnResources: spent.right },
+        input.subject.actorId,
+        targetIds,
+        relationshipFacts,
+      ),
+      input.subject.actorId,
+    ),
   };
 }
 

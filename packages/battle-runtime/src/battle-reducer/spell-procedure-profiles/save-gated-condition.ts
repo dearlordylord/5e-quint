@@ -49,11 +49,13 @@ import { Schema } from "effect";
 import {
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
+  spellProcedureResolutionContext,
 } from "./profile.ts";
 import {
   BattleConditionSchema,
   MovementFeet,
   PreparedSpellAccessSchema,
+  SaveGatedConditionSpellTargetingSchema,
   SpellConditionCountedRepeatSaveSchema,
   SpellConditionEscapeSchema,
   SpellConditionRepeatSaveSchema,
@@ -260,18 +262,9 @@ function saveGatedConditionChoiceHoles(
 function resolveSaveGatedCondition(
   input: SaveGatedConditionResolveInput,
 ): BattleResolutionResult {
-  return resolveSaveGateConditionSpellAct({
-    input: input.input,
-    actorId: input.actorId,
-    invocation: input.invocation,
-    fillSet: input.fillSet,
-    ...(input.actionCostOverride === undefined
-      ? {}
-      : { actionCostOverride: input.actionCostOverride }),
-    ...(input.metamagicApplications === undefined
-      ? {}
-      : { metamagicApplications: input.metamagicApplications }),
-  });
+  return resolveSaveGateConditionSpellAct(
+    spellProcedureResolutionContext(input),
+  );
 }
 
 const SaveGatedConditionInvocationSchema = spellProcedureExecutionSchema(
@@ -282,32 +275,7 @@ const SaveGatedConditionInvocationSchema = spellProcedureExecutionSchema(
     spellRuleFacts: SpellRuleExecutionFactsSchema,
     ability: AbilitySchema,
     dc: DcSourceSchema,
-    targeting: Schema.Union(
-      Schema.Struct({
-        kind: Schema.Literal("singleCombatant"),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("targetList"),
-        minTargets: Schema.Literal(1),
-        maxTargets: Schema.Number,
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("pointOriginSphere"),
-        radiusFeet: MovementFeet,
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("pointOriginCubeExcludingCaster"),
-        sideFeet: MovementFeet,
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("pointOriginCube"),
-        sideFeet: MovementFeet,
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("selfOriginCone"),
-        lengthFeet: MovementFeet,
-      }),
-    ),
+    targeting: SaveGatedConditionSpellTargetingSchema,
     targetCreatureTypes: Schema.NullOr(Schema.Array(CreatureTypeSchema)),
     effect: SpellFailedSaveConditionEffectExecutionSchema,
     saveRollModeRule: Schema.NullOr(SpellSavingThrowRollModeRuleSchema),

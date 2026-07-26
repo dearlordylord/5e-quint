@@ -1,14 +1,12 @@
 // Flaming Sphere hazard and ram composite transition.
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE
 
-import { damageAmount } from "@dnd/shared/types";
-import {
-  spellSaveGateBranch,
-  spellSaveGateDamageAmount,
-  spellSaveGateDamageResult,
-} from "@dnd/shared-algebras/spell-save-gate-algebra";
 import { Match } from "effect";
 import { expendActionSpellSlot } from "./action-spell-slot-expenditure.ts";
+import {
+  applyDamageToPositiveHitPoints,
+  halfDamageAfterSuccessfulSave,
+} from "./focused-spell-hazard-damage.ts";
 
 const byTag = Match.discriminator("tag");
 
@@ -76,17 +74,7 @@ export function flamingSphereDamageAfterSave(input: {
   readonly rolledDamage: number;
   readonly savingThrowSucceeded: boolean;
 }): number {
-  const branch = spellSaveGateBranch(input.savingThrowSucceeded);
-  const saveDamageResult = spellSaveGateDamageResult({
-    branch,
-    damageOnSuccess: "halfDamage",
-  });
-  return Number(
-    spellSaveGateDamageAmount(
-      damageAmount(input.rolledDamage),
-      saveDamageResult,
-    ),
-  );
+  return halfDamageAfterSuccessfulSave(input);
 }
 
 export function flamingSphereMoveDistanceAccepted(input: {
@@ -155,10 +143,7 @@ export function applyFlamingSphereHazardDamage(
   const damage = flamingSphereDamageAfterSave(fills);
   return {
     ...state,
-    targetVitals: applyResolvedDamageToPositiveHitPoints(
-      state.targetVitals,
-      damage,
-    ),
+    targetVitals: applyDamageToPositiveHitPoints(state.targetVitals, damage),
   };
 }
 
@@ -196,25 +181,4 @@ export function resolveFlamingSphereHazardRam(
     ),
     Match.exhaustive,
   );
-}
-
-function applyResolvedDamageToPositiveHitPoints(
-  vitals: FlamingSphereHazardRamCreatureVitals,
-  rawDamage: number,
-): FlamingSphereHazardRamCreatureVitals {
-  if (vitals.dead) return vitals;
-  const resolvedDamage = Math.max(0, Math.floor(rawDamage));
-  const absorbedByTemporaryHitPoints = Math.min(
-    vitals.temporaryHitPoints,
-    resolvedDamage,
-  );
-  const damageToHitPoints = resolvedDamage - absorbedByTemporaryHitPoints;
-  const nextHitPoints = Math.max(0, vitals.hitPoints - damageToHitPoints);
-  return {
-    ...vitals,
-    hitPoints: nextHitPoints,
-    temporaryHitPoints:
-      vitals.temporaryHitPoints - absorbedByTemporaryHitPoints,
-    dead: nextHitPoints === 0,
-  };
 }

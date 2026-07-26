@@ -39,6 +39,7 @@ import { Schema } from "effect";
 import {
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
+  spellProcedureResolutionContext,
 } from "./profile.ts";
 import {
   AttackBonus,
@@ -92,18 +93,9 @@ function discoverChainedSpellAttackDamageCastAct(
 function resolveChainedSpellAttackDamage(
   input: ChainedSpellAttackDamageResolveInput,
 ): BattleResolutionResult {
-  return resolveChainedSpellAttackDamageAct({
-    input: input.input,
-    actorId: input.actorId,
-    invocation: input.invocation,
-    fillSet: input.fillSet,
-    ...(input.actionCostOverride === undefined
-      ? {}
-      : { actionCostOverride: input.actionCostOverride }),
-    ...(input.metamagicApplications === undefined
-      ? {}
-      : { metamagicApplications: input.metamagicApplications }),
-  });
+  return resolveChainedSpellAttackDamageAct(
+    spellProcedureResolutionContext(input),
+  );
 }
 
 export const ChainedSpellAttackDamageInvocationSchema =

@@ -1,4 +1,5 @@
 import { maybeOpenSpellCastReactionWindow } from "../spell-cast-reaction-window.ts";
+import { spellCastCandidatesForTargetHole } from "../spell-cast-candidate.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-dragons-breath-initial
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE
@@ -39,16 +40,12 @@ import { breakBattleConcentration } from "../damage-apply.ts";
 
 import { needsHolesResult } from "../needs-holes-result.ts";
 import { invalidResult } from "../result-helpers.ts";
-import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
+import { selectSpellTargetList } from "../spell-target-list-selection.ts";
 import { applyDragonsBreathInitialSpellEffect } from "../spells-active-effects.ts";
 import { spellDamageTypeChoiceHole } from "../spells-damage-fills.ts";
 import { sameStringSet } from "../spells-execution-facts.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
-import {
-  spellTargetListHole,
-  spellTargetListHoleId,
-  validateSpellTargetList,
-} from "../spells-targeting.ts";
+import { spellTargetListHole } from "../spells-targeting.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
@@ -204,53 +201,33 @@ function discoverDragonsBreathInitialCastAct(
   invocation: BattleExecutableSpellInvocation<DragonsBreathInitialInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const targetHole = spellTargetListHole(state, actorId, invocation);
-  return targetHole.choices.length === 0
-    ? []
-    : [
-        {
-          subject: {
-            tag: "bonusActionSpell" as const,
-            actorId,
-            procedureRef: invocation.sourceProcedureRef,
-            mode: { tag: "cast" as const },
-          },
-          initialHoles: [targetHole, spellDamageTypeChoiceHole(invocation)],
-        },
-      ];
+  return spellCastCandidatesForTargetHole(
+    "bonusActionSpell",
+    actorId,
+    invocation.sourceProcedureRef,
+    targetHole,
+    [spellDamageTypeChoiceHole(invocation)],
+  );
 }
 
 function resolveDragonsBreathInitial(
   input: DragonsBreathInitialResolveInput,
 ): BattleResolutionResult {
-  if (
-    !fillsBelongToSpellCastHoles(input.input.fills, [
-      spellTargetListHoleId(input.invocation),
-      spellDamageTypeChoiceHole(input.invocation).holeId,
-    ])
-  ) {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
+  const targetSelection = selectSpellTargetList({
+    state: input.input.state,
+    subject: input.input.subject,
+    fills: input.input.fills,
+    fillSet: input.fillSet,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    additionalHoleIds: [spellDamageTypeChoiceHole(input.invocation).holeId],
+    invalidFillMessage:
       "Dragon's Breath uses one target-list fill and one damage type choice.",
-    );
+  });
+  if (targetSelection.tag !== "selected") {
+    return targetSelection;
   }
-
-  if (input.fillSet.targetList === undefined) {
-    return needsHolesResult(input.input.state, input.input.subject, [
-      spellTargetListHole(input.input.state, input.actorId, input.invocation),
-    ]);
-  }
-  const validation = validateSpellTargetList(
-    input.input.state,
-    input.actorId,
-    input.invocation,
-    input.fillSet.targetList.targetIds,
-    input.fillSet.targetList.spatialFacts,
-  );
-  if (validation !== null) {
-    return invalidResult(input.input.state, "invalidFill", validation);
-  }
-  const targetId = input.fillSet.targetList.targetIds[0];
+  const targetId = targetSelection.targetIds[0];
   if (targetId === undefined) {
     return invalidResult(
       input.input.state,
@@ -285,7 +262,7 @@ function resolveDragonsBreathInitial(
 
   const spellCastReactionWindow = maybeOpenSpellCastReactionWindow(
     input,
-    input.fillSet.targetList.targetIds,
+    targetSelection.targetIds,
     { kind: "bonusAction" },
     undefined,
   );

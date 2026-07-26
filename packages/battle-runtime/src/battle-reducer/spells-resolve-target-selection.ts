@@ -121,24 +121,14 @@ export function spellTargetListSelection(input: {
     "maxTargets" in input.invocation.targeting &&
     input.invocation.targeting.maxTargets === 1
   ) {
-    if (input.fillSet.targetList !== undefined) {
-      return { tag: "invalid", message: input.singleTargetListMessage };
-    }
-    if (input.fillSet.targetId === undefined) {
-      return {
-        tag: "needsHoles",
-        hole: spellTargetHole(input.state, input.actorId, input.invocation),
-      };
-    }
-    return spellTargetIsLegal(
-      input.state,
-      input.actorId,
-      input.fillSet.targetId,
-      input.invocation,
-      input.fillSet.targetSpatialFacts,
-    )
-      ? { tag: "ok", targetIds: [input.fillSet.targetId] }
-      : { tag: "invalid", message: input.invalidSingleTargetMessage };
+    return spellSingleTargetSelection({
+      state: input.state,
+      actorId: input.actorId,
+      invocation: input.invocation,
+      fillSet: input.fillSet,
+      targetListMessage: input.singleTargetListMessage,
+      invalidTargetMessage: input.invalidSingleTargetMessage,
+    });
   }
 
   if (input.fillSet.targetId !== undefined) {

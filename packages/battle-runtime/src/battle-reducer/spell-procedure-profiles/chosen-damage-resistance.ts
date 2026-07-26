@@ -1,5 +1,7 @@
 import { resolveSpellActiveEffectCast } from "../spell-active-effect-resolution.ts";
+import { actionSpellCastCandidatesForTargetHole } from "../spell-cast-candidate.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
+import { replaceTargetActiveEffect } from "../active-effect-replacement.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-chosen-damage-resistance
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 import { CombatantId } from "../../identity.ts";
@@ -22,9 +24,8 @@ import {
   type BattleExecutableSpellInvocation,
   type ChosenDamageResistanceSpellInvocation,
 } from "../../battle-state-execution.ts";
-import { needsHolesResult } from "../needs-holes-result.ts";
 import { invalidResult } from "../result-helpers.ts";
-import { selectSingleSpellTarget } from "../single-spell-target.ts";
+import { selectSingleSpellTargetAndDamageType } from "../single-spell-target.ts";
 import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
 import { ATTACK_TARGET_HOLE_ID } from "../battle-runtime-protocol.ts";
 import { spellDamageTypeChoiceHole } from "../spells-damage-fills.ts";
@@ -176,20 +177,12 @@ function discoverChosenDamageResistanceCastAct(
   invocation: BattleExecutableSpellInvocation<ChosenDamageResistanceSpellInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const targetHole = spellTargetHole(state, actorId, invocation);
-  if (targetHole.choices.length === 0) {
-    return [];
-  }
-  return [
-    {
-      subject: {
-        tag: "actionSpell" as const,
-        actorId,
-        procedureRef: invocation.sourceProcedureRef,
-        mode: { tag: "cast" as const },
-      },
-      initialHoles: [targetHole, spellDamageTypeChoiceHole(invocation)],
-    },
-  ];
+  return actionSpellCastCandidatesForTargetHole(
+    actorId,
+    invocation.sourceProcedureRef,
+    targetHole,
+    [spellDamageTypeChoiceHole(invocation)],
+  );
 }
 
 function resolveChosenDamageResistance(
@@ -208,48 +201,33 @@ function resolveChosenDamageResistance(
     );
   }
 
-  const targetSelection = selectSingleSpellTarget({
+  const selection = selectSingleSpellTargetAndDamageType({
     state: input.input.state,
     subject: input.input.subject,
     actorId: input.actorId,
     invocation: input.invocation,
     targetId: input.fillSet.targetId,
     targetSpatialFacts: input.fillSet.targetSpatialFacts,
+    damageType: input.fillSet.damageTypeChoice?.value,
     invalidTargetMessage:
       "Chosen damage Resistance spell target must be a willing combatant within the selected spell's supported range.",
-  });
-  if (targetSelection.tag !== "selected") {
-    return targetSelection;
-  }
-
-  if (input.fillSet.damageTypeChoice === undefined) {
-    return needsHolesResult(input.input.state, input.input.subject, [
-      spellDamageTypeChoiceHole(input.invocation),
-    ]);
-  }
-  if (
-    !input.invocation.damageTypeChoices.includes(
-      input.fillSet.damageTypeChoice.value,
-    )
-  ) {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
+    invalidDamageTypeMessage:
       "Chosen damage Resistance spell damage type must be one of the selected spell's choices.",
-    );
+  });
+  if (selection.tag !== "selected") {
+    return selection;
   }
-  const damageType = input.fillSet.damageTypeChoice.value;
 
   return resolveSpellActiveEffectCast({
     resolution: input,
-    targetIds: [targetSelection.targetId],
+    targetIds: [selection.targetId],
     castingResource: { kind: "magicAction" },
     applyEffect: (state) =>
       applyChosenDamageResistanceEffect({
         state,
         actorId: input.actorId,
-        targetId: targetSelection.targetId,
-        damageType,
+        targetId: selection.targetId,
+        damageType: selection.damageType,
         invocation: input.invocation,
       }),
   });
@@ -262,10 +240,6 @@ function applyChosenDamageResistanceEffect(input: {
   readonly damageType: DamageType;
   readonly invocation: BattleExecutableSpellInvocation<ChosenDamageResistanceSpellInvocation>;
 }): BattleState {
-  const target = input.state.combatants.get(input.targetId);
-  if (target === undefined) {
-    return input.state;
-  }
   const nextEffect = {
     kind: "damageResistance" as const,
     sourceProcedureRef: input.invocation.sourceProcedureRef,
@@ -276,24 +250,15 @@ function applyChosenDamageResistanceEffect(input: {
     BattleActiveEffect,
     { readonly kind: "damageResistance" }
   >;
-  const activeEffects = [
-    ...target.activeEffects.filter(
-      (effect) =>
-        !(
-          effect.kind === "damageResistance" &&
-          effect.sourceProcedureRef === input.invocation.sourceProcedureRef &&
-          effect.sourceCombatantId === input.actorId
-        ),
-    ),
+  return replaceTargetActiveEffect(
+    input.state,
+    input.targetId,
+    (effect) =>
+      effect.kind === "damageResistance" &&
+      effect.sourceProcedureRef === input.invocation.sourceProcedureRef &&
+      effect.sourceCombatantId === input.actorId,
     nextEffect,
-  ];
-  return {
-    ...input.state,
-    combatants: new Map(input.state.combatants).set(input.targetId, {
-      ...target,
-      activeEffects,
-    }),
-  };
+  );
 }
 
 export const ChosenDamageResistanceInvocationSchema =

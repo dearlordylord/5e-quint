@@ -1,5 +1,6 @@
 import { maybeOpenSpellCastReactionWindow } from "../spell-cast-reaction-window.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
+import { spellCastCandidatesForTargetHole } from "../spell-cast-candidate.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-direct-condition-removal
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION
 //
@@ -145,19 +146,13 @@ function discoverDirectConditionRemovalCastAct(
   invocation: BattleExecutableSpellInvocation<DirectConditionRemovalSpellInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const targetHole = spellTargetHole(state, actorId, invocation);
-  return targetHole.choices.length === 0
-    ? []
-    : [
-        {
-          subject: {
-            tag: "bonusActionSpell",
-            actorId,
-            procedureRef: invocation.sourceProcedureRef,
-            mode: { tag: "cast" },
-          },
-          initialHoles: [targetHole, spellConditionChoiceHole(invocation)],
-        },
-      ];
+  return spellCastCandidatesForTargetHole(
+    "bonusActionSpell",
+    actorId,
+    invocation.sourceProcedureRef,
+    targetHole,
+    [spellConditionChoiceHole(invocation)],
+  );
 }
 
 function resolveDirectConditionRemoval(

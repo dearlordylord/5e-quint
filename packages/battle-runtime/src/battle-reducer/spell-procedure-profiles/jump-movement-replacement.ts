@@ -1,4 +1,5 @@
 import { maybeOpenSpellCastReactionWindow } from "../spell-cast-reaction-window.ts";
+import { spellCastCandidatesForTargetHole } from "../spell-cast-candidate.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-jump-movement-replacement
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE
@@ -31,20 +32,14 @@ import {
 import { CombatantId } from "../../identity.ts";
 import { DurationBattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
 
-import { needsHolesResult } from "../needs-holes-result.ts";
-import { invalidResult } from "../result-helpers.ts";
-import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
-import { allocateBattleActiveEffectRef } from "../../active-effect/execution-ref.ts";
+import { replaceAllocatedTargetSpellActiveEffects } from "../active-effect-replacement.ts";
+import { selectSpellTargetList } from "../spell-target-list-selection.ts";
 import {
   sameStringSet,
   scalarBuffSpellTargetCount,
 } from "../spells-execution-facts.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
-import {
-  spellTargetListHole,
-  spellTargetListHoleId,
-  validateSpellTargetList,
-} from "../spells-targeting.ts";
+import { spellTargetListHole } from "../spells-targeting.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
@@ -200,55 +195,34 @@ function discoverJumpMovementReplacementCastAct(
   invocation: BattleExecutableSpellInvocation<JumpMovementReplacementInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const targetHole = spellTargetListHole(state, actorId, invocation);
-  return targetHole.choices.length === 0
-    ? []
-    : [
-        {
-          subject: {
-            tag: "bonusActionSpell" as const,
-            actorId,
-            procedureRef: invocation.sourceProcedureRef,
-            mode: { tag: "cast" as const },
-          },
-          initialHoles: [targetHole],
-        },
-      ];
+  return spellCastCandidatesForTargetHole(
+    "bonusActionSpell",
+    actorId,
+    invocation.sourceProcedureRef,
+    targetHole,
+  );
 }
 
 function resolveJumpMovementReplacement(
   input: JumpMovementReplacementResolveInput,
 ): BattleResolutionResult {
-  if (
-    !fillsBelongToSpellCastHoles(input.input.fills, [
-      spellTargetListHoleId(input.invocation),
-    ])
-  ) {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      "Jump uses a target-list fill only.",
-    );
+  const targetSelection = selectSpellTargetList({
+    state: input.input.state,
+    subject: input.input.subject,
+    fills: input.input.fills,
+    fillSet: input.fillSet,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    invalidFillMessage: "Jump uses a target-list fill only.",
+  });
+  if (targetSelection.tag !== "selected") {
+    return targetSelection;
   }
-
-  if (input.fillSet.targetList === undefined) {
-    return needsHolesResult(input.input.state, input.input.subject, [
-      spellTargetListHole(input.input.state, input.actorId, input.invocation),
-    ]);
-  }
-  const validation = validateSpellTargetList(
-    input.input.state,
-    input.actorId,
-    input.invocation,
-    input.fillSet.targetList.targetIds,
-    input.fillSet.targetList.spatialFacts,
-  );
-  if (validation !== null) {
-    return invalidResult(input.input.state, "invalidFill", validation);
-  }
+  const { targetIds } = targetSelection;
 
   const spellCastReactionWindow = maybeOpenSpellCastReactionWindow(
     input,
-    input.fillSet.targetList.targetIds,
+    targetIds,
     { kind: "bonusAction" },
     undefined,
   );
@@ -259,7 +233,7 @@ function resolveJumpMovementReplacement(
   const effected = applyJumpMovementReplacementSpellEffect(
     input.input.state,
     input.actorId,
-    input.fillSet.targetList.targetIds,
+    targetIds,
     input.invocation,
     input.input.subject.procedureRef,
   );
@@ -278,42 +252,26 @@ function applyJumpMovementReplacementSpellEffect(
   invocation: JumpMovementReplacementResolveInput["invocation"],
   procedureRef: BonusActionSpellBattleResolutionInput["subject"]["procedureRef"],
 ): BattleState {
-  return targetIds.reduce((nextState, targetId) => {
-    const target = nextState.combatants.get(targetId);
-    if (target === undefined) {
-      return nextState;
-    }
-    const allocation = allocateBattleActiveEffectRef({
-      state: nextState,
-      ownerId: targetId,
-    });
-    if (allocation.tag === "ownerNotFound") return nextState;
-    const allocatedTarget = allocation.owner;
-    const nextEffect = {
-      ...invocation.activeEffect,
-      sourceCombatantId: actorId,
-      sourceProcedureRef: procedureRef,
-      effectRef: allocation.effectRef,
-    };
-    const activeEffects = [
-      ...allocatedTarget.activeEffects.filter(
+  return targetIds.reduce(
+    (nextState, targetId) =>
+      replaceAllocatedTargetSpellActiveEffects(
+        nextState,
+        targetId,
         (effect) =>
-          !(
-            effect.kind === "jumpMovementReplacement" &&
-            effect.sourceProcedureRef === procedureRef &&
-            effect.sourceCombatantId === actorId
-          ),
+          effect.kind === "jumpMovementReplacement" &&
+          effect.sourceProcedureRef === procedureRef &&
+          effect.sourceCombatantId === actorId,
+        (effectRef) => [
+          {
+            ...invocation.activeEffect,
+            sourceCombatantId: actorId,
+            sourceProcedureRef: procedureRef,
+            effectRef,
+          },
+        ],
       ),
-      nextEffect,
-    ];
-    return {
-      ...allocation.state,
-      combatants: new Map(allocation.state.combatants).set(targetId, {
-        ...allocatedTarget,
-        activeEffects,
-      }),
-    };
-  }, state);
+    state,
+  );
 }
 
 const JumpMovementReplacementInvocationSchema = spellProcedureExecutionSchema(

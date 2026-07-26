@@ -1,5 +1,7 @@
-import { maybeOpenSpellCastReactionWindow } from "../spell-cast-reaction-window.ts";
-import { completeSpellActiveEffectCast } from "../spell-active-effect-resolution.ts";
+import {
+  completeSpellActiveEffectCast,
+  maybeOpenConfiguredSpellCastReactionWindow,
+} from "../spell-active-effect-resolution.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-roll-modifier
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-glyph-stored-concentration-full-duration
@@ -354,19 +356,12 @@ function resolveRollModifier(
     return effectSelectionResolution.result;
   const effectSelection = effectSelectionResolution.selection;
 
-  if (input.storedGlyphRelease === undefined) {
-    const spellCastReactionWindow = maybeOpenSpellCastReactionWindow(
-      input,
-      targetSelection.targetIds,
-      input.actionCostOverride === "bonusAction" ||
-        input.input.subject.tag === "bonusActionSpell"
-        ? { kind: "bonusAction" }
-        : { kind: "magicAction" },
-      input.metamagicApplications ?? [],
-    );
-    if (spellCastReactionWindow !== null) {
-      return spellCastReactionWindow;
-    }
+  const spellCastReactionWindow = maybeOpenConfiguredSpellCastReactionWindow({
+    resolution: input,
+    targetIds: targetSelection.targetIds,
+  });
+  if (spellCastReactionWindow !== null) {
+    return spellCastReactionWindow;
   }
 
   const affectedTargetsResolution = spellSelectionResolution(
@@ -405,24 +400,28 @@ function resolveRollModifier(
   });
 }
 
+const RollModifierInvocationCommonFields = {
+  access: Schema.Union(
+    PreparedSpellAccessSchema,
+    ClassCantripSpellAccessSchema,
+  ),
+  resource: Schema.Union(
+    SpellSlotInvocationResourceSchema,
+    NoSpellInvocationResourceSchema,
+  ),
+  procedure: Schema.Literal("rollModifier"),
+  spellRuleFacts: SpellRuleExecutionFactsSchema,
+  actionCost: Schema.Literal("magicAction"),
+  targeting: RollModifierSpellTargetingSchema,
+  rangeFeet: MovementFeet,
+  saveGate: RollModifierSpellSaveGateSchema,
+} as const;
+
 const RollModifierInvocationSchema = spellProcedureExecutionSchema(
   Schema.Union(
     Schema.Struct({
-      access: Schema.Union(
-        PreparedSpellAccessSchema,
-        ClassCantripSpellAccessSchema,
-      ),
-      resource: Schema.Union(
-        SpellSlotInvocationResourceSchema,
-        NoSpellInvocationResourceSchema,
-      ),
-      procedure: Schema.Literal("rollModifier"),
-      spellRuleFacts: SpellRuleExecutionFactsSchema,
-      actionCost: Schema.Literal("magicAction"),
-      targeting: RollModifierSpellTargetingSchema,
+      ...RollModifierInvocationCommonFields,
       effect: D20RollModifierEffectSchema,
-      rangeFeet: MovementFeet,
-      saveGate: RollModifierSpellSaveGateSchema,
       skillChoices: Schema.NullOr(
         Schema.Array(Schema.Literal(...BATTLE_SURFACE_SKILLS)),
       ),
@@ -432,21 +431,8 @@ const RollModifierInvocationSchema = spellProcedureExecutionSchema(
       }),
     }),
     Schema.Struct({
-      access: Schema.Union(
-        PreparedSpellAccessSchema,
-        ClassCantripSpellAccessSchema,
-      ),
-      resource: Schema.Union(
-        SpellSlotInvocationResourceSchema,
-        NoSpellInvocationResourceSchema,
-      ),
-      procedure: Schema.Literal("rollModifier"),
-      spellRuleFacts: SpellRuleExecutionFactsSchema,
-      actionCost: Schema.Literal("magicAction"),
-      targeting: RollModifierSpellTargetingSchema,
+      ...RollModifierInvocationCommonFields,
       effect: AbilityCheckRollModeEffectSchema,
-      rangeFeet: MovementFeet,
-      saveGate: RollModifierSpellSaveGateSchema,
       skillChoices: Schema.Literal(null),
       abilityChoices: Schema.Array(Schema.Literal(...BATTLE_SURFACE_ABILITIES)),
       abilityChoiceApplication: Schema.Literal("single", "perTarget"),

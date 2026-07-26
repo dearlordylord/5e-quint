@@ -1,7 +1,8 @@
-import { maybeOpenSpellCastReactionWindow } from "../spell-cast-reaction-window.ts";
+import { openReactionThenResolveWillingTargetSave } from "../willing-target-save-gate.ts";
+import { replaceTargetActiveEffectsEndingDisplacedConcentrations } from "../active-effect-replacement.ts";
+import { actionSpellCastCandidatesForTargetHole } from "../spell-cast-candidate.ts";
 import { fillsBelongToDeclaredHoles } from "../fill-hole-protocol.ts";
 import { selectSingleSpellTarget } from "../single-spell-target.ts";
-import { resolveWillingTargetSaveGate } from "../willing-target-save-gate.ts";
 import {
   ATTACK_TARGET_HOLE_ID,
   LEVITATE_INITIAL_RISE_HOLE_ID,
@@ -28,7 +29,6 @@ import { Either } from "effect";
 import {
   type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
-  type BattleCreatureState,
   type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
   type BattleState,
@@ -44,7 +44,6 @@ import {
   resolvedResult,
   resolutionFromStateResult,
 } from "../result-helpers.ts";
-import { combatantsAfterConcentrationSpellEffectsEndedIfNoEffects } from "../spell-condition-effects-helpers.ts";
 import {
   LEVITATE_ALTITUDE_CONTROL_FEET,
   LEVITATE_INITIAL_RISE_FEET,
@@ -195,21 +194,11 @@ function discoverLevitatedCreatureCastAct(
   invocation: BattleExecutableSpellInvocation<LevitatedCreatureInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const targetHole = spellTargetHole(state, actorId, invocation);
-  const castActs =
-    targetHole.choices.length === 0
-      ? []
-      : [
-          {
-            subject: {
-              tag: "actionSpell" as const,
-              actorId,
-              procedureRef: invocation.sourceProcedureRef,
-              mode: { tag: "cast" as const },
-            },
-            initialHoles: [targetHole],
-          },
-        ];
-  return castActs;
+  return actionSpellCastCandidatesForTargetHole(
+    actorId,
+    invocation.sourceProcedureRef,
+    targetHole,
+  );
 }
 
 function resolveLevitatedCreature(
@@ -244,29 +233,18 @@ function resolveLevitatedCreature(
   }
   const target = targetSelection.target;
 
-  if (input.storedGlyphRelease === undefined) {
-    const spellCastReactionWindow = maybeOpenSpellCastReactionWindow(
-      input,
-      [target.combatantId],
-      { kind: "magicAction" },
-      undefined,
-    );
-    if (spellCastReactionWindow !== null) {
-      return spellCastReactionWindow;
-    }
-  }
-
-  const saveGate = resolveWillingTargetSaveGate({
-    state: input.input.state,
-    subject: input.input.subject,
-    actorId: input.actorId,
+  const saveResolution = openReactionThenResolveWillingTargetSave({
+    resolution: input,
     targetId: target.combatantId,
-    invocation: input.invocation,
     targetSpatialFacts: input.fillSet.targetSpatialFacts,
     savingThrowOutcomes: input.fillSet.savingThrowOutcomes,
     willingTargetSaveMessage:
       "Willing Levitate creature targets do not make a Saving Throw.",
   });
+  if (saveResolution.tag !== "saveGate") {
+    return saveResolution;
+  }
+  const { saveGate } = saveResolution;
   if (saveGate.tag === "resolutionRequired") {
     return saveGate.resolution;
   }
@@ -365,27 +343,12 @@ function applyLevitatedCreatureSpellEffect(
       ),
       nextEffect,
     ];
-    const withReplacement = {
-      ...allocation.state,
-      combatants: new Map(allocation.state.combatants).set(targetId, {
-        ...allocatedTarget,
-        activeEffects,
-      }),
-    };
-    const combatants = displacedEffects.reduce<
-      ReadonlyMap<CombatantId, BattleCreatureState>
-    >(
-      (nextCombatants, effect) =>
-        combatantsAfterConcentrationSpellEffectsEndedIfNoEffects(
-          nextCombatants,
-          {
-            sourceCombatantId: effect.sourceCombatantId,
-            sourceProcedureRef: effect.sourceProcedureRef,
-          },
-        ),
-      withReplacement.combatants,
+    return replaceTargetActiveEffectsEndingDisplacedConcentrations(
+      allocation.state,
+      targetId,
+      activeEffects,
+      displacedEffects,
     );
-    return { ...withReplacement, combatants };
   }, state);
 }
 

@@ -1,5 +1,12 @@
-import { maybeOpenSpellCastReactionWindow } from "../spell-cast-reaction-window.ts";
+import {
+  maybeOpenConfiguredSpellCastReactionWindow,
+  spendConfiguredSpellCastResources,
+} from "../spell-active-effect-resolution.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
+import {
+  actionSpellCastCandidatesForTargetHole,
+  spellCastCandidate,
+} from "../spell-cast-candidate.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
 import { DiceExprSchema } from "@dnd/surface/surface/schema";
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE
@@ -70,7 +77,6 @@ import { spellCreatedHeldObjectHasFreeHand } from "../spell-created-held-object.
 import { spellTargetHole } from "../spells-targeting.ts";
 import { resolveSpellAttackDamageAct } from "../spells-resolve.ts";
 import type { SpellProcedureExecutionRegistry } from "./execution-registry.ts";
-import { spendSpellCastResources } from "../spells-resolve-resources.ts";
 import { sameStringSet } from "../spells-execution-facts.ts";
 import type {
   SpellAdmissionContext,
@@ -438,15 +444,12 @@ function discoverSpellCreatedHeldObjectCastAct(
     return [];
   }
   return [
-    {
-      subject: {
-        tag: "bonusActionSpell",
-        actorId,
-        procedureRef: invocation.sourceProcedureRef,
-        mode: { tag: "cast" },
-      },
-      initialHoles: [],
-    },
+    spellCastCandidate(
+      "bonusActionSpell",
+      actorId,
+      invocation.sourceProcedureRef,
+      [],
+    ),
   ];
 }
 
@@ -467,19 +470,11 @@ function discoverSpellCreatedHeldObjectAttackCastAct(
     );
   if (effect?.objectState.kind !== "held") return [];
   const targetHole = spellTargetHole(state, actorId, invocation);
-  return targetHole.choices.length === 0
-    ? []
-    : [
-        {
-          subject: {
-            tag: "actionSpell",
-            actorId,
-            procedureRef: invocation.sourceProcedureRef,
-            mode: { tag: "cast" },
-          },
-          initialHoles: [targetHole],
-        },
-      ];
+  return actionSpellCastCandidatesForTargetHole(
+    actorId,
+    invocation.sourceProcedureRef,
+    targetHole,
+  );
 }
 
 function discoverSpellCreatedHeldObjectReEvokeCastAct(
@@ -502,15 +497,12 @@ function discoverSpellCreatedHeldObjectReEvokeCastAct(
     );
   if (effect?.objectState.kind !== "notHeld") return [];
   return [
-    {
-      subject: {
-        tag: "bonusActionSpell",
-        actorId,
-        procedureRef: invocation.sourceProcedureRef,
-        mode: { tag: "cast" },
-      },
-      initialHoles: [],
-    },
+    spellCastCandidate(
+      "bonusActionSpell",
+      actorId,
+      invocation.sourceProcedureRef,
+      [],
+    ),
   ];
 }
 
@@ -534,20 +526,17 @@ function resolveSpellCreatedHeldObject(
       handStateError.message,
     );
   }
-  const spellCastReactionWindow = maybeOpenSpellCastReactionWindow(
-    input,
-    [input.actorId],
-    { kind: "bonusAction" },
-    undefined,
-  );
+  const resolution = { ...input, actionCostOverride: "bonusAction" as const };
+  const spellCastReactionWindow = maybeOpenConfiguredSpellCastReactionWindow({
+    resolution,
+    targetIds: [input.actorId],
+  });
   if (spellCastReactionWindow !== null) {
     return spellCastReactionWindow;
   }
-  const resourced = spendSpellCastResources({
+  const resourced = spendConfiguredSpellCastResources({
+    resolution,
     state: input.input.state,
-    actorId: input.actorId,
-    invocation: input.invocation,
-    errorState: input.input.state,
   });
   if (resourced.tag === "invalid") {
     return resourced;

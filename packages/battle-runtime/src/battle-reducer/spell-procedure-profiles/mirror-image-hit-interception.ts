@@ -1,5 +1,7 @@
-import { maybeOpenSpellCastReactionWindow } from "../spell-cast-reaction-window.ts";
+import { resolveSpellActiveEffectCast } from "../spell-active-effect-resolution.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
+import { replaceTargetSpellActiveEffect } from "../active-effect-replacement.ts";
+import { actionSpellCastCandidate } from "../spell-cast-candidate.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-mirror-image-hit-interception
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION
 //
@@ -29,7 +31,6 @@ import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elaps
 import { DurationBattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
 import { Either } from "effect";
 
-import { battleCreatureWithSpellActiveEffects } from "../../active-effect/lifecycle.ts";
 import {
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
@@ -44,10 +45,9 @@ import {
   MIRROR_IMAGE_INITIAL_DUPLICATES,
   MIRROR_IMAGE_UNAFFECTED_BY,
 } from "../domain-constants.ts";
-import { invalidResult, resolutionFromStateResult } from "../result-helpers.ts";
+import { invalidResult } from "../result-helpers.ts";
 import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
 import { sameStringSet } from "../spells-execution-facts.ts";
-import { spendSpellCastResources } from "../spells-resolve-resources.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
@@ -144,17 +144,7 @@ function discoverMirrorImageHitInterceptionCastAct(
   actorId: CombatantId,
   invocation: BattleExecutableSpellInvocation<MirrorImageHitInterceptionSpellInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
-  return [
-    {
-      subject: {
-        tag: "actionSpell",
-        actorId,
-        procedureRef: invocation.sourceProcedureRef,
-        mode: { tag: "cast" },
-      },
-      initialHoles: [],
-    },
-  ];
+  return [actionSpellCastCandidate(actorId, invocation.sourceProcedureRef, [])];
 }
 
 function applyMirrorImageHitInterceptionEffect(
@@ -162,33 +152,19 @@ function applyMirrorImageHitInterceptionEffect(
   actorId: CombatantId,
   invocation: BattleExecutableSpellInvocation<MirrorImageHitInterceptionSpellInvocation>,
 ): BattleState {
-  const actor = state.combatants.get(actorId);
-  if (actor === undefined) {
-    return state;
-  }
-  const nextEffect = {
-    ...invocation.activeEffect,
-    sourceProcedureRef: invocation.sourceProcedureRef,
-    sourceCombatantId: actorId,
-  };
-  const activeEffects = [
-    ...actor.activeEffects.filter(
-      (effect) =>
-        !(
-          effect.kind === "mirrorImageDuplicates" &&
-          effect.sourceProcedureRef === invocation.sourceProcedureRef &&
-          effect.sourceCombatantId === actorId
-        ),
-    ),
-    nextEffect,
-  ];
-  return {
-    ...state,
-    combatants: new Map(state.combatants).set(
-      actorId,
-      battleCreatureWithSpellActiveEffects(actor, activeEffects),
-    ),
-  };
+  return replaceTargetSpellActiveEffect(
+    state,
+    actorId,
+    (effect) =>
+      effect.kind === "mirrorImageDuplicates" &&
+      effect.sourceProcedureRef === invocation.sourceProcedureRef &&
+      effect.sourceCombatantId === actorId,
+    {
+      ...invocation.activeEffect,
+      sourceProcedureRef: invocation.sourceProcedureRef,
+      sourceCombatantId: actorId,
+    },
+  );
 }
 
 function resolveMirrorImageHitInterception(
@@ -202,28 +178,17 @@ function resolveMirrorImageHitInterception(
     );
   }
 
-  const spellCastReactionWindow = maybeOpenSpellCastReactionWindow(
-    input,
-    [input.actorId],
-    { kind: "magicAction" },
-    undefined,
-  );
-  if (spellCastReactionWindow !== null) {
-    return spellCastReactionWindow;
-  }
-
-  const effected = applyMirrorImageHitInterceptionEffect(
-    input.input.state,
-    input.actorId,
-    input.invocation,
-  );
-  const resourced = spendSpellCastResources({
-    state: effected,
-    actorId: input.actorId,
-    invocation: input.invocation,
-    errorState: input.input.state,
+  return resolveSpellActiveEffectCast({
+    resolution: input,
+    targetIds: [input.actorId],
+    castingResource: { kind: "magicAction" },
+    applyEffect: (state) =>
+      applyMirrorImageHitInterceptionEffect(
+        state,
+        input.actorId,
+        input.invocation,
+      ),
   });
-  return resolutionFromStateResult(resourced);
 }
 
 const MirrorImageHitInterceptionInvocationSchema =

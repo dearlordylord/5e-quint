@@ -1,8 +1,16 @@
 import type {
   BattleActiveEffect,
+  BattleCreatureState,
   BattleState,
 } from "../battle-state-execution.ts";
-import type { CombatantId } from "../identity.ts";
+import type {
+  BattleActiveEffectExecutionRef,
+  BattleProcedureExecutionRef,
+  CombatantId,
+} from "../identity.ts";
+import { battleCreatureWithSpellActiveEffects } from "../active-effect/lifecycle.ts";
+import { allocateBattleActiveEffectRef } from "../active-effect/execution-ref.ts";
+import { combatantsAfterConcentrationSpellEffectsEndedIfNoEffects } from "./spell-condition-effects-helpers.ts";
 
 export function replaceTargetActiveEffect(
   state: BattleState,
@@ -24,4 +32,86 @@ export function replaceTargetActiveEffect(
       ],
     }),
   };
+}
+
+export function replaceTargetSpellActiveEffect(
+  state: BattleState,
+  targetId: CombatantId,
+  replaces: (effect: BattleActiveEffect) => boolean,
+  replacement: BattleActiveEffect,
+): BattleState {
+  const target = state.combatants.get(targetId);
+  if (target === undefined) {
+    return state;
+  }
+  const activeEffects = [
+    ...target.activeEffects.filter((effect) => !replaces(effect)),
+    replacement,
+  ];
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(
+      targetId,
+      battleCreatureWithSpellActiveEffects(target, activeEffects),
+    ),
+  };
+}
+
+export function replaceAllocatedTargetSpellActiveEffects(
+  state: BattleState,
+  targetId: CombatantId,
+  replaces: (effect: BattleActiveEffect) => boolean,
+  replacements: (
+    effectRef: BattleActiveEffectExecutionRef,
+  ) => readonly BattleActiveEffect[],
+): BattleState {
+  const allocation = allocateBattleActiveEffectRef({
+    state,
+    ownerId: targetId,
+  });
+  if (allocation.tag === "ownerNotFound") {
+    return state;
+  }
+  const activeEffects = [
+    ...allocation.owner.activeEffects.filter((effect) => !replaces(effect)),
+    ...replacements(allocation.effectRef),
+  ];
+  return {
+    ...allocation.state,
+    combatants: new Map(allocation.state.combatants).set(
+      targetId,
+      battleCreatureWithSpellActiveEffects(allocation.owner, activeEffects),
+    ),
+  };
+}
+
+export function replaceTargetActiveEffectsEndingDisplacedConcentrations(
+  state: BattleState,
+  targetId: CombatantId,
+  activeEffects: readonly BattleActiveEffect[],
+  displacedEffects: readonly {
+    readonly sourceCombatantId: CombatantId;
+    readonly sourceProcedureRef: BattleProcedureExecutionRef;
+  }[],
+): BattleState {
+  const target = state.combatants.get(targetId);
+  if (target === undefined) return state;
+  const withReplacement = {
+    ...state,
+    combatants: new Map(state.combatants).set(targetId, {
+      ...target,
+      activeEffects,
+    }),
+  };
+  const combatants = displacedEffects.reduce<
+    ReadonlyMap<CombatantId, BattleCreatureState>
+  >(
+    (nextCombatants, effect) =>
+      combatantsAfterConcentrationSpellEffectsEndedIfNoEffects(
+        nextCombatants,
+        effect,
+      ),
+    withReplacement.combatants,
+  );
+  return { ...withReplacement, combatants };
 }

@@ -11,6 +11,7 @@ import { invalidResult } from "./result-helpers.ts";
 import { spellSavingThrowOutcomeHole } from "./spells-damage-fills.ts";
 import { validateSavingThrowOutcomes } from "./spells-resolve-save-gates.ts";
 import { spellTargetIsKnownWilling } from "./spells-targeting.ts";
+import { maybeOpenConfiguredSpellCastReactionWindow } from "./spell-active-effect-resolution.ts";
 
 type WillingTargetSaveInvocation = Parameters<
   typeof spellSavingThrowOutcomeHole
@@ -23,6 +24,41 @@ export type WillingTargetSaveGate =
       readonly tag: "resolutionRequired";
       readonly resolution: BattleResolutionResult;
     };
+
+export function openReactionThenResolveWillingTargetSave(input: {
+  readonly resolution: Omit<
+    Parameters<
+      typeof maybeOpenConfiguredSpellCastReactionWindow
+    >[0]["resolution"],
+    "invocation"
+  > & { readonly invocation: WillingTargetSaveInvocation };
+  readonly targetId: CombatantId;
+  readonly targetSpatialFacts: readonly BattleTargetSpatialFact[];
+  readonly savingThrowOutcomes: BattleSpellSavingThrowOutcomeValue | undefined;
+  readonly willingTargetSaveMessage: string;
+}):
+  | BattleResolutionResult
+  | { readonly tag: "saveGate"; readonly saveGate: WillingTargetSaveGate } {
+  const reactionWindow = maybeOpenConfiguredSpellCastReactionWindow({
+    resolution: input.resolution,
+    targetIds: [input.targetId],
+  });
+  return (
+    reactionWindow ?? {
+      tag: "saveGate",
+      saveGate: resolveWillingTargetSaveGate({
+        state: input.resolution.input.state,
+        subject: input.resolution.input.subject,
+        actorId: input.resolution.actorId,
+        targetId: input.targetId,
+        invocation: input.resolution.invocation,
+        targetSpatialFacts: input.targetSpatialFacts,
+        savingThrowOutcomes: input.savingThrowOutcomes,
+        willingTargetSaveMessage: input.willingTargetSaveMessage,
+      }),
+    }
+  );
+}
 
 /**
  * Resolves the save protocol shared by spells that affect a willing target

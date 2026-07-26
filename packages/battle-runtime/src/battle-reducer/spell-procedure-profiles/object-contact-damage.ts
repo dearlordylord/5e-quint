@@ -1,4 +1,8 @@
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
+import {
+  ongoingSpellRepeatCastIsAvailable,
+  ongoingSpellRepeatIsOnLaterTurn,
+} from "../ongoing-spell-repeat-cast.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 import { DiceExprSchema } from "@dnd/surface/surface/schema";
@@ -51,11 +55,7 @@ import {
   BattleProcedureExecutionRef,
   CombatantId,
 } from "../../identity.ts";
-import { currentActorId } from "../creature-state-leaves.ts";
-import {
-  antimagicFieldOngoingSpellEffectRefForActiveEffect,
-  ongoingSpellEffectSuppressedByAntimagicField,
-} from "../antimagic-field-suppression.ts";
+import { antimagicFieldOngoingSpellEffectRefForActiveEffect } from "../antimagic-field-suppression.ts";
 import {
   resolveObjectContactDamageRepeatSpellAct,
   resolveObjectContactDamageSpellAct,
@@ -197,8 +197,7 @@ function objectContactDamageRepeatIsDiscoverable(
   const battleTurn = spellAdmissionBattleTurn(ctx);
   return (
     battleTurn !== undefined &&
-    (battleTurn.currentActorId !== effect.startedOn.actorId ||
-      battleTurn.round !== effect.startedOn.round)
+    ongoingSpellRepeatIsOnLaterTurn(battleTurn, effect)
   );
 }
 
@@ -424,20 +423,7 @@ function discoverObjectContactDamageRepeatCastAct(
   actorId: CombatantId,
   invocation: import("../../battle-state-execution.ts").BattleExecutableSpellInvocation<ObjectContactDamageRepeatInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
-  if (
-    currentActorId(state) === invocation.activeEffect.startedOn.actorId &&
-    state.initiative.round === invocation.activeEffect.startedOn.round
-  ) {
-    return [];
-  }
-  if (
-    ongoingSpellEffectSuppressedByAntimagicField(
-      state,
-      antimagicFieldOngoingSpellEffectRefForActiveEffect(
-        invocation.activeEffect,
-      ),
-    )
-  ) {
+  if (!ongoingSpellRepeatCastIsAvailable(state, invocation.activeEffect)) {
     return [];
   }
   return [

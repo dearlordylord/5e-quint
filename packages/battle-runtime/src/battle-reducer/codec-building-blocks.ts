@@ -362,6 +362,53 @@ export const SpellAttackDamageTargetingSchema = Schema.Union(
   SingleCreatureOrObjectSpellTargetingSchema,
 );
 
+const SingleCombatantSpellTargetingSchema = Schema.Struct({
+  kind: Schema.Literal("singleCombatant"),
+});
+const TargetListSpellTargetingSchema = Schema.Struct({
+  kind: Schema.Literal("targetList"),
+  minTargets: Schema.Literal(1),
+  maxTargets: Schema.Number,
+});
+const PointOriginSphereSpellTargetingSchema = Schema.Struct({
+  kind: Schema.Literal("pointOriginSphere"),
+  radiusFeet: MovementFeet,
+});
+const PointOriginCubeExcludingCasterSpellTargetingSchema = Schema.Struct({
+  kind: Schema.Literal("pointOriginCubeExcludingCaster"),
+  sideFeet: MovementFeet,
+});
+const PointOriginCubeSpellTargetingSchema = Schema.Struct({
+  kind: Schema.Literal("pointOriginCube"),
+  sideFeet: MovementFeet,
+});
+const SelfOriginConeSpellTargetingSchema = Schema.Struct({
+  kind: Schema.Literal("selfOriginCone"),
+  lengthFeet: MovementFeet,
+});
+
+export const SaveGatedConditionSpellTargetingSchema = Schema.Union(
+  SingleCombatantSpellTargetingSchema,
+  TargetListSpellTargetingSchema,
+  PointOriginSphereSpellTargetingSchema,
+  PointOriginCubeExcludingCasterSpellTargetingSchema,
+  PointOriginCubeSpellTargetingSchema,
+  SelfOriginConeSpellTargetingSchema,
+);
+
+export const SaveGatedDamageSpellTargetingSchema = Schema.Union(
+  SaveGatedConditionSpellTargetingSchema,
+  Schema.Struct({
+    kind: Schema.Literal("selfOriginCube"),
+    sideFeet: MovementFeet,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("selfOriginLine"),
+    lengthFeet: MovementFeet,
+    widthFeet: MovementFeet,
+  }),
+);
+
 export const CantripSpellAttackSequenceAttackCountSchema = Schema.Literal(
   ...ELDRITCH_BLAST_BEAM_COUNTS,
 );

@@ -361,7 +361,7 @@ export function battleStatBlockExecutionScopeRefBelongsToCombatant(
     hasExactKeys(decoded, ["battleId", "combatantId", "kind", "ordinal"]) &&
     decoded.kind === "statBlockExecution" &&
     decoded.combatantId === combatantId &&
-    scopeReferenceEncodingIsCanonical(scopeRef, decoded)
+    scopeReferenceEncodingIsCanonical(scopeRef, decoded, "statBlockExecution")
   );
 }
 
@@ -389,7 +389,7 @@ export function battleStatBlockExecutionScopeRefBelongsToBattle(
     hasExactKeys(decoded, ["battleId", "combatantId", "kind", "ordinal"]) &&
     decoded.kind === "statBlockExecution" &&
     decoded.battleId === battleId &&
-    scopeReferenceEncodingIsCanonical(scopeRef, decoded)
+    scopeReferenceEncodingIsCanonical(scopeRef, decoded, "statBlockExecution")
   );
 }
 
@@ -410,18 +410,9 @@ export function battleCharacterExecutionScopeRefBelongsToBattle(
 export function battleStatBlockExecutionScopeRefIsWellFormed(
   scopeRef: BattleStatBlockExecutionScopeRef,
 ): boolean {
-  const decoded = parseExecutionReference(scopeRef);
-  return (
-    decoded !== null &&
-    hasExactKeys(decoded, ["battleId", "combatantId", "kind", "ordinal"]) &&
-    decoded.kind === "statBlockExecution" &&
-    typeof decoded.battleId === "string" &&
-    decoded.battleId.trim() === decoded.battleId &&
-    decoded.battleId.length > 0 &&
-    typeof decoded.combatantId === "string" &&
-    decoded.combatantId.trim() === decoded.combatantId &&
-    decoded.combatantId.length > 0 &&
-    scopeReferenceEncodingIsCanonical(scopeRef, decoded)
+  return battleOwnedExecutionScopeReferenceIsCanonical(
+    scopeRef,
+    "statBlockExecution",
   );
 }
 
@@ -579,7 +570,7 @@ function battleOwnedExecutionScopeRefOrdinalIsBefore(
 function scopeReferenceEncodingIsCanonical(
   reference: string,
   decoded: Readonly<Record<string, unknown>>,
-  kind: "statBlockExecution" | "attackExecution" = "statBlockExecution",
+  kind: "statBlockExecution" | "characterExecution" | "attackExecution",
 ): boolean {
   return (
     typeof decoded.battleId === "string" &&
@@ -597,7 +588,7 @@ function scopeReferenceEncodingIsCanonical(
 
 function battleOwnedExecutionScopeReferenceIsCanonical(
   reference: string,
-  kind: "attackExecution",
+  kind: "statBlockExecution" | "characterExecution" | "attackExecution",
 ): boolean {
   const decoded = parseExecutionReference(reference);
   return (
@@ -663,43 +654,18 @@ function battleExecutionScopeReferenceIsCanonical(reference: string): boolean {
 function battleStatBlockExecutionScopeReferenceIsCanonical(
   reference: string,
 ): boolean {
-  const decoded = parseExecutionReference(reference);
-  return (
-    decoded !== null &&
-    hasExactKeys(decoded, ["battleId", "combatantId", "kind", "ordinal"]) &&
-    decoded.kind === "statBlockExecution" &&
-    typeof decoded.battleId === "string" &&
-    decoded.battleId.trim() === decoded.battleId &&
-    decoded.battleId.length > 0 &&
-    typeof decoded.combatantId === "string" &&
-    decoded.combatantId.trim() === decoded.combatantId &&
-    decoded.combatantId.length > 0 &&
-    scopeReferenceEncodingIsCanonical(reference, decoded)
+  return battleOwnedExecutionScopeReferenceIsCanonical(
+    reference,
+    "statBlockExecution",
   );
 }
 
 function battleCharacterExecutionScopeReferenceIsCanonical(
   reference: string,
 ): boolean {
-  const decoded = parseExecutionReference(reference);
-  return (
-    decoded !== null &&
-    hasExactKeys(decoded, ["battleId", "combatantId", "kind", "ordinal"]) &&
-    decoded.kind === "characterExecution" &&
-    typeof decoded.battleId === "string" &&
-    decoded.battleId.trim() === decoded.battleId &&
-    decoded.battleId.length > 0 &&
-    typeof decoded.combatantId === "string" &&
-    decoded.combatantId.trim() === decoded.combatantId &&
-    decoded.combatantId.length > 0 &&
-    nonNegativeIntegerProperty(decoded, "ordinal") &&
-    reference ===
-      JSON.stringify({
-        battleId: decoded.battleId,
-        combatantId: decoded.combatantId,
-        kind: "characterExecution",
-        ordinal: decoded.ordinal,
-      })
+  return battleOwnedExecutionScopeReferenceIsCanonical(
+    reference,
+    "characterExecution",
   );
 }
 

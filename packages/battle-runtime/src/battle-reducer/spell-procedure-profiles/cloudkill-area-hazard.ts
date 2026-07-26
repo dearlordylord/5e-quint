@@ -1,4 +1,5 @@
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
+import { ongoingConcentrationAreaSpellFacts } from "../ongoing-concentration-area-spell.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-cloudkill-area-hazard
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 import { DiceExprSchema } from "@dnd/surface/surface/schema";
@@ -22,10 +23,7 @@ import { DiceExprSchema } from "@dnd/surface/surface/schema";
 //   - UBIQUITOUS_LANGUAGE.md: Magic Action, Spell Slot, Concentration,
 //     Area of Effect/Sphere, Obscurement, Saving Throw, Damage Type.
 
-import {
-  elapsedTimeTicksFromTimeSpanDuration,
-  type ElapsedTimeTicks,
-} from "@dnd/shared-algebras/elapsed-time-algebra";
+import { type ElapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
 import { Either, Schema } from "effect";
 
@@ -131,46 +129,37 @@ function admitCloudkillAreaHazard(
 function cloudkillAreaHazardSpell(
   spell: BattleSpellAdmissionSource,
 ): CloudkillProfileShape | null {
-  if (spell.mechanics.family !== "ongoing_effect") {
+  const ongoing = ongoingConcentrationAreaSpellFacts(spell);
+  if (ongoing === null) {
     return null;
   }
-  const durationTicks =
-    spell.mechanics.duration.kind === "concentration"
-      ? elapsedTimeTicksFromTimeSpanDuration(spell.mechanics.duration.upTo)
-      : null;
-  const attachment = spell.mechanics.attachment;
-  const area =
-    attachment.kind === "hole" && attachment.value.kind === "area"
-      ? attachment.value
-      : null;
-  const passiveOperation = spell.mechanics.operations.find(
+  const { mechanics, duration, durationTicks, area } = ongoing;
+  const passiveOperation = mechanics.operations.find(
     (operation) => operation.trigger.kind === "passive",
   );
-  const moveOperation = spell.mechanics.operations.find(
+  const moveOperation = mechanics.operations.find(
     (operation) => operation.trigger.kind === "on_attached_turn_start",
   );
-  const enterOperation = spell.mechanics.operations.find(
+  const enterOperation = mechanics.operations.find(
     (operation) => operation.trigger.kind === "on_creature_enters_area",
   );
-  const endTurnOperation = spell.mechanics.operations.find(
+  const endTurnOperation = mechanics.operations.find(
     (operation) => operation.trigger.kind === "on_creature_ends_turn_in_area",
   );
-  const initialPhase = spell.mechanics.initialPhase;
+  const initialPhase = mechanics.initialPhase;
   const initialDamageAmount = cloudkillSaveGateDamageAmount(initialPhase);
 
   if (
-    spell.mechanics.level !== CLOUDKILL_LEVEL ||
-    spell.mechanics.castingTime.kind !== "action" ||
-    spell.mechanics.range.kind !== "point" ||
-    spell.mechanics.range.feet !== CLOUDKILL_RANGE_FEET ||
-    spell.mechanics.duration.kind !== "concentration" ||
-    spell.mechanics.duration.upTo.unit !== "minute" ||
-    spell.mechanics.duration.upTo.amount !== CLOUDKILL_DURATION_MINUTES ||
-    spell.mechanics.duration.earlyEnd?.some(
+    mechanics.level !== CLOUDKILL_LEVEL ||
+    mechanics.castingTime.kind !== "action" ||
+    mechanics.range.kind !== "point" ||
+    mechanics.range.feet !== CLOUDKILL_RANGE_FEET ||
+    duration.upTo.unit !== "minute" ||
+    duration.upTo.amount !== CLOUDKILL_DURATION_MINUTES ||
+    duration.earlyEnd?.some(
       (earlyEnd) => earlyEnd.kind === "area_dispersed_by_strong_wind",
     ) !== true ||
-    spell.mechanics.operations.length !== CLOUDKILL_OPERATION_COUNT ||
-    durationTicks === null ||
+    mechanics.operations.length !== CLOUDKILL_OPERATION_COUNT ||
     Either.isLeft(durationTicks) ||
     area?.kind !== "area" ||
     area.origin.kind !== "point_within_range" ||
@@ -189,7 +178,7 @@ function cloudkillAreaHazardSpell(
 
   return {
     durationTicks: durationTicks.right,
-    rangeFeet: spell.mechanics.range.feet,
+    rangeFeet: mechanics.range.feet,
     radiusFeet: area.shape.radiusFeet,
     damageAmount: initialDamageAmount,
   };

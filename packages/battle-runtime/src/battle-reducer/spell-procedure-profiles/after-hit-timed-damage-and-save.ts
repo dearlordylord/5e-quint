@@ -1,8 +1,4 @@
-import {
-  completeAfterHitSpellCast,
-  prepareAfterHitSlotSpellCast,
-} from "../after-hit-spell-resolution.ts";
-import { appendAfterHitSpellDamage } from "../after-hit-spell-damage.ts";
+import { resolveAfterHitSlotSpellDamageCast } from "../after-hit-spell-resolution.ts";
 import { replaceTargetActiveEffect } from "../active-effect-replacement.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-after-hit-timed-damage-save
@@ -265,16 +261,6 @@ function applyAfterHitTimedDamageAndSaveSpellEffect(
 function resolveAfterHitTimedDamageAndSave(
   input: AfterHitTimedDamageAndSaveResolveInput,
 ): BattleResolutionResult {
-  const preparation = prepareAfterHitSlotSpellCast({
-    input: input.input,
-    invocation: input.invocation,
-    fillSet: input.fillSet,
-    casterId: input.input.subject.casterId,
-    targetId: input.input.target.combatantId,
-  });
-  if (preparation.tag !== "prepared") {
-    return preparation;
-  }
   const damageAddition: AttackSpellDamageAddition = {
     kind: "attackSpellDamageAddition",
     sourceProcedure: "afterHitTimedDamageAndSave",
@@ -285,23 +271,20 @@ function resolveAfterHitTimedDamageAndSave(
       damageType: input.invocation.immediateDamage.damageType,
     },
   };
-  const nextFrame = appendAfterHitSpellDamage(
-    input.input.frame,
-    damageAddition,
-  );
-  const effected = applyAfterHitTimedDamageAndSaveSpellEffect(
-    preparation.state,
-    input.input.target.combatantId,
-    input.invocation,
-  );
-  return completeAfterHitSpellCast({
-    state: effected,
-    frame: nextFrame,
-    subject: input.input.subject,
+  return resolveAfterHitSlotSpellDamageCast({
+    input: input.input,
+    frame: input.input.frame,
+    fillSet: input.fillSet,
     casterId: input.input.subject.casterId,
     invocation: input.invocation,
     targetId: input.input.target.combatantId,
-    handledInterruptTrigger: input.input.handledInterruptTrigger,
+    damageAddition,
+    applyEffect: (state) =>
+      applyAfterHitTimedDamageAndSaveSpellEffect(
+        state,
+        input.input.target.combatantId,
+        input.invocation,
+      ),
   });
 }
 

@@ -1,8 +1,4 @@
-import {
-  completeAfterHitSpellCast,
-  prepareAfterHitSlotSpellCast,
-} from "../after-hit-spell-resolution.ts";
-import { appendAfterHitSpellDamage } from "../after-hit-spell-damage.ts";
+import { resolveAfterHitSlotSpellDamageCast } from "../after-hit-spell-resolution.ts";
 import { replaceTargetActiveEffect } from "../active-effect-replacement.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-after-hit-damage-illumination
@@ -53,7 +49,7 @@ import { CombatantId } from "../../identity.ts";
 import { SHINING_SMITE_BRIGHT_LIGHT_RADIUS_FEET } from "../spells-active-effects.ts";
 import {
   sameStringSet,
-  supportedDamageAmountExpr,
+  supportedSpellSlotDamageFacts,
 } from "../spells-execution-facts.ts";
 import type {
   SpellAdmissionContext,
@@ -97,38 +93,27 @@ function admitAfterHitDamageAndIllumination(
   if (projection === null) {
     return [];
   }
-  return ctx.actor.origin.spellcasting.spellSlots.flatMap(
-    (slot): readonly AfterHitDamageAndIlluminationInvocation[] => {
-      if (Number(slot.spellLevel) < spell.mechanics.level) {
-        return [];
-      }
-      const damageExpr = supportedDamageAmountExpr({
-        amount: projection.damageAmount,
-        spellLevel: spell.mechanics.level,
-        slotLevel: slot.spellLevel,
-      });
-      if (damageExpr === null) {
-        return [];
-      }
-      return [
-        {
-          access: { tag: "prepared" },
-          resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
-          procedure: "afterHitDamageAndIllumination",
-          spell,
-          actionCost: "bonusAction",
-          damage: {
-            expr: damageExpr,
-            damageType: projection.damageType,
-          },
-          activeEffect: {
-            kind: "shiningSmiteIllumination",
-            sourceCombatantId: ctx.actor.combatantId,
-            expiresAt: projection.expiresAt,
-          },
-        },
-      ];
-    },
+  return supportedSpellSlotDamageFacts({
+    slots: ctx.actor.origin.spellcasting.spellSlots,
+    amount: projection.damageAmount,
+    spellLevel: spell.mechanics.level,
+  }).map(
+    ({ slotLevel, damageExpr }): AfterHitDamageAndIlluminationInvocation => ({
+      access: { tag: "prepared" },
+      resource: { tag: "spellSlot", slotLevel },
+      procedure: "afterHitDamageAndIllumination",
+      spell,
+      actionCost: "bonusAction",
+      damage: {
+        expr: damageExpr,
+        damageType: projection.damageType,
+      },
+      activeEffect: {
+        kind: "shiningSmiteIllumination",
+        sourceCombatantId: ctx.actor.combatantId,
+        expiresAt: projection.expiresAt,
+      },
+    }),
   );
 }
 
@@ -242,17 +227,6 @@ function applyAfterHitDamageAndIlluminationSpellEffect(
 function resolveAfterHitDamageAndIllumination(
   input: AfterHitDamageAndIlluminationResolveInput,
 ): BattleResolutionResult {
-  const preparation = prepareAfterHitSlotSpellCast({
-    input: input.input,
-    invocation: input.invocation,
-    fillSet: input.fillSet,
-    casterId: input.input.subject.casterId,
-    targetId: input.input.target.combatantId,
-  });
-  if (preparation.tag !== "prepared") {
-    return preparation;
-  }
-
   const damageAddition: AttackSpellDamageAddition = {
     kind: "attackSpellDamageAddition",
     sourceProcedure: "afterHitDamageAndIllumination",
@@ -263,23 +237,20 @@ function resolveAfterHitDamageAndIllumination(
       damageType: input.invocation.damage.damageType,
     },
   };
-  const nextFrame = appendAfterHitSpellDamage(
-    input.input.frame,
-    damageAddition,
-  );
-  const effected = applyAfterHitDamageAndIlluminationSpellEffect(
-    preparation.state,
-    input.input.target.combatantId,
-    input.invocation,
-  );
-  return completeAfterHitSpellCast({
-    state: effected,
-    frame: nextFrame,
-    subject: input.input.subject,
+  return resolveAfterHitSlotSpellDamageCast({
+    input: input.input,
+    frame: input.input.frame,
+    fillSet: input.fillSet,
     casterId: input.input.subject.casterId,
     invocation: input.invocation,
     targetId: input.input.target.combatantId,
-    handledInterruptTrigger: input.input.handledInterruptTrigger,
+    damageAddition,
+    applyEffect: (state) =>
+      applyAfterHitDamageAndIlluminationSpellEffect(
+        state,
+        input.input.target.combatantId,
+        input.invocation,
+      ),
   });
 }
 

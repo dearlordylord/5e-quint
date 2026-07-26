@@ -1,5 +1,7 @@
 import { resolveSpellActiveEffectCast } from "../spell-active-effect-resolution.ts";
+import { actionSpellCastCandidatesForTargetHole } from "../spell-cast-candidate.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
+import { replaceTargetActiveEffect } from "../active-effect-replacement.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-damage-reduction
 import { BattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
 //
@@ -35,9 +37,8 @@ import {
   type BattleExecutableSpellInvocation,
   type DamageReductionSpellInvocation,
 } from "../../battle-state-execution.ts";
-import { needsHolesResult } from "../needs-holes-result.ts";
 import { invalidResult } from "../result-helpers.ts";
-import { selectSingleSpellTarget } from "../single-spell-target.ts";
+import { selectSingleSpellTargetAndDamageType } from "../single-spell-target.ts";
 import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
 import { ATTACK_TARGET_HOLE_ID } from "../battle-runtime-protocol.ts";
 import { spellDamageTypeChoiceHole } from "../spells-damage-fills.ts";
@@ -138,10 +139,6 @@ function applyDamageReductionEffect(
   damageType: DamageType,
   invocation: BattleExecutableSpellInvocation<DamageReductionSpellInvocation>,
 ): BattleState {
-  const target = state.combatants.get(targetId);
-  if (target === undefined) {
-    return state;
-  }
   const nextEffect = {
     kind: "spellDamageReduction" as const,
     sourceProcedureRef: invocation.sourceProcedureRef,
@@ -151,23 +148,14 @@ function applyDamageReductionEffect(
     usedThisTurn: false,
     expiresAt: invocation.expiresAt,
   };
-  const activeEffects = [
-    ...target.activeEffects.filter(
-      (effect) =>
-        !(
-          effect.kind === "spellDamageReduction" &&
-          effect.sourceProcedureRef === invocation.sourceProcedureRef
-        ),
-    ),
+  return replaceTargetActiveEffect(
+    state,
+    targetId,
+    (effect) =>
+      effect.kind === "spellDamageReduction" &&
+      effect.sourceProcedureRef === invocation.sourceProcedureRef,
     nextEffect,
-  ];
-  return {
-    ...state,
-    combatants: new Map(state.combatants).set(targetId, {
-      ...target,
-      activeEffects,
-    }),
-  };
+  );
 }
 
 function admitDamageReduction(
@@ -196,20 +184,12 @@ function discoverDamageReductionCastAct(
   invocation: BattleExecutableSpellInvocation<DamageReductionSpellInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const targetHole = spellTargetHole(state, actorId, invocation);
-  if (targetHole.choices.length === 0) {
-    return [];
-  }
-  return [
-    {
-      subject: {
-        tag: "actionSpell",
-        actorId,
-        procedureRef: invocation.sourceProcedureRef,
-        mode: { tag: "cast" },
-      },
-      initialHoles: [targetHole, spellDamageTypeChoiceHole(invocation)],
-    },
-  ];
+  return actionSpellCastCandidatesForTargetHole(
+    actorId,
+    invocation.sourceProcedureRef,
+    targetHole,
+    [spellDamageTypeChoiceHole(invocation)],
+  );
 }
 
 function resolveDamageReduction(
@@ -228,47 +208,33 @@ function resolveDamageReduction(
     );
   }
 
-  const targetSelection = selectSingleSpellTarget({
+  const selection = selectSingleSpellTargetAndDamageType({
     state: input.input.state,
     subject: input.input.subject,
     actorId: input.actorId,
     invocation: input.invocation,
     targetId: input.fillSet.targetId,
     targetSpatialFacts: input.fillSet.targetSpatialFacts,
+    damageType: input.fillSet.damageTypeChoice?.value,
     invalidTargetMessage:
       "Spell target must be a combatant within the selected spell's supported range.",
-  });
-  if (targetSelection.tag !== "selected") {
-    return targetSelection;
-  }
-  if (input.fillSet.damageTypeChoice === undefined) {
-    return needsHolesResult(input.input.state, input.input.subject, [
-      spellDamageTypeChoiceHole(input.invocation),
-    ]);
-  }
-  if (
-    !input.invocation.damageTypeChoices.includes(
-      input.fillSet.damageTypeChoice.value,
-    )
-  ) {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
+    invalidDamageTypeMessage:
       "Damage-reduction spell damage type must be one of the selected spell's choices.",
-    );
+  });
+  if (selection.tag !== "selected") {
+    return selection;
   }
-  const damageType = input.fillSet.damageTypeChoice.value;
 
   return resolveSpellActiveEffectCast({
     resolution: input,
-    targetIds: [targetSelection.targetId],
+    targetIds: [selection.targetId],
     castingResource: { kind: "magicAction" },
     applyEffect: (state) =>
       applyDamageReductionEffect(
         state,
         input.actorId,
-        targetSelection.targetId,
-        damageType,
+        selection.targetId,
+        selection.damageType,
         input.invocation,
       ),
   });

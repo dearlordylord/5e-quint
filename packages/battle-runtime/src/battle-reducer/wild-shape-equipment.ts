@@ -149,47 +149,33 @@ function resolvedDispositionForChoice(
   if (choice.disposition === "worn") {
     if (choice.practicality.kind === "notPracticalToWear") {
       if (choice.practicality.fallback === "falls") {
-        return {
-          tag: "valid",
-          value: {
-            item: choice.item,
-            disposition: "falls",
-          },
-        };
+        return resolvedEquipmentDisposition(choice.item, "falls");
       }
-      return {
-        tag: "valid",
-        value: {
-          item: choice.item,
-          disposition: "merges",
-        },
-      };
+      return resolvedEquipmentDisposition(choice.item, "merges");
     }
     if (!wildShapeLoadoutObjectSupportsEffectiveWornProjection(choice.item)) {
       return unsupportedWornEquipmentDisposition();
     }
-    return {
-      tag: "valid",
-      value: {
-        item: choice.item,
-        disposition: "worn",
-      },
-    };
+    return resolvedEquipmentDisposition(choice.item, "worn");
   }
   if (choice.disposition === "falls") {
-    return {
-      tag: "valid",
-      value: {
-        item: choice.item,
-        disposition: "falls",
-      },
-    };
+    return resolvedEquipmentDisposition(choice.item, "falls");
   }
+  return resolvedEquipmentDisposition(choice.item, "merges");
+}
+
+function resolvedEquipmentDisposition(
+  item: WildShapeLoadoutObjectRef,
+  disposition: ResolvedWildShapeEquipmentDisposition["disposition"],
+): {
+  readonly tag: "valid";
+  readonly value: ResolvedWildShapeEquipmentDisposition;
+} {
   return {
     tag: "valid",
     value: {
-      item: choice.item,
-      disposition: "merges",
+      item,
+      disposition,
     },
   };
 }

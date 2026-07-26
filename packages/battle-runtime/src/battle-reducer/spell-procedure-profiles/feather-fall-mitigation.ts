@@ -37,18 +37,12 @@ import {
 import { CombatantId } from "../../identity.ts";
 import { DurationBattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
 import { invalidResult } from "../result-helpers.ts";
-import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
 import { stateAfterSpellCastDeclared } from "../spell-cast-declaration.ts";
+import { selectSpellTargetList } from "../spell-target-list-selection.ts";
 import { sameStringSet } from "../spells-execution-facts.ts";
 import { completeReactionSpellSlotCast } from "../reaction-spell-resolution.ts";
-import {
-  spellTargetListHole,
-  spellTargetListHoleId,
-  validateSpellTargetList,
-} from "../spells-targeting.ts";
 import { featherFallReactionSpellMatchesTrigger } from "../reaction-triggered-spells.ts";
 
-import { needsHolesResult } from "../needs-holes-result.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
@@ -187,42 +181,24 @@ function resolveFeatherFallMitigation(
       "Feather Fall requires a matching falling Reaction trigger.",
     );
   }
-  if (
-    !fillsBelongToSpellCastHoles(input.input.fills, [
-      spellTargetListHoleId(input.invocation),
-    ])
-  ) {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      "Feather Fall uses only falling target-list fills.",
-    );
-  }
-  if (input.fillSet.targetList === undefined) {
-    return needsHolesResult(input.input.state, input.input.subject, [
-      spellTargetListHole(
-        input.input.state,
-        input.input.subject.reactorId,
-        input.invocation,
-      ),
-    ]);
-  }
-  const targetValidation = validateSpellTargetList(
-    input.input.state,
-    input.input.subject.reactorId,
-    input.invocation,
-    input.fillSet.targetList.targetIds,
-    input.fillSet.targetList.spatialFacts,
-  );
-  if (targetValidation !== null) {
-    return invalidResult(input.input.state, "invalidFill", targetValidation);
+  const targetSelection = selectSpellTargetList({
+    state: input.input.state,
+    subject: input.input.subject,
+    fills: input.input.fills,
+    fillSet: input.fillSet,
+    actorId: input.input.subject.reactorId,
+    invocation: input.invocation,
+    invalidFillMessage: "Feather Fall uses only falling target-list fills.",
+  });
+  if (targetSelection.tag !== "selected") {
+    return targetSelection;
   }
   const castingState = stateAfterSpellCastDeclared({
     state: input.input.state,
     casterId: input.input.subject.reactorId,
     invocation: input.invocation,
   });
-  const effected: BattleState = input.fillSet.targetList.targetIds.reduce(
+  const effected: BattleState = targetSelection.targetIds.reduce(
     (state, targetId) => {
       const target = state.combatants.get(targetId);
       return target === undefined

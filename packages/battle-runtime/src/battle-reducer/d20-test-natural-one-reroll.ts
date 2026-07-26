@@ -104,6 +104,26 @@ function d20TestNaturalOneRerollGate<Decision>(input: {
     : { tag: "decision", decision: input.decision };
 }
 
+function d20TestNaturalOneRerollDecisionState<Decision>(
+  input: Parameters<typeof d20TestRollFacts>[0] & {
+    readonly actor: BattleCreatureState | undefined;
+    readonly decision: Decision | undefined;
+  },
+): {
+  readonly facts: D20TestRollFacts;
+  readonly gate: D20TestNaturalOneRerollGate<Decision>;
+} {
+  const facts = d20TestRollFacts(input);
+  return {
+    facts,
+    gate: d20TestNaturalOneRerollGate({
+      actor: input.actor,
+      facts,
+      decision: input.decision,
+    }),
+  };
+}
+
 export function d20TestNaturalOneRerollRollDecisionRequired(input: {
   readonly actor: BattleCreatureState | undefined;
   readonly originalNaturalD20: number | undefined;
@@ -213,12 +233,7 @@ export function d20TestNaturalOneRerollRollIssue(input: {
   readonly requiredRollMode?: AttackRollMode | undefined;
   readonly otherD20RerollPresent?: boolean;
 }): string | null {
-  const facts = d20TestRollFacts(input);
-  const gate = d20TestNaturalOneRerollGate({
-    actor: input.actor,
-    facts,
-    decision: input.decision,
-  });
+  const { facts, gate } = d20TestNaturalOneRerollDecisionState(input);
   if (gate.tag === "finished") {
     return gate.issue;
   }
@@ -264,12 +279,7 @@ export function d20TestNaturalOneRerollOutcomeIssue(input: {
       ? null
       : D20_TEST_NATURAL_ONE_REROLL_WITHOUT_ROLL_MESSAGE;
   }
-  const facts = d20TestRollFacts(input);
-  const gate = d20TestNaturalOneRerollGate({
-    actor: input.actor,
-    facts,
-    decision: input.decision,
-  });
+  const { facts, gate } = d20TestNaturalOneRerollDecisionState(input);
   if (gate.tag === "finished") {
     return gate.issue;
   }

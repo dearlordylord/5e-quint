@@ -1,4 +1,5 @@
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
+import { ongoingConcentrationAreaSpellFacts } from "../ongoing-concentration-area-spell.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-insect-plague-area-hazard
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 import { DiceExprSchema } from "@dnd/surface/surface/schema";
@@ -20,10 +21,7 @@ import { DiceExprSchema } from "@dnd/surface/surface/schema";
 //     Area of Effect/Sphere, Difficult Terrain, Lightly Obscured, Saving
 //     Throw, Damage Type.
 
-import {
-  elapsedTimeTicksFromTimeSpanDuration,
-  type ElapsedTimeTicks,
-} from "@dnd/shared-algebras/elapsed-time-algebra";
+import { type ElapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
 import { Either, Schema } from "effect";
 
@@ -129,40 +127,31 @@ function admitInsectPlagueAreaHazard(
 function insectPlagueAreaHazardSpell(
   spell: BattleSpellAdmissionSource,
 ): InsectPlagueProfileShape | null {
-  if (spell.mechanics.family !== "ongoing_effect") {
+  const ongoing = ongoingConcentrationAreaSpellFacts(spell);
+  if (ongoing === null) {
     return null;
   }
-  const durationTicks =
-    spell.mechanics.duration.kind === "concentration"
-      ? elapsedTimeTicksFromTimeSpanDuration(spell.mechanics.duration.upTo)
-      : null;
-  const attachment = spell.mechanics.attachment;
-  const area =
-    attachment.kind === "hole" && attachment.value.kind === "area"
-      ? attachment.value
-      : null;
-  const passiveOperation = spell.mechanics.operations.find(
+  const { mechanics, duration, durationTicks, area } = ongoing;
+  const passiveOperation = mechanics.operations.find(
     (operation) => operation.trigger.kind === "passive",
   );
-  const enterOperation = spell.mechanics.operations.find(
+  const enterOperation = mechanics.operations.find(
     (operation) => operation.trigger.kind === "on_creature_enters_area",
   );
-  const endTurnOperation = spell.mechanics.operations.find(
+  const endTurnOperation = mechanics.operations.find(
     (operation) => operation.trigger.kind === "on_creature_ends_turn_in_area",
   );
-  const initialPhase = spell.mechanics.initialPhase;
+  const initialPhase = mechanics.initialPhase;
   const initialDamageAmount = insectPlagueSaveGateDamageAmount(initialPhase);
 
   if (
-    spell.mechanics.level !== INSECT_PLAGUE_LEVEL ||
-    spell.mechanics.castingTime.kind !== "action" ||
-    spell.mechanics.range.kind !== "point" ||
-    spell.mechanics.range.feet !== INSECT_PLAGUE_RANGE_FEET ||
-    spell.mechanics.duration.kind !== "concentration" ||
-    spell.mechanics.duration.upTo.unit !== "minute" ||
-    spell.mechanics.duration.upTo.amount !== INSECT_PLAGUE_DURATION_MINUTES ||
-    spell.mechanics.operations.length !== INSECT_PLAGUE_OPERATION_COUNT ||
-    durationTicks === null ||
+    mechanics.level !== INSECT_PLAGUE_LEVEL ||
+    mechanics.castingTime.kind !== "action" ||
+    mechanics.range.kind !== "point" ||
+    mechanics.range.feet !== INSECT_PLAGUE_RANGE_FEET ||
+    duration.upTo.unit !== "minute" ||
+    duration.upTo.amount !== INSECT_PLAGUE_DURATION_MINUTES ||
+    mechanics.operations.length !== INSECT_PLAGUE_OPERATION_COUNT ||
     Either.isLeft(durationTicks) ||
     area?.kind !== "area" ||
     area.origin.kind !== "point_within_range" ||
@@ -180,7 +169,7 @@ function insectPlagueAreaHazardSpell(
 
   return {
     durationTicks: durationTicks.right,
-    rangeFeet: spell.mechanics.range.feet,
+    rangeFeet: mechanics.range.feet,
     radiusFeet: area.shape.radiusFeet,
     damageAmount: initialDamageAmount,
   };

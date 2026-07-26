@@ -353,10 +353,13 @@ export function flamingSphereSavingThrowOutcomeHole(
 ): BattleFlamingSphereSavingThrowOutcomeHole {
   const key = `battle:flaming-sphere-save:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}:${trigger}`;
   return {
-    kind: "savingThrowOutcome",
-    holeId: holeId(key),
-    holeInstanceKey: holeInstanceKey(key),
-    label: `${flamingSphereTriggerLabel(trigger)} DEX save`,
+    ...movableZoneSavingThrowOutcomeHoleBase(
+      state,
+      targetId,
+      effect.save,
+      key,
+      `${flamingSphereTriggerLabel(trigger)} DEX save`,
+    ),
     movableZone: {
       targetId,
       sourceProcedureRef: effect.sourceProcedureRef,
@@ -365,7 +368,6 @@ export function flamingSphereSavingThrowOutcomeHole(
       trigger,
       save: effect.save,
     },
-    ...singleTargetSavingThrowProjections(state, targetId, effect.save),
   };
 }
 
@@ -400,10 +402,13 @@ export function moonbeamSavingThrowOutcomeHole(
 ): BattleMoonbeamSavingThrowOutcomeHole {
   const key = `battle:moonbeam-save:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}:${trigger}`;
   return {
-    kind: "savingThrowOutcome",
-    holeId: holeId(key),
-    holeInstanceKey: holeInstanceKey(key),
-    label: `${moonbeamTriggerLabel(trigger)} CON save`,
+    ...movableZoneSavingThrowOutcomeHoleBase(
+      state,
+      targetId,
+      effect.save,
+      key,
+      `${moonbeamTriggerLabel(trigger)} CON save`,
+    ),
     movableZone: {
       targetId,
       sourceProcedureRef: effect.sourceProcedureRef,
@@ -412,7 +417,24 @@ export function moonbeamSavingThrowOutcomeHole(
       trigger,
       save: effect.save,
     },
-    ...singleTargetSavingThrowProjections(state, targetId, effect.save),
+  };
+}
+
+function movableZoneSavingThrowOutcomeHoleBase<
+  Save extends FlamingSphereEffect["save"] | MoonbeamEffect["save"],
+>(
+  state: BattleState,
+  targetId: CombatantId,
+  save: Save,
+  key: string,
+  label: string,
+) {
+  return {
+    kind: "savingThrowOutcome" as const,
+    holeId: holeId(key),
+    holeInstanceKey: holeInstanceKey(key),
+    label,
+    ...singleTargetSavingThrowProjections(state, targetId, save),
   };
 }
 

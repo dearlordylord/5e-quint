@@ -1,5 +1,7 @@
-import { maybeOpenSpellCastReactionWindow } from "../spell-cast-reaction-window.ts";
-import { completeSpellActiveEffectCast } from "../spell-active-effect-resolution.ts";
+import {
+  completeSpellActiveEffectCast,
+  maybeOpenConfiguredSpellCastReactionWindow,
+} from "../spell-active-effect-resolution.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.scalar-buff
 import { DiceExprSchema } from "@dnd/surface/surface/schema";
@@ -438,19 +440,12 @@ function resolveScalarBuff(
     return targetSelectionResolution.result;
   const targetSelection = targetSelectionResolution.selection;
 
-  if (input.storedGlyphRelease === undefined) {
-    const spellCastReactionWindow = maybeOpenSpellCastReactionWindow(
-      input,
-      targetSelection.targetIds,
-      input.actionCostOverride === "bonusAction" ||
-        input.input.subject.tag === "bonusActionSpell"
-        ? { kind: "bonusAction" }
-        : { kind: "magicAction" },
-      input.metamagicApplications ?? [],
-    );
-    if (spellCastReactionWindow !== null) {
-      return spellCastReactionWindow;
-    }
+  const spellCastReactionWindow = maybeOpenConfiguredSpellCastReactionWindow({
+    resolution: input,
+    targetIds: targetSelection.targetIds,
+  });
+  if (spellCastReactionWindow !== null) {
+    return spellCastReactionWindow;
   }
 
   if (

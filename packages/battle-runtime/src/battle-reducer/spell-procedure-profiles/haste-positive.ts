@@ -1,4 +1,5 @@
 import { resolveSpellActiveEffectCast } from "../spell-active-effect-resolution.ts";
+import { actionSpellCastCandidatesForTargetHole } from "../spell-cast-candidate.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-haste-positive
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-glyph-stored-concentration-full-duration
@@ -23,7 +24,6 @@ import type {
 import { isEffectAtom } from "@dnd/surface/surface/types";
 import { Either, Schema } from "effect";
 
-import { battleCreatureWithSpellActiveEffects } from "../../active-effect/lifecycle.ts";
 import type { BattleActiveEffect } from "../../active-effect/types.ts";
 import {
   type ActionSpellBattleResolutionInput,
@@ -34,8 +34,8 @@ import {
   type HastePositiveSpellInvocation,
 } from "../../battle-state-execution.ts";
 import { CombatantId } from "../../identity.ts";
-import { allocateBattleActiveEffectRef } from "../../active-effect/execution-ref.ts";
 
+import { replaceAllocatedTargetSpellActiveEffects } from "../active-effect-replacement.ts";
 import { spellSelectionResolution } from "../needs-holes-result.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { battleStateWithCurrentActorSpellGrantedActionResourcesForTargets } from "../spell-granted-action-resource.ts";
@@ -318,19 +318,11 @@ function discoverHastePositiveCastAct(
   invocation: BattleExecutableSpellInvocation<HastePositiveSpellInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const targetHole = spellTargetHole(state, actorId, invocation);
-  return targetHole.choices.length === 0
-    ? []
-    : [
-        {
-          subject: {
-            tag: "actionSpell" as const,
-            actorId,
-            procedureRef: invocation.sourceProcedureRef,
-            mode: { tag: "cast" as const },
-          },
-          initialHoles: [targetHole],
-        },
-      ];
+  return actionSpellCastCandidatesForTargetHole(
+    actorId,
+    invocation.sourceProcedureRef,
+    targetHole,
+  );
 }
 
 function resolveHastePositive(
@@ -425,50 +417,33 @@ function applyHastePositiveEffects(
   targetIds: readonly CombatantId[],
   invocation: BattleExecutableSpellInvocation<HastePositiveSpellInvocation>,
 ): BattleState {
-  return targetIds.reduce((nextState, targetId) => {
-    const target = nextState.combatants.get(targetId);
-    if (target === undefined) {
-      return nextState;
-    }
-    const allocation = allocateBattleActiveEffectRef({
-      state: nextState,
-      ownerId: targetId,
-    });
-    if (allocation.tag === "ownerNotFound") return nextState;
-    const allocatedTarget = allocation.owner;
-    const nextEffects = hastePositiveEffects(invocation).map((effect) =>
-      effect.kind === "spellGrantedActionResource"
-        ? {
-            ...effect,
-            sourceProcedureRef: invocation.sourceProcedureRef,
-            sourceCombatantId: actorId,
-            effectRef: allocation.effectRef,
-          }
-        : {
-            ...effect,
-            sourceProcedureRef: invocation.sourceProcedureRef,
-            sourceCombatantId: actorId,
-          },
-    );
-    const activeEffects = [
-      ...allocatedTarget.activeEffects.filter(
+  return targetIds.reduce(
+    (nextState, targetId) =>
+      replaceAllocatedTargetSpellActiveEffects(
+        nextState,
+        targetId,
         (effect) =>
-          !(
-            isHastePositiveActiveEffect(effect) &&
-            effect.sourceProcedureRef === invocation.sourceProcedureRef &&
-            effect.sourceCombatantId === actorId
+          isHastePositiveActiveEffect(effect) &&
+          effect.sourceProcedureRef === invocation.sourceProcedureRef &&
+          effect.sourceCombatantId === actorId,
+        (effectRef) =>
+          hastePositiveEffects(invocation).map((effect) =>
+            effect.kind === "spellGrantedActionResource"
+              ? {
+                  ...effect,
+                  sourceProcedureRef: invocation.sourceProcedureRef,
+                  sourceCombatantId: actorId,
+                  effectRef,
+                }
+              : {
+                  ...effect,
+                  sourceProcedureRef: invocation.sourceProcedureRef,
+                  sourceCombatantId: actorId,
+                },
           ),
       ),
-      ...nextEffects,
-    ];
-    return {
-      ...allocation.state,
-      combatants: new Map(allocation.state.combatants).set(
-        targetId,
-        battleCreatureWithSpellActiveEffects(allocatedTarget, activeEffects),
-      ),
-    };
-  }, state);
+    state,
+  );
 }
 
 type HastePositiveActiveEffect = Extract<

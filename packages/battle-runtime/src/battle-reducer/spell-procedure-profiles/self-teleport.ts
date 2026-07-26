@@ -1,4 +1,7 @@
-import { maybeOpenSpellCastReactionWindow } from "../spell-cast-reaction-window.ts";
+import {
+  maybeOpenConfiguredSpellCastReactionWindow,
+  spendConfiguredSpellCastResources,
+} from "../spell-active-effect-resolution.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-self-teleport
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE
@@ -39,7 +42,6 @@ import { type CombatantId } from "../../identity.ts";
 import { needsHolesResult } from "../needs-holes-result.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
-import { spendSpellCastResources } from "../spells-resolve-resources.ts";
 import {
   spellTeleportDestinationHole,
   spellTeleportDestinationHoleId,
@@ -183,21 +185,18 @@ function resolveSelfTeleport(
     );
   }
 
-  const spellCastReactionWindow = maybeOpenSpellCastReactionWindow(
-    input,
-    [],
-    { kind: "bonusAction" },
-    undefined,
-  );
+  const resolution = { ...input, actionCostOverride: "bonusAction" as const };
+  const spellCastReactionWindow = maybeOpenConfiguredSpellCastReactionWindow({
+    resolution,
+    targetIds: [],
+  });
   if (spellCastReactionWindow !== null) {
     return spellCastReactionWindow;
   }
 
-  const resourced = spendSpellCastResources({
+  const resourced = spendConfiguredSpellCastResources({
+    resolution,
     state: input.input.state,
-    actorId: input.actorId,
-    invocation: input.invocation,
-    errorState: input.input.state,
   });
   return resourced.tag === "invalid"
     ? resourced

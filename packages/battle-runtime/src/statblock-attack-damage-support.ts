@@ -108,12 +108,7 @@ function supportedStatBlockBaseDamageEffect(
     return null;
   }
 
-  const staticDamage = statBlockDamageNotationStaticAmount(effect.amount);
-  return {
-    expr: effect.amount.expr,
-    ...(staticDamage === undefined ? {} : { static: staticDamage }),
-    damageType: effect.damageType,
-  };
+  return statBlockDamageComponent(effect.amount, effect.damageType);
 }
 
 function supportedStatBlockAdvantageBonusDamageEffect(
@@ -128,11 +123,22 @@ function supportedStatBlockAdvantageBonusDamageEffect(
     return null;
   }
 
-  const staticDamage = statBlockDamageNotationStaticAmount(effect.amount);
+  return statBlockDamageComponent(effect.amount, effect.damageType);
+}
+
+function statBlockDamageComponent(
+  amount: {
+    readonly kind: "fixed";
+    readonly expr: DiceExpr;
+    readonly static?: number;
+  },
+  damageType: StatBlockAttackDamageComponent["damageType"],
+): StatBlockAttackDamageComponent {
+  const staticDamage = statBlockDamageNotationStaticAmount(amount);
   return {
-    expr: effect.amount.expr,
+    expr: amount.expr,
     ...(staticDamage === undefined ? {} : { static: staticDamage }),
-    damageType: effect.damageType,
+    damageType,
   };
 }
 
