@@ -579,6 +579,70 @@ describe("Character Sheet battle handoff", () => {
         owner: "characterBattleRuntime",
       },
     ]);
+
+    expect(
+      startBattleFromCharacterSheetAndStatBlock({
+        battleId: battleId("battle:duplicate-participant"),
+        character: {
+          sheet: sheet.right,
+          unitLibrary,
+          statBlockCatalog,
+          combatantId: characterCombatantId,
+          displayName: "Character",
+          initiative: initiativeScore(20),
+        },
+        statBlockBattleInput: {
+          combatantId: characterCombatantId,
+          statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+          initiative: initiativeScore(10),
+        },
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        issue: {
+          message: expect.stringContaining("Duplicate combatant id"),
+        },
+      },
+    });
+
+    const skeleton = statBlockCatalog.requireStatBlock("stat_block_skeleton");
+    expect(
+      startBattleFromCharacterSheetAndStatBlock({
+        battleId: battleId("battle:unsupported-stat-block"),
+        character: {
+          sheet: sheet.right,
+          unitLibrary,
+          statBlockCatalog,
+          combatantId: characterCombatantId,
+          displayName: "Character",
+          initiative: initiativeScore(20),
+        },
+        statBlockBattleInput: {
+          combatantId: monsterCombatantId,
+          statBlock: {
+            ...skeleton,
+            statBlock: {
+              ...skeleton.statBlock,
+              hp: {
+                kind: "caster_derived",
+                source: "proficiency_bonus",
+              },
+            },
+          },
+          initiative: initiativeScore(10),
+        },
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        issue: {
+          message: expect.stringContaining(
+            "requires literal Stat Block maximum HP",
+          ),
+        },
+      },
+    });
   });
 
   test("projects Alert Proficiency Bonus into the character Initiative score", () => {
@@ -3188,6 +3252,31 @@ describe("Character Sheet battle handoff", () => {
             holes: ["settlementConflict"],
           },
         ],
+      },
+    });
+    expect(
+      startBattleFromCharacterSheetAndStatBlock({
+        battleId: battleId("battle:stable-init-rejected"),
+        character: {
+          combatantId: combatantId("stable-init-entry"),
+          displayName: "Stable Fighter",
+          sheet: sheet.right,
+          initiative: initiativeScore(10),
+          unitLibrary,
+          statBlockCatalog,
+        },
+        statBlockBattleInput: {
+          combatantId: combatantId("stable-init-entry-skeleton"),
+          statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+          initiative: initiativeScore(5),
+        },
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        issue: {
+          message: expect.stringContaining("in-progress Stable recovery time"),
+        },
       },
     });
 
