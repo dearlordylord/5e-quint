@@ -588,12 +588,9 @@ function characterBattleClassLevels(
     });
   }
 
-  const [first, ...rest] = classLevels;
-  return first === undefined
-    ? battleCreatureInitIssue(
-        "Character battle initialization requires at least one class level.",
-      )
-    : Either.right([first, ...rest]);
+  // progressionClassLevels is non-empty and every entry is projected exactly
+  // once unless this function has already returned a typed projection issue.
+  return Either.right([classLevels[0]!, ...classLevels.slice(1)]);
 }
 
 function characterBattleMetamagicFromBuild(

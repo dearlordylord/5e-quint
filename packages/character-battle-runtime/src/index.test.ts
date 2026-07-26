@@ -401,6 +401,39 @@ describe("Character Sheet battle handoff", () => {
     expect(result).toEqual(Either.right(initiativeScore(16)));
   });
 
+  test("rejects non-integer Initiative totals and unreadable class projections", () => {
+    expect(
+      characterBattleInitiativeScore({
+        build,
+        unitLibrary,
+        rollTotal: 10.5,
+        proficiencyBonusChoice: "omit",
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: { message: expect.stringContaining("must be an integer") },
+    });
+    expect(
+      characterBattleInitiativeScore({
+        build: {
+          ...build,
+          progression: {
+            startingClass: classUnitId(
+              authoredUnitId("synthetic:missing-class"),
+            ),
+            advancements: [],
+          },
+        },
+        unitLibrary,
+        rollTotal: 10,
+        proficiencyBonusChoice: "add",
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: { message: expect.stringContaining("Unknown Unit") },
+    });
+  });
+
   test("rejects Initiative Proficiency Bonus when no admitted profile is present", () => {
     const result = characterBattleInitiativeScore({
       build: defenseBuild({ wearingArmor: false }),
@@ -3851,6 +3884,92 @@ describe("Character Sheet battle handoff", () => {
 });
 
 describe("Character Build battle projection", () => {
+  test("reports invalid build-to-battle creature boundary facts", () => {
+    const init = {
+      combatantId: combatantId("invalid-build-boundary"),
+      characterId: characterId("character:invalid-build-boundary"),
+      displayName: "Invalid boundary",
+      build,
+      initiative: initiativeScore(10),
+      unitLibrary,
+    } as const;
+
+    expect(
+      battleCreatureInitFromCharacterBuild({
+        ...init,
+        hitPointMaximum: Hp(0),
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: { message: expect.stringContaining("max HP must be positive") },
+    });
+    expect(
+      battleCreatureInitFromCharacterBuild({
+        ...init,
+        currentHp: Hp(13),
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: { message: expect.stringContaining("current HP exceeds max HP") },
+    });
+    expect(
+      battleCreatureInitFromCharacterBuild({
+        ...init,
+        build: {
+          ...build,
+          species: authoredUnitId("synthetic:missing-species"),
+        },
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: { message: expect.stringContaining("Unknown Unit") },
+    });
+    expect(
+      battleCreatureInitFromCharacterBuild({
+        ...init,
+        build: {
+          ...build,
+          species: authoredUnitId("class_fighter"),
+        },
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: { message: expect.stringContaining("Expected species Unit") },
+    });
+    expect(
+      battleCreatureInitFromCharacterBuild({
+        ...init,
+        build: {
+          ...build,
+          progression: {
+            startingClass: classUnitId(
+              authoredUnitId("synthetic:missing-class"),
+            ),
+            advancements: [],
+          },
+        },
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: { message: expect.stringContaining("Cannot find class Unit") },
+    });
+    expect(
+      battleCreatureInitFromCharacterBuild({
+        ...init,
+        druidWildShapeAvailableForms: [
+          statBlockCatalog.requireStatBlock("stat_block_rat"),
+        ],
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message: expect.stringContaining(
+          "available forms require the Druid Wild Shape feature",
+        ),
+      },
+    });
+  });
+
   test("projects an empty weapon loadout as no attack option", () => {
     expect(characterAttackActionOption(build, unitLibrary)).toEqual(
       Either.right(null),

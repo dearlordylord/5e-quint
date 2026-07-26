@@ -4,6 +4,7 @@ import {
   characterClassLevel,
   type CharacterClassLevel,
 } from "@dnd/shared/game-facts";
+import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import type { UnitRecord } from "@dnd/surface/surface/types";
 
 export type ClassUnitId = UnitRecord["id"] & Brand.Brand<"ClassUnitId">;
@@ -226,20 +227,28 @@ export function classLevelForUnit(
 
 export function progressionClassUnitIds(
   progression: CharacterProgression,
-): readonly ClassUnitId[] {
-  return [
-    ...new Set([
-      progression.startingClass,
-      ...progression.advancements.map((entry) => entry.classUnitId),
-    ]),
-  ];
+): ReadonlyNonEmptyArray<ClassUnitId> {
+  const additionalClassUnitIds = [
+    ...new Set(progression.advancements.map((entry) => entry.classUnitId)),
+  ].filter((classUnitId) => classUnitId !== progression.startingClass);
+  return [progression.startingClass, ...additionalClassUnitIds];
 }
 
 export function progressionClassLevels(
   progression: CharacterProgression,
-): readonly CharacterProgressionClassLevel[] {
-  return progressionClassUnitIds(progression).map((unitId) => ({
-    classUnitId: unitId,
-    classLevel: characterClassLevel(classLevelForUnit(progression, unitId)),
-  }));
+): ReadonlyNonEmptyArray<CharacterProgressionClassLevel> {
+  const [firstClassUnitId, ...remainingClassUnitIds] =
+    progressionClassUnitIds(progression);
+  const classLevelFor = (
+    classUnitId: ClassUnitId,
+  ): CharacterProgressionClassLevel => ({
+    classUnitId,
+    classLevel: characterClassLevel(
+      classLevelForUnit(progression, classUnitId),
+    ),
+  });
+  return [
+    classLevelFor(firstClassUnitId),
+    ...remainingClassUnitIds.map(classLevelFor),
+  ];
 }
