@@ -966,7 +966,7 @@ describe("Character Sheet battle handoff", () => {
 
   test("rejects absent and incomplete retained companion admissions", () => {
     const ownerId = combatantId("companion-admission-owner");
-    const state = expectRight(
+    const started = expectRight(
       startBattle({
         battleId: battleId("companion-admission-boundaries"),
         combatants: [
@@ -977,7 +977,8 @@ describe("Character Sheet battle handoff", () => {
           }),
         ],
       }),
-    ).state;
+    );
+    const state = started.state;
     const sheetWithoutCompanion = expectRight(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:no-companion"),
@@ -1054,6 +1055,66 @@ describe("Character Sheet battle handoff", () => {
         companionCombatantId: combatantId("dismissed-companion"),
       }),
     ).toMatchObject({ _tag: "Right" });
+
+    const disappeared = retainedCompanionSheetWithManifestation(
+      embodied,
+      (manifestation) => {
+        if (manifestation.tag === "disappearedAtZeroHitPoints") {
+          throw new Error("Expected embodied retained companion fixture.");
+        }
+        const { hitPoints: _hitPoints, ...proof } = manifestation;
+        return { ...proof, tag: "disappearedAtZeroHitPoints" };
+      },
+    );
+    expect(
+      admitCharacterSheetCompanionToBattle({
+        ...admissionBase,
+        sheet: disappeared,
+      }),
+    ).toMatchObject({ _tag: "Right" });
+    expect(
+      admitCharacterSheetCompanionToBattle({
+        session: started,
+        sheet: disappeared,
+        unitLibrary,
+        ownerCombatantId: ownerId,
+        initialCombatantOrder: new Map([[ownerId, 0]]),
+        statBlockCatalog,
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message: expect.stringContaining(
+          "owner has no authored runtime context",
+        ),
+      },
+    });
+
+    const unitLibraryWithoutFamiliarCatalog: UnitCatalog = {
+      getUnit: (id) => unitLibrary.getUnit(id),
+      listUnits: () =>
+        unitLibrary
+          .listUnits()
+          .filter((unit) => unit.id !== authoredUnitId("find_familiar")),
+      requireUnit: (id) => unitLibrary.requireUnit(id),
+    };
+    expect(
+      admitCharacterSheetCompanionToBattle({
+        ...admissionBase,
+        sheet: embodied,
+        unitLibrary: unitLibraryWithoutFamiliarCatalog,
+        companionCombatantId: combatantId("missing-catalog-companion"),
+        initiative: initiativeScore(14),
+        placement: { kind: "unoccupiedSpaceWithinSpellRange" },
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message: expect.stringContaining(
+          "requires a familiar-like form catalog",
+        ),
+      },
+    });
   });
 
   test("reports retained companion settlement identity and manifestation conflicts", () => {
@@ -1082,20 +1143,36 @@ describe("Character Sheet battle handoff", () => {
         combatants: [ownerInit],
       }),
     );
+    const embodiedAdmission = {
+      sheet,
+      unitLibrary,
+      ownerCombatantId: ownerId,
+      companionCombatantId: companionId,
+      initiative: initiativeScore(14),
+      placement: { kind: "unoccupiedSpaceWithinSpellRange" as const },
+      initialCombatantOrder: new Map<ReturnType<typeof combatantId>, number>(),
+      statBlockCatalog,
+    };
+    expect(
+      admitCharacterSheetCompanionToBattle({
+        ...embodiedAdmission,
+        state: started.state,
+      }),
+    ).toMatchObject({ _tag: "Left" });
+    expect(
+      admitCharacterSheetCompanionToBattle({
+        ...embodiedAdmission,
+        session: started,
+      }),
+    ).toMatchObject({ _tag: "Left" });
     const admitted = expectRight(
       admitCharacterSheetCompanionToBattle({
-        sheet,
+        ...embodiedAdmission,
         state: started.state,
-        unitLibrary,
-        ownerCombatantId: ownerId,
-        companionCombatantId: companionId,
-        initiative: initiativeScore(14),
-        placement: { kind: "unoccupiedSpaceWithinSpellRange" },
         initialCombatantOrder: new Map([
           [ownerId, 0],
           [companionId, 1],
         ]),
-        statBlockCatalog,
       }),
     );
     const selection = {
