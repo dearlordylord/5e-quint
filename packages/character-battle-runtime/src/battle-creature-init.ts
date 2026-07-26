@@ -11,7 +11,6 @@ import {
   scoreModifier,
   startBattle,
   initiativeScore,
-  unitIsSupportedClassFeatureSpellFreeCastResource,
   type CharacterBattleFeatureInit,
   type CharacterBattleMetamagicInit,
   type CharacterBattleResourceInit,
@@ -789,28 +788,18 @@ function characterBattlePersistedUsesRemaining(
     );
   }
 
-  if (unitIsSupportedClassFeatureSpellFreeCastResource(unit)) {
-    const profile =
-      supportedClassFeatureSpellFreeCastGrantsForUnit(unit)?.profile;
-    if (profile === undefined) {
-      return Either.right(undefined);
-    }
-    const resource = characterBattleResourceForUnit(unit);
-    if (resource.cap.kind !== "fixed") {
-      return battleCreatureInitIssue(
-        "Class feature spell free casts must use a fixed battle resource cap.",
-      );
-    }
+  const freeCastGrants = supportedClassFeatureSpellFreeCastGrantsForUnit(unit);
+  if (freeCastGrants !== null) {
     const expended =
       resourceExpenditures.find(
-        (expenditure) => expenditure.tag === profile.resourceTag,
+        (expenditure) => expenditure.tag === freeCastGrants.profile.resourceTag,
       )?.expended ?? 0;
-    if (expended > resource.cap.uses) {
+    if (expended > freeCastGrants.freeCastGrant.count) {
       return battleCreatureInitIssue(
         "Class feature spell free-cast expenditure exceeds its battle resource cap.",
       );
     }
-    return Either.right(resource.cap.uses - expended);
+    return Either.right(freeCastGrants.freeCastGrant.count - expended);
   }
   const useCountExpenditure = resourceExpenditures.find(
     (expenditure) =>
