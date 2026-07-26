@@ -5467,6 +5467,195 @@ describe("Character Build battle projection", () => {
     );
   });
 
+  test("rejects contradictory Book of Shadows and spellcasting source facts", () => {
+    const spellcastingIssue = (candidateBuild: CharacterBuild) =>
+      characterSpellcasting({
+        build: candidateBuild,
+        unitLibrary,
+        bookOfShadowsPresence: { tag: "onPerson" },
+      });
+    const tome = pactOfTheTomeWarlockBuild();
+    const tomeSpellcasting = tome.spellcasting;
+    if (tomeSpellcasting === undefined) {
+      throw new Error("Expected Pact of the Tome spellcasting fixture.");
+    }
+    const [source] = tomeSpellcasting.sources;
+
+    expect(
+      spellcastingIssue({
+        ...tome,
+        spellcasting: {
+          ...tomeSpellcasting,
+          sources: [source, source],
+        },
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Character Battle supports one Book of Shadows Spell Access source.",
+      },
+    });
+    expect(
+      spellcastingIssue(
+        pactOfTheTomeWarlockBuild({
+          bookOfShadowsCantrips: ["fire_bolt", "fire_bolt", "minor_illusion"],
+        }),
+      ),
+    ).toMatchObject({
+      _tag: "Left",
+      left: { message: expect.stringContaining("selections must be distinct") },
+    });
+    expect(
+      spellcastingIssue(
+        pactOfTheTomeWarlockBuild({
+          bookOfShadowsCantrips: [
+            "weapon_longsword",
+            "spare_the_dying",
+            "minor_illusion",
+          ],
+        }),
+      ),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message: expect.stringContaining(
+          "cantrips must come from class spell lists",
+        ),
+      },
+    });
+    expect(
+      spellcastingIssue(
+        pactOfTheTomeWarlockBuild({
+          bookOfShadowsRitualSpells: ["true_strike", "detect_magic"],
+        }),
+      ),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message: expect.stringContaining(
+          "Ritual spells must be level-1 spells from class spell lists",
+        ),
+      },
+    });
+
+    const oneSourceBuild = trueStrikeWizardBuild();
+    const oneSourceSpellcasting = oneSourceBuild.spellcasting;
+    if (oneSourceSpellcasting === undefined) {
+      throw new Error("Expected Wizard spellcasting fixture.");
+    }
+    const [wizardSource] = oneSourceSpellcasting.sources;
+    expect(
+      characterSpellcasting({
+        build: {
+          ...oneSourceBuild,
+          spellcasting: {
+            ...oneSourceSpellcasting,
+            sources: [
+              {
+                ...wizardSource,
+                sourceUnitId: authoredUnitId("synthetic:missing-class"),
+              },
+            ],
+          },
+        },
+        unitLibrary,
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: { message: expect.stringContaining("class spellcasting source") },
+    });
+    expect(
+      characterSpellcasting({
+        build: {
+          ...oneSourceBuild,
+          spellcasting: {
+            ...oneSourceSpellcasting,
+            sources: [
+              wizardSource,
+              {
+                ...wizardSource,
+                sourceUnitId: authoredUnitId("class_warlock"),
+              },
+            ],
+          },
+        },
+        unitLibrary,
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: { message: expect.stringContaining("one source class") },
+    });
+    expect(
+      characterSpellcasting({
+        build: {
+          ...oneSourceBuild,
+          spellcasting: {
+            ...oneSourceSpellcasting,
+            sources: [
+              wizardSource,
+              { ...wizardSource, spellcastingAbility: "wis" },
+            ],
+          },
+        },
+        unitLibrary,
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: { message: expect.stringContaining("one spellcasting ability") },
+    });
+    expect(
+      characterSpellcasting({
+        build: {
+          ...oneSourceBuild,
+          spellcasting: {
+            ...oneSourceSpellcasting,
+            sources: [
+              {
+                ...wizardSource,
+                cantrips: [authoredUnitId("weapon_longsword")],
+              },
+            ],
+          },
+        },
+        unitLibrary,
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: { message: expect.stringContaining("Expected spell Unit") },
+    });
+  });
+
+  test("propagates missing invocation and feature-granted Spell Units", () => {
+    expect(
+      characterSpellcasting({
+        build: armorOfShadowsWarlockBuild(),
+        unitLibrary: unitCatalogWithoutUnitIds("mage_armor"),
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: { message: expect.stringContaining("Unknown Unit") },
+    });
+    expect(
+      characterSpellcasting({
+        build: warlockInvocationBuild({ pactOfTheChain: true }),
+        unitLibrary: unitCatalogWithoutUnitIds("find_familiar"),
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: { message: expect.stringContaining("Unknown Unit") },
+    });
+    expect(
+      characterSpellcasting({
+        build: favoredEnemyRangerBuild(),
+        unitLibrary: unitCatalogWithoutUnitIds("hunters_mark"),
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: { message: expect.stringContaining("Unknown Unit") },
+    });
+  });
+
   test("does not project Pact of the Chain Spell Access without selected invocation ownership", () => {
     const spellcasting = expectRight(
       characterSpellcasting({
@@ -8163,6 +8352,22 @@ function unitLibraryWithSyntheticFamiliarFormCatalog(): UnitCatalog {
         ? syntheticCatalog
         : unitLibrary.requireUnit(id),
   };
+}
+
+function unitCatalogWithoutUnitIds(...unitIds: readonly string[]): UnitCatalog {
+  const omitted = new Set(unitIds);
+  const result = buildUnitCatalog({
+    collections: [
+      {
+        ...srdUnitCollection,
+        units: srdUnitCollection.units.filter((unit) => !omitted.has(unit.id)),
+      },
+    ],
+  });
+  if (result.tag !== "ok") {
+    throw new Error("Expected filtered test Unit catalog to build.");
+  }
+  return result.catalog;
 }
 
 function testSorcererMetamagicOptionId(optionId: string) {
