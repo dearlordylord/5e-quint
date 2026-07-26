@@ -4,10 +4,7 @@ import { Brand, Either, Match } from "effect";
 
 import { type Ability, type ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import { CLASS_NAMES, type ClassName } from "@dnd/shared/game-facts";
-import {
-  readClassCreationFacts,
-  type SurfaceReadIssue,
-} from "@dnd/surface/surface/character-creation-readers";
+import { classCreationFacts } from "@dnd/surface/surface/character-creation-readers";
 import { srdUnitCollection } from "@dnd/surface/surface/unit-catalog";
 import type {
   PrimaryAbilityExpression,
@@ -143,17 +140,11 @@ export type MulticlassPrerequisite =
 export type NonEmptyMulticlassPrerequisites =
   ReadonlyNonEmptyArray<MulticlassPrerequisite>;
 
-export type MulticlassPrerequisiteTable = ReadonlyMap<
-  ClassName,
-  MulticlassPrerequisite
+export type MulticlassPrerequisiteTable = Readonly<
+  Record<ClassName, MulticlassPrerequisite>
 >;
 
 export type MulticlassPrerequisiteTableIssue =
-  | {
-      readonly tag: "unreadableSrdClassContainer";
-      readonly unitId: UnitRecord["id"];
-      readonly issues: readonly SurfaceReadIssue[];
-    }
   | {
       readonly tag: "duplicateSrdClassContainer";
       readonly className: ClassName;
@@ -164,11 +155,7 @@ export type MulticlassPrerequisiteTableIssue =
     };
 
 export type MulticlassPrerequisiteLookupIssue =
-  | MulticlassPrerequisiteTableIssue
-  | {
-      readonly tag: "missingMulticlassPrerequisite";
-      readonly className: ClassName;
-    };
+  MulticlassPrerequisiteTableIssue;
 
 const byTag = Match.discriminator("tag");
 const byKind = Match.discriminator("kind");
@@ -213,27 +200,19 @@ export function multiclassPrerequisitesFromSrdClassContainers(
   for (const unit of units) {
     if (unit.kind !== "class") continue;
 
-    const result = readClassCreationFacts(unit);
-    if (result.tag === "unreadable") {
-      issues.push({
-        tag: "unreadableSrdClassContainer",
-        unitId: unit.id,
-        issues: result.issues,
-      });
-      continue;
-    }
+    const facts = classCreationFacts(unit);
 
-    if (prerequisites.has(result.value.className)) {
+    if (prerequisites.has(facts.className)) {
       issues.push({
         tag: "duplicateSrdClassContainer",
-        className: result.value.className,
+        className: facts.className,
       });
       continue;
     }
 
     prerequisites.set(
-      result.value.className,
-      multiclassPrerequisiteFromPrimaryAbilities(result.value.primaryAbilities),
+      facts.className,
+      multiclassPrerequisiteFromPrimaryAbilities(facts.primaryAbilities),
     );
   }
 
@@ -248,7 +227,9 @@ export function multiclassPrerequisitesFromSrdClassContainers(
     return Either.left([firstIssue, ...restIssues]);
   }
 
-  return Either.right(prerequisites);
+  return Either.right(
+    Object.fromEntries(prerequisites) as MulticlassPrerequisiteTable,
+  );
 }
 
 export const MULTICLASS_PREREQUISITES: Either.Either<
@@ -266,12 +247,9 @@ export function meetsMulticlassPrerequisite(
   boolean,
   ReadonlyNonEmptyArray<MulticlassPrerequisiteLookupIssue>
 > {
-  return Either.flatMap(MULTICLASS_PREREQUISITES, (prerequisites) => {
-    const prerequisite = prerequisites.get(className);
-    return prerequisite === undefined
-      ? Either.left([{ tag: "missingMulticlassPrerequisite", className }])
-      : Either.right(evalPrereq(prerequisite, scores));
-  });
+  return Either.map(MULTICLASS_PREREQUISITES, (prerequisites) =>
+    evalPrereq(prerequisites[className], scores),
+  );
 }
 
 function evalPrereq(
@@ -309,12 +287,7 @@ export function canMulticlass(
       ...classChange.currentClasses,
       classChange.newClass,
     ]) {
-      const prerequisite = prerequisites.get(className);
-      if (prerequisite === undefined) {
-        return Either.left([
-          { tag: "missingMulticlassPrerequisite", className },
-        ]);
-      }
+      const prerequisite = prerequisites[className];
       if (!evalPrereq(prerequisite, scores)) {
         return Either.right(false);
       }

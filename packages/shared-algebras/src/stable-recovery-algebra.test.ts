@@ -84,6 +84,53 @@ describe("Stable recovery algebra", () => {
       });
     }
   });
+
+  test("recovers when sampled time elapses and rejects invalid d4 results", () => {
+    const recovered = advanceStableRecovery({
+      recovery: {
+        kind: "regains1HpAfter",
+        remaining: requireRight(parsePositiveElapsedTimeTicks(300)),
+      },
+      ticks: elapsedTimeTicks(300),
+    });
+    expect(recovered).toMatchObject({
+      _tag: "Right",
+      right: { tag: "recovered" },
+    });
+
+    expect(
+      advanceStableRecoveryWithRoll({
+        recovery: {
+          kind: "regains1HpAfter1d4Hours",
+          elapsedBeforeRecoveryRoll: elapsedTimeTicks(0),
+        },
+        ticks: elapsedTimeTicks(600),
+        roll: DieRollResult(5),
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: { tag: "stableRecoveryIssue" },
+    });
+  });
+
+  test("starts the recovery-roll protocol at the one-hour boundary", () => {
+    expect(
+      advanceStableRecovery({
+        recovery: {
+          kind: "regains1HpAfter1d4Hours",
+          elapsedBeforeRecoveryRoll: elapsedTimeTicks(0),
+        },
+        ticks: elapsedTimeTicks(600),
+      }),
+    ).toMatchObject({
+      _tag: "Right",
+      right: {
+        tag: "needsStableRecoveryRoll",
+        elapsedTicks: 0,
+        remainingTicks: 600,
+      },
+    });
+  });
 });
 
 function requireRight<A, E>(either: Either.Either<A, E>): A {

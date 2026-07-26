@@ -23,6 +23,9 @@ const COMMON_COVERAGE_EXCLUDES = [
   "src/**/*.qnt-replay.test-support.ts",
   "src/**/*.replay-data.test-support.ts",
   "src/**/*.gen.*",
+  // Pure compatibility barrel: it owns no executable behavior and only
+  // re-exports the canonical @dnd/shared elapsed-time implementation.
+  "src/elapsed-time-algebra.ts",
 ];
 const COMMON_DUPLICATION_EXCLUDES = [
   "**/*.test.ts",
@@ -76,7 +79,7 @@ const PACKAGE_POLICIES = {
     duplicationCeiling: 2,
   },
   "shared-algebras": {
-    coverage: { lines: 69, statements: 69, functions: 82, branches: 88 },
+    coverage: { lines: 99, statements: 99, functions: 99, branches: 99 },
     circularBaseline: 0,
     duplicationCeiling: 2,
   },

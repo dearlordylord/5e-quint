@@ -92,6 +92,12 @@ describe("spell slot expenditure algebra", () => {
         spellSlotExpenditureRequired(level1),
       ),
     ).toBe(false);
+    expect(
+      canExpendSpellSlot(
+        slotState({ slotsRemaining: 7 }),
+        spellSlotExpenditureNotRequired,
+      ),
+    ).toBe(false);
   });
 
   test("capacity projection spends the existing slot state without adding another ledger", () => {
