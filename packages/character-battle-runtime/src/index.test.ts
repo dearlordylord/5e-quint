@@ -734,6 +734,26 @@ describe("Character Sheet battle handoff", () => {
     });
 
     expect(Either.isLeft(handoff)).toBe(true);
+    expect(
+      settleHandoffBranchToCharacterSheet({
+        sheet: sheet.right,
+        unitLibrary,
+        combatant: handoffBranchCombatant({
+          origin: {
+            kind: "character",
+            characterId: characterId("character:sheet"),
+          },
+          hp: Hp(sheetMaximumHp(sheet.right) + 1),
+          maxHp: sheetMaximumHp(sheet.right),
+        }),
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Battle handoff current HP exceeds Character Sheet maximum HP.",
+      },
+    });
   });
 
   test("rejects non-character and ownership-context-free settlement inputs", () => {
@@ -3509,6 +3529,37 @@ describe("Character Sheet battle handoff", () => {
       { spellLevel: 1, count: 2, expended: 2 },
     ]);
     expect(characterSheetTempHp(settled)).toBe(3);
+    expect(
+      settleHandoffBranchToCharacterSheet({
+        sheet: sheet.right,
+        unitLibrary,
+        combatant: handoffBranchCombatant({
+          origin: {
+            kind: "character",
+            characterId: characterId("character:rest-state"),
+            spellcasting: handoffSpellcastingState({
+              spellSlots: [
+                {
+                  spellLevel: spellSlotLevel(1),
+                  count: resourceCount(2),
+                  expended: resourceCount(0),
+                },
+              ],
+            }),
+          },
+          hp: Hp(7),
+          maxHp: sheetMaximumHp(sheet.right),
+          tempHp: Hp(0),
+          positiveHpUnconscious: null,
+        }),
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Battle handoff Spell Slot expenditure cannot be lower than the pre-battle Character Sheet expenditure.",
+      },
+    });
   });
 
   test("rejects ordinary Spell Slot handoff when count capacity drifts", () => {
@@ -3940,6 +3991,23 @@ describe("Character Sheet battle handoff", () => {
           "Battle handoff Spell Slot state requires Character Sheet Spell Slot or Pact Slot state.",
       },
     });
+    expect(
+      settleHandoffBranchToCharacterSheet({
+        sheet,
+        unitLibrary,
+        combatant: handoffBranchCombatant({
+          origin: {
+            kind: "character",
+            characterId: characterId("character:no-slot-state"),
+            spellcasting: handoffSpellcastingState({ spellSlots: [] }),
+          },
+          hp: Hp(8),
+          maxHp: sheetMaximumHp(sheet),
+          tempHp: Hp(0),
+          positiveHpUnconscious: null,
+        }),
+      }),
+    ).toMatchObject({ _tag: "Right" });
   });
 
   test("rejects mixed ordinary Spell Slot and Pact Slot handoff until battle slots carry source identity", () => {
@@ -4498,6 +4566,37 @@ describe("Character Sheet battle handoff", () => {
           "Class feature spell free-cast battle capacity must match Character Sheet resource capacity.",
       },
     });
+    expect(
+      settleHandoffBranchToCharacterSheet({
+        sheet: sheet.right,
+        unitLibrary,
+        resourceOwnership: [{ resourcePoolRef, unit: favoredEnemy }],
+        combatant: handoffBranchCombatant({
+          origin: {
+            kind: "character",
+            characterId: characterId("character:ranger-free-cast-drift"),
+            resources: [
+              {
+                resourcePoolRef,
+                resource: favoredEnemyResource,
+                usedThisTurn: false,
+                usesRemaining: resourceCount(favoredEnemyResource.cap.uses + 1),
+              },
+            ],
+          },
+          hp: Hp(1),
+          maxHp: sheetMaximumHp(sheet.right),
+          tempHp: Hp(0),
+          positiveHpUnconscious: null,
+        }),
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Class feature spell free-cast remaining uses exceed the battle resource cap during battle handoff.",
+      },
+    });
   });
 
   test("hands shared Monk Focus use-count expenditures into and out of battle", () => {
@@ -4630,6 +4729,42 @@ describe("Character Sheet battle handoff", () => {
       left: {
         message:
           "Class feature use-count battle capacity must match Character Sheet resource capacity.",
+      },
+    });
+    const focusResource = characterBattleResourceForUnit(focusUnit);
+    if (!hasLimitedCharacterBattleResourceCap(focusResource)) {
+      throw new Error("Expected finite Monk Focus resource.");
+    }
+    expect(
+      settleHandoffBranchToCharacterSheet({
+        sheet: sheet.right,
+        unitLibrary,
+        resourceOwnership: [{ resourcePoolRef, unit: focusUnit }],
+        combatant: handoffBranchCombatant({
+          origin: {
+            kind: "character",
+            characterId: characterId("character:monk-focus-capacity-drift"),
+            classLevels: parsedClassLevelsForTest("monk", 2),
+            resources: [
+              {
+                resourcePoolRef,
+                resource: focusResource,
+                usedThisTurn: false,
+                usesRemaining: resourceCount(3),
+              },
+            ],
+          },
+          hp: Hp(15),
+          maxHp: sheetMaximumHp(sheet.right),
+          tempHp: Hp(0),
+          positiveHpUnconscious: null,
+        }),
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Class feature use-count remaining uses exceed the battle resource cap during battle handoff.",
       },
     });
   });
@@ -4790,6 +4925,41 @@ describe("Character Sheet battle handoff", () => {
       left: {
         message:
           "Class feature point-pool battle capacity must match Character Sheet resource capacity.",
+      },
+    });
+    const fontOfMagicResource = characterBattleResourceForUnit(fontOfMagicUnit);
+    if (fontOfMagicResource.kind !== "point_pool") {
+      throw new Error("Expected Font of Magic point-pool resource.");
+    }
+    expect(
+      settleHandoffBranchToCharacterSheet({
+        sheet: sheet.right,
+        unitLibrary,
+        resourceOwnership: [{ resourcePoolRef, unit: fontOfMagicUnit }],
+        combatant: handoffBranchCombatant({
+          origin: {
+            kind: "character",
+            characterId: characterId("character:sorcery-point-capacity-drift"),
+            classLevels: parsedClassLevelsForTest("sorcerer", 5),
+            resources: [
+              {
+                resourcePoolRef,
+                resource: fontOfMagicResource,
+                pointsRemaining: resourceCount(6),
+              },
+            ],
+          },
+          hp: Hp(24),
+          maxHp: sheetMaximumHp(sheet.right),
+          tempHp: Hp(0),
+          positiveHpUnconscious: null,
+        }),
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Class feature point-pool remaining points exceed the battle resource cap during battle handoff.",
       },
     });
   });
