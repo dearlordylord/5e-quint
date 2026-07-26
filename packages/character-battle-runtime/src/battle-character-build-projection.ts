@@ -324,14 +324,17 @@ function characterWeaponAttackActionOption(
     return Either.right(null);
   }
 
-  const baseAttack = characterBattleCreatureInitWeaponAttack({
-    kind: "weapon",
-    weapon: admitCharacterWeaponExecutionWeapon(unit.right),
+  const baseAttack = {
+    ...characterBattleCreatureInitWeaponAttack({
+      kind: "weapon",
+      weapon: admitCharacterWeaponExecutionWeapon(unit.right),
+      ability: "str",
+      abilityModifier: battleAbilityModifier(
+        scoreModifier(build.abilityScores.str),
+      ),
+    }),
     ability: "str",
-    abilityModifier: battleAbilityModifier(
-      scoreModifier(build.abilityScores.str),
-    ),
-  });
+  } as const satisfies PhysicalAbilityWeaponAttack;
   const martialArts = martialArtsAttackProjectionForBuild({
     build,
     unitLibrary,
@@ -417,6 +420,10 @@ const PACT_OF_THE_BLADE_ADDITIONAL_DAMAGE_TYPE_CHOICES = [
   "radiant",
 ] as const satisfies ReadonlyArray<DamageType>;
 
+type PhysicalAbilityWeaponAttack = CharacterBattleCreatureInitWeaponAttack & {
+  readonly ability: "str" | "dex";
+};
+
 function pactBladeDamageTypeChoices(
   weaponDamageType: DamageType,
 ): CharacterWeaponAttackDamageTypeChoices {
@@ -436,7 +443,7 @@ function pactBladeDamageTypeChoices(
 }
 
 function pactBladeWeaponAttack(
-  attack: CharacterBattleCreatureInitWeaponAttack,
+  attack: PhysicalAbilityWeaponAttack,
   build: CharacterBuild,
   itemId: CharacterEquipmentItemId,
   pactBladeBondedWeaponItemId: CharacterEquipmentItemId | undefined,
@@ -472,9 +479,7 @@ function pactBladeWeaponAttack(
       Number(attack.abilityModifier) + Number(characterProficiency),
     ),
     damageAbilityModifier: attack.abilityModifier,
-    ...(attack.ability === "cha"
-      ? {}
-      : { alternateAbilityChoices: [charismaAttack] }),
+    alternateAbilityChoices: [charismaAttack],
     damageTypeChoices: pactBladeDamageTypeChoices(
       attack.weapon.damage.damageType,
     ),
@@ -581,10 +586,10 @@ function martialArtsLoadoutConditionHolds(input: {
 }
 
 function martialArtsWeaponAttack(
-  attack: CharacterBattleCreatureInitWeaponAttack,
+  attack: PhysicalAbilityWeaponAttack,
   build: CharacterBuild,
   projection: MartialArtsAttackProjection,
-): CharacterBattleCreatureInitWeaponAttack {
+): PhysicalAbilityWeaponAttack {
   const chosen = martialArtsChosenAbility(
     build,
     attack.ability,
@@ -636,11 +641,14 @@ function martialArtsUnarmedStrike(
   };
 }
 
-function martialArtsChosenAbility(
+function martialArtsChosenAbility<FallbackAbility extends Ability>(
   build: CharacterBuild,
-  fallbackAbility: Ability,
+  fallbackAbility: FallbackAbility,
   fallbackModifier: AbilityModifier,
-): { readonly ability: Ability; readonly modifier: AbilityModifier } {
+): {
+  readonly ability: "dex" | FallbackAbility;
+  readonly modifier: AbilityModifier;
+} {
   const dexModifier = battleAbilityModifier(
     scoreModifier(build.abilityScores.dex),
   );

@@ -131,6 +131,7 @@ import {
   battleCreatureInitFromCharacterBuild,
   battleCreatureInitFromCharacterBuildWithRoute,
   characterAttackActionOption,
+  characterBaseUnarmedStrikeActionOption,
   characterUnitRefsWithBattleSupportProfiles,
   characterSheetBattleInit,
   characterSheetBattleInitWithRoute,
@@ -145,6 +146,7 @@ import {
   startBattleFromCharacterSheetAndStatBlock,
   characterBattleRuntimeIssueMessage,
 } from "./index.ts";
+import { characterPactBladeBondedWeaponItemId } from "./battle-character-build-projection.ts";
 import {
   battleSupportProfileSourceFactsForBuild,
   characterBattleWeaponMasterySelections,
@@ -4960,6 +4962,12 @@ describe("Character Build battle projection", () => {
       left: { message: expect.stringContaining("Unknown Unit") },
     });
     expect(
+      characterBaseUnarmedStrikeActionOption(
+        missingEquipmentBuild,
+        unitLibrary,
+      ),
+    ).toMatchObject({ _tag: "Right" });
+    expect(
       characterOffHandAttackActionOption(missingEquipmentBuild, unitLibrary),
     ).toMatchObject({
       _tag: "Left",
@@ -4984,6 +4992,85 @@ describe("Character Build battle projection", () => {
       _tag: "Left",
       left: { message: expect.stringContaining("Unknown Unit") },
     });
+    expect(
+      characterBaseUnarmedStrikeActionOption(
+        {
+          ...build,
+          features: [
+            {
+              kind: "selectedClassChoice",
+              selectedFromUnitId: authoredUnitId("fighter_fighting_style"),
+              unitId: authoredUnitId("synthetic:missing-martial-feature"),
+            },
+          ],
+        },
+        unitLibrary,
+      ),
+    ).toMatchObject({
+      _tag: "Left",
+      left: { message: expect.stringContaining("Unknown Unit") },
+    });
+    const daggerItemId = characterEquipmentItemId({
+      slot: "main",
+      unitId: expectRight(
+        characterEquipmentItemUnitId(authoredUnitId("weapon_dagger")),
+      ),
+    });
+    expect(
+      characterAttackActionOption(
+        {
+          ...build,
+          features: [
+            {
+              kind: "selectedClassChoice",
+              selectedFromUnitId: authoredUnitId("fighter_fighting_style"),
+              unitId: authoredUnitId("synthetic:missing-martial-feature"),
+            },
+          ],
+          equipment: {
+            owned: [
+              {
+                itemId: daggerItemId,
+                unitId: authoredUnitId("weapon_dagger"),
+              },
+            ],
+            loadout: {
+              weapon: { itemId: daggerItemId, grip: "one_handed" },
+            },
+          },
+        },
+        unitLibrary,
+      ),
+    ).toMatchObject({
+      _tag: "Left",
+      left: { message: expect.stringContaining("Unknown Unit") },
+    });
+
+    const nonWeaponItemId = characterEquipmentItemId({
+      slot: "main",
+      unitId: expectRight(
+        characterEquipmentItemUnitId(authoredUnitId("armor_chain_mail")),
+      ),
+    });
+    expect(
+      characterAttackActionOption(
+        {
+          ...build,
+          equipment: {
+            owned: [
+              {
+                itemId: nonWeaponItemId,
+                unitId: authoredUnitId("armor_chain_mail"),
+              },
+            ],
+            loadout: {
+              weapon: { itemId: nonWeaponItemId, grip: "one_handed" },
+            },
+          },
+        },
+        unitLibrary,
+      ),
+    ).toEqual(Either.right(null));
 
     const init = {
       combatantId: combatantId("missing-projection-unit"),
@@ -5031,6 +5118,24 @@ describe("Character Build battle projection", () => {
             loadout: { armor: missingArmorItemId },
           },
         },
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: { message: expect.stringContaining("Unknown Unit") },
+    });
+    expect(
+      characterPactBladeBondedWeaponItemId({
+        build: {
+          ...pactBladeInvocationBuild(authoredUnitId("weapon_longsword")),
+          equipment: {
+            owned: [{ itemId: missingItemId, unitId: missingUnitId }],
+            loadout: {
+              weapon: { itemId: missingItemId, grip: "one_handed" },
+            },
+          },
+        },
+        unitLibrary,
+        itemId: missingItemId,
       }),
     ).toMatchObject({
       _tag: "Left",
@@ -5118,6 +5223,88 @@ describe("Character Build battle projection", () => {
     ).toMatchObject({
       _tag: "Left",
       left: { message: expect.stringContaining("Unknown Unit") },
+    });
+
+    const missingArmorUnitId = authoredUnitId(
+      "synthetic:missing-spellcasting-armor",
+    );
+    const missingArmorItemId = characterEquipmentItemId({
+      slot: "armor",
+      unitId: expectRight(characterEquipmentItemUnitId(missingArmorUnitId)),
+    });
+    expect(
+      characterSpellcasting({
+        build: {
+          ...wizard,
+          equipment: {
+            owned: [
+              {
+                itemId: missingArmorItemId,
+                unitId: missingArmorUnitId,
+              },
+            ],
+            loadout: { armor: missingArmorItemId },
+          },
+        },
+        unitLibrary,
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: { message: expect.stringContaining("Unknown Unit") },
+    });
+    const chainMailItemId = characterEquipmentItemId({
+      slot: "armor",
+      unitId: expectRight(
+        characterEquipmentItemUnitId(authoredUnitId("armor_chain_mail")),
+      ),
+    });
+    expect(
+      expectRight(
+        characterSpellcasting({
+          build: {
+            ...wizard,
+            equipment: {
+              owned: [
+                {
+                  itemId: chainMailItemId,
+                  unitId: authoredUnitId("armor_chain_mail"),
+                },
+              ],
+              loadout: { armor: chainMailItemId },
+            },
+          },
+          unitLibrary,
+        }),
+      ),
+    ).toMatchObject({ canCastSpells: false });
+    expect(
+      characterSpellcasting({
+        build: {
+          ...wizard,
+          spellcasting: {
+            ...wizardSpellcasting,
+            sources: [
+              {
+                ...wizardSource,
+                spellbook: [authoredUnitId("weapon_longsword")],
+              },
+            ],
+          },
+        },
+        unitLibrary,
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: { message: expect.stringContaining("Spellbook Ritual Access") },
+    });
+    expect(
+      characterSpellcasting({
+        build: wizard,
+        unitLibrary: unitCatalogWithoutUnitIds("class_wizard"),
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: { message: expect.stringContaining("class Unit") },
     });
   });
 
@@ -5481,6 +5668,19 @@ describe("Character Build battle projection", () => {
     }
     const [source] = tomeSpellcasting.sources;
 
+    expectRight(
+      spellcastingIssue({
+        ...tome,
+        features: [
+          {
+            kind: "selectedClassChoice",
+            selectedFromUnitId: authoredUnitId("class_warlock"),
+            unitId: authoredUnitId("warlock_pact_magic"),
+          },
+          ...tome.features,
+        ],
+      }),
+    );
     expect(
       spellcastingIssue({
         ...tome,
@@ -5656,6 +5856,117 @@ describe("Character Build battle projection", () => {
     });
   });
 
+  test("rejects cross-record Spell catalog kind and level drift", () => {
+    const fireBolt = srdUnitCollection.units.find(
+      (unit) => unit.id === "fire_bolt",
+    );
+    const detectMagic = srdUnitCollection.units.find(
+      (unit) => unit.id === "detect_magic",
+    );
+    const mageArmor = srdUnitCollection.units.find(
+      (unit) => unit.id === "mage_armor",
+    );
+    const huntersMark = srdUnitCollection.units.find(
+      (unit) => unit.id === "hunters_mark",
+    );
+    const longsword = srdUnitCollection.units.find(
+      (unit) => unit.id === "weapon_longsword",
+    );
+    if (
+      fireBolt?.kind !== "spell" ||
+      detectMagic?.kind !== "spell" ||
+      mageArmor?.kind !== "spell" ||
+      huntersMark?.kind !== "spell" ||
+      longsword?.kind !== "weapon"
+    ) {
+      throw new Error("Expected Spell and weapon catalog fixtures.");
+    }
+    const tomeProjection = (catalog: UnitCatalog) =>
+      characterSpellcasting({
+        build: pactOfTheTomeWarlockBuild(),
+        unitLibrary: catalog,
+        bookOfShadowsPresence: { tag: "onPerson" },
+      });
+
+    expect(
+      tomeProjection(
+        unitCatalogReplacingUnit({
+          ...fireBolt,
+          mechanics: { ...fireBolt.mechanics, level: 1 },
+        }),
+      ),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message: expect.stringContaining(
+          "cantrip selections must be cantrip Spell Definitions",
+        ),
+      },
+    });
+    expect(
+      tomeProjection(
+        unitCatalogReplacingUnit({
+          ...detectMagic,
+          mechanics: { ...detectMagic.mechanics, level: 2 },
+        }),
+      ),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message: expect.stringContaining(
+          "Ritual selections must be level-1 ritual-tagged",
+        ),
+      },
+    });
+
+    const weaponAtSpellId = {
+      ...longsword,
+      id: fireBolt.id,
+      name: "Synthetic Weapon at Spell Id",
+      provenance: fireBolt.provenance,
+    } satisfies (typeof srdUnitCollection.units)[number];
+    expect(
+      tomeProjection(unitCatalogReplacingUnit(weaponAtSpellId)),
+    ).toMatchObject({
+      _tag: "Left",
+      left: { message: expect.stringContaining("Expected spell Unit") },
+    });
+    expect(
+      tomeProjection(
+        unitCatalogReplacingUnit({
+          ...longsword,
+          id: detectMagic.id,
+          name: "Synthetic Weapon at Ritual Spell Id",
+          provenance: detectMagic.provenance,
+        }),
+      ),
+    ).toMatchObject({
+      _tag: "Left",
+      left: { message: expect.stringContaining("Expected spell Unit") },
+    });
+
+    for (const [spell, candidateBuild] of [
+      [mageArmor, armorOfShadowsWarlockBuild()],
+      [huntersMark, favoredEnemyRangerBuild()],
+    ] as const) {
+      const weaponReplacement = {
+        ...longsword,
+        id: spell.id,
+        name: "Synthetic Weapon at Granted Spell Id",
+        provenance: spell.provenance,
+      } satisfies (typeof srdUnitCollection.units)[number];
+      expect(
+        characterSpellcasting({
+          build: candidateBuild,
+          unitLibrary: unitCatalogReplacingUnit(weaponReplacement),
+        }),
+      ).toMatchObject({
+        _tag: "Left",
+        left: { message: expect.stringContaining("Expected spell Unit") },
+      });
+    }
+  });
+
   test("does not project Pact of the Chain Spell Access without selected invocation ownership", () => {
     const spellcasting = expectRight(
       characterSpellcasting({
@@ -5709,6 +6020,26 @@ describe("Character Build battle projection", () => {
 
     expect(spellcasting.preparedSpells).toEqual([]);
     expect(spellcasting.featurePreparedSpells).toEqual([]);
+
+    expect(
+      expectRight(
+        characterSpellcasting({
+          build: {
+            ...trueStrikeWizardBuild(),
+            features: [
+              {
+                kind: "selectedClassChoice",
+                selectedFromUnitId: authoredUnitId("class_wizard"),
+                unitId: authoredUnitId(
+                  "synthetic:missing-feature-spell-access",
+                ),
+              },
+            ],
+          },
+          unitLibrary,
+        }),
+      ).featurePreparedSpells,
+    ).toEqual([]);
   });
 
   test("projects selected Weapon Mastery Sap into battle attack behavior", () => {
@@ -6037,6 +6368,23 @@ describe("Character Build battle projection", () => {
         },
       },
     });
+
+    const shortsword = expectRight(
+      characterAttackActionOption(
+        monkBuild({
+          weaponUnitId: "weapon_shortsword",
+          str: 12,
+          dex: 16,
+        }),
+        unitLibrary,
+        [{ className: "monk", level: 1 }],
+      ),
+    );
+    expect(shortsword?.weapon.damage).toMatchObject({
+      kind: "dice",
+      dice: 1,
+      dieSize: 6,
+    });
   });
 
   test("projects Pact of the Blade onto the bonded melee weapon only", () => {
@@ -6076,6 +6424,40 @@ describe("Character Build battle projection", () => {
       damageTypeChoices: ["slashing", "necrotic", "psychic", "radiant"],
       weapon: { weaponUnitId: "weapon_longsword" },
     });
+  });
+
+  test("keeps Pact of the Blade damage choices distinct for magical weapon damage", () => {
+    const baseWeapon = srdUnitCollection.units.find(
+      (unit) => unit.id === "weapon_longsword",
+    );
+    if (
+      baseWeapon === undefined ||
+      baseWeapon.kind !== "weapon" ||
+      baseWeapon.damage.kind !== "dice"
+    ) {
+      throw new Error("Expected Longsword dice-damage weapon fixture.");
+    }
+    for (const [damageType, expected] of [
+      ["necrotic", ["necrotic", "psychic", "radiant"]],
+      ["psychic", ["psychic", "necrotic", "radiant"]],
+      ["radiant", ["radiant", "necrotic", "psychic"]],
+    ] as const) {
+      const weapon = {
+        ...baseWeapon,
+        damage: { ...baseWeapon.damage, damageType },
+      } satisfies typeof baseWeapon;
+      const catalog = unitCatalogReplacingUnit(weapon);
+      const pactBuild = pactBladeInvocationBuild(baseWeapon.id);
+      const bondedItemId = pactBuild.equipment.loadout.weapon?.itemId;
+      if (bondedItemId === undefined) {
+        throw new Error("Expected Pact of the Blade weapon fixture.");
+      }
+      expect(
+        expectRight(
+          characterAttackActionOption(pactBuild, catalog, [], bondedItemId),
+        )?.damageTypeChoices,
+      ).toEqual(expected);
+    }
   });
 
   test("keeps Pact of the Blade Charisma selectable when the normal ability is better", () => {
@@ -6432,6 +6814,59 @@ describe("Character Build battle projection", () => {
         }),
       ),
     ).toBe(true);
+
+    const validBuild = pactBladeInvocationBuild(
+      authoredUnitId("weapon_longsword"),
+    );
+    const validItemId = validBuild.equipment.loadout.weapon?.itemId;
+    if (validItemId === undefined) {
+      throw new Error("Expected Pact of the Blade owned weapon fixture.");
+    }
+    expect(
+      battleCreatureInitFromCharacterBuild({
+        combatantId: combatantId("pact-blade-unowned"),
+        characterId: characterId("character:pact-blade-unowned"),
+        displayName: "Unowned Blade Character",
+        build: {
+          ...validBuild,
+          equipment: { ...validBuild.equipment, owned: [] },
+        },
+        initiative: initiativeScore(10),
+        unitLibrary,
+        pactBladeBondedWeaponItemId: validItemId,
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: { message: expect.stringContaining("reference owned equipment") },
+    });
+
+    const missingUnitId = authoredUnitId("synthetic:missing-pact-weapon");
+    const missingItemId = characterEquipmentItemId({
+      slot: "main",
+      unitId: expectRight(characterEquipmentItemUnitId(missingUnitId)),
+    });
+    expect(
+      battleCreatureInitFromCharacterBuild({
+        combatantId: combatantId("pact-blade-missing-unit"),
+        characterId: characterId("character:pact-blade-missing-unit"),
+        displayName: "Missing Pact Weapon Character",
+        build: {
+          ...validBuild,
+          equipment: {
+            owned: [{ itemId: missingItemId, unitId: missingUnitId }],
+            loadout: {
+              weapon: { itemId: missingItemId, grip: "one_handed" },
+            },
+          },
+        },
+        initiative: initiativeScore(10),
+        unitLibrary,
+        pactBladeBondedWeaponItemId: missingItemId,
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: { message: expect.stringContaining("Unknown Unit") },
+    });
   });
 
   test("keeps non-melee Pact of the Blade weapons ordinary when no bond is supplied", () => {
@@ -8366,6 +8801,25 @@ function unitCatalogWithoutUnitIds(...unitIds: readonly string[]): UnitCatalog {
   });
   if (result.tag !== "ok") {
     throw new Error("Expected filtered test Unit catalog to build.");
+  }
+  return result.catalog;
+}
+
+function unitCatalogReplacingUnit(
+  replacement: (typeof srdUnitCollection.units)[number],
+): UnitCatalog {
+  const result = buildUnitCatalog({
+    collections: [
+      {
+        ...srdUnitCollection,
+        units: srdUnitCollection.units.map((unit) =>
+          unit.id === replacement.id ? replacement : unit,
+        ),
+      },
+    ],
+  });
+  if (result.tag !== "ok") {
+    throw new Error("Expected replaced test Unit catalog to build.");
   }
   return result.catalog;
 }
