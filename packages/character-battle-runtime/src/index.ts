@@ -275,12 +275,6 @@ export function characterSheetBattleInitWithRoute(
       sheet,
       statBlockCatalog,
     });
-  if (Either.isLeft(druidWildShapeAvailableForms)) {
-    return Either.left({
-      issue: druidWildShapeAvailableForms.left,
-      routeEvents: rejectCharacterBattleInitProjectionRoute(),
-    });
-  }
   const hitPointMaximum = characterSheetHitPointMaximum({
     sheet,
     unitLibrary,
@@ -303,9 +297,9 @@ export function characterSheetBattleInitWithRoute(
     currentHp: characterSheetCurrentHp(sheet),
     tempHp: characterSheetTempHp(sheet),
     ...withDefinedCharacterBattleSheetState(sheet),
-    ...(druidWildShapeAvailableForms.right === undefined
+    ...(druidWildShapeAvailableForms === undefined
       ? {}
-      : { druidWildShapeAvailableForms: druidWildShapeAvailableForms.right }),
+      : { druidWildShapeAvailableForms }),
   });
   return Either.isLeft(init)
     ? Either.left({
@@ -1221,12 +1215,9 @@ function characterSheetDruidWildShapeResourceUnitId(input: {
 function battleDruidWildShapeAvailableFormsFromSheet(input: {
   readonly sheet: CharacterSheet;
   readonly statBlockCatalog: StatBlockCatalog;
-}): Either.Either<
-  readonly StatBlockRecord[] | undefined,
-  BattleCreatureInitIssue
-> {
+}): readonly StatBlockRecord[] | undefined {
   const knownForms = characterSheetDruidWildShapeKnownForms(input.sheet);
-  if (knownForms === undefined) return Either.right(undefined);
+  if (knownForms === undefined) return undefined;
   const forms: StatBlockRecord[] = [];
   for (const statBlockId of knownForms.statBlockIds) {
     const statBlock = input.statBlockCatalog.getStatBlock(statBlockId);
@@ -1234,7 +1225,7 @@ function battleDruidWildShapeAvailableFormsFromSheet(input: {
       forms.push(statBlock.value);
     }
   }
-  return Either.right(forms);
+  return forms;
 }
 
 function druidWildShapeResourceExpenditureFromBattle(input: {
