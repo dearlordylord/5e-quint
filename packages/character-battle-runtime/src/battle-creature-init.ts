@@ -727,7 +727,10 @@ function characterBattleResourceInit(
 
 function characterBattlePersistedPointsRemaining(
   build: CharacterBuild,
-  unit: UnitRecord,
+  unit: Extract<
+    UnitRecord,
+    { readonly kind: "class_feature" | "species_trait" }
+  >,
   unitLibrary: UnitCatalog,
   resourceExpenditures: readonly CharacterSheetResourceExpenditure[],
   classLevels: CharacterBattleClassLevels,
@@ -761,7 +764,10 @@ function characterBattlePersistedPointsRemaining(
 
 function characterBattlePersistedUsesRemaining(
   build: CharacterBuild,
-  unit: UnitRecord,
+  unit: Extract<
+    UnitRecord,
+    { readonly kind: "class_feature" | "species_trait" }
+  >,
   unitLibrary: UnitCatalog,
   resourceExpenditures: readonly CharacterSheetResourceExpenditure[],
   classLevels: CharacterBattleClassLevels,
@@ -806,9 +812,6 @@ function characterBattlePersistedUsesRemaining(
       expenditure.tag === "useCountResource" && expenditure.unitId === unit.id,
   );
   if (useCountExpenditure === undefined) {
-    return Either.right(undefined);
-  }
-  if (unit.kind !== "class_feature" && unit.kind !== "species_trait") {
     return Either.right(undefined);
   }
   const resource =
