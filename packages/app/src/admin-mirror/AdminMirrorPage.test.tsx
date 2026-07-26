@@ -52,6 +52,7 @@ beforeEach(() => {
 
 afterEach(() => {
   cleanup()
+  vi.unstubAllEnvs()
   vi.unstubAllGlobals()
 })
 
@@ -259,6 +260,16 @@ describe("AdminMirrorPage mirror boundary", () => {
     render(<AdminMirrorPage />)
 
     expect(await screen.findByText("No presentation snapshots retained by this mirror.")).toBeTruthy()
+  })
+
+  test("uses the configured mirror URL", async () => {
+    vi.stubEnv("VITE_ADMIN_MIRROR_URL", "http://configured-mirror.test")
+    fetchMock.mockResolvedValue(jsonResponse({ sessions: [] }))
+
+    render(<AdminMirrorPage />)
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith("http://configured-mirror.test/admin-projections"))
+    expect(TestEventSource.latest?.url).toBe("http://configured-mirror.test/admin-projections/events")
   })
 })
 

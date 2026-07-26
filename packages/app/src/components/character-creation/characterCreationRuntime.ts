@@ -41,6 +41,7 @@ import { Either } from "effect"
 
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-use-count-resource
 const catalogBuild = buildUnitCatalog({ collections: [srdUnitCollection] })
+/* v8 ignore next -- the imported checked-in SRD collection is validated by Surface catalog tests */
 if (catalogBuild.tag !== "ok") {
   throw new Error(`SRD Unit catalog failed to build: ${JSON.stringify(catalogBuild.issues)}`)
 }

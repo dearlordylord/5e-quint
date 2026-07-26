@@ -7,6 +7,7 @@ import type * as CharacterCreationRuntime from "./characterCreationRuntime.ts"
 
 const pageFailures = vi.hoisted(() => ({
   fillRejected: false,
+  invalidAssessment: false,
   richSummary: false,
   sheetCreation: false,
   sheetSummary: false
@@ -18,6 +19,20 @@ vi.mock("#/components/character-creation/characterCreationRuntime.ts", async (im
   const { Hp, resourceCount, spellSlotLevel } = await import("@dnd/shared/types")
   return {
     ...actual,
+    assessCharacterDraft: vi.fn(
+      (draft: Parameters<typeof actual.assessCharacterDraft>[0]): ReturnType<typeof actual.assessCharacterDraft> => {
+        const assessment = actual.assessCharacterDraft(draft)
+        return pageFailures.invalidAssessment
+          ? {
+              ...assessment,
+              finalization: {
+                tag: "invalid",
+                issues: [{ code: "syntheticInvalidDraft", message: "Synthetic invalid draft." }]
+              } as never
+            }
+          : assessment
+      }
+    ),
     applyCharacterCreationFill: vi.fn(
       (
         draft: Parameters<typeof actual.applyCharacterCreationFill>[0],
@@ -65,6 +80,14 @@ vi.mock("#/components/character-creation/characterCreationRuntime.ts", async (im
                   spellLevel: spellSlotLevel(1)
                 }
               ],
+              resources: [
+                {
+                  count: resourceCount(2),
+                  expended: resourceCount(1),
+                  tag: "classFeatureUseCount",
+                  unitId: "synthetic:resource"
+                }
+              ] as never,
               tempHp: Hp(2)
             })
           : summary
@@ -86,6 +109,17 @@ vi.mock("#/components/character-creation/characterCreationRuntime.ts", async (im
 })
 
 describe("CharacterCreationPage failure presentation", () => {
+  it("shows an invalid finalization assessment", () => {
+    pageFailures.invalidAssessment = true
+    try {
+      render(<CharacterCreationPage />)
+
+      expect(screen.getByText("1 finalization issue(s) require fixes.")).toBeTruthy()
+    } finally {
+      pageFailures.invalidAssessment = false
+    }
+  })
+
   it("shows a typed Character Sheet creation failure", () => {
     pageFailures.sheetCreation = true
     try {
@@ -122,6 +156,7 @@ describe("CharacterCreationPage failure presentation", () => {
       expect(screen.getByText(/2 temp/)).toBeTruthy()
       expect(screen.getByText("Level 1: 1/3")).toBeTruthy()
       expect(screen.getByText("Level 2: 1/2")).toBeTruthy()
+      expect(screen.getByText("synthetic:resource: 1/2")).toBeTruthy()
     } finally {
       pageFailures.richSummary = false
     }

@@ -60,7 +60,7 @@ export function JsonEditor({
             setError(null)
             onChange(parsed)
           } catch (jsonError) {
-            setError(jsonError instanceof Error ? jsonError.message : "Invalid JSON")
+            setError(String(jsonError))
           }
         }}
         spellCheck={false}
