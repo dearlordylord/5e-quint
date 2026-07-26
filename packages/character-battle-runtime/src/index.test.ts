@@ -665,6 +665,53 @@ describe("Character Sheet battle handoff", () => {
     });
   });
 
+  test("routes Character Sheet initialization failures from caller catalog drift", () => {
+    const sheet = expectRight(
+      rebuildCharacterSheetFixture({
+        characterId: characterSheetId("character:init-catalog-drift"),
+        build,
+        currentHp: Hp(10),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+    const input = {
+      sheet,
+      statBlockCatalog,
+      combatantId: combatantId("init-catalog-drift"),
+      displayName: "Catalog Drift Fighter",
+      initiative: initiativeScore(10),
+    } as const;
+
+    expect(
+      characterSheetBattleInitWithRoute({
+        ...input,
+        unitLibrary: unitCatalogWithoutUnitIds("class_fighter"),
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        routeEvents: [
+          {
+            kind: "rejectCharacterBattleHandoff",
+            holes: ["hitPointProjection"],
+          },
+        ],
+      },
+    });
+    expect(
+      characterSheetBattleInitWithRoute({
+        ...input,
+        unitLibrary: unitCatalogWithoutUnitIds("species_orc"),
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        issue: { message: expect.stringContaining("Unknown Unit") },
+      },
+    });
+  });
+
   test("projects Alert Proficiency Bonus into the character Initiative score", () => {
     const result = characterBattleInitiativeScore({
       build: {
