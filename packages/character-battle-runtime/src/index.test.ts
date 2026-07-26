@@ -143,8 +143,12 @@ import {
   startBattleFromCharacterSheetAndStatBlock,
   characterBattleRuntimeIssueMessage,
 } from "./index.ts";
-import { battleSupportProfileSourceFactsForBuild } from "./battle-support-profiles.ts";
+import {
+  battleSupportProfileSourceFactsForBuild,
+  characterBattleWeaponMasterySelections,
+} from "./battle-support-profiles.ts";
 import { characterBattleOriginFeatSelectedReferenceProjection } from "./origin-feat-selected-reference-projection.ts";
+import { settleCompanionFromBattle } from "./companion-handoff.ts";
 
 function battleCreatureInitFromStatBlock(
   input: Parameters<typeof parseBattleCreatureInitFromStatBlock>[0],
@@ -295,6 +299,86 @@ describe("Character Sheet battle handoff", () => {
         ),
       },
     });
+  });
+
+  test("reports malformed Weapon Mastery selections and deduplicates valid selections", () => {
+    const malformed = characterBattleWeaponMasterySelections(
+      {
+        ...build,
+        features: [
+          {
+            kind: "selectedClassChoice",
+            selectedFromUnitId: authoredUnitId(
+              "synthetic:missing-mastery-source",
+            ),
+            unitId: authoredUnitId("weapon_longsword"),
+          },
+          {
+            kind: "selectedClassChoice",
+            selectedFromUnitId: authoredUnitId("fighter_weapon_mastery"),
+            unitId: authoredUnitId("synthetic:missing-mastery-weapon"),
+          },
+          {
+            kind: "selectedClassChoice",
+            selectedFromUnitId: authoredUnitId("fighter_weapon_mastery"),
+            unitId: authoredUnitId("class_fighter"),
+          },
+          {
+            kind: "selectedClassChoice",
+            selectedFromUnitId: authoredUnitId("fighter_fighting_style"),
+            unitId: authoredUnitId("weapon_longsword"),
+          },
+        ],
+      },
+      unitLibrary,
+    );
+    expect(malformed).toMatchObject({
+      _tag: "Left",
+      left: [
+        { message: expect.stringContaining("Unknown Character Build Unit") },
+        {
+          message: expect.stringContaining(
+            "Unknown selected Weapon Mastery Unit",
+          ),
+        },
+        {
+          message: expect.stringContaining(
+            "Expected selected Weapon Mastery option to be a weapon Unit",
+          ),
+        },
+      ],
+    });
+
+    const selected = {
+      kind: "selectedClassChoice",
+      selectedFromUnitId: authoredUnitId("fighter_weapon_mastery"),
+      unitId: authoredUnitId("weapon_longsword"),
+    } as const;
+    expect(
+      characterBattleWeaponMasterySelections(
+        {
+          ...build,
+          features: [selected, selected],
+        },
+        unitLibrary,
+      ),
+    ).toEqual(
+      Either.right([{ weaponUnitId: authoredUnitId("weapon_longsword") }]),
+    );
+  });
+
+  test("ignores invalid and unsupported supplied mastery weapon refs", () => {
+    const refs = characterUnitRefsWithBattleSupportProfiles(
+      build,
+      unitLibrary,
+      [
+        { weaponUnitId: authoredUnitId("synthetic:missing-weapon") },
+        { weaponUnitId: authoredUnitId("class_fighter") },
+        { weaponUnitId: authoredUnitId("weapon_dagger") },
+      ],
+    );
+
+    expect(refs).toMatchObject({ _tag: "Right" });
   });
 
   test("composes sheet and stat block participants into battle runtime entry", () => {
@@ -818,6 +902,158 @@ describe("Character Sheet battle handoff", () => {
         companionCombatantId: combatantId("dismissed-companion"),
       }),
     ).toMatchObject({ _tag: "Right" });
+  });
+
+  test("reports retained companion settlement identity and manifestation conflicts", () => {
+    const sheet = retainedOrdinaryCompanionSheet({
+      characterIdValue: "character:companion-settlement-boundaries",
+      companionIdValue: "companion:settlement-boundaries",
+      selectedForm: { tag: "normalNamedForm", formId: "cat" },
+      currentHp: Hp(2),
+      tempHp: Hp(0),
+    });
+    const ownerId = combatantId("companion-settlement-owner");
+    const companionId = combatantId("companion-settlement-companion");
+    const ownerInit = expectRight(
+      characterSheetBattleInit({
+        sheet,
+        unitLibrary,
+        statBlockCatalog,
+        combatantId: ownerId,
+        displayName: "Companion Owner",
+        initiative: initiativeScore(12),
+      }),
+    );
+    const started = expectRight(
+      startBattle({
+        battleId: battleId("companion-settlement-boundaries"),
+        combatants: [ownerInit],
+      }),
+    );
+    const admitted = expectRight(
+      admitCharacterSheetCompanionToBattle({
+        sheet,
+        state: started.state,
+        unitLibrary,
+        ownerCombatantId: ownerId,
+        companionCombatantId: companionId,
+        initiative: initiativeScore(14),
+        placement: { kind: "unoccupiedSpaceWithinSpellRange" },
+        initialCombatantOrder: new Map([
+          [ownerId, 0],
+          [companionId, 1],
+        ]),
+        statBlockCatalog,
+      }),
+    );
+    const selection = {
+      formAccess: "findFamiliar",
+      selectedForm: { tag: "normalNamedForm", formId: "cat" },
+    } as const;
+    const settle = (
+      state: BattleState,
+      selectedSheet: CharacterSheet = sheet,
+      retainedCompanionSelection:
+        | typeof selection
+        | {
+            readonly formAccess: "pactOfTheChain";
+            readonly selectedForm: typeof selection.selectedForm;
+          }
+        | undefined = selection,
+    ) =>
+      settleCompanionFromBattle({
+        sheet: selectedSheet,
+        state,
+        ownerCombatantId: ownerId,
+        unitLibrary,
+        statBlockCatalog,
+        ...(retainedCompanionSelection === undefined
+          ? {}
+          : { retainedCompanionSelection }),
+      });
+
+    expect(
+      settleCompanionFromBattle({
+        sheet,
+        state: admitted,
+        ownerCombatantId: ownerId,
+        unitLibrary,
+        statBlockCatalog,
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message: expect.stringContaining(
+          "no battle-owned authored form selection",
+        ),
+      },
+    });
+    expect(
+      settle(admitted, sheet, {
+        ...selection,
+        formAccess: "pactOfTheChain",
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: { message: expect.stringContaining("form access does not match") },
+    });
+
+    const noCompanionSheet = expectRight(
+      rebuildCharacterSheetFixture({
+        characterId: characterSheetId("character:no-settlement-companion"),
+        build,
+        currentHp: Hp(7),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+    expect(settle(admitted, noCompanionSheet)).toMatchObject({
+      _tag: "Left",
+      left: {
+        message: expect.stringContaining("no Character Sheet companion slot"),
+      },
+    });
+    const otherCompanionSheet = retainedOrdinaryCompanionSheet({
+      characterIdValue: "character:other-settlement-companion",
+      companionIdValue: "companion:other-settlement-companion",
+      selectedForm: { tag: "normalNamedForm", formId: "cat" },
+      currentHp: Hp(2),
+      tempHp: Hp(0),
+    });
+    expect(settle(admitted, otherCompanionSheet)).toMatchObject({
+      _tag: "Left",
+      left: {
+        message: expect.stringContaining("durable identity does not match"),
+      },
+    });
+
+    const companion = admitted.companions.get(ownerId);
+    if (companion === undefined) {
+      throw new Error("Expected admitted retained companion fixture.");
+    }
+    const dismissedForever = {
+      ...admitted,
+      companions: new Map([
+        [ownerId, { ...companion, status: "dismissedForever" as const }],
+      ]),
+    };
+    expect(settle(dismissedForever)).toMatchObject({
+      _tag: "Right",
+      right: { companion: { tag: "none" } },
+    });
+
+    const missingCombatant = {
+      ...admitted,
+      combatants: new Map(
+        [...admitted.combatants].filter(
+          ([combatantKey]) => combatantKey !== companionId,
+        ),
+      ),
+    };
+    expect(settle(missingCombatant)).toMatchObject({
+      _tag: "Left",
+      left: { message: expect.stringContaining("combatant is missing") },
+    });
   });
 
   test("recasting an embodied retained companion keeps identity and clamps carried Hit Points (A47)", () => {
