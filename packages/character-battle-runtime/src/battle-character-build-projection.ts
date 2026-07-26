@@ -132,12 +132,9 @@ export function characterAttackActionOption(
   if (loadoutWeapon === undefined) {
     return Either.right(null);
   }
-  const selectedWeapon = characterBuildEquipmentItemUnitId(
+  const selectedWeapon = characterEquipmentItemSourceFromId(
     loadoutWeapon.itemId,
-  );
-  if (selectedWeapon == null) {
-    return Either.right(null);
-  }
+  ).unitId;
   const selectedWeaponItemId = loadoutWeapon.itemId;
 
   return characterWeaponAttackActionOption(
@@ -163,12 +160,9 @@ export function characterOffHandAttackActionOption(
   if (loadoutWeapon === undefined) {
     return Either.right(undefined);
   }
-  const selectedWeapon = characterBuildEquipmentItemUnitId(
+  const selectedWeapon = characterEquipmentItemSourceFromId(
     loadoutWeapon.itemId,
-  );
-  if (selectedWeapon == null) {
-    return Either.right(undefined);
-  }
+  ).unitId;
   const selectedWeaponItemId = loadoutWeapon.itemId;
 
   const option = characterWeaponAttackActionOption(
@@ -293,12 +287,7 @@ export function characterPactBladeBondedWeaponItemId(input: {
       "Pact of the Blade bond must reference owned equipment.",
     );
   }
-  const weaponUnitId = characterBuildEquipmentItemUnitId(input.itemId);
-  if (weaponUnitId === undefined) {
-    return battleCreatureInitIssue(
-      "Pact of the Blade bond must reference a weapon item id.",
-    );
-  }
+  const weaponUnitId = characterEquipmentItemSourceFromId(input.itemId).unitId;
   const unit = getRequiredUnit(input.unitLibrary, weaponUnitId);
   if (Either.isLeft(unit)) {
     return battleCreatureInitIssue(unit.left.message);

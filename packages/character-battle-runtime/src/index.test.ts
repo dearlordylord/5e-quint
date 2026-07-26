@@ -54,6 +54,7 @@ import {
   castRetainedFindFamiliarRuntime,
   discoverBattleActs,
   initiativeScore,
+  KNOCKED_OUT_UNCONSCIOUS,
   parseCharacterBattleClassLevels,
   resolveBattleSubject,
   spendCharacterPointPoolResource,
@@ -126,16 +127,22 @@ import { describe, expect, test } from "vitest";
 import {
   admitCharacterSheetCompanionToBattle,
   battleCreatureInitFromCharacterBuild,
+  characterAttackActionOption,
   characterUnitRefsWithBattleSupportProfiles,
   characterSheetBattleInit,
   characterArmorClassState,
   characterBattleInitiativeScore,
   characterBattleResourceInitsFromBuild,
+  characterBattleLoadoutFromBuild,
+  characterOffHandAttackActionOption,
   characterSpellcasting,
   settleCharacterSheetFromBattle,
   startBattleFromCharacterBuildAndStatBlock,
   startBattleFromCharacterSheetAndStatBlock,
+  characterBattleRuntimeIssueMessage,
 } from "./index.ts";
+import { battleSupportProfileSourceFactsForBuild } from "./battle-support-profiles.ts";
+import { characterBattleOriginFeatSelectedReferenceProjection } from "./origin-feat-selected-reference-projection.ts";
 
 function battleCreatureInitFromStatBlock(
   input: Parameters<typeof parseBattleCreatureInitFromStatBlock>[0],
@@ -183,6 +190,111 @@ function rebuildCharacterSheetFixture(input: CharacterSheetTestInput) {
 }
 
 describe("Character Sheet battle handoff", () => {
+  test("formats both character projection and battle-state initialization issues", () => {
+    expect(
+      characterBattleRuntimeIssueMessage({
+        tag: "battleCreatureInitIssue",
+        message: "Synthetic character projection issue.",
+      }),
+    ).toBe("Synthetic character projection issue.");
+    expect(
+      characterBattleRuntimeIssueMessage({
+        tag: "battleStateInitIssue",
+        message: "Synthetic battle-state issue.",
+      }),
+    ).toBe("Synthetic battle-state issue.");
+  });
+
+  test("reports unreadable Origin feat selected-reference sources", () => {
+    expect(
+      characterBattleOriginFeatSelectedReferenceProjection({
+        build: {
+          ...build,
+          background: authoredUnitId("synthetic:missing-background"),
+        },
+        unitLibrary,
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        tag: "battleCreatureInitIssue",
+        message: expect.stringContaining("readable background Origin feat"),
+      },
+    });
+    expect(
+      characterBattleOriginFeatSelectedReferenceProjection({
+        build: {
+          ...build,
+          background: authoredUnitId("class_fighter"),
+        },
+        unitLibrary,
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        tag: "battleCreatureInitIssue",
+        message: expect.stringContaining("readable background Origin feat"),
+      },
+    });
+  });
+
+  test("reports invalid Draconic Ancestry source facts", () => {
+    const dragonborn = dragonbornFighterBuild();
+    expect(
+      battleSupportProfileSourceFactsForBuild(
+        {
+          ...dragonborn,
+          species: authoredUnitId("synthetic:missing-species"),
+        },
+        unitLibrary,
+      ),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message: expect.stringContaining("Unknown Character Build species"),
+      },
+    });
+    expect(
+      battleSupportProfileSourceFactsForBuild(
+        {
+          ...dragonborn,
+          species: authoredUnitId("species_orc"),
+        },
+        unitLibrary,
+      ),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message: expect.stringContaining(
+          "requires a species with a Draconic Ancestry source",
+        ),
+      },
+    });
+    expect(
+      battleSupportProfileSourceFactsForBuild(
+        {
+          ...dragonborn,
+          speciesChoiceFacts: {
+            draconicAncestry: {
+              kind: "draconicAncestry",
+              ancestorId: characterDraconicAncestrySelection(
+                "synthetic:ancestor" as never,
+              ),
+            },
+          },
+        },
+        unitLibrary,
+      ),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message: expect.stringContaining(
+          "must reference the selected species source table",
+        ),
+      },
+    });
+  });
+
   test("composes sheet and stat block participants into battle runtime entry", () => {
     const characterCombatantId = combatantId("combatant:sheet-entry");
     const monsterCombatantId = combatantId("combatant:stat-block-entry");
@@ -579,6 +691,98 @@ describe("Character Sheet battle handoff", () => {
         expended: resourceCount(1),
       },
     ]);
+  });
+
+  test("rejects absent and incomplete retained companion admissions", () => {
+    const ownerId = combatantId("companion-admission-owner");
+    const state = expectRight(
+      startBattle({
+        battleId: battleId("companion-admission-boundaries"),
+        combatants: [
+          battleCreatureInitFromStatBlock({
+            combatantId: ownerId,
+            statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+            initiative: initiativeScore(12),
+          }),
+        ],
+      }),
+    ).state;
+    const sheetWithoutCompanion = expectRight(
+      rebuildCharacterSheetFixture({
+        characterId: characterSheetId("character:no-companion"),
+        build,
+        currentHp: Hp(7),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+    const admissionBase = {
+      state,
+      unitLibrary,
+      ownerCombatantId: ownerId,
+      initialCombatantOrder: new Map([[ownerId, 0]]),
+      statBlockCatalog,
+    } as const;
+
+    expect(
+      admitCharacterSheetCompanionToBattle({
+        ...admissionBase,
+        sheet: sheetWithoutCompanion,
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: { message: "Character Sheet has no retained companion to admit." },
+    });
+
+    const embodied = retainedOrdinaryCompanionSheet({
+      characterIdValue: "character:incomplete-companion-admission",
+      companionIdValue: "companion:incomplete-admission",
+      selectedForm: { tag: "normalNamedForm", formId: "cat" },
+      currentHp: Hp(2),
+      tempHp: Hp(0),
+    });
+    expect(
+      admitCharacterSheetCompanionToBattle({
+        ...admissionBase,
+        sheet: embodied,
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Present companion admission requires combatant id, Initiative, and placement.",
+      },
+    });
+
+    const dismissed = retainedCompanionSheetWithManifestation(
+      embodied,
+      (manifestation) => {
+        if (manifestation.tag === "disappearedAtZeroHitPoints") {
+          throw new Error("Expected embodied retained companion fixture.");
+        }
+        return { ...manifestation, tag: "temporarilyDismissed" };
+      },
+    );
+    expect(
+      admitCharacterSheetCompanionToBattle({
+        ...admissionBase,
+        sheet: dismissed,
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Temporarily dismissed companion admission requires a reappearance combatant id.",
+      },
+    });
+
+    expect(
+      admitCharacterSheetCompanionToBattle({
+        ...admissionBase,
+        sheet: dismissed,
+        companionCombatantId: combatantId("dismissed-companion"),
+      }),
+    ).toMatchObject({ _tag: "Right" });
   });
 
   test("recasting an embodied retained companion keeps identity and clamps carried Hit Points (A47)", () => {
@@ -2011,6 +2215,160 @@ describe("Character Sheet battle handoff", () => {
     expect(Either.isLeft(handoff)).toBe(true);
   });
 
+  test.each([
+    {
+      label: "unstable",
+      sheetLifecycle: {
+        tag: "unstable",
+        deathSaves: { successes: 1, failures: 1 },
+      },
+      battleLifecycle: {
+        policy: "usesDeathSavingThrows",
+        deathSaves: {
+          deathSaves: { successes: 1, failures: 1 },
+          stable: false,
+          dead: false,
+          hpRegained: false,
+        },
+      },
+    },
+    {
+      label: "stable",
+      sheetLifecycle: {
+        tag: "stable",
+        recovery: {
+          kind: "regains1HpAfter1d4Hours",
+          elapsedBeforeRecoveryRoll: elapsedTimeTicks(0),
+        },
+      },
+      battleLifecycle: {
+        policy: "usesDeathSavingThrows",
+        deathSaves: {
+          deathSaves: { successes: 0, failures: 0 },
+          stable: true,
+          dead: false,
+          hpRegained: false,
+        },
+      },
+    },
+    {
+      label: "dead",
+      sheetLifecycle: {
+        tag: "dead",
+        deathSaves: { successes: 0, failures: 3 },
+      },
+      battleLifecycle: {
+        policy: "usesDeathSavingThrows",
+        deathSaves: {
+          deathSaves: { successes: 0, failures: 3 },
+          stable: false,
+          dead: true,
+          hpRegained: false,
+        },
+      },
+    },
+  ] as const)(
+    "round-trips $label zero-HP lifecycle through battle",
+    ({ label, sheetLifecycle, battleLifecycle }) => {
+      const characterIdValue = `character:zero-hp-${label}`;
+      const sheet = expectRight(
+        rebuildCharacterSheetFixture({
+          characterId: characterSheetId(characterIdValue),
+          build,
+          currentHp: Hp(0),
+          tempHp: Hp(0),
+          unitLibrary,
+          zeroHpLifecycle: sheetLifecycle,
+        }),
+      );
+      const init = characterSheetBattleInit({
+        sheet,
+        unitLibrary,
+        statBlockCatalog,
+        combatantId: combatantId(`combatant:zero-hp-${label}`),
+        displayName: `Zero HP ${label}`,
+        initiative: initiativeScore(10),
+      });
+      expect(init).toMatchObject({ _tag: "Right" });
+
+      const settled = settleHandoffBranchToCharacterSheet({
+        sheet,
+        unitLibrary,
+        combatant: handoffBranchCombatant({
+          origin: {
+            kind: "character",
+            characterId: characterId(characterIdValue),
+          },
+          hp: Hp(0),
+          maxHp: sheetMaximumHp(sheet),
+          tempHp: Hp(0),
+          positiveHpUnconscious: null,
+          zeroHpLifecycle: battleLifecycle,
+        }),
+      });
+      expect(settled).toMatchObject({
+        _tag: "Right",
+        right: {
+          hitPoints: {
+            tag: "zero",
+            lifecycle: { tag: label },
+          },
+        },
+      });
+    },
+  );
+
+  test("round-trips positive-HP unconscious state through battle", () => {
+    const sheet = expectRight(
+      rebuildCharacterSheetFixture({
+        characterId: characterSheetId("character:positive-hp-unconscious"),
+        build,
+        currentHp: Hp(1),
+        tempHp: Hp(0),
+        positiveHpUnconscious: { tag: "knockedOut" },
+        unitLibrary,
+      }),
+    );
+    const init = expectRight(
+      characterSheetBattleInit({
+        sheet,
+        unitLibrary,
+        statBlockCatalog,
+        combatantId: combatantId("combatant:positive-hp-unconscious"),
+        displayName: "Positive HP unconscious",
+        initiative: initiativeScore(10),
+      }),
+    );
+    expect(init).toMatchObject({
+      creatureInit: {
+        positiveHpUnconscious: KNOCKED_OUT_UNCONSCIOUS,
+      },
+    });
+    const session = expectRight(
+      startBattle({
+        battleId: battleId("battle:positive-hp-unconscious"),
+        combatants: [init],
+      }),
+    );
+    const combatant = requireCombatant(
+      session.state,
+      combatantId("combatant:positive-hp-unconscious"),
+    );
+
+    expect(
+      settleCharacterSheetFromBattle({
+        sheet,
+        state: session.state,
+        context: session.context,
+        unitLibrary,
+        combatant,
+      }),
+    ).toMatchObject({
+      _tag: "Right",
+      right: { hitPoints: { tag: "knockedOut" } },
+    });
+  });
+
   test("preserves non-battle sheet state while settling battle-owned HP and Spell Slots", () => {
     const sheet = rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:rest-state"),
@@ -3405,6 +3763,16 @@ describe("Character Sheet battle handoff", () => {
 });
 
 describe("Character Build battle projection", () => {
+  test("projects an empty weapon loadout as no attack option", () => {
+    expect(characterAttackActionOption(build, unitLibrary)).toEqual(
+      Either.right(null),
+    );
+    expect(characterOffHandAttackActionOption(build, unitLibrary)).toEqual(
+      Either.right(undefined),
+    );
+    expect(characterBattleLoadoutFromBuild(build)).toEqual({});
+  });
+
   test("applies Defense Armor Class bonus while wearing eligible armor", () => {
     const armorClass = expectRight(
       characterArmorClassState({
