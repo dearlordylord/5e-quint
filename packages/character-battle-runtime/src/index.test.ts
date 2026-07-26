@@ -303,6 +303,26 @@ describe("Character Sheet battle handoff", () => {
         ),
       },
     });
+    expect(
+      battleCreatureInitFromCharacterBuild({
+        combatantId: combatantId("invalid-ancestry-init"),
+        characterId: characterId("character:invalid-ancestry-init"),
+        displayName: "Invalid Ancestry",
+        build: {
+          ...dragonborn,
+          species: authoredUnitId("species_orc"),
+        },
+        initiative: initiativeScore(10),
+        unitLibrary,
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message: expect.stringContaining(
+          "requires a species with a Draconic Ancestry source",
+        ),
+      },
+    });
   });
 
   test("reports malformed Weapon Mastery selections and deduplicates valid selections", () => {
@@ -824,6 +844,99 @@ describe("Character Sheet battle handoff", () => {
       left: {
         message:
           "Battle handoff character has no authored runtime ownership context.",
+      },
+    });
+  });
+
+  test("rejects inconsistent battle resource ownership context", () => {
+    const sheet = expectRight(
+      rebuildCharacterSheetFixture({
+        characterId: characterSheetId("character:resource-ownership"),
+        build: monkBuild({ level: 2, str: 12, dex: 16 }),
+        currentHp: Hp(15),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+    const focusUnit = unitLibrary.requireUnit(MONK_MONKS_FOCUS_UNIT_ID);
+    const focusResource = characterBattleResourceForUnit(focusUnit);
+    if (!hasLimitedCharacterBattleResourceCap(focusResource)) {
+      throw new Error("Expected finite Monk Focus resource.");
+    }
+    const firstRef = battleResourcePoolExecutionRefForTest("ownership:first");
+    const secondRef = battleResourcePoolExecutionRefForTest("ownership:second");
+    const resourceState = (resourcePoolRef: typeof firstRef) => ({
+      resourcePoolRef,
+      resource: focusResource,
+      usedThisTurn: false,
+      usesRemaining: resourceCount(1),
+    });
+    const ownership = (resourcePoolRef: typeof firstRef) => ({
+      resourcePoolRef,
+      unit: focusUnit,
+    });
+    const settle = (
+      resources: readonly ReturnType<typeof resourceState>[],
+      resourceOwnership: readonly CharacterBattleResourceOwnership[],
+    ) =>
+      settleHandoffBranchToCharacterSheet({
+        sheet,
+        unitLibrary,
+        resourceOwnership,
+        combatant: handoffBranchCombatant({
+          origin: {
+            kind: "character",
+            characterId: characterId("character:resource-ownership"),
+            classLevels: parsedClassLevelsForTest("monk", 2),
+            resources,
+          },
+          hp: Hp(15),
+          maxHp: sheetMaximumHp(sheet),
+          tempHp: Hp(0),
+          positiveHpUnconscious: null,
+        }),
+      });
+
+    expect(settle([resourceState(firstRef)], [])).toMatchObject({
+      _tag: "Left",
+      left: {
+        message: expect.stringContaining(
+          "ownership must cover every mechanical resource",
+        ),
+      },
+    });
+    expect(
+      settle(
+        [resourceState(firstRef), resourceState(secondRef)],
+        [ownership(firstRef), ownership(firstRef)],
+      ),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message: expect.stringContaining(
+          "ownership contains a duplicate resource pool reference",
+        ),
+      },
+    });
+    expect(
+      settle(
+        [resourceState(firstRef), resourceState(firstRef)],
+        [ownership(firstRef), ownership(secondRef)],
+      ),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message: expect.stringContaining(
+          "duplicate mechanical resource pool reference",
+        ),
+      },
+    });
+    expect(
+      settle([resourceState(firstRef)], [ownership(secondRef)]),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message: expect.stringContaining("no authored ownership context"),
       },
     });
   });
@@ -4412,6 +4525,35 @@ describe("Character Sheet battle handoff", () => {
       unitId: "sorcerer_font_of_magic",
       expended: resourceCount(3),
     });
+
+    const malformedMetamagicBuild = {
+      ...sorcererMetamagicBuild(),
+      features: sorcererMetamagicBuild().features.map((feature) =>
+        feature.kind === "selectedSorcererMetamagicOption"
+          ? {
+              ...feature,
+              selectedFromUnitId: authoredUnitId(
+                "synthetic:missing-metamagic-source",
+              ),
+            }
+          : feature,
+      ),
+    } satisfies CharacterBuild;
+    expect(
+      battleCreatureInitFromCharacterBuild({
+        combatantId: combatantId("malformed-metamagic-init"),
+        characterId: characterId("character:malformed-metamagic-init"),
+        displayName: "Malformed Metamagic Sorcerer",
+        build: malformedMetamagicBuild,
+        initiative: initiativeScore(10),
+        unitLibrary,
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message: "Metamagic known option count must match the Sorcerer level.",
+      },
+    });
   });
 
   test("preserves sheet-owned healing resource expenditures", () => {
@@ -5737,6 +5879,28 @@ describe("Character Build battle projection", () => {
         left: { message: expect.stringContaining(message) },
       });
     }
+    expect(
+      battleCreatureInitFromCharacterBuild({
+        combatantId: combatantId("over-cap-resource-init"),
+        characterId: characterId("character:over-cap-resource-init"),
+        displayName: "Over-cap Sorcerer",
+        build: sorcererMetamagicBuild(),
+        initiative: initiativeScore(10),
+        unitLibrary,
+        resourceExpenditures: [
+          {
+            tag: "pointPoolResource",
+            unitId: authoredUnitId("sorcerer_font_of_magic"),
+            expended: resourceCount(99),
+          },
+        ],
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message: expect.stringContaining("point-pool expenditure exceeds"),
+      },
+    });
 
     const barbarian = {
       ...defenseBuild({ wearingArmor: false }),
