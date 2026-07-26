@@ -1,0 +1,2062 @@
+import { armorClass } from "@dnd/shared-algebras/armor-class-algebra";
+import {
+  DieRollResult,
+  movementFeet,
+  type DamageType,
+} from "@dnd/shared/types";
+import type { Ability, Size } from "@dnd/surface/surface/types";
+import { expect } from "vitest";
+import {
+  type BattleActiveEffect,
+  type BattleCloudkillAreaHazardTrigger,
+  type BattleInsectPlagueAreaHazardTrigger,
+  type BattleSleetStormAreaHazardTrigger,
+  type BattleSpellTargetListRelationshipFact,
+} from "./battle-state-execution.ts";
+import {
+  insectPlagueAreaHazardSavingThrowOutcomeHole,
+  cloudkillAreaHazardSavingThrowOutcomeHole,
+  sleetStormAreaHazardSavingThrowOutcomeHole,
+} from "./battle-reducer/turn-end-movement.ts";
+import {
+  battleAreaId,
+  battleActSpellPresentation,
+  battleObjectId,
+  battleTablePositionId,
+  discoverBattleActCandidates,
+  discoverBattleActs,
+  type AvailableBattleAct,
+  type BattleAreaId,
+  type BattleAntimagicFieldTransitWitness,
+  type BattleFill,
+  type BattleHole,
+  type BattleLineDirectionId,
+  type BattleRuntimeSession,
+  type BattleObjectId,
+  type BattleObjectDamageDisposition,
+  type BattleObjectIgnitionDisposition,
+  type BattleProcedureExecutionRef,
+  type BattleSpellAreaChoice,
+  type BattleSpellAreaOriginAnchor,
+  type BattleSpellConditionChoiceHole,
+  type BattleState,
+  type BattleSubject,
+  type BattleSelectedSpellInvocation,
+  type BattleTargetSpatialFact,
+  type CombatantId,
+  type SpellInvocationRef,
+} from "./index.ts";
+import type {
+  ActionSpellAct,
+  BonusActionDashSpellAct,
+  BonusActionSpellAct,
+} from "./unit-profile-admission-catalog.test-support.ts";
+import {
+  flamingSphereAreaId,
+  greaseAreaId,
+  gustOfWindAreaId,
+  gustOfWindEastDirectionId,
+  gustOfWindNorthDirectionId,
+  insectPlagueAreaId,
+  cloudkillAreaId,
+  moonbeamAreaId,
+  sleetStormAreaId,
+  spikeGrowthAreaId,
+  resistanceUnitId,
+  spellCasterId,
+  spellTargetId,
+  thunderwaveObjectId,
+  webAreaId,
+} from "./unit-profile-admission-catalog.test-support.ts";
+import { requireCombatant } from "./unit-profile-admission-creature-fixture.test-support.ts";
+import {
+  battleProcedureExecutionRefForSpellHoleForTest,
+  battleProcedureExecutionRefForTest,
+} from "./battle-runtime.test-support.ts";
+import {
+  bindSelectedSpellInvocation,
+  characterSpellProcedureExecution,
+  characterSpellProcedure,
+  type SpellProcedureExecution,
+} from "./character-execution-admission.ts";
+function spellInvocationForAvailableAct(
+  _state: BattleState,
+  act: AvailableBattleAct,
+): SpellInvocationRef | undefined {
+  return battleActSpellPresentation(act)?.invocation;
+}
+
+type SleetStormAreaHazardEffect = Extract<
+  BattleActiveEffect,
+  { readonly kind: "sleetStormAreaHazard" }
+>;
+type InsectPlagueAreaHazardEffect = Extract<
+  BattleActiveEffect,
+  { readonly kind: "insectPlagueAreaHazard" }
+>;
+type CloudkillAreaHazardEffect = Extract<
+  BattleActiveEffect,
+  { readonly kind: "cloudkillAreaHazard" }
+>;
+const tableSelectedPointAreaOriginAnchor = {
+  kind: "tableSelectedPoint",
+} as const satisfies BattleSpellAreaOriginAnchor;
+
+export function spellAct(input: {
+  readonly session: BattleRuntimeSession;
+  readonly spellId: string;
+  readonly slotLevel?: number;
+}): ActionSpellAct {
+  const act = maybeSpellAct(input);
+  expect(act).toBeDefined();
+  if (act === undefined) {
+    throw new Error(`Expected ${input.spellId} spell act.`);
+  }
+  return act;
+}
+
+export function maybeSpellAct(input: {
+  readonly session: BattleRuntimeSession;
+  readonly spellId: string;
+  readonly slotLevel?: number;
+}): ActionSpellAct | undefined {
+  return discoverBattleActs(input.session).find(
+    (candidate): candidate is ActionSpellAct => {
+      const invocation = spellInvocationForAvailableAct(
+        input.session.state,
+        candidate,
+      );
+      return (
+        candidate.subject.tag === "actionSpell" &&
+        invocation?.spellId === input.spellId &&
+        (input.slotLevel === undefined ||
+          (invocation.tag === "spellSlot" &&
+            Number(invocation.slotLevel) === input.slotLevel))
+      );
+    },
+  );
+}
+
+export function bonusSpellAct(input: {
+  readonly session: BattleRuntimeSession;
+  readonly spellId: string;
+  readonly slotLevel?: number;
+}): BonusActionSpellAct {
+  const act = maybeBonusSpellAct(input);
+  expect(act).toBeDefined();
+  if (act === undefined) {
+    throw new Error(`Expected ${input.spellId} Bonus Action spell act.`);
+  }
+  return act;
+}
+
+export function maybeBonusSpellAct(input: {
+  readonly session: BattleRuntimeSession;
+  readonly spellId: string;
+  readonly slotLevel?: number;
+}): BonusActionSpellAct | undefined {
+  return discoverBattleActs(input.session).find(
+    (candidate): candidate is BonusActionSpellAct => {
+      const invocation = spellInvocationForAvailableAct(
+        input.session.state,
+        candidate,
+      );
+      return (
+        candidate.subject.tag === "bonusActionSpell" &&
+        invocation?.spellId === input.spellId &&
+        (input.slotLevel === undefined ||
+          (invocation.tag === "spellSlot" &&
+            Number(invocation.slotLevel) === input.slotLevel))
+      );
+    },
+  );
+}
+
+export function bonusSpellActForItem(input: {
+  readonly session: BattleRuntimeSession;
+  readonly spellId: string;
+  readonly componentWeaponObjectId: BattleObjectId;
+}): BonusActionSpellAct {
+  const act = discoverBattleActs(input.session).find(
+    (candidate): candidate is BonusActionSpellAct => {
+      const invocation = spellInvocationForAvailableAct(
+        input.session.state,
+        candidate,
+      );
+      return (
+        candidate.subject.tag === "bonusActionSpell" &&
+        invocation?.spellId === input.spellId &&
+        characterSpellProcedureObjectId(input.session.state, candidate) ===
+          input.componentWeaponObjectId
+      );
+    },
+  );
+  expect(act).toBeDefined();
+  if (act === undefined) {
+    throw new Error(
+      `Expected ${input.spellId} Bonus Action spell act for ${input.componentWeaponObjectId}.`,
+    );
+  }
+  return act;
+}
+
+function characterSpellProcedureObjectId(
+  state: BattleState,
+  act: AvailableBattleAct,
+): BattleObjectId | undefined {
+  if (!("procedureRef" in act.subject)) return undefined;
+  const actor = state.combatants.get(act.subject.actorId);
+  if (actor?.origin.kind !== "character") return undefined;
+  const procedure = characterSpellProcedure(
+    actor.origin.execution,
+    act.subject.procedureRef,
+  );
+  return procedure?.procedure === "weaponAttackOverride"
+    ? procedure.activeEffect.weaponItemId
+    : procedure?.procedure === "spellHostedWeaponAttack"
+      ? procedure.componentWeaponObjectId
+      : undefined;
+}
+
+export function magicWeaponTargetItemFill(
+  hole: Extract<BattleHole, { readonly kind: "magicWeaponTargetItem" }>,
+  target: {
+    readonly holderCombatantId: CombatantId;
+    readonly itemId: BattleObjectId;
+  },
+): Extract<BattleFill, { readonly kind: "magicWeaponTargetItem" }> {
+  return {
+    kind: "magicWeaponTargetItem",
+    holeId: hole.holeId,
+    value: {
+      kind: "nonmagicalWeaponItem",
+      holderCombatantId: target.holderCombatantId,
+      itemId: target.itemId,
+    },
+  };
+}
+
+export function bonusActionDashSpellAct(input: {
+  readonly session: BattleRuntimeSession;
+  readonly spellId: string;
+}): BonusActionDashSpellAct {
+  const act = discoverBattleActs(input.session).find(
+    (candidate): candidate is BonusActionDashSpellAct => {
+      const invocation = spellInvocationForAvailableAct(
+        input.session.state,
+        candidate,
+      );
+      return (
+        candidate.subject.tag === "bonusActionDashSpell" &&
+        invocation?.spellId === input.spellId
+      );
+    },
+  );
+  expect(act).toBeDefined();
+  if (act === undefined) {
+    throw new Error(`Expected ${input.spellId} Bonus Action Dash spell act.`);
+  }
+  return act;
+}
+
+export function jumpMovementReplacementAct(state: BattleState): ReturnType<
+  typeof discoverBattleActCandidates
+>[number] & {
+  readonly subject: Extract<
+    BattleSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "jumpMovementReplacement";
+    }
+  >;
+} {
+  const act = maybeJumpMovementReplacementAct(state);
+  expect(act).toBeDefined();
+  if (act === undefined) {
+    throw new Error("Expected Jump movement replacement act.");
+  }
+  return act;
+}
+
+export function maybeJumpMovementReplacementAct(state: BattleState):
+  | (ReturnType<typeof discoverBattleActCandidates>[number] & {
+      readonly subject: Extract<
+        BattleSubject,
+        {
+          readonly tag: "runtimeCommand";
+          readonly command: "jumpMovementReplacement";
+        }
+      >;
+    })
+  | undefined {
+  return discoverBattleActCandidates(state).find(isJumpMovementReplacementAct);
+}
+
+function isJumpMovementReplacementAct(
+  candidate: ReturnType<typeof discoverBattleActCandidates>[number],
+): candidate is ReturnType<typeof discoverBattleActCandidates>[number] & {
+  readonly subject: Extract<
+    BattleSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "jumpMovementReplacement";
+    }
+  >;
+} {
+  return (
+    candidate.subject.tag === "runtimeCommand" &&
+    candidate.subject.command === "jumpMovementReplacement"
+  );
+}
+
+export function requireSpellDamageReductionHole(
+  holes: readonly BattleHole[],
+): Extract<BattleHole, { readonly kind: "rolledDice" }> & {
+  readonly spellDamageReduction: unknown;
+} {
+  const hole = holes.find(
+    (
+      candidate,
+    ): candidate is Extract<BattleHole, { readonly kind: "rolledDice" }> & {
+      readonly spellDamageReduction: unknown;
+    } => candidate.kind === "rolledDice" && "spellDamageReduction" in candidate,
+  );
+  if (hole === undefined) {
+    throw new Error("Expected spell damage reduction roll hole.");
+  }
+  return hole;
+}
+
+export function withResistanceEffect(
+  state: BattleState,
+  targetId: CombatantId,
+  damageType: DamageType,
+  usedThisTurn: boolean,
+): BattleState {
+  const target = requireCombatant(state, targetId);
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(targetId, {
+      ...target,
+      activeEffects: [
+        ...target.activeEffects,
+        {
+          kind: "spellDamageReduction" as const,
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String(resistanceUnitId),
+          ),
+          sourceCombatantId: spellCasterId,
+          damageType,
+          amount: { dice: 1 as const, dieSize: 4 as const },
+          usedThisTurn,
+          expiresAt: {
+            kind: "concentration" as const,
+            combatantId: spellCasterId,
+          },
+        },
+      ],
+    }),
+  };
+}
+
+export function spellTargetFill(
+  hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
+  _spellId: string,
+  casterId: CombatantId,
+  targetId: CombatantId,
+): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  const sourceProcedureRef =
+    battleProcedureExecutionRefForSpellHoleForTest(hole);
+  return {
+    kind: "targetChoice",
+    holeId: hole.holeId,
+    value: targetId,
+    ...(hole.relationshipFactRequest?.kind === "attackRollTargetIsEnemy"
+      ? {
+          relationshipFacts: [
+            {
+              kind: "attackRollTargetIsEnemy" as const,
+              attackerId: hole.relationshipFactRequest.attackerId,
+              targetId,
+              targetIsEnemy: true,
+            },
+          ],
+        }
+      : {}),
+    spatialFacts: [
+      {
+        kind: "spellTarget",
+        casterId,
+        targetId,
+        sourceProcedureRef,
+      },
+    ],
+  };
+}
+
+export function damageTypeChoiceFill(
+  hole: Extract<BattleHole, { readonly kind: "damageTypeChoice" }>,
+  value: Extract<BattleFill, { readonly kind: "damageTypeChoice" }>["value"],
+): Extract<BattleFill, { readonly kind: "damageTypeChoice" }> {
+  return { kind: "damageTypeChoice", holeId: hole.holeId, value };
+}
+
+export function spiritualWeaponTargetFill(
+  hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
+  _spellId: string,
+  casterId: CombatantId,
+  targetId: CombatantId,
+  forcePositionId = battleTablePositionId("spiritual-weapon-force"),
+): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  const sourceProcedureRef =
+    battleProcedureExecutionRefForSpellHoleForTest(hole);
+  return {
+    kind: "targetChoice",
+    holeId: hole.holeId,
+    value: targetId,
+    spatialFacts: [
+      {
+        kind: "spiritualWeaponTargetWithinForceReach",
+        casterId,
+        targetId,
+        sourceProcedureRef,
+        forcePositionId,
+        reachFeet: movementFeet(5),
+      },
+    ],
+  };
+}
+
+export function spiritualWeaponForcePositionFill(input: {
+  readonly hole: Extract<
+    BattleHole,
+    { readonly kind: "spiritualWeaponForcePosition" }
+  >;
+  readonly positionId?: string;
+  readonly distanceFromCasterFeet?: number;
+  readonly moveDistanceFeet?: number;
+}): Extract<BattleFill, { readonly kind: "spiritualWeaponForcePosition" }> {
+  const positionId = battleTablePositionId(
+    input.positionId ?? "spiritual-weapon-force",
+  );
+  return {
+    kind: "spiritualWeaponForcePosition",
+    holeId: input.hole.holeId,
+    value:
+      input.hole.mode === "cast"
+        ? {
+            mode: "cast",
+            positionId,
+            distanceFromCasterFeet: movementFeet(
+              input.distanceFromCasterFeet ?? 60,
+            ),
+          }
+        : {
+            mode: "reposition",
+            positionId,
+            moveDistanceFeet: movementFeet(input.moveDistanceFeet ?? 20),
+          },
+  };
+}
+
+export function knownWillingSpellTargetFill(
+  hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
+  spellId: string,
+  casterId: CombatantId,
+  targetId: CombatantId,
+): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  const sourceProcedureRef =
+    battleProcedureExecutionRefForSpellHoleForTest(hole);
+  const base = spellTargetFill(hole, spellId, casterId, targetId);
+  return {
+    ...base,
+    spatialFacts: [
+      ...(base.spatialFacts ?? []),
+      {
+        kind: "spellTargetKnownWilling",
+        casterId,
+        targetId,
+        sourceProcedureRef,
+      },
+    ],
+  };
+}
+
+export function wardingBondSpellTargetFill(
+  hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
+  spellId: string,
+  casterId: CombatantId,
+  targetId: CombatantId,
+): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  const sourceProcedureRef =
+    battleProcedureExecutionRefForSpellHoleForTest(hole);
+  const base = knownWillingSpellTargetFill(hole, spellId, casterId, targetId);
+  return {
+    ...base,
+    spatialFacts: [
+      ...(base.spatialFacts ?? []),
+      {
+        kind: "wardingBondPairedWornPlatinumRings",
+        casterId,
+        targetId,
+        sourceProcedureRef,
+      },
+      {
+        kind: "wardingBondCreaturesDistance",
+        casterId,
+        targetId,
+        sourceProcedureRef,
+        distanceFeet: movementFeet(60),
+      },
+    ],
+  };
+}
+
+export function teleportDestinationFill(input: {
+  readonly hole: Extract<BattleHole, { readonly kind: "teleportDestination" }>;
+  readonly destinationId?: string;
+  readonly distanceFeet?: number;
+  readonly antimagicFieldTransit?: readonly BattleAntimagicFieldTransitWitness[];
+}): Extract<BattleFill, { readonly kind: "teleportDestination" }> {
+  return {
+    kind: "teleportDestination",
+    holeId: input.hole.holeId,
+    value: {
+      kind: "unoccupiedVisibleDestination",
+      actorId: input.hole.actorId,
+      sourceProcedureRef: battleProcedureExecutionRefForSpellHoleForTest(
+        input.hole,
+      ),
+      destinationId: battleTablePositionId(
+        input.destinationId ?? "misty-step-destination",
+      ),
+      distanceFeet: movementFeet(input.distanceFeet ?? 30),
+      antimagicFieldTransit: input.antimagicFieldTransit ?? [],
+    },
+  };
+}
+
+export type ObjectTargetChoiceFill = Extract<
+  BattleFill,
+  { readonly kind: "objectTargetChoice" }
+>;
+
+export function spellObjectTargetFill(input: {
+  readonly hole: Extract<BattleHole, { readonly kind: "objectTargetChoice" }>;
+  readonly objectId?: ObjectTargetChoiceFill["value"];
+  readonly spellId: string;
+  readonly casterId: CombatantId;
+  readonly rangeFeet?: ReturnType<typeof movementFeet>;
+  readonly damageDisposition?: BattleObjectDamageDisposition;
+  readonly ignitionDisposition?: BattleObjectIgnitionDisposition;
+  readonly attackerCanSeeObject?: boolean;
+}): ObjectTargetChoiceFill {
+  const objectId = input.objectId ?? battleObjectId("produce-flame-object");
+  const sourceProcedureRef = battleProcedureExecutionRefForSpellHoleForTest(
+    input.hole,
+  );
+  return {
+    kind: "objectTargetChoice",
+    holeId: input.hole.holeId,
+    value: objectId,
+    spatialFacts: [
+      {
+        kind: "spellObjectTarget",
+        casterId: input.casterId,
+        objectId,
+        sourceProcedureRef,
+        rangeFeet: input.rangeFeet ?? movementFeet(60),
+        armorClass: armorClass(13),
+        damageDisposition: input.damageDisposition ?? { kind: "tableResolved" },
+      },
+      ...(input.ignitionDisposition === undefined
+        ? []
+        : [
+            {
+              kind: "spellObjectIgnition" as const,
+              casterId: input.casterId,
+              objectId,
+              sourceProcedureRef,
+              disposition: input.ignitionDisposition,
+            },
+          ]),
+      ...(input.attackerCanSeeObject === undefined
+        ? []
+        : [
+            {
+              kind: "spellObjectTargetSight" as const,
+              casterId: input.casterId,
+              objectId,
+              sourceProcedureRef,
+              attackerCanSeeObject: input.attackerCanSeeObject,
+            },
+          ]),
+    ],
+  };
+}
+
+export function spellManufacturedMetalObjectTargetFill(input: {
+  readonly hole: Extract<BattleHole, { readonly kind: "objectTargetChoice" }>;
+  readonly objectId?: ObjectTargetChoiceFill["value"];
+  readonly spellId: string;
+  readonly casterId: CombatantId;
+  readonly rangeFeet?: ReturnType<typeof movementFeet>;
+}): ObjectTargetChoiceFill {
+  const objectId = input.objectId ?? battleObjectId("heat-metal-object");
+  const sourceProcedureRef = battleProcedureExecutionRefForSpellHoleForTest(
+    input.hole,
+  );
+  return {
+    kind: "objectTargetChoice",
+    holeId: input.hole.holeId,
+    value: objectId,
+    spatialFacts: [
+      {
+        kind: "spellManufacturedMetalObjectTarget",
+        casterId: input.casterId,
+        objectId,
+        sourceProcedureRef,
+        rangeFeet: input.rangeFeet ?? movementFeet(60),
+        casterCanSeeObject: true,
+      },
+    ],
+  };
+}
+
+export function spellObjectContactTargetsFill(input: {
+  readonly hole: Extract<BattleHole, { readonly kind: "objectContactTargets" }>;
+  readonly targetIds: readonly CombatantId[];
+  readonly holdingOrWearing?: ReadonlyMap<CombatantId, "holding" | "wearing">;
+}): Extract<BattleFill, { readonly kind: "objectContactTargets" }> {
+  return {
+    kind: "objectContactTargets",
+    holeId: input.hole.holeId,
+    value: { targetIds: input.targetIds },
+    spatialFacts: [
+      ...(input.hole.objectContact.requiresObjectWithinRange
+        ? [
+            {
+              kind: "spellObjectWithinSpellRange" as const,
+              sourceCombatantId: input.hole.objectContact.sourceCombatantId,
+              sourceProcedureRef: input.hole.objectContact.sourceProcedureRef,
+              objectId: input.hole.objectContact.objectId,
+              rangeFeet: input.hole.objectContact.rangeFeet,
+            },
+          ]
+        : []),
+      ...input.targetIds.map((targetId) => ({
+        kind: "spellObjectPhysicalContact" as const,
+        sourceCombatantId: input.hole.objectContact.sourceCombatantId,
+        sourceProcedureRef: input.hole.objectContact.sourceProcedureRef,
+        objectId: input.hole.objectContact.objectId,
+        targetId,
+      })),
+      ...input.targetIds.flatMap((targetId) => {
+        const relation = input.holdingOrWearing?.get(targetId);
+        return relation === undefined
+          ? []
+          : [
+              {
+                kind: "spellObjectHoldingOrWearing" as const,
+                sourceCombatantId: input.hole.objectContact.sourceCombatantId,
+                sourceProcedureRef: input.hole.objectContact.sourceProcedureRef,
+                objectId: input.hole.objectContact.objectId,
+                targetId,
+                relation,
+              },
+            ];
+      }),
+    ],
+  };
+}
+
+export function objectDropResolutionFill(
+  hole: Extract<BattleHole, { readonly kind: "objectDropResolution" }>,
+  outcomes: Extract<
+    BattleFill,
+    { readonly kind: "objectDropResolution" }
+  >["value"]["outcomes"],
+): Extract<BattleFill, { readonly kind: "objectDropResolution" }> {
+  return {
+    kind: "objectDropResolution",
+    holeId: hole.holeId,
+    value: { outcomes },
+  };
+}
+
+export function spellObjectLightTargetFill(input: {
+  readonly hole: Extract<BattleHole, { readonly kind: "objectTargetChoice" }>;
+  readonly objectId?: ObjectTargetChoiceFill["value"];
+  readonly spellId: string;
+  readonly casterId: CombatantId;
+  readonly size?: Size;
+  readonly wornOrCarried?: Extract<
+    BattleTargetSpatialFact,
+    { readonly kind: "spellObjectLightTarget" }
+  >["wornOrCarried"];
+}): ObjectTargetChoiceFill {
+  const objectId = input.objectId ?? battleObjectId("light-object");
+  const sourceProcedureRef = battleProcedureExecutionRefForSpellHoleForTest(
+    input.hole,
+  );
+  return {
+    kind: "objectTargetChoice",
+    holeId: input.hole.holeId,
+    value: objectId,
+    spatialFacts: [
+      {
+        kind: "spellObjectLightTarget",
+        casterId: input.casterId,
+        objectId,
+        sourceProcedureRef,
+        size: input.size ?? "medium",
+        wornOrCarried: input.wornOrCarried ?? { kind: "nobody" },
+      },
+    ],
+  };
+}
+
+export function spellDistantObjectLightTargetFill(input: {
+  readonly hole: Extract<BattleHole, { readonly kind: "objectTargetChoice" }>;
+  readonly objectId?: ObjectTargetChoiceFill["value"];
+  readonly spellId: string;
+  readonly casterId: CombatantId;
+  readonly rangeFeet: Extract<
+    BattleTargetSpatialFact,
+    { readonly kind: "spellDistantObjectLightTarget" }
+  >["rangeFeet"];
+  readonly size?: Size;
+  readonly wornOrCarried?: Extract<
+    BattleTargetSpatialFact,
+    { readonly kind: "spellDistantObjectLightTarget" }
+  >["wornOrCarried"];
+}): ObjectTargetChoiceFill {
+  const objectId = input.objectId ?? battleObjectId("distant-light-object");
+  const sourceProcedureRef = battleProcedureExecutionRefForSpellHoleForTest(
+    input.hole,
+  );
+  return {
+    kind: "objectTargetChoice",
+    holeId: input.hole.holeId,
+    value: objectId,
+    spatialFacts: [
+      {
+        kind: "spellDistantObjectLightTarget",
+        casterId: input.casterId,
+        objectId,
+        sourceProcedureRef,
+        rangeFeet: input.rangeFeet,
+        size: input.size ?? "medium",
+        wornOrCarried: input.wornOrCarried ?? { kind: "nobody" },
+      },
+    ],
+  };
+}
+
+export function spellTouchedObjectTargetFill(input: {
+  readonly hole: Extract<BattleHole, { readonly kind: "objectTargetChoice" }>;
+  readonly objectId?: ObjectTargetChoiceFill["value"];
+  readonly spellId: string;
+  readonly casterId: CombatantId;
+}): ObjectTargetChoiceFill {
+  const objectId = input.objectId ?? battleObjectId("touched-object");
+  const sourceProcedureRef = battleProcedureExecutionRefForSpellHoleForTest(
+    input.hole,
+  );
+  return {
+    kind: "objectTargetChoice",
+    holeId: input.hole.holeId,
+    value: objectId,
+    spatialFacts: [
+      {
+        kind: "spellTouchedObjectTarget",
+        casterId: input.casterId,
+        objectId,
+        sourceProcedureRef,
+      },
+    ],
+  };
+}
+
+export function spellDistantTouchedObjectTargetFill(input: {
+  readonly hole: Extract<BattleHole, { readonly kind: "objectTargetChoice" }>;
+  readonly objectId?: ObjectTargetChoiceFill["value"];
+  readonly spellId: string;
+  readonly casterId: CombatantId;
+  readonly rangeFeet: Extract<
+    BattleTargetSpatialFact,
+    { readonly kind: "spellDistantTouchedObjectTarget" }
+  >["rangeFeet"];
+}): ObjectTargetChoiceFill {
+  const objectId = input.objectId ?? battleObjectId("distant-touched-object");
+  const sourceProcedureRef = battleProcedureExecutionRefForSpellHoleForTest(
+    input.hole,
+  );
+  return {
+    kind: "objectTargetChoice",
+    holeId: input.hole.holeId,
+    value: objectId,
+    spatialFacts: [
+      {
+        kind: "spellDistantTouchedObjectTarget",
+        casterId: input.casterId,
+        objectId,
+        sourceProcedureRef,
+        rangeFeet: input.rangeFeet,
+      },
+    ],
+  };
+}
+
+export function spellTargetListFill(
+  hole: Extract<BattleHole, { readonly kind: "spellTargetList" }>,
+  casterId: CombatantId,
+  spellId: string,
+  targetIds: readonly CombatantId[],
+  relationshipFacts?: readonly [
+    BattleSpellTargetListRelationshipFact,
+    ...BattleSpellTargetListRelationshipFact[],
+  ],
+): Extract<BattleFill, { readonly kind: "spellTargetList" }> {
+  const sourceProcedureRef =
+    battleProcedureExecutionRefForSpellHoleForTest(hole);
+  const relationshipFactRequest = hole.relationshipFactRequest;
+  const selectedRelationshipFacts =
+    relationshipFacts ??
+    (relationshipFactRequest?.kind === "spellTargetIsHostileToCaster" &&
+    targetIds[0] !== undefined
+      ? [
+          {
+            kind: "spellTargetIsHostileToCaster" as const,
+            casterId: relationshipFactRequest.casterId,
+            targetId: targetIds[0],
+            sourceProcedureRef: relationshipFactRequest.sourceProcedureRef,
+            targetIsHostileToCaster: true,
+          },
+          ...targetIds.slice(1).map((targetId) => ({
+            kind: "spellTargetIsHostileToCaster" as const,
+            casterId: relationshipFactRequest.casterId,
+            targetId,
+            sourceProcedureRef: relationshipFactRequest.sourceProcedureRef,
+            targetIsHostileToCaster: true,
+          })),
+        ]
+      : undefined);
+  if (hole.spatialTargeting.kind === "pointOriginSphere") {
+    return {
+      kind: "spellTargetList",
+      holeId: hole.holeId,
+      value: { targetIds },
+      ...(selectedRelationshipFacts === undefined
+        ? {}
+        : { relationshipFacts: selectedRelationshipFacts }),
+      spatialFacts: [
+        {
+          kind: "spellTargetsInPointOriginSphere",
+          casterId,
+          sourceProcedureRef,
+          areaId: battleAreaId(`test:${spellId}:point-origin-sphere`),
+          radiusFeet: hole.spatialTargeting.radiusFeet,
+          targetIds,
+        },
+      ],
+    };
+  }
+  return {
+    kind: "spellTargetList",
+    holeId: hole.holeId,
+    value: { targetIds },
+    ...(selectedRelationshipFacts === undefined
+      ? {}
+      : { relationshipFacts: selectedRelationshipFacts }),
+    spatialFacts: [
+      ...targetIds.map((targetId) => ({
+        kind: "spellTarget" as const,
+        casterId,
+        targetId,
+        sourceProcedureRef,
+      })),
+    ],
+  };
+}
+
+export function knownWillingSpellTargetListFill(
+  hole: Extract<BattleHole, { readonly kind: "spellTargetList" }>,
+  casterId: CombatantId,
+  _spellId: string,
+  targetIds: readonly CombatantId[],
+): Extract<BattleFill, { readonly kind: "spellTargetList" }> {
+  const sourceProcedureRef =
+    battleProcedureExecutionRefForSpellHoleForTest(hole);
+  return {
+    kind: "spellTargetList",
+    holeId: hole.holeId,
+    value: { targetIds },
+    spatialFacts: targetIds.flatMap((targetId) => [
+      {
+        kind: "spellTarget" as const,
+        casterId,
+        targetId,
+        sourceProcedureRef,
+      },
+      {
+        kind: "spellTargetKnownWilling" as const,
+        casterId,
+        targetId,
+        sourceProcedureRef,
+      },
+    ]),
+  };
+}
+
+export function jumpSpellTargetListFill(
+  hole: Extract<BattleHole, { readonly kind: "spellTargetList" }>,
+  casterId: CombatantId,
+  spellId: string,
+  targetIds: readonly CombatantId[],
+): Extract<BattleFill, { readonly kind: "spellTargetList" }> {
+  return knownWillingSpellTargetListFill(hole, casterId, spellId, targetIds);
+}
+
+export function savingThrowOutcomeFill(
+  hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>,
+  outcomes: readonly {
+    readonly targetId: CombatantId;
+    readonly succeeded: boolean;
+    readonly naturalD20?: number;
+    readonly withoutRoll?: true;
+    readonly d20TestNaturalOneReroll?: Extract<
+      BattleFill,
+      { readonly kind: "savingThrowOutcome" }
+    >["value"]["outcomes"][number]["d20TestNaturalOneReroll"];
+  }[],
+): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
+  const projectedOutcomes = outcomes.map(d20TestSavingThrowOutcomeValue);
+  const relationshipFactRequest =
+    "relationshipFactRequest" in hole
+      ? hole.relationshipFactRequest
+      : undefined;
+  const relationshipFacts =
+    relationshipFactRequest?.kind === "savingThrowTargetIsEnemy" &&
+    outcomes[0] !== undefined
+      ? ([
+          {
+            kind: "savingThrowTargetIsEnemy" as const,
+            actorId: relationshipFactRequest.actorId,
+            targetId: outcomes[0].targetId,
+            targetIsEnemy: true,
+          },
+          ...outcomes.slice(1).map((outcome) => ({
+            kind: "savingThrowTargetIsEnemy" as const,
+            actorId: relationshipFactRequest.actorId,
+            targetId: outcome.targetId,
+            targetIsEnemy: true,
+          })),
+        ] as const)
+      : undefined;
+  return {
+    kind: "savingThrowOutcome",
+    holeId: hole.holeId,
+    ...(relationshipFacts === undefined ? {} : { relationshipFacts }),
+    value:
+      "outcomeTargeting" in hole && hole.outcomeTargeting === "area"
+        ? {
+            area: {
+              originAnchorId: spellCasterId,
+              affectedTargetIds: outcomes.map((outcome) => outcome.targetId),
+            },
+            outcomes: projectedOutcomes,
+          }
+        : { outcomes: projectedOutcomes },
+  };
+}
+
+function d20TestSavingThrowOutcomeValue(outcome: {
+  readonly targetId: CombatantId;
+  readonly succeeded: boolean;
+  readonly naturalD20?: number;
+  readonly withoutRoll?: true;
+  readonly d20TestNaturalOneReroll?: Extract<
+    BattleFill,
+    { readonly kind: "savingThrowOutcome" }
+  >["value"]["outcomes"][number]["d20TestNaturalOneReroll"];
+}): Extract<
+  BattleFill,
+  { readonly kind: "savingThrowOutcome" }
+>["value"]["outcomes"][number] {
+  if (outcome.withoutRoll === true) {
+    return {
+      targetId: outcome.targetId,
+      succeeded: outcome.succeeded,
+      withoutRoll: true,
+    };
+  }
+  return {
+    targetId: outcome.targetId,
+    succeeded: outcome.succeeded,
+    ...(outcome.naturalD20 === undefined
+      ? {}
+      : { naturalD20: DieRollResult(outcome.naturalD20) }),
+    ...(outcome.d20TestNaturalOneReroll === undefined
+      ? {}
+      : { d20TestNaturalOneReroll: outcome.d20TestNaturalOneReroll }),
+  };
+}
+
+export function spellConditionChoiceFill(
+  hole: BattleSpellConditionChoiceHole,
+  value: BattleSpellConditionChoiceHole["choices"][number],
+): Extract<BattleFill, { readonly kind: "conditionChoice" }> {
+  return {
+    kind: "conditionChoice",
+    holeId: hole.holeId,
+    value,
+  };
+}
+
+export function faerieFireObjectOutlineFill(
+  hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>,
+  affectedObjectIds: readonly ReturnType<typeof battleObjectId>[],
+): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
+  return {
+    kind: "savingThrowOutcome",
+    holeId: hole.holeId,
+    value: {
+      area: {
+        kind: "faerieFireArea",
+        originAnchorId: spellCasterId,
+        affectedTargetIds: [],
+        affectedObjectIds,
+      },
+      outcomes: [],
+    },
+  };
+}
+
+export function thunderwaveSavingThrowOutcomeFill(
+  hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>,
+  outcomes: readonly {
+    readonly targetId: CombatantId;
+    readonly succeeded: boolean;
+  }[],
+): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
+  return {
+    kind: "savingThrowOutcome",
+    holeId: hole.holeId,
+    value: {
+      area: thunderwaveArea(
+        outcomes.map((outcome) => outcome.targetId),
+        outcomes.flatMap((outcome) =>
+          outcome.succeeded ? [] : [outcome.targetId],
+        ),
+      ),
+      outcomes,
+    },
+  };
+}
+
+export function thunderwaveArea(
+  affectedTargetIds: readonly CombatantId[],
+  failedTargetIds: readonly CombatantId[],
+): Extract<BattleSpellAreaChoice, { readonly kind: "thunderwaveArea" }> {
+  return {
+    kind: "thunderwaveArea",
+    originAnchorId: spellCasterId,
+    affectedTargetIds,
+    creaturePushes: failedTargetIds.map((targetId) => ({
+      targetId,
+      disposition: {
+        kind: "pushed" as const,
+        distanceFeet: movementFeet(10),
+        destinationId: battleTablePositionId(`pushed:${targetId}`),
+        provokesOpportunityAttacks: false as const,
+      },
+    })),
+    unsecuredObjectPushes: [
+      {
+        objectId: thunderwaveObjectId,
+        disposition: {
+          kind: "pushed",
+          distanceFeet: movementFeet(10),
+          destinationId: battleTablePositionId("pushed:thunderwave-object"),
+          provokesOpportunityAttacks: false,
+        },
+      },
+    ],
+    audibleBoom: {
+      sound: "thunderous boom",
+      audibleRadiusFeet: movementFeet(300),
+    },
+  };
+}
+
+export function greaseSavingThrowOutcomeFill(
+  hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>,
+  outcomes: readonly {
+    readonly targetId: CombatantId;
+    readonly succeeded: boolean;
+  }[],
+): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
+  return {
+    kind: "savingThrowOutcome",
+    holeId: hole.holeId,
+    value: {
+      area: {
+        kind: "greaseGroundArea",
+        areaId: greaseAreaId,
+        originAnchorId: spellCasterId,
+        affectedTargetIds: outcomes.map((outcome) => outcome.targetId),
+      },
+      outcomes,
+    },
+  };
+}
+
+export function gustOfWindLineSavingThrowOutcomeFill(
+  hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>,
+  outcomes: readonly {
+    readonly targetId: CombatantId;
+    readonly succeeded: boolean;
+  }[],
+  options: {
+    readonly areaId?: BattleAreaId;
+    readonly directionId?: BattleLineDirectionId;
+    readonly creaturePushes?: Extract<
+      BattleSpellAreaChoice,
+      { readonly kind: "gustOfWindLineArea" }
+    >["creaturePushes"];
+  } = {},
+): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
+  const failedTargetIds = outcomes.flatMap((outcome) =>
+    outcome.succeeded ? [] : [outcome.targetId],
+  );
+  return {
+    kind: "savingThrowOutcome",
+    holeId: hole.holeId,
+    value: {
+      area: {
+        kind: "gustOfWindLineArea",
+        areaId: options.areaId ?? gustOfWindAreaId,
+        directionId: options.directionId ?? gustOfWindNorthDirectionId,
+        originAnchorId: spellCasterId,
+        affectedTargetIds: outcomes.map((outcome) => outcome.targetId),
+        creaturePushes:
+          options.creaturePushes ??
+          failedTargetIds.map((targetId) => ({
+            targetId,
+            disposition: {
+              kind: "pushed" as const,
+              distanceFeet: movementFeet(15),
+              destinationId: battleTablePositionId(
+                `pushed:gust-of-wind:${targetId}`,
+              ),
+              provokesOpportunityAttacks: false as const,
+            },
+          })),
+      },
+      outcomes,
+    },
+  };
+}
+
+export function gustOfWindLineDirectionChoiceFill(
+  hole: Extract<BattleHole, { readonly kind: "gustOfWindLineDirectionChoice" }>,
+  directionId: BattleLineDirectionId = gustOfWindEastDirectionId,
+): Extract<BattleFill, { readonly kind: "gustOfWindLineDirectionChoice" }> {
+  return {
+    kind: "gustOfWindLineDirectionChoice",
+    holeId: hole.holeId,
+    value: { directionId },
+  };
+}
+
+export function flamingSphereAreaFill(
+  hole: Extract<BattleHole, { readonly kind: "spellAreaChoice" }>,
+  areaId = flamingSphereAreaId,
+  originAnchor: BattleSpellAreaOriginAnchor = tableSelectedPointAreaOriginAnchor,
+): Extract<BattleFill, { readonly kind: "spellAreaChoice" }> {
+  return {
+    kind: "spellAreaChoice",
+    holeId: hole.holeId,
+    value: { kind: "flamingSphereArea", areaId, originAnchor },
+  };
+}
+
+export function spikeGrowthAreaFill(
+  hole: Extract<BattleHole, { readonly kind: "spellAreaChoice" }>,
+  areaId = spikeGrowthAreaId,
+  originAnchor: BattleSpellAreaOriginAnchor = tableSelectedPointAreaOriginAnchor,
+): Extract<BattleFill, { readonly kind: "spellAreaChoice" }> {
+  return {
+    kind: "spellAreaChoice",
+    holeId: hole.holeId,
+    value: { kind: "spikeGrowthArea", areaId, originAnchor },
+  };
+}
+
+export function moonbeamAreaFill(
+  hole: Extract<BattleHole, { readonly kind: "spellAreaChoice" }>,
+  areaId = moonbeamAreaId,
+  originAnchor: BattleSpellAreaOriginAnchor = tableSelectedPointAreaOriginAnchor,
+): Extract<BattleFill, { readonly kind: "spellAreaChoice" }> {
+  return {
+    kind: "spellAreaChoice",
+    holeId: hole.holeId,
+    value: { kind: "moonbeamCylinderArea", areaId, originAnchor },
+  };
+}
+
+export function sleetStormAreaFill(
+  hole: Extract<BattleHole, { readonly kind: "spellAreaChoice" }>,
+  areaId = sleetStormAreaId,
+): Extract<BattleFill, { readonly kind: "spellAreaChoice" }> {
+  return {
+    kind: "spellAreaChoice",
+    holeId: hole.holeId,
+    value: { kind: "sleetStormCylinderArea", areaId },
+  };
+}
+
+export function insectPlagueAreaFill(
+  hole: Extract<BattleHole, { readonly kind: "spellAreaChoice" }>,
+  areaId = insectPlagueAreaId,
+): Extract<BattleFill, { readonly kind: "spellAreaChoice" }> {
+  return {
+    kind: "spellAreaChoice",
+    holeId: hole.holeId,
+    value: { kind: "insectPlagueSphereArea", areaId },
+  };
+}
+
+export function cloudkillAreaFill(
+  hole: Extract<BattleHole, { readonly kind: "spellAreaChoice" }>,
+  areaId = cloudkillAreaId,
+): Extract<BattleFill, { readonly kind: "spellAreaChoice" }> {
+  return {
+    kind: "spellAreaChoice",
+    holeId: hole.holeId,
+    value: { kind: "cloudkillSphereArea", areaId },
+  };
+}
+
+export function webAreaFill(
+  hole: Extract<BattleHole, { readonly kind: "spellAreaChoice" }>,
+  areaId = webAreaId,
+  originAnchor: BattleSpellAreaOriginAnchor = tableSelectedPointAreaOriginAnchor,
+): Extract<BattleFill, { readonly kind: "spellAreaChoice" }> {
+  return {
+    kind: "spellAreaChoice",
+    holeId: hole.holeId,
+    value: { kind: "webCubeArea", areaId, originAnchor },
+  };
+}
+
+export function flamingSphereRamMovementFill(
+  hole: Extract<BattleHole, { readonly kind: "movableZoneRamMovement" }>,
+  moveFeet = 30,
+): Extract<BattleFill, { readonly kind: "movableZoneRamMovement" }> {
+  return {
+    kind: "movableZoneRamMovement",
+    holeId: hole.holeId,
+    value: { moveFeet: movementFeet(moveFeet) },
+  };
+}
+
+export function flamingSphereRepositionMovementFill(
+  hole: Extract<BattleHole, { readonly kind: "movableZoneRepositionMovement" }>,
+  moveFeet = 30,
+): Extract<BattleFill, { readonly kind: "movableZoneRepositionMovement" }> {
+  return {
+    kind: "movableZoneRepositionMovement",
+    holeId: hole.holeId,
+    value: { moveFeet: movementFeet(moveFeet) },
+  };
+}
+
+export function singleTargetSavingThrowOutcomeFill(
+  hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>,
+  targetId: CombatantId,
+  succeeded: boolean,
+): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
+  return {
+    kind: "savingThrowOutcome",
+    holeId: hole.holeId,
+    value: { outcomes: [{ targetId, succeeded }] },
+  };
+}
+
+export function commandApproachMovementFill(
+  hole: Extract<BattleHole, { readonly kind: "movement" }>,
+  value: {
+    readonly movementCostFeet: number;
+    readonly movedWithinFiveFeetOfCaster: boolean;
+  },
+): Extract<BattleFill, { readonly kind: "movement" }> {
+  return {
+    kind: "movement",
+    holeId: hole.holeId,
+    value: {
+      speedKind: "walk",
+      movementCostFeet: movementFeet(value.movementCostFeet),
+      provokedOpportunityAttacks: [],
+      commandApproach: {
+        kind: "commandApproachShortestDirectRouteTowardCaster",
+        movedWithinFiveFeetOfCaster: value.movedWithinFiveFeetOfCaster,
+      },
+    },
+  };
+}
+
+export function commandFleeMovementFill(
+  hole: Extract<BattleHole, { readonly kind: "movement" }>,
+  value: {
+    readonly movementCostFeet: number;
+    readonly provokedOpportunityAttacks: Extract<
+      BattleFill,
+      { readonly kind: "movement" }
+    >["value"]["provokedOpportunityAttacks"];
+  },
+): Extract<BattleFill, { readonly kind: "movement" }> {
+  return {
+    kind: "movement",
+    holeId: hole.holeId,
+    value: {
+      speedKind: "walk",
+      movementCostFeet: movementFeet(value.movementCostFeet),
+      provokedOpportunityAttacks: value.provokedOpportunityAttacks,
+      commandFlee: {
+        kind: "commandFleeFastestAvailableRouteAwayFromCaster",
+      },
+    },
+  };
+}
+
+export function greaseGroundHazardSaveAct(
+  session: BattleRuntimeSession,
+  actorId: CombatantId,
+  trigger: "entersArea" | "endsTurnInArea",
+): AvailableBattleAct & {
+  readonly subject: Extract<
+    BattleSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "greaseGroundHazardSave";
+    }
+  >;
+} {
+  const act = discoverBattleActs(session).find(
+    (
+      candidate,
+    ): candidate is AvailableBattleAct & {
+      readonly subject: Extract<
+        BattleSubject,
+        {
+          readonly tag: "runtimeCommand";
+          readonly command: "greaseGroundHazardSave";
+        }
+      >;
+    } =>
+      candidate.subject.tag === "runtimeCommand" &&
+      candidate.subject.command === "greaseGroundHazardSave" &&
+      candidate.subject.actorId === actorId &&
+      candidate.subject.trigger === trigger &&
+      candidate.subject.areaId === greaseAreaId,
+  );
+  if (act === undefined) {
+    throw new Error(`Expected Grease ${trigger} save act.`);
+  }
+  return act;
+}
+
+export function greaseGroundHazardEndTurnAct(
+  session: BattleRuntimeSession,
+  actorId: CombatantId,
+): ReturnType<typeof greaseGroundHazardSaveAct> {
+  return greaseGroundHazardSaveAct(session, actorId, "endsTurnInArea");
+}
+
+export function webRestraintSaveAct(
+  session: BattleRuntimeSession,
+  actorId: CombatantId,
+  trigger: "entersArea" | "startsTurnInArea",
+): AvailableBattleAct & {
+  readonly subject: Extract<
+    BattleSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "webRestraintSave";
+    }
+  >;
+} {
+  const act = discoverBattleActs(session).find(
+    (
+      candidate,
+    ): candidate is AvailableBattleAct & {
+      readonly subject: Extract<
+        BattleSubject,
+        {
+          readonly tag: "runtimeCommand";
+          readonly command: "webRestraintSave";
+        }
+      >;
+    } =>
+      candidate.subject.tag === "runtimeCommand" &&
+      candidate.subject.command === "webRestraintSave" &&
+      candidate.subject.actorId === actorId &&
+      candidate.subject.trigger === trigger &&
+      candidate.subject.areaId === webAreaId,
+  );
+  if (act === undefined) {
+    throw new Error(`Expected Web ${trigger} save act.`);
+  }
+  return act;
+}
+
+export function sleetStormAreaHazardSaveAct(
+  state: BattleState,
+  actorId: CombatantId,
+  trigger: BattleSleetStormAreaHazardTrigger,
+): AvailableBattleAct & {
+  readonly subject: Extract<
+    BattleSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "sleetStormAreaHazardSave";
+    }
+  >;
+} {
+  const effect = activeSleetStormAreaHazardEffect(state);
+  if (effect === undefined) {
+    throw new Error("Expected active Sleet Storm area hazard.");
+  }
+  const subject: Extract<
+    BattleSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "sleetStormAreaHazardSave";
+    }
+  > = {
+    tag: "runtimeCommand",
+    actorId,
+    command: "sleetStormAreaHazardSave",
+    areaMembershipTrigger: {
+      kind: trigger === "entersArea" ? "firstEntryOnTurn" : "turnStartInArea",
+      areaId: effect.areaId,
+    },
+  };
+  return {
+    presentation: { kind: "intrinsic" },
+    subject,
+    label:
+      trigger === "entersArea"
+        ? "Enter Sleet Storm"
+        : "Start Turn in Sleet Storm",
+    summary:
+      trigger === "entersArea"
+        ? "Resolve the caller-supplied first-entry Sleet Storm Dexterity Saving Throw."
+        : "Resolve the caller-supplied start-turn Sleet Storm Dexterity Saving Throw.",
+    initialHoles: [
+      sleetStormAreaHazardSavingThrowOutcomeHole(
+        state,
+        actorId,
+        effect,
+        trigger,
+      ),
+    ],
+  };
+}
+
+export function insectPlagueAreaHazardSaveAct(
+  session: BattleRuntimeSession,
+  actorId: CombatantId,
+  trigger: BattleInsectPlagueAreaHazardTrigger,
+): AvailableBattleAct & {
+  readonly subject: Extract<
+    BattleSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "insectPlagueAreaHazardSave";
+    }
+  >;
+} {
+  const effect = activeInsectPlagueAreaHazardEffect(session.state);
+  if (effect === undefined) {
+    throw new Error("Expected active Insect Plague area hazard.");
+  }
+  const subject: Extract<
+    BattleSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "insectPlagueAreaHazardSave";
+    }
+  > = {
+    tag: "runtimeCommand",
+    actorId,
+    command: "insectPlagueAreaHazardSave",
+    areaMembershipTrigger: {
+      kind:
+        trigger === "appearsInArea"
+          ? "appearsInArea"
+          : trigger === "entersArea"
+            ? "firstEntryOnTurn"
+            : "turnEndInArea",
+      areaId: effect.areaId,
+    },
+  };
+  return {
+    presentation: { kind: "intrinsic" },
+    subject,
+    label:
+      trigger === "appearsInArea"
+        ? "Insect Plague Appears"
+        : trigger === "entersArea"
+          ? "Enter Insect Plague"
+          : "End Turn in Insect Plague",
+    summary:
+      "Resolve the caller-supplied Insect Plague Constitution Saving Throw and Piercing damage.",
+    initialHoles: [
+      insectPlagueAreaHazardSavingThrowOutcomeHole(
+        session.state,
+        actorId,
+        effect,
+        trigger,
+      ),
+    ],
+  };
+}
+
+export function cloudkillAreaHazardSaveAct(
+  session: BattleRuntimeSession,
+  actorId: CombatantId,
+  trigger: BattleCloudkillAreaHazardTrigger,
+): AvailableBattleAct & {
+  readonly subject: Extract<
+    BattleSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "cloudkillAreaHazardSave";
+    }
+  >;
+} {
+  const effect = activeCloudkillAreaHazardEffect(session.state);
+  if (effect === undefined) {
+    throw new Error("Expected active Cloudkill area hazard.");
+  }
+  const subject: Extract<
+    BattleSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "cloudkillAreaHazardSave";
+    }
+  > = {
+    tag: "runtimeCommand",
+    actorId,
+    command: "cloudkillAreaHazardSave",
+    areaMembershipTrigger: {
+      kind:
+        trigger === "appearsInArea"
+          ? "appearsInArea"
+          : trigger === "movesIntoSpace"
+            ? "areaMovesIntoSpace"
+            : trigger === "entersArea"
+              ? "firstEntryOnTurn"
+              : "turnEndInArea",
+      areaId: effect.areaId,
+    },
+  };
+  return {
+    presentation: { kind: "intrinsic" },
+    subject,
+    label:
+      trigger === "appearsInArea"
+        ? "Cloudkill Appears"
+        : trigger === "movesIntoSpace"
+          ? "Cloudkill Moves Into Space"
+          : trigger === "entersArea"
+            ? "Enter Cloudkill"
+            : "End Turn in Cloudkill",
+    summary:
+      "Resolve the caller-supplied Cloudkill Constitution Saving Throw and Poison damage.",
+    initialHoles: [
+      cloudkillAreaHazardSavingThrowOutcomeHole(
+        session.state,
+        actorId,
+        effect,
+        trigger,
+      ),
+    ],
+  };
+}
+
+function activeInsectPlagueAreaHazardEffect(
+  state: BattleState,
+): InsectPlagueAreaHazardEffect | undefined {
+  return [...state.combatants.values()]
+    .flatMap((combatant) => combatant.activeEffects)
+    .find(
+      (effect): effect is InsectPlagueAreaHazardEffect =>
+        effect.kind === "insectPlagueAreaHazard" &&
+        effect.sourceCombatantId === spellCasterId &&
+        effect.areaId === insectPlagueAreaId,
+    );
+}
+
+function activeCloudkillAreaHazardEffect(
+  state: BattleState,
+): CloudkillAreaHazardEffect | undefined {
+  return [...state.combatants.values()]
+    .flatMap((combatant) => combatant.activeEffects)
+    .find(
+      (effect): effect is CloudkillAreaHazardEffect =>
+        effect.kind === "cloudkillAreaHazard" &&
+        effect.sourceCombatantId === spellCasterId &&
+        effect.areaId === cloudkillAreaId,
+    );
+}
+
+function activeSleetStormAreaHazardEffect(
+  state: BattleState,
+): SleetStormAreaHazardEffect | undefined {
+  return [...state.combatants.values()]
+    .flatMap((combatant) => combatant.activeEffects)
+    .find(
+      (effect): effect is SleetStormAreaHazardEffect =>
+        effect.kind === "sleetStormAreaHazard" &&
+        effect.sourceCombatantId === spellCasterId &&
+        effect.areaId === sleetStormAreaId,
+    );
+}
+
+export function webRestrainedNoLongerInAreaAct(
+  session: BattleRuntimeSession,
+  actorId: CombatantId,
+): AvailableBattleAct & {
+  readonly subject: Extract<
+    BattleSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "webRestrainedNoLongerInArea";
+    }
+  >;
+} {
+  const act = discoverBattleActs(session).find(
+    (
+      candidate,
+    ): candidate is AvailableBattleAct & {
+      readonly subject: Extract<
+        BattleSubject,
+        {
+          readonly tag: "runtimeCommand";
+          readonly command: "webRestrainedNoLongerInArea";
+        }
+      >;
+    } =>
+      candidate.subject.tag === "runtimeCommand" &&
+      candidate.subject.command === "webRestrainedNoLongerInArea" &&
+      candidate.subject.actorId === actorId &&
+      candidate.subject.areaId === webAreaId,
+  );
+  if (act === undefined) {
+    throw new Error("Expected Web no-longer-in-area cleanup act.");
+  }
+  return act;
+}
+
+export function webAreaRemovedAct(
+  session: BattleRuntimeSession,
+): AvailableBattleAct & {
+  readonly subject: Extract<
+    BattleSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "webAreaRemoved";
+    }
+  >;
+} {
+  const act = discoverBattleActs(session).find(
+    (
+      candidate,
+    ): candidate is AvailableBattleAct & {
+      readonly subject: Extract<
+        BattleSubject,
+        {
+          readonly tag: "runtimeCommand";
+          readonly command: "webAreaRemoved";
+        }
+      >;
+    } =>
+      candidate.subject.tag === "runtimeCommand" &&
+      candidate.subject.command === "webAreaRemoved" &&
+      candidate.subject.areaId === webAreaId,
+  );
+  if (act === undefined) {
+    throw new Error("Expected Web area removal act.");
+  }
+  return act;
+}
+
+export function gustOfWindLineEndTurnSaveAct(
+  state: BattleState,
+  actorId: CombatantId = spellTargetId,
+  areaId: BattleAreaId = gustOfWindAreaId,
+  directionId: BattleLineDirectionId = gustOfWindNorthDirectionId,
+): ReturnType<typeof discoverBattleActCandidates>[number] & {
+  readonly subject: Extract<
+    BattleSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "gustOfWindLineSave";
+    }
+  >;
+} {
+  const act = discoverBattleActCandidates(state).find(
+    (
+      candidate,
+    ): candidate is ReturnType<typeof discoverBattleActCandidates>[number] & {
+      readonly subject: Extract<
+        BattleSubject,
+        {
+          readonly tag: "runtimeCommand";
+          readonly command: "gustOfWindLineSave";
+        }
+      >;
+    } =>
+      candidate.subject.tag === "runtimeCommand" &&
+      candidate.subject.command === "gustOfWindLineSave" &&
+      candidate.subject.actorId === actorId &&
+      candidate.subject.areaId === areaId &&
+      candidate.subject.directionId === directionId,
+  );
+  if (act === undefined) {
+    throw new Error("Expected Gust of Wind Line end-turn save act.");
+  }
+  return act;
+}
+
+export function gustOfWindLineDirectionChangeAct(
+  state: BattleState,
+  actorId: CombatantId = spellCasterId,
+  areaId: BattleAreaId = gustOfWindAreaId,
+  directionId: BattleLineDirectionId = gustOfWindNorthDirectionId,
+): ReturnType<typeof discoverBattleActCandidates>[number] & {
+  readonly subject: Extract<
+    BattleSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "gustOfWindLineDirectionChange";
+    }
+  >;
+} {
+  const act = discoverBattleActCandidates(state).find(
+    (
+      candidate,
+    ): candidate is ReturnType<typeof discoverBattleActCandidates>[number] & {
+      readonly subject: Extract<
+        BattleSubject,
+        {
+          readonly tag: "runtimeCommand";
+          readonly command: "gustOfWindLineDirectionChange";
+        }
+      >;
+    } =>
+      candidate.subject.tag === "runtimeCommand" &&
+      candidate.subject.command === "gustOfWindLineDirectionChange" &&
+      candidate.subject.actorId === actorId &&
+      candidate.subject.areaId === areaId &&
+      candidate.subject.directionId === directionId,
+  );
+  if (act === undefined) {
+    throw new Error("Expected Gust of Wind Line direction-change act.");
+  }
+  return act;
+}
+
+export function flamingSphereEndTurnAct(
+  session: BattleRuntimeSession,
+  actorId: CombatantId = spellTargetId,
+): AvailableBattleAct & {
+  readonly subject: Extract<
+    BattleSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "movableZoneSave";
+    }
+  >;
+} {
+  const act = discoverBattleActs(session).find(
+    (
+      candidate,
+    ): candidate is AvailableBattleAct & {
+      readonly subject: Extract<
+        BattleSubject,
+        {
+          readonly tag: "runtimeCommand";
+          readonly command: "movableZoneSave";
+        }
+      >;
+    } =>
+      candidate.subject.tag === "runtimeCommand" &&
+      candidate.subject.command === "movableZoneSave" &&
+      candidate.subject.trigger === "endsTurnWithinFiveFeetOfSphere" &&
+      candidate.subject.actorId === actorId &&
+      candidate.subject.areaId === flamingSphereAreaId,
+  );
+  if (act === undefined) {
+    throw new Error("Expected Flaming Sphere end-turn save act.");
+  }
+  return act;
+}
+
+export function flamingSphereRepositionAct(
+  session: BattleRuntimeSession,
+  actorId: CombatantId = spellCasterId,
+): AvailableBattleAct & {
+  readonly subject: Extract<
+    BattleSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "movableZoneReposition";
+    }
+  >;
+} {
+  const act = discoverBattleActs(session).find(
+    (
+      candidate,
+    ): candidate is AvailableBattleAct & {
+      readonly subject: Extract<
+        BattleSubject,
+        {
+          readonly tag: "runtimeCommand";
+          readonly command: "movableZoneReposition";
+        }
+      >;
+    } =>
+      candidate.subject.tag === "runtimeCommand" &&
+      candidate.subject.command === "movableZoneReposition" &&
+      candidate.subject.actorId === actorId &&
+      candidate.subject.areaId === flamingSphereAreaId,
+  );
+  if (act === undefined) {
+    throw new Error("Expected Flaming Sphere reposition act.");
+  }
+  return act;
+}
+
+export function flamingSphereRamAct(
+  session: BattleRuntimeSession,
+  actorId: CombatantId = spellCasterId,
+  targetId: CombatantId = spellTargetId,
+): AvailableBattleAct & {
+  readonly subject: Extract<
+    BattleSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "movableZoneRam";
+    }
+  >;
+} {
+  const act = discoverBattleActs(session).find(
+    (
+      candidate,
+    ): candidate is AvailableBattleAct & {
+      readonly subject: Extract<
+        BattleSubject,
+        {
+          readonly tag: "runtimeCommand";
+          readonly command: "movableZoneRam";
+        }
+      >;
+    } =>
+      candidate.subject.tag === "runtimeCommand" &&
+      candidate.subject.command === "movableZoneRam" &&
+      candidate.subject.actorId === actorId &&
+      candidate.subject.targetId === targetId &&
+      candidate.subject.areaId === flamingSphereAreaId,
+  );
+  if (act === undefined) {
+    throw new Error("Expected Flaming Sphere ram act.");
+  }
+  return act;
+}
+
+export function moonbeamRepositionMovementFill(
+  hole: Extract<BattleHole, { readonly kind: "movableZoneRepositionMovement" }>,
+  moveFeet = 60,
+): Extract<BattleFill, { readonly kind: "movableZoneRepositionMovement" }> {
+  return {
+    kind: "movableZoneRepositionMovement",
+    holeId: hole.holeId,
+    value: { moveFeet: movementFeet(moveFeet) },
+  };
+}
+
+export function moonbeamEndTurnSaveAct(
+  session: BattleRuntimeSession,
+  actorId: CombatantId = spellTargetId,
+  areaId: BattleAreaId = moonbeamAreaId,
+): AvailableBattleAct & {
+  readonly subject: Extract<
+    BattleSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "movableZoneSave";
+    }
+  >;
+} {
+  const act = discoverBattleActs(session).find(
+    (
+      candidate,
+    ): candidate is AvailableBattleAct & {
+      readonly subject: Extract<
+        BattleSubject,
+        {
+          readonly tag: "runtimeCommand";
+          readonly command: "movableZoneSave";
+        }
+      >;
+    } =>
+      candidate.subject.tag === "runtimeCommand" &&
+      candidate.subject.command === "movableZoneSave" &&
+      candidate.subject.actorId === actorId &&
+      candidate.subject.trigger === "endsTurnInArea" &&
+      candidate.subject.areaId === areaId,
+  );
+  if (act === undefined) {
+    throw new Error("Expected Moonbeam end-turn save act.");
+  }
+  return act;
+}
+
+export function moonbeamRepositionAct(
+  session: BattleRuntimeSession,
+  actorId: CombatantId = spellCasterId,
+): AvailableBattleAct & {
+  readonly subject: Extract<
+    BattleSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "movableZoneReposition";
+    }
+  >;
+} {
+  const act = discoverBattleActs(session).find(
+    (
+      candidate,
+    ): candidate is AvailableBattleAct & {
+      readonly subject: Extract<
+        BattleSubject,
+        {
+          readonly tag: "runtimeCommand";
+          readonly command: "movableZoneReposition";
+        }
+      >;
+    } =>
+      candidate.subject.tag === "runtimeCommand" &&
+      candidate.subject.command === "movableZoneReposition" &&
+      candidate.subject.actorId === actorId &&
+      candidate.subject.areaId === moonbeamAreaId,
+  );
+  if (act === undefined) {
+    throw new Error("Expected Moonbeam reposition act.");
+  }
+  return act;
+}
+
+export function skillChoiceFill(
+  hole: Extract<BattleHole, { readonly kind: "skillChoice" }>,
+  value: Extract<BattleFill, { readonly kind: "skillChoice" }>["value"],
+): Extract<BattleFill, { readonly kind: "skillChoice" }> {
+  return { kind: "skillChoice", holeId: hole.holeId, value };
+}
+
+export function abilityChoiceFill(
+  hole: Extract<BattleHole, { readonly kind: "abilityChoice" }>,
+  value: Ability,
+): Extract<BattleFill, { readonly kind: "abilityChoice" }> {
+  return { kind: "abilityChoice", holeId: hole.holeId, value };
+}
+
+export function targetAbilityChoicesFill(
+  hole: Extract<BattleHole, { readonly kind: "targetAbilityChoices" }>,
+  choices: readonly {
+    readonly targetId: CombatantId;
+    readonly ability: Ability;
+  }[],
+): Extract<BattleFill, { readonly kind: "targetAbilityChoices" }> {
+  return {
+    kind: "targetAbilityChoices",
+    holeId: hole.holeId,
+    value: { choices },
+  };
+}
+
+export function isSelectedSorcerousBurstDamageInvocation(
+  invocation: SpellProcedureExecution,
+): invocation is Extract<
+  SpellProcedureExecution,
+  { readonly procedure: "spellAttackDamage" }
+> & {
+  readonly damage: Extract<
+    Extract<
+      SpellProcedureExecution,
+      { readonly procedure: "spellAttackDamage" }
+    >["damage"],
+    { readonly kind: "selectedSorcerousBurstDamage" }
+  >;
+} {
+  return (
+    invocation.procedure === "spellAttackDamage" &&
+    invocation.damage.kind === "selectedSorcerousBurstDamage"
+  );
+}
+
+export function spellActInvocation(
+  session: BattleRuntimeSession,
+  act: ActionSpellAct,
+): BattleSelectedSpellInvocation {
+  return requireSpellProcedureForTest(session, act.subject.procedureRef);
+}
+
+export function spellHoleInvocation(
+  session: BattleRuntimeSession,
+  holes: readonly BattleHole[],
+): BattleSelectedSpellInvocation {
+  return requireSpellProcedureForTest(
+    session,
+    battleProcedureExecutionRefForSpellHoleForTest(
+      holes[0] ??
+        (() => {
+          throw new Error("Expected a Spell hole.");
+        })(),
+    ),
+  );
+}
+
+function requireSpellProcedureForTest(
+  session: BattleRuntimeSession,
+  procedureRef: BattleProcedureExecutionRef,
+): BattleSelectedSpellInvocation {
+  for (const combatant of session.state.combatants.values()) {
+    if (combatant.origin.kind !== "character") continue;
+    const execution = characterSpellProcedureExecution(
+      combatant.origin.execution,
+      procedureRef,
+    );
+    if (execution !== undefined && "spellRuleFacts" in execution) {
+      return bindSelectedSpellInvocation(execution, procedureRef);
+    }
+  }
+  const availableRefs = [...session.state.combatants.values()].flatMap(
+    (combatant) =>
+      combatant.origin.kind === "character"
+        ? combatant.origin.execution.procedureBindings.flatMap((binding) =>
+            binding.procedure.kind === "spellInvocation"
+              ? [binding.procedureRef]
+              : [],
+          )
+        : [],
+  );
+  throw new Error(
+    `Expected bound Spell procedure ${procedureRef}; available refs: ${availableRefs.join(", ")}.`,
+  );
+}

@@ -1,3 +1,4 @@
+import { maybeOpenSpellCastReactionWindow } from "../spell-cast-reaction-window.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.scalar-buff
 import { DiceExprSchema } from "@dnd/surface/surface/schema";
@@ -51,7 +52,6 @@ import {
   type HealingSpellActionCost,
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
-import { maybeOpenInterruptWindow, snapshotBattle } from "../dispatcher.ts";
 import { CombatantId } from "../../identity.ts";
 import { BattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
 import { battleCreatureWithSpellActiveEffects } from "../../active-effect/lifecycle.ts";
@@ -64,12 +64,15 @@ import {
   battleStateWithFlySpeedGrantEndFallCleanupFrames,
   flySpeedGrantEndFallCleanupFramesForExpiredEffects,
 } from "../fly-speed-grant-end-fall-cleanup.ts";
-import { needsHolesResult } from "../hole-helpers.ts";
-import { invalidResult } from "../result-helpers.ts";
 import {
-  spellCastInterruptFrame,
-  spellCastMetamagicApplicationsInput,
-} from "../spell-cast-interrupt-frame.ts";
+  needsHolesResult,
+  spellSelectionResolution,
+} from "../needs-holes-result.ts";
+import {
+  invalidResult,
+  resolvedResult,
+  resolutionFromStateResult,
+} from "../result-helpers.ts";
 import { scalarBuffTemporaryHitPointsAmount } from "../spell-effects.ts";
 import {
   readiedSpellAct,
@@ -431,43 +434,24 @@ function resolveScalarBuff(
       "Scalar buff spells use target fills and optional scalar dice roll.",
     );
   }
-  const targetSelection = scalarBuffSpellTargetSelection(input);
-  if (targetSelection.tag === "needsHoles") {
-    return needsHolesResult(input.input.state, input.input.subject, [
-      targetSelection.hole,
-    ]);
-  }
-  if (targetSelection.tag === "invalid") {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      targetSelection.message,
-    );
-  }
+  const targetSelectionResolution = spellSelectionResolution(
+    input.input.state,
+    input.input.subject,
+    scalarBuffSpellTargetSelection(input),
+  );
+  if (targetSelectionResolution.tag === "resolution")
+    return targetSelectionResolution.result;
+  const targetSelection = targetSelectionResolution.selection;
 
   if (input.storedGlyphRelease === undefined) {
-    const spellCastReactionWindow = maybeOpenInterruptWindow(
-      input.input.state,
-      spellCastInterruptFrame({
-        casterId: input.actorId,
-        invocation: input.invocation,
-        targetIds: targetSelection.targetIds,
-        reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
-        castingResource:
-          input.actionCostOverride === "bonusAction" ||
-          input.input.subject.tag === "bonusActionSpell"
-            ? { kind: "bonusAction" }
-            : { kind: "magicAction" },
-        ...spellCastMetamagicApplicationsInput(
-          input.metamagicApplications ?? [],
-        ),
-        continuation: {
-          kind: "replay",
-          subject: input.input.subject,
-          fills: input.input.fills,
-        },
-      }),
-      input.input.handledInterruptTrigger,
+    const spellCastReactionWindow = maybeOpenSpellCastReactionWindow(
+      input,
+      targetSelection.targetIds,
+      input.actionCostOverride === "bonusAction" ||
+        input.input.subject.tag === "bonusActionSpell"
+        ? { kind: "bonusAction" }
+        : { kind: "magicAction" },
+      input.metamagicApplications ?? [],
     );
     if (spellCastReactionWindow !== null) {
       return spellCastReactionWindow;
@@ -509,11 +493,7 @@ function resolveScalarBuff(
     input.fillSet.healingRoll,
   );
   if (input.storedGlyphRelease !== undefined) {
-    return {
-      tag: "resolved",
-      state: effected,
-      snapshot: snapshotBattle(effected),
-    };
+    return resolvedResult(effected);
   }
   const resourced = spendSpellCastResources({
     state: effected,
@@ -530,13 +510,7 @@ function resolveScalarBuff(
       ? {}
       : { metamagicApplications: input.metamagicApplications }),
   });
-  return resourced.tag === "invalid"
-    ? resourced
-    : {
-        tag: "resolved",
-        state: resourced.state,
-        snapshot: snapshotBattle(resourced.state),
-      };
+  return resolutionFromStateResult(resourced);
 }
 
 const ScalarBuffInvocationSchema = spellProcedureExecutionSchema(

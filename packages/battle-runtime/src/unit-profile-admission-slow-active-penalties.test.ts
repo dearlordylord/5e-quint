@@ -1,5 +1,5 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME slow
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME slow
@@ -55,7 +55,7 @@ import {
   spellSlotInvocationRef,
   spellTargetId,
   zeroAbilityWeaponAttack,
-} from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission.test-support.ts";
 import type {
   AvailableBattleAct,
   BattleActiveEffect,
@@ -65,15 +65,15 @@ import type {
   BattleSpellSavingThrowOutcomeHole,
   BattleState,
   CombatantId,
-} from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission.test-support.ts";
 import {
   requireCharacterSpellProcedureRefForTest,
   monsterMultiattackStatBlock,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
-import { shillelaghUnitId } from "./unit-profile-admission-catalog-support.ts";
-import { defineSelectedIdentityReplayWitness } from "./selected-identity-witness.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
+import { shillelaghUnitId } from "./unit-profile-admission-catalog.test-support.ts";
+import { defineSelectedIdentityReplayWitness } from "./selected-identity-witness.test-support.ts";
 
 const slowExtraTargetId = combatantId("unit-profile-slow-extra-target");
 const slowMultiattackTargetId = combatantId(

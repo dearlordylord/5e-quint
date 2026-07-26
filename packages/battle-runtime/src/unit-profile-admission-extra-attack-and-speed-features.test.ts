@@ -24,7 +24,7 @@ import {
   spellCasterId,
   spellTargetId,
   unitLibrary,
-} from "./unit-profile-admission-catalog-support.ts";
+} from "./unit-profile-admission-catalog.test-support.ts";
 import {
   characterCreature,
   attackRollFill,
@@ -34,7 +34,7 @@ import {
   requireResultHole,
   resolveWeaponAttack,
   singleCharacterWeaponAttackSubject,
-} from "./unit-profile-admission-creature-fixture-support.ts";
+} from "./unit-profile-admission-creature-fixture.test-support.ts";
 import {
   extraAttackBattle,
   extraAttackBattleUnitRef,
@@ -51,7 +51,7 @@ import {
   rovingSupportProfile,
   shieldArmorClassState,
   shieldLoadout,
-} from "./unit-profile-admission-feature-fixture-support.ts";
+} from "./unit-profile-admission-feature-fixture.test-support.ts";
 import {
   ACROBATIC_MOVEMENT_SUPPORT_PROFILE,
   battleAcrobaticMovementSupportForUnit,
@@ -71,12 +71,12 @@ import {
   resolveBattleSubject,
   snapshotBattle,
   startBattle,
-} from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission.test-support.ts";
 import type {
   BattleState,
   UnitRecord,
-} from "./unit-profile-admission-test-support.ts";
-import { characterBattleFeatureInitForTest } from "./battle-runtime-test-support.ts";
+} from "./unit-profile-admission.test-support.ts";
+import { characterBattleFeatureInitForTest } from "./battle-runtime.test-support.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 
 const syntheticExtraAttackCounts = [1, 2, 3] as const;

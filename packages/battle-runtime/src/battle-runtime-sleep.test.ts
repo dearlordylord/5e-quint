@@ -1,7 +1,7 @@
 import type {
   BattleState,
   BattleSubject,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import { discoverBattleActCandidates } from "./index.ts";
 import { describe, expect, test } from "vitest";
 import {
@@ -46,7 +46,7 @@ import {
   targetFill,
   wizardId,
   wizardSpellcasting,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 
 describe("battle runtime: Sleep", () => {
   test("Sleep failed initial saves apply pending Incapacitated and spend cast resources", () => {

@@ -8,7 +8,7 @@
 // UNIT-IDENTITY-REPLAY: level1-damage-spell-selected-identity sorcerous_burst doResolveSorcerousBurstSpellAttackDamage
 // UNIT-IDENTITY-REPLAY: level1-damage-spell-selected-identity starry_wisp doResolveStarryWispObjectSpellAttackDamageAndDimLight
 // UNIT-IDENTITY-REPLAY: level1-damage-spell-selected-identity vicious_mockery doResolveViciousMockeryWisdomSavingThrowPsychicDamageAndNextAttackDisadvantage
-import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
+import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 import { Either } from "effect";
 import {
   armorClass,
@@ -31,10 +31,10 @@ import {
   CHROMATIC_ORB_DAMAGE_TYPES,
   CHROMATIC_ORB_LEAP_RANGE_FEET,
 } from "./battle-reducer/domain-constants.ts";
-import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
+import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
-import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
-import { damageTypeChoiceFill } from "./unit-profile-admission-spell-fill-support.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.test-support.ts";
+import { damageTypeChoiceFill } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { expect } from "vitest";
 import {
   battleId,

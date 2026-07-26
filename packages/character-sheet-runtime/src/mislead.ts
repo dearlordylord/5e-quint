@@ -7,17 +7,16 @@ import type { UnitCatalog } from "@dnd/character-creation-runtime";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
-import { hasPreparedClassSpellAccess } from "./prepared-spell-access.ts";
-import { spendCharacterSheetSpellSlot } from "./spell-slots.ts";
 import {
   characterSheetIssue,
-  getRequiredUnit,
   type CharacterSheet,
   type CharacterSheetIssue,
   type CharacterSheetMisleadCasting,
   type CharacterSheetMisleadInvocation,
   type CharacterSheetMisleadResult,
 } from "./sheet-types.ts";
+
+import { castPreparedSpell } from "./prepared-spell-cast.ts";
 
 const MISLEAD_SPELL_ID = "mislead" as const;
 const MISLEAD_SPELL_LEVEL = spellSlotLevel(5);
@@ -28,48 +27,25 @@ export function castMislead(input: {
   readonly unitLibrary: UnitCatalog;
   readonly casting: CharacterSheetMisleadCasting;
 }): Either.Either<CharacterSheetMisleadResult, CharacterSheetIssue> {
-  const spell = misleadSpell(input.unitLibrary);
-  if (Either.isLeft(spell)) return Either.left(spell.left);
-
-  if (!hasPreparedClassSpellAccess(input.sheet, spell.right.id)) {
-    return characterSheetIssue("Mislead requires prepared class Spell Access.");
-  }
-
-  if (!Number.isInteger(input.casting.casterSpeedFeet)) {
-    return characterSheetIssue("Mislead requires an integer caster Speed.");
-  }
-  if (input.casting.casterSpeedFeet <= 0) {
-    return characterSheetIssue("Mislead requires a positive caster Speed.");
-  }
-
-  const invocation = misleadInvocationFromSpell({
-    spell: spell.right,
-    casting: input.casting,
-  });
-  if (Either.isLeft(invocation)) return Either.left(invocation.left);
-
-  const spent = spendCharacterSheetSpellSlot({
+  return castPreparedSpell({
     sheet: input.sheet,
+    unitLibrary: input.unitLibrary,
+    spellId: authoredUnitId(MISLEAD_SPELL_ID),
     spellLevel: MISLEAD_SPELL_LEVEL,
-    spellSlotSource: "ordinary",
+    spellName: "Mislead",
+    invocation: (spell) => {
+      if (!Number.isInteger(input.casting.casterSpeedFeet)) {
+        return characterSheetIssue("Mislead requires an integer caster Speed.");
+      }
+      if (input.casting.casterSpeedFeet <= 0) {
+        return characterSheetIssue("Mislead requires a positive caster Speed.");
+      }
+      return misleadInvocationFromSpell({
+        spell: spell,
+        casting: input.casting,
+      });
+    },
   });
-  if (Either.isLeft(spent)) return Either.left(spent.left);
-
-  return Either.right({
-    sheet: spent.right,
-    invocation: invocation.right,
-  });
-}
-
-function misleadSpell(
-  unitLibrary: UnitCatalog,
-): Either.Either<SpellRecord, CharacterSheetIssue> {
-  const unit = getRequiredUnit(unitLibrary, authoredUnitId(MISLEAD_SPELL_ID));
-  if (Either.isLeft(unit)) return Either.left(unit.left);
-  if (unit.right.kind !== "spell") {
-    return characterSheetIssue("Mislead requires a Spell record.");
-  }
-  return Either.right(unit.right);
 }
 
 function misleadInvocationFromSpell(input: {

@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 
 import { admitCharacterWeaponAttackExecutionWeapon } from "./character-weapon-execution-admission.ts";
 import { battleObjectId } from "./identity.ts";
-import { unitLibrary } from "./battle-runtime-test-support.ts";
+import { unitLibrary } from "./battle-runtime.test-support.ts";
 
 describe("character weapon execution admission", () => {
   test("normalizes an omitted Surface property list to one canonical empty list", () => {

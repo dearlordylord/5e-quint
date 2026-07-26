@@ -1,3 +1,4 @@
+import { maybeOpenSpellCastReactionWindow } from "../spell-cast-reaction-window.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-jump-movement-replacement
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE
@@ -27,17 +28,16 @@ import {
   type BonusActionSpellBattleResolutionInput,
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
-import { maybeOpenInterruptWindow } from "../dispatcher.ts";
 import { CombatantId } from "../../identity.ts";
 import { DurationBattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
-import { needsHolesResult } from "../hole-helpers.ts";
+
+import { needsHolesResult } from "../needs-holes-result.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { allocateBattleActiveEffectRef } from "../../active-effect/execution-ref.ts";
 import {
   sameStringSet,
   scalarBuffSpellTargetCount,
 } from "../spells-execution-facts.ts";
-import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
 import {
   spellTargetListHole,
@@ -253,21 +253,11 @@ function resolveJumpMovementReplacement(
     return invalidResult(input.input.state, "invalidFill", validation);
   }
 
-  const spellCastReactionWindow = maybeOpenInterruptWindow(
-    input.input.state,
-    spellCastInterruptFrame({
-      casterId: input.actorId,
-      invocation: input.invocation,
-      targetIds: input.fillSet.targetList.targetIds,
-      reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
-      castingResource: { kind: "bonusAction" },
-      continuation: {
-        kind: "replay",
-        subject: input.input.subject,
-        fills: input.input.fills,
-      },
-    }),
-    input.input.handledInterruptTrigger,
+  const spellCastReactionWindow = maybeOpenSpellCastReactionWindow(
+    input,
+    input.fillSet.targetList.targetIds,
+    { kind: "bonusAction" },
+    undefined,
   );
   if (spellCastReactionWindow !== null) {
     return spellCastReactionWindow;

@@ -2,7 +2,7 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 import type {
   BattleState,
   BattleSubject,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import { describe, expect, test } from "vitest";
 import {
   attackDamageDispositionFill,
@@ -46,7 +46,7 @@ import {
   wizardId,
   wizardSpellcasting,
   wizardVsSkeletonBattle,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 
 function readiedSpellProcedureRef(state: BattleState) {
   const readied = state.readiedSpells.get(wizardId);

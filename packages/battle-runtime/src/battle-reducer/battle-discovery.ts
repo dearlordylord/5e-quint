@@ -16,10 +16,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING CHARACTER.LIFECYCLE.LAYER_PROJECTION BATTLE.COMPOSITION.REDUCER_SPINE_CONTRACT BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
-import type {
-  ActionEconomyState,
-  RuntimeActionResource,
-} from "@dnd/shared-algebras/action-economy-algebra";
+import type { ActionEconomyState } from "@dnd/shared-algebras/action-economy-algebra";
 import {
   actionResourceAllows,
   canSpendAction,
@@ -43,7 +40,7 @@ import {
   findFamiliarCompanionEntryForOwner,
   isPresentFindFamiliarCombatant,
 } from "../find-familiar-state.ts";
-import { combatantHasPactOfTheChainFindFamiliar } from "../find-familiar-pact-chain.ts";
+import { combatantHasPactOfTheChainFindFamiliar } from "../find-familiar-pact-facts.ts";
 import {
   companionHeldObjectFactsHole,
   companionReappearanceInitiativeHole,
@@ -59,16 +56,13 @@ import {
 } from "./attack-damage-apply.ts";
 import { minimalCreatureAttackActs } from "./creature-attack.ts";
 import { attackExecutionSelectionForOption } from "../battle-action-options.ts";
-import {
-  helpAttackAllyChoices,
-  helpAttackAllyHole,
-} from "./attack-resolution.ts";
+import { helpAttackAllyChoices, helpAttackAllyHole } from "./help-attack.ts";
 import { currentActorId, grappledBy } from "./creature-state-leaves.ts";
 import {
   activeLevitatedCreatureTargetsControlledBy,
   levitateAltitudeChangeHole,
 } from "./levitate-creature.ts";
-import { dragonsBreathExhaleActs } from "./dragons-breath.ts";
+import { dragonsBreathExhaleActs } from "./dragons-breath-discovery.ts";
 import {
   combatantCanTakeActions,
   combatantCanTakeReactions,
@@ -126,24 +120,28 @@ import {
   canonicalHeldObjectIdsForActor,
   commandDropHeldObjectFactsHole,
   commandPendingEffectsForActor,
-  movementHole,
-  readiedSpellInitialHoles,
   standFromProneCostFeet,
   type GreaseGroundHazardEffect,
   type WebRestraintHazardEffect,
   type GustOfWindLineEffect,
   type FlamingSphereEffect,
   type MoonbeamEffect,
-} from "./turn-end-movement.ts";
-import { supportedUnitFeatureActs } from "./unit-features.ts";
-import { monkFocusActs } from "./monk-focus.ts";
+} from "./turn-movement-discovery.ts";
+import { readiedSpellInitialHoles } from "./readied-initial-holes.ts";
+import { movementHole } from "./movement-holes.ts";
+import {
+  isClassFeatureExtraAttackActionResource,
+  isStatBlockMultiattackActionResource,
+} from "./action-resource-kinds.ts";
+import { supportedUnitFeatureActs } from "./unit-feature-discovery.ts";
+import { monkFocusActs } from "./monk-focus-discovery.ts";
 import {
   isWardingBondEffect,
   wardingBondSeparationFactsHole,
 } from "./warding-bond.ts";
 import { SELF_TRANSFORMATION_MODE_KINDS } from "./domain-constants.ts";
 import { SUPPORTED_STAT_BLOCK_BONUS_ACTION_STANDARD_ACTIONS } from "./battle-runtime-protocol.ts";
-import { discoverLegendaryActionActs } from "./unit-features.ts";
+import { discoverLegendaryActionActs } from "./unit-feature-discovery.ts";
 import { characterSpellProcedure } from "../character-execution-queries.ts";
 import {
   activeSelfTransformationModeEffect,
@@ -162,11 +160,7 @@ import type {
   BattleState,
   StatBlockBattleCreatureState,
 } from "../battle-state-execution.ts";
-import type {
-  ClassFeatureExtraAttackActionResource,
-  StatBlockMultiattackActionResource,
-  SupportedStatBlockBonusActionStandardAction,
-} from "./battle-runtime-protocol.ts";
+import type { SupportedStatBlockBonusActionStandardAction } from "./battle-runtime-protocol.ts";
 import type { SelfTransformationModeKind } from "./domain-constants.ts";
 
 type FogCloudObscurementEffect = Extract<
@@ -1728,26 +1722,6 @@ export function supportedStatBlockBonusActionStandardAction(
 ): standardAction is SupportedStatBlockBonusActionStandardAction {
   return SUPPORTED_STAT_BLOCK_BONUS_ACTION_STANDARD_ACTIONS.some(
     (supported) => supported === standardAction,
-  );
-}
-
-export function isStatBlockMultiattackActionResource(
-  resource: RuntimeActionResource,
-  actorId: CombatantId,
-): resource is StatBlockMultiattackActionResource {
-  return (
-    resource.source === "statBlockMultiattack" &&
-    resource.sourceOwnerId === actorId
-  );
-}
-
-export function isClassFeatureExtraAttackActionResource(
-  resource: RuntimeActionResource,
-  actorId: CombatantId,
-): resource is ClassFeatureExtraAttackActionResource {
-  return (
-    resource.source === "classFeatureExtraAttack" &&
-    resource.sourceOwnerId === actorId
   );
 }
 

@@ -10,11 +10,8 @@ import type { UnitCatalog } from "@dnd/character-creation-runtime";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
-import { hasPreparedClassSpellAccess } from "./prepared-spell-access.ts";
-import { spendCharacterSheetSpellSlot } from "./spell-slots.ts";
 import {
   characterSheetIssue,
-  getRequiredUnit,
   type CharacterSheet,
   type CharacterSheetGeasCommand,
   type CharacterSheetGeasInvocation,
@@ -23,6 +20,9 @@ import {
   type CharacterSheetGeasTarget,
   type CharacterSheetIssue,
 } from "./sheet-types.ts";
+import { hasWisdomSaveGatePhase } from "./spell-profile-shape.ts";
+
+import { castPreparedSpell } from "./prepared-spell-cast.ts";
 
 const GEAS_SPELL_ID = "geas" as const;
 const GEAS_SPELL_LEVEL = spellSlotLevel(5);
@@ -36,48 +36,24 @@ export function castGeas(input: {
   readonly target: CharacterSheetGeasTarget;
   readonly command: CharacterSheetGeasCommand;
 }): Either.Either<CharacterSheetGeasResult, CharacterSheetIssue> {
-  const spell = geasSpell(input.unitLibrary);
-  if (Either.isLeft(spell)) return Either.left(spell.left);
-
-  if (!hasPreparedClassSpellAccess(input.sheet, spell.right.id)) {
-    return characterSheetIssue("Geas requires prepared class Spell Access.");
-  }
-
-  const commandIssue = geasCommandIssue(input.command);
-  if (commandIssue !== null) return characterSheetIssue(commandIssue);
-
-  const targetIssue = geasTargetIssue(input.target);
-  if (targetIssue !== null) return characterSheetIssue(targetIssue);
-
-  const invocation = geasInvocationFromSpell({
-    spell: spell.right,
-    target: input.target,
-    command: input.command,
-  });
-  if (Either.isLeft(invocation)) return Either.left(invocation.left);
-
-  const spent = spendCharacterSheetSpellSlot({
+  return castPreparedSpell({
     sheet: input.sheet,
+    unitLibrary: input.unitLibrary,
+    spellId: authoredUnitId(GEAS_SPELL_ID),
     spellLevel: GEAS_SPELL_LEVEL,
-    spellSlotSource: "ordinary",
+    spellName: "Geas",
+    invocation: (spell) => {
+      const commandIssue = geasCommandIssue(input.command);
+      if (commandIssue !== null) return characterSheetIssue(commandIssue);
+      const targetIssue = geasTargetIssue(input.target);
+      if (targetIssue !== null) return characterSheetIssue(targetIssue);
+      return geasInvocationFromSpell({
+        spell: spell,
+        target: input.target,
+        command: input.command,
+      });
+    },
   });
-  if (Either.isLeft(spent)) return Either.left(spent.left);
-
-  return Either.right({
-    sheet: spent.right,
-    invocation: invocation.right,
-  });
-}
-
-function geasSpell(
-  unitLibrary: UnitCatalog,
-): Either.Either<SpellRecord, CharacterSheetIssue> {
-  const unit = getRequiredUnit(unitLibrary, authoredUnitId(GEAS_SPELL_ID));
-  if (Either.isLeft(unit)) return Either.left(unit.left);
-  if (unit.right.kind !== "spell") {
-    return characterSheetIssue("Geas requires a Spell record.");
-  }
-  return Either.right(unit.right);
 }
 
 function geasCommandIssue(command: CharacterSheetGeasCommand): string | null {
@@ -130,20 +106,17 @@ function geasInvocationFromSpell(input: {
     );
   }
 
-  const saveGatePhase = spell.mechanics.phases.find(
-    (phase) =>
-      phase.kind === "save_gate" &&
-      phase.ability === "wis" &&
-      phase.dc.kind === "caster_spell_save_dc" &&
-      phase.attachment.kind === "hole" &&
-      phase.attachment.holeId === "geas_target" &&
-      phase.attachment.value.kind === "target" &&
-      phase.attachment.value.selection.mode === "one" &&
+  const hasSaveGatePhase = hasWisdomSaveGatePhase(
+    spell,
+    "geas_target",
+    (phase, attachment) =>
+      attachment.value.kind === "target" &&
+      attachment.value.selection.mode === "one" &&
       phase.onFail.kind === "apply_condition" &&
       phase.onFail.condition === "charmed" &&
       phase.onSuccess.kind === "none",
   );
-  if (saveGatePhase === undefined) {
+  if (!hasSaveGatePhase) {
     return characterSheetIssue(
       "Geas requires the supported Wisdom save Charmed profile.",
     );

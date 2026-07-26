@@ -3,8 +3,8 @@
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3PUTB-05 wizard_potent_cantrip
 // UNIT-IDENTITY-REPLAY: L3PUTB-05 wizard_potent_cantrip doAttackMissHalfDamage doAttackMissNoAdditionalEffect doAttackMissNoLightEmitter doSaveSuccessHalfDamage doSaveSuccessNoAdditionalEffect doRejectObjectMissHalfDamage
 import { classLevel } from "@dnd/shared/types";
-import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
-import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
+import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.test-support.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.test-support.ts";
 import {
   characterBattleFeatureInitForTest,
   armorClass,
@@ -33,7 +33,7 @@ import {
   unitLibrary,
   wizardId,
   wizardSpellcasting,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import type {
   BattleResolutionResult,
   BattleRuntimeSession,

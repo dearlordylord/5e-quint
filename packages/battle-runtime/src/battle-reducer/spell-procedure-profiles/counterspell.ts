@@ -35,8 +35,11 @@ import {
   type BattleTurnResources,
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
-import { snapshotBattle, interruptedProcedureSubject } from "../dispatcher.ts";
-import { needsHolesResult } from "../hole-helpers.ts";
+import {
+  snapshotBattle,
+  interruptedProcedureSubject,
+} from "../interrupt-execution.ts";
+import { needsHolesResult } from "../needs-holes-result.ts";
 import { counterspellReactionSpellMatchesTrigger } from "../reaction-triggered-spells.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { stateAfterSpellCastDeclared } from "../spell-cast-declaration.ts";

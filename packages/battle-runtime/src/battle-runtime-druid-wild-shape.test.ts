@@ -58,7 +58,7 @@ import {
   testCharacterWeaponAttackForUnit,
   unitLibrary,
   wizardSpellcasting,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import { admitCharacterWeaponAttackExecutionWeapon } from "./character-weapon-execution-admission.ts";
 import {
   activeDruidWildShapeEffect,

@@ -1,5 +1,5 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
 import {
   battleActSpellSlotPresentation,
   battleActSpellPresentation,
@@ -45,10 +45,10 @@ import {
   wizardSpellcasting,
   type BattleState,
   type BattleRuntimeSession,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import { parseBattleSpellEffectLevel } from "./battle-reducer/spells-effective-level.ts";
 import { battleSpellEffectOccurrenceId } from "./identity.ts";
-import { darknessUnitId } from "./unit-profile-admission-catalog-support.ts";
+import { darknessUnitId } from "./unit-profile-admission-catalog.test-support.ts";
 
 const darknessDurationTicks = elapsedTimeTicks(100);
 

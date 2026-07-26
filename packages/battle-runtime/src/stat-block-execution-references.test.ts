@@ -32,7 +32,7 @@ import {
   wizardId,
   wizardSpellcasting,
   wizardVsSkeletonBattle,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import {
   BattleCharacterExecutionScopeRef,
   BattleActiveEffectExecutionRef,

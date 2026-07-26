@@ -23,12 +23,13 @@ import {
   REMARKABLE_ATHLETE_CRITICAL_HIT_MOVEMENT_HOLE_ID,
   REMARKABLE_ATHLETE_CRITICAL_HIT_MOVEMENT_HOLE_INSTANCE,
 } from "./domain-constants.ts";
-import { needsHolesResult } from "./hole-helpers.ts";
+
+import { needsHolesResult } from "./needs-holes-result.ts";
 import {
   effectiveMovementSpeed,
   representedMovementSpeedKinds,
 } from "./movement-speed.ts";
-import { applyBattleMovement } from "./readied-release.ts";
+import { applyBattleMovement } from "./battle-movement.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { parseBattleMovement } from "./turn-end-movement.ts";
 

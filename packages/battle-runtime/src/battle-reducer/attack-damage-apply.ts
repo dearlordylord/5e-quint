@@ -65,7 +65,7 @@ import {
   ATTACK_DAMAGE_DISPOSITION_HOLE_INSTANCE,
   type StatBlockMultiattackActionResource,
 } from "./battle-runtime-protocol.ts";
-import { isStatBlockMultiattackActionResource } from "./battle-discovery.ts";
+import { isStatBlockMultiattackActionResource } from "./action-resource-kinds.ts";
 import { attackDamageDieFloorChoiceProcedureRefs } from "./attack-damage-die-floor-choice.ts";
 import {
   damageAllowsKnockOut,

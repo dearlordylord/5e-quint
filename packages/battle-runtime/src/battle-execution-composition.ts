@@ -31,6 +31,16 @@ import {
 } from "./battle-reducer/battle-snapshot.ts";
 import type { FindFamiliarWithin100FeetFact } from "./find-familiar-telepathy.ts";
 import type { CombatantId } from "./identity.ts";
+import { ATTACK_RESOLVERS } from "./battle-reducer/attack-main.ts";
+import { resolveMonkFocusFlurryOfBlowsStrike } from "./battle-reducer/monk-flurry-attack.ts";
+import { resolvePactOfTheChainFamiliarReactionAttack } from "./find-familiar-pact-chain.ts";
+import type { BattleAttackRouteResolvers } from "./battle-reducer/attack-resolvers.ts";
+
+const BATTLE_ATTACK_ROUTE_RESOLVERS = {
+  ...ATTACK_RESOLVERS,
+  resolveMonkFocusFlurryOfBlowsStrike,
+  resolvePactOfTheChainFamiliarReactionAttack,
+} satisfies BattleAttackRouteResolvers;
 
 export function resolveAdmittedBattleSubject(
   input: AdmittedBattleResolutionInput,
@@ -38,7 +48,11 @@ export function resolveAdmittedBattleSubject(
   const executionRegistry = spellProcedureExecutionRegistry();
   return battleResolutionWithExecutionSnapshot(
     input.state,
-    resolveAdmittedBattleSubjectWithRegistry(input, executionRegistry),
+    resolveAdmittedBattleSubjectWithRegistry(
+      input,
+      executionRegistry,
+      BATTLE_ATTACK_ROUTE_RESOLVERS,
+    ),
     executionRegistry,
   );
 }
@@ -50,7 +64,11 @@ export function resolveBattleInterrupt(input: {
   const executionRegistry = spellProcedureExecutionRegistry();
   return battleResolutionWithExecutionSnapshot(
     input.state,
-    resolveBattleInterruptWithRegistry(input, executionRegistry),
+    resolveBattleInterruptWithRegistry(
+      input,
+      executionRegistry,
+      BATTLE_ATTACK_ROUTE_RESOLVERS,
+    ),
     executionRegistry,
   );
 }
@@ -76,7 +94,11 @@ export function endTurn(input: {
   const executionRegistry = spellProcedureExecutionRegistry();
   return battleResolutionWithExecutionSnapshot(
     input.state,
-    endTurnWithRegistry(input, executionRegistry),
+    endTurnWithRegistry(
+      input,
+      executionRegistry,
+      BATTLE_ATTACK_ROUTE_RESOLVERS,
+    ),
     executionRegistry,
   );
 }
@@ -93,7 +115,11 @@ export function deliverTouchSpellThroughFindFamiliar(input: {
   const executionRegistry = spellProcedureExecutionRegistry();
   return battleResolutionWithExecutionSnapshot(
     input.state,
-    deliverTouchSpellThroughFindFamiliarWithRegistry(input, executionRegistry),
+    deliverTouchSpellThroughFindFamiliarWithRegistry(
+      input,
+      executionRegistry,
+      BATTLE_ATTACK_ROUTE_RESOLVERS,
+    ),
     executionRegistry,
   );
 }
@@ -168,6 +194,7 @@ export function resolveReplayContinuationFromState(
       handledInterruptTrigger,
       fills,
       executionRegistry,
+      BATTLE_ATTACK_ROUTE_RESOLVERS,
     ),
     executionRegistry,
   );

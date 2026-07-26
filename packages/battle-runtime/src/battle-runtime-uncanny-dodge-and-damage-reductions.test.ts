@@ -14,7 +14,7 @@ import { REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE } from "./unit-featur
 import type {
   BattleInterruptCheckpoint,
   BattleState,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import { describe, expect, test } from "vitest";
 import {
   characterBattleFeatureInitForTest,
@@ -53,7 +53,7 @@ import {
   targetFill,
   testBattleCreatureStateWithConditions,
   uncannyDodgeUnit,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 
 describe("battle runtime: Uncanny Dodge and damage reductions", () => {
   test("Uncanny Dodge is chosen when the attack hits and halves later attack damage", () => {

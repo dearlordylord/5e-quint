@@ -57,13 +57,13 @@ import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics
 import {
   attackRollFill,
   damageRollFillWithGroups,
-} from "./unit-profile-admission-creature-fixture-support.ts";
+} from "./unit-profile-admission-creature-fixture.test-support.ts";
 import {
   applyFailedSaveSpellConditionEffects,
   selectFailedSaveConditionEffect,
 } from "./battle-reducer/spells-active-effects.ts";
 import { applyPreparedSlotSpellDamage } from "./battle-reducer/spells-damage-fills.ts";
-import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.test-support.ts";
 import {
   MBT_TEST_TIMEOUT_MS,
   defineDriver,
@@ -73,7 +73,7 @@ import {
   reducerRoutedProtectionCharmStateCheck,
   run,
   type ReducerRouteEvent,
-} from "./battle-runtime-mbt-driver-kit.ts";
+} from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import type { ReplayAddressableSpellActiveEffect } from "./active-effect/execution-ref.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import {
@@ -81,7 +81,7 @@ import {
   battleProcedureExecutionRefForTest,
   resolveBattleSubject,
   statBlockProcedurePresentationsForStateForTest,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import {
   characterSpellProcedure,
   type SpellProcedureExecution,

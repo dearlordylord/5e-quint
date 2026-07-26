@@ -3,8 +3,8 @@ import {
   difficultyClass,
   type AbilityModifier,
   type DifficultyClass,
-  type ReadonlyNonEmptyArray,
-} from "./types.ts";
+} from "./check-difficulty.ts";
+import type { ReadonlyNonEmptyArray } from "./non-empty-array.d.ts";
 
 /** Dependency-safe authored identity vocabulary for execution projections. */
 export const UnitId = Schema.NonEmptyTrimmedString.pipe(Schema.brand("UnitId"));

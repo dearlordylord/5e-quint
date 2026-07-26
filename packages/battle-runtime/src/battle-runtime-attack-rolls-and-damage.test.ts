@@ -35,11 +35,11 @@ import {
   defaultArmorClassState,
   discoverBattleActs,
   resolveBattleSubject,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import type {
   BattleState,
   BattleSubject,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import { describe, expect, test } from "vitest";
 
 describe("battle runtime: attack rolls and damage", () => {

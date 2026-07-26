@@ -29,7 +29,7 @@ import {
   targetFill,
   wizardId,
   wizardSpellcasting,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 
 describe("battle runtime: Poison Spray and Chill Touch", () => {
   test("Poison Spray uses creature target spell attack damage and cantrip scaling", () => {

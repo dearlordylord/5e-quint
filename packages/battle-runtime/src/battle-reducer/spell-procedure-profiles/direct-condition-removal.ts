@@ -1,3 +1,4 @@
+import { maybeOpenSpellCastReactionWindow } from "../spell-cast-reaction-window.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-direct-condition-removal
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION
@@ -17,11 +18,13 @@ import {
   type BonusActionSpellBattleResolutionInput,
   type DirectConditionRemovalSpellInvocation,
 } from "../../battle-state-execution.ts";
-import { maybeOpenInterruptWindow } from "../dispatcher.ts";
 import { type CombatantId } from "../../identity.ts";
-import { needsHolesResult } from "../hole-helpers.ts";
+
+import {
+  needsHolesResult,
+  spellSelectionResolution,
+} from "../needs-holes-result.ts";
 import { invalidResult } from "../result-helpers.ts";
-import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
 import {
   battleCreatureAfterConditionRemoval,
   combatantsAfterConcentrationSpellEffectsEndedIfNoEffects,
@@ -192,19 +195,14 @@ function resolveDirectConditionRemoval(
     );
   }
 
-  const targetSelection = directConditionRemovalSpellTargetSelection(input);
-  if (targetSelection.tag === "needsHoles") {
-    return needsHolesResult(input.input.state, input.input.subject, [
-      targetSelection.hole,
-    ]);
-  }
-  if (targetSelection.tag === "invalid") {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      targetSelection.message,
-    );
-  }
+  const targetSelectionResolution = spellSelectionResolution(
+    input.input.state,
+    input.input.subject,
+    directConditionRemovalSpellTargetSelection(input),
+  );
+  if (targetSelectionResolution.tag === "resolution")
+    return targetSelectionResolution.result;
+  const targetSelection = targetSelectionResolution.selection;
   const conditionChoice = input.fillSet.conditionChoice;
   if (conditionChoice === undefined) {
     return needsHolesResult(input.input.state, input.input.subject, [
@@ -222,21 +220,11 @@ function resolveDirectConditionRemoval(
     );
   }
 
-  const spellCastReactionWindow = maybeOpenInterruptWindow(
-    input.input.state,
-    spellCastInterruptFrame({
-      casterId: input.actorId,
-      invocation: input.invocation,
-      targetIds: targetSelection.targetIds,
-      reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
-      castingResource: { kind: "bonusAction" },
-      continuation: {
-        kind: "replay",
-        subject: input.input.subject,
-        fills: input.input.fills,
-      },
-    }),
-    input.input.handledInterruptTrigger,
+  const spellCastReactionWindow = maybeOpenSpellCastReactionWindow(
+    input,
+    targetSelection.targetIds,
+    { kind: "bonusAction" },
+    undefined,
   );
   if (spellCastReactionWindow !== null) {
     return spellCastReactionWindow;

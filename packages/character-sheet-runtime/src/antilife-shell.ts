@@ -7,19 +7,18 @@ import type { UnitCatalog } from "@dnd/character-creation-runtime";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
-import { hasPreparedClassSpellAccess } from "./prepared-spell-access.ts";
-import { spendCharacterSheetSpellSlot } from "./spell-slots.ts";
 import {
   ANTILIFE_SHELL_ALLOWED_BARRIER_INTERACTION_VALUES,
   ANTILIFE_SHELL_EXCEPTED_CREATURE_TYPE_VALUES,
   characterSheetIssue,
-  getRequiredUnit,
   type CharacterSheet,
   type CharacterSheetAntilifeShellBarrierPlacement,
   type CharacterSheetAntilifeShellInvocation,
   type CharacterSheetAntilifeShellResult,
   type CharacterSheetIssue,
 } from "./sheet-types.ts";
+
+import { castPreparedSpell } from "./prepared-spell-cast.ts";
 
 const ANTILIFE_SHELL_SPELL_ID = "antilife_shell" as const;
 const ANTILIFE_SHELL_SPELL_LEVEL = spellSlotLevel(5);
@@ -31,46 +30,19 @@ export function castAntilifeShell(input: {
   readonly unitLibrary: UnitCatalog;
   readonly placement: CharacterSheetAntilifeShellBarrierPlacement;
 }): Either.Either<CharacterSheetAntilifeShellResult, CharacterSheetIssue> {
-  const spell = antilifeShellSpell(input.unitLibrary);
-  if (Either.isLeft(spell)) return Either.left(spell.left);
-
-  if (!hasPreparedClassSpellAccess(input.sheet, spell.right.id)) {
-    return characterSheetIssue(
-      "Antilife Shell requires prepared class Spell Access.",
-    );
-  }
-
-  const invocation = antilifeShellInvocationFromSpell({
-    spell: spell.right,
-    placement: input.placement,
-  });
-  if (Either.isLeft(invocation)) return Either.left(invocation.left);
-
-  const spent = spendCharacterSheetSpellSlot({
+  return castPreparedSpell({
     sheet: input.sheet,
+    unitLibrary: input.unitLibrary,
+    spellId: authoredUnitId(ANTILIFE_SHELL_SPELL_ID),
     spellLevel: ANTILIFE_SHELL_SPELL_LEVEL,
-    spellSlotSource: "ordinary",
+    spellName: "Antilife Shell",
+    invocation: (spell) => {
+      return antilifeShellInvocationFromSpell({
+        spell: spell,
+        placement: input.placement,
+      });
+    },
   });
-  if (Either.isLeft(spent)) return Either.left(spent.left);
-
-  return Either.right({
-    sheet: spent.right,
-    invocation: invocation.right,
-  });
-}
-
-function antilifeShellSpell(
-  unitLibrary: UnitCatalog,
-): Either.Either<SpellRecord, CharacterSheetIssue> {
-  const unit = getRequiredUnit(
-    unitLibrary,
-    authoredUnitId(ANTILIFE_SHELL_SPELL_ID),
-  );
-  if (Either.isLeft(unit)) return Either.left(unit.left);
-  if (unit.right.kind !== "spell") {
-    return characterSheetIssue("Antilife Shell requires a Spell record.");
-  }
-  return Either.right(unit.right);
 }
 
 function antilifeShellInvocationFromSpell(input: {

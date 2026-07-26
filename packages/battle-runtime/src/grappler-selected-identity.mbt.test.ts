@@ -1,8 +1,8 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.grappler
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3-FOLLOWUP-GRAPPLER-RUNTIME feat_grappler
 // UNIT-IDENTITY-REPLAY: L3-FOLLOWUP-GRAPPLER-RUNTIME feat_grappler doFastWrestlerExemptsSameSizeDragCost doAttackAdvantageAgainstGrappledTarget doPunchAndGrabFailedSaveGrapple
-import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
-import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
+import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.test-support.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.test-support.ts";
 import {
   attackInitialTargetHole,
   attackRollFill,
@@ -22,7 +22,7 @@ import {
   targetFill,
   unitFeatureDecisionFill,
   type BattleSubject,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 
 type GrapplerAttackRollMode = "none" | "normal" | "advantage" | "disadvantage";
 type GrapplerLastResult =

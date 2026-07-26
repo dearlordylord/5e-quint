@@ -11,7 +11,7 @@ import {
   sacredFlameUnitId,
   spellCasterId,
   spellTargetId,
-} from "./unit-profile-admission-catalog-support.ts";
+} from "./unit-profile-admission-catalog.test-support.ts";
 import {
   damageRollFillWithGroups,
   requireCombatant,
@@ -20,7 +20,7 @@ import {
   resolveWeaponAttack,
   statBlockWithCreatureType,
   zeroAbilityWeaponAttack,
-} from "./unit-profile-admission-creature-fixture-support.ts";
+} from "./unit-profile-admission-creature-fixture.test-support.ts";
 import {
   resolvedAnimalFriendshipState,
   spellBattle,
@@ -30,15 +30,15 @@ import {
   spellAct,
   spellTargetFill,
   spellTargetListFill,
-} from "./unit-profile-admission-spell-fill-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+} from "./unit-profile-admission-spell-fill.test-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   applyPreparedSlotSpellDamage,
   combatantId,
   elapsedTimeTicks,
   endTurn,
   resolveBattleSubject,
-} from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission.test-support.ts";
 
 describe("SRDINV30C deterministic creature charm Spell Unit admission", () => {
   test("animal friendship only admits Beast targets and applies Charmed on a failed Wisdom save", () => {

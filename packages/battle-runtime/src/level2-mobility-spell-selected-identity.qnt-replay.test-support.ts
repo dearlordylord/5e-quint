@@ -1,4 +1,4 @@
-import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
+import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.test-support.ts";
 
 import { level2MobilitySpellSelectedIdentityReplay } from "./level2-mobility-spell-selected-identity.replay-data.test-support.ts";
 

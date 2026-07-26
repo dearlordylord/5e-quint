@@ -19,7 +19,7 @@ import {
   flameBladeUnitId,
   spellCasterId,
   spellTargetId,
-} from "./unit-profile-admission-catalog-support.ts";
+} from "./unit-profile-admission-catalog.test-support.ts";
 import {
   attackRollFill,
   damageRollFillWithGroups,
@@ -27,7 +27,7 @@ import {
   requireHole,
   requireResultHole,
   zeroAbilityWeaponAttack,
-} from "./unit-profile-admission-creature-fixture-support.ts";
+} from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
   bonusSpellAct,
@@ -35,8 +35,8 @@ import {
   spellAct,
   spellHoleInvocation,
   spellTargetFill,
-} from "./unit-profile-admission-spell-fill-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+} from "./unit-profile-admission-spell-fill.test-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   breakBattleConcentration,
   canSpendAction,
@@ -49,11 +49,11 @@ import {
   snapshotBattle,
   type BattleRuntimeSession,
   type BattleState,
-} from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission.test-support.ts";
 import {
   battleProcedureExecutionRefForTest,
   requireCharacterSpellProcedureRefForTest,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 
 describe("SRDINV95 deterministic Flame Blade admission", () => {
   test("flame_blade casts as a Bonus Action slot spell and occupies the canonical free hand", () => {

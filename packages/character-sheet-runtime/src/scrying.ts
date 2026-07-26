@@ -10,14 +10,11 @@ import type { UnitCatalog } from "@dnd/character-creation-runtime";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
-import { hasPreparedClassSpellAccess } from "./prepared-spell-access.ts";
-import { spendCharacterSheetSpellSlot } from "./spell-slots.ts";
 import {
   SCRYING_MATERIAL_COMPONENTS,
   SCRYING_TARGET_CONNECTION_FACTS,
   SCRYING_TARGET_KNOWLEDGE_FACTS,
   characterSheetIssue,
-  getRequiredUnit,
   type CharacterSheet,
   type CharacterSheetIssue,
   type CharacterSheetScryingCasting,
@@ -28,6 +25,9 @@ import {
   type CharacterSheetScryingTargetConnection,
   type CharacterSheetScryingTargetKnowledge,
 } from "./sheet-types.ts";
+import { hasWisdomSaveGatePhase } from "./spell-profile-shape.ts";
+
+import { castPreparedSpell } from "./prepared-spell-cast.ts";
 
 const SCRYING_SPELL_ID = "scrying" as const;
 const SCRYING_SPELL_LEVEL = spellSlotLevel(5);
@@ -42,33 +42,21 @@ export function castScrying(input: {
   readonly casting: CharacterSheetScryingCasting;
   readonly target: CharacterSheetScryingTarget;
 }): Either.Either<CharacterSheetScryingResult, CharacterSheetIssue> {
-  const spell = scryingSpell(input.unitLibrary);
-  if (Either.isLeft(spell)) return Either.left(spell.left);
-
-  if (!hasPreparedClassSpellAccess(input.sheet, spell.right.id)) {
-    return characterSheetIssue("Scrying requires prepared class Spell Access.");
-  }
-
-  const targetIssue = scryingTargetIssue(input.target);
-  if (targetIssue !== null) return characterSheetIssue(targetIssue);
-
-  const invocation = scryingInvocationFromSpell({
-    spell: spell.right,
-    casting: input.casting,
-    target: input.target,
-  });
-  if (Either.isLeft(invocation)) return Either.left(invocation.left);
-
-  const spent = spendCharacterSheetSpellSlot({
+  return castPreparedSpell({
     sheet: input.sheet,
+    unitLibrary: input.unitLibrary,
+    spellId: authoredUnitId(SCRYING_SPELL_ID),
     spellLevel: SCRYING_SPELL_LEVEL,
-    spellSlotSource: "ordinary",
-  });
-  if (Either.isLeft(spent)) return Either.left(spent.left);
-
-  return Either.right({
-    sheet: spent.right,
-    invocation: invocation.right,
+    spellName: "Scrying",
+    invocation: (spell) => {
+      const targetIssue = scryingTargetIssue(input.target);
+      if (targetIssue !== null) return characterSheetIssue(targetIssue);
+      return scryingInvocationFromSpell({
+        spell: spell,
+        casting: input.casting,
+        target: input.target,
+      });
+    },
   });
 }
 
@@ -76,17 +64,6 @@ export function scryingSavingThrowModifier(
   target: Extract<CharacterSheetScryingTarget, { readonly tag: "creature" }>,
 ): number {
   return target.knowledge.saveModifier + target.connection.saveModifier;
-}
-
-function scryingSpell(
-  unitLibrary: UnitCatalog,
-): Either.Either<SpellRecord, CharacterSheetIssue> {
-  const unit = getRequiredUnit(unitLibrary, authoredUnitId(SCRYING_SPELL_ID));
-  if (Either.isLeft(unit)) return Either.left(unit.left);
-  if (unit.right.kind !== "spell") {
-    return characterSheetIssue("Scrying requires a Spell record.");
-  }
-  return Either.right(unit.right);
 }
 
 function scryingTargetIssue(
@@ -146,21 +123,18 @@ function scryingInvocationFromSpell(input: {
       "Scrying requires the 1,000 GP non-consumed focus material component contract.",
     );
   }
-  const saveGatePhase = spell.mechanics.phases.find(
-    (phase) =>
-      phase.kind === "save_gate" &&
-      phase.ability === "wis" &&
-      phase.dc.kind === "caster_spell_save_dc" &&
-      phase.attachment.kind === "hole" &&
-      phase.attachment.holeId === "scrying_target" &&
-      phase.attachment.value.kind === "target" &&
-      isSupportedScryingCreatureSelection(phase.attachment.value.selection) &&
+  const hasSaveGatePhase = hasWisdomSaveGatePhase(
+    spell,
+    "scrying_target",
+    (phase, attachment) =>
+      attachment.value.kind === "target" &&
+      isSupportedScryingCreatureSelection(attachment.value.selection) &&
       phase.onFail.kind === "create_sensor" &&
       phase.onFail.visibility === "invisible" &&
       phase.onFail.durability === "invulnerable" &&
       phase.onSuccess.kind === "none",
   );
-  if (saveGatePhase === undefined) {
+  if (!hasSaveGatePhase) {
     return characterSheetIssue(
       "Scrying requires the supported same-plane creature Wisdom save-gate profile.",
     );

@@ -21,13 +21,13 @@ import {
   spellRecord,
   spellSlotInvocationRef,
   spellTargetId,
-} from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission.test-support.ts";
 import {
   requireCharacterSpellProcedureRefForTest,
   attackRollFill,
   attackTargetFill,
   damageRollFillWithGroups,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 
 describe("L12G Alter Self self-transformation Spell Unit admission", () => {
   test("Aquatic Adaptation grants water breathing and a Swim Speed linked to Speed", () => {

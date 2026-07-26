@@ -9,7 +9,7 @@ import {
   mbtSpecPath,
   reducerRouteStartBattle,
   type ReducerRouteEvent,
-} from "./battle-runtime-mbt-driver-kit.ts";
+} from "./battle-runtime-mbt-driver-kit.test-support.ts";
 
 import {
   battleId,
@@ -26,13 +26,13 @@ import {
   statBlockCreatureInit,
   unitLibrary,
   wizardSpellcasting,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import {
   type BattleFill,
   type BattleHole,
   type BattleRuntimeSession,
 } from "./index.ts";
-import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.test-support.ts";
 
 type BattleRollMode = "normal" | "advantage" | "disadvantage";
 

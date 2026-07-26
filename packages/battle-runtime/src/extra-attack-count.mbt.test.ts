@@ -23,7 +23,7 @@ import {
   type ExtraAttackMbtProjection,
   type ExtraAttackSelectedUnitIdentityReplay,
   type SelectedUnitIdentityReplaySequence,
-} from "./battle-runtime-mbt-driver-kit.ts";
+} from "./battle-runtime-mbt-driver-kit.test-support.ts";
 
 const extraAttackDriverSchema = {
   init: {},

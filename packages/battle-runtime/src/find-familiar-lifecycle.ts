@@ -12,11 +12,11 @@ import * as Option from "effect/Option";
 export {
   applyFindFamiliarZeroHitPointDisappearance,
   permanentlyDismissFindFamiliar,
-  retainedStoredFormForPresentCompanion,
   temporarilyDismissFindFamiliar,
   type FindFamiliarLifecycleInputBase,
   type FindFamiliarOwnerInput,
 } from "./find-familiar-lifecycle-execution.ts";
+export { retainedStoredFormForPresentCompanion } from "./companion-stored-form.ts";
 import {
   familiarMaxHp,
   familiarStatBlockWithCreatureTypeOverride,

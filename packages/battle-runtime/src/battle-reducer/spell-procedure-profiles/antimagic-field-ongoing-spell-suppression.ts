@@ -49,8 +49,8 @@ import {
   isTrackedOngoingSpellLightEmitter,
   ongoingSpellEffectRefKey,
 } from "../antimagic-field-suppression.ts";
-import { snapshotBattle } from "../dispatcher.ts";
-import { needsHolesResult } from "../hole-helpers.ts";
+import { snapshotBattle } from "../interrupt-execution.ts";
+import { needsHolesResult } from "../needs-holes-result.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { sameStringSet } from "../spells-execution-facts.ts";
 import { spellAreaChoiceHole } from "../spells-holes-fills.ts";

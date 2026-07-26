@@ -1,3 +1,4 @@
+import { savingThrowMetamagicHoles } from "../saving-throw-metamagic-holes.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-careful-save-protection
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-heightened-save-disadvantage
@@ -50,16 +51,11 @@ import {
   SpellSlotInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import {
-  CAREFUL_METAMAGIC_EFFECT_KIND,
   discoverSpellMetamagicSelections,
-  HEIGHTENED_METAMAGIC_EFFECT_KIND,
   spellMetamagicApplications,
 } from "../metamagic-support.ts";
 import {
-  carefulSpellProtectedTargetsHole,
   commandOptionChoiceHole,
-  heightenedSpellTargetChoiceHole,
-  spellSavingThrowTargeting,
   spellTargetListHole,
 } from "../spells-holes-fills.ts";
 
@@ -278,7 +274,7 @@ function commandMetamagicCastActs(input: {
       },
       initialHoles: [
         input.targetHole,
-        ...commandMetamagicInitialHoles(
+        ...savingThrowMetamagicHoles(
           input.state,
           input.actorId,
           input.invocation,
@@ -304,34 +300,6 @@ function commandCastAct(
     },
     initialHoles,
   };
-}
-
-function commandMetamagicInitialHoles(
-  state: BattleState,
-  actorId: CombatantId,
-  invocation: BattleExecutableSpellInvocation<CommandSpellInvocation>,
-  metamagicApplications: readonly SpellMetamagicApplicationFact[],
-): readonly BattleHole[] {
-  const targeting = spellSavingThrowTargeting(invocation);
-  const holes: BattleHole[] = [];
-  if (
-    targeting.kind !== "singleCombatant" &&
-    metamagicApplications.some(
-      (application) => application.effectKind === CAREFUL_METAMAGIC_EFFECT_KIND,
-    )
-  ) {
-    holes.push(carefulSpellProtectedTargetsHole(state, actorId, invocation));
-  }
-  if (
-    targeting.kind !== "singleCombatant" &&
-    metamagicApplications.some(
-      (application) =>
-        application.effectKind === HEIGHTENED_METAMAGIC_EFFECT_KIND,
-    )
-  ) {
-    holes.push(heightenedSpellTargetChoiceHole(state, actorId, invocation));
-  }
-  return holes;
 }
 
 function resolveCommand(input: CommandResolveInput): BattleResolutionResult {
@@ -369,4 +337,3 @@ export const commandProfile = {
   discoverCastAct: discoverCommandCastAct,
   resolve: resolveCommand,
 } satisfies SpellProcedureDeclaration<"command", CommandSpellInvocation>;
-import type { SpellMetamagicApplicationFact } from "../metamagic-support.ts";

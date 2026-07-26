@@ -26,18 +26,12 @@ import {
   isSpellDamageReductionRollFill,
   spellDamageReductionRollForTarget,
 } from "./damage-helpers.ts";
-import {
-  savingThrowFlatBonusProjections,
-  savingThrowRollModeProjections,
-} from "./spells-damage-fills.ts";
-import {
-  extendSavingThrowOngoingFeatures,
-  ongoingFeatureEnemyRelationshipDecisionRequired,
-} from "./attack-roll.ts";
+import { extendSavingThrowOngoingFeatures } from "./attack-roll.ts";
 import { parseSavingThrowRelationshipFacts } from "./roll-trigger-relationship-facts.ts";
 import { combatantCanTakeActions } from "./creature-state-execution.ts";
 import { currentActorId } from "./creature-state-leaves.ts";
-import { needsHolesResult } from "./hole-helpers.ts";
+
+import { needsHolesResult } from "./needs-holes-result.ts";
 import { invalidResult } from "./result-helpers.ts";
 import {
   damageDispositionFillFor,
@@ -46,10 +40,8 @@ import {
 } from "./attack-damage-apply.ts";
 import { battleStateAfterTargetActionEarlyEndForActor } from "./sanctuary-targeting-interdiction.ts";
 import type {
-  BattleActDiscoveryCandidate,
   BattleCreatureState,
   BattleDragonsBreathDamageRollHole,
-  BattleDragonsBreathSavingThrowOutcomeHole,
   BattleFill,
   BattleHoleId,
   BattleResolutionInputForSubject,
@@ -60,22 +52,13 @@ import type {
 import { validateRolledDiceFillForDiceExpr } from "../battle-state-execution.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";
 
-type DragonsBreathEffect = Extract<
-  BattleCreatureState["activeEffects"][number],
-  { readonly kind: "dragonsBreath" }
->;
-type DragonsBreathExhaleSubject = Extract<
-  BattleResolutionInputForSubject<
-    Extract<
-      import("../battle-subjects.ts").BattleSubject,
-      {
-        readonly tag: "runtimeCommand";
-        readonly command: "dragonsBreathExhale";
-      }
-    >
-  >["subject"],
-  { readonly command: "dragonsBreathExhale" }
->;
+import {
+  dragonsBreathHoleKey,
+  dragonsBreathSavingThrowOutcomeHole,
+  type DragonsBreathEffect,
+  type DragonsBreathExhaleSubject,
+} from "./dragons-breath-discovery.ts";
+import { ongoingFeatureEnemyRelationshipDecisionRequired } from "./ongoing-feature-relationship.ts";
 type ExpectedDragonBreathFill = {
   readonly kind: BattleFill["kind"];
   readonly holeId: BattleHoleId;
@@ -90,31 +73,6 @@ type DragonsBreathDamageEntry = {
   readonly damageAmount: number;
   readonly spellDamageReductionHoles: readonly ExpectedDragonBreathFill[];
 };
-
-const DRAGONS_BREATH_CONE_LENGTH_FEET = 15;
-
-export function dragonsBreathExhaleActs(
-  state: BattleState,
-  actorId: CombatantId,
-): readonly BattleActDiscoveryCandidate[] {
-  const actor = state.combatants.get(actorId);
-  if (
-    actor === undefined ||
-    !combatantCanTakeActions(actor) ||
-    !canSpendAction(state.currentTurnResources, "magic")
-  ) {
-    return [];
-  }
-  return activeDragonsBreathEffects(actor).map((effect) => {
-    const subject = dragonsBreathExhaleSubject(actorId, effect);
-    return {
-      subject,
-      initialHoles: [
-        dragonsBreathSavingThrowOutcomeHole(state, actorId, effect),
-      ],
-    };
-  });
-}
 
 export function resolveDragonsBreathExhaleCommand(
   input: BattleResolutionInputForSubject<DragonsBreathExhaleSubject>,
@@ -495,42 +453,6 @@ export function resolveDragonsBreathExhaleCommand(
   };
 }
 
-export function dragonsBreathSavingThrowOutcomeHole(
-  state: BattleState,
-  actorId: CombatantId,
-  effect: DragonsBreathEffect,
-): BattleDragonsBreathSavingThrowOutcomeHole {
-  const key = dragonsBreathHoleKey(effect, "saving-throw-outcome");
-  return {
-    kind: "savingThrowOutcome",
-    holeId: holeId(key),
-    holeInstanceKey: holeInstanceKey(key),
-    label: "Dragon's Breath 15-foot Cone Saving Throw outcomes",
-    dragonsBreath: {
-      sourceCombatantId: effect.sourceCombatantId,
-      sourceProcedureRef: effect.sourceProcedureRef,
-      lengthFeet: DRAGONS_BREATH_CONE_LENGTH_FEET,
-    },
-    ability: "dex",
-    dc: { kind: "fixed", dc: effect.spellSaveDc },
-    areaChoices: [],
-    targetRollModes: savingThrowRollModeProjections(state, "dex"),
-    targetFlatBonuses: savingThrowFlatBonusProjections(state, "dex"),
-    ...(ongoingFeatureEnemyRelationshipDecisionRequired(
-      state,
-      actorId,
-      "enemySavingThrow",
-    )
-      ? {
-          relationshipFactRequest: {
-            kind: "savingThrowTargetIsEnemy" as const,
-            actorId,
-          },
-        }
-      : {}),
-  };
-}
-
 function dragonsBreathDamageRollHole(
   effect: DragonsBreathEffect,
 ): BattleDragonsBreathDamageRollHole {
@@ -560,14 +482,6 @@ function dragonsBreathDamageExpr(effect: DragonsBreathEffect): {
   return { dice: Number(effect.originalSlotLevel) + 1, dieSize: 6 };
 }
 
-function activeDragonsBreathEffects(
-  actor: BattleCreatureState,
-): readonly DragonsBreathEffect[] {
-  return actor.activeEffects.filter(
-    (effect): effect is DragonsBreathEffect => effect.kind === "dragonsBreath",
-  );
-}
-
 function activeDragonsBreathEffect(
   actor: BattleCreatureState | undefined,
   subject: DragonsBreathExhaleSubject,
@@ -577,18 +491,6 @@ function activeDragonsBreathEffect(
       effect.kind === "dragonsBreath" &&
       spellActiveEffectExecutionRef(effect) === subject.effectRef,
   );
-}
-
-function dragonsBreathExhaleSubject(
-  actorId: CombatantId,
-  effect: DragonsBreathEffect,
-): DragonsBreathExhaleSubject {
-  return {
-    tag: "runtimeCommand",
-    actorId,
-    command: "dragonsBreathExhale",
-    effectRef: spellActiveEffectExecutionRef(effect),
-  };
 }
 
 function validateDragonsBreathSavingThrowFill(
@@ -710,11 +612,4 @@ function rolledDiceFillFor(
     (fill): fill is Extract<BattleFill, { readonly kind: "rolledDice" }> =>
       fill.kind === "rolledDice" && fill.holeId === expectedHoleId,
   );
-}
-
-function dragonsBreathHoleKey(
-  effect: DragonsBreathEffect,
-  suffix: string,
-): string {
-  return `battle:dragons-breath:${effect.sourceProcedureRef}:${effect.sourceCombatantId}:${suffix}`;
 }

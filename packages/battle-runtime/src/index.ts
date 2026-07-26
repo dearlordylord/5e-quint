@@ -543,7 +543,7 @@ export {
   type BattleReducerRouteSubjectFamily,
 } from "./battle-reducer/reducer-route.ts";
 export { battleCreatureInitFromStatBlock } from "./battle-init.ts";
-export { spellSaveDcForCaster } from "./battle-reducer/attack-resolution.ts";
+export { spellSaveDcForCaster } from "./battle-reducer/spell-save-dc.ts";
 export {
   breakBattleConcentration,
   resolveBattleConcentrationDamage,

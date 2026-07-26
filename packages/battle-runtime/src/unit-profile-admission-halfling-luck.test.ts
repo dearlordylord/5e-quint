@@ -50,17 +50,17 @@ import {
   unitLibrary,
   unitMechanicsVariant,
   viciousMockeryUnitId,
-} from "./unit-profile-admission-test-support.ts";
-import { dispelMagicUnitId } from "./unit-profile-admission-catalog-support.ts";
+} from "./unit-profile-admission.test-support.ts";
+import { dispelMagicUnitId } from "./unit-profile-admission-catalog.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
   spellAct,
   spellTargetFill,
-} from "./unit-profile-admission-spell-fill-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+} from "./unit-profile-admission-spell-fill.test-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import { battleSpellEffectOccurrenceId } from "./identity.ts";
 import { parseBattleSpellEffectLevel } from "./battle-reducer/spells-effective-level.ts";
-import { defineSelectedIdentityReplayWitness } from "./selected-identity-witness.ts";
+import { defineSelectedIdentityReplayWitness } from "./selected-identity-witness.test-support.ts";
 import {
   abilityCheckFill,
   attackExecutionSelectionForSubjectForTest,
@@ -100,7 +100,7 @@ import {
   wizardSpellcasting,
   type BattleState,
   type BattleSubject,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 
 const expectedRerollProfile = {
   optional: true,

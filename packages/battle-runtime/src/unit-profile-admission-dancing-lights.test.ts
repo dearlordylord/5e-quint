@@ -1,5 +1,5 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
-import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime-test-support.ts";
+import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV88A dancing_lights
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-dancing-lights-movable-dim-light
@@ -9,17 +9,17 @@ import {
   rayOfFrostUnitId,
   spellCasterId,
   spellTargetId,
-} from "./unit-profile-admission-catalog-support.ts";
+} from "./unit-profile-admission-catalog.test-support.ts";
 import {
   interruptDecisionFill,
   requireHole,
-} from "./unit-profile-admission-creature-fixture-support.ts";
+} from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
   bonusSpellAct,
   spellAct,
-} from "./unit-profile-admission-spell-fill-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+} from "./unit-profile-admission-spell-fill.test-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   abilityModifier,
   battleTablePositionId,
@@ -35,12 +35,12 @@ import {
   resolveBattleInterrupt,
   resolveBattleSubject,
   snapshotBattle,
-} from "./unit-profile-admission-test-support.ts";
-import type { ActionSpellAct } from "./unit-profile-admission-catalog-support.ts";
+} from "./unit-profile-admission.test-support.ts";
+import type { ActionSpellAct } from "./unit-profile-admission-catalog.test-support.ts";
 import type {
   BattleFill,
   BattleState,
-} from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission.test-support.ts";
 
 describe("SRDINV32A deterministic Dancing Lights admission", () => {
   test("dancing_lights is admitted as Magic Action source-owned movable Dim Light", () => {

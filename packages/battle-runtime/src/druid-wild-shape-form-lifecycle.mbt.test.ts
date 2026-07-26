@@ -43,7 +43,7 @@ import {
   run,
   stateCheck,
   type ReducerRouteEvent,
-} from "./battle-runtime-mbt-driver-kit.ts";
+} from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import {
   attackRollFill,
   battleId,
@@ -61,7 +61,7 @@ import {
   targetFill,
   unitLibrary,
   wizardSpellcasting,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import {
   activeDruidWildShapeEffect,
   activeDruidWildShapeForm,
@@ -78,7 +78,7 @@ import {
   type BattleState,
   type CharacterBattleCreatureState,
 } from "./index.ts";
-import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.test-support.ts";
 
 const ACTIVE_FORMS = ["trueForm", "ridingHorse", "cat"] as const;
 type ActiveForm = (typeof ACTIVE_FORMS)[number];

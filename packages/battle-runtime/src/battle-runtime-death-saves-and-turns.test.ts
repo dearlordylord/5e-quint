@@ -4,7 +4,7 @@ import type {
   BattleRuntimeSession,
   BattleState,
   BattleSubject,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import { describe, expect, test } from "vitest";
 import {
   attackDamageDispositionFill,
@@ -54,7 +54,7 @@ import {
   targetFill,
   wizardId,
   wizardSpellcasting,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 
 function spareTheDyingSubject(
   session: BattleRuntimeSession,

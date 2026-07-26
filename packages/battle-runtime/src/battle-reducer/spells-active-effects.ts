@@ -51,7 +51,7 @@ import type {
   CombatantId,
 } from "../identity.ts";
 import { allocateBattleActiveEffectRef } from "../active-effect/execution-ref.ts";
-import { battleCreatureStateWithKnockOutPreservedConditions } from "./creature-state-execution.ts";
+import { battleCreatureStateWithKnockOutPreservedConditions } from "./creature-hit-point-state.ts";
 import {
   CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
   characterExecutionWithDancingLightsReposition,
@@ -100,7 +100,6 @@ import {
   type SpiritualWeaponRepeatTargeting,
   type SpellCreatedHeldObjectActiveEffect,
   type SpellCreatedHeldObjectState,
-  type BattleSpecialSpeedKind,
   type SelfTransformationModeEffectPayload,
   type SpellActiveEffectPostDamageRider,
   type SpellConditionCountedRepeatSave,
@@ -1506,15 +1505,6 @@ export function activeSelfTransformationNaturalWeaponsEffect(
   | undefined {
   const effect = activeSelfTransformationModeEffect(combatant);
   return effect?.mode === "naturalWeapons" ? effect : undefined;
-}
-
-export function selfTransformationModeSpecialSpeedKind(
-  effect: BattleActiveEffect,
-): BattleSpecialSpeedKind | null {
-  return effect.kind === "selfTransformation" &&
-    effect.mode === "aquaticAdaptation"
-    ? "swim"
-    : null;
 }
 
 export function applySelfTransformationModeEffect(input: {

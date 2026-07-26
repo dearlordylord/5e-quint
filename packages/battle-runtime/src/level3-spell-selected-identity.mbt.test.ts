@@ -12,8 +12,8 @@ import {
   glyphExplosiveRuneReleaseProfileForSpell,
   glyphStoredSpellReleaseProfileForSpell,
 } from "./battle-reducer/glyph-durable-occurrence.ts";
-import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
-import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
+import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.test-support.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.test-support.ts";
 import {
   glyphOfWardingUnitId,
   hasteUnitId,
@@ -22,28 +22,28 @@ import {
   slowUnitId,
   spellCasterId,
   spellTargetId,
-} from "./unit-profile-admission-catalog-support.ts";
+} from "./unit-profile-admission-catalog.test-support.ts";
 import {
   requireCombatant,
   requireHole,
-} from "./unit-profile-admission-creature-fixture-support.ts";
+} from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
   damageTypeChoiceFill,
   knownWillingSpellTargetFill,
   sleetStormAreaFill,
   spellAct,
-} from "./unit-profile-admission-spell-fill-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+} from "./unit-profile-admission-spell-fill.test-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   resolveBattleSubject,
   spellSlotInvocationRef,
-} from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission.test-support.ts";
 import {
   battleProcedureExecutionRefForTest,
   requireCharacterSpellProcedureRefForTest,
-} from "./battle-runtime-test-support.ts";
-import type { BattleHole } from "./unit-profile-admission-test-support.ts";
+} from "./battle-runtime.test-support.ts";
+import type { BattleHole } from "./unit-profile-admission.test-support.ts";
 
 const LEVEL3_SPELL_SELECTED_IDENTITY_TASK_ID =
   "L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES";

@@ -7,7 +7,7 @@ import {
   characterSeed,
   startBattleRight,
   testCharacterWeaponAttackForUnit,
-} from "../battle-runtime-test-support.ts";
+} from "../battle-runtime.test-support.ts";
 import {
   addBattleCombatant,
   battleStateInitIssueFromAdmissionIssues,

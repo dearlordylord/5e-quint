@@ -2,7 +2,7 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME warding_bond
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-warding-bond-linked-effect
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { describe, expect, test } from "vitest";
 import { damageAmount, DieRollResult } from "@dnd/shared/types";
@@ -18,9 +18,10 @@ import {
   characterBonusAttackSubjectForTest,
   characterAttackSubjectForTest,
   concentrationSavingThrowFill,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import { type BattleInterruptedProcedure } from "./battle-state-execution.ts";
 import { resumeInterruptedProcedure } from "./battle-reducer/dispatcher.ts";
+import { ATTACK_RESOLVERS } from "./battle-reducer/attack-main.ts";
 import { attackDamageInterruptionFrame } from "./battle-reducer/attack-damage-events.ts";
 import {
   burningHandsUnitId,
@@ -32,7 +33,7 @@ import {
   spellCasterId,
   spellTargetId,
   wardingBondUnitId,
-} from "./unit-profile-admission-catalog-support.ts";
+} from "./unit-profile-admission-catalog.test-support.ts";
 import {
   requireCombatant,
   requireHole,
@@ -43,7 +44,7 @@ import {
   sameClubMainAndOffHandLoadout,
   weaponAttackSubject,
   zeroAbilityWeaponAttack,
-} from "./unit-profile-admission-creature-fixture-support.ts";
+} from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
   knownWillingSpellTargetFill,
@@ -51,8 +52,8 @@ import {
   spellAct,
   spellTargetFill,
   wardingBondSpellTargetFill,
-} from "./unit-profile-admission-spell-fill-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+} from "./unit-profile-admission-spell-fill.test-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import { spellActiveEffectExecutionRef } from "./active-effect/execution-ref.ts";
 import {
   applyBattleHitPointDamage,
@@ -64,7 +65,7 @@ import {
   resolveBattleSubject,
   spellId,
   spellSlotInvocationRef,
-} from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission.test-support.ts";
 import type {
   BattleActiveEffect,
   BattleFill,
@@ -73,7 +74,7 @@ import type {
   BattleState,
   BattleSubject,
   CombatantId,
-} from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission.test-support.ts";
 import type { BattleProcedureExecutionRef } from "./identity.ts";
 
 describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding Bond admission", () => {
@@ -335,6 +336,7 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
       state,
       continuation,
       "attackDamage",
+      ATTACK_RESOLVERS,
     );
     expect(needsTargetSave).toMatchObject({ tag: "needsHoles" });
     if (needsTargetSave.tag !== "needsHoles") {

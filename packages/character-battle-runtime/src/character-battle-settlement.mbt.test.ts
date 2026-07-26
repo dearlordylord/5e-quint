@@ -61,7 +61,7 @@ import {
   characterSheetBattleInit,
   settleCharacterSheetFromBattle,
 } from "./index.ts";
-import { battleProcedureExecutionRefForTest } from "./sdk-integration-test-support.ts";
+import { battleProcedureExecutionRefForTest } from "./sdk-integration.test-support.ts";
 
 function battleCreatureInitFromStatBlock(
   input: Parameters<typeof parseBattleCreatureInitFromStatBlock>[0],

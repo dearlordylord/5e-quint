@@ -1,4 +1,4 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
 import { sameBattleSubject } from "./battle-subjects.ts";
 import { Match } from "effect";
 import { describe, expect, it } from "vitest";
@@ -21,7 +21,7 @@ import {
   run,
   stateCheck,
   type ReducerRouteEvent,
-} from "./battle-runtime-mbt-driver-kit.ts";
+} from "./battle-runtime-mbt-driver-kit.test-support.ts";
 
 import {
   armorClass,
@@ -44,7 +44,7 @@ import {
   skeletonCreatureInit,
   startBattleRight,
   unitLibrary,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import {
   battleId,
   battleObjectId,

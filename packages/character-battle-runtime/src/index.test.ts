@@ -60,7 +60,7 @@ import {
   startBattle,
 } from "@dnd/battle-runtime";
 import { findFamiliarFormEligibilityForSpell } from "@dnd/surface/surface/find-familiar-forms";
-import { battleResourcePoolExecutionRefForTest } from "./sdk-integration-test-support.ts";
+import { battleResourcePoolExecutionRefForTest } from "./sdk-integration.test-support.ts";
 import {
   abilityScoreAssignment,
   characterDraconicAncestrySelection,

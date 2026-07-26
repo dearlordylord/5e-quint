@@ -30,7 +30,7 @@ import {
   statBlockCreatureInit,
   testDaggerAttack,
   characterSeed,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import {
   battleAttackExecutionScopeRefForProcedureRef,
   battleAttackExecutionScopeRefBelongsToBattle,
@@ -38,7 +38,7 @@ import {
   battleProcedureExecutionRefBelongsToScope,
 } from "./identity.ts";
 import { boundAttackExecutionSelectionKey } from "./battle-action-options.ts";
-import { unitLibrary } from "./unit-profile-admission-catalog-support.ts";
+import { unitLibrary } from "./unit-profile-admission-catalog.test-support.ts";
 import { attackActionOptionPresentationName } from "./stat-block-presentation.ts";
 
 function identicalDaggerSession(name = "Dagger") {

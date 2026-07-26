@@ -72,7 +72,8 @@ import {
   d20TestNaturalOneRerollRollIssue,
   effectiveD20TestNaturalOneRerollAttackRoll,
 } from "./d20-test-natural-one-reroll.ts";
-import { needsHolesResult, revealHidden } from "./hole-helpers.ts";
+import { revealHidden } from "./hole-helpers.ts";
+import { needsHolesResult } from "./needs-holes-result.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { resolveRemarkableAthleteCriticalHitMovement } from "./remarkable-athlete-critical-movement.ts";
 import { battleStateAfterTargetActionEarlyEndForActor } from "./sanctuary-targeting-interdiction.ts";

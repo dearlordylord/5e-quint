@@ -10,7 +10,7 @@ import { effectiveWalkSpeed } from "./battle-reducer/movement-speed.ts";
 import {
   calmEmotionsUnitId,
   protectionFromEvilAndGoodUnitId,
-} from "./unit-profile-admission-catalog-support.ts";
+} from "./unit-profile-admission-catalog.test-support.ts";
 import { tickDurationEffects } from "./battle-reducer/turn-end-movement.ts";
 import {
   applyBattleHitPointDamage,
@@ -32,19 +32,19 @@ import {
   spellCasterId,
   spellSlotInvocationRef,
   spellTargetId,
-} from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission.test-support.ts";
 import type {
   BattleFill,
   BattleHole,
   BattleRuntimeSession,
   BattleSpellSavingThrowOutcomeHole,
-} from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission.test-support.ts";
 import { battleCreatureStateWithKnockOutPreservedConditions } from "./battle-reducer/creature-state.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
   battleProcedureExecutionRefForTest,
   requireCharacterSpellProcedureRefForTest,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 
 describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
   test("Hypnotic Pattern admits level-3+ area save casting and applies Charmed, Incapacitated, and Speed 0", () => {

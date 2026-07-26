@@ -37,7 +37,7 @@ import {
   rolledDiceGroup,
   targetFill,
   unsupportedAbilityModifierActivationUnit,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import type { BattleRuntimeSession } from "./index.ts";
 
 function requireBardicInspirationProcedureRef(session: BattleRuntimeSession) {

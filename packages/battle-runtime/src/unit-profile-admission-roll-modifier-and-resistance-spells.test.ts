@@ -13,14 +13,14 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 import {
   battleActiveEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { describe, expect, test } from "vitest";
 import {
   requireCharacterSpellProcedureRefForTest,
   attackExecutionSelectionForSubjectForTest,
   characterAttackSubjectForTest,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import protectionFromEnergyInput from "../../surface/content/protection_from_energy.json";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import type { DamageType } from "@dnd/shared/types";
@@ -40,7 +40,7 @@ import {
   resistanceUnitId,
   spellCasterId,
   spellTargetId,
-} from "./unit-profile-admission-catalog-support.ts";
+} from "./unit-profile-admission-catalog.test-support.ts";
 import {
   attackDamageDispositionFill,
   attackRollFill,
@@ -52,7 +52,7 @@ import {
   requireResultHole,
   weaponAttackSubject,
   zeroAbilityWeaponAttack,
-} from "./unit-profile-admission-creature-fixture-support.ts";
+} from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
   abilityChoiceFill,
@@ -66,8 +66,8 @@ import {
   spellTargetFill,
   spellTargetListFill,
   withResistanceEffect,
-} from "./unit-profile-admission-spell-fill-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+} from "./unit-profile-admission-spell-fill.test-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   applyCondition,
   battleCreatureStateWithKnockOutPreservedConditions,
@@ -80,13 +80,13 @@ import {
   Hp,
   resolveBattleSubject,
   spellSlotInvocationRef,
-} from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission.test-support.ts";
 import type {
   BattleFill,
   BattleRuntimeSession,
   BattleState,
   BattleSubject,
-} from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission.test-support.ts";
 import { tickDurationEffects } from "./battle-reducer/turn-end-movement.ts";
 import {
   passivePerceptionModifierDelta,
@@ -94,7 +94,7 @@ import {
 } from "./battle-reducer/hole-helpers.ts";
 import { BattleHoleSchema } from "./index.ts";
 import { Either, Schema } from "effect";
-import { defineSelectedIdentityReplayWitness } from "./selected-identity-witness.ts";
+import { defineSelectedIdentityReplayWitness } from "./selected-identity-witness.test-support.ts";
 
 function withoutKnownWillingFacts<
   T extends Extract<

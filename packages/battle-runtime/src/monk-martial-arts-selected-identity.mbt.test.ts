@@ -11,8 +11,8 @@ import {
 } from "@dnd/surface/surface/unit-catalog";
 
 import { martialArtsAttackProjectionProfileForUnit } from "./index.ts";
-import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
-import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
+import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.test-support.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.test-support.ts";
 
 type MonkMartialArtsLastResult = "init" | "projected" | "invalid";
 type MonkMartialArtsProjection = {

@@ -31,7 +31,6 @@ import type {
   BattleProcedureExecutionRef,
   CombatantId,
 } from "../../identity.ts";
-import type { SpellMetamagicApplicationFact } from "../metamagic-support.ts";
 import type { ChainedSpellFillSet } from "../spells-resolve-chained.ts";
 import type { SpellFillSet } from "../spells-resolve-fill-set.ts";
 import type { WeaponAttackOverrideFillInput } from "../weapon-attack-override-fill-input.ts";
@@ -371,3 +370,4 @@ export type SpellProcedureDeclarationResolution<
 export type SpellProcedureExecutionResolution<
   P extends SpellProcedureKey = SpellProcedureKey,
 > = SpellProcedureDeclarationResolution<P>;
+import type { SpellMetamagicApplicationFact } from "../metamagic-support.ts";

@@ -32,7 +32,7 @@ import {
   wizardId,
   wizardSpellcasting,
   armorClass,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 
 const potentCantripUnit = unitLibrary.requireUnit("wizard_potent_cantrip");
 const potentCantripUnitRef = supportedBattleUnitRef(potentCantripUnit);

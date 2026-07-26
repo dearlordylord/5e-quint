@@ -24,8 +24,8 @@ import {
   targetFill,
   damageRollFill,
   unitLibrary,
-} from "./battle-runtime-test-support.ts";
-import type { BattleState } from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
+import type { BattleState } from "./battle-runtime.test-support.ts";
 
 describe("battle runtime: Barbarian Retaliation", () => {
   test("opens an after-damage Reaction attack against the damaging creature within 5 feet", () => {

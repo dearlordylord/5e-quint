@@ -10,11 +10,11 @@ import { Match } from "effect";
 import type { Trace, TraceEdge, TraceNode } from "./tracer-model.ts";
 import {
   describeBonusActionTrigger,
-  idGen,
   procedureForFamily,
   procedurePrefix,
 } from "./tracer-rule-labels.ts";
 import type { IdGen } from "./tracer-rule-labels.ts";
+import { traceRoot } from "./tracer-root.ts";
 
 import { traceDuration } from "./tracer-duration.ts";
 import type { SpellCtx } from "./tracer-spell-context.ts";
@@ -48,17 +48,10 @@ import { traceTargetCountScaling } from "./tracer-scaling.ts";
 const byFamily = Match.discriminator("family");
 
 export function traceSpellUnit(spell: SpellRecord): Trace {
-  const nodes: TraceNode[] = [];
-  const edges: TraceEdge[] = [];
-  const ids = idGen();
-
-  const rootId = ids("root");
-  nodes.push({
-    id: rootId,
-    category: "source",
-    atomKind: "spell_root",
-    label: `spell_root\n${spell.name}`,
-  });
+  const { rootId, nodes, edges, ids } = traceRoot(
+    "spell_root",
+    `spell_root\n${spell.name}`,
+  );
 
   const procedureId = traceSpellMechanics(spell.mechanics, nodes, edges, ids);
   edges.push({ from: rootId, to: procedureId, relation: "roots" });

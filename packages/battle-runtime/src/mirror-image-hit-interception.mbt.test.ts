@@ -12,7 +12,7 @@ import {
   numberFromQuintInt,
   run,
   stateCheck,
-} from "./battle-runtime-mbt-driver-kit.ts";
+} from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import {
   MIRROR_IMAGE_HIT_INTERCEPTION_DUPLICATE_COUNTS,
   resolveMirrorImageHitInterception,

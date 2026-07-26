@@ -1,3 +1,4 @@
+import { savingThrowMetamagicHoles } from "../saving-throw-metamagic-holes.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-hideous-laughter-repeat-save-lifecycle
 //
 // The hideousLaughter Spell Procedure Profile: action-time Spell Slot casting
@@ -49,16 +50,10 @@ import {
   SpellSlotInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import {
-  CAREFUL_METAMAGIC_EFFECT_KIND,
   discoverSpellMetamagicSelections,
-  HEIGHTENED_METAMAGIC_EFFECT_KIND,
   spellMetamagicApplications,
 } from "../metamagic-support.ts";
-import {
-  carefulSpellProtectedTargetsHole,
-  heightenedSpellTargetChoiceHole,
-  spellTargetListHole,
-} from "../spells-holes-fills.ts";
+import { spellTargetListHole } from "../spells-holes-fills.ts";
 
 type HideousLaughterSpellInvocation = Extract<
   SupportedSpellInvocation,
@@ -264,7 +259,7 @@ function hideousLaughterMetamagicCastActs(input: {
       },
       initialHoles: [
         input.targetHole,
-        ...hideousLaughterMetamagicInitialHoles(
+        ...savingThrowMetamagicHoles(
           input.state,
           input.actorId,
           input.invocation,
@@ -289,31 +284,6 @@ function hideousLaughterCastAct(
     },
     initialHoles,
   };
-}
-
-function hideousLaughterMetamagicInitialHoles(
-  state: BattleState,
-  actorId: CombatantId,
-  invocation: BattleExecutableSpellInvocation<HideousLaughterSpellInvocation>,
-  metamagicApplications: readonly SpellMetamagicApplicationFact[],
-): readonly BattleHole[] {
-  const holes: BattleHole[] = [];
-  if (
-    metamagicApplications.some(
-      (application) => application.effectKind === CAREFUL_METAMAGIC_EFFECT_KIND,
-    )
-  ) {
-    holes.push(carefulSpellProtectedTargetsHole(state, actorId, invocation));
-  }
-  if (
-    metamagicApplications.some(
-      (application) =>
-        application.effectKind === HEIGHTENED_METAMAGIC_EFFECT_KIND,
-    )
-  ) {
-    holes.push(heightenedSpellTargetChoiceHole(state, actorId, invocation));
-  }
-  return holes;
 }
 
 function resolveHideousLaughter(
@@ -357,4 +327,3 @@ export const hideousLaughterProfile = {
   "hideousLaughter",
   HideousLaughterSpellInvocation
 >;
-import type { SpellMetamagicApplicationFact } from "../metamagic-support.ts";

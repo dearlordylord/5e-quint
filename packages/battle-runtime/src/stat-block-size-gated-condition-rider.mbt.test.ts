@@ -30,7 +30,7 @@ import {
   type ReducerRouteEvent,
   type ReducerRouteFill,
   type ReducerRouteOwnerGroup,
-} from "./battle-runtime-mbt-driver-kit.ts";
+} from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import {
   battleId,
   combatantId,
@@ -46,7 +46,7 @@ import {
   type BattleHole,
   type BattleState,
   type BattleSubject,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import type { BattleResolutionResult } from "./index.ts";
 
 type SizeGatedConditionRiderHole = "TargetChoice" | "AttackRoll" | "DamageRoll";

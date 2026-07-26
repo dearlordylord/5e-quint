@@ -9,6 +9,7 @@ import {
   STABLE_RECOVERY_ROLL_DICE_EXPR,
   advanceStableRecovery,
   advanceStableRecoveryWithRoll,
+  type StableRecoveryAdvanceResult,
 } from "@dnd/shared-algebras/stable-recovery-algebra";
 import { validateRolledDiceForDiceExpr } from "@dnd/shared-algebras/runtime-dice-algebra";
 import {
@@ -359,37 +360,12 @@ function passStableRecoveryRule(input: {
   if (Either.isLeft(advanced)) {
     return invalidElapsedTimeResult(sheet, advanced.left.message);
   }
-  if (advanced.right.tag === "needsStableRecoveryRoll") {
-    return {
-      tag: "needsHoles",
-      sheet,
-      holes: [input.hole ?? stableRecoveryRollHole(sheet.characterId)],
-      elapsedTicks: advanced.right.elapsedTicks,
-      remainingTicks: advanced.right.remainingTicks,
-    };
-  }
-  if (advanced.right.tag === "recovered") {
-    return {
-      tag: "resolved",
-      sheet: replaceCharacterSheetHitPoints(sheet, {
-        tag: "positive",
-        currentHp: Hp(1),
-        tempHp: sheet.hitPoints.tempHp,
-      }),
-      elapsedTicks: advanced.right.elapsedTicks,
-    };
-  }
-  return {
-    tag: "resolved",
-    sheet: replaceCharacterSheetHitPoints(sheet, {
-      ...sheet.hitPoints,
-      lifecycle: {
-        tag: "stable",
-        recovery: advanced.right.recovery,
-      },
-    }),
-    elapsedTicks: advanced.right.elapsedTicks,
-  };
+  return stableRecoveryAdvanceResult({
+    sheet,
+    hitPoints: sheet.hitPoints,
+    advanced: advanced.right,
+    hole: input.hole ?? stableRecoveryRollHole(sheet.characterId),
+  });
 }
 
 function passStableRecoveryRuleWithRoll(input: {
@@ -417,36 +393,53 @@ function passStableRecoveryRuleWithRoll(input: {
   if (Either.isLeft(advanced)) {
     return invalidElapsedTimeResult(sheet, advanced.left.message);
   }
-  if (advanced.right.tag === "needsStableRecoveryRoll") {
+  return stableRecoveryAdvanceResult({
+    sheet,
+    hitPoints: sheet.hitPoints,
+    advanced: advanced.right,
+    hole: input.hole,
+  });
+}
+
+function stableRecoveryAdvanceResult(input: {
+  readonly sheet: CharacterSheet;
+  readonly hitPoints: Extract<
+    CharacterSheetHitPoints,
+    { readonly tag: "zero" }
+  >;
+  readonly advanced: StableRecoveryAdvanceResult;
+  readonly hole: RuntimeHole;
+}): CharacterSheetElapsedTimeResult {
+  if (input.advanced.tag === "needsStableRecoveryRoll") {
     return {
       tag: "needsHoles",
-      sheet,
+      sheet: input.sheet,
       holes: [input.hole],
-      elapsedTicks: advanced.right.elapsedTicks,
-      remainingTicks: advanced.right.remainingTicks,
+      elapsedTicks: input.advanced.elapsedTicks,
+      remainingTicks: input.advanced.remainingTicks,
     };
   }
-  if (advanced.right.tag === "recovered") {
+  if (input.advanced.tag === "recovered") {
     return {
       tag: "resolved",
-      sheet: replaceCharacterSheetHitPoints(sheet, {
+      sheet: replaceCharacterSheetHitPoints(input.sheet, {
         tag: "positive",
         currentHp: Hp(1),
-        tempHp: sheet.hitPoints.tempHp,
+        tempHp: input.hitPoints.tempHp,
       }),
-      elapsedTicks: advanced.right.elapsedTicks,
+      elapsedTicks: input.advanced.elapsedTicks,
     };
   }
   return {
     tag: "resolved",
-    sheet: replaceCharacterSheetHitPoints(sheet, {
-      ...sheet.hitPoints,
+    sheet: replaceCharacterSheetHitPoints(input.sheet, {
+      ...input.hitPoints,
       lifecycle: {
         tag: "stable",
-        recovery: advanced.right.recovery,
+        recovery: input.advanced.recovery,
       },
     }),
-    elapsedTicks: advanced.right.elapsedTicks,
+    elapsedTicks: input.advanced.elapsedTicks,
   };
 }
 

@@ -1,3 +1,4 @@
+import { savingThrowMetamagicHoles } from "../saving-throw-metamagic-holes.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties unit-feature.metamagic-heightened-save-disadvantage unit-feature.metamagic-careful-save-protection
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
@@ -36,7 +37,10 @@ import {
   type BattleExecutableSpellInvocation,
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
-import { maybeOpenInterruptWindow, snapshotBattle } from "../dispatcher.ts";
+import {
+  maybeOpenInterruptWindow,
+  snapshotBattle,
+} from "../interrupt-execution.ts";
 import { battleCreatureWithSpellActiveEffects } from "../../active-effect/lifecycle.ts";
 import { type CombatantId } from "../../identity.ts";
 import {
@@ -55,7 +59,7 @@ import {
   startSpellEffectConcentration,
 } from "../spells-resolve-resources.ts";
 import { invalidResult } from "../result-helpers.ts";
-import { needsHolesResult } from "../hole-helpers.ts";
+import { needsHolesResult } from "../needs-holes-result.ts";
 import {
   DcSourceSchema,
   MovementFeet,
@@ -74,17 +78,10 @@ import {
   spellProcedureExecutionSchema,
 } from "./profile.ts";
 import {
-  CAREFUL_METAMAGIC_EFFECT_KIND,
   discoverSpellMetamagicSelections,
-  HEIGHTENED_METAMAGIC_EFFECT_KIND,
   spellMetamagicApplications,
 } from "../metamagic-support.ts";
-import {
-  carefulSpellProtectedTargetsHole,
-  heightenedSpellTargetChoiceHole,
-  spellSavingThrowOutcomeHole,
-  spellSavingThrowTargeting,
-} from "../spells-holes-fills.ts";
+import { spellSavingThrowOutcomeHole } from "../spells-holes-fills.ts";
 
 type SlowActivePenaltiesSpellInvocation = Extract<
   SupportedSpellInvocation,
@@ -328,7 +325,7 @@ function discoverSlowActivePenaltiesCastAct(
     ...discoverSpellMetamagicSelections({ actor, invocation }).map(
       (metamagic) => {
         const applications = spellMetamagicApplications(actor, metamagic);
-        const metamagicHoles = slowActivePenaltiesMetamagicInitialHoles(
+        const metamagicHoles = savingThrowMetamagicHoles(
           state,
           actorId,
           invocation,
@@ -359,34 +356,6 @@ function slowActivePenaltiesCastAct(
     },
     initialHoles,
   };
-}
-
-function slowActivePenaltiesMetamagicInitialHoles(
-  state: BattleState,
-  actorId: CombatantId,
-  invocation: BattleExecutableSpellInvocation<SlowActivePenaltiesSpellInvocation>,
-  metamagicApplications: readonly SpellMetamagicApplicationFact[],
-): readonly BattleHole[] {
-  const targeting = spellSavingThrowTargeting(invocation);
-  const holes: BattleHole[] = [];
-  if (
-    targeting.kind !== "singleCombatant" &&
-    metamagicApplications.some(
-      (application) => application.effectKind === CAREFUL_METAMAGIC_EFFECT_KIND,
-    )
-  ) {
-    holes.push(carefulSpellProtectedTargetsHole(state, actorId, invocation));
-  }
-  if (
-    targeting.kind !== "singleCombatant" &&
-    metamagicApplications.some(
-      (application) =>
-        application.effectKind === HEIGHTENED_METAMAGIC_EFFECT_KIND,
-    )
-  ) {
-    holes.push(heightenedSpellTargetChoiceHole(state, actorId, invocation));
-  }
-  return holes;
 }
 
 function resolveSlowActivePenalties(
@@ -667,4 +636,3 @@ export const slowActivePenaltiesProfile = {
   "slowActivePenalties",
   SlowActivePenaltiesSpellInvocation
 >;
-import type { SpellMetamagicApplicationFact } from "../metamagic-support.ts";

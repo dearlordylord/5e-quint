@@ -1,3 +1,4 @@
+import { maybeOpenSpellCastReactionWindow } from "../spell-cast-reaction-window.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-direct-condition
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-glyph-stored-concentration-full-duration
@@ -22,15 +23,12 @@ import {
   type BattleState,
   type DirectConditionSpellInvocation,
 } from "../../battle-state-execution.ts";
-import { maybeOpenInterruptWindow, snapshotBattle } from "../dispatcher.ts";
+import { snapshotBattle } from "../interrupt-execution.ts";
 import { CombatantId } from "../../identity.ts";
 import { applyDirectConditionSpellEffects } from "../direct-condition-lifecycle.ts";
-import { needsHolesResult } from "../hole-helpers.ts";
+
+import { needsHolesResult } from "../needs-holes-result.ts";
 import { invalidResult } from "../result-helpers.ts";
-import {
-  spellCastInterruptFrame,
-  spellCastMetamagicApplicationsInput,
-} from "../spell-cast-interrupt-frame.ts";
 import {
   sameStringSet,
   scalarBuffSpellTargetCount,
@@ -239,28 +237,14 @@ function resolveDirectCondition(
   }
 
   if (input.storedGlyphRelease === undefined) {
-    const spellCastReactionWindow = maybeOpenInterruptWindow(
-      input.input.state,
-      spellCastInterruptFrame({
-        casterId: input.actorId,
-        invocation: input.invocation,
-        targetIds: input.fillSet.targetList.targetIds,
-        reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
-        castingResource:
-          input.actionCostOverride === "bonusAction" ||
-          input.input.subject.tag === "bonusActionSpell"
-            ? { kind: "bonusAction" }
-            : { kind: "magicAction" },
-        ...spellCastMetamagicApplicationsInput(
-          input.metamagicApplications ?? [],
-        ),
-        continuation: {
-          kind: "replay",
-          subject: input.input.subject,
-          fills: input.input.fills,
-        },
-      }),
-      input.input.handledInterruptTrigger,
+    const spellCastReactionWindow = maybeOpenSpellCastReactionWindow(
+      input,
+      input.fillSet.targetList.targetIds,
+      input.actionCostOverride === "bonusAction" ||
+        input.input.subject.tag === "bonusActionSpell"
+        ? { kind: "bonusAction" }
+        : { kind: "magicAction" },
+      input.metamagicApplications ?? [],
     );
     if (spellCastReactionWindow !== null) {
       return spellCastReactionWindow;

@@ -5,12 +5,12 @@ import {
   SPELL_CAST_REACTION_FACTS_HOLE_ID,
 } from "./battle-reducer/battle-runtime-protocol.ts";
 import { parseWeaponAttackOverrideFillInput } from "./battle-reducer/weapon-attack-override-fill-input.ts";
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
 import {
   spellCasterId,
   spellTargetId,
-} from "./unit-profile-admission-catalog-support.ts";
-import { movementFeet } from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission-catalog.test-support.ts";
+import { movementFeet } from "./unit-profile-admission.test-support.ts";
 
 type TargetSpatialFactsFill = Extract<
   BattleFill,

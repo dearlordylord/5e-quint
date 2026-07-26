@@ -30,7 +30,7 @@ import {
   unitFeatureDecisionFill,
   unitLibrary,
   type BattleSubject,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 
 describe("battle runtime: Stunning Strike", () => {
   test("failed save spends Focus and Stuns until the start of the Monk's next turn", () => {

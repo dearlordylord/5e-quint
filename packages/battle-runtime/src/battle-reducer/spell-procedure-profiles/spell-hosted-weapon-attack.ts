@@ -41,7 +41,8 @@ import {
   supportedDamageAmountExpr,
 } from "../spells-execution-facts.ts";
 import { wildShapeCanUseWornLoadoutObject } from "../wild-shape-equipment.ts";
-import { attackTargetHole, needsHolesResult } from "../hole-helpers.ts";
+import { attackTargetHole } from "../hole-helpers.ts";
+import { needsHolesResult } from "../needs-holes-result.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
 import type {

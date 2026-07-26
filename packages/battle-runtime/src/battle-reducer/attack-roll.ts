@@ -10,12 +10,10 @@ import {
   applyCondition,
   EMPTY_CONDITION_STATE,
   hasCondition,
-  isIncapacitated,
 } from "@dnd/shared-algebras/conditions-algebra";
 import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
 import {
   abilityModifier,
-  difficultyClass,
   movementDeltaFeet,
   SIZES,
   type Ability,
@@ -64,7 +62,6 @@ import {
   type BattleFill,
   type BattleShovePushOutcome,
   type BattleTargetChoiceHole,
-  type BattleUnitFeatureSavingThrowOutcomeHole,
   type BattleUnitFeatureDecisionHole,
   type BattleLightEmitter,
   type BattleObjectOutline,
@@ -87,10 +84,10 @@ type RuntimeSpellProcedure =
   | RuntimeSpellProcedureExecution;
 import {
   activeOngoingFeatureOccurrencesForCombatant,
-  battleCreatureStateWithKnockOutPreservedConditions,
   isCharacterBattleCreatureState,
   ongoingFeatureProfileForSourceKey,
-} from "./creature-state-execution.ts";
+} from "./creature-state-queries.ts";
+import { battleCreatureStateWithKnockOutPreservedConditions } from "./creature-hit-point-state.ts";
 import { combatantHasGrapplerSupportProfile } from "./grappler-support-profile.ts";
 import { attackDamageDieFloorChoiceProcedureRefs } from "./attack-damage-die-floor-choice.ts";
 import {
@@ -115,8 +112,6 @@ import {
   spellConcentrationEffectSourceFromEffect,
 } from "./spell-condition-effects-helpers.ts";
 import {
-  WEAPON_MASTERY_TOPPLE_SAVE_HOLE_ID,
-  WEAPON_MASTERY_TOPPLE_SAVE_HOLE_INSTANCE,
   WEAPON_MASTERY_CLEAVE_ATTACK_ROLL_HOLE_ID,
   WEAPON_MASTERY_CLEAVE_ATTACK_ROLL_HOLE_INSTANCE,
   WEAPON_MASTERY_CLEAVE_DAMAGE_HOLE_ID,
@@ -136,18 +131,15 @@ import {
   HUNTERS_PREY_HORDE_BREAKER_TARGET_HOLE_ID,
   HUNTERS_PREY_HORDE_BREAKER_TARGET_HOLE_INSTANCE,
 } from "./domain-constants.ts";
-import {
-  savingThrowFlatBonusProjections,
-  savingThrowRollModeProjections,
-} from "./spells-damage-fills.ts";
 import { combatantEffectiveSize } from "./druid-wild-shape.ts";
 import {
   attackExecutionSelectionMatchesOption,
   attackTargetIsLegal,
   attackTargetRangeBand,
-  combatantProficiencyBonus,
-  effectiveWalkSpeed,
-} from "./movement-speed.ts";
+} from "./attack-spatial.ts";
+import { hasDodgeBenefit } from "./dodge-benefit.ts";
+import { ongoingFeatureEnemyRelationshipDecisionRequired } from "./ongoing-feature-relationship.ts";
+export { ongoingFeatureEnemyRelationshipDecisionRequired } from "./ongoing-feature-relationship.ts";
 import {
   attackRollTargetIsEnemy,
   parseSavingThrowRelationshipFacts,
@@ -847,24 +839,6 @@ export function attackAbilityMatchesModifier(
   );
 }
 
-export function hasDodgeBenefit(
-  state: BattleState,
-  target: BattleCreatureState,
-): boolean {
-  return (
-    target.dodging &&
-    !isIncapacitated(target.conditions) &&
-    Number(
-      effectiveWalkSpeed(
-        target,
-        state.grapples.some(
-          (grapple) => grapple.targetId === target.combatantId,
-        ),
-      ),
-    ) > 0
-  );
-}
-
 export function hasDodgeAttackRollBenefit(
   state: BattleState,
   target: BattleCreatureState,
@@ -1134,57 +1108,6 @@ export function applyWeaponMasterySlowAfterDamage(input: {
   };
 }
 
-export function weaponMasteryToppleSavingThrowHole(
-  state: BattleState,
-  attackerId: CombatantId,
-  targetId: CombatantId,
-  attack: SupportedAttackActionOption,
-): BattleUnitFeatureSavingThrowOutcomeHole | null {
-  const selection = weaponMasteryToppleSelection(
-    state,
-    attackerId,
-    targetId,
-    attack,
-  );
-  if (selection === null) {
-    return null;
-  }
-  const attacker = state.combatants.get(attackerId);
-  if (attacker === undefined) {
-    return null;
-  }
-  return {
-    kind: "savingThrowOutcome",
-    holeId: WEAPON_MASTERY_TOPPLE_SAVE_HOLE_ID,
-    holeInstanceKey: WEAPON_MASTERY_TOPPLE_SAVE_HOLE_INSTANCE,
-    label: "Topple Constitution saving throw",
-    ...(ongoingFeatureEnemyRelationshipDecisionRequired(
-      state,
-      attackerId,
-      "enemySavingThrow",
-    )
-      ? {
-          relationshipFactRequest: {
-            kind: "savingThrowTargetIsEnemy" as const,
-            actorId: attackerId,
-          },
-        }
-      : {}),
-    ability: "con",
-    dc: {
-      kind: "fixed",
-      dc: difficultyClass(
-        8 +
-          Number(selection.attack.abilityModifier) +
-          combatantProficiencyBonus(attacker),
-      ),
-    },
-    targetIds: [targetId],
-    targetRollModes: savingThrowRollModeProjections(state, "con"),
-    targetFlatBonuses: savingThrowFlatBonusProjections(state, "con"),
-  };
-}
-
 export function applyWeaponMasteryToppleSavingThrow(
   state: BattleState,
   attackerId: CombatantId,
@@ -1250,7 +1173,7 @@ export function applyWeaponMasteryToppleSavingThrow(
   };
 }
 
-function weaponMasteryToppleSelection(
+export function weaponMasteryToppleSelection(
   state: BattleState,
   attackerId: CombatantId,
   targetId: CombatantId,
@@ -1960,23 +1883,6 @@ export function extendSavingThrowOngoingFeatures(
       activeOngoingFeatureOccurrences: nextOccurrences,
     }),
   };
-}
-
-export function ongoingFeatureEnemyRelationshipDecisionRequired(
-  state: BattleState,
-  actorId: CombatantId,
-  trigger: "attackRollAgainstEnemy" | "enemySavingThrow",
-): boolean {
-  const actor = state.combatants.get(actorId);
-  return (
-    actor !== undefined &&
-    [...activeOngoingFeatureOccurrencesForCombatant(actor)].some(([key]) =>
-      ongoingFeatureProfileHasExtensionTrigger(
-        ongoingFeatureProfileForSourceKey(actor, key),
-        trigger,
-      ),
-    )
-  );
 }
 
 export function recordAttackRollOngoingFeatures(

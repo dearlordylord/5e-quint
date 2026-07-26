@@ -1,3 +1,4 @@
+import { maybeOpenSpellCastReactionWindow } from "../spell-cast-reaction-window.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magic-weapon-enhancement
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
@@ -22,14 +23,13 @@ import {
   type MagicWeaponEnhancementBonus,
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
-import { maybeOpenInterruptWindow, snapshotBattle } from "../dispatcher.ts";
 import type { CombatantId } from "../../identity.ts";
 import { battleWeaponItemHasMagicWeaponEnhancement } from "../attack-damage-apply.ts";
 import { activeDruidWildShapeEffect } from "../druid-wild-shape.ts";
-import { needsHolesResult } from "../hole-helpers.ts";
-import { invalidResult } from "../result-helpers.ts";
+
+import { needsHolesResult } from "../needs-holes-result.ts";
+import { invalidResult, resolutionFromStateResult } from "../result-helpers.ts";
 import { wildShapeCanUseWornLoadoutObject } from "../wild-shape-equipment.ts";
-import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
 import type { SpellFillSet } from "../spells-resolve-fill-set.ts";
 import { magicWeaponTargetItemHole } from "../spells-targeting.ts";
@@ -250,21 +250,11 @@ function resolveMagicWeaponEnhancement(
     );
   }
 
-  const spellCastReactionWindow = maybeOpenInterruptWindow(
-    input.input.state,
-    spellCastInterruptFrame({
-      casterId: input.actorId,
-      invocation: input.invocation,
-      targetIds: [],
-      reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
-      castingResource: { kind: "bonusAction" },
-      continuation: {
-        kind: "replay",
-        subject: input.input.subject,
-        fills: input.input.fills,
-      },
-    }),
-    input.input.handledInterruptTrigger,
+  const spellCastReactionWindow = maybeOpenSpellCastReactionWindow(
+    input,
+    [],
+    { kind: "bonusAction" },
+    undefined,
   );
   if (spellCastReactionWindow !== null) {
     return spellCastReactionWindow;
@@ -313,13 +303,7 @@ function resolveMagicWeaponEnhancement(
     invocation: input.invocation,
     errorState: input.input.state,
   });
-  return resourced.tag === "invalid"
-    ? resourced
-    : {
-        tag: "resolved",
-        state: resourced.state,
-        snapshot: snapshotBattle(resourced.state),
-      };
+  return resolutionFromStateResult(resourced);
 }
 
 function battleMagicWeaponTargetItemIsHeldWeapon(

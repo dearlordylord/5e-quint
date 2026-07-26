@@ -18,12 +18,12 @@ import {
   spellCasterId,
   spellTargetId,
   unitLibrary,
-} from "./unit-profile-admission-catalog-support.ts";
+} from "./unit-profile-admission-catalog.test-support.ts";
 import {
   characterCreature,
   requireHole,
-} from "./unit-profile-admission-creature-fixture-support.ts";
-import { characterBattleFeatureInitForTest } from "./battle-runtime-test-support.ts";
+} from "./unit-profile-admission-creature-fixture.test-support.ts";
+import { characterBattleFeatureInitForTest } from "./battle-runtime.test-support.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import {
   battleMagicActionHealingPoolSupportForUnit,
@@ -34,7 +34,7 @@ import {
   discoverBattleActCandidates,
   resolveBattleSubject,
   startBattle,
-} from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission.test-support.ts";
 
 const preserveLifeUnit = unitLibrary.requireUnit(clericPreserveLifeUnitId);
 const channelDivinityUnit = unitLibrary.requireUnit(

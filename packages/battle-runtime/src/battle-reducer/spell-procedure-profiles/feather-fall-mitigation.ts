@@ -34,7 +34,7 @@ import {
   type BattleState,
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
-import { snapshotBattle } from "../dispatcher.ts";
+import { snapshotBattle } from "../interrupt-execution.ts";
 import { CombatantId } from "../../identity.ts";
 import { DurationBattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
 import { invalidResult } from "../result-helpers.ts";
@@ -47,7 +47,8 @@ import {
   validateSpellTargetList,
 } from "../spells-targeting.ts";
 import { featherFallReactionSpellMatchesTrigger } from "../reaction-triggered-spells.ts";
-import { needsHolesResult } from "../hole-helpers.ts";
+
+import { needsHolesResult } from "../needs-holes-result.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,

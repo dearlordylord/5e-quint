@@ -48,10 +48,7 @@ import {
 import { Match } from "effect";
 import {
   attackDamageContinuationConcentrationFrame,
-  currentInterruptCheckpoint,
-  currentInterruptFrame,
   interruptCheckpointFrame,
-  interruptDecisionHole,
   interruptedProcedureSubject,
   interruptedProcedureSupportsAttackDamageChanges,
   maybeOpenInterruptWindow,
@@ -59,22 +56,21 @@ import {
   openBattleInterruptWindow,
   readiedMovementReactionChoices,
   readiedSpellReactionChoices,
-  snapshotBattle,
   spendReaction,
-  unofferedEligibleResponders,
   type BattleOpenedInterruptWindowResult,
 } from "./interrupt-execution.ts";
+import {
+  currentInterruptCheckpoint,
+  currentInterruptFrame,
+  interruptDecisionHole,
+  snapshotBattle,
+  unofferedEligibleResponders,
+} from "./battle-snapshot.ts";
 export {
   attackDamageContinuationConcentrationFrame,
   attackHitBonusActionSpellReactionChoices,
-  battleSnapshotProjection,
-  battleTurnSnapshot,
-  currentInterruptCheckpoint,
-  currentInterruptFrame,
   interruptCheckpointFrame,
   interruptChoices,
-  interruptDecisionHole,
-  interruptTriggerLabel,
   interruptWindowProgress,
   interruptedProcedureSubject,
   interruptedProcedureSupportsAttackDamageChanges,
@@ -82,16 +78,24 @@ export {
   openAfterDamageSequenceInterruptWindow,
   openBattleInterruptWindow,
   opportunityAttackReactionChoices,
-  pendingInterruptSnapshot,
   readiedMovementReactionChoices,
   readiedSpellReactionChoices,
   retaliationReactionAttackChoices,
-  snapshotBattle,
   spendReaction,
-  unofferedEligibleResponders,
   type BattleInterruptWindowProgress,
   type BattleOpenedInterruptWindowResult,
 } from "./interrupt-execution.ts";
+export {
+  battleSnapshotProjection,
+  battleTurnSnapshot,
+  currentInterruptCheckpoint,
+  currentInterruptFrame,
+  interruptDecisionHole,
+  interruptTriggerLabel,
+  pendingInterruptSnapshot,
+  snapshotBattle,
+  unofferedEligibleResponders,
+} from "./battle-snapshot.ts";
 import * as Either from "effect/Either";
 import { type BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
 import {
@@ -112,7 +116,6 @@ import {
   companionHeldObjectFactsHole,
   findFamiliarTouchDeliveryTargetHoles,
 } from "../find-familiar-companion-subjects.ts";
-import { resolvePactOfTheChainFamiliarReactionAttack } from "../find-familiar-pact-chain.ts";
 import {
   findFamiliarCompanionEntryForOwner,
   isPresentFindFamiliarCombatant,
@@ -175,7 +178,8 @@ import {
   damageDispositionForTarget,
   zeroHitPointReplacementDispositionHole,
 } from "./attack-damage-apply.ts";
-import { needsHolesResult } from "./hole-helpers.ts";
+
+import { needsHolesResult } from "./needs-holes-result.ts";
 import { interruptAttackExecutionSelectionsEqual } from "./movement-speed.ts";
 import {
   applyProtectionRelevantEffectSaveOutcome,
@@ -277,11 +281,10 @@ import {
 import { validateSavingThrowOutcomes } from "./spells-resolve-save-gates.ts";
 import { INTERRUPT_DECISION_HOLE_ID } from "./battle-runtime-protocol.ts";
 import { activeOngoingFeaturesPreventSpellInvocation } from "./spells-invocation-guards.ts";
-import {
-  resolveAttack,
-  resolveHuntersPreyHordeBreakerContinuation,
-  resolveWeaponMasteryCleaveContinuation,
-} from "./attack-main.ts";
+import type {
+  BattleAttackResolvers,
+  BattleAttackRouteResolvers,
+} from "./attack-resolvers.ts";
 import {
   resolveBonusActionStandardAction,
   resolveDash,
@@ -306,10 +309,10 @@ import {
   resolveOffHandAttack,
 } from "./attack-offhand.ts";
 import {
-  applyBattleMovement,
   resolveReleaseReadiedMovementCommand,
   resolveReleaseReadiedSpellCommand,
 } from "./readied-release.ts";
+import { applyBattleMovement } from "./battle-movement.ts";
 import {
   commandPendingEffectsForActor,
   resolveCloudkillAreaHazardSaveCommand,
@@ -344,10 +347,7 @@ import {
   resolveUnitFeature,
   resolveUnitFeatureHeldWeaponActivation,
 } from "./unit-features.ts";
-import {
-  resolveMonkFocusFlurryOfBlowsStrike,
-  resolveMonkFocusOption,
-} from "./monk-focus.ts";
+import { resolveMonkFocusOption } from "./monk-focus.ts";
 import { resolveOpportunityAttackCommand } from "./opportunity-attacks.ts";
 import type {
   BattleAfterDamageEvent,
@@ -404,6 +404,7 @@ import {
 
 type ResolveBattleSubjectInternalOptions = {
   readonly executionRegistry: SpellProcedureExecutionRegistry;
+  readonly attackResolvers: BattleAttackRouteResolvers;
   readonly replayingInterruptedProcedure?: boolean;
   readonly handledInterruptTrigger?: BattleInterruptTrigger;
   readonly pendingAttackDamageReductions?: readonly BattlePendingAttackDamageReduction[];
@@ -414,8 +415,12 @@ type ResolveBattleSubjectInternalOptions = {
 export function resolveAdmittedBattleSubject(
   input: AdmittedBattleResolutionInput,
   executionRegistry: SpellProcedureExecutionRegistry,
+  attackResolvers: BattleAttackRouteResolvers,
 ): BattleResolutionResult {
-  return resolveBattleSubjectInternal(input, { executionRegistry });
+  return resolveBattleSubjectInternal(input, {
+    executionRegistry,
+    attackResolvers,
+  });
 }
 
 function validateD20TestNaturalOneRerollFills(
@@ -765,6 +770,7 @@ export function resolveBattleSubjectInternal(
           frame: activeFrame,
           subject: input.subject,
           fills: input.fills,
+          attackResolvers: options.attackResolvers,
         });
       }
       if (activeFrame.kind === "attackDamageContinuationCunningStrike") {
@@ -803,6 +809,7 @@ export function resolveBattleSubjectInternal(
           subject: input.subject,
           fills: input.fills,
           executionRegistry: options.executionRegistry,
+          attackResolvers: options.attackResolvers,
         });
       }
       if (activeFrame.kind === "flySpeedGrantEndFallCleanup") {
@@ -826,6 +833,7 @@ export function resolveBattleSubjectInternal(
       ) {
         const interruptResult = resolveBattleSubjectInternal(input, {
           executionRegistry: options.executionRegistry,
+          attackResolvers: options.attackResolvers,
           replayingInterruptedProcedure: true,
           ...(activeInterrupt.handledInterruptTrigger === undefined
             ? {}
@@ -850,6 +858,7 @@ export function resolveBattleSubjectInternal(
           ? completeActiveInterruptProcedure(
               interruptResult.state,
               options.executionRegistry,
+              options.attackResolvers,
             )
           : interruptResult;
       }
@@ -1125,7 +1134,7 @@ export function resolveBattleSubjectInternal(
       };
     }
     if (subject.tag === "action" && subject.action === "attack") {
-      return resolveAttack({
+      return options.attackResolvers.resolveAttack({
         ...input,
         subject,
         ...(options.replayingInterruptedProcedure === undefined
@@ -1152,31 +1161,33 @@ export function resolveBattleSubjectInternal(
       });
     }
     if (subject.tag === "pactOfTheChainFamiliarAttack") {
-      return resolvePactOfTheChainFamiliarReactionAttack({
-        ...input,
-        subject,
-        ...(options.replayingInterruptedProcedure === undefined
-          ? {}
-          : {
-              replayingInterruptedProcedure:
-                options.replayingInterruptedProcedure,
-            }),
-        ...(options.handledInterruptTrigger === undefined
-          ? {}
-          : { handledInterruptTrigger: options.handledInterruptTrigger }),
-        ...(options.pendingAttackDamageReductions === undefined
-          ? {}
-          : {
-              pendingAttackDamageReductions:
-                options.pendingAttackDamageReductions,
-            }),
-        ...(options.pendingAttackDamageAdditions === undefined
-          ? {}
-          : {
-              pendingAttackDamageAdditions:
-                options.pendingAttackDamageAdditions,
-            }),
-      });
+      return options.attackResolvers.resolvePactOfTheChainFamiliarReactionAttack(
+        {
+          ...input,
+          subject,
+          ...(options.replayingInterruptedProcedure === undefined
+            ? {}
+            : {
+                replayingInterruptedProcedure:
+                  options.replayingInterruptedProcedure,
+              }),
+          ...(options.handledInterruptTrigger === undefined
+            ? {}
+            : { handledInterruptTrigger: options.handledInterruptTrigger }),
+          ...(options.pendingAttackDamageReductions === undefined
+            ? {}
+            : {
+                pendingAttackDamageReductions:
+                  options.pendingAttackDamageReductions,
+              }),
+          ...(options.pendingAttackDamageAdditions === undefined
+            ? {}
+            : {
+                pendingAttackDamageAdditions:
+                  options.pendingAttackDamageAdditions,
+              }),
+        },
+      );
     }
     if (subject.tag === "creatureAttack") {
       const combatants = creatureAttackSubjectCombatants({
@@ -1429,7 +1440,7 @@ export function resolveBattleSubjectInternal(
       return resolveMonkFocusOption({ ...input, subject });
     }
     if (subject.tag === "monkFocusFlurryOfBlowsStrike") {
-      return resolveMonkFocusFlurryOfBlowsStrike({
+      return options.attackResolvers.resolveMonkFocusFlurryOfBlowsStrike({
         ...input,
         subject,
         ...(options.replayingInterruptedProcedure === undefined
@@ -1471,6 +1482,7 @@ export function resolveBattleSubjectInternal(
       return resolveFindFamiliarTouchSpellSubject(
         { ...input, subject },
         options.executionRegistry,
+        options.attackResolvers,
       );
     }
     if (subject.tag === "actionSpell") {
@@ -2042,6 +2054,7 @@ function resolveFindFamiliarTouchSpellSubject(
     Extract<BattleSubject, { readonly tag: "findFamiliarTouchSpell" }>
   >,
   executionRegistry: SpellProcedureExecutionRegistry,
+  attackResolvers: BattleAttackRouteResolvers,
 ): BattleResolutionResult {
   const connection = findFamiliarConnectionFact({
     state: input.state,
@@ -2073,6 +2086,7 @@ function resolveFindFamiliarTouchSpellSubject(
       fact: connection.fact,
     },
     executionRegistry,
+    attackResolvers,
   );
   return delivered.tag === "needsHoles"
     ? {
@@ -2094,6 +2108,7 @@ export function deliverTouchSpellThroughFindFamiliar(
     readonly fact: FindFamiliarWithin100FeetFact;
   },
   executionRegistry: SpellProcedureExecutionRegistry,
+  attackResolvers: BattleAttackRouteResolvers,
 ): BattleResolutionResult {
   const prepared = prepareTouchSpellDeliveryThroughFindFamiliar(input);
   if (prepared.tag === "invalid") {
@@ -2112,7 +2127,11 @@ export function deliverTouchSpellThroughFindFamiliar(
       "The familiar-delivered spell procedure is no longer bound to its caster.",
     );
   }
-  const cast = resolveAdmittedBattleSubject(admission.input, executionRegistry);
+  const cast = resolveAdmittedBattleSubject(
+    admission.input,
+    executionRegistry,
+    attackResolvers,
+  );
   if (cast.tag === "invalid") {
     return { ...cast, snapshot: snapshotBattle(input.state) };
   }
@@ -3378,6 +3397,7 @@ export function resolveBattleInterrupt(
     readonly fill: Extract<BattleFill, { readonly kind: "interruptDecision" }>;
   },
   executionRegistry: SpellProcedureExecutionRegistry,
+  attackResolvers: BattleAttackRouteResolvers,
 ): BattleResolutionResult {
   const withInterruptRoute = (
     result: BattleResolutionResult,
@@ -3464,6 +3484,7 @@ export function resolveBattleInterrupt(
             selection: input.fill.value.choice,
           },
           executionRegistry,
+          attackResolvers,
         ),
       );
     }
@@ -3503,6 +3524,7 @@ export function resolveBattleInterrupt(
     }
     const interruptResult = resolveBattleSubjectInternal(admission.input, {
       executionRegistry,
+      attackResolvers,
       replayingInterruptedProcedure: true,
     });
     return withInterruptRoute(
@@ -3510,6 +3532,7 @@ export function resolveBattleInterrupt(
         ? completeActiveInterruptProcedure(
             interruptResult.state,
             executionRegistry,
+            attackResolvers,
           )
         : interruptResult,
     );
@@ -3556,8 +3579,10 @@ export function resolveBattleInterrupt(
             updatedFrame.continuation,
             updatedFrame.trigger,
             executionRegistry,
+            attackResolvers,
           ),
           executionRegistry,
+          attackResolvers,
         )
       : {
           tag: "resolved",
@@ -3628,6 +3653,7 @@ export function resolveReactionRollOrDamageReduction(
     readonly selection: BattleInterruptProcedureSelection;
   },
   executionRegistry: SpellProcedureExecutionRegistry,
+  attackResolvers: BattleAttackRouteResolvers,
 ): BattleResolutionResult {
   if (input.selection.kind !== "reactionRollOrDamageReduction") {
     return invalidResult(
@@ -3753,8 +3779,10 @@ export function resolveReactionRollOrDamageReduction(
           completedFrame.continuation,
           completedFrame.trigger,
           executionRegistry,
+          attackResolvers,
         ),
         executionRegistry,
+        attackResolvers,
       )
     : {
         tag: "resolved",
@@ -4847,13 +4875,18 @@ function afterHitSpellMatchesAttackTrigger(
 export function completeResolvedActiveInterruptIfPending(
   result: BattleResolutionResult,
   executionRegistry: SpellProcedureExecutionRegistry,
+  attackResolvers: BattleAttackRouteResolvers,
 ): BattleResolutionResult {
   if (result.tag !== "resolved") {
     return result;
   }
   return currentInterruptCheckpoint(result.state)?.activeInterrupt === undefined
     ? result
-    : completeActiveInterruptProcedure(result.state, executionRegistry);
+    : completeActiveInterruptProcedure(
+        result.state,
+        executionRegistry,
+        attackResolvers,
+      );
 }
 
 export function interruptCheckpointAfterModifier(
@@ -5058,6 +5091,7 @@ export function sameInterruptProcedureChoice(
 export function completeActiveInterruptProcedure(
   state: BattleState,
   executionRegistry: SpellProcedureExecutionRegistry,
+  attackResolvers: BattleAttackRouteResolvers,
 ): BattleResolutionResult {
   const frame = currentInterruptCheckpoint(state);
   const activeInterrupt = frame?.activeInterrupt;
@@ -5109,8 +5143,10 @@ export function completeActiveInterruptProcedure(
           completedFrame.continuation,
           completedFrame.trigger,
           executionRegistry,
+          attackResolvers,
         ),
         executionRegistry,
+        attackResolvers,
       )
     : {
         tag: "resolved",
@@ -5149,6 +5185,7 @@ export function resumeInterruptedProcedure(
     { readonly kind: "replay" }
   >,
   handledInterruptTrigger: BattleInterruptTrigger,
+  attackResolvers: BattleAttackResolvers,
 ): BattleResolutionResult {
   if (continuation.kind === "resolved") {
     return {
@@ -5172,7 +5209,7 @@ export function resumeInterruptedProcedure(
     });
   }
   if (continuation.kind === "weaponMasteryCleave") {
-    return resolveWeaponMasteryCleaveContinuation({
+    return attackResolvers.resolveWeaponMasteryCleaveContinuation({
       state,
       subject: continuation.subject,
       firstTargetId: continuation.firstTargetId,
@@ -5185,7 +5222,7 @@ export function resumeInterruptedProcedure(
     });
   }
   if (continuation.kind === "huntersPreyHordeBreaker") {
-    return resolveHuntersPreyHordeBreakerContinuation({
+    return attackResolvers.resolveHuntersPreyHordeBreakerContinuation({
       state,
       subject: continuation.subject,
       firstTargetId: continuation.firstTargetId,
@@ -5317,6 +5354,7 @@ function resumeInterruptedProcedureWithExecutionRegistry(
   continuation: BattleInterruptedProcedure,
   handledInterruptTrigger: BattleInterruptTrigger,
   executionRegistry: SpellProcedureExecutionRegistry,
+  attackResolvers: BattleAttackRouteResolvers,
 ): BattleResolutionResult {
   return continuation.kind === "replay"
     ? resolveReplayContinuationFromState(
@@ -5325,8 +5363,14 @@ function resumeInterruptedProcedureWithExecutionRegistry(
         handledInterruptTrigger,
         continuation.fills,
         executionRegistry,
+        attackResolvers,
       )
-    : resumeInterruptedProcedure(state, continuation, handledInterruptTrigger);
+    : resumeInterruptedProcedure(
+        state,
+        continuation,
+        handledInterruptTrigger,
+        attackResolvers,
+      );
 }
 
 export function resolveAttackDamageContinuationCunningStrike(input: {
@@ -5468,6 +5512,7 @@ export function resolveReplayContinuation(input: {
   readonly subject: BattleSubject;
   readonly fills: readonly BattleFill[];
   readonly executionRegistry: SpellProcedureExecutionRegistry;
+  readonly attackResolvers: BattleAttackRouteResolvers;
 }): BattleResolutionResult {
   const stateWithoutFrame = {
     ...input.state,
@@ -5479,6 +5524,7 @@ export function resolveReplayContinuation(input: {
     input.frame.handledInterruptTrigger,
     replayContinuationFills(input.frame.continuation.fills, input.fills),
     input.executionRegistry,
+    input.attackResolvers,
   );
 }
 
@@ -5603,6 +5649,7 @@ export function resolveReplayContinuationFromState(
   handledInterruptTrigger: BattleInterruptTrigger,
   fills: readonly BattleFill[],
   executionRegistry: SpellProcedureExecutionRegistry,
+  attackResolvers: BattleAttackRouteResolvers,
 ): BattleResolutionResult {
   if (continuation.glyphStoredSpellReleaseReplay !== undefined) {
     return resolveGlyphStoredSpellReplayContinuationFromState(
@@ -5627,6 +5674,7 @@ export function resolveReplayContinuationFromState(
   }
   const result = resolveBattleSubjectInternal(admission.input, {
     executionRegistry,
+    attackResolvers,
     replayingInterruptedProcedure: true,
     handledInterruptTrigger,
     ...(continuation.attackDamageReductions === undefined
@@ -5870,6 +5918,7 @@ export function resolveAttackDamageContinuationConcentration(input: {
   readonly frame: BattleAttackDamageContinuationConcentrationFrame;
   readonly subject: BattleSubject;
   readonly fills: readonly BattleFill[];
+  readonly attackResolvers: BattleAttackRouteResolvers;
 }): BattleResolutionResult {
   const concentrationSave = attackDamageContinuationConcentrationHole(
     input.state,
@@ -5937,6 +5986,7 @@ export function resolveAttackDamageContinuationConcentration(input: {
       },
     },
     input.frame.handledInterruptTrigger,
+    input.attackResolvers,
   );
 }
 
@@ -6465,6 +6515,7 @@ export function endTurn(
     readonly fills?: readonly BattleFill[];
   },
   executionRegistry: SpellProcedureExecutionRegistry,
+  attackResolvers: BattleAttackRouteResolvers,
 ): BattleResolutionResult {
   const admission = admitBattleResolutionInput({
     state: input.state,
@@ -6485,6 +6536,7 @@ export function endTurn(
   const result = resolveAdmittedBattleSubject(
     admission.input,
     executionRegistry,
+    attackResolvers,
   );
   const routeEvents = battleReducerRouteForResolution(admission.input, result);
   return routeEvents === undefined ? result : { ...result, routeEvents };

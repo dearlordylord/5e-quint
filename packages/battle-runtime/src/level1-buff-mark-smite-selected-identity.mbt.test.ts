@@ -3,7 +3,7 @@ import {
   battleProcedureExecutionRefForTest,
   characterSpellProcedureRefMatchesSpellForTest,
   type MembersOf,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1E-DIVINE-FAVOR divine_favor
@@ -31,7 +31,7 @@ import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { Either } from "effect";
 import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";
 import { describe, expect, it } from "vitest";
-import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
+import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 import { admitCharacterWeaponAttackExecutionWeapon } from "./character-weapon-execution-admission.ts";
 import { battleObjectId } from "./identity.ts";
 
@@ -120,9 +120,9 @@ import {
   reducerRoutedLevel1WeaponHostedSelectedRouteStateCheck,
   run,
   stateCheck,
-} from "./battle-runtime-mbt-driver-kit.ts";
-import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
-import { damageTypeChoiceFill } from "./unit-profile-admission-spell-fill-support.ts";
+} from "./battle-runtime-mbt-driver-kit.test-support.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.test-support.ts";
+import { damageTypeChoiceFill } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 
 type Level1BuffMarkSmiteSelectedIdentityAction =

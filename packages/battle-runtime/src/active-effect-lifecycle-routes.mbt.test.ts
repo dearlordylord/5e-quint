@@ -19,7 +19,7 @@ import {
   type ReducerRouteHole,
   type ReducerRouteOwnerGroup,
   type ReducerRouteSubjectFamily,
-} from "./battle-runtime-mbt-driver-kit.ts";
+} from "./battle-runtime-mbt-driver-kit.test-support.ts";
 
 type RouteState<Surface extends string> = {
   readonly surface: Surface;

@@ -11,11 +11,8 @@ import type { UnitCatalog } from "@dnd/character-creation-runtime";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
-import { hasPreparedClassSpellAccess } from "./prepared-spell-access.ts";
-import { spendCharacterSheetSpellSlot } from "./spell-slots.ts";
 import {
   characterSheetIssue,
-  getRequiredUnit,
   type CharacterSheet,
   type CharacterSheetCreationInvocation,
   type CharacterSheetCreationObject,
@@ -23,6 +20,8 @@ import {
   type CharacterSheetCreationResult,
   type CharacterSheetIssue,
 } from "./sheet-types.ts";
+
+import { castPreparedSpell } from "./prepared-spell-cast.ts";
 
 const CREATION_SPELL_ID = "creation" as const;
 const CREATION_SPELL_LEVEL = spellSlotLevel(5);
@@ -54,51 +53,26 @@ export function castCreation(input: {
   readonly object: CharacterSheetCreationObject;
   readonly castLevel?: SpellSlotLevel;
 }): Either.Either<CharacterSheetCreationResult, CharacterSheetIssue> {
-  const spell = creationSpell(input.unitLibrary);
-  if (Either.isLeft(spell)) return Either.left(spell.left);
-
-  if (!hasPreparedClassSpellAccess(input.sheet, spell.right.id)) {
-    return characterSheetIssue(
-      "Creation requires prepared class Spell Access.",
-    );
-  }
-
-  const castLevel = input.castLevel ?? CREATION_SPELL_LEVEL;
-  const objectIssue = creationObjectIssue({
-    object: input.object,
-    castLevel,
-  });
-  if (objectIssue !== null) return characterSheetIssue(objectIssue);
-
-  const invocation = creationInvocationFromSpell({
-    spell: spell.right,
-    object: input.object,
-    castLevel,
-  });
-  if (Either.isLeft(invocation)) return Either.left(invocation.left);
-
-  const spent = spendCharacterSheetSpellSlot({
+  return castPreparedSpell({
     sheet: input.sheet,
-    spellLevel: castLevel,
-    spellSlotSource: "ordinary",
+    unitLibrary: input.unitLibrary,
+    spellId: authoredUnitId(CREATION_SPELL_ID),
+    spellLevel: input.castLevel ?? CREATION_SPELL_LEVEL,
+    spellName: "Creation",
+    invocation: (spell) => {
+      const castLevel = input.castLevel ?? CREATION_SPELL_LEVEL;
+      const objectIssue = creationObjectIssue({
+        object: input.object,
+        castLevel,
+      });
+      if (objectIssue !== null) return characterSheetIssue(objectIssue);
+      return creationInvocationFromSpell({
+        spell: spell,
+        object: input.object,
+        castLevel,
+      });
+    },
   });
-  if (Either.isLeft(spent)) return Either.left(spent.left);
-
-  return Either.right({
-    sheet: spent.right,
-    invocation: invocation.right,
-  });
-}
-
-function creationSpell(
-  unitLibrary: UnitCatalog,
-): Either.Either<SpellRecord, CharacterSheetIssue> {
-  const unit = getRequiredUnit(unitLibrary, authoredUnitId(CREATION_SPELL_ID));
-  if (Either.isLeft(unit)) return Either.left(unit.left);
-  if (unit.right.kind !== "spell") {
-    return characterSheetIssue("Creation requires a Spell record.");
-  }
-  return Either.right(unit.right);
 }
 
 function creationObjectIssue(input: {

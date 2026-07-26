@@ -4,7 +4,7 @@ import type {
   BattleHole,
   BattleReadiedSpellTrigger,
   BattleState,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import type { BattleRuntimeSession } from "./index.ts";
 import { describe, expect, test } from "vitest";
 import {
@@ -41,7 +41,7 @@ import {
   wizardId,
   wizardSpellcasting,
   ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 
 describe("battle runtime: Eldritch Blast", () => {
   test("Eldritch Blast resolves independent creature and object beams for one Magic action", () => {

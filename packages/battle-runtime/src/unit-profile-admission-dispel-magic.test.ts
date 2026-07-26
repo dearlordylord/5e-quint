@@ -6,7 +6,7 @@ import {
   battleActiveEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
   requireCharacterSpellProcedureRefForTest,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { Round } from "@dnd/shared/types";
 import type { ActivationPhase, SpellRecord } from "@dnd/surface/surface/types";
@@ -30,20 +30,20 @@ import {
   spellCasterId,
   spellTargetId,
   spiritualWeaponUnitId,
-} from "./unit-profile-admission-catalog-support.ts";
+} from "./unit-profile-admission-catalog.test-support.ts";
 import {
   requireHole,
   requireResultHole,
-} from "./unit-profile-admission-creature-fixture-support.ts";
+} from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
   maybeSpellAct,
   spellAct,
-} from "./unit-profile-admission-spell-fill-support.ts";
+} from "./unit-profile-admission-spell-fill.test-support.ts";
 import {
   decodeSpellRecordForTest,
   spellRecord,
-} from "./unit-profile-admission-spell-record-support.ts";
+} from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   attackBonus,
   battleAreaId,
@@ -57,7 +57,7 @@ import {
   type BattleFill,
   type BattleHole,
   type BattleRuntimeSession,
-} from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission.test-support.ts";
 
 type OngoingSpellTargetChoiceFill = Extract<
   BattleFill,

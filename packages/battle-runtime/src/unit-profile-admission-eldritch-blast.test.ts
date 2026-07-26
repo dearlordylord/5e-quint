@@ -1,5 +1,5 @@
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
-import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime-test-support.ts";
+import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV39 eldritch_blast
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-independent-attack-sequence
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE
@@ -8,19 +8,19 @@ import {
   eldritchBlastUnitId,
   spellCasterId,
   spellTargetId,
-} from "./unit-profile-admission-catalog-support.ts";
-import { requireResultHole } from "./unit-profile-admission-creature-fixture-support.ts";
+} from "./unit-profile-admission-catalog.test-support.ts";
+import { requireResultHole } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
   maybeSpellAct,
   spellAct,
   spellHoleInvocation,
   spellTargetFill,
-} from "./unit-profile-admission-spell-fill-support.ts";
+} from "./unit-profile-admission-spell-fill.test-support.ts";
 import {
   eldritchBlastWithTargetCount,
   spellRecord,
-} from "./unit-profile-admission-spell-record-support.ts";
+} from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   attackBonus,
   cantripSpellInvocationRef,
@@ -28,11 +28,11 @@ import {
   decodeUnitRecordSync,
   eldritchBlastInput,
   resolveBattleSubject,
-} from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission.test-support.ts";
 import type {
   BattleHole,
   SpellRecord,
-} from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission.test-support.ts";
 
 describe("SRDINV39 deterministic Eldritch Blast Spell Unit admission", () => {
   test("eldritch_blast is admitted as exact SRD creature-or-object spell attack beams", () => {

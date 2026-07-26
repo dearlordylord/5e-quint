@@ -5,7 +5,7 @@ import { describe, expect, test } from "vitest";
 import {
   characterAttackSubjectForTest,
   requireCharacterUnitProcedureRefForTest,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import {
   boonOfCombatProwessUnitId,
   combatProwessSupportProfile,
@@ -14,7 +14,7 @@ import {
   spellCasterId,
   spellTargetId,
   unitLibrary,
-} from "./unit-profile-admission-catalog-support.ts";
+} from "./unit-profile-admission-catalog.test-support.ts";
 import {
   attackRollFill,
   attackTargetFill,
@@ -25,20 +25,20 @@ import {
   weaponAttackRollHole,
   weaponAttackSubject,
   zeroAbilityWeaponAttack,
-} from "./unit-profile-admission-creature-fixture-support.ts";
-import { combatProwessBattle } from "./unit-profile-admission-feature-fixture-support.ts";
+} from "./unit-profile-admission-creature-fixture.test-support.ts";
+import { combatProwessBattle } from "./unit-profile-admission-feature-fixture.test-support.ts";
 import {
   spellAct,
   spellTargetFill,
-} from "./unit-profile-admission-spell-fill-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+} from "./unit-profile-admission-spell-fill.test-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   battleUnitRefWithSupportProfiles,
   Either,
   parseSupportedUnitFeatureProfile,
   resolveBattleInterrupt,
   resolveBattleSubject,
-} from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission.test-support.ts";
 
 function combatProwessProcedureRef(
   state: Parameters<typeof requireCharacterUnitProcedureRefForTest>[0],

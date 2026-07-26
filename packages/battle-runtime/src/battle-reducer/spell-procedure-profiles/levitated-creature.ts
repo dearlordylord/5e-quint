@@ -1,3 +1,4 @@
+import { maybeOpenSpellCastReactionWindow } from "../spell-cast-reaction-window.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-glyph-stored-concentration-full-duration
@@ -24,13 +25,17 @@ import {
   type BattleState,
   type LevitatedCreatureSpellInvocation,
 } from "../../battle-state-execution.ts";
-import { maybeOpenInterruptWindow, snapshotBattle } from "../dispatcher.ts";
+import { snapshotBattle } from "../interrupt-execution.ts";
 import { CombatantId } from "../../identity.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";
 import { allocateBattleActiveEffectRef } from "../../active-effect/execution-ref.ts";
-import { needsHolesResult } from "../hole-helpers.ts";
-import { invalidResult } from "../result-helpers.ts";
-import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
+
+import { needsHolesResult } from "../needs-holes-result.ts";
+import {
+  invalidResult,
+  resolvedResult,
+  resolutionFromStateResult,
+} from "../result-helpers.ts";
 import { combatantsAfterConcentrationSpellEffectsEndedIfNoEffects } from "../spell-condition-effects-helpers.ts";
 import {
   LEVITATE_ALTITUDE_CONTROL_FEET,
@@ -271,21 +276,11 @@ function resolveLevitatedCreature(
   }
 
   if (input.storedGlyphRelease === undefined) {
-    const spellCastReactionWindow = maybeOpenInterruptWindow(
-      input.input.state,
-      spellCastInterruptFrame({
-        casterId: input.actorId,
-        invocation: input.invocation,
-        targetIds: [target.combatantId],
-        reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
-        castingResource: { kind: "magicAction" },
-        continuation: {
-          kind: "replay",
-          subject: input.input.subject,
-          fills: input.input.fills,
-        },
-      }),
-      input.input.handledInterruptTrigger,
+    const spellCastReactionWindow = maybeOpenSpellCastReactionWindow(
+      input,
+      [target.combatantId],
+      { kind: "magicAction" },
+      undefined,
     );
     if (spellCastReactionWindow !== null) {
       return spellCastReactionWindow;
@@ -350,13 +345,7 @@ function resolveLevitatedCreature(
         errorState: input.input.state,
         startConcentration: false,
       });
-      return resourced.tag === "invalid"
-        ? resourced
-        : {
-            tag: "resolved",
-            state: resourced.state,
-            snapshot: snapshotBattle(resourced.state),
-          };
+      return resolutionFromStateResult(resourced);
     }
   }
 
@@ -385,11 +374,7 @@ function resolveLevitatedCreature(
     input.input.subject.procedureRef,
   );
   if (input.storedGlyphRelease !== undefined) {
-    return {
-      tag: "resolved",
-      state: effected,
-      snapshot: snapshotBattle(effected),
-    };
+    return resolvedResult(effected);
   }
   const resourced = spendSpellCastResources({
     state: effected,
@@ -400,13 +385,7 @@ function resolveLevitatedCreature(
       ? { startConcentration: false }
       : {}),
   });
-  return resourced.tag === "invalid"
-    ? resourced
-    : {
-        tag: "resolved",
-        state: resourced.state,
-        snapshot: snapshotBattle(resourced.state),
-      };
+  return resolutionFromStateResult(resourced);
 }
 
 function applyLevitatedCreatureSpellEffect(

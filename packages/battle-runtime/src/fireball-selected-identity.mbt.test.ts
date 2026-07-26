@@ -1,5 +1,5 @@
 // UNIT-IDENTITY-QNT-REPLAY: B23-FIREBALL-IDENTITY-WITNESS fireball doDiscoverFireballSaveGatedDamage
-import { defineSelectedIdentityQntReplay } from "./selected-identity-witness.ts";
+import { defineSelectedIdentityQntReplay } from "./selected-identity-witness.test-support.ts";
 
 import { fireballSelectedIdentityQntReplay } from "./fireball-selected-identity.qnt-replay.test-support.ts";
 

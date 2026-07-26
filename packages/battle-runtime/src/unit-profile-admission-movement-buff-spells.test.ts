@@ -7,18 +7,18 @@ import {
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV53 jump
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-expeditious-retreat-dash spell.invocation-jump-movement-replacement
 import { describe, expect, test } from "vitest";
-import type { BonusActionSpellAct } from "./unit-profile-admission-catalog-support.ts";
+import type { BonusActionSpellAct } from "./unit-profile-admission-catalog.test-support.ts";
 import {
   expeditiousRetreatUnitId,
   jumpUnitId,
   spellCasterId,
   spellTargetId,
-} from "./unit-profile-admission-catalog-support.ts";
+} from "./unit-profile-admission-catalog.test-support.ts";
 import {
   movementFill,
   requireCombatant,
   requireHole,
-} from "./unit-profile-admission-creature-fixture-support.ts";
+} from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
   bonusActionDashSpellAct,
@@ -27,8 +27,8 @@ import {
   jumpSpellTargetListFill,
   maybeJumpMovementReplacementAct,
   spellTargetListFill,
-} from "./unit-profile-admission-spell-fill-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+} from "./unit-profile-admission-spell-fill.test-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   breakBattleConcentration,
   combatantId,
@@ -38,7 +38,7 @@ import {
   movementFeet,
   resolveBattleSubject,
   spellSlotInvocationRef,
-} from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission.test-support.ts";
 
 describe("SRDINV49 deterministic Expeditious Retreat admission", () => {
   test("expeditious_retreat casts as a Bonus Action Dash spell", () => {

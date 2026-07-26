@@ -16,7 +16,7 @@ import {
   characterSeed,
   startBattleRight,
   statBlockRecord,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 
 describe("Stat Block combatant admission capability", () => {
   const admittedCombatantId = combatantId("admitted-stat-block");

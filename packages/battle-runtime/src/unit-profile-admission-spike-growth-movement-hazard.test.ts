@@ -10,7 +10,7 @@ import {
   requireCombatant,
   requireHole,
   requireResultHole,
-} from "./unit-profile-admission-creature-fixture-support.ts";
+} from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
   commandApproachMovementFill,
@@ -19,8 +19,8 @@ import {
   spellAct,
   spellHoleInvocation,
   spikeGrowthAreaFill,
-} from "./unit-profile-admission-spell-fill-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+} from "./unit-profile-admission-spell-fill.test-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   breakBattleConcentration,
   DieRollResult,
@@ -34,7 +34,7 @@ import {
   type BattleFill,
   type BattleSubject,
   type BattleState,
-} from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission.test-support.ts";
 import {
   spellCasterId,
   spellTargetId,
@@ -42,13 +42,13 @@ import {
   spikeGrowthUnitId,
   webAreaId,
   webUnitId,
-} from "./unit-profile-admission-catalog-support.ts";
+} from "./unit-profile-admission-catalog.test-support.ts";
 import { EMPOWERED_SPELL_REROLL_UNSUPPORTED_DAMAGE_ROLL_OWNER_MESSAGE } from "./battle-reducer/spell-reroll-issues.ts";
 import {
   battleActiveEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
   requireCharacterSpellProcedureRefForTest,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import type { BattleProcedureExecutionRef } from "./identity.ts";
 
 const spikeGrowthDurationTicks = elapsedTimeTicks(100);

@@ -44,7 +44,7 @@ import {
   resolveBattleSubject,
   characterSpellInvocationRefForProcedureRefForTest,
   opportunityAttackProcedureSelectionForTest,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],

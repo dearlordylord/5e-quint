@@ -5,8 +5,8 @@
 // UNIT-IDENTITY-REPLAY: L3-FOLLOWUP-HALFLING-NIMBLENESS-RUNTIME species_halfling_nimbleness doMoveThroughLargerCreatureSpace doRejectOccupiedStop doRejectMissingProfile doRejectSameSizeTraversal
 import { expect, it } from "vitest";
 
-import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
-import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
+import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.test-support.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.test-support.ts";
 import {
   battleId,
   battleTablePositionId,
@@ -18,8 +18,8 @@ import {
   type BattleReducerRouteEvent,
   type BattleSubject,
 } from "./index.ts";
-import { unitLibrary } from "./unit-profile-admission-catalog-support.ts";
-import { requireCombatant } from "./unit-profile-admission-creature-fixture-support.ts";
+import { unitLibrary } from "./unit-profile-admission-catalog.test-support.ts";
+import { requireCombatant } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import {
   characterBattleFeatureInitForTest,
   resolveBattleSubject,
@@ -29,7 +29,7 @@ import {
   movementFill,
   requireHole,
   startBattleRight,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import { BattleAttackProcedureExecutionRef } from "./identity.ts";
 import * as Either from "effect/Either";
 

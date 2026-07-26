@@ -39,7 +39,7 @@ import {
   quintVariantTag,
   run,
   stateCheck,
-} from "./battle-runtime-mbt-driver-kit.ts";
+} from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import {
   resolveBattleSubject,
   attackInitialTargetHole,
@@ -59,7 +59,7 @@ import {
   secondWizardId,
   targetFill,
   wizardId,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import { replayContinuationFrame } from "./battle-reducer/dispatcher.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";

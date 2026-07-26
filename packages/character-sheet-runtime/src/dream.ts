@@ -7,12 +7,9 @@ import type { UnitCatalog } from "@dnd/character-creation-runtime";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
-import { hasPreparedClassSpellAccess } from "./prepared-spell-access.ts";
-import { spendCharacterSheetSpellSlot } from "./spell-slots.ts";
 import {
   DREAM_MATERIAL_COMPONENTS,
   characterSheetIssue,
-  getRequiredUnit,
   type CharacterSheet,
   type CharacterSheetDreamCasting,
   type CharacterSheetDreamInvocation,
@@ -23,6 +20,9 @@ import {
   type CharacterSheetDreamTarget,
   type CharacterSheetIssue,
 } from "./sheet-types.ts";
+import { hasSingleDirectSelfNoEffectPhase } from "./spell-profile-shape.ts";
+
+import { castPreparedSpell } from "./prepared-spell-cast.ts";
 
 const DREAM_SPELL_ID = "dream" as const;
 const DREAM_SPELL_LEVEL = spellSlotLevel(5);
@@ -38,50 +38,26 @@ export function castDream(input: {
   readonly messenger: CharacterSheetDreamMessenger;
   readonly mode: CharacterSheetDreamMode;
 }): Either.Either<CharacterSheetDreamResult, CharacterSheetIssue> {
-  const spell = dreamSpell(input.unitLibrary);
-  if (Either.isLeft(spell)) return Either.left(spell.left);
-
-  if (!hasPreparedClassSpellAccess(input.sheet, spell.right.id)) {
-    return characterSheetIssue("Dream requires prepared class Spell Access.");
-  }
-
-  const targetIssue = dreamTargetIssue(input.target);
-  if (targetIssue !== null) return characterSheetIssue(targetIssue);
-
-  const modeIssue = dreamModeIssue(input.mode);
-  if (modeIssue !== null) return characterSheetIssue(modeIssue);
-
-  const invocation = dreamInvocationFromSpell({
-    spell: spell.right,
-    casting: input.casting,
-    target: input.target,
-    messenger: input.messenger,
-    mode: input.mode,
-  });
-  if (Either.isLeft(invocation)) return Either.left(invocation.left);
-
-  const spent = spendCharacterSheetSpellSlot({
+  return castPreparedSpell({
     sheet: input.sheet,
+    unitLibrary: input.unitLibrary,
+    spellId: authoredUnitId(DREAM_SPELL_ID),
     spellLevel: DREAM_SPELL_LEVEL,
-    spellSlotSource: "ordinary",
+    spellName: "Dream",
+    invocation: (spell) => {
+      const targetIssue = dreamTargetIssue(input.target);
+      if (targetIssue !== null) return characterSheetIssue(targetIssue);
+      const modeIssue = dreamModeIssue(input.mode);
+      if (modeIssue !== null) return characterSheetIssue(modeIssue);
+      return dreamInvocationFromSpell({
+        spell: spell,
+        casting: input.casting,
+        target: input.target,
+        messenger: input.messenger,
+        mode: input.mode,
+      });
+    },
   });
-  if (Either.isLeft(spent)) return Either.left(spent.left);
-
-  return Either.right({
-    sheet: spent.right,
-    invocation: invocation.right,
-  });
-}
-
-function dreamSpell(
-  unitLibrary: UnitCatalog,
-): Either.Either<SpellRecord, CharacterSheetIssue> {
-  const unit = getRequiredUnit(unitLibrary, authoredUnitId(DREAM_SPELL_ID));
-  if (Either.isLeft(unit)) return Either.left(unit.left);
-  if (unit.right.kind !== "spell") {
-    return characterSheetIssue("Dream requires a Spell record.");
-  }
-  return Either.right(unit.right);
 }
 
 function dreamTargetIssue(target: CharacterSheetDreamTarget): string | null {
@@ -145,14 +121,7 @@ function dreamInvocationFromSpell(input: {
       "Dream requires the handful-of-sand Material component contract.",
     );
   }
-  const directPhase = spell.mechanics.phases.find(
-    (phase) =>
-      phase.kind === "direct" &&
-      phase.attachment.kind === "self" &&
-      (phase.effects ?? []).length === 1 &&
-      (phase.effects ?? [])[0]?.kind === "none",
-  );
-  if (directPhase === undefined) {
+  if (!hasSingleDirectSelfNoEffectPhase(spell)) {
     return characterSheetIssue(
       "Dream requires the supported direct session-profile phase.",
     );

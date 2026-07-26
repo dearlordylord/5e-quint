@@ -46,8 +46,8 @@ const PACKAGE_POLICIES = {
     duplicationCeiling: 2,
   },
   "battle-runtime": {
-    coverage: { lines: 78, statements: 78, functions: 81, branches: 83 },
-    circularBaseline: 122,
+    coverage: { lines: 84, statements: 84, functions: 90, branches: 83 },
+    circularBaseline: 0,
     duplicationCeiling: 7.82,
   },
   "character-battle-runtime": {
@@ -61,9 +61,9 @@ const PACKAGE_POLICIES = {
     duplicationCeiling: 2,
   },
   "character-sheet-runtime": {
-    coverage: { lines: 80, statements: 80, functions: 92, branches: 68 },
+    coverage: { lines: 80, statements: 80, functions: 93, branches: 70 },
     circularBaseline: 0,
-    duplicationCeiling: 7.11,
+    duplicationCeiling: 2,
   },
   mcp: {
     coverage: { lines: 84, statements: 84, functions: 89, branches: 79 },
@@ -71,8 +71,8 @@ const PACKAGE_POLICIES = {
     duplicationCeiling: 2,
   },
   shared: {
-    coverage: { lines: 15, statements: 15, functions: 61, branches: 64 },
-    circularBaseline: 1,
+    coverage: { lines: 99, statements: 99, functions: 99, branches: 99 },
+    circularBaseline: 0,
     duplicationCeiling: 2,
   },
   "shared-algebras": {
@@ -83,7 +83,7 @@ const PACKAGE_POLICIES = {
   surface: {
     coverage: { lines: 60, statements: 60, functions: 53, branches: 67 },
     circularBaseline: 0,
-    duplicationCeiling: 3.85,
+    duplicationCeiling: 2,
   },
 };
 

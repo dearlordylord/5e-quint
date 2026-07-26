@@ -11,7 +11,7 @@ import {
   quintVariantValue,
   run,
   stateCheck,
-} from "./battle-runtime-mbt-driver-kit.ts";
+} from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import { describe, expect, it } from "vitest";
 
 import { battleTablePositionId } from "./index.ts";
@@ -25,7 +25,7 @@ import {
   resolveBattleSubject,
   shoveOutcomeFill,
   targetFill,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import {
   decodeRuleCoreComponentRoute,
   type RuleCoreComponentRoutedProjection,
@@ -34,7 +34,7 @@ import {
 import type {
   BattleFill,
   BattleSubject,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import type { BattleShovePushOutcome } from "./battle-state-execution.ts";
 
 const shoveOutcomeScenarios = [

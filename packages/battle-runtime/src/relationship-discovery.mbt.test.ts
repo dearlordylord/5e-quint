@@ -13,11 +13,12 @@ import {
   statBlockCreatureInit,
   wizardId,
   type BattleState,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
+import {} from "./battle-reducer/attack-resolution.ts";
 import {
   helpAttackAllyChoices,
   helpAttackTargetChoices,
-} from "./battle-reducer/attack-resolution.ts";
+} from "./battle-reducer/help-attack.ts";
 import {
   MBT_TEST_TIMEOUT_MS,
   booleanField,
@@ -28,7 +29,7 @@ import {
   quintStateRecord,
   run,
   stateCheck,
-} from "./battle-runtime-mbt-driver-kit.ts";
+} from "./battle-runtime-mbt-driver-kit.test-support.ts";
 
 type RelationshipDiscoveryProjection = {
   readonly helpActDiscovered: boolean;

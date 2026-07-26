@@ -1,7 +1,7 @@
 import {
   battleProcedureExecutionRefForTest,
   characterBattleFeatureInitForTest,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import { battleReducerRouteEventsForDiscoveredAct } from "./battle-reducer/reducer-route.ts";
 // RAW-COVERAGE: runtime-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
@@ -28,7 +28,7 @@ import {
   run,
   stateCheck,
   type ReducerRouteEvent,
-} from "./battle-runtime-mbt-driver-kit.ts";
+} from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import { decodeSpeciesRecordSync } from "@dnd/surface/surface/schema";
 import * as Either from "effect/Either";
 
@@ -46,15 +46,15 @@ import {
   type BattleState,
   type BattleSubject,
 } from "./index.ts";
-import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.test-support.ts";
 import {
   dwarfDwarvenResilienceUnitId,
   speciesHalflingBraveUnitId,
   speciesDragonbornDamageResistanceUnitId,
   unitLibrary,
-} from "./unit-profile-admission-catalog-support.ts";
-import { characterCreature } from "./unit-profile-admission-creature-fixture-support.ts";
-import { battleUnitRefWithSupportProfiles } from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission-catalog.test-support.ts";
+import { characterCreature } from "./unit-profile-admission-creature-fixture.test-support.ts";
+import { battleUnitRefWithSupportProfiles } from "./unit-profile-admission.test-support.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import {
   resolveBattleSubject,
@@ -71,7 +71,7 @@ import {
   testBattleCreatureStateWithConditions,
   wizardId,
   wizardSpellcasting,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 
 const speciesGoliathPowerfulBuildUnitId = "species_goliath_powerful_build";
 const speciesHalflingNimblenessUnitId = "species_halfling_nimbleness";

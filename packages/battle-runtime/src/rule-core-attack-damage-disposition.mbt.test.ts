@@ -11,7 +11,7 @@ import {
   numberFromQuintInt,
   run,
   stateCheck,
-} from "./battle-runtime-mbt-driver-kit.ts";
+} from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import { battleId, combatantId } from "./index.ts";
 import {
   resolveBattleSubject,
@@ -30,7 +30,7 @@ import {
   requireHole,
   startBattleRight,
   targetFill,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import { ATTACK_DAMAGE_DISPOSITION_HOLE_ID } from "./battle-reducer/battle-runtime-protocol.ts";
 import {
   decodeRuleCoreComponentRoute,

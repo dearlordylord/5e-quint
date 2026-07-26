@@ -4,7 +4,7 @@ import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import type {
   BattleState,
   BattleSubject,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import {
   attackRollFill,
   battleId,
@@ -45,7 +45,7 @@ import {
   wizardId,
   wizardSpellcasting,
   wizardVsSkeletonBattle,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 
 describe("battle runtime: spellcasting actions and slots", () => {
   test("Wizard action-time spell acts spend slots for prepared level-1 spells but not cantrips", () => {

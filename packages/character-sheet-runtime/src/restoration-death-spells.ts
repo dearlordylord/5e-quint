@@ -60,7 +60,7 @@ export type CharacterSheetGreaterRestorationInput = {
   readonly target: CharacterSheet;
   readonly unitLibrary: UnitCatalog;
   readonly spellId: UnitRecord["id"];
-  readonly castLevel?: SpellSlotLevel;
+  readonly castLevel: SpellSlotLevel | undefined;
   readonly spellSlotSource?: CharacterSheetFontOfMagicSpellSlotSource;
   readonly casting: CharacterSheetCompletedTouchSpellCasting;
   readonly effect: CharacterSheetGreaterRestorationEffect;
@@ -88,7 +88,7 @@ export type CharacterSheetRaiseDeadInput = {
   readonly target: CharacterSheet;
   readonly unitLibrary: UnitCatalog;
   readonly spellId: UnitRecord["id"];
-  readonly castLevel?: SpellSlotLevel;
+  readonly castLevel: SpellSlotLevel | undefined;
   readonly spellSlotSource?: CharacterSheetFontOfMagicSpellSlotSource;
   readonly casting: CharacterSheetCompletedTouchSpellCasting;
   readonly eligibility: CharacterSheetRaiseDeadEligibility;
@@ -199,15 +199,7 @@ export function castGreaterRestorationOnSheet(
 > {
   const profile = greaterRestorationProfileForSpell(input);
   if (Either.isLeft(profile)) return Either.left(profile.left);
-  const castLevel = input.castLevel ?? profile.right.minimumCastLevel;
-  const prepared = prepareRestorationDeathCasting({
-    caster: input.caster,
-    castLevel,
-    minimumCastLevel: profile.right.minimumCastLevel,
-    spellSlotSource: input.spellSlotSource,
-    casting: input.casting,
-    materialCostGp: profile.right.materialCostGp,
-  });
+  const prepared = preparedRestorationDeathCasting(input, profile.right);
   if (Either.isLeft(prepared)) return Either.left(prepared.left);
 
   if (!profile.right.conditions.includes(input.effect.condition)) {
@@ -216,7 +208,7 @@ export function castGreaterRestorationOnSheet(
     );
   }
   const sourceIsTarget = input.caster.characterId === input.target.characterId;
-  const targetBase = sourceIsTarget ? prepared.right : input.target;
+  const targetBase = sourceIsTarget ? prepared.right.caster : input.target;
   if (
     !targetBase.conditions.some(
       (condition) => condition === input.effect.condition,
@@ -233,10 +225,10 @@ export function castGreaterRestorationOnSheet(
     ),
   };
   return Either.right({
-    caster: sourceIsTarget ? restored : prepared.right,
+    caster: sourceIsTarget ? restored : prepared.right.caster,
     target: restored,
     spellId: profile.right.spell.id,
-    castLevel,
+    castLevel: prepared.right.castLevel,
     deferredMechanics: [],
   });
 }
@@ -249,15 +241,7 @@ export function castRaiseDeadOnSheet(
 > {
   const profile = raiseDeadProfileForSpell(input);
   if (Either.isLeft(profile)) return Either.left(profile.left);
-  const castLevel = input.castLevel ?? profile.right.minimumCastLevel;
-  const prepared = prepareRestorationDeathCasting({
-    caster: input.caster,
-    castLevel,
-    minimumCastLevel: profile.right.minimumCastLevel,
-    spellSlotSource: input.spellSlotSource,
-    casting: input.casting,
-    materialCostGp: profile.right.materialCostGp,
-  });
+  const prepared = preparedRestorationDeathCasting(input, profile.right);
   if (Either.isLeft(prepared)) return Either.left(prepared.left);
 
   const eligibilityIssue = raiseDeadEligibilityIssue({
@@ -277,7 +261,7 @@ export function castRaiseDeadOnSheet(
   });
   if (Either.isLeft(hitPoints)) return Either.left(hitPoints.left);
   return Either.right({
-    caster: prepared.right,
+    caster: prepared.right.caster,
     target: {
       ...input.target,
       hitPoints: hitPoints.right,
@@ -286,7 +270,7 @@ export function castRaiseDeadOnSheet(
       ),
     },
     spellId: profile.right.spell.id,
-    castLevel,
+    castLevel: prepared.right.castLevel,
     deferredMechanics: [
       "raise_dead_d20_test_penalty",
       "dead_glossary_exhaustion_and_attunement_return_cleanup",
@@ -304,15 +288,7 @@ export function castReincarnateOnSheet(
       "Reincarnate requires prepared class Spell Access.",
     );
   }
-  const castLevel = input.castLevel ?? profile.right.minimumCastLevel;
-  const prepared = prepareRestorationDeathCasting({
-    caster: input.caster,
-    castLevel,
-    minimumCastLevel: profile.right.minimumCastLevel,
-    spellSlotSource: input.spellSlotSource,
-    casting: input.casting,
-    materialCostGp: profile.right.materialCostGp,
-  });
+  const prepared = preparedRestorationDeathCasting(input, profile.right);
   if (Either.isLeft(prepared)) return Either.left(prepared.left);
 
   const eligibilityIssue = reincarnateEligibilityIssue({
@@ -328,10 +304,10 @@ export function castReincarnateOnSheet(
   }
 
   return Either.right({
-    caster: prepared.right,
+    caster: prepared.right.caster,
     target: input.target,
     spellId: profile.right.spell.id,
-    castLevel,
+    castLevel: prepared.right.castLevel,
     targetRemains: input.eligibility.targetRemains,
     speciesReplacement: {
       tag: "tableSessionSpeciesReplacement",
@@ -351,6 +327,33 @@ export function castReincarnateOnSheet(
     },
     deferredMechanics: REINCARNATE_DEFERRED_MECHANICS,
   });
+}
+
+function preparedRestorationDeathCasting(
+  input:
+    | CharacterSheetGreaterRestorationInput
+    | CharacterSheetRaiseDeadInput
+    | CharacterSheetReincarnateInput,
+  profile: {
+    readonly minimumCastLevel: SpellSlotLevel;
+    readonly materialCostGp: number;
+  },
+): Either.Either<
+  { readonly caster: CharacterSheet; readonly castLevel: SpellSlotLevel },
+  CharacterSheetIssue
+> {
+  const castLevel = input.castLevel ?? profile.minimumCastLevel;
+  const caster = prepareRestorationDeathCasting({
+    caster: input.caster,
+    castLevel,
+    minimumCastLevel: profile.minimumCastLevel,
+    spellSlotSource: input.spellSlotSource,
+    casting: input.casting,
+    materialCostGp: profile.materialCostGp,
+  });
+  return Either.isLeft(caster)
+    ? Either.left(caster.left)
+    : Either.right({ caster: caster.right, castLevel });
 }
 
 function prepareRestorationDeathCasting(input: {
@@ -537,18 +540,11 @@ function singleDirectCreaturePhase(
       "Restoration/death spell casting requires one direct phase.",
     );
   }
-  const selection =
-    phase.attachment.kind === "hole" && phase.attachment.value.kind === "target"
-      ? phase.attachment.value.selection
-      : undefined;
-  const rawSelection: unknown = selection;
-  const targetKinds =
-    isRecord(rawSelection) && Array.isArray(rawSelection["targetKinds"])
-      ? rawSelection["targetKinds"]
-      : undefined;
+  const selection = directTargetSelection(phase);
+  const targetKinds = arrayProperty(selection, "targetKinds");
   if (
-    selection === undefined ||
-    selection.mode !== "one" ||
+    !isRecord(selection) ||
+    selection["mode"] !== "one" ||
     targetKinds?.length !== 1 ||
     targetKinds[0] !== "creature"
   ) {
@@ -564,16 +560,10 @@ function singleDirectDeadCreaturePhase(
 ): Either.Either<DirectActivationPhase, CharacterSheetIssue> {
   const phase = singleDirectCreaturePhase(spell);
   if (Either.isLeft(phase)) return Either.left(phase.left);
-  const selection =
-    phase.right.attachment.kind === "hole" &&
-    phase.right.attachment.value.kind === "target"
-      ? phase.right.attachment.value.selection
-      : undefined;
-  const rawSelection: unknown = selection;
-  const stateFilter =
-    isRecord(rawSelection) && Array.isArray(rawSelection["stateFilter"])
-      ? rawSelection["stateFilter"]
-      : undefined;
+  const stateFilter = arrayProperty(
+    directTargetSelection(phase.right),
+    "stateFilter",
+  );
   return stateFilter?.length === 1 && stateFilter[0] === "dead"
     ? Either.right(phase.right)
     : characterSheetIssue(
@@ -586,20 +576,9 @@ function singleDirectDeadHumanoidPhase(
 ): Either.Either<DirectActivationPhase, CharacterSheetIssue> {
   const phase = singleDirectCreaturePhase(spell);
   if (Either.isLeft(phase)) return Either.left(phase.left);
-  const selection =
-    phase.right.attachment.kind === "hole" &&
-    phase.right.attachment.value.kind === "target"
-      ? phase.right.attachment.value.selection
-      : undefined;
-  const rawSelection: unknown = selection;
-  const stateFilter =
-    isRecord(rawSelection) && Array.isArray(rawSelection["stateFilter"])
-      ? rawSelection["stateFilter"]
-      : undefined;
-  const typeFilter =
-    isRecord(rawSelection) && Array.isArray(rawSelection["typeFilter"])
-      ? rawSelection["typeFilter"]
-      : undefined;
+  const selection = directTargetSelection(phase.right);
+  const stateFilter = arrayProperty(selection, "stateFilter");
+  const typeFilter = arrayProperty(selection, "typeFilter");
   return stateFilter?.length === 1 &&
     stateFilter[0] === "dead" &&
     typeFilter?.length === 1 &&
@@ -608,6 +587,22 @@ function singleDirectDeadHumanoidPhase(
     : characterSheetIssue(
         "Reincarnate requires a direct dead-Humanoid target profile.",
       );
+}
+
+function directTargetSelection(phase: DirectActivationPhase): unknown {
+  return phase.attachment.kind === "hole" &&
+    phase.attachment.value.kind === "target"
+    ? phase.attachment.value.selection
+    : undefined;
+}
+
+function arrayProperty(
+  value: unknown,
+  property: string,
+): readonly unknown[] | undefined {
+  return isRecord(value) && Array.isArray(value[property])
+    ? value[property]
+    : undefined;
 }
 
 function isRemoveConditionEffect(

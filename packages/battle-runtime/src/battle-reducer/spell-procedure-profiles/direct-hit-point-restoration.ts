@@ -1,3 +1,4 @@
+import { maybeOpenSpellCastReactionWindow } from "../spell-cast-reaction-window.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.hit-point-restoration unit-feature.spell-slot-healing-modifier
 import { DiceExprSchema } from "@dnd/surface/surface/schema";
@@ -45,15 +46,13 @@ import {
   type HealingSpellTargeting,
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
-import { maybeOpenInterruptWindow } from "../dispatcher.ts";
 import { type CombatantId } from "../../identity.ts";
 import { applyHpHealing } from "../damage-apply.ts";
-import { needsHolesResult } from "../hole-helpers.ts";
-import { invalidResult } from "../result-helpers.ts";
 import {
-  spellCastInterruptFrame,
-  spellCastMetamagicApplicationsInput,
-} from "../spell-cast-interrupt-frame.ts";
+  needsHolesResult,
+  spellSelectionResolution,
+} from "../needs-holes-result.ts";
+import { invalidResult } from "../result-helpers.ts";
 import { spellHealingAmount } from "../spell-effects.ts";
 import {
   spellHealingRollHole,
@@ -306,40 +305,23 @@ function resolveDirectHitPointRestoration(
       "Hit Point restoration spells use target fills and one healing roll.",
     );
   }
-  const targetSelection = healingSpellTargetSelection(input);
-  if (targetSelection.tag === "needsHoles") {
-    return needsHolesResult(input.input.state, input.input.subject, [
-      targetSelection.hole,
-    ]);
-  }
-  if (targetSelection.tag === "invalid") {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      targetSelection.message,
-    );
-  }
-
-  const spellCastReactionWindow = maybeOpenInterruptWindow(
+  const targetSelectionResolution = spellSelectionResolution(
     input.input.state,
-    spellCastInterruptFrame({
-      casterId: input.actorId,
-      invocation: input.invocation,
-      targetIds: targetSelection.targetIds,
-      reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
-      castingResource:
-        input.actionCostOverride === "bonusAction" ||
-        input.input.subject.tag === "bonusActionSpell"
-          ? { kind: "bonusAction" }
-          : { kind: "magicAction" },
-      ...spellCastMetamagicApplicationsInput(input.metamagicApplications ?? []),
-      continuation: {
-        kind: "replay",
-        subject: input.input.subject,
-        fills: input.input.fills,
-      },
-    }),
-    input.input.handledInterruptTrigger,
+    input.input.subject,
+    healingSpellTargetSelection(input),
+  );
+  if (targetSelectionResolution.tag === "resolution")
+    return targetSelectionResolution.result;
+  const targetSelection = targetSelectionResolution.selection;
+
+  const spellCastReactionWindow = maybeOpenSpellCastReactionWindow(
+    input,
+    targetSelection.targetIds,
+    input.actionCostOverride === "bonusAction" ||
+      input.input.subject.tag === "bonusActionSpell"
+      ? { kind: "bonusAction" }
+      : { kind: "magicAction" },
+    input.metamagicApplications ?? [],
   );
   if (spellCastReactionWindow !== null) {
     return spellCastReactionWindow;

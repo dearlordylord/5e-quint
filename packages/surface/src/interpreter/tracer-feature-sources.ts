@@ -28,6 +28,7 @@ import type {
 import type { Trace, TraceEdge, TraceNode } from "./tracer-model.ts";
 import { idGen } from "./tracer-rule-labels.ts";
 import type { IdGen } from "./tracer-rule-labels.ts";
+import { traceRoot } from "./tracer-root.ts";
 
 import {
   traceClassFeatureMechanics,
@@ -47,17 +48,10 @@ import { traceOnHitTriggerMechanics } from "./tracer-mastery.ts";
 // ============================================================
 
 export function traceClassFeatureUnit(feat: ClassFeatureRecord): Trace {
-  const nodes: TraceNode[] = [];
-  const edges: TraceEdge[] = [];
-  const ids = idGen();
-
-  const rootId = ids("root");
-  nodes.push({
-    id: rootId,
-    category: "source",
-    atomKind: "class_feature_root",
-    label: `class_feature_root\n${feat.name}\n(${feat.className}, L${feat.acquiredAtLevel})`,
-  });
+  const { rootId, nodes, edges, ids } = traceRoot(
+    "class_feature_root",
+    `class_feature_root\n${feat.name}\n(${feat.className}, L${feat.acquiredAtLevel})`,
+  );
 
   const procedureIds = traceClassFeatureMechanics(
     feat.mechanics,
@@ -194,17 +188,10 @@ export function traceMagicItemMechanics(
 // ============================================================
 
 export function traceFeatUnit(feat: FeatRecord): Trace {
-  const nodes: TraceNode[] = [];
-  const edges: TraceEdge[] = [];
-  const ids = idGen();
-
-  const rootId = ids("root");
-  nodes.push({
-    id: rootId,
-    category: "source",
-    atomKind: "feat_root",
-    label: `feat_root\n${feat.name}\n(${feat.category})`,
-  });
+  const { rootId, nodes, edges, ids } = traceRoot(
+    "feat_root",
+    `feat_root\n${feat.name}\n(${feat.category})`,
+  );
 
   const procId = traceFeatMechanics(feat.mechanics, nodes, edges, ids);
   edges.push({ from: rootId, to: procId, relation: "roots" });
@@ -392,17 +379,10 @@ function traceLightExtraAttackDamageAbilityModifierMechanics(
 // ============================================================
 
 export function traceSpeciesTraitUnit(trait: SpeciesTraitRecord): Trace {
-  const nodes: TraceNode[] = [];
-  const edges: TraceEdge[] = [];
-  const ids = idGen();
-
-  const rootId = ids("root");
-  nodes.push({
-    id: rootId,
-    category: "source",
-    atomKind: "species_trait_root",
-    label: `species_trait_root\n${trait.name}\n(${trait.species})`,
-  });
+  const { rootId, nodes, edges, ids } = traceRoot(
+    "species_trait_root",
+    `species_trait_root\n${trait.name}\n(${trait.species})`,
+  );
 
   const procId =
     trait.mechanics.family === "triggered_replacement"

@@ -1,5 +1,5 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
 import { Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
@@ -15,7 +15,7 @@ import {
   quintVariantValue,
   run,
   stateCheck,
-} from "./battle-runtime-mbt-driver-kit.ts";
+} from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import {
   beginMoonbeamLaterTurn,
   resolveMoonbeamCast,

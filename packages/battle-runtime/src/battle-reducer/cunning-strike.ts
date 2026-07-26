@@ -60,7 +60,7 @@ import {
   effectiveMovementSpeed,
   representedMovementSpeedKinds,
 } from "./movement-speed.ts";
-import { applyBattleMovement } from "./readied-release.ts";
+import { applyBattleMovement } from "./battle-movement.ts";
 import { conditionHadNonSpellSourceBeforeSpellEffect } from "./spell-condition-effects-helpers.ts";
 import {
   savingThrowFlatBonusProjections,

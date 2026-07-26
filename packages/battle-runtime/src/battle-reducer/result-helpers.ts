@@ -20,3 +20,21 @@ export function invalidResult(
     snapshot: snapshotBattle(state),
   };
 }
+
+export function resolvedResult(
+  state: BattleState,
+): Extract<BattleResolutionResult, { readonly tag: "resolved" }> {
+  return {
+    tag: "resolved",
+    state,
+    snapshot: snapshotBattle(state),
+  };
+}
+
+export function resolutionFromStateResult(
+  result:
+    | { readonly tag: "resolved"; readonly state: BattleState }
+    | Extract<BattleResolutionResult, { readonly tag: "invalid" }>,
+): BattleResolutionResult {
+  return result.tag === "invalid" ? result : resolvedResult(result.state);
+}

@@ -33,7 +33,8 @@ import {
   type GlyphStoredAreaOngoingProcedure,
 } from "../glyph-stored-spell-invocation.ts";
 import type { CombatantId } from "../identity.ts";
-import { needsHolesResult } from "./hole-helpers.ts";
+
+import { needsHolesResult } from "./needs-holes-result.ts";
 import { invalidResult } from "./result-helpers.ts";
 import {
   applyFlamingSphereCastEffect,
@@ -54,9 +55,9 @@ import { maybeOpenInterruptWindow } from "./interrupt-execution.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";
 import {
   saveMetamagicSelectionState,
-  validateGustOfWindLineAreaPushFacts,
   validateSavingThrowOutcomes,
 } from "./spells-resolve-save-gates.ts";
+import { validateGustOfWindLineAreaPushFacts } from "./gust-of-wind-push-facts.ts";
 import type { SpellFillSet } from "./spells-resolve-fill-set.ts";
 import { isTrackedOngoingSpellLightEmitter } from "./antimagic-field-suppression.ts";
 import type { CharacterBattleMetamagicOptionFact } from "../character-battle-resource-execution.ts";

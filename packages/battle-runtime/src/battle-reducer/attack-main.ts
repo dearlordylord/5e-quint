@@ -69,8 +69,8 @@ import {
   requiredAttackRollMode,
   tacticalMasterAttackWithReplacement,
   tacticalMasterReplacementDecisionHole,
-  weaponMasteryToppleSavingThrowHole,
 } from "./attack-roll.ts";
+import { weaponMasteryToppleSavingThrowHole } from "./weapon-mastery-topple-hole.ts";
 
 import {
   activeEffectArmorClass,
@@ -114,15 +114,16 @@ import {
 } from "./attack-damage-events.ts";
 import { resolveAttackDamageReductionZeroDamageRedirectAfterReduction } from "./attack-damage-redirect.ts";
 import { resumeInterruptedProcedure } from "./dispatcher.ts";
+import type { BattleAttackResolvers } from "./attack-resolvers.ts";
 import { maybeOpenInterruptWindow } from "./interrupt-execution.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";
 
 import {
   attackTargetHole,
   grappleOutcomeHole,
-  needsHolesResult,
   revealHidden,
 } from "./hole-helpers.ts";
+import { needsHolesResult } from "./needs-holes-result.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
 
 import {
@@ -3048,6 +3049,7 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
       cleaveUsedState,
       continuation,
       input.handledInterruptTrigger ?? "attackDamage",
+      ATTACK_RESOLVERS,
     ),
   };
 }
@@ -3775,9 +3777,16 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
       usedState,
       continuation,
       input.handledInterruptTrigger ?? "attackDamage",
+      ATTACK_RESOLVERS,
     ),
   };
 }
+
+export const ATTACK_RESOLVERS = {
+  resolveAttack,
+  resolveWeaponMasteryCleaveContinuation,
+  resolveHuntersPreyHordeBreakerContinuation,
+} satisfies BattleAttackResolvers;
 
 function huntersPreyHordeBreakerDamageDispositionHole(
   input: Parameters<typeof attackDamageDispositionHole>[0],

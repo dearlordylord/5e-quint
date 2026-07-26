@@ -72,7 +72,7 @@ import {
   reducerRoutedWeaponMasteryPropertyStateCheck,
   reducerRoutedWardedTargetInterdictionStateCheck,
   run,
-} from "./battle-runtime-mbt-driver-kit.ts";
+} from "./battle-runtime-mbt-driver-kit.test-support.ts";
 
 describe("battle reducer route connector MBT", () => {
   it(

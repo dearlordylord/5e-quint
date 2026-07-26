@@ -65,10 +65,8 @@ import {
   attackRollMissToHitReplacementHolePayload,
   signedModifier,
 } from "./statblock-attacks.ts";
-import {
-  hasDodgeBenefit,
-  ongoingFeatureEnemyRelationshipDecisionRequired,
-} from "./attack-roll.ts";
+import { hasDodgeBenefit } from "./dodge-benefit.ts";
+import { ongoingFeatureEnemyRelationshipDecisionRequired } from "./ongoing-feature-relationship.ts";
 import { spellTargetHasNonSpatialPrerequisites } from "./spells-targeting.ts";
 import { spellTargetIsHostileToCaster } from "./roll-trigger-relationship-facts.ts";
 import { battleCreatureType } from "./domain-helpers.ts";

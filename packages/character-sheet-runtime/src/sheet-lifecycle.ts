@@ -375,6 +375,23 @@ export function rebuildCharacterSheet(
   if (Either.isLeft(fiendishResilience)) {
     return Either.left(fiendishResilience.left);
   }
+  const hitPoints = characterSheetHitPoints({
+    ...input,
+    currentHp: hitPointCapacity.right.currentHp,
+  });
+  if (Either.isLeft(hitPoints)) return Either.left(hitPoints.left);
+  const commonState = availableSheetCommonState(input, {
+    hitPoints: hitPoints.right,
+    conditions: conditions.right,
+    spentHitDice: spentHitDice.right,
+    restFeatureUses: restFeatureUses.right,
+    resourceExpenditures: resourceExpenditures.right,
+    heroicInspiration: heroicInspiration.right,
+    companion: companion.right,
+    druidWildShapeKnownForms: druidWildShapeKnownForms.right,
+    druidCircleLand: druidCircleLand.right,
+    fiendishResilience: fiendishResilience.right,
+  });
 
   if (isNonSpellcastingBuild(input.build)) {
     if (
@@ -390,33 +407,9 @@ export function rebuildCharacterSheet(
         "Non-spellcasting Character Sheet cannot carry Pact Slot state.",
       );
     }
-    const hitPoints = characterSheetHitPoints({
-      ...input,
-      currentHp: hitPointCapacity.right.currentHp,
-    });
-    if (Either.isLeft(hitPoints)) return Either.left(hitPoints.left);
     return Either.right({
-      tag: "available",
-      characterId: input.characterId,
+      ...commonState,
       build: input.build,
-      hitPointMaximumReduction: input.hitPointMaximumReduction,
-      exhaustionLevel: input.exhaustionLevel ?? 0,
-      hitPoints: hitPoints.right,
-      conditions: conditions.right,
-      spentHitDice: spentHitDice.right,
-      restFeatureUses: restFeatureUses.right,
-      resourceExpenditures: resourceExpenditures.right,
-      heroicInspiration: heroicInspiration.right,
-      companion: companion.right,
-      ...(druidWildShapeKnownForms.right === undefined
-        ? {}
-        : { druidWildShapeKnownForms: druidWildShapeKnownForms.right }),
-      ...(druidCircleLand.right === undefined
-        ? {}
-        : { druidCircleLand: druidCircleLand.right }),
-      ...(fiendishResilience.right === undefined
-        ? {}
-        : { fiendishResilience: fiendishResilience.right }),
     });
   }
 
@@ -426,11 +419,6 @@ export function rebuildCharacterSheet(
     );
   }
   const build = input.build;
-  const hitPoints = characterSheetHitPoints({
-    ...input,
-    currentHp: hitPointCapacity.right.currentHp,
-  });
-  if (Either.isLeft(hitPoints)) return Either.left(hitPoints.left);
   const spellSlotState =
     storedSpellSlotState === undefined
       ? spellSlotStateFromInput({
@@ -453,32 +441,56 @@ export function rebuildCharacterSheet(
   }
 
   return Either.right({
-    tag: "available",
-    characterId: input.characterId,
+    ...commonState,
     build,
-    hitPointMaximumReduction: input.hitPointMaximumReduction,
-    exhaustionLevel: input.exhaustionLevel ?? 0,
-    hitPoints: hitPoints.right,
-    conditions: conditions.right,
-    spentHitDice: spentHitDice.right,
-    restFeatureUses: restFeatureUses.right,
-    resourceExpenditures: resourceExpenditures.right,
-    heroicInspiration: heroicInspiration.right,
-    companion: companion.right,
     bookOfShadowsPresence: bookOfShadowsPresence.right,
-    ...(druidWildShapeKnownForms.right === undefined
-      ? {}
-      : { druidWildShapeKnownForms: druidWildShapeKnownForms.right }),
-    ...(druidCircleLand.right === undefined
-      ? {}
-      : { druidCircleLand: druidCircleLand.right }),
-    ...(fiendishResilience.right === undefined
-      ? {}
-      : { fiendishResilience: fiendishResilience.right }),
     spellSlotExpenditures: spellSlotState.right.ordinarySpellSlotExpenditures,
     createdSpellSlots: spellSlotState.right.createdSpellSlots,
     pactSlotExpenditure: pactSlotExpenditure.right,
   });
+}
+
+type AvailableSheetCommonState = Pick<
+  CharacterSheet,
+  | "companion"
+  | "conditions"
+  | "heroicInspiration"
+  | "hitPoints"
+  | "resourceExpenditures"
+  | "restFeatureUses"
+  | "spentHitDice"
+> & {
+  readonly druidCircleLand: CharacterSheet["druidCircleLand"];
+  readonly druidWildShapeKnownForms: CharacterSheet["druidWildShapeKnownForms"];
+  readonly fiendishResilience: CharacterSheet["fiendishResilience"];
+};
+
+function availableSheetCommonState(
+  input: CharacterSheetInput,
+  state: AvailableSheetCommonState,
+) {
+  return {
+    tag: "available" as const,
+    characterId: input.characterId,
+    hitPointMaximumReduction: input.hitPointMaximumReduction,
+    exhaustionLevel: input.exhaustionLevel ?? 0,
+    hitPoints: state.hitPoints,
+    conditions: state.conditions,
+    spentHitDice: state.spentHitDice,
+    restFeatureUses: state.restFeatureUses,
+    resourceExpenditures: state.resourceExpenditures,
+    heroicInspiration: state.heroicInspiration,
+    companion: state.companion,
+    ...(state.druidWildShapeKnownForms === undefined
+      ? {}
+      : { druidWildShapeKnownForms: state.druidWildShapeKnownForms }),
+    ...(state.druidCircleLand === undefined
+      ? {}
+      : { druidCircleLand: state.druidCircleLand }),
+    ...(state.fiendishResilience === undefined
+      ? {}
+      : { fiendishResilience: state.fiendishResilience }),
+  };
 }
 
 function bookOfShadowsPresenceFromInput(

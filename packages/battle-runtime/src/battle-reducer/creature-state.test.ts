@@ -10,7 +10,7 @@ import { characterBattleCreatureInitWeaponAttack } from "../battle-init.ts";
 import {
   characterSeed,
   testCharacterWeaponAttackForUnit,
-} from "../battle-runtime-test-support.ts";
+} from "../battle-runtime.test-support.ts";
 import { weaponLoadoutMismatchMessage } from "./domain-helpers.ts";
 import { battleCreatureStateAdmissionFromInit } from "./creature-state.ts";
 

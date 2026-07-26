@@ -13,8 +13,8 @@ import {
   projectBattleState,
   resolveQuickenedEldritchBlast,
   sorcererMetamagicBattle,
-} from "./sorcerer-metamagic-selected-identity-support.ts";
-import type { SelectedIdentityReplayWitness } from "./selected-identity-witness.ts";
+} from "./sorcerer-metamagic-selected-identity.test-support.ts";
+import type { SelectedIdentityReplayWitness } from "./selected-identity-witness.test-support.ts";
 
 export const sorcererMetamagicSpellAttackSequenceSelectedIdentityReplay = {
   describeLabel:

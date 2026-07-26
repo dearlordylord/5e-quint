@@ -1,3 +1,4 @@
+import { maybeOpenSpellCastReactionWindow } from "../spell-cast-reaction-window.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING
@@ -20,7 +21,6 @@ import {
   type BattleState,
   type WardingBondSpellInvocation,
 } from "../../battle-state-execution.ts";
-import { maybeOpenInterruptWindow, snapshotBattle } from "../dispatcher.ts";
 import { type CombatantId } from "../../identity.ts";
 import {
   WARDING_BOND_ARMOR_CLASS_BONUS,
@@ -28,12 +28,12 @@ import {
   WARDING_BOND_CONNECTION_RANGE_FEET,
   WARDING_BOND_SAVING_THROW_BONUS,
 } from "../domain-constants.ts";
-import { needsHolesResult } from "../hole-helpers.ts";
-import { invalidResult } from "../result-helpers.ts";
+
+import { needsHolesResult } from "../needs-holes-result.ts";
+import { invalidResult, resolutionFromStateResult } from "../result-helpers.ts";
 import { sameStringSet } from "../spells-execution-facts.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
 import type { SpellFillSet } from "../spells-resolve-fill-set.ts";
-import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
 import {
   applyWardingBondSpellEffect,
   wardingBondCastFactsAreSatisfied,
@@ -331,21 +331,11 @@ function resolveWardingBond(
     );
   }
 
-  const spellCastReactionWindow = maybeOpenInterruptWindow(
-    input.input.state,
-    spellCastInterruptFrame({
-      casterId: input.actorId,
-      invocation: input.invocation,
-      targetIds: [target.combatantId],
-      reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
-      castingResource: { kind: "magicAction" },
-      continuation: {
-        kind: "replay",
-        subject: input.input.subject,
-        fills: input.input.fills,
-      },
-    }),
-    input.input.handledInterruptTrigger,
+  const spellCastReactionWindow = maybeOpenSpellCastReactionWindow(
+    input,
+    [target.combatantId],
+    { kind: "magicAction" },
+    undefined,
   );
   if (spellCastReactionWindow !== null) {
     return spellCastReactionWindow;
@@ -363,13 +353,7 @@ function resolveWardingBond(
     invocation: input.invocation,
     errorState: input.input.state,
   });
-  return resourced.tag === "invalid"
-    ? resourced
-    : {
-        tag: "resolved",
-        state: resourced.state,
-        snapshot: snapshotBattle(resourced.state),
-      };
+  return resolutionFromStateResult(resourced);
 }
 
 function wardingBondFillSetHasDisallowedFills(

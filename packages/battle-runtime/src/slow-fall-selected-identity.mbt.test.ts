@@ -23,9 +23,9 @@ import {
   resolveBattleInterrupt,
   startBattleRight,
   unitLibrary,
-} from "./battle-runtime-test-support.ts";
-import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
-import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
+} from "./battle-runtime.test-support.ts";
+import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.test-support.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.test-support.ts";
 import { REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE } from "./unit-feature-support.ts";
 
 type SlowFallLastResult = "init" | "reducedDamage" | "preventedDamage";

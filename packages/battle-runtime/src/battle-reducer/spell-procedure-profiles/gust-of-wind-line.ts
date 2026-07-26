@@ -1,3 +1,7 @@
+import {
+  discoverSavingThrowMetamagicCastActs,
+  savingThrowMetamagicHolesOr,
+} from "../saving-throw-metamagic-holes.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-gust-of-wind-line unit-feature.metamagic-heightened-save-disadvantage
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
@@ -31,7 +35,6 @@ import { Either } from "effect";
 import {
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
-  type BattleCreatureState,
   type BattleHole,
   type BattleResolutionResult,
   type BattleState,
@@ -55,18 +58,7 @@ import {
   PreparedSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
-import {
-  CAREFUL_METAMAGIC_EFFECT_KIND,
-  discoverSpellMetamagicSelections,
-  HEIGHTENED_METAMAGIC_EFFECT_KIND,
-  spellMetamagicApplications,
-} from "../metamagic-support.ts";
-import {
-  carefulSpellProtectedTargetsHole,
-  heightenedSpellTargetChoiceHole,
-  spellSavingThrowOutcomeHole,
-  spellSavingThrowTargeting,
-} from "../spells-holes-fills.ts";
+import { spellSavingThrowOutcomeHole } from "../spells-holes-fills.ts";
 
 type GustOfWindLineSpellInvocation = Extract<
   SupportedSpellInvocation,
@@ -259,52 +251,18 @@ function discoverGustOfWindLineCastAct(
   const baseCastAct = gustOfWindLineCastAct(actorId, invocation, [initialHole]);
   return [
     baseCastAct,
-    ...gustOfWindLineMetamagicCastActs({
+    ...discoverSavingThrowMetamagicCastActs({
       state,
       actorId,
       actor,
       invocation,
       baseCastAct,
-      baseHoles: [initialHole],
+      initialHoles: (applications) =>
+        savingThrowMetamagicHolesOr(state, actorId, invocation, applications, [
+          initialHole,
+        ]),
     }),
   ];
-}
-
-function gustOfWindLineMetamagicCastActs(input: {
-  readonly state: BattleState;
-  readonly actorId: CombatantId;
-  readonly actor: BattleCreatureState | undefined;
-  readonly invocation: BattleExecutableSpellInvocation<GustOfWindLineSpellInvocation>;
-  readonly baseCastAct: BattleActDiscoveryCandidate;
-  readonly baseHoles: readonly BattleHole[];
-}): readonly BattleActDiscoveryCandidate[] {
-  const actor = input.actor;
-  if (actor === undefined) {
-    return [];
-  }
-  return discoverSpellMetamagicSelections({
-    actor,
-    invocation: input.invocation,
-  }).map((metamagic) => {
-    const applications = spellMetamagicApplications(actor, metamagic);
-    const metamagicInitialHoles = gustOfWindLineMetamagicInitialHoles(
-      input.state,
-      input.actorId,
-      input.invocation,
-      applications,
-    );
-    return {
-      ...input.baseCastAct,
-      subject: {
-        ...input.baseCastAct.subject,
-        metamagic,
-      },
-      initialHoles:
-        metamagicInitialHoles.length === 0
-          ? input.baseHoles
-          : metamagicInitialHoles,
-    };
-  });
 }
 
 function gustOfWindLineCastAct(
@@ -321,34 +279,6 @@ function gustOfWindLineCastAct(
     },
     initialHoles,
   };
-}
-
-function gustOfWindLineMetamagicInitialHoles(
-  state: BattleState,
-  actorId: CombatantId,
-  invocation: BattleExecutableSpellInvocation<GustOfWindLineSpellInvocation>,
-  metamagicApplications: readonly SpellMetamagicApplicationFact[],
-): readonly BattleHole[] {
-  const targeting = spellSavingThrowTargeting(invocation);
-  const holes: BattleHole[] = [];
-  if (
-    targeting.kind !== "singleCombatant" &&
-    metamagicApplications.some(
-      (application) => application.effectKind === CAREFUL_METAMAGIC_EFFECT_KIND,
-    )
-  ) {
-    holes.push(carefulSpellProtectedTargetsHole(state, actorId, invocation));
-  }
-  if (
-    targeting.kind !== "singleCombatant" &&
-    metamagicApplications.some(
-      (application) =>
-        application.effectKind === HEIGHTENED_METAMAGIC_EFFECT_KIND,
-    )
-  ) {
-    holes.push(heightenedSpellTargetChoiceHole(state, actorId, invocation));
-  }
-  return holes;
 }
 
 function resolveGustOfWindLine(
@@ -397,4 +327,3 @@ export const gustOfWindLineProfile = {
   "gustOfWindLine",
   GustOfWindLineSpellInvocation
 >;
-import type { SpellMetamagicApplicationFact } from "../metamagic-support.ts";

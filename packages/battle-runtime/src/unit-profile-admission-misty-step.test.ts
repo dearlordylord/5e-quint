@@ -12,21 +12,21 @@ import {
   mistyStepUnitId,
   spellCasterId,
   spellTargetId,
-} from "./unit-profile-admission-catalog-support.ts";
-import type { BonusActionSpellAct } from "./unit-profile-admission-catalog-support.ts";
-import { requireHole } from "./unit-profile-admission-creature-fixture-support.ts";
+} from "./unit-profile-admission-catalog.test-support.ts";
+import type { BonusActionSpellAct } from "./unit-profile-admission-catalog.test-support.ts";
+import { requireHole } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
   bonusSpellAct,
   maybeBonusSpellAct,
   teleportDestinationFill,
-} from "./unit-profile-admission-spell-fill-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+} from "./unit-profile-admission-spell-fill.test-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   attackExecutionSelectionForSubjectForTest,
   battleProcedureExecutionRefForTest,
   characterAttackSubjectForTest,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import { characterSpellProcedure } from "./character-execution-admission.ts";
 import {
   battleTablePositionId,
@@ -38,7 +38,7 @@ import {
   savingThrowOutcomeFill,
   spellSlotInvocationRef,
   type BattleFill,
-} from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission.test-support.ts";
 
 describe("L12G-SPELL-MISTY-STEP deterministic Misty Step admission", () => {
   test("misty_step casts as a Bonus Action self-teleport spell with a table destination witness", () => {

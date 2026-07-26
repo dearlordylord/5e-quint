@@ -2,7 +2,7 @@ import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import {
   battleProcedureExecutionRefForTest,
   characterBattleFeatureInitForTest,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.magic-action-healing-pool
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3PUTB-04 cleric_preserve_life
@@ -17,8 +17,8 @@ import {
   type BattleState,
   type CombatantId,
 } from "./index.ts";
-import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
-import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
+import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.test-support.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.test-support.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import {
   clericChannelDivinityUnitId,
@@ -26,11 +26,11 @@ import {
   spellCasterId,
   spellTargetId,
   unitLibrary,
-} from "./unit-profile-admission-catalog-support.ts";
+} from "./unit-profile-admission-catalog.test-support.ts";
 import {
   characterCreature,
   requireHole,
-} from "./unit-profile-admission-creature-fixture-support.ts";
+} from "./unit-profile-admission-creature-fixture.test-support.ts";
 import {
   battleId,
   battleMagicActionHealingPoolSupportForUnit,
@@ -40,7 +40,7 @@ import {
   discoverBattleActCandidates,
   resolveBattleSubject,
   startBattle,
-} from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission.test-support.ts";
 
 type PreserveLifeLastResult =
   | "init"

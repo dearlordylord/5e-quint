@@ -1,5 +1,5 @@
 import { statBlockId as parseSharedStatBlockId } from "@dnd/shared/game-facts";
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.ATTACK.MINIMAL_RESOLUTION
 import { describe, expect, it } from "vitest";
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
@@ -34,7 +34,7 @@ import {
   run,
   stateCheck,
   type ReducerRouteEvent,
-} from "./battle-runtime-mbt-driver-kit.ts";
+} from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import type {
   BattleActDiscoveryCandidate,
   BattleCreatureAttackDamageRollHole,
@@ -51,9 +51,9 @@ import {
   statBlockCreatureInit,
   startBattleRight,
   testBattleCreatureStateWithConditions,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import { resolvedAnimalFriendshipState } from "./unit-profile-admission-spell-battle-support.ts";
-import { spellCasterId } from "./unit-profile-admission-catalog-support.ts";
+import { spellCasterId } from "./unit-profile-admission-catalog.test-support.ts";
 
 const INITIAL_HP = 20;
 const ATTACKER_A_ID = combatantId("creature-attack-a");

@@ -13,7 +13,8 @@ import type {
   SupportedAttackActionOption,
 } from "./battle-action-options.ts";
 import { combatantCanTakeReactions } from "./battle-reducer/creature-state-execution.ts";
-import { snapshotBattle, spendReaction } from "./battle-reducer/dispatcher.ts";
+import { snapshotBattle } from "./battle-reducer/battle-snapshot.ts";
+import { spendReaction } from "./battle-reducer/interrupt-execution.ts";
 import { invalidResult } from "./battle-reducer/result-helpers.ts";
 import { resolveSelectedAttackProcedure } from "./battle-reducer/attack-main.ts";
 import {
@@ -27,6 +28,8 @@ import {
 } from "./battle-reducer/statblock.ts";
 import { findPresentFamiliarById } from "./find-familiar-state.ts";
 import type { CombatantId } from "./identity.ts";
+import { combatantHasPactOfTheChainFindFamiliar } from "./find-familiar-pact-facts.ts";
+export { combatantHasPactOfTheChainFindFamiliar } from "./find-familiar-pact-facts.ts";
 
 export type PactOfTheChainFamiliarAttackSubject = Extract<
   BattleSubject,
@@ -101,20 +104,6 @@ export function resolvePactOfTheChainFamiliarReactionAttack(
         familiarId: input.subject.familiarId,
         attack: selectedAttack,
       }),
-  );
-}
-
-export function combatantHasPactOfTheChainFindFamiliar(
-  state: BattleState,
-  ownerId: CombatantId,
-): boolean {
-  const owner = state.combatants.get(ownerId);
-  return (
-    owner?.origin.kind === "character" &&
-    owner.origin.spellcasting?.pactOfTheChainFindFamiliarInvocationMode !==
-      null &&
-    owner.origin.spellcasting?.pactOfTheChainFindFamiliarInvocationMode !==
-      undefined
   );
 }
 

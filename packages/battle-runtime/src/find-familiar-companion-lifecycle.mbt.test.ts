@@ -1,5 +1,5 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
-import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
+import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.find-familiar-lifecycle
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE
@@ -46,7 +46,7 @@ import {
   run,
   stateCheck,
   type ReducerRouteEvent,
-} from "./battle-runtime-mbt-driver-kit.ts";
+} from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import {
   battleReducerStartRouteEvent,
   battleId,
@@ -75,9 +75,9 @@ import {
 import {
   characterCreature,
   requireCombatant,
-} from "./unit-profile-admission-creature-fixture-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
-import { statBlockCatalog } from "./unit-profile-admission-catalog-support.ts";
+} from "./unit-profile-admission-creature-fixture.test-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
+import { statBlockCatalog } from "./unit-profile-admission-catalog.test-support.ts";
 import { statBlockProcedurePresentations } from "./stat-block-presentation.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 

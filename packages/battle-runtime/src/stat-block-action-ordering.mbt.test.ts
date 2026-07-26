@@ -34,7 +34,7 @@ import {
   type ReducerRouteEvent,
   type ReducerRouteFill,
   type ReducerRouteOwnerGroup,
-} from "./battle-runtime-mbt-driver-kit.ts";
+} from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import { attackDamageByTypeEntries } from "./battle-reducer/damage-helpers.ts";
 import { statBlockAttackActionOptions } from "./battle-reducer/statblock.ts";
 import { battleExecutionScopeOrdinal } from "./identity.ts";
@@ -65,7 +65,7 @@ import {
   type BattleRuntimeSession,
   type BattleState,
   type BattleSubject,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import type { AttackDamageRider } from "./battle-state-execution.ts";
 import type { BattleResolutionResult } from "./index.ts";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";

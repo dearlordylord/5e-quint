@@ -1,3 +1,4 @@
+import { maybeOpenSpellCastReactionWindow } from "../spell-cast-reaction-window.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-creature-size-change
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-glyph-stored-concentration-full-duration
@@ -32,7 +33,7 @@ import {
   type BattleState,
   type CreatureSizeChangeSpellInvocation,
 } from "../../battle-state-execution.ts";
-import { snapshotBattle } from "../dispatcher.ts";
+import { snapshotBattle } from "../interrupt-execution.ts";
 import { CombatantId } from "../../identity.ts";
 import type {
   CreatureSizeDecreaseSpellProcedureExecution,
@@ -46,14 +47,14 @@ import {
   creatureSizeChangeProcedure,
 } from "../creature-size-change-effects.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";
-import { maybeOpenInterruptWindow } from "../dispatcher.ts";
-import { needsHolesResult } from "../hole-helpers.ts";
-import { invalidResult } from "../result-helpers.ts";
-import { sameStringSet } from "../spells-execution-facts.ts";
+
+import { needsHolesResult } from "../needs-holes-result.ts";
 import {
-  spellCastInterruptFrame,
-  spellCastMetamagicApplicationsInput,
-} from "../spell-cast-interrupt-frame.ts";
+  invalidResult,
+  resolvedResult,
+  resolutionFromStateResult,
+} from "../result-helpers.ts";
+import { sameStringSet } from "../spells-execution-facts.ts";
 import { combatantsAfterConcentrationSpellEffectsEndedIfNoEffects } from "../spell-condition-effects-helpers.ts";
 import { spellSavingThrowOutcomeHole } from "../spells-damage-fills.ts";
 import { validateSavingThrowOutcomes } from "../spells-resolve-save-gates.ts";
@@ -436,29 +437,16 @@ function resolveCreatureSizeChange(
   }
 
   if (input.storedGlyphRelease === undefined) {
-    const spellCastReactionWindow = maybeOpenInterruptWindow(
-      input.input.state,
-      spellCastInterruptFrame({
-        casterId: input.actorId,
+    const spellCastReactionWindow = maybeOpenSpellCastReactionWindow(
+      input,
+      [target.combatantId],
+      spellCastingTimeResourceForSpellCast({
         invocation: input.invocation,
-        targetIds: [target.combatantId],
-        reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
-        castingResource: spellCastingTimeResourceForSpellCast({
-          invocation: input.invocation,
-          ...(input.actionCostOverride === undefined
-            ? {}
-            : { actionCostOverride: input.actionCostOverride }),
-        }),
-        ...spellCastMetamagicApplicationsInput(
-          input.metamagicApplications ?? [],
-        ),
-        continuation: {
-          kind: "replay",
-          subject: input.input.subject,
-          fills: input.input.fills,
-        },
+        ...(input.actionCostOverride === undefined
+          ? {}
+          : { actionCostOverride: input.actionCostOverride }),
       }),
-      input.input.handledInterruptTrigger,
+      input.metamagicApplications ?? [],
     );
     if (spellCastReactionWindow !== null) {
       return spellCastReactionWindow;
@@ -522,13 +510,7 @@ function resolveCreatureSizeChange(
           ? {}
           : { metamagicApplications: input.metamagicApplications }),
       });
-      return resourced.tag === "invalid"
-        ? resourced
-        : {
-            tag: "resolved",
-            state: resourced.state,
-            snapshot: snapshotBattle(resourced.state),
-          };
+      return resolutionFromStateResult(resourced);
     }
   }
 
@@ -546,11 +528,7 @@ function resolveCreatureSizeChange(
     input.metamagicApplications,
   );
   if (input.storedGlyphRelease !== undefined) {
-    return {
-      tag: "resolved",
-      state: effected,
-      snapshot: snapshotBattle(effected),
-    };
+    return resolvedResult(effected);
   }
   const resourced = spendSpellCastResources({
     state: effected,

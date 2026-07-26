@@ -31,8 +31,8 @@ import {
   difficultyClass,
   discoverBattleActs,
   resolveBattleSubject,
-} from "./battle-runtime-test-support.ts";
-import type { BattleState } from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
+import type { BattleState } from "./battle-runtime.test-support.ts";
 import { isCharacterBattleCreatureState } from "./battle-reducer/creature-state.ts";
 import type { BattleProcedureExecutionRef, CombatantId } from "./index.ts";
 import { describe, expect, test } from "vitest";

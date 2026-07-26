@@ -32,12 +32,22 @@ export function traceActivation(
   edges: TraceEdge[],
   ids: IdGen,
 ): void {
+  tracePhases(m.phases, ctx, nodes, edges, ids);
+}
+
+export function tracePhases(
+  phases: readonly ActivationPhase[],
+  ctx: SpellCtx,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): void {
   // Thread phase resolutions with `branches_on_completion` edges so the
   // graph shows "phase 1 completes, phase 2 follows" explicitly. SRD
   // sequencing ("Hit or miss, the shard then explodes") becomes a real
   // edge instead of implicit array order.
   let previousResolutionId: string | null = null;
-  m.phases.forEach((phase, idx) => {
+  phases.forEach((phase, idx) => {
     const thisResolutionId = tracePhase(phase, idx + 1, ctx, nodes, edges, ids);
     if (previousResolutionId !== null) {
       edges.push({
@@ -318,25 +328,7 @@ export function tracePhase(
         if (outcome.phases === undefined) continue;
 
         const branchCtx: SpellCtx = { ...ctx, procId: branchId };
-        let previousResolutionId: string | null = null;
-        outcome.phases.forEach((nestedPhase, idx) => {
-          const nestedResolutionId = tracePhase(
-            nestedPhase,
-            idx + 1,
-            branchCtx,
-            nodes,
-            edges,
-            ids,
-          );
-          if (previousResolutionId !== null) {
-            edges.push({
-              from: previousResolutionId,
-              to: nestedResolutionId,
-              relation: "branches_on_completion",
-            });
-          }
-          previousResolutionId = nestedResolutionId;
-        });
+        tracePhases(outcome.phases, branchCtx, nodes, edges, ids);
       }
       return resId;
     }
@@ -382,25 +374,7 @@ export function tracePhaseContinuation(
   }
 
   const branchCtx: SpellCtx = { ...ctx, procId: continuationId };
-  let previousResolutionId: string | null = null;
-  continuation.next.forEach((nestedPhase: ActivationPhase, idx: number) => {
-    const nestedResolutionId = tracePhase(
-      nestedPhase,
-      idx + 1,
-      branchCtx,
-      nodes,
-      edges,
-      ids,
-    );
-    if (previousResolutionId !== null) {
-      edges.push({
-        from: previousResolutionId,
-        to: nestedResolutionId,
-        relation: "branches_on_completion",
-      });
-    }
-    previousResolutionId = nestedResolutionId;
-  });
+  tracePhases(continuation.next, branchCtx, nodes, edges, ids);
 }
 
 export function traceEffectModeChoice(

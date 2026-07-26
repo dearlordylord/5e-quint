@@ -10,11 +10,8 @@ import type { UnitCatalog } from "@dnd/character-creation-runtime";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
-import { hasPreparedClassSpellAccess } from "./prepared-spell-access.ts";
-import { spendCharacterSheetSpellSlot } from "./spell-slots.ts";
 import {
   characterSheetIssue,
-  getRequiredUnit,
   type CharacterSheet,
   type CharacterSheetDominatePersonInvocation,
   type CharacterSheetDominatePersonOutcome,
@@ -22,6 +19,9 @@ import {
   type CharacterSheetDominatePersonTarget,
   type CharacterSheetIssue,
 } from "./sheet-types.ts";
+import { hasWisdomSaveGatePhase } from "./spell-profile-shape.ts";
+
+import { castPreparedSpell } from "./prepared-spell-cast.ts";
 
 const DOMINATE_PERSON_SPELL_ID = "dominate_person" as const;
 const DOMINATE_PERSON_SPELL_LEVEL = spellSlotLevel(5);
@@ -33,49 +33,21 @@ export function castDominatePerson(input: {
   readonly unitLibrary: UnitCatalog;
   readonly target: CharacterSheetDominatePersonTarget;
 }): Either.Either<CharacterSheetDominatePersonResult, CharacterSheetIssue> {
-  const spell = dominatePersonSpell(input.unitLibrary);
-  if (Either.isLeft(spell)) return Either.left(spell.left);
-
-  if (!hasPreparedClassSpellAccess(input.sheet, spell.right.id)) {
-    return characterSheetIssue(
-      "Dominate Person requires prepared class Spell Access.",
-    );
-  }
-
-  const targetIssue = dominatePersonTargetIssue(input.target);
-  if (targetIssue !== null) return characterSheetIssue(targetIssue);
-
-  const invocation = dominatePersonInvocationFromSpell({
-    spell: spell.right,
-    target: input.target,
-  });
-  if (Either.isLeft(invocation)) return Either.left(invocation.left);
-
-  const spent = spendCharacterSheetSpellSlot({
+  return castPreparedSpell({
     sheet: input.sheet,
+    unitLibrary: input.unitLibrary,
+    spellId: authoredUnitId(DOMINATE_PERSON_SPELL_ID),
     spellLevel: DOMINATE_PERSON_SPELL_LEVEL,
-    spellSlotSource: "ordinary",
+    spellName: "Dominate Person",
+    invocation: (spell) => {
+      const targetIssue = dominatePersonTargetIssue(input.target);
+      if (targetIssue !== null) return characterSheetIssue(targetIssue);
+      return dominatePersonInvocationFromSpell({
+        spell: spell,
+        target: input.target,
+      });
+    },
   });
-  if (Either.isLeft(spent)) return Either.left(spent.left);
-
-  return Either.right({
-    sheet: spent.right,
-    invocation: invocation.right,
-  });
-}
-
-function dominatePersonSpell(
-  unitLibrary: UnitCatalog,
-): Either.Either<SpellRecord, CharacterSheetIssue> {
-  const unit = getRequiredUnit(
-    unitLibrary,
-    authoredUnitId(DOMINATE_PERSON_SPELL_ID),
-  );
-  if (Either.isLeft(unit)) return Either.left(unit.left);
-  if (unit.right.kind !== "spell") {
-    return characterSheetIssue("Dominate Person requires a Spell record.");
-  }
-  return Either.right(unit.right);
 }
 
 function dominatePersonTargetIssue(
@@ -120,21 +92,18 @@ function dominatePersonInvocationFromSpell(input: {
     );
   }
 
-  const saveGatePhase = spell.mechanics.phases.find(
-    (phase) =>
-      phase.kind === "save_gate" &&
-      phase.ability === "wis" &&
-      phase.dc.kind === "caster_spell_save_dc" &&
-      phase.attachment.kind === "hole" &&
-      phase.attachment.holeId === "dominate_person_target" &&
-      phase.attachment.value.kind === "target" &&
-      isDominatePersonTargetSelection(phase.attachment.value.selection) &&
+  const hasSaveGatePhase = hasWisdomSaveGatePhase(
+    spell,
+    "dominate_person_target",
+    (phase, attachment) =>
+      attachment.value.kind === "target" &&
+      isDominatePersonTargetSelection(attachment.value.selection) &&
       phase.onFail.kind === "apply_condition" &&
       phase.onFail.condition === "charmed" &&
       phase.onSuccess.kind === "none" &&
       hasDamageTriggeredEndingRepeatSave(phase.repeatSaves),
   );
-  if (saveGatePhase === undefined) {
+  if (!hasSaveGatePhase) {
     return characterSheetIssue(
       "Dominate Person requires the supported Wisdom save Charmed control profile.",
     );

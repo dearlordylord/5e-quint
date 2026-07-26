@@ -23,7 +23,7 @@ import {
   characterAttackSubjectForTest,
   attackExecutionSelectionForSubjectForTest,
   attackTargetSpatialFact,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import { admitCharacterWeaponAttackExecutionWeapon } from "./character-weapon-execution-admission.ts";
 import { battleObjectId } from "./identity.ts";
 
@@ -34,7 +34,7 @@ import {
   mbtSpecPath,
   reducerRoutedWeaponMasteryPropertyStateCheck,
   run,
-} from "./battle-runtime-mbt-driver-kit.ts";
+} from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import { Either } from "effect";
 import { battleReducerRouteEventsForDiscoveredAct } from "./battle-reducer/reducer-route.ts";
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
@@ -73,7 +73,7 @@ import {
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
-import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.test-support.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 
 type WeaponMasteryProjection = {

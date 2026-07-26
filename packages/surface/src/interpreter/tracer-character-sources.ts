@@ -10,6 +10,7 @@ import type {
 import type { Trace, TraceEdge, TraceNode } from "./tracer-model.ts";
 import { describeToolProficiencyGrant, idGen } from "./tracer-rule-labels.ts";
 import type { IdGen } from "./tracer-rule-labels.ts";
+import { traceRoot } from "./tracer-root.ts";
 
 import { traceFromNodes } from "./tracer-equipment.ts";
 
@@ -20,17 +21,10 @@ import { describeClassWeaponProficiency } from "./tracer-activated-abilities.ts"
 // ============================================================
 
 export function traceClassUnit(unit: ClassRecord): Trace {
-  const nodes: TraceNode[] = [];
-  const edges: TraceEdge[] = [];
-  const ids = idGen();
-
-  const rootId = ids("root");
-  nodes.push({
-    id: rootId,
-    category: "source",
-    atomKind: "class_root",
-    label: `class_root\n${unit.name}\nhit die d${unit.hitPointDie}`,
-  });
+  const { rootId, nodes, edges, ids } = traceRoot(
+    "class_root",
+    `class_root\n${unit.name}\nhit die d${unit.hitPointDie}`,
+  );
 
   const primaryAbilityId = ids("primary_ability");
   nodes.push({
@@ -171,17 +165,10 @@ export function traceSubclassUnit(
 }
 
 export function traceBackgroundUnit(unit: BackgroundRecord): Trace {
-  const nodes: TraceNode[] = [];
-  const edges: TraceEdge[] = [];
-  const ids = idGen();
-
-  const rootId = ids("root");
-  nodes.push({
-    id: rootId,
-    category: "source",
-    atomKind: "background_root",
-    label: `background_root\n${unit.name}\n${unit.abilityScoreIncrease.abilities.join(", ")}`,
-  });
+  const { rootId, nodes, edges, ids } = traceRoot(
+    "background_root",
+    `background_root\n${unit.name}\n${unit.abilityScoreIncrease.abilities.join(", ")}`,
+  );
 
   const featId = ids("feat");
   nodes.push({
@@ -198,17 +185,10 @@ export function traceBackgroundUnit(unit: BackgroundRecord): Trace {
 }
 
 export function traceSpeciesUnit(unit: SpeciesRecord): Trace {
-  const nodes: TraceNode[] = [];
-  const edges: TraceEdge[] = [];
-  const ids = idGen();
-
-  const rootId = ids("root");
-  nodes.push({
-    id: rootId,
-    category: "source",
-    atomKind: "species_root",
-    label: `species_root\n${unit.name}\n${unit.creatureType}, ${speciesSizeLabel(unit.size)}, ${unit.speed.walkFeet} ft.`,
-  });
+  const { rootId, nodes, edges, ids } = traceRoot(
+    "species_root",
+    `species_root\n${unit.name}\n${unit.creatureType}, ${speciesSizeLabel(unit.size)}, ${unit.speed.walkFeet} ft.`,
+  );
 
   for (const traitId of Object.values(unit.traits)) {
     const traitNodeId = ids("trait");

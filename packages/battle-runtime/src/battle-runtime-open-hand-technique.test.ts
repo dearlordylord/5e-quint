@@ -33,7 +33,7 @@ import {
   type BattleRuntimeSession,
   type BattleState,
   type BattleSubject,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import { battleOpenHandTechniqueSupportForUnit } from "./unit-feature-support.ts";
 
 describe("battle runtime: Open Hand Technique", () => {

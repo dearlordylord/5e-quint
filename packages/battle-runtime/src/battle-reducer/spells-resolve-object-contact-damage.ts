@@ -57,10 +57,8 @@ import {
   fillsMatchingHoleIds,
 } from "./damage-apply.ts";
 import { damageRelationshipDecisionFillCheck } from "./damage-relationship-decisions.ts";
-import {
-  deduplicateBattleHolesById,
-  needsHolesResult,
-} from "./hole-helpers.ts";
+import { deduplicateBattleHolesById } from "./hole-helpers.ts";
+import { needsHolesResult } from "./needs-holes-result.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
 import { battleStateAfterTargetActionEarlyEndForActor } from "./sanctuary-targeting-interdiction.ts";

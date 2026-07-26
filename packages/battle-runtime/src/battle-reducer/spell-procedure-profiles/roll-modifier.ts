@@ -1,3 +1,4 @@
+import { maybeOpenSpellCastReactionWindow } from "../spell-cast-reaction-window.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-roll-modifier
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-glyph-stored-concentration-full-duration
@@ -48,15 +49,14 @@ import {
   type SelectedRollModifierSpellEffect,
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
-import { snapshotBattle } from "../dispatcher.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";
-import { maybeOpenInterruptWindow } from "../dispatcher.ts";
-import { needsHolesResult } from "../hole-helpers.ts";
-import { invalidResult } from "../result-helpers.ts";
+
+import { spellSelectionResolution } from "../needs-holes-result.ts";
 import {
-  spellCastInterruptFrame,
-  spellCastMetamagicApplicationsInput,
-} from "../spell-cast-interrupt-frame.ts";
+  invalidResult,
+  resolvedResult,
+  resolutionFromStateResult,
+} from "../result-helpers.ts";
 import {
   rollModifierUsesTargetAbilityChoices,
   spellRollModifierAbilityChoiceHole,
@@ -330,79 +330,50 @@ function resolveRollModifier(
     );
   }
 
-  const targetSelection = rollModifierSpellTargetSelection(input);
-  if (targetSelection.tag === "needsHoles") {
-    return needsHolesResult(input.input.state, input.input.subject, [
-      targetSelection.hole,
-    ]);
-  }
-  if (targetSelection.tag === "invalid") {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      targetSelection.message,
-    );
-  }
+  const targetSelectionResolution = spellSelectionResolution(
+    input.input.state,
+    input.input.subject,
+    rollModifierSpellTargetSelection(input),
+  );
+  if (targetSelectionResolution.tag === "resolution")
+    return targetSelectionResolution.result;
+  const targetSelection = targetSelectionResolution.selection;
 
-  const effectSelection = rollModifierSpellEffectSelection({
-    ...input,
-    targetIds: targetSelection.targetIds,
-  });
-  if (effectSelection.tag === "needsHoles") {
-    return needsHolesResult(input.input.state, input.input.subject, [
-      effectSelection.hole,
-    ]);
-  }
-  if (effectSelection.tag === "invalid") {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      effectSelection.message,
-    );
-  }
+  const effectSelectionResolution = spellSelectionResolution(
+    input.input.state,
+    input.input.subject,
+    rollModifierSpellEffectSelection({
+      ...input,
+      targetIds: targetSelection.targetIds,
+    }),
+  );
+  if (effectSelectionResolution.tag === "resolution")
+    return effectSelectionResolution.result;
+  const effectSelection = effectSelectionResolution.selection;
 
   if (input.storedGlyphRelease === undefined) {
-    const spellCastReactionWindow = maybeOpenInterruptWindow(
-      input.input.state,
-      spellCastInterruptFrame({
-        casterId: input.actorId,
-        invocation: input.invocation,
-        targetIds: targetSelection.targetIds,
-        reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
-        castingResource:
-          input.actionCostOverride === "bonusAction" ||
-          input.input.subject.tag === "bonusActionSpell"
-            ? { kind: "bonusAction" }
-            : { kind: "magicAction" },
-        ...spellCastMetamagicApplicationsInput(
-          input.metamagicApplications ?? [],
-        ),
-        continuation: {
-          kind: "replay",
-          subject: input.input.subject,
-          fills: input.input.fills,
-        },
-      }),
-      input.input.handledInterruptTrigger,
+    const spellCastReactionWindow = maybeOpenSpellCastReactionWindow(
+      input,
+      targetSelection.targetIds,
+      input.actionCostOverride === "bonusAction" ||
+        input.input.subject.tag === "bonusActionSpell"
+        ? { kind: "bonusAction" }
+        : { kind: "magicAction" },
+      input.metamagicApplications ?? [],
     );
     if (spellCastReactionWindow !== null) {
       return spellCastReactionWindow;
     }
   }
 
-  const affectedTargets = rollModifierSpellAffectedTargets(input);
-  if (affectedTargets.tag === "needsHoles") {
-    return needsHolesResult(input.input.state, input.input.subject, [
-      affectedTargets.hole,
-    ]);
-  }
-  if (affectedTargets.tag === "invalid") {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      affectedTargets.message,
-    );
-  }
+  const affectedTargetsResolution = spellSelectionResolution(
+    input.input.state,
+    input.input.subject,
+    rollModifierSpellAffectedTargets(input),
+  );
+  if (affectedTargetsResolution.tag === "resolution")
+    return affectedTargetsResolution.result;
+  const affectedTargets = affectedTargetsResolution.selection;
 
   const concentrationBase =
     input.storedGlyphRelease !== undefined
@@ -427,11 +398,7 @@ function resolveRollModifier(
           input.invocation.sourceProcedureRef,
         );
   if (input.storedGlyphRelease !== undefined) {
-    return {
-      tag: "resolved",
-      state: effected,
-      snapshot: snapshotBattle(effected),
-    };
+    return resolvedResult(effected);
   }
   const resourced = spendSpellCastResources({
     state: effected,
@@ -448,13 +415,7 @@ function resolveRollModifier(
       ? {}
       : { metamagicApplications: input.metamagicApplications }),
   });
-  return resourced.tag === "invalid"
-    ? resourced
-    : {
-        tag: "resolved",
-        state: resourced.state,
-        snapshot: snapshotBattle(resourced.state),
-      };
+  return resolutionFromStateResult(resourced);
 }
 
 const RollModifierInvocationSchema = spellProcedureExecutionSchema(

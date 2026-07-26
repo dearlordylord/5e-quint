@@ -1,73 +1,28 @@
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-flaming-sphere-hazard-ram spell.invocation-moonbeam-movable-zone
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spike-growth-movement-hazard
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-gust-of-wind-line
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-sleet-storm-area-hazard
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-insect-plague-area-hazard spell.invocation-cloudkill-area-hazard unit-feature.acrobatic-movement
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-acid-arrow-attack-timing
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-d20-lifecycle
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-heightened-save-disadvantage
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.cunning-strike
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-haste-positive
-// RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
-// KERNEL-COVERAGE: runtime-owner BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE BATTLE.COMMAND.OPTION_AND_NEXT_TURN BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.INSECT_PLAGUE_AREA_HAZARD_LIFECYCLE BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_POSITIVE_EFFECTS
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_LETHARGY_LIFECYCLE
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SEE_INVISIBILITY_OBSERVER_SIGHT
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ACID_ARROW_ATTACK_TIMING
-// KERNEL-COVERAGE: runtime-owner BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING
-// KERNEL-COVERAGE: runtime-owner BATTLE.COMPOSITION.TURN_BOUNDARY_EFFECT_LIFECYCLE_ORDERING
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.creature-space-movement-permission unit-feature.d20-test-natural-one-reroll unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.invocation-grease-ground-hazard spell.invocation-jump-movement-replacement spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
-
 import { Either, Match } from "effect";
-
 import { spellActiveEffectExecutionRef } from "../active-effect/execution-ref.ts";
 import {
   canSpendMovement,
   canSpendBonusAction,
   enableMovementActionBonusActionExclusion,
   markMovementSpentForMovementActionBonusActionExclusion,
-  resetTurnActionEconomy,
   spendAction,
   spendActivationResource,
 } from "@dnd/shared-algebras/action-economy-algebra";
-
 import { rolledDiceTotal } from "@dnd/shared-algebras/runtime-dice-algebra";
-
 import {
   holeId,
   holeInstanceKey,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
-
 import {
   hasCondition,
   removeCondition,
 } from "@dnd/shared-algebras/conditions-algebra";
-
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
-
 import {
   currentActing,
   nextInitiative,
 } from "@dnd/shared-algebras/initiative-algebra";
-
 import { ordinaryMovementCost } from "@dnd/shared-algebras/movement-cost-algebra";
-
 import {
   DieRollResult,
   MovementFeet,
@@ -75,47 +30,37 @@ import {
   type Ability,
   type Round as RoundType,
 } from "@dnd/shared/types";
-
 import {
   type BattleInsectPlagueAreaMembershipTrigger,
   type BattleCloudkillAreaMembershipTrigger,
   type BattleSleetStormAreaMembershipTrigger,
-  type BattleMovementSpeedKind,
   type BattleInterruptAttackExecutionSelection,
   type BattleSubject,
 } from "../battle-subjects.ts";
 import { characterBattleResourceIsUseCount } from "../character-battle-resource-execution.ts";
 import { attackExecutionSelectionKey } from "../battle-action-options.ts";
-
 import { type BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
-
 import {
   type BattleAreaId,
-  type BattleObjectId,
   type BattleProcedureExecutionRef,
   CombatantId,
 } from "../identity.ts";
-
 import {
   damageDispositionFillFor,
   damageDispositionFillsValidation,
   damageDispositionForTarget,
   zeroHitPointReplacementDispositionHole,
 } from "./attack-damage-apply.ts";
-
 import { attackActionOptionsForActor } from "./attack-damage-apply.ts";
-
 import {
   combatantWearingArmor,
   combatantWieldingShield,
   currentActorId,
 } from "./creature-state-leaves.ts";
-
 import {
   battleCreatureStateWithKnockOutPreservedConditions,
   combatantCanTakeActions,
 } from "./creature-state-execution.ts";
-
 import {
   applyStartTurnDeathSavingThrow,
   applyHitPointMaximumIncreaseExpiration,
@@ -139,49 +84,34 @@ import {
   d20TestNaturalOneRerollHoleWithOption,
   effectiveD20TestNaturalOneRerollDeathSavingThrow,
 } from "./d20-test-natural-one-reroll.ts";
-
 import { maybeOpenInterruptWindow } from "./interrupt-execution.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";
 import {
   flamingSphereDamageAfterSave,
   flamingSphereMoveDistanceAccepted,
 } from "./flaming-sphere-hazard-ram.ts";
-
 import { hideousLaughterRepeatSavingThrowOutcomeHole } from "./hideous-laughter-repeat-save.ts";
-
-import { needsHolesResult } from "./hole-helpers.ts";
+import { needsHolesResult } from "./needs-holes-result.ts";
 import { maxJumpMovementReplacementDistanceFeet } from "./jump-movement-replacement.ts";
 import { validateLevitatedMovementFact } from "./levitate-creature.ts";
 import {
   moonbeamDamageAfterSave,
   moonbeamMoveDistanceAccepted,
 } from "./moonbeam-movable-zone.ts";
-export { resolveOpportunityAttackCommand } from "./opportunity-attacks.ts";
-export {
-  applyBattleMovement,
-  readiedSpellInitialHoles,
-  readiedMovementInitialHoles,
-  resolveReleaseReadiedMovementCommand,
-  resolveReleaseReadiedSpellCommand,
-} from "./readied-release.ts";
-import { applyBattleMovement } from "./readied-release.ts";
-
+import { applyBattleMovement } from "./battle-movement.ts";
 import {
   battleMovementBudgetForActor,
   combatantCanMoveInState,
   combatantCanMoveWithBudget,
   creatureSizeIsLargerThanSelf,
   effectiveMovementSpeed,
-  effectiveWalkSpeed,
   grappleTargetExemptFromDragCost,
   opportunityAttackThreatsForMovement,
   interruptAttackExecutionSelectionMatchesOption,
   representedMovementSpeedKinds,
 } from "./movement-speed.ts";
-
 import { invalidResult } from "./result-helpers.ts";
 import { slowActionOrBonusActionTurnResources } from "./slow-active-penalties-runtime.ts";
-
 import {
   combatantsAfterConcentrationSpellEffectsEndedIfNoEffects,
   combatantsAfterConcentrationSpellEffectsEndedIfNoEffectsForSources,
@@ -199,11 +129,8 @@ import {
   spellEndTargetStatePromotesIncapacitated,
 } from "./spell-end-target-state.ts";
 import { spellGrantedActionResourceTurnResources } from "./spell-granted-action-resource.ts";
-
 import { damageAmountAfterTargetAdjustments } from "./damage-helpers.ts";
-
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
-
 import {
   applyPreparedSlotSpellDamage,
   applySaveDamageResult,
@@ -243,12 +170,9 @@ import {
   tickDurationBattleLightEmitters,
 } from "./spells-active-effects.ts";
 import { revertShapeShiftedCombatantToTrueForm } from "./shape-shifting.ts";
-import { validateGustOfWindLineAreaPushFacts } from "./spells-resolve-save-gates.ts";
-
+import { validateGustOfWindLineAreaPushFacts } from "./gust-of-wind-push-facts.ts";
 import { attackTargetConstraint } from "./statblock-attacks.ts";
-
 import { refreshStatBlockStartTurnExecution } from "../stat-block-execution-state.ts";
-
 import type {
   ActiveOngoingFeatureOccurrence,
   BattleAcrobaticMovementFact,
@@ -265,17 +189,13 @@ import type {
   BattleFill,
   BattleFlamingSphereDamageRollHole,
   BattleFlamingSphereRamMovementHole,
-  BattleFlamingSphereSavingThrowOutcomeHole,
   BattleFlamingSphereTrigger,
   BattleAreaDifficultTerrainMovementFact,
   BattleAreaDifficultTerrainSource,
   BattleAbilityD20TestRollModeEndTurnSavingThrowOutcomeHole,
-  BattleGustOfWindLineDirectionChoiceHole,
   BattleGustOfWindLineMovementFact,
-  BattleGustOfWindLineSavingThrowOutcomeHole,
   BattleMoonbeamDamageRollHole,
   BattleMoonbeamSaveTrigger,
-  BattleMoonbeamSavingThrowOutcomeHole,
   BattleMovableZoneRepositionMovementHole,
   BattleGrappleLink,
   BattleGrappleDragMovementFact,
@@ -289,13 +209,10 @@ import type {
   BattleCloudkillAreaHazardTrigger,
   BattleSleetStormAreaHazardSavingThrowOutcomeHole,
   BattleSleetStormAreaHazardTrigger,
-  BattleWebRestraintSavingThrowOutcomeHole,
   BattleWebRestraintTrigger,
   BattleHideousLaughterRepeatSavingThrowOutcomeHole,
-  BattleHeldObjectFactsHole,
   BattleHoleId,
   BattleJumpMovementReplacementFact,
-  BattleMovementHole,
   BattleMovementFillValue,
   BattleOpportunityAttackThreat,
   AdmittedBattleResolutionInput,
@@ -326,9 +243,67 @@ import { validateRolledDiceFillForDiceExpr } from "../battle-state-execution.ts"
 import {
   DEATH_SAVING_THROW_HOLE_ID,
   MOVEMENT_HOLE_ID,
-  MOVEMENT_HOLE_INSTANCE,
   STAT_BLOCK_RECHARGE_ROLL_HOLE_ID,
 } from "./battle-runtime-protocol.ts";
+import { movementHole } from "./movement-holes.ts";
+import { resetBattleTurnResources } from "./turn-resource-reset.ts";
+import {
+  canonicalHeldObjectIdsForActor,
+  commandDropHeldObjectFactsHole,
+  commandDropHeldObjectFactsHoleId,
+  commandPendingEffectsForActor,
+  flamingSphereRamMovementHole,
+  flamingSphereRepositionMovementHole,
+  flamingSphereSavingThrowOutcomeHole,
+  flamingSphereTriggerLabel,
+  greaseGroundHazardSavingThrowOutcomeHole,
+  gustOfWindLineDirectionChoiceHole,
+  gustOfWindLineSavingThrowOutcomeHole,
+  hideousLaughterEffects,
+  moonbeamRepositionMovementHole,
+  moonbeamSavingThrowOutcomeHole,
+  moonbeamTriggerLabel,
+  standFromProneCostFeet,
+  webRestraintSavingThrowOutcomeHole,
+} from "./turn-movement-discovery.ts";
+import type {
+  CommandPendingEffect,
+  FlamingSphereEffect,
+  GreaseGroundHazardEffect,
+  GustOfWindLineEffect,
+  HideousLaughterEffect,
+  MoonbeamEffect,
+  WebRestraintHazardEffect,
+} from "./turn-movement-discovery.ts";
+export {
+  canonicalHeldObjectIdsForActor,
+  commandDropHeldObjectFactsHole,
+  commandPendingEffectsForActor,
+  flamingSphereRamMovementHole,
+  flamingSphereRepositionMovementHole,
+  flamingSphereSavingThrowOutcomeHole,
+  greaseGroundHazardSavingThrowOutcomeHole,
+  gustOfWindLineDirectionChoiceHole,
+  gustOfWindLineSavingThrowOutcomeHole,
+  moonbeamRepositionMovementHole,
+  moonbeamSavingThrowOutcomeHole,
+  standFromProneCostFeet,
+  webRestraintSavingThrowOutcomeHole,
+} from "./turn-movement-discovery.ts";
+export type {
+  CommandPendingEffect,
+  FlamingSphereEffect,
+  GreaseGroundHazardEffect,
+  GustOfWindLineEffect,
+  MoonbeamEffect,
+  WebRestraintHazardEffect,
+} from "./turn-movement-discovery.ts";
+
+export {
+  readiedMovementInitialHoles,
+  readiedSpellInitialHoles,
+} from "./readied-initial-holes.ts";
+
 export function resolveEndTurn(
   state: BattleState,
   deathSavingThrowRoll?: DieRollResult,
@@ -1074,26 +1049,27 @@ type SleepPendingRepeatSaveEffect = Extract<
   BattleActiveEffect,
   { readonly kind: "sleepPendingRepeatSave" }
 >;
+
 type SpellConditionEndTurnSaveEffect = Extract<
   BattleActiveEffect,
   { readonly kind: "spellConditionEndTurnSave" }
 >;
+
 type SpellConditionCountedEndTurnSaveEffect = Extract<
   BattleActiveEffect,
   { readonly kind: "spellConditionCountedEndTurnSave" }
 >;
+
 type UnitFeatureConditionEndTurnSaveEffect = Extract<
   BattleActiveEffect,
   { readonly kind: "unitFeatureConditionEndTurnSave" }
 >;
+
 type AbilityD20TestRollModeEndTurnSaveEffect = Extract<
   BattleActiveEffect,
   { readonly kind: "abilityD20TestRollModeEndTurnSave" }
 >;
-type HideousLaughterEffect = Extract<
-  BattleActiveEffect,
-  { readonly kind: "hideousLaughter" }
->;
+
 type DurationActiveEffect = Extract<
   Exclude<
     BattleActiveEffect,
@@ -1604,45 +1580,24 @@ function validateSlowActivePenaltiesEndTurnSavingThrowOutcome(
     : "Slow end-turn Saving Throw outcome must match the ending-turn target.";
 }
 
-export type GreaseGroundHazardEffect = Extract<
-  BattleActiveEffect,
-  { readonly kind: "greaseGroundHazard" }
->;
-export type WebRestraintHazardEffect = Extract<
-  BattleActiveEffect,
-  { readonly kind: "webRestraintHazard" }
->;
 export type SleetStormAreaHazardEffect = Extract<
   BattleActiveEffect,
   { readonly kind: "sleetStormAreaHazard" }
 >;
+
 export type InsectPlagueAreaHazardEffect = Extract<
   BattleActiveEffect,
   { readonly kind: "insectPlagueAreaHazard" }
 >;
+
 export type CloudkillAreaHazardEffect = Extract<
   BattleActiveEffect,
   { readonly kind: "cloudkillAreaHazard" }
 >;
+
 export type SlowActivePenaltiesEffect = Extract<
   BattleActiveEffect,
   { readonly kind: "slowActivePenalties" }
->;
-export type FlamingSphereEffect = Extract<
-  BattleActiveEffect,
-  { readonly kind: "flamingSphere" }
->;
-export type MoonbeamEffect = Extract<
-  BattleActiveEffect,
-  { readonly kind: "moonbeam" }
->;
-export type GustOfWindLineEffect = Extract<
-  BattleActiveEffect,
-  { readonly kind: "gustOfWindLine" }
->;
-export type CommandPendingEffect = Extract<
-  BattleActiveEffect,
-  { readonly kind: "commandPending" }
 >;
 
 export function commandPendingEffectForSubject(
@@ -1667,76 +1622,6 @@ export function commandPendingEffectForSubject(
         spellActiveEffectExecutionRef(effect) === subject.effectRef,
     ) ?? null
   );
-}
-
-export function commandPendingEffectsForActor(
-  state: BattleState,
-  actorId: CombatantId,
-): readonly CommandPendingEffect[] {
-  const actor = state.combatants.get(actorId);
-  if (actor === undefined) {
-    return [];
-  }
-  return actor.activeEffects.filter(
-    (effect): effect is CommandPendingEffect =>
-      effect.kind === "commandPending" &&
-      effect.expiresAt.combatantId === actorId &&
-      effect.expiresAt.round === state.initiative.round,
-  );
-}
-
-const COMMAND_DROP_HELD_OBJECT_FACTS_HOLE_INSTANCE = holeInstanceKey(
-  "battle:command-drop:held-object-facts",
-);
-
-export function commandDropHeldObjectFactsHole(
-  subject: Extract<
-    BattleSubject,
-    {
-      readonly tag: "runtimeCommand";
-      readonly command: "commandDrop";
-    }
-  >,
-): BattleHeldObjectFactsHole {
-  return {
-    holeInstanceKey: COMMAND_DROP_HELD_OBJECT_FACTS_HOLE_INSTANCE,
-    holeId: commandDropHeldObjectFactsHoleId(subject),
-    kind: "heldObjectFacts",
-    label: "Command Drop held-object facts",
-    actorId: subject.actorId,
-  };
-}
-
-function commandDropHeldObjectFactsHoleId(
-  subject: Extract<
-    BattleSubject,
-    {
-      readonly tag: "runtimeCommand";
-      readonly command: "commandDrop";
-    }
-  >,
-): BattleHoleId {
-  return holeId(
-    `battle:command-drop:held-object-facts:${subject.actorId}:${subject.effectRef}`,
-  );
-}
-
-export function canonicalHeldObjectIdsForActor(
-  state: BattleState,
-  actorId: CombatantId,
-): readonly BattleObjectId[] | null {
-  const actor = state.combatants.get(actorId);
-  if (actor?.origin.kind !== "character") {
-    return null;
-  }
-  const loadout = actor.origin.selectedLoadout;
-  return [
-    ...(loadout.weapon === undefined ? [] : [loadout.weapon.itemId]),
-    ...(loadout.offHandWeapon === undefined
-      ? []
-      : [loadout.offHandWeapon.itemId]),
-    ...(loadout.shield === undefined ? [] : [loadout.shield.itemId]),
-  ];
 }
 
 function stateWithoutCommandPendingEffect(
@@ -2355,51 +2240,6 @@ function activeEffectForArea<
   return undefined;
 }
 
-export function greaseGroundHazardSavingThrowOutcomeHole(
-  state: BattleState,
-  targetId: CombatantId,
-  effect: GreaseGroundHazardEffect,
-  trigger: "entersArea" | "endsTurnInArea",
-): BattleGreaseGroundHazardSavingThrowOutcomeHole {
-  const key = `battle:grease-ground-hazard-save:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}:${trigger}`;
-  return {
-    kind: "savingThrowOutcome",
-    holeId: holeId(key),
-    holeInstanceKey: holeInstanceKey(key),
-    label: `${trigger === "entersArea" ? "Entry" : "End-turn"} DEX save`,
-    greaseGroundHazard: {
-      targetId,
-      sourceProcedureRef: effect.sourceProcedureRef,
-      sourceCombatantId: effect.sourceCombatantId,
-      areaId: effect.areaId,
-      trigger,
-      save: effect.save,
-    },
-    ability: effect.save.ability,
-    dc: effect.save.dc,
-    areaChoices: [],
-    targetRollModes: savingThrowRollModeProjections(
-      state,
-      effect.save.ability,
-      undefined,
-      greaseGroundHazardHeightenedRollModeProjection(effect, targetId),
-    ).filter((projection) => projection.targetId === targetId),
-    targetFlatBonuses: savingThrowFlatBonusProjections(
-      state,
-      effect.save.ability,
-    ).filter((projection) => projection.targetId === targetId),
-  };
-}
-
-function greaseGroundHazardHeightenedRollModeProjection(
-  effect: GreaseGroundHazardEffect,
-  targetId: CombatantId,
-): BattleSavingThrowRollModeProjection | undefined {
-  return effect.heightenedSpellTargetDisadvantage?.targetId === targetId
-    ? { targetId, rollMode: "disadvantage" }
-    : undefined;
-}
-
 function greaseGroundHazardSavingThrowOutcomeFor(
   fills: readonly Extract<
     BattleFill,
@@ -2547,40 +2387,6 @@ function webRestraintHazardEffectFor(
     (effect): effect is WebRestraintHazardEffect =>
       effect.kind === "webRestraintHazard",
   );
-}
-
-export function webRestraintSavingThrowOutcomeHole(
-  state: BattleState,
-  targetId: CombatantId,
-  effect: WebRestraintHazardEffect,
-  trigger: BattleWebRestraintTrigger,
-): BattleWebRestraintSavingThrowOutcomeHole {
-  const key = `battle:web-restraint-save:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}:${trigger}`;
-  return {
-    kind: "savingThrowOutcome",
-    holeId: holeId(key),
-    holeInstanceKey: holeInstanceKey(key),
-    label: `${trigger === "entersArea" ? "Entry" : "Start-turn"} DEX save`,
-    webRestraint: {
-      targetId,
-      sourceProcedureRef: effect.sourceProcedureRef,
-      sourceCombatantId: effect.sourceCombatantId,
-      areaId: effect.areaId,
-      trigger,
-      save: effect.save,
-    },
-    ability: effect.save.ability,
-    dc: effect.save.dc,
-    areaChoices: [],
-    targetRollModes: savingThrowRollModeProjections(
-      state,
-      effect.save.ability,
-    ).filter((projection) => projection.targetId === targetId),
-    targetFlatBonuses: savingThrowFlatBonusProjections(
-      state,
-      effect.save.ability,
-    ).filter((projection) => projection.targetId === targetId),
-  };
 }
 
 function validateWebRestraintSavingThrowOutcome(
@@ -3893,70 +3699,6 @@ function gustOfWindLineEffectFor(
   );
 }
 
-export function gustOfWindLineSavingThrowOutcomeHole(
-  state: BattleState,
-  targetId: CombatantId,
-  effect: GustOfWindLineEffect,
-  trigger: "endsTurnInLine",
-): BattleGustOfWindLineSavingThrowOutcomeHole {
-  const key = `battle:gust-of-wind-line-save:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}:${effect.directionId}:${trigger}`;
-  return {
-    kind: "savingThrowOutcome",
-    holeId: holeId(key),
-    holeInstanceKey: holeInstanceKey(key),
-    label: "End-turn STR save",
-    gustOfWindLine: {
-      targetId,
-      sourceProcedureRef: effect.sourceProcedureRef,
-      sourceCombatantId: effect.sourceCombatantId,
-      areaId: effect.areaId,
-      directionId: effect.directionId,
-      trigger,
-      save: effect.save,
-      pushDistanceFeet: effect.pushDistanceFeet,
-    },
-    ability: effect.save.ability,
-    dc: effect.save.dc,
-    areaChoices: [],
-    targetRollModes: savingThrowRollModeProjections(
-      state,
-      effect.save.ability,
-      undefined,
-      gustOfWindLineHeightenedRollModeProjection(effect, targetId),
-    ).filter((projection) => projection.targetId === targetId),
-    targetFlatBonuses: savingThrowFlatBonusProjections(
-      state,
-      effect.save.ability,
-    ).filter((projection) => projection.targetId === targetId),
-  };
-}
-
-function gustOfWindLineHeightenedRollModeProjection(
-  effect: GustOfWindLineEffect,
-  targetId: CombatantId,
-): BattleSavingThrowRollModeProjection | undefined {
-  return effect.heightenedSpellTargetDisadvantage?.targetId === targetId
-    ? { targetId, rollMode: "disadvantage" }
-    : undefined;
-}
-
-export function gustOfWindLineDirectionChoiceHole(
-  effect: GustOfWindLineEffect,
-): BattleGustOfWindLineDirectionChoiceHole {
-  const key = `battle:gust-of-wind-line-direction:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}:${effect.directionId}`;
-  return {
-    kind: "gustOfWindLineDirectionChoice",
-    holeId: holeId(key),
-    holeInstanceKey: holeInstanceKey(key),
-    label: "Line direction",
-    sourceCombatantId: effect.sourceCombatantId,
-    sourceProcedureRef: effect.sourceProcedureRef,
-    areaId: effect.areaId,
-    directionId: effect.directionId,
-    requiresTableSpatialFact: true,
-  };
-}
-
 function validateGustOfWindLineSavingThrowOutcome(
   value: BattleSavingThrowOutcomeValue,
   targetId: CombatantId,
@@ -4215,93 +3957,6 @@ function flamingSphereEffectFor(
     subject.areaId,
     (effect): effect is FlamingSphereEffect => effect.kind === "flamingSphere",
   );
-}
-
-function flamingSphereTriggerLabel(
-  trigger: BattleFlamingSphereTrigger,
-): "ram" | "end-within-5-feet" {
-  if (trigger === "rammedBySphere") {
-    return "ram";
-  }
-  if (trigger === "endsTurnWithinFiveFeetOfSphere") {
-    return "end-within-5-feet";
-  }
-  const _: never = trigger;
-  return _;
-}
-
-export function flamingSphereRamMovementHole(
-  targetId: CombatantId,
-  effect: FlamingSphereEffect,
-): BattleFlamingSphereRamMovementHole {
-  const key = `battle:flaming-sphere-ram-movement:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}`;
-  return {
-    kind: "movableZoneRamMovement",
-    holeId: holeId(key),
-    holeInstanceKey: holeInstanceKey(key),
-    label: "Ram movement",
-    movableZone: {
-      targetId,
-      sourceProcedureRef: effect.sourceProcedureRef,
-      sourceCombatantId: effect.sourceCombatantId,
-      areaId: effect.areaId,
-      maxMoveFeet: effect.ramMaxMoveFeet,
-    },
-    requiresTableSpatialFact: true,
-  };
-}
-
-export function flamingSphereRepositionMovementHole(
-  effect: FlamingSphereEffect,
-): BattleMovableZoneRepositionMovementHole {
-  const key = `battle:flaming-sphere-reposition-movement:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}`;
-  return {
-    kind: "movableZoneRepositionMovement",
-    holeId: holeId(key),
-    holeInstanceKey: holeInstanceKey(key),
-    label: "Reposition movement",
-    movableZone: {
-      sourceProcedureRef: effect.sourceProcedureRef,
-      sourceCombatantId: effect.sourceCombatantId,
-      areaId: effect.areaId,
-      maxMoveFeet: effect.ramMaxMoveFeet,
-    },
-    requiresTableSpatialFact: true,
-  };
-}
-
-export function flamingSphereSavingThrowOutcomeHole(
-  state: BattleState,
-  targetId: CombatantId,
-  effect: FlamingSphereEffect,
-  trigger: BattleFlamingSphereTrigger,
-): BattleFlamingSphereSavingThrowOutcomeHole {
-  const key = `battle:flaming-sphere-save:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}:${trigger}`;
-  return {
-    kind: "savingThrowOutcome",
-    holeId: holeId(key),
-    holeInstanceKey: holeInstanceKey(key),
-    label: `${flamingSphereTriggerLabel(trigger)} DEX save`,
-    movableZone: {
-      targetId,
-      sourceProcedureRef: effect.sourceProcedureRef,
-      sourceCombatantId: effect.sourceCombatantId,
-      areaId: effect.areaId,
-      trigger,
-      save: effect.save,
-    },
-    ability: effect.save.ability,
-    dc: effect.save.dc,
-    areaChoices: [],
-    targetRollModes: savingThrowRollModeProjections(
-      state,
-      effect.save.ability,
-    ).filter((projection) => projection.targetId === targetId),
-    targetFlatBonuses: savingThrowFlatBonusProjections(
-      state,
-      effect.save.ability,
-    ).filter((projection) => projection.targetId === targetId),
-  };
 }
 
 function flamingSphereDamageRollHole(
@@ -5027,63 +4682,6 @@ function moonbeamEffectFor(
   );
 }
 
-function moonbeamTriggerLabel(
-  trigger: BattleMoonbeamSaveTrigger,
-):
-  | "appears-in-area"
-  | "area-moves-into-space"
-  | "enters-area"
-  | "ends-turn-in-area" {
-  if (trigger === "appearsInArea") {
-    return "appears-in-area";
-  }
-  if (trigger === "areaMovesIntoSpace") {
-    return "area-moves-into-space";
-  }
-  if (trigger === "entersArea") {
-    return "enters-area";
-  }
-  if (trigger === "endsTurnInArea") {
-    return "ends-turn-in-area";
-  }
-  const _: never = trigger;
-  return _;
-}
-
-export function moonbeamSavingThrowOutcomeHole(
-  state: BattleState,
-  targetId: CombatantId,
-  effect: MoonbeamEffect,
-  trigger: BattleMoonbeamSaveTrigger,
-): BattleMoonbeamSavingThrowOutcomeHole {
-  const key = `battle:moonbeam-save:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}:${trigger}`;
-  return {
-    kind: "savingThrowOutcome",
-    holeId: holeId(key),
-    holeInstanceKey: holeInstanceKey(key),
-    label: `${moonbeamTriggerLabel(trigger)} CON save`,
-    movableZone: {
-      targetId,
-      sourceProcedureRef: effect.sourceProcedureRef,
-      sourceCombatantId: effect.sourceCombatantId,
-      areaId: effect.areaId,
-      trigger,
-      save: effect.save,
-    },
-    ability: effect.save.ability,
-    dc: effect.save.dc,
-    areaChoices: [],
-    targetRollModes: savingThrowRollModeProjections(
-      state,
-      effect.save.ability,
-    ).filter((projection) => projection.targetId === targetId),
-    targetFlatBonuses: savingThrowFlatBonusProjections(
-      state,
-      effect.save.ability,
-    ).filter((projection) => projection.targetId === targetId),
-  };
-}
-
 function moonbeamDamageRollHole(
   targetId: CombatantId,
   effect: MoonbeamEffect,
@@ -5104,25 +4702,6 @@ function moonbeamDamageRollHole(
       damage: effect.damage,
     },
     critical: false,
-  };
-}
-
-export function moonbeamRepositionMovementHole(
-  effect: MoonbeamEffect,
-): BattleMovableZoneRepositionMovementHole {
-  const key = `battle:moonbeam-reposition-movement:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}`;
-  return {
-    kind: "movableZoneRepositionMovement",
-    holeId: holeId(key),
-    holeInstanceKey: holeInstanceKey(key),
-    label: "Reposition movement",
-    movableZone: {
-      sourceProcedureRef: effect.sourceProcedureRef,
-      sourceCombatantId: effect.sourceCombatantId,
-      areaId: effect.areaId,
-      maxMoveFeet: effect.repositionMaxMoveFeet,
-    },
-    requiresTableSpatialFact: true,
   };
 }
 
@@ -5716,17 +5295,6 @@ function applySleepRepeatSaveFills(
       broken.spellEndTargetStatePromotionIds,
     );
   }, state);
-}
-
-function hideousLaughterEffects(
-  combatant: BattleCreatureState | undefined,
-): readonly HideousLaughterEffect[] {
-  return combatant === undefined
-    ? []
-    : combatant.activeEffects.filter(
-        (effect): effect is HideousLaughterEffect =>
-          effect.kind === "hideousLaughter",
-      );
 }
 
 function applyHideousLaughterRepeatSaveFills(
@@ -6739,31 +6307,6 @@ export function expireOngoingFeatures(
       },
     ]),
   );
-}
-
-export function resetBattleTurnResources(
-  resources: BattleTurnResources,
-): BattleTurnResources {
-  const { lightWeaponAttackMade: _lightWeaponAttackMade, ...base } =
-    resetTurnActionEconomy(resources);
-  return {
-    ...base,
-    commandHalt: null,
-    jumpDistanceMultiplier: null,
-    heightenedStepOfTheWindCarriedCreatures: [],
-    spellSlotUsesThisTurn: [],
-    levelOnePlusSpellCastsThisTurn: [],
-    quickenedLevelOnePlusSpellCastsThisTurn: [],
-    attackRollMadeThisTurn: false,
-    attackDamageRidersUsedThisTurn: [],
-    stunningStrikesUsedThisTurn: [],
-    huntersPreyHordeBreakerUsedThisTurn: [],
-    recklessAttackWhileRagingUsedThisTurn: [],
-    weaponDamageDiceRollChoicesUsedThisTurn: [],
-    grapplerPunchAndGrabUsedThisTurn: [],
-    dashMovementBonusFeet: movementFeet(0),
-    disengaged: false,
-  };
 }
 
 export function resolveEndTurnCommand(
@@ -7823,6 +7366,7 @@ const END_TURN_FILL_KINDS = [
   "savingThrowOutcome",
   "statBlockRechargeRoll",
 ] as const satisfies ReadonlyArray<BattleFill["kind"]>;
+
 const END_TURN_FILL_KIND_SET: ReadonlySet<BattleFill["kind"]> = new Set(
   END_TURN_FILL_KINDS,
 );
@@ -8146,98 +7690,6 @@ export function resolveStandFromProneCommand(
     state: nextState,
     snapshot: snapshotBattle(nextState),
   };
-}
-
-export function standFromProneCostFeet(
-  state: BattleState,
-  actorId: CombatantId,
-): number | null {
-  const actor = state.combatants.get(actorId);
-  if (actor === undefined || !hasCondition(actor.conditions, "prone")) {
-    return null;
-  }
-  if (hideousLaughterEffects(actor).length > 0) {
-    return null;
-  }
-  const speed = effectiveWalkSpeed(
-    actor,
-    state.grapples.some((grapple) => grapple.targetId === actorId),
-  );
-  const cost = Math.floor(Number(speed) / 2);
-  const remaining = battleMovementBudgetForActor(state, actorId).remainingFeet;
-  if (cost <= 0 || Number(remaining) < cost) return null;
-  return cost;
-}
-
-export function movementHole(
-  state: BattleState,
-  actorId: CombatantId,
-): BattleMovementHole {
-  const budget = battleMovementBudgetForActor(state, actorId);
-  return movementHoleWithBudget(
-    actorId,
-    budget.remainingFeet,
-    budget.speedKinds.map((speedKind) => ({
-      kind: speedKind.kind,
-      movementBudgetFeet: speedKind.remainingFeet,
-    })),
-  );
-}
-
-export function readiedMovementHole(
-  state: BattleState,
-  actorId: CombatantId,
-): BattleMovementHole {
-  const actor = state.combatants.get(actorId);
-  const isGrappled = state.grapples.some(
-    (grapple) => grapple.targetId === actorId,
-  );
-  const speedKinds =
-    actor === undefined
-      ? []
-      : representedMovementSpeedKinds(actor).map((kind) => ({
-          kind,
-          movementBudgetFeet: effectiveMovementSpeed(actor, kind, isGrappled),
-        }));
-  return movementHoleWithBudget(
-    actorId,
-    readiedMovementBudgetForActor(state, actorId),
-    speedKinds,
-  );
-}
-
-export function movementHoleWithBudget(
-  actorId: CombatantId,
-  movementBudgetFeet: MovementFeet,
-  speedKinds: readonly {
-    readonly kind: BattleMovementSpeedKind;
-    readonly movementBudgetFeet: MovementFeet;
-  }[] = [{ kind: "walk", movementBudgetFeet }],
-): BattleMovementHole {
-  return {
-    kind: "movement",
-    holeInstanceKey: MOVEMENT_HOLE_INSTANCE,
-    holeId: MOVEMENT_HOLE_ID,
-    label: "Movement",
-    actorId,
-    movementBudgetFeet,
-    speedKinds,
-  };
-}
-
-export function readiedMovementBudgetForActor(
-  state: BattleState,
-  actorId: CombatantId,
-  speedKind: BattleMovementSpeedKind = "walk",
-): MovementFeet {
-  const actor = state.combatants.get(actorId);
-  return actor === undefined
-    ? movementFeet(0)
-    : effectiveMovementSpeed(
-        actor,
-        speedKind,
-        state.grapples.some((grapple) => grapple.targetId === actorId),
-      );
 }
 
 export function parseBattleMovement(
@@ -9093,16 +8545,22 @@ type AreaMovementCostFactResult =
 
 const ACROBATIC_MOVEMENT_EMPTY_PATHS_MESSAGE =
   "Acrobatic Movement requires at least one table-supplied vertical-surface or liquid path.";
+
 const ACROBATIC_MOVEMENT_REPEATED_PATH_MESSAGE =
   "Acrobatic Movement path witness repeats a traversal path.";
+
 const ACROBATIC_MOVEMENT_UNKNOWN_PATH_MESSAGE =
   "Acrobatic Movement path witness contains an unsupported traversal path.";
+
 const ACROBATIC_MOVEMENT_MISSING_PROFILE_MESSAGE =
   "Acrobatic Movement requires a selected Acrobatic Movement support profile.";
+
 const ACROBATIC_MOVEMENT_EQUIPMENT_MESSAGE =
   "Acrobatic Movement requires the mover to be unarmored and not wielding a Shield.";
+
 const ACROBATIC_MOVEMENT_TURN_MESSAGE =
   "Acrobatic Movement can be used only on the mover's turn.";
+
 const ACROBATIC_MOVEMENT_FALLING_MESSAGE =
   "Acrobatic Movement path witness must preserve no-falling-during-movement semantics.";
 
@@ -9171,20 +8629,28 @@ function acrobaticMovementProfileForCombatant(
 
 const CREATURE_SPACE_TRAVERSAL_WRONG_KIND_MESSAGE =
   "Creature-space traversal movement fact has the wrong kind.";
+
 const CREATURE_SPACE_TRAVERSAL_EMPTY_SPACES_MESSAGE =
   "Creature-space traversal movement fact requires an occupied creature space.";
+
 const CREATURE_SPACE_TRAVERSAL_UNKNOWN_MOVER_MESSAGE =
   "Creature-space traversal requires a known mover.";
+
 const CREATURE_SPACE_TRAVERSAL_MISSING_PROFILE_MESSAGE =
   "Creature-space traversal requires a selected occupied-creature-space movement permission profile.";
+
 const CREATURE_SPACE_TRAVERSAL_SELF_OCCUPANT_MESSAGE =
   "Creature-space traversal cannot name the mover as the occupied creature.";
+
 const CREATURE_SPACE_TRAVERSAL_REPEATED_OCCUPANT_MESSAGE =
   "Creature-space traversal movement fact repeats an occupied creature.";
+
 const CREATURE_SPACE_TRAVERSAL_UNKNOWN_OCCUPANT_MESSAGE =
   "Creature-space traversal references an unknown occupied creature.";
+
 const CREATURE_SPACE_TRAVERSAL_SAME_SIZE_MESSAGE =
   "Creature-space traversal requires each occupied creature to be larger than the mover.";
+
 const CREATURE_SPACE_TRAVERSAL_OCCUPIED_STOP_MESSAGE =
   "Creature-space traversal cannot end in an occupied creature space.";
 

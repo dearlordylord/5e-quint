@@ -1,3 +1,4 @@
+import { savingThrowMetamagicHoles } from "../saving-throw-metamagic-holes.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-hypnotic-pattern-control spell.invocation-glyph-stored-concentration-full-duration
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 //
@@ -37,7 +38,10 @@ import {
   type GlyphStoredAreaControlInvocation,
   type GlyphStoredAreaControlProcedure,
 } from "../../glyph-stored-spell-invocation.ts";
-import { maybeOpenInterruptWindow, snapshotBattle } from "../dispatcher.ts";
+import {
+  maybeOpenInterruptWindow,
+  snapshotBattle,
+} from "../interrupt-execution.ts";
 import type { CharacterBattleMetamagicOptionFact } from "../../character-battle-resource-execution.ts";
 import { type CombatantId } from "../../identity.ts";
 import { battleCreatureWithSpellActiveEffects } from "../../active-effect/lifecycle.ts";
@@ -57,7 +61,7 @@ import {
   startSpellEffectConcentration,
 } from "../spells-resolve-resources.ts";
 import { invalidResult } from "../result-helpers.ts";
-import { needsHolesResult } from "../hole-helpers.ts";
+import { needsHolesResult } from "../needs-holes-result.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
@@ -75,16 +79,10 @@ import {
   SpellSlotInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import {
-  CAREFUL_METAMAGIC_EFFECT_KIND,
   discoverSpellMetamagicSelections,
-  HEIGHTENED_METAMAGIC_EFFECT_KIND,
   spellMetamagicApplications,
 } from "../metamagic-support.ts";
-import {
-  carefulSpellProtectedTargetsHole,
-  heightenedSpellTargetChoiceHole,
-  spellSavingThrowOutcomeHole,
-} from "../spells-holes-fills.ts";
+import { spellSavingThrowOutcomeHole } from "../spells-holes-fills.ts";
 
 type HypnoticPatternSpellInvocation = Extract<
   SupportedSpellInvocation,
@@ -312,7 +310,7 @@ function discoverHypnoticPatternCastAct(
         return {
           ...baseCastAct,
           subject: { ...baseCastAct.subject, metamagic },
-          initialHoles: hypnoticPatternMetamagicInitialHoles(
+          initialHoles: savingThrowMetamagicHoles(
             state,
             actorId,
             invocation,
@@ -338,31 +336,6 @@ function hypnoticPatternCastAct(
     },
     initialHoles,
   };
-}
-
-function hypnoticPatternMetamagicInitialHoles(
-  state: BattleState,
-  actorId: CombatantId,
-  invocation: BattleExecutableSpellInvocation<HypnoticPatternSpellInvocation>,
-  metamagicApplications: readonly CharacterBattleMetamagicOptionFact[],
-): readonly BattleHole[] {
-  const holes: BattleHole[] = [];
-  if (
-    metamagicApplications.some(
-      (application) => application.effectKind === CAREFUL_METAMAGIC_EFFECT_KIND,
-    )
-  ) {
-    holes.push(carefulSpellProtectedTargetsHole(state, actorId, invocation));
-  }
-  if (
-    metamagicApplications.some(
-      (application) =>
-        application.effectKind === HEIGHTENED_METAMAGIC_EFFECT_KIND,
-    )
-  ) {
-    holes.push(heightenedSpellTargetChoiceHole(state, actorId, invocation));
-  }
-  return holes;
 }
 
 function hypnoticPatternReleaseResourceState(input: {

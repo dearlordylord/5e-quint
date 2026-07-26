@@ -4,7 +4,7 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 import type {
   BattleFill,
   BattleSubject,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import { describe, expect, test } from "vitest";
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { sourceDamageRollPenaltyRollHole } from "./battle-reducer/damage-helpers.ts";
@@ -39,7 +39,7 @@ import {
   wizardId,
   wizardSpellcasting,
   ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 
 describe("battle runtime: Ice Knife", () => {
   test("Ray of Enfeeblement source penalty is requested before Ice Knife attack-burst save damage", () => {

@@ -6,7 +6,7 @@ import {
   subclassRogueThiefUnitId,
   unitLibrary,
   unitMechanicsVariant,
-} from "./unit-profile-admission-catalog-support.ts";
+} from "./unit-profile-admission-catalog.test-support.ts";
 import {
   battleBonusActionDelegatedStandardActionsSupportForUnit,
   battleUnitRefWithSupportProfiles,
@@ -14,7 +14,7 @@ import {
   classLevel,
   Either,
   parseSupportedUnitFeatureProfile,
-} from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission.test-support.ts";
 
 describe("L13UG-A17 level-3 resource and action feature admission", () => {
   test("Rogue Thief grants Fast Hands at level 3", () => {

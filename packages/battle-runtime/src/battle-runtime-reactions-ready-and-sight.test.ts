@@ -1,6 +1,6 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { describe, expect, test } from "vitest";
-import type { BattleState } from "./battle-runtime-test-support.ts";
+import type { BattleState } from "./battle-runtime.test-support.ts";
 import {
   applyCondition,
   attackDamageHoleAfterHit,
@@ -41,7 +41,7 @@ import {
   wizardId,
   wizardTurnWithReadiedRay,
   wizardVsSkeletonBattle,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 
 function readiedSpellAttackHitPending() {
   const state = fighterTurnWithReadiedRay("attackHit");

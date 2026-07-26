@@ -28,7 +28,7 @@ import {
   statBlockRecord,
   unitLibrary,
   wizardSpellcasting,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
 
 const characterCombatantId = combatantId("projection-character");

@@ -10,7 +10,7 @@ import {
   mbtSpecPath,
   mbtTraceCount,
   run,
-} from "./battle-runtime-mbt-driver-kit.ts";
+} from "./battle-runtime-mbt-driver-kit.test-support.ts";
 
 describe("Hit Point restoration ordering MBT", () => {
   it(

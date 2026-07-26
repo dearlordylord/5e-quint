@@ -15,14 +15,14 @@ import {
   parseSupportedUnitFeatureProfile,
   startBattleWithInitialInitiativeSetup,
   unitLibrary,
-} from "./unit-profile-admission-test-support.ts";
-import { characterCreature } from "./unit-profile-admission-creature-fixture-support.ts";
+} from "./unit-profile-admission.test-support.ts";
+import { characterCreature } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import type {
   BattleState,
   CombatantId,
   UnitRecord,
-} from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission.test-support.ts";
 
 const alertUnitId = "alert";
 const alertSourceId = combatantId("alert-source");

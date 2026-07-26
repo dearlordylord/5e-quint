@@ -20,7 +20,7 @@ import {
 import type {
   BattleState,
   BattleSubject,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import {
   abilityCheckFill,
   applyCondition,
@@ -88,12 +88,12 @@ import {
   wizardId,
   wizardSpellcasting,
   wizardVsSkeletonBattle,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import {
   battleProcedureExecutionRefForTest,
   requireCharacterSpellProcedureRefForTest,
   requireCharacterUnitProcedureRefForTest,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 
 describe("battle runtime: movement, Grapple, and Hide", () => {
   test("generic combat actions spend the Action and expose typed battle state", () => {

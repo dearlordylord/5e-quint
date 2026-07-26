@@ -17,7 +17,7 @@ import {
   resolveFindFamiliarForm,
   resolvePactOfTheChainFindFamiliarForm,
   startBattle,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import { describe, expect, test } from "vitest";
 
 describe("battle runtime: Find Familiar and Pact of the Chain", () => {

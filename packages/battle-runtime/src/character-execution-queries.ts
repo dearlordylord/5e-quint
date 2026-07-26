@@ -26,12 +26,8 @@ import type {
   SpiritualWeaponRepeatAttackSpellProcedureExecution,
 } from "./character-execution.ts";
 import type { SpellExecutionFacts } from "./battle-reducer/spell-execution-facts.ts";
-import { sameDancingLightsRepositionExecution } from "./spell-procedure-execution-equality-ability-insect-plague.ts";
-import {
-  sameSpellCreatedHeldObjectAttackExecution,
-  sameSpellCreatedHeldObjectReEvokeExecution,
-} from "./spell-procedure-execution-equality-created-object.ts";
 import { sameSpellProcedureExecution } from "./same-spell-procedure-execution.ts";
+import { sameDomainValue } from "./domain-value-equality.ts";
 export type { BattleSpellProcedureExecution } from "./character-execution.ts";
 import type {
   CharacterExecutionState,
@@ -351,31 +347,7 @@ function sameDynamicSpellProcedureExecution(
     | SpellCreatedHeldObjectReEvokeSpellProcedureExecution
     | SpiritualWeaponRepeatAttackSpellProcedureExecution,
 ): boolean {
-  return Match.value(right).pipe(
-    Match.discriminatorsExhaustive("procedure")({
-      dancingLightsReposition: (value) =>
-        left.procedure === value.procedure &&
-        sameDancingLightsRepositionExecution(left, value),
-      heldLightHurl: (value) => sameSpellProcedureExecution(left, value),
-      markedDamageRider: (value) => sameSpellProcedureExecution(left, value),
-      objectContactDamageRepeat: (value) =>
-        left.procedure === value.procedure &&
-        left.activeEffectRef === value.activeEffectRef &&
-        left.activeEffectSourceProcedureRef ===
-          value.activeEffectSourceProcedureRef,
-      spellCreatedHeldObjectAttack: (value) =>
-        left.procedure === value.procedure &&
-        sameSpellCreatedHeldObjectAttackExecution(left, value),
-      spellCreatedHeldObjectReEvoke: (value) =>
-        left.procedure === value.procedure &&
-        sameSpellCreatedHeldObjectReEvokeExecution(left, value),
-      spiritualWeaponRepeatAttack: (value) =>
-        left.procedure === value.procedure &&
-        left.activeEffectRef === value.activeEffectRef &&
-        left.activeEffectSourceProcedureRef ===
-          value.activeEffectSourceProcedureRef,
-    }),
-  );
+  return sameDomainValue(left, right);
 }
 
 export function characterSpellProcedure(

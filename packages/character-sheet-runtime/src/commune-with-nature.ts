@@ -6,16 +6,16 @@ import type { UnitCatalog } from "@dnd/character-creation-runtime";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
-import { hasPreparedClassSpellAccess } from "./prepared-spell-access.ts";
-import { spendCharacterSheetSpellSlot } from "./spell-slots.ts";
 import {
   characterSheetIssue,
-  getRequiredUnit,
   type CharacterSheet,
   type CharacterSheetCommuneWithNatureInvocation,
   type CharacterSheetCommuneWithNatureResult,
   type CharacterSheetIssue,
 } from "./sheet-types.ts";
+import { hasSingleDirectSelfNoEffectPhase } from "./spell-profile-shape.ts";
+
+import { castPreparedSpell } from "./prepared-spell-cast.ts";
 
 const COMMUNE_WITH_NATURE_SPELL_ID = "commune_with_nature" as const;
 const COMMUNE_WITH_NATURE_SPELL_LEVEL = spellSlotLevel(5);
@@ -24,43 +24,16 @@ export function castCommuneWithNature(input: {
   readonly sheet: CharacterSheet;
   readonly unitLibrary: UnitCatalog;
 }): Either.Either<CharacterSheetCommuneWithNatureResult, CharacterSheetIssue> {
-  const spell = communeWithNatureSpell(input.unitLibrary);
-  if (Either.isLeft(spell)) return Either.left(spell.left);
-
-  if (!hasPreparedClassSpellAccess(input.sheet, spell.right.id)) {
-    return characterSheetIssue(
-      "Commune with Nature requires prepared class Spell Access.",
-    );
-  }
-
-  const invocation = communeWithNatureInvocationFromSpell(spell.right);
-  if (Either.isLeft(invocation)) return Either.left(invocation.left);
-
-  const spent = spendCharacterSheetSpellSlot({
+  return castPreparedSpell({
     sheet: input.sheet,
+    unitLibrary: input.unitLibrary,
+    spellId: authoredUnitId(COMMUNE_WITH_NATURE_SPELL_ID),
     spellLevel: COMMUNE_WITH_NATURE_SPELL_LEVEL,
-    spellSlotSource: "ordinary",
+    spellName: "Commune with Nature",
+    invocation: (spell) => {
+      return communeWithNatureInvocationFromSpell(spell);
+    },
   });
-  if (Either.isLeft(spent)) return Either.left(spent.left);
-
-  return Either.right({
-    sheet: spent.right,
-    invocation: invocation.right,
-  });
-}
-
-function communeWithNatureSpell(
-  unitLibrary: UnitCatalog,
-): Either.Either<SpellRecord, CharacterSheetIssue> {
-  const unit = getRequiredUnit(
-    unitLibrary,
-    authoredUnitId(COMMUNE_WITH_NATURE_SPELL_ID),
-  );
-  if (Either.isLeft(unit)) return Either.left(unit.left);
-  if (unit.right.kind !== "spell") {
-    return characterSheetIssue("Commune with Nature requires a Spell record.");
-  }
-  return Either.right(unit.right);
 }
 
 function communeWithNatureInvocationFromSpell(
@@ -80,14 +53,7 @@ function communeWithNatureInvocationFromSpell(
       "Commune with Nature requires the supported self-range level-5 Divination profile.",
     );
   }
-  const directPhase = spell.mechanics.phases.find(
-    (phase) =>
-      phase.kind === "direct" &&
-      phase.attachment.kind === "self" &&
-      (phase.effects ?? []).length === 1 &&
-      (phase.effects ?? [])[0]?.kind === "none",
-  );
-  if (directPhase === undefined) {
+  if (!hasSingleDirectSelfNoEffectPhase(spell)) {
     return characterSheetIssue(
       "Commune with Nature requires the supported direct self exploration-query profile.",
     );

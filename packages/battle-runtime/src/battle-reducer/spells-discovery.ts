@@ -42,7 +42,7 @@ import {
   spellCastCanTriggerCounterspell,
   type CounterspellCapableReactor,
 } from "./counterspell-reaction-discovery.ts";
-import { slowSomaticSpellFailureOutcomeHole } from "./slow-active-penalties-runtime.ts";
+import { slowSomaticSpellFailureOutcomeHole } from "./slow-active-penalties-facts.ts";
 import {
   type BattleActDiscoveryCandidate,
   type BattleCreatureState,

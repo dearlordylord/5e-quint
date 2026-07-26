@@ -6,24 +6,24 @@ import { describe, expect, test } from "vitest";
 import {
   dispelEvilAndGoodUnitId,
   spellCasterId,
-} from "./unit-profile-admission-catalog-support.ts";
+} from "./unit-profile-admission-catalog.test-support.ts";
 import {
   attackTargetFill,
   requireCombatant,
   requireResultHole,
   statBlockAttackAct,
   statBlockWithCreatureType,
-} from "./unit-profile-admission-creature-fixture-support.ts";
+} from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
-import { spellAct } from "./unit-profile-admission-spell-fill-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+import { spellAct } from "./unit-profile-admission-spell-fill.test-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   combatantId,
   conditionApplicationPreventedByCreatureTypeProtection,
   endTurn,
   resolveBattlePossessionAttempt,
   resolveBattleSubject,
-} from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission.test-support.ts";
 
 describe("L19E-02 Dispel Evil and Good creature-type protection subset", () => {
   test("casts as a self spell and imposes attack Disadvantage for SRD scoped creature types", () => {
