@@ -127,9 +127,11 @@ import { describe, expect, test } from "vitest";
 import {
   admitCharacterSheetCompanionToBattle,
   battleCreatureInitFromCharacterBuild,
+  battleCreatureInitFromCharacterBuildWithRoute,
   characterAttackActionOption,
   characterUnitRefsWithBattleSupportProfiles,
   characterSheetBattleInit,
+  characterSheetBattleInitWithRoute,
   characterArmorClassState,
   characterBattleInitiativeScore,
   characterBattleResourceInitsFromBuild,
@@ -1635,6 +1637,71 @@ describe("Character Sheet battle handoff", () => {
           "Character battle initialization max HP exceeds build-derived max HP.",
       }),
     );
+
+    expect(
+      battleCreatureInitFromCharacterBuildWithRoute({
+        combatantId: combatantId("contradictory-maximum-init-route"),
+        characterId: characterId("character:contradictory-maximum-init-route"),
+        displayName: "Fighter",
+        build,
+        initiative: initiativeScore(20),
+        unitLibrary,
+        hitPointMaximum: Hp(13),
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        routeEvents: [
+          {
+            kind: "rejectCharacterBattleHandoff",
+            holes: ["hitPointProjection"],
+          },
+        ],
+      },
+    });
+  });
+
+  test("records accepted and ordinary rejected CharacterBuild projection routes", () => {
+    expect(
+      battleCreatureInitFromCharacterBuildWithRoute({
+        combatantId: combatantId("accepted-build-init-route"),
+        characterId: characterId("character:accepted-build-init-route"),
+        displayName: "Fighter",
+        build,
+        initiative: initiativeScore(20),
+        unitLibrary,
+      }),
+    ).toMatchObject({
+      _tag: "Right",
+      right: {
+        routeEvents: [
+          { kind: "projectCharacterSheetToBattle" },
+          { kind: "recordCharacterBattleHandoffFacts" },
+          { kind: "enterBattleRuntime" },
+        ],
+      },
+    });
+
+    expect(
+      battleCreatureInitFromCharacterBuildWithRoute({
+        combatantId: combatantId("rejected-build-init-route"),
+        characterId: characterId("character:rejected-build-init-route"),
+        displayName: "Druid",
+        build: druidWildShapeBuild(),
+        initiative: initiativeScore(20),
+        unitLibrary,
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        routeEvents: [
+          {
+            kind: "rejectCharacterBattleHandoff",
+            holes: ["settlementConflict"],
+          },
+        ],
+      },
+    });
   });
 
   test("threads origin and class-feature languages into character battle initialization", () => {
@@ -2187,6 +2254,27 @@ describe("Character Sheet battle handoff", () => {
     });
     expect(Either.isRight(sheet)).toBe(true);
     if (Either.isLeft(sheet)) return;
+
+    expect(
+      characterSheetBattleInitWithRoute({
+        combatantId: combatantId("stable-init-route"),
+        displayName: "Stable Fighter",
+        sheet: sheet.right,
+        initiative: initiativeScore(10),
+        unitLibrary,
+        statBlockCatalog,
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        routeEvents: [
+          {
+            kind: "rejectCharacterBattleHandoff",
+            holes: ["settlementConflict"],
+          },
+        ],
+      },
+    });
 
     const handoff = settleHandoffBranchToCharacterSheet({
       sheet: sheet.right,

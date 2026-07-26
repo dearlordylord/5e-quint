@@ -224,6 +224,19 @@ export type CharacterBattleRuntimeEntryIssue = {
   readonly routeEvents: readonly CharacterBattleRouteEvent[];
 };
 
+type CharacterBattleCreatureState = BattleCreatureState & {
+  readonly origin: Extract<
+    BattleCreatureState["origin"],
+    { readonly kind: "character" }
+  >;
+};
+
+function isCharacterBattleCreatureState(
+  combatant: BattleCreatureState,
+): combatant is CharacterBattleCreatureState {
+  return combatant.origin.kind === "character";
+}
+
 export function characterSheetBattleInit(input: CharacterSheetBattleInitInput) {
   const projection = characterSheetBattleInitWithRoute(input);
   return Either.isLeft(projection)
@@ -546,14 +559,13 @@ export function settleCharacterSheetFromBattle(input: {
   readonly unitLibrary: UnitCatalog;
   readonly statBlockCatalog?: StatBlockCatalog;
 }): Either.Either<CharacterSheet, CharacterSheetBattleHandoffIssue> {
-  if (input.combatant.origin.kind !== "character") {
+  const combatant = input.combatant;
+  if (!isCharacterBattleCreatureState(combatant)) {
     return characterSheetBattleHandoffIssue(
       "Battle handoff combatant is not a character.",
     );
   }
-  const runtimeContext = input.context.characters.get(
-    input.combatant.combatantId,
-  );
+  const runtimeContext = input.context.characters.get(combatant.combatantId);
   if (runtimeContext === undefined) {
     return characterSheetBattleHandoffIssue(
       "Battle handoff character has no authored runtime ownership context.",
@@ -561,6 +573,7 @@ export function settleCharacterSheetFromBattle(input: {
   }
   const settledCharacter = settleBattleCombatantIntoCharacterSheet({
     ...input,
+    combatant,
     runtimeContext,
   });
   if (Either.isLeft(settledCharacter)) return settledCharacter;
@@ -582,16 +595,11 @@ export function settleCharacterSheetFromBattle(input: {
 
 function settleBattleCombatantIntoCharacterSheet(input: {
   readonly sheet: CharacterSheet;
-  readonly combatant: BattleCreatureState;
+  readonly combatant: CharacterBattleCreatureState;
   readonly unitLibrary: UnitCatalog;
   readonly statBlockCatalog?: StatBlockCatalog;
   readonly runtimeContext: CharacterBattleRuntimeContext;
 }): Either.Either<CharacterSheet, CharacterSheetBattleHandoffIssue> {
-  if (input.combatant.origin.kind !== "character") {
-    return characterSheetBattleHandoffIssue(
-      "Battle handoff combatant is not a character.",
-    );
-  }
   if (input.combatant.origin.characterId !== input.sheet.characterId) {
     return characterSheetBattleHandoffIssue(
       "Battle handoff character identity does not match Character Sheet.",
@@ -707,14 +715,11 @@ function settleBattleCombatantIntoCharacterSheet(input: {
 
 function characterSheetSpellSlotSourceStateFromBattle(input: {
   readonly sheet: CharacterSheet;
-  readonly combatant: BattleCreatureState;
+  readonly combatant: CharacterBattleCreatureState;
 }): Either.Either<
   CharacterSheetSpellSlotSourceState | undefined,
   CharacterSheetBattleHandoffIssue
 > {
-  if (input.combatant.origin.kind !== "character") {
-    return Either.right(undefined);
-  }
   const battleSpellcasting = input.combatant.origin.spellcasting;
   if (battleSpellcasting === undefined) {
     return Either.right(undefined);
@@ -869,16 +874,13 @@ function spellSlotSourceSpendForBattleDelta(input: {
 
 function characterResourceExpendituresFromBattle(input: {
   readonly sheet: CharacterSheet;
-  readonly combatant: BattleCreatureState;
+  readonly combatant: CharacterBattleCreatureState;
   readonly unitLibrary: UnitCatalog;
   readonly runtimeContext: CharacterBattleRuntimeContext;
 }): Either.Either<
   readonly CharacterSheetResourceExpenditure[],
   CharacterSheetBattleHandoffIssue
 > {
-  if (input.combatant.origin.kind !== "character") {
-    return Either.right(input.sheet.resourceExpenditures);
-  }
   const sheetResources = characterSheetResources(
     input.sheet,
     input.unitLibrary,
@@ -1243,7 +1245,7 @@ function battleDruidWildShapeAvailableFormsFromSheet(input: {
 
 function druidWildShapeResourceExpenditureFromBattle(input: {
   readonly sheet: CharacterSheet;
-  readonly combatant: BattleCreatureState;
+  readonly combatant: CharacterBattleCreatureState;
   readonly unitLibrary: UnitCatalog;
   readonly sheetResources: readonly CharacterSheetResourceState[];
   readonly battleResources: readonly OwnedCharacterBattleResource[];
@@ -1251,9 +1253,6 @@ function druidWildShapeResourceExpenditureFromBattle(input: {
   CharacterSheetResourceExpenditure | undefined,
   CharacterSheetBattleHandoffIssue
 > {
-  if (input.combatant.origin.kind !== "character") {
-    return Either.right(undefined);
-  }
   const origin = input.combatant.origin;
   const resources = input.battleResources.filter(
     (candidate) =>
@@ -1425,7 +1424,7 @@ function hasPurePactSlotState(sheet: CharacterSheet): boolean {
 function characterSheetPactSlotExpenditureFromBattle(
   input: {
     readonly sheet: CharacterSheet;
-    readonly combatant: BattleCreatureState;
+    readonly combatant: CharacterBattleCreatureState;
   },
   pactSlots: CharacterSheetPactSlotState,
 ): Either.Either<
@@ -1434,9 +1433,6 @@ function characterSheetPactSlotExpenditureFromBattle(
 > {
   if (hasMixedSpellAndPactSlotState(input.sheet)) {
     return characterSheetBattleHandoffIssue(mixedSpellAndPactSlotStateMessage);
-  }
-  if (input.combatant.origin.kind !== "character") {
-    return Either.right({ expended: pactSlots.expended });
   }
   const battleSpellcasting = input.combatant.origin.spellcasting;
   if (battleSpellcasting === undefined) {
@@ -1465,12 +1461,9 @@ function characterSheetPactSlotExpenditureFromBattle(
 
 function bookOfShadowsPresenceFromBattle(input: {
   readonly sheet: CharacterSheet;
-  readonly combatant: BattleCreatureState;
+  readonly combatant: CharacterBattleCreatureState;
   readonly runtimeContext: CharacterBattleRuntimeContext;
 }): CharacterSheetBookOfShadowsPresence | undefined {
-  if (input.combatant.origin.kind !== "character") {
-    return input.sheet.bookOfShadowsPresence;
-  }
   return (
     input.runtimeContext.spellcastingPresentationSource
       ?.bookOfShadowsSpellAccesses[0]?.bookPresence ??
