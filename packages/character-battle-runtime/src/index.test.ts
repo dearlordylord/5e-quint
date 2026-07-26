@@ -381,6 +381,86 @@ describe("Character Sheet battle handoff", () => {
     expect(refs).toMatchObject({ _tag: "Right" });
   });
 
+  test("propagates support-profile selection, source-fact, and catalog failures", () => {
+    const malformedMasteryBuild = {
+      ...build,
+      features: [
+        {
+          kind: "selectedClassChoice",
+          selectedFromUnitId: authoredUnitId(
+            "synthetic:missing-mastery-source",
+          ),
+          unitId: authoredUnitId("weapon_longsword"),
+        },
+      ],
+    } satisfies CharacterBuild;
+    expect(
+      characterUnitRefsWithBattleSupportProfiles(
+        malformedMasteryBuild,
+        unitLibrary,
+      ),
+    ).toMatchObject({ _tag: "Left" });
+
+    expect(
+      characterUnitRefsWithBattleSupportProfiles(
+        {
+          ...dragonbornFighterBuild(),
+          speciesChoiceFacts: {
+            draconicAncestry: {
+              kind: "draconicAncestry",
+              ancestorId: characterDraconicAncestrySelection(
+                "synthetic:ancestor" as never,
+              ),
+            },
+          },
+        },
+        unitLibrary,
+        [],
+      ),
+    ).toMatchObject({ _tag: "Left" });
+
+    const missingBuildRefCatalog: UnitCatalog = {
+      getUnit: (id) =>
+        id === authoredUnitId("synthetic:missing-build-ref")
+          ? Option.none()
+          : unitLibrary.getUnit(id),
+      listUnits: () => unitLibrary.listUnits(),
+      requireUnit: (id) => unitLibrary.requireUnit(id),
+    };
+    expect(
+      characterUnitRefsWithBattleSupportProfiles(
+        {
+          ...build,
+          features: [
+            {
+              kind: "selectedClassChoice",
+              selectedFromUnitId: authoredUnitId("fighter_fighting_style"),
+              unitId: authoredUnitId("synthetic:missing-build-ref"),
+            },
+          ],
+        },
+        missingBuildRefCatalog,
+        [],
+      ),
+    ).toMatchObject({ _tag: "Left" });
+
+    const missingMasteryProfileCatalog: UnitCatalog = {
+      getUnit: (id) =>
+        id === authoredUnitId("mastery_sap")
+          ? Option.none()
+          : unitLibrary.getUnit(id),
+      listUnits: () => unitLibrary.listUnits(),
+      requireUnit: (id) => unitLibrary.requireUnit(id),
+    };
+    expect(
+      characterUnitRefsWithBattleSupportProfiles(
+        build,
+        missingMasteryProfileCatalog,
+        [{ weaponUnitId: authoredUnitId("weapon_longsword") }],
+      ),
+    ).toMatchObject({ _tag: "Left" });
+  });
+
   test("composes sheet and stat block participants into battle runtime entry", () => {
     const characterCombatantId = combatantId("combatant:sheet-entry");
     const monsterCombatantId = combatantId("combatant:stat-block-entry");
@@ -552,6 +632,78 @@ describe("Character Sheet battle handoff", () => {
     });
 
     expect(Either.isLeft(handoff)).toBe(true);
+  });
+
+  test("rejects non-character and ownership-context-free settlement inputs", () => {
+    const sheet = expectRight(
+      rebuildCharacterSheetFixture({
+        characterId: characterSheetId("character:settlement-owner-boundary"),
+        build,
+        currentHp: Hp(10),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+    const characterCombatantId = combatantId("settlement-owner-boundary");
+    const statBlockCombatantId = combatantId("settlement-stat-block-boundary");
+    const session = expectRight(
+      startBattle({
+        battleId: battleId("settlement-owner-boundaries"),
+        combatants: [
+          expectRight(
+            characterSheetBattleInit({
+              sheet,
+              unitLibrary,
+              statBlockCatalog,
+              combatantId: characterCombatantId,
+              displayName: "Settlement Owner",
+              initiative: initiativeScore(12),
+            }),
+          ),
+          battleCreatureInitFromStatBlock({
+            combatantId: statBlockCombatantId,
+            statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+            initiative: initiativeScore(10),
+          }),
+        ],
+      }),
+    );
+    const statBlockCombatant = requireCombatant(
+      session.state,
+      statBlockCombatantId,
+    );
+    expect(
+      settleCharacterSheetFromBattle({
+        sheet,
+        state: session.state,
+        context: session.context,
+        combatant: statBlockCombatant,
+        unitLibrary,
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: { message: "Battle handoff combatant is not a character." },
+    });
+
+    const characterCombatant = requireCombatant(
+      session.state,
+      characterCombatantId,
+    );
+    expect(
+      settleCharacterSheetFromBattle({
+        sheet,
+        state: session.state,
+        context: battleRuntimeContextForTest(new Map()),
+        combatant: characterCombatant,
+        unitLibrary,
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Battle handoff character has no authored runtime ownership context.",
+      },
+    });
   });
 
   test("rejects handoff maximum HP drift from the existing Character Sheet", () => {
