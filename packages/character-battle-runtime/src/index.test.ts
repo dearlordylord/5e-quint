@@ -414,6 +414,14 @@ describe("Character Sheet battle handoff", () => {
       ),
     ).toMatchObject({ _tag: "Left" });
     expect(initBuild(malformedMasteryBuild)).toMatchObject({ _tag: "Left" });
+    expect(
+      characterBattleInitiativeScore({
+        build: malformedMasteryBuild,
+        unitLibrary,
+        rollTotal: 10,
+        proficiencyBonusChoice: "add",
+      }),
+    ).toMatchObject({ _tag: "Left" });
 
     const invalidAncestryBuild = {
       ...dragonbornFighterBuild(),
@@ -4881,6 +4889,33 @@ describe("Character Build battle projection", () => {
         ...init,
         build: {
           ...build,
+          species: authoredUnitId("species_human"),
+        },
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message: expect.stringContaining("requires selected species size"),
+      },
+    });
+    expect(
+      battleCreatureInitFromCharacterBuild({
+        ...init,
+        build: {
+          ...build,
+          species: authoredUnitId("species_human"),
+          speciesSize: "small",
+        },
+      }),
+    ).toMatchObject({
+      _tag: "Right",
+      right: { creatureInit: { size: "small" } },
+    });
+    expect(
+      battleCreatureInitFromCharacterBuild({
+        ...init,
+        build: {
+          ...build,
           progression: {
             startingClass: classUnitId(
               authoredUnitId("synthetic:missing-class"),
@@ -5394,6 +5429,90 @@ describe("Character Build battle projection", () => {
     expect(
       (init.creatureInit.resources ?? []).map((resource) => resource.unit.id),
     ).not.toContain("paladin_lay_on_hands");
+  });
+
+  test("rejects persisted battle resource expenditures above their caps", () => {
+    for (const [candidateBuild, expenditure, message] of [
+      [
+        sorcererMetamagicBuild(),
+        {
+          tag: "pointPoolResource",
+          unitId: authoredUnitId("sorcerer_font_of_magic"),
+          expended: resourceCount(99),
+        },
+        "point-pool expenditure exceeds",
+      ],
+      [
+        druidWildShapeBuild(),
+        {
+          tag: "useCountResource",
+          unitId: authoredUnitId("druid_wild_shape"),
+          expended: resourceCount(99),
+        },
+        "Druid Wild Shape expenditure exceeds",
+      ],
+      [
+        favoredEnemyRangerBuild(),
+        {
+          tag: "favoredEnemyHuntersMarkFreeCasts",
+          expended: resourceCount(99),
+        },
+        "free-cast expenditure exceeds",
+      ],
+      [
+        monkBuild({ level: 2, str: 12, dex: 16 }),
+        {
+          tag: "useCountResource",
+          unitId: authoredUnitId("monk_monks_focus"),
+          expended: resourceCount(99),
+        },
+        "use-count expenditure exceeds",
+      ],
+    ] as const) {
+      expect(
+        characterBattleResourceInitsFromBuild(candidateBuild, unitLibrary, [
+          expenditure,
+        ]),
+      ).toMatchObject({
+        _tag: "Left",
+        left: { message: expect.stringContaining(message) },
+      });
+    }
+
+    const barbarian = {
+      ...defenseBuild({ wearingArmor: false }),
+      progression: {
+        startingClass: classUnitId(authoredUnitId("class_barbarian")),
+        advancements: Array.from({ length: 9 }, () => ({
+          classUnitId: classUnitId(authoredUnitId("class_barbarian")),
+          hitPointRule: { tag: "fixedHigherLevelGain" as const },
+        })),
+      },
+      features: [
+        {
+          kind: "selectedClassChoice",
+          selectedFromUnitId: authoredUnitId("class_barbarian"),
+          unitId: authoredUnitId("subclass_barbarian_path_of_the_berserker"),
+        },
+      ],
+      equipment: { owned: [], loadout: {} },
+    } satisfies CharacterBuild;
+    expect(
+      characterBattleResourceInitsFromBuild(barbarian, unitLibrary, [
+        {
+          tag: "useCountResource",
+          unitId: authoredUnitId("barbarian_retaliation"),
+          expended: resourceCount(1),
+        },
+      ]),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message: expect.stringContaining(
+          "requires a finite battle resource cap",
+        ),
+      },
+    });
   });
 
   test("threads build weapon proficiencies into True Strike discovery", () => {
