@@ -1,3 +1,9 @@
+import {
+  completeAfterHitSpellCast,
+  prepareAfterHitSlotSpellCast,
+} from "../after-hit-spell-resolution.ts";
+import { appendAfterHitSpellDamage } from "../after-hit-spell-damage.ts";
+import { replaceTargetActiveEffect } from "../active-effect-replacement.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-after-hit-damage-illumination
 import { DiceExprSchema } from "@dnd/surface/surface/schema";
@@ -43,22 +49,12 @@ import {
   type BattleResolutionResult,
   type BattleState,
 } from "../../battle-state-execution.ts";
-import { snapshotBattle } from "../dispatcher.ts";
 import { CombatantId } from "../../identity.ts";
-import {
-  maybeOpenPostCastReadySpellCastWindow,
-  maybeOpenSpellCastInterruptWindowWithTriggeredSpellChoices,
-  interruptCheckpointFrame,
-} from "../dispatcher.ts";
-import { invalidResult } from "../result-helpers.ts";
-import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
 import { SHINING_SMITE_BRIGHT_LIGHT_RADIUS_FEET } from "../spells-active-effects.ts";
 import {
   sameStringSet,
   supportedDamageAmountExpr,
 } from "../spells-execution-facts.ts";
-import { spellFillSetContainsOnlySpellCastReactionFacts } from "../spells-resolve-fill-set.ts";
-import { spendSpellCastResources } from "../spells-resolve-resources.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
@@ -229,73 +225,32 @@ function applyAfterHitDamageAndIlluminationSpellEffect(
     { readonly procedure: "afterHitDamageAndIllumination" }
   >,
 ): BattleState {
-  const target = state.combatants.get(targetId);
-  if (target === undefined) {
-    return state;
-  }
-  const replacing = target.activeEffects.filter(
+  return replaceTargetActiveEffect(
+    state,
+    targetId,
     (effect) =>
       effect.kind === "shiningSmiteIllumination" &&
       effect.sourceProcedureRef === invocation.sourceProcedureRef &&
       effect.sourceCombatantId === invocation.activeEffect.sourceCombatantId,
-  );
-  const activeEffects = [
-    ...target.activeEffects.filter((effect) => !replacing.includes(effect)),
     {
       ...invocation.activeEffect,
       sourceProcedureRef: invocation.sourceProcedureRef,
     },
-  ];
-  return {
-    ...state,
-    combatants: new Map(state.combatants).set(targetId, {
-      ...target,
-      activeEffects,
-    }),
-  };
+  );
 }
 
 function resolveAfterHitDamageAndIllumination(
   input: AfterHitDamageAndIlluminationResolveInput,
 ): BattleResolutionResult {
-  if (!spellFillSetContainsOnlySpellCastReactionFacts(input.fillSet, {})) {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      "Attack-hit Bonus Action spell accepts only spell-cast Reaction trigger facts.",
-    );
-  }
-  const attackContinuation = input.input.frame.continuation;
-  const spellCastFrame = spellCastInterruptFrame({
+  const preparation = prepareAfterHitSlotSpellCast({
+    input: input.input,
+    invocation: input.invocation,
+    fillSet: input.fillSet,
     casterId: input.input.subject.casterId,
-    invocation: input.invocation,
-    targetIds: [input.input.target.combatantId],
-    reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
-    castingResource: { kind: "bonusAction" },
-    continuation: {
-      kind: "replay",
-      subject: input.input.subject,
-      fills: input.input.fills,
-    },
+    targetId: input.input.target.combatantId,
   });
-  const spellCastReactionWindow =
-    maybeOpenSpellCastInterruptWindowWithTriggeredSpellChoices(
-      input.input.state,
-      spellCastFrame,
-      input.input.handledInterruptTrigger,
-    );
-  if (spellCastReactionWindow !== null) {
-    return spellCastReactionWindow;
-  }
-
-  const resourced = spendSpellCastResources({
-    state: input.input.state,
-    actorId: input.input.subject.casterId,
-    invocation: input.invocation,
-    errorState: input.input.state,
-  });
-  if (resourced.tag === "invalid") {
-    return resourced;
+  if (preparation.tag !== "prepared") {
+    return preparation;
   }
 
   const damageAddition: AttackSpellDamageAddition = {
@@ -308,45 +263,24 @@ function resolveAfterHitDamageAndIllumination(
       damageType: input.invocation.damage.damageType,
     },
   };
-  const nextFrame = {
-    ...input.input.frame,
-    continuation: {
-      ...attackContinuation,
-      attackDamageAdditions: [
-        ...(attackContinuation.attackDamageAdditions ?? []),
-        damageAddition,
-      ],
-    },
-  };
+  const nextFrame = appendAfterHitSpellDamage(
+    input.input.frame,
+    damageAddition,
+  );
   const effected = applyAfterHitDamageAndIlluminationSpellEffect(
-    resourced.state,
+    preparation.state,
     input.input.target.combatantId,
     input.invocation,
   );
-  const nextState: BattleState = {
-    ...effected,
-    interruptStack: [
-      ...effected.interruptStack.slice(0, -1),
-      interruptCheckpointFrame(nextFrame),
-    ],
-  };
-  const readiedSpellCastReactionWindow = maybeOpenPostCastReadySpellCastWindow({
-    state: nextState,
+  return completeAfterHitSpellCast({
+    state: effected,
+    frame: nextFrame,
     subject: input.input.subject,
     casterId: input.input.subject.casterId,
-    sourceProcedureRef: input.invocation.sourceProcedureRef,
-    spellProcedure: input.invocation.procedure,
-    targetIds: [input.input.target.combatantId],
+    invocation: input.invocation,
+    targetId: input.input.target.combatantId,
     handledInterruptTrigger: input.input.handledInterruptTrigger,
   });
-  if (readiedSpellCastReactionWindow !== null) {
-    return readiedSpellCastReactionWindow;
-  }
-  return {
-    tag: "resolved",
-    state: nextState,
-    snapshot: snapshotBattle(nextState),
-  };
 }
 
 const AfterHitDamageAndIlluminationInvocationSchema =

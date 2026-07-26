@@ -57,12 +57,18 @@ import {
   resolvedResult,
   resolutionFromStateResult,
 } from "../result-helpers.ts";
+import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
+import { ATTACK_TARGET_HOLE_ID } from "../battle-runtime-protocol.ts";
 import {
   rollModifierUsesTargetAbilityChoices,
   spellRollModifierAbilityChoiceHole,
+  spellRollModifierAbilityChoiceHoleId,
   spellRollModifierSkillChoiceHole,
+  spellRollModifierSkillChoiceHoleId,
   spellRollModifierTargetAbilityChoicesHole,
+  spellRollModifierTargetAbilityChoicesHoleId,
 } from "../spells-damage-fills.ts";
+import { spellSavingThrowOutcomeHoleId } from "../spells-damage-fills.ts";
 import { targetListSpellUsesTargetListHole } from "../spells-discovery.ts";
 import {
   isD20RollModifierSpellProjection,
@@ -77,7 +83,11 @@ import {
   rollModifierSpellEffectSelection,
   rollModifierSpellTargetSelection,
 } from "../spells-resolve-target-selection.ts";
-import { spellTargetHole, spellTargetListHole } from "../spells-targeting.ts";
+import {
+  spellTargetHole,
+  spellTargetListHole,
+  spellTargetListHoleId,
+} from "../spells-targeting.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
@@ -315,13 +325,14 @@ function resolveRollModifier(
   input: RollModifierResolveInput,
 ): BattleResolutionResult {
   if (
-    input.fillSet.attackRoll !== undefined ||
-    input.fillSet.targetAllocation !== undefined ||
-    input.fillSet.damageRoll !== undefined ||
-    input.fillSet.attackBurstDamageRoll !== undefined ||
-    input.fillSet.healingRoll !== undefined ||
-    input.fillSet.damageDispositions.length > 0 ||
-    input.fillSet.concentrationSavingThrows.length > 0
+    !fillsBelongToSpellCastHoles(input.input.fills, [
+      ATTACK_TARGET_HOLE_ID,
+      spellTargetListHoleId(input.invocation),
+      spellRollModifierSkillChoiceHoleId(input.invocation),
+      spellRollModifierAbilityChoiceHoleId(input.invocation),
+      spellRollModifierTargetAbilityChoicesHoleId(input.invocation),
+      spellSavingThrowOutcomeHoleId(input.invocation),
+    ])
   ) {
     return invalidResult(
       input.input.state,

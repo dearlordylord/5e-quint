@@ -43,10 +43,13 @@ import { needsHolesResult } from "../needs-holes-result.ts";
 import { counterspellReactionSpellMatchesTrigger } from "../reaction-triggered-spells.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { stateAfterSpellCastDeclared } from "../spell-cast-declaration.ts";
-import { spellSavingThrowOutcomeHole } from "../spells-damage-fills.ts";
+import {
+  spellSavingThrowOutcomeHole,
+  spellSavingThrowOutcomeHoleId,
+} from "../spells-damage-fills.ts";
 import { expendSpellSlot } from "../spell-effects.ts";
 import { sameStringSet } from "../spells-execution-facts.ts";
-import { spellFillSetContainsOnlySpellCastReactionFacts } from "../spells-resolve-fill-set.ts";
+import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
 import { validateSavingThrowOutcomes } from "../spells-resolve-save-gates.ts";
 import {
   markSpellSlotExpendedThisTurn,
@@ -172,9 +175,9 @@ function resolveCounterspell(
     );
   }
   if (
-    !spellFillSetContainsOnlySpellCastReactionFacts(input.fillSet, {
-      allowSavingThrowOutcomes: true,
-    })
+    !fillsBelongToSpellCastHoles(input.input.fills, [
+      spellSavingThrowOutcomeHoleId(input.invocation),
+    ])
   ) {
     return invalidResult(
       input.input.state,

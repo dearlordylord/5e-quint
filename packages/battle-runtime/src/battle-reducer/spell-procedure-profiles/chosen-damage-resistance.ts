@@ -25,9 +25,12 @@ import {
 import { breakBattleConcentration } from "../damage-apply.ts";
 import { needsHolesResult } from "../needs-holes-result.ts";
 import { invalidResult, resolutionFromStateResult } from "../result-helpers.ts";
+import { selectSingleSpellTarget } from "../single-spell-target.ts";
+import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
+import { ATTACK_TARGET_HOLE_ID } from "../battle-runtime-protocol.ts";
 import { spellDamageTypeChoiceHole } from "../spells-damage-fills.ts";
 import { sameStringSet } from "../spells-execution-facts.ts";
-import { spellTargetHole, spellTargetIsLegal } from "../spells-targeting.ts";
+import { spellTargetHole } from "../spells-targeting.ts";
 import {
   spellRequiresConcentration,
   spendSpellCastResources,
@@ -198,42 +201,10 @@ function resolveChosenDamageResistance(
   input: ChosenDamageResistanceResolveInput,
 ): BattleResolutionResult {
   if (
-    input.fillSet.objectTarget !== undefined ||
-    input.fillSet.objectContactTargets !== undefined ||
-    input.fillSet.objectContactSavingThrowOutcome !== undefined ||
-    input.fillSet.objectDropResolution !== undefined ||
-    input.fillSet.magicWeaponTargetItem !== undefined ||
-    input.fillSet.ongoingSpellTarget !== undefined ||
-    input.fillSet.ongoingSpellAbilityChecks.length > 0 ||
-    input.fillSet.targetAllocation !== undefined ||
-    input.fillSet.targetList !== undefined ||
-    input.fillSet.attackSequencePartFills.length > 0 ||
-    input.fillSet.attackRoll !== undefined ||
-    input.fillSet.remarkableAthleteCriticalHitMovementDecision !== undefined ||
-    input.fillSet.remarkableAthleteCriticalHitMovement !== undefined ||
-    input.fillSet.savingThrowOutcomes !== undefined ||
-    input.fillSet.skillChoice !== undefined ||
-    input.fillSet.abilityChoice !== undefined ||
-    input.fillSet.targetAbilityChoices !== undefined ||
-    input.fillSet.thaumaturgyActiveOneMinuteEffectCount !== undefined ||
-    input.fillSet.commandOptionChoice !== undefined ||
-    input.fillSet.selfTransformationModeChoice !== undefined ||
-    input.fillSet.conditionChoice !== undefined ||
-    input.fillSet.levitateInitialRiseFeet !== undefined ||
-    input.fillSet.areaChoice !== undefined ||
-    input.fillSet.teleportDestination !== undefined ||
-    input.fillSet.spiritualWeaponForcePosition !== undefined ||
-    input.fillSet.dancingLightsPlacement !== undefined ||
-    input.fillSet.concentrationSavingThrows.length > 0 ||
-    input.fillSet.hideousLaughterDamageRepeatSaves.length > 0 ||
-    input.fillSet.damageDispositions.length > 0 ||
-    input.fillSet.damageRoll !== undefined ||
-    input.fillSet.mirrorImageDuplicateRoll !== undefined ||
-    input.fillSet.movement !== undefined ||
-    input.fillSet.spellDamageReductionRolls.length > 0 ||
-    input.fillSet.sourceDamageRollPenaltyRolls.length > 0 ||
-    input.fillSet.attackBurstDamageRoll !== undefined ||
-    input.fillSet.healingRoll !== undefined
+    !fillsBelongToSpellCastHoles(input.input.fills, [
+      ATTACK_TARGET_HOLE_ID,
+      spellDamageTypeChoiceHole(input.invocation).holeId,
+    ])
   ) {
     return invalidResult(
       input.input.state,
@@ -242,30 +213,18 @@ function resolveChosenDamageResistance(
     );
   }
 
-  const targetHole = spellTargetHole(
-    input.input.state,
-    input.actorId,
-    input.invocation,
-  );
-  if (input.fillSet.targetId === undefined) {
-    return needsHolesResult(input.input.state, input.input.subject, [
-      targetHole,
-    ]);
-  }
-  if (
-    !spellTargetIsLegal(
-      input.input.state,
-      input.actorId,
-      input.fillSet.targetId,
-      input.invocation,
-      input.fillSet.targetSpatialFacts,
-    )
-  ) {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
+  const targetSelection = selectSingleSpellTarget({
+    state: input.input.state,
+    subject: input.input.subject,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    targetId: input.fillSet.targetId,
+    targetSpatialFacts: input.fillSet.targetSpatialFacts,
+    invalidTargetMessage:
       "Chosen damage Resistance spell target must be a willing combatant within the selected spell's supported range.",
-    );
+  });
+  if (targetSelection.tag !== "selected") {
+    return targetSelection;
   }
 
   if (input.fillSet.damageTypeChoice === undefined) {
@@ -287,7 +246,7 @@ function resolveChosenDamageResistance(
 
   const spellCastReactionWindow = maybeOpenSpellCastReactionWindow(
     input,
-    [input.fillSet.targetId],
+    [targetSelection.targetId],
     { kind: "magicAction" },
     undefined,
   );
@@ -301,7 +260,7 @@ function resolveChosenDamageResistance(
   const effected = applyChosenDamageResistanceEffect({
     state: concentrationBase,
     actorId: input.actorId,
-    targetId: input.fillSet.targetId,
+    targetId: targetSelection.targetId,
     damageType: input.fillSet.damageTypeChoice.value,
     invocation: input.invocation,
   });

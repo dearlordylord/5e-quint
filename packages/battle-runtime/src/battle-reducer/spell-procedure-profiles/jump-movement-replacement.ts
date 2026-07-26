@@ -33,6 +33,7 @@ import { DurationBattleActiveEffectExpirationSchema } from "../../active-effect/
 
 import { needsHolesResult } from "../needs-holes-result.ts";
 import { invalidResult } from "../result-helpers.ts";
+import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
 import { allocateBattleActiveEffectRef } from "../../active-effect/execution-ref.ts";
 import {
   sameStringSet,
@@ -41,6 +42,7 @@ import {
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
 import {
   spellTargetListHole,
+  spellTargetListHoleId,
   validateSpellTargetList,
 } from "../spells-targeting.ts";
 import type {
@@ -217,18 +219,9 @@ function resolveJumpMovementReplacement(
   input: JumpMovementReplacementResolveInput,
 ): BattleResolutionResult {
   if (
-    input.fillSet.attackRoll !== undefined ||
-    input.fillSet.targetAllocation !== undefined ||
-    input.fillSet.targetId !== undefined ||
-    input.fillSet.damageRoll !== undefined ||
-    input.fillSet.attackBurstDamageRoll !== undefined ||
-    input.fillSet.healingRoll !== undefined ||
-    input.fillSet.skillChoice !== undefined ||
-    input.fillSet.targetAbilityChoices !== undefined ||
-    input.fillSet.damageTypeChoice !== undefined ||
-    input.fillSet.savingThrowOutcomes !== undefined ||
-    input.fillSet.damageDispositions.length > 0 ||
-    input.fillSet.concentrationSavingThrows.length > 0
+    !fillsBelongToSpellCastHoles(input.input.fills, [
+      spellTargetListHoleId(input.invocation),
+    ])
   ) {
     return invalidResult(
       input.input.state,

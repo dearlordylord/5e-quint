@@ -1877,64 +1877,6 @@ export function spellFillSet(
   };
 }
 
-export function spellFillSetContainsOnlySpellCastReactionFacts(
-  fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>,
-  options: { readonly allowSavingThrowOutcomes?: boolean },
-): boolean {
-  return (
-    fillSet.targetId === undefined &&
-    fillSet.objectTarget === undefined &&
-    fillSet.objectContactTargets === undefined &&
-    fillSet.objectContactSavingThrowOutcome === undefined &&
-    fillSet.objectDropResolution === undefined &&
-    fillSet.magicWeaponTargetItem === undefined &&
-    fillSet.ongoingSpellTarget === undefined &&
-    fillSet.ongoingSpellAbilityChecks.length === 0 &&
-    fillSet.spiritualWeaponForcePosition === undefined &&
-    fillSet.targetSpatialFacts.length === 0 &&
-    fillSet.targetAllocation === undefined &&
-    fillSet.targetList === undefined &&
-    fillSet.attackSequencePartFills.every(
-      (attackSequencePartFill) =>
-        attackSequencePartFill.target === undefined &&
-        attackSequencePartFill.attackRoll === undefined &&
-        attackSequencePartFill.remarkableAthleteCriticalHitMovementDecision ===
-          undefined &&
-        attackSequencePartFill.remarkableAthleteCriticalHitMovement ===
-          undefined &&
-        attackSequencePartFill.mirrorImageDuplicateRoll === undefined &&
-        attackSequencePartFill.damageRoll === undefined,
-    ) &&
-    fillSet.attackRoll === undefined &&
-    fillSet.remarkableAthleteCriticalHitMovementDecision === undefined &&
-    fillSet.remarkableAthleteCriticalHitMovement === undefined &&
-    (options.allowSavingThrowOutcomes === true ||
-      fillSet.savingThrowOutcomes === undefined) &&
-    fillSet.skillChoice === undefined &&
-    fillSet.abilityChoice === undefined &&
-    fillSet.targetAbilityChoices === undefined &&
-    fillSet.thaumaturgyActiveOneMinuteEffectCount === undefined &&
-    fillSet.commandOptionChoice === undefined &&
-    fillSet.selfTransformationModeChoice === undefined &&
-    fillSet.conditionChoice === undefined &&
-    fillSet.levitateInitialRiseFeet === undefined &&
-    fillSet.areaChoice === undefined &&
-    fillSet.teleportDestination === undefined &&
-    fillSet.dancingLightsPlacement === undefined &&
-    fillSet.damageTypeChoice === undefined &&
-    fillSet.concentrationSavingThrows.length === 0 &&
-    fillSet.hideousLaughterDamageRepeatSaves.length === 0 &&
-    fillSet.damageDispositions.length === 0 &&
-    fillSet.damageRoll === undefined &&
-    fillSet.mirrorImageDuplicateRoll === undefined &&
-    fillSet.movement === undefined &&
-    fillSet.spellDamageReductionRolls.length === 0 &&
-    fillSet.sourceDamageRollPenaltyRolls.length === 0 &&
-    fillSet.attackBurstDamageRoll === undefined &&
-    fillSet.healingRoll === undefined
-  );
-}
-
 function spellAttackSequencePartIndexForMirrorImageRoll(
   invocation: Extract<
     RuntimeSpellProcedure,

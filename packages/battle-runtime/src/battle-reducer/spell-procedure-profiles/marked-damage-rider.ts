@@ -72,9 +72,14 @@ import { breakBattleConcentration } from "../damage-apply.ts";
 
 import { needsHolesResult } from "../needs-holes-result.ts";
 import { invalidResult } from "../result-helpers.ts";
+import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
+import { ATTACK_TARGET_HOLE_ID } from "../battle-runtime-protocol.ts";
 import { battleStateAfterTargetActionEarlyEndForActor } from "../sanctuary-targeting-interdiction.ts";
 import { expendSpellSlot } from "../spell-effects.ts";
-import { spellAbilityChoiceHole } from "../spells-damage-fills.ts";
+import {
+  spellAbilityChoiceHole,
+  spellAbilityChoiceHoleId,
+} from "../spells-damage-fills.ts";
 import { HUNTERS_MARK_FINDING_SKILLS } from "../domain-constants.ts";
 import { markSpellSlotExpendedThisTurn } from "../spell-turn-resources.ts";
 import {
@@ -485,17 +490,12 @@ function resolveMarkedDamageRider(
   input: MarkedDamageRiderResolveInput,
 ): BattleResolutionResult {
   if (
-    input.fillSet.targetList !== undefined ||
-    input.fillSet.attackRoll !== undefined ||
-    input.fillSet.targetAllocation !== undefined ||
-    input.fillSet.damageRoll !== undefined ||
-    input.fillSet.attackBurstDamageRoll !== undefined ||
-    input.fillSet.healingRoll !== undefined ||
-    input.fillSet.damageDispositions.length > 0 ||
-    input.fillSet.savingThrowOutcomes !== undefined ||
-    input.fillSet.skillChoice !== undefined ||
-    input.fillSet.targetAbilityChoices !== undefined ||
-    input.fillSet.concentrationSavingThrows.length > 0
+    !fillsBelongToSpellCastHoles(input.input.fills, [
+      ATTACK_TARGET_HOLE_ID,
+      ...(input.invocation.action === "cast"
+        ? [spellAbilityChoiceHoleId(input.invocation)]
+        : []),
+    ])
   ) {
     return invalidResult(
       input.input.state,

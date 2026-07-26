@@ -50,16 +50,12 @@ import {
   SLOW_ACTIVE_PENALTIES_SPEED_RATIO,
 } from "../domain-constants.ts";
 import { extendSavingThrowOngoingFeatures } from "../attack-roll.ts";
-import {
-  saveMetamagicSelectionState,
-  validateSavingThrowOutcomes,
-} from "../spells-resolve-save-gates.ts";
+import { resolveAreaSaveMetamagicFills } from "../spells-resolve-save-gates.ts";
 import {
   spendSpellCastResources,
   startSpellEffectConcentration,
 } from "../spells-resolve-resources.ts";
 import { invalidResult } from "../result-helpers.ts";
-import { needsHolesResult } from "../needs-holes-result.ts";
 import {
   DcSourceSchema,
   MovementFeet,
@@ -375,58 +371,21 @@ function resolveSlowActivePenalties(
       "Slow uses an area Saving Throw outcome fill.",
     );
   }
-  const metamagicSelections = saveMetamagicSelectionState({
+  const areaSave = resolveAreaSaveMetamagicFills({
     state: input.input.state,
+    subject: input.input.subject,
     actorId: input.actorId,
     invocation: input.invocation,
     fills: input.input.fills,
     metamagicApplications: input.metamagicApplications,
-    targetId: undefined,
+    savingThrowOutcomes: input.fillSet.savingThrowOutcomes,
   });
-  if (metamagicSelections.tag === "invalid") {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      metamagicSelections.message,
-    );
+  if (areaSave.tag !== "ready") {
+    return areaSave;
   }
-  if (metamagicSelections.tag === "needsHoles") {
-    return needsHolesResult(
-      input.input.state,
-      input.input.subject,
-      metamagicSelections.holes,
-    );
-  }
-  const savingThrowHole = spellSavingThrowOutcomeHole(
-    input.input.state,
-    input.actorId,
-    input.invocation,
-    metamagicSelections.heightenedSpellTargetId,
-  );
-  if (input.fillSet.savingThrowOutcomes === undefined) {
-    return needsHolesResult(input.input.state, input.input.subject, [
-      savingThrowHole,
-    ]);
-  }
-  const savingThrowValidation = validateSavingThrowOutcomes(
-    input.fillSet.savingThrowOutcomes,
-    input.invocation,
-    input.input.state,
-    input.actorId,
-    undefined,
-    undefined,
-    metamagicSelections.carefulSpellProtectedTargetIds,
-    metamagicSelections.heightenedSpellTargetId,
-  );
-  if (savingThrowValidation !== null) {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      savingThrowValidation,
-    );
-  }
+  const savingThrowOutcomes = areaSave.savingThrowOutcomes;
   const areaWitnessValidation = validateSlowAreaWitness(
-    input.fillSet.savingThrowOutcomes,
+    savingThrowOutcomes,
     input.invocation.maxTargets,
   );
   if (areaWitnessValidation !== null) {
@@ -436,11 +395,11 @@ function resolveSlowActivePenalties(
       areaWitnessValidation,
     );
   }
-  const affectedTargetIds = input.fillSet.savingThrowOutcomes.outcomes.map(
+  const affectedTargetIds = savingThrowOutcomes.outcomes.map(
     (outcome) => outcome.targetId,
   );
-  const failedTargets = input.fillSet.savingThrowOutcomes.outcomes.flatMap(
-    (outcome) => (outcome.succeeded ? [] : [outcome.targetId]),
+  const failedTargets = savingThrowOutcomes.outcomes.flatMap((outcome) =>
+    outcome.succeeded ? [] : [outcome.targetId],
   );
   if (failedTargets.length > 0) {
     const saveFailedReactionWindow = maybeOpenInterruptWindow(

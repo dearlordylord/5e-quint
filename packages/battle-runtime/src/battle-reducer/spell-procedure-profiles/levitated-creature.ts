@@ -1,4 +1,12 @@
 import { maybeOpenSpellCastReactionWindow } from "../spell-cast-reaction-window.ts";
+import { fillsBelongToDeclaredHoles } from "../fill-hole-protocol.ts";
+import { selectSingleSpellTarget } from "../single-spell-target.ts";
+import {
+  ATTACK_TARGET_HOLE_ID,
+  LEVITATE_INITIAL_RISE_HOLE_ID,
+  SPELL_CAST_REACTION_FACTS_HOLE_ID,
+} from "../battle-runtime-protocol.ts";
+import { spellSavingThrowOutcomeHoleId } from "../spells-damage-fills.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-glyph-stored-concentration-full-duration
@@ -47,7 +55,6 @@ import { spellSavingThrowOutcomeHole } from "../spells-damage-fills.ts";
 import {
   spellTargetHole,
   spellTargetIsKnownWilling,
-  spellTargetIsLegal,
 } from "../spells-targeting.ts";
 import { validateSavingThrowOutcomes } from "../spells-resolve-save-gates.ts";
 import {
@@ -214,37 +221,12 @@ function resolveLevitatedCreature(
   input: LevitatedCreatureResolveInput,
 ): BattleResolutionResult {
   if (
-    input.fillSet.objectTarget !== undefined ||
-    input.fillSet.objectContactTargets !== undefined ||
-    input.fillSet.objectContactSavingThrowOutcome !== undefined ||
-    input.fillSet.objectDropResolution !== undefined ||
-    input.fillSet.magicWeaponTargetItem !== undefined ||
-    input.fillSet.ongoingSpellTarget !== undefined ||
-    input.fillSet.ongoingSpellAbilityChecks.length > 0 ||
-    input.fillSet.attackRoll !== undefined ||
-    input.fillSet.targetAllocation !== undefined ||
-    input.fillSet.targetList !== undefined ||
-    input.fillSet.attackSequencePartFills.length > 0 ||
-    input.fillSet.damageRoll !== undefined ||
-    input.fillSet.attackBurstDamageRoll !== undefined ||
-    input.fillSet.healingRoll !== undefined ||
-    input.fillSet.mirrorImageDuplicateRoll !== undefined ||
-    input.fillSet.skillChoice !== undefined ||
-    input.fillSet.targetAbilityChoices !== undefined ||
-    input.fillSet.abilityChoice !== undefined ||
-    input.fillSet.thaumaturgyActiveOneMinuteEffectCount !== undefined ||
-    input.fillSet.commandOptionChoice !== undefined ||
-    input.fillSet.selfTransformationModeChoice !== undefined ||
-    input.fillSet.conditionChoice !== undefined ||
-    input.fillSet.areaChoice !== undefined ||
-    input.fillSet.teleportDestination !== undefined ||
-    input.fillSet.dancingLightsPlacement !== undefined ||
-    input.fillSet.damageTypeChoice !== undefined ||
-    input.fillSet.movement !== undefined ||
-    input.fillSet.hideousLaughterDamageRepeatSaves.length > 0 ||
-    input.fillSet.damageDispositions.length > 0 ||
-    input.fillSet.concentrationSavingThrows.length > 0 ||
-    input.fillSet.spellDamageReductionRolls.length > 0
+    !fillsBelongToDeclaredHoles(input.input.fills, [
+      ATTACK_TARGET_HOLE_ID,
+      SPELL_CAST_REACTION_FACTS_HOLE_ID,
+      spellSavingThrowOutcomeHoleId(input.invocation),
+      LEVITATE_INITIAL_RISE_HOLE_ID,
+    ])
   ) {
     return invalidResult(
       input.input.state,
@@ -252,28 +234,20 @@ function resolveLevitatedCreature(
       "Levitate's creature branch uses one target, one initial-rise fill, and, for unwilling targets, one Constitution Saving Throw fill.",
     );
   }
-  if (input.fillSet.targetId === undefined) {
-    return needsHolesResult(input.input.state, input.input.subject, [
-      spellTargetHole(input.input.state, input.actorId, input.invocation),
-    ]);
-  }
-  const target = input.input.state.combatants.get(input.fillSet.targetId);
-  if (
-    target === undefined ||
-    !spellTargetIsLegal(
-      input.input.state,
-      input.actorId,
-      target.combatantId,
-      input.invocation,
-      input.fillSet.targetSpatialFacts,
-    )
-  ) {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
+  const targetSelection = selectSingleSpellTarget({
+    state: input.input.state,
+    subject: input.input.subject,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    targetId: input.fillSet.targetId,
+    targetSpatialFacts: input.fillSet.targetSpatialFacts,
+    invalidTargetMessage:
       "Levitate creature target must be a combatant within 60 feet that the caster can see.",
-    );
+  });
+  if (targetSelection.tag !== "selected") {
+    return targetSelection;
   }
+  const target = targetSelection.target;
 
   if (input.storedGlyphRelease === undefined) {
     const spellCastReactionWindow = maybeOpenSpellCastReactionWindow(

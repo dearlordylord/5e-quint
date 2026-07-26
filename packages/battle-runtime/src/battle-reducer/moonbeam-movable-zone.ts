@@ -1,19 +1,14 @@
 // Moonbeam movable Cylinder composite transition.
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE
 
-import { damageAmount, resourceCount, spellSlotLevel } from "@dnd/shared/types";
+import { damageAmount } from "@dnd/shared/types";
 import {
   spellSaveGateBranch,
   spellSaveGateDamageAmount,
   spellSaveGateDamageResult,
 } from "@dnd/shared-algebras/spell-save-gate-algebra";
-import {
-  applySpellSlotExpenditure,
-  spellSlotExpenditureAccepted,
-  spellSlotExpenditureRequired,
-  spellSlotExpenditureResultState,
-} from "@dnd/shared-algebras/spell-slot-expenditure-algebra";
 import { Match } from "effect";
+import { expendActionSpellSlot } from "./action-spell-slot-expenditure.ts";
 import {
   projectShapeShiftRuntimeReversion,
   trueFormRuntimeState,
@@ -141,35 +136,14 @@ export function resolveMoonbeamCast(
   state: MoonbeamMovableZoneState,
   slotLevel: number,
 ): MoonbeamMovableZoneState {
-  if (
-    !state.actionAvailable ||
-    !Number.isInteger(slotLevel) ||
-    slotLevel < MOONBEAM_MINIMUM_SLOT_LEVEL ||
-    slotLevel > 9 ||
-    !Number.isInteger(state.slotLedger.slotLevel) ||
-    state.slotLedger.slotLevel < 1 ||
-    state.slotLedger.slotLevel > 9 ||
-    !Number.isInteger(state.slotLedger.slotsRemaining) ||
-    state.slotLedger.slotsRemaining < 0
-  ) {
-    return state;
-  }
-  const requestedSlotLevel = spellSlotLevel(slotLevel);
-  const slotState = {
-    slotLedger: {
-      slotLevel: spellSlotLevel(state.slotLedger.slotLevel),
-      slotsRemaining: resourceCount(state.slotLedger.slotsRemaining),
-    },
-    slotSpellCastThisTurn: state.slotSpellCastThisTurn,
-  };
-  const slotResult = applySpellSlotExpenditure(
-    slotState,
-    spellSlotExpenditureRequired(requestedSlotLevel),
+  const slotExpenditure = expendActionSpellSlot(
+    state,
+    slotLevel,
+    MOONBEAM_MINIMUM_SLOT_LEVEL,
   );
-  if (!spellSlotExpenditureAccepted(slotResult)) {
+  if (slotExpenditure === undefined) {
     return state;
   }
-  const nextSlotState = spellSlotExpenditureResultState(slotState, slotResult);
   return {
     ...state,
     actionAvailable: false,
@@ -180,11 +154,7 @@ export function resolveMoonbeamCast(
       repositionMaxMoveFeet: MOONBEAM_REPOSITION_MAX_MOVE_FEET,
       savedThisTurn: false,
     },
-    slotLedger: {
-      slotLevel: Number(nextSlotState.slotLedger.slotLevel),
-      slotsRemaining: Number(nextSlotState.slotLedger.slotsRemaining),
-    },
-    slotSpellCastThisTurn: nextSlotState.slotSpellCastThisTurn,
+    ...slotExpenditure,
   };
 }
 

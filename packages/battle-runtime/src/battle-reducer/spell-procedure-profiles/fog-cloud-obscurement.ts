@@ -27,13 +27,10 @@ import type { LinearPerLevel } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
 import {
-  type BattleActDiscoveryCandidate,
   type BattleResolutionResult,
-  type BattleState,
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
-import { type CombatantId } from "../../identity.ts";
-import { spellAreaChoiceHole } from "../spells-holes-fills.ts";
+import { discoverActionSpellAreaCastAct } from "../spell-area-cast-discovery.ts";
 import { resolveFogCloudObscurementSpellAct } from "../spells-resolve-area-effects.ts";
 import type {
   SpellAdmissionContext,
@@ -163,24 +160,6 @@ function fogCloudObscurementSpell(
   };
 }
 
-function discoverFogCloudObscurementCastAct(
-  _state: BattleState,
-  actorId: CombatantId,
-  invocation: import("../../battle-state-execution.ts").BattleExecutableSpellInvocation<FogCloudObscurementSpellInvocation>,
-): readonly BattleActDiscoveryCandidate[] {
-  return [
-    {
-      subject: {
-        tag: "actionSpell",
-        actorId,
-        procedureRef: invocation.sourceProcedureRef,
-        mode: { tag: "cast" },
-      },
-      initialHoles: [spellAreaChoiceHole(invocation)],
-    },
-  ];
-}
-
 function resolveFogCloudObscurement(
   input: FogCloudObscurementResolveInput,
 ): BattleResolutionResult {
@@ -210,7 +189,7 @@ export const fogCloudObscurementProfile = {
   procedure: "fogCloudObscurement",
   executionSchema: FogCloudObscurementInvocationSchema,
   admit: admitFogCloudObscurement,
-  discoverCastAct: discoverFogCloudObscurementCastAct,
+  discoverCastAct: discoverActionSpellAreaCastAct,
   resolve: resolveFogCloudObscurement,
 } satisfies SpellProcedureDeclaration<
   "fogCloudObscurement",

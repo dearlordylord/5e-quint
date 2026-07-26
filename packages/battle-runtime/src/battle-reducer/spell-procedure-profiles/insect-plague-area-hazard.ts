@@ -28,19 +28,16 @@ import { movementFeet } from "@dnd/shared/types";
 import { Either, Schema } from "effect";
 
 import {
-  type BattleActDiscoveryCandidate,
   type BattleResolutionResult,
-  type BattleState,
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
-import { type CombatantId } from "../../identity.ts";
 import {
   DcSourceSchema,
   MovementFeet,
   PreparedSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
-import { spellAreaChoiceHole } from "../spells-holes-fills.ts";
+import { discoverActionSpellAreaCastAct } from "../spell-area-cast-discovery.ts";
 import { supportedDamageAmountExpr } from "../spells-execution-facts.ts";
 import { resolveInsectPlagueAreaHazardSpellAct } from "../spells-resolve-area-effects.ts";
 import type {
@@ -231,24 +228,6 @@ function insectPlagueSaveGateDamageAmount(
   return null;
 }
 
-function discoverInsectPlagueAreaHazardCastAct(
-  _state: BattleState,
-  actorId: CombatantId,
-  invocation: import("../../battle-state-execution.ts").BattleExecutableSpellInvocation<InsectPlagueAreaHazardSpellInvocation>,
-): readonly BattleActDiscoveryCandidate[] {
-  return [
-    {
-      subject: {
-        tag: "actionSpell",
-        actorId,
-        procedureRef: invocation.sourceProcedureRef,
-        mode: { tag: "cast" },
-      },
-      initialHoles: [spellAreaChoiceHole(invocation)],
-    },
-  ];
-}
-
 function resolveInsectPlagueAreaHazard(
   input: InsectPlagueAreaHazardResolveInput,
 ): BattleResolutionResult {
@@ -285,7 +264,7 @@ export const insectPlagueAreaHazardProfile = {
   procedure: "insectPlagueAreaHazard",
   executionSchema: InsectPlagueAreaHazardInvocationSchema,
   admit: admitInsectPlagueAreaHazard,
-  discoverCastAct: discoverInsectPlagueAreaHazardCastAct,
+  discoverCastAct: discoverActionSpellAreaCastAct,
   resolve: resolveInsectPlagueAreaHazard,
 } satisfies SpellProcedureDeclaration<
   "insectPlagueAreaHazard",

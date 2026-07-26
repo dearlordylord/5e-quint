@@ -107,11 +107,8 @@ import { spellCastInterruptFrame } from "./spell-cast-interrupt-frame.ts";
 
 import { resolvePreparedSlotSpellRelease } from "./spells-resolve-prepared-slot.ts";
 import { resolveSaveGateDamageSpellRelease } from "./spells-resolve-save-gates.ts";
-import {
-  spellFillSet,
-  spellFillSetContainsOnlySpellCastReactionFacts,
-  type SpellFillSet,
-} from "./spells-resolve-fill-set.ts";
+import { spellFillSet, type SpellFillSet } from "./spells-resolve-fill-set.ts";
+import { fillsBelongToSpellCastHoles } from "./fill-hole-protocol.ts";
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
 import {
   spellDancingLightsPlacementHole,
@@ -539,7 +536,7 @@ export function resolveReadySpellAct(
   if (fillSet.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", fillSet.message);
   }
-  if (!spellFillSetContainsOnlySpellCastReactionFacts(fillSet, {})) {
+  if (!fillsBelongToSpellCastHoles(input.fills)) {
     return invalidResult(
       input.state,
       "invalidFill",

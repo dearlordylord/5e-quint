@@ -353,6 +353,71 @@ export function saveMetamagicSelectionState(input: {
       };
 }
 
+export function resolveAreaSaveMetamagicFills(input: {
+  readonly state: BattleState;
+  readonly subject: BattleSubject;
+  readonly actorId: CombatantId;
+  readonly invocation: Parameters<
+    typeof saveMetamagicSelectionState
+  >[0]["invocation"];
+  readonly fills: readonly BattleFill[];
+  readonly metamagicApplications:
+    | readonly CharacterBattleMetamagicOptionFact[]
+    | undefined;
+  readonly savingThrowOutcomes: BattleSpellSavingThrowOutcomeValue | undefined;
+}):
+  | BattleResolutionResult
+  | {
+      readonly tag: "ready";
+      readonly savingThrowOutcomes: BattleSpellSavingThrowOutcomeValue;
+      readonly carefulSpellProtectedTargetIds: readonly CombatantId[];
+      readonly heightenedSpellTargetId: CombatantId | undefined;
+    } {
+  const selection = saveMetamagicSelectionState({
+    state: input.state,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    fills: input.fills,
+    metamagicApplications: input.metamagicApplications,
+    targetId: undefined,
+  });
+  if (selection.tag === "invalid") {
+    return invalidResult(input.state, "invalidFill", selection.message);
+  }
+  if (selection.tag === "needsHoles") {
+    return needsHolesResult(input.state, input.subject, selection.holes);
+  }
+  if (input.savingThrowOutcomes === undefined) {
+    return needsHolesResult(input.state, input.subject, [
+      spellSavingThrowOutcomeHole(
+        input.state,
+        input.actorId,
+        input.invocation,
+        selection.heightenedSpellTargetId,
+      ),
+    ]);
+  }
+  const validation = validateSavingThrowOutcomes(
+    input.savingThrowOutcomes,
+    input.invocation,
+    input.state,
+    input.actorId,
+    undefined,
+    undefined,
+    selection.carefulSpellProtectedTargetIds,
+    selection.heightenedSpellTargetId,
+  );
+  return validation === null
+    ? {
+        tag: "ready",
+        savingThrowOutcomes: input.savingThrowOutcomes,
+        carefulSpellProtectedTargetIds:
+          selection.carefulSpellProtectedTargetIds,
+        heightenedSpellTargetId: selection.heightenedSpellTargetId,
+      }
+    : invalidResult(input.state, "invalidFill", validation);
+}
+
 function saveMetamagicSelectionFills(
   fills: readonly BattleFill[],
   invocation: Extract<

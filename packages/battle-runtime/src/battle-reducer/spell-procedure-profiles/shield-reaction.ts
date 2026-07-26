@@ -17,25 +17,21 @@ import { unitId } from "@dnd/shared/game-facts";
 //     the Reaction.
 //   - UBIQUITOUS_LANGUAGE.md: Reaction, Armor Class (AC), Casting Time.
 
-import { Either } from "effect";
-
 import {
   type AvailableBattleAct,
   type BattleResolutionResult,
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
-import { snapshotBattle } from "../interrupt-execution.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { stateAfterSpellCastDeclared } from "../spell-cast-declaration.ts";
-import { expendSpellSlot } from "../spell-effects.ts";
 import { applyShieldReactionSpellActiveEffect } from "../spells-active-effects.ts";
 import { sameStringSet } from "../spells-execution-facts.ts";
 import {
   reactionTriggerIncludesHitByAttackRoll,
   reactionTriggerNamedSpellIds,
 } from "../spell-reaction-trigger-shape.ts";
-import { spellFillSetContainsOnlySpellCastReactionFacts } from "../spells-resolve-fill-set.ts";
-import { markSpellSlotExpendedThisTurn } from "../spell-turn-resources.ts";
+import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
+import { completeReactionSpellSlotCast } from "../reaction-spell-resolution.ts";
 import { shieldReactionSpellMatchesTrigger } from "../shield-reaction-trigger.ts";
 import type {
   SpellAdmissionContext,
@@ -162,7 +158,7 @@ function resolveShieldReaction(
       "Shield requires a matching attack-hit or Magic Missile Reaction trigger.",
     );
   }
-  if (!spellFillSetContainsOnlySpellCastReactionFacts(input.fillSet, {})) {
+  if (!fillsBelongToSpellCastHoles(input.input.fills)) {
     return invalidResult(
       input.input.state,
       "invalidFill",
@@ -180,31 +176,12 @@ function resolveShieldReaction(
     input.input.subject.reactorId,
     input.invocation,
   );
-  const slotted = expendSpellSlot(
-    effected,
-    input.input.subject.reactorId,
-    input.invocation.resource.slotLevel,
-  );
-  const nextTurnResources = markSpellSlotExpendedThisTurn(
-    slotted.currentTurnResources,
-    input.input.subject.reactorId,
-  );
-  if (Either.isLeft(nextTurnResources)) {
-    return invalidResult(
-      input.input.state,
-      "staleSubject",
-      "This turn has already expended a Spell Slot.",
-    );
-  }
-  const nextState = {
-    ...slotted,
-    currentTurnResources: nextTurnResources.right,
-  };
-  return {
-    tag: "resolved",
-    state: nextState,
-    snapshot: snapshotBattle(nextState),
-  };
+  return completeReactionSpellSlotCast({
+    effectedState: effected,
+    errorState: input.input.state,
+    casterId: input.input.subject.reactorId,
+    slotLevel: input.invocation.resource.slotLevel,
+  });
 }
 
 const ShieldReactionInvocationSchema = spellProcedureExecutionSchema(

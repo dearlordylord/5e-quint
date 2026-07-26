@@ -39,10 +39,14 @@ import { ThaumaturgyBoomingVoiceTemplateSchema } from "../../active-effect/codec
 
 import { needsHolesResult } from "../needs-holes-result.ts";
 import { invalidResult, resolutionFromStateResult } from "../result-helpers.ts";
+import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
 import { thaumaturgyActiveOneMinuteEffectCountHole } from "../spells-damage-fills.ts";
 import { thaumaturgyBoomingVoiceProjection } from "../spells-profiles-support.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
-import { THAUMATURGY_MAX_ACTIVE_ONE_MINUTE_EFFECTS } from "../domain-constants.ts";
+import {
+  THAUMATURGY_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_ID,
+  THAUMATURGY_MAX_ACTIVE_ONE_MINUTE_EFFECTS,
+} from "../domain-constants.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
@@ -155,30 +159,9 @@ function resolveThaumaturgyBoomingVoice(
   input: SpellProcedureProfileResolveInput<ThaumaturgyBoomingVoiceInvocation>,
 ): BattleResolutionResult {
   if (
-    input.fillSet.targetId !== undefined ||
-    input.fillSet.objectTarget !== undefined ||
-    input.fillSet.targetSpatialFacts.length > 0 ||
-    input.fillSet.targetAllocation !== undefined ||
-    input.fillSet.targetList !== undefined ||
-    input.fillSet.attackSequencePartFills.length > 0 ||
-    input.fillSet.attackRoll !== undefined ||
-    input.fillSet.savingThrowOutcomes !== undefined ||
-    input.fillSet.skillChoice !== undefined ||
-    input.fillSet.targetAbilityChoices !== undefined ||
-    input.fillSet.abilityChoice !== undefined ||
-    input.fillSet.commandOptionChoice !== undefined ||
-    input.fillSet.areaChoice !== undefined ||
-    input.fillSet.dancingLightsPlacement !== undefined ||
-    input.fillSet.damageTypeChoice !== undefined ||
-    input.fillSet.concentrationSavingThrows.length > 0 ||
-    input.fillSet.hideousLaughterDamageRepeatSaves.length > 0 ||
-    input.fillSet.damageDispositions.length > 0 ||
-    input.fillSet.damageRoll !== undefined ||
-    input.fillSet.mirrorImageDuplicateRoll !== undefined ||
-    input.fillSet.movement !== undefined ||
-    input.fillSet.spellDamageReductionRolls.length > 0 ||
-    input.fillSet.attackBurstDamageRoll !== undefined ||
-    input.fillSet.healingRoll !== undefined
+    !fillsBelongToSpellCastHoles(input.input.fills, [
+      THAUMATURGY_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_ID,
+    ])
   ) {
     return invalidResult(
       input.input.state,

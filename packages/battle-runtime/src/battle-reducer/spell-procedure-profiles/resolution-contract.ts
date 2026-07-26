@@ -4,7 +4,6 @@ import type {
   BonusActionSpellBattleResolutionInput,
   BattleCreatureState,
   BattleFill,
-  BattleInterruptedProcedure,
   BattleInterruptCheckpoint,
   BattleResolutionInputForSubject,
   BattleState,
@@ -54,18 +53,8 @@ type AttackHitBonusActionSpellCommandSubject = Extract<
     readonly command: "castAttackHitBonusActionSpell";
   }
 >;
-type AttackHitDamageReplayFrame = Extract<
-  BattleInterruptCheckpoint,
-  { readonly trigger: "attackHit" }
-> & {
-  readonly continuation: Extract<
-    BattleInterruptedProcedure,
-    {
-      readonly kind: "replay";
-      readonly glyphStoredSpellReleaseReplay?: never;
-    }
-  >;
-};
+type AttackHitDamageReplayFrame =
+  import("../../battle-state-execution.ts").BattleAttackHitReplayCheckpoint;
 type AttackHitDamageResolutionInput =
   BattleResolutionInputForSubject<AttackHitBonusActionSpellCommandSubject> & {
     readonly frame: AttackHitDamageReplayFrame;

@@ -31,19 +31,16 @@ import { movementFeet } from "@dnd/shared/types";
 import { Either, Schema } from "effect";
 
 import {
-  type BattleActDiscoveryCandidate,
   type BattleResolutionResult,
-  type BattleState,
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
-import { type CombatantId } from "../../identity.ts";
 import {
   DcSourceSchema,
   MovementFeet,
   PreparedSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
-import { spellAreaChoiceHole } from "../spells-holes-fills.ts";
+import { discoverActionSpellAreaCastAct } from "../spell-area-cast-discovery.ts";
 import { resolveSleetStormAreaHazardSpellAct } from "../spells-resolve-area-effects.ts";
 import type {
   SpellAdmissionContext,
@@ -242,24 +239,6 @@ function isSleetStormAreaHazardSaveGate(
   return appliesProne && breaksConcentration;
 }
 
-function discoverSleetStormAreaHazardCastAct(
-  _state: BattleState,
-  actorId: CombatantId,
-  invocation: import("../../battle-state-execution.ts").BattleExecutableSpellInvocation<SleetStormAreaHazardSpellInvocation>,
-): readonly BattleActDiscoveryCandidate[] {
-  return [
-    {
-      subject: {
-        tag: "actionSpell",
-        actorId,
-        procedureRef: invocation.sourceProcedureRef,
-        mode: { tag: "cast" },
-      },
-      initialHoles: [spellAreaChoiceHole(invocation)],
-    },
-  ];
-}
-
 function resolveSleetStormAreaHazard(
   input: SleetStormAreaHazardResolveInput,
 ): BattleResolutionResult {
@@ -293,7 +272,7 @@ export const sleetStormAreaHazardProfile = {
   procedure: "sleetStormAreaHazard",
   executionSchema: SleetStormAreaHazardInvocationSchema,
   admit: admitSleetStormAreaHazard,
-  discoverCastAct: discoverSleetStormAreaHazardCastAct,
+  discoverCastAct: discoverActionSpellAreaCastAct,
   resolve: resolveSleetStormAreaHazard,
 } satisfies SpellProcedureDeclaration<
   "sleetStormAreaHazard",

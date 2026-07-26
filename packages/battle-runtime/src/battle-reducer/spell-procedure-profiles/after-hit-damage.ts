@@ -1,3 +1,8 @@
+import {
+  completeAfterHitSpellCast,
+  maybeOpenAfterHitSpellCastInterrupt,
+} from "../after-hit-spell-resolution.ts";
+import { appendAfterHitSpellDamage } from "../after-hit-spell-damage.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-after-hit-damage
 import {
@@ -42,25 +47,18 @@ import {
   type BattleResolutionResult,
   type BattleState,
 } from "../../battle-state-execution.ts";
-import { snapshotBattle } from "../dispatcher.ts";
 import {
   type BattleResourcePoolExecutionRef,
   type CombatantId,
 } from "../../identity.ts";
-import {
-  maybeOpenPostCastReadySpellCastWindow,
-  maybeOpenSpellCastInterruptWindowWithTriggeredSpellChoices,
-  interruptCheckpointFrame,
-} from "../dispatcher.ts";
 import { characterBattleResourcePoolRefHasUsesRemaining } from "../../character-battle-resource-execution.ts";
 import { battleCreatureType } from "../domain-helpers.ts";
 import { invalidResult } from "../result-helpers.ts";
-import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
 import {
   sameStringSet,
   supportedDamageAmountExpr,
 } from "../spells-execution-facts.ts";
-import { spellFillSetContainsOnlySpellCastReactionFacts } from "../spells-resolve-fill-set.ts";
+import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
 import {
   spendClassFeatureFreeCastResource,
   spendSpellCastResources,
@@ -234,32 +232,20 @@ function discoverAfterHitDamageCastAct(): readonly AvailableBattleAct[] {
 function resolveAfterHitDamage(
   input: AfterHitDamageResolveInput,
 ): BattleResolutionResult {
-  if (!spellFillSetContainsOnlySpellCastReactionFacts(input.fillSet, {})) {
+  if (!fillsBelongToSpellCastHoles(input.input.fills)) {
     return invalidResult(
       input.input.state,
       "invalidFill",
       "Attack-hit Bonus Action spell accepts only spell-cast Reaction trigger facts.",
     );
   }
-  const attackContinuation = input.input.frame.continuation;
-  const spellCastFrame = spellCastInterruptFrame({
-    casterId: input.input.subject.casterId,
+  const spellCastReactionWindow = maybeOpenAfterHitSpellCastInterrupt({
+    input: input.input,
     invocation: input.invocation,
-    targetIds: [input.input.target.combatantId],
-    reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
-    castingResource: { kind: "bonusAction" },
-    continuation: {
-      kind: "replay",
-      subject: input.input.subject,
-      fills: input.input.fills,
-    },
+    fillSet: input.fillSet,
+    casterId: input.input.subject.casterId,
+    targetId: input.input.target.combatantId,
   });
-  const spellCastReactionWindow =
-    maybeOpenSpellCastInterruptWindowWithTriggeredSpellChoices(
-      input.input.state,
-      spellCastFrame,
-      input.input.handledInterruptTrigger,
-    );
   if (spellCastReactionWindow !== null) {
     return spellCastReactionWindow;
   }
@@ -305,40 +291,19 @@ function resolveAfterHitDamage(
       damageType: input.invocation.damage.damageType,
     },
   };
-  const nextFrame = {
-    ...input.input.frame,
-    continuation: {
-      ...attackContinuation,
-      attackDamageAdditions: [
-        ...(attackContinuation.attackDamageAdditions ?? []),
-        damageAddition,
-      ],
-    },
-  };
-  const nextState: BattleState = {
-    ...resourced.state,
-    interruptStack: [
-      ...resourced.state.interruptStack.slice(0, -1),
-      interruptCheckpointFrame(nextFrame),
-    ],
-  };
-  const readiedSpellCastReactionWindow = maybeOpenPostCastReadySpellCastWindow({
-    state: nextState,
+  const nextFrame = appendAfterHitSpellDamage(
+    input.input.frame,
+    damageAddition,
+  );
+  return completeAfterHitSpellCast({
+    state: resourced.state,
+    frame: nextFrame,
     subject: input.input.subject,
     casterId: input.input.subject.casterId,
-    sourceProcedureRef: input.invocation.sourceProcedureRef,
-    spellProcedure: input.invocation.procedure,
-    targetIds: [input.input.target.combatantId],
+    invocation: input.invocation,
+    targetId: input.input.target.combatantId,
     handledInterruptTrigger: input.input.handledInterruptTrigger,
   });
-  if (readiedSpellCastReactionWindow !== null) {
-    return readiedSpellCastReactionWindow;
-  }
-  return {
-    tag: "resolved",
-    state: nextState,
-    snapshot: snapshotBattle(nextState),
-  };
 }
 
 function spendAfterHitDamageFreeCastResource(

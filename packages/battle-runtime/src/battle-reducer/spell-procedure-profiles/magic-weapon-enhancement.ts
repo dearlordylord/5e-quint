@@ -29,10 +29,13 @@ import { activeDruidWildShapeEffect } from "../druid-wild-shape.ts";
 
 import { needsHolesResult } from "../needs-holes-result.ts";
 import { invalidResult, resolutionFromStateResult } from "../result-helpers.ts";
+import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
 import { wildShapeCanUseWornLoadoutObject } from "../wild-shape-equipment.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
-import type { SpellFillSet } from "../spells-resolve-fill-set.ts";
-import { magicWeaponTargetItemHole } from "../spells-targeting.ts";
+import {
+  magicWeaponTargetItemHole,
+  magicWeaponTargetItemHoleId,
+} from "../spells-targeting.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
@@ -212,7 +215,11 @@ function discoverMagicWeaponEnhancementCastAct(
 function resolveMagicWeaponEnhancement(
   input: SpellProcedureProfileResolveInput<MagicWeaponEnhancementInvocation>,
 ): BattleResolutionResult {
-  if (magicWeaponEnhancementFillSetHasDisallowedFills(input.fillSet)) {
+  if (
+    !fillsBelongToSpellCastHoles(input.input.fills, [
+      magicWeaponTargetItemHoleId(input.invocation),
+    ])
+  ) {
     return invalidResult(
       input.input.state,
       "invalidFill",
@@ -342,50 +349,6 @@ function battleMagicWeaponTargetItemIsHeldWeapon(
   return (
     holder.origin.selectedLoadout.weapon?.itemId === targetItem.itemId ||
     holder.origin.selectedLoadout.offHandWeapon?.itemId === targetItem.itemId
-  );
-}
-
-function magicWeaponEnhancementFillSetHasDisallowedFills(
-  fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>,
-): boolean {
-  return (
-    fillSet.targetId !== undefined ||
-    fillSet.objectTarget !== undefined ||
-    fillSet.objectContactTargets !== undefined ||
-    fillSet.objectContactSavingThrowOutcome !== undefined ||
-    fillSet.objectDropResolution !== undefined ||
-    fillSet.targetSpatialFacts.length > 0 ||
-    fillSet.targetAllocation !== undefined ||
-    fillSet.targetList !== undefined ||
-    fillSet.attackSequencePartFills.some(
-      (attackSequencePartFill) =>
-        attackSequencePartFill.target !== undefined ||
-        attackSequencePartFill.attackRoll !== undefined ||
-        attackSequencePartFill.mirrorImageDuplicateRoll !== undefined ||
-        attackSequencePartFill.damageRoll !== undefined,
-    ) ||
-    fillSet.attackRoll !== undefined ||
-    fillSet.savingThrowOutcomes !== undefined ||
-    fillSet.skillChoice !== undefined ||
-    fillSet.targetAbilityChoices !== undefined ||
-    fillSet.abilityChoice !== undefined ||
-    fillSet.thaumaturgyActiveOneMinuteEffectCount !== undefined ||
-    fillSet.commandOptionChoice !== undefined ||
-    fillSet.selfTransformationModeChoice !== undefined ||
-    fillSet.conditionChoice !== undefined ||
-    fillSet.areaChoice !== undefined ||
-    fillSet.teleportDestination !== undefined ||
-    fillSet.dancingLightsPlacement !== undefined ||
-    fillSet.damageTypeChoice !== undefined ||
-    fillSet.concentrationSavingThrows.length > 0 ||
-    fillSet.hideousLaughterDamageRepeatSaves.length > 0 ||
-    fillSet.damageDispositions.length > 0 ||
-    fillSet.damageRoll !== undefined ||
-    fillSet.mirrorImageDuplicateRoll !== undefined ||
-    fillSet.movement !== undefined ||
-    fillSet.spellDamageReductionRolls.length > 0 ||
-    fillSet.attackBurstDamageRoll !== undefined ||
-    fillSet.healingRoll !== undefined
   );
 }
 

@@ -34,7 +34,6 @@ import { Either } from "effect";
 
 import {
   type ActionSpellBattleResolutionInput,
-  type BattleActDiscoveryCandidate,
   type BattleAntimagicFieldAffectedOngoingSpellEffect,
   type BattleAntimagicFieldAreaChoice,
   type BattleResolutionResult,
@@ -52,8 +51,11 @@ import {
 import { snapshotBattle } from "../interrupt-execution.ts";
 import { needsHolesResult } from "../needs-holes-result.ts";
 import { invalidResult } from "../result-helpers.ts";
+import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
 import { sameStringSet } from "../spells-execution-facts.ts";
+import { discoverActionSpellAreaCastAct } from "../spell-area-cast-discovery.ts";
 import { spellAreaChoiceHole } from "../spells-holes-fills.ts";
+import { spellAreaChoiceHoleId } from "../spells-targeting.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
 import type {
   SpellAdmissionContext,
@@ -167,46 +169,13 @@ function antimagicFieldOngoingSpellSuppressionSpell(
   };
 }
 
-function discoverAntimagicFieldOngoingSpellSuppressionCastAct(
-  _state: BattleState,
-  actorId: CombatantId,
-  invocation: BattleExecutableSpellInvocation<AntimagicFieldOngoingSpellSuppressionInvocation>,
-): readonly BattleActDiscoveryCandidate[] {
-  return [
-    {
-      subject: {
-        tag: "actionSpell",
-        actorId,
-        procedureRef: invocation.sourceProcedureRef,
-        mode: { tag: "cast" },
-      },
-      initialHoles: [spellAreaChoiceHole(invocation)],
-    },
-  ];
-}
-
 function resolveAntimagicFieldOngoingSpellSuppression(
   input: AntimagicFieldOngoingSpellSuppressionResolveInput,
 ): BattleResolutionResult {
   if (
-    input.fillSet.targetId !== undefined ||
-    input.fillSet.objectTarget !== undefined ||
-    input.fillSet.targetAllocation !== undefined ||
-    input.fillSet.targetList !== undefined ||
-    input.fillSet.attackRoll !== undefined ||
-    input.fillSet.savingThrowOutcomes !== undefined ||
-    input.fillSet.skillChoice !== undefined ||
-    input.fillSet.targetAbilityChoices !== undefined ||
-    input.fillSet.abilityChoice !== undefined ||
-    input.fillSet.commandOptionChoice !== undefined ||
-    input.fillSet.damageTypeChoice !== undefined ||
-    input.fillSet.concentrationSavingThrows.length > 0 ||
-    input.fillSet.damageDispositions.length > 0 ||
-    input.fillSet.damageRoll !== undefined ||
-    input.fillSet.movement !== undefined ||
-    input.fillSet.spellDamageReductionRolls.length > 0 ||
-    input.fillSet.attackBurstDamageRoll !== undefined ||
-    input.fillSet.healingRoll !== undefined
+    !fillsBelongToSpellCastHoles(input.input.fills, [
+      spellAreaChoiceHoleId(input.invocation),
+    ])
   ) {
     return invalidResult(
       input.input.state,
@@ -381,7 +350,7 @@ export const antimagicFieldOngoingSpellSuppressionProfile = {
   procedure: "antimagicFieldOngoingSpellSuppression",
   executionSchema: AntimagicFieldOngoingSpellSuppressionInvocationSchema,
   admit: admitAntimagicFieldOngoingSpellSuppression,
-  discoverCastAct: discoverAntimagicFieldOngoingSpellSuppressionCastAct,
+  discoverCastAct: discoverActionSpellAreaCastAct,
   resolve: resolveAntimagicFieldOngoingSpellSuppression,
 } satisfies SpellProcedureDeclaration<
   "antimagicFieldOngoingSpellSuppression",

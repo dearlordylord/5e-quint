@@ -42,7 +42,7 @@ import {
   spellActTurnResourceAvailable,
   spellHasAvailableSpend,
 } from "../spell-turn-resources.ts";
-import { spellFillSetContainsOnlySpellCastReactionFacts } from "../spells-resolve-fill-set.ts";
+import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
@@ -179,7 +179,7 @@ function resolveExpeditiousRetreatDash(
       "Expeditious Retreat caster is not in this battle.",
     );
   }
-  if (!spellFillSetContainsOnlySpellCastReactionFacts(input.fillSet, {})) {
+  if (!fillsBelongToSpellCastHoles(input.input.fills)) {
     return invalidResult(
       input.input.state,
       "invalidFill",

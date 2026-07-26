@@ -42,11 +42,13 @@ import type { CharacterBattleSpellcastingExecutionState } from "../../character-
 
 import { needsHolesResult } from "../needs-holes-result.ts";
 import { invalidResult, resolutionFromStateResult } from "../result-helpers.ts";
+import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
 import { spellInvocationEffectiveSpellLevel } from "../spells-effective-level.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
 import {
   spellObjectLightTargetFact,
   spellObjectTargetHole,
+  spellObjectTargetHoleId,
   type ObjectLightTargetFact,
 } from "../spells-targeting.ts";
 import type {
@@ -416,18 +418,9 @@ function resolveObjectLight(
   input: SpellProcedureProfileResolveInput<ObjectLightInvocation>,
 ): BattleResolutionResult {
   if (
-    input.fillSet.targetId !== undefined ||
-    input.fillSet.targetList !== undefined ||
-    input.fillSet.attackRoll !== undefined ||
-    input.fillSet.targetAllocation !== undefined ||
-    input.fillSet.damageRoll !== undefined ||
-    input.fillSet.attackBurstDamageRoll !== undefined ||
-    input.fillSet.healingRoll !== undefined ||
-    input.fillSet.damageDispositions.length > 0 ||
-    input.fillSet.savingThrowOutcomes !== undefined ||
-    input.fillSet.skillChoice !== undefined ||
-    input.fillSet.targetAbilityChoices !== undefined ||
-    input.fillSet.concentrationSavingThrows.length > 0
+    !fillsBelongToSpellCastHoles(input.input.fills, [
+      spellObjectTargetHoleId(input.invocation),
+    ])
   ) {
     return invalidResult(
       input.input.state,

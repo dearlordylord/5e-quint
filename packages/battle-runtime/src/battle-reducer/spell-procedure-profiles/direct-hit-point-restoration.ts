@@ -53,6 +53,8 @@ import {
   spellSelectionResolution,
 } from "../needs-holes-result.ts";
 import { invalidResult } from "../result-helpers.ts";
+import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
+import { ATTACK_TARGET_HOLE_ID } from "../battle-runtime-protocol.ts";
 import { spellHealingAmount } from "../spell-effects.ts";
 import {
   spellHealingRollHole,
@@ -64,7 +66,11 @@ import {
 } from "../spells-discovery.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
 import { healingSpellTargetSelection } from "../spells-resolve-target-selection.ts";
-import { spellTargetHole, spellTargetListHole } from "../spells-targeting.ts";
+import {
+  spellTargetHole,
+  spellTargetListHole,
+  spellTargetListHoleId,
+} from "../spells-targeting.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
@@ -290,14 +296,11 @@ function resolveDirectHitPointRestoration(
   input: DirectHitPointRestorationResolveInput,
 ): BattleResolutionResult {
   if (
-    input.fillSet.attackRoll !== undefined ||
-    input.fillSet.targetAllocation !== undefined ||
-    input.fillSet.damageRoll !== undefined ||
-    input.fillSet.damageDispositions.length > 0 ||
-    input.fillSet.savingThrowOutcomes !== undefined ||
-    input.fillSet.skillChoice !== undefined ||
-    input.fillSet.targetAbilityChoices !== undefined ||
-    input.fillSet.concentrationSavingThrows.length > 0
+    !fillsBelongToSpellCastHoles(input.input.fills, [
+      ATTACK_TARGET_HOLE_ID,
+      spellTargetListHoleId(input.invocation),
+      spellHealingRollHole(input.invocation).holeId,
+    ])
   ) {
     return invalidResult(
       input.input.state,

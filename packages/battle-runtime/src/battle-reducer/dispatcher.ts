@@ -274,10 +274,8 @@ import {
 } from "./spells-resolve.ts";
 import { resolveReleaseSpellCreatedHeldObjectCommand } from "./spells-resolve-release.ts";
 import { resolveDragonsBreathExhaleCommand } from "./dragons-breath.ts";
-import {
-  spellFillSet,
-  spellFillSetContainsOnlySpellCastReactionFacts,
-} from "./spells-resolve-fill-set.ts";
+import { spellFillSet } from "./spells-resolve-fill-set.ts";
+import { fillsBelongToSpellCastHoles } from "./fill-hole-protocol.ts";
 import { validateSavingThrowOutcomes } from "./spells-resolve-save-gates.ts";
 import { INTERRUPT_DECISION_HOLE_ID } from "./battle-runtime-protocol.ts";
 import { activeOngoingFeaturesPreventSpellInvocation } from "./spells-invocation-guards.ts";
@@ -4846,7 +4844,7 @@ function attackHitBonusActionSpellFillValidation(
       result: invalidResult(input.state, "invalidFill", fillSet.message),
     };
   }
-  return spellFillSetContainsOnlySpellCastReactionFacts(fillSet, {})
+  return fillsBelongToSpellCastHoles(input.fills)
     ? { tag: "validNonSave", fillSet }
     : {
         tag: "invalid",

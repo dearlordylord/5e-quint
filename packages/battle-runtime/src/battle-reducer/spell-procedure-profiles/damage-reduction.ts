@@ -38,13 +38,16 @@ import {
 import { breakBattleConcentration } from "../damage-apply.ts";
 import { needsHolesResult } from "../needs-holes-result.ts";
 import { invalidResult, resolutionFromStateResult } from "../result-helpers.ts";
+import { selectSingleSpellTarget } from "../single-spell-target.ts";
+import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
+import { ATTACK_TARGET_HOLE_ID } from "../battle-runtime-protocol.ts";
 import {
   spellRequiresConcentration,
   spendSpellCastResources,
 } from "../spells-resolve-resources.ts";
 import { spellDamageTypeChoiceHole } from "../spells-damage-fills.ts";
 import { scalarBuffActiveEffectExpiration } from "../spells-profiles-support.ts";
-import { spellTargetHole, spellTargetIsLegal } from "../spells-targeting.ts";
+import { spellTargetHole } from "../spells-targeting.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
@@ -218,17 +221,10 @@ function resolveDamageReduction(
   input: SpellProcedureProfileResolveInput<DamageReductionSpellInvocation>,
 ): BattleResolutionResult {
   if (
-    input.fillSet.attackRoll !== undefined ||
-    input.fillSet.targetAllocation !== undefined ||
-    input.fillSet.targetList !== undefined ||
-    input.fillSet.damageRoll !== undefined ||
-    input.fillSet.attackBurstDamageRoll !== undefined ||
-    input.fillSet.healingRoll !== undefined ||
-    input.fillSet.skillChoice !== undefined ||
-    input.fillSet.targetAbilityChoices !== undefined ||
-    input.fillSet.savingThrowOutcomes !== undefined ||
-    input.fillSet.damageDispositions.length > 0 ||
-    input.fillSet.concentrationSavingThrows.length > 0
+    !fillsBelongToSpellCastHoles(input.input.fills, [
+      ATTACK_TARGET_HOLE_ID,
+      spellDamageTypeChoiceHole(input.invocation).holeId,
+    ])
   ) {
     return invalidResult(
       input.input.state,
@@ -237,30 +233,18 @@ function resolveDamageReduction(
     );
   }
 
-  const targetHole = spellTargetHole(
-    input.input.state,
-    input.actorId,
-    input.invocation,
-  );
-  if (input.fillSet.targetId === undefined) {
-    return needsHolesResult(input.input.state, input.input.subject, [
-      targetHole,
-    ]);
-  }
-  if (
-    !spellTargetIsLegal(
-      input.input.state,
-      input.actorId,
-      input.fillSet.targetId,
-      input.invocation,
-      input.fillSet.targetSpatialFacts,
-    )
-  ) {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
+  const targetSelection = selectSingleSpellTarget({
+    state: input.input.state,
+    subject: input.input.subject,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    targetId: input.fillSet.targetId,
+    targetSpatialFacts: input.fillSet.targetSpatialFacts,
+    invalidTargetMessage:
       "Spell target must be a combatant within the selected spell's supported range.",
-    );
+  });
+  if (targetSelection.tag !== "selected") {
+    return targetSelection;
   }
   if (input.fillSet.damageTypeChoice === undefined) {
     return needsHolesResult(input.input.state, input.input.subject, [
@@ -281,7 +265,7 @@ function resolveDamageReduction(
 
   const spellCastReactionWindow = maybeOpenSpellCastReactionWindow(
     input,
-    [input.fillSet.targetId],
+    [targetSelection.targetId],
     { kind: "magicAction" },
     undefined,
   );
@@ -295,7 +279,7 @@ function resolveDamageReduction(
   const effected = applyDamageReductionEffect(
     concentrationBase,
     input.actorId,
-    input.fillSet.targetId,
+    targetSelection.targetId,
     input.fillSet.damageTypeChoice.value,
     input.invocation,
   );

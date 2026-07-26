@@ -32,13 +32,10 @@ import { movementFeet } from "@dnd/shared/types";
 import { Either } from "effect";
 
 import {
-  type BattleActDiscoveryCandidate,
   type BattleResolutionResult,
-  type BattleState,
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
-import { type CombatantId } from "../../identity.ts";
-import { spellAreaChoiceHole } from "../spells-holes-fills.ts";
+import { discoverActionSpellAreaCastAct } from "../spell-area-cast-discovery.ts";
 import { resolveWebRestraintHazardSpellAct } from "../spells-resolve-area-effects.ts";
 import type {
   SpellAdmissionContext,
@@ -237,24 +234,6 @@ function isWebRestraintEscapeOperation(
   );
 }
 
-function discoverWebRestraintHazardCastAct(
-  _state: BattleState,
-  actorId: CombatantId,
-  invocation: import("../../battle-state-execution.ts").BattleExecutableSpellInvocation<WebRestraintHazardSpellInvocation>,
-): readonly BattleActDiscoveryCandidate[] {
-  return [
-    {
-      subject: {
-        tag: "actionSpell",
-        actorId,
-        procedureRef: invocation.sourceProcedureRef,
-        mode: { tag: "cast" },
-      },
-      initialHoles: [spellAreaChoiceHole(invocation)],
-    },
-  ];
-}
-
 function resolveWebRestraintHazard(
   input: WebRestraintHazardResolveInput,
 ): BattleResolutionResult {
@@ -286,7 +265,7 @@ export const webRestraintHazardProfile = {
   procedure: "webRestraintHazard",
   executionSchema: WebRestraintHazardInvocationSchema,
   admit: admitWebRestraintHazard,
-  discoverCastAct: discoverWebRestraintHazardCastAct,
+  discoverCastAct: discoverActionSpellAreaCastAct,
   resolve: resolveWebRestraintHazard,
 } satisfies SpellProcedureDeclaration<
   "webRestraintHazard",
