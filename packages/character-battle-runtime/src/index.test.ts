@@ -29,6 +29,8 @@ import type {
   BattleRuntimeContext,
   BattleRuntimeSession,
   BattleState,
+  BattleCompanionState,
+  RetainedCompanionBattleSelection,
   CharacterBattleResourceOwnership,
   CharacterBattleResourceState,
   CharacterBattleSpellcastingExecutionState,
@@ -1143,6 +1145,107 @@ describe("Character Sheet battle handoff", () => {
     });
   });
 
+  test("admits Pact of the Chain special forms in embodied and stored states", () => {
+    const ownerId = combatantId("pact-chain-companion-owner");
+    const companionId = combatantId("pact-chain-companion");
+    const sheet = expectRight(
+      rebuildCharacterSheetFixture({
+        characterId: characterSheetId("character:pact-chain-companion"),
+        build: warlockInvocationBuild({ pactOfTheChain: true }),
+        currentHp: Hp(8),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+    const retained = expectRight(
+      createRetainedFamiliarLikeCompanion({
+        sheet,
+        unitLibrary,
+        statBlockCatalog,
+        companionId: retainedCompanionId("companion:pact-chain-skeleton"),
+        source: {
+          tag: "invocationSpellAccess",
+          spellId: authoredUnitId("find_familiar"),
+        },
+        selectedForm: {
+          tag: "pactOfTheChainSpecialForm",
+          formId: "skeleton",
+        },
+        creatureTypeOverrideChoiceId: "fiend",
+      }),
+    );
+    const ownerInit = expectRight(
+      characterSheetBattleInit({
+        sheet: retained,
+        unitLibrary,
+        statBlockCatalog,
+        combatantId: ownerId,
+        displayName: "Pact Companion Owner",
+        initiative: initiativeScore(12),
+      }),
+    );
+    const started = expectRight(
+      startBattle({
+        battleId: battleId("pact-chain-companion-admission"),
+        combatants: [ownerInit],
+      }),
+    );
+    const admissionBase = {
+      sheet: retained,
+      unitLibrary,
+      ownerCombatantId: ownerId,
+      companionCombatantId: companionId,
+      initiative: initiativeScore(14),
+      placement: { kind: "unoccupiedSpaceWithinSpellRange" as const },
+      initialCombatantOrder: new Map([
+        [ownerId, 0],
+        [companionId, 1],
+      ]),
+      statBlockCatalog,
+    };
+    const admitted = expectRight(
+      admitCharacterSheetCompanionToBattle({
+        ...admissionBase,
+        state: started.state,
+      }),
+    );
+    expect(admitted.companions.get(ownerId)).toMatchObject({
+      status: "present",
+      formAccess: "pactOfTheChain",
+    });
+
+    const dismissed = retainedCompanionSheetWithManifestation(
+      retained,
+      (manifestation) => {
+        if (manifestation.tag === "disappearedAtZeroHitPoints") {
+          throw new Error("Expected embodied Pact companion fixture.");
+        }
+        return { ...manifestation, tag: "temporarilyDismissed" };
+      },
+    );
+    expect(
+      admitCharacterSheetCompanionToBattle({
+        ...admissionBase,
+        sheet: dismissed,
+        session: started,
+      }),
+    ).toMatchObject({
+      _tag: "Right",
+      right: {
+        state: {
+          companions: expect.any(Map),
+        },
+      },
+    });
+    expect(
+      admitCharacterSheetCompanionToBattle({
+        ...admissionBase,
+        sheet: dismissed,
+        state: admitted,
+      }),
+    ).toMatchObject({ _tag: "Left" });
+  });
+
   test("reports retained companion settlement identity and manifestation conflicts", () => {
     const sheet = retainedOrdinaryCompanionSheet({
       characterIdValue: "character:companion-settlement-boundaries",
@@ -1209,11 +1312,7 @@ describe("Character Sheet battle handoff", () => {
       state: BattleState,
       selectedSheet: CharacterSheet = sheet,
       retainedCompanionSelection:
-        | typeof selection
-        | {
-            readonly formAccess: "pactOfTheChain";
-            readonly selectedForm: typeof selection.selectedForm;
-          }
+        | RetainedCompanionBattleSelection
         | undefined = selection,
     ) =>
       settleCompanionFromBattle({
@@ -1227,6 +1326,15 @@ describe("Character Sheet battle handoff", () => {
           : { retainedCompanionSelection }),
       });
 
+    expect(
+      settleCompanionFromBattle({
+        sheet,
+        state: admitted,
+        ownerCombatantId: ownerId,
+        unitLibrary,
+        retainedCompanionSelection: selection,
+      }),
+    ).toMatchObject({ _tag: "Right" });
     expect(
       settleCompanionFromBattle({
         sheet,
@@ -1308,6 +1416,216 @@ describe("Character Sheet battle handoff", () => {
     expect(settle(missingCombatant)).toMatchObject({
       _tag: "Left",
       left: { message: expect.stringContaining("combatant is missing") },
+    });
+
+    if (companion.status !== "present") {
+      throw new Error("Expected present admitted companion fixture.");
+    }
+    const companionCombatant = admitted.combatants.get(companionId);
+    const ownerCombatant = admitted.combatants.get(ownerId);
+    if (companionCombatant === undefined || ownerCombatant === undefined) {
+      throw new Error("Expected owner and companion combatant fixtures.");
+    }
+    const zeroHpCompanionState = expectRight(
+      startBattle({
+        battleId: battleId("companion-settlement-zero-hp"),
+        combatants: [
+          battleCreatureInitFromStatBlock({
+            combatantId: companionId,
+            statBlock: statBlockCatalog.requireStatBlock("stat_block_cat"),
+            initiative: initiativeScore(14),
+            currentHp: Hp(0),
+          }),
+        ],
+      }),
+    ).state;
+    const zeroHpCompanion = zeroHpCompanionState.combatants.get(companionId);
+    if (zeroHpCompanion === undefined) {
+      throw new Error("Expected zero-HP companion combatant fixture.");
+    }
+    expect(
+      settle({
+        ...admitted,
+        combatants: new Map(admitted.combatants).set(
+          companionId,
+          zeroHpCompanion,
+        ),
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: { message: expect.stringContaining("must have positive HP") },
+    });
+    expect(
+      settle({
+        ...admitted,
+        combatants: new Map(admitted.combatants).set(companionId, {
+          ...ownerCombatant,
+          combatantId: companionId,
+        }),
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message: expect.stringContaining(
+          "Present companion Stat Block combatant is missing",
+        ),
+      },
+    });
+    const ratState = expectRight(
+      startBattle({
+        battleId: battleId("companion-settlement-rat-proof"),
+        combatants: [
+          battleCreatureInitFromStatBlock({
+            combatantId: companionId,
+            statBlock: statBlockCatalog.requireStatBlock("stat_block_rat"),
+            initiative: initiativeScore(14),
+          }),
+        ],
+      }),
+    ).state;
+    const ratCombatant = ratState.combatants.get(companionId);
+    if (ratCombatant === undefined) {
+      throw new Error("Expected Rat combatant fixture.");
+    }
+    expect(
+      settle({
+        ...admitted,
+        combatants: new Map(admitted.combatants).set(companionId, ratCombatant),
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message: expect.stringContaining(
+          "cannot be joined to its retained authored selection",
+        ),
+      },
+    });
+    expect(
+      settle(
+        {
+          ...admitted,
+          companions: new Map([
+            [
+              ownerId,
+              {
+                ...companion,
+                formAccess: "pactOfTheChain",
+              },
+            ],
+          ]),
+        },
+        sheet,
+        {
+          formAccess: "pactOfTheChain",
+          selectedForm: {
+            tag: "pactOfTheChainSpecialForm",
+            formId: "sprite",
+          },
+        },
+      ),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message: expect.stringContaining(
+          "does not match its resolved Stat Block id",
+        ),
+      },
+    });
+
+    const retained = characterSheetCompanion(sheet);
+    if (
+      retained.tag !== "retainedOneAtATime" ||
+      retained.companion.manifestation.tag !== "embodiedOutsideBattle"
+    ) {
+      throw new Error("Expected embodied retained companion fixture.");
+    }
+    const storedCompanionBase = {
+      ownerId: companion.ownerId,
+      identity: companion.identity,
+      protocol: companion.protocol,
+      creatureTypeOverride: companion.creatureTypeOverride,
+      formAccess: companion.formAccess,
+      resolvedStatBlockId: authoredStatBlockId("stat_block_cat"),
+    } as const;
+    const temporarilyDismissed = {
+      ...storedCompanionBase,
+      status: "temporarilyDismissed",
+      reappearanceCombatantId: companionId,
+      hitPoints: retained.companion.manifestation.hitPoints,
+    } as const satisfies BattleCompanionState;
+    expect(
+      settle({
+        ...admitted,
+        companions: new Map([[ownerId, temporarilyDismissed]]),
+      }),
+    ).toMatchObject({
+      _tag: "Right",
+      right: {
+        companion: {
+          companion: { manifestation: { tag: "temporarilyDismissed" } },
+        },
+      },
+    });
+    const disappeared = {
+      ...storedCompanionBase,
+      status: "disappearedAtZeroHitPoints",
+    } as const satisfies BattleCompanionState;
+    expect(
+      settle({
+        ...admitted,
+        companions: new Map([[ownerId, disappeared]]),
+      }),
+    ).toMatchObject({
+      _tag: "Right",
+      right: {
+        companion: {
+          companion: { manifestation: { tag: "disappearedAtZeroHitPoints" } },
+        },
+      },
+    });
+    expect(
+      settleCompanionFromBattle({
+        sheet,
+        state: {
+          ...admitted,
+          companions: new Map([[ownerId, disappeared]]),
+        },
+        ownerCombatantId: ownerId,
+        unitLibrary,
+        retainedCompanionSelection: {
+          formAccess: "findFamiliar",
+          selectedForm: {
+            tag: "challengeRatingZeroBeast",
+            statBlockId: authoredStatBlockId("stat_block_cat"),
+          },
+        },
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message: expect.stringContaining("requires a Stat Block catalog"),
+      },
+    });
+    expect(
+      settle({
+        ...admitted,
+        companions: new Map([
+          [
+            ownerId,
+            {
+              ...temporarilyDismissed,
+              resolvedStatBlockId: authoredStatBlockId("stat_block_rat"),
+            },
+          ],
+        ]),
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message: expect.stringContaining(
+          "cannot be joined to its retained authored selection",
+        ),
+      },
     });
   });
 
@@ -1779,19 +2097,82 @@ describe("Character Sheet battle handoff", () => {
         ],
       }),
     );
-
-    const admitted = admitCharacterSheetCompanionToBattle({
-      sheet: forged,
+    const admissionInput = {
       state: state.state,
       unitLibrary,
       ownerCombatantId: ownerId,
       companionCombatantId: companionId,
       initiative: initiativeScore(14),
-      placement: { kind: "unoccupiedSpaceWithinSpellRange" },
+      placement: { kind: "unoccupiedSpaceWithinSpellRange" as const },
       initialCombatantOrder: new Map([
         [ownerId, 0],
         [companionId, 1],
       ]),
+    };
+
+    expect(
+      admitCharacterSheetCompanionToBattle({
+        ...admissionInput,
+        sheet: retained,
+        statBlockCatalog,
+      }),
+    ).toMatchObject({ _tag: "Right" });
+
+    const mismatchedProof = expectRight(
+      replaceCharacterSheetCompanion({
+        sheet: retained,
+        companion: {
+          tag: "retainedOneAtATime",
+          companion: {
+            ...retainedCompanion.companion,
+            manifestation: {
+              ...retainedCompanion.companion.manifestation,
+              resolvedStatBlockId: authoredStatBlockId("stat_block_rat"),
+            },
+          },
+        },
+      }),
+    );
+    expect(
+      admitCharacterSheetCompanionToBattle({
+        ...admissionInput,
+        sheet: mismatchedProof,
+        statBlockCatalog,
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message: expect.stringContaining(
+          "does not match its resolved Stat Block id",
+        ),
+      },
+    });
+
+    const catalogWithoutCat: StatBlockCatalog = {
+      getStatBlock: (id) =>
+        id === "stat_block_cat"
+          ? Option.none()
+          : statBlockCatalog.getStatBlock(id),
+      listStatBlocks: () =>
+        statBlockCatalog
+          .listStatBlocks()
+          .filter((statBlock) => statBlock.id !== "stat_block_cat"),
+      requireStatBlock: (id) => statBlockCatalog.requireStatBlock(id),
+    };
+    expect(
+      admitCharacterSheetCompanionToBattle({
+        ...admissionInput,
+        sheet: retained,
+        statBlockCatalog: catalogWithoutCat,
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: { message: expect.stringContaining("Stat Block is missing") },
+    });
+
+    const admitted = admitCharacterSheetCompanionToBattle({
+      sheet: forged,
+      ...admissionInput,
       statBlockCatalog,
     });
 
