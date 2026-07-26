@@ -4334,6 +4334,78 @@ describe("Character Sheet battle handoff", () => {
           "Battle handoff Spell Slot expenditure is source-ambiguous for level 3.",
       }),
     );
+
+    const ordinarySlotsExhausted = expectRight(
+      rebuildCharacterSheetFixture({
+        characterId: characterSheetId("character:sorcerer-created-slot-spend"),
+        build: sorcererMetamagicBuild(),
+        currentHp: Hp(24),
+        tempHp: Hp(0),
+        unitLibrary,
+        spellSlotExpenditures: [
+          { spellLevel: spellSlotLevel(3), expended: resourceCount(2) },
+        ],
+      }),
+    );
+    const createdAfterOrdinaryExhausted = expectRight(
+      convertFontOfMagicSorceryPointsToSpellSlot({
+        sheet: ordinarySlotsExhausted,
+        unitLibrary,
+        spellLevel: spellSlotLevel(3),
+      }),
+    );
+    const createdSlotSpent = expectRight(
+      settleHandoffBranchToCharacterSheet({
+        sheet: createdAfterOrdinaryExhausted,
+        unitLibrary,
+        combatant: handoffBranchCombatant({
+          origin: {
+            kind: "character",
+            characterId: characterId("character:sorcerer-created-slot-spend"),
+            spellcasting: {
+              sourceClassName: "sorcerer",
+              spellcastingAbilityModifier: abilityModifier(3),
+              proficiencyBonus: proficiencyBonus(3),
+              canCastSpells: true,
+              pactOfTheChainFindFamiliarInvocationMode: null,
+              spellSlots: [
+                {
+                  spellLevel: spellSlotLevel(1),
+                  count: resourceCount(4),
+                  expended: resourceCount(0),
+                },
+                {
+                  spellLevel: spellSlotLevel(2),
+                  count: resourceCount(3),
+                  expended: resourceCount(0),
+                },
+                {
+                  spellLevel: spellSlotLevel(3),
+                  count: resourceCount(3),
+                  expended: resourceCount(3),
+                },
+              ],
+            },
+          },
+          hp: Hp(24),
+          maxHp: sheetMaximumHp(createdAfterOrdinaryExhausted),
+          tempHp: Hp(0),
+          positiveHpUnconscious: null,
+        }),
+      }),
+    );
+    expect(characterSheetSpellSlotSourceState(createdSlotSpent)).toEqual({
+      ordinarySpellSlotExpenditures: [
+        { spellLevel: spellSlotLevel(3), expended: resourceCount(2) },
+      ],
+      createdSpellSlots: [
+        {
+          spellLevel: spellSlotLevel(3),
+          count: resourceCount(1),
+          expended: resourceCount(1),
+        },
+      ],
+    });
   });
 
   test("keeps Font of Magic Spell Slot creation at the Character Sheet boundary during battle", () => {
