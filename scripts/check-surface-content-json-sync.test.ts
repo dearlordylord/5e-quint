@@ -62,6 +62,20 @@ describe("Surface content publication checker", () => {
       },
     },
     {
+      name: "empty part with a nonempty-part status",
+      result: {
+        tag: "invalid-locator",
+        resolutions: [{ part: "", status: "ok-heading" }],
+      },
+    },
+    {
+      name: "nonempty part with the empty-part status",
+      result: {
+        tag: "invalid-locator",
+        resolutions: [{ part: "synthetic", status: "empty-section-part" }],
+      },
+    },
+    {
       name: "empty successful excerpt",
       result: { tag: "ok", rulesExcerpt: "" },
     },

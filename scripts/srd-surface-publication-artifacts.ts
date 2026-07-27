@@ -14,23 +14,28 @@ import {
 } from "../packages/surface/src/surface/schema.ts";
 import { srdSurface } from "../packages/surface/src/surface/surface-catalog.ts";
 
-const SourceResolutionSchema = Schema.Struct({
-  part: Schema.String,
-  status: Schema.Literal(
-    "empty-section-part",
-    "ok-line-range",
-    "ok-line-range-alias",
-    "bad-line-range",
-    "ok-heading",
-    "ok-heading-alias",
-    "ok-prose-anchor",
-    "ok-prose-anchor-alias",
-    "missing-anchor",
-    "missing-file",
-    "ok-file",
-    "ok-file-alias",
-  ),
-});
+const SourceResolutionSchema = Schema.Union(
+  Schema.Struct({
+    part: Schema.Literal(""),
+    status: Schema.Literal("empty-section-part"),
+  }),
+  Schema.Struct({
+    part: Schema.NonEmptyTrimmedString,
+    status: Schema.Literal(
+      "ok-line-range",
+      "ok-line-range-alias",
+      "bad-line-range",
+      "ok-heading",
+      "ok-heading-alias",
+      "ok-prose-anchor",
+      "ok-prose-anchor-alias",
+      "missing-anchor",
+      "missing-file",
+      "ok-file",
+      "ok-file-alias",
+    ),
+  }),
+);
 type SourceResolution = Schema.Schema.Type<typeof SourceResolutionSchema>;
 
 const RulesExcerptResultSchema = Schema.Union(
