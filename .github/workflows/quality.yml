@@ -36,6 +36,28 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Install ripgrep
+        env:
+          RIPGREP_SHA256: 4cf9f2741e6c465ffdb7c26f38056a59e2a2544b51f7cc128ef28337eeae4d8e
+          RIPGREP_VERSION: 14.1.1
+        run: |
+          set -euo pipefail
+          archive="$RUNNER_TEMP/ripgrep.tar.gz"
+          install_dir="$RUNNER_TEMP/ripgrep"
+          asset="ripgrep-${RIPGREP_VERSION}-x86_64-unknown-linux-musl"
+          curl \
+            --fail \
+            --location \
+            --silent \
+            --show-error \
+            "https://github.com/BurntSushi/ripgrep/releases/download/${RIPGREP_VERSION}/${asset}.tar.gz" \
+            --output "$archive"
+          echo "$RIPGREP_SHA256  $archive" | sha256sum --check
+          mkdir -p "$install_dir"
+          tar -xzf "$archive" -C "$install_dir" --strip-components=1
+          echo "$install_dir" >> "$GITHUB_PATH"
+          "$install_dir/rg" --version
+
       - name: Install Dhall JSON
         run: |
           set -euo pipefail
