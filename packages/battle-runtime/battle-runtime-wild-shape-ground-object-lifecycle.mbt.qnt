@@ -7,6 +7,10 @@ module battleRuntimeWildShapeGroundObjectLifecycleMbt {
     | FallenReverted
     | HeldWithThreeUses
     | MergedActive
+    | FallenActiveAgain
+    | FallenRevertedAgain
+    | HeldWithTwoUses
+    | ArmorFallenReverted
 
   var qState: WildShapeGroundObjectLifecycle
 
@@ -45,6 +49,31 @@ module battleRuntimeWildShapeGroundObjectLifecycleMbt {
     qState' = HeldWithThreeUses,
   }
 
+  action doAssumeAgainWhileFallen = all {
+    qState == FallenReverted,
+    qState' = FallenActiveAgain,
+  }
+
+  action doRevertFallenAgain = all {
+    qState == FallenActiveAgain,
+    qState' = FallenRevertedAgain,
+  }
+
+  action doPickupFallenWeaponAgain = all {
+    qState == FallenRevertedAgain,
+    qState' = HeldWithTwoUses,
+  }
+
+  action doFallArmorAndRevert = all {
+    qState == HeldWithFourUses,
+    qState' = ArmorFallenReverted,
+  }
+
+  action doRejectArmorHeldWeaponPickup = all {
+    qState == ArmorFallenReverted,
+    qState' = ArmorFallenReverted,
+  }
+
   action doMergeOnWildShape = all {
     qState == HeldWithFourUses,
     qState' = MergedActive,
@@ -61,6 +90,11 @@ module battleRuntimeWildShapeGroundObjectLifecycleMbt {
     doFallOnWildShape,
     doRevertFallen,
     doPickupFallenWeapon,
+    doAssumeAgainWhileFallen,
+    doRevertFallenAgain,
+    doPickupFallenWeaponAgain,
+    doFallArmorAndRevert,
+    doRejectArmorHeldWeaponPickup,
     doMergeOnWildShape,
     doRevertMerged,
     doStutter,

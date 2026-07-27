@@ -69,6 +69,7 @@ type RuntimeState = {
 const druidId = combatantId("wild-shape-ground-object-mbt-druid");
 const opponentId = combatantId("wild-shape-ground-object-mbt-opponent");
 const quarterstaffObjectId = battleObjectId("main:weapon_quarterstaff");
+const chainMailObjectId = battleObjectId("armor:equipment_chain_mail");
 const groundPositionId = battleTablePositionId(
   "wild-shape-ground-object-mbt-position",
 );
@@ -79,6 +80,11 @@ const driverSchema = {
   doFallOnWildShape: {},
   doRevertFallen: {},
   doPickupFallenWeapon: {},
+  doAssumeAgainWhileFallen: {},
+  doRevertFallenAgain: {},
+  doPickupFallenWeaponAgain: {},
+  doFallArmorAndRevert: {},
+  doRejectArmorHeldWeaponPickup: {},
   doMergeOnWildShape: {},
   doRevertMerged: {},
   doStutter: {},
@@ -110,6 +116,25 @@ describe("Wild Shape ground-object lifecycle MBT parity", () => {
       custody: "held",
       groundSource: "none",
       shillelaghAvailable: true,
+    });
+
+    const activeAgain = assumeFormWhileQuarterstaffIsGrounded(fallenReversion);
+    expect(projectRuntimeState(activeAgain)).toMatchObject({
+      custody: "ground",
+      formActive: true,
+      shillelaghAvailable: false,
+      wildShapeUsesRemaining: 2,
+    });
+
+    const armorReversion = revertForm(
+      assumeForm(initialRuntimeState("armor"), "falls"),
+    );
+    expect(
+      projectRuntimeState(rejectArmorHeldWeaponPickup(armorReversion)),
+    ).toMatchObject({
+      custody: "ground",
+      formActive: false,
+      shillelaghAvailable: false,
     });
   });
 
@@ -150,6 +175,21 @@ function createDriver() {
       doPickupFallenWeapon: () => {
         state = pickUpQuarterstaff(state);
       },
+      doAssumeAgainWhileFallen: () => {
+        state = assumeFormWhileQuarterstaffIsGrounded(state);
+      },
+      doRevertFallenAgain: () => {
+        state = revertForm(state);
+      },
+      doPickupFallenWeaponAgain: () => {
+        state = pickUpQuarterstaff(state);
+      },
+      doFallArmorAndRevert: () => {
+        state = revertForm(assumeForm(initialRuntimeState("armor"), "falls"));
+      },
+      doRejectArmorHeldWeaponPickup: () => {
+        state = rejectArmorHeldWeaponPickup(state);
+      },
       doMergeOnWildShape: () => {
         state = assumeForm(state, "merges");
       },
@@ -171,7 +211,9 @@ const groundObjectLifecycleStateCheck = stateCheck(
   },
 );
 
-function initialRuntimeState(): RuntimeState {
+function initialRuntimeState(
+  loadoutKind: "weapon" | "armor" = "weapon",
+): RuntimeState {
   return {
     battle: startBattleSessionRight({
       battleId: battleId("wild-shape-ground-object-lifecycle-mbt"),
@@ -185,16 +227,28 @@ function initialRuntimeState(): RuntimeState {
           druidWildShapeAvailableForms: [
             statBlockCatalog.requireStatBlock(ridingHorseId),
           ],
-          selectedLoadout: {
-            weapon: {
-              itemId: quarterstaffObjectId,
-              unitId: parseSharedUnitId("weapon_quarterstaff"),
-              grip: "one_handed",
-            },
-          },
-          attack: testCharacterWeaponAttackForUnit(
-            parseSharedUnitId("weapon_quarterstaff"),
-          ),
+          selectedLoadout:
+            loadoutKind === "weapon"
+              ? {
+                  weapon: {
+                    itemId: quarterstaffObjectId,
+                    unitId: parseSharedUnitId("weapon_quarterstaff"),
+                    grip: "one_handed",
+                  },
+                }
+              : {
+                  armor: {
+                    itemId: chainMailObjectId,
+                    unitId: parseSharedUnitId("equipment_chain_mail"),
+                  },
+                },
+          ...(loadoutKind === "weapon"
+            ? {
+                attack: testCharacterWeaponAttackForUnit(
+                  parseSharedUnitId("weapon_quarterstaff"),
+                ),
+              }
+            : {}),
           spellcasting: {
             ...wizardSpellcasting({
               cantrips: [spellRecord("shillelagh")],
@@ -312,6 +366,63 @@ function revertForm(state: RuntimeState): RuntimeState {
   };
 }
 
+function assumeFormWhileQuarterstaffIsGrounded(
+  state: RuntimeState,
+): RuntimeState {
+  const battle = battleRuntimeSessionForTest({
+    ...state.battle,
+    state: {
+      ...state.battle.state,
+      currentTurnResources: {
+        ...state.battle.state.currentTurnResources,
+        currentHasBonusAction: true,
+      },
+    },
+  });
+  const act = discoverBattleActs(battle).find(
+    (candidate) =>
+      battleActDruidWildShapePresentation(candidate)?.formStatBlockId ===
+      ridingHorseId,
+  );
+  if (act?.subject.tag !== "druidWildShape") {
+    throw new Error("Expected second Druid Wild Shape assume-form act.");
+  }
+  const needsLimbWitness = resolveBattleSubject({
+    state: battle.state,
+    subject: act.subject,
+    fills: [],
+  });
+  if (needsLimbWitness.tag !== "needsHoles") {
+    throw new Error("Expected a second Wild Shape object-handling witness.");
+  }
+  const dispositionHole = needsLimbWitness.holes.find(
+    (hole) => hole.kind === "wildShapeEquipmentDisposition",
+  );
+  if (dispositionHole === undefined) {
+    throw new Error("Expected a second Wild Shape equipment disposition hole.");
+  }
+  expect(dispositionHole.candidates).toEqual([]);
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state: battle.state,
+      subject: act.subject,
+      fills: [
+        {
+          kind: "wildShapeEquipmentDisposition",
+          holeId: dispositionHole.holeId,
+          value: {
+            formLimbs: { kind: "canHandleObjects" },
+            choices: [],
+          },
+        },
+      ],
+    }),
+  );
+  return {
+    battle: battleRuntimeSessionForTest({ ...battle, state: resolved.state }),
+  };
+}
+
 function pickUpQuarterstaff(state: RuntimeState): RuntimeState {
   const result = applyBattleHeldWeaponPickup(state.battle.state, {
     interaction: {
@@ -335,6 +446,25 @@ function pickUpQuarterstaff(state: RuntimeState): RuntimeState {
   };
 }
 
+function rejectArmorHeldWeaponPickup(state: RuntimeState): RuntimeState {
+  const result = applyBattleHeldWeaponPickup(state.battle.state, {
+    interaction: {
+      actorId: druidId,
+      objectId: chainMailObjectId,
+      actorSpace: {
+        kind: "actorSpace",
+        positionId: groundPositionId,
+      },
+    },
+    loadoutSlot: "mainWeapon",
+  });
+  expect(result).toMatchObject({
+    tag: "invalid",
+    reason: "selectedLoadoutMismatch",
+  });
+  return state;
+}
+
 function projectRuntimeState(
   state: RuntimeState,
 ): GroundObjectLifecycleProjection {
@@ -342,16 +472,22 @@ function projectRuntimeState(
   if (druid?.origin.kind !== "character") {
     throw new Error("Expected Druid character combatant.");
   }
+  const selectedObjectId =
+    druid.origin.selectedLoadout.weapon?.itemId ??
+    druid.origin.selectedLoadout.armor?.itemId;
+  if (selectedObjectId === undefined) {
+    throw new Error("Expected selected weapon or armor lifecycle object.");
+  }
   const groundObject = state.battle.state.groundObjects
     .get(druidId)
-    ?.get(quarterstaffObjectId);
+    ?.get(selectedObjectId);
   const disposition = activeDruidWildShapeEffect(druid)?.equipmentDisposition;
   const custody =
     groundObject !== undefined
       ? "ground"
       : disposition?.some(
             (entry) =>
-              entry.item.objectId === quarterstaffObjectId &&
+              entry.item.objectId === selectedObjectId &&
               entry.disposition === "merges",
           )
         ? "merged"
@@ -408,6 +544,34 @@ const QUINT_PROJECTION_BY_LIFECYCLE_TAG: Readonly<
     wildShapeUsesRemaining: 3,
   },
   FallenReverted: {
+    custody: "ground",
+    groundSource: "druidWildShape",
+    formActive: false,
+    shillelaghAvailable: false,
+    wildShapeUsesRemaining: 3,
+  },
+  FallenActiveAgain: {
+    custody: "ground",
+    groundSource: "druidWildShape",
+    formActive: true,
+    shillelaghAvailable: false,
+    wildShapeUsesRemaining: 2,
+  },
+  FallenRevertedAgain: {
+    custody: "ground",
+    groundSource: "druidWildShape",
+    formActive: false,
+    shillelaghAvailable: false,
+    wildShapeUsesRemaining: 2,
+  },
+  HeldWithTwoUses: {
+    custody: "held",
+    groundSource: "none",
+    formActive: false,
+    shillelaghAvailable: true,
+    wildShapeUsesRemaining: 2,
+  },
+  ArmorFallenReverted: {
     custody: "ground",
     groundSource: "druidWildShape",
     formActive: false,

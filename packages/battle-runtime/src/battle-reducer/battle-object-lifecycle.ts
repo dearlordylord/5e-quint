@@ -48,6 +48,7 @@ export type BattleHeldWeaponPickupResult =
       readonly reason:
         | "missingCombatant"
         | "actorNotCharacter"
+        | "activeWildShape"
         | "objectNotOnGround"
         | "positionMismatch"
         | "selectedLoadoutMismatch";
@@ -145,6 +146,15 @@ export function applyBattleHeldWeaponPickup(
       tag: "invalid",
       reason: "actorNotCharacter",
       message: "Battle loadout object pickup requires a character actor.",
+    };
+  }
+  if (
+    actor.activeEffects.some((effect) => effect.kind === "druidWildShapeForm")
+  ) {
+    return {
+      tag: "invalid",
+      reason: "activeWildShape",
+      message: "Held-weapon pickup requires Wild Shape to have ended.",
     };
   }
   const actorGroundObjects = state.groundObjects.get(interaction.actorId);

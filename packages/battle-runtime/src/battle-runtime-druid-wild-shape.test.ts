@@ -2525,6 +2525,22 @@ test("fallen Wild Shape weapons stay unavailable after reversion until picked up
       ]),
     ]),
   );
+  expect(
+    applyBattleHeldWeaponPickup(fallen.state, {
+      interaction: {
+        actorId: druidId,
+        objectId: quarterstaff.objectId,
+        actorSpace: {
+          kind: "actorSpace",
+          positionId: druidGroundPositionId,
+        },
+      },
+      loadoutSlot: "mainWeapon",
+    }),
+  ).toMatchObject({
+    tag: "invalid",
+    reason: "activeWildShape",
+  });
   const dismissTurn = restoreBonusAction(fallen.state);
   const dismissed = requireResolved(
     resolveDruidWildShape(

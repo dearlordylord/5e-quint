@@ -57,7 +57,8 @@ Status: implemented, including durable fallen-equipment lifecycle follow-up
   `groundObjects`; it does not copy ownership or add held/equipped flags.
 - The typed held-weapon pickup validates character, table-supplied ground
   position, selected main/off-hand loadout slot, and object identity before
-  removing the overlay. It does not admit armor or Shield pickup/equip.
+  removing the overlay. It requires Wild Shape to have ended and does not admit
+  armor or Shield pickup/equip.
 - Command Drop already has a narrow canonical held-object projection for
   character loadout in `packages/battle-runtime/src/battle-reducer/turn-end-movement.ts`.
   That helper proves loadout-derived object facts can be owned without copying
