@@ -12,19 +12,33 @@
         "tiers": [
           {
             "minimumClassLevel": 3,
-            "spellIds": ["aid", "bless", "cure_wounds", "lesser_restoration"]
+            "spellIds": [
+              "aid",
+              "bless",
+              "cure_wounds",
+              "lesser_restoration"
+            ]
           },
           {
             "minimumClassLevel": 5,
-            "spellIds": ["mass_healing_word", "revivify"]
+            "spellIds": [
+              "mass_healing_word",
+              "revivify"
+            ]
           },
           {
             "minimumClassLevel": 7,
-            "spellIds": ["aura_of_life", "death_ward"]
+            "spellIds": [
+              "aura_of_life",
+              "death_ward"
+            ]
           },
           {
             "minimumClassLevel": 9,
-            "spellIds": ["greater_restoration", "mass_cure_wounds"]
+            "spellIds": [
+              "greater_restoration",
+              "mass_cure_wounds"
+            ]
           }
         ]
       }

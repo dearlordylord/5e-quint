@@ -18,7 +18,9 @@
           },
           "disposition": "willing",
           "mode": "choose_up_to",
-          "targetKinds": ["creature"]
+          "targetKinds": [
+            "creature"
+          ]
         }
       }
     },
@@ -48,7 +50,10 @@
               "carriedOrHeldObjects": "cannot_be_dropped_used_or_interacted_with",
               "communication": "cannot_talk",
               "objectManipulation": "cannot_manipulate_objects",
-              "prohibitedActivities": ["attack", "spellcasting"]
+              "prohibitedActivities": [
+                "attack",
+                "spellcasting"
+              ]
             },
             "kind": "spell_effect_mist_cloud",
             "movement": {
@@ -58,9 +63,19 @@
               "speedKind": "fly"
             },
             "passive": {
-              "conditionImmunities": ["prone"],
-              "damageResistances": ["bludgeoning", "piercing", "slashing"],
-              "savingThrowAdvantage": ["str", "dex", "con"]
+              "conditionImmunities": [
+                "prone"
+              ],
+              "damageResistances": [
+                "bludgeoning",
+                "piercing",
+                "slashing"
+              ],
+              "savingThrowAdvantage": [
+                "str",
+                "dex",
+                "con"
+              ]
             },
             "tableSpatial": {
               "creatureSpace": "can_enter_and_occupy_other_creature_space",

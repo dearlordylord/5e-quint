@@ -1,6 +1,11 @@
 {
   "armorTraining": {
-    "categories": ["light", "medium", "heavy", "shield"],
+    "categories": [
+      "light",
+      "medium",
+      "heavy",
+      "shield"
+    ],
     "kind": "trained"
   },
   "className": "fighter",
@@ -69,14 +74,20 @@
   },
   "name": "Fighter",
   "primaryAbilities": {
-    "abilities": ["str", "dex"],
+    "abilities": [
+      "str",
+      "dex"
+    ],
     "kind": "any_of"
   },
   "provenance": {
     "kind": "srd-5.2.1",
     "section": "Classes/Fighter.md:3-24,29-34,54,56-97,102-114"
   },
-  "savingThrowProficiencies": ["str", "con"],
+  "savingThrowProficiencies": [
+    "str",
+    "con"
+  ],
   "skillProficiencyChoice": {
     "choose": 2,
     "options": [
@@ -165,7 +176,9 @@
   "subclassChoices": [
     {
       "level": 3,
-      "options": ["subclass_fighter_champion"]
+      "options": [
+        "subclass_fighter_champion"
+      ]
     }
   ],
   "toolProficiencies": {

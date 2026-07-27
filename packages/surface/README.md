@@ -243,8 +243,9 @@ Do not hand-author or manually patch content JSON except as part of
 debugging a Dhall compile problem; make the source change in Dhall,
 regenerate JSON, then regenerate the trace.
 
-The worker and local authoring flow assume `dhall-to-json` is
-installed. Compile with:
+The worker and local authoring flow require the `dhall-to-json` version pinned
+in `dhall-json-toolchain.json`. The root publication check rejects any other
+version because generated JSON is compared byte-for-byte. Compile with:
 
 ```sh
 dhall-to-json --omit-empty --file content/bless.dhall --output content/bless.json

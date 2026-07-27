@@ -20,7 +20,9 @@
       "permanentAfter": {
         "cadence": "daily",
         "count": 365,
-        "endsOn": ["dispel"],
+        "endsOn": [
+          "dispel"
+        ],
         "kind": "repeated_casts",
         "target": "same_target"
       },

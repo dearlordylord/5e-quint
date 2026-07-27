@@ -1,6 +1,10 @@
 {
   "abilityScoreIncrease": {
-    "abilities": ["dex", "con", "int"],
+    "abilities": [
+      "dex",
+      "con",
+      "int"
+    ],
     "methods": [
       {
         "kind": "two_scores",
@@ -24,7 +28,10 @@
     "kind": "srd-5.2.1",
     "section": "Character-Origins.md:11-29,41-47"
   },
-  "skillProficiencies": ["sleight_of_hand", "stealth"],
+  "skillProficiencies": [
+    "sleight_of_hand",
+    "stealth"
+  ],
   "startingEquipment": [
     {
       "coinsGp": 16,

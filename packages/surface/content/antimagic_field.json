@@ -65,7 +65,10 @@
       },
       {
         "effect": {
-          "exceptSources": ["artifact", "deity"],
+          "exceptSources": [
+            "artifact",
+            "deity"
+          ],
           "kind": "suppress_ongoing_magic_effects",
           "suppressedTimeCountsAgainstDuration": true
         },

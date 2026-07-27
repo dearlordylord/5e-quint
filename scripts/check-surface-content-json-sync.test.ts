@@ -11,9 +11,11 @@ import { tmpdir } from "node:os";
 import { describe, expect, it } from "vitest";
 
 import {
+  checkDhallJsonCompilerVersion,
   runPublicationCheck,
   type PublicationIssue,
 } from "./check-surface-content-json-sync.ts";
+import dhallJsonToolchain from "../packages/surface/dhall-json-toolchain.json" with { type: "json" };
 import {
   serializeSurfacePublicationArtifact,
   SRD_SURFACE_PUBLICATION_ARTIFACTS,
@@ -27,6 +29,15 @@ const validRecord = readFileSync(
 );
 
 describe("Surface content publication checker", () => {
+  it("requires the compiler version that owns byte-exact publication", () => {
+    expect(
+      checkDhallJsonCompilerVersion(`${dhallJsonToolchain.dhallJsonVersion}\n`),
+    ).toBeUndefined();
+    expect(checkDhallJsonCompilerVersion("1.7.11\n")).toContain(
+      `dhall-to-json ${dhallJsonToolchain.dhallJsonVersion} is required`,
+    );
+  });
+
   it("accumulates missing, orphaned, drift, compile, and decode issues", () => {
     const contentDir = mkdtempSync(join(tmpdir(), "surface-publication-test-"));
 

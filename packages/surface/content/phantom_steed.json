@@ -50,7 +50,11 @@
     "level": 3,
     "mount": {
       "createdEquipment": {
-        "items": ["saddle", "bit", "bridle"],
+        "items": [
+          "saddle",
+          "bit",
+          "bridle"
+        ],
         "vanishesIfCarriedMoreThanFeetFromCreature": 10
       },
       "hourlyTravelMiles": 13,

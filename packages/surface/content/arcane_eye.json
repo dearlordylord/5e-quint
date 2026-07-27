@@ -49,7 +49,9 @@
       {
         "effect": {
           "kind": "remote_perception",
-          "senses": ["seeing"]
+          "senses": [
+            "seeing"
+          ]
         },
         "trigger": {
           "kind": "passive"

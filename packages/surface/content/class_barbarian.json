@@ -1,6 +1,10 @@
 {
   "armorTraining": {
-    "categories": ["light", "medium", "shield"],
+    "categories": [
+      "light",
+      "medium",
+      "shield"
+    ],
     "kind": "trained"
   },
   "className": "barbarian",
@@ -57,14 +61,19 @@
   },
   "name": "Barbarian",
   "primaryAbilities": {
-    "abilities": ["str"],
+    "abilities": [
+      "str"
+    ],
     "kind": "all_of"
   },
   "provenance": {
     "kind": "srd-5.2.1",
     "section": "Classes/Barbarian.md:3-25,29,33-38,56-116,128-130"
   },
-  "savingThrowProficiencies": ["str", "con"],
+  "savingThrowProficiencies": [
+    "str",
+    "con"
+  ],
   "skillProficiencyChoice": {
     "choose": 2,
     "options": [
@@ -106,7 +115,9 @@
   "subclassChoices": [
     {
       "level": 3,
-      "options": ["subclass_barbarian_path_of_the_berserker"]
+      "options": [
+        "subclass_barbarian_path_of_the_berserker"
+      ]
     }
   ],
   "toolProficiencies": {

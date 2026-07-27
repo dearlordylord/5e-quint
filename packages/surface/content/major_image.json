@@ -38,7 +38,12 @@
     "operations": [
       {
         "effect": {
-          "channels": ["visual", "sound", "smell", "temperature"],
+          "channels": [
+            "visual",
+            "sound",
+            "smell",
+            "temperature"
+          ],
           "kind": "create_illusion",
           "maxSize": "gargantuan"
         },

@@ -36,7 +36,9 @@
             "kind": "target",
             "selection": {
               "mode": "one",
-              "targetKinds": ["creature"],
+              "targetKinds": [
+                "creature"
+              ],
               "visibility": "caster_can_see"
             }
           }
@@ -46,7 +48,10 @@
         },
         "kind": "save_gate",
         "onFail": {
-          "condition": ["charmed", "incapacitated"],
+          "condition": [
+            "charmed",
+            "incapacitated"
+          ],
           "kind": "apply_condition"
         },
         "onSuccess": {

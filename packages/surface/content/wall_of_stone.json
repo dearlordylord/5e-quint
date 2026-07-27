@@ -45,7 +45,10 @@
               {
                 "durability": {
                   "acValue": 15,
-                  "damageImmunities": ["poison", "psychic"],
+                  "damageImmunities": [
+                    "poison",
+                    "psychic"
+                  ],
                   "hpPerSection": 30
                 },
                 "kind": "create_object",

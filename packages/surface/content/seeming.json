@@ -31,7 +31,9 @@
             "kind": "target",
             "selection": {
               "mode": "any_number",
-              "targetKinds": ["creature"]
+              "targetKinds": [
+                "creature"
+              ]
             }
           }
         },
@@ -40,7 +42,9 @@
         },
         "kind": "save_gate",
         "onFail": {
-          "channels": ["visual"],
+          "channels": [
+            "visual"
+          ],
           "kind": "create_illusion",
           "maxSize": "medium"
         },

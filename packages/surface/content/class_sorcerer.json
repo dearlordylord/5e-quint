@@ -34,14 +34,19 @@
   },
   "name": "Sorcerer",
   "primaryAbilities": {
-    "abilities": ["cha"],
+    "abilities": [
+      "cha"
+    ],
     "kind": "all_of"
   },
   "provenance": {
     "kind": "srd-5.2.1",
     "section": "Classes/Sorcerer.md:3-24,29,33-45,56-76,119-129,219-320; Spells/Descriptions-M-P#Phantasmal Force"
   },
-  "savingThrowProficiencies": ["con", "cha"],
+  "savingThrowProficiencies": [
+    "con",
+    "cha"
+  ],
   "skillProficiencyChoice": {
     "choose": 2,
     "options": [
@@ -605,7 +610,9 @@
   "subclassChoices": [
     {
       "level": 3,
-      "options": ["subclass_sorcerer_draconic_sorcery"]
+      "options": [
+        "subclass_sorcerer_draconic_sorcery"
+      ]
     }
   ],
   "toolProficiencies": {

@@ -30,8 +30,12 @@
             "kind": "target",
             "selection": {
               "mode": "one",
-              "stateFilter": ["dead"],
-              "targetKinds": ["creature"]
+              "stateFilter": [
+                "dead"
+              ],
+              "targetKinds": [
+                "creature"
+              ]
             }
           }
         },
@@ -41,7 +45,9 @@
               "amount": 10,
               "unit": "day"
             },
-            "excludedDeathCauses": ["old_age"],
+            "excludedDeathCauses": [
+              "old_age"
+            ],
             "hitPoints": 1,
             "kind": "revive_dead_creature",
             "missingBodyParts": "not_restored",

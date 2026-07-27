@@ -18,7 +18,9 @@
           "selection": {
             "disposition": "willing",
             "mode": "one",
-            "targetKinds": ["creature"]
+            "targetKinds": [
+              "creature"
+            ]
           }
         }
       }
@@ -33,7 +35,10 @@
         "material": "platinum",
         "minimumValueGpEach": 50,
         "requiredFor": "spell_duration",
-        "wornBy": ["caster", "target"]
+        "wornBy": [
+          "caster",
+          "target"
+        ]
       },
       "s": true,
       "v": true
@@ -85,7 +90,9 @@
             "sign": "+"
           },
           "kind": "modify_roll_numeric",
-          "on": ["saving_throw"]
+          "on": [
+            "saving_throw"
+          ]
         },
         "predicate": {
           "kind": "attached_bond_within_range"

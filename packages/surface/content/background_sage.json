@@ -1,6 +1,10 @@
 {
   "abilityScoreIncrease": {
-    "abilities": ["con", "int", "wis"],
+    "abilities": [
+      "con",
+      "int",
+      "wis"
+    ],
     "methods": [
       {
         "kind": "two_scores",
@@ -24,7 +28,10 @@
     "kind": "srd-5.2.1",
     "section": "Character-Origins.md:11-29,49-55"
   },
-  "skillProficiencies": ["arcana", "history"],
+  "skillProficiencies": [
+    "arcana",
+    "history"
+  ],
   "startingEquipment": [
     {
       "coinsGp": 8,

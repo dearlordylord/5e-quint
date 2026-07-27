@@ -34,8 +34,12 @@
             },
             "selection": {
               "mode": "any_number",
-              "targetKinds": ["creature"],
-              "typeFilter": ["humanoid"]
+              "targetKinds": [
+                "creature"
+              ],
+              "typeFilter": [
+                "humanoid"
+              ]
             },
             "shape": {
               "kind": "sphere",

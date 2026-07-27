@@ -1,7 +1,10 @@
 {
   "abilityScoreIncreaseChoice": {
     "abilityScope": {
-      "abilities": ["str", "dex"],
+      "abilities": [
+        "str",
+        "dex"
+      ],
       "kind": "specific_abilities"
     },
     "maxScore": 20,
@@ -19,7 +22,9 @@
   "mechanics": {
     "attackAdvantage": {
       "mode": "advantage",
-      "on": ["attack_roll"],
+      "on": [
+        "attack_roll"
+      ],
       "target": "creature_grappled_by_you"
     },
     "family": "grappler",
@@ -28,7 +33,10 @@
       "targetSize": "your_size_or_smaller"
     },
     "punchAndGrab": {
-      "options": ["damage", "grapple"],
+      "options": [
+        "damage",
+        "grapple"
+      ],
       "trigger": "attack_action_unarmed_strike_hit_on_turn",
       "usageLimit": {
         "kind": "once_per_turn"

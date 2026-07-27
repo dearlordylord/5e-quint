@@ -16,7 +16,9 @@
       "permanentAfter": {
         "cadence": "daily",
         "count": 30,
-        "endsOn": ["dispel"],
+        "endsOn": [
+          "dispel"
+        ],
         "kind": "repeated_casts",
         "target": "same_target"
       },
@@ -41,7 +43,10 @@
               "objectFilter": {
                 "targetRelation": "not_worn_or_carried"
               },
-              "targetKinds": ["creature", "object"]
+              "targetKinds": [
+                "creature",
+                "object"
+              ]
             }
           }
         },

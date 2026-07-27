@@ -68,7 +68,10 @@
       "value": 39
     },
     "initiativeModifier": 3,
-    "languages": ["Celestial", "Common"],
+    "languages": [
+      "Celestial",
+      "Common"
+    ],
     "reactions": {
       "specials": [
         {
@@ -82,7 +85,11 @@
       ]
     },
     "resistances": {
-      "damageTypes": ["necrotic", "psychic", "radiant"],
+      "damageTypes": [
+        "necrotic",
+        "psychic",
+        "radiant"
+      ],
       "kind": "fixed"
     },
     "senses": [

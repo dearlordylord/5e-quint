@@ -58,7 +58,10 @@
           "paralyzed",
           "poisoned"
         ],
-        "damageTypes": ["poison", "psychic"]
+        "damageTypes": [
+          "poison",
+          "psychic"
+        ]
       },
       "languages": "caster_languages",
       "senses": [

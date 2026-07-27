@@ -33,7 +33,9 @@
                 "perSlotAboveBase": 1
               },
               "mode": "choose_up_to",
-              "targetKinds": ["creature"]
+              "targetKinds": [
+                "creature"
+              ]
             }
           }
         },

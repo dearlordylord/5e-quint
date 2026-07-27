@@ -35,7 +35,10 @@
                 "targetRelation": "not_worn_or_carried",
                 "visibility": "caster_can_see"
               },
-              "targetKinds": ["creature", "object"]
+              "targetKinds": [
+                "creature",
+                "object"
+              ]
             }
           }
         },
@@ -56,16 +59,24 @@
                   "steps": 1
                 },
                 {
-                  "abilityFilter": ["str"],
+                  "abilityFilter": [
+                    "str"
+                  ],
                   "kind": "modify_roll_advantage",
                   "mode": "advantage",
-                  "on": ["ability_check"]
+                  "on": [
+                    "ability_check"
+                  ]
                 },
                 {
                   "kind": "modify_roll_advantage",
                   "mode": "advantage",
-                  "on": ["saving_throw"],
-                  "saveAbilityFilter": ["str"]
+                  "on": [
+                    "saving_throw"
+                  ],
+                  "saveAbilityFilter": [
+                    "str"
+                  ]
                 },
                 {
                   "damageSourceFilter": {
@@ -92,16 +103,24 @@
                   "steps": 1
                 },
                 {
-                  "abilityFilter": ["str"],
+                  "abilityFilter": [
+                    "str"
+                  ],
                   "kind": "modify_roll_advantage",
                   "mode": "disadvantage",
-                  "on": ["ability_check"]
+                  "on": [
+                    "ability_check"
+                  ]
                 },
                 {
                   "kind": "modify_roll_advantage",
                   "mode": "disadvantage",
-                  "on": ["saving_throw"],
-                  "saveAbilityFilter": ["str"]
+                  "on": [
+                    "saving_throw"
+                  ],
+                  "saveAbilityFilter": [
+                    "str"
+                  ]
                 },
                 {
                   "damageSourceFilter": {

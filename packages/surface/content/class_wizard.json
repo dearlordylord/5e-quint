@@ -30,14 +30,19 @@
   },
   "name": "Wizard",
   "primaryAbilities": {
-    "abilities": ["int"],
+    "abilities": [
+      "int"
+    ],
     "kind": "all_of"
   },
   "provenance": {
     "kind": "srd-5.2.1",
     "section": "Classes/Wizard.md:3-25,29,31-43,56-82,94-114,138-266; Spells/Descriptions-M-P#Phantasmal Force"
   },
-  "savingThrowProficiencies": ["int", "wis"],
+  "savingThrowProficiencies": [
+    "int",
+    "wis"
+  ],
   "skillProficiencyChoice": {
     "choose": 2,
     "options": [
@@ -581,7 +586,10 @@
       ]
     },
     "spellcastingAbility": "int",
-    "spellcastingFocuses": ["arcane_focus", "spellbook"],
+    "spellcastingFocuses": [
+      "arcane_focus",
+      "spellbook"
+    ],
     "spellcastingProgression": [
       {
         "atLevel": 1,
@@ -823,7 +831,9 @@
   "subclassChoices": [
     {
       "level": 3,
-      "options": ["subclass_wizard_evoker"]
+      "options": [
+        "subclass_wizard_evoker"
+      ]
     }
   ],
   "toolProficiencies": {

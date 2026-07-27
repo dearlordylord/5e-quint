@@ -63,7 +63,10 @@
             "kind": "conditional_bonus_damage",
             "when": {
               "kind": "target_creature_type",
-              "types": ["fiend", "undead"]
+              "types": [
+                "fiend",
+                "undead"
+              ]
             }
           }
         ],

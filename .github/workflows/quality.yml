@@ -36,5 +36,36 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Install Dhall JSON
+        run: |
+          set -euo pipefail
+          mapfile -t dhall_json_toolchain < <(
+            node -e '
+              const toolchain = require("./packages/surface/dhall-json-toolchain.json")
+              console.log(toolchain.dhallHaskellRelease)
+              console.log(toolchain.dhallJsonVersion)
+              console.log(toolchain.linuxX64ArchiveSha256)
+            '
+          )
+          dhall_haskell_release="${dhall_json_toolchain[0]}"
+          dhall_json_version="${dhall_json_toolchain[1]}"
+          dhall_json_sha256="${dhall_json_toolchain[2]}"
+          archive="$RUNNER_TEMP/dhall-json.tar.bz2"
+          install_dir="$RUNNER_TEMP/dhall-json"
+          curl \
+            --fail \
+            --location \
+            --silent \
+            --show-error \
+            "https://github.com/dhall-lang/dhall-haskell/releases/download/${dhall_haskell_release}/dhall-json-${dhall_json_version}-x86_64-linux.tar.bz2" \
+            --output "$archive"
+          echo "$dhall_json_sha256  $archive" | sha256sum --check
+          mkdir -p "$install_dir"
+          tar -xjf "$archive" -C "$install_dir"
+          echo "$install_dir/bin" >> "$GITHUB_PATH"
+          installed_version="$("$install_dir/bin/dhall-to-json" --version)"
+          test "$installed_version" = "$dhall_json_version"
+          echo "dhall-to-json $installed_version"
+
       - name: Run workspace quality gate
         run: pnpm quality

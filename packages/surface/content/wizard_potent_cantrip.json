@@ -10,7 +10,10 @@
       "kind": "half_cantrip_damage_if_any"
     },
     "family": "potent_cantrip",
-    "outcomes": ["miss_with_attack_roll", "target_succeeds_saving_throw"],
+    "outcomes": [
+      "miss_with_attack_roll",
+      "target_succeeds_saving_throw"
+    ],
     "trigger": {
       "cantripKind": "damaging",
       "kind": "cast_cantrip_at_creature"

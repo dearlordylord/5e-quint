@@ -21,15 +21,24 @@
           },
           {
             "minimumClassLevel": 5,
-            "spellIds": ["fireball", "stinking_cloud"]
+            "spellIds": [
+              "fireball",
+              "stinking_cloud"
+            ]
           },
           {
             "minimumClassLevel": 7,
-            "spellIds": ["fire_shield", "wall_of_fire"]
+            "spellIds": [
+              "fire_shield",
+              "wall_of_fire"
+            ]
           },
           {
             "minimumClassLevel": 9,
-            "spellIds": ["geas", "insect_plague"]
+            "spellIds": [
+              "geas",
+              "insect_plague"
+            ]
           }
         ]
       }

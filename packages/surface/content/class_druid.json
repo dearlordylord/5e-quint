@@ -1,6 +1,9 @@
 {
   "armorTraining": {
-    "categories": ["light", "shield"],
+    "categories": [
+      "light",
+      "shield"
+    ],
     "kind": "trained"
   },
   "className": "druid",
@@ -45,14 +48,19 @@
   },
   "name": "Druid",
   "primaryAbilities": {
-    "abilities": ["wis"],
+    "abilities": [
+      "wis"
+    ],
     "kind": "all_of"
   },
   "provenance": {
     "kind": "srd-5.2.1",
     "section": "Classes/Druid.md:3-35,55,57-79,130-136,184-266"
   },
-  "savingThrowProficiencies": ["int", "wis"],
+  "savingThrowProficiencies": [
+    "int",
+    "wis"
+  ],
   "skillProficiencyChoice": {
     "choose": 2,
     "options": [
@@ -556,7 +564,9 @@
   "subclassChoices": [
     {
       "level": 3,
-      "options": ["subclass_druid_circle_of_the_land"]
+      "options": [
+        "subclass_druid_circle_of_the_land"
+      ]
     }
   ],
   "toolProficiencies": {

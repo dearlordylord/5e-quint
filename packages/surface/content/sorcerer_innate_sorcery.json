@@ -39,7 +39,9 @@
           {
             "kind": "modify_roll_advantage",
             "mode": "advantage",
-            "on": ["spell_attack_roll"],
+            "on": [
+              "spell_attack_roll"
+            ],
             "spellSourceFilter": {
               "className": "sorcerer"
             }

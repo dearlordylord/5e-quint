@@ -59,7 +59,10 @@
                 "kind": "apply_condition"
               },
               {
-                "actions": ["action", "bonus_action"],
+                "actions": [
+                  "action",
+                  "bonus_action"
+                ],
                 "duration": "current_turn",
                 "kind": "restrict_action_usage",
                 "whileCondition": "poisoned"

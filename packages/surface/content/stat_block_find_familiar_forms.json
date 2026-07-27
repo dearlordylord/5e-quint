@@ -57,7 +57,9 @@
         "value": 1
       },
       "initiativeModifier": 2,
-      "languages": ["None"],
+      "languages": [
+        "None"
+      ],
       "senses": [
         {
           "kind": "blindsight",
@@ -141,7 +143,9 @@
         "value": 2
       },
       "initiativeModifier": 2,
-      "languages": ["None"],
+      "languages": [
+        "None"
+      ],
       "senses": [
         {
           "kind": "darkvision",
@@ -241,7 +245,9 @@
         "value": 1
       },
       "initiativeModifier": 1,
-      "languages": ["None"],
+      "languages": [
+        "None"
+      ],
       "senses": [
         {
           "kind": "darkvision",
@@ -345,7 +351,9 @@
         "value": 1
       },
       "initiativeModifier": 3,
-      "languages": ["None"],
+      "languages": [
+        "None"
+      ],
       "size": "tiny",
       "skillModifiers": [
         {
@@ -429,7 +437,9 @@
         "value": 2
       },
       "initiativeModifier": 0,
-      "languages": ["None"],
+      "languages": [
+        "None"
+      ],
       "senses": [
         {
           "kind": "darkvision",
@@ -519,7 +529,9 @@
         "value": 3
       },
       "initiativeModifier": 2,
-      "languages": ["None"],
+      "languages": [
+        "None"
+      ],
       "senses": [
         {
           "kind": "darkvision",
@@ -623,7 +635,9 @@
         "value": 1
       },
       "initiativeModifier": 1,
-      "languages": ["None"],
+      "languages": [
+        "None"
+      ],
       "senses": [
         {
           "kind": "darkvision",
@@ -723,7 +737,9 @@
         "value": 1
       },
       "initiativeModifier": 0,
-      "languages": ["None"],
+      "languages": [
+        "None"
+      ],
       "senses": [
         {
           "kind": "darkvision",
@@ -819,7 +835,9 @@
         "value": 2
       },
       "initiativeModifier": 2,
-      "languages": ["None"],
+      "languages": [
+        "None"
+      ],
       "size": "tiny",
       "skillModifiers": [
         {
@@ -921,7 +939,9 @@
         "value": 1
       },
       "initiativeModifier": 2,
-      "languages": ["None"],
+      "languages": [
+        "None"
+      ],
       "senses": [
         {
           "kind": "darkvision",
@@ -1021,7 +1041,9 @@
         "value": 1
       },
       "initiativeModifier": 3,
-      "languages": ["None"],
+      "languages": [
+        "None"
+      ],
       "senses": [
         {
           "kind": "darkvision",
@@ -1131,7 +1153,9 @@
         "value": 5
       },
       "initiativeModifier": 2,
-      "languages": ["None"],
+      "languages": [
+        "None"
+      ],
       "senses": [
         {
           "kind": "blindsight",
@@ -1237,13 +1261,23 @@
         "value": 21
       },
       "immunities": {
-        "conditions": ["poisoned"],
-        "damageTypes": ["fire", "poison"]
+        "conditions": [
+          "poisoned"
+        ],
+        "damageTypes": [
+          "fire",
+          "poison"
+        ]
       },
       "initiativeModifier": 3,
-      "languages": ["Common", "Infernal"],
+      "languages": [
+        "Common",
+        "Infernal"
+      ],
       "resistances": {
-        "damageTypes": ["cold"],
+        "damageTypes": [
+          "cold"
+        ],
         "kind": "fixed"
       },
       "senses": [
@@ -1392,7 +1426,9 @@
         "value": 10
       },
       "initiativeModifier": 2,
-      "languages": ["Understands Common and Draconic but can't speak"],
+      "languages": [
+        "Understands Common and Draconic but can't speak"
+      ],
       "senses": [
         {
           "kind": "blindsight",
@@ -1515,13 +1551,24 @@
         "value": 25
       },
       "immunities": {
-        "conditions": ["poisoned"],
-        "damageTypes": ["poison"]
+        "conditions": [
+          "poisoned"
+        ],
+        "damageTypes": [
+          "poison"
+        ]
       },
       "initiativeModifier": 3,
-      "languages": ["Abyssal", "Common"],
+      "languages": [
+        "Abyssal",
+        "Common"
+      ],
       "resistances": {
-        "damageTypes": ["cold", "fire", "lightning"],
+        "damageTypes": [
+          "cold",
+          "fire",
+          "lightning"
+        ],
         "kind": "fixed"
       },
       "senses": [
@@ -1651,7 +1698,11 @@
         "value": 10
       },
       "initiativeModifier": 4,
-      "languages": ["Common", "Elvish", "Sylvan"],
+      "languages": [
+        "Common",
+        "Elvish",
+        "Sylvan"
+      ],
       "size": "tiny",
       "skillModifiers": [
         {

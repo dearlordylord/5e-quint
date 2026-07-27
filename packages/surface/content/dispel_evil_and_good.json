@@ -36,7 +36,9 @@
           ],
           "kind": "modify_roll_advantage",
           "mode": "disadvantage",
-          "on": ["attack_roll"]
+          "on": [
+            "attack_roll"
+          ]
         },
         "trigger": {
           "kind": "passive"

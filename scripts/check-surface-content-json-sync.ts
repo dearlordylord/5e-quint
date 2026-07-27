@@ -19,6 +19,7 @@ import {
   SURFACE_PUBLICATION_MEMBERS,
   SURFACE_SCHEMA_BOUND_MEASURES,
 } from "../packages/surface/src/surface/publication-artifacts.ts";
+import dhallJsonToolchain from "../packages/surface/dhall-json-toolchain.json" with { type: "json" };
 
 export type PublicationIssue =
   | {
@@ -76,6 +77,15 @@ export type PublicationCheckResult = {
   readonly sourceCount: number;
   readonly peerCount: number;
 };
+
+export function checkDhallJsonCompilerVersion(
+  versionOutput: string,
+): string | undefined {
+  const installedVersion = versionOutput.trim();
+  return installedVersion === dhallJsonToolchain.dhallJsonVersion
+    ? undefined
+    : `dhall-to-json ${dhallJsonToolchain.dhallJsonVersion} is required for byte-exact Surface publication; found ${installedVersion || "an empty version"}.`;
+}
 
 function repoPath(repoRoot: string, filePath: string): string {
   return relative(repoRoot, filePath).split("\\").join("/");
@@ -422,6 +432,12 @@ function main(): void {
     console.error(
       "dhall-to-json is required to verify Surface content JSON sync.",
     );
+    process.exitCode = 1;
+    return;
+  }
+  const compilerVersionIssue = checkDhallJsonCompilerVersion(compiler.stdout);
+  if (compilerVersionIssue !== undefined) {
+    console.error(compilerVersionIssue);
     process.exitCode = 1;
     return;
   }

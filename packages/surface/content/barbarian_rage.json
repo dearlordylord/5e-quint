@@ -10,7 +10,9 @@
     },
     "family": "activation",
     "ongoingFeature": {
-      "actionRestrictions": ["spellcasting"],
+      "actionRestrictions": [
+        "spellcasting"
+      ],
       "activationTiming": "activation_cost",
       "concentrationEffect": "break_and_prevent",
       "levelOverrides": [
@@ -21,15 +23,23 @@
               "amount": 10,
               "unit": "minute"
             },
-            "earlyEndArmorCategories": ["heavy"],
-            "earlyEndConditions": ["unconscious"],
+            "earlyEndArmorCategories": [
+              "heavy"
+            ],
+            "earlyEndConditions": [
+              "unconscious"
+            ],
             "kind": "fixed_duration"
           }
         }
       ],
       "lifecycle": {
-        "earlyEndArmorCategories": ["heavy"],
-        "earlyEndConditions": ["incapacitated"],
+        "earlyEndArmorCategories": [
+          "heavy"
+        ],
+        "earlyEndConditions": [
+          "incapacitated"
+        ],
         "extensionTriggers": [
           "attack_roll_against_enemy",
           "bonus_action",
@@ -62,7 +72,9 @@
             "kind": "grant_resistance"
           },
           {
-            "abilityFilter": ["str"],
+            "abilityFilter": [
+              "str"
+            ],
             "delta": {
               "axis": "class",
               "base": 2,

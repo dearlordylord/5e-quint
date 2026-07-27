@@ -54,7 +54,9 @@
         {
           "atSlot": 9,
           "duration": {
-            "endsOn": ["dispel"],
+            "endsOn": [
+              "dispel"
+            ],
             "kind": "permanent"
           }
         }
@@ -73,7 +75,9 @@
             "kind": "target",
             "selection": {
               "mode": "one",
-              "targetKinds": ["creature"]
+              "targetKinds": [
+                "creature"
+              ]
             }
           }
         },
@@ -97,13 +101,23 @@
                       "value": {
                         "kind": "choice",
                         "label": "cursed ability",
-                        "options": ["str", "dex", "con", "int", "wis", "cha"]
+                        "options": [
+                          "str",
+                          "dex",
+                          "con",
+                          "int",
+                          "wis",
+                          "cha"
+                        ]
                       }
                     },
                     "affects": "self_roll",
                     "kind": "modify_roll_advantage",
                     "mode": "disadvantage",
-                    "on": ["ability_check", "saving_throw"],
+                    "on": [
+                      "ability_check",
+                      "saving_throw"
+                    ],
                     "saveAbilityFilter": {
                       "holeId": "bestow_curse_ability",
                       "kind": "same_choice_as"
@@ -125,7 +139,9 @@
                     "attackRollTarget": "caster",
                     "kind": "modify_roll_advantage",
                     "mode": "disadvantage",
-                    "on": ["attack_roll"]
+                    "on": [
+                      "attack_roll"
+                    ]
                   },
                   "trigger": {
                     "kind": "passive"
@@ -176,7 +192,10 @@
                     "kind": "damage"
                   },
                   "trigger": {
-                    "damageSource": ["attack_roll", "spell"],
+                    "damageSource": [
+                      "attack_roll",
+                      "spell"
+                    ],
                     "kind": "on_caster_deals_damage_to_attachment"
                   }
                 }

@@ -37,7 +37,10 @@
           },
           {
             "kind": "remote_perception",
-            "senses": ["seeing", "hearing"],
+            "senses": [
+              "seeing",
+              "hearing"
+            ],
             "switchCost": "bonus_action"
           }
         ],

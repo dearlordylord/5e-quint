@@ -16,7 +16,9 @@
       "v": true
     },
     "duration": {
-      "endsOn": ["dispel"],
+      "endsOn": [
+        "dispel"
+      ],
       "kind": "permanent"
     },
     "family": "activation",

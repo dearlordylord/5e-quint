@@ -41,10 +41,16 @@
         "onFail": {
           "effects": [
             {
-              "abilityFilter": ["str"],
+              "abilityFilter": [
+                "str"
+              ],
               "kind": "modify_roll_advantage",
               "mode": "disadvantage",
-              "on": ["attack_roll", "ability_check", "saving_throw"]
+              "on": [
+                "attack_roll",
+                "ability_check",
+                "saving_throw"
+              ]
             },
             {
               "delta": {
@@ -65,7 +71,9 @@
           },
           "kind": "modify_roll_advantage",
           "mode": "disadvantage",
-          "on": ["attack_roll"]
+          "on": [
+            "attack_roll"
+          ]
         },
         "repeatSaves": [
           {

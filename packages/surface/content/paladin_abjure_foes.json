@@ -14,13 +14,19 @@
       "condition": "frightened",
       "duration": {
         "amount": 1,
-        "endsOn": ["target_takes_any_damage"],
+        "endsOn": [
+          "target_takes_any_damage"
+        ],
         "unit": "minute"
       },
       "kind": "apply_condition",
       "turnRestriction": {
         "kind": "choose_only_one",
-        "options": ["move", "action", "bonus_action"]
+        "options": [
+          "move",
+          "action",
+          "bonus_action"
+        ]
       }
     },
     "save": {

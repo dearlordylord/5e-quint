@@ -1,6 +1,11 @@
 {
   "armorTraining": {
-    "categories": ["light", "medium", "heavy", "shield"],
+    "categories": [
+      "light",
+      "medium",
+      "heavy",
+      "shield"
+    ],
     "kind": "trained"
   },
   "className": "paladin",
@@ -69,14 +74,20 @@
   },
   "name": "Paladin",
   "primaryAbilities": {
-    "abilities": ["str", "cha"],
+    "abilities": [
+      "str",
+      "cha"
+    ],
     "kind": "all_of"
   },
   "provenance": {
     "kind": "srd-5.2.1",
     "section": "Classes/Paladin.md:3-24,29,33-43,66-129,148-154,172-204,206-215"
   },
-  "savingThrowProficiencies": ["wis", "cha"],
+  "savingThrowProficiencies": [
+    "wis",
+    "cha"
+  ],
   "skillProficiencyChoice": {
     "choose": 2,
     "options": [
@@ -422,7 +433,9 @@
   "subclassChoices": [
     {
       "level": 3,
-      "options": ["subclass_paladin_oath_of_devotion"]
+      "options": [
+        "subclass_paladin_oath_of_devotion"
+      ]
     }
   ],
   "toolProficiencies": {

@@ -91,7 +91,11 @@
       }
     ],
     "spellcastingAbilityChoice": {
-      "abilities": ["int", "wis", "cha"],
+      "abilities": [
+        "int",
+        "wis",
+        "cha"
+      ],
       "kind": "spellcasting_ability_choice"
     },
     "timing": "species_selection"

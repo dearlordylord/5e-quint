@@ -7,7 +7,13 @@
       "chooser": "caster",
       "kind": "one_or_more_creature_type_choice",
       "label": "affected creature types",
-      "options": ["celestial", "elemental", "fey", "fiend", "undead"],
+      "options": [
+        "celestial",
+        "elemental",
+        "fey",
+        "fiend",
+        "undead"
+      ],
       "selection": "one_or_more"
     },
     "castingTime": {
@@ -32,7 +38,10 @@
             "dc": {
               "kind": "caster_spell_save_dc"
             },
-            "methods": ["teleportation", "interplanar_travel"]
+            "methods": [
+              "teleportation",
+              "interplanar_travel"
+            ]
           },
           "nonmagicalMeans": "prevented"
         },
@@ -41,11 +50,16 @@
           "effects": {
             "attackRollDisadvantage": {
               "attacker": "affected_creature",
-              "on": ["attack_roll"],
+              "on": [
+                "attack_roll"
+              ],
               "target": "protected_target"
             },
             "sourceScopedPrevention": {
-              "conditions": ["charmed", "frightened"],
+              "conditions": [
+                "charmed",
+                "frightened"
+              ],
               "possession": "prevented",
               "source": "affected_creature"
             }
@@ -61,7 +75,10 @@
             "dc": {
               "kind": "caster_spell_save_dc"
             },
-            "methods": ["teleportation", "interplanar_travel"]
+            "methods": [
+              "teleportation",
+              "interplanar_travel"
+            ]
           },
           "nonmagicalMeans": "prevented"
         },
@@ -70,11 +87,16 @@
           "effects": {
             "attackRollDisadvantage": {
               "attacker": "affected_creature",
-              "on": ["attack_roll"],
+              "on": [
+                "attack_roll"
+              ],
               "target": "protected_target"
             },
             "sourceScopedPrevention": {
-              "conditions": ["charmed", "frightened"],
+              "conditions": [
+                "charmed",
+                "frightened"
+              ],
               "possession": "prevented",
               "source": "affected_creature"
             }

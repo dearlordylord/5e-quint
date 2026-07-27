@@ -129,7 +129,10 @@
         "targetLimit": {
           "count": 6,
           "distinct": true,
-          "targetTypes": ["creature", "object"]
+          "targetTypes": [
+            "creature",
+            "object"
+          ]
         },
         "trigger": {
           "kind": "on_caster_turn_start",

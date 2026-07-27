@@ -28,14 +28,19 @@
             "kind": "target",
             "selection": {
               "mode": "one",
-              "targetKinds": ["creature"]
+              "targetKinds": [
+                "creature"
+              ]
             }
           }
         },
         "effects": [
           {
             "condition": {
-              "from": ["charmed", "petrified"],
+              "from": [
+                "charmed",
+                "petrified"
+              ],
               "kind": "choose"
             },
             "kind": "remove_condition"

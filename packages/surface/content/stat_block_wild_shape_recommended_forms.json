@@ -57,7 +57,9 @@
         "value": 13
       },
       "initiativeModifier": 1,
-      "languages": ["None"],
+      "languages": [
+        "None"
+      ],
       "size": "large",
       "speeds": [
         {
@@ -133,7 +135,9 @@
         "value": 11
       },
       "initiativeModifier": 2,
-      "languages": ["None"],
+      "languages": [
+        "None"
+      ],
       "senses": [
         {
           "kind": "darkvision",

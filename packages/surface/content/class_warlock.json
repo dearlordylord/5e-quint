@@ -1,6 +1,8 @@
 {
   "armorTraining": {
-    "categories": ["light"],
+    "categories": [
+      "light"
+    ],
     "kind": "trained"
   },
   "className": "warlock",
@@ -41,14 +43,19 @@
   },
   "name": "Warlock",
   "primaryAbilities": {
-    "abilities": ["cha"],
+    "abilities": [
+      "cha"
+    ],
     "kind": "all_of"
   },
   "provenance": {
     "kind": "srd-5.2.1",
     "section": "Classes/Warlock.md:3-24,29,31-45,68-104,332-406"
   },
-  "savingThrowProficiencies": ["wis", "cha"],
+  "savingThrowProficiencies": [
+    "wis",
+    "cha"
+  ],
   "skillProficiencyChoice": {
     "choose": 2,
     "options": [
@@ -422,7 +429,9 @@
   "subclassChoices": [
     {
       "level": 3,
-      "options": ["subclass_warlock_fiend_patron"]
+      "options": [
+        "subclass_warlock_fiend_patron"
+      ]
     }
   ],
   "toolProficiencies": {

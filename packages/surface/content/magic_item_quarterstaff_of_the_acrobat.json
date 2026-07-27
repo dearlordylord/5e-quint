@@ -19,7 +19,9 @@
           "sign": "+"
         },
         "kind": "modify_roll_numeric",
-        "on": ["attack_roll"],
+        "on": [
+          "attack_roll"
+        ],
         "weaponFilter": {
           "itemId": "magic_item_quarterstaff_of_the_acrobat",
           "kind": "specific_item"

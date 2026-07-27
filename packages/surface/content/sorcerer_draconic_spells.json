@@ -21,15 +21,24 @@
           },
           {
             "minimumClassLevel": 5,
-            "spellIds": ["fear", "fly"]
+            "spellIds": [
+              "fear",
+              "fly"
+            ]
           },
           {
             "minimumClassLevel": 7,
-            "spellIds": ["arcane_eye", "charm_monster"]
+            "spellIds": [
+              "arcane_eye",
+              "charm_monster"
+            ]
           },
           {
             "minimumClassLevel": 9,
-            "spellIds": ["legend_lore", "summon_dragon"]
+            "spellIds": [
+              "legend_lore",
+              "summon_dragon"
+            ]
           }
         ]
       }

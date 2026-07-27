@@ -32,7 +32,9 @@
                 "sign": "+"
               },
               "kind": "modify_roll_numeric",
-              "on": ["attack_roll"],
+              "on": [
+                "attack_roll"
+              ],
               "weaponFilter": {
                 "kind": "source_item"
               }

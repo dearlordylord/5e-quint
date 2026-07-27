@@ -12,23 +12,38 @@
         "tiers": [
           {
             "minimumClassLevel": 3,
-            "spellIds": ["protection_from_evil_and_good", "shield_of_faith"]
+            "spellIds": [
+              "protection_from_evil_and_good",
+              "shield_of_faith"
+            ]
           },
           {
             "minimumClassLevel": 5,
-            "spellIds": ["aid", "zone_of_truth"]
+            "spellIds": [
+              "aid",
+              "zone_of_truth"
+            ]
           },
           {
             "minimumClassLevel": 9,
-            "spellIds": ["beacon_of_hope", "dispel_magic"]
+            "spellIds": [
+              "beacon_of_hope",
+              "dispel_magic"
+            ]
           },
           {
             "minimumClassLevel": 13,
-            "spellIds": ["freedom_of_movement", "guardian_of_faith"]
+            "spellIds": [
+              "freedom_of_movement",
+              "guardian_of_faith"
+            ]
           },
           {
             "minimumClassLevel": 17,
-            "spellIds": ["commune", "flame_strike"]
+            "spellIds": [
+              "commune",
+              "flame_strike"
+            ]
           }
         ]
       }

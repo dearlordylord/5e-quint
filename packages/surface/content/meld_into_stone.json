@@ -109,7 +109,10 @@
             "owner": "table_witnessed_closest_unoccupied_space"
           }
         },
-        "triggers": ["partial_destruction", "shape_change_no_longer_fits"]
+        "triggers": [
+          "partial_destruction",
+          "shape_change_no_longer_fits"
+        ]
       },
       "tableTerrainObject": {
         "closestUnoccupiedSpace": "table_witnessed_closest_unoccupied_space_to_entry_location",

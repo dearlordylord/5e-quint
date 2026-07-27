@@ -1,0 +1,24 @@
+# Generated publication bytes are owned by their source generators.
+packages/surface/content/*.json
+packages/surface/publication/*.json
+
+# Generated Unit coverage bytes are owned by unit-profile-coverage-check.cjs.
+plans/unit-profile-coverage/unit-matrix.json
+plans/unit-profile-coverage/UNIT_REPORT.md
+plans/unit-profile-coverage/srd-unit-inventory.json
+plans/unit-profile-coverage/SRD_UNIT_INVENTORY.md
+plans/unit-profile-coverage/level1-full-support.json
+plans/unit-profile-coverage/LEVEL1_FULL_SUPPORT.md
+plans/unit-profile-coverage/level1-*-full-support.json
+plans/unit-profile-coverage/LEVEL1_*_FULL_SUPPORT.md
+plans/unit-profile-coverage/level1-*-mining-audit.json
+plans/unit-profile-coverage/LEVEL1_*_MINING_AUDIT.md
+plans/unit-profile-coverage/level1-2-qnt-mbt-join.json
+plans/unit-profile-coverage/LEVEL1_2_QNT_MBT_JOIN.md
+plans/unit-profile-coverage/LEVEL1_2_ULTRA_GOLDEN_SUMMARY.md
+plans/unit-profile-coverage/spell-procedure-mbt-evidence-gate.json
+plans/unit-profile-coverage/SPELL_PROCEDURE_MBT_EVIDENCE_GATE.md
+plans/unit-profile-coverage/feature-procedure-mbt-evidence-gate.json
+plans/unit-profile-coverage/FEATURE_PROCEDURE_MBT_EVIDENCE_GATE.md
+plans/unit-profile-coverage/ultra-golden-gate.json
+plans/unit-profile-coverage/ULTRA_GOLDEN_GATE.md

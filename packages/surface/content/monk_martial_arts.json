@@ -12,7 +12,11 @@
           "kind": "unarmed_or_monk_weapons_only"
         },
         {
-          "categories": ["light", "medium", "heavy"],
+          "categories": [
+            "light",
+            "medium",
+            "heavy"
+          ],
           "kind": "not_wearing_armor"
         },
         {
@@ -60,7 +64,11 @@
       },
       {
         "kind": "substitute_ability_for_rolls",
-        "on": ["attack_roll", "damage_roll", "unarmed_strike_save_dc"],
+        "on": [
+          "attack_roll",
+          "damage_roll",
+          "unarmed_strike_save_dc"
+        ],
         "replaces": "str",
         "scope": "unarmed_or_monk_weapon",
         "use": "dex"

@@ -16,7 +16,9 @@
       "v": true
     },
     "duration": {
-      "endsOn": ["dispel"],
+      "endsOn": [
+        "dispel"
+      ],
       "kind": "permanent"
     },
     "family": "glyph_warding",
@@ -95,7 +97,13 @@
             "value": {
               "kind": "choice",
               "label": "explosive rune damage type",
-              "options": ["acid", "cold", "fire", "lightning", "thunder"]
+              "options": [
+                "acid",
+                "cold",
+                "fire",
+                "lightning",
+                "thunder"
+              ]
             }
           }
         },
@@ -153,7 +161,10 @@
     "school": "abjuration",
     "trigger": {
       "commonEvents": {
-        "closeableObject": ["opening_object", "seeing_glyph"],
+        "closeableObject": [
+          "opening_object",
+          "seeing_glyph"
+        ],
         "surface": [
           "touching_glyph",
           "stepping_on_glyph",

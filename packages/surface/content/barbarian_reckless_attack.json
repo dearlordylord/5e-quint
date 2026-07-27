@@ -23,17 +23,23 @@
         },
         "effects": [
           {
-            "abilityFilter": ["str"],
+            "abilityFilter": [
+              "str"
+            ],
             "affects": "self_roll",
             "kind": "modify_roll_advantage",
             "mode": "advantage",
-            "on": ["attack_roll"]
+            "on": [
+              "attack_roll"
+            ]
           },
           {
             "affects": "rolls_against_self",
             "kind": "modify_roll_advantage",
             "mode": "advantage",
-            "on": ["attack_roll"]
+            "on": [
+              "attack_roll"
+            ]
           }
         ],
         "kind": "direct"

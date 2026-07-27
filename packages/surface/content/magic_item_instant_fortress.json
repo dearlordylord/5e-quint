@@ -23,7 +23,11 @@
           {
             "durability": {
               "acValue": 20,
-              "damageImmunities": ["bludgeoning", "piercing", "slashing"],
+              "damageImmunities": [
+                "bludgeoning",
+                "piercing",
+                "slashing"
+              ],
               "hpPerSection": 100
             },
             "kind": "create_object",

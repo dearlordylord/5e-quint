@@ -22,7 +22,9 @@
               "spellList": "druid"
             },
             {
-              "abilityFilter": ["int"],
+              "abilityFilter": [
+                "int"
+              ],
               "delta": {
                 "ability": "wis",
                 "kind": "ability_modifier",
@@ -30,10 +32,15 @@
                 "sign": "+"
               },
               "kind": "modify_roll_numeric",
-              "on": ["ability_check"],
+              "on": [
+                "ability_check"
+              ],
               "skillFilter": {
                 "kind": "fixed",
-                "skills": ["arcana", "nature"]
+                "skills": [
+                  "arcana",
+                  "nature"
+                ]
               }
             }
           ]

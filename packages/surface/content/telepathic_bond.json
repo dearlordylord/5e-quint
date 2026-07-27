@@ -33,7 +33,9 @@
               "count": 8,
               "disposition": "willing",
               "mode": "choose_up_to",
-              "targetKinds": ["creature"]
+              "targetKinds": [
+                "creature"
+              ]
             }
           }
         },

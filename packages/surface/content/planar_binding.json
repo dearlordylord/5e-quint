@@ -80,8 +80,15 @@
             "kind": "target",
             "selection": {
               "mode": "one",
-              "targetKinds": ["creature"],
-              "typeFilter": ["celestial", "elemental", "fey", "fiend"]
+              "targetKinds": [
+                "creature"
+              ],
+              "typeFilter": [
+                "celestial",
+                "elemental",
+                "fey",
+                "fiend"
+              ]
             }
           }
         },

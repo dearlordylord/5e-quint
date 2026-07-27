@@ -17,15 +17,21 @@
           {
             "kind": "modify_roll_advantage",
             "mode": "advantage",
-            "on": ["initiative"]
+            "on": [
+              "initiative"
+            ]
           },
           {
             "kind": "modify_roll_advantage",
             "mode": "advantage",
-            "on": ["ability_check"],
+            "on": [
+              "ability_check"
+            ],
             "skillFilter": {
               "kind": "fixed",
-              "skills": ["perception"]
+              "skills": [
+                "perception"
+              ]
             }
           },
           {
@@ -97,7 +103,9 @@
                   "sign": "+"
                 },
                 "kind": "modify_roll_numeric",
-                "on": ["saving_throw"]
+                "on": [
+                  "saving_throw"
+                ]
               }
             ],
             "kind": "direct"

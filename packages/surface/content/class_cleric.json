@@ -1,6 +1,10 @@
 {
   "armorTraining": {
-    "categories": ["light", "medium", "shield"],
+    "categories": [
+      "light",
+      "medium",
+      "shield"
+    ],
     "kind": "trained"
   },
   "className": "cleric",
@@ -45,17 +49,28 @@
   },
   "name": "Cleric",
   "primaryAbilities": {
-    "abilities": ["wis"],
+    "abilities": [
+      "wis"
+    ],
     "kind": "all_of"
   },
   "provenance": {
     "kind": "srd-5.2.1",
     "section": "Classes/Cleric.md:3-24,29,33-45,56-109,146-255"
   },
-  "savingThrowProficiencies": ["wis", "cha"],
+  "savingThrowProficiencies": [
+    "wis",
+    "cha"
+  ],
   "skillProficiencyChoice": {
     "choose": 2,
-    "options": ["history", "insight", "medicine", "persuasion", "religion"]
+    "options": [
+      "history",
+      "insight",
+      "medicine",
+      "persuasion",
+      "religion"
+    ]
   },
   "spellcasting": {
     "cantripAccess": {
@@ -623,7 +638,9 @@
   "subclassChoices": [
     {
       "level": 3,
-      "options": ["subclass_cleric_life_domain"]
+      "options": [
+        "subclass_cleric_life_domain"
+      ]
     }
   ],
   "toolProficiencies": {

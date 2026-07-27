@@ -171,7 +171,10 @@
         },
         "trigger": {
           "kind": "on_creature_attempts_magical_escape",
-          "methods": ["teleportation", "interplanar_travel"]
+          "methods": [
+            "teleportation",
+            "interplanar_travel"
+          ]
         }
       }
     ],

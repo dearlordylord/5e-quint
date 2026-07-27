@@ -14,7 +14,10 @@
       "v": true
     },
     "duration": {
-      "endsOn": ["dispel", "damage"],
+      "endsOn": [
+        "dispel",
+        "damage"
+      ],
       "kind": "permanent"
     },
     "family": "activation",
@@ -34,7 +37,10 @@
         },
         "effects": [
           {
-            "condition": ["invisible", "unconscious"],
+            "condition": [
+              "invisible",
+              "unconscious"
+            ],
             "kind": "apply_condition"
           }
         ],

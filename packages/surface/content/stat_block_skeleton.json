@@ -84,11 +84,18 @@
       "value": 13
     },
     "immunities": {
-      "conditions": ["exhaustion", "poisoned"],
-      "damageTypes": ["poison"]
+      "conditions": [
+        "exhaustion",
+        "poisoned"
+      ],
+      "damageTypes": [
+        "poison"
+      ]
     },
     "initiativeModifier": 3,
-    "languages": ["Understands Common plus one other language but can't speak"],
+    "languages": [
+      "Understands Common plus one other language but can't speak"
+    ],
     "savingThrowModifiers": [
       {
         "ability": "str",
@@ -132,7 +139,9 @@
       }
     ],
     "vulnerabilities": {
-      "damageTypes": ["bludgeoning"],
+      "damageTypes": [
+        "bludgeoning"
+      ],
       "kind": "fixed"
     }
   }
