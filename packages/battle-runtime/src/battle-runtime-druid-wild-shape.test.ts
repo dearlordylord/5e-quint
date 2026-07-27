@@ -1214,6 +1214,72 @@ test("does not turn fallen Heavy armor into worn armor through weapon pickup", (
   );
 });
 
+test("does not turn a fallen Shield into a wielded Shield through weapon pickup", () => {
+  const shieldObjectId = battleObjectId("shield:equipment_shield");
+  const initial = druidWildShapeBattle({
+    selectedLoadout: {
+      shield: {
+        itemId: shieldObjectId,
+        unitId: parseSharedUnitId("equipment_shield"),
+      },
+    },
+  });
+  const assume = wildShapeSubject(initial, {
+    action: "assumeForm",
+    formStatBlockId: ridingHorseId,
+  });
+  const needsDisposition = resolveDruidWildShape(initial, assume);
+  if (needsDisposition.tag !== "needsHoles") {
+    throw new Error("Expected Wild Shape equipment disposition hole.");
+  }
+  const hole = requireWildShapeEquipmentDispositionHole(needsDisposition.holes);
+  const shield = hole.candidates.find(isWildShapeShieldLoadoutObjectRef);
+  if (shield === undefined) {
+    throw new Error("Expected Shield disposition candidate.");
+  }
+  const fallen = requireResolved(
+    resolveDruidWildShape(initial, assume, [
+      wildShapeDispositionFill(hole, [
+        {
+          item: shield,
+          disposition: "falls",
+          fallInActorSpace: {
+            kind: "actorSpace",
+            positionId: druidGroundPositionId,
+          },
+        },
+      ]),
+    ]),
+  );
+  const dismissTurn = restoreBonusAction(fallen.state);
+  const reverted = requireResolved(
+    resolveDruidWildShape(
+      dismissTurn,
+      wildShapeSubject(dismissTurn, { action: "dismiss" }),
+    ),
+  );
+
+  expect(
+    applyBattleHeldWeaponPickup(reverted.state, {
+      interaction: {
+        actorId: druidId,
+        objectId: shieldObjectId,
+        actorSpace: {
+          kind: "actorSpace",
+          positionId: druidGroundPositionId,
+        },
+      },
+      loadoutSlot: "mainWeapon",
+    }),
+  ).toMatchObject({
+    tag: "invalid",
+    reason: "selectedLoadoutMismatch",
+  });
+  expect(reverted.state.groundObjects.get(druidId)?.has(shieldObjectId)).toBe(
+    true,
+  );
+});
+
 test("uses the Shield-compatible unarmored base when armor falls but the Shield remains worn", () => {
   const armoredWithShield = {
     ...heavyArmorClassState(),

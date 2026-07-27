@@ -307,11 +307,14 @@ stored durably in `BattleState.groundObjects`.
 Non-merged disposition now affects executable battle state. The leaf-only
 `battle-runtime-wild-shape-ground-object-lifecycle.mbt.qnt` witness models one
 lifecycle union whose variants distinguish effective-loadout, merged-form, and
-grounded custody. Variant payloads retain object kind, remaining Wild Shape
-uses, and—only where meaningful—whether the form is active. Its
+grounded custody for one identity-preserving selected weapon. Variant payloads
+retain remaining Wild Shape uses and—only where meaningful—whether the form is
+active. Its
 focused TypeScript driver checks the production reducer, effective-loadout
 behavior, Shillelagh availability, repeated transformation/reversion, weapon
-pickup, armor/Shield rejection, and resource spending.
+pickup, and resource spending. Focused runtime tests separately verify that
+fallen armor and Shields remain grounded when passed to the held-weapon pickup
+operation; they are not modeled as mutations of the weapon lifecycle identity.
 
 Recommended progression:
 
