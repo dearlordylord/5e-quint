@@ -29,7 +29,10 @@ export const SURFACE_PROTOCOL_KINDS = [
   "choiceKey",
   "holeId",
   "limitGroup",
+  "optionId",
 ] as const;
+
+export const SURFACE_PROSE_EVIDENCE_POLICIES = ["exact", "summary"] as const;
 
 export const SURFACE_PROJECTION_KINDS = [
   "derived-label",
@@ -61,6 +64,8 @@ export type SurfaceStatBlockReferenceRelation =
   (typeof SURFACE_STAT_BLOCK_REFERENCE_RELATIONS)[number];
 export type SurfaceIdentityKind = (typeof SURFACE_IDENTITY_KINDS)[number];
 export type SurfaceProtocolKind = (typeof SURFACE_PROTOCOL_KINDS)[number];
+export type SurfaceProseEvidencePolicy =
+  (typeof SURFACE_PROSE_EVIDENCE_POLICIES)[number];
 export type SurfaceProjectionKind = (typeof SURFACE_PROJECTION_KINDS)[number];
 
 export type SurfaceSchemaFieldRole =
@@ -70,6 +75,7 @@ export type SurfaceSchemaFieldRole =
     }
   | {
       readonly category: "prose";
+      readonly evidence: SurfaceProseEvidencePolicy;
     }
   | {
       readonly category: "protocol";
@@ -123,8 +129,17 @@ export function isSurfaceSchemaRole(
 ): value is SurfaceSchemaFieldRole {
   if (!isRecord(value) || typeof value.category !== "string") return false;
   const role = value;
-  if (role.category === "prose" || role.category === "provenance") {
+  if (role.category === "provenance") {
     return exactRoleKeys(role, ["category"]);
+  }
+  if (role.category === "prose") {
+    return (
+      exactRoleKeys(role, ["category", "evidence"]) &&
+      typeof role.evidence === "string" &&
+      SURFACE_PROSE_EVIDENCE_POLICIES.some(
+        (evidence) => evidence === role.evidence,
+      )
+    );
   }
   if (role.category === "identity") {
     return (
@@ -176,6 +191,7 @@ function surfaceSchemaRoleKey(value: unknown): string | undefined {
     return `reference:${value.targetKind}:${value.relation}`;
   }
   if (value.category === "projection") return `projection:${value.kind}`;
+  if (value.category === "prose") return `prose:${value.evidence}`;
   if (value.category === "vocabulary") return "vocabulary:literal";
   return value.category;
 }

@@ -92,7 +92,7 @@ const surfaceReference = <A, I, R>(
   });
 
 const surfaceProse = <A, I, R>(schema: Schema.Schema<A & string, I, R>) =>
-  surfaceSchemaRole(schema, { category: "prose" });
+  surfaceSchemaRole(schema, { category: "prose", evidence: "summary" });
 
 const NonEmptyStringSchema = Schema.NonEmptyTrimmedString;
 
@@ -2519,12 +2519,12 @@ export const StartingEquipmentItemRefSchema = Schema.Union(
 
 export const StartingEquipmentChoiceSchema = Schema.Union(
   Schema.Struct({
-    id: surfaceIdentity(NonEmptyStringSchema, "id"),
+    id: surfaceProtocol(NonEmptyStringSchema, "optionId"),
     kind: Schema.Literal("coin_grant"),
     coinsGp: NonNegativeIntegerSchema,
   }),
   Schema.Struct({
-    id: surfaceIdentity(NonEmptyStringSchema, "id"),
+    id: surfaceProtocol(NonEmptyStringSchema, "optionId"),
     kind: Schema.Literal("item_bundle"),
     items: Schema.NonEmptyArray(StartingEquipmentItemRefSchema),
     coinsGp: exactOptional(NonNegativeIntegerSchema),

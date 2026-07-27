@@ -29,6 +29,7 @@ import {
   StandardActionKindSchema,
   surfaceSchemaRole,
   type SurfaceIdentityKind,
+  type SurfaceProjectionKind,
   type SurfaceProtocolKind,
   type SurfaceStatBlockReferenceRelation,
   type SurfaceUnitReferenceRelation,
@@ -80,7 +81,15 @@ const surfaceStatBlockReference = <A, I, R>(
   );
 
 const surfaceProse = <A, I, R>(schema: Schema.Schema<A & string, I, R>) =>
-  surfaceSchemaRole(schema, { category: "prose" });
+  surfaceSchemaRole(schema, { category: "prose", evidence: "summary" });
+
+const surfaceExactProse = <A, I, R>(schema: Schema.Schema<A & string, I, R>) =>
+  surfaceSchemaRole(schema, { category: "prose", evidence: "exact" });
+
+const surfaceProjection = <A, I, R>(
+  schema: Schema.Schema<A & string, I, R>,
+  kind: SurfaceProjectionKind,
+) => surfaceSchemaRole(schema, { category: "projection", kind });
 // Handwritten spell / mechanics surface schema slice built on the shared base
 // vocabulary in schema-base.ts.
 
@@ -369,7 +378,10 @@ export const CastTimeEffectModeChoiceSchema = Schema.Struct({
 });
 
 export const HoleIdSchema = surfaceProtocol(Schema.String, "holeId");
-export const HoleLabelSchema = surfaceIdentity(Schema.String, "label");
+export const HoleLabelSchema = surfaceProjection(
+  Schema.String,
+  "derived-label",
+);
 
 function makeHoleSchema<A, I, R>(value: Schema.Schema<A, I, R>) {
   return Schema.Struct({
@@ -2089,7 +2101,7 @@ export const MaterialComponentSchema = strictStruct({
 const GenericComponentsSchema = Schema.Struct({
   v: Schema.Boolean,
   s: Schema.Boolean,
-  m: Schema.Union(Schema.Literal(false), surfaceProse(Schema.String)),
+  m: Schema.Union(Schema.Literal(false), surfaceExactProse(Schema.String)),
   materialCostGp: optionalExact(Schema.Number),
   materialConsumed: optionalExact(Schema.Literal(true)),
 });
@@ -3582,7 +3594,7 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
       Schema.Struct({ kind: Schema.Literal("fall_to_ground") }),
       Schema.Struct({
         kind: Schema.Literal("block_targeting"),
-        scope: surfaceIdentity(Schema.String, "label"),
+        scope: surfaceProjection(Schema.String, "derived-label"),
       }),
       Schema.Struct({
         kind: Schema.Literal("choose_new_target_or_lose"),
@@ -3590,7 +3602,7 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
       }),
       Schema.Struct({
         kind: Schema.Literal("block_travel"),
-        scope: surfaceIdentity(Schema.String, "label"),
+        scope: surfaceProjection(Schema.String, "derived-label"),
       }),
       Schema.Struct({
         kind: Schema.Literal("end_if_created_in_occupied_space"),
@@ -4426,7 +4438,7 @@ export const RandomTableOutcomeSchema: Schema.suspend<
   Schema.Struct({
     min: Schema.Number,
     max: Schema.Number,
-    label: surfaceIdentity(Schema.String, "label"),
+    label: surfaceProjection(Schema.String, "derived-label"),
     phases: optionalExact(nonEmpty(ActivationPhaseSchema)),
   }),
 ).annotations({ identifier: "RandomTableOutcome" });
@@ -4439,7 +4451,7 @@ export const OngoingRandomTableOutcomeSchema: Schema.suspend<
   Schema.Struct({
     min: Schema.Number,
     max: Schema.Number,
-    label: surfaceIdentity(Schema.String, "label"),
+    label: surfaceProjection(Schema.String, "derived-label"),
     effects: optionalExact(nonEmpty(OngoingEffectSchema)),
   }),
 ).annotations({ identifier: "OngoingRandomTableOutcome" });
@@ -4868,7 +4880,7 @@ export const CreatureNamedAttackRollSchema = Schema.extend(
   CreatureAttackRollMechanicsSchema,
   Schema.Struct({
     name: surfaceIdentity(Schema.String, "name"),
-    description: optionalExact(surfaceProse(Schema.String)),
+    description: optionalExact(surfaceExactProse(Schema.String)),
     limitedUse: optionalExact(
       Schema.suspend(() => CreatureLimitedUseSchema).annotations({
         identifier: "CreatureLimitedUse",
@@ -4879,7 +4891,7 @@ export const CreatureNamedAttackRollSchema = Schema.extend(
 
 const CreatureNamedSaveGateBaseSchemaFields = {
   name: surfaceIdentity(Schema.String, "name"),
-  description: optionalExact(surfaceProse(Schema.String)),
+  description: optionalExact(surfaceExactProse(Schema.String)),
   ability: AbilitySchema,
   dc: DcSourceSchema,
   onFail: EffectAtomSchema,
@@ -4941,7 +4953,7 @@ export const CreatureNamedActionOptionSchema = Schema.Struct({
 
 export const CreatureNamedSpecialActionSchema = Schema.Struct({
   name: surfaceIdentity(Schema.String, "name"),
-  description: surfaceProse(Schema.String),
+  description: surfaceExactProse(Schema.String),
   limitedUse: optionalExact(
     Schema.suspend(() => CreatureLimitedUseSchema).annotations({
       identifier: "CreatureLimitedUse",
@@ -4998,7 +5010,7 @@ export const CreatureTraitEffectSchema = Schema.Union(
 
 export const CreatureTraitSchema = Schema.Struct({
   name: surfaceIdentity(Schema.String, "name"),
-  description: surfaceProse(Schema.String),
+  description: surfaceExactProse(Schema.String),
   effect: optionalExact(CreatureTraitEffectSchema),
 });
 
@@ -5526,7 +5538,7 @@ export const CreatureStatBlockOverridesSchema = Schema.Struct({
 });
 
 export const CreatureModeSchema = Schema.Struct({
-  label: surfaceIdentity(Schema.String, "label"),
+  label: surfaceProjection(Schema.String, "derived-label"),
   options: nonEmpty(
     Schema.Struct({
       id: surfaceIdentity(Schema.String, "id"),
