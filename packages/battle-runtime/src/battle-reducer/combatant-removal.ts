@@ -20,7 +20,7 @@ import {
   normalizeBattleGrapples,
 } from "./creature-state-leaves.ts";
 import { battleStateInitIssue } from "./domain-helpers.ts";
-import { resetBattleTurnResources } from "./turn-end-movement.ts";
+import { resetBattleTurnResources } from "./turn-resource-reset.ts";
 
 function retiredExecutionScopeOwnership(
   combatant: BattleCreatureState,

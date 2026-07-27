@@ -47,7 +47,7 @@ import {
   battleProcedureExecutionRefForTest,
   battleProcedureExecutionRefForSpellHoleForTest,
   resolveBattleSubject,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 
 const spellCasterId = combatantId("chromatic-orb-caster");
 const firstTargetId = combatantId("chromatic-orb-first-target");

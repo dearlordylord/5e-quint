@@ -1,6 +1,6 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
-import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
+import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH acid_arrow dragons_breath flame_blade flaming_sphere heat_metal moonbeam ray_of_enfeeblement scorching_ray shatter spiritual_weapon
 // UNIT-IDENTITY-REPLAY: B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH acid_arrow doDiscoverAcidArrowAttackTiming
 // UNIT-IDENTITY-REPLAY: B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH dragons_breath doDiscoverDragonsBreathInitial
@@ -22,9 +22,9 @@ import {
   damageRollFillWithGroups,
   requireHole,
   requireResultHole,
-} from "./unit-profile-admission-creature-fixture-support.ts";
-import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
-import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
+} from "./unit-profile-admission-creature-fixture.test-support.ts";
+import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.test-support.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.test-support.ts";
 import {
   battleReducerStartRouteEvent,
   endTurn,
@@ -46,7 +46,7 @@ import {
   spellCasterId,
   spellTargetId,
   spiritualWeaponUnitId,
-} from "./unit-profile-admission-catalog-support.ts";
+} from "./unit-profile-admission-catalog.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
   bonusSpellAct,
@@ -56,9 +56,9 @@ import {
   moonbeamEndTurnSaveAct,
   singleTargetSavingThrowOutcomeFill,
   spellAct,
-} from "./unit-profile-admission-spell-fill-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
-import { spellSlotInvocationRef } from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission-spell-fill.test-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
+import { spellSlotInvocationRef } from "./unit-profile-admission.test-support.ts";
 
 const rayOfEnfeeblementUnitId = "ray_of_enfeeblement";
 type Level2DamageSpellUnitId =

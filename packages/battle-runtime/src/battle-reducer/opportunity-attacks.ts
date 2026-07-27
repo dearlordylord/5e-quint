@@ -68,7 +68,8 @@ import {
 } from "./attack-damage-events.ts";
 import { maybeOpenInterruptWindow } from "./interrupt-execution.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";
-import { needsHolesResult, revealHidden } from "./hole-helpers.ts";
+import { revealHidden } from "./hole-helpers.ts";
+import { needsHolesResult } from "./needs-holes-result.ts";
 import {
   attackDamageRidersAfterCunningStrikeCost,
   cunningStrikeDamageContinuation,

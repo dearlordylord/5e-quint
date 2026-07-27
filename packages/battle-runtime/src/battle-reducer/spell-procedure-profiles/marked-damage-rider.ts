@@ -1,3 +1,4 @@
+import { maybeOpenSpellCastReactionWindow } from "../spell-cast-reaction-window.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-marked-damage-rider
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER
@@ -59,7 +60,7 @@ import {
   type SpellMarkedDamageRider,
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
-import { snapshotBattle } from "../dispatcher.ts";
+import { snapshotBattle } from "../interrupt-execution.ts";
 import {
   BattleActiveEffectExecutionRef,
   BattleProcedureExecutionRef,
@@ -68,13 +69,17 @@ import {
 import { activeMarkedDamageRiderEffect } from "../damage-helpers.ts";
 import { currentActorId } from "../creature-state-leaves.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";
-import { maybeOpenInterruptWindow } from "../dispatcher.ts";
-import { needsHolesResult } from "../hole-helpers.ts";
+
+import { needsHolesResult } from "../needs-holes-result.ts";
 import { invalidResult } from "../result-helpers.ts";
+import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
+import { ATTACK_TARGET_HOLE_ID } from "../battle-runtime-protocol.ts";
 import { battleStateAfterTargetActionEarlyEndForActor } from "../sanctuary-targeting-interdiction.ts";
 import { expendSpellSlot } from "../spell-effects.ts";
-import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
-import { spellAbilityChoiceHole } from "../spells-damage-fills.ts";
+import {
+  spellAbilityChoiceHole,
+  spellAbilityChoiceHoleId,
+} from "../spells-damage-fills.ts";
 import { HUNTERS_MARK_FINDING_SKILLS } from "../domain-constants.ts";
 import { markSpellSlotExpendedThisTurn } from "../spell-turn-resources.ts";
 import {
@@ -485,17 +490,12 @@ function resolveMarkedDamageRider(
   input: MarkedDamageRiderResolveInput,
 ): BattleResolutionResult {
   if (
-    input.fillSet.targetList !== undefined ||
-    input.fillSet.attackRoll !== undefined ||
-    input.fillSet.targetAllocation !== undefined ||
-    input.fillSet.damageRoll !== undefined ||
-    input.fillSet.attackBurstDamageRoll !== undefined ||
-    input.fillSet.healingRoll !== undefined ||
-    input.fillSet.damageDispositions.length > 0 ||
-    input.fillSet.savingThrowOutcomes !== undefined ||
-    input.fillSet.skillChoice !== undefined ||
-    input.fillSet.targetAbilityChoices !== undefined ||
-    input.fillSet.concentrationSavingThrows.length > 0
+    !fillsBelongToSpellCastHoles(input.input.fills, [
+      ATTACK_TARGET_HOLE_ID,
+      ...(input.invocation.action === "cast"
+        ? [spellAbilityChoiceHoleId(input.invocation)]
+        : []),
+    ])
   ) {
     return invalidResult(
       input.input.state,
@@ -556,21 +556,11 @@ function resolveMarkedDamageRider(
     );
   }
   if (input.invocation.action === "cast") {
-    const spellCastReactionWindow = maybeOpenInterruptWindow(
-      input.input.state,
-      spellCastInterruptFrame({
-        casterId: input.actorId,
-        invocation: input.invocation,
-        targetIds: [input.fillSet.targetId],
-        reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
-        castingResource: { kind: "bonusAction" },
-        continuation: {
-          kind: "replay",
-          subject: input.input.subject,
-          fills: input.input.fills,
-        },
-      }),
-      input.input.handledInterruptTrigger,
+    const spellCastReactionWindow = maybeOpenSpellCastReactionWindow(
+      input,
+      [input.fillSet.targetId],
+      { kind: "bonusAction" },
+      undefined,
     );
     if (spellCastReactionWindow !== null) {
       return spellCastReactionWindow;

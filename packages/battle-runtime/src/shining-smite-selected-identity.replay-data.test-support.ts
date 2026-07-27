@@ -1,13 +1,13 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { expect } from "vitest";
-import { characterSpellInvocationRefForProcedureRefForTest } from "./battle-runtime-test-support.ts";
+import { characterSpellInvocationRefForProcedureRefForTest } from "./battle-runtime.test-support.ts";
 
 import { SHINING_SMITE_BRIGHT_LIGHT_RADIUS_FEET } from "./battle-reducer/spells-active-effects.ts";
 import {
   shiningSmiteUnitId,
   spellCasterId,
   spellTargetId,
-} from "./unit-profile-admission-catalog-support.ts";
+} from "./unit-profile-admission-catalog.test-support.ts";
 import {
   attackRollFill,
   attackTargetFill,
@@ -17,9 +17,9 @@ import {
   requireResultHole,
   weaponAttackSubject,
   zeroAbilityWeaponAttack,
-} from "./unit-profile-admission-creature-fixture-support.ts";
+} from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   elapsedTimeTicks,
   movementFeet,
@@ -27,8 +27,8 @@ import {
   resolveBattleSubject,
   snapshotBattle,
   spellSlotInvocationRef,
-} from "./unit-profile-admission-test-support.ts";
-import type { SelectedIdentityReplayWitness } from "./selected-identity-witness.ts";
+} from "./unit-profile-admission.test-support.ts";
+import type { SelectedIdentityReplayWitness } from "./selected-identity-witness.test-support.ts";
 
 export const shiningSmiteSelectedIdentityReplay = {
   describeLabel: "Shining Smite selected identity replay",

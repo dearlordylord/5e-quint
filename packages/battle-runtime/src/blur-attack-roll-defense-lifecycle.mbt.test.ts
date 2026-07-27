@@ -1,5 +1,5 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
-import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
+import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-blur-attack-roll-defense
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE
@@ -31,7 +31,7 @@ import {
   quintVariantTag,
   run,
   stateCheck,
-} from "./battle-runtime-mbt-driver-kit.ts";
+} from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import type {
   BattleFill,
   BattleHole,
@@ -48,22 +48,22 @@ import {
   requireResultHole,
   statBlockAttackAct,
   statBlockWithCreatureType,
-} from "./unit-profile-admission-creature-fixture-support.ts";
+} from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
   maybeSpellAct,
   spellAct,
-} from "./unit-profile-admission-spell-fill-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+} from "./unit-profile-admission-spell-fill.test-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   breakBattleConcentration,
   combatantId,
   endTurn,
-} from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission.test-support.ts";
 import {
   blurUnitId,
   spellCasterId,
-} from "./unit-profile-admission-catalog-support.ts";
+} from "./unit-profile-admission-catalog.test-support.ts";
 
 const ATTACK_ROLL_MODES = ["normal", "advantage", "disadvantage"] as const;
 type AttackRollMode = (typeof ATTACK_ROLL_MODES)[number];

@@ -1,4 +1,4 @@
-import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
+import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.test-support.ts";
 
 import { sorcererMetamagicTwinnedSelectedIdentityReplay } from "./sorcerer-metamagic-twinned-selected-identity.replay-data.test-support.ts";
 

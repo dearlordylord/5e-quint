@@ -1,3 +1,4 @@
+import { maybeOpenSpellCastReactionWindow } from "../spell-cast-reaction-window.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-expeditious-retreat-dash
 import { ConcentrationBattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
@@ -26,23 +27,22 @@ import {
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
 import { activeOngoingFeaturesPreventSpellInvocation } from "../spells-invocation-guards.ts";
-import { maybeOpenInterruptWindow, snapshotBattle } from "../dispatcher.ts";
+import { snapshotBattle } from "../interrupt-execution.ts";
 import { CombatantId } from "../../identity.ts";
 import { allocateBattleActiveEffectRef } from "../../active-effect/execution-ref.ts";
-import { applyDashToActor } from "../attack-resolution.ts";
+import { applyDashToActor } from "../mobility-actions.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";
 import { revealHidden } from "../hole-helpers.ts";
 import { representedMovementSpeedKinds } from "../movement-speed.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { battleStateAfterTargetActionEarlyEndForActor } from "../sanctuary-targeting-interdiction.ts";
-import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
 import { expendSpellSlot } from "../spell-effects.ts";
 import {
   markSpellSlotExpendedThisTurn,
   spellActTurnResourceAvailable,
   spellHasAvailableSpend,
 } from "../spell-turn-resources.ts";
-import { spellFillSetContainsOnlySpellCastReactionFacts } from "../spells-resolve-fill-set.ts";
+import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
@@ -179,7 +179,7 @@ function resolveExpeditiousRetreatDash(
       "Expeditious Retreat caster is not in this battle.",
     );
   }
-  if (!spellFillSetContainsOnlySpellCastReactionFacts(input.fillSet, {})) {
+  if (!fillsBelongToSpellCastHoles(input.input.fills)) {
     return invalidResult(
       input.input.state,
       "invalidFill",
@@ -230,21 +230,11 @@ function resolveExpeditiousRetreatDash(
   const castingState = input.invocation.spellRuleFacts.components.verbal
     ? revealHidden(input.input.state, subject.actorId)
     : input.input.state;
-  const spellCastReactionWindow = maybeOpenInterruptWindow(
-    castingState,
-    spellCastInterruptFrame({
-      casterId: subject.actorId,
-      invocation: input.invocation,
-      targetIds: [subject.actorId],
-      reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
-      castingResource: { kind: "bonusAction" },
-      continuation: {
-        kind: "replay",
-        subject: input.input.subject,
-        fills: input.input.fills,
-      },
-    }),
-    input.input.handledInterruptTrigger,
+  const spellCastReactionWindow = maybeOpenSpellCastReactionWindow(
+    input,
+    [subject.actorId],
+    { kind: "bonusAction" },
+    undefined,
   );
   if (spellCastReactionWindow !== null) {
     return spellCastReactionWindow;

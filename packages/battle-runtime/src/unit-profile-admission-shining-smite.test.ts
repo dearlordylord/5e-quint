@@ -3,13 +3,13 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-SHINING-SMITE shining_smite
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-after-hit-damage-illumination
 import { describe, expect, test } from "vitest";
-import { characterSpellInvocationRefForProcedureRefForTest } from "./battle-runtime-test-support.ts";
-import { characterAttackSubjectForTest } from "./battle-runtime-test-support.ts";
+import { characterSpellInvocationRefForProcedureRefForTest } from "./battle-runtime.test-support.ts";
+import { characterAttackSubjectForTest } from "./battle-runtime.test-support.ts";
 import {
   shiningSmiteUnitId,
   spellCasterId,
   spellTargetId,
-} from "./unit-profile-admission-catalog-support.ts";
+} from "./unit-profile-admission-catalog.test-support.ts";
 import {
   attackRollFill,
   attackTargetFill,
@@ -20,9 +20,9 @@ import {
   requireResultHole,
   weaponAttackSubject,
   zeroAbilityWeaponAttack,
-} from "./unit-profile-admission-creature-fixture-support.ts";
+} from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import { SHINING_SMITE_BRIGHT_LIGHT_RADIUS_FEET } from "./battle-reducer/spells-active-effects.ts";
 import {
   applyCondition,
@@ -36,8 +36,8 @@ import {
   resolveBattleSubject,
   snapshotBattle,
   spellSlotInvocationRef,
-} from "./unit-profile-admission-test-support.ts";
-import type { BattleSubject } from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission.test-support.ts";
+import type { BattleSubject } from "./unit-profile-admission.test-support.ts";
 
 describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () => {
   test("shining_smite adds Radiant damage after a melee hit and illuminates the target until Concentration ends", () => {

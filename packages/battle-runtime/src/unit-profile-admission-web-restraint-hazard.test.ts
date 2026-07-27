@@ -3,7 +3,7 @@ import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import {
   battleActiveEffectExecutionRefForTest,
   requireCharacterSpellProcedureRefForTest,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-WEB-TERRAIN-OBSCUREMENT-FIRE web
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-web-restraint-hazard
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE
@@ -14,7 +14,7 @@ import {
   requireResultHole,
   abilityCheckFill,
   movementFill,
-} from "./unit-profile-admission-creature-fixture-support.ts";
+} from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
   singleTargetSavingThrowOutcomeFill,
@@ -24,8 +24,8 @@ import {
   webAreaRemovedAct,
   webRestrainedNoLongerInAreaAct,
   webRestraintSaveAct,
-} from "./unit-profile-admission-spell-fill-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+} from "./unit-profile-admission-spell-fill.test-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import { type CombatantId } from "./identity.ts";
 import {
   battleObscurementZones,
@@ -35,15 +35,15 @@ import {
   movementFeet,
   resolveBattleSubject,
   spellSlotInvocationRef,
-} from "./unit-profile-admission-test-support.ts";
-import type { BattleSubject } from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission.test-support.ts";
+import type { BattleSubject } from "./unit-profile-admission.test-support.ts";
 import {
   ensnaringStrikeHelperId,
   spellCasterId,
   spellTargetId,
   webAreaId,
   webUnitId,
-} from "./unit-profile-admission-catalog-support.ts";
+} from "./unit-profile-admission-catalog.test-support.ts";
 import { tickDurationEffects } from "./battle-reducer/turn-end-movement.ts";
 import { discoverBattleActs } from "./index.ts";
 

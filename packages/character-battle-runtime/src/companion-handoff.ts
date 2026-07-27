@@ -34,6 +34,7 @@ import {
   findFamiliarFormEligibilityForSpell,
   PACT_OF_THE_CHAIN_SPECIAL_FORM_REFS,
   type FindFamiliarFormEligibility,
+  type FindFamiliarFormSelection,
 } from "@dnd/surface/surface/find-familiar-forms";
 import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
@@ -269,36 +270,33 @@ function battleStoredFormForSheetCompanion(input: {
   CharacterSheetBattleHandoffIssue
 > {
   const proof = input.companion.manifestation;
-  const formAccess = battleFormAccessForSheetCompanion({
+  const formSelectionAccess = battleFormSelectionAccessForSheetCompanion({
     protocol: input.companion.protocol,
     selectedForm: proof.selectedForm,
   });
-  if (Either.isLeft(formAccess)) return Either.left(formAccess.left);
+  if (Either.isLeft(formSelectionAccess)) {
+    return Either.left(formSelectionAccess.left);
+  }
   const proofIssue = retainedCompanionResolvedFormProofIssue({
     unitLibrary: input.unitLibrary,
     statBlockCatalog: input.statBlockCatalog,
-    selectedForm: proof.selectedForm,
+    selectedForm: formSelectionAccess.right.selectedForm,
     resolvedStatBlockId: proof.resolvedStatBlockId,
   });
   if (proofIssue !== null) {
     return characterSheetBattleHandoffIssue(proofIssue);
   }
   const formEligibility = battleCompanionFormEligibilityForAccess({
-    formAccess: formAccess.right,
+    formAccess: formSelectionAccess.right.formAccess,
     unitLibrary: input.unitLibrary,
   });
   if (Either.isLeft(formEligibility)) return Either.left(formEligibility.left);
-  if (formAccess.right === "findFamiliar") {
-    if (proof.selectedForm.tag === "pactOfTheChainSpecialForm") {
-      return characterSheetBattleHandoffIssue(
-        "Find Familiar retained companion access cannot use special companion forms.",
-      );
-    }
+  if (formSelectionAccess.right.formAccess === "findFamiliar") {
     return Either.right({
       formEligibility: formEligibility.right,
       storedForm: {
         formAccess: "findFamiliar",
-        formSelection: proof.selectedForm,
+        formSelection: formSelectionAccess.right.selectedForm,
         resolvedStatBlockId: proof.resolvedStatBlockId,
       },
     });
@@ -307,7 +305,7 @@ function battleStoredFormForSheetCompanion(input: {
     formEligibility: formEligibility.right,
     storedForm: {
       formAccess: "pactOfTheChain",
-      formSelection: proof.selectedForm,
+      formSelection: formSelectionAccess.right.selectedForm,
       resolvedStatBlockId: proof.resolvedStatBlockId,
     },
   });
@@ -431,13 +429,20 @@ function retainedFamiliarLikeNormalFormProofIssue(input: {
     : "Retained companion normal form proof does not match its resolved Stat Block id.";
 }
 
-function battleFormAccessForSheetCompanion(input: {
+type BattleFormSelectionAccess =
+  | {
+      readonly formAccess: "findFamiliar";
+      readonly selectedForm: FindFamiliarFormSelection;
+    }
+  | {
+      readonly formAccess: "pactOfTheChain";
+      readonly selectedForm: CharacterSheetCompanionFormSelection;
+    };
+
+function battleFormSelectionAccessForSheetCompanion(input: {
   readonly protocol: CharacterSheetRetainedCompanionProtocol;
   readonly selectedForm: CharacterSheetCompanionFormSelection;
-}): Either.Either<
-  BattleCompanionStoredForm["formAccess"],
-  CharacterSheetBattleHandoffIssue
-> {
+}): Either.Either<BattleFormSelectionAccess, CharacterSheetBattleHandoffIssue> {
   const formAccess = retainedCompanionProtocolFacts(input.protocol).formCatalog;
   if (input.selectedForm.tag === "pactOfTheChainSpecialForm") {
     if (formAccess !== "pactOfTheChain") {
@@ -445,9 +450,15 @@ function battleFormAccessForSheetCompanion(input: {
         "Special retained companion forms require an attack-exception protocol.",
       );
     }
-    return Either.right("pactOfTheChain");
+    return Either.right({
+      formAccess: "pactOfTheChain",
+      selectedForm: input.selectedForm,
+    });
   }
-  return Either.right(formAccess);
+  return Either.right({
+    formAccess,
+    selectedForm: input.selectedForm,
+  });
 }
 
 export function settleCompanionFromBattle(input: {

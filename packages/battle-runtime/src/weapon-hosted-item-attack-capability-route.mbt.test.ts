@@ -23,7 +23,7 @@ import {
   run,
   stateCheck,
   type ReducerRouteEvent,
-} from "./battle-runtime-mbt-driver-kit.ts";
+} from "./battle-runtime-mbt-driver-kit.test-support.ts";
 
 const ATTACK_HOST_BY_VARIANT_TAG = {
   HeldWeaponAvailableAttackHost: "heldWeaponAvailableAttackHost",

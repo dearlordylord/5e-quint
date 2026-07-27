@@ -6,14 +6,14 @@ import {
   characterAttackSubjectForTest,
   characterBattleFeatureInitForTest,
   requireCharacterUnitProcedureRefForTest,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import {
   rogueSneakAttackUnitId,
   savageAttackerUnitId,
   spellCasterId,
   spellTargetId,
   unitLibrary,
-} from "./unit-profile-admission-catalog-support.ts";
+} from "./unit-profile-admission-catalog.test-support.ts";
 import {
   attackRollFill,
   attackTargetFill,
@@ -21,12 +21,12 @@ import {
   requireResultHole,
   weaponAttackSubject,
   zeroAbilityWeaponAttack,
-} from "./unit-profile-admission-creature-fixture-support.ts";
+} from "./unit-profile-admission-creature-fixture.test-support.ts";
 import {
   attackDamageRiderBattleUnitRef,
   savageAttackerBattle,
   savageAttackerBattleUnitRef,
-} from "./unit-profile-admission-feature-fixture-support.ts";
+} from "./unit-profile-admission-feature-fixture.test-support.ts";
 import {
   battleUnitRefWithSupportProfiles,
   classLevel,
@@ -37,8 +37,8 @@ import {
   parseSupportedUnitFeatureProfile,
   resolveBattleSubject,
   WEAPON_DAMAGE_DICE_ROLL_CHOICE_SUPPORT_PROFILE,
-} from "./unit-profile-admission-test-support.ts";
-import type { BattleState } from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission.test-support.ts";
+import type { BattleState } from "./unit-profile-admission.test-support.ts";
 
 describe("QMBT31 deterministic Savage Attacker profile slice", () => {
   test("savage attacker is admitted and projected as a weapon damage dice roll choice", () => {

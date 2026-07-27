@@ -3,10 +3,10 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31F true_strike
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31C divine_smite
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-after-hit-damage spell.invocation-spell-hosted-weapon-attack
-import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime-test-support.ts";
+import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { describe, expect, test } from "vitest";
-import { characterAttackSubjectForTest } from "./battle-runtime-test-support.ts";
+import { characterAttackSubjectForTest } from "./battle-runtime.test-support.ts";
 import {
   divineSmiteUnitId,
   rayOfFrostUnitId,
@@ -14,7 +14,7 @@ import {
   spellTargetId,
   statBlockCatalog,
   trueStrikeUnitId,
-} from "./unit-profile-admission-catalog-support.ts";
+} from "./unit-profile-admission-catalog.test-support.ts";
 import {
   attackRollFill,
   attackTargetFill,
@@ -26,10 +26,10 @@ import {
   statBlockWithCreatureType,
   weaponAttackSubject,
   zeroAbilityWeaponAttack,
-} from "./unit-profile-admission-creature-fixture-support.ts";
+} from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
-import { spellAct } from "./unit-profile-admission-spell-fill-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+import { spellAct } from "./unit-profile-admission-spell-fill.test-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   abilityModifier,
   attackBonus,
@@ -46,8 +46,8 @@ import {
   resolveBattleSubject,
   spellSlotInvocationRef,
   trueStrikeInput,
-} from "./unit-profile-admission-test-support.ts";
-import type { BattleFill } from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission.test-support.ts";
+import type { BattleFill } from "./unit-profile-admission.test-support.ts";
 
 describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => {
   test("true_strike casts through its material weapon using spellcasting ability and cantrip Radiant scaling", () => {

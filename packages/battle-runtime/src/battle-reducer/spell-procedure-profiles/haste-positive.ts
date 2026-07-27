@@ -1,3 +1,5 @@
+import { resolveSpellActiveEffectCast } from "../spell-active-effect-resolution.ts";
+import { actionSpellCastCandidatesForTargetHole } from "../spell-cast-candidate.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-haste-positive
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-glyph-stored-concentration-full-duration
@@ -22,32 +24,28 @@ import type {
 import { isEffectAtom } from "@dnd/surface/surface/types";
 import { Either, Schema } from "effect";
 
-import { battleCreatureWithSpellActiveEffects } from "../../active-effect/lifecycle.ts";
 import type { BattleActiveEffect } from "../../active-effect/types.ts";
 import {
   type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
-  type BattleHole,
   type BattleResolutionResult,
   type BattleState,
   type HastePositiveSpellInvocation,
 } from "../../battle-state-execution.ts";
-import { maybeOpenInterruptWindow, snapshotBattle } from "../dispatcher.ts";
 import { CombatantId } from "../../identity.ts";
-import { allocateBattleActiveEffectRef } from "../../active-effect/execution-ref.ts";
-import { breakBattleConcentration } from "../damage-apply.ts";
-import { needsHolesResult } from "../hole-helpers.ts";
+
+import { replaceAllocatedTargetSpellActiveEffects } from "../active-effect-replacement.ts";
+import { spellSelectionResolution } from "../needs-holes-result.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { battleStateWithCurrentActorSpellGrantedActionResourcesForTargets } from "../spell-granted-action-resource.ts";
-import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
 import { sameStringSet } from "../spells-execution-facts.ts";
 import type { SpellFillSet } from "../spells-resolve-fill-set.ts";
+import { spellTargetHole } from "../spells-holes-fills.ts";
 import {
-  spellRequiresConcentration,
-  spendSpellCastResources,
-} from "../spells-resolve-resources.ts";
-import { spellTargetHole, spellTargetIsLegal } from "../spells-holes-fills.ts";
+  spellSingleTargetSelection,
+  type SpellSingleTargetSelection,
+} from "../spells-resolve-target-selection.ts";
 import {
   MovementFeet,
   PreparedSpellAccessSchema,
@@ -93,11 +91,6 @@ const HastePositiveActionRestrictionSchema = Schema.Struct({
     Schema.Struct({ action: Schema.Literal("utilize") }),
   ),
 });
-
-type HastePositiveTargetSelection =
-  | { readonly tag: "ok"; readonly targetIds: readonly [CombatantId] }
-  | { readonly tag: "needsHoles"; readonly hole: BattleHole }
-  | { readonly tag: "invalid"; readonly message: string };
 
 function admitHastePositive(
   spell: BattleSpellAdmissionSource,
@@ -325,19 +318,11 @@ function discoverHastePositiveCastAct(
   invocation: BattleExecutableSpellInvocation<HastePositiveSpellInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const targetHole = spellTargetHole(state, actorId, invocation);
-  return targetHole.choices.length === 0
-    ? []
-    : [
-        {
-          subject: {
-            tag: "actionSpell" as const,
-            actorId,
-            procedureRef: invocation.sourceProcedureRef,
-            mode: { tag: "cast" as const },
-          },
-          initialHoles: [targetHole],
-        },
-      ];
+  return actionSpellCastCandidatesForTargetHole(
+    actorId,
+    invocation.sourceProcedureRef,
+    targetHole,
+  );
 }
 
 function resolveHastePositive(
@@ -351,89 +336,32 @@ function resolveHastePositive(
     );
   }
 
-  const targetSelection = hastePositiveTargetSelection(input);
-  if (targetSelection.tag === "needsHoles") {
-    return needsHolesResult(input.input.state, input.input.subject, [
-      targetSelection.hole,
-    ]);
-  }
-  if (targetSelection.tag === "invalid") {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      targetSelection.message,
-    );
-  }
-
-  if (input.storedGlyphRelease === undefined) {
-    const spellCastReactionWindow = maybeOpenInterruptWindow(
-      input.input.state,
-      spellCastInterruptFrame({
-        casterId: input.actorId,
-        invocation: input.invocation,
-        targetIds: targetSelection.targetIds,
-        reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
-        castingResource: { kind: "magicAction" },
-        continuation: {
-          kind: "replay",
-          subject: input.input.subject,
-          fills: input.input.fills,
-        },
-      }),
-      input.input.handledInterruptTrigger,
-    );
-    if (spellCastReactionWindow !== null) {
-      return spellCastReactionWindow;
-    }
-  }
-
-  const concentrationBase =
-    input.storedGlyphRelease !== undefined
-      ? input.input.state
-      : spellRequiresConcentration(input.invocation)
-        ? breakBattleConcentration(input.input.state, input.actorId)
-        : input.input.state;
-  const effected = applyHastePositiveEffects(
-    concentrationBase,
-    input.actorId,
-    targetSelection.targetIds,
-    input.invocation,
+  const targetSelectionResolution = spellSelectionResolution(
+    input.input.state,
+    input.input.subject,
+    hastePositiveTargetSelection(input),
   );
-  if (input.storedGlyphRelease !== undefined) {
-    const resolvedState =
-      battleStateWithCurrentActorSpellGrantedActionResourcesForTargets(
-        effected,
-        targetSelection.targetIds,
-      );
-    return {
-      tag: "resolved",
-      state: resolvedState,
-      snapshot: snapshotBattle(resolvedState),
-    };
-  }
-  const resourced = spendSpellCastResources({
-    state: effected,
-    actorId: input.actorId,
-    invocation: input.invocation,
-    errorState: input.input.state,
-    ...(input.storedGlyphRelease !== undefined
-      ? { startConcentration: false }
-      : {}),
-  });
-  if (resourced.tag === "invalid") {
-    return resourced;
-  }
+  if (targetSelectionResolution.tag === "resolution")
+    return targetSelectionResolution.result;
+  const targetSelection = targetSelectionResolution.selection;
 
-  const resolvedState =
-    battleStateWithCurrentActorSpellGrantedActionResourcesForTargets(
-      resourced.state,
-      targetSelection.targetIds,
-    );
-  return {
-    tag: "resolved",
-    state: resolvedState,
-    snapshot: snapshotBattle(resolvedState),
-  };
+  return resolveSpellActiveEffectCast({
+    resolution: input,
+    targetIds: targetSelection.targetIds,
+    castingResource: { kind: "magicAction" },
+    applyEffect: (state) =>
+      applyHastePositiveEffects(
+        state,
+        input.actorId,
+        targetSelection.targetIds,
+        input.invocation,
+      ),
+    finalizeState: (state) =>
+      battleStateWithCurrentActorSpellGrantedActionResourcesForTargets(
+        state,
+        targetSelection.targetIds,
+      ),
+  });
 }
 
 function hasNonHastePositiveFill(
@@ -471,32 +399,16 @@ function hastePositiveTargetSelection(input: {
   readonly actorId: CombatantId;
   readonly invocation: BattleExecutableSpellInvocation<HastePositiveSpellInvocation>;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
-}): HastePositiveTargetSelection {
-  if (input.fillSet.targetList !== undefined) {
-    return {
-      tag: "invalid",
-      message: "Haste positive effects require one target choice.",
-    };
-  }
-  if (input.fillSet.targetId === undefined) {
-    return {
-      tag: "needsHoles",
-      hole: spellTargetHole(input.input.state, input.actorId, input.invocation),
-    };
-  }
-  return spellTargetIsLegal(
-    input.input.state,
-    input.actorId,
-    input.fillSet.targetId,
-    input.invocation,
-    input.fillSet.targetSpatialFacts,
-  )
-    ? { tag: "ok", targetIds: [input.fillSet.targetId] }
-    : {
-        tag: "invalid",
-        message:
-          "Haste target must be a known willing combatant the caster can see within the spell's supported range.",
-      };
+}): SpellSingleTargetSelection {
+  return spellSingleTargetSelection({
+    state: input.input.state,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    fillSet: input.fillSet,
+    targetListMessage: "Haste positive effects require one target choice.",
+    invalidTargetMessage:
+      "Haste target must be a known willing combatant the caster can see within the spell's supported range.",
+  });
 }
 
 function applyHastePositiveEffects(
@@ -505,50 +417,33 @@ function applyHastePositiveEffects(
   targetIds: readonly CombatantId[],
   invocation: BattleExecutableSpellInvocation<HastePositiveSpellInvocation>,
 ): BattleState {
-  return targetIds.reduce((nextState, targetId) => {
-    const target = nextState.combatants.get(targetId);
-    if (target === undefined) {
-      return nextState;
-    }
-    const allocation = allocateBattleActiveEffectRef({
-      state: nextState,
-      ownerId: targetId,
-    });
-    if (allocation.tag === "ownerNotFound") return nextState;
-    const allocatedTarget = allocation.owner;
-    const nextEffects = hastePositiveEffects(invocation).map((effect) =>
-      effect.kind === "spellGrantedActionResource"
-        ? {
-            ...effect,
-            sourceProcedureRef: invocation.sourceProcedureRef,
-            sourceCombatantId: actorId,
-            effectRef: allocation.effectRef,
-          }
-        : {
-            ...effect,
-            sourceProcedureRef: invocation.sourceProcedureRef,
-            sourceCombatantId: actorId,
-          },
-    );
-    const activeEffects = [
-      ...allocatedTarget.activeEffects.filter(
+  return targetIds.reduce(
+    (nextState, targetId) =>
+      replaceAllocatedTargetSpellActiveEffects(
+        nextState,
+        targetId,
         (effect) =>
-          !(
-            isHastePositiveActiveEffect(effect) &&
-            effect.sourceProcedureRef === invocation.sourceProcedureRef &&
-            effect.sourceCombatantId === actorId
+          isHastePositiveActiveEffect(effect) &&
+          effect.sourceProcedureRef === invocation.sourceProcedureRef &&
+          effect.sourceCombatantId === actorId,
+        (effectRef) =>
+          hastePositiveEffects(invocation).map((effect) =>
+            effect.kind === "spellGrantedActionResource"
+              ? {
+                  ...effect,
+                  sourceProcedureRef: invocation.sourceProcedureRef,
+                  sourceCombatantId: actorId,
+                  effectRef,
+                }
+              : {
+                  ...effect,
+                  sourceProcedureRef: invocation.sourceProcedureRef,
+                  sourceCombatantId: actorId,
+                },
           ),
       ),
-      ...nextEffects,
-    ];
-    return {
-      ...allocation.state,
-      combatants: new Map(allocation.state.combatants).set(
-        targetId,
-        battleCreatureWithSpellActiveEffects(allocatedTarget, activeEffects),
-      ),
-    };
-  }, state);
+    state,
+  );
 }
 
 type HastePositiveActiveEffect = Extract<

@@ -1,7 +1,7 @@
 import {
   battleProcedureExecutionRefForTest,
   resolveBattleSubject,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import {
   battleActSpellSlotPresentation,
   battleActSpellPresentation,
@@ -59,9 +59,9 @@ import {
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
-import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
-import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
-import { spellConditionChoiceFill } from "./unit-profile-admission-spell-fill-support.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.test-support.ts";
+import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.test-support.ts";
+import { spellConditionChoiceFill } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 
 type ConditionSavingThrowSelectedIdentityProjection = {

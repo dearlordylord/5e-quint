@@ -1,3 +1,7 @@
+import {
+  completeSpellActiveEffectCast,
+  maybeOpenConfiguredSpellCastReactionWindow,
+} from "../spell-active-effect-resolution.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-roll-modifier
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-glyph-stored-concentration-full-duration
@@ -48,36 +52,36 @@ import {
   type SelectedRollModifierSpellEffect,
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
-import { snapshotBattle } from "../dispatcher.ts";
-import { breakBattleConcentration } from "../damage-apply.ts";
-import { maybeOpenInterruptWindow } from "../dispatcher.ts";
-import { needsHolesResult } from "../hole-helpers.ts";
+
+import { spellSelectionResolution } from "../needs-holes-result.ts";
 import { invalidResult } from "../result-helpers.ts";
-import {
-  spellCastInterruptFrame,
-  spellCastMetamagicApplicationsInput,
-} from "../spell-cast-interrupt-frame.ts";
+import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
+import { ATTACK_TARGET_HOLE_ID } from "../battle-runtime-protocol.ts";
 import {
   rollModifierUsesTargetAbilityChoices,
   spellRollModifierAbilityChoiceHole,
+  spellRollModifierAbilityChoiceHoleId,
   spellRollModifierSkillChoiceHole,
+  spellRollModifierSkillChoiceHoleId,
   spellRollModifierTargetAbilityChoicesHole,
+  spellRollModifierTargetAbilityChoicesHoleId,
 } from "../spells-damage-fills.ts";
+import { spellSavingThrowOutcomeHoleId } from "../spells-damage-fills.ts";
 import { targetListSpellUsesTargetListHole } from "../spells-discovery.ts";
 import {
   isD20RollModifierSpellProjection,
   rollModifierSpellProjection,
 } from "../spells-profiles-support.ts";
 import {
-  spellRequiresConcentration,
-  spendSpellCastResources,
-} from "../spells-resolve-resources.ts";
-import {
   rollModifierSpellAffectedTargets,
   rollModifierSpellEffectSelection,
   rollModifierSpellTargetSelection,
 } from "../spells-resolve-target-selection.ts";
-import { spellTargetHole, spellTargetListHole } from "../spells-targeting.ts";
+import {
+  spellTargetHole,
+  spellTargetListHole,
+  spellTargetListHoleId,
+} from "../spells-targeting.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
@@ -315,13 +319,14 @@ function resolveRollModifier(
   input: RollModifierResolveInput,
 ): BattleResolutionResult {
   if (
-    input.fillSet.attackRoll !== undefined ||
-    input.fillSet.targetAllocation !== undefined ||
-    input.fillSet.damageRoll !== undefined ||
-    input.fillSet.attackBurstDamageRoll !== undefined ||
-    input.fillSet.healingRoll !== undefined ||
-    input.fillSet.damageDispositions.length > 0 ||
-    input.fillSet.concentrationSavingThrows.length > 0
+    !fillsBelongToSpellCastHoles(input.input.fills, [
+      ATTACK_TARGET_HOLE_ID,
+      spellTargetListHoleId(input.invocation),
+      spellRollModifierSkillChoiceHoleId(input.invocation),
+      spellRollModifierAbilityChoiceHoleId(input.invocation),
+      spellRollModifierTargetAbilityChoicesHoleId(input.invocation),
+      spellSavingThrowOutcomeHoleId(input.invocation),
+    ])
   ) {
     return invalidResult(
       input.input.state,
@@ -330,151 +335,93 @@ function resolveRollModifier(
     );
   }
 
-  const targetSelection = rollModifierSpellTargetSelection(input);
-  if (targetSelection.tag === "needsHoles") {
-    return needsHolesResult(input.input.state, input.input.subject, [
-      targetSelection.hole,
-    ]);
-  }
-  if (targetSelection.tag === "invalid") {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      targetSelection.message,
-    );
-  }
+  const targetSelectionResolution = spellSelectionResolution(
+    input.input.state,
+    input.input.subject,
+    rollModifierSpellTargetSelection(input),
+  );
+  if (targetSelectionResolution.tag === "resolution")
+    return targetSelectionResolution.result;
+  const targetSelection = targetSelectionResolution.selection;
 
-  const effectSelection = rollModifierSpellEffectSelection({
-    ...input,
+  const effectSelectionResolution = spellSelectionResolution(
+    input.input.state,
+    input.input.subject,
+    rollModifierSpellEffectSelection({
+      ...input,
+      targetIds: targetSelection.targetIds,
+    }),
+  );
+  if (effectSelectionResolution.tag === "resolution")
+    return effectSelectionResolution.result;
+  const effectSelection = effectSelectionResolution.selection;
+
+  const spellCastReactionWindow = maybeOpenConfiguredSpellCastReactionWindow({
+    resolution: input,
     targetIds: targetSelection.targetIds,
   });
-  if (effectSelection.tag === "needsHoles") {
-    return needsHolesResult(input.input.state, input.input.subject, [
-      effectSelection.hole,
-    ]);
-  }
-  if (effectSelection.tag === "invalid") {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      effectSelection.message,
-    );
+  if (spellCastReactionWindow !== null) {
+    return spellCastReactionWindow;
   }
 
-  if (input.storedGlyphRelease === undefined) {
-    const spellCastReactionWindow = maybeOpenInterruptWindow(
-      input.input.state,
-      spellCastInterruptFrame({
-        casterId: input.actorId,
-        invocation: input.invocation,
-        targetIds: targetSelection.targetIds,
-        reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
-        castingResource:
-          input.actionCostOverride === "bonusAction" ||
-          input.input.subject.tag === "bonusActionSpell"
-            ? { kind: "bonusAction" }
-            : { kind: "magicAction" },
-        ...spellCastMetamagicApplicationsInput(
-          input.metamagicApplications ?? [],
-        ),
-        continuation: {
-          kind: "replay",
-          subject: input.input.subject,
-          fills: input.input.fills,
-        },
-      }),
-      input.input.handledInterruptTrigger,
-    );
-    if (spellCastReactionWindow !== null) {
-      return spellCastReactionWindow;
-    }
-  }
+  const affectedTargetsResolution = spellSelectionResolution(
+    input.input.state,
+    input.input.subject,
+    rollModifierSpellAffectedTargets(input),
+  );
+  if (affectedTargetsResolution.tag === "resolution")
+    return affectedTargetsResolution.result;
+  const affectedTargets = affectedTargetsResolution.selection;
 
-  const affectedTargets = rollModifierSpellAffectedTargets(input);
-  if (affectedTargets.tag === "needsHoles") {
-    return needsHolesResult(input.input.state, input.input.subject, [
-      affectedTargets.hole,
-    ]);
-  }
-  if (affectedTargets.tag === "invalid") {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      affectedTargets.message,
-    );
-  }
-
-  const concentrationBase =
-    input.storedGlyphRelease !== undefined
-      ? input.input.state
-      : spellRequiresConcentration(input.invocation)
-        ? breakBattleConcentration(input.input.state, input.actorId)
-        : input.input.state;
   const affectedTargetIds = new Set(affectedTargets.targetIds);
-  const effected =
-    effectSelection.selection.kind === "sameForTargets"
-      ? applyRollModifierEffect(
-          concentrationBase,
-          affectedTargets.targetIds,
-          effectSelection.selection.effect,
-          input.invocation.sourceProcedureRef,
-        )
-      : applyRollModifierEffectsByTarget(
-          concentrationBase,
-          effectSelection.selection.targetEffects.filter((targetEffect) =>
-            affectedTargetIds.has(targetEffect.targetId),
-          ),
-          input.invocation.sourceProcedureRef,
-        );
-  if (input.storedGlyphRelease !== undefined) {
-    return {
-      tag: "resolved",
-      state: effected,
-      snapshot: snapshotBattle(effected),
-    };
-  }
-  const resourced = spendSpellCastResources({
-    state: effected,
-    actorId: input.actorId,
-    invocation: input.invocation,
-    errorState: input.input.state,
-    ...(input.storedGlyphRelease !== undefined
-      ? { startConcentration: false }
-      : {}),
+  return completeSpellActiveEffectCast({
+    resolution: input,
     ...(input.actionCostOverride === undefined
       ? {}
       : { actionCostOverride: input.actionCostOverride }),
     ...(input.metamagicApplications === undefined
       ? {}
       : { metamagicApplications: input.metamagicApplications }),
+    applyEffect: (state) =>
+      effectSelection.selection.kind === "sameForTargets"
+        ? applyRollModifierEffect(
+            state,
+            affectedTargets.targetIds,
+            effectSelection.selection.effect,
+            input.invocation.sourceProcedureRef,
+          )
+        : applyRollModifierEffectsByTarget(
+            state,
+            effectSelection.selection.targetEffects.filter((targetEffect) =>
+              affectedTargetIds.has(targetEffect.targetId),
+            ),
+            input.invocation.sourceProcedureRef,
+          ),
   });
-  return resourced.tag === "invalid"
-    ? resourced
-    : {
-        tag: "resolved",
-        state: resourced.state,
-        snapshot: snapshotBattle(resourced.state),
-      };
 }
+
+const RollModifierInvocationCommonFields = {
+  access: Schema.Union(
+    PreparedSpellAccessSchema,
+    ClassCantripSpellAccessSchema,
+  ),
+  resource: Schema.Union(
+    SpellSlotInvocationResourceSchema,
+    NoSpellInvocationResourceSchema,
+  ),
+  procedure: Schema.Literal("rollModifier"),
+  spellRuleFacts: SpellRuleExecutionFactsSchema,
+  actionCost: Schema.Literal("magicAction"),
+  targeting: RollModifierSpellTargetingSchema,
+  rangeFeet: MovementFeet,
+  saveGate: RollModifierSpellSaveGateSchema,
+} as const;
 
 const RollModifierInvocationSchema = spellProcedureExecutionSchema(
   Schema.Union(
     Schema.Struct({
-      access: Schema.Union(
-        PreparedSpellAccessSchema,
-        ClassCantripSpellAccessSchema,
-      ),
-      resource: Schema.Union(
-        SpellSlotInvocationResourceSchema,
-        NoSpellInvocationResourceSchema,
-      ),
-      procedure: Schema.Literal("rollModifier"),
-      spellRuleFacts: SpellRuleExecutionFactsSchema,
-      actionCost: Schema.Literal("magicAction"),
-      targeting: RollModifierSpellTargetingSchema,
+      ...RollModifierInvocationCommonFields,
       effect: D20RollModifierEffectSchema,
-      rangeFeet: MovementFeet,
-      saveGate: RollModifierSpellSaveGateSchema,
       skillChoices: Schema.NullOr(
         Schema.Array(Schema.Literal(...BATTLE_SURFACE_SKILLS)),
       ),
@@ -484,21 +431,8 @@ const RollModifierInvocationSchema = spellProcedureExecutionSchema(
       }),
     }),
     Schema.Struct({
-      access: Schema.Union(
-        PreparedSpellAccessSchema,
-        ClassCantripSpellAccessSchema,
-      ),
-      resource: Schema.Union(
-        SpellSlotInvocationResourceSchema,
-        NoSpellInvocationResourceSchema,
-      ),
-      procedure: Schema.Literal("rollModifier"),
-      spellRuleFacts: SpellRuleExecutionFactsSchema,
-      actionCost: Schema.Literal("magicAction"),
-      targeting: RollModifierSpellTargetingSchema,
+      ...RollModifierInvocationCommonFields,
       effect: AbilityCheckRollModeEffectSchema,
-      rangeFeet: MovementFeet,
-      saveGate: RollModifierSpellSaveGateSchema,
       skillChoices: Schema.Literal(null),
       abilityChoices: Schema.Array(Schema.Literal(...BATTLE_SURFACE_ABILITIES)),
       abilityChoiceApplication: Schema.Literal("single", "perTarget"),

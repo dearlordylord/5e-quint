@@ -28,7 +28,8 @@ describe("InitiativeTracker", () => {
             team: "red"
           }),
           creature({ id: "unconscious", name: "Unconscious Wizard", unconscious: true }),
-          creature({ dead: true, id: "dead", name: "Dead Wizard" })
+          creature({ dead: true, id: "dead", name: "Dead Wizard" }),
+          creature({ id: "empty", name: "Empty Wizard", preparedSpells: [] })
         ]}
       />
     )
@@ -51,6 +52,9 @@ describe("InitiativeTracker", () => {
     expect(screen.getByText("counterspell").className).toContain("line-through")
 
     fireEvent.click(screen.getByRole("button", { name: /Dead Wizard/ }))
+    expect(screen.queryByText("magic missile")).toBeNull()
+
+    fireEvent.click(screen.getByRole("button", { name: /Empty Wizard/ }))
     expect(screen.queryByText("magic missile")).toBeNull()
   })
 })

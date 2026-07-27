@@ -62,7 +62,7 @@ const INLINE_ALLOWLIST_PATH_RULES = [
   {
     reason: "battle-runtime-mbt-fixture-boundary",
     pattern:
-      /^packages\/battle-runtime\/src\/battle-runtime-mbt-driver-kit\.ts$/,
+      /^packages\/battle-runtime\/src\/battle-runtime-mbt-driver-kit\.test-support\.ts$/,
   },
   {
     reason: "battle-runtime-unit-feature-support-profile-boundary",
@@ -397,7 +397,7 @@ function assertBattleReplayExecutionBoundary() {
     },
     {
       relativePath:
-        "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts",
+        "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.test-support.ts",
       patterns: [/BattleActDiscoverySubject as BattleSubject/],
     },
     {
@@ -2934,7 +2934,7 @@ function runSelfTest() {
   ].join("\n");
 
   const fixtureProjectionViolations = findViolationsForFile(
-    "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts",
+    "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.test-support.ts",
     battleRuntimeMbtFixtureProjection,
     authoredAlternation,
     new Set(),

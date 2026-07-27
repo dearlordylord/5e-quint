@@ -7,11 +7,8 @@ import type { UnitCatalog } from "@dnd/character-creation-runtime";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
-import { hasPreparedClassSpellAccess } from "./prepared-spell-access.ts";
-import { spendCharacterSheetSpellSlot } from "./spell-slots.ts";
 import {
   characterSheetIssue,
-  getRequiredUnit,
   type CharacterSheet,
   type CharacterSheetIssue,
   type CharacterSheetSeemingInvocation,
@@ -19,6 +16,8 @@ import {
   type CharacterSheetSeemingTarget,
   type CharacterSheetSeemingTargetOutcome,
 } from "./sheet-types.ts";
+
+import { castPreparedSpell } from "./prepared-spell-cast.ts";
 
 const SEEMING_SPELL_ID = "seeming" as const;
 const SEEMING_SPELL_LEVEL = spellSlotLevel(5);
@@ -29,44 +28,21 @@ export function castSeeming(input: {
   readonly unitLibrary: UnitCatalog;
   readonly targets: readonly CharacterSheetSeemingTarget[];
 }): Either.Either<CharacterSheetSeemingResult, CharacterSheetIssue> {
-  const spell = seemingSpell(input.unitLibrary);
-  if (Either.isLeft(spell)) return Either.left(spell.left);
-
-  if (!hasPreparedClassSpellAccess(input.sheet, spell.right.id)) {
-    return characterSheetIssue("Seeming requires prepared class Spell Access.");
-  }
-
-  const targetIssue = seemingTargetIssue(input.targets);
-  if (targetIssue !== null) return characterSheetIssue(targetIssue);
-
-  const invocation = seemingInvocationFromSpell({
-    spell: spell.right,
-    targets: input.targets,
-  });
-  if (Either.isLeft(invocation)) return Either.left(invocation.left);
-
-  const spent = spendCharacterSheetSpellSlot({
+  return castPreparedSpell({
     sheet: input.sheet,
+    unitLibrary: input.unitLibrary,
+    spellId: authoredUnitId(SEEMING_SPELL_ID),
     spellLevel: SEEMING_SPELL_LEVEL,
-    spellSlotSource: "ordinary",
+    spellName: "Seeming",
+    invocation: (spell) => {
+      const targetIssue = seemingTargetIssue(input.targets);
+      if (targetIssue !== null) return characterSheetIssue(targetIssue);
+      return seemingInvocationFromSpell({
+        spell: spell,
+        targets: input.targets,
+      });
+    },
   });
-  if (Either.isLeft(spent)) return Either.left(spent.left);
-
-  return Either.right({
-    sheet: spent.right,
-    invocation: invocation.right,
-  });
-}
-
-function seemingSpell(
-  unitLibrary: UnitCatalog,
-): Either.Either<SpellRecord, CharacterSheetIssue> {
-  const unit = getRequiredUnit(unitLibrary, authoredUnitId(SEEMING_SPELL_ID));
-  if (Either.isLeft(unit)) return Either.left(unit.left);
-  if (unit.right.kind !== "spell") {
-    return characterSheetIssue("Seeming requires a Spell record.");
-  }
-  return Either.right(unit.right);
 }
 
 function seemingTargetIssue(

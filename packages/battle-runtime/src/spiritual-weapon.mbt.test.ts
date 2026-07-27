@@ -1,4 +1,4 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-spiritual-weapon-attack-proxy
 import { Either } from "effect";
 import { describe, expect, it } from "vitest";
@@ -14,7 +14,7 @@ import {
   quintVariantTag,
   run,
   stateCheck,
-} from "./battle-runtime-mbt-driver-kit.ts";
+} from "./battle-runtime-mbt-driver-kit.test-support.ts";
 
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import {
@@ -35,7 +35,7 @@ import {
   skeletonCreatureInit,
   skeletonId,
   unitLibrary,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import {
   battleId,
   battleTablePositionId,

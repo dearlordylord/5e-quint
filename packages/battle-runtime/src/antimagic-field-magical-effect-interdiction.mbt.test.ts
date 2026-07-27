@@ -1,7 +1,7 @@
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
-import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
+import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
+import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 import { battleActUnitPresentation } from "./battle-act-composition.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.ANTIMAGIC_FIELD_MAGICAL_EFFECT_INTERDICTION
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-antimagic-field-magical-effect-interdiction
@@ -25,12 +25,12 @@ import {
   spellCasterId,
   spellTargetId,
   unitLibrary,
-} from "./unit-profile-admission-catalog-support.ts";
+} from "./unit-profile-admission-catalog.test-support.ts";
 import {
   characterCreature,
   requireHole,
-} from "./unit-profile-admission-creature-fixture-support.ts";
-import { characterBattleFeatureInitForTest } from "./battle-runtime-test-support.ts";
+} from "./unit-profile-admission-creature-fixture.test-support.ts";
+import { characterBattleFeatureInitForTest } from "./battle-runtime.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
   knownWillingSpellTargetFill,
@@ -38,8 +38,8 @@ import {
   spellAct,
   spellManufacturedMetalObjectTargetFill,
   spellObjectContactTargetsFill,
-} from "./unit-profile-admission-spell-fill-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+} from "./unit-profile-admission-spell-fill.test-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   battleAreaId,
   battleId,
@@ -70,7 +70,7 @@ import {
   run,
   stateCheck,
   type MbtWitnessLastResult,
-} from "./battle-runtime-mbt-driver-kit.ts";
+} from "./battle-runtime-mbt-driver-kit.test-support.ts";
 
 type AntimagicMagicalEffectInterdictionProjection = {
   readonly spellTargetAllowed: boolean;

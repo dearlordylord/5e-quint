@@ -1,5 +1,5 @@
 import { statBlockId as parseSharedStatBlockId } from "@dnd/shared/game-facts";
-import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
+import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt stat-block.attack-control
 // KERNEL-COVERAGE: parity-witness BATTLE.STAT_BLOCK.ATTACK_CONTROL
 import { isDeepStrictEqual } from "node:util";
@@ -34,7 +34,7 @@ import {
   type ReducerRouteEvent,
   type ReducerRouteFill,
   type ReducerRouteOwnerGroup,
-} from "./battle-runtime-mbt-driver-kit.ts";
+} from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import {
   battleId,
   combatantId,

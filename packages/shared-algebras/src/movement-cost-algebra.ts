@@ -1,5 +1,6 @@
 import type { SpeedType } from "@dnd/shared/game-facts";
 import { movementFeet, type MovementFeet } from "@dnd/shared/types";
+import { Match } from "effect";
 
 export type MovementActivity =
   | {
@@ -46,20 +47,17 @@ export function movementCost(facts: MovementCostFacts): MovementCost {
 }
 
 function activityExtraCostPerFoot(activity: MovementActivity): number {
-  if (activity.kind === "ordinary") {
-    return 0;
-  }
-  if (activity.kind === "climbing") {
-    return activity.speedType === "climb" ? 0 : 1;
-  }
-  if (activity.kind === "swimming") {
-    return activity.speedType === "swim" ? 0 : 1;
-  }
-  if (activity.kind === "crawling") {
-    return 1;
-  }
-  const exhaustive: never = activity;
-  return exhaustive;
+  return Match.value(activity).pipe(
+    Match.when({ kind: "ordinary" }, () => 0),
+    Match.when({ kind: "climbing" }, ({ speedType }) =>
+      speedType === "climb" ? 0 : 1,
+    ),
+    Match.when({ kind: "swimming" }, ({ speedType }) =>
+      speedType === "swim" ? 0 : 1,
+    ),
+    Match.when({ kind: "crawling" }, () => 1),
+    Match.exhaustive,
+  );
 }
 
 export function ordinaryMovementCost(

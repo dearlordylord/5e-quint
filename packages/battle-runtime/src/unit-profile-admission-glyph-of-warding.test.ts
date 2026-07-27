@@ -127,12 +127,12 @@ import {
   thunderwaveUnitId,
   unitLibrary,
   webUnitId,
-} from "./unit-profile-admission-catalog-support.ts";
-import { defineSelectedIdentityReplayWitness } from "./selected-identity-witness.ts";
+} from "./unit-profile-admission-catalog.test-support.ts";
+import { defineSelectedIdentityReplayWitness } from "./selected-identity-witness.test-support.ts";
 import {
   attackRollFill,
   interruptDecisionFill,
-} from "./unit-profile-admission-creature-fixture-support.ts";
+} from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
   maybeSpellAct,
@@ -146,8 +146,8 @@ import {
   spiritualWeaponForcePositionFill,
   thunderwaveArea,
   webAreaFill,
-} from "./unit-profile-admission-spell-fill-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+} from "./unit-profile-admission-spell-fill.test-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   battleAreaId,
   battleObjectId,
@@ -170,7 +170,7 @@ import {
   resolveBattleSubject,
   snapshotBattle,
   spellSaveDcForCaster,
-} from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission.test-support.ts";
 import {
   battleSpellEffectOccurrenceId,
   type BattleProcedureExecutionRef,
@@ -180,7 +180,7 @@ import {
   battleProcedureExecutionRefForTest,
   characterBattleFeatureInitForTest,
   requireCharacterUnitProcedureRefForTest,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 
 const executionRegistry = spellProcedureExecutionRegistry();
 

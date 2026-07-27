@@ -2,7 +2,7 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 import {
   resolveBattleSubject,
   type MembersOf,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-dragons-breath-granted-action
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION
@@ -39,19 +39,19 @@ import {
   quintVariantTag,
   run,
   stateCheck,
-} from "./battle-runtime-mbt-driver-kit.ts";
+} from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import {
   damageRollFillWithGroups,
   requireCombatant,
   requireHole,
   requireResultHole,
-} from "./unit-profile-admission-creature-fixture-support.ts";
+} from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
   bonusSpellAct,
   damageTypeChoiceFill,
   knownWillingSpellTargetListFill,
-} from "./unit-profile-admission-spell-fill-support.ts";
+} from "./unit-profile-admission-spell-fill.test-support.ts";
 import {
   breakBattleConcentration,
   discoverBattleActCandidates,
@@ -71,7 +71,7 @@ import {
   dragonsBreathUnitId,
   spellCasterId,
   spellTargetId,
-} from "./unit-profile-admission-catalog-support.ts";
+} from "./unit-profile-admission-catalog.test-support.ts";
 
 type DragonsBreathTurnRole = "caster" | "target";
 type DragonsBreathSlotLevel = 2 | 3;

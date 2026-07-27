@@ -11,7 +11,7 @@ import {
   fighterVsGoblinBattle,
   goblinId,
   skeletonId,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 
 const state = fighterVsGoblinBattle();
 const canonicalBoundaryFacts = {

@@ -5,9 +5,11 @@ export {
   type Ability,
   type Condition,
 } from "./game-facts.ts";
-
-export type NonEmptyArray<T> = [T, ...T[]];
-export type ReadonlyNonEmptyArray<T> = readonly [T, ...T[]];
+export * from "./check-difficulty.ts";
+export type {
+  NonEmptyArray,
+  ReadonlyNonEmptyArray,
+} from "./non-empty-array.d.ts";
 
 export function isArrayOfOne<T>(value: readonly T[]): value is readonly [T] {
   return value.length === 1;
@@ -373,25 +375,6 @@ export const ArmorClass = Schema.Number.pipe(
 export type ArmorClass = typeof ArmorClass.Type;
 export function armorClass(n: number): ArmorClass {
   return ArmorClass.make(Math.max(1, Math.floor(n)));
-}
-
-export const DifficultyClass = Schema.Number.pipe(
-  Schema.int(),
-  Schema.greaterThanOrEqualTo(1),
-  Schema.brand("DifficultyClass"),
-);
-export type DifficultyClass = typeof DifficultyClass.Type;
-export function difficultyClass(n: number): DifficultyClass {
-  return DifficultyClass.make(Math.max(1, Math.floor(n)));
-}
-
-export const AbilityModifier = Schema.Number.pipe(
-  Schema.int(),
-  Schema.brand("AbilityModifier"),
-);
-export type AbilityModifier = typeof AbilityModifier.Type;
-export function abilityModifier(n: number): AbilityModifier {
-  return AbilityModifier.make(Math.floor(n));
 }
 
 export const AttackBonus = Schema.Number.pipe(

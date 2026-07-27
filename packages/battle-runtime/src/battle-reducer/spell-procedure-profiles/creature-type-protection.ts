@@ -1,4 +1,10 @@
+import { resolveSpellActiveEffectCast } from "../spell-active-effect-resolution.ts";
+import {
+  actionSpellCastCandidate,
+  actionSpellCastCandidatesForTargetHole,
+} from "../spell-cast-candidate.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
+import { replaceTargetActiveEffect } from "../active-effect-replacement.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.creature-type-protection-and-charm
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-glyph-stored-concentration-full-duration
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION
@@ -16,33 +22,32 @@ import {
   type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
-  type BattleHole,
   type BattleResolutionResult,
   type BattleState,
   type CreatureTypeProtectionSpellInvocation,
 } from "../../battle-state-execution.ts";
-import { maybeOpenInterruptWindow, snapshotBattle } from "../dispatcher.ts";
 import { CombatantId } from "../../identity.ts";
 import { BattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
-import { breakBattleConcentration } from "../damage-apply.ts";
 import {
   DISPEL_EVIL_AND_GOOD_CREATURE_TYPES,
   PROTECTION_FROM_EVIL_AND_GOOD_CREATURE_TYPES,
   PROTECTION_FROM_EVIL_AND_GOOD_PREVENTED_CONDITIONS,
 } from "../domain-constants.ts";
-import { needsHolesResult } from "../hole-helpers.ts";
+
+import { spellSelectionResolution } from "../needs-holes-result.ts";
 import { invalidResult } from "../result-helpers.ts";
-import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
+import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
+import { ATTACK_TARGET_HOLE_ID } from "../battle-runtime-protocol.ts";
 import {
   scalarBuffActiveEffectExpiration,
   sameCreatureTypeSet,
 } from "../spells-profiles-support.ts";
-import { spellTargetHole, spellTargetIsLegal } from "../spells-holes-fills.ts";
-import type { SpellFillSet } from "../spells-resolve-fill-set.ts";
+import { spellTargetHole } from "../spells-holes-fills.ts";
 import {
-  spellRequiresConcentration,
-  spendSpellCastResources,
-} from "../spells-resolve-resources.ts";
+  spellSingleTargetSelection,
+  type SpellSingleTargetSelection,
+} from "../spells-resolve-target-selection.ts";
+import type { SpellFillSet } from "../spells-resolve-fill-set.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
@@ -58,11 +63,6 @@ import {
   PreparedSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
-
-type CreatureTypeProtectionTargetSelection =
-  | { readonly tag: "ok"; readonly targetIds: readonly [CombatantId] }
-  | { readonly tag: "needsHoles"; readonly hole: BattleHole }
-  | { readonly tag: "invalid"; readonly message: string };
 
 function admitCreatureTypeProtection(
   spell: BattleSpellAdmissionSource,
@@ -247,49 +247,22 @@ function discoverCreatureTypeProtectionCastAct(
 ): readonly BattleActDiscoveryCandidate[] {
   if (invocation.targeting.kind === "self") {
     return [
-      {
-        subject: {
-          tag: "actionSpell" as const,
-          actorId,
-          procedureRef: invocation.sourceProcedureRef,
-          mode: { tag: "cast" as const },
-        },
-        initialHoles: [],
-      },
+      actionSpellCastCandidate(actorId, invocation.sourceProcedureRef, []),
     ];
   }
   const targetHole = spellTargetHole(state, actorId, invocation);
-  const castActs =
-    targetHole.choices.length === 0
-      ? []
-      : [
-          {
-            subject: {
-              tag: "actionSpell" as const,
-              actorId,
-              procedureRef: invocation.sourceProcedureRef,
-              mode: { tag: "cast" as const },
-            },
-            initialHoles: [targetHole],
-          },
-        ];
-  return castActs;
+  return actionSpellCastCandidatesForTargetHole(
+    actorId,
+    invocation.sourceProcedureRef,
+    targetHole,
+  );
 }
 
 function resolveCreatureTypeProtection(
   input: SpellProcedureProfileResolveInput<CreatureTypeProtectionSpellInvocation>,
 ): BattleResolutionResult {
   if (
-    input.fillSet.attackRoll !== undefined ||
-    input.fillSet.targetAllocation !== undefined ||
-    input.fillSet.damageRoll !== undefined ||
-    input.fillSet.attackBurstDamageRoll !== undefined ||
-    input.fillSet.healingRoll !== undefined ||
-    input.fillSet.skillChoice !== undefined ||
-    input.fillSet.targetAbilityChoices !== undefined ||
-    input.fillSet.savingThrowOutcomes !== undefined ||
-    input.fillSet.damageDispositions.length > 0 ||
-    input.fillSet.concentrationSavingThrows.length > 0
+    !fillsBelongToSpellCastHoles(input.input.fills, [ATTACK_TARGET_HOLE_ID])
   ) {
     return invalidResult(
       input.input.state,
@@ -298,77 +271,27 @@ function resolveCreatureTypeProtection(
     );
   }
 
-  const targetSelection = creatureTypeProtectionSpellTargetSelection(input);
-  if (targetSelection.tag === "needsHoles") {
-    return needsHolesResult(input.input.state, input.input.subject, [
-      targetSelection.hole,
-    ]);
-  }
-  if (targetSelection.tag === "invalid") {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      targetSelection.message,
-    );
-  }
-
-  if (input.storedGlyphRelease === undefined) {
-    const spellCastReactionWindow = maybeOpenInterruptWindow(
-      input.input.state,
-      spellCastInterruptFrame({
-        casterId: input.actorId,
-        invocation: input.invocation,
-        targetIds: targetSelection.targetIds,
-        reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
-        castingResource: { kind: "magicAction" },
-        continuation: {
-          kind: "replay",
-          subject: input.input.subject,
-          fills: input.input.fills,
-        },
-      }),
-      input.input.handledInterruptTrigger,
-    );
-    if (spellCastReactionWindow !== null) {
-      return spellCastReactionWindow;
-    }
-  }
-
-  const concentrationBase =
-    input.storedGlyphRelease !== undefined
-      ? input.input.state
-      : spellRequiresConcentration(input.invocation)
-        ? breakBattleConcentration(input.input.state, input.actorId)
-        : input.input.state;
-  const effected = applyCreatureTypeProtectionEffect(
-    concentrationBase,
-    input.actorId,
-    targetSelection.targetIds,
-    input.invocation,
+  const targetSelectionResolution = spellSelectionResolution(
+    input.input.state,
+    input.input.subject,
+    creatureTypeProtectionSpellTargetSelection(input),
   );
-  if (input.storedGlyphRelease !== undefined) {
-    return {
-      tag: "resolved",
-      state: effected,
-      snapshot: snapshotBattle(effected),
-    };
-  }
-  const resourced = spendSpellCastResources({
-    state: effected,
-    actorId: input.actorId,
-    invocation: input.invocation,
-    errorState: input.input.state,
-    ...(input.storedGlyphRelease !== undefined
-      ? { startConcentration: false }
-      : {}),
+  if (targetSelectionResolution.tag === "resolution")
+    return targetSelectionResolution.result;
+  const targetSelection = targetSelectionResolution.selection;
+
+  return resolveSpellActiveEffectCast({
+    resolution: input,
+    targetIds: targetSelection.targetIds,
+    castingResource: { kind: "magicAction" },
+    applyEffect: (state) =>
+      applyCreatureTypeProtectionEffect(
+        state,
+        input.actorId,
+        targetSelection.targetIds,
+        input.invocation,
+      ),
   });
-  return resourced.tag === "invalid"
-    ? resourced
-    : {
-        tag: "resolved",
-        state: resourced.state,
-        snapshot: snapshotBattle(resourced.state),
-      };
 }
 
 function creatureTypeProtectionSpellTargetSelection(input: {
@@ -376,7 +299,7 @@ function creatureTypeProtectionSpellTargetSelection(input: {
   readonly actorId: CombatantId;
   readonly invocation: BattleExecutableSpellInvocation<CreatureTypeProtectionSpellInvocation>;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
-}): CreatureTypeProtectionTargetSelection {
+}): SpellSingleTargetSelection {
   if (input.invocation.targeting.kind === "self") {
     return input.fillSet.targetId !== undefined ||
       input.fillSet.targetList !== undefined ||
@@ -388,31 +311,16 @@ function creatureTypeProtectionSpellTargetSelection(input: {
         }
       : { tag: "ok", targetIds: [input.actorId] };
   }
-  if (input.fillSet.targetList !== undefined) {
-    return {
-      tag: "invalid",
-      message: "Creature-type protection spells require one target choice.",
-    };
-  }
-  if (input.fillSet.targetId === undefined) {
-    return {
-      tag: "needsHoles",
-      hole: spellTargetHole(input.input.state, input.actorId, input.invocation),
-    };
-  }
-  return spellTargetIsLegal(
-    input.input.state,
-    input.actorId,
-    input.fillSet.targetId,
-    input.invocation,
-    input.fillSet.targetSpatialFacts,
-  )
-    ? { tag: "ok", targetIds: [input.fillSet.targetId] }
-    : {
-        tag: "invalid",
-        message:
-          "Creature-type protection spell target must be a combatant within the selected spell's supported range.",
-      };
+  return spellSingleTargetSelection({
+    state: input.input.state,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    fillSet: input.fillSet,
+    targetListMessage:
+      "Creature-type protection spells require one target choice.",
+    invalidTargetMessage:
+      "Creature-type protection spell target must be a combatant within the selected spell's supported range.",
+  });
 }
 
 function applyCreatureTypeProtectionEffect(
@@ -421,35 +329,23 @@ function applyCreatureTypeProtectionEffect(
   targetIds: readonly CombatantId[],
   invocation: BattleExecutableSpellInvocation<CreatureTypeProtectionSpellInvocation>,
 ): BattleState {
-  return targetIds.reduce((nextState, targetId) => {
-    const target = nextState.combatants.get(targetId);
-    if (target === undefined) {
-      return nextState;
-    }
-    const nextEffect = {
-      ...invocation.activeEffect,
-      sourceProcedureRef: invocation.sourceProcedureRef,
-      sourceCombatantId: actorId,
-    };
-    const activeEffects = [
-      ...target.activeEffects.filter(
+  return targetIds.reduce(
+    (nextState, targetId) =>
+      replaceTargetActiveEffect(
+        nextState,
+        targetId,
         (effect) =>
-          !(
-            effect.kind === "creatureTypeProtection" &&
-            effect.sourceProcedureRef === invocation.sourceProcedureRef &&
-            effect.sourceCombatantId === actorId
-          ),
+          effect.kind === "creatureTypeProtection" &&
+          effect.sourceProcedureRef === invocation.sourceProcedureRef &&
+          effect.sourceCombatantId === actorId,
+        {
+          ...invocation.activeEffect,
+          sourceProcedureRef: invocation.sourceProcedureRef,
+          sourceCombatantId: actorId,
+        },
       ),
-      nextEffect,
-    ];
-    return {
-      ...nextState,
-      combatants: new Map(nextState.combatants).set(targetId, {
-        ...target,
-        activeEffects,
-      }),
-    };
-  }, state);
+    state,
+  );
 }
 
 const CreatureTypeProtectionInvocationSchema = spellProcedureExecutionSchema(

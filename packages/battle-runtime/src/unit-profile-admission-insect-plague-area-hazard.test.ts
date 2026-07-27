@@ -18,7 +18,7 @@ import {
   requireCombatant,
   requireHole,
   requireResultHole,
-} from "./unit-profile-admission-creature-fixture-support.ts";
+} from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
   insectPlagueAreaFill,
@@ -26,13 +26,13 @@ import {
   singleTargetSavingThrowOutcomeFill,
   spellAct,
   spellHoleInvocation,
-} from "./unit-profile-admission-spell-fill-support.ts";
+} from "./unit-profile-admission-spell-fill.test-support.ts";
 import {
   insectPlagueAreaId,
   insectPlagueUnitId,
   spellCasterId,
   spellTargetId,
-} from "./unit-profile-admission-catalog-support.ts";
+} from "./unit-profile-admission-catalog.test-support.ts";
 import {
   battleObscurementZones,
   elapsedTimeTicks,
@@ -42,7 +42,7 @@ import {
   resolveBattleSubject,
   spellSlotInvocationRef,
   type BattleSubject,
-} from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission.test-support.ts";
 
 function castInsectPlague() {
   const spell = insectPlagueSpellRecord();

@@ -9,7 +9,7 @@ import {
   requireCombatant,
   requireHole,
   requireResultHole,
-} from "./unit-profile-admission-creature-fixture-support.ts";
+} from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
   flamingSphereAreaFill,
@@ -21,8 +21,8 @@ import {
   singleTargetSavingThrowOutcomeFill,
   spellAct,
   spellHoleInvocation,
-} from "./unit-profile-admission-spell-fill-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+} from "./unit-profile-admission-spell-fill.test-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   battleAreaId,
   elapsedTimeTicks,
@@ -32,18 +32,18 @@ import {
   resolveBattleSubject,
   sameBattleSubject,
   spellSlotInvocationRef,
-} from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission.test-support.ts";
 import {
   flamingSphereAreaId,
   flamingSphereUnitId,
   spellCasterId,
   spellTargetId,
-} from "./unit-profile-admission-catalog-support.ts";
+} from "./unit-profile-admission-catalog.test-support.ts";
 import type { BattleFill } from "./index.ts";
 import {
   battleProcedureExecutionRefForTest,
   requireCharacterSpellProcedureRefForTest,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 
 describe("L12G deterministic Flaming Sphere admission", () => {
   test("flaming sphere is admitted as a movable fire Sphere hazard", () => {

@@ -17,7 +17,7 @@ import {
   quintVariantValue,
   run,
   stateCheck,
-} from "./battle-runtime-mbt-driver-kit.ts";
+} from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
   battleId,
@@ -34,7 +34,7 @@ import {
   testCharacterWeaponAttackForUnit,
   unitLibrary,
   wizardSpellcasting,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import {
   activeDruidWildShapeEffect,
   applyBattleHeldWeaponPickup,

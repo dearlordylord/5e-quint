@@ -31,7 +31,7 @@ import {
   spellCasterId,
   spellTargetId,
   unitLibrary,
-} from "./unit-profile-admission-catalog-support.ts";
+} from "./unit-profile-admission-catalog.test-support.ts";
 import { HEIGHTENED_METAMAGIC_EFFECT_KIND } from "./battle-reducer/metamagic.ts";
 import {
   requireCombatant,
@@ -39,7 +39,7 @@ import {
   requireHole,
   requireResultHole,
   statBlockWithCreatureType,
-} from "./unit-profile-admission-creature-fixture-support.ts";
+} from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { tickDurationEffects } from "./battle-reducer/turn-end-movement.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
@@ -51,11 +51,11 @@ import {
   spellHoleInvocation,
   spellTargetFill,
   spellTargetListFill,
-} from "./unit-profile-admission-spell-fill-support.ts";
+} from "./unit-profile-admission-spell-fill.test-support.ts";
 import {
   spellAdmissionSource,
   spellRecord,
-} from "./unit-profile-admission-spell-record-support.ts";
+} from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   BattleFillSchema,
   BattleHoleSchema,
@@ -76,12 +76,12 @@ import {
   spellSlotLevel,
   supportedPreparedSaveGateConditionProfile,
   supportedPreparedSleepTargetAdmissionProfile,
-} from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission.test-support.ts";
 import {
   battleProcedureExecutionRefForTest,
   requireCharacterSpellProcedureRefForTest,
   resolveBattleSubject,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 
 describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
   test("hold_person is admitted with Humanoid filtering, Paralyzed lifecycle, and Concentration cleanup", () => {

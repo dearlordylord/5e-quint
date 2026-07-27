@@ -1,5 +1,5 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
-import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
+import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 // RAW trace:
 // - .references/srd-5.2.1/Spells/Descriptions-A-D.md#Dragon's Breath:
 //   Bonus Action, Concentration, willing target, target-granted Magic Action,
@@ -33,7 +33,7 @@ import {
   quintVariantTag,
   run,
   stateCheck,
-} from "./battle-runtime-mbt-driver-kit.ts";
+} from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import { describe, expect, it } from "vitest";
 import dragonsBreathInput from "../../surface/content/dragons_breath.json";
 
@@ -43,7 +43,7 @@ import {
   requireCombatant,
   requireHole,
   requireResultHole,
-} from "./unit-profile-admission-creature-fixture-support.ts";
+} from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
   bonusSpellAct,
@@ -53,14 +53,14 @@ import {
   spellAct,
   spellManufacturedMetalObjectTargetFill,
   spellObjectContactTargetsFill,
-} from "./unit-profile-admission-spell-fill-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+} from "./unit-profile-admission-spell-fill.test-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   dragonsBreathUnitId,
   heatMetalUnitId,
   spellCasterId,
   spellTargetId,
-} from "./unit-profile-admission-catalog-support.ts";
+} from "./unit-profile-admission-catalog.test-support.ts";
 import {
   battleObjectId,
   discoverBattleActs,

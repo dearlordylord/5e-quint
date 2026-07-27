@@ -9,7 +9,7 @@ import {
   numberFromQuintInt,
   run,
   stateCheck,
-} from "./battle-runtime-mbt-driver-kit.ts";
+} from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { describe, expect, it } from "vitest";
 
@@ -22,7 +22,7 @@ import {
   characterSeed,
   startBattleRight,
   statBlockCreatureInit,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import {
   decodeRuleCoreComponentRoute,
   type RuleCoreComponentRoutedProjection,

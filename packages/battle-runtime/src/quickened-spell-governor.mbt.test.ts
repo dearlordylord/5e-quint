@@ -4,7 +4,7 @@ import {
   battleProcedureExecutionRefForTest,
   characterSpellInvocationRefForProcedureRefForTest,
   requireCharacterSpellProcedureRefForTest,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { battleRuntimeSessionWithState } from "./battle-runtime-context.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.metamagic-cast-governor-quickened
@@ -59,7 +59,7 @@ import {
   quintVariantMappedValue,
   run,
   stateCheck,
-} from "./battle-runtime-mbt-driver-kit.ts";
+} from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import {
   attackRollFill,
   battleId,
@@ -78,12 +78,12 @@ import {
   unitLibrary,
   wizardId,
   wizardSpellcasting,
-} from "./battle-runtime-test-support.ts";
-import { enlargeReduceUnitId } from "./unit-profile-admission-catalog-support.ts";
+} from "./battle-runtime.test-support.ts";
+import { enlargeReduceUnitId } from "./unit-profile-admission-catalog.test-support.ts";
 import {
   knownWillingSpellTargetFill,
   knownWillingSpellTargetListFill,
-} from "./unit-profile-admission-spell-fill-support.ts";
+} from "./unit-profile-admission-spell-fill.test-support.ts";
 import {
   type AvailableBattleAct,
   type BattleFill,

@@ -17,8 +17,8 @@ import {
   resolveTransmutedBurningHandsToPoison,
   resolveTransmutedRayOfFrostToPoison,
   transmutedSorcererMetamagicBattle,
-} from "./sorcerer-metamagic-selected-identity-support.ts";
-import type { SelectedIdentityReplayWitness } from "./selected-identity-witness.ts";
+} from "./sorcerer-metamagic-selected-identity.test-support.ts";
+import type { SelectedIdentityReplayWitness } from "./selected-identity-witness.test-support.ts";
 
 export const sorcererMetamagicTransmutedSelectedIdentityReplay = {
   describeLabel: "Sorcerer Metamagic Transmuted Spell selected identity replay",

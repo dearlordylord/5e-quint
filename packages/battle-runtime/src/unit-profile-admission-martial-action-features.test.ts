@@ -41,7 +41,7 @@ import {
   speciesHalflingBraveUnitId,
   unitLibrary,
   unitMechanicsVariant,
-} from "./unit-profile-admission-catalog-support.ts";
+} from "./unit-profile-admission-catalog.test-support.ts";
 import {
   ALTERNATE_ACTION_COST_ACTIONS,
   ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
@@ -79,7 +79,7 @@ import {
   startBattle,
   WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
   STUNNING_STRIKE_SUPPORT_PROFILE,
-} from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission.test-support.ts";
 import {
   battleTacticalMasterReplacementSupportForUnit,
   battleWeaponMasteryPushSupportForUnit,
@@ -89,15 +89,15 @@ import {
   WEAPON_MASTERY_PUSH_SUPPORT_PROFILE,
   WEAPON_MASTERY_SLOW_SUPPORT_PROFILE,
 } from "./unit-feature-support.ts";
-import { characterCreature } from "./unit-profile-admission-creature-fixture-support.ts";
+import { characterCreature } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import {
   characterBattleFeatureInitForTest,
   grappleOutcomeFill,
   requireHole,
   requireResolved,
   targetFill,
-} from "./battle-runtime-test-support.ts";
-import type { UnitRecord } from "./unit-profile-admission-test-support.ts";
+} from "./battle-runtime.test-support.ts";
+import type { UnitRecord } from "./unit-profile-admission.test-support.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 
 const speciesGoliathPowerfulBuildUnitId = "species_goliath_powerful_build";

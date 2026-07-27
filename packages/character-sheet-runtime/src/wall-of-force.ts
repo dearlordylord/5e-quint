@@ -7,11 +7,8 @@ import type { UnitCatalog } from "@dnd/character-creation-runtime";
 import type { OngoingEffect, SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
-import { hasPreparedClassSpellAccess } from "./prepared-spell-access.ts";
-import { spendCharacterSheetSpellSlot } from "./spell-slots.ts";
 import {
   characterSheetIssue,
-  getRequiredUnit,
   type CharacterSheet,
   type CharacterSheetIssue,
   type CharacterSheetWallOfForceInvocation,
@@ -19,6 +16,8 @@ import {
   type CharacterSheetWallOfForceResult,
   type CharacterSheetWallOfForceShape,
 } from "./sheet-types.ts";
+
+import { castPreparedSpell } from "./prepared-spell-cast.ts";
 
 const WALL_OF_FORCE_SPELL_ID = "wall_of_force" as const;
 const WALL_OF_FORCE_SPELL_LEVEL = spellSlotLevel(5);
@@ -36,50 +35,22 @@ export function castWallOfForce(input: {
   readonly placement: CharacterSheetWallOfForcePlacement;
   readonly shape: CharacterSheetWallOfForceShape;
 }): Either.Either<CharacterSheetWallOfForceResult, CharacterSheetIssue> {
-  const spell = wallOfForceSpell(input.unitLibrary);
-  if (Either.isLeft(spell)) return Either.left(spell.left);
-
-  if (!hasPreparedClassSpellAccess(input.sheet, spell.right.id)) {
-    return characterSheetIssue(
-      "Wall of Force requires prepared class Spell Access.",
-    );
-  }
-
-  const shapeIssue = wallOfForceShapeIssue(input.shape);
-  if (shapeIssue !== null) return characterSheetIssue(shapeIssue);
-
-  const invocation = wallOfForceInvocationFromSpell({
-    spell: spell.right,
-    placement: input.placement,
-    shape: input.shape,
-  });
-  if (Either.isLeft(invocation)) return Either.left(invocation.left);
-
-  const spent = spendCharacterSheetSpellSlot({
+  return castPreparedSpell({
     sheet: input.sheet,
+    unitLibrary: input.unitLibrary,
+    spellId: authoredUnitId(WALL_OF_FORCE_SPELL_ID),
     spellLevel: WALL_OF_FORCE_SPELL_LEVEL,
-    spellSlotSource: "ordinary",
+    spellName: "Wall of Force",
+    invocation: (spell) => {
+      const shapeIssue = wallOfForceShapeIssue(input.shape);
+      if (shapeIssue !== null) return characterSheetIssue(shapeIssue);
+      return wallOfForceInvocationFromSpell({
+        spell: spell,
+        placement: input.placement,
+        shape: input.shape,
+      });
+    },
   });
-  if (Either.isLeft(spent)) return Either.left(spent.left);
-
-  return Either.right({
-    sheet: spent.right,
-    invocation: invocation.right,
-  });
-}
-
-function wallOfForceSpell(
-  unitLibrary: UnitCatalog,
-): Either.Either<SpellRecord, CharacterSheetIssue> {
-  const unit = getRequiredUnit(
-    unitLibrary,
-    authoredUnitId(WALL_OF_FORCE_SPELL_ID),
-  );
-  if (Either.isLeft(unit)) return Either.left(unit.left);
-  if (unit.right.kind !== "spell") {
-    return characterSheetIssue("Wall of Force requires a Spell record.");
-  }
-  return Either.right(unit.right);
 }
 
 function wallOfForceShapeIssue(

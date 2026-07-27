@@ -1,5 +1,5 @@
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME gust_of_wind
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-gust-of-wind-line
@@ -14,12 +14,12 @@ import {
   startBattleSessionRight,
   statBlockCreatureInit,
   wizardSpellcasting,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import {
   movementFill,
   requireCombatant,
   requireHole,
-} from "./unit-profile-admission-creature-fixture-support.ts";
+} from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
   gustOfWindLineDirectionChangeAct,
@@ -28,11 +28,11 @@ import {
   gustOfWindLineSavingThrowOutcomeFill,
   spellAct,
   spellHoleInvocation,
-} from "./unit-profile-admission-spell-fill-support.ts";
+} from "./unit-profile-admission-spell-fill.test-support.ts";
 import {
   decodeSpellRecordForTest,
   spellRecord,
-} from "./unit-profile-admission-spell-record-support.ts";
+} from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   battleId,
   breakBattleConcentration,
@@ -46,7 +46,7 @@ import {
   type AvailableBattleAct,
   type BattleRuntimeSession,
   type BattleState,
-} from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission.test-support.ts";
 import {
   greaseAreaId,
   greaseUnitId,
@@ -58,7 +58,7 @@ import {
   spellTargetId,
   thunderwaveSecondTargetId,
   unitLibrary,
-} from "./unit-profile-admission-catalog-support.ts";
+} from "./unit-profile-admission-catalog.test-support.ts";
 
 describe("L12G deterministic Gust of Wind Line admission", () => {
   test("gust of wind is admitted as a self-origin Line STR-save concentration spell", () => {

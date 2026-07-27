@@ -36,14 +36,9 @@ import {
   type OpenHandTechniqueDecisionChoice,
 } from "./domain-constants.ts";
 import {
-  savingThrowFlatBonusProjections,
-  savingThrowRollModeProjections,
-} from "./spells-damage-fills.ts";
-import {
-  extendSavingThrowOngoingFeatures,
-  ongoingFeatureEnemyRelationshipDecisionRequired,
-} from "./attack-roll.ts";
-import { parseSavingThrowRelationshipFacts } from "./roll-trigger-relationship-facts.ts";
+  stateWithUnitFeatureSavingThrowRelationships,
+  unitFeatureSingleTargetSavingThrowProjection,
+} from "./unit-feature-saving-throw.ts";
 
 type OpenHandTechniqueSavingThrowChoice = Extract<
   OpenHandTechniqueDecisionChoice,
@@ -211,29 +206,20 @@ function resolveOpenHandTechniqueSaveChoice(
         "Open Hand Technique Saving Throw must target the attacked creature.",
     };
   }
-  const relationshipFacts = parseSavingThrowRelationshipFacts(
-    input.savingThrow.relationshipFacts ?? [],
-    hit.actorId,
-    [hit.targetId],
-    ongoingFeatureEnemyRelationshipDecisionRequired(
-      input.state,
-      hit.actorId,
-      "enemySavingThrow",
-    ),
-  );
-  if (relationshipFacts === null) {
+  const savingThrowState = stateWithUnitFeatureSavingThrowRelationships({
+    relationshipRequestState: input.state,
+    state: input.state,
+    actorId: hit.actorId,
+    targetId: hit.targetId,
+    savingThrow: input.savingThrow,
+  });
+  if (savingThrowState === null) {
     return {
       tag: "invalid",
       message:
         "Open Hand Technique relationship facts must answer the saving-throw hole request.",
     };
   }
-  const savingThrowState = extendSavingThrowOngoingFeatures(
-    input.state,
-    hit.actorId,
-    [hit.targetId],
-    relationshipFacts,
-  );
   const push = openHandTechniquePush(input.savingThrow);
   if (choice !== "pushAwayOnFailedSave" && push !== undefined) {
     return {
@@ -279,34 +265,20 @@ function openHandTechniqueSavingThrowHole(
     holeId: OPEN_HAND_TECHNIQUE_SAVE_HOLE_ID,
     holeInstanceKey: OPEN_HAND_TECHNIQUE_SAVE_HOLE_INSTANCE,
     label: `Open Hand Technique ${choice === "pushAwayOnFailedSave" ? "Strength" : "Dexterity"} Saving Throw`,
-    ...(ongoingFeatureEnemyRelationshipDecisionRequired(
+    ...unitFeatureSingleTargetSavingThrowProjection({
       state,
-      hit.actorId,
-      "enemySavingThrow",
-    )
-      ? {
-          relationshipFactRequest: {
-            kind: "savingThrowTargetIsEnemy" as const,
-            actorId: hit.actorId,
-          },
-        }
-      : {}),
-    ability,
-    dc: {
-      kind: "fixed",
-      dc: difficultyClass(
-        hit.execution.technique.effectSaveDc.base +
-          wisdomModifier +
-          combatantProficiencyBonus(actor),
-      ),
-    },
-    targetIds: [hit.targetId],
-    targetRollModes: savingThrowRollModeProjections(state, ability).filter(
-      (projection) => projection.targetId === hit.targetId,
-    ),
-    targetFlatBonuses: savingThrowFlatBonusProjections(state, ability).filter(
-      (projection) => projection.targetId === hit.targetId,
-    ),
+      actorId: hit.actorId,
+      targetId: hit.targetId,
+      ability,
+      dc: {
+        kind: "fixed",
+        dc: difficultyClass(
+          hit.execution.technique.effectSaveDc.base +
+            wisdomModifier +
+            combatantProficiencyBonus(actor),
+        ),
+      },
+    }),
   };
 }
 

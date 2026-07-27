@@ -3,7 +3,7 @@ import { unitId } from "@dnd/shared/game-facts";
 import {
   battleProcedureExecutionRefForTest,
   requireCharacterUnitProcedureRefForTest,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT47 orc_relentless_endurance
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT53 orc_adrenaline_rush
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.bonus-action-dash-temporary-hit-points unit-feature.zero-hit-point-replacement
@@ -17,7 +17,7 @@ import {
   spellTargetId,
   unitLibrary,
   unitMechanicsVariant,
-} from "./unit-profile-admission-catalog-support.ts";
+} from "./unit-profile-admission-catalog.test-support.ts";
 import {
   attackDamageDispositionFill,
   attackRollFill,
@@ -26,7 +26,7 @@ import {
   requireHole,
   requireResultHole,
   weaponAttackSubject,
-} from "./unit-profile-admission-creature-fixture-support.ts";
+} from "./unit-profile-admission-creature-fixture.test-support.ts";
 import {
   adrenalineRushBattle,
   adrenalineRushDashAct,
@@ -36,15 +36,15 @@ import {
   relentlessEnduranceBattle,
   relentlessEnduranceDamageResult,
   relentlessEnduranceDisposition,
-} from "./unit-profile-admission-feature-fixture-support.ts";
+} from "./unit-profile-admission-feature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
   savingThrowOutcomeFill,
   spellAct,
   spellTargetFill,
-} from "./unit-profile-admission-spell-fill-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
-import type { UnitRecord } from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission-spell-fill.test-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
+import type { UnitRecord } from "./unit-profile-admission.test-support.ts";
 import {
   battleUnitRefWithSupportProfiles,
   bonusActionDashTemporaryHitPointsProfileForUnit,
@@ -54,7 +54,7 @@ import {
   parseSupportedUnitFeatureProfile,
   resolveBattleSubject,
   ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE,
-} from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission.test-support.ts";
 
 describe("QMBT47 deterministic Relentless Endurance admission", () => {
   test("orc_relentless_endurance is admitted as zero-Hit-Point replacement", () => {

@@ -3,20 +3,20 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-attack-roll-advantage-save
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { describe, expect, test } from "vitest";
-import { characterAttackSubjectForTest } from "./battle-runtime-test-support.ts";
+import { characterAttackSubjectForTest } from "./battle-runtime.test-support.ts";
 import {
   faerieFireUnitId,
   spellCasterId,
   spellTargetId,
   starryWispUnitId,
-} from "./unit-profile-admission-catalog-support.ts";
+} from "./unit-profile-admission-catalog.test-support.ts";
 import {
   attackTargetFill,
   requireHole,
   requireResultHole,
-} from "./unit-profile-admission-creature-fixture-support.ts";
+} from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   applyCondition,
   battleIlluminationFromLightEmitters,
@@ -27,15 +27,15 @@ import {
   snapshotBattle,
   spellSlotInvocationRef,
   validateSavingThrowOutcomes,
-} from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission.test-support.ts";
 import { characterSpellProcedure } from "./character-execution-admission.ts";
 import {
   faerieFireObjectOutlineFill,
   savingThrowOutcomeFill,
   spellAct,
   spellObjectTargetFill,
-} from "./unit-profile-admission-spell-fill-support.ts";
-import type { BattleSubject } from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission-spell-fill.test-support.ts";
+import type { BattleSubject } from "./unit-profile-admission.test-support.ts";
 
 describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
   test("faerie_fire is admitted as point-origin Cube save-gated outline effects", () => {

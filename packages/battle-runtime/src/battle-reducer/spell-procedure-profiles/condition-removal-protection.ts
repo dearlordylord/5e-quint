@@ -1,3 +1,5 @@
+import { resolveSpellActiveEffectCast } from "../spell-active-effect-resolution.ts";
+import { actionSpellCastCandidatesForTargetHole } from "../spell-cast-candidate.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-condition-removal-protection
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION
@@ -12,27 +14,26 @@ import {
   type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
-  type BattleHole,
   type BattleResolutionResult,
   type BattleState,
   type ConditionRemovalProtectionSpellInvocation,
 } from "../../battle-state-execution.ts";
-import { maybeOpenInterruptWindow, snapshotBattle } from "../dispatcher.ts";
 import { CombatantId } from "../../identity.ts";
 import { BattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
-import { breakBattleConcentration } from "../damage-apply.ts";
-import { needsHolesResult } from "../hole-helpers.ts";
+
+import { spellSelectionResolution } from "../needs-holes-result.ts";
 import { invalidResult } from "../result-helpers.ts";
-import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
+import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
+import { ATTACK_TARGET_HOLE_ID } from "../battle-runtime-protocol.ts";
 import { battleCreatureAfterConditionRemoval } from "../spell-condition-effects-helpers.ts";
 import { sameStringSet } from "../spells-execution-facts.ts";
 import { scalarBuffActiveEffectExpiration } from "../spells-profiles-support.ts";
-import { spellTargetHole, spellTargetIsLegal } from "../spells-holes-fills.ts";
-import type { SpellFillSet } from "../spells-resolve-fill-set.ts";
+import { spellTargetHole } from "../spells-holes-fills.ts";
 import {
-  spellRequiresConcentration,
-  spendSpellCastResources,
-} from "../spells-resolve-resources.ts";
+  spellSingleTargetSelection,
+  type SpellSingleTargetSelection,
+} from "../spells-resolve-target-selection.ts";
+import type { SpellFillSet } from "../spells-resolve-fill-set.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
@@ -48,11 +49,6 @@ import {
   PreparedSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
-
-type ConditionRemovalProtectionTargetSelection =
-  | { readonly tag: "ok"; readonly targetIds: readonly [CombatantId] }
-  | { readonly tag: "needsHoles"; readonly hole: BattleHole }
-  | { readonly tag: "invalid"; readonly message: string };
 
 function admitConditionRemovalProtection(
   spell: BattleSpellAdmissionSource,
@@ -178,49 +174,18 @@ function discoverConditionRemovalProtectionCastAct(
   invocation: BattleExecutableSpellInvocation<ConditionRemovalProtectionSpellInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const targetHole = spellTargetHole(state, actorId, invocation);
-  const castActs =
-    targetHole.choices.length === 0
-      ? []
-      : [
-          {
-            subject: {
-              tag: "actionSpell" as const,
-              actorId,
-              procedureRef: invocation.sourceProcedureRef,
-              mode: { tag: "cast" as const },
-            },
-            initialHoles: [targetHole],
-          },
-        ];
-  return castActs;
+  return actionSpellCastCandidatesForTargetHole(
+    actorId,
+    invocation.sourceProcedureRef,
+    targetHole,
+  );
 }
 
 function resolveConditionRemovalProtection(
   input: SpellProcedureProfileResolveInput<ConditionRemovalProtectionSpellInvocation>,
 ): BattleResolutionResult {
   if (
-    input.fillSet.objectTarget !== undefined ||
-    input.fillSet.attackRoll !== undefined ||
-    input.fillSet.targetAllocation !== undefined ||
-    input.fillSet.attackSequencePartFills.length > 0 ||
-    input.fillSet.damageRoll !== undefined ||
-    input.fillSet.attackBurstDamageRoll !== undefined ||
-    input.fillSet.healingRoll !== undefined ||
-    input.fillSet.skillChoice !== undefined ||
-    input.fillSet.targetAbilityChoices !== undefined ||
-    input.fillSet.abilityChoice !== undefined ||
-    input.fillSet.conditionChoice !== undefined ||
-    input.fillSet.commandOptionChoice !== undefined ||
-    input.fillSet.areaChoice !== undefined ||
-    input.fillSet.teleportDestination !== undefined ||
-    input.fillSet.dancingLightsPlacement !== undefined ||
-    input.fillSet.damageTypeChoice !== undefined ||
-    input.fillSet.savingThrowOutcomes !== undefined ||
-    input.fillSet.movement !== undefined ||
-    input.fillSet.hideousLaughterDamageRepeatSaves.length > 0 ||
-    input.fillSet.damageDispositions.length > 0 ||
-    input.fillSet.concentrationSavingThrows.length > 0 ||
-    input.fillSet.spellDamageReductionRolls.length > 0
+    !fillsBelongToSpellCastHoles(input.input.fills, [ATTACK_TARGET_HOLE_ID])
   ) {
     return invalidResult(
       input.input.state,
@@ -229,62 +194,27 @@ function resolveConditionRemovalProtection(
     );
   }
 
-  const targetSelection = conditionRemovalProtectionSpellTargetSelection(input);
-  if (targetSelection.tag === "needsHoles") {
-    return needsHolesResult(input.input.state, input.input.subject, [
-      targetSelection.hole,
-    ]);
-  }
-  if (targetSelection.tag === "invalid") {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      targetSelection.message,
-    );
-  }
-
-  const spellCastReactionWindow = maybeOpenInterruptWindow(
+  const targetSelectionResolution = spellSelectionResolution(
     input.input.state,
-    spellCastInterruptFrame({
-      casterId: input.actorId,
-      invocation: input.invocation,
-      targetIds: targetSelection.targetIds,
-      reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
-      castingResource: { kind: "magicAction" },
-      continuation: {
-        kind: "replay",
-        subject: input.input.subject,
-        fills: input.input.fills,
-      },
-    }),
-    input.input.handledInterruptTrigger,
+    input.input.subject,
+    conditionRemovalProtectionSpellTargetSelection(input),
   );
-  if (spellCastReactionWindow !== null) {
-    return spellCastReactionWindow;
-  }
+  if (targetSelectionResolution.tag === "resolution")
+    return targetSelectionResolution.result;
+  const targetSelection = targetSelectionResolution.selection;
 
-  const concentrationBase = spellRequiresConcentration(input.invocation)
-    ? breakBattleConcentration(input.input.state, input.actorId)
-    : input.input.state;
-  const effected = applyConditionRemovalProtectionEffect(
-    concentrationBase,
-    input.actorId,
-    targetSelection.targetIds,
-    input.invocation,
-  );
-  const resourced = spendSpellCastResources({
-    state: effected,
-    actorId: input.actorId,
-    invocation: input.invocation,
-    errorState: input.input.state,
+  return resolveSpellActiveEffectCast({
+    resolution: input,
+    targetIds: targetSelection.targetIds,
+    castingResource: { kind: "magicAction" },
+    applyEffect: (state) =>
+      applyConditionRemovalProtectionEffect(
+        state,
+        input.actorId,
+        targetSelection.targetIds,
+        input.invocation,
+      ),
   });
-  return resourced.tag === "invalid"
-    ? resourced
-    : {
-        tag: "resolved",
-        state: resourced.state,
-        snapshot: snapshotBattle(resourced.state),
-      };
 }
 
 function conditionRemovalProtectionSpellTargetSelection(input: {
@@ -292,32 +222,17 @@ function conditionRemovalProtectionSpellTargetSelection(input: {
   readonly actorId: CombatantId;
   readonly invocation: BattleExecutableSpellInvocation<ConditionRemovalProtectionSpellInvocation>;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
-}): ConditionRemovalProtectionTargetSelection {
-  if (input.fillSet.targetList !== undefined) {
-    return {
-      tag: "invalid",
-      message: "Condition-removal protection spells require one target choice.",
-    };
-  }
-  if (input.fillSet.targetId === undefined) {
-    return {
-      tag: "needsHoles",
-      hole: spellTargetHole(input.input.state, input.actorId, input.invocation),
-    };
-  }
-  return spellTargetIsLegal(
-    input.input.state,
-    input.actorId,
-    input.fillSet.targetId,
-    input.invocation,
-    input.fillSet.targetSpatialFacts,
-  )
-    ? { tag: "ok", targetIds: [input.fillSet.targetId] }
-    : {
-        tag: "invalid",
-        message:
-          "Condition-removal protection spell target must be a combatant within the selected spell's supported range.",
-      };
+}): SpellSingleTargetSelection {
+  return spellSingleTargetSelection({
+    state: input.input.state,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    fillSet: input.fillSet,
+    targetListMessage:
+      "Condition-removal protection spells require one target choice.",
+    invalidTargetMessage:
+      "Condition-removal protection spell target must be a combatant within the selected spell's supported range.",
+  });
 }
 
 function applyConditionRemovalProtectionEffect(

@@ -8,14 +8,14 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 import {
   battleProcedureExecutionRefForTest,
   requireCharacterUnitProcedureRefForTest,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import { describe, expect, test } from "vitest";
 import {
   greatWeaponFightingUnitId,
   spellCasterId,
   spellTargetId,
   unitLibrary,
-} from "./unit-profile-admission-catalog-support.ts";
+} from "./unit-profile-admission-catalog.test-support.ts";
 import {
   attackRollFill,
   attackTargetFill,
@@ -23,8 +23,8 @@ import {
   requireResultHole,
   weaponAttackSubject,
   zeroAbilityWeaponAttack,
-} from "./unit-profile-admission-creature-fixture-support.ts";
-import { greatWeaponFightingBattle } from "./unit-profile-admission-feature-fixture-support.ts";
+} from "./unit-profile-admission-creature-fixture.test-support.ts";
+import { greatWeaponFightingBattle } from "./unit-profile-admission-feature-fixture.test-support.ts";
 import {
   ATTACK_DAMAGE_DIE_FLOOR_SUPPORT_PROFILE,
   battleAttackDamageDieFloorSupportForUnit,
@@ -33,15 +33,15 @@ import {
   elapsedTimeTicks,
   parseSupportedUnitFeatureProfile,
   resolveBattleSubject,
-} from "./unit-profile-admission-test-support.ts";
-import { defineSelectedIdentityReplayWitness } from "./selected-identity-witness.ts";
+} from "./unit-profile-admission.test-support.ts";
+import { defineSelectedIdentityReplayWitness } from "./selected-identity-witness.test-support.ts";
 import type {
   BattleActiveEffect,
   BattleCreatureInit,
   BattleFill,
   BattleRuntimeSession,
   UnitRecord,
-} from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission.test-support.ts";
 
 describe("L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME deterministic profile slice", () => {
   test("Great Weapon Fighting is admitted as an optional attack damage die floor", () => {

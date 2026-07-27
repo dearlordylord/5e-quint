@@ -2,8 +2,8 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.open-hand-technique
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3PUTB-06-MONK-OPEN-HAND-TECHNIQUE-RUNTIME monk_open_hand_technique
 // UNIT-IDENTITY-REPLAY: L3PUTB-06-MONK-OPEN-HAND-TECHNIQUE-RUNTIME monk_open_hand_technique doDecline doDenyOpportunityAttacks doPushAwaySaveSucceeded doPushAwaySaveFailed doApplyProneSaveSucceeded doApplyProneSaveFailed doRejectNonFlurry doRejectPushTooFar doRejectApplyPronePushDisposition
-import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
-import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
+import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.test-support.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.test-support.ts";
 import { battleTablePositionId } from "./index.ts";
 import type { BattleResolutionResult } from "./index.ts";
 import type { BattleShovePushOutcome } from "./battle-state-execution.ts";
@@ -32,7 +32,7 @@ import {
   type BattleHole,
   type BattleState,
   type BattleSubject,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 
 type OpenHandTechniqueProjection = {
   readonly targetOpportunityAttackDenied: boolean;

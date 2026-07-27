@@ -1,5 +1,5 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L5-C17-HASTE-POSITIVE-RUNTIME haste
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L5-C18-HASTE-LETHARGY-RUNTIME haste
@@ -23,7 +23,7 @@ import { savingThrowRollModeProjections } from "./battle-reducer/spells-damage-f
 import {
   requireCharacterSpellProcedureRefForTest,
   savingThrowOutcomeFill,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import {
   extraAttackSupportProfile,
   fighterExtraAttackUnitId,
@@ -31,17 +31,17 @@ import {
   spellCasterId,
   spellTargetId,
   unitLibrary,
-} from "./unit-profile-admission-catalog-support.ts";
+} from "./unit-profile-admission-catalog.test-support.ts";
 import {
   requireCombatant,
   requireHole,
-} from "./unit-profile-admission-creature-fixture-support.ts";
+} from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
   knownWillingSpellTargetFill,
   spellAct,
-} from "./unit-profile-admission-spell-fill-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+} from "./unit-profile-admission-spell-fill.test-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   battleUnitRefWithSupportProfiles,
   breakBattleConcentration,
@@ -52,15 +52,15 @@ import {
   applyCondition,
   resolveBattleSubject,
   spellSlotInvocationRef,
-} from "./unit-profile-admission-test-support.ts";
-import { defineSelectedIdentityReplayWitness } from "./selected-identity-witness.ts";
+} from "./unit-profile-admission.test-support.ts";
+import { defineSelectedIdentityReplayWitness } from "./selected-identity-witness.test-support.ts";
 import type { RuntimeActionResource } from "@dnd/shared-algebras/action-economy-algebra";
 import type {
   BattleActiveEffect,
   BattleCreatureState,
   BattleState,
   CombatantId,
-} from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission.test-support.ts";
 
 describe("L5-C17/L5-C18 Haste runtime profile", () => {
   test("admits Haste as a level-3 Magic Action spell and applies positive effects", () => {

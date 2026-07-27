@@ -22,7 +22,7 @@ import {
   sorcererInnateSorceryUnitId,
   unitLibrary,
   unitMechanicsVariant,
-} from "./unit-profile-admission-catalog-support.ts";
+} from "./unit-profile-admission-catalog.test-support.ts";
 import {
   BARDIC_INSPIRATION_GRANT_SUPPORT_PROFILE,
   battleBardicInspirationGrantSupportForUnit,
@@ -39,8 +39,8 @@ import {
   parseSupportedUnitFeatureProfile,
   REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
   SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
-} from "./unit-profile-admission-test-support.ts";
-import type { UnitRecord } from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission.test-support.ts";
+import type { UnitRecord } from "./unit-profile-admission.test-support.ts";
 import {
   characterBattleResourceIsUseCount,
   characterBattleResourceMaxUses,

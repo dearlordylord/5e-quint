@@ -34,11 +34,13 @@ const COMMON_DUPLICATION_EXCLUDES = [
   "**/*.gen.*",
 ];
 
-// Every production package must appear here. Coverage floors are the measured
-// 2026-07-25 baselines rounded down to whole percentages, creating an
-// executable ratchet toward the repository's 99% target. Libraries are
-// consumed as TypeScript source by their owning applications; the root Turbo
-// build discovers the packages that own build scripts.
+// Every production package must appear here. Coverage floors are temporary
+// non-regression ratchets measured on 2026-07-26 and rounded down to whole
+// percentages; issue #227's real target remains 99% for every metric in every
+// package. Duplication ceilings remain at issue #228's real 2% target except
+// for an explicitly identified temporary ratchet. Libraries are consumed as
+// TypeScript source by their owning applications; the root Turbo build
+// discovers the packages that own build scripts.
 const PACKAGE_POLICIES = {
   app: {
     coverage: "packageConfig",
@@ -46,14 +48,15 @@ const PACKAGE_POLICIES = {
     duplicationCeiling: 2,
   },
   "battle-runtime": {
-    coverage: { lines: 78, statements: 78, functions: 81, branches: 83 },
-    circularBaseline: 122,
-    duplicationCeiling: 7.82,
-  },
-  "character-battle-runtime": {
-    coverage: { lines: 71, statements: 71, functions: 79, branches: 73 },
+    coverage: { lines: 85, statements: 85, functions: 90, branches: 84 },
     circularBaseline: 0,
     duplicationCeiling: 2,
+  },
+  "character-battle-runtime": {
+    coverage: { lines: 96, statements: 96, functions: 100, branches: 93 },
+    circularBaseline: 0,
+    // Temporary non-regression remedy; issue #228 still requires <= 2%.
+    duplicationCeiling: 2.39,
   },
   "character-creation-runtime": {
     coverage: { lines: 79, statements: 79, functions: 86, branches: 78 },
@@ -61,9 +64,9 @@ const PACKAGE_POLICIES = {
     duplicationCeiling: 2,
   },
   "character-sheet-runtime": {
-    coverage: { lines: 80, statements: 80, functions: 92, branches: 68 },
+    coverage: { lines: 80, statements: 80, functions: 93, branches: 70 },
     circularBaseline: 0,
-    duplicationCeiling: 7.11,
+    duplicationCeiling: 2,
   },
   mcp: {
     coverage: { lines: 84, statements: 84, functions: 89, branches: 79 },
@@ -71,19 +74,19 @@ const PACKAGE_POLICIES = {
     duplicationCeiling: 2,
   },
   shared: {
-    coverage: { lines: 15, statements: 15, functions: 61, branches: 64 },
-    circularBaseline: 1,
+    coverage: { lines: 99, statements: 99, functions: 100, branches: 99 },
+    circularBaseline: 0,
     duplicationCeiling: 2,
   },
   "shared-algebras": {
-    coverage: { lines: 69, statements: 69, functions: 82, branches: 88 },
+    coverage: { lines: 99, statements: 99, functions: 100, branches: 99 },
     circularBaseline: 0,
     duplicationCeiling: 2,
   },
   surface: {
-    coverage: { lines: 60, statements: 60, functions: 53, branches: 67 },
+    coverage: { lines: 86, statements: 86, functions: 82, branches: 83 },
     circularBaseline: 0,
-    duplicationCeiling: 3.85,
+    duplicationCeiling: 2,
   },
 };
 

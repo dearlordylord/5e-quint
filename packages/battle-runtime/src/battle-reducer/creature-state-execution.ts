@@ -9,21 +9,15 @@ import {
   type ArmorClassState,
 } from "@dnd/shared-algebras/armor-class-algebra";
 import {
-  applyCondition,
   hasCondition,
   isIncapacitated,
   type ConditionState,
 } from "@dnd/shared-algebras/conditions-algebra";
-import { Hp, type Condition } from "@dnd/shared/types";
+import { type Condition } from "@dnd/shared/types";
 import type { StatBlockValue } from "@dnd/surface/surface/types";
 import { Match } from "effect";
 import { CONDITIONS as ALL_CONDITIONS } from "@dnd/shared/types";
-import {
-  CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
-  characterProcedureBindingSnapshots,
-  characterUnitProcedure,
-  type UnitFeatureProcedureExecution,
-} from "../character-execution-queries.ts";
+import { characterProcedureBindingSnapshots } from "../character-execution-queries.ts";
 import {
   characterBattleResourceIsPointPool,
   characterBattleResourceUsage,
@@ -37,80 +31,24 @@ import {
 } from "../identity.ts";
 import { statBlockExecutionSnapshot } from "../stat-block-execution-state.ts";
 import {
-  type ActiveOngoingFeatureOccurrence,
   type BattleActiveEffect,
   type BattleCharacterResourceSnapshot,
   type BattleCreatureOriginSnapshot,
   type BattleCreatureSnapshot,
   type BattleCreatureState,
-  type BattleCreatureKnockOutLifecycle,
   type BattleCreatureZeroHpLifecycleSnapshot,
   type BattleState,
   type CharacterBattleCreatureState,
-  type OngoingFeatureSourceKey,
 } from "../battle-state-execution.ts";
-import { type HpDamageProjection } from "./battle-runtime-protocol.ts";
-import {
-  KnockedOutConditionState,
-  KnockedOutOneHp,
-  type KnockedOutConditionState as KnockedOutConditionStateT,
-  type KnockedOutOneHp as KnockedOutOneHpT,
-} from "./knocked-out-state.ts";
 
-export function knockedOutOneHp(): KnockedOutOneHpT {
-  return KnockedOutOneHp(Hp(1));
-}
-
-export function knockedOutConditionState(
-  conditions: ConditionState,
-): KnockedOutConditionStateT {
-  return KnockedOutConditionState(applyCondition(conditions, "unconscious"));
-}
-
-export function battleCreatureStateWithKnockOutPreservedConditions(
-  combatant: BattleCreatureState,
-  conditions: ConditionState,
-): BattleCreatureState {
-  return combatant.positiveHpUnconscious === null
-    ? { ...combatant, conditions }
-    : { ...combatant, conditions: knockedOutConditionState(conditions) };
-}
-
-export function nonKnockOutLifecycleFields(
-  hp: Hp,
-  conditions: ConditionState,
-): BattleCreatureKnockOutLifecycle {
-  return { hp, conditions, positiveHpUnconscious: null };
-}
-
-export function battleCreatureStateWithoutKnockOut(
-  combatant: BattleCreatureState,
-  hp: Hp,
-  conditions: ConditionState,
-): BattleCreatureState {
-  return { ...combatant, ...nonKnockOutLifecycleFields(hp, conditions) };
-}
-
-export function battleCreatureStateWithDamageProjection(
-  combatant: BattleCreatureState,
-  projection: HpDamageProjection,
-): BattleCreatureState {
-  const tempHp = Hp(projection.currentTempHp - projection.tempHpAbsorbed);
-  if (
-    combatant.positiveHpUnconscious !== null &&
-    Number(projection.nextHp) === 1
-  ) {
-    return { ...combatant, hp: knockedOutOneHp(), tempHp };
-  }
-  return {
-    ...battleCreatureStateWithoutKnockOut(
-      combatant,
-      projection.nextHp,
-      combatant.conditions,
-    ),
-    tempHp,
-  };
-}
+export {
+  battleCreatureStateWithDamageProjection,
+  battleCreatureStateWithKnockOutPreservedConditions,
+  battleCreatureStateWithoutKnockOut,
+  knockedOutConditionState,
+  knockedOutOneHp,
+  nonKnockOutLifecycleFields,
+} from "./creature-hit-point-state.ts";
 
 export function literalStatBlockNumber(value: StatBlockValue): number {
   if (value.kind !== "literal") {
@@ -124,70 +62,36 @@ import {
   SLOW_ACTIVE_PENALTIES_ARMOR_CLASS_DELTA,
   WARDING_BOND_ARMOR_CLASS_BONUS,
 } from "./domain-constants.ts";
-import { effectiveHitPointMaximum } from "./damage-apply.ts";
+import { effectiveHitPointMaximum } from "./hit-point-maximum.ts";
 import {
   activeDruidWildShapeEffect,
   combatantDruidWildShapeArmorClassState,
   combatantEffectiveSize,
   removeEndedDruidWildShapeEffects,
 } from "./druid-wild-shape.ts";
-import { characterEffectiveLoadoutFromOrigin } from "./battle-object-lifecycle.ts";
+import {
+  battleObjectIsOnGround,
+  characterEffectiveLoadoutFromOrigin,
+} from "./battle-object-lifecycle.ts";
 import { battleMovementBudgetForActor } from "./movement-speed.ts";
 import { spellExecutionFacts } from "./spell-execution-facts.ts";
 import { wildShapeCanUseWornLoadoutObject } from "./wild-shape-equipment.ts";
-import { battleObjectIsOnGround } from "./battle-object-lifecycle.ts";
 import {
   combatantInvisibleBenefitDenied,
-  combatantWearingArmorCategory,
   currentActorId,
   grappledBy,
   zeroHpLifecycleIsTerminal,
 } from "./creature-state-leaves.ts";
 
-export function isCharacterBattleCreatureState(
-  actor: BattleCreatureState | undefined,
-): actor is CharacterBattleCreatureState {
-  return actor?.origin.kind === "character";
-}
-
-export function activeOngoingFeatureOccurrencesForCombatant(
-  state: BattleState,
-  combatant: BattleCreatureState,
-): ReadonlyMap<OngoingFeatureSourceKey, ActiveOngoingFeatureOccurrence> {
-  return new Map(
-    [...combatant.activeOngoingFeatureOccurrences].filter(([key]) => {
-      const profile = ongoingFeatureProfileForSourceKey(combatant, key);
-      return (
-        profile !== null &&
-        !profile.lifecycle.earlyEndConditions.some((condition) =>
-          hasCondition(combatant.conditions, condition),
-        ) &&
-        !profile.lifecycle.earlyEndArmorCategories.some((category) =>
-          combatantWearingArmorCategory(state, combatant, category),
-        )
-      );
-    }),
-  );
-}
-
-export function ongoingFeatureProfileForSourceKey(
-  combatant: BattleCreatureState,
-  key: OngoingFeatureSourceKey,
-): Extract<
-  UnitFeatureProcedureExecution,
-  { readonly kind: "ongoingFeature" }
-> | null {
-  if (!isCharacterBattleCreatureState(combatant)) return null;
-  const procedure = characterUnitProcedure(
-    combatant.origin.execution,
-    key,
-    CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
-  );
-  return procedure?.kind === "unitFeature" &&
-    procedure.execution.kind === "ongoingFeature"
-    ? procedure.execution
-    : null;
-}
+import {
+  activeOngoingFeatureOccurrencesForCombatant,
+  isCharacterBattleCreatureState,
+} from "./creature-state-queries.ts";
+export {
+  activeOngoingFeatureOccurrencesForCombatant,
+  isCharacterBattleCreatureState,
+  ongoingFeatureProfileForSourceKey,
+} from "./creature-state-queries.ts";
 
 export function normalizeEarlyEndedOngoingFeatures(
   state: BattleState,

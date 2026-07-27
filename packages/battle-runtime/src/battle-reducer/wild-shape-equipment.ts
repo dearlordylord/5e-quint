@@ -149,49 +149,62 @@ function resolvedDispositionForChoice(
   if (choice.disposition === "worn") {
     if (choice.practicality.kind === "notPracticalToWear") {
       if (choice.practicality.fallback.disposition === "falls") {
-        return {
-          tag: "valid",
-          value: {
-            item: choice.item,
-            disposition: "falls",
-            fallInActorSpace: choice.practicality.fallback.fallInActorSpace,
-          },
-        };
+        return resolvedFallenEquipmentDisposition(
+          choice.item,
+          choice.practicality.fallback.fallInActorSpace,
+        );
       }
-      return {
-        tag: "valid",
-        value: {
-          item: choice.item,
-          disposition: "merges",
-        },
-      };
+      return resolvedEquipmentDisposition(choice.item, "merges");
     }
     if (!wildShapeLoadoutObjectSupportsEffectiveWornProjection(choice.item)) {
       return unsupportedWornEquipmentDisposition();
     }
-    return {
-      tag: "valid",
-      value: {
-        item: choice.item,
-        disposition: "worn",
-      },
-    };
+    return resolvedEquipmentDisposition(choice.item, "worn");
   }
   if (choice.disposition === "falls") {
-    return {
-      tag: "valid",
-      value: {
-        item: choice.item,
-        disposition: "falls",
-        fallInActorSpace: choice.fallInActorSpace,
-      },
-    };
+    return resolvedFallenEquipmentDisposition(
+      choice.item,
+      choice.fallInActorSpace,
+    );
   }
+  return resolvedEquipmentDisposition(choice.item, "merges");
+}
+
+function resolvedEquipmentDisposition(
+  item: WildShapeLoadoutObjectRef,
+  disposition: Exclude<
+    ResolvedWildShapeEquipmentDisposition["disposition"],
+    "falls"
+  >,
+): {
+  readonly tag: "valid";
+  readonly value: ResolvedWildShapeEquipmentDisposition;
+} {
   return {
     tag: "valid",
     value: {
-      item: choice.item,
-      disposition: "merges",
+      item,
+      disposition,
+    },
+  };
+}
+
+function resolvedFallenEquipmentDisposition(
+  item: WildShapeLoadoutObjectRef,
+  fallInActorSpace: Extract<
+    ResolvedWildShapeEquipmentDisposition,
+    { readonly disposition: "falls" }
+  >["fallInActorSpace"],
+): {
+  readonly tag: "valid";
+  readonly value: ResolvedWildShapeEquipmentDisposition;
+} {
+  return {
+    tag: "valid",
+    value: {
+      item,
+      disposition: "falls",
+      fallInActorSpace,
     },
   };
 }

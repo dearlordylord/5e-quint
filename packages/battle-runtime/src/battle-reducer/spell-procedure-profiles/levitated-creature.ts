@@ -1,3 +1,14 @@
+import { openReactionThenResolveWillingTargetSave } from "../willing-target-save-gate.ts";
+import { replaceTargetActiveEffectsEndingDisplacedConcentrations } from "../active-effect-replacement.ts";
+import { actionSpellCastCandidatesForTargetHole } from "../spell-cast-candidate.ts";
+import { fillsBelongToDeclaredHoles } from "../fill-hole-protocol.ts";
+import { selectSingleSpellTarget } from "../single-spell-target.ts";
+import {
+  ATTACK_TARGET_HOLE_ID,
+  LEVITATE_INITIAL_RISE_HOLE_ID,
+  SPELL_CAST_REACTION_FACTS_HOLE_ID,
+} from "../battle-runtime-protocol.ts";
+import { spellSavingThrowOutcomeHoleId } from "../spells-damage-fills.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-glyph-stored-concentration-full-duration
@@ -18,33 +29,28 @@ import { Either } from "effect";
 import {
   type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
-  type BattleCreatureState,
   type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
   type BattleState,
   type LevitatedCreatureSpellInvocation,
 } from "../../battle-state-execution.ts";
-import { maybeOpenInterruptWindow, snapshotBattle } from "../dispatcher.ts";
 import { CombatantId } from "../../identity.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";
 import { allocateBattleActiveEffectRef } from "../../active-effect/execution-ref.ts";
-import { needsHolesResult } from "../hole-helpers.ts";
-import { invalidResult } from "../result-helpers.ts";
-import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
-import { combatantsAfterConcentrationSpellEffectsEndedIfNoEffects } from "../spell-condition-effects-helpers.ts";
+
+import { needsHolesResult } from "../needs-holes-result.ts";
+import {
+  invalidResult,
+  resolvedResult,
+  resolutionFromStateResult,
+} from "../result-helpers.ts";
 import {
   LEVITATE_ALTITUDE_CONTROL_FEET,
   LEVITATE_INITIAL_RISE_FEET,
   levitateInitialRiseHole,
 } from "../levitate-creature.ts";
 import { sameStringSet } from "../spells-execution-facts.ts";
-import { spellSavingThrowOutcomeHole } from "../spells-damage-fills.ts";
-import {
-  spellTargetHole,
-  spellTargetIsKnownWilling,
-  spellTargetIsLegal,
-} from "../spells-targeting.ts";
-import { validateSavingThrowOutcomes } from "../spells-resolve-save-gates.ts";
+import { spellTargetHole } from "../spells-targeting.ts";
 import {
   spellRequiresConcentration,
   spendSpellCastResources,
@@ -188,58 +194,23 @@ function discoverLevitatedCreatureCastAct(
   invocation: BattleExecutableSpellInvocation<LevitatedCreatureInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const targetHole = spellTargetHole(state, actorId, invocation);
-  const castActs =
-    targetHole.choices.length === 0
-      ? []
-      : [
-          {
-            subject: {
-              tag: "actionSpell" as const,
-              actorId,
-              procedureRef: invocation.sourceProcedureRef,
-              mode: { tag: "cast" as const },
-            },
-            initialHoles: [targetHole],
-          },
-        ];
-  return castActs;
+  return actionSpellCastCandidatesForTargetHole(
+    actorId,
+    invocation.sourceProcedureRef,
+    targetHole,
+  );
 }
 
 function resolveLevitatedCreature(
   input: LevitatedCreatureResolveInput,
 ): BattleResolutionResult {
   if (
-    input.fillSet.objectTarget !== undefined ||
-    input.fillSet.objectContactTargets !== undefined ||
-    input.fillSet.objectContactSavingThrowOutcome !== undefined ||
-    input.fillSet.objectDropResolution !== undefined ||
-    input.fillSet.magicWeaponTargetItem !== undefined ||
-    input.fillSet.ongoingSpellTarget !== undefined ||
-    input.fillSet.ongoingSpellAbilityChecks.length > 0 ||
-    input.fillSet.attackRoll !== undefined ||
-    input.fillSet.targetAllocation !== undefined ||
-    input.fillSet.targetList !== undefined ||
-    input.fillSet.attackSequencePartFills.length > 0 ||
-    input.fillSet.damageRoll !== undefined ||
-    input.fillSet.attackBurstDamageRoll !== undefined ||
-    input.fillSet.healingRoll !== undefined ||
-    input.fillSet.mirrorImageDuplicateRoll !== undefined ||
-    input.fillSet.skillChoice !== undefined ||
-    input.fillSet.targetAbilityChoices !== undefined ||
-    input.fillSet.abilityChoice !== undefined ||
-    input.fillSet.thaumaturgyActiveOneMinuteEffectCount !== undefined ||
-    input.fillSet.commandOptionChoice !== undefined ||
-    input.fillSet.selfTransformationModeChoice !== undefined ||
-    input.fillSet.conditionChoice !== undefined ||
-    input.fillSet.areaChoice !== undefined ||
-    input.fillSet.teleportDestination !== undefined ||
-    input.fillSet.dancingLightsPlacement !== undefined ||
-    input.fillSet.damageTypeChoice !== undefined ||
-    input.fillSet.movement !== undefined ||
-    input.fillSet.hideousLaughterDamageRepeatSaves.length > 0 ||
-    input.fillSet.damageDispositions.length > 0 ||
-    input.fillSet.concentrationSavingThrows.length > 0 ||
-    input.fillSet.spellDamageReductionRolls.length > 0
+    !fillsBelongToDeclaredHoles(input.input.fills, [
+      ATTACK_TARGET_HOLE_ID,
+      SPELL_CAST_REACTION_FACTS_HOLE_ID,
+      spellSavingThrowOutcomeHoleId(input.invocation),
+      LEVITATE_INITIAL_RISE_HOLE_ID,
+    ])
   ) {
     return invalidResult(
       input.input.state,
@@ -247,117 +218,55 @@ function resolveLevitatedCreature(
       "Levitate's creature branch uses one target, one initial-rise fill, and, for unwilling targets, one Constitution Saving Throw fill.",
     );
   }
-  if (input.fillSet.targetId === undefined) {
-    return needsHolesResult(input.input.state, input.input.subject, [
-      spellTargetHole(input.input.state, input.actorId, input.invocation),
-    ]);
-  }
-  const target = input.input.state.combatants.get(input.fillSet.targetId);
-  if (
-    target === undefined ||
-    !spellTargetIsLegal(
-      input.input.state,
-      input.actorId,
-      target.combatantId,
-      input.invocation,
-      input.fillSet.targetSpatialFacts,
-    )
-  ) {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
+  const targetSelection = selectSingleSpellTarget({
+    state: input.input.state,
+    subject: input.input.subject,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    targetId: input.fillSet.targetId,
+    targetSpatialFacts: input.fillSet.targetSpatialFacts,
+    invalidTargetMessage:
       "Levitate creature target must be a combatant within 60 feet that the caster can see.",
-    );
+  });
+  if (targetSelection.tag !== "selected") {
+    return targetSelection;
   }
+  const target = targetSelection.target;
 
-  if (input.storedGlyphRelease === undefined) {
-    const spellCastReactionWindow = maybeOpenInterruptWindow(
-      input.input.state,
-      spellCastInterruptFrame({
-        casterId: input.actorId,
-        invocation: input.invocation,
-        targetIds: [target.combatantId],
-        reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
-        castingResource: { kind: "magicAction" },
-        continuation: {
-          kind: "replay",
-          subject: input.input.subject,
-          fills: input.input.fills,
-        },
-      }),
-      input.input.handledInterruptTrigger,
-    );
-    if (spellCastReactionWindow !== null) {
-      return spellCastReactionWindow;
-    }
-  }
-
-  const targetIsWilling = spellTargetIsKnownWilling(
-    input.actorId,
-    target.combatantId,
-    input.invocation,
-    input.fillSet.targetSpatialFacts,
-  );
-  if (targetIsWilling && input.fillSet.savingThrowOutcomes !== undefined) {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
+  const saveResolution = openReactionThenResolveWillingTargetSave({
+    resolution: input,
+    targetId: target.combatantId,
+    targetSpatialFacts: input.fillSet.targetSpatialFacts,
+    savingThrowOutcomes: input.fillSet.savingThrowOutcomes,
+    willingTargetSaveMessage:
       "Willing Levitate creature targets do not make a Saving Throw.",
-    );
+  });
+  if (saveResolution.tag !== "saveGate") {
+    return saveResolution;
   }
-  const savingThrowHole = spellSavingThrowOutcomeHole(
-    input.input.state,
-    input.actorId,
-    input.invocation,
-  );
-  if (!targetIsWilling && input.fillSet.savingThrowOutcomes === undefined) {
-    return needsHolesResult(input.input.state, input.input.subject, [
-      savingThrowHole,
-    ]);
+  const { saveGate } = saveResolution;
+  if (saveGate.tag === "resolutionRequired") {
+    return saveGate.resolution;
   }
-  if (input.fillSet.savingThrowOutcomes !== undefined) {
-    const validation = validateSavingThrowOutcomes(
-      input.fillSet.savingThrowOutcomes,
-      input.invocation,
-      input.input.state,
-      input.actorId,
-      undefined,
-      [target.combatantId],
-    );
-    if (validation !== null) {
-      return invalidResult(input.input.state, "invalidFill", validation);
+  if (saveGate.tag === "unaffected") {
+    if (input.fillSet.levitateInitialRiseFeet !== undefined) {
+      return invalidResult(
+        input.input.state,
+        "invalidFill",
+        "Successful Levitate creature saves are unaffected and do not use an initial-rise fill.",
+      );
     }
-    const outcome = input.fillSet.savingThrowOutcomes.outcomes[0];
-    if (outcome?.succeeded === true) {
-      if (input.fillSet.levitateInitialRiseFeet !== undefined) {
-        return invalidResult(
-          input.input.state,
-          "invalidFill",
-          "Successful Levitate creature saves are unaffected and do not use an initial-rise fill.",
-        );
-      }
-      if (input.storedGlyphRelease !== undefined) {
-        return {
-          tag: "resolved",
-          state: input.input.state,
-          snapshot: snapshotBattle(input.input.state),
-        };
-      }
-      const resourced = spendSpellCastResources({
-        state: input.input.state,
-        actorId: input.actorId,
-        invocation: input.invocation,
-        errorState: input.input.state,
-        startConcentration: false,
-      });
-      return resourced.tag === "invalid"
-        ? resourced
-        : {
-            tag: "resolved",
-            state: resourced.state,
-            snapshot: snapshotBattle(resourced.state),
-          };
+    if (input.storedGlyphRelease !== undefined) {
+      return resolvedResult(input.input.state);
     }
+    const resourced = spendSpellCastResources({
+      state: input.input.state,
+      actorId: input.actorId,
+      invocation: input.invocation,
+      errorState: input.input.state,
+      startConcentration: false,
+    });
+    return resolutionFromStateResult(resourced);
   }
 
   if (input.fillSet.levitateInitialRiseFeet === undefined) {
@@ -385,11 +294,7 @@ function resolveLevitatedCreature(
     input.input.subject.procedureRef,
   );
   if (input.storedGlyphRelease !== undefined) {
-    return {
-      tag: "resolved",
-      state: effected,
-      snapshot: snapshotBattle(effected),
-    };
+    return resolvedResult(effected);
   }
   const resourced = spendSpellCastResources({
     state: effected,
@@ -400,13 +305,7 @@ function resolveLevitatedCreature(
       ? { startConcentration: false }
       : {}),
   });
-  return resourced.tag === "invalid"
-    ? resourced
-    : {
-        tag: "resolved",
-        state: resourced.state,
-        snapshot: snapshotBattle(resourced.state),
-      };
+  return resolutionFromStateResult(resourced);
 }
 
 function applyLevitatedCreatureSpellEffect(
@@ -444,27 +343,12 @@ function applyLevitatedCreatureSpellEffect(
       ),
       nextEffect,
     ];
-    const withReplacement = {
-      ...allocation.state,
-      combatants: new Map(allocation.state.combatants).set(targetId, {
-        ...allocatedTarget,
-        activeEffects,
-      }),
-    };
-    const combatants = displacedEffects.reduce<
-      ReadonlyMap<CombatantId, BattleCreatureState>
-    >(
-      (nextCombatants, effect) =>
-        combatantsAfterConcentrationSpellEffectsEndedIfNoEffects(
-          nextCombatants,
-          {
-            sourceCombatantId: effect.sourceCombatantId,
-            sourceProcedureRef: effect.sourceProcedureRef,
-          },
-        ),
-      withReplacement.combatants,
+    return replaceTargetActiveEffectsEndingDisplacedConcentrations(
+      allocation.state,
+      targetId,
+      activeEffects,
+      displacedEffects,
     );
-    return { ...withReplacement, combatants };
   }, state);
 }
 

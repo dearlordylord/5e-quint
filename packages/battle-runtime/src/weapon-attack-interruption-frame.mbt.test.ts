@@ -21,7 +21,7 @@ import {
   quintVariantValue,
   run,
   stateCheck,
-} from "./battle-runtime-mbt-driver-kit.ts";
+} from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import type {
   BattleAttackDamageInterruptionFrame,
   BattleHole,
@@ -53,7 +53,7 @@ import {
   interruptDecisionFill,
   movementFill,
   targetFill,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 
 const driverSchema = {
   init: {},

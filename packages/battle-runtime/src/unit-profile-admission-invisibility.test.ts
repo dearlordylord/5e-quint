@@ -9,7 +9,7 @@ import type { BattleProcedureExecutionRef } from "./identity.ts";
 import {
   requireCharacterSpellProcedureRefForTest,
   characterSpellInvocationRefForProcedureRefForTest,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import {
   blurUnitId,
   counterspellUnitId,
@@ -19,7 +19,7 @@ import {
   shieldUnitId,
   spellCasterId,
   spellTargetId,
-} from "./unit-profile-admission-catalog-support.ts";
+} from "./unit-profile-admission-catalog.test-support.ts";
 import {
   attackRollFill,
   attackTargetFill,
@@ -30,15 +30,15 @@ import {
   interruptDecisionFill,
   statBlockAttackAct,
   statBlockWithCreatureType,
-} from "./unit-profile-admission-creature-fixture-support.ts";
+} from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
   spellAct,
   spellActInvocation,
   savingThrowOutcomeFill,
   spellTargetListFill,
-} from "./unit-profile-admission-spell-fill-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+} from "./unit-profile-admission-spell-fill.test-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   abilityModifier,
   applyBattleHitPointDamage,
@@ -54,7 +54,7 @@ import {
   resolveBattleSubject,
   spellSlotInvocationRef,
   startBattle,
-} from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission.test-support.ts";
 import {
   SPELL_CAST_REACTION_FACTS_HOLE_ID,
   type BattleActiveEffect,

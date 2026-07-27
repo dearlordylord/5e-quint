@@ -1,19 +1,12 @@
 // Flaming Sphere hazard and ram composite transition.
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE
 
-import { damageAmount, resourceCount, spellSlotLevel } from "@dnd/shared/types";
-import {
-  spellSaveGateBranch,
-  spellSaveGateDamageAmount,
-  spellSaveGateDamageResult,
-} from "@dnd/shared-algebras/spell-save-gate-algebra";
-import {
-  applySpellSlotExpenditure,
-  spellSlotExpenditureAccepted,
-  spellSlotExpenditureRequired,
-  spellSlotExpenditureResultState,
-} from "@dnd/shared-algebras/spell-slot-expenditure-algebra";
 import { Match } from "effect";
+import { expendActionSpellSlot } from "./action-spell-slot-expenditure.ts";
+import {
+  applyDamageToPositiveHitPoints,
+  halfDamageAfterSuccessfulSave,
+} from "./focused-spell-hazard-damage.ts";
 
 const byTag = Match.discriminator("tag");
 
@@ -81,17 +74,7 @@ export function flamingSphereDamageAfterSave(input: {
   readonly rolledDamage: number;
   readonly savingThrowSucceeded: boolean;
 }): number {
-  const branch = spellSaveGateBranch(input.savingThrowSucceeded);
-  const saveDamageResult = spellSaveGateDamageResult({
-    branch,
-    damageOnSuccess: "halfDamage",
-  });
-  return Number(
-    spellSaveGateDamageAmount(
-      damageAmount(input.rolledDamage),
-      saveDamageResult,
-    ),
-  );
+  return halfDamageAfterSuccessfulSave(input);
 }
 
 export function flamingSphereMoveDistanceAccepted(input: {
@@ -120,35 +103,14 @@ export function resolveFlamingSphereCast(
   state: FlamingSphereHazardRamState,
   slotLevel: number,
 ): FlamingSphereHazardRamState {
-  if (
-    !state.actionAvailable ||
-    !Number.isInteger(slotLevel) ||
-    slotLevel < FLAMING_SPHERE_MINIMUM_SLOT_LEVEL ||
-    slotLevel > 9 ||
-    !Number.isInteger(state.slotLedger.slotLevel) ||
-    state.slotLedger.slotLevel < 1 ||
-    state.slotLedger.slotLevel > 9 ||
-    !Number.isInteger(state.slotLedger.slotsRemaining) ||
-    state.slotLedger.slotsRemaining < 0
-  ) {
-    return state;
-  }
-  const requestedSlotLevel = spellSlotLevel(slotLevel);
-  const slotState = {
-    slotLedger: {
-      slotLevel: spellSlotLevel(state.slotLedger.slotLevel),
-      slotsRemaining: resourceCount(state.slotLedger.slotsRemaining),
-    },
-    slotSpellCastThisTurn: state.slotSpellCastThisTurn,
-  };
-  const slotResult = applySpellSlotExpenditure(
-    slotState,
-    spellSlotExpenditureRequired(requestedSlotLevel),
+  const slotExpenditure = expendActionSpellSlot(
+    state,
+    slotLevel,
+    FLAMING_SPHERE_MINIMUM_SLOT_LEVEL,
   );
-  if (!spellSlotExpenditureAccepted(slotResult)) {
+  if (slotExpenditure === undefined) {
     return state;
   }
-  const nextSlotState = spellSlotExpenditureResultState(slotState, slotResult);
   return {
     ...state,
     actionAvailable: false,
@@ -158,11 +120,7 @@ export function resolveFlamingSphereCast(
       durationTicks: FLAMING_SPHERE_DURATION_TICKS,
       ramMaxMoveFeet: FLAMING_SPHERE_RAM_MAX_MOVE_FEET,
     },
-    slotLedger: {
-      slotLevel: Number(nextSlotState.slotLedger.slotLevel),
-      slotsRemaining: Number(nextSlotState.slotLedger.slotsRemaining),
-    },
-    slotSpellCastThisTurn: nextSlotState.slotSpellCastThisTurn,
+    ...slotExpenditure,
   };
 }
 
@@ -185,10 +143,7 @@ export function applyFlamingSphereHazardDamage(
   const damage = flamingSphereDamageAfterSave(fills);
   return {
     ...state,
-    targetVitals: applyResolvedDamageToPositiveHitPoints(
-      state.targetVitals,
-      damage,
-    ),
+    targetVitals: applyDamageToPositiveHitPoints(state.targetVitals, damage),
   };
 }
 
@@ -226,25 +181,4 @@ export function resolveFlamingSphereHazardRam(
     ),
     Match.exhaustive,
   );
-}
-
-function applyResolvedDamageToPositiveHitPoints(
-  vitals: FlamingSphereHazardRamCreatureVitals,
-  rawDamage: number,
-): FlamingSphereHazardRamCreatureVitals {
-  if (vitals.dead) return vitals;
-  const resolvedDamage = Math.max(0, Math.floor(rawDamage));
-  const absorbedByTemporaryHitPoints = Math.min(
-    vitals.temporaryHitPoints,
-    resolvedDamage,
-  );
-  const damageToHitPoints = resolvedDamage - absorbedByTemporaryHitPoints;
-  const nextHitPoints = Math.max(0, vitals.hitPoints - damageToHitPoints);
-  return {
-    ...vitals,
-    hitPoints: nextHitPoints,
-    temporaryHitPoints:
-      vitals.temporaryHitPoints - absorbedByTemporaryHitPoints,
-    dead: nextHitPoints === 0,
-  };
 }

@@ -16,6 +16,35 @@ import type { SpellProcedureDeclarationResolution } from "./resolution-contract.
 
 export type OkSpellFillSet = Extract<SpellFillSet, { readonly tag: "ok" }>;
 
+export function spellProcedureResolutionContext<
+  ResolutionInput,
+  ActorId,
+  Invocation,
+  FillSet,
+  ActionCostOverride,
+  MetamagicApplications,
+>(input: {
+  readonly input: ResolutionInput;
+  readonly actorId: ActorId;
+  readonly invocation: Invocation;
+  readonly fillSet: FillSet;
+  readonly actionCostOverride?: ActionCostOverride;
+  readonly metamagicApplications?: MetamagicApplications;
+}) {
+  return {
+    input: input.input,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    fillSet: input.fillSet,
+    ...(input.actionCostOverride === undefined
+      ? {}
+      : { actionCostOverride: input.actionCostOverride }),
+    ...(input.metamagicApplications === undefined
+      ? {}
+      : { metamagicApplications: input.metamagicApplications }),
+  };
+}
+
 export type SpellProcedureProfileResolveInput<
   I extends { readonly procedure: SpellProcedureKey },
 > = SpellProcedureDeclarationResolution<I["procedure"]>;

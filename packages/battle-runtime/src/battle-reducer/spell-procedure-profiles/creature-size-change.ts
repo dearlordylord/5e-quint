@@ -1,3 +1,12 @@
+import { fillsBelongToDeclaredHoles } from "../fill-hole-protocol.ts";
+import { selectSingleSpellTarget } from "../single-spell-target.ts";
+import { openReactionThenResolveWillingTargetSave } from "../willing-target-save-gate.ts";
+import { replaceTargetActiveEffectsEndingDisplacedConcentrations } from "../active-effect-replacement.ts";
+import {
+  ATTACK_TARGET_HOLE_ID,
+  SPELL_CAST_REACTION_FACTS_HOLE_ID,
+} from "../battle-runtime-protocol.ts";
+import { spellSavingThrowOutcomeHoleId } from "../spells-damage-fills.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-creature-size-change
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-glyph-stored-concentration-full-duration
@@ -26,13 +35,12 @@ import type { EffectAtom, OngoingEffect } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 import {
   type BattleActDiscoveryCandidate,
-  type BattleCreatureState,
   type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
   type BattleState,
   type CreatureSizeChangeSpellInvocation,
 } from "../../battle-state-execution.ts";
-import { snapshotBattle } from "../dispatcher.ts";
+import { snapshotBattle } from "../interrupt-execution.ts";
 import { CombatantId } from "../../identity.ts";
 import type {
   CreatureSizeDecreaseSpellProcedureExecution,
@@ -46,27 +54,16 @@ import {
   creatureSizeChangeProcedure,
 } from "../creature-size-change-effects.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";
-import { maybeOpenInterruptWindow } from "../dispatcher.ts";
-import { needsHolesResult } from "../hole-helpers.ts";
-import { invalidResult } from "../result-helpers.ts";
+
+import {
+  invalidResult,
+  resolvedResult,
+  resolutionFromStateResult,
+} from "../result-helpers.ts";
 import { sameStringSet } from "../spells-execution-facts.ts";
-import {
-  spellCastInterruptFrame,
-  spellCastMetamagicApplicationsInput,
-} from "../spell-cast-interrupt-frame.ts";
-import { combatantsAfterConcentrationSpellEffectsEndedIfNoEffects } from "../spell-condition-effects-helpers.ts";
-import { spellSavingThrowOutcomeHole } from "../spells-damage-fills.ts";
-import { validateSavingThrowOutcomes } from "../spells-resolve-save-gates.ts";
-import {
-  spellCastingTimeResourceForSpellCast,
-  spellRequiresConcentration,
-  spendSpellCastResources,
-} from "../spells-resolve-resources.ts";
-import {
-  spellTargetHole,
-  spellTargetIsKnownWilling,
-  spellTargetIsLegal,
-} from "../spells-targeting.ts";
+import { spellRequiresConcentration } from "../spells-resolve-resources.ts";
+import { spendConfiguredSpellCastResources } from "../spell-active-effect-resolution.ts";
+import { spellTargetHole } from "../spells-targeting.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
@@ -374,37 +371,11 @@ function resolveCreatureSizeChange(
   input: SpellProcedureProfileResolveInput<CreatureSizeChangeInvocation>,
 ): BattleResolutionResult {
   if (
-    input.fillSet.objectTarget !== undefined ||
-    input.fillSet.objectContactTargets !== undefined ||
-    input.fillSet.objectContactSavingThrowOutcome !== undefined ||
-    input.fillSet.objectDropResolution !== undefined ||
-    input.fillSet.magicWeaponTargetItem !== undefined ||
-    input.fillSet.ongoingSpellTarget !== undefined ||
-    input.fillSet.ongoingSpellAbilityChecks.length > 0 ||
-    input.fillSet.attackRoll !== undefined ||
-    input.fillSet.targetAllocation !== undefined ||
-    input.fillSet.targetList !== undefined ||
-    input.fillSet.attackSequencePartFills.length > 0 ||
-    input.fillSet.damageRoll !== undefined ||
-    input.fillSet.attackBurstDamageRoll !== undefined ||
-    input.fillSet.healingRoll !== undefined ||
-    input.fillSet.mirrorImageDuplicateRoll !== undefined ||
-    input.fillSet.skillChoice !== undefined ||
-    input.fillSet.targetAbilityChoices !== undefined ||
-    input.fillSet.abilityChoice !== undefined ||
-    input.fillSet.thaumaturgyActiveOneMinuteEffectCount !== undefined ||
-    input.fillSet.commandOptionChoice !== undefined ||
-    input.fillSet.selfTransformationModeChoice !== undefined ||
-    input.fillSet.conditionChoice !== undefined ||
-    input.fillSet.areaChoice !== undefined ||
-    input.fillSet.teleportDestination !== undefined ||
-    input.fillSet.dancingLightsPlacement !== undefined ||
-    input.fillSet.damageTypeChoice !== undefined ||
-    input.fillSet.movement !== undefined ||
-    input.fillSet.hideousLaughterDamageRepeatSaves.length > 0 ||
-    input.fillSet.damageDispositions.length > 0 ||
-    input.fillSet.concentrationSavingThrows.length > 0 ||
-    input.fillSet.spellDamageReductionRolls.length > 0
+    !fillsBelongToDeclaredHoles(input.input.fills, [
+      ATTACK_TARGET_HOLE_ID,
+      SPELL_CAST_REACTION_FACTS_HOLE_ID,
+      spellSavingThrowOutcomeHoleId(input.invocation),
+    ])
   ) {
     return invalidResult(
       input.input.state,
@@ -412,124 +383,46 @@ function resolveCreatureSizeChange(
       "Creature size-change spells use one target and, for unwilling targets, one Saving Throw fill.",
     );
   }
-  if (input.fillSet.targetId === undefined) {
-    return needsHolesResult(input.input.state, input.input.subject, [
-      spellTargetHole(input.input.state, input.actorId, input.invocation),
-    ]);
-  }
-  const target = input.input.state.combatants.get(input.fillSet.targetId);
-  if (
-    target === undefined ||
-    !spellTargetIsLegal(
-      input.input.state,
-      input.actorId,
-      target.combatantId,
-      input.invocation,
-      input.fillSet.targetSpatialFacts,
-    )
-  ) {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
+  const targetSelection = selectSingleSpellTarget({
+    state: input.input.state,
+    subject: input.input.subject,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    targetId: input.fillSet.targetId,
+    targetSpatialFacts: input.fillSet.targetSpatialFacts,
+    invalidTargetMessage:
       "Creature size-change spell target must be a combatant within the selected spell's supported range.",
-    );
+  });
+  if (targetSelection.tag !== "selected") {
+    return targetSelection;
   }
+  const target = targetSelection.target;
 
-  if (input.storedGlyphRelease === undefined) {
-    const spellCastReactionWindow = maybeOpenInterruptWindow(
-      input.input.state,
-      spellCastInterruptFrame({
-        casterId: input.actorId,
-        invocation: input.invocation,
-        targetIds: [target.combatantId],
-        reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
-        castingResource: spellCastingTimeResourceForSpellCast({
-          invocation: input.invocation,
-          ...(input.actionCostOverride === undefined
-            ? {}
-            : { actionCostOverride: input.actionCostOverride }),
-        }),
-        ...spellCastMetamagicApplicationsInput(
-          input.metamagicApplications ?? [],
-        ),
-        continuation: {
-          kind: "replay",
-          subject: input.input.subject,
-          fills: input.input.fills,
-        },
-      }),
-      input.input.handledInterruptTrigger,
-    );
-    if (spellCastReactionWindow !== null) {
-      return spellCastReactionWindow;
-    }
-  }
-
-  const targetIsWilling = spellTargetIsKnownWilling(
-    input.actorId,
-    target.combatantId,
-    input.invocation,
-    input.fillSet.targetSpatialFacts,
-  );
-  if (targetIsWilling && input.fillSet.savingThrowOutcomes !== undefined) {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
+  const saveResolution = openReactionThenResolveWillingTargetSave({
+    resolution: input,
+    targetId: target.combatantId,
+    targetSpatialFacts: input.fillSet.targetSpatialFacts,
+    savingThrowOutcomes: input.fillSet.savingThrowOutcomes,
+    willingTargetSaveMessage:
       "Willing creature size-change targets do not make a Saving Throw.",
-    );
+  });
+  if (saveResolution.tag !== "saveGate") {
+    return saveResolution;
   }
-  const savingThrowHole = spellSavingThrowOutcomeHole(
-    input.input.state,
-    input.actorId,
-    input.invocation,
-  );
-  if (!targetIsWilling && input.fillSet.savingThrowOutcomes === undefined) {
-    return needsHolesResult(input.input.state, input.input.subject, [
-      savingThrowHole,
-    ]);
+  const { saveGate } = saveResolution;
+  if (saveGate.tag === "resolutionRequired") {
+    return saveGate.resolution;
   }
-  if (input.fillSet.savingThrowOutcomes !== undefined) {
-    const validation = validateSavingThrowOutcomes(
-      input.fillSet.savingThrowOutcomes,
-      input.invocation,
-      input.input.state,
-      input.actorId,
-      undefined,
-      [target.combatantId],
-    );
-    if (validation !== null) {
-      return invalidResult(input.input.state, "invalidFill", validation);
+  if (saveGate.tag === "unaffected") {
+    if (input.storedGlyphRelease !== undefined) {
+      return resolvedResult(input.input.state);
     }
-    const outcome = input.fillSet.savingThrowOutcomes.outcomes[0];
-    if (outcome?.succeeded === true) {
-      if (input.storedGlyphRelease !== undefined) {
-        return {
-          tag: "resolved",
-          state: input.input.state,
-          snapshot: snapshotBattle(input.input.state),
-        };
-      }
-      const resourced = spendSpellCastResources({
-        state: input.input.state,
-        actorId: input.actorId,
-        invocation: input.invocation,
-        errorState: input.input.state,
-        startConcentration: false,
-        ...(input.actionCostOverride === undefined
-          ? {}
-          : { actionCostOverride: input.actionCostOverride }),
-        ...(input.metamagicApplications === undefined
-          ? {}
-          : { metamagicApplications: input.metamagicApplications }),
-      });
-      return resourced.tag === "invalid"
-        ? resourced
-        : {
-            tag: "resolved",
-            state: resourced.state,
-            snapshot: snapshotBattle(resourced.state),
-          };
-    }
+    const resourced = spendConfiguredSpellCastResources({
+      resolution: input,
+      state: input.input.state,
+      startConcentration: false,
+    });
+    return resolutionFromStateResult(resourced);
   }
 
   const concentrationBase =
@@ -546,26 +439,14 @@ function resolveCreatureSizeChange(
     input.metamagicApplications,
   );
   if (input.storedGlyphRelease !== undefined) {
-    return {
-      tag: "resolved",
-      state: effected,
-      snapshot: snapshotBattle(effected),
-    };
+    return resolvedResult(effected);
   }
-  const resourced = spendSpellCastResources({
+  const resourced = spendConfiguredSpellCastResources({
+    resolution: input,
     state: effected,
-    actorId: input.actorId,
-    invocation: input.invocation,
-    errorState: input.input.state,
     ...(input.storedGlyphRelease !== undefined
       ? { startConcentration: false }
       : {}),
-    ...(input.actionCostOverride === undefined
-      ? {}
-      : { actionCostOverride: input.actionCostOverride }),
-    ...(input.metamagicApplications === undefined
-      ? {}
-      : { metamagicApplications: input.metamagicApplications }),
   });
   if (resourced.tag === "invalid") {
     return resourced;
@@ -609,27 +490,12 @@ function applyCreatureSizeChangeEffect(
       target.activeEffects,
       nextEffect,
     );
-    const withReplacement = {
-      ...nextState,
-      combatants: new Map(nextState.combatants).set(targetId, {
-        ...target,
-        activeEffects: replacement.activeEffects,
-      }),
-    };
-    const combatants = replacement.displacedEffects.reduce<
-      ReadonlyMap<CombatantId, BattleCreatureState>
-    >(
-      (nextCombatants, effect) =>
-        combatantsAfterConcentrationSpellEffectsEndedIfNoEffects(
-          nextCombatants,
-          {
-            sourceCombatantId: effect.sourceCombatantId,
-            sourceProcedureRef: effect.sourceProcedureRef,
-          },
-        ),
-      withReplacement.combatants,
+    return replaceTargetActiveEffectsEndingDisplacedConcentrations(
+      nextState,
+      targetId,
+      replacement.activeEffects,
+      replacement.displacedEffects,
     );
-    return { ...withReplacement, combatants };
   }, state);
 }
 

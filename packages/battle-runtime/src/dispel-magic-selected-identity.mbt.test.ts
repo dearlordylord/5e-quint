@@ -2,8 +2,8 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 import {
   battleActiveEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
-} from "./battle-runtime-test-support.ts";
-import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
+import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-ongoing-spell-ending
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay B21-DISPEL-MAGIC-IDENTITY-WITNESS dispel_magic
@@ -15,19 +15,19 @@ import { expect } from "vitest";
 
 import { parseBattleSpellEffectLevel } from "./battle-reducer/spells-effective-level.ts";
 import { battleSpellEffectOccurrenceId } from "./identity.ts";
-import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
-import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.test-support.ts";
+import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import {
   continualFlameUnitId,
   dispelMagicUnitId,
   heatMetalUnitId,
   spellCasterId,
   spellTargetId,
-} from "./unit-profile-admission-catalog-support.ts";
-import { requireHole } from "./unit-profile-admission-creature-fixture-support.ts";
+} from "./unit-profile-admission-catalog.test-support.ts";
+import { requireHole } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
-import { spellAct } from "./unit-profile-admission-spell-fill-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+import { spellAct } from "./unit-profile-admission-spell-fill.test-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   battleObjectId,
   type BattleActiveEffect,

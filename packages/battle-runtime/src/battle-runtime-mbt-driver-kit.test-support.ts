@@ -1,0 +1,19405 @@
+import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
+import * as path from "node:path";
+import {
+  battleActSpellPresentation,
+  battleActSpellSlotPresentation,
+  battleActUnitPresentation,
+} from "./battle-act-composition.ts";
+import {
+  defineDriver,
+  run,
+  stateCheck,
+  transformITFValue,
+} from "@firfi/quint-connect";
+import {
+  ITFBigInt,
+  ITFList,
+  ITFMap,
+  ITFSet,
+  ITFTuple,
+  ITFVariant,
+} from "@firfi/quint-connect/effect";
+import { Either, Match, Schema } from "effect";
+import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";
+import { expect } from "vitest";
+import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
+import { type Ability, type SurfaceSkill } from "@dnd/shared/game-facts";
+import {
+  DieRollResult,
+  Hp,
+  abilityModifier,
+  attackBonus,
+  classLevel,
+  difficultyClass,
+  movementFeet,
+  proficiencyBonus,
+} from "@dnd/shared/types";
+import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
+import {
+  buildStatBlockCatalog,
+  srdStatBlockCollection,
+} from "@dnd/surface/surface/stat-block-catalog";
+import type {
+  DamageType,
+  SpellRecord,
+  StatBlockRecord,
+  UnitRecord,
+} from "@dnd/surface/surface/types";
+import {
+  buildUnitCatalog,
+  srdUnitCollection,
+} from "@dnd/surface/surface/unit-catalog";
+import magicMissileInput from "../../surface/content/magic_missile.json";
+import {
+  ATTACK_ROLL_REQUIRED_BEFORE_DAMAGE_MESSAGE,
+  ATTACK_TARGET_REQUIRED_BEFORE_ROLL_OR_DAMAGE_MESSAGE,
+} from "./battle-reducer/attack-main.ts";
+import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
+import {
+  battleProcedureExecutionRefForTest,
+  characterBattleFeatureInitForTest,
+  characterSpellInvocationRefForProcedureRefForTest,
+  fighterTurnWithReadiedAcidAndSecondReadiedRay,
+  attackExecutionSelectionForSubjectForTest as interruptAttackExecutionSelectionForSubject,
+  attackInitialTargetHole as interruptAttackInitialTargetHole,
+  attackRollHoleAfterTarget as interruptAttackRollHoleAfterTarget,
+  attackTargetFill as interruptAttackTargetFill,
+  interruptDecisionFill as interruptDecisionFillSupport,
+  fighterAttackSubject as interruptFighterAttackSubject,
+  findAct as findActForTest,
+  goblinId as interruptGoblinId,
+  reactionChoiceWithSubject as interruptReactionChoiceWithSubject,
+  requireCharacterUnitProcedureRefForTest,
+  savingThrowOutcomeFill as interruptSavingThrowOutcomeFill,
+  secondWizardId as interruptSecondWizardId,
+  wizardId as interruptWizardId,
+  resolveBattleSubject,
+  type BattleActSelectorForTest,
+} from "./battle-runtime.test-support.ts";
+import { admitCharacterWeaponAttackExecutionWeapon } from "./character-weapon-execution-admission.ts";
+import { battleMagicActionHealingPoolSupportForUnit } from "./unit-feature-support.ts";
+import {
+  chromaticOrbUnitId,
+  rayOfFrostUnitId,
+  sorcererInnateSorceryUnitId,
+  spellCasterId,
+  spellTargetId,
+} from "./unit-profile-admission-catalog.test-support.ts";
+import {
+  attackTargetFill as creatureAttackTargetFill,
+  statBlockAttackAct,
+  statBlockCreature,
+  statBlockWithCreatureType,
+} from "./unit-profile-admission-creature-fixture.test-support.ts";
+import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
+import type { CharacterProcedureBattleSubject } from "./battle-subjects.ts";
+import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
+import {
+  ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
+  BATTLE_INVALID_REASON_CODES,
+  battleId,
+  battleObjectId,
+  battleReducerStartRouteEvent,
+  battleUnitRefWithSupportProfiles,
+  cantripSpellInvocationRef,
+  characterBattleResourceUsage,
+  characterId,
+  combatantId,
+  discoverBattleActs,
+  initiativeScore,
+  isCharacterProcedureBattleSubject,
+  resolveBattleInterrupt,
+  sameBattleSubject,
+  snapshotBattle,
+  spellSaveDcForCaster,
+  spellSlotInvocationRef,
+  startBattle,
+  type AvailableBattleAct,
+  type BattleCreatureInit,
+  type BattleFill,
+  type BattleHole,
+  type BattleInterruptProcedureChoice,
+  type BattleInvalidReasonCode,
+  type BattleProcedureExecutionRef,
+  type BattleResolutionResult,
+  type BattleState,
+  type BattleRuntimeSession,
+  type BattleSubject,
+  type CombatantId,
+} from "./index.ts";
+
+function requireAdmittedCharacterProcedureSubject(
+  session: BattleRuntimeSession,
+  selection: BattleActSelectorForTest,
+): CharacterProcedureBattleSubject {
+  const subject = findActForTest(session, selection).subject;
+  if (!isCharacterProcedureBattleSubject(subject)) {
+    throw new Error(`Expected selected ${selection.tag} procedure subject.`);
+  }
+  return subject;
+}
+
+export {
+  ITFBigInt,
+  ITFList,
+  ITFMap,
+  ITFSet,
+  ITFTuple,
+  ITFVariant,
+  defineDriver,
+  run,
+  stateCheck,
+  transformITFValue,
+};
+
+/*
+ * Research note for the parity-driver kit seam:
+ * - quint-connect simple.run already applies transformITFValue before
+ *   stateCheck deserializers, so kit readers operate on transformed JS values.
+ * - quint-connect/effect re-exports the ITF schemas; the kit re-exports them
+ *   for deterministic reader tests and for future drivers that need raw ITF
+ *   fixtures.
+ * - StandardSchema pick plumbing is not upstream-specialized for this repo's
+ *   recurring int/bool/string-literal picks, so this kit owns those schemas.
+ * - BattleResolutionResult recording is battle-runtime-specific, so this kit
+ *   folds the production union into the witness protocol in one place.
+ */
+
+export const MBT_DEFAULT_TRACE_COUNT = 1;
+export const MBT_TEST_TIMEOUT_MS = 120_000;
+
+export const MBT_WITNESS_LAST_RESULTS = [
+  "init",
+  "needsHoles",
+  "resolved",
+  "invalid",
+] as const;
+export type MbtWitnessLastResult = (typeof MBT_WITNESS_LAST_RESULTS)[number];
+
+const MBT_WITNESS_LAST_RESULT_BY_VARIANT_TAG = {
+  WInit: "init",
+  WNeedsHoles: "needsHoles",
+  WResolved: "resolved",
+  WInvalid: "invalid",
+} as const satisfies Readonly<Record<string, MbtWitnessLastResult>>;
+
+const MBT_WITNESS_INVALID_REASON_VARIANT_TAG_BY_REASON = {
+  staleSubject: "WStaleSubject",
+  wrongActor: "WWrongActor",
+  missingCombatant: "WMissingCombatant",
+  invalidFill: "WInvalidFill",
+  unsupportedSubject: "WUnsupportedSubject",
+  unsupportedActOption: "WUnsupportedActOption",
+} as const satisfies Readonly<Record<BattleInvalidReasonCode, string>>;
+
+export type MbtWitnessLastInvalidReason<NoInvalidReason extends string> =
+  | NoInvalidReason
+  | BattleInvalidReasonCode;
+
+export type MbtWitnessProtocolState<
+  Hole = BattleHole,
+  NoInvalidReason extends string = string,
+> = {
+  readonly holes: readonly Hole[];
+  readonly lastResult: MbtWitnessLastResult;
+  readonly lastInvalidReason: MbtWitnessLastInvalidReason<NoInvalidReason>;
+};
+
+export type BattleResolutionRecorderSnapshot<
+  NoInvalidReason extends string = string,
+> = MbtWitnessProtocolState<BattleHole, NoInvalidReason> & {
+  readonly state: BattleState;
+};
+
+const QuintIntAsNumber = Schema.transform(
+  Schema.BigIntFromSelf,
+  Schema.Number,
+  { strict: true, decode: (n) => Number(n), encode: (n) => BigInt(n) },
+);
+
+export const mbtPickSchemas = {
+  int: Schema.standardSchemaV1(QuintIntAsNumber),
+  bool: Schema.standardSchemaV1(Schema.Boolean),
+  unknown: Schema.standardSchemaV1(Schema.Unknown),
+  stringLiteral: <const Values extends readonly [string, ...string[]]>(
+    ...values: Values
+  ) => Schema.standardSchemaV1(Schema.Literal(...values)),
+} as const;
+
+export function mbtTraceCount(): number {
+  return numberFromEnv("MBT_TRACES", MBT_DEFAULT_TRACE_COUNT);
+}
+
+export function focusedMbtMaxSteps(domainMaxSteps: number): number {
+  const requestedSteps = numberFromEnv("MBT_STEPS", domainMaxSteps);
+  return Math.min(requestedSteps, domainMaxSteps);
+}
+
+export function mbtSpecPath(
+  importMetaDirname: string,
+  specFileName: string,
+): string {
+  return path.resolve(importMetaDirname, "..", specFileName);
+}
+
+export function quintStateRecord(
+  raw: unknown,
+): Readonly<Record<string, unknown>> {
+  if (!isRecord(raw)) {
+    throw new Error("Expected Quint state to be an object.");
+  }
+
+  return raw;
+}
+
+export function quintField(
+  state: Readonly<Record<string, unknown>>,
+  field: string,
+): unknown {
+  if (Object.hasOwn(state, field)) {
+    return state[field];
+  }
+
+  throw new Error(`Expected Quint state field ${field}.`);
+}
+
+export function quintRecordField(
+  state: Readonly<Record<string, unknown>>,
+  field: string,
+): Readonly<Record<string, unknown>> {
+  const value = quintField(state, field);
+  if (isRecord(value)) {
+    return value;
+  }
+
+  throw new Error(`Expected Quint record field ${field}.`);
+}
+
+export function numberFromQuintInt(raw: unknown, field: string): number {
+  if (typeof raw === "number") {
+    return raw;
+  }
+  if (typeof raw === "bigint") {
+    return Number(raw);
+  }
+
+  throw new Error(`Expected Quint integer field ${field}.`);
+}
+
+export function booleanField(
+  state: Readonly<Record<string, unknown>>,
+  field: string,
+): boolean {
+  return booleanValue(quintField(state, field), field);
+}
+
+export function booleanValue(raw: unknown, field: string): boolean {
+  if (typeof raw === "boolean") {
+    return raw;
+  }
+  throw new Error(`Expected Quint boolean field ${field}.`);
+}
+
+export function stringLiteralField<const Values extends readonly string[]>(
+  state: Readonly<Record<string, unknown>>,
+  field: string,
+  values: Values,
+): Values[number] {
+  return stringLiteralValue(quintField(state, field), field, values);
+}
+
+export function stringLiteralValue<const Values extends readonly string[]>(
+  raw: unknown,
+  field: string,
+  values: Values,
+): Values[number] {
+  if (typeof raw === "string" && values.includes(raw)) {
+    return raw;
+  }
+
+  throw new Error(`Expected Quint string-literal field ${field}.`);
+}
+
+export function quintSet(raw: unknown, field: string): readonly unknown[] {
+  if (raw instanceof Set) {
+    return [...raw];
+  }
+
+  throw new Error(`Expected Quint set field ${field}.`);
+}
+
+export function quintList(raw: unknown, field: string): readonly unknown[] {
+  if (Array.isArray(raw)) {
+    return raw;
+  }
+
+  throw new Error(`Expected Quint list field ${field}.`);
+}
+
+export type QuintVariantWithValue = {
+  readonly tag: string;
+  readonly value: unknown;
+};
+
+export function quintVariantTag(raw: unknown, field = "variant"): string {
+  if (isRecord(raw) && typeof raw["tag"] === "string") {
+    return raw["tag"];
+  }
+
+  if (typeof raw === "string") {
+    return raw;
+  }
+
+  throw new Error(`Expected Quint variant tag field ${field}.`);
+}
+
+export function quintVariantMappedValue<
+  const Mapping extends Readonly<Record<string, string>>,
+>(
+  raw: unknown,
+  field: string,
+  mapping: Mapping,
+  label: string,
+): Mapping[keyof Mapping] {
+  const tag = quintVariantTag(raw, field);
+  if (hasOwnStringKey(mapping, tag)) {
+    return mapping[tag];
+  }
+
+  throw new Error(`Unknown ${label} tag: ${tag}.`);
+}
+
+export function quintVariantValue(
+  raw: unknown,
+  expectedTag: string,
+  field = "variant",
+): unknown {
+  if (
+    isRecord(raw) &&
+    raw["tag"] === expectedTag &&
+    Object.hasOwn(raw, "value")
+  ) {
+    return raw["value"];
+  }
+
+  throw new Error(
+    `Expected Quint ${expectedTag} variant value field ${field}.`,
+  );
+}
+
+export function mbtWitnessLastInvalidReasons<
+  const NoInvalidReason extends string,
+>(
+  noInvalidReason: NoInvalidReason,
+): readonly [NoInvalidReason, ...typeof BATTLE_INVALID_REASON_CODES] {
+  return [noInvalidReason, ...BATTLE_INVALID_REASON_CODES];
+}
+
+export function decodeWitnessProtocolState<
+  Hole,
+  const NoInvalidReason extends string,
+>(input: {
+  readonly state: Readonly<Record<string, unknown>>;
+  readonly noInvalidReason: NoInvalidReason;
+  readonly protocolField: string;
+  readonly decodeHole: (raw: unknown) => Hole;
+  readonly compareHoles?: (left: Hole, right: Hole) => number;
+}): MbtWitnessProtocolState<Hole, NoInvalidReason> {
+  return decodeTypedWitnessProtocolState(input);
+}
+
+function decodeTypedWitnessProtocolState<
+  Hole,
+  const NoInvalidReason extends string,
+>(input: {
+  readonly state: Readonly<Record<string, unknown>>;
+  readonly noInvalidReason: NoInvalidReason;
+  readonly protocolField: string;
+  readonly decodeHole: (raw: unknown) => Hole;
+  readonly compareHoles?: (left: Hole, right: Hole) => number;
+}): MbtWitnessProtocolState<Hole, NoInvalidReason> {
+  const protocol = quintRecordField(input.state, input.protocolField);
+  const holesField = `${input.protocolField}.holes`;
+  const resultField = `${input.protocolField}.result`;
+  const resultRaw = quintField(protocol, "result");
+  const lastResult = mbtWitnessLastResultFromVariant(resultRaw, resultField);
+  return {
+    holes: quintSet(quintField(protocol, "holes"), holesField)
+      .map(input.decodeHole)
+      .sort(input.compareHoles),
+    lastResult,
+    lastInvalidReason:
+      lastResult === "invalid"
+        ? mbtWitnessInvalidReasonFromVariant(
+            quintVariantValue(resultRaw, "WInvalid", resultField),
+            resultField,
+          )
+        : input.noInvalidReason,
+  };
+}
+
+export function assertWitnessProtocolConsistentWithScenario(input: {
+  readonly label: string;
+  readonly scenarioOutcome: string;
+  readonly protocol: Pick<
+    MbtWitnessProtocolState<unknown, string>,
+    "holes" | "lastResult"
+  > & { readonly lastInvalidReason?: string };
+  readonly initScenarioResult?: string;
+  readonly invalidScenarioReasons?: Readonly<Record<string, string>>;
+}): void {
+  const initScenarioResult = input.initScenarioResult ?? "init";
+  const invalidReason = input.invalidScenarioReasons?.[input.scenarioOutcome];
+  const expected: MbtWitnessLastResult =
+    invalidReason !== undefined
+      ? "invalid"
+      : input.scenarioOutcome === initScenarioResult
+        ? "init"
+        : input.protocol.holes.length > 0
+          ? "needsHoles"
+          : "resolved";
+  if (input.protocol.lastResult !== expected) {
+    throw new Error(
+      `Expected ${input.label} witness protocol result ${expected} for scenario ${input.scenarioOutcome}, got ${input.protocol.lastResult}.`,
+    );
+  }
+  if (
+    invalidReason !== undefined &&
+    input.protocol.lastInvalidReason !== invalidReason
+  ) {
+    throw new Error(
+      `Expected ${input.label} witness invalid reason ${invalidReason} for scenario ${input.scenarioOutcome}, got ${String(input.protocol.lastInvalidReason)}.`,
+    );
+  }
+}
+
+function mbtWitnessLastResultFromVariant(
+  raw: unknown,
+  field: string,
+): MbtWitnessLastResult {
+  const tag = quintVariantTag(raw, field);
+  if (isMbtWitnessLastResultVariantTag(tag)) {
+    return MBT_WITNESS_LAST_RESULT_BY_VARIANT_TAG[tag];
+  }
+
+  throw new Error(`Expected Quint witness result variant field ${field}.`);
+}
+
+function isMbtWitnessLastResultVariantTag(
+  tag: string,
+): tag is keyof typeof MBT_WITNESS_LAST_RESULT_BY_VARIANT_TAG {
+  return hasOwnStringKey(MBT_WITNESS_LAST_RESULT_BY_VARIANT_TAG, tag);
+}
+
+function hasOwnStringKey<const ObjectValue extends object>(
+  value: ObjectValue,
+  key: string,
+): key is Extract<keyof ObjectValue, string> {
+  return Object.hasOwn(value, key);
+}
+
+function mbtWitnessInvalidReasonFromVariant(
+  raw: unknown,
+  field: string,
+): BattleInvalidReasonCode {
+  const tag = quintVariantTag(raw, field);
+  const reason = BATTLE_INVALID_REASON_CODES.find(
+    (candidate) =>
+      MBT_WITNESS_INVALID_REASON_VARIANT_TAG_BY_REASON[candidate] === tag,
+  );
+  if (reason !== undefined) {
+    return reason;
+  }
+
+  throw new Error(
+    `Expected Quint witness invalid reason variant field ${field}.`,
+  );
+}
+
+export function createBattleSubjectResolutionRecorder<
+  const NoInvalidReason extends string,
+>(input: {
+  readonly initialState: BattleState;
+  readonly subject: BattleSubject;
+  readonly noInvalidReason: NoInvalidReason;
+}): {
+  readonly submit: (fills: readonly BattleFill[]) => void;
+  readonly record: (result: BattleResolutionResult) => void;
+  readonly reset: (state: BattleState) => void;
+  readonly snapshot: () => BattleResolutionRecorderSnapshot<NoInvalidReason>;
+} {
+  let snapshot = initialBattleResolutionRecorderSnapshot(
+    input.initialState,
+    input.noInvalidReason,
+  );
+
+  return {
+    submit: (fills) => {
+      snapshot = recordBattleResolutionResult(
+        snapshot,
+        resolveBattleSubject({
+          state: snapshot.state,
+          subject: input.subject,
+          fills,
+        }),
+        input.noInvalidReason,
+      );
+    },
+    record: (result) => {
+      snapshot = recordBattleResolutionResult(
+        snapshot,
+        result,
+        input.noInvalidReason,
+      );
+    },
+    reset: (state) => {
+      snapshot = initialBattleResolutionRecorderSnapshot(
+        state,
+        input.noInvalidReason,
+      );
+    },
+    snapshot: () => snapshot,
+  };
+}
+
+export function createBattleInterruptResolutionRecorder<
+  const NoInvalidReason extends string,
+>(input: {
+  readonly initialState: BattleState;
+  readonly noInvalidReason: NoInvalidReason;
+}): {
+  readonly submit: (
+    fill: Extract<BattleFill, { readonly kind: "interruptDecision" }>,
+  ) => void;
+  readonly record: (result: BattleResolutionResult) => void;
+  readonly reset: (state: BattleState) => void;
+  readonly snapshot: () => BattleResolutionRecorderSnapshot<NoInvalidReason>;
+} {
+  let snapshot = initialBattleResolutionRecorderSnapshot(
+    input.initialState,
+    input.noInvalidReason,
+  );
+
+  return {
+    submit: (fill) => {
+      snapshot = recordBattleResolutionResult(
+        snapshot,
+        resolveBattleInterrupt({
+          state: snapshot.state,
+          fill,
+        }),
+        input.noInvalidReason,
+      );
+    },
+    record: (result) => {
+      snapshot = recordBattleResolutionResult(
+        snapshot,
+        result,
+        input.noInvalidReason,
+      );
+    },
+    reset: (state) => {
+      snapshot = initialBattleResolutionRecorderSnapshot(
+        state,
+        input.noInvalidReason,
+      );
+    },
+    snapshot: () => snapshot,
+  };
+}
+
+export function initialBattleResolutionRecorderSnapshot<
+  const NoInvalidReason extends string,
+>(
+  state: BattleState,
+  noInvalidReason: NoInvalidReason,
+): BattleResolutionRecorderSnapshot<NoInvalidReason> {
+  return {
+    state,
+    holes: [],
+    lastResult: "init",
+    lastInvalidReason: noInvalidReason,
+  };
+}
+
+export function recordBattleResolutionResult<
+  const NoInvalidReason extends string,
+>(
+  snapshot: BattleResolutionRecorderSnapshot<NoInvalidReason>,
+  result: BattleResolutionResult,
+  noInvalidReason: NoInvalidReason,
+): BattleResolutionRecorderSnapshot<NoInvalidReason> {
+  return Match.value(result).pipe(
+    Match.when({ tag: "resolved" }, (resolved) => ({
+      state: resolved.state,
+      holes: [],
+      lastResult: "resolved" as const,
+      lastInvalidReason: noInvalidReason,
+    })),
+    Match.when({ tag: "needsHoles" }, (needsHoles) => ({
+      state: needsHoles.state,
+      holes: needsHoles.holes,
+      lastResult: "needsHoles" as const,
+      lastInvalidReason: noInvalidReason,
+    })),
+    Match.when({ tag: "invalid" }, (invalid) => ({
+      state: snapshot.state,
+      holes: snapshot.holes,
+      lastResult: "invalid" as const,
+      lastInvalidReason: invalid.reason,
+    })),
+    Match.exhaustive,
+  );
+}
+
+type MbtHole =
+  | "TargetChoice"
+  | "ObjectTargetChoice"
+  | "SpellTargetAllocation"
+  | "SavingThrowOutcome"
+  | "AttackRoll"
+  | "DamageRoll"
+  | "SpellDamageRoll"
+  | "StatBlockRechargeRoll"
+  | "LevitateAltitudeChange"
+  | "LevitateInitialRise"
+  | "SlowSomaticSpellFailureOutcome";
+type MbtLastResult = "init" | "needsHoles" | "resolved" | "invalid";
+type MbtLastInvalidReason = "" | "invalidFill" | "staleSubject" | "wrongActor";
+type SpellTargetSubject =
+  | Extract<BattleSubject, { readonly tag: "actionSpell" }>
+  | Extract<BattleSubject, { readonly tag: "bonusActionSpell" }>;
+type WeaponAttackOrderingStage =
+  | "actSelection"
+  | "targetChoice"
+  | "attackRoll"
+  | "damageDice"
+  | "resolved";
+type WeaponAttackOrderingError =
+  | ""
+  | "targetChoiceRequired"
+  | "attackRollRequired";
+type WeaponAttackOrderingHole = "targetChoice" | "attackRoll" | "rolledDice";
+type SaveGatedSpellOrderingStage =
+  | "actSelection"
+  | "targetListAndConditionChoice"
+  | "targetList"
+  | "conditionChoice"
+  | "damageSavingThrowOutcome"
+  | "conditionSavingThrowOutcome"
+  | "damageDice"
+  | "resolved";
+type SaveGatedSpellOrderingError =
+  | ""
+  | "targetOrAreaRequired"
+  | "savingThrowRequired";
+type SaveGatedSpellOrderingHole =
+  | "spellTargetList"
+  | "conditionChoice"
+  | "savingThrowOutcome"
+  | "rolledDice";
+type SpellAttackOrderingStage =
+  | "actSelection"
+  | "targetChoice"
+  | "typedTargetChoice"
+  | "targetList"
+  | "targetAllocation"
+  | "damageTypeAndTargetChoice"
+  | "damageTypeChoice"
+  | "attackRoll"
+  | "damageDice"
+  | "resolved";
+type SpellAttackOrderingError =
+  | ""
+  | "targetRequired"
+  | "damageTypeRequired"
+  | "targetOrDamageTypeRequired"
+  | "attackRollRequired";
+type SpellAttackOrderingHole =
+  | "targetChoice"
+  | "spellTargetList"
+  | "spellTargetAllocation"
+  | "damageTypeChoice"
+  | "attackRoll"
+  | "rolledDice";
+type HitPointRestorationOrderingStage =
+  | "actSelection"
+  | "spellHealingTargetChoice"
+  | "spellHealingTargetList"
+  | "spellHealingRoll"
+  | "featureHealingPoolDistribution"
+  | "resolved";
+type HitPointRestorationOrderingError =
+  | ""
+  | "healingTargetRequired"
+  | "healingAmountRequired"
+  | "healingDistributionRequired";
+type HitPointRestorationOrderingHole =
+  | "targetChoice"
+  | "spellTargetList"
+  | "rolledDice"
+  | "hitPointHealingDistribution";
+type CommandOrderingStage =
+  | "actSelection"
+  | "targetListAndOptionChoice"
+  | "targetList"
+  | "optionChoice"
+  | "savingThrowOutcome"
+  | "dropHeldObjectFacts"
+  | "approachMovement"
+  | "fleeMovement"
+  | "resolved";
+type CommandOrderingError =
+  | ""
+  | "commandTargetListRequired"
+  | "commandOptionChoiceRequired"
+  | "commandSavingThrowRequired"
+  | "commandHeldObjectFactsRequired"
+  | "commandMovementRequired";
+type CommandOrderingHole =
+  | "spellTargetList"
+  | "commandOptionChoice"
+  | "savingThrowOutcome"
+  | "movement"
+  | "interruptDecision";
+type CommandOrderingPendingOption =
+  | "none"
+  | "grovel"
+  | "drop"
+  | "halt"
+  | "approach"
+  | "flee";
+type MbtProjection = {
+  readonly skeletonHp: number;
+  readonly skeletonDead: boolean;
+  readonly actionAvailable: boolean;
+  readonly multiattackDispatchesAvailable: number;
+  readonly sneakAttackUsedThisTurn: boolean;
+  readonly holes: readonly MbtHole[];
+  readonly lastResult: MbtLastResult;
+  readonly lastInvalidReason: MbtLastInvalidReason;
+};
+type WeaponAttackOrderingProjection = {
+  readonly stage: WeaponAttackOrderingStage;
+  readonly holes: readonly WeaponAttackOrderingHole[];
+  readonly lastResult: MbtLastResult;
+  readonly orderingError: WeaponAttackOrderingError;
+};
+type SaveGatedSpellOrderingProjection = {
+  readonly stage: SaveGatedSpellOrderingStage;
+  readonly holes: readonly SaveGatedSpellOrderingHole[];
+  readonly lastResult: MbtLastResult;
+  readonly orderingError: SaveGatedSpellOrderingError;
+};
+type SpellAttackOrderingProjection = {
+  readonly stage: SpellAttackOrderingStage;
+  readonly holes: readonly SpellAttackOrderingHole[];
+  readonly lastResult: MbtLastResult;
+  readonly orderingError: SpellAttackOrderingError;
+};
+type HitPointRestorationOrderingProjection = {
+  readonly stage: HitPointRestorationOrderingStage;
+  readonly holes: readonly HitPointRestorationOrderingHole[];
+  readonly lastResult: MbtLastResult;
+  readonly orderingError: HitPointRestorationOrderingError;
+  readonly spellTargetHp: number;
+  readonly spellTargetZeroHpLifecycleCleared: boolean;
+  readonly featureTargetHp: number;
+  readonly featureTargetZeroHpLifecycleCleared: boolean;
+};
+type DeathSavingThrowMbtHole = "DeathSavingThrow";
+const DEATH_SAVING_THROW_MBT_TURN_ROLES = ["actor", "target"] as const;
+type DeathSavingThrowMbtTurnRole =
+  (typeof DEATH_SAVING_THROW_MBT_TURN_ROLES)[number];
+type DeathSavingThrowProjection = {
+  readonly currentTurnRole: DeathSavingThrowMbtTurnRole;
+  readonly targetHp: number;
+  readonly targetUnconscious: boolean;
+  readonly targetStable: boolean;
+  readonly targetDead: boolean;
+  readonly targetDeathSuccesses: number;
+  readonly targetDeathFailures: number;
+  readonly holes: readonly DeathSavingThrowMbtHole[];
+  readonly lastResult: MbtLastResult;
+  readonly lastInvalidReason: MbtLastInvalidReason;
+};
+type ConcentrationBreakTeardownScenario =
+  | "init"
+  | "concentrationSpellCast"
+  | "damageSaveNeeded"
+  | "damageFailedTeardownBeforeNextCommand"
+  | "voluntaryEndTeardown"
+  | "replacementTeardownBeforeNewEffect";
+type ConcentrationBreakTeardownProjection = {
+  readonly scenario: ConcentrationBreakTeardownScenario;
+  readonly damageTaken: number;
+  readonly saveDc: number;
+  readonly saveRollTotal: number;
+  readonly concentrationSaveOffered: boolean;
+  readonly casterConcentrating: boolean;
+  readonly blurredEffectCount: number;
+  readonly spellSlotExpended: number;
+  readonly teardownBeforeNextCommand: boolean;
+  readonly replacementStartedAfterTeardown: boolean;
+};
+type PendingConcentrationSave = {
+  readonly state: BattleState;
+  readonly subject: Extract<BattleSubject, { readonly tag: "action" }>;
+  readonly fills: readonly BattleFill[];
+  readonly holes: readonly [
+    Extract<BattleHole, { readonly kind: "concentrationSavingThrow" }>,
+  ];
+};
+type ConcentrationBreakTeardownRuntimeState = {
+  readonly battle: BattleRuntimeSession;
+  readonly scenario: ConcentrationBreakTeardownScenario;
+  readonly damageTaken: number;
+  readonly saveDc: number;
+  readonly saveRollTotal: number;
+  readonly concentrationSaveOffered: boolean;
+  readonly teardownBeforeNextCommand: boolean;
+  readonly replacementStartedAfterTeardown: boolean;
+  readonly pendingConcentrationSave: PendingConcentrationSave | null;
+  readonly lastRouteEvents: readonly ReducerRouteEvent[];
+};
+type BattleCombatantState =
+  BattleState["combatants"] extends ReadonlyMap<CombatantId, infer Combatant>
+    ? Combatant
+    : never;
+type ReducerRouteSubjectFamily =
+  | "battleAction"
+  | "abilityCheckSearch"
+  | "slotSpell"
+  | "saveGatedSpell"
+  | "hitPointRestoration"
+  | "weaponAttack"
+  | "weaponMasteryProperty"
+  | "attackActionAreaSaveDamageReplacement"
+  | "spellAttack"
+  | "spellAttackProcedure"
+  | "spellHostedWeaponAttack"
+  | "weaponDamageRider"
+  | "heldWeaponActiveEffect"
+  | "weaponEnhancementItemTarget"
+  | "weaponHostedSpellEffectCleanup"
+  | "afterHitDamageRider"
+  | "statBlockAction"
+  | "creatureAttack"
+  | "deathSavingThrow"
+  | "zeroHitPointStabilization"
+  | "concentrationTeardown"
+  | "commandEffect"
+  | "reactionSpell"
+  | "reactionArmorClassEffect"
+  | "reactionAfterDamageEffect"
+  | "reactionSpellInterruption"
+  | "reactionFallMitigation"
+  | "interruptStackResume"
+  | "rollModifierEffect"
+  | "spellDamageReduction"
+  | "scalarBuffEffect"
+  | "repeatSaveConditionEffect"
+  | "turnBoundaryEffectLifecycle"
+  | "zeroHitPointSpellEffectTeardown"
+  | "unitFeatureBonusAction"
+  | "activeFeatureSpellSaveDc"
+  | "activeFeatureSpellAttackRollMode"
+  | "companionLifecycle"
+  | "companionSharedSenses"
+  | "companionTouchDelivery"
+  | "companionReactionAttack"
+  | "objectTargetSpellAttack"
+  | "passiveDamageAdjustment"
+  | "passiveSavingThrowRollMode"
+  | "passiveAbilityCheckRollMode"
+  | "creatureSpaceMovementPermission"
+  | "creatureStatProjection"
+  | "movementResource"
+  | "specialSpeedProjection"
+  | "forcedMovement"
+  | "movementPresentation"
+  | "activeFormLifecycle"
+  | "creatureTypeTargetAdmission"
+  | "protectionCharmActiveEffect"
+  | "charmSourceDamageBreak"
+  | "wardedTargetInterdiction"
+  | "metamagicSpellGovernor"
+  | "metamagicBonusActionCastingTime"
+  | "metamagicSavingThrowProtection"
+  | "metamagicSavingThrowRollMode"
+  | "metamagicDamageTypeSubstitution"
+  | "metamagicEffectiveSpellLevel"
+  | "metamagicSpellRangeProjection"
+  | "metamagicSpellDurationProjection"
+  | "metamagicSpellComponentProjection"
+  | "metamagicMissedSpellAttackReroll"
+  | "metamagicDamageDiceReroll"
+  | "spellBaseArmorClassEffect"
+  | "hitPointRegainPrevention"
+  | "nextAttackRollMode"
+  | "reactionInterdiction"
+  | "conditionRider"
+  | "objectLightRider"
+  | "spatialEffect"
+  | "mixedTargetOutcomeSpell"
+  | "markedDamageRiderEffect"
+  | "conditionImmunityTemporaryHitPointEffect";
+type ReducerRouteOwnerGroup =
+  | "battleActionEconomy"
+  | "battleSpellSlotAndActionEconomy"
+  | "battleHoleFrontier"
+  | "battleTargetSelection"
+  | "battleAttackRoll"
+  | "battleAttackActionProcedure"
+  | "battleSpellAttackProcedure"
+  | "battleAbilityCheck"
+  | "battleHitPoint"
+  | "battleDamageRoll"
+  | "battleDamageType"
+  | "battleHitPointAndZeroHpLifecycle"
+  | "battleConditionLifecycle"
+  | "battleStatBlockAction"
+  | "battleConcentration"
+  | "battleActiveEffect"
+  | "battleItemTargetBoundary"
+  | "battleMovementResource"
+  | "battleInterruptStack"
+  | "battleFeatureResource"
+  | "battleTemporaryHitPoint"
+  | "battleTurnBoundary"
+  | "battleCompanion"
+  | "battleObjectTargetBoundary"
+  | "battleAreaShape"
+  | "battleSavingThrowOutcome"
+  | "battleDamageAdjustment"
+  | "battleSavingThrowRollMode"
+  | "battleAbilityCheckRollMode"
+  | "battleAttackRollMode"
+  | "battleCreatureSpaceMovement"
+  | "battleCreatureState"
+  | "battleArmorClass"
+  | "battleLightProjection"
+  | "battleSightProjection"
+  | "battleObscurementProjection"
+  | "battleAreaHazard"
+  | "battleSpellInvocation"
+  | "battleTablePresentation";
+type ReducerRouteHole =
+  | "abilityCheck"
+  | "abilityChoice"
+  | "attackDamageDisposition"
+  | "attackRoll"
+  | "commandOptionChoice"
+  | "companionReappearanceInitiative"
+  | "concentrationSavingThrow"
+  | "conditionChoice"
+  | "damageTypeChoice"
+  | "deathSavingThrow"
+  | "grappleOutcome"
+  | "gustOfWindLineDirectionChoice"
+  | "hitPointHealingDistribution"
+  | "interruptDecision"
+  | "levitateAltitudeChange"
+  | "levitateInitialRise"
+  | "movement"
+  | "objectDropResolution"
+  | "ongoingSpellTargetChoice"
+  | "rolledDice"
+  | "sanctuaryInterdictionOutcome"
+  | "savingThrowOutcome"
+  | "selfTransformationModeChoice"
+  | "shoveOutcome"
+  | "skillChoice"
+  | "slowSomaticSpellFailureOutcome"
+  | "spellcastingAbilityCheck"
+  | "spellTargetAllocation"
+  | "spellTargetList"
+  | "statBlockRechargeRoll"
+  | "targetAbilityChoices"
+  | "targetChoice"
+  | "unitFeatureDecision"
+  | "wildShapeEquipmentDisposition";
+type ReducerRouteFillKind =
+  | "abilityCheck"
+  | "abilityChoice"
+  | "attackDamageDisposition"
+  | "attackRoll"
+  | "commandOptionChoice"
+  | "companionReappearanceInitiative"
+  | "concentrationSavingThrow"
+  | "conditionChoice"
+  | "damageTypeChoice"
+  | "deathSavingThrow"
+  | "grappleOutcome"
+  | "gustOfWindLineDirectionChoice"
+  | "hitPointHealingDistribution"
+  | "interruptDecision"
+  | "levitateAltitudeChange"
+  | "levitateInitialRise"
+  | "magicWeaponTargetItem"
+  | "movement"
+  | "objectDropResolution"
+  | "ongoingSpellTargetChoice"
+  | "rolledDice"
+  | "sanctuaryInterdictionOutcome"
+  | "savingThrowOutcome"
+  | "selfTransformationModeChoice"
+  | "shoveOutcome"
+  | "skillChoice"
+  | "slowSomaticSpellFailureOutcome"
+  | "spellTargetAllocation"
+  | "spellTargetList"
+  | "statBlockRechargeRoll"
+  | "targetAbilityChoices"
+  | "targetChoice"
+  | "unitFeatureDecision"
+  | "wildShapeEquipmentDisposition";
+type ReducerRouteAbilityChoice = Ability;
+type ReducerRouteSkillChoice = SurfaceSkill;
+type ReducerRouteFill =
+  | ReducerRouteFillKind
+  | {
+      readonly kind: "skillChoice";
+      readonly skill: ReducerRouteSkillChoice;
+    }
+  | {
+      readonly kind: "abilityChoice";
+      readonly ability: ReducerRouteAbilityChoice;
+    }
+  | {
+      readonly kind: "targetAbilityChoices";
+      readonly choices: {
+        readonly primary: ReducerRouteAbilityChoice;
+        readonly secondary: ReducerRouteAbilityChoice;
+      };
+    };
+type ReducerRouteEvent =
+  | {
+      readonly kind: "startBattle";
+      readonly owner: ReducerRouteOwnerGroup;
+    }
+  | {
+      readonly kind: "discoverBattleActs";
+      readonly subject: ReducerRouteSubjectFamily;
+      readonly holes: readonly ReducerRouteHole[];
+      readonly owner: ReducerRouteOwnerGroup;
+    }
+  | {
+      readonly kind: "resolveBattleSubject";
+      readonly subject: ReducerRouteSubjectFamily;
+      readonly fill: ReducerRouteFill;
+      readonly holes: readonly ReducerRouteHole[];
+      readonly owner: ReducerRouteOwnerGroup;
+    }
+  | {
+      readonly kind: "resolveBattleSubjectWithoutFill";
+      readonly subject: ReducerRouteSubjectFamily;
+      readonly holes: readonly ReducerRouteHole[];
+      readonly owner: ReducerRouteOwnerGroup;
+    }
+  | {
+      readonly kind: "resolveBattleInterrupt";
+      readonly subject: ReducerRouteSubjectFamily;
+      readonly fill: ReducerRouteFill;
+      readonly holes: readonly ReducerRouteHole[];
+      readonly owner: ReducerRouteOwnerGroup;
+    };
+export type {
+  ReducerRouteEvent,
+  ReducerRouteFill,
+  ReducerRouteHole,
+  ReducerRouteOwnerGroup,
+  ReducerRouteSubjectFamily,
+};
+type ReducerRoutedMagicMissileProjection = MbtProjection & {
+  readonly route: readonly ReducerRouteEvent[];
+};
+type ReducerRoutedWeaponAttackSkeletonProjection = MbtProjection & {
+  readonly route: readonly ReducerRouteEvent[];
+};
+type ReducerRoutedWeaponAttackOrderingProjection =
+  WeaponAttackOrderingProjection & {
+    readonly route: readonly ReducerRouteEvent[];
+  };
+type ReducerRoutedWeaponMasteryPropertyProjection = {
+  readonly route: readonly ReducerRouteEvent[];
+};
+type ReducerRoutedAttackActionAreaSaveDamageReplacementProjection = {
+  readonly route: readonly ReducerRouteEvent[];
+};
+type ReducerRoutedMetamagicProjection = {
+  readonly route: readonly ReducerRouteEvent[];
+};
+type ReducerRoutedProtectionCharmProjection = {
+  readonly route: readonly ReducerRouteEvent[];
+};
+type ReducerRoutedWardedTargetInterdictionProjection = {
+  readonly route: readonly ReducerRouteEvent[];
+};
+type ReducerRoutedSpellBaseArmorClassEffectProjection = {
+  readonly route: readonly ReducerRouteEvent[];
+};
+type ReducerRoutedHitPointRegainPreventionProjection = {
+  readonly route: readonly ReducerRouteEvent[];
+};
+type NextAttackRollModeSource =
+  | "hostAttackHitDamageOutcome"
+  | "hostSaveEffectOutcome"
+  | "hostAssistActionOutcome"
+  | "hostBonusActionFeatureOutcome";
+type NextAttackRollModeCarrier =
+  | "hostOutcomeTargetCarrier"
+  | "distractedEnemyCarrier"
+  | "actingBeneficiaryCarrier";
+type NextAttackRollModeAttacker =
+  | "sourceAttacker"
+  | "affectedTargetAttacker"
+  | "sourceAllyAttacker";
+type NextAttackRollModeTargetScope =
+  | "attackAgainstAffectedTargetOnly"
+  | "attackAgainstAnyTarget";
+type NextAttackRollModeExpirationBoundary =
+  | "beforeSourceNextTurnStarts"
+  | "beforeSourceNextTurnEnds"
+  | "beforeBeneficiaryCurrentTurnEnds"
+  | "beforeAffectedTargetNextTurnEnds";
+type NextAttackRollModeDirection = "advantage" | "disadvantage";
+type NextAttackRollModeRouteFact =
+  | {
+      readonly kind: "source";
+      readonly source: NextAttackRollModeSource;
+    }
+  | {
+      readonly kind: "carrier";
+      readonly carrier: NextAttackRollModeCarrier;
+    }
+  | {
+      readonly kind: "attacker";
+      readonly attacker: NextAttackRollModeAttacker;
+    }
+  | {
+      readonly kind: "targetScope";
+      readonly targetScope: NextAttackRollModeTargetScope;
+    }
+  | {
+      readonly kind: "expirationBoundary";
+      readonly boundary: NextAttackRollModeExpirationBoundary;
+    }
+  | {
+      readonly kind: "direction";
+      readonly direction: NextAttackRollModeDirection;
+    }
+  | { readonly kind: "admitted" }
+  | { readonly kind: "projected" }
+  | { readonly kind: "consumed" }
+  | { readonly kind: "expired" }
+  | { readonly kind: "cleanedUp" };
+type ReducerRoutedNextAttackRollModeProjection = {
+  readonly route: readonly ReducerRouteEvent[];
+  readonly facts: readonly NextAttackRollModeRouteFact[];
+};
+type ReactionInterdictionSource = "hostAttackHitDamageOutcome";
+type ReactionInterdictionCarrier = "hostOutcomeTargetCarrier";
+type ReactionInterdictionScope = "affectedTargetReactionsOnly";
+type ReactionInterdictionTriggerFamily = "opportunityAttackTriggerFamily";
+type ReactionInterdictionExpirationBoundary =
+  "untilAffectedTargetNextTurnStarts";
+type ReactionInterdictionRouteFact =
+  | {
+      readonly kind: "source";
+      readonly source: ReactionInterdictionSource;
+    }
+  | {
+      readonly kind: "carrier";
+      readonly carrier: ReactionInterdictionCarrier;
+    }
+  | {
+      readonly kind: "scope";
+      readonly scope: ReactionInterdictionScope;
+    }
+  | {
+      readonly kind: "triggerFamily";
+      readonly triggerFamily: ReactionInterdictionTriggerFamily;
+    }
+  | {
+      readonly kind: "expirationBoundary";
+      readonly boundary: ReactionInterdictionExpirationBoundary;
+    }
+  | { readonly kind: "admitted" }
+  | { readonly kind: "projectedToMovementDiscovery" }
+  | { readonly kind: "projectedToReactionDiscovery" }
+  | { readonly kind: "expired" }
+  | { readonly kind: "cleanedUp" };
+type ReducerRoutedOpportunityAttackDenialProjection = {
+  readonly route: readonly ReducerRouteEvent[];
+  readonly facts: readonly ReactionInterdictionRouteFact[];
+};
+type ConditionRiderHostOutcome =
+  | "hostAttackHitDamageOutcome"
+  | "hostFailedSavingThrowOutcome";
+type ConditionRiderCarrier = "affectedTargetConditionCarrier";
+type ConditionRiderConditionKind =
+  | "poisoned"
+  | "blinded"
+  | "deafened"
+  | "restrained"
+  | "incapacitated"
+  | "paralyzed"
+  | "prone"
+  | "unconscious";
+type ConditionRiderAdmission =
+  | "conditionApplied"
+  | "conditionRejectedByImmunity";
+type ConditionRiderBoundary =
+  | "untilSourceNextTurnEnds"
+  | "untilAffectedTargetNextTurnEnds"
+  | "untilSpellEnds"
+  | "affectedTargetEndTurnRepeatSave";
+type ConditionRiderEscape = "athleticsActionEscapeCheck";
+type ConditionRiderCleanupOwner =
+  | "battleTurnBoundary"
+  | "battleConditionLifecycle"
+  | "battleActiveEffect";
+type ConditionRiderRouteFact =
+  | {
+      readonly kind: "hostOutcome";
+      readonly outcome: ConditionRiderHostOutcome;
+    }
+  | {
+      readonly kind: "carrier";
+      readonly carrier: ConditionRiderCarrier;
+    }
+  | {
+      readonly kind: "conditionKind";
+      readonly condition: ConditionRiderConditionKind;
+    }
+  | {
+      readonly kind: "admission";
+      readonly admission: ConditionRiderAdmission;
+    }
+  | {
+      readonly kind: "boundary";
+      readonly boundary: ConditionRiderBoundary;
+    }
+  | {
+      readonly kind: "escape";
+      readonly escape: ConditionRiderEscape;
+    }
+  | { readonly kind: "repeatSaveFrontierOpened" }
+  | { readonly kind: "repeatSaveSucceeded" }
+  | { readonly kind: "repeatSaveFailed" }
+  | {
+      readonly kind: "transition";
+      readonly condition: ConditionRiderConditionKind;
+    }
+  | {
+      readonly kind: "impliedCondition";
+      readonly condition: ConditionRiderConditionKind;
+    }
+  | {
+      readonly kind: "selfEndBlocked";
+      readonly condition: ConditionRiderConditionKind;
+    }
+  | { readonly kind: "escapeCheckFrontierOpened" }
+  | { readonly kind: "escapeCheckSucceeded" }
+  | { readonly kind: "expired" }
+  | {
+      readonly kind: "cleanedUpBy";
+      readonly owner: ConditionRiderCleanupOwner;
+    };
+type ReducerRoutedConditionRiderProjection = {
+  readonly route: readonly ReducerRouteEvent[];
+  readonly facts: readonly ConditionRiderRouteFact[];
+};
+type ObjectLightEmitterSource =
+  | "objectAttachedEmitterSource"
+  | "heldEmitterSource";
+type ObjectLightEmitterAdmission =
+  | "objectTargetAdmittedByTableWitness"
+  | "objectTargetRejectedByTableWitness"
+  | "emitterEffectAdmitted";
+type ObjectLightEmitterAttachment = "attachedToObject" | "heldByCaster";
+type ObjectLightProjection = "brightLightProjection" | "dimLightProjection";
+type ObjectLightCleanup =
+  | "replacementCleanup"
+  | "hurlCleanup"
+  | "durationCleanup";
+type ObjectLightCleanupOwner = "battleActiveEffect" | "battleTurnBoundary";
+type ObjectLightTableWitness =
+  | "objectValidityAdmissionWitness"
+  | "objectGeometryWitness"
+  | "coverGeometryWitness"
+  | "opaqueBlockerGeometryWitness"
+  | "colorPresentationWitness"
+  | "objectDurabilityBoundaryWitness";
+type ObjectLightRouteFact =
+  | {
+      readonly kind: "emitterSource";
+      readonly source: ObjectLightEmitterSource;
+    }
+  | {
+      readonly kind: "admission";
+      readonly admission: ObjectLightEmitterAdmission;
+    }
+  | {
+      readonly kind: "attachment";
+      readonly attachment: ObjectLightEmitterAttachment;
+    }
+  | {
+      readonly kind: "projection";
+      readonly projection: ObjectLightProjection;
+    }
+  | {
+      readonly kind: "cleanedUpBy";
+      readonly cleanup: ObjectLightCleanup;
+      readonly owner: ObjectLightCleanupOwner;
+    }
+  | {
+      readonly kind: "tableWitness";
+      readonly witness: ObjectLightTableWitness;
+    };
+type ReducerRoutedObjectLightProjection = {
+  readonly route: readonly ReducerRouteEvent[];
+  readonly facts: readonly ObjectLightRouteFact[];
+};
+type SpatialEffectBattleEffect =
+  | "movableMultiEmitterEffectAdmitted"
+  | "outlineEffectAdmitted"
+  | "areaObscurementEffectAdmitted"
+  | "areaHazardEffectAdmitted"
+  | "concentrationBackedEffect";
+type SpatialEffectLight =
+  | "multiEmitterDimLightProjection"
+  | "emitterPositionMoved"
+  | "brightLightProjection"
+  | "dimLightProjection";
+type SpatialEffectGeometry =
+  | "areaShapeWitness"
+  | "areaMembershipWitness"
+  | "movementPathWitness"
+  | "totalCoverBlockerWitness"
+  | "strongWindWitness";
+type SpatialEffectPresentation =
+  | "emitterAppearancePresentation"
+  | "colorChoicePresentation"
+  | "visibleOutlinePresentation";
+type SpatialEffectObject =
+  | "outlinedObjectWitness"
+  | "objectSightTargetWitness"
+  | "objectInvisibleBenefitDeniedProjection";
+type SpatialEffectSight =
+  | "attackerCanSeeTargetWitness"
+  | "invisibleBenefitDeniedProjection"
+  | "attackRollAdvantageProjection"
+  | "heavilyObscuredProjection"
+  | "lightlyObscuredProjection";
+type SpatialEffectHazard =
+  | "difficultTerrainProjection"
+  | "areaCreatedSavingThrowTrigger"
+  | "areaMovedSavingThrowTrigger"
+  | "entrySavingThrowTrigger"
+  | "startTurnSavingThrowTrigger"
+  | "endTurnSavingThrowTrigger"
+  | "saveTriggeredDamageTrigger"
+  | "movementDamageTrigger"
+  | "failedSaveRestraintTrigger"
+  | "perTurnTriggerLimit"
+  | "areaRemovedCleanup";
+type SpatialEffectCleanup =
+  | "durationCleanup"
+  | "concentrationBreakCleanup"
+  | "dispersalCleanup"
+  | "removalCleanup"
+  | "replacementCleanup";
+type SpatialEffectCleanupOwner =
+  | "battleActiveEffect"
+  | "battleConcentration"
+  | "battleTurnBoundary"
+  | "battleObscurementProjection"
+  | "battleAreaHazard";
+export type SpatialEffectRouteFact =
+  | {
+      readonly kind: "battleEffect";
+      readonly effect: SpatialEffectBattleEffect;
+    }
+  | {
+      readonly kind: "light";
+      readonly light: SpatialEffectLight;
+    }
+  | {
+      readonly kind: "geometry";
+      readonly geometry: SpatialEffectGeometry;
+    }
+  | {
+      readonly kind: "presentation";
+      readonly presentation: SpatialEffectPresentation;
+    }
+  | {
+      readonly kind: "object";
+      readonly object: SpatialEffectObject;
+    }
+  | {
+      readonly kind: "sight";
+      readonly sight: SpatialEffectSight;
+    }
+  | {
+      readonly kind: "hazard";
+      readonly hazard: SpatialEffectHazard;
+    }
+  | {
+      readonly kind: "cleanedUpBy";
+      readonly cleanup: SpatialEffectCleanup;
+      readonly owner: SpatialEffectCleanupOwner;
+    };
+type ReducerRoutedSpatialEffectProjection = {
+  readonly route: readonly ReducerRouteEvent[];
+  readonly facts: readonly SpatialEffectRouteFact[];
+};
+type SelectedConcentrationHazardRow =
+  | "none"
+  | "flamingSphereHazard"
+  | "moonbeamMovableZone"
+  | "spikeGrowthMovementHazard"
+  | "webRestraintHazard";
+type ReducerRoutedSelectedConcentrationHazardProjection = {
+  readonly selectedRow: SelectedConcentrationHazardRow;
+  readonly route: readonly ReducerRouteEvent[];
+  readonly facts: readonly SpatialEffectRouteFact[];
+};
+type ReducerRoutedLevel1SpatialCompositionProjection = {
+  readonly route: readonly ReducerRouteEvent[];
+};
+type ReducerRoutedLevel1WeaponHostedSelectedRouteProjection = {
+  readonly route: readonly ReducerRouteEvent[];
+};
+type MixedTargetOutcomeTarget =
+  | "primaryTarget"
+  | "secondaryTarget"
+  | "objectTarget";
+type MixedTargetOutcomeResolution =
+  | "attackHit"
+  | "attackMiss"
+  | "savingThrowFailed"
+  | "savingThrowSucceeded";
+type MixedTargetOutcomeDamageProjection =
+  | "attackDamage"
+  | "fullSavingThrowDamage"
+  | "halfSavingThrowDamage"
+  | "noDamage";
+type MixedTargetOutcomeSharedSpend =
+  | "sharedSpellSlotSpend"
+  | "sharedCantripActionSpend";
+type MixedTargetOutcomeDamageRoll =
+  | "primaryAttackDamageRoll"
+  | "sharedSavingThrowDamageRoll";
+type MixedTargetOutcomeSecondaryProjection =
+  | "objectBoundary"
+  | "light"
+  | "condition"
+  | "nextAttackRollMode"
+  | "burstSavingThrow"
+  | "chainedAttackTarget";
+type MixedTargetOutcomeRouteFact =
+  | {
+      readonly kind: "target";
+      readonly target: MixedTargetOutcomeTarget;
+    }
+  | {
+      readonly kind: "resolution";
+      readonly target: MixedTargetOutcomeTarget;
+      readonly outcome: MixedTargetOutcomeResolution;
+    }
+  | {
+      readonly kind: "damageProjection";
+      readonly target: MixedTargetOutcomeTarget;
+      readonly damage: MixedTargetOutcomeDamageProjection;
+    }
+  | {
+      readonly kind: "sharedSpend";
+      readonly spend: MixedTargetOutcomeSharedSpend;
+    }
+  | {
+      readonly kind: "damageRoll";
+      readonly roll: MixedTargetOutcomeDamageRoll;
+    }
+  | {
+      readonly kind: "secondaryProjection";
+      readonly target: MixedTargetOutcomeTarget;
+      readonly projection: MixedTargetOutcomeSecondaryProjection;
+    };
+type ReducerRoutedMixedTargetOutcomeProjection = {
+  readonly route: readonly ReducerRouteEvent[];
+  readonly facts: readonly MixedTargetOutcomeRouteFact[];
+};
+type MarkedDamageRiderHost = "attackRollHitMarkedTarget";
+type MarkedDamageRiderDamage = "extraDamageOnMarkedTargetHit";
+type MarkedDamageRiderTransfer =
+  | "transferAwaitsMarkedTargetDrop"
+  | "transferAvailableAfterMarkedTargetDrops"
+  | "transferAvailableOnSameTurn"
+  | "transferAvailableOnLaterTurn"
+  | "transferConsumesBonusAction"
+  | "transferResetsAwaitingMarkedTargetDrop";
+type TargetedAbilityCheckRollModeFact =
+  | "targetScopedSelectedAbility"
+  | "matchingTargetSelectedAbilityCheckDisadvantage"
+  | "nonmatchingAbilityCheckNormal"
+  | "nonmarkedActorAbilityCheckNormal"
+  | "concentrationCleanupRestoresNormalAbilityCheck";
+type MarkedDamageRiderOwnerFact =
+  | "markedRiderBattleActiveEffect"
+  | "markedRiderBattleConcentration"
+  | "markedRiderBattleAbilityCheckRollMode"
+  | "markedRiderBattleActiveEffectCleanup";
+type MarkedDamageRiderRouteFact =
+  | {
+      readonly kind: "markedHost";
+      readonly host: MarkedDamageRiderHost;
+    }
+  | {
+      readonly kind: "markedDamage";
+      readonly damage: MarkedDamageRiderDamage;
+    }
+  | {
+      readonly kind: "markedTransfer";
+      readonly transfer: MarkedDamageRiderTransfer;
+    }
+  | {
+      readonly kind: "targetedAbilityCheckRollMode";
+      readonly rollMode: TargetedAbilityCheckRollModeFact;
+    }
+  | {
+      readonly kind: "markedOwner";
+      readonly owner: MarkedDamageRiderOwnerFact;
+    };
+type ConditionImmunityTemporaryHitPointEffect =
+  | "conditionImmunityApplied"
+  | "conditionApplicationRejectedByImmunity"
+  | "turnStartTemporaryHitPointGrantScheduled"
+  | "turnStartTemporaryHitPointsGranted"
+  | "temporaryHitPointsUseNonStackingChoice"
+  | "concentrationCleanupPreventsLaterTurnStartGrant";
+type ConditionImmunityTemporaryHitPointCondition =
+  "frightenedConditionImmunity";
+type ConditionImmunityTemporaryHitPointOwner =
+  | "battleActiveEffect"
+  | "battleConditionLifecycle"
+  | "battleTemporaryHitPoint"
+  | "battleTurnBoundary"
+  | "battleConcentration"
+  | "battleActiveEffectCleanup";
+type ConditionImmunityTemporaryHitPointRouteFact =
+  | {
+      readonly kind: "immunityTemporaryHitPointEffect";
+      readonly effect: ConditionImmunityTemporaryHitPointEffect;
+    }
+  | {
+      readonly kind: "immunityTemporaryHitPointCondition";
+      readonly condition: ConditionImmunityTemporaryHitPointCondition;
+    }
+  | {
+      readonly kind: "immunityTemporaryHitPointOwner";
+      readonly owner: ConditionImmunityTemporaryHitPointOwner;
+    };
+type MarkedDamageImmunityRouteFact =
+  | MarkedDamageRiderRouteFact
+  | ConditionImmunityTemporaryHitPointRouteFact;
+type ReducerRoutedMarkedDamageImmunityProjection = {
+  readonly route: readonly ReducerRouteEvent[];
+  readonly facts: readonly MarkedDamageImmunityRouteFact[];
+};
+type ReducerRoutedSaveGatedSpellOrderingProjection =
+  SaveGatedSpellOrderingProjection & {
+    readonly route: readonly ReducerRouteEvent[];
+  };
+type ReducerRoutedSpellAttackOrderingProjection =
+  SpellAttackOrderingProjection & {
+    readonly route: readonly ReducerRouteEvent[];
+  };
+type ReducerRoutedChainedAttackProcedureProjection = {
+  readonly route: readonly ReducerRouteEvent[];
+};
+type ReducerRoutedIndependentSpellAttackSequenceProjection = {
+  readonly route: readonly ReducerRouteEvent[];
+};
+type ReducerRoutedInterruptStackResumeProjection = {
+  readonly route: readonly ReducerRouteEvent[];
+};
+type ChainedAttackProcedureSubject = Extract<
+  BattleSubject,
+  { readonly tag: "actionSpell" }
+>;
+type ChainedAttackProcedureAct = AvailableBattleAct;
+type ChainedAttackProcedureSlotLevel = 1 | 2;
+type IndependentSpellAttackSequenceAct = AvailableBattleAct;
+type ReducerRoutedHitPointRestorationOrderingProjection =
+  HitPointRestorationOrderingProjection & {
+    readonly route: readonly ReducerRouteEvent[];
+  };
+type ReducerRoutedDeathSavingThrowProjection = DeathSavingThrowProjection & {
+  readonly route: readonly ReducerRouteEvent[];
+};
+type ReducerRoutedConcentrationBreakTeardownProjection =
+  ConcentrationBreakTeardownProjection & {
+    readonly route: readonly ReducerRouteEvent[];
+  };
+type ReducerRoutedCommandOrderingProjection = CommandOrderingProjection & {
+  readonly route: readonly ReducerRouteEvent[];
+};
+type CommandOrderingProjection = {
+  readonly stage: CommandOrderingStage;
+  readonly holes: readonly CommandOrderingHole[];
+  readonly tableFactFrontierOpen: boolean;
+  readonly lastResult: MbtLastResult;
+  readonly orderingError: CommandOrderingError;
+  readonly pendingCommandOption: CommandOrderingPendingOption;
+  readonly targetProne: boolean;
+  readonly droppedObjectCount: number;
+  readonly haltSuppressed: boolean;
+  readonly movementSpentFeet: number;
+  readonly currentActor: "Caster" | "Target";
+  readonly reactionWindowOpen: boolean;
+};
+
+type ReducerSpineContractStage =
+  | "notStarted"
+  | "battleStarted"
+  | "actDiscovered"
+  | "subjectNeedsHoles"
+  | "subjectResolved"
+  | "turnAdvanced";
+type ReducerSpineContractEntrypoint =
+  | "none"
+  | "startBattle"
+  | "discoverBattleActs"
+  | "resolveBattleSubject";
+type ReducerSpineContractSubject =
+  | "none"
+  | "slotSpell"
+  | "weaponAttack"
+  | "endTurn";
+type ReducerSpineContractActor = "none" | "caster" | "target";
+type ReducerSpineContractSpellSlotUse = "none" | "pending" | "committed";
+type ReducerSpineContractHole =
+  | "targetChoice"
+  | "spellTargetAllocation"
+  | "attackRoll"
+  | "rolledDice";
+type ReducerSpineContractProjection = {
+  readonly stage: ReducerSpineContractStage;
+  readonly entrypoint: ReducerSpineContractEntrypoint;
+  readonly subject: ReducerSpineContractSubject;
+  readonly currentActor: ReducerSpineContractActor;
+  readonly holes: readonly ReducerSpineContractHole[];
+  readonly lastResult: MbtLastResult;
+  readonly lastInvalidReason: MbtLastInvalidReason;
+  readonly actionAvailable: boolean;
+  readonly bonusActionAvailable: boolean;
+  readonly casterReactionAvailable: boolean;
+  readonly targetReactionAvailable: boolean;
+  readonly spellSlotUse: ReducerSpineContractSpellSlotUse;
+  readonly interruptDepth: number;
+  readonly casterHp: number;
+  readonly targetHp: number;
+};
+
+export type ExtraAttackMbtProjection = {
+  readonly skeletonHp: number;
+  readonly actionAvailable: boolean;
+  readonly extraAttackSlotsAvailable: number;
+  readonly movementSpentFeet: number;
+  readonly lastResult: MbtLastResult;
+  readonly lastInvalidReason: MbtLastInvalidReason;
+};
+
+export type AdrenalineRushMbtProjection = {
+  readonly actorTempHp: number;
+  readonly bonusActionAvailable: boolean;
+  readonly dashBonusFeet: number;
+  readonly featureUsesRemaining: number;
+  readonly lastResult: MbtLastResult;
+  readonly lastInvalidReason: MbtLastInvalidReason;
+};
+type ReducerRoutedAdrenalineRushProjection = AdrenalineRushMbtProjection & {
+  readonly route: readonly ReducerRouteEvent[];
+};
+const ACTIVE_FEATURE_SPELL_ATTACK_ROLL_MODES = ["none", "advantage"] as const;
+type ActiveFeatureSpellAttackRollMode =
+  (typeof ACTIVE_FEATURE_SPELL_ATTACK_ROLL_MODES)[number];
+type ActiveFeatureSpellBenefitRouteProjection = {
+  readonly route: readonly ReducerRouteEvent[];
+  readonly spellSaveDc: number;
+  readonly spellAttackRollMode: ActiveFeatureSpellAttackRollMode;
+};
+type ActiveFeatureSpellBenefitSourceClassName = "sorcerer" | "wizard";
+
+export type RogueSteadyAimMbtProjection = {
+  readonly bonusActionAvailable: boolean;
+  readonly actorSpeedFeet: number;
+  readonly nextAttackAdvantageActive: boolean;
+  readonly speedZeroActive: boolean;
+  readonly attackRollMode: "normal" | "advantage";
+  readonly lastResult: MbtLastResult;
+  readonly lastInvalidReason: MbtLastInvalidReason;
+};
+
+type ScalarBuffMbtProjection = {
+  readonly fighterSpeed: number;
+  readonly goblinSpeed: number;
+  readonly actionAvailable: boolean;
+  readonly holes: readonly MbtHole[];
+  readonly lastResult: MbtLastResult;
+  readonly lastInvalidReason: MbtLastInvalidReason;
+};
+type ReducerRoutedScalarBuffProjection = Omit<
+  ScalarBuffMbtProjection,
+  "fighterSpeed" | "goblinSpeed"
+> & {
+  readonly casterSpeed: number;
+  readonly targetSpeed: number;
+  readonly route: readonly ReducerRouteEvent[];
+};
+
+const fighterId = combatantId("fighter");
+const skeletonId = combatantId("skeleton");
+const deathSavingThrowTargetId = combatantId("death-saving-throw-target");
+const concentrationBreakAttackerId = combatantId(
+  "concentration-break-attacker",
+);
+const interruptShieldAttackerId = combatantId(
+  "interrupt-stack-shield-attacker",
+);
+const interruptShieldCasterId = combatantId("interrupt-stack-shield-caster");
+const interruptShieldUnitId = "shield";
+const interruptInitialHp = 12;
+const chainedAttackProcedureSecondTargetId = combatantId(
+  "chained-attack-procedure-second-target",
+);
+const chainedAttackProcedureThirdTargetId = combatantId(
+  "chained-attack-procedure-third-target",
+);
+const statBlockCatalogResult = buildStatBlockCatalog({
+  collections: [srdStatBlockCollection],
+});
+const unitCatalogResult = buildUnitCatalog({
+  collections: [srdUnitCollection],
+});
+
+function startBattleSessionRight(
+  input: Parameters<typeof startBattle>[0],
+): BattleRuntimeSession {
+  const result = startBattle(input);
+  if (Either.isLeft(result)) {
+    throw new Error(battleStateInitIssueMessage(result.left));
+  }
+  return result.right;
+}
+
+export function reducerRouteStartBattle(
+  owner: ReducerRouteOwnerGroup,
+): ReducerRouteEvent {
+  return { kind: "startBattle", owner };
+}
+
+export function reducerRouteDiscoverBattleActs(input: {
+  readonly subject: ReducerRouteSubjectFamily;
+  readonly holes: readonly Pick<BattleHole, "kind">[];
+  readonly owner: ReducerRouteOwnerGroup;
+}): ReducerRouteEvent {
+  return {
+    kind: "discoverBattleActs",
+    subject: input.subject,
+    holes: reducerRouteHolesFromRuntime(input.holes),
+    owner: input.owner,
+  };
+}
+
+export function reducerRouteResolveBattleSubject(input: {
+  readonly subject: ReducerRouteSubjectFamily;
+  readonly fill: ReducerRouteFill;
+  readonly holes: readonly Pick<BattleHole, "kind">[];
+  readonly owner: ReducerRouteOwnerGroup;
+}): ReducerRouteEvent {
+  return {
+    kind: "resolveBattleSubject",
+    subject: input.subject,
+    fill: input.fill,
+    holes: reducerRouteHolesFromRuntime(input.holes),
+    owner: input.owner,
+  };
+}
+
+export function reducerRouteResolveBattleSubjectWithoutFill(input: {
+  readonly subject: ReducerRouteSubjectFamily;
+  readonly holes: readonly Pick<BattleHole, "kind">[];
+  readonly owner: ReducerRouteOwnerGroup;
+}): ReducerRouteEvent {
+  return {
+    kind: "resolveBattleSubjectWithoutFill",
+    subject: input.subject,
+    holes: reducerRouteHolesFromRuntime(input.holes),
+    owner: input.owner,
+  };
+}
+
+function appendPublicRouteEvents(
+  route: readonly ReducerRouteEvent[],
+  events: readonly ReducerRouteEvent[] | undefined,
+): readonly ReducerRouteEvent[] {
+  return events === undefined ? route : [...route, ...events];
+}
+
+if (statBlockCatalogResult.tag !== "ok" || unitCatalogResult.tag !== "ok") {
+  throw new Error("Battle runtime MBT catalogs must build successfully.");
+}
+
+const statBlockCatalog = statBlockCatalogResult.catalog;
+const unitLibrary = unitCatalogResult.catalog;
+const magicMissileUnit = decodeUnitRecordSync(magicMissileInput);
+if (magicMissileUnit.kind !== "spell") {
+  throw new Error("Expected Magic Missile content to decode as a spell Unit.");
+}
+const magicMissileSpell = magicMissileUnit satisfies SpellRecord;
+const driverSchema = {
+  init: {},
+  doDiscoverAttack: {},
+  doFillTarget: {},
+  doRejectWrongTarget: {},
+  doFillAttackRollMiss: {},
+  doFillAttackRollHit: {},
+  doFillDamageLow: {},
+  doFillDamageHigh: {},
+  doFillDamageLowSneakAttack: {},
+  doFillDamageHighSneakAttack: {},
+  doRejectStaleAfterResolved: {},
+  doStartSkeletonTurn: {},
+  doResolveSkeletonMultiattack: {},
+  doRejectRecursiveSkeletonMultiattack: {},
+  doSpendSkeletonMultiattackDispatch: {},
+  step: {},
+} as const;
+
+const weaponAttackOrderingDriverSchema = {
+  init: {},
+  doDiscoverAttack: {},
+  doRejectAttackRollBeforeTargetChoice: {},
+  doFillTargetChoice: {},
+  doRejectDamageBeforeAttackRoll: {},
+  doFillAttackRollMiss: {},
+  doFillAttackRollHit: {},
+  doFillDamageDice: {},
+  step: {},
+} as const;
+
+const weaponMasteryPropertyRouteDriverSchema = {
+  init: {},
+  doRouteSapPropertyActiveEffectRider: {},
+  doRouteTopplePropertySaveGate: {},
+  doRouteTopplePropertyConditionRider: {},
+  doRouteCleavePropertyDecision: {},
+  doRouteCleavePropertySecondTarget: {},
+  doRouteCleavePropertySecondAttack: {},
+  doRouteCleavePropertySecondDamage: {},
+  step: {},
+} as const;
+
+const attackActionAreaSaveDamageReplacementRouteDriverSchema = {
+  init: {},
+  doDiscoverAreaSaveDamageReplacement: {},
+  doFillAreaSavingThrows: {},
+  doFillDamageRoll: {},
+  doResolveWithoutExtraAttackContinuation: {},
+  doOpenExtraAttackContinuation: {},
+  doRejectMissingResource: {},
+  doRejectMismatchedArea: {},
+  doRejectInvalidDamageRoll: {},
+  step: {},
+} as const;
+
+const metamagicRouteDriverSchema = {
+  init: {},
+  doRouteMetamagicResourceGovernor: {},
+  doRejectMetamagicResourceGovernor: {},
+  doRouteBonusActionCastingTime: {},
+  doRejectPriorLevelOnePlusSpell: {},
+  doResolveQuickenedSaveGatedDamage: {},
+  doResolveQuickenedRestoration: {},
+  doResolveQuickenedSaveGatedCondition: {},
+  doResolveQuickenedSaveGatedConditionImmunity: {},
+  doResolveQuickenedDirectCondition: {},
+  doResolveQuickenedRollModifier: {},
+  doResolveQuickenedAfterMagicActionSpent: {},
+  doRouteSavingThrowProtectionSaveGatedDamage: {},
+  doRouteSavingThrowProtectionNoEffect: {},
+  doRouteSavingThrowRollMode: {},
+  doRouteDamageTypeSubstitution: {},
+  doRouteEffectiveSpellLevel: {},
+  doRouteSpellRangeProjection: {},
+  doRouteSpellDurationProjection: {},
+  doRouteSpellComponentProjection: {},
+  doRouteMissedSpellAttackReroll: {},
+  doRouteDamageDiceReroll: {},
+  step: {},
+} as const;
+
+const hitPointRegainPreventionRouteDriverSchema = {
+  init: {},
+  doAdmitAttackHitRegainPreventionEffect: {},
+  doInterdictLaterHitPointHealing: {},
+  doExpireAtTurnBoundary: {},
+  doStutterAfterExpiry: {},
+  step: {},
+} as const;
+
+const nextAttackRollModeRouteDriverSchema = {
+  init: {},
+  doAdmitHostAttackHitNextAttackAdvantageEffect: {},
+  doAdmitHostEffectNextAttackDisadvantageEffect: {},
+  doProjectAdvantageOnLaterAttackAgainstAffectedTarget: {},
+  doProjectDisadvantageOnAffectedTargetNextAttack: {},
+  doExpireAdvantageAtBoundary: {},
+  doExpireDisadvantageAtBoundary: {},
+  doStutterAfterCleanup: {},
+  step: {},
+} as const;
+
+const opportunityAttackDenialRouteDriverSchema = {
+  init: {},
+  doAdmitAttackHitOpportunityAttackDenialEffect: {},
+  doProjectOpportunityAttackDenialIntoMovementReactionDiscovery: {},
+  doExpireActiveDenialAtAffectedTargetTurnStart: {},
+  doExpireProjectedDenialAtAffectedTargetTurnStart: {},
+  doStutterAfterCleanup: {},
+  step: {},
+} as const;
+
+const conditionRiderRouteDriverSchema = {
+  init: {},
+  doAdmitAttackHitPoisonConditionRider: {},
+  doRejectAttackHitPoisonConditionRiderByImmunity: {},
+  doExpireAttackHitPoisonConditionRider: {},
+  doAdmitFailedSaveBlindedNextTurnConditionRider: {},
+  doExpireFailedSaveBlindedNextTurnConditionRider: {},
+  doRejectFailedSaveBlindedConditionRiderByImmunity: {},
+  doAdmitFailedSaveBlindedRepeatSaveConditionRider: {},
+  doAdmitFailedSaveDeafenedRepeatSaveConditionRider: {},
+  doOpenFailedSaveConditionRepeatSaveFrontier: {},
+  doResolveFailedSaveConditionRepeatSaveSuccessCleanup: {},
+  doAdmitFailedSaveRestrainedUntilSpellEndEscapeConditionRider: {},
+  doOpenRestrainedAthleticsEscapeFrontier: {},
+  doResolveRestrainedAthleticsEscapeSuccessCleanup: {},
+  doAdmitFailedSaveSleepIncapacitatedConditionRider: {},
+  doOpenSleepRepeatSaveFrontier: {},
+  doResolveSleepRepeatSaveFailureTransitionToUnconscious: {},
+  doAdmitFailedSaveParalyzedUntilSpellEndRepeatSaveConditionRider: {},
+  doAdmitFailedSaveIncapacitatedProneSelfEndBlockedConditionRider: {},
+  doStutterAfterTerminalSurface: {},
+  step: {},
+} as const;
+
+const objectLightRouteDriverSchema = {
+  init: {},
+  doAdmitObjectAttachedEmitter: {},
+  doRejectObjectAttachedEmitterWithoutObjectWitness: {},
+  doAdmitHeldLightEmitter: {},
+  doProjectObjectAttachedBrightDimLight: {},
+  doProjectHeldBrightDimLight: {},
+  doCleanupObjectAttachedEmitterOnReplacement: {},
+  doCleanupHeldEmitterOnHurl: {},
+  doCleanupObjectAttachedEmitterOnDuration: {},
+  doRecordTableOwnedGeometryAndCoverWitnesses: {},
+  doStutterAfterTerminalSurface: {},
+  step: {},
+} as const;
+
+const spatialEffectRouteDriverSchema = {
+  init: {},
+  doAdmitMovableMultiEmitterLight: {},
+  doMoveMovableMultiEmitterLight: {},
+  doAdmitOutlineSightEffect: {},
+  doProjectOutlineSightAttackAdvantage: {},
+  doAdmitAreaObscurement: {},
+  doCleanupAreaObscurementByDuration: {},
+  doDisperseAreaObscurementByStrongWind: {},
+  doAdmitAreaHazard: {},
+  doResolveAreaHazardSavingThrowTrigger: {},
+  doResolveAreaHazardDifficultTerrainMovement: {},
+  doResolveAreaHazardMovementDamageTrigger: {},
+  doCleanupAreaHazard: {},
+  doAdmitConcentrationBackedAreaHazard: {},
+  doResolveConcentrationBackedAreaHazardSavingThrowTrigger: {},
+  doResolveConcentrationBackedAreaHazardDifficultTerrainMovement: {},
+  doResolveConcentrationBackedAreaHazardMovementDamageTrigger: {},
+  doCleanupConcentrationBackedAreaHazardAfterConcentrationBreak: {},
+  doRecordTableOwnedSpatialWitnesses: {},
+  doStutterAfterTerminalSurface: {},
+  step: {},
+} as const;
+
+const selectedConcentrationHazardRouteDriverSchema = {
+  init: {},
+  doDiscoverFlamingSphereHazard: {},
+  doDiscoverMoonbeamMovableZone: {},
+  doDiscoverSpikeGrowthMovementHazard: {},
+  doDiscoverWebRestraintHazard: {},
+  doStutterAfterTerminalSurface: {},
+  step: {},
+} as const;
+
+const level1SpatialCompositionRouteDriverSchema = {
+  init: {},
+  doRouteMovableMultiEmitterLight: {},
+  doRouteOutlineSightAdvantage: {},
+  doRouteFallMitigation: {},
+  doRouteAreaObscurementCleanup: {},
+  doRouteAreaHazardSave: {},
+  doRouteAreaHazardMovement: {},
+  doRouteMovementReplacement: {},
+  doRouteObjectLightEmitter: {},
+  doRouteHeldLightEmitter: {},
+  doRouteSavePushPresentation: {},
+  doStutterAfterTerminalSurface: {},
+  step: {},
+} as const;
+
+const level1WeaponHostedSelectedRouteDriverSchema = {
+  init: {},
+  doDivineFavorWeaponDamageRider: {},
+  doShillelaghWeaponAttackOverride: {},
+  doTrueStrikeSpellHostedWeaponAttack: {},
+  doStutterAfterTerminalSurface: {},
+  step: {},
+} as const;
+
+const mixedTargetOutcomeRouteDriverSchema = {
+  init: {},
+  doRouteAreaSavingThrowMixedOutcomes: {},
+  doRouteAttackHitBurstSavingThrowMixedOutcomes: {},
+  doRouteAttackMissBurstSavingThrowMixedOutcomes: {},
+  doRouteObjectAttackSecondaryProjection: {},
+  doRouteAttackHitConditionProjection: {},
+  doRouteSaveFailureNextAttackProjection: {},
+  doRouteChainedAttackMixedTargetOutcomes: {},
+  doStutterAfterTerminalSurface: {},
+  step: {},
+} as const;
+
+const markedDamageImmunityRouteDriverSchema = {
+  init: {},
+  doAdmitMarkedDamageRider: {},
+  doProjectMarkedDamageRiderOnHit: {},
+  doOpenMarkedDamageRiderTransferAfterTargetDrop: {},
+  doTransferMarkedDamageRiderSameTurn: {},
+  doTransferMarkedDamageRiderLaterTurn: {},
+  doAdmitTargetedAbilityCheckMarkedDamageRider: {},
+  doProjectTargetedAbilityCheckRollMode: {},
+  doCleanupTargetedAbilityCheckRollMode: {},
+  doAdmitConditionImmunityTemporaryHitPoints: {},
+  doProjectConditionImmunity: {},
+  doGrantTurnStartTemporaryHitPoints: {},
+  doCleanupConditionImmunityTemporaryHitPoints: {},
+  doStutterAfterTerminalSurface: {},
+  step: {},
+} as const;
+
+const saveGatedSpellOrderingDriverSchema = {
+  init: {},
+  doDiscoverAreaSaveDamage: {},
+  doSubmitDamageBeforeSavingThrow: {},
+  doFillAreaSaveFailed: {},
+  doFillAreaDamageDice: {},
+  doDiscoverTargetListConditionChoice: {},
+  doFillTargetListBeforeConditionChoice: {},
+  doFillConditionChoiceAfterTargetList: {},
+  doFillConditionChoiceBeforeTargetList: {},
+  doFillTargetListAfterConditionChoice: {},
+  doFillConditionSavingThrow: {},
+  step: {},
+} as const;
+
+const spellAttackOrderingDriverSchema = {
+  init: {},
+  doDiscoverSingleTargetSpellAttack: {},
+  doSubmitAttackRollBeforeTargetChoice: {},
+  doFillTargetChoice: {},
+  doSubmitDamageBeforeAttackRoll: {},
+  doFillAttackRollMiss: {},
+  doFillAttackRollHit: {},
+  doFillDamageDice: {},
+  doDiscoverTypedSpellAttack: {},
+  doFillDamageTypeBeforeTargetChoice: {},
+  doFillTargetChoiceBeforeDamageType: {},
+  doFillDamageTypeAfterTargetChoice: {},
+  doFillTargetChoiceAfterDamageType: {},
+  step: {},
+} as const;
+
+const chainedAttackProcedureRouteDriverSchema = {
+  init: {},
+  doStartCast: { slotLevel: mbtPickSchemas.int },
+  doChooseDamageType: {},
+  doChooseInitialTarget: {},
+  doResolveStep0AttackHit: {},
+  doResolveStep0DamageNoDuplicate: {},
+  doResolveStep0DamageDuplicate: {},
+  doChooseFirstLeapTarget: {},
+  doResolveStep1AttackHit: {},
+  doResolveStep1DuplicateDamageSlot1Limit: {},
+  doResolveStep1DuplicateDamageSlot2AllowsLeap: {},
+  step: {},
+} as const;
+
+const independentSpellAttackSequenceRouteDriverSchema = {
+  init: {},
+  doFillTwoCreatureTargets: {},
+  doFillFirstAttackMiss: {},
+  doFillFirstAttackHit: {},
+  doFillFirstDamageLow: {},
+  doFillSecondAttackMiss: {},
+  doFillSecondAttackHit: {},
+  doFillSecondDamageLow: {},
+  doRejectStaleAfterResolved: {},
+  step: {},
+} as const;
+
+const interruptStackResumeRouteDriverSchema = {
+  init: {},
+  doNestedDeclineResumesOuterInterrupt: {},
+  doShieldMutationResumesInterruptedAttack: {},
+  doReplayRecordedProcedureFromRoot: {},
+  step: {},
+} as const;
+
+const hitPointRestorationOrderingDriverSchema = {
+  init: {},
+  doDiscoverSingleTargetSpellHealing: {},
+  doSubmitHealingRollBeforeTargetChoice: {},
+  doFillSpellHealingTargetChoice: {},
+  doDiscoverTargetListSpellHealing: {},
+  doSubmitHealingRollBeforeTargetList: {},
+  doFillSpellHealingTargetList: {},
+  doFillSpellHealingRoll: {},
+  doDiscoverFeatureHealingPool: {},
+  doFillFeatureHealingDistribution: {},
+  step: {},
+} as const;
+
+const deathSavingThrowRouteDriverSchema = {
+  init: {},
+  doDiscoverEndTurnDeathSavingThrow: {},
+  doFillDeathSavingThrow: {
+    roll: mbtPickSchemas.int,
+  },
+  doRejectWrongActorEndTurnAfterResolved: {},
+  step: {},
+} as const;
+
+const concentrationBreakTeardownRouteDriverSchema = {
+  init: {},
+  doCastConcentrationSpell: {},
+  doDamageRequestsConcentrationSave: {
+    damageDiePip: mbtPickSchemas.int,
+  },
+  doFailConcentrationSave: {
+    saveRollTotal: mbtPickSchemas.int,
+  },
+  doVoluntaryEndConcentration: {},
+  doCastReplacementConcentrationSpell: {},
+  step: {},
+} as const;
+
+const commandOrderingDriverSchema = {
+  init: {},
+  doDiscoverCommand: {},
+  doSubmitOptionBeforeTargetList: {},
+  doFillTargetList: {},
+  doSubmitSavingThrowBeforeOption: {},
+  doFillGrovelOption: {},
+  doFillFailedGrovelSavingThrow: {},
+  doFollowGrovel: {},
+  doDropNeedsHeldObjectFacts: {},
+  doFillDropHeldObjectFacts: {},
+  doHaltSuppresses: {},
+  doApproachMovementContinues: {},
+  doFillApproachMovementContinues: {},
+  doFillApproachMovementWithinFive: {},
+  doApproachNoMovement: {},
+  doFleeMovement: {},
+  doFillFleeMovement: {},
+  doRejectFleePartialMovement: {},
+  doFleeNoMovement: {},
+  doFleeOpportunityAttack: {},
+  step: {},
+} as const;
+
+const magicMissileDriverSchema = {
+  init: {},
+  doFillMagicMissileAllocation: {},
+  doFillMagicMissileDamage: { dartRollTotal: mbtPickSchemas.int },
+  step: {},
+} as const;
+
+const reducerSpineContractDriverSchema = {
+  init: {},
+  doStartBattle: {},
+  doDiscoverSlotSpell: {},
+  doResolveSlotSpellTargets: {},
+  doResolveSlotSpellDamage: {},
+  doEndTurnToTarget: {},
+  doDiscoverWeaponAttack: {},
+  doResolveWeaponTarget: {},
+  doResolveWeaponAttackHit: {},
+  doResolveWeaponDamage: {},
+  step: {},
+} as const;
+
+const extraAttackDriverSchema = {
+  init: {},
+  initOneAdditionalAttack: {},
+  initTwoAdditionalAttacks: {},
+  initThreeAdditionalAttacks: {},
+  doResolveFirstExtraAttackMiss: {},
+  doMoveBetweenExtraAttackSlots: {},
+  doResolveSecondExtraAttackMiss: {},
+  doRejectThirdExtraAttack: {},
+  doEndTurnClosesExtraAttackSlot: {},
+  step: {},
+} as const;
+
+const adrenalineRushDriverSchema = {
+  init: {},
+  doAdrenalineRushDash: {},
+  doRejectSecondDash: {},
+  step: {},
+} as const;
+const activeFeatureSpellBenefitRouteDriverSchema = {
+  init: {},
+  doRouteActiveFeatureSpellSaveDcBenefit: {},
+  doRouteActiveFeatureSpellAttackBenefit: {},
+  doRouteNonSourceSpellExcluded: {},
+  step: {},
+} as const;
+
+const protectionCharmRouteDriverSchema = {
+  init: {},
+  doDiscoverAnimalFriendshipBeastTargetAdmission: {},
+  doResolveAnimalFriendshipFailedSaveCharmed: {},
+  doResolveAnimalFriendshipCasterDamageBreak: {},
+  doResolveProtectionFromEvilAndGoodKnownWillingTargetProtection: {},
+  doProjectProtectionFromEvilAndGoodScopedAttackDisadvantage: {},
+  doPreventProtectionFromEvilAndGoodScopedCharmAndPossession: {},
+  doResolveProtectionFromEvilAndGoodRelevantCharmSaveAdvantage: {},
+  step: {},
+} as const;
+
+const wardedTargetInterdictionRouteDriverSchema = {
+  init: {},
+  doCastSanctuaryWardCreation: {},
+  doInterdictDirectAttackFailedSaveLoss: {},
+  doInterdictDirectSpellSuccessfulSavePassThrough: {},
+  doRetargetDirectAttackToLegalReplacement: {},
+  doRejectIllegalReplacementTarget: {},
+  doExcludeAreaEffectFromInterdiction: {},
+  doEndWardOnWardedAttackRoll: {},
+  doEndWardOnWardedSpellCast: {},
+  doEndWardOnWardedDamageDealt: {},
+  step: {},
+} as const;
+
+const spellBaseArmorClassEffectRouteDriverSchema = {
+  init: {},
+  doRouteUnarmoredTargetAdmission: {},
+  doRouteArmoredTargetRejection: {},
+  doRouteBaseArmorClassProjection: {},
+  doRouteDurationExpiry: {},
+  step: {},
+} as const;
+
+const rogueSteadyAimDriverSchema = {
+  init: {},
+  doSteadyAim: {},
+  doRejectAfterMoved: {},
+  doRejectSecondAim: {},
+  doAttackConsumesAdvantage: {},
+  doEndTurnCleanup: {},
+  step: {},
+} as const;
+
+const scalarBuffDriverSchema = {
+  init: {},
+  doFillLongstriderTarget: {},
+  doRejectStaleAfterResolved: {},
+  step: {},
+} as const;
+
+export type ExtraAttackDriverAction = Exclude<
+  keyof typeof extraAttackDriverSchema,
+  | "init"
+  | "initOneAdditionalAttack"
+  | "initTwoAdditionalAttacks"
+  | "initThreeAdditionalAttacks"
+  | "step"
+>;
+export type AdrenalineRushDriverAction = Exclude<
+  keyof typeof adrenalineRushDriverSchema,
+  "init" | "step"
+>;
+export type RogueSteadyAimDriverAction = Exclude<
+  keyof typeof rogueSteadyAimDriverSchema,
+  "init" | "step"
+>;
+type ExtraAttackSelectedUnitId =
+  | "barbarian_extra_attack"
+  | "fighter_extra_attack"
+  | "monk_extra_attack"
+  | "paladin_extra_attack"
+  | "ranger_extra_attack";
+export const extraAttackMbtAdditionalAttackCounts = [1, 2, 3] as const;
+type ExtraAttackMbtAdditionalAttackCount =
+  (typeof extraAttackMbtAdditionalAttackCounts)[number];
+type SyntheticExtraAttackMbtUnitId =
+  | "test_synthetic_attack_count_2"
+  | "test_synthetic_attack_count_3";
+type ExtraAttackMbtUnitId =
+  | ExtraAttackSelectedUnitId
+  | SyntheticExtraAttackMbtUnitId;
+type ExtraAttackMbtInitAction =
+  | "initOneAdditionalAttack"
+  | "initTwoAdditionalAttacks"
+  | "initThreeAdditionalAttacks";
+export type SelectedUnitIdentityReplaySequence<
+  ActionName extends string,
+  Projection,
+> = {
+  readonly name: string;
+  readonly actions: readonly ActionName[];
+  readonly expected: Projection;
+};
+export type ExtraAttackSelectedUnitIdentityReplay = {
+  readonly driver: "extraAttack";
+  readonly taskId: "extra-attack-count-scaling";
+  readonly unitId: ExtraAttackSelectedUnitId;
+  readonly actions: readonly ExtraAttackDriverAction[];
+  readonly sequences: readonly SelectedUnitIdentityReplaySequence<
+    ExtraAttackDriverAction,
+    ExtraAttackMbtProjection
+  >[];
+};
+export type AdrenalineRushSelectedUnitIdentityReplay = {
+  readonly driver: "adrenalineRush";
+  readonly taskId: "L1H-ORC-ADRENALINE-RUSH";
+  readonly unitId: "orc_adrenaline_rush";
+  readonly actions: readonly AdrenalineRushDriverAction[];
+  readonly sequences: readonly SelectedUnitIdentityReplaySequence<
+    AdrenalineRushDriverAction,
+    AdrenalineRushMbtProjection
+  >[];
+};
+export type RogueSteadyAimSelectedUnitIdentityReplay = {
+  readonly driver: "rogueSteadyAim";
+  readonly taskId: "L3PUTB-01-ROGUE-STEADY-AIM-RUNTIME";
+  readonly unitId: "rogue_steady_aim";
+  readonly actions: readonly RogueSteadyAimDriverAction[];
+  readonly sequences: readonly SelectedUnitIdentityReplaySequence<
+    RogueSteadyAimDriverAction,
+    RogueSteadyAimMbtProjection
+  >[];
+};
+export type SelectedUnitIdentityReplay =
+  | ExtraAttackSelectedUnitIdentityReplay
+  | AdrenalineRushSelectedUnitIdentityReplay
+  | RogueSteadyAimSelectedUnitIdentityReplay;
+type SelectedUnitIdentityReplayUnitId = SelectedUnitIdentityReplay["unitId"];
+type SelectedReplayDriver<ActionName extends string, Projection> = {
+  readonly actions: Readonly<
+    Record<
+      ActionName,
+      { readonly handler: (input: Record<string, never>) => unknown }
+    >
+  >;
+  readonly getState?: () => Projection;
+};
+
+async function runSelectedIdentityReplay<ActionName extends string, Projection>(
+  replay: {
+    readonly unitId: SelectedUnitIdentityReplayUnitId;
+    readonly actions: readonly ActionName[];
+    readonly sequences: readonly SelectedUnitIdentityReplaySequence<
+      ActionName,
+      Projection
+    >[];
+  },
+  createDriver: () => SelectedReplayDriver<ActionName, Projection>,
+): Promise<void> {
+  const replayedActions = new Set<ActionName>();
+
+  for (const sequence of replay.sequences) {
+    const driver = createDriver();
+
+    for (const actionName of sequence.actions) {
+      resetSelectedUnitRuntimeBoundaryIds();
+      replayedActions.add(actionName);
+      await driver.actions[actionName].handler({});
+      expect(
+        selectedUnitRuntimeBoundaryIds.has(replay.unitId),
+        `${replay.unitId}:${sequence.name}:${actionName} must bind its Unit id`,
+      ).toBe(true);
+    }
+
+    const runtime = driver.getState?.();
+    if (runtime === undefined) {
+      throw new Error("Selected identity replay driver must expose getState.");
+    }
+    expect(runtime, `${replay.unitId}:${sequence.name}`).toEqual(
+      sequence.expected,
+    );
+  }
+
+  expect(replayedActions).toEqual(new Set(replay.actions));
+  resetSelectedUnitRuntimeBoundaryIds();
+}
+
+export async function runSelectedUnitIdentityReplay(
+  replay: SelectedUnitIdentityReplay,
+): Promise<void> {
+  if (replay.driver === "extraAttack") {
+    await runSelectedIdentityReplay(
+      replay,
+      createExtraAttackDriver(replay.unitId),
+    );
+    return;
+  }
+  if (replay.driver === "adrenalineRush") {
+    await runSelectedIdentityReplay(replay, createAdrenalineRushDriver());
+    return;
+  }
+  await runSelectedIdentityReplay(replay, createRogueSteadyAimDriver());
+}
+
+const selectedUnitRuntimeBoundaryIds = new Set<string>();
+
+function resetSelectedUnitRuntimeBoundaryIds(): void {
+  selectedUnitRuntimeBoundaryIds.clear();
+}
+
+function recordSelectedUnitRuntimeBoundaryId(unitId: string) {
+  selectedUnitRuntimeBoundaryIds.add(unitId);
+  return parseSharedUnitId(unitId);
+}
+
+export function createBattleRuntimeDriver() {
+  return defineDriver(driverSchema, () => {
+    let session = fighterVsSkeletonBattleSession();
+    let state = session.state;
+    let subject: BattleSubject = fighterAttackSubject(session);
+    let fills: readonly BattleFill[] = [];
+    let holes: readonly BattleHole[] = discoverAttackHoles(session, subject);
+    let lastResult: MbtProjection["lastResult"] = "init";
+    let lastInvalidReason: MbtProjection["lastInvalidReason"] = "";
+
+    function reset(): void {
+      session = fighterVsSkeletonBattleSession();
+      state = session.state;
+      subject = fighterAttackSubject(session);
+      fills = [];
+      holes = discoverAttackHoles(session, subject);
+      lastResult = "init";
+      lastInvalidReason = "";
+    }
+
+    function submit(nextFills: readonly BattleFill[]): void {
+      fills = fillsWithMbtSpellCastReactionFacts(holes, nextFills);
+      const result = resolveBattleSubject({ state, subject, fills });
+      recordResult(result);
+    }
+
+    function recordResult(result: BattleResolutionResult): void {
+      lastResult = result.tag;
+      if (result.tag === "resolved") {
+        state = result.state;
+        holes = [];
+        lastInvalidReason = "";
+        return;
+      }
+      if (result.tag === "needsHoles") {
+        state = result.state;
+        holes = result.holes;
+        lastInvalidReason = "";
+        return;
+      }
+      lastInvalidReason = mbtInvalidReason(result.reason);
+    }
+
+    return {
+      init: reset,
+      doDiscoverAttack: () => {
+        subject = fighterAttackSubject(
+          battleRuntimeSessionForTest({ state, context: session.context }),
+        );
+        holes = discoverAttackHoles(
+          battleRuntimeSessionForTest({ state, context: session.context }),
+          subject,
+        );
+        lastResult = "needsHoles";
+        lastInvalidReason = "";
+      },
+      doFillTarget: () => {
+        const target = requireHole(holes, "targetChoice");
+        submit([targetFill(target, skeletonId)]);
+      },
+      doRejectWrongTarget: () => {
+        const target = requireHole(holes, "targetChoice");
+        submit([targetFill(target, fighterId)]);
+      },
+      doFillAttackRollMiss: () => {
+        const attackRoll = requireHole(holes, "attackRoll");
+        submit([
+          ...fills,
+          attackRollFill(attackRoll, { total: 13, naturalD20: 9 }),
+        ]);
+      },
+      doFillAttackRollHit: () => {
+        const attackRoll = requireHole(holes, "attackRoll");
+        submit([
+          ...fills,
+          attackRollFill(attackRoll, {
+            total: 14,
+            naturalD20: 10,
+            rollMode: "advantage",
+          }),
+        ]);
+      },
+      doFillDamageLow: () => {
+        const damage = requireHole(holes, "rolledDice");
+        submit([...fills, damageRollFill(damage, 2)]);
+      },
+      doFillDamageHigh: () => {
+        const damage = requireHole(holes, "rolledDice");
+        submit([...fills, damageRollFill(damage, 4)]);
+      },
+      doFillDamageLowSneakAttack: () => {
+        const damage = requireHole(holes, "rolledDice");
+        submit([
+          ...fills,
+          damageRollFillWithGroups(
+            damage,
+            [[2], [2]],
+            [
+              requireCharacterUnitProcedureRefForTest(
+                battleRuntimeSessionForTest({
+                  state,
+                  context: session.context,
+                }),
+                fighterId,
+                "rogue_sneak_attack",
+              ),
+            ],
+          ),
+        ]);
+      },
+      doFillDamageHighSneakAttack: () => {
+        const damage = requireHole(holes, "rolledDice");
+        submit([
+          ...fills,
+          damageRollFillWithGroups(
+            damage,
+            [[4], [4]],
+            [
+              requireCharacterUnitProcedureRefForTest(
+                battleRuntimeSessionForTest({
+                  state,
+                  context: session.context,
+                }),
+                fighterId,
+                "rogue_sneak_attack",
+              ),
+            ],
+          ),
+        ]);
+      },
+      doRejectStaleAfterResolved: () => {
+        recordResult(resolveBattleSubject({ state, subject, fills }));
+      },
+      doStartSkeletonTurn: () => {
+        subject = endTurnSubject();
+        fills = [];
+        recordResult(resolveBattleSubject({ state, subject, fills }));
+      },
+      doResolveSkeletonMultiattack: () => {
+        subject = skeletonMultiattackSubject(
+          battleRuntimeSessionForTest({ state, context: session.context }),
+        );
+        fills = [];
+        recordResult(resolveBattleSubject({ state, subject, fills }));
+      },
+      doRejectRecursiveSkeletonMultiattack: () => {
+        subject = skeletonMultiattackSubject(
+          battleRuntimeSessionForTest({ state, context: session.context }),
+        );
+        fills = [];
+        recordResult(resolveBattleSubject({ state, subject, fills }));
+      },
+      doSpendSkeletonMultiattackDispatch: () => {
+        subject = skeletonShortswordSubject(
+          battleRuntimeSessionForTest({ state, context: session.context }),
+        );
+        const target = requireHole(
+          discoverAttackHoles(
+            battleRuntimeSessionForTest({ state, context: session.context }),
+            subject,
+          ),
+          "targetChoice",
+        );
+        const targetChoice = targetFill(target, fighterId);
+        const attackRoll = requireHole(
+          holesAfterFills(state, subject, [targetChoice]),
+          "attackRoll",
+        );
+        fills = [
+          targetChoice,
+          attackRollFill(attackRoll, { total: 1, naturalD20: 1 }),
+        ];
+        recordResult(resolveBattleSubject({ state, subject, fills }));
+      },
+      step: () => {},
+      getState: () =>
+        projectMbtState({
+          state,
+          holes,
+          lastResult,
+          lastInvalidReason,
+        }),
+    };
+  });
+}
+
+export function createBattleRuntimeRouteDriver() {
+  return defineDriver(driverSchema, () => {
+    let session = fighterVsSkeletonBattleSession();
+    let state = session.state;
+    let subject: BattleSubject = fighterAttackSubject(session);
+    let fills: readonly BattleFill[] = [];
+    let holes: readonly BattleHole[] = discoverAttackHoles(session, subject);
+    let route: readonly ReducerRouteEvent[] = [];
+    let lastResult: MbtProjection["lastResult"] = "init";
+    let lastInvalidReason: MbtProjection["lastInvalidReason"] = "";
+
+    function reset(): void {
+      session = fighterVsSkeletonBattleSession();
+      state = session.state;
+      subject = fighterAttackSubject(session);
+      fills = [];
+      const act = discoverAttackAct(session, subject);
+      holes = act.initialHoles;
+      route = [reducerRouteStartBattle("battleActionEconomy")];
+      appendRequiredRouteEvents({
+        routeEvents: act.routeEvents,
+        context: "weapon Attack skeleton initial discovery",
+      });
+      lastResult = "init";
+      lastInvalidReason = "";
+    }
+
+    function recordResult(result: BattleResolutionResult): void {
+      lastResult = result.tag;
+      if (result.tag === "resolved") {
+        state = result.state;
+        holes = [];
+        lastInvalidReason = "";
+        return;
+      }
+      if (result.tag === "needsHoles") {
+        state = result.state;
+        holes = result.holes;
+        lastInvalidReason = "";
+        return;
+      }
+      lastInvalidReason = mbtInvalidReason(result.reason);
+    }
+
+    function appendRequiredRouteEvents(input: {
+      readonly routeEvents: readonly ReducerRouteEvent[] | undefined;
+      readonly context: string;
+    }): void {
+      if (input.routeEvents === undefined || input.routeEvents.length === 0) {
+        throw new Error(
+          `Expected public reducer route events on ${input.context}.`,
+        );
+      }
+      route = [...route, ...input.routeEvents];
+    }
+
+    function submit(nextFills: readonly BattleFill[]): void {
+      fills = fillsWithMbtSpellCastReactionFacts(holes, nextFills);
+      const result = resolveBattleSubject({ state, subject, fills });
+      recordResult(result);
+      appendRequiredRouteEvents({
+        routeEvents: result.routeEvents,
+        context: "weapon Attack skeleton resolution",
+      });
+    }
+
+    function resolveWithoutFill(): void {
+      const result = resolveBattleSubject({ state, subject, fills });
+      recordResult(result);
+      appendRequiredRouteEvents({
+        routeEvents: result.routeEvents,
+        context: "weapon Attack skeleton no-fill resolution",
+      });
+    }
+
+    reset();
+
+    return {
+      init: reset,
+      doDiscoverAttack: () => {
+        subject = fighterAttackSubject(
+          battleRuntimeSessionForTest({ state, context: session.context }),
+        );
+        const act = discoverAttackAct(
+          battleRuntimeSessionForTest({ state, context: session.context }),
+          subject,
+        );
+        holes = act.initialHoles;
+        appendRequiredRouteEvents({
+          routeEvents: act.routeEvents,
+          context: "weapon Attack skeleton discovery",
+        });
+        lastResult = "needsHoles";
+        lastInvalidReason = "";
+      },
+      doFillTarget: () => {
+        const target = requireHole(holes, "targetChoice");
+        submit([targetFill(target, skeletonId)]);
+      },
+      doRejectWrongTarget: () => {
+        const target = requireHole(holes, "targetChoice");
+        submit([targetFill(target, fighterId)]);
+      },
+      doFillAttackRollMiss: () => {
+        const attackRoll = requireHole(holes, "attackRoll");
+        submit([
+          ...fills,
+          attackRollFill(attackRoll, { total: 13, naturalD20: 9 }),
+        ]);
+      },
+      doFillAttackRollHit: () => {
+        const attackRoll = requireHole(holes, "attackRoll");
+        submit([
+          ...fills,
+          attackRollFill(attackRoll, {
+            total: 14,
+            naturalD20: 10,
+            rollMode: "advantage",
+          }),
+        ]);
+      },
+      doFillDamageLow: () => {
+        const damage = requireHole(holes, "rolledDice");
+        submit([...fills, damageRollFill(damage, 2)]);
+      },
+      doFillDamageHigh: () => {
+        const damage = requireHole(holes, "rolledDice");
+        submit([...fills, damageRollFill(damage, 4)]);
+      },
+      doFillDamageLowSneakAttack: () => {
+        const damage = requireHole(holes, "rolledDice");
+        submit([
+          ...fills,
+          damageRollFillWithGroups(
+            damage,
+            [[2], [2]],
+            [
+              requireCharacterUnitProcedureRefForTest(
+                battleRuntimeSessionForTest({
+                  state,
+                  context: session.context,
+                }),
+                fighterId,
+                "rogue_sneak_attack",
+              ),
+            ],
+          ),
+        ]);
+      },
+      doFillDamageHighSneakAttack: () => {
+        const damage = requireHole(holes, "rolledDice");
+        submit([
+          ...fills,
+          damageRollFillWithGroups(
+            damage,
+            [[4], [4]],
+            [
+              requireCharacterUnitProcedureRefForTest(
+                battleRuntimeSessionForTest({
+                  state,
+                  context: session.context,
+                }),
+                fighterId,
+                "rogue_sneak_attack",
+              ),
+            ],
+          ),
+        ]);
+      },
+      doRejectStaleAfterResolved: () => {
+        fills = [];
+        resolveWithoutFill();
+      },
+      doStartSkeletonTurn: () => {
+        subject = endTurnSubject();
+        fills = [];
+        resolveWithoutFill();
+      },
+      doResolveSkeletonMultiattack: () => {
+        subject = skeletonMultiattackSubject(
+          battleRuntimeSessionForTest({ state, context: session.context }),
+        );
+        fills = [];
+        resolveWithoutFill();
+      },
+      doRejectRecursiveSkeletonMultiattack: () => {
+        subject = skeletonMultiattackSubject(
+          battleRuntimeSessionForTest({ state, context: session.context }),
+        );
+        fills = [];
+        resolveWithoutFill();
+      },
+      doSpendSkeletonMultiattackDispatch: () => {
+        subject = skeletonShortswordSubject(
+          battleRuntimeSessionForTest({ state, context: session.context }),
+        );
+        const act = discoverAttackAct(
+          battleRuntimeSessionForTest({ state, context: session.context }),
+          subject,
+        );
+        appendRequiredRouteEvents({
+          routeEvents: act.routeEvents,
+          context: "weapon Attack skeleton stat-block attack discovery",
+        });
+        const target = requireHole(act.initialHoles, "targetChoice");
+        const targetChoice = targetFill(target, fighterId);
+        fills = [targetChoice];
+        const needsAttackRoll = resolveBattleSubject({
+          state,
+          subject,
+          fills,
+        });
+        recordResult(needsAttackRoll);
+        appendRequiredRouteEvents({
+          routeEvents: needsAttackRoll.routeEvents,
+          context: "weapon Attack skeleton stat-block target resolution",
+        });
+        const attackRoll = requireHole(holes, "attackRoll");
+        fills = [
+          targetChoice,
+          attackRollFill(attackRoll, { total: 1, naturalD20: 1 }),
+        ];
+        const result = resolveBattleSubject({ state, subject, fills });
+        recordResult(result);
+        appendRequiredRouteEvents({
+          routeEvents: result.routeEvents,
+          context: "weapon Attack skeleton stat-block attack-roll resolution",
+        });
+      },
+      step: () => {},
+      getState: () => ({
+        ...projectMbtState({
+          state,
+          holes,
+          lastResult,
+          lastInvalidReason,
+        }),
+        route,
+      }),
+    };
+  });
+}
+
+export function createWeaponAttackOrderingDriver() {
+  return defineDriver(weaponAttackOrderingDriverSchema, () => {
+    let session = fighterVsSkeletonBattleSession();
+    let state = session.state;
+    const subject = fighterAttackSubject(session);
+    let fills: readonly BattleFill[] = [];
+    let holes: readonly BattleHole[] = [];
+    let stage: WeaponAttackOrderingProjection["stage"] = "actSelection";
+    let lastResult: WeaponAttackOrderingProjection["lastResult"] = "init";
+    let orderingError: WeaponAttackOrderingProjection["orderingError"] = "";
+
+    function reset(): void {
+      session = fighterVsSkeletonBattleSession();
+      state = session.state;
+      fills = [];
+      holes = [];
+      stage = "actSelection";
+      lastResult = "init";
+      orderingError = "";
+    }
+
+    function recordAccepted(
+      result: BattleResolutionResult,
+      nextStage: WeaponAttackOrderingProjection["stage"],
+    ): void {
+      lastResult = result.tag;
+      if (result.tag === "resolved") {
+        state = result.state;
+        holes = [];
+        stage = nextStage;
+        orderingError = "";
+        return;
+      }
+      if (result.tag === "needsHoles") {
+        state = result.state;
+        holes = result.holes;
+        stage = nextStage;
+        orderingError = "";
+        return;
+      }
+      throw new Error(`Expected accepted weapon attack ordering fill.`);
+    }
+
+    function recordOrderingRejection(
+      result: BattleResolutionResult,
+      expectedOrderingError: Exclude<
+        WeaponAttackOrderingProjection["orderingError"],
+        ""
+      >,
+      expectedMessage: string,
+    ): void {
+      if (
+        result.tag !== "invalid" ||
+        result.reason !== "invalidFill" ||
+        result.message !== expectedMessage
+      ) {
+        throw new Error(
+          `Expected weapon attack ordering fill rejection: ${expectedMessage}`,
+        );
+      }
+      lastResult = result.tag;
+      orderingError = expectedOrderingError;
+    }
+
+    return {
+      init: reset,
+      doDiscoverAttack: () => {
+        holes = discoverAttackHoles(
+          battleRuntimeSessionForTest({ state, context: session.context }),
+          subject,
+        );
+        stage = "targetChoice";
+        lastResult = "needsHoles";
+        orderingError = "";
+      },
+      doRejectAttackRollBeforeTargetChoice: () => {
+        const target = requireHole(holes, "targetChoice");
+        const attackRoll = requireHole(
+          holesAfterFills(state, subject, [targetFill(target, skeletonId)]),
+          "attackRoll",
+        );
+        recordOrderingRejection(
+          resolveBattleSubject({
+            state,
+            subject,
+            fills: [attackRollFill(attackRoll, { total: 14, naturalD20: 10 })],
+          }),
+          "targetChoiceRequired",
+          ATTACK_TARGET_REQUIRED_BEFORE_ROLL_OR_DAMAGE_MESSAGE,
+        );
+      },
+      doFillTargetChoice: () => {
+        const target = requireHole(holes, "targetChoice");
+        fills = [targetFill(target, skeletonId)];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "attackRoll",
+        );
+      },
+      doRejectDamageBeforeAttackRoll: () => {
+        const attackRoll = requireHole(holes, "attackRoll");
+        const damage = requireHole(
+          holesAfterFills(state, subject, [
+            ...fills,
+            attackRollFill(attackRoll, { total: 14, naturalD20: 10 }),
+          ]),
+          "rolledDice",
+        );
+        recordOrderingRejection(
+          resolveBattleSubject({
+            state,
+            subject,
+            fills: [...fills, damageRollFill(damage, 3)],
+          }),
+          "attackRollRequired",
+          ATTACK_ROLL_REQUIRED_BEFORE_DAMAGE_MESSAGE,
+        );
+      },
+      doFillAttackRollMiss: () => {
+        const attackRoll = requireHole(holes, "attackRoll");
+        fills = [
+          ...fills,
+          attackRollFill(attackRoll, { total: 13, naturalD20: 9 }),
+        ];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "resolved",
+        );
+      },
+      doFillAttackRollHit: () => {
+        const attackRoll = requireHole(holes, "attackRoll");
+        fills = [
+          ...fills,
+          attackRollFill(attackRoll, { total: 14, naturalD20: 10 }),
+        ];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "damageDice",
+        );
+      },
+      doFillDamageDice: () => {
+        const damage = requireHole(holes, "rolledDice");
+        fills = [...fills, damageRollFill(damage, 3)];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "resolved",
+        );
+      },
+      step: () => {},
+      getState: () =>
+        projectWeaponAttackOrderingState({
+          holes,
+          stage,
+          lastResult,
+          orderingError,
+        }),
+    };
+  });
+}
+
+export function createSaveGatedSpellOrderingDriver() {
+  return defineDriver(saveGatedSpellOrderingDriverSchema, () => {
+    let session = saveGatedSpellOrderingBattle("lightning_bolt", 3);
+    let state = session.state;
+    let subject: Extract<BattleSubject, { readonly tag: "actionSpell" }> =
+      lightningBoltSubject(session);
+    let fills: readonly BattleFill[] = [];
+    let holes: readonly BattleHole[] = [];
+    let stage: SaveGatedSpellOrderingProjection["stage"] = "actSelection";
+    let lastResult: SaveGatedSpellOrderingProjection["lastResult"] = "init";
+    let orderingError: SaveGatedSpellOrderingProjection["orderingError"] = "";
+
+    function reset(): void {
+      session = saveGatedSpellOrderingBattle("lightning_bolt", 3);
+      state = session.state;
+      subject = lightningBoltSubject(session);
+      fills = [];
+      holes = [];
+      stage = "actSelection";
+      lastResult = "init";
+      orderingError = "";
+    }
+
+    function discoverSpell(
+      spellId: "lightning_bolt" | "blindness_deafness",
+      slotLevel: 2 | 3,
+      procedure: "saveGatedDamage" | "saveGatedCondition",
+      nextStage: SaveGatedSpellOrderingProjection["stage"],
+    ): void {
+      session = saveGatedSpellOrderingBattle(spellId, slotLevel);
+      state = session.state;
+      subject = saveGatedSpellSubject(session, spellId, slotLevel, procedure);
+      fills = [];
+      holes = discoverSaveGatedSpellHoles(session, subject, spellId);
+      stage = nextStage;
+      lastResult = "needsHoles";
+      orderingError = "";
+    }
+
+    function recordAccepted(
+      result: BattleResolutionResult,
+      nextStage: SaveGatedSpellOrderingProjection["stage"],
+    ): void {
+      lastResult = result.tag;
+      if (result.tag === "resolved") {
+        state = result.state;
+        holes = [];
+        stage = nextStage;
+        orderingError = "";
+        return;
+      }
+      if (result.tag === "needsHoles") {
+        state = result.state;
+        holes = result.holes;
+        stage = nextStage;
+        orderingError = "";
+        return;
+      }
+      throw new Error(
+        `Expected accepted save-gated spell ordering fill, got ${result.tag}: ${
+          "message" in result ? result.message : ""
+        }`,
+      );
+    }
+
+    function recordNeedsEarlierHole(
+      result: BattleResolutionResult,
+      expectedOrderingError: Exclude<
+        SaveGatedSpellOrderingProjection["orderingError"],
+        ""
+      >,
+      expectedStage: SaveGatedSpellOrderingProjection["stage"],
+    ): void {
+      if (result.tag !== "needsHoles") {
+        throw new Error(
+          "Expected save-gated spell fill to request earlier holes.",
+        );
+      }
+      lastResult = result.tag;
+      holes = result.holes;
+      stage = expectedStage;
+      orderingError = expectedOrderingError;
+    }
+
+    return {
+      init: reset,
+      doDiscoverAreaSaveDamage: () => {
+        discoverSpell(
+          "lightning_bolt",
+          3,
+          "saveGatedDamage",
+          "damageSavingThrowOutcome",
+        );
+      },
+      doSubmitDamageBeforeSavingThrow: () => {
+        const savingThrow = requireHole(holes, "savingThrowOutcome");
+        const damage = requireHole(
+          saveGatedSpellHolesAfterFills(state, subject, [
+            saveGatedSpellSavingThrowOutcomeFill(savingThrow, [
+              { targetId: skeletonId, succeeded: false },
+            ]),
+          ]),
+          "rolledDice",
+        );
+        recordNeedsEarlierHole(
+          resolveBattleSubject({
+            state,
+            subject,
+            fills: [
+              damageRollFillWithGroups(damage, [[6, 6, 6, 6, 6, 6, 6, 6]]),
+            ],
+          }),
+          "savingThrowRequired",
+          "damageSavingThrowOutcome",
+        );
+      },
+      doFillAreaSaveFailed: () => {
+        const savingThrow = requireHole(holes, "savingThrowOutcome");
+        fills = [
+          saveGatedSpellSavingThrowOutcomeFill(savingThrow, [
+            { targetId: skeletonId, succeeded: false },
+          ]),
+        ];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "damageDice",
+        );
+      },
+      doFillAreaDamageDice: () => {
+        const damage = requireHole(holes, "rolledDice");
+        fills = [
+          ...fills,
+          damageRollFillWithGroups(damage, [[6, 6, 6, 6, 6, 6, 6, 6]]),
+        ];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "resolved",
+        );
+      },
+      doDiscoverTargetListConditionChoice: () => {
+        discoverSpell(
+          "blindness_deafness",
+          2,
+          "saveGatedCondition",
+          "targetListAndConditionChoice",
+        );
+      },
+      doFillTargetListBeforeConditionChoice: () => {
+        const targetList = requireHole(holes, "spellTargetList");
+        fills = [
+          spellTargetListFill(targetList, requireSpellTargetSubject(subject), [
+            skeletonId,
+          ]),
+        ];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "conditionChoice",
+        );
+      },
+      doFillConditionChoiceAfterTargetList: () => {
+        const conditionChoice = requireHole(holes, "conditionChoice");
+        fills = [
+          ...fills,
+          saveGatedSpellConditionChoiceFill(conditionChoice, "blinded"),
+        ];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "conditionSavingThrowOutcome",
+        );
+      },
+      doFillConditionChoiceBeforeTargetList: () => {
+        const conditionChoice = requireHole(holes, "conditionChoice");
+        fills = [saveGatedSpellConditionChoiceFill(conditionChoice, "blinded")];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "targetList",
+        );
+      },
+      doFillTargetListAfterConditionChoice: () => {
+        const targetList = requireHole(holes, "spellTargetList");
+        fills = [
+          ...fills,
+          spellTargetListFill(targetList, requireSpellTargetSubject(subject), [
+            skeletonId,
+          ]),
+        ];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "conditionSavingThrowOutcome",
+        );
+      },
+      doFillConditionSavingThrow: () => {
+        const savingThrow = requireHole(holes, "savingThrowOutcome");
+        fills = [
+          ...fills,
+          saveGatedSpellSavingThrowOutcomeFill(savingThrow, [
+            { targetId: skeletonId, succeeded: false },
+          ]),
+        ];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "resolved",
+        );
+      },
+      step: () => {},
+      getState: () =>
+        projectSaveGatedSpellOrderingState({
+          holes,
+          stage,
+          lastResult,
+          orderingError,
+        }),
+    };
+  });
+}
+
+export function createWeaponAttackOrderingRouteDriver() {
+  return defineDriver(weaponAttackOrderingDriverSchema, () => {
+    let session = fighterVsSkeletonBattleSession();
+    let state = session.state;
+    const subject = fighterAttackSubject(session);
+    let fills: readonly BattleFill[] = [];
+    let holes: readonly BattleHole[] = [];
+    let route: readonly ReducerRouteEvent[] = [];
+    let stage: WeaponAttackOrderingProjection["stage"] = "actSelection";
+    let lastResult: WeaponAttackOrderingProjection["lastResult"] = "init";
+    let orderingError: WeaponAttackOrderingProjection["orderingError"] = "";
+
+    function reset(): void {
+      session = fighterVsSkeletonBattleSession();
+      state = session.state;
+      fills = [];
+      holes = [];
+      route = [battleReducerStartRouteEvent()];
+      stage = "actSelection";
+      lastResult = "init";
+      orderingError = "";
+    }
+
+    function recordAccepted(
+      result: BattleResolutionResult,
+      nextStage: WeaponAttackOrderingProjection["stage"],
+    ): void {
+      lastResult = result.tag;
+      if (result.tag === "resolved") {
+        state = result.state;
+        holes = [];
+        route = appendPublicRouteEvents(
+          route,
+          requireWeaponAttackOrderingRouteEvents(result),
+        );
+        stage = nextStage;
+        orderingError = "";
+        return;
+      }
+      if (result.tag === "needsHoles") {
+        state = result.state;
+        holes = result.holes;
+        route = appendPublicRouteEvents(
+          route,
+          requireWeaponAttackOrderingRouteEvents(result),
+        );
+        stage = nextStage;
+        orderingError = "";
+        return;
+      }
+      throw new Error(`Expected accepted weapon attack ordering fill.`);
+    }
+
+    function recordOrderingRejection(
+      result: BattleResolutionResult,
+      expectedOrderingError: Exclude<
+        WeaponAttackOrderingProjection["orderingError"],
+        ""
+      >,
+      expectedMessage: string,
+    ): void {
+      if (
+        result.tag !== "invalid" ||
+        result.reason !== "invalidFill" ||
+        result.message !== expectedMessage
+      ) {
+        throw new Error(
+          `Expected weapon attack ordering fill rejection: ${expectedMessage}`,
+        );
+      }
+      route = appendPublicRouteEvents(
+        route,
+        requireWeaponAttackOrderingRouteEvents(result),
+      );
+      lastResult = result.tag;
+      orderingError = expectedOrderingError;
+    }
+
+    reset();
+
+    return {
+      init: reset,
+      doDiscoverAttack: () => {
+        const act = discoverAttackAct(
+          battleRuntimeSessionForTest({ state, context: session.context }),
+          subject,
+        );
+        holes = act.initialHoles;
+        route = appendPublicRouteEvents(
+          route,
+          requireWeaponAttackOrderingActRouteEvents(act),
+        );
+        stage = "targetChoice";
+        lastResult = "needsHoles";
+        orderingError = "";
+      },
+      doRejectAttackRollBeforeTargetChoice: () => {
+        const target = requireHole(holes, "targetChoice");
+        const attackRoll = requireHole(
+          holesAfterFills(state, subject, [targetFill(target, skeletonId)]),
+          "attackRoll",
+        );
+        recordOrderingRejection(
+          resolveBattleSubject({
+            state,
+            subject,
+            fills: [attackRollFill(attackRoll, { total: 14, naturalD20: 10 })],
+          }),
+          "targetChoiceRequired",
+          ATTACK_TARGET_REQUIRED_BEFORE_ROLL_OR_DAMAGE_MESSAGE,
+        );
+      },
+      doFillTargetChoice: () => {
+        const target = requireHole(holes, "targetChoice");
+        fills = [targetFill(target, skeletonId)];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "attackRoll",
+        );
+      },
+      doRejectDamageBeforeAttackRoll: () => {
+        const attackRoll = requireHole(holes, "attackRoll");
+        const damage = requireHole(
+          holesAfterFills(state, subject, [
+            ...fills,
+            attackRollFill(attackRoll, { total: 14, naturalD20: 10 }),
+          ]),
+          "rolledDice",
+        );
+        recordOrderingRejection(
+          resolveBattleSubject({
+            state,
+            subject,
+            fills: [...fills, damageRollFill(damage, 3)],
+          }),
+          "attackRollRequired",
+          ATTACK_ROLL_REQUIRED_BEFORE_DAMAGE_MESSAGE,
+        );
+      },
+      doFillAttackRollMiss: () => {
+        const attackRoll = requireHole(holes, "attackRoll");
+        fills = [
+          ...fills,
+          attackRollFill(attackRoll, { total: 13, naturalD20: 9 }),
+        ];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "resolved",
+        );
+      },
+      doFillAttackRollHit: () => {
+        const attackRoll = requireHole(holes, "attackRoll");
+        fills = [
+          ...fills,
+          attackRollFill(attackRoll, { total: 14, naturalD20: 10 }),
+        ];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "damageDice",
+        );
+      },
+      doFillDamageDice: () => {
+        const damage = requireHole(holes, "rolledDice");
+        fills = [...fills, damageRollFill(damage, 3)];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "resolved",
+        );
+      },
+      step: () => {},
+      getState: () => ({
+        ...projectWeaponAttackOrderingState({
+          holes,
+          stage,
+          lastResult,
+          orderingError,
+        }),
+        route,
+      }),
+    };
+  });
+}
+
+const WEAPON_MASTERY_PROPERTY_ROUTE_SUBJECT =
+  "weaponMasteryProperty" satisfies ReducerRouteSubjectFamily;
+const WEAPON_MASTERY_PROPERTY_WEAPON_ATTACK_SUBJECT =
+  "weaponAttack" satisfies ReducerRouteSubjectFamily;
+const NO_WEAPON_MASTERY_PROPERTY_ROUTE_HOLES =
+  [] as const satisfies readonly ReducerRouteHole[];
+const WEAPON_MASTERY_PROPERTY_TARGET_HOLES = [
+  "targetChoice",
+] as const satisfies readonly ReducerRouteHole[];
+const WEAPON_MASTERY_PROPERTY_ATTACK_ROLL_HOLES = [
+  "attackRoll",
+] as const satisfies readonly ReducerRouteHole[];
+const WEAPON_MASTERY_PROPERTY_DAMAGE_HOLES = [
+  "rolledDice",
+] as const satisfies readonly ReducerRouteHole[];
+const WEAPON_MASTERY_PROPERTY_SAVE_HOLES = [
+  "savingThrowOutcome",
+] as const satisfies readonly ReducerRouteHole[];
+const WEAPON_MASTERY_PROPERTY_DECISION_HOLES = [
+  "unitFeatureDecision",
+] as const satisfies readonly ReducerRouteHole[];
+
+function weaponMasteryPropertyDiscoverRoute(input: {
+  readonly subject: ReducerRouteSubjectFamily;
+  readonly holes: readonly ReducerRouteHole[];
+  readonly owner: ReducerRouteOwnerGroup;
+}): ReducerRouteEvent {
+  return {
+    kind: "discoverBattleActs",
+    subject: input.subject,
+    holes: input.holes,
+    owner: input.owner,
+  };
+}
+
+function weaponMasteryPropertyResolveRoute(input: {
+  readonly subject: ReducerRouteSubjectFamily;
+  readonly fill: ReducerRouteFill;
+  readonly holes: readonly ReducerRouteHole[];
+  readonly owner: ReducerRouteOwnerGroup;
+}): ReducerRouteEvent {
+  return {
+    kind: "resolveBattleSubject",
+    subject: input.subject,
+    fill: input.fill,
+    holes: input.holes,
+    owner: input.owner,
+  };
+}
+
+function weaponMasteryPropertyResolveWithoutFillRoute(input: {
+  readonly subject: ReducerRouteSubjectFamily;
+  readonly holes: readonly ReducerRouteHole[];
+  readonly owner: ReducerRouteOwnerGroup;
+}): ReducerRouteEvent {
+  return {
+    kind: "resolveBattleSubjectWithoutFill",
+    subject: input.subject,
+    holes: input.holes,
+    owner: input.owner,
+  };
+}
+
+function weaponMasteryPropertyWeaponAttackRollRoute(): readonly ReducerRouteEvent[] {
+  return [
+    reducerRouteStartBattle("battleActionEconomy"),
+    weaponMasteryPropertyDiscoverRoute({
+      subject: WEAPON_MASTERY_PROPERTY_WEAPON_ATTACK_SUBJECT,
+      holes: WEAPON_MASTERY_PROPERTY_TARGET_HOLES,
+      owner: "battleActionEconomy",
+    }),
+    weaponMasteryPropertyResolveRoute({
+      subject: WEAPON_MASTERY_PROPERTY_WEAPON_ATTACK_SUBJECT,
+      fill: "targetChoice",
+      holes: WEAPON_MASTERY_PROPERTY_ATTACK_ROLL_HOLES,
+      owner: "battleTargetSelection",
+    }),
+  ];
+}
+
+function weaponMasteryPropertyWeaponHitDamageRoute(): readonly ReducerRouteEvent[] {
+  return [
+    ...weaponMasteryPropertyWeaponAttackRollRoute(),
+    weaponMasteryPropertyResolveRoute({
+      subject: WEAPON_MASTERY_PROPERTY_WEAPON_ATTACK_SUBJECT,
+      fill: "attackRoll",
+      holes: WEAPON_MASTERY_PROPERTY_DAMAGE_HOLES,
+      owner: "battleAttackRoll",
+    }),
+  ];
+}
+
+function weaponMasteryPropertySapRoute(): readonly ReducerRouteEvent[] {
+  return [
+    ...weaponMasteryPropertyWeaponHitDamageRoute(),
+    weaponMasteryPropertyResolveRoute({
+      subject: WEAPON_MASTERY_PROPERTY_WEAPON_ATTACK_SUBJECT,
+      fill: "rolledDice",
+      holes: NO_WEAPON_MASTERY_PROPERTY_ROUTE_HOLES,
+      owner: "battleHitPoint",
+    }),
+    weaponMasteryPropertyResolveWithoutFillRoute({
+      subject: WEAPON_MASTERY_PROPERTY_ROUTE_SUBJECT,
+      holes: NO_WEAPON_MASTERY_PROPERTY_ROUTE_HOLES,
+      owner: "battleActiveEffect",
+    }),
+  ];
+}
+
+function weaponMasteryPropertyToppleSaveGateRoute(): readonly ReducerRouteEvent[] {
+  return [
+    ...weaponMasteryPropertyWeaponAttackRollRoute(),
+    weaponMasteryPropertyResolveRoute({
+      subject: WEAPON_MASTERY_PROPERTY_ROUTE_SUBJECT,
+      fill: "attackRoll",
+      holes: WEAPON_MASTERY_PROPERTY_SAVE_HOLES,
+      owner: "battleConditionLifecycle",
+    }),
+  ];
+}
+
+function weaponMasteryPropertyToppleConditionRoute(
+  route: readonly ReducerRouteEvent[],
+): readonly ReducerRouteEvent[] {
+  return [
+    ...route,
+    weaponMasteryPropertyResolveRoute({
+      subject: WEAPON_MASTERY_PROPERTY_ROUTE_SUBJECT,
+      fill: "savingThrowOutcome",
+      holes: WEAPON_MASTERY_PROPERTY_DAMAGE_HOLES,
+      owner: "battleConditionLifecycle",
+    }),
+  ];
+}
+
+function weaponMasteryPropertyCleaveDecisionRoute(): readonly ReducerRouteEvent[] {
+  return [
+    ...weaponMasteryPropertyWeaponHitDamageRoute(),
+    weaponMasteryPropertyResolveRoute({
+      subject: WEAPON_MASTERY_PROPERTY_WEAPON_ATTACK_SUBJECT,
+      fill: "rolledDice",
+      holes: WEAPON_MASTERY_PROPERTY_DECISION_HOLES,
+      owner: "battleHitPoint",
+    }),
+    weaponMasteryPropertyResolveWithoutFillRoute({
+      subject: WEAPON_MASTERY_PROPERTY_ROUTE_SUBJECT,
+      holes: WEAPON_MASTERY_PROPERTY_DECISION_HOLES,
+      owner: "battleFeatureResource",
+    }),
+  ];
+}
+
+function weaponMasteryPropertyCleaveSecondTargetRoute(
+  route: readonly ReducerRouteEvent[],
+): readonly ReducerRouteEvent[] {
+  return [
+    ...route,
+    weaponMasteryPropertyResolveRoute({
+      subject: WEAPON_MASTERY_PROPERTY_ROUTE_SUBJECT,
+      fill: "unitFeatureDecision",
+      holes: WEAPON_MASTERY_PROPERTY_TARGET_HOLES,
+      owner: "battleFeatureResource",
+    }),
+  ];
+}
+
+function weaponMasteryPropertyCleaveSecondAttackRoute(
+  route: readonly ReducerRouteEvent[],
+): readonly ReducerRouteEvent[] {
+  return [
+    ...route,
+    weaponMasteryPropertyResolveRoute({
+      subject: WEAPON_MASTERY_PROPERTY_ROUTE_SUBJECT,
+      fill: "targetChoice",
+      holes: WEAPON_MASTERY_PROPERTY_ATTACK_ROLL_HOLES,
+      owner: "battleTargetSelection",
+    }),
+  ];
+}
+
+function weaponMasteryPropertyCleaveSecondDamageRoute(
+  route: readonly ReducerRouteEvent[],
+): readonly ReducerRouteEvent[] {
+  return [
+    ...route,
+    weaponMasteryPropertyResolveRoute({
+      subject: WEAPON_MASTERY_PROPERTY_ROUTE_SUBJECT,
+      fill: "attackRoll",
+      holes: WEAPON_MASTERY_PROPERTY_DAMAGE_HOLES,
+      owner: "battleAttackRoll",
+    }),
+    weaponMasteryPropertyResolveRoute({
+      subject: WEAPON_MASTERY_PROPERTY_ROUTE_SUBJECT,
+      fill: "rolledDice",
+      holes: NO_WEAPON_MASTERY_PROPERTY_ROUTE_HOLES,
+      owner: "battleHitPoint",
+    }),
+    weaponMasteryPropertyResolveWithoutFillRoute({
+      subject: WEAPON_MASTERY_PROPERTY_ROUTE_SUBJECT,
+      holes: NO_WEAPON_MASTERY_PROPERTY_ROUTE_HOLES,
+      owner: "battleFeatureResource",
+    }),
+  ];
+}
+
+export function createWeaponMasteryPropertyRouteDriver() {
+  return defineDriver(weaponMasteryPropertyRouteDriverSchema, () => {
+    let route: readonly ReducerRouteEvent[] =
+      weaponMasteryPropertyWeaponAttackRollRoute();
+
+    function reset(): void {
+      route = weaponMasteryPropertyWeaponAttackRollRoute();
+    }
+
+    reset();
+
+    return {
+      init: reset,
+      doRouteSapPropertyActiveEffectRider: () => {
+        route = weaponMasteryPropertySapRoute();
+      },
+      doRouteTopplePropertySaveGate: () => {
+        route = weaponMasteryPropertyToppleSaveGateRoute();
+      },
+      doRouteTopplePropertyConditionRider: () => {
+        route = weaponMasteryPropertyToppleConditionRoute(route);
+      },
+      doRouteCleavePropertyDecision: () => {
+        route = weaponMasteryPropertyCleaveDecisionRoute();
+      },
+      doRouteCleavePropertySecondTarget: () => {
+        route = weaponMasteryPropertyCleaveSecondTargetRoute(route);
+      },
+      doRouteCleavePropertySecondAttack: () => {
+        route = weaponMasteryPropertyCleaveSecondAttackRoute(route);
+      },
+      doRouteCleavePropertySecondDamage: () => {
+        route = weaponMasteryPropertyCleaveSecondDamageRoute(route);
+      },
+      step: () => {},
+      getState: (): ReducerRoutedWeaponMasteryPropertyProjection => ({ route }),
+    };
+  });
+}
+
+const ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_ROUTE_SUBJECT =
+  "attackActionAreaSaveDamageReplacement" satisfies ReducerRouteSubjectFamily;
+const ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_EXTRA_ATTACK_SUBJECT =
+  "weaponAttack" satisfies ReducerRouteSubjectFamily;
+const NO_ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_ROUTE_HOLES =
+  [] as const satisfies readonly ReducerRouteHole[];
+const ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_SAVE_HOLES = [
+  "savingThrowOutcome",
+] as const satisfies readonly ReducerRouteHole[];
+const ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_DAMAGE_HOLES = [
+  "rolledDice",
+] as const satisfies readonly ReducerRouteHole[];
+const ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_EXTRA_ATTACK_HOLES = [
+  "targetChoice",
+] as const satisfies readonly ReducerRouteHole[];
+
+function attackActionAreaSaveDamageReplacementDiscoverRoute(input: {
+  readonly subject: ReducerRouteSubjectFamily;
+  readonly holes: readonly ReducerRouteHole[];
+  readonly owner: ReducerRouteOwnerGroup;
+}): ReducerRouteEvent {
+  return {
+    kind: "discoverBattleActs",
+    subject: input.subject,
+    holes: input.holes,
+    owner: input.owner,
+  };
+}
+
+function attackActionAreaSaveDamageReplacementResolveRoute(input: {
+  readonly subject: ReducerRouteSubjectFamily;
+  readonly fill: ReducerRouteFill;
+  readonly holes: readonly ReducerRouteHole[];
+  readonly owner: ReducerRouteOwnerGroup;
+}): ReducerRouteEvent {
+  return {
+    kind: "resolveBattleSubject",
+    subject: input.subject,
+    fill: input.fill,
+    holes: input.holes,
+    owner: input.owner,
+  };
+}
+
+function attackActionAreaSaveDamageReplacementResolveWithoutFillRoute(input: {
+  readonly subject: ReducerRouteSubjectFamily;
+  readonly holes: readonly ReducerRouteHole[];
+  readonly owner: ReducerRouteOwnerGroup;
+}): ReducerRouteEvent {
+  return {
+    kind: "resolveBattleSubjectWithoutFill",
+    subject: input.subject,
+    holes: input.holes,
+    owner: input.owner,
+  };
+}
+
+function attackActionAreaSaveDamageReplacementInitialRoute(): readonly ReducerRouteEvent[] {
+  return [reducerRouteStartBattle("battleActionEconomy")];
+}
+
+function attackActionAreaSaveDamageReplacementDiscoveredRoute(
+  route: readonly ReducerRouteEvent[],
+): readonly ReducerRouteEvent[] {
+  return [
+    ...route,
+    attackActionAreaSaveDamageReplacementDiscoverRoute({
+      subject: ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_ROUTE_SUBJECT,
+      holes: ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_SAVE_HOLES,
+      owner: "battleFeatureResource",
+    }),
+  ];
+}
+
+function attackActionAreaSaveDamageReplacementSavingThrowsRoute(
+  route: readonly ReducerRouteEvent[],
+): readonly ReducerRouteEvent[] {
+  return [
+    ...route,
+    attackActionAreaSaveDamageReplacementResolveRoute({
+      subject: ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_ROUTE_SUBJECT,
+      fill: "savingThrowOutcome",
+      holes: ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_DAMAGE_HOLES,
+      owner: "battleAreaShape",
+    }),
+    attackActionAreaSaveDamageReplacementResolveWithoutFillRoute({
+      subject: ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_ROUTE_SUBJECT,
+      holes: ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_DAMAGE_HOLES,
+      owner: "battleSavingThrowOutcome",
+    }),
+    attackActionAreaSaveDamageReplacementResolveWithoutFillRoute({
+      subject: ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_ROUTE_SUBJECT,
+      holes: ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_DAMAGE_HOLES,
+      owner: "battleDamageType",
+    }),
+  ];
+}
+
+function attackActionAreaSaveDamageReplacementDamageRoute(
+  route: readonly ReducerRouteEvent[],
+): readonly ReducerRouteEvent[] {
+  return [
+    ...route,
+    attackActionAreaSaveDamageReplacementResolveRoute({
+      subject: ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_ROUTE_SUBJECT,
+      fill: "rolledDice",
+      holes: NO_ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_ROUTE_HOLES,
+      owner: "battleDamageRoll",
+    }),
+    attackActionAreaSaveDamageReplacementResolveWithoutFillRoute({
+      subject: ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_ROUTE_SUBJECT,
+      holes: NO_ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_ROUTE_HOLES,
+      owner: "battleHitPoint",
+    }),
+    attackActionAreaSaveDamageReplacementResolveWithoutFillRoute({
+      subject: ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_ROUTE_SUBJECT,
+      holes: NO_ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_ROUTE_HOLES,
+      owner: "battleFeatureResource",
+    }),
+  ];
+}
+
+function attackActionAreaSaveDamageReplacementResolvedRoute(
+  route: readonly ReducerRouteEvent[],
+): readonly ReducerRouteEvent[] {
+  return [
+    ...route,
+    attackActionAreaSaveDamageReplacementResolveWithoutFillRoute({
+      subject: ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_ROUTE_SUBJECT,
+      holes: NO_ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_ROUTE_HOLES,
+      owner: "battleAttackActionProcedure",
+    }),
+  ];
+}
+
+function attackActionAreaSaveDamageReplacementExtraAttackRoute(
+  route: readonly ReducerRouteEvent[],
+): readonly ReducerRouteEvent[] {
+  return [
+    ...route,
+    attackActionAreaSaveDamageReplacementDiscoverRoute({
+      subject: ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_EXTRA_ATTACK_SUBJECT,
+      holes: ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_EXTRA_ATTACK_HOLES,
+      owner: "battleAttackActionProcedure",
+    }),
+  ];
+}
+
+function attackActionAreaSaveDamageReplacementMissingResourceRoute(
+  route: readonly ReducerRouteEvent[],
+): readonly ReducerRouteEvent[] {
+  return [
+    ...route,
+    attackActionAreaSaveDamageReplacementResolveWithoutFillRoute({
+      subject: ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_ROUTE_SUBJECT,
+      holes: NO_ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_ROUTE_HOLES,
+      owner: "battleFeatureResource",
+    }),
+  ];
+}
+
+function attackActionAreaSaveDamageReplacementMismatchedAreaRoute(
+  route: readonly ReducerRouteEvent[],
+): readonly ReducerRouteEvent[] {
+  return [
+    ...route,
+    attackActionAreaSaveDamageReplacementResolveRoute({
+      subject: ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_ROUTE_SUBJECT,
+      fill: "savingThrowOutcome",
+      holes: ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_SAVE_HOLES,
+      owner: "battleAreaShape",
+    }),
+  ];
+}
+
+function attackActionAreaSaveDamageReplacementInvalidDamageRollRoute(
+  route: readonly ReducerRouteEvent[],
+): readonly ReducerRouteEvent[] {
+  return [
+    ...route,
+    attackActionAreaSaveDamageReplacementResolveRoute({
+      subject: ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_ROUTE_SUBJECT,
+      fill: "rolledDice",
+      holes: ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_DAMAGE_HOLES,
+      owner: "battleDamageRoll",
+    }),
+  ];
+}
+
+export function createAttackActionAreaSaveDamageReplacementRouteDriver() {
+  return defineDriver(
+    attackActionAreaSaveDamageReplacementRouteDriverSchema,
+    () => {
+      let route: readonly ReducerRouteEvent[] =
+        attackActionAreaSaveDamageReplacementInitialRoute();
+
+      function reset(): void {
+        route = attackActionAreaSaveDamageReplacementInitialRoute();
+      }
+
+      reset();
+
+      return {
+        init: reset,
+        doDiscoverAreaSaveDamageReplacement: () => {
+          route = attackActionAreaSaveDamageReplacementDiscoveredRoute(route);
+        },
+        doFillAreaSavingThrows: () => {
+          route = attackActionAreaSaveDamageReplacementSavingThrowsRoute(route);
+        },
+        doFillDamageRoll: () => {
+          route = attackActionAreaSaveDamageReplacementDamageRoute(route);
+        },
+        doResolveWithoutExtraAttackContinuation: () => {
+          route = attackActionAreaSaveDamageReplacementResolvedRoute(route);
+        },
+        doOpenExtraAttackContinuation: () => {
+          route = attackActionAreaSaveDamageReplacementExtraAttackRoute(route);
+        },
+        doRejectMissingResource: () => {
+          route =
+            attackActionAreaSaveDamageReplacementMissingResourceRoute(route);
+        },
+        doRejectMismatchedArea: () => {
+          route =
+            attackActionAreaSaveDamageReplacementMismatchedAreaRoute(route);
+        },
+        doRejectInvalidDamageRoll: () => {
+          route =
+            attackActionAreaSaveDamageReplacementInvalidDamageRollRoute(route);
+        },
+        step: () => {},
+        getState:
+          (): ReducerRoutedAttackActionAreaSaveDamageReplacementProjection => ({
+            route,
+          }),
+      };
+    },
+  );
+}
+
+const METAMAGIC_SPELL_GOVERNOR_ROUTE_SUBJECT =
+  "metamagicSpellGovernor" satisfies ReducerRouteSubjectFamily;
+const METAMAGIC_BONUS_ACTION_CASTING_TIME_ROUTE_SUBJECT =
+  "metamagicBonusActionCastingTime" satisfies ReducerRouteSubjectFamily;
+const METAMAGIC_SAVING_THROW_PROTECTION_ROUTE_SUBJECT =
+  "metamagicSavingThrowProtection" satisfies ReducerRouteSubjectFamily;
+const METAMAGIC_COMMAND_EFFECT_ROUTE_SUBJECT =
+  "commandEffect" satisfies ReducerRouteSubjectFamily;
+const METAMAGIC_SAVING_THROW_ROLL_MODE_ROUTE_SUBJECT =
+  "metamagicSavingThrowRollMode" satisfies ReducerRouteSubjectFamily;
+const METAMAGIC_DAMAGE_TYPE_SUBSTITUTION_ROUTE_SUBJECT =
+  "metamagicDamageTypeSubstitution" satisfies ReducerRouteSubjectFamily;
+const METAMAGIC_EFFECTIVE_SPELL_LEVEL_ROUTE_SUBJECT =
+  "metamagicEffectiveSpellLevel" satisfies ReducerRouteSubjectFamily;
+const METAMAGIC_SPELL_RANGE_PROJECTION_ROUTE_SUBJECT =
+  "metamagicSpellRangeProjection" satisfies ReducerRouteSubjectFamily;
+const METAMAGIC_SPELL_DURATION_PROJECTION_ROUTE_SUBJECT =
+  "metamagicSpellDurationProjection" satisfies ReducerRouteSubjectFamily;
+const METAMAGIC_SPELL_COMPONENT_PROJECTION_ROUTE_SUBJECT =
+  "metamagicSpellComponentProjection" satisfies ReducerRouteSubjectFamily;
+const METAMAGIC_MISSED_SPELL_ATTACK_REROLL_ROUTE_SUBJECT =
+  "metamagicMissedSpellAttackReroll" satisfies ReducerRouteSubjectFamily;
+const METAMAGIC_DAMAGE_DICE_REROLL_ROUTE_SUBJECT =
+  "metamagicDamageDiceReroll" satisfies ReducerRouteSubjectFamily;
+const NO_METAMAGIC_ROUTE_HOLES =
+  [] as const satisfies readonly ReducerRouteHole[];
+const METAMAGIC_ATTACK_ROLL_HOLES = [
+  "attackRoll",
+] as const satisfies readonly ReducerRouteHole[];
+const METAMAGIC_DAMAGE_ROLL_HOLES = [
+  "rolledDice",
+] as const satisfies readonly ReducerRouteHole[];
+const METAMAGIC_DAMAGE_TYPE_HOLES = [
+  "damageTypeChoice",
+] as const satisfies readonly ReducerRouteHole[];
+const METAMAGIC_SAVING_THROW_HOLES = [
+  "savingThrowOutcome",
+] as const satisfies readonly ReducerRouteHole[];
+const METAMAGIC_TARGET_CHOICE_HOLES = [
+  "targetChoice",
+] as const satisfies readonly ReducerRouteHole[];
+const METAMAGIC_TARGET_LIST_HOLES = [
+  "spellTargetList",
+] as const satisfies readonly ReducerRouteHole[];
+const METAMAGIC_COMMAND_OPTION_AND_TARGET_LIST_HOLES = [
+  "commandOptionChoice",
+  "spellTargetList",
+] as const satisfies readonly ReducerRouteHole[];
+
+function metamagicDiscoverRoute(input: {
+  readonly subject: ReducerRouteSubjectFamily;
+  readonly holes: readonly ReducerRouteHole[];
+  readonly owner: ReducerRouteOwnerGroup;
+}): ReducerRouteEvent {
+  return {
+    kind: "discoverBattleActs",
+    subject: input.subject,
+    holes: input.holes,
+    owner: input.owner,
+  };
+}
+
+function metamagicResolveRoute(input: {
+  readonly subject: ReducerRouteSubjectFamily;
+  readonly fill: ReducerRouteFill;
+  readonly holes: readonly ReducerRouteHole[];
+  readonly owner: ReducerRouteOwnerGroup;
+}): ReducerRouteEvent {
+  return {
+    kind: "resolveBattleSubject",
+    subject: input.subject,
+    fill: input.fill,
+    holes: input.holes,
+    owner: input.owner,
+  };
+}
+
+function metamagicResolveWithoutFillRoute(input: {
+  readonly subject: ReducerRouteSubjectFamily;
+  readonly holes: readonly ReducerRouteHole[];
+  readonly owner: ReducerRouteOwnerGroup;
+}): ReducerRouteEvent {
+  return {
+    kind: "resolveBattleSubjectWithoutFill",
+    subject: input.subject,
+    holes: input.holes,
+    owner: input.owner,
+  };
+}
+
+function metamagicInitialRoute(): readonly ReducerRouteEvent[] {
+  return [reducerRouteStartBattle("battleActionEconomy")];
+}
+
+function metamagicResourceGovernorRoute(): readonly ReducerRouteEvent[] {
+  return [
+    ...metamagicInitialRoute(),
+    metamagicResolveWithoutFillRoute({
+      subject: METAMAGIC_SPELL_GOVERNOR_ROUTE_SUBJECT,
+      holes: NO_METAMAGIC_ROUTE_HOLES,
+      owner: "battleFeatureResource",
+    }),
+  ];
+}
+
+function metamagicBonusActionCastingTimeRoute(): readonly ReducerRouteEvent[] {
+  return [
+    ...metamagicInitialRoute(),
+    metamagicDiscoverRoute({
+      subject: METAMAGIC_BONUS_ACTION_CASTING_TIME_ROUTE_SUBJECT,
+      holes: METAMAGIC_TARGET_CHOICE_HOLES,
+      owner: "battleFeatureResource",
+    }),
+    metamagicResolveWithoutFillRoute({
+      subject: METAMAGIC_BONUS_ACTION_CASTING_TIME_ROUTE_SUBJECT,
+      holes: METAMAGIC_TARGET_CHOICE_HOLES,
+      owner: "battleActionEconomy",
+    }),
+    metamagicResolveWithoutFillRoute({
+      subject: METAMAGIC_BONUS_ACTION_CASTING_TIME_ROUTE_SUBJECT,
+      holes: METAMAGIC_TARGET_CHOICE_HOLES,
+      owner: "battleSpellSlotAndActionEconomy",
+    }),
+    metamagicResolveRoute({
+      subject: METAMAGIC_BONUS_ACTION_CASTING_TIME_ROUTE_SUBJECT,
+      fill: "targetChoice",
+      holes: METAMAGIC_ATTACK_ROLL_HOLES,
+      owner: "battleTargetSelection",
+    }),
+    metamagicResolveRoute({
+      subject: METAMAGIC_BONUS_ACTION_CASTING_TIME_ROUTE_SUBJECT,
+      fill: "attackRoll",
+      holes: METAMAGIC_DAMAGE_ROLL_HOLES,
+      owner: "battleSpellAttackProcedure",
+    }),
+    metamagicResolveWithoutFillRoute({
+      subject: METAMAGIC_BONUS_ACTION_CASTING_TIME_ROUTE_SUBJECT,
+      holes: NO_METAMAGIC_ROUTE_HOLES,
+      owner: "battleTurnBoundary",
+    }),
+  ];
+}
+
+function metamagicPriorLevelOnePlusSpellRejectionRoute(): readonly ReducerRouteEvent[] {
+  return [
+    ...metamagicInitialRoute(),
+    metamagicResolveWithoutFillRoute({
+      subject: METAMAGIC_BONUS_ACTION_CASTING_TIME_ROUTE_SUBJECT,
+      holes: NO_METAMAGIC_ROUTE_HOLES,
+      owner: "battleTurnBoundary",
+    }),
+  ];
+}
+
+function metamagicQuickenedSaveGatedDamageRoute(): readonly ReducerRouteEvent[] {
+  return [
+    ...metamagicInitialRoute(),
+    metamagicDiscoverRoute({
+      subject: METAMAGIC_BONUS_ACTION_CASTING_TIME_ROUTE_SUBJECT,
+      holes: METAMAGIC_SAVING_THROW_HOLES,
+      owner: "battleFeatureResource",
+    }),
+    metamagicResolveWithoutFillRoute({
+      subject: METAMAGIC_BONUS_ACTION_CASTING_TIME_ROUTE_SUBJECT,
+      holes: METAMAGIC_SAVING_THROW_HOLES,
+      owner: "battleActionEconomy",
+    }),
+    metamagicResolveWithoutFillRoute({
+      subject: METAMAGIC_BONUS_ACTION_CASTING_TIME_ROUTE_SUBJECT,
+      holes: METAMAGIC_SAVING_THROW_HOLES,
+      owner: "battleSpellSlotAndActionEconomy",
+    }),
+    metamagicResolveRoute({
+      subject: METAMAGIC_BONUS_ACTION_CASTING_TIME_ROUTE_SUBJECT,
+      fill: "savingThrowOutcome",
+      holes: METAMAGIC_DAMAGE_ROLL_HOLES,
+      owner: "battleSavingThrowOutcome",
+    }),
+    metamagicResolveRoute({
+      subject: METAMAGIC_BONUS_ACTION_CASTING_TIME_ROUTE_SUBJECT,
+      fill: "rolledDice",
+      holes: NO_METAMAGIC_ROUTE_HOLES,
+      owner: "battleDamageRoll",
+    }),
+    metamagicResolveWithoutFillRoute({
+      subject: METAMAGIC_BONUS_ACTION_CASTING_TIME_ROUTE_SUBJECT,
+      holes: NO_METAMAGIC_ROUTE_HOLES,
+      owner: "battleTurnBoundary",
+    }),
+  ];
+}
+
+function metamagicQuickenedRestorationRoute(): readonly ReducerRouteEvent[] {
+  return [
+    ...metamagicInitialRoute(),
+    metamagicDiscoverRoute({
+      subject: METAMAGIC_BONUS_ACTION_CASTING_TIME_ROUTE_SUBJECT,
+      holes: METAMAGIC_TARGET_CHOICE_HOLES,
+      owner: "battleFeatureResource",
+    }),
+    metamagicResolveWithoutFillRoute({
+      subject: METAMAGIC_BONUS_ACTION_CASTING_TIME_ROUTE_SUBJECT,
+      holes: METAMAGIC_TARGET_CHOICE_HOLES,
+      owner: "battleActionEconomy",
+    }),
+    metamagicResolveWithoutFillRoute({
+      subject: METAMAGIC_BONUS_ACTION_CASTING_TIME_ROUTE_SUBJECT,
+      holes: METAMAGIC_TARGET_CHOICE_HOLES,
+      owner: "battleSpellSlotAndActionEconomy",
+    }),
+    metamagicResolveRoute({
+      subject: METAMAGIC_BONUS_ACTION_CASTING_TIME_ROUTE_SUBJECT,
+      fill: "targetChoice",
+      holes: METAMAGIC_DAMAGE_ROLL_HOLES,
+      owner: "battleTargetSelection",
+    }),
+    metamagicResolveRoute({
+      subject: METAMAGIC_BONUS_ACTION_CASTING_TIME_ROUTE_SUBJECT,
+      fill: "rolledDice",
+      holes: NO_METAMAGIC_ROUTE_HOLES,
+      owner: "battleHitPointAndZeroHpLifecycle",
+    }),
+    metamagicResolveWithoutFillRoute({
+      subject: METAMAGIC_BONUS_ACTION_CASTING_TIME_ROUTE_SUBJECT,
+      holes: NO_METAMAGIC_ROUTE_HOLES,
+      owner: "battleTurnBoundary",
+    }),
+  ];
+}
+
+function metamagicQuickenedSaveGatedConditionRoute(
+  finalOwner: "battleConditionLifecycle" | "battleActiveEffect",
+): readonly ReducerRouteEvent[] {
+  return [
+    ...metamagicInitialRoute(),
+    metamagicDiscoverRoute({
+      subject: METAMAGIC_BONUS_ACTION_CASTING_TIME_ROUTE_SUBJECT,
+      holes: METAMAGIC_SAVING_THROW_HOLES,
+      owner: "battleFeatureResource",
+    }),
+    metamagicResolveWithoutFillRoute({
+      subject: METAMAGIC_BONUS_ACTION_CASTING_TIME_ROUTE_SUBJECT,
+      holes: METAMAGIC_SAVING_THROW_HOLES,
+      owner: "battleActionEconomy",
+    }),
+    metamagicResolveWithoutFillRoute({
+      subject: METAMAGIC_BONUS_ACTION_CASTING_TIME_ROUTE_SUBJECT,
+      holes: METAMAGIC_SAVING_THROW_HOLES,
+      owner: "battleSpellSlotAndActionEconomy",
+    }),
+    metamagicResolveRoute({
+      subject: METAMAGIC_BONUS_ACTION_CASTING_TIME_ROUTE_SUBJECT,
+      fill: "savingThrowOutcome",
+      holes: NO_METAMAGIC_ROUTE_HOLES,
+      owner: "battleSavingThrowOutcome",
+    }),
+    metamagicResolveWithoutFillRoute({
+      subject: METAMAGIC_BONUS_ACTION_CASTING_TIME_ROUTE_SUBJECT,
+      holes: NO_METAMAGIC_ROUTE_HOLES,
+      owner: finalOwner,
+    }),
+  ];
+}
+
+function metamagicQuickenedTargetListActiveEffectRoute(): readonly ReducerRouteEvent[] {
+  return [
+    ...metamagicInitialRoute(),
+    metamagicDiscoverRoute({
+      subject: METAMAGIC_BONUS_ACTION_CASTING_TIME_ROUTE_SUBJECT,
+      holes: METAMAGIC_TARGET_LIST_HOLES,
+      owner: "battleFeatureResource",
+    }),
+    metamagicResolveWithoutFillRoute({
+      subject: METAMAGIC_BONUS_ACTION_CASTING_TIME_ROUTE_SUBJECT,
+      holes: METAMAGIC_TARGET_LIST_HOLES,
+      owner: "battleActionEconomy",
+    }),
+    metamagicResolveWithoutFillRoute({
+      subject: METAMAGIC_BONUS_ACTION_CASTING_TIME_ROUTE_SUBJECT,
+      holes: METAMAGIC_TARGET_LIST_HOLES,
+      owner: "battleSpellSlotAndActionEconomy",
+    }),
+    metamagicResolveRoute({
+      subject: METAMAGIC_BONUS_ACTION_CASTING_TIME_ROUTE_SUBJECT,
+      fill: "spellTargetList",
+      holes: NO_METAMAGIC_ROUTE_HOLES,
+      owner: "battleTargetSelection",
+    }),
+    metamagicResolveWithoutFillRoute({
+      subject: METAMAGIC_BONUS_ACTION_CASTING_TIME_ROUTE_SUBJECT,
+      holes: NO_METAMAGIC_ROUTE_HOLES,
+      owner: "battleActiveEffect",
+    }),
+  ];
+}
+
+function metamagicSavingThrowProtectionSaveGatedDamageRoute(): readonly ReducerRouteEvent[] {
+  return [
+    ...metamagicInitialRoute(),
+    metamagicDiscoverRoute({
+      subject: METAMAGIC_SAVING_THROW_PROTECTION_ROUTE_SUBJECT,
+      holes: METAMAGIC_TARGET_LIST_HOLES,
+      owner: "battleFeatureResource",
+    }),
+    metamagicResolveRoute({
+      subject: METAMAGIC_SAVING_THROW_PROTECTION_ROUTE_SUBJECT,
+      fill: "spellTargetList",
+      holes: METAMAGIC_SAVING_THROW_HOLES,
+      owner: "battleFeatureResource",
+    }),
+    metamagicResolveRoute({
+      subject: METAMAGIC_SAVING_THROW_PROTECTION_ROUTE_SUBJECT,
+      fill: "savingThrowOutcome",
+      holes: METAMAGIC_DAMAGE_ROLL_HOLES,
+      owner: "battleSavingThrowOutcome",
+    }),
+    metamagicResolveWithoutFillRoute({
+      subject: METAMAGIC_SAVING_THROW_PROTECTION_ROUTE_SUBJECT,
+      holes: METAMAGIC_DAMAGE_ROLL_HOLES,
+      owner: "battleDamageAdjustment",
+    }),
+    metamagicResolveWithoutFillRoute({
+      subject: METAMAGIC_SAVING_THROW_PROTECTION_ROUTE_SUBJECT,
+      holes: NO_METAMAGIC_ROUTE_HOLES,
+      owner: "battleFeatureResource",
+    }),
+  ];
+}
+
+function metamagicSavingThrowProtectionNoEffectRoute(): readonly ReducerRouteEvent[] {
+  return [
+    ...metamagicInitialRoute(),
+    metamagicDiscoverRoute({
+      subject: METAMAGIC_COMMAND_EFFECT_ROUTE_SUBJECT,
+      holes: METAMAGIC_COMMAND_OPTION_AND_TARGET_LIST_HOLES,
+      owner: "battleSpellSlotAndActionEconomy",
+    }),
+    metamagicResolveRoute({
+      subject: METAMAGIC_COMMAND_EFFECT_ROUTE_SUBJECT,
+      fill: "commandOptionChoice",
+      holes: METAMAGIC_SAVING_THROW_HOLES,
+      owner: "battleHoleFrontier",
+    }),
+    metamagicResolveRoute({
+      subject: METAMAGIC_COMMAND_EFFECT_ROUTE_SUBJECT,
+      fill: "savingThrowOutcome",
+      holes: NO_METAMAGIC_ROUTE_HOLES,
+      owner: "battleActiveEffect",
+    }),
+  ];
+}
+
+function metamagicSavingThrowRollModeRoute(): readonly ReducerRouteEvent[] {
+  return [
+    ...metamagicInitialRoute(),
+    metamagicDiscoverRoute({
+      subject: METAMAGIC_SAVING_THROW_ROLL_MODE_ROUTE_SUBJECT,
+      holes: METAMAGIC_SAVING_THROW_HOLES,
+      owner: "battleFeatureResource",
+    }),
+    metamagicResolveWithoutFillRoute({
+      subject: METAMAGIC_SAVING_THROW_ROLL_MODE_ROUTE_SUBJECT,
+      holes: METAMAGIC_SAVING_THROW_HOLES,
+      owner: "battleSavingThrowRollMode",
+    }),
+    metamagicResolveRoute({
+      subject: METAMAGIC_SAVING_THROW_ROLL_MODE_ROUTE_SUBJECT,
+      fill: "savingThrowOutcome",
+      holes: NO_METAMAGIC_ROUTE_HOLES,
+      owner: "battleSavingThrowOutcome",
+    }),
+    metamagicResolveWithoutFillRoute({
+      subject: METAMAGIC_SAVING_THROW_ROLL_MODE_ROUTE_SUBJECT,
+      holes: NO_METAMAGIC_ROUTE_HOLES,
+      owner: "battleConditionLifecycle",
+    }),
+  ];
+}
+
+function metamagicDamageTypeSubstitutionRoute(): readonly ReducerRouteEvent[] {
+  return [
+    ...metamagicInitialRoute(),
+    metamagicDiscoverRoute({
+      subject: METAMAGIC_DAMAGE_TYPE_SUBSTITUTION_ROUTE_SUBJECT,
+      holes: METAMAGIC_DAMAGE_TYPE_HOLES,
+      owner: "battleFeatureResource",
+    }),
+    metamagicResolveRoute({
+      subject: METAMAGIC_DAMAGE_TYPE_SUBSTITUTION_ROUTE_SUBJECT,
+      fill: "damageTypeChoice",
+      holes: METAMAGIC_DAMAGE_ROLL_HOLES,
+      owner: "battleDamageType",
+    }),
+    metamagicResolveRoute({
+      subject: METAMAGIC_DAMAGE_TYPE_SUBSTITUTION_ROUTE_SUBJECT,
+      fill: "rolledDice",
+      holes: NO_METAMAGIC_ROUTE_HOLES,
+      owner: "battleDamageRoll",
+    }),
+    metamagicResolveWithoutFillRoute({
+      subject: METAMAGIC_DAMAGE_TYPE_SUBSTITUTION_ROUTE_SUBJECT,
+      holes: NO_METAMAGIC_ROUTE_HOLES,
+      owner: "battleHitPoint",
+    }),
+  ];
+}
+
+function metamagicEffectiveSpellLevelRoute(): readonly ReducerRouteEvent[] {
+  return [
+    ...metamagicInitialRoute(),
+    metamagicDiscoverRoute({
+      subject: METAMAGIC_EFFECTIVE_SPELL_LEVEL_ROUTE_SUBJECT,
+      holes: METAMAGIC_TARGET_LIST_HOLES,
+      owner: "battleFeatureResource",
+    }),
+    metamagicResolveWithoutFillRoute({
+      subject: METAMAGIC_EFFECTIVE_SPELL_LEVEL_ROUTE_SUBJECT,
+      holes: METAMAGIC_TARGET_LIST_HOLES,
+      owner: "battleSpellSlotAndActionEconomy",
+    }),
+    metamagicResolveRoute({
+      subject: METAMAGIC_EFFECTIVE_SPELL_LEVEL_ROUTE_SUBJECT,
+      fill: "spellTargetList",
+      holes: NO_METAMAGIC_ROUTE_HOLES,
+      owner: "battleTargetSelection",
+    }),
+  ];
+}
+
+function metamagicSpellRangeProjectionRoute(): readonly ReducerRouteEvent[] {
+  return [
+    ...metamagicInitialRoute(),
+    metamagicDiscoverRoute({
+      subject: METAMAGIC_SPELL_RANGE_PROJECTION_ROUTE_SUBJECT,
+      holes: METAMAGIC_TARGET_CHOICE_HOLES,
+      owner: "battleFeatureResource",
+    }),
+    metamagicResolveWithoutFillRoute({
+      subject: METAMAGIC_SPELL_RANGE_PROJECTION_ROUTE_SUBJECT,
+      holes: METAMAGIC_TARGET_CHOICE_HOLES,
+      owner: "battleObjectTargetBoundary",
+    }),
+    metamagicResolveRoute({
+      subject: METAMAGIC_SPELL_RANGE_PROJECTION_ROUTE_SUBJECT,
+      fill: "targetChoice",
+      holes: NO_METAMAGIC_ROUTE_HOLES,
+      owner: "battleTargetSelection",
+    }),
+  ];
+}
+
+function metamagicSpellDurationProjectionRoute(): readonly ReducerRouteEvent[] {
+  return [
+    ...metamagicInitialRoute(),
+    metamagicDiscoverRoute({
+      subject: METAMAGIC_SPELL_DURATION_PROJECTION_ROUTE_SUBJECT,
+      holes: NO_METAMAGIC_ROUTE_HOLES,
+      owner: "battleFeatureResource",
+    }),
+    metamagicResolveWithoutFillRoute({
+      subject: METAMAGIC_SPELL_DURATION_PROJECTION_ROUTE_SUBJECT,
+      holes: NO_METAMAGIC_ROUTE_HOLES,
+      owner: "battleActiveEffect",
+    }),
+    metamagicResolveWithoutFillRoute({
+      subject: METAMAGIC_SPELL_DURATION_PROJECTION_ROUTE_SUBJECT,
+      holes: NO_METAMAGIC_ROUTE_HOLES,
+      owner: "battleConcentration",
+    }),
+  ];
+}
+
+function metamagicSpellComponentProjectionRoute(): readonly ReducerRouteEvent[] {
+  return [
+    ...metamagicInitialRoute(),
+    metamagicDiscoverRoute({
+      subject: METAMAGIC_SPELL_COMPONENT_PROJECTION_ROUTE_SUBJECT,
+      holes: NO_METAMAGIC_ROUTE_HOLES,
+      owner: "battleFeatureResource",
+    }),
+    metamagicResolveWithoutFillRoute({
+      subject: METAMAGIC_SPELL_COMPONENT_PROJECTION_ROUTE_SUBJECT,
+      holes: NO_METAMAGIC_ROUTE_HOLES,
+      owner: "battleSpellSlotAndActionEconomy",
+    }),
+  ];
+}
+
+function metamagicMissedSpellAttackRerollRoute(): readonly ReducerRouteEvent[] {
+  return [
+    ...metamagicInitialRoute(),
+    metamagicDiscoverRoute({
+      subject: METAMAGIC_MISSED_SPELL_ATTACK_REROLL_ROUTE_SUBJECT,
+      holes: METAMAGIC_ATTACK_ROLL_HOLES,
+      owner: "battleFeatureResource",
+    }),
+    metamagicResolveRoute({
+      subject: METAMAGIC_MISSED_SPELL_ATTACK_REROLL_ROUTE_SUBJECT,
+      fill: "attackRoll",
+      holes: METAMAGIC_ATTACK_ROLL_HOLES,
+      owner: "battleAttackRoll",
+    }),
+    metamagicResolveRoute({
+      subject: METAMAGIC_MISSED_SPELL_ATTACK_REROLL_ROUTE_SUBJECT,
+      fill: "attackRoll",
+      holes: METAMAGIC_DAMAGE_ROLL_HOLES,
+      owner: "battleAttackRoll",
+    }),
+    metamagicResolveWithoutFillRoute({
+      subject: METAMAGIC_MISSED_SPELL_ATTACK_REROLL_ROUTE_SUBJECT,
+      holes: NO_METAMAGIC_ROUTE_HOLES,
+      owner: "battleFeatureResource",
+    }),
+  ];
+}
+
+function metamagicDamageDiceRerollRoute(): readonly ReducerRouteEvent[] {
+  return [
+    ...metamagicInitialRoute(),
+    metamagicDiscoverRoute({
+      subject: METAMAGIC_DAMAGE_DICE_REROLL_ROUTE_SUBJECT,
+      holes: METAMAGIC_DAMAGE_ROLL_HOLES,
+      owner: "battleFeatureResource",
+    }),
+    metamagicResolveRoute({
+      subject: METAMAGIC_DAMAGE_DICE_REROLL_ROUTE_SUBJECT,
+      fill: "rolledDice",
+      holes: METAMAGIC_DAMAGE_ROLL_HOLES,
+      owner: "battleDamageRoll",
+    }),
+    metamagicResolveRoute({
+      subject: METAMAGIC_DAMAGE_DICE_REROLL_ROUTE_SUBJECT,
+      fill: "rolledDice",
+      holes: NO_METAMAGIC_ROUTE_HOLES,
+      owner: "battleDamageRoll",
+    }),
+    metamagicResolveWithoutFillRoute({
+      subject: METAMAGIC_DAMAGE_DICE_REROLL_ROUTE_SUBJECT,
+      holes: NO_METAMAGIC_ROUTE_HOLES,
+      owner: "battleHitPoint",
+    }),
+  ];
+}
+
+export function createMetamagicRouteDriver() {
+  return defineDriver(metamagicRouteDriverSchema, () => {
+    let route: readonly ReducerRouteEvent[] = metamagicInitialRoute();
+
+    function reset(): void {
+      route = metamagicInitialRoute();
+    }
+
+    reset();
+
+    return {
+      init: reset,
+      doRouteMetamagicResourceGovernor: () => {
+        route = metamagicResourceGovernorRoute();
+      },
+      doRejectMetamagicResourceGovernor: () => {
+        route = metamagicResourceGovernorRoute();
+      },
+      doRouteBonusActionCastingTime: () => {
+        route = metamagicBonusActionCastingTimeRoute();
+      },
+      doRejectPriorLevelOnePlusSpell: () => {
+        route = metamagicPriorLevelOnePlusSpellRejectionRoute();
+      },
+      doResolveQuickenedSaveGatedDamage: () => {
+        route = metamagicQuickenedSaveGatedDamageRoute();
+      },
+      doResolveQuickenedRestoration: () => {
+        route = metamagicQuickenedRestorationRoute();
+      },
+      doResolveQuickenedSaveGatedCondition: () => {
+        route = metamagicQuickenedSaveGatedConditionRoute("battleActiveEffect");
+      },
+      doResolveQuickenedSaveGatedConditionImmunity: () => {
+        route = metamagicQuickenedSaveGatedConditionRoute("battleActiveEffect");
+      },
+      doResolveQuickenedDirectCondition: () => {
+        route = metamagicQuickenedTargetListActiveEffectRoute();
+      },
+      doResolveQuickenedRollModifier: () => {
+        route = metamagicQuickenedTargetListActiveEffectRoute();
+      },
+      doResolveQuickenedAfterMagicActionSpent: () => {
+        route = metamagicQuickenedRestorationRoute();
+      },
+      doRouteSavingThrowProtectionSaveGatedDamage: () => {
+        route = metamagicSavingThrowProtectionSaveGatedDamageRoute();
+      },
+      doRouteSavingThrowProtectionNoEffect: () => {
+        route = metamagicSavingThrowProtectionNoEffectRoute();
+      },
+      doRouteSavingThrowRollMode: () => {
+        route = metamagicSavingThrowRollModeRoute();
+      },
+      doRouteDamageTypeSubstitution: () => {
+        route = metamagicDamageTypeSubstitutionRoute();
+      },
+      doRouteEffectiveSpellLevel: () => {
+        route = metamagicEffectiveSpellLevelRoute();
+      },
+      doRouteSpellRangeProjection: () => {
+        route = metamagicSpellRangeProjectionRoute();
+      },
+      doRouteSpellDurationProjection: () => {
+        route = metamagicSpellDurationProjectionRoute();
+      },
+      doRouteSpellComponentProjection: () => {
+        route = metamagicSpellComponentProjectionRoute();
+      },
+      doRouteMissedSpellAttackReroll: () => {
+        route = metamagicMissedSpellAttackRerollRoute();
+      },
+      doRouteDamageDiceReroll: () => {
+        route = metamagicDamageDiceRerollRoute();
+      },
+      step: () => {},
+      getState: (): ReducerRoutedMetamagicProjection => ({ route }),
+    };
+  });
+}
+
+const CREATURE_TYPE_TARGET_ADMISSION_ROUTE_SUBJECT =
+  "creatureTypeTargetAdmission" satisfies ReducerRouteSubjectFamily;
+const PROTECTION_CHARM_ACTIVE_EFFECT_ROUTE_SUBJECT =
+  "protectionCharmActiveEffect" satisfies ReducerRouteSubjectFamily;
+const CHARM_SOURCE_DAMAGE_BREAK_ROUTE_SUBJECT =
+  "charmSourceDamageBreak" satisfies ReducerRouteSubjectFamily;
+const WARDED_TARGET_INTERDICTION_ROUTE_SUBJECT =
+  "wardedTargetInterdiction" satisfies ReducerRouteSubjectFamily;
+const SPELL_BASE_ARMOR_CLASS_EFFECT_ROUTE_SUBJECT =
+  "spellBaseArmorClassEffect" satisfies ReducerRouteSubjectFamily;
+const HIT_POINT_REGAIN_PREVENTION_ROUTE_SUBJECT =
+  "hitPointRegainPrevention" satisfies ReducerRouteSubjectFamily;
+const NEXT_ATTACK_ROLL_MODE_ROUTE_SUBJECT =
+  "nextAttackRollMode" satisfies ReducerRouteSubjectFamily;
+const REACTION_INTERDICTION_ROUTE_SUBJECT =
+  "reactionInterdiction" satisfies ReducerRouteSubjectFamily;
+const CONDITION_RIDER_ROUTE_SUBJECT =
+  "conditionRider" satisfies ReducerRouteSubjectFamily;
+const OBJECT_LIGHT_RIDER_ROUTE_SUBJECT =
+  "objectLightRider" satisfies ReducerRouteSubjectFamily;
+const NO_ROUTE_HOLES = [] as const satisfies readonly ReducerRouteHole[];
+const TARGET_CHOICE_ROUTE_HOLES = [
+  "targetChoice",
+] as const satisfies readonly ReducerRouteHole[];
+const ABILITY_CHOICE_ROUTE_HOLES = [
+  "abilityChoice",
+] as const satisfies readonly ReducerRouteHole[];
+const TARGET_AND_ABILITY_CHOICE_ROUTE_HOLES = [
+  "abilityChoice",
+  "targetChoice",
+] as const satisfies readonly ReducerRouteHole[];
+const ATTACK_ROLL_ROUTE_HOLES = [
+  "attackRoll",
+] as const satisfies readonly ReducerRouteHole[];
+const ROLLED_DICE_ROUTE_HOLES = [
+  "rolledDice",
+] as const satisfies readonly ReducerRouteHole[];
+const SAVING_THROW_OUTCOME_ROUTE_HOLES = [
+  "savingThrowOutcome",
+] as const satisfies readonly ReducerRouteHole[];
+const MOVEMENT_ROUTE_HOLES = [
+  "movement",
+] as const satisfies readonly ReducerRouteHole[];
+const ABILITY_CHECK_ROUTE_HOLES = [
+  "abilityCheck",
+] as const satisfies readonly ReducerRouteHole[];
+const TARGET_AND_SAVE_ROUTE_HOLES = [
+  "savingThrowOutcome",
+  "targetChoice",
+] as const satisfies readonly ReducerRouteHole[];
+const SANCTUARY_OUTCOME_ROUTE_HOLES = [
+  "sanctuaryInterdictionOutcome",
+] as const satisfies readonly ReducerRouteHole[];
+const SANCTUARY_OUTCOME_AND_TARGET_ROUTE_HOLES = [
+  "sanctuaryInterdictionOutcome",
+  "targetChoice",
+] as const satisfies readonly ReducerRouteHole[];
+
+function routeDiscoverSubject(input: {
+  readonly subject: ReducerRouteSubjectFamily;
+  readonly holes: readonly ReducerRouteHole[];
+  readonly owner: ReducerRouteOwnerGroup;
+}): ReducerRouteEvent {
+  return {
+    kind: "discoverBattleActs",
+    subject: input.subject,
+    holes: input.holes,
+    owner: input.owner,
+  };
+}
+
+function routeResolveSubject(input: {
+  readonly subject: ReducerRouteSubjectFamily;
+  readonly fill: ReducerRouteFill;
+  readonly holes: readonly ReducerRouteHole[];
+  readonly owner: ReducerRouteOwnerGroup;
+}): ReducerRouteEvent {
+  return {
+    kind: "resolveBattleSubject",
+    subject: input.subject,
+    fill: input.fill,
+    holes: input.holes,
+    owner: input.owner,
+  };
+}
+
+function routeResolveSubjectWithoutFill(input: {
+  readonly subject: ReducerRouteSubjectFamily;
+  readonly holes: readonly ReducerRouteHole[];
+  readonly owner: ReducerRouteOwnerGroup;
+}): ReducerRouteEvent {
+  return {
+    kind: "resolveBattleSubjectWithoutFill",
+    subject: input.subject,
+    holes: input.holes,
+    owner: input.owner,
+  };
+}
+
+function routeStart(): ReducerRouteEvent {
+  return reducerRouteStartBattle("battleActionEconomy");
+}
+
+function protectionCharmInitialRoute(): readonly ReducerRouteEvent[] {
+  return [routeStart()];
+}
+
+function protectionCharmActiveEffectDiscovery(
+  holes: readonly ReducerRouteHole[],
+): ReducerRouteEvent {
+  return routeDiscoverSubject({
+    subject: PROTECTION_CHARM_ACTIVE_EFFECT_ROUTE_SUBJECT,
+    holes,
+    owner: "battleSpellSlotAndActionEconomy",
+  });
+}
+
+function animalFriendshipSaveCharmedRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeStart(),
+    protectionCharmActiveEffectDiscovery(TARGET_AND_SAVE_ROUTE_HOLES),
+    routeResolveSubject({
+      subject: PROTECTION_CHARM_ACTIVE_EFFECT_ROUTE_SUBJECT,
+      fill: "targetChoice",
+      holes: SAVING_THROW_OUTCOME_ROUTE_HOLES,
+      owner: "battleTargetSelection",
+    }),
+    routeResolveSubject({
+      subject: PROTECTION_CHARM_ACTIVE_EFFECT_ROUTE_SUBJECT,
+      fill: "savingThrowOutcome",
+      holes: NO_ROUTE_HOLES,
+      owner: "battleSavingThrowOutcome",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: PROTECTION_CHARM_ACTIVE_EFFECT_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleConditionLifecycle",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: PROTECTION_CHARM_ACTIVE_EFFECT_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleActiveEffect",
+    }),
+  ];
+}
+
+function animalFriendshipTargetAdmissionRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeStart(),
+    routeDiscoverSubject({
+      subject: CREATURE_TYPE_TARGET_ADMISSION_ROUTE_SUBJECT,
+      holes: TARGET_CHOICE_ROUTE_HOLES,
+      owner: "battleSpellSlotAndActionEconomy",
+    }),
+  ];
+}
+
+function animalFriendshipSourceDamageBreakRoute(): readonly ReducerRouteEvent[] {
+  return [
+    ...animalFriendshipSaveCharmedRoute(),
+    routeResolveSubjectWithoutFill({
+      subject: CHARM_SOURCE_DAMAGE_BREAK_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleHitPoint",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: CHARM_SOURCE_DAMAGE_BREAK_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleConditionLifecycle",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: CHARM_SOURCE_DAMAGE_BREAK_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleActiveEffect",
+    }),
+  ];
+}
+
+function protectionCharmTargetActiveEffectRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeStart(),
+    protectionCharmActiveEffectDiscovery(TARGET_CHOICE_ROUTE_HOLES),
+    routeResolveSubject({
+      subject: PROTECTION_CHARM_ACTIVE_EFFECT_ROUTE_SUBJECT,
+      fill: "targetChoice",
+      holes: NO_ROUTE_HOLES,
+      owner: "battleTargetSelection",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: PROTECTION_CHARM_ACTIVE_EFFECT_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleActiveEffect",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: PROTECTION_CHARM_ACTIVE_EFFECT_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleConcentration",
+    }),
+  ];
+}
+
+function protectionCharmAttackRollModeRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeStart(),
+    routeDiscoverSubject({
+      subject: PROTECTION_CHARM_ACTIVE_EFFECT_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleActiveEffect",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: PROTECTION_CHARM_ACTIVE_EFFECT_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleAttackRoll",
+    }),
+  ];
+}
+
+function protectionCharmPossessionPreventionRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeStart(),
+    routeDiscoverSubject({
+      subject: PROTECTION_CHARM_ACTIVE_EFFECT_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleActiveEffect",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: PROTECTION_CHARM_ACTIVE_EFFECT_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleConditionLifecycle",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: PROTECTION_CHARM_ACTIVE_EFFECT_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleCreatureState",
+    }),
+  ];
+}
+
+function protectionCharmSavingThrowRollModeRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeStart(),
+    routeDiscoverSubject({
+      subject: PROTECTION_CHARM_ACTIVE_EFFECT_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleActiveEffect",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: PROTECTION_CHARM_ACTIVE_EFFECT_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleSavingThrowRollMode",
+    }),
+  ];
+}
+
+export function createProtectionCharmRouteDriver() {
+  return defineDriver(protectionCharmRouteDriverSchema, () => {
+    let route: readonly ReducerRouteEvent[] = protectionCharmInitialRoute();
+
+    function reset(): void {
+      route = protectionCharmInitialRoute();
+    }
+
+    reset();
+
+    return {
+      init: reset,
+      doDiscoverAnimalFriendshipBeastTargetAdmission: () => {
+        route = animalFriendshipTargetAdmissionRoute();
+      },
+      doResolveAnimalFriendshipFailedSaveCharmed: () => {
+        route = animalFriendshipSaveCharmedRoute();
+      },
+      doResolveAnimalFriendshipCasterDamageBreak: () => {
+        route = animalFriendshipSourceDamageBreakRoute();
+      },
+      doResolveProtectionFromEvilAndGoodKnownWillingTargetProtection: () => {
+        route = protectionCharmTargetActiveEffectRoute();
+      },
+      doProjectProtectionFromEvilAndGoodScopedAttackDisadvantage: () => {
+        route = protectionCharmAttackRollModeRoute();
+      },
+      doPreventProtectionFromEvilAndGoodScopedCharmAndPossession: () => {
+        route = protectionCharmPossessionPreventionRoute();
+      },
+      doResolveProtectionFromEvilAndGoodRelevantCharmSaveAdvantage: () => {
+        route = protectionCharmSavingThrowRollModeRoute();
+      },
+      step: () => {},
+      getState: (): ReducerRoutedProtectionCharmProjection => ({ route }),
+    };
+  });
+}
+
+function wardedTargetInitialRoute(): readonly ReducerRouteEvent[] {
+  return [routeStart()];
+}
+
+function wardedTargetDiscovery(
+  holes: readonly ReducerRouteHole[],
+  owner: ReducerRouteOwnerGroup,
+): ReducerRouteEvent {
+  return routeDiscoverSubject({
+    subject: WARDED_TARGET_INTERDICTION_ROUTE_SUBJECT,
+    holes,
+    owner,
+  });
+}
+
+function wardedTargetWardCreationRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeStart(),
+    wardedTargetDiscovery(
+      TARGET_CHOICE_ROUTE_HOLES,
+      "battleSpellSlotAndActionEconomy",
+    ),
+    routeResolveSubject({
+      subject: WARDED_TARGET_INTERDICTION_ROUTE_SUBJECT,
+      fill: "targetChoice",
+      holes: NO_ROUTE_HOLES,
+      owner: "battleTargetSelection",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: WARDED_TARGET_INTERDICTION_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleActiveEffect",
+    }),
+  ];
+}
+
+function wardedTargetFailedSaveLossRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeStart(),
+    wardedTargetDiscovery(SANCTUARY_OUTCOME_ROUTE_HOLES, "battleActiveEffect"),
+    routeResolveSubject({
+      subject: WARDED_TARGET_INTERDICTION_ROUTE_SUBJECT,
+      fill: "sanctuaryInterdictionOutcome",
+      holes: NO_ROUTE_HOLES,
+      owner: "battleSavingThrowOutcome",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: WARDED_TARGET_INTERDICTION_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleActionEconomy",
+    }),
+  ];
+}
+
+function wardedTargetSuccessfulSavePassThroughRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeStart(),
+    wardedTargetDiscovery(SANCTUARY_OUTCOME_ROUTE_HOLES, "battleActiveEffect"),
+    routeResolveSubject({
+      subject: WARDED_TARGET_INTERDICTION_ROUTE_SUBJECT,
+      fill: "sanctuaryInterdictionOutcome",
+      holes: NO_ROUTE_HOLES,
+      owner: "battleSavingThrowOutcome",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: WARDED_TARGET_INTERDICTION_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleHoleFrontier",
+    }),
+  ];
+}
+
+function wardedTargetLegalReplacementRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeStart(),
+    wardedTargetDiscovery(
+      SANCTUARY_OUTCOME_AND_TARGET_ROUTE_HOLES,
+      "battleActiveEffect",
+    ),
+    routeResolveSubject({
+      subject: WARDED_TARGET_INTERDICTION_ROUTE_SUBJECT,
+      fill: "sanctuaryInterdictionOutcome",
+      holes: TARGET_CHOICE_ROUTE_HOLES,
+      owner: "battleSavingThrowOutcome",
+    }),
+    routeResolveSubject({
+      subject: WARDED_TARGET_INTERDICTION_ROUTE_SUBJECT,
+      fill: "targetChoice",
+      holes: NO_ROUTE_HOLES,
+      owner: "battleTargetSelection",
+    }),
+  ];
+}
+
+function wardedTargetIllegalReplacementRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeStart(),
+    wardedTargetDiscovery(
+      SANCTUARY_OUTCOME_AND_TARGET_ROUTE_HOLES,
+      "battleActiveEffect",
+    ),
+    routeResolveSubject({
+      subject: WARDED_TARGET_INTERDICTION_ROUTE_SUBJECT,
+      fill: "sanctuaryInterdictionOutcome",
+      holes: TARGET_CHOICE_ROUTE_HOLES,
+      owner: "battleSavingThrowOutcome",
+    }),
+    routeResolveSubject({
+      subject: WARDED_TARGET_INTERDICTION_ROUTE_SUBJECT,
+      fill: "targetChoice",
+      holes: TARGET_CHOICE_ROUTE_HOLES,
+      owner: "battleTargetSelection",
+    }),
+  ];
+}
+
+function wardedTargetAreaEffectExcludedRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeStart(),
+    wardedTargetDiscovery(NO_ROUTE_HOLES, "battleAreaShape"),
+    routeResolveSubjectWithoutFill({
+      subject: WARDED_TARGET_INTERDICTION_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleAreaShape",
+    }),
+  ];
+}
+
+function wardedTargetEarlyEndRoute(
+  owner: ReducerRouteOwnerGroup,
+): readonly ReducerRouteEvent[] {
+  return [
+    routeStart(),
+    wardedTargetDiscovery(NO_ROUTE_HOLES, "battleActiveEffect"),
+    routeResolveSubjectWithoutFill({
+      subject: WARDED_TARGET_INTERDICTION_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner,
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: WARDED_TARGET_INTERDICTION_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleActiveEffect",
+    }),
+  ];
+}
+
+export function createWardedTargetInterdictionRouteDriver() {
+  return defineDriver(wardedTargetInterdictionRouteDriverSchema, () => {
+    let route: readonly ReducerRouteEvent[] = wardedTargetInitialRoute();
+
+    function reset(): void {
+      route = wardedTargetInitialRoute();
+    }
+
+    reset();
+
+    return {
+      init: reset,
+      doCastSanctuaryWardCreation: () => {
+        route = wardedTargetWardCreationRoute();
+      },
+      doInterdictDirectAttackFailedSaveLoss: () => {
+        route = wardedTargetFailedSaveLossRoute();
+      },
+      doInterdictDirectSpellSuccessfulSavePassThrough: () => {
+        route = wardedTargetSuccessfulSavePassThroughRoute();
+      },
+      doRetargetDirectAttackToLegalReplacement: () => {
+        route = wardedTargetLegalReplacementRoute();
+      },
+      doRejectIllegalReplacementTarget: () => {
+        route = wardedTargetIllegalReplacementRoute();
+      },
+      doExcludeAreaEffectFromInterdiction: () => {
+        route = wardedTargetAreaEffectExcludedRoute();
+      },
+      doEndWardOnWardedAttackRoll: () => {
+        route = wardedTargetEarlyEndRoute("battleAttackRoll");
+      },
+      doEndWardOnWardedSpellCast: () => {
+        route = wardedTargetEarlyEndRoute("battleSpellSlotAndActionEconomy");
+      },
+      doEndWardOnWardedDamageDealt: () => {
+        route = wardedTargetEarlyEndRoute("battleHitPoint");
+      },
+      step: () => {},
+      getState: (): ReducerRoutedWardedTargetInterdictionProjection => ({
+        route,
+      }),
+    };
+  });
+}
+
+function spellBaseArmorClassInitialRoute(): readonly ReducerRouteEvent[] {
+  return [routeStart()];
+}
+
+function spellBaseArmorClassDiscovery(
+  holes: readonly ReducerRouteHole[],
+  owner: ReducerRouteOwnerGroup,
+): ReducerRouteEvent {
+  return routeDiscoverSubject({
+    subject: SPELL_BASE_ARMOR_CLASS_EFFECT_ROUTE_SUBJECT,
+    holes,
+    owner,
+  });
+}
+
+function spellBaseArmorClassTargetAdmissionRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeStart(),
+    spellBaseArmorClassDiscovery(
+      TARGET_CHOICE_ROUTE_HOLES,
+      "battleSpellSlotAndActionEconomy",
+    ),
+    routeResolveSubject({
+      subject: SPELL_BASE_ARMOR_CLASS_EFFECT_ROUTE_SUBJECT,
+      fill: "targetChoice",
+      holes: NO_ROUTE_HOLES,
+      owner: "battleTargetSelection",
+    }),
+  ];
+}
+
+function spellBaseArmorClassTargetRejectionRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeStart(),
+    spellBaseArmorClassDiscovery(
+      TARGET_CHOICE_ROUTE_HOLES,
+      "battleSpellSlotAndActionEconomy",
+    ),
+    routeResolveSubject({
+      subject: SPELL_BASE_ARMOR_CLASS_EFFECT_ROUTE_SUBJECT,
+      fill: "targetChoice",
+      holes: TARGET_CHOICE_ROUTE_HOLES,
+      owner: "battleTargetSelection",
+    }),
+  ];
+}
+
+function spellBaseArmorClassProjectionRoute(): readonly ReducerRouteEvent[] {
+  return [
+    ...spellBaseArmorClassTargetAdmissionRoute(),
+    routeResolveSubjectWithoutFill({
+      subject: SPELL_BASE_ARMOR_CLASS_EFFECT_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleActiveEffect",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: SPELL_BASE_ARMOR_CLASS_EFFECT_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleArmorClass",
+    }),
+  ];
+}
+
+function spellBaseArmorClassDurationExpiryRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeStart(),
+    spellBaseArmorClassDiscovery(NO_ROUTE_HOLES, "battleActiveEffect"),
+    routeResolveSubjectWithoutFill({
+      subject: SPELL_BASE_ARMOR_CLASS_EFFECT_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleTurnBoundary",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: SPELL_BASE_ARMOR_CLASS_EFFECT_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleActiveEffect",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: SPELL_BASE_ARMOR_CLASS_EFFECT_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleArmorClass",
+    }),
+  ];
+}
+
+export type SpellBaseArmorClassEffectRouteAction =
+  | "doRouteUnarmoredTargetAdmission"
+  | "doRouteArmoredTargetRejection"
+  | "doRouteBaseArmorClassProjection"
+  | "doRouteDurationExpiry";
+
+const SPELL_BASE_ARMOR_CLASS_EFFECT_ROUTE_PROJECTIONS = {
+  doRouteUnarmoredTargetAdmission: spellBaseArmorClassTargetAdmissionRoute,
+  doRouteArmoredTargetRejection: spellBaseArmorClassTargetRejectionRoute,
+  doRouteBaseArmorClassProjection: spellBaseArmorClassProjectionRoute,
+  doRouteDurationExpiry: spellBaseArmorClassDurationExpiryRoute,
+} as const satisfies Record<
+  SpellBaseArmorClassEffectRouteAction,
+  () => readonly ReducerRouteEvent[]
+>;
+
+export function spellBaseArmorClassEffectRouteProjection(
+  action: SpellBaseArmorClassEffectRouteAction,
+): readonly ReducerRouteEvent[] {
+  return SPELL_BASE_ARMOR_CLASS_EFFECT_ROUTE_PROJECTIONS[action]();
+}
+
+export function createSpellBaseArmorClassEffectRouteDriver() {
+  return defineDriver(spellBaseArmorClassEffectRouteDriverSchema, () => {
+    let route: readonly ReducerRouteEvent[] = spellBaseArmorClassInitialRoute();
+
+    function reset(): void {
+      route = spellBaseArmorClassInitialRoute();
+    }
+
+    reset();
+
+    return {
+      init: reset,
+      doRouteUnarmoredTargetAdmission: () => {
+        route = spellBaseArmorClassTargetAdmissionRoute();
+      },
+      doRouteArmoredTargetRejection: () => {
+        route = spellBaseArmorClassTargetRejectionRoute();
+      },
+      doRouteBaseArmorClassProjection: () => {
+        route = spellBaseArmorClassProjectionRoute();
+      },
+      doRouteDurationExpiry: () => {
+        route = spellBaseArmorClassDurationExpiryRoute();
+      },
+      step: () => {},
+      getState: (): ReducerRoutedSpellBaseArmorClassEffectProjection => ({
+        route,
+      }),
+    };
+  });
+}
+
+function hitPointRegainPreventionInitialRoute(): readonly ReducerRouteEvent[] {
+  return [reducerRouteStartBattle("battleActionEconomy")];
+}
+
+function hitPointRegainPreventionAdmissionRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeDiscoverSubject({
+      subject: "spellAttack",
+      holes: TARGET_CHOICE_ROUTE_HOLES,
+      owner: "battleActionEconomy",
+    }),
+    routeResolveSubject({
+      subject: "spellAttack",
+      fill: "targetChoice",
+      holes: ATTACK_ROLL_ROUTE_HOLES,
+      owner: "battleTargetSelection",
+    }),
+    routeResolveSubject({
+      subject: "spellAttack",
+      fill: "attackRoll",
+      holes: ROLLED_DICE_ROUTE_HOLES,
+      owner: "battleAttackRoll",
+    }),
+    routeResolveSubject({
+      subject: "spellAttack",
+      fill: "rolledDice",
+      holes: NO_ROUTE_HOLES,
+      owner: "battleHitPoint",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: HIT_POINT_REGAIN_PREVENTION_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleActiveEffect",
+    }),
+  ];
+}
+
+function hitPointRegainPreventionHealingInterdictionRoute(): ReducerRouteEvent {
+  return routeResolveSubject({
+    subject: HIT_POINT_REGAIN_PREVENTION_ROUTE_SUBJECT,
+    fill: "hitPointHealingDistribution",
+    holes: NO_ROUTE_HOLES,
+    owner: "battleHitPoint",
+  });
+}
+
+function hitPointRegainPreventionCleanupRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeResolveSubjectWithoutFill({
+      subject: HIT_POINT_REGAIN_PREVENTION_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleTurnBoundary",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: HIT_POINT_REGAIN_PREVENTION_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleActiveEffect",
+    }),
+  ];
+}
+
+export function createHitPointRegainPreventionRouteDriver() {
+  return defineDriver(hitPointRegainPreventionRouteDriverSchema, () => {
+    let route: readonly ReducerRouteEvent[] =
+      hitPointRegainPreventionInitialRoute();
+
+    return {
+      init: () => {
+        route = hitPointRegainPreventionInitialRoute();
+      },
+      doAdmitAttackHitRegainPreventionEffect: () => {
+        route = [...route, ...hitPointRegainPreventionAdmissionRoute()];
+      },
+      doInterdictLaterHitPointHealing: () => {
+        route = [...route, hitPointRegainPreventionHealingInterdictionRoute()];
+      },
+      doExpireAtTurnBoundary: () => {
+        route = [...route, ...hitPointRegainPreventionCleanupRoute()];
+      },
+      doStutterAfterExpiry: () => {},
+      step: () => {},
+      getState: (): ReducerRoutedHitPointRegainPreventionProjection => ({
+        route,
+      }),
+    };
+  });
+}
+
+const NEXT_ATTACK_ROLL_MODE_ADVANTAGE_ADMISSION_FACTS = [
+  {
+    kind: "source",
+    source: "hostAttackHitDamageOutcome",
+  },
+  {
+    kind: "carrier",
+    carrier: "hostOutcomeTargetCarrier",
+  },
+  {
+    kind: "attacker",
+    attacker: "sourceAttacker",
+  },
+  {
+    kind: "targetScope",
+    targetScope: "attackAgainstAffectedTargetOnly",
+  },
+  {
+    kind: "expirationBoundary",
+    boundary: "beforeSourceNextTurnEnds",
+  },
+  {
+    kind: "direction",
+    direction: "advantage",
+  },
+  {
+    kind: "admitted",
+  },
+] as const satisfies readonly NextAttackRollModeRouteFact[];
+
+const NEXT_ATTACK_ROLL_MODE_DISADVANTAGE_ADMISSION_FACTS = [
+  {
+    kind: "source",
+    source: "hostSaveEffectOutcome",
+  },
+  {
+    kind: "carrier",
+    carrier: "hostOutcomeTargetCarrier",
+  },
+  {
+    kind: "attacker",
+    attacker: "affectedTargetAttacker",
+  },
+  {
+    kind: "targetScope",
+    targetScope: "attackAgainstAnyTarget",
+  },
+  {
+    kind: "expirationBoundary",
+    boundary: "beforeAffectedTargetNextTurnEnds",
+  },
+  {
+    kind: "direction",
+    direction: "disadvantage",
+  },
+  {
+    kind: "admitted",
+  },
+] as const satisfies readonly NextAttackRollModeRouteFact[];
+
+const NEXT_ATTACK_ROLL_MODE_CONSUMPTION_FACTS = [
+  { kind: "projected" },
+  { kind: "consumed" },
+  { kind: "cleanedUp" },
+] as const satisfies readonly NextAttackRollModeRouteFact[];
+
+const NEXT_ATTACK_ROLL_MODE_EXPIRY_FACTS = [
+  { kind: "expired" },
+  { kind: "cleanedUp" },
+] as const satisfies readonly NextAttackRollModeRouteFact[];
+
+function nextAttackRollModeInitialRoute(): readonly ReducerRouteEvent[] {
+  return [routeStart()];
+}
+
+function nextAttackRollModeAdvantageAdmissionRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeDiscoverSubject({
+      subject: "spellAttack",
+      holes: TARGET_CHOICE_ROUTE_HOLES,
+      owner: "battleActionEconomy",
+    }),
+    routeResolveSubject({
+      subject: "spellAttack",
+      fill: "targetChoice",
+      holes: ATTACK_ROLL_ROUTE_HOLES,
+      owner: "battleTargetSelection",
+    }),
+    routeResolveSubject({
+      subject: "spellAttack",
+      fill: "attackRoll",
+      holes: ROLLED_DICE_ROUTE_HOLES,
+      owner: "battleAttackRoll",
+    }),
+    routeResolveSubject({
+      subject: "spellAttack",
+      fill: "rolledDice",
+      holes: NO_ROUTE_HOLES,
+      owner: "battleHitPoint",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: NEXT_ATTACK_ROLL_MODE_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleActiveEffect",
+    }),
+  ];
+}
+
+function nextAttackRollModeDisadvantageAdmissionRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeDiscoverSubject({
+      subject: "saveGatedSpell",
+      holes: TARGET_CHOICE_ROUTE_HOLES,
+      owner: "battleSpellSlotAndActionEconomy",
+    }),
+    routeResolveSubject({
+      subject: "saveGatedSpell",
+      fill: "targetChoice",
+      holes: SAVING_THROW_OUTCOME_ROUTE_HOLES,
+      owner: "battleTargetSelection",
+    }),
+    routeResolveSubject({
+      subject: "saveGatedSpell",
+      fill: "savingThrowOutcome",
+      holes: NO_ROUTE_HOLES,
+      owner: "battleSavingThrowOutcome",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: NEXT_ATTACK_ROLL_MODE_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleActiveEffect",
+    }),
+  ];
+}
+
+function nextAttackRollModeProjectionRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeResolveSubjectWithoutFill({
+      subject: NEXT_ATTACK_ROLL_MODE_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleAttackRollMode",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: NEXT_ATTACK_ROLL_MODE_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleActiveEffect",
+    }),
+  ];
+}
+
+function nextAttackRollModeExpirationRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeResolveSubjectWithoutFill({
+      subject: NEXT_ATTACK_ROLL_MODE_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleTurnBoundary",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: NEXT_ATTACK_ROLL_MODE_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleActiveEffect",
+    }),
+  ];
+}
+
+export function createNextAttackRollModeRouteDriver() {
+  return defineDriver(nextAttackRollModeRouteDriverSchema, () => {
+    let route: readonly ReducerRouteEvent[] = nextAttackRollModeInitialRoute();
+    let facts: readonly NextAttackRollModeRouteFact[] = [];
+
+    function reset(): void {
+      route = nextAttackRollModeInitialRoute();
+      facts = [];
+    }
+
+    reset();
+
+    return {
+      init: reset,
+      doAdmitHostAttackHitNextAttackAdvantageEffect: () => {
+        route = [...route, ...nextAttackRollModeAdvantageAdmissionRoute()];
+        facts = NEXT_ATTACK_ROLL_MODE_ADVANTAGE_ADMISSION_FACTS;
+      },
+      doAdmitHostEffectNextAttackDisadvantageEffect: () => {
+        route = [...route, ...nextAttackRollModeDisadvantageAdmissionRoute()];
+        facts = NEXT_ATTACK_ROLL_MODE_DISADVANTAGE_ADMISSION_FACTS;
+      },
+      doProjectAdvantageOnLaterAttackAgainstAffectedTarget: () => {
+        route = [...route, ...nextAttackRollModeProjectionRoute()];
+        facts = [...facts, ...NEXT_ATTACK_ROLL_MODE_CONSUMPTION_FACTS];
+      },
+      doProjectDisadvantageOnAffectedTargetNextAttack: () => {
+        route = [...route, ...nextAttackRollModeProjectionRoute()];
+        facts = [...facts, ...NEXT_ATTACK_ROLL_MODE_CONSUMPTION_FACTS];
+      },
+      doExpireAdvantageAtBoundary: () => {
+        route = [...route, ...nextAttackRollModeExpirationRoute()];
+        facts = [...facts, ...NEXT_ATTACK_ROLL_MODE_EXPIRY_FACTS];
+      },
+      doExpireDisadvantageAtBoundary: () => {
+        route = [...route, ...nextAttackRollModeExpirationRoute()];
+        facts = [...facts, ...NEXT_ATTACK_ROLL_MODE_EXPIRY_FACTS];
+      },
+      doStutterAfterCleanup: () => {},
+      step: () => {},
+      getState: (): ReducerRoutedNextAttackRollModeProjection => ({
+        route,
+        facts,
+      }),
+    };
+  });
+}
+
+const OPPORTUNITY_ATTACK_DENIAL_ADMISSION_FACTS = [
+  {
+    kind: "source",
+    source: "hostAttackHitDamageOutcome",
+  },
+  {
+    kind: "carrier",
+    carrier: "hostOutcomeTargetCarrier",
+  },
+  {
+    kind: "scope",
+    scope: "affectedTargetReactionsOnly",
+  },
+  {
+    kind: "triggerFamily",
+    triggerFamily: "opportunityAttackTriggerFamily",
+  },
+  {
+    kind: "expirationBoundary",
+    boundary: "untilAffectedTargetNextTurnStarts",
+  },
+  {
+    kind: "admitted",
+  },
+] as const satisfies readonly ReactionInterdictionRouteFact[];
+
+const OPPORTUNITY_ATTACK_DENIAL_PROJECTION_FACTS = [
+  { kind: "projectedToMovementDiscovery" },
+  { kind: "projectedToReactionDiscovery" },
+] as const satisfies readonly ReactionInterdictionRouteFact[];
+
+const OPPORTUNITY_ATTACK_DENIAL_EXPIRY_FACTS = [
+  { kind: "expired" },
+  { kind: "cleanedUp" },
+] as const satisfies readonly ReactionInterdictionRouteFact[];
+
+const CONDITION_RIDER_ATTACK_HIT_POISON_APPLIED_FACTS = [
+  {
+    kind: "hostOutcome",
+    outcome: "hostAttackHitDamageOutcome",
+  },
+  {
+    kind: "carrier",
+    carrier: "affectedTargetConditionCarrier",
+  },
+  {
+    kind: "conditionKind",
+    condition: "poisoned",
+  },
+  {
+    kind: "admission",
+    admission: "conditionApplied",
+  },
+  {
+    kind: "boundary",
+    boundary: "untilSourceNextTurnEnds",
+  },
+] as const satisfies readonly ConditionRiderRouteFact[];
+
+const CONDITION_RIDER_ATTACK_HIT_POISON_REJECTED_FACTS = [
+  {
+    kind: "hostOutcome",
+    outcome: "hostAttackHitDamageOutcome",
+  },
+  {
+    kind: "carrier",
+    carrier: "affectedTargetConditionCarrier",
+  },
+  {
+    kind: "conditionKind",
+    condition: "poisoned",
+  },
+  {
+    kind: "admission",
+    admission: "conditionRejectedByImmunity",
+  },
+] as const satisfies readonly ConditionRiderRouteFact[];
+
+const CONDITION_RIDER_FAILED_SAVE_BLINDED_NEXT_TURN_FACTS = [
+  {
+    kind: "hostOutcome",
+    outcome: "hostFailedSavingThrowOutcome",
+  },
+  {
+    kind: "carrier",
+    carrier: "affectedTargetConditionCarrier",
+  },
+  {
+    kind: "conditionKind",
+    condition: "blinded",
+  },
+  {
+    kind: "admission",
+    admission: "conditionApplied",
+  },
+  {
+    kind: "boundary",
+    boundary: "untilSourceNextTurnEnds",
+  },
+] as const satisfies readonly ConditionRiderRouteFact[];
+
+function conditionRiderFailedSaveRejectedFacts(
+  condition: ConditionRiderConditionKind,
+): readonly ConditionRiderRouteFact[] {
+  return [
+    {
+      kind: "hostOutcome",
+      outcome: "hostFailedSavingThrowOutcome",
+    },
+    {
+      kind: "carrier",
+      carrier: "affectedTargetConditionCarrier",
+    },
+    {
+      kind: "conditionKind",
+      condition,
+    },
+    {
+      kind: "admission",
+      admission: "conditionRejectedByImmunity",
+    },
+  ] as const satisfies readonly ConditionRiderRouteFact[];
+}
+
+function conditionRiderFailedSaveRepeatSaveFacts(
+  condition: "blinded" | "deafened",
+): readonly ConditionRiderRouteFact[] {
+  return [
+    {
+      kind: "hostOutcome",
+      outcome: "hostFailedSavingThrowOutcome",
+    },
+    {
+      kind: "carrier",
+      carrier: "affectedTargetConditionCarrier",
+    },
+    {
+      kind: "conditionKind",
+      condition,
+    },
+    {
+      kind: "admission",
+      admission: "conditionApplied",
+    },
+    {
+      kind: "boundary",
+      boundary: "affectedTargetEndTurnRepeatSave",
+    },
+  ] as const satisfies readonly ConditionRiderRouteFact[];
+}
+
+const CONDITION_RIDER_FAILED_SAVE_RESTRAINED_FACTS = [
+  {
+    kind: "hostOutcome",
+    outcome: "hostFailedSavingThrowOutcome",
+  },
+  {
+    kind: "carrier",
+    carrier: "affectedTargetConditionCarrier",
+  },
+  {
+    kind: "conditionKind",
+    condition: "restrained",
+  },
+  {
+    kind: "admission",
+    admission: "conditionApplied",
+  },
+  {
+    kind: "boundary",
+    boundary: "untilSpellEnds",
+  },
+  {
+    kind: "escape",
+    escape: "athleticsActionEscapeCheck",
+  },
+] as const satisfies readonly ConditionRiderRouteFact[];
+
+const CONDITION_RIDER_FAILED_SAVE_SLEEP_INCAPACITATED_FACTS = [
+  {
+    kind: "hostOutcome",
+    outcome: "hostFailedSavingThrowOutcome",
+  },
+  {
+    kind: "carrier",
+    carrier: "affectedTargetConditionCarrier",
+  },
+  {
+    kind: "conditionKind",
+    condition: "incapacitated",
+  },
+  {
+    kind: "admission",
+    admission: "conditionApplied",
+  },
+  {
+    kind: "boundary",
+    boundary: "untilAffectedTargetNextTurnEnds",
+  },
+] as const satisfies readonly ConditionRiderRouteFact[];
+
+const CONDITION_RIDER_FAILED_SAVE_PARALYZED_REPEAT_SAVE_FACTS = [
+  {
+    kind: "hostOutcome",
+    outcome: "hostFailedSavingThrowOutcome",
+  },
+  {
+    kind: "carrier",
+    carrier: "affectedTargetConditionCarrier",
+  },
+  {
+    kind: "conditionKind",
+    condition: "paralyzed",
+  },
+  {
+    kind: "impliedCondition",
+    condition: "incapacitated",
+  },
+  {
+    kind: "admission",
+    admission: "conditionApplied",
+  },
+  {
+    kind: "boundary",
+    boundary: "untilSpellEnds",
+  },
+  {
+    kind: "boundary",
+    boundary: "affectedTargetEndTurnRepeatSave",
+  },
+] as const satisfies readonly ConditionRiderRouteFact[];
+
+const CONDITION_RIDER_FAILED_SAVE_INCAPACITATED_PRONE_SELF_END_BLOCKED_FACTS = [
+  {
+    kind: "hostOutcome",
+    outcome: "hostFailedSavingThrowOutcome",
+  },
+  {
+    kind: "carrier",
+    carrier: "affectedTargetConditionCarrier",
+  },
+  {
+    kind: "conditionKind",
+    condition: "incapacitated",
+  },
+  {
+    kind: "conditionKind",
+    condition: "prone",
+  },
+  {
+    kind: "selfEndBlocked",
+    condition: "prone",
+  },
+  {
+    kind: "admission",
+    admission: "conditionApplied",
+  },
+  {
+    kind: "boundary",
+    boundary: "untilSpellEnds",
+  },
+  {
+    kind: "boundary",
+    boundary: "affectedTargetEndTurnRepeatSave",
+  },
+] as const satisfies readonly ConditionRiderRouteFact[];
+
+const CONDITION_RIDER_DURATION_CLEANUP_FACTS = [
+  { kind: "expired" },
+  { kind: "cleanedUpBy", owner: "battleTurnBoundary" },
+  { kind: "cleanedUpBy", owner: "battleConditionLifecycle" },
+  { kind: "cleanedUpBy", owner: "battleActiveEffect" },
+] as const satisfies readonly ConditionRiderRouteFact[];
+
+const CONDITION_RIDER_RESTRAINED_ESCAPE_CLEANUP_FACTS = [
+  { kind: "escapeCheckSucceeded" },
+  { kind: "cleanedUpBy", owner: "battleConditionLifecycle" },
+  { kind: "cleanedUpBy", owner: "battleActiveEffect" },
+] as const satisfies readonly ConditionRiderRouteFact[];
+
+const CONDITION_RIDER_SLEEP_REPEAT_SAVE_FAILURE_FACTS = [
+  { kind: "repeatSaveFailed" },
+  { kind: "transition", condition: "unconscious" },
+  { kind: "boundary", boundary: "untilSpellEnds" },
+] as const satisfies readonly ConditionRiderRouteFact[];
+
+const CONDITION_RIDER_REPEAT_SAVE_SUCCESS_CLEANUP_FACTS = [
+  { kind: "repeatSaveSucceeded" },
+  { kind: "cleanedUpBy", owner: "battleConditionLifecycle" },
+  { kind: "cleanedUpBy", owner: "battleActiveEffect" },
+] as const satisfies readonly ConditionRiderRouteFact[];
+
+function opportunityAttackDenialInitialRoute(): readonly ReducerRouteEvent[] {
+  return [routeStart()];
+}
+
+function opportunityAttackDenialAdmissionRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeDiscoverSubject({
+      subject: "spellAttack",
+      holes: TARGET_CHOICE_ROUTE_HOLES,
+      owner: "battleActionEconomy",
+    }),
+    routeResolveSubject({
+      subject: "spellAttack",
+      fill: "targetChoice",
+      holes: ATTACK_ROLL_ROUTE_HOLES,
+      owner: "battleTargetSelection",
+    }),
+    routeResolveSubject({
+      subject: "spellAttack",
+      fill: "attackRoll",
+      holes: ROLLED_DICE_ROUTE_HOLES,
+      owner: "battleAttackRoll",
+    }),
+    routeResolveSubject({
+      subject: "spellAttack",
+      fill: "rolledDice",
+      holes: NO_ROUTE_HOLES,
+      owner: "battleHitPoint",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: REACTION_INTERDICTION_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleActiveEffect",
+    }),
+  ];
+}
+
+function opportunityAttackDenialProjectionRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeResolveSubjectWithoutFill({
+      subject: REACTION_INTERDICTION_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleMovementResource",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: REACTION_INTERDICTION_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleInterruptStack",
+    }),
+  ];
+}
+
+function opportunityAttackDenialExpirationRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeResolveSubjectWithoutFill({
+      subject: REACTION_INTERDICTION_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleTurnBoundary",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: REACTION_INTERDICTION_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleActiveEffect",
+    }),
+  ];
+}
+
+export function createOpportunityAttackDenialRouteDriver() {
+  return defineDriver(opportunityAttackDenialRouteDriverSchema, () => {
+    let route: readonly ReducerRouteEvent[] =
+      opportunityAttackDenialInitialRoute();
+    let facts: readonly ReactionInterdictionRouteFact[] = [];
+
+    function reset(): void {
+      route = opportunityAttackDenialInitialRoute();
+      facts = [];
+    }
+
+    reset();
+
+    return {
+      init: reset,
+      doAdmitAttackHitOpportunityAttackDenialEffect: () => {
+        route = [...route, ...opportunityAttackDenialAdmissionRoute()];
+        facts = OPPORTUNITY_ATTACK_DENIAL_ADMISSION_FACTS;
+      },
+      doProjectOpportunityAttackDenialIntoMovementReactionDiscovery: () => {
+        route = [...route, ...opportunityAttackDenialProjectionRoute()];
+        facts = [...facts, ...OPPORTUNITY_ATTACK_DENIAL_PROJECTION_FACTS];
+      },
+      doExpireActiveDenialAtAffectedTargetTurnStart: () => {
+        route = [...route, ...opportunityAttackDenialExpirationRoute()];
+        facts = [...facts, ...OPPORTUNITY_ATTACK_DENIAL_EXPIRY_FACTS];
+      },
+      doExpireProjectedDenialAtAffectedTargetTurnStart: () => {
+        route = [...route, ...opportunityAttackDenialExpirationRoute()];
+        facts = [...facts, ...OPPORTUNITY_ATTACK_DENIAL_EXPIRY_FACTS];
+      },
+      doStutterAfterCleanup: () => {},
+      step: () => {},
+      getState: (): ReducerRoutedOpportunityAttackDenialProjection => ({
+        route,
+        facts,
+      }),
+    };
+  });
+}
+
+function conditionRiderInitialRoute(): readonly ReducerRouteEvent[] {
+  return [routeStart()];
+}
+
+function conditionRiderAttackHitHostOutcomeRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeDiscoverSubject({
+      subject: "spellAttack",
+      holes: TARGET_CHOICE_ROUTE_HOLES,
+      owner: "battleActionEconomy",
+    }),
+    routeResolveSubject({
+      subject: "spellAttack",
+      fill: "targetChoice",
+      holes: ATTACK_ROLL_ROUTE_HOLES,
+      owner: "battleTargetSelection",
+    }),
+    routeResolveSubject({
+      subject: "spellAttack",
+      fill: "attackRoll",
+      holes: ROLLED_DICE_ROUTE_HOLES,
+      owner: "battleAttackRoll",
+    }),
+    routeResolveSubject({
+      subject: "spellAttack",
+      fill: "rolledDice",
+      holes: NO_ROUTE_HOLES,
+      owner: "battleHitPoint",
+    }),
+  ];
+}
+
+function conditionRiderFailedSaveHostOutcomeRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeDiscoverSubject({
+      subject: "saveGatedSpell",
+      holes: TARGET_CHOICE_ROUTE_HOLES,
+      owner: "battleSpellSlotAndActionEconomy",
+    }),
+    routeResolveSubject({
+      subject: "saveGatedSpell",
+      fill: "targetChoice",
+      holes: SAVING_THROW_OUTCOME_ROUTE_HOLES,
+      owner: "battleTargetSelection",
+    }),
+    routeResolveSubject({
+      subject: "saveGatedSpell",
+      fill: "savingThrowOutcome",
+      holes: NO_ROUTE_HOLES,
+      owner: "battleSavingThrowOutcome",
+    }),
+  ];
+}
+
+function conditionRiderResolveWithoutFill(
+  owner: ReducerRouteOwnerGroup,
+): ReducerRouteEvent {
+  return routeResolveSubjectWithoutFill({
+    subject: CONDITION_RIDER_ROUTE_SUBJECT,
+    holes: NO_ROUTE_HOLES,
+    owner,
+  });
+}
+
+function conditionRiderAttackHitAdmissionRoute(
+  admitActiveEffect: boolean,
+): readonly ReducerRouteEvent[] {
+  const route = [
+    ...conditionRiderAttackHitHostOutcomeRoute(),
+    conditionRiderResolveWithoutFill("battleConditionLifecycle"),
+  ];
+  return admitActiveEffect
+    ? [...route, conditionRiderResolveWithoutFill("battleActiveEffect")]
+    : route;
+}
+
+function conditionRiderFailedSaveAdmissionRoute(): readonly ReducerRouteEvent[] {
+  return [
+    ...conditionRiderFailedSaveHostOutcomeRoute(),
+    conditionRiderResolveWithoutFill("battleConditionLifecycle"),
+    conditionRiderResolveWithoutFill("battleActiveEffect"),
+  ];
+}
+
+function conditionRiderFailedSaveRejectionRoute(): readonly ReducerRouteEvent[] {
+  return [
+    ...conditionRiderFailedSaveHostOutcomeRoute(),
+    conditionRiderResolveWithoutFill("battleConditionLifecycle"),
+  ];
+}
+
+function conditionRiderDurationCleanupRoute(): readonly ReducerRouteEvent[] {
+  return [
+    conditionRiderResolveWithoutFill("battleTurnBoundary"),
+    conditionRiderResolveWithoutFill("battleConditionLifecycle"),
+    conditionRiderResolveWithoutFill("battleActiveEffect"),
+  ];
+}
+
+function conditionRiderRepeatSaveFrontierRoute(): ReducerRouteEvent {
+  return routeDiscoverSubject({
+    subject: CONDITION_RIDER_ROUTE_SUBJECT,
+    holes: SAVING_THROW_OUTCOME_ROUTE_HOLES,
+    owner: "battleTurnBoundary",
+  });
+}
+
+function conditionRiderRepeatSaveSuccessCleanupRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeResolveSubject({
+      subject: CONDITION_RIDER_ROUTE_SUBJECT,
+      fill: "savingThrowOutcome",
+      holes: NO_ROUTE_HOLES,
+      owner: "battleConditionLifecycle",
+    }),
+    conditionRiderResolveWithoutFill("battleActiveEffect"),
+  ];
+}
+
+function conditionRiderEscapeCheckFrontierRoute(): ReducerRouteEvent {
+  return routeDiscoverSubject({
+    subject: CONDITION_RIDER_ROUTE_SUBJECT,
+    holes: ABILITY_CHECK_ROUTE_HOLES,
+    owner: "battleAbilityCheck",
+  });
+}
+
+function conditionRiderEscapeCheckSuccessCleanupRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeResolveSubject({
+      subject: CONDITION_RIDER_ROUTE_SUBJECT,
+      fill: "abilityCheck",
+      holes: NO_ROUTE_HOLES,
+      owner: "battleAbilityCheck",
+    }),
+    conditionRiderResolveWithoutFill("battleConditionLifecycle"),
+    conditionRiderResolveWithoutFill("battleActiveEffect"),
+  ];
+}
+
+function conditionRiderSleepRepeatSaveFailureRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeResolveSubject({
+      subject: CONDITION_RIDER_ROUTE_SUBJECT,
+      fill: "savingThrowOutcome",
+      holes: NO_ROUTE_HOLES,
+      owner: "battleConditionLifecycle",
+    }),
+    conditionRiderResolveWithoutFill("battleActiveEffect"),
+  ];
+}
+
+export function createConditionRiderRouteDriver() {
+  return defineDriver(conditionRiderRouteDriverSchema, () => {
+    let route: readonly ReducerRouteEvent[] = conditionRiderInitialRoute();
+    let facts: readonly ConditionRiderRouteFact[] = [];
+
+    function reset(): void {
+      route = conditionRiderInitialRoute();
+      facts = [];
+    }
+
+    reset();
+
+    return {
+      init: reset,
+      doAdmitAttackHitPoisonConditionRider: () => {
+        route = [...route, ...conditionRiderAttackHitAdmissionRoute(true)];
+        facts = CONDITION_RIDER_ATTACK_HIT_POISON_APPLIED_FACTS;
+      },
+      doRejectAttackHitPoisonConditionRiderByImmunity: () => {
+        route = [...route, ...conditionRiderAttackHitAdmissionRoute(false)];
+        facts = CONDITION_RIDER_ATTACK_HIT_POISON_REJECTED_FACTS;
+      },
+      doExpireAttackHitPoisonConditionRider: () => {
+        route = [...route, ...conditionRiderDurationCleanupRoute()];
+        facts = [...facts, ...CONDITION_RIDER_DURATION_CLEANUP_FACTS];
+      },
+      doAdmitFailedSaveBlindedNextTurnConditionRider: () => {
+        route = [...route, ...conditionRiderFailedSaveAdmissionRoute()];
+        facts = CONDITION_RIDER_FAILED_SAVE_BLINDED_NEXT_TURN_FACTS;
+      },
+      doExpireFailedSaveBlindedNextTurnConditionRider: () => {
+        route = [...route, ...conditionRiderDurationCleanupRoute()];
+        facts = [...facts, ...CONDITION_RIDER_DURATION_CLEANUP_FACTS];
+      },
+      doRejectFailedSaveBlindedConditionRiderByImmunity: () => {
+        route = [...route, ...conditionRiderFailedSaveRejectionRoute()];
+        facts = conditionRiderFailedSaveRejectedFacts("blinded");
+      },
+      doAdmitFailedSaveBlindedRepeatSaveConditionRider: () => {
+        route = [...route, ...conditionRiderFailedSaveAdmissionRoute()];
+        facts = conditionRiderFailedSaveRepeatSaveFacts("blinded");
+      },
+      doAdmitFailedSaveDeafenedRepeatSaveConditionRider: () => {
+        route = [...route, ...conditionRiderFailedSaveAdmissionRoute()];
+        facts = conditionRiderFailedSaveRepeatSaveFacts("deafened");
+      },
+      doOpenFailedSaveConditionRepeatSaveFrontier: () => {
+        route = [...route, conditionRiderRepeatSaveFrontierRoute()];
+        facts = [...facts, { kind: "repeatSaveFrontierOpened" }];
+      },
+      doResolveFailedSaveConditionRepeatSaveSuccessCleanup: () => {
+        route = [...route, ...conditionRiderRepeatSaveSuccessCleanupRoute()];
+        facts = [
+          ...facts,
+          ...CONDITION_RIDER_REPEAT_SAVE_SUCCESS_CLEANUP_FACTS,
+        ];
+      },
+      doAdmitFailedSaveRestrainedUntilSpellEndEscapeConditionRider: () => {
+        route = [...route, ...conditionRiderFailedSaveAdmissionRoute()];
+        facts = CONDITION_RIDER_FAILED_SAVE_RESTRAINED_FACTS;
+      },
+      doOpenRestrainedAthleticsEscapeFrontier: () => {
+        route = [...route, conditionRiderEscapeCheckFrontierRoute()];
+        facts = [...facts, { kind: "escapeCheckFrontierOpened" }];
+      },
+      doResolveRestrainedAthleticsEscapeSuccessCleanup: () => {
+        route = [...route, ...conditionRiderEscapeCheckSuccessCleanupRoute()];
+        facts = [...facts, ...CONDITION_RIDER_RESTRAINED_ESCAPE_CLEANUP_FACTS];
+      },
+      doAdmitFailedSaveSleepIncapacitatedConditionRider: () => {
+        route = [...route, ...conditionRiderFailedSaveAdmissionRoute()];
+        facts = CONDITION_RIDER_FAILED_SAVE_SLEEP_INCAPACITATED_FACTS;
+      },
+      doOpenSleepRepeatSaveFrontier: () => {
+        route = [...route, conditionRiderRepeatSaveFrontierRoute()];
+        facts = [...facts, { kind: "repeatSaveFrontierOpened" }];
+      },
+      doResolveSleepRepeatSaveFailureTransitionToUnconscious: () => {
+        route = [...route, ...conditionRiderSleepRepeatSaveFailureRoute()];
+        facts = [...facts, ...CONDITION_RIDER_SLEEP_REPEAT_SAVE_FAILURE_FACTS];
+      },
+      doAdmitFailedSaveParalyzedUntilSpellEndRepeatSaveConditionRider: () => {
+        route = [...route, ...conditionRiderFailedSaveAdmissionRoute()];
+        facts = CONDITION_RIDER_FAILED_SAVE_PARALYZED_REPEAT_SAVE_FACTS;
+      },
+      doAdmitFailedSaveIncapacitatedProneSelfEndBlockedConditionRider: () => {
+        route = [...route, ...conditionRiderFailedSaveAdmissionRoute()];
+        facts =
+          CONDITION_RIDER_FAILED_SAVE_INCAPACITATED_PRONE_SELF_END_BLOCKED_FACTS;
+      },
+      doStutterAfterTerminalSurface: () => {},
+      step: () => {},
+      getState: (): ReducerRoutedConditionRiderProjection => ({
+        route,
+        facts,
+      }),
+    };
+  });
+}
+
+const OBJECT_LIGHT_OBJECT_ATTACHED_ADMISSION_FACTS = [
+  {
+    kind: "emitterSource",
+    source: "objectAttachedEmitterSource",
+  },
+  {
+    kind: "admission",
+    admission: "objectTargetAdmittedByTableWitness",
+  },
+  {
+    kind: "admission",
+    admission: "emitterEffectAdmitted",
+  },
+  {
+    kind: "attachment",
+    attachment: "attachedToObject",
+  },
+  {
+    kind: "tableWitness",
+    witness: "objectValidityAdmissionWitness",
+  },
+] as const satisfies readonly ObjectLightRouteFact[];
+
+const OBJECT_LIGHT_OBJECT_REJECTED_FACTS = [
+  {
+    kind: "emitterSource",
+    source: "objectAttachedEmitterSource",
+  },
+  {
+    kind: "admission",
+    admission: "objectTargetRejectedByTableWitness",
+  },
+  {
+    kind: "tableWitness",
+    witness: "objectValidityAdmissionWitness",
+  },
+] as const satisfies readonly ObjectLightRouteFact[];
+
+const OBJECT_LIGHT_HELD_ADMISSION_FACTS = [
+  {
+    kind: "emitterSource",
+    source: "heldEmitterSource",
+  },
+  {
+    kind: "admission",
+    admission: "emitterEffectAdmitted",
+  },
+  {
+    kind: "attachment",
+    attachment: "heldByCaster",
+  },
+] as const satisfies readonly ObjectLightRouteFact[];
+
+const OBJECT_LIGHT_BRIGHT_DIM_PROJECTION_FACTS = [
+  {
+    kind: "projection",
+    projection: "brightLightProjection",
+  },
+  {
+    kind: "projection",
+    projection: "dimLightProjection",
+  },
+] as const satisfies readonly ObjectLightRouteFact[];
+
+const OBJECT_LIGHT_REPLACEMENT_CLEANUP_FACTS = [
+  {
+    kind: "cleanedUpBy",
+    cleanup: "replacementCleanup",
+    owner: "battleActiveEffect",
+  },
+] as const satisfies readonly ObjectLightRouteFact[];
+
+const OBJECT_LIGHT_HURL_CLEANUP_FACTS = [
+  {
+    kind: "cleanedUpBy",
+    cleanup: "hurlCleanup",
+    owner: "battleActiveEffect",
+  },
+] as const satisfies readonly ObjectLightRouteFact[];
+
+const OBJECT_LIGHT_DURATION_CLEANUP_FACTS = [
+  {
+    kind: "cleanedUpBy",
+    cleanup: "durationCleanup",
+    owner: "battleTurnBoundary",
+  },
+  {
+    kind: "cleanedUpBy",
+    cleanup: "durationCleanup",
+    owner: "battleActiveEffect",
+  },
+] as const satisfies readonly ObjectLightRouteFact[];
+
+const OBJECT_LIGHT_TABLE_GEOMETRY_WITNESS_FACTS = [
+  {
+    kind: "tableWitness",
+    witness: "objectGeometryWitness",
+  },
+  {
+    kind: "tableWitness",
+    witness: "coverGeometryWitness",
+  },
+  {
+    kind: "tableWitness",
+    witness: "opaqueBlockerGeometryWitness",
+  },
+  {
+    kind: "tableWitness",
+    witness: "colorPresentationWitness",
+  },
+  {
+    kind: "tableWitness",
+    witness: "objectDurabilityBoundaryWitness",
+  },
+] as const satisfies readonly ObjectLightRouteFact[];
+
+function objectLightInitialRoute(): readonly ReducerRouteEvent[] {
+  return [routeStart()];
+}
+
+function objectLightObjectAdmissionRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeDiscoverSubject({
+      subject: OBJECT_LIGHT_RIDER_ROUTE_SUBJECT,
+      holes: TARGET_CHOICE_ROUTE_HOLES,
+      owner: "battleSpellSlotAndActionEconomy",
+    }),
+    routeResolveSubject({
+      subject: OBJECT_LIGHT_RIDER_ROUTE_SUBJECT,
+      fill: "targetChoice",
+      holes: NO_ROUTE_HOLES,
+      owner: "battleObjectTargetBoundary",
+    }),
+  ];
+}
+
+function objectLightEmitterAdmissionRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeResolveSubjectWithoutFill({
+      subject: OBJECT_LIGHT_RIDER_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleActiveEffect",
+    }),
+  ];
+}
+
+function objectLightProjectionRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeResolveSubjectWithoutFill({
+      subject: OBJECT_LIGHT_RIDER_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleLightProjection",
+    }),
+  ];
+}
+
+function objectLightActiveEffectCleanupRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeResolveSubjectWithoutFill({
+      subject: OBJECT_LIGHT_RIDER_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleActiveEffect",
+    }),
+  ];
+}
+
+function objectLightDurationCleanupRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeResolveSubjectWithoutFill({
+      subject: OBJECT_LIGHT_RIDER_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleTurnBoundary",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: OBJECT_LIGHT_RIDER_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleActiveEffect",
+    }),
+  ];
+}
+
+function objectLightTableGeometryWitnessRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeResolveSubjectWithoutFill({
+      subject: OBJECT_LIGHT_RIDER_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleAreaShape",
+    }),
+  ];
+}
+
+export function createObjectLightRouteDriver() {
+  return defineDriver(objectLightRouteDriverSchema, () => {
+    let route: readonly ReducerRouteEvent[] = objectLightInitialRoute();
+    let facts: readonly ObjectLightRouteFact[] = [];
+
+    function reset(): void {
+      route = objectLightInitialRoute();
+      facts = [];
+    }
+
+    reset();
+
+    return {
+      init: reset,
+      doAdmitObjectAttachedEmitter: () => {
+        route = [
+          ...route,
+          ...objectLightObjectAdmissionRoute(),
+          ...objectLightEmitterAdmissionRoute(),
+        ];
+        facts = OBJECT_LIGHT_OBJECT_ATTACHED_ADMISSION_FACTS;
+      },
+      doRejectObjectAttachedEmitterWithoutObjectWitness: () => {
+        route = [...route, ...objectLightObjectAdmissionRoute()];
+        facts = OBJECT_LIGHT_OBJECT_REJECTED_FACTS;
+      },
+      doAdmitHeldLightEmitter: () => {
+        route = [...route, ...objectLightEmitterAdmissionRoute()];
+        facts = OBJECT_LIGHT_HELD_ADMISSION_FACTS;
+      },
+      doProjectObjectAttachedBrightDimLight: () => {
+        route = [...route, ...objectLightProjectionRoute()];
+        facts = [...facts, ...OBJECT_LIGHT_BRIGHT_DIM_PROJECTION_FACTS];
+      },
+      doProjectHeldBrightDimLight: () => {
+        route = [...route, ...objectLightProjectionRoute()];
+        facts = [...facts, ...OBJECT_LIGHT_BRIGHT_DIM_PROJECTION_FACTS];
+      },
+      doCleanupObjectAttachedEmitterOnReplacement: () => {
+        route = [...route, ...objectLightActiveEffectCleanupRoute()];
+        facts = [...facts, ...OBJECT_LIGHT_REPLACEMENT_CLEANUP_FACTS];
+      },
+      doCleanupHeldEmitterOnHurl: () => {
+        route = [...route, ...objectLightActiveEffectCleanupRoute()];
+        facts = [...facts, ...OBJECT_LIGHT_HURL_CLEANUP_FACTS];
+      },
+      doCleanupObjectAttachedEmitterOnDuration: () => {
+        route = [...route, ...objectLightDurationCleanupRoute()];
+        facts = [...facts, ...OBJECT_LIGHT_DURATION_CLEANUP_FACTS];
+      },
+      doRecordTableOwnedGeometryAndCoverWitnesses: () => {
+        route = [...route, ...objectLightTableGeometryWitnessRoute()];
+        facts = OBJECT_LIGHT_TABLE_GEOMETRY_WITNESS_FACTS;
+      },
+      doStutterAfterTerminalSurface: () => {},
+      step: () => {},
+      getState: (): ReducerRoutedObjectLightProjection => ({
+        route,
+        facts,
+      }),
+    };
+  });
+}
+
+const SPATIAL_EFFECT_ROUTE_SUBJECT =
+  "spatialEffect" satisfies ReducerRouteSubjectFamily;
+
+const SPATIAL_EFFECT_MOVABLE_MULTI_EMITTER_LIGHT_FACTS = [
+  {
+    kind: "battleEffect",
+    effect: "movableMultiEmitterEffectAdmitted",
+  },
+  {
+    kind: "battleEffect",
+    effect: "concentrationBackedEffect",
+  },
+  {
+    kind: "light",
+    light: "multiEmitterDimLightProjection",
+  },
+  {
+    kind: "presentation",
+    presentation: "emitterAppearancePresentation",
+  },
+] as const satisfies readonly SpatialEffectRouteFact[];
+
+const SPATIAL_EFFECT_MOVABLE_EMITTER_MOVED_FACTS = [
+  {
+    kind: "light",
+    light: "emitterPositionMoved",
+  },
+  {
+    kind: "geometry",
+    geometry: "movementPathWitness",
+  },
+] as const satisfies readonly SpatialEffectRouteFact[];
+
+const SPATIAL_EFFECT_OUTLINE_ADMISSION_FACTS = [
+  {
+    kind: "battleEffect",
+    effect: "outlineEffectAdmitted",
+  },
+  {
+    kind: "battleEffect",
+    effect: "concentrationBackedEffect",
+  },
+  {
+    kind: "geometry",
+    geometry: "areaShapeWitness",
+  },
+  {
+    kind: "geometry",
+    geometry: "areaMembershipWitness",
+  },
+  {
+    kind: "light",
+    light: "dimLightProjection",
+  },
+  {
+    kind: "presentation",
+    presentation: "colorChoicePresentation",
+  },
+  {
+    kind: "presentation",
+    presentation: "visibleOutlinePresentation",
+  },
+  {
+    kind: "object",
+    object: "outlinedObjectWitness",
+  },
+] as const satisfies readonly SpatialEffectRouteFact[];
+
+const SPATIAL_EFFECT_OUTLINE_PROJECTION_FACTS = [
+  {
+    kind: "sight",
+    sight: "attackerCanSeeTargetWitness",
+  },
+  {
+    kind: "sight",
+    sight: "invisibleBenefitDeniedProjection",
+  },
+  {
+    kind: "sight",
+    sight: "attackRollAdvantageProjection",
+  },
+  {
+    kind: "object",
+    object: "objectSightTargetWitness",
+  },
+  {
+    kind: "object",
+    object: "objectInvisibleBenefitDeniedProjection",
+  },
+] as const satisfies readonly SpatialEffectRouteFact[];
+
+const SPATIAL_EFFECT_AREA_OBSCUREMENT_FACTS = [
+  {
+    kind: "battleEffect",
+    effect: "areaObscurementEffectAdmitted",
+  },
+  {
+    kind: "battleEffect",
+    effect: "concentrationBackedEffect",
+  },
+  {
+    kind: "geometry",
+    geometry: "areaShapeWitness",
+  },
+  {
+    kind: "sight",
+    sight: "heavilyObscuredProjection",
+  },
+] as const satisfies readonly SpatialEffectRouteFact[];
+
+const SPATIAL_EFFECT_AREA_HAZARD_FACTS = [
+  {
+    kind: "battleEffect",
+    effect: "areaHazardEffectAdmitted",
+  },
+  {
+    kind: "geometry",
+    geometry: "areaShapeWitness",
+  },
+  {
+    kind: "hazard",
+    hazard: "difficultTerrainProjection",
+  },
+] as const satisfies readonly SpatialEffectRouteFact[];
+
+const SPATIAL_EFFECT_CONCENTRATION_BACKED_AREA_HAZARD_FACTS = [
+  {
+    kind: "battleEffect",
+    effect: "areaHazardEffectAdmitted",
+  },
+  {
+    kind: "battleEffect",
+    effect: "concentrationBackedEffect",
+  },
+  {
+    kind: "geometry",
+    geometry: "areaShapeWitness",
+  },
+  {
+    kind: "hazard",
+    hazard: "difficultTerrainProjection",
+  },
+] as const satisfies readonly SpatialEffectRouteFact[];
+
+const SPATIAL_EFFECT_HAZARD_SAVE_FACTS = [
+  {
+    kind: "geometry",
+    geometry: "areaMembershipWitness",
+  },
+  {
+    kind: "hazard",
+    hazard: "entrySavingThrowTrigger",
+  },
+  {
+    kind: "hazard",
+    hazard: "startTurnSavingThrowTrigger",
+  },
+  {
+    kind: "hazard",
+    hazard: "perTurnTriggerLimit",
+  },
+] as const satisfies readonly SpatialEffectRouteFact[];
+
+const SPATIAL_EFFECT_HAZARD_DIFFICULT_TERRAIN_MOVEMENT_FACTS = [
+  {
+    kind: "geometry",
+    geometry: "movementPathWitness",
+  },
+  {
+    kind: "hazard",
+    hazard: "difficultTerrainProjection",
+  },
+] as const satisfies readonly SpatialEffectRouteFact[];
+
+const SPATIAL_EFFECT_HAZARD_MOVEMENT_DAMAGE_FACTS = [
+  {
+    kind: "geometry",
+    geometry: "movementPathWitness",
+  },
+  {
+    kind: "hazard",
+    hazard: "movementDamageTrigger",
+  },
+] as const satisfies readonly SpatialEffectRouteFact[];
+
+const SPATIAL_EFFECT_OBSCUREMENT_DURATION_CLEANUP_FACTS = [
+  {
+    kind: "cleanedUpBy",
+    cleanup: "durationCleanup",
+    owner: "battleObscurementProjection",
+  },
+  {
+    kind: "cleanedUpBy",
+    cleanup: "durationCleanup",
+    owner: "battleActiveEffect",
+  },
+  {
+    kind: "cleanedUpBy",
+    cleanup: "durationCleanup",
+    owner: "battleConcentration",
+  },
+] as const satisfies readonly SpatialEffectRouteFact[];
+
+const SPATIAL_EFFECT_OBSCUREMENT_DISPERSAL_CLEANUP_FACTS = [
+  {
+    kind: "geometry",
+    geometry: "strongWindWitness",
+  },
+  {
+    kind: "cleanedUpBy",
+    cleanup: "dispersalCleanup",
+    owner: "battleObscurementProjection",
+  },
+  {
+    kind: "cleanedUpBy",
+    cleanup: "dispersalCleanup",
+    owner: "battleActiveEffect",
+  },
+  {
+    kind: "cleanedUpBy",
+    cleanup: "dispersalCleanup",
+    owner: "battleConcentration",
+  },
+] as const satisfies readonly SpatialEffectRouteFact[];
+
+const SPATIAL_EFFECT_HAZARD_CLEANUP_FACTS = [
+  {
+    kind: "hazard",
+    hazard: "areaRemovedCleanup",
+  },
+  {
+    kind: "cleanedUpBy",
+    cleanup: "removalCleanup",
+    owner: "battleAreaHazard",
+  },
+  {
+    kind: "cleanedUpBy",
+    cleanup: "durationCleanup",
+    owner: "battleActiveEffect",
+  },
+] as const satisfies readonly SpatialEffectRouteFact[];
+
+const SPATIAL_EFFECT_CONCENTRATION_BREAK_HAZARD_CLEANUP_FACTS = [
+  {
+    kind: "hazard",
+    hazard: "areaRemovedCleanup",
+  },
+  {
+    kind: "cleanedUpBy",
+    cleanup: "concentrationBreakCleanup",
+    owner: "battleConcentration",
+  },
+  {
+    kind: "cleanedUpBy",
+    cleanup: "concentrationBreakCleanup",
+    owner: "battleAreaHazard",
+  },
+  {
+    kind: "cleanedUpBy",
+    cleanup: "concentrationBreakCleanup",
+    owner: "battleActiveEffect",
+  },
+] as const satisfies readonly SpatialEffectRouteFact[];
+
+const SPATIAL_EFFECT_TABLE_SPATIAL_WITNESS_FACTS = [
+  {
+    kind: "geometry",
+    geometry: "areaShapeWitness",
+  },
+  {
+    kind: "geometry",
+    geometry: "areaMembershipWitness",
+  },
+  {
+    kind: "geometry",
+    geometry: "totalCoverBlockerWitness",
+  },
+  {
+    kind: "geometry",
+    geometry: "movementPathWitness",
+  },
+  {
+    kind: "object",
+    object: "outlinedObjectWitness",
+  },
+  {
+    kind: "sight",
+    sight: "attackerCanSeeTargetWitness",
+  },
+  {
+    kind: "sight",
+    sight: "lightlyObscuredProjection",
+  },
+  {
+    kind: "hazard",
+    hazard: "difficultTerrainProjection",
+  },
+  {
+    kind: "presentation",
+    presentation: "colorChoicePresentation",
+  },
+] as const satisfies readonly SpatialEffectRouteFact[];
+
+const SELECTED_CONCENTRATION_HAZARD_BASE_FACTS = [
+  {
+    kind: "battleEffect",
+    effect: "areaHazardEffectAdmitted",
+  },
+  {
+    kind: "battleEffect",
+    effect: "concentrationBackedEffect",
+  },
+  {
+    kind: "geometry",
+    geometry: "areaShapeWitness",
+  },
+] as const satisfies readonly SpatialEffectRouteFact[];
+
+const SELECTED_CONCENTRATION_HAZARD_DIFFICULT_TERRAIN_FACTS = [
+  {
+    kind: "hazard",
+    hazard: "difficultTerrainProjection",
+  },
+] as const satisfies readonly SpatialEffectRouteFact[];
+
+const SELECTED_FLAMING_SPHERE_HAZARD_FACTS = [
+  {
+    kind: "geometry",
+    geometry: "areaMembershipWitness",
+  },
+  {
+    kind: "hazard",
+    hazard: "areaMovedSavingThrowTrigger",
+  },
+  {
+    kind: "hazard",
+    hazard: "endTurnSavingThrowTrigger",
+  },
+] as const satisfies readonly SpatialEffectRouteFact[];
+
+const SELECTED_MOONBEAM_HAZARD_FACTS = [
+  {
+    kind: "geometry",
+    geometry: "areaMembershipWitness",
+  },
+  {
+    kind: "light",
+    light: "dimLightProjection",
+  },
+  {
+    kind: "hazard",
+    hazard: "areaCreatedSavingThrowTrigger",
+  },
+  {
+    kind: "hazard",
+    hazard: "areaMovedSavingThrowTrigger",
+  },
+  {
+    kind: "hazard",
+    hazard: "entrySavingThrowTrigger",
+  },
+  {
+    kind: "hazard",
+    hazard: "endTurnSavingThrowTrigger",
+  },
+  {
+    kind: "hazard",
+    hazard: "perTurnTriggerLimit",
+  },
+] as const satisfies readonly SpatialEffectRouteFact[];
+
+const SELECTED_WEB_HAZARD_FACTS = [
+  {
+    kind: "geometry",
+    geometry: "areaMembershipWitness",
+  },
+  {
+    kind: "sight",
+    sight: "lightlyObscuredProjection",
+  },
+  {
+    kind: "hazard",
+    hazard: "entrySavingThrowTrigger",
+  },
+  {
+    kind: "hazard",
+    hazard: "startTurnSavingThrowTrigger",
+  },
+  {
+    kind: "hazard",
+    hazard: "failedSaveRestraintTrigger",
+  },
+] as const satisfies readonly SpatialEffectRouteFact[];
+
+function spatialEffectInitialRoute(): readonly ReducerRouteEvent[] {
+  return [routeStart()];
+}
+
+function spatialEffectAdmissionRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeDiscoverSubject({
+      subject: SPATIAL_EFFECT_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleSpellSlotAndActionEconomy",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: SPATIAL_EFFECT_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleActiveEffect",
+    }),
+  ];
+}
+
+function spatialEffectConcentrationRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeResolveSubjectWithoutFill({
+      subject: SPATIAL_EFFECT_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleConcentration",
+    }),
+  ];
+}
+
+function spatialEffectLightProjectionRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeResolveSubjectWithoutFill({
+      subject: SPATIAL_EFFECT_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleLightProjection",
+    }),
+  ];
+}
+
+function spatialEffectMoveEmitterRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeDiscoverSubject({
+      subject: SPATIAL_EFFECT_ROUTE_SUBJECT,
+      holes: TARGET_CHOICE_ROUTE_HOLES,
+      owner: "battleSpellSlotAndActionEconomy",
+    }),
+    routeResolveSubject({
+      subject: SPATIAL_EFFECT_ROUTE_SUBJECT,
+      fill: "targetChoice",
+      holes: NO_ROUTE_HOLES,
+      owner: "battleAreaShape",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: SPATIAL_EFFECT_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleLightProjection",
+    }),
+  ];
+}
+
+function spatialEffectOutlineAdmissionRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeDiscoverSubject({
+      subject: SPATIAL_EFFECT_ROUTE_SUBJECT,
+      holes: TARGET_AND_SAVE_ROUTE_HOLES,
+      owner: "battleSpellSlotAndActionEconomy",
+    }),
+    routeResolveSubject({
+      subject: SPATIAL_EFFECT_ROUTE_SUBJECT,
+      fill: "targetChoice",
+      holes: SAVING_THROW_OUTCOME_ROUTE_HOLES,
+      owner: "battleAreaShape",
+    }),
+    routeResolveSubject({
+      subject: SPATIAL_EFFECT_ROUTE_SUBJECT,
+      fill: "savingThrowOutcome",
+      holes: NO_ROUTE_HOLES,
+      owner: "battleSavingThrowOutcome",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: SPATIAL_EFFECT_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleActiveEffect",
+    }),
+  ];
+}
+
+function spatialEffectOutlineProjectionRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeResolveSubjectWithoutFill({
+      subject: SPATIAL_EFFECT_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleLightProjection",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: SPATIAL_EFFECT_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleSightProjection",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: SPATIAL_EFFECT_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleAttackRollMode",
+    }),
+  ];
+}
+
+function spatialEffectAreaAdmissionRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeDiscoverSubject({
+      subject: SPATIAL_EFFECT_ROUTE_SUBJECT,
+      holes: TARGET_CHOICE_ROUTE_HOLES,
+      owner: "battleSpellSlotAndActionEconomy",
+    }),
+    routeResolveSubject({
+      subject: SPATIAL_EFFECT_ROUTE_SUBJECT,
+      fill: "targetChoice",
+      holes: NO_ROUTE_HOLES,
+      owner: "battleAreaShape",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: SPATIAL_EFFECT_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleActiveEffect",
+    }),
+  ];
+}
+
+function spatialEffectObscurementProjectionRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeResolveSubjectWithoutFill({
+      subject: SPATIAL_EFFECT_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleObscurementProjection",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: SPATIAL_EFFECT_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleSightProjection",
+    }),
+  ];
+}
+
+function spatialEffectHazardProjectionRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeResolveSubjectWithoutFill({
+      subject: SPATIAL_EFFECT_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleAreaHazard",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: SPATIAL_EFFECT_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleCreatureSpaceMovement",
+    }),
+  ];
+}
+
+function spatialEffectHazardSavingThrowRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeDiscoverSubject({
+      subject: SPATIAL_EFFECT_ROUTE_SUBJECT,
+      holes: SAVING_THROW_OUTCOME_ROUTE_HOLES,
+      owner: "battleAreaHazard",
+    }),
+    routeResolveSubject({
+      subject: SPATIAL_EFFECT_ROUTE_SUBJECT,
+      fill: "savingThrowOutcome",
+      holes: NO_ROUTE_HOLES,
+      owner: "battleSavingThrowOutcome",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: SPATIAL_EFFECT_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleConditionLifecycle",
+    }),
+  ];
+}
+
+function spatialEffectHazardDifficultTerrainMovementRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeDiscoverSubject({
+      subject: SPATIAL_EFFECT_ROUTE_SUBJECT,
+      holes: MOVEMENT_ROUTE_HOLES,
+      owner: "battleAreaHazard",
+    }),
+    routeResolveSubject({
+      subject: SPATIAL_EFFECT_ROUTE_SUBJECT,
+      fill: "movement",
+      holes: NO_ROUTE_HOLES,
+      owner: "battleMovementResource",
+    }),
+  ];
+}
+
+function spatialEffectHazardMovementDamageRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeDiscoverSubject({
+      subject: SPATIAL_EFFECT_ROUTE_SUBJECT,
+      holes: MOVEMENT_ROUTE_HOLES,
+      owner: "battleAreaHazard",
+    }),
+    routeResolveSubject({
+      subject: SPATIAL_EFFECT_ROUTE_SUBJECT,
+      fill: "movement",
+      holes: ROLLED_DICE_ROUTE_HOLES,
+      owner: "battleMovementResource",
+    }),
+    routeResolveSubject({
+      subject: SPATIAL_EFFECT_ROUTE_SUBJECT,
+      fill: "rolledDice",
+      holes: NO_ROUTE_HOLES,
+      owner: "battleHitPoint",
+    }),
+  ];
+}
+
+function spatialEffectObscurementDurationCleanupRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeResolveSubjectWithoutFill({
+      subject: SPATIAL_EFFECT_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleTurnBoundary",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: SPATIAL_EFFECT_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleObscurementProjection",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: SPATIAL_EFFECT_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleActiveEffect",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: SPATIAL_EFFECT_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleConcentration",
+    }),
+  ];
+}
+
+function spatialEffectObscurementDispersalCleanupRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeResolveSubjectWithoutFill({
+      subject: SPATIAL_EFFECT_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleObscurementProjection",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: SPATIAL_EFFECT_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleActiveEffect",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: SPATIAL_EFFECT_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleConcentration",
+    }),
+  ];
+}
+
+function spatialEffectHazardCleanupRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeResolveSubjectWithoutFill({
+      subject: SPATIAL_EFFECT_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleTurnBoundary",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: SPATIAL_EFFECT_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleAreaHazard",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: SPATIAL_EFFECT_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleActiveEffect",
+    }),
+  ];
+}
+
+function spatialEffectConcentrationBreakHazardCleanupRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeResolveSubjectWithoutFill({
+      subject: SPATIAL_EFFECT_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleConcentration",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: SPATIAL_EFFECT_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleAreaHazard",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: SPATIAL_EFFECT_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleActiveEffect",
+    }),
+  ];
+}
+
+function spatialEffectTableSpatialWitnessRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeResolveSubjectWithoutFill({
+      subject: SPATIAL_EFFECT_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleAreaShape",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: SPATIAL_EFFECT_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleSightProjection",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: SPATIAL_EFFECT_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleAreaHazard",
+    }),
+  ];
+}
+
+export function createSpatialEffectRouteDriver() {
+  return defineDriver(spatialEffectRouteDriverSchema, () => {
+    let route: readonly ReducerRouteEvent[] = spatialEffectInitialRoute();
+    let facts: readonly SpatialEffectRouteFact[] = [];
+
+    function reset(): void {
+      route = spatialEffectInitialRoute();
+      facts = [];
+    }
+
+    reset();
+
+    return {
+      init: reset,
+      doAdmitMovableMultiEmitterLight: () => {
+        route = [
+          ...route,
+          ...spatialEffectAdmissionRoute(),
+          ...spatialEffectConcentrationRoute(),
+          ...spatialEffectLightProjectionRoute(),
+        ];
+        facts = SPATIAL_EFFECT_MOVABLE_MULTI_EMITTER_LIGHT_FACTS;
+      },
+      doMoveMovableMultiEmitterLight: () => {
+        route = [...route, ...spatialEffectMoveEmitterRoute()];
+        facts = [...facts, ...SPATIAL_EFFECT_MOVABLE_EMITTER_MOVED_FACTS];
+      },
+      doAdmitOutlineSightEffect: () => {
+        route = [
+          ...route,
+          ...spatialEffectOutlineAdmissionRoute(),
+          ...spatialEffectConcentrationRoute(),
+        ];
+        facts = SPATIAL_EFFECT_OUTLINE_ADMISSION_FACTS;
+      },
+      doProjectOutlineSightAttackAdvantage: () => {
+        route = [...route, ...spatialEffectOutlineProjectionRoute()];
+        facts = [...facts, ...SPATIAL_EFFECT_OUTLINE_PROJECTION_FACTS];
+      },
+      doAdmitAreaObscurement: () => {
+        route = [
+          ...route,
+          ...spatialEffectAreaAdmissionRoute(),
+          ...spatialEffectConcentrationRoute(),
+          ...spatialEffectObscurementProjectionRoute(),
+        ];
+        facts = SPATIAL_EFFECT_AREA_OBSCUREMENT_FACTS;
+      },
+      doCleanupAreaObscurementByDuration: () => {
+        route = [...route, ...spatialEffectObscurementDurationCleanupRoute()];
+        facts = [
+          ...facts,
+          ...SPATIAL_EFFECT_OBSCUREMENT_DURATION_CLEANUP_FACTS,
+        ];
+      },
+      doDisperseAreaObscurementByStrongWind: () => {
+        route = [...route, ...spatialEffectObscurementDispersalCleanupRoute()];
+        facts = [
+          ...facts,
+          ...SPATIAL_EFFECT_OBSCUREMENT_DISPERSAL_CLEANUP_FACTS,
+        ];
+      },
+      doAdmitAreaHazard: () => {
+        route = [
+          ...route,
+          ...spatialEffectAreaAdmissionRoute(),
+          ...spatialEffectHazardProjectionRoute(),
+        ];
+        facts = SPATIAL_EFFECT_AREA_HAZARD_FACTS;
+      },
+      doResolveAreaHazardSavingThrowTrigger: () => {
+        route = [...route, ...spatialEffectHazardSavingThrowRoute()];
+        facts = [...facts, ...SPATIAL_EFFECT_HAZARD_SAVE_FACTS];
+      },
+      doResolveAreaHazardDifficultTerrainMovement: () => {
+        route = [
+          ...route,
+          ...spatialEffectHazardDifficultTerrainMovementRoute(),
+        ];
+        facts = [
+          ...facts,
+          ...SPATIAL_EFFECT_HAZARD_DIFFICULT_TERRAIN_MOVEMENT_FACTS,
+        ];
+      },
+      doResolveAreaHazardMovementDamageTrigger: () => {
+        route = [...route, ...spatialEffectHazardMovementDamageRoute()];
+        facts = [...facts, ...SPATIAL_EFFECT_HAZARD_MOVEMENT_DAMAGE_FACTS];
+      },
+      doCleanupAreaHazard: () => {
+        route = [...route, ...spatialEffectHazardCleanupRoute()];
+        facts = [...facts, ...SPATIAL_EFFECT_HAZARD_CLEANUP_FACTS];
+      },
+      doAdmitConcentrationBackedAreaHazard: () => {
+        route = [
+          ...route,
+          ...spatialEffectAreaAdmissionRoute(),
+          ...spatialEffectConcentrationRoute(),
+          ...spatialEffectHazardProjectionRoute(),
+        ];
+        facts = SPATIAL_EFFECT_CONCENTRATION_BACKED_AREA_HAZARD_FACTS;
+      },
+      doResolveConcentrationBackedAreaHazardSavingThrowTrigger: () => {
+        route = [...route, ...spatialEffectHazardSavingThrowRoute()];
+        facts = [...facts, ...SPATIAL_EFFECT_HAZARD_SAVE_FACTS];
+      },
+      doResolveConcentrationBackedAreaHazardDifficultTerrainMovement: () => {
+        route = [
+          ...route,
+          ...spatialEffectHazardDifficultTerrainMovementRoute(),
+        ];
+        facts = [
+          ...facts,
+          ...SPATIAL_EFFECT_HAZARD_DIFFICULT_TERRAIN_MOVEMENT_FACTS,
+        ];
+      },
+      doResolveConcentrationBackedAreaHazardMovementDamageTrigger: () => {
+        route = [...route, ...spatialEffectHazardMovementDamageRoute()];
+        facts = [...facts, ...SPATIAL_EFFECT_HAZARD_MOVEMENT_DAMAGE_FACTS];
+      },
+      doCleanupConcentrationBackedAreaHazardAfterConcentrationBreak: () => {
+        route = [
+          ...route,
+          ...spatialEffectConcentrationBreakHazardCleanupRoute(),
+        ];
+        facts = [
+          ...facts,
+          ...SPATIAL_EFFECT_CONCENTRATION_BREAK_HAZARD_CLEANUP_FACTS,
+        ];
+      },
+      doRecordTableOwnedSpatialWitnesses: () => {
+        route = [...route, ...spatialEffectTableSpatialWitnessRoute()];
+        facts = SPATIAL_EFFECT_TABLE_SPATIAL_WITNESS_FACTS;
+      },
+      doStutterAfterTerminalSurface: () => {},
+      step: () => {},
+      getState: (): ReducerRoutedSpatialEffectProjection => ({
+        route,
+        facts,
+      }),
+    };
+  });
+}
+
+function selectedConcentrationHazardAdmissionRoute(): readonly ReducerRouteEvent[] {
+  return [
+    ...spatialEffectAreaAdmissionRoute(),
+    ...spatialEffectConcentrationRoute(),
+    ...spatialEffectHazardProjectionRoute(),
+  ];
+}
+
+function selectedConcentrationHazardMovementDamageRoute(): readonly ReducerRouteEvent[] {
+  return [
+    ...selectedConcentrationHazardAdmissionRoute(),
+    ...spatialEffectHazardMovementDamageRoute(),
+    ...spatialEffectConcentrationBreakHazardCleanupRoute(),
+  ];
+}
+
+export function createSelectedConcentrationHazardRouteDriver() {
+  return defineDriver(selectedConcentrationHazardRouteDriverSchema, () => {
+    let selectedRow: SelectedConcentrationHazardRow = "none";
+    let route: readonly ReducerRouteEvent[] = spatialEffectInitialRoute();
+    let facts: readonly SpatialEffectRouteFact[] = [];
+
+    function reset(): void {
+      selectedRow = "none";
+      route = spatialEffectInitialRoute();
+      facts = [];
+    }
+
+    function recordSaveHazard(input: {
+      readonly row: SelectedConcentrationHazardRow;
+      readonly projectionRoute?: readonly ReducerRouteEvent[];
+      readonly rowFacts: readonly SpatialEffectRouteFact[];
+    }): void {
+      selectedRow = input.row;
+      route = [
+        ...spatialEffectInitialRoute(),
+        ...selectedConcentrationHazardAdmissionRoute(),
+        ...(input.projectionRoute ?? []),
+        ...spatialEffectHazardSavingThrowRoute(),
+        ...spatialEffectConcentrationBreakHazardCleanupRoute(),
+      ];
+      facts = [
+        ...SELECTED_CONCENTRATION_HAZARD_BASE_FACTS,
+        ...input.rowFacts,
+        ...SPATIAL_EFFECT_CONCENTRATION_BREAK_HAZARD_CLEANUP_FACTS,
+      ];
+    }
+
+    reset();
+
+    return {
+      init: reset,
+      doDiscoverFlamingSphereHazard: () => {
+        recordSaveHazard({
+          row: "flamingSphereHazard",
+          rowFacts: SELECTED_FLAMING_SPHERE_HAZARD_FACTS,
+        });
+      },
+      doDiscoverMoonbeamMovableZone: () => {
+        recordSaveHazard({
+          row: "moonbeamMovableZone",
+          projectionRoute: spatialEffectLightProjectionRoute(),
+          rowFacts: SELECTED_MOONBEAM_HAZARD_FACTS,
+        });
+      },
+      doDiscoverSpikeGrowthMovementHazard: () => {
+        selectedRow = "spikeGrowthMovementHazard";
+        route = [
+          ...spatialEffectInitialRoute(),
+          ...selectedConcentrationHazardMovementDamageRoute(),
+        ];
+        facts = [
+          ...SELECTED_CONCENTRATION_HAZARD_BASE_FACTS,
+          ...SELECTED_CONCENTRATION_HAZARD_DIFFICULT_TERRAIN_FACTS,
+          ...SPATIAL_EFFECT_HAZARD_MOVEMENT_DAMAGE_FACTS,
+          ...SPATIAL_EFFECT_CONCENTRATION_BREAK_HAZARD_CLEANUP_FACTS,
+        ];
+      },
+      doDiscoverWebRestraintHazard: () => {
+        recordSaveHazard({
+          row: "webRestraintHazard",
+          projectionRoute: spatialEffectObscurementProjectionRoute(),
+          rowFacts: [
+            ...SELECTED_CONCENTRATION_HAZARD_DIFFICULT_TERRAIN_FACTS,
+            ...SELECTED_WEB_HAZARD_FACTS,
+          ],
+        });
+      },
+      doStutterAfterTerminalSurface: () => {},
+      step: () => {},
+      getState: (): ReducerRoutedSelectedConcentrationHazardProjection => ({
+        selectedRow,
+        route,
+        facts,
+      }),
+    };
+  });
+}
+
+const LEVEL1_SPATIAL_REACTION_FALL_MITIGATION_ROUTE_SUBJECT =
+  "reactionFallMitigation" satisfies ReducerRouteSubjectFamily;
+const LEVEL1_SPATIAL_MOVEMENT_PRESENTATION_ROUTE_SUBJECT =
+  "movementPresentation" satisfies ReducerRouteSubjectFamily;
+const INTERRUPT_DECISION_ROUTE_HOLES = [
+  "interruptDecision",
+] as const satisfies readonly ReducerRouteHole[];
+const MOVEMENT_AND_SAVING_THROW_ROUTE_HOLES = [
+  "movement",
+  "savingThrowOutcome",
+] as const satisfies readonly ReducerRouteHole[];
+
+function routeResolveInterrupt(input: {
+  readonly subject: ReducerRouteSubjectFamily;
+  readonly fill: ReducerRouteFill;
+  readonly holes: readonly ReducerRouteHole[];
+  readonly owner: ReducerRouteOwnerGroup;
+}): ReducerRouteEvent {
+  return {
+    kind: "resolveBattleInterrupt",
+    subject: input.subject,
+    fill: input.fill,
+    holes: input.holes,
+    owner: input.owner,
+  };
+}
+
+function level1SpatialCompositionInitialRoute(): readonly ReducerRouteEvent[] {
+  return [routeStart()];
+}
+
+function level1SpatialMovableMultiEmitterLightRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeStart(),
+    ...spatialEffectAdmissionRoute(),
+    ...spatialEffectConcentrationRoute(),
+    ...spatialEffectLightProjectionRoute(),
+    ...spatialEffectMoveEmitterRoute(),
+  ];
+}
+
+function level1SpatialOutlineSightAdvantageRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeStart(),
+    ...spatialEffectOutlineAdmissionRoute(),
+    ...spatialEffectConcentrationRoute(),
+    ...spatialEffectOutlineProjectionRoute(),
+  ];
+}
+
+function level1SpatialFallMitigationRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeStart(),
+    routeDiscoverSubject({
+      subject: LEVEL1_SPATIAL_REACTION_FALL_MITIGATION_ROUTE_SUBJECT,
+      holes: INTERRUPT_DECISION_ROUTE_HOLES,
+      owner: "battleInterruptStack",
+    }),
+    routeResolveInterrupt({
+      subject: LEVEL1_SPATIAL_REACTION_FALL_MITIGATION_ROUTE_SUBJECT,
+      fill: "interruptDecision",
+      holes: NO_ROUTE_HOLES,
+      owner: "battleSpellSlotAndActionEconomy",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: LEVEL1_SPATIAL_REACTION_FALL_MITIGATION_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleActiveEffect",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: LEVEL1_SPATIAL_REACTION_FALL_MITIGATION_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleMovementResource",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: LEVEL1_SPATIAL_REACTION_FALL_MITIGATION_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleHitPoint",
+    }),
+  ];
+}
+
+function level1SpatialAreaObscurementCleanupRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeStart(),
+    ...spatialEffectAreaAdmissionRoute(),
+    ...spatialEffectConcentrationRoute(),
+    ...spatialEffectObscurementProjectionRoute(),
+    ...spatialEffectObscurementDispersalCleanupRoute(),
+  ];
+}
+
+function level1SpatialAreaHazardSaveRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeStart(),
+    ...spatialEffectAreaAdmissionRoute(),
+    ...spatialEffectHazardProjectionRoute(),
+    ...spatialEffectHazardSavingThrowRoute(),
+  ];
+}
+
+function level1SpatialAreaHazardMovementRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeStart(),
+    ...spatialEffectAreaAdmissionRoute(),
+    ...spatialEffectHazardProjectionRoute(),
+    ...spatialEffectHazardDifficultTerrainMovementRoute(),
+    ...spatialEffectHazardCleanupRoute(),
+  ];
+}
+
+function level1SpatialMovementReplacementRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeStart(),
+    routeDiscoverSubject({
+      subject: LEVEL1_SPATIAL_MOVEMENT_PRESENTATION_ROUTE_SUBJECT,
+      holes: MOVEMENT_ROUTE_HOLES,
+      owner: "battleMovementResource",
+    }),
+    routeResolveSubject({
+      subject: LEVEL1_SPATIAL_MOVEMENT_PRESENTATION_ROUTE_SUBJECT,
+      fill: "movement",
+      holes: NO_ROUTE_HOLES,
+      owner: "battleMovementResource",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: LEVEL1_SPATIAL_MOVEMENT_PRESENTATION_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleTablePresentation",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: LEVEL1_SPATIAL_MOVEMENT_PRESENTATION_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleConditionLifecycle",
+    }),
+  ];
+}
+
+function level1SpatialObjectLightEmitterRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeStart(),
+    ...objectLightObjectAdmissionRoute(),
+    ...objectLightEmitterAdmissionRoute(),
+    ...objectLightProjectionRoute(),
+    ...objectLightActiveEffectCleanupRoute(),
+  ];
+}
+
+function level1SpatialHeldLightEmitterRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeStart(),
+    ...objectLightEmitterAdmissionRoute(),
+    ...objectLightProjectionRoute(),
+    ...objectLightActiveEffectCleanupRoute(),
+  ];
+}
+
+function level1SpatialSavePushPresentationRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeStart(),
+    routeDiscoverSubject({
+      subject: LEVEL1_SPATIAL_MOVEMENT_PRESENTATION_ROUTE_SUBJECT,
+      holes: MOVEMENT_AND_SAVING_THROW_ROUTE_HOLES,
+      owner: "battleSavingThrowOutcome",
+    }),
+    routeResolveSubject({
+      subject: LEVEL1_SPATIAL_MOVEMENT_PRESENTATION_ROUTE_SUBJECT,
+      fill: "savingThrowOutcome",
+      holes: MOVEMENT_ROUTE_HOLES,
+      owner: "battleSavingThrowOutcome",
+    }),
+    routeResolveSubject({
+      subject: LEVEL1_SPATIAL_MOVEMENT_PRESENTATION_ROUTE_SUBJECT,
+      fill: "movement",
+      holes: NO_ROUTE_HOLES,
+      owner: "battleMovementResource",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: LEVEL1_SPATIAL_MOVEMENT_PRESENTATION_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleTablePresentation",
+    }),
+    routeDiscoverSubject({
+      subject: LEVEL1_SPATIAL_MOVEMENT_PRESENTATION_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleObjectTargetBoundary",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: LEVEL1_SPATIAL_MOVEMENT_PRESENTATION_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleObjectTargetBoundary",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: LEVEL1_SPATIAL_MOVEMENT_PRESENTATION_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleTablePresentation",
+    }),
+  ];
+}
+
+export function createLevel1SpatialCompositionRouteDriver() {
+  return defineDriver(level1SpatialCompositionRouteDriverSchema, () => {
+    let route: readonly ReducerRouteEvent[] =
+      level1SpatialCompositionInitialRoute();
+
+    function reset(): void {
+      route = level1SpatialCompositionInitialRoute();
+    }
+
+    reset();
+
+    return {
+      init: reset,
+      doRouteMovableMultiEmitterLight: () => {
+        route = level1SpatialMovableMultiEmitterLightRoute();
+      },
+      doRouteOutlineSightAdvantage: () => {
+        route = level1SpatialOutlineSightAdvantageRoute();
+      },
+      doRouteFallMitigation: () => {
+        route = level1SpatialFallMitigationRoute();
+      },
+      doRouteAreaObscurementCleanup: () => {
+        route = level1SpatialAreaObscurementCleanupRoute();
+      },
+      doRouteAreaHazardSave: () => {
+        route = level1SpatialAreaHazardSaveRoute();
+      },
+      doRouteAreaHazardMovement: () => {
+        route = level1SpatialAreaHazardMovementRoute();
+      },
+      doRouteMovementReplacement: () => {
+        route = level1SpatialMovementReplacementRoute();
+      },
+      doRouteObjectLightEmitter: () => {
+        route = level1SpatialObjectLightEmitterRoute();
+      },
+      doRouteHeldLightEmitter: () => {
+        route = level1SpatialHeldLightEmitterRoute();
+      },
+      doRouteSavePushPresentation: () => {
+        route = level1SpatialSavePushPresentationRoute();
+      },
+      doStutterAfterTerminalSurface: () => {},
+      step: () => {},
+      getState: (): ReducerRoutedLevel1SpatialCompositionProjection => ({
+        route,
+      }),
+    };
+  });
+}
+
+const LEVEL1_WEAPON_HOSTED_DAMAGE_RIDER_ROUTE_SUBJECT =
+  "weaponDamageRider" satisfies ReducerRouteSubjectFamily;
+const LEVEL1_WEAPON_HOSTED_HELD_WEAPON_ROUTE_SUBJECT =
+  "heldWeaponActiveEffect" satisfies ReducerRouteSubjectFamily;
+const LEVEL1_WEAPON_HOSTED_SPELL_ATTACK_ROUTE_SUBJECT =
+  "spellHostedWeaponAttack" satisfies ReducerRouteSubjectFamily;
+const DAMAGE_TYPE_AND_TARGET_CHOICE_ROUTE_HOLES = [
+  "damageTypeChoice",
+  "targetChoice",
+] as const satisfies readonly ReducerRouteHole[];
+
+function level1WeaponHostedSelectedInitialRoute(): readonly ReducerRouteEvent[] {
+  return [routeStart()];
+}
+
+function level1WeaponHostedRouteDiscover(input: {
+  readonly subject: ReducerRouteSubjectFamily;
+  readonly holes: readonly ReducerRouteHole[];
+  readonly owner: ReducerRouteOwnerGroup;
+}): ReducerRouteEvent {
+  return routeDiscoverSubject(input);
+}
+
+function level1WeaponHostedRouteResolve(input: {
+  readonly subject: ReducerRouteSubjectFamily;
+  readonly fill: ReducerRouteFill;
+  readonly holes: readonly ReducerRouteHole[];
+  readonly owner: ReducerRouteOwnerGroup;
+}): ReducerRouteEvent {
+  return routeResolveSubject(input);
+}
+
+function level1WeaponHostedRouteResolveWithoutFill(input: {
+  readonly subject: ReducerRouteSubjectFamily;
+  readonly owner: ReducerRouteOwnerGroup;
+}): ReducerRouteEvent {
+  return routeResolveSubjectWithoutFill({
+    subject: input.subject,
+    holes: NO_ROUTE_HOLES,
+    owner: input.owner,
+  });
+}
+
+function divineFavorWeaponDamageRiderRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeStart(),
+    level1WeaponHostedRouteDiscover({
+      subject: LEVEL1_WEAPON_HOSTED_DAMAGE_RIDER_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleSpellSlotAndActionEconomy",
+    }),
+    level1WeaponHostedRouteResolveWithoutFill({
+      subject: LEVEL1_WEAPON_HOSTED_DAMAGE_RIDER_ROUTE_SUBJECT,
+      owner: "battleActiveEffect",
+    }),
+    level1WeaponHostedRouteDiscover({
+      subject: LEVEL1_WEAPON_HOSTED_DAMAGE_RIDER_ROUTE_SUBJECT,
+      holes: ROLLED_DICE_ROUTE_HOLES,
+      owner: "battleActiveEffect",
+    }),
+    level1WeaponHostedRouteResolve({
+      subject: LEVEL1_WEAPON_HOSTED_DAMAGE_RIDER_ROUTE_SUBJECT,
+      fill: "rolledDice",
+      holes: NO_ROUTE_HOLES,
+      owner: "battleHitPoint",
+    }),
+  ];
+}
+
+function shillelaghWeaponAttackOverrideRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeStart(),
+    level1WeaponHostedRouteDiscover({
+      subject: LEVEL1_WEAPON_HOSTED_HELD_WEAPON_ROUTE_SUBJECT,
+      holes: NO_ROUTE_HOLES,
+      owner: "battleActionEconomy",
+    }),
+    level1WeaponHostedRouteResolveWithoutFill({
+      subject: LEVEL1_WEAPON_HOSTED_HELD_WEAPON_ROUTE_SUBJECT,
+      owner: "battleActiveEffect",
+    }),
+    level1WeaponHostedRouteDiscover({
+      subject: LEVEL1_WEAPON_HOSTED_HELD_WEAPON_ROUTE_SUBJECT,
+      holes: ATTACK_ROLL_ROUTE_HOLES,
+      owner: "battleActiveEffect",
+    }),
+    level1WeaponHostedRouteResolve({
+      subject: LEVEL1_WEAPON_HOSTED_HELD_WEAPON_ROUTE_SUBJECT,
+      fill: "attackRoll",
+      holes: ROLLED_DICE_ROUTE_HOLES,
+      owner: "battleAttackRoll",
+    }),
+    level1WeaponHostedRouteDiscover({
+      subject: LEVEL1_WEAPON_HOSTED_HELD_WEAPON_ROUTE_SUBJECT,
+      holes: ROLLED_DICE_ROUTE_HOLES,
+      owner: "battleActiveEffect",
+    }),
+    level1WeaponHostedRouteResolve({
+      subject: LEVEL1_WEAPON_HOSTED_HELD_WEAPON_ROUTE_SUBJECT,
+      fill: "rolledDice",
+      holes: NO_ROUTE_HOLES,
+      owner: "battleHitPoint",
+    }),
+  ];
+}
+
+function trueStrikeSpellHostedWeaponAttackRoute(): readonly ReducerRouteEvent[] {
+  return [
+    routeStart(),
+    level1WeaponHostedRouteDiscover({
+      subject: LEVEL1_WEAPON_HOSTED_SPELL_ATTACK_ROUTE_SUBJECT,
+      holes: DAMAGE_TYPE_AND_TARGET_CHOICE_ROUTE_HOLES,
+      owner: "battleActionEconomy",
+    }),
+    level1WeaponHostedRouteResolve({
+      subject: LEVEL1_WEAPON_HOSTED_SPELL_ATTACK_ROUTE_SUBJECT,
+      fill: "damageTypeChoice",
+      holes: TARGET_CHOICE_ROUTE_HOLES,
+      owner: "battleHoleFrontier",
+    }),
+    level1WeaponHostedRouteDiscover({
+      subject: LEVEL1_WEAPON_HOSTED_SPELL_ATTACK_ROUTE_SUBJECT,
+      holes: TARGET_CHOICE_ROUTE_HOLES,
+      owner: "battleTargetSelection",
+    }),
+    level1WeaponHostedRouteResolve({
+      subject: LEVEL1_WEAPON_HOSTED_SPELL_ATTACK_ROUTE_SUBJECT,
+      fill: "targetChoice",
+      holes: ATTACK_ROLL_ROUTE_HOLES,
+      owner: "battleTargetSelection",
+    }),
+    level1WeaponHostedRouteDiscover({
+      subject: LEVEL1_WEAPON_HOSTED_SPELL_ATTACK_ROUTE_SUBJECT,
+      holes: ATTACK_ROLL_ROUTE_HOLES,
+      owner: "battleAttackRoll",
+    }),
+    level1WeaponHostedRouteResolve({
+      subject: LEVEL1_WEAPON_HOSTED_SPELL_ATTACK_ROUTE_SUBJECT,
+      fill: "attackRoll",
+      holes: ROLLED_DICE_ROUTE_HOLES,
+      owner: "battleAttackRoll",
+    }),
+    level1WeaponHostedRouteDiscover({
+      subject: LEVEL1_WEAPON_HOSTED_SPELL_ATTACK_ROUTE_SUBJECT,
+      holes: ROLLED_DICE_ROUTE_HOLES,
+      owner: "battleHitPoint",
+    }),
+    level1WeaponHostedRouteResolve({
+      subject: LEVEL1_WEAPON_HOSTED_SPELL_ATTACK_ROUTE_SUBJECT,
+      fill: "rolledDice",
+      holes: NO_ROUTE_HOLES,
+      owner: "battleHitPoint",
+    }),
+  ];
+}
+
+export function createLevel1WeaponHostedSelectedRouteDriver() {
+  return defineDriver(level1WeaponHostedSelectedRouteDriverSchema, () => {
+    let route: readonly ReducerRouteEvent[] =
+      level1WeaponHostedSelectedInitialRoute();
+
+    function reset(): void {
+      route = level1WeaponHostedSelectedInitialRoute();
+    }
+
+    reset();
+
+    return {
+      init: reset,
+      doDivineFavorWeaponDamageRider: () => {
+        route = divineFavorWeaponDamageRiderRoute();
+      },
+      doShillelaghWeaponAttackOverride: () => {
+        route = shillelaghWeaponAttackOverrideRoute();
+      },
+      doTrueStrikeSpellHostedWeaponAttack: () => {
+        route = trueStrikeSpellHostedWeaponAttackRoute();
+      },
+      doStutterAfterTerminalSurface: () => {},
+      step: () => {},
+      getState: (): ReducerRoutedLevel1WeaponHostedSelectedRouteProjection => ({
+        route,
+      }),
+    };
+  });
+}
+
+const MIXED_TARGET_OUTCOME_ROUTE_SUBJECT =
+  "mixedTargetOutcomeSpell" satisfies ReducerRouteSubjectFamily;
+const MIXED_TARGET_OUTCOME_OWNER =
+  "battleSpellInvocation" satisfies ReducerRouteOwnerGroup;
+
+function mixedTargetOutcomeInitialRoute(): readonly ReducerRouteEvent[] {
+  return [routeStart()];
+}
+
+function mixedTargetOutcomeDiscoverRoute(
+  holes: readonly ReducerRouteHole[],
+): ReducerRouteEvent {
+  return routeDiscoverSubject({
+    subject: MIXED_TARGET_OUTCOME_ROUTE_SUBJECT,
+    holes,
+    owner: MIXED_TARGET_OUTCOME_OWNER,
+  });
+}
+
+function mixedTargetOutcomeResolveRoute(
+  fill: ReducerRouteFill,
+  holes: readonly ReducerRouteHole[],
+): ReducerRouteEvent {
+  return mixedTargetOutcomeResolveRouteWithOwner(
+    fill,
+    holes,
+    MIXED_TARGET_OUTCOME_OWNER,
+  );
+}
+
+function mixedTargetOutcomeResolveRouteWithOwner(
+  fill: ReducerRouteFill,
+  holes: readonly ReducerRouteHole[],
+  owner: ReducerRouteOwnerGroup,
+): ReducerRouteEvent {
+  return routeResolveSubject({
+    subject: MIXED_TARGET_OUTCOME_ROUTE_SUBJECT,
+    fill,
+    holes,
+    owner,
+  });
+}
+
+function mixedTargetOutcomeProjectionRoute(): ReducerRouteEvent {
+  return routeResolveSubjectWithoutFill({
+    subject: MIXED_TARGET_OUTCOME_ROUTE_SUBJECT,
+    holes: NO_ROUTE_HOLES,
+    owner: MIXED_TARGET_OUTCOME_OWNER,
+  });
+}
+
+function mixedTargetOutcomeAreaSaveRoute(): readonly ReducerRouteEvent[] {
+  return [
+    mixedTargetOutcomeDiscoverRoute(SAVING_THROW_OUTCOME_ROUTE_HOLES),
+    mixedTargetOutcomeResolveRoute(
+      "savingThrowOutcome",
+      ROLLED_DICE_ROUTE_HOLES,
+    ),
+    mixedTargetOutcomeResolveRoute("rolledDice", NO_ROUTE_HOLES),
+  ];
+}
+
+function mixedTargetOutcomeAttackHitBurstRoute(): readonly ReducerRouteEvent[] {
+  return [
+    mixedTargetOutcomeDiscoverRoute(TARGET_CHOICE_ROUTE_HOLES),
+    mixedTargetOutcomeResolveRouteWithOwner(
+      "targetChoice",
+      ATTACK_ROLL_ROUTE_HOLES,
+      "battleTargetSelection",
+    ),
+    mixedTargetOutcomeResolveRouteWithOwner(
+      "attackRoll",
+      ROLLED_DICE_ROUTE_HOLES,
+      "battleAttackRoll",
+    ),
+    mixedTargetOutcomeResolveRouteWithOwner(
+      "rolledDice",
+      SAVING_THROW_OUTCOME_ROUTE_HOLES,
+      "battleHitPoint",
+    ),
+    mixedTargetOutcomeResolveRouteWithOwner(
+      "savingThrowOutcome",
+      ROLLED_DICE_ROUTE_HOLES,
+      "battleSavingThrowOutcome",
+    ),
+    mixedTargetOutcomeResolveRouteWithOwner(
+      "rolledDice",
+      NO_ROUTE_HOLES,
+      "battleHitPoint",
+    ),
+  ];
+}
+
+function mixedTargetOutcomeAttackMissBurstRoute(): readonly ReducerRouteEvent[] {
+  return [
+    mixedTargetOutcomeDiscoverRoute(TARGET_CHOICE_ROUTE_HOLES),
+    mixedTargetOutcomeResolveRouteWithOwner(
+      "targetChoice",
+      ATTACK_ROLL_ROUTE_HOLES,
+      "battleTargetSelection",
+    ),
+    mixedTargetOutcomeResolveRouteWithOwner(
+      "attackRoll",
+      SAVING_THROW_OUTCOME_ROUTE_HOLES,
+      "battleAttackRoll",
+    ),
+    mixedTargetOutcomeResolveRouteWithOwner(
+      "savingThrowOutcome",
+      ROLLED_DICE_ROUTE_HOLES,
+      "battleSavingThrowOutcome",
+    ),
+    mixedTargetOutcomeResolveRouteWithOwner(
+      "rolledDice",
+      NO_ROUTE_HOLES,
+      "battleHitPoint",
+    ),
+  ];
+}
+
+function mixedTargetOutcomeObjectAttackRoute(): readonly ReducerRouteEvent[] {
+  return [
+    mixedTargetOutcomeDiscoverRoute(TARGET_CHOICE_ROUTE_HOLES),
+    mixedTargetOutcomeResolveRoute("targetChoice", ATTACK_ROLL_ROUTE_HOLES),
+    mixedTargetOutcomeResolveRoute("attackRoll", ROLLED_DICE_ROUTE_HOLES),
+    mixedTargetOutcomeResolveRoute("rolledDice", NO_ROUTE_HOLES),
+    mixedTargetOutcomeProjectionRoute(),
+  ];
+}
+
+function mixedTargetOutcomeSaveProjectionRoute(): readonly ReducerRouteEvent[] {
+  return [
+    mixedTargetOutcomeDiscoverRoute(TARGET_CHOICE_ROUTE_HOLES),
+    mixedTargetOutcomeResolveRoute(
+      "targetChoice",
+      SAVING_THROW_OUTCOME_ROUTE_HOLES,
+    ),
+    mixedTargetOutcomeResolveRoute(
+      "savingThrowOutcome",
+      ROLLED_DICE_ROUTE_HOLES,
+    ),
+    mixedTargetOutcomeResolveRoute("rolledDice", NO_ROUTE_HOLES),
+    mixedTargetOutcomeProjectionRoute(),
+  ];
+}
+
+function mixedTargetOutcomeChainedAttackRoute(): readonly ReducerRouteEvent[] {
+  return [
+    mixedTargetOutcomeDiscoverRoute(TARGET_CHOICE_ROUTE_HOLES),
+    mixedTargetOutcomeResolveRoute("targetChoice", ATTACK_ROLL_ROUTE_HOLES),
+    mixedTargetOutcomeResolveRoute("attackRoll", ROLLED_DICE_ROUTE_HOLES),
+    mixedTargetOutcomeResolveRoute("rolledDice", TARGET_CHOICE_ROUTE_HOLES),
+    mixedTargetOutcomeResolveRoute("targetChoice", ATTACK_ROLL_ROUTE_HOLES),
+    mixedTargetOutcomeResolveRoute("attackRoll", ROLLED_DICE_ROUTE_HOLES),
+    mixedTargetOutcomeResolveRoute("rolledDice", NO_ROUTE_HOLES),
+  ];
+}
+
+const MIXED_TARGET_OUTCOME_SLOT_SPEND_FACT = [
+  {
+    kind: "sharedSpend",
+    spend: "sharedSpellSlotSpend",
+  },
+] as const satisfies readonly MixedTargetOutcomeRouteFact[];
+
+const MIXED_TARGET_OUTCOME_CANTRIP_SPEND_FACT = [
+  {
+    kind: "sharedSpend",
+    spend: "sharedCantripActionSpend",
+  },
+] as const satisfies readonly MixedTargetOutcomeRouteFact[];
+
+const MIXED_TARGET_OUTCOME_SHARED_SAVE_DAMAGE_ROLL_FACT = [
+  {
+    kind: "damageRoll",
+    roll: "sharedSavingThrowDamageRoll",
+  },
+] as const satisfies readonly MixedTargetOutcomeRouteFact[];
+
+const MIXED_TARGET_OUTCOME_PRIMARY_ATTACK_DAMAGE_ROLL_FACT = [
+  {
+    kind: "damageRoll",
+    roll: "primaryAttackDamageRoll",
+  },
+] as const satisfies readonly MixedTargetOutcomeRouteFact[];
+
+const MIXED_TARGET_OUTCOME_AREA_SAVE_FACTS = [
+  ...MIXED_TARGET_OUTCOME_SLOT_SPEND_FACT,
+  ...MIXED_TARGET_OUTCOME_SHARED_SAVE_DAMAGE_ROLL_FACT,
+  { kind: "target", target: "primaryTarget" },
+  { kind: "target", target: "secondaryTarget" },
+  {
+    kind: "resolution",
+    target: "primaryTarget",
+    outcome: "savingThrowFailed",
+  },
+  {
+    kind: "resolution",
+    target: "secondaryTarget",
+    outcome: "savingThrowSucceeded",
+  },
+  {
+    kind: "damageProjection",
+    target: "primaryTarget",
+    damage: "fullSavingThrowDamage",
+  },
+  {
+    kind: "damageProjection",
+    target: "secondaryTarget",
+    damage: "halfSavingThrowDamage",
+  },
+] as const satisfies readonly MixedTargetOutcomeRouteFact[];
+
+const MIXED_TARGET_OUTCOME_ATTACK_HIT_BURST_FACTS = [
+  ...MIXED_TARGET_OUTCOME_SLOT_SPEND_FACT,
+  ...MIXED_TARGET_OUTCOME_PRIMARY_ATTACK_DAMAGE_ROLL_FACT,
+  ...MIXED_TARGET_OUTCOME_SHARED_SAVE_DAMAGE_ROLL_FACT,
+  { kind: "target", target: "primaryTarget" },
+  { kind: "target", target: "secondaryTarget" },
+  { kind: "resolution", target: "primaryTarget", outcome: "attackHit" },
+  {
+    kind: "resolution",
+    target: "primaryTarget",
+    outcome: "savingThrowFailed",
+  },
+  {
+    kind: "resolution",
+    target: "secondaryTarget",
+    outcome: "savingThrowSucceeded",
+  },
+  {
+    kind: "damageProjection",
+    target: "primaryTarget",
+    damage: "attackDamage",
+  },
+  {
+    kind: "damageProjection",
+    target: "primaryTarget",
+    damage: "fullSavingThrowDamage",
+  },
+  {
+    kind: "damageProjection",
+    target: "secondaryTarget",
+    damage: "halfSavingThrowDamage",
+  },
+  {
+    kind: "secondaryProjection",
+    target: "primaryTarget",
+    projection: "burstSavingThrow",
+  },
+  {
+    kind: "secondaryProjection",
+    target: "secondaryTarget",
+    projection: "burstSavingThrow",
+  },
+] as const satisfies readonly MixedTargetOutcomeRouteFact[];
+
+const MIXED_TARGET_OUTCOME_ATTACK_MISS_BURST_FACTS = [
+  ...MIXED_TARGET_OUTCOME_SLOT_SPEND_FACT,
+  ...MIXED_TARGET_OUTCOME_SHARED_SAVE_DAMAGE_ROLL_FACT,
+  { kind: "target", target: "primaryTarget" },
+  { kind: "target", target: "secondaryTarget" },
+  { kind: "resolution", target: "primaryTarget", outcome: "attackMiss" },
+  {
+    kind: "resolution",
+    target: "primaryTarget",
+    outcome: "savingThrowFailed",
+  },
+  {
+    kind: "resolution",
+    target: "secondaryTarget",
+    outcome: "savingThrowSucceeded",
+  },
+  {
+    kind: "damageProjection",
+    target: "primaryTarget",
+    damage: "noDamage",
+  },
+  {
+    kind: "damageProjection",
+    target: "primaryTarget",
+    damage: "fullSavingThrowDamage",
+  },
+  {
+    kind: "damageProjection",
+    target: "secondaryTarget",
+    damage: "halfSavingThrowDamage",
+  },
+  {
+    kind: "secondaryProjection",
+    target: "primaryTarget",
+    projection: "burstSavingThrow",
+  },
+  {
+    kind: "secondaryProjection",
+    target: "secondaryTarget",
+    projection: "burstSavingThrow",
+  },
+] as const satisfies readonly MixedTargetOutcomeRouteFact[];
+
+const MIXED_TARGET_OUTCOME_OBJECT_ATTACK_FACTS = [
+  ...MIXED_TARGET_OUTCOME_CANTRIP_SPEND_FACT,
+  { kind: "target", target: "objectTarget" },
+  { kind: "resolution", target: "objectTarget", outcome: "attackHit" },
+  {
+    kind: "damageProjection",
+    target: "objectTarget",
+    damage: "attackDamage",
+  },
+  {
+    kind: "secondaryProjection",
+    target: "objectTarget",
+    projection: "objectBoundary",
+  },
+  { kind: "secondaryProjection", target: "objectTarget", projection: "light" },
+] as const satisfies readonly MixedTargetOutcomeRouteFact[];
+
+const MIXED_TARGET_OUTCOME_ATTACK_CONDITION_FACTS = [
+  ...MIXED_TARGET_OUTCOME_SLOT_SPEND_FACT,
+  { kind: "target", target: "primaryTarget" },
+  { kind: "resolution", target: "primaryTarget", outcome: "attackHit" },
+  {
+    kind: "damageProjection",
+    target: "primaryTarget",
+    damage: "attackDamage",
+  },
+  {
+    kind: "secondaryProjection",
+    target: "primaryTarget",
+    projection: "condition",
+  },
+] as const satisfies readonly MixedTargetOutcomeRouteFact[];
+
+const MIXED_TARGET_OUTCOME_SAVE_NEXT_ATTACK_FACTS = [
+  ...MIXED_TARGET_OUTCOME_CANTRIP_SPEND_FACT,
+  { kind: "target", target: "primaryTarget" },
+  {
+    kind: "resolution",
+    target: "primaryTarget",
+    outcome: "savingThrowFailed",
+  },
+  {
+    kind: "damageProjection",
+    target: "primaryTarget",
+    damage: "fullSavingThrowDamage",
+  },
+  {
+    kind: "secondaryProjection",
+    target: "primaryTarget",
+    projection: "nextAttackRollMode",
+  },
+] as const satisfies readonly MixedTargetOutcomeRouteFact[];
+
+const MIXED_TARGET_OUTCOME_CHAINED_ATTACK_FACTS = [
+  ...MIXED_TARGET_OUTCOME_SLOT_SPEND_FACT,
+  { kind: "target", target: "primaryTarget" },
+  { kind: "target", target: "secondaryTarget" },
+  { kind: "resolution", target: "primaryTarget", outcome: "attackHit" },
+  { kind: "resolution", target: "secondaryTarget", outcome: "attackHit" },
+  {
+    kind: "damageProjection",
+    target: "primaryTarget",
+    damage: "attackDamage",
+  },
+  {
+    kind: "damageProjection",
+    target: "secondaryTarget",
+    damage: "attackDamage",
+  },
+  {
+    kind: "secondaryProjection",
+    target: "secondaryTarget",
+    projection: "chainedAttackTarget",
+  },
+] as const satisfies readonly MixedTargetOutcomeRouteFact[];
+
+export function createMixedTargetOutcomeRouteDriver() {
+  return defineDriver(mixedTargetOutcomeRouteDriverSchema, () => {
+    let route: readonly ReducerRouteEvent[] = mixedTargetOutcomeInitialRoute();
+    let facts: readonly MixedTargetOutcomeRouteFact[] = [];
+
+    function reset(): void {
+      route = mixedTargetOutcomeInitialRoute();
+      facts = [];
+    }
+
+    reset();
+
+    return {
+      init: reset,
+      doRouteAreaSavingThrowMixedOutcomes: () => {
+        route = [...route, ...mixedTargetOutcomeAreaSaveRoute()];
+        facts = MIXED_TARGET_OUTCOME_AREA_SAVE_FACTS;
+      },
+      doRouteAttackHitBurstSavingThrowMixedOutcomes: () => {
+        route = [...route, ...mixedTargetOutcomeAttackHitBurstRoute()];
+        facts = MIXED_TARGET_OUTCOME_ATTACK_HIT_BURST_FACTS;
+      },
+      doRouteAttackMissBurstSavingThrowMixedOutcomes: () => {
+        route = [...route, ...mixedTargetOutcomeAttackMissBurstRoute()];
+        facts = MIXED_TARGET_OUTCOME_ATTACK_MISS_BURST_FACTS;
+      },
+      doRouteObjectAttackSecondaryProjection: () => {
+        route = [...route, ...mixedTargetOutcomeObjectAttackRoute()];
+        facts = MIXED_TARGET_OUTCOME_OBJECT_ATTACK_FACTS;
+      },
+      doRouteAttackHitConditionProjection: () => {
+        route = [...route, ...mixedTargetOutcomeObjectAttackRoute()];
+        facts = MIXED_TARGET_OUTCOME_ATTACK_CONDITION_FACTS;
+      },
+      doRouteSaveFailureNextAttackProjection: () => {
+        route = [...route, ...mixedTargetOutcomeSaveProjectionRoute()];
+        facts = MIXED_TARGET_OUTCOME_SAVE_NEXT_ATTACK_FACTS;
+      },
+      doRouteChainedAttackMixedTargetOutcomes: () => {
+        route = [...route, ...mixedTargetOutcomeChainedAttackRoute()];
+        facts = MIXED_TARGET_OUTCOME_CHAINED_ATTACK_FACTS;
+      },
+      doStutterAfterTerminalSurface: () => {},
+      step: () => {},
+      getState: (): ReducerRoutedMixedTargetOutcomeProjection => ({
+        route,
+        facts,
+      }),
+    };
+  });
+}
+
+const MARKED_DAMAGE_RIDER_EFFECT_ROUTE_SUBJECT =
+  "markedDamageRiderEffect" satisfies ReducerRouteSubjectFamily;
+const CONDITION_IMMUNITY_TEMPORARY_HIT_POINT_ROUTE_SUBJECT =
+  "conditionImmunityTemporaryHitPointEffect" satisfies ReducerRouteSubjectFamily;
+
+function markedDamageImmunityInitialRoute(): readonly ReducerRouteEvent[] {
+  return [routeStart()];
+}
+
+function discoverMarkedDamageRiderRoute(input: {
+  readonly holes: readonly ReducerRouteHole[];
+  readonly owner: ReducerRouteOwnerGroup;
+}): ReducerRouteEvent {
+  return routeDiscoverSubject({
+    subject: MARKED_DAMAGE_RIDER_EFFECT_ROUTE_SUBJECT,
+    holes: input.holes,
+    owner: input.owner,
+  });
+}
+
+function resolveMarkedDamageRiderRoute(input: {
+  readonly fill: ReducerRouteFill;
+  readonly holes: readonly ReducerRouteHole[];
+  readonly owner: ReducerRouteOwnerGroup;
+}): ReducerRouteEvent {
+  return routeResolveSubject({
+    subject: MARKED_DAMAGE_RIDER_EFFECT_ROUTE_SUBJECT,
+    fill: input.fill,
+    holes: input.holes,
+    owner: input.owner,
+  });
+}
+
+function resolveMarkedDamageRiderWithoutFill(
+  owner: ReducerRouteOwnerGroup,
+): ReducerRouteEvent {
+  return routeResolveSubjectWithoutFill({
+    subject: MARKED_DAMAGE_RIDER_EFFECT_ROUTE_SUBJECT,
+    holes: NO_ROUTE_HOLES,
+    owner,
+  });
+}
+
+function discoverConditionImmunityTemporaryHitPointRoute(input: {
+  readonly holes: readonly ReducerRouteHole[];
+  readonly owner: ReducerRouteOwnerGroup;
+}): ReducerRouteEvent {
+  return routeDiscoverSubject({
+    subject: CONDITION_IMMUNITY_TEMPORARY_HIT_POINT_ROUTE_SUBJECT,
+    holes: input.holes,
+    owner: input.owner,
+  });
+}
+
+function resolveConditionImmunityTemporaryHitPointRoute(input: {
+  readonly fill: ReducerRouteFill;
+  readonly holes: readonly ReducerRouteHole[];
+  readonly owner: ReducerRouteOwnerGroup;
+}): ReducerRouteEvent {
+  return routeResolveSubject({
+    subject: CONDITION_IMMUNITY_TEMPORARY_HIT_POINT_ROUTE_SUBJECT,
+    fill: input.fill,
+    holes: input.holes,
+    owner: input.owner,
+  });
+}
+
+function resolveConditionImmunityTemporaryHitPointWithoutFill(
+  owner: ReducerRouteOwnerGroup,
+): ReducerRouteEvent {
+  return routeResolveSubjectWithoutFill({
+    subject: CONDITION_IMMUNITY_TEMPORARY_HIT_POINT_ROUTE_SUBJECT,
+    holes: NO_ROUTE_HOLES,
+    owner,
+  });
+}
+
+function markedDamageRiderAdmissionRoute(): readonly ReducerRouteEvent[] {
+  return [
+    discoverMarkedDamageRiderRoute({
+      holes: TARGET_CHOICE_ROUTE_HOLES,
+      owner: "battleSpellSlotAndActionEconomy",
+    }),
+    resolveMarkedDamageRiderRoute({
+      fill: "targetChoice",
+      holes: NO_ROUTE_HOLES,
+      owner: "battleTargetSelection",
+    }),
+    resolveMarkedDamageRiderWithoutFill("battleActiveEffect"),
+    resolveMarkedDamageRiderWithoutFill("battleConcentration"),
+  ];
+}
+
+function targetedAbilityCheckMarkedRiderAdmissionRoute(): readonly ReducerRouteEvent[] {
+  return [
+    discoverMarkedDamageRiderRoute({
+      holes: TARGET_AND_ABILITY_CHOICE_ROUTE_HOLES,
+      owner: "battleSpellSlotAndActionEconomy",
+    }),
+    resolveMarkedDamageRiderRoute({
+      fill: "targetChoice",
+      holes: ABILITY_CHOICE_ROUTE_HOLES,
+      owner: "battleTargetSelection",
+    }),
+    resolveMarkedDamageRiderRoute({
+      fill: { kind: "abilityChoice", ability: "wis" },
+      holes: NO_ROUTE_HOLES,
+      owner: "battleActiveEffect",
+    }),
+    resolveMarkedDamageRiderWithoutFill("battleConcentration"),
+  ];
+}
+
+function targetedAbilityCheckRollModeProjectionRoute(): readonly ReducerRouteEvent[] {
+  return [resolveMarkedDamageRiderWithoutFill("battleAbilityCheckRollMode")];
+}
+
+function targetedAbilityCheckRollModeCleanupRoute(): readonly ReducerRouteEvent[] {
+  return [
+    resolveMarkedDamageRiderWithoutFill("battleConcentration"),
+    resolveMarkedDamageRiderWithoutFill("battleActiveEffect"),
+  ];
+}
+
+function markedDamageRiderAttackHitProjectionRoute(): readonly ReducerRouteEvent[] {
+  return [
+    discoverMarkedDamageRiderRoute({
+      holes: TARGET_CHOICE_ROUTE_HOLES,
+      owner: "battleActionEconomy",
+    }),
+    resolveMarkedDamageRiderRoute({
+      fill: "targetChoice",
+      holes: ATTACK_ROLL_ROUTE_HOLES,
+      owner: "battleTargetSelection",
+    }),
+    resolveMarkedDamageRiderRoute({
+      fill: "attackRoll",
+      holes: ROLLED_DICE_ROUTE_HOLES,
+      owner: "battleAttackRoll",
+    }),
+    resolveMarkedDamageRiderRoute({
+      fill: "rolledDice",
+      holes: NO_ROUTE_HOLES,
+      owner: "battleHitPoint",
+    }),
+  ];
+}
+
+function markedDamageRiderTransferAvailabilityRoute(): readonly ReducerRouteEvent[] {
+  return [
+    resolveMarkedDamageRiderWithoutFill("battleHitPointAndZeroHpLifecycle"),
+    resolveMarkedDamageRiderWithoutFill("battleActiveEffect"),
+  ];
+}
+
+function markedDamageRiderTransferRoute(): readonly ReducerRouteEvent[] {
+  return [
+    discoverMarkedDamageRiderRoute({
+      holes: TARGET_CHOICE_ROUTE_HOLES,
+      owner: "battleActionEconomy",
+    }),
+    resolveMarkedDamageRiderRoute({
+      fill: "targetChoice",
+      holes: NO_ROUTE_HOLES,
+      owner: "battleTargetSelection",
+    }),
+    resolveMarkedDamageRiderWithoutFill("battleActiveEffect"),
+  ];
+}
+
+function immunityTemporaryHitPointAdmissionRoute(): readonly ReducerRouteEvent[] {
+  return [
+    discoverConditionImmunityTemporaryHitPointRoute({
+      holes: TARGET_CHOICE_ROUTE_HOLES,
+      owner: "battleSpellSlotAndActionEconomy",
+    }),
+    resolveConditionImmunityTemporaryHitPointRoute({
+      fill: "targetChoice",
+      holes: NO_ROUTE_HOLES,
+      owner: "battleTargetSelection",
+    }),
+    resolveConditionImmunityTemporaryHitPointWithoutFill("battleActiveEffect"),
+    resolveConditionImmunityTemporaryHitPointWithoutFill("battleConcentration"),
+  ];
+}
+
+function conditionImmunityProjectionRoute(): readonly ReducerRouteEvent[] {
+  return [
+    resolveConditionImmunityTemporaryHitPointWithoutFill(
+      "battleConditionLifecycle",
+    ),
+    resolveConditionImmunityTemporaryHitPointWithoutFill("battleActiveEffect"),
+  ];
+}
+
+function turnStartTemporaryHitPointRoute(): readonly ReducerRouteEvent[] {
+  return [
+    discoverConditionImmunityTemporaryHitPointRoute({
+      holes: NO_ROUTE_HOLES,
+      owner: "battleTurnBoundary",
+    }),
+    resolveConditionImmunityTemporaryHitPointWithoutFill(
+      "battleTemporaryHitPoint",
+    ),
+  ];
+}
+
+function immunityTemporaryHitPointCleanupRoute(): readonly ReducerRouteEvent[] {
+  return [
+    resolveConditionImmunityTemporaryHitPointWithoutFill("battleConcentration"),
+    resolveConditionImmunityTemporaryHitPointWithoutFill("battleActiveEffect"),
+  ];
+}
+
+const MARKED_RIDER_ADMISSION_FACTS = [
+  {
+    kind: "markedTransfer",
+    transfer: "transferAwaitsMarkedTargetDrop",
+  },
+] as const satisfies readonly MarkedDamageImmunityRouteFact[];
+
+const TARGETED_ABILITY_CHECK_MARKED_RIDER_ADMISSION_FACTS = [
+  {
+    kind: "targetedAbilityCheckRollMode",
+    rollMode: "targetScopedSelectedAbility",
+  },
+  {
+    kind: "markedOwner",
+    owner: "markedRiderBattleActiveEffect",
+  },
+  {
+    kind: "markedOwner",
+    owner: "markedRiderBattleConcentration",
+  },
+] as const satisfies readonly MarkedDamageImmunityRouteFact[];
+
+const TARGETED_ABILITY_CHECK_ROLL_MODE_PROJECTION_FACTS = [
+  {
+    kind: "targetedAbilityCheckRollMode",
+    rollMode: "matchingTargetSelectedAbilityCheckDisadvantage",
+  },
+  {
+    kind: "targetedAbilityCheckRollMode",
+    rollMode: "nonmatchingAbilityCheckNormal",
+  },
+  {
+    kind: "targetedAbilityCheckRollMode",
+    rollMode: "nonmarkedActorAbilityCheckNormal",
+  },
+  {
+    kind: "markedOwner",
+    owner: "markedRiderBattleAbilityCheckRollMode",
+  },
+] as const satisfies readonly MarkedDamageImmunityRouteFact[];
+
+const TARGETED_ABILITY_CHECK_ROLL_MODE_CLEANUP_FACTS = [
+  {
+    kind: "targetedAbilityCheckRollMode",
+    rollMode: "concentrationCleanupRestoresNormalAbilityCheck",
+  },
+  {
+    kind: "markedOwner",
+    owner: "markedRiderBattleConcentration",
+  },
+  {
+    kind: "markedOwner",
+    owner: "markedRiderBattleActiveEffectCleanup",
+  },
+] as const satisfies readonly MarkedDamageImmunityRouteFact[];
+
+const MARKED_RIDER_DAMAGE_PROJECTION_FACTS = [
+  {
+    kind: "markedHost",
+    host: "attackRollHitMarkedTarget",
+  },
+  {
+    kind: "markedDamage",
+    damage: "extraDamageOnMarkedTargetHit",
+  },
+] as const satisfies readonly MarkedDamageImmunityRouteFact[];
+
+const MARKED_RIDER_TRANSFER_AVAILABILITY_FACTS = [
+  {
+    kind: "markedTransfer",
+    transfer: "transferAvailableAfterMarkedTargetDrops",
+  },
+] as const satisfies readonly MarkedDamageImmunityRouteFact[];
+
+const MARKED_RIDER_SAME_TURN_TRANSFER_FACTS = [
+  {
+    kind: "markedTransfer",
+    transfer: "transferAvailableOnSameTurn",
+  },
+  {
+    kind: "markedTransfer",
+    transfer: "transferConsumesBonusAction",
+  },
+  {
+    kind: "markedTransfer",
+    transfer: "transferResetsAwaitingMarkedTargetDrop",
+  },
+] as const satisfies readonly MarkedDamageImmunityRouteFact[];
+
+const MARKED_RIDER_LATER_TURN_TRANSFER_FACTS = [
+  {
+    kind: "markedTransfer",
+    transfer: "transferAvailableOnLaterTurn",
+  },
+  {
+    kind: "markedTransfer",
+    transfer: "transferConsumesBonusAction",
+  },
+  {
+    kind: "markedTransfer",
+    transfer: "transferResetsAwaitingMarkedTargetDrop",
+  },
+] as const satisfies readonly MarkedDamageImmunityRouteFact[];
+
+const IMMUNITY_TEMPORARY_HP_ADMISSION_FACTS = [
+  {
+    kind: "immunityTemporaryHitPointCondition",
+    condition: "frightenedConditionImmunity",
+  },
+  {
+    kind: "immunityTemporaryHitPointEffect",
+    effect: "conditionImmunityApplied",
+  },
+  {
+    kind: "immunityTemporaryHitPointEffect",
+    effect: "turnStartTemporaryHitPointGrantScheduled",
+  },
+  {
+    kind: "immunityTemporaryHitPointOwner",
+    owner: "battleActiveEffect",
+  },
+] as const satisfies readonly MarkedDamageImmunityRouteFact[];
+
+const CONDITION_IMMUNITY_PROJECTION_FACTS = [
+  {
+    kind: "immunityTemporaryHitPointEffect",
+    effect: "conditionApplicationRejectedByImmunity",
+  },
+  {
+    kind: "immunityTemporaryHitPointOwner",
+    owner: "battleConditionLifecycle",
+  },
+] as const satisfies readonly MarkedDamageImmunityRouteFact[];
+
+const TURN_START_TEMPORARY_HP_FACTS = [
+  {
+    kind: "immunityTemporaryHitPointEffect",
+    effect: "turnStartTemporaryHitPointsGranted",
+  },
+  {
+    kind: "immunityTemporaryHitPointEffect",
+    effect: "temporaryHitPointsUseNonStackingChoice",
+  },
+  {
+    kind: "immunityTemporaryHitPointOwner",
+    owner: "battleTurnBoundary",
+  },
+  {
+    kind: "immunityTemporaryHitPointOwner",
+    owner: "battleTemporaryHitPoint",
+  },
+] as const satisfies readonly MarkedDamageImmunityRouteFact[];
+
+const IMMUNITY_TEMPORARY_HP_CLEANUP_FACTS = [
+  {
+    kind: "immunityTemporaryHitPointEffect",
+    effect: "concentrationCleanupPreventsLaterTurnStartGrant",
+  },
+  {
+    kind: "immunityTemporaryHitPointOwner",
+    owner: "battleConcentration",
+  },
+  {
+    kind: "immunityTemporaryHitPointOwner",
+    owner: "battleActiveEffectCleanup",
+  },
+] as const satisfies readonly MarkedDamageImmunityRouteFact[];
+
+export function createMarkedDamageImmunityRouteDriver() {
+  return defineDriver(markedDamageImmunityRouteDriverSchema, () => {
+    let route: readonly ReducerRouteEvent[] =
+      markedDamageImmunityInitialRoute();
+    let facts: readonly MarkedDamageImmunityRouteFact[] = [];
+
+    function reset(): void {
+      route = markedDamageImmunityInitialRoute();
+      facts = [];
+    }
+
+    reset();
+
+    return {
+      init: reset,
+      doAdmitMarkedDamageRider: () => {
+        route = [...route, ...markedDamageRiderAdmissionRoute()];
+        facts = MARKED_RIDER_ADMISSION_FACTS;
+      },
+      doProjectMarkedDamageRiderOnHit: () => {
+        route = [...route, ...markedDamageRiderAttackHitProjectionRoute()];
+        facts = [...facts, ...MARKED_RIDER_DAMAGE_PROJECTION_FACTS];
+      },
+      doOpenMarkedDamageRiderTransferAfterTargetDrop: () => {
+        route = [...route, ...markedDamageRiderTransferAvailabilityRoute()];
+        facts = [...facts, ...MARKED_RIDER_TRANSFER_AVAILABILITY_FACTS];
+      },
+      doTransferMarkedDamageRiderSameTurn: () => {
+        route = [...route, ...markedDamageRiderTransferRoute()];
+        facts = [...facts, ...MARKED_RIDER_SAME_TURN_TRANSFER_FACTS];
+      },
+      doTransferMarkedDamageRiderLaterTurn: () => {
+        route = [
+          ...route,
+          resolveMarkedDamageRiderWithoutFill("battleTurnBoundary"),
+          ...markedDamageRiderTransferRoute(),
+        ];
+        facts = [...facts, ...MARKED_RIDER_LATER_TURN_TRANSFER_FACTS];
+      },
+      doAdmitTargetedAbilityCheckMarkedDamageRider: () => {
+        route = [...route, ...targetedAbilityCheckMarkedRiderAdmissionRoute()];
+        facts = TARGETED_ABILITY_CHECK_MARKED_RIDER_ADMISSION_FACTS;
+      },
+      doProjectTargetedAbilityCheckRollMode: () => {
+        route = [...route, ...targetedAbilityCheckRollModeProjectionRoute()];
+        facts = [
+          ...facts,
+          ...TARGETED_ABILITY_CHECK_ROLL_MODE_PROJECTION_FACTS,
+        ];
+      },
+      doCleanupTargetedAbilityCheckRollMode: () => {
+        route = [...route, ...targetedAbilityCheckRollModeCleanupRoute()];
+        facts = [...facts, ...TARGETED_ABILITY_CHECK_ROLL_MODE_CLEANUP_FACTS];
+      },
+      doAdmitConditionImmunityTemporaryHitPoints: () => {
+        route = [...route, ...immunityTemporaryHitPointAdmissionRoute()];
+        facts = IMMUNITY_TEMPORARY_HP_ADMISSION_FACTS;
+      },
+      doProjectConditionImmunity: () => {
+        route = [...route, ...conditionImmunityProjectionRoute()];
+        facts = [...facts, ...CONDITION_IMMUNITY_PROJECTION_FACTS];
+      },
+      doGrantTurnStartTemporaryHitPoints: () => {
+        route = [...route, ...turnStartTemporaryHitPointRoute()];
+        facts = [...facts, ...TURN_START_TEMPORARY_HP_FACTS];
+      },
+      doCleanupConditionImmunityTemporaryHitPoints: () => {
+        route = [...route, ...immunityTemporaryHitPointCleanupRoute()];
+        facts = [...facts, ...IMMUNITY_TEMPORARY_HP_CLEANUP_FACTS];
+      },
+      doStutterAfterTerminalSurface: () => {},
+      step: () => {},
+      getState: (): ReducerRoutedMarkedDamageImmunityProjection => ({
+        route,
+        facts,
+      }),
+    };
+  });
+}
+
+export function createSaveGatedSpellOrderingRouteDriver() {
+  return defineDriver(saveGatedSpellOrderingDriverSchema, () => {
+    let session = saveGatedSpellOrderingBattle("lightning_bolt", 3);
+    let state = session.state;
+    let subject: Extract<BattleSubject, { readonly tag: "actionSpell" }> =
+      lightningBoltSubject(session);
+    let fills: readonly BattleFill[] = [];
+    let holes: readonly BattleHole[] = [];
+    let route: readonly ReducerRouteEvent[] = [];
+    let stage: SaveGatedSpellOrderingProjection["stage"] = "actSelection";
+    let lastResult: SaveGatedSpellOrderingProjection["lastResult"] = "init";
+    let orderingError: SaveGatedSpellOrderingProjection["orderingError"] = "";
+
+    function reset(): void {
+      session = saveGatedSpellOrderingBattle("lightning_bolt", 3);
+      state = session.state;
+      subject = lightningBoltSubject(session);
+      fills = [];
+      holes = [];
+      route = [reducerRouteStartBattle("battleActionEconomy")];
+      stage = "actSelection";
+      lastResult = "init";
+      orderingError = "";
+    }
+
+    function discoverSpell(
+      spellId: "lightning_bolt" | "blindness_deafness",
+      slotLevel: 2 | 3,
+      procedure: "saveGatedDamage" | "saveGatedCondition",
+      nextStage: SaveGatedSpellOrderingProjection["stage"],
+    ): void {
+      session = saveGatedSpellOrderingBattle(spellId, slotLevel);
+      state = session.state;
+      subject = saveGatedSpellSubject(session, spellId, slotLevel, procedure);
+      fills = [];
+      holes = discoverSaveGatedSpellHoles(session, subject, spellId);
+      route = [
+        ...route,
+        reducerRouteDiscoverBattleActs({
+          subject: "saveGatedSpell",
+          holes,
+          owner: "battleSpellSlotAndActionEconomy",
+        }),
+      ];
+      stage = nextStage;
+      lastResult = "needsHoles";
+      orderingError = "";
+    }
+
+    function recordAccepted(
+      result: BattleResolutionResult,
+      nextStage: SaveGatedSpellOrderingProjection["stage"],
+      fill: ReducerRouteFill,
+      owner: ReducerRouteOwnerGroup,
+    ): void {
+      lastResult = result.tag;
+      if (result.tag === "resolved") {
+        state = result.state;
+        holes = [];
+        route = [
+          ...route,
+          reducerRouteResolveBattleSubject({
+            subject: "saveGatedSpell",
+            fill,
+            holes,
+            owner,
+          }),
+        ];
+        stage = nextStage;
+        orderingError = "";
+        return;
+      }
+      if (result.tag === "needsHoles") {
+        state = result.state;
+        holes = result.holes;
+        route = [
+          ...route,
+          reducerRouteResolveBattleSubject({
+            subject: "saveGatedSpell",
+            fill,
+            holes,
+            owner,
+          }),
+        ];
+        stage = nextStage;
+        orderingError = "";
+        return;
+      }
+      throw new Error(
+        `Expected accepted save-gated spell ordering fill, got ${result.tag}: ${
+          "message" in result ? result.message : ""
+        }`,
+      );
+    }
+
+    function recordNeedsEarlierHole(
+      result: BattleResolutionResult,
+      expectedOrderingError: Exclude<
+        SaveGatedSpellOrderingProjection["orderingError"],
+        ""
+      >,
+      expectedStage: SaveGatedSpellOrderingProjection["stage"],
+      fill: ReducerRouteFill,
+    ): void {
+      if (result.tag !== "needsHoles") {
+        throw new Error(
+          "Expected save-gated spell fill to request earlier holes.",
+        );
+      }
+      lastResult = result.tag;
+      holes = result.holes;
+      route = [
+        ...route,
+        reducerRouteResolveBattleSubject({
+          subject: "saveGatedSpell",
+          fill,
+          holes,
+          owner: "battleHoleFrontier",
+        }),
+      ];
+      stage = expectedStage;
+      orderingError = expectedOrderingError;
+    }
+
+    reset();
+
+    return {
+      init: reset,
+      doDiscoverAreaSaveDamage: () => {
+        discoverSpell(
+          "lightning_bolt",
+          3,
+          "saveGatedDamage",
+          "damageSavingThrowOutcome",
+        );
+      },
+      doSubmitDamageBeforeSavingThrow: () => {
+        const savingThrow = requireHole(holes, "savingThrowOutcome");
+        const damage = requireHole(
+          saveGatedSpellHolesAfterFills(state, subject, [
+            saveGatedSpellSavingThrowOutcomeFill(savingThrow, [
+              { targetId: skeletonId, succeeded: false },
+            ]),
+          ]),
+          "rolledDice",
+        );
+        recordNeedsEarlierHole(
+          resolveBattleSubject({
+            state,
+            subject,
+            fills: [
+              damageRollFillWithGroups(damage, [[6, 6, 6, 6, 6, 6, 6, 6]]),
+            ],
+          }),
+          "savingThrowRequired",
+          "damageSavingThrowOutcome",
+          "rolledDice",
+        );
+      },
+      doFillAreaSaveFailed: () => {
+        const savingThrow = requireHole(holes, "savingThrowOutcome");
+        fills = [
+          saveGatedSpellSavingThrowOutcomeFill(savingThrow, [
+            { targetId: skeletonId, succeeded: false },
+          ]),
+        ];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "damageDice",
+          "savingThrowOutcome",
+          "battleHoleFrontier",
+        );
+      },
+      doFillAreaDamageDice: () => {
+        const damage = requireHole(holes, "rolledDice");
+        fills = [
+          ...fills,
+          damageRollFillWithGroups(damage, [[6, 6, 6, 6, 6, 6, 6, 6]]),
+        ];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "resolved",
+          "rolledDice",
+          "battleHitPoint",
+        );
+      },
+      doDiscoverTargetListConditionChoice: () => {
+        discoverSpell(
+          "blindness_deafness",
+          2,
+          "saveGatedCondition",
+          "targetListAndConditionChoice",
+        );
+      },
+      doFillTargetListBeforeConditionChoice: () => {
+        const targetList = requireHole(holes, "spellTargetList");
+        fills = [
+          spellTargetListFill(targetList, requireSpellTargetSubject(subject), [
+            skeletonId,
+          ]),
+        ];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "conditionChoice",
+          "spellTargetList",
+          "battleHoleFrontier",
+        );
+      },
+      doFillConditionChoiceAfterTargetList: () => {
+        const conditionChoice = requireHole(holes, "conditionChoice");
+        fills = [
+          ...fills,
+          saveGatedSpellConditionChoiceFill(conditionChoice, "blinded"),
+        ];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "conditionSavingThrowOutcome",
+          "conditionChoice",
+          "battleHoleFrontier",
+        );
+      },
+      doFillConditionChoiceBeforeTargetList: () => {
+        const conditionChoice = requireHole(holes, "conditionChoice");
+        fills = [saveGatedSpellConditionChoiceFill(conditionChoice, "blinded")];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "targetList",
+          "conditionChoice",
+          "battleHoleFrontier",
+        );
+      },
+      doFillTargetListAfterConditionChoice: () => {
+        const targetList = requireHole(holes, "spellTargetList");
+        fills = [
+          ...fills,
+          spellTargetListFill(targetList, requireSpellTargetSubject(subject), [
+            skeletonId,
+          ]),
+        ];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "conditionSavingThrowOutcome",
+          "spellTargetList",
+          "battleHoleFrontier",
+        );
+      },
+      doFillConditionSavingThrow: () => {
+        const savingThrow = requireHole(holes, "savingThrowOutcome");
+        fills = [
+          ...fills,
+          saveGatedSpellSavingThrowOutcomeFill(savingThrow, [
+            { targetId: skeletonId, succeeded: false },
+          ]),
+        ];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "resolved",
+          "savingThrowOutcome",
+          "battleHoleFrontier",
+        );
+      },
+      step: () => {},
+      getState: () => ({
+        ...projectSaveGatedSpellOrderingState({
+          holes,
+          stage,
+          lastResult,
+          orderingError,
+        }),
+        route,
+      }),
+    };
+  });
+}
+
+export function createSpellAttackOrderingDriver() {
+  return defineDriver(spellAttackOrderingDriverSchema, () => {
+    // authored-id-dispatch-allow: battle-runtime-mbt-fixture-boundary
+    let session = spellAttackOrderingBattle("fire_bolt");
+    let state = session.state;
+    let subject: Extract<BattleSubject, { readonly tag: "actionSpell" }> =
+      spellAttackSubject(session, "fire_bolt", "spellAttackDamage");
+    let fills: readonly BattleFill[] = [];
+    let holes: readonly BattleHole[] = [];
+    let stage: SpellAttackOrderingProjection["stage"] = "actSelection";
+    let lastResult: SpellAttackOrderingProjection["lastResult"] = "init";
+    let orderingError: SpellAttackOrderingProjection["orderingError"] = "";
+
+    function reset(): void {
+      session = spellAttackOrderingBattle("fire_bolt");
+      state = session.state;
+      subject = spellAttackSubject(session, "fire_bolt", "spellAttackDamage");
+      fills = [];
+      holes = [];
+      stage = "actSelection";
+      lastResult = "init";
+      orderingError = "";
+    }
+
+    function discoverSpellAttack(
+      spellId: "fire_bolt" | "sorcerous_burst",
+      nextStage: SpellAttackOrderingProjection["stage"],
+    ): void {
+      session = spellAttackOrderingBattle(spellId);
+      state = session.state;
+      subject = spellAttackSubject(session, spellId, "spellAttackDamage");
+      fills = [];
+      holes = discoverSpellAttackHoles(session, subject, spellId);
+      stage = nextStage;
+      lastResult = "needsHoles";
+      orderingError = "";
+    }
+
+    function recordAccepted(
+      result: BattleResolutionResult,
+      nextStage: SpellAttackOrderingProjection["stage"],
+    ): void {
+      lastResult = result.tag;
+      if (result.tag === "resolved") {
+        state = result.state;
+        holes = [];
+        stage = nextStage;
+        orderingError = "";
+        return;
+      }
+      if (result.tag === "needsHoles") {
+        state = result.state;
+        holes = result.holes;
+        stage = nextStage;
+        orderingError = "";
+        return;
+      }
+      throw new Error(
+        `Expected accepted spell attack ordering fill, got ${result.tag}: ${
+          "message" in result ? result.message : ""
+        }`,
+      );
+    }
+
+    function recordNeedsEarlierHole(
+      result: BattleResolutionResult,
+      expectedOrderingError: Exclude<
+        SpellAttackOrderingProjection["orderingError"],
+        ""
+      >,
+      expectedStage: SpellAttackOrderingProjection["stage"],
+    ): void {
+      if (result.tag !== "needsHoles") {
+        throw new Error("Expected spell attack fill to request earlier holes.");
+      }
+      lastResult = result.tag;
+      holes = result.holes;
+      stage = expectedStage;
+      orderingError = expectedOrderingError;
+    }
+
+    return {
+      init: reset,
+      doDiscoverSingleTargetSpellAttack: () => {
+        discoverSpellAttack("fire_bolt", "targetChoice");
+      },
+      doSubmitAttackRollBeforeTargetChoice: () => {
+        const target = requireHole(holes, "targetChoice");
+        const attackRoll = requireHole(
+          spellAttackHolesAfterFills(state, subject, [
+            spellTargetChoiceFill(target, skeletonId, subject),
+          ]),
+          "attackRoll",
+        );
+        recordNeedsEarlierHole(
+          resolveBattleSubject({
+            state,
+            subject,
+            fills: [attackRollFill(attackRoll, { total: 14, naturalD20: 10 })],
+          }),
+          "targetRequired",
+          "targetChoice",
+        );
+      },
+      doFillTargetChoice: () => {
+        const target = requireHole(holes, "targetChoice");
+        fills = [spellTargetChoiceFill(target, skeletonId, subject)];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "attackRoll",
+        );
+      },
+      doSubmitDamageBeforeAttackRoll: () => {
+        const attackRoll = requireHole(holes, "attackRoll");
+        const damage = requireHole(
+          spellAttackHolesAfterFills(state, subject, [
+            ...fills,
+            attackRollFill(attackRoll, { total: 14, naturalD20: 10 }),
+          ]),
+          "rolledDice",
+        );
+        recordNeedsEarlierHole(
+          resolveBattleSubject({
+            state,
+            subject,
+            fills: [...fills, damageRollFill(damage, 3)],
+          }),
+          "attackRollRequired",
+          "attackRoll",
+        );
+      },
+      doFillAttackRollMiss: () => {
+        const attackRoll = requireHole(holes, "attackRoll");
+        fills = [
+          ...fills,
+          attackRollFill(attackRoll, { total: 1, naturalD20: 1 }),
+        ];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "resolved",
+        );
+      },
+      doFillAttackRollHit: () => {
+        const attackRoll = requireHole(holes, "attackRoll");
+        fills = [
+          ...fills,
+          attackRollFill(attackRoll, { total: 14, naturalD20: 10 }),
+        ];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "damageDice",
+        );
+      },
+      doFillDamageDice: () => {
+        const damage = requireHole(holes, "rolledDice");
+        fills = [...fills, damageRollFill(damage, 3)];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "resolved",
+        );
+      },
+      doDiscoverTypedSpellAttack: () => {
+        discoverSpellAttack("sorcerous_burst", "damageTypeAndTargetChoice");
+      },
+      doFillDamageTypeBeforeTargetChoice: () => {
+        const damageType = requireHole(holes, "damageTypeChoice");
+        fills = [spellDamageTypeChoiceFill(damageType, "fire")];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "typedTargetChoice",
+        );
+      },
+      doFillTargetChoiceBeforeDamageType: () => {
+        const target = requireHole(holes, "targetChoice");
+        fills = [spellTargetChoiceFill(target, skeletonId, subject)];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "damageTypeChoice",
+        );
+      },
+      doFillDamageTypeAfterTargetChoice: () => {
+        const damageType = requireHole(holes, "damageTypeChoice");
+        fills = [...fills, spellDamageTypeChoiceFill(damageType, "fire")];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "attackRoll",
+        );
+      },
+      doFillTargetChoiceAfterDamageType: () => {
+        const target = requireHole(holes, "targetChoice");
+        fills = [...fills, spellTargetChoiceFill(target, skeletonId, subject)];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "attackRoll",
+        );
+      },
+      step: () => {},
+      getState: () =>
+        projectSpellAttackOrderingState({
+          holes,
+          stage,
+          lastResult,
+          orderingError,
+        }),
+    };
+  });
+}
+
+export function createSpellAttackOrderingRouteDriver() {
+  return defineDriver(spellAttackOrderingDriverSchema, () => {
+    // authored-id-dispatch-allow: battle-runtime-mbt-fixture-boundary
+    let session = spellAttackOrderingBattle("fire_bolt");
+    let state = session.state;
+    let subject: Extract<BattleSubject, { readonly tag: "actionSpell" }> =
+      spellAttackSubject(session, "fire_bolt", "spellAttackDamage");
+    let fills: readonly BattleFill[] = [];
+    let holes: readonly BattleHole[] = [];
+    let route: readonly ReducerRouteEvent[] = [];
+    let stage: SpellAttackOrderingProjection["stage"] = "actSelection";
+    let lastResult: SpellAttackOrderingProjection["lastResult"] = "init";
+    let orderingError: SpellAttackOrderingProjection["orderingError"] = "";
+
+    function reset(): void {
+      session = spellAttackOrderingBattle("fire_bolt");
+      state = session.state;
+      subject = spellAttackSubject(session, "fire_bolt", "spellAttackDamage");
+      fills = [];
+      holes = [];
+      route = [battleReducerStartRouteEvent()];
+      stage = "actSelection";
+      lastResult = "init";
+      orderingError = "";
+    }
+
+    function discoverSpellAttack(
+      spellId: "fire_bolt" | "sorcerous_burst",
+      nextStage: SpellAttackOrderingProjection["stage"],
+    ): void {
+      session = spellAttackOrderingBattle(spellId);
+      state = session.state;
+      subject = spellAttackSubject(session, spellId, "spellAttackDamage");
+      fills = [];
+      const act = discoverSpellAttackAct(session, subject, spellId);
+      holes = act.initialHoles;
+      route = appendPublicRouteEvents(route, act.routeEvents);
+      stage = nextStage;
+      lastResult = "needsHoles";
+      orderingError = "";
+    }
+
+    function recordAccepted(
+      result: BattleResolutionResult,
+      nextStage: SpellAttackOrderingProjection["stage"],
+    ): void {
+      lastResult = result.tag;
+      if (result.tag === "resolved") {
+        state = result.state;
+        holes = [];
+        route = appendPublicRouteEvents(route, result.routeEvents);
+        stage = nextStage;
+        orderingError = "";
+        return;
+      }
+      if (result.tag === "needsHoles") {
+        state = result.state;
+        holes = result.holes;
+        route = appendPublicRouteEvents(route, result.routeEvents);
+        stage = nextStage;
+        orderingError = "";
+        return;
+      }
+      throw new Error(
+        `Expected accepted spell attack ordering fill, got ${result.tag}: ${
+          "message" in result ? result.message : ""
+        }`,
+      );
+    }
+
+    function recordNeedsEarlierHole(
+      result: BattleResolutionResult,
+      expectedOrderingError: Exclude<
+        SpellAttackOrderingProjection["orderingError"],
+        ""
+      >,
+      expectedStage: SpellAttackOrderingProjection["stage"],
+    ): void {
+      if (result.tag !== "needsHoles") {
+        throw new Error("Expected spell attack fill to request earlier holes.");
+      }
+      lastResult = result.tag;
+      holes = result.holes;
+      route = appendPublicRouteEvents(route, result.routeEvents);
+      stage = expectedStage;
+      orderingError = expectedOrderingError;
+    }
+
+    reset();
+
+    return {
+      init: reset,
+      doDiscoverSingleTargetSpellAttack: () => {
+        discoverSpellAttack("fire_bolt", "targetChoice");
+      },
+      doSubmitAttackRollBeforeTargetChoice: () => {
+        const target = requireHole(holes, "targetChoice");
+        const attackRoll = requireHole(
+          spellAttackHolesAfterFills(state, subject, [
+            spellTargetChoiceFill(target, skeletonId, subject),
+          ]),
+          "attackRoll",
+        );
+        recordNeedsEarlierHole(
+          resolveBattleSubject({
+            state,
+            subject,
+            fills: [attackRollFill(attackRoll, { total: 14, naturalD20: 10 })],
+          }),
+          "targetRequired",
+          "targetChoice",
+        );
+      },
+      doFillTargetChoice: () => {
+        const target = requireHole(holes, "targetChoice");
+        fills = [spellTargetChoiceFill(target, skeletonId, subject)];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "attackRoll",
+        );
+      },
+      doSubmitDamageBeforeAttackRoll: () => {
+        const attackRoll = requireHole(holes, "attackRoll");
+        const damage = requireHole(
+          spellAttackHolesAfterFills(state, subject, [
+            ...fills,
+            attackRollFill(attackRoll, { total: 14, naturalD20: 10 }),
+          ]),
+          "rolledDice",
+        );
+        recordNeedsEarlierHole(
+          resolveBattleSubject({
+            state,
+            subject,
+            fills: [...fills, damageRollFill(damage, 3)],
+          }),
+          "attackRollRequired",
+          "attackRoll",
+        );
+      },
+      doFillAttackRollMiss: () => {
+        const attackRoll = requireHole(holes, "attackRoll");
+        fills = [
+          ...fills,
+          attackRollFill(attackRoll, { total: 1, naturalD20: 1 }),
+        ];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "resolved",
+        );
+      },
+      doFillAttackRollHit: () => {
+        const attackRoll = requireHole(holes, "attackRoll");
+        fills = [
+          ...fills,
+          attackRollFill(attackRoll, { total: 14, naturalD20: 10 }),
+        ];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "damageDice",
+        );
+      },
+      doFillDamageDice: () => {
+        const damage = requireHole(holes, "rolledDice");
+        fills = [...fills, damageRollFill(damage, 3)];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "resolved",
+        );
+      },
+      doDiscoverTypedSpellAttack: () => {
+        discoverSpellAttack("sorcerous_burst", "damageTypeAndTargetChoice");
+      },
+      doFillDamageTypeBeforeTargetChoice: () => {
+        const damageType = requireHole(holes, "damageTypeChoice");
+        fills = [spellDamageTypeChoiceFill(damageType, "fire")];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "typedTargetChoice",
+        );
+      },
+      doFillTargetChoiceBeforeDamageType: () => {
+        const target = requireHole(holes, "targetChoice");
+        fills = [
+          spellTargetChoiceFill(
+            target,
+            skeletonId,
+            requireSpellTargetSubject(subject),
+          ),
+        ];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "damageTypeChoice",
+        );
+      },
+      doFillDamageTypeAfterTargetChoice: () => {
+        const damageType = requireHole(holes, "damageTypeChoice");
+        fills = [...fills, spellDamageTypeChoiceFill(damageType, "fire")];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "attackRoll",
+        );
+      },
+      doFillTargetChoiceAfterDamageType: () => {
+        const target = requireHole(holes, "targetChoice");
+        fills = [...fills, spellTargetChoiceFill(target, skeletonId, subject)];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "attackRoll",
+        );
+      },
+      step: () => {},
+      getState: () => ({
+        ...projectSpellAttackOrderingState({
+          holes,
+          stage,
+          lastResult,
+          orderingError,
+        }),
+        route,
+      }),
+    };
+  });
+}
+
+const CHAINED_ATTACK_PROCEDURE_DAMAGE_TYPE = "fire" satisfies DamageType;
+const CHAINED_ATTACK_PROCEDURE_STEP0_NO_DUPLICATE_FACES = [1, 2, 3] as const;
+const CHAINED_ATTACK_PROCEDURE_STEP0_NO_DUPLICATE_SLOT2_FACES = [
+  1, 2, 3, 4,
+] as const;
+const CHAINED_ATTACK_PROCEDURE_STEP0_DUPLICATE_FACES = [2, 2, 5] as const;
+const CHAINED_ATTACK_PROCEDURE_STEP0_DUPLICATE_SLOT2_FACES = [
+  2, 2, 5, 1,
+] as const;
+const CHAINED_ATTACK_PROCEDURE_STEP1_SLOT1_LIMIT_FACES = [1, 1, 1] as const;
+const CHAINED_ATTACK_PROCEDURE_STEP1_SLOT2_LEAP_FACES = [1, 1, 1, 1] as const;
+const INDEPENDENT_SPELL_ATTACK_SEQUENCE_SPELL_ID = "eldritch_blast";
+const INDEPENDENT_SPELL_ATTACK_SEQUENCE_INITIAL_TARGET_HP = 13;
+const INDEPENDENT_SPELL_ATTACK_SEQUENCE_LOW_DAMAGE = 4;
+
+export function createChainedAttackProcedureRouteDriver() {
+  return defineDriver(chainedAttackProcedureRouteDriverSchema, () => {
+    let session = chainedAttackProcedureBattle();
+    let state = session.state;
+    let subject: ChainedAttackProcedureSubject | null = null;
+    let slotLevel: ChainedAttackProcedureSlotLevel | null = null;
+    let fills: readonly BattleFill[] = [];
+    let holes: readonly BattleHole[] = [];
+    let route: readonly ReducerRouteEvent[] = [];
+
+    function reset(): void {
+      session = chainedAttackProcedureBattle();
+      state = session.state;
+      subject = null;
+      slotLevel = null;
+      fills = [];
+      holes = [];
+      route = [battleReducerStartRouteEvent()];
+    }
+
+    function recordResolvedFill(input: {
+      readonly fill: BattleFill;
+      readonly expectedTag: "needsHoles" | "resolved";
+    }): void {
+      const currentSubject = requireChainedAttackProcedureSubject(subject);
+      fills = [...fills, input.fill];
+      const result = resolveBattleSubject({
+        state,
+        subject: currentSubject,
+        fills,
+      });
+      if (result.tag === "invalid") {
+        throw new Error(
+          `Expected chained attack procedure ${input.expectedTag}, got invalid: ${result.message}`,
+        );
+      }
+      if (result.tag !== input.expectedTag) {
+        throw new Error(
+          `Expected chained attack procedure ${input.expectedTag}, got ${
+            result.tag
+          }: ${"message" in result ? result.message : ""}`,
+        );
+      }
+      holes = result.tag === "needsHoles" ? result.holes : [];
+      route = [...route, ...requireChainedAttackProcedureRouteEvents(result)];
+    }
+
+    reset();
+
+    return {
+      init: reset,
+      doStartCast: (input: { readonly slotLevel: number }) => {
+        slotLevel = chainedAttackProcedureSlotLevel(input.slotLevel);
+        const act = chainedAttackProcedureAct(session, slotLevel);
+        if (act.subject.tag !== "actionSpell") {
+          throw new Error("Expected chained Action spell subject.");
+        }
+        subject = act.subject;
+        fills = [];
+        holes = act.initialHoles;
+        route = [...route, ...requireChainedAttackProcedureActRouteEvents(act)];
+      },
+      doChooseDamageType: () => {
+        recordResolvedFill({
+          fill: spellDamageTypeChoiceFill(
+            requireTypedHole(holes, "damageTypeChoice"),
+            CHAINED_ATTACK_PROCEDURE_DAMAGE_TYPE,
+          ),
+          expectedTag: "needsHoles",
+        });
+      },
+      doChooseInitialTarget: () => {
+        recordResolvedFill({
+          fill: chainedAttackProcedureTargetFill(
+            requireTypedHole(holes, "targetChoice"),
+            spellTargetId,
+          ),
+          expectedTag: "needsHoles",
+        });
+      },
+      doResolveStep0AttackHit: () => {
+        recordResolvedFill({
+          fill: attackRollFill(requireTypedHole(holes, "attackRoll"), {
+            total: 18,
+            naturalD20: 12,
+          }),
+          expectedTag: "needsHoles",
+        });
+      },
+      doResolveStep0DamageNoDuplicate: () => {
+        recordResolvedFill({
+          fill: chainedAttackProcedureDamageRollFill(
+            requireTypedHole(holes, "rolledDice"),
+            chainedAttackProcedureStep0NoDuplicateFaces(
+              requireChainedAttackProcedureSlotLevel(slotLevel),
+            ),
+          ),
+          expectedTag: "resolved",
+        });
+      },
+      doResolveStep0DamageDuplicate: () => {
+        recordResolvedFill({
+          fill: chainedAttackProcedureDamageRollFill(
+            requireTypedHole(holes, "rolledDice"),
+            chainedAttackProcedureStep0DuplicateFaces(
+              requireChainedAttackProcedureSlotLevel(slotLevel),
+            ),
+          ),
+          expectedTag: "needsHoles",
+        });
+      },
+      doChooseFirstLeapTarget: () => {
+        recordResolvedFill({
+          fill: chainedAttackProcedureLeapTargetFill(
+            requireTypedHole(holes, "targetChoice"),
+          ),
+          expectedTag: "needsHoles",
+        });
+      },
+      doResolveStep1AttackHit: () => {
+        recordResolvedFill({
+          fill: attackRollFill(requireTypedHole(holes, "attackRoll"), {
+            total: 18,
+            naturalD20: 12,
+          }),
+          expectedTag: "needsHoles",
+        });
+      },
+      doResolveStep1DuplicateDamageSlot1Limit: () => {
+        recordResolvedFill({
+          fill: chainedAttackProcedureDamageRollFill(
+            requireTypedHole(holes, "rolledDice"),
+            CHAINED_ATTACK_PROCEDURE_STEP1_SLOT1_LIMIT_FACES,
+          ),
+          expectedTag: "resolved",
+        });
+      },
+      doResolveStep1DuplicateDamageSlot2AllowsLeap: () => {
+        recordResolvedFill({
+          fill: chainedAttackProcedureDamageRollFill(
+            requireTypedHole(holes, "rolledDice"),
+            CHAINED_ATTACK_PROCEDURE_STEP1_SLOT2_LEAP_FACES,
+          ),
+          expectedTag: "needsHoles",
+        });
+      },
+      step: () => {},
+      getState: () => ({ route }),
+    };
+  });
+}
+
+export function createIndependentSpellAttackSequenceRouteDriver() {
+  return defineDriver(independentSpellAttackSequenceRouteDriverSchema, () => {
+    let session = independentSpellAttackSequenceBattle();
+    let replayBaseState = session.state;
+    const subject = independentSpellAttackSequenceSubject(session);
+    let fills: readonly BattleFill[] = [];
+    let holes: readonly BattleHole[] = [];
+    let route: readonly ReducerRouteEvent[] = [];
+
+    function reset(): void {
+      session = independentSpellAttackSequenceBattle();
+      replayBaseState = session.state;
+      const act = independentSpellAttackSequenceAct(session);
+      fills = [];
+      holes = act.initialHoles;
+      route = [
+        battleReducerStartRouteEvent(),
+        ...requireIndependentSpellAttackSequenceActRouteEvents(act),
+      ];
+    }
+
+    function recordResolvedFill(input: {
+      readonly nextFills: readonly BattleFill[];
+      readonly expectedTag: "needsHoles" | "resolved";
+    }): void {
+      fills = fillsWithMbtSpellCastReactionFacts(holes, input.nextFills);
+      const result = resolveBattleSubject({
+        state: replayBaseState,
+        subject,
+        fills,
+      });
+      if (result.tag !== input.expectedTag) {
+        throw new Error(
+          `Expected independent spell attack sequence ${input.expectedTag}, got ${
+            result.tag
+          }: ${"message" in result ? result.message : ""}`,
+        );
+      }
+      if (input.nextFills.at(-1)?.kind === "rolledDice") {
+        assertIndependentSpellAttackSequenceTargetHp(
+          result.state,
+          independentSpellAttackSequenceExpectedTargetHp(fills),
+        );
+      }
+      if (result.tag === "resolved") {
+        replayBaseState = result.state;
+      }
+      holes = result.tag === "needsHoles" ? result.holes : [];
+      route = [
+        ...route,
+        ...requireIndependentSpellAttackSequenceRouteEvents(result),
+      ];
+    }
+
+    reset();
+
+    return {
+      init: reset,
+      doFillTwoCreatureTargets: () => {
+        const [firstTarget, secondTarget] =
+          twoIndependentSpellAttackSequenceTargetHoles(holes);
+        recordResolvedFill({
+          nextFills: [
+            independentSpellAttackSequenceTargetFill(firstTarget),
+            independentSpellAttackSequenceTargetFill(secondTarget),
+          ],
+          expectedTag: "needsHoles",
+        });
+      },
+      doFillFirstAttackMiss: () => {
+        recordResolvedFill({
+          nextFills: [
+            ...fills,
+            attackRollFill(requireTypedHole(holes, "attackRoll"), {
+              total: 1,
+              naturalD20: 1,
+            }),
+          ],
+          expectedTag: "needsHoles",
+        });
+      },
+      doFillFirstAttackHit: () => {
+        recordResolvedFill({
+          nextFills: [
+            ...fills,
+            attackRollFill(requireTypedHole(holes, "attackRoll"), {
+              total: 18,
+              naturalD20: 12,
+            }),
+          ],
+          expectedTag: "needsHoles",
+        });
+      },
+      doFillFirstDamageLow: () => {
+        recordResolvedFill({
+          nextFills: [
+            ...fills,
+            damageRollFillWithGroups(requireTypedHole(holes, "rolledDice"), [
+              [INDEPENDENT_SPELL_ATTACK_SEQUENCE_LOW_DAMAGE],
+            ]),
+          ],
+          expectedTag: "needsHoles",
+        });
+      },
+      doFillSecondAttackMiss: () => {
+        recordResolvedFill({
+          nextFills: [
+            ...fills,
+            attackRollFill(requireTypedHole(holes, "attackRoll"), {
+              total: 1,
+              naturalD20: 1,
+            }),
+          ],
+          expectedTag: "resolved",
+        });
+      },
+      doFillSecondAttackHit: () => {
+        recordResolvedFill({
+          nextFills: [
+            ...fills,
+            attackRollFill(requireTypedHole(holes, "attackRoll"), {
+              total: 18,
+              naturalD20: 12,
+            }),
+          ],
+          expectedTag: "needsHoles",
+        });
+      },
+      doFillSecondDamageLow: () => {
+        recordResolvedFill({
+          nextFills: [
+            ...fills,
+            damageRollFillWithGroups(requireTypedHole(holes, "rolledDice"), [
+              [INDEPENDENT_SPELL_ATTACK_SEQUENCE_LOW_DAMAGE],
+            ]),
+          ],
+          expectedTag: "resolved",
+        });
+      },
+      doRejectStaleAfterResolved: () => {
+        const result = resolveBattleSubject({
+          state: replayBaseState,
+          subject,
+          fills,
+        });
+        if (result.tag !== "invalid" || result.reason !== "staleSubject") {
+          throw new Error("Expected stale independent spell attack sequence.");
+        }
+        route = [
+          ...route,
+          ...requireIndependentSpellAttackSequenceRouteEvents(result),
+        ];
+      },
+      step: () => {},
+      getState: () => ({ route }),
+    };
+  });
+}
+
+export function createInterruptStackResumeRouteDriver() {
+  return defineDriver(interruptStackResumeRouteDriverSchema, () => {
+    let route: readonly ReducerRouteEvent[] = [];
+
+    function reset(): void {
+      route = [battleReducerStartRouteEvent()];
+    }
+
+    function appendInterruptRouteEvents(result: BattleResolutionResult): void {
+      if (result.routeEvents === undefined || result.routeEvents.length === 0) {
+        throw new Error(
+          "Expected public reducer route events on interrupt-stack resume resolution.",
+        );
+      }
+      route = [...route, ...result.routeEvents];
+    }
+
+    reset();
+
+    return {
+      init: reset,
+      doNestedDeclineResumesOuterInterrupt: () => {
+        const state = fighterTurnWithReadiedAcidAndSecondReadiedRay();
+        const subject = interruptFighterAttackSubject(state);
+        const target = interruptAttackInitialTargetHole(state, subject);
+        const attackRoll = interruptAttackRollHoleAfterTarget(
+          state,
+          target,
+          subject,
+          interruptGoblinId,
+        );
+        const awaitingAttackReaction = resolveBattleSubject({
+          state,
+          subject,
+          fills: [
+            interruptAttackTargetFill(
+              target,
+              subject.actorId,
+              interruptGoblinId,
+              interruptAttackExecutionSelectionForSubject(subject),
+            ),
+            attackRollFill(attackRoll, { total: 15, naturalD20: 10 }),
+          ],
+        });
+        if (awaitingAttackReaction.tag !== "needsHoles") {
+          throw new Error("Expected outer attack-hit interrupt window.");
+        }
+        appendInterruptRouteEvents(awaitingAttackReaction);
+        const releaseChoice = interruptReactionChoiceWithSubject(
+          awaitingAttackReaction.snapshot.pendingInterrupt!.choices,
+        );
+        if (
+          releaseChoice.subject.tag !== "runtimeCommand" ||
+          releaseChoice.subject.command !== "releaseReadiedSpell"
+        ) {
+          throw new Error("Expected a readied-spell release subject.");
+        }
+        const released = resolveBattleInterrupt({
+          state: awaitingAttackReaction.state,
+          fill: interruptDecisionFillSupport(
+            awaitingAttackReaction.snapshot.pendingInterrupt!.decisionHole,
+            {
+              kind: "resolve",
+              responderId: interruptWizardId,
+              choice: {
+                kind: "releaseReadiedSpell",
+                readiedSpellCasterId: interruptWizardId,
+                procedureRef: releaseChoice.subject.procedureRef,
+                fills: [],
+              },
+            },
+          ),
+        });
+        if (released.tag !== "needsHoles") {
+          throw new Error("Expected released readied spell holes.");
+        }
+        appendInterruptRouteEvents(released);
+        const save = requireTypedHole(released.holes, "savingThrowOutcome");
+        const nested = resolveBattleSubject({
+          state: released.state,
+          subject: releaseChoice.subject,
+          fills: [
+            interruptSavingThrowOutcomeFill(save, [
+              { targetId: interruptGoblinId, succeeded: false },
+            ]),
+          ],
+        });
+        if (nested.tag !== "needsHoles") {
+          throw new Error("Expected nested save-failed interrupt window.");
+        }
+        appendInterruptRouteEvents(nested);
+        const declinedNested = resolveBattleInterrupt({
+          state: nested.state,
+          fill: interruptDecisionFillSupport(
+            nested.snapshot.pendingInterrupt!.decisionHole,
+            {
+              kind: "decline",
+              responderId: interruptSecondWizardId,
+            },
+          ),
+        });
+        if (declinedNested.tag !== "needsHoles") {
+          throw new Error("Expected nested decline to resume spell damage.");
+        }
+        appendInterruptRouteEvents(declinedNested);
+      },
+      doShieldMutationResumesInterruptedAttack: () => {
+        const session = interruptShieldBattle();
+        const state = session.state;
+        const attackAct = interruptShieldUnarmedStrikeAct(session);
+        const target = requireTypedHole(attackAct.initialHoles, "targetChoice");
+        const targetFillForAttack = interruptShieldAttackTargetFill(target);
+        const awaitingAttackRoll = resolveBattleSubject({
+          state,
+          subject: attackAct.subject,
+          fills: [targetFillForAttack],
+        });
+        if (awaitingAttackRoll.tag !== "needsHoles") {
+          throw new Error("Expected attack target to request an Attack Roll.");
+        }
+        const attackRoll = requireTypedHole(
+          awaitingAttackRoll.holes,
+          "attackRoll",
+        );
+        const awaitingReaction = resolveBattleSubject({
+          state,
+          subject: attackAct.subject,
+          fills: [
+            targetFillForAttack,
+            attackRollFill(attackRoll, { total: 14, naturalD20: 10 }),
+          ],
+        });
+        if (awaitingReaction.tag !== "needsHoles") {
+          throw new Error("Expected Shield to open an attack-hit interrupt.");
+        }
+        appendInterruptRouteEvents(awaitingReaction);
+        const choice = requireInterruptShieldReactionChoice(
+          awaitingReaction,
+          session.context,
+        );
+        const resolved = resolveBattleInterrupt({
+          state: awaitingReaction.state,
+          fill: interruptDecisionFillSupport(
+            awaitingReaction.snapshot.pendingInterrupt!.decisionHole,
+            {
+              kind: "resolve",
+              responderId: interruptShieldCasterId,
+              choice: {
+                kind: "castTriggeredReactionSpell",
+                procedureRef: choice.subject.procedureRef,
+                fills: [],
+              },
+            },
+          ),
+        });
+        if (resolved.tag !== "resolved") {
+          throw new Error("Expected Shield active effect to resume attack.");
+        }
+        appendInterruptRouteEvents(resolved);
+      },
+      doReplayRecordedProcedureFromRoot: () => {
+        const continuation = publicReplayContinuationAfterAttackDeclines();
+        route = [battleReducerStartRouteEvent()];
+        const pendingDamage = resolveBattleSubject({
+          state: continuation.state,
+          subject: continuation.subject,
+          fills: [],
+        });
+        if (pendingDamage.tag !== "needsHoles") {
+          throw new Error("Expected replay continuation to request damage.");
+        }
+        appendInterruptRouteEvents(pendingDamage);
+        const replayDamage = requireTypedHole(
+          pendingDamage.holes,
+          "rolledDice",
+        );
+        const replayFromRoot = resolveBattleSubject({
+          state: pendingDamage.state,
+          subject: continuation.subject,
+          fills: [damageRollFill(replayDamage, 4)],
+        });
+        if (replayFromRoot.tag !== "resolved") {
+          throw new Error("Expected replay-from-root to resolve.");
+        }
+        appendInterruptRouteEvents(replayFromRoot);
+      },
+      step: () => {},
+      getState: (): ReducerRoutedInterruptStackResumeProjection => ({
+        route,
+      }),
+    };
+  });
+}
+
+function publicReplayContinuationAfterAttackDeclines(): {
+  readonly state: BattleState;
+  readonly subject: Extract<
+    BattleSubject,
+    { readonly tag: "action"; readonly action: "attack" }
+  >;
+} {
+  const state = fighterTurnWithReadiedAcidAndSecondReadiedRay();
+  const subject = interruptFighterAttackSubject(state);
+  const target = interruptAttackInitialTargetHole(state, subject);
+  const attackRoll = interruptAttackRollHoleAfterTarget(
+    state,
+    target,
+    subject,
+    interruptGoblinId,
+  );
+  let result: BattleResolutionResult = resolveBattleSubject({
+    state,
+    subject,
+    fills: [
+      interruptAttackTargetFill(
+        target,
+        subject.actorId,
+        interruptGoblinId,
+        interruptAttackExecutionSelectionForSubject(subject),
+      ),
+      attackRollFill(attackRoll, { total: 15, naturalD20: 10 }),
+    ],
+  });
+  while (
+    result.tag === "needsHoles" &&
+    result.holes.some((hole) => hole.kind === "interruptDecision")
+  ) {
+    const pending = result.snapshot.pendingInterrupt;
+    const responderId = pending?.choices[0]?.reactorId;
+    if (pending == null || responderId === undefined) {
+      throw new Error("Expected public interrupt decision responder.");
+    }
+    result = resolveBattleInterrupt({
+      state: result.state,
+      fill: interruptDecisionFillSupport(pending.decisionHole, {
+        kind: "decline",
+        responderId,
+      }),
+    });
+  }
+  if (
+    result.tag !== "needsHoles" ||
+    !result.holes.some((hole) => hole.kind === "rolledDice") ||
+    result.state.interruptStack.at(-1)?.kind !== "replayContinuation"
+  ) {
+    throw new Error(
+      "Expected public interrupt decline path to reach replay continuation damage.",
+    );
+  }
+  return {
+    state: result.state,
+    subject,
+  };
+}
+
+export function createHitPointRestorationOrderingDriver() {
+  return defineDriver(hitPointRestorationOrderingDriverSchema, () => {
+    let session = healingSpellOrderingBattle();
+    let state = session.state;
+    let subject: BattleSubject = healingWordSubject(session);
+    let fills: readonly BattleFill[] = [];
+    let holes: readonly BattleHole[] = [];
+    let stage: HitPointRestorationOrderingProjection["stage"] = "actSelection";
+    let lastResult: HitPointRestorationOrderingProjection["lastResult"] =
+      "init";
+    let orderingError: HitPointRestorationOrderingProjection["orderingError"] =
+      "";
+    let spellTargetHp = 0;
+    let spellTargetZeroHpLifecycleCleared = false;
+    let featureTargetHp = 0;
+    let featureTargetZeroHpLifecycleCleared = false;
+
+    function reset(): void {
+      session = healingSpellOrderingBattle();
+      state = session.state;
+      subject = healingWordSubject(session);
+      fills = [];
+      holes = [];
+      stage = "actSelection";
+      lastResult = "init";
+      orderingError = "";
+      spellTargetHp = 0;
+      spellTargetZeroHpLifecycleCleared = false;
+      featureTargetHp = 0;
+      featureTargetZeroHpLifecycleCleared = false;
+    }
+
+    function recordAccepted(
+      result: BattleResolutionResult,
+      nextStage: HitPointRestorationOrderingProjection["stage"],
+    ): void {
+      lastResult = result.tag;
+      if (result.tag === "resolved") {
+        state = result.state;
+        holes = [];
+        stage = nextStage;
+        orderingError = "";
+        return;
+      }
+      if (result.tag === "needsHoles") {
+        state = result.state;
+        holes = result.holes;
+        stage = nextStage;
+        orderingError = "";
+        return;
+      }
+      throw new Error(
+        `Expected accepted Hit Point restoration ordering fill, got ${
+          result.tag
+        }: ${"message" in result ? result.message : ""}`,
+      );
+    }
+
+    function recordNeedsEarlierHole(
+      result: BattleResolutionResult,
+      expectedOrderingError: Exclude<
+        HitPointRestorationOrderingProjection["orderingError"],
+        ""
+      >,
+      expectedStage: HitPointRestorationOrderingProjection["stage"],
+    ): void {
+      if (result.tag !== "needsHoles") {
+        throw new Error(
+          "Expected Hit Point restoration fill to request earlier holes.",
+        );
+      }
+      lastResult = result.tag;
+      holes = result.holes;
+      stage = expectedStage;
+      orderingError = expectedOrderingError;
+    }
+
+    return {
+      init: reset,
+      doDiscoverSingleTargetSpellHealing: () => {
+        session = healingSpellOrderingBattle();
+        state = session.state;
+        subject = healingWordSubject(session);
+        fills = [];
+        holes = healingOrderingHolesAfterFills(state, subject, []);
+        stage = "spellHealingTargetChoice";
+        lastResult = "needsHoles";
+        orderingError = "";
+        spellTargetHp = 0;
+        spellTargetZeroHpLifecycleCleared = false;
+      },
+      doSubmitHealingRollBeforeTargetChoice: () => {
+        const target = requireHole(holes, "targetChoice");
+        const healingRoll = requireHole(
+          healingOrderingHolesAfterFills(state, subject, [
+            spellTargetChoiceFill(
+              target,
+              skeletonId,
+              requireSpellTargetSubject(subject),
+            ),
+          ]),
+          "rolledDice",
+        );
+        recordNeedsEarlierHole(
+          resolveBattleSubject({
+            state,
+            subject,
+            fills: [damageRollFillWithGroups(healingRoll, [[1, 1]])],
+          }),
+          "healingTargetRequired",
+          "spellHealingTargetChoice",
+        );
+      },
+      doFillSpellHealingTargetChoice: () => {
+        const target = requireHole(holes, "targetChoice");
+        fills = [
+          spellTargetChoiceFill(
+            target,
+            skeletonId,
+            requireSpellTargetSubject(subject),
+          ),
+        ];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "spellHealingRoll",
+        );
+      },
+      doDiscoverTargetListSpellHealing: () => {
+        session = healingTargetListSpellOrderingBattle();
+        state = session.state;
+        subject = massHealingWordSubject(session);
+        fills = [];
+        holes = healingOrderingHolesAfterFills(state, subject, []);
+        stage = "spellHealingTargetList";
+        lastResult = "needsHoles";
+        orderingError = "";
+        spellTargetHp = 0;
+        spellTargetZeroHpLifecycleCleared = false;
+      },
+      doSubmitHealingRollBeforeTargetList: () => {
+        const targetList = requireHole(holes, "spellTargetList");
+        const healingRoll = requireHole(
+          healingOrderingHolesAfterFills(state, subject, [
+            spellTargetListFill(
+              targetList,
+              requireSpellTargetSubject(subject),
+              [skeletonId],
+            ),
+          ]),
+          "rolledDice",
+        );
+        recordNeedsEarlierHole(
+          resolveBattleSubject({
+            state,
+            subject,
+            fills: [damageRollFillWithGroups(healingRoll, [[1, 1]])],
+          }),
+          "healingTargetRequired",
+          "spellHealingTargetList",
+        );
+      },
+      doFillSpellHealingTargetList: () => {
+        const targetList = requireHole(holes, "spellTargetList");
+        fills = [
+          spellTargetListFill(targetList, requireSpellTargetSubject(subject), [
+            skeletonId,
+          ]),
+        ];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "spellHealingRoll",
+        );
+      },
+      doFillSpellHealingRoll: () => {
+        const healingRoll = requireHole(holes, "rolledDice");
+        fills = [...fills, damageRollFillWithGroups(healingRoll, [[1, 1]])];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "resolved",
+        );
+        const healedTarget = snapshotCombatant(state, skeletonId);
+        spellTargetHp = healedTarget.hp;
+        spellTargetZeroHpLifecycleCleared =
+          zeroHpLifecycleClearedByHealing(healedTarget);
+      },
+      doDiscoverFeatureHealingPool: () => {
+        session = featureHealingPoolOrderingBattle();
+        state = session.state;
+        subject = preserveLifeSubject(session);
+        fills = [];
+        holes = healingOrderingHolesAfterFills(state, subject, []);
+        stage = "featureHealingPoolDistribution";
+        lastResult = "needsHoles";
+        orderingError = "";
+        featureTargetHp = 0;
+        featureTargetZeroHpLifecycleCleared = false;
+      },
+      doFillFeatureHealingDistribution: () => {
+        const distribution = requireHole(holes, "hitPointHealingDistribution");
+        fills = [
+          preserveLifeDistributionFill(distribution, [
+            { targetId: skeletonId, hitPoints: 8 },
+          ]),
+        ];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "resolved",
+        );
+        const healedTarget = snapshotCombatant(state, skeletonId);
+        featureTargetHp = healedTarget.hp;
+        featureTargetZeroHpLifecycleCleared =
+          zeroHpLifecycleClearedByHealing(healedTarget);
+      },
+      step: () => {},
+      getState: () =>
+        projectHitPointRestorationOrderingState({
+          holes,
+          stage,
+          lastResult,
+          orderingError,
+          spellTargetHp,
+          spellTargetZeroHpLifecycleCleared,
+          featureTargetHp,
+          featureTargetZeroHpLifecycleCleared,
+        }),
+    };
+  });
+}
+
+export function createHitPointRestorationOrderingRouteDriver() {
+  return defineDriver(hitPointRestorationOrderingDriverSchema, () => {
+    let session = healingSpellOrderingBattle();
+    let state = session.state;
+    let subject: BattleSubject = healingWordSubject(session);
+    let fills: readonly BattleFill[] = [];
+    let holes: readonly BattleHole[] = [];
+    let route: readonly ReducerRouteEvent[] = [];
+    let stage: HitPointRestorationOrderingProjection["stage"] = "actSelection";
+    let lastResult: HitPointRestorationOrderingProjection["lastResult"] =
+      "init";
+    let orderingError: HitPointRestorationOrderingProjection["orderingError"] =
+      "";
+    let spellTargetHp = 0;
+    let spellTargetZeroHpLifecycleCleared = false;
+    let featureTargetHp = 0;
+    let featureTargetZeroHpLifecycleCleared = false;
+
+    function reset(): void {
+      session = healingSpellOrderingBattle();
+      state = session.state;
+      subject = healingWordSubject(session);
+      fills = [];
+      holes = [];
+      route = [battleReducerStartRouteEvent()];
+      stage = "actSelection";
+      lastResult = "init";
+      orderingError = "";
+      spellTargetHp = 0;
+      spellTargetZeroHpLifecycleCleared = false;
+      featureTargetHp = 0;
+      featureTargetZeroHpLifecycleCleared = false;
+    }
+
+    function recordAccepted(
+      result: BattleResolutionResult,
+      nextStage: HitPointRestorationOrderingProjection["stage"],
+    ): void {
+      lastResult = result.tag;
+      if (result.tag === "resolved") {
+        state = result.state;
+        holes = [];
+        route = [
+          ...route,
+          ...requireHitPointRestorationOrderingRouteEvents(result),
+        ];
+        stage = nextStage;
+        orderingError = "";
+        return;
+      }
+      if (result.tag === "needsHoles") {
+        state = result.state;
+        holes = result.holes;
+        route = [
+          ...route,
+          ...requireHitPointRestorationOrderingRouteEvents(result),
+        ];
+        stage = nextStage;
+        orderingError = "";
+        return;
+      }
+      throw new Error(
+        `Expected accepted Hit Point restoration ordering fill, got ${
+          result.tag
+        }: ${"message" in result ? result.message : ""}`,
+      );
+    }
+
+    function recordNeedsEarlierHole(
+      result: BattleResolutionResult,
+      expectedOrderingError: Exclude<
+        HitPointRestorationOrderingProjection["orderingError"],
+        ""
+      >,
+      expectedStage: HitPointRestorationOrderingProjection["stage"],
+    ): void {
+      if (result.tag !== "needsHoles") {
+        throw new Error(
+          "Expected Hit Point restoration fill to request earlier holes.",
+        );
+      }
+      lastResult = result.tag;
+      holes = result.holes;
+      route = [
+        ...route,
+        ...requireHitPointRestorationOrderingRouteEvents(result),
+      ];
+      stage = expectedStage;
+      orderingError = expectedOrderingError;
+    }
+
+    function discoverHealingAct(input: {
+      readonly nextSession: BattleRuntimeSession;
+      readonly findAct: (
+        act: ReturnType<typeof discoverBattleActs>[number],
+      ) => boolean;
+      readonly nextStage: HitPointRestorationOrderingProjection["stage"];
+    }): void {
+      session = input.nextSession;
+      state = session.state;
+      const act = discoverBattleActs(session).find(input.findAct);
+      if (act === undefined) {
+        throw new Error("Expected public Hit Point restoration act discovery.");
+      }
+      subject = act.subject;
+      fills = [];
+      holes = act.initialHoles;
+      route = [
+        ...route,
+        ...requireHitPointRestorationOrderingActRouteEvents(act),
+      ];
+      stage = input.nextStage;
+      lastResult = "needsHoles";
+      orderingError = "";
+    }
+
+    reset();
+
+    return {
+      init: reset,
+      doDiscoverSingleTargetSpellHealing: () => {
+        discoverHealingAct({
+          nextSession: healingSpellOrderingBattle(),
+          findAct: (act) =>
+            act.subject.tag === "bonusActionSpell" &&
+            battleActSpellPresentation(act)?.invocation.procedure ===
+              "directHitPointRestoration" &&
+            // authored-id-dispatch-allow: battle-runtime-mbt-fixture-boundary
+            battleActSpellPresentation(act)?.invocation.spellId ===
+              "healing_word",
+          nextStage: "spellHealingTargetChoice",
+        });
+        spellTargetHp = 0;
+        spellTargetZeroHpLifecycleCleared = false;
+      },
+      doSubmitHealingRollBeforeTargetChoice: () => {
+        const target = requireHole(holes, "targetChoice");
+        const healingRoll = requireHole(
+          healingOrderingHolesAfterFills(state, subject, [
+            spellTargetChoiceFill(
+              target,
+              skeletonId,
+              requireSpellTargetSubject(subject),
+            ),
+          ]),
+          "rolledDice",
+        );
+        recordNeedsEarlierHole(
+          resolveBattleSubject({
+            state,
+            subject,
+            fills: [damageRollFillWithGroups(healingRoll, [[1, 1]])],
+          }),
+          "healingTargetRequired",
+          "spellHealingTargetChoice",
+        );
+      },
+      doFillSpellHealingTargetChoice: () => {
+        const target = requireHole(holes, "targetChoice");
+        fills = [
+          spellTargetChoiceFill(
+            target,
+            skeletonId,
+            requireSpellTargetSubject(subject),
+          ),
+        ];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "spellHealingRoll",
+        );
+      },
+      doDiscoverTargetListSpellHealing: () => {
+        discoverHealingAct({
+          nextSession: healingTargetListSpellOrderingBattle(),
+          findAct: (act) =>
+            act.subject.tag === "bonusActionSpell" &&
+            battleActSpellPresentation(act)?.invocation.procedure ===
+              "directHitPointRestoration" &&
+            // authored-id-dispatch-allow: battle-runtime-mbt-fixture-boundary
+            battleActSpellPresentation(act)?.invocation.spellId ===
+              "mass_healing_word",
+          nextStage: "spellHealingTargetList",
+        });
+        spellTargetHp = 0;
+        spellTargetZeroHpLifecycleCleared = false;
+      },
+      doSubmitHealingRollBeforeTargetList: () => {
+        const targetList = requireHole(holes, "spellTargetList");
+        const healingRoll = requireHole(
+          healingOrderingHolesAfterFills(state, subject, [
+            spellTargetListFill(
+              targetList,
+              requireSpellTargetSubject(subject),
+              [skeletonId],
+            ),
+          ]),
+          "rolledDice",
+        );
+        recordNeedsEarlierHole(
+          resolveBattleSubject({
+            state,
+            subject,
+            fills: [damageRollFillWithGroups(healingRoll, [[1, 1]])],
+          }),
+          "healingTargetRequired",
+          "spellHealingTargetList",
+        );
+      },
+      doFillSpellHealingTargetList: () => {
+        const targetList = requireHole(holes, "spellTargetList");
+        fills = [
+          spellTargetListFill(targetList, requireSpellTargetSubject(subject), [
+            skeletonId,
+          ]),
+        ];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "spellHealingRoll",
+        );
+      },
+      doFillSpellHealingRoll: () => {
+        const healingRoll = requireHole(holes, "rolledDice");
+        fills = [...fills, damageRollFillWithGroups(healingRoll, [[1, 1]])];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "resolved",
+        );
+        const healedTarget = snapshotCombatant(state, skeletonId);
+        spellTargetHp = healedTarget.hp;
+        spellTargetZeroHpLifecycleCleared =
+          zeroHpLifecycleClearedByHealing(healedTarget);
+      },
+      doDiscoverFeatureHealingPool: () => {
+        discoverHealingAct({
+          nextSession: featureHealingPoolOrderingBattle(),
+          findAct: (act) =>
+            act.subject.tag === "unitFeature" &&
+            // authored-id-dispatch-allow: battle-runtime-mbt-fixture-boundary
+            battleActUnitPresentation(act)?.unitId === "cleric_preserve_life",
+          nextStage: "featureHealingPoolDistribution",
+        });
+        featureTargetHp = 0;
+        featureTargetZeroHpLifecycleCleared = false;
+      },
+      doFillFeatureHealingDistribution: () => {
+        const distribution = requireHole(holes, "hitPointHealingDistribution");
+        fills = [
+          preserveLifeDistributionFill(distribution, [
+            { targetId: skeletonId, hitPoints: 8 },
+          ]),
+        ];
+        recordAccepted(
+          resolveBattleSubject({ state, subject, fills }),
+          "resolved",
+        );
+        const healedTarget = snapshotCombatant(state, skeletonId);
+        featureTargetHp = healedTarget.hp;
+        featureTargetZeroHpLifecycleCleared =
+          zeroHpLifecycleClearedByHealing(healedTarget);
+      },
+      step: () => {},
+      getState: () => ({
+        ...projectHitPointRestorationOrderingState({
+          holes,
+          stage,
+          lastResult,
+          orderingError,
+          spellTargetHp,
+          spellTargetZeroHpLifecycleCleared,
+          featureTargetHp,
+          featureTargetZeroHpLifecycleCleared,
+        }),
+        route,
+      }),
+    };
+  });
+}
+
+export function createDeathSavingThrowRouteDriver() {
+  return defineDriver(deathSavingThrowRouteDriverSchema, () => {
+    const subject = deathSavingThrowEndTurnSubject();
+    const recorder = createBattleSubjectResolutionRecorder({
+      initialState: deathSavingThrowBattle(),
+      subject,
+      noInvalidReason: "",
+    });
+    let fills: readonly BattleFill[] = [];
+    let route: readonly ReducerRouteEvent[] = [];
+
+    function reset(): void {
+      const state = deathSavingThrowBattle();
+      recorder.reset(state);
+      fills = [];
+      route = [battleReducerStartRouteEvent()];
+    }
+
+    function recordDeathSavingThrowResolution(
+      nextFills: readonly BattleFill[],
+    ): void {
+      const snapshot = recorder.snapshot();
+      const result = resolveBattleSubject({
+        state: snapshot.state,
+        subject,
+        fills: nextFills,
+      });
+      if (result.routeEvents === undefined || result.routeEvents.length === 0) {
+        throw new Error(
+          "Expected public reducer route events on Death Saving Throw resolution.",
+        );
+      }
+      route = [...route, ...result.routeEvents];
+      recorder.record(result);
+    }
+
+    function fillDeathSavingThrow(roll: number): void {
+      const deathSavingThrow = requireTypedHole(
+        recorder.snapshot().holes,
+        "deathSavingThrow",
+      );
+      fills = [deathSavingThrowFill(deathSavingThrow, roll)];
+      recordDeathSavingThrowResolution(fills);
+    }
+
+    reset();
+
+    return {
+      init: reset,
+      doDiscoverEndTurnDeathSavingThrow: () => {
+        recordDeathSavingThrowResolution([]);
+      },
+      doFillDeathSavingThrow: ({ roll }) => {
+        fillDeathSavingThrow(roll);
+      },
+      doRejectWrongActorEndTurnAfterResolved: () => {
+        recordDeathSavingThrowResolution(fills);
+      },
+      step: () => {},
+      getState: () => ({
+        ...projectDeathSavingThrowState(recorder.snapshot()),
+        route,
+      }),
+    };
+  });
+}
+
+export function createConcentrationBreakTeardownRouteDriver() {
+  return defineDriver(concentrationBreakTeardownRouteDriverSchema, () => {
+    let state = initialConcentrationBreakTeardownState();
+    let route: readonly ReducerRouteEvent[] = [];
+
+    function reset(): void {
+      state = initialConcentrationBreakTeardownState();
+      route = [battleReducerStartRouteEvent()];
+    }
+
+    function appendResolutionRouteEvents(result: BattleResolutionResult): void {
+      if (result.routeEvents === undefined || result.routeEvents.length === 0) {
+        throw new Error(
+          "Expected public reducer route events on Concentration resolution.",
+        );
+      }
+      route = [...route, ...result.routeEvents];
+    }
+
+    function appendDiscoveredActRouteEvents(input: {
+      readonly routeEvents?: readonly ReducerRouteEvent[];
+    }): void {
+      if (input.routeEvents === undefined || input.routeEvents.length === 0) {
+        throw new Error(
+          "Expected public reducer route events on Concentration act discovery.",
+        );
+      }
+      route = [...route, ...input.routeEvents];
+    }
+
+    function recordConcentrationCast(
+      input: ConcentrationBreakTeardownRuntimeState,
+    ): ConcentrationBreakTeardownRuntimeState {
+      const act = concentrationBreakTeardownCastAct(input.battle);
+      appendDiscoveredActRouteEvents(act);
+      const result = resolveBattleSubject({
+        state: input.battle.state,
+        subject: act.subject,
+        fills: [],
+      });
+      appendResolutionRouteEvents(result);
+      return {
+        ...input,
+        battle: battleRuntimeSessionForTest({
+          state: requireResolved(result).state,
+          context: input.battle.context,
+        }),
+        pendingConcentrationSave: null,
+        lastRouteEvents: result.routeEvents ?? [],
+      };
+    }
+
+    reset();
+
+    return {
+      init: reset,
+      doCastConcentrationSpell: () => {
+        state = {
+          ...recordConcentrationCast(initialConcentrationBreakTeardownState()),
+          scenario: "concentrationSpellCast",
+        };
+      },
+      doDamageRequestsConcentrationSave: (input: {
+        readonly damageDiePip: number;
+      }) => {
+        state = damageRequestsConcentrationSave(state, input.damageDiePip);
+        route = [...route, ...state.lastRouteEvents];
+      },
+      doFailConcentrationSave: (input: { readonly saveRollTotal: number }) => {
+        state = failConcentrationSave(state, input.saveRollTotal);
+        route = [...route, ...state.lastRouteEvents];
+      },
+      doVoluntaryEndConcentration: () => {
+        const cast = recordConcentrationCast(
+          initialConcentrationBreakTeardownState(),
+        );
+        const act = endConcentrationAct(cast.battle);
+        appendDiscoveredActRouteEvents(act);
+        const result = resolveBattleSubject({
+          state: cast.battle.state,
+          subject: act.subject,
+          fills: [],
+        });
+        appendResolutionRouteEvents(result);
+        state = {
+          ...cast,
+          battle: battleRuntimeSessionForTest({
+            state: requireResolved(result).state,
+            context: cast.battle.context,
+          }),
+          scenario: "voluntaryEndTeardown",
+          teardownBeforeNextCommand:
+            concentrationTeardownIsVisibleBeforeNextCommand(
+              battleRuntimeSessionForTest({
+                state: requireResolved(result).state,
+                context: cast.battle.context,
+              }),
+            ),
+          lastRouteEvents: result.routeEvents ?? [],
+        };
+      },
+      doCastReplacementConcentrationSpell: () => {
+        const initial = initialConcentrationBreakTeardownState();
+        const beforeReplacement = stateWithPreexistingBlurConcentration(
+          initial.battle.state,
+        );
+        const replaced = recordConcentrationCast({
+          ...initial,
+          battle: battleRuntimeSessionForTest({
+            state: beforeReplacement,
+            context: initial.battle.context,
+          }),
+        });
+        state = {
+          ...replaced,
+          scenario: "replacementTeardownBeforeNewEffect",
+          replacementStartedAfterTeardown:
+            blurredEffectCount(replaced.battle.state) === 1,
+        };
+      },
+      step: () => {},
+      getState: () => ({
+        ...projectConcentrationBreakTeardownState(state),
+        route,
+      }),
+    };
+  });
+}
+
+export function createCommandOrderingDriver() {
+  return createCommandOrderingDriverWithRoute(false);
+}
+
+export function createCommandOrderingRouteDriver() {
+  return createCommandOrderingDriverWithRoute(true);
+}
+
+function createCommandOrderingDriverWithRoute<
+  const IncludeRoute extends boolean,
+>(includeRoute: IncludeRoute) {
+  return defineDriver(commandOrderingDriverSchema, () => {
+    let session = commandOrderingBattle();
+    let state = session.state;
+    let subject: BattleSubject = commandOrderingCastSubject(session);
+    let fills: readonly BattleFill[] = [];
+    let holes: readonly BattleHole[] = [];
+    let stage: CommandOrderingProjection["stage"] = "actSelection";
+    let lastResult: CommandOrderingProjection["lastResult"] = "init";
+    let orderingError: CommandOrderingProjection["orderingError"] = "";
+    let pendingCommandOption: CommandOrderingPendingOption = "none";
+    let droppedObjectCount = 0;
+    let route: readonly ReducerRouteEvent[] = [battleReducerStartRouteEvent()];
+
+    function reset(): void {
+      session = commandOrderingBattle();
+      state = session.state;
+      subject = commandOrderingCastSubject(session);
+      fills = [];
+      holes = [];
+      stage = "actSelection";
+      lastResult = "init";
+      orderingError = "";
+      pendingCommandOption = "none";
+      droppedObjectCount = 0;
+      route = [battleReducerStartRouteEvent()];
+    }
+
+    function recordAccepted(
+      result: BattleResolutionResult,
+      nextStage: CommandOrderingProjection["stage"],
+    ): void {
+      lastResult = result.tag;
+      if (result.tag === "resolved") {
+        state = result.state;
+        session = battleRuntimeSessionForTest({
+          state,
+          context: session.context,
+        });
+        holes = [];
+        stage = nextStage;
+        orderingError = "";
+        droppedObjectCount =
+          "droppedObjects" in result ? (result.droppedObjects?.length ?? 0) : 0;
+        pendingCommandOption = commandPendingOption(state);
+        return;
+      }
+      if (result.tag === "needsHoles") {
+        state = result.state;
+        session = battleRuntimeSessionForTest({
+          state,
+          context: session.context,
+        });
+        holes = result.holes;
+        stage = nextStage;
+        orderingError = "";
+        pendingCommandOption = commandPendingOption(state);
+        return;
+      }
+      throw new Error(
+        `Expected accepted Command ordering fill, got ${result.tag}: ${
+          "message" in result ? result.message : ""
+        }`,
+      );
+    }
+
+    function recordNeedsEarlierHole(
+      result: BattleResolutionResult,
+      expectedOrderingError: Exclude<
+        CommandOrderingProjection["orderingError"],
+        ""
+      >,
+      expectedStage: CommandOrderingProjection["stage"],
+    ): void {
+      if (result.tag !== "needsHoles") {
+        throw new Error("Expected Command fill to request an earlier hole.");
+      }
+      lastResult = result.tag;
+      holes = result.holes;
+      stage = expectedStage;
+      orderingError = expectedOrderingError;
+      pendingCommandOption = commandPendingOption(state);
+    }
+
+    function recordInvalid(
+      result: BattleResolutionResult,
+      expectedOrderingError: Exclude<
+        CommandOrderingProjection["orderingError"],
+        ""
+      >,
+    ): void {
+      if (result.tag !== "invalid" || result.reason !== "invalidFill") {
+        throw new Error("Expected Command ordering invalid fill.");
+      }
+      lastResult = result.tag;
+      orderingError = expectedOrderingError;
+      pendingCommandOption = commandPendingOption(state);
+    }
+
+    function discoverCommand(): void {
+      session = commandOrderingBattle();
+      state = session.state;
+      const act = commandOrderingCastAct(session);
+      subject = act.subject;
+      fills = [];
+      holes = act.initialHoles;
+      stage = "targetListAndOptionChoice";
+      lastResult = "needsHoles";
+      orderingError = "";
+      pendingCommandOption = "none";
+      droppedObjectCount = 0;
+      appendCommandOrderingActRouteEvents(act);
+    }
+
+    function startRuntimeCommand(
+      option: Exclude<CommandOrderingPendingOption, "none">,
+      input: CommandTargetTurnInput = {},
+    ): ReturnType<typeof commandRuntimeAct> {
+      state = commandTargetTurn(option, input);
+      session = battleRuntimeSessionForTest({
+        state,
+        context: session.context,
+      });
+      const act = commandRuntimeAct(session, option);
+      subject = act.subject;
+      fills = [];
+      holes = act.initialHoles;
+      lastResult = holes.length === 0 ? "resolved" : "needsHoles";
+      orderingError = "";
+      pendingCommandOption = commandPendingOption(state);
+      droppedObjectCount = 0;
+      return act;
+    }
+
+    function appendCommandOrderingActRouteEvents(input: {
+      readonly routeEvents?: readonly ReducerRouteEvent[];
+    }): void {
+      if (!includeRoute) return;
+      if (input.routeEvents === undefined || input.routeEvents.length === 0) {
+        throw new Error("Expected public reducer route events on Command act.");
+      }
+      route = [...route, ...input.routeEvents];
+    }
+
+    function appendCommandOrderingRouteEvents(
+      result: BattleResolutionResult,
+    ): void {
+      if (!includeRoute) return;
+      if (result.routeEvents === undefined || result.routeEvents.length === 0) {
+        throw new Error(
+          "Expected public reducer route events on Command resolution.",
+        );
+      }
+      route = [...route, ...result.routeEvents];
+    }
+
+    return {
+      init: reset,
+      doDiscoverCommand: discoverCommand,
+      doSubmitOptionBeforeTargetList: () => {
+        const commandOption = requireHole(holes, "commandOptionChoice");
+        const result = resolveBattleSubject({
+          state,
+          subject,
+          fills: [commandOptionFill(commandOption, "grovel")],
+        });
+        recordNeedsEarlierHole(
+          result,
+          "commandTargetListRequired",
+          "targetList",
+        );
+        appendCommandOrderingRouteEvents(result);
+      },
+      doFillTargetList: () => {
+        const targetList = requireHole(holes, "spellTargetList");
+        fills = [
+          spellTargetListFill(targetList, requireSpellTargetSubject(subject), [
+            skeletonId,
+          ]),
+        ];
+        const result = resolveBattleSubject({ state, subject, fills });
+        recordAccepted(result, "optionChoice");
+        appendCommandOrderingRouteEvents(result);
+      },
+      doSubmitSavingThrowBeforeOption: () => {
+        const commandOption = requireHole(holes, "commandOptionChoice");
+        if (subject.tag !== "actionSpell") {
+          throw new Error("Expected Command cast subject.");
+        }
+        const savingThrow = requireHole(
+          commandHolesAfterFills(state, subject, [
+            ...fills,
+            commandOptionFill(commandOption, "grovel"),
+          ]),
+          "savingThrowOutcome",
+        );
+        const result = resolveBattleSubject({
+          state,
+          subject,
+          fills: [
+            ...fills,
+            saveGatedSpellSavingThrowOutcomeFill(savingThrow, [
+              { targetId: skeletonId, succeeded: false },
+            ]),
+          ],
+        });
+        recordNeedsEarlierHole(
+          result,
+          "commandOptionChoiceRequired",
+          "optionChoice",
+        );
+        appendCommandOrderingRouteEvents(result);
+      },
+      doFillGrovelOption: () => {
+        const commandOption = requireHole(holes, "commandOptionChoice");
+        fills = [...fills, commandOptionFill(commandOption, "grovel")];
+        const result = resolveBattleSubject({ state, subject, fills });
+        recordAccepted(result, "savingThrowOutcome");
+        appendCommandOrderingRouteEvents(result);
+      },
+      doFillFailedGrovelSavingThrow: () => {
+        const savingThrow = requireHole(holes, "savingThrowOutcome");
+        fills = [
+          ...fills,
+          saveGatedSpellSavingThrowOutcomeFill(savingThrow, [
+            { targetId: skeletonId, succeeded: false },
+          ]),
+        ];
+        const result = resolveBattleSubject({ state, subject, fills });
+        recordAccepted(result, "resolved");
+        appendCommandOrderingRouteEvents(result);
+      },
+      doFollowGrovel: () => {
+        const targetTurn = requireResolved(
+          resolveBattleSubject({
+            state,
+            subject: endTurnSubjectFor(fighterId),
+            fills: [],
+          }),
+        ).state;
+        const command = commandRuntimeAct(
+          battleRuntimeSessionForTest({
+            state: targetTurn,
+            context: session.context,
+          }),
+          "grovel",
+        );
+        const result = resolveBattleSubject({
+          state: targetTurn,
+          subject: command.subject,
+          fills: [],
+        });
+        recordAccepted(result, "resolved");
+        appendCommandOrderingRouteEvents(result);
+      },
+      doDropNeedsHeldObjectFacts: () => {
+        const act = startRuntimeCommand("drop");
+        stage = "dropHeldObjectFacts";
+        lastResult = "needsHoles";
+        appendCommandOrderingActRouteEvents(act);
+      },
+      doFillDropHeldObjectFacts: () => {
+        const heldObjectFacts = requireHole(holes, "heldObjectFacts");
+        fills = [
+          {
+            kind: "heldObjectFacts",
+            holeId: heldObjectFacts.holeId,
+            value: {
+              objectIds: [
+                battleObjectId("command-ordering:main-hand"),
+                battleObjectId("command-ordering:off-hand"),
+              ],
+            },
+          },
+        ];
+        const result = resolveBattleSubject({ state, subject, fills });
+        recordAccepted(result, "resolved");
+        appendCommandOrderingRouteEvents(result);
+      },
+      doHaltSuppresses: () => {
+        state = commandTargetTurn("halt");
+        subject = endTurnSubjectFor(skeletonId);
+        fills = [];
+        holes = [];
+        stage = "resolved";
+        lastResult = "resolved";
+        orderingError = "";
+        pendingCommandOption = commandPendingOption(state);
+        droppedObjectCount = 0;
+        appendCommandOrderingRouteEvents(
+          resolveBattleSubject({ state, subject, fills }),
+        );
+      },
+      doApproachMovementContinues: () => {
+        const act = startRuntimeCommand("approach");
+        stage = "approachMovement";
+        appendCommandOrderingActRouteEvents(act);
+      },
+      doFillApproachMovementContinues: () => {
+        const movement = requireHole(holes, "movement");
+        fills = [
+          commandApproachMovementFill(movement, {
+            movementCostFeet: 10,
+            movedWithinFiveFeetOfCaster: false,
+          }),
+        ];
+        const result = resolveBattleSubject({ state, subject, fills });
+        recordAccepted(result, "resolved");
+        appendCommandOrderingRouteEvents(result);
+      },
+      doFillApproachMovementWithinFive: () => {
+        const movement = requireHole(holes, "movement");
+        fills = [
+          commandApproachMovementFill(movement, {
+            movementCostFeet: 10,
+            movedWithinFiveFeetOfCaster: true,
+          }),
+        ];
+        const result = resolveBattleSubject({ state, subject, fills });
+        recordAccepted(result, "resolved");
+        appendCommandOrderingRouteEvents(result);
+      },
+      doApproachNoMovement: () => {
+        startRuntimeCommand("approach", { grappledByCaster: true });
+        const result = resolveBattleSubject({ state, subject, fills: [] });
+        recordAccepted(result, "resolved");
+        appendCommandOrderingRouteEvents(result);
+      },
+      doFleeMovement: () => {
+        const act = startRuntimeCommand("flee");
+        stage = "fleeMovement";
+        appendCommandOrderingActRouteEvents(act);
+      },
+      doFillFleeMovement: () => {
+        const movement = requireHole(holes, "movement");
+        fills = [
+          commandFleeMovementFill(movement, {
+            movementCostFeet: 30,
+            provokedOpportunityAttacks: [],
+          }),
+        ];
+        const result = resolveBattleSubject({ state, subject, fills });
+        recordAccepted(result, "resolved");
+        appendCommandOrderingRouteEvents(result);
+      },
+      doRejectFleePartialMovement: () => {
+        const movement = requireHole(holes, "movement");
+        const result = resolveBattleSubject({
+          state,
+          subject,
+          fills: [
+            commandFleeMovementFill(movement, {
+              movementCostFeet: 10,
+              provokedOpportunityAttacks: [],
+            }),
+          ],
+        });
+        recordInvalid(result, "commandMovementRequired");
+        appendCommandOrderingRouteEvents(result);
+      },
+      doFleeNoMovement: () => {
+        startRuntimeCommand("flee", { grappledByCaster: true });
+        const result = resolveBattleSubject({ state, subject, fills: [] });
+        recordAccepted(result, "resolved");
+        appendCommandOrderingRouteEvents(result);
+      },
+      doFleeOpportunityAttack: () => {
+        const movement = requireHole(holes, "movement");
+        fills = [
+          commandFleeMovementFill(movement, {
+            movementCostFeet: 30,
+            provokedOpportunityAttacks: [
+              {
+                reactorId: fighterId,
+                ...interruptAttackExecutionSelectionForSubject(
+                  interruptFighterAttackSubject(state, "Unarmed Strike"),
+                ),
+              },
+            ],
+          }),
+        ];
+        const result = resolveBattleSubject({ state, subject, fills });
+        recordAccepted(result, "resolved");
+        appendCommandOrderingRouteEvents(result);
+      },
+      step: () => {},
+      getState: (): IncludeRoute extends true
+        ? ReducerRoutedCommandOrderingProjection
+        : CommandOrderingProjection => {
+        const projection = projectCommandOrderingState({
+          state,
+          holes,
+          stage,
+          lastResult,
+          orderingError,
+          pendingCommandOption,
+          droppedObjectCount,
+        });
+        // IncludeRoute is a literal boolean chosen by the public factory, but
+        // TypeScript does not narrow conditional return types from this branch.
+        return (
+          includeRoute ? { ...projection, route } : projection
+        ) as IncludeRoute extends true
+          ? ReducerRoutedCommandOrderingProjection
+          : CommandOrderingProjection;
+      },
+    };
+  });
+}
+
+export function createExtraAttackDriver(
+  unitId: ExtraAttackMbtUnitId = "fighter_extra_attack",
+  schema: typeof extraAttackDriverSchema = extraAttackDriverSchema,
+) {
+  return defineDriver(schema, () => {
+    let session = extraAttackBattle(unitId);
+    let state = session.state;
+    let currentUnitId = unitId;
+    let subject: BattleSubject = fighterAttackSubject(session);
+    let lastResult: ExtraAttackMbtProjection["lastResult"] = "init";
+    let lastInvalidReason: ExtraAttackMbtProjection["lastInvalidReason"] = "";
+
+    function resetUnit(nextUnitId: ExtraAttackMbtUnitId): void {
+      currentUnitId = nextUnitId;
+      session = extraAttackBattle(nextUnitId);
+      state = session.state;
+      subject = fighterAttackSubject(session);
+      lastResult = "init";
+      lastInvalidReason = "";
+    }
+
+    function recordResult(result: BattleResolutionResult): void {
+      lastResult = result.tag;
+      if (result.tag === "resolved") {
+        state = result.state;
+        lastInvalidReason = "";
+        return;
+      }
+      if (result.tag === "needsHoles") {
+        state = result.state;
+        lastInvalidReason = "";
+        return;
+      }
+      lastInvalidReason = mbtInvalidReason(result.reason);
+    }
+
+    function resolveAttackMiss(): void {
+      recordExtraAttackBoundaryFromState(state, currentUnitId);
+      subject = fighterAttackSubject(
+        battleRuntimeSessionForTest({ state, context: session.context }),
+      );
+      const target = requireHole(
+        discoverAttackHoles(
+          battleRuntimeSessionForTest({ state, context: session.context }),
+          subject,
+        ),
+        "targetChoice",
+      );
+      const targetChoice = targetFill(target, skeletonId);
+      const attackRoll = requireHole(
+        holesAfterFills(state, subject, [targetChoice]),
+        "attackRoll",
+      );
+      recordResult(
+        resolveBattleSubject({
+          state,
+          subject,
+          fills: [
+            targetChoice,
+            attackRollFill(attackRoll, { total: 1, naturalD20: 1 }),
+          ],
+        }),
+      );
+      recordExtraAttackBoundaryFromState(state, currentUnitId);
+    }
+
+    return {
+      init: () => {
+        resetUnit(unitId);
+      },
+      initOneAdditionalAttack: () => {
+        resetUnit(extraAttackMbtUnitIdForAdditionalAttacks(1));
+      },
+      initTwoAdditionalAttacks: () => {
+        resetUnit(extraAttackMbtUnitIdForAdditionalAttacks(2));
+      },
+      initThreeAdditionalAttacks: () => {
+        resetUnit(extraAttackMbtUnitIdForAdditionalAttacks(3));
+      },
+      doResolveFirstExtraAttackMiss: resolveAttackMiss,
+      doMoveBetweenExtraAttackSlots: () => {
+        subject = moveSubject();
+        const result = resolveBattleSubject({ state, subject, fills: [] });
+        if (result.tag !== "needsHoles") {
+          recordResult(result);
+          return;
+        }
+        const movement = requireHole(result.holes, "movement");
+        recordResult(
+          resolveBattleSubject({
+            state,
+            subject,
+            fills: [movementFill(movement, { movementCostFeet: 5 })],
+          }),
+        );
+      },
+      doResolveSecondExtraAttackMiss: resolveAttackMiss,
+      doRejectThirdExtraAttack: () => {
+        subject = fighterAttackSubject(
+          battleRuntimeSessionForTest({ state, context: session.context }),
+        );
+        recordResult(resolveBattleSubject({ state, subject, fills: [] }));
+      },
+      doEndTurnClosesExtraAttackSlot: () => {
+        subject = endTurnSubject();
+        recordResult(resolveBattleSubject({ state, subject, fills: [] }));
+      },
+      step: () => {},
+      getState: () =>
+        projectExtraAttackMbtState({
+          state,
+          lastResult,
+          lastInvalidReason,
+        }),
+    };
+  });
+}
+
+export function createMagicMissileDriver() {
+  return defineDriver(magicMissileDriverSchema, () => {
+    let session = fighterVsSkeletonBattleSession();
+    let state = session.state;
+    const subject = magicMissileSubject();
+    let fills: readonly BattleFill[] = [];
+    let holes: readonly BattleHole[] = discoverMagicMissileHoles(
+      session,
+      subject,
+    );
+    let lastResult: MbtProjection["lastResult"] = "init";
+    let lastInvalidReason: MbtProjection["lastInvalidReason"] = "";
+
+    function reset(): void {
+      session = fighterVsSkeletonBattleSession();
+      state = session.state;
+      fills = [];
+      holes = discoverMagicMissileHoles(session, subject);
+      lastResult = "init";
+      lastInvalidReason = "";
+    }
+
+    function submit(nextFills: readonly BattleFill[]): void {
+      fills = fillsWithMbtSpellCastReactionFacts(holes, nextFills);
+      const result = resolveBattleSubject({ state, subject, fills });
+      lastResult = result.tag;
+      if (result.tag === "resolved") {
+        state = result.state;
+        holes = [];
+        lastInvalidReason = "";
+        return;
+      }
+      if (result.tag === "needsHoles") {
+        state = result.state;
+        holes = result.holes;
+        lastInvalidReason = "";
+        return;
+      }
+      lastInvalidReason = mbtInvalidReason(result.reason);
+    }
+
+    return {
+      init: reset,
+      doFillMagicMissileAllocation: () => {
+        const allocation = requireHole(holes, "spellTargetAllocation");
+        submit([
+          spellTargetAllocationFill(
+            allocation,
+            skeletonId,
+            3,
+            subject.procedureRef,
+          ),
+        ]);
+      },
+      doFillMagicMissileDamage: ({ dartRollTotal }) => {
+        const damage = requireHole(holes, "rolledDice");
+        submit([
+          ...fills,
+          damageRollFillWithGroups(damage, [
+            magicMissileDamageRollGroup(dartRollTotal),
+          ]),
+        ]);
+      },
+      step: () => {},
+      getState: () =>
+        projectMbtState({
+          state,
+          holes,
+          lastResult,
+          lastInvalidReason,
+        }),
+    };
+  });
+}
+
+export function createMagicMissileRouteDriver() {
+  return defineDriver(magicMissileDriverSchema, () => {
+    let session = fighterVsSkeletonBattleSession();
+    let state = session.state;
+    const subject = magicMissileSubject();
+    let fills: readonly BattleFill[] = [];
+    let holes: readonly BattleHole[] = [];
+    let route: readonly ReducerRouteEvent[] = [];
+    let lastResult: MbtProjection["lastResult"] = "init";
+    let lastInvalidReason: MbtProjection["lastInvalidReason"] = "";
+
+    function reset(): void {
+      session = fighterVsSkeletonBattleSession();
+      state = session.state;
+      const act = discoverMagicMissileAct(session, subject);
+      const initialHoles = act.initialHoles;
+      fills = [];
+      holes = initialHoles;
+      route = [
+        battleReducerStartRouteEvent(),
+        ...requireMagicMissileActRouteEvents(act),
+      ];
+      lastResult = "init";
+      lastInvalidReason = "";
+    }
+
+    function submit(nextFills: readonly BattleFill[]): void {
+      fills = fillsWithMbtSpellCastReactionFacts(holes, nextFills);
+      const result = resolveBattleSubject({ state, subject, fills });
+      lastResult = result.tag;
+      if (result.tag === "resolved") {
+        state = result.state;
+        holes = [];
+        route = [...route, ...requireMagicMissileRouteEvents(result)];
+        lastInvalidReason = "";
+        return;
+      }
+      if (result.tag === "needsHoles") {
+        state = result.state;
+        holes = result.holes;
+        route = [...route, ...requireMagicMissileRouteEvents(result)];
+        lastInvalidReason = "";
+        return;
+      }
+      lastInvalidReason = mbtInvalidReason(result.reason);
+    }
+
+    reset();
+
+    return {
+      init: reset,
+      doFillMagicMissileAllocation: () => {
+        const allocation = requireHole(holes, "spellTargetAllocation");
+        submit([
+          spellTargetAllocationFill(
+            allocation,
+            skeletonId,
+            3,
+            subject.procedureRef,
+          ),
+        ]);
+      },
+      doFillMagicMissileDamage: ({ dartRollTotal }) => {
+        const damage = requireHole(holes, "rolledDice");
+        submit([
+          ...fills,
+          damageRollFillWithGroups(damage, [
+            magicMissileDamageRollGroup(dartRollTotal),
+          ]),
+        ]);
+      },
+      step: () => {},
+      getState: () => ({
+        ...projectMbtState({
+          state,
+          holes,
+          lastResult,
+          lastInvalidReason,
+        }),
+        route,
+      }),
+    };
+  });
+}
+
+export function createReducerSpineContractDriver() {
+  return defineDriver(reducerSpineContractDriverSchema, () => {
+    let state: BattleState | null = null;
+    let context: BattleRuntimeSession["context"] | null = null;
+    let subject: BattleSubject = magicMissileSubject();
+    let fills: readonly BattleFill[] = [];
+    let holes: readonly BattleHole[] = [];
+    let stage: ReducerSpineContractProjection["stage"] = "notStarted";
+    let entrypoint: ReducerSpineContractProjection["entrypoint"] = "none";
+    let subjectKind: ReducerSpineContractProjection["subject"] = "none";
+    let lastResult: ReducerSpineContractProjection["lastResult"] = "init";
+    let lastInvalidReason: ReducerSpineContractProjection["lastInvalidReason"] =
+      "";
+
+    function reset(): void {
+      state = null;
+      context = null;
+      subject = magicMissileSubject();
+      fills = [];
+      holes = [];
+      stage = "notStarted";
+      entrypoint = "none";
+      subjectKind = "none";
+      lastResult = "init";
+      lastInvalidReason = "";
+    }
+
+    function requireStartedState(): BattleState {
+      if (state === null) {
+        throw new Error("Expected reducer-spine battle state to be started.");
+      }
+      return state;
+    }
+
+    function requireStartedSession(): BattleRuntimeSession {
+      if (context === null) {
+        throw new Error("Expected reducer-spine battle context to be started.");
+      }
+      return battleRuntimeSessionForTest({
+        state: requireStartedState(),
+        context,
+      });
+    }
+
+    function recordAccepted(
+      result: BattleResolutionResult,
+      nextStage: ReducerSpineContractProjection["stage"],
+    ): void {
+      lastResult = result.tag;
+      if (result.tag === "resolved") {
+        state = result.state;
+        holes = [];
+        stage = nextStage;
+        lastInvalidReason = "";
+        return;
+      }
+      if (result.tag === "needsHoles") {
+        state = result.state;
+        holes = result.holes;
+        stage = nextStage;
+        lastInvalidReason = "";
+        return;
+      }
+      throw new Error(
+        `Expected accepted reducer-spine result, got ${result.tag}: ${
+          "message" in result ? result.message : ""
+        }`,
+      );
+    }
+
+    return {
+      init: reset,
+      doStartBattle: () => {
+        const session = fighterVsSkeletonBattleSession();
+        state = session.state;
+        context = session.context;
+        subject = magicMissileSubject();
+        fills = [];
+        holes = [];
+        stage = "battleStarted";
+        entrypoint = "startBattle";
+        subjectKind = "none";
+        lastResult = "resolved";
+        lastInvalidReason = "";
+      },
+      doDiscoverSlotSpell: () => {
+        state = requireStartedState();
+        const spellSubject = magicMissileSubject();
+        subject = spellSubject;
+        fills = [];
+        holes = discoverMagicMissileHoles(
+          requireStartedSession(),
+          spellSubject,
+        );
+        stage = "actDiscovered";
+        entrypoint = "discoverBattleActs";
+        subjectKind = "slotSpell";
+        lastResult = "needsHoles";
+        lastInvalidReason = "";
+      },
+      doResolveSlotSpellTargets: () => {
+        const allocation = requireHole(holes, "spellTargetAllocation");
+        fills = fillsWithMbtSpellCastReactionFacts(holes, [
+          spellTargetAllocationFill(
+            allocation,
+            skeletonId,
+            3,
+            magicMissileSubject().procedureRef,
+          ),
+        ]);
+        recordAccepted(
+          resolveBattleSubject({
+            state: requireStartedState(),
+            subject,
+            fills,
+          }),
+          "subjectNeedsHoles",
+        );
+        entrypoint = "resolveBattleSubject";
+        subjectKind = "slotSpell";
+      },
+      doResolveSlotSpellDamage: () => {
+        const damage = requireHole(holes, "rolledDice");
+        fills = [
+          ...fills,
+          damageRollFillWithGroups(damage, [magicMissileDamageRollGroup(3)]),
+        ];
+        recordAccepted(
+          resolveBattleSubject({
+            state: requireStartedState(),
+            subject,
+            fills,
+          }),
+          "subjectResolved",
+        );
+        entrypoint = "resolveBattleSubject";
+        subjectKind = "slotSpell";
+      },
+      doEndTurnToTarget: () => {
+        subject = endTurnSubjectFor(fighterId);
+        fills = [];
+        recordAccepted(
+          resolveBattleSubject({
+            state: requireStartedState(),
+            subject,
+            fills,
+          }),
+          "turnAdvanced",
+        );
+        entrypoint = "resolveBattleSubject";
+        subjectKind = "endTurn";
+      },
+      doDiscoverWeaponAttack: () => {
+        state = requireStartedState();
+        const session = requireStartedSession();
+        const attackSubject = skeletonShortswordSubject(session);
+        subject = attackSubject;
+        fills = [];
+        holes = discoverAttackHoles(session, attackSubject);
+        stage = "actDiscovered";
+        entrypoint = "discoverBattleActs";
+        subjectKind = "weaponAttack";
+        lastResult = "needsHoles";
+        lastInvalidReason = "";
+      },
+      doResolveWeaponTarget: () => {
+        const target = requireHole(holes, "targetChoice");
+        fills = [targetFill(target, fighterId)];
+        recordAccepted(
+          resolveBattleSubject({
+            state: requireStartedState(),
+            subject,
+            fills,
+          }),
+          "subjectNeedsHoles",
+        );
+        entrypoint = "resolveBattleSubject";
+        subjectKind = "weaponAttack";
+      },
+      doResolveWeaponAttackHit: () => {
+        const attackRoll = requireHole(holes, "attackRoll");
+        fills = [
+          ...fills,
+          attackRollFill(attackRoll, { total: 18, naturalD20: 14 }),
+        ];
+        recordAccepted(
+          resolveBattleSubject({
+            state: requireStartedState(),
+            subject,
+            fills,
+          }),
+          "subjectNeedsHoles",
+        );
+        entrypoint = "resolveBattleSubject";
+        subjectKind = "weaponAttack";
+      },
+      doResolveWeaponDamage: () => {
+        const damage = requireHole(holes, "rolledDice");
+        fills = [...fills, damageRollFill(damage, 3)];
+        recordAccepted(
+          resolveBattleSubject({
+            state: requireStartedState(),
+            subject,
+            fills,
+          }),
+          "subjectResolved",
+        );
+        entrypoint = "resolveBattleSubject";
+        subjectKind = "weaponAttack";
+      },
+      step: () => {},
+      getState: () =>
+        projectReducerSpineContractState({
+          state,
+          holes,
+          stage,
+          entrypoint,
+          subject: subjectKind,
+          lastResult,
+          lastInvalidReason,
+        }),
+    };
+  });
+}
+
+function magicMissileDamageRollGroup(
+  dartRollTotal: number,
+): readonly [number, number, number] {
+  if (dartRollTotal === 3) {
+    return [1, 1, 1];
+  }
+  if (dartRollTotal === 12) {
+    return [4, 4, 4];
+  }
+  throw new Error(`Unexpected Magic Missile dart roll total ${dartRollTotal}.`);
+}
+
+export function createScalarBuffDriver() {
+  return createScalarBuffDriverWithRoute(false);
+}
+
+export function createScalarBuffRouteDriver() {
+  return createScalarBuffDriverWithRoute(true);
+}
+
+function createScalarBuffDriverWithRoute<const IncludeRoute extends boolean>(
+  includeRoute: IncludeRoute,
+) {
+  return defineDriver(scalarBuffDriverSchema, () => {
+    let session = scalarBuffBattle();
+    let state = session.state;
+    let act: AvailableBattleAct = discoverLongstriderAct(
+      session,
+      longstriderSubject(session),
+    );
+    let subject: BattleSubject = act.subject;
+    let fills: readonly BattleFill[] = [];
+    let holes: readonly BattleHole[] = act.initialHoles;
+    let lastResult: ScalarBuffMbtProjection["lastResult"] = "init";
+    let lastInvalidReason: ScalarBuffMbtProjection["lastInvalidReason"] = "";
+    let route: readonly ReducerRouteEvent[] = initialScalarBuffRoute(act);
+
+    function reset(): void {
+      session = scalarBuffBattle();
+      state = session.state;
+      act = discoverLongstriderAct(session, longstriderSubject(session));
+      subject = act.subject;
+      fills = [];
+      holes = act.initialHoles;
+      lastResult = "init";
+      lastInvalidReason = "";
+      route = initialScalarBuffRoute(act);
+    }
+
+    function initialScalarBuffRoute(
+      initialAct: AvailableBattleAct,
+    ): readonly ReducerRouteEvent[] {
+      if (!includeRoute) return [];
+      return [
+        battleReducerStartRouteEvent(),
+        ...requireScalarBuffActRouteEvents(initialAct),
+      ];
+    }
+
+    function recordResult(result: BattleResolutionResult): void {
+      lastResult = result.tag;
+      if (result.tag === "resolved") {
+        state = result.state;
+        holes = [];
+        lastInvalidReason = "";
+        recordRoute(result);
+        return;
+      }
+      if (result.tag === "needsHoles") {
+        state = result.state;
+        holes = result.holes;
+        lastInvalidReason = "";
+        recordRoute(result);
+        return;
+      }
+      lastInvalidReason = mbtInvalidReason(result.reason);
+      recordRoute(result);
+    }
+
+    function recordRoute(result: BattleResolutionResult): void {
+      if (!includeRoute) return;
+      route = [...route, ...requireScalarBuffRouteEvents(result)];
+    }
+
+    return {
+      init: reset,
+      doFillLongstriderTarget: () => {
+        const target = requireHole(holes, "targetChoice");
+        fills = [
+          spellTargetChoiceFill(
+            target,
+            skeletonId,
+            requireSpellTargetSubject(subject),
+          ),
+        ];
+        recordResult(resolveBattleSubject({ state, subject, fills }));
+      },
+      doRejectStaleAfterResolved: () => {
+        recordResult(resolveBattleSubject({ state, subject, fills }));
+      },
+      step: () => {},
+      getState: (): IncludeRoute extends true
+        ? ReducerRoutedScalarBuffProjection
+        : ScalarBuffMbtProjection => {
+        const projection = projectScalarBuffMbtState({
+          state,
+          holes,
+          lastResult,
+          lastInvalidReason,
+        });
+        const routedProjection: ReducerRoutedScalarBuffProjection = {
+          casterSpeed: projection.fighterSpeed,
+          targetSpeed: projection.goblinSpeed,
+          actionAvailable: projection.actionAvailable,
+          holes: projection.holes,
+          lastResult: projection.lastResult,
+          lastInvalidReason: projection.lastInvalidReason,
+          route,
+        };
+        // IncludeRoute is a literal boolean chosen by the public factory, but
+        // TypeScript does not narrow conditional return types from this branch.
+        return (
+          includeRoute ? routedProjection : projection
+        ) as IncludeRoute extends true
+          ? ReducerRoutedScalarBuffProjection
+          : ScalarBuffMbtProjection;
+      },
+    };
+  });
+}
+
+export function createAdrenalineRushDriver(
+  schema: typeof adrenalineRushDriverSchema = adrenalineRushDriverSchema,
+) {
+  return createAdrenalineRushDriverWithRoute(false, schema);
+}
+
+export function createAdrenalineRushRouteDriver(
+  schema: typeof adrenalineRushDriverSchema = adrenalineRushDriverSchema,
+) {
+  return createAdrenalineRushDriverWithRoute(true, schema);
+}
+
+const UNIT_FEATURE_BONUS_ACTION_ROUTE_SUBJECT =
+  "unitFeatureBonusAction" satisfies ReducerRouteSubjectFamily;
+const FEATURE_DASH_TEMPORARY_HIT_POINT_RESOLVED_OWNERS = [
+  "battleActionEconomy",
+  "battleFeatureResource",
+  "battleMovementResource",
+  "battleTemporaryHitPoint",
+] as const satisfies readonly ReducerRouteOwnerGroup[];
+const FEATURE_DASH_TEMPORARY_HIT_POINT_STALE_OWNERS = [
+  "battleActionEconomy",
+] as const satisfies readonly ReducerRouteOwnerGroup[];
+
+function createAdrenalineRushDriverWithRoute<
+  const IncludeRoute extends boolean,
+>(includeRoute: IncludeRoute, schema: typeof adrenalineRushDriverSchema) {
+  return defineDriver(schema, () => {
+    let session = adrenalineRushBattle();
+    let state = session.state;
+    let lastResult: AdrenalineRushMbtProjection["lastResult"] = "init";
+    let lastInvalidReason: AdrenalineRushMbtProjection["lastInvalidReason"] =
+      "";
+    let route: readonly ReducerRouteEvent[] = initialAdrenalineRushRoute();
+
+    function reset(): void {
+      session = adrenalineRushBattle();
+      state = session.state;
+      lastResult = "init";
+      lastInvalidReason = "";
+      route = initialAdrenalineRushRoute();
+    }
+
+    function initialAdrenalineRushRoute(): readonly ReducerRouteEvent[] {
+      return [
+        reducerRouteStartBattle("battleActionEconomy"),
+        {
+          kind: "discoverBattleActs",
+          subject: UNIT_FEATURE_BONUS_ACTION_ROUTE_SUBJECT,
+          holes: [],
+          owner: "battleFeatureResource",
+        },
+      ];
+    }
+
+    function adrenalineRushResolveRoute(
+      owners: readonly ReducerRouteOwnerGroup[],
+    ): readonly ReducerRouteEvent[] {
+      return owners.map((owner) =>
+        reducerRouteResolveBattleSubjectWithoutFill({
+          subject: UNIT_FEATURE_BONUS_ACTION_ROUTE_SUBJECT,
+          holes: [],
+          owner,
+        }),
+      );
+    }
+
+    function recordResult(
+      result: BattleResolutionResult,
+      owners: readonly ReducerRouteOwnerGroup[],
+    ): void {
+      lastResult = result.tag;
+      if (result.tag === "resolved") {
+        state = result.state;
+        lastInvalidReason = "";
+        if (includeRoute) {
+          route = [...route, ...adrenalineRushResolveRoute(owners)];
+        }
+        return;
+      }
+      if (result.tag === "needsHoles") {
+        state = result.state;
+        lastInvalidReason = "";
+        if (includeRoute) {
+          route = [...route, ...adrenalineRushResolveRoute(owners)];
+        }
+        return;
+      }
+      lastInvalidReason = mbtInvalidReason(result.reason);
+      if (includeRoute) {
+        route = [...route, ...adrenalineRushResolveRoute(owners)];
+      }
+    }
+
+    return {
+      init: reset,
+      doAdrenalineRushDash: () => {
+        recordResult(
+          resolveBattleSubject({
+            state,
+            subject: adrenalineRushDashSubject(
+              battleRuntimeSessionForTest({
+                state,
+                context: session.context,
+              }),
+            ),
+            fills: [],
+          }),
+          FEATURE_DASH_TEMPORARY_HIT_POINT_RESOLVED_OWNERS,
+        );
+      },
+      doRejectSecondDash: () => {
+        recordResult(
+          resolveBattleSubject({
+            state,
+            subject: adrenalineRushDashSubject(
+              battleRuntimeSessionForTest({
+                state,
+                context: session.context,
+              }),
+            ),
+            fills: [],
+          }),
+          FEATURE_DASH_TEMPORARY_HIT_POINT_STALE_OWNERS,
+        );
+      },
+      step: () => {},
+      getState: () => {
+        const projection = projectAdrenalineRushMbtState({
+          state,
+          context: session.context,
+          lastResult,
+          lastInvalidReason,
+        });
+        const routedProjection = { ...projection, route };
+        // IncludeRoute is a literal boolean chosen by the public factory, but
+        // TypeScript does not narrow conditional return types from this branch.
+        return (
+          includeRoute ? routedProjection : projection
+        ) as IncludeRoute extends true
+          ? ReducerRoutedAdrenalineRushProjection
+          : AdrenalineRushMbtProjection;
+      },
+    };
+  });
+}
+
+const ACTIVE_FEATURE_SPELL_SAVE_DC_ROUTE_SUBJECT =
+  "activeFeatureSpellSaveDc" satisfies ReducerRouteSubjectFamily;
+const ACTIVE_FEATURE_SPELL_ATTACK_ROLL_MODE_ROUTE_SUBJECT =
+  "activeFeatureSpellAttackRollMode" satisfies ReducerRouteSubjectFamily;
+const ACTIVE_FEATURE_SPELL_BENEFIT_TARGET_CHOICE_HOLES = [
+  { kind: "targetChoice" },
+] as const satisfies readonly Pick<BattleHole, "kind">[];
+const ACTIVE_FEATURE_SPELL_BENEFIT_ATTACK_ROLL_HOLES = [
+  { kind: "attackRoll" },
+] as const satisfies readonly Pick<BattleHole, "kind">[];
+
+function activeFeatureActivationRoute(): readonly ReducerRouteEvent[] {
+  return [
+    reducerRouteStartBattle("battleActionEconomy"),
+    reducerRouteDiscoverBattleActs({
+      subject: UNIT_FEATURE_BONUS_ACTION_ROUTE_SUBJECT,
+      holes: [],
+      owner: "battleFeatureResource",
+    }),
+    reducerRouteResolveBattleSubjectWithoutFill({
+      subject: UNIT_FEATURE_BONUS_ACTION_ROUTE_SUBJECT,
+      holes: [],
+      owner: "battleActionEconomy",
+    }),
+    reducerRouteResolveBattleSubjectWithoutFill({
+      subject: UNIT_FEATURE_BONUS_ACTION_ROUTE_SUBJECT,
+      holes: [],
+      owner: "battleFeatureResource",
+    }),
+    reducerRouteResolveBattleSubjectWithoutFill({
+      subject: UNIT_FEATURE_BONUS_ACTION_ROUTE_SUBJECT,
+      holes: [],
+      owner: "battleActiveEffect",
+    }),
+  ];
+}
+
+function activeFeatureSpellSaveDcRoute(): readonly ReducerRouteEvent[] {
+  return [
+    ...activeFeatureActivationRoute(),
+    reducerRouteResolveBattleSubjectWithoutFill({
+      subject: ACTIVE_FEATURE_SPELL_SAVE_DC_ROUTE_SUBJECT,
+      holes: [],
+      owner: "battleActiveEffect",
+    }),
+    reducerRouteResolveBattleSubjectWithoutFill({
+      subject: ACTIVE_FEATURE_SPELL_SAVE_DC_ROUTE_SUBJECT,
+      holes: [],
+      owner: "battleSpellSlotAndActionEconomy",
+    }),
+  ];
+}
+
+function activeFeatureSpellAttackRollModeRoute(): readonly ReducerRouteEvent[] {
+  return [
+    ...activeFeatureSpellSaveDcRoute(),
+    reducerRouteDiscoverBattleActs({
+      subject: ACTIVE_FEATURE_SPELL_ATTACK_ROLL_MODE_ROUTE_SUBJECT,
+      holes: ACTIVE_FEATURE_SPELL_BENEFIT_TARGET_CHOICE_HOLES,
+      owner: "battleSpellSlotAndActionEconomy",
+    }),
+    reducerRouteResolveBattleSubject({
+      subject: ACTIVE_FEATURE_SPELL_ATTACK_ROLL_MODE_ROUTE_SUBJECT,
+      fill: "targetChoice",
+      holes: ACTIVE_FEATURE_SPELL_BENEFIT_ATTACK_ROLL_HOLES,
+      owner: "battleTargetSelection",
+    }),
+    reducerRouteResolveBattleSubjectWithoutFill({
+      subject: ACTIVE_FEATURE_SPELL_ATTACK_ROLL_MODE_ROUTE_SUBJECT,
+      holes: ACTIVE_FEATURE_SPELL_BENEFIT_ATTACK_ROLL_HOLES,
+      owner: "battleActiveEffect",
+    }),
+    reducerRouteResolveBattleSubjectWithoutFill({
+      subject: ACTIVE_FEATURE_SPELL_ATTACK_ROLL_MODE_ROUTE_SUBJECT,
+      holes: ACTIVE_FEATURE_SPELL_BENEFIT_ATTACK_ROLL_HOLES,
+      owner: "battleSpellAttackProcedure",
+    }),
+  ];
+}
+
+function projectActiveFeatureSpellBenefit(
+  sourceClassName: ActiveFeatureSpellBenefitSourceClassName,
+): Omit<ActiveFeatureSpellBenefitRouteProjection, "route"> {
+  const session = activeFeatureSpellBenefitActivatedBattle(sourceClassName);
+  return {
+    spellSaveDc: requireActiveFeatureSpellBenefitSaveDc(session.state),
+    spellAttackRollMode: activeFeatureSpellAttackRollMode(session),
+  };
+}
+
+function activeFeatureSpellBenefitActivatedBattle(
+  sourceClassName: ActiveFeatureSpellBenefitSourceClassName,
+): BattleRuntimeSession {
+  const session = activeFeatureSpellBenefitBattle(sourceClassName);
+  const subject = activeFeatureSpellBenefitSubject(session);
+  const state = requireResolved(
+    resolveBattleSubject({
+      state: session.state,
+      subject,
+      fills: [],
+    }),
+  ).state;
+  return battleRuntimeSessionForTest({ state, context: session.context });
+}
+
+function activeFeatureSpellBenefitBattle(
+  sourceClassName: ActiveFeatureSpellBenefitSourceClassName,
+): BattleRuntimeSession {
+  return startBattleSessionRight({
+    battleId: battleId(`active-feature-spell-benefit-route-${sourceClassName}`),
+    combatants: [
+      activeFeatureSpellBenefitCasterCreatureInit({
+        initiative: 20,
+        sourceClassName,
+      }),
+      activeFeatureSpellBenefitTargetCreatureInit({ initiative: 10 }),
+    ],
+  });
+}
+
+function activeFeatureSpellBenefitSubject(
+  session: BattleRuntimeSession,
+): Extract<BattleSubject, { readonly tag: "unitFeature" }> {
+  const act = discoverBattleActs(session).find(
+    (candidate) =>
+      candidate.subject.tag === "unitFeature" &&
+      candidate.subject.actorId === fighterId,
+  );
+  if (act === undefined || act.subject.tag !== "unitFeature") {
+    throw new Error("Expected active feature spell benefit Unit feature act.");
+  }
+  return act.subject;
+}
+
+function requireActiveFeatureSpellBenefitSaveDc(state: BattleState): number {
+  const spellSaveDc = spellSaveDcForCaster(state, fighterId);
+  if (spellSaveDc === null) {
+    throw new Error(
+      "Expected active feature spell benefit caster to have a Spell Save DC.",
+    );
+  }
+  return Number(spellSaveDc);
+}
+
+function activeFeatureSpellAttackRollMode(
+  session: BattleRuntimeSession,
+): ActiveFeatureSpellBenefitRouteProjection["spellAttackRollMode"] {
+  const state = session.state;
+  const subject = activeFeatureSpellBenefitSpellAttackSubject(session);
+  const target = requireResultHole(
+    resolveBattleSubject({
+      state,
+      subject,
+      fills: [],
+    }),
+    "targetChoice",
+  );
+  const attackRoll = requireResultHole(
+    resolveBattleSubject({
+      state,
+      subject,
+      fills: [spellTargetChoiceFill(target, skeletonId, subject)],
+    }),
+    "attackRoll",
+  );
+  return attackRoll.rollMode === "advantage" ? "advantage" : "none";
+}
+
+function activeFeatureSpellBenefitSpellAttackSubject(
+  session: BattleRuntimeSession,
+): Extract<BattleSubject, { readonly tag: "actionSpell" }> {
+  const subject = requireAdmittedCharacterProcedureSubject(session, {
+    tag: "actionSpell",
+    actorId: fighterId,
+    invocation: cantripSpellInvocationRef(
+      rayOfFrostUnitId,
+      "spellAttackDamage",
+    ),
+    mode: { tag: "cast" },
+  });
+  if (subject.tag !== "actionSpell") throw new Error("Expected action Spell.");
+  return subject;
+}
+
+export function createActiveFeatureSpellBenefitRouteDriver() {
+  return defineDriver(activeFeatureSpellBenefitRouteDriverSchema, () => {
+    let route: readonly ReducerRouteEvent[] = [
+      reducerRouteStartBattle("battleActionEconomy"),
+    ];
+    let spellSaveDc = 13;
+    let spellAttackRollMode: ActiveFeatureSpellBenefitRouteProjection["spellAttackRollMode"] =
+      "none";
+
+    function reset(): void {
+      route = [reducerRouteStartBattle("battleActionEconomy")];
+      spellSaveDc = 13;
+      spellAttackRollMode = "none";
+    }
+
+    function project(
+      sourceClassName: ActiveFeatureSpellBenefitSourceClassName,
+    ): void {
+      const projection = projectActiveFeatureSpellBenefit(sourceClassName);
+      spellSaveDc = projection.spellSaveDc;
+      spellAttackRollMode = projection.spellAttackRollMode;
+    }
+
+    reset();
+
+    return {
+      init: reset,
+      doRouteActiveFeatureSpellSaveDcBenefit: () => {
+        project("sorcerer");
+        route = activeFeatureSpellSaveDcRoute();
+        spellAttackRollMode = "none";
+      },
+      doRouteActiveFeatureSpellAttackBenefit: () => {
+        project("sorcerer");
+        route = activeFeatureSpellAttackRollModeRoute();
+      },
+      doRouteNonSourceSpellExcluded: () => {
+        project("wizard");
+        route = activeFeatureSpellAttackRollModeRoute();
+      },
+      step: () => {},
+      getState: (): ActiveFeatureSpellBenefitRouteProjection => ({
+        route,
+        spellSaveDc,
+        spellAttackRollMode,
+      }),
+    };
+  });
+}
+
+export function createRogueSteadyAimDriver(
+  schema: typeof rogueSteadyAimDriverSchema = rogueSteadyAimDriverSchema,
+) {
+  return defineDriver(schema, () => {
+    let session = rogueSteadyAimBattle();
+    let state = session.state;
+    let lastResult: RogueSteadyAimMbtProjection["lastResult"] = "init";
+    let lastInvalidReason: RogueSteadyAimMbtProjection["lastInvalidReason"] =
+      "";
+
+    function reset(): void {
+      session = rogueSteadyAimBattle();
+      state = session.state;
+      lastResult = "init";
+      lastInvalidReason = "";
+    }
+
+    function recordResult(result: BattleResolutionResult): void {
+      lastResult = result.tag;
+      if (result.tag === "resolved") {
+        state = result.state;
+        lastInvalidReason = "";
+        return;
+      }
+      if (result.tag === "needsHoles") {
+        state = result.state;
+        lastInvalidReason = "";
+        return;
+      }
+      lastInvalidReason = mbtInvalidReason(result.reason);
+    }
+
+    function resolveAttack(): void {
+      const subject = fighterAttackSubject(
+        battleRuntimeSessionForTest({ state, context: session.context }),
+      );
+      const targetHole = requireHole(
+        discoverAttackHoles(
+          battleRuntimeSessionForTest({ state, context: session.context }),
+          subject,
+        ),
+        "targetChoice",
+      );
+      const target = targetFill(targetHole, skeletonId);
+      const attackRollHole = requireHole(
+        holesAfterFills(state, subject, [target]),
+        "attackRoll",
+      );
+      const attackRoll = attackRollFill(attackRollHole, {
+        total: 16,
+        naturalD20: 11,
+        rollMode: "advantage",
+      });
+      const damageHole = requireHole(
+        holesAfterFills(state, subject, [target, attackRoll]),
+        "rolledDice",
+      );
+      recordResult(
+        resolveBattleSubject({
+          state,
+          subject,
+          fills: [target, attackRoll, damageRollFill(damageHole, 4)],
+        }),
+      );
+    }
+
+    return {
+      init: reset,
+      doSteadyAim: () => {
+        recordResult(
+          resolveBattleSubject({
+            state,
+            subject: rogueSteadyAimSubject(
+              battleRuntimeSessionForTest({
+                state,
+                context: session.context,
+              }),
+            ),
+            fills: [],
+          }),
+        );
+      },
+      doRejectAfterMoved: () => {
+        session = rogueSteadyAimBattleWithMovementSpent();
+        state = session.state;
+        recordResult(
+          resolveBattleSubject({
+            state,
+            subject: rogueSteadyAimSubject(
+              battleRuntimeSessionForTest({
+                state,
+                context: session.context,
+              }),
+            ),
+            fills: [],
+          }),
+        );
+      },
+      doRejectSecondAim: () => {
+        recordResult(
+          resolveBattleSubject({
+            state,
+            subject: rogueSteadyAimSubject(
+              battleRuntimeSessionForTest({
+                state,
+                context: session.context,
+              }),
+            ),
+            fills: [],
+          }),
+        );
+      },
+      doAttackConsumesAdvantage: resolveAttack,
+      doEndTurnCleanup: () => {
+        recordResult(
+          resolveBattleSubject({
+            state,
+            subject: endTurnSubject(),
+            fills: [],
+          }),
+        );
+        if (lastResult === "resolved") {
+          recordResult(
+            resolveBattleSubject({
+              state,
+              subject: endTurnSubjectFor(skeletonId),
+              fills: [],
+            }),
+          );
+        }
+      },
+      step: () => {},
+      getState: () =>
+        projectRogueSteadyAimMbtState({
+          state,
+          lastResult,
+          lastInvalidReason,
+        }),
+    };
+  });
+}
+
+const REDUCER_ROUTE_SUBJECT_BY_VARIANT_TAG = {
+  BattleActionRouteSubject: "battleAction",
+  AbilityCheckSearchRouteSubject: "abilityCheckSearch",
+  SlotSpellRouteSubject: "slotSpell",
+  SaveGatedSpellRouteSubject: "saveGatedSpell",
+  HitPointRestorationRouteSubject: "hitPointRestoration",
+  WeaponAttackRouteSubject: "weaponAttack",
+  WeaponMasteryPropertyRouteSubject: "weaponMasteryProperty",
+  AttackActionAreaSaveDamageReplacementRouteSubject:
+    "attackActionAreaSaveDamageReplacement",
+  SpellAttackRouteSubject: "spellAttack",
+  SpellAttackProcedureRouteSubject: "spellAttackProcedure",
+  SpellHostedWeaponAttackRouteSubject: "spellHostedWeaponAttack",
+  WeaponDamageRiderRouteSubject: "weaponDamageRider",
+  HeldWeaponActiveEffectRouteSubject: "heldWeaponActiveEffect",
+  WeaponEnhancementItemTargetRouteSubject: "weaponEnhancementItemTarget",
+  WeaponHostedSpellEffectCleanupRouteSubject: "weaponHostedSpellEffectCleanup",
+  AfterHitDamageRiderRouteSubject: "afterHitDamageRider",
+  StatBlockActionRouteSubject: "statBlockAction",
+  CreatureAttackRouteSubject: "creatureAttack",
+  DeathSavingThrowRouteSubject: "deathSavingThrow",
+  ZeroHitPointStabilizationRouteSubject: "zeroHitPointStabilization",
+  ConcentrationTeardownRouteSubject: "concentrationTeardown",
+  CommandEffectRouteSubject: "commandEffect",
+  ReactionSpellRouteSubject: "reactionSpell",
+  ReactionArmorClassEffectRouteSubject: "reactionArmorClassEffect",
+  ReactionAfterDamageEffectRouteSubject: "reactionAfterDamageEffect",
+  ReactionSpellInterruptionRouteSubject: "reactionSpellInterruption",
+  ReactionFallMitigationRouteSubject: "reactionFallMitigation",
+  InterruptStackResumeRouteSubject: "interruptStackResume",
+  RollModifierEffectRouteSubject: "rollModifierEffect",
+  SpellDamageReductionRouteSubject: "spellDamageReduction",
+  ScalarBuffEffectRouteSubject: "scalarBuffEffect",
+  RepeatSaveConditionEffectRouteSubject: "repeatSaveConditionEffect",
+  TurnBoundaryEffectLifecycleRouteSubject: "turnBoundaryEffectLifecycle",
+  ZeroHitPointSpellEffectTeardownRouteSubject:
+    "zeroHitPointSpellEffectTeardown",
+  UnitFeatureBonusActionRouteSubject: "unitFeatureBonusAction",
+  ActiveFeatureSpellSaveDcRouteSubject: "activeFeatureSpellSaveDc",
+  ActiveFeatureSpellAttackRollModeRouteSubject:
+    "activeFeatureSpellAttackRollMode",
+  CompanionLifecycleRouteSubject: "companionLifecycle",
+  CompanionSharedSensesRouteSubject: "companionSharedSenses",
+  CompanionTouchDeliveryRouteSubject: "companionTouchDelivery",
+  CompanionReactionAttackRouteSubject: "companionReactionAttack",
+  ObjectTargetSpellAttackRouteSubject: "objectTargetSpellAttack",
+  PassiveDamageAdjustmentRouteSubject: "passiveDamageAdjustment",
+  PassiveSavingThrowRollModeRouteSubject: "passiveSavingThrowRollMode",
+  PassiveAbilityCheckRollModeRouteSubject: "passiveAbilityCheckRollMode",
+  CreatureSpaceMovementPermissionRouteSubject:
+    "creatureSpaceMovementPermission",
+  CreatureStatProjectionRouteSubject: "creatureStatProjection",
+  MovementResourceRouteSubject: "movementResource",
+  SpecialSpeedProjectionRouteSubject: "specialSpeedProjection",
+  ForcedMovementRouteSubject: "forcedMovement",
+  MovementPresentationRouteSubject: "movementPresentation",
+  ActiveFormLifecycleRouteSubject: "activeFormLifecycle",
+  CreatureTypeTargetAdmissionRouteSubject: "creatureTypeTargetAdmission",
+  ProtectionCharmActiveEffectRouteSubject: "protectionCharmActiveEffect",
+  CharmSourceDamageBreakRouteSubject: "charmSourceDamageBreak",
+  WardedTargetInterdictionRouteSubject: "wardedTargetInterdiction",
+  MetamagicSpellGovernorRouteSubject: "metamagicSpellGovernor",
+  MetamagicBonusActionCastingTimeRouteSubject:
+    "metamagicBonusActionCastingTime",
+  MetamagicSavingThrowProtectionRouteSubject: "metamagicSavingThrowProtection",
+  MetamagicSavingThrowRollModeRouteSubject: "metamagicSavingThrowRollMode",
+  MetamagicDamageTypeSubstitutionRouteSubject:
+    "metamagicDamageTypeSubstitution",
+  MetamagicEffectiveSpellLevelRouteSubject: "metamagicEffectiveSpellLevel",
+  MetamagicSpellRangeProjectionRouteSubject: "metamagicSpellRangeProjection",
+  MetamagicSpellDurationProjectionRouteSubject:
+    "metamagicSpellDurationProjection",
+  MetamagicSpellComponentProjectionRouteSubject:
+    "metamagicSpellComponentProjection",
+  MetamagicMissedSpellAttackRerollRouteSubject:
+    "metamagicMissedSpellAttackReroll",
+  MetamagicDamageDiceRerollRouteSubject: "metamagicDamageDiceReroll",
+  SpellBaseArmorClassEffectRouteSubject: "spellBaseArmorClassEffect",
+  HitPointRegainPreventionRouteSubject: "hitPointRegainPrevention",
+  NextAttackRollModeRouteSubject: "nextAttackRollMode",
+  ReactionInterdictionRouteSubject: "reactionInterdiction",
+  ConditionRiderRouteSubject: "conditionRider",
+  ObjectLightRiderRouteSubject: "objectLightRider",
+  SpatialEffectRouteSubject: "spatialEffect",
+  MixedTargetOutcomeSpellRouteSubject: "mixedTargetOutcomeSpell",
+  MarkedDamageRiderEffectRouteSubject: "markedDamageRiderEffect",
+  ConditionImmunityTemporaryHitPointEffectRouteSubject:
+    "conditionImmunityTemporaryHitPointEffect",
+} as const satisfies Readonly<Record<string, ReducerRouteSubjectFamily>>;
+
+const REDUCER_ROUTE_OWNER_BY_VARIANT_TAG = {
+  BattleActionEconomyOwner: "battleActionEconomy",
+  BattleSpellSlotAndActionEconomyOwner: "battleSpellSlotAndActionEconomy",
+  BattleHoleFrontierOwner: "battleHoleFrontier",
+  BattleTargetSelectionOwner: "battleTargetSelection",
+  BattleAttackRollOwner: "battleAttackRoll",
+  BattleAttackActionProcedureOwner: "battleAttackActionProcedure",
+  BattleSpellAttackProcedureOwner: "battleSpellAttackProcedure",
+  BattleAbilityCheckOwner: "battleAbilityCheck",
+  BattleHitPointOwner: "battleHitPoint",
+  BattleDamageRollOwner: "battleDamageRoll",
+  BattleDamageTypeOwner: "battleDamageType",
+  BattleHitPointAndZeroHpLifecycleOwner: "battleHitPointAndZeroHpLifecycle",
+  BattleConditionLifecycleOwner: "battleConditionLifecycle",
+  BattleStatBlockActionOwner: "battleStatBlockAction",
+  BattleConcentrationOwner: "battleConcentration",
+  BattleActiveEffectOwner: "battleActiveEffect",
+  BattleItemTargetBoundaryOwner: "battleItemTargetBoundary",
+  BattleMovementResourceOwner: "battleMovementResource",
+  BattleInterruptStackOwner: "battleInterruptStack",
+  BattleFeatureResourceOwner: "battleFeatureResource",
+  BattleTemporaryHitPointOwner: "battleTemporaryHitPoint",
+  BattleTurnBoundaryOwner: "battleTurnBoundary",
+  BattleCompanionOwner: "battleCompanion",
+  BattleObjectTargetBoundaryOwner: "battleObjectTargetBoundary",
+  BattleAreaShapeOwner: "battleAreaShape",
+  BattleSavingThrowOutcomeOwner: "battleSavingThrowOutcome",
+  BattleDamageAdjustmentOwner: "battleDamageAdjustment",
+  BattleSavingThrowRollModeOwner: "battleSavingThrowRollMode",
+  BattleAbilityCheckRollModeOwner: "battleAbilityCheckRollMode",
+  BattleAttackRollModeOwner: "battleAttackRollMode",
+  BattleCreatureSpaceMovementOwner: "battleCreatureSpaceMovement",
+  BattleCreatureStateOwner: "battleCreatureState",
+  BattleArmorClassOwner: "battleArmorClass",
+  BattleLightProjectionOwner: "battleLightProjection",
+  BattleSightProjectionOwner: "battleSightProjection",
+  BattleObscurementProjectionOwner: "battleObscurementProjection",
+  BattleAreaHazardOwner: "battleAreaHazard",
+  BattleSpellInvocationOwner: "battleSpellInvocation",
+  BattleTablePresentationOwner: "battleTablePresentation",
+} as const satisfies Readonly<Record<string, ReducerRouteOwnerGroup>>;
+
+const NEXT_ATTACK_ROLL_MODE_SOURCE_BY_VARIANT_TAG = {
+  HostAttackHitDamageOutcome: "hostAttackHitDamageOutcome",
+  HostSaveEffectOutcome: "hostSaveEffectOutcome",
+  HostAssistActionOutcome: "hostAssistActionOutcome",
+  HostBonusActionFeatureOutcome: "hostBonusActionFeatureOutcome",
+} as const satisfies Readonly<Record<string, NextAttackRollModeSource>>;
+
+const NEXT_ATTACK_ROLL_MODE_CARRIER_BY_VARIANT_TAG = {
+  HostOutcomeTargetCarrier: "hostOutcomeTargetCarrier",
+  DistractedEnemyCarrier: "distractedEnemyCarrier",
+  ActingBeneficiaryCarrier: "actingBeneficiaryCarrier",
+} as const satisfies Readonly<Record<string, NextAttackRollModeCarrier>>;
+
+const NEXT_ATTACK_ROLL_MODE_ATTACKER_BY_VARIANT_TAG = {
+  SourceAttacker: "sourceAttacker",
+  AffectedTargetAttacker: "affectedTargetAttacker",
+  SourceAllyAttacker: "sourceAllyAttacker",
+} as const satisfies Readonly<Record<string, NextAttackRollModeAttacker>>;
+
+const NEXT_ATTACK_ROLL_MODE_TARGET_SCOPE_BY_VARIANT_TAG = {
+  AttackAgainstAffectedTargetOnly: "attackAgainstAffectedTargetOnly",
+  AttackAgainstAnyTarget: "attackAgainstAnyTarget",
+} as const satisfies Readonly<Record<string, NextAttackRollModeTargetScope>>;
+
+const NEXT_ATTACK_ROLL_MODE_EXPIRATION_BOUNDARY_BY_VARIANT_TAG = {
+  BeforeSourceNextTurnStarts: "beforeSourceNextTurnStarts",
+  BeforeSourceNextTurnEnds: "beforeSourceNextTurnEnds",
+  BeforeBeneficiaryCurrentTurnEnds: "beforeBeneficiaryCurrentTurnEnds",
+  BeforeAffectedTargetNextTurnEnds: "beforeAffectedTargetNextTurnEnds",
+} as const satisfies Readonly<
+  Record<string, NextAttackRollModeExpirationBoundary>
+>;
+
+const NEXT_ATTACK_ROLL_MODE_DIRECTION_BY_VARIANT_TAG = {
+  NextAttackRollAdvantage: "advantage",
+  NextAttackRollDisadvantage: "disadvantage",
+} as const satisfies Readonly<Record<string, NextAttackRollModeDirection>>;
+
+const REACTION_INTERDICTION_SOURCE_BY_VARIANT_TAG = {
+  HostAttackHitDamageOutcome: "hostAttackHitDamageOutcome",
+} as const satisfies Readonly<Record<string, ReactionInterdictionSource>>;
+
+const REACTION_INTERDICTION_CARRIER_BY_VARIANT_TAG = {
+  HostOutcomeTargetCarrier: "hostOutcomeTargetCarrier",
+} as const satisfies Readonly<Record<string, ReactionInterdictionCarrier>>;
+
+const REACTION_INTERDICTION_SCOPE_BY_VARIANT_TAG = {
+  AffectedTargetReactionsOnly: "affectedTargetReactionsOnly",
+} as const satisfies Readonly<Record<string, ReactionInterdictionScope>>;
+
+const REACTION_INTERDICTION_TRIGGER_FAMILY_BY_VARIANT_TAG = {
+  OpportunityAttackTriggerFamily: "opportunityAttackTriggerFamily",
+} as const satisfies Readonly<
+  Record<string, ReactionInterdictionTriggerFamily>
+>;
+
+const REACTION_INTERDICTION_EXPIRATION_BOUNDARY_BY_VARIANT_TAG = {
+  UntilAffectedTargetNextTurnStarts: "untilAffectedTargetNextTurnStarts",
+} as const satisfies Readonly<
+  Record<string, ReactionInterdictionExpirationBoundary>
+>;
+
+const CONDITION_RIDER_HOST_OUTCOME_BY_VARIANT_TAG = {
+  HostAttackHitDamageOutcome: "hostAttackHitDamageOutcome",
+  HostFailedSavingThrowOutcome: "hostFailedSavingThrowOutcome",
+} as const satisfies Readonly<Record<string, ConditionRiderHostOutcome>>;
+
+const CONDITION_RIDER_CARRIER_BY_VARIANT_TAG = {
+  AffectedTargetConditionCarrier: "affectedTargetConditionCarrier",
+} as const satisfies Readonly<Record<string, ConditionRiderCarrier>>;
+
+const CONDITION_RIDER_CONDITION_KIND_BY_VARIANT_TAG = {
+  PoisonedCondition: "poisoned",
+  BlindedCondition: "blinded",
+  DeafenedCondition: "deafened",
+  RestrainedCondition: "restrained",
+  IncapacitatedCondition: "incapacitated",
+  ParalyzedCondition: "paralyzed",
+  ProneCondition: "prone",
+  UnconsciousCondition: "unconscious",
+} as const satisfies Readonly<Record<string, ConditionRiderConditionKind>>;
+
+const CONDITION_RIDER_ADMISSION_BY_VARIANT_TAG = {
+  ConditionApplied: "conditionApplied",
+  ConditionRejectedByImmunity: "conditionRejectedByImmunity",
+} as const satisfies Readonly<Record<string, ConditionRiderAdmission>>;
+
+const CONDITION_RIDER_BOUNDARY_BY_VARIANT_TAG = {
+  UntilSourceNextTurnEnds: "untilSourceNextTurnEnds",
+  UntilAffectedTargetNextTurnEnds: "untilAffectedTargetNextTurnEnds",
+  UntilSpellEnds: "untilSpellEnds",
+  AffectedTargetEndTurnRepeatSave: "affectedTargetEndTurnRepeatSave",
+} as const satisfies Readonly<Record<string, ConditionRiderBoundary>>;
+
+const CONDITION_RIDER_ESCAPE_BY_VARIANT_TAG = {
+  AthleticsActionEscapeCheck: "athleticsActionEscapeCheck",
+} as const satisfies Readonly<Record<string, ConditionRiderEscape>>;
+
+const CONDITION_RIDER_CLEANUP_OWNER_BY_VARIANT_TAG = {
+  BattleTurnBoundaryCleanupOwner: "battleTurnBoundary",
+  BattleConditionLifecycleCleanupOwner: "battleConditionLifecycle",
+  BattleActiveEffectCleanupOwner: "battleActiveEffect",
+} as const satisfies Readonly<Record<string, ConditionRiderCleanupOwner>>;
+
+const OBJECT_LIGHT_EMITTER_SOURCE_BY_VARIANT_TAG = {
+  ObjectAttachedEmitterSource: "objectAttachedEmitterSource",
+  HeldEmitterSource: "heldEmitterSource",
+} as const satisfies Readonly<Record<string, ObjectLightEmitterSource>>;
+
+const OBJECT_LIGHT_EMITTER_ADMISSION_BY_VARIANT_TAG = {
+  ObjectTargetAdmittedByTableWitness: "objectTargetAdmittedByTableWitness",
+  ObjectTargetRejectedByTableWitness: "objectTargetRejectedByTableWitness",
+  EmitterEffectAdmitted: "emitterEffectAdmitted",
+} as const satisfies Readonly<Record<string, ObjectLightEmitterAdmission>>;
+
+const OBJECT_LIGHT_EMITTER_ATTACHMENT_BY_VARIANT_TAG = {
+  AttachedToObject: "attachedToObject",
+  HeldByCaster: "heldByCaster",
+} as const satisfies Readonly<Record<string, ObjectLightEmitterAttachment>>;
+
+const OBJECT_LIGHT_PROJECTION_BY_VARIANT_TAG = {
+  BrightLightProjection: "brightLightProjection",
+  DimLightProjection: "dimLightProjection",
+} as const satisfies Readonly<Record<string, ObjectLightProjection>>;
+
+const OBJECT_LIGHT_CLEANUP_BY_VARIANT_TAG = {
+  ReplacementCleanup: "replacementCleanup",
+  HurlCleanup: "hurlCleanup",
+  DurationCleanup: "durationCleanup",
+} as const satisfies Readonly<Record<string, ObjectLightCleanup>>;
+
+const OBJECT_LIGHT_CLEANUP_OWNER_BY_VARIANT_TAG = {
+  BattleActiveEffectCleanupOwner: "battleActiveEffect",
+  BattleTurnBoundaryCleanupOwner: "battleTurnBoundary",
+} as const satisfies Readonly<Record<string, ObjectLightCleanupOwner>>;
+
+const OBJECT_LIGHT_TABLE_WITNESS_BY_VARIANT_TAG = {
+  ObjectValidityAdmissionWitness: "objectValidityAdmissionWitness",
+  ObjectGeometryWitness: "objectGeometryWitness",
+  CoverGeometryWitness: "coverGeometryWitness",
+  OpaqueBlockerGeometryWitness: "opaqueBlockerGeometryWitness",
+  ColorPresentationWitness: "colorPresentationWitness",
+  ObjectDurabilityBoundaryWitness: "objectDurabilityBoundaryWitness",
+} as const satisfies Readonly<Record<string, ObjectLightTableWitness>>;
+
+const SPATIAL_EFFECT_BATTLE_EFFECT_BY_VARIANT_TAG = {
+  MovableMultiEmitterEffectAdmitted: "movableMultiEmitterEffectAdmitted",
+  OutlineEffectAdmitted: "outlineEffectAdmitted",
+  AreaObscurementEffectAdmitted: "areaObscurementEffectAdmitted",
+  AreaHazardEffectAdmitted: "areaHazardEffectAdmitted",
+  ConcentrationBackedEffect: "concentrationBackedEffect",
+} as const satisfies Readonly<Record<string, SpatialEffectBattleEffect>>;
+
+const SPATIAL_EFFECT_LIGHT_BY_VARIANT_TAG = {
+  MultiEmitterDimLightProjection: "multiEmitterDimLightProjection",
+  EmitterPositionMoved: "emitterPositionMoved",
+  BrightLightProjection: "brightLightProjection",
+  DimLightProjection: "dimLightProjection",
+} as const satisfies Readonly<Record<string, SpatialEffectLight>>;
+
+const SPATIAL_EFFECT_GEOMETRY_BY_VARIANT_TAG = {
+  AreaShapeWitness: "areaShapeWitness",
+  AreaMembershipWitness: "areaMembershipWitness",
+  MovementPathWitness: "movementPathWitness",
+  TotalCoverBlockerWitness: "totalCoverBlockerWitness",
+  StrongWindWitness: "strongWindWitness",
+} as const satisfies Readonly<Record<string, SpatialEffectGeometry>>;
+
+const SPATIAL_EFFECT_PRESENTATION_BY_VARIANT_TAG = {
+  EmitterAppearancePresentation: "emitterAppearancePresentation",
+  ColorChoicePresentation: "colorChoicePresentation",
+  VisibleOutlinePresentation: "visibleOutlinePresentation",
+} as const satisfies Readonly<Record<string, SpatialEffectPresentation>>;
+
+const SPATIAL_EFFECT_OBJECT_BY_VARIANT_TAG = {
+  OutlinedObjectWitness: "outlinedObjectWitness",
+  ObjectSightTargetWitness: "objectSightTargetWitness",
+  ObjectInvisibleBenefitDeniedProjection:
+    "objectInvisibleBenefitDeniedProjection",
+} as const satisfies Readonly<Record<string, SpatialEffectObject>>;
+
+const SPATIAL_EFFECT_SIGHT_BY_VARIANT_TAG = {
+  AttackerCanSeeTargetWitness: "attackerCanSeeTargetWitness",
+  InvisibleBenefitDeniedProjection: "invisibleBenefitDeniedProjection",
+  AttackRollAdvantageProjection: "attackRollAdvantageProjection",
+  HeavilyObscuredProjection: "heavilyObscuredProjection",
+  LightlyObscuredProjection: "lightlyObscuredProjection",
+} as const satisfies Readonly<Record<string, SpatialEffectSight>>;
+
+const SPATIAL_EFFECT_HAZARD_BY_VARIANT_TAG = {
+  DifficultTerrainProjection: "difficultTerrainProjection",
+  AreaCreatedSavingThrowTrigger: "areaCreatedSavingThrowTrigger",
+  AreaMovedSavingThrowTrigger: "areaMovedSavingThrowTrigger",
+  EntrySavingThrowTrigger: "entrySavingThrowTrigger",
+  StartTurnSavingThrowTrigger: "startTurnSavingThrowTrigger",
+  EndTurnSavingThrowTrigger: "endTurnSavingThrowTrigger",
+  SaveTriggeredDamageTrigger: "saveTriggeredDamageTrigger",
+  MovementDamageTrigger: "movementDamageTrigger",
+  FailedSaveRestraintTrigger: "failedSaveRestraintTrigger",
+  PerTurnTriggerLimit: "perTurnTriggerLimit",
+  AreaRemovedCleanup: "areaRemovedCleanup",
+} as const satisfies Readonly<Record<string, SpatialEffectHazard>>;
+
+const SPATIAL_EFFECT_CLEANUP_BY_VARIANT_TAG = {
+  DurationCleanup: "durationCleanup",
+  ConcentrationBreakCleanup: "concentrationBreakCleanup",
+  DispersalCleanup: "dispersalCleanup",
+  RemovalCleanup: "removalCleanup",
+  ReplacementCleanup: "replacementCleanup",
+} as const satisfies Readonly<Record<string, SpatialEffectCleanup>>;
+
+const SPATIAL_EFFECT_CLEANUP_OWNER_BY_VARIANT_TAG = {
+  BattleActiveEffectCleanupOwner: "battleActiveEffect",
+  BattleConcentrationCleanupOwner: "battleConcentration",
+  BattleTurnBoundaryCleanupOwner: "battleTurnBoundary",
+  BattleObscurementCleanupOwner: "battleObscurementProjection",
+  BattleAreaHazardCleanupOwner: "battleAreaHazard",
+} as const satisfies Readonly<Record<string, SpatialEffectCleanupOwner>>;
+
+const SELECTED_CONCENTRATION_HAZARD_ROW_BY_VARIANT_TAG = {
+  NoSelectedConcentrationHazardRow: "none",
+  FlamingSphereHazardRow: "flamingSphereHazard",
+  MoonbeamMovableZoneRow: "moonbeamMovableZone",
+  SpikeGrowthMovementHazardRow: "spikeGrowthMovementHazard",
+  WebRestraintHazardRow: "webRestraintHazard",
+} as const satisfies Readonly<Record<string, SelectedConcentrationHazardRow>>;
+
+const MIXED_TARGET_OUTCOME_TARGET_BY_VARIANT_TAG = {
+  PrimaryTarget: "primaryTarget",
+  SecondaryTarget: "secondaryTarget",
+  ObjectTarget: "objectTarget",
+} as const satisfies Readonly<Record<string, MixedTargetOutcomeTarget>>;
+
+const MIXED_TARGET_OUTCOME_RESOLUTION_BY_VARIANT_TAG = {
+  AttackHitOutcome: "attackHit",
+  AttackMissOutcome: "attackMiss",
+  SavingThrowFailedOutcome: "savingThrowFailed",
+  SavingThrowSucceededOutcome: "savingThrowSucceeded",
+} as const satisfies Readonly<Record<string, MixedTargetOutcomeResolution>>;
+
+const MIXED_TARGET_OUTCOME_DAMAGE_PROJECTION_BY_VARIANT_TAG = {
+  AttackDamageProjection: "attackDamage",
+  FullSavingThrowDamageProjection: "fullSavingThrowDamage",
+  HalfSavingThrowDamageProjection: "halfSavingThrowDamage",
+  NoDamageProjection: "noDamage",
+} as const satisfies Readonly<
+  Record<string, MixedTargetOutcomeDamageProjection>
+>;
+
+const MIXED_TARGET_OUTCOME_SHARED_SPEND_BY_VARIANT_TAG = {
+  SharedSpellSlotSpend: "sharedSpellSlotSpend",
+  SharedCantripActionSpend: "sharedCantripActionSpend",
+} as const satisfies Readonly<Record<string, MixedTargetOutcomeSharedSpend>>;
+
+const MIXED_TARGET_OUTCOME_DAMAGE_ROLL_BY_VARIANT_TAG = {
+  PrimaryAttackDamageRoll: "primaryAttackDamageRoll",
+  SharedSavingThrowDamageRoll: "sharedSavingThrowDamageRoll",
+} as const satisfies Readonly<Record<string, MixedTargetOutcomeDamageRoll>>;
+
+const MIXED_TARGET_OUTCOME_SECONDARY_PROJECTION_BY_VARIANT_TAG = {
+  ObjectBoundaryProjection: "objectBoundary",
+  LightProjection: "light",
+  ConditionProjection: "condition",
+  NextAttackRollModeProjection: "nextAttackRollMode",
+  BurstSavingThrowProjection: "burstSavingThrow",
+  ChainedAttackTargetProjection: "chainedAttackTarget",
+} as const satisfies Readonly<
+  Record<string, MixedTargetOutcomeSecondaryProjection>
+>;
+
+const MARKED_DAMAGE_RIDER_HOST_BY_VARIANT_TAG = {
+  AttackRollHitMarkedTarget: "attackRollHitMarkedTarget",
+} as const satisfies Readonly<Record<string, MarkedDamageRiderHost>>;
+
+const MARKED_DAMAGE_RIDER_DAMAGE_BY_VARIANT_TAG = {
+  ExtraDamageOnMarkedTargetHit: "extraDamageOnMarkedTargetHit",
+} as const satisfies Readonly<Record<string, MarkedDamageRiderDamage>>;
+
+const MARKED_DAMAGE_RIDER_TRANSFER_BY_VARIANT_TAG = {
+  TransferAwaitsMarkedTargetDrop: "transferAwaitsMarkedTargetDrop",
+  TransferAvailableAfterMarkedTargetDrops:
+    "transferAvailableAfterMarkedTargetDrops",
+  TransferAvailableOnSameTurn: "transferAvailableOnSameTurn",
+  TransferAvailableOnLaterTurn: "transferAvailableOnLaterTurn",
+  TransferConsumesBonusAction: "transferConsumesBonusAction",
+  TransferResetsAwaitingMarkedTargetDrop:
+    "transferResetsAwaitingMarkedTargetDrop",
+} as const satisfies Readonly<Record<string, MarkedDamageRiderTransfer>>;
+
+const TARGETED_ABILITY_CHECK_ROLL_MODE_FACT_BY_VARIANT_TAG = {
+  TargetScopedSelectedAbility: "targetScopedSelectedAbility",
+  MatchingTargetSelectedAbilityCheckDisadvantage:
+    "matchingTargetSelectedAbilityCheckDisadvantage",
+  NonmatchingAbilityCheckNormal: "nonmatchingAbilityCheckNormal",
+  NonmarkedActorAbilityCheckNormal: "nonmarkedActorAbilityCheckNormal",
+  ConcentrationCleanupRestoresNormalAbilityCheck:
+    "concentrationCleanupRestoresNormalAbilityCheck",
+} as const satisfies Readonly<Record<string, TargetedAbilityCheckRollModeFact>>;
+
+const MARKED_DAMAGE_RIDER_OWNER_FACT_BY_VARIANT_TAG = {
+  MarkedRiderBattleActiveEffectProjectionOwner: "markedRiderBattleActiveEffect",
+  MarkedRiderBattleConcentrationOwner: "markedRiderBattleConcentration",
+  MarkedRiderBattleAbilityCheckRollModeOwner:
+    "markedRiderBattleAbilityCheckRollMode",
+  MarkedRiderBattleActiveEffectCleanupOwner:
+    "markedRiderBattleActiveEffectCleanup",
+} as const satisfies Readonly<Record<string, MarkedDamageRiderOwnerFact>>;
+
+const CONDITION_IMMUNITY_TEMPORARY_HIT_POINT_EFFECT_BY_VARIANT_TAG = {
+  ConditionImmunityApplied: "conditionImmunityApplied",
+  ConditionApplicationRejectedByImmunity:
+    "conditionApplicationRejectedByImmunity",
+  TurnStartTemporaryHitPointGrantScheduled:
+    "turnStartTemporaryHitPointGrantScheduled",
+  TurnStartTemporaryHitPointsGranted: "turnStartTemporaryHitPointsGranted",
+  TemporaryHitPointsUseNonStackingChoice:
+    "temporaryHitPointsUseNonStackingChoice",
+  ConcentrationCleanupPreventsLaterTurnStartGrant:
+    "concentrationCleanupPreventsLaterTurnStartGrant",
+} as const satisfies Readonly<
+  Record<string, ConditionImmunityTemporaryHitPointEffect>
+>;
+
+const CONDITION_IMMUNITY_TEMPORARY_HIT_POINT_CONDITION_BY_VARIANT_TAG = {
+  FrightenedConditionImmunity: "frightenedConditionImmunity",
+} as const satisfies Readonly<
+  Record<string, ConditionImmunityTemporaryHitPointCondition>
+>;
+
+const CONDITION_IMMUNITY_TEMPORARY_HIT_POINT_OWNER_BY_VARIANT_TAG = {
+  BattleActiveEffectProjectionOwner: "battleActiveEffect",
+  BattleConditionLifecycleProjectionOwner: "battleConditionLifecycle",
+  BattleTemporaryHitPointProjectionOwner: "battleTemporaryHitPoint",
+  BattleTurnBoundaryProjectionOwner: "battleTurnBoundary",
+  ImmunityBattleConcentrationCleanupOwner: "battleConcentration",
+  ImmunityBattleActiveEffectCleanupOwner: "battleActiveEffectCleanup",
+} as const satisfies Readonly<
+  Record<string, ConditionImmunityTemporaryHitPointOwner>
+>;
+
+const REDUCER_ROUTE_HOLE_BY_VARIANT_TAG = {
+  AbilityCheckHoleKind: "abilityCheck",
+  AbilityChoiceHoleKind: "abilityChoice",
+  AttackDamageDispositionHoleKind: "attackDamageDisposition",
+  AttackRollHoleKind: "attackRoll",
+  CommandOptionChoiceHoleKind: "commandOptionChoice",
+  CompanionReappearanceInitiativeHoleKind: "companionReappearanceInitiative",
+  ConcentrationSavingThrowHoleKind: "concentrationSavingThrow",
+  ConditionChoiceHoleKind: "conditionChoice",
+  DamageTypeChoiceHoleKind: "damageTypeChoice",
+  DeathSavingThrowHoleKind: "deathSavingThrow",
+  GrappleOutcomeHoleKind: "grappleOutcome",
+  GustOfWindLineDirectionChoiceHoleKind: "gustOfWindLineDirectionChoice",
+  HitPointHealingDistributionHoleKind: "hitPointHealingDistribution",
+  InterruptDecisionHoleKind: "interruptDecision",
+  LevitateAltitudeChangeHoleKind: "levitateAltitudeChange",
+  LevitateInitialRiseHoleKind: "levitateInitialRise",
+  MovementHoleKind: "movement",
+  ObjectDropResolutionHoleKind: "objectDropResolution",
+  OngoingSpellTargetChoiceHoleKind: "ongoingSpellTargetChoice",
+  RolledDiceHoleKind: "rolledDice",
+  SanctuaryInterdictionOutcomeHoleKind: "sanctuaryInterdictionOutcome",
+  SavingThrowOutcomeHoleKind: "savingThrowOutcome",
+  SelfTransformationModeChoiceHoleKind: "selfTransformationModeChoice",
+  ShoveOutcomeHoleKind: "shoveOutcome",
+  SkillChoiceHoleKind: "skillChoice",
+  SlowSomaticSpellFailureOutcomeHoleKind: "slowSomaticSpellFailureOutcome",
+  SpellcastingAbilityCheckHoleKind: "spellcastingAbilityCheck",
+  SpellTargetAllocationHoleKind: "spellTargetAllocation",
+  SpellTargetListHoleKind: "spellTargetList",
+  StatBlockRechargeRollHoleKind: "statBlockRechargeRoll",
+  TargetAbilityChoicesHoleKind: "targetAbilityChoices",
+  TargetChoiceHoleKind: "targetChoice",
+  UnitFeatureDecisionHoleKind: "unitFeatureDecision",
+  WildShapeEquipmentDispositionHoleKind: "wildShapeEquipmentDisposition",
+} as const satisfies Readonly<Record<string, ReducerRouteHole>>;
+
+const REDUCER_ROUTE_FILL_BY_VARIANT_TAG = {
+  AbilityCheckFillKind: "abilityCheck",
+  AbilityChoiceFillKind: "abilityChoice",
+  AttackDamageDispositionFillKind: "attackDamageDisposition",
+  AttackRollFillKind: "attackRoll",
+  CommandOptionChoiceFillKind: "commandOptionChoice",
+  CompanionReappearanceInitiativeFillKind: "companionReappearanceInitiative",
+  ConcentrationSavingThrowFillKind: "concentrationSavingThrow",
+  ConditionChoiceFillKind: "conditionChoice",
+  DamageTypeChoiceFillKind: "damageTypeChoice",
+  DeathSavingThrowFillKind: "deathSavingThrow",
+  GrappleOutcomeFillKind: "grappleOutcome",
+  GustOfWindLineDirectionChoiceFillKind: "gustOfWindLineDirectionChoice",
+  HitPointHealingDistributionFillKind: "hitPointHealingDistribution",
+  InterruptDecisionFillKind: "interruptDecision",
+  LevitateAltitudeChangeFillKind: "levitateAltitudeChange",
+  LevitateInitialRiseFillKind: "levitateInitialRise",
+  MagicWeaponTargetItemFillKind: "magicWeaponTargetItem",
+  MovementFillKind: "movement",
+  ObjectDropResolutionFillKind: "objectDropResolution",
+  OngoingSpellTargetChoiceFillKind: "ongoingSpellTargetChoice",
+  RolledDiceFillKind: "rolledDice",
+  SanctuaryInterdictionOutcomeFillKind: "sanctuaryInterdictionOutcome",
+  SavingThrowOutcomeFillKind: "savingThrowOutcome",
+  SelfTransformationModeChoiceFillKind: "selfTransformationModeChoice",
+  ShoveOutcomeFillKind: "shoveOutcome",
+  SkillChoiceFillKind: "skillChoice",
+  SlowSomaticSpellFailureOutcomeFillKind: "slowSomaticSpellFailureOutcome",
+  SpellTargetAllocationFillKind: "spellTargetAllocation",
+  SpellTargetListFillKind: "spellTargetList",
+  StatBlockRechargeRollFillKind: "statBlockRechargeRoll",
+  TargetAbilityChoicesFillKind: "targetAbilityChoices",
+  TargetChoiceFillKind: "targetChoice",
+  UnitFeatureDecisionFillKind: "unitFeatureDecision",
+  WildShapeEquipmentDispositionFillKind: "wildShapeEquipmentDisposition",
+} as const satisfies Readonly<Record<string, ReducerRouteFillKind>>;
+
+const REDUCER_ROUTE_ABILITY_CHOICE_BY_VARIANT_TAG = {
+  RouteAbilityStr: "str",
+  RouteAbilityDex: "dex",
+  RouteAbilityCon: "con",
+  RouteAbilityInt: "int",
+  RouteAbilityWis: "wis",
+  RouteAbilityCha: "cha",
+} as const satisfies Readonly<Record<string, ReducerRouteAbilityChoice>>;
+
+const REDUCER_ROUTE_SKILL_CHOICE_BY_VARIANT_TAG = {
+  RouteSkillAcrobatics: "acrobatics",
+  RouteSkillAnimalHandling: "animal_handling",
+  RouteSkillArcana: "arcana",
+  RouteSkillAthletics: "athletics",
+  RouteSkillDeception: "deception",
+  RouteSkillHistory: "history",
+  RouteSkillInsight: "insight",
+  RouteSkillIntimidation: "intimidation",
+  RouteSkillInvestigation: "investigation",
+  RouteSkillMedicine: "medicine",
+  RouteSkillNature: "nature",
+  RouteSkillPerception: "perception",
+  RouteSkillPerformance: "performance",
+  RouteSkillPersuasion: "persuasion",
+  RouteSkillReligion: "religion",
+  RouteSkillSleightOfHand: "sleight_of_hand",
+  RouteSkillStealth: "stealth",
+  RouteSkillSurvival: "survival",
+} as const satisfies Readonly<Record<string, ReducerRouteSkillChoice>>;
+
+export function decodeReducerRoute(raw: unknown): readonly ReducerRouteEvent[] {
+  return quintList(raw, "qRoute").map(decodeReducerRouteEvent);
+}
+
+function decodeReducerRouteEvent(raw: unknown): ReducerRouteEvent {
+  const tag = quintVariantTag(raw, "qRoute[]");
+  if (tag === "RouteStartBattle") {
+    const payload = reducerRoutePayload(raw, tag);
+    return {
+      kind: "startBattle",
+      owner: reducerRouteOwner(quintField(payload, "owner")),
+    };
+  }
+  if (tag === "RouteDiscoverBattleActs") {
+    const payload = reducerRoutePayload(raw, tag);
+    return {
+      kind: "discoverBattleActs",
+      subject: reducerRouteSubject(quintField(payload, "subject")),
+      holes: reducerRouteHoles(quintField(payload, "holes")),
+      owner: reducerRouteOwner(quintField(payload, "owner")),
+    };
+  }
+  if (tag === "RouteResolveBattleSubject") {
+    const payload = reducerRoutePayload(raw, tag);
+    return {
+      kind: "resolveBattleSubject",
+      subject: reducerRouteSubject(quintField(payload, "subject")),
+      fill: reducerRouteFill(quintField(payload, "fill")),
+      holes: reducerRouteHoles(quintField(payload, "holes")),
+      owner: reducerRouteOwner(quintField(payload, "owner")),
+    };
+  }
+  if (tag === "RouteResolveBattleSubjectWithoutFill") {
+    const payload = reducerRoutePayload(raw, tag);
+    return {
+      kind: "resolveBattleSubjectWithoutFill",
+      subject: reducerRouteSubject(quintField(payload, "subject")),
+      holes: reducerRouteHoles(quintField(payload, "holes")),
+      owner: reducerRouteOwner(quintField(payload, "owner")),
+    };
+  }
+  if (tag === "RouteResolveBattleInterrupt") {
+    const payload = reducerRoutePayload(raw, tag);
+    return {
+      kind: "resolveBattleInterrupt",
+      subject: reducerRouteSubject(quintField(payload, "subject")),
+      fill: reducerRouteFill(quintField(payload, "fill")),
+      holes: reducerRouteHoles(quintField(payload, "holes")),
+      owner: reducerRouteOwner(quintField(payload, "owner")),
+    };
+  }
+
+  throw new Error(`Unknown reducer-route event: ${tag}.`);
+}
+
+function reducerRoutePayload(
+  raw: unknown,
+  tag: string,
+): Readonly<Record<string, unknown>> {
+  const value = quintVariantValue(raw, tag, "qRoute[]");
+  if (isRecord(value)) {
+    return value;
+  }
+
+  throw new Error(`Expected reducer-route ${tag} payload record.`);
+}
+
+function reducerRouteSubject(raw: unknown): ReducerRouteSubjectFamily {
+  return quintVariantMappedValue(
+    raw,
+    "qRoute[].subject",
+    REDUCER_ROUTE_SUBJECT_BY_VARIANT_TAG,
+    "reducer-route subject",
+  );
+}
+
+function reducerRouteOwner(raw: unknown): ReducerRouteOwnerGroup {
+  return quintVariantMappedValue(
+    raw,
+    "qRoute[].owner",
+    REDUCER_ROUTE_OWNER_BY_VARIANT_TAG,
+    "reducer-route owner",
+  );
+}
+
+function reducerRouteHole(raw: unknown): ReducerRouteHole {
+  return quintVariantMappedValue(
+    raw,
+    "qRoute[].holes[]",
+    REDUCER_ROUTE_HOLE_BY_VARIANT_TAG,
+    "reducer-route hole",
+  );
+}
+
+function reducerRouteHoles(raw: unknown): readonly ReducerRouteHole[] {
+  return quintSet(raw, "qRoute[].holes").map(reducerRouteHole).sort();
+}
+
+function reducerRouteFillKind(raw: unknown): ReducerRouteFillKind {
+  return quintVariantMappedValue(
+    raw,
+    "qRoute[].fill",
+    REDUCER_ROUTE_FILL_BY_VARIANT_TAG,
+    "reducer-route fill",
+  );
+}
+
+function reducerRouteFill(raw: unknown): ReducerRouteFill {
+  const tag = quintVariantTag(raw, "qRoute[].fill");
+  if (tag in REDUCER_ROUTE_FILL_BY_VARIANT_TAG) {
+    return reducerRouteFillKind(raw);
+  }
+  if (tag === "RouteFillKind") {
+    const payload = reducerRoutePayload(raw, tag);
+    return reducerRouteFillKind(quintField(payload, "fill"));
+  }
+  if (tag === "RouteSkillChoiceFill") {
+    const payload = reducerRoutePayload(raw, tag);
+    return {
+      kind: "skillChoice",
+      skill: reducerRouteSkillChoice(quintField(payload, "skill")),
+    };
+  }
+  if (tag === "RouteAbilityChoiceFill") {
+    const payload = reducerRoutePayload(raw, tag);
+    return {
+      kind: "abilityChoice",
+      ability: reducerRouteAbilityChoice(quintField(payload, "ability")),
+    };
+  }
+  if (tag === "RouteTargetAbilityChoicesFill") {
+    const payload = reducerRoutePayload(raw, tag);
+    return {
+      kind: "targetAbilityChoices",
+      choices: reducerRouteTwoTargetAbilityChoices(
+        quintField(payload, "choices"),
+      ),
+    };
+  }
+
+  throw new Error(`Unknown reducer-route fill evidence: ${tag}.`);
+}
+
+function reducerRouteSkillChoice(raw: unknown): ReducerRouteSkillChoice {
+  return quintVariantMappedValue(
+    raw,
+    "qRoute[].fill.skill",
+    REDUCER_ROUTE_SKILL_CHOICE_BY_VARIANT_TAG,
+    "reducer-route skill choice",
+  );
+}
+
+function reducerRouteAbilityChoice(raw: unknown): ReducerRouteAbilityChoice {
+  return quintVariantMappedValue(
+    raw,
+    "qRoute[].fill.ability",
+    REDUCER_ROUTE_ABILITY_CHOICE_BY_VARIANT_TAG,
+    "reducer-route ability choice",
+  );
+}
+
+function reducerRouteTwoTargetAbilityChoices(raw: unknown): {
+  readonly primary: ReducerRouteAbilityChoice;
+  readonly secondary: ReducerRouteAbilityChoice;
+} {
+  if (!isRecord(raw)) {
+    throw new Error(
+      "Expected reducer-route two-target ability choices record.",
+    );
+  }
+  return {
+    primary: reducerRouteAbilityChoice(quintField(raw, "primary")),
+    secondary: reducerRouteAbilityChoice(quintField(raw, "secondary")),
+  };
+}
+
+function decodeNextAttackRollModeRouteFacts(
+  raw: unknown,
+): readonly NextAttackRollModeRouteFact[] {
+  return quintList(raw, "qFacts").map(decodeNextAttackRollModeRouteFact);
+}
+
+function decodeNextAttackRollModeRouteFact(
+  raw: unknown,
+): NextAttackRollModeRouteFact {
+  const tag = quintVariantTag(raw, "qFacts[]");
+  if (tag === "RouteNextAttackRollModeSource") {
+    const payload = nextAttackRollModeFactPayload(raw, tag);
+    return {
+      kind: "source",
+      source: quintVariantMappedValue(
+        quintField(payload, "source"),
+        "qFacts[].source",
+        NEXT_ATTACK_ROLL_MODE_SOURCE_BY_VARIANT_TAG,
+        "next-Attack-Roll mode source",
+      ),
+    };
+  }
+  if (tag === "RouteNextAttackRollModeCarrier") {
+    const payload = nextAttackRollModeFactPayload(raw, tag);
+    return {
+      kind: "carrier",
+      carrier: quintVariantMappedValue(
+        quintField(payload, "carrier"),
+        "qFacts[].carrier",
+        NEXT_ATTACK_ROLL_MODE_CARRIER_BY_VARIANT_TAG,
+        "next-Attack-Roll mode carrier",
+      ),
+    };
+  }
+  if (tag === "RouteNextAttackRollModeAttacker") {
+    const payload = nextAttackRollModeFactPayload(raw, tag);
+    return {
+      kind: "attacker",
+      attacker: quintVariantMappedValue(
+        quintField(payload, "attacker"),
+        "qFacts[].attacker",
+        NEXT_ATTACK_ROLL_MODE_ATTACKER_BY_VARIANT_TAG,
+        "next-Attack-Roll mode attacker",
+      ),
+    };
+  }
+  if (tag === "RouteNextAttackRollModeTargetScope") {
+    const payload = nextAttackRollModeFactPayload(raw, tag);
+    return {
+      kind: "targetScope",
+      targetScope: quintVariantMappedValue(
+        quintField(payload, "targetScope"),
+        "qFacts[].targetScope",
+        NEXT_ATTACK_ROLL_MODE_TARGET_SCOPE_BY_VARIANT_TAG,
+        "next-Attack-Roll mode target scope",
+      ),
+    };
+  }
+  if (tag === "RouteNextAttackRollModeExpirationBoundary") {
+    const payload = nextAttackRollModeFactPayload(raw, tag);
+    return {
+      kind: "expirationBoundary",
+      boundary: quintVariantMappedValue(
+        quintField(payload, "boundary"),
+        "qFacts[].boundary",
+        NEXT_ATTACK_ROLL_MODE_EXPIRATION_BOUNDARY_BY_VARIANT_TAG,
+        "next-Attack-Roll mode expiration boundary",
+      ),
+    };
+  }
+  if (tag === "RouteNextAttackRollModeDirection") {
+    const payload = nextAttackRollModeFactPayload(raw, tag);
+    return {
+      kind: "direction",
+      direction: quintVariantMappedValue(
+        quintField(payload, "direction"),
+        "qFacts[].direction",
+        NEXT_ATTACK_ROLL_MODE_DIRECTION_BY_VARIANT_TAG,
+        "next-Attack-Roll mode direction",
+      ),
+    };
+  }
+  if (tag === "RouteNextAttackRollModeAdmitted") {
+    return { kind: "admitted" };
+  }
+  if (tag === "RouteNextAttackRollModeProjected") {
+    return { kind: "projected" };
+  }
+  if (tag === "RouteNextAttackRollModeConsumed") {
+    return { kind: "consumed" };
+  }
+  if (tag === "RouteNextAttackRollModeExpired") {
+    return { kind: "expired" };
+  }
+  if (tag === "RouteNextAttackRollModeCleanedUp") {
+    return { kind: "cleanedUp" };
+  }
+
+  throw new Error(`Unknown next-Attack-Roll mode route fact: ${tag}.`);
+}
+
+function nextAttackRollModeFactPayload(
+  raw: unknown,
+  tag: string,
+): Readonly<Record<string, unknown>> {
+  const value = quintVariantValue(raw, tag, "qFacts[]");
+  if (isRecord(value)) {
+    return value;
+  }
+
+  throw new Error(`Expected next-Attack-Roll mode ${tag} payload record.`);
+}
+
+function decodeReactionInterdictionRouteFacts(
+  raw: unknown,
+): readonly ReactionInterdictionRouteFact[] {
+  return quintList(raw, "qFacts").map(decodeReactionInterdictionRouteFact);
+}
+
+function decodeReactionInterdictionRouteFact(
+  raw: unknown,
+): ReactionInterdictionRouteFact {
+  const tag = quintVariantTag(raw, "qFacts[]");
+  if (tag === "RouteReactionInterdictionSource") {
+    const payload = reactionInterdictionFactPayload(raw, tag);
+    return {
+      kind: "source",
+      source: quintVariantMappedValue(
+        quintField(payload, "source"),
+        "qFacts[].source",
+        REACTION_INTERDICTION_SOURCE_BY_VARIANT_TAG,
+        "reaction interdiction source",
+      ),
+    };
+  }
+  if (tag === "RouteReactionInterdictionCarrier") {
+    const payload = reactionInterdictionFactPayload(raw, tag);
+    return {
+      kind: "carrier",
+      carrier: quintVariantMappedValue(
+        quintField(payload, "carrier"),
+        "qFacts[].carrier",
+        REACTION_INTERDICTION_CARRIER_BY_VARIANT_TAG,
+        "reaction interdiction carrier",
+      ),
+    };
+  }
+  if (tag === "RouteReactionInterdictionScope") {
+    const payload = reactionInterdictionFactPayload(raw, tag);
+    return {
+      kind: "scope",
+      scope: quintVariantMappedValue(
+        quintField(payload, "scope"),
+        "qFacts[].scope",
+        REACTION_INTERDICTION_SCOPE_BY_VARIANT_TAG,
+        "reaction interdiction scope",
+      ),
+    };
+  }
+  if (tag === "RouteReactionInterdictionTriggerFamily") {
+    const payload = reactionInterdictionFactPayload(raw, tag);
+    return {
+      kind: "triggerFamily",
+      triggerFamily: quintVariantMappedValue(
+        quintField(payload, "triggerFamily"),
+        "qFacts[].triggerFamily",
+        REACTION_INTERDICTION_TRIGGER_FAMILY_BY_VARIANT_TAG,
+        "reaction interdiction trigger family",
+      ),
+    };
+  }
+  if (tag === "RouteReactionInterdictionExpirationBoundary") {
+    const payload = reactionInterdictionFactPayload(raw, tag);
+    return {
+      kind: "expirationBoundary",
+      boundary: quintVariantMappedValue(
+        quintField(payload, "boundary"),
+        "qFacts[].boundary",
+        REACTION_INTERDICTION_EXPIRATION_BOUNDARY_BY_VARIANT_TAG,
+        "reaction interdiction expiration boundary",
+      ),
+    };
+  }
+  if (tag === "RouteReactionInterdictionAdmitted") {
+    return { kind: "admitted" };
+  }
+  if (tag === "RouteReactionInterdictionProjectedToMovementDiscovery") {
+    return { kind: "projectedToMovementDiscovery" };
+  }
+  if (tag === "RouteReactionInterdictionProjectedToReactionDiscovery") {
+    return { kind: "projectedToReactionDiscovery" };
+  }
+  if (tag === "RouteReactionInterdictionExpired") {
+    return { kind: "expired" };
+  }
+  if (tag === "RouteReactionInterdictionCleanedUp") {
+    return { kind: "cleanedUp" };
+  }
+
+  throw new Error(`Unknown reaction interdiction route fact: ${tag}.`);
+}
+
+function reactionInterdictionFactPayload(
+  raw: unknown,
+  tag: string,
+): Readonly<Record<string, unknown>> {
+  const value = quintVariantValue(raw, tag, "qFacts[]");
+  if (isRecord(value)) {
+    return value;
+  }
+
+  throw new Error(`Expected reaction interdiction ${tag} payload record.`);
+}
+
+function decodeConditionRiderRouteFacts(
+  raw: unknown,
+): readonly ConditionRiderRouteFact[] {
+  return quintList(raw, "qFacts").map(decodeConditionRiderRouteFact);
+}
+
+function decodeConditionRiderRouteFact(raw: unknown): ConditionRiderRouteFact {
+  const tag = quintVariantTag(raw, "qFacts[]");
+  if (tag === "RouteConditionRiderHostOutcome") {
+    const payload = conditionRiderFactPayload(raw, tag);
+    return {
+      kind: "hostOutcome",
+      outcome: quintVariantMappedValue(
+        quintField(payload, "outcome"),
+        "qFacts[].outcome",
+        CONDITION_RIDER_HOST_OUTCOME_BY_VARIANT_TAG,
+        "condition rider host outcome",
+      ),
+    };
+  }
+  if (tag === "RouteConditionRiderCarrier") {
+    const payload = conditionRiderFactPayload(raw, tag);
+    return {
+      kind: "carrier",
+      carrier: quintVariantMappedValue(
+        quintField(payload, "carrier"),
+        "qFacts[].carrier",
+        CONDITION_RIDER_CARRIER_BY_VARIANT_TAG,
+        "condition rider carrier",
+      ),
+    };
+  }
+  if (tag === "RouteConditionRiderConditionKind") {
+    const payload = conditionRiderFactPayload(raw, tag);
+    return {
+      kind: "conditionKind",
+      condition: quintVariantMappedValue(
+        quintField(payload, "condition"),
+        "qFacts[].condition",
+        CONDITION_RIDER_CONDITION_KIND_BY_VARIANT_TAG,
+        "condition rider condition kind",
+      ),
+    };
+  }
+  if (tag === "RouteConditionRiderAdmission") {
+    const payload = conditionRiderFactPayload(raw, tag);
+    return {
+      kind: "admission",
+      admission: quintVariantMappedValue(
+        quintField(payload, "admission"),
+        "qFacts[].admission",
+        CONDITION_RIDER_ADMISSION_BY_VARIANT_TAG,
+        "condition rider admission",
+      ),
+    };
+  }
+  if (tag === "RouteConditionRiderBoundary") {
+    const payload = conditionRiderFactPayload(raw, tag);
+    return {
+      kind: "boundary",
+      boundary: quintVariantMappedValue(
+        quintField(payload, "boundary"),
+        "qFacts[].boundary",
+        CONDITION_RIDER_BOUNDARY_BY_VARIANT_TAG,
+        "condition rider boundary",
+      ),
+    };
+  }
+  if (tag === "RouteConditionRiderEscape") {
+    const payload = conditionRiderFactPayload(raw, tag);
+    return {
+      kind: "escape",
+      escape: quintVariantMappedValue(
+        quintField(payload, "escape"),
+        "qFacts[].escape",
+        CONDITION_RIDER_ESCAPE_BY_VARIANT_TAG,
+        "condition rider escape",
+      ),
+    };
+  }
+  if (tag === "RouteConditionRiderRepeatSaveFrontierOpened") {
+    return { kind: "repeatSaveFrontierOpened" };
+  }
+  if (tag === "RouteConditionRiderRepeatSaveSucceeded") {
+    return { kind: "repeatSaveSucceeded" };
+  }
+  if (tag === "RouteConditionRiderRepeatSaveFailed") {
+    return { kind: "repeatSaveFailed" };
+  }
+  if (tag === "RouteConditionRiderTransition") {
+    const payload = conditionRiderFactPayload(raw, tag);
+    return {
+      kind: "transition",
+      condition: quintVariantMappedValue(
+        quintField(payload, "condition"),
+        "qFacts[].condition",
+        CONDITION_RIDER_CONDITION_KIND_BY_VARIANT_TAG,
+        "condition rider transition condition",
+      ),
+    };
+  }
+  if (tag === "RouteConditionRiderImpliedCondition") {
+    const payload = conditionRiderFactPayload(raw, tag);
+    return {
+      kind: "impliedCondition",
+      condition: quintVariantMappedValue(
+        quintField(payload, "condition"),
+        "qFacts[].condition",
+        CONDITION_RIDER_CONDITION_KIND_BY_VARIANT_TAG,
+        "condition rider implied condition",
+      ),
+    };
+  }
+  if (tag === "RouteConditionRiderSelfEndBlocked") {
+    const payload = conditionRiderFactPayload(raw, tag);
+    return {
+      kind: "selfEndBlocked",
+      condition: quintVariantMappedValue(
+        quintField(payload, "condition"),
+        "qFacts[].condition",
+        CONDITION_RIDER_CONDITION_KIND_BY_VARIANT_TAG,
+        "condition rider self-end blocked condition",
+      ),
+    };
+  }
+  if (tag === "RouteConditionRiderEscapeCheckFrontierOpened") {
+    return { kind: "escapeCheckFrontierOpened" };
+  }
+  if (tag === "RouteConditionRiderEscapeCheckSucceeded") {
+    return { kind: "escapeCheckSucceeded" };
+  }
+  if (tag === "RouteConditionRiderExpired") {
+    return { kind: "expired" };
+  }
+  if (tag === "RouteConditionRiderCleanedUpBy") {
+    const payload = conditionRiderFactPayload(raw, tag);
+    return {
+      kind: "cleanedUpBy",
+      owner: quintVariantMappedValue(
+        quintField(payload, "owner"),
+        "qFacts[].owner",
+        CONDITION_RIDER_CLEANUP_OWNER_BY_VARIANT_TAG,
+        "condition rider cleanup owner",
+      ),
+    };
+  }
+
+  throw new Error(`Unknown condition rider route fact: ${tag}.`);
+}
+
+function conditionRiderFactPayload(
+  raw: unknown,
+  tag: string,
+): Readonly<Record<string, unknown>> {
+  const value = quintVariantValue(raw, tag, "qFacts[]");
+  if (isRecord(value)) {
+    return value;
+  }
+
+  throw new Error(`Expected condition rider ${tag} payload record.`);
+}
+
+function decodeObjectLightRouteFacts(
+  raw: unknown,
+): readonly ObjectLightRouteFact[] {
+  return quintList(raw, "qFacts").map(decodeObjectLightRouteFact);
+}
+
+function decodeObjectLightRouteFact(raw: unknown): ObjectLightRouteFact {
+  const tag = quintVariantTag(raw, "qFacts[]");
+  if (tag === "RouteObjectLightEmitterSource") {
+    const payload = objectLightFactPayload(raw, tag);
+    return {
+      kind: "emitterSource",
+      source: quintVariantMappedValue(
+        quintField(payload, "source"),
+        "qFacts[].source",
+        OBJECT_LIGHT_EMITTER_SOURCE_BY_VARIANT_TAG,
+        "object/light emitter source",
+      ),
+    };
+  }
+  if (tag === "RouteObjectLightAdmission") {
+    const payload = objectLightFactPayload(raw, tag);
+    return {
+      kind: "admission",
+      admission: quintVariantMappedValue(
+        quintField(payload, "admission"),
+        "qFacts[].admission",
+        OBJECT_LIGHT_EMITTER_ADMISSION_BY_VARIANT_TAG,
+        "object/light admission",
+      ),
+    };
+  }
+  if (tag === "RouteObjectLightAttachment") {
+    const payload = objectLightFactPayload(raw, tag);
+    return {
+      kind: "attachment",
+      attachment: quintVariantMappedValue(
+        quintField(payload, "attachment"),
+        "qFacts[].attachment",
+        OBJECT_LIGHT_EMITTER_ATTACHMENT_BY_VARIANT_TAG,
+        "object/light attachment",
+      ),
+    };
+  }
+  if (tag === "RouteObjectLightProjection") {
+    const payload = objectLightFactPayload(raw, tag);
+    return {
+      kind: "projection",
+      projection: quintVariantMappedValue(
+        quintField(payload, "projection"),
+        "qFacts[].projection",
+        OBJECT_LIGHT_PROJECTION_BY_VARIANT_TAG,
+        "object/light projection",
+      ),
+    };
+  }
+  if (tag === "RouteObjectLightCleanedUpBy") {
+    const payload = objectLightFactPayload(raw, tag);
+    return {
+      kind: "cleanedUpBy",
+      cleanup: quintVariantMappedValue(
+        quintField(payload, "cleanup"),
+        "qFacts[].cleanup",
+        OBJECT_LIGHT_CLEANUP_BY_VARIANT_TAG,
+        "object/light cleanup",
+      ),
+      owner: quintVariantMappedValue(
+        quintField(payload, "owner"),
+        "qFacts[].owner",
+        OBJECT_LIGHT_CLEANUP_OWNER_BY_VARIANT_TAG,
+        "object/light cleanup owner",
+      ),
+    };
+  }
+  if (tag === "RouteObjectLightTableWitness") {
+    const payload = objectLightFactPayload(raw, tag);
+    return {
+      kind: "tableWitness",
+      witness: quintVariantMappedValue(
+        quintField(payload, "witness"),
+        "qFacts[].witness",
+        OBJECT_LIGHT_TABLE_WITNESS_BY_VARIANT_TAG,
+        "object/light table witness",
+      ),
+    };
+  }
+
+  throw new Error(`Unknown object/light route fact: ${tag}.`);
+}
+
+function objectLightFactPayload(
+  raw: unknown,
+  tag: string,
+): Readonly<Record<string, unknown>> {
+  const value = quintVariantValue(raw, tag, "qFacts[]");
+  if (isRecord(value)) {
+    return value;
+  }
+
+  throw new Error(`Expected object/light ${tag} payload record.`);
+}
+
+export function decodeSpatialEffectRouteFacts(
+  raw: unknown,
+): readonly SpatialEffectRouteFact[] {
+  return quintList(raw, "qFacts").map(decodeSpatialEffectRouteFact);
+}
+
+function decodeSpatialEffectRouteFact(raw: unknown): SpatialEffectRouteFact {
+  const tag = quintVariantTag(raw, "qFacts[]");
+  if (tag === "RouteSpatialEffectBattleEffect") {
+    const payload = spatialEffectFactPayload(raw, tag);
+    return {
+      kind: "battleEffect",
+      effect: quintVariantMappedValue(
+        quintField(payload, "effect"),
+        "qFacts[].effect",
+        SPATIAL_EFFECT_BATTLE_EFFECT_BY_VARIANT_TAG,
+        "spatial effect battle effect",
+      ),
+    };
+  }
+  if (tag === "RouteSpatialEffectLight") {
+    const payload = spatialEffectFactPayload(raw, tag);
+    return {
+      kind: "light",
+      light: quintVariantMappedValue(
+        quintField(payload, "light"),
+        "qFacts[].light",
+        SPATIAL_EFFECT_LIGHT_BY_VARIANT_TAG,
+        "spatial effect light",
+      ),
+    };
+  }
+  if (tag === "RouteSpatialEffectGeometry") {
+    const payload = spatialEffectFactPayload(raw, tag);
+    return {
+      kind: "geometry",
+      geometry: quintVariantMappedValue(
+        quintField(payload, "geometry"),
+        "qFacts[].geometry",
+        SPATIAL_EFFECT_GEOMETRY_BY_VARIANT_TAG,
+        "spatial effect geometry",
+      ),
+    };
+  }
+  if (tag === "RouteSpatialEffectPresentation") {
+    const payload = spatialEffectFactPayload(raw, tag);
+    return {
+      kind: "presentation",
+      presentation: quintVariantMappedValue(
+        quintField(payload, "presentation"),
+        "qFacts[].presentation",
+        SPATIAL_EFFECT_PRESENTATION_BY_VARIANT_TAG,
+        "spatial effect presentation",
+      ),
+    };
+  }
+  if (tag === "RouteSpatialEffectObject") {
+    const payload = spatialEffectFactPayload(raw, tag);
+    return {
+      kind: "object",
+      object: quintVariantMappedValue(
+        quintField(payload, "object"),
+        "qFacts[].object",
+        SPATIAL_EFFECT_OBJECT_BY_VARIANT_TAG,
+        "spatial effect object",
+      ),
+    };
+  }
+  if (tag === "RouteSpatialEffectSight") {
+    const payload = spatialEffectFactPayload(raw, tag);
+    return {
+      kind: "sight",
+      sight: quintVariantMappedValue(
+        quintField(payload, "sight"),
+        "qFacts[].sight",
+        SPATIAL_EFFECT_SIGHT_BY_VARIANT_TAG,
+        "spatial effect sight",
+      ),
+    };
+  }
+  if (tag === "RouteSpatialEffectHazard") {
+    const payload = spatialEffectFactPayload(raw, tag);
+    return {
+      kind: "hazard",
+      hazard: quintVariantMappedValue(
+        quintField(payload, "hazard"),
+        "qFacts[].hazard",
+        SPATIAL_EFFECT_HAZARD_BY_VARIANT_TAG,
+        "spatial effect hazard",
+      ),
+    };
+  }
+  if (tag === "RouteSpatialEffectCleanedUpBy") {
+    const payload = spatialEffectFactPayload(raw, tag);
+    return {
+      kind: "cleanedUpBy",
+      cleanup: quintVariantMappedValue(
+        quintField(payload, "cleanup"),
+        "qFacts[].cleanup",
+        SPATIAL_EFFECT_CLEANUP_BY_VARIANT_TAG,
+        "spatial effect cleanup",
+      ),
+      owner: quintVariantMappedValue(
+        quintField(payload, "owner"),
+        "qFacts[].owner",
+        SPATIAL_EFFECT_CLEANUP_OWNER_BY_VARIANT_TAG,
+        "spatial effect cleanup owner",
+      ),
+    };
+  }
+
+  throw new Error(`Unknown spatial effect route fact: ${tag}.`);
+}
+
+function spatialEffectFactPayload(
+  raw: unknown,
+  tag: string,
+): Readonly<Record<string, unknown>> {
+  const value = quintVariantValue(raw, tag, "qFacts[]");
+  if (isRecord(value)) {
+    return value;
+  }
+
+  throw new Error(`Expected spatial effect ${tag} payload record.`);
+}
+
+function decodeMixedTargetOutcomeRouteFacts(
+  raw: unknown,
+): readonly MixedTargetOutcomeRouteFact[] {
+  return quintList(raw, "qFacts").map(decodeMixedTargetOutcomeRouteFact);
+}
+
+function decodeMixedTargetOutcomeRouteFact(
+  raw: unknown,
+): MixedTargetOutcomeRouteFact {
+  const tag = quintVariantTag(raw, "qFacts[]");
+  if (tag === "RouteMixedTargetOutcomeTarget") {
+    const payload = mixedTargetOutcomeFactPayload(raw, tag);
+    return {
+      kind: "target",
+      target: quintVariantMappedValue(
+        quintField(payload, "target"),
+        "qFacts[].target",
+        MIXED_TARGET_OUTCOME_TARGET_BY_VARIANT_TAG,
+        "mixed-target outcome target",
+      ),
+    };
+  }
+  if (tag === "RouteMixedTargetOutcomeResolution") {
+    const payload = mixedTargetOutcomeFactPayload(raw, tag);
+    return {
+      kind: "resolution",
+      target: quintVariantMappedValue(
+        quintField(payload, "target"),
+        "qFacts[].target",
+        MIXED_TARGET_OUTCOME_TARGET_BY_VARIANT_TAG,
+        "mixed-target outcome resolution target",
+      ),
+      outcome: quintVariantMappedValue(
+        quintField(payload, "outcome"),
+        "qFacts[].outcome",
+        MIXED_TARGET_OUTCOME_RESOLUTION_BY_VARIANT_TAG,
+        "mixed-target outcome resolution",
+      ),
+    };
+  }
+  if (tag === "RouteMixedTargetOutcomeDamageProjection") {
+    const payload = mixedTargetOutcomeFactPayload(raw, tag);
+    return {
+      kind: "damageProjection",
+      target: quintVariantMappedValue(
+        quintField(payload, "target"),
+        "qFacts[].target",
+        MIXED_TARGET_OUTCOME_TARGET_BY_VARIANT_TAG,
+        "mixed-target outcome damage target",
+      ),
+      damage: quintVariantMappedValue(
+        quintField(payload, "damage"),
+        "qFacts[].damage",
+        MIXED_TARGET_OUTCOME_DAMAGE_PROJECTION_BY_VARIANT_TAG,
+        "mixed-target outcome damage projection",
+      ),
+    };
+  }
+  if (tag === "RouteMixedTargetOutcomeSharedSpend") {
+    const payload = mixedTargetOutcomeFactPayload(raw, tag);
+    return {
+      kind: "sharedSpend",
+      spend: quintVariantMappedValue(
+        quintField(payload, "spend"),
+        "qFacts[].spend",
+        MIXED_TARGET_OUTCOME_SHARED_SPEND_BY_VARIANT_TAG,
+        "mixed-target outcome shared spend",
+      ),
+    };
+  }
+  if (tag === "RouteMixedTargetOutcomeDamageRoll") {
+    const payload = mixedTargetOutcomeFactPayload(raw, tag);
+    return {
+      kind: "damageRoll",
+      roll: quintVariantMappedValue(
+        quintField(payload, "roll"),
+        "qFacts[].roll",
+        MIXED_TARGET_OUTCOME_DAMAGE_ROLL_BY_VARIANT_TAG,
+        "mixed-target outcome damage roll",
+      ),
+    };
+  }
+  if (tag === "RouteMixedTargetOutcomeSecondaryProjection") {
+    const payload = mixedTargetOutcomeFactPayload(raw, tag);
+    return {
+      kind: "secondaryProjection",
+      target: quintVariantMappedValue(
+        quintField(payload, "target"),
+        "qFacts[].target",
+        MIXED_TARGET_OUTCOME_TARGET_BY_VARIANT_TAG,
+        "mixed-target outcome secondary projection target",
+      ),
+      projection: quintVariantMappedValue(
+        quintField(payload, "projection"),
+        "qFacts[].projection",
+        MIXED_TARGET_OUTCOME_SECONDARY_PROJECTION_BY_VARIANT_TAG,
+        "mixed-target outcome secondary projection",
+      ),
+    };
+  }
+
+  throw new Error(`Unknown mixed-target outcome route fact: ${tag}.`);
+}
+
+function mixedTargetOutcomeFactPayload(
+  raw: unknown,
+  tag: string,
+): Readonly<Record<string, unknown>> {
+  const value = quintVariantValue(raw, tag, "qFacts[]");
+  if (isRecord(value)) {
+    return value;
+  }
+
+  throw new Error(`Expected mixed-target outcome ${tag} payload record.`);
+}
+
+function decodeMarkedDamageImmunityRouteFacts(
+  raw: unknown,
+): readonly MarkedDamageImmunityRouteFact[] {
+  return quintList(raw, "qFacts").map(decodeMarkedDamageImmunityRouteFact);
+}
+
+function decodeMarkedDamageImmunityRouteFact(
+  raw: unknown,
+): MarkedDamageImmunityRouteFact {
+  const tag = quintVariantTag(raw, "qFacts[]");
+  if (tag === "RouteMarkedDamageRiderFact") {
+    const payload = markedDamageImmunityFactPayload(raw, tag);
+    return decodeMarkedDamageRiderRouteFact(quintField(payload, "fact"));
+  }
+  if (tag === "RouteConditionImmunityTemporaryHitPointFact") {
+    const payload = markedDamageImmunityFactPayload(raw, tag);
+    return decodeConditionImmunityTemporaryHitPointRouteFact(
+      quintField(payload, "fact"),
+    );
+  }
+
+  throw new Error(`Unknown marked-damage/immunity route fact: ${tag}.`);
+}
+
+function decodeMarkedDamageRiderRouteFact(
+  raw: unknown,
+): MarkedDamageRiderRouteFact {
+  const tag = quintVariantTag(raw, "qFacts[].fact");
+  if (tag === "RouteMarkedDamageRiderHost") {
+    const payload = markedDamageRiderFactPayload(raw, tag);
+    return {
+      kind: "markedHost",
+      host: quintVariantMappedValue(
+        quintField(payload, "host"),
+        "qFacts[].fact.host",
+        MARKED_DAMAGE_RIDER_HOST_BY_VARIANT_TAG,
+        "marked damage rider host",
+      ),
+    };
+  }
+  if (tag === "RouteMarkedDamageRiderDamage") {
+    const payload = markedDamageRiderFactPayload(raw, tag);
+    return {
+      kind: "markedDamage",
+      damage: quintVariantMappedValue(
+        quintField(payload, "damage"),
+        "qFacts[].fact.damage",
+        MARKED_DAMAGE_RIDER_DAMAGE_BY_VARIANT_TAG,
+        "marked damage rider damage",
+      ),
+    };
+  }
+  if (tag === "RouteMarkedDamageRiderTransfer") {
+    const payload = markedDamageRiderFactPayload(raw, tag);
+    return {
+      kind: "markedTransfer",
+      transfer: quintVariantMappedValue(
+        quintField(payload, "transfer"),
+        "qFacts[].fact.transfer",
+        MARKED_DAMAGE_RIDER_TRANSFER_BY_VARIANT_TAG,
+        "marked damage rider transfer",
+      ),
+    };
+  }
+  if (tag === "RouteMarkedDamageRiderTargetedAbilityCheckRollMode") {
+    const payload = markedDamageRiderFactPayload(raw, tag);
+    return {
+      kind: "targetedAbilityCheckRollMode",
+      rollMode: quintVariantMappedValue(
+        quintField(payload, "rollMode"),
+        "qFacts[].fact.rollMode",
+        TARGETED_ABILITY_CHECK_ROLL_MODE_FACT_BY_VARIANT_TAG,
+        "targeted ability-check roll-mode fact",
+      ),
+    };
+  }
+  if (tag === "RouteMarkedDamageRiderOwner") {
+    const payload = markedDamageRiderFactPayload(raw, tag);
+    return {
+      kind: "markedOwner",
+      owner: quintVariantMappedValue(
+        quintField(payload, "owner"),
+        "qFacts[].fact.owner",
+        MARKED_DAMAGE_RIDER_OWNER_FACT_BY_VARIANT_TAG,
+        "marked damage rider owner",
+      ),
+    };
+  }
+  throw new Error(`Unknown marked damage rider route fact: ${tag}.`);
+}
+
+function decodeConditionImmunityTemporaryHitPointRouteFact(
+  raw: unknown,
+): ConditionImmunityTemporaryHitPointRouteFact {
+  const tag = quintVariantTag(raw, "qFacts[].fact");
+  if (tag === "RouteConditionImmunityTemporaryHitPointEffect") {
+    const payload = conditionImmunityTemporaryHitPointFactPayload(raw, tag);
+    return {
+      kind: "immunityTemporaryHitPointEffect",
+      effect: quintVariantMappedValue(
+        quintField(payload, "effect"),
+        "qFacts[].fact.effect",
+        CONDITION_IMMUNITY_TEMPORARY_HIT_POINT_EFFECT_BY_VARIANT_TAG,
+        "condition-immunity temporary-Hit-Point effect",
+      ),
+    };
+  }
+  if (tag === "RouteConditionImmunityTemporaryHitPointCondition") {
+    const payload = conditionImmunityTemporaryHitPointFactPayload(raw, tag);
+    return {
+      kind: "immunityTemporaryHitPointCondition",
+      condition: quintVariantMappedValue(
+        quintField(payload, "condition"),
+        "qFacts[].fact.condition",
+        CONDITION_IMMUNITY_TEMPORARY_HIT_POINT_CONDITION_BY_VARIANT_TAG,
+        "condition-immunity temporary-Hit-Point condition",
+      ),
+    };
+  }
+  if (tag === "RouteConditionImmunityTemporaryHitPointOwner") {
+    const payload = conditionImmunityTemporaryHitPointFactPayload(raw, tag);
+    return {
+      kind: "immunityTemporaryHitPointOwner",
+      owner: quintVariantMappedValue(
+        quintField(payload, "owner"),
+        "qFacts[].fact.owner",
+        CONDITION_IMMUNITY_TEMPORARY_HIT_POINT_OWNER_BY_VARIANT_TAG,
+        "condition-immunity temporary-Hit-Point owner",
+      ),
+    };
+  }
+
+  throw new Error(
+    `Unknown condition-immunity temporary-Hit-Point route fact: ${tag}.`,
+  );
+}
+
+function markedDamageImmunityFactPayload(
+  raw: unknown,
+  tag: string,
+): Readonly<Record<string, unknown>> {
+  const value = quintVariantValue(raw, tag, "qFacts[]");
+  if (isRecord(value)) {
+    return value;
+  }
+
+  throw new Error(`Expected marked-damage/immunity ${tag} payload record.`);
+}
+
+function markedDamageRiderFactPayload(
+  raw: unknown,
+  tag: string,
+): Readonly<Record<string, unknown>> {
+  const value = quintVariantValue(raw, tag, "qFacts[].fact");
+  if (isRecord(value)) {
+    return value;
+  }
+
+  throw new Error(`Expected marked damage rider ${tag} payload record.`);
+}
+
+function conditionImmunityTemporaryHitPointFactPayload(
+  raw: unknown,
+  tag: string,
+): Readonly<Record<string, unknown>> {
+  const value = quintVariantValue(raw, tag, "qFacts[].fact");
+  if (isRecord(value)) {
+    return value;
+  }
+
+  throw new Error(
+    `Expected condition-immunity temporary-Hit-Point ${tag} payload record.`,
+  );
+}
+
+function normalizeQuintState(raw: unknown): MbtProjection {
+  const root = quintStateRecord(raw);
+  const state = Object.hasOwn(root, "qState")
+    ? quintRecordField(root, "qState")
+    : root;
+  const protocolField = Object.hasOwn(state, "qProtocol")
+    ? "qProtocol"
+    : Object.hasOwn(state, "protocol")
+      ? "protocol"
+      : undefined;
+  if (protocolField === undefined) {
+    throw new Error(
+      "Expected typed witness protocol field qProtocol or protocol.",
+    );
+  }
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField,
+    noInvalidReason: "",
+    decodeHole: holeName,
+  });
+
+  return {
+    skeletonHp: numberFromQuintInt(state["qSkeletonHp"], "qSkeletonHp"),
+    skeletonDead: booleanField(state, "qSkeletonDead"),
+    actionAvailable: booleanField(state, "qActionAvailable"),
+    multiattackDispatchesAvailable: numberFromQuintInt(
+      state["qMultiattackDispatchesAvailable"],
+      "qMultiattackDispatchesAvailable",
+    ),
+    sneakAttackUsedThisTurn: booleanField(state, "qSneakAttackUsedThisTurn"),
+    holes: protocol.holes,
+    lastResult: mbtLastResult(protocol.lastResult),
+    lastInvalidReason: mbtLastInvalidReason(protocol.lastInvalidReason),
+  };
+}
+
+function normalizeReducerRoutedMagicMissileQuintState(
+  raw: unknown,
+): ReducerRoutedMagicMissileProjection {
+  const root = quintStateRecord(raw);
+  const state = Object.hasOwn(root, "qState")
+    ? quintRecordField(root, "qState")
+    : root;
+  return {
+    ...normalizeQuintState(raw),
+    route: decodeReducerRoute(quintField(state, "qRoute")),
+  };
+}
+
+function normalizeReducerRoutedWeaponAttackSkeletonQuintState(
+  raw: unknown,
+): ReducerRoutedWeaponAttackSkeletonProjection {
+  const root = quintStateRecord(raw);
+  const state = Object.hasOwn(root, "qState")
+    ? quintRecordField(root, "qState")
+    : root;
+  return {
+    ...normalizeQuintState(raw),
+    route: decodeReducerRoute(quintField(state, "qRoute")),
+  };
+}
+
+function normalizeWeaponAttackOrderingQuintState(
+  raw: unknown,
+): WeaponAttackOrderingProjection {
+  const state = quintStateRecord(raw);
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "qProtocol",
+    noInvalidReason: "",
+    decodeHole: weaponAttackOrderingHole,
+    compareHoles: (left, right) => left.localeCompare(right),
+  });
+
+  return {
+    stage: weaponAttackOrderingStage(state["qStage"]),
+    holes: protocol.holes,
+    lastResult: mbtLastResult(protocol.lastResult),
+    orderingError: weaponAttackOrderingError(state["qLastOrderingError"]),
+  };
+}
+
+function normalizeReducerRoutedWeaponAttackOrderingQuintState(
+  raw: unknown,
+): ReducerRoutedWeaponAttackOrderingProjection {
+  const state = quintStateRecord(raw);
+  return {
+    ...normalizeWeaponAttackOrderingQuintState(raw),
+    route: decodeReducerRoute(quintField(state, "qRoute")),
+  };
+}
+
+function normalizeReducerRoutedWeaponMasteryPropertyQuintState(
+  raw: unknown,
+): ReducerRoutedWeaponMasteryPropertyProjection {
+  const state = quintStateRecord(raw);
+  return {
+    route: decodeReducerRoute(quintField(state, "qRoute")),
+  };
+}
+
+function normalizeReducerRoutedAttackActionAreaSaveDamageReplacementQuintState(
+  raw: unknown,
+): ReducerRoutedAttackActionAreaSaveDamageReplacementProjection {
+  const state = quintStateRecord(raw);
+  return {
+    route: decodeReducerRoute(quintField(state, "qRoute")),
+  };
+}
+
+function normalizeActiveFeatureSpellBenefitRouteQuintState(
+  raw: unknown,
+): ActiveFeatureSpellBenefitRouteProjection {
+  const state = quintStateRecord(raw);
+  return {
+    route: decodeReducerRoute(quintField(state, "qRoute")),
+    spellSaveDc: numberFromQuintInt(
+      quintField(state, "qSpellSaveDc"),
+      "qSpellSaveDc",
+    ),
+    spellAttackRollMode: stringLiteralField(
+      state,
+      "qSpellAttackRollMode",
+      ACTIVE_FEATURE_SPELL_ATTACK_ROLL_MODES,
+    ),
+  };
+}
+
+function normalizeReducerRoutedMetamagicQuintState(
+  raw: unknown,
+): ReducerRoutedMetamagicProjection {
+  const state = quintStateRecord(raw);
+  return {
+    route: decodeReducerRoute(quintField(state, "qRoute")),
+  };
+}
+
+function normalizeReducerRoutedProtectionCharmQuintState(
+  raw: unknown,
+): ReducerRoutedProtectionCharmProjection {
+  const state = quintStateRecord(raw);
+  return {
+    route: decodeReducerRoute(quintField(state, "qRoute")),
+  };
+}
+
+function normalizeReducerRoutedWardedTargetInterdictionQuintState(
+  raw: unknown,
+): ReducerRoutedWardedTargetInterdictionProjection {
+  const state = quintStateRecord(raw);
+  return {
+    route: decodeReducerRoute(quintField(state, "qRoute")),
+  };
+}
+
+function normalizeReducerRoutedSpellBaseArmorClassEffectQuintState(
+  raw: unknown,
+): ReducerRoutedSpellBaseArmorClassEffectProjection {
+  const state = quintStateRecord(raw);
+  return {
+    route: decodeReducerRoute(quintField(state, "qRoute")),
+  };
+}
+
+function normalizeReducerRoutedHitPointRegainPreventionQuintState(
+  raw: unknown,
+): ReducerRoutedHitPointRegainPreventionProjection {
+  const state = quintStateRecord(raw);
+  return {
+    route: decodeReducerRoute(quintField(state, "qRoute")),
+  };
+}
+
+function normalizeReducerRoutedNextAttackRollModeQuintState(
+  raw: unknown,
+): ReducerRoutedNextAttackRollModeProjection {
+  const state = quintStateRecord(raw);
+  return {
+    route: decodeReducerRoute(quintField(state, "qRoute")),
+    facts: decodeNextAttackRollModeRouteFacts(quintField(state, "qFacts")),
+  };
+}
+
+function normalizeReducerRoutedOpportunityAttackDenialQuintState(
+  raw: unknown,
+): ReducerRoutedOpportunityAttackDenialProjection {
+  const state = quintStateRecord(raw);
+  return {
+    route: decodeReducerRoute(quintField(state, "qRoute")),
+    facts: decodeReactionInterdictionRouteFacts(quintField(state, "qFacts")),
+  };
+}
+
+function normalizeReducerRoutedConditionRiderQuintState(
+  raw: unknown,
+): ReducerRoutedConditionRiderProjection {
+  const state = quintStateRecord(raw);
+  return {
+    route: decodeReducerRoute(quintField(state, "qRoute")),
+    facts: decodeConditionRiderRouteFacts(quintField(state, "qFacts")),
+  };
+}
+
+function normalizeReducerRoutedObjectLightQuintState(
+  raw: unknown,
+): ReducerRoutedObjectLightProjection {
+  const state = quintStateRecord(raw);
+  return {
+    route: decodeReducerRoute(quintField(state, "qRoute")),
+    facts: decodeObjectLightRouteFacts(quintField(state, "qFacts")),
+  };
+}
+
+function normalizeReducerRoutedSpatialEffectQuintState(
+  raw: unknown,
+): ReducerRoutedSpatialEffectProjection {
+  const state = quintStateRecord(raw);
+  return {
+    route: decodeReducerRoute(quintField(state, "qRoute")),
+    facts: decodeSpatialEffectRouteFacts(quintField(state, "qFacts")),
+  };
+}
+
+function normalizeReducerRoutedSelectedConcentrationHazardQuintState(
+  raw: unknown,
+): ReducerRoutedSelectedConcentrationHazardProjection {
+  const state = quintStateRecord(raw);
+  return {
+    selectedRow: quintVariantMappedValue(
+      quintField(state, "qSelectedRow"),
+      "qSelectedRow",
+      SELECTED_CONCENTRATION_HAZARD_ROW_BY_VARIANT_TAG,
+      "selected concentration hazard row",
+    ),
+    route: decodeReducerRoute(quintField(state, "qRoute")),
+    facts: decodeSpatialEffectRouteFacts(quintField(state, "qFacts")),
+  };
+}
+
+function normalizeReducerRoutedLevel1SpatialCompositionQuintState(
+  raw: unknown,
+): ReducerRoutedLevel1SpatialCompositionProjection {
+  const state = quintStateRecord(raw);
+  return {
+    route: decodeReducerRoute(quintField(state, "qRoute")),
+  };
+}
+
+function normalizeReducerRoutedLevel1WeaponHostedSelectedRouteQuintState(
+  raw: unknown,
+): ReducerRoutedLevel1WeaponHostedSelectedRouteProjection {
+  const state = quintStateRecord(raw);
+  return {
+    route: decodeReducerRoute(quintField(state, "qRoute")),
+  };
+}
+
+function normalizeReducerRoutedMixedTargetOutcomeQuintState(
+  raw: unknown,
+): ReducerRoutedMixedTargetOutcomeProjection {
+  const state = quintStateRecord(raw);
+  return {
+    route: decodeReducerRoute(quintField(state, "qRoute")),
+    facts: decodeMixedTargetOutcomeRouteFacts(quintField(state, "qFacts")),
+  };
+}
+
+function normalizeReducerRoutedMarkedDamageImmunityQuintState(
+  raw: unknown,
+): ReducerRoutedMarkedDamageImmunityProjection {
+  const state = quintStateRecord(raw);
+  return {
+    route: decodeReducerRoute(quintField(state, "qRoute")),
+    facts: decodeMarkedDamageImmunityRouteFacts(quintField(state, "qFacts")),
+  };
+}
+
+function normalizeSaveGatedSpellOrderingQuintState(
+  raw: unknown,
+): SaveGatedSpellOrderingProjection {
+  const state = quintStateRecord(raw);
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "qProtocol",
+    noInvalidReason: "",
+    decodeHole: saveGatedSpellOrderingHole,
+    compareHoles: (left, right) => left.localeCompare(right),
+  });
+
+  return {
+    stage: saveGatedSpellOrderingStage(state["qStage"]),
+    holes: protocol.holes,
+    lastResult: mbtLastResult(protocol.lastResult),
+    orderingError: saveGatedSpellOrderingError(state["qLastOrderingError"]),
+  };
+}
+
+function normalizeReducerRoutedSaveGatedSpellOrderingQuintState(
+  raw: unknown,
+): ReducerRoutedSaveGatedSpellOrderingProjection {
+  const state = quintStateRecord(raw);
+  return {
+    ...normalizeSaveGatedSpellOrderingQuintState(raw),
+    route: decodeReducerRoute(quintField(state, "qRoute")),
+  };
+}
+
+function normalizeSpellAttackOrderingQuintState(
+  raw: unknown,
+): SpellAttackOrderingProjection {
+  const state = quintStateRecord(raw);
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "qProtocol",
+    noInvalidReason: "",
+    decodeHole: spellAttackOrderingHole,
+    compareHoles: (left, right) => left.localeCompare(right),
+  });
+
+  return {
+    stage: spellAttackOrderingStage(state["qStage"]),
+    holes: protocol.holes,
+    lastResult: mbtLastResult(protocol.lastResult),
+    orderingError: spellAttackOrderingError(state["qLastOrderingError"]),
+  };
+}
+
+function normalizeReducerRoutedSpellAttackOrderingQuintState(
+  raw: unknown,
+): ReducerRoutedSpellAttackOrderingProjection {
+  const state = quintStateRecord(raw);
+  return {
+    ...normalizeSpellAttackOrderingQuintState(raw),
+    route: decodeReducerRoute(quintField(state, "qRoute")),
+  };
+}
+
+function normalizeReducerRoutedChainedAttackProcedureQuintState(
+  raw: unknown,
+): ReducerRoutedChainedAttackProcedureProjection {
+  const state = quintRecordField(quintStateRecord(raw), "qState");
+  return {
+    route: decodeReducerRoute(quintField(state, "qRoute")),
+  };
+}
+
+function normalizeReducerRoutedIndependentSpellAttackSequenceQuintState(
+  raw: unknown,
+): ReducerRoutedIndependentSpellAttackSequenceProjection {
+  const state = quintRecordField(quintStateRecord(raw), "qState");
+  return {
+    route: decodeReducerRoute(quintField(state, "qRoute")),
+  };
+}
+
+function normalizeReducerRoutedInterruptStackResumeQuintState(
+  raw: unknown,
+): ReducerRoutedInterruptStackResumeProjection {
+  const state = quintStateRecord(raw);
+  return {
+    route: decodeReducerRoute(quintField(state, "qRoute")),
+  };
+}
+
+function normalizeHitPointRestorationOrderingQuintState(
+  raw: unknown,
+): HitPointRestorationOrderingProjection {
+  const state = quintStateRecord(raw);
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "qProtocol",
+    noInvalidReason: "",
+    decodeHole: hitPointRestorationOrderingHole,
+    compareHoles: (left, right) => left.localeCompare(right),
+  });
+
+  return {
+    stage: hitPointRestorationOrderingStage(state["qStage"]),
+    holes: protocol.holes,
+    lastResult: mbtLastResult(protocol.lastResult),
+    orderingError: hitPointRestorationOrderingError(
+      state["qLastOrderingError"],
+    ),
+    spellTargetHp: numberFromQuintInt(
+      state["qSpellTargetHp"],
+      "qSpellTargetHp",
+    ),
+    spellTargetZeroHpLifecycleCleared: booleanField(
+      state,
+      "qSpellTargetZeroHpLifecycleCleared",
+    ),
+    featureTargetHp: numberFromQuintInt(
+      state["qFeatureTargetHp"],
+      "qFeatureTargetHp",
+    ),
+    featureTargetZeroHpLifecycleCleared: booleanField(
+      state,
+      "qFeatureTargetZeroHpLifecycleCleared",
+    ),
+  };
+}
+
+function normalizeReducerRoutedHitPointRestorationOrderingQuintState(
+  raw: unknown,
+): ReducerRoutedHitPointRestorationOrderingProjection {
+  const state = quintStateRecord(raw);
+  return {
+    ...normalizeHitPointRestorationOrderingQuintState(raw),
+    route: decodeReducerRoute(quintField(state, "qRoute")),
+  };
+}
+
+function normalizeDeathSavingThrowQuintState(
+  raw: unknown,
+): DeathSavingThrowProjection {
+  const state = quintRecordField(quintStateRecord(raw), "qState");
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "protocol",
+    noInvalidReason: "",
+    decodeHole: deathSavingThrowHole,
+    compareHoles: (left, right) => left.localeCompare(right),
+  });
+
+  return {
+    currentTurnRole: stringLiteralValue(
+      quintField(state, "currentTurnRole"),
+      "qState.currentTurnRole",
+      DEATH_SAVING_THROW_MBT_TURN_ROLES,
+    ),
+    targetHp: numberFromQuintInt(
+      quintField(state, "targetHp"),
+      "qState.targetHp",
+    ),
+    targetUnconscious: booleanField(state, "targetUnconscious"),
+    targetStable: booleanField(state, "targetStable"),
+    targetDead: booleanField(state, "targetDead"),
+    targetDeathSuccesses: numberFromQuintInt(
+      quintField(state, "targetDeathSuccesses"),
+      "qState.targetDeathSuccesses",
+    ),
+    targetDeathFailures: numberFromQuintInt(
+      quintField(state, "targetDeathFailures"),
+      "qState.targetDeathFailures",
+    ),
+    holes: protocol.holes,
+    lastResult: mbtLastResult(protocol.lastResult),
+    lastInvalidReason: mbtLastInvalidReason(protocol.lastInvalidReason),
+  };
+}
+
+function normalizeReducerRoutedDeathSavingThrowQuintState(
+  raw: unknown,
+): ReducerRoutedDeathSavingThrowProjection {
+  const state = quintRecordField(quintStateRecord(raw), "qState");
+  return {
+    ...normalizeDeathSavingThrowQuintState(raw),
+    route: decodeReducerRoute(quintField(state, "qRoute")),
+  };
+}
+
+function normalizeConcentrationBreakTeardownQuintState(
+  raw: unknown,
+): ConcentrationBreakTeardownProjection {
+  const state = quintRecordField(quintStateRecord(raw), "qState");
+  const scenario = concentrationBreakTeardownScenario(state["qScenario"]);
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "protocol",
+    noInvalidReason: "",
+    decodeHole: concentrationBreakTeardownHole,
+  });
+  assertWitnessProtocolConsistentWithScenario({
+    label: "Concentration break teardown",
+    scenarioOutcome: scenario,
+    protocol,
+  });
+  return {
+    scenario,
+    damageTaken: numberFromQuintInt(state["qDamageTaken"], "qDamageTaken"),
+    saveDc: numberFromQuintInt(state["qSaveDc"], "qSaveDc"),
+    saveRollTotal: numberFromQuintInt(
+      state["qSaveRollTotal"],
+      "qSaveRollTotal",
+    ),
+    concentrationSaveOffered: booleanField(state, "qConcentrationSaveOffered"),
+    casterConcentrating: booleanField(state, "qCasterConcentrating"),
+    blurredEffectCount: numberFromQuintInt(
+      state["qBlurredEffectCount"],
+      "qBlurredEffectCount",
+    ),
+    spellSlotExpended: numberFromQuintInt(
+      state["qSpellSlotExpended"],
+      "qSpellSlotExpended",
+    ),
+    teardownBeforeNextCommand: booleanField(
+      state,
+      "qTeardownBeforeNextCommand",
+    ),
+    replacementStartedAfterTeardown: booleanField(
+      state,
+      "qReplacementStartedAfterTeardown",
+    ),
+  };
+}
+
+function normalizeReducerRoutedConcentrationBreakTeardownQuintState(
+  raw: unknown,
+): ReducerRoutedConcentrationBreakTeardownProjection {
+  const state = quintRecordField(quintStateRecord(raw), "qState");
+  return {
+    ...normalizeConcentrationBreakTeardownQuintState(raw),
+    route: decodeReducerRoute(quintField(state, "qRoute")),
+  };
+}
+
+function normalizeCommandOrderingQuintState(
+  raw: unknown,
+): CommandOrderingProjection {
+  const state = quintStateRecord(raw);
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "qProtocol",
+    noInvalidReason: "",
+    decodeHole: commandOrderingHole,
+    compareHoles: (left, right) => left.localeCompare(right),
+  });
+
+  return {
+    stage: commandOrderingStage(state["qStage"]),
+    holes: protocol.holes,
+    tableFactFrontierOpen: booleanField(state, "qTableFactFrontierOpen"),
+    lastResult: mbtLastResult(protocol.lastResult),
+    orderingError: commandOrderingError(state["qLastOrderingError"]),
+    pendingCommandOption: commandOrderingPendingOption(
+      state["qPendingCommandOption"],
+    ),
+    targetProne: booleanField(state, "qTargetProne"),
+    droppedObjectCount: numberFromQuintInt(
+      state["qDroppedObjectCount"],
+      "qDroppedObjectCount",
+    ),
+    haltSuppressed: booleanField(state, "qHaltSuppressed"),
+    movementSpentFeet: numberFromQuintInt(
+      state["qMovementSpentFeet"],
+      "qMovementSpentFeet",
+    ),
+    currentActor: commandOrderingActor(state["qCurrentActor"]),
+    reactionWindowOpen: booleanField(state, "qReactionWindowOpen"),
+  };
+}
+
+function normalizeReducerRoutedCommandOrderingQuintState(
+  raw: unknown,
+): ReducerRoutedCommandOrderingProjection {
+  const state = quintStateRecord(raw);
+  return {
+    ...normalizeCommandOrderingQuintState(raw),
+    route: decodeReducerRoute(quintField(state, "qRoute")),
+  };
+}
+
+function normalizeReducerSpineContractQuintState(
+  raw: unknown,
+): ReducerSpineContractProjection {
+  const state = quintStateRecord(raw);
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "qProtocol",
+    noInvalidReason: "",
+    decodeHole: reducerSpineContractHole,
+    compareHoles: (left, right) => left.localeCompare(right),
+  });
+
+  return {
+    stage: reducerSpineContractStage(state["qStage"]),
+    entrypoint: reducerSpineContractEntrypoint(state["qEntrypoint"]),
+    subject: reducerSpineContractSubject(state["qSubject"]),
+    currentActor: reducerSpineContractActor(state["qCurrentActor"]),
+    holes: protocol.holes,
+    lastResult: mbtLastResult(protocol.lastResult),
+    lastInvalidReason: mbtLastInvalidReason(protocol.lastInvalidReason),
+    actionAvailable: booleanField(state, "qActionAvailable"),
+    bonusActionAvailable: booleanField(state, "qBonusActionAvailable"),
+    casterReactionAvailable: booleanField(state, "qCasterReactionAvailable"),
+    targetReactionAvailable: booleanField(state, "qTargetReactionAvailable"),
+    spellSlotUse: reducerSpineContractSpellSlotUse(state["qSpellSlotUse"]),
+    interruptDepth: numberFromQuintInt(
+      state["qInterruptDepth"],
+      "qInterruptDepth",
+    ),
+    casterHp: numberFromQuintInt(state["qCasterHp"], "qCasterHp"),
+    targetHp: numberFromQuintInt(state["qTargetHp"], "qTargetHp"),
+  };
+}
+
+function normalizeExtraAttackQuintState(
+  raw: unknown,
+): ExtraAttackMbtProjection {
+  const state = quintRecordField(quintStateRecord(raw), "qState");
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "protocol",
+    noInvalidReason: "",
+    decodeHole: extraAttackUnexpectedHole,
+  });
+  if (protocol.holes.length !== 0) {
+    throw new Error("Expected Extra Attack witness holes to be empty.");
+  }
+
+  return {
+    skeletonHp: numberFromQuintInt(state["qSkeletonHp"], "qSkeletonHp"),
+    actionAvailable: booleanField(state, "qActionAvailable"),
+    extraAttackSlotsAvailable: numberFromQuintInt(
+      state["qExtraAttackSlotsAvailable"],
+      "qExtraAttackSlotsAvailable",
+    ),
+    movementSpentFeet: numberFromQuintInt(
+      state["qMovementSpentFeet"],
+      "qMovementSpentFeet",
+    ),
+    lastResult: mbtLastResult(protocol.lastResult),
+    lastInvalidReason: mbtLastInvalidReason(protocol.lastInvalidReason),
+  };
+}
+
+function extraAttackUnexpectedHole(raw: unknown): never {
+  throw new Error(`Unexpected Extra Attack witness hole ${String(raw)}.`);
+}
+
+function normalizeAdrenalineRushQuintState(
+  raw: unknown,
+): AdrenalineRushMbtProjection {
+  const state = quintRecordField(quintStateRecord(raw), "qState");
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "protocol",
+    noInvalidReason: "",
+    decodeHole: adrenalineRushUnexpectedHole,
+  });
+  if (protocol.holes.length !== 0) {
+    throw new Error("Expected Adrenaline Rush witness holes to be empty.");
+  }
+
+  return {
+    actorTempHp: numberFromQuintInt(state["qActorTempHp"], "qActorTempHp"),
+    bonusActionAvailable: booleanField(state, "qBonusActionAvailable"),
+    dashBonusFeet: numberFromQuintInt(
+      state["qDashBonusFeet"],
+      "qDashBonusFeet",
+    ),
+    featureUsesRemaining: numberFromQuintInt(
+      state["qFeatureUsesRemaining"],
+      "qFeatureUsesRemaining",
+    ),
+    lastResult: protocol.lastResult,
+    lastInvalidReason: mbtLastInvalidReason(protocol.lastInvalidReason),
+  };
+}
+
+function normalizeReducerRoutedAdrenalineRushQuintState(
+  raw: unknown,
+): ReducerRoutedAdrenalineRushProjection {
+  const state = quintRecordField(quintStateRecord(raw), "qState");
+  return {
+    ...normalizeAdrenalineRushQuintState(raw),
+    route: decodeReducerRoute(quintField(state, "qRoute")),
+  };
+}
+
+function adrenalineRushUnexpectedHole(raw: unknown): never {
+  throw new Error(
+    `Adrenaline Rush witness does not expect holes; received ${String(raw)}.`,
+  );
+}
+
+function normalizeRogueSteadyAimQuintState(
+  raw: unknown,
+): RogueSteadyAimMbtProjection {
+  const state = quintRecordField(quintStateRecord(raw), "qState");
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "protocol",
+    noInvalidReason: "",
+    decodeHole: rogueSteadyAimUnexpectedHole,
+  });
+  if (protocol.holes.length !== 0) {
+    throw new Error("Expected Rogue Steady Aim witness holes to be empty.");
+  }
+
+  return {
+    bonusActionAvailable: booleanField(state, "qBonusActionAvailable"),
+    actorSpeedFeet: numberFromQuintInt(
+      state["qActorSpeedFeet"],
+      "qActorSpeedFeet",
+    ),
+    nextAttackAdvantageActive: booleanField(
+      state,
+      "qNextAttackAdvantageActive",
+    ),
+    speedZeroActive: booleanField(state, "qSpeedZeroActive"),
+    attackRollMode: booleanField(state, "qAttackRollAdvantage")
+      ? "advantage"
+      : "normal",
+    lastResult: mbtLastResult(protocol.lastResult),
+    lastInvalidReason: mbtLastInvalidReason(protocol.lastInvalidReason),
+  };
+}
+
+function rogueSteadyAimUnexpectedHole(raw: unknown): never {
+  throw new Error(
+    `Rogue Steady Aim witness does not expect holes; received ${String(raw)}.`,
+  );
+}
+
+function normalizeScalarBuffQuintState(raw: unknown): ScalarBuffMbtProjection {
+  const state = quintRecordField(quintStateRecord(raw), "qState");
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "protocol",
+    noInvalidReason: "",
+    decodeHole: holeName,
+    compareHoles: (left, right) => left.localeCompare(right),
+  });
+
+  return {
+    fighterSpeed: numberFromQuintInt(
+      state["fighterSpeed"],
+      "qState.fighterSpeed",
+    ),
+    goblinSpeed: numberFromQuintInt(state["goblinSpeed"], "qState.goblinSpeed"),
+    actionAvailable: booleanField(state, "actionAvailable"),
+    holes: protocol.holes,
+    lastResult: mbtLastResult(protocol.lastResult),
+    lastInvalidReason: mbtLastInvalidReason(protocol.lastInvalidReason),
+  };
+}
+
+function normalizeReducerRoutedScalarBuffQuintState(
+  raw: unknown,
+): ReducerRoutedScalarBuffProjection {
+  const state = quintRecordField(quintStateRecord(raw), "qState");
+  const protocol = decodeWitnessProtocolState({
+    state,
+    protocolField: "protocol",
+    noInvalidReason: "",
+    decodeHole: holeName,
+    compareHoles: (left, right) => left.localeCompare(right),
+  });
+
+  return {
+    casterSpeed: numberFromQuintInt(state["casterSpeed"], "qState.casterSpeed"),
+    targetSpeed: numberFromQuintInt(state["targetSpeed"], "qState.targetSpeed"),
+    actionAvailable: booleanField(state, "actionAvailable"),
+    holes: protocol.holes,
+    lastResult: mbtLastResult(protocol.lastResult),
+    lastInvalidReason: mbtLastInvalidReason(protocol.lastInvalidReason),
+    route: decodeReducerRoute(quintField(state, "qRoute")),
+  };
+}
+
+function compareState(spec: MbtProjection, impl: MbtProjection): boolean {
+  expect(impl).toEqual(spec);
+  return true;
+}
+
+function mbtInvalidReason(
+  reason: Extract<
+    BattleResolutionResult,
+    { readonly tag: "invalid" }
+  >["reason"],
+): MbtProjection["lastInvalidReason"] {
+  if (
+    reason === "invalidFill" ||
+    reason === "staleSubject" ||
+    reason === "wrongActor"
+  ) {
+    return reason;
+  }
+
+  throw new Error(`Unexpected battle-runtime MBT invalid reason: ${reason}`);
+}
+
+export const battleRuntimeStateCheck = stateCheck(
+  normalizeQuintState,
+  compareState,
+);
+export const reducerRoutedMagicMissileStateCheck = stateCheck(
+  normalizeReducerRoutedMagicMissileQuintState,
+  (
+    spec: ReducerRoutedMagicMissileProjection,
+    impl: ReducerRoutedMagicMissileProjection,
+  ) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
+export const reducerRoutedWeaponAttackSkeletonStateCheck = stateCheck(
+  normalizeReducerRoutedWeaponAttackSkeletonQuintState,
+  (
+    spec: ReducerRoutedWeaponAttackSkeletonProjection,
+    impl: ReducerRoutedWeaponAttackSkeletonProjection,
+  ) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
+export const weaponAttackOrderingStateCheck = stateCheck(
+  normalizeWeaponAttackOrderingQuintState,
+  (
+    spec: WeaponAttackOrderingProjection,
+    impl: WeaponAttackOrderingProjection,
+  ) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
+export const reducerRoutedWeaponAttackOrderingStateCheck = stateCheck(
+  normalizeReducerRoutedWeaponAttackOrderingQuintState,
+  (
+    spec: ReducerRoutedWeaponAttackOrderingProjection,
+    impl: ReducerRoutedWeaponAttackOrderingProjection,
+  ) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
+export const reducerRoutedWeaponMasteryPropertyStateCheck = stateCheck(
+  normalizeReducerRoutedWeaponMasteryPropertyQuintState,
+  (
+    spec: ReducerRoutedWeaponMasteryPropertyProjection,
+    impl: ReducerRoutedWeaponMasteryPropertyProjection,
+  ) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
+export const reducerRoutedAttackActionAreaSaveDamageReplacementStateCheck =
+  stateCheck(
+    normalizeReducerRoutedAttackActionAreaSaveDamageReplacementQuintState,
+    (
+      spec: ReducerRoutedAttackActionAreaSaveDamageReplacementProjection,
+      impl: ReducerRoutedAttackActionAreaSaveDamageReplacementProjection,
+    ) => {
+      expect(impl).toEqual(spec);
+      return true;
+    },
+  );
+export const reducerRoutedActiveFeatureSpellBenefitStateCheck = stateCheck(
+  normalizeActiveFeatureSpellBenefitRouteQuintState,
+  (
+    spec: ActiveFeatureSpellBenefitRouteProjection,
+    impl: ActiveFeatureSpellBenefitRouteProjection,
+  ) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
+export const reducerRoutedMetamagicStateCheck = stateCheck(
+  normalizeReducerRoutedMetamagicQuintState,
+  (
+    spec: ReducerRoutedMetamagicProjection,
+    impl: ReducerRoutedMetamagicProjection,
+  ) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
+export const reducerRoutedProtectionCharmStateCheck = stateCheck(
+  normalizeReducerRoutedProtectionCharmQuintState,
+  (
+    spec: ReducerRoutedProtectionCharmProjection,
+    impl: ReducerRoutedProtectionCharmProjection,
+  ) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
+export const reducerRoutedWardedTargetInterdictionStateCheck = stateCheck(
+  normalizeReducerRoutedWardedTargetInterdictionQuintState,
+  (
+    spec: ReducerRoutedWardedTargetInterdictionProjection,
+    impl: ReducerRoutedWardedTargetInterdictionProjection,
+  ) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
+export const reducerRoutedSpellBaseArmorClassEffectStateCheck = stateCheck(
+  normalizeReducerRoutedSpellBaseArmorClassEffectQuintState,
+  (
+    spec: ReducerRoutedSpellBaseArmorClassEffectProjection,
+    impl: ReducerRoutedSpellBaseArmorClassEffectProjection,
+  ) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
+export const reducerRoutedHitPointRegainPreventionStateCheck = stateCheck(
+  normalizeReducerRoutedHitPointRegainPreventionQuintState,
+  (
+    spec: ReducerRoutedHitPointRegainPreventionProjection,
+    impl: ReducerRoutedHitPointRegainPreventionProjection,
+  ) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
+export const reducerRoutedNextAttackRollModeStateCheck = stateCheck(
+  normalizeReducerRoutedNextAttackRollModeQuintState,
+  (
+    spec: ReducerRoutedNextAttackRollModeProjection,
+    impl: ReducerRoutedNextAttackRollModeProjection,
+  ) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
+export const reducerRoutedOpportunityAttackDenialStateCheck = stateCheck(
+  normalizeReducerRoutedOpportunityAttackDenialQuintState,
+  (
+    spec: ReducerRoutedOpportunityAttackDenialProjection,
+    impl: ReducerRoutedOpportunityAttackDenialProjection,
+  ) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
+export const reducerRoutedConditionRiderStateCheck = stateCheck(
+  normalizeReducerRoutedConditionRiderQuintState,
+  (
+    spec: ReducerRoutedConditionRiderProjection,
+    impl: ReducerRoutedConditionRiderProjection,
+  ) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
+export const reducerRoutedObjectLightStateCheck = stateCheck(
+  normalizeReducerRoutedObjectLightQuintState,
+  (
+    spec: ReducerRoutedObjectLightProjection,
+    impl: ReducerRoutedObjectLightProjection,
+  ) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
+export const reducerRoutedSpatialEffectStateCheck = stateCheck(
+  normalizeReducerRoutedSpatialEffectQuintState,
+  (
+    spec: ReducerRoutedSpatialEffectProjection,
+    impl: ReducerRoutedSpatialEffectProjection,
+  ) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
+export const reducerRoutedSelectedConcentrationHazardStateCheck = stateCheck(
+  normalizeReducerRoutedSelectedConcentrationHazardQuintState,
+  (
+    spec: ReducerRoutedSelectedConcentrationHazardProjection,
+    impl: ReducerRoutedSelectedConcentrationHazardProjection,
+  ) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
+export const reducerRoutedLevel1SpatialCompositionStateCheck = stateCheck(
+  normalizeReducerRoutedLevel1SpatialCompositionQuintState,
+  (
+    spec: ReducerRoutedLevel1SpatialCompositionProjection,
+    impl: ReducerRoutedLevel1SpatialCompositionProjection,
+  ) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
+export const reducerRoutedLevel1WeaponHostedSelectedRouteStateCheck =
+  stateCheck(
+    normalizeReducerRoutedLevel1WeaponHostedSelectedRouteQuintState,
+    (
+      spec: ReducerRoutedLevel1WeaponHostedSelectedRouteProjection,
+      impl: ReducerRoutedLevel1WeaponHostedSelectedRouteProjection,
+    ) => {
+      expect(impl).toEqual(spec);
+      return true;
+    },
+  );
+export const reducerRoutedMixedTargetOutcomeStateCheck = stateCheck(
+  normalizeReducerRoutedMixedTargetOutcomeQuintState,
+  (
+    spec: ReducerRoutedMixedTargetOutcomeProjection,
+    impl: ReducerRoutedMixedTargetOutcomeProjection,
+  ) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
+export const reducerRoutedMarkedDamageImmunityStateCheck = stateCheck(
+  normalizeReducerRoutedMarkedDamageImmunityQuintState,
+  (
+    spec: ReducerRoutedMarkedDamageImmunityProjection,
+    impl: ReducerRoutedMarkedDamageImmunityProjection,
+  ) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
+export const saveGatedSpellOrderingStateCheck = stateCheck(
+  normalizeSaveGatedSpellOrderingQuintState,
+  (
+    spec: SaveGatedSpellOrderingProjection,
+    impl: SaveGatedSpellOrderingProjection,
+  ) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
+export const reducerRoutedSaveGatedSpellOrderingStateCheck = stateCheck(
+  normalizeReducerRoutedSaveGatedSpellOrderingQuintState,
+  (
+    spec: ReducerRoutedSaveGatedSpellOrderingProjection,
+    impl: ReducerRoutedSaveGatedSpellOrderingProjection,
+  ) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
+export const spellAttackOrderingStateCheck = stateCheck(
+  normalizeSpellAttackOrderingQuintState,
+  (
+    spec: SpellAttackOrderingProjection,
+    impl: SpellAttackOrderingProjection,
+  ) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
+export const reducerRoutedSpellAttackOrderingStateCheck = stateCheck(
+  normalizeReducerRoutedSpellAttackOrderingQuintState,
+  (
+    spec: ReducerRoutedSpellAttackOrderingProjection,
+    impl: ReducerRoutedSpellAttackOrderingProjection,
+  ) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
+export const reducerRoutedChainedAttackProcedureStateCheck = stateCheck(
+  normalizeReducerRoutedChainedAttackProcedureQuintState,
+  (
+    spec: ReducerRoutedChainedAttackProcedureProjection,
+    impl: ReducerRoutedChainedAttackProcedureProjection,
+  ) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
+export const reducerRoutedIndependentSpellAttackSequenceStateCheck = stateCheck(
+  normalizeReducerRoutedIndependentSpellAttackSequenceQuintState,
+  (
+    spec: ReducerRoutedIndependentSpellAttackSequenceProjection,
+    impl: ReducerRoutedIndependentSpellAttackSequenceProjection,
+  ) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
+export const reducerRoutedInterruptStackResumeStateCheck = stateCheck(
+  normalizeReducerRoutedInterruptStackResumeQuintState,
+  (
+    spec: ReducerRoutedInterruptStackResumeProjection,
+    impl: ReducerRoutedInterruptStackResumeProjection,
+  ) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
+export const hitPointRestorationOrderingStateCheck = stateCheck(
+  normalizeHitPointRestorationOrderingQuintState,
+  (
+    spec: HitPointRestorationOrderingProjection,
+    impl: HitPointRestorationOrderingProjection,
+  ) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
+export const reducerRoutedHitPointRestorationOrderingStateCheck = stateCheck(
+  normalizeReducerRoutedHitPointRestorationOrderingQuintState,
+  (
+    spec: ReducerRoutedHitPointRestorationOrderingProjection,
+    impl: ReducerRoutedHitPointRestorationOrderingProjection,
+  ) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
+export const reducerRoutedDeathSavingThrowStateCheck = stateCheck(
+  normalizeReducerRoutedDeathSavingThrowQuintState,
+  (
+    spec: ReducerRoutedDeathSavingThrowProjection,
+    impl: ReducerRoutedDeathSavingThrowProjection,
+  ) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
+export const reducerRoutedConcentrationBreakTeardownStateCheck = stateCheck(
+  normalizeReducerRoutedConcentrationBreakTeardownQuintState,
+  (
+    spec: ReducerRoutedConcentrationBreakTeardownProjection,
+    impl: ReducerRoutedConcentrationBreakTeardownProjection,
+  ) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
+export const commandOrderingStateCheck = stateCheck(
+  normalizeCommandOrderingQuintState,
+  (spec: CommandOrderingProjection, impl: CommandOrderingProjection) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
+export const reducerRoutedCommandOrderingStateCheck = stateCheck(
+  normalizeReducerRoutedCommandOrderingQuintState,
+  (
+    spec: ReducerRoutedCommandOrderingProjection,
+    impl: ReducerRoutedCommandOrderingProjection,
+  ) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
+export const reducerSpineContractStateCheck = stateCheck(
+  normalizeReducerSpineContractQuintState,
+  (
+    spec: ReducerSpineContractProjection,
+    impl: ReducerSpineContractProjection,
+  ) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
+export const extraAttackStateCheck = stateCheck(
+  normalizeExtraAttackQuintState,
+  (spec: ExtraAttackMbtProjection, impl: ExtraAttackMbtProjection) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
+export const adrenalineRushStateCheck = stateCheck(
+  normalizeAdrenalineRushQuintState,
+  (spec: AdrenalineRushMbtProjection, impl: AdrenalineRushMbtProjection) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
+export const reducerRoutedAdrenalineRushStateCheck = stateCheck(
+  normalizeReducerRoutedAdrenalineRushQuintState,
+  (
+    spec: ReducerRoutedAdrenalineRushProjection,
+    impl: ReducerRoutedAdrenalineRushProjection,
+  ) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
+export const rogueSteadyAimStateCheck = stateCheck(
+  normalizeRogueSteadyAimQuintState,
+  (spec: RogueSteadyAimMbtProjection, impl: RogueSteadyAimMbtProjection) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
+export const scalarBuffStateCheck = stateCheck(
+  normalizeScalarBuffQuintState,
+  (spec: ScalarBuffMbtProjection, impl: ScalarBuffMbtProjection) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
+export const reducerRoutedScalarBuffStateCheck = stateCheck(
+  normalizeReducerRoutedScalarBuffQuintState,
+  (
+    spec: ReducerRoutedScalarBuffProjection,
+    impl: ReducerRoutedScalarBuffProjection,
+  ) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
+function projectMbtState(input: {
+  readonly state: BattleState;
+  readonly holes: readonly BattleHole[];
+  readonly lastResult: MbtProjection["lastResult"];
+  readonly lastInvalidReason: MbtProjection["lastInvalidReason"];
+}): MbtProjection {
+  const snapshot = snapshotBattle(input.state);
+  const skeleton = snapshot.combatants.find(
+    (combatant) => combatant.combatantId === skeletonId,
+  );
+  if (skeleton == null) {
+    throw new Error("Expected Skeleton in battle snapshot.");
+  }
+
+  return {
+    skeletonHp: skeleton.hp,
+    skeletonDead:
+      skeleton.zeroHpLifecycle.policy === "diesAtZeroHp" &&
+      skeleton.zeroHpLifecycle.dead,
+    actionAvailable: snapshot.turn.actionResources.some(
+      (resource) => resource.source === "turn",
+    ),
+    multiattackDispatchesAvailable: snapshot.turn.actionResources.filter(
+      (resource) =>
+        resource.source === "statBlockMultiattack" &&
+        resource.sourceOwnerId === skeletonId,
+    ).length,
+    sneakAttackUsedThisTurn: snapshot.turn.attackDamageRidersUsedThisTurn.some(
+      (usage) => usage.attackerId === fighterId,
+    ),
+    holes: projectHoles(input.holes),
+    lastResult: input.lastResult,
+    lastInvalidReason: input.lastInvalidReason,
+  };
+}
+
+function projectWeaponAttackOrderingState(input: {
+  readonly holes: readonly BattleHole[];
+  readonly stage: WeaponAttackOrderingProjection["stage"];
+  readonly lastResult: WeaponAttackOrderingProjection["lastResult"];
+  readonly orderingError: WeaponAttackOrderingProjection["orderingError"];
+}): WeaponAttackOrderingProjection {
+  return {
+    stage: input.stage,
+    holes: input.holes.map(weaponAttackOrderingHoleFromRuntime).sort(),
+    lastResult: input.lastResult,
+    orderingError: input.orderingError,
+  };
+}
+
+function projectSaveGatedSpellOrderingState(input: {
+  readonly holes: readonly BattleHole[];
+  readonly stage: SaveGatedSpellOrderingProjection["stage"];
+  readonly lastResult: SaveGatedSpellOrderingProjection["lastResult"];
+  readonly orderingError: SaveGatedSpellOrderingProjection["orderingError"];
+}): SaveGatedSpellOrderingProjection {
+  return {
+    stage: input.stage,
+    holes: input.holes.map(saveGatedSpellOrderingHoleFromRuntime).sort(),
+    lastResult: input.lastResult,
+    orderingError: input.orderingError,
+  };
+}
+
+function projectSpellAttackOrderingState(input: {
+  readonly holes: readonly BattleHole[];
+  readonly stage: SpellAttackOrderingProjection["stage"];
+  readonly lastResult: SpellAttackOrderingProjection["lastResult"];
+  readonly orderingError: SpellAttackOrderingProjection["orderingError"];
+}): SpellAttackOrderingProjection {
+  return {
+    stage: input.stage,
+    holes: input.holes.flatMap(spellAttackOrderingHoleFromRuntime).sort(),
+    lastResult: input.lastResult,
+    orderingError: input.orderingError,
+  };
+}
+
+function projectHitPointRestorationOrderingState(input: {
+  readonly holes: readonly BattleHole[];
+  readonly stage: HitPointRestorationOrderingProjection["stage"];
+  readonly lastResult: HitPointRestorationOrderingProjection["lastResult"];
+  readonly orderingError: HitPointRestorationOrderingProjection["orderingError"];
+  readonly spellTargetHp: number;
+  readonly spellTargetZeroHpLifecycleCleared: boolean;
+  readonly featureTargetHp: number;
+  readonly featureTargetZeroHpLifecycleCleared: boolean;
+}): HitPointRestorationOrderingProjection {
+  return {
+    stage: input.stage,
+    holes: input.holes.map(hitPointRestorationOrderingHoleFromRuntime).sort(),
+    lastResult: input.lastResult,
+    orderingError: input.orderingError,
+    spellTargetHp: input.spellTargetHp,
+    spellTargetZeroHpLifecycleCleared: input.spellTargetZeroHpLifecycleCleared,
+    featureTargetHp: input.featureTargetHp,
+    featureTargetZeroHpLifecycleCleared:
+      input.featureTargetZeroHpLifecycleCleared,
+  };
+}
+
+function projectDeathSavingThrowState(
+  input: BattleResolutionRecorderSnapshot<"">,
+): DeathSavingThrowProjection {
+  const snapshot = snapshotBattle(input.state);
+  const target = snapshot.combatants.find(
+    (combatant) => combatant.combatantId === deathSavingThrowTargetId,
+  );
+  if (target === undefined) {
+    throw new Error("Expected Death Saving Throw target in battle snapshot.");
+  }
+  if (target.zeroHpLifecycle.policy !== "usesDeathSavingThrows") {
+    throw new Error("Expected Death Saving Throw target lifecycle owner.");
+  }
+
+  return {
+    currentTurnRole:
+      snapshot.currentActorId === deathSavingThrowTargetId ? "target" : "actor",
+    targetHp: target.hp,
+    targetUnconscious: target.conditions.includes("unconscious"),
+    targetStable: target.zeroHpLifecycle.stable,
+    targetDead: target.zeroHpLifecycle.dead,
+    targetDeathSuccesses: target.zeroHpLifecycle.deathSaves.successes,
+    targetDeathFailures: target.zeroHpLifecycle.deathSaves.failures,
+    holes: input.holes.map(deathSavingThrowHoleFromRuntime).sort(),
+    lastResult: input.lastResult,
+    lastInvalidReason: mbtLastInvalidReason(input.lastInvalidReason),
+  };
+}
+
+function projectConcentrationBreakTeardownState(
+  state: ConcentrationBreakTeardownRuntimeState,
+): ConcentrationBreakTeardownProjection {
+  const caster = requireBattleCombatant(state.battle.state, fighterId);
+  return {
+    scenario: state.scenario,
+    damageTaken: state.damageTaken,
+    saveDc: state.saveDc,
+    saveRollTotal: state.saveRollTotal,
+    concentrationSaveOffered: state.concentrationSaveOffered,
+    casterConcentrating:
+      // authored-id-dispatch-allow: battle-runtime-mbt-fixture-boundary
+      caster.concentration?.sourceProcedureRef === "blur" &&
+      caster.concentration.effectKind === "spellEffect",
+    blurredEffectCount: blurredEffectCount(state.battle.state),
+    spellSlotExpended: casterSpellSlotExpended(state.battle.state),
+    teardownBeforeNextCommand: state.teardownBeforeNextCommand,
+    replacementStartedAfterTeardown: state.replacementStartedAfterTeardown,
+  };
+}
+
+function projectCommandOrderingState(input: {
+  readonly state: BattleState;
+  readonly holes: readonly BattleHole[];
+  readonly stage: CommandOrderingProjection["stage"];
+  readonly lastResult: CommandOrderingProjection["lastResult"];
+  readonly orderingError: CommandOrderingProjection["orderingError"];
+  readonly pendingCommandOption: CommandOrderingProjection["pendingCommandOption"];
+  readonly droppedObjectCount: number;
+}): CommandOrderingProjection {
+  const snapshot = snapshotBattle(input.state);
+  const targetSnapshot = snapshot.combatants.find(
+    (combatant) => combatant.combatantId === skeletonId,
+  );
+  return {
+    stage: input.stage,
+    holes: input.holes.flatMap(commandOrderingHoleFromRuntime).sort(),
+    tableFactFrontierOpen: input.holes.some(
+      (hole) => hole.kind === "heldObjectFacts",
+    ),
+    lastResult: input.lastResult,
+    orderingError: input.orderingError,
+    pendingCommandOption: input.pendingCommandOption,
+    targetProne: targetSnapshot?.conditions.includes("prone") ?? false,
+    droppedObjectCount: input.droppedObjectCount,
+    haltSuppressed: input.state.currentTurnResources.commandHalt !== null,
+    movementSpentFeet:
+      targetSnapshot === undefined
+        ? 0
+        : Number(targetSnapshot.movement.spentFeet),
+    currentActor: commandOrderingActorId(snapshot.currentActorId),
+    reactionWindowOpen: input.state.interruptStack.length > 0,
+  };
+}
+
+function projectReducerSpineContractState(input: {
+  readonly state: BattleState | null;
+  readonly holes: readonly BattleHole[];
+  readonly stage: ReducerSpineContractProjection["stage"];
+  readonly entrypoint: ReducerSpineContractProjection["entrypoint"];
+  readonly subject: ReducerSpineContractProjection["subject"];
+  readonly lastResult: ReducerSpineContractProjection["lastResult"];
+  readonly lastInvalidReason: ReducerSpineContractProjection["lastInvalidReason"];
+}): ReducerSpineContractProjection {
+  if (input.state === null) {
+    return {
+      stage: input.stage,
+      entrypoint: input.entrypoint,
+      subject: input.subject,
+      currentActor: "none",
+      holes: [],
+      lastResult: input.lastResult,
+      lastInvalidReason: input.lastInvalidReason,
+      actionAvailable: false,
+      bonusActionAvailable: false,
+      casterReactionAvailable: false,
+      targetReactionAvailable: false,
+      spellSlotUse: "none",
+      interruptDepth: 0,
+      casterHp: 0,
+      targetHp: 0,
+    };
+  }
+
+  const snapshot = snapshotBattle(input.state);
+  const caster = snapshotCombatant(input.state, fighterId);
+  const target = snapshotCombatant(input.state, skeletonId);
+
+  return {
+    stage: input.stage,
+    entrypoint: input.entrypoint,
+    subject: input.subject,
+    currentActor: reducerSpineContractActorId(snapshot.currentActorId),
+    holes: input.holes.map(reducerSpineContractHoleFromRuntime).sort(),
+    lastResult: input.lastResult,
+    lastInvalidReason: input.lastInvalidReason,
+    actionAvailable: snapshot.turn.actionResources.some(
+      (resource) => resource.source === "turn",
+    ),
+    bonusActionAvailable:
+      input.state.currentTurnResources.currentHasBonusAction,
+    casterReactionAvailable:
+      input.state.combatants.get(fighterId)?.reactionAvailable ?? false,
+    targetReactionAvailable:
+      input.state.combatants.get(skeletonId)?.reactionAvailable ?? false,
+    spellSlotUse: reducerSpineContractSpellSlotUseFromRuntime(input.state),
+    interruptDepth: input.state.interruptStack.length,
+    casterHp: caster.hp,
+    targetHp: target.hp,
+  };
+}
+
+function snapshotCombatant(
+  state: BattleState,
+  combatantId: CombatantId,
+): ReturnType<typeof snapshotBattle>["combatants"][number] {
+  const combatant = snapshotBattle(state).combatants.find(
+    (candidate) => candidate.combatantId === combatantId,
+  );
+  if (combatant === undefined) {
+    throw new Error("Expected combatant in battle snapshot.");
+  }
+  return combatant;
+}
+
+function zeroHpLifecycleClearedByHealing(
+  combatant: ReturnType<typeof snapshotCombatant>,
+): boolean {
+  return (
+    combatant.hp > 0 &&
+    !combatant.conditions.includes("unconscious") &&
+    combatant.zeroHpLifecycle.policy === "usesDeathSavingThrows" &&
+    !combatant.zeroHpLifecycle.dead &&
+    !combatant.zeroHpLifecycle.stable &&
+    combatant.zeroHpLifecycle.deathSaves.successes === 0 &&
+    combatant.zeroHpLifecycle.deathSaves.failures === 0
+  );
+}
+
+function requireBattleCombatant(
+  state: BattleState,
+  combatantId: CombatantId,
+): BattleCombatantState {
+  const combatant = state.combatants.get(combatantId);
+  if (combatant === undefined) {
+    throw new Error("Expected combatant in battle state.");
+  }
+  return combatant;
+}
+
+function initialConcentrationBreakTeardownState(): ConcentrationBreakTeardownRuntimeState {
+  return {
+    battle: concentrationBreakTeardownBattle(),
+    scenario: "init",
+    damageTaken: 0,
+    saveDc: 0,
+    saveRollTotal: 0,
+    concentrationSaveOffered: false,
+    teardownBeforeNextCommand: false,
+    replacementStartedAfterTeardown: false,
+    pendingConcentrationSave: null,
+    lastRouteEvents: [],
+  };
+}
+
+function damageRequestsConcentrationSave(
+  state: ConcentrationBreakTeardownRuntimeState,
+  damageDiePip: number,
+): ConcentrationBreakTeardownRuntimeState {
+  if (state.scenario !== "concentrationSpellCast") {
+    throw new Error("Expected Concentration spell cast before damage.");
+  }
+  const attackerTurn = advanceToConcentrationAttackerTurn(state.battle.state);
+  const attackerTurnSession = battleRuntimeSessionForTest({
+    state: attackerTurn,
+    context: state.battle.context,
+  });
+  const act = statBlockAttackAct(
+    attackerTurnSession,
+    concentrationBreakAttackerId,
+    "Scimitar",
+  );
+  const subject = act.subject;
+  const target = requireResultHole(
+    resolveBattleSubject({
+      state: attackerTurn,
+      subject,
+      fills: [],
+    }),
+    "targetChoice",
+  );
+  const targetFillForCaster = creatureAttackTargetFill(
+    target,
+    concentrationBreakAttackerId,
+    fighterId,
+  );
+  const attackRoll = requireResultHole(
+    resolveBattleSubject({
+      state: attackerTurn,
+      subject,
+      fills: [targetFillForCaster],
+    }),
+    "attackRoll",
+  );
+  const attackFill = attackRollFill(attackRoll, {
+    total: 20,
+    naturalD20: 16,
+    ...(attackRoll.rollMode === undefined
+      ? {}
+      : { rollMode: attackRoll.rollMode }),
+  });
+  const damage = requireResultHole(
+    resolveBattleSubject({
+      state: attackerTurn,
+      subject,
+      fills: [targetFillForCaster, attackFill],
+    }),
+    "rolledDice",
+  );
+  const damageFill = damageRollFill(damage, damageDiePip);
+  const fills = [targetFillForCaster, attackFill, damageFill] as const;
+  const pending = resolveBattleSubject({
+    state: attackerTurn,
+    subject,
+    fills,
+  });
+  if (pending.tag !== "needsHoles") {
+    throw new Error("Expected damage to request a Concentration Saving Throw.");
+  }
+  const concentration = requireTypedHole(
+    pending.holes,
+    "concentrationSavingThrow",
+  );
+  const damageTaken = Number(concentration.damageAmount);
+  return {
+    ...state,
+    battle: battleRuntimeSessionForTest({
+      state: pending.state,
+      context: state.battle.context,
+    }),
+    scenario: "damageSaveNeeded",
+    damageTaken,
+    saveDc: Number(concentration.dc),
+    concentrationSaveOffered: true,
+    pendingConcentrationSave: {
+      state: pending.state,
+      subject,
+      fills,
+      holes: [concentration],
+    },
+    lastRouteEvents: pending.routeEvents ?? [],
+  };
+}
+
+function failConcentrationSave(
+  state: ConcentrationBreakTeardownRuntimeState,
+  saveRollTotal: number,
+): ConcentrationBreakTeardownRuntimeState {
+  if (state.scenario !== "damageSaveNeeded") {
+    throw new Error("Expected pending Concentration save.");
+  }
+  const pending = state.pendingConcentrationSave;
+  if (pending === null) {
+    throw new Error("Expected pending Concentration save state.");
+  }
+  const [concentration] = pending.holes;
+  if (saveRollTotal >= Number(concentration.dc)) {
+    throw new Error("Expected failed Concentration save total.");
+  }
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state: pending.state,
+      subject: pending.subject,
+      fills: [
+        ...pending.fills,
+        concentrationSavingThrowFill(concentration, false),
+      ],
+    }),
+  );
+  return {
+    ...state,
+    battle: battleRuntimeSessionForTest({
+      state: resolved.state,
+      context: state.battle.context,
+    }),
+    scenario: "damageFailedTeardownBeforeNextCommand",
+    saveRollTotal,
+    concentrationSaveOffered: false,
+    teardownBeforeNextCommand: concentrationTeardownIsVisibleBeforeNextCommand(
+      battleRuntimeSessionForTest({
+        state: resolved.state,
+        context: state.battle.context,
+      }),
+    ),
+    pendingConcentrationSave: null,
+    lastRouteEvents: resolved.routeEvents ?? [],
+  };
+}
+
+function concentrationBreakTeardownCastAct(
+  session: BattleRuntimeSession,
+): ReturnType<typeof discoverBattleActs>[number] & {
+  readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
+} {
+  const act = discoverBattleActs(session).find(
+    (
+      candidate,
+    ): candidate is ReturnType<typeof discoverBattleActs>[number] & {
+      readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
+    } =>
+      candidate.subject.tag === "actionSpell" &&
+      battleActSpellPresentation(candidate)?.invocation.procedure ===
+        "blurAttackRollDefense",
+  );
+  if (act === undefined) {
+    throw new Error("Expected Concentration spell cast act.");
+  }
+  return act;
+}
+
+function endConcentrationAct(session: BattleRuntimeSession): ReturnType<
+  typeof discoverBattleActs
+>[number] & {
+  readonly subject: Extract<
+    BattleSubject,
+    { readonly tag: "runtimeCommand"; readonly command: "endConcentration" }
+  >;
+} {
+  const act = discoverBattleActs(session).find(
+    (
+      candidate,
+    ): candidate is ReturnType<typeof discoverBattleActs>[number] & {
+      readonly subject: Extract<
+        BattleSubject,
+        { readonly tag: "runtimeCommand"; readonly command: "endConcentration" }
+      >;
+    } =>
+      candidate.subject.tag === "runtimeCommand" &&
+      candidate.subject.command === "endConcentration",
+  );
+  if (act === undefined) {
+    throw new Error("Expected End Concentration act.");
+  }
+  return act;
+}
+
+function stateWithPreexistingBlurConcentration(
+  state: BattleState,
+): BattleState {
+  const caster = requireBattleCombatant(state, fighterId);
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(fighterId, {
+      ...caster,
+      concentration: {
+        sourceProcedureRef: battleProcedureExecutionRefForTest("blur"),
+        effectKind: "spellEffect",
+      },
+      activeEffects: [
+        ...caster.activeEffects,
+        {
+          kind: "blurred",
+          sourceProcedureRef: battleProcedureExecutionRefForTest("blur"),
+          sourceCombatantId: fighterId,
+          expiresAt: {
+            kind: "concentration",
+            combatantId: fighterId,
+          },
+        },
+      ],
+    }),
+  };
+}
+
+function advanceToConcentrationAttackerTurn(state: BattleState): BattleState {
+  return requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: endTurnSubjectFor(fighterId),
+      fills: [],
+    }),
+  ).state;
+}
+
+function concentrationTeardownIsVisibleBeforeNextCommand(
+  session: BattleRuntimeSession,
+): boolean {
+  const state = session.state;
+  const caster = requireBattleCombatant(state, fighterId);
+  return (
+    discoverBattleActs(session).length > 0 &&
+    caster.concentration === null &&
+    blurredEffectCount(state) === 0
+  );
+}
+
+function blurredEffectCount(state: BattleState): number {
+  return requireBattleCombatant(state, fighterId).activeEffects.filter(
+    (effect) => effect.kind === "blurred",
+  ).length;
+}
+
+function casterSpellSlotExpended(state: BattleState): number {
+  const caster = requireBattleCombatant(state, fighterId);
+  if (caster.origin.kind !== "character") {
+    return 0;
+  }
+  const slot = caster.origin.spellcasting?.spellSlots.find(
+    (candidate) => Number(candidate.spellLevel) === 2,
+  );
+  return Number(slot?.expended ?? 0);
+}
+
+function projectExtraAttackMbtState(input: {
+  readonly state: BattleState;
+  readonly lastResult: ExtraAttackMbtProjection["lastResult"];
+  readonly lastInvalidReason: ExtraAttackMbtProjection["lastInvalidReason"];
+}): ExtraAttackMbtProjection {
+  const snapshot = snapshotBattle(input.state);
+  const skeleton = snapshot.combatants.find(
+    (combatant) => combatant.combatantId === skeletonId,
+  );
+  const fighter = snapshot.combatants.find(
+    (combatant) => combatant.combatantId === fighterId,
+  );
+  if (skeleton == null || fighter == null) {
+    throw new Error("Expected Extra Attack MBT combatants.");
+  }
+
+  return {
+    skeletonHp: skeleton.hp,
+    actionAvailable: snapshot.turn.actionResources.some(
+      (resource) => resource.source === "turn",
+    ),
+    extraAttackSlotsAvailable: snapshot.turn.actionResources.filter(
+      (resource) =>
+        resource.source === "classFeatureExtraAttack" &&
+        resource.sourceOwnerId === fighterId,
+    ).length,
+    movementSpentFeet: Number(fighter.movement.spentFeet),
+    lastResult: input.lastResult,
+    lastInvalidReason: input.lastInvalidReason,
+  };
+}
+
+function recordExtraAttackBoundaryFromState(
+  state: BattleState,
+  unitId: ExtraAttackMbtUnitId,
+): void {
+  if (
+    state.currentTurnResources.actionResources.some(
+      (resource) =>
+        resource.source === "classFeatureExtraAttack" &&
+        resource.sourceOwnerId === fighterId,
+    )
+  ) {
+    recordSelectedUnitRuntimeBoundaryId(unitId);
+  }
+}
+
+function projectAdrenalineRushMbtState(input: {
+  readonly context: BattleRuntimeSession["context"];
+  readonly state: BattleState;
+  readonly lastResult: AdrenalineRushMbtProjection["lastResult"];
+  readonly lastInvalidReason: AdrenalineRushMbtProjection["lastInvalidReason"];
+}): AdrenalineRushMbtProjection {
+  const snapshot = snapshotBattle(input.state);
+  const actor = snapshot.combatants.find(
+    (combatant) => combatant.combatantId === fighterId,
+  );
+  if (actor == null) {
+    throw new Error("Expected Adrenaline Rush MBT actor.");
+  }
+  return {
+    actorTempHp: actor.tempHp,
+    bonusActionAvailable: snapshot.turn.bonusActionAvailable,
+    dashBonusFeet: Number(snapshot.turn.dashMovementBonusFeet),
+    featureUsesRemaining: resourceUsesRemaining(
+      battleRuntimeSessionForTest({
+        state: input.state,
+        context: input.context,
+      }),
+      "orc_adrenaline_rush",
+    ),
+    lastResult: input.lastResult,
+    lastInvalidReason: input.lastInvalidReason,
+  };
+}
+
+function projectRogueSteadyAimMbtState(input: {
+  readonly state: BattleState;
+  readonly lastResult: RogueSteadyAimMbtProjection["lastResult"];
+  readonly lastInvalidReason: RogueSteadyAimMbtProjection["lastInvalidReason"];
+}): RogueSteadyAimMbtProjection {
+  const snapshot = snapshotBattle(input.state);
+  const actor = snapshot.combatants.find(
+    (combatant) => combatant.combatantId === fighterId,
+  );
+  const actorState = input.state.combatants.get(fighterId);
+  if (actor == null || actorState === undefined) {
+    throw new Error("Expected Steady Aim MBT actor.");
+  }
+  const nextAttackAdvantageActive = actorState.activeEffects.some(
+    (effect) =>
+      effect.kind === "nextAttackRollBySelf" &&
+      "sourceUnitId" in effect &&
+      // authored-id-dispatch-allow: battle-runtime-mbt-fixture-boundary
+      effect.sourceUnitId === "rogue_steady_aim" &&
+      effect.mode === "advantage",
+  );
+  const speedZeroActive = actorState.activeEffects.some(
+    (effect) =>
+      effect.kind === "selfSpeedZero" &&
+      effect.sourceProcedureRef ===
+        battleProcedureExecutionRefForTest("rogue_steady_aim"),
+  );
+  return {
+    bonusActionAvailable: snapshot.turn.bonusActionAvailable,
+    actorSpeedFeet: Number(actor.movement.speedFeet),
+    nextAttackAdvantageActive,
+    speedZeroActive,
+    attackRollMode: nextAttackAdvantageActive ? "advantage" : "normal",
+    lastResult: input.lastResult,
+    lastInvalidReason: input.lastInvalidReason,
+  };
+}
+
+function projectScalarBuffMbtState(input: {
+  readonly state: BattleState;
+  readonly holes: readonly BattleHole[];
+  readonly lastResult: ScalarBuffMbtProjection["lastResult"];
+  readonly lastInvalidReason: ScalarBuffMbtProjection["lastInvalidReason"];
+}): ScalarBuffMbtProjection {
+  const snapshot = snapshotBattle(input.state);
+  const fighter = snapshot.combatants.find(
+    (combatant) => combatant.combatantId === fighterId,
+  );
+  const skeleton = snapshot.combatants.find(
+    (combatant) => combatant.combatantId === skeletonId,
+  );
+  if (fighter == null || skeleton == null) {
+    throw new Error("Expected scalar buff MBT combatants.");
+  }
+  return {
+    fighterSpeed: Number(fighter.movement.speedFeet),
+    goblinSpeed: Number(skeleton.movement.speedFeet),
+    actionAvailable: snapshot.turn.actionResources.some(
+      (resource) => resource.source === "turn",
+    ),
+    holes: projectHoles(input.holes),
+    lastResult: input.lastResult,
+    lastInvalidReason: input.lastInvalidReason,
+  };
+}
+
+function discoverAttackHoles(
+  session: BattleRuntimeSession,
+  subject: Extract<
+    BattleSubject,
+    { readonly tag: "action"; readonly action: "attack" }
+  >,
+): readonly BattleHole[] {
+  return discoverAttackAct(session, subject).initialHoles;
+}
+
+function discoverAttackAct(
+  session: BattleRuntimeSession,
+  subject: Extract<
+    BattleSubject,
+    { readonly tag: "action"; readonly action: "attack" }
+  >,
+): AvailableBattleAct {
+  const act = discoverBattleActs(session).find(
+    (candidate) =>
+      candidate.subject.tag === "action" &&
+      candidate.subject.action === "attack" &&
+      sameBattleSubject(candidate.subject, subject),
+  );
+  if (act == null) {
+    throw new Error("Expected the selected attack act.");
+  }
+
+  return act;
+}
+
+function discoverLongstriderAct(
+  session: BattleRuntimeSession,
+  subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>,
+): AvailableBattleAct {
+  const act = discoverBattleActs(session).find(
+    (candidate) =>
+      candidate.subject.tag === "actionSpell" &&
+      candidate.subject.actorId === subject.actorId &&
+      sameBattleSubject(candidate.subject, subject),
+  );
+  if (act == null) {
+    throw new Error("Expected Longstrider spell act.");
+  }
+
+  return act;
+}
+
+function discoverMagicMissileHoles(
+  session: BattleRuntimeSession,
+  subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>,
+): readonly BattleHole[] {
+  return discoverMagicMissileAct(session, subject).initialHoles;
+}
+
+function discoverMagicMissileAct(
+  session: BattleRuntimeSession,
+  subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>,
+): AvailableBattleAct {
+  const act = discoverBattleActs(session).find(
+    (candidate) =>
+      candidate.subject.tag === "actionSpell" &&
+      candidate.subject.actorId === subject.actorId &&
+      sameBattleSubject(candidate.subject, subject),
+  );
+  if (act == null) {
+    throw new Error("Expected Magic Missile spell act.");
+  }
+
+  return act;
+}
+
+function discoverSaveGatedSpellHoles(
+  session: BattleRuntimeSession,
+  subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>,
+  spellId: string,
+): readonly BattleHole[] {
+  const act = discoverBattleActs(session).find(
+    (candidate) =>
+      candidate.subject.tag === "actionSpell" &&
+      candidate.subject.actorId === subject.actorId &&
+      battleActSpellPresentation(candidate)?.invocation.spellId === spellId,
+  );
+  if (act == null) {
+    throw new Error(`Expected ${spellId} save-gated spell act.`);
+  }
+
+  return act.initialHoles;
+}
+
+function discoverSpellAttackHoles(
+  session: BattleRuntimeSession,
+  subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>,
+  spellId: string,
+): readonly BattleHole[] {
+  return discoverSpellAttackAct(session, subject, spellId).initialHoles;
+}
+
+function discoverSpellAttackAct(
+  session: BattleRuntimeSession,
+  subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>,
+  spellId: string,
+): AvailableBattleAct {
+  const act = discoverBattleActs(session).find(
+    (candidate) =>
+      candidate.subject.tag === "actionSpell" &&
+      candidate.subject.actorId === subject.actorId &&
+      battleActSpellPresentation(candidate)?.invocation.spellId === spellId,
+  );
+  if (act == null) {
+    throw new Error(`Expected ${spellId} spell attack act.`);
+  }
+
+  return act;
+}
+
+function holesAfterFills(
+  state: BattleState,
+  subject: Extract<
+    BattleSubject,
+    { readonly tag: "action"; readonly action: "attack" }
+  >,
+  fills: readonly BattleFill[],
+): readonly BattleHole[] {
+  const result = resolveBattleSubject({ state, subject, fills });
+  if (result.tag !== "needsHoles") {
+    throw new Error("Expected attack fills to request more holes.");
+  }
+
+  return result.holes;
+}
+
+function saveGatedSpellHolesAfterFills(
+  state: BattleState,
+  subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>,
+  fills: readonly BattleFill[],
+): readonly BattleHole[] {
+  const result = resolveBattleSubject({ state, subject, fills });
+  if (result.tag !== "needsHoles") {
+    throw new Error("Expected save-gated spell fills to request more holes.");
+  }
+
+  return result.holes;
+}
+
+function commandHolesAfterFills(
+  state: BattleState,
+  subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>,
+  fills: readonly BattleFill[],
+): readonly BattleHole[] {
+  const result = resolveBattleSubject({ state, subject, fills });
+  if (result.tag !== "needsHoles") {
+    throw new Error("Expected Command fills to request more holes.");
+  }
+
+  return result.holes;
+}
+
+function spellAttackHolesAfterFills(
+  state: BattleState,
+  subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>,
+  fills: readonly BattleFill[],
+): readonly BattleHole[] {
+  const result = resolveBattleSubject({ state, subject, fills });
+  if (result.tag !== "needsHoles") {
+    throw new Error("Expected spell attack fills to request more holes.");
+  }
+
+  return result.holes;
+}
+
+function healingOrderingHolesAfterFills(
+  state: BattleState,
+  subject: BattleSubject,
+  fills: readonly BattleFill[],
+): readonly BattleHole[] {
+  const result = resolveBattleSubject({ state, subject, fills });
+  if (result.tag !== "needsHoles") {
+    throw new Error(
+      "Expected Hit Point restoration fills to request more holes.",
+    );
+  }
+
+  return result.holes;
+}
+
+function fighterAttackSubject(
+  session: BattleRuntimeSession,
+): Extract<
+  BattleSubject,
+  { readonly tag: "action"; readonly action: "attack" }
+> {
+  const subject = discoverBattleActs(session).find(
+    (act) =>
+      act.subject.tag === "action" &&
+      act.subject.action === "attack" &&
+      act.subject.actorId === fighterId &&
+      act.summary === "Take the Attack action with Dagger.",
+  )?.subject;
+  if (subject?.tag !== "action" || subject.action !== "attack") {
+    throw new Error("Expected discovered fighter Dagger attack.");
+  }
+  return subject;
+}
+
+function adrenalineRushDashSubject(
+  session: BattleRuntimeSession,
+): Extract<BattleSubject, { readonly tag: "bonusActionStandardAction" }> {
+  const subject = requireAdmittedCharacterProcedureSubject(session, {
+    tag: "bonusActionStandardAction",
+    actorId: fighterId,
+    sourceUnitId: recordSelectedUnitRuntimeBoundaryId("orc_adrenaline_rush"),
+    action: "dash",
+    speedKind: "walk",
+  });
+  if (subject.tag !== "bonusActionStandardAction") {
+    throw new Error("Expected admitted Bonus Action Dash.");
+  }
+  return subject;
+}
+
+function rogueSteadyAimSubject(
+  session: BattleRuntimeSession,
+): Extract<BattleSubject, { readonly tag: "unitFeature" }> {
+  const subject = requireAdmittedCharacterProcedureSubject(session, {
+    tag: "unitFeature",
+    actorId: fighterId,
+    unitId: recordSelectedUnitRuntimeBoundaryId("rogue_steady_aim"),
+  });
+  if (subject.tag !== "unitFeature") throw new Error("Expected Unit feature.");
+  return subject;
+}
+
+function skeletonMultiattackSubject(
+  session: BattleRuntimeSession,
+): Extract<
+  BattleSubject,
+  { readonly tag: "action"; readonly action: "multiattack" }
+> {
+  const act = discoverBattleActs(session).find(
+    (candidate) =>
+      candidate.subject.tag === "action" &&
+      candidate.subject.actorId === skeletonId &&
+      candidate.subject.action === "multiattack",
+  );
+  if (act?.subject.tag !== "action" || act.subject.action !== "multiattack") {
+    throw new Error("Expected the Skeleton Multiattack act.");
+  }
+  return act.subject;
+}
+
+function skeletonShortswordSubject(
+  session: BattleRuntimeSession,
+): Extract<
+  BattleSubject,
+  { readonly tag: "action"; readonly action: "attack" }
+> {
+  const matchingActs = discoverBattleActs(session).filter(
+    (candidate) =>
+      candidate.subject.tag === "action" &&
+      candidate.subject.actorId === skeletonId &&
+      candidate.subject.action === "attack" &&
+      candidate.subject.procedureRef !== undefined &&
+      candidate.subject.statBlockDamageNotation === undefined &&
+      candidate.summary === "Take the Attack action with Shortsword.",
+  );
+  if (matchingActs.length !== 1) {
+    throw new Error("Expected one rolled Skeleton Shortsword attack act.");
+  }
+  const subject = matchingActs[0]?.subject;
+  if (subject?.tag !== "action" || subject.action !== "attack") {
+    throw new Error("Expected the Skeleton Shortsword attack subject.");
+  }
+  return subject;
+}
+
+function magicMissileSubject(): Extract<
+  AvailableBattleAct["subject"],
+  { readonly tag: "actionSpell" }
+> {
+  const subject = requireAdmittedCharacterProcedureSubject(
+    fighterVsSkeletonBattleSession(),
+    {
+      tag: "actionSpell",
+      actorId: fighterId,
+      invocation: spellSlotInvocationRef(
+        "magic_missile",
+        1,
+        "repeatedDamageAllocation",
+      ),
+      mode: { tag: "cast" },
+    },
+  );
+  if (subject.tag !== "actionSpell") {
+    throw new Error("Expected admitted Magic Missile spell subject.");
+  }
+  return subject;
+}
+
+function longstriderSubject(
+  session: BattleRuntimeSession,
+): Extract<BattleSubject, { readonly tag: "actionSpell" }> {
+  const subject = requireAdmittedCharacterProcedureSubject(session, {
+    tag: "actionSpell",
+    actorId: fighterId,
+    invocation: spellSlotInvocationRef("longstrider", 1, "scalarBuff"),
+    mode: { tag: "cast" },
+  });
+  if (subject.tag !== "actionSpell") throw new Error("Expected action Spell.");
+  return subject;
+}
+
+function lightningBoltSubject(
+  session: BattleRuntimeSession,
+): Extract<BattleSubject, { readonly tag: "actionSpell" }> {
+  return saveGatedSpellSubject(session, "lightning_bolt", 3, "saveGatedDamage");
+}
+
+function saveGatedSpellSubject(
+  session: BattleRuntimeSession,
+  spellId: "lightning_bolt" | "blindness_deafness",
+  slotLevel: 2 | 3,
+  procedure: "saveGatedDamage" | "saveGatedCondition",
+): Extract<BattleSubject, { readonly tag: "actionSpell" }> {
+  const subject = requireAdmittedCharacterProcedureSubject(session, {
+    tag: "actionSpell",
+    actorId: fighterId,
+    invocation: spellSlotInvocationRef(spellId, slotLevel, procedure),
+    mode: { tag: "cast" },
+  });
+  if (subject.tag !== "actionSpell") throw new Error("Expected action Spell.");
+  return subject;
+}
+
+function spellAttackSubject(
+  session: BattleRuntimeSession,
+  spellId: "fire_bolt" | "sorcerous_burst",
+  procedure: "spellAttackDamage",
+): Extract<BattleSubject, { readonly tag: "actionSpell" }> {
+  const subject = requireAdmittedCharacterProcedureSubject(session, {
+    tag: "actionSpell",
+    actorId: fighterId,
+    invocation: cantripSpellInvocationRef(spellId, procedure),
+    mode: { tag: "cast" },
+  });
+  if (subject.tag !== "actionSpell") throw new Error("Expected action Spell.");
+  return subject;
+}
+
+function independentSpellAttackSequenceSubject(
+  session: BattleRuntimeSession,
+): Extract<BattleSubject, { readonly tag: "actionSpell" }> {
+  const subject = requireAdmittedCharacterProcedureSubject(session, {
+    tag: "actionSpell",
+    actorId: spellCasterId,
+    invocation: cantripSpellInvocationRef(
+      INDEPENDENT_SPELL_ATTACK_SEQUENCE_SPELL_ID,
+      "spellAttackSequence",
+    ),
+    mode: { tag: "cast" },
+  });
+  if (subject.tag !== "actionSpell") throw new Error("Expected action Spell.");
+  return subject;
+}
+
+function chainedAttackProcedureAct(
+  session: BattleRuntimeSession,
+  slotLevel: ChainedAttackProcedureSlotLevel,
+): ChainedAttackProcedureAct {
+  const act = discoverBattleActs(session).find(
+    (candidate) =>
+      candidate.subject.tag === "actionSpell" &&
+      battleActSpellPresentation(candidate)?.invocation.procedure ===
+        "chainedSpellAttackDamage" &&
+      battleActSpellPresentation(candidate)?.invocation.tag === "spellSlot" &&
+      Number(
+        battleActSpellSlotPresentation(candidate)?.invocation.slotLevel,
+      ) === slotLevel,
+  );
+  if (act === undefined) {
+    throw new Error(
+      `Expected chained spell attack procedure act at slot ${slotLevel}.`,
+    );
+  }
+  return act;
+}
+
+function independentSpellAttackSequenceAct(
+  session: BattleRuntimeSession,
+): IndependentSpellAttackSequenceAct {
+  const act = discoverBattleActs(session).find(
+    (candidate) =>
+      candidate.subject.tag === "actionSpell" &&
+      candidate.subject.actorId === spellCasterId &&
+      // authored-id-dispatch-allow: battle-runtime-mbt-fixture-boundary
+      battleActSpellPresentation(candidate)?.invocation.spellId ===
+        INDEPENDENT_SPELL_ATTACK_SEQUENCE_SPELL_ID &&
+      battleActSpellPresentation(candidate)?.invocation.procedure ===
+        "spellAttackSequence",
+  );
+  if (act === undefined) {
+    throw new Error("Expected independent spell attack sequence act.");
+  }
+  return act;
+}
+
+type InterruptShieldAttackAct = AvailableBattleAct & {
+  readonly subject: Extract<
+    BattleSubject,
+    { readonly tag: "action"; readonly action: "attack" }
+  >;
+};
+
+function interruptShieldUnarmedStrikeAct(
+  session: BattleRuntimeSession,
+): InterruptShieldAttackAct {
+  const act = discoverBattleActs(session).find(
+    (candidate): candidate is InterruptShieldAttackAct =>
+      candidate.subject.tag === "action" &&
+      candidate.subject.action === "attack" &&
+      candidate.subject.actorId === interruptShieldAttackerId &&
+      candidate.summary === "Take the Attack action with Unarmed Strike.",
+  );
+  if (act === undefined) {
+    throw new Error("Expected interrupt-stack Shield Unarmed Strike act.");
+  }
+  return act;
+}
+
+function interruptShieldAttackTargetFill(
+  hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
+): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  if (hole.attack === undefined) {
+    throw new Error("Expected bound interrupt-shield attack selection.");
+  }
+  return {
+    kind: "targetChoice",
+    holeId: hole.holeId,
+    value: interruptShieldCasterId,
+    spatialFacts: [
+      {
+        kind: "attackTargetInMeleeReach",
+        actorId: interruptShieldAttackerId,
+        targetId: interruptShieldCasterId,
+        ...hole.attack.selection,
+      },
+    ],
+  };
+}
+
+function requireInterruptShieldReactionChoice(
+  result: Extract<BattleResolutionResult, { readonly tag: "needsHoles" }>,
+  context: BattleRuntimeSession["context"],
+): Extract<
+  BattleInterruptProcedureChoice,
+  { readonly kind: "castTriggeredReactionSpell" }
+> {
+  const choice = result.snapshot.pendingInterrupt?.choices.find(
+    (
+      candidate,
+    ): candidate is Extract<
+      BattleInterruptProcedureChoice,
+      { readonly kind: "castTriggeredReactionSpell" }
+    > => {
+      if (
+        candidate.kind !== "castTriggeredReactionSpell" ||
+        candidate.reactorId !== interruptShieldCasterId
+      )
+        return false;
+      const invocation = characterSpellInvocationRefForProcedureRefForTest(
+        battleRuntimeSessionForTest({ state: result.state, context }),
+        candidate.reactorId,
+        candidate.subject.procedureRef,
+      );
+      return (
+        invocation.tag === "spellSlot" &&
+        // authored-id-dispatch-allow: battle-runtime-mbt-fixture-boundary
+        invocation.spellId === interruptShieldUnitId &&
+        invocation.procedure === "shieldReaction"
+      );
+    },
+  );
+  if (choice === undefined) {
+    throw new Error("Expected interrupt-stack Shield Reaction choice.");
+  }
+  return choice;
+}
+
+function twoIndependentSpellAttackSequenceTargetHoles(
+  holes: readonly BattleHole[],
+): readonly [
+  Extract<BattleHole, { readonly kind: "targetChoice" }>,
+  Extract<BattleHole, { readonly kind: "targetChoice" }>,
+] {
+  const targetHoles = holes.filter(
+    (hole): hole is Extract<BattleHole, { readonly kind: "targetChoice" }> =>
+      hole.kind === "targetChoice",
+  );
+  const first = targetHoles[0];
+  const second = targetHoles[1];
+  if (first === undefined || second === undefined || targetHoles.length !== 2) {
+    throw new Error(
+      "Expected exactly two independent spell attack sequence target holes.",
+    );
+  }
+  return [first, second];
+}
+
+function chainedAttackProcedureSlotLevel(
+  raw: number,
+): ChainedAttackProcedureSlotLevel {
+  if (raw === 1 || raw === 2) return raw;
+  throw new Error(`Unknown chained attack procedure slot level: ${raw}.`);
+}
+
+function requireChainedAttackProcedureSlotLevel(
+  slotLevel: ChainedAttackProcedureSlotLevel | null,
+): ChainedAttackProcedureSlotLevel {
+  if (slotLevel !== null) return slotLevel;
+  throw new Error("Expected chained attack procedure slot level.");
+}
+
+function chainedAttackProcedureStep0NoDuplicateFaces(
+  slotLevel: ChainedAttackProcedureSlotLevel,
+): readonly number[] {
+  return slotLevel === 1
+    ? CHAINED_ATTACK_PROCEDURE_STEP0_NO_DUPLICATE_FACES
+    : CHAINED_ATTACK_PROCEDURE_STEP0_NO_DUPLICATE_SLOT2_FACES;
+}
+
+function chainedAttackProcedureStep0DuplicateFaces(
+  slotLevel: ChainedAttackProcedureSlotLevel,
+): readonly number[] {
+  return slotLevel === 1
+    ? CHAINED_ATTACK_PROCEDURE_STEP0_DUPLICATE_FACES
+    : CHAINED_ATTACK_PROCEDURE_STEP0_DUPLICATE_SLOT2_FACES;
+}
+
+function requireChainedAttackProcedureSubject(
+  subject: ChainedAttackProcedureSubject | null,
+): ChainedAttackProcedureSubject {
+  if (subject !== null) return subject;
+  throw new Error("Expected chained attack procedure subject.");
+}
+
+function requireChainedAttackProcedureActRouteEvents(
+  act: ChainedAttackProcedureAct,
+): readonly ReducerRouteEvent[] {
+  if (act.routeEvents !== undefined && act.routeEvents.length > 0) {
+    return act.routeEvents;
+  }
+  throw new Error(
+    "Expected public reducer route events on chained attack procedure act.",
+  );
+}
+
+function requireChainedAttackProcedureRouteEvents(
+  result: Extract<
+    BattleResolutionResult,
+    { readonly tag: "needsHoles" | "resolved" }
+  >,
+): readonly ReducerRouteEvent[] {
+  if (result.routeEvents !== undefined && result.routeEvents.length > 0) {
+    return result.routeEvents;
+  }
+  throw new Error(
+    "Expected public reducer route events on chained attack procedure resolution.",
+  );
+}
+
+function requireIndependentSpellAttackSequenceActRouteEvents(
+  act: IndependentSpellAttackSequenceAct,
+): readonly ReducerRouteEvent[] {
+  if (act.routeEvents !== undefined && act.routeEvents.length > 0) {
+    return act.routeEvents;
+  }
+  throw new Error(
+    "Expected public reducer route events on independent spell attack sequence act.",
+  );
+}
+
+function requireIndependentSpellAttackSequenceRouteEvents(
+  result: BattleResolutionResult,
+): readonly ReducerRouteEvent[] {
+  if (result.routeEvents !== undefined && result.routeEvents.length > 0) {
+    return result.routeEvents;
+  }
+  throw new Error(
+    "Expected public reducer route events on independent spell attack sequence resolution.",
+  );
+}
+
+function requireHitPointRestorationOrderingActRouteEvents(
+  act: ReturnType<typeof discoverBattleActs>[number],
+): readonly ReducerRouteEvent[] {
+  if (act.routeEvents !== undefined && act.routeEvents.length > 0) {
+    return act.routeEvents;
+  }
+  throw new Error(
+    "Expected public reducer route events on Hit Point restoration act.",
+  );
+}
+
+function requireHitPointRestorationOrderingRouteEvents(
+  result: BattleResolutionResult,
+): readonly ReducerRouteEvent[] {
+  if (result.routeEvents !== undefined && result.routeEvents.length > 0) {
+    return result.routeEvents;
+  }
+  throw new Error(
+    "Expected public reducer route events on Hit Point restoration resolution.",
+  );
+}
+
+function requireWeaponAttackOrderingActRouteEvents(
+  act: AvailableBattleAct,
+): readonly ReducerRouteEvent[] {
+  if (act.routeEvents !== undefined && act.routeEvents.length > 0) {
+    return act.routeEvents;
+  }
+  throw new Error(
+    "Expected public reducer route events on weapon Attack ordering act.",
+  );
+}
+
+function requireWeaponAttackOrderingRouteEvents(
+  result: BattleResolutionResult,
+): readonly ReducerRouteEvent[] {
+  if (result.routeEvents !== undefined && result.routeEvents.length > 0) {
+    return result.routeEvents;
+  }
+  throw new Error(
+    "Expected public reducer route events on weapon Attack ordering resolution.",
+  );
+}
+
+function requireMagicMissileActRouteEvents(
+  act: AvailableBattleAct,
+): readonly ReducerRouteEvent[] {
+  if (act.routeEvents !== undefined && act.routeEvents.length > 0) {
+    return act.routeEvents;
+  }
+  throw new Error("Expected public reducer route events on Magic Missile act.");
+}
+
+function requireMagicMissileRouteEvents(
+  result: BattleResolutionResult,
+): readonly ReducerRouteEvent[] {
+  if (result.routeEvents !== undefined && result.routeEvents.length > 0) {
+    return result.routeEvents;
+  }
+  throw new Error(
+    "Expected public reducer route events on Magic Missile resolution.",
+  );
+}
+
+function requireScalarBuffActRouteEvents(
+  act: AvailableBattleAct,
+): readonly ReducerRouteEvent[] {
+  if (act.routeEvents !== undefined && act.routeEvents.length > 0) {
+    return act.routeEvents;
+  }
+  throw new Error("Expected public reducer route events on scalar-buff act.");
+}
+
+function requireScalarBuffRouteEvents(
+  result: BattleResolutionResult,
+): readonly ReducerRouteEvent[] {
+  if (result.routeEvents !== undefined && result.routeEvents.length > 0) {
+    return result.routeEvents;
+  }
+  throw new Error(
+    "Expected public reducer route events on scalar-buff resolution.",
+  );
+}
+
+function independentSpellAttackSequenceTargetFill(
+  hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
+): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  return {
+    kind: "targetChoice",
+    holeId: hole.holeId,
+    value: spellTargetId,
+    spatialFacts: [
+      {
+        kind: "spellTarget",
+        casterId: spellCasterId,
+        targetId: spellTargetId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          INDEPENDENT_SPELL_ATTACK_SEQUENCE_SPELL_ID,
+        ),
+      },
+    ],
+  };
+}
+
+function independentSpellAttackSequenceExpectedTargetHp(
+  fills: readonly BattleFill[],
+): number {
+  const damageFillCount = fills.filter(
+    (fill) => fill.kind === "rolledDice",
+  ).length;
+  return (
+    INDEPENDENT_SPELL_ATTACK_SEQUENCE_INITIAL_TARGET_HP -
+    damageFillCount * INDEPENDENT_SPELL_ATTACK_SEQUENCE_LOW_DAMAGE
+  );
+}
+
+function assertIndependentSpellAttackSequenceTargetHp(
+  state: BattleState,
+  expectedTargetHp: number,
+): void {
+  const target = snapshotCombatant(state, spellTargetId);
+  if (target.hp !== expectedTargetHp) {
+    throw new Error(
+      `Expected independent spell attack target Hit Points ${expectedTargetHp}, got ${target.hp}.`,
+    );
+  }
+}
+
+function healingWordSubject(
+  session: BattleRuntimeSession,
+): Extract<BattleSubject, { readonly tag: "bonusActionSpell" }> {
+  const subject = requireAdmittedCharacterProcedureSubject(session, {
+    tag: "bonusActionSpell",
+    actorId: fighterId,
+    invocation: spellSlotInvocationRef(
+      "healing_word",
+      1,
+      "directHitPointRestoration",
+    ),
+    mode: { tag: "cast" },
+  });
+  if (subject.tag !== "bonusActionSpell") {
+    throw new Error("Expected Bonus Action Spell.");
+  }
+  return subject;
+}
+
+function massHealingWordSubject(
+  session: BattleRuntimeSession,
+): Extract<BattleSubject, { readonly tag: "bonusActionSpell" }> {
+  const subject = requireAdmittedCharacterProcedureSubject(session, {
+    tag: "bonusActionSpell",
+    actorId: fighterId,
+    invocation: spellSlotInvocationRef(
+      "mass_healing_word",
+      3,
+      "directHitPointRestoration",
+    ),
+    mode: { tag: "cast" },
+  });
+  if (subject.tag !== "bonusActionSpell") {
+    throw new Error("Expected Bonus Action Spell.");
+  }
+  return subject;
+}
+
+function preserveLifeSubject(
+  session: BattleRuntimeSession,
+): Extract<BattleSubject, { readonly tag: "unitFeature" }> {
+  const subject = requireAdmittedCharacterProcedureSubject(session, {
+    tag: "unitFeature",
+    actorId: fighterId,
+    unitId: parseSharedUnitId("cleric_preserve_life"),
+  });
+  if (subject.tag !== "unitFeature") throw new Error("Expected Unit feature.");
+  return subject;
+}
+
+function moveSubject(): Extract<
+  BattleSubject,
+  { readonly tag: "runtimeCommand"; readonly command: "move" }
+> {
+  return { tag: "runtimeCommand", actorId: fighterId, command: "move" };
+}
+
+function fighterVsSkeletonBattleSession(): BattleRuntimeSession {
+  return startBattleSessionRight({
+    battleId: battleId("battle-runtime-mbt-fighter-skeleton"),
+    combatants: [
+      rogueCreatureInit({ initiative: 20 }),
+      skeletonCreatureInit({ initiative: 10 }),
+    ],
+  });
+}
+
+function interruptShieldBattle(): BattleRuntimeSession {
+  return startBattleSessionRight({
+    battleId: battleId("battle-runtime-mbt-interrupt-stack-resume-shield"),
+    combatants: [
+      interruptShieldCharacterCreature({
+        combatantId: interruptShieldAttackerId,
+        displayName: "Attacker",
+        initiative: 20,
+      }),
+      interruptShieldCharacterCreature({
+        combatantId: interruptShieldCasterId,
+        displayName: "Shield caster",
+        initiative: 10,
+        spellcasting: {
+          sourceClassName: "wizard",
+          spellcastingAbilityModifier: abilityModifier(3),
+          proficiencyBonus: proficiencyBonus(2),
+          canCastSpells: true,
+          cantrips: [],
+          preparedSpells: [unitCatalogSpellRecord(interruptShieldUnitId)],
+          featurePreparedSpells: [],
+          spellbookRitualSpellAccesses: [],
+          invocationSpellAccesses: [],
+          spellSlots: [{ spellLevel: 1, count: 1 }],
+        },
+      }),
+    ],
+  });
+}
+
+function extraAttackBattle(
+  unitId: ExtraAttackMbtUnitId = "fighter_extra_attack",
+): BattleRuntimeSession {
+  return startBattleSessionRight({
+    battleId: battleId("battle-runtime-mbt-extra-attack"),
+    combatants: [
+      extraAttackCreatureInit({ initiative: 20, unitId }),
+      skeletonCreatureInit({ initiative: 10 }),
+    ],
+  });
+}
+
+function extraAttackMbtUnitIdForAdditionalAttacks(
+  additionalAttacks: ExtraAttackMbtAdditionalAttackCount,
+): ExtraAttackMbtUnitId {
+  if (additionalAttacks === 1) return "fighter_extra_attack";
+  if (additionalAttacks === 2) return "test_synthetic_attack_count_2";
+  return "test_synthetic_attack_count_3";
+}
+
+export function extraAttackMbtInitAction(
+  additionalAttacks: ExtraAttackMbtAdditionalAttackCount,
+): ExtraAttackMbtInitAction {
+  if (additionalAttacks === 1) return "initOneAdditionalAttack";
+  if (additionalAttacks === 2) return "initTwoAdditionalAttacks";
+  return "initThreeAdditionalAttacks";
+}
+
+function unitCatalogSpellRecord(unitId: string): SpellRecord {
+  const unit = unitLibrary.requireUnit(unitId);
+  if (unit.kind !== "spell") {
+    throw new Error(`Expected Unit ${unitId} to be a Spell.`);
+  }
+  return unit;
+}
+
+function extraAttackMbtUnit(unitId: ExtraAttackMbtUnitId): UnitRecord {
+  if (unitId === "test_synthetic_attack_count_2") {
+    return syntheticExtraAttackMbtUnit(2);
+  }
+  if (unitId === "test_synthetic_attack_count_3") {
+    return syntheticExtraAttackMbtUnit(3);
+  }
+  return unitLibrary.requireUnit(unitId);
+}
+
+function syntheticExtraAttackMbtUnit(
+  additionalAttacks: Exclude<ExtraAttackMbtAdditionalAttackCount, 1>,
+): UnitRecord {
+  const unit = unitLibrary.requireUnit("fighter_extra_attack");
+  if (unit.kind !== "class_feature" || unit.mechanics.family !== "passive") {
+    throw new Error("Expected passive Fighter Extra Attack Unit.");
+  }
+  return {
+    ...unit,
+    id: parseSharedUnitId(`test_synthetic_attack_count_${additionalAttacks}`),
+    name: `Synthetic Attack Count ${additionalAttacks}`,
+    description: `Synthetic fixture for ${additionalAttacks} additional Attack action attack(s).`,
+    provenance: {
+      kind: "srd-5.2.1",
+      section:
+        additionalAttacks === 2
+          ? "Classes/Fighter#Two Extra Attacks"
+          : "Classes/Fighter#Three Extra Attacks",
+    },
+    mechanics: {
+      ...unit.mechanics,
+      grants: [{ kind: "scale_attack_count", additional: additionalAttacks }],
+    },
+  };
+}
+
+function extraAttackMbtClassLevel(unitId: ExtraAttackMbtUnitId): number {
+  if (unitId === "test_synthetic_attack_count_2") return 11;
+  if (unitId === "test_synthetic_attack_count_3") return 20;
+  return 5;
+}
+
+function adrenalineRushBattle(): BattleRuntimeSession {
+  return startBattleSessionRight({
+    battleId: battleId("battle-runtime-mbt-adrenaline-rush"),
+    combatants: [
+      adrenalineRushCreatureInit({ initiative: 20 }),
+      skeletonCreatureInit({ initiative: 10 }),
+    ],
+  });
+}
+
+function rogueSteadyAimBattle(): BattleRuntimeSession {
+  return startBattleSessionRight({
+    battleId: battleId("battle-runtime-mbt-rogue-steady-aim"),
+    combatants: [
+      rogueSteadyAimCreatureInit({ initiative: 20 }),
+      skeletonCreatureInit({ initiative: 10 }),
+    ],
+  });
+}
+
+function rogueSteadyAimBattleWithMovementSpent(): BattleRuntimeSession {
+  const session = rogueSteadyAimBattle();
+  const state = session.state;
+  const actor = state.combatants.get(fighterId);
+  if (actor === undefined) {
+    throw new Error("Expected Steady Aim MBT actor.");
+  }
+  return battleRuntimeSessionForTest({
+    state: {
+      ...state,
+      combatants: new Map(state.combatants).set(fighterId, {
+        ...actor,
+        movementSpentFeet: movementFeet(5),
+      }),
+    },
+    context: session.context,
+  });
+}
+
+function scalarBuffBattle(): BattleRuntimeSession {
+  return startBattleSessionRight({
+    battleId: battleId("battle-runtime-mbt-scalar-buff"),
+    combatants: [
+      scalarBuffCasterCreatureInit({ initiative: 20 }),
+      skeletonCreatureInit({ initiative: 10 }),
+    ],
+  });
+}
+
+function saveGatedSpellOrderingBattle(
+  spellId: "lightning_bolt" | "blindness_deafness",
+  slotLevel: 2 | 3,
+): BattleRuntimeSession {
+  return startBattleSessionRight({
+    battleId: battleId("battle-runtime-mbt-save-gated-spell-ordering"),
+    combatants: [
+      saveGatedSpellOrderingCasterCreatureInit({
+        initiative: 20,
+        spellId,
+        slotLevel,
+      }),
+      skeletonCreatureInit({ initiative: 10 }),
+    ],
+  });
+}
+
+function commandOrderingBattle(): BattleRuntimeSession {
+  return startBattleSessionRight({
+    battleId: battleId("battle-runtime-mbt-command-ordering"),
+    combatants: [
+      commandOrderingCasterCreatureInit({ initiative: 20 }),
+      skeletonCreatureInit({ initiative: 10 }),
+    ],
+  });
+}
+
+function spellAttackOrderingBattle(
+  spellId: "fire_bolt" | "sorcerous_burst",
+): BattleRuntimeSession {
+  return startBattleSessionRight({
+    battleId: battleId("battle-runtime-mbt-spell-attack-ordering"),
+    combatants: [
+      spellAttackOrderingCasterCreatureInit({
+        initiative: 20,
+        spellId,
+      }),
+      skeletonCreatureInit({ initiative: 10 }),
+    ],
+  });
+}
+
+function chainedAttackProcedureBattle(): BattleRuntimeSession {
+  return spellBattle({
+    preparedSpells: [spellRecord(chromaticOrbUnitId)],
+    spellSlots: [
+      { spellLevel: 1, count: 1 },
+      { spellLevel: 2, count: 1 },
+    ],
+    extraTargetIds: [
+      chainedAttackProcedureSecondTargetId,
+      chainedAttackProcedureThirdTargetId,
+    ],
+  });
+}
+
+function independentSpellAttackSequenceBattle(): BattleRuntimeSession {
+  return spellBattle({
+    cantrips: [spellRecord(INDEPENDENT_SPELL_ATTACK_SEQUENCE_SPELL_ID)],
+    spellSlots: [],
+    casterClassLevels: [{ className: "warlock", level: 5 }],
+    targetHp: INDEPENDENT_SPELL_ATTACK_SEQUENCE_INITIAL_TARGET_HP,
+    targetMaxHp: INDEPENDENT_SPELL_ATTACK_SEQUENCE_INITIAL_TARGET_HP,
+  });
+}
+
+function healingSpellOrderingBattle(): BattleRuntimeSession {
+  return startBattleSessionRight({
+    battleId: battleId(
+      "battle-runtime-mbt-hit-point-restoration-spell-ordering",
+    ),
+    combatants: [
+      healingSpellOrderingCasterCreatureInit({
+        initiative: 20,
+        spellId: "healing_word",
+        slotLevel: 1,
+        characterLevel: 1,
+      }),
+      healingOrderingTargetCreatureInit({ initiative: 10, currentHp: 0 }),
+    ],
+  });
+}
+
+function healingTargetListSpellOrderingBattle(): BattleRuntimeSession {
+  return startBattleSessionRight({
+    battleId: battleId(
+      "battle-runtime-mbt-hit-point-restoration-target-list-spell-ordering",
+    ),
+    combatants: [
+      healingSpellOrderingCasterCreatureInit({
+        initiative: 20,
+        spellId: "mass_healing_word",
+        slotLevel: 3,
+        characterLevel: 5,
+      }),
+      healingOrderingTargetCreatureInit({ initiative: 10, currentHp: 0 }),
+    ],
+  });
+}
+
+function featureHealingPoolOrderingBattle(): BattleRuntimeSession {
+  return startBattleSessionRight({
+    battleId: battleId(
+      "battle-runtime-mbt-hit-point-restoration-feature-ordering",
+    ),
+    combatants: [
+      preserveLifeOrderingCreatureInit({ initiative: 20 }),
+      healingOrderingTargetCreatureInit({ initiative: 10, currentHp: 0 }),
+    ],
+  });
+}
+
+function deathSavingThrowBattle(): BattleState {
+  return deathSavingThrowBattleSession().state;
+}
+
+function deathSavingThrowBattleSession(): BattleRuntimeSession {
+  return startBattleSessionRight({
+    battleId: battleId("battle-runtime-mbt-death-saving-throw-route"),
+    combatants: [
+      deathSavingThrowCharacterInit({
+        combatantId: fighterId,
+        characterId: "death-saving-throw-route-actor-character",
+        displayName: "Actor",
+        initiative: 20,
+        currentHp: 12,
+      }),
+      deathSavingThrowCharacterInit({
+        combatantId: deathSavingThrowTargetId,
+        characterId: "death-saving-throw-route-target-character",
+        displayName: "Target",
+        initiative: 10,
+        currentHp: 0,
+        zeroHpLifecycle: {
+          policy: "usesDeathSavingThrows",
+          deathSaves: {
+            deathSaves: { successes: 2, failures: 1 },
+            stable: false,
+            dead: false,
+            hpRegained: false,
+          },
+        },
+      }),
+    ],
+  });
+}
+
+function concentrationBreakTeardownBattle(): BattleRuntimeSession {
+  return startBattleSessionRight({
+    battleId: battleId("battle-runtime-mbt-concentration-break-teardown-route"),
+    combatants: [
+      concentrationBreakTeardownCasterInit({ initiative: 20 }),
+      statBlockCreature({
+        combatantId: concentrationBreakAttackerId,
+        statBlock: statBlockWithCreatureType("humanoid"),
+        initiative: 10,
+      }),
+    ],
+  });
+}
+
+function endTurnSubject(): Extract<
+  BattleSubject,
+  { readonly tag: "runtimeCommand"; readonly command: "endTurn" }
+> {
+  return endTurnSubjectFor(fighterId);
+}
+
+function deathSavingThrowEndTurnSubject(): Extract<
+  BattleSubject,
+  { readonly tag: "runtimeCommand"; readonly command: "endTurn" }
+> {
+  const act = discoverBattleActs(deathSavingThrowBattleSession()).find(
+    (candidate) =>
+      candidate.subject.tag === "runtimeCommand" &&
+      candidate.subject.actorId === fighterId &&
+      candidate.subject.command === "endTurn",
+  );
+  if (
+    act?.subject.tag === "runtimeCommand" &&
+    act.subject.command === "endTurn"
+  ) {
+    return act.subject;
+  }
+  throw new Error("Expected Death Saving Throw End Turn act discovery.");
+}
+
+function commandOrderingCastSubject(
+  session: BattleRuntimeSession,
+): Extract<BattleSubject, { readonly tag: "actionSpell" }> {
+  const subject = requireAdmittedCharacterProcedureSubject(session, {
+    tag: "actionSpell",
+    actorId: fighterId,
+    invocation: spellSlotInvocationRef("command", 1, "command"),
+    mode: { tag: "cast" },
+  });
+  if (subject.tag !== "actionSpell") throw new Error("Expected action Spell.");
+  return subject;
+}
+
+function commandOrderingCastAct(session: BattleRuntimeSession): ReturnType<
+  typeof discoverBattleActs
+>[number] & {
+  readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
+} {
+  const act = discoverBattleActs(session).find(
+    (
+      candidate,
+    ): candidate is ReturnType<typeof discoverBattleActs>[number] & {
+      readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
+    } =>
+      candidate.subject.tag === "actionSpell" &&
+      battleActSpellPresentation(candidate)?.invocation.procedure === "command",
+  );
+  if (act === undefined) {
+    throw new Error("Expected Command cast act.");
+  }
+  return act;
+}
+
+type RuntimeCommandOption = Exclude<CommandOrderingPendingOption, "none">;
+type CommandRuntimeSubject = Extract<
+  BattleSubject,
+  { readonly tag: "runtimeCommand" }
+>;
+type CommandTargetTurnInput = {
+  readonly grappledByCaster?: boolean;
+};
+
+function commandRuntimeAct(
+  session: BattleRuntimeSession,
+  option: RuntimeCommandOption,
+): ReturnType<typeof discoverBattleActs>[number] & {
+  readonly subject: CommandRuntimeSubject;
+} {
+  const command = commandSubjectForOption(option);
+  const act = discoverBattleActs(session).find(
+    (
+      candidate,
+    ): candidate is ReturnType<typeof discoverBattleActs>[number] & {
+      readonly subject: CommandRuntimeSubject;
+    } =>
+      candidate.subject.tag === "runtimeCommand" &&
+      candidate.subject.command === command,
+  );
+  if (act === undefined) {
+    throw new Error(`Expected runtime Command act ${command}.`);
+  }
+  return act;
+}
+
+function commandSubjectForOption(
+  option: RuntimeCommandOption,
+): CommandRuntimeSubject["command"] {
+  if (option === "grovel") return "commandGrovel";
+  if (option === "drop") return "commandDrop";
+  if (option === "approach") return "commandApproach";
+  if (option === "flee") return "commandFlee";
+  throw new Error("Command Halt does not expose a runtime command act.");
+}
+
+function commandTargetTurn(
+  option: RuntimeCommandOption,
+  input: CommandTargetTurnInput = {},
+): BattleState {
+  const cast = castCommandForOrdering(option);
+  const targetTurn = requireResolved(
+    resolveBattleSubject({
+      state: cast.state,
+      subject: endTurnSubjectFor(fighterId),
+      fills: [],
+    }),
+  ).state;
+  return input.grappledByCaster === true
+    ? grappledByCaster(targetTurn)
+    : targetTurn;
+}
+
+function castCommandForOrdering(
+  option: RuntimeCommandOption,
+): Extract<BattleResolutionResult, { readonly tag: "resolved" }> {
+  const session = commandOrderingBattle();
+  const act = commandOrderingCastAct(session);
+  const target = requireHole(act.initialHoles, "spellTargetList");
+  const commandOption = requireHole(act.initialHoles, "commandOptionChoice");
+  const targetSelection = spellTargetListFill(target, act.subject, [
+    skeletonId,
+  ]);
+  const optionSelection = commandOptionFill(commandOption, option);
+  const savingThrow = requireHole(
+    commandHolesAfterFills(session.state, act.subject, [
+      targetSelection,
+      optionSelection,
+    ]),
+    "savingThrowOutcome",
+  );
+  return requireResolved(
+    resolveBattleSubject({
+      state: session.state,
+      subject: act.subject,
+      fills: [
+        targetSelection,
+        optionSelection,
+        saveGatedSpellSavingThrowOutcomeFill(savingThrow, [
+          { targetId: skeletonId, succeeded: false },
+        ]),
+      ],
+    }),
+  );
+}
+
+function endTurnSubjectFor(
+  actorId: CombatantId,
+): Extract<
+  BattleSubject,
+  { readonly tag: "runtimeCommand"; readonly command: "endTurn" }
+> {
+  return { tag: "runtimeCommand", actorId, command: "endTurn" };
+}
+
+function commandPendingOption(
+  state: BattleState,
+): CommandOrderingPendingOption {
+  const target = state.combatants.get(skeletonId);
+  const effect = target?.activeEffects.find(
+    (candidate) => candidate.kind === "commandPending",
+  );
+  return effect?.kind === "commandPending" ? effect.option : "none";
+}
+
+function commandOrderingActorId(
+  actorId: CombatantId,
+): CommandOrderingProjection["currentActor"] {
+  if (actorId === fighterId) return "Caster";
+  if (actorId === skeletonId) return "Target";
+  throw new Error(`Unexpected Command ordering actor ${actorId}.`);
+}
+
+function grappledByCaster(state: BattleState): BattleState {
+  return {
+    ...state,
+    grapples: [
+      ...state.grapples,
+      {
+        grapplerId: fighterId,
+        targetId: skeletonId,
+        escapeDc: difficultyClass(12),
+        reachFeet: movementFeet(5),
+        hand: "left",
+      },
+    ],
+  };
+}
+
+function rogueCreatureInit(input: {
+  readonly initiative: number;
+}): BattleCreatureInit {
+  return {
+    combatantId: fighterId,
+    displayName: "Rogue",
+    initiative: initiativeScore(input.initiative),
+    creatureInit: {
+      kind: "character",
+      characterId: characterId("fighter-character"),
+      characterUnitRefs: [
+        {
+          unit: unitLibrary.requireUnit("weapon_dagger"),
+          supportProfiles: [],
+        },
+        {
+          unit: unitLibrary.requireUnit("rogue_sneak_attack"),
+          supportProfiles: [ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE],
+        },
+      ],
+      classLevels: [{ className: "rogue", level: 1 }],
+      knownLanguages: ["Common"],
+      d20Statistics: testCharacterD20Statistics({ str: 16 }),
+      weaponMasteries: [],
+      armorClass: {
+        ...defaultArmorClassState(),
+        rightHandUse: "mainWeapon",
+      },
+      size: "medium",
+      speed: { walkFeet: movementFeet(30) },
+      currentHp: Hp(12),
+      maxHp: Hp(12),
+      tempHp: Hp(0),
+      selectedLoadout: {
+        weapon: {
+          itemId: battleObjectId("main:weapon_dagger"),
+          unitId: parseSharedUnitId("weapon_dagger"),
+          grip: "one_handed",
+        },
+      },
+      attack: daggerAttack(),
+      unarmedStrike: baseUnarmedStrike(),
+      unitFeatures: [
+        characterBattleFeatureInitForTest(
+          unitLibrary.requireUnit("rogue_sneak_attack"),
+          [{ className: "rogue", level: classLevel(1) }],
+        ),
+      ],
+      spellcasting: {
+        sourceClassName: "rogue",
+        spellcastingAbilityModifier: 3,
+        proficiencyBonus: proficiencyBonus(2),
+        canCastSpells: true,
+        cantrips: [],
+        preparedSpells: [magicMissileSpell],
+        featurePreparedSpells: [],
+        spellbookRitualSpellAccesses: [],
+        invocationSpellAccesses: [],
+        spellSlots: [{ spellLevel: 1, count: 1 }],
+      },
+    },
+  };
+}
+
+function interruptShieldCharacterCreature(input: {
+  readonly combatantId: CombatantId;
+  readonly displayName: string;
+  readonly initiative: number;
+  readonly spellcasting?: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["spellcasting"];
+}): BattleCreatureInit {
+  return {
+    combatantId: input.combatantId,
+    displayName: input.displayName,
+    initiative: initiativeScore(input.initiative),
+    creatureInit: {
+      kind: "character",
+      characterId: characterId(`${input.combatantId}-character`),
+      characterUnitRefs: [],
+      classLevels: [{ className: "wizard", level: 1 }],
+      knownLanguages: ["Common"],
+      d20Statistics: testCharacterD20Statistics(),
+      weaponMasteries: [],
+      armorClass: defaultArmorClassState(),
+      size: "medium",
+      speed: { walkFeet: movementFeet(30) },
+      currentHp: Hp(interruptInitialHp),
+      maxHp: Hp(interruptInitialHp),
+      tempHp: Hp(0),
+      selectedLoadout: {},
+      attack: null,
+      unarmedStrike: {
+        ...baseUnarmedStrike(),
+        attackAbilityModifier: abilityModifier(0),
+        attackBonus: attackBonus(2),
+        damageAbilityModifier: abilityModifier(0),
+      },
+      ...(input.spellcasting === undefined
+        ? {}
+        : { spellcasting: input.spellcasting }),
+    },
+  };
+}
+
+function rogueSteadyAimCreatureInit(input: {
+  readonly initiative: number;
+}): BattleCreatureInit {
+  const steadyAim = unitLibrary.requireUnit("rogue_steady_aim");
+  if (steadyAim.kind !== "class_feature") {
+    throw new Error("Expected Steady Aim class feature Unit.");
+  }
+  return {
+    combatantId: fighterId,
+    displayName: "Rogue",
+    initiative: initiativeScore(input.initiative),
+    creatureInit: {
+      kind: "character",
+      characterId: characterId("steady-aim-rogue-character"),
+      characterUnitRefs: [
+        {
+          unit: unitLibrary.requireUnit("weapon_dagger"),
+          supportProfiles: [],
+        },
+        rogueSteadyAimUnitRef(steadyAim),
+      ],
+      classLevels: [{ className: "rogue", level: 3 }],
+      knownLanguages: ["Common"],
+      d20Statistics: testCharacterD20Statistics({ str: 16 }),
+      weaponMasteries: [],
+      armorClass: {
+        ...defaultArmorClassState(),
+        rightHandUse: "mainWeapon",
+      },
+      size: "medium",
+      speed: { walkFeet: movementFeet(30) },
+      currentHp: Hp(12),
+      maxHp: Hp(12),
+      tempHp: Hp(0),
+      selectedLoadout: {
+        weapon: {
+          itemId: battleObjectId("main:weapon_dagger"),
+          unitId: parseSharedUnitId("weapon_dagger"),
+          grip: "one_handed",
+        },
+      },
+      attack: daggerAttack(),
+      unarmedStrike: baseUnarmedStrike(),
+      unitFeatures: [
+        characterBattleFeatureInitForTest(steadyAim, [
+          { className: "rogue", level: classLevel(3) },
+        ]),
+      ],
+    },
+  };
+}
+
+function extraAttackCreatureInit(input: {
+  readonly initiative: number;
+  readonly unitId: ExtraAttackMbtUnitId;
+}): BattleCreatureInit {
+  const unit = extraAttackMbtUnit(input.unitId);
+  if (unit.kind !== "class_feature") {
+    throw new Error("Expected Extra Attack class-feature Unit.");
+  }
+  return {
+    combatantId: fighterId,
+    displayName: `${unit.className} Extra Attacker`,
+    initiative: initiativeScore(input.initiative),
+    creatureInit: {
+      kind: "character",
+      characterId: characterId(`extra-attack-${unit.className}-character`),
+      characterUnitRefs: [
+        {
+          unit: unitLibrary.requireUnit("weapon_dagger"),
+          supportProfiles: [],
+        },
+        extraAttackUnitRef(unit),
+      ],
+      classLevels: [
+        {
+          className: unit.className,
+          level: extraAttackMbtClassLevel(input.unitId),
+        },
+      ],
+      knownLanguages: ["Common"],
+      d20Statistics: testCharacterD20Statistics({ str: 16 }),
+      weaponMasteries: [],
+      armorClass: {
+        ...defaultArmorClassState(),
+        rightHandUse: "mainWeapon",
+      },
+      size: "medium",
+      speed: { walkFeet: movementFeet(30) },
+      currentHp: Hp(12),
+      maxHp: Hp(12),
+      tempHp: Hp(0),
+      selectedLoadout: {
+        weapon: {
+          itemId: battleObjectId("main:weapon_dagger"),
+          unitId: parseSharedUnitId("weapon_dagger"),
+          grip: "one_handed",
+        },
+      },
+      attack: daggerAttack(),
+      unarmedStrike: baseUnarmedStrike(),
+      unitFeatures: [
+        characterBattleFeatureInitForTest(unit, [
+          {
+            className: unit.className,
+            level: classLevel(extraAttackMbtClassLevel(input.unitId)),
+          },
+        ]),
+      ],
+    },
+  };
+}
+
+function adrenalineRushCreatureInit(input: {
+  readonly initiative: number;
+}): BattleCreatureInit {
+  const unit = unitLibrary.requireUnit("orc_adrenaline_rush");
+  return {
+    combatantId: fighterId,
+    displayName: "Orc",
+    initiative: initiativeScore(input.initiative),
+    creatureInit: {
+      kind: "character",
+      characterId: characterId("adrenaline-rush-character"),
+      characterUnitRefs: [adrenalineRushUnitRef(unit)],
+      classLevels: [{ className: "fighter", level: 5 }],
+      knownLanguages: ["Common"],
+      d20Statistics: testCharacterD20Statistics({ str: 16 }),
+      weaponMasteries: [],
+      armorClass: defaultArmorClassState(),
+      size: "medium",
+      speed: { walkFeet: movementFeet(30) },
+      currentHp: Hp(12),
+      maxHp: Hp(12),
+      tempHp: Hp(1),
+      selectedLoadout: {},
+      attack: null,
+      unarmedStrike: baseUnarmedStrike(),
+      resources: [{ unit, usesRemaining: 3 }],
+      unitFeatures: [
+        characterBattleFeatureInitForTest(unit, [
+          { className: "fighter", level: classLevel(5) },
+        ]),
+      ],
+    },
+  };
+}
+
+function activeFeatureSpellBenefitCasterCreatureInit(input: {
+  readonly initiative: number;
+  readonly sourceClassName: ActiveFeatureSpellBenefitSourceClassName;
+}): BattleCreatureInit {
+  const classLevels =
+    input.sourceClassName === "sorcerer"
+      ? ([{ className: "sorcerer" as const, level: classLevel(1) }] as const)
+      : ([
+          { className: "sorcerer" as const, level: classLevel(1) },
+          { className: "wizard" as const, level: classLevel(1) },
+        ] as const);
+  return {
+    combatantId: fighterId,
+    displayName: "Active Feature Spell Benefit Caster",
+    initiative: initiativeScore(input.initiative),
+    creatureInit: {
+      kind: "character",
+      characterId: characterId("active-feature-spell-benefit-caster"),
+      characterUnitRefs: [],
+      classLevels,
+      knownLanguages: ["Common"],
+      d20Statistics: testCharacterD20Statistics(),
+      weaponMasteries: [],
+      armorClass: defaultArmorClassState(),
+      size: "medium",
+      speed: { walkFeet: movementFeet(30) },
+      currentHp: Hp(12),
+      maxHp: Hp(12),
+      tempHp: Hp(0),
+      selectedLoadout: {},
+      attack: null,
+      unarmedStrike: baseUnarmedStrike(),
+      resources: [activeFeatureSpellBenefitResource()],
+      spellcasting: {
+        sourceClassName: input.sourceClassName,
+        spellcastingAbilityModifier: 3,
+        proficiencyBonus: proficiencyBonus(2),
+        canCastSpells: true,
+        cantrips: [spellRecord(rayOfFrostUnitId)],
+        preparedSpells: [],
+        featurePreparedSpells: [],
+        spellbookRitualSpellAccesses: [],
+        invocationSpellAccesses: [],
+        spellSlots: [],
+      },
+    },
+  };
+}
+
+function activeFeatureSpellBenefitTargetCreatureInit(input: {
+  readonly initiative: number;
+}): BattleCreatureInit {
+  return {
+    combatantId: skeletonId,
+    displayName: "Active Feature Spell Benefit Target",
+    initiative: initiativeScore(input.initiative),
+    creatureInit: {
+      kind: "character",
+      characterId: characterId("active-feature-spell-benefit-target"),
+      characterUnitRefs: [],
+      classLevels: [{ className: "fighter", level: classLevel(1) }],
+      knownLanguages: ["Common"],
+      d20Statistics: testCharacterD20Statistics(),
+      weaponMasteries: [],
+      armorClass: defaultArmorClassState(),
+      size: "medium",
+      speed: { walkFeet: movementFeet(30) },
+      currentHp: Hp(12),
+      maxHp: Hp(12),
+      tempHp: Hp(0),
+      selectedLoadout: {},
+      attack: null,
+      unarmedStrike: baseUnarmedStrike(),
+    },
+  };
+}
+
+function scalarBuffCasterCreatureInit(input: {
+  readonly initiative: number;
+}): BattleCreatureInit {
+  const unit = unitLibrary.requireUnit("longstrider");
+  if (unit.kind !== "spell") {
+    throw new Error("Expected Longstrider spell Unit.");
+  }
+  return {
+    combatantId: fighterId,
+    displayName: "Longstrider Caster",
+    initiative: initiativeScore(input.initiative),
+    creatureInit: {
+      kind: "character",
+      characterId: characterId("scalar-buff-caster-character"),
+      characterUnitRefs: [],
+      classLevels: [{ className: "fighter", level: 1 }],
+      knownLanguages: ["Common"],
+      d20Statistics: testCharacterD20Statistics({ str: 16 }),
+      weaponMasteries: [],
+      armorClass: defaultArmorClassState(),
+      size: "medium",
+      speed: { walkFeet: movementFeet(30) },
+      currentHp: Hp(12),
+      maxHp: Hp(12),
+      tempHp: Hp(0),
+      selectedLoadout: {},
+      attack: null,
+      unarmedStrike: baseUnarmedStrike(),
+      spellcasting: {
+        sourceClassName: "fighter",
+        spellcastingAbilityModifier: 3,
+        proficiencyBonus: proficiencyBonus(2),
+        canCastSpells: true,
+        cantrips: [],
+        preparedSpells: [unit],
+        featurePreparedSpells: [],
+        spellbookRitualSpellAccesses: [],
+        invocationSpellAccesses: [],
+        spellSlots: [{ spellLevel: 1, count: 1 }],
+      },
+    },
+  };
+}
+
+function saveGatedSpellOrderingCasterCreatureInit(input: {
+  readonly initiative: number;
+  readonly spellId: "lightning_bolt" | "blindness_deafness";
+  readonly slotLevel: 2 | 3;
+}): BattleCreatureInit {
+  const unit = unitLibrary.requireUnit(input.spellId);
+  if (unit.kind !== "spell") {
+    throw new Error(`Expected ${input.spellId} spell Unit.`);
+  }
+  return {
+    combatantId: fighterId,
+    displayName: "Save-Gated Spell Caster",
+    initiative: initiativeScore(input.initiative),
+    creatureInit: {
+      kind: "character",
+      characterId: characterId("save-gated-spell-ordering-caster-character"),
+      characterUnitRefs: [],
+      classLevels: [{ className: "wizard", level: 5 }],
+      knownLanguages: ["Common"],
+      d20Statistics: testCharacterD20Statistics({ str: 16 }),
+      weaponMasteries: [],
+      armorClass: defaultArmorClassState(),
+      size: "medium",
+      speed: { walkFeet: movementFeet(30) },
+      currentHp: Hp(20),
+      maxHp: Hp(20),
+      tempHp: Hp(0),
+      selectedLoadout: {},
+      attack: null,
+      unarmedStrike: baseUnarmedStrike(),
+      spellcasting: {
+        sourceClassName: "wizard",
+        spellcastingAbilityModifier: 3,
+        proficiencyBonus: proficiencyBonus(2),
+        canCastSpells: true,
+        cantrips: [],
+        preparedSpells: [unit],
+        featurePreparedSpells: [],
+        spellbookRitualSpellAccesses: [],
+        invocationSpellAccesses: [],
+        spellSlots: [{ spellLevel: input.slotLevel, count: 1 }],
+      },
+    },
+  };
+}
+
+function commandOrderingCasterCreatureInit(input: {
+  readonly initiative: number;
+}): BattleCreatureInit {
+  const unit = unitLibrary.requireUnit("command");
+  if (unit.kind !== "spell") {
+    throw new Error("Expected Command spell Unit.");
+  }
+  return {
+    combatantId: fighterId,
+    displayName: "Command Ordering Caster",
+    initiative: initiativeScore(input.initiative),
+    creatureInit: {
+      kind: "character",
+      characterId: characterId("command-ordering-caster-character"),
+      characterUnitRefs: [],
+      classLevels: [{ className: "wizard", level: 5 }],
+      knownLanguages: ["Common"],
+      d20Statistics: testCharacterD20Statistics({ str: 16 }),
+      weaponMasteries: [],
+      armorClass: defaultArmorClassState(),
+      size: "medium",
+      speed: { walkFeet: movementFeet(30) },
+      currentHp: Hp(20),
+      maxHp: Hp(20),
+      tempHp: Hp(0),
+      selectedLoadout: {},
+      attack: null,
+      unarmedStrike: baseUnarmedStrike(),
+      spellcasting: {
+        sourceClassName: "wizard",
+        spellcastingAbilityModifier: 3,
+        proficiencyBonus: proficiencyBonus(2),
+        canCastSpells: true,
+        cantrips: [],
+        preparedSpells: [unit],
+        featurePreparedSpells: [],
+        spellbookRitualSpellAccesses: [],
+        invocationSpellAccesses: [],
+        spellSlots: [{ spellLevel: 1, count: 1 }],
+      },
+    },
+  };
+}
+
+function spellAttackOrderingCasterCreatureInit(input: {
+  readonly initiative: number;
+  readonly spellId: "fire_bolt" | "sorcerous_burst";
+}): BattleCreatureInit {
+  const unit = unitLibrary.requireUnit(input.spellId);
+  if (unit.kind !== "spell") {
+    throw new Error(`Expected ${input.spellId} spell Unit.`);
+  }
+  return {
+    combatantId: fighterId,
+    displayName: "Spell Attack Caster",
+    initiative: initiativeScore(input.initiative),
+    creatureInit: {
+      kind: "character",
+      characterId: characterId("spell-attack-ordering-caster-character"),
+      characterUnitRefs: [],
+      classLevels: [{ className: "sorcerer", level: 1 }],
+      knownLanguages: ["Common"],
+      d20Statistics: testCharacterD20Statistics({ str: 16 }),
+      weaponMasteries: [],
+      armorClass: defaultArmorClassState(),
+      size: "medium",
+      speed: { walkFeet: movementFeet(30) },
+      currentHp: Hp(20),
+      maxHp: Hp(20),
+      tempHp: Hp(0),
+      selectedLoadout: {},
+      attack: null,
+      unarmedStrike: baseUnarmedStrike(),
+      spellcasting: {
+        sourceClassName: "sorcerer",
+        spellcastingAbilityModifier: 3,
+        proficiencyBonus: proficiencyBonus(2),
+        canCastSpells: true,
+        cantrips: [unit],
+        preparedSpells: [],
+        featurePreparedSpells: [],
+        spellbookRitualSpellAccesses: [],
+        invocationSpellAccesses: [],
+        spellSlots: [],
+      },
+    },
+  };
+}
+
+function healingSpellOrderingCasterCreatureInit(input: {
+  readonly initiative: number;
+  readonly spellId: "healing_word" | "mass_healing_word";
+  readonly slotLevel: 1 | 3;
+  readonly characterLevel: number;
+}): BattleCreatureInit {
+  const unit = unitLibrary.requireUnit(input.spellId);
+  if (unit.kind !== "spell") {
+    throw new Error(`Expected ${input.spellId} spell Unit.`);
+  }
+  return {
+    combatantId: fighterId,
+    displayName: "Healing Spell Caster",
+    initiative: initiativeScore(input.initiative),
+    creatureInit: {
+      kind: "character",
+      characterId: characterId("hit-point-restoration-spell-caster"),
+      characterUnitRefs: [],
+      classLevels: [{ className: "cleric", level: input.characterLevel }],
+      knownLanguages: ["Common"],
+      d20Statistics: testCharacterD20Statistics({ str: 10 }),
+      weaponMasteries: [],
+      armorClass: defaultArmorClassState(),
+      size: "medium",
+      speed: { walkFeet: movementFeet(30) },
+      currentHp: Hp(20),
+      maxHp: Hp(20),
+      tempHp: Hp(0),
+      selectedLoadout: {},
+      attack: null,
+      unarmedStrike: baseUnarmedStrike(),
+      spellcasting: {
+        sourceClassName: "cleric",
+        spellcastingAbilityModifier: 3,
+        proficiencyBonus: proficiencyBonus(2),
+        canCastSpells: true,
+        cantrips: [],
+        preparedSpells: [unit],
+        featurePreparedSpells: [],
+        spellbookRitualSpellAccesses: [],
+        invocationSpellAccesses: [],
+        spellSlots: [{ spellLevel: input.slotLevel, count: 1 }],
+      },
+    },
+  };
+}
+
+function preserveLifeOrderingCreatureInit(input: {
+  readonly initiative: number;
+}): BattleCreatureInit {
+  const preserveLife = unitLibrary.requireUnit("cleric_preserve_life");
+  const channelDivinity = unitLibrary.requireUnit("cleric_channel_divinity");
+  const support = battleMagicActionHealingPoolSupportForUnit(preserveLife);
+  if (support === null || support === "unsupported") {
+    throw new Error("Expected Preserve Life healing-pool support.");
+  }
+  return {
+    combatantId: fighterId,
+    displayName: "Life Cleric",
+    initiative: initiativeScore(input.initiative),
+    creatureInit: {
+      kind: "character",
+      characterId: characterId("hit-point-restoration-feature-caster"),
+      characterUnitRefs: [preserveLifeUnitRef(preserveLife, support)],
+      classLevels: [{ className: "cleric", level: classLevel(3) }],
+      knownLanguages: ["Common"],
+      d20Statistics: testCharacterD20Statistics({ str: 10 }),
+      weaponMasteries: [],
+      armorClass: defaultArmorClassState(),
+      size: "medium",
+      speed: { walkFeet: movementFeet(30) },
+      currentHp: Hp(20),
+      maxHp: Hp(20),
+      tempHp: Hp(0),
+      selectedLoadout: {},
+      attack: null,
+      unarmedStrike: baseUnarmedStrike(),
+      resources: [{ unit: channelDivinity, usesRemaining: 2 }],
+      unitFeatures: [
+        characterBattleFeatureInitForTest(preserveLife, [
+          { className: "cleric", level: classLevel(3) },
+        ]),
+      ],
+    },
+  };
+}
+
+function healingOrderingTargetCreatureInit(input: {
+  readonly initiative: number;
+  readonly currentHp: number;
+}): BattleCreatureInit {
+  return {
+    combatantId: skeletonId,
+    displayName: "Healing Target",
+    initiative: initiativeScore(input.initiative),
+    creatureInit: {
+      kind: "character",
+      characterId: characterId("hit-point-restoration-target"),
+      characterUnitRefs: [],
+      classLevels: [{ className: "fighter", level: 1 }],
+      knownLanguages: ["Common"],
+      d20Statistics: testCharacterD20Statistics({ str: 10 }),
+      weaponMasteries: [],
+      armorClass: defaultArmorClassState(),
+      size: "medium",
+      speed: { walkFeet: movementFeet(30) },
+      currentHp: Hp(input.currentHp),
+      maxHp: Hp(20),
+      tempHp: Hp(0),
+      selectedLoadout: {},
+      attack: null,
+      unarmedStrike: baseUnarmedStrike(),
+      conditions: input.currentHp === 0 ? ["unconscious"] : [],
+      ...(input.currentHp === 0
+        ? {
+            zeroHpLifecycle: {
+              policy: "usesDeathSavingThrows" as const,
+              deathSaves: {
+                deathSaves: { successes: 2, failures: 1 },
+                stable: false,
+                dead: false,
+                hpRegained: false,
+              },
+            },
+          }
+        : {}),
+    },
+  };
+}
+
+function deathSavingThrowCharacterInit(input: {
+  readonly combatantId: CombatantId;
+  readonly characterId: string;
+  readonly displayName: string;
+  readonly initiative: number;
+  readonly currentHp: number;
+  readonly zeroHpLifecycle?: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["zeroHpLifecycle"];
+}): BattleCreatureInit {
+  return {
+    combatantId: input.combatantId,
+    displayName: input.displayName,
+    initiative: initiativeScore(input.initiative),
+    creatureInit: {
+      kind: "character",
+      characterId: characterId(input.characterId),
+      characterUnitRefs: [],
+      classLevels: [{ className: "fighter", level: 1 }],
+      knownLanguages: ["Common"],
+      d20Statistics: testCharacterD20Statistics({ str: 10 }),
+      weaponMasteries: [],
+      armorClass: defaultArmorClassState(),
+      size: "medium",
+      speed: { walkFeet: movementFeet(30) },
+      currentHp: Hp(input.currentHp),
+      maxHp: Hp(20),
+      tempHp: Hp(0),
+      selectedLoadout: {},
+      attack: null,
+      unarmedStrike: baseUnarmedStrike(),
+      conditions: input.currentHp === 0 ? ["unconscious"] : [],
+      ...(input.zeroHpLifecycle === undefined
+        ? {}
+        : { zeroHpLifecycle: input.zeroHpLifecycle }),
+    },
+  };
+}
+
+function concentrationBreakTeardownCasterInit(input: {
+  readonly initiative: number;
+}): BattleCreatureInit {
+  const blur = unitLibrary.requireUnit("blur");
+  if (blur.kind !== "spell") {
+    throw new Error("Expected Blur spell Unit.");
+  }
+  return {
+    combatantId: fighterId,
+    displayName: "Concentration Caster",
+    initiative: initiativeScore(input.initiative),
+    creatureInit: {
+      kind: "character",
+      characterId: characterId("concentration-break-teardown-route-caster"),
+      characterUnitRefs: [],
+      classLevels: [{ className: "wizard", level: 3 }],
+      knownLanguages: ["Common"],
+      d20Statistics: testCharacterD20Statistics({ str: 10 }),
+      weaponMasteries: [],
+      armorClass: defaultArmorClassState(),
+      size: "medium",
+      speed: { walkFeet: movementFeet(30) },
+      currentHp: Hp(20),
+      maxHp: Hp(20),
+      tempHp: Hp(0),
+      selectedLoadout: {},
+      attack: null,
+      unarmedStrike: baseUnarmedStrike(),
+      spellcasting: {
+        sourceClassName: "wizard",
+        spellcastingAbilityModifier: 3,
+        proficiencyBonus: proficiencyBonus(2),
+        canCastSpells: true,
+        cantrips: [],
+        preparedSpells: [blur],
+        featurePreparedSpells: [],
+        spellbookRitualSpellAccesses: [],
+        invocationSpellAccesses: [],
+        spellSlots: [{ spellLevel: 2, count: 2 }],
+      },
+    },
+  };
+}
+
+function preserveLifeUnitRef(
+  unit: UnitRecord,
+  support: Exclude<
+    ReturnType<typeof battleMagicActionHealingPoolSupportForUnit>,
+    null | "unsupported"
+  >,
+): Extract<
+  BattleCreatureInit["creatureInit"],
+  { readonly kind: "character" }
+>["characterUnitRefs"][number] {
+  const unitRef = battleUnitRefWithSupportProfiles({
+    unitRef: { unitId: unit.id },
+    unit,
+    classLevels: [{ className: "cleric", level: classLevel(3) }],
+  });
+  if (Either.isLeft(unitRef)) {
+    throw new Error(unitRef.left.message);
+  }
+  if (
+    !unitRef.right.supportProfiles.some(
+      (candidate) => JSON.stringify(candidate) === JSON.stringify(support),
+    )
+  ) {
+    throw new Error("Expected Preserve Life healing-pool support profile.");
+  }
+  return unitRef.right;
+}
+
+function extraAttackUnitRef(
+  unit: UnitRecord,
+): Extract<
+  BattleCreatureInit["creatureInit"],
+  { readonly kind: "character" }
+>["characterUnitRefs"][number] {
+  const unitRef = battleUnitRefWithSupportProfiles({
+    unitRef: { unitId: unit.id },
+    unit,
+  });
+  if (Either.isLeft(unitRef)) {
+    throw new Error(unitRef.left.message);
+  }
+  return unitRef.right;
+}
+
+function adrenalineRushUnitRef(
+  unit: UnitRecord,
+): Extract<
+  BattleCreatureInit["creatureInit"],
+  { readonly kind: "character" }
+>["characterUnitRefs"][number] {
+  const unitRef = battleUnitRefWithSupportProfiles({
+    unitRef: { unitId: unit.id },
+    unit,
+  });
+  if (Either.isLeft(unitRef)) {
+    throw new Error(unitRef.left.message);
+  }
+  return unitRef.right;
+}
+
+function activeFeatureSpellBenefitResource(): NonNullable<
+  Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["resources"]
+>[number] {
+  const unit = unitLibrary.requireUnit(sorcererInnateSorceryUnitId);
+  if (
+    unit.kind !== "class_feature" ||
+    unit.mechanics.family !== "activation" ||
+    !("resource" in unit.mechanics)
+  ) {
+    throw new Error("Expected active feature spell benefit resource Unit.");
+  }
+  return { unit };
+}
+
+function rogueSteadyAimUnitRef(
+  unit: UnitRecord,
+): Extract<
+  BattleCreatureInit["creatureInit"],
+  { readonly kind: "character" }
+>["characterUnitRefs"][number] {
+  const unitRef = battleUnitRefWithSupportProfiles({
+    unitRef: { unitId: unit.id },
+    unit,
+    classLevels: [{ className: "rogue", level: 3 }],
+  });
+  if (Either.isLeft(unitRef)) {
+    throw new Error(unitRef.left.message);
+  }
+  return unitRef.right;
+}
+
+function resourceUsesRemaining(
+  session: BattleRuntimeSession,
+  unitId: string,
+): number {
+  const state = session.state;
+  const actor = state.combatants.get(fighterId);
+  if (actor?.origin.kind !== "character") return 1;
+  const resourcePoolRef = session.context.characters
+    .get(fighterId)
+    ?.resourceOwnership.find(
+      (ownership) => ownership.unit.id === unitId,
+    )?.resourcePoolRef;
+  if (resourcePoolRef === undefined) return 1;
+  const resource = actor.origin.resources.find(
+    (candidate) => candidate.resourcePoolRef === resourcePoolRef,
+  );
+  if (
+    resource === undefined ||
+    characterBattleResourceUsage(resource) !== "limited"
+  ) {
+    return 1;
+  }
+  return "usesRemaining" in resource ? resource.usesRemaining : 1;
+}
+
+function daggerAttack(): NonNullable<
+  Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["attack"]
+> {
+  const weapon = unitLibrary.requireUnit("weapon_dagger");
+  if (weapon.kind !== "weapon") {
+    throw new Error("Expected Dagger weapon Unit.");
+  }
+
+  return {
+    kind: "weapon",
+    ...admitCharacterWeaponAttackExecutionWeapon(
+      weapon,
+      battleObjectId(`main:${weapon.id}`),
+      [],
+    ),
+    ability: "str",
+    abilityModifier: abilityModifier(3),
+  };
+}
+
+function baseUnarmedStrike(): Extract<
+  BattleCreatureInit["creatureInit"],
+  { readonly kind: "character" }
+>["unarmedStrike"] {
+  return {
+    kind: "unarmedStrike",
+    effect: {
+      kind: "damage",
+      damage: { kind: "base", damageType: "bludgeoning", flat: 1 },
+    },
+    attackAbility: "str",
+    attackAbilityModifier: abilityModifier(3),
+    attackBonus: attackBonus(5),
+    damageAbilityModifier: abilityModifier(3),
+  };
+}
+
+function skeletonCreatureInit(input: {
+  readonly initiative: number;
+}): BattleCreatureInit {
+  return {
+    combatantId: skeletonId,
+    displayName: "Skeleton",
+    initiative: initiativeScore(input.initiative),
+    creatureInit: {
+      kind: "statBlock",
+      source: Either.getOrThrow(
+        battleStatBlockCombatantSource(skeletonMultiattackStatBlock()),
+      ),
+      currentHp: Hp(13),
+      tempHp: Hp(0),
+    },
+  };
+}
+
+function skeletonMultiattackStatBlock(): StatBlockRecord {
+  const base = statBlockCatalog.requireStatBlock("stat_block_skeleton");
+  return {
+    ...base,
+    statBlock: {
+      ...base.statBlock,
+      actions: {
+        ...base.statBlock.actions,
+        multiattacks: [
+          {
+            name: "Multiattack",
+            dispatches: [
+              { name: "Shortsword", count: { kind: "literal", value: 2 } },
+            ],
+          },
+        ],
+      },
+    },
+  };
+}
+
+function requireHole(
+  holes: readonly BattleHole[],
+  kind: BattleHole["kind"],
+): BattleHole {
+  const hole = holes.find((candidate) => candidate.kind === kind);
+  if (hole == null) {
+    throw new Error(`Expected ${kind} hole.`);
+  }
+
+  return hole;
+}
+
+function requireTypedHole<const Kind extends BattleHole["kind"]>(
+  holes: readonly BattleHole[],
+  kind: Kind,
+): Extract<BattleHole, { readonly kind: Kind }> {
+  const hole = requireHole(holes, kind);
+  if (hole.kind === kind) {
+    // The equality check proves the runtime kind; TypeScript cannot express
+    // that refinement for this generic Extract.
+    return hole as Extract<BattleHole, { readonly kind: Kind }>;
+  }
+
+  throw new Error(`Expected ${kind} hole.`);
+}
+
+function requireResultHole<const Kind extends BattleHole["kind"]>(
+  result: BattleResolutionResult,
+  kind: Kind,
+): Extract<BattleHole, { readonly kind: Kind }> {
+  if (result.tag !== "needsHoles") {
+    throw new Error(`Expected ${kind} hole result, got ${result.tag}.`);
+  }
+  return requireTypedHole(result.holes, kind);
+}
+
+function requireResolved(
+  result: BattleResolutionResult,
+): Extract<BattleResolutionResult, { readonly tag: "resolved" }> {
+  if (result.tag !== "resolved") {
+    throw new Error(
+      `Expected resolved battle result, got ${result.tag}: ${
+        "message" in result ? result.message : ""
+      }`,
+    );
+  }
+  return result;
+}
+
+function fillsWithMbtSpellCastReactionFacts(
+  holes: readonly BattleHole[],
+  fills: readonly BattleFill[],
+): readonly BattleFill[] {
+  const filledHoleIds = new Set(
+    fills
+      .filter((fill) => fill.kind === "targetSpatialFacts")
+      .map((fill) => fill.holeId),
+  );
+  const spellCastReactionFactFills = holes.flatMap(
+    (
+      hole,
+    ): readonly Extract<
+      BattleFill,
+      { readonly kind: "targetSpatialFacts" }
+    >[] =>
+      hole.kind === "targetSpatialFacts" && !filledHoleIds.has(hole.holeId)
+        ? [
+            {
+              kind: "targetSpatialFacts",
+              holeId: hole.holeId,
+              spatialFacts: [],
+            },
+          ]
+        : [],
+  );
+  return spellCastReactionFactFills.length === 0
+    ? fills
+    : [...fills, ...spellCastReactionFactFills];
+}
+
+function targetFill(
+  hole: BattleHole,
+  targetId: CombatantId,
+): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  if (hole.kind !== "targetChoice") {
+    throw new Error("Expected an attack target-choice hole.");
+  }
+  const attackSpatialFacts =
+    hole.attack === undefined
+      ? []
+      : [
+          hole.attack.targetConstraint === "meleeReach"
+            ? {
+                kind: "attackTargetInMeleeReach" as const,
+                actorId: hole.attack.actorId,
+                targetId,
+                ...hole.attack.selection,
+              }
+            : {
+                kind: "attackTargetInRangedRange" as const,
+                actorId: hole.attack.actorId,
+                targetId,
+                ...hole.attack.selection,
+                rangeBand: "normal" as const,
+              },
+        ];
+  return {
+    kind: "targetChoice",
+    holeId: hole.holeId,
+    value: targetId,
+    spatialFacts: [
+      ...attackSpatialFacts,
+      {
+        kind: "attackerAllyWithin5FeetOfTarget",
+        attackerId: fighterId,
+        targetId,
+        allyId: combatantId("ally"),
+      },
+    ],
+  };
+}
+
+function spellTargetChoiceFill(
+  hole: BattleHole,
+  targetId: CombatantId,
+  subject: SpellTargetSubject,
+): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  if (hole.kind !== "targetChoice") {
+    throw new Error("Expected target choice hole.");
+  }
+  return {
+    kind: "targetChoice",
+    holeId: hole.holeId,
+    value: targetId,
+    spatialFacts: [
+      {
+        kind: "spellTarget",
+        casterId: subject.actorId,
+        targetId,
+        sourceProcedureRef: subject.procedureRef,
+      },
+    ],
+  };
+}
+
+function requireSpellTargetSubject(subject: BattleSubject): SpellTargetSubject {
+  if (subject.tag === "actionSpell" || subject.tag === "bonusActionSpell") {
+    return subject;
+  }
+  throw new Error(
+    "Expected the current ordering stage to own a spell subject.",
+  );
+}
+
+function isSpellProcedureRollHole(
+  hole: Extract<BattleHole, { readonly kind: "rolledDice" }>,
+): boolean {
+  return "sourceProcedureRef" in hole;
+}
+
+function chainedAttackProcedureTargetFill(
+  hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
+  targetId: CombatantId,
+): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  return {
+    kind: "targetChoice",
+    holeId: hole.holeId,
+    value: targetId,
+    spatialFacts: [
+      {
+        kind: "spellTarget",
+        casterId: spellCasterId,
+        targetId,
+        sourceProcedureRef:
+          battleProcedureExecutionRefForTest(chromaticOrbUnitId),
+      },
+    ],
+  };
+}
+
+function chainedAttackProcedureLeapTargetFill(
+  hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
+): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  return {
+    kind: "targetChoice",
+    holeId: hole.holeId,
+    value: chainedAttackProcedureSecondTargetId,
+    spatialFacts: [
+      {
+        kind: "spellLeapTargetWithinRange",
+        previousTargetId: spellTargetId,
+        targetId: chainedAttackProcedureSecondTargetId,
+        sourceProcedureRef:
+          battleProcedureExecutionRefForTest(chromaticOrbUnitId),
+        rangeFeet: movementFeet(30),
+      },
+    ],
+  };
+}
+
+function spellTargetListFill(
+  hole: BattleHole,
+  subject: SpellTargetSubject,
+  targetIds: readonly CombatantId[],
+): Extract<BattleFill, { readonly kind: "spellTargetList" }> {
+  if (hole.kind !== "spellTargetList") {
+    throw new Error("Expected spell target-list hole.");
+  }
+  return {
+    kind: "spellTargetList",
+    holeId: hole.holeId,
+    value: { targetIds },
+    spatialFacts: targetIds.map((targetId) => ({
+      kind: "spellTarget",
+      casterId: subject.actorId,
+      targetId,
+      sourceProcedureRef: subject.procedureRef,
+    })),
+  };
+}
+
+function saveGatedSpellConditionChoiceFill(
+  hole: BattleHole,
+  value: "blinded" | "deafened",
+): Extract<BattleFill, { readonly kind: "conditionChoice" }> {
+  if (hole.kind !== "conditionChoice") {
+    throw new Error("Expected condition choice hole.");
+  }
+  return {
+    kind: "conditionChoice",
+    holeId: hole.holeId,
+    value,
+  };
+}
+
+function spellDamageTypeChoiceFill(
+  hole: BattleHole,
+  value: DamageType,
+): Extract<BattleFill, { readonly kind: "damageTypeChoice" }> {
+  if (hole.kind !== "damageTypeChoice") {
+    throw new Error("Expected damage type choice hole.");
+  }
+  return {
+    kind: "damageTypeChoice",
+    holeId: hole.holeId,
+    value,
+  };
+}
+
+function saveGatedSpellSavingThrowOutcomeFill(
+  hole: BattleHole,
+  outcomes: readonly {
+    readonly targetId: CombatantId;
+    readonly succeeded: boolean;
+  }[],
+): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
+  if (hole.kind !== "savingThrowOutcome") {
+    throw new Error("Expected Saving Throw outcome hole.");
+  }
+  return {
+    kind: "savingThrowOutcome",
+    holeId: hole.holeId,
+    value:
+      "outcomeTargeting" in hole && hole.outcomeTargeting === "area"
+        ? {
+            area: {
+              originAnchorId: fighterId,
+              affectedTargetIds: outcomes.map((outcome) => outcome.targetId),
+            },
+            outcomes,
+          }
+        : { outcomes },
+  };
+}
+
+function deathSavingThrowFill(
+  hole: Extract<BattleHole, { readonly kind: "deathSavingThrow" }>,
+  roll: number,
+): Extract<BattleFill, { readonly kind: "deathSavingThrow" }> {
+  return {
+    kind: "deathSavingThrow",
+    holeId: hole.holeId,
+    value: DieRollResult(roll),
+  };
+}
+
+function concentrationSavingThrowFill(
+  hole: Extract<BattleHole, { readonly kind: "concentrationSavingThrow" }>,
+  succeeded: boolean,
+): Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }> {
+  return {
+    kind: "concentrationSavingThrow",
+    holeId: hole.holeId,
+    value: {
+      succeeded,
+      withoutRoll: true,
+    },
+  };
+}
+
+function commandOptionFill(
+  hole: BattleHole,
+  value: Exclude<CommandOrderingPendingOption, "none">,
+): Extract<BattleFill, { readonly kind: "commandOptionChoice" }> {
+  if (hole.kind !== "commandOptionChoice") {
+    throw new Error("Expected Command option-choice hole.");
+  }
+  return {
+    kind: "commandOptionChoice",
+    holeId: hole.holeId,
+    value,
+  };
+}
+
+function movementFill(
+  hole: BattleHole,
+  value: { readonly movementCostFeet: number },
+): Extract<BattleFill, { readonly kind: "movement" }> {
+  if (hole.kind !== "movement") {
+    throw new Error("Expected movement hole.");
+  }
+
+  return {
+    kind: "movement",
+    holeId: hole.holeId,
+    value: {
+      speedKind: "walk",
+      movementCostFeet: movementFeet(value.movementCostFeet),
+      provokedOpportunityAttacks: [],
+    },
+  };
+}
+
+function commandApproachMovementFill(
+  hole: BattleHole,
+  value: {
+    readonly movementCostFeet: number;
+    readonly movedWithinFiveFeetOfCaster: boolean;
+  },
+): Extract<BattleFill, { readonly kind: "movement" }> {
+  if (hole.kind !== "movement") {
+    throw new Error("Expected Command Approach movement hole.");
+  }
+  return {
+    kind: "movement",
+    holeId: hole.holeId,
+    value: {
+      speedKind: "walk",
+      movementCostFeet: movementFeet(value.movementCostFeet),
+      provokedOpportunityAttacks: [],
+      commandApproach: {
+        kind: "commandApproachShortestDirectRouteTowardCaster",
+        movedWithinFiveFeetOfCaster: value.movedWithinFiveFeetOfCaster,
+      },
+    },
+  };
+}
+
+function commandFleeMovementFill(
+  hole: BattleHole,
+  value: {
+    readonly movementCostFeet: number;
+    readonly provokedOpportunityAttacks: Extract<
+      BattleFill,
+      { readonly kind: "movement" }
+    >["value"]["provokedOpportunityAttacks"];
+  },
+): Extract<BattleFill, { readonly kind: "movement" }> {
+  if (hole.kind !== "movement") {
+    throw new Error("Expected Command Flee movement hole.");
+  }
+  return {
+    kind: "movement",
+    holeId: hole.holeId,
+    value: {
+      speedKind: "walk",
+      movementCostFeet: movementFeet(value.movementCostFeet),
+      provokedOpportunityAttacks: value.provokedOpportunityAttacks,
+      commandFlee: {
+        kind: "commandFleeFastestAvailableRouteAwayFromCaster",
+      },
+    },
+  };
+}
+
+function spellTargetAllocationFill(
+  hole: BattleHole,
+  targetId: CombatantId,
+  count: number,
+  sourceProcedureRef: BattleProcedureExecutionRef,
+): Extract<BattleFill, { readonly kind: "spellTargetAllocation" }> {
+  if (hole.kind !== "spellTargetAllocation") {
+    throw new Error("Expected spell target allocation hole.");
+  }
+
+  return {
+    kind: "spellTargetAllocation",
+    holeId: hole.holeId,
+    value: { allocations: [{ targetId, count }] },
+    spatialFacts: [
+      {
+        kind: "spellTarget",
+        casterId: fighterId,
+        targetId,
+        sourceProcedureRef,
+      },
+    ],
+  };
+}
+
+function attackRollFill(
+  hole: BattleHole,
+  value: {
+    readonly total: number;
+    readonly naturalD20: number;
+    readonly rollMode?: "normal" | "advantage" | "disadvantage";
+  },
+): Extract<BattleFill, { readonly kind: "attackRoll" }> {
+  return {
+    kind: "attackRoll",
+    holeId: hole.holeId,
+    value: {
+      total: value.total,
+      naturalD20: DieRollResult(value.naturalD20),
+      ...(value.rollMode === undefined ? {} : { rollMode: value.rollMode }),
+    },
+  };
+}
+
+function damageRollFill(
+  hole: BattleHole,
+  value: number,
+): Extract<BattleFill, { readonly kind: "rolledDice" }> {
+  return damageRollFillWithGroups(hole, [[value]]);
+}
+
+function chainedAttackProcedureDamageRollFill(
+  hole: Extract<BattleHole, { readonly kind: "rolledDice" }>,
+  faces: readonly number[],
+): Extract<BattleFill, { readonly kind: "rolledDice" }> {
+  return damageRollFillWithGroups(hole, [faces]);
+}
+
+function damageRollFillWithGroups(
+  hole: BattleHole,
+  groups: readonly (readonly number[])[],
+  selectedAttackDamageRiderProcedureRefs?: readonly BattleProcedureExecutionRef[],
+): Extract<BattleFill, { readonly kind: "rolledDice" }> {
+  if (groups.length === 0 || groups.some((group) => group.length === 0)) {
+    throw new Error("Expected non-empty rolled damage groups.");
+  }
+
+  return {
+    kind: "rolledDice",
+    holeId: hole.holeId,
+    ...(selectedAttackDamageRiderProcedureRefs === undefined
+      ? {}
+      : { selectedAttackDamageRiderProcedureRefs }),
+    value: rolledDiceGroups(groups),
+  };
+}
+
+function preserveLifeDistributionFill(
+  hole: BattleHole,
+  allocations: readonly {
+    readonly targetId: CombatantId;
+    readonly hitPoints: number;
+  }[],
+): Extract<BattleFill, { readonly kind: "hitPointHealingDistribution" }> {
+  if (hole.kind !== "hitPointHealingDistribution") {
+    throw new Error("Expected Hit Point healing distribution hole.");
+  }
+  return {
+    kind: "hitPointHealingDistribution",
+    holeId: hole.holeId,
+    value: {
+      allocations: allocations.map((allocation) => ({
+        targetId: allocation.targetId,
+        hitPoints: Hp(allocation.hitPoints),
+      })),
+    },
+    spatialFacts: allocations
+      .filter((allocation) => allocation.targetId !== fighterId)
+      .map((allocation) => ({
+        kind: "magicActionHealingPoolTargetWithinRange" as const,
+        actorId: fighterId,
+        targetId: allocation.targetId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          "cleric_preserve_life",
+        ),
+        rangeFeet: movementFeet(30),
+      })),
+  };
+}
+
+function rolledDiceGroups(
+  groups: readonly (readonly number[])[],
+): Extract<BattleFill, { readonly kind: "rolledDice" }>["value"] {
+  const [firstGroup, ...restGroups] = groups;
+  if (firstGroup === undefined) {
+    throw new Error("Expected at least one rolled damage group.");
+  }
+
+  return [
+    rolledDiceGroup(firstGroup),
+    ...restGroups.map((group) => rolledDiceGroup(group)),
+  ];
+}
+
+function rolledDiceGroup(
+  group: readonly number[],
+): Extract<BattleFill, { readonly kind: "rolledDice" }>["value"][number] {
+  const [first, ...rest] = group;
+  if (first === undefined) {
+    throw new Error("Expected at least one die result.");
+  }
+
+  return {
+    results: [DieRollResult(first), ...rest.map(DieRollResult)],
+  };
+}
+
+function reducerRouteHolesFromRuntime(
+  holes: readonly Pick<BattleHole, "kind">[],
+): readonly ReducerRouteHole[] {
+  return [...new Set(holes.flatMap(reducerRouteHolesFromRuntimeHole))].sort();
+}
+
+function reducerRouteHolesFromRuntimeHole(
+  hole: Pick<BattleHole, "kind">,
+): readonly ReducerRouteHole[] {
+  if (hole.kind === "abilityCheck") return ["abilityCheck"];
+  if (hole.kind === "abilityChoice") return ["abilityChoice"];
+  if (hole.kind === "attackDamageDisposition") {
+    return ["attackDamageDisposition"];
+  }
+  if (hole.kind === "attackRoll") return ["attackRoll"];
+  if (hole.kind === "commandOptionChoice") return ["commandOptionChoice"];
+  if (hole.kind === "companionReappearanceInitiative") {
+    return ["companionReappearanceInitiative"];
+  }
+  if (hole.kind === "concentrationSavingThrow") {
+    return ["concentrationSavingThrow"];
+  }
+  if (hole.kind === "conditionChoice") return ["conditionChoice"];
+  if (hole.kind === "damageTypeChoice") return ["damageTypeChoice"];
+  if (hole.kind === "deathSavingThrow") return ["deathSavingThrow"];
+  if (hole.kind === "grappleOutcome") return ["grappleOutcome"];
+  if (hole.kind === "gustOfWindLineDirectionChoice") {
+    return ["gustOfWindLineDirectionChoice"];
+  }
+  // Held-object inventories are caller/table-supplied boundary facts, not a
+  // durable reducer-route frontier.
+  if (hole.kind === "heldObjectFacts") return [];
+  if (hole.kind === "hitPointHealingDistribution") {
+    return ["hitPointHealingDistribution"];
+  }
+  if (hole.kind === "interruptDecision") return ["interruptDecision"];
+  if (hole.kind === "levitateAltitudeChange") {
+    return ["levitateAltitudeChange"];
+  }
+  if (hole.kind === "levitateInitialRise") return ["levitateInitialRise"];
+  // Magic Weapon target item identity is caller/table-supplied inventory
+  // evidence, not a durable reducer-route frontier.
+  if (hole.kind === "magicWeaponTargetItem") return [];
+  if (hole.kind === "movement") return ["movement"];
+  if (hole.kind === "objectDropResolution") return ["objectDropResolution"];
+  // Object target choice is a table-owned boundary fact, outside this route vocabulary.
+  if (hole.kind === "objectTargetChoice") return [];
+  if (hole.kind === "ongoingSpellTargetChoice") {
+    return ["ongoingSpellTargetChoice"];
+  }
+  if (hole.kind === "rolledDice") return ["rolledDice"];
+  if (hole.kind === "sanctuaryInterdictionOutcome") {
+    return ["sanctuaryInterdictionOutcome"];
+  }
+  if (hole.kind === "savingThrowOutcome") return ["savingThrowOutcome"];
+  if (hole.kind === "selfTransformationModeChoice") {
+    return ["selfTransformationModeChoice"];
+  }
+  if (
+    hole.kind === "helpAttackAllyDecision" ||
+    hole.kind === "helpAttackEnemyDecision"
+  ) {
+    throw new Error(
+      "Generic battle runtime MBT leaves Help relationship decisions to the focused Help witness.",
+    );
+  }
+  if (hole.kind === "shoveOutcome") return ["shoveOutcome"];
+  if (hole.kind === "skillChoice") return ["skillChoice"];
+  if (hole.kind === "slowSomaticSpellFailureOutcome") {
+    return ["slowSomaticSpellFailureOutcome"];
+  }
+  if (hole.kind === "spellcastingAbilityCheck") {
+    return ["spellcastingAbilityCheck"];
+  }
+  if (hole.kind === "spellTargetAllocation") return ["spellTargetAllocation"];
+  if (hole.kind === "spellTargetList") return ["spellTargetList"];
+  if (hole.kind === "statBlockRechargeRoll") {
+    return ["statBlockRechargeRoll"];
+  }
+  if (hole.kind === "targetAbilityChoices") return ["targetAbilityChoices"];
+  if (hole.kind === "targetChoice") return ["targetChoice"];
+  if (hole.kind === "unitFeatureDecision") return ["unitFeatureDecision"];
+  if (hole.kind === "wildShapeEquipmentDisposition") {
+    return ["wildShapeEquipmentDisposition"];
+  }
+
+  throw new Error(`Unexpected reducer-route hole: ${hole.kind}.`);
+}
+
+function projectHoles(holes: readonly BattleHole[]): readonly MbtHole[] {
+  return holes.flatMap(projectHole).sort();
+}
+
+function deathSavingThrowHoleFromRuntime(
+  hole: Pick<BattleHole, "kind">,
+): DeathSavingThrowMbtHole {
+  if (hole.kind === "deathSavingThrow") {
+    return "DeathSavingThrow";
+  }
+
+  throw new Error(`Unexpected Death Saving Throw route hole: ${hole.kind}`);
+}
+
+function projectHole(hole: BattleHole): readonly MbtHole[] {
+  if (hole.kind === "shoveOutcome") {
+    throw new Error("Battle runtime MBT does not model Shove holes.");
+  }
+  if (hole.kind === "unitFeatureDecision") {
+    throw new Error(
+      "Battle runtime MBT does not model Unit Feature decision holes.",
+    );
+  }
+  if (hole.kind === "abilityChoice") {
+    throw new Error("Battle runtime MBT does not model ability choice holes.");
+  }
+  if (hole.kind === "conditionChoice") {
+    throw new Error(
+      "Battle runtime MBT does not model condition choice holes.",
+    );
+  }
+  if (hole.kind === "spellAreaChoice") {
+    throw new Error("Battle runtime MBT does not model spell area holes.");
+  }
+  if (hole.kind === "sanctuaryInterdictionOutcome") {
+    throw new Error("Battle runtime MBT does not model Sanctuary holes.");
+  }
+  if (hole.kind === "dancingLightsPlacement") {
+    throw new Error(
+      "Battle runtime MBT does not model Dancing Lights placement holes.",
+    );
+  }
+  if (hole.kind === "thaumaturgyActiveOneMinuteEffectCount") {
+    throw new Error(
+      "Battle runtime MBT does not model Thaumaturgy active-effect count holes.",
+    );
+  }
+  if (hole.kind === "targetSpatialFacts") {
+    // The active MBT suites do not branch on Counterspell table facts; they
+    // prefill this projection-only hole with an empty fact set before submit.
+    return [];
+  }
+  if (hole.kind === "teleportDestination") {
+    throw new Error(
+      "Battle runtime MBT does not model teleport destination holes.",
+    );
+  }
+  if (hole.kind === "spiritualWeaponForcePosition") {
+    throw new Error(
+      "Battle runtime aggregate MBT does not model Spiritual Weapon force-position holes.",
+    );
+  }
+  if (hole.kind === "movableZoneRamMovement") {
+    throw new Error(
+      "Battle runtime MBT does not model movable zone ram movement holes.",
+    );
+  }
+  if (hole.kind === "movableZoneRepositionMovement") {
+    throw new Error(
+      "Battle runtime MBT does not model movable zone reposition movement holes.",
+    );
+  }
+  if (hole.kind === "selfTransformationModeChoice") {
+    throw new Error(
+      "Battle runtime MBT does not model self-transformation mode holes.",
+    );
+  }
+  if (hole.kind === "objectContactTargets") {
+    throw new Error(
+      "Battle runtime MBT does not model object contact target holes.",
+    );
+  }
+  if (hole.kind === "gustOfWindLineDirectionChoice") {
+    throw new Error(
+      "Battle runtime MBT does not model Gust of Wind direction-choice holes.",
+    );
+  }
+  if (hole.kind === "objectDropResolution") {
+    throw new Error(
+      "Battle runtime MBT does not model object drop resolution holes.",
+    );
+  }
+  if (hole.kind === "magicWeaponTargetItem") {
+    throw new Error(
+      "Battle runtime MBT does not model Magic Weapon target-item holes.",
+    );
+  }
+  if (hole.kind === "ongoingSpellTargetChoice") {
+    throw new Error(
+      "Battle runtime MBT does not model ongoing spell target holes.",
+    );
+  }
+  if (hole.kind === "spellcastingAbilityCheck") {
+    throw new Error(
+      "Battle runtime MBT does not model spellcasting ability check holes.",
+    );
+  }
+  if (hole.kind === "levitateAltitudeChange") {
+    return ["LevitateAltitudeChange"];
+  }
+  if (hole.kind === "levitateInitialRise") {
+    return ["LevitateInitialRise"];
+  }
+  if (hole.kind === "slowSomaticSpellFailureOutcome") {
+    return ["SlowSomaticSpellFailureOutcome"];
+  }
+  if (hole.kind === "targetAbilityChoices") {
+    throw new Error(
+      "Battle runtime MBT does not model target ability choices holes.",
+    );
+  }
+  if (hole.kind === "hitPointHealingDistribution") {
+    throw new Error(
+      "Battle runtime MBT does not model Hit Point healing distribution holes.",
+    );
+  }
+  if (hole.kind === "wildShapeEquipmentDisposition") {
+    throw new Error(
+      "Generic battle runtime MBT leaves Wild Shape equipment disposition holes to focused Wild Shape equipment witnesses.",
+    );
+  }
+  if (hole.kind === "findFamiliarConnection") {
+    throw new Error(
+      "Generic battle runtime MBT leaves companion connection holes to focused companion witnesses.",
+    );
+  }
+  if (
+    hole.kind === "companionReappearancePlacement" ||
+    hole.kind === "companionReappearanceInitiative"
+  ) {
+    throw new Error(
+      "Generic battle runtime MBT leaves companion reappearance holes to focused companion witnesses.",
+    );
+  }
+  return [
+    Match.value(hole)
+      .pipe(
+        Match.when({ kind: "targetChoice" }, () => "TargetChoice" as const),
+        Match.when(
+          { kind: "objectTargetChoice" },
+          () => "ObjectTargetChoice" as const,
+        ),
+        Match.when(
+          { kind: "spellTargetAllocation" },
+          () => "SpellTargetAllocation" as const,
+        ),
+        Match.when({ kind: "spellTargetList" }, () => {
+          throw new Error(
+            "Battle runtime MBT does not model spell target-list holes.",
+          );
+        }),
+        Match.when({ kind: "attackRoll" }, () => {
+          return "AttackRoll" as const;
+        }),
+        Match.when({ kind: "rolledDice" }, (rolledDice) => {
+          if (isSpellProcedureRollHole(rolledDice)) {
+            return "SpellDamageRoll" as const;
+          }
+          return "DamageRoll" as const;
+        }),
+        Match.when({ kind: "deathSavingThrow" }, () => {
+          throw new Error(
+            "Battle runtime aggregate MBT does not model Death Saving Throw holes.",
+          );
+        }),
+        Match.when({ kind: "statBlockRechargeRoll" }, () => {
+          return "StatBlockRechargeRoll" as const;
+        }),
+        Match.when({ kind: "savingThrowOutcome" }, () => {
+          return "SavingThrowOutcome" as const;
+        }),
+        Match.when({ kind: "skillChoice" }, () => {
+          throw new Error(
+            "Battle runtime MBT does not model skill choice holes.",
+          );
+        }),
+        Match.when({ kind: "commandOptionChoice" }, () => {
+          throw new Error(
+            "Battle runtime MBT does not model Command option holes.",
+          );
+        }),
+        Match.when({ kind: "heldObjectFacts" }, () => {
+          throw new Error(
+            "Battle runtime MBT does not model held-object fact holes.",
+          );
+        }),
+        Match.when({ kind: "concentrationSavingThrow" }, () => {
+          throw new Error(
+            "Battle runtime MBT does not model concentration saving throw holes.",
+          );
+        }),
+        Match.when({ kind: "damageTypeChoice" }, () => {
+          throw new Error(
+            "Battle runtime MBT does not model damage type holes.",
+          );
+        }),
+        Match.when({ kind: "interruptDecision" }, () => {
+          throw new Error("Battle runtime MBT does not model reaction holes.");
+        }),
+        Match.when({ kind: "movement" }, () => {
+          throw new Error("Battle runtime MBT does not model movement holes.");
+        }),
+      )
+      .pipe(
+        Match.when({ kind: "toolPossessionFacts" }, () => {
+          throw new Error(
+            "Battle runtime MBT does not model tool possession holes.",
+          );
+        }),
+        Match.when({ kind: "abilityCheck" }, () => {
+          throw new Error(
+            "Battle runtime MBT does not model ability check holes.",
+          );
+        }),
+        Match.when({ kind: "grappleOutcome" }, () => {
+          throw new Error("Battle runtime MBT does not model Grapple holes.");
+        }),
+        Match.when({ kind: "attackDamageDisposition" }, () => {
+          throw new Error(
+            "Battle runtime MBT does not model attack damage disposition holes.",
+          );
+        }),
+        Match.when({ kind: "damageRelationshipDecisions" }, () => {
+          throw new Error(
+            "Battle runtime MBT does not model damage relationship decision holes.",
+          );
+        }),
+        Match.when({ kind: "helpAttackAllyDecision" }, () => {
+          throw new Error(
+            "Generic battle runtime MBT leaves Help ally decisions to the focused Help witness.",
+          );
+        }),
+        Match.when({ kind: "helpAttackEnemyDecision" }, () => {
+          throw new Error(
+            "Generic battle runtime MBT leaves Help enemy decisions to the focused Help witness.",
+          );
+        }),
+        Match.when({ kind: "cunningStrikeEndTurnCoverFacts" }, () => {
+          throw new Error(
+            "Battle runtime MBT does not model Cunning Strike end-turn cover fact holes.",
+          );
+        }),
+        Match.exhaustive,
+      ),
+  ];
+}
+
+function holeName(raw: unknown): MbtHole {
+  const tag = quintVariantTag(raw);
+  if (
+    tag === "TargetChoice" ||
+    tag === "ObjectTargetChoice" ||
+    tag === "SpellTargetAllocation" ||
+    tag === "SavingThrowOutcome" ||
+    tag === "AttackRoll" ||
+    tag === "DamageRoll" ||
+    tag === "SpellDamageRoll" ||
+    tag === "StatBlockRechargeRoll" ||
+    tag === "LevitateAltitudeChange" ||
+    tag === "LevitateInitialRise" ||
+    tag === "SlowSomaticSpellFailureOutcome"
+  ) {
+    return tag;
+  }
+
+  throw new Error(`Unknown Quint battle hole variant: ${tag}`);
+}
+
+function weaponAttackOrderingStage(raw: unknown): WeaponAttackOrderingStage {
+  const tag = quintVariantTag(raw);
+  if (tag === "WeaponAttackActSelectionStage") return "actSelection";
+  if (tag === "WeaponAttackTargetChoiceStage") return "targetChoice";
+  if (tag === "WeaponAttackAttackRollStage") return "attackRoll";
+  if (tag === "WeaponAttackDamageDiceStage") return "damageDice";
+  if (tag === "WeaponAttackResolvedStage") return "resolved";
+
+  throw new Error(`Unknown weapon attack ordering stage: ${tag}`);
+}
+
+function weaponAttackOrderingHole(raw: unknown): WeaponAttackOrderingHole {
+  const tag = quintVariantTag(raw);
+  if (tag === "TargetChoiceHoleKind") return "targetChoice";
+  if (tag === "AttackRollHoleKind") return "attackRoll";
+  if (tag === "RolledDiceHoleKind") return "rolledDice";
+
+  throw new Error(`Unknown weapon attack ordering hole: ${tag}`);
+}
+
+function weaponAttackOrderingHoleFromRuntime(
+  hole: Pick<BattleHole, "kind">,
+): WeaponAttackOrderingHole {
+  if (hole.kind === "targetChoice") return "targetChoice";
+  if (hole.kind === "attackRoll") return "attackRoll";
+  if (hole.kind === "rolledDice") return "rolledDice";
+
+  throw new Error(`Unexpected weapon attack ordering hole: ${hole.kind}`);
+}
+
+function weaponAttackOrderingError(raw: unknown): WeaponAttackOrderingError {
+  if (
+    raw === "" ||
+    raw === "targetChoiceRequired" ||
+    raw === "attackRollRequired"
+  ) {
+    return raw;
+  }
+
+  throw new Error(`Unknown weapon attack ordering error: ${String(raw)}.`);
+}
+
+function saveGatedSpellOrderingStage(
+  raw: unknown,
+): SaveGatedSpellOrderingStage {
+  const tag = quintVariantTag(raw);
+  if (tag === "SaveGatedSpellActSelectionStage") return "actSelection";
+  if (tag === "SaveGatedSpellTargetListAndConditionChoiceStage") {
+    return "targetListAndConditionChoice";
+  }
+  if (tag === "SaveGatedSpellTargetListStage") return "targetList";
+  if (tag === "SaveGatedSpellConditionChoiceStage") {
+    return "conditionChoice";
+  }
+  if (tag === "SaveGatedSpellDamageSavingThrowOutcomeStage") {
+    return "damageSavingThrowOutcome";
+  }
+  if (tag === "SaveGatedSpellConditionSavingThrowOutcomeStage") {
+    return "conditionSavingThrowOutcome";
+  }
+  if (tag === "SaveGatedSpellDamageDiceStage") return "damageDice";
+  if (tag === "SaveGatedSpellResolvedStage") return "resolved";
+
+  throw new Error(`Unknown save-gated spell ordering stage: ${tag}`);
+}
+
+function saveGatedSpellOrderingHole(raw: unknown): SaveGatedSpellOrderingHole {
+  const tag = quintVariantTag(raw);
+  if (tag === "SpellTargetListHoleKind") return "spellTargetList";
+  if (tag === "ConditionChoiceHoleKind") return "conditionChoice";
+  if (tag === "SavingThrowOutcomeHoleKind") return "savingThrowOutcome";
+  if (tag === "RolledDiceHoleKind") return "rolledDice";
+
+  throw new Error(`Unknown save-gated spell ordering hole: ${tag}`);
+}
+
+function saveGatedSpellOrderingHoleFromRuntime(
+  hole: Pick<BattleHole, "kind">,
+): SaveGatedSpellOrderingHole {
+  if (hole.kind === "spellTargetList") return "spellTargetList";
+  if (hole.kind === "conditionChoice") return "conditionChoice";
+  if (hole.kind === "savingThrowOutcome") return "savingThrowOutcome";
+  if (hole.kind === "rolledDice") return "rolledDice";
+
+  throw new Error(`Unexpected save-gated spell ordering hole: ${hole.kind}`);
+}
+
+function saveGatedSpellOrderingError(
+  raw: unknown,
+): SaveGatedSpellOrderingError {
+  if (
+    raw === "" ||
+    raw === "targetOrAreaRequired" ||
+    raw === "savingThrowRequired"
+  ) {
+    return raw;
+  }
+
+  throw new Error(`Unknown save-gated spell ordering error: ${String(raw)}.`);
+}
+
+function spellAttackOrderingStage(raw: unknown): SpellAttackOrderingStage {
+  const tag = quintVariantTag(raw);
+  if (tag === "SpellAttackActSelectionStage") return "actSelection";
+  if (tag === "SpellAttackTargetChoiceStage") return "targetChoice";
+  if (tag === "SpellAttackTypedTargetChoiceStage") return "typedTargetChoice";
+  if (tag === "SpellAttackTargetListStage") return "targetList";
+  if (tag === "SpellAttackTargetAllocationStage") return "targetAllocation";
+  if (tag === "SpellAttackDamageTypeAndTargetChoiceStage") {
+    return "damageTypeAndTargetChoice";
+  }
+  if (tag === "SpellAttackDamageTypeChoiceStage") return "damageTypeChoice";
+  if (tag === "SpellAttackAttackRollStage") return "attackRoll";
+  if (tag === "SpellAttackDamageDiceStage") return "damageDice";
+  if (tag === "SpellAttackResolvedStage") return "resolved";
+
+  throw new Error(`Unknown spell attack ordering stage: ${tag}`);
+}
+
+function spellAttackOrderingHole(raw: unknown): SpellAttackOrderingHole {
+  const tag = quintVariantTag(raw);
+  if (tag === "TargetChoiceHoleKind") return "targetChoice";
+  if (tag === "SpellTargetListHoleKind") return "spellTargetList";
+  if (tag === "SpellTargetAllocationHoleKind") return "spellTargetAllocation";
+  if (tag === "DamageTypeChoiceHoleKind") return "damageTypeChoice";
+  if (tag === "AttackRollHoleKind") return "attackRoll";
+  if (tag === "RolledDiceHoleKind") return "rolledDice";
+
+  throw new Error(`Unknown spell attack ordering hole: ${tag}`);
+}
+
+function spellAttackOrderingHoleFromRuntime(
+  hole: Pick<BattleHole, "kind">,
+): readonly SpellAttackOrderingHole[] {
+  if (hole.kind === "targetChoice") return ["targetChoice"];
+  if (hole.kind === "spellTargetList") return ["spellTargetList"];
+  if (hole.kind === "spellTargetAllocation") return ["spellTargetAllocation"];
+  if (hole.kind === "damageTypeChoice") return ["damageTypeChoice"];
+  if (hole.kind === "attackRoll") return ["attackRoll"];
+  if (hole.kind === "rolledDice") return ["rolledDice"];
+  if (hole.kind === "objectTargetChoice") return [];
+
+  throw new Error(`Unexpected spell attack ordering hole: ${hole.kind}`);
+}
+
+function spellAttackOrderingError(raw: unknown): SpellAttackOrderingError {
+  if (
+    raw === "" ||
+    raw === "targetRequired" ||
+    raw === "damageTypeRequired" ||
+    raw === "targetOrDamageTypeRequired" ||
+    raw === "attackRollRequired"
+  ) {
+    return raw;
+  }
+
+  throw new Error(`Unknown spell attack ordering error: ${String(raw)}.`);
+}
+
+function hitPointRestorationOrderingStage(
+  raw: unknown,
+): HitPointRestorationOrderingStage {
+  const tag = quintVariantTag(raw);
+  if (tag === "HitPointRestorationActSelectionStage") return "actSelection";
+  if (tag === "SpellHealingTargetChoiceStage") {
+    return "spellHealingTargetChoice";
+  }
+  if (tag === "SpellHealingTargetListStage") return "spellHealingTargetList";
+  if (tag === "SpellHealingRollStage") return "spellHealingRoll";
+  if (tag === "FeatureHealingPoolDistributionStage") {
+    return "featureHealingPoolDistribution";
+  }
+  if (tag === "HitPointRestorationResolvedStage") return "resolved";
+
+  throw new Error(`Unknown Hit Point restoration ordering stage: ${tag}`);
+}
+
+function hitPointRestorationOrderingHole(
+  raw: unknown,
+): HitPointRestorationOrderingHole {
+  const tag = quintVariantTag(raw);
+  if (tag === "TargetChoiceHoleKind") return "targetChoice";
+  if (tag === "SpellTargetListHoleKind") return "spellTargetList";
+  if (tag === "RolledDiceHoleKind") return "rolledDice";
+  if (tag === "HitPointHealingDistributionHoleKind") {
+    return "hitPointHealingDistribution";
+  }
+
+  throw new Error(`Unknown Hit Point restoration ordering hole: ${tag}`);
+}
+
+function hitPointRestorationOrderingHoleFromRuntime(
+  hole: Pick<BattleHole, "kind">,
+): HitPointRestorationOrderingHole {
+  if (hole.kind === "targetChoice") return "targetChoice";
+  if (hole.kind === "spellTargetList") return "spellTargetList";
+  if (hole.kind === "rolledDice") return "rolledDice";
+  if (hole.kind === "hitPointHealingDistribution") {
+    return "hitPointHealingDistribution";
+  }
+
+  throw new Error(
+    `Unexpected Hit Point restoration ordering hole: ${hole.kind}`,
+  );
+}
+
+function hitPointRestorationOrderingError(
+  raw: unknown,
+): HitPointRestorationOrderingError {
+  if (
+    raw === "" ||
+    raw === "healingTargetRequired" ||
+    raw === "healingAmountRequired" ||
+    raw === "healingDistributionRequired"
+  ) {
+    return raw;
+  }
+
+  throw new Error(
+    `Unknown Hit Point restoration ordering error: ${String(raw)}.`,
+  );
+}
+
+function deathSavingThrowHole(raw: unknown): DeathSavingThrowMbtHole {
+  const tag = quintVariantTag(raw);
+  if (tag === "DeathSavingThrow") {
+    return tag;
+  }
+
+  throw new Error(`Unknown Death Saving Throw hole: ${tag}`);
+}
+
+function concentrationBreakTeardownHole(raw: unknown): string {
+  const tag = quintVariantTag(raw, "Concentration break teardown witness hole");
+  if (tag === "ConcentrationSavingThrow") return "concentrationSavingThrow";
+  if (tag === "ConcentrationBreakTeardown") {
+    return "concentrationBreakTeardown";
+  }
+  throw new Error(`Unexpected Concentration break teardown hole ${tag}.`);
+}
+
+const CONCENTRATION_BREAK_TEARDOWN_SCENARIO_BY_TAG = {
+  Init: "init",
+  ConcentrationSpellCast: "concentrationSpellCast",
+  DamageSaveNeeded: "damageSaveNeeded",
+  DamageFailedTeardownBeforeNextCommand:
+    "damageFailedTeardownBeforeNextCommand",
+  VoluntaryEndTeardown: "voluntaryEndTeardown",
+  ReplacementTeardownBeforeNewEffect: "replacementTeardownBeforeNewEffect",
+} as const satisfies Readonly<
+  Record<string, ConcentrationBreakTeardownScenario>
+>;
+
+function concentrationBreakTeardownScenario(
+  raw: unknown,
+): ConcentrationBreakTeardownScenario {
+  const tag = quintVariantTag(raw, "qScenario");
+  if (hasOwnStringKey(CONCENTRATION_BREAK_TEARDOWN_SCENARIO_BY_TAG, tag)) {
+    return CONCENTRATION_BREAK_TEARDOWN_SCENARIO_BY_TAG[tag];
+  }
+  throw new Error(`Unexpected Concentration break teardown scenario ${tag}.`);
+}
+
+function commandOrderingStage(raw: unknown): CommandOrderingStage {
+  const tag = quintVariantTag(raw);
+  if (tag === "CommandActSelectionStage") return "actSelection";
+  if (tag === "CommandTargetListAndOptionChoiceStage") {
+    return "targetListAndOptionChoice";
+  }
+  if (tag === "CommandTargetListStage") return "targetList";
+  if (tag === "CommandOptionChoiceStage") return "optionChoice";
+  if (tag === "CommandSavingThrowOutcomeStage") return "savingThrowOutcome";
+  if (tag === "CommandDropHeldObjectFactsStage") {
+    return "dropHeldObjectFacts";
+  }
+  if (tag === "CommandApproachMovementStage") return "approachMovement";
+  if (tag === "CommandFleeMovementStage") return "fleeMovement";
+  if (tag === "CommandResolvedStage") return "resolved";
+
+  throw new Error(`Unknown Command ordering stage: ${tag}`);
+}
+
+function commandOrderingHole(raw: unknown): CommandOrderingHole {
+  const tag = quintVariantTag(raw);
+  if (tag === "SpellTargetListHoleKind") return "spellTargetList";
+  if (tag === "CommandOptionChoiceHoleKind") return "commandOptionChoice";
+  if (tag === "SavingThrowOutcomeHoleKind") return "savingThrowOutcome";
+  if (tag === "MovementHoleKind") return "movement";
+  if (tag === "InterruptDecisionHoleKind") return "interruptDecision";
+
+  throw new Error(`Unknown Command ordering hole: ${tag}`);
+}
+
+function commandOrderingHoleFromRuntime(
+  hole: Pick<BattleHole, "kind">,
+): readonly CommandOrderingHole[] {
+  if (hole.kind === "spellTargetList") return ["spellTargetList"];
+  if (hole.kind === "commandOptionChoice") return ["commandOptionChoice"];
+  if (hole.kind === "savingThrowOutcome") return ["savingThrowOutcome"];
+  if (hole.kind === "movement") return ["movement"];
+  if (hole.kind === "interruptDecision") return ["interruptDecision"];
+  if (hole.kind === "heldObjectFacts") return [];
+
+  throw new Error(`Unexpected Command ordering hole: ${hole.kind}`);
+}
+
+function commandOrderingError(raw: unknown): CommandOrderingError {
+  if (
+    raw === "" ||
+    raw === "commandTargetListRequired" ||
+    raw === "commandOptionChoiceRequired" ||
+    raw === "commandSavingThrowRequired" ||
+    raw === "commandHeldObjectFactsRequired" ||
+    raw === "commandMovementRequired"
+  ) {
+    return raw;
+  }
+
+  throw new Error(`Unknown Command ordering error: ${String(raw)}.`);
+}
+
+function commandOrderingPendingOption(
+  raw: unknown,
+): CommandOrderingPendingOption {
+  if (
+    raw === "none" ||
+    raw === "grovel" ||
+    raw === "drop" ||
+    raw === "halt" ||
+    raw === "approach" ||
+    raw === "flee"
+  ) {
+    return raw;
+  }
+
+  throw new Error(`Unknown Command pending option: ${String(raw)}.`);
+}
+
+function commandOrderingActor(
+  raw: unknown,
+): CommandOrderingProjection["currentActor"] {
+  if (raw === "Caster" || raw === "Target") return raw;
+  throw new Error(`Unknown Command ordering actor: ${String(raw)}.`);
+}
+
+function reducerSpineContractStage(raw: unknown): ReducerSpineContractStage {
+  const tag = quintVariantTag(raw);
+  if (tag === "ReducerNotStarted") return "notStarted";
+  if (tag === "ReducerBattleStarted") return "battleStarted";
+  if (tag === "ReducerActDiscovered") return "actDiscovered";
+  if (tag === "ReducerSubjectNeedsHoles") return "subjectNeedsHoles";
+  if (tag === "ReducerSubjectResolved") return "subjectResolved";
+  if (tag === "ReducerTurnAdvanced") return "turnAdvanced";
+
+  throw new Error(`Unknown reducer-spine stage: ${tag}.`);
+}
+
+function reducerSpineContractEntrypoint(
+  raw: unknown,
+): ReducerSpineContractEntrypoint {
+  const tag = quintVariantTag(raw);
+  if (tag === "NoReducerEntrypoint") return "none";
+  if (tag === "StartBattleEntrypoint") return "startBattle";
+  if (tag === "DiscoverBattleActsEntrypoint") return "discoverBattleActs";
+  if (tag === "ResolveBattleSubjectEntrypoint") {
+    return "resolveBattleSubject";
+  }
+
+  throw new Error(`Unknown reducer-spine entrypoint: ${tag}.`);
+}
+
+function reducerSpineContractSubject(
+  raw: unknown,
+): ReducerSpineContractSubject {
+  const tag = quintVariantTag(raw);
+  if (tag === "NoReducerSubject") return "none";
+  if (tag === "SlotSpellSubject") return "slotSpell";
+  if (tag === "WeaponAttackSubject") return "weaponAttack";
+  if (tag === "EndTurnSubject") return "endTurn";
+
+  throw new Error(`Unknown reducer-spine subject: ${tag}.`);
+}
+
+function reducerSpineContractActor(raw: unknown): ReducerSpineContractActor {
+  const tag = quintVariantTag(raw);
+  if (tag === "NoSpineActor") return "none";
+  if (tag === "CasterActor") return "caster";
+  if (tag === "TargetActor") return "target";
+
+  throw new Error(`Unknown reducer-spine actor: ${tag}.`);
+}
+
+function reducerSpineContractSpellSlotUse(
+  raw: unknown,
+): ReducerSpineContractSpellSlotUse {
+  const tag = quintVariantTag(raw);
+  if (tag === "NoSpellSlotUse") return "none";
+  if (tag === "PendingSpellSlotUse") return "pending";
+  if (tag === "CommittedSpellSlotUse") return "committed";
+
+  throw new Error(`Unknown reducer-spine spell-slot use: ${tag}.`);
+}
+
+function reducerSpineContractHole(raw: unknown): ReducerSpineContractHole {
+  const tag = quintVariantTag(raw);
+  if (tag === "TargetChoiceHoleKind") return "targetChoice";
+  if (tag === "SpellTargetAllocationHoleKind") {
+    return "spellTargetAllocation";
+  }
+  if (tag === "AttackRollHoleKind") return "attackRoll";
+  if (tag === "RolledDiceHoleKind") return "rolledDice";
+
+  throw new Error(`Unknown reducer-spine hole: ${tag}.`);
+}
+
+function reducerSpineContractHoleFromRuntime(
+  hole: Pick<BattleHole, "kind">,
+): ReducerSpineContractHole {
+  if (hole.kind === "targetChoice") return "targetChoice";
+  if (hole.kind === "spellTargetAllocation") return "spellTargetAllocation";
+  if (hole.kind === "attackRoll") return "attackRoll";
+  if (hole.kind === "rolledDice") return "rolledDice";
+
+  throw new Error(`Unexpected reducer-spine hole: ${hole.kind}.`);
+}
+
+function reducerSpineContractActorId(
+  actorId: CombatantId,
+): ReducerSpineContractActor {
+  if (actorId === fighterId) return "caster";
+  if (actorId === skeletonId) return "target";
+
+  throw new Error(`Unexpected reducer-spine actor id: ${actorId}.`);
+}
+
+function reducerSpineContractSpellSlotUseFromRuntime(
+  state: BattleState,
+): ReducerSpineContractSpellSlotUse {
+  const uses = state.currentTurnResources.spellSlotUsesThisTurn.filter(
+    (use) => use.combatantId === fighterId,
+  );
+  if (uses.some((use) => use.kind === "committed")) return "committed";
+  if (uses.some((use) => use.kind === "pending")) return "pending";
+  return "none";
+}
+
+function mbtLastResult(raw: unknown): MbtLastResult {
+  if (
+    raw === "init" ||
+    raw === "needsHoles" ||
+    raw === "resolved" ||
+    raw === "invalid"
+  ) {
+    return raw;
+  }
+
+  throw new Error(`Unknown Quint last result: ${String(raw)}.`);
+}
+
+function mbtLastInvalidReason(raw: unknown): MbtLastInvalidReason {
+  if (
+    raw === "" ||
+    raw === "invalidFill" ||
+    raw === "staleSubject" ||
+    raw === "wrongActor"
+  ) {
+    return raw;
+  }
+
+  throw new Error(`Unknown Quint invalid reason: ${String(raw)}.`);
+}
+
+function numberFromEnv(
+  name: "MBT_STEPS" | "MBT_TRACES",
+  fallback: number,
+): number {
+  const raw = process.env[name];
+  if (raw === undefined) {
+    return fallback;
+  }
+  const parsed = Number(raw);
+  if (Number.isInteger(parsed) && parsed > 0) {
+    return parsed;
+  }
+
+  throw new Error(`Expected positive integer ${name}.`);
+}
+
+function isRecord(raw: unknown): raw is Readonly<Record<string, unknown>> {
+  return typeof raw === "object" && raw !== null && !Array.isArray(raw);
+}

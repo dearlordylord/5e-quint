@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { combatantId } from "./identity.ts";
-import { fighterVsGoblinBattle } from "./battle-runtime-test-support.ts";
+import { fighterVsGoblinBattle } from "./battle-runtime.test-support.ts";
 
 import {
   assertWitnessProtocolConsistentWithScenario,
@@ -22,7 +22,7 @@ import {
   recordBattleResolutionResult,
   stringLiteralField,
   transformITFValue,
-} from "./battle-runtime-mbt-driver-kit.ts";
+} from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import type {
   BattleHole,
   BattleResolutionResult,

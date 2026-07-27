@@ -12,10 +12,11 @@ export default defineConfig({
       include: ["src/**/*.{ts,tsx}"],
       exclude: ["**/*.test.ts", "**/*.test.tsx", "**/*.config.ts", "**/*.d.ts", "**/*.gen.*"],
       thresholds: {
-        lines: 95,
-        functions: 83,
-        branches: 96,
-        statements: 95
+        lines: 99,
+        functions: 99,
+        // Temporary measured non-regression floor; issue #227's target remains 99%.
+        branches: 98,
+        statements: 99
       }
     }
   }

@@ -21,7 +21,7 @@ import { describe, expect, it } from "vitest";
 import {
   resolveBattleSubject,
   characterAttackSubjectForTest,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 
 import {
   MBT_TEST_TIMEOUT_MS,
@@ -38,7 +38,7 @@ import {
   quintVariantTag,
   run,
   stateCheck,
-} from "./battle-runtime-mbt-driver-kit.ts";
+} from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import { combatantEffectiveSize } from "./battle-reducer/druid-wild-shape.ts";
 import { INITIAL_TURN_RESOURCES } from "./battle-reducer/battle-runtime-protocol.ts";
 import { requiredAbilityCheckRollMode } from "./battle-reducer/hole-helpers.ts";
@@ -52,21 +52,21 @@ import {
   requireResultHole,
   weaponAttackSubject,
   zeroAbilityWeaponAttack,
-} from "./unit-profile-admission-creature-fixture-support.ts";
+} from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
   knownWillingSpellTargetFill,
   maybeSpellAct,
   savingThrowOutcomeFill,
   spellTargetFill,
-} from "./unit-profile-admission-spell-fill-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+} from "./unit-profile-admission-spell-fill.test-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   enlargeReduceUnitId,
   spellCasterId,
   spellTargetId,
   type ActionSpellAct,
-} from "./unit-profile-admission-catalog-support.ts";
+} from "./unit-profile-admission-catalog.test-support.ts";
 import {
   breakBattleConcentration,
   discoverBattleActs,

@@ -81,9 +81,14 @@ import {
 import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
 import { setCompanion } from "../companion-state.ts";
 import { findPresentFamiliarById } from "../find-familiar-state.ts";
-import { retainedStoredFormForPresentCompanion } from "../find-familiar-lifecycle-execution.ts";
+import { retainedStoredFormForPresentCompanion } from "../companion-stored-form.ts";
 import type { ZeroHpLifecycle } from "../zero-hp-lifecycle.ts";
 import { removeBattleCombatants } from "./combatant-removal.ts";
+import {
+  appliedHitPointMaximumIncreaseAmount,
+  effectiveHitPointMaximum,
+  hitPointMaximumIncreaseAmount,
+} from "./hit-point-maximum.ts";
 import {
   currentActorId,
   normalizeBattleGrapples,
@@ -94,7 +99,7 @@ import {
   battleCreatureStateWithoutKnockOut,
   knockedOutConditionState,
   knockedOutOneHp,
-} from "./creature-state-execution.ts";
+} from "./creature-hit-point-state.ts";
 import {
   activeDruidWildShape,
   applyActiveDruidWildShapeRechargeRolls,
@@ -326,13 +331,6 @@ type HitPointMaximumIncreaseEffect = Extract<
   { readonly kind: "hitPointMaximumIncrease" }
 >;
 
-export function effectiveHitPointMaximum(combatant: BattleCreatureState): Hp {
-  return Hp(
-    Number(combatant.maxHp) +
-      appliedHitPointMaximumIncreaseAmount(combatant.activeEffects),
-  );
-}
-
 export function applyHitPointMaximumIncrease(
   combatant: BattleCreatureState,
   effect: HitPointMaximumIncreaseEffect,
@@ -378,33 +376,6 @@ export function applyHitPointMaximumIncreaseExpiration(
     combatant.conditions,
   );
   return Number(nextHp) > 0 ? updated : applyInitialZeroHpLifecycle(updated);
-}
-
-function appliedHitPointMaximumIncreaseAmount(
-  effects: readonly BattleActiveEffect[],
-): number {
-  const highestAmountBySpell = new Map<string, number>();
-  for (const effect of effects) {
-    if (effect.kind !== "hitPointMaximumIncrease") {
-      continue;
-    }
-    const amount = hitPointMaximumIncreaseAmount(effect);
-    const activeAmount =
-      highestAmountBySpell.get(effect.sourceProcedureRef) ?? 0;
-    if (amount > activeAmount) {
-      highestAmountBySpell.set(effect.sourceProcedureRef, amount);
-    }
-  }
-  return [...highestAmountBySpell.values()].reduce(
-    (total, amount) => total + amount,
-    0,
-  );
-}
-
-function hitPointMaximumIncreaseAmount(
-  effect: HitPointMaximumIncreaseEffect,
-): number {
-  return Math.max(0, Math.floor(effect.amount));
 }
 
 function applyCurrentHitPointIncrease(

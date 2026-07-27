@@ -54,6 +54,7 @@ import {
   spellAdmissionCharacterLevel,
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
+  spellProcedureResolutionContext,
 } from "./profile.ts";
 
 type SpellAttackSequenceResolveInput =
@@ -103,18 +104,7 @@ function discoverSpellAttackSequenceCastAct(
 function resolveSpellAttackSequence(
   input: SpellAttackSequenceResolveInput,
 ): BattleResolutionResult {
-  return resolveSpellAttackSequenceAct({
-    input: input.input,
-    actorId: input.actorId,
-    invocation: input.invocation,
-    fillSet: input.fillSet,
-    ...(input.actionCostOverride === undefined
-      ? {}
-      : { actionCostOverride: input.actionCostOverride }),
-    ...(input.metamagicApplications === undefined
-      ? {}
-      : { metamagicApplications: input.metamagicApplications }),
-  });
+  return resolveSpellAttackSequenceAct(spellProcedureResolutionContext(input));
 }
 
 const SpellAttackSequenceInvocationSchema = spellProcedureExecutionSchema(

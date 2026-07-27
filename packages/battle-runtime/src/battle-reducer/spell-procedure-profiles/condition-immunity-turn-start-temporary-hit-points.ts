@@ -1,3 +1,5 @@
+import { resolveSpellActiveEffectCast } from "../spell-active-effect-resolution.ts";
+import { actionSpellCastCandidatesForTargetHole } from "../spell-cast-candidate.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-condition-immunity-turn-start-temporary-hit-points
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-glyph-stored-concentration-full-duration
@@ -18,30 +20,28 @@ import {
   type ActionSpellBattleResolutionInput,
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
-  type BattleHole,
   type BattleResolutionResult,
   type BattleState,
   type ConditionImmunityAndTurnStartTemporaryHitPointsSpellInvocation,
 } from "../../battle-state-execution.ts";
-import { maybeOpenInterruptWindow, snapshotBattle } from "../dispatcher.ts";
 import { CombatantId } from "../../identity.ts";
 import { BattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
-import { breakBattleConcentration } from "../damage-apply.ts";
 import { targetListSpellUsesTargetListHole } from "../spells-discovery.ts";
-import { needsHolesResult } from "../hole-helpers.ts";
+
+import { spellSelectionResolution } from "../needs-holes-result.ts";
 import { invalidResult } from "../result-helpers.ts";
-import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
+import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
+import { ATTACK_TARGET_HOLE_ID } from "../battle-runtime-protocol.ts";
 import { conditionHadNonSpellSourceBeforeSpellEffect } from "../spell-condition-effects-helpers.ts";
 import { scalarBuffSpellTargetCount } from "../spells-execution-facts.ts";
 import { scalarBuffActiveEffectExpiration } from "../spells-profiles-support.ts";
-import {
-  spellTargetHole,
-  spellTargetIsLegal,
-  spellTargetListHole,
-  validateSpellTargetList,
-} from "../spells-holes-fills.ts";
+import { spellTargetHole, spellTargetListHole } from "../spells-holes-fills.ts";
+import { spellTargetListHoleId } from "../spells-targeting.ts";
 import type { SpellFillSet } from "../spells-resolve-fill-set.ts";
-import { spendSpellCastResources } from "../spells-resolve-resources.ts";
+import {
+  spellTargetListSelection,
+  type SpellTargetListSelection,
+} from "../spells-resolve-target-selection.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
@@ -57,11 +57,6 @@ import {
   PreparedSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
-
-type ConditionImmunityAndTurnStartTemporaryHitPointsTargetSelection =
-  | { readonly tag: "ok"; readonly targetIds: readonly CombatantId[] }
-  | { readonly tag: "needsHoles"; readonly hole: BattleHole }
-  | { readonly tag: "invalid"; readonly message: string };
 
 function admitConditionImmunityAndTurnStartTemporaryHitPoints(
   spell: BattleSpellAdmissionSource,
@@ -199,48 +194,21 @@ function discoverConditionImmunityAndTurnStartTemporaryHitPointsCastAct(
   const targetHole = targetListSpellUsesTargetListHole(invocation)
     ? spellTargetListHole(state, actorId, invocation)
     : spellTargetHole(state, actorId, invocation);
-  return targetHole.choices.length === 0
-    ? []
-    : [
-        {
-          subject: {
-            tag: "actionSpell",
-            actorId,
-            procedureRef: invocation.sourceProcedureRef,
-            mode: { tag: "cast" },
-          },
-          initialHoles: [targetHole],
-        },
-      ];
+  return actionSpellCastCandidatesForTargetHole(
+    actorId,
+    invocation.sourceProcedureRef,
+    targetHole,
+  );
 }
 
 function resolveConditionImmunityAndTurnStartTemporaryHitPoints(
   input: SpellProcedureProfileResolveInput<ConditionImmunityAndTurnStartTemporaryHitPointsSpellInvocation>,
 ): BattleResolutionResult {
   if (
-    input.fillSet.objectTarget !== undefined ||
-    input.fillSet.attackRoll !== undefined ||
-    input.fillSet.targetAllocation !== undefined ||
-    input.fillSet.attackSequencePartFills.length > 0 ||
-    input.fillSet.damageRoll !== undefined ||
-    input.fillSet.attackBurstDamageRoll !== undefined ||
-    input.fillSet.healingRoll !== undefined ||
-    input.fillSet.skillChoice !== undefined ||
-    input.fillSet.targetAbilityChoices !== undefined ||
-    input.fillSet.abilityChoice !== undefined ||
-    input.fillSet.conditionChoice !== undefined ||
-    input.fillSet.commandOptionChoice !== undefined ||
-    input.fillSet.areaChoice !== undefined ||
-    input.fillSet.teleportDestination !== undefined ||
-    input.fillSet.dancingLightsPlacement !== undefined ||
-    input.fillSet.damageTypeChoice !== undefined ||
-    input.fillSet.savingThrowOutcomes !== undefined ||
-    input.fillSet.movement !== undefined ||
-    input.fillSet.thaumaturgyActiveOneMinuteEffectCount !== undefined ||
-    input.fillSet.hideousLaughterDamageRepeatSaves.length > 0 ||
-    input.fillSet.damageDispositions.length > 0 ||
-    input.fillSet.concentrationSavingThrows.length > 0 ||
-    input.fillSet.spellDamageReductionRolls.length > 0
+    !fillsBelongToSpellCastHoles(input.input.fills, [
+      ATTACK_TARGET_HOLE_ID,
+      spellTargetListHoleId(input.invocation),
+    ])
   ) {
     return invalidResult(
       input.input.state,
@@ -248,76 +216,27 @@ function resolveConditionImmunityAndTurnStartTemporaryHitPoints(
       "Condition-immunity turn-start Temporary Hit Points spells use target fills only.",
     );
   }
-  const targetSelection =
-    conditionImmunityAndTurnStartTemporaryHitPointsSpellTargetSelection(input);
-  if (targetSelection.tag === "needsHoles") {
-    return needsHolesResult(input.input.state, input.input.subject, [
-      targetSelection.hole,
-    ]);
-  }
-  if (targetSelection.tag === "invalid") {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      targetSelection.message,
-    );
-  }
-
-  if (input.storedGlyphRelease === undefined) {
-    const spellCastReactionWindow = maybeOpenInterruptWindow(
-      input.input.state,
-      spellCastInterruptFrame({
-        casterId: input.actorId,
-        invocation: input.invocation,
-        targetIds: targetSelection.targetIds,
-        reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
-        castingResource: { kind: "magicAction" },
-        continuation: {
-          kind: "replay",
-          subject: input.input.subject,
-          fills: input.input.fills,
-        },
-      }),
-      input.input.handledInterruptTrigger,
-    );
-    if (spellCastReactionWindow !== null) {
-      return spellCastReactionWindow;
-    }
-  }
-
-  const concentrationBase =
-    input.storedGlyphRelease !== undefined
-      ? input.input.state
-      : breakBattleConcentration(input.input.state, input.actorId);
-  const effected = applyConditionImmunityAndTurnStartTemporaryHitPointsEffects(
-    concentrationBase,
-    input.actorId,
-    targetSelection.targetIds,
-    input.invocation,
+  const targetSelectionResolution = spellSelectionResolution(
+    input.input.state,
+    input.input.subject,
+    conditionImmunityAndTurnStartTemporaryHitPointsSpellTargetSelection(input),
   );
-  if (input.storedGlyphRelease !== undefined) {
-    return {
-      tag: "resolved",
-      state: effected,
-      snapshot: snapshotBattle(effected),
-    };
-  }
-  const resourced = spendSpellCastResources({
-    state: effected,
-    actorId: input.actorId,
-    invocation: input.invocation,
-    errorState: input.input.state,
-    ...(input.storedGlyphRelease !== undefined
-      ? { startConcentration: false }
-      : {}),
+  if (targetSelectionResolution.tag === "resolution")
+    return targetSelectionResolution.result;
+  const targetSelection = targetSelectionResolution.selection;
+
+  return resolveSpellActiveEffectCast({
+    resolution: input,
+    targetIds: targetSelection.targetIds,
+    castingResource: { kind: "magicAction" },
+    applyEffect: (state) =>
+      applyConditionImmunityAndTurnStartTemporaryHitPointsEffects(
+        state,
+        input.actorId,
+        targetSelection.targetIds,
+        input.invocation,
+      ),
   });
-  return resourced.tag === "invalid"
-    ? resourced
-    : {
-        tag: "resolved",
-        state: resourced.state,
-        snapshot: snapshotBattle(resourced.state),
-      };
 }
 
 function conditionImmunityAndTurnStartTemporaryHitPointsSpellTargetSelection(input: {
@@ -325,67 +244,19 @@ function conditionImmunityAndTurnStartTemporaryHitPointsSpellTargetSelection(inp
   readonly actorId: CombatantId;
   readonly invocation: BattleExecutableSpellInvocation<ConditionImmunityAndTurnStartTemporaryHitPointsSpellInvocation>;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
-}): ConditionImmunityAndTurnStartTemporaryHitPointsTargetSelection {
-  if (input.invocation.targeting.maxTargets === 1) {
-    if (input.fillSet.targetList !== undefined) {
-      return {
-        tag: "invalid",
-        message:
-          "Single-target condition-immunity turn-start Temporary Hit Points spells require one target choice.",
-      };
-    }
-    if (input.fillSet.targetId === undefined) {
-      return {
-        tag: "needsHoles",
-        hole: spellTargetHole(
-          input.input.state,
-          input.actorId,
-          input.invocation,
-        ),
-      };
-    }
-    return spellTargetIsLegal(
-      input.input.state,
-      input.actorId,
-      input.fillSet.targetId,
-      input.invocation,
-      input.fillSet.targetSpatialFacts,
-    )
-      ? { tag: "ok", targetIds: [input.fillSet.targetId] }
-      : {
-          tag: "invalid",
-          message:
-            "Condition-immunity turn-start Temporary Hit Points spell target must be a combatant within the selected spell's supported range.",
-        };
-  }
-
-  if (input.fillSet.targetId !== undefined) {
-    return {
-      tag: "invalid",
-      message:
-        "Multi-target condition-immunity turn-start Temporary Hit Points spells require a target list.",
-    };
-  }
-  if (input.fillSet.targetList === undefined) {
-    return {
-      tag: "needsHoles",
-      hole: spellTargetListHole(
-        input.input.state,
-        input.actorId,
-        input.invocation,
-      ),
-    };
-  }
-  const validation = validateSpellTargetList(
-    input.input.state,
-    input.actorId,
-    input.invocation,
-    input.fillSet.targetList.targetIds,
-    input.fillSet.targetList.spatialFacts,
-  );
-  return validation === null
-    ? { tag: "ok", targetIds: input.fillSet.targetList.targetIds }
-    : { tag: "invalid", message: validation };
+}): SpellTargetListSelection {
+  return spellTargetListSelection({
+    state: input.input.state,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    fillSet: input.fillSet,
+    singleTargetListMessage:
+      "Single-target condition-immunity turn-start Temporary Hit Points spells require one target choice.",
+    invalidSingleTargetMessage:
+      "Condition-immunity turn-start Temporary Hit Points spell target must be a combatant within the selected spell's supported range.",
+    multiTargetChoiceMessage:
+      "Multi-target condition-immunity turn-start Temporary Hit Points spells require a target list.",
+  });
 }
 
 function applyConditionImmunityAndTurnStartTemporaryHitPointsEffects(

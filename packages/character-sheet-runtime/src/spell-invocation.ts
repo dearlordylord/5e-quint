@@ -154,16 +154,8 @@ function characterSheetBookOfShadowsRitualInvocation(
       "Book of Shadows Ritual requires the book on your person.",
     );
   }
-  const spell = getRequiredUnit(input.unitLibrary, input.spellId);
+  const spell = requiredRitualSpell(input, spellHasTopLevelRitualTag);
   if (Either.isLeft(spell)) return Either.left(spell.left);
-  if (!isSpellRecord(spell.right)) {
-    return characterSheetIssue("Ritual spell invocation requires a Spell.");
-  }
-  if (!spellHasTopLevelRitualTag(spell.right)) {
-    return characterSheetIssue(
-      "Ritual spell invocation requires a ritual-tagged Spell Definition.",
-    );
-  }
   return Either.right({
     tag: "bookOfShadowsRitual",
     spellId: input.spellId,
@@ -209,16 +201,8 @@ function characterSheetSpellbookRitualAccessForSpell(
       "Ritual spell invocation requires spellcasting Spell Access.",
     );
   }
-  const spell = getRequiredUnit(input.unitLibrary, input.spellId);
+  const spell = requiredRitualSpell(input, spellHasLeveledRitualTag);
   if (Either.isLeft(spell)) return Either.left(spell.left);
-  if (!isSpellRecord(spell.right)) {
-    return characterSheetIssue("Ritual spell invocation requires a Spell.");
-  }
-  if (!spellHasLeveledRitualTag(spell.right)) {
-    return characterSheetIssue(
-      "Ritual spell invocation requires a ritual-tagged Spell Definition.",
-    );
-  }
   const spellbookSources = input.build.spellcasting.sources.filter(
     (candidate) =>
       candidate.spellbook.some((spellId) => spellId === input.spellId),
@@ -244,6 +228,25 @@ function characterSheetSpellbookRitualAccessForSpell(
   return characterSheetIssue(
     "Spellbook ritual invocation requires a spellbook Ritual Access feature for the spellbook source.",
   );
+}
+
+function requiredRitualSpell(
+  input: Pick<
+    CharacterSheetSpellbookRitualAccessInput,
+    "spellId" | "unitLibrary"
+  >,
+  hasRequiredRitualTag: (spell: SpellRecord) => boolean,
+): Either.Either<SpellRecord, CharacterSheetIssue> {
+  const spell = getRequiredUnit(input.unitLibrary, input.spellId);
+  if (Either.isLeft(spell)) return Either.left(spell.left);
+  if (!isSpellRecord(spell.right)) {
+    return characterSheetIssue("Ritual spell invocation requires a Spell.");
+  }
+  return hasRequiredRitualTag(spell.right)
+    ? Either.right(spell.right)
+    : characterSheetIssue(
+        "Ritual spell invocation requires a ritual-tagged Spell Definition.",
+      );
 }
 
 function optionalSpellbookRitualAccessFeatureForSource(input: {

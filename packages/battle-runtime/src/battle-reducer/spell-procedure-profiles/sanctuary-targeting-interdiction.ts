@@ -1,4 +1,5 @@
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
+import { spellCastCandidatesForTargetHole } from "../spell-cast-candidate.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-sanctuary-targeting-interdiction
 // KERNEL-COVERAGE: runtime-owner BATTLE.SANCTUARY.TARGETING_INTERDICTION
 //
@@ -31,7 +32,8 @@ import {
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
 import { CombatantId } from "../../identity.ts";
-import { needsHolesResult } from "../hole-helpers.ts";
+
+import { needsHolesResult } from "../needs-holes-result.ts";
 import { invalidResult } from "../result-helpers.ts";
 import {
   battleStateAfterTargetActionEarlyEndForActor,
@@ -180,19 +182,12 @@ function discoverSanctuaryTargetingInterdictionCastAct(
   invocation: BattleExecutableSpellInvocation<SanctuaryTargetingInterdictionInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const targetHole = spellTargetListHole(state, actorId, invocation);
-  return targetHole.choices.length === 0
-    ? []
-    : [
-        {
-          subject: {
-            tag: "bonusActionSpell" as const,
-            actorId,
-            procedureRef: invocation.sourceProcedureRef,
-            mode: { tag: "cast" as const },
-          },
-          initialHoles: [targetHole],
-        },
-      ];
+  return spellCastCandidatesForTargetHole(
+    "bonusActionSpell",
+    actorId,
+    invocation.sourceProcedureRef,
+    targetHole,
+  );
 }
 
 function resolveSanctuaryTargetingInterdiction(

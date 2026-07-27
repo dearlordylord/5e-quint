@@ -37,11 +37,7 @@ import {
   type RolledDiceGroup,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 
-import {
-  DifficultyClass,
-  difficultyClass,
-  movementFeet,
-} from "@dnd/shared/types";
+import { difficultyClass } from "@dnd/shared/types";
 
 import { Match } from "effect";
 import {
@@ -57,10 +53,7 @@ import * as Either from "effect/Either";
 
 import type { SupportedAttackActionOption } from "../battle-action-options.ts";
 
-import {
-  type BattleMovementSpeedKind,
-  type BattleSubject,
-} from "../battle-subjects.ts";
+import { type BattleSubject } from "../battle-subjects.ts";
 
 import {
   resourceHasUsesRemaining,
@@ -95,9 +88,7 @@ import { parseSavingThrowRelationshipFacts } from "./roll-trigger-relationship-f
 import {
   battleCreatureStateWithKnockOutPreservedConditions,
   combatantCanTakeActions,
-  activeOngoingFeatureOccurrencesForCombatant,
   isCharacterBattleCreatureState,
-  ongoingFeatureProfileForSourceKey,
 } from "./creature-state-execution.ts";
 
 import {
@@ -123,23 +114,24 @@ import {
   grappleTargetHole,
   hideAbilityCheckHole,
   hypnoticPatternShakeAwakeTargetHole,
-  needsHolesResult,
   searchAbilityCheckHole,
   searchTargetHole,
   shoveOutcomeHole,
   shoveTargetHole,
   sleepShakeAwakeTargetHole,
 } from "./hole-helpers.ts";
+import { needsHolesResult } from "./needs-holes-result.ts";
 
 import {
   combatantProficiencyBonus,
-  effectiveMovementSpeed,
   grappleLinkForTarget,
   representedMovementSpeedKinds,
   shoveForTarget,
 } from "./movement-speed.ts";
 
 import { invalidResult } from "./result-helpers.ts";
+import { applyDashToActor, applyDisengage } from "./mobility-actions.ts";
+import { spellSaveDcForCaster } from "./spell-save-dc.ts";
 import { combatantHasSlowActivePenalties } from "./slow-active-penalties-runtime.ts";
 
 import {
@@ -179,8 +171,6 @@ import type {
   BattleCreatureState,
   BattleFill,
   BattleGrappleLink,
-  BattleHelpAttackAllyDecisionHole,
-  BattleHelpAttackEnemyDecisionHole,
   BattleHoleId,
   BattleSavingThrowRelationshipFact,
   BattleResolutionInput,
@@ -219,9 +209,7 @@ import {
   GRAPPLE_OUTCOME_HOLE_ID,
   GRAPPLE_TARGET_HOLE_ID,
   HELP_ATTACK_ALLY_HOLE_ID,
-  HELP_ATTACK_ALLY_HOLE_INSTANCE,
   HELP_ATTACK_TARGET_HOLE_ID,
-  HELP_ATTACK_TARGET_HOLE_INSTANCE,
   HIDE_ABILITY_CHECK_HOLE_ID,
   HIDE_DC,
   SEARCH_ABILITY_CHECK_HOLE_ID,
@@ -234,13 +222,21 @@ import {
 import {
   actorHasClassFeatureExtraAttackActionResource,
   actorHasStatBlockMultiattackActionResource,
-  isClassFeatureExtraAttackActionResource,
   isStatBlockBattleCreatureState,
-  isStatBlockMultiattackActionResource,
   spendTurnAction,
   supportedStatBlockBonusActionStandardAction,
 } from "./battle-discovery.ts";
+import {
+  isClassFeatureExtraAttackActionResource,
+  isStatBlockMultiattackActionResource,
+} from "./action-resource-kinds.ts";
 import { spellDamageRerollUnsupportedIssue } from "./spell-reroll-issues.ts";
+import {
+  helpAttackAllyChoices,
+  helpAttackAllyHole,
+  helpAttackTargetChoices,
+  helpAttackTargetHole,
+} from "./help-attack.ts";
 import { zeroHpLifecycleIsTerminal } from "./creature-state-leaves.ts";
 export function needsAttackDamageConcentrationResult(input: {
   readonly state: BattleState;
@@ -312,29 +308,6 @@ export function resolveDash(
     tag: "resolved",
     state: nextState,
     snapshot: snapshotBattle(nextState),
-  };
-}
-
-export function applyDashToActor(
-  state: BattleState,
-  actor: BattleCreatureState,
-  speedKind: BattleMovementSpeedKind,
-  spentResources: BattleTurnResources,
-): BattleState {
-  const speed = effectiveMovementSpeed(
-    state,
-    actor,
-    speedKind,
-    state.grapples.some((grapple) => grapple.targetId === actor.combatantId),
-  );
-  return {
-    ...state,
-    currentTurnResources: {
-      ...spentResources,
-      dashMovementBonusFeet: movementFeet(
-        Number(spentResources.dashMovementBonusFeet) + Number(speed),
-      ),
-    },
   };
 }
 
@@ -602,16 +575,6 @@ export function resolveBonusActionDisengage(
     tag: "resolved",
     state: nextState,
     snapshot: snapshotBattle(nextState),
-  };
-}
-
-export function applyDisengage(
-  state: BattleState,
-  spentResources: BattleTurnResources,
-): BattleState {
-  return {
-    ...state,
-    currentTurnResources: { ...spentResources, disengaged: true },
   };
 }
 
@@ -1170,67 +1133,6 @@ export function resolveSearch(
     state: nextState,
     snapshot: snapshotBattle(nextState),
   };
-}
-
-export function helpAttackAllyHole(
-  state: BattleState,
-  helperId: CombatantId,
-): BattleHelpAttackAllyDecisionHole {
-  return {
-    kind: "helpAttackAllyDecision",
-    holeInstanceKey: HELP_ATTACK_ALLY_HOLE_INSTANCE,
-    holeId: HELP_ATTACK_ALLY_HOLE_ID,
-    label: "Help ally",
-    helperId,
-    choices: helpAttackAllyChoices(state, helperId),
-  };
-}
-
-export function helpAttackTargetHole(
-  state: BattleState,
-  helperId: CombatantId,
-  allyId: CombatantId,
-): BattleHelpAttackEnemyDecisionHole {
-  return {
-    kind: "helpAttackEnemyDecision",
-    holeInstanceKey: HELP_ATTACK_TARGET_HOLE_INSTANCE,
-    holeId: HELP_ATTACK_TARGET_HOLE_ID,
-    label: "Help attack target",
-    helperId,
-    allyId,
-    choices: helpAttackTargetChoices(state, helperId, allyId),
-  };
-}
-
-export function helpAttackAllyChoices(
-  state: BattleState,
-  helperId: CombatantId,
-): readonly CombatantId[] {
-  const participants = helpAttackParticipantChoices(state, helperId);
-  return participants.length >= 2 ? participants : [];
-}
-
-export function helpAttackTargetChoices(
-  state: BattleState,
-  helperId: CombatantId,
-  allyId: CombatantId,
-): readonly CombatantId[] {
-  if (!helpAttackAllyChoices(state, helperId).includes(allyId)) return [];
-  return helpAttackParticipantChoices(state, helperId).filter(
-    (combatantId) => combatantId !== allyId,
-  );
-}
-
-function helpAttackParticipantChoices(
-  state: BattleState,
-  helperId: CombatantId,
-): readonly CombatantId[] {
-  return [...state.combatants]
-    .filter(
-      ([combatantId, combatant]) =>
-        combatantId !== helperId && !zeroHpLifecycleIsTerminal(combatant),
-    )
-    .map(([combatantId]) => combatantId);
 }
 
 export function hasHelpAttackTargetSpatialFact(
@@ -1965,58 +1867,6 @@ export function abilityCheckFill(
     };
   }
   return { tag: "ok", value: check };
-}
-
-export function spellSaveDcForCaster(
-  state: BattleState,
-  casterId: CombatantId,
-): DifficultyClass | null {
-  const caster = state.combatants.get(casterId);
-  if (caster?.origin.kind !== "character") {
-    return null;
-  }
-  const spellcasting = caster.origin.spellcasting;
-  if (spellcasting === undefined) {
-    return null;
-  }
-  return difficultyClass(
-    8 +
-      Number(spellcasting.spellcastingAbilityModifier) +
-      spellcasting.proficiencyBonus +
-      activeOngoingFeatureSpellSaveDcBonus(state, caster),
-  );
-}
-
-function activeOngoingFeatureSpellSaveDcBonus(
-  state: BattleState,
-  caster: BattleCreatureState,
-): number {
-  if (!isCharacterBattleCreatureState(caster)) {
-    return 0;
-  }
-  const spellcasting = caster.origin.spellcasting;
-  if (spellcasting === undefined) {
-    return 0;
-  }
-  return [...activeOngoingFeatureOccurrencesForCombatant(state, caster)].reduce(
-    (total, [key]) => {
-      const profile = ongoingFeatureProfileForSourceKey(caster, key);
-      if (profile === null) {
-        return total;
-      }
-      return (
-        total +
-        profile.spellModifiers.reduce(
-          (modifierTotal, modifier) =>
-            modifier.sourceClassName === spellcasting.sourceClassName
-              ? modifierTotal + modifier.saveDcBonus
-              : modifierTotal,
-          0,
-        )
-      );
-    },
-    0,
-  );
 }
 
 function validateShovePushDisposition(

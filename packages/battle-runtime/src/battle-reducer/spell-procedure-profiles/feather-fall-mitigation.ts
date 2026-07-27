@@ -34,20 +34,15 @@ import {
   type BattleState,
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
-import { snapshotBattle } from "../dispatcher.ts";
 import { CombatantId } from "../../identity.ts";
 import { DurationBattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { stateAfterSpellCastDeclared } from "../spell-cast-declaration.ts";
-import { expendSpellSlot } from "../spell-effects.ts";
+import { selectSpellTargetList } from "../spell-target-list-selection.ts";
 import { sameStringSet } from "../spells-execution-facts.ts";
-import { markSpellSlotExpendedThisTurn } from "../spell-turn-resources.ts";
-import {
-  spellTargetListHole,
-  validateSpellTargetList,
-} from "../spells-targeting.ts";
+import { completeReactionSpellSlotCast } from "../reaction-spell-resolution.ts";
 import { featherFallReactionSpellMatchesTrigger } from "../reaction-triggered-spells.ts";
-import { needsHolesResult } from "../hole-helpers.ts";
+
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
@@ -186,48 +181,24 @@ function resolveFeatherFallMitigation(
       "Feather Fall requires a matching falling Reaction trigger.",
     );
   }
-  if (
-    input.fillSet.targetId !== undefined ||
-    input.fillSet.attackRoll !== undefined ||
-    input.fillSet.targetAllocation !== undefined ||
-    input.fillSet.damageRoll !== undefined ||
-    input.fillSet.damageDispositions.length > 0 ||
-    input.fillSet.savingThrowOutcomes !== undefined ||
-    input.fillSet.skillChoice !== undefined ||
-    input.fillSet.targetAbilityChoices !== undefined ||
-    input.fillSet.concentrationSavingThrows.length > 0
-  ) {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      "Feather Fall uses only falling target-list fills.",
-    );
-  }
-  if (input.fillSet.targetList === undefined) {
-    return needsHolesResult(input.input.state, input.input.subject, [
-      spellTargetListHole(
-        input.input.state,
-        input.input.subject.reactorId,
-        input.invocation,
-      ),
-    ]);
-  }
-  const targetValidation = validateSpellTargetList(
-    input.input.state,
-    input.input.subject.reactorId,
-    input.invocation,
-    input.fillSet.targetList.targetIds,
-    input.fillSet.targetList.spatialFacts,
-  );
-  if (targetValidation !== null) {
-    return invalidResult(input.input.state, "invalidFill", targetValidation);
+  const targetSelection = selectSpellTargetList({
+    state: input.input.state,
+    subject: input.input.subject,
+    fills: input.input.fills,
+    fillSet: input.fillSet,
+    actorId: input.input.subject.reactorId,
+    invocation: input.invocation,
+    invalidFillMessage: "Feather Fall uses only falling target-list fills.",
+  });
+  if (targetSelection.tag !== "selected") {
+    return targetSelection;
   }
   const castingState = stateAfterSpellCastDeclared({
     state: input.input.state,
     casterId: input.input.subject.reactorId,
     invocation: input.invocation,
   });
-  const effected: BattleState = input.fillSet.targetList.targetIds.reduce(
+  const effected: BattleState = targetSelection.targetIds.reduce(
     (state, targetId) => {
       const target = state.combatants.get(targetId);
       return target === undefined
@@ -248,31 +219,12 @@ function resolveFeatherFallMitigation(
     },
     castingState,
   );
-  const slotted = expendSpellSlot(
-    effected,
-    input.input.subject.reactorId,
-    input.invocation.resource.slotLevel,
-  );
-  const nextTurnResources = markSpellSlotExpendedThisTurn(
-    slotted.currentTurnResources,
-    input.input.subject.reactorId,
-  );
-  if (Either.isLeft(nextTurnResources)) {
-    return invalidResult(
-      input.input.state,
-      "staleSubject",
-      "This turn has already expended a Spell Slot.",
-    );
-  }
-  const nextState = {
-    ...slotted,
-    currentTurnResources: nextTurnResources.right,
-  };
-  return {
-    tag: "resolved",
-    state: nextState,
-    snapshot: snapshotBattle(nextState),
-  };
+  return completeReactionSpellSlotCast({
+    effectedState: effected,
+    errorState: input.input.state,
+    casterId: input.input.subject.reactorId,
+    slotLevel: input.invocation.resource.slotLevel,
+  });
 }
 
 const FeatherFallMitigationInvocationSchema = spellProcedureExecutionSchema(

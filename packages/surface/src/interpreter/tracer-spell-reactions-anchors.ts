@@ -19,8 +19,9 @@ import {
 import type { IdGen } from "./tracer-rule-labels.ts";
 import type { SpellCtx } from "./tracer-spell-context.ts";
 
-import { tracePhase } from "./tracer-activation.ts";
+import { tracePhases } from "./tracer-activation.ts";
 import { traceDiceAmountScaling } from "./tracer-scaling.ts";
+import { traceDecisionCommit } from "./tracer-decision.ts";
 
 type ObjectAnchor = Extract<AnchorTarget, { kind: "object" }>;
 type MagicCircleWardDirection =
@@ -83,43 +84,13 @@ export function traceTriggeredReaction(
   // Prepare / Prompt / Commit chain — the decision boundary. Per
   // UBIQUITOUS_LANGUAGE §Triggers line 31: "Declining does not consume
   // the reaction resource." The chain represents that optionality.
-  const prepId = ids("prep");
-  nodes.push({
-    id: prepId,
-    category: "procedure",
-    atomKind: "prepare",
-    label: "prepare",
+  const commitId = traceDecisionCommit({
+    procedureId: ctx.procId,
+    interruptsTrigger: m.interruptsTrigger,
+    nodes,
+    edges,
+    ids,
   });
-  edges.push({ from: ctx.procId, to: prepId, relation: "prepares" });
-
-  const promptId = ids("prompt");
-  nodes.push({
-    id: promptId,
-    category: "procedure",
-    atomKind: "prompt",
-    label: "prompt",
-  });
-  edges.push({ from: prepId, to: promptId, relation: "prompts" });
-
-  const commitId = ids("commit");
-  nodes.push({
-    id: commitId,
-    category: "procedure",
-    atomKind: "commit",
-    label: "commit",
-  });
-  edges.push({ from: promptId, to: commitId, relation: "commits" });
-
-  if (m.interruptsTrigger) {
-    const intId = ids("int");
-    nodes.push({
-      id: intId,
-      category: "resolution",
-      atomKind: "interrupt_resolution",
-      label: "interrupt_resolution",
-    });
-    edges.push({ from: commitId, to: intId, relation: "grants" });
-  }
 
   // Phases of the reaction — unified with ActivationMechanics.
   // ctx.procId threads through so the phase tracers emit their
@@ -129,25 +100,7 @@ export function traceTriggeredReaction(
     slotId: ctx.slotId,
     range: ctx.range,
   };
-  let previousResolutionId: string | null = null;
-  m.phases.forEach((phase, idx) => {
-    const thisResolutionId = tracePhase(
-      phase,
-      idx + 1,
-      phaseCtx,
-      nodes,
-      edges,
-      ids,
-    );
-    if (previousResolutionId !== null) {
-      edges.push({
-        from: previousResolutionId,
-        to: thisResolutionId,
-        relation: "branches_on_completion",
-      });
-    }
-    previousResolutionId = thisResolutionId;
-  });
+  tracePhases(m.phases, phaseCtx, nodes, edges, ids);
 }
 
 // v4 Subgraph hunt §4.2 — anchored_trigger payload family. Pressure

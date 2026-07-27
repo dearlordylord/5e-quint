@@ -1,4 +1,12 @@
+import {
+  maybeOpenConfiguredSpellCastReactionWindow,
+  spendConfiguredSpellCastResources,
+} from "../spell-active-effect-resolution.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
+import {
+  actionSpellCastCandidatesForTargetHole,
+  spellCastCandidate,
+} from "../spell-cast-candidate.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
 import { DiceExprSchema } from "@dnd/surface/surface/schema";
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE
@@ -48,12 +56,13 @@ import { characterSpellProcedureRefsForProcedure } from "../../character-executi
 import {
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
+  type BattleFill,
   type BattleResolutionResult,
   type BattleState,
   type SpellCreatedHeldObjectActiveEffect,
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
-import { maybeOpenInterruptWindow, snapshotBattle } from "../dispatcher.ts";
+import { snapshotBattle } from "../interrupt-execution.ts";
 import {
   BattleActiveEffectExecutionRef,
   BattleProcedureExecutionRef,
@@ -62,16 +71,14 @@ import {
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 import { allocateBattleActiveEffectRef } from "../../active-effect/execution-ref.ts";
 import { invalidResult } from "../result-helpers.ts";
+import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
 import { SPELL_CREATED_HELD_OBJECT_MELEE_REACH_FEET } from "../domain-constants.ts";
-import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
 import { spellCreatedHeldObjectHasFreeHand } from "../spell-created-held-object.ts";
 import { spellTargetHole } from "../spells-targeting.ts";
 import { resolveSpellAttackDamageAct } from "../spells-resolve.ts";
 import type { SpellProcedureExecutionRegistry } from "./execution-registry.ts";
-import { spendSpellCastResources } from "../spells-resolve-resources.ts";
 import { sameStringSet } from "../spells-execution-facts.ts";
 import type {
-  OkSpellFillSet,
   SpellAdmissionContext,
   SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
@@ -437,15 +444,12 @@ function discoverSpellCreatedHeldObjectCastAct(
     return [];
   }
   return [
-    {
-      subject: {
-        tag: "bonusActionSpell",
-        actorId,
-        procedureRef: invocation.sourceProcedureRef,
-        mode: { tag: "cast" },
-      },
-      initialHoles: [],
-    },
+    spellCastCandidate(
+      "bonusActionSpell",
+      actorId,
+      invocation.sourceProcedureRef,
+      [],
+    ),
   ];
 }
 
@@ -466,19 +470,11 @@ function discoverSpellCreatedHeldObjectAttackCastAct(
     );
   if (effect?.objectState.kind !== "held") return [];
   const targetHole = spellTargetHole(state, actorId, invocation);
-  return targetHole.choices.length === 0
-    ? []
-    : [
-        {
-          subject: {
-            tag: "actionSpell",
-            actorId,
-            procedureRef: invocation.sourceProcedureRef,
-            mode: { tag: "cast" },
-          },
-          initialHoles: [targetHole],
-        },
-      ];
+  return actionSpellCastCandidatesForTargetHole(
+    actorId,
+    invocation.sourceProcedureRef,
+    targetHole,
+  );
 }
 
 function discoverSpellCreatedHeldObjectReEvokeCastAct(
@@ -501,15 +497,12 @@ function discoverSpellCreatedHeldObjectReEvokeCastAct(
     );
   if (effect?.objectState.kind !== "notHeld") return [];
   return [
-    {
-      subject: {
-        tag: "bonusActionSpell",
-        actorId,
-        procedureRef: invocation.sourceProcedureRef,
-        mode: { tag: "cast" },
-      },
-      initialHoles: [],
-    },
+    spellCastCandidate(
+      "bonusActionSpell",
+      actorId,
+      invocation.sourceProcedureRef,
+      [],
+    ),
   ];
 }
 
@@ -519,7 +512,7 @@ function resolveSpellCreatedHeldObject(
   const handStateError = spellCreatedHeldObjectHandStateError(
     input.input.state,
     input.actorId,
-    input.fillSet,
+    input.input.fills,
     {
       allowSpellCastReactionFacts: true,
       unrelatedFillsMessage:
@@ -533,30 +526,17 @@ function resolveSpellCreatedHeldObject(
       handStateError.message,
     );
   }
-  const spellCastReactionWindow = maybeOpenInterruptWindow(
-    input.input.state,
-    spellCastInterruptFrame({
-      casterId: input.actorId,
-      invocation: input.invocation,
-      targetIds: [input.actorId],
-      reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
-      castingResource: { kind: "bonusAction" },
-      continuation: {
-        kind: "replay",
-        subject: input.input.subject,
-        fills: input.input.fills,
-      },
-    }),
-    input.input.handledInterruptTrigger,
-  );
+  const resolution = { ...input, actionCostOverride: "bonusAction" as const };
+  const spellCastReactionWindow = maybeOpenConfiguredSpellCastReactionWindow({
+    resolution,
+    targetIds: [input.actorId],
+  });
   if (spellCastReactionWindow !== null) {
     return spellCastReactionWindow;
   }
-  const resourced = spendSpellCastResources({
+  const resourced = spendConfiguredSpellCastResources({
+    resolution,
     state: input.input.state,
-    actorId: input.actorId,
-    invocation: input.invocation,
-    errorState: input.input.state,
   });
   if (resourced.tag === "invalid") {
     return resourced;
@@ -620,7 +600,7 @@ function resolveSpellCreatedHeldObjectReEvoke(
   const handStateError = spellCreatedHeldObjectHandStateError(
     input.input.state,
     input.actorId,
-    input.fillSet,
+    input.input.fills,
     {
       allowSpellCastReactionFacts: false,
       unrelatedFillsMessage:
@@ -685,7 +665,7 @@ function resolveSpellCreatedHeldObjectReEvoke(
 function spellCreatedHeldObjectHandStateError(
   state: BattleState,
   actorId: CombatantId,
-  fillSet: OkSpellFillSet,
+  fills: readonly BattleFill[],
   options: {
     readonly allowSpellCastReactionFacts: boolean;
     readonly unrelatedFillsMessage: string;
@@ -695,9 +675,9 @@ function spellCreatedHeldObjectHandStateError(
   readonly message: string;
 } | null {
   if (
-    spellCreatedHeldObjectHasUnrelatedFills(fillSet) ||
-    (!options.allowSpellCastReactionFacts &&
-      fillSet.reactionSpellTargetFacts.length > 0)
+    options.allowSpellCastReactionFacts
+      ? !fillsBelongToSpellCastHoles(fills)
+      : fills.length > 0
   ) {
     return { reason: "invalidFill", message: options.unrelatedFillsMessage };
   }
@@ -708,47 +688,6 @@ function spellCreatedHeldObjectHandStateError(
     };
   }
   return null;
-}
-
-function spellCreatedHeldObjectHasUnrelatedFills(
-  fillSet: OkSpellFillSet,
-): boolean {
-  return (
-    fillSet.targetId !== undefined ||
-    fillSet.objectTarget !== undefined ||
-    fillSet.targetSpatialFacts.length > 0 ||
-    fillSet.targetAllocation !== undefined ||
-    fillSet.targetList !== undefined ||
-    fillSet.attackSequencePartFills.some(
-      (attackSequencePartFill) =>
-        attackSequencePartFill.target !== undefined ||
-        attackSequencePartFill.attackRoll !== undefined ||
-        attackSequencePartFill.mirrorImageDuplicateRoll !== undefined ||
-        attackSequencePartFill.damageRoll !== undefined,
-    ) ||
-    fillSet.attackRoll !== undefined ||
-    fillSet.savingThrowOutcomes !== undefined ||
-    fillSet.skillChoice !== undefined ||
-    fillSet.targetAbilityChoices !== undefined ||
-    fillSet.abilityChoice !== undefined ||
-    fillSet.thaumaturgyActiveOneMinuteEffectCount !== undefined ||
-    fillSet.commandOptionChoice !== undefined ||
-    fillSet.selfTransformationModeChoice !== undefined ||
-    fillSet.conditionChoice !== undefined ||
-    fillSet.areaChoice !== undefined ||
-    fillSet.teleportDestination !== undefined ||
-    fillSet.dancingLightsPlacement !== undefined ||
-    fillSet.damageTypeChoice !== undefined ||
-    fillSet.concentrationSavingThrows.length > 0 ||
-    fillSet.hideousLaughterDamageRepeatSaves.length > 0 ||
-    fillSet.damageDispositions.length > 0 ||
-    fillSet.damageRoll !== undefined ||
-    fillSet.mirrorImageDuplicateRoll !== undefined ||
-    fillSet.movement !== undefined ||
-    fillSet.spellDamageReductionRolls.length > 0 ||
-    fillSet.attackBurstDamageRoll !== undefined ||
-    fillSet.healingRoll !== undefined
-  );
 }
 
 const SpellCreatedHeldObjectInvocationSchema = spellProcedureExecutionSchema(

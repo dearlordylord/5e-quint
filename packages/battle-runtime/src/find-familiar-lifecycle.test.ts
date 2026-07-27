@@ -70,7 +70,7 @@ import {
 import {
   characterBattleFeatureInitForTest,
   resolveBattleSubject,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import { D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND } from "./battle-state-execution.ts";
 import { ATTACK_TARGET_HOLE_ID } from "./battle-reducer/battle-runtime-protocol.ts";

@@ -1,8 +1,5 @@
 // KERNEL-COVERAGE: runtime-owner CHARACTER.BATTLE.HANDOFF.INIT_PROJECTION
-import {
-  characterBuildUnitRefs,
-  type CharacterBuild,
-} from "@dnd/character-creation-runtime";
+import { type CharacterBuild } from "@dnd/character-creation-runtime";
 import { readBackgroundCreationFacts } from "@dnd/surface/surface/character-creation-readers";
 import type { UnitRecord } from "@dnd/surface/surface/types";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
@@ -24,7 +21,7 @@ export function characterBattleOriginFeatSelectedReferenceProjection(input: {
   CharacterBattleOriginFeatSelectedReferenceProjection,
   BattleCreatureInitIssue
 > {
-  const originFeatUnitIds = retainedBackgroundOriginFeatUnitIds(input);
+  const originFeatUnitIds = backgroundOriginFeatUnitIds(input);
   if (Either.isLeft(originFeatUnitIds)) {
     return Either.left(originFeatUnitIds.left);
   }
@@ -34,7 +31,7 @@ export function characterBattleOriginFeatSelectedReferenceProjection(input: {
   });
 }
 
-function retainedBackgroundOriginFeatUnitIds(input: {
+function backgroundOriginFeatUnitIds(input: {
   readonly build: CharacterBuild;
   readonly unitLibrary: UnitCatalog;
 }): Either.Either<readonly UnitRecord["id"][], BattleCreatureInitIssue> {
@@ -50,21 +47,5 @@ function retainedBackgroundOriginFeatUnitIds(input: {
       "Character battle Origin feat selected-reference projection requires a readable background Origin feat.",
     );
   }
-  const backgroundOriginFeatUnitIds = [backgroundFacts.value.originFeatId];
-
-  const retainedUnitIds = new Set(
-    characterBuildUnitRefs(input.build, input.unitLibrary).map(
-      (ref) => ref.unitId,
-    ),
-  );
-  const retainedOriginFeatUnitIds = backgroundOriginFeatUnitIds.filter(
-    (unitId: UnitRecord["id"]) => retainedUnitIds.has(unitId),
-  );
-  if (retainedOriginFeatUnitIds.length !== backgroundOriginFeatUnitIds.length) {
-    return battleCreatureInitIssue(
-      "Character battle Origin feat selected-reference projection requires the background Origin feat to be retained in CharacterBuild unit refs.",
-    );
-  }
-
-  return Either.right(retainedOriginFeatUnitIds);
+  return Either.right([backgroundFacts.value.originFeatId]);
 }

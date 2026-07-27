@@ -45,7 +45,8 @@ import {
   sourceDamageRollPenaltyRollForDamageRoll,
   unexpectedSourceDamageRollPenaltyRoll,
 } from "./damage-helpers.ts";
-import { needsHolesResult } from "./hole-helpers.ts";
+
+import { needsHolesResult } from "./needs-holes-result.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
 import { spellCastInterruptFrame } from "./spell-cast-interrupt-frame.ts";

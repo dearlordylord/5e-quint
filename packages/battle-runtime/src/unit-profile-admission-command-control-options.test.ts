@@ -1,39 +1,39 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV50D2 command
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-command-drop-held-object spell.invocation-command-halt-grovel
-import { battleActiveEffectExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { battleActiveEffectExecutionRefForTest } from "./battle-runtime.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { describe, expect, test } from "vitest";
 import {
   requireCharacterSpellProcedureRefForTest,
   characterBonusAttackSubjectForTest,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import {
   commandLegendaryActorId,
   commandUnitId,
   spellCasterId,
   spellTargetId,
-} from "./unit-profile-admission-catalog-support.ts";
+} from "./unit-profile-admission-catalog.test-support.ts";
 import {
   legendaryActionStatBlock,
   requireCombatant,
   requireHole,
   requireResultHole,
   zeroAbilityWeaponAttack,
-} from "./unit-profile-admission-creature-fixture-support.ts";
+} from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
   savingThrowOutcomeFill,
   spellAct,
   spellActInvocation,
   spellTargetListFill,
-} from "./unit-profile-admission-spell-fill-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+} from "./unit-profile-admission-spell-fill.test-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import type {
   AvailableBattleAct,
   BattleFill,
   BattleSubject,
-} from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission.test-support.ts";
 import {
   battleObjectId,
   combatantId,
@@ -43,7 +43,7 @@ import {
   movementFeet,
   resolveBattleSubject,
   spellSlotInvocationRef,
-} from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission.test-support.ts";
 
 describe("QMBT14 deterministic Command control option admission", () => {
   test("command is admitted as a target-list save spell with promoted option choices and slot-scaled targets", () => {

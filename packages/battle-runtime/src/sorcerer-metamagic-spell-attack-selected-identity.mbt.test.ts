@@ -20,18 +20,18 @@ import {
   mbtSpecPath,
   reducerRoutedMetamagicStateCheck,
   run,
-} from "./battle-runtime-mbt-driver-kit.ts";
+} from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import {
   battleReducerStartRouteEvent,
   type BattleReducerRouteEvent,
 } from "./index.ts";
-import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.test-support.ts";
 import {
   observeQuickenedRayOfFrostRoute,
   projectBattleState,
   resolveQuickenedRayOfFrost,
   sorcererMetamagicBattle,
-} from "./sorcerer-metamagic-selected-identity-support.ts";
+} from "./sorcerer-metamagic-selected-identity.test-support.ts";
 
 const quickenedSpellAttackRouteReplayDriverSchema = {
   init: {},

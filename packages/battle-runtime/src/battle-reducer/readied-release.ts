@@ -3,171 +3,33 @@
 
 import type { BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
 import { sameBattleSubject, type BattleSubject } from "../battle-subjects.ts";
-import { movementFeet } from "@dnd/shared/types";
-import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
-import { markMovementSpentForMovementActionBonusActionExclusion } from "@dnd/shared-algebras/action-economy-algebra";
-import { needsHolesResult } from "./hole-helpers.ts";
+
+import { needsHolesResult } from "./needs-holes-result.ts";
 import { invalidResult } from "./result-helpers.ts";
-import {
-  spellDamageTypeChoiceHole,
-  spellObjectTargetHole,
-  spellSavingThrowOutcomeHole,
-  spellTargetAllocationHole,
-  spellTargetHole,
-} from "./spells-holes-fills.ts";
-import { resolveSpellRelease } from "./spells-resolve.ts";
-import {
-  combatantCanMoveWithBudget,
-  battleMovementBudgetForActor,
-  movementHoleHasRemainingBudget,
-  opportunityAttackThreatsForMovement,
-} from "./movement-speed.ts";
+import { resolveSpellRelease } from "./spells-resolve-release.ts";
+import { opportunityAttackThreatsForMovement } from "./movement-speed.ts";
 import {
   parseBattleMovement,
-  readiedMovementHole,
-  readiedMovementBudgetForActor,
   resolveMovementEffectsAfterMovement,
 } from "./turn-end-movement.ts";
-import { updateLevitatedCreatureAltitude } from "./levitate-creature.ts";
-import { battleCreatureStateWithKnockOutPreservedConditions } from "./creature-state-execution.ts";
 import {
-  currentActorId,
-  normalizeBattleGrapples,
-} from "./creature-state-leaves.ts";
+  readiedMovementBudgetForActor,
+  readiedMovementHole,
+} from "./movement-holes.ts";
 import { breakBattleConcentration } from "./damage-apply.ts";
 import {
   currentInterruptCheckpoint,
   maybeOpenInterruptWindow,
 } from "./interrupt-execution.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";
-import type { CombatantId } from "../identity.ts";
 import type {
-  BattleHole,
-  BattleReadiedSpell,
   BattleResolutionInput,
   BattleResolutionInputForSubject,
   BattleResolutionResult,
-  BattleResolvedMovement,
-  BattleState,
 } from "../battle-state-execution.ts";
 import { MOVEMENT_HOLE_ID } from "./battle-runtime-protocol.ts";
 import { characterSpellProcedure } from "../character-execution-queries.ts";
 import { isReadiedSpellInvocation } from "./spells-discovery.ts";
-
-export function applyBattleMovement(
-  state: BattleState,
-  movement: BattleResolvedMovement,
-): BattleState {
-  const mover = state.combatants.get(movement.moverId);
-  if (
-    mover === undefined ||
-    !combatantCanMoveWithBudget(
-      state,
-      movement.moverId,
-      movement.spendsTurnMovement
-        ? battleMovementBudgetForActor(
-            state,
-            movement.moverId,
-            movement.speedKind,
-          ).remainingFeet
-        : readiedMovementBudgetForActor(
-            state,
-            movement.moverId,
-            movement.speedKind,
-          ),
-    )
-  ) {
-    return state;
-  }
-  const nextMover = movement.spendsTurnMovement
-    ? {
-        ...mover,
-        movementSpentFeet: movementFeet(
-          Number(mover.movementSpentFeet) + Number(movement.movementCostFeet),
-        ),
-      }
-    : mover;
-  const landedMover =
-    movement.jumpMovementReplacement?.landing.difficultTerrainAcrobatics ===
-    "failed"
-      ? battleCreatureStateWithKnockOutPreservedConditions(
-          nextMover,
-          applyCondition(nextMover.conditions, "prone"),
-        )
-      : nextMover;
-  const combatants = new Map(state.combatants).set(
-    movement.moverId,
-    landedMover,
-  );
-  const movedState = normalizeBattleGrapples({
-    ...state,
-    currentTurnResources:
-      movement.spendsTurnMovement && movement.moverId === currentActorId(state)
-        ? markMovementSpentForMovementActionBonusActionExclusion(
-            state.currentTurnResources,
-          )
-        : state.currentTurnResources,
-    combatants,
-  });
-  const levitatedMovement = movement.levitatedMovement;
-  return levitatedMovement?.altitudeChange === undefined
-    ? movedState
-    : updateLevitatedCreatureAltitude({
-        state: movedState,
-        targetId: movement.moverId,
-        sourceCombatantId: levitatedMovement.sourceCombatantId,
-        sourceProcedureRef: levitatedMovement.sourceProcedureRef,
-        change: levitatedMovement.altitudeChange,
-      });
-}
-
-export function readiedSpellInitialHoles(
-  state: BattleState,
-  casterId: CombatantId,
-  readied: BattleReadiedSpell,
-): readonly BattleHole[] {
-  const caster = state.combatants.get(casterId);
-  const invocation =
-    caster?.origin.kind === "character"
-      ? characterSpellProcedure(
-          caster.origin.execution,
-          readied.procedureRef,
-          caster,
-        )
-      : undefined;
-  if (invocation === undefined || !isReadiedSpellInvocation(invocation)) {
-    return [];
-  }
-  if (invocation.procedure === "saveGatedDamage") {
-    return invocation.targeting.kind === "singleCombatant"
-      ? [spellTargetHole(state, casterId, invocation)]
-      : [spellSavingThrowOutcomeHole(state, casterId, invocation)];
-  }
-  if (invocation.procedure === "repeatedDamageAllocation") {
-    return [spellTargetAllocationHole(state, casterId, invocation)];
-  }
-  if (invocation.procedure === "chainedSpellAttackDamage") {
-    return [spellDamageTypeChoiceHole(invocation)];
-  }
-  if (
-    invocation.procedure === "spellAttackDamage" &&
-    invocation.targeting.kind === "singleCreatureOrObject"
-  ) {
-    return [
-      spellTargetHole(state, casterId, invocation),
-      spellObjectTargetHole(invocation),
-    ];
-  }
-  return [spellTargetHole(state, casterId, invocation)];
-}
-
-export function readiedMovementInitialHoles(
-  state: BattleState,
-  actorId: CombatantId,
-): readonly BattleHole[] {
-  const hole = readiedMovementHole(state, actorId);
-  return movementHoleHasRemainingBudget(hole) ? [hole] : [];
-}
 
 export function resolveReleaseReadiedSpellCommand(
   input: BattleResolutionInput,

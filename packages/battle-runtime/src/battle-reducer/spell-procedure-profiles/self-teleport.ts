@@ -1,3 +1,7 @@
+import {
+  maybeOpenConfiguredSpellCastReactionWindow,
+  spendConfiguredSpellCastResources,
+} from "../spell-active-effect-resolution.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-self-teleport
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE
@@ -32,12 +36,12 @@ import {
   type BattleTeleportDestinationFact,
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
-import { maybeOpenInterruptWindow, snapshotBattle } from "../dispatcher.ts";
+import { snapshotBattle } from "../interrupt-execution.ts";
 import { type CombatantId } from "../../identity.ts";
-import { needsHolesResult } from "../hole-helpers.ts";
+
+import { needsHolesResult } from "../needs-holes-result.ts";
 import { invalidResult } from "../result-helpers.ts";
-import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
-import { spendSpellCastResources } from "../spells-resolve-resources.ts";
+import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
 import {
   spellTeleportDestinationHole,
   spellTeleportDestinationHoleId,
@@ -141,30 +145,9 @@ function resolveSelfTeleport(
   input: SelfTeleportResolveInput,
 ): BattleResolutionResult {
   if (
-    input.fillSet.attackRoll !== undefined ||
-    input.fillSet.targetAllocation !== undefined ||
-    input.fillSet.targetId !== undefined ||
-    input.fillSet.objectTarget !== undefined ||
-    input.fillSet.targetList !== undefined ||
-    input.fillSet.targetSpatialFacts.length > 0 ||
-    input.fillSet.attackSequencePartFills.length > 0 ||
-    input.fillSet.damageRoll !== undefined ||
-    input.fillSet.attackBurstDamageRoll !== undefined ||
-    input.fillSet.healingRoll !== undefined ||
-    input.fillSet.skillChoice !== undefined ||
-    input.fillSet.targetAbilityChoices !== undefined ||
-    input.fillSet.abilityChoice !== undefined ||
-    input.fillSet.thaumaturgyActiveOneMinuteEffectCount !== undefined ||
-    input.fillSet.commandOptionChoice !== undefined ||
-    input.fillSet.areaChoice !== undefined ||
-    input.fillSet.dancingLightsPlacement !== undefined ||
-    input.fillSet.damageTypeChoice !== undefined ||
-    input.fillSet.savingThrowOutcomes !== undefined ||
-    input.fillSet.movement !== undefined ||
-    input.fillSet.hideousLaughterDamageRepeatSaves.length > 0 ||
-    input.fillSet.damageDispositions.length > 0 ||
-    input.fillSet.concentrationSavingThrows.length > 0 ||
-    input.fillSet.spellDamageReductionRolls.length > 0
+    !fillsBelongToSpellCastHoles(input.input.fills, [
+      spellTeleportDestinationHoleId(input.invocation, input.actorId),
+    ])
   ) {
     return invalidResult(
       input.input.state,
@@ -202,31 +185,18 @@ function resolveSelfTeleport(
     );
   }
 
-  const spellCastReactionWindow = maybeOpenInterruptWindow(
-    input.input.state,
-    spellCastInterruptFrame({
-      casterId: input.actorId,
-      invocation: input.invocation,
-      targetIds: [],
-      reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
-      castingResource: { kind: "bonusAction" },
-      continuation: {
-        kind: "replay",
-        subject: input.input.subject,
-        fills: input.input.fills,
-      },
-    }),
-    input.input.handledInterruptTrigger,
-  );
+  const resolution = { ...input, actionCostOverride: "bonusAction" as const };
+  const spellCastReactionWindow = maybeOpenConfiguredSpellCastReactionWindow({
+    resolution,
+    targetIds: [],
+  });
   if (spellCastReactionWindow !== null) {
     return spellCastReactionWindow;
   }
 
-  const resourced = spendSpellCastResources({
+  const resourced = spendConfiguredSpellCastResources({
+    resolution,
     state: input.input.state,
-    actorId: input.actorId,
-    invocation: input.invocation,
-    errorState: input.input.state,
   });
   return resourced.tag === "invalid"
     ? resourced

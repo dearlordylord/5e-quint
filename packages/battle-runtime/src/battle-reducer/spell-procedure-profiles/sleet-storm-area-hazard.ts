@@ -1,4 +1,5 @@
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
+import { ongoingConcentrationAreaSpellFacts } from "../ongoing-concentration-area-spell.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-sleet-storm-area-hazard
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE
@@ -23,27 +24,21 @@ import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 //     Invocation, Area of Effect/Cylinder, Difficult Terrain, Heavily Obscured,
 //     Prone, and Saving Throw.
 
-import {
-  elapsedTimeTicksFromTimeSpanDuration,
-  type ElapsedTimeTicks,
-} from "@dnd/shared-algebras/elapsed-time-algebra";
+import { type ElapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
 import { Either, Schema } from "effect";
 
 import {
-  type BattleActDiscoveryCandidate,
   type BattleResolutionResult,
-  type BattleState,
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
-import { type CombatantId } from "../../identity.ts";
 import {
   DcSourceSchema,
   MovementFeet,
   PreparedSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
-import { spellAreaChoiceHole } from "../spells-holes-fills.ts";
+import { discoverActionSpellAreaCastAct } from "../spell-area-cast-discovery.ts";
 import { resolveSleetStormAreaHazardSpellAct } from "../spells-resolve-area-effects.ts";
 import type {
   SpellAdmissionContext,
@@ -128,35 +123,28 @@ function admitSleetStormAreaHazard(
 function sleetStormAreaHazardSpell(
   spell: BattleSpellAdmissionSource,
 ): SleetStormAreaHazardProfileShape | null {
-  if (spell.mechanics.family !== "ongoing_effect") {
+  const ongoing = ongoingConcentrationAreaSpellFacts(spell);
+  if (ongoing === null) {
     return null;
   }
-  const durationTicks =
-    spell.mechanics.duration.kind === "concentration"
-      ? elapsedTimeTicksFromTimeSpanDuration(spell.mechanics.duration.upTo)
-      : null;
-  const attachment = spell.mechanics.attachment;
-  const area =
-    attachment.kind === "hole" && attachment.value.kind === "area"
-      ? attachment.value
-      : null;
-  const enterOperation = spell.mechanics.operations.find(
+  const { mechanics, duration, durationTicks, area } = ongoing;
+  const enterOperation = mechanics.operations.find(
     (operation) => operation.trigger.kind === "on_creature_enters_area",
   );
-  const startTurnOperation = spell.mechanics.operations.find(
+  const startTurnOperation = mechanics.operations.find(
     (operation) => operation.trigger.kind === "on_creature_starts_turn_in_area",
   );
-  const difficultTerrainOperation = spell.mechanics.operations.find(
+  const difficultTerrainOperation = mechanics.operations.find(
     (operation) =>
       operation.trigger.kind === "passive" &&
       operation.effect.kind === "area_is_difficult_terrain",
   );
-  const heavilyObscuredOperation = spell.mechanics.operations.find(
+  const heavilyObscuredOperation = mechanics.operations.find(
     (operation) =>
       operation.trigger.kind === "passive" &&
       operation.effect.kind === "area_is_heavily_obscured",
   );
-  const exposedFlamesOperation = spell.mechanics.operations.find(
+  const exposedFlamesOperation = mechanics.operations.find(
     (operation) =>
       operation.trigger.kind === "passive" &&
       operation.effect.kind === "douse_exposed_flames",
@@ -167,15 +155,13 @@ function sleetStormAreaHazardSpell(
   );
 
   if (
-    spell.mechanics.level !== SLEET_STORM_LEVEL ||
-    spell.mechanics.castingTime.kind !== "action" ||
-    spell.mechanics.range.kind !== "point" ||
-    spell.mechanics.range.feet !== SLEET_STORM_RANGE_FEET ||
-    spell.mechanics.duration.kind !== "concentration" ||
-    spell.mechanics.duration.upTo.unit !== "minute" ||
-    spell.mechanics.duration.upTo.amount !== SLEET_STORM_DURATION_MINUTES ||
-    spell.mechanics.operations.length !== SLEET_STORM_OPERATION_COUNT ||
-    durationTicks === null ||
+    mechanics.level !== SLEET_STORM_LEVEL ||
+    mechanics.castingTime.kind !== "action" ||
+    mechanics.range.kind !== "point" ||
+    mechanics.range.feet !== SLEET_STORM_RANGE_FEET ||
+    duration.upTo.unit !== "minute" ||
+    duration.upTo.amount !== SLEET_STORM_DURATION_MINUTES ||
+    mechanics.operations.length !== SLEET_STORM_OPERATION_COUNT ||
     Either.isLeft(durationTicks) ||
     area?.kind !== "area" ||
     area.origin.kind !== "point_within_range" ||
@@ -194,7 +180,7 @@ function sleetStormAreaHazardSpell(
 
   return {
     durationTicks: durationTicks.right,
-    rangeFeet: spell.mechanics.range.feet,
+    rangeFeet: mechanics.range.feet,
     radiusFeet: area.shape.radiusFeet,
     heightFeet: area.shape.heightFeet,
   };
@@ -242,24 +228,6 @@ function isSleetStormAreaHazardSaveGate(
   return appliesProne && breaksConcentration;
 }
 
-function discoverSleetStormAreaHazardCastAct(
-  _state: BattleState,
-  actorId: CombatantId,
-  invocation: import("../../battle-state-execution.ts").BattleExecutableSpellInvocation<SleetStormAreaHazardSpellInvocation>,
-): readonly BattleActDiscoveryCandidate[] {
-  return [
-    {
-      subject: {
-        tag: "actionSpell",
-        actorId,
-        procedureRef: invocation.sourceProcedureRef,
-        mode: { tag: "cast" },
-      },
-      initialHoles: [spellAreaChoiceHole(invocation)],
-    },
-  ];
-}
-
 function resolveSleetStormAreaHazard(
   input: SleetStormAreaHazardResolveInput,
 ): BattleResolutionResult {
@@ -293,7 +261,7 @@ export const sleetStormAreaHazardProfile = {
   procedure: "sleetStormAreaHazard",
   executionSchema: SleetStormAreaHazardInvocationSchema,
   admit: admitSleetStormAreaHazard,
-  discoverCastAct: discoverSleetStormAreaHazardCastAct,
+  discoverCastAct: discoverActionSpellAreaCastAct,
   resolve: resolveSleetStormAreaHazard,
 } satisfies SpellProcedureDeclaration<
   "sleetStormAreaHazard",

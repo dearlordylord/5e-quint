@@ -1,3 +1,4 @@
+import { discoverSavingThrowSpellCastActs } from "../saving-throw-metamagic-holes.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-grease-ground-hazard unit-feature.metamagic-heightened-save-disadvantage
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 //
@@ -22,8 +23,6 @@ import type { ActivationPhase } from "@dnd/surface/surface/types";
 import {
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
-  type BattleCreatureState,
-  type BattleHole,
   type BattleResolutionResult,
   type BattleState,
   type SpellTargeting,
@@ -47,18 +46,6 @@ import {
   SpellSlotInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import { Either, Schema } from "effect";
-import {
-  CAREFUL_METAMAGIC_EFFECT_KIND,
-  discoverSpellMetamagicSelections,
-  HEIGHTENED_METAMAGIC_EFFECT_KIND,
-  spellMetamagicApplications,
-} from "../metamagic-support.ts";
-import {
-  carefulSpellProtectedTargetsHole,
-  heightenedSpellTargetChoiceHole,
-  spellSavingThrowOutcomeHole,
-  spellSavingThrowTargeting,
-} from "../spells-holes-fills.ts";
 
 type GreaseGroundHazardSpellInvocation = Extract<
   SupportedSpellInvocation,
@@ -198,107 +185,7 @@ function discoverGreaseGroundHazardCastAct(
   actorId: CombatantId,
   invocation: BattleExecutableSpellInvocation<GreaseGroundHazardSpellInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
-  const actor = state.combatants.get(actorId);
-  const savingThrowHole = spellSavingThrowOutcomeHole(
-    state,
-    actorId,
-    invocation,
-  );
-  const baseCastAct = greaseGroundHazardCastAct(actorId, invocation, [
-    savingThrowHole,
-  ]);
-  return [
-    baseCastAct,
-    ...greaseGroundHazardMetamagicCastActs({
-      state,
-      actorId,
-      actor,
-      invocation,
-      baseCastAct,
-      baseHoles: [savingThrowHole],
-    }),
-  ];
-}
-
-function greaseGroundHazardMetamagicCastActs(input: {
-  readonly state: BattleState;
-  readonly actorId: CombatantId;
-  readonly actor: BattleCreatureState | undefined;
-  readonly invocation: BattleExecutableSpellInvocation<GreaseGroundHazardSpellInvocation>;
-  readonly baseCastAct: BattleActDiscoveryCandidate;
-  readonly baseHoles: readonly BattleHole[];
-}): readonly BattleActDiscoveryCandidate[] {
-  const actor = input.actor;
-  if (actor === undefined) {
-    return [];
-  }
-  return discoverSpellMetamagicSelections({
-    actor,
-    invocation: input.invocation,
-  }).map((metamagic) => {
-    const applications = spellMetamagicApplications(actor, metamagic);
-    const metamagicInitialHoles = greaseGroundHazardMetamagicInitialHoles(
-      input.state,
-      input.actorId,
-      input.invocation,
-      applications,
-    );
-    return {
-      ...input.baseCastAct,
-      subject: {
-        ...input.baseCastAct.subject,
-        metamagic,
-      },
-      initialHoles:
-        metamagicInitialHoles.length === 0
-          ? input.baseHoles
-          : metamagicInitialHoles,
-    };
-  });
-}
-
-function greaseGroundHazardCastAct(
-  actorId: CombatantId,
-  invocation: import("../../battle-state-execution.ts").BattleExecutableSpellInvocation<GreaseGroundHazardSpellInvocation>,
-  initialHoles: readonly BattleHole[],
-): BattleActDiscoveryCandidate {
-  return {
-    subject: {
-      tag: "actionSpell",
-      actorId,
-      procedureRef: invocation.sourceProcedureRef,
-      mode: { tag: "cast" },
-    },
-    initialHoles,
-  };
-}
-
-function greaseGroundHazardMetamagicInitialHoles(
-  state: BattleState,
-  actorId: CombatantId,
-  invocation: BattleExecutableSpellInvocation<GreaseGroundHazardSpellInvocation>,
-  metamagicApplications: readonly SpellMetamagicApplicationFact[],
-): readonly BattleHole[] {
-  const targeting = spellSavingThrowTargeting(invocation);
-  const holes: BattleHole[] = [];
-  if (
-    targeting.kind !== "singleCombatant" &&
-    metamagicApplications.some(
-      (application) => application.effectKind === CAREFUL_METAMAGIC_EFFECT_KIND,
-    )
-  ) {
-    holes.push(carefulSpellProtectedTargetsHole(state, actorId, invocation));
-  }
-  if (
-    targeting.kind !== "singleCombatant" &&
-    metamagicApplications.some(
-      (application) =>
-        application.effectKind === HEIGHTENED_METAMAGIC_EFFECT_KIND,
-    )
-  ) {
-    holes.push(heightenedSpellTargetChoiceHole(state, actorId, invocation));
-  }
-  return holes;
+  return discoverSavingThrowSpellCastActs(state, actorId, invocation);
 }
 
 function resolveGreaseGroundHazard(
@@ -341,4 +228,3 @@ export const greaseGroundHazardProfile = {
   "greaseGroundHazard",
   GreaseGroundHazardSpellInvocation
 >;
-import type { SpellMetamagicApplicationFact } from "../metamagic-support.ts";

@@ -105,30 +105,24 @@ export function combatantWearingArmorCategory(
   combatant: BattleCreatureState,
   category: ArmorCategory,
 ): boolean {
-  if (
-    combatantActiveDruidWildShape(combatant) !== null &&
-    !combatantDruidWildShapeEquipmentWearsKind(combatant, "armor")
-  ) {
-    return false;
-  }
-  if (
-    combatant.origin.kind === "character" &&
-    combatant.origin.selectedLoadout.armor !== undefined &&
-    characterEffectiveLoadoutFromOrigin(
-      state,
-      combatant.combatantId,
-      combatant.origin,
-    ).armor === undefined
-  ) {
-    return false;
-  }
   return (
+    combatantArmorWearIsEffective(state, combatant) &&
     combatant.armorClass.base.kind === "armor" &&
     combatant.armorClass.base.category === category
   );
 }
 
 export function combatantWearingArmor(
+  state: BattleState,
+  combatant: BattleCreatureState,
+): boolean {
+  return (
+    combatantArmorWearIsEffective(state, combatant) &&
+    combatant.armorClass.base.kind === "armor"
+  );
+}
+
+function combatantArmorWearIsEffective(
   state: BattleState,
   combatant: BattleCreatureState,
 ): boolean {
@@ -149,7 +143,7 @@ export function combatantWearingArmor(
   ) {
     return false;
   }
-  return combatant.armorClass.base.kind === "armor";
+  return true;
 }
 
 export function combatantWieldingShield(

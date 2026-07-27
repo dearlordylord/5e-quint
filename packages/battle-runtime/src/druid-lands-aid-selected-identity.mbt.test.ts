@@ -1,5 +1,5 @@
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.magic-action-area-save-damage-healing
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3PUTB-08-DRUID-LANDS-AID-RUNTIME druid_lands_aid
@@ -19,9 +19,9 @@ import {
   characterBattleFeatureInitForTest,
   characterSeed,
   wizardSpellcasting,
-} from "./battle-runtime-test-support.ts";
-import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
-import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
+} from "./battle-runtime.test-support.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.test-support.ts";
+import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import {
   druidLandsAidUnitId,
@@ -29,11 +29,11 @@ import {
   spellTargetId,
   statBlockCatalog,
   unitLibrary,
-} from "./unit-profile-admission-catalog-support.ts";
+} from "./unit-profile-admission-catalog.test-support.ts";
 import {
   characterCreature,
   requireHole,
-} from "./unit-profile-admission-creature-fixture-support.ts";
+} from "./unit-profile-admission-creature-fixture.test-support.ts";
 import {
   battleId,
   battleMagicActionAreaSaveDamageHealingSupportForUnit,
@@ -43,7 +43,7 @@ import {
   discoverBattleActCandidates,
   resolveBattleSubject,
   startBattle,
-} from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission.test-support.ts";
 
 type LandsAidLastResult =
   | "init"

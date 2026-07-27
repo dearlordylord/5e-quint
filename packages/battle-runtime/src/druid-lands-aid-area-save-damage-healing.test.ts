@@ -20,18 +20,18 @@ import {
   characterBattleFeatureInitForTest,
   characterSeed,
   wizardSpellcasting,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import {
   druidLandsAidUnitId,
   spellCasterId,
   spellTargetId,
   statBlockCatalog,
   unitLibrary,
-} from "./unit-profile-admission-catalog-support.ts";
+} from "./unit-profile-admission-catalog.test-support.ts";
 import {
   characterCreature,
   requireHole,
-} from "./unit-profile-admission-creature-fixture-support.ts";
+} from "./unit-profile-admission-creature-fixture.test-support.ts";
 import {
   battleId,
   battleMagicActionAreaSaveDamageHealingSupportForUnit,
@@ -41,7 +41,7 @@ import {
   discoverBattleActCandidates,
   resolveBattleSubject,
   startBattle,
-} from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission.test-support.ts";
 
 const druidWildShapeUnitId = "druid_wild_shape";
 const landsAidUnit = unitLibrary.requireUnit(druidLandsAidUnitId);

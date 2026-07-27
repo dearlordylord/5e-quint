@@ -25,14 +25,14 @@ import {
   findAct,
   resolveBattleSubject,
   spellSlotInvocationRef,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import { spellActiveEffectExecutionRef } from "./active-effect/execution-ref.ts";
 import type { SpellActiveEffect } from "./active-effect/execution-ref.ts";
 import { describe, expect, test } from "vitest";
 import type {
   BattleSubject,
   BattleHole,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 
 function holeProcedureRef(hole: BattleHole) {
   if (!("sourceProcedureRef" in hole)) {

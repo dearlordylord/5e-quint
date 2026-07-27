@@ -1,3 +1,4 @@
+import type * as CharacterCreationRuntime from "@dnd/character-creation-runtime"
 import type * as CharacterSheetRuntime from "@dnd/character-sheet-runtime"
 import { Either } from "effect"
 import { describe, expect, it, vi } from "vitest"
@@ -13,8 +14,22 @@ const summaryFailures = vi.hoisted(() => ({
   freshSheet: false,
   hitDice: false,
   maximumHp: false,
-  resources: false
+  resources: false,
+  wildShapeFacts: false
 }))
+
+vi.mock("@dnd/character-creation-runtime", async (importOriginal) => {
+  const actual = await importOriginal<typeof CharacterCreationRuntime>()
+  const { Either } = await import("effect")
+  return {
+    ...actual,
+    characterBuildDruidWildShapeFacts: vi.fn((input: Parameters<typeof actual.characterBuildDruidWildShapeFacts>[0]) =>
+      summaryFailures.wildShapeFacts
+        ? Either.left({ tag: "syntheticWildShapeFacts", message: "Synthetic Wild Shape facts failure." })
+        : actual.characterBuildDruidWildShapeFacts(input)
+    )
+  }
+})
 
 vi.mock("@dnd/character-sheet-runtime", async (importOriginal) => {
   const actual = await importOriginal<typeof CharacterSheetRuntime>()
@@ -85,6 +100,21 @@ describe("character creation app failure projections", () => {
       })
     } finally {
       summaryFailures.freshSheet = false
+    }
+  })
+
+  it("preserves Wild Shape fact projection failures", () => {
+    summaryFailures.wildShapeFacts = true
+    try {
+      expect(createCharacterSheetFromDraft(FIGHTER_EXAMPLE_DRAFT)).toMatchObject({
+        _tag: "Left",
+        left: {
+          tag: "characterSheetInvalid",
+          message: "Synthetic Wild Shape facts failure."
+        }
+      })
+    } finally {
+      summaryFailures.wildShapeFacts = false
     }
   })
 })

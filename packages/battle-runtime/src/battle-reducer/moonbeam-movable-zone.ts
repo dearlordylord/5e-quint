@@ -1,19 +1,12 @@
 // Moonbeam movable Cylinder composite transition.
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE
 
-import { damageAmount, resourceCount, spellSlotLevel } from "@dnd/shared/types";
-import {
-  spellSaveGateBranch,
-  spellSaveGateDamageAmount,
-  spellSaveGateDamageResult,
-} from "@dnd/shared-algebras/spell-save-gate-algebra";
-import {
-  applySpellSlotExpenditure,
-  spellSlotExpenditureAccepted,
-  spellSlotExpenditureRequired,
-  spellSlotExpenditureResultState,
-} from "@dnd/shared-algebras/spell-slot-expenditure-algebra";
 import { Match } from "effect";
+import { expendActionSpellSlot } from "./action-spell-slot-expenditure.ts";
+import {
+  applyDamageToPositiveHitPoints,
+  halfDamageAfterSuccessfulSave,
+} from "./focused-spell-hazard-damage.ts";
 import {
   projectShapeShiftRuntimeReversion,
   trueFormRuntimeState,
@@ -102,17 +95,7 @@ export function moonbeamDamageAfterSave(input: {
   readonly rolledDamage: number;
   readonly savingThrowSucceeded: boolean;
 }): number {
-  const branch = spellSaveGateBranch(input.savingThrowSucceeded);
-  const saveDamageResult = spellSaveGateDamageResult({
-    branch,
-    damageOnSuccess: "halfDamage",
-  });
-  return Number(
-    spellSaveGateDamageAmount(
-      damageAmount(input.rolledDamage),
-      saveDamageResult,
-    ),
-  );
+  return halfDamageAfterSuccessfulSave(input);
 }
 
 export function moonbeamDamageRollAccepted(input: {
@@ -141,35 +124,14 @@ export function resolveMoonbeamCast(
   state: MoonbeamMovableZoneState,
   slotLevel: number,
 ): MoonbeamMovableZoneState {
-  if (
-    !state.actionAvailable ||
-    !Number.isInteger(slotLevel) ||
-    slotLevel < MOONBEAM_MINIMUM_SLOT_LEVEL ||
-    slotLevel > 9 ||
-    !Number.isInteger(state.slotLedger.slotLevel) ||
-    state.slotLedger.slotLevel < 1 ||
-    state.slotLedger.slotLevel > 9 ||
-    !Number.isInteger(state.slotLedger.slotsRemaining) ||
-    state.slotLedger.slotsRemaining < 0
-  ) {
-    return state;
-  }
-  const requestedSlotLevel = spellSlotLevel(slotLevel);
-  const slotState = {
-    slotLedger: {
-      slotLevel: spellSlotLevel(state.slotLedger.slotLevel),
-      slotsRemaining: resourceCount(state.slotLedger.slotsRemaining),
-    },
-    slotSpellCastThisTurn: state.slotSpellCastThisTurn,
-  };
-  const slotResult = applySpellSlotExpenditure(
-    slotState,
-    spellSlotExpenditureRequired(requestedSlotLevel),
+  const slotExpenditure = expendActionSpellSlot(
+    state,
+    slotLevel,
+    MOONBEAM_MINIMUM_SLOT_LEVEL,
   );
-  if (!spellSlotExpenditureAccepted(slotResult)) {
+  if (slotExpenditure === undefined) {
     return state;
   }
-  const nextSlotState = spellSlotExpenditureResultState(slotState, slotResult);
   return {
     ...state,
     actionAvailable: false,
@@ -180,11 +142,7 @@ export function resolveMoonbeamCast(
       repositionMaxMoveFeet: MOONBEAM_REPOSITION_MAX_MOVE_FEET,
       savedThisTurn: false,
     },
-    slotLedger: {
-      slotLevel: Number(nextSlotState.slotLedger.slotLevel),
-      slotsRemaining: Number(nextSlotState.slotLedger.slotsRemaining),
-    },
-    slotSpellCastThisTurn: nextSlotState.slotSpellCastThisTurn,
+    ...slotExpenditure,
   };
 }
 
@@ -207,7 +165,7 @@ export function resolveMoonbeamSave(
       }
       const damaged = {
         ...state,
-        targetVitals: applyResolvedDamageToPositiveHitPoints(
+        targetVitals: applyDamageToPositiveHitPoints(
           state.targetVitals,
           moonbeamDamageAfterSave(fills),
         ),
@@ -321,25 +279,4 @@ function moonbeamZoneWithSavedThisTurn(
     byTag("active", (active) => ({ ...active, savedThisTurn })),
     Match.exhaustive,
   );
-}
-
-function applyResolvedDamageToPositiveHitPoints(
-  vitals: MoonbeamMovableZoneCreatureVitals,
-  rawDamage: number,
-): MoonbeamMovableZoneCreatureVitals {
-  if (vitals.dead) return vitals;
-  const resolvedDamage = Math.max(0, Math.floor(rawDamage));
-  const absorbedByTemporaryHitPoints = Math.min(
-    vitals.temporaryHitPoints,
-    resolvedDamage,
-  );
-  const damageToHitPoints = resolvedDamage - absorbedByTemporaryHitPoints;
-  const nextHitPoints = Math.max(0, vitals.hitPoints - damageToHitPoints);
-  return {
-    ...vitals,
-    hitPoints: nextHitPoints,
-    temporaryHitPoints:
-      vitals.temporaryHitPoints - absorbedByTemporaryHitPoints,
-    dead: nextHitPoints === 0,
-  };
 }

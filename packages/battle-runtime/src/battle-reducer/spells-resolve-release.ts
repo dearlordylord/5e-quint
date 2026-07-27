@@ -72,7 +72,8 @@ import {
   d20TestNaturalOneRerollRollIssue,
   effectiveD20TestNaturalOneRerollAttackRoll,
 } from "./d20-test-natural-one-reroll.ts";
-import { needsHolesResult, revealHidden } from "./hole-helpers.ts";
+import { revealHidden } from "./hole-helpers.ts";
+import { needsHolesResult } from "./needs-holes-result.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { resolveRemarkableAthleteCriticalHitMovement } from "./remarkable-athlete-critical-movement.ts";
 import { battleStateAfterTargetActionEarlyEndForActor } from "./sanctuary-targeting-interdiction.ts";
@@ -106,11 +107,8 @@ import { spellCastInterruptFrame } from "./spell-cast-interrupt-frame.ts";
 
 import { resolvePreparedSlotSpellRelease } from "./spells-resolve-prepared-slot.ts";
 import { resolveSaveGateDamageSpellRelease } from "./spells-resolve-save-gates.ts";
-import {
-  spellFillSet,
-  spellFillSetContainsOnlySpellCastReactionFacts,
-  type SpellFillSet,
-} from "./spells-resolve-fill-set.ts";
+import { spellFillSet, type SpellFillSet } from "./spells-resolve-fill-set.ts";
+import { fillsBelongToSpellCastHoles } from "./fill-hole-protocol.ts";
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
 import {
   spellDancingLightsPlacementHole,
@@ -538,7 +536,7 @@ export function resolveReadySpellAct(
   if (fillSet.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", fillSet.message);
   }
-  if (!spellFillSetContainsOnlySpellCastReactionFacts(fillSet, {})) {
+  if (!fillsBelongToSpellCastHoles(input.fills)) {
     return invalidResult(
       input.state,
       "invalidFill",

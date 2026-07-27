@@ -170,17 +170,13 @@ export function activationResourceCost(
     return Either.left("unsupported unit activation cost");
   }
 
-  if ("castingTime" in mechanics) {
-    if (isSupportedSurfaceCastingTimeKind(mechanics.castingTime.kind)) {
-      return Either.right(
-        activationResourceCostFromSurfaceKind(mechanics.castingTime.kind),
-      );
-    }
-
-    return Either.left("unsupported unit casting time");
+  if (isSupportedSurfaceCastingTimeKind(mechanics.castingTime.kind)) {
+    return Either.right(
+      activationResourceCostFromSurfaceKind(mechanics.castingTime.kind),
+    );
   }
 
-  return Either.left("unsupported unit activation cost");
+  return Either.left("unsupported unit casting time");
 }
 
 export function actionRestrictionAllows(

@@ -11,7 +11,7 @@ import {
   unitLibrary,
   unitMechanicsVariant,
   warlockDarkOnesBlessingUnitId,
-} from "./unit-profile-admission-catalog-support.ts";
+} from "./unit-profile-admission-catalog.test-support.ts";
 import {
   battleEnemyZeroHitPointTemporaryHitPointsSupportForUnit,
   battleMagicActionAreaSaveDamageHealingSupportForUnit,
@@ -26,7 +26,7 @@ import {
   movementFeet,
   parseSupportedUnitFeatureProfile,
   SPELL_SLOT_HEALING_MODIFIER_SUPPORT_PROFILE,
-} from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission.test-support.ts";
 
 describe("L13UG-A16 level-3 heal and damage feature admission", () => {
   test("selected SRD subclasses grant the admitted level-3 feature Units", () => {

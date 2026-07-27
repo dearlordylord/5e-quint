@@ -24,13 +24,13 @@ import {
   statBlockCatalog,
   statBlockCreatureInit,
   unitLibrary,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import { discoverBattleActs } from "./battle-act-composition.ts";
 import type { BattleRuntimeContext } from "./battle-runtime-context.ts";
 import type { BattleDruidWildShapeKnownForm } from "./druid-wild-shape-known-form-execution.ts";
 import type { StatBlockExecutionAdmission } from "./stat-block-execution-state.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   battleRuntimeContextForTest,
   battleRuntimeSessionForTest,

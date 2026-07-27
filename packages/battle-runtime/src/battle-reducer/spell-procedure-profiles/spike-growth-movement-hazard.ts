@@ -31,13 +31,10 @@ import type { DamageType, DiceExpr } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
 import {
-  type BattleActDiscoveryCandidate,
   type BattleResolutionResult,
-  type BattleState,
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
-import { type CombatantId } from "../../identity.ts";
-import { spellAreaChoiceHole } from "../spells-holes-fills.ts";
+import { discoverActionSpellAreaCastAct } from "../spell-area-cast-discovery.ts";
 import { resolveSpikeGrowthMovementHazardSpellAct } from "../spells-resolve-area-effects.ts";
 import type {
   SpellAdmissionContext,
@@ -183,24 +180,6 @@ function spikeGrowthMovementHazardSpell(
   };
 }
 
-function discoverSpikeGrowthMovementHazardCastAct(
-  _state: BattleState,
-  actorId: CombatantId,
-  invocation: import("../../battle-state-execution.ts").BattleExecutableSpellInvocation<SpikeGrowthMovementHazardSpellInvocation>,
-): readonly BattleActDiscoveryCandidate[] {
-  return [
-    {
-      subject: {
-        tag: "actionSpell",
-        actorId,
-        procedureRef: invocation.sourceProcedureRef,
-        mode: { tag: "cast" },
-      },
-      initialHoles: [spellAreaChoiceHole(invocation)],
-    },
-  ];
-}
-
 function resolveSpikeGrowthMovementHazard(
   input: SpikeGrowthMovementHazardResolveInput,
 ): BattleResolutionResult {
@@ -235,7 +214,7 @@ export const spikeGrowthMovementHazardProfile = {
   procedure: "spikeGrowthMovementHazard",
   executionSchema: SpikeGrowthMovementHazardInvocationSchema,
   admit: admitSpikeGrowthMovementHazard,
-  discoverCastAct: discoverSpikeGrowthMovementHazardCastAct,
+  discoverCastAct: discoverActionSpellAreaCastAct,
   resolve: resolveSpikeGrowthMovementHazard,
 } satisfies SpellProcedureDeclaration<
   "spikeGrowthMovementHazard",

@@ -7,11 +7,8 @@ import type { UnitCatalog } from "@dnd/character-creation-runtime";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
-import { hasPreparedClassSpellAccess } from "./prepared-spell-access.ts";
-import { spendCharacterSheetSpellSlot } from "./spell-slots.ts";
 import {
   characterSheetIssue,
-  getRequiredUnit,
   type CharacterSheet,
   type CharacterSheetIssue,
   type CharacterSheetTreeStrideInvocation,
@@ -19,6 +16,8 @@ import {
   type CharacterSheetTreeStrideTransitInput,
   type CharacterSheetTreeStrideTransitResult,
 } from "./sheet-types.ts";
+
+import { castPreparedSpell } from "./prepared-spell-cast.ts";
 
 const TREE_STRIDE_SPELL_ID = "tree_stride" as const;
 const TREE_STRIDE_SPELL_LEVEL = spellSlotLevel(5);
@@ -30,28 +29,15 @@ export function castTreeStride(input: {
   readonly sheet: CharacterSheet;
   readonly unitLibrary: UnitCatalog;
 }): Either.Either<CharacterSheetTreeStrideResult, CharacterSheetIssue> {
-  const spell = treeStrideSpell(input.unitLibrary);
-  if (Either.isLeft(spell)) return Either.left(spell.left);
-
-  if (!hasPreparedClassSpellAccess(input.sheet, spell.right.id)) {
-    return characterSheetIssue(
-      "Tree Stride requires prepared class Spell Access.",
-    );
-  }
-
-  const invocation = treeStrideInvocationFromSpell(spell.right);
-  if (Either.isLeft(invocation)) return Either.left(invocation.left);
-
-  const spent = spendCharacterSheetSpellSlot({
+  return castPreparedSpell({
     sheet: input.sheet,
+    unitLibrary: input.unitLibrary,
+    spellId: authoredUnitId(TREE_STRIDE_SPELL_ID),
     spellLevel: TREE_STRIDE_SPELL_LEVEL,
-    spellSlotSource: "ordinary",
-  });
-  if (Either.isLeft(spent)) return Either.left(spent.left);
-
-  return Either.right({
-    sheet: spent.right,
-    invocation: invocation.right,
+    spellName: "Tree Stride",
+    invocation: (spell) => {
+      return treeStrideInvocationFromSpell(spell);
+    },
   });
 }
 
@@ -88,20 +74,6 @@ export function resolveTreeStrideTransit(
     usedThisTurn: true,
     endsOutsideTree: true,
   });
-}
-
-function treeStrideSpell(
-  unitLibrary: UnitCatalog,
-): Either.Either<SpellRecord, CharacterSheetIssue> {
-  const unit = getRequiredUnit(
-    unitLibrary,
-    authoredUnitId(TREE_STRIDE_SPELL_ID),
-  );
-  if (Either.isLeft(unit)) return Either.left(unit.left);
-  if (unit.right.kind !== "spell") {
-    return characterSheetIssue("Tree Stride requires a Spell record.");
-  }
-  return Either.right(unit.right);
 }
 
 function treeStrideInvocationFromSpell(

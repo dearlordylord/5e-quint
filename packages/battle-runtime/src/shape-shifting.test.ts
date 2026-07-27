@@ -1,5 +1,5 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.druid-wild-shape-known-form
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
 import { elapsedTimeTicks } from "@dnd/shared/elapsed-time";
 import { expect, test } from "vitest";
 
@@ -18,7 +18,7 @@ import {
   combatantId,
   startBattleRight,
   statBlockCreatureInit,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import {
   battleExecutionScopeOrdinal,
   battleStatBlockExecutionScopeRef,

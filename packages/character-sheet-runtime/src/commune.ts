@@ -11,18 +11,17 @@ import type { UnitCatalog } from "@dnd/character-creation-runtime";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
-import { hasPreparedClassSpellAccess } from "./prepared-spell-access.ts";
-import { spendCharacterSheetSpellSlot } from "./spell-slots.ts";
 import {
   COMMUNE_CASTING_REST_FEATURE_TAG,
   characterSheetIssue,
-  getRequiredUnit,
   type CharacterSheet,
   type CharacterSheetCommuneInvocation,
   type CharacterSheetCommuneResult,
   type CharacterSheetIssue,
   type CharacterSheetRestFeatureUse,
 } from "./sheet-types.ts";
+
+import { castPreparedSpell } from "./prepared-spell-cast.ts";
 
 const COMMUNE_SPELL_ID = "commune" as const;
 const COMMUNE_SPELL_LEVEL = spellSlotLevel(5);
@@ -32,49 +31,35 @@ export function castCommune(input: {
   readonly sheet: CharacterSheet;
   readonly unitLibrary: UnitCatalog;
 }): Either.Either<CharacterSheetCommuneResult, CharacterSheetIssue> {
-  const spell = communeSpell(input.unitLibrary);
-  if (Either.isLeft(spell)) return Either.left(spell.left);
-
-  if (!hasPreparedClassSpellAccess(input.sheet, spell.right.id)) {
-    return characterSheetIssue("Commune requires prepared class Spell Access.");
-  }
-
-  const invocation = communeInvocationFromSpell({
-    spell: spell.right,
-    previousCastCountSinceLongRest: communeCastCountSinceLongRest(input.sheet),
-  });
-  if (Either.isLeft(invocation)) return Either.left(invocation.left);
-
-  const spent = spendCharacterSheetSpellSlot({
+  const cast = castPreparedSpell({
     sheet: input.sheet,
+    unitLibrary: input.unitLibrary,
+    spellId: authoredUnitId(COMMUNE_SPELL_ID),
     spellLevel: COMMUNE_SPELL_LEVEL,
-    spellSlotSource: "ordinary",
+    spellName: "Commune",
+    invocation: (spell) => {
+      return communeInvocationFromSpell({
+        spell: spell,
+        previousCastCountSinceLongRest: communeCastCountSinceLongRest(
+          input.sheet,
+        ),
+      });
+    },
   });
-  if (Either.isLeft(spent)) return Either.left(spent.left);
-
+  if (Either.isLeft(cast)) return Either.left(cast.left);
   return Either.right({
     sheet: {
-      ...spent.right,
+      ...cast.right.sheet,
       restFeatureUses: replaceCommuneCastCountSinceLongRest({
-        restFeatureUses: spent.right.restFeatureUses,
+        restFeatureUses: cast.right.sheet.restFeatureUses,
         nextCastCount: resourceCount(
-          invocation.right.repeatedCasting.previousCastCountSinceLongRest + 1,
+          cast.right.invocation.repeatedCasting.previousCastCountSinceLongRest +
+            1,
         ),
       }),
     },
-    invocation: invocation.right,
+    invocation: cast.right.invocation,
   });
-}
-
-function communeSpell(
-  unitLibrary: UnitCatalog,
-): Either.Either<SpellRecord, CharacterSheetIssue> {
-  const unit = getRequiredUnit(unitLibrary, authoredUnitId(COMMUNE_SPELL_ID));
-  if (Either.isLeft(unit)) return Either.left(unit.left);
-  if (unit.right.kind !== "spell") {
-    return characterSheetIssue("Commune requires a Spell record.");
-  }
-  return Either.right(unit.right);
 }
 
 function communeInvocationFromSpell(input: {

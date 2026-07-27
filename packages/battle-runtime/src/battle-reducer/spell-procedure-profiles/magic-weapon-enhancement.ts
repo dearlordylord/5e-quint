@@ -1,3 +1,4 @@
+import { maybeOpenConfiguredSpellCastReactionWindow } from "../spell-active-effect-resolution.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magic-weapon-enhancement
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
@@ -14,7 +15,6 @@ import { Either } from "effect";
 import {
   MAGIC_WEAPON_ENHANCEMENT_BONUSES,
   type BattleActDiscoveryCandidate,
-  type BattleActiveEffect,
   type BattleActiveEffectExpiration,
   type BattleMagicWeaponTargetItemFact,
   type BattleResolutionResult,
@@ -22,19 +22,22 @@ import {
   type MagicWeaponEnhancementBonus,
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
-import { maybeOpenInterruptWindow, snapshotBattle } from "../dispatcher.ts";
 import type { CombatantId } from "../../identity.ts";
 import { battleWeaponItemHasMagicWeaponEnhancement } from "../attack-damage-apply.ts";
 import { isCharacterBattleCreatureState } from "../creature-state-execution.ts";
 import { activeDruidWildShapeEffect } from "../druid-wild-shape.ts";
-import { needsHolesResult } from "../hole-helpers.ts";
-import { invalidResult } from "../result-helpers.ts";
+
+import { needsHolesResult } from "../needs-holes-result.ts";
+import { invalidResult, resolutionFromStateResult } from "../result-helpers.ts";
+import { replaceTargetActiveEffect } from "../active-effect-replacement.ts";
+import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
 import { wildShapeCanUseWornLoadoutObject } from "../wild-shape-equipment.ts";
 import { characterEffectiveLoadout } from "../battle-object-lifecycle.ts";
-import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
-import type { SpellFillSet } from "../spells-resolve-fill-set.ts";
-import { magicWeaponTargetItemHole } from "../spells-targeting.ts";
+import {
+  magicWeaponTargetItemHole,
+  magicWeaponTargetItemHoleId,
+} from "../spells-targeting.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
@@ -214,7 +217,11 @@ function discoverMagicWeaponEnhancementCastAct(
 function resolveMagicWeaponEnhancement(
   input: SpellProcedureProfileResolveInput<MagicWeaponEnhancementInvocation>,
 ): BattleResolutionResult {
-  if (magicWeaponEnhancementFillSetHasDisallowedFills(input.fillSet)) {
+  if (
+    !fillsBelongToSpellCastHoles(input.input.fills, [
+      magicWeaponTargetItemHoleId(input.invocation),
+    ])
+  ) {
     return invalidResult(
       input.input.state,
       "invalidFill",
@@ -252,22 +259,10 @@ function resolveMagicWeaponEnhancement(
     );
   }
 
-  const spellCastReactionWindow = maybeOpenInterruptWindow(
-    input.input.state,
-    spellCastInterruptFrame({
-      casterId: input.actorId,
-      invocation: input.invocation,
-      targetIds: [],
-      reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
-      castingResource: { kind: "bonusAction" },
-      continuation: {
-        kind: "replay",
-        subject: input.input.subject,
-        fills: input.input.fills,
-      },
-    }),
-    input.input.handledInterruptTrigger,
-  );
+  const spellCastReactionWindow = maybeOpenConfiguredSpellCastReactionWindow({
+    resolution: input,
+    targetIds: [],
+  });
   if (spellCastReactionWindow !== null) {
     return spellCastReactionWindow;
   }
@@ -280,15 +275,13 @@ function resolveMagicWeaponEnhancement(
       "Magic Weapon caster is not in this battle.",
     );
   }
-  const activeEffects: readonly BattleActiveEffect[] = [
-    ...actor.activeEffects.filter(
-      (effect) =>
-        !(
-          effect.kind === "spellMagicWeaponEnhancement" &&
-          effect.sourceProcedureRef === input.invocation.sourceProcedureRef &&
-          effect.sourceCombatantId === input.actorId
-        ),
-    ),
+  const effected = replaceTargetActiveEffect(
+    input.input.state,
+    input.actorId,
+    (effect) =>
+      effect.kind === "spellMagicWeaponEnhancement" &&
+      effect.sourceProcedureRef === input.invocation.sourceProcedureRef &&
+      effect.sourceCombatantId === input.actorId,
     {
       kind: "spellMagicWeaponEnhancement",
       sourceProcedureRef: input.invocation.sourceProcedureRef,
@@ -301,27 +294,14 @@ function resolveMagicWeaponEnhancement(
         durationTicks: input.invocation.durationTicks,
       },
     },
-  ];
-  const effected = {
-    ...input.input.state,
-    combatants: new Map(input.input.state.combatants).set(input.actorId, {
-      ...actor,
-      activeEffects,
-    }),
-  };
+  );
   const resourced = spendSpellCastResources({
     state: effected,
     actorId: input.actorId,
     invocation: input.invocation,
     errorState: input.input.state,
   });
-  return resourced.tag === "invalid"
-    ? resourced
-    : {
-        tag: "resolved",
-        state: resourced.state,
-        snapshot: snapshotBattle(resourced.state),
-      };
+  return resolutionFromStateResult(resourced);
 }
 
 function battleMagicWeaponTargetItemIsHeldWeapon(
@@ -361,50 +341,6 @@ function battleMagicWeaponTargetItemIsHeldWeapon(
   return (
     loadout.weapon?.itemId === targetItem.itemId ||
     loadout.offHandWeapon?.itemId === targetItem.itemId
-  );
-}
-
-function magicWeaponEnhancementFillSetHasDisallowedFills(
-  fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>,
-): boolean {
-  return (
-    fillSet.targetId !== undefined ||
-    fillSet.objectTarget !== undefined ||
-    fillSet.objectContactTargets !== undefined ||
-    fillSet.objectContactSavingThrowOutcome !== undefined ||
-    fillSet.objectDropResolution !== undefined ||
-    fillSet.targetSpatialFacts.length > 0 ||
-    fillSet.targetAllocation !== undefined ||
-    fillSet.targetList !== undefined ||
-    fillSet.attackSequencePartFills.some(
-      (attackSequencePartFill) =>
-        attackSequencePartFill.target !== undefined ||
-        attackSequencePartFill.attackRoll !== undefined ||
-        attackSequencePartFill.mirrorImageDuplicateRoll !== undefined ||
-        attackSequencePartFill.damageRoll !== undefined,
-    ) ||
-    fillSet.attackRoll !== undefined ||
-    fillSet.savingThrowOutcomes !== undefined ||
-    fillSet.skillChoice !== undefined ||
-    fillSet.targetAbilityChoices !== undefined ||
-    fillSet.abilityChoice !== undefined ||
-    fillSet.thaumaturgyActiveOneMinuteEffectCount !== undefined ||
-    fillSet.commandOptionChoice !== undefined ||
-    fillSet.selfTransformationModeChoice !== undefined ||
-    fillSet.conditionChoice !== undefined ||
-    fillSet.areaChoice !== undefined ||
-    fillSet.teleportDestination !== undefined ||
-    fillSet.dancingLightsPlacement !== undefined ||
-    fillSet.damageTypeChoice !== undefined ||
-    fillSet.concentrationSavingThrows.length > 0 ||
-    fillSet.hideousLaughterDamageRepeatSaves.length > 0 ||
-    fillSet.damageDispositions.length > 0 ||
-    fillSet.damageRoll !== undefined ||
-    fillSet.mirrorImageDuplicateRoll !== undefined ||
-    fillSet.movement !== undefined ||
-    fillSet.spellDamageReductionRolls.length > 0 ||
-    fillSet.attackBurstDamageRoll !== undefined ||
-    fillSet.healingRoll !== undefined
   );
 }
 

@@ -70,19 +70,19 @@ import {
   spellSaveDcForCaster,
   startBattle,
   startBattleSessionRight,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import { BRUTAL_STRIKE_SUPPORT_PROFILE } from "./unit-feature-support.ts";
 import type {
   BattleState,
   BattleSubject,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import type { BattleRuntimeSession } from "./index.ts";
 import { describe, expect, test } from "vitest";
 import {
   battleProcedureExecutionRefForTest,
   requireCharacterSpellProcedureRefForTest,
   requireCharacterUnitProcedureRefForTest,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 
 function requireRecklessAttackProcedureRef(state: BattleState) {
   const actor = state.combatants.get(fighterId);

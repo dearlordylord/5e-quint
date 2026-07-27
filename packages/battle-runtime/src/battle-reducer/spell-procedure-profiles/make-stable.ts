@@ -1,4 +1,6 @@
+import { maybeOpenSpellCastReactionWindow } from "../spell-cast-reaction-window.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
+import { actionSpellCastCandidatesForTargetHole } from "../spell-cast-candidate.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-make-stable
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MAKE_STABLE_LIFECYCLE
 //
@@ -32,13 +34,14 @@ import {
   type BattleState,
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
-import { maybeOpenInterruptWindow } from "../dispatcher.ts";
-import { needsHolesResult } from "../hole-helpers.ts";
+
 import { invalidResult } from "../result-helpers.ts";
-import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
+import { selectSingleSpellTarget } from "../single-spell-target.ts";
+import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
+import { ATTACK_TARGET_HOLE_ID } from "../battle-runtime-protocol.ts";
 import { sameStringSet } from "../spells-execution-facts.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
-import { spellTargetHole, spellTargetIsLegal } from "../spells-targeting.ts";
+import { spellTargetHole } from "../spells-targeting.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
@@ -137,38 +140,18 @@ function discoverMakeStableCastAct(
   invocation: BattleExecutableSpellInvocation<MakeStableInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const targetHole = spellTargetHole(state, actorId, invocation);
-  if (targetHole.choices.length === 0) {
-    return [];
-  }
-  return [
-    {
-      subject: {
-        tag: "actionSpell",
-        actorId,
-        procedureRef: invocation.sourceProcedureRef,
-        mode: { tag: "cast" },
-      },
-      initialHoles: [targetHole],
-    },
-  ];
+  return actionSpellCastCandidatesForTargetHole(
+    actorId,
+    invocation.sourceProcedureRef,
+    targetHole,
+  );
 }
 
 function resolveMakeStable(
   input: SpellProcedureProfileResolveInput<MakeStableInvocation>,
 ): BattleResolutionResult {
   if (
-    input.fillSet.attackRoll !== undefined ||
-    input.fillSet.targetAllocation !== undefined ||
-    input.fillSet.targetList !== undefined ||
-    input.fillSet.damageRoll !== undefined ||
-    input.fillSet.attackBurstDamageRoll !== undefined ||
-    input.fillSet.healingRoll !== undefined ||
-    input.fillSet.skillChoice !== undefined ||
-    input.fillSet.targetAbilityChoices !== undefined ||
-    input.fillSet.damageTypeChoice !== undefined ||
-    input.fillSet.savingThrowOutcomes !== undefined ||
-    input.fillSet.damageDispositions.length > 0 ||
-    input.fillSet.concentrationSavingThrows.length > 0
+    !fillsBelongToSpellCastHoles(input.input.fills, [ATTACK_TARGET_HOLE_ID])
   ) {
     return invalidResult(
       input.input.state,
@@ -176,57 +159,32 @@ function resolveMakeStable(
       "Stable cantrips use one zero-Hit-Point target fill.",
     );
   }
-  const targetHole = spellTargetHole(
-    input.input.state,
-    input.actorId,
-    input.invocation,
-  );
-  if (input.fillSet.targetId === undefined) {
-    return needsHolesResult(input.input.state, input.input.subject, [
-      targetHole,
-    ]);
-  }
-  if (
-    !spellTargetIsLegal(
-      input.input.state,
-      input.actorId,
-      input.fillSet.targetId,
-      input.invocation,
-      input.fillSet.targetSpatialFacts,
-    )
-  ) {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
+  const targetSelection = selectSingleSpellTarget({
+    state: input.input.state,
+    subject: input.input.subject,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    targetId: input.fillSet.targetId,
+    targetSpatialFacts: input.fillSet.targetSpatialFacts,
+    invalidTargetMessage:
       "Spell target must be a zero-Hit-Point non-dead combatant within the selected spell's supported range.",
-    );
+  });
+  if (targetSelection.tag !== "selected") {
+    return targetSelection;
   }
 
-  const spellCastReactionWindow = maybeOpenInterruptWindow(
-    input.input.state,
-    spellCastInterruptFrame({
-      casterId: input.actorId,
-      invocation: input.invocation,
-      targetIds: [input.fillSet.targetId],
-      reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
-      castingResource: { kind: "magicAction" },
-      continuation: {
-        kind: "replay",
-        subject: input.input.subject,
-        fills: input.input.fills,
-      },
-    }),
-    input.input.handledInterruptTrigger,
+  const spellCastReactionWindow = maybeOpenSpellCastReactionWindow(
+    input,
+    [targetSelection.targetId],
+    { kind: "magicAction" },
+    undefined,
   );
   if (spellCastReactionWindow !== null) {
     return spellCastReactionWindow;
   }
 
-  const target = input.input.state.combatants.get(input.fillSet.targetId);
-  if (
-    target === undefined ||
-    target.zeroHpLifecycle.policy !== "usesDeathSavingThrows"
-  ) {
+  const target = targetSelection.target;
+  if (target.zeroHpLifecycle.policy !== "usesDeathSavingThrows") {
     return invalidResult(
       input.input.state,
       "invalidFill",

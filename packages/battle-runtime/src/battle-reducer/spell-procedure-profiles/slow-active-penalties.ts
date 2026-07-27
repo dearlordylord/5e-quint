@@ -1,3 +1,4 @@
+import { discoverSavingThrowSpellCastActs } from "../saving-throw-metamagic-holes.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties unit-feature.metamagic-heightened-save-disadvantage unit-feature.metamagic-careful-save-protection
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
@@ -29,14 +30,16 @@ import type { ActivationPhase, EffectAtom } from "@dnd/surface/surface/types";
 import { Either, Schema } from "effect";
 import {
   type BattleActDiscoveryCandidate,
-  type BattleHole,
   type BattleResolutionResult,
   type BattleSpellSavingThrowOutcomeValue,
   type BattleState,
   type BattleExecutableSpellInvocation,
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
-import { maybeOpenInterruptWindow, snapshotBattle } from "../dispatcher.ts";
+import {
+  maybeOpenInterruptWindow,
+  snapshotBattle,
+} from "../interrupt-execution.ts";
 import { battleCreatureWithSpellActiveEffects } from "../../active-effect/lifecycle.ts";
 import { type CombatantId } from "../../identity.ts";
 import {
@@ -46,16 +49,12 @@ import {
   SLOW_ACTIVE_PENALTIES_SPEED_RATIO,
 } from "../domain-constants.ts";
 import { extendSavingThrowOngoingFeatures } from "../attack-roll.ts";
-import {
-  saveMetamagicSelectionState,
-  validateSavingThrowOutcomes,
-} from "../spells-resolve-save-gates.ts";
+import { resolveAreaSaveMetamagicFills } from "../spells-resolve-save-gates.ts";
 import {
   spendSpellCastResources,
   startSpellEffectConcentration,
 } from "../spells-resolve-resources.ts";
 import { invalidResult } from "../result-helpers.ts";
-import { needsHolesResult } from "../hole-helpers.ts";
 import {
   DcSourceSchema,
   MovementFeet,
@@ -73,18 +72,6 @@ import {
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
 } from "./profile.ts";
-import {
-  CAREFUL_METAMAGIC_EFFECT_KIND,
-  discoverSpellMetamagicSelections,
-  HEIGHTENED_METAMAGIC_EFFECT_KIND,
-  spellMetamagicApplications,
-} from "../metamagic-support.ts";
-import {
-  carefulSpellProtectedTargetsHole,
-  heightenedSpellTargetChoiceHole,
-  spellSavingThrowOutcomeHole,
-  spellSavingThrowTargeting,
-} from "../spells-holes-fills.ts";
 
 type SlowActivePenaltiesSpellInvocation = Extract<
   SupportedSpellInvocation,
@@ -311,82 +298,7 @@ function discoverSlowActivePenaltiesCastAct(
   actorId: CombatantId,
   invocation: BattleExecutableSpellInvocation<SlowActivePenaltiesSpellInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
-  const actor = state.combatants.get(actorId);
-  const savingThrowHole = spellSavingThrowOutcomeHole(
-    state,
-    actorId,
-    invocation,
-  );
-  const baseCastAct = slowActivePenaltiesCastAct(actorId, invocation, [
-    savingThrowHole,
-  ]);
-  if (actor === undefined) {
-    return [baseCastAct];
-  }
-  return [
-    baseCastAct,
-    ...discoverSpellMetamagicSelections({ actor, invocation }).map(
-      (metamagic) => {
-        const applications = spellMetamagicApplications(actor, metamagic);
-        const metamagicHoles = slowActivePenaltiesMetamagicInitialHoles(
-          state,
-          actorId,
-          invocation,
-          applications,
-        );
-        return {
-          ...baseCastAct,
-          subject: { ...baseCastAct.subject, metamagic },
-          initialHoles:
-            metamagicHoles.length === 0 ? [savingThrowHole] : metamagicHoles,
-        };
-      },
-    ),
-  ];
-}
-
-function slowActivePenaltiesCastAct(
-  actorId: CombatantId,
-  invocation: BattleExecutableSpellInvocation<SlowActivePenaltiesSpellInvocation>,
-  initialHoles: readonly BattleHole[],
-): BattleActDiscoveryCandidate {
-  return {
-    subject: {
-      tag: "actionSpell",
-      actorId,
-      procedureRef: invocation.sourceProcedureRef,
-      mode: { tag: "cast" },
-    },
-    initialHoles,
-  };
-}
-
-function slowActivePenaltiesMetamagicInitialHoles(
-  state: BattleState,
-  actorId: CombatantId,
-  invocation: BattleExecutableSpellInvocation<SlowActivePenaltiesSpellInvocation>,
-  metamagicApplications: readonly SpellMetamagicApplicationFact[],
-): readonly BattleHole[] {
-  const targeting = spellSavingThrowTargeting(invocation);
-  const holes: BattleHole[] = [];
-  if (
-    targeting.kind !== "singleCombatant" &&
-    metamagicApplications.some(
-      (application) => application.effectKind === CAREFUL_METAMAGIC_EFFECT_KIND,
-    )
-  ) {
-    holes.push(carefulSpellProtectedTargetsHole(state, actorId, invocation));
-  }
-  if (
-    targeting.kind !== "singleCombatant" &&
-    metamagicApplications.some(
-      (application) =>
-        application.effectKind === HEIGHTENED_METAMAGIC_EFFECT_KIND,
-    )
-  ) {
-    holes.push(heightenedSpellTargetChoiceHole(state, actorId, invocation));
-  }
-  return holes;
+  return discoverSavingThrowSpellCastActs(state, actorId, invocation);
 }
 
 function resolveSlowActivePenalties(
@@ -406,58 +318,21 @@ function resolveSlowActivePenalties(
       "Slow uses an area Saving Throw outcome fill.",
     );
   }
-  const metamagicSelections = saveMetamagicSelectionState({
+  const areaSave = resolveAreaSaveMetamagicFills({
     state: input.input.state,
+    subject: input.input.subject,
     actorId: input.actorId,
     invocation: input.invocation,
     fills: input.input.fills,
     metamagicApplications: input.metamagicApplications,
-    targetId: undefined,
+    savingThrowOutcomes: input.fillSet.savingThrowOutcomes,
   });
-  if (metamagicSelections.tag === "invalid") {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      metamagicSelections.message,
-    );
+  if (areaSave.tag !== "ready") {
+    return areaSave;
   }
-  if (metamagicSelections.tag === "needsHoles") {
-    return needsHolesResult(
-      input.input.state,
-      input.input.subject,
-      metamagicSelections.holes,
-    );
-  }
-  const savingThrowHole = spellSavingThrowOutcomeHole(
-    input.input.state,
-    input.actorId,
-    input.invocation,
-    metamagicSelections.heightenedSpellTargetId,
-  );
-  if (input.fillSet.savingThrowOutcomes === undefined) {
-    return needsHolesResult(input.input.state, input.input.subject, [
-      savingThrowHole,
-    ]);
-  }
-  const savingThrowValidation = validateSavingThrowOutcomes(
-    input.fillSet.savingThrowOutcomes,
-    input.invocation,
-    input.input.state,
-    input.actorId,
-    undefined,
-    undefined,
-    metamagicSelections.carefulSpellProtectedTargetIds,
-    metamagicSelections.heightenedSpellTargetId,
-  );
-  if (savingThrowValidation !== null) {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      savingThrowValidation,
-    );
-  }
+  const savingThrowOutcomes = areaSave.savingThrowOutcomes;
   const areaWitnessValidation = validateSlowAreaWitness(
-    input.fillSet.savingThrowOutcomes,
+    savingThrowOutcomes,
     input.invocation.maxTargets,
   );
   if (areaWitnessValidation !== null) {
@@ -467,11 +342,11 @@ function resolveSlowActivePenalties(
       areaWitnessValidation,
     );
   }
-  const affectedTargetIds = input.fillSet.savingThrowOutcomes.outcomes.map(
+  const affectedTargetIds = savingThrowOutcomes.outcomes.map(
     (outcome) => outcome.targetId,
   );
-  const failedTargets = input.fillSet.savingThrowOutcomes.outcomes.flatMap(
-    (outcome) => (outcome.succeeded ? [] : [outcome.targetId]),
+  const failedTargets = savingThrowOutcomes.outcomes.flatMap((outcome) =>
+    outcome.succeeded ? [] : [outcome.targetId],
   );
   if (failedTargets.length > 0) {
     const saveFailedReactionWindow = maybeOpenInterruptWindow(
@@ -667,4 +542,3 @@ export const slowActivePenaltiesProfile = {
   "slowActivePenalties",
   SlowActivePenaltiesSpellInvocation
 >;
-import type { SpellMetamagicApplicationFact } from "../metamagic-support.ts";

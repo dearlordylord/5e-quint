@@ -1,5 +1,5 @@
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
-import { requireCharacterUnitProcedureRefForTest } from "./battle-runtime-test-support.ts";
+import { requireCharacterUnitProcedureRefForTest } from "./battle-runtime.test-support.ts";
 // RAW-COVERAGE: runtime-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-action-area-save-damage-replacement
@@ -26,14 +26,14 @@ import { battleReducerStartRouteEvent } from "./index.ts";
 import {
   characterCreature,
   requireHole,
-} from "./unit-profile-admission-creature-fixture-support.ts";
+} from "./unit-profile-admission-creature-fixture.test-support.ts";
 import {
   fighterExtraAttackUnitId,
   speciesDragonbornBreathWeaponUnitId,
   spellCasterId,
   spellTargetId,
   unitLibrary,
-} from "./unit-profile-admission-catalog-support.ts";
+} from "./unit-profile-admission-catalog.test-support.ts";
 import {
   battleId,
   battleAttackActionAreaSaveDamageReplacementSupportForUnit,
@@ -43,10 +43,10 @@ import {
   discoverBattleActCandidates,
   resolveBattleSubject,
   startBattle,
-} from "./unit-profile-admission-test-support.ts";
-import { extraAttackBattleUnitRef } from "./unit-profile-admission-feature-fixture-support.ts";
-import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
-import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
+} from "./unit-profile-admission.test-support.ts";
+import { extraAttackBattleUnitRef } from "./unit-profile-admission-feature-fixture.test-support.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.test-support.ts";
+import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 
 type BreathWeaponLastResult =

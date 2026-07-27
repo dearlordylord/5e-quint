@@ -31,7 +31,7 @@ import {
   Schema,
   snapshotBattle,
   startBattle,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import { battleCreaturePresentationDisplayName } from "./stat-block-presentation.ts";
 import {
   battlePresentedSnapshot,

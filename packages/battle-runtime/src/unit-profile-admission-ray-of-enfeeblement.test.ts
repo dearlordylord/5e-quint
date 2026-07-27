@@ -1,6 +1,6 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
-import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
+import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
+import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-D20-LIFECYCLE ray_of_enfeeblement
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-ray-of-enfeeblement-d20-lifecycle
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-ray-of-enfeeblement-damage-penalty
@@ -23,7 +23,7 @@ import {
   heatMetalUnitId,
   spellCasterId,
   spellTargetId,
-} from "./unit-profile-admission-catalog-support.ts";
+} from "./unit-profile-admission-catalog.test-support.ts";
 import {
   attackRollFill,
   attackTargetFill,
@@ -32,7 +32,7 @@ import {
   requireHole,
   requireResultHole,
   zeroAbilityWeaponAttack,
-} from "./unit-profile-admission-creature-fixture-support.ts";
+} from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
   requireSpellDamageReductionHole,
@@ -44,7 +44,7 @@ import {
   spellTargetFill,
   spellTargetListFill,
   withResistanceEffect,
-} from "./unit-profile-admission-spell-fill-support.ts";
+} from "./unit-profile-admission-spell-fill.test-support.ts";
 import { damageAmount, Hp, proficiencyBonus } from "@dnd/shared/types";
 import { spellSavingThrowOutcomeHole } from "./battle-reducer/spells-damage-fills.ts";
 import { abilityD20TestRollModeSaveGateProfile } from "./battle-reducer/spell-procedure-profiles/ability-d20-test-roll-mode-save-gate.ts";
@@ -55,8 +55,8 @@ import { spellProcedureExecution } from "./character-execution-admission.ts";
 import {
   spellAdmissionSource,
   spellRecord,
-} from "./unit-profile-admission-spell-record-support.ts";
-import { endTurn } from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission-spell-record.test-support.ts";
+import { endTurn } from "./unit-profile-admission.test-support.ts";
 import {
   battleObjectId,
   combatantId,

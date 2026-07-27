@@ -1,3 +1,4 @@
+import { discoverTargetSavingThrowSpellCastActs } from "../saving-throw-metamagic-holes.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-hideous-laughter-repeat-save-lifecycle
 //
 // The hideousLaughter Spell Procedure Profile: action-time Spell Slot casting
@@ -21,8 +22,6 @@ import type {
 import {
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
-  type BattleCreatureState,
-  type BattleHole,
   type BattleResolutionResult,
   type BattleState,
   type SpellTargeting,
@@ -48,17 +47,7 @@ import {
   PreparedSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
-import {
-  CAREFUL_METAMAGIC_EFFECT_KIND,
-  discoverSpellMetamagicSelections,
-  HEIGHTENED_METAMAGIC_EFFECT_KIND,
-  spellMetamagicApplications,
-} from "../metamagic-support.ts";
-import {
-  carefulSpellProtectedTargetsHole,
-  heightenedSpellTargetChoiceHole,
-  spellTargetListHole,
-} from "../spells-holes-fills.ts";
+import { spellTargetListHole } from "../spells-holes-fills.ts";
 
 type HideousLaughterSpellInvocation = Extract<
   SupportedSpellInvocation,
@@ -231,89 +220,14 @@ function discoverHideousLaughterCastAct(
     return [];
   }
 
-  const baseCastAct = hideousLaughterCastAct(actorId, invocation, [targetHole]);
-  const metamagicCastActs = hideousLaughterMetamagicCastActs({
+  const castActs = discoverTargetSavingThrowSpellCastActs({
     state,
     actorId,
     actor,
     invocation,
     targetHole,
-    baseCastAct,
   });
-  const castActs = [baseCastAct, ...metamagicCastActs];
   return [...castActs, ...readiedSpellAct(state, actorId, invocation)];
-}
-
-function hideousLaughterMetamagicCastActs(input: {
-  readonly state: BattleState;
-  readonly actorId: CombatantId;
-  readonly actor: BattleCreatureState;
-  readonly invocation: BattleExecutableSpellInvocation<HideousLaughterSpellInvocation>;
-  readonly targetHole: BattleHole;
-  readonly baseCastAct: BattleActDiscoveryCandidate;
-}): readonly BattleActDiscoveryCandidate[] {
-  return discoverSpellMetamagicSelections({
-    actor: input.actor,
-    invocation: input.invocation,
-  }).map((metamagic) => {
-    return {
-      ...input.baseCastAct,
-      subject: {
-        ...input.baseCastAct.subject,
-        metamagic,
-      },
-      initialHoles: [
-        input.targetHole,
-        ...hideousLaughterMetamagicInitialHoles(
-          input.state,
-          input.actorId,
-          input.invocation,
-          spellMetamagicApplications(input.actor, metamagic),
-        ),
-      ],
-    };
-  });
-}
-
-function hideousLaughterCastAct(
-  actorId: CombatantId,
-  invocation: import("../../battle-state-execution.ts").BattleExecutableSpellInvocation<HideousLaughterSpellInvocation>,
-  initialHoles: readonly BattleHole[],
-): BattleActDiscoveryCandidate {
-  return {
-    subject: {
-      tag: "actionSpell",
-      actorId,
-      procedureRef: invocation.sourceProcedureRef,
-      mode: { tag: "cast" },
-    },
-    initialHoles,
-  };
-}
-
-function hideousLaughterMetamagicInitialHoles(
-  state: BattleState,
-  actorId: CombatantId,
-  invocation: BattleExecutableSpellInvocation<HideousLaughterSpellInvocation>,
-  metamagicApplications: readonly SpellMetamagicApplicationFact[],
-): readonly BattleHole[] {
-  const holes: BattleHole[] = [];
-  if (
-    metamagicApplications.some(
-      (application) => application.effectKind === CAREFUL_METAMAGIC_EFFECT_KIND,
-    )
-  ) {
-    holes.push(carefulSpellProtectedTargetsHole(state, actorId, invocation));
-  }
-  if (
-    metamagicApplications.some(
-      (application) =>
-        application.effectKind === HEIGHTENED_METAMAGIC_EFFECT_KIND,
-    )
-  ) {
-    holes.push(heightenedSpellTargetChoiceHole(state, actorId, invocation));
-  }
-  return holes;
 }
 
 function resolveHideousLaughter(
@@ -357,4 +271,3 @@ export const hideousLaughterProfile = {
   "hideousLaughter",
   HideousLaughterSpellInvocation
 >;
-import type { SpellMetamagicApplicationFact } from "../metamagic-support.ts";

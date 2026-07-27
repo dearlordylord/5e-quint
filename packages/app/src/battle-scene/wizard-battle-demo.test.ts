@@ -106,6 +106,7 @@ describe("wizard battle demo", () => {
     }
     const cueSteps = [
       { ...step, cue: { spell: { ...baseSpell, areaCenter: { col: 2, row: 2 }, areaRadiusFeet: 10 } } },
+      { ...step, cue: { spell: { ...baseSpell, areaCenter: { col: 2, row: 2 } } } },
       { ...step, cue: { spell: { ...baseSpell, targetId } } },
       { ...step, cue: { spell: baseSpell } }
     ]
@@ -118,6 +119,39 @@ describe("wizard battle demo", () => {
             snapshot: presented,
             step: cueStep,
             stepIndex
+          })
+        )
+      ).toBe(true)
+    }
+
+    expect(
+      Either.isRight(
+        computeWizardBattleScene({
+          meta: { combatants: {}, objectNames: {} },
+          snapshot: presented,
+          step: { ...step, cue: { spell: { ...baseSpell, targetId } } },
+          stepIndex: 0
+        })
+      )
+    ).toBe(true)
+
+    if (firstCombatant.origin.kind === "character") {
+      expect(
+        Either.isRight(
+          computeWizardBattleScene({
+            meta: WIZARD_BATTLE_DEMO_META,
+            snapshot: {
+              ...presented,
+              combatants: [
+                {
+                  ...firstCombatant,
+                  origin: { ...firstCombatant.origin, spellcasting: null }
+                },
+                ...presented.combatants.slice(1)
+              ]
+            },
+            step,
+            stepIndex: 0
           })
         )
       ).toBe(true)

@@ -43,7 +43,7 @@ import {
   unitLibrary,
   wizardId,
   wizardSpellcasting,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import type {
   BattleRuntimeSession,
   BattleState,

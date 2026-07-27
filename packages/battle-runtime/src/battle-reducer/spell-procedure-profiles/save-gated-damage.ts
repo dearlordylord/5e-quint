@@ -1,3 +1,8 @@
+import {
+  discoverSavingThrowMetamagicCastActs,
+  savingThrowMetamagicHolesOr,
+} from "../saving-throw-metamagic-holes.ts";
+import { actionSpellCastCandidate } from "../spell-cast-candidate.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-damage-save-or-attack
 import {
@@ -40,6 +45,7 @@ import {
   MovementFeet,
   NoSpellInvocationResourceSchema,
   PreparedSpellAccessSchema,
+  SaveGatedDamageSpellTargetingSchema,
   SpellFailedSavePostDamageRiderSchema,
   SpellPostSaveAreaEffectSchema,
   SpellSavingThrowRollModeRuleSchema,
@@ -57,23 +63,15 @@ import {
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
 import {
-  CAREFUL_METAMAGIC_EFFECT_KIND,
-  discoverSpellMetamagicSelections,
-  HEIGHTENED_METAMAGIC_EFFECT_KIND,
-  spellMetamagicApplications,
-} from "../metamagic-support.ts";
-import {
-  carefulSpellProtectedTargetsHole,
-  heightenedSpellTargetChoiceHole,
   spellAbilityChoiceHole,
   spellSavingThrowOutcomeHole,
-  spellSavingThrowTargeting,
   spellTargetHole,
 } from "../spells-holes-fills.ts";
 import {
   spellAdmissionCharacterLevel,
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
+  spellProcedureResolutionContext,
 } from "./profile.ts";
 
 type SaveGatedDamageSpellInvocation = Extract<
@@ -138,19 +136,28 @@ function discoverSingleTargetSaveGatedDamageCastActs(
   if (targetHole.choices.length === 0) {
     return [];
   }
-  const baseCastAct = saveGatedDamageCastAct(actorId, invocation, [
-    targetHole,
-    ...saveGatedDamageAbilityChoiceHoles(invocation),
-  ]);
+  const baseCastAct = actionSpellCastCandidate(
+    actorId,
+    invocation.sourceProcedureRef,
+    [targetHole, ...saveGatedDamageAbilityChoiceHoles(invocation)],
+  );
   return [
     baseCastAct,
-    ...saveGatedDamageMetamagicCastActs({
+    ...discoverSavingThrowMetamagicCastActs({
       state,
       actorId,
       actor,
       invocation,
       baseCastAct,
-      baseHoles: [targetHole],
+      initialHoles: (applications) =>
+        savingThrowMetamagicHolesOr(
+          state,
+          actorId,
+          invocation,
+          applications,
+          [targetHole],
+          saveGatedDamageAbilityChoiceHoles(invocation),
+        ),
     }),
   ];
 }
@@ -166,104 +173,30 @@ function discoverAreaSaveGatedDamageCastActs(
     actorId,
     invocation,
   );
-  const baseCastAct = saveGatedDamageCastAct(actorId, invocation, [
-    savingThrowHole,
-    ...saveGatedDamageAbilityChoiceHoles(invocation),
-  ]);
+  const baseCastAct = actionSpellCastCandidate(
+    actorId,
+    invocation.sourceProcedureRef,
+    [savingThrowHole, ...saveGatedDamageAbilityChoiceHoles(invocation)],
+  );
   return [
     baseCastAct,
-    ...saveGatedDamageMetamagicCastActs({
+    ...discoverSavingThrowMetamagicCastActs({
       state,
       actorId,
       actor,
       invocation,
       baseCastAct,
-      baseHoles: [savingThrowHole],
+      initialHoles: (applications) =>
+        savingThrowMetamagicHolesOr(
+          state,
+          actorId,
+          invocation,
+          applications,
+          [savingThrowHole],
+          saveGatedDamageAbilityChoiceHoles(invocation),
+        ),
     }),
   ];
-}
-
-function saveGatedDamageMetamagicCastActs(input: {
-  readonly state: BattleState;
-  readonly actorId: CombatantId;
-  readonly actor: BattleCreatureState | undefined;
-  readonly invocation: BattleExecutableSpellInvocation<SaveGatedDamageSpellInvocation>;
-  readonly baseCastAct: BattleActDiscoveryCandidate;
-  readonly baseHoles: readonly BattleHole[];
-}): readonly BattleActDiscoveryCandidate[] {
-  const actor = input.actor;
-  if (actor === undefined) {
-    return [];
-  }
-  return discoverSpellMetamagicSelections({
-    actor,
-    invocation: input.invocation,
-  }).map((metamagic) => {
-    const applications = spellMetamagicApplications(actor, metamagic);
-    const metamagicInitialHoles = saveGatedDamageMetamagicInitialHoles(
-      input.state,
-      input.actorId,
-      input.invocation,
-      applications,
-    );
-    return {
-      ...input.baseCastAct,
-      subject: {
-        ...input.baseCastAct.subject,
-        metamagic,
-      },
-      initialHoles:
-        metamagicInitialHoles.length === 0
-          ? input.baseHoles
-          : metamagicInitialHoles,
-    };
-  });
-}
-
-function saveGatedDamageCastAct(
-  actorId: CombatantId,
-  invocation: import("../../battle-state-execution.ts").BattleExecutableSpellInvocation<SaveGatedDamageSpellInvocation>,
-  initialHoles: readonly BattleHole[],
-): BattleActDiscoveryCandidate {
-  return {
-    subject: {
-      tag: "actionSpell",
-      actorId,
-      procedureRef: invocation.sourceProcedureRef,
-      mode: { tag: "cast" },
-    },
-    initialHoles,
-  };
-}
-
-function saveGatedDamageMetamagicInitialHoles(
-  state: BattleState,
-  actorId: CombatantId,
-  invocation: BattleExecutableSpellInvocation<SaveGatedDamageSpellInvocation>,
-  metamagicApplications: readonly SpellMetamagicApplicationFact[],
-): readonly BattleHole[] {
-  const targeting = spellSavingThrowTargeting(invocation);
-  const holes: BattleHole[] = [
-    ...saveGatedDamageAbilityChoiceHoles(invocation),
-  ];
-  if (
-    targeting.kind !== "singleCombatant" &&
-    metamagicApplications.some(
-      (application) => application.effectKind === CAREFUL_METAMAGIC_EFFECT_KIND,
-    )
-  ) {
-    holes.push(carefulSpellProtectedTargetsHole(state, actorId, invocation));
-  }
-  if (
-    targeting.kind !== "singleCombatant" &&
-    metamagicApplications.some(
-      (application) =>
-        application.effectKind === HEIGHTENED_METAMAGIC_EFFECT_KIND,
-    )
-  ) {
-    holes.push(heightenedSpellTargetChoiceHole(state, actorId, invocation));
-  }
-  return holes;
 }
 
 function saveGatedDamageAbilityChoiceHoles(
@@ -302,18 +235,7 @@ function resolveSaveGatedDamage(
       input.fillSet,
     );
   }
-  return resolveSaveGateDamageSpellAct({
-    input: input.input,
-    actorId: input.actorId,
-    invocation: input.invocation,
-    fillSet: input.fillSet,
-    ...(input.actionCostOverride === undefined
-      ? {}
-      : { actionCostOverride: input.actionCostOverride }),
-    ...(input.metamagicApplications === undefined
-      ? {}
-      : { metamagicApplications: input.metamagicApplications }),
-  });
+  return resolveSaveGateDamageSpellAct(spellProcedureResolutionContext(input));
 }
 
 function isTriggeredReactionSaveGatedDamageResolution(
@@ -332,134 +254,48 @@ const ReactionSpellInvocationCastingTimeSchema = Schema.Struct({
   kind: Schema.Literal("reaction"),
 });
 
+const SaveGatedDamageCommonFields = {
+  procedure: Schema.Literal("saveGatedDamage"),
+  spellRuleFacts: SpellRuleExecutionFactsSchema,
+  ability: AbilitySchema,
+  dc: DcSourceSchema,
+  targeting: SaveGatedDamageSpellTargetingSchema,
+  damage: Schema.Struct({
+    expr: DiceExprSchema,
+    damageType: DamageTypeSchema,
+  }),
+  additionalDamageComponents: Schema.Array(SpellDamageSchema),
+  successDamage: Schema.Literal("none", "half"),
+  rangeFeet: MovementFeet,
+  failedSavePostDamageRiders: Schema.Array(
+    SpellFailedSavePostDamageRiderSchema,
+  ),
+  failedSaveConditionEffects: Schema.Array(
+    SpellFailedSaveConditionEffectExecutionSchema,
+  ),
+  failedSaveAbilityChoices: Schema.NullOr(Schema.Array(AbilitySchema)),
+  saveRollModeRule: Schema.NullOr(SpellSavingThrowRollModeRuleSchema),
+  postSaveAreaEffect: Schema.optionalWith(SpellPostSaveAreaEffectSchema, {
+    exact: true,
+  }),
+} as const;
+
 const SaveGatedDamageInvocationSchema = spellProcedureExecutionSchema(
   Schema.Union(
     Schema.Struct({
       access: ClassCantripSpellAccessSchema,
       resource: NoSpellInvocationResourceSchema,
-      procedure: Schema.Literal("saveGatedDamage"),
-      spellRuleFacts: SpellRuleExecutionFactsSchema,
       castingTime: ActionSpellInvocationCastingTimeSchema,
-      ability: AbilitySchema,
-      dc: DcSourceSchema,
-      targeting: Schema.Union(
-        Schema.Struct({
-          kind: Schema.Literal("singleCombatant"),
-        }),
-        Schema.Struct({
-          kind: Schema.Literal("targetList"),
-          minTargets: Schema.Literal(1),
-          maxTargets: Schema.Number,
-        }),
-        Schema.Struct({
-          kind: Schema.Literal("pointOriginSphere"),
-          radiusFeet: MovementFeet,
-        }),
-        Schema.Struct({
-          kind: Schema.Literal("pointOriginCubeExcludingCaster"),
-          sideFeet: MovementFeet,
-        }),
-        Schema.Struct({
-          kind: Schema.Literal("pointOriginCube"),
-          sideFeet: MovementFeet,
-        }),
-        Schema.Struct({
-          kind: Schema.Literal("selfOriginCube"),
-          sideFeet: MovementFeet,
-        }),
-        Schema.Struct({
-          kind: Schema.Literal("selfOriginCone"),
-          lengthFeet: MovementFeet,
-        }),
-        Schema.Struct({
-          kind: Schema.Literal("selfOriginLine"),
-          lengthFeet: MovementFeet,
-          widthFeet: MovementFeet,
-        }),
-      ),
-      damage: Schema.Struct({
-        expr: DiceExprSchema,
-        damageType: DamageTypeSchema,
-      }),
-      additionalDamageComponents: Schema.Array(SpellDamageSchema),
-      successDamage: Schema.Literal("none", "half"),
-      rangeFeet: MovementFeet,
-      failedSavePostDamageRiders: Schema.Array(
-        SpellFailedSavePostDamageRiderSchema,
-      ),
-      failedSaveConditionEffects: Schema.Array(
-        SpellFailedSaveConditionEffectExecutionSchema,
-      ),
-      failedSaveAbilityChoices: Schema.NullOr(Schema.Array(AbilitySchema)),
-      saveRollModeRule: Schema.NullOr(SpellSavingThrowRollModeRuleSchema),
-      postSaveAreaEffect: Schema.optionalWith(SpellPostSaveAreaEffectSchema, {
-        exact: true,
-      }),
+      ...SaveGatedDamageCommonFields,
     }),
     Schema.Struct({
       access: PreparedSpellAccessSchema,
       resource: SpellSlotInvocationResourceSchema,
-      procedure: Schema.Literal("saveGatedDamage"),
-      spellRuleFacts: SpellRuleExecutionFactsSchema,
       castingTime: Schema.Union(
         ActionSpellInvocationCastingTimeSchema,
         ReactionSpellInvocationCastingTimeSchema,
       ),
-      ability: AbilitySchema,
-      dc: DcSourceSchema,
-      targeting: Schema.Union(
-        Schema.Struct({
-          kind: Schema.Literal("singleCombatant"),
-        }),
-        Schema.Struct({
-          kind: Schema.Literal("targetList"),
-          minTargets: Schema.Literal(1),
-          maxTargets: Schema.Number,
-        }),
-        Schema.Struct({
-          kind: Schema.Literal("pointOriginSphere"),
-          radiusFeet: MovementFeet,
-        }),
-        Schema.Struct({
-          kind: Schema.Literal("pointOriginCubeExcludingCaster"),
-          sideFeet: MovementFeet,
-        }),
-        Schema.Struct({
-          kind: Schema.Literal("pointOriginCube"),
-          sideFeet: MovementFeet,
-        }),
-        Schema.Struct({
-          kind: Schema.Literal("selfOriginCube"),
-          sideFeet: MovementFeet,
-        }),
-        Schema.Struct({
-          kind: Schema.Literal("selfOriginCone"),
-          lengthFeet: MovementFeet,
-        }),
-        Schema.Struct({
-          kind: Schema.Literal("selfOriginLine"),
-          lengthFeet: MovementFeet,
-          widthFeet: MovementFeet,
-        }),
-      ),
-      damage: Schema.Struct({
-        expr: DiceExprSchema,
-        damageType: DamageTypeSchema,
-      }),
-      additionalDamageComponents: Schema.Array(SpellDamageSchema),
-      successDamage: Schema.Literal("none", "half"),
-      rangeFeet: MovementFeet,
-      failedSavePostDamageRiders: Schema.Array(
-        SpellFailedSavePostDamageRiderSchema,
-      ),
-      failedSaveConditionEffects: Schema.Array(
-        SpellFailedSaveConditionEffectExecutionSchema,
-      ),
-      failedSaveAbilityChoices: Schema.NullOr(Schema.Array(AbilitySchema)),
-      saveRollModeRule: Schema.NullOr(SpellSavingThrowRollModeRuleSchema),
-      postSaveAreaEffect: Schema.optionalWith(SpellPostSaveAreaEffectSchema, {
-        exact: true,
-      }),
+      ...SaveGatedDamageCommonFields,
     }),
   ),
 );
@@ -473,4 +309,3 @@ export const saveGatedDamageProfile = {
   "saveGatedDamage",
   SaveGatedDamageSpellInvocation
 >;
-import type { SpellMetamagicApplicationFact } from "../metamagic-support.ts";

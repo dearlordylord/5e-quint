@@ -60,7 +60,7 @@ import {
   effectiveMovementSpeed,
   representedMovementSpeedKinds,
 } from "./movement-speed.ts";
-import { applyBattleMovement } from "./readied-release.ts";
+import { applyBattleMovement } from "./battle-movement.ts";
 import { conditionHadNonSpellSourceBeforeSpellEffect } from "./spell-condition-effects-helpers.ts";
 import {
   savingThrowFlatBonusProjections,
@@ -433,15 +433,31 @@ function resolveCunningStrikeEquipmentGatedConditionSave(
       ],
     };
   }
-  const validation = validateCunningStrikeSavingThrow(
+  return resolveCunningStrikeSavingThrow(
+    state,
+    context,
     fills.savingThrow,
-    context.targetId,
+    (savingThrowState) =>
+      applyCunningStrikeConditionEndTurnSaveFailure(
+        savingThrowState,
+        context,
+        effect,
+      ),
   );
+}
+
+function resolveCunningStrikeSavingThrow(
+  state: BattleState,
+  context: CunningStrikeContext,
+  fill: NonNullable<CunningStrikeAfterDamageFills["savingThrow"]>,
+  applyFailure: (state: BattleState) => BattleState,
+): CunningStrikeAfterDamageResult {
+  const validation = validateCunningStrikeSavingThrow(fill, context.targetId);
   if (validation !== null) {
     return { tag: "invalid", message: validation };
   }
   const relationshipFacts = parseSavingThrowRelationshipFacts(
-    fills.savingThrow.relationshipFacts ?? [],
+    fill.relationshipFacts ?? [],
     context.attackerId,
     [context.targetId],
     ongoingFeatureEnemyRelationshipDecisionRequired(
@@ -466,13 +482,9 @@ function resolveCunningStrikeEquipmentGatedConditionSave(
   return {
     tag: "ok",
     state:
-      fills.savingThrow.value.outcomes[0]?.succeeded === true
+      fill.value.outcomes[0]?.succeeded === true
         ? savingThrowState
-        : applyCunningStrikeConditionEndTurnSaveFailure(
-            savingThrowState,
-            context,
-            effect,
-          ),
+        : applyFailure(savingThrowState),
   };
 }
 
@@ -503,47 +515,17 @@ function resolveCunningStrikeSizeGatedConditionSave(
       ],
     };
   }
-  const validation = validateCunningStrikeSavingThrow(
-    fills.savingThrow,
-    context.targetId,
-  );
-  if (validation !== null) {
-    return { tag: "invalid", message: validation };
-  }
-  const relationshipFacts = parseSavingThrowRelationshipFacts(
-    fills.savingThrow.relationshipFacts ?? [],
-    context.attackerId,
-    [context.targetId],
-    ongoingFeatureEnemyRelationshipDecisionRequired(
-      state,
-      context.attackerId,
-      "enemySavingThrow",
-    ),
-  );
-  if (relationshipFacts === null) {
-    return {
-      tag: "invalid",
-      message:
-        "Cunning Strike relationship facts must answer the saving-throw hole request.",
-    };
-  }
-  const savingThrowState = extendSavingThrowOngoingFeatures(
+  return resolveCunningStrikeSavingThrow(
     state,
-    context.attackerId,
-    [context.targetId],
-    relationshipFacts,
+    context,
+    fills.savingThrow,
+    (savingThrowState) =>
+      applyCunningStrikeImmediateConditionFailure(
+        savingThrowState,
+        context,
+        effect,
+      ),
   );
-  return {
-    tag: "ok",
-    state:
-      fills.savingThrow.value.outcomes[0]?.succeeded === true
-        ? savingThrowState
-        : applyCunningStrikeImmediateConditionFailure(
-            savingThrowState,
-            context,
-            effect,
-          ),
-  };
 }
 
 function resolveCunningStrikePostDamageMovement(

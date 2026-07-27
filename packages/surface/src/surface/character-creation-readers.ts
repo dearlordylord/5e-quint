@@ -135,30 +135,25 @@ export function readClassCreationFacts(
     return unsupportedKind(unit, "class");
   }
 
+  return { tag: "readable", value: classCreationFacts(unit) };
+}
+
+export function classCreationFacts(unit: ClassRecord): ClassCreationFacts {
   if (unit.className === "wizard") {
     return {
-      tag: "readable",
-      value: {
-        ...readCommonClassCreationFacts(unit),
-        spellcasting: unit.spellcasting,
-      },
+      ...readCommonClassCreationFacts(unit),
+      spellcasting: unit.spellcasting,
     };
   }
 
   if ("spellcasting" in unit && unit.spellcasting !== undefined) {
     return {
-      tag: "readable",
-      value: {
-        ...readCommonClassCreationFacts(unit),
-        spellcasting: unit.spellcasting,
-      },
+      ...readCommonClassCreationFacts(unit),
+      spellcasting: unit.spellcasting,
     };
   }
 
-  return {
-    tag: "readable",
-    value: readCommonClassCreationFacts(unit),
-  };
+  return readCommonClassCreationFacts(unit);
 }
 
 function readCommonClassCreationFacts<TClassRecord extends ClassRecord>(

@@ -1,7 +1,7 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV84G sanctuary
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-sanctuary-targeting-interdiction
-import { battleProcedureExecutionRefForSpellHoleForTest } from "./battle-runtime-test-support.ts";
+import { battleProcedureExecutionRefForSpellHoleForTest } from "./battle-runtime.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { Schema } from "effect";
 import * as Either from "effect/Either";
@@ -45,7 +45,7 @@ import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts"
 import {
   resolveBattleSubject,
   attackExecutionSelectionForSubjectForTest,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],

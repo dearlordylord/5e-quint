@@ -1,4 +1,4 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay roll-modifier-buff bless bane guidance resistance shield_of_faith
 // UNIT-IDENTITY-REPLAY: roll-modifier-buff bless doBlessAttackAndSaveModifier
 // UNIT-IDENTITY-REPLAY: roll-modifier-buff bane doBaneFailedSavePenalty
@@ -11,7 +11,7 @@ import { Either } from "effect";
 import {
   resolveBattleSubject,
   characterAttackSubjectForTest,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import {
@@ -62,9 +62,9 @@ import {
   run,
   stateCheck,
   type ReducerRouteEvent,
-} from "./battle-runtime-mbt-driver-kit.ts";
-import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
-import { damageTypeChoiceFill } from "./unit-profile-admission-spell-fill-support.ts";
+} from "./battle-runtime-mbt-driver-kit.test-support.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.test-support.ts";
+import { damageTypeChoiceFill } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 
 const rollModifierBuffSpellIds = [

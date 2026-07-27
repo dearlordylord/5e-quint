@@ -1,5 +1,5 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
-import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
+import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1D2-BARDIC-INSPIRATION-SCALING bard_bardic_inspiration
 // UNIT-IDENTITY-REPLAY: L1D2-BARDIC-INSPIRATION-SCALING bard_bardic_inspiration doGrantBardicInspirationD12
 import * as Either from "effect/Either";
@@ -20,7 +20,7 @@ import {
 } from "@dnd/surface/surface/unit-catalog";
 import { battleActUnitPresentation } from "./battle-act-composition.ts";
 
-import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
+import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import {
   BARDIC_INSPIRATION_GRANT_SUPPORT_PROFILE,
@@ -37,7 +37,7 @@ import {
   type BattleRuntimeSession,
   type BattleState,
 } from "./index.ts";
-import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.test-support.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 
 type BardicInspirationProjection = {

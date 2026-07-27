@@ -3,7 +3,7 @@
 import { describe, expect, it } from "vitest";
 
 import { savingThrowRollModeProjections } from "./battle-reducer/spells-damage-fills.ts";
-import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.test-support.ts";
 import {
   MBT_TEST_TIMEOUT_MS,
   decodeReducerRoute,
@@ -16,8 +16,8 @@ import {
   run,
   stateCheck,
   type ReducerRouteEvent,
-} from "./battle-runtime-mbt-driver-kit.ts";
-import { characterCreature } from "./unit-profile-admission-creature-fixture-support.ts";
+} from "./battle-runtime-mbt-driver-kit.test-support.ts";
+import { characterCreature } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import {
   applyCondition,
   barbarianDangerSenseUnitId,
@@ -30,10 +30,10 @@ import {
   spellTargetId,
   startBattle,
   unitLibrary,
-} from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission.test-support.ts";
 import { passiveSavingThrowRollModeRouteEvents } from "./index.ts";
-import { characterBattleFeatureInitForTest } from "./battle-runtime-test-support.ts";
-import type { BattleState } from "./unit-profile-admission-test-support.ts";
+import { characterBattleFeatureInitForTest } from "./battle-runtime.test-support.ts";
+import type { BattleState } from "./unit-profile-admission.test-support.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 
 const BARBARIAN_DANGER_SENSE_UNIT_ID = "barbarian_danger_sense";

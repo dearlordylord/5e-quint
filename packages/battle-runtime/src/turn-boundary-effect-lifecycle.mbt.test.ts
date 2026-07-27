@@ -13,7 +13,7 @@ import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 // Boundary: bounded source/target fixture; not exhaustive same-timing ordering.
 // Death Saving Throw ordering is intentionally outside this witness; this
 // fixture does not assert a same-timing ordering for that lifecycle.
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import {
   difficultyClass,
@@ -46,7 +46,7 @@ import {
   run,
   stateCheck,
   type ReducerRouteEvent,
-} from "./battle-runtime-mbt-driver-kit.ts";
+} from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import {
   characterSeed,
   damageRollFillWithGroups,
@@ -56,7 +56,7 @@ import {
   goblinId,
   savingThrowOutcomeFill,
   startBattleRight,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import {
   battleReducerStartRouteEvent,
   battleId,

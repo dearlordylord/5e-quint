@@ -30,11 +30,11 @@ import {
   type CombatantId,
   unitLibrary,
   wizardSpellcasting,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import {
   savingThrowOutcomeFill,
   spellAct,
-} from "./unit-profile-admission-spell-fill-support.ts";
+} from "./unit-profile-admission-spell-fill.test-support.ts";
 import type {
   BattleDamageRelationshipDecision,
   BattleTargetSpatialFact,

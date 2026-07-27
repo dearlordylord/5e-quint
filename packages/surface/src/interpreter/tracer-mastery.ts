@@ -6,8 +6,9 @@ import type {
   SaveGateRiderResult,
 } from "../surface/types.ts";
 import type { Trace, TraceEdge, TraceNode } from "./tracer-model.ts";
-import { describeDc, idGen } from "./tracer-rule-labels.ts";
+import { describeDc } from "./tracer-rule-labels.ts";
 import type { IdGen } from "./tracer-rule-labels.ts";
+import { traceRoot } from "./tracer-root.ts";
 
 import { traceUsageLimit } from "./tracer-effect-scaling.ts";
 
@@ -16,17 +17,10 @@ import { traceUsageLimit } from "./tracer-effect-scaling.ts";
 // ============================================================
 
 export function traceMasteryUnit(mastery: MasteryRecord): Trace {
-  const nodes: TraceNode[] = [];
-  const edges: TraceEdge[] = [];
-  const ids = idGen();
-
-  const rootId = ids("root");
-  nodes.push({
-    id: rootId,
-    category: "source",
-    atomKind: "mastery_root",
-    label: `mastery_root\n${mastery.name}`,
-  });
+  const { rootId, nodes, edges, ids } = traceRoot(
+    "mastery_root",
+    `mastery_root\n${mastery.name}`,
+  );
 
   const resolutionId = traceOnHitTriggerMechanics(
     mastery.mechanics,

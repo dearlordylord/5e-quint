@@ -1,4 +1,7 @@
+import { resolveSpellActiveEffectCast } from "../spell-active-effect-resolution.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
+import { replaceTargetSpellActiveEffect } from "../active-effect-replacement.ts";
+import { actionSpellCastCandidate } from "../spell-cast-candidate.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-see-invisible-observer-sight
 import { DurationBattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SEE_INVISIBILITY_OBSERVER_SIGHT
@@ -27,7 +30,6 @@ import { DurationBattleActiveEffectExpirationSchema } from "../../active-effect/
 import { elapsedTimeTicksFromHours } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { Either } from "effect";
 
-import { battleCreatureWithSpellActiveEffects } from "../../active-effect/lifecycle.ts";
 import {
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
@@ -35,11 +37,9 @@ import {
   type BattleState,
   type SeeInvisibleObserverSightSpellInvocation,
 } from "../../battle-state-execution.ts";
-import { maybeOpenInterruptWindow, snapshotBattle } from "../dispatcher.ts";
 import { CombatantId } from "../../identity.ts";
 import { invalidResult } from "../result-helpers.ts";
-import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
-import { spendSpellCastResources } from "../spells-resolve-resources.ts";
+import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
@@ -134,17 +134,7 @@ function discoverSeeInvisibleObserverSightCastAct(
   actorId: CombatantId,
   invocation: BattleExecutableSpellInvocation<SeeInvisibleObserverSightSpellInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
-  return [
-    {
-      subject: {
-        tag: "actionSpell",
-        actorId,
-        procedureRef: invocation.sourceProcedureRef,
-        mode: { tag: "cast" },
-      },
-      initialHoles: [],
-    },
-  ];
+  return [actionSpellCastCandidate(actorId, invocation.sourceProcedureRef, [])];
 }
 
 function applySeeInvisibleObserverSightEffect(
@@ -152,65 +142,25 @@ function applySeeInvisibleObserverSightEffect(
   actorId: CombatantId,
   invocation: BattleExecutableSpellInvocation<SeeInvisibleObserverSightSpellInvocation>,
 ): BattleState {
-  const actor = state.combatants.get(actorId);
-  if (actor === undefined) {
-    return state;
-  }
-  const nextEffect = {
-    ...invocation.activeEffect,
-    sourceProcedureRef: invocation.sourceProcedureRef,
-    sourceCombatantId: actorId,
-  };
-  const activeEffects = [
-    ...actor.activeEffects.filter(
-      (effect) =>
-        !(
-          effect.kind === "seeInvisibleAndEthereal" &&
-          effect.sourceProcedureRef === invocation.sourceProcedureRef &&
-          effect.sourceCombatantId === actorId
-        ),
-    ),
-    nextEffect,
-  ];
-  return {
-    ...state,
-    combatants: new Map(state.combatants).set(
-      actorId,
-      battleCreatureWithSpellActiveEffects(actor, activeEffects),
-    ),
-  };
+  return replaceTargetSpellActiveEffect(
+    state,
+    actorId,
+    (effect) =>
+      effect.kind === "seeInvisibleAndEthereal" &&
+      effect.sourceProcedureRef === invocation.sourceProcedureRef &&
+      effect.sourceCombatantId === actorId,
+    {
+      ...invocation.activeEffect,
+      sourceProcedureRef: invocation.sourceProcedureRef,
+      sourceCombatantId: actorId,
+    },
+  );
 }
 
 function resolveSeeInvisibleObserverSight(
   input: SpellProcedureProfileResolveInput<SeeInvisibleObserverSightSpellInvocation>,
 ): BattleResolutionResult {
-  if (
-    input.fillSet.targetId !== undefined ||
-    input.fillSet.objectTarget !== undefined ||
-    input.fillSet.targetSpatialFacts.length > 0 ||
-    input.fillSet.targetAllocation !== undefined ||
-    input.fillSet.targetList !== undefined ||
-    input.fillSet.attackSequencePartFills.length > 0 ||
-    input.fillSet.attackRoll !== undefined ||
-    input.fillSet.savingThrowOutcomes !== undefined ||
-    input.fillSet.skillChoice !== undefined ||
-    input.fillSet.targetAbilityChoices !== undefined ||
-    input.fillSet.abilityChoice !== undefined ||
-    input.fillSet.thaumaturgyActiveOneMinuteEffectCount !== undefined ||
-    input.fillSet.commandOptionChoice !== undefined ||
-    input.fillSet.conditionChoice !== undefined ||
-    input.fillSet.areaChoice !== undefined ||
-    input.fillSet.dancingLightsPlacement !== undefined ||
-    input.fillSet.damageTypeChoice !== undefined ||
-    input.fillSet.concentrationSavingThrows.length > 0 ||
-    input.fillSet.hideousLaughterDamageRepeatSaves.length > 0 ||
-    input.fillSet.damageDispositions.length > 0 ||
-    input.fillSet.damageRoll !== undefined ||
-    input.fillSet.movement !== undefined ||
-    input.fillSet.spellDamageReductionRolls.length > 0 ||
-    input.fillSet.attackBurstDamageRoll !== undefined ||
-    input.fillSet.healingRoll !== undefined
-  ) {
+  if (!fillsBelongToSpellCastHoles(input.input.fills)) {
     return invalidResult(
       input.input.state,
       "invalidFill",
@@ -218,44 +168,17 @@ function resolveSeeInvisibleObserverSight(
     );
   }
 
-  const spellCastReactionWindow = maybeOpenInterruptWindow(
-    input.input.state,
-    spellCastInterruptFrame({
-      casterId: input.actorId,
-      invocation: input.invocation,
-      targetIds: [input.actorId],
-      reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
-      castingResource: { kind: "magicAction" },
-      continuation: {
-        kind: "replay",
-        subject: input.input.subject,
-        fills: input.input.fills,
-      },
-    }),
-    input.input.handledInterruptTrigger,
-  );
-  if (spellCastReactionWindow !== null) {
-    return spellCastReactionWindow;
-  }
-
-  const effected = applySeeInvisibleObserverSightEffect(
-    input.input.state,
-    input.actorId,
-    input.invocation,
-  );
-  const resourced = spendSpellCastResources({
-    state: effected,
-    actorId: input.actorId,
-    invocation: input.invocation,
-    errorState: input.input.state,
+  return resolveSpellActiveEffectCast({
+    resolution: input,
+    targetIds: [input.actorId],
+    castingResource: { kind: "magicAction" },
+    applyEffect: (state) =>
+      applySeeInvisibleObserverSightEffect(
+        state,
+        input.actorId,
+        input.invocation,
+      ),
   });
-  return resourced.tag === "invalid"
-    ? resourced
-    : {
-        tag: "resolved",
-        state: resourced.state,
-        snapshot: snapshotBattle(resourced.state),
-      };
 }
 
 const SeeInvisibleObserverSightInvocationSchema = spellProcedureExecutionSchema(

@@ -10,7 +10,7 @@ import {
   focusedMbtMaxSteps,
   mbtTraceCount,
   weaponAttackOrderingStateCheck,
-} from "./battle-runtime-mbt-driver-kit.ts";
+} from "./battle-runtime-mbt-driver-kit.test-support.ts";
 
 describe("weapon attack ordering MBT", () => {
   it("projects weapon Attack hole-frontier order and ordering rejections", async () => {

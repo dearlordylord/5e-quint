@@ -1,5 +1,5 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
-import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
+import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
+import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-self-teleport
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE BATTLE.SPELL.ANTIMAGIC_FIELD_TRANSIT_BLOCKING
 // RAW trace:
@@ -33,7 +33,7 @@ import {
   quintVariantTag,
   run,
   stateCheck,
-} from "./battle-runtime-mbt-driver-kit.ts";
+} from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import { describe, expect, it } from "vitest";
 
 import type {
@@ -49,22 +49,22 @@ import { discoverBattleActCandidates, snapshotBattle } from "./index.ts";
 import {
   requireCombatant,
   requireHole,
-} from "./unit-profile-admission-creature-fixture-support.ts";
-import { teleportDestinationFill } from "./unit-profile-admission-spell-fill-support.ts";
+} from "./unit-profile-admission-creature-fixture.test-support.ts";
+import { teleportDestinationFill } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   battleAreaId,
   battleTablePositionId,
   movementFeet,
-} from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission.test-support.ts";
 import { antimagicFieldTransitInvalidReason } from "./battle-reducer/antimagic-field-transit-blocking.ts";
 import {
   antimagicFieldUnitId,
   mistyStepUnitId,
   spellCasterId,
   spellTargetId,
-} from "./unit-profile-admission-catalog-support.ts";
+} from "./unit-profile-admission-catalog.test-support.ts";
 
 type LastResult =
   | "init"

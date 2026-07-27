@@ -4766,9 +4766,7 @@
       },
       "subclassSelection": {
         "state": "choice-and-options-installed",
-        "optionUnitIds": [
-          "subclass_barbarian_path_of_the_berserker"
-        ]
+        "optionUnitIds": ["subclass_barbarian_path_of_the_berserker"]
       },
       "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
@@ -5480,7 +5478,7 @@
         },
         {
           "owner": "battle-runtime",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV72B at packages/battle-runtime/src/battle-runtime-test-support.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV72B at packages/battle-runtime/src/battle-runtime.test-support.ts",
           "status": "owner evidence present"
         }
       ],
@@ -6597,9 +6595,7 @@
       },
       "subclassSelection": {
         "state": "choice-and-options-installed",
-        "optionUnitIds": [
-          "subclass_bard_college_of_lore"
-        ]
+        "optionUnitIds": ["subclass_bard_college_of_lore"]
       },
       "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
@@ -12864,9 +12860,7 @@
       },
       "subclassSelection": {
         "state": "choice-and-options-installed",
-        "optionUnitIds": [
-          "subclass_cleric_life_domain"
-        ]
+        "optionUnitIds": ["subclass_cleric_life_domain"]
       },
       "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
@@ -13716,7 +13710,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV84C at packages/battle-runtime/src/battle-runtime-test-support.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV84C at packages/battle-runtime/src/battle-runtime.test-support.ts",
           "status": "owner evidence present"
         }
       ],
@@ -18564,9 +18558,7 @@
       },
       "subclassSelection": {
         "state": "choice-and-options-installed",
-        "optionUnitIds": [
-          "subclass_druid_circle_of_the_land"
-        ]
+        "optionUnitIds": ["subclass_druid_circle_of_the_land"]
       },
       "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
@@ -19561,7 +19553,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV84C at packages/battle-runtime/src/battle-runtime-test-support.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV84C at packages/battle-runtime/src/battle-runtime.test-support.ts",
           "status": "owner evidence present"
         }
       ],
@@ -20001,7 +19993,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV84E at packages/battle-runtime/src/battle-runtime-test-support.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV84E at packages/battle-runtime/src/battle-runtime.test-support.ts",
           "status": "owner evidence present"
         }
       ],
@@ -24824,9 +24816,7 @@
       },
       "subclassSelection": {
         "state": "choice-and-options-installed",
-        "optionUnitIds": [
-          "subclass_fighter_champion"
-        ]
+        "optionUnitIds": ["subclass_fighter_champion"]
       },
       "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
@@ -26775,9 +26765,7 @@
       },
       "subclassSelection": {
         "state": "choice-and-options-installed",
-        "optionUnitIds": [
-          "subclass_monk_warrior_of_the_open_hand"
-        ]
+        "optionUnitIds": ["subclass_monk_warrior_of_the_open_hand"]
       },
       "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
@@ -28663,9 +28651,7 @@
       },
       "subclassSelection": {
         "state": "choice-and-options-installed",
-        "optionUnitIds": [
-          "subclass_paladin_oath_of_devotion"
-        ]
+        "optionUnitIds": ["subclass_paladin_oath_of_devotion"]
       },
       "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
@@ -30756,7 +30742,7 @@
         },
         {
           "owner": "battle-runtime",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV87C at packages/battle-runtime/src/battle-runtime-test-support.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV87C at packages/battle-runtime/src/battle-runtime.test-support.ts",
           "status": "owner evidence present"
         }
       ],
@@ -31835,9 +31821,7 @@
       },
       "subclassSelection": {
         "state": "choice-and-options-installed",
-        "optionUnitIds": [
-          "subclass_ranger_hunter"
-        ]
+        "optionUnitIds": ["subclass_ranger_hunter"]
       },
       "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
@@ -32793,7 +32777,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV84E at packages/battle-runtime/src/battle-runtime-test-support.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV84E at packages/battle-runtime/src/battle-runtime.test-support.ts",
           "status": "owner evidence present"
         }
       ],
@@ -35518,9 +35502,7 @@
       },
       "subclassSelection": {
         "state": "choice-and-options-installed",
-        "optionUnitIds": [
-          "subclass_rogue_thief"
-        ]
+        "optionUnitIds": ["subclass_rogue_thief"]
       },
       "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
@@ -36250,7 +36232,7 @@
         },
         {
           "owner": "battle-runtime",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV75B at packages/battle-runtime/src/battle-runtime-test-support.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV75B at packages/battle-runtime/src/battle-runtime.test-support.ts",
           "status": "owner evidence present"
         }
       ],
@@ -37349,9 +37331,7 @@
       },
       "subclassSelection": {
         "state": "choice-and-options-installed",
-        "optionUnitIds": [
-          "subclass_sorcerer_draconic_sorcery"
-        ]
+        "optionUnitIds": ["subclass_sorcerer_draconic_sorcery"]
       },
       "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
@@ -39092,7 +39072,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV84E at packages/battle-runtime/src/battle-runtime-test-support.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV84E at packages/battle-runtime/src/battle-runtime.test-support.ts",
           "status": "owner evidence present"
         }
       ],
@@ -44122,9 +44102,7 @@
       },
       "subclassSelection": {
         "state": "choice-and-options-installed",
-        "optionUnitIds": [
-          "subclass_warlock_fiend_patron"
-        ]
+        "optionUnitIds": ["subclass_warlock_fiend_patron"]
       },
       "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
@@ -45278,7 +45256,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV84D at packages/battle-runtime/src/battle-runtime-test-support.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV84D at packages/battle-runtime/src/battle-runtime.test-support.ts",
           "status": "owner evidence present"
         }
       ],
@@ -48096,9 +48074,7 @@
       },
       "subclassSelection": {
         "state": "choice-and-options-installed",
-        "optionUnitIds": [
-          "subclass_wizard_evoker"
-        ]
+        "optionUnitIds": ["subclass_wizard_evoker"]
       },
       "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-installed-owner-evidence-present",
@@ -49787,7 +49763,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV84E at packages/battle-runtime/src/battle-runtime-test-support.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; SRDINV84E at packages/battle-runtime/src/battle-runtime.test-support.ts",
           "status": "owner evidence present"
         }
       ],

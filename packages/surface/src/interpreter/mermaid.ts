@@ -56,22 +56,7 @@ export function renderTraceDocument(trace: Trace, unit: UnitRecord): string {
     out.push("");
     out.push(`5e.tools: <${externalLink}>`);
   }
-  out.push("");
-  out.push(renderMermaid(trace));
-  out.push("");
-  out.push("## Atoms referenced");
-  out.push("");
-  for (const k of trace.atomKinds) {
-    out.push(`- \`${k}\``);
-  }
-  out.push("");
-  out.push("## Relations referenced");
-  out.push("");
-  const relations = [...new Set(trace.edges.map((e) => e.relation))].sort();
-  for (const r of relations) {
-    out.push(`- \`${r}\``);
-  }
-  out.push("");
+  appendTraceGraphAndReferences(out, trace);
   return out.join("\n");
 }
 
@@ -89,23 +74,23 @@ export function renderStatBlockTraceDocument(
   out.push("This authored Surface content is **not** a `UnitRecord`.");
   out.push("");
   out.push(`SRD source: \`${statBlock.provenance.section}\``);
-  out.push("");
-  out.push(renderMermaid(trace));
-  out.push("");
-  out.push("## Atoms referenced");
-  out.push("");
-  for (const k of trace.atomKinds) {
-    out.push(`- \`${k}\``);
-  }
-  out.push("");
-  out.push("## Relations referenced");
-  out.push("");
-  const relations = [...new Set(trace.edges.map((e) => e.relation))].sort();
-  for (const r of relations) {
-    out.push(`- \`${r}\``);
-  }
-  out.push("");
+  appendTraceGraphAndReferences(out, trace);
   return out.join("\n");
+}
+
+function appendTraceGraphAndReferences(out: string[], trace: Trace): void {
+  out.push("", renderMermaid(trace), "", "## Atoms referenced", "");
+  for (const kind of trace.atomKinds) {
+    out.push(`- \`${kind}\``);
+  }
+  out.push("", "## Relations referenced", "");
+  const relations = [
+    ...new Set(trace.edges.map((edge) => edge.relation)),
+  ].sort();
+  for (const relation of relations) {
+    out.push(`- \`${relation}\``);
+  }
+  out.push("");
 }
 
 function escapeLabel(s: string): string {

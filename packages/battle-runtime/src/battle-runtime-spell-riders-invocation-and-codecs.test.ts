@@ -41,12 +41,12 @@ import {
   movementFeet,
   resolveBattleSubject,
   Schema,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import type {
   BattleSubject,
   BattleRuntimeSession,
   CombatantId,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import { describe, expect, test } from "vitest";
 
 describe("battle runtime: spell riders, invocations, and codecs", () => {

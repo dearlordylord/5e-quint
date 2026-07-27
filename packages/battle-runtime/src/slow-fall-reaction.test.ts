@@ -22,7 +22,7 @@ import {
   resolveBattleInterrupt,
   startBattleRight,
   unitLibrary,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import { REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE } from "./unit-feature-support.ts";
 
 const monkId = combatantId("slow-fall-monk");

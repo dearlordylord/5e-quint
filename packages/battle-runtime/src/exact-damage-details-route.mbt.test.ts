@@ -22,7 +22,7 @@ import {
   type ReducerRouteEvent,
   type ReducerRouteOwnerGroup,
   type ReducerRouteSubjectFamily,
-} from "./battle-runtime-mbt-driver-kit.ts";
+} from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import {
   decodeRuleCoreComponentRoute,
   ruleCoreComponentRoute,

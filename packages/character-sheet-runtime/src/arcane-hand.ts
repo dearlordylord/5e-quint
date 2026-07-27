@@ -12,17 +12,16 @@ import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
 import { characterSheetHitPointMaximum } from "./hit-points.ts";
-import { hasPreparedClassSpellAccess } from "./prepared-spell-access.ts";
-import { spendCharacterSheetSpellSlot } from "./spell-slots.ts";
 import {
   characterSheetIssue,
-  getRequiredUnit,
   type CharacterSheet,
   type CharacterSheetArcaneHandInvocation,
   type CharacterSheetArcaneHandResult,
   type CharacterSheetArcaneHandSpace,
   type CharacterSheetIssue,
 } from "./sheet-types.ts";
+
+import { castPreparedSpell } from "./prepared-spell-cast.ts";
 
 const ARCANE_HAND_SPELL_ID = "arcane_hand" as const;
 const ARCANE_HAND_SPELL_LEVEL = spellSlotLevel(5);
@@ -35,61 +34,33 @@ export function castArcaneHand(input: {
   readonly space: CharacterSheetArcaneHandSpace;
   readonly castLevel?: SpellSlotLevel;
 }): Either.Either<CharacterSheetArcaneHandResult, CharacterSheetIssue> {
-  const spell = arcaneHandSpell(input.unitLibrary);
-  if (Either.isLeft(spell)) return Either.left(spell.left);
-
-  if (!hasPreparedClassSpellAccess(input.sheet, spell.right.id)) {
-    return characterSheetIssue(
-      "Arcane Hand requires prepared class Spell Access.",
-    );
-  }
-
-  const castLevel = input.castLevel ?? ARCANE_HAND_SPELL_LEVEL;
-  if (castLevel < ARCANE_HAND_SPELL_LEVEL) {
-    return characterSheetIssue(
-      "Arcane Hand requires a level-5 or higher Spell Slot.",
-    );
-  }
-
-  const hitPointMaximum = characterSheetHitPointMaximum({
+  return castPreparedSpell({
     sheet: input.sheet,
     unitLibrary: input.unitLibrary,
+    spellId: authoredUnitId(ARCANE_HAND_SPELL_ID),
+    spellLevel: input.castLevel ?? ARCANE_HAND_SPELL_LEVEL,
+    spellName: "Arcane Hand",
+    invocation: (spell) => {
+      const castLevel = input.castLevel ?? ARCANE_HAND_SPELL_LEVEL;
+      if (castLevel < ARCANE_HAND_SPELL_LEVEL) {
+        return characterSheetIssue(
+          "Arcane Hand requires a level-5 or higher Spell Slot.",
+        );
+      }
+      const hitPointMaximum = characterSheetHitPointMaximum({
+        sheet: input.sheet,
+        unitLibrary: input.unitLibrary,
+      });
+      if (Either.isLeft(hitPointMaximum))
+        return Either.left(hitPointMaximum.left);
+      return arcaneHandInvocationFromSpell({
+        spell: spell,
+        space: input.space,
+        castLevel,
+        hitPointMaximum: hitPointMaximum.right,
+      });
+    },
   });
-  if (Either.isLeft(hitPointMaximum)) return Either.left(hitPointMaximum.left);
-
-  const invocation = arcaneHandInvocationFromSpell({
-    spell: spell.right,
-    space: input.space,
-    castLevel,
-    hitPointMaximum: hitPointMaximum.right,
-  });
-  if (Either.isLeft(invocation)) return Either.left(invocation.left);
-
-  const spent = spendCharacterSheetSpellSlot({
-    sheet: input.sheet,
-    spellLevel: castLevel,
-    spellSlotSource: "ordinary",
-  });
-  if (Either.isLeft(spent)) return Either.left(spent.left);
-
-  return Either.right({
-    sheet: spent.right,
-    invocation: invocation.right,
-  });
-}
-
-function arcaneHandSpell(
-  unitLibrary: UnitCatalog,
-): Either.Either<SpellRecord, CharacterSheetIssue> {
-  const unit = getRequiredUnit(
-    unitLibrary,
-    authoredUnitId(ARCANE_HAND_SPELL_ID),
-  );
-  if (Either.isLeft(unit)) return Either.left(unit.left);
-  if (unit.right.kind !== "spell") {
-    return characterSheetIssue("Arcane Hand requires a Spell record.");
-  }
-  return Either.right(unit.right);
 }
 
 function arcaneHandInvocationFromSpell(input: {

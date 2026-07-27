@@ -1,4 +1,4 @@
-import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime-test-support.ts";
+import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV29E ice_knife
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV29F3 chromatic_orb
@@ -13,27 +13,27 @@ import {
   rayOfFrostUnitId,
   spellCasterId,
   spellTargetId,
-} from "./unit-profile-admission-catalog-support.ts";
+} from "./unit-profile-admission-catalog.test-support.ts";
 import {
   requireHole,
   requireResultHole,
-} from "./unit-profile-admission-creature-fixture-support.ts";
+} from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
   spellAct,
   spellActInvocation,
   spellHoleInvocation,
   spellTargetFill,
-} from "./unit-profile-admission-spell-fill-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+} from "./unit-profile-admission-spell-fill.test-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   cantripSpellInvocationRef,
   discoverBattleActs,
   movementDeltaFeet,
   resolveBattleSubject,
   spellSlotInvocationRef,
-} from "./unit-profile-admission-test-support.ts";
-import type { ActionSpellAct } from "./unit-profile-admission-catalog-support.ts";
+} from "./unit-profile-admission.test-support.ts";
+import type { ActionSpellAct } from "./unit-profile-admission-catalog.test-support.ts";
 
 describe("QMBT14 deterministic chained attack and Mage Armor admission", () => {
   test("ice_knife is admitted as a mixed spell attack plus primary-target burst save", () => {

@@ -47,12 +47,10 @@ import {
   fillsMatchingHoleIds,
 } from "./damage-apply.ts";
 import { damageRelationshipDecisionFillCheck } from "./damage-relationship-decisions.ts";
-import {
-  deduplicateBattleHolesById,
-  needsHolesResult,
-} from "./hole-helpers.ts";
+import { deduplicateBattleHolesById } from "./hole-helpers.ts";
+import { needsHolesResult } from "./needs-holes-result.ts";
 import { invalidResult } from "./result-helpers.ts";
-import { applyBattleMovement } from "./readied-release.ts";
+import { applyBattleMovement } from "./battle-movement.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
 import { sanctuaryTargetingInterdictionCheck } from "./sanctuary-targeting-interdiction.ts";
 import {
@@ -110,11 +108,11 @@ import {
 import { spellFillSet, type SpellFillSet } from "./spells-resolve-fill-set.ts";
 import type { CharacterBattleMetamagicOptionFact } from "../character-battle-resource-execution.ts";
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
+import { parseBattleMovement } from "./turn-end-movement.ts";
 import {
-  parseBattleMovement,
-  readiedMovementHole,
   readiedMovementBudgetForActor,
-} from "./turn-end-movement.ts";
+  readiedMovementHole,
+} from "./movement-holes.ts";
 import {
   type ActionSpellBattleResolutionInput,
   type BattleActiveEffect,
@@ -122,7 +120,6 @@ import {
   type BattleCreatureState,
   type BattleExecutableSpellInvocation,
   type BattleFill,
-  type BattleGustOfWindLinePushDisposition,
   type BattleHole,
   type BattleHoleId,
   type BattleObjectDamageOutcome,
@@ -354,6 +351,71 @@ export function saveMetamagicSelectionState(input: {
         carefulSpellProtectedTargetIds,
         heightenedSpellTargetId,
       };
+}
+
+export function resolveAreaSaveMetamagicFills(input: {
+  readonly state: BattleState;
+  readonly subject: BattleSubject;
+  readonly actorId: CombatantId;
+  readonly invocation: Parameters<
+    typeof saveMetamagicSelectionState
+  >[0]["invocation"];
+  readonly fills: readonly BattleFill[];
+  readonly metamagicApplications:
+    | readonly CharacterBattleMetamagicOptionFact[]
+    | undefined;
+  readonly savingThrowOutcomes: BattleSpellSavingThrowOutcomeValue | undefined;
+}):
+  | BattleResolutionResult
+  | {
+      readonly tag: "ready";
+      readonly savingThrowOutcomes: BattleSpellSavingThrowOutcomeValue;
+      readonly carefulSpellProtectedTargetIds: readonly CombatantId[];
+      readonly heightenedSpellTargetId: CombatantId | undefined;
+    } {
+  const selection = saveMetamagicSelectionState({
+    state: input.state,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    fills: input.fills,
+    metamagicApplications: input.metamagicApplications,
+    targetId: undefined,
+  });
+  if (selection.tag === "invalid") {
+    return invalidResult(input.state, "invalidFill", selection.message);
+  }
+  if (selection.tag === "needsHoles") {
+    return needsHolesResult(input.state, input.subject, selection.holes);
+  }
+  if (input.savingThrowOutcomes === undefined) {
+    return needsHolesResult(input.state, input.subject, [
+      spellSavingThrowOutcomeHole(
+        input.state,
+        input.actorId,
+        input.invocation,
+        selection.heightenedSpellTargetId,
+      ),
+    ]);
+  }
+  const validation = validateSavingThrowOutcomes(
+    input.savingThrowOutcomes,
+    input.invocation,
+    input.state,
+    input.actorId,
+    undefined,
+    undefined,
+    selection.carefulSpellProtectedTargetIds,
+    selection.heightenedSpellTargetId,
+  );
+  return validation === null
+    ? {
+        tag: "ready",
+        savingThrowOutcomes: input.savingThrowOutcomes,
+        carefulSpellProtectedTargetIds:
+          selection.carefulSpellProtectedTargetIds,
+        heightenedSpellTargetId: selection.heightenedSpellTargetId,
+      }
+    : invalidResult(input.state, "invalidFill", validation);
 }
 
 function saveMetamagicSelectionFills(
@@ -3654,56 +3716,6 @@ function validateThunderwavePushDisposition(
   if (disposition.kind === "pushed") {
     return disposition.destinationId.length === 0
       ? "Thunderwave pushed destinations must be caller-supplied non-empty table positions."
-      : null;
-  }
-  return null;
-}
-
-export function validateGustOfWindLineAreaPushFacts(input: {
-  readonly area: BattleSpellAreaChoice | undefined;
-  readonly failedTargetIds: readonly CombatantId[];
-  readonly pushDistanceFeet: MovementFeet;
-}): string | null {
-  const area = input.area;
-  if (area === undefined || area.kind !== "gustOfWindLineArea") {
-    return "Gust of Wind requires caller-supplied Line area, direction, and failed-save push facts.";
-  }
-  const failedTargetIds = new Set(input.failedTargetIds);
-  const pushedTargetIds = new Set<CombatantId>();
-  for (const push of area.creaturePushes) {
-    if (!failedTargetIds.has(push.targetId)) {
-      return "Gust of Wind push facts must match failed-save targets.";
-    }
-    if (pushedTargetIds.has(push.targetId)) {
-      return "Gust of Wind push facts must not duplicate targets.";
-    }
-    pushedTargetIds.add(push.targetId);
-    const dispositionValidation = validateGustOfWindLinePushDisposition(
-      push.disposition,
-      input.pushDistanceFeet,
-    );
-    if (dispositionValidation !== null) {
-      return dispositionValidation;
-    }
-  }
-  return pushedTargetIds.size === failedTargetIds.size
-    ? null
-    : "Gust of Wind push facts must cover every failed-save target.";
-}
-
-function validateGustOfWindLinePushDisposition(
-  disposition: BattleGustOfWindLinePushDisposition,
-  distanceFeet: MovementFeet,
-): string | null {
-  if (disposition.distanceFeet !== distanceFeet) {
-    return "Gust of Wind push disposition must use the spell's 15-foot distance.";
-  }
-  if (disposition.provokesOpportunityAttacks !== false) {
-    return "Gust of Wind push disposition must not provoke Opportunity Attacks.";
-  }
-  if (disposition.kind === "pushed") {
-    return disposition.destinationId.length === 0
-      ? "Gust of Wind pushed destinations must be caller-supplied non-empty table positions."
       : null;
   }
   return null;

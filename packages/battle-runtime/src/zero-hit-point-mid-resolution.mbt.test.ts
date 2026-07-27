@@ -1,4 +1,4 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
 import type { BattleActDiscoveryCandidate } from "./battle-state-execution.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.PROTOCOL.ZERO_HIT_POINT_MID_RESOLUTION
 // RAW trace:
@@ -38,7 +38,7 @@ import {
   run,
   stateCheck,
   type ReducerRouteEvent,
-} from "./battle-runtime-mbt-driver-kit.ts";
+} from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import {
   resolveBattleSubject,
   attackRollFill,
@@ -54,7 +54,7 @@ import {
   targetFill,
   wizardId,
   wizardSpellcasting,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import {
   battleId,
   battleReducerStartRouteEvent,
@@ -66,7 +66,7 @@ import {
   type BattleResolutionResult,
   type BattleState,
 } from "./index.ts";
-import { requireCombatant } from "./unit-profile-admission-creature-fixture-support.ts";
+import { requireCombatant } from "./unit-profile-admission-creature-fixture.test-support.ts";
 
 type ZeroHitPointMidResolutionScenario = "init" | "spellAttackSequenceResolved";
 const zeroHitPointRouteSurfaceByTag = {

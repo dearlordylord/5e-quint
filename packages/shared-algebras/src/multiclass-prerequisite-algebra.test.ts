@@ -95,7 +95,7 @@ describe("multiclass-prerequisite-algebra", () => {
     );
 
     for (const facts of classFacts) {
-      expect(table.get(facts.className)).toEqual(
+      expect(table[facts.className]).toEqual(
         multiclassPrerequisiteFromPrimaryAbilities(facts.primaryAbilities),
       );
     }
@@ -190,12 +190,12 @@ describe("multiclass-prerequisite-algebra", () => {
     const table = prerequisiteTable();
 
     expect(MULTICLASS_THRESHOLD).toBe(13);
-    expect(table.get("barbarian")).toEqual({
+    expect(table.barbarian).toEqual({
       tag: "scoreAtLeast",
       ability: "str",
       minimum: 13,
     });
-    expect(table.get("wizard")).toEqual({
+    expect(table.wizard).toEqual({
       tag: "scoreAtLeast",
       ability: "int",
       minimum: 13,

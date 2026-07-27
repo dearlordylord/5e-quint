@@ -31,7 +31,7 @@ import {
   quintVariantTag,
   run,
   stateCheck,
-} from "./battle-runtime-mbt-driver-kit.ts";
+} from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -56,7 +56,7 @@ import {
   slowUnitId,
   spellCasterId,
   spellTargetId,
-} from "./unit-profile-admission-catalog-support.ts";
+} from "./unit-profile-admission-catalog.test-support.ts";
 import { combatantId } from "./identity.ts";
 import {
   attackRollFill,
@@ -65,18 +65,18 @@ import {
   requireHole,
   requireResultHole,
   zeroAbilityWeaponAttack,
-} from "./unit-profile-admission-creature-fixture-support.ts";
-import { extraAttackBattleUnitRef } from "./unit-profile-admission-feature-fixture-support.ts";
+} from "./unit-profile-admission-creature-fixture.test-support.ts";
+import { extraAttackBattleUnitRef } from "./unit-profile-admission-feature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
   singleTargetSavingThrowOutcomeFill,
   spellAct,
-} from "./unit-profile-admission-spell-fill-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+} from "./unit-profile-admission-spell-fill.test-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   resolveBattleSubject,
   monsterMultiattackStatBlock,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 
 type LastResult =
   | "init"

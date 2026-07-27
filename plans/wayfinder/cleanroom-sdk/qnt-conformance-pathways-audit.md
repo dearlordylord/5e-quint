@@ -143,7 +143,7 @@ Battle route seam.
 The shared battle driver kit imports the public Battle runtime surface. Its
 generic resolution recorder submits fills directly to `resolveBattleSubject`
 and records the returned `BattleResolutionResult`
-(`packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts:491-534`). The
+(`packages/battle-runtime/src/battle-runtime-mbt-driver-kit.test-support.ts:491-534`). The
 ordinary battle driver likewise resolves the current subject through the
 production function and projects returned state, Holes, result tag, and invalid
 reason (the same file, lines `2645-2684`). Focused MBT tests then pair these
@@ -155,7 +155,7 @@ Turn, then weapon targeting and damage
 (`packages/battle-runtime/src/reducer-spine-contract.mbt.test.ts:14-29`). Its
 driver calls production discovery and `resolveBattleSubject` across those
 phases
-(`packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts:11309-11475`).
+(`packages/battle-runtime/src/battle-runtime-mbt-driver-kit.test-support.ts:11309-11475`).
 The QNT file explicitly identifies itself as a thin spine witness rather than
 the rule owner; focused slices remain responsible for the rule semantics
 (`packages/battle-runtime/battle-runtime-reducer-spine-contract.mbt.qnt:1-11`).
@@ -167,7 +167,7 @@ act discovery attaches route events to discovered acts
 (`packages/battle-runtime/src/battle-reducer/battle-discovery.ts:685-692`). The
 route MBT requires those production-provided arrays and fails when they are
 absent instead of constructing replacement events
-(`packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts:2789-2873`).
+(`packages/battle-runtime/src/battle-runtime-mbt-driver-kit.test-support.ts:2789-2873`).
 
 This makes a helper-only or shadow-dispatch implementation more visible: the
 same public result that carries semantic state must also carry the production

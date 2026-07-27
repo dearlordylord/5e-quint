@@ -1,3 +1,5 @@
+import { maybeOpenSpellCastReactionWindow } from "../spell-cast-reaction-window.ts";
+import { actionSpellCastCandidatesForTargetHole } from "../spell-cast-candidate.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING
@@ -20,7 +22,6 @@ import {
   type BattleState,
   type WardingBondSpellInvocation,
 } from "../../battle-state-execution.ts";
-import { maybeOpenInterruptWindow, snapshotBattle } from "../dispatcher.ts";
 import { type CombatantId } from "../../identity.ts";
 import {
   WARDING_BOND_ARMOR_CLASS_BONUS,
@@ -28,12 +29,12 @@ import {
   WARDING_BOND_CONNECTION_RANGE_FEET,
   WARDING_BOND_SAVING_THROW_BONUS,
 } from "../domain-constants.ts";
-import { needsHolesResult } from "../hole-helpers.ts";
-import { invalidResult } from "../result-helpers.ts";
+
+import { needsHolesResult } from "../needs-holes-result.ts";
+import { invalidResult, resolutionFromStateResult } from "../result-helpers.ts";
+import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
 import { sameStringSet } from "../spells-execution-facts.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
-import type { SpellFillSet } from "../spells-resolve-fill-set.ts";
-import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
 import {
   applyWardingBondSpellEffect,
   wardingBondCastFactsAreSatisfied,
@@ -267,27 +268,22 @@ function discoverWardingBondCastAct(
   invocation: BattleExecutableSpellInvocation<WardingBondSpellInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const targetHole = spellTargetHole(state, actorId, invocation);
-  const castActs =
-    targetHole.choices.length === 0
-      ? []
-      : [
-          {
-            subject: {
-              tag: "actionSpell" as const,
-              actorId,
-              procedureRef: invocation.sourceProcedureRef,
-              mode: { tag: "cast" as const },
-            },
-            initialHoles: [targetHole],
-          },
-        ];
-  return castActs;
+  return actionSpellCastCandidatesForTargetHole(
+    actorId,
+    invocation.sourceProcedureRef,
+    targetHole,
+  );
 }
 
 function resolveWardingBond(
   input: SpellProcedureProfileResolveInput<WardingBondSpellInvocation>,
 ): BattleResolutionResult {
-  if (wardingBondFillSetHasDisallowedFills(input.fillSet)) {
+  const targetHole = spellTargetHole(
+    input.input.state,
+    input.actorId,
+    input.invocation,
+  );
+  if (!fillsBelongToSpellCastHoles(input.input.fills, [targetHole.holeId])) {
     return invalidResult(
       input.input.state,
       "invalidFill",
@@ -297,7 +293,7 @@ function resolveWardingBond(
 
   if (input.fillSet.targetId === undefined) {
     return needsHolesResult(input.input.state, input.input.subject, [
-      spellTargetHole(input.input.state, input.actorId, input.invocation),
+      targetHole,
     ]);
   }
 
@@ -331,21 +327,11 @@ function resolveWardingBond(
     );
   }
 
-  const spellCastReactionWindow = maybeOpenInterruptWindow(
-    input.input.state,
-    spellCastInterruptFrame({
-      casterId: input.actorId,
-      invocation: input.invocation,
-      targetIds: [target.combatantId],
-      reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
-      castingResource: { kind: "magicAction" },
-      continuation: {
-        kind: "replay",
-        subject: input.input.subject,
-        fills: input.input.fills,
-      },
-    }),
-    input.input.handledInterruptTrigger,
+  const spellCastReactionWindow = maybeOpenSpellCastReactionWindow(
+    input,
+    [target.combatantId],
+    { kind: "magicAction" },
+    undefined,
   );
   if (spellCastReactionWindow !== null) {
     return spellCastReactionWindow;
@@ -363,44 +349,7 @@ function resolveWardingBond(
     invocation: input.invocation,
     errorState: input.input.state,
   });
-  return resourced.tag === "invalid"
-    ? resourced
-    : {
-        tag: "resolved",
-        state: resourced.state,
-        snapshot: snapshotBattle(resourced.state),
-      };
-}
-
-function wardingBondFillSetHasDisallowedFills(
-  fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>,
-): boolean {
-  return (
-    fillSet.objectTarget !== undefined ||
-    fillSet.targetAllocation !== undefined ||
-    fillSet.targetList !== undefined ||
-    fillSet.attackSequencePartFills.length > 0 ||
-    fillSet.attackRoll !== undefined ||
-    fillSet.savingThrowOutcomes !== undefined ||
-    fillSet.skillChoice !== undefined ||
-    fillSet.targetAbilityChoices !== undefined ||
-    fillSet.abilityChoice !== undefined ||
-    fillSet.thaumaturgyActiveOneMinuteEffectCount !== undefined ||
-    fillSet.commandOptionChoice !== undefined ||
-    fillSet.conditionChoice !== undefined ||
-    fillSet.areaChoice !== undefined ||
-    fillSet.teleportDestination !== undefined ||
-    fillSet.dancingLightsPlacement !== undefined ||
-    fillSet.damageTypeChoice !== undefined ||
-    fillSet.concentrationSavingThrows.length > 0 ||
-    fillSet.hideousLaughterDamageRepeatSaves.length > 0 ||
-    fillSet.damageDispositions.length > 0 ||
-    fillSet.damageRoll !== undefined ||
-    fillSet.movement !== undefined ||
-    fillSet.spellDamageReductionRolls.length > 0 ||
-    fillSet.attackBurstDamageRoll !== undefined ||
-    fillSet.healingRoll !== undefined
-  );
+  return resolutionFromStateResult(resourced);
 }
 
 const WardingBondInvocationSchema = spellProcedureExecutionSchema(

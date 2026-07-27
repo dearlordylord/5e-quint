@@ -32,6 +32,7 @@ import {
 } from "./companion-state.ts";
 import type { FindFamiliarCreatureTypeOverride } from "@dnd/shared/game-facts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
+import { retainedStoredFormForPresentCompanion } from "./companion-stored-form.ts";
 
 type FindFamiliarCombatantRemoval =
   | { readonly tag: "resolved"; readonly state: BattleState }
@@ -114,19 +115,6 @@ export function findFamiliarDisappearedAtZeroHitPointsState(input: {
     protocol: input.protocol,
     creatureTypeOverride: input.creatureTypeOverride,
   };
-}
-
-export function retainedStoredFormForPresentCompanion(input: {
-  readonly state: BattleState;
-  readonly companionId: CombatantId;
-  readonly companion: BattleCompanionPresentState;
-}): BattleCompanionStoredForm | string {
-  const combatant = input.state.combatants.get(input.companionId);
-  if (combatant?.origin.kind !== "statBlock") {
-    return "Present companion Stat Block combatant is missing.";
-  }
-  const resolvedStatBlockId = combatant.origin.statBlockId;
-  return { formAccess: input.companion.formAccess, resolvedStatBlockId };
 }
 
 export function presentFindFamiliarHitPoints(

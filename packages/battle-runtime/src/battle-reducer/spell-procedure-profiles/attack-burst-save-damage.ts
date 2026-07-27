@@ -49,6 +49,7 @@ import { Schema } from "effect";
 import {
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
+  spellProcedureResolutionContext,
 } from "./profile.ts";
 import {
   AbilitySchema,
@@ -97,18 +98,9 @@ function discoverAttackBurstSaveDamageCastAct(
 function resolveAttackBurstSaveDamage(
   input: AttackBurstSaveDamageResolveInput,
 ): BattleResolutionResult {
-  return resolveAttackBurstSaveDamageSpellAct({
-    input: input.input,
-    actorId: input.actorId,
-    invocation: input.invocation,
-    fillSet: input.fillSet,
-    ...(input.actionCostOverride === undefined
-      ? {}
-      : { actionCostOverride: input.actionCostOverride }),
-    ...(input.metamagicApplications === undefined
-      ? {}
-      : { metamagicApplications: input.metamagicApplications }),
-  });
+  return resolveAttackBurstSaveDamageSpellAct(
+    spellProcedureResolutionContext(input),
+  );
 }
 
 const AttackBurstSaveDamageInvocationSchema = spellProcedureExecutionSchema(

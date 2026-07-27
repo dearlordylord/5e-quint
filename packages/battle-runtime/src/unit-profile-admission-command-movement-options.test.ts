@@ -3,17 +3,17 @@ import { describe, expect, test } from "vitest";
 import {
   attackExecutionSelectionForSubjectForTest,
   characterAttackSubjectForTest,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import {
   commandUnitId,
   spellCasterId,
   spellTargetId,
-} from "./unit-profile-admission-catalog-support.ts";
+} from "./unit-profile-admission-catalog.test-support.ts";
 import {
   requireCombatant,
   requireHole,
   requireResultHole,
-} from "./unit-profile-admission-creature-fixture-support.ts";
+} from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
   commandApproachMovementFill,
@@ -21,19 +21,19 @@ import {
   savingThrowOutcomeFill,
   spellAct,
   spellTargetListFill,
-} from "./unit-profile-admission-spell-fill-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+} from "./unit-profile-admission-spell-fill.test-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   difficultyClass,
   discoverBattleActCandidates,
   endTurn,
   movementFeet,
   resolveBattleSubject,
-} from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission.test-support.ts";
 import type {
   BattleFill,
   BattleState,
-} from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission.test-support.ts";
 
 describe("QMBT14 deterministic Command movement option admission", () => {
   test("command Approach consumes supplied route movement and continues when not within five feet", () => {

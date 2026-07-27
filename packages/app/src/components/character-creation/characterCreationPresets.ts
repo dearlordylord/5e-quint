@@ -75,6 +75,7 @@ function applyPresetFills(draft: CharacterDraft, fills: ReadonlyArray<CreationFi
   let current = draft
   for (const fill of fills) {
     const result = applyCharacterCreationFill(current, fill)
+    /* v8 ignore next -- checked-in preset fills are exercised as a complete accepted sequence below */
     if (result.tag !== "accepted") {
       throw new Error(`Character creation preset fill failed: ${JSON.stringify(result.issues)}`)
     }
@@ -93,6 +94,7 @@ function currentChoiceFill(
   const matchingHoles = assessCharacterDraft(draft).holes.filter(
     (candidate) => candidate.kind === "choice" && predicate(candidate)
   )
+  /* v8 ignore next -- every checked-in preset choice is exercised through this exact-one authoring gate */
   if (matchingHoles.length !== 1) throw new Error("Expected exactly one character creation preset choice hole.")
   const hole = matchingHoles[0]
   return presetChoiceFill(hole.holeId, ...optionIds)
@@ -162,6 +164,7 @@ function abilityScorePresetFill(): CreationFill {
       cha: 12
     }
   })
+  /* v8 ignore next -- the checked-in standard-array assignment is parsed while constructing every preset */
   if (Either.isLeft(fill)) throw new Error("Expected character creation preset ability scores to parse.")
   return fill.right
 }

@@ -15,7 +15,7 @@ import {
   requireHole,
   requireResultHole,
   movementFill,
-} from "./unit-profile-admission-creature-fixture-support.ts";
+} from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
   singleTargetSavingThrowOutcomeFill,
@@ -23,16 +23,16 @@ import {
   sleetStormAreaHazardSaveAct,
   spellAct,
   spellHoleInvocation,
-} from "./unit-profile-admission-spell-fill-support.ts";
+} from "./unit-profile-admission-spell-fill.test-support.ts";
 import {
   decodeSpellRecordForTest,
   spellRecord,
-} from "./unit-profile-admission-spell-record-support.ts";
+} from "./unit-profile-admission-spell-record.test-support.ts";
 import type {
   BattleActiveEffect,
   BattleState,
   BattleSubject,
-} from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission.test-support.ts";
 import {
   battleObscurementZones,
   elapsedTimeTicks,
@@ -44,13 +44,13 @@ import {
   spellCasterId,
   spellSlotInvocationRef,
   spellTargetId,
-} from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission.test-support.ts";
 import { discoverBattleActCandidates, discoverBattleActs } from "./index.ts";
-import { defineSelectedIdentityReplayWitness } from "./selected-identity-witness.ts";
+import { defineSelectedIdentityReplayWitness } from "./selected-identity-witness.test-support.ts";
 import {
   battleProcedureExecutionRefForTest,
   requireCharacterSpellProcedureRefForTest,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 
 const syntheticTargetConcentrationSpellId =
   "synthetic_sleet_storm_concentration_fixture";

@@ -1,4 +1,9 @@
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
+import {
+  ongoingSpellRepeatCastIsAvailable,
+  ongoingSpellRepeatIsOnLaterTurn,
+} from "../ongoing-spell-repeat-cast.ts";
+import { spellCastCandidate } from "../spell-cast-candidate.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spiritual-weapon-attack-proxy
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 import { DiceExprSchema } from "@dnd/surface/surface/schema";
@@ -55,17 +60,13 @@ import {
   BattleProcedureExecutionRef,
   CombatantId,
 } from "../../identity.ts";
-import {
-  antimagicFieldOngoingSpellEffectRefForActiveEffect,
-  ongoingSpellEffectSuppressedByAntimagicField,
-} from "../antimagic-field-suppression.ts";
+import { antimagicFieldOngoingSpellEffectRefForActiveEffect } from "../antimagic-field-suppression.ts";
 import {
   spiritualWeaponForcePositionHole,
   spellTargetHole,
 } from "../spells-targeting.ts";
 import { resolveBonusActionSpellAttackProxyAct } from "../spells-resolve.ts";
 import type { SpellProcedureExecutionRegistry } from "./execution-registry.ts";
-import { currentActorId } from "../creature-state-leaves.ts";
 import { supportedDamageAmountExpr } from "../spells-execution-facts.ts";
 import type {
   SpellAdmissionContext,
@@ -240,8 +241,7 @@ function spiritualWeaponRepeatIsLaterTurn(
   const battleTurn = spellAdmissionBattleTurn(ctx);
   return (
     battleTurn !== undefined &&
-    (battleTurn.currentActorId !== effect.startedOn.actorId ||
-      battleTurn.round !== effect.startedOn.round)
+    ongoingSpellRepeatIsOnLaterTurn(battleTurn, effect)
   );
 }
 
@@ -412,23 +412,7 @@ function discoverSpiritualWeaponAttackProxyCastAct(
   actorId: CombatantId,
   invocation: BattleExecutableSpellInvocation<SpiritualWeaponAttackProxyInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
-  const targetHole = spellTargetHole(state, actorId, invocation);
-  return targetHole.choices.length === 0
-    ? []
-    : [
-        {
-          subject: {
-            tag: "bonusActionSpell" as const,
-            actorId,
-            procedureRef: invocation.sourceProcedureRef,
-            mode: { tag: "cast" as const },
-          },
-          initialHoles: [
-            spiritualWeaponForcePositionHole(invocation),
-            targetHole,
-          ],
-        },
-      ];
+  return spiritualWeaponAttackCandidate(state, actorId, invocation);
 }
 
 function discoverSpiritualWeaponRepeatAttackCastAct(
@@ -436,38 +420,29 @@ function discoverSpiritualWeaponRepeatAttackCastAct(
   actorId: CombatantId,
   invocation: BattleExecutableSpellInvocation<SpiritualWeaponRepeatAttackInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
-  if (
-    currentActorId(state) === invocation.activeEffect.startedOn.actorId &&
-    state.initiative.round === invocation.activeEffect.startedOn.round
-  ) {
+  if (!ongoingSpellRepeatCastIsAvailable(state, invocation.activeEffect)) {
     return [];
   }
-  if (
-    ongoingSpellEffectSuppressedByAntimagicField(
-      state,
-      antimagicFieldOngoingSpellEffectRefForActiveEffect(
-        invocation.activeEffect,
-      ),
-    )
-  ) {
-    return [];
-  }
+  return spiritualWeaponAttackCandidate(state, actorId, invocation);
+}
+
+function spiritualWeaponAttackCandidate(
+  state: BattleState,
+  actorId: CombatantId,
+  invocation: BattleExecutableSpellInvocation<
+    SpiritualWeaponAttackProxyInvocation | SpiritualWeaponRepeatAttackInvocation
+  >,
+): readonly BattleActDiscoveryCandidate[] {
   const targetHole = spellTargetHole(state, actorId, invocation);
   return targetHole.choices.length === 0
     ? []
     : [
-        {
-          subject: {
-            tag: "bonusActionSpell" as const,
-            actorId,
-            procedureRef: invocation.sourceProcedureRef,
-            mode: { tag: "cast" as const },
-          },
-          initialHoles: [
-            spiritualWeaponForcePositionHole(invocation),
-            targetHole,
-          ],
-        },
+        spellCastCandidate(
+          "bonusActionSpell",
+          actorId,
+          invocation.sourceProcedureRef,
+          [spiritualWeaponForcePositionHole(invocation), targetHole],
+        ),
       ];
 }
 

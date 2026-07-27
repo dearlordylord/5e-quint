@@ -1,8 +1,8 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.cunning-strike
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L5-A13-ROGUE-CUNNING-STRIKE-BATTLE-RUNTIME rogue_cunning_strike
 // UNIT-IDENTITY-REPLAY: L5-A13-ROGUE-CUNNING-STRIKE-BATTLE-RUNTIME rogue_cunning_strike doResolveCunningStrikeTripFailedSave doResolveCunningStrikePoisonFailedSave doResolveCunningStrikeWithdrawMove
-import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
-import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
+import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.test-support.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.test-support.ts";
 import {
   attackDamageDispositionFill,
   attackDamageHoleAfterHit,
@@ -33,7 +33,7 @@ import {
   type BattleHole,
   type BattleState,
   type BattleSubject,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import type { BattleProcedureExecutionRef } from "./index.ts";
 import { difficultyClass } from "@dnd/shared/types";
 

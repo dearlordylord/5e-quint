@@ -138,7 +138,7 @@ import {
   spellDamageReductionRollForTarget,
   spellDamageReductionRollHole,
 } from "./damage-helpers.ts";
-import { spellSaveDcForCaster } from "./attack-resolution.ts";
+import { spellSaveDcForCaster } from "./spell-save-dc.ts";
 import {
   applySaveDamageResult,
   savingThrowFlatBonusProjections,

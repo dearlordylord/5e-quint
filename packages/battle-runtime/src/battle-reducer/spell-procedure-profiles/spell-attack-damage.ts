@@ -22,7 +22,6 @@ import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts
 // spiritual weapon attacks, object-contact repeats, and spellAttackDamage share
 // one damage lifecycle. The profile owns dispatch into that shared lifecycle.
 
-import { DamageTypeSchema, DiceExprSchema } from "@dnd/surface/surface/schema";
 import {
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
@@ -57,6 +56,7 @@ import {
   PreparedSpellAccessSchema,
   SpellDamageSchema,
   SpellAttackMissDamageSchema,
+  SpellAttackDamagePayloadSchema,
   SpellAttackDamageTargetingSchema,
   SpellPostDamageRiderSchema,
   SpellSlotInvocationResourceSchema,
@@ -66,32 +66,6 @@ import {
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
 } from "./profile.ts";
-
-const SpellAttackDamagePayloadExecutionSchema = Schema.Union(
-  Schema.Struct({
-    kind: Schema.Literal("fixedSpellAttackDamage"),
-    expr: DiceExprSchema,
-    damageType: DamageTypeSchema,
-  }),
-  Schema.Struct({
-    kind: Schema.Literal("sorcerousBurstDamageTypeChoice"),
-    expr: DiceExprSchema,
-    damageTypeChoices: Schema.NonEmptyArray(DamageTypeSchema),
-    maxDieAdditionalDiceLimit: Schema.Number.pipe(
-      Schema.int(),
-      Schema.greaterThanOrEqualTo(0),
-    ),
-  }),
-  Schema.Struct({
-    kind: Schema.Literal("selectedSorcerousBurstDamage"),
-    expr: DiceExprSchema,
-    damageType: DamageTypeSchema,
-    maxDieAdditionalDiceLimit: Schema.Number.pipe(
-      Schema.int(),
-      Schema.greaterThanOrEqualTo(0),
-    ),
-  }),
-);
 
 type SpellAttackDamageResolveInput =
   SpellProcedureProfileResolveInput<SpellAttackDamageInvocation>;
@@ -175,47 +149,36 @@ function resolveSpellAttackDamage(
   return resolveSpellAttackDamageAct(input, executionRegistry);
 }
 
+const SpellAttackDamageInvocationCommonFields = {
+  procedure: Schema.Literal("spellAttackDamage"),
+  spellRuleFacts: SpellRuleExecutionFactsSchema,
+  targeting: SpellAttackDamageTargetingSchema,
+  damage: SpellAttackDamagePayloadSchema,
+  rangeFeet: MovementFeet,
+  attackKind: Schema.Literal("melee_spell_attack", "ranged_spell_attack"),
+  attackBonus: AttackBonus,
+  missDamage: SpellAttackMissDamageSchema,
+  laterDamage: Schema.NullOr(SpellDamageSchema),
+  postDamageRiders: Schema.Array(SpellPostDamageRiderSchema),
+  objectHitEffect: Schema.Union(
+    Schema.Struct({ kind: Schema.Literal("none") }),
+    Schema.Struct({
+      kind: Schema.Literal("igniteFlammableUnattended"),
+    }),
+  ),
+} as const;
+
 export const SpellAttackDamageInvocationSchema = spellProcedureExecutionSchema(
   Schema.Union(
     Schema.Struct({
+      ...SpellAttackDamageInvocationCommonFields,
       access: ClassCantripSpellAccessSchema,
       resource: NoSpellInvocationResourceSchema,
-      procedure: Schema.Literal("spellAttackDamage"),
-      spellRuleFacts: SpellRuleExecutionFactsSchema,
-      targeting: SpellAttackDamageTargetingSchema,
-      damage: SpellAttackDamagePayloadExecutionSchema,
-      rangeFeet: MovementFeet,
-      attackKind: Schema.Literal("melee_spell_attack", "ranged_spell_attack"),
-      attackBonus: AttackBonus,
-      missDamage: SpellAttackMissDamageSchema,
-      laterDamage: Schema.NullOr(SpellDamageSchema),
-      postDamageRiders: Schema.Array(SpellPostDamageRiderSchema),
-      objectHitEffect: Schema.Union(
-        Schema.Struct({ kind: Schema.Literal("none") }),
-        Schema.Struct({
-          kind: Schema.Literal("igniteFlammableUnattended"),
-        }),
-      ),
     }),
     Schema.Struct({
+      ...SpellAttackDamageInvocationCommonFields,
       access: PreparedSpellAccessSchema,
       resource: SpellSlotInvocationResourceSchema,
-      procedure: Schema.Literal("spellAttackDamage"),
-      spellRuleFacts: SpellRuleExecutionFactsSchema,
-      targeting: SpellAttackDamageTargetingSchema,
-      damage: SpellAttackDamagePayloadExecutionSchema,
-      rangeFeet: MovementFeet,
-      attackKind: Schema.Literal("melee_spell_attack", "ranged_spell_attack"),
-      attackBonus: AttackBonus,
-      missDamage: SpellAttackMissDamageSchema,
-      laterDamage: Schema.NullOr(SpellDamageSchema),
-      postDamageRiders: Schema.Array(SpellPostDamageRiderSchema),
-      objectHitEffect: Schema.Union(
-        Schema.Struct({ kind: Schema.Literal("none") }),
-        Schema.Struct({
-          kind: Schema.Literal("igniteFlammableUnattended"),
-        }),
-      ),
     }),
   ),
 );

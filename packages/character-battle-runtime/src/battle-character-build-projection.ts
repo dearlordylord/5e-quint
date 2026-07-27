@@ -176,12 +176,9 @@ export function characterAttackActionOption(
   if (loadoutWeapon === undefined) {
     return Either.right(null);
   }
-  const selectedWeapon = characterBuildEquipmentItemUnitId(
+  const selectedWeapon = characterEquipmentItemSourceFromId(
     loadoutWeapon.itemId,
-  );
-  if (selectedWeapon == null) {
-    return Either.right(null);
-  }
+  ).unitId;
   const selectedWeaponItemId = loadoutWeapon.itemId;
 
   return characterWeaponAttackActionOption(
@@ -207,12 +204,9 @@ export function characterOffHandAttackActionOption(
   if (loadoutWeapon === undefined) {
     return Either.right(undefined);
   }
-  const selectedWeapon = characterBuildEquipmentItemUnitId(
+  const selectedWeapon = characterEquipmentItemSourceFromId(
     loadoutWeapon.itemId,
-  );
-  if (selectedWeapon == null) {
-    return Either.right(undefined);
-  }
+  ).unitId;
   const selectedWeaponItemId = loadoutWeapon.itemId;
 
   const option = characterWeaponAttackActionOption(
@@ -337,12 +331,7 @@ export function characterPactBladeBondedWeaponItemId(input: {
       "Pact of the Blade bond must reference owned equipment.",
     );
   }
-  const weaponUnitId = characterBuildEquipmentItemUnitId(input.itemId);
-  if (weaponUnitId === undefined) {
-    return battleCreatureInitIssue(
-      "Pact of the Blade bond must reference a weapon item id.",
-    );
-  }
+  const weaponUnitId = characterEquipmentItemSourceFromId(input.itemId).unitId;
   const unit = getRequiredUnit(input.unitLibrary, weaponUnitId);
   if (Either.isLeft(unit)) {
     return battleCreatureInitIssue(unit.left.message);
@@ -379,14 +368,17 @@ function characterWeaponAttackActionOption(
     return Either.right(null);
   }
 
-  const baseAttack = characterBattleCreatureInitWeaponAttack({
-    kind: "weapon",
-    weapon: admitCharacterWeaponExecutionWeapon(unit.right),
+  const baseAttack = {
+    ...characterBattleCreatureInitWeaponAttack({
+      kind: "weapon",
+      weapon: admitCharacterWeaponExecutionWeapon(unit.right),
+      ability: "str",
+      abilityModifier: battleAbilityModifier(
+        scoreModifier(build.abilityScores.str),
+      ),
+    }),
     ability: "str",
-    abilityModifier: battleAbilityModifier(
-      scoreModifier(build.abilityScores.str),
-    ),
-  });
+  } as const satisfies PhysicalAbilityWeaponAttack;
   const martialArts = martialArtsAttackProjectionForBuild({
     build,
     unitLibrary,
@@ -472,6 +464,10 @@ const PACT_OF_THE_BLADE_ADDITIONAL_DAMAGE_TYPE_CHOICES = [
   "radiant",
 ] as const satisfies ReadonlyArray<DamageType>;
 
+type PhysicalAbilityWeaponAttack = CharacterBattleCreatureInitWeaponAttack & {
+  readonly ability: "str" | "dex";
+};
+
 function pactBladeDamageTypeChoices(
   weaponDamageType: DamageType,
 ): CharacterWeaponAttackDamageTypeChoices {
@@ -491,7 +487,7 @@ function pactBladeDamageTypeChoices(
 }
 
 function pactBladeWeaponAttack(
-  attack: CharacterBattleCreatureInitWeaponAttack,
+  attack: PhysicalAbilityWeaponAttack,
   build: CharacterBuild,
   itemId: CharacterEquipmentItemId,
   pactBladeBondedWeaponItemId: CharacterEquipmentItemId | undefined,
@@ -527,9 +523,7 @@ function pactBladeWeaponAttack(
       Number(attack.abilityModifier) + Number(characterProficiency),
     ),
     damageAbilityModifier: attack.abilityModifier,
-    ...(attack.ability === "cha"
-      ? {}
-      : { alternateAbilityChoices: [charismaAttack] }),
+    alternateAbilityChoices: [charismaAttack],
     damageTypeChoices: pactBladeDamageTypeChoices(
       attack.weapon.damage.damageType,
     ),
@@ -636,10 +630,10 @@ function martialArtsLoadoutConditionHolds(input: {
 }
 
 function martialArtsWeaponAttack(
-  attack: CharacterBattleCreatureInitWeaponAttack,
+  attack: PhysicalAbilityWeaponAttack,
   build: CharacterBuild,
   projection: MartialArtsAttackProjection,
-): CharacterBattleCreatureInitWeaponAttack {
+): PhysicalAbilityWeaponAttack {
   const chosen = martialArtsChosenAbility(
     build,
     attack.ability,
@@ -691,11 +685,14 @@ function martialArtsUnarmedStrike(
   };
 }
 
-function martialArtsChosenAbility(
+function martialArtsChosenAbility<FallbackAbility extends Ability>(
   build: CharacterBuild,
-  fallbackAbility: Ability,
+  fallbackAbility: FallbackAbility,
   fallbackModifier: AbilityModifier,
-): { readonly ability: Ability; readonly modifier: AbilityModifier } {
+): {
+  readonly ability: "dex" | FallbackAbility;
+  readonly modifier: AbilityModifier;
+} {
   const dexModifier = battleAbilityModifier(
     scoreModifier(build.abilityScores.dex),
   );
@@ -896,9 +893,10 @@ function bookOfShadowsSpellAccess(input: {
   BattleCreatureInitIssue
 > {
   const accesses =
-    input.build.spellcasting?.sources.flatMap((source) =>
-      source.bookOfShadows === undefined ? [] : [source],
-    ) ?? [];
+    input.build.spellcasting?.sources.flatMap((source) => {
+      const access = source.bookOfShadows;
+      return access === undefined ? [] : [{ source, access }];
+    }) ?? [];
   if (accesses.length === 0) {
     return Either.right([]);
   }
@@ -922,7 +920,7 @@ function bookOfShadowsSpellAccess(input: {
       "Character Battle supports one Book of Shadows Spell Access source.",
     );
   }
-  const source = accesses[0];
+  const { source, access } = accesses[0];
   const sourceClassName = classUnitIdToClassName({
     unitLibrary: input.unitLibrary,
     classUnitId: source.sourceUnitId,
@@ -930,22 +928,6 @@ function bookOfShadowsSpellAccess(input: {
   if (Either.isLeft(sourceClassName) || sourceClassName.right !== "warlock") {
     return battleCreatureInitIssue(
       "Book of Shadows Spell Access must be attached to the Warlock spellcasting source.",
-    );
-  }
-  const access = source.bookOfShadows;
-  if (access === undefined) {
-    return battleCreatureInitIssue(
-      "Book of Shadows Spell Access source is missing its selection.",
-    );
-  }
-  if (access.tag !== "bookOfShadows") {
-    return battleCreatureInitIssue(
-      "Book of Shadows Spell Access selection is invalid.",
-    );
-  }
-  if (access.cantrips.length !== 3 || access.ritualSpells.length !== 2) {
-    return battleCreatureInitIssue(
-      "Book of Shadows Spell Access requires exactly three cantrips and two Ritual spells.",
     );
   }
   const selectedSpellIds = [...access.cantrips, ...access.ritualSpells];
@@ -998,13 +980,6 @@ function bookOfShadowsSpellAccess(input: {
   if (Either.isLeft(ritualSpells)) {
     return battleCreatureInitIssue(ritualSpells.left.message);
   }
-  const bookOfShadowsSpells = bookOfShadowsSpellRecordTuples({
-    cantrips: cantrips.right,
-    ritualSpells: ritualSpells.right,
-  });
-  if (Either.isLeft(bookOfShadowsSpells)) {
-    return Either.left(bookOfShadowsSpells.left);
-  }
   if (cantrips.right.some((spell) => spell.mechanics.level !== 0)) {
     return battleCreatureInitIssue(
       "Book of Shadows cantrip selections must be cantrip Spell Definitions.",
@@ -1024,72 +999,11 @@ function bookOfShadowsSpellAccess(input: {
     {
       tag: access.tag,
       bookPresence: input.bookOfShadowsPresence,
-      cantrips: bookOfShadowsSpells.right.cantrips,
-      ritualSpells: bookOfShadowsSpells.right.ritualSpells,
+      cantrips: cantrips.right,
+      ritualSpells: ritualSpells.right,
       spellcastingFocus: access.spellcastingFocus,
     },
   ]);
-}
-
-type BookOfShadowsSpellRecordTuples = Pick<
-  CharacterBattleBookOfShadowsSpellAccessInit,
-  "cantrips" | "ritualSpells"
->;
-
-function bookOfShadowsSpellRecordTuples(input: {
-  readonly cantrips: readonly SpellRecord[];
-  readonly ritualSpells: readonly SpellRecord[];
-}): Either.Either<BookOfShadowsSpellRecordTuples, BattleCreatureInitIssue> {
-  const cantrips = bookOfShadowsCantripRecords(input.cantrips);
-  if (Either.isLeft(cantrips)) {
-    return Either.left(cantrips.left);
-  }
-  const ritualSpells = bookOfShadowsRitualSpellRecords(input.ritualSpells);
-  if (Either.isLeft(ritualSpells)) {
-    return Either.left(ritualSpells.left);
-  }
-  return Either.right({
-    cantrips: cantrips.right,
-    ritualSpells: ritualSpells.right,
-  });
-}
-
-function bookOfShadowsCantripRecords(
-  spells: readonly SpellRecord[],
-): Either.Either<
-  readonly [SpellRecord, SpellRecord, SpellRecord],
-  BattleCreatureInitIssue
-> {
-  const [first, second, third, ...extra] = spells;
-  if (
-    first === undefined ||
-    second === undefined ||
-    third === undefined ||
-    extra.length !== 0
-  ) {
-    return battleCreatureInitIssue(
-      "Book of Shadows Spell Access requires exactly three cantrips.",
-    );
-  }
-  const tuple: readonly [SpellRecord, SpellRecord, SpellRecord] = [
-    first,
-    second,
-    third,
-  ];
-  return Either.right(tuple);
-}
-
-function bookOfShadowsRitualSpellRecords(
-  spells: readonly SpellRecord[],
-): Either.Either<readonly [SpellRecord, SpellRecord], BattleCreatureInitIssue> {
-  const [first, second, ...extra] = spells;
-  if (first === undefined || second === undefined || extra.length !== 0) {
-    return battleCreatureInitIssue(
-      "Book of Shadows Spell Access requires exactly two Ritual spells.",
-    );
-  }
-  const tuple: readonly [SpellRecord, SpellRecord] = [first, second];
-  return Either.right(tuple);
 }
 
 function invocationSpellAccess(input: {
@@ -1246,10 +1160,13 @@ function characterBuildLevel(build: CharacterBuild) {
   return characterLevel(computeTotalLevel(build.progression));
 }
 
-function spellRecordsForIds(
+function spellRecordsForIds<const UnitIds extends readonly UnitRecord["id"][]>(
   unitLibrary: UnitCatalog,
-  unitIds: readonly UnitRecord["id"][],
-): Either.Either<readonly SpellRecord[], BattleCreatureInitIssue> {
+  unitIds: UnitIds,
+): Either.Either<
+  { readonly [Index in keyof UnitIds]: SpellRecord },
+  BattleCreatureInitIssue
+> {
   const spells: SpellRecord[] = [];
   for (const unitId of unitIds) {
     const unit = getRequiredUnit(unitLibrary, unitId);
@@ -1261,7 +1178,11 @@ function spellRecordsForIds(
     }
     spells.push(unit.right);
   }
-  return Either.right(spells);
+  // Every input id contributes exactly one record unless the function returns
+  // a typed lookup/kind issue, so this projection preserves tuple length.
+  return Either.right(
+    spells as { readonly [Index in keyof UnitIds]: SpellRecord },
+  );
 }
 
 export function getRequiredUnit(

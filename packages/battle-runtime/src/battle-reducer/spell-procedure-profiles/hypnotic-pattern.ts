@@ -1,3 +1,5 @@
+import { savingThrowMetamagicHoles } from "../saving-throw-metamagic-holes.ts";
+import { actionSpellCastCandidate } from "../spell-cast-candidate.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-hypnotic-pattern-control spell.invocation-glyph-stored-concentration-full-duration
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 //
@@ -25,7 +27,6 @@ import type {
   ActionSpellBattleResolutionInput,
   BattleActDiscoveryCandidate,
   BattleExecutableSpellInvocation,
-  BattleHole,
   BattleInterruptedProcedure,
   BattleResolutionResult,
   BattleSpellSavingThrowOutcomeValue,
@@ -37,7 +38,10 @@ import {
   type GlyphStoredAreaControlInvocation,
   type GlyphStoredAreaControlProcedure,
 } from "../../glyph-stored-spell-invocation.ts";
-import { maybeOpenInterruptWindow, snapshotBattle } from "../dispatcher.ts";
+import {
+  maybeOpenInterruptWindow,
+  snapshotBattle,
+} from "../interrupt-execution.ts";
 import type { CharacterBattleMetamagicOptionFact } from "../../character-battle-resource-execution.ts";
 import { type CombatantId } from "../../identity.ts";
 import { battleCreatureWithSpellActiveEffects } from "../../active-effect/lifecycle.ts";
@@ -48,16 +52,12 @@ import {
   conditionHadNonSpellSourceBeforeSpellEffect,
 } from "../spell-condition-effects-helpers.ts";
 import { extendSavingThrowOngoingFeatures } from "../attack-roll.ts";
-import {
-  saveMetamagicSelectionState,
-  validateSavingThrowOutcomes,
-} from "../spells-resolve-save-gates.ts";
+import { resolveAreaSaveMetamagicFills } from "../spells-resolve-save-gates.ts";
 import {
   spendSpellCastResources,
   startSpellEffectConcentration,
 } from "../spells-resolve-resources.ts";
 import { invalidResult } from "../result-helpers.ts";
-import { needsHolesResult } from "../hole-helpers.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
@@ -75,16 +75,10 @@ import {
   SpellSlotInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import {
-  CAREFUL_METAMAGIC_EFFECT_KIND,
   discoverSpellMetamagicSelections,
-  HEIGHTENED_METAMAGIC_EFFECT_KIND,
   spellMetamagicApplications,
 } from "../metamagic-support.ts";
-import {
-  carefulSpellProtectedTargetsHole,
-  heightenedSpellTargetChoiceHole,
-  spellSavingThrowOutcomeHole,
-} from "../spells-holes-fills.ts";
+import { spellSavingThrowOutcomeHole } from "../spells-holes-fills.ts";
 
 type HypnoticPatternSpellInvocation = Extract<
   SupportedSpellInvocation,
@@ -297,9 +291,11 @@ function discoverHypnoticPatternCastAct(
     actorId,
     invocation,
   );
-  const baseCastAct = hypnoticPatternCastAct(actorId, invocation, [
-    savingThrowHole,
-  ]);
+  const baseCastAct = actionSpellCastCandidate(
+    actorId,
+    invocation.sourceProcedureRef,
+    [savingThrowHole],
+  );
   const actor = state.combatants.get(actorId);
   if (actor === undefined) {
     return [baseCastAct];
@@ -312,7 +308,7 @@ function discoverHypnoticPatternCastAct(
         return {
           ...baseCastAct,
           subject: { ...baseCastAct.subject, metamagic },
-          initialHoles: hypnoticPatternMetamagicInitialHoles(
+          initialHoles: savingThrowMetamagicHoles(
             state,
             actorId,
             invocation,
@@ -322,47 +318,6 @@ function discoverHypnoticPatternCastAct(
       },
     ),
   ];
-}
-
-function hypnoticPatternCastAct(
-  actorId: CombatantId,
-  invocation: import("../../battle-state-execution.ts").BattleExecutableSpellInvocation<HypnoticPatternSpellInvocation>,
-  initialHoles: readonly BattleHole[],
-): BattleActDiscoveryCandidate {
-  return {
-    subject: {
-      tag: "actionSpell",
-      actorId,
-      procedureRef: invocation.sourceProcedureRef,
-      mode: { tag: "cast" },
-    },
-    initialHoles,
-  };
-}
-
-function hypnoticPatternMetamagicInitialHoles(
-  state: BattleState,
-  actorId: CombatantId,
-  invocation: BattleExecutableSpellInvocation<HypnoticPatternSpellInvocation>,
-  metamagicApplications: readonly CharacterBattleMetamagicOptionFact[],
-): readonly BattleHole[] {
-  const holes: BattleHole[] = [];
-  if (
-    metamagicApplications.some(
-      (application) => application.effectKind === CAREFUL_METAMAGIC_EFFECT_KIND,
-    )
-  ) {
-    holes.push(carefulSpellProtectedTargetsHole(state, actorId, invocation));
-  }
-  if (
-    metamagicApplications.some(
-      (application) =>
-        application.effectKind === HEIGHTENED_METAMAGIC_EFFECT_KIND,
-    )
-  ) {
-    holes.push(heightenedSpellTargetChoiceHole(state, actorId, invocation));
-  }
-  return holes;
 }
 
 function hypnoticPatternReleaseResourceState(input: {
@@ -437,59 +392,21 @@ function resolveHypnoticPattern(
       "Hypnotic Pattern uses an area Saving Throw outcome fill.",
     );
   }
-  const metamagicSelections = saveMetamagicSelectionState({
+  const areaSave = resolveAreaSaveMetamagicFills({
     state: input.input.state,
+    subject: input.input.subject,
     actorId: input.actorId,
     invocation: input.invocation,
     fills: input.input.fills,
     metamagicApplications,
-    targetId: undefined,
+    savingThrowOutcomes: input.fillSet.savingThrowOutcomes,
   });
-  if (metamagicSelections.tag === "invalid") {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      metamagicSelections.message,
-    );
+  if (areaSave.tag !== "ready") {
+    return areaSave;
   }
-  if (metamagicSelections.tag === "needsHoles") {
-    return needsHolesResult(
-      input.input.state,
-      input.input.subject,
-      metamagicSelections.holes,
-    );
-  }
-  const savingThrowHole = spellSavingThrowOutcomeHole(
-    input.input.state,
-    input.actorId,
-    input.invocation,
-    metamagicSelections.heightenedSpellTargetId,
-  );
-  if (input.fillSet.savingThrowOutcomes === undefined) {
-    return needsHolesResult(input.input.state, input.input.subject, [
-      savingThrowHole,
-    ]);
-  }
-  const savingThrowValidation = validateSavingThrowOutcomes(
-    input.fillSet.savingThrowOutcomes,
-    input.invocation,
-    input.input.state,
-    input.actorId,
-    undefined,
-    undefined,
-    metamagicSelections.carefulSpellProtectedTargetIds,
-    metamagicSelections.heightenedSpellTargetId,
-  );
-  if (savingThrowValidation !== null) {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      savingThrowValidation,
-    );
-  }
-  const areaWitnessValidation = validateHypnoticPatternAreaWitness(
-    input.fillSet.savingThrowOutcomes,
-  );
+  const savingThrowOutcomes = areaSave.savingThrowOutcomes;
+  const areaWitnessValidation =
+    validateHypnoticPatternAreaWitness(savingThrowOutcomes);
   if (areaWitnessValidation !== null) {
     return invalidResult(
       input.input.state,
@@ -499,17 +416,17 @@ function resolveHypnoticPattern(
   }
   const invalidStoredGlyphCenter = invalidStoredGlyphAreaCenterResult({
     state: input.input.state,
-    savingThrowOutcomes: input.fillSet.savingThrowOutcomes,
+    savingThrowOutcomes,
     storedGlyphRelease: input.storedGlyphRelease,
   });
   if (invalidStoredGlyphCenter !== null) {
     return invalidStoredGlyphCenter;
   }
-  const affectedTargetIds = input.fillSet.savingThrowOutcomes.outcomes.map(
+  const affectedTargetIds = savingThrowOutcomes.outcomes.map(
     (outcome) => outcome.targetId,
   );
-  const failedTargets = input.fillSet.savingThrowOutcomes.outcomes.flatMap(
-    (outcome) => (outcome.succeeded ? [] : [outcome.targetId]),
+  const failedTargets = savingThrowOutcomes.outcomes.flatMap((outcome) =>
+    outcome.succeeded ? [] : [outcome.targetId],
   );
   if (failedTargets.length > 0) {
     const continuation: BattleInterruptedProcedure =

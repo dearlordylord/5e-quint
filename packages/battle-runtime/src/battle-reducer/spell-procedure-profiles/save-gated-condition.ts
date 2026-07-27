@@ -1,3 +1,8 @@
+import {
+  discoverSavingThrowMetamagicCastActs,
+  savingThrowMetamagicHoles,
+} from "../saving-throw-metamagic-holes.ts";
+import { actionSpellCastCandidate } from "../spell-cast-candidate.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-condition-save
 import {
@@ -44,11 +49,13 @@ import { Schema } from "effect";
 import {
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
+  spellProcedureResolutionContext,
 } from "./profile.ts";
 import {
   BattleConditionSchema,
   MovementFeet,
   PreparedSpellAccessSchema,
+  SaveGatedConditionSpellTargetingSchema,
   SpellConditionCountedRepeatSaveSchema,
   SpellConditionEscapeSchema,
   SpellConditionRepeatSaveSchema,
@@ -113,18 +120,9 @@ export const SpellFailedSaveConditionEffectExecutionSchema = Schema.Union(
   }),
 );
 import {
-  CAREFUL_METAMAGIC_EFFECT_KIND,
-  discoverSpellMetamagicSelections,
-  HEIGHTENED_METAMAGIC_EFFECT_KIND,
-  spellMetamagicApplications,
-} from "../metamagic-support.ts";
-import {
-  carefulSpellProtectedTargetsHole,
-  heightenedSpellTargetChoiceHole,
   saveGatedConditionHasConditionChoice,
   spellConditionChoiceHole,
   spellSavingThrowOutcomeHole,
-  spellSavingThrowTargeting,
   spellTargetHole,
   spellTargetListHole,
 } from "../spells-holes-fills.ts";
@@ -186,23 +184,28 @@ function discoverTargetedSaveGatedConditionCastActs(
     return [];
   }
   const conditionChoiceHoles = saveGatedConditionChoiceHoles(invocation);
-  const baseCastAct = saveGatedConditionCastAct(actorId, invocation, [
-    targetHole,
-    ...conditionChoiceHoles,
-  ]);
+  const baseCastAct = actionSpellCastCandidate(
+    actorId,
+    invocation.sourceProcedureRef,
+    [targetHole, ...conditionChoiceHoles],
+  );
   return [
     baseCastAct,
-    ...saveGatedConditionMetamagicCastActs({
+    ...discoverSavingThrowMetamagicCastActs({
       state,
       actorId,
       actor,
       invocation,
       baseCastAct,
-      metamagicInitialHoles: (saveMetamagicSelectionHoles) =>
-        saveMetamagicSelectionHoles.length === 0
-          ? [targetHole]
-          : [targetHole, ...saveMetamagicSelectionHoles],
-      conditionChoiceHoles,
+      initialHoles: (applications) => {
+        const saveHoles = savingThrowMetamagicHoles(
+          state,
+          actorId,
+          invocation,
+          applications,
+        );
+        return [targetHole, ...saveHoles, ...conditionChoiceHoles];
+      },
     }),
   ];
 }
@@ -219,23 +222,31 @@ function discoverAreaSaveGatedConditionCastActs(
     invocation,
   );
   const conditionChoiceHoles = saveGatedConditionChoiceHoles(invocation);
-  const baseCastAct = saveGatedConditionCastAct(actorId, invocation, [
-    savingThrowHole,
-    ...conditionChoiceHoles,
-  ]);
+  const baseCastAct = actionSpellCastCandidate(
+    actorId,
+    invocation.sourceProcedureRef,
+    [savingThrowHole, ...conditionChoiceHoles],
+  );
   return [
     baseCastAct,
-    ...saveGatedConditionMetamagicCastActs({
+    ...discoverSavingThrowMetamagicCastActs({
       state,
       actorId,
       actor,
       invocation,
       baseCastAct,
-      metamagicInitialHoles: (saveMetamagicSelectionHoles) =>
-        saveMetamagicSelectionHoles.length === 0
-          ? [savingThrowHole]
-          : saveMetamagicSelectionHoles,
-      conditionChoiceHoles,
+      initialHoles: (applications) => {
+        const saveHoles = savingThrowMetamagicHoles(
+          state,
+          actorId,
+          invocation,
+          applications,
+        );
+        return [
+          ...(saveHoles.length === 0 ? [savingThrowHole] : saveHoles),
+          ...conditionChoiceHoles,
+        ];
+      },
     }),
   ];
 }
@@ -248,105 +259,12 @@ function saveGatedConditionChoiceHoles(
     : [];
 }
 
-function saveGatedConditionMetamagicCastActs(input: {
-  readonly state: BattleState;
-  readonly actorId: CombatantId;
-  readonly actor: BattleCreatureState | undefined;
-  readonly invocation: BattleExecutableSpellInvocation<SaveGatedConditionSpellInvocation>;
-  readonly baseCastAct: BattleActDiscoveryCandidate;
-  readonly metamagicInitialHoles: (
-    saveMetamagicSelectionHoles: readonly BattleHole[],
-  ) => readonly BattleHole[];
-  readonly conditionChoiceHoles: readonly BattleHole[];
-}): readonly BattleActDiscoveryCandidate[] {
-  const actor = input.actor;
-  if (actor === undefined) {
-    return [];
-  }
-  return discoverSpellMetamagicSelections({
-    actor,
-    invocation: input.invocation,
-  }).map((metamagic) => {
-    const applications = spellMetamagicApplications(actor, metamagic);
-    const metamagicInitialHoles = saveGatedConditionMetamagicInitialHoles(
-      input.state,
-      input.actorId,
-      input.invocation,
-      applications,
-    );
-    return {
-      ...input.baseCastAct,
-      subject: {
-        ...input.baseCastAct.subject,
-        metamagic,
-      },
-      initialHoles: [
-        ...input.metamagicInitialHoles(metamagicInitialHoles),
-        ...input.conditionChoiceHoles,
-      ],
-    };
-  });
-}
-
-function saveGatedConditionCastAct(
-  actorId: CombatantId,
-  invocation: BattleExecutableSpellInvocation<SaveGatedConditionSpellInvocation>,
-  initialHoles: readonly BattleHole[],
-): BattleActDiscoveryCandidate {
-  return {
-    subject: {
-      tag: "actionSpell",
-      actorId,
-      procedureRef: invocation.sourceProcedureRef,
-      mode: { tag: "cast" },
-    },
-    initialHoles,
-  };
-}
-
-function saveGatedConditionMetamagicInitialHoles(
-  state: BattleState,
-  actorId: CombatantId,
-  invocation: BattleExecutableSpellInvocation<SaveGatedConditionSpellInvocation>,
-  metamagicApplications: readonly SpellMetamagicApplicationFact[],
-): readonly BattleHole[] {
-  const targeting = spellSavingThrowTargeting(invocation);
-  const holes: BattleHole[] = [];
-  if (
-    targeting.kind !== "singleCombatant" &&
-    metamagicApplications.some(
-      (application) => application.effectKind === CAREFUL_METAMAGIC_EFFECT_KIND,
-    )
-  ) {
-    holes.push(carefulSpellProtectedTargetsHole(state, actorId, invocation));
-  }
-  if (
-    targeting.kind !== "singleCombatant" &&
-    metamagicApplications.some(
-      (application) =>
-        application.effectKind === HEIGHTENED_METAMAGIC_EFFECT_KIND,
-    )
-  ) {
-    holes.push(heightenedSpellTargetChoiceHole(state, actorId, invocation));
-  }
-  return holes;
-}
-
 function resolveSaveGatedCondition(
   input: SaveGatedConditionResolveInput,
 ): BattleResolutionResult {
-  return resolveSaveGateConditionSpellAct({
-    input: input.input,
-    actorId: input.actorId,
-    invocation: input.invocation,
-    fillSet: input.fillSet,
-    ...(input.actionCostOverride === undefined
-      ? {}
-      : { actionCostOverride: input.actionCostOverride }),
-    ...(input.metamagicApplications === undefined
-      ? {}
-      : { metamagicApplications: input.metamagicApplications }),
-  });
+  return resolveSaveGateConditionSpellAct(
+    spellProcedureResolutionContext(input),
+  );
 }
 
 const SaveGatedConditionInvocationSchema = spellProcedureExecutionSchema(
@@ -357,32 +275,7 @@ const SaveGatedConditionInvocationSchema = spellProcedureExecutionSchema(
     spellRuleFacts: SpellRuleExecutionFactsSchema,
     ability: AbilitySchema,
     dc: DcSourceSchema,
-    targeting: Schema.Union(
-      Schema.Struct({
-        kind: Schema.Literal("singleCombatant"),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("targetList"),
-        minTargets: Schema.Literal(1),
-        maxTargets: Schema.Number,
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("pointOriginSphere"),
-        radiusFeet: MovementFeet,
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("pointOriginCubeExcludingCaster"),
-        sideFeet: MovementFeet,
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("pointOriginCube"),
-        sideFeet: MovementFeet,
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("selfOriginCone"),
-        lengthFeet: MovementFeet,
-      }),
-    ),
+    targeting: SaveGatedConditionSpellTargetingSchema,
     targetCreatureTypes: Schema.NullOr(Schema.Array(CreatureTypeSchema)),
     effect: SpellFailedSaveConditionEffectExecutionSchema,
     saveRollModeRule: Schema.NullOr(SpellSavingThrowRollModeRuleSchema),
@@ -399,4 +292,3 @@ export const saveGatedConditionProfile = {
   "saveGatedCondition",
   SaveGatedConditionSpellInvocation
 >;
-import type { SpellMetamagicApplicationFact } from "../metamagic-support.ts";

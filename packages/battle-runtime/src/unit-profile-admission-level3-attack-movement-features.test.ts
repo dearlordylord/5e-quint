@@ -20,7 +20,7 @@ import {
   unitLibrary,
   unitMechanicsVariant,
   wizardPotentCantripUnitId,
-} from "./unit-profile-admission-catalog-support.ts";
+} from "./unit-profile-admission-catalog.test-support.ts";
 import {
   battleHuntersPreySupportForUnit,
   battleOpenHandTechniqueSupportForUnit,
@@ -49,24 +49,24 @@ import {
   requireResultHole,
   resolveBattleSubject,
   startBattle,
-} from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission.test-support.ts";
 import type { BattleActiveEffect } from "./battle-state-execution.ts";
 import { requiredAbilityCheckRollMode } from "./battle-reducer/hole-helpers.ts";
-import { characterCreature } from "./unit-profile-admission-creature-fixture-support.ts";
+import { characterCreature } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
   bonusSpellAct,
   spellAct,
   spellTargetFill,
-} from "./unit-profile-admission-spell-fill-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+} from "./unit-profile-admission-spell-fill.test-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import {
   attackExecutionSelectionForSubjectForTest,
   characterBattleFeatureInitForTest,
   characterAttackSubjectForTest,
   requireCharacterUnitProcedureRefForTest,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 
 const remarkableAthleteActorId = combatantId("remarkable-athlete-actor");
 const remarkableAthleteTargetId = combatantId("remarkable-athlete-target");

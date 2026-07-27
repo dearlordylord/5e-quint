@@ -10,7 +10,7 @@ import {
   mbtTraceCount,
   run,
   spellAttackOrderingStateCheck,
-} from "./battle-runtime-mbt-driver-kit.ts";
+} from "./battle-runtime-mbt-driver-kit.test-support.ts";
 
 describe("spell attack ordering MBT", () => {
   it(

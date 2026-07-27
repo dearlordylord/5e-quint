@@ -5,7 +5,7 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 import {
   battleProcedureExecutionRefForTest,
   characterBattleFeatureInitForTest,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import { describe, expect, test } from "vitest";
 import { savingThrowRollModeProjections } from "./battle-reducer/spells-damage-fills.ts";
 import {
@@ -30,15 +30,15 @@ import {
   spellTargetId,
   startBattle,
   unitLibrary,
-} from "./unit-profile-admission-test-support.ts";
-import { characterCreature } from "./unit-profile-admission-creature-fixture-support.ts";
+} from "./unit-profile-admission.test-support.ts";
+import { characterCreature } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import type {
   BattleActiveEffect,
   BattleRuntimeSession,
   BattleState,
   UnitRecord,
-} from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission.test-support.ts";
 
 const dangerSenseSupportProfile = {
   kind: PASSIVE_SAVING_THROW_ROLL_MODE_SUPPORT_PROFILE,

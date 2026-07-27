@@ -10,6 +10,7 @@
 //     Sphere, then repeats the save at the end of the target's next turn.
 //   - UBIQUITOUS_LANGUAGE.md: Saving Throw, Condition, Unconscious, Magic
 //     Action, and Spell Invocation.
+import { actionSpellCastCandidate } from "../spell-cast-candidate.ts";
 
 import { movementFeet, MovementFeet } from "@dnd/shared/types";
 import type { ActivationPhase } from "@dnd/surface/surface/types";
@@ -17,7 +18,6 @@ import {
   SUPPORTED_POINT_SPHERE_SAVE_GATE_RADIUS_FEET,
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
-  type BattleHole,
   type BattleResolutionResult,
   type BattleState,
   type SpellTargeting,
@@ -190,9 +190,11 @@ function discoverSleepTargetAdmissionCastAct(
 ): readonly BattleActDiscoveryCandidate[] {
   const actor = state.combatants.get(actorId);
   const initialHole = spellSavingThrowOutcomeHole(state, actorId, invocation);
-  const baseCastAct = sleepTargetAdmissionCastAct(actorId, invocation, [
-    initialHole,
-  ]);
+  const baseCastAct = actionSpellCastCandidate(
+    actorId,
+    invocation.sourceProcedureRef,
+    [initialHole],
+  );
   const metamagicCastActs =
     actor === undefined
       ? []
@@ -212,22 +214,6 @@ function discoverSleepTargetAdmissionCastAct(
         );
   const castActs = [baseCastAct, ...metamagicCastActs];
   return [...castActs, ...readiedSpellAct(state, actorId, invocation)];
-}
-
-function sleepTargetAdmissionCastAct(
-  actorId: CombatantId,
-  invocation: import("../../battle-state-execution.ts").BattleExecutableSpellInvocation<SleepTargetAdmissionSpellInvocation>,
-  initialHoles: readonly BattleHole[],
-): BattleActDiscoveryCandidate {
-  return {
-    subject: {
-      tag: "actionSpell",
-      actorId,
-      procedureRef: invocation.sourceProcedureRef,
-      mode: { tag: "cast" },
-    },
-    initialHoles,
-  };
 }
 
 function resolveSleepTargetAdmission(

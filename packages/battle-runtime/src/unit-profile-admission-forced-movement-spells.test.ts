@@ -8,21 +8,21 @@ import {
   requireCharacterSpellProcedureRefForTest,
   attackExecutionSelectionForSubjectForTest,
   characterAttackSubjectForTest,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import {
   dissonantWhispersUnitId,
   spellCasterId,
   spellTargetId,
   thunderwaveSecondTargetId,
   thunderwaveUnitId,
-} from "./unit-profile-admission-catalog-support.ts";
+} from "./unit-profile-admission-catalog.test-support.ts";
 import {
   damageRollFillWithGroups,
   movementFill,
   requireCombatant,
   requireHole,
   requireResultHole,
-} from "./unit-profile-admission-creature-fixture-support.ts";
+} from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
   maybeSpellAct,
@@ -32,7 +32,7 @@ import {
   spellTargetFill,
   thunderwaveArea,
   thunderwaveSavingThrowOutcomeFill,
-} from "./unit-profile-admission-spell-fill-support.ts";
+} from "./unit-profile-admission-spell-fill.test-support.ts";
 import {
   spellRecord,
   thunderwaveWithFailedSaveDamage,
@@ -40,14 +40,14 @@ import {
   thunderwaveWithoutDirectPhase,
   thunderwaveWithoutFailedSavePush,
   thunderwaveWithSaveGateCone,
-} from "./unit-profile-admission-spell-record-support.ts";
+} from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   type BattleRuntimeSession,
   difficultyClass,
   movementFeet,
   resolveBattleSubject,
   spellSlotInvocationRef,
-} from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission.test-support.ts";
 
 describe("SRDINV51 deterministic Thunderwave Spell Unit admission", () => {
   test("thunderwave is admitted as self-origin Cube save damage with push and boom facts", () => {

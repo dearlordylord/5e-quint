@@ -28,13 +28,10 @@ import { movementFeet } from "@dnd/shared/types";
 import { Either } from "effect";
 
 import {
-  type BattleActDiscoveryCandidate,
   type BattleResolutionResult,
-  type BattleState,
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
-import { type CombatantId } from "../../identity.ts";
-import { spellAreaChoiceHole } from "../spells-holes-fills.ts";
+import { discoverActionSpellAreaCastAct } from "../spell-area-cast-discovery.ts";
 import { supportedDamageAmountExpr } from "../spells-execution-facts.ts";
 import { resolveFlamingSphereSpellAct } from "../spells-resolve-area-effects.ts";
 import type {
@@ -254,24 +251,6 @@ function isFlamingSphereSaveEffect(
   );
 }
 
-function discoverFlamingSphereCastAct(
-  _state: BattleState,
-  actorId: CombatantId,
-  invocation: import("../../battle-state-execution.ts").BattleExecutableSpellInvocation<FlamingSphereSpellInvocation>,
-): readonly BattleActDiscoveryCandidate[] {
-  return [
-    {
-      subject: {
-        tag: "actionSpell",
-        actorId,
-        procedureRef: invocation.sourceProcedureRef,
-        mode: { tag: "cast" },
-      },
-      initialHoles: [spellAreaChoiceHole(invocation)],
-    },
-  ];
-}
-
 function resolveFlamingSphere(
   input: FlamingSphereResolveInput,
 ): BattleResolutionResult {
@@ -308,7 +287,7 @@ export const flamingSphereProfile = {
   procedure: "flamingSphere",
   executionSchema: FlamingSphereInvocationSchema,
   admit: admitFlamingSphere,
-  discoverCastAct: discoverFlamingSphereCastAct,
+  discoverCastAct: discoverActionSpellAreaCastAct,
   resolve: resolveFlamingSphere,
 } satisfies SpellProcedureDeclaration<
   "flamingSphere",

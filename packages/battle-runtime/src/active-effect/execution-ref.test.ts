@@ -5,7 +5,7 @@ import {
   characterSeed,
   battleActiveEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
-} from "../battle-runtime-test-support.ts";
+} from "../battle-runtime.test-support.ts";
 import { describe, expect, test } from "vitest";
 
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";

@@ -97,10 +97,10 @@
 {"unitId":"fighter_tactical_mind","evidence":{"tag":"selected-identity-replay","taskId":"L1H-FIGHTER-TACTICAL-MIND","ownerPath":"packages/battle-runtime/src/rule-core-features.mbt.test.ts"}}
 {"unitId":"fighter_indomitable","evidence":{"tag":"selected-identity-replay","taskId":"L19D-04-FIGHTER-INDOMITABLE","ownerPath":"packages/battle-runtime/src/unit-profile-admission-class-roll-and-resource-features.test.ts"}}
 {"unitId":"bard_bardic_inspiration","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV72A","ownerPath":"packages/battle-runtime/src/unit-profile-admission-class-roll-and-resource-features.test.ts"}}
-{"unitId":"bard_bardic_inspiration","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV72B","ownerPath":"packages/battle-runtime/src/battle-runtime-test-support.ts"}}
+{"unitId":"bard_bardic_inspiration","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV72B","ownerPath":"packages/battle-runtime/src/battle-runtime.test-support.ts"}}
 {"unitId":"bard_bardic_inspiration","evidence":{"tag":"selected-identity-replay","taskId":"L1D2-BARDIC-INSPIRATION-SCALING","ownerPath":"packages/battle-runtime/src/bardic-inspiration-selected-identity.mbt.test.ts"}}
 {"unitId":"sorcerer_innate_sorcery","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV75A","ownerPath":"packages/battle-runtime/src/unit-profile-admission-class-roll-and-resource-features.test.ts"}}
-{"unitId":"sorcerer_innate_sorcery","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV75B","ownerPath":"packages/battle-runtime/src/battle-runtime-test-support.ts"}}
+{"unitId":"sorcerer_innate_sorcery","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV75B","ownerPath":"packages/battle-runtime/src/battle-runtime.test-support.ts"}}
 {"unitId":"sorcerer_font_of_magic","evidence":{"tag":"selected-identity-replay","taskId":"B6-CLASS-FEATURE-IDENTITY-BATCH-3","ownerPath":"packages/character-creation-runtime/src/class-feature-projections.mbt.test.ts"}}
 {"unitId":"sorcerer_metamagic","evidence":{"tag":"selected-identity-replay","taskId":"B6-CLASS-FEATURE-IDENTITY-BATCH-3","ownerPath":"packages/character-creation-runtime/src/class-feature-projections.mbt.test.ts"}}
 {"unitId":"bard_cutting_words","evidence":{"tag":"deterministic-admission-projection","taskId":"QMBT65","ownerPath":"packages/battle-runtime/src/unit-profile-admission-class-roll-and-resource-features.test.ts"}}
@@ -207,7 +207,7 @@
 {"unitId":"true_strike","evidence":{"tag":"selected-identity-replay","taskId":"L1E-TRUE-STRIKE","ownerPath":"packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts"}}
 {"unitId":"hunters_mark","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV31B","ownerPath":"packages/battle-runtime/src/unit-profile-admission-candidate-narrowing-spells.test.ts"}}
 {"unitId":"hunters_mark","evidence":{"tag":"selected-identity-replay","taskId":"L1E-HUNTERS-MARK","ownerPath":"packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts"}}
-{"unitId":"ranger_favored_enemy","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV87C","ownerPath":"packages/battle-runtime/src/battle-runtime-test-support.ts"}}
+{"unitId":"ranger_favored_enemy","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV87C","ownerPath":"packages/battle-runtime/src/battle-runtime.test-support.ts"}}
 {"unitId":"ranger_favored_enemy","evidence":{"tag":"selected-identity-replay","taskId":"B5-CLASS-FEATURE-IDENTITY-BATCH-2","ownerPath":"packages/character-sheet-runtime/src/class-feature-selected-identity.mbt.test.ts"}}
 {"unitId":"ranger_expertise","evidence":{"tag":"deterministic-admission-projection","taskId":"L19C-02-RANGER-EXPERTISE-GENERIC-OWNER","ownerPath":"packages/character-creation-runtime/src/ranger-expertise-level9.test.ts"}}
 {"unitId":"ranger_expertise","evidence":{"tag":"selected-identity-replay","taskId":"L19C-02-RANGER-EXPERTISE-GENERIC-OWNER","ownerPath":"packages/character-creation-runtime/src/ranger-expertise-level9.test.ts"}}
@@ -228,9 +228,9 @@
 {"unitId":"fire_bolt","evidence":{"tag":"selected-identity-replay","taskId":"attack-spell-shape","ownerPath":"packages/battle-runtime/src/attack-spell-shape-selected-identity.mbt.test.ts"}}
 {"unitId":"sorcerous_burst","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV84B","ownerPath":"packages/battle-runtime/src/unit-profile-admission-candidate-narrowing-spells.test.ts"}}
 {"unitId":"sorcerous_burst","evidence":{"tag":"selected-identity-replay","taskId":"level1-damage-spell-selected-identity","ownerPath":"packages/battle-runtime/src/level1-damage-spell-selected-identity.mbt.test.ts"}}
-{"unitId":"spare_the_dying","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV84C","ownerPath":"packages/battle-runtime/src/battle-runtime-test-support.ts"}}
+{"unitId":"spare_the_dying","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV84C","ownerPath":"packages/battle-runtime/src/battle-runtime.test-support.ts"}}
 {"unitId":"spare_the_dying","evidence":{"tag":"selected-identity-replay","taskId":"healing-stabilization","ownerPath":"packages/battle-runtime/src/healing-stabilization-selected-identity.mbt.test.ts"}}
-{"unitId":"hex","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV84D","ownerPath":"packages/battle-runtime/src/battle-runtime-test-support.ts"}}
+{"unitId":"hex","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV84D","ownerPath":"packages/battle-runtime/src/battle-runtime.test-support.ts"}}
 {"unitId":"hex","evidence":{"tag":"selected-identity-replay","taskId":"L1E-HEX","ownerPath":"packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts"}}
 {"unitId":"starry_wisp","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV59B","ownerPath":"packages/battle-runtime/src/unit-profile-admission-candidate-narrowing-spells.test.ts"}}
 {"unitId":"starry_wisp","evidence":{"tag":"selected-identity-replay","taskId":"level1-damage-spell-selected-identity","ownerPath":"packages/battle-runtime/src/level1-damage-spell-selected-identity.mbt.test.ts"}}
@@ -272,7 +272,7 @@
 {"unitId":"web","evidence":{"tag":"selected-identity-replay","taskId":"B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH","ownerPath":"packages/battle-runtime/src/level2-control-spell-selected-identity.mbt.test.ts"}}
 {"unitId":"grease","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV40","ownerPath":"packages/battle-runtime/src/unit-profile-admission-grease-ground-hazard.test.ts"}}
 {"unitId":"grease","evidence":{"tag":"selected-identity-replay","taskId":"level1-spatial-witness","ownerPath":"packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts"}}
-{"unitId":"fog_cloud","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV84E","ownerPath":"packages/battle-runtime/src/battle-runtime-test-support.ts"}}
+{"unitId":"fog_cloud","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV84E","ownerPath":"packages/battle-runtime/src/battle-runtime.test-support.ts"}}
 {"unitId":"flaming_sphere","evidence":{"tag":"deterministic-admission-projection","taskId":"L12G-MISSING-FLAMING-SPHERE","ownerPath":"packages/battle-runtime/src/unit-profile-admission-flaming-sphere.test.ts"}}
 {"unitId":"fog_cloud","evidence":{"tag":"selected-identity-replay","taskId":"level1-spatial-witness","ownerPath":"packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts"}}
 {"unitId":"expeditious_retreat","evidence":{"tag":"deterministic-admission-projection","taskId":"SRDINV49","ownerPath":"packages/battle-runtime/src/unit-profile-admission-movement-buff-spells.test.ts"}}

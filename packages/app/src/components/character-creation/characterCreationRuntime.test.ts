@@ -37,6 +37,13 @@ const DRUID_WILD_SHAPE_KNOWN_FORM_IDS = [
 ] as const
 
 describe("character creation runtime", () => {
+  test("rejects a draft that is not ready for a Character Sheet", () => {
+    expect(createCharacterSheetFromDraft(createCharacterDraft({}))).toMatchObject({
+      _tag: "Left",
+      left: { tag: "draftNotReady" }
+    })
+  })
+
   test("requires explicit Wild Shape known forms before creating a Druid sheet", () => {
     const draft = completeSupportedDruidTwoDraft()
 

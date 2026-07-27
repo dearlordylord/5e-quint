@@ -36,6 +36,16 @@ export type HealingSpellTargetSelection =
   | { readonly tag: "needsHoles"; readonly hole: BattleHole }
   | { readonly tag: "invalid"; readonly message: string };
 
+export type SpellTargetListSelection =
+  | { readonly tag: "ok"; readonly targetIds: readonly CombatantId[] }
+  | { readonly tag: "needsHoles"; readonly hole: BattleHole }
+  | { readonly tag: "invalid"; readonly message: string };
+
+export type SpellSingleTargetSelection =
+  | { readonly tag: "ok"; readonly targetIds: readonly [CombatantId] }
+  | { readonly tag: "needsHoles"; readonly hole: BattleHole }
+  | { readonly tag: "invalid"; readonly message: string };
+
 export type ScalarBuffSpellTargetSelection =
   | { readonly tag: "ok"; readonly targetIds: readonly CombatantId[] }
   | { readonly tag: "needsHoles"; readonly hole: BattleHole }
@@ -70,6 +80,78 @@ export type RollModifierSpellAffectedTargets =
   | { readonly tag: "needsHoles"; readonly hole: BattleHole }
   | { readonly tag: "invalid"; readonly message: string };
 
+export function spellSingleTargetSelection(input: {
+  readonly state: ActionSpellBattleResolutionInput["state"];
+  readonly actorId: CombatantId;
+  readonly invocation: BattleExecutableSpellInvocation;
+  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+  readonly targetListMessage: string;
+  readonly invalidTargetMessage: string;
+}): SpellSingleTargetSelection {
+  if (input.fillSet.targetList !== undefined) {
+    return { tag: "invalid", message: input.targetListMessage };
+  }
+  if (input.fillSet.targetId === undefined) {
+    return {
+      tag: "needsHoles",
+      hole: spellTargetHole(input.state, input.actorId, input.invocation),
+    };
+  }
+  return spellTargetIsLegal(
+    input.state,
+    input.actorId,
+    input.fillSet.targetId,
+    input.invocation,
+    input.fillSet.targetSpatialFacts,
+  )
+    ? { tag: "ok", targetIds: [input.fillSet.targetId] }
+    : { tag: "invalid", message: input.invalidTargetMessage };
+}
+
+export function spellTargetListSelection(input: {
+  readonly state: ActionSpellBattleResolutionInput["state"];
+  readonly actorId: CombatantId;
+  readonly invocation: Parameters<typeof validateSpellTargetList>[2];
+  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+  readonly singleTargetListMessage: string;
+  readonly invalidSingleTargetMessage: string;
+  readonly multiTargetChoiceMessage: string;
+}): SpellTargetListSelection {
+  if (
+    "maxTargets" in input.invocation.targeting &&
+    input.invocation.targeting.maxTargets === 1
+  ) {
+    return spellSingleTargetSelection({
+      state: input.state,
+      actorId: input.actorId,
+      invocation: input.invocation,
+      fillSet: input.fillSet,
+      targetListMessage: input.singleTargetListMessage,
+      invalidTargetMessage: input.invalidSingleTargetMessage,
+    });
+  }
+
+  if (input.fillSet.targetId !== undefined) {
+    return { tag: "invalid", message: input.multiTargetChoiceMessage };
+  }
+  if (input.fillSet.targetList === undefined) {
+    return {
+      tag: "needsHoles",
+      hole: spellTargetListHole(input.state, input.actorId, input.invocation),
+    };
+  }
+  const validation = validateSpellTargetList(
+    input.state,
+    input.actorId,
+    input.invocation,
+    input.fillSet.targetList.targetIds,
+    input.fillSet.targetList.spatialFacts,
+  );
+  return validation === null
+    ? { tag: "ok", targetIds: input.fillSet.targetList.targetIds }
+    : { tag: "invalid", message: validation };
+}
+
 export function healingSpellTargetSelection(input: {
   readonly input:
     | ActionSpellBattleResolutionInput
@@ -83,69 +165,18 @@ export function healingSpellTargetSelection(input: {
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
 }): HealingSpellTargetSelection {
-  if (input.invocation.targeting.maxTargets === 1) {
-    if (input.fillSet.targetList !== undefined) {
-      return {
-        tag: "invalid",
-        message: "Single-target healing spells use one target fill.",
-      };
-    }
-    if (input.fillSet.targetId == null) {
-      return {
-        tag: "needsHoles",
-        hole: spellTargetHole(
-          input.input.state,
-          input.actorId,
-          input.invocation,
-        ),
-      };
-    }
-    const target = input.input.state.combatants.get(input.fillSet.targetId);
-    if (
-      target == null ||
-      !spellTargetIsLegal(
-        input.input.state,
-        input.actorId,
-        target.combatantId,
-        input.invocation,
-        input.fillSet.targetSpatialFacts,
-      )
-    ) {
-      return {
-        tag: "invalid",
-        message:
-          "Spell target must be a combatant within the selected spell's supported range.",
-      };
-    }
-    return { tag: "ok", targetIds: [target.combatantId] };
-  }
-
-  if (input.fillSet.targetId !== undefined) {
-    return {
-      tag: "invalid",
-      message: "Multi-target healing spells use a target-list fill.",
-    };
-  }
-  if (input.fillSet.targetList === undefined) {
-    return {
-      tag: "needsHoles",
-      hole: spellTargetListHole(
-        input.input.state,
-        input.actorId,
-        input.invocation,
-      ),
-    };
-  }
-  const validation = validateSpellTargetList(
-    input.input.state,
-    input.actorId,
-    input.invocation,
-    input.fillSet.targetList.targetIds,
-    input.fillSet.targetList.spatialFacts,
-  );
-  return validation === null
-    ? { tag: "ok", targetIds: input.fillSet.targetList.targetIds }
-    : { tag: "invalid", message: validation };
+  return spellTargetListSelection({
+    state: input.input.state,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    fillSet: input.fillSet,
+    singleTargetListMessage:
+      "Single-target healing spells use one target fill.",
+    invalidSingleTargetMessage:
+      "Spell target must be a combatant within the selected spell's supported range.",
+    multiTargetChoiceMessage:
+      "Multi-target healing spells use a target-list fill.",
+  });
 }
 
 export function scalarBuffSpellTargetSelection(input: {
@@ -175,67 +206,18 @@ export function scalarBuffSpellTargetSelection(input: {
     };
   }
 
-  if (
-    input.invocation.targeting.kind === "targetList" &&
-    input.invocation.targeting.maxTargets === 1
-  ) {
-    if (input.fillSet.targetList !== undefined) {
-      return {
-        tag: "invalid",
-        message: "Single-target scalar buff spells require one target choice.",
-      };
-    }
-    if (input.fillSet.targetId === undefined) {
-      return {
-        tag: "needsHoles",
-        hole: spellTargetHole(
-          input.input.state,
-          input.actorId,
-          input.invocation,
-        ),
-      };
-    }
-    return spellTargetIsLegal(
-      input.input.state,
-      input.actorId,
-      input.fillSet.targetId,
-      input.invocation,
-      input.fillSet.targetSpatialFacts,
-    )
-      ? { tag: "ok", targetIds: [input.fillSet.targetId] }
-      : {
-          tag: "invalid",
-          message:
-            "Scalar buff spell target must be a combatant within the selected spell's supported range.",
-        };
-  }
-
-  if (input.fillSet.targetId !== undefined) {
-    return {
-      tag: "invalid",
-      message: "Multi-target scalar buff spells require a target list.",
-    };
-  }
-  if (input.fillSet.targetList === undefined) {
-    return {
-      tag: "needsHoles",
-      hole: spellTargetListHole(
-        input.input.state,
-        input.actorId,
-        input.invocation,
-      ),
-    };
-  }
-  const validation = validateSpellTargetList(
-    input.input.state,
-    input.actorId,
-    input.invocation,
-    input.fillSet.targetList.targetIds,
-    input.fillSet.targetList.spatialFacts,
-  );
-  return validation === null
-    ? { tag: "ok", targetIds: input.fillSet.targetList.targetIds }
-    : { tag: "invalid", message: validation };
+  return spellTargetListSelection({
+    state: input.input.state,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    fillSet: input.fillSet,
+    singleTargetListMessage:
+      "Single-target scalar buff spells require one target choice.",
+    invalidSingleTargetMessage:
+      "Scalar buff spell target must be a combatant within the selected spell's supported range.",
+    multiTargetChoiceMessage:
+      "Multi-target scalar buff spells require a target list.",
+  });
 }
 
 export function rollModifierSpellTargetSelection(input: {
@@ -248,68 +230,18 @@ export function rollModifierSpellTargetSelection(input: {
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
 }): RollModifierSpellTargetSelection {
-  if (
-    input.invocation.targeting.kind === "targetList" &&
-    input.invocation.targeting.maxTargets === 1
-  ) {
-    if (input.fillSet.targetList !== undefined) {
-      return {
-        tag: "invalid",
-        message:
-          "Single-target roll modifier spells require one target choice.",
-      };
-    }
-    if (input.fillSet.targetId === undefined) {
-      return {
-        tag: "needsHoles",
-        hole: spellTargetHole(
-          input.input.state,
-          input.actorId,
-          input.invocation,
-        ),
-      };
-    }
-    return spellTargetIsLegal(
-      input.input.state,
-      input.actorId,
-      input.fillSet.targetId,
-      input.invocation,
-      input.fillSet.targetSpatialFacts,
-    )
-      ? { tag: "ok", targetIds: [input.fillSet.targetId] }
-      : {
-          tag: "invalid",
-          message:
-            "Roll modifier spell target must be a combatant within the selected spell's supported range.",
-        };
-  }
-
-  if (input.fillSet.targetId !== undefined) {
-    return {
-      tag: "invalid",
-      message: "Multi-target roll modifier spells require a target list.",
-    };
-  }
-  if (input.fillSet.targetList === undefined) {
-    return {
-      tag: "needsHoles",
-      hole: spellTargetListHole(
-        input.input.state,
-        input.actorId,
-        input.invocation,
-      ),
-    };
-  }
-  const validation = validateSpellTargetList(
-    input.input.state,
-    input.actorId,
-    input.invocation,
-    input.fillSet.targetList.targetIds,
-    input.fillSet.targetList.spatialFacts,
-  );
-  return validation === null
-    ? { tag: "ok", targetIds: input.fillSet.targetList.targetIds }
-    : { tag: "invalid", message: validation };
+  return spellTargetListSelection({
+    state: input.input.state,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    fillSet: input.fillSet,
+    singleTargetListMessage:
+      "Single-target roll modifier spells require one target choice.",
+    invalidSingleTargetMessage:
+      "Roll modifier spell target must be a combatant within the selected spell's supported range.",
+    multiTargetChoiceMessage:
+      "Multi-target roll modifier spells require a target list.",
+  });
 }
 
 export function rollModifierSpellEffectSelection(input: {

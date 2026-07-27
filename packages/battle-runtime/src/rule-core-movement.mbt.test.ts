@@ -13,7 +13,7 @@ import {
   quintVariantTag,
   run,
   stateCheck,
-} from "./battle-runtime-mbt-driver-kit.ts";
+} from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import {
   decodeRuleCoreComponentRoute,
   type RuleCoreComponentRoutedProjection,
@@ -52,7 +52,7 @@ import {
   resolveBattleSubject,
   attackExecutionSelectionForSubjectForTest,
   characterAttackSubjectForTest,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 
 const ruleCoreMovementMbtHoles = [
   "Movement",

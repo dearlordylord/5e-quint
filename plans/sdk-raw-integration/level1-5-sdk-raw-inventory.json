@@ -14458,7 +14458,7 @@
         "unitEvidenceOwnerBoundaries": ["character-battle-to-battle"],
         "unitEvidenceOwnerPaths": [
           "packages/battle-runtime/src/bardic-inspiration-selected-identity.mbt.test.ts",
-          "packages/battle-runtime/src/battle-runtime-test-support.ts",
+          "packages/battle-runtime/src/battle-runtime.test-support.ts",
           "packages/battle-runtime/src/unit-profile-admission-class-roll-and-resource-features.test.ts"
         ]
       },
@@ -32866,7 +32866,7 @@
           "character-sheet"
         ],
         "unitEvidenceOwnerPaths": [
-          "packages/battle-runtime/src/battle-runtime-test-support.ts",
+          "packages/battle-runtime/src/battle-runtime.test-support.ts",
           "packages/character-sheet-runtime/src/class-feature-selected-identity.mbt.test.ts"
         ]
       },
@@ -37360,7 +37360,7 @@
         "unclassifiedProfileIds": [],
         "unitEvidenceOwnerBoundaries": ["character-battle-to-battle"],
         "unitEvidenceOwnerPaths": [
-          "packages/battle-runtime/src/battle-runtime-test-support.ts",
+          "packages/battle-runtime/src/battle-runtime.test-support.ts",
           "packages/battle-runtime/src/feature-selected-identity.mbt.test.ts",
           "packages/battle-runtime/src/unit-profile-admission-class-roll-and-resource-features.test.ts"
         ]

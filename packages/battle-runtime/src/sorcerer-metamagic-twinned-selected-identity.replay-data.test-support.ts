@@ -13,8 +13,8 @@ import {
   projectBattleState,
   resolveTwinnedBless,
   twinnedSorcererMetamagicBattle,
-} from "./sorcerer-metamagic-selected-identity-support.ts";
-import type { SelectedIdentityReplayWitness } from "./selected-identity-witness.ts";
+} from "./sorcerer-metamagic-selected-identity.test-support.ts";
+import type { SelectedIdentityReplayWitness } from "./selected-identity-witness.test-support.ts";
 
 export const sorcererMetamagicTwinnedSelectedIdentityReplay = {
   describeLabel: "Sorcerer Metamagic Twinned Spell selected identity replay",

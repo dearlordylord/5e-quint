@@ -4,14 +4,14 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 import {
   battleActiveEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import { describe, expect, test } from "vitest";
 import {
   charmPersonUnitId,
   protectionFromEvilAndGoodUnitId,
   spellCasterId,
   spellTargetId,
-} from "./unit-profile-admission-catalog-support.ts";
+} from "./unit-profile-admission-catalog.test-support.ts";
 import {
   attackTargetFill,
   requireCombatant,
@@ -19,7 +19,7 @@ import {
   requireResultHole,
   statBlockAttackAct,
   statBlockWithCreatureType,
-} from "./unit-profile-admission-creature-fixture-support.ts";
+} from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
   knownWillingSpellTargetFill,
@@ -27,8 +27,8 @@ import {
   spellAct,
   spellActInvocation,
   spellTargetFill,
-} from "./unit-profile-admission-spell-fill-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+} from "./unit-profile-admission-spell-fill.test-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import { spellActiveEffectExecutionRef } from "./active-effect/execution-ref.ts";
 import type { SpellActiveEffect } from "./active-effect/execution-ref.ts";
 import {
@@ -46,7 +46,7 @@ import {
   resolveBattleSubject,
   selectFailedSaveConditionEffect,
   spellSavingThrowOutcomeHole,
-} from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission.test-support.ts";
 import type {
   BattleSelectedSpellInvocation,
   BattleActiveEffect,

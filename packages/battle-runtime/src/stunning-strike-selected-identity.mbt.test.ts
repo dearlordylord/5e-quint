@@ -2,8 +2,8 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.stunning-strike
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L5-A12-MONK-STUNNING-STRIKE-BATTLE-RUNTIME monk_stunning_strike
 // UNIT-IDENTITY-REPLAY: L5-A12-MONK-STUNNING-STRIKE-BATTLE-RUNTIME monk_stunning_strike doFailedSave doSuccessfulSave doDecline doSecondUseGate
-import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
-import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
+import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.test-support.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.test-support.ts";
 import type { BattleResolutionResult } from "./index.ts";
 import {
   attackRollFill,
@@ -29,7 +29,7 @@ import {
   type BattleHole,
   type BattleState,
   type BattleSubject,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 
 type StunningStrikeProjection = {
   readonly targetStunned: boolean;

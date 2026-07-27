@@ -3,7 +3,7 @@
 // UNIT-IDENTITY-REPLAY: B11-LEVEL2-MOBILITY-SPELL-IDENTITY-BATCH fly doDiscoverFlySpeedGrant
 // UNIT-IDENTITY-REPLAY: B11-LEVEL2-MOBILITY-SPELL-IDENTITY-BATCH misty_step doDiscoverMistyStepSelfTeleport
 // UNIT-IDENTITY-REPLAY: B11-LEVEL2-MOBILITY-SPELL-IDENTITY-BATCH spider_climb doDiscoverSpiderClimbSpeedGrant
-import { defineSelectedIdentityReplayWitness } from "./selected-identity-witness.ts";
+import { defineSelectedIdentityReplayWitness } from "./selected-identity-witness.test-support.ts";
 
 import { level2MobilitySpellSelectedIdentityReplay } from "./level2-mobility-spell-selected-identity.replay-data.test-support.ts";
 

@@ -1,6 +1,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties spell.invocation-haste-positive
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE BATTLE.SPELL.HASTE_POSITIVE_EFFECTS
 import type { SpeedType } from "@dnd/shared/game-facts";
+import { Match } from "effect";
 import {
   movementDeltaFeet,
   movementFeet,
@@ -130,12 +131,11 @@ function specialSpeed(
   ordinarySpeedFeet: MovementFeet,
   globalChange: CombinedSpeedChange,
 ): MovementFeet {
-  if (candidate.kind === "equalToSpeed") {
-    return ordinarySpeedFeet;
-  }
-  if (candidate.kind === "fixed") {
-    return changedSpeed(candidate.speedFeet, globalChange);
-  }
-  const exhaustive: never = candidate;
-  return exhaustive;
+  return Match.value(candidate).pipe(
+    Match.when({ kind: "equalToSpeed" }, () => ordinarySpeedFeet),
+    Match.when({ kind: "fixed" }, ({ speedFeet }) =>
+      changedSpeed(speedFeet, globalChange),
+    ),
+    Match.exhaustive,
+  );
 }

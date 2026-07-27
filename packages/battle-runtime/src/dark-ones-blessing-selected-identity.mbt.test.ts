@@ -16,13 +16,13 @@ import {
   type BattleState,
   type CombatantId,
   unitLibrary,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import type {
   BattleDamageRelationshipDecision,
   BattleTargetSpatialFact,
 } from "./battle-state-execution.ts";
-import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
-import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.test-support.ts";
+import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import { enemyZeroHitPointTemporaryHitPointsProcedures } from "./battle-reducer/enemy-zero-hit-point-temporary-hit-points.ts";
 import { isCharacterBattleCreatureState } from "./battle-reducer/creature-state.ts";
 import { battleEnemyZeroHitPointTemporaryHitPointsSupportForUnit } from "./unit-feature-support.ts";

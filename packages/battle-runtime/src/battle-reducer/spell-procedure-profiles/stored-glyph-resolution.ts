@@ -6,7 +6,7 @@ import {
   resolveSaveGateConditionSpellAct,
   resolveSaveGateDamageSpellRelease,
 } from "../spells-resolve-save-gates.ts";
-import { resolveSpellRelease } from "../spells-resolve.ts";
+import { resolveSpellRelease } from "../spells-resolve-release.ts";
 import {
   spellProcedureExecutionFor,
   type SpellProcedureExecutionRegistry,
@@ -147,6 +147,7 @@ export function executeStoredGlyphSpellProcedure(
         targetId: release.targetId,
         sourceCombatantId: actorId,
         invocation: release.invocation,
+        fills: input.fills,
         fillSet,
       }),
     ),

@@ -14,13 +14,13 @@ import {
   spellCasterId,
   spellTargetId,
   starryWispUnitId,
-} from "./unit-profile-admission-catalog-support.ts";
+} from "./unit-profile-admission-catalog.test-support.ts";
 import {
   attackRollFill,
   damageRollFillWithGroups,
   requireHole,
   requireResultHole,
-} from "./unit-profile-admission-creature-fixture-support.ts";
+} from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
   isSelectedSorcerousBurstDamageInvocation,
@@ -29,8 +29,8 @@ import {
   spellHoleInvocation,
   spellObjectTargetFill,
   spellTargetFill,
-} from "./unit-profile-admission-spell-fill-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+} from "./unit-profile-admission-spell-fill.test-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   battleObjectId,
   cantripSpellInvocationRef,
@@ -46,13 +46,13 @@ import {
   spellId,
   starryWispInput,
   validateSpellDamageFill,
-} from "./unit-profile-admission-test-support.ts";
-import type { SpellMarkedDamageRider } from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission.test-support.ts";
+import type { SpellMarkedDamageRider } from "./unit-profile-admission.test-support.ts";
 import {
   battleActiveEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
   requireCharacterSpellProcedureRefForTest,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 
 describe("QMBT15 Spell Unit admission candidate narrowing", () => {
   test("fire_bolt is admitted as creature-or-object ranged spell attack damage with object ignition projection", () => {

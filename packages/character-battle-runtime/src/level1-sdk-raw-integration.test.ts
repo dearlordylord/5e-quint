@@ -105,7 +105,7 @@ import {
   srdStatBlock,
   spellSlotActForProcedure,
   unitLibrary,
-} from "./sdk-integration-test-support.ts";
+} from "./sdk-integration.test-support.ts";
 
 type SavingThrowOutcomeHole = Extract<
   BattleHole,

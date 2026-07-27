@@ -30,34 +30,29 @@ import type {
   DiceAmount as SurfaceDiceAmount,
 } from "@dnd/surface/surface/types";
 import { DamageTypeSchema, DiceExprSchema } from "@dnd/surface/surface/schema";
-import { type Size } from "@dnd/shared/types";
-
 import type { BattleInterruptTrigger } from "../../battle-interrupt-triggers.ts";
 import {
   type AfterHitSaveGatedConditionSpellInvocation,
   type AvailableBattleAct,
   type BattleCreatureState,
-  type BattleExecutableSpellInvocation,
   type BattleFill,
   type BattleResolutionInputForSubject,
   type BattleResolutionResult,
-  type BattleSpellSavingThrowOutcomeHole,
   type BattleSpellSavingThrowOutcomeValue,
-  type BattleState,
 } from "../../battle-state-execution.ts";
 import { snapshotBattle } from "../dispatcher.ts";
 import type { BattleSubject } from "../../battle-subjects.ts";
 import { type CombatantId } from "../../identity.ts";
-import { combatantEffectiveSize } from "../druid-wild-shape.ts";
+import { afterHitSaveGatedConditionSavingThrowOutcomeHole } from "../after-hit-save-gated-condition-hole.ts";
 import {
   maybeOpenPostCastReadySpellCastWindow,
   maybeOpenInterruptWindow,
   maybeOpenSpellCastInterruptWindowWithTriggeredSpellChoices,
 } from "../dispatcher.ts";
-import { needsHolesResult } from "../hole-helpers.ts";
+
+import { needsHolesResult } from "../needs-holes-result.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
-import { spellSavingThrowOutcomeHole } from "../spells-damage-fills.ts";
 import {
   applyFailedSaveSpellConditionEffects,
   selectFailedSaveConditionEffect,
@@ -411,25 +406,6 @@ function afterHitSaveGatedConditionFillSet(
       };
 }
 
-export function afterHitSaveGatedConditionSavingThrowOutcomeHole(
-  state: BattleState,
-  casterId: CombatantId,
-  target: BattleCreatureState,
-  invocation: BattleExecutableSpellInvocation<AfterHitSaveGatedConditionInvocation>,
-): BattleSpellSavingThrowOutcomeHole {
-  const base = spellSavingThrowOutcomeHole(state, casterId, invocation);
-  return {
-    ...base,
-    label: "Spell Saving Throw outcome",
-    targetRollModes: [
-      ...base.targetRollModes,
-      ...(creatureSizeIsLargeOrLarger(combatantEffectiveSize(target))
-        ? [{ targetId: target.combatantId, rollMode: "advantage" as const }]
-        : []),
-    ],
-  };
-}
-
 function validateAfterHitSaveGatedConditionSavingThrowOutcome(
   value: BattleSpellSavingThrowOutcomeValue,
   targetId: CombatantId,
@@ -440,10 +416,6 @@ function validateAfterHitSaveGatedConditionSavingThrowOutcome(
   return value.outcomes.length === 1 && value.outcomes[0]?.targetId === targetId
     ? null
     : "Single-target save-gate spell Saving Throw outcome must match the triggering hit target.";
-}
-
-function creatureSizeIsLargeOrLarger(size: Size): boolean {
-  return size === "large" || size === "huge" || size === "gargantuan";
 }
 
 const AfterHitSaveGatedConditionInvocationSchema =

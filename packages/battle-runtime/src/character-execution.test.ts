@@ -3,7 +3,7 @@ import { describe, expect, test } from "vitest";
 
 import { BattleSnapshotSchema } from "./battle-reducer/battle-codecs.ts";
 import { snapshotBattle } from "./battle-reducer/battle-snapshot.ts";
-import { wizardVsSkeletonBattle } from "./battle-runtime-test-support.ts";
+import { wizardVsSkeletonBattle } from "./battle-runtime.test-support.ts";
 
 describe("character procedure execution identity", () => {
   test("decodes durable bindings independently of their serialized order", () => {

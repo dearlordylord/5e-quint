@@ -5,6 +5,7 @@ import {
   characterBuildSorcererFontOfMagicFacts,
   characterBuildSpellcastingSlotCapacity,
   fontOfMagicSpellSlotCreationOption,
+  type CharacterBuildSorcererFontOfMagicFacts,
   type CharacterBuild,
   type CharacterBuildPactMagicSlotPool,
   type UnitCatalog,
@@ -101,18 +102,13 @@ export function characterSheetPactSlots(
 export function convertFontOfMagicSpellSlotToSorceryPoints(
   input: CharacterSheetFontOfMagicSlotToSorceryPointsInput,
 ): Either.Either<CharacterSheet, CharacterSheetIssue> {
-  const fontOfMagicFacts = characterBuildSorcererFontOfMagicFacts({
-    build: input.sheet.build,
-    unitLibrary: input.unitLibrary,
-  });
-  if (Either.isLeft(fontOfMagicFacts)) {
-    return characterSheetIssue(fontOfMagicFacts.left.message);
-  }
-  if (fontOfMagicFacts.right === undefined) {
-    return characterSheetIssue(
-      "Font of Magic conversion requires the Sorcerer Font of Magic feature.",
-    );
-  }
+  const fontOfMagicFacts = requiredFontOfMagicFacts(
+    input.sheet,
+    input.unitLibrary,
+    "Font of Magic conversion requires the Sorcerer Font of Magic feature.",
+  );
+  if (Either.isLeft(fontOfMagicFacts))
+    return Either.left(fontOfMagicFacts.left);
   const fontOfMagic = fontOfMagicFacts.right;
   if (!isCharacterSheetWithSpellSlots(input.sheet)) {
     return characterSheetIssue(
@@ -127,21 +123,20 @@ export function convertFontOfMagicSpellSlotToSorceryPoints(
   });
   if (Either.isLeft(spellSlotSpend)) return Either.left(spellSlotSpend.left);
 
-  const resources = characterSheetResources(input.sheet, input.unitLibrary);
-  if (Either.isLeft(resources)) return Either.left(resources.left);
-  const sorceryPoints = resources.right.find(
-    (resource): resource is CharacterSheetSorceryPointPoolResourceState =>
-      resource.tag === "pointPoolResource" &&
-      resource.unitId === fontOfMagic.unitId,
+  const sorceryPoints = sorceryPointPool(
+    input.sheet,
+    input.unitLibrary,
+    fontOfMagic.unitId,
   );
-  if (sorceryPoints === undefined) {
+  if (Either.isLeft(sorceryPoints)) return Either.left(sorceryPoints.left);
+  if (sorceryPoints.right === undefined) {
     return characterSheetIssue(
       "Font of Magic conversion requires the shared Sorcery Point resource.",
     );
   }
 
   const pointGain = resourceCount(input.spellLevel);
-  if (sorceryPoints.expended < pointGain) {
+  if (sorceryPoints.right.expended < pointGain) {
     return characterSheetIssue(
       "Font of Magic conversion would exceed the Sorcery Point maximum.",
     );
@@ -153,8 +148,8 @@ export function convertFontOfMagicSpellSlotToSorceryPoints(
     createdSpellSlots: spellSlotSpend.right.createdSpellSlots,
     resourceExpenditures: replacePointPoolResourceExpenditure({
       expenditures: input.sheet.resourceExpenditures,
-      unitId: sorceryPoints.unitId,
-      expended: resourceCount(sorceryPoints.expended - pointGain),
+      unitId: sorceryPoints.right.unitId,
+      expended: resourceCount(sorceryPoints.right.expended - pointGain),
     }),
   });
 }
@@ -162,18 +157,13 @@ export function convertFontOfMagicSpellSlotToSorceryPoints(
 export function convertFontOfMagicSorceryPointsToSpellSlot(
   input: CharacterSheetFontOfMagicSorceryPointsToSpellSlotInput,
 ): Either.Either<CharacterSheet, CharacterSheetIssue> {
-  const fontOfMagicFacts = characterBuildSorcererFontOfMagicFacts({
-    build: input.sheet.build,
-    unitLibrary: input.unitLibrary,
-  });
-  if (Either.isLeft(fontOfMagicFacts)) {
-    return characterSheetIssue(fontOfMagicFacts.left.message);
-  }
-  if (fontOfMagicFacts.right === undefined) {
-    return characterSheetIssue(
-      "Font of Magic Spell Slot creation requires the Sorcerer Font of Magic feature.",
-    );
-  }
+  const fontOfMagicFacts = requiredFontOfMagicFacts(
+    input.sheet,
+    input.unitLibrary,
+    "Font of Magic Spell Slot creation requires the Sorcerer Font of Magic feature.",
+  );
+  if (Either.isLeft(fontOfMagicFacts))
+    return Either.left(fontOfMagicFacts.left);
   const fontOfMagic = fontOfMagicFacts.right;
   if (!isCharacterSheetWithSpellSlots(input.sheet)) {
     return characterSheetIssue(
@@ -198,19 +188,19 @@ export function convertFontOfMagicSorceryPointsToSpellSlot(
     );
   }
 
-  const resources = characterSheetResources(input.sheet, input.unitLibrary);
-  if (Either.isLeft(resources)) return Either.left(resources.left);
-  const sorceryPoints = resources.right.find(
-    (resource): resource is CharacterSheetSorceryPointPoolResourceState =>
-      resource.tag === "pointPoolResource" &&
-      resource.unitId === fontOfMagic.unitId,
+  const sorceryPoints = sorceryPointPool(
+    input.sheet,
+    input.unitLibrary,
+    fontOfMagic.unitId,
   );
-  if (sorceryPoints === undefined) {
+  if (Either.isLeft(sorceryPoints)) return Either.left(sorceryPoints.left);
+  if (sorceryPoints.right === undefined) {
     return characterSheetIssue(
       "Font of Magic Spell Slot creation requires the shared Sorcery Point resource.",
     );
   }
-  const availableSorceryPoints = sorceryPoints.count - sorceryPoints.expended;
+  const availableSorceryPoints =
+    sorceryPoints.right.count - sorceryPoints.right.expended;
   if (availableSorceryPoints < option.pointCost) {
     return characterSheetIssue(
       "Font of Magic Spell Slot creation requires enough unexpended Sorcery Points.",
@@ -225,10 +215,43 @@ export function convertFontOfMagicSorceryPointsToSpellSlot(
     }),
     resourceExpenditures: replacePointPoolResourceExpenditure({
       expenditures: input.sheet.resourceExpenditures,
-      unitId: sorceryPoints.unitId,
-      expended: resourceCount(sorceryPoints.expended + option.pointCost),
+      unitId: sorceryPoints.right.unitId,
+      expended: resourceCount(sorceryPoints.right.expended + option.pointCost),
     }),
   });
+}
+
+function sorceryPointPool(
+  sheet: CharacterSheet,
+  unitLibrary: UnitCatalog,
+  unitId: CharacterSheetSorceryPointPoolResourceState["unitId"],
+): Either.Either<
+  CharacterSheetSorceryPointPoolResourceState | undefined,
+  CharacterSheetIssue
+> {
+  return Either.map(characterSheetResources(sheet, unitLibrary), (resources) =>
+    resources.find(
+      (resource): resource is CharacterSheetSorceryPointPoolResourceState =>
+        resource.tag === "pointPoolResource" && resource.unitId === unitId,
+    ),
+  );
+}
+
+function requiredFontOfMagicFacts(
+  sheet: CharacterSheet,
+  unitLibrary: UnitCatalog,
+  missingFeatureMessage: string,
+): Either.Either<CharacterBuildSorcererFontOfMagicFacts, CharacterSheetIssue> {
+  const facts = characterBuildSorcererFontOfMagicFacts({
+    build: sheet.build,
+    unitLibrary,
+  });
+  if (Either.isLeft(facts)) {
+    return characterSheetIssue(facts.left.message);
+  }
+  return facts.right === undefined
+    ? characterSheetIssue(missingFeatureMessage)
+    : Either.right(facts.right);
 }
 
 export function ordinarySpellSlotStates(

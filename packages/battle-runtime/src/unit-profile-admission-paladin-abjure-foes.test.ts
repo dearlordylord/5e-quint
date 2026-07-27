@@ -21,7 +21,7 @@ import {
   savingThrowOutcomeFill,
   testCharacterD20Statistics,
   wizardSpellcasting,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import type {
   BattleFill,
   BattleHole,
@@ -37,11 +37,11 @@ import {
   spellCasterId,
   spellTargetId,
   unitLibrary,
-} from "./unit-profile-admission-catalog-support.ts";
+} from "./unit-profile-admission-catalog.test-support.ts";
 import {
   characterCreature,
   requireHole,
-} from "./unit-profile-admission-creature-fixture-support.ts";
+} from "./unit-profile-admission-creature-fixture.test-support.ts";
 import {
   battleId,
   battleUnitRefWithSupportProfiles,
@@ -52,7 +52,7 @@ import {
   endTurn,
   resolveBattleSubject,
   startBattle,
-} from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission.test-support.ts";
 import { battleMagicActionSaveGatedConditionSupportForUnit } from "./unit-feature-support.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 

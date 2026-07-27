@@ -10,14 +10,13 @@ import type { UnitCatalog } from "@dnd/character-creation-runtime";
 import type { DamageType, SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
-import { spendCharacterSheetSpellSlot } from "./spell-slots.ts";
+import { castPreparedSpell } from "./prepared-spell-cast.ts";
 import {
   ANIMATE_OBJECTS_SIZE_VALUES,
   CONJURE_ELEMENTAL_ELEMENT_VALUES,
   PLANAR_BINDING_TARGET_CREATURE_TYPE_VALUES,
   SUMMON_DRAGON_DAMAGE_TYPE_VALUES,
   characterSheetIssue,
-  getRequiredUnit,
   type CharacterSheet,
   type CharacterSheetAnimatedObjectContract,
   type CharacterSheetAnimateObjectsInvocation,
@@ -56,39 +55,27 @@ export function castAnimateObjects(input: {
   readonly spellcastingAbilityModifier: number;
   readonly castLevel?: SpellSlotLevel;
 }): Either.Either<CharacterSheetAnimateObjectsResult, CharacterSheetIssue> {
-  const spell = spellRecord(input.unitLibrary, ANIMATE_OBJECTS_SPELL_ID);
-  if (Either.isLeft(spell)) return Either.left(spell.left);
-
-  const accessIssue = preparedAccessIssue(
-    input.sheet,
-    ANIMATE_OBJECTS_SPELL_ID,
-  );
-  if (accessIssue !== null) return characterSheetIssue(accessIssue);
-
   const castLevel = input.castLevel ?? LIFECYCLE_SPELL_LEVEL;
-  const targetIssue = animateObjectsTargetIssue({
-    targets: input.targets,
-    spellcastingAbilityModifier: input.spellcastingAbilityModifier,
-    castLevel,
-  });
-  if (targetIssue !== null) return characterSheetIssue(targetIssue);
-
-  const invocation = animateObjectsInvocationFromSpell({
-    spell: spell.right,
-    targets: input.targets,
-    spellcastingAbilityModifier: input.spellcastingAbilityModifier,
-    castLevel,
-  });
-  if (Either.isLeft(invocation)) return Either.left(invocation.left);
-
-  const spent = spendCharacterSheetSpellSlot({
+  return castLifecycleSpell({
     sheet: input.sheet,
-    spellLevel: castLevel,
-    spellSlotSource: "ordinary",
+    unitLibrary: input.unitLibrary,
+    spellId: ANIMATE_OBJECTS_SPELL_ID,
+    castLevel,
+    invocation: (spell) => {
+      const targetIssue = animateObjectsTargetIssue({
+        targets: input.targets,
+        spellcastingAbilityModifier: input.spellcastingAbilityModifier,
+        castLevel,
+      });
+      if (targetIssue !== null) return characterSheetIssue(targetIssue);
+      return animateObjectsInvocationFromSpell({
+        spell,
+        targets: input.targets,
+        spellcastingAbilityModifier: input.spellcastingAbilityModifier,
+        castLevel,
+      });
+    },
   });
-  if (Either.isLeft(spent)) return Either.left(spent.left);
-
-  return Either.right({ sheet: spent.right, invocation: invocation.right });
 }
 
 export function castConjureElemental(input: {
@@ -97,37 +84,23 @@ export function castConjureElemental(input: {
   readonly spirit: CharacterSheetConjureElementalSpirit;
   readonly castLevel?: SpellSlotLevel;
 }): Either.Either<CharacterSheetConjureElementalResult, CharacterSheetIssue> {
-  const spell = spellRecord(input.unitLibrary, CONJURE_ELEMENTAL_SPELL_ID);
-  if (Either.isLeft(spell)) return Either.left(spell.left);
-
-  const accessIssue = preparedAccessIssue(
-    input.sheet,
-    CONJURE_ELEMENTAL_SPELL_ID,
-  );
-  if (accessIssue !== null) return characterSheetIssue(accessIssue);
-
   const castLevel = input.castLevel ?? LIFECYCLE_SPELL_LEVEL;
-  if (castLevel < LIFECYCLE_SPELL_LEVEL) {
-    return characterSheetIssue(
-      "Conjure Elemental requires a level-5 or higher Spell Slot.",
-    );
-  }
-
-  const invocation = conjureElementalInvocationFromSpell({
-    spell: spell.right,
-    spirit: input.spirit,
-    castLevel,
-  });
-  if (Either.isLeft(invocation)) return Either.left(invocation.left);
-
-  const spent = spendCharacterSheetSpellSlot({
+  return castLifecycleSpell({
     sheet: input.sheet,
-    spellLevel: castLevel,
-    spellSlotSource: "ordinary",
+    unitLibrary: input.unitLibrary,
+    spellId: CONJURE_ELEMENTAL_SPELL_ID,
+    castLevel,
+    invocation: (spell) =>
+      castLevel < LIFECYCLE_SPELL_LEVEL
+        ? characterSheetIssue(
+            "Conjure Elemental requires a level-5 or higher Spell Slot.",
+          )
+        : conjureElementalInvocationFromSpell({
+            spell,
+            spirit: input.spirit,
+            castLevel,
+          }),
   });
-  if (Either.isLeft(spent)) return Either.left(spent.left);
-
-  return Either.right({ sheet: spent.right, invocation: invocation.right });
 }
 
 export function castSummonDragon(input: {
@@ -136,34 +109,23 @@ export function castSummonDragon(input: {
   readonly spirit: CharacterSheetSummonDragonSpirit;
   readonly castLevel?: SpellSlotLevel;
 }): Either.Either<CharacterSheetSummonDragonResult, CharacterSheetIssue> {
-  const spell = spellRecord(input.unitLibrary, SUMMON_DRAGON_SPELL_ID);
-  if (Either.isLeft(spell)) return Either.left(spell.left);
-
-  const accessIssue = preparedAccessIssue(input.sheet, SUMMON_DRAGON_SPELL_ID);
-  if (accessIssue !== null) return characterSheetIssue(accessIssue);
-
   const castLevel = input.castLevel ?? LIFECYCLE_SPELL_LEVEL;
-  if (castLevel < LIFECYCLE_SPELL_LEVEL) {
-    return characterSheetIssue(
-      "Summon Dragon requires a level-5 or higher Spell Slot.",
-    );
-  }
-
-  const invocation = summonDragonInvocationFromSpell({
-    spell: spell.right,
-    spirit: input.spirit,
-    castLevel,
-  });
-  if (Either.isLeft(invocation)) return Either.left(invocation.left);
-
-  const spent = spendCharacterSheetSpellSlot({
+  return castLifecycleSpell({
     sheet: input.sheet,
-    spellLevel: castLevel,
-    spellSlotSource: "ordinary",
+    unitLibrary: input.unitLibrary,
+    spellId: SUMMON_DRAGON_SPELL_ID,
+    castLevel,
+    invocation: (spell) =>
+      castLevel < LIFECYCLE_SPELL_LEVEL
+        ? characterSheetIssue(
+            "Summon Dragon requires a level-5 or higher Spell Slot.",
+          )
+        : summonDragonInvocationFromSpell({
+            spell,
+            spirit: input.spirit,
+            castLevel,
+          }),
   });
-  if (Either.isLeft(spent)) return Either.left(spent.left);
-
-  return Either.right({ sheet: spent.right, invocation: invocation.right });
 }
 
 export function castPlanarBinding(input: {
@@ -172,62 +134,46 @@ export function castPlanarBinding(input: {
   readonly target: CharacterSheetPlanarBindingTarget;
   readonly castLevel?: SpellSlotLevel;
 }): Either.Either<CharacterSheetPlanarBindingResult, CharacterSheetIssue> {
-  const spell = spellRecord(input.unitLibrary, PLANAR_BINDING_SPELL_ID);
-  if (Either.isLeft(spell)) return Either.left(spell.left);
-
-  const accessIssue = preparedAccessIssue(input.sheet, PLANAR_BINDING_SPELL_ID);
-  if (accessIssue !== null) return characterSheetIssue(accessIssue);
-
   const castLevel = input.castLevel ?? LIFECYCLE_SPELL_LEVEL;
-  if (castLevel < LIFECYCLE_SPELL_LEVEL) {
-    return characterSheetIssue(
-      "Planar Binding requires a level-5 or higher Spell Slot.",
-    );
-  }
-
-  const invocation = planarBindingInvocationFromSpell({
-    spell: spell.right,
-    target: input.target,
-    castLevel,
-  });
-  if (Either.isLeft(invocation)) return Either.left(invocation.left);
-
-  const spent = spendCharacterSheetSpellSlot({
+  return castLifecycleSpell({
     sheet: input.sheet,
-    spellLevel: castLevel,
-    spellSlotSource: "ordinary",
+    unitLibrary: input.unitLibrary,
+    spellId: PLANAR_BINDING_SPELL_ID,
+    castLevel,
+    invocation: (spell) =>
+      castLevel < LIFECYCLE_SPELL_LEVEL
+        ? characterSheetIssue(
+            "Planar Binding requires a level-5 or higher Spell Slot.",
+          )
+        : planarBindingInvocationFromSpell({
+            spell,
+            target: input.target,
+            castLevel,
+          }),
   });
-  if (Either.isLeft(spent)) return Either.left(spent.left);
-
-  return Either.right({ sheet: spent.right, invocation: invocation.right });
 }
 
-function spellRecord(
-  unitLibrary: UnitCatalog,
-  spellId: string,
-): Either.Either<SpellRecord, CharacterSheetIssue> {
-  const unit = getRequiredUnit(unitLibrary, authoredUnitId(spellId));
-  if (Either.isLeft(unit)) return Either.left(unit.left);
-  return unit.right.kind === "spell"
-    ? Either.right(unit.right)
-    : characterSheetIssue(
-        "Summoned/object lifecycle support requires a Spell record.",
-      );
-}
-
-function preparedAccessIssue(
-  sheet: CharacterSheet,
-  spellId: string,
-): string | null {
-  const hasAccess =
-    sheet.build.spellcasting?.sources.some((source) =>
-      source.preparedSpells.some(
-        (preparedSpellId) => preparedSpellId === spellId,
-      ),
-    ) ?? false;
-  return hasAccess
-    ? null
-    : "Summoned/object lifecycle spell requires prepared class Spell Access.";
+function castLifecycleSpell<Invocation>(input: {
+  readonly sheet: CharacterSheet;
+  readonly unitLibrary: UnitCatalog;
+  readonly spellId: string;
+  readonly castLevel: SpellSlotLevel;
+  readonly invocation: (
+    spell: SpellRecord,
+  ) => Either.Either<Invocation, CharacterSheetIssue>;
+}) {
+  return castPreparedSpell({
+    sheet: input.sheet,
+    unitLibrary: input.unitLibrary,
+    spellId: authoredUnitId(input.spellId),
+    spellLevel: input.castLevel,
+    spellName: "Summoned/object lifecycle spell",
+    spellRecordIssue:
+      "Summoned/object lifecycle support requires a Spell record.",
+    spellAccessIssue:
+      "Summoned/object lifecycle spell requires prepared class Spell Access.",
+    invocation: input.invocation,
+  });
 }
 
 function animateObjectsTargetIssue(input: {
@@ -298,12 +244,7 @@ function animateObjectsInvocationFromSpell(input: {
 
   return Either.right({
     tag: "animateObjects",
-    spellId: spell.id,
-    spellLevel: spell.mechanics.level,
-    castLevel: input.castLevel,
-    spellSlotCost: { kind: "ordinary", spellLevel: input.castLevel },
-    preparationRequirement: "prepared",
-    requiredSpellAccess: "class_prepared",
+    ...preparedLifecycleInvocation(spell, input.castLevel),
     castingTime: { kind: "action" },
     rangeFeet: ANIMATE_OBJECTS_RANGE_FEET,
     duration: duration.right,
@@ -366,12 +307,7 @@ function conjureElementalInvocationFromSpell(input: {
 
   return Either.right({
     tag: "conjureElemental",
-    spellId: spell.id,
-    spellLevel: spell.mechanics.level,
-    castLevel: input.castLevel,
-    spellSlotCost: { kind: "ordinary", spellLevel: input.castLevel },
-    preparationRequirement: "prepared",
-    requiredSpellAccess: "class_prepared",
+    ...preparedLifecycleInvocation(spell, input.castLevel),
     castingTime: { kind: "action" },
     rangeFeet: CONJURE_ELEMENTAL_RANGE_FEET,
     duration: duration.right,
@@ -437,12 +373,7 @@ function summonDragonInvocationFromSpell(input: {
 
   return Either.right({
     tag: "summonDragon",
-    spellId: spell.id,
-    spellLevel: spell.mechanics.level,
-    castLevel: input.castLevel,
-    spellSlotCost: { kind: "ordinary", spellLevel: input.castLevel },
-    preparationRequirement: "prepared",
-    requiredSpellAccess: "class_prepared",
+    ...preparedLifecycleInvocation(spell, input.castLevel),
     castingTime: { kind: "action" },
     rangeFeet: SUMMON_DRAGON_RANGE_FEET,
     duration: duration.right,
@@ -516,12 +447,7 @@ function planarBindingInvocationFromSpell(input: {
 
   return Either.right({
     tag: "planarBinding",
-    spellId: spell.id,
-    spellLevel: spell.mechanics.level,
-    castLevel: input.castLevel,
-    spellSlotCost: { kind: "ordinary", spellLevel: input.castLevel },
-    preparationRequirement: "prepared",
-    requiredSpellAccess: "class_prepared",
+    ...preparedLifecycleInvocation(spell, input.castLevel),
     castingTime: { kind: "hours", amount: 1 },
     rangeFeet: PLANAR_BINDING_RANGE_FEET,
     duration: duration.right,
@@ -542,6 +468,20 @@ function planarBindingInvocationFromSpell(input: {
             commandExecutionOwner: "table",
           },
   });
+}
+
+function preparedLifecycleInvocation(
+  spell: SpellRecord,
+  castLevel: SpellSlotLevel,
+) {
+  return {
+    spellId: spell.id,
+    spellLevel: spell.mechanics.level,
+    castLevel,
+    spellSlotCost: { kind: "ordinary" as const, spellLevel: castLevel },
+    preparationRequirement: "prepared" as const,
+    requiredSpellAccess: "class_prepared" as const,
+  };
 }
 
 function animateObjectsSizeWeight(

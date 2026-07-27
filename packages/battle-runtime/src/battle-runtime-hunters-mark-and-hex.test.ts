@@ -2,7 +2,7 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 import {
   battleProcedureExecutionRefForSpellHoleForTest,
   battleProcedureExecutionRefForTest,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-marked-damage-rider
@@ -12,7 +12,7 @@ import type {
   BattleFill,
   BattleState,
   OngoingFeatureSourceKey,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import {
   applyBattleHitPointDamage,
   attackDamageDispositionFill,
@@ -55,7 +55,7 @@ import {
   targetFill,
   tickDurationEffects,
   wizardSpellcasting,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 
 describe("battle runtime: Hunter's Mark and Hex", () => {
   test("Hunter's Mark adds Force damage to attack-roll hits against the mark and transfers after the mark drops", () => {

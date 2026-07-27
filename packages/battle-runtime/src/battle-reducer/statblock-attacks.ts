@@ -52,7 +52,7 @@ import { currentActorId } from "./creature-state-leaves.ts";
 import {
   isCharacterBattleCreatureState,
   ongoingFeatureProfileForSourceKey,
-} from "./creature-state-execution.ts";
+} from "./creature-state-queries.ts";
 import {
   activeRageDamageBonusForFrenzy,
   ongoingFeatureProfileIsRecklessAttackForFrenzy,

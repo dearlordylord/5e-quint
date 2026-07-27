@@ -1,4 +1,6 @@
+import { resolveSpellActiveEffectCast } from "../spell-active-effect-resolution.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
+import { spellCastCandidate } from "../spell-cast-candidate.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-held-light-emitter
 //
 // The heldLight Spell Procedure Profile: a cantrip-access spell (today Produce
@@ -37,10 +39,8 @@ import {
   type BattleExecutableSpellInvocation,
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
-import { maybeOpenInterruptWindow, snapshotBattle } from "../dispatcher.ts";
 import { invalidResult } from "../result-helpers.ts";
-import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
-import { spendSpellCastResources } from "../spells-resolve-resources.ts";
+import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
@@ -202,15 +202,12 @@ function discoverHeldLightCastAct(
   invocation: BattleExecutableSpellInvocation<HeldLightInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   return [
-    {
-      subject: {
-        tag: "bonusActionSpell",
-        actorId,
-        procedureRef: invocation.sourceProcedureRef,
-        mode: { tag: "cast" },
-      },
-      initialHoles: [],
-    },
+    spellCastCandidate(
+      "bonusActionSpell",
+      actorId,
+      invocation.sourceProcedureRef,
+      [],
+    ),
   ];
 }
 
@@ -280,21 +277,7 @@ function applyHeldLightEffect(
 function resolveHeldLight(
   input: SpellProcedureProfileResolveInput<HeldLightInvocation>,
 ): BattleResolutionResult {
-  if (
-    input.fillSet.targetId !== undefined ||
-    input.fillSet.targetList !== undefined ||
-    input.fillSet.attackRoll !== undefined ||
-    input.fillSet.targetAllocation !== undefined ||
-    input.fillSet.damageRoll !== undefined ||
-    input.fillSet.attackBurstDamageRoll !== undefined ||
-    input.fillSet.healingRoll !== undefined ||
-    input.fillSet.damageDispositions.length > 0 ||
-    input.fillSet.skillChoice !== undefined ||
-    input.fillSet.targetAbilityChoices !== undefined ||
-    input.fillSet.commandOptionChoice !== undefined ||
-    input.fillSet.savingThrowOutcomes !== undefined ||
-    input.fillSet.concentrationSavingThrows.length > 0
-  ) {
+  if (!fillsBelongToSpellCastHoles(input.input.fills)) {
     return invalidResult(
       input.input.state,
       "invalidFill",
@@ -302,44 +285,13 @@ function resolveHeldLight(
     );
   }
 
-  const spellCastReactionWindow = maybeOpenInterruptWindow(
-    input.input.state,
-    spellCastInterruptFrame({
-      casterId: input.actorId,
-      invocation: input.invocation,
-      targetIds: [input.actorId],
-      reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
-      castingResource: { kind: "bonusAction" },
-      continuation: {
-        kind: "replay",
-        subject: input.input.subject,
-        fills: input.input.fills,
-      },
-    }),
-    input.input.handledInterruptTrigger,
-  );
-  if (spellCastReactionWindow !== null) {
-    return spellCastReactionWindow;
-  }
-
-  const effected = applyHeldLightEffect(
-    input.input.state,
-    input.actorId,
-    input.invocation,
-  );
-  const resourced = spendSpellCastResources({
-    state: effected,
-    actorId: input.actorId,
-    invocation: input.invocation,
-    errorState: input.input.state,
+  return resolveSpellActiveEffectCast({
+    resolution: input,
+    targetIds: [input.actorId],
+    castingResource: { kind: "bonusAction" },
+    applyEffect: (state) =>
+      applyHeldLightEffect(state, input.actorId, input.invocation),
   });
-  return resourced.tag === "invalid"
-    ? resourced
-    : {
-        tag: "resolved",
-        state: resourced.state,
-        snapshot: snapshotBattle(resourced.state),
-      };
 }
 
 const HeldLightInvocationSchema = spellProcedureExecutionSchema(

@@ -1,13 +1,13 @@
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
 import { battleObjectId } from "./identity.ts";
 import {
   battleActSpellPresentation,
   battleAdmittedSpellPresentations,
 } from "./battle-act-composition.ts";
 import { battleRuntimeContextFromCharacterAdmission } from "./battle-runtime-context.ts";
-import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime-test-support.ts";
+import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime.test-support.ts";
 import {
   ATTACK_TARGET_HOLE_ID,
   SPELL_CAST_REACTION_FACTS_HOLE_ID,
@@ -29,7 +29,7 @@ import {
   spellCasterId,
   spellTargetId,
   unitLibrary,
-} from "./unit-profile-admission-catalog-support.ts";
+} from "./unit-profile-admission-catalog.test-support.ts";
 import {
   attackRollFill,
   attackTargetFill,
@@ -42,7 +42,7 @@ import {
   weaponAttackRollHole,
   weaponAttackSubject,
   zeroAbilityWeaponAttack,
-} from "./unit-profile-admission-creature-fixture-support.ts";
+} from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
   bonusSpellAct,
@@ -50,8 +50,8 @@ import {
   magicWeaponTargetItemFill,
   spellAct,
   spellTargetFill,
-} from "./unit-profile-admission-spell-fill-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+} from "./unit-profile-admission-spell-fill.test-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   abilityModifier,
   attackBonus,
@@ -64,7 +64,7 @@ import {
   proficiencyBonus,
   resolveBattleSubject,
   spellSlotInvocationRef,
-} from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission.test-support.ts";
 
 describe("SRDINV84H deterministic Shillelagh weapon override admission", () => {
   test("shillelagh is admitted only for a held Club or Quarterstaff", () => {

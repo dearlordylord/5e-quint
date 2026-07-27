@@ -38,7 +38,7 @@ import {
   Hp,
   resolveBattleInterrupt,
   resolveBattleSubject,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import { classLevel } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
 

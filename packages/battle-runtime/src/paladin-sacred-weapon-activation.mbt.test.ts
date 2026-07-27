@@ -7,11 +7,11 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.paladin-sacred-weapon
 import { describe, expect, test } from "vitest";
 import { classLevel } from "@dnd/shared/types";
-import { characterBattleFeatureInitForTest } from "./battle-runtime-test-support.ts";
+import { characterBattleFeatureInitForTest } from "./battle-runtime.test-support.ts";
 import { battleObjectId } from "./identity.ts";
 
-import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
-import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
+import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.test-support.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.test-support.ts";
 import type { BattleActDiscoveryCandidate } from "./battle-state-execution.ts";
 import {
   attackTargetFill,
@@ -32,15 +32,15 @@ import {
   type BattleState,
   type BattleSubject,
   unitLibrary,
-} from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission.test-support.ts";
 import {
   paladinChannelDivinityUnitId,
   paladinSacredWeaponUnitId,
-} from "./unit-profile-admission-catalog-support.ts";
+} from "./unit-profile-admission-catalog.test-support.ts";
 import {
   characterCreature,
   zeroAbilityWeaponAttack,
-} from "./unit-profile-admission-creature-fixture-support.ts";
+} from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { normalizeEarlyEndedOngoingFeatures } from "./battle-reducer/creature-state.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 

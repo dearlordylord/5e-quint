@@ -33,7 +33,7 @@ import {
   testShortswordAttack,
   type BattleRuntimeSession,
   type BattleSubject,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import {
   battleLightExtraAttackDamageAbilityModifierSupportForUnit,
   battleUnitRefWithSupportProfiles,
@@ -45,8 +45,8 @@ import {
 import {
   twoWeaponFightingUnitId,
   unitLibrary,
-} from "./unit-profile-admission-catalog-support.ts";
-import { defineSelectedIdentityReplayWitness } from "./selected-identity-witness.ts";
+} from "./unit-profile-admission-catalog.test-support.ts";
+import { defineSelectedIdentityReplayWitness } from "./selected-identity-witness.test-support.ts";
 
 describe("L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME deterministic profile slice", () => {
   test("Two-Weapon Fighting is admitted as a Light extra attack damage ability modifier permission", () => {

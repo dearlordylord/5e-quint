@@ -23,7 +23,7 @@ import {
   startBattleSessionRight,
   wizardId,
   wizardSpellcasting,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 
 describe("battle runtime: Fire Bolt object targets", () => {
   test("Fire Bolt object target requires ignition facts before resolving the object attack", () => {

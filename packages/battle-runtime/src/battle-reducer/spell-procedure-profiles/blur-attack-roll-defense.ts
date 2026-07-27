@@ -1,4 +1,7 @@
+import { resolveSpellActiveEffectCast } from "../spell-active-effect-resolution.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
+import { replaceTargetSpellActiveEffect } from "../active-effect-replacement.ts";
+import { actionSpellCastCandidate } from "../spell-cast-candidate.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-blur-attack-roll-defense
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE
 //
@@ -25,7 +28,6 @@ import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts
 //     witnesses stay in attack-roll.ts.
 //   - Concentration cleanup stays in the shared active-effect lifecycle.
 
-import { battleCreatureWithSpellActiveEffects } from "../../active-effect/lifecycle.ts";
 import {
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
@@ -33,18 +35,12 @@ import {
   type BattleState,
   type BlurAttackRollDefenseSpellInvocation,
 } from "../../battle-state-execution.ts";
-import { maybeOpenInterruptWindow, snapshotBattle } from "../dispatcher.ts";
 import { type CombatantId } from "../../identity.ts";
 import { BlurredActiveEffectTemplateSchema } from "../../active-effect/codecs.ts";
-import { breakBattleConcentration } from "../damage-apply.ts";
 import { invalidResult } from "../result-helpers.ts";
-import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
+import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
 import { sameStringSet } from "../spells-execution-facts.ts";
 import { scalarBuffActiveEffectExpiration } from "../spells-profiles-support.ts";
-import {
-  spellRequiresConcentration,
-  spendSpellCastResources,
-} from "../spells-resolve-resources.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
@@ -135,17 +131,7 @@ function discoverBlurAttackRollDefenseCastAct(
   actorId: CombatantId,
   invocation: BattleExecutableSpellInvocation<BlurAttackRollDefenseSpellInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
-  return [
-    {
-      subject: {
-        tag: "actionSpell",
-        actorId,
-        procedureRef: invocation.sourceProcedureRef,
-        mode: { tag: "cast" },
-      },
-      initialHoles: [],
-    },
-  ];
+  return [actionSpellCastCandidate(actorId, invocation.sourceProcedureRef, [])];
 }
 
 function applyBlurAttackRollDefenseEffect(
@@ -153,65 +139,25 @@ function applyBlurAttackRollDefenseEffect(
   actorId: CombatantId,
   invocation: BattleExecutableSpellInvocation<BlurAttackRollDefenseSpellInvocation>,
 ): BattleState {
-  const actor = state.combatants.get(actorId);
-  if (actor === undefined) {
-    return state;
-  }
-  const nextEffect = {
-    ...invocation.activeEffect,
-    sourceProcedureRef: invocation.sourceProcedureRef,
-    sourceCombatantId: actorId,
-  };
-  const activeEffects = [
-    ...actor.activeEffects.filter(
-      (effect) =>
-        !(
-          effect.kind === "blurred" &&
-          effect.sourceProcedureRef === invocation.sourceProcedureRef &&
-          effect.sourceCombatantId === actorId
-        ),
-    ),
-    nextEffect,
-  ];
-  return {
-    ...state,
-    combatants: new Map(state.combatants).set(
-      actorId,
-      battleCreatureWithSpellActiveEffects(actor, activeEffects),
-    ),
-  };
+  return replaceTargetSpellActiveEffect(
+    state,
+    actorId,
+    (effect) =>
+      effect.kind === "blurred" &&
+      effect.sourceProcedureRef === invocation.sourceProcedureRef &&
+      effect.sourceCombatantId === actorId,
+    {
+      ...invocation.activeEffect,
+      sourceProcedureRef: invocation.sourceProcedureRef,
+      sourceCombatantId: actorId,
+    },
+  );
 }
 
 function resolveBlurAttackRollDefense(
   input: SpellProcedureProfileResolveInput<BlurAttackRollDefenseSpellInvocation>,
 ): BattleResolutionResult {
-  if (
-    input.fillSet.targetId !== undefined ||
-    input.fillSet.objectTarget !== undefined ||
-    input.fillSet.targetSpatialFacts.length > 0 ||
-    input.fillSet.targetAllocation !== undefined ||
-    input.fillSet.targetList !== undefined ||
-    input.fillSet.attackSequencePartFills.length > 0 ||
-    input.fillSet.attackRoll !== undefined ||
-    input.fillSet.savingThrowOutcomes !== undefined ||
-    input.fillSet.skillChoice !== undefined ||
-    input.fillSet.targetAbilityChoices !== undefined ||
-    input.fillSet.abilityChoice !== undefined ||
-    input.fillSet.thaumaturgyActiveOneMinuteEffectCount !== undefined ||
-    input.fillSet.commandOptionChoice !== undefined ||
-    input.fillSet.conditionChoice !== undefined ||
-    input.fillSet.areaChoice !== undefined ||
-    input.fillSet.dancingLightsPlacement !== undefined ||
-    input.fillSet.damageTypeChoice !== undefined ||
-    input.fillSet.concentrationSavingThrows.length > 0 ||
-    input.fillSet.hideousLaughterDamageRepeatSaves.length > 0 ||
-    input.fillSet.damageDispositions.length > 0 ||
-    input.fillSet.damageRoll !== undefined ||
-    input.fillSet.movement !== undefined ||
-    input.fillSet.spellDamageReductionRolls.length > 0 ||
-    input.fillSet.attackBurstDamageRoll !== undefined ||
-    input.fillSet.healingRoll !== undefined
-  ) {
+  if (!fillsBelongToSpellCastHoles(input.input.fills)) {
     return invalidResult(
       input.input.state,
       "invalidFill",
@@ -219,47 +165,13 @@ function resolveBlurAttackRollDefense(
     );
   }
 
-  const spellCastReactionWindow = maybeOpenInterruptWindow(
-    input.input.state,
-    spellCastInterruptFrame({
-      casterId: input.actorId,
-      invocation: input.invocation,
-      targetIds: [input.actorId],
-      reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
-      castingResource: { kind: "magicAction" },
-      continuation: {
-        kind: "replay",
-        subject: input.input.subject,
-        fills: input.input.fills,
-      },
-    }),
-    input.input.handledInterruptTrigger,
-  );
-  if (spellCastReactionWindow !== null) {
-    return spellCastReactionWindow;
-  }
-
-  const concentrationBase = spellRequiresConcentration(input.invocation)
-    ? breakBattleConcentration(input.input.state, input.actorId)
-    : input.input.state;
-  const effected = applyBlurAttackRollDefenseEffect(
-    concentrationBase,
-    input.actorId,
-    input.invocation,
-  );
-  const resourced = spendSpellCastResources({
-    state: effected,
-    actorId: input.actorId,
-    invocation: input.invocation,
-    errorState: input.input.state,
+  return resolveSpellActiveEffectCast({
+    resolution: input,
+    targetIds: [input.actorId],
+    castingResource: { kind: "magicAction" },
+    applyEffect: (state) =>
+      applyBlurAttackRollDefenseEffect(state, input.actorId, input.invocation),
   });
-  return resourced.tag === "invalid"
-    ? resourced
-    : {
-        tag: "resolved",
-        state: resourced.state,
-        snapshot: snapshotBattle(resourced.state),
-      };
 }
 
 const BlurAttackRollDefenseInvocationSchema = spellProcedureExecutionSchema(

@@ -21,7 +21,7 @@ import {
   stringLiteralValue,
   type BattleResolutionRecorderSnapshot,
   type MbtWitnessLastResult,
-} from "./battle-runtime-mbt-driver-kit.ts";
+} from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import {
   resolveBattleSubject,
   characterSeed,
@@ -29,7 +29,7 @@ import {
   fighterId,
   findHole,
   startBattleRight,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import {
   battleId,
   characterId,

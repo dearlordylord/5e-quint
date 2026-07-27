@@ -12,6 +12,7 @@ import { WIZARD_BATTLE_DEMO_META, WIZARD_BATTLE_DEMO_STEPS } from "#/battle-scen
 import { CharacterCreationPage } from "#/components/character-creation/CharacterCreationPage.tsx"
 import { PageShell } from "#/components/PageShell.tsx"
 
+/* v8 ignore next -- this is a browser entry; the fallback only keeps tooling imports side-effect safe */
 const pathname = typeof window === "undefined" ? "/" : window.location.pathname
 
 export function HomePage() {
@@ -56,6 +57,7 @@ export function RootApp({ path = pathname }: { readonly path?: string }) {
   )
 }
 
+/* v8 ignore next -- this is a browser entry; the fallback only keeps tooling imports side-effect safe */
 const root = typeof document === "undefined" ? null : document.getElementById("root")
 if (root)
   createRoot(root).render(

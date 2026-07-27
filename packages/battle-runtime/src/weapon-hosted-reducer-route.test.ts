@@ -1,6 +1,6 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
-import { battleActiveEffectExecutionRefForTest } from "./battle-runtime-test-support.ts";
-import { resolveBattleSubject } from "./battle-runtime-test-support.ts";
+import { battleActiveEffectExecutionRefForTest } from "./battle-runtime.test-support.ts";
+import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 import { battleObjectId } from "./identity.ts";
 import { describe, expect, it } from "vitest";
 
@@ -22,7 +22,7 @@ import {
   statBlockAttackAct,
   weaponAttackSubject,
   zeroAbilityWeaponAttack,
-} from "./unit-profile-admission-creature-fixture-support.ts";
+} from "./unit-profile-admission-creature-fixture.test-support.ts";
 import {
   divineFavorUnitId,
   magicWeaponUnitId,
@@ -30,18 +30,18 @@ import {
   spellCasterId,
   spellTargetId,
   trueStrikeUnitId,
-} from "./unit-profile-admission-catalog-support.ts";
+} from "./unit-profile-admission-catalog.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
   bonusSpellAct,
   magicWeaponTargetItemFill,
   spellAct,
-} from "./unit-profile-admission-spell-fill-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+} from "./unit-profile-admission-spell-fill.test-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   classLevel,
   proficiencyBonus,
-} from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission.test-support.ts";
 
 const startRoute = battleReducerStartRouteEvent();
 const WEAPON_HOSTED_ROUTE_SUBJECTS = [

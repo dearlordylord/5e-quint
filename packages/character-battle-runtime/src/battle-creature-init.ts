@@ -11,7 +11,6 @@ import {
   scoreModifier,
   startBattle,
   initiativeScore,
-  unitIsSupportedClassFeatureSpellFreeCastResource,
   type CharacterBattleFeatureInit,
   type CharacterBattleMetamagicInit,
   type CharacterBattleResourceInit,
@@ -630,12 +629,9 @@ function characterBattleClassLevels(
     });
   }
 
-  const [first, ...rest] = classLevels;
-  return first === undefined
-    ? battleCreatureInitIssue(
-        "Character battle initialization requires at least one class level.",
-      )
-    : Either.right([first, ...rest]);
+  // progressionClassLevels is non-empty and every entry is projected exactly
+  // once unless this function has already returned a typed projection issue.
+  return Either.right([classLevels[0]!, ...classLevels.slice(1)]);
 }
 
 function characterBattleMetamagicFromBuild(
@@ -773,7 +769,10 @@ function characterBattleResourceInit(
 
 function characterBattlePersistedPointsRemaining(
   build: CharacterBuild,
-  unit: UnitRecord,
+  unit: Extract<
+    UnitRecord,
+    { readonly kind: "class_feature" | "species_trait" }
+  >,
   unitLibrary: UnitCatalog,
   resourceExpenditures: readonly CharacterSheetResourceExpenditure[],
   classLevels: CharacterBattleClassLevels,
@@ -807,7 +806,10 @@ function characterBattlePersistedPointsRemaining(
 
 function characterBattlePersistedUsesRemaining(
   build: CharacterBuild,
-  unit: UnitRecord,
+  unit: Extract<
+    UnitRecord,
+    { readonly kind: "class_feature" | "species_trait" }
+  >,
   unitLibrary: UnitCatalog,
   resourceExpenditures: readonly CharacterSheetResourceExpenditure[],
   classLevels: CharacterBattleClassLevels,
@@ -834,37 +836,24 @@ function characterBattlePersistedUsesRemaining(
     );
   }
 
-  if (unitIsSupportedClassFeatureSpellFreeCastResource(unit)) {
-    const profile =
-      supportedClassFeatureSpellFreeCastGrantsForUnit(unit)?.profile;
-    if (profile === undefined) {
-      return Either.right(undefined);
-    }
-    const resource = characterBattleResourceForUnit(unit);
-    if (resource.cap.kind !== "fixed") {
-      return battleCreatureInitIssue(
-        "Class feature spell free casts must use a fixed battle resource cap.",
-      );
-    }
+  const freeCastGrants = supportedClassFeatureSpellFreeCastGrantsForUnit(unit);
+  if (freeCastGrants !== null) {
     const expended =
       resourceExpenditures.find(
-        (expenditure) => expenditure.tag === profile.resourceTag,
+        (expenditure) => expenditure.tag === freeCastGrants.profile.resourceTag,
       )?.expended ?? 0;
-    if (expended > resource.cap.uses) {
+    if (expended > freeCastGrants.freeCastGrant.count) {
       return battleCreatureInitIssue(
         "Class feature spell free-cast expenditure exceeds its battle resource cap.",
       );
     }
-    return Either.right(resource.cap.uses - expended);
+    return Either.right(freeCastGrants.freeCastGrant.count - expended);
   }
   const useCountExpenditure = resourceExpenditures.find(
     (expenditure) =>
       expenditure.tag === "useCountResource" && expenditure.unitId === unit.id,
   );
   if (useCountExpenditure === undefined) {
-    return Either.right(undefined);
-  }
-  if (unit.kind !== "class_feature" && unit.kind !== "species_trait") {
     return Either.right(undefined);
   }
   const resource =

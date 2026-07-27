@@ -73,6 +73,39 @@ type ReactionReductionDiceFacts = {
   readonly dieSize: DamageDieSize;
   readonly flatModifier: number;
 };
+type RolledReactionReductionModifier = Extract<
+  ReactionRollOrDamageReductionModifier,
+  {
+    readonly kind: "attackRollReduction" | "attackDamageRollReduction";
+  }
+>;
+
+function rolledReactionReductionChoice(
+  reactorId: CombatantId,
+  procedureRef: BattleProcedureExecutionRef,
+  kind: "attackRollReduction" | "damageRollReduction",
+  modifier: RolledReactionReductionModifier,
+): readonly BattleInterruptProcedureChoice[] {
+  return [
+    {
+      kind: "reactionRollOrDamageReduction",
+      reactorId,
+      choice: {
+        kind,
+        procedureRef,
+        reduction: {
+          kind: "rolled",
+          dice: modifier.reduction.dice,
+          flatModifier: modifier.reduction.flatModifier,
+          dieSize: modifier.reduction.dieSize,
+          spends: modifier.reduction.spends,
+        },
+      },
+      initialHoles: [reactionModifierRollHole()],
+    },
+  ];
+}
+
 export function spendReactionModifierResource(
   state: BattleState,
   reactorId: CombatantId,
@@ -388,24 +421,12 @@ export function reactionRollOrDamageReductionChoiceForProfile(
         },
       ];
     }
-    return [
-      {
-        kind: "reactionRollOrDamageReduction",
-        reactorId,
-        choice: {
-          kind: "attackRollReduction",
-          procedureRef,
-          reduction: {
-            kind: "rolled",
-            dice: modifier.reduction.dice,
-            flatModifier: modifier.reduction.flatModifier,
-            dieSize: modifier.reduction.dieSize,
-            spends: modifier.reduction.spends,
-          },
-        },
-        initialHoles: [reactionModifierRollHole()],
-      },
-    ];
+    return rolledReactionReductionChoice(
+      reactorId,
+      procedureRef,
+      "attackRollReduction",
+      modifier,
+    );
   }
   if (frame.trigger !== "attackDamage") {
     if (frame.trigger === "creatureFalls") {
@@ -429,24 +450,12 @@ export function reactionRollOrDamageReductionChoiceForProfile(
       battleAttackHostParticipantId(frame.continuation.participant),
     )
   ) {
-    return [
-      {
-        kind: "reactionRollOrDamageReduction",
-        reactorId,
-        choice: {
-          kind: "damageRollReduction",
-          procedureRef,
-          reduction: {
-            kind: "rolled",
-            dice: modifier.reduction.dice,
-            flatModifier: modifier.reduction.flatModifier,
-            dieSize: modifier.reduction.dieSize,
-            spends: modifier.reduction.spends,
-          },
-        },
-        initialHoles: [reactionModifierRollHole()],
-      },
-    ];
+    return rolledReactionReductionChoice(
+      reactorId,
+      procedureRef,
+      "damageRollReduction",
+      modifier,
+    );
   }
   return [];
 }

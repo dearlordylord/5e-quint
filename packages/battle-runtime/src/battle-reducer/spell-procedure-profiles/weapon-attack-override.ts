@@ -17,7 +17,7 @@ import {
   interruptWindowProgress,
   snapshotBattle,
   type BattleInterruptWindowProgress,
-} from "../dispatcher.ts";
+} from "../interrupt-execution.ts";
 import {
   admitWeaponAttackOverride,
   type WeaponAttackOverrideInvocation,

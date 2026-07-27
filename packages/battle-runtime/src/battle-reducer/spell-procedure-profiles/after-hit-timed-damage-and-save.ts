@@ -1,3 +1,5 @@
+import { resolveAfterHitSlotSpellDamageCast } from "../after-hit-spell-resolution.ts";
+import { replaceTargetActiveEffect } from "../active-effect-replacement.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-after-hit-timed-damage-save
 import {
@@ -45,19 +47,9 @@ import {
   type BattleResolutionResult,
   type BattleState,
 } from "../../battle-state-execution.ts";
-import { snapshotBattle } from "../dispatcher.ts";
 import { CombatantId } from "../../identity.ts";
-import {
-  maybeOpenPostCastReadySpellCastWindow,
-  maybeOpenSpellCastInterruptWindowWithTriggeredSpellChoices,
-  interruptCheckpointFrame,
-} from "../dispatcher.ts";
-import { invalidResult } from "../result-helpers.ts";
-import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
 import { supportedDamageAmountExpr } from "../spells-execution-facts.ts";
 import { scalarBuffActiveEffectExpiration } from "../spells-profiles-support.ts";
-import { spellFillSetContainsOnlySpellCastReactionFacts } from "../spells-resolve-fill-set.ts";
-import { spendSpellCastResources } from "../spells-resolve-resources.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
@@ -252,74 +244,23 @@ function applyAfterHitTimedDamageAndSaveSpellEffect(
     { readonly procedure: "afterHitTimedDamageAndSave" }
   >,
 ): BattleState {
-  const target = state.combatants.get(targetId);
-  if (target === undefined) {
-    return state;
-  }
-  const replacing = target.activeEffects.filter(
+  return replaceTargetActiveEffect(
+    state,
+    targetId,
     (effect) =>
       effect.kind === "spellTurnStartDamageAndSave" &&
       effect.sourceProcedureRef === invocation.sourceProcedureRef &&
       effect.sourceCombatantId === invocation.activeEffect.sourceCombatantId,
-  );
-  const activeEffects = [
-    ...target.activeEffects.filter((effect) => !replacing.includes(effect)),
     {
       ...invocation.activeEffect,
       sourceProcedureRef: invocation.sourceProcedureRef,
     },
-  ];
-  return {
-    ...state,
-    combatants: new Map(state.combatants).set(targetId, {
-      ...target,
-      activeEffects,
-    }),
-  };
+  );
 }
 
 function resolveAfterHitTimedDamageAndSave(
   input: AfterHitTimedDamageAndSaveResolveInput,
 ): BattleResolutionResult {
-  if (!spellFillSetContainsOnlySpellCastReactionFacts(input.fillSet, {})) {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      "Attack-hit Bonus Action spell accepts only spell-cast Reaction trigger facts.",
-    );
-  }
-  const attackContinuation = input.input.frame.continuation;
-  const spellCastFrame = spellCastInterruptFrame({
-    casterId: input.input.subject.casterId,
-    invocation: input.invocation,
-    targetIds: [input.input.target.combatantId],
-    reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
-    castingResource: { kind: "bonusAction" },
-    continuation: {
-      kind: "replay",
-      subject: input.input.subject,
-      fills: input.input.fills,
-    },
-  });
-  const spellCastReactionWindow =
-    maybeOpenSpellCastInterruptWindowWithTriggeredSpellChoices(
-      input.input.state,
-      spellCastFrame,
-      input.input.handledInterruptTrigger,
-    );
-  if (spellCastReactionWindow !== null) {
-    return spellCastReactionWindow;
-  }
-
-  const resourced = spendSpellCastResources({
-    state: input.input.state,
-    actorId: input.input.subject.casterId,
-    invocation: input.invocation,
-    errorState: input.input.state,
-  });
-  if (resourced.tag === "invalid") {
-    return resourced;
-  }
   const damageAddition: AttackSpellDamageAddition = {
     kind: "attackSpellDamageAddition",
     sourceProcedure: "afterHitTimedDamageAndSave",
@@ -330,45 +271,21 @@ function resolveAfterHitTimedDamageAndSave(
       damageType: input.invocation.immediateDamage.damageType,
     },
   };
-  const nextFrame = {
-    ...input.input.frame,
-    continuation: {
-      ...attackContinuation,
-      attackDamageAdditions: [
-        ...(attackContinuation.attackDamageAdditions ?? []),
-        damageAddition,
-      ],
-    },
-  };
-  const effected = applyAfterHitTimedDamageAndSaveSpellEffect(
-    resourced.state,
-    input.input.target.combatantId,
-    input.invocation,
-  );
-  const nextState: BattleState = {
-    ...effected,
-    interruptStack: [
-      ...effected.interruptStack.slice(0, -1),
-      interruptCheckpointFrame(nextFrame),
-    ],
-  };
-  const readiedSpellCastReactionWindow = maybeOpenPostCastReadySpellCastWindow({
-    state: nextState,
-    subject: input.input.subject,
+  return resolveAfterHitSlotSpellDamageCast({
+    input: input.input,
+    frame: input.input.frame,
+    fillSet: input.fillSet,
     casterId: input.input.subject.casterId,
-    sourceProcedureRef: input.invocation.sourceProcedureRef,
-    spellProcedure: input.invocation.procedure,
-    targetIds: [input.input.target.combatantId],
-    handledInterruptTrigger: input.input.handledInterruptTrigger,
+    invocation: input.invocation,
+    targetId: input.input.target.combatantId,
+    damageAddition,
+    applyEffect: (state) =>
+      applyAfterHitTimedDamageAndSaveSpellEffect(
+        state,
+        input.input.target.combatantId,
+        input.invocation,
+      ),
   });
-  if (readiedSpellCastReactionWindow !== null) {
-    return readiedSpellCastReactionWindow;
-  }
-  return {
-    tag: "resolved",
-    state: nextState,
-    snapshot: snapshotBattle(nextState),
-  };
 }
 
 const AfterHitTimedDamageAndSaveInvocationSchema =

@@ -13,7 +13,6 @@ import type { WizardBattleDemoMeta, WizardBattleDemoStep } from "./wizard-battle
 
 const FIRST_STEP = 0
 const AUTO_ADVANCE_MS = 900
-const STICKY_HEADER_FALLBACK_HEIGHT = 200
 const STICKY_HEADER_SCROLL_OFFSET = 40
 
 export function BattlePage({
@@ -27,7 +26,7 @@ export function BattlePage({
   const [autoPlay, setAutoPlay] = useState(false)
   const [isStuck, setIsStuck] = useState(false)
   const headerRef = useRef<HTMLDivElement | null>(null)
-  const step = steps[cursor] ?? steps[FIRST_STEP]
+  const step = steps[cursor]
   const lastStep = steps.length - 1
   const presentedSnapshot = useMemo(() => battlePresentedSnapshot(step.session), [step.session])
   const projectionResult = useMemo(
@@ -50,6 +49,7 @@ export function BattlePage({
     (nextCursor: number) => {
       const bounded = Math.max(FIRST_STEP, Math.min(nextCursor, lastStep))
       setCursor(bounded)
+      /* v8 ignore next -- callbacks cannot fire during React server rendering */
       if (typeof window === "undefined") return
       const url = new URL(window.location.href)
       if (bounded === FIRST_STEP) url.searchParams.delete("step")
@@ -69,9 +69,11 @@ export function BattlePage({
   const playbackScrubberProps = { cursor, lastStep, onStepTo: stepTo } as const
 
   useEffect(() => {
+    /* v8 ignore next -- React does not execute effects during server rendering */
     if (typeof window === "undefined") return
     const onScroll = () => {
-      const headerHeight = headerRef.current?.offsetHeight ?? STICKY_HEADER_FALLBACK_HEIGHT
+      const headerHeight = headerRef.current?.offsetHeight
+      if (headerHeight === undefined) return
       setIsStuck(window.scrollY > headerHeight - STICKY_HEADER_SCROLL_OFFSET)
     }
     window.addEventListener("scroll", onScroll, { passive: true })
@@ -89,6 +91,7 @@ export function BattlePage({
   }, [autoPlay, cursor, lastStep, stepTo])
 
   useEffect(() => {
+    /* v8 ignore next -- React does not execute effects during server rendering */
     if (typeof window === "undefined") return
     const handler = (event: KeyboardEvent) => {
       if (event.key === "ArrowRight") {
@@ -179,6 +182,7 @@ export function BattlePage({
 }
 
 function initialStep(stepCount: number): number {
+  /* v8 ignore next -- this browser component's initializer only executes while rendering in a browser */
   if (typeof window === "undefined") return FIRST_STEP
   const raw = new URLSearchParams(window.location.search).get("step")
   if (raw === null) return FIRST_STEP

@@ -14,7 +14,7 @@ import {
   run,
   runSelectedUnitIdentityReplay,
   type RogueSteadyAimSelectedUnitIdentityReplay,
-} from "./battle-runtime-mbt-driver-kit.ts";
+} from "./battle-runtime-mbt-driver-kit.test-support.ts";
 
 const rogueSteadyAimDriverSchema = {
   init: {},

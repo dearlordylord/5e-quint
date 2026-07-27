@@ -15,7 +15,7 @@ import { describe, expect, test } from "vitest";
 import {
   requireCharacterSpellProcedureRefForTest,
   characterSpellInvocationRefForProcedureRefForTest,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import {
   aidUnitId,
   barkskinUnitId,
@@ -27,11 +27,11 @@ import {
   spellCasterId,
   spellTargetId,
   spiderClimbUnitId,
-} from "./unit-profile-admission-catalog-support.ts";
+} from "./unit-profile-admission-catalog.test-support.ts";
 import {
   damageRollFillWithGroups,
   requireHole,
-} from "./unit-profile-admission-creature-fixture-support.ts";
+} from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
   bonusSpellAct,
@@ -42,8 +42,8 @@ import {
   spellHoleInvocation,
   spellTargetFill,
   spellTargetListFill,
-} from "./unit-profile-admission-spell-fill-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+} from "./unit-profile-admission-spell-fill.test-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   applyCondition,
   breakBattleConcentration,
@@ -61,7 +61,7 @@ import {
   resolveFlySpeedGrantEndFallCleanup,
   snapshotBattle,
   spellSlotInvocationRef,
-} from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission.test-support.ts";
 import type {
   BattleFill,
   BattleFlySpeedGrantEndFallCleanupFrame,
@@ -70,7 +70,7 @@ import type {
   BattleTargetSpatialFact,
   CombatantId,
   EndedFlySpeedGrant,
-} from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission.test-support.ts";
 
 const featherFallUnitId = "feather_fall";
 

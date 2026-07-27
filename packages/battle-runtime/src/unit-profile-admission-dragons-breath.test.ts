@@ -13,21 +13,21 @@ import {
   dragonsBreathUnitId,
   spellCasterId,
   spellTargetId,
-} from "./unit-profile-admission-catalog-support.ts";
+} from "./unit-profile-admission-catalog.test-support.ts";
 import {
   damageRollFillWithGroups,
   requireCombatant,
   requireHole,
   requireResultHole,
   rolledDiceGroup,
-} from "./unit-profile-admission-creature-fixture-support.ts";
+} from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
   bonusSpellAct,
   damageTypeChoiceFill,
   knownWillingSpellTargetListFill,
   spellTargetListFill,
-} from "./unit-profile-admission-spell-fill-support.ts";
+} from "./unit-profile-admission-spell-fill.test-support.ts";
 import {
   breakBattleConcentration,
   combatantId,
@@ -47,11 +47,11 @@ import {
   type CombatantId,
   type DamageType,
   type SpellRecord,
-} from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission.test-support.ts";
 import {
   battleActiveEffectExecutionRefForTest,
   requireCharacterSpellProcedureRefForTest,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 
 describe("Dragon's Breath initial cast admission", () => {
   test("stores chosen damage type, original slot, and caster save DC on the willing target", () => {

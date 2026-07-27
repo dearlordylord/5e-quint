@@ -33,8 +33,8 @@ import {
   movementFeet,
   objectInvisibleBenefitDenied,
   resolveBattleSubject,
-} from "./battle-runtime-test-support.ts";
-import type { BattleSubject } from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
+import type { BattleSubject } from "./battle-runtime.test-support.ts";
 import { describe, expect, test } from "vitest";
 
 describe("battle runtime: Starry Wisp", () => {

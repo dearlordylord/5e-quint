@@ -442,15 +442,10 @@ export function attackFillSet(
       targetSpatialFacts = fill.spatialFacts ?? [];
       targetRelationshipFacts = parsed.fill.relationshipFacts ?? [];
       targetSpatialFactsFilled = true;
-      const rangeFactValidation =
-        validateUniqueAttackTargetRangeFacts(targetSpatialFacts);
-      if (rangeFactValidation !== null) {
-        return { tag: "invalid", message: rangeFactValidation };
-      }
-      const sightFactValidation =
-        validateUniqueAttackSightFacts(targetSpatialFacts);
-      if (sightFactValidation !== null) {
-        return { tag: "invalid", message: sightFactValidation };
+      const spatialFactValidation =
+        validateUniqueAttackTargetSpatialFacts(targetSpatialFacts);
+      if (spatialFactValidation !== null) {
+        return { tag: "invalid", message: spatialFactValidation };
       }
       continue;
     }
@@ -467,15 +462,10 @@ export function attackFillSet(
       }
       targetSpatialFacts = fill.spatialFacts;
       targetSpatialFactsFilled = true;
-      const rangeFactValidation =
-        validateUniqueAttackTargetRangeFacts(targetSpatialFacts);
-      if (rangeFactValidation !== null) {
-        return { tag: "invalid", message: rangeFactValidation };
-      }
-      const sightFactValidation =
-        validateUniqueAttackSightFacts(targetSpatialFacts);
-      if (sightFactValidation !== null) {
-        return { tag: "invalid", message: sightFactValidation };
+      const spatialFactValidation =
+        validateUniqueAttackTargetSpatialFacts(targetSpatialFacts);
+      if (spatialFactValidation !== null) {
+        return { tag: "invalid", message: spatialFactValidation };
       }
       continue;
     }
@@ -929,6 +919,15 @@ export function validateUniqueAttackSightFacts(
     return null;
   }
   return "Attack sight facts must contain at most one witness for each direction, attacker, and target.";
+}
+
+function validateUniqueAttackTargetSpatialFacts(
+  spatialFacts: readonly BattleTargetSpatialFact[],
+): string | null {
+  return (
+    validateUniqueAttackTargetRangeFacts(spatialFacts) ??
+    validateUniqueAttackSightFacts(spatialFacts)
+  );
 }
 
 export function validateUniqueAttackTargetRangeFacts(

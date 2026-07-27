@@ -41,7 +41,7 @@ import {
   type BattleRuntimeSession,
   type BattleState,
   type BattleSubject,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 
 describe("battle runtime: Monk's Focus battle options", () => {
   test("rejects an execution ref bound to a different Unit procedure family", () => {

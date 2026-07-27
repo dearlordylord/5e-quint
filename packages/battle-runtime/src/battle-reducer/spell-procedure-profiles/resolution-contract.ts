@@ -4,7 +4,6 @@ import type {
   BonusActionSpellBattleResolutionInput,
   BattleCreatureState,
   BattleFill,
-  BattleInterruptedProcedure,
   BattleInterruptCheckpoint,
   BattleResolutionInputForSubject,
   BattleState,
@@ -31,7 +30,6 @@ import type {
   BattleProcedureExecutionRef,
   CombatantId,
 } from "../../identity.ts";
-import type { SpellMetamagicApplicationFact } from "../metamagic-support.ts";
 import type { ChainedSpellFillSet } from "../spells-resolve-chained.ts";
 import type { SpellFillSet } from "../spells-resolve-fill-set.ts";
 import type { WeaponAttackOverrideFillInput } from "../weapon-attack-override-fill-input.ts";
@@ -55,18 +53,8 @@ type AttackHitBonusActionSpellCommandSubject = Extract<
     readonly command: "castAttackHitBonusActionSpell";
   }
 >;
-type AttackHitDamageReplayFrame = Extract<
-  BattleInterruptCheckpoint,
-  { readonly trigger: "attackHit" }
-> & {
-  readonly continuation: Extract<
-    BattleInterruptedProcedure,
-    {
-      readonly kind: "replay";
-      readonly glyphStoredSpellReleaseReplay?: never;
-    }
-  >;
-};
+type AttackHitDamageReplayFrame =
+  import("../../battle-state-execution.ts").BattleAttackHitReplayCheckpoint;
 type AttackHitDamageResolutionInput =
   BattleResolutionInputForSubject<AttackHitBonusActionSpellCommandSubject> & {
     readonly frame: AttackHitDamageReplayFrame;
@@ -371,3 +359,4 @@ export type SpellProcedureDeclarationResolution<
 export type SpellProcedureExecutionResolution<
   P extends SpellProcedureKey = SpellProcedureKey,
 > = SpellProcedureDeclarationResolution<P>;
+import type { SpellMetamagicApplicationFact } from "../metamagic-support.ts";

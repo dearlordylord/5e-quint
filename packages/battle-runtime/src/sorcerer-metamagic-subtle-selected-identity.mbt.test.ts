@@ -33,19 +33,19 @@ import {
   mbtSpecPath,
   reducerRoutedMetamagicStateCheck,
   run,
-} from "./battle-runtime-mbt-driver-kit.ts";
-import { damageRollFillWithGroups } from "./battle-runtime-test-support.ts";
-import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
+} from "./battle-runtime-mbt-driver-kit.test-support.ts";
+import { damageRollFillWithGroups } from "./battle-runtime.test-support.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.test-support.ts";
 import {
   barkskinUnitId,
   falseLifeUnitId,
   spellCasterId,
   unitLibrary,
-} from "./unit-profile-admission-catalog-support.ts";
-import { requireHole } from "./unit-profile-admission-creature-fixture-support.ts";
+} from "./unit-profile-admission-catalog.test-support.ts";
+import { requireHole } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
-import { spellAct } from "./unit-profile-admission-spell-fill-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+import { spellAct } from "./unit-profile-admission-spell-fill.test-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   battleReducerStartRouteEvent,
   discoverBattleActs,
@@ -57,7 +57,7 @@ import {
 import {
   resolveBattleSubject,
   type BattleState,
-} from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission.test-support.ts";
 
 type SubtleFalseLifeProjection = {
   readonly verbalSuppressed: boolean;

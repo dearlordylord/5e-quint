@@ -1,3 +1,4 @@
+import { resolveSpellActiveEffectCast } from "../spell-active-effect-resolution.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-self-ability-check-advantage
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS
@@ -33,16 +34,18 @@ import {
   type BattleState,
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
-import { maybeOpenInterruptWindow, snapshotBattle } from "../dispatcher.ts";
 import { type CombatantId } from "../../identity.ts";
 import { ThaumaturgyBoomingVoiceTemplateSchema } from "../../active-effect/codecs.ts";
-import { needsHolesResult } from "../hole-helpers.ts";
+
+import { needsHolesResult } from "../needs-holes-result.ts";
 import { invalidResult } from "../result-helpers.ts";
-import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
+import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
 import { thaumaturgyActiveOneMinuteEffectCountHole } from "../spells-damage-fills.ts";
 import { thaumaturgyBoomingVoiceProjection } from "../spells-profiles-support.ts";
-import { spendSpellCastResources } from "../spells-resolve-resources.ts";
-import { THAUMATURGY_MAX_ACTIVE_ONE_MINUTE_EFFECTS } from "../domain-constants.ts";
+import {
+  THAUMATURGY_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_ID,
+  THAUMATURGY_MAX_ACTIVE_ONE_MINUTE_EFFECTS,
+} from "../domain-constants.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
@@ -155,30 +158,9 @@ function resolveThaumaturgyBoomingVoice(
   input: SpellProcedureProfileResolveInput<ThaumaturgyBoomingVoiceInvocation>,
 ): BattleResolutionResult {
   if (
-    input.fillSet.targetId !== undefined ||
-    input.fillSet.objectTarget !== undefined ||
-    input.fillSet.targetSpatialFacts.length > 0 ||
-    input.fillSet.targetAllocation !== undefined ||
-    input.fillSet.targetList !== undefined ||
-    input.fillSet.attackSequencePartFills.length > 0 ||
-    input.fillSet.attackRoll !== undefined ||
-    input.fillSet.savingThrowOutcomes !== undefined ||
-    input.fillSet.skillChoice !== undefined ||
-    input.fillSet.targetAbilityChoices !== undefined ||
-    input.fillSet.abilityChoice !== undefined ||
-    input.fillSet.commandOptionChoice !== undefined ||
-    input.fillSet.areaChoice !== undefined ||
-    input.fillSet.dancingLightsPlacement !== undefined ||
-    input.fillSet.damageTypeChoice !== undefined ||
-    input.fillSet.concentrationSavingThrows.length > 0 ||
-    input.fillSet.hideousLaughterDamageRepeatSaves.length > 0 ||
-    input.fillSet.damageDispositions.length > 0 ||
-    input.fillSet.damageRoll !== undefined ||
-    input.fillSet.mirrorImageDuplicateRoll !== undefined ||
-    input.fillSet.movement !== undefined ||
-    input.fillSet.spellDamageReductionRolls.length > 0 ||
-    input.fillSet.attackBurstDamageRoll !== undefined ||
-    input.fillSet.healingRoll !== undefined
+    !fillsBelongToSpellCastHoles(input.input.fills, [
+      THAUMATURGY_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_ID,
+    ])
   ) {
     return invalidResult(
       input.input.state,
@@ -227,44 +209,17 @@ function resolveThaumaturgyBoomingVoice(
     );
   }
 
-  const spellCastReactionWindow = maybeOpenInterruptWindow(
-    input.input.state,
-    spellCastInterruptFrame({
-      casterId: input.actorId,
-      invocation: input.invocation,
-      targetIds: [input.actorId],
-      reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
-      castingResource: { kind: "magicAction" },
-      continuation: {
-        kind: "replay",
-        subject: input.input.subject,
-        fills: input.input.fills,
-      },
-    }),
-    input.input.handledInterruptTrigger,
-  );
-  if (spellCastReactionWindow !== null) {
-    return spellCastReactionWindow;
-  }
-
-  const effected = applyThaumaturgyBoomingVoiceEffect(
-    input.input.state,
-    input.actorId,
-    input.invocation,
-  );
-  const resourced = spendSpellCastResources({
-    state: effected,
-    actorId: input.actorId,
-    invocation: input.invocation,
-    errorState: input.input.state,
+  return resolveSpellActiveEffectCast({
+    resolution: input,
+    targetIds: [input.actorId],
+    castingResource: { kind: "magicAction" },
+    applyEffect: (state) =>
+      applyThaumaturgyBoomingVoiceEffect(
+        state,
+        input.actorId,
+        input.invocation,
+      ),
   });
-  return resourced.tag === "invalid"
-    ? resourced
-    : {
-        tag: "resolved",
-        state: resourced.state,
-        snapshot: snapshotBattle(resourced.state),
-      };
 }
 
 const ThaumaturgyBoomingVoiceInvocationSchema = spellProcedureExecutionSchema(

@@ -28,7 +28,8 @@ import { traceUsageLimit } from "./tracer-effect-scaling.ts";
 
 import { traceSpawnedCreature } from "./tracer-creature-actions.ts";
 
-import { tracePhase } from "./tracer-activation.ts";
+import { tracePhases } from "./tracer-activation.ts";
+import { traceDecisionCommit } from "./tracer-decision.ts";
 
 export function traceActivatedAbility(
   m: ActivatedAbilityMechanics,
@@ -36,12 +37,101 @@ export function traceActivatedAbility(
   edges: TraceEdge[],
   ids: IdGen,
 ): string {
-  const procId = ids("act");
+  const procId = traceActivatedProcedurePrelude(
+    m,
+    "activate",
+    "act",
+    nodes,
+    edges,
+    ids,
+  );
+
+  // Phases — iterate in sequence, threading branches_on_completion
+  // edges like spell activations.
+  const ctx: SpellCtx = {
+    procId,
+    slotId: null,
+    range: m.range ?? { kind: "self" },
+  };
+  tracePhases(m.phases, ctx, nodes, edges, ids);
+
+  return procId;
+}
+
+export function traceTriggeredReactionAbility(
+  m: TriggeredReactionAbilityMechanics,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): string {
+  const procId = traceActivatedProcedurePrelude(
+    m,
+    "respond",
+    "rsp",
+    nodes,
+    edges,
+    ids,
+  );
+
+  const commitId = traceDecisionCommit({
+    procedureId: procId,
+    interruptsTrigger: m.interruptsTrigger,
+    nodes,
+    edges,
+    ids,
+  });
+
+  const ctx: SpellCtx = {
+    procId: commitId,
+    slotId: null,
+    range: m.range,
+  };
+  tracePhases(m.phases, ctx, nodes, edges, ids);
+
+  return procId;
+}
+
+export function traceMagicItemSpawnedCreature(
+  m: MagicItemSpawnedCreatureMechanics,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): string {
+  const procId = traceActivatedProcedurePrelude(
+    m,
+    "activate",
+    "act",
+    nodes,
+    edges,
+    ids,
+  );
+  const ctx: SpellCtx = { procId, slotId: null, range: m.range };
+  traceSpawnedCreature(m, ctx, nodes, edges, ids);
+  return procId;
+}
+
+function traceActivatedProcedurePrelude(
+  m: Pick<
+    ActivatedAbilityMechanics,
+    | "activationCost"
+    | "condition"
+    | "duration"
+    | "resetCadence"
+    | "resource"
+    | "usageLimit"
+  >,
+  atomKind: "activate" | "respond",
+  idPrefix: "act" | "rsp",
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): string {
+  const procId = ids(idPrefix);
   nodes.push({
     id: procId,
     category: "procedure",
-    atomKind: "activate",
-    label: "activate",
+    atomKind,
+    label: atomKind,
   });
 
   if (m.condition !== undefined && m.condition.kind !== "always") {
@@ -50,10 +140,8 @@ export function traceActivatedAbility(
     }
   }
 
-  // Activation cost. `free` emits nothing — no quota consumed.
   traceActivationCost(m.activationCost, procId, nodes, edges, ids);
 
-  // Resource consumption + reset cadence.
   if (m.resource !== undefined && m.resetCadence !== undefined) {
     const resId = traceActivationResource(m.resource, nodes, edges, ids);
     edges.push({ from: procId, to: resId, relation: "consumes" });
@@ -66,154 +154,6 @@ export function traceActivatedAbility(
     traceDuration(m.duration, procId, nodes, edges, ids);
   }
 
-  // Phases — iterate in sequence, threading branches_on_completion
-  // edges like spell activations.
-  const ctx: SpellCtx = {
-    procId,
-    slotId: null,
-    range: m.range ?? { kind: "self" },
-  };
-  let previousResolutionId: string | null = null;
-  m.phases.forEach((phase, idx) => {
-    const thisResolutionId = tracePhase(phase, idx + 1, ctx, nodes, edges, ids);
-    if (previousResolutionId !== null) {
-      edges.push({
-        from: previousResolutionId,
-        to: thisResolutionId,
-        relation: "branches_on_completion",
-      });
-    }
-    previousResolutionId = thisResolutionId;
-  });
-
-  return procId;
-}
-
-export function traceTriggeredReactionAbility(
-  m: TriggeredReactionAbilityMechanics,
-  nodes: TraceNode[],
-  edges: TraceEdge[],
-  ids: IdGen,
-): string {
-  const procId = ids("rsp");
-  nodes.push({
-    id: procId,
-    category: "procedure",
-    atomKind: "respond",
-    label: "respond",
-  });
-
-  if (m.condition !== undefined && m.condition.kind !== "always") {
-    for (const predId of traceEquipmentPredicate(m.condition, nodes, ids)) {
-      edges.push({ from: procId, to: predId, relation: "requires" });
-    }
-  }
-
-  traceActivationCost(m.activationCost, procId, nodes, edges, ids);
-
-  const resId = traceActivationResource(m.resource, nodes, edges, ids);
-  edges.push({ from: procId, to: resId, relation: "consumes" });
-  traceResetCadence(m.resetCadence, resId, nodes, edges, ids);
-
-  traceUsageLimit(m.usageLimit, procId, "consumes", nodes, edges, ids);
-
-  if (m.duration !== undefined) {
-    traceDuration(m.duration, procId, nodes, edges, ids);
-  }
-
-  const prepId = ids("prep");
-  nodes.push({
-    id: prepId,
-    category: "procedure",
-    atomKind: "prepare",
-    label: "prepare",
-  });
-  edges.push({ from: procId, to: prepId, relation: "prepares" });
-
-  const promptId = ids("prompt");
-  nodes.push({
-    id: promptId,
-    category: "procedure",
-    atomKind: "prompt",
-    label: "prompt",
-  });
-  edges.push({ from: prepId, to: promptId, relation: "prompts" });
-
-  const commitId = ids("commit");
-  nodes.push({
-    id: commitId,
-    category: "procedure",
-    atomKind: "commit",
-    label: "commit",
-  });
-  edges.push({ from: promptId, to: commitId, relation: "commits" });
-
-  if (m.interruptsTrigger) {
-    const intId = ids("int");
-    nodes.push({
-      id: intId,
-      category: "resolution",
-      atomKind: "interrupt_resolution",
-      label: "interrupt_resolution",
-    });
-    edges.push({ from: commitId, to: intId, relation: "grants" });
-  }
-
-  const ctx: SpellCtx = {
-    procId: commitId,
-    slotId: null,
-    range: m.range,
-  };
-  let previousResolutionId: string | null = null;
-  m.phases.forEach((phase, idx) => {
-    const thisResolutionId = tracePhase(phase, idx + 1, ctx, nodes, edges, ids);
-    if (previousResolutionId !== null) {
-      edges.push({
-        from: previousResolutionId,
-        to: thisResolutionId,
-        relation: "branches_on_completion",
-      });
-    }
-    previousResolutionId = thisResolutionId;
-  });
-
-  return procId;
-}
-
-export function traceMagicItemSpawnedCreature(
-  m: MagicItemSpawnedCreatureMechanics,
-  nodes: TraceNode[],
-  edges: TraceEdge[],
-  ids: IdGen,
-): string {
-  const procId = ids("act");
-  nodes.push({
-    id: procId,
-    category: "procedure",
-    atomKind: "activate",
-    label: "activate",
-  });
-
-  if (m.condition !== undefined && m.condition.kind !== "always") {
-    for (const predId of traceEquipmentPredicate(m.condition, nodes, ids)) {
-      edges.push({ from: procId, to: predId, relation: "requires" });
-    }
-  }
-
-  traceActivationCost(m.activationCost, procId, nodes, edges, ids);
-
-  const resId = traceActivationResource(m.resource, nodes, edges, ids);
-  edges.push({ from: procId, to: resId, relation: "consumes" });
-  traceResetCadence(m.resetCadence, resId, nodes, edges, ids);
-
-  traceUsageLimit(m.usageLimit, procId, "consumes", nodes, edges, ids);
-
-  if (m.duration !== undefined) {
-    traceDuration(m.duration, procId, nodes, edges, ids);
-  }
-
-  const ctx: SpellCtx = { procId, slotId: null, range: m.range };
-  traceSpawnedCreature(m, ctx, nodes, edges, ids);
   return procId;
 }
 

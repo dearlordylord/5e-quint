@@ -4,24 +4,34 @@ import { describe, expect, it } from "vitest";
 import type { ActionRestriction } from "@dnd/surface/surface/types";
 import {
   CreatureId as CreatureIdSchema,
+  CONDITIONS,
   type BattleActiveEffectExecutionRef,
   type BattleProcedureExecutionRef,
 } from "@dnd/shared/types";
 import { Index, Initiative, Round } from "@dnd/shared/types";
 
 import {
+  actionResourceAllows,
   actionResourceAllowsAdditionalAttacks,
+  activationResourceCost,
+  activationResourceCostFromSurfaceKind,
   canSpendAction,
   canSpendBonusAction,
   canSpendMovement,
+  canSpendUnarmedStrikeActionResource,
   enableActionOrBonusActionExclusion,
   enableMovementActionBonusActionExclusion,
   grantSpellEffectActionResource,
   grantUnitActionResource,
+  isSupportedSurfaceCastingTimeKind,
   markMovementSpentForMovementActionBonusActionExclusion,
   resetTurnActionEconomy,
   spendAction,
+  spendActionResourceAtIndex,
   spendActivationResource,
+  spendMatchingActionResource,
+  spendUnarmedStrikeActionResource,
+  unarmedStrikeActionResourceAllows,
   type ActionEconomyState,
 } from "./action-economy-algebra.ts";
 import {
@@ -35,11 +45,15 @@ import {
   addDeathFailures,
   resetDeathSaveRuntimeState,
   resolveDeathSavingThrow,
+  validDeathSaveRuntimeState,
 } from "./death-saves-algebra.ts";
 import {
   createInitiativeStack,
+  createScoredInitiativeStack,
   currentActing,
+  initiativeEntries,
   initiativeOrder,
+  insertAtOrderIndex,
   insertByInitiative,
   nextInitiative,
   removeFromInitiative,
@@ -75,6 +89,56 @@ const oneAttackDashDisengageHideUtilizeRestriction: ActionRestriction = {
 };
 
 describe("action-economy-algebra", () => {
+  it("parses supported Surface activation resource costs", () => {
+    expect(isSupportedSurfaceCastingTimeKind("action")).toBe(true);
+    expect(isSupportedSurfaceCastingTimeKind("bonus_action")).toBe(true);
+    expect(isSupportedSurfaceCastingTimeKind("reaction")).toBe(false);
+    expect(activationResourceCostFromSurfaceKind("action")).toEqual({
+      kind: "action",
+      action: "magic",
+    });
+    expect(activationResourceCostFromSurfaceKind("bonus_action")).toEqual({
+      kind: "bonusAction",
+    });
+    expect(
+      activationResourceCost({
+        mechanics: { activationCost: { kind: "free" } },
+      }),
+    ).toEqual(Either.right({ kind: "free" }));
+    expect(
+      activationResourceCost({
+        mechanics: { activationCost: { kind: "bonus_action" } },
+      }),
+    ).toEqual(Either.right({ kind: "bonusAction" }));
+    expect(
+      activationResourceCost({
+        mechanics: {
+          activationCost: { kind: "standard_action", action: "attack" },
+        },
+      }),
+    ).toEqual(Either.right({ kind: "action", action: "attack" }));
+    expect(
+      activationResourceCost({
+        mechanics: {
+          activationCost: {
+            kind: "standard_action",
+            action: "synthetic:unsupported",
+          },
+        },
+      }),
+    ).toEqual(Either.left("unsupported unit activation cost"));
+    expect(
+      activationResourceCost({
+        mechanics: { castingTime: { kind: "action" } },
+      }),
+    ).toEqual(Either.right({ kind: "action", action: "magic" }));
+    expect(
+      activationResourceCost({
+        mechanics: { castingTime: { kind: "reaction" } },
+      }),
+    ).toEqual(Either.left("unsupported unit casting time"));
+  });
+
   it("resets turn action and bonus-action resources", () => {
     const state = resetTurnActionEconomy(emptyActionEconomyState());
 
@@ -309,6 +373,131 @@ describe("action-economy-algebra", () => {
       ),
     ).toEqual(Either.left("spell-effect action resource already granted"));
   });
+
+  it("spends selected and unarmed-strike action resources", () => {
+    const flurry = {
+      kind: "action",
+      source: "monkFocusFlurryOfBlows",
+      sourceOwnerId,
+      sourceProcedureRef: unitActionProcedureRef,
+    } as const;
+    const state = {
+      ...resetTurnActionEconomy(emptyActionEconomyState()),
+      actionResources: [{ kind: "action", source: "turn" }, flurry] as const,
+    };
+
+    expect(actionResourceAllows(flurry, "attack")).toBe(false);
+    expect(unarmedStrikeActionResourceAllows(flurry)).toBe(true);
+    expect(canSpendUnarmedStrikeActionResource(state)).toBe(true);
+    const spentFlurry = spendUnarmedStrikeActionResource(state);
+    expect(Either.isRight(spentFlurry)).toBe(true);
+    if (Either.isLeft(spentFlurry)) return;
+    expect(spentFlurry.right.actionResources).toEqual([
+      { kind: "action", source: "turn" },
+    ]);
+
+    const selected = spendMatchingActionResource(
+      grantTestUnitActionResource(),
+      "attack",
+      (resource) => resource.source === "unit",
+    );
+    expect(Either.isRight(selected)).toBe(true);
+    expect(
+      spendMatchingActionResource(
+        emptyActionEconomyState(),
+        "attack",
+        () => true,
+      ),
+    ).toEqual(Either.left("no action resource available"));
+    expect(spendUnarmedStrikeActionResource(emptyActionEconomyState())).toEqual(
+      Either.left("no action resource available"),
+    );
+    expect(spendAction(emptyActionEconomyState(), "attack")).toEqual(
+      Either.left("no action resource available"),
+    );
+    expect(
+      spendActivationResource(
+        resetTurnActionEconomy(emptyActionEconomyState()),
+        { kind: "action", action: "attack" },
+      ),
+    ).toMatchObject({ _tag: "Right" });
+    expect(
+      spendActionResourceAtIndex(
+        resetTurnActionEconomy(emptyActionEconomyState()),
+        0,
+      ).actionResources,
+    ).toEqual([]);
+  });
+
+  it("covers unrestricted resources and idempotent exclusion activation", () => {
+    const unrestricted: ActionRestriction = { kind: "none" };
+    const turnResource = { kind: "action", source: "turn" } as const;
+    expect(actionResourceAllowsAdditionalAttacks(turnResource)).toBe(true);
+    expect(
+      actionResourceAllowsAdditionalAttacks({
+        kind: "action",
+        source: "unit",
+        sourceOwnerId,
+        sourceProcedureRef: unitActionProcedureRef,
+        restriction: unrestricted,
+      }),
+    ).toBe(true);
+    expect(
+      actionResourceAllowsAdditionalAttacks({
+        kind: "action",
+        source: "classFeatureExtraAttack",
+        sourceOwnerId,
+        sourceProcedureRef: unitActionProcedureRef,
+        restriction: unrestricted,
+      }),
+    ).toBe(false);
+    expect(
+      markMovementSpentForMovementActionBonusActionExclusion(
+        emptyActionEconomyState(),
+      ),
+    ).toEqual(emptyActionEconomyState());
+
+    const actionOrBonusRestricted = enableActionOrBonusActionExclusion(
+      resetTurnActionEconomy(emptyActionEconomyState()),
+    );
+    expect(enableActionOrBonusActionExclusion(actionOrBonusRestricted)).toBe(
+      actionOrBonusRestricted,
+    );
+
+    const movementRestricted = enableMovementActionBonusActionExclusion(
+      resetTurnActionEconomy(emptyActionEconomyState()),
+      false,
+    );
+    expect(
+      enableMovementActionBonusActionExclusion(movementRestricted, true),
+    ).toBe(movementRestricted);
+    expect(
+      enableMovementActionBonusActionExclusion(
+        resetTurnActionEconomy(emptyActionEconomyState()),
+        true,
+      ).movementActionBonusActionExclusion,
+    ).toEqual({ kind: "restricted", choice: "movement" });
+
+    const withoutAction = enableMovementActionBonusActionExclusion(
+      emptyActionEconomyState(),
+      false,
+    );
+    expect(withoutAction.movementActionBonusActionExclusion).toEqual({
+      kind: "restricted",
+      choice: "action",
+    });
+    const withoutBonus = enableMovementActionBonusActionExclusion(
+      {
+        ...resetTurnActionEconomy(emptyActionEconomyState()),
+        currentHasBonusAction: false,
+      },
+      false,
+    );
+    expect(withoutBonus.movementActionBonusActionExclusion).toEqual({
+      kind: "restricted",
+      choice: "bonusAction",
+    });
+  });
 });
 
 describe("conditions-algebra", () => {
@@ -329,6 +518,11 @@ describe("conditions-algebra", () => {
     expect(stillProne.prone).toBe(true);
     expect(awake).toEqual({ ...stillProne, unconscious: false });
     expect(hasCondition(awake, "prone")).toBe(true);
+    expect(hasCondition(EMPTY_CONDITION_STATE, "prone")).toBe(false);
+    expect(
+      removeCondition(applyCondition(EMPTY_CONDITION_STATE, "prone"), "prone")
+        .prone,
+    ).toBe(false);
   });
 
   it("derives Incapacitated from direct and implied condition facts", () => {
@@ -339,6 +533,16 @@ describe("conditions-algebra", () => {
       isIncapacitated(applyCondition(EMPTY_CONDITION_STATE, "paralyzed")),
     ).toBe(true);
     expect(isIncapacitated(EMPTY_CONDITION_STATE)).toBe(false);
+  });
+
+  it("round-trips every directly represented condition", () => {
+    for (const condition of CONDITIONS) {
+      const applied = applyCondition(EMPTY_CONDITION_STATE, condition);
+      expect(hasCondition(applied, condition)).toBe(true);
+      expect(hasCondition(removeCondition(applied, condition), condition)).toBe(
+        condition === "prone" && applied.unconscious,
+      );
+    }
   });
 });
 
@@ -379,6 +583,46 @@ describe("death-saves-algebra", () => {
     });
     expect(addDeathFailures(hpRegained, 2)).toBe(hpRegained);
     expect(resolveDeathSavingThrow(hpRegained, 1)).toBe(hpRegained);
+  });
+
+  it("validates lifecycle states and ordinary failed rolls", () => {
+    const failed = resolveDeathSavingThrow(resetDeathSaveRuntimeState(), 5);
+    expect(failed.deathSaves.failures).toBe(1);
+    expect(validDeathSaveRuntimeState(failed)).toBe(true);
+    expect(
+      validDeathSaveRuntimeState({
+        ...failed,
+        stable: true,
+        dead: true,
+      }),
+    ).toBe(false);
+    expect(resolveDeathSavingThrow(failed, 0)).toBe(failed);
+    expect(
+      validDeathSaveRuntimeState({
+        ...failed,
+        stable: true,
+        hpRegained: true,
+      }),
+    ).toBe(false);
+    expect(
+      validDeathSaveRuntimeState({
+        ...failed,
+        hpRegained: true,
+        deathSaves: { successes: 0, failures: 0 },
+      }),
+    ).toBe(true);
+    expect(
+      validDeathSaveRuntimeState({
+        ...failed,
+        stable: true,
+      }),
+    ).toBe(false);
+    expect(
+      validDeathSaveRuntimeState({
+        ...failed,
+        dead: true,
+      }),
+    ).toBe(false);
   });
 });
 
@@ -429,6 +673,79 @@ describe("initiative-algebra", () => {
     expect(
       Option.isNone(swapInitialInitiativeScores(stack, "c1", "missing")),
     ).toBe(true);
+  });
+
+  it("supports scored construction, indexed insertion, swapping, and empty removal", () => {
+    expect(
+      Either.isRight(
+        createScoredInitiativeStack(
+          [initiativeEntry("c1", 2), initiativeEntry("c2", 1)],
+          Round(1),
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      createScoredInitiativeStack(
+        [initiativeEntry("c1", 1), initiativeEntry("c2", 2)],
+        Round(1),
+      ),
+    ).toEqual(Either.left("Initiative order must be monotone nonincreasing."));
+
+    const stack = initialInitiativeStack();
+    expect(
+      initiativeOrder(
+        insertAtOrderIndex(stack, 0, initiativeEntry("first", 3)),
+      ),
+    ).toEqual(["first", "c1", "c2"]);
+    expect(
+      initiativeOrder(
+        insertAtOrderIndex(stack, 99, initiativeEntry("last", 0)),
+      ),
+    ).toEqual(["c1", "c2", "last"]);
+
+    const swapped = swapInitialInitiativeScores(stack, "c1", "c2");
+    expect(Option.isSome(swapped)).toBe(true);
+    if (Option.isSome(swapped)) {
+      expect(
+        initiativeEntries(swapped.value).map((entry) => entry.creature),
+      ).toEqual(["c2", "c1"]);
+    }
+    expect(Option.isNone(swapInitialInitiativeScores(stack, "c1", "c1"))).toBe(
+      true,
+    );
+    expect(Option.isNone(removeFromInitiative(stack, () => true))).toBe(true);
+    expect(Option.isSome(removeFromInitiative(stack, () => false))).toBe(true);
+
+    const three = createInitiativeStack(
+      [
+        initiativeEntry("c1", 2),
+        initiativeEntry("c2", 2),
+        initiativeEntry("c3", 1),
+      ],
+      Round(1),
+    );
+    expect(Option.isSome(swapInitialInitiativeScores(three, "c1", "c2"))).toBe(
+      true,
+    );
+  });
+
+  it("validates insertion decisions against the actual tie", () => {
+    const stack = initialInitiativeStack();
+    expect(
+      insertByInitiative(stack, "cx", Initiative(3), [["c1"], Index(0)]),
+    ).toEqual({
+      status: "error",
+      reason: "decision_supplied_without_tie",
+    });
+    expect(insertByInitiative(stack, "cx", Initiative(3)).status).toBe("ok");
+
+    const tied = createInitiativeStack(
+      [initiativeEntry("c1", 2), initiativeEntry("c2", 2)],
+      Round(1),
+    );
+    expect(
+      insertByInitiative(tied, "cx", Initiative(2), [["wrong"], Index(0)]),
+    ).toEqual({ status: "decide", tie: ["c1", "c2"] });
   });
 });
 

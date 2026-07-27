@@ -115,17 +115,16 @@ vocabulary remains allowed.
 Unresolved repository-local imports and non-literal dynamic loading fail the
 gate so the transitive closure cannot be silently incomplete.
 
-The default command enforces the complete protected execution-root set.
-The gate also scans the complete reducer closure for direct `.resolve` calls:
-only calls on an execution-registry entry are allowed. Its self-tests cover
-direct, aliased, and bracket-property bypass attempts.
+The default command is the final ownership audit and enforces that complete
+protected execution-root set. Every declared root is permanent, so there is no
+separate candidate-audit mode. The gate also scans the complete reducer closure
+for direct `.resolve` calls: only calls on an execution-registry entry are
+allowed. Its self-tests cover direct, aliased, and bracket-property bypass
+attempts.
 
-`node scripts/check-battle-runtime-import-ownership.cjs --audit-candidates`
-audits only the smaller migration-candidate root set and reports violations
-without weakening the default gate. The two modes intentionally discover
-different root sets. `--self-test` exercises classification, transitive paths,
-and the split between `stat-block-execution-state.ts` and
-`stat-block-presentation.ts`; unknown or combined flags are rejected.
+`--self-test` exercises classification, transitive paths, and the split between
+`stat-block-execution-state.ts` and `stat-block-presentation.ts`; unknown or
+combined flags are rejected.
 
 ## Reducer Extensibility Discipline
 

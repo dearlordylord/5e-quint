@@ -39,7 +39,7 @@ import {
   statBlockCreatureInit,
   targetFill,
   unitLibrary,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 
 describe("battle runtime: Cutting Words", () => {
   test("full SRD Cutting Words is admitted with ability-check reactions supported", () => {

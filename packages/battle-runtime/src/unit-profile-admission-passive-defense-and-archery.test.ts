@@ -9,23 +9,23 @@ import {
   spellCasterId,
   spellTargetId,
   unitLibrary,
-} from "./unit-profile-admission-catalog-support.ts";
+} from "./unit-profile-admission-catalog.test-support.ts";
 import {
   weaponAttackRollHole,
   zeroAbilityWeaponAttack,
-} from "./unit-profile-admission-creature-fixture-support.ts";
+} from "./unit-profile-admission-creature-fixture.test-support.ts";
 import {
   archeryBattle,
   archeryBattleUnitRef,
   archeryFeatureUnit,
-} from "./unit-profile-admission-feature-fixture-support.ts";
+} from "./unit-profile-admission-feature-fixture.test-support.ts";
 import {
   battleUnitRefWithSupportProfiles,
   Either,
   parseSupportedUnitFeatureProfile,
   PASSIVE_ARMOR_CLASS_BONUS_SUPPORT_PROFILE,
-} from "./unit-profile-admission-test-support.ts";
-import type { UnitRecord } from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission.test-support.ts";
+import type { UnitRecord } from "./unit-profile-admission.test-support.ts";
 
 describe("QMBT18 deterministic unsupported feature profile slice", () => {
   test("defense is admitted and projected as a passive Armor Class bonus while wearing armor", () => {

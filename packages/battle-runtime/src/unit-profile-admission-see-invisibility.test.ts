@@ -16,16 +16,16 @@ import {
 import {
   requireCombatant,
   statBlockWithCreatureType,
-} from "./unit-profile-admission-creature-fixture-support.ts";
+} from "./unit-profile-admission-creature-fixture.test-support.ts";
 import {
   seeInvisibilityDurationTicks,
   seeInvisibilityUnitId,
   spellCasterId,
   spellTargetId,
-} from "./unit-profile-admission-catalog-support.ts";
+} from "./unit-profile-admission-catalog.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
-import { spellAct } from "./unit-profile-admission-spell-fill-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+import { spellAct } from "./unit-profile-admission-spell-fill.test-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   applyCondition,
   battleCreatureStateWithKnockOutPreservedConditions,
@@ -34,7 +34,7 @@ import {
   elapsedTimeTicks,
   hasCondition,
   resolveBattleSubject,
-} from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission.test-support.ts";
 import { tickDurationEffects } from "./battle-reducer/turn-end-movement.ts";
 
 const observerId = combatantId("unit-profile-see-invisibility-observer");

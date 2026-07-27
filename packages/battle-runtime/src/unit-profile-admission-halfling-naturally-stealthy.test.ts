@@ -19,7 +19,7 @@ import {
   resolveBattleSubject,
   startBattle,
   startBattleSessionRight,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import {
   battleHideActionObscurementPermissionSupportForUnit,
   battleId,
@@ -33,8 +33,8 @@ import {
   speciesHalflingNaturallyStealthyUnitId,
   unitLibrary,
   unitMechanicsVariant,
-} from "./unit-profile-admission-test-support.ts";
-import { defineSelectedIdentityReplayWitness } from "./selected-identity-witness.ts";
+} from "./unit-profile-admission.test-support.ts";
+import { defineSelectedIdentityReplayWitness } from "./selected-identity-witness.test-support.ts";
 
 const obscuringCreatureId = combatantId(
   "naturally-stealthy-obscuring-creature",

@@ -7,14 +7,14 @@ import {
   mistyStepUnitId,
   spellCasterId,
   spiderClimbUnitId,
-} from "./unit-profile-admission-catalog-support.ts";
+} from "./unit-profile-admission-catalog.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
   bonusSpellAct,
   spellAct,
-} from "./unit-profile-admission-spell-fill-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
-import { spellSlotInvocationRef } from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission-spell-fill.test-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
+import { spellSlotInvocationRef } from "./unit-profile-admission.test-support.ts";
 
 type SpellActionTag = "actionSpell" | "bonusActionSpell";
 
@@ -56,7 +56,7 @@ function discoverInvocation(input: {
     mode: { tag: "cast" },
   });
 }
-import type { SelectedIdentityReplayWitness } from "./selected-identity-witness.ts";
+import type { SelectedIdentityReplayWitness } from "./selected-identity-witness.test-support.ts";
 
 export const level2MobilitySpellSelectedIdentityReplay = {
   describeLabel: "Level 2 mobility spell selected identity replay",

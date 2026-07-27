@@ -9,7 +9,7 @@ import {
   createReducerSpineContractDriver,
   focusedMbtMaxSteps,
   reducerSpineContractStateCheck,
-} from "./battle-runtime-mbt-driver-kit.ts";
+} from "./battle-runtime-mbt-driver-kit.test-support.ts";
 
 describe("battle reducer spine contract MBT", () => {
   it("projects the reducer lifecycle from battle start through spell, turn, and weapon damage", async () => {

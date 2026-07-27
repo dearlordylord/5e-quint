@@ -1,5 +1,5 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
 import {
   battleActDruidWildShapePresentation,
   battleActSpellPresentation,
@@ -29,14 +29,14 @@ import {
   Schema,
   startBattleSessionRight,
   wizardSpellcasting,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import {
   characterCreature,
   damageRollFillWithGroups,
   requireCombatant,
   requireHole,
   requireResultHole,
-} from "./unit-profile-admission-creature-fixture-support.ts";
+} from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
   moonbeamAreaFill,
@@ -46,8 +46,8 @@ import {
   singleTargetSavingThrowOutcomeFill,
   spellAct,
   spellHoleInvocation,
-} from "./unit-profile-admission-spell-fill-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+} from "./unit-profile-admission-spell-fill.test-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   battleExecutionScopeOrdinal,
   battleStatBlockExecutionScopeRef,
@@ -64,7 +64,7 @@ import {
   movementFeet,
   resolveBattleSubject,
   spellSlotInvocationRef,
-} from "./unit-profile-admission-test-support.ts";
+} from "./unit-profile-admission.test-support.ts";
 import {
   moonbeamAreaId,
   moonbeamUnitId,
@@ -72,7 +72,7 @@ import {
   spellTargetId,
   statBlockCatalog,
   unitLibrary,
-} from "./unit-profile-admission-catalog-support.ts";
+} from "./unit-profile-admission-catalog.test-support.ts";
 import { EMPOWERED_SPELL_REROLL_UNSUPPORTED_DAMAGE_ROLL_OWNER_MESSAGE } from "./battle-reducer/spell-reroll-issues.ts";
 
 describe("L12G deterministic Moonbeam admission", () => {

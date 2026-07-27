@@ -79,11 +79,8 @@ import {
 import { maybeOpenInterruptWindow } from "./interrupt-execution.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";
 
-import {
-  attackTargetHole,
-  needsHolesResult,
-  revealHidden,
-} from "./hole-helpers.ts";
+import { attackTargetHole, revealHidden } from "./hole-helpers.ts";
+import { needsHolesResult } from "./needs-holes-result.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
 import { resolveRemarkableAthleteCriticalHitMovement } from "./remarkable-athlete-critical-movement.ts";
 import {

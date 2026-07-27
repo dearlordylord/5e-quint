@@ -97,14 +97,7 @@ export function fiendishResilienceAfterShortRest(input: {
   CharacterSheetFiendishResilience | undefined,
   CharacterSheetIssue
 > {
-  const sheet = input.input.completion.startedRest.sheet;
-  return fiendishResilienceAfterRestSelection({
-    sheet,
-    unitLibrary: input.input.unitLibrary,
-    ...(input.input.fiendishResilienceDamageType === undefined
-      ? {}
-      : { selectedDamageType: input.input.fiendishResilienceDamageType }),
-  });
+  return fiendishResilienceAfterRest(input.input);
 }
 
 export function fiendishResilienceAfterLongRest(input: {
@@ -113,13 +106,22 @@ export function fiendishResilienceAfterLongRest(input: {
   CharacterSheetFiendishResilience | undefined,
   CharacterSheetIssue
 > {
-  const sheet = input.input.completion.startedRest.sheet;
+  return fiendishResilienceAfterRest(input.input);
+}
+
+function fiendishResilienceAfterRest(
+  input: CharacterSheetShortRestInput | CharacterSheetLongRestInput,
+): Either.Either<
+  CharacterSheetFiendishResilience | undefined,
+  CharacterSheetIssue
+> {
+  const sheet = input.completion.startedRest.sheet;
   return fiendishResilienceAfterRestSelection({
     sheet,
-    unitLibrary: input.input.unitLibrary,
-    ...(input.input.fiendishResilienceDamageType === undefined
+    unitLibrary: input.unitLibrary,
+    ...(input.fiendishResilienceDamageType === undefined
       ? {}
-      : { selectedDamageType: input.input.fiendishResilienceDamageType }),
+      : { selectedDamageType: input.fiendishResilienceDamageType }),
   });
 }
 
@@ -288,24 +290,13 @@ function fiendishResilienceForSheet(input: {
   CharacterSheetFiendishResilience | undefined,
   CharacterSheetIssue
 > {
-  const featureOwned = ownedClassFeature(
-    { build: input.sheet.build, unitLibrary: input.unitLibrary },
-    authoredUnitId(FIENDISH_RESILIENCE_UNIT_ID),
-  );
-  if (Either.isLeft(featureOwned)) return Either.left(featureOwned.left);
-  if (featureOwned.right === undefined) {
-    return input.sheet.fiendishResilience === undefined
-      ? Either.right(undefined)
-      : characterSheetIssue(
-          "Fiendish Resilience selection requires the Fiendish Resilience feature.",
-        );
-  }
-  if (input.sheet.fiendishResilience === undefined) {
-    return characterSheetIssue(
-      "Fiendish Resilience requires selected damage type state.",
-    );
-  }
-  return fiendishResilienceSelection(input.sheet.fiendishResilience.damageType);
+  return fiendishResilienceFromInput({
+    build: input.sheet.build,
+    unitLibrary: input.unitLibrary,
+    ...(input.sheet.fiendishResilience === undefined
+      ? {}
+      : { fiendishResilience: input.sheet.fiendishResilience }),
+  });
 }
 
 function naturesWardForSheet(input: {

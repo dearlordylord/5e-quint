@@ -1172,6 +1172,18 @@ export type BattleInterruptCheckpoint =
       readonly moverId: CombatantId;
       readonly threats: readonly BattleOpportunityAttackThreat[];
     });
+export type BattleAttackHitReplayCheckpoint = Extract<
+  BattleInterruptCheckpoint,
+  { readonly trigger: "attackHit" }
+> & {
+  readonly continuation: Extract<
+    BattleInterruptedProcedure,
+    {
+      readonly kind: "replay";
+      readonly glyphStoredSpellReleaseReplay?: never;
+    }
+  >;
+};
 export type EndedFlySpeedGrant = Extract<
   BattleActiveEffect,
   { readonly kind: "specialSpeedGrant"; readonly speedKind: "fly" }

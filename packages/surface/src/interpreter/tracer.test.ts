@@ -24,9 +24,34 @@ import spiritualWeaponInput from "../../content/spiritual_weapon.json";
 import zoneOfTruthInput from "../../content/zone_of_truth.json";
 import wardingBondInput from "../../content/warding_bond.json";
 import { decodeUnitRecordSync } from "../surface/schema.ts";
-import { traceUnit } from "./tracer.ts";
+import { srdSurface } from "../surface/surface-catalog.ts";
+import {
+  renderStatBlockTraceDocument,
+  renderTraceDocument,
+} from "./mermaid.ts";
+import { traceStatBlock, traceUnit } from "./tracer.ts";
 
 describe("Surface trace interpreter", () => {
+  test("traces every shipped SRD Unit and Stat Block", () => {
+    for (const unit of srdSurface.units) {
+      const trace = traceUnit(unit);
+      expect(trace.unitId).toBe(unit.id);
+      expect(trace.nodes.length).toBeGreaterThan(0);
+      expect(renderTraceDocument(trace, unit)).toContain(
+        `Unit id: \`${unit.id}\``,
+      );
+    }
+
+    for (const statBlock of srdSurface.statBlocks) {
+      const trace = traceStatBlock(statBlock);
+      expect(trace.unitId).toBe(statBlock.id);
+      expect(trace.nodes.length).toBeGreaterThan(0);
+      expect(renderStatBlockTraceDocument(trace, statBlock)).toContain(
+        `Stat Block id: \`${statBlock.id}\``,
+      );
+    }
+  });
+
   test("renders Fighter class creation traits as class graph nodes", () => {
     const trace = traceUnit(decodeUnitRecordSync(classFighterInput));
 

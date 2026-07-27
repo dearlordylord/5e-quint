@@ -24,7 +24,6 @@ import type {
   CombatantId,
 } from "../identity.ts";
 import {
-  battleSubjectForReplay,
   type BattleMovementSpeedKind,
   type BattleSubject,
 } from "../battle-subjects.ts";
@@ -63,7 +62,6 @@ import {
   type BattleGrappleOutcomeHole,
   type BattleShoveOutcomeHole,
   type BattleHole,
-  type BattleResolutionResult,
   type BattleState,
   type BattleTargetChoiceHole,
 } from "../battle-state-execution.ts";
@@ -94,8 +92,7 @@ import {
   SLEEP_SHAKE_AWAKE_TARGET_HOLE_ID,
   SLEEP_SHAKE_AWAKE_TARGET_HOLE_INSTANCE,
 } from "./battle-runtime-protocol.ts";
-import { snapshotBattle } from "./battle-snapshot.ts";
-import { spellSaveDcForCaster } from "./attack-resolution.ts";
+import { spellSaveDcForCaster } from "./spell-save-dc.ts";
 import {
   creatureSizeIsLargerThanSelf,
   grappleLinkForTarget,
@@ -663,20 +660,6 @@ function activeRemarkableAthleteAbilityCheckAdvantageMatches(
       procedure.execution.remarkableAthlete.abilityCheck.ability === ability &&
       procedure.execution.remarkableAthlete.abilityCheck.skill === skill,
   );
-}
-
-export function needsHolesResult(
-  state: BattleState,
-  subject: BattleSubject,
-  holes: readonly BattleHole[],
-): Extract<BattleResolutionResult, { readonly tag: "needsHoles" }> {
-  return {
-    tag: "needsHoles",
-    state,
-    subject: battleSubjectForReplay(subject),
-    holes,
-    snapshot: snapshotBattle(state),
-  };
 }
 
 export function deduplicateBattleHolesById(

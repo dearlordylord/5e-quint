@@ -1,5 +1,5 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
-import { battleProcedureExecutionRefForTest } from "./battle-runtime-test-support.ts";
+import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
 import {
   requireCharacterSpellProcedureRefForTest,
   startBattleSessionRight,
@@ -24,7 +24,7 @@ import {
   discoverBattleActs,
   resolveBattleSubject,
   spellSlotInvocationRef,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import { describe, expect, test } from "vitest";
 
 describe("battle runtime: Acid Splash", () => {

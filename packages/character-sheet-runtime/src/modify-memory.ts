@@ -7,11 +7,8 @@ import type { UnitCatalog } from "@dnd/character-creation-runtime";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
-import { hasPreparedClassSpellAccess } from "./prepared-spell-access.ts";
-import { spendCharacterSheetSpellSlot } from "./spell-slots.ts";
 import {
   characterSheetIssue,
-  getRequiredUnit,
   type CharacterSheet,
   type CharacterSheetIssue,
   type CharacterSheetModifyMemoryInvocation,
@@ -20,6 +17,9 @@ import {
   type CharacterSheetModifyMemoryResult,
   type CharacterSheetModifyMemoryTarget,
 } from "./sheet-types.ts";
+import { hasWisdomSaveGatePhase } from "./spell-profile-shape.ts";
+
+import { castPreparedSpell } from "./prepared-spell-cast.ts";
 
 const MODIFY_MEMORY_SPELL_ID = "modify_memory" as const;
 const MODIFY_MEMORY_SPELL_LEVEL = spellSlotLevel(5);
@@ -32,53 +32,24 @@ export function castModifyMemory(input: {
   readonly target: CharacterSheetModifyMemoryTarget;
   readonly memoryEdit: CharacterSheetModifyMemoryMemoryEdit;
 }): Either.Either<CharacterSheetModifyMemoryResult, CharacterSheetIssue> {
-  const spell = modifyMemorySpell(input.unitLibrary);
-  if (Either.isLeft(spell)) return Either.left(spell.left);
-
-  if (!hasPreparedClassSpellAccess(input.sheet, spell.right.id)) {
-    return characterSheetIssue(
-      "Modify Memory requires prepared class Spell Access.",
-    );
-  }
-
-  const targetIssue = modifyMemoryTargetIssue(input.target);
-  if (targetIssue !== null) return characterSheetIssue(targetIssue);
-
-  const memoryEditIssue = modifyMemoryEditIssue(input.memoryEdit);
-  if (memoryEditIssue !== null) return characterSheetIssue(memoryEditIssue);
-
-  const invocation = modifyMemoryInvocationFromSpell({
-    spell: spell.right,
-    target: input.target,
-    memoryEdit: input.memoryEdit,
-  });
-  if (Either.isLeft(invocation)) return Either.left(invocation.left);
-
-  const spent = spendCharacterSheetSpellSlot({
+  return castPreparedSpell({
     sheet: input.sheet,
+    unitLibrary: input.unitLibrary,
+    spellId: authoredUnitId(MODIFY_MEMORY_SPELL_ID),
     spellLevel: MODIFY_MEMORY_SPELL_LEVEL,
-    spellSlotSource: "ordinary",
+    spellName: "Modify Memory",
+    invocation: (spell) => {
+      const targetIssue = modifyMemoryTargetIssue(input.target);
+      if (targetIssue !== null) return characterSheetIssue(targetIssue);
+      const memoryEditIssue = modifyMemoryEditIssue(input.memoryEdit);
+      if (memoryEditIssue !== null) return characterSheetIssue(memoryEditIssue);
+      return modifyMemoryInvocationFromSpell({
+        spell: spell,
+        target: input.target,
+        memoryEdit: input.memoryEdit,
+      });
+    },
   });
-  if (Either.isLeft(spent)) return Either.left(spent.left);
-
-  return Either.right({
-    sheet: spent.right,
-    invocation: invocation.right,
-  });
-}
-
-function modifyMemorySpell(
-  unitLibrary: UnitCatalog,
-): Either.Either<SpellRecord, CharacterSheetIssue> {
-  const unit = getRequiredUnit(
-    unitLibrary,
-    authoredUnitId(MODIFY_MEMORY_SPELL_ID),
-  );
-  if (Either.isLeft(unit)) return Either.left(unit.left);
-  if (unit.right.kind !== "spell") {
-    return characterSheetIssue("Modify Memory requires a Spell record.");
-  }
-  return Either.right(unit.right);
 }
 
 function modifyMemoryTargetIssue(
@@ -148,19 +119,16 @@ function modifyMemoryInvocationFromSpell(input: {
     );
   }
 
-  const saveGatePhase = spell.mechanics.phases.find(
-    (phase) =>
-      phase.kind === "save_gate" &&
-      phase.ability === "wis" &&
-      phase.dc.kind === "caster_spell_save_dc" &&
-      phase.attachment.kind === "hole" &&
-      phase.attachment.holeId === "modify_memory_target" &&
-      phase.attachment.value.kind === "target" &&
-      phase.attachment.value.selection.mode === "one" &&
+  const hasSaveGatePhase = hasWisdomSaveGatePhase(
+    spell,
+    "modify_memory_target",
+    (phase, attachment) =>
+      attachment.value.kind === "target" &&
+      attachment.value.selection.mode === "one" &&
       phase.onSuccess.kind === "none" &&
       appliesModifyMemoryConditions(phase.onFail),
   );
-  if (saveGatePhase === undefined) {
+  if (!hasSaveGatePhase) {
     return characterSheetIssue(
       "Modify Memory requires the supported Wisdom save Charmed/Incapacitated profile.",
     );

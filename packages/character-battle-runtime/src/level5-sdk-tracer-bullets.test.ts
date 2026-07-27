@@ -95,7 +95,7 @@ import {
   srdStatBlock,
   unitFeatureDecisionFill,
   unitLibrary,
-} from "./sdk-integration-test-support.ts";
+} from "./sdk-integration.test-support.ts";
 
 const extraAttackBarbarianId = combatantId(
   "combatant:l5-tracer-extra-attack-barbarian",

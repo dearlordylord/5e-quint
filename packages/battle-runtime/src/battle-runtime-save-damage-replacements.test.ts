@@ -9,7 +9,7 @@ import {
   fighterId,
   wizardId,
   resolveBattleSubject,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import { describe, expect, test } from "vitest";
 
 describe("battle runtime: save-damage replacements", () => {

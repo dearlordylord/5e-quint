@@ -1,4 +1,5 @@
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
+import { actionSpellCastCandidatesForTargetHole } from "../spell-cast-candidate.ts";
 // The persistentArmorEffect Spell Procedure Profile: a touch spell that
 import { DurationBattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
 // creates a timed Spell Effect setting the willing unarmored target's base
@@ -39,7 +40,8 @@ import {
 } from "../../procedure-execution/persistent-armor-effect-facts.ts";
 import { CombatantId } from "../../identity.ts";
 import { combatantWearingArmor } from "../creature-state-leaves.ts";
-import { needsHolesResult } from "../hole-helpers.ts";
+
+import { needsHolesResult } from "../needs-holes-result.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
 import { spellTargetHole, spellTargetIsLegal } from "../spells-targeting.ts";
@@ -175,20 +177,11 @@ function discoverPersistentArmorEffectCastAct(
   invocation: BattleExecutableSpellInvocation<PersistentArmorInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const targetHole = spellTargetHole(state, actorId, invocation);
-  if (targetHole.choices.length === 0) {
-    return [];
-  }
-  return [
-    {
-      subject: {
-        tag: "actionSpell",
-        actorId,
-        procedureRef: invocation.sourceProcedureRef,
-        mode: { tag: "cast" },
-      },
-      initialHoles: [targetHole],
-    },
-  ];
+  return actionSpellCastCandidatesForTargetHole(
+    actorId,
+    invocation.sourceProcedureRef,
+    targetHole,
+  );
 }
 
 function applyPersistentArmorEffect(

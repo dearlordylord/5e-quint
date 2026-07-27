@@ -63,19 +63,19 @@ import {
   resolveBattleInterrupt,
   resolveBattleSubject,
   unitLibrary,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import type {
   BattleState,
   BattleSubject,
   CombatantId,
-} from "./battle-runtime-test-support.ts";
-import { wardingBondUnitId } from "./unit-profile-admission-catalog-support.ts";
+} from "./battle-runtime.test-support.ts";
+import { wardingBondUnitId } from "./unit-profile-admission-catalog.test-support.ts";
 import { WEAPON_MASTERY_SAP_SUPPORT_PROFILE } from "./unit-feature-support.ts";
 import { describe, expect, test } from "vitest";
 import {
   battleActiveEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
-} from "./battle-runtime-test-support.ts";
+} from "./battle-runtime.test-support.ts";
 
 function requireMechanicalCharacterProcedureRef(
   state: BattleState,

@@ -7,12 +7,9 @@ import type { UnitCatalog } from "@dnd/character-creation-runtime";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
-import { hasPreparedClassSpellAccess } from "./prepared-spell-access.ts";
-import { spendCharacterSheetSpellSlot } from "./spell-slots.ts";
 import {
   TELEPORTATION_CIRCLE_MATERIAL_COMPONENTS,
   characterSheetIssue,
-  getRequiredUnit,
   type CharacterSheet,
   type CharacterSheetIssue,
   type CharacterSheetTeleportationCircleCasting,
@@ -20,6 +17,8 @@ import {
   type CharacterSheetTeleportationCircleInvocation,
   type CharacterSheetTeleportationCircleResult,
 } from "./sheet-types.ts";
+
+import { castPreparedSpell } from "./prepared-spell-cast.ts";
 
 const TELEPORTATION_CIRCLE_SPELL_ID = "teleportation_circle" as const;
 const TELEPORTATION_CIRCLE_SPELL_LEVEL = spellSlotLevel(5);
@@ -33,47 +32,20 @@ export function castTeleportationCircle(input: {
   CharacterSheetTeleportationCircleResult,
   CharacterSheetIssue
 > {
-  const spell = teleportationCircleSpell(input.unitLibrary);
-  if (Either.isLeft(spell)) return Either.left(spell.left);
-
-  if (!hasPreparedClassSpellAccess(input.sheet, spell.right.id)) {
-    return characterSheetIssue(
-      "Teleportation Circle requires prepared class Spell Access.",
-    );
-  }
-
-  const invocation = teleportationCircleInvocationFromSpell({
-    spell: spell.right,
-    destination: input.destination,
-    casting: input.casting,
-  });
-  if (Either.isLeft(invocation)) return Either.left(invocation.left);
-
-  const spent = spendCharacterSheetSpellSlot({
+  return castPreparedSpell({
     sheet: input.sheet,
+    unitLibrary: input.unitLibrary,
+    spellId: authoredUnitId(TELEPORTATION_CIRCLE_SPELL_ID),
     spellLevel: TELEPORTATION_CIRCLE_SPELL_LEVEL,
-    spellSlotSource: "ordinary",
+    spellName: "Teleportation Circle",
+    invocation: (spell) => {
+      return teleportationCircleInvocationFromSpell({
+        spell: spell,
+        destination: input.destination,
+        casting: input.casting,
+      });
+    },
   });
-  if (Either.isLeft(spent)) return Either.left(spent.left);
-
-  return Either.right({
-    sheet: spent.right,
-    invocation: invocation.right,
-  });
-}
-
-function teleportationCircleSpell(
-  unitLibrary: UnitCatalog,
-): Either.Either<SpellRecord, CharacterSheetIssue> {
-  const unit = getRequiredUnit(
-    unitLibrary,
-    authoredUnitId(TELEPORTATION_CIRCLE_SPELL_ID),
-  );
-  if (Either.isLeft(unit)) return Either.left(unit.left);
-  if (unit.right.kind !== "spell") {
-    return characterSheetIssue("Teleportation Circle requires a Spell record.");
-  }
-  return Either.right(unit.right);
 }
 
 function teleportationCircleInvocationFromSpell(input: {

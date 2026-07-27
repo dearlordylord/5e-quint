@@ -1,4 +1,7 @@
+import { resolveSpellActiveEffectCast } from "../spell-active-effect-resolution.ts";
+import { actionSpellCastCandidatesForTargetHole } from "../spell-cast-candidate.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
+import { replaceTargetActiveEffect } from "../active-effect-replacement.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-damage-reduction
 import { BattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
 //
@@ -34,19 +37,13 @@ import {
   type BattleExecutableSpellInvocation,
   type DamageReductionSpellInvocation,
 } from "../../battle-state-execution.ts";
-import { snapshotBattle } from "../dispatcher.ts";
-import { breakBattleConcentration } from "../damage-apply.ts";
-import { maybeOpenInterruptWindow } from "../dispatcher.ts";
-import { needsHolesResult } from "../hole-helpers.ts";
 import { invalidResult } from "../result-helpers.ts";
-import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
-import {
-  spellRequiresConcentration,
-  spendSpellCastResources,
-} from "../spells-resolve-resources.ts";
+import { selectSingleSpellTargetAndDamageType } from "../single-spell-target.ts";
+import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
+import { ATTACK_TARGET_HOLE_ID } from "../battle-runtime-protocol.ts";
 import { spellDamageTypeChoiceHole } from "../spells-damage-fills.ts";
 import { scalarBuffActiveEffectExpiration } from "../spells-profiles-support.ts";
-import { spellTargetHole, spellTargetIsLegal } from "../spells-targeting.ts";
+import { spellTargetHole } from "../spells-targeting.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
@@ -142,10 +139,6 @@ function applyDamageReductionEffect(
   damageType: DamageType,
   invocation: BattleExecutableSpellInvocation<DamageReductionSpellInvocation>,
 ): BattleState {
-  const target = state.combatants.get(targetId);
-  if (target === undefined) {
-    return state;
-  }
   const nextEffect = {
     kind: "spellDamageReduction" as const,
     sourceProcedureRef: invocation.sourceProcedureRef,
@@ -155,23 +148,14 @@ function applyDamageReductionEffect(
     usedThisTurn: false,
     expiresAt: invocation.expiresAt,
   };
-  const activeEffects = [
-    ...target.activeEffects.filter(
-      (effect) =>
-        !(
-          effect.kind === "spellDamageReduction" &&
-          effect.sourceProcedureRef === invocation.sourceProcedureRef
-        ),
-    ),
+  return replaceTargetActiveEffect(
+    state,
+    targetId,
+    (effect) =>
+      effect.kind === "spellDamageReduction" &&
+      effect.sourceProcedureRef === invocation.sourceProcedureRef,
     nextEffect,
-  ];
-  return {
-    ...state,
-    combatants: new Map(state.combatants).set(targetId, {
-      ...target,
-      activeEffects,
-    }),
-  };
+  );
 }
 
 function admitDamageReduction(
@@ -200,37 +184,22 @@ function discoverDamageReductionCastAct(
   invocation: BattleExecutableSpellInvocation<DamageReductionSpellInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const targetHole = spellTargetHole(state, actorId, invocation);
-  if (targetHole.choices.length === 0) {
-    return [];
-  }
-  return [
-    {
-      subject: {
-        tag: "actionSpell",
-        actorId,
-        procedureRef: invocation.sourceProcedureRef,
-        mode: { tag: "cast" },
-      },
-      initialHoles: [targetHole, spellDamageTypeChoiceHole(invocation)],
-    },
-  ];
+  return actionSpellCastCandidatesForTargetHole(
+    actorId,
+    invocation.sourceProcedureRef,
+    targetHole,
+    [spellDamageTypeChoiceHole(invocation)],
+  );
 }
 
 function resolveDamageReduction(
   input: SpellProcedureProfileResolveInput<DamageReductionSpellInvocation>,
 ): BattleResolutionResult {
   if (
-    input.fillSet.attackRoll !== undefined ||
-    input.fillSet.targetAllocation !== undefined ||
-    input.fillSet.targetList !== undefined ||
-    input.fillSet.damageRoll !== undefined ||
-    input.fillSet.attackBurstDamageRoll !== undefined ||
-    input.fillSet.healingRoll !== undefined ||
-    input.fillSet.skillChoice !== undefined ||
-    input.fillSet.targetAbilityChoices !== undefined ||
-    input.fillSet.savingThrowOutcomes !== undefined ||
-    input.fillSet.damageDispositions.length > 0 ||
-    input.fillSet.concentrationSavingThrows.length > 0
+    !fillsBelongToSpellCastHoles(input.input.fills, [
+      ATTACK_TARGET_HOLE_ID,
+      spellDamageTypeChoiceHole(input.invocation).holeId,
+    ])
   ) {
     return invalidResult(
       input.input.state,
@@ -239,91 +208,36 @@ function resolveDamageReduction(
     );
   }
 
-  const targetHole = spellTargetHole(
-    input.input.state,
-    input.actorId,
-    input.invocation,
-  );
-  if (input.fillSet.targetId === undefined) {
-    return needsHolesResult(input.input.state, input.input.subject, [
-      targetHole,
-    ]);
-  }
-  if (
-    !spellTargetIsLegal(
-      input.input.state,
-      input.actorId,
-      input.fillSet.targetId,
-      input.invocation,
-      input.fillSet.targetSpatialFacts,
-    )
-  ) {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      "Spell target must be a combatant within the selected spell's supported range.",
-    );
-  }
-  if (input.fillSet.damageTypeChoice === undefined) {
-    return needsHolesResult(input.input.state, input.input.subject, [
-      spellDamageTypeChoiceHole(input.invocation),
-    ]);
-  }
-  if (
-    !input.invocation.damageTypeChoices.includes(
-      input.fillSet.damageTypeChoice.value,
-    )
-  ) {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      "Damage-reduction spell damage type must be one of the selected spell's choices.",
-    );
-  }
-
-  const spellCastReactionWindow = maybeOpenInterruptWindow(
-    input.input.state,
-    spellCastInterruptFrame({
-      casterId: input.actorId,
-      invocation: input.invocation,
-      targetIds: [input.fillSet.targetId],
-      reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
-      castingResource: { kind: "magicAction" },
-      continuation: {
-        kind: "replay",
-        subject: input.input.subject,
-        fills: input.input.fills,
-      },
-    }),
-    input.input.handledInterruptTrigger,
-  );
-  if (spellCastReactionWindow !== null) {
-    return spellCastReactionWindow;
-  }
-
-  const concentrationBase = spellRequiresConcentration(input.invocation)
-    ? breakBattleConcentration(input.input.state, input.actorId)
-    : input.input.state;
-  const effected = applyDamageReductionEffect(
-    concentrationBase,
-    input.actorId,
-    input.fillSet.targetId,
-    input.fillSet.damageTypeChoice.value,
-    input.invocation,
-  );
-  const resourced = spendSpellCastResources({
-    state: effected,
+  const selection = selectSingleSpellTargetAndDamageType({
+    state: input.input.state,
+    subject: input.input.subject,
     actorId: input.actorId,
     invocation: input.invocation,
-    errorState: input.input.state,
+    targetId: input.fillSet.targetId,
+    targetSpatialFacts: input.fillSet.targetSpatialFacts,
+    damageType: input.fillSet.damageTypeChoice?.value,
+    invalidTargetMessage:
+      "Spell target must be a combatant within the selected spell's supported range.",
+    invalidDamageTypeMessage:
+      "Damage-reduction spell damage type must be one of the selected spell's choices.",
   });
-  return resourced.tag === "invalid"
-    ? resourced
-    : {
-        tag: "resolved",
-        state: resourced.state,
-        snapshot: snapshotBattle(resourced.state),
-      };
+  if (selection.tag !== "selected") {
+    return selection;
+  }
+
+  return resolveSpellActiveEffectCast({
+    resolution: input,
+    targetIds: [selection.targetId],
+    castingResource: { kind: "magicAction" },
+    applyEffect: (state) =>
+      applyDamageReductionEffect(
+        state,
+        input.actorId,
+        selection.targetId,
+        selection.damageType,
+        input.invocation,
+      ),
+  });
 }
 
 export const DamageReductionInvocationSchema = spellProcedureExecutionSchema(

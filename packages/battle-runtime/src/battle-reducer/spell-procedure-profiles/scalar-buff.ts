@@ -1,3 +1,7 @@
+import {
+  completeSpellActiveEffectCast,
+  maybeOpenConfiguredSpellCastReactionWindow,
+} from "../spell-active-effect-resolution.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.scalar-buff
 import { DiceExprSchema } from "@dnd/surface/surface/schema";
@@ -51,25 +55,24 @@ import {
   type HealingSpellActionCost,
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
-import { maybeOpenInterruptWindow, snapshotBattle } from "../dispatcher.ts";
 import { CombatantId } from "../../identity.ts";
 import { BattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
 import { battleCreatureWithSpellActiveEffects } from "../../active-effect/lifecycle.ts";
 import {
   applyHitPointMaximumIncrease,
   applyTemporaryHitPoints,
-  breakBattleConcentration,
 } from "../damage-apply.ts";
 import {
   battleStateWithFlySpeedGrantEndFallCleanupFrames,
   flySpeedGrantEndFallCleanupFramesForExpiredEffects,
 } from "../fly-speed-grant-end-fall-cleanup.ts";
-import { needsHolesResult } from "../hole-helpers.ts";
-import { invalidResult } from "../result-helpers.ts";
 import {
-  spellCastInterruptFrame,
-  spellCastMetamagicApplicationsInput,
-} from "../spell-cast-interrupt-frame.ts";
+  needsHolesResult,
+  spellSelectionResolution,
+} from "../needs-holes-result.ts";
+import { invalidResult } from "../result-helpers.ts";
+import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
+import { ATTACK_TARGET_HOLE_ID } from "../battle-runtime-protocol.ts";
 import { scalarBuffTemporaryHitPointsAmount } from "../spell-effects.ts";
 import {
   readiedSpellAct,
@@ -87,12 +90,12 @@ import {
   scalarBuffSpellRangeFeet,
   scalarBuffSpellTargeting,
 } from "../spells-profiles-support.ts";
-import {
-  spellRequiresConcentration,
-  spendSpellCastResources,
-} from "../spells-resolve-resources.ts";
 import { scalarBuffSpellTargetSelection } from "../spells-resolve-target-selection.ts";
-import { spellTargetHole, spellTargetListHole } from "../spells-targeting.ts";
+import {
+  spellTargetHole,
+  spellTargetListHole,
+  spellTargetListHoleId,
+} from "../spells-targeting.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
@@ -416,14 +419,11 @@ function resolveScalarBuff(
   input: ScalarBuffResolveInput,
 ): BattleResolutionResult {
   if (
-    input.fillSet.attackRoll !== undefined ||
-    input.fillSet.targetAllocation !== undefined ||
-    input.fillSet.damageRoll !== undefined ||
-    input.fillSet.damageDispositions.length > 0 ||
-    input.fillSet.savingThrowOutcomes !== undefined ||
-    input.fillSet.skillChoice !== undefined ||
-    input.fillSet.targetAbilityChoices !== undefined ||
-    input.fillSet.concentrationSavingThrows.length > 0
+    !fillsBelongToSpellCastHoles(input.input.fills, [
+      ATTACK_TARGET_HOLE_ID,
+      spellTargetListHoleId(input.invocation),
+      spellScalarBuffRollHole(input.invocation).holeId,
+    ])
   ) {
     return invalidResult(
       input.input.state,
@@ -431,47 +431,21 @@ function resolveScalarBuff(
       "Scalar buff spells use target fills and optional scalar dice roll.",
     );
   }
-  const targetSelection = scalarBuffSpellTargetSelection(input);
-  if (targetSelection.tag === "needsHoles") {
-    return needsHolesResult(input.input.state, input.input.subject, [
-      targetSelection.hole,
-    ]);
-  }
-  if (targetSelection.tag === "invalid") {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      targetSelection.message,
-    );
-  }
+  const targetSelectionResolution = spellSelectionResolution(
+    input.input.state,
+    input.input.subject,
+    scalarBuffSpellTargetSelection(input),
+  );
+  if (targetSelectionResolution.tag === "resolution")
+    return targetSelectionResolution.result;
+  const targetSelection = targetSelectionResolution.selection;
 
-  if (input.storedGlyphRelease === undefined) {
-    const spellCastReactionWindow = maybeOpenInterruptWindow(
-      input.input.state,
-      spellCastInterruptFrame({
-        casterId: input.actorId,
-        invocation: input.invocation,
-        targetIds: targetSelection.targetIds,
-        reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
-        castingResource:
-          input.actionCostOverride === "bonusAction" ||
-          input.input.subject.tag === "bonusActionSpell"
-            ? { kind: "bonusAction" }
-            : { kind: "magicAction" },
-        ...spellCastMetamagicApplicationsInput(
-          input.metamagicApplications ?? [],
-        ),
-        continuation: {
-          kind: "replay",
-          subject: input.input.subject,
-          fills: input.input.fills,
-        },
-      }),
-      input.input.handledInterruptTrigger,
-    );
-    if (spellCastReactionWindow !== null) {
-      return spellCastReactionWindow;
-    }
+  const spellCastReactionWindow = maybeOpenConfiguredSpellCastReactionWindow({
+    resolution: input,
+    targetIds: targetSelection.targetIds,
+  });
+  if (spellCastReactionWindow !== null) {
+    return spellCastReactionWindow;
   }
 
   if (
@@ -495,48 +469,23 @@ function resolveScalarBuff(
     }
   }
 
-  const concentrationBase =
-    input.storedGlyphRelease !== undefined
-      ? input.input.state
-      : spellRequiresConcentration(input.invocation)
-        ? breakBattleConcentration(input.input.state, input.actorId)
-        : input.input.state;
-  const effected = applyScalarBuffEffect(
-    concentrationBase,
-    input.actorId,
-    targetSelection.targetIds,
-    input.invocation,
-    input.fillSet.healingRoll,
-  );
-  if (input.storedGlyphRelease !== undefined) {
-    return {
-      tag: "resolved",
-      state: effected,
-      snapshot: snapshotBattle(effected),
-    };
-  }
-  const resourced = spendSpellCastResources({
-    state: effected,
-    actorId: input.actorId,
-    invocation: input.invocation,
-    errorState: input.input.state,
-    ...(input.storedGlyphRelease !== undefined
-      ? { startConcentration: false }
-      : {}),
+  return completeSpellActiveEffectCast({
+    resolution: input,
     ...(input.actionCostOverride === undefined
       ? {}
       : { actionCostOverride: input.actionCostOverride }),
     ...(input.metamagicApplications === undefined
       ? {}
       : { metamagicApplications: input.metamagicApplications }),
+    applyEffect: (state) =>
+      applyScalarBuffEffect(
+        state,
+        input.actorId,
+        targetSelection.targetIds,
+        input.invocation,
+        input.fillSet.healingRoll,
+      ),
   });
-  return resourced.tag === "invalid"
-    ? resourced
-    : {
-        tag: "resolved",
-        state: resourced.state,
-        snapshot: snapshotBattle(resourced.state),
-      };
 }
 
 const ScalarBuffInvocationSchema = spellProcedureExecutionSchema(
