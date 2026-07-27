@@ -1115,8 +1115,14 @@ function resolveSection(section, index) {
   return section
     .split(";")
     .map((part) => part.trim())
-    .filter(Boolean)
     .map((part) => {
+      if (part.length === 0) {
+        return {
+          part,
+          status: "empty-section-part",
+          canonical: "",
+        };
+      }
       const parsed = splitSectionPart(part);
       const files = candidateFiles(parsed.base, index.fileByRel);
       if (files.length === 0) {
@@ -2543,10 +2549,13 @@ function rulesExcerptForSection(section, index) {
       resolutions: excerptResolutionDiagnostics(resolutions),
     };
   }
-  const rulesExcerpt = located
-    .map((result) => result.text)
-    .filter(Boolean)
-    .join("\n\n");
+  if (located.some((result) => result.text.length === 0)) {
+    return {
+      tag: "empty-excerpt",
+      resolutions: excerptResolutionDiagnostics(resolutions),
+    };
+  }
+  const rulesExcerpt = located.map((result) => result.text).join("\n\n");
   return rulesExcerpt.length === 0
     ? {
         tag: "empty-excerpt",

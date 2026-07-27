@@ -110,6 +110,25 @@ test("publication excerpts require canonical locators and copy exact RAW", () =>
   );
   assert.equal(lineAlias.tag, "invalid-locator");
   assert.equal(lineAlias.resolutions[0].status, "ok-line-range-alias");
+
+  for (const section of [
+    ";Character-Origins.md:215",
+    "Character-Origins.md:215;;Character-Origins.md:227-228",
+  ]) {
+    const emptyPart = auditModule.rulesExcerptForSection(section, index);
+    assert.equal(emptyPart.tag, "invalid-locator");
+    assert.ok(
+      emptyPart.resolutions.some(
+        (resolution) => resolution.status === "empty-section-part",
+      ),
+    );
+  }
+
+  const blankPart = auditModule.rulesExcerptForSection(
+    "Character-Origins.md:216;Character-Origins.md:227",
+    index,
+  );
+  assert.equal(blankPart.tag, "empty-excerpt");
 });
 
 test("feature anchors resolve to their feature instead of the parent class", () => {

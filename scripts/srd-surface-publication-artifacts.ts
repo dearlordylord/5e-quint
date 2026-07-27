@@ -15,8 +15,9 @@ import {
 import { srdSurface } from "../packages/surface/src/surface/surface-catalog.ts";
 
 const SourceResolutionSchema = Schema.Struct({
-  part: Schema.NonEmptyTrimmedString,
+  part: Schema.String,
   status: Schema.Literal(
+    "empty-section-part",
     "ok-line-range",
     "ok-line-range-alias",
     "bad-line-range",
