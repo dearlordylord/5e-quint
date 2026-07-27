@@ -11,8 +11,10 @@ import {
   focusedMbtMaxSteps,
   mbtSpecPath,
   mbtTraceCount,
+  quintField,
   quintStateRecord,
   quintVariantTag,
+  quintVariantValue,
   run,
   stateCheck,
 } from "./battle-runtime-mbt-driver-kit.ts";
@@ -50,12 +52,27 @@ import {
 //   the spell requires a Club or Quarterstaff the caster is holding.
 // - .references/srd-5.2.1/Playing-the-Game.md#Interacting with Things:
 //   picking up an object is an object interaction.
+// - .references/srd-5.2.1/Equipment.md#Getting Into and Out of Armor:
+//   armor has explicit donning times; pickup cannot restore it as equipped.
+//   The Armor table separately requires a Utilize action to don a Shield.
 // - UBIQUITOUS_LANGUAGE.md: Character Sheet, Creature, and Action Lifecycle.
 
-const CUSTODIES = ["held", "merged", "ground"] as const;
-type Custody = (typeof CUSTODIES)[number];
+const CUSTODY = {
+  held: "held",
+  merged: "merged",
+  ground: "ground",
+} as const;
+const LIFECYCLE_OBJECT_KIND = {
+  weapon: "weapon",
+  armor: "armor",
+  shield: "shield",
+} as const;
+type Custody = (typeof CUSTODY)[keyof typeof CUSTODY];
+type LifecycleObjectKind =
+  (typeof LIFECYCLE_OBJECT_KIND)[keyof typeof LIFECYCLE_OBJECT_KIND];
 type GroundObjectLifecycleProjection = {
   readonly custody: Custody;
+  readonly objectKind: LifecycleObjectKind;
   readonly groundSource: "none" | "druidWildShape";
   readonly formActive: boolean;
   readonly shillelaghAvailable: boolean;
@@ -64,12 +81,20 @@ type GroundObjectLifecycleProjection = {
 
 type RuntimeState = {
   readonly battle: BattleRuntimeSession;
+  readonly lifecycleObject:
+    | {
+        readonly kind: "weapon";
+        readonly objectId: typeof quarterstaffObjectId;
+      }
+    | { readonly kind: "armor"; readonly objectId: typeof chainMailObjectId }
+    | { readonly kind: "shield"; readonly objectId: typeof shieldObjectId };
 };
 
 const druidId = combatantId("wild-shape-ground-object-mbt-druid");
 const opponentId = combatantId("wild-shape-ground-object-mbt-opponent");
 const quarterstaffObjectId = battleObjectId("main:weapon_quarterstaff");
 const chainMailObjectId = battleObjectId("armor:equipment_chain_mail");
+const shieldObjectId = battleObjectId("shield:equipment_shield");
 const groundPositionId = battleTablePositionId(
   "wild-shape-ground-object-mbt-position",
 );
@@ -85,6 +110,8 @@ const driverSchema = {
   doPickupFallenWeaponAgain: {},
   doFallArmorAndRevert: {},
   doRejectArmorHeldWeaponPickup: {},
+  doFallShieldAndRevert: {},
+  doRejectShieldHeldWeaponPickup: {},
   doMergeOnWildShape: {},
   doRevertMerged: {},
   doStutter: {},
@@ -97,7 +124,7 @@ describe("Wild Shape ground-object lifecycle MBT parity", () => {
       assumeForm(initialRuntimeState(), "merges"),
     );
     expect(projectRuntimeState(mergedReversion)).toMatchObject({
-      custody: "held",
+      custody: CUSTODY.held,
       groundSource: "none",
       shillelaghAvailable: true,
     });
@@ -130,9 +157,21 @@ describe("Wild Shape ground-object lifecycle MBT parity", () => {
       assumeForm(initialRuntimeState("armor"), "falls"),
     );
     expect(
-      projectRuntimeState(rejectArmorHeldWeaponPickup(armorReversion)),
+      projectRuntimeState(rejectNonWeaponHeldWeaponPickup(armorReversion)),
     ).toMatchObject({
       custody: "ground",
+      formActive: false,
+      shillelaghAvailable: false,
+    });
+
+    const shieldReversion = revertForm(
+      assumeForm(initialRuntimeState("shield"), "falls"),
+    );
+    expect(
+      projectRuntimeState(rejectNonWeaponHeldWeaponPickup(shieldReversion)),
+    ).toMatchObject({
+      custody: "ground",
+      objectKind: "shield",
       formActive: false,
       shillelaghAvailable: false,
     });
@@ -188,7 +227,13 @@ function createDriver() {
         state = revertForm(assumeForm(initialRuntimeState("armor"), "falls"));
       },
       doRejectArmorHeldWeaponPickup: () => {
-        state = rejectArmorHeldWeaponPickup(state);
+        state = rejectNonWeaponHeldWeaponPickup(state);
+      },
+      doFallShieldAndRevert: () => {
+        state = revertForm(assumeForm(initialRuntimeState("shield"), "falls"));
+      },
+      doRejectShieldHeldWeaponPickup: () => {
+        state = rejectNonWeaponHeldWeaponPickup(state);
       },
       doMergeOnWildShape: () => {
         state = assumeForm(state, "merges");
@@ -212,9 +257,17 @@ const groundObjectLifecycleStateCheck = stateCheck(
 );
 
 function initialRuntimeState(
-  loadoutKind: "weapon" | "armor" = "weapon",
+  loadoutKind: LifecycleObjectKind = "weapon",
 ): RuntimeState {
+  const lifecycleObject = {
+    weapon: { kind: "weapon", objectId: quarterstaffObjectId },
+    armor: { kind: "armor", objectId: chainMailObjectId },
+    shield: { kind: "shield", objectId: shieldObjectId },
+  } as const satisfies Readonly<
+    Record<LifecycleObjectKind, RuntimeState["lifecycleObject"]>
+  >;
   return {
+    lifecycleObject: lifecycleObject[loadoutKind],
     battle: startBattleSessionRight({
       battleId: battleId("wild-shape-ground-object-lifecycle-mbt"),
       combatants: [
@@ -236,12 +289,19 @@ function initialRuntimeState(
                     grip: "one_handed",
                   },
                 }
-              : {
-                  armor: {
-                    itemId: chainMailObjectId,
-                    unitId: parseSharedUnitId("equipment_chain_mail"),
+              : loadoutKind === "armor"
+                ? {
+                    armor: {
+                      itemId: chainMailObjectId,
+                      unitId: parseSharedUnitId("equipment_chain_mail"),
+                    },
+                  }
+                : {
+                    shield: {
+                      itemId: shieldObjectId,
+                      unitId: parseSharedUnitId("equipment_shield"),
+                    },
                   },
-                },
           ...(loadoutKind === "weapon"
             ? {
                 attack: testCharacterWeaponAttackForUnit(
@@ -328,6 +388,7 @@ function assumeForm(
     }),
   );
   return {
+    lifecycleObject: state.lifecycleObject,
     battle: battleRuntimeSessionForTest({
       ...battle,
       state: resolved.state,
@@ -362,6 +423,7 @@ function revertForm(state: RuntimeState): RuntimeState {
     }),
   );
   return {
+    lifecycleObject: state.lifecycleObject,
     battle: battleRuntimeSessionForTest({ ...battle, state: resolved.state }),
   };
 }
@@ -419,6 +481,7 @@ function assumeFormWhileQuarterstaffIsGrounded(
     }),
   );
   return {
+    lifecycleObject: state.lifecycleObject,
     battle: battleRuntimeSessionForTest({ ...battle, state: resolved.state }),
   };
 }
@@ -439,6 +502,7 @@ function pickUpQuarterstaff(state: RuntimeState): RuntimeState {
     throw new Error(result.message);
   }
   return {
+    lifecycleObject: state.lifecycleObject,
     battle: battleRuntimeSessionForTest({
       ...state.battle,
       state: result.state,
@@ -446,11 +510,14 @@ function pickUpQuarterstaff(state: RuntimeState): RuntimeState {
   };
 }
 
-function rejectArmorHeldWeaponPickup(state: RuntimeState): RuntimeState {
+function rejectNonWeaponHeldWeaponPickup(state: RuntimeState): RuntimeState {
+  if (state.lifecycleObject.kind === "weapon") {
+    throw new Error("Expected an armor or Shield lifecycle object.");
+  }
   const result = applyBattleHeldWeaponPickup(state.battle.state, {
     interaction: {
       actorId: druidId,
-      objectId: chainMailObjectId,
+      objectId: state.lifecycleObject.objectId,
       actorSpace: {
         kind: "actorSpace",
         positionId: groundPositionId,
@@ -472,12 +539,7 @@ function projectRuntimeState(
   if (druid?.origin.kind !== "character") {
     throw new Error("Expected Druid character combatant.");
   }
-  const selectedObjectId =
-    druid.origin.selectedLoadout.weapon?.itemId ??
-    druid.origin.selectedLoadout.armor?.itemId;
-  if (selectedObjectId === undefined) {
-    throw new Error("Expected selected weapon or armor lifecycle object.");
-  }
+  const selectedObjectId = state.lifecycleObject.objectId;
   const groundObject = state.battle.state.groundObjects
     .get(druidId)
     ?.get(selectedObjectId);
@@ -504,6 +566,7 @@ function projectRuntimeState(
   });
   return {
     custody,
+    objectKind: state.lifecycleObject.kind,
     groundSource:
       groundObject?.source.kind === "druidWildShape"
         ? "druidWildShape"
@@ -518,81 +581,80 @@ function projectRuntimeState(
 }
 
 function normalizeQuintState(raw: unknown): GroundObjectLifecycleProjection {
-  const tag = quintVariantTag(quintStateRecord(raw)["qState"], "qState");
-  const projection = QUINT_PROJECTION_BY_LIFECYCLE_TAG[tag];
-  if (projection === undefined) {
-    throw new Error(`Unexpected Quint lifecycle ${tag}.`);
+  const qState = quintField(quintStateRecord(raw), "qState");
+  const lifecycleTag = quintVariantTag(qState, "qState");
+  const payload = quintStateRecord(
+    quintVariantValue(qState, lifecycleTag, "qState"),
+  );
+  const objectKind = decodeLifecycleObjectKind(
+    quintField(payload, "objectKind"),
+  );
+  const uses = decodeWildShapeUses(quintField(payload, "uses"));
+
+  if (lifecycleTag === "EffectiveLoadout") {
+    return {
+      custody: "held",
+      objectKind,
+      groundSource: "none",
+      formActive: false,
+      shillelaghAvailable: objectKind === "weapon",
+      wildShapeUsesRemaining: uses,
+    };
   }
-  return projection;
+  if (lifecycleTag === "MergedForm") {
+    return {
+      custody: CUSTODY.merged,
+      objectKind,
+      groundSource: "none",
+      formActive: true,
+      shillelaghAvailable: false,
+      wildShapeUsesRemaining: uses,
+    };
+  }
+  if (lifecycleTag === "Grounded") {
+    const formActive = quintField(payload, "formActive");
+    if (typeof formActive !== "boolean") {
+      throw new Error("Expected Quint grounded formActive boolean.");
+    }
+    return {
+      custody: CUSTODY.ground,
+      objectKind,
+      groundSource: "druidWildShape",
+      formActive,
+      shillelaghAvailable: false,
+      wildShapeUsesRemaining: uses,
+    };
+  }
+  throw new Error(`Unexpected Quint lifecycle ${lifecycleTag}.`);
 }
 
-const QUINT_PROJECTION_BY_LIFECYCLE_TAG: Readonly<
-  Record<string, GroundObjectLifecycleProjection>
-> = {
-  HeldWithFourUses: {
-    custody: "held",
-    groundSource: "none",
-    formActive: false,
-    shillelaghAvailable: true,
-    wildShapeUsesRemaining: 4,
-  },
-  FallenActive: {
-    custody: "ground",
-    groundSource: "druidWildShape",
-    formActive: true,
-    shillelaghAvailable: false,
-    wildShapeUsesRemaining: 3,
-  },
-  FallenReverted: {
-    custody: "ground",
-    groundSource: "druidWildShape",
-    formActive: false,
-    shillelaghAvailable: false,
-    wildShapeUsesRemaining: 3,
-  },
-  FallenActiveAgain: {
-    custody: "ground",
-    groundSource: "druidWildShape",
-    formActive: true,
-    shillelaghAvailable: false,
-    wildShapeUsesRemaining: 2,
-  },
-  FallenRevertedAgain: {
-    custody: "ground",
-    groundSource: "druidWildShape",
-    formActive: false,
-    shillelaghAvailable: false,
-    wildShapeUsesRemaining: 2,
-  },
-  HeldWithTwoUses: {
-    custody: "held",
-    groundSource: "none",
-    formActive: false,
-    shillelaghAvailable: true,
-    wildShapeUsesRemaining: 2,
-  },
-  ArmorFallenReverted: {
-    custody: "ground",
-    groundSource: "druidWildShape",
-    formActive: false,
-    shillelaghAvailable: false,
-    wildShapeUsesRemaining: 3,
-  },
-  HeldWithThreeUses: {
-    custody: "held",
-    groundSource: "none",
-    formActive: false,
-    shillelaghAvailable: true,
-    wildShapeUsesRemaining: 3,
-  },
-  MergedActive: {
-    custody: "merged",
-    groundSource: "none",
-    formActive: true,
-    shillelaghAvailable: false,
-    wildShapeUsesRemaining: 3,
-  },
-};
+function decodeLifecycleObjectKind(raw: unknown): LifecycleObjectKind {
+  const tag = quintVariantTag(raw, "objectKind");
+  const valueByTag = {
+    Weapon: LIFECYCLE_OBJECT_KIND.weapon,
+    Armor: LIFECYCLE_OBJECT_KIND.armor,
+    Shield: LIFECYCLE_OBJECT_KIND.shield,
+  } as const satisfies Readonly<Record<string, LifecycleObjectKind>>;
+  const value = valueByTag[tag as keyof typeof valueByTag];
+  if (value === undefined) {
+    throw new Error(`Unexpected Quint lifecycle object kind ${tag}.`);
+  }
+  return value;
+}
+
+function decodeWildShapeUses(raw: unknown): number {
+  const tag = quintVariantTag(raw, "uses");
+  const valueByTag = {
+    FourUses: 4,
+    ThreeUses: 3,
+    TwoUses: 2,
+  } as const;
+  const value = valueByTag[tag as keyof typeof valueByTag];
+  if (value === undefined) {
+    throw new Error(`Unexpected Quint Wild Shape uses ${tag}.`);
+  }
+  return value;
+}
 
 function druidWildShapeUsesRemaining(session: BattleRuntimeSession): number {
   const resourcePoolRef = session.context.characters

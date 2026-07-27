@@ -48,7 +48,7 @@ export type BattleHeldWeaponPickupResult =
       readonly reason:
         | "missingCombatant"
         | "actorNotCharacter"
-        | "activeWildShape"
+        | "activeFormPickupUnsupported"
         | "objectNotOnGround"
         | "positionMismatch"
         | "selectedLoadoutMismatch";
@@ -153,8 +153,9 @@ export function applyBattleHeldWeaponPickup(
   ) {
     return {
       tag: "invalid",
-      reason: "activeWildShape",
-      message: "Held-weapon pickup requires Wild Shape to have ended.",
+      reason: "activeFormPickupUnsupported",
+      message:
+        "This narrow held-weapon restoration operation does not support pickup while Wild Shape is active.",
     };
   }
   const actorGroundObjects = state.groundObjects.get(interaction.actorId);
@@ -211,6 +212,7 @@ function battleActorGroundObjectsFromEntries(
 ): BattleActorGroundObjects {
   // Brands are erased at runtime; the non-empty tuple proves this Map cannot
   // encode the redundant actor-with-no-ground-objects state.
+  // eslint-disable-next-line no-restricted-syntax -- the tuple is the runtime proof required by this erased non-empty-map brand
   return new Map(entries) as unknown as BattleActorGroundObjects;
 }
 

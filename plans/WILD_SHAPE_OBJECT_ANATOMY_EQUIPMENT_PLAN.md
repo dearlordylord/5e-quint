@@ -57,8 +57,9 @@ Status: implemented, including durable fallen-equipment lifecycle follow-up
   `groundObjects`; it does not copy ownership or add held/equipped flags.
 - The typed held-weapon pickup validates character, table-supplied ground
   position, selected main/off-hand loadout slot, and object identity before
-  removing the overlay. It requires Wild Shape to have ended and does not admit
-  armor or Shield pickup/equip.
+  removing the overlay. Its narrow capability does not support active-form
+  pickup and does not admit armor or Shield pickup/equip; issue #230 owns
+  generic custody, active-form handling, and timed donning/Shield use.
 - Command Drop already has a narrow canonical held-object projection for
   character loadout in `packages/battle-runtime/src/battle-reducer/turn-end-movement.ts`.
   That helper proves loadout-derived object facts can be owned without copying
@@ -234,9 +235,11 @@ stored durably in `BattleState.groundObjects`.
    does not carry durable inventory and RAW disposition applies to the equipment
    currently worn/carried by the battle creature.
 3. Change Wild Shape assume-form acts to expose a hole instead of hard-coding
-   merged equipment when the candidate list is non-empty:
+   merged equipment:
    `BattleHole { kind: "wildShapeEquipmentDisposition"; actorId; formStatBlockId; candidates }`.
-   An empty candidate list should need no fill and resolve directly.
+   The fill remains necessary when the candidate list is empty because its
+   `formLimbs` witness is an independent current-form fact used by later
+   object-handling mechanics; empty candidates require `choices: []`.
 4. Add a matching fill:
    `BattleFill { kind: "wildShapeEquipmentDisposition"; holeId; value: { formLimbs: WildShapeFormLimbObjectHandlingWitness; choices: readonly WildShapeEquipmentDispositionChoice[] } }`.
    The limb witness is a current-form caller/GM fact for object handling
@@ -303,11 +306,12 @@ stored durably in `BattleState.groundObjects`.
 
 Non-merged disposition now affects executable battle state. The leaf-only
 `battle-runtime-wild-shape-ground-object-lifecycle.mbt.qnt` witness models one
-lifecycle variant whose projections include custody
-(`Held | Merged | Ground(source)`) and remaining Wild Shape uses, so
-contradictory custody or use-count combinations are unrepresentable. Its
+lifecycle union whose variants distinguish effective-loadout, merged-form, and
+grounded custody. Variant payloads retain object kind, remaining Wild Shape
+uses, and—only where meaningful—whether the form is active. Its
 focused TypeScript driver checks the production reducer, effective-loadout
-behavior, Shillelagh availability, reversion, pickup, and resource spending.
+behavior, Shillelagh availability, repeated transformation/reversion, weapon
+pickup, armor/Shield rejection, and resource spending.
 
 Recommended progression:
 

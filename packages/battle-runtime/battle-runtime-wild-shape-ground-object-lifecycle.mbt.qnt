@@ -1,16 +1,12 @@
 // -*- mode: Bluespec; -*-
 
 module battleRuntimeWildShapeGroundObjectLifecycleMbt {
+  type LifecycleObjectKind = Weapon | Armor | Shield
+  type WildShapeUses = FourUses | ThreeUses | TwoUses
   type WildShapeGroundObjectLifecycle =
-    | HeldWithFourUses
-    | FallenActive
-    | FallenReverted
-    | HeldWithThreeUses
-    | MergedActive
-    | FallenActiveAgain
-    | FallenRevertedAgain
-    | HeldWithTwoUses
-    | ArmorFallenReverted
+    | EffectiveLoadout({ objectKind: LifecycleObjectKind, uses: WildShapeUses })
+    | Grounded({ objectKind: LifecycleObjectKind, formActive: bool, uses: WildShapeUses })
+    | MergedForm({ objectKind: LifecycleObjectKind, uses: WildShapeUses })
 
   var qState: WildShapeGroundObjectLifecycle
 
@@ -25,63 +21,128 @@ module battleRuntimeWildShapeGroundObjectLifecycleMbt {
   //   the spell requires a Club or Quarterstaff the caster is holding.
   // - .references/srd-5.2.1/Playing-the-Game.md#Interacting with Things:
   //   picking up an object is an object interaction.
+  // - .references/srd-5.2.1/Equipment.md#Getting Into and Out of Armor:
+  //   armor has explicit donning times; pickup cannot restore it as equipped.
+  //   The Armor table separately requires a Utilize action to don a Shield.
   // - UBIQUITOUS_LANGUAGE.md: Character Sheet, Creature, and Action Lifecycle.
   //
-  // The lifecycle variant is the only stored fact. Custody, form activity,
-  // Shillelagh eligibility, provenance, and remaining Wild Shape uses are
-  // projections of that phase, so contradictory combinations are
-  // unrepresentable.
+  // The lifecycle variant separates effective-loadout, grounded, and
+  // merged-form custody. Its payload retains only independently meaningful
+  // facts: object kind, form activity for a grounded object, and uses.
 
-  action init = qState' = HeldWithFourUses
+  action init = qState' =
+    EffectiveLoadout({ objectKind: Weapon, uses: FourUses })
 
   action doFallOnWildShape = all {
-    qState == HeldWithFourUses,
-    qState' = FallenActive,
+    qState == EffectiveLoadout({ objectKind: Weapon, uses: FourUses }),
+    qState' = Grounded({
+      objectKind: Weapon,
+      formActive: true,
+      uses: ThreeUses,
+    }),
   }
 
   action doRevertFallen = all {
-    qState == FallenActive,
-    qState' = FallenReverted,
+    qState == Grounded({
+      objectKind: Weapon,
+      formActive: true,
+      uses: ThreeUses,
+    }),
+    qState' = Grounded({
+      objectKind: Weapon,
+      formActive: false,
+      uses: ThreeUses,
+    }),
   }
 
   action doPickupFallenWeapon = all {
-    qState == FallenReverted,
-    qState' = HeldWithThreeUses,
+    qState == Grounded({
+      objectKind: Weapon,
+      formActive: false,
+      uses: ThreeUses,
+    }),
+    qState' = EffectiveLoadout({ objectKind: Weapon, uses: ThreeUses }),
   }
 
   action doAssumeAgainWhileFallen = all {
-    qState == FallenReverted,
-    qState' = FallenActiveAgain,
+    qState == Grounded({
+      objectKind: Weapon,
+      formActive: false,
+      uses: ThreeUses,
+    }),
+    qState' = Grounded({
+      objectKind: Weapon,
+      formActive: true,
+      uses: TwoUses,
+    }),
   }
 
   action doRevertFallenAgain = all {
-    qState == FallenActiveAgain,
-    qState' = FallenRevertedAgain,
+    qState == Grounded({
+      objectKind: Weapon,
+      formActive: true,
+      uses: TwoUses,
+    }),
+    qState' = Grounded({
+      objectKind: Weapon,
+      formActive: false,
+      uses: TwoUses,
+    }),
   }
 
   action doPickupFallenWeaponAgain = all {
-    qState == FallenRevertedAgain,
-    qState' = HeldWithTwoUses,
+    qState == Grounded({
+      objectKind: Weapon,
+      formActive: false,
+      uses: TwoUses,
+    }),
+    qState' = EffectiveLoadout({ objectKind: Weapon, uses: TwoUses }),
   }
 
   action doFallArmorAndRevert = all {
-    qState == HeldWithFourUses,
-    qState' = ArmorFallenReverted,
+    qState == EffectiveLoadout({ objectKind: Weapon, uses: FourUses }),
+    qState' = Grounded({
+      objectKind: Armor,
+      formActive: false,
+      uses: ThreeUses,
+    }),
   }
 
   action doRejectArmorHeldWeaponPickup = all {
-    qState == ArmorFallenReverted,
-    qState' = ArmorFallenReverted,
+    qState == Grounded({
+      objectKind: Armor,
+      formActive: false,
+      uses: ThreeUses,
+    }),
+    qState' = qState,
+  }
+
+  action doFallShieldAndRevert = all {
+    qState == EffectiveLoadout({ objectKind: Weapon, uses: FourUses }),
+    qState' = Grounded({
+      objectKind: Shield,
+      formActive: false,
+      uses: ThreeUses,
+    }),
+  }
+
+  action doRejectShieldHeldWeaponPickup = all {
+    qState == Grounded({
+      objectKind: Shield,
+      formActive: false,
+      uses: ThreeUses,
+    }),
+    qState' = qState,
   }
 
   action doMergeOnWildShape = all {
-    qState == HeldWithFourUses,
-    qState' = MergedActive,
+    qState == EffectiveLoadout({ objectKind: Weapon, uses: FourUses }),
+    qState' = MergedForm({ objectKind: Weapon, uses: ThreeUses }),
   }
 
   action doRevertMerged = all {
-    qState == MergedActive,
-    qState' = HeldWithThreeUses,
+    qState == MergedForm({ objectKind: Weapon, uses: ThreeUses }),
+    qState' = EffectiveLoadout({ objectKind: Weapon, uses: ThreeUses }),
   }
 
   action doStutter = qState' = qState
@@ -95,6 +156,8 @@ module battleRuntimeWildShapeGroundObjectLifecycleMbt {
     doPickupFallenWeaponAgain,
     doFallArmorAndRevert,
     doRejectArmorHeldWeaponPickup,
+    doFallShieldAndRevert,
+    doRejectShieldHeldWeaponPickup,
     doMergeOnWildShape,
     doRevertMerged,
     doStutter,

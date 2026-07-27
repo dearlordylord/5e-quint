@@ -1470,6 +1470,7 @@ test("rejects invalid Wild Shape equipment disposition choices and converts impo
   if (mainWeapon === undefined) {
     throw new Error("Expected main weapon candidate.");
   }
+  // eslint-disable-next-line no-restricted-syntax -- this negative boundary test deliberately constructs a type-forbidden worn weapon
   const practicalWornMainWeapon = {
     item: mainWeapon,
     disposition: "worn",
@@ -2539,7 +2540,7 @@ test("fallen Wild Shape weapons stay unavailable after reversion until picked up
     }),
   ).toMatchObject({
     tag: "invalid",
-    reason: "activeWildShape",
+    reason: "activeFormPickupUnsupported",
   });
   const dismissTurn = restoreBonusAction(fallen.state);
   const dismissed = requireResolved(
