@@ -164,6 +164,7 @@ const EXPECTED_EXPORTS = [
   "characterSheetArmorClass",
   "characterSheetArmorClassProjection",
   "characterSheetArmorClassState",
+  "characterSheetUnarmoredArmorClassBase",
   "characterSheetClassFeaturePreparedSpellAccessesForBuild",
   "characterSheetClassFeatureSelectedReferenceProjection",
   "characterSheetCompanion",
@@ -276,6 +277,11 @@ const EXPECTED_EXPORT_RECONCILIATION_REASONS = [
     name: "characterSheetArmorClassProjection",
     reason:
       "Character Sheet owns Armor Class projection from build, loadout, armor training, ability scores, and Surface Unit mechanics; exposing the projection-with-route entrypoint lets route replay observe selected-reference and Armor Class qRoute events without maintaining an adapter-local route projection.",
+  },
+  {
+    name: "characterSheetUnarmoredArmorClassBase",
+    reason:
+      "Character Sheet owns Armor Class base projection from build facts and effective Shield use; battle handoff reuses that projection for encounter-time equipment custody without copying class-feature formula logic.",
   },
   {
     name: "CharacterSheetArmorClassProjection",

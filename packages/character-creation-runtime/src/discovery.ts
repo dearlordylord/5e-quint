@@ -189,19 +189,23 @@ export function discoverCreationHoles(input: {
   readonly unitLibrary: UnitCatalog;
   readonly supportProfile?: CharacterCreationSupportProfile;
 }): readonly CreationHole[] {
+  const discoveryInput = {
+    ...input,
+    supportProfile: input.supportProfile ?? CHARACTER_CREATION_SUPPORT_PROFILE,
+  };
   return [
-    ...discoverInitialDraftHoles(input),
-    ...discoverClassGrantedHoles(input),
-    ...discoverBackgroundGrantedHoles(input),
-    ...discoverBackgroundOriginFeatGrantHoles(input),
-    ...discoverSpeciesGrantedHoles(input),
-    ...discoverEquipmentHoles(input),
+    ...discoverInitialDraftHoles(discoveryInput),
+    ...discoverClassGrantedHoles(discoveryInput),
+    ...discoverBackgroundGrantedHoles(discoveryInput),
+    ...discoverBackgroundOriginFeatGrantHoles(discoveryInput),
+    ...discoverSpeciesGrantedHoles(discoveryInput),
+    ...discoverEquipmentHoles(discoveryInput),
   ];
 }
 export function discoverInitialDraftHoles(input: {
   readonly draft: CharacterDraft;
   readonly unitLibrary: UnitCatalog;
-  readonly supportProfile?: CharacterCreationSupportProfile;
+  readonly supportProfile: CharacterCreationSupportProfile;
 }): readonly CreationHole[] {
   return INITIAL_CHARACTER_DRAFT_PATHS.flatMap((path) => {
     if (hasDraftSelection(input.draft.selections, path)) {
@@ -220,7 +224,7 @@ export function discoverInitialDraftHoles(input: {
 export function discoverClassGrantedHoles(input: {
   readonly draft: CharacterDraft;
   readonly unitLibrary: UnitCatalog;
-  readonly supportProfile?: CharacterCreationSupportProfile;
+  readonly supportProfile: CharacterCreationSupportProfile;
 }): readonly CreationHole[] {
   const progression = input.draft.selections.progression;
   if (
@@ -326,7 +330,7 @@ function discoverClassSpellcastingHoles(
   classLevel: number,
   facts: ReadableClassCreationFacts,
   draft: CharacterDraft,
-  supportProfile?: CharacterCreationSupportProfile,
+  supportProfile: CharacterCreationSupportProfile,
 ): readonly CreationHole[] {
   return classSpellcastingChoiceHoles(classUnitId, facts, classLevel).flatMap(
     (hole) => unselectedUnitChoiceHole(draft, hole, supportProfile),
@@ -510,7 +514,7 @@ function discoverSubclassHoles(
   input: {
     readonly draft: CharacterDraft;
     readonly unitLibrary: UnitCatalog;
-    readonly supportProfile?: CharacterCreationSupportProfile;
+    readonly supportProfile: CharacterCreationSupportProfile;
   },
 ): readonly CreationHole[] {
   return facts.subclassChoices
@@ -538,7 +542,7 @@ function discoverSelectedSubclassFeatureGrantHoles(
   input: {
     readonly draft: CharacterDraft;
     readonly unitLibrary: UnitCatalog;
-    readonly supportProfile?: CharacterCreationSupportProfile;
+    readonly supportProfile: CharacterCreationSupportProfile;
   },
 ): readonly CreationHole[] {
   const selectedSubclassIds = input.draft.selections.choices.flatMap(
@@ -569,11 +573,7 @@ function discoverSelectedSubclassFeatureGrantHoles(
             classLevel,
             input.draft,
             input.unitLibrary,
-            {
-              ...(input.supportProfile === undefined
-                ? {}
-                : { supportProfile: input.supportProfile }),
-            },
+            { supportProfile: input.supportProfile },
           )
         : [],
     );
@@ -585,7 +585,7 @@ function discoverAdditionalClassGrantedHoles(
   classLevel: number,
   draft: CharacterDraft,
   unitLibrary: UnitCatalog,
-  supportProfile?: CharacterCreationSupportProfile,
+  supportProfile: CharacterCreationSupportProfile,
 ): readonly CreationHole[] {
   const classUnit = unitLibrary.getUnit(classUnitId);
   if (Option.isNone(classUnit)) {
@@ -625,7 +625,7 @@ function discoverClassFeatureGrantHolesInLevelOrder(
   draft: CharacterDraft,
   unitLibrary: UnitCatalog,
   deferOwnedSkillExpertiseChoices: boolean,
-  supportProfile?: CharacterCreationSupportProfile,
+  supportProfile: CharacterCreationSupportProfile,
 ): readonly CreationHole[] {
   const holes: CreationHole[] = [];
   let deferLaterOwnedSkillExpertiseChoices = deferOwnedSkillExpertiseChoices;
@@ -643,7 +643,7 @@ function discoverClassFeatureGrantHolesInLevelOrder(
         unitLibrary,
         {
           deferOwnedSkillExpertiseChoices: deferLaterOwnedSkillExpertiseChoices,
-          ...(supportProfile === undefined ? {} : { supportProfile }),
+          supportProfile,
         },
       ),
     );
@@ -842,7 +842,7 @@ export function selectedClassFeatureAcquisitionGrantChoiceHoles(input: {
 function discoverSelectedFeatAbilityScoreIncreaseHoles(input: {
   readonly draft: CharacterDraft;
   readonly unitLibrary: UnitCatalog;
-  readonly supportProfile?: CharacterCreationSupportProfile;
+  readonly supportProfile: CharacterCreationSupportProfile;
 }): readonly CreationHole[] {
   return input.draft.selections.choices.flatMap((selection) => {
     if (
@@ -879,7 +879,7 @@ function discoverSelectedFeatAbilityScoreIncreaseHoles(input: {
 export function discoverBackgroundGrantedHoles(input: {
   readonly draft: CharacterDraft;
   readonly unitLibrary: UnitCatalog;
-  readonly supportProfile?: CharacterCreationSupportProfile;
+  readonly supportProfile: CharacterCreationSupportProfile;
 }): readonly CreationHole[] {
   const backgroundUnitId = input.draft.selections.background;
   if (
@@ -935,7 +935,7 @@ export function discoverBackgroundGrantedHoles(input: {
 function discoverBackgroundOriginFeatGrantHoles(input: {
   readonly draft: CharacterDraft;
   readonly unitLibrary: UnitCatalog;
-  readonly supportProfile?: CharacterCreationSupportProfile;
+  readonly supportProfile: CharacterCreationSupportProfile;
 }): readonly CreationHole[] {
   const backgroundUnitId = input.draft.selections.background;
   if (
@@ -986,7 +986,7 @@ function discoverBackgroundOriginFeatGrantHoles(input: {
 function discoverSpeciesGrantedHoles(input: {
   readonly draft: CharacterDraft;
   readonly unitLibrary: UnitCatalog;
-  readonly supportProfile?: CharacterCreationSupportProfile;
+  readonly supportProfile: CharacterCreationSupportProfile;
 }): readonly CreationHole[] {
   return [
     ...speciesTraitGrantChoiceHoles(input).flatMap((hole) =>
@@ -1204,7 +1204,7 @@ export function backgroundToolChoiceSpec(
 export function discoverEquipmentHoles(input: {
   readonly draft: CharacterDraft;
   readonly unitLibrary: UnitCatalog;
-  readonly supportProfile?: CharacterCreationSupportProfile;
+  readonly supportProfile: CharacterCreationSupportProfile;
 }): readonly CreationHole[] {
   const classUnitId =
     input.draft.selections.progression == null
@@ -1260,7 +1260,7 @@ function classToolProficiencyChoiceHoles(
   draft: CharacterDraft,
   classUnitId: UnitRecord["id"],
   facts: ReadableClassCreationFacts,
-  supportProfile?: CharacterCreationSupportProfile,
+  supportProfile: CharacterCreationSupportProfile,
 ): readonly CreationHole[] {
   const proficiency = facts.toolProficiencies;
   if (proficiency.kind !== "choice") {
@@ -1295,7 +1295,7 @@ export function startingEquipmentChoiceHole(
 export function hasSupportedCoinEquipmentPath(input: {
   readonly draft: CharacterDraft;
   readonly unitLibrary: UnitCatalog;
-  readonly supportProfile?: CharacterCreationSupportProfile;
+  readonly supportProfile: CharacterCreationSupportProfile;
 }): boolean {
   const draft = input.draft;
   const progression = draft.selections.progression;
@@ -1681,8 +1681,8 @@ export function discoverClassFeatureGrantHoles(
   unitLibrary: UnitCatalog,
   input: {
     readonly deferOwnedSkillExpertiseChoices?: boolean;
-    readonly supportProfile?: CharacterCreationSupportProfile;
-  } = {},
+    readonly supportProfile: CharacterCreationSupportProfile;
+  },
 ): readonly CreationHole[] {
   return classFeatureGrantChoiceHoles(featureUnitId, unitLibrary, {
     classLevel,

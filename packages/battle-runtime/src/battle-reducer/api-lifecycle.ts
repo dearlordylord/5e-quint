@@ -280,6 +280,7 @@ export function startBattle(
     combatants,
     executionScopeCursors,
     companions: new Map(),
+    groundObjects: new Map(),
     objectOutlines: [],
     lightEmitters: [],
     hidePrerequisites: new Map(input.hidePrerequisites ?? []),

@@ -222,7 +222,9 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
     const state = castWardingBond(wardingBondBattle());
     const target = requireCombatant(state, spellTargetId);
 
-    expect(damageAmountAfterTargetAdjustments(target, 9, "fire")).toBe(4);
+    expect(damageAmountAfterTargetAdjustments(state, target, 9, "fire")).toBe(
+      4,
+    );
 
     const damaged = applyBattleHitPointDamage({
       state,

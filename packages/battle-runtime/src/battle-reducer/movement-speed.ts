@@ -70,10 +70,10 @@ import { selfTransformationModeSpecialSpeedKind } from "./spells-active-effects.
 import { SLOW_ACTIVE_PENALTIES_SPEED_RATIO } from "./domain-constants.ts";
 import {
   combatantCanSee,
-  combatantWearingArmor,
   combatantHandUses,
-  combatantWieldingShield,
+  combatantWearingArmor,
   combatantWearingArmorCategory,
+  combatantWieldingShield,
   currentActorId,
   grappledBy,
 } from "./creature-state-leaves.ts";
@@ -97,6 +97,7 @@ type BattleSpecialSpeedCandidate =
     };
 
 export function battleMovementBudget(
+  state: BattleState,
   combatant: BattleCreatureState | undefined,
   grapples: readonly BattleGrappleLink[] = [],
   movementBonusFeet: MovementFeet = movementFeet(0),
@@ -122,13 +123,23 @@ export function battleMovementBudget(
   const isGrappled = grapples.some(
     (grapple) => grapple.targetId === combatant.combatantId,
   );
-  const speedFeet = effectiveMovementSpeed(combatant, speedKind, isGrappled);
+  const speedFeet = effectiveMovementSpeed(
+    state,
+    combatant,
+    speedKind,
+    isGrappled,
+  );
   const movementBudgetFeet = Number(speedFeet) + Number(movementBonusFeet);
   const remainingFeet = movementFeet(
     Math.max(0, movementBudgetFeet - Number(combatant.movementSpentFeet)),
   );
   const speedKinds = representedMovementSpeedKinds(combatant).map((kind) => {
-    const kindSpeedFeet = effectiveMovementSpeed(combatant, kind, isGrappled);
+    const kindSpeedFeet = effectiveMovementSpeed(
+      state,
+      combatant,
+      kind,
+      isGrappled,
+    );
     return {
       kind,
       speedFeet: kindSpeedFeet,
@@ -160,6 +171,7 @@ export function battleMovementBudgetForActor(
       ? state.currentTurnResources.dashMovementBonusFeet
       : movementFeet(0);
   return battleMovementBudget(
+    state,
     state.combatants.get(actorId),
     state.grapples,
     bonus,
@@ -176,20 +188,22 @@ export function movementHoleHasRemainingBudget(
 }
 
 export function effectiveWalkSpeed(
+  state: BattleState,
   combatant: BattleCreatureState,
   isGrappled = false,
 ): MovementFeet {
-  return effectiveMovementSpeed(combatant, "walk", isGrappled);
+  return effectiveMovementSpeed(state, combatant, "walk", isGrappled);
 }
 
 export function effectiveMovementSpeed(
+  state: BattleState,
   combatant: BattleCreatureState,
   speedKind: BattleMovementSpeedKind,
   isGrappled = false,
 ): MovementFeet {
   const speedFeet =
     sharedEffectiveSpeed(
-      battleCreatureSpeedFacts(combatant, isGrappled),
+      battleCreatureSpeedFacts(state, combatant, isGrappled),
       speedKind,
     ) ?? movementFeet(0);
   return combatant.activeEffects.some((effect) => effect.kind === "speedHalved")
@@ -229,21 +243,23 @@ function literalWalkSpeed(
 }
 
 export function battleCreatureSpeedFacts(
+  state: BattleState,
   combatant: BattleCreatureState,
   isGrappled = false,
 ): CreatureSpeedFacts {
   return {
     ordinarySpeedFeet: movementFeet(baseWalkSpeed(combatant)),
-    speedChanges: battleSpeedChanges(combatant),
+    speedChanges: battleSpeedChanges(state, combatant),
     specialSpeeds: battleSpecialSpeedCandidates(combatant),
     terminalSpeedZero: battleTerminalSpeedZero(combatant, isGrappled),
   };
 }
 
 export function battleSpeedChanges(
+  state: BattleState,
   combatant: BattleCreatureState,
 ): readonly SpeedChange[] {
-  const passiveFeatureDelta = passiveSpeedBonusDelta(combatant);
+  const passiveFeatureDelta = passiveSpeedBonusDelta(state, combatant);
   const activeEffectDelta = combatant.activeEffects
     .filter(
       (effect) =>
@@ -433,7 +449,10 @@ export function passiveSpeedKindGrantKinds(
   return PASSIVE_SPEED_KIND_GRANT_KINDS.filter((kind) => kinds.has(kind));
 }
 
-export function passiveSpeedBonusDelta(combatant: BattleCreatureState): number {
+export function passiveSpeedBonusDelta(
+  state: BattleState,
+  combatant: BattleCreatureState,
+): number {
   if (combatant.origin.kind !== "character") {
     return 0;
   }
@@ -459,7 +478,7 @@ export function passiveSpeedBonusDelta(combatant: BattleCreatureState): number {
           : undefined;
     if (
       speed !== undefined &&
-      passiveSpeedBonusConditionApplies(combatant, speed.condition)
+      passiveSpeedBonusConditionApplies(state, combatant, speed.condition)
     ) {
       total += Number(speed.deltaFeet);
     }
@@ -468,6 +487,7 @@ export function passiveSpeedBonusDelta(combatant: BattleCreatureState): number {
 }
 
 function passiveSpeedBonusConditionApplies(
+  state: BattleState,
   combatant: BattleCreatureState,
   condition: PassiveSpeedBonusCondition,
 ): boolean {
@@ -476,14 +496,14 @@ function passiveSpeedBonusConditionApplies(
       { kind: "notWearingArmor" },
       ({ categories }) =>
         !categories.some((category) =>
-          combatantWearingArmorCategory(combatant, category),
+          combatantWearingArmorCategory(state, combatant, category),
         ),
     ),
     Match.when(
       { kind: "unarmoredUnshielded" },
       () =>
-        !combatantWearingArmor(combatant) &&
-        !combatantWieldingShield(combatant),
+        !combatantWearingArmor(state, combatant) &&
+        !combatantWieldingShield(state, combatant),
     ),
     Match.exhaustive,
   );
@@ -749,7 +769,7 @@ export function grappleLinkForTarget(
         "Grapple while using a Beast form requires unsupported form anatomy and free-hand projection.",
     };
   }
-  const hand = firstFreeHand(grappler, state.grapples);
+  const hand = firstFreeHand(state, grappler, state.grapples);
   if (hand === undefined) {
     return { tag: "invalid", message: "Grapple requires a free hand." };
   }
@@ -830,10 +850,11 @@ export function shoveForTarget(
 }
 
 export function firstFreeHand(
+  state: BattleState,
   combatant: BattleCreatureState,
   grapples: readonly BattleGrappleLink[],
 ): BattleHand | undefined {
-  const hands = combatantHandUses(combatant, grapples);
+  const hands = combatantHandUses(state, combatant, grapples);
   if (hands.left === "free") return "left";
   if (hands.right === "free") return "right";
   return undefined;

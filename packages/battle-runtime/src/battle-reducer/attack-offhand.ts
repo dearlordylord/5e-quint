@@ -407,7 +407,7 @@ function resolveBonusActionAttack(
   );
   const hit = attackRollHitsWithCriticalThreshold(
     effectiveAttackRoll,
-    currentArmorClass(activeEffectArmorClass(target)),
+    currentArmorClass(activeEffectArmorClass(input.state, target)),
     criticalThreshold,
   );
   let attackRolledState = consumeHelpAttackForAttackRoll(
@@ -553,6 +553,7 @@ function resolveBonusActionAttack(
         spellWeaponDamageRiders,
         spellMarkedDamageRiders,
         ongoingFeatureDamageModifier(
+          attackRolledState,
           attackRolledState.combatants.get(input.subject.actorId),
           attack,
         ),
@@ -598,6 +599,7 @@ function resolveBonusActionAttack(
       spellWeaponDamageRiders,
       spellMarkedDamageRiders,
       ongoingFeatureDamageModifier(
+        attackRolledState,
         attackRolledState.combatants.get(input.subject.actorId),
         attack,
       ),
@@ -612,6 +614,7 @@ function resolveBonusActionAttack(
       input.subject.actorId,
     );
     const damageRollByType = attackDamageByTypeEntries(
+      attackRolledState,
       damageSource,
       attack,
       attack.procedureRef,
@@ -704,6 +707,7 @@ function resolveBonusActionAttack(
       ),
     };
     const damageAmount = attackDamageEventAmountForTarget(
+      spellReducedState,
       spellReduction.target,
       reducedDamageEventAfterSpellReduction,
     );

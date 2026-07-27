@@ -20,7 +20,10 @@ import {
   hasCondition,
 } from "@dnd/shared-algebras/conditions-algebra";
 import type { ConditionState } from "@dnd/shared-algebras/conditions-algebra";
-import { statBlockArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
+import {
+  defaultUnarmoredArmorClassBase,
+  statBlockArmorClassState,
+} from "@dnd/shared-algebras/armor-class-algebra";
 import {
   resetDeathSaveRuntimeState,
   validDeathSaveRuntimeState,
@@ -460,6 +463,15 @@ export function battleCreatureStateAdmissionFromInit(
             }),
         weaponProficiencies: creatureInit.weaponProficiencies ?? [],
         selectedLoadout: creatureInit.selectedLoadout,
+        unarmoredArmorClassBases:
+          creatureInit.unarmoredArmorClassBases ??
+          (() => {
+            const base =
+              creatureInit.armorClass.base.kind === "ability_sum"
+                ? creatureInit.armorClass.base
+                : defaultUnarmoredArmorClassBase();
+            return { shielded: base, unshielded: base };
+          })(),
         invocationFeatures: creatureInit.invocationFeatures ?? [],
         speed: creatureInit.speed,
         attack: attackExecution.execution.attack,

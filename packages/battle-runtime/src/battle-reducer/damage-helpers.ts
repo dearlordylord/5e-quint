@@ -37,6 +37,7 @@ import {
 import {
   type AttackDamageRider,
   type BattleCreatureState,
+  type BattleState,
   type BattleFill,
   type BattleHole,
   type BattleRolledDiceFill,
@@ -74,21 +75,29 @@ export type DamageAmountByTypeEntry = {
 };
 
 export function fixedAttackDamageAmount(
+  state: BattleState,
   attacker: BattleCreatureState | undefined,
   target: BattleCreatureState,
   attack: SupportedAttackActionOption,
   attackRoll?: AttackRollResult,
 ): number | null {
-  const entries = fixedAttackDamageByTypeEntries(attacker, attack, attackRoll);
+  const entries = fixedAttackDamageByTypeEntries(
+    state,
+    attacker,
+    attack,
+    attackRoll,
+  );
   return entries === null
     ? null
     : damageAmountByTypeAfterTargetAdjustments(
+        state,
         target,
         damageAmountByTypeEntriesToMap(entries),
       );
 }
 
 export function fixedAttackDamageByTypeEntries(
+  state: BattleState,
   attacker: BattleCreatureState | undefined,
   attack: SupportedAttackActionOption,
   attackRoll?: AttackRollResult,
@@ -104,7 +113,7 @@ export function fixedAttackDamageByTypeEntries(
           amount: Math.max(
             0,
             attackDamageModifier(attack) +
-              ongoingFeatureDamageModifier(attacker, attack),
+              ongoingFeatureDamageModifier(state, attacker, attack),
           ),
         },
       ];
@@ -121,7 +130,7 @@ export function fixedAttackDamageByTypeEntries(
       }));
       const baseStaticDamageWithModifier = addDamageModifierToFirstEntry(
         baseStaticDamage,
-        ongoingFeatureDamageModifier(attacker, statBlockAttack),
+        ongoingFeatureDamageModifier(state, attacker, statBlockAttack),
       );
       const advantageBonus =
         damage.advantageBonus !== undefined &&
@@ -162,6 +171,7 @@ function addDamageModifierToFirstEntry(
 }
 
 export function attackDamageByTypeEntries(
+  state: BattleState,
   attacker: BattleCreatureState | undefined,
   attack: SupportedAttackActionOption,
   attackProcedureRef: BattleProcedureExecutionRef,
@@ -174,6 +184,7 @@ export function attackDamageByTypeEntries(
 ): readonly DamageAmountByTypeEntry[] {
   return [
     ...attackDamageByType(
+      state,
       attacker,
       attack,
       attackProcedureRef,
@@ -188,6 +199,7 @@ export function attackDamageByTypeEntries(
 }
 
 export function attackDamageByType(
+  state: BattleState,
   attacker: BattleCreatureState | undefined,
   attack: SupportedAttackActionOption,
   attackProcedureRef: BattleProcedureExecutionRef,
@@ -207,6 +219,7 @@ export function attackDamageByType(
     spellMarkedDamageRiders,
   );
   const fixedBaseDamageEntries = fixedAttackDamageByTypeEntries(
+    state,
     attacker,
     attack,
     attackRoll,
@@ -232,7 +245,7 @@ export function attackDamageByType(
         fixedBaseDamageEntries === null && index === 0
           ? attackDamageModifier(attack) +
             selectedAttackDamageAbilityModifier(attack, damageRoll) +
-            ongoingFeatureDamageModifier(attacker, attack)
+            ongoingFeatureDamageModifier(state, attacker, attack)
           : 0;
       if (component.operation === "subtract") {
         return totals;
@@ -747,6 +760,7 @@ export function entriesAfterProportionalDamageReduction(
 }
 
 export function ongoingFeatureDamageModifier(
+  state: BattleState,
   attacker: BattleCreatureState | undefined,
   attack: SupportedAttackActionOption,
 ): number {
@@ -756,24 +770,23 @@ export function ongoingFeatureDamageModifier(
   ) {
     return 0;
   }
-  return [...activeOngoingFeatureOccurrencesForCombatant(attacker)].reduce(
-    (total, [key]) => {
-      const profile = ongoingFeatureProfileForSourceKey(attacker, key);
-      if (profile === null) return total;
-      return (
-        total +
-        profile.damageModifiers.reduce(
-          (ongoingFeatureTotal, modifier) =>
-            ongoingFeatureTotal +
-            (ongoingFeatureDamageModifierApplies(modifier, attack)
-              ? modifier.amount
-              : 0),
-          0,
-        )
-      );
-    },
-    0,
-  );
+  return [
+    ...activeOngoingFeatureOccurrencesForCombatant(state, attacker),
+  ].reduce((total, [key]) => {
+    const profile = ongoingFeatureProfileForSourceKey(attacker, key);
+    if (profile === null) return total;
+    return (
+      total +
+      profile.damageModifiers.reduce(
+        (ongoingFeatureTotal, modifier) =>
+          ongoingFeatureTotal +
+          (ongoingFeatureDamageModifierApplies(modifier, attack)
+            ? modifier.amount
+            : 0),
+        0,
+      )
+    );
+  }, 0);
 }
 
 export function activeSpellWeaponDamageRiders(
@@ -858,23 +871,26 @@ export function addDamageAmountForType(
 }
 
 export function damageAmountByTypeAfterTargetAdjustments(
+  state: BattleState,
   target: BattleCreatureState,
   damageByType: ReadonlyMap<DamageType, number>,
 ): number {
   return [...damageByType].reduce(
     (total, [damageType, amount]) =>
-      total + damageAmountAfterTargetAdjustments(target, amount, damageType),
+      total +
+      damageAmountAfterTargetAdjustments(state, target, amount, damageType),
     0,
   );
 }
 
 export function damageAmountAfterTargetAdjustments(
+  state: BattleState,
   target: BattleCreatureState,
   amount: number,
   damageType: DamageType,
 ): number {
   if (target.origin.kind !== "statBlock") {
-    return targetHasRuntimeDamageResistance(target, damageType)
+    return targetHasRuntimeDamageResistance(state, target, damageType)
       ? Math.floor(amount / 2)
       : amount;
   }
@@ -885,7 +901,7 @@ export function damageAmountAfterTargetAdjustments(
   }
 
   const afterResistance =
-    targetHasRuntimeDamageResistance(target, damageType) ||
+    targetHasRuntimeDamageResistance(state, target, damageType) ||
     statBlock.resistances.includes(damageType)
       ? Math.floor(amount / 2)
       : amount;
@@ -896,6 +912,7 @@ export function damageAmountAfterTargetAdjustments(
 }
 
 function targetHasRuntimeDamageResistance(
+  state: BattleState,
   target: BattleCreatureState,
   damageType: DamageType,
 ): boolean {
@@ -906,7 +923,7 @@ function targetHasRuntimeDamageResistance(
     ) ||
     combatantHasWardingBondResistance(target) ||
     characterExecutionGrantsPassiveDamageResistance(target, damageType) ||
-    [...activeOngoingFeatureOccurrencesForCombatant(target)].some(
+    [...activeOngoingFeatureOccurrencesForCombatant(state, target)].some(
       ([key]) =>
         ongoingFeatureProfileForSourceKey(target, key)?.resistances.includes(
           damageType,

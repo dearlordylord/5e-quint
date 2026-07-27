@@ -1522,7 +1522,7 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
     if (actor === undefined) {
       throw new Error("Expected Twinned Spell actor.");
     }
-    const baseBlessInvocation = supportedSpellActs(actor).find(
+    const baseBlessInvocation = supportedSpellActs(state, actor).find(
       (invocation) =>
         invocation.procedure === "rollModifier" &&
         invocation.resource.tag === "spellSlot" &&
@@ -3521,7 +3521,7 @@ function supportedInvocationFor(
     throw new Error(`Expected ${targetSpellId} ${procedure} act.`);
   }
   const procedureRef = act.subject.procedureRef;
-  const invocation = supportedSpellActs(actor).find(
+  const invocation = supportedSpellActs(session.state, actor).find(
     (candidate) => candidate.sourceProcedureRef === procedureRef,
   );
   if (invocation === undefined) {

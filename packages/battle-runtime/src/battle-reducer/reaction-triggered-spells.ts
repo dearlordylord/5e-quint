@@ -76,7 +76,7 @@ export function triggeredReactionSpellChoices(
       ) {
         return [];
       }
-      return supportedSpellActs(reactor).flatMap(
+      return supportedSpellActs(state, reactor).flatMap(
         (invocation): readonly BattleInterruptProcedureChoice[] => {
           const executableInvocation = invocation;
           if (

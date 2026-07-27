@@ -323,19 +323,23 @@ export function resolveAttackDamageReductionZeroDamageRedirectAfterReduction(inp
   if (redirectTarget === undefined) {
     return { tag: "ok", state: resourceSpent };
   }
-  const redirectedDamage = attackDamageEventAmountForTarget(redirectTarget, {
-    kind: "aggregateDamage",
-    damageByTypeBeforeTargetAdjustments: [
-      {
-        damageType: offer.redirect.originalDamageType,
-        amount: Math.max(
-          0,
-          selection.value.redirectedDamageRoll +
-            Number(offer.redirect.damageAbilityModifier),
-        ),
-      },
-    ],
-  });
+  const redirectedDamage = attackDamageEventAmountForTarget(
+    resourceSpent,
+    redirectTarget,
+    {
+      kind: "aggregateDamage",
+      damageByTypeBeforeTargetAdjustments: [
+        {
+          damageType: offer.redirect.originalDamageType,
+          amount: Math.max(
+            0,
+            selection.value.redirectedDamageRoll +
+              Number(offer.redirect.damageAbilityModifier),
+          ),
+        },
+      ],
+    },
+  );
   const relationshipDecision = damageRelationshipDecisionFillCheck({
     state: resourceSpent,
     damageEventHoleId:

@@ -45,7 +45,10 @@ import type {
   LiteralWalkStatBlockSpeed,
 } from "./druid-wild-shape-known-form-execution.ts";
 export type { BattleDruidWildShapeKnownForm } from "./druid-wild-shape-known-form-execution.ts";
-import type { BattleStateInitIssue } from "./battle-state-execution.ts";
+import type {
+  BattleStateInitIssue,
+  CharacterBattleUnarmoredArmorClassBases,
+} from "./battle-state-execution.ts";
 import {
   battleStatBlockCombatantSource,
   type BattleStatBlockCombatantSource,
@@ -273,6 +276,12 @@ export type CharacterBattleCreatureInit = {
   readonly druidWildShapeAvailableForms?: readonly BattleDruidWildShapeKnownForm[];
   readonly weaponProficiencies?: readonly WeaponProficiency[];
   readonly armorClass: ArmorClassState;
+  /**
+   * Omission has one precise meaning for synthetic/direct fixtures: use the
+   * selected ability-sum base when already unarmored, otherwise use the default
+   * 10 + Dexterity base for both Shield states.
+   */
+  readonly unarmoredArmorClassBases?: CharacterBattleUnarmoredArmorClassBases;
   readonly size: Size;
   readonly speed: BattleWalkSpeed;
   readonly currentHp: Hp;

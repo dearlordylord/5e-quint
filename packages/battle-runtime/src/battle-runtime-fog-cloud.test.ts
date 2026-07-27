@@ -76,7 +76,7 @@ describe("battle runtime: Fog Cloud", () => {
     if (wizard === undefined) {
       throw new Error("Expected Wizard.");
     }
-    const levelThree = supportedSpellActs(wizard).find(
+    const levelThree = supportedSpellActs(session.state, wizard).find(
       (invocation) =>
         invocation.procedure === "fogCloudObscurement" &&
         invocation.resource.slotLevel === 3,

@@ -2411,6 +2411,17 @@ function runSelfTest(root) {
       testText,
       testPath,
     );
+    const tableOnlyDeclaredActions = extractDeclaredReplayActionNames(
+      testText.replace(/const driverSchema = \{[\s\S]*?\} as const;\n/, ""),
+    );
+    if (
+      !tableOnlyDeclaredActions.has("doReachableAction") ||
+      tableOnlyDeclaredActions.has("doDriverOnly")
+    ) {
+      fail(
+        `Self-test failed: deterministic replay-table actions were not recognized independently of a driver schema, got ${JSON.stringify([...tableOnlyDeclaredActions])}`,
+      );
+    }
     const issues = validateOwnerClaims(
       [],
       [],

@@ -142,6 +142,7 @@ import {
 
 import { maybeOpenInterruptWindow } from "./interrupt-execution.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";
+import { characterEffectiveLoadoutFromOrigin } from "./battle-object-lifecycle.ts";
 import {
   flamingSphereDamageAfterSave,
   flamingSphereMoveDistanceAccepted,
@@ -277,7 +278,6 @@ import type {
   BattleMoonbeamSaveTrigger,
   BattleMoonbeamSavingThrowOutcomeHole,
   BattleMovableZoneRepositionMovementHole,
-  BattleGrappleLink,
   BattleGrappleDragMovementFact,
   BattleGreaseGroundHazardSavingThrowOutcomeHole,
   BattleSpikeGrowthMovementDamageRollHole,
@@ -617,8 +617,10 @@ export function resolveEndTurn(
     commandHalt === null
       ? combatantsAfterDamageReductionReset
       : combatantsWithCommandHaltMovementSpent(
-          combatantsAfterDamageReductionReset,
-          state.grapples,
+          {
+            ...stateAfterSleepRepeatSaves,
+            combatants: combatantsAfterDamageReductionReset,
+          },
           nextActorId,
         );
   const nextState = battleStateWithFlySpeedGrantEndFallCleanupFrames(
@@ -709,24 +711,25 @@ function combatantHasMoveActionBonusActionRestriction(
 }
 
 function combatantsWithCommandHaltMovementSpent(
-  combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
-  grapples: readonly BattleGrappleLink[],
+  state: BattleState,
   actorId: CombatantId,
 ): ReadonlyMap<CombatantId, BattleCreatureState> {
-  const actor = combatants.get(actorId);
+  const actor = state.combatants.get(actorId);
   if (actor === undefined) {
-    return combatants;
+    return state.combatants;
   }
 
-  const isGrappled = grapples.some((grapple) => grapple.targetId === actorId);
+  const isGrappled = state.grapples.some(
+    (grapple) => grapple.targetId === actorId,
+  );
   const spentFeet = Math.max(
     Number(actor.movementSpentFeet),
     ...representedMovementSpeedKinds(actor).map((kind) =>
-      Number(effectiveMovementSpeed(actor, kind, isGrappled)),
+      Number(effectiveMovementSpeed(state, actor, kind, isGrappled)),
     ),
   );
 
-  return new Map(combatants).set(actorId, {
+  return new Map(state.combatants).set(actorId, {
     ...actor,
     movementSpentFeet: movementFeet(spentFeet),
   });
@@ -886,11 +889,13 @@ function spellTurnEndDamageRollFor(
 }
 
 function spellTurnEndDamageAmount(
+  state: BattleState,
   target: BattleCreatureState,
   effect: SpellTurnEndDamageEffect,
   roll: Extract<BattleFill, { readonly kind: "rolledDice" }>,
 ): number {
   return damageAmountAfterTargetAdjustments(
+    state,
     target,
     rolledDiceTotal(roll.value) + (effect.damage.expr.flat ?? 0),
     effect.damage.damageType,
@@ -951,12 +956,14 @@ function spellTurnStartDamageRollFor(
 }
 
 function spellTurnStartDamageAmount(
+  state: BattleState,
   target: BattleCreatureState,
   effect: SpellTurnStartDamageEffect,
   roll: Extract<BattleFill, { readonly kind: "rolledDice" }>,
 ): number {
   const damage = spellTurnStartDamageForEffect(effect);
   return damageAmountAfterTargetAdjustments(
+    state,
     target,
     rolledDiceTotal(roll.value) + (damage.expr.flat ?? 0),
     damage.damageType,
@@ -988,7 +995,7 @@ function applySpellTurnStartDamage(
   return applyPreparedSlotSpellDamage(
     state,
     targetId,
-    spellTurnStartDamageAmount(target, effect, roll),
+    spellTurnStartDamageAmount(state, target, effect, roll),
     {
       concentrationSavingThrow,
       wardingBondDamageShareConcentrationSavingThrows,
@@ -1729,7 +1736,11 @@ export function canonicalHeldObjectIdsForActor(
   if (actor?.origin.kind !== "character") {
     return null;
   }
-  const loadout = actor.origin.selectedLoadout;
+  const loadout = characterEffectiveLoadoutFromOrigin(
+    state,
+    actor.combatantId,
+    actor.origin,
+  );
   return [
     ...(loadout.weapon === undefined ? [] : [loadout.weapon.itemId]),
     ...(loadout.offHandWeapon === undefined
@@ -3057,6 +3068,7 @@ function insectPlagueAreaHazardSaveAlreadyResolved(
 }
 
 function insectPlagueAreaHazardAdjustedDamage(input: {
+  readonly state: BattleState;
   readonly target: BattleCreatureState;
   readonly effect: InsectPlagueAreaHazardEffect;
   readonly damageFill: Extract<BattleFill, { readonly kind: "rolledDice" }>;
@@ -3066,6 +3078,7 @@ function insectPlagueAreaHazardAdjustedDamage(input: {
     rolledDiceTotal(input.damageFill.value) +
     (input.effect.damage.expr.flat ?? 0);
   return damageAmountAfterTargetAdjustments(
+    input.state,
     input.target,
     applySaveDamageResult(rolledDamage, input.saveSucceeded ? "half" : "full"),
     input.effect.damage.damageType,
@@ -3090,6 +3103,7 @@ function applyInsectPlagueAreaHazardDamage(input: {
     input.state,
     input.targetId,
     insectPlagueAreaHazardAdjustedDamage({
+      state: input.state,
       target,
       effect: input.effect,
       damageFill: input.damageFill,
@@ -3222,6 +3236,7 @@ export function resolveInsectPlagueAreaHazardSaveCommand(
     return invalidResult(input.state, "invalidFill", damageValidation);
   }
   const adjustedDamage = insectPlagueAreaHazardAdjustedDamage({
+    state: input.state,
     target,
     effect,
     damageFill,
@@ -3437,6 +3452,7 @@ function cloudkillAreaHazardSaveAlreadyResolved(
 }
 
 function cloudkillAreaHazardAdjustedDamage(input: {
+  readonly state: BattleState;
   readonly target: BattleCreatureState;
   readonly effect: CloudkillAreaHazardEffect;
   readonly damageFill: Extract<BattleFill, { readonly kind: "rolledDice" }>;
@@ -3446,6 +3462,7 @@ function cloudkillAreaHazardAdjustedDamage(input: {
     rolledDiceTotal(input.damageFill.value) +
     (input.effect.damage.expr.flat ?? 0);
   return damageAmountAfterTargetAdjustments(
+    input.state,
     input.target,
     applySaveDamageResult(rolledDamage, input.saveSucceeded ? "half" : "full"),
     input.effect.damage.damageType,
@@ -3470,6 +3487,7 @@ function applyCloudkillAreaHazardDamage(input: {
     input.state,
     input.targetId,
     cloudkillAreaHazardAdjustedDamage({
+      state: input.state,
       target,
       effect: input.effect,
       damageFill: input.damageFill,
@@ -3602,6 +3620,7 @@ export function resolveCloudkillAreaHazardSaveCommand(
     return invalidResult(input.state, "invalidFill", damageValidation);
   }
   const adjustedDamage = cloudkillAreaHazardAdjustedDamage({
+    state: input.state,
     target,
     effect,
     damageFill,
@@ -4416,6 +4435,7 @@ function validateFlamingSphereRepositionMovement(
 }
 
 function flamingSphereAdjustedDamage(input: {
+  readonly state: BattleState;
   readonly target: BattleCreatureState;
   readonly effect: FlamingSphereEffect;
   readonly damageFill: Extract<BattleFill, { readonly kind: "rolledDice" }>;
@@ -4429,6 +4449,7 @@ function flamingSphereAdjustedDamage(input: {
     savingThrowSucceeded: input.saveSucceeded,
   });
   return damageAmountAfterTargetAdjustments(
+    input.state,
     input.target,
     saveAdjustedDamage,
     input.effect.damage.damageType,
@@ -4453,6 +4474,7 @@ function applyFlamingSphereDamage(input: {
     input.state,
     input.targetId,
     flamingSphereAdjustedDamage({
+      state: input.state,
       target,
       effect: input.effect,
       damageFill: input.damageFill,
@@ -4606,6 +4628,7 @@ export function resolveFlamingSphereSaveCommand(
     return invalidResult(input.state, "invalidFill", damageValidation);
   }
   const adjustedDamage = flamingSphereAdjustedDamage({
+    state: input.state,
     target,
     effect,
     damageFill,
@@ -4925,6 +4948,7 @@ export function resolveFlamingSphereRamCommand(
       : concentrationSavingThrowHole(
           target,
           flamingSphereAdjustedDamage({
+            state: input.state,
             target,
             effect,
             damageFill,
@@ -5169,6 +5193,7 @@ function validateMoonbeamRepositionMovement(
 }
 
 function moonbeamAdjustedDamage(input: {
+  readonly state: BattleState;
   readonly target: BattleCreatureState;
   readonly effect: MoonbeamEffect;
   readonly damageFill: Extract<BattleFill, { readonly kind: "rolledDice" }>;
@@ -5178,6 +5203,7 @@ function moonbeamAdjustedDamage(input: {
     rolledDiceTotal(input.damageFill.value) +
     (input.effect.damage.expr.flat ?? 0);
   return damageAmountAfterTargetAdjustments(
+    input.state,
     input.target,
     moonbeamDamageAfterSave({
       rolledDamage,
@@ -5205,6 +5231,7 @@ function applyMoonbeamDamage(input: {
     input.state,
     input.targetId,
     moonbeamAdjustedDamage({
+      state: input.state,
       target,
       effect: input.effect,
       damageFill: input.damageFill,
@@ -5398,6 +5425,7 @@ export function resolveMoonbeamSaveCommand(
     return invalidResult(input.state, "invalidFill", damageValidation);
   }
   const adjustedDamage = moonbeamAdjustedDamage({
+    state: input.state,
     target,
     effect,
     damageFill,
@@ -6170,7 +6198,12 @@ function applyStartTurnSpellDamageFills(
     if (roll === undefined || target === undefined) {
       return nextState;
     }
-    const damageAmount = spellTurnStartDamageAmount(target, effect, roll);
+    const damageAmount = spellTurnStartDamageAmount(
+      nextState,
+      target,
+      effect,
+      roll,
+    );
     const concentrationHole = concentrationSavingThrowHole(
       target,
       damageAmount,
@@ -6253,7 +6286,12 @@ function applyEndTurnSpellDamageFills(
     if (roll === undefined || target === undefined) {
       return nextState;
     }
-    const damageAmount = spellTurnEndDamageAmount(target, effect, roll);
+    const damageAmount = spellTurnEndDamageAmount(
+      nextState,
+      target,
+      effect,
+      roll,
+    );
     const concentrationHole = concentrationSavingThrowHole(
       target,
       damageAmount,
@@ -6317,7 +6355,7 @@ function endTurnDamageDispositionHoles(
       zeroHitPointReplacementDispositionHole({
         damageSourceId: effect.sourceCombatantId,
         target,
-        damageAmount: spellTurnEndDamageAmount(target, effect, roll),
+        damageAmount: spellTurnEndDamageAmount(state, target, effect, roll),
       }) ?? []
     );
   });
@@ -6340,7 +6378,7 @@ function startTurnDamageDispositionHoles(
       zeroHitPointReplacementDispositionHole({
         damageSourceId: effect.sourceCombatantId,
         target,
-        damageAmount: spellTurnStartDamageAmount(target, effect, roll),
+        damageAmount: spellTurnStartDamageAmount(state, target, effect, roll),
       }) ?? []
     );
   });
@@ -7274,6 +7312,7 @@ export function resolveEndTurnCommand(
         return { tag: "ok" as const, holes: [] };
       }
       const damageAmount = spellTurnEndDamageAmount(
+        input.state,
         actor,
         request.effect,
         request.roll,
@@ -7320,6 +7359,7 @@ export function resolveEndTurnCommand(
         return { tag: "ok" as const, holes: [] };
       }
       const damageAmount = spellTurnStartDamageAmount(
+        input.state,
         nextActor,
         request.effect,
         request.roll,
@@ -7609,6 +7649,7 @@ export function resolveEndTurnCommand(
         state: input.state,
         target,
         damageAmount: spellTurnEndDamageAmount(
+          input.state,
           target,
           request.effect,
           request.roll,
@@ -7626,6 +7667,7 @@ export function resolveEndTurnCommand(
         state: input.state,
         target,
         damageAmount: spellTurnStartDamageAmount(
+          input.state,
           target,
           request.effect,
           request.roll,
@@ -8160,6 +8202,7 @@ export function standFromProneCostFeet(
     return null;
   }
   const speed = effectiveWalkSpeed(
+    state,
     actor,
     state.grapples.some((grapple) => grapple.targetId === actorId),
   );
@@ -8197,7 +8240,12 @@ export function readiedMovementHole(
       ? []
       : representedMovementSpeedKinds(actor).map((kind) => ({
           kind,
-          movementBudgetFeet: effectiveMovementSpeed(actor, kind, isGrappled),
+          movementBudgetFeet: effectiveMovementSpeed(
+            state,
+            actor,
+            kind,
+            isGrappled,
+          ),
         }));
   return movementHoleWithBudget(
     actorId,
@@ -8234,6 +8282,7 @@ export function readiedMovementBudgetForActor(
   return actor === undefined
     ? movementFeet(0)
     : effectiveMovementSpeed(
+        state,
         actor,
         speedKind,
         state.grapples.some((grapple) => grapple.targetId === actorId),
@@ -8570,11 +8619,13 @@ function validateSpikeGrowthMovementDamageRoll(
 }
 
 function spikeGrowthMovementDamageAmount(
+  state: BattleState,
   target: BattleCreatureState,
   request: SpikeGrowthMovementDamageRequest,
   fill: Extract<BattleFill, { readonly kind: "rolledDice" }>,
 ): number {
   return damageAmountAfterTargetAdjustments(
+    state,
     target,
     rolledDiceTotal(fill.value) + (request.damage.expr.flat ?? 0),
     request.damage.damageType,
@@ -8681,6 +8732,7 @@ export function resolveMovementEffectsAfterMovement(input: {
     }
 
     const damageAmount = spikeGrowthMovementDamageAmount(
+      input.state,
       target,
       request,
       damageFill,
@@ -9121,7 +9173,10 @@ function validateAcrobaticMovementFact(
   if (currentActorId(state) !== mover.combatantId) {
     return ACROBATIC_MOVEMENT_TURN_MESSAGE;
   }
-  if (combatantWearingArmor(mover) || combatantWieldingShield(mover)) {
+  if (
+    combatantWearingArmor(state, mover) ||
+    combatantWieldingShield(state, mover)
+  ) {
     return ACROBATIC_MOVEMENT_EQUIPMENT_MESSAGE;
   }
   if (fact.withoutFallingDuringMovement !== true) {

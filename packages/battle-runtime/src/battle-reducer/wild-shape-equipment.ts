@@ -148,12 +148,13 @@ function resolvedDispositionForChoice(
   | { readonly tag: "invalid"; readonly message: string } {
   if (choice.disposition === "worn") {
     if (choice.practicality.kind === "notPracticalToWear") {
-      if (choice.practicality.fallback === "falls") {
+      if (choice.practicality.fallback.disposition === "falls") {
         return {
           tag: "valid",
           value: {
             item: choice.item,
             disposition: "falls",
+            fallInActorSpace: choice.practicality.fallback.fallInActorSpace,
           },
         };
       }
@@ -182,6 +183,7 @@ function resolvedDispositionForChoice(
       value: {
         item: choice.item,
         disposition: "falls",
+        fallInActorSpace: choice.fallInActorSpace,
       },
     };
   }

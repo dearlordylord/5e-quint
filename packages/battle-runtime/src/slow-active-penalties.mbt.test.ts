@@ -750,8 +750,10 @@ function slowActivePenaltiesProjection(
       (resource) => resource.source === "statBlockMultiattack",
     ).length,
     targetSlowed: slowEffect !== undefined,
-    targetSpeedFeet: Number(effectiveWalkSpeed(target)),
-    targetArmorClass: Number(currentArmorClass(activeEffectArmorClass(target))),
+    targetSpeedFeet: Number(effectiveWalkSpeed(state.battle.state, target)),
+    targetArmorClass: Number(
+      currentArmorClass(activeEffectArmorClass(state.battle.state, target)),
+    ),
     dexteritySavingThrowDelta,
     targetCanReact: combatantCanTakeReactions(target),
     casterConcentrating: casterHasConcentratedSlowEffect,

@@ -59,7 +59,11 @@ import {
   BATTLE_INTERRUPT_TRIGGERS,
   BATTLE_READIED_SPELL_TRIGGERS,
 } from "../battle-interrupt-triggers.ts";
-import { WILD_SHAPE_FORM_LIMB_OBJECT_HANDLING_WITNESSES } from "./wild-shape-equipment.ts";
+import {
+  WILD_SHAPE_EFFECTIVE_LOADOUT_WORN_KINDS,
+  WILD_SHAPE_FORM_LIMB_OBJECT_HANDLING_WITNESSES,
+  type WildShapeLoadoutObjectRef,
+} from "./wild-shape-equipment.ts";
 import {
   BATTLE_MOVEMENT_SPEED_KINDS,
   BattleSubjectSchema,
@@ -313,24 +317,40 @@ const WildShapeOffHandWeaponLoadoutObjectRefSchema = Schema.Struct({
   objectId: BattleObjectId,
 });
 
-const WildShapeWornLoadoutObjectRefSchema = Schema.Union(
-  WildShapeArmorLoadoutObjectRefSchema,
-  WildShapeShieldLoadoutObjectRefSchema,
-  WildShapeMainWeaponLoadoutObjectRefSchema,
-  WildShapeOffHandWeaponLoadoutObjectRefSchema,
-);
+const WildShapeLoadoutObjectRefSchemaByKind = {
+  armor: WildShapeArmorLoadoutObjectRefSchema,
+  shield: WildShapeShieldLoadoutObjectRefSchema,
+  mainWeapon: WildShapeMainWeaponLoadoutObjectRefSchema,
+  offHandWeapon: WildShapeOffHandWeaponLoadoutObjectRefSchema,
+} as const satisfies Record<
+  WildShapeLoadoutObjectRef["kind"],
+  Schema.Schema.AnyNoContext
+>;
 
 const WildShapeLoadoutObjectRefSchema = Schema.Union(
-  WildShapeArmorLoadoutObjectRefSchema,
-  WildShapeShieldLoadoutObjectRefSchema,
-  WildShapeMainWeaponLoadoutObjectRefSchema,
-  WildShapeOffHandWeaponLoadoutObjectRefSchema,
+  ...Object.values(WildShapeLoadoutObjectRefSchemaByKind),
 );
+
+const WildShapeWornLoadoutObjectRefSchema = Schema.Union(
+  ...WILD_SHAPE_EFFECTIVE_LOADOUT_WORN_KINDS.map(
+    (kind) => WildShapeLoadoutObjectRefSchemaByKind[kind],
+  ),
+);
+
+const WildShapeFallInActorSpaceWitnessSchema = Schema.Struct({
+  kind: Schema.Literal("actorSpace"),
+  positionId: BattleTablePositionId,
+});
 
 const WildShapeEquipmentDispositionChoiceSchema = Schema.Union(
   Schema.Struct({
     item: WildShapeLoadoutObjectRefSchema,
-    disposition: Schema.Literal("falls", "merges"),
+    disposition: Schema.Literal("falls"),
+    fallInActorSpace: WildShapeFallInActorSpaceWitnessSchema,
+  }),
+  Schema.Struct({
+    item: WildShapeLoadoutObjectRefSchema,
+    disposition: Schema.Literal("merges"),
   }),
   Schema.Struct({
     item: WildShapeWornLoadoutObjectRefSchema,
@@ -341,7 +361,15 @@ const WildShapeEquipmentDispositionChoiceSchema = Schema.Union(
       }),
       Schema.Struct({
         kind: Schema.Literal("notPracticalToWear"),
-        fallback: Schema.Literal("falls", "merges"),
+        fallback: Schema.Union(
+          Schema.Struct({
+            disposition: Schema.Literal("falls"),
+            fallInActorSpace: WildShapeFallInActorSpaceWitnessSchema,
+          }),
+          Schema.Struct({
+            disposition: Schema.Literal("merges"),
+          }),
+        ),
       }),
     ),
   }),

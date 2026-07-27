@@ -30,7 +30,7 @@ export function spellCreatedHeldObjectFreeHand(
   if (actor === undefined) {
     return undefined;
   }
-  const hands = combatantHandUses(actor, state.grapples);
+  const hands = combatantHandUses(state, actor, state.grapples);
   if (hands.left === "free") return "left";
   if (hands.right === "free") return "right";
   return undefined;

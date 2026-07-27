@@ -4,6 +4,7 @@
 
 import type {
   BattleCreatureState,
+  BattleState,
   DamageSpellSource,
   PreparedDamageSpellSource,
   ScalarBuffSpellTargeting,
@@ -86,6 +87,7 @@ export function isTargetListSpellInvocation<
 }
 
 export function activeOngoingFeaturesPreventSpellInvocation(
+  state: BattleState,
   actor: BattleCreatureState,
   invocation: RuntimeSpellProcedure,
 ): boolean {
@@ -96,14 +98,15 @@ export function activeOngoingFeaturesPreventSpellInvocation(
   return (
     (activeWildShape !== null &&
       !druidBeastSpellsAllowsInvocation(actor, invocation)) ||
-    activeOngoingNonWildShapeFeaturesPreventSpellcasting(actor)
+    activeOngoingNonWildShapeFeaturesPreventSpellcasting(state, actor)
   );
 }
 
 function activeOngoingNonWildShapeFeaturesPreventSpellcasting(
+  state: BattleState,
   actor: BattleCreatureState,
 ): boolean {
-  return [...activeOngoingFeatureOccurrencesForCombatant(actor)].some(
+  return [...activeOngoingFeatureOccurrencesForCombatant(state, actor)].some(
     ([key]) =>
       ongoingFeatureProfileForSourceKey(
         actor,

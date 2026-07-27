@@ -1703,6 +1703,7 @@ export function resolveSaveGateDamageSpellAct(input: {
         [
           targetId,
           damageAmountByTypeAfterTargetAdjustments(
+            input.input.state,
             reduction.target,
             reduction.damageByType,
           ),
@@ -1932,6 +1933,7 @@ export function resolveSaveGateDamageSpellAct(input: {
       spellReduction.tag !== "ok"
         ? 0
         : damageAmountByTypeAfterTargetAdjustments(
+            input.input.state,
             spellReduction.target,
             spellReduction.damageByType,
           );

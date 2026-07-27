@@ -336,7 +336,7 @@ function recklessAttackIsAvailableOrActiveForBrutalStrike(
   if (attacker?.origin.kind !== "character") {
     return false;
   }
-  return [...activeOngoingFeatureOccurrencesForCombatant(attacker)].some(
+  return [...activeOngoingFeatureOccurrencesForCombatant(state, attacker)].some(
     ([sourceKey]) => {
       const profile = ongoingFeatureProfileForSourceKey(attacker, sourceKey);
       return (
@@ -492,7 +492,7 @@ function spendBrutalStrikeForcefulBlowMovement(
   if (attacker === undefined) return state;
   const movementSpentFeet = movementFeet(
     Number(attacker.movementSpentFeet) +
-      Math.floor(Number(effectiveWalkSpeed(attacker)) / 2),
+      Math.floor(Number(effectiveWalkSpeed(state, attacker)) / 2),
   );
   return {
     ...state,
@@ -1107,7 +1107,7 @@ export function resolveSelectedAttackProcedure(
   const criticalThreshold = criticalThresholdForAttack(attacker, attack);
   const ordinaryHit = attackRollHitsWithCriticalThreshold(
     effectiveAttackRoll,
-    currentArmorClass(activeEffectArmorClass(target)),
+    currentArmorClass(activeEffectArmorClass(input.state, target)),
     criticalThreshold,
   );
   const missToHitReplacement = selectedAttackRollMissToHitReplacement({
@@ -1297,6 +1297,7 @@ export function resolveSelectedAttackProcedure(
       spellWeaponDamageRiders.length > 0
       ? null
       : fixedAttackDamageByTypeEntries(
+          attackRolledState,
           attackRolledState.combatants.get(attackerId),
           attack,
           effectiveAttackRoll,
@@ -1306,6 +1307,7 @@ export function resolveSelectedAttackProcedure(
     fixedDamageByTypeBeforeTargetAdjustments === null
       ? null
       : damageAmountByTypeAfterTargetAdjustments(
+          attackRolledState,
           target,
           damageAmountByTypeEntriesToMap(
             fixedDamageByTypeBeforeTargetAdjustments,
@@ -1549,6 +1551,7 @@ export function resolveSelectedAttackProcedure(
       ),
     };
     const reducedFixedDamageAmount = attackDamageEventAmountForTarget(
+      spellReducedState,
       spellReduction.target,
       reducedDamageEventAfterSpellReduction,
     );
@@ -1840,6 +1843,7 @@ export function resolveSelectedAttackProcedure(
         spellWeaponDamageRiders,
         spellMarkedDamageRiders,
         ongoingFeatureDamageModifier(
+          attackRolledState,
           attackRolledState.combatants.get(attackerId),
           attack,
         ),
@@ -1884,6 +1888,7 @@ export function resolveSelectedAttackProcedure(
       spellWeaponDamageRiders,
       spellMarkedDamageRiders,
       ongoingFeatureDamageModifier(
+        attackRolledState,
         attackRolledState.combatants.get(attackerId),
         attack,
       ),
@@ -1896,6 +1901,7 @@ export function resolveSelectedAttackProcedure(
     }
     const damageSource = attackRolledState.combatants.get(attackerId);
     const damageRollByType = attackDamageByTypeEntries(
+      attackRolledState,
       damageSource,
       attack,
       attack.procedureRef,
@@ -1988,6 +1994,7 @@ export function resolveSelectedAttackProcedure(
       ),
     };
     const reducedDamageAmount = attackDamageEventAmountForTarget(
+      spellReducedState,
       spellReduction.target,
       reducedDamageEventAfterSpellReduction,
     );
@@ -2696,7 +2703,7 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
   );
   const ordinaryCleaveHit = attackRollHitsWithCriticalThreshold(
     effectiveCleaveAttackRoll,
-    currentArmorClass(activeEffectArmorClass(secondTarget)),
+    currentArmorClass(activeEffectArmorClass(input.state, secondTarget)),
     cleaveCriticalThreshold,
   );
   const cleaveMissToHitReplacement = selectedAttackRollMissToHitReplacement({
@@ -2876,6 +2883,7 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
     };
   }
   const damageByType = attackDamageByTypeEntries(
+    cleaveAttackRolledState,
     cleaveAttackRolledState.combatants.get(input.subject.actorId),
     cleaveAttack,
     input.subject.procedureRef,
@@ -2920,6 +2928,7 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
     damageRollByType: damageAmountByTypeMapEntries(sourcePenalty.damageByType),
   } satisfies BattleAttackDamageEvent;
   const cleaveDamageAmount = attackDamageEventAmountForTarget(
+    cleaveAttackRolledState,
     secondTarget,
     damageEvent,
   );
@@ -3472,7 +3481,7 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
   );
   const hit = attackRollHitsWithCriticalThreshold(
     effectiveHordeBreakerAttackRoll,
-    currentArmorClass(activeEffectArmorClass(secondTarget)),
+    currentArmorClass(activeEffectArmorClass(input.state, secondTarget)),
     criticalThreshold,
   );
   const rolledState = consumeHelpAttackForAttackRoll(
@@ -3513,6 +3522,7 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
       )
     : [];
   const hordeBreakerOngoingDamageModifier = ongoingFeatureDamageModifier(
+    rolledState,
     rolledState.combatants.get(input.subject.actorId),
     input.attack,
   );
@@ -3645,6 +3655,7 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
     };
   }
   const damageByType = attackDamageByTypeEntries(
+    rolledState,
     rolledState.combatants.get(input.subject.actorId),
     input.attack,
     input.subject.procedureRef,
@@ -3662,6 +3673,7 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
     ),
   } satisfies BattleAttackDamageEvent;
   const damageAmount = attackDamageEventAmountForTarget(
+    rolledState,
     secondTarget,
     damageEvent,
   );

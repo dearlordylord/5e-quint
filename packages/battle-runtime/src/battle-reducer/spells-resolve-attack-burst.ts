@@ -362,7 +362,7 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
 
   const ordinaryHit = attackRollHits(
     effectiveAttackRoll,
-    currentArmorClass(activeEffectArmorClass(target)),
+    currentArmorClass(activeEffectArmorClass(input.input.state, target)),
   );
   const missToHitReplacement = selectedAttackRollMissToHitReplacement({
     state: input.input.state,
@@ -584,6 +584,7 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
   const attackDamageAmount =
     hitTarget && input.fillSet.attackBurstDamageRoll !== undefined
       ? damageAmountByTypeAfterTargetAdjustments(
+          postRemarkableAthleteMovementState,
           target,
           attackSourcePenalty.damageByType,
         )
@@ -887,6 +888,7 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
             [
               targetId,
               damageAmountByTypeAfterTargetAdjustments(
+                damagedByAttack,
                 burstTarget,
                 burstSourcePenalty.damageByType,
               ),

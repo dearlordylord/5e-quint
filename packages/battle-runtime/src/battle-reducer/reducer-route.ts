@@ -2568,14 +2568,19 @@ function activeFeatureSpellModifierExists(
   ) => boolean,
 ): boolean {
   const caster = state.combatants.get(casterId);
-  return activeFeatureSpellModifiers(caster).some(predicate);
+  return activeFeatureSpellModifiers(state, caster).some(predicate);
 }
 
-function activeFeatureSpellModifiers(caster: BattleCreatureState | undefined) {
+function activeFeatureSpellModifiers(
+  state: BattleState,
+  caster: BattleCreatureState | undefined,
+) {
   if (!isCharacterBattleCreatureState(caster)) {
     return [];
   }
-  return [...activeOngoingFeatureOccurrencesForCombatant(caster)].flatMap(
+  return [
+    ...activeOngoingFeatureOccurrencesForCombatant(state, caster),
+  ].flatMap(
     ([key]) =>
       ongoingFeatureProfileForSourceKey(caster, key)?.spellModifiers ?? [],
   );
@@ -8487,7 +8492,11 @@ function creatureAttackRouteForResolution(
     if (target === undefined) {
       return undefined;
     }
-    const holes = creatureAttackHit({ target, attackRoll: fill })
+    const holes = creatureAttackHit({
+      state: input.state,
+      target,
+      attackRoll: fill,
+    })
       ? result.tag === "needsHoles"
         ? battleReducerRouteHoles(result.holes)
         : []

@@ -1221,6 +1221,7 @@ export function resolveBattleSubjectInternal(
         ]);
       }
       const hit = creatureAttackHit({
+        state: input.state,
         target: combatants.target,
         attackRoll: fills.attackRoll,
       });
@@ -3857,7 +3858,13 @@ export function resolveCastTriggeredReactionSpellCommand(
       "Triggered Reaction spell no longer has its required runtime spell resource.",
     );
   }
-  if (activeOngoingFeaturesPreventSpellInvocation(reactor, invocation)) {
+  if (
+    activeOngoingFeaturesPreventSpellInvocation(
+      input.state,
+      reactor,
+      invocation,
+    )
+  ) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -4338,6 +4345,7 @@ export function resolveTriggeredReactionSaveGatedDamage(
     ]);
   }
   const damageAmount = damageAmountByTypeAfterTargetAdjustments(
+    input.state,
     target,
     damageAmountByTypeAfterSaveDamageResult(
       sourcePenalty.damageByType,
@@ -4624,7 +4632,9 @@ export function resolveCastAttackHitBonusActionSpellCommand(
       "Attack-hit Bonus Action spell is not available for this hit.",
     );
   }
-  if (activeOngoingFeaturesPreventSpellInvocation(actor, invocation)) {
+  if (
+    activeOngoingFeaturesPreventSpellInvocation(input.state, actor, invocation)
+  ) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -5801,7 +5811,7 @@ export function attackDamageContinuationAmount(
   const target = state.combatants.get(continuation.target.combatantId);
   return target === undefined
     ? null
-    : attackDamageEventAmountForTarget(target, continuation.damageInput);
+    : attackDamageEventAmountForTarget(state, target, continuation.damageInput);
 }
 
 export function attackDamageContinuationConcentrationHole(
@@ -5816,7 +5826,7 @@ export function attackDamageContinuationConcentrationHole(
     return null;
   }
   const damageAmount = Number(
-    attackDamageEventAmountForTarget(target, continuation.damageInput),
+    attackDamageEventAmountForTarget(state, target, continuation.damageInput),
   );
   const fills = attackDamageContinuationConcentrationFills(continuation);
   return (
@@ -5844,7 +5854,9 @@ function attackDamageContinuationTargetConcentrationFill(
   }
   const hole = concentrationSavingThrowHole(
     target,
-    Number(attackDamageEventAmountForTarget(target, continuation.damageInput)),
+    Number(
+      attackDamageEventAmountForTarget(state, target, continuation.damageInput),
+    ),
   );
   return hole === null
     ? undefined

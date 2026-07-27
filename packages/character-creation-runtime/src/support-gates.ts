@@ -486,7 +486,7 @@ export const CHARACTER_CREATION_SUPPORT_PROFILE = {
 export function unsupportedHoleSelectionOptionId(
   hole: CreationHole,
   optionIds: readonly CreationChoiceOptionId[],
-  supportProfile: CharacterCreationSupportProfile = CHARACTER_CREATION_SUPPORT_PROFILE,
+  supportProfile: CharacterCreationSupportProfile,
 ): CreationChoiceOptionId | undefined {
   const supportedOptionIds = supportedHoleOptionIdSet(hole, supportProfile);
   if (supportedOptionIds == null) {
@@ -560,7 +560,7 @@ export function supportedHoleOptionIds(
 
 export function supportedDraftOptionIds(
   source: DraftCreationHoleSource,
-  supportProfile: CharacterCreationSupportProfile = CHARACTER_CREATION_SUPPORT_PROFILE,
+  supportProfile: CharacterCreationSupportProfile,
 ): readonly CreationChoiceOptionId[] | undefined {
   if (source.path === "draft.progression.initial") {
     return supportProfile.supportedProgressions.map(progressionOptionId);
@@ -600,7 +600,7 @@ export function supportedDraftOptionIds(
 // character creation support widens beyond the current profile.
 export function supportedUnitOptionIds(
   choiceKey: SupportProfileUnitChoiceKey,
-  supportProfile: CharacterCreationSupportProfile = CHARACTER_CREATION_SUPPORT_PROFILE,
+  supportProfile: CharacterCreationSupportProfile,
 ): readonly CreationChoiceOptionId[] {
   const optionIdsByChoiceKey: CharacterCreationSupportProfile["unitOptionIdsByChoiceKey"] =
     supportProfile.unitOptionIdsByChoiceKey;
@@ -609,7 +609,7 @@ export function supportedUnitOptionIds(
 
 export function supportedUnitOptionIdsForSource(
   source: UnitChoiceSource,
-  supportProfile: CharacterCreationSupportProfile = CHARACTER_CREATION_SUPPORT_PROFILE,
+  supportProfile: CharacterCreationSupportProfile,
 ): readonly CreationChoiceOptionId[] {
   if (
     source.choiceKey === CLASS_EQUIPMENT_CHOICE_KEY ||
@@ -640,14 +640,14 @@ export function supportedUnitOptionIdsForSource(
 
 export function supportedHoleOptionIdSet(
   hole: CreationHole,
-  supportProfile: CharacterCreationSupportProfile = CHARACTER_CREATION_SUPPORT_PROFILE,
+  supportProfile: CharacterCreationSupportProfile,
 ): ReadonlySet<CreationChoiceOptionId> | undefined {
   const optionIds = supportedHoleOptionIds(hole, supportProfile);
   return optionIds == null ? undefined : new Set(optionIds);
 }
 
 export function supportedClassUnitIds(
-  supportProfile: CharacterCreationSupportProfile = CHARACTER_CREATION_SUPPORT_PROFILE,
+  supportProfile: CharacterCreationSupportProfile,
 ): readonly UnitRecord["id"][] {
   return uniqueValues(
     supportProfile.supportedProgressions.map((progression) =>
@@ -657,7 +657,7 @@ export function supportedClassUnitIds(
 }
 
 export function supportedBackgroundUnitIds(
-  supportProfile: CharacterCreationSupportProfile = CHARACTER_CREATION_SUPPORT_PROFILE,
+  supportProfile: CharacterCreationSupportProfile,
 ): readonly UnitRecord["id"][] {
   return supportProfile.backgroundUnitIds;
 }
@@ -675,14 +675,14 @@ export function speciesUnitIdsWithSupportedTraitChoices(): readonly UnitRecord["
 }
 
 export function supportedPurchasableEquipmentUnitIds(
-  supportProfile: CharacterCreationSupportProfile = CHARACTER_CREATION_SUPPORT_PROFILE,
+  supportProfile: CharacterCreationSupportProfile,
 ): readonly UnitRecord["id"][] {
   return supportProfile.purchasableEquipmentUnitIds;
 }
 
 export function supportedPurchasableEquipmentUnitIdsForClass(
   classUnitId: UnitRecord["id"],
-  supportProfile: CharacterCreationSupportProfile = CHARACTER_CREATION_SUPPORT_PROFILE,
+  supportProfile: CharacterCreationSupportProfile,
 ): readonly UnitRecord["id"][] {
   return classUnitId === PHASE1_CLASS_FIGHTER_UNIT_ID
     ? supportProfile.purchasableEquipmentUnitIds
@@ -690,20 +690,20 @@ export function supportedPurchasableEquipmentUnitIdsForClass(
 }
 
 export function supportedEquipmentPurchaseChoiceCount(
-  supportProfile: CharacterCreationSupportProfile = CHARACTER_CREATION_SUPPORT_PROFILE,
+  supportProfile: CharacterCreationSupportProfile,
 ): number {
   return supportProfile.equipmentPurchaseChoiceCount;
 }
 
 export function supportedLoadoutChoices(
-  supportProfile: CharacterCreationSupportProfile = CHARACTER_CREATION_SUPPORT_PROFILE,
+  supportProfile: CharacterCreationSupportProfile,
 ): readonly SupportedLoadoutChoice[] {
   return supportProfile.loadoutChoices;
 }
 
 export function isSupportedProgression(
   progression: CharacterProgression,
-  supportProfile: CharacterCreationSupportProfile = CHARACTER_CREATION_SUPPORT_PROFILE,
+  supportProfile: CharacterCreationSupportProfile,
 ): boolean {
   return supportProfile.supportedProgressions.some((supported) =>
     sameProgression(supported, progression),
@@ -712,7 +712,7 @@ export function isSupportedProgression(
 
 export function supportedProgressionsForClass(
   classUnitId: UnitRecord["id"],
-  supportProfile: CharacterCreationSupportProfile = CHARACTER_CREATION_SUPPORT_PROFILE,
+  supportProfile: CharacterCreationSupportProfile,
 ): readonly CharacterProgression[] {
   return supportProfile.supportedProgressions.filter(
     (progression) => startingClassUnitId(progression) === classUnitId,
@@ -721,7 +721,7 @@ export function supportedProgressionsForClass(
 
 export function supportedProgressionForOptionId(
   optionId: CreationChoiceOptionId,
-  supportProfile: CharacterCreationSupportProfile = CHARACTER_CREATION_SUPPORT_PROFILE,
+  supportProfile: CharacterCreationSupportProfile,
 ): CharacterProgression | undefined {
   return supportProfile.supportedProgressions.find(
     (progression) => progressionOptionId(progression) === optionId,
@@ -730,7 +730,7 @@ export function supportedProgressionForOptionId(
 
 export function supportsCharacterBuildResourceUnitId(
   unitId: UnitRecord["id"],
-  supportProfile: CharacterCreationSupportProfile = CHARACTER_CREATION_SUPPORT_PROFILE,
+  supportProfile: CharacterCreationSupportProfile,
 ): boolean {
   return supportProfile.characterBuildResourceUnitIds.some(
     (supportedUnitId) => supportedUnitId === unitId,
@@ -761,7 +761,7 @@ function sameProgression(
 
 export function supportedLoadoutChoiceForSource(
   source: LoadoutSource,
-  supportProfile: CharacterCreationSupportProfile = CHARACTER_CREATION_SUPPORT_PROFILE,
+  supportProfile: CharacterCreationSupportProfile,
 ): SupportedLoadoutChoice | undefined {
   return supportProfile.loadoutChoices.find(
     (choice) =>

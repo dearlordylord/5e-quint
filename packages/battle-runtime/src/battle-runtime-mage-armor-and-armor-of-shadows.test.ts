@@ -601,8 +601,8 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
       ],
     };
 
-    expect(combatantWearingArmor(staleDruid)).toBe(false);
-    expect(combatantWieldingShield(staleDruid)).toBe(false);
+    expect(combatantWearingArmor(state, staleDruid)).toBe(false);
+    expect(combatantWieldingShield(state, staleDruid)).toBe(false);
   });
 
   test("Armor of Shadows casts self-only Mage Armor without expending a Spell Slot", () => {

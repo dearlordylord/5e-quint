@@ -127,10 +127,14 @@ export function fillCreationHoles(
     readonly supportProfile?: CharacterCreationSupportProfile;
   },
 ): CreationBatchFillResult {
-  const holes = discoverCreationHoles(input);
+  const fillInput = {
+    ...input,
+    supportProfile: input.supportProfile ?? CHARACTER_CREATION_SUPPORT_PROFILE,
+  };
+  const holes = discoverCreationHoles(fillInput);
   const holeIndex = indexCreationHoles(holes);
-  const fillAcceptance = acceptedCreationFills(input, holeIndex);
-  const finalization = finalizeCharacterDraft(input);
+  const fillAcceptance = acceptedCreationFills(fillInput, holeIndex);
+  const finalization = finalizeCharacterDraft(fillInput);
   const rejectedIssues = nonEmptyReadonlyArray(fillAcceptance.issues);
 
   if (rejectedIssues != null) {
@@ -157,22 +161,20 @@ export function fillCreationHoles(
     };
   }
 
-  return acceptedCreationBatchFillResult(input, nextDraft.right);
+  return acceptedCreationBatchFillResult(fillInput, nextDraft.right);
 }
 
 function acceptedCreationBatchFillResult(
   input: CreationBatchFillInput & {
     readonly unitLibrary: UnitCatalog;
-    readonly supportProfile?: CharacterCreationSupportProfile;
+    readonly supportProfile: CharacterCreationSupportProfile;
   },
   draft: CharacterDraft,
 ): AcceptedCreationBatchFillResult {
   const nextInput = {
     draft,
     unitLibrary: input.unitLibrary,
-    ...(input.supportProfile === undefined
-      ? {}
-      : { supportProfile: input.supportProfile }),
+    supportProfile: input.supportProfile,
   };
 
   return {
@@ -187,12 +189,18 @@ export function creationFillIssues(
   input: CreationBatchFillInput,
   holeIndex: CreationHoleIndex,
 ): readonly CreationBatchFillIssue[] {
-  return acceptedCreationFills(input, holeIndex).issues;
+  return acceptedCreationFills(
+    {
+      ...input,
+      supportProfile: CHARACTER_CREATION_SUPPORT_PROFILE,
+    },
+    holeIndex,
+  ).issues;
 }
 
 function acceptedCreationFills(
   input: CreationBatchFillInput & {
-    readonly supportProfile?: CharacterCreationSupportProfile;
+    readonly supportProfile: CharacterCreationSupportProfile;
   },
   holeIndex: CreationHoleIndex,
 ): CreationFillAcceptance {
@@ -529,7 +537,7 @@ function acceptedCreationFill(
   hole: CreationHole,
   fill: CreationFill,
   fillIndex: FillIndex,
-  supportProfile: CharacterCreationSupportProfile = CHARACTER_CREATION_SUPPORT_PROFILE,
+  supportProfile: CharacterCreationSupportProfile,
 ): ApplyCreationFillResult<AcceptedCreationFill> {
   if (isDraftSourcedCreationHole(hole)) {
     const acceptedFill = acceptedDraftFill(

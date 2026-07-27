@@ -878,7 +878,7 @@ function cunningStrikeWithdrawMovementBudget(
     kind,
     movementBudgetFeet: movementFeet(
       Math.floor(
-        Number(effectiveMovementSpeed(attacker, kind, isGrappled)) / 2,
+        Number(effectiveMovementSpeed(state, attacker, kind, isGrappled)) / 2,
       ),
     ),
   }));

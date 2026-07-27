@@ -537,7 +537,7 @@ function resolveSpellAttackSequenceCreaturePart(input: {
   );
   const ordinaryHit = attackRollHits(
     effectiveAttackRoll,
-    currentArmorClass(activeEffectArmorClass(target)),
+    currentArmorClass(activeEffectArmorClass(input.state, target)),
   );
   const missToHitReplacement = selectedAttackRollMissToHitReplacement({
     state: input.state,
@@ -798,6 +798,7 @@ function resolveSpellAttackSequenceCreaturePart(input: {
     );
   }
   const spellDamageAmount = damageAmountByTypeAfterTargetAdjustments(
+    postRemarkableAthleteMovementState,
     spellReduction.target,
     spellReduction.damageByType,
   );

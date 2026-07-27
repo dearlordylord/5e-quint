@@ -143,7 +143,7 @@ describe("battle runtime: Stunning Strike", () => {
       throw new Error("Expected Stunning Strike target.");
     }
     expect(hasCondition(target.conditions, "stunned")).toBe(false);
-    expect(effectiveWalkSpeed(target)).toBe(15);
+    expect(effectiveWalkSpeed(resolved.state, target)).toBe(15);
     expect(requiredAttackRollMode(resolved.state, fighterId, goblinId)).toBe(
       "advantage",
     );

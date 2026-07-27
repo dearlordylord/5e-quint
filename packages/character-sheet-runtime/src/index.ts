@@ -39,6 +39,7 @@ export {
   characterSheetArmorClass,
   characterSheetArmorClassProjection,
   characterSheetArmorClassState,
+  characterSheetUnarmoredArmorClassBase,
 } from "./armor-class.ts";
 export {
   characterSheetClassFeaturePreparedSpellAccessesForBuild,

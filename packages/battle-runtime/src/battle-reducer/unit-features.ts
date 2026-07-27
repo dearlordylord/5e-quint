@@ -128,6 +128,11 @@ import {
   wildShapeLoadoutObjectRefs,
   type WildShapeLoadoutObjectRef,
 } from "./wild-shape-equipment.ts";
+import {
+  battleStateWithGroundObjects,
+  characterEffectiveLoadout,
+  wildShapeGroundObjectPlacement,
+} from "./battle-object-lifecycle.ts";
 import { attackActionOptionName } from "./statblock-attacks.ts";
 import { attackTargetHole } from "./hole-helpers.ts";
 import type {
@@ -530,7 +535,7 @@ function paladinSacredWeaponActs(
     ) {
       return [];
     }
-    return sacredWeaponHeldMeleeWeapons(actor).map((weapon) => ({
+    return sacredWeaponHeldMeleeWeapons(state, actor).map((weapon) => ({
       subject: {
         tag: "unitFeatureHeldWeaponActivation" as const,
         actorId: actor.combatantId,
@@ -576,17 +581,19 @@ function paladinSacredWeaponDismissActs(
 }
 
 function sacredWeaponHeldMeleeWeapons(
+  state: BattleState,
   actor: CharacterBattleCreatureState,
 ): readonly SacredWeaponHeldMeleeWeapon[] {
   const weapons: SacredWeaponHeldMeleeWeapon[] = [];
-  const main = actor.origin.selectedLoadout.weapon;
+  const loadout = characterEffectiveLoadout(state, actor);
+  const main = loadout.weapon;
   const activeWildShape = activeDruidWildShapeEffect(actor);
   if (
     main !== undefined &&
     actor.origin.attack?.kind === "weapon" &&
     actor.origin.attack.weaponObjectId === main.itemId &&
     wildShapeCanUseLoadoutWeaponObject({
-      loadout: actor.origin.selectedLoadout,
+      loadout,
       activeWildShape,
       objectKind: "mainWeapon",
       objectId: main.itemId,
@@ -598,13 +605,13 @@ function sacredWeaponHeldMeleeWeapons(
       attackName: attackActionOptionName(actor.origin.attack),
     });
   }
-  const offHand = actor.origin.selectedLoadout.offHandWeapon;
+  const offHand = loadout.offHandWeapon;
   if (
     offHand !== undefined &&
     actor.origin.offHandAttack?.kind === "weapon" &&
     actor.origin.offHandAttack.weaponObjectId === offHand.itemId &&
     wildShapeCanUseLoadoutWeaponObject({
-      loadout: actor.origin.selectedLoadout,
+      loadout,
       activeWildShape,
       objectKind: "offHandWeapon",
       objectId: offHand.itemId,
@@ -683,6 +690,7 @@ export function druidWildShapeActsForResource(
             formExecutionRef: admission.execution.scopeRef,
           },
           initialHoles: wildShapeInitialEquipmentDispositionHoles(
+            state,
             actor,
             admission.execution.scopeRef,
           ),
@@ -706,10 +714,13 @@ export function druidWildShapeActsForResource(
 }
 
 function wildShapeInitialEquipmentDispositionHoles(
+  state: BattleState,
   actor: CharacterBattleCreatureState,
   formExecutionRef: BattleWildShapeEquipmentDispositionHole["formExecutionRef"],
 ): readonly BattleWildShapeEquipmentDispositionHole[] {
-  const candidates = wildShapeLoadoutObjectRefs(actor.origin.selectedLoadout);
+  const candidates = wildShapeLoadoutObjectRefs(
+    characterEffectiveLoadout(state, actor),
+  );
   return [
     wildShapeEquipmentDispositionHole({
       actorId: actor.combatantId,
@@ -902,7 +913,7 @@ export function resolveUnitFeatureHeldWeaponActivation(
   }
   const unitFeature = procedure.execution;
   if (
-    !sacredWeaponHeldMeleeWeapons(actor).some(
+    !sacredWeaponHeldMeleeWeapons(input.state, actor).some(
       (weapon) => weapon.itemId === input.subject.weaponItemId,
     )
   ) {
@@ -1342,6 +1353,7 @@ function resolveMagicActionAreaSaveDamageHealingUnitFeature(
           ? Math.floor(damageRollTotal / 2)
           : damageRollTotal;
       const damageAmount = damageAmountByTypeAfterTargetAdjustments(
+        state,
         target,
         new Map([
           [
@@ -1614,7 +1626,7 @@ export function resolveDruidWildShapeUnitFeature(
   }
   const form = formAdmission.statBlock;
   const equipmentCandidates = wildShapeLoadoutObjectRefs(
-    actor.origin.selectedLoadout,
+    characterEffectiveLoadout(input.state, actor),
   );
   const expectedEquipmentDispositionHole = wildShapeEquipmentDispositionHole({
     actorId: actor.combatantId,
@@ -1703,7 +1715,7 @@ export function resolveDruidWildShapeUnitFeature(
       nextActor,
     ),
   };
-  const nextState = assumeDruidWildShapeForm({
+  const stateWithActiveForm = assumeDruidWildShapeForm({
     state: stateWithResourceSpend,
     actor: nextActor,
     procedureRef: input.subject.procedureRef,
@@ -1714,14 +1726,40 @@ export function resolveDruidWildShapeUnitFeature(
     ),
     profile: unitFeature,
   });
+  const dropSource = {
+    kind: "druidWildShape",
+    procedureRef: input.subject.procedureRef,
+    formExecutionRef: formAdmission.execution.scopeRef,
+  } as const satisfies Extract<
+    BattleDroppedObjectOutcome["source"],
+    { readonly kind: "druidWildShape" }
+  >;
+  const placement = battleStateWithGroundObjects(
+    stateWithActiveForm,
+    equipmentDisposition.dispositions.flatMap((disposition) =>
+      disposition.disposition === "falls"
+        ? [
+            wildShapeGroundObjectPlacement({
+              actorId: actor.combatantId,
+              objectId: disposition.item.objectId,
+              positionId: disposition.fallInActorSpace.positionId,
+              source: dropSource,
+            }),
+          ]
+        : [],
+    ),
+  );
+  if (placement.tag === "conflict") {
+    return invalidResult(input.state, "staleSubject", placement.message);
+  }
+  const nextState = placement.state;
   return {
     tag: "resolved",
     state: nextState,
     snapshot: snapshotBattle(nextState),
     ...wildShapeDroppedObjectsResultField({
       actorId: actor.combatantId,
-      procedureRef: input.subject.procedureRef,
-      formExecutionRef: formAdmission.execution.scopeRef,
+      source: dropSource,
       dispositions: equipmentDisposition.dispositions,
     }),
   };
@@ -1729,14 +1767,10 @@ export function resolveDruidWildShapeUnitFeature(
 
 function wildShapeDroppedObjectsResultField(input: {
   readonly actorId: BattleDroppedObjectOutcome["actorId"];
-  readonly procedureRef: Extract<
+  readonly source: Extract<
     BattleDroppedObjectOutcome["source"],
     { readonly kind: "druidWildShape" }
-  >["procedureRef"];
-  readonly formExecutionRef: Extract<
-    BattleDroppedObjectOutcome["source"],
-    { readonly kind: "druidWildShape" }
-  >["formExecutionRef"];
+  >;
   readonly dispositions: readonly ResolvedWildShapeEquipmentDisposition[];
 }): Pick<
   Extract<BattleResolutionResult, { readonly tag: "resolved" }>,
@@ -1750,11 +1784,7 @@ function wildShapeDroppedObjectsResultField(input: {
               kind: "objectDropped",
               actorId: input.actorId,
               objectId: disposition.item.objectId,
-              source: {
-                kind: "druidWildShape",
-                procedureRef: input.procedureRef,
-                formExecutionRef: input.formExecutionRef,
-              },
+              source: input.source,
             },
           ]
         : [],
@@ -2590,6 +2620,7 @@ function resolveAttackActionAreaSaveDamageReplacementUnitFeature(
           ? Math.floor(damageRollTotal / 2)
           : damageRollTotal;
       const damageAmount = damageAmountByTypeAfterTargetAdjustments(
+        state,
         target,
         new Map([
           [
@@ -4152,8 +4183,10 @@ export function ongoingFeatureIsAvailable(
     return false;
   }
   const occurrenceKey = procedureRef;
-  const activeOngoingFeature =
-    activeOngoingFeatureOccurrencesForCombatant(actor).get(occurrenceKey);
+  const activeOngoingFeature = activeOngoingFeatureOccurrencesForCombatant(
+    state,
+    actor,
+  ).get(occurrenceKey);
   if (activeOngoingFeature !== undefined) {
     return (
       canSpendBonusAction(state.currentTurnResources) &&
@@ -4170,7 +4203,7 @@ export function ongoingFeatureIsAvailable(
     return false;
   }
   return !unitFeature.lifecycle.earlyEndArmorCategories.some((category) =>
-    combatantWearingArmorCategory(actor, category),
+    combatantWearingArmorCategory(state, actor, category),
   );
 }
 
@@ -4218,8 +4251,10 @@ export function resolveOngoingFeatureUnitFeature(
   }
 
   const occurrenceKey = input.subject.procedureRef;
-  const activeOngoingFeature =
-    activeOngoingFeatureOccurrencesForCombatant(actor).get(occurrenceKey);
+  const activeOngoingFeature = activeOngoingFeatureOccurrencesForCombatant(
+    input.state,
+    actor,
+  ).get(occurrenceKey);
   const nextActiveOngoingFeatureOccurrences = new Map(
     actor.activeOngoingFeatureOccurrences,
   );

@@ -2071,6 +2071,7 @@ export function applySpellDamage(
     return state;
   }
   const effectiveDamage = damageAmountByTypeAfterTargetAdjustments(
+    state,
     reduction.target,
     reduction.damageByType,
   );
@@ -2159,6 +2160,7 @@ export function applyPreparedSlotSpellDamage(
 }
 
 export function spellDamageAmountForTarget(
+  state: BattleState,
   target: BattleCreatureState,
   invocation: RuntimeDamageSpellProcedure,
   damageRoll: Extract<BattleFill, { readonly kind: "rolledDice" }>,
@@ -2167,6 +2169,7 @@ export function spellDamageAmountForTarget(
   critical = false,
 ): number {
   return damageAmountByTypeAfterTargetAdjustments(
+    state,
     target,
     spellDamageByTypeForTarget(
       target,
@@ -2430,6 +2433,7 @@ function objectDamageTypeIsImmune(damageType: DamageType): boolean {
 }
 
 export function spellBurstDamageAmountForTarget(
+  state: BattleState,
   target: BattleCreatureState,
   invocation: Extract<
     RuntimeSpellProcedure,
@@ -2450,6 +2454,7 @@ export function spellBurstDamageAmountForTarget(
   );
   const flat = invocation.burst.damage.expr.flat ?? 0;
   return damageAmountAfterTargetAdjustments(
+    state,
     target,
     applySaveDamageResult(diceTotal + flat, saveDamageResult),
     invocation.burst.damage.damageType,
@@ -2457,6 +2462,7 @@ export function spellBurstDamageAmountForTarget(
 }
 
 export function repeatedDamageAllocationSpellDamageAmount(
+  state: BattleState,
   target: BattleCreatureState,
   invocation: Extract<
     RuntimeSpellProcedure,
@@ -2478,6 +2484,7 @@ export function repeatedDamageAllocationSpellDamageAmount(
     ) ?? 0;
   const flat = (invocation.damage.expr.flat ?? 0) * repeatedEffectCount;
   return damageAmountAfterTargetAdjustments(
+    state,
     target,
     diceTotal + flat,
     invocation.damage.damageType,

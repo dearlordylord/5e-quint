@@ -222,6 +222,9 @@ function extractDeclaredReplayActionNames(text, filePath) {
         ...actionMapMatch[2].matchAll(/^ {2}((?:do)[A-Z][A-Za-z0-9_]*)\s*:/gm),
       ].map((match) => match[1]),
     ),
+    ...extractTableSelectedUnitIdentityReplays(text).flatMap(
+      (replay) => replay.actionNames,
+    ),
     ...extractSelectedIdentityWitnessActionNames(text, filePath),
   ]);
 }

@@ -183,12 +183,13 @@ export function creatureAttackSubjectCombatants(input: {
 }
 
 export function creatureAttackHit(input: {
+  readonly state: BattleState;
   readonly target: BattleCreatureState;
   readonly attackRoll: Extract<BattleFill, { readonly kind: "attackRoll" }>;
 }): boolean {
   return (
     input.attackRoll.value.total >=
-    Number(currentArmorClass(activeEffectArmorClass(input.target)))
+    Number(currentArmorClass(activeEffectArmorClass(input.state, input.target)))
   );
 }
 

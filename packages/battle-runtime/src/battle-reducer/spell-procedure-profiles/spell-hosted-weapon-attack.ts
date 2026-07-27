@@ -41,6 +41,7 @@ import {
   supportedDamageAmountExpr,
 } from "../spells-execution-facts.ts";
 import { wildShapeCanUseWornLoadoutObject } from "../wild-shape-equipment.ts";
+import { battleObjectIsOnGround } from "../battle-object-lifecycle.ts";
 import { attackTargetHole, needsHolesResult } from "../hole-helpers.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
@@ -379,9 +380,11 @@ function spellHostedWeaponAttackForExecution(
   if (actor === undefined || !isCharacterBattleCreatureState(actor)) {
     return undefined;
   }
-  return spellHostedWeaponAttacks(actor).find(
-    ({ objectId }) => objectId === componentWeaponObjectId,
-  );
+  return battleObjectIsOnGround(state, actorId, componentWeaponObjectId)
+    ? undefined
+    : spellHostedWeaponAttacks(actor).find(
+        ({ objectId }) => objectId === componentWeaponObjectId,
+      );
 }
 
 function spellHostedWeaponAttackBonusDamageAdditions(

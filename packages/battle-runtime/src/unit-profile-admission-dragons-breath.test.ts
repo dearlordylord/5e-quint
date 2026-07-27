@@ -73,6 +73,7 @@ describe("Dragon's Breath initial cast admission", () => {
     const damageTypeHole = requireHole(act.initialHoles, "damageTypeChoice");
     const invocationPresentation = battleActSpellPresentation(act)?.invocation;
     const invocation = supportedSpellActs(
+      state,
       requireCombatant(state, spellCasterId),
     ).find(
       (candidate) => candidate.sourceProcedureRef === act.subject.procedureRef,

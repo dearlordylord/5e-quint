@@ -178,7 +178,7 @@ describe("battle runtime: death saves and turns", () => {
     const cleric = state.combatants.get(wizardId);
     const invocation =
       cleric?.origin.kind === "character"
-        ? supportedSpellActs(cleric).find(
+        ? supportedSpellActs(state, cleric).find(
             (candidate) => candidate.procedure === "makeStable",
           )
         : undefined;
@@ -324,7 +324,7 @@ describe("battle runtime: death saves and turns", () => {
     const cleric = state.combatants.get(wizardId);
     const invocation =
       cleric?.origin.kind === "character"
-        ? supportedSpellActs(cleric).find(
+        ? supportedSpellActs(state, cleric).find(
             (candidate) => candidate.procedure === "makeStable",
           )
         : undefined;

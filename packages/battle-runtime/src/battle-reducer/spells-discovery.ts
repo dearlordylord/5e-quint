@@ -256,7 +256,7 @@ export function discoverSupportedSpellInvocations(
   }
   const spellcastingPreventedByAntimagicField =
     combatantInsideActiveAntimagicFieldAura(state, actorId);
-  const invocations = supportedSpellActs(actor);
+  const invocations = supportedSpellActs(state, actor);
   const executionInvocations = invocations;
   const counterspellReactors = counterspellCapableReactors(state);
   const acts = invocations.flatMap(

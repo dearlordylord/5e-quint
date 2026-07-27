@@ -1024,7 +1024,7 @@ export function spellTargetHasNonSpatialPrerequisites(
   if (
     invocation.procedure === "persistentArmorEffect" &&
     target !== undefined &&
-    combatantWearingArmor(target)
+    combatantWearingArmor(state, target)
   ) {
     return false;
   }

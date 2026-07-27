@@ -99,15 +99,22 @@ export type ArmorClassState = {
   readonly rightHandUse: HandUse;
 };
 
+export function defaultUnarmoredArmorClassBase(): Extract<
+  ArmorClassBaseSource,
+  { readonly kind: "ability_sum"; readonly source: "default_unarmored" }
+> {
+  return {
+    kind: "ability_sum",
+    base: armorClass(10),
+    abilityModifiers: ["dex"],
+    source: "default_unarmored",
+  };
+}
+
 export function defaultArmorClassState(): ArmorClassState {
   return {
     abilityModifiers: zeroAbilityModifiers(),
-    base: {
-      kind: "ability_sum",
-      base: armorClass(10),
-      abilityModifiers: ["dex"],
-      source: "default_unarmored",
-    },
+    base: defaultUnarmoredArmorClassBase(),
     bonuses: [],
     floors: [],
     armorTraining: new Set(),

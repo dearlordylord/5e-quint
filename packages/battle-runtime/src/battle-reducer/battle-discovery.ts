@@ -723,7 +723,7 @@ function findFamiliarTouchSpellActs(input: {
   if (actor?.origin.kind !== "character") {
     return [];
   }
-  const invocations = supportedSpellActs(actor);
+  const invocations = supportedSpellActs(input.state, actor);
   return input.spellActs.flatMap(
     (act): readonly BattleActDiscoveryCandidate[] => {
       const subject = act.subject;

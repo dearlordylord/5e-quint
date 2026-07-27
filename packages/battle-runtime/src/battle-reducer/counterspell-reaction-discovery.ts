@@ -36,7 +36,7 @@ export function counterspellCapableReactors(
       ) {
         return [];
       }
-      const invocations = supportedSpellActs(combatant).flatMap(
+      const invocations = supportedSpellActs(state, combatant).flatMap(
         (candidate): readonly CounterspellInvocation[] => {
           if (candidate.procedure !== "counterspell") return [];
           const execution = candidate;

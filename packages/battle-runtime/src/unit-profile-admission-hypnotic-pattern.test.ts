@@ -111,7 +111,7 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
     const target = requireCombatant(cast.state, spellTargetId);
     expect(hasCondition(target.conditions, "charmed")).toBe(true);
     expect(hasCondition(target.conditions, "incapacitated")).toBe(true);
-    expect(Number(effectiveWalkSpeed(target))).toBe(0);
+    expect(Number(effectiveWalkSpeed(cast.state, target))).toBe(0);
     expect(target.activeEffects).toEqual([
       expect.objectContaining({
         kind: "hypnoticPatternControl",
@@ -209,7 +209,7 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
     expect(caster.concentration).toBeNull();
     expect(hasCondition(target.conditions, "charmed")).toBe(false);
     expect(hasCondition(target.conditions, "incapacitated")).toBe(false);
-    expect(Number(effectiveWalkSpeed(target))).toBeGreaterThan(0);
+    expect(Number(effectiveWalkSpeed(cast.state, target))).toBeGreaterThan(0);
     expect(
       target.activeEffects.some(
         (effect) => effect.kind === "hypnoticPatternControl",
@@ -269,7 +269,7 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
     expect(caster.concentration).toBeNull();
     expect(hasCondition(target.conditions, "charmed")).toBe(false);
     expect(hasCondition(target.conditions, "incapacitated")).toBe(false);
-    expect(Number(effectiveWalkSpeed(target))).toBeGreaterThan(0);
+    expect(Number(effectiveWalkSpeed(cast.state, target))).toBeGreaterThan(0);
     expect(
       target.activeEffects.some(
         (effect) => effect.kind === "hypnoticPatternControl",
@@ -347,7 +347,9 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
     const target = requireCombatant(concentrationBroken, spellTargetId);
     expect(hasCondition(target.conditions, "charmed")).toBe(false);
     expect(hasCondition(target.conditions, "incapacitated")).toBe(false);
-    expect(Number(effectiveWalkSpeed(target))).toBeGreaterThan(0);
+    expect(
+      Number(effectiveWalkSpeed(concentrationBroken, target)),
+    ).toBeGreaterThan(0);
     expect(
       target.activeEffects.some(
         (effect) => effect.kind === "hypnoticPatternControl",
@@ -397,7 +399,14 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
     }
     expect(hasCondition(target.conditions, "charmed")).toBe(false);
     expect(hasCondition(target.conditions, "incapacitated")).toBe(false);
-    expect(Number(effectiveWalkSpeed(target))).toBeGreaterThan(0);
+    expect(
+      Number(
+        effectiveWalkSpeed(
+          { ...cast.state, combatants: expiredCombatants },
+          target,
+        ),
+      ),
+    ).toBeGreaterThan(0);
     expect(expiredCombatants.get(spellCasterId)?.concentration).toBeNull();
   });
 
@@ -522,7 +531,7 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
     const target = requireCombatant(shaken.state, spellTargetId);
     expect(hasCondition(target.conditions, "charmed")).toBe(false);
     expect(hasCondition(target.conditions, "incapacitated")).toBe(false);
-    expect(Number(effectiveWalkSpeed(target))).toBeGreaterThan(0);
+    expect(Number(effectiveWalkSpeed(shaken.state, target))).toBeGreaterThan(0);
     expect(target.activeEffects).toEqual([]);
     expect(
       requireCombatant(shaken.state, spellCasterId).concentration,
