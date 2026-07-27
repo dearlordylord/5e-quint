@@ -51,6 +51,45 @@ describe("Surface content publication checker", () => {
     });
   });
 
+  it.each([
+    {
+      name: "unknown resolution status",
+      result: {
+        tag: "invalid-locator",
+        resolutions: [{ part: "synthetic", status: "typo" }],
+      },
+    },
+    {
+      name: "empty successful excerpt",
+      result: { tag: "ok", rulesExcerpt: "" },
+    },
+    {
+      name: "excess response property",
+      result: {
+        tag: "ok",
+        rulesExcerpt: "Synthetic exact excerpt",
+        excess: true,
+      },
+    },
+  ])("rejects $name at the excerpt boundary", ({ result }) => {
+    const publication = buildSrdSurfacePublication({
+      excerptSource: {
+        buildReferenceIndex: () => ({ synthetic: true }),
+        rulesExcerptForSection: () => result,
+      },
+    });
+
+    expect(publication.tag).toBe("invalid");
+    if (publication.tag === "invalid") {
+      expect(publication.issues).not.toHaveLength(0);
+      expect(
+        publication.issues.every(
+          (issue) => issue.kind === "excerpt-result-invalid",
+        ),
+      ).toBe(true);
+    }
+  });
+
   it("requires the compiler version that owns byte-exact publication", () => {
     expect(
       checkDhallJsonCompilerVersion(`${dhallJsonToolchain.dhallJsonVersion}\n`),

@@ -90,6 +90,26 @@ test("publication excerpts require canonical locators and copy exact RAW", () =>
   );
   assert.equal(malformedRange.tag, "invalid-locator");
   assert.equal(malformedRange.resolutions[0].status, "bad-line-range");
+
+  for (const section of [
+    "Character-Origins.md:215,,227-228",
+    "Character-Origins.md:227-228,215",
+    "Character-Origins.md:215,215",
+  ]) {
+    const malformedComposition = auditModule.rulesExcerptForSection(
+      section,
+      index,
+    );
+    assert.equal(malformedComposition.tag, "invalid-locator");
+    assert.equal(malformedComposition.resolutions[0].status, "bad-line-range");
+  }
+
+  const lineAlias = auditModule.rulesExcerptForSection(
+    "Character-Origins/Halfling:215",
+    index,
+  );
+  assert.equal(lineAlias.tag, "invalid-locator");
+  assert.equal(lineAlias.resolutions[0].status, "ok-line-range-alias");
 });
 
 test("feature anchors resolve to their feature instead of the parent class", () => {

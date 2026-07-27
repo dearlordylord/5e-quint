@@ -971,14 +971,15 @@ function splitSectionPart(part) {
 function resolveLineRanges(part, base, suffix, files, index) {
   const rel = files[0];
   const lineCount = (index.rawByRel.get(rel) ?? "").split("\n").length;
-  const rangeParts = suffix
-    .split(",")
-    .map((range) => range.trim())
-    .filter(Boolean);
+  const rangeParts = suffix.split(",").map((range) => range.trim());
   const ranges = [];
   const invalidRanges = [];
-  if (rangeParts.length === 0) invalidRanges.push(suffix);
+  let precedingLast = 0;
   for (const range of rangeParts) {
+    if (range.length === 0) {
+      invalidRanges.push(range);
+      continue;
+    }
     const match = range.match(/^(\d+)(?:-(\d+))?$/);
     if (match === null) {
       invalidRanges.push(range);
@@ -986,18 +987,30 @@ function resolveLineRanges(part, base, suffix, files, index) {
     }
     const first = Number(match[1]);
     const last = match[2] === undefined ? first : Number(match[2]);
-    if (first < 1 || last < first || last > lineCount) {
+    if (
+      first < 1 ||
+      last < first ||
+      last > lineCount ||
+      first <= precedingLast
+    ) {
       invalidRanges.push(range);
       continue;
     }
     ranges.push({ first, last });
+    precedingLast = last;
   }
+  const legacyBase = rel !== base && rel !== `${base}.md`;
 
   return {
     part,
-    status: invalidRanges.length === 0 ? "ok-line-range" : "bad-line-range",
+    status:
+      invalidRanges.length > 0
+        ? "bad-line-range"
+        : legacyBase
+          ? "ok-line-range-alias"
+          : "ok-line-range",
     canonical: `${rel}:${suffix}`,
-    legacyBase: rel !== base && rel !== `${base}.md`,
+    legacyBase,
     invalidRanges,
     lineRanges:
       invalidRanges.length === 0

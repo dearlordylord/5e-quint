@@ -15,15 +15,27 @@ import {
 import { srdSurface } from "../packages/surface/src/surface/surface-catalog.ts";
 
 const SourceResolutionSchema = Schema.Struct({
-  part: Schema.String,
-  status: Schema.String,
+  part: Schema.NonEmptyTrimmedString,
+  status: Schema.Literal(
+    "ok-line-range",
+    "ok-line-range-alias",
+    "bad-line-range",
+    "ok-heading",
+    "ok-heading-alias",
+    "ok-prose-anchor",
+    "ok-prose-anchor-alias",
+    "missing-anchor",
+    "missing-file",
+    "ok-file",
+    "ok-file-alias",
+  ),
 });
 type SourceResolution = Schema.Schema.Type<typeof SourceResolutionSchema>;
 
 const RulesExcerptResultSchema = Schema.Union(
   Schema.Struct({
     tag: Schema.Literal("ok"),
-    rulesExcerpt: Schema.String,
+    rulesExcerpt: RulesExcerptSchema,
   }),
   Schema.Struct({
     tag: Schema.Literal("invalid-locator", "empty-excerpt"),
@@ -61,7 +73,7 @@ export type SurfacePublicationBuildIssue =
       readonly kind: "record-excerpt-invalid";
       readonly recordId: string;
       readonly section: string;
-      readonly reason: "invalid-locator" | "empty-excerpt" | "invalid-excerpt";
+      readonly reason: "invalid-locator" | "empty-excerpt";
       readonly resolutions: ReadonlyArray<SourceResolution>;
     };
 
@@ -173,9 +185,9 @@ export function buildSrdSurfacePublication(
       });
       return undefined;
     }
-    const decodedResult = Schema.decodeUnknownEither(RulesExcerptResultSchema)(
-      candidate,
-    );
+    const decodedResult = Schema.decodeUnknownEither(RulesExcerptResultSchema, {
+      onExcessProperty: "error",
+    })(candidate);
     if (Either.isLeft(decodedResult)) {
       issues.push({
         kind: "excerpt-result-invalid",
@@ -196,20 +208,7 @@ export function buildSrdSurfacePublication(
       });
       return undefined;
     }
-    const rulesExcerpt = Schema.decodeUnknownEither(RulesExcerptSchema)(
-      result.rulesExcerpt,
-    );
-    if (Either.isLeft(rulesExcerpt)) {
-      issues.push({
-        kind: "record-excerpt-invalid",
-        recordId: record.id,
-        section: record.provenance.section,
-        reason: "invalid-excerpt",
-        resolutions: [],
-      });
-      return undefined;
-    }
-    return { ...record, rulesExcerpt: rulesExcerpt.right };
+    return { ...record, rulesExcerpt: result.rulesExcerpt };
   };
 
   const firstUnit = publishRecord(srdSurface.units[0]);
