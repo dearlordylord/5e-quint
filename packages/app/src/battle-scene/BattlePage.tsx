@@ -26,7 +26,7 @@ export function BattlePage({
   const [autoPlay, setAutoPlay] = useState(false)
   const [isStuck, setIsStuck] = useState(false)
   const headerRef = useRef<HTMLDivElement | null>(null)
-  const step = steps[cursor]!
+  const step = steps[cursor]
   const lastStep = steps.length - 1
   const presentedSnapshot = useMemo(() => battlePresentedSnapshot(step.session), [step.session])
   const projectionResult = useMemo(
@@ -72,7 +72,8 @@ export function BattlePage({
     /* v8 ignore next -- React does not execute effects during server rendering */
     if (typeof window === "undefined") return
     const onScroll = () => {
-      const headerHeight = headerRef.current!.offsetHeight
+      const headerHeight = headerRef.current?.offsetHeight
+      if (headerHeight === undefined) return
       setIsStuck(window.scrollY > headerHeight - STICKY_HEADER_SCROLL_OFFSET)
     }
     window.addEventListener("scroll", onScroll, { passive: true })

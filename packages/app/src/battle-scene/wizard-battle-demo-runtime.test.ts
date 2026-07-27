@@ -1,6 +1,7 @@
 import { combatantId } from "@dnd/battle-runtime"
 import { describe, expect, test } from "vitest"
 
+import { WIZARD_BATTLE_DEMO_STEPS } from "./wizard-battle-demo.ts"
 import {
   requireActionSpellAct,
   requireCounterspellChoice,
@@ -9,7 +10,6 @@ import {
   requireNeedsHoles,
   requireNeedsReaction
 } from "./wizard-battle-demo-runtime.ts"
-import { WIZARD_BATTLE_DEMO_STEPS } from "./wizard-battle-demo.ts"
 
 describe("wizard battle demo runtime guards", () => {
   test("reports stale authored fixture selections at their boundary", () => {

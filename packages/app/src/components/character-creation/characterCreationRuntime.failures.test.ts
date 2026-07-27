@@ -1,3 +1,4 @@
+import type * as CharacterCreationRuntime from "@dnd/character-creation-runtime"
 import type * as CharacterSheetRuntime from "@dnd/character-sheet-runtime"
 import { Either } from "effect"
 import { describe, expect, it, vi } from "vitest"
@@ -18,7 +19,7 @@ const summaryFailures = vi.hoisted(() => ({
 }))
 
 vi.mock("@dnd/character-creation-runtime", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@dnd/character-creation-runtime")>()
+  const actual = await importOriginal<typeof CharacterCreationRuntime>()
   const { Either } = await import("effect")
   return {
     ...actual,

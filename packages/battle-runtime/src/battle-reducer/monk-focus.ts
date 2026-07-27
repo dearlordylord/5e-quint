@@ -1,3 +1,6 @@
+// Monk's Focus option execution.
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.monk-focus-battle-options unit-feature.open-hand-technique unit-feature.stunning-strike
+
 import {
   rolledDiceTotal,
   validateRolledDiceForDiceExpr,

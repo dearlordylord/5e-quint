@@ -17,8 +17,8 @@ const SOURCE_EXTENSIONS = new Set([
   ".cjs",
 ]);
 const EXPLICIT_TEST_SUPPORT_OWNERS = new Set([
-  "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts",
-  "packages/battle-runtime/src/battle-runtime-test-support.ts",
+  "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.test-support.ts",
+  "packages/battle-runtime/src/battle-runtime.test-support.ts",
 ]);
 
 function isAllowedOwner(relativePath) {
@@ -96,7 +96,7 @@ function runSelfTest() {
   );
   assert.equal(
     violationFor(
-      "packages/battle-runtime/src/battle-runtime-test-support.ts",
+      "packages/battle-runtime/src/battle-runtime.test-support.ts",
       'import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";',
     ),
     null,

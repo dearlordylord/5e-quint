@@ -22,13 +22,14 @@ vi.mock("#/components/character-creation/characterCreationRuntime.ts", async (im
     assessCharacterDraft: vi.fn(
       (draft: Parameters<typeof actual.assessCharacterDraft>[0]): ReturnType<typeof actual.assessCharacterDraft> => {
         const assessment = actual.assessCharacterDraft(draft)
+        const invalidFinalization: typeof assessment.finalization = {
+          tag: "invalid",
+          issues: [{ tag: "illegalFinalization", cause: { tag: "draftIncomplete" } }]
+        }
         return pageFailures.invalidAssessment
           ? {
               ...assessment,
-              finalization: {
-                tag: "invalid",
-                issues: [{ code: "syntheticInvalidDraft", message: "Synthetic invalid draft." }]
-              } as never
+              finalization: invalidFinalization
             }
           : assessment
       }

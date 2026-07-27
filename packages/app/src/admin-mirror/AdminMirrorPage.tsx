@@ -373,7 +373,7 @@ export function selectMirrorSession(
   if (selectedSessionId !== null) {
     return sessions.find((session) => session.envelope.mirrorSessionId === selectedSessionId) ?? null
   }
-  return sessions[0]!
+  return sessions[0] ?? null
 }
 
 export function decodeMirrorSessionResponse(value: unknown): Either.Either<AdminMirrorSessionListResponse, string> {
