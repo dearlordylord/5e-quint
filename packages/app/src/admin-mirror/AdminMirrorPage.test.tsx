@@ -162,7 +162,7 @@ describe("AdminMirrorPage mirror boundary", () => {
     expect(screen.getByText("available")).toBeTruthy()
     expect(screen.getByText("inBattle")).toBeTruthy()
     expect(screen.getByText("multiple publishers")).toBeTruthy()
-    expect(setSelectedSessionId).toHaveBeenCalledWith("demo")
+    await waitFor(() => expect(setSelectedSessionId).toHaveBeenCalledWith("demo"))
 
     const source = TestEventSource.latest
     expect(source?.url).toContain("/admin-projections/events")
