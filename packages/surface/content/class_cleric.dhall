@@ -2,7 +2,7 @@
   { categories = [ "light", "medium", "shield" ], kind = "trained" }
 , className = "cleric"
 , description =
-    "SRD Cleric class creation and level 1-10 progression facts, including class-list prepared Spell Access, Spell Slots, spellcasting focus facts, level 1-2 class feature grants, Ability Score Improvement, and level 10 Divine Intervention."
+    "As a Cleric, you gain the following class features when you reach the specified Cleric levels. These features are listed in the Cleric Features table."
 , featureGrants =
   [ { level = 1, unitId = "cleric_divine_order" }
   , { level = 2, unitId = "cleric_channel_divinity" }
@@ -24,7 +24,7 @@
 , primaryAbilities = { abilities = [ "wis" ], kind = "all_of" }
 , provenance =
   { kind = "srd-5.2.1"
-  , section = "Classes/Cleric.md:3-24,33-45,56-109,146-255"
+  , section = "Classes/Cleric.md:3-24,29,33-45,56-109,146-255"
   }
 , savingThrowProficiencies = [ "wis", "cha" ]
 , skillProficiencyChoice =

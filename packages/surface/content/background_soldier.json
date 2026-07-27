@@ -1,10 +1,6 @@
 {
   "abilityScoreIncrease": {
-    "abilities": [
-      "str",
-      "dex",
-      "con"
-    ],
+    "abilities": ["str", "dex", "con"],
     "methods": [
       {
         "kind": "two_scores",
@@ -19,7 +15,7 @@
       }
     ]
   },
-  "description": "Minimum SRD Soldier background facts for ability scores, proficiencies, feat, and equipment.",
+  "description": "Soldier. Ability Scores: Strength, Dexterity, Constitution. Feat: Savage Attacker. Skill Proficiencies: Athletics and Intimidation. Tool Proficiency: Gaming Set.",
   "id": "background_soldier",
   "kind": "background",
   "name": "Soldier",
@@ -28,10 +24,7 @@
     "kind": "srd-5.2.1",
     "section": "Character-Origins.md:11-29,57-63"
   },
-  "skillProficiencies": [
-    "athletics",
-    "intimidation"
-  ],
+  "skillProficiencies": ["athletics", "intimidation"],
   "startingEquipment": [
     {
       "coinsGp": 14,

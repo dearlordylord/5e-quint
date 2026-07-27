@@ -76,6 +76,7 @@ let findSteed =
               , actions =
                   { attacks =
                       [ { name = "Otherworldly Slam"
+                        , attackAbility = "spellcasting"
                         , attackType = "melee"
                         , attackBonus =
                             { kind = "caster_derived"

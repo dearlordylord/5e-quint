@@ -97,7 +97,7 @@ let staffOfPower =
           , section = "MagicItems#StaffOfPower"
           }
       , description =
-          "This staff has 20 charges and can be wielded as a magic Quarterstaff that grants a +2 bonus to attack rolls and damage rolls made with it. While holding it, you gain a +2 bonus to Armor Class, saving throws, and spell attack rolls. While holding the staff, you can cast Cone of Cold (5 charges), Fireball at level 5 (5 charges), Globe of Invulnerability (6 charges), Hold Monster (5 charges), Levitate (2 charges), Lightning Bolt at level 5 (5 charges), Magic Missile (1 charge), Ray of Enfeeblement (1 charge), or Wall of Force (5 charges) from it, using your spell save DC. The staff regains 2d8 + 4 expended charges daily at dawn. The special last-charge rider and Retributive Strike are omitted from this authored subset; see proposal-magic_item_staff_of_power.md."
+          "This staff has 20 charges and can be wielded as a magic Quarterstaff that grants a +2 bonus to attack rolls and damage rolls made with it. While holding it, you gain a +2 bonus to Armor Class, saving throws, and spell attack rolls. While holding the staff, you can cast the following spells from it using your spell save DC: Cone of Cold (5 charges); Magic Missile (1 charge); Fireball at level 5 (5 charges); Ray of Enfeeblement (1 charge); Globe of Invulnerability (6 charges); Wall of Force (5 charges); Hold Monster (5 charges); Levitate (2 charges); Lightning Bolt at level 5 (5 charges). The staff regains 2d8 + 4 expended charges daily at dawn."
       , mechanics =
           { family = "composite"
           , parts =

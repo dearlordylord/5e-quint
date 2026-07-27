@@ -505,6 +505,7 @@ function baseStatBlockRecord(id: string): StatBlockRecord {
 
 function venomDartAttack(): StatBlockAttack {
   return {
+    attackAbility: "dex",
     attackBonus: { kind: "literal", value: 4 },
     attackType: "ranged",
     name: multiDamageAttackName,

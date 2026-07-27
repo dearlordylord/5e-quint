@@ -10,7 +10,7 @@
     "dieSize": 6,
     "kind": "dice"
   },
-  "description": "Quarterstaff from the SRD weapons table.",
+  "description": "Quarterstaff — weapons table.",
   "id": "weapon_quarterstaff",
   "kind": "weapon",
   "mastery": "topple",

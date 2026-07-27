@@ -118,7 +118,7 @@ let windWall =
           , section = "Spells/Descriptions-S-Z#Wind Wall"
           }
       , description =
-          "A wall of strong wind rises from the ground at a point within range. You can make the wall up to 50 feet long, 15 feet high, and 1 foot thick. When the wall appears, each creature in its area makes a Strength saving throw, taking 4d8 Bludgeoning damage on a failed save or half as much damage on a successful one. The strong wind keeps fog, smoke, and other gases at bay. Small or smaller flying creatures or objects can't pass through the wall. Arrows, bolts, and other ordinary projectiles launched at targets behind the wall are deflected upward and miss automatically; giant-hurled boulders, siege-engine projectiles, and similar projectiles are unaffected. Creatures in gaseous form can't pass through it."
+          "A wall of strong wind rises from the ground at a point within range. You can make the wall up to 50 feet long, 15 feet high, and 1 foot thick. When the wall appears, each creature in its area makes a Strength saving throw, taking 4d8 Bludgeoning damage on a failed save or half as much damage on a successful one. The strong wind keeps fog, smoke, and other gases at bay. Small or smaller flying creatures or objects can't pass through the wall. Arrows, bolts, and other ordinary projectiles launched at targets behind the wall are deflected upward and miss automatically. Boulders hurled by Giants or siege engines, and similar projectiles, are unaffected. Creatures in gaseous form can't pass through it."
       , mechanics =
           { family = "ongoing_effect"
           , level = 3

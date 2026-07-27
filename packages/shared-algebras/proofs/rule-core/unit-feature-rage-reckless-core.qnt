@@ -89,7 +89,6 @@ module unitFeatureRageRecklessCore {
   type FrenzyAttackFacts = {
     hitWithAttackRoll: bool,
     strengthBasedAttack: bool,
-    attackForm: RageAttackForm,
     barbarianLevel: int,
     attackDamageType: RuleDamageType,
   }
@@ -252,9 +251,6 @@ module unitFeatureRageRecklessCore {
     firstEligibleHitResolvedThisTurn: false,
   }
 
-  pure def frenzyAttackFormEligible(form: RageAttackForm): bool =
-    form == RageWeaponAttack or form == RageUnarmedStrikeAttack
-
   pure def resolveFrenzy(state: FrenzyState, facts: FrenzyAttackFacts): FrenzyResult = {
     val dice = rageDamageBonus(facts.barbarianLevel)
     val admitted = all {
@@ -264,7 +260,6 @@ module unitFeatureRageRecklessCore {
       state.recklessAttackUsedWhileRagingThisTurn,
       facts.hitWithAttackRoll,
       facts.strengthBasedAttack,
-      frenzyAttackFormEligible(facts.attackForm),
       not(state.firstEligibleHitResolvedThisTurn),
       dice > 0,
     }

@@ -24,7 +24,7 @@ let monksFocus =
       { acquiredAtLevel = 2
       , className = "monk"
       , description =
-          "SRD Monk level 2 Focus Point resource container. A Monk's Focus Points equal Monk level, return after a Short or Long Rest, and can fuel Flurry of Blows, Patient Defense, and Step of the Wind."
+          "Your focus and martial training allow you to harness a well of extraordinary energy within yourself. This energy is represented by Focus Points. Your Monk level determines the number of points you have. You can expend these points to enhance or fuel certain Monk features: Flurry of Blows, Patient Defense, and Step of the Wind. When you expend a Focus Point, it is unavailable until you finish a Short or Long Rest."
       , id = "monk_monks_focus"
       , kind = "class_feature"
       , mechanics =

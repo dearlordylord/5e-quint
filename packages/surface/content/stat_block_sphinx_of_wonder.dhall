@@ -18,7 +18,8 @@
   , ac = { kind = "literal", value = +13 }
   , actions =
     { attacks =
-      [ { attackBonus = { kind = "literal", value = +5 }
+      [ { attackAbility = "dex"
+        , attackBonus = { kind = "literal", value = +5 }
         , attackType = "melee"
         , name = "Rend"
         , onHit =

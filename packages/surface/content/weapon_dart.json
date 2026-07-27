@@ -7,7 +7,7 @@
     "dieSize": 4,
     "kind": "dice"
   },
-  "description": "Dart from the SRD weapons table.",
+  "description": "Dart — weapons table.",
   "id": "weapon_dart",
   "kind": "weapon",
   "mastery": "vex",

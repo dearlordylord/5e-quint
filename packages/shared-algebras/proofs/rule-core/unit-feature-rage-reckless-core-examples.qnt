@@ -117,21 +117,18 @@ module unitFeatureRageRecklessCoreExamples {
     val result = resolveFrenzy(state, {
       hitWithAttackRoll: true,
       strengthBasedAttack: true,
-      attackForm: RageUnarmedStrikeAttack,
       barbarianLevel: 3,
       attackDamageType: BludgeoningDamage,
     })
     val repeated = resolveFrenzy(result.state, {
       hitWithAttackRoll: true,
       strengthBasedAttack: true,
-      attackForm: RageWeaponAttack,
       barbarianLevel: 3,
       attackDamageType: SlashingDamage,
     })
     val blocked = resolveFrenzy(initialFrenzyState(rage, reckless, false), {
       hitWithAttackRoll: true,
       strengthBasedAttack: true,
-      attackForm: RageWeaponAttack,
       barbarianLevel: 3,
       attackDamageType: SlashingDamage,
     })

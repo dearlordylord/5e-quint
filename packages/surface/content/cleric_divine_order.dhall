@@ -56,7 +56,7 @@ let divineOrder =
       , provenance =
           { kind = "srd-5.2.1", section = "Classes/Cleric#Divine Order" }
       , description =
-          "Choose Protector for Martial weapon proficiency and Heavy armor training, or Thaumaturge for one Cleric cantrip and a Wisdom-modifier bonus to Arcana or Religion checks."
+          "Choose one sacred role. With Protector, you gain proficiency with Martial weapons and training with Heavy armor. With Thaumaturge, you know one extra Cleric cantrip. You have a bonus to Intelligence (Arcana or Religion) checks equal to your Wisdom modifier."
       , mechanics =
           { family = "class_feature_acquisition_choice"
           , choiceKey = "divine_order"

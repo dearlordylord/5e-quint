@@ -41,6 +41,7 @@ import { isDeepStrictEqual } from "node:util";
 import {
   resolveBattleSubject,
   characterAttackSubjectForTest,
+  targetFill,
 } from "./battle-runtime.test-support.ts";
 
 import {
@@ -91,7 +92,6 @@ import {
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
   REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
   SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
-  WEAPON_DAMAGE_DICE_ROLL_CHOICE_SUPPORT_PROFILE,
   WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
   ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE,
   battleUnitRefWithSupportProfiles,
@@ -825,8 +825,8 @@ function createRuleCoreFeatureDriver(
       readonly damageRoll: number;
       readonly damageGroups?: readonly (readonly number[])[];
       readonly rollMode?: AttackRollMode;
-      readonly activatedOngoingFeatureUnitId?: string;
-      readonly missToHitReplacementUnitId?: string;
+      readonly activatedOngoingFeatureProcedureRef?: BattleProcedureExecutionRef;
+      readonly useMissToHitReplacement?: true;
       readonly selectedAttackDamageRiderProcedureRefs?: readonly BattleProcedureExecutionRef[];
       readonly weaponDamageDiceRollChoice?: Extract<
         BattleFill,
@@ -854,20 +854,35 @@ function createRuleCoreFeatureDriver(
         }),
         "attackRoll",
       );
+      if (attackRoll.kind !== "attackRoll" || !("attack" in attackRoll)) {
+        throw new Error("Expected character attackRoll hole.");
+      }
+      const missToHitReplacementProcedureRef =
+        input.useMissToHitReplacement === true
+          ? attackRoll.missToHitReplacements?.[0]?.procedureRef
+          : undefined;
+      if (
+        input.useMissToHitReplacement === true &&
+        missToHitReplacementProcedureRef === undefined
+      ) {
+        throw new Error(
+          `Expected the attack-roll hole to offer a miss-to-hit replacement: ${JSON.stringify(attackRoll)}.`,
+        );
+      }
       const rollValue = {
         total: input.attackRollTotal ?? input.naturalD20 ?? 15,
         naturalD20: input.naturalD20 ?? 10,
         ...(input.rollMode === undefined ? {} : { rollMode: input.rollMode }),
-        ...(input.activatedOngoingFeatureUnitId === undefined
+        ...(input.activatedOngoingFeatureProcedureRef === undefined
           ? {}
           : {
-              activatedOngoingFeatureUnitId:
-                input.activatedOngoingFeatureUnitId,
+              activatedOngoingFeatureProcedureRef:
+                input.activatedOngoingFeatureProcedureRef,
             }),
-        ...(input.missToHitReplacementUnitId === undefined
+        ...(missToHitReplacementProcedureRef === undefined
           ? {}
           : {
-              missToHitReplacementUnitId: input.missToHitReplacementUnitId,
+              missToHitReplacementProcedureRef,
             }),
       };
       const damage = requireHole(
@@ -995,9 +1010,8 @@ function createRuleCoreFeatureDriver(
           state,
           damageRoll: 7,
           rollMode: "advantage",
-          activatedOngoingFeatureUnitId: recordSelectedUnitRuntimeBoundaryId(
-            "barbarian_reckless_attack",
-          ),
+          activatedOngoingFeatureProcedureRef:
+            requireOngoingFeatureProcedureRef(state, "firstAttackRoll"),
         });
         lastDamageAmount = 7;
       },
@@ -1031,9 +1045,8 @@ function createRuleCoreFeatureDriver(
           damageRoll: 1,
           damageGroups: [[1], [1, 1]],
           rollMode: "advantage",
-          activatedOngoingFeatureUnitId: recordSelectedUnitRuntimeBoundaryId(
-            "barbarian_reckless_attack",
-          ),
+          activatedOngoingFeatureProcedureRef:
+            requireOngoingFeatureProcedureRef(raging.state, "firstAttackRoll"),
         });
         featureUsesRemaining = resourceUsesRemaining(state);
         lastDamageAmount = 2;
@@ -1265,9 +1278,7 @@ function createRuleCoreFeatureDriver(
           naturalD20: 2,
           attackRollTotal: 1,
           damageRoll: 4,
-          missToHitReplacementUnitId: recordSelectedUnitRuntimeBoundaryId(
-            "feat_boon_of_combat_prowess",
-          ),
+          useMissToHitReplacement: true,
         });
         featureUsesRemaining = combatProwessUsesRemaining(state);
         lastDamageAmount = 4;
@@ -1811,6 +1822,9 @@ function rageBattle(): BattleState {
 }
 
 function recklessBattle(): BattleState {
+  const recklessUnitId = recordSelectedUnitRuntimeBoundaryId(
+    "barbarian_reckless_attack",
+  );
   return startBattleRight({
     battleId: battleId("rule-core-reckless"),
     combatants: [
@@ -1819,11 +1833,14 @@ function recklessBattle(): BattleState {
         classLevels: [{ className: "barbarian", level: 2 }],
         unitFeatures: [
           characterBattleFeatureInitForTest(
-            unitLibrary.requireUnit(
-              recordSelectedUnitRuntimeBoundaryId("barbarian_reckless_attack"),
-            ),
+            unitLibrary.requireUnit(recklessUnitId),
             [{ className: "barbarian", level: classLevel(2) }],
           ),
+        ],
+        characterUnitRefs: [
+          supportedCharacterUnitRef(recklessUnitId, [
+            { className: "barbarian", level: classLevel(2) },
+          ]),
         ],
       }),
       featureTarget(10),
@@ -1863,6 +1880,12 @@ function sneakAttackBattle(): BattleState {
 
 function frenzyBattle(): BattleState {
   const frenzyUnitId = recordSelectedUnitRuntimeBoundaryId("barbarian_frenzy");
+  const recklessUnitId = recordSelectedUnitRuntimeBoundaryId(
+    "barbarian_reckless_attack",
+  );
+  const classLevels = [
+    { className: "barbarian", level: classLevel(3) },
+  ] as const;
   return startBattleRight({
     battleId: battleId("rule-core-frenzy"),
     combatants: [
@@ -1873,20 +1896,16 @@ function frenzyBattle(): BattleState {
         unitFeatures: [
           characterBattleFeatureInitForTest(
             unitLibrary.requireUnit(frenzyUnitId),
-            [{ className: "barbarian", level: classLevel(3) }],
+            classLevels,
           ),
           characterBattleFeatureInitForTest(
-            unitLibrary.requireUnit(
-              recordSelectedUnitRuntimeBoundaryId("barbarian_reckless_attack"),
-            ),
-            [{ className: "barbarian", level: classLevel(3) }],
+            unitLibrary.requireUnit(recklessUnitId),
+            classLevels,
           ),
         ],
         characterUnitRefs: [
-          {
-            unit: unitLibrary.requireUnit(frenzyUnitId),
-            supportProfiles: [ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE],
-          },
+          supportedCharacterUnitRef(frenzyUnitId, classLevels),
+          supportedCharacterUnitRef(recklessUnitId, classLevels),
         ],
       }),
       featureTarget(10),
@@ -1917,19 +1936,22 @@ function improvedCriticalBattle(): BattleState {
 }
 
 function savageAttackerBattle(): BattleState {
+  const unit = unitLibrary.requireUnit(
+    recordSelectedUnitRuntimeBoundaryId("feat_savage_attacker"),
+  );
+  const unitRef = battleUnitRefWithSupportProfiles({
+    unitRef: { unitId: unit.id },
+    unit,
+  });
+  if (Either.isLeft(unitRef)) {
+    throw new Error(unitRef.left.message);
+  }
   return startBattleRight({
     battleId: battleId("rule-core-savage-attacker"),
     combatants: [
       featureActor({
         initiative: 20,
-        characterUnitRefs: [
-          {
-            unit: unitLibrary.requireUnit(
-              recordSelectedUnitRuntimeBoundaryId("feat_savage_attacker"),
-            ),
-            supportProfiles: [WEAPON_DAMAGE_DICE_ROLL_CHOICE_SUPPORT_PROFILE],
-          },
-        ],
+        characterUnitRefs: [unitRef.right],
       }),
       featureTarget(10),
     ],
@@ -2116,6 +2138,18 @@ function featureActor(input: {
     input.attack === undefined
       ? zeroAbilityWeaponAttack("weapon_longsword")
       : input.attack;
+  const characterUnitRefs = [...(input.characterUnitRefs ?? [])];
+  if (
+    attack !== null &&
+    !characterUnitRefs.some(
+      ({ unit }) => unit.id === attack.weapon.weaponUnitId,
+    )
+  ) {
+    characterUnitRefs.push({
+      unit: unitLibrary.requireUnit(attack.weapon.weaponUnitId),
+      supportProfiles: [],
+    });
+  }
   return {
     combatantId: input.combatantId ?? actorId,
     displayName: input.displayName ?? "Feature Actor",
@@ -2123,7 +2157,7 @@ function featureActor(input: {
     creatureInit: {
       kind: "character",
       characterId: characterId(`${input.combatantId ?? actorId}-character`),
-      characterUnitRefs: input.characterUnitRefs ?? [],
+      characterUnitRefs,
       classLevels: input.classLevels ?? [{ className: "fighter", level: 1 }],
       knownLanguages: ["Common"],
       d20Statistics: testCharacterD20Statistics(),
@@ -2179,6 +2213,26 @@ function featureTarget(initiative: number): BattleCreatureInit {
       attack: zeroAbilityWeaponAttack("weapon_shortsword"),
     }),
   };
+}
+
+function supportedCharacterUnitRef(
+  unitId: string,
+  classLevels: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["classLevels"],
+): Extract<
+  BattleCreatureInit["creatureInit"],
+  { readonly kind: "character" }
+>["characterUnitRefs"][number] {
+  const unit = unitLibrary.requireUnit(unitId);
+  const unitRef = battleUnitRefWithSupportProfiles({
+    unitRef: { unitId: unit.id },
+    unit,
+    classLevels,
+  });
+  if (Either.isLeft(unitRef)) throw new Error(unitRef.left.message);
+  return unitRef.right;
 }
 
 function zeroAbilityWeaponAttack(
@@ -2273,6 +2327,7 @@ function requireUnitFeatureProcedureRef(
   ownerId: CombatantId,
   executionKind:
     | "attackDamageRider"
+    | "attackRollMissToHitReplacement"
     | "failedAbilityCheckResourceBoost"
     | "weaponDamageDiceRollChoice"
     | "zeroHitPointReplacement",
@@ -2334,7 +2389,11 @@ function requireHole(
   kind: BattleHole["kind"],
 ): BattleHole {
   if (result.tag !== "needsHoles") {
-    throw new Error(`Expected needsHoles, got ${result.tag}.`);
+    throw new Error(
+      result.tag === "invalid"
+        ? `Expected needsHoles, got invalid (${result.reason}: ${result.message}).`
+        : `Expected needsHoles, got ${result.tag}.`,
+    );
   }
   return requireHoleFromList(result.holes, kind);
 }
@@ -2356,41 +2415,36 @@ function attackTargetFill(
   if (hole.kind !== "targetChoice" || hole.attack === undefined) {
     throw new Error("Expected bound targetChoice attack selection.");
   }
-  return {
-    kind: "targetChoice",
-    holeId: hole.holeId,
-    value: defenderId,
-    spatialFacts: [
-      hole.attack.targetConstraint === "rangedRange"
-        ? {
-            kind: "attackTargetInRangedRange",
-            actorId: attackerId,
-            targetId: defenderId,
-            ...hole.attack.selection,
-            rangeBand: "normal",
-          }
-        : {
-            kind: "attackTargetInMeleeReach",
-            actorId: attackerId,
-            targetId: defenderId,
-            ...hole.attack.selection,
-          },
-      {
-        kind: "attackerAllyWithin5FeetOfTarget",
-        attackerId,
-        targetId: defenderId,
-        allyId: combatantId("rule-core-feature-ally"),
-      },
-      {
-        kind: "spellTarget",
-        casterId: combatantId("rule-core-feature-wizard"),
-        targetId: defenderId,
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String("dex_half_cantrip"),
-        ),
-      },
-    ],
-  };
+  return targetFill(hole, defenderId, [
+    hole.attack.targetConstraint === "rangedRange"
+      ? {
+          kind: "attackTargetInRangedRange",
+          actorId: attackerId,
+          targetId: defenderId,
+          ...hole.attack.selection,
+          rangeBand: "normal",
+        }
+      : {
+          kind: "attackTargetInMeleeReach",
+          actorId: attackerId,
+          targetId: defenderId,
+          ...hole.attack.selection,
+        },
+    {
+      kind: "attackerAllyWithin5FeetOfTarget",
+      attackerId,
+      targetId: defenderId,
+      allyId: combatantId("rule-core-feature-ally"),
+    },
+    {
+      kind: "spellTarget",
+      casterId: combatantId("rule-core-feature-wizard"),
+      targetId: defenderId,
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String("dex_half_cantrip"),
+      ),
+    },
+  ]);
 }
 
 function abilityCheckFill(hole: BattleHole, total: number): BattleFill {
@@ -2404,8 +2458,8 @@ function attackRollFill(
     readonly total: number;
     readonly naturalD20: number;
     readonly rollMode?: AttackRollMode;
-    readonly activatedOngoingFeatureUnitId?: string;
-    readonly missToHitReplacementUnitId?: string;
+    readonly activatedOngoingFeatureProcedureRef?: BattleProcedureExecutionRef;
+    readonly missToHitReplacementProcedureRef?: BattleProcedureExecutionRef;
   },
 ): BattleFill {
   if (hole.kind !== "attackRoll") throw new Error("Expected attackRoll.");
@@ -2416,14 +2470,18 @@ function attackRollFill(
       total: value.total,
       naturalD20: DieRollResult(value.naturalD20),
       ...(value.rollMode === undefined ? {} : { rollMode: value.rollMode }),
-      ...(value.activatedOngoingFeatureUnitId === undefined
+      ...(value.activatedOngoingFeatureProcedureRef === undefined
         ? {}
         : {
-            activatedOngoingFeatureUnitId: value.activatedOngoingFeatureUnitId,
+            activatedOngoingFeatureProcedureRef:
+              value.activatedOngoingFeatureProcedureRef,
           }),
-      ...(value.missToHitReplacementUnitId === undefined
+      ...(value.missToHitReplacementProcedureRef === undefined
         ? {}
-        : { missToHitReplacementUnitId: value.missToHitReplacementUnitId }),
+        : {
+            missToHitReplacementProcedureRef:
+              value.missToHitReplacementProcedureRef,
+          }),
     },
   };
 }
@@ -2557,7 +2615,7 @@ function resourceUsesRemaining(
 ): number {
   const actor = state.combatants.get(ownerId);
   if (actor?.origin.kind !== "character") return 1;
-  const resource = requireSoleLimitedFeatureResource(actor.origin.resources);
+  const resource = soleLimitedFeatureResource(actor.origin.resources);
   if (
     resource === undefined ||
     characterBattleResourceUsage(resource) !== "limited"
@@ -2574,11 +2632,7 @@ function combatProwessUsesRemaining(state: BattleState): number {
   }
   return actor.attackRollMissToHitReplacementsUsedSinceTurnStart.some(
     (usage) =>
-      usage.procedureRef ===
-      unitFeatureProcedureRefForProjection(
-        state,
-        "attackRollMissToHitReplacement",
-      ),
+      usage.procedureRef === combatProwessProcedureRefForProjection(state),
   )
     ? 0
     : 1;
@@ -2640,10 +2694,7 @@ function projectRuleCoreFeatureState(input: {
         (used) =>
           used.attackerId === actorId &&
           used.procedureRef ===
-            unitFeatureProcedureRefForProjection(
-              input.state,
-              "attackDamageRider",
-            ),
+            sneakAttackProcedureRefForProjection(input.state),
       ),
     lastDamageAmount: input.lastDamageAmount,
     abilityCheckBoostedTotal: input.abilityCheckBoostedTotal,
@@ -2657,16 +2708,30 @@ function projectRuleCoreFeatureState(input: {
   });
 }
 
-function unitFeatureProcedureRefForProjection(
+function combatProwessProcedureRefForProjection(
   state: BattleState,
-  kind: "attackDamageRider" | "attackRollMissToHitReplacement",
+): BattleProcedureExecutionRef | undefined {
+  const actor = state.combatants.get(actorId);
+  if (actor?.origin.kind !== "character") return undefined;
+  return actor.origin.execution.procedureBindings.find(
+    (binding) =>
+      binding.procedure.kind === "unitSupportProfile" &&
+      typeof binding.procedure.execution === "object" &&
+      binding.procedure.execution.kind === "attackRollMissToHitReplacement",
+  )?.procedureRef;
+}
+
+function sneakAttackProcedureRefForProjection(
+  state: BattleState,
 ): BattleProcedureExecutionRef | undefined {
   const actor = state.combatants.get(actorId);
   if (actor?.origin.kind !== "character") return undefined;
   return actor.origin.execution.procedureBindings.find(
     (binding) =>
       binding.procedure.kind === "unitFeature" &&
-      binding.procedure.execution.kind === kind,
+      binding.procedure.execution.kind === "attackDamageRider" &&
+      binding.procedure.execution.trigger ===
+        "finesseOrRangedAttackWithAdvantageOrAlly",
   )?.procedureRef;
 }
 
@@ -2684,6 +2749,22 @@ function ongoingFeatureProcedureRefForProjection(
   )?.procedureRef;
 }
 
+function requireOngoingFeatureProcedureRef(
+  state: BattleState,
+  activationTrigger: "bonusAction" | "firstAttackRoll",
+): BattleProcedureExecutionRef {
+  const procedureRef = ongoingFeatureProcedureRefForProjection(
+    state,
+    activationTrigger,
+  );
+  if (procedureRef === undefined) {
+    throw new Error(
+      `Expected ${activationTrigger} ongoing Feature procedure binding.`,
+    );
+  }
+  return procedureRef;
+}
+
 function actionSurgeGrant(state: BattleState): ActionSurgeGrant {
   if (
     state.currentTurnResources.actionResources.some(
@@ -2695,7 +2776,7 @@ function actionSurgeGrant(state: BattleState): ActionSurgeGrant {
   }
   const actor = state.combatants.get(actorId);
   if (actor?.origin.kind === "character") {
-    const resource = requireSoleLimitedFeatureResource(actor.origin.resources);
+    const resource = soleLimitedFeatureResource(actor.origin.resources);
     if (
       resource !== undefined &&
       characterBattleResourceUsage(resource) === "limited" &&
@@ -2708,35 +2789,34 @@ function actionSurgeGrant(state: BattleState): ActionSurgeGrant {
   return "NoActionSurgeActionGrant";
 }
 
-function requireSoleLimitedFeatureResource(
+function soleLimitedFeatureResource(
   resources: readonly CharacterBattleResourceState[],
-): CharacterBattleResourceState {
+): CharacterBattleResourceState | undefined {
   const limitedResources = resources.filter(
     (candidate) => characterBattleResourceUsage(candidate) === "limited",
   );
-  if (limitedResources.length !== 1) {
+  if (limitedResources.length > 1) {
     throw new Error(
-      `Expected exactly one limited feature resource, got ${limitedResources.length}.`,
+      `Expected at most one limited feature resource, got ${limitedResources.length}.`,
     );
   }
-  const resource = limitedResources.at(0);
-  if (resource === undefined) {
-    throw new Error("Expected the sole limited feature resource.");
-  }
-  return resource;
+  return limitedResources.at(0);
 }
 
 function incomingAttackAdvantage(state: BattleState): boolean {
+  const recklessProcedureRef = ongoingFeatureProcedureRefForProjection(
+    state,
+    "firstAttackRoll",
+  );
   if (
-    [
-      ...(state.combatants
-        .get(actorId)
-        ?.activeOngoingFeatureOccurrences.keys() ?? []),
-    ].some((key) => String(key) === "barbarian_reckless_attack")
+    recklessProcedureRef !== undefined &&
+    state.combatants
+      .get(actorId)
+      ?.activeOngoingFeatureOccurrences.has(recklessProcedureRef) === true
   ) {
     return true;
   }
-  const subject = actorAttackSubject(state, "Scimitar", targetId);
+  const subject = actorAttackSubject(state, "Shortsword", targetId);
   const target = resolveBattleSubject({ state, subject, fills: [] });
   if (target.tag !== "needsHoles") return false;
   const targetHole = target.holes.find((hole) => hole.kind === "targetChoice");

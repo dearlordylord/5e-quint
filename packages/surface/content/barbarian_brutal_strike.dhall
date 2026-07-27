@@ -31,7 +31,7 @@ let brutalStrike =
       , provenance =
           { kind = "srd-5.2.1", section = "Classes/Barbarian.md:128-134" }
       , description =
-          "If you use Reckless Attack, you can forgo Advantage on one eligible Strength-based attack roll on your turn. On a hit, the target takes an extra 1d10 damage of the same type dealt by the weapon or Unarmed Strike, and you choose Forceful Blow or Hamstring Blow."
+          "If you use Reckless Attack, you can forgo any Advantage on one Strength-based attack roll of your choice on your turn. The chosen attack roll mustn't have Disadvantage. On a hit, the target takes an extra 1d10 damage of the same type dealt by the weapon or Unarmed Strike, and you can cause one Brutal Strike effect of your choice."
       , mechanics =
           { family = "brutal_strike"
           , trigger =

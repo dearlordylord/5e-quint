@@ -7,7 +7,7 @@
     "dieSize": 4,
     "kind": "dice"
   },
-  "description": "Sickle from the SRD weapons table.",
+  "description": "Sickle — weapons table.",
   "id": "weapon_sickle",
   "kind": "weapon",
   "mastery": "nick",

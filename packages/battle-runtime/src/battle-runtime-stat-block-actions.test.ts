@@ -202,6 +202,7 @@ function sizeGatedConditionRiderStatBlock(): StatBlockRecord {
       actions: {
         attacks: [
           {
+            attackAbility: "str",
             attackBonus: { kind: "literal", value: 4 },
             attackType: "melee",
             name: "Bite",

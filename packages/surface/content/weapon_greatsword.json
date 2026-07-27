@@ -7,7 +7,7 @@
     "dieSize": 6,
     "kind": "dice"
   },
-  "description": "Greatsword from the SRD weapons table.",
+  "description": "Greatsword — weapons table.",
   "id": "weapon_greatsword",
   "kind": "weapon",
   "mastery": "graze",

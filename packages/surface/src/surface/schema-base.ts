@@ -652,8 +652,8 @@ export const ProficiencyGrantSubjectSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("tool"),
     toolId: surfaceSchemaRole(Schema.NonEmptyTrimmedString, {
-      category: "identity",
-      kind: "catalog-reference",
+      category: "projection",
+      kind: "derived-reference",
     }),
   }),
   Schema.Struct({
@@ -666,8 +666,8 @@ export const ToolProficiencyGrantSubjectSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("tool"),
     toolId: surfaceSchemaRole(Schema.NonEmptyTrimmedString, {
-      category: "identity",
-      kind: "catalog-reference",
+      category: "projection",
+      kind: "derived-reference",
     }),
   }),
   Schema.Struct({

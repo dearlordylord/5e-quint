@@ -16,17 +16,18 @@ import {
   WEAPON_DAMAGE_DICE_ROLL_CHOICE_SUPPORT_PROFILE,
 } from "../unit-feature-execution-constants.ts";
 import type { UnitFeatureProcedureExecution } from "../character-execution-queries.ts";
-import type {
-  BoundSupportedAttackActionOption,
-  BattleWeaponDamage,
-  CharacterUnarmedStrikeActionOption,
-  CharacterWeaponAttackActionOption,
-  StatBlockAttackActionOption,
-  StatBlockAttackDamage,
-  StatBlockAttackDamageComponent,
-  StaticStatBlockAttackDamage,
-  SupportedAttackActionOption,
-  SupportedCreatureAttackRollMechanics,
+import {
+  attackExecutionAbility,
+  type BoundSupportedAttackActionOption,
+  type BattleWeaponDamage,
+  type CharacterUnarmedStrikeActionOption,
+  type CharacterWeaponAttackActionOption,
+  type StatBlockAttackActionOption,
+  type StatBlockAttackDamage,
+  type StatBlockAttackDamageComponent,
+  type StaticStatBlockAttackDamage,
+  type SupportedAttackActionOption,
+  type SupportedCreatureAttackRollMechanics,
 } from "../battle-action-options.ts";
 import type { CreatureAttackRollMechanics } from "@dnd/surface/surface/types";
 import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
@@ -385,25 +386,36 @@ export function weaponAttackSupportsFinesseOrRanged(
   );
 }
 
-function attackUsesStrengthWeaponOrUnarmedStrike(
+function attackUsesStrengthBasedAttack(
   attack: SupportedAttackActionOption,
 ): attack is
   | CharacterWeaponAttackActionOption
-  | CharacterUnarmedStrikeActionOption {
-  return (
-    (attack.kind === "weapon" && attack.ability === "str") ||
-    (attack.kind === "unarmedStrike" && attack.attackAbility === "str")
-  );
+  | CharacterUnarmedStrikeActionOption
+  | StatBlockAttackActionOption {
+  return attackExecutionAbility(attack) === "str";
 }
 
 function selectedAttackDamageType(
   attack:
     | CharacterWeaponAttackActionOption
-    | CharacterUnarmedStrikeActionOption,
+    | CharacterUnarmedStrikeActionOption
+    | StatBlockAttackActionOption,
 ): DamageType {
-  return attack.kind === "weapon"
-    ? selectedWeaponDamage(attack.weapon).damageType
-    : attack.effect.damage.damageType;
+  if (attack.kind === "weapon") {
+    return selectedWeaponDamage(attack.weapon).damageType;
+  }
+  if (attack.kind === "unarmedStrike") {
+    return attack.effect.damage.damageType;
+  }
+  return frenzyDamageTypeForStatBlockAttack(attack);
+}
+
+function frenzyDamageTypeForStatBlockAttack(
+  attack: StatBlockAttackActionOption,
+): DamageType {
+  // ASSUMPTIONS.md A50 owns the authored-order interpretation.
+  return supportedStatBlockAttackDamage(attack.attack).baseComponents[0]
+    .damageType;
 }
 
 export function targetHasAdjacentNonIncapacitatedAlly(
@@ -478,9 +490,8 @@ export function eligibleAttackDamageRiders(
         binding.procedureRef,
         attackerId,
         damageType,
-        profile.trigger ===
-          "rageActiveRecklessStrengthWeaponOrUnarmedStrikeFirstHit" &&
-          attackUsesStrengthWeaponOrUnarmedStrike(attack)
+        profile.trigger === "rageActiveRecklessStrengthBasedAttackFirstHit" &&
+          attackUsesStrengthBasedAttack(attack)
           ? (activeRageDamageBonusForFrenzy(attacker, attack)?.damageBonus ?? 0)
           : 0,
       );
@@ -586,13 +597,12 @@ function selectedAttackDamageTypeForProfile(input: {
       : null;
   }
   if (
-    input.profile.trigger ===
-    "rageActiveRecklessStrengthWeaponOrUnarmedStrikeFirstHit"
+    input.profile.trigger === "rageActiveRecklessStrengthBasedAttackFirstHit"
   ) {
     if (currentActorId(input.state) !== input.attackerId) {
       return null;
     }
-    if (!attackUsesStrengthWeaponOrUnarmedStrike(input.attack)) {
+    if (!attackUsesStrengthBasedAttack(input.attack)) {
       return null;
     }
     const attack = input.attack;
@@ -617,7 +627,8 @@ function frenzyRecklessAttackWhileRagingUsedThisTurn(input: {
   readonly attackerId: CombatantId;
   readonly attack:
     | CharacterWeaponAttackActionOption
-    | CharacterUnarmedStrikeActionOption;
+    | CharacterUnarmedStrikeActionOption
+    | StatBlockAttackActionOption;
 }): boolean {
   const activeRage = activeRageDamageBonusForFrenzy(
     input.attacker,

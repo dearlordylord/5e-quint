@@ -24,7 +24,7 @@ let weapon =
       , category = "simple"
       , usage = "melee"
       , provenance = { kind = "srd-5.2.1", section = "Equipment#Weapons" }
-      , description = "Greatclub from the SRD weapons table."
+      , description = "Greatclub — weapons table."
       , damage =
         { kind = "dice"
         , dice = Some 1

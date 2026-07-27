@@ -41,6 +41,7 @@
         "actions": {
           "attacks": [
             {
+              "attackAbility": "spellcasting",
               "attackBonus": {
                 "kind": "caster_derived",
                 "source": "spell_attack_mod"
@@ -67,11 +68,7 @@
         "creatureType": {
           "kind": "choice",
           "label": "creature type",
-          "options": [
-            "celestial",
-            "fey",
-            "fiend"
-          ]
+          "options": ["celestial", "fey", "fiend"]
         },
         "displayName": "Otherworldly Steed",
         "hp": {
@@ -82,12 +79,7 @@
           "startingAtLevel": 2
         },
         "languages": "caster_languages",
-        "saveProficiencies": [
-          "str",
-          "dex",
-          "con",
-          "wis"
-        ],
+        "saveProficiencies": ["str", "dex", "con", "wis"],
         "size": "large",
         "speeds": [
           {

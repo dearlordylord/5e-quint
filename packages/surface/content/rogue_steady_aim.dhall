@@ -7,7 +7,7 @@ let steadyAim =
       , provenance =
           { kind = "srd-5.2.1", section = "Classes/Rogue.md:89-91" }
       , description =
-          "As a Bonus Action, if you haven't moved during the current turn, you gain Advantage on your next attack roll this turn, and your Speed becomes 0 until the turn ends."
+          "As a Bonus Action, you give yourself Advantage on your next attack roll on the current turn. You can use this feature only if you haven't moved during this turn, and after you use it, your Speed is 0 until the end of the current turn."
       , mechanics =
           { family = "steady_aim"
           , activationCost = { kind = "bonus_action" }

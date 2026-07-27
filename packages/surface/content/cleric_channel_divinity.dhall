@@ -2,7 +2,7 @@ let channelDivinity =
       { acquiredAtLevel = 2
       , className = "cleric"
       , description =
-          "SRD Cleric level 2 Channel Divinity resource container. A Cleric has two uses, regains one expended use on a Short Rest and all expended uses on a Long Rest, and chooses Divine Spark or Turn Undead when spending the resource."
+          "You can channel divine energy directly from the Outer Planes to fuel magical effects. You start with two such effects: Divine Spark and Turn Undead. You can use this class's Channel Divinity twice. You regain one of its expended uses when you finish a Short Rest, and you regain all expended uses when you finish a Long Rest."
       , id = "cleric_channel_divinity"
       , kind = "class_feature"
       , mechanics =

@@ -1,7 +1,7 @@
 { armorTraining.kind = "none"
 , className = "sorcerer"
 , description =
-    "SRD Sorcerer class creation and level 1-10 progression facts, including class-list prepared Spell Access, Spell Slots, spellcasting focus facts, level-1 and level-2 class-feature grants, level-3 subclass selection, Ability Score Improvement, Sorcerous Restoration, and level 10 Metamagic admission."
+    "As a Sorcerer, you gain the following class features when you reach the specified Sorcerer levels. These features are listed in the Sorcerer Features table."
 , featureGrants =
   [ { level = 1, unitId = "sorcerer_innate_sorcery" }
   , { level = 2, unitId = "sorcerer_font_of_magic" }
@@ -17,7 +17,7 @@
 , primaryAbilities = { abilities = [ "cha" ], kind = "all_of" }
 , provenance =
   { kind = "srd-5.2.1"
-  , section = "Classes/Sorcerer.md:3-24,33-45,56-76,123-129,219-319; Spells/Descriptions-M-P#Phantasmal Force"
+  , section = "Classes/Sorcerer.md:3-24,29,33-45,56-76,119-129,219-320; Spells/Descriptions-M-P#Phantasmal Force"
   }
 , savingThrowProficiencies = [ "con", "cha" ]
 , skillProficiencyChoice =

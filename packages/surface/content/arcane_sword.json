@@ -8,7 +8,7 @@
       "kind": "hole",
       "label": "spectral sword",
       "value": {
-        "description": "space within range",
+        "description": "within range",
         "kind": "location"
       }
     },

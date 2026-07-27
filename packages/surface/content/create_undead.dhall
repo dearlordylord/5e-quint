@@ -12,7 +12,7 @@ let createUndead =
           , section = "Spells/Descriptions-A-D#Create Undead"
           }
       , description =
-          "Cast only at night. Choose up to three corpses of Medium or Small Humanoids within range. Each one becomes a Ghoul under your control. As a Bonus Action within 120 ft, command any animated creature. Control lasts 24 hours; recast within that window to reassert control over up to three creatures. Higher-level slots open a per-slot menu of Ghoul / Ghast / Wight / Mummy counts."
+          "Cast only at night. Choose up to three corpses of Medium or Small Humanoids within range. Each one becomes a Ghoul under your control. As a Bonus Action on each of your turns, you can mentally command any creature you animated with this spell if the creature is within 120 feet of you. The creature is under your control for 24 hours; cast this spell before the current 24-hour period ends to reassert control over up to three creatures. Higher-level slots can animate or reassert control over Ghouls, Ghasts, Wights, or Mummies."
       , mechanics =
           { family = "reanimated_creature"
           , level = 6

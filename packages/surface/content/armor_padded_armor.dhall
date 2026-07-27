@@ -5,7 +5,7 @@ let armor =
       , name = "Padded Armor"
       , category = "light"
       , provenance = { kind = "srd-5.2.1", section = "Equipment#Armor" }
-      , description = "Padded Armor from the SRD armor table."
+      , description = "Padded Armor — armor table."
       , acFormula = { kind = "light_dex", base = 11 }
       , stealthDisadvantage = True
       , weightPounds = 8

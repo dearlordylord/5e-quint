@@ -1,5 +1,5 @@
 {
-  "description": "While holding the rod, you have Advantage on Wisdom (Perception) checks and on Initiative rolls. While holding the rod, you can cast Detect Evil and Good, Detect Magic, Detect Poison and Disease, and See Invisibility from it. As a Magic action, you can plant the rod in the ground; for 10 minutes, while in its Bright Light, you and your allies gain a +1 bonus to Armor Class and saving throws. The aura's Invisible-creature-location rider is omitted from this authored subset; see proposal-magic_item_rod_of_alertness.md.",
+  "description": "While holding the rod, you have Advantage on Wisdom (Perception) checks and on Initiative rolls. While holding the rod, you can cast the following spells from it: Detect Evil and Good; Detect Magic; Detect Poison and Disease; See Invisibility. As a Magic action, you can plant the rod in the ground. While in its Bright Light, you and your allies gain a +1 bonus to Armor Class and saving throws. The effect ends after 10 minutes.",
   "destruction": {
     "kind": "none"
   },
@@ -17,21 +17,15 @@
           {
             "kind": "modify_roll_advantage",
             "mode": "advantage",
-            "on": [
-              "initiative"
-            ]
+            "on": ["initiative"]
           },
           {
             "kind": "modify_roll_advantage",
             "mode": "advantage",
-            "on": [
-              "ability_check"
-            ],
+            "on": ["ability_check"],
             "skillFilter": {
               "kind": "fixed",
-              "skills": [
-                "perception"
-              ]
+              "skills": ["perception"]
             }
           },
           {
@@ -103,9 +97,7 @@
                   "sign": "+"
                 },
                 "kind": "modify_roll_numeric",
-                "on": [
-                  "saving_throw"
-                ]
+                "on": ["saving_throw"]
               }
             ],
             "kind": "direct"

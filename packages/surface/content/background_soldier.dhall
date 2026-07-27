@@ -42,7 +42,7 @@ let soldier =
           ]
         }
       , description =
-          "Minimum SRD Soldier background facts for ability scores, proficiencies, feat, and equipment."
+          "Soldier. Ability Scores: Strength, Dexterity, Constitution. Feat: Savage Attacker. Skill Proficiencies: Athletics and Intimidation. Tool Proficiency: Gaming Set."
       , id = "background_soldier"
       , kind = "background"
       , name = "Soldier"

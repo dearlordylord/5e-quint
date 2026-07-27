@@ -5,7 +5,7 @@ let armor =
       , name = "Plate Armor"
       , category = "heavy"
       , provenance = { kind = "srd-5.2.1", section = "Equipment#Armor" }
-      , description = "Plate Armor from the SRD armor table."
+      , description = "Plate Armor — armor table."
       , acFormula = { kind = "heavy_fixed", ac = 18 }
       , strengthRequirement = 15
       , stealthDisadvantage = True

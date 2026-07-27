@@ -42,7 +42,7 @@ let acolyte =
           ]
         }
       , description =
-          "Minimum SRD Acolyte background facts for ability scores, proficiencies, feat, and equipment."
+          "Acolyte. Ability Scores: Intelligence, Wisdom, Charisma. Feat: Magic Initiate (Cleric). Skill Proficiencies: Insight and Religion. Tool Proficiency: Calligrapher's Supplies."
       , id = "background_acolyte"
       , kind = "background"
       , name = "Acolyte"

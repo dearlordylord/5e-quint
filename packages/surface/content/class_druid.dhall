@@ -1,7 +1,7 @@
 { armorTraining = { categories = [ "light", "shield" ], kind = "trained" }
 , className = "druid"
 , description =
-    "SRD Druid class creation and level 1-10 progression facts, including class-list prepared Spell Access, Spell Slots, spellcasting focus facts, level 1-2 class feature grants, level 3 subclass selection, and the level 4 Ability Score Improvement feature grant."
+    "As a Druid, you gain the following class features when you reach the specified Druid levels. These features are listed in the Druid Features table."
 , featureGrants =
   [ { level = 1, unitId = "druid_druidic" }
   , { level = 1, unitId = "druid_primal_order" }
@@ -23,7 +23,7 @@
 , primaryAbilities = { abilities = [ "wis" ], kind = "all_of" }
 , provenance =
   { kind = "srd-5.2.1"
-  , section = "Classes/Druid.md:3-35,57-79,134-136,184-266"
+  , section = "Classes/Druid.md:3-35,55,57-79,130-136,184-266"
   }
 , savingThrowProficiencies = [ "int", "wis" ]
 , skillProficiencyChoice =

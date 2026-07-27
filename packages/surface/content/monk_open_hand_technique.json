@@ -1,7 +1,7 @@
 {
   "acquiredAtLevel": 3,
   "className": "monk",
-  "description": "Whenever you hit a creature with an attack granted by Flurry of Blows, you can Addle, Push, or Topple the target.",
+  "description": "Whenever you hit a creature with an attack granted by Flurry of Blows, you can impose one of the following effects: Addle, Push, Topple.",
   "id": "monk_open_hand_technique",
   "kind": "class_feature",
   "mechanics": {

@@ -10,7 +10,7 @@ let WeaponProficiency : Type =
 let monk =
       { armorTraining = { kind = "none" }
       , className = "monk"
-      , description = "SRD Monk class creation facts plus level 1-10 progression, including level 9 Acrobatic Movement and level 10 Heightened Focus and Self-Restoration grants."
+      , description = "As a Monk, you gain the following class features when you reach the specified Monk levels. These features are listed in the Monk Features table."
       , featureGrants =
         [ { level = 1, unitId = "monk_martial_arts" }
         , { level = 1, unitId = "monk_unarmored_defense" }
@@ -31,7 +31,7 @@ let monk =
       , multiclassProficiencies = { kind = "none" }
       , name = "Monk"
       , primaryAbilities = { abilities = [ "dex", "wis" ], kind = "all_of" }
-      , provenance = { kind = "srd-5.2.1", section = "Classes/Monk.md:3-25,28-35,53-128" }
+      , provenance = { kind = "srd-5.2.1", section = "Classes/Monk.md:3-25,28-35,53-128,138-158" }
       , savingThrowProficiencies = [ "str", "dex" ]
       , skillProficiencyChoice =
         { choose = 2, options = [ "acrobatics", "athletics", "history", "insight", "religion", "stealth" ] }

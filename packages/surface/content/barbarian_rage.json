@@ -1,7 +1,7 @@
 {
   "acquiredAtLevel": 1,
   "className": "barbarian",
-  "description": "Enter a Rage as a Bonus Action, gaining Bludgeoning, Piercing, and Slashing Resistance and bonus damage for Strength weapon or Unarmed Strike attacks.",
+  "description": "Enter a Rage as a Bonus Action. You have Resistance to Bludgeoning, Piercing, and Slashing damage. When you make an attack using Strength with either a weapon or an Unarmed Strike, you gain a bonus to the damage.",
   "id": "barbarian_rage",
   "kind": "class_feature",
   "mechanics": {
@@ -10,9 +10,7 @@
     },
     "family": "activation",
     "ongoingFeature": {
-      "actionRestrictions": [
-        "spellcasting"
-      ],
+      "actionRestrictions": ["spellcasting"],
       "activationTiming": "activation_cost",
       "concentrationEffect": "break_and_prevent",
       "levelOverrides": [
@@ -23,23 +21,15 @@
               "amount": 10,
               "unit": "minute"
             },
-            "earlyEndArmorCategories": [
-              "heavy"
-            ],
-            "earlyEndConditions": [
-              "unconscious"
-            ],
+            "earlyEndArmorCategories": ["heavy"],
+            "earlyEndConditions": ["unconscious"],
             "kind": "fixed_duration"
           }
         }
       ],
       "lifecycle": {
-        "earlyEndArmorCategories": [
-          "heavy"
-        ],
-        "earlyEndConditions": [
-          "incapacitated"
-        ],
+        "earlyEndArmorCategories": ["heavy"],
+        "earlyEndConditions": ["incapacitated"],
         "extensionTriggers": [
           "attack_roll_against_enemy",
           "bonus_action",
@@ -72,9 +62,7 @@
             "kind": "grant_resistance"
           },
           {
-            "abilityFilter": [
-              "str"
-            ],
+            "abilityFilter": ["str"],
             "delta": {
               "axis": "class",
               "base": 2,

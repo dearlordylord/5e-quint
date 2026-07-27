@@ -24,6 +24,7 @@
       "actions": {
         "attacks": [
           {
+            "attackAbility": "dex",
             "attackBonus": {
               "kind": "literal",
               "value": 4
@@ -107,6 +108,7 @@
       "actions": {
         "attacks": [
           {
+            "attackAbility": "dex",
             "attackBonus": {
               "kind": "literal",
               "value": 4
@@ -206,6 +208,7 @@
       "actions": {
         "attacks": [
           {
+            "attackAbility": "dex",
             "attackBonus": {
               "kind": "literal",
               "value": 3
@@ -309,6 +312,7 @@
       "actions": {
         "attacks": [
           {
+            "attackAbility": "dex",
             "attackBonus": {
               "kind": "literal",
               "value": 5
@@ -392,6 +396,7 @@
       "actions": {
         "attacks": [
           {
+            "attackAbility": "dex",
             "attackBonus": {
               "kind": "literal",
               "value": 2
@@ -481,6 +486,7 @@
       "actions": {
         "attacks": [
           {
+            "attackAbility": "dex",
             "attackBonus": {
               "kind": "literal",
               "value": 4
@@ -584,6 +590,7 @@
       "actions": {
         "attacks": [
           {
+            "attackAbility": "dex",
             "attackBonus": {
               "kind": "literal",
               "value": 3
@@ -683,6 +690,7 @@
       "actions": {
         "attacks": [
           {
+            "attackAbility": "dex",
             "attackBonus": {
               "kind": "literal",
               "value": 2
@@ -778,6 +786,7 @@
       "actions": {
         "attacks": [
           {
+            "attackAbility": "dex",
             "attackBonus": {
               "kind": "literal",
               "value": 4
@@ -867,6 +876,7 @@
       "actions": {
         "attacks": [
           {
+            "attackAbility": "dex",
             "attackBonus": {
               "kind": "literal",
               "value": 4
@@ -978,6 +988,7 @@
       "actions": {
         "attacks": [
           {
+            "attackAbility": "dex",
             "attackBonus": {
               "kind": "literal",
               "value": 5
@@ -1075,6 +1086,7 @@
       "actions": {
         "attacks": [
           {
+            "attackAbility": "dex",
             "attackBonus": {
               "kind": "literal",
               "value": 4
@@ -1170,6 +1182,7 @@
       "actions": {
         "attacks": [
           {
+            "attackAbility": "dex",
             "attackBonus": {
               "kind": "literal",
               "value": 5
@@ -1303,6 +1316,7 @@
       "actions": {
         "attacks": [
           {
+            "attackAbility": "dex",
             "attackBonus": {
               "kind": "literal",
               "value": 4
@@ -1449,6 +1463,7 @@
       "actions": {
         "attacks": [
           {
+            "attackAbility": "dex",
             "attackBonus": {
               "kind": "literal",
               "value": 5
@@ -1564,6 +1579,7 @@
       "actions": {
         "attacks": [
           {
+            "attackAbility": "dex",
             "attackBonus": {
               "kind": "literal",
               "value": 6
@@ -1588,6 +1604,7 @@
             "reachFeet": 5
           },
           {
+            "attackAbility": "dex",
             "attackBonus": {
               "kind": "literal",
               "value": 6

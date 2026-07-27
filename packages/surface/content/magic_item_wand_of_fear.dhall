@@ -51,7 +51,7 @@ let wand =
           , section = "MagicItems#WandOfFear"
           }
       , description =
-          "This wand has 7 charges. While holding the wand, you can cast Command (save DC 15; the command word is restricted to \"flee\" or \"grovel\") for 1 charge or Fear (save DC 15; 60-foot Cone) for 3 charges from it. The wand regains 1d6 + 1 expended charges daily at dawn. If you expend the wand's last charge, roll 1d20. On a 1, the wand crumbles into ashes and is destroyed."
+          "This wand has 7 charges. While holding the wand, you can cast one of the spells at save DC 15. Command (\"flee\" or \"grovel\" only): 1 charge. Fear (60-foot Cone): 3 charges. The wand regains 1d6 + 1 expended charges daily at dawn. If you expend the wand's last charge, roll 1d20. On a 1, the wand crumbles into ashes and is destroyed."
       , mechanics =
           { family = "activation"
           , condition = { kind = "holding_item" }

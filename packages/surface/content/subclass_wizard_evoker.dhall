@@ -12,7 +12,7 @@ let evoker =
       , kind = "subclass"
       , name = "Evoker"
       , provenance =
-          { kind = "srd-5.2.1", section = "Classes/Wizard.md:108-110,405" }
+          { kind = "srd-5.2.1", section = "Classes/Wizard.md:108-110,405-429" }
       }
 
 in  evoker

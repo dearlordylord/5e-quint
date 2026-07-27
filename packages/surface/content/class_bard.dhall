@@ -1,7 +1,7 @@
 { armorTraining = { categories = [ "light" ], kind = "trained" }
 , className = "bard"
 , description =
-    "SRD Bard class creation and level 1-10 progression facts, including class-list prepared Spell Access, Spell Slots, spellcasting focus facts, level 1-2 class feature grants, Ability Score Improvement, level 9 Expertise, and level 10 Magical Secrets."
+    "As a Bard, you gain the following class features when you reach the specified Bard levels. These features are listed in the Bard Features table."
 , featureGrants =
   [ { level = 1, unitId = "bard_bardic_inspiration" }
   , { level = 2, unitId = "bard_expertise" }
@@ -61,7 +61,7 @@
 , primaryAbilities = { abilities = [ "cha" ], kind = "all_of" }
 , provenance =
   { kind = "srd-5.2.1"
-  , section = "Classes/Bard.md:3-26,34-45,69-103,109-111,143-230; Spells/Descriptions-M-P#Phantasmal Force"
+  , section = "Classes/Bard.md:3-26,30,34-45,69-107,109-111,143-233; Spells/Descriptions-M-P#Phantasmal Force"
   }
 , savingThrowProficiencies = [ "dex", "cha" ]
 , skillProficiencyChoice =

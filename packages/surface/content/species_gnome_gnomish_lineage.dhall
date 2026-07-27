@@ -137,7 +137,7 @@ let rockGnome
 
 let gnomishLineage =
       { description =
-          "Choose either Forest Gnome or Rock Gnome, and choose Intelligence, Wisdom, or Charisma as the spellcasting ability for spells from this trait."
+          "Choose a lineage: Forest Gnome; Rock Gnome. Choose Intelligence, Wisdom, or Charisma as the spellcasting ability for spells from this trait."
       , id = "species_gnome_gnomish_lineage"
       , kind = "species_trait"
       , mechanics =

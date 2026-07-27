@@ -5,7 +5,7 @@
   },
   "category": "heavy",
   "costGp": 30,
-  "description": "Ring Mail from the SRD armor table.",
+  "description": "Ring Mail — armor table.",
   "donDoff": {
     "doffMinutes": 5,
     "donMinutes": 10

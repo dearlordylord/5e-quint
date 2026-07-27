@@ -1,7 +1,7 @@
 { armorTraining.kind = "none"
 , className = "wizard"
 , description =
-    "SRD Wizard class creation facts, including level 1-10 spellbook, prepared spells, Spell Slots, Ritual Adept, Arcane Recovery, Scholar, and spellcasting focus facts."
+    "As a Wizard, you gain the following class features when you reach the specified Wizard levels. These features are listed in the Wizard Features table."
 , featureGrants =
   [ { level = 1, unitId = "wizard_ritual_adept" }
   , { level = 1, unitId = "wizard_arcane_recovery" }
@@ -16,7 +16,7 @@
 , primaryAbilities = { abilities = [ "int" ], kind = "all_of" }
 , provenance =
   { kind = "srd-5.2.1"
-  , section = "Classes/Wizard.md:3-25,31-43,56-82,94-114,138-266; Spells/Descriptions-M-P#Phantasmal Force"
+  , section = "Classes/Wizard.md:3-25,29,31-43,56-82,94-114,138-266; Spells/Descriptions-M-P#Phantasmal Force"
   }
 , savingThrowProficiencies = [ "int", "wis" ]
 , skillProficiencyChoice =

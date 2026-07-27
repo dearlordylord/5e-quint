@@ -1,7 +1,7 @@
 {
   "acquiredAtLevel": 2,
   "className": "ranger",
-  "description": "Choose one of your skill proficiencies with which you lack Expertise; you gain Expertise in that skill. You also know two languages of your choice from the Character Creation language tables.",
+  "description": "Choose one of your skill proficiencies with which you lack Expertise; you gain Expertise in that skill. You know two languages of your choice from the Character Creation language tables.",
   "id": "ranger_deft_explorer",
   "kind": "class_feature",
   "mechanics": {

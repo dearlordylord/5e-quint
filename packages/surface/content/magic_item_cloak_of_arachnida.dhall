@@ -66,7 +66,7 @@ let cloak =
           , section = "MagicItems#CloakOfArachnida"
           }
       , description =
-          "While wearing this cloak, you gain Resistance to Poison damage. You have a Climb Speed equal to your Speed and can move up, down, and across vertical surfaces and along ceilings, while leaving your hands free. You can't be caught in webs of any sort and can move through webs as if they were Difficult Terrain. You can cast Web (save DC 13). The web created by the spell fills twice its normal area. Once used, this property can't be used again until the next dawn."
+          "While wearing it, you gain the following benefits. You have Resistance to Poison damage. You have a Climb Speed equal to your Speed and can move up, down, and across vertical surfaces and along ceilings, while leaving your hands free. You can't be caught in webs of any sort and can move through webs as if they were Difficult Terrain. You can cast Web (save DC 13). The web created by the spell fills twice its normal area. Once used, this property can't be used again until the next dawn."
       , mechanics =
           { family = "composite"
           , parts =

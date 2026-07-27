@@ -9,7 +9,7 @@ let arcaneHand =
           , section = "Spells/Descriptions-A-D#Arcane Hand"
           }
       , description =
-          "You create a Large hand of shimmering magical energy in an unoccupied space that you can see within range. The hand is an object with AC 20, Hit Points equal to your Hit Point maximum, and no occupied space. When you cast the spell and as a Bonus Action on later turns, you can move the hand up to 60 feet and cause Clenched Fist, Forceful Hand, Grasping Hand, or Interposing Hand. Using a Higher-Level Spell Slot, Clenched Fist and Grasping Hand damage increase."
+          "You create a Large hand of shimmering magical energy in an unoccupied space that you can see within range. The hand is an object with AC 20 and Hit Points equal to your Hit Point maximum. The hand doesn't occupy its space. When you cast the spell and as a Bonus Action on later turns, you can move the hand up to 60 feet and cause one effect: Clenched Fist; Forceful Hand; Grasping Hand; Interposing Hand. Using a Higher-Level Spell Slot. The damage of the Clenched Fist increases by 2d8 and the damage of the Grasping Hand increases by 2d6 for each spell slot level above 5."
       , mechanics =
           { family = "activation"
           , level = 5
@@ -25,7 +25,7 @@ let arcaneHand =
                 , attachment =
                     { kind = "location"
                     , description =
-                        "unoccupied space that the caster can see within range"
+                        "unoccupied space that you can see within range"
                     }
                 , effects = [ { kind = "none" } ]
                 }

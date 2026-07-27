@@ -106,7 +106,7 @@ let fleshToStone =
           , section = "Spells/Descriptions-E-L#Flesh to Stone"
           }
       , description =
-          "You attempt to turn one creature that you can see within range into stone. The target makes a Constitution saving throw. On a failed save, it has the Restrained condition for the duration. On a successful save, its Speed is 0 until the start of your next turn. Constructs automatically succeed. A Restrained target repeats the Constitution save at the end of each of its turns. Three successes end the spell; three failures turn it to stone and give it the Petrified condition for the duration. If you maintain Concentration for the entire possible duration, the target is Petrified until ended by Greater Restoration or similar magic."
+          "You attempt to turn one creature that you can see within range into stone. The target makes a Constitution saving throw. On a failed save, it has the Restrained condition for the duration. On a successful save, its Speed is 0 until the start of your next turn. Constructs automatically succeed. A Restrained target makes another Constitution saving throw at the end of each of its turns. Three successes end the spell. Three failures turn it to stone; it has the Petrified condition for the duration. If you maintain Concentration for the entire possible duration, the target is Petrified until ended by Greater Restoration or similar magic."
       , mechanics =
           { family = "activation"
           , level = 6

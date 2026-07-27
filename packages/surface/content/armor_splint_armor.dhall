@@ -5,7 +5,7 @@ let armor =
       , name = "Splint Armor"
       , category = "heavy"
       , provenance = { kind = "srd-5.2.1", section = "Equipment#Armor" }
-      , description = "Splint Armor from the SRD armor table."
+      , description = "Splint Armor — armor table."
       , acFormula = { kind = "heavy_fixed", ac = 17 }
       , strengthRequirement = 15
       , stealthDisadvantage = True

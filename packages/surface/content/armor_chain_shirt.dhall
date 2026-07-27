@@ -5,7 +5,7 @@ let armor =
       , name = "Chain Shirt"
       , category = "medium"
       , provenance = { kind = "srd-5.2.1", section = "Equipment#Armor" }
-      , description = "Chain Shirt from the SRD armor table."
+      , description = "Chain Shirt — armor table."
       , acFormula = { kind = "medium_dex_max_2", base = 13 }
       , weightPounds = 20
       , costGp = 50

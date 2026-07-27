@@ -148,7 +148,7 @@ let iceStorm =
           , section = "Spells/Descriptions-E-L#Ice Storm"
           }
       , description =
-          "Hail falls in a 20-foot-radius, 40-foot-high Cylinder centered on a point within range. Each creature in the Cylinder makes a Dexterity saving throw, taking 2d10 Bludgeoning damage and 4d6 Cold damage on a failed save or half as much damage on a successful one. The ground in the Cylinder becomes Difficult Terrain until the end of your next turn. Using a Higher-Level Spell Slot. The Bludgeoning damage increases by 1d10 for each spell slot level above 4."
+          "Hail falls in a 20-foot-radius, 40-foot-high Cylinder centered on a point within range. Each creature in the Cylinder makes a Dexterity saving throw, taking 2d10 Bludgeoning damage and 4d6 Cold damage on a failed save or half as much damage on a successful one. Hailstones turn the ground in the Cylinder into Difficult Terrain until the end of your next turn. Using a Higher-Level Spell Slot. The Bludgeoning damage increases by 1d10 for each spell slot level above 4."
       , mechanics =
           { family = "activation"
           , level = 4

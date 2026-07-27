@@ -15,7 +15,7 @@ let wildCompanion =
       , provenance =
           { kind = "srd-5.2.1", section = "Classes/Druid.md:124-128" }
       , description =
-          "As a Magic action, expend a spell slot or one Wild Shape use to cast Find Familiar without Material components. The familiar is Fey and disappears when you finish a Long Rest."
+          "As a Magic action, expend a spell slot or a use of Wild Shape to cast Find Familiar without Material components. The familiar is Fey and disappears when you finish a Long Rest."
       , mechanics =
           { family = "druid_wild_companion_spell_cast"
           , activationCost = { kind = "standard_action", action = "magic" }

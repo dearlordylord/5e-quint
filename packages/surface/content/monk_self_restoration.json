@@ -1,7 +1,7 @@
 {
   "acquiredAtLevel": 10,
   "className": "monk",
-  "description": "At the end of each of your turns, you can remove one of these conditions from yourself: Charmed, Frightened, or Poisoned. In addition, forgoing food and drink doesn't give you levels of Exhaustion.",
+  "description": "At the end of each of your turns, you can remove one of the following conditions from yourself: Charmed, Frightened, or Poisoned. In addition, forgoing food and drink doesn't give you levels of Exhaustion.",
   "id": "monk_self_restoration",
   "kind": "class_feature",
   "mechanics": {

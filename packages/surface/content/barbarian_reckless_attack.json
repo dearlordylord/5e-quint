@@ -1,7 +1,7 @@
 {
   "acquiredAtLevel": 2,
   "className": "barbarian",
-  "description": "Attack recklessly to gain Advantage on Strength attack rolls while attacks against you also have Advantage.",
+  "description": "Attack recklessly to have Advantage on Strength attack rolls. Attack rolls against you have Advantage until the start of your next turn.",
   "id": "barbarian_reckless_attack",
   "kind": "class_feature",
   "mechanics": {
@@ -23,23 +23,17 @@
         },
         "effects": [
           {
-            "abilityFilter": [
-              "str"
-            ],
+            "abilityFilter": ["str"],
             "affects": "self_roll",
             "kind": "modify_roll_advantage",
             "mode": "advantage",
-            "on": [
-              "attack_roll"
-            ]
+            "on": ["attack_roll"]
           },
           {
             "affects": "rolls_against_self",
             "kind": "modify_roll_advantage",
             "mode": "advantage",
-            "on": [
-              "attack_roll"
-            ]
+            "on": ["attack_roll"]
           }
         ],
         "kind": "direct"

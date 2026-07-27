@@ -8,7 +8,7 @@
       "kind": "hole",
       "label": "eye location",
       "value": {
-        "description": "point within range",
+        "description": "within range",
         "kind": "location"
       }
     },
@@ -49,9 +49,7 @@
       {
         "effect": {
           "kind": "remote_perception",
-          "senses": [
-            "seeing"
-          ]
+          "senses": ["seeing"]
         },
         "trigger": {
           "kind": "passive"

@@ -2,7 +2,9 @@ import type { DamageType } from "@dnd/surface/surface/types";
 import type {
   CharacterUnarmedStrikeActionOption,
   CharacterWeaponAttackActionOption,
+  StatBlockAttackActionOption,
 } from "../battle-action-options.ts";
+import { attackExecutionAbility } from "../battle-action-options.ts";
 import type {
   CharacterBattleCreatureState,
   OngoingFeatureSourceKey,
@@ -70,7 +72,8 @@ export function activeRageDamageBonusForFrenzy(
   attacker: CharacterBattleCreatureState,
   attack:
     | CharacterWeaponAttackActionOption
-    | CharacterUnarmedStrikeActionOption,
+    | CharacterUnarmedStrikeActionOption
+    | StatBlockAttackActionOption,
 ): ActiveRageDamageBonusForFrenzy | null {
   const bonuses = activeRageSourceKeysForFrenzy(attacker).flatMap(
     (key): readonly ActiveRageDamageBonusForFrenzy[] => {
@@ -94,14 +97,15 @@ export function activeRageDamageBonusForFrenzy(
 function attackAbilityMatchesDamageModifier(
   attack:
     | CharacterWeaponAttackActionOption
-    | CharacterUnarmedStrikeActionOption,
+    | CharacterUnarmedStrikeActionOption
+    | StatBlockAttackActionOption,
   modifier: OngoingFeatureProfile["damageModifiers"][number],
 ): boolean {
-  const attackAbility =
-    attack.kind === "weapon" ? attack.ability : attack.attackAbility;
+  const attackAbility = attackExecutionAbility(attack);
   const abilityMatches =
     modifier.abilityFilter === undefined ||
-    (attackAbility !== "spellcasting" &&
+    (attackAbility !== undefined &&
+      attackAbility !== "spellcasting" &&
       modifier.abilityFilter.includes(attackAbility));
   return (
     abilityMatches &&

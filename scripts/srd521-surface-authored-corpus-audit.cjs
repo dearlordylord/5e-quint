@@ -2,11 +2,13 @@ const fs = require("node:fs");
 const path = require("node:path");
 require("tsx/cjs");
 const { Either, Schema } = require("effect");
+const { DAMAGE_TYPES } = require("../packages/shared/src/types.ts");
 const {
   StatBlockRecordSchema,
   UnitRecordSchema,
 } = require("../packages/surface/src/surface/schema.ts");
 const {
+  CLASS_NAMES,
   SURFACE_SCHEMA_ROLE_ANNOTATION,
   isSurfaceSchemaRole,
   readSurfaceSchemaRole,
@@ -15,21 +17,12 @@ const {
 
 const root = path.resolve(__dirname, "..");
 const referenceRoot = path.join(root, ".references/srd-5.2.1");
-const contentDir = path.join(root, "packages/surface/content");
 const reportDir = path.join(root, "plans/srd-corpus-audit");
 const jsonReportPath = path.join(
   reportDir,
   "surface-authored-corpus-audit.json",
 );
 const mdReportPath = path.join(reportDir, "surface-authored-corpus-audit.md");
-const unitCatalogPath = path.join(
-  root,
-  "packages/surface/src/surface/unit-catalog.ts",
-);
-const statBlockCatalogPath = path.join(
-  root,
-  "packages/surface/src/surface/stat-block-catalog.ts",
-);
 
 const STRUCTURAL_VOCABULARY_ROLE = Object.freeze({
   category: "vocabulary",
@@ -197,17 +190,6 @@ function assertSurfaceSchemaStringRoles() {
   ]) {
     walkSchemaShape(schema.ast, rootName, () => {});
   }
-}
-
-function buildSurfaceSchemaFieldRoles() {
-  assertSurfaceSchemaStringRoles();
-  const roles = new Map();
-  for (const schema of [UnitRecordSchema, StatBlockRecordSchema]) {
-    walkSchemaShape(schema.ast, "Surface", (_path, role, ast) => {
-      if (role !== undefined && ast !== undefined) roles.set(ast, role);
-    });
-  }
-  return roles;
 }
 
 function unwrappedSchemaAst(ast) {
@@ -759,7 +741,11 @@ function walkMarkdownFiles(dir, files = []) {
     const filePath = path.join(dir, entry.name);
     if (entry.isDirectory()) {
       walkMarkdownFiles(filePath, files);
-    } else if (entry.isFile() && entry.name.endsWith(".md")) {
+    } else if (
+      entry.isFile() &&
+      entry.name.endsWith(".md") &&
+      entry.name !== "ATTRIBUTION.md"
+    ) {
       files.push(filePath);
     }
   }
@@ -767,22 +753,25 @@ function walkMarkdownFiles(dir, files = []) {
 }
 
 function lineNumber(raw, index) {
-  return raw.slice(0, index).split("\n").length;
+  return raw.slice(0, index).split("\n").length + (raw[index] === "\n" ? 1 : 0);
 }
 
-function buildReferenceIndex() {
-  const markdownFiles = walkMarkdownFiles(referenceRoot).sort();
+function buildReferenceIndex(sourceRoot = referenceRoot) {
+  const markdownFiles = walkMarkdownFiles(sourceRoot).sort();
   const fileByRel = new Map();
+  const rawByRel = new Map();
   const headingsByFile = new Map();
   const proseAnchorsByFile = new Map();
 
   for (const filePath of markdownFiles) {
-    const rel = path.relative(referenceRoot, filePath).replace(/\\/g, "/");
+    const rel = path.relative(sourceRoot, filePath).replace(/\\/g, "/");
     const raw = fs.readFileSync(filePath, "utf8");
     fileByRel.set(rel, filePath);
+    rawByRel.set(rel, raw);
 
     const headings = [...raw.matchAll(/^(#{1,6})\s+(.+)$/gm)].map((match) => ({
       rel,
+      level: match[1].length,
       line: lineNumber(raw, match.index),
       text: match[2].trim(),
       normalized: normalizeAnchor(match[2]),
@@ -798,74 +787,118 @@ function buildReferenceIndex() {
       line: lineNumber(raw, match.index),
       text: match[1].trim(),
       normalized: normalizeAnchor(match[1]),
+      isList: /^[-*]\s+/.test(
+        raw.split("\n")[lineNumber(raw, match.index) - 1] ?? "",
+      ),
     }));
     proseAnchorsByFile.set(rel, proseAnchors);
   }
 
-  return { fileByRel, headingsByFile, proseAnchorsByFile };
+  return {
+    sourceRoot,
+    fileByRel,
+    rawByRel,
+    headingsByFile,
+    proseAnchorsByFile,
+  };
 }
 
-function readSurfaceRecords() {
+function scanSurfaceRecords(workspaceRoot = root) {
   const records = [];
-  const installedUnitFiles = importedContentFiles(unitCatalogPath);
-  const installedStatBlockFiles = importedContentFiles(statBlockCatalogPath);
-
+  const issues = [];
+  const workspaceContentDir = path.join(
+    workspaceRoot,
+    "packages/surface/content",
+  );
   function visit(value, file, index) {
-    if (Array.isArray(value)) {
-      value.forEach((entry, entryIndex) => visit(entry, file, entryIndex));
-      return;
-    }
-    if (
-      value &&
-      typeof value === "object" &&
-      value.provenance?.kind === "srd-5.2.1"
-    ) {
-      records.push(
-        decodeSurfaceRecord({
-          contentPath: `packages/surface/content/${file}`,
-          contentFile: file,
-          index,
-          id: value.id,
-          kind: value.kind ?? "unknown",
-          name: value.name ?? value.statBlock?.displayName ?? value.id,
-          section: value.provenance.section,
-          value,
-          catalogBoundary:
-            value.kind === "statBlock"
-              ? installedStatBlockFiles.has(file)
-                ? "srd-stat-block-collection"
-                : "not-installed"
-              : installedUnitFiles.has(file)
-                ? "srd-unit-collection"
-                : "authored-not-installed",
-        }),
-      );
+    const objectValue =
+      value !== null && typeof value === "object" && !Array.isArray(value)
+        ? value
+        : {};
+    const record = {
+      contentPath: `packages/surface/content/${file}`,
+      contentFile: file,
+      index,
+      id: objectValue.id,
+      kind: objectValue.kind ?? "unknown",
+      name:
+        objectValue.name ??
+        objectValue.statBlock?.displayName ??
+        objectValue.id,
+      section: objectValue.provenance?.section,
+      value,
+    };
+    try {
+      records.push(decodeSurfaceRecord(record));
+    } catch (error) {
+      issues.push({
+        code: "surface-decode-failure",
+        contentPath: `packages/surface/content/${file}`,
+        recordId:
+          typeof objectValue.id === "string" ? objectValue.id : undefined,
+        message: error instanceof Error ? error.message : String(error),
+      });
     }
   }
 
-  for (const file of fs
-    .readdirSync(contentDir)
-    .filter((entry) => entry.endsWith(".json"))
-    .sort()) {
-    visit(
-      JSON.parse(fs.readFileSync(path.join(contentDir, file), "utf8")),
-      file,
+  function visitDocument(value, file) {
+    if (Array.isArray(value)) {
+      if (value.length === 0) {
+        issues.push({
+          code: "surface-content-empty",
+          contentPath: `packages/surface/content/${file}`,
+          message: "Surface content arrays must contain at least one record",
+        });
+      }
+      value.forEach((entry, entryIndex) => visit(entry, file, entryIndex));
+    } else {
+      visit(value, file);
+    }
+  }
+
+  let files = [];
+  try {
+    files = fs
+      .readdirSync(workspaceContentDir)
+      .filter((entry) => entry.endsWith(".json"))
+      .sort();
+  } catch (error) {
+    issues.push({
+      code: "surface-corpus-unreadable",
+      contentPath: "packages/surface/content",
+      message: error instanceof Error ? error.message : String(error),
+    });
+  }
+  for (const file of files) {
+    try {
+      visitDocument(
+        JSON.parse(
+          fs.readFileSync(path.join(workspaceContentDir, file), "utf8"),
+        ),
+        file,
+      );
+    } catch (error) {
+      issues.push({
+        code: "surface-content-unreadable",
+        contentPath: `packages/surface/content/${file}`,
+        message: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
+
+  return { records, issues };
+}
+
+function readSurfaceRecords(workspaceRoot = root) {
+  const scan = scanSurfaceRecords(workspaceRoot);
+  if (scan.issues.length > 0) {
+    throw new Error(
+      `Surface corpus scan failed: ${scan.issues
+        .map((issue) => `${issue.contentPath}: ${issue.message}`)
+        .join("; ")}`,
     );
   }
-
-  return records;
-}
-
-function importedContentFiles(sourcePath) {
-  if (!fs.existsSync(sourcePath)) {
-    return new Set();
-  }
-  const raw = fs.readFileSync(sourcePath, "utf8");
-  return new Set(
-    [...raw.matchAll(/from\s+"..\/..\/content\/([^"]+\.json)"/g)].map(
-      (match) => match[1],
-    ),
-  );
+  return scan.records;
 }
 
 function addIfPresent(paths, fileByRel, rel) {
@@ -935,14 +968,9 @@ function splitSectionPart(part) {
   return { base: part, separator: "", suffix: "" };
 }
 
-function lineCountFor(rel) {
-  return fs.readFileSync(path.join(referenceRoot, rel), "utf8").split("\n")
-    .length;
-}
-
-function resolveLineRanges(part, base, suffix, files) {
+function resolveLineRanges(part, base, suffix, files, index) {
   const rel = files[0];
-  const lineCount = lineCountFor(rel);
+  const lineCount = (index.rawByRel.get(rel) ?? "").split("\n").length;
   const invalidRanges = suffix
     .split(",")
     .map((range) => range.trim())
@@ -982,13 +1010,46 @@ function anchorMatches(anchors, target, mode) {
 
 function resolveAnchor(part, base, suffix, files, index) {
   const target = normalizeAnchor(suffix);
+  const ownerContext = normalizeAnchor(base.split("/").at(-1));
+
+  function contextualMatch(rel, matches) {
+    const headings = index.headingsByFile.get(rel) ?? [];
+    return [...matches].sort((left, right) => {
+      const score = (candidate) =>
+        headings
+          .filter((heading) => heading.line < candidate.line)
+          .filter(
+            (heading) =>
+              heading.normalized.includes(ownerContext) ||
+              ownerContext.includes(heading.normalized),
+          ).length;
+      const specificity = (candidate) =>
+        Math.abs(candidate.normalized.length - target.length);
+      return (
+        specificity(left) - specificity(right) ||
+        score(right) - score(left) ||
+        left.line - right.line
+      );
+    })[0];
+  }
 
   for (const mode of ["exact", "prefix", "suffix"]) {
     for (const rel of files) {
       const headings = index.headingsByFile.get(rel) ?? [];
       const matches = anchorMatches(headings, target, mode);
       if (matches.length > 0) {
-        const match = matches[0];
+        const selected = contextualMatch(rel, matches);
+        const selectedIndex = headings.indexOf(selected);
+        const match =
+          headings
+            .slice(0, selectedIndex)
+            .reverse()
+            .find(
+              (heading) =>
+                heading.level < selected.level &&
+                (heading.normalized.includes(target) ||
+                  target.includes(heading.normalized)),
+            ) ?? selected;
         return {
           part,
           status:
@@ -996,15 +1057,20 @@ function resolveAnchor(part, base, suffix, files, index) {
               ? "ok-heading"
               : "ok-heading-alias",
           canonical: `${match.rel}#${match.text}`,
+          evidence: {
+            rel: match.rel,
+            lines: headingEvidenceLines(match, index),
+          },
         };
       }
     }
-
+  }
+  for (const mode of ["exact", "prefix", "suffix"]) {
     for (const rel of files) {
       const proseAnchors = index.proseAnchorsByFile.get(rel) ?? [];
       const matches = anchorMatches(proseAnchors, target, mode);
       if (matches.length > 0) {
-        const match = matches[0];
+        const match = contextualMatch(rel, matches);
         return {
           part,
           status:
@@ -1012,6 +1078,10 @@ function resolveAnchor(part, base, suffix, files, index) {
               ? "ok-prose-anchor"
               : "ok-prose-anchor-alias",
           canonical: `${match.rel}:${match.line} (${match.text})`,
+          evidence: {
+            rel: match.rel,
+            lines: proseEvidenceLines(match, index),
+          },
         };
       }
     }
@@ -1040,7 +1110,13 @@ function resolveSection(section, index) {
         };
       }
       if (parsed.separator === ":") {
-        return resolveLineRanges(part, parsed.base, parsed.suffix, files);
+        return resolveLineRanges(
+          part,
+          parsed.base,
+          parsed.suffix,
+          files,
+          index,
+        );
       }
       if (parsed.separator === "#") {
         return resolveAnchor(part, parsed.base, parsed.suffix, files, index);
@@ -1092,271 +1168,1961 @@ function collectUnitReferences(records) {
   return refs;
 }
 
-function buildSpellHeadingSet(index) {
-  const spellHeadings = new Set();
-  for (const [rel, headings] of index.headingsByFile.entries()) {
-    if (!rel.startsWith("Spells/Descriptions-")) {
-      continue;
-    }
-    for (const heading of headings) {
-      spellHeadings.add(heading.normalized);
-    }
-  }
-  return spellHeadings;
+const auditContextState = new WeakMap();
+
+const ID_NAMESPACE_PREFIXES = [
+  "armor",
+  "background",
+  "barbarian",
+  "bard",
+  "class",
+  "cleric",
+  "druid",
+  "equipment",
+  "feat",
+  "fighter",
+  "magic_item",
+  "mastery",
+  "monk",
+  "orc",
+  "paladin",
+  "ranger",
+  "rogue",
+  "sorcerer",
+  "species",
+  "stat_block",
+  "subclass",
+  "warlock",
+  "weapon",
+  "wizard",
+];
+
+function sourceWords(value) {
+  return (
+    String(value)
+      .toLowerCase()
+      .replace(/['’]/g, "")
+      .match(/[a-z0-9]+/g) ?? []
+  );
 }
 
-function buildStatBlockHeadingSet(index) {
-  const statBlockHeadings = new Set();
-  for (const [rel, headings] of index.headingsByFile.entries()) {
-    if (!rel.startsWith("Monsters/")) continue;
-    for (const heading of headings) statBlockHeadings.add(heading.normalized);
+function stemSourceWord(value) {
+  const word = value.toLowerCase();
+  const irregular = {
+    added: "add",
+    adding: "add",
+    changing: "change",
+    collapses: "collapse",
+    choice: "choose",
+    choices: "choose",
+    chosen: "choose",
+    choosing: "choose",
+    chose: "choose",
+    dms: "dm",
+    failed: "fail",
+    failure: "fail",
+    failures: "fail",
+    fails: "fail",
+    forced: "force",
+    forcing: "force",
+    gave: "give",
+    given: "give",
+    giving: "give",
+    held: "hold",
+    has: "have",
+    holding: "hold",
+    increases: "increase",
+    increased: "increase",
+    increasing: "increase",
+    known: "know",
+    knowing: "know",
+    made: "make",
+    makes: "make",
+    making: "make",
+    moved: "move",
+    moving: "move",
+    perceives: "perceive",
+    provides: "provide",
+    recast: "cast",
+    recasting: "cast",
+    replaced: "replace",
+    replacing: "replace",
+    releases: "release",
+    requires: "require",
+    saving: "save",
+    saves: "save",
+    spoken: "speak",
+    speaking: "speak",
+    struck: "strike",
+    succeeds: "succeed",
+    success: "succeed",
+    successful: "succeed",
+    taken: "take",
+    taking: "take",
+    temp: "temporary",
+    used: "use",
+    uses: "use",
+    using: "use",
+    worn: "wear",
+    wearing: "wear",
+  };
+  if (irregular[word] !== undefined) return irregular[word];
+  if (word.endsWith("ied")) return `${word.slice(0, -3)}y`;
+  if (word.endsWith("ies")) return `${word.slice(0, -3)}y`;
+  if (word.endsWith("ing")) {
+    const base = word.slice(0, -3).replace(/(.)\1$/, "$1");
+    return /(?:at|gat)$/.test(base) ? `${base}e` : base;
   }
-  return statBlockHeadings;
+  if (word.endsWith("ed")) {
+    const base = word.slice(0, -2).replace(/(.)\1$/, "$1");
+    return /(?:at|gat)$/.test(base) ? `${base}e` : base;
+  }
+  if (/(?:ses|xes|zes|ches|shes)$/.test(word)) return word.slice(0, -2);
+  if (word.endsWith("s") && !word.endsWith("ss")) return word.slice(0, -1);
+  return word;
 }
 
-function buildAudit() {
-  assertSurfaceSchemaStringRoles();
-  const index = buildReferenceIndex();
-  const records = readSurfaceRecords();
-  const spellHeadings = buildSpellHeadingSet(index);
-  const statBlockHeadings = buildStatBlockHeadingSet(index);
-  const authoredUnitIds = new Set(
-    records
-      .filter((record) => record.kind !== "statBlock")
-      .map((record) => record.id),
+function containsWordSequence(haystack, needle) {
+  if (needle.length === 0 || haystack.length < needle.length) return false;
+  for (let start = 0; start <= haystack.length - needle.length; start += 1) {
+    if (needle.every((word, index) => haystack[start + index] === word)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function containsStemmedWordSequence(haystack, needle) {
+  if (needle.length === 0 || haystack.length < needle.length) return false;
+  const identityWordForms = (word) =>
+    new Set([
+      word,
+      ...(word.endsWith("s") ? [word.slice(0, -1)] : []),
+      ...(word.endsWith("ies") ? [`${word.slice(0, -3)}y`] : []),
+    ]);
+  const sameIdentityWord = (left, right) => {
+    const rightForms = identityWordForms(right);
+    return [...identityWordForms(left)].some((form) => rightForms.has(form));
+  };
+  for (let start = 0; start <= haystack.length - needle.length; start += 1) {
+    if (
+      needle.every((word, index) =>
+        sameIdentityWord(haystack[start + index], word),
+      )
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function sourceIdentityCandidates(value) {
+  const raw = String(value).trim();
+  const withoutLevelSuffix = raw.replace(/_l\d+$/, "");
+  const withoutQualifier = raw.replace(/\s*\([^)]*\)\s*$/, "");
+  const candidates = new Set([
+    raw,
+    raw.replace(/_/g, " "),
+    withoutLevelSuffix.replace(/_/g, " "),
+    withoutQualifier,
+    withoutQualifier.replace(/,\s*\+\d+\s*$/, ""),
+  ]);
+  for (const candidate of [raw, withoutLevelSuffix]) {
+    const prefix = ID_NAMESPACE_PREFIXES.find((namespace) =>
+      candidate.startsWith(`${namespace}_`),
+    );
+    if (prefix !== undefined) {
+      const withoutPrefix = candidate.slice(prefix.length + 1);
+      candidates.add(withoutPrefix.replace(/_/g, " "));
+      if (
+        CLASS_NAMES.includes(prefix) &&
+        withoutPrefix.startsWith(`${prefix}s_`)
+      ) {
+        candidates.add(
+          withoutPrefix.slice(prefix.length + 2).replace(/_/g, " "),
+        );
+      }
+      if (prefix === "subclass") {
+        const className = CLASS_NAMES.find((name) =>
+          withoutPrefix.startsWith(`${name}_`),
+        );
+        if (className !== undefined) {
+          candidates.add(
+            withoutPrefix.slice(className.length + 1).replace(/_/g, " "),
+          );
+        }
+      }
+    }
+  }
+  return [...candidates].map(sourceWords).filter((words) => words.length > 0);
+}
+
+function sourceContainsIdentity(value, source) {
+  const haystack = sourceWords(source);
+  return sourceIdentityCandidates(value).some((candidate) =>
+    containsStemmedWordSequence(haystack, candidate),
   );
-  const authoredStatBlockIds = new Set(
-    records
-      .filter((record) => record.kind === "statBlock")
-      .map((record) => record.id),
+}
+
+function sourceContainsAuthoredName(value, source) {
+  const raw = String(value).trim();
+  const withoutQualifier = raw.replace(/\s*\([^)]*\)\s*$/, "");
+  const candidates = new Set([
+    raw,
+    withoutQualifier,
+    withoutQualifier.replace(/,\s*\+\d+\s*$/, ""),
+  ]);
+  const haystack = sourceWords(source);
+  return [...candidates]
+    .map(sourceWords)
+    .filter((words) => words.length > 0)
+    .some((candidate) => containsStemmedWordSequence(haystack, candidate));
+}
+
+function sourceContainsCanonicalReference(value, source) {
+  const candidate = sourceWords(String(value).replace(/_/g, " "));
+  return containsStemmedWordSequence(sourceWords(source), candidate);
+}
+
+function slug(value) {
+  return String(value)
+    .toLowerCase()
+    .replace(/['’]/g, "")
+    .replace(/\+/g, " plus ")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_|_$/g, "")
+    .replace(/_+/g, "_");
+}
+
+function idBelongsToName(id, name) {
+  const recordId = slug(id);
+  const nameSlug = slug(String(name).replace(/\s*\([^)]*\)\s*$/, ""));
+  if (recordId === nameSlug || recordId.endsWith(`_${nameSlug}`)) return true;
+  const withoutCategory = nameSlug.replace(/_(armor|weapon)$/, "");
+  if (
+    withoutCategory !== nameSlug &&
+    (recordId === withoutCategory || recordId.endsWith(`_${withoutCategory}`))
+  ) {
+    return true;
+  }
+  return (
+    nameSlug === "ability_score_improvement" &&
+    new RegExp(`(?:^|_)${nameSlug}_l(?:[1-9]|1[0-9]|20)$`).test(recordId)
   );
-  const checks = records.flatMap((record) =>
-    resolveSection(record.section, index).map((resolution) => {
-      const { value: _value, ...recordForReport } = record;
-      return {
-        ...recordForReport,
-        ...resolution,
-        severity: statusSeverity(resolution.status),
-      };
+}
+
+function unsupportedSummaryWords(value, source, checkClauseLocal = true) {
+  const normalizedValue = normalizeAnchor(value);
+  const normalizedSource = normalizeAnchor(source);
+  if (
+    normalizedValue.length > 0 &&
+    normalizedSource.includes(normalizedValue)
+  ) {
+    return [];
+  }
+  const valueWords = summaryContentWords(value);
+  const sourceStems = new Set(sourceWords(source).map(stemSourceWord));
+  return [
+    ...valueWords.filter(
+      (word) => !summaryWordHasLocalEvidence(word, sourceStems),
+    ),
+    ...unsupportedSummaryDomainOrder(value, source),
+    ...unsupportedSummaryRelations(value, source),
+    ...unsupportedTypedSummaryRelations(value, source),
+    ...unsupportedNumericSummaryRelations(value, source),
+    ...(checkClauseLocal
+      ? unsupportedCrossSentenceClauseVocabulary(value, source)
+      : []),
+    ...unsupportedExactClauseOrder(value, source),
+    ...unsupportedOrderedSummaryClauses(value, source),
+  ];
+}
+
+const SUMMARY_SOURCE_EQUIVALENTS = Object.freeze({
+  "1d6": ["d6"],
+  ac: ["armor", "class"],
+  cr: ["challenge", "rating"],
+  ft: ["feet"],
+  hp: ["hit", "point"],
+  per: ["each"],
+});
+
+function summaryWordHasLocalEvidence(word, sourceStems) {
+  const stem = stemSourceWord(word);
+  if (sourceStems.has(stem)) return true;
+  const requiredSourceWords = SUMMARY_SOURCE_EQUIVALENTS[word];
+  return (
+    requiredSourceWords !== undefined &&
+    requiredSourceWords.every((sourceWord) =>
+      sourceStems.has(stemSourceWord(sourceWord)),
+    )
+  );
+}
+
+const SUMMARY_COUNTED_DOMAIN_WORDS = new Set([
+  "ally",
+  "area",
+  "attack",
+  "aura",
+  "condition",
+  "creature",
+  "damage",
+  "object",
+  "point",
+  "regain",
+  "spell",
+  "start",
+  "target",
+  "wall",
+  "weapon",
+]);
+
+function unsupportedSummaryDomainOrder(value, source) {
+  const sourceSentenceWords = summarySentences(source);
+  return summarySentences(value).flatMap((candidateWords) => {
+    const candidateDomainWords = candidateWords
+      .map(stemSourceWord)
+      .filter((word) => SUMMARY_COUNTED_DOMAIN_WORDS.has(word));
+    if (candidateDomainWords.length < 2) return [];
+    const candidateStems = candidateWords.map(stemSourceWord);
+    const stronglyMatchingSourceSentences = sourceSentenceWords.filter(
+      (sourceWordsForSentence) =>
+        longestCommonSubsequenceLength(
+          candidateStems,
+          sourceWordsForSentence.map(stemSourceWord),
+        ) /
+          candidateStems.length >=
+        SUMMARY_DOMAIN_ORDER_MATCH_RATIO,
+    );
+    if (stronglyMatchingSourceSentences.length === 0) return [];
+    return stronglyMatchingSourceSentences.some((sourceWordsForSentence) => {
+      const sourceDomainWords = sourceWordsForSentence
+        .map(stemSourceWord)
+        .filter((word) => SUMMARY_COUNTED_DOMAIN_WORDS.has(word));
+      let sourceCursor = 0;
+      return candidateDomainWords.every((word) => {
+        const relativeIndex = sourceDomainWords
+          .slice(sourceCursor)
+          .indexOf(word);
+        if (relativeIndex === -1) return false;
+        sourceCursor += relativeIndex + 1;
+        return true;
+      });
+    })
+      ? []
+      : candidateDomainWords;
+  });
+}
+
+const SUMMARY_GRAMMAR_WORDS = new Set();
+const SUMMARY_RELATION_WORDS = new Set([
+  "and",
+  "or",
+  "when",
+  "where",
+  "whether",
+]);
+
+function summaryContentWords(value) {
+  return sourceWords(value).filter((word) => !SUMMARY_GRAMMAR_WORDS.has(word));
+}
+
+function summarySentences(value) {
+  return String(value)
+    .split(/[.!?;]+/)
+    .map(summaryContentWords)
+    .filter((words) => words.length > 0);
+}
+
+function summarySourceClauseRecords(value) {
+  return String(value)
+    .split(/\n+/)
+    .flatMap((rawLine) => {
+      const line = rawLine.trim();
+      if (
+        line.length === 0 ||
+        /^#{1,6}\s/.test(line) ||
+        /^-{3,}$/.test(line) ||
+        /^\|(?:\s*:?-+:?\s*\|)+$/.test(line) ||
+        (/^\*[^*].*\*$/.test(line) && !/^\*{2,3}/.test(line))
+      ) {
+        return [];
+      }
+      const sentences = line
+        .replace(/(\*{2,3}[^*\n]+)\.(\*{2,3})/g, "$1:$2")
+        .split(/[.!?;]+/)
+        .map(summaryContentWords)
+        .filter((words) => words.length > 0);
+      return [
+        ...sentences.map((words) => ({ words, parts: [words] })),
+        ...sentences.slice(0, -1).map((sentence, index) => ({
+          words: [...sentence, ...sentences[index + 1]],
+          parts: [sentence, sentences[index + 1]],
+        })),
+      ];
+    });
+}
+
+function summarySourceClauses(value) {
+  return summarySourceClauseRecords(value).map((clause) => clause.words);
+}
+
+function unsupportedSummaryRelations(value, source) {
+  const valueSentences = summarySentences(value);
+  const sourceSentenceWords = summarySentences(source);
+  return valueSentences.flatMap((words) => {
+    const candidateOccurrences = words.flatMap((word, index) =>
+      SUMMARY_RELATION_WORDS.has(word)
+        ? [
+            {
+              previous: words[index - 1],
+              word,
+              next: words[index + 1],
+            },
+          ]
+        : [],
+    );
+    if (candidateOccurrences.length === 0) return [];
+    const candidateStems = words.map(stemSourceWord);
+    const stronglyMatchingSourceSentences = sourceSentenceWords.filter(
+      (sourceWordsForSentence) =>
+        longestCommonSubsequenceLength(
+          candidateStems,
+          sourceWordsForSentence.map(stemSourceWord),
+        ) /
+          candidateStems.length >=
+        SUMMARY_STRONG_CLAUSE_MATCH_RATIO,
+    );
+    const sourceSentences =
+      stronglyMatchingSourceSentences.length === 0
+        ? sourceSentenceWords
+        : stronglyMatchingSourceSentences;
+    const supported = sourceSentences.some((sourceWordsForSentence) => {
+      const sourceOccurrences = sourceWordsForSentence.flatMap((word, index) =>
+        SUMMARY_RELATION_WORDS.has(word)
+          ? [{ words: sourceWordsForSentence, word, index }]
+          : [],
+      );
+      let sourceCursor = 0;
+      for (const candidate of candidateOccurrences) {
+        const relativeIndex = sourceOccurrences
+          .slice(sourceCursor)
+          .findIndex(
+            (sourceOccurrence) =>
+              sourceOccurrence.word === candidate.word &&
+              sourceRelationOccurrenceMatches(sourceOccurrence, candidate),
+          );
+        if (relativeIndex === -1) return false;
+        sourceCursor += relativeIndex + 1;
+      }
+      return true;
+    });
+    if (supported) return [];
+    if (stronglyMatchingSourceSentences.length > 0) {
+      return candidateOccurrences.map(({ word }) => word);
+    }
+    return candidateOccurrences.flatMap((candidate) =>
+      sourceSentenceWords.some((sourceWordsForSentence) =>
+        sourceWordsForSentence.some(
+          (word, index) =>
+            word === candidate.word &&
+            sourceRelationOccurrenceMatches(
+              { words: sourceWordsForSentence, word, index },
+              candidate,
+            ),
+        ),
+      )
+        ? []
+        : [candidate.word],
+    );
+  });
+}
+
+const SUMMARY_RELATION_SOURCE_WINDOW = 12;
+const SUMMARY_TYPED_RELATION_SOURCE_WINDOW = 12;
+const SUMMARY_TYPED_RELATION_CANDIDATE_WINDOW = 3;
+const SUMMARY_NUMERIC_RELATION_SOURCE_WINDOW = 12;
+const SUMMARY_ORDERED_CLAUSE_MINIMUM_RATIO = 0.51;
+const SUMMARY_DOMAIN_ORDER_MATCH_RATIO = 0.65;
+const SUMMARY_STRONG_CLAUSE_MATCH_RATIO = 0.8;
+const SUMMARY_CLAUSE_ORDER_IGNORED_WORDS = new Set(["a", "an", "its", "the"]);
+const SUMMARY_LOCAL_CLAUSE_IGNORED_WORDS = new Set([
+  ...SUMMARY_CLAUSE_ORDER_IGNORED_WORDS,
+  "at",
+  "by",
+  "for",
+  "from",
+  "in",
+  "it",
+  "of",
+  "on",
+  "that",
+  "to",
+  "with",
+]);
+const SUMMARY_NUMERIC_UNIT_WORDS = new Set(
+  ["day", "feet", "foot", "hour", "mile", "minute", "round", "second"].map(
+    stemSourceWord,
+  ),
+);
+const SUMMARY_NUMERIC_ANCHORS = new Set(
+  [
+    "ally",
+    "attack",
+    "bonus",
+    "damage",
+    "diameter",
+    "level",
+    "move",
+    "movement",
+    "radius",
+    "regain",
+    "slot",
+  ].map(stemSourceWord),
+);
+const SUMMARY_TYPED_MODIFIERS = new Set([
+  "charisma",
+  "constitution",
+  "dexterity",
+  "intelligence",
+  "strength",
+  "wisdom",
+  ...DAMAGE_TYPES,
+]);
+const SUMMARY_TYPED_NOUNS = new Set([
+  "attack",
+  "check",
+  "damage",
+  "immunity",
+  "resistance",
+  "save",
+  "saving",
+  "throw",
+]);
+
+function summaryWordEvidenceAlternatives(word) {
+  return [
+    [word],
+    ...(SUMMARY_SOURCE_EQUIVALENTS[word] === undefined
+      ? []
+      : [SUMMARY_SOURCE_EQUIVALENTS[word]]),
+  ];
+}
+
+function candidateEvidenceSequences(words, index = 0, prefix = []) {
+  if (index === words.length) return [prefix];
+  return summaryWordEvidenceAlternatives(words[index]).flatMap((alternative) =>
+    candidateEvidenceSequences(words, index + 1, [...prefix, ...alternative]),
+  );
+}
+
+function sourceContainsBoundedSummaryWords(
+  sourceWordList,
+  candidateWords,
+  maximumWindow,
+) {
+  for (const requiredWords of candidateEvidenceSequences(candidateWords)) {
+    const required = requiredWords.map(stemSourceWord);
+    for (let start = 0; start < sourceWordList.length; start += 1) {
+      if (stemSourceWord(sourceWordList[start]) !== required[0]) continue;
+      let cursor = start + 1;
+      let matched = 1;
+      while (
+        matched < required.length &&
+        cursor < sourceWordList.length &&
+        cursor - start <= maximumWindow
+      ) {
+        if (stemSourceWord(sourceWordList[cursor]) === required[matched]) {
+          matched += 1;
+        }
+        cursor += 1;
+      }
+      if (matched === required.length) return true;
+    }
+  }
+  return false;
+}
+
+function sourceRelationOccurrenceMatches(sourceOccurrence, candidate) {
+  const previousMatches =
+    candidate.previous === undefined ||
+    sourceContainsBoundedSummaryWords(
+      sourceOccurrence.words.slice(
+        Math.max(0, sourceOccurrence.index - SUMMARY_RELATION_SOURCE_WINDOW),
+        sourceOccurrence.index,
+      ),
+      [candidate.previous],
+      SUMMARY_RELATION_SOURCE_WINDOW,
+    );
+  const nextMatches =
+    candidate.next === undefined ||
+    sourceContainsBoundedSummaryWords(
+      sourceOccurrence.words.slice(
+        sourceOccurrence.index + 1,
+        sourceOccurrence.index + 1 + SUMMARY_RELATION_SOURCE_WINDOW,
+      ),
+      [candidate.next],
+      SUMMARY_RELATION_SOURCE_WINDOW,
+    );
+  return previousMatches && nextMatches;
+}
+
+function unsupportedTypedSummaryRelations(value, source) {
+  const unsupported = [];
+  const sourceSentenceWords = summarySentences(source);
+  const sentences = summarySentences(value);
+  for (const words of sentences) {
+    for (let index = 0; index < words.length; index += 1) {
+      if (!SUMMARY_TYPED_MODIFIERS.has(words[index])) continue;
+      const nounOffset = words
+        .slice(index + 1, index + 1 + SUMMARY_TYPED_RELATION_CANDIDATE_WINDOW)
+        .findIndex((word) => SUMMARY_TYPED_NOUNS.has(word));
+      if (nounOffset === -1) continue;
+      const noun = words[index + 1 + nounOffset];
+      if (
+        !sourceSentenceWords.some((sourceWordsForSentence) =>
+          sourceContainsBoundedSummaryWords(
+            sourceWordsForSentence,
+            [words[index], noun],
+            SUMMARY_TYPED_RELATION_SOURCE_WINDOW,
+          ),
+        )
+      ) {
+        unsupported.push(noun);
+      }
+    }
+  }
+  return unsupported;
+}
+
+function isNumericRuleWord(word) {
+  return /^(?:\d+(?:d\d+s?)?|d\d+s?)$/.test(word);
+}
+
+function canonicalNumericRuleWord(word) {
+  const singular = word.endsWith("s") ? word.slice(0, -1) : word;
+  return /^d\d+$/.test(singular) ? `1${singular}` : singular;
+}
+
+function candidateStructurallySpansSourcePart(candidateWords, sourcePart) {
+  const candidateStems = candidateWords
+    .filter((word) => !isNumericRuleWord(word))
+    .map(stemSourceWord);
+  const sourceStems = sourcePart
+    .filter((word) => !isNumericRuleWord(word))
+    .map(stemSourceWord);
+  if (sourceStems.length === 0) return false;
+  const shared = longestCommonSubsequenceLength(candidateStems, sourceStems);
+  return (
+    shared >= Math.min(2, sourceStems.length) &&
+    shared / sourceStems.length >= 0.3
+  );
+}
+
+function unsupportedNumericSummaryRelations(value, source) {
+  // Numeric facts retain their source-sentence ownership. Adjacent source
+  // sentences may jointly support prose vocabulary, but must never form a
+  // synthetic clause from which a candidate can borrow another sentence's
+  // number or unit.
+  const structuralSourceClauseRecords = summarySourceClauseRecords(source);
+  const sourceSentenceWords = structuralSourceClauseRecords
+    .filter((clause) => clause.parts.length === 1)
+    .map((clause) => clause.words);
+  const structuralSourceClauses = structuralSourceClauseRecords.map(
+    (clause) => clause.words,
+  );
+  return summarySentences(value).flatMap((words) => {
+    const candidateNumbers = words.flatMap((word, index) =>
+      isNumericRuleWord(word)
+        ? [
+            {
+              canonical: canonicalNumericRuleWord(word),
+              index,
+              sequenceKey: numericSequenceKey(words, index),
+              word,
+            },
+          ]
+        : [],
+    );
+    if (candidateNumbers.length === 0) return [];
+    const candidateNonNumericStems = words
+      .filter((word) => !isNumericRuleWord(word))
+      .map(stemSourceWord);
+    const exactVocabularySourceSentences = sourceSentenceWords.filter(
+      (sourceWordsForSentence) =>
+        sameWordMultiset(
+          candidateNonNumericStems,
+          sourceWordsForSentence
+            .filter((word) => !isNumericRuleWord(word))
+            .map(stemSourceWord),
+        ),
+    );
+    const sourceSentencesByStructuralMatch = structuralSourceClauses.map(
+      (sourceWordsForSentence) => {
+        const sourceNonNumericStems = sourceWordsForSentence
+          .filter((word) => !isNumericRuleWord(word))
+          .map(stemSourceWord);
+        return {
+          ratio:
+            longestCommonSubsequenceLength(
+              candidateNonNumericStems,
+              sourceNonNumericStems,
+            ) / candidateNonNumericStems.length,
+          words: sourceWordsForSentence,
+        };
+      },
+    );
+    const strongestStructuralMatch = sourceSentencesByStructuralMatch.reduce(
+      (maximum, candidate) => Math.max(maximum, candidate.ratio),
+      0,
+    );
+    const exactSingleSentenceOwners = sourceSentenceWords
+      .map((sourceWordsForSentence) => ({
+        ratio:
+          longestCommonSubsequenceLength(
+            candidateNonNumericStems,
+            sourceWordsForSentence
+              .filter((word) => !isNumericRuleWord(word))
+              .map(stemSourceWord),
+          ) / candidateNonNumericStems.length,
+        words: sourceWordsForSentence,
+      }))
+      .filter((candidate) => candidate.ratio === 1)
+      .map((candidate) => candidate.words);
+    const exactPairedOwners =
+      exactSingleSentenceOwners.length > 0
+        ? []
+        : structuralSourceClauseRecords
+            .filter(
+              (clause) =>
+                clause.parts.length === 2 &&
+                longestCommonSubsequenceLength(
+                  candidateNonNumericStems,
+                  clause.words
+                    .filter((word) => !isNumericRuleWord(word))
+                    .map(stemSourceWord),
+                ) === candidateNonNumericStems.length &&
+                clause.parts.every((part) =>
+                  candidateStructurallySpansSourcePart(words, part),
+                ),
+            )
+            .map((clause) => clause.words);
+    const owningSourceSentences = [
+      ...exactSingleSentenceOwners,
+      ...exactPairedOwners,
+    ];
+    if (
+      owningSourceSentences.length > 0 &&
+      !owningSourceSentences.some((sourceWordsForSentence) => {
+        const sourceNumbers = sourceWordsForSentence.flatMap((word, index) =>
+          isNumericRuleWord(word)
+            ? [numericSequenceKey(sourceWordsForSentence, index)]
+            : [],
+        );
+        return sharedNumericSequenceOrderMatches(
+          candidateNumbers.map(({ sequenceKey }) => sequenceKey),
+          sourceNumbers,
+        );
+      })
+    ) {
+      return candidateNumbers.map(({ word }) => word);
+    }
+    const stronglyMatchingSourceSentences = exactVocabularySourceSentences;
+    if (
+      stronglyMatchingSourceSentences.length > 0 &&
+      !stronglyMatchingSourceSentences.some((sourceWordsForSentence) => {
+        const sourceNumbers = sourceWordsForSentence.flatMap((word, index) =>
+          isNumericRuleWord(word)
+            ? [numericSequenceKey(sourceWordsForSentence, index)]
+            : [],
+        );
+        let sourceCursor = 0;
+        return candidateNumbers.every(({ sequenceKey }) => {
+          const relativeIndex = sourceNumbers
+            .slice(sourceCursor)
+            .indexOf(sequenceKey);
+          if (relativeIndex === -1) return false;
+          sourceCursor += relativeIndex + 1;
+          return true;
+        });
+      })
+    ) {
+      return candidateNumbers.map(({ word }) => word);
+    }
+    const bestStructuralSourceSentences =
+      strongestStructuralMatch >= SUMMARY_ORDERED_CLAUSE_MINIMUM_RATIO
+        ? sourceSentencesByStructuralMatch
+            .filter((candidate) => candidate.ratio === strongestStructuralMatch)
+            .map((candidate) => candidate.words)
+        : [];
+    const structurallyDisplacedNumbers = new Set();
+    const sourceSequences = bestStructuralSourceSentences
+      .map((sourceWordsForSentence) =>
+        sourceWordsForSentence.flatMap((word, index) =>
+          isNumericRuleWord(word)
+            ? [numericSequenceKey(sourceWordsForSentence, index)]
+            : [],
+        ),
+      )
+      .filter((sequence) => sequence.length > 0);
+    const chargeCostCount = candidateNumbers.filter(
+      (candidate) =>
+        stemSourceWord(words[candidate.index + 1] ?? "") ===
+        stemSourceWord("charge"),
+    ).length;
+    if (
+      words.length > 4 &&
+      chargeCostCount === 0 &&
+      sourceSequences.length === 0
+    ) {
+      return candidateNumbers.map(({ word }) => word);
+    }
+    if (
+      words.length > 4 &&
+      chargeCostCount < 2 &&
+      sourceSequences.length > 0 &&
+      !sourceSequences.some((sequence) =>
+        sharedNumericSequenceOrderMatches(
+          candidateNumbers.map(({ sequenceKey }) => sequenceKey),
+          sequence,
+        ),
+      )
+    ) {
+      for (const candidate of candidateNumbers) {
+        structurallyDisplacedNumbers.add(candidate.index);
+      }
+    }
+    return candidateNumbers.flatMap((candidate) => {
+      if (structurallyDisplacedNumbers.has(candidate.index)) {
+        return [candidate.word];
+      }
+      const immediateAssociations = [
+        ...(candidate.index === 0
+          ? []
+          : [[words[candidate.index - 1], candidate.word]]),
+        ...(candidate.index === words.length - 1
+          ? []
+          : [[candidate.word, words[candidate.index + 1]]]),
+      ];
+      const followingWord = words[candidate.index + 1];
+      const chargeRowLabel =
+        candidate.index > 0 &&
+        followingWord !== undefined &&
+        stemSourceWord(followingWord) === stemSourceWord("charge") &&
+        !isNumericRuleWord(words[candidate.index - 1])
+          ? longestSourceBackedNumericLabel(
+              words,
+              candidate.index,
+              sourceSentenceWords,
+            )
+          : undefined;
+      const chargeRowAssociation =
+        candidate.index > 0 &&
+        followingWord !== undefined &&
+        stemSourceWord(followingWord) === stemSourceWord("charge")
+          ? isNumericRuleWord(words[candidate.index - 1])
+            ? [words[0], candidate.word]
+            : [
+                ...(chargeRowLabel ?? [words[candidate.index - 1]]),
+                candidate.word,
+              ]
+          : undefined;
+      const chargeRowWindow =
+        chargeRowAssociation === undefined
+          ? 0
+          : isNumericRuleWord(words[candidate.index - 1])
+            ? 4
+            : chargeRowAssociation.length - 1;
+      const unitAssociations =
+        followingWord !== undefined &&
+        SUMMARY_NUMERIC_UNIT_WORDS.has(stemSourceWord(followingWord))
+          ? [
+              ...(candidate.index === 0
+                ? []
+                : [
+                    [words[candidate.index - 1], candidate.word, followingWord],
+                  ]),
+              ...(candidate.index + 2 >= words.length
+                ? []
+                : [
+                    [candidate.word, followingWord, words[candidate.index + 2]],
+                  ]),
+            ]
+          : [];
+      const associations = [
+        ...words
+          .slice(Math.max(0, candidate.index - 6), candidate.index)
+          .filter((word) => SUMMARY_NUMERIC_ANCHORS.has(stemSourceWord(word)))
+          .map((anchor) => [anchor, candidate.word]),
+        ...words
+          .slice(candidate.index + 1, candidate.index + 7)
+          .filter((word) => SUMMARY_NUMERIC_ANCHORS.has(stemSourceWord(word)))
+          .map((anchor) => [candidate.word, anchor]),
+      ];
+      return sourceSentenceWords.some((sourceWordsForSentence) =>
+        sourceWordsForSentence.some(
+          (word) =>
+            isNumericRuleWord(word) &&
+            canonicalNumericRuleWord(word) === candidate.canonical &&
+            (chargeRowAssociation === undefined ||
+              sourceContainsBoundedSummaryWords(
+                sourceWordsForSentence,
+                chargeRowAssociation,
+                chargeRowWindow,
+              )) &&
+            (immediateAssociations.length === 0 ||
+              immediateAssociations.some((association) =>
+                sourceContainsBoundedSummaryWords(
+                  sourceWordsForSentence,
+                  association,
+                  SUMMARY_NUMERIC_RELATION_SOURCE_WINDOW,
+                ),
+              )) &&
+            (unitAssociations.length === 0 ||
+              unitAssociations.some((association) =>
+                sourceContainsBoundedSummaryWords(
+                  sourceWordsForSentence,
+                  association,
+                  SUMMARY_NUMERIC_RELATION_SOURCE_WINDOW,
+                ),
+              )) &&
+            (chargeRowAssociation !== undefined ||
+              associations.every((association) =>
+                sourceContainsBoundedSummaryWords(
+                  sourceWordsForSentence,
+                  association,
+                  SUMMARY_NUMERIC_RELATION_SOURCE_WINDOW,
+                ),
+              )),
+        ),
+      )
+        ? []
+        : [candidate.word];
+    });
+  });
+}
+
+function numericSequenceKey(words, index) {
+  const canonical = canonicalNumericRuleWord(words[index]);
+  const followingStem = stemSourceWord(words[index + 1] ?? "");
+  return SUMMARY_NUMERIC_UNIT_WORDS.has(followingStem)
+    ? `${canonical}:${followingStem}`
+    : canonical;
+}
+
+function longestSourceBackedNumericLabel(
+  candidateWords,
+  numericIndex,
+  sourceSentenceWords,
+) {
+  const maximumLength = Math.min(5, numericIndex);
+  for (let length = maximumLength; length >= 1; length -= 1) {
+    const label = candidateWords.slice(numericIndex - length, numericIndex);
+    if (
+      sourceSentenceWords.some((sourceWordsForSentence) =>
+        sourceContainsBoundedSummaryWords(
+          sourceWordsForSentence,
+          label,
+          label.length - 1,
+        ),
+      )
+    ) {
+      return label;
+    }
+  }
+  return undefined;
+}
+
+function sharedNumericSequenceOrderMatches(candidate, source) {
+  return sequenceContainsInOrder(source, candidate);
+}
+
+function sequenceContainsInOrder(source, candidate) {
+  let sourceCursor = 0;
+  return candidate.every((word) => {
+    const relativeIndex = source.slice(sourceCursor).indexOf(word);
+    if (relativeIndex === -1) return false;
+    sourceCursor += relativeIndex + 1;
+    return true;
+  });
+}
+
+function unsupportedOrderedSummaryClauses(value, source) {
+  const sourceSentenceWords = summarySentences(source);
+  return summarySentences(value).flatMap((candidate) => {
+    if (candidate.length < 5) return [];
+    const candidateStems = candidate.map(stemSourceWord);
+    const maximumRatio = sourceSentenceWords.reduce(
+      (maximum, sourceSentence) =>
+        Math.max(
+          maximum,
+          longestCommonSubsequenceLength(
+            candidateStems,
+            sourceSentence.map(stemSourceWord),
+          ) / candidateStems.length,
+        ),
+      0,
+    );
+    return maximumRatio >= SUMMARY_ORDERED_CLAUSE_MINIMUM_RATIO
+      ? []
+      : [candidate[0]];
+  });
+}
+
+function unsupportedExactClauseOrder(value, source) {
+  const sourceSentenceWords = summarySentences(source);
+  return summarySentences(value).flatMap((candidateWords) => {
+    const candidateStems = candidateWords
+      .filter((word) => !SUMMARY_CLAUSE_ORDER_IGNORED_WORDS.has(word))
+      .map(stemSourceWord);
+    const sameVocabularySourceSentences = sourceSentenceWords.filter(
+      (sourceWordsForSentence) =>
+        sameWordMultiset(
+          candidateStems,
+          sourceWordsForSentence
+            .filter((word) => !SUMMARY_CLAUSE_ORDER_IGNORED_WORDS.has(word))
+            .map(stemSourceWord),
+        ),
+    );
+    if (sameVocabularySourceSentences.length === 0) return [];
+    return sameVocabularySourceSentences.some(
+      (sourceWordsForSentence) =>
+        candidateStems.join("\u0000") ===
+        sourceWordsForSentence
+          .filter((word) => !SUMMARY_CLAUSE_ORDER_IGNORED_WORDS.has(word))
+          .map(stemSourceWord)
+          .join("\u0000"),
+    )
+      ? []
+      : [candidateStems[0]];
+  });
+}
+
+function unsupportedCrossSentenceClauseVocabulary(value, source) {
+  const clauseEvidenceStem = (word) => {
+    const stem = stemSourceWord(word);
+    if (stem === "book" || stem === "manual") return "tome";
+    if (stem === "determin") return "choose";
+    return stem;
+  };
+  const sourceSentenceWords = summarySourceClauses(source);
+  const sourceLabelStems = new Set(
+    [
+      ...String(source).matchAll(/^#{1,6}\s+(.+)$/gm),
+      ...String(source).matchAll(/\*{2,3}([^*\n]+?)\.?\*{2,3}/g),
+      ...String(source).matchAll(/^\|(.+)\|$/gm),
+    ].flatMap((match) => sourceWords(match[1]).map(clauseEvidenceStem)),
+  );
+  const clauseDeltas = summarySentences(value).flatMap((candidateWords) => {
+    const candidateStems = candidateWords.map(clauseEvidenceStem);
+    const matches = sourceSentenceWords
+      .map((words, sourceIndex) => {
+        const stems = words.map(clauseEvidenceStem);
+        return {
+          ratio:
+            longestCommonSubsequenceLength(candidateStems, stems) /
+            candidateStems.length,
+          sourceIndex,
+          stems,
+        };
+      })
+      .sort((left, right) => right.ratio - left.ratio);
+    const strongest = matches[0];
+    if (
+      strongest === undefined ||
+      strongest.ratio < SUMMARY_STRONG_CLAUSE_MATCH_RATIO
+    ) {
+      return [];
+    }
+    const meaningful = (word) =>
+      !SUMMARY_LOCAL_CLAUSE_IGNORED_WORDS.has(word) && !isNumericRuleWord(word);
+    return [
+      {
+        borrowed: multisetDifference(
+          candidateStems.filter(meaningful),
+          strongest.stems.filter(meaningful),
+        ),
+        omitted: multisetDifference(
+          strongest.stems.filter(meaningful),
+          candidateStems.filter(meaningful),
+        ),
+        sourceIndex: strongest.sourceIndex,
+      },
+    ];
+  });
+  return clauseDeltas.flatMap((delta, index) =>
+    delta.borrowed.filter((borrowed) => {
+      const oneForOneBorrow =
+        delta.borrowed.length === 1 &&
+        delta.omitted.length === 1 &&
+        sourceSentenceWords.some(
+          (words, sourceIndex) =>
+            sourceIndex !== delta.sourceIndex &&
+            words.map(clauseEvidenceStem).includes(borrowed),
+        );
+      const reciprocalBorrow = clauseDeltas.some(
+        (other, otherIndex) =>
+          otherIndex !== index &&
+          other.omitted.includes(borrowed) &&
+          delta.omitted.some((omitted) => other.borrowed.includes(omitted)),
+      );
+      return (
+        !sourceLabelStems.has(borrowed) && (oneForOneBorrow || reciprocalBorrow)
+      );
     }),
   );
-  const unitReferenceChecks = collectUnitReferences(records).map((ref) => {
-    const authored =
-      ref.targetKind === "statBlock"
-        ? authoredStatBlockIds.has(ref.targetRecordId)
-        : authoredUnitIds.has(ref.targetRecordId);
-    const scannerVisibleSrdSpell =
-      ref.targetKind === "unit" &&
-      spellHeadings.has(normalizeAnchor(ref.targetRecordId.replace(/_/g, " ")));
-    const scannerVisibleSrdStatBlock =
-      ref.targetKind === "statBlock" &&
-      statBlockHeadings.has(
-        normalizeAnchor(ref.targetRecordId.replace(/_/g, " ")),
-      );
-    return {
-      ...ref,
-      status: authored
-        ? "ok-authored-reference"
-        : scannerVisibleSrdSpell
-          ? "srd-spell-reference-without-authored-unit"
-          : scannerVisibleSrdStatBlock
-            ? "srd-stat-block-reference-without-authored-record"
-            : ref.targetKind === "statBlock"
-              ? "missing-authored-stat-block"
-              : "missing-authored-unit",
-      severity:
-        authored || scannerVisibleSrdSpell || scannerVisibleSrdStatBlock
-          ? authored
-            ? "ok"
-            : "warning"
-          : "failure",
-    };
-  });
-  const statusCounts = {};
-  const kindCounts = {};
-  const catalogBoundaryCounts = {};
-  for (const check of checks) {
-    statusCounts[check.status] = (statusCounts[check.status] ?? 0) + 1;
-    kindCounts[check.kind] = (kindCounts[check.kind] ?? 0) + 1;
-    catalogBoundaryCounts[check.catalogBoundary] =
-      (catalogBoundaryCounts[check.catalogBoundary] ?? 0) + 1;
-  }
-  const unitReferenceStatusCounts = {};
-  for (const check of unitReferenceChecks) {
-    unitReferenceStatusCounts[check.status] =
-      (unitReferenceStatusCounts[check.status] ?? 0) + 1;
-  }
+}
 
+function multisetDifference(left, right) {
+  const remaining = new Map();
+  for (const word of right) {
+    remaining.set(word, (remaining.get(word) ?? 0) + 1);
+  }
+  return left.filter((word) => {
+    const available = remaining.get(word) ?? 0;
+    if (available === 0) return true;
+    remaining.set(word, available - 1);
+    return false;
+  });
+}
+
+function sameWordMultiset(left, right) {
+  if (left.length !== right.length) return false;
+  return [...left].sort().join("\u0000") === [...right].sort().join("\u0000");
+}
+
+function longestCommonSubsequenceLength(left, right) {
+  let previous = new Uint16Array(right.length + 1);
+  for (const leftWord of left) {
+    const current = new Uint16Array(right.length + 1);
+    for (let rightIndex = 1; rightIndex <= right.length; rightIndex += 1) {
+      current[rightIndex] =
+        leftWord === right[rightIndex - 1]
+          ? previous[rightIndex - 1] + 1
+          : Math.max(previous[rightIndex], current[rightIndex - 1]);
+    }
+    previous = current;
+  }
+  return previous[right.length];
+}
+
+function sourceContainsSummary(value, source, checkClauseLocal = true) {
+  const normalizedValue = normalizeAnchor(value);
+  const normalizedSource = normalizeAnchor(source);
+  if (
+    normalizedValue.length > 0 &&
+    normalizedSource.includes(normalizedValue)
+  ) {
+    return true;
+  }
+  const contentWords = summaryContentWords(value);
+  if (contentWords.length === 0) return false;
+  if (!checkClauseLocal) {
+    const sourceStems = new Set(sourceWords(source).map(stemSourceWord));
+    return contentWords.every((word) =>
+      summaryWordHasLocalEvidence(word, sourceStems),
+    );
+  }
+  return unsupportedSummaryWords(value, source).length === 0;
+}
+
+function sourceContainsExactProse(value, source) {
+  const words = sourceWords(value);
+  return words.length > 0 && containsWordSequence(sourceWords(source), words);
+}
+
+function sourceContainsLabel(value, source) {
+  if (sourceContainsIdentity(value, source)) return true;
+  const words = summaryContentWords(value);
+  const sourceStems = new Set(sourceWords(source).map(stemSourceWord));
+  return (
+    words.length > 0 &&
+    words.filter((word) => sourceStems.has(stemSourceWord(word))).length /
+      words.length >
+      0.5
+  );
+}
+
+function sourceContainsDisplayName(value, source) {
+  if (sourceContainsIdentity(value, source)) return true;
+  const words = sourceWords(value).filter((word) => word.length >= 3);
+  const firstWord = words[0];
+  const aliases = {
+    caster: ["you"],
+    chosen: ["choose"],
+  };
+  const sourceStems = new Set(sourceWords(source).map(stemSourceWord));
+  const firstWordOwned =
+    firstWord !== undefined &&
+    [firstWord, ...(aliases[firstWord] ?? [])].some((word) =>
+      sourceStems.has(stemSourceWord(word)),
+    );
+  return firstWordOwned && sourceContainsLabel(value, source);
+}
+
+function headingEvidenceLines(match, index) {
+  const headings = index.headingsByFile.get(match.rel) ?? [];
+  const rawLines = (index.rawByRel.get(match.rel) ?? "").split("\n");
+  const matchIndex = headings.indexOf(match);
+  const following = headings
+    .slice(matchIndex + 1)
+    .find((heading) => heading.level <= match.level);
+  const lines = [];
+  let ancestorLevel = match.level;
+  for (
+    let cursor = matchIndex - 1;
+    cursor >= 0 && ancestorLevel > 1;
+    cursor -= 1
+  ) {
+    const heading = headings[cursor];
+    if (heading.level < ancestorLevel) {
+      lines.unshift(heading.line);
+      ancestorLevel = heading.level;
+    }
+  }
+  for (
+    let line = match.line;
+    line < (following?.line ?? rawLines.length + 1);
+    line += 1
+  ) {
+    lines.push(line);
+  }
+  return lines;
+}
+
+function proseEvidenceLines(match, index) {
+  const headings = index.headingsByFile.get(match.rel) ?? [];
+  const anchors = index.proseAnchorsByFile.get(match.rel) ?? [];
+  const rawLines = (index.rawByRel.get(match.rel) ?? "").split("\n");
+  const nextHeading = headings.find((heading) => heading.line > match.line);
+  const nextAnchor = anchors.find((anchor) => anchor.line > match.line);
+  const boundary = match.isList
+    ? Math.min(
+        nextHeading?.line ?? rawLines.length + 1,
+        nextAnchor?.line ?? rawLines.length + 1,
+      )
+    : (nextHeading?.line ?? rawLines.length + 1);
+  const lines = [];
+  let ancestorLevel = Number.POSITIVE_INFINITY;
+  for (let cursor = headings.length - 1; cursor >= 0; cursor -= 1) {
+    const heading = headings[cursor];
+    if (heading.line >= match.line || heading.level >= ancestorLevel) continue;
+    lines.unshift(heading.line);
+    ancestorLevel = heading.level;
+  }
+  for (let line = match.line; line < boundary; line += 1) lines.push(line);
+  return lines;
+}
+
+function evidenceForResolution(resolution, index) {
+  if (resolution.evidence !== undefined) return resolution.evidence;
+  const rel = resolution.canonical.split(/[#:]/, 1)[0];
+  if (!index.rawByRel.has(rel)) return { rel, lines: [] };
+  const headingName = resolution.canonical.match(/^[^#]+#(.+)$/)?.[1];
+  if (headingName !== undefined) {
+    const heading = (index.headingsByFile.get(rel) ?? []).find(
+      (candidate) => candidate.normalized === normalizeAnchor(headingName),
+    );
+    return {
+      rel,
+      lines: heading === undefined ? [] : headingEvidenceLines(heading, index),
+    };
+  }
+  const proseLine = resolution.canonical.match(/^[^:]+:(\d+) \(/)?.[1];
+  if (proseLine !== undefined) {
+    const anchor = (index.proseAnchorsByFile.get(rel) ?? []).find(
+      (candidate) => candidate.line === Number(proseLine),
+    );
+    return {
+      rel,
+      lines: anchor === undefined ? [] : proseEvidenceLines(anchor, index),
+    };
+  }
+  const ranges = resolution.canonical.match(/^[^:]+:(.+)$/)?.[1];
+  if (ranges !== undefined) {
+    const lines = ranges.split(",").flatMap((part) => {
+      const range = part.trim().match(/^(\d+)(?:-(\d+))?$/);
+      if (range === null) return [];
+      const first = Number(range[1]);
+      const last = Number(range[2] ?? range[1]);
+      const precedingHeading = [...(index.headingsByFile.get(rel) ?? [])]
+        .reverse()
+        .find((heading) => heading.line < first);
+      return [
+        ...(precedingHeading === undefined ? [] : [precedingHeading.line]),
+        ...Array.from(
+          { length: last - first + 1 },
+          (_, offset) => first + offset,
+        ),
+      ];
+    });
+    return { rel, lines };
+  }
   return {
-    generatedAt: new Date().toISOString(),
-    scope:
-      "SRD 5.2.1 authored Surface corpus provenance audit over generated packages/surface/content JSON records. Includes Unit records and StatBlock records with SRD provenance.",
-    metrics: {
-      authoredRecords: records.length,
-      provenanceParts: checks.length,
-      failures: checks.filter((check) => check.severity === "failure").length,
-      warnings: checks.filter((check) => check.severity === "warning").length,
-      unitReferenceChecks: unitReferenceChecks.length,
-      unitReferenceFailures: unitReferenceChecks.filter(
-        (check) => check.severity === "failure",
-      ).length,
-      unitReferenceWarnings: unitReferenceChecks.filter(
-        (check) => check.severity === "warning",
-      ).length,
-      statusCounts,
-      kindCounts,
-      catalogBoundaryCounts,
-      unitReferenceStatusCounts,
-    },
-    checks,
-    unitReferenceChecks,
+    rel,
+    lines: Array.from(
+      { length: (index.rawByRel.get(rel) ?? "").split("\n").length },
+      (_, line) => line + 1,
+    ),
   };
 }
 
-function renderRows(checks) {
-  if (checks.length === 0) {
-    return ["| _none_ | _none_ | _none_ | _none_ | _none_ | _none_ |"];
+function sourceTextForResolution(resolution, index) {
+  const evidence = evidenceForResolution(resolution, index);
+  const rawLines = (index.rawByRel.get(evidence.rel) ?? "").split("\n");
+  return evidence.lines
+    .map((line) => rawLines[line - 1] ?? "")
+    .join("\n")
+    .trim();
+}
+
+function freezeResult(value) {
+  if (Array.isArray(value)) {
+    value.forEach(freezeResult);
+  } else if (value !== null && typeof value === "object") {
+    Object.values(value).forEach(freezeResult);
   }
-  return checks.map(
-    (check) =>
-      `| \`${check.id ?? ""}\` | ${check.kind} | ${check.name ?? ""} | \`${check.contentPath}${check.index == null ? "" : `[${check.index}]`}\` | ${check.status} | \`${check.part}\` -> \`${check.canonical}\` |`,
+  return Object.freeze(value);
+}
+
+function observationForRecord(record) {
+  const observations = [];
+  walkDecodedSurfaceRecord(record, (fieldPath, value, role) => {
+    observations.push({
+      fieldPath: fieldPath.replace(/^value\./, ""),
+      value,
+      role,
+    });
+  });
+  return observations;
+}
+
+function recordIdentityKey(record) {
+  const family = record.kind === "statBlock" ? "statBlock" : "unit";
+  return `${family}:${record.id}`;
+}
+
+function createAuditContext(options = {}) {
+  const workspaceRoot = options.root ?? root;
+  const contextIssues = [];
+  const sourceRoot = path.join(workspaceRoot, ".references/srd-5.2.1");
+  let index;
+  try {
+    index = buildReferenceIndex(sourceRoot);
+  } catch (error) {
+    contextIssues.push({
+      code: "srd-source-index-unreadable",
+      contentPath: ".references/srd-5.2.1",
+      message: error instanceof Error ? error.message : String(error),
+    });
+    index = {
+      sourceRoot,
+      fileByRel: new Map(),
+      rawByRel: new Map(),
+      headingsByFile: new Map(),
+      proseAnchorsByFile: new Map(),
+    };
+  }
+  const corpusScan =
+    options.records === undefined
+      ? scanSurfaceRecords(workspaceRoot)
+      : { records: structuredClone(options.records), issues: [] };
+  const records = corpusScan.records;
+  contextIssues.push(...corpusScan.issues);
+  if (records.length === 0) {
+    contextIssues.push({
+      code: "surface-corpus-empty",
+      contentPath: "packages/surface/content",
+      message: "The production Surface corpus must contain at least one record",
+    });
+  }
+  try {
+    assertSurfaceSchemaStringRoles();
+  } catch (error) {
+    contextIssues.push({
+      code: "schema-role-incomplete",
+      contentPath: "packages/surface/src/surface/schema.ts",
+      message: error instanceof Error ? error.message : String(error),
+    });
+  }
+  const observationsByRecord = new Map();
+  for (const record of records) {
+    try {
+      observationsByRecord.set(record, observationForRecord(record));
+    } catch (error) {
+      contextIssues.push({
+        code: "surface-traversal-failure",
+        contentPath: record.contentPath,
+        recordId: record.id,
+        message: error instanceof Error ? error.message : String(error),
+      });
+      observationsByRecord.set(record, []);
+    }
+  }
+  const unitIds = new Set();
+  const statBlockIds = new Set();
+  const sourceResolutionsByIdentity = new Map();
+  const provenanceSectionByIdentity = new Map();
+  for (const record of records) {
+    (record.kind === "statBlock" ? statBlockIds : unitIds).add(record.id);
+    const key = recordIdentityKey(record);
+    if (!sourceResolutionsByIdentity.has(key)) {
+      provenanceSectionByIdentity.set(
+        key,
+        record.value.provenance?.section ?? record.section ?? "",
+      );
+      sourceResolutionsByIdentity.set(
+        key,
+        resolveSection(
+          record.value.provenance?.section ?? record.section ?? "",
+          index,
+        ),
+      );
+    }
+  }
+  const token = Object.freeze({
+    kind: "srd521-surface-corpus-audit-context",
+  });
+  auditContextState.set(token, {
+    workspaceRoot,
+    index,
+    records,
+    observationsByRecord,
+    unitIds,
+    statBlockIds,
+    sourceResolutionsByIdentity,
+    provenanceSectionByIdentity,
+    contextIssues,
+    publishabilityPolicy: Object.freeze({
+      productionProvenance: "srd-5.2.1",
+      productionContentPrefix: "packages/surface/content/",
+    }),
+  });
+  return token;
+}
+
+function stateForContext(context) {
+  const state = auditContextState.get(context);
+  if (state === undefined) {
+    throw new TypeError("Unknown SRD corpus audit context");
+  }
+  return state;
+}
+
+function issueForRecord(code, record, message, details = {}) {
+  return {
+    code,
+    contentPath: record.contentPath,
+    recordId: record.id,
+    message,
+    ...details,
+  };
+}
+
+function sourceEvidenceForRecord(state, record, observations) {
+  const issues = [];
+  const warnings = [];
+  const resolutions =
+    state.sourceResolutionsByIdentity.get(recordIdentityKey(record)) ?? [];
+  const accepted = resolutions.filter(
+    (resolution) => statusSeverity(resolution.status) !== "failure",
+  );
+  for (const resolution of resolutions) {
+    const severity = statusSeverity(resolution.status);
+    if (severity === "failure") {
+      issues.push(
+        issueForRecord(
+          "unresolved-provenance",
+          record,
+          `SRD source ${resolution.part} did not resolve (${resolution.status})`,
+          { sourcePart: resolution.part, sourceStatus: resolution.status },
+        ),
+      );
+    } else if (severity === "warning") {
+      warnings.push({
+        code: "noncanonical-provenance",
+        contentPath: record.contentPath,
+        recordId: record.id,
+        message: `${resolution.part} resolves through ${resolution.status}`,
+      });
+    }
+  }
+  const sourceParts = accepted.map((resolution) =>
+    sourceTextForResolution(resolution, state.index),
+  );
+  if (sourceParts.some((source) => source.length === 0)) {
+    issues.push(
+      issueForRecord(
+        "empty-source-evidence",
+        record,
+        "An accepted SRD source resolution produced no evidence text",
+      ),
+    );
+  }
+  const source = sourceParts.filter(Boolean).join("\n");
+  for (const observation of observations) {
+    if (
+      observation.role.category === "vocabulary" ||
+      observation.role.category === "provenance" ||
+      observation.role.category === "projection"
+    ) {
+      continue;
+    }
+    if (observation.role.category === "reference") continue;
+    if (observation.role.category === "protocol") {
+      continue;
+    }
+    if (observation.role.category === "identity") {
+      let supported;
+      if (observation.role.kind === "id" && observation.fieldPath === "id") {
+        supported =
+          (idBelongsToName(observation.value, record.name) ||
+            sourceContainsSummary(observation.value, source, false)) &&
+          sourceContainsIdentity(record.name, source);
+      } else if (observation.role.kind === "id") {
+        supported = sourceContainsLabel(observation.value, source);
+      } else if (observation.role.kind === "catalog-reference") {
+        supported = sourceContainsAuthoredName(observation.value, source);
+      } else if (observation.role.kind === "label") {
+        supported = sourceContainsLabel(observation.value, source);
+      } else if (observation.role.kind === "displayName") {
+        supported = sourceContainsDisplayName(observation.value, source);
+      } else {
+        supported = sourceContainsIdentity(observation.value, source);
+      }
+      if (!supported) {
+        const unsupportedWords = unsupportedSummaryWords(
+          observation.value,
+          source,
+        );
+        issues.push(
+          issueForRecord(
+            "identity-evidence-missing",
+            record,
+            `${observation.fieldPath} identity has no exact local SRD evidence`,
+            {
+              fieldPath: observation.fieldPath,
+              value: observation.value,
+              unsupportedWords,
+            },
+          ),
+        );
+      }
+      continue;
+    }
+    if (
+      observation.role.category === "prose" &&
+      !(observation.role.evidence === "exact"
+        ? sourceContainsExactProse(observation.value, source)
+        : sourceContainsSummary(observation.value, source))
+    ) {
+      const unsupportedWords = unsupportedSummaryWords(
+        observation.value,
+        source,
+      );
+      issues.push(
+        issueForRecord(
+          "prose-evidence-missing",
+          record,
+          `${observation.fieldPath} prose has no exact local SRD evidence`,
+          { fieldPath: observation.fieldPath, unsupportedWords },
+        ),
+      );
+    }
+  }
+  return { issues, warnings, source };
+}
+
+function referenceIssuesForRecord(state, record, observations, source) {
+  const issues = [];
+  const warnings = [];
+  for (const observation of observations) {
+    if (observation.role.category !== "reference") continue;
+    const targetIds =
+      observation.role.targetKind === "statBlock"
+        ? state.statBlockIds
+        : state.unitIds;
+    const locallyVisible = sourceContainsIdentity(observation.value, source);
+    if (targetIds.has(observation.value) && locallyVisible) continue;
+    if (
+      !targetIds.has(observation.value) &&
+      sourceContainsCanonicalReference(observation.value, source)
+    ) {
+      warnings.push({
+        code: "source-visible-reference",
+        contentPath: record.contentPath,
+        recordId: record.id,
+        fieldPath: observation.fieldPath,
+        targetKind: observation.role.targetKind,
+        targetRecordId: observation.value,
+        message: `${observation.value} has SRD evidence but no authored Surface record`,
+      });
+    } else {
+      const targetExists = targetIds.has(observation.value);
+      issues.push(
+        issueForRecord(
+          targetExists
+            ? "authored-reference-evidence-missing"
+            : "missing-authored-reference",
+          record,
+          targetExists
+            ? `${observation.fieldPath} reference has no exact local SRD evidence`
+            : `${observation.fieldPath} references missing ${observation.role.targetKind} ${observation.value}`,
+          {
+            fieldPath: observation.fieldPath,
+            targetKind: observation.role.targetKind,
+            targetRecordId: observation.value,
+          },
+        ),
+      );
+    }
+  }
+  return { issues, warnings };
+}
+
+function auditRecordAgainstState(state, record, observations) {
+  const issues = [];
+  const warnings = [];
+  if (
+    !record.contentPath.startsWith(
+      state.publishabilityPolicy.productionContentPrefix,
+    )
+  ) {
+    issues.push(
+      issueForRecord(
+        "nonpublishable-content-path",
+        record,
+        `Production Surface content must live under ${state.publishabilityPolicy.productionContentPrefix}`,
+      ),
+    );
+  }
+  if (
+    record.value.provenance?.kind !==
+    state.publishabilityPolicy.productionProvenance
+  ) {
+    issues.push(
+      issueForRecord(
+        "non-srd-provenance",
+        record,
+        `Production Surface content has ${String(record.value.provenance?.kind)} provenance`,
+      ),
+    );
+  }
+  const sourceEvidence = sourceEvidenceForRecord(state, record, observations);
+  const references = referenceIssuesForRecord(
+    state,
+    record,
+    observations,
+    sourceEvidence.source,
+  );
+  issues.push(...sourceEvidence.issues, ...references.issues);
+  warnings.push(...sourceEvidence.warnings, ...references.warnings);
+  return { issues, warnings };
+}
+
+function licensingIssues(state) {
+  const requirements = [
+    {
+      rel: "NOTICE",
+      fragments: [
+        "System Reference Document 5.2.1",
+        "Wizards of the Coast LLC",
+        "https://creativecommons.org/licenses/by/4.0/legalcode",
+      ],
+    },
+    {
+      rel: ".references/srd-5.2.1/ATTRIBUTION.md",
+      fragments: [
+        "System Reference Document 5.2.1",
+        "Wizards of the Coast LLC",
+        "https://creativecommons.org/licenses/by/4.0/legalcode",
+      ],
+    },
+  ];
+  return requirements.flatMap(({ rel, fragments }) => {
+    const filePath = path.join(state.workspaceRoot, rel);
+    if (!fs.existsSync(filePath)) {
+      return [
+        {
+          code: "missing-attribution",
+          contentPath: rel,
+          message: `${rel} is required for SRD attribution`,
+        },
+      ];
+    }
+    let raw;
+    try {
+      raw = fs.readFileSync(filePath, "utf8");
+    } catch (error) {
+      return [
+        {
+          code: "attribution-unreadable",
+          contentPath: rel,
+          message: error instanceof Error ? error.message : String(error),
+        },
+      ];
+    }
+    return fragments
+      .filter((fragment) => !raw.includes(fragment))
+      .map((fragment) => ({
+        code: "incomplete-attribution",
+        contentPath: rel,
+        message: `${rel} is missing required attribution fragment: ${fragment}`,
+      }));
+  });
+}
+
+function duplicateIdentityIssues(state) {
+  const seen = new Map();
+  const issues = [];
+  for (const record of state.records) {
+    const family = record.kind === "statBlock" ? "statBlock" : "unit";
+    const key = `${family}:${record.id}`;
+    const prior = seen.get(key);
+    if (prior !== undefined) {
+      issues.push(
+        issueForRecord(
+          "duplicate-authored-identity",
+          record,
+          `${family} identity ${record.id} is also declared by ${prior}`,
+        ),
+      );
+    } else {
+      seen.set(key, record.contentPath);
+    }
+  }
+  return issues;
+}
+
+function finalizeAuditResult(scope, recordsAudited, issues, warnings) {
+  const issueCounts = {};
+  const warningCounts = {};
+  for (const issue of issues) {
+    issueCounts[issue.code] = (issueCounts[issue.code] ?? 0) + 1;
+  }
+  for (const warning of warnings) {
+    warningCounts[warning.code] = (warningCounts[warning.code] ?? 0) + 1;
+  }
+  return freezeResult({
+    status: issues.length === 0 ? "accepted" : "rejected",
+    scope,
+    metrics: {
+      recordsAudited,
+      issues: issues.length,
+      warnings: warnings.length,
+      issueCounts,
+      warningCounts,
+    },
+    issues: [...issues].sort((left, right) =>
+      `${left.contentPath}:${left.code}:${left.fieldPath ?? ""}`.localeCompare(
+        `${right.contentPath}:${right.code}:${right.fieldPath ?? ""}`,
+      ),
+    ),
+    warnings: [...warnings].sort((left, right) =>
+      `${left.contentPath}:${left.code}:${left.fieldPath ?? ""}`.localeCompare(
+        `${right.contentPath}:${right.code}:${right.fieldPath ?? ""}`,
+      ),
+    ),
+  });
+}
+
+function auditCorpus(context) {
+  const state = stateForContext(context);
+  const issues = [
+    ...state.contextIssues,
+    ...duplicateIdentityIssues(state),
+    ...licensingIssues(state),
+  ];
+  const warnings = [];
+  for (const record of state.records) {
+    const result = auditRecordAgainstState(
+      state,
+      record,
+      state.observationsByRecord.get(record) ?? [],
+    );
+    issues.push(...result.issues);
+    warnings.push(...result.warnings);
+  }
+  return finalizeAuditResult(
+    {
+      kind: "corpus",
+      description:
+        "Complete generated SRD 5.2.1 Surface Unit and Stat Block corpus",
+    },
+    state.records.length,
+    issues,
+    warnings,
   );
 }
 
-function renderMarkdownReport(audit) {
-  const failures = audit.checks.filter((check) => check.severity === "failure");
-  const warnings = audit.checks.filter((check) => check.severity === "warning");
-  const referenceFailures = audit.unitReferenceChecks.filter(
-    (check) => check.severity === "failure",
+function auditRecordDelta(context, record) {
+  const state = stateForContext(context);
+  const issues = [];
+  const objectValue =
+    record.value !== null &&
+    typeof record.value === "object" &&
+    !Array.isArray(record.value)
+      ? record.value
+      : {};
+  const candidate = {
+    ...record,
+    id: objectValue.id,
+    kind: objectValue.kind ?? "unknown",
+    name:
+      objectValue.name ?? objectValue.statBlock?.displayName ?? objectValue.id,
+    section: objectValue.provenance?.section,
+  };
+  let decodedRecord;
+  try {
+    decodedRecord = decodeSurfaceRecord(candidate);
+  } catch (error) {
+    issues.push(
+      issueForRecord(
+        "surface-decode-failure",
+        candidate,
+        error instanceof Error ? error.message : String(error),
+      ),
+    );
+    return finalizeAuditResult(
+      { kind: "record-delta", recordId: String(candidate.id ?? "unknown") },
+      1,
+      issues,
+      [],
+    );
+  }
+  if (
+    !state.sourceResolutionsByIdentity.has(recordIdentityKey(decodedRecord))
+  ) {
+    issues.push(
+      issueForRecord(
+        "delta-record-not-in-context",
+        decodedRecord,
+        "Delta records must belong to the immutable audit context",
+      ),
+    );
+  } else {
+    const baselineSection = state.provenanceSectionByIdentity.get(
+      recordIdentityKey(decodedRecord),
+    );
+    if (decodedRecord.value.provenance.section !== baselineSection) {
+      issues.push(
+        issueForRecord(
+          "delta-provenance-mismatch",
+          decodedRecord,
+          "Delta provenance must match the immutable audit context",
+          {
+            baselineSection,
+            candidateSection: decodedRecord.value.provenance.section,
+          },
+        ),
+      );
+    }
+  }
+  let observations = [];
+  try {
+    observations = observationForRecord(decodedRecord);
+  } catch (error) {
+    issues.push(
+      issueForRecord(
+        "surface-traversal-failure",
+        decodedRecord,
+        error instanceof Error ? error.message : String(error),
+      ),
+    );
+  }
+  const result = auditRecordAgainstState(state, decodedRecord, observations);
+  return finalizeAuditResult(
+    { kind: "record-delta", recordId: decodedRecord.id },
+    1,
+    [...issues, ...result.issues],
+    result.warnings,
   );
-  const referenceWarnings = audit.unitReferenceChecks.filter(
-    (check) => check.severity === "warning",
-  );
+}
+
+function renderJsonReport(result) {
+  return `${JSON.stringify(result, null, 2)}\n`;
+}
+
+function renderMarkdownReport(result) {
+  const cell = (value) =>
+    String(value).replaceAll("|", "\\|").replaceAll(/\r?\n/g, " ");
+  const table = (entries) => {
+    const headings = ["Code", "Content", "Message"];
+    const rows =
+      entries.length === 0
+        ? [["_none_", "_none_", "_none_"]]
+        : entries.map((entry) => [
+            `\`${cell(entry.code)}\``,
+            `\`${cell(entry.contentPath)}\``,
+            cell(entry.message),
+          ]);
+    const widths = headings.map((heading, index) =>
+      Math.max(heading.length, ...rows.map((row) => row[index].length)),
+    );
+    const renderRow = (row) =>
+      `| ${row.map((value, index) => value.padEnd(widths[index])).join(" | ")} |`;
+    return [
+      renderRow(headings),
+      renderRow(widths.map((width) => "-".repeat(width))),
+      ...rows.map(renderRow),
+    ];
+  };
   return [
     "# SRD 5.2.1 Surface Authored Corpus Audit",
     "",
     "Generated by `node scripts/srd521-surface-authored-corpus-audit.cjs`.",
     "",
-    "This report audits SRD-provenance authored Surface content, not only spells. It checks generated `packages/surface/content/*.json` records because those are the production authored-content projection consumed by Surface catalogs. When a source fix is needed, edit the matching `.dhall` source and regenerate JSON.",
+    `Status: ${result.status}`,
     "",
-    "A provenance part is considered scanner-visible when this script can resolve it to a local SRD markdown file, heading, prose anchor, or line range under `.references/srd-5.2.1/`.",
+    `- Records audited: ${result.metrics.recordsAudited}`,
+    `- Issues: ${result.metrics.issues}`,
+    `- Warnings: ${result.metrics.warnings}`,
     "",
-    "## Metrics",
+    "## Issues",
     "",
-    `- Authored SRD records: ${audit.metrics.authoredRecords}`,
-    `- Provenance parts checked: ${audit.metrics.provenanceParts}`,
-    `- Failures: ${audit.metrics.failures}`,
-    `- Warnings: ${audit.metrics.warnings}`,
-    `- Unit reference checks: ${audit.metrics.unitReferenceChecks}`,
-    `- Unit reference failures: ${audit.metrics.unitReferenceFailures}`,
-    `- Unit reference warnings: ${audit.metrics.unitReferenceWarnings}`,
-    "",
-    "### Status Counts",
-    "",
-    "| Status | Count |",
-    "|---|---:|",
-    ...Object.entries(audit.metrics.statusCounts)
-      .sort(([left], [right]) => left.localeCompare(right))
-      .map(([status, count]) => `| ${status} | ${count} |`),
-    "",
-    "### Authored Record Kinds",
-    "",
-    "| Kind | Count |",
-    "|---|---:|",
-    ...Object.entries(audit.metrics.kindCounts)
-      .sort(([left], [right]) => left.localeCompare(right))
-      .map(([kind, count]) => `| ${kind} | ${count} |`),
-    "",
-    "### Catalog Boundaries",
-    "",
-    "| Boundary | Provenance parts |",
-    "|---|---:|",
-    ...Object.entries(audit.metrics.catalogBoundaryCounts)
-      .sort(([left], [right]) => left.localeCompare(right))
-      .map(([boundary, count]) => `| ${boundary} | ${count} |`),
-    "",
-    "### Unit Reference Closure",
-    "",
-    "This checks scanner-visible Unit references inside authored records: class/subclass feature grants, subclass choices, species trait maps, starting-equipment Unit refs, resource Unit links, and spell-list `spellIds` arrays.",
-    "",
-    "| Status | Count |",
-    "|---|---:|",
-    ...Object.entries(audit.metrics.unitReferenceStatusCounts)
-      .sort(([left], [right]) => left.localeCompare(right))
-      .map(([status, count]) => `| ${status} | ${count} |`),
-    "",
-    "#### Unit Reference Failures",
-    "",
-    "| Owner | Relation | Field | Target Unit |",
-    "|---|---|---|---|",
-    ...(referenceFailures.length === 0
-      ? ["| _none_ | _none_ | _none_ | _none_ |"]
-      : referenceFailures.map(
-          (check) =>
-            `| \`${check.id}\` | ${check.relation} | \`${check.fieldPath}\` | \`${check.targetRecordId}\` |`,
-        )),
-    "",
-    "#### Unit Reference Warnings",
-    "",
-    "These references point to scanner-visible SRD spell sections, but the target spell is not authored as a Surface Unit yet.",
-    "",
-    "| Owner | Relation | Field | Target Unit |",
-    "|---|---|---|---|",
-    ...(referenceWarnings.length === 0
-      ? ["| _none_ | _none_ | _none_ | _none_ |"]
-      : referenceWarnings.map(
-          (check) =>
-            `| \`${check.id}\` | ${check.relation} | \`${check.fieldPath}\` | \`${check.targetRecordId}\` |`,
-        )),
-    "",
-    "## Failures",
-    "",
-    "| Id | Kind | Name | Content | Status | Resolution |",
-    "|---|---|---|---|---|---|",
-    ...renderRows(failures),
+    ...table(result.issues),
     "",
     "## Warnings",
     "",
-    "Warnings are scanner-visible through a known legacy alias, but the provenance string is not canonical for the markdown file it resolves to. They do not block the audit.",
-    "",
-    "| Id | Kind | Name | Content | Status | Resolution |",
-    "|---|---|---|---|---|---|",
-    ...renderRows(warnings.slice(0, 200)),
-    ...(warnings.length > 200
-      ? [
-          `| ... | ... | ... | ... | ... | ${warnings.length - 200} additional warnings omitted; see JSON report. |`,
-        ]
-      : []),
+    ...table(result.warnings),
     "",
   ].join("\n");
 }
 
-if (require.main === module) {
-  const audit = buildAudit();
-  fs.mkdirSync(reportDir, { recursive: true });
-  fs.writeFileSync(jsonReportPath, `${JSON.stringify(audit, null, 2)}\n`);
-  fs.writeFileSync(mdReportPath, renderMarkdownReport(audit));
+function buildAudit() {
+  return auditCorpus(createAuditContext());
+}
 
+if (require.main === module) {
+  const result = buildAudit();
+  fs.mkdirSync(reportDir, { recursive: true });
+  fs.writeFileSync(jsonReportPath, renderJsonReport(result));
+  fs.writeFileSync(mdReportPath, renderMarkdownReport(result));
   console.log(`Wrote ${jsonReportPath}`);
   console.log(`Wrote ${mdReportPath}`);
   console.log(
-    `Surface authored corpus audit: ${audit.metrics.failures} provenance failures, ${audit.metrics.unitReferenceFailures} unit reference failures, ${audit.metrics.warnings} warnings, ${audit.metrics.provenanceParts} provenance parts.`,
+    `Surface authored corpus audit: ${result.status}; ${result.metrics.issues} issue(s), ${result.metrics.warnings} warning(s), ${result.metrics.recordsAudited} record(s).`,
   );
-
-  if (audit.metrics.failures > 0 || audit.metrics.unitReferenceFailures > 0) {
-    process.exitCode = 1;
-  }
+  if (result.status === "rejected") process.exitCode = 1;
 }
 
 module.exports = {
   assertSurfaceSchemaStringRoles,
+  auditCorpus,
+  auditRecordDelta,
   buildAudit,
   buildReferenceIndex,
-  buildSurfaceSchemaFieldRoles,
+  collectDecodedStringPaths,
   collectUnitReferences,
+  createAuditContext,
   decodeSurfaceRecord,
   readSurfaceRecords,
-  collectDecodedStringPaths,
+  renderJsonReport,
+  renderMarkdownReport,
+  resolveSection,
+  sourceContainsIdentity,
+  sourceTextForResolution,
+  unsupportedSummaryWords,
   walkDecodedSurfaceRecord,
   walkSchemaShape,
   walkSurfaceValue,

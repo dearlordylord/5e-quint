@@ -1,7 +1,7 @@
 {
   "acquiredAtLevel": 2,
   "className": "bard",
-  "description": "Gain Expertise in two skill proficiencies of your choice, then two more at Bard level 9.",
+  "description": "Gain Expertise in two skill proficiencies of your choice. At Bard level 9, gain Expertise in two more skill proficiencies of your choice.",
   "id": "bard_expertise",
   "kind": "class_feature",
   "mechanics": {

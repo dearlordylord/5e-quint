@@ -90,7 +90,7 @@ let staffOfFire =
           , section = "MagicItems#StaffOfFire"
           }
       , description =
-          "You have Resistance to Fire damage while you hold this staff. The staff has 10 charges. While holding the staff, you can cast Burning Hands (1 charge), Fireball (3 charges), or Wall of Fire (4 charges) from it, using your spell save DC. The staff regains 1d6 + 4 expended charges daily at dawn. If you expend the last charge, roll 1d20. On a 1, the staff crumbles into cinders and is destroyed."
+          "You have Resistance to Fire damage while you hold this staff. The staff has 10 charges. While holding the staff, you can cast the following spells from it using your spell save DC: Burning Hands (1 charge); Wall of Fire (4 charges); Fireball (3 charges). The staff regains 1d6 + 4 expended charges daily at dawn. If you expend the last charge, roll 1d20. On a 1, the staff crumbles into cinders and is destroyed."
       , mechanics =
           { family = "composite"
           , parts =

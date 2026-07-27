@@ -20,7 +20,7 @@ let rogueSkills =
 let rogue =
       { armorTraining = { categories = [ "light" ], kind = "trained" }
       , className = "rogue"
-      , description = "SRD Rogue class creation facts, subclass selection, Steady Aim, level 4-5 feature grants, the level 9 Supreme Sneak grant, and the level 10 Ability Score Improvement grant."
+      , description = "As a Rogue, you gain the following class features when you reach the specified Rogue levels. These features are listed in the Rogue Features table."
       , featureGrants =
         [ { level = 1, unitId = "rogue_expertise" }
         , { level = 1, unitId = "rogue_sneak_attack" }
@@ -61,7 +61,7 @@ let rogue =
           }
       , name = "Rogue"
       , primaryAbilities = { abilities = [ "dex" ], kind = "all_of" }
-      , provenance = { kind = "srd-5.2.1", section = "Classes/Rogue.md:3-25,33-36,38-39,57-79,85-150" }
+      , provenance = { kind = "srd-5.2.1", section = "Classes/Rogue.md:3-25,30,33-36,38-39,57-79,85-150,175-179" }
       , savingThrowProficiencies = [ "dex", "int" ]
       , skillProficiencyChoice = { choose = 4, options = rogueSkills }
       , subclassChoices =

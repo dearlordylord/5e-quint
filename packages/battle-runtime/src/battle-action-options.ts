@@ -308,7 +308,7 @@ export function attackExecutionAbility(
 ): BattleAttackExecutionAbility | undefined {
   if (attack.kind === "weapon") return attack.ability;
   if (attack.kind === "unarmedStrike") return attack.attackAbility;
-  return undefined;
+  return attack.attack.attackAbility;
 }
 
 export function attackExecutionDamageType(

@@ -28,7 +28,7 @@ let sequester =
           , section = "Spells/Descriptions-S-Z#Sequester"
           }
       , description =
-          "With a touch, you magically sequester an object or a willing creature. For the duration, the target has the Invisible condition and (if a creature) the Unconscious condition. You may set a caster-defined early-end trigger; the spell also ends if the target takes any damage."
+          "With a touch, you magically sequester an object or a willing creature. For the duration, the target has the Invisible condition. If the target is a creature, it has the Unconscious condition. You can set a condition for the spell to end early. This spell also ends if the target takes any damage."
       , mechanics =
           { family = "activation"
           , level = 7

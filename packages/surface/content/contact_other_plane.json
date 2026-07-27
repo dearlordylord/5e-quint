@@ -1,5 +1,5 @@
 {
-  "description": "You mentally contact a demigod, the spirit of a long-dead sage, or some other knowledgeable entity from another plane. When you cast this spell, make a DC 15 Intelligence saving throw. On a successful save, you can ask the entity up to five questions before the spell ends. The GM answers each question with one word, using unclear if the entity doesn't know; if a one-word answer would be misleading, the GM might offer a short phrase. On a failed save, you take 6d6 Psychic damage and have the Incapacitated condition until you finish a Long Rest. Greater Restoration ends this effect.",
+  "description": "You mentally contact a demigod, the spirit of a long-dead sage, or some other knowledgeable entity from another plane. When you cast this spell, make a DC 15 Intelligence saving throw. On a successful save, you can ask the entity up to five questions before the spell ends. The GM answers each question with one word, such as unclear if the entity doesn't know; if a one-word answer would be misleading, the GM might offer a short phrase. On a failed save, you take 6d6 Psychic damage and have the Incapacitated condition until you finish a Long Rest. Greater Restoration ends this effect.",
   "id": "contact_other_plane",
   "kind": "spell",
   "mechanics": {

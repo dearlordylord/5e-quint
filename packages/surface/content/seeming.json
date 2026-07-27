@@ -1,5 +1,5 @@
 {
-  "description": "You give an illusory appearance to each creature of your choice that you can see within range. An unwilling target can make a Charisma saving throw, and on a success it is unaffected. You can give the same or different appearances, changing bodies and equipment, making a target seem 1 foot shorter or taller and heavier or lighter. The new appearance must have the same basic arrangement of limbs. The changes fail physical inspection. A creature that takes the Study action can make an Intelligence (Investigation) check against your spell save DC; on a success, it becomes aware the target is disguised.",
+  "description": "You give an illusory appearance to each creature of your choice that you can see within range. An unwilling target can make a Charisma saving throw, and if it succeeds, it is unaffected. You can give the same or different appearances, changing bodies and equipment, making a target seem 1 foot shorter or taller and heavier or lighter. The new appearance must have the same basic arrangement of limbs. The changes fail physical inspection. A creature that takes the Study action can make an Intelligence (Investigation) check against your spell save DC; if it succeeds, it becomes aware the target is disguised.",
   "id": "seeming",
   "kind": "spell",
   "mechanics": {
@@ -31,9 +31,7 @@
             "kind": "target",
             "selection": {
               "mode": "any_number",
-              "targetKinds": [
-                "creature"
-              ]
+              "targetKinds": ["creature"]
             }
           }
         },
@@ -42,9 +40,7 @@
         },
         "kind": "save_gate",
         "onFail": {
-          "channels": [
-            "visual"
-          ],
+          "channels": ["visual"],
           "kind": "create_illusion",
           "maxSize": "medium"
         },

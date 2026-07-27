@@ -962,7 +962,8 @@ describe("character-creation Surface records", () => {
       {
         className: "paladin",
         input: classPaladinInput,
-        provenance: "Classes/Paladin.md:3-24,33-43,66-129,172-204,206-215",
+        provenance:
+          "Classes/Paladin.md:3-24,29,33-43,66-129,148-154,172-204,206-215",
         spellIds: [
           "create_food_and_water",
           "daylight",

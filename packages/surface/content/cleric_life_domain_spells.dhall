@@ -26,7 +26,7 @@ let lifeDomainSpells =
           , section = "Classes/Cleric#Life Domain Spells"
           }
       , description =
-          "Your connection to this divine domain ensures you always have certain spells ready. When you reach Cleric levels 3, 5, 7, and 9, you thereafter always have the listed Life Domain spells prepared."
+          "Your connection to this divine domain ensures you always have certain spells ready. When you reach a Cleric level specified in the Life Domain Spells table, you thereafter always have the listed spells prepared."
       , mechanics =
           { family = "passive"
           , grants =

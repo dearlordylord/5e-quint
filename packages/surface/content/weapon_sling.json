@@ -7,7 +7,7 @@
     "dieSize": 4,
     "kind": "dice"
   },
-  "description": "Sling from the SRD weapons table.",
+  "description": "Sling — weapons table.",
   "id": "weapon_sling",
   "kind": "weapon",
   "mastery": "slow",

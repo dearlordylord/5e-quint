@@ -9,7 +9,7 @@ let treeStride =
           , section = "Spells/Descriptions-S-Z#Tree Stride"
           }
       , description =
-          "You gain the ability to enter a living tree at least your size and move from inside it to inside another living tree of the same kind within 500 feet. You use 5 feet of movement to enter a tree. You instantly know the location of all other trees of the same kind within 500 feet and, as part of the move used to enter, can either pass into one of them or step out of the tree you're in. You appear within 5 feet of the destination tree, using another 5 feet of movement; if you have no movement left, you appear within 5 feet of the tree you entered. You can use this transportation once on each of your turns and must end each turn outside a tree."
+          "You gain the ability to enter a living tree at least your size. You can move from inside it to inside another living tree of the same kind within 500 feet. You use 5 feet of movement to enter a tree. You instantly know the location of all other trees of the same kind within 500 feet and, as part of the move used to enter, can either pass into one of those trees or step out of the tree you're in. You appear within 5 feet of the destination tree, using another 5 feet of movement; if you have no movement left, you appear within 5 feet of the tree you entered. You can use this transportation once on each of your turns. You must end each turn outside a tree."
       , mechanics =
           { family = "activation"
           , level = 5

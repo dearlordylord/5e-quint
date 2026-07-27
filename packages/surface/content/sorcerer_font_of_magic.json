@@ -1,7 +1,7 @@
 {
   "acquiredAtLevel": 2,
   "className": "sorcerer",
-  "description": "SRD Sorcerer level 2 Sorcery Point pool and spell-slot conversion source facts. A Sorcerer's Sorcery Point maximum equals Sorcerer level from level 2, all expended Sorcery Points return on a Long Rest, a spell slot can be expended for Sorcery Points equal to the slot's level with no action, and Sorcery Points can be spent as a Bonus Action to create a temporary spell slot that vanishes on Long Rest.",
+  "description": "You can tap into the wellspring of magic within yourself. This wellspring is represented by Sorcery Points, which allow you to create a variety of magical effects. You can't have more Sorcery Points than the number shown in the table for your level. You regain all expended Sorcery Points when you finish a Long Rest. You can expend a spell slot to gain a number of Sorcery Points equal to the slot's level. As a Bonus Action, you can transform unexpended Sorcery Points into one spell slot. Any spell slot you create with this feature vanishes when you finish a Long Rest.",
   "id": "sorcerer_font_of_magic",
   "kind": "class_feature",
   "mechanics": {

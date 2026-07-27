@@ -66,7 +66,8 @@ in  [ { challengeRating = 0.25
     , ac = { kind = "literal", value = 11 }
     , actions =
       { attacks =
-        [ { attackBonus = { kind = "literal", value = 5 }
+        [ { attackAbility = "str"
+          , attackBonus = { kind = "literal", value = 5 }
           , attackType = "melee"
           , description = None Text
           , name = "Hooves"
@@ -121,7 +122,8 @@ in  [ { challengeRating = 0.25
     , ac = { kind = "literal", value = 12 }
     , actions =
       { attacks =
-        [ { attackBonus = { kind = "literal", value = 4 }
+        [ { attackAbility = "str"
+          , attackBonus = { kind = "literal", value = 4 }
           , attackType = "melee"
           , description = None Text
           , name = "Bite"

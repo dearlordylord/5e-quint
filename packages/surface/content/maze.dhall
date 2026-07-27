@@ -28,7 +28,7 @@ let maze =
           , section = "Spells/Descriptions-M-P#Maze"
           }
       , description =
-          "You banish a creature that you can see within range into a labyrinthine demiplane. The target remains there for the duration or until it escapes. The target can take a Study action to make a DC 20 Intelligence (Investigation) check. On a success, it escapes and the spell ends. When the spell ends, the target reappears in the space it left or, if occupied, the nearest unoccupied space."
+          "You banish a creature that you can see within range into a labyrinthine demiplane. The target remains there for the duration or until it escapes. The target can take a Study action to make a DC 20 Intelligence (Investigation) check. If the check succeeds, it escapes and the spell ends. When the spell ends, the target reappears in the space it left or, if occupied, the nearest unoccupied space."
       , mechanics =
           { family = "ongoing_effect"
           , level = 8

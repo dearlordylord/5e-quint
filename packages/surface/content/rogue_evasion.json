@@ -1,7 +1,7 @@
 {
   "acquiredAtLevel": 7,
   "className": "rogue",
-  "description": "When a Dexterity Saving Throw would allow half damage, take no damage on success and half damage on failure.",
+  "description": "When an effect allows you to make a Dexterity saving throw to take only half damage, you take no damage if you succeed on the saving throw and only half damage if you fail.",
   "id": "rogue_evasion",
   "kind": "class_feature",
   "mechanics": {

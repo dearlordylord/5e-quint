@@ -99,7 +99,7 @@ let arcaneSword =
               , label = "spectral sword"
               , value =
                   { kind = "location"
-                  , description = "space within range"
+                  , description = "within range"
                   }
               }
           , initialPhase =

@@ -22,7 +22,7 @@ let fastHands =
       { acquiredAtLevel = 3
       , className = "rogue"
       , description =
-          "As a Bonus Action, you can make a Dexterity (Sleight of Hand) check to pick a lock or disarm a trap with Thieves' Tools or to pick a pocket, take the Utilize action, or take the Magic action to use a magic item that requires that action."
+          "As a Bonus Action, you can do one of the following. Make a Dexterity (Sleight of Hand) check to pick a lock or disarm a trap with Thieves' Tools or to pick a pocket. Take the Utilize action, or take the Magic action to use a magic item that requires that action."
       , id = "rogue_fast_hands"
       , kind = "class_feature"
       , mechanics =

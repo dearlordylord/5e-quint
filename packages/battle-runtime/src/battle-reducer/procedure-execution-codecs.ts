@@ -755,9 +755,7 @@ export const AttackDamageRiderProcedureExecutionSchema = Schema.Union(
     kind: Schema.Literal("attackDamageRider"),
     optional: Schema.Literal(false),
     usageLimit: Schema.Literal("oncePerTurn"),
-    trigger: Schema.Literal(
-      "rageActiveRecklessStrengthWeaponOrUnarmedStrikeFirstHit",
-    ),
+    trigger: Schema.Literal("rageActiveRecklessStrengthBasedAttackFirstHit"),
     classLevel: ClassLevel,
     dice: Schema.Struct({
       kind: Schema.Literal("rageDamageBonus"),

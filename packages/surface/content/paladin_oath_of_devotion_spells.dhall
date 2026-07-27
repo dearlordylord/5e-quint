@@ -25,7 +25,7 @@ let oathOfDevotionSpells =
           , section = "Classes/Paladin#Oath of Devotion Spells"
           }
       , description =
-          "The magic of your oath ensures you always have certain spells ready. When you reach Paladin levels 3, 5, 9, 13, and 17, you thereafter always have the listed Oath of Devotion spells prepared."
+          "The magic of your oath ensures you always have certain spells ready. When you reach a Paladin level specified in the Oath of Devotion Spells table, you thereafter always have the listed spells prepared."
       , mechanics =
           { family = "passive"
           , grants =

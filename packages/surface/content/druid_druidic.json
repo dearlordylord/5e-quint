@@ -1,7 +1,7 @@
 {
   "acquiredAtLevel": 1,
   "className": "druid",
-  "description": "You know Druidic, always have Speak with Animals prepared, and can use Druidic to leave hidden messages.",
+  "description": "You know Druidic, the secret language of Druids. You always have Speak with Animals prepared. You can use Druidic to leave hidden messages.",
   "id": "druid_druidic",
   "kind": "class_feature",
   "mechanics": {

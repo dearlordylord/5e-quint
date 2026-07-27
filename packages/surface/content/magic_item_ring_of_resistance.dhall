@@ -9,7 +9,7 @@ let ring =
           , section = "MagicItems#Ring of Resistance"
           }
       , description =
-          "You have Resistance to one damage type while wearing this ring. The gemstone in the ring indicates the type, which the GM chooses or determines randomly by rolling on a table."
+          "You have Resistance to one damage type while wearing this ring. The gemstone in the ring indicates the type, which the GM chooses or determines randomly by rolling on the table."
       , mechanics =
           { family = "passive"
           , grants =

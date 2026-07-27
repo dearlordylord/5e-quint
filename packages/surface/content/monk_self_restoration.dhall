@@ -7,7 +7,7 @@ let selfRestoration =
       , provenance =
           { kind = "srd-5.2.1", section = "Classes/Monk.md:152-156" }
       , description =
-          "At the end of each of your turns, you can remove one of these conditions from yourself: Charmed, Frightened, or Poisoned. In addition, forgoing food and drink doesn't give you levels of Exhaustion."
+          "At the end of each of your turns, you can remove one of the following conditions from yourself: Charmed, Frightened, or Poisoned. In addition, forgoing food and drink doesn't give you levels of Exhaustion."
       , mechanics = { family = "passive", grants = [] : List {} }
       }
 

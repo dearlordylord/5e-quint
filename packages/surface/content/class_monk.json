@@ -3,7 +3,7 @@
     "kind": "none"
   },
   "className": "monk",
-  "description": "SRD Monk class creation facts plus level 1-10 progression, including level 9 Acrobatic Movement and level 10 Heightened Focus and Self-Restoration grants.",
+  "description": "As a Monk, you gain the following class features when you reach the specified Monk levels. These features are listed in the Monk Features table.",
   "featureGrants": [
     {
       "level": 1,
@@ -62,20 +62,14 @@
   },
   "name": "Monk",
   "primaryAbilities": {
-    "abilities": [
-      "dex",
-      "wis"
-    ],
+    "abilities": ["dex", "wis"],
     "kind": "all_of"
   },
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "Classes/Monk.md:3-25,28-35,53-128"
+    "section": "Classes/Monk.md:3-25,28-35,53-128,138-158"
   },
-  "savingThrowProficiencies": [
-    "str",
-    "dex"
-  ],
+  "savingThrowProficiencies": ["str", "dex"],
   "skillProficiencyChoice": {
     "choose": 2,
     "options": [
@@ -121,9 +115,7 @@
   "subclassChoices": [
     {
       "level": 3,
-      "options": [
-        "subclass_monk_warrior_of_the_open_hand"
-      ]
+      "options": ["subclass_monk_warrior_of_the_open_hand"]
     }
   ],
   "toolProficiencies": {
@@ -146,9 +138,7 @@
       "kind": "weapon_category"
     },
     {
-      "anyOfProperties": [
-        "light"
-      ],
+      "anyOfProperties": ["light"],
       "category": "martial",
       "kind": "weapon_category_with_properties"
     }

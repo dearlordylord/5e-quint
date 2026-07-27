@@ -1,7 +1,7 @@
 {
   "acquiredAtLevel": 3,
   "className": "warlock",
-  "description": "The magic of your patron ensures you always have certain spells ready. When you reach Warlock levels 3, 5, 7, and 9, you thereafter always have the listed Fiend spells prepared.",
+  "description": "The magic of your patron ensures you always have certain spells ready; when you reach a Warlock level specified in the Fiend Spells table, you thereafter always have the listed spells prepared.",
   "id": "warlock_fiend_spells",
   "kind": "class_feature",
   "mechanics": {
@@ -21,24 +21,15 @@
           },
           {
             "minimumClassLevel": 5,
-            "spellIds": [
-              "fireball",
-              "stinking_cloud"
-            ]
+            "spellIds": ["fireball", "stinking_cloud"]
           },
           {
             "minimumClassLevel": 7,
-            "spellIds": [
-              "fire_shield",
-              "wall_of_fire"
-            ]
+            "spellIds": ["fire_shield", "wall_of_fire"]
           },
           {
             "minimumClassLevel": 9,
-            "spellIds": [
-              "geas",
-              "insect_plague"
-            ]
+            "spellIds": ["geas", "insect_plague"]
           }
         ]
       }

@@ -9,7 +9,7 @@ let creation =
           , section = "Spells/Descriptions-A-D#Creation"
           }
       , description =
-          "You pull wisps of shadow material from the Shadowfell to create an object within range. The object is vegetable matter or mineral matter, must be no larger than a 5-foot Cube, and must be a form and material you have seen. Its duration depends on material: 24 hours for vegetable matter, 12 hours for stone or crystal, 1 hour for precious metals, 10 minutes for gems, and 1 minute for adamantine or mithral. If composed of multiple materials, use the shortest duration. A created object used as another spell's Material component makes that spell fail. Using a Higher-Level Spell Slot, the Cube increases by 5 feet for each slot level above 5."
+          "You pull wisps of shadow material from the Shadowfell to create an object within range. The object is vegetable matter or mineral matter, must be no larger than a 5-foot Cube, and must be a form and material you have seen. The spell's duration depends on the object's material, as shown in the Materials table. Vegetable matter: 24 hours. Stone or crystal: 12 hours. Precious metals: 1 hour. Gems: 10 minutes. Adamantine or mithral: 1 minute. If composed of multiple materials, use the shortest duration. Using a created object as another spell's Material component causes the other spell to fail. Using a Higher-Level Spell Slot, the Cube increases by 5 feet for each slot level above 5."
       , mechanics =
           { family = "activation"
           , level = 5
@@ -22,7 +22,7 @@ let creation =
           , phases =
               [ { kind = "direct"
                 , attachment =
-                    { kind = "location", description = "point within range" }
+                    { kind = "location", description = "within range" }
                 , effects =
                     [ { kind = "create_object"
                       , maxSize = "medium"

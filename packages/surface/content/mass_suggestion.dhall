@@ -32,9 +32,6 @@
 --     "doesn't obviously harm") are DM agenda (narrative mutation /
 --     session-owned compliance, per BATCH_DIGEST_PROMPT.md §DM rules
 --     and the historical Command deferred precedent).
---   • "Creatures that can't be Charmed are immune" — handled by the
---     target's own condition-immunity state at resolution time; not
---     a per-spell filter.
 --   • "Who can hear and understand you" is language/comprehension
 --     (DM agenda per §B Comprehend Languages / Tongues).
 --   • "Spell ends when the subject finishes what it was asked to do"

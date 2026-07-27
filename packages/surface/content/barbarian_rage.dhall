@@ -63,7 +63,7 @@ let rage =
           , section = "Classes/Barbarian#Rage"
           }
       , description =
-          "Enter a Rage as a Bonus Action, gaining Bludgeoning, Piercing, and Slashing Resistance and bonus damage for Strength weapon or Unarmed Strike attacks."
+          "Enter a Rage as a Bonus Action. You have Resistance to Bludgeoning, Piercing, and Slashing damage. When you make an attack using Strength with either a weapon or an Unarmed Strike, you gain a bonus to the damage."
       , mechanics =
           { family = "activation"
           , activationCost = { kind = "bonus_action" }

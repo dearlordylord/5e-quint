@@ -68,7 +68,8 @@ let potion =
                     , label = "sensor location"
                     , value =
                         { kind = "location"
-                        , description = "familiar or obvious location"
+                        , description =
+                            "a familiar location; an obvious unfamiliar location"
                         }
                     }
                 , effects = [ createSensor, remotePerception ]

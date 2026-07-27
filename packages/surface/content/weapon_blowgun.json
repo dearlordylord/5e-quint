@@ -6,7 +6,7 @@
     "damageType": "piercing",
     "kind": "flat"
   },
-  "description": "Blowgun from the SRD weapons table.",
+  "description": "Blowgun — weapons table.",
   "id": "weapon_blowgun",
   "kind": "weapon",
   "mastery": "vex",

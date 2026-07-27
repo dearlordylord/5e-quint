@@ -1,5 +1,5 @@
 {
-  "description": "A storm of fire appears within range. The area consists of up to ten contiguous 10-foot Cubes arranged as you like. Each creature in the area makes a Dexterity saving throw, taking 7d10 Fire damage on a failed save or half as much damage on a successful one. Flammable objects in the area that aren't being worn or carried start burning.",
+  "description": "A storm of fire appears within range. The area consists of up to ten 10-foot Cubes, which you arrange as you like. Each Cube must be contiguous with at least one other Cube. Each creature in the area makes a Dexterity saving throw, taking 7d10 Fire damage on a failed save or half as much damage on a successful one. Flammable objects in the area that aren't being worn or carried start burning.",
   "id": "fire_storm",
   "kind": "spell",
   "mechanics": {

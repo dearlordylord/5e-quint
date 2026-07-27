@@ -7,7 +7,7 @@
     "dieSize": 6,
     "kind": "dice"
   },
-  "description": "Shortbow from the SRD weapons table.",
+  "description": "Shortbow — weapons table.",
   "id": "weapon_shortbow",
   "kind": "weapon",
   "mastery": "vex",

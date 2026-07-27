@@ -9,7 +9,7 @@ let druidic =
       , acquiredAtLevel = 1
       , provenance = { kind = "srd-5.2.1", section = "Classes/Druid#Druidic" }
       , description =
-          "You know Druidic, always have Speak with Animals prepared, and can use Druidic to leave hidden messages."
+          "You know Druidic, the secret language of Druids. You always have Speak with Animals prepared. You can use Druidic to leave hidden messages."
       , mechanics =
           { family = "passive"
           , grants =

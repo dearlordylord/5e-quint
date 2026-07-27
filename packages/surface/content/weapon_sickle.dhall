@@ -24,7 +24,7 @@ let weapon =
       , category = "simple"
       , usage = "melee"
       , provenance = { kind = "srd-5.2.1", section = "Equipment#Weapons" }
-      , description = "Sickle from the SRD weapons table."
+      , description = "Sickle — weapons table."
       , damage =
         { kind = "dice"
         , dice = Some 1

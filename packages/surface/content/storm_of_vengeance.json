@@ -1,5 +1,5 @@
 {
-  "description": "A churning storm cloud forms for the duration, centered on a point within range and spreading to a radius of 300 feet. Each creature under the cloud when it appears makes a Constitution saving throw or takes 2d6 Thunder damage and has the Deafened condition for the duration. At the start of later turns, the storm changes: turn 2 deals 4d6 Acid damage to each creature and object under it; turn 3 strikes six different creatures or objects with lightning, each making a Dexterity saving throw for 10d6 Lightning damage or half on success; turn 4 deals 2d6 Bludgeoning damage to each creature under it; turns 5-10 deal 1d6 Cold damage to each creature there, and until the spell ends the area is Difficult Terrain and Heavily Obscured, ranged attacks with weapons are impossible there, and strong wind blows through it.",
+  "description": "A churning storm cloud forms for the duration, centered on a point within range and spreading to a radius of 300 feet. Each creature under the cloud when it appears makes a Constitution saving throw or takes 2d6 Thunder damage and has the Deafened condition for the duration. At the start of later turns, the storm produces different effects. On turn 2, each creature and object under the cloud takes 4d6 Acid damage. On turn 3, you call six bolts of lightning from the cloud to strike six different creatures or objects beneath it. Each target makes a Dexterity saving throw, taking 10d6 Lightning damage on a failed save or half as much damage on a successful one. On turn 4, each creature under the cloud takes 2d6 Bludgeoning damage. On turns 5-10, each creature there takes 1d6 Cold damage. Until the spell ends, the area is Difficult Terrain and Heavily Obscured, ranged attacks with weapons are impossible there, and strong wind blows through it.",
   "id": "storm_of_vengeance",
   "kind": "spell",
   "mechanics": {
@@ -129,10 +129,7 @@
         "targetLimit": {
           "count": 6,
           "distinct": true,
-          "targetTypes": [
-            "creature",
-            "object"
-          ]
+          "targetTypes": ["creature", "object"]
         },
         "trigger": {
           "kind": "on_caster_turn_start",

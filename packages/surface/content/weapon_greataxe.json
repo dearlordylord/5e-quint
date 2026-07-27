@@ -7,7 +7,7 @@
     "dieSize": 12,
     "kind": "dice"
   },
-  "description": "Greataxe from the SRD weapons table.",
+  "description": "Greataxe — weapons table.",
   "id": "weapon_greataxe",
   "kind": "weapon",
   "mastery": "cleave",

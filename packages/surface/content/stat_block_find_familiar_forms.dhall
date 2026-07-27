@@ -35,7 +35,8 @@ in  [ { challengeRating = 0.0
     , ac = { kind = "literal", value = 12 }
     , actions =
       { attacks =
-        [ { attackBonus = { kind = "literal", value = 4 }
+        [ { attackAbility = "dex"
+          , attackBonus = { kind = "literal", value = 4 }
           , attackType = "melee"
           , description = None Text
           , name = "Bite"
@@ -93,7 +94,8 @@ in  [ { challengeRating = 0.0
     , ac = { kind = "literal", value = 12 }
     , actions =
       { attacks =
-        [ { attackBonus = { kind = "literal", value = 4 }
+        [ { attackAbility = "dex"
+          , attackBonus = { kind = "literal", value = 4 }
           , attackType = "melee"
           , description = None Text
           , name = "Scratch"
@@ -158,7 +160,8 @@ in  [ { challengeRating = 0.0
     , ac = { kind = "literal", value = 11 }
     , actions =
       { attacks =
-        [ { attackBonus = { kind = "literal", value = 3 }
+        [ { attackAbility = "dex"
+          , attackBonus = { kind = "literal", value = 3 }
           , attackType = "melee"
           , description = None Text
           , name = "Bite"
@@ -226,7 +229,8 @@ in  [ { challengeRating = 0.0
     , ac = { kind = "literal", value = 13 }
     , actions =
       { attacks =
-        [ { attackBonus = { kind = "literal", value = 5 }
+        [ { attackAbility = "dex"
+          , attackBonus = { kind = "literal", value = 5 }
           , attackType = "melee"
           , description = None Text
           , name = "Talons"
@@ -283,7 +287,8 @@ in  [ { challengeRating = 0.0
     , ac = { kind = "literal", value = 10 }
     , actions =
       { attacks =
-        [ { attackBonus = { kind = "literal", value = 2 }
+        [ { attackAbility = "dex"
+          , attackBonus = { kind = "literal", value = 2 }
           , attackType = "melee"
           , description = None Text
           , name = "Bite"
@@ -346,7 +351,8 @@ in  [ { challengeRating = 0.0
     , ac = { kind = "literal", value = 12 }
     , actions =
       { attacks =
-        [ { attackBonus = { kind = "literal", value = 4 }
+        [ { attackAbility = "dex"
+          , attackBonus = { kind = "literal", value = 4 }
           , attackType = "melee"
           , description = None Text
           , name = "Tentacles"
@@ -414,7 +420,8 @@ in  [ { challengeRating = 0.0
     , ac = { kind = "literal", value = 11 }
     , actions =
       { attacks =
-        [ { attackBonus = { kind = "literal", value = 3 }
+        [ { attackAbility = "dex"
+          , attackBonus = { kind = "literal", value = 3 }
           , attackType = "melee"
           , description = None Text
           , name = "Talons"
@@ -479,7 +486,8 @@ in  [ { challengeRating = 0.0
     , ac = { kind = "literal", value = 10 }
     , actions =
       { attacks =
-        [ { attackBonus = { kind = "literal", value = 2 }
+        [ { attackAbility = "dex"
+          , attackBonus = { kind = "literal", value = 2 }
           , attackType = "melee"
           , description = None Text
           , name = "Bite"
@@ -542,7 +550,8 @@ in  [ { challengeRating = 0.0
     , ac = { kind = "literal", value = 12 }
     , actions =
       { attacks =
-        [ { attackBonus = { kind = "literal", value = 4 }
+        [ { attackAbility = "dex"
+          , attackBonus = { kind = "literal", value = 4 }
           , attackType = "melee"
           , description = None Text
           , name = "Beak"
@@ -604,7 +613,8 @@ in  [ { challengeRating = 0.0
     , ac = { kind = "literal", value = 12 }
     , actions =
       { attacks =
-        [ { attackBonus = { kind = "literal", value = 4 }
+        [ { attackAbility = "dex"
+          , attackBonus = { kind = "literal", value = 4 }
           , attackType = "melee"
           , description = None Text
           , name = "Bite"
@@ -678,7 +688,8 @@ in  [ { challengeRating = 0.0
     , ac = { kind = "literal", value = 13 }
     , actions =
       { attacks =
-        [ { attackBonus = { kind = "literal", value = 5 }
+        [ { attackAbility = "dex"
+          , attackBonus = { kind = "literal", value = 5 }
           , attackType = "melee"
           , description = None Text
           , name = "Bite"
@@ -740,7 +751,8 @@ in  [ { challengeRating = 0.0
     , ac = { kind = "literal", value = 12 }
     , actions =
       { attacks =
-        [ { attackBonus = { kind = "literal", value = 4 }
+        [ { attackAbility = "dex"
+          , attackBonus = { kind = "literal", value = 4 }
           , attackType = "melee"
           , description = None Text
           , name = "Bite"
@@ -807,7 +819,8 @@ in  [ { challengeRating = 0.0
     , ac = { kind = "literal", value = 13 }
     , actions =
       { attacks =
-        [ { attackBonus = { kind = "literal", value = 5 }
+        [ { attackAbility = "dex"
+          , attackBonus = { kind = "literal", value = 5 }
           , attackType = "melee"
           , description = None Text
           , name = "Sting"
@@ -895,7 +908,8 @@ in  [ { challengeRating = 0.0
     , ac = { kind = "literal", value = 14 }
     , actions =
       { attacks =
-        [ { attackBonus = { kind = "literal", value = 4 }
+        [ { attackAbility = "dex"
+          , attackBonus = { kind = "literal", value = 4 }
           , attackType = "melee"
           , description = None Text
           , name = "Bite"
@@ -982,7 +996,8 @@ in  [ { challengeRating = 0.0
     , ac = { kind = "literal", value = 13 }
     , actions =
       { attacks =
-        [ { attackBonus = { kind = "literal", value = 5 }
+        [ { attackAbility = "dex"
+          , attackBonus = { kind = "literal", value = 5 }
           , attackType = "melee"
           , description =
               Some
@@ -1063,7 +1078,8 @@ in  [ { challengeRating = 0.0
     , ac = { kind = "literal", value = 15 }
     , actions =
       { attacks =
-        [ { attackBonus = { kind = "literal", value = 6 }
+        [ { attackAbility = "dex"
+          , attackBonus = { kind = "literal", value = 6 }
           , attackType = "melee"
           , description = None Text
           , name = "Needle Sword"
@@ -1080,7 +1096,8 @@ in  [ { challengeRating = 0.0
           , rangeFeet = None { long : Natural, normal : Natural }
           , reachFeet = Some 5
           }
-        , { attackBonus = { kind = "literal", value = 6 }
+        , { attackAbility = "dex"
+          , attackBonus = { kind = "literal", value = 6 }
           , attackType = "ranged"
           , description =
               Some

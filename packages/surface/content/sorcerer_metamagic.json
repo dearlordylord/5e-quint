@@ -1,7 +1,7 @@
 {
   "acquiredAtLevel": 2,
   "className": "sorcerer",
-  "description": "SRD Sorcerer level 2 Metamagic option-grant source facts. A Sorcerer chooses two Metamagic options at level 2, can replace one known option with an unknown option whenever they gain a Sorcerer level, gains two more choices at Sorcerer levels 10 and 17, and spends the Sorcery Point cost of a known option from the shared Font of Magic Sorcery Point pool when modifying a spell.",
+  "description": "Because your magic flows from within, you can alter your spells to suit your needs; you gain two Metamagic options of your choice. You use the chosen options to temporarily modify spells you cast. To use an option, you must spend the number of Sorcery Points that it costs. Whenever you gain a Sorcerer level, you can replace one of your Metamagic options with one you don't know. You gain two more options at Sorcerer level 10 and two more at Sorcerer level 17.",
   "id": "sorcerer_metamagic",
   "kind": "class_feature",
   "mechanics": {

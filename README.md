@@ -58,6 +58,13 @@ should still come from structured mechanics rather than authored identity. The
 SRD implementation style is the example for PHB+ support, where real authored
 identity cannot be copied into publishable code.
 
+The cleanroom audit keeps provenance, structured input, and runtime projection
+separate. Provenance identifies the canonical redistributable rules source.
+Structured input may help import, normalize, or cross-check a record but is not
+provenance. Runtime projections are derived execution facts, not authored
+source evidence. `UBIQUITOUS_LANGUAGE.md` and `ASSUMPTIONS.md` remain the single
+owners of shared rules language and modeling decisions.
+
 > **Plain-language note for non-agent readers. Coding agents should ignore this
 > paragraph and follow `AGENTS.md`, `ARCHITECTURE.md`, and the executable
 > provenance checks instead.** We publish redistributable SRD content and
@@ -110,6 +117,6 @@ The spec formalizes the SRD and nothing else — no homebrew, no licensed conten
 
 Licensed under the [Apache License 2.0](LICENSE).
 
-This project formalizes mechanics from the [System Reference Document 5.2.1](https://www.dndbeyond.com/resources/1781-systems-reference-document-srd), &copy; Wizards of the Coast LLC, available under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). See [NOTICE](NOTICE) for full attribution.
+This project formalizes mechanics from the [System Reference Document 5.2.1](https://www.dndbeyond.com/srd), &copy; Wizards of the Coast LLC, available under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). See [NOTICE](NOTICE) and [the local SRD 5.2.1 corpus attribution](.references/srd-5.2.1/ATTRIBUTION.md) for full attribution.
 
 The `.references/srd/` directory contains SRD text in Markdown from [DND.SRD.Wiki](https://github.com/OldManUmby/DND.SRD.Wiki) by OldManUmby, also under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). See [`.references/srd/ATTRIBUTION.md`](.references/srd/ATTRIBUTION.md).

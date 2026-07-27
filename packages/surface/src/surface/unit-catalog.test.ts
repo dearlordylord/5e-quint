@@ -4501,7 +4501,7 @@ describe("SRD Unit catalog boundary", () => {
       },
     ]);
     expect(magicAura.description).toContain(
-      "spells and other magical effects treat the target",
+      "Spells and other magical effects treat the target",
     );
   });
 
@@ -4852,9 +4852,8 @@ describe("SRD Unit catalog boundary", () => {
         ],
       },
     ]);
-    expect(revivify.description).toContain(
-      "conditions, magical contagions, and curses",
-    );
+    expect(revivify.description).toContain("died of old age");
+    expect(revivify.description).not.toContain("magical contagions");
   });
 
   test("decodes Sending as table-owned mental message delivery", () => {
@@ -5556,7 +5555,7 @@ describe("SRD Unit catalog boundary", () => {
       },
     ]);
     expect(magicMouth.description).toContain(
-      "visual or audible conditions within 30 feet",
+      "visual or audible conditions that occur within 30 feet",
     );
   });
 
@@ -7358,7 +7357,7 @@ describe("SRD Unit catalog boundary", () => {
       },
       provenance: {
         kind: "srd-5.2.1",
-        section: "Classes/Sorcerer.md:127-129",
+        section: "Classes/Sorcerer.md:87-109,127-129",
       },
     });
   });

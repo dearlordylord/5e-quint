@@ -1750,7 +1750,7 @@ describe("QMBT8 deterministic Unit feature admission expansion", () => {
         unit,
         optional: false,
         usageLimit: "oncePerTurn",
-        trigger: "rageActiveRecklessStrengthWeaponOrUnarmedStrikeFirstHit",
+        trigger: "rageActiveRecklessStrengthBasedAttackFirstHit",
         classLevel: classLevel(3),
         dice: { kind: "rageDamageBonus", dieSize: 6 },
       }),

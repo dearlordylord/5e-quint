@@ -7,7 +7,7 @@
     "dieSize": 10,
     "kind": "dice"
   },
-  "description": "Pike from the SRD weapons table.",
+  "description": "Pike — weapons table.",
   "id": "weapon_pike",
   "kind": "weapon",
   "mastery": "push",

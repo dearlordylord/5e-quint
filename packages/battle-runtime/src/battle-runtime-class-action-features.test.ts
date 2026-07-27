@@ -1,4 +1,7 @@
-import { battleObjectId } from "./identity.ts";
+import {
+  battleObjectId,
+  BattleStatBlockProcedureExecutionRef,
+} from "./identity.ts";
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.rogue-steady-aim
@@ -7,6 +10,7 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L19D-02-BRUTAL-STRIKE-FORCEFUL-BLOW barbarian_brutal_strike
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L19D-03-BRUTAL-STRIKE-HAMSTRING barbarian_brutal_strike
 import { classLevel } from "@dnd/shared/types";
+import type { CreatureNamedAttackRoll } from "@dnd/surface/surface/types";
 import {
   battleActUnitPresentation,
   battleActSpellPresentation,
@@ -48,6 +52,7 @@ import {
   secondWindWithAdditionalDirectEffect,
   wizardSpellcasting,
   spellRecord,
+  statBlockCatalog,
   fighterId,
   goblinId,
   wizardId,
@@ -72,6 +77,10 @@ import {
   startBattleSessionRight,
 } from "./battle-runtime.test-support.ts";
 import { BRUTAL_STRIKE_SUPPORT_PROFILE } from "./unit-feature-support.ts";
+import { activeRageDamageBonusForFrenzy } from "./battle-reducer/barbarian-frenzy.ts";
+import { isCharacterBattleCreatureState } from "./battle-reducer/creature-state-queries.ts";
+import { eligibleAttackDamageRiders } from "./battle-reducer/statblock-attacks.ts";
+import { creatureNamedAttackRollIsSupported } from "./statblock-action-support.ts";
 import type {
   BattleState,
   BattleSubject,
@@ -2378,23 +2387,76 @@ describe("battle runtime: class action features", () => {
     const raging = requireResolved(
       resolveBattleSubject({ state, subject: rageSubject, fills: [] }),
     ).state;
+    const ragingActor = raging.combatants.get(fighterId);
+    if (!isCharacterBattleCreatureState(ragingActor)) {
+      throw new Error("Expected the raging fixture to be a character.");
+    }
+    const strengthBasedStatBlockAttack = statBlockCatalog
+      .requireStatBlock("stat_block_wolf")
+      .statBlock.actions?.attacks?.find((attack) => attack.name === "Bite");
+    if (
+      strengthBasedStatBlockAttack === undefined ||
+      !creatureNamedAttackRollIsSupported(strengthBasedStatBlockAttack)
+    ) {
+      throw new Error("Expected a supported Strength-based Stat Block attack.");
+    }
+    const statBlockAttackSubject = goblinAttackSubject(state, "Scimitar");
+    if (statBlockAttackSubject.procedureRef === undefined) {
+      throw new Error("Expected a Stat Block attack procedure reference.");
+    }
+    const statBlockProcedureRef = BattleStatBlockProcedureExecutionRef.make(
+      statBlockAttackSubject.procedureRef,
+    );
+    const baseDamageEffect = strengthBasedStatBlockAttack.onHit.find(
+      (effect) => effect.kind === "damage",
+    );
+    if (baseDamageEffect === undefined) {
+      throw new Error("Expected the Strength-based attack to deal damage.");
+    }
+    const multiDamageStatBlockAttack: CreatureNamedAttackRoll = {
+      ...strengthBasedStatBlockAttack,
+      onHit: [
+        baseDamageEffect,
+        {
+          kind: "damage",
+          amount: {
+            kind: "fixed",
+            expr: { dice: 1, dieSize: 4, flat: 0 },
+            static: 2,
+          },
+          damageType: "fire",
+        },
+      ],
+    };
+    if (!creatureNamedAttackRollIsSupported(multiDamageStatBlockAttack)) {
+      throw new Error("Expected a supported multi-damage Stat Block attack.");
+    }
+    expect(
+      activeRageDamageBonusForFrenzy(ragingActor, {
+        kind: "statBlockAttack",
+        procedureRef: statBlockProcedureRef,
+        attack: strengthBasedStatBlockAttack,
+        damageNotation: "rolled",
+      }),
+    ).toMatchObject({ damageBonus: 2 });
 
     const attackSubject = fighterAttackSubject(state, "Unarmed Strike");
     const target = attackInitialTargetHole(raging, attackSubject);
     const roll = attackRollHoleAfterTarget(raging, target, attackSubject);
+    const recklessAttackRollFill = attackRollFill(roll, {
+      total: 15,
+      naturalD20: 10,
+      rollMode: "advantage",
+      activatedOngoingFeatureProcedureRef:
+        requireRecklessAttackProcedureRef(state),
+    });
+    if (recklessAttackRollFill.kind !== "attackRoll") {
+      throw new Error("Expected an attack roll fill.");
+    }
     const afterRecklessRoll = resolveBattleSubject({
       state: raging,
       subject: attackSubject,
-      fills: [
-        targetFill(target, goblinId),
-        attackRollFill(roll, {
-          total: 15,
-          naturalD20: 10,
-          rollMode: "advantage",
-          activatedOngoingFeatureProcedureRef:
-            requireRecklessAttackProcedureRef(state),
-        }),
-      ],
+      fills: [targetFill(target, goblinId), recklessAttackRollFill],
     });
     if (afterRecklessRoll.tag !== "needsHoles") {
       throw new Error("Expected Frenzy attack to reach damage roll.");
@@ -2413,6 +2475,41 @@ describe("battle runtime: class action features", () => {
         },
       ],
     });
+    expect(
+      eligibleAttackDamageRiders(
+        afterRecklessRoll.state,
+        fighterId,
+        goblinId,
+        {
+          kind: "statBlockAttack",
+          procedureRef: statBlockProcedureRef,
+          attack: strengthBasedStatBlockAttack,
+          damageNotation: "rolled",
+        },
+        recklessAttackRollFill.value,
+        [],
+      ),
+    ).toHaveLength(1);
+    expect(
+      eligibleAttackDamageRiders(
+        afterRecklessRoll.state,
+        fighterId,
+        goblinId,
+        {
+          kind: "statBlockAttack",
+          procedureRef: statBlockProcedureRef,
+          attack: multiDamageStatBlockAttack,
+          damageNotation: "rolled",
+        },
+        recklessAttackRollFill.value,
+        [],
+      ),
+    ).toMatchObject([
+      {
+        optional: false,
+        damage: { damageType: "piercing" },
+      },
+    ]);
     const damageFill = damageRollFillWithGroups(damage, [[4, 4]]);
     const disposition = attackDamageDispositionHoleAfterFills(
       afterRecklessRoll.state,

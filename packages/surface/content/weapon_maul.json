@@ -7,7 +7,7 @@
     "dieSize": 6,
     "kind": "dice"
   },
-  "description": "Maul from the SRD weapons table.",
+  "description": "Maul — weapons table.",
   "id": "weapon_maul",
   "kind": "weapon",
   "mastery": "topple",

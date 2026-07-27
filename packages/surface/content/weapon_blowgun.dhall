@@ -24,7 +24,7 @@ let weapon =
       , category = "martial"
       , usage = "ranged"
       , provenance = { kind = "srd-5.2.1", section = "Equipment#Weapons" }
-      , description = "Blowgun from the SRD weapons table."
+      , description = "Blowgun — weapons table."
       , damage =
         { kind = "flat"
         , dice = None Natural

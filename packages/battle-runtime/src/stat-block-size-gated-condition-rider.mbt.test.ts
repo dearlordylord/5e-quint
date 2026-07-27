@@ -545,6 +545,7 @@ function sizeGatedConditionRiderTargetStatBlockId(
 
 function biteAttack(): StatBlockAttack {
   return {
+    attackAbility: "str",
     attackBonus: { kind: "literal", value: 4 },
     attackType: "melee",
     name: biteAttackName,

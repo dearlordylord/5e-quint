@@ -7,7 +7,7 @@
     "dieSize": 4,
     "kind": "dice"
   },
-  "description": "Dagger from the SRD weapons table.",
+  "description": "Dagger — weapons table.",
   "id": "weapon_dagger",
   "kind": "weapon",
   "mastery": "nick",

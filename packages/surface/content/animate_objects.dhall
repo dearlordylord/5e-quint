@@ -21,7 +21,7 @@ let animateObjects =
           , section = "Spells/Descriptions-A-D#Animate Objects"
           }
       , description =
-          "Objects animate at your command. Choose up to spellcasting-mod nonmagical objects within range; Medium or smaller = 1, Large = 2, Huge = 3 toward the cap. Each becomes a Construct using the Animated Object stat block. Reverts to object form at 0 HP (overflow damage carries over)."
+          "Objects animate at your command. Choose a number of nonmagical objects within range that aren't being worn or carried, aren't fixed to a surface, and aren't Gargantuan. The maximum number is equal to your spellcasting ability modifier; a Medium or smaller target counts as one object, a Large target counts as two, and a Huge target counts as three. Each target becomes a Construct using the Animated Object stat block. At 0 Hit Points, it reverts to its object form, and any remaining damage carries over."
       , mechanics =
           { family = "templated_multi_spawn"
           , level = 5
@@ -62,6 +62,7 @@ let animateObjects =
               , actions =
                   { attacks =
                       [ { name = "Slam"
+                        , attackAbility = "spellcasting"
                         , attackType = "melee"
                         , attackBonus =
                             { kind = "caster_derived"

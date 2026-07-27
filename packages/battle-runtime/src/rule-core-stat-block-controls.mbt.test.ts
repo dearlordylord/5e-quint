@@ -762,6 +762,7 @@ function baseStatBlockRecord(id: string): StatBlockRecord {
 
 function primaryAttack(): StatBlockAttack {
   return {
+    attackAbility: "str",
     attackBonus: { kind: "literal", value: 4 },
     attackType: "melee",
     name: primaryAttackName,
@@ -778,6 +779,7 @@ function primaryAttack(): StatBlockAttack {
 
 function secondaryAttack(): StatBlockAttack {
   return {
+    attackAbility: "dex",
     attackBonus: { kind: "literal", value: 4 },
     attackType: "ranged",
     name: secondaryAttackName,

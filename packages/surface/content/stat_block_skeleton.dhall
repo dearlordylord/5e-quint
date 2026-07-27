@@ -16,7 +16,8 @@ let AttackRange
 
 let Attack
     : Type
-    = { attackBonus : { kind : Text, value : Integer }
+    = { attackAbility : Text
+      , attackBonus : { kind : Text, value : Integer }
       , attackType : Text
       , name : Text
       , onHit : List HitEffect
@@ -25,7 +26,8 @@ let Attack
       }
 
 let shortsword : Attack =
-      { attackBonus = { kind = "literal", value = +5 }
+      { attackAbility = "dex"
+      , attackBonus = { kind = "literal", value = +5 }
       , attackType = "melee"
       , name = "Shortsword"
       , onHit =
@@ -43,7 +45,8 @@ let shortsword : Attack =
       }
 
 let shortbow : Attack =
-      { attackBonus = { kind = "literal", value = +5 }
+      { attackAbility = "dex"
+      , attackBonus = { kind = "literal", value = +5 }
       , attackType = "ranged"
       , name = "Shortbow"
       , onHit =

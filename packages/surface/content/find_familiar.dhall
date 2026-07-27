@@ -37,7 +37,7 @@ let findFamiliar =
           , section = "Spells/Descriptions-E-L#Find Familiar"
           }
       , description =
-          "You gain the service of a familiar, a spirit that takes an animal form you choose from a list of CR-0 Beasts. The familiar has the statistics of the chosen form, though it is a Celestial, Fey, or Fiend (your choice) instead of a Beast. It obeys your commands, acts on its own Initiative, and cannot attack. While within 100 feet you can communicate telepathically and as a Bonus Action see/hear through its senses. It can deliver your touch spells. It disappears at 0 HP and is replaced by recasting; One Familiar Only."
+          "You gain the service of a familiar, a spirit that takes an animal form you choose: Bat, Cat, Frog, Hawk, Lizard, Octopus, Owl, Rat, Raven, Spider, Weasel, or another Beast that has a CR of 0. The familiar has the statistics of the chosen form, though it is a Celestial, Fey, or Fiend (your choice) instead of a Beast. It obeys your commands. It acts on its own Initiative. A familiar can't attack. While within 100 feet, you can communicate telepathically. As a Bonus Action, you can see and hear through its senses. It can deliver your touch spells. When the familiar drops to 0 Hit Points, it disappears. The familiar reappears after you cast this spell again. One Familiar Only."
       , mechanics =
           { family = "spawned_creature"
           , level = 1

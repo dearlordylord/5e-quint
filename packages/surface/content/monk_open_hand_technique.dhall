@@ -16,7 +16,7 @@ let openHandTechnique =
       , provenance =
           { kind = "srd-5.2.1", section = "Classes/Monk.md:192-202" }
       , description =
-          "Whenever you hit a creature with an attack granted by Flurry of Blows, you can Addle, Push, or Topple the target."
+          "Whenever you hit a creature with an attack granted by Flurry of Blows, you can impose one of the following effects: Addle, Push, Topple."
       , mechanics =
           { family = "open_hand_technique"
           , trigger =

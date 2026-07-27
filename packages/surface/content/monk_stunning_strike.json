@@ -1,7 +1,7 @@
 {
   "acquiredAtLevel": 5,
   "className": "monk",
-  "description": "Once per turn when you hit a creature with a Monk weapon or an Unarmed Strike, you can expend 1 Focus Point to force a Constitution saving throw.",
+  "description": "Once per turn when you hit a creature with a Monk weapon or an Unarmed Strike, you can expend 1 Focus Point to attempt a stunning strike. The target must make a Constitution saving throw.",
   "id": "monk_stunning_strike",
   "kind": "class_feature",
   "mechanics": {

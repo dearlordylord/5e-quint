@@ -1,5 +1,5 @@
 {
-  "description": "Choose either Forest Gnome or Rock Gnome, and choose Intelligence, Wisdom, or Charisma as the spellcasting ability for spells from this trait.",
+  "description": "Choose a lineage: Forest Gnome; Rock Gnome. Choose Intelligence, Wisdom, or Charisma as the spellcasting ability for spells from this trait.",
   "id": "species_gnome_gnomish_lineage",
   "kind": "species_trait",
   "mechanics": {
@@ -91,11 +91,7 @@
       }
     ],
     "spellcastingAbilityChoice": {
-      "abilities": [
-        "int",
-        "wis",
-        "cha"
-      ],
+      "abilities": ["int", "wis", "cha"],
       "kind": "spellcasting_ability_choice"
     },
     "timing": "species_selection"

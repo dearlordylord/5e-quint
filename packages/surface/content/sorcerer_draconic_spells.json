@@ -1,7 +1,7 @@
 {
   "acquiredAtLevel": 3,
   "className": "sorcerer",
-  "description": "When you reach Sorcerer levels 3, 5, 7, and 9, you thereafter always have the listed Draconic spells prepared.",
+  "description": "When you reach a Sorcerer level specified in the Draconic Spells table, you thereafter always have the listed spells prepared.",
   "id": "sorcerer_draconic_spells",
   "kind": "class_feature",
   "mechanics": {
@@ -21,24 +21,15 @@
           },
           {
             "minimumClassLevel": 5,
-            "spellIds": [
-              "fear",
-              "fly"
-            ]
+            "spellIds": ["fear", "fly"]
           },
           {
             "minimumClassLevel": 7,
-            "spellIds": [
-              "arcane_eye",
-              "charm_monster"
-            ]
+            "spellIds": ["arcane_eye", "charm_monster"]
           },
           {
             "minimumClassLevel": 9,
-            "spellIds": [
-              "legend_lore",
-              "summon_dragon"
-            ]
+            "spellIds": ["legend_lore", "summon_dragon"]
           }
         ]
       }

@@ -24,7 +24,7 @@ let weapon =
       , category = "martial"
       , usage = "ranged"
       , provenance = { kind = "srd-5.2.1", section = "Equipment#Weapons" }
-      , description = "Heavy Crossbow from the SRD weapons table."
+      , description = "Heavy Crossbow — weapons table."
       , damage =
         { kind = "dice"
         , dice = Some 1

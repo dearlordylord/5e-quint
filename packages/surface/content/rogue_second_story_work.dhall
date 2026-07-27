@@ -23,7 +23,7 @@ let secondStoryWork =
           , section = "Classes/Rogue#Second-Story Work"
           }
       , description =
-          "You have a Climb Speed equal to your Speed. In addition, you can use Dexterity instead of Strength to determine the distance you jump."
+          "You gain a Climb Speed equal to your Speed. You can determine your jump distance using your Dexterity rather than your Strength."
       , mechanics =
           { family = "passive"
           , grants =

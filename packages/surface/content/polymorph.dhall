@@ -20,7 +20,7 @@ let polymorph =
           , section = "Spells/Descriptions-M-P#Polymorph"
           }
       , description =
-          "You attempt to transform a creature that you can see within range into a Beast. The target must succeed on a Wisdom saving throw or shape-shift into a Beast form for the duration. That form can be any Beast with CR ≤ the target's (or the target's level if it doesn't have a CR). The target's stats are replaced by the chosen Beast but retains its alignment, personality, creature type, Hit Points, and Hit Point Dice. The target gains Temp HP equal to the Beast form's HP; spell ends if Temp HP depletes."
+          "You attempt to transform a creature that you can see within range into a Beast. The target must succeed on a Wisdom saving throw or shape-shift into a Beast form for the duration. That form can be any Beast that has CR ≤ the target's (or the target's level if it doesn't have a CR). The target's stats are replaced by the stat block of the chosen Beast, but the target retains its alignment, personality, creature type, Hit Points, and Hit Point Dice. The target gains Temp HP equal to the Beast form's HP; the spell ends if no Temporary Hit Points remain."
       , mechanics =
           { family = "activation"
           , level = 4

@@ -1,10 +1,6 @@
 {
   "abilityScoreIncrease": {
-    "abilities": [
-      "con",
-      "int",
-      "wis"
-    ],
+    "abilities": ["con", "int", "wis"],
     "methods": [
       {
         "kind": "two_scores",
@@ -19,7 +15,7 @@
       }
     ]
   },
-  "description": "Minimum SRD Sage background facts for ability scores, proficiencies, feat, and equipment.",
+  "description": "Sage. Ability Scores: Constitution, Intelligence, Wisdom. Feat: Magic Initiate (Wizard). Skill Proficiencies: Arcana and History. Tool Proficiency: Calligrapher's Supplies.",
   "id": "background_sage",
   "kind": "background",
   "name": "Sage",
@@ -28,10 +24,7 @@
     "kind": "srd-5.2.1",
     "section": "Character-Origins.md:11-29,49-55"
   },
-  "skillProficiencies": [
-    "arcana",
-    "history"
-  ],
+  "skillProficiencies": ["arcana", "history"],
   "startingEquipment": [
     {
       "coinsGp": 8,

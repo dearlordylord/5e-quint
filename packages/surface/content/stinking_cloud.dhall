@@ -115,7 +115,7 @@ let stinkingCloud =
           , section = "Spells/Descriptions-S-Z#Stinking Cloud"
           }
       , description =
-          "You create a 20-foot-radius Sphere of yellow, nauseating gas centered on a point within range. The cloud is Heavily Obscured. Each creature that starts its turn in the Sphere must succeed on a Constitution saving throw or have the Poisoned condition until the end of the current turn. While Poisoned in this way, the creature can't take an action or a Bonus Action. Strong wind can disperse the cloud."
+          "You create a 20-foot-radius Sphere of yellow, nauseating gas centered on a point within range. The cloud is Heavily Obscured. Each creature that starts its turn in the Sphere must succeed on a Constitution saving throw or have the Poisoned condition until the end of the current turn. While Poisoned in this way, the creature can't take an action or a Bonus Action. Strong wind disperses the cloud."
       , mechanics =
           { family = "ongoing_effect"
           , level = 3

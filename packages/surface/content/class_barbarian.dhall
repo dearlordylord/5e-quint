@@ -17,7 +17,7 @@ let barbarian =
           { categories = [ "light", "medium", "shield" ], kind = "trained" }
       , className = "barbarian"
       , description =
-          "SRD Barbarian class creation facts plus level 1-10 progression, including level 5 Extra Attack and Fast Movement and the level 9 Brutal Strike grant."
+          "As a Barbarian, you gain the following class features when you reach the specified Barbarian levels. These features are listed in the Barbarian Features table."
       , featureGrants =
         [ { level = 1, unitId = "barbarian_rage" }
         , { level = 1, unitId = "barbarian_unarmored_defense" }
@@ -42,7 +42,7 @@ let barbarian =
       , primaryAbilities = { abilities = [ "str" ], kind = "all_of" }
       , provenance =
         { kind = "srd-5.2.1"
-        , section = "Classes/Barbarian.md:3-25,33-38,56-116"
+        , section = "Classes/Barbarian.md:3-25,29,33-38,56-116,128-130"
         }
       , savingThrowProficiencies = [ "str", "con" ]
       , skillProficiencyChoice =

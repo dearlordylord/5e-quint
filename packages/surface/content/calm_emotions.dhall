@@ -23,7 +23,7 @@ let calmEmotions =
           , section = "Spells/Descriptions-A-D#Calm Emotions"
           }
       , description =
-          "Each Humanoid in a 20-foot-radius Sphere centered on a point you choose within range must make a Charisma saving throw. On a failed save, a target can be made immune to the Charmed and Frightened conditions until the spell ends, suppressing those conditions while the spell lasts. Alternatively, a Hostile target can become Indifferent about creatures of your choice until harmed or witnessing allies being harmed; the attitude returns when the spell ends."
+          "Each Humanoid in a 20-foot-radius Sphere centered on a point you choose within range must succeed on a Charisma saving throw or be affected by one of the following effects. A creature has Immunity to the Charmed and Frightened conditions until the spell ends; if it was already Charmed or Frightened, those conditions are suppressed for the duration. The creature becomes Indifferent about creatures of your choice that it's Hostile toward. This indifference ends if the target takes damage or witnesses its allies taking damage. When the spell ends, the creature's attitude returns to normal."
       , mechanics =
           { family = "activation"
           , level = 2

@@ -7,7 +7,7 @@
     "dieSize": 8,
     "kind": "dice"
   },
-  "description": "Light Crossbow from the SRD weapons table.",
+  "description": "Light Crossbow — weapons table.",
   "id": "weapon_light_crossbow",
   "kind": "weapon",
   "mastery": "slow",

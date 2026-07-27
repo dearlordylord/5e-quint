@@ -9,7 +9,7 @@ let shield =
           , section = "Equipment#Armor"
           }
       , description =
-          "A Shield gives a +2 bonus to Armor Class and takes the Utilize action to don or doff."
+          "Shield: +2 Armor Class. Utilize Action to Don or Doff."
       , armorClassProjection =
           { kind = "trained_shield_bonus"
           , handUse = "shield"

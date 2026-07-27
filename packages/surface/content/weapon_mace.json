@@ -7,7 +7,7 @@
     "dieSize": 6,
     "kind": "dice"
   },
-  "description": "Mace from the SRD weapons table.",
+  "description": "Mace — weapons table.",
   "id": "weapon_mace",
   "kind": "weapon",
   "mastery": "sap",

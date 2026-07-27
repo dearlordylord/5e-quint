@@ -229,7 +229,7 @@ let earthquake =
           , section = "Spells/Descriptions-E-L#Earthquake"
           }
       , description =
-          "Choose a point on the ground within range. For the duration, an intense tremor rips through the ground in a 100-foot-radius circle centered on that point, and the ground there is Difficult Terrain. When you cast the spell and at the end of each of your turns, each creature on the ground in the area makes a Dexterity saving throw. On a failed save, it has the Prone condition and its Concentration is broken. The tremor damages structures in contact with the ground in the area; structures that drop to 0 Hit Points collapse. Creatures near a collapsing structure make a Dexterity saving throw or take 12d6 Bludgeoning damage, fall Prone, and are buried in rubble."
+          "Choose a point on the ground within range. For the duration, an intense tremor rips through the ground in a 100-foot-radius circle centered on that point. The ground there is Difficult Terrain. When you cast the spell and at the end of each of your turns, each creature on the ground in the area makes a Dexterity saving throw. On a failed save, it has the Prone condition and its Concentration is broken. The tremor damages structures in contact with the ground in the area; structures that drop to 0 Hit Points collapse. A creature within a distance from a collapsing structure equal to half its height makes a Dexterity saving throw. On a failed save, the creature takes 12d6 Bludgeoning damage, has the Prone condition, and is buried in rubble."
       , mechanics =
           { family = "ongoing_effect"
           , level = 8

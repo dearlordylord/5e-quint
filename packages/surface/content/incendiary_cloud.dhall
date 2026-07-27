@@ -52,7 +52,7 @@ let incendiaryCloud =
           , section = "Spells/Descriptions-E-L#Incendiary Cloud"
           }
       , description =
-          "A swirling cloud of embers and smoke fills a 20-foot-radius Sphere centered on a point within range. When the cloud appears, each creature in it makes a Dexterity saving throw, taking 10d8 Fire damage on a failed save or half as much damage on a successful one. A creature must also make this save when the Sphere moves into its space and when it enters the Sphere or ends its turn there, only once per turn. The cloud moves 10 feet away from you at the start of each of your turns."
+          "A swirling cloud of embers and smoke fills a 20-foot-radius Sphere centered on a point within range. When the cloud appears, each creature in it makes a Dexterity saving throw, taking 10d8 Fire damage on a failed save or half as much damage on a successful one. A creature must also make this save when the Sphere moves into its space and when it enters the Sphere or ends its turn there. A creature makes this save only once per turn. The cloud moves 10 feet away from you at the start of each of your turns."
       , mechanics =
           { family = "ongoing_effect"
           , level = 8

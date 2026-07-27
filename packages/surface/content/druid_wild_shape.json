@@ -1,7 +1,7 @@
 {
   "acquiredAtLevel": 2,
   "className": "druid",
-  "description": "As a Bonus Action, expend one Wild Shape use to shape-shift into a known Beast form for a number of hours equal to half your Druid level, rounded down. You retain the SRD-listed character facts, cannot cast spells, gain Temporary Hit Points equal to your Druid level, and revert when the duration expires, you use Wild Shape again, you have the Incapacitated condition, you die, or you dismiss the form as a Bonus Action.",
+  "description": "As a Bonus Action, you shape-shift into a Beast form that you have learned for this feature. You stay in that form for a number of hours equal to half your Druid level or until you use Wild Shape again, have the Incapacitated condition, or die. You can also leave the form early as a Bonus Action. When you assume a Wild Shape form, you gain a number of Temporary Hit Points equal to your Druid level. You can't cast spells.",
   "id": "druid_wild_shape",
   "kind": "class_feature",
   "mechanics": {

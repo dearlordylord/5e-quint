@@ -27,7 +27,7 @@ let thaumaturgy =
           , section = "Spells/Descriptions-S-Z#Thaumaturgy"
           }
       , description =
-          "You manifest a minor wonder within range. Choose one of the spell's effects. Booming Voice makes your voice boom up to three times as loud as normal for 1 minute and gives you Advantage on Charisma (Intimidation) checks for the duration. If you cast this spell multiple times, you can have up to three of its 1-minute effects active at a time."
+          "You manifest a minor wonder within range. You create one of the spell's effects. Your voice booms up to three times as loud as normal for 1 minute. For the duration, you have Advantage on Charisma (Intimidation) checks. If you cast this spell multiple times, you can have up to three of its 1-minute effects active at a time."
       , mechanics =
           { family = "ongoing_effect"
           , level = 0

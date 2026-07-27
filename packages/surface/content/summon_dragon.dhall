@@ -130,6 +130,7 @@ let summonDragon =
                       ]
                   , attacks =
                       [ { name = "Rend"
+                        , attackAbility = "spellcasting"
                         , attackType = "melee"
                         , attackBonus =
                             { kind = "caster_derived"

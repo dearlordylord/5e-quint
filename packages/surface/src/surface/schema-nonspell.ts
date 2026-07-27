@@ -34,6 +34,7 @@ import {
   StandardActionKindSchema,
   surfaceSchemaRole,
   type SurfaceIdentityKind,
+  type SurfaceProjectionKind,
   type SurfaceProtocolKind,
   type SurfaceUnitReferenceRelation,
   ToolProficiencyGrantSchema,
@@ -80,6 +81,11 @@ const surfaceProtocol = <A, I, R>(
   schema: Schema.Schema<A & string, I, R>,
   kind: SurfaceProtocolKind,
 ) => surfaceSchemaRole(schema, { category: "protocol", kind });
+
+const surfaceProjection = <A, I, R>(
+  schema: Schema.Schema<A & string, I, R>,
+  kind: SurfaceProjectionKind,
+) => surfaceSchemaRole(schema, { category: "projection", kind });
 
 const surfaceReference = <A, I, R>(
   schema: Schema.Schema<A & string, I, R>,
@@ -973,7 +979,7 @@ export const DruidWildCompanionSpellCastMechanicsSchema = Schema.Struct({
   }),
   spellModeOverride: Schema.Struct({
     kind: Schema.Literal("fixed_creature_type_mode_option"),
-    optionId: surfaceIdentity(Schema.Literal("fey"), "id"),
+    optionId: surfaceProtocol(Schema.Literal("fey"), "optionId"),
   }),
   familiarDismissal: Schema.Struct({
     kind: Schema.Literal("caster_finishes_long_rest"),
@@ -1286,11 +1292,11 @@ export const OpenHandTechniqueMechanicsSchema = strictStruct({
   family: Schema.Literal("open_hand_technique"),
   trigger: strictStruct({
     kind: Schema.Literal("hit_with_attack_granted_by"),
-    resourceOptionUnitId: surfaceReference(
+    resourceOptionUnitId: surfaceProjection(
       Schema.Literal("monk_monks_focus"),
-      "resource-link",
+      "derived-reference",
     ),
-    optionId: surfaceIdentity(Schema.Literal("flurry_of_blows"), "id"),
+    optionId: surfaceProtocol(Schema.Literal("flurry_of_blows"), "optionId"),
   }),
   optional: Schema.Literal(true),
   effectSaveDc: strictStruct({
@@ -1410,9 +1416,9 @@ export const CunningStrikeMechanicsSchema = strictStruct({
         kind: Schema.Literal("equipment_on_person"),
         equipment: strictStruct({
           kind: Schema.Literal("tool"),
-          toolId: surfaceIdentity(
+          toolId: surfaceProjection(
             Schema.Literal("poisoners_kit"),
-            "catalog-reference",
+            "derived-reference",
           ),
         }),
       }),
@@ -1959,7 +1965,7 @@ export const SneakAttackDamageRiderTriggerSchema = strictStruct({
 
 export const FrenzyAttackDamageRiderTriggerSchema = strictStruct({
   kind: Schema.Literal("hit_with_attack_roll"),
-  attackFilter: Schema.Literal("strength_weapon_or_unarmed_strike"),
+  attackFilter: Schema.Literal("strength_based_attack"),
   prerequisite: Schema.Literal(
     "rage_active_and_reckless_attack_used_this_turn",
   ),
@@ -2504,7 +2510,7 @@ export const BackgroundAbilityScoreIncreaseSchema = Schema.Struct({
 export const StartingEquipmentItemRefSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("unit_ref"),
-    unitId: surfaceReference(NonEmptyStringSchema, "unit-reference"),
+    unitId: surfaceReference(NonEmptyStringSchema, "item-reference"),
     quantity: exactOptional(PositiveIntegerSchema),
   }),
   Schema.Struct({
@@ -2512,7 +2518,7 @@ export const StartingEquipmentItemRefSchema = Schema.Union(
   }),
   Schema.Struct({
     kind: Schema.Literal("draft_owned_item"),
-    itemName: surfaceIdentity(NonEmptyStringSchema, "name"),
+    itemName: surfaceIdentity(NonEmptyStringSchema, "catalog-reference"),
     quantity: exactOptional(PositiveIntegerSchema),
   }),
 );
@@ -3819,14 +3825,14 @@ export const SpeciesTraitMechanicsSchema = Schema.Union(
 export const SpeciesTraitRecordSchema = Schema.Struct({
   ...UnitMetadataSchema.fields,
   kind: Schema.Literal("species_trait"),
-  species: surfaceIdentity(NonEmptyStringSchema, "reference"),
+  species: surfaceIdentity(NonEmptyStringSchema, "catalog-reference"),
   mechanics: SpeciesTraitMechanicsSchema,
 });
 
 export const BackgroundToolProficiencySchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("specific_tool"),
-    toolId: surfaceIdentity(NonEmptyStringSchema, "catalog-reference"),
+    toolId: surfaceProjection(NonEmptyStringSchema, "derived-reference"),
   }),
   Schema.Struct({
     kind: Schema.Literal("tool_category_choice"),

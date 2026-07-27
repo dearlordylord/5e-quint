@@ -1,7 +1,7 @@
 { armorTraining = { categories = [ "light" ], kind = "trained" }
 , className = "warlock"
 , description =
-    "SRD Warlock class creation and level 1-9 progression facts, including Pact Magic progression, the level-2 Magical Cunning feature grant, level-3 subclass selection, and level-9 Contact Patron feature grant."
+    "As a Warlock, you gain the following class features when you reach the specified Warlock levels. These features are listed in the Warlock Features table."
 , featureGrants =
   [ { level = 1, unitId = "warlock_eldritch_invocations" }
   , { level = 1, unitId = "warlock_pact_magic" }
@@ -20,7 +20,7 @@
 , primaryAbilities = { abilities = [ "cha" ], kind = "all_of" }
 , provenance =
   { kind = "srd-5.2.1"
-  , section = "Classes/Warlock.md:3-24,31-45,68-104,332-406"
+  , section = "Classes/Warlock.md:3-24,29,31-45,68-104,332-406"
   }
 , savingThrowProficiencies = [ "wis", "cha" ]
 , skillProficiencyChoice =

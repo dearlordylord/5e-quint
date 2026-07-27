@@ -7,7 +7,7 @@
     "dieSize": 6,
     "kind": "dice"
   },
-  "description": "Hand Crossbow from the SRD weapons table.",
+  "description": "Hand Crossbow — weapons table.",
   "id": "weapon_hand_crossbow",
   "kind": "weapon",
   "mastery": "vex",

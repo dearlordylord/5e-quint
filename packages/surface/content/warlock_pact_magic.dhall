@@ -10,7 +10,7 @@ let pactMagic =
       { acquiredAtLevel = 1
       , className = "warlock"
       , description =
-          "SRD Warlock level 1 Pact Magic retained feature. Slot capacity, Pact Slot level, cantrip access, prepared spell access, spellcasting ability, and Arcane Focus permission are projected from the Warlock class spellcasting facts."
+          "Through occult ceremony, you have formed a pact with a mysterious entity to gain magical powers. The entity is a voice in the shadows—its identity unclear—but its boon to you is concrete: the ability to cast spells."
       , id = "warlock_pact_magic"
       , kind = "class_feature"
       , mechanics =

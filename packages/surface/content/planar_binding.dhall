@@ -9,7 +9,7 @@ let planarBinding =
           , section = "Spells/Descriptions-M-P#Planar Binding"
           }
       , description =
-          "You attempt to bind a Celestial, Elemental, Fey, or Fiend to your service. The creature must remain within range for the entire casting. At the completion, it makes a Charisma saving throw. On a failed save, it is bound to serve you for the duration. If it was summoned or created by another spell, that spell's duration extends to match this spell. A bound creature follows your commands to the best of its ability, though Hostile creatures try to twist commands. When it completes the command before the spell ends, it reports to you if on the same plane, or returns to the binding place if you are on another plane. Higher-level slots increase duration to 10 days, 30 days, 180 days, or 366 days."
+          "You attempt to bind a Celestial, Elemental, Fey, or Fiend to your service. The creature must remain within range for the entire casting. At the completion of the casting, the target must succeed on a Charisma saving throw or be bound to serve you for the duration. If it was summoned or created by another spell, that spell's duration extends to match this spell. A bound creature follows your commands to the best of its ability. If the creature is Hostile, it strives to twist your commands. If the creature carries out your commands completely before the spell ends, it reports to you if on the same plane. If you are on another plane, it returns to the binding place. Higher-level slots increase duration to 10 days, 30 days, 180 days, and 366 days."
       , mechanics =
           { family = "activation"
           , level = 5

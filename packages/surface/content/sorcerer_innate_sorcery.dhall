@@ -12,7 +12,7 @@ let innateSorcery =
           , section = "Classes/Sorcerer#Innate Sorcery"
           }
       , description =
-          "As a Bonus Action, unleash your magic for 1 minute, increasing Sorcerer spell save DCs by 1 and giving Advantage on Sorcerer spell attack rolls."
+          "As a Bonus Action, unleash your magic for 1 minute. The spell save DC of your Sorcerer spells increases by 1. You have Advantage on the attack rolls of Sorcerer spells you cast."
       , mechanics =
           { family = "activation"
           , activationCost = { kind = "bonus_action" }

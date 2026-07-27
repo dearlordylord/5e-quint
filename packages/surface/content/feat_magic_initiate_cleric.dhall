@@ -1,7 +1,7 @@
 let magicInitiateCleric =
       { category = "origin"
       , description =
-          "Magic Initiate specialized to the Cleric spell list: choose two Cleric cantrips, choose one level 1 Cleric spell that is always prepared and has one free Long Rest cast, choose Intelligence, Wisdom, or Charisma as the spellcasting ability, and replace one chosen spell with another same-level Cleric spell when gaining a level."
+          "Choose two Cleric cantrips. Choose one level 1 Cleric spell; you always have that spell prepared. You can cast it once without a spell slot. Choose Intelligence, Wisdom, or Charisma as the spellcasting ability. Whenever you gain a new level, you can replace one of the spells you chose with a different Cleric spell of the same level."
       , id = "feat_magic_initiate_cleric"
       , kind = "feat"
       , mechanics =

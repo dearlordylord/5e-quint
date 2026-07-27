@@ -9,7 +9,7 @@ let communeWithNature =
           , section = "Spells/Descriptions-A-D#Commune with Nature"
           }
       , description =
-          "You commune with nature spirits and learn three facts about the surrounding area: outdoors within 3 miles, or in caves and other natural underground settings within 300 feet. The spell doesn't function where nature has been replaced by construction. The facts can include settlements, portals to other planes, one CR 10+ Celestial, Elemental, Fey, Fiend, or Undead, the prevalent kind of plant, mineral, or Beast, or bodies of water."
+          "You commune with nature spirits and gain knowledge of the surrounding area. Outdoors, the spell gives you knowledge within 3 miles. In caves and other natural underground settings, the radius is 300 feet. The spell doesn't function where nature has been replaced by construction. Choose three of the following facts: settlements; portals to other planes; one CR 10+ creature that is a Celestial, Elemental, Fey, Fiend, or Undead; the prevalent kind of plant, mineral, or Beast; locations of bodies of water."
       , mechanics =
           { family = "activation"
           , level = 5

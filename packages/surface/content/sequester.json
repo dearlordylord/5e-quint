@@ -1,5 +1,5 @@
 {
-  "description": "With a touch, you magically sequester an object or a willing creature. For the duration, the target has the Invisible condition and (if a creature) the Unconscious condition. You may set a caster-defined early-end trigger; the spell also ends if the target takes any damage.",
+  "description": "With a touch, you magically sequester an object or a willing creature. For the duration, the target has the Invisible condition. If the target is a creature, it has the Unconscious condition. You can set a condition for the spell to end early. This spell also ends if the target takes any damage.",
   "id": "sequester",
   "kind": "spell",
   "mechanics": {
@@ -14,10 +14,7 @@
       "v": true
     },
     "duration": {
-      "endsOn": [
-        "dispel",
-        "damage"
-      ],
+      "endsOn": ["dispel", "damage"],
       "kind": "permanent"
     },
     "family": "activation",
@@ -37,10 +34,7 @@
         },
         "effects": [
           {
-            "condition": [
-              "invisible",
-              "unconscious"
-            ],
+            "condition": ["invisible", "unconscious"],
             "kind": "apply_condition"
           }
         ],

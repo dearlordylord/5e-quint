@@ -7,7 +7,7 @@
     "dieSize": 10,
     "kind": "dice"
   },
-  "description": "Heavy Crossbow from the SRD weapons table.",
+  "description": "Heavy Crossbow — weapons table.",
   "id": "weapon_heavy_crossbow",
   "kind": "weapon",
   "mastery": "push",

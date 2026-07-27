@@ -1,7 +1,7 @@
 let magicInitiateDruid =
       { category = "origin"
       , description =
-          "Magic Initiate specialized to the Druid spell list: choose two Druid cantrips, choose one level 1 Druid spell that is always prepared and has one free Long Rest cast, choose Intelligence, Wisdom, or Charisma as the spellcasting ability, and replace one chosen spell with another same-level Druid spell when gaining a level."
+          "Choose two Druid cantrips. Choose one level 1 Druid spell; you always have that spell prepared. You can cast it once without a spell slot. Choose Intelligence, Wisdom, or Charisma as the spellcasting ability. Whenever you gain a new level, you can replace one of the spells you chose with a different Druid spell of the same level."
       , id = "feat_magic_initiate_druid"
       , kind = "feat"
       , mechanics =

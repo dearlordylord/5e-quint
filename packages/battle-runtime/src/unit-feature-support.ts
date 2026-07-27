@@ -2194,7 +2194,7 @@ export type SupportedUnitFeatureFacts =
       readonly kind: "attackDamageRider";
       readonly optional: false;
       readonly usageLimit: "oncePerTurn";
-      readonly trigger: "rageActiveRecklessStrengthWeaponOrUnarmedStrikeFirstHit";
+      readonly trigger: "rageActiveRecklessStrengthBasedAttackFirstHit";
       readonly classLevel: ClassLevel;
       readonly dice: {
         readonly kind: "rageDamageBonus";
@@ -2834,7 +2834,7 @@ type AttackDamageRiderMechanicsProjection =
         SupportedUnitFeatureProfile,
         {
           readonly kind: "attackDamageRider";
-          readonly trigger: "rageActiveRecklessStrengthWeaponOrUnarmedStrikeFirstHit";
+          readonly trigger: "rageActiveRecklessStrengthBasedAttackFirstHit";
         }
       >,
       "kind" | "unit" | "usageLimit" | "classLevel"
@@ -2896,7 +2896,7 @@ function attackDamageRiderMechanicsProjection(
   if (
     mechanics.optional === false &&
     "attackFilter" in mechanics.trigger &&
-    mechanics.trigger.attackFilter === "strength_weapon_or_unarmed_strike" &&
+    mechanics.trigger.attackFilter === "strength_based_attack" &&
     mechanics.trigger.prerequisite ===
       "rage_active_and_reckless_attack_used_this_turn" &&
     mechanics.trigger.hitLimit === "first_target_hit_this_turn" &&
@@ -2904,7 +2904,7 @@ function attackDamageRiderMechanicsProjection(
   ) {
     return {
       optional: false,
-      trigger: "rageActiveRecklessStrengthWeaponOrUnarmedStrikeFirstHit",
+      trigger: "rageActiveRecklessStrengthBasedAttackFirstHit",
       dice: {
         kind: "rageDamageBonus",
         dieSize: mechanics.effect.dice.dieSize,

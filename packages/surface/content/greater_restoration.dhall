@@ -9,7 +9,7 @@ let greaterRestoration =
           , section = "Spells/Descriptions-E-L#Greater Restoration"
           }
       , description =
-          "You touch a creature and magically remove one of these effects from it: 1 Exhaustion level, the Charmed or Petrified condition, a curse including the target's Attunement to a cursed magic item, any reduction to one of the target's ability scores, or any reduction to the target's Hit Point maximum."
+          "You touch a creature and magically remove one of the following effects from it: 1 Exhaustion level; the Charmed or Petrified condition; a curse including the target's Attunement to a cursed magic item; any reduction to one of the target's ability scores; any reduction to the target's Hit Point maximum."
       , mechanics =
           { family = "activation"
           , level = 5

@@ -1,7 +1,7 @@
 {
   "acquiredAtLevel": 1,
   "className": "warlock",
-  "description": "You gain Eldritch Invocations of your choice, meeting prerequisites, replacing eligible invocations when you gain a Warlock level, and not choosing the same invocation twice unless its description allows it.",
+  "description": "You gain Eldritch Invocations of your choice. If an invocation has a prerequisite, you must meet it. Whenever you gain a Warlock level, you can replace one of your invocations with another one for which you qualify. You can't pick the same invocation more than once unless its description says otherwise.",
   "id": "warlock_eldritch_invocations",
   "kind": "class_feature",
   "mechanics": {

@@ -387,7 +387,7 @@ let prismaticWall =
           , section = "Spells/Descriptions-M-P#Prismatic Wall"
           }
       , description =
-          "A shimmering, multicolored plane of light forms a vertical opaque wall up to 90 feet long, 30 feet high, and 1 inch thick, or a globe up to 30 feet in diameter. If positioned in an occupied space, the spell ends without effect. The wall sheds Bright Light within 100 feet and Dim Light for an additional 100 feet. You and designated creatures can pass through and be near it without harm. Other creatures that can see it and move within 20 feet or start their turn there make a Constitution save or have the Blinded condition for 1 minute. The wall has seven ordered layers, each with its own Dexterity-save effect and destruction condition."
+          "A shimmering, multicolored plane of light forms a vertical opaque wall up to 90 feet long, 30 feet high, and 1 inch thick. Alternatively, you shape the wall into a globe up to 30 feet in diameter. If positioned in an occupied space, the spell ends without effect. The wall sheds Bright Light within 100 feet; Dim Light for an additional 100 feet. You and creatures you designate can pass through and be near it without harm. If another creature that can see the wall moves within 20 feet of it or starts its turn there, it makes a Constitution save or has the Blinded condition for 1 minute. The wall has seven ordered layers, each with a different color. Each layer has different properties."
       , mechanics =
           { family = "ongoing_effect"
           , level = 9

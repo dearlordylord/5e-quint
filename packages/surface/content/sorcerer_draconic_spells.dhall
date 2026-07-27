@@ -24,7 +24,7 @@ let draconicSpells =
           , section = "Classes/Sorcerer#Draconic Spells"
           }
       , description =
-          "When you reach Sorcerer levels 3, 5, 7, and 9, you thereafter always have the listed Draconic spells prepared."
+          "When you reach a Sorcerer level specified in the Draconic Spells table, you thereafter always have the listed spells prepared."
       , mechanics =
           { family = "passive"
           , grants =

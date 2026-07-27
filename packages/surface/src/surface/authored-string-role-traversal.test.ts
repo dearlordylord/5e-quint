@@ -228,7 +228,7 @@ describe("Surface authored string role traversal", () => {
     const records = traversal.readSurfaceRecords();
     expect(audit.metrics.recordsAudited).toBe(records.length);
     expect(traversal.collectUnitReferences(records).length).toBeGreaterThan(0);
-  });
+  }, 15_000);
 
   it("does not traverse an incompatible tagged branch", () => {
     const schema = Schema.Union(

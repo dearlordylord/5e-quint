@@ -16,7 +16,7 @@ let abjureFoes =
       , provenance =
           { kind = "srd-5.2.1", section = "Classes/Paladin.md:144-146" }
       , description =
-          "As a Magic action, expend one use of Channel Divinity to target visible creatures within 60 feet up to your Charisma modifier, minimum one. Each target must succeed on a Wisdom saving throw or have the Frightened condition for 1 minute or until it takes any damage. While Frightened in this way, a target can do only one of move, action, or Bonus Action on its turns."
+          "As a Magic action, expend one use of Channel Divinity to target a number of creatures equal to your Charisma modifier, minimum one, that you can see within 60 feet. Each target must succeed on a Wisdom saving throw or have the Frightened condition for 1 minute or until it takes any damage. While Frightened in this way, a target can do only one of move, action, or Bonus Action on its turns."
       , mechanics =
           { family = "abjure_foes"
           , activationCost = { kind = "standard_action", action = "magic" }

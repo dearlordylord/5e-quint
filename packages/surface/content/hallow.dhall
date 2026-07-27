@@ -9,7 +9,7 @@ let hallow =
           , section = "Spells/Descriptions-E-L#Hallow"
           }
       , description =
-          "You touch a point and infuse an area around it with holy or unholy power. The radius can be up to 60 feet, and the spell fails if the radius includes an area already under Hallow. Choose Aberration, Celestial, Elemental, Fey, Fiend, or Undead creature types for Hallowed Ward; chosen types can't willingly enter, and creatures possessed by or Charmed or Frightened by them aren't possessed, Charmed, or Frightened by them while in the area. You also bind one extra effect: Courage, Darkness, Daylight, Peaceful Rest, Extradimensional Interference, Fear, Resistance, Silence, Tongues, or Vulnerability."
+          "You touch a point and infuse an area around it with holy or unholy power. The radius can be up to 60 feet, and the spell fails if the radius includes an area already under Hallow. Choose any of these creature types: Aberration, Celestial, Elemental, Fey, Fiend, or Undead. Chosen types can't willingly enter, and any creature possessed by or Charmed or Frightened by them isn't possessed, Charmed, or Frightened by them while in the area. You bind one extra effect: Courage; Darkness; Daylight; Peaceful Rest; Extradimensional Interference; Fear; Resistance; Silence; Tongues; Vulnerability."
       , mechanics =
           { family = "activation"
           , level = 5

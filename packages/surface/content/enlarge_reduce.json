@@ -1,5 +1,5 @@
 {
-  "description": "For the duration, the spell enlarges or reduces a creature or an object you can see within range (see the chosen effect below). The object can't be worn or carried. An unwilling creature can make a Constitution saving throw; on a successful save, the spell has no effect. Enlarge increases the target's size by one category, grants Advantage on Strength checks and Strength saving throws, and adds 1d4 damage to attacks with enlarged weapons or Unarmed Strikes. Reduce decreases the target's size by one category, imposes Disadvantage on Strength checks and Strength saving throws, and subtracts 1d4 damage from attacks with reduced weapons or Unarmed Strikes, to a minimum of 1 damage.",
+  "description": "For the duration, the spell enlarges or reduces a creature or an object you can see within range. The object must be neither worn nor carried. An unwilling creature can make a Constitution saving throw; on a successful save, the spell has no effect. Enlarge increases the target's size by one category. The target has Advantage on Strength checks and Strength saving throws. Attacks with enlarged weapons or Unarmed Strikes deal an extra 1d4 damage. Reduce decreases the target's size by one category. The target has Disadvantage on Strength checks and Strength saving throws. Attacks with reduced weapons or Unarmed Strikes deal 1d4 less damage; this can't reduce the damage below 1.",
   "id": "enlarge_reduce",
   "kind": "spell",
   "mechanics": {
@@ -35,10 +35,7 @@
                 "targetRelation": "not_worn_or_carried",
                 "visibility": "caster_can_see"
               },
-              "targetKinds": [
-                "creature",
-                "object"
-              ]
+              "targetKinds": ["creature", "object"]
             }
           }
         },
@@ -59,24 +56,16 @@
                   "steps": 1
                 },
                 {
-                  "abilityFilter": [
-                    "str"
-                  ],
+                  "abilityFilter": ["str"],
                   "kind": "modify_roll_advantage",
                   "mode": "advantage",
-                  "on": [
-                    "ability_check"
-                  ]
+                  "on": ["ability_check"]
                 },
                 {
                   "kind": "modify_roll_advantage",
                   "mode": "advantage",
-                  "on": [
-                    "saving_throw"
-                  ],
-                  "saveAbilityFilter": [
-                    "str"
-                  ]
+                  "on": ["saving_throw"],
+                  "saveAbilityFilter": ["str"]
                 },
                 {
                   "damageSourceFilter": {
@@ -103,24 +92,16 @@
                   "steps": 1
                 },
                 {
-                  "abilityFilter": [
-                    "str"
-                  ],
+                  "abilityFilter": ["str"],
                   "kind": "modify_roll_advantage",
                   "mode": "disadvantage",
-                  "on": [
-                    "ability_check"
-                  ]
+                  "on": ["ability_check"]
                 },
                 {
                   "kind": "modify_roll_advantage",
                   "mode": "disadvantage",
-                  "on": [
-                    "saving_throw"
-                  ],
-                  "saveAbilityFilter": [
-                    "str"
-                  ]
+                  "on": ["saving_throw"],
+                  "saveAbilityFilter": ["str"]
                 },
                 {
                   "damageSourceFilter": {

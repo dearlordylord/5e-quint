@@ -94,7 +94,7 @@ let arcaneEye =
                   , label = "eye location"
                   , value =
                       { kind = "location"
-                      , description = "point within range"
+                      , description = "within range"
                       }
                   }
               , operations =

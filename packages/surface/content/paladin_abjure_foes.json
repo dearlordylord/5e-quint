@@ -1,7 +1,7 @@
 {
   "acquiredAtLevel": 9,
   "className": "paladin",
-  "description": "As a Magic action, expend one use of Channel Divinity to target visible creatures within 60 feet up to your Charisma modifier, minimum one. Each target must succeed on a Wisdom saving throw or have the Frightened condition for 1 minute or until it takes any damage. While Frightened in this way, a target can do only one of move, action, or Bonus Action on its turns.",
+  "description": "As a Magic action, expend one use of Channel Divinity to target a number of creatures equal to your Charisma modifier, minimum one, that you can see within 60 feet. Each target must succeed on a Wisdom saving throw or have the Frightened condition for 1 minute or until it takes any damage. While Frightened in this way, a target can do only one of move, action, or Bonus Action on its turns.",
   "id": "paladin_abjure_foes",
   "kind": "class_feature",
   "mechanics": {
@@ -14,19 +14,13 @@
       "condition": "frightened",
       "duration": {
         "amount": 1,
-        "endsOn": [
-          "target_takes_any_damage"
-        ],
+        "endsOn": ["target_takes_any_damage"],
         "unit": "minute"
       },
       "kind": "apply_condition",
       "turnRestriction": {
         "kind": "choose_only_one",
-        "options": [
-          "move",
-          "action",
-          "bonus_action"
-        ]
+        "options": ["move", "action", "bonus_action"]
       }
     },
     "save": {

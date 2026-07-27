@@ -24,7 +24,7 @@ let weapon =
       , category = "simple"
       , usage = "ranged"
       , provenance = { kind = "srd-5.2.1", section = "Equipment#Weapons" }
-      , description = "Sling from the SRD weapons table."
+      , description = "Sling — weapons table."
       , damage =
         { kind = "dice"
         , dice = Some 1

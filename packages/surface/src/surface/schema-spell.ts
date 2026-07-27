@@ -349,23 +349,23 @@ export const DiceExprBaseSchema = Schema.Struct({
 
 export const CastTimeChoiceDamageTypeSchema = Schema.Struct({
   kind: Schema.Literal("choice"),
-  label: surfaceIdentity(Schema.String, "label"),
+  label: surfaceProjection(Schema.String, "derived-label"),
   options: nonEmpty(DamageTypeSchema),
 });
 
 export const DamageTypeChoiceTableSchema = nonEmpty(
   Schema.Struct({
-    id: surfaceIdentity(Schema.String, "id"),
+    id: surfaceProtocol(Schema.String, "optionId"),
     displayName: surfaceIdentity(Schema.String, "displayName"),
     damageType: DamageTypeSchema,
   }),
 );
 
 export const CastTimeEffectModeChoiceSchema = Schema.Struct({
-  label: surfaceIdentity(Schema.String, "label"),
+  label: surfaceProjection(Schema.String, "derived-label"),
   options: nonEmpty(
     Schema.Struct({
-      id: surfaceIdentity(Schema.String, "id"),
+      id: surfaceProtocol(Schema.String, "optionId"),
       displayName: surfaceIdentity(Schema.String, "displayName"),
       effects: optionalExact(
         Schema.suspend(() => nonEmpty(EffectAtomSchema)).annotations({
@@ -394,7 +394,7 @@ function makeHoleSchema<A, I, R>(value: Schema.Schema<A, I, R>) {
 
 export const CastTimeChoiceAbilitySchema = Schema.Struct({
   kind: Schema.Literal("choice"),
-  label: surfaceIdentity(Schema.String, "label"),
+  label: surfaceProjection(Schema.String, "derived-label"),
   options: nonEmpty(AbilitySchema),
 });
 
@@ -426,7 +426,7 @@ export const DamageTypeRefBaseSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("choice_table"),
     holeId: HoleIdSchema,
-    label: surfaceIdentity(Schema.String, "label"),
+    label: surfaceProjection(Schema.String, "derived-label"),
     options: DamageTypeChoiceTableSchema,
   }),
   Schema.Struct({
@@ -3154,7 +3154,7 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         }),
         options: nonEmpty(
           strictStruct({
-            id: surfaceIdentity(Schema.String, "id"),
+            id: surfaceProtocol(Schema.String, "optionId"),
             displayName: surfaceIdentity(Schema.String, "displayName"),
             operations: nonEmpty(
               Schema.suspend(() => OngoingOperationSchema).annotations({
@@ -4161,10 +4161,10 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
       }),
       Schema.Struct({
         kind: Schema.Literal("choose_effect_mode"),
-        label: surfaceIdentity(Schema.String, "label"),
+        label: surfaceProjection(Schema.String, "derived-label"),
         options: nonEmpty(
           Schema.Struct({
-            id: surfaceIdentity(Schema.String, "id"),
+            id: surfaceProtocol(Schema.String, "optionId"),
             displayName: surfaceIdentity(Schema.String, "displayName"),
             effects: nonEmpty(OngoingEffectSchema),
           }),
@@ -4651,10 +4651,10 @@ export const ModalActivationMechanicsSchema = Schema.extend(
   Schema.Struct({
     family: Schema.Literal("modal_activation"),
     mode: strictStruct({
-      label: surfaceIdentity(Schema.String, "label"),
+      label: surfaceProjection(Schema.String, "derived-label"),
       options: nonEmpty(
         strictStruct({
-          id: surfaceIdentity(Schema.String, "id"),
+          id: surfaceProtocol(Schema.String, "optionId"),
           displayName: surfaceIdentity(Schema.String, "displayName"),
           castingTime: CastingTimeSchema,
           attachment: AttachmentSchema,
@@ -4863,6 +4863,7 @@ const CreatureAttackEffectAtomSchema = Schema.Union(
 );
 
 export const CreatureAttackRollMechanicsSchema = Schema.Struct({
+  attackAbility: Schema.Union(AbilitySchema, Schema.Literal("spellcasting")),
   attackType: Schema.Literal("melee", "ranged"),
   attackBonus: StatBlockValueSchema,
   reachFeet: optionalExact(Schema.Number),
@@ -5016,13 +5017,13 @@ export const CreatureTraitSchema = Schema.Struct({
 
 export const CastTimeChoiceSizeSchema = Schema.Struct({
   kind: Schema.Literal("choice"),
-  label: surfaceIdentity(Schema.String, "label"),
+  label: surfaceProjection(Schema.String, "derived-label"),
   options: nonEmpty(SizeSchema),
 });
 
 export const CastTimeChoiceCreatureTypeSchema = Schema.Struct({
   kind: Schema.Literal("choice"),
-  label: surfaceIdentity(Schema.String, "label"),
+  label: surfaceProjection(Schema.String, "derived-label"),
   options: nonEmpty(CreatureTypeSchema),
 });
 
@@ -5041,7 +5042,10 @@ export const MagicCircleAffectedCreatureTypeSchema = Schema.Literal(
 export const MagicCircleAffectedCreatureTypeChoiceSchema = strictStruct({
   kind: Schema.Literal("one_or_more_creature_type_choice"),
   chooser: Schema.Literal("caster"),
-  label: surfaceIdentity(Schema.Literal("affected creature types"), "label"),
+  label: surfaceProjection(
+    Schema.Literal("affected creature types"),
+    "derived-label",
+  ),
   selection: Schema.Literal("one_or_more"),
   options: nonEmpty(MagicCircleAffectedCreatureTypeSchema),
 }).pipe(
@@ -5541,7 +5545,7 @@ export const CreatureModeSchema = Schema.Struct({
   label: surfaceProjection(Schema.String, "derived-label"),
   options: nonEmpty(
     Schema.Struct({
-      id: surfaceIdentity(Schema.String, "id"),
+      id: surfaceProtocol(Schema.String, "optionId"),
       displayName: surfaceIdentity(Schema.String, "displayName"),
       overrides: CreatureStatBlockOverridesSchema,
     }),

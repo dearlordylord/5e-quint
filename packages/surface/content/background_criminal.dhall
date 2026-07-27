@@ -42,7 +42,7 @@ let criminal =
           ]
         }
       , description =
-          "Minimum SRD Criminal background facts for ability scores, proficiencies, feat, and equipment."
+          "Criminal. Ability Scores: Dexterity, Constitution, Intelligence. Feat: Alert. Skill Proficiencies: Sleight of Hand and Stealth. Tool Proficiency: Thieves' Tools."
       , id = "background_criminal"
       , kind = "background"
       , name = "Criminal"

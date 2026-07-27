@@ -9,7 +9,7 @@ let sorcerousRestoration =
       { acquiredAtLevel = 5
       , className = "sorcerer"
       , description =
-          "SRD Sorcerer level 5 Sorcerous Restoration source facts. When a Sorcerer finishes a Short Rest, they can regain expended Sorcery Points from the existing Font of Magic pool, up to half Sorcerer level rounded down, and can't use this feature again until finishing a Long Rest."
+          "When you finish a Short Rest, you can regain expended Sorcery Points, but no more than a number equal to half your Sorcerer level (round down). Once you use this feature, you can't do so again until you finish a Long Rest."
       , id = "sorcerer_sorcerous_restoration"
       , kind = "class_feature"
       , mechanics =
@@ -24,7 +24,7 @@ let sorcerousRestoration =
           }
       , name = "Sorcerous Restoration"
       , provenance =
-          { kind = "srd-5.2.1", section = "Classes/Sorcerer.md:127-129" }
+          { kind = "srd-5.2.1", section = "Classes/Sorcerer.md:87-109,127-129" }
       }
 
 in  sorcerousRestoration

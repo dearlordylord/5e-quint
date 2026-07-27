@@ -83,12 +83,12 @@ module battleRuntimeFeatureBridgeExamples {
 
   run test_frenzy_runtime_projection_uses_rage_and_reckless_profiles = {
     all {
-      assert(battleRuntimeFrenzyDamageDice(true, true, true, true, RageUnarmedStrikeAttack, false, 3) == 2),
-      assert(battleRuntimeFrenzyDamageDice(true, true, true, true, RageWeaponAttack, false, 16) == 4),
-      assert(battleRuntimeFrenzyDamageDice(false, true, true, true, RageWeaponAttack, false, 3) == 0),
-      assert(battleRuntimeFrenzyDamageDice(true, false, true, true, RageWeaponAttack, false, 3) == 0),
-      assert(battleRuntimeFrenzyDamageDice(true, true, true, true, RageSpellAttack, false, 3) == 0),
-      assert(battleRuntimeFrenzyDamageDice(true, true, true, true, RageWeaponAttack, true, 3) == 0),
+      assert(battleRuntimeFrenzyDamageDice(true, true, true, true, false, 3) == 2),
+      assert(battleRuntimeFrenzyDamageDice(true, true, true, true, false, 16) == 4),
+      assert(battleRuntimeFrenzyDamageDice(false, true, true, true, false, 3) == 0),
+      assert(battleRuntimeFrenzyDamageDice(true, false, true, true, false, 3) == 0),
+      assert(battleRuntimeFrenzyDamageDice(true, true, true, false, false, 3) == 0),
+      assert(battleRuntimeFrenzyDamageDice(true, true, true, true, true, 3) == 0),
     }
   }
 

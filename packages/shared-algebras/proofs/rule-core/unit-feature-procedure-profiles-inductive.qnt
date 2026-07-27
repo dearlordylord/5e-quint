@@ -345,7 +345,6 @@ module unitFeatureProcedureProfilesInductive {
     nondet rageActive = Set(true, false).oneOf()
     nondet recklessWhileRaging = Set(true, false).oneOf()
     nondet strengthAttack = Set(true, false).oneOf()
-    nondet attackForm = Set(RageWeaponAttack, RageUnarmedStrikeAttack).oneOf()
     val state = initialFrenzyState(
       qRageState.with("occurrence", if (rageActive) RageUntilEndOfNextTurn else NoRageOccurrence),
       qRecklessAttackState
@@ -356,7 +355,6 @@ module unitFeatureProcedureProfilesInductive {
     val result = resolveFrenzy(state, {
       hitWithAttackRoll: true,
       strengthBasedAttack: strengthAttack,
-      attackForm: attackForm,
       barbarianLevel: 3,
       attackDamageType: SlashingDamage,
     })

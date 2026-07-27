@@ -9,7 +9,7 @@ let awaken =
           , section = "Spells/Descriptions-A-D#Awaken"
           }
       , description =
-          "After tracing magical pathways within a precious gemstone, you touch a Beast or Plant creature with Intelligence 3 or less or a natural plant that isn't a creature. The target gains Intelligence 10 and the ability to speak one language you know. A natural plant becomes a Plant creature with movement and senses chosen by the GM. The awakened target has the Charmed condition for 30 days or until you or your allies damage it; when the condition ends, it chooses its attitude toward you."
+          "You spend the casting time tracing magical pathways within a precious gemstone and then touch a Beast or Plant creature with Intelligence 3 or less or a natural plant that isn't a creature. The target gains Intelligence 10 and the ability to speak one language you know. If the target is a natural plant, it becomes a Plant creature and gains the ability to move its limbs, roots, vines, creepers, and so forth, and it gains senses similar to a human's. The GM chooses statistics appropriate for the awakened Plant. The awakened target has the Charmed condition for 30 days or until you or your allies damage it; when the condition ends, it chooses its attitude toward you."
       , mechanics =
           { family = "activation"
           , level = 5

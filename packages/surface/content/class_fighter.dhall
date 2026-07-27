@@ -21,7 +21,7 @@ let fighter =
           }
       , className = "fighter"
       , description =
-          "SRD Fighter class creation facts plus level 1-10 progression, including level 5 Extra Attack and level 9 Indomitable and Tactical Master grants."
+          "As a Fighter, you gain the following class features when you reach the specified Fighter levels. These features are listed in the Fighter Features table."
       , featureGrants =
         [ { level = 1, unitId = "fighter_fighting_style" }
         , { level = 1, unitId = "fighter_second_wind" }
@@ -49,7 +49,7 @@ let fighter =
       , primaryAbilities = { abilities = [ "str", "dex" ], kind = "any_of" }
       , provenance =
         { kind = "srd-5.2.1"
-        , section = "Classes/Fighter.md:3-24,29-34,56-97"
+        , section = "Classes/Fighter.md:3-24,29-34,54,56-97,102-114"
         }
       , savingThrowProficiencies = [ "str", "con" ]
       , skillProficiencyChoice =

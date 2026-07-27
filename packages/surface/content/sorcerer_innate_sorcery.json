@@ -1,7 +1,7 @@
 {
   "acquiredAtLevel": 1,
   "className": "sorcerer",
-  "description": "As a Bonus Action, unleash your magic for 1 minute, increasing Sorcerer spell save DCs by 1 and giving Advantage on Sorcerer spell attack rolls.",
+  "description": "As a Bonus Action, unleash your magic for 1 minute. The spell save DC of your Sorcerer spells increases by 1. You have Advantage on the attack rolls of Sorcerer spells you cast.",
   "id": "sorcerer_innate_sorcery",
   "kind": "class_feature",
   "mechanics": {
@@ -39,9 +39,7 @@
           {
             "kind": "modify_roll_advantage",
             "mode": "advantage",
-            "on": [
-              "spell_attack_roll"
-            ],
+            "on": ["spell_attack_roll"],
             "spellSourceFilter": {
               "className": "sorcerer"
             }

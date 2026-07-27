@@ -2,7 +2,7 @@
   { categories = [ "light", "medium", "shield" ], kind = "trained" }
 , className = "ranger"
 , description =
-    "SRD Ranger class creation and level 1-10 progression facts, including class-list prepared Spell Access, Spell Slots, spellcasting focus facts, level-2 class-feature grants, level-3 subclass selection, Ability Score Improvement feature grants, level-5 Extra Attack, level-6 Roving, level-9 Expertise, and level-10 Tireless."
+    "As a Ranger, you gain the following class features when you reach the specified Ranger levels. These features are listed in the Ranger Features table."
 , featureGrants =
   [ { level = 1, unitId = "ranger_favored_enemy" }
   , { level = 1, unitId = "ranger_weapon_mastery" }
@@ -45,7 +45,7 @@
 , primaryAbilities = { abilities = [ "dex", "wis" ], kind = "all_of" }
 , provenance =
   { kind = "srd-5.2.1"
-  , section = "Classes/Ranger.md:3-24,33-43,58-120,160-213"
+  , section = "Classes/Ranger.md:3-24,29,33-43,58-128,160-213"
   }
 , savingThrowProficiencies = [ "str", "dex" ]
 , skillProficiencyChoice =

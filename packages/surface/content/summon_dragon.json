@@ -41,6 +41,7 @@
         "actions": {
           "attacks": [
             {
+              "attackAbility": "spellcasting",
               "attackBonus": {
                 "kind": "caster_derived",
                 "source": "spell_attack_mod"
@@ -122,13 +123,7 @@
                   "value": {
                     "kind": "choice",
                     "label": "breath-weapon damage type (shared with Shared Resistances)",
-                    "options": [
-                      "acid",
-                      "cold",
-                      "fire",
-                      "lightning",
-                      "poison"
-                    ]
+                    "options": ["acid", "cold", "fire", "lightning", "poison"]
                   }
                 },
                 "kind": "damage"
@@ -149,31 +144,14 @@
           "startingAtLevel": 5
         },
         "immunities": {
-          "conditions": [
-            "charmed",
-            "frightened",
-            "poisoned"
-          ]
+          "conditions": ["charmed", "frightened", "poisoned"]
         },
         "languages": "caster_languages",
         "resistances": {
           "kind": "choose_one_from",
-          "options": [
-            "acid",
-            "cold",
-            "fire",
-            "lightning",
-            "poison"
-          ]
+          "options": ["acid", "cold", "fire", "lightning", "poison"]
         },
-        "saveProficiencies": [
-          "str",
-          "dex",
-          "con",
-          "int",
-          "wis",
-          "cha"
-        ],
+        "saveProficiencies": ["str", "dex", "con", "int", "wis", "cha"],
         "senses": [
           {
             "kind": "blindsight",

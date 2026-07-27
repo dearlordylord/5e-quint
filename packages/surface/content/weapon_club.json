@@ -10,7 +10,7 @@
     "dieSize": 4,
     "kind": "dice"
   },
-  "description": "Club from the SRD weapons table.",
+  "description": "Club — weapons table.",
   "id": "weapon_club",
   "kind": "weapon",
   "mastery": "slow",

@@ -189,7 +189,6 @@ module battleRuntimeFeatureBridge {
     recklessAttackUsedWhileRagingThisTurn: bool,
     hitWithAttackRoll: bool,
     strengthBasedAttack: bool,
-    attackForm: RageAttackForm,
     usedThisTurn: bool,
     barbarianLevel: int
   ): int = {
@@ -201,7 +200,6 @@ module battleRuntimeFeatureBridge {
     resolveFrenzy(state, {
       hitWithAttackRoll: hitWithAttackRoll,
       strengthBasedAttack: strengthBasedAttack,
-      attackForm: attackForm,
       barbarianLevel: barbarianLevel,
       attackDamageType: BludgeoningDamage,
     }).damageDice

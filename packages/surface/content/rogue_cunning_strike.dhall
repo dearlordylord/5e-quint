@@ -39,7 +39,7 @@ let cunningStrike =
           , section = "Classes/Rogue.md:95-150"
           }
       , description =
-          "When you deal Sneak Attack damage, forgo one Sneak Attack die to add one Cunning Strike effect."
+          "You've developed cunning ways to use your Sneak Attack. When you deal Sneak Attack damage, you can add one of the following Cunning Strike effects. Each effect has a die cost, which is the number of Sneak Attack damage dice you must forgo to add the effect. You remove the die before rolling, and the effect occurs immediately after the attack's damage is dealt."
       , mechanics =
           { family = "cunning_strike"
           , trigger =

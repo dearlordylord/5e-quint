@@ -7,7 +7,7 @@
     "dieSize": 8,
     "kind": "dice"
   },
-  "description": "Longbow from the SRD weapons table.",
+  "description": "Longbow — weapons table.",
   "id": "weapon_longbow",
   "kind": "weapon",
   "mastery": "slow",

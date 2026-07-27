@@ -1,14 +1,10 @@
 {
   "armorTraining": {
-    "categories": [
-      "light",
-      "medium",
-      "shield"
-    ],
+    "categories": ["light", "medium", "shield"],
     "kind": "trained"
   },
   "className": "cleric",
-  "description": "SRD Cleric class creation and level 1-10 progression facts, including class-list prepared Spell Access, Spell Slots, spellcasting focus facts, level 1-2 class feature grants, Ability Score Improvement, and level 10 Divine Intervention.",
+  "description": "As a Cleric, you gain the following class features when you reach the specified Cleric levels. These features are listed in the Cleric Features table.",
   "featureGrants": [
     {
       "level": 1,
@@ -49,28 +45,17 @@
   },
   "name": "Cleric",
   "primaryAbilities": {
-    "abilities": [
-      "wis"
-    ],
+    "abilities": ["wis"],
     "kind": "all_of"
   },
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "Classes/Cleric.md:3-24,33-45,56-109,146-255"
+    "section": "Classes/Cleric.md:3-24,29,33-45,56-109,146-255"
   },
-  "savingThrowProficiencies": [
-    "wis",
-    "cha"
-  ],
+  "savingThrowProficiencies": ["wis", "cha"],
   "skillProficiencyChoice": {
     "choose": 2,
-    "options": [
-      "history",
-      "insight",
-      "medicine",
-      "persuasion",
-      "religion"
-    ]
+    "options": ["history", "insight", "medicine", "persuasion", "religion"]
   },
   "spellcasting": {
     "cantripAccess": {
@@ -638,9 +623,7 @@
   "subclassChoices": [
     {
       "level": 3,
-      "options": [
-        "subclass_cleric_life_domain"
-      ]
+      "options": ["subclass_cleric_life_domain"]
     }
   ],
   "toolProficiencies": {

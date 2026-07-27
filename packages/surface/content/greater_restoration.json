@@ -1,5 +1,5 @@
 {
-  "description": "You touch a creature and magically remove one of these effects from it: 1 Exhaustion level, the Charmed or Petrified condition, a curse including the target's Attunement to a cursed magic item, any reduction to one of the target's ability scores, or any reduction to the target's Hit Point maximum.",
+  "description": "You touch a creature and magically remove one of the following effects from it: 1 Exhaustion level; the Charmed or Petrified condition; a curse including the target's Attunement to a cursed magic item; any reduction to one of the target's ability scores; any reduction to the target's Hit Point maximum.",
   "id": "greater_restoration",
   "kind": "spell",
   "mechanics": {
@@ -28,19 +28,14 @@
             "kind": "target",
             "selection": {
               "mode": "one",
-              "targetKinds": [
-                "creature"
-              ]
+              "targetKinds": ["creature"]
             }
           }
         },
         "effects": [
           {
             "condition": {
-              "from": [
-                "charmed",
-                "petrified"
-              ],
+              "from": ["charmed", "petrified"],
               "kind": "choose"
             },
             "kind": "remove_condition"

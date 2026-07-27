@@ -24,7 +24,7 @@ let weapon =
       , category = "martial"
       , usage = "melee"
       , provenance = { kind = "srd-5.2.1", section = "Equipment#Weapons" }
-      , description = "Warhammer from the SRD weapons table."
+      , description = "Warhammer — weapons table."
       , damage =
         { kind = "dice"
         , dice = Some 1

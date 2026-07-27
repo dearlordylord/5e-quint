@@ -1,7 +1,7 @@
 {
   "acquiredAtLevel": 3,
   "className": "cleric",
-  "description": "Your connection to this divine domain ensures you always have certain spells ready. When you reach Cleric levels 3, 5, 7, and 9, you thereafter always have the listed Life Domain spells prepared.",
+  "description": "Your connection to this divine domain ensures you always have certain spells ready. When you reach a Cleric level specified in the Life Domain Spells table, you thereafter always have the listed spells prepared.",
   "id": "cleric_life_domain_spells",
   "kind": "class_feature",
   "mechanics": {
@@ -12,33 +12,19 @@
         "tiers": [
           {
             "minimumClassLevel": 3,
-            "spellIds": [
-              "aid",
-              "bless",
-              "cure_wounds",
-              "lesser_restoration"
-            ]
+            "spellIds": ["aid", "bless", "cure_wounds", "lesser_restoration"]
           },
           {
             "minimumClassLevel": 5,
-            "spellIds": [
-              "mass_healing_word",
-              "revivify"
-            ]
+            "spellIds": ["mass_healing_word", "revivify"]
           },
           {
             "minimumClassLevel": 7,
-            "spellIds": [
-              "aura_of_life",
-              "death_ward"
-            ]
+            "spellIds": ["aura_of_life", "death_ward"]
           },
           {
             "minimumClassLevel": 9,
-            "spellIds": [
-              "greater_restoration",
-              "mass_cure_wounds"
-            ]
+            "spellIds": ["greater_restoration", "mass_cure_wounds"]
           }
         ]
       }

@@ -9,7 +9,7 @@ let naturesWard =
           , section = "Classes/Druid#Nature's Ward"
           }
       , description =
-          "You are immune to the Poisoned condition, and you have Resistance to a damage type associated with your current land choice in the Circle Spells feature. Arid grants Fire resistance, Polar grants Cold resistance, Temperate grants Lightning resistance, and Tropical grants Poison resistance."
+          "You are immune to the Poisoned condition, and you have Resistance to a damage type associated with your current land choice in the Circle Spells feature, as shown in the Nature's Ward table: Arid, Fire; Polar, Cold; Temperate, Lightning; Tropical, Poison."
       , mechanics =
           { family = "passive"
           , grants =
