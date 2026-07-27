@@ -154,4 +154,34 @@ describe("Surface content publication checker", () => {
       rmSync(contentDir, { force: true, recursive: true });
     }
   });
+
+  it("accumulates generation and independently observable artifact issues", () => {
+    const contentDir = mkdtempSync(join(tmpdir(), "surface-artifact-test-"));
+    const publicationDir = join(contentDir, "missing-publication");
+
+    try {
+      const result = runPublicationCheck({
+        repoRoot: contentDir,
+        contentDir,
+        publicationDir,
+        publicationExcerptSource: {
+          buildReferenceIndex: () => {
+            throw new Error("synthetic unreadable RAW");
+          },
+          rulesExcerptForSection: () => {
+            throw new Error("must not resolve without an index");
+          },
+        },
+        compile: () => undefined,
+      });
+
+      expect(result.issues.map((issue) => issue.kind)).toEqual([
+        "publication-generation-failed",
+        "missing-publication-artifact",
+        "missing-publication-artifact",
+      ]);
+    } finally {
+      rmSync(contentDir, { force: true, recursive: true });
+    }
+  });
 });

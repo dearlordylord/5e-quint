@@ -72,7 +72,10 @@ export type SurfacePublicationBuildResult =
     }
   | {
       readonly tag: "invalid";
-      readonly issues: ReadonlyArray<SurfacePublicationBuildIssue>;
+      readonly issues: readonly [
+        SurfacePublicationBuildIssue,
+        ...SurfacePublicationBuildIssue[],
+      ];
     };
 
 const require = createRequire(import.meta.url);
@@ -221,14 +224,32 @@ export function buildSrdSurfacePublication(
       const published = publishRecord(record);
       return published === undefined ? [] : [published];
     });
-  if (
-    issues.length > 0 ||
-    firstUnit === undefined ||
-    firstStatBlock === undefined
-  ) {
-    return { tag: "invalid", issues };
+  if (firstUnit === undefined && issues.length === 0) {
+    issues.push({
+      kind: "excerpt-result-invalid",
+      recordId: srdSurface.units[0].id,
+      section: srdSurface.units[0].provenance.section,
+      message: "Publishing the first Unit failed without a diagnostic",
+    });
+  }
+  if (firstStatBlock === undefined && issues.length === 0) {
+    issues.push({
+      kind: "excerpt-result-invalid",
+      recordId: srdSurface.statBlocks[0].id,
+      section: srdSurface.statBlocks[0].provenance.section,
+      message: "Publishing the first Stat Block failed without a diagnostic",
+    });
+  }
+  const firstIssue = issues[0];
+  if (firstIssue !== undefined) {
+    return { tag: "invalid", issues: [firstIssue, ...issues.slice(1)] };
   }
 
+  // No excerpt can be absent here: publishRecord records an issue on every
+  // invalid path, and the issue branch above returns before publication.
+  if (firstUnit === undefined || firstStatBlock === undefined) {
+    throw new Error("Surface publication lost a record without a diagnostic");
+  }
   const units = [firstUnit, ...remainingUnits] as const;
   const statBlocks = [firstStatBlock, ...remainingStatBlocks] as const;
   const published: PublishedSrdSurface = {

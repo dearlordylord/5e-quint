@@ -971,19 +971,27 @@ function splitSectionPart(part) {
 function resolveLineRanges(part, base, suffix, files, index) {
   const rel = files[0];
   const lineCount = (index.rawByRel.get(rel) ?? "").split("\n").length;
-  const invalidRanges = suffix
+  const rangeParts = suffix
     .split(",")
     .map((range) => range.trim())
-    .filter(Boolean)
-    .filter((range) => {
-      const match = range.match(/^(\d+)(?:-(\d+))?$/);
-      if (!match) {
-        return true;
-      }
-      const start = Number(match[1]);
-      const end = match[2] === undefined ? start : Number(match[2]);
-      return start < 1 || end < start || end > lineCount;
-    });
+    .filter(Boolean);
+  const ranges = [];
+  const invalidRanges = [];
+  if (rangeParts.length === 0) invalidRanges.push(suffix);
+  for (const range of rangeParts) {
+    const match = range.match(/^(\d+)(?:-(\d+))?$/);
+    if (match === null) {
+      invalidRanges.push(range);
+      continue;
+    }
+    const first = Number(match[1]);
+    const last = match[2] === undefined ? first : Number(match[2]);
+    if (first < 1 || last < first || last > lineCount) {
+      invalidRanges.push(range);
+      continue;
+    }
+    ranges.push({ first, last });
+  }
 
   return {
     part,
@@ -991,6 +999,13 @@ function resolveLineRanges(part, base, suffix, files, index) {
     canonical: `${rel}:${suffix}`,
     legacyBase: rel !== base && rel !== `${base}.md`,
     invalidRanges,
+    lineRanges:
+      invalidRanges.length === 0
+        ? {
+            rel,
+            ranges,
+          }
+        : undefined,
   };
 }
 
@@ -2405,6 +2420,24 @@ function proseEvidenceLines(match, index) {
 
 function evidenceForResolution(resolution, index) {
   if (resolution.evidence !== undefined) return resolution.evidence;
+  if (resolution.lineRanges !== undefined) {
+    const { rel, ranges } = resolution.lineRanges;
+    return {
+      rel,
+      lines: ranges.flatMap(({ first, last }) => {
+        const precedingHeading = [...(index.headingsByFile.get(rel) ?? [])]
+          .reverse()
+          .find((heading) => heading.line < first);
+        return [
+          ...(precedingHeading === undefined ? [] : [precedingHeading.line]),
+          ...Array.from(
+            { length: last - first + 1 },
+            (_, offset) => first + offset,
+          ),
+        ];
+      }),
+    };
+  }
   const rel = resolution.canonical.split(/[#:]/, 1)[0];
   if (!index.rawByRel.has(rel)) return { rel, lines: [] };
   const headingName = resolution.canonical.match(/^[^#]+#(.+)$/)?.[1];
@@ -2426,26 +2459,6 @@ function evidenceForResolution(resolution, index) {
       rel,
       lines: anchor === undefined ? [] : proseEvidenceLines(anchor, index),
     };
-  }
-  const ranges = resolution.canonical.match(/^[^:]+:(.+)$/)?.[1];
-  if (ranges !== undefined) {
-    const lines = ranges.split(",").flatMap((part) => {
-      const range = part.trim().match(/^(\d+)(?:-(\d+))?$/);
-      if (range === null) return [];
-      const first = Number(range[1]);
-      const last = Number(range[2] ?? range[1]);
-      const precedingHeading = [...(index.headingsByFile.get(rel) ?? [])]
-        .reverse()
-        .find((heading) => heading.line < first);
-      return [
-        ...(precedingHeading === undefined ? [] : [precedingHeading.line]),
-        ...Array.from(
-          { length: last - first + 1 },
-          (_, offset) => first + offset,
-        ),
-      ];
-    });
-    return { rel, lines };
   }
   return {
     rel,
@@ -2470,21 +2483,16 @@ function exactLocatedTextForResolution(resolution, index) {
     return sourceTextForResolution(resolution, index);
   }
 
-  const rel = resolution.canonical.split(":", 1)[0];
-  const ranges = resolution.canonical.slice(rel.length + 1);
+  if (resolution.lineRanges === undefined) return "";
+  const { rel, ranges } = resolution.lineRanges;
   const rawLines = (index.rawByRel.get(rel) ?? "").split("\n");
   return ranges
-    .split(",")
-    .flatMap((part) => {
-      const range = part.trim().match(/^(\d+)(?:-(\d+))?$/);
-      if (range === null) return [];
-      const first = Number(range[1]);
-      const last = Number(range[2] ?? range[1]);
-      return Array.from(
+    .flatMap(({ first, last }) =>
+      Array.from(
         { length: last - first + 1 },
-        (_, offset) => rawLines[first + offset - 1] ?? "",
-      );
-    })
+        (_, offset) => rawLines[first + offset - 1],
+      ),
+    )
     .join("\n")
     .trim();
 }

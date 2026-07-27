@@ -21,6 +21,7 @@ import dhallJsonToolchain from "../packages/surface/dhall-json-toolchain.json" w
 import {
   buildSrdSurfacePublication,
   describeSurfacePublicationBuildIssue,
+  type SurfacePublicationExcerptSource,
   type SurfacePublicationBuildIssue,
 } from "./srd-surface-publication-artifacts.ts";
 
@@ -73,6 +74,7 @@ export type PublicationCheckOptions = {
   readonly repoRoot: string;
   readonly contentDir: string;
   readonly publicationDir?: string;
+  readonly publicationExcerptSource?: SurfacePublicationExcerptSource;
   readonly compile: (
     sourcePath: string,
     outputPath: string,
@@ -297,8 +299,12 @@ function checkSurfacePublicationArtifacts(
   issues: PublicationIssue[],
   repoRoot: string,
   publicationDir: string,
+  excerptSource?: SurfacePublicationExcerptSource,
 ): void {
-  const publication = buildSrdSurfacePublication();
+  const publication =
+    excerptSource === undefined
+      ? buildSrdSurfacePublication()
+      : buildSrdSurfacePublication({ excerptSource });
   if (publication.tag === "invalid") {
     issues.push(
       ...publication.issues.map((issue) => ({
@@ -306,7 +312,6 @@ function checkSurfacePublicationArtifacts(
         issue,
       })),
     );
-    return;
   }
 
   for (const member of SURFACE_PUBLICATION_MEMBERS) {
@@ -327,7 +332,10 @@ function checkSurfacePublicationArtifacts(
       continue;
     }
 
-    if (!committed.bytes.equals(publication.bytes[member])) {
+    if (
+      publication.tag === "ok" &&
+      !committed.bytes.equals(publication.bytes[member])
+    ) {
       issues.push({
         kind: "out-of-sync-publication-artifact",
         file: displayFile,
@@ -432,7 +440,12 @@ export function runPublicationCheck(
   }
 
   if (options.publicationDir !== undefined) {
-    checkSurfacePublicationArtifacts(issues, repoRoot, options.publicationDir);
+    checkSurfacePublicationArtifacts(
+      issues,
+      repoRoot,
+      options.publicationDir,
+      options.publicationExcerptSource,
+    );
   }
 
   return { issues, sourceCount: sources.length, peerCount: peers.length };
