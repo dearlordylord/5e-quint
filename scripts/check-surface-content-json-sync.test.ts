@@ -5,6 +5,7 @@ import {
   rmSync,
   writeFileSync,
 } from "node:fs";
+import { createRequire } from "node:module";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 
@@ -26,6 +27,7 @@ const validRecord = readFileSync(
   join(process.cwd(), "packages/surface/content/bless.json"),
   "utf8",
 );
+const require = createRequire(import.meta.url);
 
 describe("Surface content publication checker", () => {
   it("returns unreadable RAW input as a typed publication issue", () => {
@@ -87,6 +89,52 @@ describe("Surface content publication checker", () => {
           (issue) => issue.kind === "excerpt-result-invalid",
         ),
       ).toBe(true);
+    }
+  });
+
+  it("preserves real locator diagnostics across the CJS boundary", () => {
+    const candidate: unknown = require("./srd521-surface-authored-corpus-audit.cjs");
+    expect(typeof candidate).toBe("object");
+    expect(candidate).not.toBeNull();
+    if (typeof candidate !== "object" || candidate === null) return;
+    const buildReferenceIndex = Reflect.get(candidate, "buildReferenceIndex");
+    const rulesExcerptForSection = Reflect.get(
+      candidate,
+      "rulesExcerptForSection",
+    );
+    expect(typeof buildReferenceIndex).toBe("function");
+    expect(typeof rulesExcerptForSection).toBe("function");
+    if (
+      typeof buildReferenceIndex !== "function" ||
+      typeof rulesExcerptForSection !== "function"
+    ) {
+      return;
+    }
+    const index: unknown = buildReferenceIndex();
+    const actualAliasResult: unknown = rulesExcerptForSection(
+      "MagicItems#Cloak of Protection",
+      index,
+    );
+
+    const publication = buildSrdSurfacePublication({
+      excerptSource: {
+        buildReferenceIndex: () => index,
+        rulesExcerptForSection: () => actualAliasResult,
+      },
+    });
+
+    expect(publication.tag).toBe("invalid");
+    if (publication.tag === "invalid") {
+      expect(publication.issues[0]).toMatchObject({
+        kind: "record-excerpt-invalid",
+        reason: "invalid-locator",
+        resolutions: [
+          {
+            part: "MagicItems#Cloak of Protection",
+            status: "ok-heading-alias",
+          },
+        ],
+      });
     }
   });
 

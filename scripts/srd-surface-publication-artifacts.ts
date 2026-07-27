@@ -38,7 +38,11 @@ const RulesExcerptResultSchema = Schema.Union(
     rulesExcerpt: RulesExcerptSchema,
   }),
   Schema.Struct({
-    tag: Schema.Literal("invalid-locator", "empty-excerpt"),
+    tag: Schema.Literal(
+      "invalid-locator",
+      "invalid-resolution",
+      "empty-excerpt",
+    ),
     resolutions: Schema.Array(SourceResolutionSchema),
   }),
 );
@@ -73,7 +77,10 @@ export type SurfacePublicationBuildIssue =
       readonly kind: "record-excerpt-invalid";
       readonly recordId: string;
       readonly section: string;
-      readonly reason: "invalid-locator" | "empty-excerpt";
+      readonly reason:
+        | "invalid-locator"
+        | "invalid-resolution"
+        | "empty-excerpt";
       readonly resolutions: ReadonlyArray<SourceResolution>;
     };
 

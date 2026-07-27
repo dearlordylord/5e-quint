@@ -2493,21 +2493,33 @@ function sourceTextForResolution(resolution, index) {
 
 function exactLocatedTextForResolution(resolution, index) {
   if (resolution.status !== "ok-line-range") {
-    return sourceTextForResolution(resolution, index);
+    return {
+      tag: "ok",
+      text: sourceTextForResolution(resolution, index),
+    };
   }
 
-  if (resolution.lineRanges === undefined) return "";
+  if (resolution.lineRanges === undefined) {
+    return { tag: "invalid-resolution" };
+  }
   const { rel, ranges } = resolution.lineRanges;
   const rawLines = (index.rawByRel.get(rel) ?? "").split("\n");
-  return ranges
-    .flatMap(({ first, last }) =>
-      Array.from(
-        { length: last - first + 1 },
-        (_, offset) => rawLines[first + offset - 1],
-      ),
-    )
-    .join("\n")
-    .trim();
+  return {
+    tag: "ok",
+    text: ranges
+      .flatMap(({ first, last }) =>
+        Array.from(
+          { length: last - first + 1 },
+          (_, offset) => rawLines[first + offset - 1],
+        ),
+      )
+      .join("\n")
+      .trim(),
+  };
+}
+
+function excerptResolutionDiagnostics(resolutions) {
+  return resolutions.map(({ part, status }) => ({ part, status }));
 }
 
 function rulesExcerptForSection(section, index) {
@@ -2518,18 +2530,27 @@ function rulesExcerptForSection(section, index) {
   if (invalid.length > 0) {
     return {
       tag: "invalid-locator",
-      resolutions: invalid,
+      resolutions: excerptResolutionDiagnostics(invalid),
     };
   }
 
-  const rulesExcerpt = resolutions
-    .map((resolution) => exactLocatedTextForResolution(resolution, index))
+  const located = resolutions.map((resolution) =>
+    exactLocatedTextForResolution(resolution, index),
+  );
+  if (located.some((result) => result.tag === "invalid-resolution")) {
+    return {
+      tag: "invalid-resolution",
+      resolutions: excerptResolutionDiagnostics(resolutions),
+    };
+  }
+  const rulesExcerpt = located
+    .map((result) => result.text)
     .filter(Boolean)
     .join("\n\n");
   return rulesExcerpt.length === 0
     ? {
         tag: "empty-excerpt",
-        resolutions,
+        resolutions: excerptResolutionDiagnostics(resolutions),
       }
     : {
         tag: "ok",
