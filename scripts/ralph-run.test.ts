@@ -260,6 +260,32 @@ const makeCleanRepository = () => {
   return root;
 };
 
+const writePrerequisiteOnlyCodex = (fakeBin: string) => {
+  const fakeCodex = join(fakeBin, "codex");
+  writeFileSync(
+    fakeCodex,
+    [
+      "#!/usr/bin/env bash",
+      'echo "unexpected codex invocation" >&2',
+      "exit 99",
+      "",
+    ].join("\n"),
+  );
+  chmodSync(fakeCodex, 0o755);
+};
+
+const makePrerequisiteOnlyCodexBin = () => {
+  const fakeBin = mkdtempSync(join(tmpdir(), "ralph-codex-test-bin-"));
+  roots.push(fakeBin);
+  writePrerequisiteOnlyCodex(fakeBin);
+  return fakeBin;
+};
+
+const environmentWithPrerequisiteOnlyCodex = () => {
+  const fakeBin = makePrerequisiteOnlyCodexBin();
+  return { ...process.env, PATH: `${fakeBin}:${process.env.PATH ?? ""}` };
+};
+
 const addLockProbe = (root: string) => {
   const path = join(root, "scripts", "lock-probe.sh");
   writeFileSync(
@@ -807,7 +833,11 @@ describe("Ralph launcher boundaries", () => {
     const positiveLimit = spawnSync(
       "bash",
       [runnerPath, "missing-plan.md", "--implementation-round-limit", "7"],
-      { cwd: repositoryRoot, encoding: "utf8" },
+      {
+        cwd: repositoryRoot,
+        encoding: "utf8",
+        env: environmentWithPrerequisiteOnlyCodex(),
+      },
     );
     expect(positiveLimit.status).not.toBe(0);
     expect(positiveLimit.stderr).toContain("plan file not found");
@@ -1985,7 +2015,11 @@ describe("Ralph launcher boundaries", () => {
     const result = spawnSync(
       "bash",
       ["scripts/ralph-run.sh", "plan.md", "--run-id", "untracked-run"],
-      { cwd: root, encoding: "utf8" },
+      {
+        cwd: root,
+        encoding: "utf8",
+        env: environmentWithPrerequisiteOnlyCodex(),
+      },
     );
     expect(result.status).toBe(1);
     expect(result.stderr).toContain(
@@ -2027,6 +2061,7 @@ describe("Ralph launcher boundaries", () => {
       ].join("\n"),
     );
     chmodSync(fakePnpm, 0o755);
+    writePrerequisiteOnlyCodex(fakeBin);
 
     const result = spawnSync(
       "bash",
@@ -2062,7 +2097,11 @@ describe("Ralph launcher boundaries", () => {
       const result = spawnSync(
         "bash",
         ["scripts/ralph-run.sh", "plan.md", "--run-id", "second-run"],
-        { cwd: root, encoding: "utf8" },
+        {
+          cwd: root,
+          encoding: "utf8",
+          env: environmentWithPrerequisiteOnlyCodex(),
+        },
       );
       expect(result.status).toBe(1);
       expect(result.stderr).toContain(
