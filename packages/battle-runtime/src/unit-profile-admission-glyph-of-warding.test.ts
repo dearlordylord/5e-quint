@@ -448,7 +448,6 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       ...glyph,
       id: parseSharedUnitId("synthetic_completed_mark"),
       name: "Synthetic Completed Mark",
-      description: "Synthetic durable mark record for identity-free tests.",
     } satisfies SpellRecord;
 
     expect(profile).toEqual({
@@ -492,8 +491,6 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       ...glyph,
       id: parseSharedUnitId("synthetic_delayed_burst_mark"),
       name: "Synthetic Delayed Burst Mark",
-      description:
-        "Synthetic delayed mark record for identity-free release tests.",
     } satisfies SpellRecord;
     const glyphMechanics = requireGlyphMechanics(glyph);
     const renamedDamageTypeHole = {
@@ -564,8 +561,6 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       ...glyph,
       id: parseSharedUnitId("synthetic_delayed_spell_mark"),
       name: "Synthetic Delayed Spell Mark",
-      description:
-        "Synthetic delayed mark record for stored-spell release tests.",
     } satisfies SpellRecord;
     expect(profile).toEqual({
       kind: "glyphStoredSpellReleaseProfile",
@@ -730,7 +725,6 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     ]).filter((ref) => ref !== undefined);
     const storedBindings = JSON.stringify(duplicated.procedureBindings);
     expect(storedBindings).not.toContain(guidingBolt.name);
-    expect(storedBindings).not.toContain(guidingBolt.description);
     expect(storedBindings).not.toContain(guidingBolt.provenance.section);
     expect(originalRefs).toHaveLength(2);
     expect(new Set(originalRefs).size).toBe(2);

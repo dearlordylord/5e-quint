@@ -16670,14 +16670,17 @@ function syntheticExtraAttackMbtUnit(
   additionalAttacks: Exclude<ExtraAttackMbtAdditionalAttackCount, 1>,
 ): UnitRecord {
   const unit = unitLibrary.requireUnit("fighter_extra_attack");
-  if (unit.kind !== "class_feature" || unit.mechanics.family !== "passive") {
+  if (unit.kind !== "class_feature") {
+    throw new Error("Expected Fighter Extra Attack class-feature Unit.");
+  }
+  const mechanics = unit.mechanics;
+  if (mechanics.family !== "passive") {
     throw new Error("Expected passive Fighter Extra Attack Unit.");
   }
   return {
     ...unit,
     id: parseSharedUnitId(`test_synthetic_attack_count_${additionalAttacks}`),
     name: `Synthetic Attack Count ${additionalAttacks}`,
-    description: `Synthetic fixture for ${additionalAttacks} additional Attack action attack(s).`,
     provenance: {
       kind: "srd-5.2.1",
       section:
@@ -16686,7 +16689,7 @@ function syntheticExtraAttackMbtUnit(
           : "Classes/Fighter#Three Extra Attacks",
     },
     mechanics: {
-      ...unit.mechanics,
+      ...mechanics,
       grants: [{ kind: "scale_attack_count", additional: additionalAttacks }],
     },
   };

@@ -4824,8 +4824,6 @@ function rogueSneakAttackUnit(input?: {
     name: "Sneak Attack",
     className: "rogue",
     acquiredAtLevel: input?.acquiredAtLevel ?? 1,
-    description:
-      "Once per turn, deal extra damage to one creature hit with an eligible attack roll.",
     provenance: {
       kind: "srd-5.2.1",
       section: "Classes/Rogue#Sneak Attack",
@@ -4873,8 +4871,6 @@ function rogueCunningStrikeUnit(input?: {
     name: "Cunning Strike",
     className: "rogue",
     acquiredAtLevel: input?.acquiredAtLevel ?? 5,
-    description:
-      "When Sneak Attack damage is dealt, forgo one Sneak Attack die to add one Cunning Strike effect.",
     provenance: {
       kind: "srd-5.2.1",
       section: "Classes/Rogue.md:95-150",
@@ -4940,8 +4936,6 @@ function rogueEvasionUnit(input?: {
     name: "Evasion",
     className: "rogue",
     acquiredAtLevel: 7,
-    description:
-      "When a Dexterity Saving Throw would allow half damage, take no damage on success and half damage on failure.",
     provenance: {
       kind: "srd-5.2.1",
       section: "Classes/Rogue#Evasion",
@@ -4969,8 +4963,6 @@ export function uncannyDodgeUnit(): Extract<
     name: "Uncanny Dodge",
     className: "rogue",
     acquiredAtLevel: 5,
-    description:
-      "Take a Reaction to halve damage from an attack roll that hits you.",
     provenance: {
       kind: "srd-5.2.1",
       section: "Classes/Rogue#Uncanny Dodge",
@@ -5001,8 +4993,6 @@ export function cuttingWordsUnit(): Extract<
     name: "Cutting Words",
     className: "bard",
     acquiredAtLevel: 3,
-    description:
-      "Take a Reaction and expend Bardic Inspiration to reduce an attack roll or damage roll.",
     provenance: {
       kind: "srd-5.2.1",
       section: "Classes/Bard#Cutting Words",
@@ -5113,8 +5103,6 @@ export function unsupportedAbilityModifierActivationUnit(): Extract<
     name: "Tireless Test",
     className: "ranger",
     acquiredAtLevel: 10,
-    description:
-      "Unsupported ability-modifier activation resource fixture for admission.",
     provenance: {
       kind: "xphb",
       section: "structured-input-only",
@@ -5160,8 +5148,6 @@ export function barbarianRageUnit(): Extract<
     name: "Rage",
     className: "barbarian",
     acquiredAtLevel: 1,
-    description:
-      "Enter a Rage as a Bonus Action, gaining Bludgeoning, Piercing, and Slashing Resistance and bonus damage for Strength weapon or Unarmed Strike attacks.",
     provenance: {
       kind: "srd-5.2.1",
       section: "Classes/Barbarian#Rage",
@@ -5251,8 +5237,6 @@ function barbarianRecklessAttackUnit(): Extract<
     name: "Reckless Attack",
     className: "barbarian",
     acquiredAtLevel: 2,
-    description:
-      "Attack recklessly to gain Advantage on Strength attack rolls while attacks against you also have Advantage.",
     provenance: {
       kind: "srd-5.2.1",
       section: "Classes/Barbarian#Reckless Attack",
