@@ -1,7 +1,7 @@
 let circleOfTheLand =
       { className = "druid"
       , description =
-          "The Circle of the Land Druid subclass choice. Subclass feature Units are modeled separately from the choice boundary."
+          "The Circle of the Land subclass is detailed after this class's description."
       , featureGrants =
           [ { level = 3, unitId = "druid_circle_of_the_land_spells" }
           , { level = 3, unitId = "druid_lands_aid" }

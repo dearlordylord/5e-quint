@@ -1,6 +1,6 @@
 {
   "className": "rogue",
-  "description": "The Thief Rogue subclass choice. Subclass feature Units are modeled separately from the choice boundary.",
+  "description": "The Thief subclass is detailed after this class's description.",
   "featureGrants": [
     {
       "level": 3,

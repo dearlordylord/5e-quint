@@ -14,7 +14,7 @@ let channelDivinity =
       { acquiredAtLevel = 3
       , className = "paladin"
       , description =
-          "SRD Paladin level 3 Channel Divinity resource container. A Paladin has two uses, regains one expended use on a Short Rest and all expended uses on a Long Rest, and chooses among Paladin Channel Divinity effects when spending the resource. Later Paladin use scaling is deferred to later-level progression work."
+          "You can channel divine energy directly from the Outer Planes, using it to fuel magical effects. Each time you use this class's Channel Divinity, you choose which effect from this class to create. You can use this class's Channel Divinity twice. You regain one of its expended uses when you finish a Short Rest, and you regain all expended uses when you finish a Long Rest."
       , id = "paladin_channel_divinity"
       , kind = "class_feature"
       , mechanics =

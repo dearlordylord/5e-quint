@@ -1,6 +1,6 @@
 let dragonborn =
       { creatureType = "humanoid"
-      , description = "Dragonborn species source facts for character creation admission."
+      , description = "As a Dragonborn, you have these special traits."
       , draconicAncestry =
         { damageType =
           { kind = "choice_table"

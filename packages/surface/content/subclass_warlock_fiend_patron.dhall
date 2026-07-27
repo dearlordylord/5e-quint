@@ -1,7 +1,7 @@
 let fiendPatron =
       { className = "warlock"
       , description =
-          "The Fiend Patron Warlock subclass choice. Subclass feature Units are modeled separately from the choice boundary."
+          "The Fiend Patron subclass is detailed after this class's description."
       , featureGrants =
           [ { level = 3, unitId = "warlock_fiend_spells" }
           , { level = 3, unitId = "warlock_dark_ones_blessing" }

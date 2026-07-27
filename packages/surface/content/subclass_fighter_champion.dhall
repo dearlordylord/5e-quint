@@ -1,7 +1,7 @@
 let champion =
       { className = "fighter"
       , description =
-          "The Champion Fighter subclass choice. Subclass feature Units are promoted separately from the choice boundary."
+          "The Champion subclass is detailed after this class's description."
       , featureGrants =
         [ { level = 3, unitId = "fighter_improved_critical" }
         , { level = 3, unitId = "fighter_remarkable_athlete" }

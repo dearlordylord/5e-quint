@@ -1,6 +1,6 @@
 {
   "className": "fighter",
-  "description": "The Champion Fighter subclass choice. Subclass feature Units are promoted separately from the choice boundary.",
+  "description": "The Champion subclass is detailed after this class's description.",
   "featureGrants": [
     {
       "level": 3,

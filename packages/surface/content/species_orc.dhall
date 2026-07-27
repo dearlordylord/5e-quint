@@ -1,6 +1,6 @@
 let orc =
       { creatureType = "humanoid"
-      , description = "Minimum SRD Orc aggregate species facts."
+      , description = "As an Orc, you have these special traits."
       , id = "species_orc"
       , kind = "species"
       , name = "Orc"

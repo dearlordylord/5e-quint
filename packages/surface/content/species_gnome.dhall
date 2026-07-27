@@ -1,6 +1,6 @@
 let gnome =
       { creatureType = "humanoid"
-      , description = "Gnome species source facts for Surface catalog admission."
+      , description = "As a Gnome, you have these special traits."
       , id = "species_gnome"
       , kind = "species"
       , name = "Gnome"

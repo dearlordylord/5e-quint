@@ -1,6 +1,6 @@
 {
   "creatureType": "humanoid",
-  "description": "Halfling species source facts for Surface catalog admission.",
+  "description": "As a Halfling, you have these special traits.",
   "id": "species_halfling",
   "kind": "species",
   "name": "Halfling",

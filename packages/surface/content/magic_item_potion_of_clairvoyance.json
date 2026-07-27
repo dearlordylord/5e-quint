@@ -37,10 +37,7 @@
           },
           {
             "kind": "remote_perception",
-            "senses": [
-              "seeing",
-              "hearing"
-            ],
+            "senses": ["seeing", "hearing"],
             "switchCost": "bonus_action"
           }
         ],
@@ -65,7 +62,7 @@
   "name": "Potion of Clairvoyance",
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "MagicItems#PotionOfClairvoyance"
+    "section": "MagicItems#PotionOfClairvoyance; Spells/Descriptions-A-D#Clairvoyance"
   },
   "rarity": "rare",
   "requiresAttunement": false

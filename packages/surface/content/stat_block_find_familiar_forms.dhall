@@ -800,7 +800,7 @@ in  [ { challengeRating = 0.0
   , kind = "statBlock"
   , name = "Imp"
   , provenance =
-    { kind = "srd-5.2.1", section = "Monsters/Monsters-H-L.md:386-413" }
+    { kind = "srd-5.2.1", section = "Monsters/Monsters-H-L.md:386-415" }
   , statBlock =
     { abilityScores =
       { cha = 14, con = 13, dex = 17, int = 11, str = 6, wis = 12 }

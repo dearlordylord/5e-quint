@@ -1,6 +1,6 @@
 let human =
       { creatureType = "humanoid"
-      , description = "Human species source facts for Surface catalog admission."
+      , description = "As a Human, you have these special traits."
       , id = "species_human"
       , kind = "species"
       , name = "Human"

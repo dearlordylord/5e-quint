@@ -1,6 +1,6 @@
 {
   "creatureType": "humanoid",
-  "description": "Tiefling species source facts for character creation admission.",
+  "description": "As a Tiefling, you have the following special traits.",
   "id": "species_tiefling",
   "kind": "species",
   "name": "Tiefling",
@@ -10,10 +10,7 @@
   },
   "size": {
     "kind": "choice",
-    "options": [
-      "medium",
-      "small"
-    ]
+    "options": ["medium", "small"]
   },
   "species": "tiefling",
   "speed": {

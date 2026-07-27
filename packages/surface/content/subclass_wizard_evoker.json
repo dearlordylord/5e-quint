@@ -1,6 +1,6 @@
 {
   "className": "wizard",
-  "description": "The Evoker Wizard subclass choice. Subclass feature Units are modeled separately from the choice boundary.",
+  "description": "The Evoker subclass is detailed after this class's description.",
   "featureGrants": [
     {
       "level": 3,

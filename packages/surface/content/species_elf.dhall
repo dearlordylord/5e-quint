@@ -1,6 +1,6 @@
 let elf =
       { creatureType = "humanoid"
-      , description = "Elf species source facts for character creation admission."
+      , description = "As an Elf, you have these special traits."
       , id = "species_elf"
       , kind = "species"
       , name = "Elf"

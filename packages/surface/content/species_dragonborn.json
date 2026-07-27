@@ -1,6 +1,6 @@
 {
   "creatureType": "humanoid",
-  "description": "Dragonborn species source facts for character creation admission.",
+  "description": "As a Dragonborn, you have these special traits.",
   "draconicAncestry": {
     "damageType": {
       "holeId": "species_dragonborn_draconic_ancestry_damage_type",

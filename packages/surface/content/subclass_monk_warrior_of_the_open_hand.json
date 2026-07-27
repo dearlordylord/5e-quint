@@ -1,6 +1,6 @@
 {
   "className": "monk",
-  "description": "The Warrior of the Open Hand Monk subclass choice. Subclass feature Units are modeled separately from the choice boundary.",
+  "description": "The Warrior of the Open Hand subclass is detailed after this class's description.",
   "featureGrants": [
     {
       "level": 3,

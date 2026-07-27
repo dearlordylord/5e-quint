@@ -7,7 +7,7 @@ let heightenedFocus =
       , provenance =
           { kind = "srd-5.2.1", section = "Classes/Monk.md:142-150" }
       , description =
-          "Your Flurry of Blows, Patient Defense, and Step of the Wind gain benefits. Flurry of Blows can spend 1 Focus Point to make three Unarmed Strikes instead of two. Patient Defense grants Temporary Hit Points equal to two rolls of your Martial Arts die when you expend a Focus Point. Step of the Wind can carry one willing Large-or-smaller creature within 5 feet of yourself until the end of your turn without provoking Opportunity Attacks. Surface owner need: Monk's Focus option execution must accept level-gated option overrides for strike count, Temporary Hit Points from Martial Arts dice, and carried-creature movement."
+          "Your Flurry of Blows, Patient Defense, and Step of the Wind gain benefits. Flurry of Blows can spend 1 Focus Point to make three Unarmed Strikes instead of two. Patient Defense grants Temporary Hit Points equal to two rolls of your Martial Arts die when you expend a Focus Point. Step of the Wind can carry one willing Large-or-smaller creature within 5 feet of yourself until the end of your turn without provoking Opportunity Attacks."
       , mechanics = { family = "passive", grants = [] : List {} }
       }
 

@@ -42,7 +42,8 @@ let potion =
       , requiresAttunement = False
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "MagicItems#PotionOfClairvoyance"
+          , section =
+              "MagicItems#PotionOfClairvoyance; Spells/Descriptions-A-D#Clairvoyance"
           }
       , description =
           "When you drink this potion, you gain the effect of the Clairvoyance spell (no Concentration required)."

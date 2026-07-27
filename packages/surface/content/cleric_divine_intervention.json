@@ -1,7 +1,7 @@
 {
   "acquiredAtLevel": 10,
   "className": "cleric",
-  "description": "As a Magic action, choose any Cleric spell of level 5 or lower that doesn't require a Reaction to cast. As part of the same action, you cast that spell without expending a spell slot or needing Material components. You can't use this feature again until you finish a Long Rest. Surface owner need: session Spell Invocation must model a one-action free cast from the Cleric list with a level cap, non-Reaction casting-time filter, no slot spend, and Material-component suppression.",
+  "description": "As a Magic action, choose any Cleric spell of level 5 or lower that doesn't require a Reaction to cast. As part of the same action, you cast that spell without expending a spell slot or needing Material components. You can't use this feature again until you finish a Long Rest.",
   "id": "cleric_divine_intervention",
   "kind": "class_feature",
   "mechanics": {

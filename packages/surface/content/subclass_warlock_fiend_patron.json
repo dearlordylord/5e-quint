@@ -1,6 +1,6 @@
 {
   "className": "warlock",
-  "description": "The Fiend Patron Warlock subclass choice. Subclass feature Units are modeled separately from the choice boundary.",
+  "description": "The Fiend Patron subclass is detailed after this class's description.",
   "featureGrants": [
     {
       "level": 3,

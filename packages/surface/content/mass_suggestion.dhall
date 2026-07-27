@@ -2,18 +2,11 @@
 --
 -- RAW (Spells / Descriptions M-P / Mass Suggestion):
 --   "You suggest a course of activity — described in no more than
---    two or three sentences — to one or more creatures you can see
---    within range who can hear and understand you. Creatures that
---    can't be Charmed are immune. The suggestion must sound
---    achievable and not involve anything that would obviously harm
---    the target."
---   "Each target must succeed on a Wisdom saving throw or be Charmed
---    by you for the duration or until you or your allies deal damage
---    to the target. A creature that is Charmed by you in this way
---    pursues the course of activity you described to the best of its
---    ability. If the activity can be completed in a shorter time
---    than the spell's duration, the spell ends when the subject
---    finishes what it was asked to do."
+--    25 words — to twelve or fewer creatures you can see within range
+--    that can hear and understand you."
+--   "Each target must succeed on a Wisdom saving throw or have the
+--    Charmed condition for the duration or until you or your allies
+--    deal damage to the target."
 --   "Using a Higher-Level Spell Slot. The duration is longer with a
 --    spell slot of level 7 (10 days), 8 (30 days), or 9 (366 days)."
 --
@@ -56,7 +49,7 @@ let massSuggestion =
           , section = "Spells/Descriptions-M-P#Mass Suggestion"
           }
       , description =
-          "You suggest a course of activity — described in no more than two or three sentences — to one or more creatures you can see within range who can hear and understand you. Creatures that can't be Charmed are immune. The suggestion must sound achievable and not involve anything that would obviously harm the target. Each target must succeed on a Wisdom saving throw or be Charmed by you for the duration or until you or your allies deal damage to the target. A creature that is Charmed by you in this way pursues the course of activity you described to the best of its ability. If the activity can be completed in a shorter time than the spell's duration, the spell ends when the subject finishes what it was asked to do. Using a Higher-Level Spell Slot. The duration is longer with a spell slot of level 7 (10 days), 8 (30 days), or 9 (366 days)."
+          "You suggest a course of activity — described in no more than 25 words — to twelve or fewer creatures you can see within range that can hear and understand you. The suggestion must sound achievable and not involve anything that would obviously deal damage to any of the targets or their allies. Each target must succeed on a Wisdom saving throw or have the Charmed condition for the duration or until you or your allies deal damage to the target. Each Charmed target pursues the suggestion to the best of its ability. The suggested activity can continue for the entire duration, but if the suggested activity can be completed in a shorter time, the spell ends for a target upon completing it. Using a Higher-Level Spell Slot. The duration is longer with a spell slot of level 7 (10 days), 8 (30 days), or 9 (366 days)."
       , mechanics =
           { family = "activation"
           , level = 6
@@ -66,7 +59,7 @@ let massSuggestion =
           , components =
               { v = True
               , s = False
-              , m = Some "a snake's tongue and a honeycomb or a drop of sweet oil"
+              , m = Some "a snake's tongue"
               }
           , duration =
               { kind = "timed"

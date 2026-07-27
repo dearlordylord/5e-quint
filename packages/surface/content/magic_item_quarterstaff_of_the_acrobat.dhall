@@ -37,7 +37,7 @@ let quarterstaffOfTheAcrobat =
           , section = "MagicItems#QuarterstaffOfTheAcrobat"
           }
       , description =
-          "You have a +2 bonus to attack rolls and damage rolls made with this magic weapon. While holding this weapon, you can cause it to emit green Dim Light out to 10 feet, either as a Bonus Action or after you roll Initiative, or you can extinguish the light as a Bonus Action. While holding this weapon, you can take a Bonus Action to alter its form, turning it into a 6-inch rod, a 10-foot pole, or reverting it to a Quarterstaff. Additional properties are form-gated: Acrobatic Assist (Quarterstaff and 10-Foot Pole forms), Attack Deflection (Quarterstaff form), and a thrown-property return rider (Quarterstaff form). This authored subset keeps only the unconditional +2 weapon bonus; omitted riders are recorded in proposal-magic_item_quarterstaff_of_the_acrobat.md."
+          "You have a +2 bonus to attack rolls and damage rolls made with this magic weapon. While holding this weapon, you can cause it to emit green Dim Light out to 10 feet, either as a Bonus Action or after you roll Initiative, or you can extinguish the light as a Bonus Action. While holding this weapon, you can take a Bonus Action to alter its form, turning it into a 6-inch rod, a 10-foot pole, or reverting it to a Quarterstaff. Additional properties are form-gated: Acrobatic Assist (Quarterstaff and 10-Foot Pole forms), Attack Deflection (Quarterstaff form), and a thrown-property return rider (Quarterstaff form)."
       , mechanics =
           { family = "passive"
           , condition = { kind = "holding_item" }

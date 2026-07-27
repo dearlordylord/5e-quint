@@ -31,7 +31,7 @@ let revivify =
           , section = "Spells/Descriptions-Q-R#Revivify"
           }
       , description =
-          "You touch a creature that has died within the last minute. That creature revives with 1 Hit Point. This spell can't revive a creature that has died of old age, nor does it restore any missing body parts. When revival magic is cast, the spirit knows who is casting it and can refuse. Unless otherwise stated, a creature that returns to life keeps conditions, magical contagions, and curses whose durations are still ongoing, returns with 1 fewer Exhaustion level, and is no longer attuned to magic items."
+          "You touch a creature that has died within the last minute. That creature revives with 1 Hit Point. This spell can't revive a creature that has died of old age, nor does it restore any missing body parts."
       , mechanics =
           { family = "activation"
           , level = 3

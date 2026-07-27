@@ -1,6 +1,6 @@
 let dwarf =
       { creatureType = "humanoid"
-      , description = "Dwarf species source facts for character creation admission."
+      , description = "As a Dwarf, you have these special traits."
       , id = "species_dwarf"
       , kind = "species"
       , name = "Dwarf"
