@@ -2,9 +2,11 @@ import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
+import { Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
 import { SRD_SURFACE_PUBLICATION_FILE_NAMES } from "./publication-artifacts.ts";
+import { PublishedSrdSurfaceSchema } from "./schema.ts";
 
 describe("committed SRD Surface publication", () => {
   test("publishes generated rules excerpts without canonical descriptions", () => {
@@ -14,15 +16,13 @@ describe("committed SRD Surface publication", () => {
         import.meta.url,
       ),
     );
-    const aggregate = JSON.parse(readFileSync(aggregatePath, "utf8")) as {
-      readonly units: ReadonlyArray<Record<string, unknown>>;
-      readonly statBlocks: ReadonlyArray<Record<string, unknown>>;
-    };
+    const aggregate = Schema.decodeUnknownSync(PublishedSrdSurfaceSchema)(
+      JSON.parse(readFileSync(aggregatePath, "utf8")),
+    );
 
     for (const record of [...aggregate.units, ...aggregate.statBlocks]) {
       expect(record).not.toHaveProperty("description");
-      expect(record.rulesExcerpt).toEqual(expect.any(String));
-      expect((record.rulesExcerpt as string).trim().length).toBeGreaterThan(0);
+      expect(record.rulesExcerpt.trim().length).toBeGreaterThan(0);
     }
   });
 

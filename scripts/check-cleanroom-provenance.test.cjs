@@ -85,6 +85,32 @@ test("publication excerpts require canonical locators and copy exact RAW", () =>
   assert.equal(alias.resolutions[0].status, "ok-heading-alias");
 });
 
+test("feature anchors resolve to their feature instead of the parent class", () => {
+  const index = auditModule.buildReferenceIndex();
+  const cases = [
+    {
+      section: "Classes/Bard#Bardic Inspiration",
+      canonical: "Classes/Bard.md#Level 1: Bardic Inspiration",
+    },
+    {
+      section: "Classes/Druid#Druidic",
+      canonical: "Classes/Druid.md#Level 1: Druidic",
+    },
+    {
+      section: "Classes/Paladin#Paladin's Smite",
+      canonical: "Classes/Paladin.md#Level 2: Paladin's Smite",
+    },
+  ];
+
+  for (const expected of cases) {
+    const [resolution] = auditModule.resolveSection(expected.section, index);
+    assert.equal(resolution.canonical, expected.canonical);
+    const excerpt = auditModule.rulesExcerptForSection(expected.section, index);
+    assert.equal(excerpt.tag, "ok");
+    assert.ok(excerpt.rulesExcerpt.length < 2_000);
+  }
+});
+
 test("mutations cannot extend immutable identity, Unit, or Stat Block evidence", () => {
   const classRecord = structuredClone(
     records.find((record) => record.id === "class_bard"),

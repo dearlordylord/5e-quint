@@ -18,7 +18,11 @@ import {
   SURFACE_SCHEMA_BOUND_MEASURES,
 } from "../packages/surface/src/surface/publication-artifacts.ts";
 import dhallJsonToolchain from "../packages/surface/dhall-json-toolchain.json" with { type: "json" };
-import { buildSrdSurfacePublication } from "./srd-surface-publication-artifacts.ts";
+import {
+  buildSrdSurfacePublication,
+  describeSurfacePublicationBuildIssue,
+  type SurfacePublicationBuildIssue,
+} from "./srd-surface-publication-artifacts.ts";
 
 export type PublicationIssue =
   | {
@@ -60,9 +64,7 @@ export type PublicationIssue =
     }
   | {
       readonly kind: "publication-generation-failed";
-      readonly recordId: string;
-      readonly section: string;
-      readonly reason: "invalid-locator" | "empty-excerpt" | "invalid-excerpt";
+      readonly issue: SurfacePublicationBuildIssue;
     };
 
 type JsonDocument = unknown;
@@ -301,9 +303,7 @@ function checkSurfacePublicationArtifacts(
     issues.push(
       ...publication.issues.map((issue) => ({
         kind: "publication-generation-failed" as const,
-        recordId: issue.recordId,
-        section: issue.section,
-        reason: issue.reason,
+        issue,
       })),
     );
     return;
@@ -491,7 +491,7 @@ function main(): void {
         );
       } else if (issue.kind === "publication-generation-failed") {
         console.error(
-          `- publication-generation-failed: ${issue.recordId}: ${issue.reason}: ${issue.section}`,
+          `- publication-generation-failed: ${describeSurfacePublicationBuildIssue(issue.issue)}`,
         );
       } else {
         console.error(

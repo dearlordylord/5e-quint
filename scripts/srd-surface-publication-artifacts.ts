@@ -14,43 +14,60 @@ import {
 } from "../packages/surface/src/surface/schema.ts";
 import { srdSurface } from "../packages/surface/src/surface/surface-catalog.ts";
 
-type SourceResolution = {
-  readonly part: string;
-  readonly status: string;
+const SourceResolutionSchema = Schema.Struct({
+  part: Schema.String,
+  status: Schema.String,
+});
+type SourceResolution = Schema.Schema.Type<typeof SourceResolutionSchema>;
+
+const RulesExcerptResultSchema = Schema.Union(
+  Schema.Struct({
+    tag: Schema.Literal("ok"),
+    rulesExcerpt: Schema.String,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("invalid-locator", "empty-excerpt"),
+    resolutions: Schema.Array(SourceResolutionSchema),
+  }),
+);
+
+export type SurfacePublicationExcerptSource = {
+  readonly buildReferenceIndex: () => unknown;
+  readonly rulesExcerptForSection: (section: string, index: unknown) => unknown;
 };
 
-type RulesExcerptResult =
+export type SurfacePublicationBuildIssue =
   | {
-      readonly tag: "ok";
-      readonly rulesExcerpt: string;
+      readonly kind: "audit-module-unavailable";
+      readonly message: string;
     }
   | {
-      readonly tag: "invalid-locator" | "empty-excerpt";
+      readonly kind: "source-index-unreadable";
+      readonly message: string;
+    }
+  | {
+      readonly kind: "excerpt-resolution-failed";
+      readonly recordId: string;
+      readonly section: string;
+      readonly message: string;
+    }
+  | {
+      readonly kind: "excerpt-result-invalid";
+      readonly recordId: string;
+      readonly section: string;
+      readonly message: string;
+    }
+  | {
+      readonly kind: "record-excerpt-invalid";
+      readonly recordId: string;
+      readonly section: string;
+      readonly reason: "invalid-locator" | "empty-excerpt" | "invalid-excerpt";
       readonly resolutions: ReadonlyArray<SourceResolution>;
     };
-
-type AuditModule = {
-  readonly buildReferenceIndex: () => unknown;
-  readonly rulesExcerptForSection: (
-    section: string,
-    index: unknown,
-  ) => RulesExcerptResult;
-};
-
-export type SurfacePublicationBuildIssue = {
-  readonly recordId: string;
-  readonly section: string;
-  readonly reason: "invalid-locator" | "empty-excerpt" | "invalid-excerpt";
-  readonly resolutions: ReadonlyArray<SourceResolution>;
-};
 
 export type SurfacePublicationBuildResult =
   | {
       readonly tag: "ok";
-      readonly artifacts: Readonly<{
-        readonly aggregate: unknown;
-        readonly schema: unknown;
-      }>;
       readonly bytes: SurfacePublicationArtifacts;
     }
   | {
@@ -59,11 +76,75 @@ export type SurfacePublicationBuildResult =
     };
 
 const require = createRequire(import.meta.url);
-const audit =
-  require("./srd521-surface-authored-corpus-audit.cjs") as AuditModule;
 
-export function buildSrdSurfacePublication(): SurfacePublicationBuildResult {
-  const index = audit.buildReferenceIndex();
+const messageForUnknown = (value: unknown): string =>
+  value instanceof Error ? value.message : String(value);
+
+const loadAuditModule = ():
+  | { readonly tag: "ok"; readonly audit: SurfacePublicationExcerptSource }
+  | { readonly tag: "invalid"; readonly message: string } => {
+  let candidate: unknown;
+  try {
+    candidate = require("./srd521-surface-authored-corpus-audit.cjs");
+  } catch (error) {
+    return { tag: "invalid", message: messageForUnknown(error) };
+  }
+  if (typeof candidate !== "object" || candidate === null) {
+    return { tag: "invalid", message: "Audit module did not export an object" };
+  }
+  const buildReferenceIndex = Reflect.get(candidate, "buildReferenceIndex");
+  const rulesExcerptForSection = Reflect.get(
+    candidate,
+    "rulesExcerptForSection",
+  );
+  if (
+    typeof buildReferenceIndex !== "function" ||
+    typeof rulesExcerptForSection !== "function"
+  ) {
+    return {
+      tag: "invalid",
+      message: "Audit module does not export the required excerpt functions",
+    };
+  }
+  return {
+    tag: "ok",
+    audit: {
+      buildReferenceIndex: () => buildReferenceIndex(),
+      rulesExcerptForSection: (section, index) =>
+        rulesExcerptForSection(section, index),
+    },
+  };
+};
+
+export function buildSrdSurfacePublication(
+  options: {
+    readonly excerptSource?: SurfacePublicationExcerptSource;
+  } = {},
+): SurfacePublicationBuildResult {
+  const loaded =
+    options.excerptSource === undefined
+      ? loadAuditModule()
+      : { tag: "ok" as const, audit: options.excerptSource };
+  if (loaded.tag === "invalid") {
+    return {
+      tag: "invalid",
+      issues: [{ kind: "audit-module-unavailable", message: loaded.message }],
+    };
+  }
+  let index: unknown;
+  try {
+    index = loaded.audit.buildReferenceIndex();
+  } catch (error) {
+    return {
+      tag: "invalid",
+      issues: [
+        {
+          kind: "source-index-unreadable",
+          message: messageForUnknown(error),
+        },
+      ],
+    };
+  }
   const issues: SurfacePublicationBuildIssue[] = [];
 
   const publishRecord = <
@@ -74,12 +155,37 @@ export function buildSrdSurfacePublication(): SurfacePublicationBuildResult {
   >(
     record: Record,
   ): (Record & { readonly rulesExcerpt: string }) | undefined => {
-    const result = audit.rulesExcerptForSection(
-      record.provenance.section,
-      index,
+    let candidate: unknown;
+    try {
+      candidate = loaded.audit.rulesExcerptForSection(
+        record.provenance.section,
+        index,
+      );
+    } catch (error) {
+      issues.push({
+        kind: "excerpt-resolution-failed",
+        recordId: record.id,
+        section: record.provenance.section,
+        message: messageForUnknown(error),
+      });
+      return undefined;
+    }
+    const decodedResult = Schema.decodeUnknownEither(RulesExcerptResultSchema)(
+      candidate,
     );
+    if (Either.isLeft(decodedResult)) {
+      issues.push({
+        kind: "excerpt-result-invalid",
+        recordId: record.id,
+        section: record.provenance.section,
+        message: String(decodedResult.left),
+      });
+      return undefined;
+    }
+    const result = decodedResult.right;
     if (result.tag !== "ok") {
       issues.push({
+        kind: "record-excerpt-invalid",
         recordId: record.id,
         section: record.provenance.section,
         reason: result.tag,
@@ -92,6 +198,7 @@ export function buildSrdSurfacePublication(): SurfacePublicationBuildResult {
     );
     if (Either.isLeft(rulesExcerpt)) {
       issues.push({
+        kind: "record-excerpt-invalid",
         recordId: record.id,
         section: record.provenance.section,
         reason: "invalid-excerpt",
@@ -130,10 +237,6 @@ export function buildSrdSurfacePublication(): SurfacePublicationBuildResult {
     statBlocks,
   };
 
-  /*
-   * The canonical schemas established every mechanics field, and excerpt
-   * generation established the only publication-only field.
-   */
   const aggregate = Schema.encodeSync(PublishedSrdSurfaceSchema)(published);
   const artifacts = {
     aggregate,
@@ -141,10 +244,27 @@ export function buildSrdSurfacePublication(): SurfacePublicationBuildResult {
   };
   return {
     tag: "ok",
-    artifacts,
     bytes: {
       aggregate: serializeSurfacePublicationArtifact(artifacts.aggregate),
       schema: serializeSurfacePublicationArtifact(artifacts.schema),
     },
   };
+}
+
+export function describeSurfacePublicationBuildIssue(
+  issue: SurfacePublicationBuildIssue,
+): string {
+  if (
+    issue.kind === "audit-module-unavailable" ||
+    issue.kind === "source-index-unreadable"
+  ) {
+    return `${issue.kind}: ${issue.message}`;
+  }
+  if (
+    issue.kind === "excerpt-resolution-failed" ||
+    issue.kind === "excerpt-result-invalid"
+  ) {
+    return `${issue.kind}: ${issue.recordId}: ${issue.section}: ${issue.message}`;
+  }
+  return `${issue.kind}: ${issue.recordId}: ${issue.reason}: ${issue.section}`;
 }

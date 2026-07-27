@@ -1038,18 +1038,7 @@ function resolveAnchor(part, base, suffix, files, index) {
       const headings = index.headingsByFile.get(rel) ?? [];
       const matches = anchorMatches(headings, target, mode);
       if (matches.length > 0) {
-        const selected = contextualMatch(rel, matches);
-        const selectedIndex = headings.indexOf(selected);
-        const match =
-          headings
-            .slice(0, selectedIndex)
-            .reverse()
-            .find(
-              (heading) =>
-                heading.level < selected.level &&
-                (heading.normalized.includes(target) ||
-                  target.includes(heading.normalized)),
-            ) ?? selected;
+        const match = contextualMatch(rel, matches);
         return {
           part,
           status:

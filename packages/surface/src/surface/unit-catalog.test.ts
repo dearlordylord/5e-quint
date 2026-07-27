@@ -2,7 +2,7 @@ import { existsSync, readFileSync } from "node:fs";
 
 import { Either, Option, Schema } from "effect";
 import { describe, expect, test } from "vitest";
-import { UnitId as UnitIdSchema } from "@dnd/shared/game-facts";
+import { type UnitId, UnitId as UnitIdSchema } from "@dnd/shared/game-facts";
 
 import findFamiliarInput from "../../content/find_familiar.json";
 import flyInput from "../../content/fly.json";
@@ -32,6 +32,7 @@ import {
   JumpMovementReplacementSchema,
   MagicCircleWardMechanicsSchema,
   OnHitTriggerMechanicsSchema,
+  PublishedSrdSurfaceSchema,
   StoneMergeMechanicsSchema,
   TargetSelectionSchema,
 } from "./schema.ts";
@@ -45,21 +46,18 @@ import { CREATURE_TYPES } from "./types.ts";
 import type { Srd521Unit, SrdUnitCollection } from "./unit-catalog.ts";
 import type { StartingEquipmentItemRef, WeaponRecord } from "./types.ts";
 
-const publication = JSON.parse(
-  readFileSync(
-    new URL("../../publication/srd-surface.json", import.meta.url),
-    "utf8",
+const publication = Schema.decodeUnknownSync(PublishedSrdSurfaceSchema)(
+  JSON.parse(
+    readFileSync(
+      new URL("../../publication/srd-surface.json", import.meta.url),
+      "utf8",
+    ),
   ),
-) as {
-  readonly units: ReadonlyArray<{
-    readonly id: string;
-    readonly rulesExcerpt: string;
-  }>;
-};
+);
 const rulesExcerptByUnitId = new Map(
   publication.units.map((unit) => [unit.id, unit.rulesExcerpt]),
 );
-const publishedRulesExcerpt = (unitId: string): string => {
+const publishedRulesExcerpt = (unitId: UnitId): string => {
   const excerpt = rulesExcerptByUnitId.get(unitId);
   expect(excerpt, `Missing published rules excerpt for ${unitId}`).toEqual(
     expect.any(String),

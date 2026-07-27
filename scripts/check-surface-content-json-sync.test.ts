@@ -28,6 +28,29 @@ const validRecord = readFileSync(
 );
 
 describe("Surface content publication checker", () => {
+  it("returns unreadable RAW input as a typed publication issue", () => {
+    const result = buildSrdSurfacePublication({
+      excerptSource: {
+        buildReferenceIndex: () => {
+          throw new Error("synthetic unreadable RAW");
+        },
+        rulesExcerptForSection: () => {
+          throw new Error("must not resolve without an index");
+        },
+      },
+    });
+
+    expect(result).toEqual({
+      tag: "invalid",
+      issues: [
+        {
+          kind: "source-index-unreadable",
+          message: "synthetic unreadable RAW",
+        },
+      ],
+    });
+  });
+
   it("requires the compiler version that owns byte-exact publication", () => {
     expect(
       checkDhallJsonCompilerVersion(`${dhallJsonToolchain.dhallJsonVersion}\n`),
