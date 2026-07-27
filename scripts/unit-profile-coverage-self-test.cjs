@@ -9,7 +9,7 @@ const {
   selectedIdentityReplayEvidenceTag,
 } = require("./unit-profile-coverage-config.cjs");
 const {
-  extractDriverSchemaActionNames,
+  extractDeclaredReplayActionNames,
   extractReplayQntActionSet,
   extractSelectedUnitIdentityReplays,
 } = require("./unit-profile-coverage-claim-scan.cjs");
@@ -2411,6 +2411,17 @@ function runSelfTest(root) {
       testText,
       testPath,
     );
+    const tableOnlyDeclaredActions = extractDeclaredReplayActionNames(
+      testText.replace(/const driverSchema = \{[\s\S]*?\} as const;\n/, ""),
+    );
+    if (
+      !tableOnlyDeclaredActions.has("doReachableAction") ||
+      tableOnlyDeclaredActions.has("doDriverOnly")
+    ) {
+      fail(
+        `Self-test failed: deterministic replay-table actions were not recognized independently of a driver schema, got ${JSON.stringify([...tableOnlyDeclaredActions])}`,
+      );
+    }
     const issues = validateOwnerClaims(
       [],
       [],
@@ -2424,7 +2435,7 @@ function runSelfTest(root) {
             taskId: "QMBT10",
             unitId: "fixture_unit",
             actionNames: ["doDriverOnly"],
-            declaredActions: extractDriverSchemaActionNames(testText),
+            declaredActions: extractDeclaredReplayActionNames(testText),
           },
           {
             ownerPath: "fixture/rule-core-features.mbt.test.ts",
@@ -2432,7 +2443,7 @@ function runSelfTest(root) {
             taskId: "QMBT10",
             unitId: "fixture_unit",
             actionNames: ["doReachableAction"],
-            declaredActions: extractDriverSchemaActionNames(testText),
+            declaredActions: extractDeclaredReplayActionNames(testText),
           },
           {
             ownerPath: "fixture/rule-core-features.mbt.test.ts",
@@ -2440,7 +2451,7 @@ function runSelfTest(root) {
             taskId: "QMBT10",
             unitId: "fixture_unit",
             actionNames: ["doReachableAction", "doDriverOnly"],
-            declaredActions: extractDriverSchemaActionNames(testText),
+            declaredActions: extractDeclaredReplayActionNames(testText),
           },
         ],
         unitIdentityQntReplays: [
@@ -2550,7 +2561,7 @@ function runSelfTest(root) {
     fs.mkdirSync(path.dirname(splitReplayOwnerPath), { recursive: true });
     fs.writeFileSync(splitReplayOwnerPath, splitReplayOwnerText);
     fs.writeFileSync(splitReplayDataPath, splitReplayDataText);
-    const splitDeclaredActions = extractDriverSchemaActionNames(
+    const splitDeclaredActions = extractDeclaredReplayActionNames(
       splitReplayOwnerText,
       splitReplayOwnerPath,
     );

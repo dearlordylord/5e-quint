@@ -55,8 +55,9 @@ Status: implemented, including durable fallen-equipment lifecycle follow-up
   and a generic dropped-object source union.
 - `characterEffectiveLoadout` projects the selected loadout minus objects in
   `groundObjects`; it does not copy ownership or add held/equipped flags.
-- The typed pickup/equip transition validates character, ground position,
-  selected-loadout slot, and object identity before removing the overlay.
+- The typed held-weapon pickup validates character, table-supplied ground
+  position, selected main/off-hand loadout slot, and object identity before
+  removing the overlay. It does not admit armor or Shield pickup/equip.
 - Command Drop already has a narrow canonical held-object projection for
   character loadout in `packages/battle-runtime/src/battle-reducer/turn-end-movement.ts`.
   That helper proves loadout-derived object facts can be owned without copying
@@ -90,8 +91,16 @@ Fallen and merged disposition have intentionally different lifecycles:
   `BattleTablePositionId`, enters
   `BattleState.groundObjects`, and remains there after reversion;
 - fallen selected-loadout objects are unavailable to weapon and held-equipment
-  consumers, including Shillelagh discovery/replay, until the typed pickup/equip
-  transition succeeds.
+  consumers, including Shillelagh discovery/replay, until the typed held-weapon
+  pickup succeeds.
+
+The durable owner remains deliberately narrow for issue 212. Only the original
+owner can restore a fallen selected main/off-hand weapon as held. Fallen armor
+and Shields remain grounded: this increment has no operation that can turn
+pickup into immediate wear. General carried custody, cross-creature pickup,
+non-loadout inventory, armor's RAW 1/5/10-minute donning times, and the Shield
+Utilize action belong to
+[GitHub issue 230](https://github.com/dearlordylord/5e-quint/issues/230).
 
 ## Original Domain-Type Proposal
 
@@ -341,6 +350,7 @@ coverage artifact should change.
 - No app/MCP-local equipment practicality inference.
 - No cross-session active Wild Shape persistence; the existing Character Sheet
   handoff boundary remains unchanged.
-- No broad Utilize/action-object implementation. The pickup/equip commit
-  transition consumes an already-resolved table position and does not invent a
-  second action-economy model.
+- No broad Utilize/action-object implementation. The held-weapon pickup consumes
+  a table-supplied actor-space witness but does not add a second action-economy
+  or geometry owner. Armor and Shield pickup/equip are explicitly unsupported
+  until GitHub issue 230 models carried custody and their RAW donning costs.

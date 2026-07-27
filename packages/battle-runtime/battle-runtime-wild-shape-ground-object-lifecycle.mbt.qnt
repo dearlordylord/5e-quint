@@ -40,7 +40,7 @@ module battleRuntimeWildShapeGroundObjectLifecycleMbt {
     qState' = FallenReverted,
   }
 
-  action doPickupFallen = all {
+  action doPickupFallenWeapon = all {
     qState == FallenReverted,
     qState' = HeldWithThreeUses,
   }
@@ -60,7 +60,7 @@ module battleRuntimeWildShapeGroundObjectLifecycleMbt {
   action step = any {
     doFallOnWildShape,
     doRevertFallen,
-    doPickupFallen,
+    doPickupFallenWeapon,
     doMergeOnWildShape,
     doRevertMerged,
     doStutter,

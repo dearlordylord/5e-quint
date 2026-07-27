@@ -66,7 +66,7 @@ import { admitCharacterWeaponAttackExecutionWeapon } from "./character-weapon-ex
 import {
   activeDruidWildShapeEffect,
   activeDruidWildShapeForm,
-  applyBattleObjectLifecycleTransition,
+  applyBattleHeldWeaponPickup,
   battleStateWithGroundObjects,
   battleAvailableDruidWildShapeKnownForms,
   BattleFillSchema,
@@ -1142,6 +1142,76 @@ test("returns Wild Shape fallen equipment at the explicit object boundary", () =
     13,
   );
   expect(canonicalHeldObjectIdsForActor(reverted.state, druidId)).toEqual([]);
+});
+
+test("does not turn fallen Heavy armor into worn armor through weapon pickup", () => {
+  const armorObjectId = battleObjectId("armor:equipment_chain_mail");
+  const initial = druidWildShapeBattle({
+    armorClass: heavyArmorClassState(),
+    selectedLoadout: {
+      armor: {
+        itemId: armorObjectId,
+        unitId: parseSharedUnitId("equipment_chain_mail"),
+      },
+    },
+  });
+  const assume = wildShapeSubject(initial, {
+    action: "assumeForm",
+    formStatBlockId: ridingHorseId,
+  });
+  const needsDisposition = resolveDruidWildShape(initial, assume);
+  if (needsDisposition.tag !== "needsHoles") {
+    throw new Error("Expected Wild Shape equipment disposition hole.");
+  }
+  const hole = requireWildShapeEquipmentDispositionHole(needsDisposition.holes);
+  const armor = hole.candidates.find(isWildShapeArmorLoadoutObjectRef);
+  if (armor === undefined) {
+    throw new Error("Expected Heavy armor disposition candidate.");
+  }
+  const fallen = requireResolved(
+    resolveDruidWildShape(initial, assume, [
+      wildShapeDispositionFill(hole, [
+        {
+          item: armor,
+          disposition: "falls",
+          fallInActorSpace: {
+            kind: "actorSpace",
+            positionId: druidGroundPositionId,
+          },
+        },
+      ]),
+    ]),
+  );
+  const dismissTurn = restoreBonusAction(fallen.state);
+  const reverted = requireResolved(
+    resolveDruidWildShape(
+      dismissTurn,
+      wildShapeSubject(dismissTurn, { action: "dismiss" }),
+    ),
+  );
+
+  const invalidWeaponPickup = applyBattleHeldWeaponPickup(reverted.state, {
+    interaction: {
+      actorId: druidId,
+      objectId: armorObjectId,
+      actorSpace: {
+        kind: "actorSpace",
+        positionId: druidGroundPositionId,
+      },
+    },
+    loadoutSlot: "mainWeapon",
+  });
+
+  expect(invalidWeaponPickup).toMatchObject({
+    tag: "invalid",
+    reason: "selectedLoadoutMismatch",
+  });
+  expect(reverted.state.groundObjects.get(druidId)?.has(armorObjectId)).toBe(
+    true,
+  );
+  expect(Number(snapshotCreature(reverted.snapshot, druidId).armorClass)).toBe(
+    10,
+  );
 });
 
 test("uses the Shield-compatible unarmored base when armor falls but the Shield remains worn", () => {
@@ -2487,8 +2557,7 @@ test("fallen Wild Shape weapons stay unavailable after reversion until picked up
     reason: "unsupportedSubject",
   });
 
-  const pickedUp = applyBattleObjectLifecycleTransition(revertedSession.state, {
-    kind: "heldWeaponPickedUp",
+  const pickedUp = applyBattleHeldWeaponPickup(revertedSession.state, {
     interaction: {
       actorId: druidId,
       objectId: quarterstaff.objectId,

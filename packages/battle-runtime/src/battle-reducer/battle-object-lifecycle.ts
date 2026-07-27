@@ -18,17 +18,10 @@ export type BattleGroundObjectPlacement = BattleGroundObjectState & {
   readonly objectId: BattleObjectId;
 };
 
-export type BattleObjectLifecycleTransition =
-  | {
-      readonly kind: "heldWeaponPickedUp";
-      readonly interaction: ResolvedBattleObjectInteraction;
-      readonly loadoutSlot: "mainWeapon" | "offHandWeapon";
-    }
-  | {
-      readonly kind: "wornEquipmentEquipped";
-      readonly interaction: ResolvedBattleObjectInteraction;
-      readonly loadoutSlot: "armor" | "shield";
-    };
+export type BattleHeldWeaponPickup = {
+  readonly interaction: ResolvedBattleObjectInteraction;
+  readonly loadoutSlot: "mainWeapon" | "offHandWeapon";
+};
 
 export type ResolvedBattleObjectInteraction = {
   readonly actorId: CombatantId;
@@ -48,7 +41,7 @@ export type BattleGroundObjectPlacementResult =
       readonly message: string;
     };
 
-export type BattleObjectLifecycleTransitionResult =
+export type BattleHeldWeaponPickupResult =
   | { readonly tag: "applied"; readonly state: BattleState }
   | {
       readonly tag: "invalid";
@@ -134,11 +127,11 @@ export function battleObjectIsOnGround(
   return state.groundObjects.get(actorId)?.has(objectId) === true;
 }
 
-export function applyBattleObjectLifecycleTransition(
+export function applyBattleHeldWeaponPickup(
   state: BattleState,
-  transition: BattleObjectLifecycleTransition,
-): BattleObjectLifecycleTransitionResult {
-  const interaction = transition.interaction;
+  pickup: BattleHeldWeaponPickup,
+): BattleHeldWeaponPickupResult {
+  const interaction = pickup.interaction;
   const actor = state.combatants.get(interaction.actorId);
   if (actor === undefined) {
     return {
@@ -170,13 +163,16 @@ export function applyBattleObjectLifecycleTransition(
       message: "Battle object pickup must use the object's ground position.",
     };
   }
-  const loadoutObject = selectedLoadoutObjectForTransition(actor, transition);
+  const loadoutObject =
+    pickup.loadoutSlot === "mainWeapon"
+      ? actor.origin.selectedLoadout.weapon
+      : actor.origin.selectedLoadout.offHandWeapon;
   if (loadoutObject?.itemId !== interaction.objectId) {
     return {
       tag: "invalid",
       reason: "selectedLoadoutMismatch",
       message:
-        "Battle object pickup and equip must restore the matching selected loadout slot.",
+        "Held-weapon pickup must restore the matching selected weapon loadout slot.",
     };
   }
   const groundObjects = new Map(state.groundObjects);
@@ -212,24 +208,6 @@ function battleObjectLifecycleActorIsCharacter(
   actor: BattleCreatureState,
 ): actor is CharacterBattleCreatureState {
   return actor.origin.kind === "character";
-}
-
-function selectedLoadoutObjectForTransition(
-  actor: CharacterBattleCreatureState,
-  transition: BattleObjectLifecycleTransition,
-):
-  | NonNullable<CharacterBattleLoadoutRef["armor"]>
-  | NonNullable<CharacterBattleLoadoutRef["shield"]>
-  | NonNullable<CharacterBattleLoadoutRef["weapon"]>
-  | NonNullable<CharacterBattleLoadoutRef["offHandWeapon"]>
-  | undefined {
-  const loadout = actor.origin.selectedLoadout;
-  if (transition.kind === "heldWeaponPickedUp") {
-    return transition.loadoutSlot === "mainWeapon"
-      ? loadout.weapon
-      : loadout.offHandWeapon;
-  }
-  return transition.loadoutSlot === "armor" ? loadout.armor : loadout.shield;
 }
 
 export function wildShapeGroundObjectPlacement(input: {

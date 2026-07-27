@@ -69,7 +69,7 @@ function scanClaimFiles(root) {
             taskId: unitIdentityReplayMatch[1],
             unitId: unitIdentityReplayMatch[2],
             actionNames: unitIdentityReplayMatch[3].trim().split(/\s+/),
-            declaredActions: extractDriverSchemaActionNames(text, filePath),
+            declaredActions: extractDeclaredReplayActionNames(text, filePath),
           });
         }
         const unitIdentityQntReplayMatch =
@@ -201,7 +201,7 @@ function hasSelectedIdentityReplayHelper(text) {
   );
 }
 
-function extractDriverSchemaActionNames(text, filePath) {
+function extractDeclaredReplayActionNames(text, filePath) {
   return new Set([
     ...[
       ...text.matchAll(
@@ -211,6 +211,9 @@ function extractDriverSchemaActionNames(text, filePath) {
       [...schemaMatch[1].matchAll(/^\s*([A-Za-z_]\w*)\s*:\s*\{\}\s*,/gm)].map(
         (match) => match[1],
       ),
+    ),
+    ...extractTableSelectedUnitIdentityReplays(text).flatMap(
+      (replay) => replay.actionNames,
     ),
     ...extractSelectedIdentityWitnessActionNames(text, filePath),
   ]);
@@ -584,7 +587,7 @@ function escapeRegExp(value) {
 }
 
 module.exports = {
-  extractDriverSchemaActionNames,
+  extractDeclaredReplayActionNames,
   extractReplayQntActionSet,
   extractSelectedUnitIdentityReplays,
   hasSelectedUnitIdentityReplayConsumer,

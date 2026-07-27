@@ -35,7 +35,7 @@ import {
 } from "./battle-runtime-test-support.ts";
 import {
   activeDruidWildShapeEffect,
-  applyBattleObjectLifecycleTransition,
+  applyBattleHeldWeaponPickup,
   discoverBattleActs,
   type BattleFill,
   type BattleRuntimeSession,
@@ -78,7 +78,7 @@ const driverSchema = {
   init: {},
   doFallOnWildShape: {},
   doRevertFallen: {},
-  doPickupFallen: {},
+  doPickupFallenWeapon: {},
   doMergeOnWildShape: {},
   doRevertMerged: {},
   doStutter: {},
@@ -147,7 +147,7 @@ function createDriver() {
       doRevertFallen: () => {
         state = revertForm(state);
       },
-      doPickupFallen: () => {
+      doPickupFallenWeapon: () => {
         state = pickUpQuarterstaff(state);
       },
       doMergeOnWildShape: () => {
@@ -313,8 +313,7 @@ function revertForm(state: RuntimeState): RuntimeState {
 }
 
 function pickUpQuarterstaff(state: RuntimeState): RuntimeState {
-  const result = applyBattleObjectLifecycleTransition(state.battle.state, {
-    kind: "heldWeaponPickedUp",
+  const result = applyBattleHeldWeaponPickup(state.battle.state, {
     interaction: {
       actorId: druidId,
       objectId: quarterstaffObjectId,
