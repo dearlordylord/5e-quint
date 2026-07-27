@@ -436,7 +436,7 @@ function supportedFalseLifeInvocation(session: BattleRuntimeSession) {
     throw new Error("Expected Subtle Spell caster.");
   }
   const procedureRef = subtleFalseLifeSubject(session).procedureRef;
-  const invocation = supportedSpellActs(actor).find(
+  const invocation = supportedSpellActs(session.state, actor).find(
     (candidate) => candidate.sourceProcedureRef === procedureRef,
   );
   if (invocation === undefined) {

@@ -2146,7 +2146,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
 
     expect(hasCondition(target.conditions, "charmed")).toBe(true);
     expect(hasCondition(target.conditions, "incapacitated")).toBe(true);
-    expect(Number(effectiveWalkSpeed(target))).toBe(0);
+    expect(Number(effectiveWalkSpeed(released.state, target))).toBe(0);
     expect(control).toMatchObject({
       kind: "hypnoticPatternControl",
       sourceCombatantId: spellCasterId,
@@ -2199,7 +2199,14 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     ).toBe(false);
     expect(hasCondition(expiredTarget.conditions, "charmed")).toBe(false);
     expect(hasCondition(expiredTarget.conditions, "incapacitated")).toBe(false);
-    expect(Number(effectiveWalkSpeed(expiredTarget))).toBeGreaterThan(0);
+    expect(
+      Number(
+        effectiveWalkSpeed(
+          { ...released.state, combatants: expiredCombatants },
+          expiredTarget,
+        ),
+      ),
+    ).toBeGreaterThan(0);
     expect(expiredCombatants.get(spellCasterId)?.concentration).toEqual(
       readiedConcentration,
     );
@@ -2309,7 +2316,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
 
     expect(hasCondition(target.conditions, "charmed")).toBe(true);
     expect(hasCondition(target.conditions, "incapacitated")).toBe(true);
-    expect(Number(effectiveWalkSpeed(target))).toBe(0);
+    expect(Number(effectiveWalkSpeed(afterDecline.state, target))).toBe(0);
     expect(control).toMatchObject({
       kind: "hypnoticPatternControl",
       sourceProcedureRef: storedSpellProcedureRefInState(

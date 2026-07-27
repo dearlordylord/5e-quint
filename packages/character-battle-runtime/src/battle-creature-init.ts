@@ -70,6 +70,7 @@ import { Either, Option } from "effect";
 import {
   battleCreatureInitIssue,
   characterArmorClassState,
+  characterUnarmoredArmorClassBases,
   characterAttackActionOption,
   characterBaseUnarmedStrikeActionOption,
   characterBattleLoadoutFromBuild,
@@ -110,7 +111,16 @@ export type CharacterBuildCreatureInput = {
   readonly bookOfShadowsPresence?: CharacterBattleBookOfShadowsPresence;
   readonly resourceExpenditures?: readonly CharacterSheetResourceExpenditure[];
   readonly druidWildShapeAvailableForms?: readonly StatBlockRecord[];
-  readonly armorClassBaseChoice?: CharacterSheetArmorClassBaseChoice;
+  readonly armorClassBaseChoices?:
+    | {
+        readonly kind: "currentEquipment";
+        readonly choice: CharacterSheetArmorClassBaseChoice;
+      }
+    | {
+        readonly kind: "byShieldUse";
+        readonly shielded: CharacterSheetArmorClassBaseChoice;
+        readonly unshielded: CharacterSheetArmorClassBaseChoice;
+      };
   readonly pactBladeBondedWeaponItemId?:
     | NonNullable<CharacterBuild["equipment"]["loadout"]["weapon"]>["itemId"]
     | NonNullable<
@@ -256,15 +266,46 @@ export function battleCreatureInitFromCharacterBuild(
     return battleCreatureInitIssue(characterSize.left.message);
   }
 
+  const currentLoadoutUsesShield =
+    input.build.equipment.loadout.shield !== undefined;
+  const currentArmorClassBaseChoice =
+    input.armorClassBaseChoices?.kind === "currentEquipment"
+      ? input.armorClassBaseChoices.choice
+      : input.armorClassBaseChoices?.kind === "byShieldUse"
+        ? currentLoadoutUsesShield
+          ? input.armorClassBaseChoices.shielded
+          : input.armorClassBaseChoices.unshielded
+        : undefined;
   const armorClass = characterArmorClassState({
     build: input.build,
     unitLibrary: input.unitLibrary,
-    ...(input.armorClassBaseChoice === undefined
+    ...(currentArmorClassBaseChoice === undefined
       ? {}
-      : { baseChoice: input.armorClassBaseChoice }),
+      : { baseChoice: currentArmorClassBaseChoice }),
   });
   if (Either.isLeft(armorClass)) {
     return battleCreatureInitIssue(armorClass.left.message);
+  }
+  const shieldedBaseChoice =
+    input.armorClassBaseChoices?.kind === "byShieldUse"
+      ? input.armorClassBaseChoices.shielded
+      : currentLoadoutUsesShield
+        ? currentArmorClassBaseChoice
+        : undefined;
+  const unshieldedBaseChoice =
+    input.armorClassBaseChoices?.kind === "byShieldUse"
+      ? input.armorClassBaseChoices.unshielded
+      : currentLoadoutUsesShield
+        ? undefined
+        : currentArmorClassBaseChoice;
+  const unarmoredArmorClassBases = characterUnarmoredArmorClassBases({
+    build: input.build,
+    unitLibrary: input.unitLibrary,
+    ...(shieldedBaseChoice === undefined ? {} : { shieldedBaseChoice }),
+    ...(unshieldedBaseChoice === undefined ? {} : { unshieldedBaseChoice }),
+  });
+  if (Either.isLeft(unarmoredArmorClassBases)) {
+    return battleCreatureInitIssue(unarmoredArmorClassBases.left.message);
   }
   const classLevels = characterBattleClassLevels(
     input.build,
@@ -427,6 +468,7 @@ export function battleCreatureInitFromCharacterBuild(
         ...proficiencies.right.weaponPropertyFilters,
       ],
       armorClass: armorClass.right,
+      unarmoredArmorClassBases: unarmoredArmorClassBases.right,
       size: characterSize.right,
       speed: { walkFeet: movementFeet(species.right.speed.walkFeet) },
       currentHp,

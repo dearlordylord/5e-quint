@@ -2567,6 +2567,7 @@ function glyphExplosiveRuneDamageLifecycleCheck(input: {
     damageAmountByTargetId.set(
       targetId,
       damageAmountByTypeAfterTargetAdjustments(
+        input.state,
         spellReduction.target,
         spellReduction.damageByType,
       ),
@@ -2865,6 +2866,7 @@ function applyGlyphExplosiveRuneDamage(input: {
       return { tag: "invalid", reason: "spellDamageReductionMismatch" };
     }
     const damageAmount = damageAmountByTypeAfterTargetAdjustments(
+      state,
       spellReduction.target,
       spellReduction.damageByType,
     );

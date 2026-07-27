@@ -537,8 +537,12 @@ describe("L3MSPEC species battle support", () => {
       throw new Error("Expected Dragonborn target combatant.");
     }
 
-    expect(damageAmountAfterTargetAdjustments(target, 9, "fire")).toBe(4);
-    expect(damageAmountAfterTargetAdjustments(target, 9, "cold")).toBe(9);
+    expect(
+      damageAmountAfterTargetAdjustments(result.right.state, target, 9, "fire"),
+    ).toBe(4);
+    expect(
+      damageAmountAfterTargetAdjustments(result.right.state, target, 9, "cold"),
+    ).toBe(9);
   });
 
   test("dwarf_dwarven_resilience admits separate Poison Resistance and Poisoned save Advantage facts", () => {
@@ -745,8 +749,12 @@ describe("L3MSPEC species battle support", () => {
       throw new Error("Expected Dwarven Resilience target combatant.");
     }
 
-    expect(damageAmountAfterTargetAdjustments(target, 9, "poison")).toBe(4);
-    expect(damageAmountAfterTargetAdjustments(target, 9, "fire")).toBe(9);
+    expect(
+      damageAmountAfterTargetAdjustments(result, target, 9, "poison"),
+    ).toBe(4);
+    expect(damageAmountAfterTargetAdjustments(result, target, 9, "fire")).toBe(
+      9,
+    );
   });
 
   test("Goliath Powerful Build admits only Grappled escape ability-check Advantage", () => {

@@ -322,6 +322,7 @@ export function applyDashToActor(
   spentResources: BattleTurnResources,
 ): BattleState {
   const speed = effectiveMovementSpeed(
+    state,
     actor,
     speedKind,
     state.grapples.some((grapple) => grapple.targetId === actor.combatantId),
@@ -1982,11 +1983,12 @@ export function spellSaveDcForCaster(
     8 +
       Number(spellcasting.spellcastingAbilityModifier) +
       spellcasting.proficiencyBonus +
-      activeOngoingFeatureSpellSaveDcBonus(caster),
+      activeOngoingFeatureSpellSaveDcBonus(state, caster),
   );
 }
 
 function activeOngoingFeatureSpellSaveDcBonus(
+  state: BattleState,
   caster: BattleCreatureState,
 ): number {
   if (!isCharacterBattleCreatureState(caster)) {
@@ -1996,7 +1998,7 @@ function activeOngoingFeatureSpellSaveDcBonus(
   if (spellcasting === undefined) {
     return 0;
   }
-  return [...activeOngoingFeatureOccurrencesForCombatant(caster)].reduce(
+  return [...activeOngoingFeatureOccurrencesForCombatant(state, caster)].reduce(
     (total, [key]) => {
       const profile = ongoingFeatureProfileForSourceKey(caster, key);
       if (profile === null) {

@@ -718,6 +718,7 @@ function resolveObjectContactDamage(input: {
             [
               targetId,
               damageAmountByTypeAfterTargetAdjustments(
+                input.state,
                 target,
                 sourcePenalty.damageByType,
               ),

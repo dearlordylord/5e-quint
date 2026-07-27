@@ -280,11 +280,13 @@ function projectDragonbornDamageResistance(
   }
   return expectedProjection({
     dragonbornFireDamageAfter: damageAmountAfterTargetAdjustments(
+      state,
       target,
       9,
       "fire",
     ),
     dragonbornColdDamageAfter: damageAmountAfterTargetAdjustments(
+      state,
       target,
       9,
       "cold",
@@ -414,11 +416,17 @@ function projectDwarvenResilience(
   }).map((projection) => projection.targetId);
   return expectedProjection({
     dwarfPoisonDamageAfter: damageAmountAfterTargetAdjustments(
+      state,
       target,
       9,
       "poison",
     ),
-    dwarfFireDamageAfter: damageAmountAfterTargetAdjustments(target, 9, "fire"),
+    dwarfFireDamageAfter: damageAmountAfterTargetAdjustments(
+      state,
+      target,
+      9,
+      "fire",
+    ),
     dwarfPoisonedSaveAdvantage: poisonedSaveTargets.includes(
       dwarvenResilienceTargetId,
     ),

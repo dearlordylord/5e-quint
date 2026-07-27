@@ -301,6 +301,7 @@ export function resolveDragonsBreathExhaleCommand(
       damageByType,
       spellDamageReductionRoll,
       damageAmount: damageAmountByTypeAfterTargetAdjustments(
+        input.state,
         spellReduction.target,
         spellReduction.damageByType,
       ),
@@ -444,6 +445,7 @@ export function resolveDragonsBreathExhaleCommand(
       );
     }
     const damageAmount = damageAmountByTypeAfterTargetAdjustments(
+      damaged,
       spellReduction.target,
       spellReduction.damageByType,
     );

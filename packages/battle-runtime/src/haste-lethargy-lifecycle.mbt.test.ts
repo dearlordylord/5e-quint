@@ -387,7 +387,7 @@ function hasteLethargyProjection(
     lethargyConditionActive: hasHasteLethargyCondition(target),
     lethargySpeedZeroActive: hasHasteSpeedZero(target),
     targetIncapacitated: hasCondition(target.conditions, "incapacitated"),
-    targetWalkSpeedFeet: Number(effectiveWalkSpeed(target)),
+    targetWalkSpeedFeet: Number(effectiveWalkSpeed(state.battle, target)),
     targetConcentrating:
       target.concentration?.effectKind === "spellEffect" &&
       target.concentration.sourceProcedureRef ===

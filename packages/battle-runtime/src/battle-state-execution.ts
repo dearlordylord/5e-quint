@@ -127,6 +127,7 @@ import type {
 } from "@dnd/shared-algebras/action-economy-algebra";
 import type {
   ArmorClass,
+  ArmorClassBaseSource,
   ArmorClassState,
 } from "@dnd/shared-algebras/armor-class-algebra";
 import type { ConditionState } from "@dnd/shared-algebras/conditions-algebra";
@@ -3886,6 +3887,17 @@ export type BattleCreatureKnockOutLifecycle =
       readonly positiveHpUnconscious: BattlePositiveHpUnconscious;
     };
 
+export type CharacterBattleUnarmoredArmorClassBases = {
+  readonly shielded: Extract<
+    ArmorClassBaseSource,
+    { readonly kind: "ability_sum" }
+  >;
+  readonly unshielded: Extract<
+    ArmorClassBaseSource,
+    { readonly kind: "ability_sum" }
+  >;
+};
+
 type BattleCreatureStateCommon = {
   readonly combatantId: CombatantId;
   readonly initiative: InitiativeScore;
@@ -3922,6 +3934,7 @@ type BattleCreatureStateCommon = {
         readonly druidWildShapeAvailableForms?: readonly StatBlockExecutionAdmission<BattleDruidWildShapeKnownForm>[];
         readonly weaponProficiencies: readonly WeaponProficiency[];
         readonly selectedLoadout: CharacterBattleLoadoutRef;
+        readonly unarmoredArmorClassBases: CharacterBattleUnarmoredArmorClassBases;
         readonly invocationFeatures: readonly CharacterBattleInvocationFeature[];
         readonly speed: BattleWalkSpeed;
         readonly attack: BoundCharacterWeaponAttackActionOption | null;
@@ -3977,6 +3990,7 @@ export type BattleState = {
     BattleExecutionScopeAllocation
   >;
   readonly companions: BattleCompanions;
+  readonly groundObjects: ReadonlyMap<CombatantId, BattleActorGroundObjects>;
   readonly objectOutlines: readonly BattleObjectOutline[];
   readonly lightEmitters: readonly BattleStoredLightEmitter[];
   readonly hidePrerequisites: ReadonlyMap<CombatantId, BattleHidePrerequisite>;
@@ -4508,6 +4522,17 @@ export type BattleDroppedObjectSource =
       readonly procedureRef: BattleProcedureExecutionRef;
       readonly formExecutionRef: BattleStatBlockExecutionScopeRef;
     };
+export type BattleGroundObjectState = {
+  readonly positionId: BattleTablePositionId;
+  readonly source: BattleDroppedObjectSource;
+};
+declare const battleActorGroundObjectsNonEmpty: unique symbol;
+export type BattleActorGroundObjects = ReadonlyMap<
+  BattleObjectId,
+  BattleGroundObjectState
+> & {
+  readonly [battleActorGroundObjectsNonEmpty]: true;
+};
 export type BattleDroppedObjectOutcome = {
   readonly kind: "objectDropped";
   readonly actorId: CombatantId;

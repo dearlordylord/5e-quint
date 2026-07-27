@@ -312,7 +312,7 @@ export function resolveOpportunityAttackCommand(
   );
   const hit = attackRollHitsWithCriticalThreshold(
     effectiveAttackRoll,
-    currentArmorClass(activeEffectArmorClass(target)),
+    currentArmorClass(activeEffectArmorClass(input.state, target)),
     criticalThreshold,
   );
   const critical = attackRollIsCriticalHit(
@@ -457,6 +457,7 @@ export function resolveOpportunityAttackCommand(
     spellMarkedDamageRiders.length > 0 || spellWeaponDamageRiders.length > 0
       ? null
       : fixedAttackDamageAmount(
+          attackRolledState,
           attackRolledState.combatants.get(subject.reactorId),
           target,
           attack,
@@ -472,6 +473,7 @@ export function resolveOpportunityAttackCommand(
     }
     const fixedDamageByTypeBeforeTargetAdjustments =
       fixedAttackDamageByTypeEntries(
+        attackRolledState,
         attackRolledState.combatants.get(subject.reactorId),
         attack,
         effectiveAttackRoll,
@@ -523,6 +525,7 @@ export function resolveOpportunityAttackCommand(
       ),
     };
     const reducedFixedDamageAmount = attackDamageEventAmountForTarget(
+      spellReducedState,
       spellReduction.target,
       reducedDamageEventAfterSpellReduction,
     );
@@ -718,6 +721,7 @@ export function resolveOpportunityAttackCommand(
         spellWeaponDamageRiders,
         spellMarkedDamageRiders,
         ongoingFeatureDamageModifier(
+          attackRolledState,
           attackRolledState.combatants.get(subject.reactorId),
           attack,
         ),
@@ -740,6 +744,7 @@ export function resolveOpportunityAttackCommand(
     spellWeaponDamageRiders,
     spellMarkedDamageRiders,
     ongoingFeatureDamageModifier(
+      attackRolledState,
       attackRolledState.combatants.get(subject.reactorId),
       attack,
     ),
@@ -752,6 +757,7 @@ export function resolveOpportunityAttackCommand(
   }
   const damageSource = attackRolledState.combatants.get(subject.reactorId);
   const damageRollByType = attackDamageByTypeEntries(
+    attackRolledState,
     damageSource,
     attack,
     attack.procedureRef,
@@ -842,6 +848,7 @@ export function resolveOpportunityAttackCommand(
     ),
   };
   const reducedDamageAmount = attackDamageEventAmountForTarget(
+    spellReducedState,
     spellReduction.target,
     reducedDamageEventAfterSpellReduction,
   );

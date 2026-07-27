@@ -41,11 +41,13 @@ import {
 } from "@dnd/character-creation-runtime";
 import {
   characterSheetArmorClassState,
+  characterSheetUnarmoredArmorClassBase,
   characterSheetSpellbookRitualAccessesForBuild,
   type CharacterSheetArmorClassBaseChoice,
 } from "@dnd/character-sheet-runtime";
 import {
   armorClassDelta,
+  type ArmorClassBaseSource,
   type ArmorClassState,
 } from "@dnd/shared-algebras/armor-class-algebra";
 import { isMonkWeapon } from "@dnd/shared-algebras/martial-arts-algebra";
@@ -101,6 +103,48 @@ export function characterArmorClassState(input: {
     bonuses.push(...armorDefenseBonus(unit.right));
   }
   return Either.right({ ...state.right, bonuses });
+}
+
+export function characterUnarmoredArmorClassBases(input: {
+  readonly build: CharacterBuild;
+  readonly unitLibrary: UnitCatalog;
+  readonly shieldedBaseChoice?: CharacterSheetArmorClassBaseChoice;
+  readonly unshieldedBaseChoice?: CharacterSheetArmorClassBaseChoice;
+}): Either.Either<
+  {
+    readonly shielded: Extract<
+      ArmorClassBaseSource,
+      { readonly kind: "ability_sum" }
+    >;
+    readonly unshielded: Extract<
+      ArmorClassBaseSource,
+      { readonly kind: "ability_sum" }
+    >;
+  },
+  BattleCreatureInitIssue
+> {
+  const shielded = characterSheetUnarmoredArmorClassBase({
+    build: input.build,
+    unitLibrary: input.unitLibrary,
+    ...(input.shieldedBaseChoice === undefined
+      ? {}
+      : { baseChoice: input.shieldedBaseChoice }),
+    wieldingShield: true,
+  });
+  if (Either.isLeft(shielded)) {
+    return battleCreatureInitIssue(shielded.left.message);
+  }
+  const unshielded = characterSheetUnarmoredArmorClassBase({
+    build: input.build,
+    unitLibrary: input.unitLibrary,
+    ...(input.unshieldedBaseChoice === undefined
+      ? {}
+      : { baseChoice: input.unshieldedBaseChoice }),
+    wieldingShield: false,
+  });
+  return Either.isLeft(unshielded)
+    ? battleCreatureInitIssue(unshielded.left.message)
+    : Either.right({ shielded: shielded.right, unshielded: unshielded.right });
 }
 
 function armorDefenseBonus(

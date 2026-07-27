@@ -47,7 +47,7 @@ import { activeOngoingFeaturesPreventSpellInvocation } from "./spells-invocation
 
 export function admittedSpellActs(
   actor: BattleCreatureState,
-  state: BattleState | undefined,
+  state: BattleState,
   spellcasting: CharacterBattleSpellcastingState | undefined,
 ): readonly SupportedSpellInvocation[] {
   if (actor.origin.kind !== "character") {
@@ -92,7 +92,7 @@ export function admittedSpellActs(
     ),
   ].filter(
     (invocation) =>
-      !activeOngoingFeaturesPreventSpellInvocation(actor, invocation),
+      !activeOngoingFeaturesPreventSpellInvocation(state, actor, invocation),
   );
   return admittedInvocations;
 }

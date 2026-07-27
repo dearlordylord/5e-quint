@@ -119,7 +119,7 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
     ]);
 
     const target = requireCombatant(resolved.state, spellTargetId);
-    expect(Number(effectiveWalkSpeed(target))).toBe(60);
+    expect(Number(effectiveWalkSpeed(resolved.state, target))).toBe(60);
     expect(target.activeEffects.map((effect) => effect.kind)).toEqual(
       expect.arrayContaining([
         "speedRatio",
@@ -249,7 +249,7 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
     const caster = requireCombatant(ended, spellCasterId);
     expect(caster.concentration).toBeNull();
     expect(hasCondition(caster.conditions, "incapacitated")).toBe(true);
-    expect(Number(effectiveWalkSpeed(caster))).toBe(0);
+    expect(Number(effectiveWalkSpeed(ended, caster))).toBe(0);
     expect(
       caster.activeEffects.some(
         (effect) =>
@@ -285,7 +285,7 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
     expect(caster.concentration).toBeNull();
     expect(hasHastePositiveEffects(target)).toBe(false);
     expect(hasCondition(target.conditions, "incapacitated")).toBe(true);
-    expect(Number(effectiveWalkSpeed(target))).toBe(0);
+    expect(Number(effectiveWalkSpeed(ended, target))).toBe(0);
     expect(hasHasteLethargyCondition(target)).toBe(true);
     expect(hasHasteSpeedZero(target)).toBe(true);
   });
@@ -314,7 +314,7 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
     expect(target.concentration).toBeNull();
     expect(hasSyntheticTargetConcentrationEffect(target)).toBe(false);
     expect(hasCondition(target.conditions, "incapacitated")).toBe(true);
-    expect(Number(effectiveWalkSpeed(target))).toBe(0);
+    expect(Number(effectiveWalkSpeed(ended, target))).toBe(0);
     expect(hasHasteLethargyCondition(target)).toBe(true);
     expect(hasHasteSpeedZero(target)).toBe(true);
   });
@@ -372,7 +372,7 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
     expect(target.concentration).toBeNull();
     expect(hasSyntheticTargetConcentrationEffect(target)).toBe(false);
     expect(hasCondition(target.conditions, "incapacitated")).toBe(true);
-    expect(Number(effectiveWalkSpeed(target))).toBe(0);
+    expect(Number(effectiveWalkSpeed(ended.state, target))).toBe(0);
     expect(hasHasteLethargyCondition(target)).toBe(true);
     expect(hasHasteSpeedZero(target)).toBe(true);
   });
@@ -406,7 +406,7 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
     expect(hasHasteLethargyCondition(target)).toBe(false);
     expect(hasHasteSpeedZero(target)).toBe(false);
     expect(hasCondition(target.conditions, "incapacitated")).toBe(true);
-    expect(Number(effectiveWalkSpeed(target))).toBe(30);
+    expect(Number(effectiveWalkSpeed(afterTargetTurn, target))).toBe(30);
   });
 
   test("duration expiry applies Haste lethargy and clears caster concentration", () => {
@@ -438,7 +438,7 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
     expect(caster.concentration).toBeNull();
     expect(hasHastePositiveEffects(target)).toBe(false);
     expect(hasCondition(target.conditions, "incapacitated")).toBe(true);
-    expect(Number(effectiveWalkSpeed(target))).toBe(0);
+    expect(Number(effectiveWalkSpeed(nextRound, target))).toBe(0);
     expect(hasHasteLethargyCondition(target)).toBe(true);
     expect(hasHasteSpeedZero(target)).toBe(true);
   });
@@ -469,7 +469,7 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
     expect(hasHastePositiveEffects(targetDuringTurn)).toBe(false);
     expect(hasHasteLethargyCondition(targetDuringTurn)).toBe(true);
     expect(hasHasteSpeedZero(targetDuringTurn)).toBe(true);
-    expect(Number(effectiveWalkSpeed(targetDuringTurn))).toBe(0);
+    expect(Number(effectiveWalkSpeed(targetTurn, targetDuringTurn))).toBe(0);
 
     const afterTargetTurn = expectEndTurn(targetTurn, spellTargetId);
     const caster = requireCombatant(afterTargetTurn, spellCasterId);
@@ -480,7 +480,7 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
     expect(hasHasteLethargyCondition(target)).toBe(false);
     expect(hasHasteSpeedZero(target)).toBe(false);
     expect(hasCondition(target.conditions, "incapacitated")).toBe(false);
-    expect(Number(effectiveWalkSpeed(target))).toBe(30);
+    expect(Number(effectiveWalkSpeed(afterTargetTurn, target))).toBe(30);
   });
 
   test("recasting Haste starts the new spell after old Haste lethargy is promoted", () => {
@@ -524,7 +524,7 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
     expect(hasHasteLethargyCondition(target)).toBe(true);
     expect(hasHasteSpeedZero(target)).toBe(true);
     expect(hasCondition(target.conditions, "incapacitated")).toBe(true);
-    expect(Number(effectiveWalkSpeed(target))).toBe(0);
+    expect(Number(effectiveWalkSpeed(second.state, target))).toBe(0);
   });
 });
 

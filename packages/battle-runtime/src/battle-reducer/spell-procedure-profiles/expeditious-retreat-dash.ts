@@ -213,7 +213,13 @@ function resolveExpeditiousRetreatDash(
       "Expeditious Retreat Dash speed kind is not represented for this combatant.",
     );
   }
-  if (activeOngoingFeaturesPreventSpellInvocation(actor, input.invocation)) {
+  if (
+    activeOngoingFeaturesPreventSpellInvocation(
+      input.input.state,
+      actor,
+      input.invocation,
+    )
+  ) {
     return invalidResult(
       input.input.state,
       "staleSubject",

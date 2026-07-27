@@ -198,7 +198,7 @@ function applyPersistentArmorEffect(
   invocation: BattleExecutableSpellInvocation<PersistentArmorInvocation>,
 ): BattleState {
   const target = state.combatants.get(targetId);
-  if (target == null || combatantWearingArmor(target)) {
+  if (target == null || combatantWearingArmor(state, target)) {
     return state;
   }
 

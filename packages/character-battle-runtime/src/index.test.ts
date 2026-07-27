@@ -3448,9 +3448,12 @@ describe("Character Build battle projection", () => {
         build: multiclassUnarmoredDefenseBuild(),
         initiative: initiativeScore(10),
         unitLibrary,
-        armorClassBaseChoice: {
-          kind: "class_feature",
-          unitId: authoredUnitId("monk_unarmored_defense"),
+        armorClassBaseChoices: {
+          kind: "currentEquipment",
+          choice: {
+            kind: "class_feature",
+            unitId: authoredUnitId("monk_unarmored_defense"),
+          },
         },
       }),
     );
@@ -3462,6 +3465,43 @@ describe("Character Build battle projection", () => {
       sourceUnitId: "monk_unarmored_defense",
     });
     expect(currentArmorClass(init.creatureInit.armorClass)).toBe(15);
+  });
+
+  test("retains distinct Shielded and unshielded Armor Class base choices", () => {
+    const init = expectRight(
+      battleCreatureInitFromCharacterBuild({
+        combatantId: combatantId("barbarian-monk-shield-states"),
+        characterId: characterId("character:barbarian-monk-shield-states"),
+        displayName: "Barbarian Monk",
+        build: multiclassUnarmoredDefenseBuild(),
+        initiative: initiativeScore(10),
+        unitLibrary,
+        armorClassBaseChoices: {
+          kind: "byShieldUse",
+          shielded: {
+            kind: "class_feature",
+            unitId: authoredUnitId("barbarian_unarmored_defense"),
+          },
+          unshielded: {
+            kind: "class_feature",
+            unitId: authoredUnitId("monk_unarmored_defense"),
+          },
+        },
+      }),
+    );
+
+    expect(init.creatureInit.kind).toBe("character");
+    if (init.creatureInit.kind !== "character") return;
+    expect(init.creatureInit.unarmoredArmorClassBases).toMatchObject({
+      shielded: {
+        source: "unarmored_defense",
+        sourceUnitId: "barbarian_unarmored_defense",
+      },
+      unshielded: {
+        source: "unarmored_defense",
+        sourceUnitId: "monk_unarmored_defense",
+      },
+    });
   });
 
   test("does not project sheet-owned charge-pool resources into battle init", () => {

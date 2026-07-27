@@ -14,6 +14,7 @@ import {
   armorClassDelta,
   currentArmorClass,
   defaultArmorClassState,
+  defaultUnarmoredArmorClassBase,
   zeroAbilityModifiers,
   type ArmorClassBaseSource,
   type ArmorClassState,
@@ -119,6 +120,20 @@ export function characterSheetArmorClassState(
   });
 }
 
+export function characterSheetUnarmoredArmorClassBase(
+  input: CharacterSheetArmorClassStateInput & {
+    readonly wieldingShield: boolean;
+  },
+): Either.Either<
+  Extract<ArmorClassBaseSource, { readonly kind: "ability_sum" }>,
+  CharacterSheetIssue
+> {
+  return selectedUnarmoredBaseSource(input, {
+    wearingArmor: false,
+    wieldingShield: input.wieldingShield,
+  });
+}
+
 export function characterSheetArmorClass(
   input: CharacterSheetArmorClassStateInput,
 ): Either.Either<ReturnType<typeof currentArmorClass>, CharacterSheetIssue> {
@@ -140,7 +155,10 @@ export function characterSheetArmorClassProjection(
 
 type CharacterSheetArmorClassBaseCandidate = {
   readonly choice: CharacterSheetArmorClassBaseChoice;
-  readonly base: ArmorClassBaseSource;
+  readonly base: Extract<
+    ArmorClassBaseSource,
+    { readonly kind: "ability_sum" }
+  >;
 };
 type CharacterSheetArmorClassEquipmentState = {
   readonly wearingArmor: boolean;
@@ -161,10 +179,13 @@ type ModifyAcSetBaseGrant = Extract<
 function selectedUnarmoredBaseSource(
   input: CharacterSheetArmorClassStateInput,
   equipment: CharacterSheetArmorClassEquipmentState,
-): Either.Either<ArmorClassBaseSource, CharacterSheetIssue> {
+): Either.Either<
+  Extract<ArmorClassBaseSource, { readonly kind: "ability_sum" }>,
+  CharacterSheetIssue
+> {
   const defaultBase = {
     choice: { kind: "default_unarmored" },
-    base: defaultArmorClassState().base,
+    base: defaultUnarmoredArmorClassBase(),
   } as const satisfies CharacterSheetArmorClassBaseCandidate;
   const classFeatureCandidateResult =
     characterSheetClassFeatureArmorClassBaseCandidates(
@@ -292,7 +313,7 @@ function equipmentPredicateMatches(
 function armorClassBaseSourceForFormula(
   sourceUnitId: UnitRecord["id"],
   formula: ModifyAcSetBaseGrant["formula"],
-): ArmorClassBaseSource | undefined {
+): Extract<ArmorClassBaseSource, { readonly kind: "ability_sum" }> | undefined {
   if (formula.kind === "base_plus_dex") {
     return {
       kind: "ability_sum",

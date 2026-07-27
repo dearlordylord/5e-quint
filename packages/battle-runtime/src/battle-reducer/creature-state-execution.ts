@@ -131,9 +131,11 @@ import {
   combatantEffectiveSize,
   removeEndedDruidWildShapeEffects,
 } from "./druid-wild-shape.ts";
+import { characterEffectiveLoadoutFromOrigin } from "./battle-object-lifecycle.ts";
 import { battleMovementBudgetForActor } from "./movement-speed.ts";
 import { spellExecutionFacts } from "./spell-execution-facts.ts";
 import { wildShapeCanUseWornLoadoutObject } from "./wild-shape-equipment.ts";
+import { battleObjectIsOnGround } from "./battle-object-lifecycle.ts";
 import {
   combatantInvisibleBenefitDenied,
   combatantWearingArmorCategory,
@@ -149,6 +151,7 @@ export function isCharacterBattleCreatureState(
 }
 
 export function activeOngoingFeatureOccurrencesForCombatant(
+  state: BattleState,
   combatant: BattleCreatureState,
 ): ReadonlyMap<OngoingFeatureSourceKey, ActiveOngoingFeatureOccurrence> {
   return new Map(
@@ -160,7 +163,7 @@ export function activeOngoingFeatureOccurrencesForCombatant(
           hasCondition(combatant.conditions, condition),
         ) &&
         !profile.lifecycle.earlyEndArmorCategories.some((category) =>
-          combatantWearingArmorCategory(combatant, category),
+          combatantWearingArmorCategory(state, combatant, category),
         )
       );
     }),
@@ -193,9 +196,11 @@ export function normalizeEarlyEndedOngoingFeatures(
   let changed = false;
   for (const [id, combatant] of state.combatants) {
     const activeOngoingFeatureOccurrences =
-      activeOngoingFeatureOccurrencesForCombatant(combatant);
-    const activeEffects =
-      activeEffectsWithoutDetachedBoundHeldWeaponEffects(combatant);
+      activeOngoingFeatureOccurrencesForCombatant(state, combatant);
+    const activeEffects = activeEffectsWithoutDetachedBoundHeldWeaponEffects(
+      state,
+      combatant,
+    );
     if (
       activeOngoingFeatureOccurrences.size !==
         combatant.activeOngoingFeatureOccurrences.size ||
@@ -215,6 +220,7 @@ export function normalizeEarlyEndedOngoingFeatures(
 }
 
 function activeEffectsWithoutDetachedBoundHeldWeaponEffects(
+  state: BattleState,
   combatant: BattleCreatureState,
 ): BattleCreatureState["activeEffects"] {
   if (!isCharacterBattleCreatureState(combatant)) {
@@ -224,15 +230,19 @@ function activeEffectsWithoutDetachedBoundHeldWeaponEffects(
     const boundWeaponItemId = activeEffectBoundHeldWeaponItemId(effect);
     return (
       boundWeaponItemId === null ||
-      combatantCanStillHoldBoundWeaponItem(combatant, boundWeaponItemId)
+      combatantCanStillHoldBoundWeaponItem(state, combatant, boundWeaponItemId)
     );
   });
 }
 
 function combatantCanStillHoldBoundWeaponItem(
+  state: BattleState,
   combatant: CharacterBattleCreatureState,
   itemId: BattleObjectId,
 ): boolean {
+  if (battleObjectIsOnGround(state, combatant.combatantId, itemId)) {
+    return false;
+  }
   const activeWildShape = activeDruidWildShapeEffect(combatant);
   const main = combatant.origin.selectedLoadout.weapon;
   const offHand = combatant.origin.selectedLoadout.offHandWeapon;
@@ -283,7 +293,7 @@ export function combatantSnapshot(
     activeEffectRefs: combatant.activeEffects.flatMap((effect) =>
       "effectRef" in effect ? [effect.effectRef] : [],
     ),
-    armorClass: currentArmorClass(activeEffectArmorClass(combatant)),
+    armorClass: currentArmorClass(activeEffectArmorClass(state, combatant)),
     size: combatantEffectiveSize(combatant),
     zeroHpLifecycle: combatantZeroHpLifecycleSnapshot(combatant),
     conditions: activeConditions(
@@ -379,13 +389,15 @@ export function characterResourceSnapshot(
 }
 
 export function activeEffectArmorClass(
+  state: BattleState,
   combatant: BattleCreatureState,
 ): ArmorClassState {
   const baseArmorClassEffect = combatant.activeEffects.find(
     (effect) => effect.kind === "spellBaseArmorClass",
   );
   const baseArmorClass =
-    combatantDruidWildShapeArmorClassState(combatant) ?? combatant.armorClass;
+    combatantDruidWildShapeArmorClassState(combatant) ??
+    groundEffectiveCharacterArmorClass(state, combatant);
   const withBase =
     baseArmorClassEffect === undefined || baseArmorClass.base.kind === "armor"
       ? baseArmorClass
@@ -436,6 +448,53 @@ export function activeEffectArmorClass(
         ...withBonuses,
         floors: [...withBonuses.floors, ...spellArmorClassFloors],
       };
+}
+
+function groundEffectiveCharacterArmorClass(
+  state: BattleState,
+  combatant: BattleCreatureState,
+): ArmorClassState {
+  if (combatant.origin.kind !== "character") return combatant.armorClass;
+  const selected = combatant.origin.selectedLoadout;
+  const effective = characterEffectiveLoadoutFromOrigin(
+    state,
+    combatant.combatantId,
+    combatant.origin,
+  );
+  const armorGrounded =
+    selected.armor !== undefined && effective.armor === undefined;
+  const shieldGrounded =
+    selected.shield !== undefined && effective.shield === undefined;
+  const armorAvailable = !armorGrounded;
+  const shieldAvailable = !shieldGrounded;
+  const usesShield = selected.shield !== undefined && shieldAvailable;
+  const usesArmoredBase =
+    combatant.armorClass.base.kind === "armor" && !armorGrounded;
+  return {
+    ...combatant.armorClass,
+    base: usesArmoredBase
+      ? combatant.armorClass.base
+      : usesShield
+        ? combatant.origin.unarmoredArmorClassBases.shielded
+        : combatant.origin.unarmoredArmorClassBases.unshielded,
+    bonuses: combatant.armorClass.bonuses.filter((bonus) => {
+      if (bonus.kind === "shield") return shieldAvailable;
+      if (bonus.kind === "wearing_armor") return armorAvailable;
+      return true;
+    }),
+    leftHandUse:
+      combatant.armorClass.leftHandUse === "shield" && !shieldAvailable
+        ? "free"
+        : combatant.armorClass.leftHandUse === "offWeapon" &&
+            effective.offHandWeapon === undefined
+          ? "free"
+          : combatant.armorClass.leftHandUse,
+    rightHandUse:
+      combatant.armorClass.rightHandUse === "mainWeapon" &&
+      effective.weapon === undefined
+        ? "free"
+        : combatant.armorClass.rightHandUse,
+  };
 }
 
 export function combatantZeroHpLifecycleSnapshot(

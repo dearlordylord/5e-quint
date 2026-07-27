@@ -9,6 +9,7 @@ import {
 import { currentActing } from "@dnd/shared-algebras/initiative-algebra";
 import type { ArmorCategory, HandUse } from "@dnd/shared/types";
 import { Match } from "effect";
+import { characterEffectiveLoadoutFromOrigin } from "./battle-object-lifecycle.ts";
 import {
   type WildShapeArmorClassWornKind,
   wildShapeEquipmentDispositionWearsKind,
@@ -100,6 +101,7 @@ export function currentActorId(state: BattleState): CombatantId {
 }
 
 export function combatantWearingArmorCategory(
+  state: BattleState,
   combatant: BattleCreatureState,
   category: ArmorCategory,
 ): boolean {
@@ -109,16 +111,41 @@ export function combatantWearingArmorCategory(
   ) {
     return false;
   }
+  if (
+    combatant.origin.kind === "character" &&
+    combatant.origin.selectedLoadout.armor !== undefined &&
+    characterEffectiveLoadoutFromOrigin(
+      state,
+      combatant.combatantId,
+      combatant.origin,
+    ).armor === undefined
+  ) {
+    return false;
+  }
   return (
     combatant.armorClass.base.kind === "armor" &&
     combatant.armorClass.base.category === category
   );
 }
 
-export function combatantWearingArmor(combatant: BattleCreatureState): boolean {
+export function combatantWearingArmor(
+  state: BattleState,
+  combatant: BattleCreatureState,
+): boolean {
   if (
     combatantActiveDruidWildShape(combatant) !== null &&
     !combatantDruidWildShapeEquipmentWearsKind(combatant, "armor")
+  ) {
+    return false;
+  }
+  if (
+    combatant.origin.kind === "character" &&
+    combatant.origin.selectedLoadout.armor !== undefined &&
+    characterEffectiveLoadoutFromOrigin(
+      state,
+      combatant.combatantId,
+      combatant.origin,
+    ).armor === undefined
   ) {
     return false;
   }
@@ -126,11 +153,23 @@ export function combatantWearingArmor(combatant: BattleCreatureState): boolean {
 }
 
 export function combatantWieldingShield(
+  state: BattleState,
   combatant: BattleCreatureState,
 ): boolean {
   if (
     combatantActiveDruidWildShape(combatant) !== null &&
     !combatantDruidWildShapeEquipmentWearsKind(combatant, "shield")
+  ) {
+    return false;
+  }
+  if (
+    combatant.origin.kind === "character" &&
+    combatant.origin.selectedLoadout.shield !== undefined &&
+    characterEffectiveLoadoutFromOrigin(
+      state,
+      combatant.combatantId,
+      combatant.origin,
+    ).shield === undefined
   ) {
     return false;
   }
@@ -148,6 +187,7 @@ export function grappledBy(
 }
 
 export function combatantHandUses(
+  state: BattleState,
   combatant: BattleCreatureState,
   grapples: readonly BattleGrappleLink[],
 ): { readonly left: HandUse; readonly right: HandUse } {
@@ -159,9 +199,28 @@ export function combatantHandUses(
     combatant,
     combatant.armorClass.rightHandUse,
   );
+  const effectiveLoadout =
+    combatant.origin.kind === "character"
+      ? characterEffectiveLoadoutFromOrigin(
+          state,
+          combatant.combatantId,
+          combatant.origin,
+        )
+      : null;
+  const selectedLoadout =
+    combatant.origin.kind === "character"
+      ? combatant.origin.selectedLoadout
+      : null;
   return {
     left: handUseForOccupancy(
-      leftHandUse,
+      (leftHandUse === "shield" &&
+        selectedLoadout?.shield !== undefined &&
+        effectiveLoadout?.shield === undefined) ||
+        (leftHandUse === "offWeapon" &&
+          selectedLoadout?.offHandWeapon !== undefined &&
+          effectiveLoadout?.offHandWeapon === undefined)
+        ? "free"
+        : leftHandUse,
       grapples.some(
         (grapple) =>
           grapple.grapplerId === combatant.combatantId &&
@@ -169,7 +228,11 @@ export function combatantHandUses(
       ),
     ),
     right: handUseForOccupancy(
-      rightHandUse,
+      rightHandUse === "mainWeapon" &&
+        selectedLoadout?.weapon !== undefined &&
+        effectiveLoadout?.weapon === undefined
+        ? "free"
+        : rightHandUse,
       grapples.some(
         (grapple) =>
           grapple.grapplerId === combatant.combatantId &&

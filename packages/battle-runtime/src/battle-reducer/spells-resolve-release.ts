@@ -866,7 +866,7 @@ export function resolveSpellRelease(
     );
     const ordinaryHit = attackRollHits(
       effectiveAttackRoll,
-      currentArmorClass(activeEffectArmorClass(target)),
+      currentArmorClass(activeEffectArmorClass(input.state, target)),
     );
     const missToHitReplacement = selectedAttackRollMissToHitReplacement({
       state: input.state,
@@ -1077,6 +1077,7 @@ export function resolveSpellRelease(
     ]);
   }
   const spellDamageAmount = damageAmountByTypeAfterTargetAdjustments(
+    input.state,
     target,
     sourcePenalty.damageByType,
   );
@@ -1194,7 +1195,7 @@ export function resolveSpellRelease(
             attackRoll: effectiveReleaseAttackRoll,
             ordinaryHit: attackRollHits(
               effectiveReleaseAttackRoll,
-              currentArmorClass(activeEffectArmorClass(target)),
+              currentArmorClass(activeEffectArmorClass(input.state, target)),
             ),
           }),
           {

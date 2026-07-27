@@ -356,7 +356,15 @@ const WildShapeEquipmentDispositionChoiceSchema: Schema.Schema<WildShapeEquipmen
   Schema.Union(
     Schema.Struct({
       item: WildShapeLoadoutObjectRefSchema,
-      disposition: Schema.Literal("falls", "merges"),
+      disposition: Schema.Literal("falls"),
+      fallInActorSpace: Schema.Struct({
+        kind: Schema.Literal("actorSpace"),
+        positionId: BattleTablePositionId,
+      }),
+    }),
+    Schema.Struct({
+      item: WildShapeLoadoutObjectRefSchema,
+      disposition: Schema.Literal("merges"),
     }),
     Schema.Struct({
       item: WildShapeWornLoadoutObjectRefSchema,
@@ -367,7 +375,18 @@ const WildShapeEquipmentDispositionChoiceSchema: Schema.Schema<WildShapeEquipmen
         }),
         Schema.Struct({
           kind: Schema.Literal("notPracticalToWear"),
-          fallback: Schema.Literal("falls", "merges"),
+          fallback: Schema.Union(
+            Schema.Struct({
+              disposition: Schema.Literal("falls"),
+              fallInActorSpace: Schema.Struct({
+                kind: Schema.Literal("actorSpace"),
+                positionId: BattleTablePositionId,
+              }),
+            }),
+            Schema.Struct({
+              disposition: Schema.Literal("merges"),
+            }),
+          ),
         }),
       ),
     }),

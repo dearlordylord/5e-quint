@@ -670,6 +670,7 @@ describe("Stat Block action ordering MBT", () => {
 
     expect(
       attackDamageByTypeEntries(
+        statBlockActionOrderingBattle(srdGoblinWarrior).state,
         undefined,
         attack,
         attack.procedureRef,

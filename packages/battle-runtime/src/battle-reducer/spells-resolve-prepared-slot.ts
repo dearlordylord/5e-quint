@@ -406,6 +406,7 @@ export function resolvePreparedSlotSpellAct(input: {
     damageAmountByAllocationIndex.set(
       allocationIndex,
       damageAmountByTypeAfterTargetAdjustments(
+        input.input.state,
         target,
         sourcePenalty.damageByType,
       ),

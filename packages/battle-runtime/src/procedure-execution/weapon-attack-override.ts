@@ -106,8 +106,14 @@ type WeaponAttackOverrideUsabilityRuntime<
   Actor,
   SelectedLoadout,
   ActiveDruidWildShape,
+  State,
 > = {
   readonly activeDruidWildShapeEffect: (actor: Actor) => ActiveDruidWildShape;
+  readonly battleObjectIsOnGround: (
+    state: State,
+    actorId: CombatantId,
+    objectId: BattleObjectId,
+  ) => boolean;
   readonly loadoutWeaponItemIsUsableDuringWildShape: (input: {
     readonly loadout: SelectedLoadout;
     readonly activeWildShape: ActiveDruidWildShape;
@@ -124,17 +130,25 @@ function weaponAttackOverrideWeaponIsUsable<
     "activeEffect"
   >,
   ActiveDruidWildShape,
+  State,
 >(
+  state: State,
   actor: Actor,
   invocation: Invocation,
   runtime: WeaponAttackOverrideUsabilityRuntime<
     Actor,
     SelectedLoadout,
-    ActiveDruidWildShape
+    ActiveDruidWildShape,
+    State
   >,
 ): boolean {
   return (
     actor.origin.kind === "character" &&
+    !runtime.battleObjectIsOnGround(
+      state,
+      actor.combatantId,
+      invocation.activeEffect.weaponItemId,
+    ) &&
     runtime.loadoutWeaponItemIsUsableDuringWildShape({
       loadout: actor.origin.selectedLoadout,
       activeWildShape: runtime.activeDruidWildShapeEffect(actor),
@@ -159,13 +173,14 @@ export function discoverWeaponAttackOverrideCastAct<
   runtime: WeaponAttackOverrideUsabilityRuntime<
     Actor,
     SelectedLoadout,
-    ActiveDruidWildShape
+    ActiveDruidWildShape,
+    State
   >,
 ): readonly WeaponAttackOverrideDiscoveryCandidate[] {
   const actor = state.combatants.get(actorId);
   if (
     actor === undefined ||
-    !weaponAttackOverrideWeaponIsUsable(actor, invocation, runtime)
+    !weaponAttackOverrideWeaponIsUsable(state, actor, invocation, runtime)
   ) {
     return [];
   }
@@ -217,6 +232,11 @@ export function weaponAttackOverrideExecutor<
       readonly activeDruidWildShapeEffect: (
         actor: Actor,
       ) => ActiveDruidWildShape;
+      readonly battleObjectIsOnGround: (
+        state: State,
+        actorId: CombatantId,
+        objectId: BattleObjectId,
+      ) => boolean;
       readonly loadoutWeaponItemIsUsableDuringWildShape: (input: {
         readonly loadout: SelectedLoadout;
         readonly activeWildShape: ActiveDruidWildShape;
@@ -313,7 +333,14 @@ export function weaponAttackOverrideExecutor<
         "Weapon attack override caster identity does not match its battle-state key.",
       );
     }
-    if (!weaponAttackOverrideWeaponIsUsable(actor, input.invocation, runtime)) {
+    if (
+      !weaponAttackOverrideWeaponIsUsable(
+        input.input.state,
+        actor,
+        input.invocation,
+        runtime,
+      )
+    ) {
       return invalid(
         "unsupportedSubject",
         "Weapon attack override requires its attached weapon to remain usable.",

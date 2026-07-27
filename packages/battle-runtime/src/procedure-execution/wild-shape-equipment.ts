@@ -1,4 +1,4 @@
-import type { BattleObjectId } from "../identity.ts";
+import type { BattleObjectId, BattleTablePositionId } from "../identity.ts";
 
 export const WILD_SHAPE_EQUIPMENT_DISPOSITIONS = [
   "falls",
@@ -58,19 +58,28 @@ export type WildShapeWearPracticalityWitness =
   | { readonly kind: "practicalToWear" }
   | {
       readonly kind: "notPracticalToWear";
-      readonly fallback: Extract<
-        WildShapeEquipmentDisposition,
-        "falls" | "merges"
-      >;
+      readonly fallback:
+        | {
+            readonly disposition: "falls";
+            readonly fallInActorSpace: WildShapeFallInActorSpaceWitness;
+          }
+        | { readonly disposition: "merges" };
     };
+
+export type WildShapeFallInActorSpaceWitness = {
+  readonly kind: "actorSpace";
+  readonly positionId: BattleTablePositionId;
+};
 
 export type WildShapeEquipmentDispositionChoice =
   | {
       readonly item: WildShapeLoadoutObjectRef;
-      readonly disposition: Extract<
-        WildShapeEquipmentDisposition,
-        "falls" | "merges"
-      >;
+      readonly disposition: "falls";
+      readonly fallInActorSpace: WildShapeFallInActorSpaceWitness;
+    }
+  | {
+      readonly item: WildShapeLoadoutObjectRef;
+      readonly disposition: "merges";
     }
   | {
       readonly item: WildShapeWornLoadoutObjectRef;
@@ -92,4 +101,5 @@ export type ResolvedWildShapeEquipmentDisposition =
   | {
       readonly item: WildShapeLoadoutObjectRef;
       readonly disposition: "falls";
+      readonly fallInActorSpace: WildShapeFallInActorSpaceWitness;
     };

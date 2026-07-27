@@ -1783,7 +1783,7 @@ function resolveSpellActInternal(
   if (
     !spiritualWeaponCommitAlreadyApplied &&
     spellInvocationIsSpellcasting(invocation) &&
-    activeOngoingFeaturesPreventSpellInvocation(actor, invocation)
+    activeOngoingFeaturesPreventSpellInvocation(input.state, actor, invocation)
   ) {
     return invalidResult(
       input.state,
@@ -2428,7 +2428,7 @@ function resolveSpellActInternal(
       effectiveD20TestNaturalOneRerollAttackRoll(fillSet.attackRoll);
     const originalHit = attackRollHits(
       naturalOneEffectiveAttackRoll,
-      currentArmorClass(activeEffectArmorClass(target)),
+      currentArmorClass(activeEffectArmorClass(input.state, target)),
     );
     const spellAttackRerollIssue = spellAttackRerollValidationIssue({
       actor: actorBeforeSpellAttack,
@@ -2476,7 +2476,7 @@ function resolveSpellActInternal(
     const effectiveAttackRoll = effectiveSpellAttackRoll(fillSet.attackRoll);
     const ordinaryHit = attackRollHits(
       effectiveAttackRoll,
-      currentArmorClass(activeEffectArmorClass(target)),
+      currentArmorClass(activeEffectArmorClass(input.state, target)),
     );
     const missToHitReplacement = selectedAttackRollMissToHitReplacement({
       state: castingState,
@@ -2825,7 +2825,7 @@ function resolveSpellActInternal(
           attackRoll: effectiveSpellAttackRoll(fillSet.attackRoll),
           ordinaryHit: attackRollHits(
             effectiveSpellAttackRoll(fillSet.attackRoll),
-            currentArmorClass(activeEffectArmorClass(target)),
+            currentArmorClass(activeEffectArmorClass(castingState, target)),
           ),
         })
       : null;
@@ -2895,7 +2895,7 @@ function resolveSpellActInternal(
     fillSet.attackRoll != null &&
     (attackRollHits(
       effectiveSpellAttackRoll(fillSet.attackRoll),
-      currentArmorClass(activeEffectArmorClass(target)),
+      currentArmorClass(activeEffectArmorClass(castingState, target)),
     ) ||
       spellAttackMissToHitReplacement !== null);
   const spellDamageResult =
@@ -3034,6 +3034,7 @@ function resolveSpellActInternal(
     ]);
   }
   const spellDamageAmount = damageAmountByTypeAfterTargetAdjustments(
+    input.state,
     spellReduction.target,
     spellReduction.damageByType,
   );
@@ -4282,7 +4283,7 @@ export function resolveBonusActionSpellAct(
   if (
     !spiritualWeaponCommitAlreadyApplied &&
     spellInvocationIsSpellcasting(invocation) &&
-    activeOngoingFeaturesPreventSpellInvocation(actor, invocation)
+    activeOngoingFeaturesPreventSpellInvocation(input.state, actor, invocation)
   ) {
     return invalidResult(
       input.state,

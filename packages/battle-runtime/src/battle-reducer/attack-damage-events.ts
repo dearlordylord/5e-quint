@@ -18,6 +18,7 @@ import type {
   BattleAttackHostSubject,
   BattleAttackRollResult,
   BattleCreatureState,
+  BattleState,
   BattleFill,
   BattlePendingAttackDamageReduction,
   BattleReactionModifierChoice,
@@ -114,11 +115,13 @@ export function attackDamageEventEntries(
 }
 
 export function attackDamageEventAmountForTarget(
+  state: BattleState,
   target: BattleCreatureState,
   event: BattleAttackDamageEvent,
 ): DamageAmount {
   return toDamageAmount(
     damageAmountByTypeAfterTargetAdjustments(
+      state,
       target,
       damageAmountByTypeEntriesToMap(attackDamageEventEntries(event)),
     ),

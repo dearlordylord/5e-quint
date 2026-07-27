@@ -25,10 +25,12 @@ import {
 import { maybeOpenInterruptWindow, snapshotBattle } from "../dispatcher.ts";
 import type { CombatantId } from "../../identity.ts";
 import { battleWeaponItemHasMagicWeaponEnhancement } from "../attack-damage-apply.ts";
+import { isCharacterBattleCreatureState } from "../creature-state-execution.ts";
 import { activeDruidWildShapeEffect } from "../druid-wild-shape.ts";
 import { needsHolesResult } from "../hole-helpers.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { wildShapeCanUseWornLoadoutObject } from "../wild-shape-equipment.ts";
+import { characterEffectiveLoadout } from "../battle-object-lifecycle.ts";
 import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
 import type { SpellFillSet } from "../spells-resolve-fill-set.ts";
@@ -327,18 +329,19 @@ function battleMagicWeaponTargetItemIsHeldWeapon(
   targetItem: BattleMagicWeaponTargetItemFact,
 ): boolean {
   const holder = state.combatants.get(targetItem.holderCombatantId);
-  if (holder?.origin.kind !== "character") {
+  if (!isCharacterBattleCreatureState(holder)) {
     return false;
   }
+  const loadout = characterEffectiveLoadout(state, holder);
   const activeWildShape = activeDruidWildShapeEffect(holder);
   if (activeWildShape !== null) {
-    const main = holder.origin.selectedLoadout.weapon;
-    const offHand = holder.origin.selectedLoadout.offHandWeapon;
+    const main = loadout.weapon;
+    const offHand = loadout.offHandWeapon;
     return (
       (main !== undefined &&
         main.itemId === targetItem.itemId &&
         wildShapeCanUseWornLoadoutObject({
-          loadout: holder.origin.selectedLoadout,
+          loadout,
           formLimbs: activeWildShape.formLimbs,
           equipmentDisposition: activeWildShape.equipmentDisposition,
           objectKind: "mainWeapon",
@@ -347,7 +350,7 @@ function battleMagicWeaponTargetItemIsHeldWeapon(
       (offHand !== undefined &&
         offHand.itemId === targetItem.itemId &&
         wildShapeCanUseWornLoadoutObject({
-          loadout: holder.origin.selectedLoadout,
+          loadout,
           formLimbs: activeWildShape.formLimbs,
           equipmentDisposition: activeWildShape.equipmentDisposition,
           objectKind: "offHandWeapon",
@@ -356,8 +359,8 @@ function battleMagicWeaponTargetItemIsHeldWeapon(
     );
   }
   return (
-    holder.origin.selectedLoadout.weapon?.itemId === targetItem.itemId ||
-    holder.origin.selectedLoadout.offHandWeapon?.itemId === targetItem.itemId
+    loadout.weapon?.itemId === targetItem.itemId ||
+    loadout.offHandWeapon?.itemId === targetItem.itemId
   );
 }
 

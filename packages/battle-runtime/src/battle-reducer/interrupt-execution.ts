@@ -753,7 +753,7 @@ export function attackHitBonusActionSpellReactionChoices(
   ) {
     return [];
   }
-  return executableSpellProceduresForActor(actor).flatMap(
+  return executableSpellProceduresForActor(state, actor).flatMap(
     (invocation): readonly BattleInterruptProcedureChoice[] => {
       if (
         !isAttackHitBonusActionSpellInvocation(invocation) ||
@@ -808,6 +808,7 @@ export function attackHitBonusActionSpellReactionChoices(
 }
 
 function executableSpellProceduresForActor(
+  state: BattleState,
   actor: BattleCreatureState,
 ): readonly BattleSpellProcedureExecution[] {
   if (!isCharacterBattleCreatureState(actor)) return [];
@@ -819,7 +820,7 @@ function executableSpellProceduresForActor(
       actor,
     );
     return invocation === undefined ||
-      activeOngoingFeaturesPreventSpellInvocation(actor, invocation)
+      activeOngoingFeaturesPreventSpellInvocation(state, actor, invocation)
       ? []
       : [invocation];
   });

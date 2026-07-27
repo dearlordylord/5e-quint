@@ -221,7 +221,7 @@ function remarkableAthleteCriticalHitMovementBudget(
   const speedKinds = representedMovementSpeedKinds(attacker).map((kind) => ({
     kind,
     movementBudgetFeet: halfMovementSpeed(
-      effectiveMovementSpeed(attacker, kind, isGrappled),
+      effectiveMovementSpeed(state, attacker, kind, isGrappled),
     ),
   }));
   return {

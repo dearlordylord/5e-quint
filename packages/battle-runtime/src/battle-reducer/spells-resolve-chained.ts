@@ -502,7 +502,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
 
     const ordinaryHit = attackRollHits(
       effectiveAttackRoll,
-      currentArmorClass(activeEffectArmorClass(target)),
+      currentArmorClass(activeEffectArmorClass(replayState, target)),
     );
     const missToHitReplacement = selectedAttackRollMissToHitReplacement({
       state: replayState,
@@ -672,6 +672,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
       ]);
     }
     const damageAmount = damageAmountByTypeAfterTargetAdjustments(
+      replayState,
       target,
       sourcePenalty.damageByType,
     );
@@ -1405,6 +1406,7 @@ export function validateChainedSpellDamageFill(
 }
 
 export function chainedSpellDamageAmountForTarget(
+  state: BattleState,
   target: BattleCreatureState,
   invocation: Extract<
     BattleExecutableSpellInvocation,
@@ -1423,6 +1425,7 @@ export function chainedSpellDamageAmountForTarget(
     0,
   );
   return damageAmountAfterTargetAdjustments(
+    state,
     target,
     diceTotal + (invocation.damage.expr.flat ?? 0),
     damageType,

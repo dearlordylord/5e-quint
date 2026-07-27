@@ -29,6 +29,7 @@ import {
   abilityModifier,
   armorClass,
   defaultArmorClassState,
+  defaultUnarmoredArmorClassBase,
 } from "@dnd/shared-algebras/armor-class-algebra";
 import type { ConditionState } from "@dnd/shared-algebras/conditions-algebra";
 import {
@@ -3403,6 +3404,10 @@ export function characterSeed(input: {
     { readonly kind: "character" }
   >["zeroHpLifecycle"];
   readonly armorClass?: ReturnType<typeof defaultArmorClassState>;
+  readonly unarmoredArmorClassBases?: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["unarmoredArmorClassBases"];
   readonly selectedLoadout?: Extract<
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
@@ -3561,6 +3566,12 @@ export function characterSeed(input: {
       ].map((ref) => [ref.unit.id, ref]),
     ).values(),
   ];
+  const armorClass =
+    input.armorClass ?? armorClassStateForLoadout(selectedLoadout);
+  const unarmoredArmorClassBase =
+    armorClass.base.kind === "ability_sum"
+      ? armorClass.base
+      : defaultUnarmoredArmorClassBase();
   return {
     combatantId: input.combatantId ?? fighterId,
     displayName: input.displayName ?? "Fighter",
@@ -3573,8 +3584,11 @@ export function characterSeed(input: {
       knownLanguages: input.knownLanguages ?? ["Common"],
       d20Statistics:
         input.d20Statistics ?? testCharacterD20Statistics({ str: 16 }),
-      armorClass:
-        input.armorClass ?? armorClassStateForLoadout(selectedLoadout),
+      armorClass,
+      unarmoredArmorClassBases: input.unarmoredArmorClassBases ?? {
+        shielded: unarmoredArmorClassBase,
+        unshielded: unarmoredArmorClassBase,
+      },
       size: input.size ?? "medium",
       speed: { walkFeet: movementFeet(30) },
       currentHp: Hp(input.currentHp ?? 12),

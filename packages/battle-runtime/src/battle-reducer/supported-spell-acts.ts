@@ -1,12 +1,14 @@
 import type {
   BattleCreatureState,
   BattleExecutableSpellInvocation,
+  BattleState,
 } from "../battle-state-execution.ts";
 import { characterSpellProcedure } from "../character-execution-queries.ts";
 import { isCharacterBattleCreatureState } from "./creature-state-execution.ts";
 import { activeOngoingFeaturesPreventSpellInvocation } from "./spells-invocation-guards.ts";
 
 export function supportedSpellActs(
+  state: BattleState,
   actor: BattleCreatureState,
 ): readonly BattleExecutableSpellInvocation[] {
   if (!isCharacterBattleCreatureState(actor)) return [];
@@ -22,6 +24,6 @@ export function supportedSpellActs(
     })
     .filter(
       (invocation) =>
-        !activeOngoingFeaturesPreventSpellInvocation(actor, invocation),
+        !activeOngoingFeaturesPreventSpellInvocation(state, actor, invocation),
     );
 }

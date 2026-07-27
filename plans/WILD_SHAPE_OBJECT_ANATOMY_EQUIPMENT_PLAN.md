@@ -2,7 +2,8 @@
 
 Task: `L3RES-10-WILD-SHAPE-OBJECT-ANATOMY-EQUIPMENT`
 
-Status: research complete; implementation plan ready.
+Status: implemented, including durable fallen-equipment lifecycle follow-up
+([GitHub issue 212](https://github.com/dearlordylord/5e-quint/issues/212)).
 
 ## RAW And Vocabulary Anchors
 
@@ -40,18 +41,22 @@ Status: research complete; implementation plan ready.
   `packages/character-battle-runtime/src/battle-character-build-projection.ts`.
 - Battle initialization stores character loadout in
   `BattleCreatureState["origin"]["selectedLoadout"]`.
-- The current battle loadout boundary preserves weapon object identity as
-  `itemId`, but armor and shield refs are only `UnitRecord["id"]` values in
-  `CharacterBattleLoadoutRef`. That boundary must be repaired before armor or
-  shield can participate in per-object Wild Shape disposition or fall outcomes.
-- Wild Shape battle activation is owned in
+- The battle loadout boundary preserves armor, shield, and weapon object
+  identity as `itemId` in `CharacterBattleLoadoutRef`.
+- Wild Shape battle activation and per-item disposition are owned in
   `packages/battle-runtime/src/battle-reducer/unit-features.ts` and
-  `packages/battle-runtime/src/battle-reducer/druid-wild-shape.ts`. It currently
-  admits only `equipmentDisposition: "merged"` and accepts no fills.
-- The active Wild Shape effect in
-  `packages/battle-runtime/src/active-effect/types.ts` can represent only
-  merged equipment. There is no current executable owner for fallen or worn
-  Wild Shape equipment disposition.
+  `packages/battle-runtime/src/battle-reducer/druid-wild-shape.ts`, with typed
+  holes/fills and practicality fallbacks in the focused Wild Shape equipment
+  owner.
+- `BattleState.groundObjects` is the canonical battle-time exception overlay
+  for durable fallen objects. Its outer key is the owning combatant id and its
+  inner key is that character's existing loadout object id, so two characters
+  may safely use the same loadout-local id. Its value stores the table position
+  and a generic dropped-object source union.
+- `characterEffectiveLoadout` projects the selected loadout minus objects in
+  `groundObjects`; it does not copy ownership or add held/equipped flags.
+- The typed pickup/equip transition validates character, ground position,
+  selected-loadout slot, and object identity before removing the overlay.
 - Command Drop already has a narrow canonical held-object projection for
   character loadout in `packages/battle-runtime/src/battle-reducer/turn-end-movement.ts`.
   That helper proves loadout-derived object facts can be owned without copying
@@ -66,9 +71,9 @@ Status: research complete; implementation plan ready.
 
 ## Design Decision
 
-Promote a battle-runtime Wild Shape equipment-disposition owner that derives its
-equipment candidates from the character origin's existing selected loadout and
-uses typed caller/GM witnesses for the RAW decisions the engine cannot infer.
+The battle-runtime Wild Shape equipment-disposition owner derives candidates
+from the character origin's selected loadout and uses typed caller/GM witnesses
+for the RAW decisions the engine cannot infer.
 
 Do not add a Wild Shape inventory, copied equipment list, or authored-form
 identity table. The owner should store only the active form and the per-loadout
@@ -77,7 +82,23 @@ with Character Build / Character Sheet equipment. Runtime consequences derive
 from the active form, the existing selected loadout, and typed disposition
 witnesses.
 
-## Proposed Domain Types
+Fallen and merged disposition have intentionally different lifecycles:
+
+- `merges` is stored on the active effect and restores automatically when that
+  effect ends;
+- `falls` requires a typed actor-space witness carrying the explicit
+  `BattleTablePositionId`, enters
+  `BattleState.groundObjects`, and remains there after reversion;
+- fallen selected-loadout objects are unavailable to weapon and held-equipment
+  consumers, including Shillelagh discovery/replay, until the typed pickup/equip
+  transition succeeds.
+
+## Original Domain-Type Proposal
+
+This section records the design stage. Where it differs, the implemented
+decision above is authoritative: falls require a table position, and the
+generic `BattleDroppedObjectSource`/`BattleState.groundObjects` owner supersedes
+the temporary Wild-Shape-specific fall outcome.
 
 Place the core vocabulary near the Wild Shape reducer owner. The exact file can
 be a new helper such as
@@ -106,12 +127,16 @@ export type WildShapeLoadoutObjectRef =
   | {
       readonly kind: "mainWeapon";
       readonly objectId: BattleObjectId;
-      readonly unitId: NonNullable<CharacterBattleLoadoutRef["weapon"]>["unitId"];
+      readonly unitId: NonNullable<
+        CharacterBattleLoadoutRef["weapon"]
+      >["unitId"];
     }
   | {
       readonly kind: "offHandWeapon";
       readonly objectId: BattleObjectId;
-      readonly unitId: NonNullable<CharacterBattleLoadoutRef["offHandWeapon"]>["unitId"];
+      readonly unitId: NonNullable<
+        CharacterBattleLoadoutRef["offHandWeapon"]
+      >["unitId"];
     };
 
 export type WildShapeFormLimbObjectHandlingWitness =
@@ -178,12 +203,10 @@ reject unknown, duplicated, or missing loadout items. The practicality witness i
 nested under one item choice and does not repeat the item identity, so a caller
 cannot pair a GM practicality fact for one item with a different item choice.
 
-`WildShapeFallenEquipmentOutcome` is intentionally not
-`BattleDroppedObjectOutcome`: the existing battle drop outcome is spell-sourced
-and requires `sourceSpellId`. Wild Shape is a unit-feature self-transformation,
-so the first implementation should keep fallen equipment as a Wild
-Shape-specific boundary result until a generic map/object lifecycle owner can
-model equipment drops with an explicit source union.
+The first increment used a Wild-Shape-specific boundary outcome. Issue 212
+superseded that temporary boundary: `BattleDroppedObjectOutcome` now has an
+explicit source union including Druid Wild Shape, and fallen equipment is also
+stored durably in `BattleState.groundObjects`.
 
 ## API Shape
 
@@ -215,8 +238,9 @@ model equipment drops with an explicit source union.
    fill.
 6. Update `BattleActiveEffect` so `druidWildShapeForm` contains:
    `equipmentDisposition: readonly ActiveWildShapeEquipmentDisposition[]`.
-   Do not add equipment fields to `BattleState`, `CharacterBattleCreatureState`,
-   or Character Build.
+   Do not add copied equipment fields to `CharacterBattleCreatureState` or
+   Character Build. The later lifecycle increment adds only the canonical
+   `BattleState.groundObjects` exception overlay.
 7. Derive runtime consequences from the active effect:
    merged items and fallen items must have no wearer/holder combat effect;
    worn items may contribute only through the existing loadout-based combat
@@ -224,11 +248,10 @@ model equipment drops with an explicit source union.
    active effect. Until that wiring exists, admit only all-merged disposition for
    reducer behavior or keep non-merged disposition as typed API evidence with no
    support-profile promotion.
-8. Treat fallen equipment as Wild Shape-specific boundary outcomes, not durable
-   map inventory. Return `WildShapeFallenEquipmentOutcome[]`, or a future
-   generic equipment-drop result with a source union that includes
-   `druidWildShape`; do not reuse the current spell-sourced
-   `BattleDroppedObjectOutcome`.
+8. The initial increment treated fallen equipment as a Wild-Shape-specific
+   boundary outcome. Issue 212 completed the future branch described there:
+   the generic drop source union includes `druidWildShape`, and
+   `BattleState.groundObjects` owns the durable battle-time location.
 9. App and MCP should render/fill the battle hole when it appears. They must
    pass typed choices and GM practicality witnesses to battle; they must not
    infer practicality from animal names or local UI tables.
@@ -268,10 +291,13 @@ model equipment drops with an explicit source union.
 
 ## QNT, MBT, And Coverage
 
-Use a small QNT owner only when non-merged disposition affects executable battle
-state. A literal witness driver is enough for deterministic all-merged and
-all-falls cases; do not import the full battle-runtime model into a new MBT
-driver.
+Non-merged disposition now affects executable battle state. The leaf-only
+`battle-runtime-wild-shape-ground-object-lifecycle.mbt.qnt` witness models one
+lifecycle variant whose projections include custody
+(`Held | Merged | Ground(source)`) and remaining Wild Shape uses, so
+contradictory custody or use-count combinations are unrepresentable. Its
+focused TypeScript driver checks the production reducer, effective-loadout
+behavior, Shillelagh availability, reversion, pickup, and resource spending.
 
 Recommended progression:
 
@@ -281,12 +307,11 @@ Recommended progression:
    tests are required. Run the existing Wild Shape form lifecycle MBT only if
    the active effect shape or subject protocol changes in a way that the
    existing MBT bridge observes.
-2. Second implementation task, if needed: add QNT/rule-core witness for
-   disposition validity and no-effect semantics once the active effect stores
-   final per-item dispositions.
-3. Later behavior task: add effective-loadout projection for worn equipment and
-   form-limb object handling consumers. That task must update QNT/runtime parity
-   because combat attack/AC/action availability can change.
+2. Completed: active-effect disposition validity and no-effect semantics are
+   covered by focused runtime tests.
+3. Completed for fallen objects: effective loadout consults the durable ground
+   overlay and the leaf-only QNT/MBT witness checks restoration versus pickup.
+   Further form-limb object-handling consumers remain separate work.
 
 Coverage artifacts should not claim full Wild Shape object/equipment runtime
 support until non-merged dispositions are reachable through production battle
@@ -311,11 +336,11 @@ coverage artifact should change.
 ## Non-Goals
 
 - No parallel Wild Shape equipment inventory.
-- No generic map/object lifecycle for dropped equipment.
 - No authored-form table that says which Beasts can wear which items or handle
   which objects.
 - No app/MCP-local equipment practicality inference.
 - No cross-session active Wild Shape persistence; the existing Character Sheet
   handoff boundary remains unchanged.
-- No broad Utilize/action-object implementation beyond carrying the typed limb
-  witness for future object-handling owners.
+- No broad Utilize/action-object implementation. The pickup/equip commit
+  transition consumes an already-resolved table position and does not invent a
+  second action-economy model.

@@ -302,7 +302,13 @@ function attackRollSourceFlags(
       attackerCanSeeTarget,
       attack,
     }) ||
-    ongoingFeatureGrantsAttackRollMode(attacker, target, "advantage", attack);
+    ongoingFeatureGrantsAttackRollMode(
+      state,
+      attacker,
+      target,
+      "advantage",
+      attack,
+    );
   const hasDisadvantage =
     sightDisadvantage ||
     hiddenTargetDisadvantage ||
@@ -316,6 +322,7 @@ function attackRollSourceFlags(
       targetSpatialFacts,
     }) ||
     ongoingFeatureGrantsAttackRollMode(
+      state,
       attacker,
       target,
       "disadvantage",
@@ -424,10 +431,16 @@ export function requiredSpellObjectTargetAttackRollMode(
   );
   const hasAdvantage =
     sources.hasAdvantage ||
-    ongoingFeatureGrantsSpellAttackRollMode(attacker, invocation, "advantage");
+    ongoingFeatureGrantsSpellAttackRollMode(
+      state,
+      attacker,
+      invocation,
+      "advantage",
+    );
   const hasDisadvantage =
     sources.hasDisadvantage ||
     ongoingFeatureGrantsSpellAttackRollMode(
+      state,
       attacker,
       invocation,
       "disadvantage",
@@ -497,10 +510,16 @@ export function requiredSpellAttackRollMode(
   );
   const hasAdvantage =
     sources.hasAdvantage ||
-    ongoingFeatureGrantsSpellAttackRollMode(attacker, invocation, "advantage");
+    ongoingFeatureGrantsSpellAttackRollMode(
+      state,
+      attacker,
+      invocation,
+      "advantage",
+    );
   const hasDisadvantage =
     sources.hasDisadvantage ||
     ongoingFeatureGrantsSpellAttackRollMode(
+      state,
       attacker,
       invocation,
       "disadvantage",
@@ -595,7 +614,7 @@ export function attackRollOngoingFeatureActivations(
       if (
         unitFeature.activationTrigger !== "firstAttackRoll" ||
         unitFeature.spendsUse ||
-        activeOngoingFeatureOccurrencesForCombatant(attacker).has(
+        activeOngoingFeatureOccurrencesForCombatant(state, attacker).has(
           binding.procedureRef,
         ) ||
         !unitFeature.rollModifiers.some(
@@ -653,7 +672,7 @@ export function attackRollOngoingFeatureActivationProfile(
         (option) => option.procedureRef === activation.procedureRef,
       ) ||
       (allowAlreadyActiveReplay &&
-        activeOngoingFeatureOccurrencesForCombatant(attacker).has(
+        activeOngoingFeatureOccurrencesForCombatant(state, attacker).has(
           activation.procedureRef,
         ))
     )
@@ -664,6 +683,7 @@ export function attackRollOngoingFeatureActivationProfile(
 }
 
 export function ongoingFeatureGrantsAttackRollMode(
+  state: BattleState,
   attacker: BattleCreatureState | undefined,
   target: BattleCreatureState | undefined,
   mode: AttackRollMode,
@@ -672,40 +692,43 @@ export function ongoingFeatureGrantsAttackRollMode(
   const outgoing =
     isCharacterBattleCreatureState(attacker) &&
     target !== undefined &&
-    [...activeOngoingFeatureOccurrencesForCombatant(attacker)].some(([key]) =>
-      ongoingFeatureProfileForSourceKey(attacker, key)?.rollModifiers.some(
-        (modifier) =>
-          modifier.mode === mode &&
-          modifier.affects === "selfRoll" &&
-          modifier.on === "attackRoll" &&
-          attackAbilityMatchesModifier(
-            attack?.kind === "weapon" || attack?.kind === "unarmedStrike"
-              ? attack
-              : null,
-            modifier,
-          ),
-      ),
+    [...activeOngoingFeatureOccurrencesForCombatant(state, attacker)].some(
+      ([key]) =>
+        ongoingFeatureProfileForSourceKey(attacker, key)?.rollModifiers.some(
+          (modifier) =>
+            modifier.mode === mode &&
+            modifier.affects === "selfRoll" &&
+            modifier.on === "attackRoll" &&
+            attackAbilityMatchesModifier(
+              attack?.kind === "weapon" || attack?.kind === "unarmedStrike"
+                ? attack
+                : null,
+              modifier,
+            ),
+        ),
     );
   const incoming =
     isCharacterBattleCreatureState(target) &&
-    [...activeOngoingFeatureOccurrencesForCombatant(target)].some(([key]) =>
-      ongoingFeatureProfileForSourceKey(target, key)?.rollModifiers.some(
-        (modifier) =>
-          modifier.mode === mode &&
-          modifier.affects === "rollsAgainstSelf" &&
-          modifier.on === "attackRoll" &&
-          attackAbilityMatchesModifier(
-            attack?.kind === "weapon" || attack?.kind === "unarmedStrike"
-              ? attack
-              : null,
-            modifier,
-          ),
-      ),
+    [...activeOngoingFeatureOccurrencesForCombatant(state, target)].some(
+      ([key]) =>
+        ongoingFeatureProfileForSourceKey(target, key)?.rollModifiers.some(
+          (modifier) =>
+            modifier.mode === mode &&
+            modifier.affects === "rollsAgainstSelf" &&
+            modifier.on === "attackRoll" &&
+            attackAbilityMatchesModifier(
+              attack?.kind === "weapon" || attack?.kind === "unarmedStrike"
+                ? attack
+                : null,
+              modifier,
+            ),
+        ),
     );
   return outgoing || incoming;
 }
 
 function ongoingFeatureGrantsSpellAttackRollMode(
+  state: BattleState,
   attacker: BattleCreatureState | undefined,
   invocation: RuntimeSpellProcedure,
   mode: AttackRollMode,
@@ -713,18 +736,20 @@ function ongoingFeatureGrantsSpellAttackRollMode(
   return (
     isCharacterBattleCreatureState(attacker) &&
     spellInvocationIsFromSpellcastingSource(attacker, invocation) &&
-    [...activeOngoingFeatureOccurrencesForCombatant(attacker)].some(([key]) => {
-      const profile = ongoingFeatureProfileForSourceKey(attacker, key);
-      return (
-        profile !== null &&
-        profile.spellModifiers.some(
-          (modifier) =>
-            modifier.attackRollMode === mode &&
-            modifier.sourceClassName ===
-              attacker.origin.spellcasting?.sourceClassName,
-        )
-      );
-    })
+    [...activeOngoingFeatureOccurrencesForCombatant(state, attacker)].some(
+      ([key]) => {
+        const profile = ongoingFeatureProfileForSourceKey(attacker, key);
+        return (
+          profile !== null &&
+          profile.spellModifiers.some(
+            (modifier) =>
+              modifier.attackRollMode === mode &&
+              modifier.sourceClassName ===
+                attacker.origin.spellcasting?.sourceClassName,
+          )
+        );
+      },
+    )
   );
 }
 
@@ -856,6 +881,7 @@ export function hasDodgeBenefit(
     !isIncapacitated(target.conditions) &&
     Number(
       effectiveWalkSpeed(
+        state,
         target,
         state.grapples.some(
           (grapple) => grapple.targetId === target.combatantId,
@@ -1881,7 +1907,7 @@ export function extendAttackRollOngoingFeatures(
   const attacker = state.combatants.get(attackerId);
   if (attacker === undefined) return state;
   const activeOngoingFeatureOccurrences =
-    activeOngoingFeatureOccurrencesForCombatant(attacker);
+    activeOngoingFeatureOccurrencesForCombatant(state, attacker);
   if (
     ![...activeOngoingFeatureOccurrences].some(([key]) =>
       ongoingFeatureProfileHasExtensionTrigger(
@@ -1928,7 +1954,7 @@ export function extendSavingThrowOngoingFeatures(
   const actor = state.combatants.get(actorId);
   if (actor === undefined) return state;
   const activeOngoingFeatureOccurrences =
-    activeOngoingFeatureOccurrencesForCombatant(actor);
+    activeOngoingFeatureOccurrencesForCombatant(state, actor);
   if (
     ![...activeOngoingFeatureOccurrences].some(([key]) =>
       ongoingFeatureProfileHasExtensionTrigger(
@@ -1970,11 +1996,12 @@ export function ongoingFeatureEnemyRelationshipDecisionRequired(
   const actor = state.combatants.get(actorId);
   return (
     actor !== undefined &&
-    [...activeOngoingFeatureOccurrencesForCombatant(actor)].some(([key]) =>
-      ongoingFeatureProfileHasExtensionTrigger(
-        ongoingFeatureProfileForSourceKey(actor, key),
-        trigger,
-      ),
+    [...activeOngoingFeatureOccurrencesForCombatant(state, actor)].some(
+      ([key]) =>
+        ongoingFeatureProfileHasExtensionTrigger(
+          ongoingFeatureProfileForSourceKey(actor, key),
+          trigger,
+        ),
     )
   );
 }

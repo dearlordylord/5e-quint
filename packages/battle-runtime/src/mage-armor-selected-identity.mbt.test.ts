@@ -363,7 +363,7 @@ function projectBattleState(
       effect.kind === "spellBaseArmorClass" &&
       effect.sourceCombatantId === casterId,
   );
-  const projectedArmorClass = activeEffectArmorClass(caster);
+  const projectedArmorClass = activeEffectArmorClass(state, caster);
   return {
     mageArmorEffectPresent: mageArmorEffect !== undefined,
     storedArmorBaseStillUnarmored: storedArmorBaseStillUnarmored(caster),

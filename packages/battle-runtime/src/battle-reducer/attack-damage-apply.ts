@@ -92,6 +92,10 @@ import {
   type WildShapeLoadoutObjectRef,
   type WildShapeWornLoadoutObjectRef,
 } from "./wild-shape-equipment.ts";
+import {
+  battleObjectIsOnGround,
+  characterEffectiveLoadoutFromOrigin,
+} from "./battle-object-lifecycle.ts";
 
 export function attackDamageHole(
   attack: SupportedAttackActionOption,
@@ -420,7 +424,13 @@ export function attackActionOptionsForActor(
       actor,
       actor.origin.unarmedStrike,
     );
-    return actor.origin.attack == null
+    return actor.origin.attack == null ||
+      (actor.origin.attack.kind === "weapon" &&
+        battleObjectIsOnGround(
+          state,
+          actor.combatantId,
+          actor.origin.attack.weaponObjectId,
+        ))
       ? [unarmedStrike]
       : [
           ...uniqueAttackExecutionSelectionOptions(
@@ -429,7 +439,11 @@ export function attackActionOptionsForActor(
                 state,
                 actor,
                 actor.origin.attack,
-                mainHandWeaponItemIdForAttack(actor, actor.origin.attack),
+                mainHandWeaponItemIdForAttack(
+                  state,
+                  actor,
+                  actor.origin.attack,
+                ),
               ),
             ),
           ),
@@ -495,6 +509,13 @@ export function offHandAttackActionOptionsForActor(
   const offHand = actor.origin.offHandAttack;
   if (main === null || offHand === undefined) return [];
   if (
+    (main.kind === "weapon" &&
+      battleObjectIsOnGround(state, actorId, main.weaponObjectId)) ||
+    battleObjectIsOnGround(state, actorId, offHand.weaponObjectId)
+  ) {
+    return [];
+  }
+  if (
     activeWildShapeEffect !== null &&
     (wildShapeWornLoadoutWeaponObjectForAttack(
       actor,
@@ -526,7 +547,7 @@ export function offHandAttackActionOptionsForActor(
     state,
     actor,
     offHandAttack,
-    offHandWeaponItemIdForAttack(actor, offHand),
+    offHandWeaponItemIdForAttack(state, actor, offHand),
   );
   const {
     attackDamageAbilityModifierChoice:
@@ -1131,6 +1152,7 @@ function spellMagicWeaponEnhancementEffectExcluded(
 }
 
 function mainHandWeaponItemIdForAttack(
+  state: BattleState,
   actor: BattleCreatureState,
   attack: CharacterWeaponAttackActionOption,
 ): BattleObjectId | undefined {
@@ -1141,7 +1163,11 @@ function mainHandWeaponItemIdForAttack(
   ) {
     return undefined;
   }
-  const mainHandWeapon = actor.origin.selectedLoadout.weapon;
+  const mainHandWeapon = characterEffectiveLoadoutFromOrigin(
+    state,
+    actor.combatantId,
+    actor.origin,
+  ).weapon;
   return mainHandWeapon !== undefined &&
     mainHandWeapon.itemId === attack.weaponObjectId
     ? mainHandWeapon.itemId
@@ -1149,6 +1175,7 @@ function mainHandWeaponItemIdForAttack(
 }
 
 function offHandWeaponItemIdForAttack(
+  state: BattleState,
   actor: BattleCreatureState,
   attack: CharacterWeaponAttackActionOption,
 ): BattleObjectId | undefined {
@@ -1158,7 +1185,11 @@ function offHandWeaponItemIdForAttack(
   ) {
     return undefined;
   }
-  const offHandWeapon = actor.origin.selectedLoadout.offHandWeapon;
+  const offHandWeapon = characterEffectiveLoadoutFromOrigin(
+    state,
+    actor.combatantId,
+    actor.origin,
+  ).offHandWeapon;
   return offHandWeapon !== undefined &&
     offHandWeapon.itemId === attack.weaponObjectId
     ? offHandWeapon.itemId
@@ -1301,7 +1332,7 @@ export function martialArtsBonusUnarmedStrikeActionOptionForActor(
     actor === undefined ||
     actor.origin.kind !== "character" ||
     !hasMartialArtsAttackProjectionSupport(actor) ||
-    !martialArtsLoadoutEligible(actor.origin)
+    !martialArtsLoadoutEligible(state, actor.combatantId, actor.origin)
   ) {
     return undefined;
   }
@@ -1369,11 +1400,16 @@ export function heldWeaponItemIdForAttack(
 ): BattleObjectId {
   const actor = state.combatants.get(actorId);
   if (actor?.origin.kind !== "character") return attack.weaponObjectId;
-  const mainWeapon = actor.origin.selectedLoadout.weapon;
+  const loadout = characterEffectiveLoadoutFromOrigin(
+    state,
+    actor.combatantId,
+    actor.origin,
+  );
+  const mainWeapon = loadout.weapon;
   if (mainWeapon !== undefined && mainWeapon.itemId === attack.weaponObjectId) {
     return mainWeapon.itemId;
   }
-  const offHandWeapon = actor.origin.selectedLoadout.offHandWeapon;
+  const offHandWeapon = loadout.offHandWeapon;
   if (
     offHandWeapon !== undefined &&
     offHandWeapon.itemId === attack.weaponObjectId
@@ -1390,7 +1426,11 @@ export function offHandWeaponItemIdForActor(
 ): BattleObjectId | undefined {
   const actor = state.combatants.get(actorId);
   if (actor?.origin.kind !== "character") return undefined;
-  const offHandWeapon = actor.origin.selectedLoadout.offHandWeapon;
+  const offHandWeapon = characterEffectiveLoadoutFromOrigin(
+    state,
+    actor.combatantId,
+    actor.origin,
+  ).offHandWeapon;
   return offHandWeapon !== undefined &&
     offHandWeapon.itemId === offHand.weaponObjectId
     ? offHandWeapon.itemId
@@ -1423,12 +1463,11 @@ function hasMartialArtsAttackProjectionSupport(
 }
 
 function martialArtsLoadoutEligible(
-  origin: Extract<
-    BattleCreatureState["origin"],
-    { readonly kind: "character" }
-  >,
+  state: BattleState,
+  actorId: CombatantId,
+  origin: CharacterBattleCreatureState["origin"],
 ): boolean {
-  const loadout = origin.selectedLoadout;
+  const loadout = characterEffectiveLoadoutFromOrigin(state, actorId, origin);
   if (loadout.armor !== undefined || loadout.shield !== undefined) {
     return false;
   }

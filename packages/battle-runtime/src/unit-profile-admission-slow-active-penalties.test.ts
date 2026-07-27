@@ -128,7 +128,7 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
 
     const baseTarget = requireCombatant(state.state, spellTargetId);
     const baseArmorClass = Number(
-      currentArmorClass(activeEffectArmorClass(baseTarget)),
+      currentArmorClass(activeEffectArmorClass(state.state, baseTarget)),
     );
     const cast = resolveBattleSubject({
       state: state.state,
@@ -160,10 +160,10 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
       }),
     ]);
     expect(savedTarget.activeEffects).toEqual([]);
-    expect(Number(effectiveWalkSpeed(target))).toBe(15);
-    expect(Number(currentArmorClass(activeEffectArmorClass(target)))).toBe(
-      baseArmorClass - 2,
-    );
+    expect(Number(effectiveWalkSpeed(cast.state, target))).toBe(15);
+    expect(
+      Number(currentArmorClass(activeEffectArmorClass(cast.state, target))),
+    ).toBe(baseArmorClass - 2);
     expect(savingThrowFlatBonusProjections(cast.state, "dex")).toEqual([
       {
         targetId: spellTargetId,
@@ -216,7 +216,7 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
       (effect) => effect.kind === "slowActivePenalties",
     );
     expect(slowEffect).toBeDefined();
-    expect(Number(effectiveWalkSpeed(slowed))).toBe(15);
+    expect(Number(effectiveWalkSpeed(cast, slowed))).toBe(15);
     expect(combatantCanTakeReactions(slowed)).toBe(false);
 
     const casterTurnEnded = endTurn({ state: cast, actorId: spellCasterId });
@@ -260,7 +260,7 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
 
     const target = requireCombatant(saved.state, spellTargetId);
     expect(target.activeEffects).toEqual([]);
-    expect(Number(effectiveWalkSpeed(target))).toBe(30);
+    expect(Number(effectiveWalkSpeed(saved.state, target))).toBe(30);
     expect(combatantCanTakeReactions(target)).toBe(true);
     expect(savingThrowFlatBonusProjections(saved.state, "dex")).toEqual([]);
     expect(
