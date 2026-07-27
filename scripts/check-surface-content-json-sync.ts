@@ -11,8 +11,6 @@ import {
   UnitRecordSchema,
 } from "../packages/surface/src/surface/schema.ts";
 import {
-  serializeSurfacePublicationArtifact,
-  SRD_SURFACE_PUBLICATION_ARTIFACTS,
   SRD_SURFACE_PUBLICATION_FILE_NAMES,
   SRD_SURFACE_SCHEMA_BOUNDS,
   SRD_SURFACE_SCHEMA_SIZE,
@@ -20,6 +18,7 @@ import {
   SURFACE_SCHEMA_BOUND_MEASURES,
 } from "../packages/surface/src/surface/publication-artifacts.ts";
 import dhallJsonToolchain from "../packages/surface/dhall-json-toolchain.json" with { type: "json" };
+import { buildSrdSurfacePublication } from "./srd-surface-publication-artifacts.ts";
 
 export type PublicationIssue =
   | {
@@ -58,6 +57,12 @@ export type PublicationIssue =
       readonly measure: keyof typeof SRD_SURFACE_SCHEMA_BOUNDS;
       readonly actual: number;
       readonly limit: number;
+    }
+  | {
+      readonly kind: "publication-generation-failed";
+      readonly recordId: string;
+      readonly section: string;
+      readonly reason: "invalid-locator" | "empty-excerpt" | "invalid-excerpt";
     };
 
 type JsonDocument = unknown;
@@ -291,9 +296,21 @@ function checkSurfacePublicationArtifacts(
   repoRoot: string,
   publicationDir: string,
 ): void {
+  const publication = buildSrdSurfacePublication();
+  if (publication.tag === "invalid") {
+    issues.push(
+      ...publication.issues.map((issue) => ({
+        kind: "publication-generation-failed" as const,
+        recordId: issue.recordId,
+        section: issue.section,
+        reason: issue.reason,
+      })),
+    );
+    return;
+  }
+
   for (const member of SURFACE_PUBLICATION_MEMBERS) {
     const fileName = SRD_SURFACE_PUBLICATION_FILE_NAMES[member];
-    const value = SRD_SURFACE_PUBLICATION_ARTIFACTS[member];
     const filePath = join(publicationDir, fileName);
     const displayFile = repoPath(repoRoot, filePath);
     const committed = readPublicationArtifact(filePath);
@@ -310,7 +327,7 @@ function checkSurfacePublicationArtifacts(
       continue;
     }
 
-    if (!committed.bytes.equals(serializeSurfacePublicationArtifact(value))) {
+    if (!committed.bytes.equals(publication.bytes[member])) {
       issues.push({
         kind: "out-of-sync-publication-artifact",
         file: displayFile,
@@ -471,6 +488,10 @@ function main(): void {
       } else if (issue.kind === "unreadable-publication-artifact") {
         console.error(
           `- unreadable-publication-artifact: ${issue.file}\n${issue.message}`,
+        );
+      } else if (issue.kind === "publication-generation-failed") {
+        console.error(
+          `- publication-generation-failed: ${issue.recordId}: ${issue.reason}: ${issue.section}`,
         );
       } else {
         console.error(

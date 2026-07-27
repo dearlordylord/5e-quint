@@ -1,7 +1,5 @@
 let halflingNimbleness =
-      { description =
-          "You can move through the space of any creature that is of a size larger than you, but you can't stop in the same space."
-      , id = "species_halfling_nimbleness"
+      {  id = "species_halfling_nimbleness"
       , kind = "species_trait"
       , mechanics =
         { family = "creature_space_movement_permission"
@@ -14,7 +12,7 @@ let halflingNimbleness =
       , name = "Halfling Nimbleness"
       , provenance =
         { kind = "srd-5.2.1"
-        , section = "Character-Origins/Halfling#Halfling Nimbleness"
+        , section = "Character-Origins.md:1,67,97,215,225-226"
         }
       , species = "halfling"
       }

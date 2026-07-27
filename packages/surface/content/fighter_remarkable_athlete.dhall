@@ -8,8 +8,7 @@ let remarkableAthlete =
           { kind = "srd-5.2.1"
           , section = "Classes/Fighter.md:139-144"
           }
-      , description =
-          "You have Advantage on Initiative rolls and Strength (Athletics) checks. Immediately after you score a Critical Hit, you can move up to half your Speed without provoking Opportunity Attacks."
+
       , mechanics =
           { family = "remarkable_athlete"
           , initiative = { kind = "roll_advantage", roll = "initiative" }

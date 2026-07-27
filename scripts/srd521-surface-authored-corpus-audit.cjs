@@ -2476,6 +2476,57 @@ function sourceTextForResolution(resolution, index) {
     .trim();
 }
 
+function exactLocatedTextForResolution(resolution, index) {
+  if (resolution.status !== "ok-line-range") {
+    return sourceTextForResolution(resolution, index);
+  }
+
+  const rel = resolution.canonical.split(":", 1)[0];
+  const ranges = resolution.canonical.slice(rel.length + 1);
+  const rawLines = (index.rawByRel.get(rel) ?? "").split("\n");
+  return ranges
+    .split(",")
+    .flatMap((part) => {
+      const range = part.trim().match(/^(\d+)(?:-(\d+))?$/);
+      if (range === null) return [];
+      const first = Number(range[1]);
+      const last = Number(range[2] ?? range[1]);
+      return Array.from(
+        { length: last - first + 1 },
+        (_, offset) => rawLines[first + offset - 1] ?? "",
+      );
+    })
+    .join("\n")
+    .trim();
+}
+
+function rulesExcerptForSection(section, index) {
+  const resolutions = resolveSection(section, index);
+  const invalid = resolutions.filter(
+    (resolution) => statusSeverity(resolution.status) !== "ok",
+  );
+  if (invalid.length > 0) {
+    return {
+      tag: "invalid-locator",
+      resolutions: invalid,
+    };
+  }
+
+  const rulesExcerpt = resolutions
+    .map((resolution) => exactLocatedTextForResolution(resolution, index))
+    .filter(Boolean)
+    .join("\n\n");
+  return rulesExcerpt.length === 0
+    ? {
+        tag: "empty-excerpt",
+        resolutions,
+      }
+    : {
+        tag: "ok",
+        rulesExcerpt,
+      };
+}
+
 function freezeResult(value) {
   if (Array.isArray(value)) {
     value.forEach(freezeResult);
@@ -3120,6 +3171,7 @@ module.exports = {
   renderJsonReport,
   renderMarkdownReport,
   resolveSection,
+  rulesExcerptForSection,
   sourceContainsIdentity,
   sourceTextForResolution,
   unsupportedSummaryWords,

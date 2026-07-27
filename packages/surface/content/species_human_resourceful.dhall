@@ -1,7 +1,5 @@
 let resourceful =
-      { description =
-          "You gain Heroic Inspiration whenever you finish a Long Rest."
-      , id = "species_human_resourceful"
+      {  id = "species_human_resourceful"
       , kind = "species_trait"
       , mechanics =
         { family = "rest_triggered_heroic_inspiration"
@@ -11,7 +9,7 @@ let resourceful =
       , name = "Resourceful"
       , provenance =
         { kind = "srd-5.2.1"
-        , section = "Character-Origins/Human#Resourceful"
+        , section = "Character-Origins.md:1,67,97,231,239-240"
         }
       , species = "human"
       }

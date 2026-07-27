@@ -1,5 +1,4 @@
 {
-  "description": "You manifest a minor wonder within range. You create one of the spell's effects. Your voice booms up to three times as loud as normal for 1 minute. For the duration, you have Advantage on Charisma (Intimidation) checks. If you cast this spell multiple times, you can have up to three of its 1-minute effects active at a time.",
   "id": "thaumaturgy",
   "kind": "spell",
   "mechanics": {

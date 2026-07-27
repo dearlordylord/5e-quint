@@ -17,8 +17,7 @@ let deflectAttacks =
       , name = "Deflect Attacks"
       , className = "monk"
       , acquiredAtLevel = 3
-      , description =
-          "When an attack roll hits you and its damage includes Bludgeoning, Piercing, or Slashing damage, take a Reaction to reduce the attack's total damage against you."
+
       , provenance =
           { kind = "srd-5.2.1", section = "Classes/Monk#Deflect Attacks" }
       , mechanics =

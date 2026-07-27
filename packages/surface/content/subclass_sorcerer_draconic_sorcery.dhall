@@ -1,7 +1,6 @@
 let draconicSorcery =
       { className = "sorcerer"
-      , description =
-          "The Draconic Sorcery subclass is detailed after this class's description."
+
       , featureGrants =
           [ { level = 3, unitId = "sorcerer_draconic_resilience" }
           , { level = 3, unitId = "sorcerer_draconic_spells" }

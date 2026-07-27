@@ -9,8 +9,7 @@ let favoredEnemy =
       , acquiredAtLevel = 1
       , provenance =
           { kind = "srd-5.2.1", section = "Classes/Ranger#Favored Enemy" }
-      , description =
-          "You always have Hunter's Mark prepared. You can cast it twice without expending a spell slot, and you regain all expended uses when you finish a Long Rest."
+
       , mechanics =
           { family = "passive"
           , grants =

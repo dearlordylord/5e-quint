@@ -1,5 +1,4 @@
 {
-  "description": "You have Darkvision with a range of 60 feet.",
   "id": "species_tiefling_darkvision",
   "kind": "species_trait",
   "mechanics": {

@@ -19,8 +19,7 @@ let lesserRestoration =
           { kind = "srd-5.2.1"
           , section = "Spells/Descriptions-E-L#Lesser Restoration"
           }
-      , description =
-          "You touch a creature and end one condition on it: Blinded, Deafened, Paralyzed, or Poisoned."
+
       , mechanics =
           { family = "activation"
           , level = 2

@@ -6,10 +6,9 @@ let ring =
       , requiresAttunement = False
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "MagicItems#Ring of Water Walking"
+          , section = "Magic-Items/Items-Q-Z.md#Ring of Water Walking"
           }
-      , description =
-          "While wearing this ring, you cast Water Walk from it, targeting only yourself."
+
       , mechanics =
           { family = "passive"
           , grants =

@@ -1,8 +1,7 @@
 { armorTraining =
   { categories = [ "light", "medium", "shield" ], kind = "trained" }
 , className = "cleric"
-, description =
-    "As a Cleric, you gain the following class features when you reach the specified Cleric levels. These features are listed in the Cleric Features table."
+
 , featureGrants =
   [ { level = 1, unitId = "cleric_divine_order" }
   , { level = 2, unitId = "cleric_channel_divinity" }

@@ -1,6 +1,5 @@
 {
   "className": "sorcerer",
-  "description": "The Draconic Sorcery subclass is detailed after this class's description.",
   "featureGrants": [
     {
       "level": 3,

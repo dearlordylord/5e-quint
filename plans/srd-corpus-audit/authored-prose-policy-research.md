@@ -15,6 +15,16 @@ The repository has no evidenced product decision that handwritten SRD summaries
 are needed for MCP usability, client usability, licensing, or mechanics
 projection.
 
+## Owner decision
+
+Issue [#237](https://github.com/dearlordylord/5e-quint/issues/237) adopts the
+generated-projection compromise from this research: canonical mechanics records
+retain typed facts and precise local RAW locators, while the portable SRD
+publication derives an exact `rulesExcerpt` for readability. Handwritten
+top-level summaries are not canonical state. Nested prose is outside that
+atomic removal where it remains authored input or a current support-code
+dependency.
+
 The current `summary` policy is a late audit design, not an original Surface
 requirement:
 
@@ -270,13 +280,12 @@ evidence favors **typed mechanics + source locator for top-level descriptions**.
 If the owner wants the aggregate to double as a standalone rules compendium,
 the recommendation changes to **generated exact excerpts**, not summaries.
 
-## Unresolved owner decisions
+## Resolved owner questions
 
-1. Must the portable Surface aggregate be useful as a standalone human-readable
-   rules catalog without the RAW corpus?
-2. Is top-level `description` a durable presentation field, or can presentation
-   join through provenance/source locators?
-3. Which nested prose values are intentional authored expression, and which
-   should become typed facts plus an optional generated presentation excerpt?
-4. Should the existing summary audit remain temporarily during migration, or
-   should the migration be atomic so no new summary can enter?
+1. The portable Surface aggregate benefits from standalone readability but does
+   not require handwritten prose; generated exact excerpts provide it.
+2. Top-level `description` is not durable canonical mechanics state.
+3. Nested prose stays governed by its schema role until each typed migration
+   establishes that it is presentation-only.
+4. Top-level summary removal is atomic. The summary audit remains only for
+   nested fields whose schema still declares summary evidence.

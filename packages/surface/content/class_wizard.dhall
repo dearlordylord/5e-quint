@@ -1,7 +1,6 @@
 { armorTraining.kind = "none"
 , className = "wizard"
-, description =
-    "As a Wizard, you gain the following class features when you reach the specified Wizard levels. These features are listed in the Wizard Features table."
+
 , featureGrants =
   [ { level = 1, unitId = "wizard_ritual_adept" }
   , { level = 1, unitId = "wizard_arcane_recovery" }

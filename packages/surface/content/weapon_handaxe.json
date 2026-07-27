@@ -7,7 +7,6 @@
     "dieSize": 6,
     "kind": "dice"
   },
-  "description": "Handaxe — weapons table.",
   "id": "weapon_handaxe",
   "kind": "weapon",
   "mastery": "vex",

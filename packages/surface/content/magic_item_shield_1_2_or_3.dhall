@@ -48,9 +48,8 @@ let shield =
       , id = "magic_item_shield_1_2_or_3"
       , name = "Shield, +1, +2, or +3"
       , provenance =
-        { kind = "srd-5.2.1", section = "MagicItems#Shield+1+2or+3" }
-      , description =
-          "While holding this Shield, you have a bonus to Armor Class determined by the Shield's rarity, in addition to the Shield's normal bonus to AC."
+        { kind = "srd-5.2.1", section = "Magic-Items/Items-Q-Z.md#Shield, +1, +2, or +3" }
+
       , armorClassProjection =
         { kind = "trained_shield_bonus"
         , handUse = "shield"

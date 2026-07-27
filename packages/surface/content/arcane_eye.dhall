@@ -71,8 +71,7 @@ let arcaneEye =
               { kind = "srd-5.2.1"
               , section = "Spells/Descriptions-A-D#Arcane Eye"
               }
-          , description =
-              "You create an Invisible, invulnerable eye within range that hovers for the duration. You mentally receive visual information from the eye, which can see in every direction. It also has Darkvision with a range of 30 feet. As a Bonus Action, you can move the eye up to 30 feet in any direction."
+
           , mechanics =
               { family = "ongoing_effect"
               , level = 4

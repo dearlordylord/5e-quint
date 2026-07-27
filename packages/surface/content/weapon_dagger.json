@@ -7,7 +7,6 @@
     "dieSize": 4,
     "kind": "dice"
   },
-  "description": "Dagger — weapons table.",
   "id": "weapon_dagger",
   "kind": "weapon",
   "mastery": "nick",

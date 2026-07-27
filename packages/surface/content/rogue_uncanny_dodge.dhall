@@ -10,8 +10,7 @@ let uncannyDodge =
       , name = "Uncanny Dodge"
       , className = "rogue"
       , acquiredAtLevel = 5
-      , description =
-          "When an attacker you can see hits you with an attack roll, take a Reaction to halve the attack's damage against you."
+
       , provenance =
           { kind = "srd-5.2.1", section = "Classes/Rogue#Uncanny Dodge" }
       , mechanics =

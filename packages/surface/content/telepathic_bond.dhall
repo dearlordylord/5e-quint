@@ -8,8 +8,7 @@ let telepathicBond =
           { kind = "srd-5.2.1"
           , section = "Spells/Descriptions-S-Z#Telepathic Bond"
           }
-      , description =
-          "You forge a telepathic link among up to eight willing creatures of your choice within range, psychically linking each to all the others for the duration. Creatures that can't communicate in any languages aren't affected. Until the spell ends, the targets can communicate telepathically through the bond whether or not they share a language. The communication is possible over any distance, though it can't extend to other planes."
+
       , mechanics =
           { family = "activation"
           , level = 5

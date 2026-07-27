@@ -154,8 +154,7 @@ let wildShape =
           { kind = "srd-5.2.1"
           , section = "Classes/Druid.md:30-49,95-122"
           }
-      , description =
-          "As a Bonus Action, you shape-shift into a Beast form that you have learned for this feature. You stay in that form for a number of hours equal to half your Druid level or until you use Wild Shape again, have the Incapacitated condition, or die. You can also leave the form early as a Bonus Action. When you assume a Wild Shape form, you gain a number of Temporary Hit Points equal to your Druid level. You can't cast spells."
+
       , mechanics =
           { family = "activation"
           , activationCost = { kind = "bonus_action" }

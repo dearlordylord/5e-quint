@@ -38,8 +38,7 @@ let protectionFromEvilAndGood =
           { kind = "srd-5.2.1"
           , section = "Spells/Descriptions-M-P#Protection from Evil and Good"
           }
-      , description =
-          "Until the spell ends, one willing creature you touch is protected against creatures that are Aberrations, Celestials, Elementals, Fey, Fiends, or Undead. Creatures of those types have Disadvantage on attack rolls against the target. The target also can't be possessed by or gain the Charmed or Frightened conditions from them. If the target is already possessed, Charmed, or Frightened by such a creature, the target has Advantage on any new saving throw against the relevant effect."
+
       , mechanics =
           { family = "activation"
           , level = 1

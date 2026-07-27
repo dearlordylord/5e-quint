@@ -6,8 +6,7 @@ let potentCantrip =
       , acquiredAtLevel = 3
       , provenance =
           { kind = "srd-5.2.1", section = "Classes/Wizard.md:417-420" }
-      , description =
-          "When you cast a damaging cantrip at a creature and miss with the attack roll or the target succeeds on a saving throw against the cantrip, the target takes half the cantrip's damage, if any, but suffers no additional effect."
+
       , mechanics =
           { family = "potent_cantrip"
           , trigger =

@@ -29,8 +29,7 @@ let huntersPrey =
       , acquiredAtLevel = 3
       , provenance =
           { kind = "srd-5.2.1", section = "Classes/Ranger.md:243-249" }
-      , description =
-          "You gain one of the following feature options of your choice: Colossus Slayer; Horde Breaker. Whenever you finish a Short or Long Rest, you can replace the chosen option with the other one. Colossus Slayer deals an extra 1d8 weapon damage once per turn against a creature missing any of its Hit Points. Horde Breaker makes another attack with the same weapon against a different creature within 5 feet of the original target once per turn."
+
       , mechanics =
           { family = "hunters_prey"
           , choice =

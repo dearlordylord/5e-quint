@@ -19,8 +19,7 @@ let circleOfTheLandSpells =
           { kind = "srd-5.2.1"
           , section = "Classes/Druid#Circle of the Land Spells"
           }
-      , description =
-          "Whenever you finish a Long Rest, choose one type of land: Arid, Polar, Temperate, or Tropical. You have the spells listed for your Druid level and lower prepared."
+
       , mechanics =
           { family = "passive"
           , grants =

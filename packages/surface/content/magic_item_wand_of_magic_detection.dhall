@@ -21,10 +21,9 @@ let wand =
       , requiresAttunement = False
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "MagicItems#WandOfMagicDetection"
+          , section = "Magic-Items/Items-Q-Z.md#Wand of Magic Detection"
           }
-      , description =
-          "This wand has 3 charges. While holding it, you can expend 1 charge to cast Detect Magic from it. The wand regains 1d3 expended charges daily at dawn."
+
       , mechanics =
           { family = "activation"
           , activationCost = { kind = "standard_action", action = "magic" }

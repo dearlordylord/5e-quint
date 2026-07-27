@@ -1,7 +1,6 @@
 {
   "acquiredAtLevel": 3,
   "className": "cleric",
-  "description": "Your connection to this divine domain ensures you always have certain spells ready. When you reach a Cleric level specified in the Life Domain Spells table, you thereafter always have the listed spells prepared.",
   "id": "cleric_life_domain_spells",
   "kind": "class_feature",
   "mechanics": {

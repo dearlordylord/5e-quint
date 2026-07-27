@@ -1,7 +1,6 @@
 let evoker =
       { className = "wizard"
-      , description =
-          "The Evoker subclass is detailed after this class's description."
+
       , featureGrants =
         [ { level = 3, unitId = "wizard_evocation_savant" }
         , { level = 3, unitId = "wizard_potent_cantrip" }

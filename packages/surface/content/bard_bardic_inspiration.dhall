@@ -8,8 +8,7 @@ let bardicInspiration =
           { kind = "srd-5.2.1"
           , section = "Classes/Bard#Bardic Inspiration"
           }
-      , description =
-          "As a Bonus Action, inspire another creature within 60 feet who can see or hear you. The creature gains one Bardic Inspiration die for the next hour."
+
       , mechanics =
           { family = "activation"
           , activationCost = { kind = "bonus_action" }

@@ -5,7 +5,7 @@ let armor =
       , name = "Hide Armor"
       , category = "medium"
       , provenance = { kind = "srd-5.2.1", section = "Equipment#Armor" }
-      , description = "Hide Armor — armor table."
+
       , acFormula = { kind = "medium_dex_max_2", base = 12 }
       , weightPounds = 12
       , costGp = 10

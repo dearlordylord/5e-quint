@@ -25,10 +25,9 @@ let brooch =
       , requiresAttunement = True
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "MagicItems#Brooch of Shielding"
+          , section = "Magic-Items/Items-A-H.md#Brooch of Shielding"
           }
-      , description =
-          "While wearing this brooch, you have Resistance to Force damage, and you have Immunity to damage from the Magic Missile spell."
+
       , mechanics =
           { family = "passive"
           , grants =

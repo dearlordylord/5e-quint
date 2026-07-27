@@ -1,5 +1,4 @@
 {
-  "description": "You radiate a concealing aura in a 30-foot Emanation for the duration. While in the aura, you and each creature you choose have a +10 bonus to Dexterity (Stealth) checks and leave no tracks.",
   "id": "pass_without_trace",
   "kind": "spell",
   "mechanics": {

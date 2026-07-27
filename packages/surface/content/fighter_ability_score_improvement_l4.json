@@ -1,7 +1,6 @@
 {
   "acquiredAtLevel": 4,
   "className": "fighter",
-  "description": "You gain the Ability Score Improvement feat (see \"Feats\") or another feat of your choice for which you qualify. You gain this feature again at Fighter levels 6, 8, 12, 14, and 16.",
   "id": "fighter_ability_score_improvement_l4",
   "kind": "class_feature",
   "mechanics": {

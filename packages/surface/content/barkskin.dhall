@@ -19,8 +19,7 @@ let barkskin =
           { kind = "srd-5.2.1"
           , section = "Spells/Descriptions-A-D#Barkskin"
           }
-      , description =
-          "You touch a willing creature. Until the spell ends, the target's skin assumes a bark-like appearance, and the target has an Armor Class of 17 if its AC is lower than that."
+
       , mechanics =
           { family = "ongoing_effect"
           , level = 2

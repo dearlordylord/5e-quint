@@ -7,11 +7,10 @@
   "metrics": {
     "recordsAudited": 620,
     "issues": 0,
-    "warnings": 190,
+    "warnings": 84,
     "issueCounts": {},
     "warningCounts": {
-      "source-visible-reference": 84,
-      "noncanonical-provenance": 106
+      "source-visible-reference": 84
     }
   },
   "issues": [],
@@ -566,18 +565,6 @@
       "message": "disguise_self has SRD evidence but no authored Surface record"
     },
     {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/cloak_of_protection.json",
-      "recordId": "cloak_of_protection",
-      "message": "MagicItems#Cloak of Protection resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/conjure_woodland_beings.json",
-      "recordId": "conjure_woodland_beings",
-      "message": "Spells/Descriptions-C#Conjure Woodland Beings resolves through ok-heading-alias"
-    },
-    {
       "code": "source-visible-reference",
       "contentPath": "packages/surface/content/create_undead.json",
       "recordId": "create_undead",
@@ -659,84 +646,6 @@
       "message": "mummy has SRD evidence but no authored Surface record"
     },
     {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/darkvision_elf.json",
-      "recordId": "elf_darkvision",
-      "message": "Species/Elf#Darkvision resolves through ok-prose-anchor-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/fabricate.json",
-      "recordId": "fabricate",
-      "message": "Spells/Descriptions-E-F#Fabricate resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/feat_archery.json",
-      "recordId": "feat_archery",
-      "message": "Feats/FightingStyle#Archery resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/fighter_improved_critical.json",
-      "recordId": "fighter_improved_critical",
-      "message": "Classes/Fighter/Champion#ImprovedCritical resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/finger_of_death.json",
-      "recordId": "finger_of_death",
-      "message": "Spells/Descriptions-E-F#Finger of Death resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/hunters_mark.json",
-      "recordId": "hunters_mark",
-      "message": "Spells/Descriptions-G-P#Hunter's Mark resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_adamantine_armor.json",
-      "recordId": "magic_item_adamantine_armor",
-      "message": "MagicItems#AdamantineArmor resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_ammunition_1_2_or_3.json",
-      "recordId": "magic_item_ammunition_1_2_or_3",
-      "message": "MagicItems#Ammunition+1+2or+3 resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_amulet_of_health.json",
-      "recordId": "magic_item_amulet_of_health",
-      "message": "MagicItems#AmuletOfHealth resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_armor_1_2_or_3.json",
-      "recordId": "magic_item_armor_1_2_or_3",
-      "message": "MagicItems#Armor+1+2or+3 resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_bag_of_holding.json",
-      "recordId": "magic_item_bag_of_holding",
-      "message": "MagicItems#Bag of Holding resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_bracers_of_defense.json",
-      "recordId": "magic_item_bracers_of_defense",
-      "message": "MagicItems#BracersOfDefense resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_brazier_of_commanding_fire_elementals.json",
-      "recordId": "magic_item_brazier_of_commanding_fire_elementals",
-      "message": "MagicItems#BrazierOfCommandingFireElementals resolves through ok-heading-alias"
-    },
-    {
       "code": "source-visible-reference",
       "contentPath": "packages/surface/content/magic_item_brazier_of_commanding_fire_elementals.json",
       "recordId": "magic_item_brazier_of_commanding_fire_elementals",
@@ -746,18 +655,6 @@
       "message": "fire_elemental has SRD evidence but no authored Surface record"
     },
     {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_brooch_of_shielding.json",
-      "recordId": "magic_item_brooch_of_shielding",
-      "message": "MagicItems#Brooch of Shielding resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_censer_of_controlling_air_elementals.json",
-      "recordId": "magic_item_censer_of_controlling_air_elementals",
-      "message": "MagicItems#CenserOfControllingAirElementals resolves through ok-heading-alias"
-    },
-    {
       "code": "source-visible-reference",
       "contentPath": "packages/surface/content/magic_item_censer_of_controlling_air_elementals.json",
       "recordId": "magic_item_censer_of_controlling_air_elementals",
@@ -765,36 +662,6 @@
       "targetKind": "statBlock",
       "targetRecordId": "air_elemental",
       "message": "air_elemental has SRD evidence but no authored Surface record"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_chime_of_opening.json",
-      "recordId": "magic_item_chime_of_opening",
-      "message": "MagicItems#ChimeOfOpening resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_cloak_of_arachnida.json",
-      "recordId": "magic_item_cloak_of_arachnida",
-      "message": "MagicItems#CloakOfArachnida resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_cloak_of_protection.json",
-      "recordId": "magic_item_cloak_of_protection",
-      "message": "MagicItems#Cloak of Protection resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_crystal_ball_of_mind_reading.json",
-      "recordId": "magic_item_crystal_ball_of_mind_reading",
-      "message": "MagicItems#CrystalBallOfMindReading resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_cube_of_force.json",
-      "recordId": "magic_item_cube_of_force",
-      "message": "MagicItems#CubeOfForce resolves through ok-heading-alias"
     },
     {
       "code": "source-visible-reference",
@@ -815,48 +682,6 @@
       "message": "resilient_sphere has SRD evidence but no authored Surface record"
     },
     {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_defender.json",
-      "recordId": "magic_item_defender",
-      "message": "MagicItems#Defender resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_eyes_of_minute_seeing.json",
-      "recordId": "magic_item_eyes_of_minute_seeing",
-      "message": "MagicItems#EyesOfMinuteSeeing resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_folding_boat.json",
-      "recordId": "magic_item_folding_boat",
-      "message": "MagicItems#Folding Boat resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_gauntlets_of_ogre_power.json",
-      "recordId": "magic_item_gauntlets_of_ogre_power",
-      "message": "MagicItems#GauntletsOfOgrePower resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_gem_of_seeing.json",
-      "recordId": "magic_item_gem_of_seeing",
-      "message": "MagicItems#GemOfSeeing resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_goggles_of_night.json",
-      "recordId": "magic_item_goggles_of_night",
-      "message": "MagicItems#GogglesOfNight resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_hat_of_disguise.json",
-      "recordId": "magic_item_hat_of_disguise",
-      "message": "MagicItems#HatOfDisguise resolves through ok-heading-alias"
-    },
-    {
       "code": "source-visible-reference",
       "contentPath": "packages/surface/content/magic_item_hat_of_disguise.json",
       "recordId": "magic_item_hat_of_disguise",
@@ -864,24 +689,6 @@
       "targetKind": "unit",
       "targetRecordId": "disguise_self",
       "message": "disguise_self has SRD evidence but no authored Surface record"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_headband_of_intellect.json",
-      "recordId": "magic_item_headband_of_intellect",
-      "message": "MagicItems#HeadbandOfIntellect resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_helm_of_comprehending_languages.json",
-      "recordId": "magic_item_helm_of_comprehending_languages",
-      "message": "MagicItems#HelmOfComprehendingLanguages resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_helm_of_teleportation.json",
-      "recordId": "magic_item_helm_of_teleportation",
-      "message": "MagicItems#HelmOfTeleportation resolves through ok-heading-alias"
     },
     {
       "code": "source-visible-reference",
@@ -893,150 +700,6 @@
       "message": "teleport has SRD evidence but no authored Surface record"
     },
     {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_javelin_of_lightning.json",
-      "recordId": "magic_item_javelin_of_lightning",
-      "message": "MagicItems#JavelinOfLightning resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_manual_of_gainful_exercise.json",
-      "recordId": "magic_item_manual_of_gainful_exercise",
-      "message": "MagicItems#ManualOfGainfulExercise resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_manual_of_quickness_of_action.json",
-      "recordId": "magic_item_manual_of_quickness_of_action",
-      "message": "MagicItems#ManualOfQuicknessOfAction resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_medallion_of_thoughts.json",
-      "recordId": "magic_item_medallion_of_thoughts",
-      "message": "MagicItems#Medallion of Thoughts resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_mithral_armor.json",
-      "recordId": "magic_item_mithral_armor",
-      "message": "MagicItems#MithralArmor resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_necklace_of_fireballs.json",
-      "recordId": "magic_item_necklace_of_fireballs",
-      "message": "MagicItems#NecklaceOfFireballs resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_periapt_of_proof_against_poison.json",
-      "recordId": "magic_item_periapt_of_proof_against_poison",
-      "message": "MagicItems#Periapt of Proof against Poison resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_potion_of_animal_friendship.json",
-      "recordId": "magic_item_potion_of_animal_friendship",
-      "message": "MagicItems#Potion of Animal Friendship resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_potion_of_clairvoyance.json",
-      "recordId": "magic_item_potion_of_clairvoyance",
-      "message": "MagicItems#PotionOfClairvoyance resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_potion_of_climbing.json",
-      "recordId": "magic_item_potion_of_climbing",
-      "message": "MagicItems#PotionOfClimbing resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_potion_of_flying.json",
-      "recordId": "magic_item_potion_of_flying",
-      "message": "MagicItems#Potion of Flying resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_potion_of_giant_strength.json",
-      "recordId": "magic_item_potion_of_giant_strength",
-      "message": "MagicItems#PotionOfGiantStrength resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_potion_of_heroism.json",
-      "recordId": "magic_item_potion_of_heroism",
-      "message": "MagicItems#Potion of Heroism resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_potion_of_invisibility.json",
-      "recordId": "magic_item_potion_of_invisibility",
-      "message": "MagicItems#Potion of Invisibility resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_potion_of_invulnerability.json",
-      "recordId": "magic_item_potion_of_invulnerability",
-      "message": "MagicItems#Potion of Invulnerability resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_potion_of_water_breathing.json",
-      "recordId": "magic_item_potion_of_water_breathing",
-      "message": "MagicItems#PotionOfWaterBreathing resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_quarterstaff_of_the_acrobat.json",
-      "recordId": "magic_item_quarterstaff_of_the_acrobat",
-      "message": "MagicItems#QuarterstaffOfTheAcrobat resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_ring_of_invisibility.json",
-      "recordId": "magic_item_ring_of_invisibility",
-      "message": "MagicItems#RingOfInvisibility resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_ring_of_jumping.json",
-      "recordId": "magic_item_ring_of_jumping",
-      "message": "MagicItems#RingOfJumping resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_ring_of_protection.json",
-      "recordId": "magic_item_ring_of_protection",
-      "message": "MagicItems#RingOfProtection resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_ring_of_resistance.json",
-      "recordId": "magic_item_ring_of_resistance",
-      "message": "MagicItems#Ring of Resistance resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_ring_of_swimming.json",
-      "recordId": "ring_of_swimming",
-      "message": "MagicItems#Ring of Swimming resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_ring_of_telekinesis.json",
-      "recordId": "ring_of_telekinesis",
-      "message": "MagicItems#Ring of Telekinesis resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_ring_of_three_wishes.json",
-      "recordId": "ring_of_three_wishes",
-      "message": "MagicItems#Ring of Three Wishes resolves through ok-heading-alias"
-    },
-    {
       "code": "source-visible-reference",
       "contentPath": "packages/surface/content/magic_item_ring_of_three_wishes.json",
       "recordId": "ring_of_three_wishes",
@@ -1044,36 +707,6 @@
       "targetKind": "unit",
       "targetRecordId": "wish",
       "message": "wish has SRD evidence but no authored Surface record"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_ring_of_warmth.json",
-      "recordId": "magic_item_ring_of_warmth",
-      "message": "MagicItems#RingOfWarmth resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_ring_of_water_walking.json",
-      "recordId": "magic_item_ring_of_water_walking",
-      "message": "MagicItems#Ring of Water Walking resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_robe_of_the_archmagi.json",
-      "recordId": "magic_item_robe_of_the_archmagi",
-      "message": "MagicItems#RobeOfTheArchmagi resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_rod_of_alertness.json",
-      "recordId": "magic_item_rod_of_alertness",
-      "message": "MagicItems#RodOfAlertness resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_rod_of_resurrection.json",
-      "recordId": "magic_item_rod_of_resurrection",
-      "message": "MagicItems#RodOfResurrection resolves through ok-heading-alias"
     },
     {
       "code": "source-visible-reference",
@@ -1085,54 +718,6 @@
       "message": "resurrection has SRD evidence but no authored Surface record"
     },
     {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_rod_of_rulership.json",
-      "recordId": "magic_item_rod_of_rulership",
-      "message": "MagicItems#RodOfRulership resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_sentinel_shield.json",
-      "recordId": "magic_item_sentinel_shield",
-      "message": "MagicItems#SentinelShield resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_shield_1_2_or_3.json",
-      "recordId": "magic_item_shield_1_2_or_3",
-      "message": "MagicItems#Shield+1+2or+3 resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_slippers_of_spider_climbing.json",
-      "recordId": "magic_item_slippers_of_spider_climbing",
-      "message": "MagicItems#Slippers of Spider Climbing resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_sovereign_glue.json",
-      "recordId": "magic_item_sovereign_glue",
-      "message": "MagicItems#SovereignGlue resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_staff_of_fire.json",
-      "recordId": "magic_item_staff_of_fire",
-      "message": "MagicItems#StaffOfFire resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_staff_of_healing.json",
-      "recordId": "magic_item_staff_of_healing",
-      "message": "MagicItems#StaffOfHealing resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_staff_of_power.json",
-      "recordId": "magic_item_staff_of_power",
-      "message": "MagicItems#StaffOfPower resolves through ok-heading-alias"
-    },
-    {
       "code": "source-visible-reference",
       "contentPath": "packages/surface/content/magic_item_staff_of_power.json",
       "recordId": "magic_item_staff_of_power",
@@ -1140,18 +725,6 @@
       "targetKind": "unit",
       "targetRecordId": "globe_of_invulnerability",
       "message": "globe_of_invulnerability has SRD evidence but no authored Surface record"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_staff_of_the_woodlands.json",
-      "recordId": "magic_item_staff_of_the_woodlands",
-      "message": "MagicItems#StaffOfTheWoodlands resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_stone_of_controlling_earth_elementals.json",
-      "recordId": "magic_item_stone_of_controlling_earth_elementals",
-      "message": "MagicItems#StoneOfControllingEarthElementals resolves through ok-heading-alias"
     },
     {
       "code": "source-visible-reference",
@@ -1163,90 +736,6 @@
       "message": "earth_elemental has SRD evidence but no authored Surface record"
     },
     {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_stone_of_good_luck_luckstone.json",
-      "recordId": "magic_item_stone_of_good_luck_luckstone",
-      "message": "MagicItems#StoneOfGoodLuckLuckstone resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_tome_of_clear_thought.json",
-      "recordId": "magic_item_tome_of_clear_thought",
-      "message": "MagicItems#TomeOfClearThought resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_tome_of_leadership_and_influence.json",
-      "recordId": "magic_item_tome_of_leadership_and_influence",
-      "message": "MagicItems#Tome of Leadership and Influence resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_tome_of_understanding.json",
-      "recordId": "magic_item_tome_of_understanding",
-      "message": "MagicItems#TomeOfUnderstanding resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_wand_of_fear.json",
-      "recordId": "magic_item_wand_of_fear",
-      "message": "MagicItems#WandOfFear resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_wand_of_fireballs.json",
-      "recordId": "magic_item_wand_of_fireballs",
-      "message": "MagicItems#WandOfFireballs resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_wand_of_lightning_bolts.json",
-      "recordId": "magic_item_wand_of_lightning_bolts",
-      "message": "MagicItems#WandOfLightningBolts resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_wand_of_magic_detection.json",
-      "recordId": "magic_item_wand_of_magic_detection",
-      "message": "MagicItems#WandOfMagicDetection resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_wand_of_magic_missiles.json",
-      "recordId": "magic_item_wand_of_magic_missiles",
-      "message": "MagicItems#WandOfMagicMissiles resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_wand_of_paralysis.json",
-      "recordId": "magic_item_wand_of_paralysis",
-      "message": "MagicItems#WandOfParalysis resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_wand_of_polymorph.json",
-      "recordId": "magic_item_wand_of_polymorph",
-      "message": "MagicItems#WandOfPolymorph resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/magic_item_weapon_1_2_or_3.json",
-      "recordId": "magic_item_weapon_1_2_or_3",
-      "message": "MagicItems#Weapon+1+2or+3 resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/major_image.json",
-      "recordId": "major_image",
-      "message": "Spells/Descriptions-M#Major Image resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/minor_illusion.json",
-      "recordId": "minor_illusion",
-      "message": "Spells/Descriptions-M-R#Minor Illusion resolves through ok-heading-alias"
-    },
-    {
       "code": "source-visible-reference",
       "contentPath": "packages/surface/content/paladin_oath_of_devotion_spells.json",
       "recordId": "paladin_oath_of_devotion_spells",
@@ -1254,66 +743,6 @@
       "targetKind": "unit",
       "targetRecordId": "guardian_of_faith",
       "message": "guardian_of_faith has SRD evidence but no authored Surface record"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/shield.json",
-      "recordId": "shield",
-      "message": "Spells/Descriptions-Q-Z#Shield resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/silent_image.json",
-      "recordId": "silent_image",
-      "message": "Spells/Descriptions-M-R#Silent Image resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/species_dragonborn_breath_weapon.json",
-      "recordId": "species_dragonborn_breath_weapon",
-      "message": "Character-Origins/Dragonborn#Breath Weapon resolves through ok-prose-anchor-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/species_dragonborn_damage_resistance.json",
-      "recordId": "species_dragonborn_damage_resistance",
-      "message": "Character-Origins/Dragonborn#Damage Resistance resolves through ok-prose-anchor-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/species_dragonborn_darkvision.json",
-      "recordId": "species_dragonborn_darkvision",
-      "message": "Character-Origins/Dragonborn#Darkvision resolves through ok-prose-anchor-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/species_dwarf_darkvision.json",
-      "recordId": "dwarf_darkvision",
-      "message": "Character-Origins/Dwarf#Darkvision resolves through ok-prose-anchor-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/species_dwarf_dwarven_resilience.json",
-      "recordId": "dwarf_dwarven_resilience",
-      "message": "Character-Origins/Dwarf#Dwarven Resilience resolves through ok-prose-anchor-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/species_gnome_darkvision.json",
-      "recordId": "species_gnome_darkvision",
-      "message": "Character-Origins/Gnome#Darkvision resolves through ok-prose-anchor-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/species_gnome_gnomish_cunning.json",
-      "recordId": "species_gnome_gnomish_cunning",
-      "message": "Character-Origins/Gnome#Gnomish Cunning resolves through ok-prose-anchor-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/species_gnome_gnomish_lineage.json",
-      "recordId": "species_gnome_gnomish_lineage",
-      "message": "Character-Origins/Gnome#Gnomish Lineage resolves through ok-prose-anchor-alias"
     },
     {
       "code": "source-visible-reference",
@@ -1341,72 +770,6 @@
       "targetKind": "unit",
       "targetRecordId": "prestidigitation",
       "message": "prestidigitation has SRD evidence but no authored Surface record"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/species_goliath_powerful_build.json",
-      "recordId": "species_goliath_powerful_build",
-      "message": "Character-Origins/Goliath#Powerful Build resolves through ok-prose-anchor-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/species_halfling_brave.json",
-      "recordId": "species_halfling_brave",
-      "message": "Character-Origins/Halfling#Brave resolves through ok-prose-anchor-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/species_halfling_luck.json",
-      "recordId": "species_halfling_luck",
-      "message": "Character-Origins/Halfling#Luck resolves through ok-prose-anchor-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/species_halfling_naturally_stealthy.json",
-      "recordId": "species_halfling_naturally_stealthy",
-      "message": "Character-Origins/Halfling#Naturally Stealthy resolves through ok-prose-anchor-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/species_halfling_nimbleness.json",
-      "recordId": "species_halfling_nimbleness",
-      "message": "Character-Origins/Halfling#Halfling Nimbleness resolves through ok-prose-anchor-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/species_human_resourceful.json",
-      "recordId": "species_human_resourceful",
-      "message": "Character-Origins/Human#Resourceful resolves through ok-prose-anchor-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/species_human_skillful.json",
-      "recordId": "species_human_skillful",
-      "message": "Character-Origins/Human#Skillful resolves through ok-prose-anchor-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/species_human_versatile.json",
-      "recordId": "species_human_versatile",
-      "message": "Character-Origins/Human#Versatile resolves through ok-prose-anchor-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/species_orc_darkvision.json",
-      "recordId": "orc_darkvision",
-      "message": "Species/Orc#Darkvision resolves through ok-prose-anchor-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/wall_of_fire.json",
-      "recordId": "wall_of_fire",
-      "message": "Spells/Descriptions-W#Wall of Fire resolves through ok-heading-alias"
-    },
-    {
-      "code": "noncanonical-provenance",
-      "contentPath": "packages/surface/content/wall_of_stone.json",
-      "recordId": "wall_of_stone",
-      "message": "Spells/Descriptions-W#Wall of Stone resolves through ok-heading-alias"
     }
   ]
 }

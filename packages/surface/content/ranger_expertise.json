@@ -1,7 +1,6 @@
 {
   "acquiredAtLevel": 9,
   "className": "ranger",
-  "description": "Choose two of your skill proficiencies with which you lack Expertise; you gain Expertise in those skills.",
   "id": "ranger_expertise",
   "kind": "class_feature",
   "mechanics": {

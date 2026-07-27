@@ -1,7 +1,5 @@
 let luck =
-      { description =
-          "When you roll a 1 on the d20 of a D20 Test, you can reroll the die, and you must use the new roll."
-      , id = "species_halfling_luck"
+      {  id = "species_halfling_luck"
       , kind = "species_trait"
       , mechanics =
         { family = "d20_test_natural_one_reroll"
@@ -18,7 +16,7 @@ let luck =
       , name = "Luck"
       , provenance =
         { kind = "srd-5.2.1"
-        , section = "Character-Origins/Halfling#Luck"
+        , section = "Character-Origins.md:1,67,97,215,227-228"
         }
       , species = "halfling"
       }

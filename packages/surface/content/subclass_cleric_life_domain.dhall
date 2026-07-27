@@ -1,7 +1,6 @@
 let lifeDomain =
       { className = "cleric"
-      , description =
-          "The Life Domain subclass is detailed after this class's description."
+
       , featureGrants =
           [ { level = 3, unitId = "cleric_life_domain_spells" }
           , { level = 3, unitId = "cleric_disciple_of_life" }

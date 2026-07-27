@@ -8,8 +8,7 @@ let eldritchInvocations =
           { kind = "srd-5.2.1"
           , section = "Classes/Warlock#Eldritch Invocations"
           }
-      , description =
-          "You gain Eldritch Invocations of your choice. If an invocation has a prerequisite, you must meet it. Whenever you gain a Warlock level, you can replace one of your invocations with another one for which you qualify. You can't pick the same invocation more than once unless its description says otherwise."
+
       , mechanics =
           { family = "feature_choice"
           , choiceKey = "eldritch_invocations"

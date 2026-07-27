@@ -15,8 +15,7 @@ let acrobaticMovement =
       , acquiredAtLevel = 9
       , provenance =
           { kind = "srd-5.2.1", section = "Classes/Monk.md:138-140" }
-      , description =
-          "While you aren't wearing armor or wielding a Shield, you gain the ability to move along vertical surfaces and across liquids on your turn without falling during the movement."
+
       , mechanics =
           { family = "acrobatic_movement"
           , condition =

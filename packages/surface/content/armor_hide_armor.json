@@ -5,7 +5,6 @@
   },
   "category": "medium",
   "costGp": 10,
-  "description": "Hide Armor — armor table.",
   "donDoff": {
     "doffMinutes": 1,
     "donMinutes": 5

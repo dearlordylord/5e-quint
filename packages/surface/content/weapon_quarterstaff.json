@@ -10,7 +10,6 @@
     "dieSize": 6,
     "kind": "dice"
   },
-  "description": "Quarterstaff — weapons table.",
   "id": "weapon_quarterstaff",
   "kind": "weapon",
   "mastery": "topple",

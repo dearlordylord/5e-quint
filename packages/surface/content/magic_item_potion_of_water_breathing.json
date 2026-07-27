@@ -1,5 +1,4 @@
 {
-  "description": "You can breathe underwater for 24 hours after drinking this potion.",
   "destruction": {
     "kind": "permanent_on_empty"
   },
@@ -45,7 +44,7 @@
   "name": "Potion of Water Breathing",
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "MagicItems#PotionOfWaterBreathing"
+    "section": "Magic-Items/Items-I-P.md#Potion of Water Breathing"
   },
   "rarity": "uncommon",
   "requiresAttunement": false

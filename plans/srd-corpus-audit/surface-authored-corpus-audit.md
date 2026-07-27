@@ -6,7 +6,7 @@ Status: accepted
 
 - Records audited: 620
 - Issues: 0
-- Warnings: 190
+- Warnings: 84
 
 ## Issues
 
@@ -16,195 +16,89 @@ Status: accepted
 
 ## Warnings
 
-| Code                       | Content                                                                          | Message                                                                               |
-| -------------------------- | -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| `source-visible-reference` | `packages/surface/content/animate_dead.json`                                     | skeleton has SRD evidence but no authored Surface record                              |
-| `source-visible-reference` | `packages/surface/content/animate_dead.json`                                     | zombie has SRD evidence but no authored Surface record                                |
-| `source-visible-reference` | `packages/surface/content/animate_dead.json`                                     | skeleton has SRD evidence but no authored Surface record                              |
-| `source-visible-reference` | `packages/surface/content/animate_dead.json`                                     | zombie has SRD evidence but no authored Surface record                                |
-| `source-visible-reference` | `packages/surface/content/animate_dead.json`                                     | skeleton has SRD evidence but no authored Surface record                              |
-| `source-visible-reference` | `packages/surface/content/animate_dead.json`                                     | zombie has SRD evidence but no authored Surface record                                |
-| `source-visible-reference` | `packages/surface/content/animate_dead.json`                                     | skeleton has SRD evidence but no authored Surface record                              |
-| `source-visible-reference` | `packages/surface/content/animate_dead.json`                                     | zombie has SRD evidence but no authored Surface record                                |
-| `source-visible-reference` | `packages/surface/content/animate_dead.json`                                     | skeleton has SRD evidence but no authored Surface record                              |
-| `source-visible-reference` | `packages/surface/content/animate_dead.json`                                     | zombie has SRD evidence but no authored Surface record                                |
-| `source-visible-reference` | `packages/surface/content/animate_dead.json`                                     | skeleton has SRD evidence but no authored Surface record                              |
-| `source-visible-reference` | `packages/surface/content/animate_dead.json`                                     | zombie has SRD evidence but no authored Surface record                                |
-| `source-visible-reference` | `packages/surface/content/animate_dead.json`                                     | skeleton has SRD evidence but no authored Surface record                              |
-| `source-visible-reference` | `packages/surface/content/animate_dead.json`                                     | zombie has SRD evidence but no authored Surface record                                |
-| `source-visible-reference` | `packages/surface/content/class_bard.json`                                       | mage_hand has SRD evidence but no authored Surface record                             |
-| `source-visible-reference` | `packages/surface/content/class_bard.json`                                       | mending has SRD evidence but no authored Surface record                               |
-| `source-visible-reference` | `packages/surface/content/class_bard.json`                                       | message has SRD evidence but no authored Surface record                               |
-| `source-visible-reference` | `packages/surface/content/class_bard.json`                                       | prestidigitation has SRD evidence but no authored Surface record                      |
-| `source-visible-reference` | `packages/surface/content/class_bard.json`                                       | illusory_script has SRD evidence but no authored Surface record                       |
-| `source-visible-reference` | `packages/surface/content/class_bard.json`                                       | unseen_servant has SRD evidence but no authored Surface record                        |
-| `source-visible-reference` | `packages/surface/content/class_bard.json`                                       | disguise_self has SRD evidence but no authored Surface record                         |
-| `source-visible-reference` | `packages/surface/content/class_cleric.json`                                     | mending has SRD evidence but no authored Surface record                               |
-| `source-visible-reference` | `packages/surface/content/class_cleric.json`                                     | purify_food_and_drink has SRD evidence but no authored Surface record                 |
-| `source-visible-reference` | `packages/surface/content/class_cleric.json`                                     | create_or_destroy_water has SRD evidence but no authored Surface record               |
-| `source-visible-reference` | `packages/surface/content/class_cleric.json`                                     | control_water has SRD evidence but no authored Surface record                         |
-| `source-visible-reference` | `packages/surface/content/class_cleric.json`                                     | divination has SRD evidence but no authored Surface record                            |
-| `source-visible-reference` | `packages/surface/content/class_cleric.json`                                     | guardian_of_faith has SRD evidence but no authored Surface record                     |
-| `source-visible-reference` | `packages/surface/content/class_cleric.json`                                     | locate_creature has SRD evidence but no authored Surface record                       |
-| `source-visible-reference` | `packages/surface/content/class_cleric.json`                                     | stone_shape has SRD evidence but no authored Surface record                           |
-| `source-visible-reference` | `packages/surface/content/class_druid.json`                                      | druidcraft has SRD evidence but no authored Surface record                            |
-| `source-visible-reference` | `packages/surface/content/class_druid.json`                                      | elementalism has SRD evidence but no authored Surface record                          |
-| `source-visible-reference` | `packages/surface/content/class_druid.json`                                      | mending has SRD evidence but no authored Surface record                               |
-| `source-visible-reference` | `packages/surface/content/class_druid.json`                                      | message has SRD evidence but no authored Surface record                               |
-| `source-visible-reference` | `packages/surface/content/class_druid.json`                                      | purify_food_and_drink has SRD evidence but no authored Surface record                 |
-| `source-visible-reference` | `packages/surface/content/class_druid.json`                                      | create_or_destroy_water has SRD evidence but no authored Surface record               |
-| `source-visible-reference` | `packages/surface/content/class_druid.json`                                      | goodberry has SRD evidence but no authored Surface record                             |
-| `source-visible-reference` | `packages/surface/content/class_paladin.json`                                    | purify_food_and_drink has SRD evidence but no authored Surface record                 |
-| `source-visible-reference` | `packages/surface/content/class_ranger.json`                                     | goodberry has SRD evidence but no authored Surface record                             |
-| `source-visible-reference` | `packages/surface/content/class_sorcerer.json`                                   | prestidigitation has SRD evidence but no authored Surface record                      |
-| `source-visible-reference` | `packages/surface/content/class_sorcerer.json`                                   | elementalism has SRD evidence but no authored Surface record                          |
-| `source-visible-reference` | `packages/surface/content/class_sorcerer.json`                                   | mage_hand has SRD evidence but no authored Surface record                             |
-| `source-visible-reference` | `packages/surface/content/class_sorcerer.json`                                   | mending has SRD evidence but no authored Surface record                               |
-| `source-visible-reference` | `packages/surface/content/class_sorcerer.json`                                   | message has SRD evidence but no authored Surface record                               |
-| `source-visible-reference` | `packages/surface/content/class_sorcerer.json`                                   | disguise_self has SRD evidence but no authored Surface record                         |
-| `source-visible-reference` | `packages/surface/content/class_warlock.json`                                    | mage_hand has SRD evidence but no authored Surface record                             |
-| `source-visible-reference` | `packages/surface/content/class_warlock.json`                                    | prestidigitation has SRD evidence but no authored Surface record                      |
-| `source-visible-reference` | `packages/surface/content/class_warlock.json`                                    | unseen_servant has SRD evidence but no authored Surface record                        |
-| `source-visible-reference` | `packages/surface/content/class_warlock.json`                                    | illusory_script has SRD evidence but no authored Surface record                       |
-| `source-visible-reference` | `packages/surface/content/class_wizard.json`                                     | prestidigitation has SRD evidence but no authored Surface record                      |
-| `source-visible-reference` | `packages/surface/content/class_wizard.json`                                     | elementalism has SRD evidence but no authored Surface record                          |
-| `source-visible-reference` | `packages/surface/content/class_wizard.json`                                     | mage_hand has SRD evidence but no authored Surface record                             |
-| `source-visible-reference` | `packages/surface/content/class_wizard.json`                                     | mending has SRD evidence but no authored Surface record                               |
-| `source-visible-reference` | `packages/surface/content/class_wizard.json`                                     | message has SRD evidence but no authored Surface record                               |
-| `source-visible-reference` | `packages/surface/content/class_wizard.json`                                     | floating_disk has SRD evidence but no authored Surface record                         |
-| `source-visible-reference` | `packages/surface/content/class_wizard.json`                                     | illusory_script has SRD evidence but no authored Surface record                       |
-| `source-visible-reference` | `packages/surface/content/class_wizard.json`                                     | unseen_servant has SRD evidence but no authored Surface record                        |
-| `source-visible-reference` | `packages/surface/content/class_wizard.json`                                     | disguise_self has SRD evidence but no authored Surface record                         |
-| `source-visible-reference` | `packages/surface/content/class_wizard.json`                                     | floating_disk has SRD evidence but no authored Surface record                         |
-| `source-visible-reference` | `packages/surface/content/class_wizard.json`                                     | illusory_script has SRD evidence but no authored Surface record                       |
-| `source-visible-reference` | `packages/surface/content/class_wizard.json`                                     | unseen_servant has SRD evidence but no authored Surface record                        |
-| `source-visible-reference` | `packages/surface/content/class_wizard.json`                                     | disguise_self has SRD evidence but no authored Surface record                         |
-| `noncanonical-provenance`  | `packages/surface/content/cloak_of_protection.json`                              | MagicItems#Cloak of Protection resolves through ok-heading-alias                      |
-| `noncanonical-provenance`  | `packages/surface/content/conjure_woodland_beings.json`                          | Spells/Descriptions-C#Conjure Woodland Beings resolves through ok-heading-alias       |
-| `source-visible-reference` | `packages/surface/content/create_undead.json`                                    | ghoul has SRD evidence but no authored Surface record                                 |
-| `source-visible-reference` | `packages/surface/content/create_undead.json`                                    | ghoul has SRD evidence but no authored Surface record                                 |
-| `source-visible-reference` | `packages/surface/content/create_undead.json`                                    | ghoul has SRD evidence but no authored Surface record                                 |
-| `source-visible-reference` | `packages/surface/content/create_undead.json`                                    | ghast has SRD evidence but no authored Surface record                                 |
-| `source-visible-reference` | `packages/surface/content/create_undead.json`                                    | wight has SRD evidence but no authored Surface record                                 |
-| `source-visible-reference` | `packages/surface/content/create_undead.json`                                    | ghoul has SRD evidence but no authored Surface record                                 |
-| `source-visible-reference` | `packages/surface/content/create_undead.json`                                    | ghast has SRD evidence but no authored Surface record                                 |
-| `source-visible-reference` | `packages/surface/content/create_undead.json`                                    | wight has SRD evidence but no authored Surface record                                 |
-| `source-visible-reference` | `packages/surface/content/create_undead.json`                                    | mummy has SRD evidence but no authored Surface record                                 |
-| `noncanonical-provenance`  | `packages/surface/content/darkvision_elf.json`                                   | Species/Elf#Darkvision resolves through ok-prose-anchor-alias                         |
-| `noncanonical-provenance`  | `packages/surface/content/fabricate.json`                                        | Spells/Descriptions-E-F#Fabricate resolves through ok-heading-alias                   |
-| `noncanonical-provenance`  | `packages/surface/content/feat_archery.json`                                     | Feats/FightingStyle#Archery resolves through ok-heading-alias                         |
-| `noncanonical-provenance`  | `packages/surface/content/fighter_improved_critical.json`                        | Classes/Fighter/Champion#ImprovedCritical resolves through ok-heading-alias           |
-| `noncanonical-provenance`  | `packages/surface/content/finger_of_death.json`                                  | Spells/Descriptions-E-F#Finger of Death resolves through ok-heading-alias             |
-| `noncanonical-provenance`  | `packages/surface/content/hunters_mark.json`                                     | Spells/Descriptions-G-P#Hunter's Mark resolves through ok-heading-alias               |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_adamantine_armor.json`                      | MagicItems#AdamantineArmor resolves through ok-heading-alias                          |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_ammunition_1_2_or_3.json`                   | MagicItems#Ammunition+1+2or+3 resolves through ok-heading-alias                       |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_amulet_of_health.json`                      | MagicItems#AmuletOfHealth resolves through ok-heading-alias                           |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_armor_1_2_or_3.json`                        | MagicItems#Armor+1+2or+3 resolves through ok-heading-alias                            |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_bag_of_holding.json`                        | MagicItems#Bag of Holding resolves through ok-heading-alias                           |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_bracers_of_defense.json`                    | MagicItems#BracersOfDefense resolves through ok-heading-alias                         |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_brazier_of_commanding_fire_elementals.json` | MagicItems#BrazierOfCommandingFireElementals resolves through ok-heading-alias        |
-| `source-visible-reference` | `packages/surface/content/magic_item_brazier_of_commanding_fire_elementals.json` | fire_elemental has SRD evidence but no authored Surface record                        |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_brooch_of_shielding.json`                   | MagicItems#Brooch of Shielding resolves through ok-heading-alias                      |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_censer_of_controlling_air_elementals.json`  | MagicItems#CenserOfControllingAirElementals resolves through ok-heading-alias         |
-| `source-visible-reference` | `packages/surface/content/magic_item_censer_of_controlling_air_elementals.json`  | air_elemental has SRD evidence but no authored Surface record                         |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_chime_of_opening.json`                      | MagicItems#ChimeOfOpening resolves through ok-heading-alias                           |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_cloak_of_arachnida.json`                    | MagicItems#CloakOfArachnida resolves through ok-heading-alias                         |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_cloak_of_protection.json`                   | MagicItems#Cloak of Protection resolves through ok-heading-alias                      |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_crystal_ball_of_mind_reading.json`          | MagicItems#CrystalBallOfMindReading resolves through ok-heading-alias                 |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_cube_of_force.json`                         | MagicItems#CubeOfForce resolves through ok-heading-alias                              |
-| `source-visible-reference` | `packages/surface/content/magic_item_cube_of_force.json`                         | private_sanctum has SRD evidence but no authored Surface record                       |
-| `source-visible-reference` | `packages/surface/content/magic_item_cube_of_force.json`                         | resilient_sphere has SRD evidence but no authored Surface record                      |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_defender.json`                              | MagicItems#Defender resolves through ok-heading-alias                                 |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_eyes_of_minute_seeing.json`                 | MagicItems#EyesOfMinuteSeeing resolves through ok-heading-alias                       |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_folding_boat.json`                          | MagicItems#Folding Boat resolves through ok-heading-alias                             |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_gauntlets_of_ogre_power.json`               | MagicItems#GauntletsOfOgrePower resolves through ok-heading-alias                     |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_gem_of_seeing.json`                         | MagicItems#GemOfSeeing resolves through ok-heading-alias                              |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_goggles_of_night.json`                      | MagicItems#GogglesOfNight resolves through ok-heading-alias                           |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_hat_of_disguise.json`                       | MagicItems#HatOfDisguise resolves through ok-heading-alias                            |
-| `source-visible-reference` | `packages/surface/content/magic_item_hat_of_disguise.json`                       | disguise_self has SRD evidence but no authored Surface record                         |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_headband_of_intellect.json`                 | MagicItems#HeadbandOfIntellect resolves through ok-heading-alias                      |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_helm_of_comprehending_languages.json`       | MagicItems#HelmOfComprehendingLanguages resolves through ok-heading-alias             |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_helm_of_teleportation.json`                 | MagicItems#HelmOfTeleportation resolves through ok-heading-alias                      |
-| `source-visible-reference` | `packages/surface/content/magic_item_helm_of_teleportation.json`                 | teleport has SRD evidence but no authored Surface record                              |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_javelin_of_lightning.json`                  | MagicItems#JavelinOfLightning resolves through ok-heading-alias                       |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_manual_of_gainful_exercise.json`            | MagicItems#ManualOfGainfulExercise resolves through ok-heading-alias                  |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_manual_of_quickness_of_action.json`         | MagicItems#ManualOfQuicknessOfAction resolves through ok-heading-alias                |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_medallion_of_thoughts.json`                 | MagicItems#Medallion of Thoughts resolves through ok-heading-alias                    |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_mithral_armor.json`                         | MagicItems#MithralArmor resolves through ok-heading-alias                             |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_necklace_of_fireballs.json`                 | MagicItems#NecklaceOfFireballs resolves through ok-heading-alias                      |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_periapt_of_proof_against_poison.json`       | MagicItems#Periapt of Proof against Poison resolves through ok-heading-alias          |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_potion_of_animal_friendship.json`           | MagicItems#Potion of Animal Friendship resolves through ok-heading-alias              |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_potion_of_clairvoyance.json`                | MagicItems#PotionOfClairvoyance resolves through ok-heading-alias                     |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_potion_of_climbing.json`                    | MagicItems#PotionOfClimbing resolves through ok-heading-alias                         |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_potion_of_flying.json`                      | MagicItems#Potion of Flying resolves through ok-heading-alias                         |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_potion_of_giant_strength.json`              | MagicItems#PotionOfGiantStrength resolves through ok-heading-alias                    |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_potion_of_heroism.json`                     | MagicItems#Potion of Heroism resolves through ok-heading-alias                        |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_potion_of_invisibility.json`                | MagicItems#Potion of Invisibility resolves through ok-heading-alias                   |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_potion_of_invulnerability.json`             | MagicItems#Potion of Invulnerability resolves through ok-heading-alias                |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_potion_of_water_breathing.json`             | MagicItems#PotionOfWaterBreathing resolves through ok-heading-alias                   |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_quarterstaff_of_the_acrobat.json`           | MagicItems#QuarterstaffOfTheAcrobat resolves through ok-heading-alias                 |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_ring_of_invisibility.json`                  | MagicItems#RingOfInvisibility resolves through ok-heading-alias                       |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_ring_of_jumping.json`                       | MagicItems#RingOfJumping resolves through ok-heading-alias                            |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_ring_of_protection.json`                    | MagicItems#RingOfProtection resolves through ok-heading-alias                         |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_ring_of_resistance.json`                    | MagicItems#Ring of Resistance resolves through ok-heading-alias                       |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_ring_of_swimming.json`                      | MagicItems#Ring of Swimming resolves through ok-heading-alias                         |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_ring_of_telekinesis.json`                   | MagicItems#Ring of Telekinesis resolves through ok-heading-alias                      |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_ring_of_three_wishes.json`                  | MagicItems#Ring of Three Wishes resolves through ok-heading-alias                     |
-| `source-visible-reference` | `packages/surface/content/magic_item_ring_of_three_wishes.json`                  | wish has SRD evidence but no authored Surface record                                  |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_ring_of_warmth.json`                        | MagicItems#RingOfWarmth resolves through ok-heading-alias                             |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_ring_of_water_walking.json`                 | MagicItems#Ring of Water Walking resolves through ok-heading-alias                    |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_robe_of_the_archmagi.json`                  | MagicItems#RobeOfTheArchmagi resolves through ok-heading-alias                        |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_rod_of_alertness.json`                      | MagicItems#RodOfAlertness resolves through ok-heading-alias                           |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_rod_of_resurrection.json`                   | MagicItems#RodOfResurrection resolves through ok-heading-alias                        |
-| `source-visible-reference` | `packages/surface/content/magic_item_rod_of_resurrection.json`                   | resurrection has SRD evidence but no authored Surface record                          |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_rod_of_rulership.json`                      | MagicItems#RodOfRulership resolves through ok-heading-alias                           |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_sentinel_shield.json`                       | MagicItems#SentinelShield resolves through ok-heading-alias                           |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_shield_1_2_or_3.json`                       | MagicItems#Shield+1+2or+3 resolves through ok-heading-alias                           |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_slippers_of_spider_climbing.json`           | MagicItems#Slippers of Spider Climbing resolves through ok-heading-alias              |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_sovereign_glue.json`                        | MagicItems#SovereignGlue resolves through ok-heading-alias                            |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_staff_of_fire.json`                         | MagicItems#StaffOfFire resolves through ok-heading-alias                              |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_staff_of_healing.json`                      | MagicItems#StaffOfHealing resolves through ok-heading-alias                           |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_staff_of_power.json`                        | MagicItems#StaffOfPower resolves through ok-heading-alias                             |
-| `source-visible-reference` | `packages/surface/content/magic_item_staff_of_power.json`                        | globe_of_invulnerability has SRD evidence but no authored Surface record              |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_staff_of_the_woodlands.json`                | MagicItems#StaffOfTheWoodlands resolves through ok-heading-alias                      |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_stone_of_controlling_earth_elementals.json` | MagicItems#StoneOfControllingEarthElementals resolves through ok-heading-alias        |
-| `source-visible-reference` | `packages/surface/content/magic_item_stone_of_controlling_earth_elementals.json` | earth_elemental has SRD evidence but no authored Surface record                       |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_stone_of_good_luck_luckstone.json`          | MagicItems#StoneOfGoodLuckLuckstone resolves through ok-heading-alias                 |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_tome_of_clear_thought.json`                 | MagicItems#TomeOfClearThought resolves through ok-heading-alias                       |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_tome_of_leadership_and_influence.json`      | MagicItems#Tome of Leadership and Influence resolves through ok-heading-alias         |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_tome_of_understanding.json`                 | MagicItems#TomeOfUnderstanding resolves through ok-heading-alias                      |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_wand_of_fear.json`                          | MagicItems#WandOfFear resolves through ok-heading-alias                               |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_wand_of_fireballs.json`                     | MagicItems#WandOfFireballs resolves through ok-heading-alias                          |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_wand_of_lightning_bolts.json`               | MagicItems#WandOfLightningBolts resolves through ok-heading-alias                     |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_wand_of_magic_detection.json`               | MagicItems#WandOfMagicDetection resolves through ok-heading-alias                     |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_wand_of_magic_missiles.json`                | MagicItems#WandOfMagicMissiles resolves through ok-heading-alias                      |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_wand_of_paralysis.json`                     | MagicItems#WandOfParalysis resolves through ok-heading-alias                          |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_wand_of_polymorph.json`                     | MagicItems#WandOfPolymorph resolves through ok-heading-alias                          |
-| `noncanonical-provenance`  | `packages/surface/content/magic_item_weapon_1_2_or_3.json`                       | MagicItems#Weapon+1+2or+3 resolves through ok-heading-alias                           |
-| `noncanonical-provenance`  | `packages/surface/content/major_image.json`                                      | Spells/Descriptions-M#Major Image resolves through ok-heading-alias                   |
-| `noncanonical-provenance`  | `packages/surface/content/minor_illusion.json`                                   | Spells/Descriptions-M-R#Minor Illusion resolves through ok-heading-alias              |
-| `source-visible-reference` | `packages/surface/content/paladin_oath_of_devotion_spells.json`                  | guardian_of_faith has SRD evidence but no authored Surface record                     |
-| `noncanonical-provenance`  | `packages/surface/content/shield.json`                                           | Spells/Descriptions-Q-Z#Shield resolves through ok-heading-alias                      |
-| `noncanonical-provenance`  | `packages/surface/content/silent_image.json`                                     | Spells/Descriptions-M-R#Silent Image resolves through ok-heading-alias                |
-| `noncanonical-provenance`  | `packages/surface/content/species_dragonborn_breath_weapon.json`                 | Character-Origins/Dragonborn#Breath Weapon resolves through ok-prose-anchor-alias     |
-| `noncanonical-provenance`  | `packages/surface/content/species_dragonborn_damage_resistance.json`             | Character-Origins/Dragonborn#Damage Resistance resolves through ok-prose-anchor-alias |
-| `noncanonical-provenance`  | `packages/surface/content/species_dragonborn_darkvision.json`                    | Character-Origins/Dragonborn#Darkvision resolves through ok-prose-anchor-alias        |
-| `noncanonical-provenance`  | `packages/surface/content/species_dwarf_darkvision.json`                         | Character-Origins/Dwarf#Darkvision resolves through ok-prose-anchor-alias             |
-| `noncanonical-provenance`  | `packages/surface/content/species_dwarf_dwarven_resilience.json`                 | Character-Origins/Dwarf#Dwarven Resilience resolves through ok-prose-anchor-alias     |
-| `noncanonical-provenance`  | `packages/surface/content/species_gnome_darkvision.json`                         | Character-Origins/Gnome#Darkvision resolves through ok-prose-anchor-alias             |
-| `noncanonical-provenance`  | `packages/surface/content/species_gnome_gnomish_cunning.json`                    | Character-Origins/Gnome#Gnomish Cunning resolves through ok-prose-anchor-alias        |
-| `noncanonical-provenance`  | `packages/surface/content/species_gnome_gnomish_lineage.json`                    | Character-Origins/Gnome#Gnomish Lineage resolves through ok-prose-anchor-alias        |
-| `source-visible-reference` | `packages/surface/content/species_gnome_gnomish_lineage.json`                    | prestidigitation has SRD evidence but no authored Surface record                      |
-| `source-visible-reference` | `packages/surface/content/species_gnome_gnomish_lineage.json`                    | mending has SRD evidence but no authored Surface record                               |
-| `source-visible-reference` | `packages/surface/content/species_gnome_gnomish_lineage.json`                    | prestidigitation has SRD evidence but no authored Surface record                      |
-| `noncanonical-provenance`  | `packages/surface/content/species_goliath_powerful_build.json`                   | Character-Origins/Goliath#Powerful Build resolves through ok-prose-anchor-alias       |
-| `noncanonical-provenance`  | `packages/surface/content/species_halfling_brave.json`                           | Character-Origins/Halfling#Brave resolves through ok-prose-anchor-alias               |
-| `noncanonical-provenance`  | `packages/surface/content/species_halfling_luck.json`                            | Character-Origins/Halfling#Luck resolves through ok-prose-anchor-alias                |
-| `noncanonical-provenance`  | `packages/surface/content/species_halfling_naturally_stealthy.json`              | Character-Origins/Halfling#Naturally Stealthy resolves through ok-prose-anchor-alias  |
-| `noncanonical-provenance`  | `packages/surface/content/species_halfling_nimbleness.json`                      | Character-Origins/Halfling#Halfling Nimbleness resolves through ok-prose-anchor-alias |
-| `noncanonical-provenance`  | `packages/surface/content/species_human_resourceful.json`                        | Character-Origins/Human#Resourceful resolves through ok-prose-anchor-alias            |
-| `noncanonical-provenance`  | `packages/surface/content/species_human_skillful.json`                           | Character-Origins/Human#Skillful resolves through ok-prose-anchor-alias               |
-| `noncanonical-provenance`  | `packages/surface/content/species_human_versatile.json`                          | Character-Origins/Human#Versatile resolves through ok-prose-anchor-alias              |
-| `noncanonical-provenance`  | `packages/surface/content/species_orc_darkvision.json`                           | Species/Orc#Darkvision resolves through ok-prose-anchor-alias                         |
-| `noncanonical-provenance`  | `packages/surface/content/wall_of_fire.json`                                     | Spells/Descriptions-W#Wall of Fire resolves through ok-heading-alias                  |
-| `noncanonical-provenance`  | `packages/surface/content/wall_of_stone.json`                                    | Spells/Descriptions-W#Wall of Stone resolves through ok-heading-alias                 |
+| Code                       | Content                                                                          | Message                                                                  |
+| -------------------------- | -------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| `source-visible-reference` | `packages/surface/content/animate_dead.json`                                     | skeleton has SRD evidence but no authored Surface record                 |
+| `source-visible-reference` | `packages/surface/content/animate_dead.json`                                     | zombie has SRD evidence but no authored Surface record                   |
+| `source-visible-reference` | `packages/surface/content/animate_dead.json`                                     | skeleton has SRD evidence but no authored Surface record                 |
+| `source-visible-reference` | `packages/surface/content/animate_dead.json`                                     | zombie has SRD evidence but no authored Surface record                   |
+| `source-visible-reference` | `packages/surface/content/animate_dead.json`                                     | skeleton has SRD evidence but no authored Surface record                 |
+| `source-visible-reference` | `packages/surface/content/animate_dead.json`                                     | zombie has SRD evidence but no authored Surface record                   |
+| `source-visible-reference` | `packages/surface/content/animate_dead.json`                                     | skeleton has SRD evidence but no authored Surface record                 |
+| `source-visible-reference` | `packages/surface/content/animate_dead.json`                                     | zombie has SRD evidence but no authored Surface record                   |
+| `source-visible-reference` | `packages/surface/content/animate_dead.json`                                     | skeleton has SRD evidence but no authored Surface record                 |
+| `source-visible-reference` | `packages/surface/content/animate_dead.json`                                     | zombie has SRD evidence but no authored Surface record                   |
+| `source-visible-reference` | `packages/surface/content/animate_dead.json`                                     | skeleton has SRD evidence but no authored Surface record                 |
+| `source-visible-reference` | `packages/surface/content/animate_dead.json`                                     | zombie has SRD evidence but no authored Surface record                   |
+| `source-visible-reference` | `packages/surface/content/animate_dead.json`                                     | skeleton has SRD evidence but no authored Surface record                 |
+| `source-visible-reference` | `packages/surface/content/animate_dead.json`                                     | zombie has SRD evidence but no authored Surface record                   |
+| `source-visible-reference` | `packages/surface/content/class_bard.json`                                       | mage_hand has SRD evidence but no authored Surface record                |
+| `source-visible-reference` | `packages/surface/content/class_bard.json`                                       | mending has SRD evidence but no authored Surface record                  |
+| `source-visible-reference` | `packages/surface/content/class_bard.json`                                       | message has SRD evidence but no authored Surface record                  |
+| `source-visible-reference` | `packages/surface/content/class_bard.json`                                       | prestidigitation has SRD evidence but no authored Surface record         |
+| `source-visible-reference` | `packages/surface/content/class_bard.json`                                       | illusory_script has SRD evidence but no authored Surface record          |
+| `source-visible-reference` | `packages/surface/content/class_bard.json`                                       | unseen_servant has SRD evidence but no authored Surface record           |
+| `source-visible-reference` | `packages/surface/content/class_bard.json`                                       | disguise_self has SRD evidence but no authored Surface record            |
+| `source-visible-reference` | `packages/surface/content/class_cleric.json`                                     | mending has SRD evidence but no authored Surface record                  |
+| `source-visible-reference` | `packages/surface/content/class_cleric.json`                                     | purify_food_and_drink has SRD evidence but no authored Surface record    |
+| `source-visible-reference` | `packages/surface/content/class_cleric.json`                                     | create_or_destroy_water has SRD evidence but no authored Surface record  |
+| `source-visible-reference` | `packages/surface/content/class_cleric.json`                                     | control_water has SRD evidence but no authored Surface record            |
+| `source-visible-reference` | `packages/surface/content/class_cleric.json`                                     | divination has SRD evidence but no authored Surface record               |
+| `source-visible-reference` | `packages/surface/content/class_cleric.json`                                     | guardian_of_faith has SRD evidence but no authored Surface record        |
+| `source-visible-reference` | `packages/surface/content/class_cleric.json`                                     | locate_creature has SRD evidence but no authored Surface record          |
+| `source-visible-reference` | `packages/surface/content/class_cleric.json`                                     | stone_shape has SRD evidence but no authored Surface record              |
+| `source-visible-reference` | `packages/surface/content/class_druid.json`                                      | druidcraft has SRD evidence but no authored Surface record               |
+| `source-visible-reference` | `packages/surface/content/class_druid.json`                                      | elementalism has SRD evidence but no authored Surface record             |
+| `source-visible-reference` | `packages/surface/content/class_druid.json`                                      | mending has SRD evidence but no authored Surface record                  |
+| `source-visible-reference` | `packages/surface/content/class_druid.json`                                      | message has SRD evidence but no authored Surface record                  |
+| `source-visible-reference` | `packages/surface/content/class_druid.json`                                      | purify_food_and_drink has SRD evidence but no authored Surface record    |
+| `source-visible-reference` | `packages/surface/content/class_druid.json`                                      | create_or_destroy_water has SRD evidence but no authored Surface record  |
+| `source-visible-reference` | `packages/surface/content/class_druid.json`                                      | goodberry has SRD evidence but no authored Surface record                |
+| `source-visible-reference` | `packages/surface/content/class_paladin.json`                                    | purify_food_and_drink has SRD evidence but no authored Surface record    |
+| `source-visible-reference` | `packages/surface/content/class_ranger.json`                                     | goodberry has SRD evidence but no authored Surface record                |
+| `source-visible-reference` | `packages/surface/content/class_sorcerer.json`                                   | prestidigitation has SRD evidence but no authored Surface record         |
+| `source-visible-reference` | `packages/surface/content/class_sorcerer.json`                                   | elementalism has SRD evidence but no authored Surface record             |
+| `source-visible-reference` | `packages/surface/content/class_sorcerer.json`                                   | mage_hand has SRD evidence but no authored Surface record                |
+| `source-visible-reference` | `packages/surface/content/class_sorcerer.json`                                   | mending has SRD evidence but no authored Surface record                  |
+| `source-visible-reference` | `packages/surface/content/class_sorcerer.json`                                   | message has SRD evidence but no authored Surface record                  |
+| `source-visible-reference` | `packages/surface/content/class_sorcerer.json`                                   | disguise_self has SRD evidence but no authored Surface record            |
+| `source-visible-reference` | `packages/surface/content/class_warlock.json`                                    | mage_hand has SRD evidence but no authored Surface record                |
+| `source-visible-reference` | `packages/surface/content/class_warlock.json`                                    | prestidigitation has SRD evidence but no authored Surface record         |
+| `source-visible-reference` | `packages/surface/content/class_warlock.json`                                    | unseen_servant has SRD evidence but no authored Surface record           |
+| `source-visible-reference` | `packages/surface/content/class_warlock.json`                                    | illusory_script has SRD evidence but no authored Surface record          |
+| `source-visible-reference` | `packages/surface/content/class_wizard.json`                                     | prestidigitation has SRD evidence but no authored Surface record         |
+| `source-visible-reference` | `packages/surface/content/class_wizard.json`                                     | elementalism has SRD evidence but no authored Surface record             |
+| `source-visible-reference` | `packages/surface/content/class_wizard.json`                                     | mage_hand has SRD evidence but no authored Surface record                |
+| `source-visible-reference` | `packages/surface/content/class_wizard.json`                                     | mending has SRD evidence but no authored Surface record                  |
+| `source-visible-reference` | `packages/surface/content/class_wizard.json`                                     | message has SRD evidence but no authored Surface record                  |
+| `source-visible-reference` | `packages/surface/content/class_wizard.json`                                     | floating_disk has SRD evidence but no authored Surface record            |
+| `source-visible-reference` | `packages/surface/content/class_wizard.json`                                     | illusory_script has SRD evidence but no authored Surface record          |
+| `source-visible-reference` | `packages/surface/content/class_wizard.json`                                     | unseen_servant has SRD evidence but no authored Surface record           |
+| `source-visible-reference` | `packages/surface/content/class_wizard.json`                                     | disguise_self has SRD evidence but no authored Surface record            |
+| `source-visible-reference` | `packages/surface/content/class_wizard.json`                                     | floating_disk has SRD evidence but no authored Surface record            |
+| `source-visible-reference` | `packages/surface/content/class_wizard.json`                                     | illusory_script has SRD evidence but no authored Surface record          |
+| `source-visible-reference` | `packages/surface/content/class_wizard.json`                                     | unseen_servant has SRD evidence but no authored Surface record           |
+| `source-visible-reference` | `packages/surface/content/class_wizard.json`                                     | disguise_self has SRD evidence but no authored Surface record            |
+| `source-visible-reference` | `packages/surface/content/create_undead.json`                                    | ghoul has SRD evidence but no authored Surface record                    |
+| `source-visible-reference` | `packages/surface/content/create_undead.json`                                    | ghoul has SRD evidence but no authored Surface record                    |
+| `source-visible-reference` | `packages/surface/content/create_undead.json`                                    | ghoul has SRD evidence but no authored Surface record                    |
+| `source-visible-reference` | `packages/surface/content/create_undead.json`                                    | ghast has SRD evidence but no authored Surface record                    |
+| `source-visible-reference` | `packages/surface/content/create_undead.json`                                    | wight has SRD evidence but no authored Surface record                    |
+| `source-visible-reference` | `packages/surface/content/create_undead.json`                                    | ghoul has SRD evidence but no authored Surface record                    |
+| `source-visible-reference` | `packages/surface/content/create_undead.json`                                    | ghast has SRD evidence but no authored Surface record                    |
+| `source-visible-reference` | `packages/surface/content/create_undead.json`                                    | wight has SRD evidence but no authored Surface record                    |
+| `source-visible-reference` | `packages/surface/content/create_undead.json`                                    | mummy has SRD evidence but no authored Surface record                    |
+| `source-visible-reference` | `packages/surface/content/magic_item_brazier_of_commanding_fire_elementals.json` | fire_elemental has SRD evidence but no authored Surface record           |
+| `source-visible-reference` | `packages/surface/content/magic_item_censer_of_controlling_air_elementals.json`  | air_elemental has SRD evidence but no authored Surface record            |
+| `source-visible-reference` | `packages/surface/content/magic_item_cube_of_force.json`                         | private_sanctum has SRD evidence but no authored Surface record          |
+| `source-visible-reference` | `packages/surface/content/magic_item_cube_of_force.json`                         | resilient_sphere has SRD evidence but no authored Surface record         |
+| `source-visible-reference` | `packages/surface/content/magic_item_hat_of_disguise.json`                       | disguise_self has SRD evidence but no authored Surface record            |
+| `source-visible-reference` | `packages/surface/content/magic_item_helm_of_teleportation.json`                 | teleport has SRD evidence but no authored Surface record                 |
+| `source-visible-reference` | `packages/surface/content/magic_item_ring_of_three_wishes.json`                  | wish has SRD evidence but no authored Surface record                     |
+| `source-visible-reference` | `packages/surface/content/magic_item_rod_of_resurrection.json`                   | resurrection has SRD evidence but no authored Surface record             |
+| `source-visible-reference` | `packages/surface/content/magic_item_staff_of_power.json`                        | globe_of_invulnerability has SRD evidence but no authored Surface record |
+| `source-visible-reference` | `packages/surface/content/magic_item_stone_of_controlling_earth_elementals.json` | earth_elemental has SRD evidence but no authored Surface record          |
+| `source-visible-reference` | `packages/surface/content/paladin_oath_of_devotion_spells.json`                  | guardian_of_faith has SRD evidence but no authored Surface record        |
+| `source-visible-reference` | `packages/surface/content/species_gnome_gnomish_lineage.json`                    | prestidigitation has SRD evidence but no authored Surface record         |
+| `source-visible-reference` | `packages/surface/content/species_gnome_gnomish_lineage.json`                    | mending has SRD evidence but no authored Surface record                  |
+| `source-visible-reference` | `packages/surface/content/species_gnome_gnomish_lineage.json`                    | prestidigitation has SRD evidence but no authored Surface record         |

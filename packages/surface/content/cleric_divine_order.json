@@ -1,7 +1,6 @@
 {
   "acquiredAtLevel": 1,
   "className": "cleric",
-  "description": "Choose one sacred role. With Protector, you gain proficiency with Martial weapons and training with Heavy armor. With Thaumaturge, you know one extra Cleric cantrip. You have a bonus to Intelligence (Arcana or Religion) checks equal to your Wisdom modifier.",
   "id": "cleric_divine_order",
   "kind": "class_feature",
   "mechanics": {

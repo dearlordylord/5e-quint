@@ -1,4 +1,4 @@
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 
 import { Either, Option, Schema } from "effect";
 import { describe, expect, test } from "vitest";
@@ -44,6 +44,28 @@ import {
 import { CREATURE_TYPES } from "./types.ts";
 import type { Srd521Unit, SrdUnitCollection } from "./unit-catalog.ts";
 import type { StartingEquipmentItemRef, WeaponRecord } from "./types.ts";
+
+const publication = JSON.parse(
+  readFileSync(
+    new URL("../../publication/srd-surface.json", import.meta.url),
+    "utf8",
+  ),
+) as {
+  readonly units: ReadonlyArray<{
+    readonly id: string;
+    readonly rulesExcerpt: string;
+  }>;
+};
+const rulesExcerptByUnitId = new Map(
+  publication.units.map((unit) => [unit.id, unit.rulesExcerpt]),
+);
+const publishedRulesExcerpt = (unitId: string): string => {
+  const excerpt = rulesExcerptByUnitId.get(unitId);
+  expect(excerpt, `Missing published rules excerpt for ${unitId}`).toEqual(
+    expect.any(String),
+  );
+  return excerpt ?? "";
+};
 
 const task183ClassFeatureUnitIds = [
   "bard_bardic_inspiration",
@@ -457,10 +479,10 @@ describe("SRD Unit catalog boundary", () => {
     });
     expect(decoded.mechanics.operations).toHaveLength(1);
     expect(decoded.mechanics.authoredConditionalEffects).toHaveLength(1);
-    expect(decoded.description).toContain(
+    expect(publishedRulesExcerpt(decoded.id)).toContain(
       "While affected by the spell, the target treats the phantasm as if it were real and rationalizes any illogical outcomes",
     );
-    expect(decoded.description).toContain(
+    expect(publishedRulesExcerpt(decoded.id)).toContain(
       "On each of your turns, such a phantasm can deal 2d8 Psychic damage",
     );
   });
@@ -547,7 +569,7 @@ describe("SRD Unit catalog boundary", () => {
       ) {
         throw new Error("Expected Fireball to be an activation spell.");
       }
-      expect(fireball.description).toContain(
+      expect(publishedRulesExcerpt(fireball.id)).toContain(
         "Flammable objects in the area that aren't being worn or carried start burning.",
       );
       expect(fireball.mechanics.phases).toMatchObject([
@@ -787,7 +809,7 @@ describe("SRD Unit catalog boundary", () => {
       },
     });
     if (acidArrow.kind !== "spell") return;
-    expect(acidArrow.description).toContain(
+    expect(publishedRulesExcerpt(acidArrow.id)).toContain(
       "4d4 Acid damage and 2d4 Acid damage at the end of its next turn",
     );
     expect(acidArrow.mechanics).toMatchObject({
@@ -1210,7 +1232,7 @@ describe("SRD Unit catalog boundary", () => {
         ],
       },
     });
-    expect(prayerOfHealing.description).toContain(
+    expect(publishedRulesExcerpt(prayerOfHealing.id)).toContain(
       "gain the benefits of a Short Rest",
     );
   });
@@ -1284,7 +1306,7 @@ describe("SRD Unit catalog boundary", () => {
       ) {
         throw new Error("Expected Shatter to be an activation spell.");
       }
-      expect(shatter.description).toContain(
+      expect(publishedRulesExcerpt(shatter.id)).toContain(
         "Each creature in a 10-foot-radius Sphere centered there makes a Constitution saving throw",
       );
       expect(shatter.mechanics.phases).toMatchObject([
@@ -1329,7 +1351,7 @@ describe("SRD Unit catalog boundary", () => {
       ) {
         throw new Error("Expected Lightning Bolt to be an activation spell.");
       }
-      expect(lightningBolt.description).toContain(
+      expect(publishedRulesExcerpt(lightningBolt.id)).toContain(
         "100-foot-long, 5-foot-wide Line",
       );
       expect(lightningBolt.mechanics.phases).toMatchObject([
@@ -1372,8 +1394,8 @@ describe("SRD Unit catalog boundary", () => {
       ) {
         throw new Error("Expected Shining Smite to be an ongoing spell.");
       }
-      expect(shiningSmite.description).toContain(
-        "Immediately after hitting a creature with a Melee weapon or an Unarmed Strike",
+      expect(publishedRulesExcerpt(shiningSmite.id)).toContain(
+        "Bonus Action, which you take immediately after hitting a creature with a Melee weapon or an Unarmed Strike",
       );
       expect(shiningSmite.mechanics).toMatchObject({
         level: 2,
@@ -4294,7 +4316,7 @@ describe("SRD Unit catalog boundary", () => {
           ],
         },
       ]);
-      expect(findTraps.description).toContain(
+      expect(publishedRulesExcerpt(findTraps.id)).toContain(
         "reveals that a trap is present but not its location",
       );
     }
@@ -4336,8 +4358,8 @@ describe("SRD Unit catalog boundary", () => {
         ],
       },
     ]);
-    expect(detectThoughts.description).toContain(
-      "the target can take an action to make an Intelligence (Arcana) check",
+    expect(publishedRulesExcerpt(detectThoughts.id)).toContain(
+      "the target can take an action on its turn to make an Intelligence (Arcana) check",
     );
   });
 
@@ -4427,7 +4449,7 @@ describe("SRD Unit catalog boundary", () => {
         onSuccess: { kind: "none" },
       },
     ]);
-    expect(animalMessenger.description).toContain(
+    expect(publishedRulesExcerpt(animalMessenger.id)).toContain(
       "message is lost, and the Beast returns to where you cast the spell",
     );
   });
@@ -4500,7 +4522,7 @@ describe("SRD Unit catalog boundary", () => {
         ],
       },
     ]);
-    expect(magicAura.description).toContain(
+    expect(publishedRulesExcerpt(magicAura.id)).toContain(
       "Spells and other magical effects treat the target",
     );
   });
@@ -4558,7 +4580,7 @@ describe("SRD Unit catalog boundary", () => {
         ],
       },
     ]);
-    expect(nondetection.description).toContain(
+    expect(publishedRulesExcerpt(nondetection.id)).toContain(
       "can't be targeted by any Divination spell",
     );
   });
@@ -4622,7 +4644,9 @@ describe("SRD Unit catalog boundary", () => {
         ],
       },
     ]);
-    expect(augury.description).toContain("cumulative 25 percent chance");
+    expect(publishedRulesExcerpt(augury.id)).toContain(
+      "cumulative 25 percent chance",
+    );
   });
 
   test("decodes Locate Animals or Plants as ritual nearest-kind location disclosure", () => {
@@ -4665,7 +4689,7 @@ describe("SRD Unit catalog boundary", () => {
         ],
       },
     ]);
-    expect(locate.description).toContain(
+    expect(publishedRulesExcerpt(locate.id)).toContain(
       "direction and distance to the closest creature or plant",
     );
   });
@@ -4734,10 +4758,10 @@ describe("SRD Unit catalog boundary", () => {
         ],
       },
     });
-    expect(plantGrowth.description).toContain(
+    expect(publishedRulesExcerpt(plantGrowth.id)).toContain(
       "4 feet of movement for every 1 foot",
     );
-    expect(plantGrowth.description).toContain(
+    expect(publishedRulesExcerpt(plantGrowth.id)).toContain(
       "yield twice the normal amount of food",
     );
   });
@@ -4784,7 +4808,9 @@ describe("SRD Unit catalog boundary", () => {
         effects: [{ kind: "none" }],
       },
     ]);
-    expect(removeCurse.description).toContain("breaks its owner's Attunement");
+    expect(publishedRulesExcerpt(removeCurse.id)).toContain(
+      "breaks its owner's Attunement",
+    );
   });
 
   test("decodes Revivify as a death-window revival Spell Definition", () => {
@@ -4852,8 +4878,10 @@ describe("SRD Unit catalog boundary", () => {
         ],
       },
     ]);
-    expect(revivify.description).toContain("died of old age");
-    expect(revivify.description).not.toContain("magical contagions");
+    expect(publishedRulesExcerpt(revivify.id)).toContain("died of old age");
+    expect(publishedRulesExcerpt(revivify.id)).not.toContain(
+      "magical contagions",
+    );
   });
 
   test("decodes Sending as table-owned mental message delivery", () => {
@@ -4926,10 +4954,10 @@ describe("SRD Unit catalog boundary", () => {
         ],
       },
     ]);
-    expect(sending.description).toContain(
+    expect(publishedRulesExcerpt(sending.id)).toContain(
       "can answer in a like manner immediately",
     );
-    expect(sending.description).toContain("5 percent chance");
+    expect(publishedRulesExcerpt(sending.id)).toContain("5 percent chance");
   });
 
   test("rejects Sending mental message block durations other than 8 hours", () => {
@@ -5021,9 +5049,15 @@ describe("SRD Unit catalog boundary", () => {
         effects: [{ kind: "none" }],
       },
     ]);
-    expect(speakWithDead.description).toContain("up to five questions");
-    expect(speakWithDead.description).toContain("target of this spell within");
-    expect(speakWithDead.description).toContain("can't speculate about future");
+    expect(publishedRulesExcerpt(speakWithDead.id)).toContain(
+      "up to five questions",
+    );
+    expect(publishedRulesExcerpt(speakWithDead.id)).toContain(
+      "target of this spell within",
+    );
+    expect(publishedRulesExcerpt(speakWithDead.id)).toContain(
+      "can't speculate about future",
+    );
   });
 
   test("decodes Speak with Plants as a table-owned plant communication Spell Definition", () => {
@@ -5072,13 +5106,15 @@ describe("SRD Unit catalog boundary", () => {
         ],
       },
     ]);
-    expect(speakWithPlants.description).toContain(
+    expect(publishedRulesExcerpt(speakWithPlants.id)).toContain(
       "events in the spell's area within the past day",
     );
-    expect(speakWithPlants.description).toContain(
-      "turn Difficult Terrain caused by plant growth into ordinary terrain",
+    expect(publishedRulesExcerpt(speakWithPlants.id)).toContain(
+      "turn Difficult Terrain caused by plant growth (such as thickets and undergrowth) into ordinary terrain",
     );
-    expect(speakWithPlants.description).toContain("shared a common language");
+    expect(publishedRulesExcerpt(speakWithPlants.id)).toContain(
+      "shared a common language",
+    );
   });
 
   test("decodes Tiny Hut as a runtime-detached shelter boundary Spell Definition", () => {
@@ -5136,15 +5172,23 @@ describe("SRD Unit catalog boundary", () => {
         },
       },
     ]);
-    expect(tinyHut.description).toContain(
+    expect(publishedRulesExcerpt(tinyHut.id)).toContain(
       "fully encapsulate all creatures in its area",
     );
-    expect(tinyHut.description).toContain("comfortable and dry");
-    expect(tinyHut.description).toContain("regardless of the weather outside");
-    expect(tinyHut.description).toContain("Dim Light or Darkness");
-    expect(tinyHut.description).toContain("opaque from the outside");
-    expect(tinyHut.description).toContain("transparent from the inside");
-    expect(tinyHut.description).toContain("leave the Emanation");
+    expect(publishedRulesExcerpt(tinyHut.id)).toContain("comfortable and dry");
+    expect(publishedRulesExcerpt(tinyHut.id)).toContain(
+      "regardless of the weather outside",
+    );
+    expect(publishedRulesExcerpt(tinyHut.id)).toContain(
+      "Dim Light or Darkness",
+    );
+    expect(publishedRulesExcerpt(tinyHut.id)).toContain(
+      "opaque from the outside",
+    );
+    expect(publishedRulesExcerpt(tinyHut.id)).toContain(
+      "transparent from the inside",
+    );
+    expect(publishedRulesExcerpt(tinyHut.id)).toContain("leave the Emanation");
   });
 
   test("decodes Water Walk as a willing-target liquid traversal Spell Definition", () => {
@@ -5216,10 +5260,12 @@ describe("SRD Unit catalog boundary", () => {
         ],
       },
     ]);
-    expect(waterWalk.description).toContain("any liquid surface");
-    expect(waterWalk.description).toContain("molten lava");
-    expect(waterWalk.description).toContain("Bonus Action");
-    expect(waterWalk.description).toContain("falls into the liquid");
+    expect(publishedRulesExcerpt(waterWalk.id)).toContain("any liquid surface");
+    expect(publishedRulesExcerpt(waterWalk.id)).toContain("molten lava");
+    expect(publishedRulesExcerpt(waterWalk.id)).toContain("Bonus Action");
+    expect(publishedRulesExcerpt(waterWalk.id)).toContain(
+      "falls into the liquid",
+    );
   });
 
   test("rejects Water Walk traversal facts with non-RAW surface example sequences", () => {
@@ -5342,8 +5388,10 @@ describe("SRD Unit catalog boundary", () => {
         },
       },
     ]);
-    expect(sleetStorm.description).toContain("Heavily Obscured");
-    expect(sleetStorm.description).toContain("lose Concentration");
+    expect(publishedRulesExcerpt(sleetStorm.id)).toContain("Heavily Obscured");
+    expect(publishedRulesExcerpt(sleetStorm.id)).toContain(
+      "lose Concentration",
+    );
   });
 
   test("decodes Slow as save-gated active penalties", () => {
@@ -5419,8 +5467,8 @@ describe("SRD Unit catalog boundary", () => {
         ],
       },
     ]);
-    expect(slow.description).toContain("Dexterity saving throws");
-    expect(slow.description).toContain("25 percent chance");
+    expect(publishedRulesExcerpt(slow.id)).toContain("Dexterity saving throws");
+    expect(publishedRulesExcerpt(slow.id)).toContain("25 percent chance");
   });
 
   test("rejects contradictory Revivify death target-state filters", () => {
@@ -5500,7 +5548,7 @@ describe("SRD Unit catalog boundary", () => {
         ],
       },
     ]);
-    expect(locate.description).toContain(
+    expect(publishedRulesExcerpt(locate.id)).toContain(
       "you know the direction of its movement",
     );
   });
@@ -5554,7 +5602,7 @@ describe("SRD Unit catalog boundary", () => {
         repetition: "caster_choice_once_or_repeating",
       },
     ]);
-    expect(magicMouth.description).toContain(
+    expect(publishedRulesExcerpt(magicMouth.id)).toContain(
       "visual or audible conditions that occur within 30 feet",
     );
   });
@@ -5628,7 +5676,7 @@ describe("SRD Unit catalog boundary", () => {
         ],
       },
     ]);
-    expect(ropeTrick.description).toContain(
+    expect(publishedRulesExcerpt(ropeTrick.id)).toContain(
       "Attacks, spells, and other effects can't pass into or out of the space",
     );
   });
@@ -5705,7 +5753,7 @@ describe("SRD Unit catalog boundary", () => {
         },
       },
     ]);
-    expect(blink.description).toContain("On a roll of 4-6");
+    expect(publishedRulesExcerpt(blink.id)).toContain("On a roll of 4–6");
   });
 
   test("rejects non-RAW Locate Object subject variants", () => {
@@ -5983,7 +6031,7 @@ describe("SRD Unit catalog boundary", () => {
         ],
       },
     ]);
-    expect(knock.description).toContain(
+    expect(publishedRulesExcerpt(knock.id)).toContain(
       "a loud knock, audible up to 300 feet away",
     );
   });

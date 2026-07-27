@@ -7,7 +7,6 @@
     "dieSize": 12,
     "kind": "dice"
   },
-  "description": "Musket — weapons table.",
   "id": "weapon_musket",
   "kind": "weapon",
   "mastery": "slow",

@@ -21,10 +21,9 @@ let archery =
       , category = "fighting_style"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Feats/FightingStyle#Archery"
+          , section = "Feats.md#Archery"
           }
-      , description =
-          "You gain a +2 bonus to attack rolls you make with Ranged weapons."
+
       , mechanics =
           { family = "passive"
           , grants =

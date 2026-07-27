@@ -37,8 +37,7 @@ let recklessAttack =
           { kind = "srd-5.2.1"
           , section = "Classes/Barbarian#Reckless Attack"
           }
-      , description =
-          "Attack recklessly to have Advantage on Strength attack rolls. Attack rolls against you have Advantage until the start of your next turn."
+
       , mechanics =
           { family = "activation"
           , activationCost = { kind = "free" }

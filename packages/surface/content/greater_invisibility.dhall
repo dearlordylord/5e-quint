@@ -19,8 +19,7 @@ let greaterInvisibility =
           { kind = "srd-5.2.1"
           , section = "Spells/Descriptions-E-L#Greater Invisibility"
           }
-      , description =
-          "A creature you touch has the Invisible condition until the spell ends."
+
       , mechanics =
           { family = "activation"
           , level = 4

@@ -1,6 +1,5 @@
 {
   "creatureType": "humanoid",
-  "description": "As a Tiefling, you have the following special traits.",
   "id": "species_tiefling",
   "kind": "species",
   "name": "Tiefling",

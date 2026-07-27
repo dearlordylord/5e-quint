@@ -1,6 +1,5 @@
 {
   "className": "fighter",
-  "description": "The Champion subclass is detailed after this class's description.",
   "featureGrants": [
     {
       "level": 3,

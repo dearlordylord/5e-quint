@@ -19,10 +19,9 @@ let damageResistance =
       , species = "dragonborn"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Character-Origins/Dragonborn#Damage Resistance"
+          , section = "Character-Origins.md:1,67,97,99,109,123-124"
           }
-      , description =
-          "You have Resistance to the damage type determined by your Draconic Ancestry trait."
+
       , mechanics =
           { family = "passive"
           , grants =

@@ -1367,7 +1367,6 @@ describe("character-creation Surface records", () => {
         id: "bard_bardic_inspiration_test",
         name: "Bardic Inspiration",
         className: "bard",
-        description: "Bardic Inspiration test shape.",
         mechanics: {
           activationCost: { kind: "bonus_action" },
           family: "activation",
@@ -1408,7 +1407,6 @@ describe("character-creation Surface records", () => {
         id: "cleric_divine_order_test",
         name: "Divine Order",
         className: "cleric",
-        description: "Divine Order test shape.",
         mechanics: {
           choiceKey: "divine_order",
           family: "class_feature_acquisition_choice",
@@ -1472,7 +1470,6 @@ describe("character-creation Surface records", () => {
         id: "druid_druidic_test",
         name: "Druidic",
         className: "druid",
-        description: "Druidic test shape.",
         mechanics: {
           family: "passive",
           grants: [
@@ -1504,7 +1501,6 @@ describe("character-creation Surface records", () => {
         id: "druid_primal_order_test",
         name: "Primal Order",
         className: "druid",
-        description: "Primal Order test shape.",
         mechanics: {
           choiceKey: "primal_order",
           family: "class_feature_acquisition_choice",
@@ -1568,7 +1564,6 @@ describe("character-creation Surface records", () => {
         id: "monk_martial_arts_test",
         name: "Martial Arts",
         className: "monk",
-        description: "Martial Arts test shape.",
         mechanics: {
           condition: {
             kind: "all_of",
@@ -1613,7 +1608,6 @@ describe("character-creation Surface records", () => {
         id: "ranger_favored_enemy_test",
         name: "Favored Enemy",
         className: "ranger",
-        description: "Favored Enemy test shape.",
         mechanics: {
           family: "passive",
           grants: [
@@ -1645,7 +1639,6 @@ describe("character-creation Surface records", () => {
         id: "rogue_expertise_test",
         name: "Expertise",
         className: "rogue",
-        description: "Expertise test shape.",
         mechanics: {
           family: "passive",
           grants: [
@@ -1666,7 +1659,6 @@ describe("character-creation Surface records", () => {
         id: "rogue_thieves_cant_test",
         name: "Thieves' Cant",
         className: "rogue",
-        description: "Thieves' Cant test shape.",
         mechanics: {
           family: "passive",
           grants: [
@@ -1684,7 +1676,6 @@ describe("character-creation Surface records", () => {
         id: "sorcerer_innate_sorcery_test",
         name: "Innate Sorcery",
         className: "sorcerer",
-        description: "Innate Sorcery test shape.",
         mechanics: {
           activationCost: { kind: "bonus_action" },
           duration: {
@@ -1720,7 +1711,6 @@ describe("character-creation Surface records", () => {
         id: "warlock_eldritch_invocations_test",
         name: "Eldritch Invocations",
         className: "warlock",
-        description: "Eldritch Invocations test shape.",
         mechanics: {
           changeOn: { count: 1, kind: "class_level" },
           choiceKey: "eldritch_invocations",
@@ -1762,7 +1752,6 @@ describe("character-creation Surface records", () => {
         id: "warlock_pact_magic_feature_test",
         name: "Pact Magic",
         className: "warlock",
-        description: "Pact Magic feature projection test shape.",
         mechanics: {
           family: "class_spellcasting_projection",
           source: "class_record_spellcasting",

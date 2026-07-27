@@ -1,6 +1,5 @@
 {
   "className": "paladin",
-  "description": "The Oath of Devotion subclass is detailed after this class's description.",
   "featureGrants": [
     {
       "level": 3,

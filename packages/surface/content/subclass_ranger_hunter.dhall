@@ -1,7 +1,6 @@
 let hunter =
       { className = "ranger"
-      , description =
-          "The Hunter subclass is detailed after this class's description."
+
       , featureGrants =
           [ { level = 3, unitId = "ranger_hunters_prey" } ]
       , id = "subclass_ranger_hunter"

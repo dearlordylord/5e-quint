@@ -1,5 +1,4 @@
 {
-  "description": "While wearing this ring, you can cast Telekinesis from it.",
   "destruction": {
     "kind": "none"
   },
@@ -18,7 +17,7 @@
   "name": "Ring of Telekinesis",
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "MagicItems#Ring of Telekinesis"
+    "section": "Magic-Items/Items-Q-Z.md#Ring of Telekinesis"
   },
   "rarity": "very_rare",
   "requiresAttunement": true

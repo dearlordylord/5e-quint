@@ -7,7 +7,6 @@
     "dieSize": 10,
     "kind": "dice"
   },
-  "description": "Halberd — weapons table.",
   "id": "weapon_halberd",
   "kind": "weapon",
   "mastery": "cleave",

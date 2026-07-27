@@ -19,8 +19,7 @@ let bodyAndMind =
           { kind = "srd-5.2.1"
           , section = "Classes/Monk#Body and Mind"
           }
-      , description =
-          "You have developed your body and mind to new heights. Your Dexterity and Wisdom scores increase by 4, to a maximum of 25."
+
       , mechanics =
           { family = "passive"
           , grants =

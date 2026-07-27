@@ -1,7 +1,6 @@
 {
   "acquiredAtLevel": 4,
   "className": "druid",
-  "description": "You gain the Ability Score Improvement feat (see \"Feats\") or another feat of your choice for which you qualify. You gain this feature again at Druid levels 8, 12, and 16.",
   "id": "druid_ability_score_improvement_l4",
   "kind": "class_feature",
   "mechanics": {

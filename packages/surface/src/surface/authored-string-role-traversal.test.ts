@@ -27,7 +27,7 @@ const {
   SorcererMetamagicMechanicsSchema,
   StartingEquipmentChoiceSchema,
 } = require("./schema-nonspell.ts");
-const { StatBlockRecordSchema } = require("./schema.ts");
+const { RulesExcerptSchema, StatBlockRecordSchema } = require("./schema.ts");
 
 const roleOf = (ast: AST.AST) => {
   const role = readSurfaceSchemaRole(ast);
@@ -109,9 +109,9 @@ describe("Surface authored string role traversal", () => {
     expect(
       roleOf(fieldSchema(CreatureNamedSpecialActionSchema, "description")),
     ).toEqual({ category: "prose", evidence: "exact" });
-    expect(roleOf(fieldSchema(SpellRecordSchema, "description"))).toEqual({
+    expect(roleOf(RulesExcerptSchema.ast)).toEqual({
       category: "prose",
-      evidence: "summary",
+      evidence: "exact",
     });
     expect(
       roleOf(unionFieldSchema(StartingEquipmentChoiceSchema, "id")),

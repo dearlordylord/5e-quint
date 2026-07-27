@@ -103,8 +103,7 @@ let plantGrowth =
           { kind = "srd-5.2.1"
           , section = "Spells/Descriptions-M-P#Plant Growth"
           }
-      , description =
-          "This spell channels vitality into plants. The casting time you use determines whether the spell has the Overgrowth or the Enrichment effect. Overgrowth: choose a point within range; all normal plants in a 100-foot-radius Sphere centered on that point become thick and overgrown. A creature moving through that area must spend 4 feet of movement for every 1 foot it moves. You can exclude one or more areas of any size within the spell's area from being affected. Enrichment: all plants in a half-mile radius centered on a point within range become enriched for 365 days. The plants yield twice the normal amount of food when harvested. They can benefit from only one Plant Growth per year."
+
       , mechanics =
           { family = "modal_activation"
           , level = 3

@@ -20,8 +20,7 @@ let seeInvisibility =
           { kind = "srd-5.2.1"
           , section = "Spells/Descriptions-S-Z#See Invisibility"
           }
-      , description =
-          "For the duration, you see creatures and objects that have the Invisible condition as if they were visible, and you can see into the Ethereal Plane. Creatures and objects there appear ghostly."
+
       , mechanics =
           { family = "activation"
           , level = 2

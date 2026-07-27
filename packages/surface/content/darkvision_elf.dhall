@@ -11,10 +11,9 @@ let darkvision =
       , species = "elf"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Species/Elf#Darkvision"
+          , section = "Character-Origins.md:1,67,97,147,155-156"
           }
-      , description =
-          "You have Darkvision with a range of 60 feet."
+
       , mechanics =
           { family = "passive"
           , grants =

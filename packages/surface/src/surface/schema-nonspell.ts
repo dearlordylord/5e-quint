@@ -2452,7 +2452,6 @@ const UnitMetadataSchema = Schema.Struct({
   id: surfaceIdentity(UnitId, "id"),
   name: surfaceIdentity(NonEmptyStringSchema, "name"),
   provenance: ProvenanceSchema,
-  description: surfaceProse(Schema.String),
 });
 
 const distinctAbilities = (abilities: readonly unknown[]): boolean =>

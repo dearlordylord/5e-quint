@@ -7,7 +7,6 @@
     "dieSize": 10,
     "kind": "dice"
   },
-  "description": "Pike — weapons table.",
   "id": "weapon_pike",
   "kind": "weapon",
   "mastery": "push",

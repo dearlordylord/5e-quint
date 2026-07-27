@@ -1,6 +1,5 @@
 {
   "category": "fighting_style",
-  "description": "You gain a +2 bonus to attack rolls you make with Ranged weapons.",
   "id": "feat_archery",
   "kind": "feat",
   "mechanics": {
@@ -27,6 +26,6 @@
   "name": "Archery",
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "Feats/FightingStyle#Archery"
+    "section": "Feats.md#Archery"
   }
 }

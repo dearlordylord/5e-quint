@@ -6,8 +6,7 @@ let unit =
       , acquiredAtLevel = 10
       , provenance =
           { kind = "srd-5.2.1", section = "Classes/Rogue.md:93-95" }
-      , description =
-          "You gain the Ability Score Improvement feat or another feat of your choice for which you qualify."
+
       , mechanics =
           { family = "passive"
           , grants =

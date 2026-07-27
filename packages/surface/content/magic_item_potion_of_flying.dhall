@@ -25,10 +25,9 @@ let potionOfFlying =
       , requiresAttunement = False
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "MagicItems#Potion of Flying"
+          , section = "Magic-Items/Items-I-P.md#Potion of Flying"
           }
-      , description =
-          "When you drink this potion, you gain a Fly Speed equal to your Speed for 1 hour and can hover. If you're in the air when the potion wears off, you fall unless you have some other means of staying aloft."
+
       , mechanics =
           { family = "activation"
           , activationCost = { kind = "standard_action", action = "magic" }

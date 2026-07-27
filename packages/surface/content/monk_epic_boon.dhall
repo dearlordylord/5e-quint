@@ -8,8 +8,7 @@ let monkEpicBoonL19 =
           { kind = "srd-5.2.1"
           , section = "Classes/Monk#Epic Boon"
           }
-      , description =
-          "You gain an Epic Boon feat (see \"Feats\") or another feat of your choice for which you qualify. Boon of Irresistible Offense is recommended."
+
       , mechanics =
           { family = "passive"
           , grants =

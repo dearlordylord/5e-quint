@@ -6,9 +6,7 @@ let frightenedSaveAdvantage =
       }
 
 let brave =
-      { description =
-          "You have Advantage on saving throws you make to avoid or end the Frightened condition."
-      , id = "species_halfling_brave"
+      {  id = "species_halfling_brave"
       , kind = "species_trait"
       , mechanics =
         { family = "passive"
@@ -17,7 +15,7 @@ let brave =
       , name = "Brave"
       , provenance =
         { kind = "srd-5.2.1"
-        , section = "Character-Origins/Halfling#Brave"
+        , section = "Character-Origins.md:1,67,97,215,223-224"
         }
       , species = "halfling"
       }

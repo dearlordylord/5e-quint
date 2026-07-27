@@ -1,7 +1,6 @@
 {
   "acquiredAtLevel": 1,
   "className": "bard",
-  "description": "As a Bonus Action, inspire another creature within 60 feet who can see or hear you. The creature gains one Bardic Inspiration die for the next hour.",
   "id": "bard_bardic_inspiration",
   "kind": "class_feature",
   "mechanics": {

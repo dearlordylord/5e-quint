@@ -39,8 +39,7 @@ let gaseousForm =
           { kind = "srd-5.2.1"
           , section = "Spells/Descriptions-E-L#Gaseous Form"
           }
-      , description =
-          "A willing creature you touch shape-shifts, along with everything it's wearing and carrying, into a misty cloud for the duration. The spell ends on the target if it drops to 0 Hit Points or if it takes a Magic action to end the spell on itself. In this form, the target's only movement method is a Fly Speed of 10 feet with hover. It can occupy another creature's space. It can pass through narrow openings, but it treats liquids as solid surfaces. The target has Resistance to Bludgeoning, Piercing, and Slashing damage; Immunity to Prone; and Advantage on Strength, Dexterity, and Constitution saving throws. The target can't talk, manipulate objects, drop/use/interact with carried or held objects, attack, or cast spells. Using a Higher-Level Spell Slot targets one additional creature per slot level above 3."
+
       , mechanics =
           { family = "ongoing_effect"
           , level = 3

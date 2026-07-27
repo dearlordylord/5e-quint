@@ -9,8 +9,7 @@ let dominateBeast =
           { kind = "srd-5.2.1"
           , section = "Spells/Descriptions-A-D#Dominate Beast"
           }
-      , description =
-          "One Beast you can see within range must succeed on a Wisdom saving throw or have the Charmed condition for the duration. The target has Advantage on the save if you or your allies are fighting it. Whenever the target takes damage, it repeats the save, ending the spell on itself on a success."
+
       , mechanics =
           { family = "activation"
           , level = 4

@@ -6,10 +6,9 @@ let helm =
       , requiresAttunement = False
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "MagicItems#HelmOfComprehendingLanguages"
+          , section = "Magic-Items/Items-A-H.md#Helm of Comprehending Languages"
           }
-      , description =
-          "While wearing this helm, you can cast Comprehend Languages from it."
+
       , mechanics =
           { family = "passive"
           , grants =

@@ -10,8 +10,7 @@ let slowFall =
       , name = "Slow Fall"
       , className = "monk"
       , acquiredAtLevel = 4
-      , description =
-          "When you fall, take a Reaction to reduce any damage you take from the fall by five times your Monk level."
+
       , provenance =
           { kind = "srd-5.2.1", section = "Classes/Monk#Slow Fall" }
       , mechanics =

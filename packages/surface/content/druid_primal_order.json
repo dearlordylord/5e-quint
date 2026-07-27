@@ -1,7 +1,6 @@
 {
   "acquiredAtLevel": 1,
   "className": "druid",
-  "description": "Choose one sacred role. With Magician, you know one extra Druid cantrip. You have a bonus to Intelligence (Arcana or Nature) checks equal to your Wisdom modifier. With Warden, you gain proficiency with Martial weapons and training with Medium armor.",
   "id": "druid_primal_order",
   "kind": "class_feature",
   "mechanics": {

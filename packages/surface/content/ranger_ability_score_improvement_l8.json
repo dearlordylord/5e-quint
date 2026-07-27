@@ -1,7 +1,6 @@
 {
   "acquiredAtLevel": 8,
   "className": "ranger",
-  "description": "You gain the Ability Score Improvement feat (see \"Feats\") or another feat of your choice for which you qualify.",
   "id": "ranger_ability_score_improvement_l8",
   "kind": "class_feature",
   "mechanics": {

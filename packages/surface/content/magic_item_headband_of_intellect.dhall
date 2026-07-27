@@ -15,10 +15,9 @@ let headband =
       , requiresAttunement = True
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "MagicItems#HeadbandOfIntellect"
+          , section = "Magic-Items/Items-A-H.md#Headband of Intellect"
           }
-      , description =
-          "Your Intelligence is 19 while you wear this headband. It has no effect on you if your Intelligence is 19 or higher without it."
+
       , mechanics =
           { family = "passive"
           , grants =

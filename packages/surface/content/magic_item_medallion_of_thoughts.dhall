@@ -6,10 +6,9 @@ let medallionOfThoughts =
       , requiresAttunement = True
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "MagicItems#Medallion of Thoughts"
+          , section = "Magic-Items/Items-I-P.md#Medallion of Thoughts"
           }
-      , description =
-          "The medallion has 5 charges. While wearing it, you can expend 1 charge to cast Detect Thoughts (save DC 13) from it. The medallion regains 1d4 expended charges daily at dawn."
+
       , mechanics =
           { family = "activation"
           , condition = { kind = "wearing_item" }

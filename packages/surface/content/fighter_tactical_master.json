@@ -1,7 +1,6 @@
 {
   "acquiredAtLevel": 9,
   "className": "fighter",
-  "description": "When you attack with a weapon whose mastery property you can use, you can replace that property with the Push, Sap, or Slow property for that attack.",
   "id": "fighter_tactical_master",
   "kind": "class_feature",
   "mechanics": {

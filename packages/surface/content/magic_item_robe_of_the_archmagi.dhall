@@ -54,10 +54,9 @@ let robeOfTheArchmagi =
       : Optional AttunementRestriction
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "MagicItems#RobeOfTheArchmagi"
+          , section = "Magic-Items/Items-Q-Z.md#Robe of the Archmagi"
           }
-      , description =
-          "You gain these benefits while wearing the robe. Armor: if you aren't wearing armor, your base Armor Class is 15 plus your Dexterity modifier. Magic Resistance: you have Advantage on saving throws against spells and other magical effects. War Mage: your spell save DC and spell attack bonus each increase by 2."
+
       , mechanics =
           { family = "composite"
           , parts =

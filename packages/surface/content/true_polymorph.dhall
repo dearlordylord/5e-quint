@@ -22,8 +22,7 @@ let truePolymorph =
           { kind = "srd-5.2.1"
           , section = "Spells/Descriptions-S-Z#True Polymorph"
           }
-      , description =
-          "Choose one creature or nonmagical object that you can see within range. The creature shape-shifts into a different creature or a nonmagical object, or the object shape-shifts into a creature. The transformation lasts for the duration or until the target dies or is destroyed, but if you maintain Concentration on this spell for the full duration, the spell lasts until dispelled. An unwilling creature can make a Wisdom saving throw, and if it succeeds, it isn't affected by this spell."
+
       , mechanics =
           { family = "activation"
           , level = 9

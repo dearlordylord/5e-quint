@@ -23,8 +23,7 @@ let draconicSpells =
           { kind = "srd-5.2.1"
           , section = "Classes/Sorcerer#Draconic Spells"
           }
-      , description =
-          "When you reach a Sorcerer level specified in the Draconic Spells table, you thereafter always have the listed spells prepared."
+
       , mechanics =
           { family = "passive"
           , grants =

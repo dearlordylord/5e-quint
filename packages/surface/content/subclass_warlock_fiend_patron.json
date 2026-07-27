@@ -1,6 +1,5 @@
 {
   "className": "warlock",
-  "description": "The Fiend Patron subclass is detailed after this class's description.",
   "featureGrants": [
     {
       "level": 3,

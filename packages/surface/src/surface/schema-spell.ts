@@ -5731,7 +5731,6 @@ export const SpellRecordSchema = Schema.Struct({
   id: surfaceIdentity(UnitId, "id"),
   name: surfaceIdentity(Schema.String, "name"),
   provenance: ProvenanceSchema,
-  description: surfaceProse(Schema.String),
   kind: Schema.Literal("spell"),
   mechanics: SpellMechanicsSchema,
 });

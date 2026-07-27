@@ -1,7 +1,6 @@
 {
   "acquiredAtLevel": 6,
   "className": "ranger",
-  "description": "Your Speed increases by 10 feet while you aren't wearing Heavy armor. You also have a Climb Speed and a Swim Speed equal to your Speed.",
   "id": "ranger_roving",
   "kind": "class_feature",
   "mechanics": {

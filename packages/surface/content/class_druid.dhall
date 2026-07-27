@@ -1,7 +1,6 @@
 { armorTraining = { categories = [ "light", "shield" ], kind = "trained" }
 , className = "druid"
-, description =
-    "As a Druid, you gain the following class features when you reach the specified Druid levels. These features are listed in the Druid Features table."
+
 , featureGrants =
   [ { level = 1, unitId = "druid_druidic" }
   , { level = 1, unitId = "druid_primal_order" }

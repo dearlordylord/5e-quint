@@ -1,7 +1,6 @@
 {
   "acquiredAtLevel": 1,
   "className": "rogue",
-  "description": "You know Thieves' Cant and one other language of your choice from the Character Creation language tables.",
   "id": "rogue_thieves_cant",
   "kind": "class_feature",
   "mechanics": {

@@ -14,8 +14,7 @@ let evasion =
       , name = "Evasion"
       , className = "monk"
       , acquiredAtLevel = 7
-      , description =
-          "When an effect allows you to make a Dexterity saving throw to take only half damage, you take no damage if you succeed on the saving throw and only half damage if you fail."
+
       , provenance = { kind = "srd-5.2.1", section = "Classes/Monk#Evasion" }
       , mechanics =
           { family = "save_damage_replacement"

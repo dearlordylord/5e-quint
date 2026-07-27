@@ -1,5 +1,4 @@
 {
-  "description": "Briefly surrounded by silvery mist, you teleport up to 30 feet to an unoccupied space you can see.",
   "id": "misty_step",
   "kind": "spell",
   "mechanics": {

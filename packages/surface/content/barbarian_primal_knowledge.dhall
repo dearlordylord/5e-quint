@@ -33,8 +33,7 @@ let primalKnowledge =
           { kind = "srd-5.2.1"
           , section = "Classes/Barbarian#Primal Knowledge"
           }
-      , description =
-          "You gain proficiency in another skill of your choice from the skill list available to Barbarians at level 1. In addition, while your Rage is active, you can channel primal power when you attempt certain tasks; if you make an Ability Check using Acrobatics, Intimidation, Perception, Stealth, or Survival, you can make it as a Strength check even if it normally uses a different ability."
+
       , mechanics =
           { family = "passive"
           , grants =

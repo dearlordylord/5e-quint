@@ -1,7 +1,6 @@
 {
   "acquiredAtLevel": 5,
   "className": "rogue",
-  "description": "When an attacker you can see hits you with an attack roll, take a Reaction to halve the attack's damage against you.",
   "id": "rogue_uncanny_dodge",
   "kind": "class_feature",
   "mechanics": {

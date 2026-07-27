@@ -6,10 +6,9 @@ let ring =
       , requiresAttunement = True
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "MagicItems#RingOfJumping"
+          , section = "Magic-Items/Items-Q-Z.md#Ring of Jumping"
           }
-      , description =
-          "While wearing this ring, you can cast Jump from it, but can target only yourself when you do so."
+
       , mechanics =
           { family = "passive"
           , grants =

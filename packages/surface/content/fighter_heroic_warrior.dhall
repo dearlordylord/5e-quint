@@ -6,8 +6,7 @@ let heroicWarrior =
       , acquiredAtLevel = 10
       , provenance =
           { kind = "srd-5.2.1", section = "Classes/Fighter.md:150-152" }
-      , description =
-          "During combat, you can give yourself Heroic Inspiration whenever you start your turn without it."
+
       , mechanics =
           { family = "combat_turn_start_heroic_inspiration"
           , trigger =

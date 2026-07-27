@@ -21,8 +21,7 @@ let sacredFlame =
           { kind = "srd-5.2.1"
           , section = "Spells/Descriptions-S-Z#Sacred Flame"
           }
-      , description =
-          "Flame-like radiance descends on a creature that you can see within range. The target must succeed on a Dexterity saving throw or take 1d8 Radiant damage. The target gains no benefit from Half Cover or Three-Quarters Cover for this save. Cantrip Upgrade: The damage increases by 1d8 when you reach levels 5 (2d8), 11 (3d8), and 17 (4d8)."
+
       , mechanics =
           { family = "activation"
           , level = 0

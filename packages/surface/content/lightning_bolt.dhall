@@ -21,8 +21,7 @@ let lightningBolt =
           { kind = "srd-5.2.1"
           , section = "Spells/Descriptions-E-L#Lightning Bolt"
           }
-      , description =
-          "A stroke of lightning forming a 100-foot-long, 5-foot-wide Line blasts from you in a direction you choose. Each creature in the Line makes a Dexterity saving throw, taking 8d6 Lightning damage on a failed save or half as much damage on a successful one. Using a Higher-Level Spell Slot. The damage increases by 1d6 for each spell slot level above 3."
+
       , mechanics =
           { family = "activation"
           , level = 3

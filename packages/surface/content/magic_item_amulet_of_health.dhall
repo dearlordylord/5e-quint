@@ -16,10 +16,9 @@ let amulet =
       , requiresAttunement = True
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "MagicItems#AmuletOfHealth"
+          , section = "Magic-Items/Items-A-H.md#Amulet of Health"
           }
-      , description =
-          "Your Constitution is 19 while you wear this amulet. It has no effect on you if your Constitution is 19 or higher without it."
+
       , mechanics =
           { family = "passive"
           , grants =

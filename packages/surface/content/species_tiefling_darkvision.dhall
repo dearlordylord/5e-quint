@@ -16,8 +16,7 @@ let tieflingDarkvision =
           { kind = "srd-5.2.1"
           , section = "Character-Origins#Tiefling"
           }
-      , description =
-          "You have Darkvision with a range of 60 feet."
+
       , mechanics =
           { family = "passive"
           , grants =

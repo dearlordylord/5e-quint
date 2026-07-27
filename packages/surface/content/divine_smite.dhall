@@ -72,8 +72,7 @@ let divineSmite =
           { kind = "srd-5.2.1"
           , section = "Spells/Descriptions-A-D#Divine Smite"
           }
-      , description =
-          "Immediately after hitting a target with a Melee weapon or an Unarmed Strike, you take a Bonus Action. The target takes an extra 2d8 Radiant damage from the attack. The damage increases by 1d8 if the target is a Fiend or an Undead. Using a Higher-Level Spell Slot. The damage increases by 1d8 for each spell slot level above 1."
+
       , mechanics =
           { family = "activation"
           , level = 1

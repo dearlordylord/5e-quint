@@ -1,5 +1,4 @@
 {
-  "description": "You have Resistance to Poison damage. You also have Advantage on saving throws you make to avoid or end the Poisoned condition.",
   "id": "dwarf_dwarven_resilience",
   "kind": "species_trait",
   "mechanics": {
@@ -24,7 +23,7 @@
   "name": "Dwarven Resilience",
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "Character-Origins/Dwarf#Dwarven Resilience"
+    "section": "Character-Origins.md:1,67,97,129,139-140"
   },
   "species": "dwarf"
 }

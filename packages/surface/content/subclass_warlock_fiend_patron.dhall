@@ -1,7 +1,6 @@
 let fiendPatron =
       { className = "warlock"
-      , description =
-          "The Fiend Patron subclass is detailed after this class's description."
+
       , featureGrants =
           [ { level = 3, unitId = "warlock_fiend_spells" }
           , { level = 3, unitId = "warlock_dark_ones_blessing" }

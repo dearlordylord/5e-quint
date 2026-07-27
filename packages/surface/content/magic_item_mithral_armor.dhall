@@ -29,9 +29,8 @@ let armor =
       , template = "any_armor_magic"
       , id = "magic_item_mithral_armor"
       , name = "Mithral Armor"
-      , provenance = { kind = "srd-5.2.1", section = "MagicItems#MithralArmor" }
-      , description =
-          "If the armor normally imposes Disadvantage on Dexterity (Stealth) checks or has a Strength requirement, the mithral version of the armor doesn't."
+      , provenance = { kind = "srd-5.2.1", section = "Magic-Items/Items-I-P.md#Mithral Armor" }
+
       , armorApplicability =
         { kind = "any_armor"
         , categories = [ "medium", "heavy" ]

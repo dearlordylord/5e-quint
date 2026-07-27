@@ -16,8 +16,7 @@ let darkOnesBlessing =
           { kind = "srd-5.2.1"
           , section = "Classes/Warlock#Level 3: Dark One's Blessing"
           }
-      , description =
-          "When you reduce an enemy to 0 Hit Points, you gain Temporary Hit Points equal to your Charisma modifier plus your Warlock level (minimum of 1 Temporary Hit Point). You also gain this benefit if someone else reduces an enemy within 10 feet of you to 0 Hit Points."
+
       , mechanics =
           { family = "enemy_zero_hit_point_temporary_hit_points"
           , trigger =

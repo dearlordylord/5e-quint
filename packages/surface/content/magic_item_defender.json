@@ -1,11 +1,10 @@
 {
-  "description": "You gain a +3 bonus to attack rolls and damage rolls made with this magic weapon. The first time you attack with it on each of your turns, you can transfer some or all of the bonus to your Armor Class. The adjusted bonuses remain in effect until the start of your next turn, although you must hold the weapon to gain the Armor Class bonus.",
   "id": "magic_item_defender",
   "kind": "weapon_template",
   "name": "Defender",
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "MagicItems#Defender"
+    "section": "Magic-Items/Items-A-H.md#Defender"
   },
   "template": "any_weapon_magic",
   "variants": [

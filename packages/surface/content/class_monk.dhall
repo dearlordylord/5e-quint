@@ -10,7 +10,7 @@ let WeaponProficiency : Type =
 let monk =
       { armorTraining = { kind = "none" }
       , className = "monk"
-      , description = "As a Monk, you gain the following class features when you reach the specified Monk levels. These features are listed in the Monk Features table."
+
       , featureGrants =
         [ { level = 1, unitId = "monk_martial_arts" }
         , { level = 1, unitId = "monk_unarmored_defense" }

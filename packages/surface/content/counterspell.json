@@ -1,5 +1,4 @@
 {
-  "description": "You attempt to interrupt a creature in the process of casting a spell. The creature makes a Constitution saving throw. On a failed save, the spell dissipates with no effect, and the action, Bonus Action, or Reaction used to cast it is wasted; if a slot was used, the slot isn't expended.",
   "id": "counterspell",
   "kind": "spell",
   "mechanics": {

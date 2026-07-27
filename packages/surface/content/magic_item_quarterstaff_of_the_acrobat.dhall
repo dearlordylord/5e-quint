@@ -34,10 +34,9 @@ let quarterstaffOfTheAcrobat =
       , requiresAttunement = True
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "MagicItems#QuarterstaffOfTheAcrobat"
+          , section = "Magic-Items/Items-Q-Z.md#Quarterstaff of the Acrobat"
           }
-      , description =
-          "You have a +2 bonus to attack rolls and damage rolls made with this magic weapon. While holding this weapon, you can cause it to emit green Dim Light out to 10 feet, either as a Bonus Action or after you roll Initiative, or you can extinguish the light as a Bonus Action. While holding this weapon, you can take a Bonus Action to alter its form, turning it into a 6-inch rod, a 10-foot pole, or reverting it to a Quarterstaff. In certain forms, the weapon has the following additional properties: Acrobatic Assist; Attack Deflection; Ranged Weapon."
+
       , mechanics =
           { family = "passive"
           , condition = { kind = "holding_item" }

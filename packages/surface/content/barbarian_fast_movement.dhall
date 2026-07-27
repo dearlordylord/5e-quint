@@ -18,8 +18,7 @@ let fastMovement =
           { kind = "srd-5.2.1"
           , section = "Classes/Barbarian#Fast Movement"
           }
-      , description =
-          "Your speed increases by 10 feet while you aren't wearing Heavy armor."
+
       , mechanics =
           { family = "passive"
           , condition =

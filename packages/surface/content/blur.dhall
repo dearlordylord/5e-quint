@@ -22,8 +22,7 @@ let blur =
           { kind = "srd-5.2.1"
           , section = "Spells/Descriptions-A-D#Blur"
           }
-      , description =
-          "Your body becomes blurred. For the duration, any creature has Disadvantage on attack rolls against you. An attacker is immune to this effect if it perceives you with Blindsight or Truesight."
+
       , mechanics =
           { family = "activation"
           , level = 2

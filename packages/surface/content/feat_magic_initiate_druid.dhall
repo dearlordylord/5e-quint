@@ -1,7 +1,6 @@
 let magicInitiateDruid =
       { category = "origin"
-      , description =
-          "Choose two Druid cantrips. Choose one level 1 Druid spell; you always have that spell prepared. You can cast it once without a spell slot. Choose Intelligence, Wisdom, or Charisma as the spellcasting ability. Whenever you gain a new level, you can replace one of the spells you chose with a different Druid spell of the same level."
+
       , id = "feat_magic_initiate_druid"
       , kind = "feat"
       , mechanics =

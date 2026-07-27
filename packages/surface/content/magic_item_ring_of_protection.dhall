@@ -21,10 +21,9 @@ let ring =
       , requiresAttunement = True
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "MagicItems#RingOfProtection"
+          , section = "Magic-Items/Items-Q-Z.md#Ring of Protection"
           }
-      , description =
-          "You gain a +1 bonus to AC and saving throws while you wear this ring."
+
       , mechanics =
           { family = "passive"
           , grants =

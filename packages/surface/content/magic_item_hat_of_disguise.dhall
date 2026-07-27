@@ -6,10 +6,9 @@ let hat =
       , requiresAttunement = True
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "MagicItems#HatOfDisguise"
+          , section = "Magic-Items/Items-A-H.md#Hat of Disguise"
           }
-      , description =
-          "While wearing this hat, you can cast the Disguise Self spell. The spell ends if the hat is removed."
+
       , mechanics =
           { family = "passive"
           , grants =

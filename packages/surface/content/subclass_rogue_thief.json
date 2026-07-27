@@ -1,6 +1,5 @@
 {
   "className": "rogue",
-  "description": "The Thief subclass is detailed after this class's description.",
   "featureGrants": [
     {
       "level": 3,

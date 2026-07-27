@@ -25,8 +25,7 @@ let invisibility =
           { kind = "srd-5.2.1"
           , section = "Spells/Descriptions-E-L#Invisibility"
           }
-      , description =
-          "A creature you touch has the Invisible condition until the spell ends. The spell ends early immediately after the target makes an attack roll, deals damage, or casts a spell. Using a Higher-Level Spell Slot. You can target one additional creature for each spell slot level above 2."
+
       , mechanics =
           { family = "activation"
           , level = 2

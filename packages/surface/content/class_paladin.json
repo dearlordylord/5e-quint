@@ -9,7 +9,6 @@
     "kind": "trained"
   },
   "className": "paladin",
-  "description": "As a Paladin, you gain the following class features when you reach the specified Paladin levels. These features are listed in the Paladin Features table.",
   "featureGrants": [
     {
       "level": 1,

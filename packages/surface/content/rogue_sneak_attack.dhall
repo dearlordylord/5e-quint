@@ -14,8 +14,7 @@ let sneakAttack =
       , name = "Sneak Attack"
       , className = "rogue"
       , acquiredAtLevel = 1
-      , description =
-          "Once per turn, you can deal extra damage to one creature you hit with an attack roll if you have Advantage on the roll and the attack uses a Finesse or a Ranged weapon. You don't need Advantage if at least one ally is within 5 feet of the target, the ally doesn't have the Incapacitated condition, and you don't have Disadvantage."
+
       , provenance =
         { kind = "srd-5.2.1", section = "Classes/Rogue#Sneak Attack" }
       , mechanics =

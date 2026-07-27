@@ -6,7 +6,6 @@
     "damageType": "piercing",
     "kind": "flat"
   },
-  "description": "Blowgun — weapons table.",
   "id": "weapon_blowgun",
   "kind": "weapon",
   "mastery": "vex",

@@ -6,7 +6,6 @@
     "trainingRequired": "shield"
   },
   "costGp": 10,
-  "description": "Shield: +2 Armor Class. Utilize Action to Don or Doff.",
   "donDoff": {
     "action": "utilize"
   },

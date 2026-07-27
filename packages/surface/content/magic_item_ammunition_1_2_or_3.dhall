@@ -68,9 +68,8 @@ let ammunition =
       , id = "magic_item_ammunition_1_2_or_3"
       , name = "Ammunition, +1, +2, or +3"
       , provenance =
-        { kind = "srd-5.2.1", section = "MagicItems#Ammunition+1+2or+3" }
-      , description =
-          "You have a bonus to attack rolls and damage rolls made with this piece of magic ammunition. Once it hits a target, the ammunition is no longer magical. Ammunition is typically found or sold in quantities of ten or twenty pieces; ten pieces are equivalent in value to a potion of the same rarity."
+        { kind = "srd-5.2.1", section = "Magic-Items/Items-A-H.md#Ammunition, +1, +2, or +3" }
+
       , ammunitionQuantity =
         { kind = "typically_found_or_sold"
         , counts = [ 10, 20 ]

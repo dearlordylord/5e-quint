@@ -68,9 +68,8 @@ let weapon =
       , id = "magic_item_weapon_1_2_or_3"
       , name = "Weapon, +1, +2, or +3"
       , provenance =
-        { kind = "srd-5.2.1", section = "MagicItems#Weapon+1+2or+3" }
-      , description =
-          "You have a bonus to attack rolls and damage rolls made with this magic weapon. The bonus is determined by the weapon's rarity."
+        { kind = "srd-5.2.1", section = "Magic-Items/Items-Q-Z.md#Weapon, +1, +2, or +3" }
+
       , weaponApplicability =
         { kind = "any_weapon", categories = [ "simple", "martial" ] }
       , variants =

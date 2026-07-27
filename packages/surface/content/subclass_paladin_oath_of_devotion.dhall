@@ -1,7 +1,6 @@
 let oathOfDevotion =
       { className = "paladin"
-      , description =
-          "The Oath of Devotion subclass is detailed after this class's description."
+
       , featureGrants =
         [ { level = 3, unitId = "paladin_oath_of_devotion_spells" }
         , { level = 3, unitId = "paladin_sacred_weapon" }

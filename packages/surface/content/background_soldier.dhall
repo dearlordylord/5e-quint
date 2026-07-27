@@ -41,8 +41,7 @@ let soldier =
             }
           ]
         }
-      , description =
-          "Soldier. Ability Scores: Strength, Dexterity, Constitution. Feat: Savage Attacker. Skill Proficiencies: Athletics and Intimidation. Tool Proficiency: Gaming Set."
+
       , id = "background_soldier"
       , kind = "background"
       , name = "Soldier"

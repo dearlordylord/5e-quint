@@ -5,7 +5,6 @@
   },
   "category": "heavy",
   "costGp": 75,
-  "description": "Chain Mail — armor table.",
   "donDoff": {
     "doffMinutes": 5,
     "donMinutes": 10

@@ -8,8 +8,7 @@ let shield =
           { kind = "srd-5.2.1"
           , section = "Equipment#Armor"
           }
-      , description =
-          "Shield: +2 Armor Class. Utilize Action to Don or Doff."
+
       , armorClassProjection =
           { kind = "trained_shield_bonus"
           , handUse = "shield"

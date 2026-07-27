@@ -1,7 +1,6 @@
 { armorTraining = { categories = [ "light" ], kind = "trained" }
 , className = "bard"
-, description =
-    "As a Bard, you gain the following class features when you reach the specified Bard levels. These features are listed in the Bard Features table."
+
 , featureGrants =
   [ { level = 1, unitId = "bard_bardic_inspiration" }
   , { level = 2, unitId = "bard_expertise" }

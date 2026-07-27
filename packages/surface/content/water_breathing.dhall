@@ -13,8 +13,7 @@ let waterBreathing =
           { kind = "srd-5.2.1"
           , section = "Spells/Descriptions-S-Z#Water Breathing"
           }
-      , description =
-          "This spell grants up to ten willing creatures of your choice within range the ability to breathe underwater until the spell ends. Affected creatures also retain their normal mode of respiration."
+
       , mechanics =
           { family = "activation"
           , level = 3

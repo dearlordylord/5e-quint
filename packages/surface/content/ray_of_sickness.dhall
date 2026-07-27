@@ -70,8 +70,7 @@ let rayOfSickness =
           { kind = "srd-5.2.1"
           , section = "Spells/Descriptions-Q-R#Ray of Sickness"
           }
-      , description =
-          "You shoot a greenish ray at a creature within range. Make a ranged spell attack against the target. On a hit, the target takes 2d8 Poison damage and has the Poisoned condition until the end of your next turn. Using a Higher-Level Spell Slot. The damage increases by 1d8 for each spell slot level above 1."
+
       , mechanics =
           { family = "activation"
           , level = 1

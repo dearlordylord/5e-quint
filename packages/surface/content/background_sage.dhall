@@ -41,8 +41,7 @@ let sage =
             }
           ]
         }
-      , description =
-          "Sage. Ability Scores: Constitution, Intelligence, Wisdom. Feat: Magic Initiate (Wizard). Skill Proficiencies: Arcana and History. Tool Proficiency: Calligrapher's Supplies."
+
       , id = "background_sage"
       , kind = "background"
       , name = "Sage"

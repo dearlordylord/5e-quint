@@ -18,8 +18,7 @@ let jump =
       , name = "Jump"
       , provenance =
           { kind = "srd-5.2.1", section = "Spells/Descriptions-E-L#Jump" }
-      , description =
-          "You touch a willing creature. Once on each of its turns until the spell ends, that creature can jump up to 30 feet by spending 10 feet of movement. Using a Higher-Level Spell Slot. You can target one additional creature for each spell slot level above 1."
+
       , mechanics =
           { family = "activation"
           , level = 1

@@ -15,8 +15,7 @@ let beaconOfHope =
           { kind = "srd-5.2.1"
           , section = "Spells/Descriptions-A-D#Beacon of Hope"
           }
-      , description =
-          "Choose any number of creatures within range. For the duration, each target has Advantage on Wisdom saving throws and Death Saving Throws and regains the maximum number of Hit Points possible from any healing."
+
       , mechanics =
           { family = "ongoing_effect"
           , level = 3

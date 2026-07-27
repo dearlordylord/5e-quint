@@ -5,10 +5,9 @@
 , requiresAttunement = False
 , provenance =
     { kind = "srd-5.2.1"
-    , section = "MagicItems#Ring of Swimming"
+    , section = "Magic-Items/Items-Q-Z.md#Ring of Swimming"
     }
-, description =
-    "You have a Swim Speed of 40 feet while wearing this ring."
+
 , mechanics =
     { family = "passive"
     , grants =

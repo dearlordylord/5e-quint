@@ -34,8 +34,7 @@ let rangerFightingStyleL2 =
           { kind = "srd-5.2.1"
           , section = "Classes/Ranger#Fighting Style"
           }
-      , description =
-          "You gain a Fighting Style feat of your choice (see \"Feats\"). Instead of choosing one of those feats, you can choose the option below.\n\nDruidic Warrior. You learn two Druid cantrips of your choice. The chosen cantrips count as Ranger spells for you, and Wisdom is your spellcasting ability for them. Whenever you gain a Ranger level, you can replace one of these cantrips with another Druid cantrip."
+
       , mechanics =
           { family = "class_feature_acquisition_choice"
           , choiceKey = "ranger_fighting_style"

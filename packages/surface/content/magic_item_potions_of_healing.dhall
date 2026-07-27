@@ -22,8 +22,7 @@ let potionOfHealing =
           { kind = "srd-5.2.1"
           , section = "Equipment#Potion of Healing"
           }
-      , description =
-          "As a Bonus Action, you can drink it or administer it to another creature within 5 feet of yourself. The creature that drinks the magical red fluid in this vial regains 2d4 + 2 Hit Points."
+
       , mechanics =
           { family = "activation"
           , activationCost = { kind = "bonus_action" }

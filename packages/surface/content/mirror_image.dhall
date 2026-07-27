@@ -19,8 +19,7 @@ let mirrorImage =
           { kind = "srd-5.2.1"
           , section = "Spells/Descriptions-M-P#Mirror Image"
           }
-      , description =
-          "Three illusory duplicates appear in your space. Each time a creature hits you with an attack roll during the duration, roll 1d6 for each remaining duplicate. If any d6 is a 3 or higher, one duplicate is hit instead of you and destroyed. Duplicates ignore all other damage and effects. The spell ends when all three duplicates are destroyed. A creature is unaffected if it has the Blinded condition, Blindsight, or Truesight."
+
       , mechanics =
           { family = "passive_hit_intercept"
           , level = 2

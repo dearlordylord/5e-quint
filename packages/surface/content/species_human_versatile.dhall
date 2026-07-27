@@ -1,7 +1,5 @@
 let versatile =
-      { description =
-          "You gain an Origin feat of your choice. Skilled is recommended."
-      , id = "species_human_versatile"
+      {  id = "species_human_versatile"
       , kind = "species_trait"
       , mechanics =
         { family = "passive"
@@ -10,7 +8,7 @@ let versatile =
       , name = "Versatile"
       , provenance =
         { kind = "srd-5.2.1"
-        , section = "Character-Origins/Human#Versatile"
+        , section = "Character-Origins.md:1,67,97,231,243-244"
         }
       , species = "human"
       }

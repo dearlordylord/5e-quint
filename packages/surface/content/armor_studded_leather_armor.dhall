@@ -5,7 +5,7 @@ let armor =
       , name = "Studded Leather Armor"
       , category = "light"
       , provenance = { kind = "srd-5.2.1", section = "Equipment#Armor" }
-      , description = "Studded Leather Armor — armor table."
+
       , acFormula = { kind = "light_dex", base = 12 }
       , weightPounds = 13
       , costGp = 45

@@ -45,8 +45,7 @@ let antimagicField =
           { kind = "srd-5.2.1"
           , section = "Spells/Descriptions-A-D#Antimagic Field"
           }
-      , description =
-          "An aura of antimagic surrounds you in a 10-foot Emanation. No one can cast spells, take Magic actions, or create other magical effects inside the aura, and those things can't target or otherwise affect anything inside it. Magical properties of magic items don't work inside the aura or on anything inside it. Areas of effect created by spells or other magic can't extend into the aura, and no one can teleport into or out of it or use planar travel there. Ongoing spells, except those cast by an Artifact or a deity, are suppressed in the area. Suppressed time counts against duration."
+
       , mechanics =
           { family = "ongoing_effect"
           , level = 8

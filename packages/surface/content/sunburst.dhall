@@ -60,8 +60,7 @@ let sunburst =
           { kind = "srd-5.2.1"
           , section = "Spells/Descriptions-S-Z#Sunburst"
           }
-      , description =
-          "Brilliant sunlight flashes in a 60-foot-radius Sphere centered on a point within range. Each creature in the Sphere makes a Constitution saving throw. On a failed save, a creature takes 12d6 Radiant damage and has the Blinded condition for 1 minute. On a successful save, it takes half as much damage only. A creature Blinded by this spell makes another Constitution saving throw at the end of each of its turns, ending the effect on itself on a success."
+
       , mechanics =
           { family = "activation"
           , level = 8

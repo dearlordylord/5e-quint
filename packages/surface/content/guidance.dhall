@@ -17,8 +17,7 @@ let guidance =
           { kind = "srd-5.2.1"
           , section = "Spells/Descriptions-E-L#Guidance"
           }
-      , description =
-          "You touch a willing creature and choose a skill. Until the spell ends, the creature adds 1d4 to any ability check using the chosen skill."
+
       , mechanics =
           { family = "ongoing_effect"
           , level = 0

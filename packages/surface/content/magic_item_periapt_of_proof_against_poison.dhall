@@ -6,10 +6,9 @@ let periapt =
       , requiresAttunement = True
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "MagicItems#Periapt of Proof against Poison"
+          , section = "Magic-Items/Items-I-P.md#Periapt of Proof against Poison"
           }
-      , description =
-          "This delicate silver chain has a brilliant-cut black gem pendant. While you wear it, you have Immunity to the Poisoned condition and Poison damage."
+
       , mechanics =
           { family = "passive"
           , grants =

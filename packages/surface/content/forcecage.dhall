@@ -174,8 +174,7 @@ let forcecage =
           { kind = "srd-5.2.1"
           , section = "Spells/Descriptions-E-L#Forcecage"
           }
-      , description =
-          "An immobile, Invisible, Cube-shaped prison composed of magical force springs into existence around an area within range. The prison can be a cage or a solid box. Creatures completely inside are trapped; creatures only partially within the area or those too large are pushed away. A creature inside can't leave by nonmagical means. To use teleportation or interplanar travel, it must first make a Charisma saving throw; on a failed save, the creature doesn't exit and wastes the spell or effect. The cage extends into the Ethereal Plane. It can't be dispelled by Dispel Magic."
+
       , mechanics =
           { family = "ongoing_effect"
           , level = 7

@@ -5,7 +5,7 @@ let armor =
       , name = "Breastplate"
       , category = "medium"
       , provenance = { kind = "srd-5.2.1", section = "Equipment#Armor" }
-      , description = "Breastplate — armor table."
+
       , acFormula = { kind = "medium_dex_max_2", base = 14 }
       , weightPounds = 20
       , costGp = 400

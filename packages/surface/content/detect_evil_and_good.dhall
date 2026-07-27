@@ -21,8 +21,7 @@ let detectEvilAndGood =
           { kind = "srd-5.2.1"
           , section = "Spells/Descriptions-A-D#Detect Evil and Good"
           }
-      , description =
-          "For the duration, you sense the location of any Aberration, Celestial, Elemental, Fey, Fiend, or Undead within 30 feet of yourself. You also sense whether the Hallow spell is active there and, if so, where."
+
       , mechanics =
           { family = "activation"
           , level = 1

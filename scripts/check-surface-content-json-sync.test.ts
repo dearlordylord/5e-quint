@@ -17,11 +17,10 @@ import {
 } from "./check-surface-content-json-sync.ts";
 import dhallJsonToolchain from "../packages/surface/dhall-json-toolchain.json" with { type: "json" };
 import {
-  serializeSurfacePublicationArtifact,
-  SRD_SURFACE_PUBLICATION_ARTIFACTS,
   SRD_SURFACE_PUBLICATION_FILE_NAMES,
   SURFACE_PUBLICATION_MEMBERS,
 } from "../packages/surface/src/surface/publication-artifacts.ts";
+import { buildSrdSurfacePublication } from "./srd-surface-publication-artifacts.ts";
 
 const validRecord = readFileSync(
   join(process.cwd(), "packages/surface/content/bless.json"),
@@ -95,15 +94,19 @@ describe("Surface content publication checker", () => {
   it("detects drift in committed language-neutral artifacts", () => {
     const contentDir = mkdtempSync(join(tmpdir(), "surface-artifact-test-"));
     const publicationDir = join(contentDir, "publication");
+    const publication = buildSrdSurfacePublication();
+    expect(publication.tag).toBe("ok");
+    if (publication.tag !== "ok") {
+      throw new Error("Production Surface publication did not build");
+    }
 
     try {
       mkdirSync(publicationDir, { recursive: true });
       for (const member of SURFACE_PUBLICATION_MEMBERS) {
         const fileName = SRD_SURFACE_PUBLICATION_FILE_NAMES[member];
-        const value = SRD_SURFACE_PUBLICATION_ARTIFACTS[member];
         writeFileSync(
           join(publicationDir, fileName),
-          serializeSurfacePublicationArtifact(value),
+          publication.bytes[member],
         );
       }
       writeFileSync(

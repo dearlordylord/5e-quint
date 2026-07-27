@@ -19,8 +19,7 @@ let jackOfAllTrades =
           { kind = "srd-5.2.1"
           , section = "Classes/Bard#Jack of All Trades"
           }
-      , description =
-          "You can add half your Proficiency Bonus (round down) to any ability check you make that uses a skill proficiency you lack and that doesn't otherwise use your Proficiency Bonus."
+
       , mechanics =
           { family = "passive"
           , grants =

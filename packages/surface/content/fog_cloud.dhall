@@ -36,8 +36,7 @@ let fogCloud =
           { kind = "srd-5.2.1"
           , section = "Spells/Descriptions-E-L#Fog Cloud"
           }
-      , description =
-          "You create a 20-foot-radius Sphere of fog centered on a point within range. The Sphere is Heavily Obscured. It lasts for the duration or until a strong wind disperses it. Using a Higher-Level Spell Slot. The fog's radius increases by 20 feet for each spell slot level above 1."
+
       , mechanics =
           { family = "ongoing_effect"
           , level = 1

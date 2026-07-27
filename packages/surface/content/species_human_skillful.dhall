@@ -31,8 +31,7 @@ let skillOptions =
       ] : List ProficiencySubject
 
 let skillful =
-      { description = "You gain proficiency in one skill of your choice."
-      , id = "species_human_skillful"
+      {  id = "species_human_skillful"
       , kind = "species_trait"
       , mechanics =
         { family = "passive"
@@ -49,7 +48,7 @@ let skillful =
       , name = "Skillful"
       , provenance =
         { kind = "srd-5.2.1"
-        , section = "Character-Origins/Human#Skillful"
+        , section = "Character-Origins.md:1,67,97,231,241-242"
         }
       , species = "human"
       }

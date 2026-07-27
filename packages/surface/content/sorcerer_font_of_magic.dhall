@@ -55,8 +55,7 @@ let pointsToSlot =
 let fontOfMagic =
       { acquiredAtLevel = 2
       , className = "sorcerer"
-      , description =
-          "You can tap into the wellspring of magic within yourself. This wellspring is represented by Sorcery Points, which allow you to create a variety of magical effects. You can't have more Sorcery Points than the number shown in the table for your level. You regain all expended Sorcery Points when you finish a Long Rest. You can expend a spell slot to gain a number of Sorcery Points equal to the slot's level. As a Bonus Action, you can transform unexpended Sorcery Points into one spell slot. Any spell slot you create with this feature vanishes when you finish a Long Rest."
+
       , id = "sorcerer_font_of_magic"
       , kind = "class_feature"
       , mechanics =

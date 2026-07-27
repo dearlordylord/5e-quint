@@ -5,7 +5,7 @@ let armor =
       , name = "Ring Mail"
       , category = "heavy"
       , provenance = { kind = "srd-5.2.1", section = "Equipment#Armor" }
-      , description = "Ring Mail — armor table."
+
       , acFormula = { kind = "heavy_fixed", ac = 14 }
       , stealthDisadvantage = True
       , weightPounds = 40

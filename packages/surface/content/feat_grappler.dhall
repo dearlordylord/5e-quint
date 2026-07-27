@@ -12,8 +12,7 @@ let grappler =
           , methods = [ { kind = "one_score", increase = 1 } ]
           }
       , category = "general"
-      , description =
-          "Increase your Strength or Dexterity by 1, to a maximum of 20. When you hit with an Unarmed Strike as part of the Attack action on your turn, you can use both the Damage and Grapple option once per turn. You have Advantage on attack rolls against a creature Grappled by you. You don't spend extra movement to move a creature Grappled by you if the creature is your size or smaller."
+
       , id = "feat_grappler"
       , kind = "feat"
       , mechanics =

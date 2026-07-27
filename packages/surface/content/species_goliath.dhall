@@ -1,6 +1,6 @@
 let goliath =
       { creatureType = "humanoid"
-      , description = "As a Goliath, you have these special traits."
+
       , id = "species_goliath"
       , kind = "species"
       , name = "Goliath"

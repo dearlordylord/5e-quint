@@ -19,8 +19,7 @@ let protectionFromEnergy =
           { kind = "srd-5.2.1"
           , section = "Spells/Descriptions-M-P#Protection from Energy"
           }
-      , description =
-          "For the duration, the willing creature you touch has Resistance to one damage type of your choice: Acid, Cold, Fire, Lightning, or Thunder."
+
       , mechanics =
           { family = "activation"
           , level = 3

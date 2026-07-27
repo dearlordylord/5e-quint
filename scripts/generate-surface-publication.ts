@@ -1,10 +1,8 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-import {
-  SRD_SURFACE_PUBLICATION_ARTIFACT_BYTES,
-  SRD_SURFACE_PUBLICATION_FILE_NAMES,
-} from "../packages/surface/src/surface/publication-artifacts.ts";
+import { SRD_SURFACE_PUBLICATION_FILE_NAMES } from "../packages/surface/src/surface/publication-artifacts.ts";
+import { buildSrdSurfacePublication } from "./srd-surface-publication-artifacts.ts";
 
 const publicationDirectory = join(
   process.cwd(),
@@ -14,11 +12,21 @@ const publicationDirectory = join(
 );
 
 mkdirSync(publicationDirectory, { recursive: true });
-writeFileSync(
-  join(publicationDirectory, SRD_SURFACE_PUBLICATION_FILE_NAMES.aggregate),
-  SRD_SURFACE_PUBLICATION_ARTIFACT_BYTES.aggregate,
-);
-writeFileSync(
-  join(publicationDirectory, SRD_SURFACE_PUBLICATION_FILE_NAMES.schema),
-  SRD_SURFACE_PUBLICATION_ARTIFACT_BYTES.schema,
-);
+const publication = buildSrdSurfacePublication();
+if (publication.tag === "invalid") {
+  for (const issue of publication.issues) {
+    console.error(
+      `Surface publication: ${issue.recordId}: ${issue.reason}: ${issue.section}`,
+    );
+  }
+  process.exitCode = 1;
+} else {
+  writeFileSync(
+    join(publicationDirectory, SRD_SURFACE_PUBLICATION_FILE_NAMES.aggregate),
+    publication.bytes.aggregate,
+  );
+  writeFileSync(
+    join(publicationDirectory, SRD_SURFACE_PUBLICATION_FILE_NAMES.schema),
+    publication.bytes.schema,
+  );
+}

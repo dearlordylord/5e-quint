@@ -1,6 +1,6 @@
 let dwarf =
       { creatureType = "humanoid"
-      , description = "As a Dwarf, you have these special traits."
+
       , id = "species_dwarf"
       , kind = "species"
       , name = "Dwarf"

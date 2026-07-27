@@ -1,7 +1,6 @@
 {
   "acquiredAtLevel": 3,
   "className": "bard",
-  "description": "You gain proficiency with three skills of your choice.",
   "id": "bard_bonus_proficiencies",
   "kind": "class_feature",
   "mechanics": {

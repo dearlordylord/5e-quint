@@ -7,7 +7,6 @@
     "dieSize": 6,
     "kind": "dice"
   },
-  "description": "Shortsword — weapons table.",
   "id": "weapon_shortsword",
   "kind": "weapon",
   "mastery": "vex",

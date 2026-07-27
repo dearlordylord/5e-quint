@@ -7,7 +7,6 @@
     "dieSize": 8,
     "kind": "dice"
   },
-  "description": "Flail — weapons table.",
   "id": "weapon_flail",
   "kind": "weapon",
   "mastery": "sap",

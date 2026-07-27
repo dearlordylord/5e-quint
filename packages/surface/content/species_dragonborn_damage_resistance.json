@@ -1,5 +1,4 @@
 {
-  "description": "You have Resistance to the damage type determined by your Draconic Ancestry trait.",
   "id": "species_dragonborn_damage_resistance",
   "kind": "species_trait",
   "mechanics": {
@@ -17,7 +16,7 @@
   "name": "Damage Resistance (Dragonborn)",
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "Character-Origins/Dragonborn#Damage Resistance"
+    "section": "Character-Origins.md:1,67,97,99,109,123-124"
   },
   "species": "dragonborn"
 }

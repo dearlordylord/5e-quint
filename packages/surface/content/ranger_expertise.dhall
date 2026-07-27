@@ -12,8 +12,7 @@ let expertise =
       , acquiredAtLevel = 9
       , provenance =
           { kind = "srd-5.2.1", section = "Classes/Ranger.md:118-120" }
-      , description =
-          "Choose two of your skill proficiencies with which you lack Expertise; you gain Expertise in those skills."
+
       , mechanics =
           { family = "passive"
           , grants =

@@ -5,7 +5,7 @@ let armor =
       , name = "Chain Mail"
       , category = "heavy"
       , provenance = { kind = "srd-5.2.1", section = "Equipment#Armor" }
-      , description = "Chain Mail — armor table."
+
       , acFormula = { kind = "heavy_fixed", ac = 16 }
       , strengthRequirement = 13
       , stealthDisadvantage = True

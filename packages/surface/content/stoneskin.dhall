@@ -19,8 +19,7 @@ let stoneskin =
           { kind = "srd-5.2.1"
           , section = "Spells/Descriptions-S-Z#Stoneskin"
           }
-      , description =
-          "Until the spell ends, one willing creature you touch has Resistance to Bludgeoning, Piercing, and Slashing damage."
+
       , mechanics =
           { family = "activation"
           , level = 4

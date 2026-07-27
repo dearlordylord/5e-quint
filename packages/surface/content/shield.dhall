@@ -9,10 +9,9 @@ let shield =
       , name = "Shield"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-Q-Z#Shield"
+          , section = "Spells/Descriptions-S-Z.md#Shield"
           }
-      , description =
-          "An imperceptible barrier of magical force protects you. Until the start of your next turn, you have a +5 bonus to AC, including against the triggering attack, and you take no damage from Magic Missile."
+
       , mechanics =
           { family = "triggered_reaction"
           , level = 1

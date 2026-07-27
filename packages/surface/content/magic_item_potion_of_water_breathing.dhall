@@ -14,10 +14,9 @@ let potion =
       , requiresAttunement = False
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "MagicItems#PotionOfWaterBreathing"
+          , section = "Magic-Items/Items-I-P.md#Potion of Water Breathing"
           }
-      , description =
-          "You can breathe underwater for 24 hours after drinking this potion."
+
       , mechanics =
           { family = "activation"
           , activationCost = { kind = "standard_action", action = "magic" }

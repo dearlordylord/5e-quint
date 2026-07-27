@@ -10,10 +10,9 @@ let bracers =
       , requiresAttunement = True
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "MagicItems#BracersOfDefense"
+          , section = "Magic-Items/Items-A-H.md#Bracers of Defense"
           }
-      , description =
-          "While wearing these bracers, you gain a +2 bonus to Armor Class if you are wearing no armor and using no Shield."
+
       , mechanics =
           { family = "passive"
           , condition =

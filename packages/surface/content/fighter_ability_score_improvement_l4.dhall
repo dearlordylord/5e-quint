@@ -8,8 +8,7 @@ let fighterAbilityScoreImprovementL4 =
           { kind = "srd-5.2.1"
           , section = "Classes/Fighter#Ability Score Improvement"
           }
-      , description =
-          "You gain the Ability Score Improvement feat (see \"Feats\") or another feat of your choice for which you qualify. You gain this feature again at Fighter levels 6, 8, 12, 14, and 16."
+
       , mechanics =
           { family = "passive"
           , grants =

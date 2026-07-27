@@ -9,8 +9,7 @@ let thievesCant =
       , acquiredAtLevel = 1
       , provenance =
           { kind = "srd-5.2.1", section = "Classes/Rogue#Thieves' Cant" }
-      , description =
-          "You know Thieves' Cant and one other language of your choice from the Character Creation language tables."
+
       , mechanics =
           { family = "passive"
           , grants =

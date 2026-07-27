@@ -11,8 +11,7 @@ let martialArts =
       , acquiredAtLevel = 1
       , provenance =
           { kind = "srd-5.2.1", section = "Classes/Monk#Martial Arts" }
-      , description =
-          "While unarmed or wielding Monk weapons and you aren't wearing armor or wielding a Shield, you gain the following benefits: Bonus Action Unarmed Strike; Martial Arts die; Dexterous Attacks."
+
       , mechanics =
           { family = "passive"
           , condition =

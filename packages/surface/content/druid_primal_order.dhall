@@ -55,8 +55,7 @@ let primalOrder =
       , acquiredAtLevel = 1
       , provenance =
           { kind = "srd-5.2.1", section = "Classes/Druid#Primal Order" }
-      , description =
-          "Choose one sacred role. With Magician, you know one extra Druid cantrip. You have a bonus to Intelligence (Arcana or Nature) checks equal to your Wisdom modifier. With Warden, you gain proficiency with Martial weapons and training with Medium armor."
+
       , mechanics =
           { family = "class_feature_acquisition_choice"
           , choiceKey = "primal_order"

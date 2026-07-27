@@ -7,7 +7,6 @@
     "dieSize": 10,
     "kind": "dice"
   },
-  "description": "Pistol — weapons table.",
   "id": "weapon_pistol",
   "kind": "weapon",
   "mastery": "vex",

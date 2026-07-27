@@ -21,8 +21,7 @@ let detectPoisonAndDisease =
           { kind = "srd-5.2.1"
           , section = "Spells/Descriptions-A-D#Detect Poison and Disease"
           }
-      , description =
-          "For the duration, you sense the location of poisons, poisonous or venomous creatures, and magical contagions within 30 feet of yourself. You sense the kind of poison, creature, or contagion in each case."
+
       , mechanics =
           { family = "activation"
           , level = 1

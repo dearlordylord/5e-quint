@@ -41,8 +41,7 @@ let acolyte =
             }
           ]
         }
-      , description =
-          "Acolyte. Ability Scores: Intelligence, Wisdom, Charisma. Feat: Magic Initiate (Cleric). Skill Proficiencies: Insight and Religion. Tool Proficiency: Calligrapher's Supplies."
+
       , id = "background_acolyte"
       , kind = "background"
       , name = "Acolyte"

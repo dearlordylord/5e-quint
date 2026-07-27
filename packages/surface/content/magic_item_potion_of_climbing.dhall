@@ -43,10 +43,9 @@ let potion =
       , requiresAttunement = False
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "MagicItems#PotionOfClimbing"
+          , section = "Magic-Items/Items-I-P.md#Potion of Climbing"
           }
-      , description =
-          "When you drink this potion, you gain a Climb Speed equal to your Speed for 1 hour. During this time, you have Advantage on Strength (Athletics) checks to climb."
+
       , mechanics =
           { family = "activation"
           , activationCost = { kind = "standard_action", action = "magic" }

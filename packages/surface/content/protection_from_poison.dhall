@@ -20,8 +20,7 @@ let protectionFromPoison =
           { kind = "srd-5.2.1"
           , section = "Spells/Descriptions-M-P#Protection from Poison"
           }
-      , description =
-          "You touch a creature and end the Poisoned condition on it. For the duration, the target has Advantage on saving throws to avoid or end the Poisoned condition, and it has Resistance to Poison damage."
+
       , mechanics =
           { family = "activation"
           , level = 2

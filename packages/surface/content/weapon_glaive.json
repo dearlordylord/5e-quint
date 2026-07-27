@@ -7,7 +7,6 @@
     "dieSize": 10,
     "kind": "dice"
   },
-  "description": "Glaive — weapons table.",
   "id": "weapon_glaive",
   "kind": "weapon",
   "mastery": "graze",

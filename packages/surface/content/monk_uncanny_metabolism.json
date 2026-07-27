@@ -1,7 +1,6 @@
 {
   "acquiredAtLevel": 2,
   "className": "monk",
-  "description": "When you roll Initiative, you can regain all expended Focus Points. When you do so, roll your Martial Arts die and regain Hit Points equal to your Monk level plus the number rolled. Once you use this feature, you can't use it again until you finish a Long Rest.",
   "id": "monk_uncanny_metabolism",
   "kind": "class_feature",
   "mechanics": {

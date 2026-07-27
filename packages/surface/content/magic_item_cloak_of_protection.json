@@ -1,5 +1,4 @@
 {
-  "description": "You gain a +1 bonus to Armor Class and saving throws while you wear this cloak.",
   "destruction": {
     "kind": "none"
   },
@@ -34,7 +33,7 @@
   "name": "Cloak of Protection",
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "MagicItems#Cloak of Protection"
+    "section": "Magic-Items/Items-A-H.md#Cloak of Protection"
   },
   "rarity": "uncommon",
   "requiresAttunement": true

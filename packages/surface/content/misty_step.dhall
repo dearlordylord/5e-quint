@@ -23,8 +23,7 @@ let mistyStep =
           { kind = "srd-5.2.1"
           , section = "Spells/Descriptions-M-P#Misty Step"
           }
-      , description =
-          "Briefly surrounded by silvery mist, you teleport up to 30 feet to an unoccupied space you can see."
+
       , mechanics =
           { family = "activation"
           , level = 2

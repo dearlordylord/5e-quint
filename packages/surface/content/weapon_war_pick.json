@@ -7,7 +7,6 @@
     "dieSize": 8,
     "kind": "dice"
   },
-  "description": "War Pick — weapons table.",
   "id": "weapon_war_pick",
   "kind": "weapon",
   "mastery": "sap",

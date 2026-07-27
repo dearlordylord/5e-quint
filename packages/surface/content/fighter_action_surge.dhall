@@ -15,8 +15,7 @@ let actionSurge =
           { kind = "srd-5.2.1"
           , section = "Classes/Fighter#Action Surge"
           }
-      , description =
-          "You can push yourself beyond your normal limits for a moment. On your turn, you can take one additional action, except the Magic action. Once you use this feature, you can't do so again until you finish a Short or Long Rest. Starting at level 17, you can use it twice before a rest but only once on a turn."
+
       , mechanics =
           { family = "activation"
           , activationCost = { kind = "free" }

@@ -21,8 +21,7 @@ let powerWordKill =
           { kind = "srd-5.2.1"
           , section = "Spells/Descriptions-M-P#Power Word Kill"
           }
-      , description =
-          "You compel one creature you can see within range to die. If the target has 100 Hit Points or fewer, it dies. Otherwise, it takes 12d12 Psychic damage."
+
       , mechanics =
           { family = "activation"
           , level = 9

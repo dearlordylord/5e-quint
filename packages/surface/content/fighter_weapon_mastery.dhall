@@ -1,8 +1,7 @@
 let weaponMastery =
       { acquiredAtLevel = 1
       , className = "fighter"
-      , description =
-          "Your training with weapons allows you to use the mastery properties of three kinds of Simple or Martial weapons of your choice. Whenever you finish a Long Rest, you can practice weapon drills and change one of those weapon choices."
+
       , id = "fighter_weapon_mastery"
       , kind = "class_feature"
       , mechanics =

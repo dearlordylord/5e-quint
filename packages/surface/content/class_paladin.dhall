@@ -1,8 +1,7 @@
 { armorTraining =
   { categories = [ "light", "medium", "heavy", "shield" ], kind = "trained" }
 , className = "paladin"
-, description =
-    "As a Paladin, you gain the following class features when you reach the specified Paladin levels. These features are listed in the Paladin Features table."
+
 , featureGrants =
   [ { level = 1, unitId = "paladin_lay_on_hands" }
   , { level = 1, unitId = "paladin_weapon_mastery" }

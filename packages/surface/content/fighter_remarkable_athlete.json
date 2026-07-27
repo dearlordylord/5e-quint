@@ -1,7 +1,6 @@
 {
   "acquiredAtLevel": 3,
   "className": "fighter",
-  "description": "You have Advantage on Initiative rolls and Strength (Athletics) checks. Immediately after you score a Critical Hit, you can move up to half your Speed without provoking Opportunity Attacks.",
   "id": "fighter_remarkable_athlete",
   "kind": "class_feature",
   "mechanics": {

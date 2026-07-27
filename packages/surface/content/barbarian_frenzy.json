@@ -1,7 +1,6 @@
 {
   "acquiredAtLevel": 3,
   "className": "barbarian",
-  "description": "If you use Reckless Attack while your Rage is active, deal extra damage to the first target you hit on your turn with a Strength-based attack.",
   "id": "barbarian_frenzy",
   "kind": "class_feature",
   "mechanics": {

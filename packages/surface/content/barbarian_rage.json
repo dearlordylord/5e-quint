@@ -1,7 +1,6 @@
 {
   "acquiredAtLevel": 1,
   "className": "barbarian",
-  "description": "Enter a Rage as a Bonus Action. You have Resistance to Bludgeoning, Piercing, and Slashing damage. When you make an attack using Strength with either a weapon or an Unarmed Strike, you gain a bonus to the damage.",
   "id": "barbarian_rage",
   "kind": "class_feature",
   "mechanics": {

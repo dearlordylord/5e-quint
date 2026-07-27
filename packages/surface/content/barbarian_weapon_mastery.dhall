@@ -1,8 +1,7 @@
 let weaponMastery =
       { acquiredAtLevel = 1
       , className = "barbarian"
-      , description =
-          "Your training with weapons allows you to use the mastery properties of two kinds of Simple or Martial Melee weapons of your choice, such as Greataxes and Handaxes. Whenever you finish a Long Rest, you can practice weapon drills and change one of those weapon choices."
+
       , id = "barbarian_weapon_mastery"
       , kind = "class_feature"
       , mechanics =

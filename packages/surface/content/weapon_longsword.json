@@ -7,7 +7,6 @@
     "dieSize": 8,
     "kind": "dice"
   },
-  "description": "Longsword — weapons table.",
   "id": "weapon_longsword",
   "kind": "weapon",
   "mastery": "sap",

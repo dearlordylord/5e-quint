@@ -1,6 +1,5 @@
 {
   "className": "monk",
-  "description": "The Warrior of the Open Hand subclass is detailed after this class's description.",
   "featureGrants": [
     {
       "level": 3,

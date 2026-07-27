@@ -8,8 +8,7 @@ let rangerAbilityScoreImprovementL8 =
           { kind = "srd-5.2.1"
           , section = "Classes/Ranger.md:106-108"
           }
-      , description =
-          "You gain the Ability Score Improvement feat (see \"Feats\") or another feat of your choice for which you qualify."
+
       , mechanics =
           { family = "passive"
           , grants =

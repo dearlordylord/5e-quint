@@ -1,5 +1,4 @@
 {
-  "description": "You pull wisps of shadow material from the Shadowfell to create an object within range. The object is vegetable matter or mineral matter, must be no larger than a 5-foot Cube, and must be a form and material you have seen. The spell's duration depends on the object's material, as shown in the Materials table. Vegetable matter: 24 hours. Stone or crystal: 12 hours. Precious metals: 1 hour. Gems: 10 minutes. Adamantine or mithral: 1 minute. If composed of multiple materials, use the shortest duration. Using a created object as another spell's Material component causes the other spell to fail. Using a Higher-Level Spell Slot, the Cube increases by 5 feet for each slot level above 5.",
   "id": "creation",
   "kind": "spell",
   "mechanics": {

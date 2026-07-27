@@ -27,8 +27,7 @@ let burningHands =
           { kind = "srd-5.2.1"
           , section = "Spells/Descriptions-A-D#Burning Hands"
           }
-      , description =
-          "A thin sheet of flames shoots forth from you. Each creature in a 15-foot Cone makes a Dexterity saving throw, taking 3d6 Fire damage on a failed save or half as much damage on a successful one. Using a Higher-Level Spell Slot. The damage increases by 1d6 for each spell slot level above 1."
+
       , mechanics =
           { family = "activation"
           , level = 1

@@ -5,8 +5,7 @@ let expertise =
       , className = "rogue"
       , acquiredAtLevel = 1
       , provenance = { kind = "srd-5.2.1", section = "Classes/Rogue#Expertise" }
-      , description =
-          "Gain Expertise in two skill proficiencies of your choice. At Rogue level 6, gain Expertise in two more skill proficiencies of your choice."
+
       , mechanics =
           { family = "passive"
           , grants =

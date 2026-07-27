@@ -7,7 +7,6 @@
     "dieSize": 12,
     "kind": "dice"
   },
-  "description": "Greataxe — weapons table.",
   "id": "weapon_greataxe",
   "kind": "weapon",
   "mastery": "cleave",

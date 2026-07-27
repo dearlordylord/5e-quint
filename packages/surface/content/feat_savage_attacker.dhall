@@ -1,7 +1,6 @@
 let savageAttacker =
       { category = "origin"
-      , description =
-          "Once per turn when you hit a target with a weapon, you can roll the weapon's damage dice twice and use either roll against the target."
+
       , id = "feat_savage_attacker"
       , kind = "feat"
       , mechanics =

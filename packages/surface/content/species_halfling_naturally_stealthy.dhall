@@ -1,7 +1,5 @@
 let naturallyStealthy =
-      { description =
-          "You can take the Hide action even when you are obscured only by a creature that is at least one size larger than you."
-      , id = "species_halfling_naturally_stealthy"
+      {  id = "species_halfling_naturally_stealthy"
       , kind = "species_trait"
       , mechanics =
         { family = "hide_action_obscurement_permission"
@@ -14,7 +12,7 @@ let naturallyStealthy =
       , name = "Naturally Stealthy"
       , provenance =
         { kind = "srd-5.2.1"
-        , section = "Character-Origins/Halfling#Naturally Stealthy"
+        , section = "Character-Origins.md:1,67,97,215,229-230"
         }
       , species = "halfling"
       }

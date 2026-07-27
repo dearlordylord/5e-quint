@@ -31,8 +31,7 @@ let landsAid =
           { kind = "srd-5.2.1"
           , section = "Classes/Druid#Level 3: Land's Aid"
           }
-      , description =
-          "As a Magic Action, you can expend a use of your Wild Shape and choose a point within 60 feet of yourself. Vitality-giving flowers and life-draining thorns appear for a moment in a 10-foot-radius Sphere centered on that point. Each creature of your choice in the Sphere must make a Constitution saving throw against your spell save DC, taking 2d6 Necrotic damage on a failed save or half as much damage on a successful one. One creature of your choice in that area regains 2d6 Hit Points. The damage and healing increase by 1d6 when you reach Druid levels 10 (3d6) and 14 (4d6)."
+
       , mechanics =
           { family = "magic_action_area_save_damage_healing"
           , activationCost = { kind = "standard_action", action = "magic" }

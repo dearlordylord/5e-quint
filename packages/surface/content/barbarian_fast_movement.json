@@ -1,7 +1,6 @@
 {
   "acquiredAtLevel": 5,
   "className": "barbarian",
-  "description": "Your speed increases by 10 feet while you aren't wearing Heavy armor.",
   "id": "barbarian_fast_movement",
   "kind": "class_feature",
   "mechanics": {

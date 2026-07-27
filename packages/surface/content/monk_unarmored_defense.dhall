@@ -12,8 +12,7 @@ let unarmoredDefense =
           { kind = "srd-5.2.1"
           , section = "Classes/Monk#Unarmored Defense"
           }
-      , description =
-          "While you aren't wearing armor or wielding a Shield, your base Armor Class equals 10 plus your Dexterity and Wisdom modifiers."
+
       , mechanics =
           { family = "passive"
           , condition =

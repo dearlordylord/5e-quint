@@ -10,10 +10,9 @@ let luckstone =
       , requiresAttunement = True
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "MagicItems#StoneOfGoodLuckLuckstone"
+          , section = "Magic-Items/Items-Q-Z.md#Stone of Good Luck (Luckstone)"
           }
-      , description =
-          "While this polished agate is on your person, you gain a +1 bonus to ability checks and saving throws."
+
       , mechanics =
           { family = "passive"
           , grants =

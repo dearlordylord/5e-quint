@@ -72,8 +72,7 @@ let contagion =
           { kind = "srd-5.2.1"
           , section = "Spells/Descriptions-A-D#Contagion"
           }
-      , description =
-          "Your touch inflicts a magical contagion. The target makes a Constitution saving throw. On a failed save, it takes 11d8 Necrotic damage and has the Poisoned condition. Choose one ability when you cast the spell; while Poisoned, the target has Disadvantage on saving throws with that ability. The target repeats the saving throw at the end of each turn until three successes or failures. Three successes end the spell on the target; three failures make it last for 7 days. Whenever an effect would end the Poisoned condition, the target must succeed on a Constitution saving throw or the Poisoned condition doesn't end."
+
       , mechanics =
           { family = "activation"
           , level = 5

@@ -1,5 +1,4 @@
 {
-  "description": "When you drink this potion, you gain 10 Temporary Hit Points that last for 1 hour. For the same duration, you are under the effect of the Bless spell (no Concentration required).",
   "destruction": {
     "kind": "permanent_on_empty"
   },
@@ -66,7 +65,7 @@
   "name": "Potion of Heroism",
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "MagicItems#Potion of Heroism"
+    "section": "Magic-Items/Items-I-P.md#Potion of Heroism"
   },
   "rarity": "rare",
   "requiresAttunement": false

@@ -10,8 +10,7 @@ let masterySlow =
       , id = "mastery_slow"
       , name = "Slow"
       , provenance = { kind = "srd-5.2.1", section = "Equipment#Slow" }
-      , description =
-          "If you hit a creature with this weapon and deal damage to it, you can reduce its Speed by 10 feet until the start of your next turn. If the creature is hit more than once by weapons that have this property, the Speed reduction doesn't exceed 10 feet."
+
       , mechanics =
           { family = "on_hit_trigger"
           , optional = True

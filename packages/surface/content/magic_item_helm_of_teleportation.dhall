@@ -21,10 +21,9 @@ let helm =
       , requiresAttunement = True
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "MagicItems#HelmOfTeleportation"
+          , section = "Magic-Items/Items-A-H.md#Helm of Teleportation"
           }
-      , description =
-          "This helm has 3 charges. While wearing it, you can expend 1 charge to cast Teleport from it. The helm regains 1d3 expended charges daily at dawn."
+
       , mechanics =
           { family = "activation"
           , condition = { kind = "wearing_item" }

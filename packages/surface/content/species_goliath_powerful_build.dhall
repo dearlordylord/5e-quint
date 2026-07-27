@@ -28,10 +28,9 @@ let powerfulBuild =
       , species = "goliath"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Character-Origins/Goliath#Powerful Build"
+          , section = "Character-Origins.md:1,67,97,194,213-214"
           }
-      , description =
-          "You have Advantage on any ability check you make to end the Grappled condition. You also count as one size larger when determining your carrying capacity."
+
       , mechanics =
           { family = "passive"
           , grants = [ grappleEscapeAdvantage ]

@@ -19,8 +19,7 @@ let primalChampion =
           { kind = "srd-5.2.1"
           , section = "Classes/Barbarian#Primal Champion"
           }
-      , description =
-          "You embody primal power. Your Strength and Constitution scores increase by 4, to a maximum of 25."
+
       , mechanics =
           { family = "passive"
           , grants =

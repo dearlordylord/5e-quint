@@ -1,7 +1,6 @@
 {
   "acquiredAtLevel": 18,
   "className": "ranger",
-  "description": "Your connection to the forces of nature grants you Blindsight with a range of 30 feet.",
   "id": "ranger_feral_senses",
   "kind": "class_feature",
   "mechanics": {

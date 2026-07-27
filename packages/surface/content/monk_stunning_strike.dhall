@@ -17,8 +17,7 @@ let stunningStrike =
           { kind = "srd-5.2.1"
           , section = "Classes/Monk#Stunning Strike"
           }
-      , description =
-          "Once per turn when you hit a creature with a Monk weapon or an Unarmed Strike, you can expend 1 Focus Point to attempt a stunning strike. The target must make a Constitution saving throw."
+
       , mechanics =
           { family = "stunning_strike"
           , trigger =

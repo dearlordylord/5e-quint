@@ -108,8 +108,7 @@ let searingSmite =
           { kind = "srd-5.2.1"
           , section = "Spells/Descriptions-S-Z#Searing Smite"
           }
-      , description =
-          "Immediately after hitting a target with a Melee weapon or an Unarmed Strike, you take a Bonus Action. As you hit the target, it takes an extra 1d6 Fire damage from the attack. At the start of each of its turns until the spell ends, the target takes 1d6 Fire damage and then makes a Constitution saving throw. On a failed save, the spell continues. On a successful save, the spell ends. Using a Higher-Level Spell Slot. All the damage increases by 1d6 for each spell slot level above 1."
+
       , mechanics =
           { family = "ongoing_effect"
           , level = 1

@@ -20,6 +20,22 @@ private checkout or revision.
 Only approved authored source records cross into this repository. Public JSON,
 traces, catalogs, and manifests are derived from those public sources.
 
+## RAW locator and publication prose boundary
+
+Canonical Unit and Stat Block records own typed authored mechanics plus their
+`provenance.section` locator. Unit records do not store a second top-level
+rules description. For SRD publication, the generator resolves that canonical
+locator against `.references/srd-5.2.1/` and adds `rulesExcerpt` as an exact,
+derived presentation projection. A missing, empty, or alias-only locator makes
+publication generation fail.
+
+`rulesExcerpt` is intentionally absent from canonical Dhall and content JSON.
+It is readable publication output, not authored mechanics or runtime input;
+reducers must continue to consume typed Surface facts. Nested prose remains
+part of canonical records where the expression is itself authored input or
+where an existing typed migration has not yet replaced prose-sensitive support
+code.
+
 ## Goal (read this first)
 
 This package is **where the taxonomy actually lives and evolves**. It is the

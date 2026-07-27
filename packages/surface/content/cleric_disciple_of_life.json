@@ -1,7 +1,6 @@
 {
   "acquiredAtLevel": 3,
   "className": "cleric",
-  "description": "When a spell you cast with a spell slot restores Hit Points to a creature, that creature regains additional Hit Points on the turn you cast the spell. The additional Hit Points equal 2 plus the spell slot's level.",
   "id": "cleric_disciple_of_life",
   "kind": "class_feature",
   "mechanics": {

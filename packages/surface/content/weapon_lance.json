@@ -7,7 +7,6 @@
     "dieSize": 10,
     "kind": "dice"
   },
-  "description": "Lance — weapons table.",
   "id": "weapon_lance",
   "kind": "weapon",
   "mastery": "topple",

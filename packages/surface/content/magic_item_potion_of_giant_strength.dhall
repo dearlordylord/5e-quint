@@ -31,10 +31,9 @@ let potion =
       , requiresAttunement = False
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "MagicItems#PotionOfGiantStrength"
+          , section = "Magic-Items/Items-I-P.md#Potion of Giant Strength"
           }
-      , description =
-          "When you drink this potion, your Strength score changes for 1 hour. The type of giant determines the score. The potion has no effect on you if your Strength is equal to or greater than that score. Potion of Giant Strength (hill): Strength 21, Uncommon."
+
       , mechanics =
           { family = "activation"
           , activationCost = { kind = "standard_action", action = "magic" }

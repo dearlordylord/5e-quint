@@ -1,7 +1,6 @@
 {
   "acquiredAtLevel": 3,
   "className": "monk",
-  "description": "When an attack roll hits you and its damage includes Bludgeoning, Piercing, or Slashing damage, take a Reaction to reduce the attack's total damage against you.",
   "id": "monk_deflect_attacks",
   "kind": "class_feature",
   "mechanics": {

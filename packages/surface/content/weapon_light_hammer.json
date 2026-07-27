@@ -7,7 +7,6 @@
     "dieSize": 4,
     "kind": "dice"
   },
-  "description": "Light Hammer — weapons table.",
   "id": "weapon_light_hammer",
   "kind": "weapon",
   "mastery": "nick",

@@ -5,7 +5,6 @@
   },
   "category": "heavy",
   "costGp": 1500,
-  "description": "Plate Armor — armor table.",
   "donDoff": {
     "doffMinutes": 5,
     "donMinutes": 10

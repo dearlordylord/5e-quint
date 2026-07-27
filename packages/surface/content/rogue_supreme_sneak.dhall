@@ -14,8 +14,7 @@ let supremeSneak =
       , acquiredAtLevel = 9
       , provenance =
           { kind = "srd-5.2.1", section = "Classes/Rogue.md:175-179" }
-      , description =
-          "You gain the Stealth Attack Cunning Strike option. If you have the Hide action's Invisible condition, this attack doesn't end that condition on you if you end the turn behind Three-Quarters Cover or Total Cover."
+
       , mechanics =
           { family = "cunning_strike_option_grant"
           , sourceUnitId = "rogue_cunning_strike"

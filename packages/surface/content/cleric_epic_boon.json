@@ -1,7 +1,6 @@
 {
   "acquiredAtLevel": 19,
   "className": "cleric",
-  "description": "You gain an Epic Boon feat (see \"Feats\") or another feat of your choice for which you qualify. Boon of Fate is recommended.",
   "id": "cleric_epic_boon",
   "kind": "class_feature",
   "mechanics": {

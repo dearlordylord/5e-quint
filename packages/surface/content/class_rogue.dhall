@@ -20,7 +20,7 @@ let rogueSkills =
 let rogue =
       { armorTraining = { categories = [ "light" ], kind = "trained" }
       , className = "rogue"
-      , description = "As a Rogue, you gain the following class features when you reach the specified Rogue levels. These features are listed in the Rogue Features table."
+
       , featureGrants =
         [ { level = 1, unitId = "rogue_expertise" }
         , { level = 1, unitId = "rogue_sneak_attack" }

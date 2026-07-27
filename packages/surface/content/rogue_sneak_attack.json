@@ -1,7 +1,6 @@
 {
   "acquiredAtLevel": 1,
   "className": "rogue",
-  "description": "Once per turn, you can deal extra damage to one creature you hit with an attack roll if you have Advantage on the roll and the attack uses a Finesse or a Ranged weapon. You don't need Advantage if at least one ally is within 5 feet of the target, the ally doesn't have the Incapacitated condition, and you don't have Disadvantage.",
   "id": "rogue_sneak_attack",
   "kind": "class_feature",
   "mechanics": {

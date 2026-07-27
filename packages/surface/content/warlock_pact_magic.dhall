@@ -9,8 +9,7 @@
 let pactMagic =
       { acquiredAtLevel = 1
       , className = "warlock"
-      , description =
-          "Through occult ceremony, you have formed a pact with a mysterious entity to gain magical powers. The entity is a voice in the shadows—its identity unclear—but its boon to you is concrete: the ability to cast spells."
+
       , id = "warlock_pact_magic"
       , kind = "class_feature"
       , mechanics =

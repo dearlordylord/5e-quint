@@ -5,7 +5,6 @@
   },
   "category": "heavy",
   "costGp": 200,
-  "description": "Splint Armor — armor table.",
   "donDoff": {
     "doffMinutes": 5,
     "donMinutes": 10

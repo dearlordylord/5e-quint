@@ -1,7 +1,6 @@
 { armorTraining = { categories = [ "light" ], kind = "trained" }
 , className = "warlock"
-, description =
-    "As a Warlock, you gain the following class features when you reach the specified Warlock levels. These features are listed in the Warlock Features table."
+
 , featureGrants =
   [ { level = 1, unitId = "warlock_eldritch_invocations" }
   , { level = 1, unitId = "warlock_pact_magic" }

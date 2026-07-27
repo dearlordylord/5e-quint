@@ -8,8 +8,7 @@ let commune =
           { kind = "srd-5.2.1"
           , section = "Spells/Descriptions-A-D#Commune"
           }
-      , description =
-          "You contact a deity or divine proxy and ask up to three yes-or-no questions before the spell ends. You receive a correct answer for each question. You might receive an unclear answer if the information lies beyond the deity's knowledge. The GM might offer a short phrase if a one-word answer could be misleading or contrary to the deity's interests. If you cast the spell more than once before finishing a Long Rest, there is a cumulative 25 percent chance for each casting after the first that you get no answer."
+
       , mechanics =
           { family = "activation"
           , level = 5

@@ -1,7 +1,6 @@
 {
   "acquiredAtLevel": 10,
   "className": "rogue",
-  "description": "You gain the Ability Score Improvement feat or another feat of your choice for which you qualify.",
   "id": "rogue_ability_score_improvement_l10",
   "kind": "class_feature",
   "mechanics": {

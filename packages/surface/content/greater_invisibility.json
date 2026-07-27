@@ -1,5 +1,4 @@
 {
-  "description": "A creature you touch has the Invisible condition until the spell ends.",
   "id": "greater_invisibility",
   "kind": "spell",
   "mechanics": {

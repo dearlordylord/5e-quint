@@ -1,8 +1,7 @@
 let channelDivinity =
       { acquiredAtLevel = 2
       , className = "cleric"
-      , description =
-          "You can channel divine energy directly from the Outer Planes to fuel magical effects. You start with two such effects: Divine Spark and Turn Undead. You can use this class's Channel Divinity twice. You regain one of its expended uses when you finish a Short Rest, and you regain all expended uses when you finish a Long Rest."
+
       , id = "cleric_channel_divinity"
       , kind = "class_feature"
       , mechanics =

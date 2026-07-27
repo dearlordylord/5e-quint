@@ -16,8 +16,7 @@ let barbarian =
       { armorTraining =
           { categories = [ "light", "medium", "shield" ], kind = "trained" }
       , className = "barbarian"
-      , description =
-          "As a Barbarian, you gain the following class features when you reach the specified Barbarian levels. These features are listed in the Barbarian Features table."
+
       , featureGrants =
         [ { level = 1, unitId = "barbarian_rage" }
         , { level = 1, unitId = "barbarian_unarmored_defense" }

@@ -6,10 +6,9 @@ let ringOfTelekinesis =
       , requiresAttunement = True
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "MagicItems#Ring of Telekinesis"
+          , section = "Magic-Items/Items-Q-Z.md#Ring of Telekinesis"
           }
-      , description =
-          "While wearing this ring, you can cast Telekinesis from it."
+
       , mechanics =
           { family = "passive"
           , grants =

@@ -11,8 +11,7 @@ let topple =
           { kind = "srd-5.2.1"
           , section = "Equipment#Topple"
           }
-      , description =
-          "If you hit a creature with this weapon, you can force the creature to make a Constitution saving throw (DC 8 plus the ability modifier used to make the attack roll and your Proficiency Bonus). On a failed save, the creature has the Prone condition."
+
       , mechanics =
           { family = "on_hit_trigger"
           , trigger = { kind = "weapon_hit" }

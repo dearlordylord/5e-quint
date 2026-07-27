@@ -37,8 +37,7 @@ let fiendishResilience =
       , acquiredAtLevel = 10
       , provenance =
           { kind = "srd-5.2.1", section = "Classes/Warlock.md:483-485" }
-      , description =
-          "Choose one damage type, other than Force, whenever you finish a Short or Long Rest. You have Resistance to that damage type until you choose a different one with this feature."
+
       , mechanics =
           { family = "passive"
           , grants =

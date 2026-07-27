@@ -53,8 +53,7 @@ let meteorSwarm =
           { kind = "srd-5.2.1"
           , section = "Spells/Descriptions-M-P#Meteor Swarm"
           }
-      , description =
-          "Blazing orbs of fire plummet to the ground at four different points you can see within range. Each creature in a 40-foot-radius Sphere centered on each point makes a Dexterity saving throw, taking 20d6 Fire damage and 20d6 Bludgeoning damage on a failed save or half as much damage on a successful one. A creature in more than one Sphere is affected only once."
+
       , mechanics =
           { family = "activation"
           , level = 9

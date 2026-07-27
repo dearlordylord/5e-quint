@@ -18,8 +18,7 @@ let extraAttack =
           { kind = "srd-5.2.1"
           , section = "Classes/Ranger#Extra Attack"
           }
-      , description =
-          "You can attack twice instead of once whenever you take the Attack action on your turn."
+
       , mechanics =
           { family = "passive"
           , grants =

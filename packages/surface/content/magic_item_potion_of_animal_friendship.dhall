@@ -22,10 +22,9 @@ let potionOfAnimalFriendship =
       , requiresAttunement = False
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "MagicItems#Potion of Animal Friendship"
+          , section = "Magic-Items/Items-I-P.md#Potion of Animal Friendship"
           }
-      , description =
-          "When you drink this potion, you can cast the level 3 version of the Animal Friendship spell (save DC 13). Agitating this potion's muddy liquid brings little bits into view: a fish scale, a hummingbird feather, a cat claw, or a squirrel hair."
+
       , mechanics =
           { family = "activation"
           , activationCost = { kind = "standard_action", action = "magic" }

@@ -140,8 +140,7 @@ let insectPlague =
           { kind = "srd-5.2.1"
           , section = "Spells/Descriptions-E-L#Insect Plague"
           }
-      , description =
-          "Swarming locusts fill a 20-foot-radius Sphere centered on a point within range. The Sphere remains for the duration, and its area is Lightly Obscured and Difficult Terrain. When the swarm appears, each creature in it makes a Constitution saving throw, taking 4d10 Piercing damage on a failed save or half as much on a successful one. A creature also makes this save when it enters the spell's area for the first time on a turn or ends its turn there, only once per turn. Using a Higher-Level Spell Slot. The damage increases by 1d10 for each spell slot level above 5."
+
       , mechanics =
           { family = "ongoing_effect"
           , level = 5

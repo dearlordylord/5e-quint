@@ -20,8 +20,7 @@ let fighter =
           , kind = "trained"
           }
       , className = "fighter"
-      , description =
-          "As a Fighter, you gain the following class features when you reach the specified Fighter levels. These features are listed in the Fighter Features table."
+
       , featureGrants =
         [ { level = 1, unitId = "fighter_fighting_style" }
         , { level = 1, unitId = "fighter_second_wind" }

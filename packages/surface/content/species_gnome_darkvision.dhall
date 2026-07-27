@@ -1,6 +1,5 @@
 let darkvision =
-      { description = "You have Darkvision with a range of 60 feet."
-      , id = "species_gnome_darkvision"
+      {  id = "species_gnome_darkvision"
       , kind = "species_trait"
       , mechanics =
         { family = "passive"
@@ -14,7 +13,7 @@ let darkvision =
       , name = "Darkvision (Gnome)"
       , provenance =
         { kind = "srd-5.2.1"
-        , section = "Character-Origins/Gnome#Darkvision"
+        , section = "Character-Origins.md:1,67,97,177,185-186"
         }
       , species = "gnome"
       }

@@ -18,8 +18,7 @@ let expeditiousRetreat =
           { kind = "srd-5.2.1"
           , section = "Spells/Descriptions-E-L#Expeditious Retreat"
           }
-      , description =
-          "You take the Dash action, and until the spell ends, you can take that action again as a Bonus Action."
+
       , mechanics =
           { family = "ongoing_effect"
           , level = 1

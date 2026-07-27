@@ -1,7 +1,6 @@
 { armorTraining.kind = "none"
 , className = "sorcerer"
-, description =
-    "As a Sorcerer, you gain the following class features when you reach the specified Sorcerer levels. These features are listed in the Sorcerer Features table."
+
 , featureGrants =
   [ { level = 1, unitId = "sorcerer_innate_sorcery" }
   , { level = 2, unitId = "sorcerer_font_of_magic" }

@@ -160,8 +160,7 @@ let wallOfForce =
           { kind = "srd-5.2.1"
           , section = "Spells/Descriptions-S-Z#Wall of Force"
           }
-      , description =
-          "An Invisible wall of force springs into existence at a point within range. It can be a hemispherical dome or globe with a radius of up to 10 feet, or a flat surface made of ten 10-foot-by-10-foot panels. Each panel must be contiguous with another panel. If the wall cuts through a creature's space when it appears, the creature is pushed to one side. Nothing can physically pass through it. It is immune to all damage and can't be dispelled by Dispel Magic. Disintegrate destroys it without harming anything inside. The wall extends into the Ethereal Plane and blocks ethereal travel through it."
+
       , mechanics =
           { family = "ongoing_effect"
           , level = 5

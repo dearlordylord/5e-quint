@@ -34,8 +34,7 @@ let grease =
           { kind = "srd-5.2.1"
           , section = "Spells/Descriptions-E-L#Grease"
           }
-      , description =
-          "Nonflammable grease covers the ground in a 10-foot square centered on a point within range and turns it into Difficult Terrain for the duration. When the grease appears, each creature standing in its area must succeed on a Dexterity saving throw or have the Prone condition. A creature that enters the area or ends its turn there must also succeed on that save or fall Prone."
+
       , mechanics =
           { family = "activation"
           , level = 1

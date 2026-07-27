@@ -11,10 +11,9 @@ let darkvision =
       , species = "dwarf"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Character-Origins/Dwarf#Darkvision"
+          , section = "Character-Origins.md:1,67,97,129,137-138"
           }
-      , description =
-          "You have Darkvision with a range of 120 feet."
+
       , mechanics =
           { family = "passive"
           , grants =

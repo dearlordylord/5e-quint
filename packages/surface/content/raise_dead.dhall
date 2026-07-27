@@ -8,8 +8,7 @@ let raiseDead =
           { kind = "srd-5.2.1"
           , section = "Spells/Descriptions-Q-R#Raise Dead"
           }
-      , description =
-          "With a touch, you revive a dead creature if it has been dead no longer than 10 days and wasn't Undead when it died. The creature returns to life with 1 Hit Point. The spell neutralizes poisons that affected it at death. The spell closes mortal wounds but doesn't restore missing body parts; if the creature lacks body parts or organs integral for survival, the spell fails. The target takes a -4 penalty to D20 Tests; every time it finishes a Long Rest, the penalty is reduced by 1 until it becomes 0."
+
       , mechanics =
           { family = "activation"
           , level = 5

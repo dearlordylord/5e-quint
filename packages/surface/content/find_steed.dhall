@@ -27,8 +27,7 @@ let findSteed =
           { kind = "srd-5.2.1"
           , section = "Spells/Descriptions-E-L#Find Steed"
           }
-      , description =
-          "You summon an otherworldly being that appears as a loyal steed in an unoccupied space of your choice within range. This creature uses the Otherworldly Steed stat block. Whenever you cast the spell, choose the steed's creature type — Celestial, Fey, or Fiend — which determines certain traits in the stat block."
+
       , mechanics =
           { family = "spawned_creature"
           , level = 2

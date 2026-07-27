@@ -16,8 +16,7 @@ let bonusProficiencies =
           { kind = "srd-5.2.1"
           , section = "Classes/Bard#Bonus Proficiencies"
           }
-      , description =
-          "You gain proficiency with three skills of your choice."
+
       , mechanics =
           { family = "passive"
           , grants =

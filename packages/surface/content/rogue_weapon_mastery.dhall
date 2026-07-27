@@ -1,8 +1,7 @@
 let weaponMastery =
       { acquiredAtLevel = 1
       , className = "rogue"
-      , description =
-          "Your training with weapons allows you to use the mastery properties of two kinds of weapons of your choice with which you have proficiency. Whenever you finish a Long Rest, you can change the kinds of weapons you chose."
+
       , id = "rogue_weapon_mastery"
       , kind = "class_feature"
       , mechanics =

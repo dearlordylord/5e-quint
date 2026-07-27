@@ -16,10 +16,9 @@ let goggles =
       , requiresAttunement = False
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "MagicItems#GogglesOfNight"
+          , section = "Magic-Items/Items-A-H.md#Goggles of Night"
           }
-      , description =
-          "While wearing these dark lenses, you have Darkvision out to 60 feet. If you already have Darkvision, wearing the goggles increases its range by 60 feet."
+
       , mechanics =
           { family = "passive"
           , condition = { kind = "wearing_item" }

@@ -1,6 +1,5 @@
 {
   "className": "barbarian",
-  "description": "The Path of the Berserker subclass is detailed after this class's description.",
   "featureGrants": [
     {
       "level": 3,

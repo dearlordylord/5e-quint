@@ -1,7 +1,6 @@
 {
   "acquiredAtLevel": 1,
   "className": "ranger",
-  "description": "You always have Hunter's Mark prepared. You can cast it twice without expending a spell slot, and you regain all expended uses when you finish a Long Rest.",
   "id": "ranger_favored_enemy",
   "kind": "class_feature",
   "mechanics": {

@@ -90,10 +90,9 @@ let rodOfAlertness =
       , requiresAttunement = True
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "MagicItems#RodOfAlertness"
+          , section = "Magic-Items/Items-Q-Z.md#Rod of Alertness"
           }
-      , description =
-          "While holding the rod, you have Advantage on Wisdom (Perception) checks and on Initiative rolls. While holding the rod, you can cast the following spells from it: Detect Evil and Good; Detect Magic; Detect Poison and Disease; See Invisibility. As a Magic action, you can plant the rod in the ground. While in its Bright Light, you and your allies gain a +1 bonus to Armor Class and saving throws. The effect ends after 10 minutes."
+
       , mechanics =
           { family = "composite"
           , parts =

@@ -22,8 +22,7 @@ let command =
           { kind = "srd-5.2.1"
           , section = "Spells/Descriptions-A-D#Command"
           }
-      , description =
-          "You speak a one-word command to a creature you can see within range. The target must succeed on a Wisdom saving throw or follow the command on its next turn. Choose the command from these options: Approach; Drop; Flee; Grovel; Halt. Using a Higher-Level Spell Slot. You can affect one additional creature for each spell slot level above 1."
+
       , mechanics =
           { family = "activation"
           , level = 1

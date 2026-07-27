@@ -7,7 +7,6 @@
     "dieSize": 6,
     "kind": "dice"
   },
-  "description": "Mace — weapons table.",
   "id": "weapon_mace",
   "kind": "weapon",
   "mastery": "sap",

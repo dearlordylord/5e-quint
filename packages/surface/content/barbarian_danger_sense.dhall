@@ -20,8 +20,7 @@ let dangerSense =
           { kind = "srd-5.2.1"
           , section = "Classes/Barbarian#Danger Sense"
           }
-      , description =
-          "You gain an uncanny sense of when things aren't as they should be, giving you an edge when you dodge perils. You have Advantage on Dexterity saving throws unless you have the Incapacitated condition."
+
       , mechanics =
           { family = "passive"
           , suppressedBy =

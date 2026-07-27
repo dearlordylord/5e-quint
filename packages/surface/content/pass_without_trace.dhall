@@ -37,8 +37,7 @@ let passWithoutTrace =
           { kind = "srd-5.2.1"
           , section = "Spells/Descriptions-M-P#Pass without Trace"
           }
-      , description =
-          "You radiate a concealing aura in a 30-foot Emanation for the duration. While in the aura, you and each creature you choose have a +10 bonus to Dexterity (Stealth) checks and leave no tracks."
+
       , mechanics =
           { family = "ongoing_effect"
           , level = 2

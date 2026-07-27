@@ -1,8 +1,7 @@
 { armorTraining =
   { categories = [ "light", "medium", "shield" ], kind = "trained" }
 , className = "ranger"
-, description =
-    "As a Ranger, you gain the following class features when you reach the specified Ranger levels. These features are listed in the Ranger Features table."
+
 , featureGrants =
   [ { level = 1, unitId = "ranger_favored_enemy" }
   , { level = 1, unitId = "ranger_weapon_mastery" }

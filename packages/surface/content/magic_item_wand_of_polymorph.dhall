@@ -22,10 +22,9 @@ let wand =
       , requiresAttunement = True
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "MagicItems#WandOfPolymorph"
+          , section = "Magic-Items/Items-Q-Z.md#Wand of Polymorph"
           }
-      , description =
-          "This wand has 7 charges. While holding it, you can expend 1 charge to cast Polymorph (save DC 15) from it. The wand regains 1d6 + 1 expended charges daily at dawn. If you expend the wand's last charge, roll 1d20. On a 1, the wand crumbles into ashes and is destroyed."
+
       , mechanics =
           { family = "activation"
           , condition = { kind = "holding_item" }

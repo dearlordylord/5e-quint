@@ -508,6 +508,14 @@ export const SrdProvenanceSchema = Schema.Struct({
 
 export type SrdProvenance = Schema.Schema.Type<typeof SrdProvenanceSchema>;
 
+export const RulesExcerptSchema = surfaceSchemaRole(
+  Schema.NonEmptyTrimmedString,
+  {
+    category: "prose",
+    evidence: "exact",
+  },
+).annotations({ identifier: "RulesExcerpt" });
+
 const recordVariantAsts = (ast: SchemaAST.AST): ReadonlyArray<SchemaAST.AST> =>
   ast._tag === "Union" ? ast.types.flatMap(recordVariantAsts) : [ast];
 
@@ -644,21 +652,22 @@ type SrdRecord<A> = A extends { readonly provenance: unknown }
     }
   : never;
 
-const specializeSrdRecordSchema = <
-  A extends { readonly provenance: unknown },
-  I extends { readonly provenance: unknown },
->(
-  schema: Schema.Schema<A, I, never>,
+type PublishedSrdRecord<A> = SrdRecord<A> & {
+  readonly rulesExcerpt: Schema.Schema.Type<typeof RulesExcerptSchema>;
+};
+
+const specializeRecordSchemaAst = (
+  schema: Schema.Schema.AnyNoContext,
+  fields: Schema.Schema.AnyNoContext,
   identifier: string,
-): Schema.Schema<SrdRecord<A>, SrdRecord<I>, never> => {
-  const provenance = Schema.Struct({ provenance: SrdProvenanceSchema });
+): SchemaAST.AST => {
   const variants = recordVariantAsts(schema.ast).map((variant, index) => {
     const recordWithoutProvenance = Schema.make<
       Readonly<Record<string, unknown>>,
       Readonly<Record<string, unknown>>,
       never
     >(SchemaAST.omit(variant, ["provenance"]));
-    const specialized = Schema.extend(provenance)(recordWithoutProvenance);
+    const specialized = Schema.extend(fields)(recordWithoutProvenance);
     // The rewrite preserves decoding and only adds named graph boundaries for
     // the generated JSON Schema references.
     const factored = factorUnionAst(specialized.ast, SRD_FACTOR_STATE);
@@ -671,8 +680,37 @@ const specializeSrdRecordSchema = <
     });
   });
 
+  return SchemaAST.Union.make(variants);
+};
+
+const specializeSrdRecordSchema = <
+  A extends { readonly provenance: unknown },
+  I extends { readonly provenance: unknown },
+>(
+  schema: Schema.Schema<A, I, never>,
+  identifier: string,
+): Schema.Schema<SrdRecord<A>, SrdRecord<I>, never> => {
+  const provenance = Schema.Struct({ provenance: SrdProvenanceSchema });
+
   return Schema.make<SrdRecord<A>, SrdRecord<I>, never>(
-    SchemaAST.Union.make(variants),
+    specializeRecordSchemaAst(schema, provenance, identifier),
+  ).annotations({ identifier });
+};
+
+const specializePublishedSrdRecordSchema = <
+  A extends { readonly provenance: unknown },
+  I extends { readonly provenance: unknown },
+>(
+  schema: Schema.Schema<A, I, never>,
+  identifier: string,
+): Schema.Schema<PublishedSrdRecord<A>, PublishedSrdRecord<I>, never> => {
+  const publicationFields = Schema.Struct({
+    provenance: SrdProvenanceSchema,
+    rulesExcerpt: RulesExcerptSchema,
+  });
+
+  return Schema.make<PublishedSrdRecord<A>, PublishedSrdRecord<I>, never>(
+    specializeRecordSchemaAst(schema, publicationFields, identifier),
   ).annotations({ identifier });
 };
 
@@ -686,6 +724,17 @@ export const SrdStatBlockRecordSchema = specializeSrdRecordSchema(
   "SrdStatBlockRecord",
 );
 
+export const PublishedSrdUnitRecordSchema = specializePublishedSrdRecordSchema(
+  UnitRecordSchema,
+  "PublishedSrdUnitRecord",
+);
+
+export const PublishedSrdStatBlockRecordSchema =
+  specializePublishedSrdRecordSchema(
+    StatBlockRecordSchema,
+    "PublishedSrdStatBlockRecord",
+  );
+
 const nonEmptyPublicationArray = <S extends Schema.Schema.AnyNoContext>(
   item: S,
 ) => Schema.Tuple([item], item);
@@ -696,6 +745,12 @@ const SrdUnitPublicationSchema = Schema.suspend(
 const SrdStatBlockPublicationSchema = Schema.suspend(
   () => SrdStatBlockRecordSchema,
 ).annotations({ identifier: "SrdStatBlockPublication" });
+const PublishedSrdUnitPublicationSchema = Schema.suspend(
+  () => PublishedSrdUnitRecordSchema,
+).annotations({ identifier: "PublishedSrdUnitPublication" });
+const PublishedSrdStatBlockPublicationSchema = Schema.suspend(
+  () => PublishedSrdStatBlockRecordSchema,
+).annotations({ identifier: "PublishedSrdStatBlockPublication" });
 
 export const SrdSurfaceSchema = Schema.Struct({
   kind: Schema.Literal("srd-5.2.1-surface-catalog"),
@@ -707,12 +762,25 @@ export const SrdSurfaceSchema = Schema.Struct({
   ),
 });
 
+export const PublishedSrdSurfaceSchema = Schema.Struct({
+  kind: Schema.Literal("srd-5.2.1-surface-catalog"),
+  units: nonEmptyPublicationArray(
+    Schema.suspend(() => PublishedSrdUnitPublicationSchema),
+  ),
+  statBlocks: nonEmptyPublicationArray(
+    Schema.suspend(() => PublishedSrdStatBlockPublicationSchema),
+  ),
+});
+
 export const SrdSurfaceJsonSchema = JSONSchema.make(
-  Schema.encodedSchema(SrdSurfaceSchema),
+  Schema.encodedSchema(PublishedSrdSurfaceSchema),
   { target: "jsonSchema2020-12" },
 );
 
 export type SrdSurface = Schema.Schema.Type<typeof SrdSurfaceSchema>;
+export type PublishedSrdSurface = Schema.Schema.Type<
+  typeof PublishedSrdSurfaceSchema
+>;
 
 const STRICT_DECODE_OPTIONS = { onExcessProperty: "error" } as const;
 

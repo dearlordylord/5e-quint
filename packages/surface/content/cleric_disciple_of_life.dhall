@@ -21,8 +21,7 @@ let discipleOfLife =
           { kind = "srd-5.2.1"
           , section = "Classes/Cleric#Level 3: Disciple of Life"
           }
-      , description =
-          "When a spell you cast with a spell slot restores Hit Points to a creature, that creature regains additional Hit Points on the turn you cast the spell. The additional Hit Points equal 2 plus the spell slot's level."
+
       , mechanics =
           { family = "spell_slot_healing_modifier"
           , trigger =

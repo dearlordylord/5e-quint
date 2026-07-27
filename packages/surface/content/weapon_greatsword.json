@@ -7,7 +7,6 @@
     "dieSize": 6,
     "kind": "dice"
   },
-  "description": "Greatsword — weapons table.",
   "id": "weapon_greatsword",
   "kind": "weapon",
   "mastery": "graze",

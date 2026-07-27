@@ -1,7 +1,6 @@
 {
   "acquiredAtLevel": 10,
   "className": "fighter",
-  "description": "During combat, you can give yourself Heroic Inspiration whenever you start your turn without it.",
   "id": "fighter_heroic_warrior",
   "kind": "class_feature",
   "mechanics": {

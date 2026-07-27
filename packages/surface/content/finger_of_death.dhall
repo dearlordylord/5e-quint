@@ -21,10 +21,9 @@ let fingerOfDeath =
       , name = "Finger of Death"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-E-F#Finger of Death"
+          , section = "Spells/Descriptions-E-L.md#Finger of Death"
           }
-      , description =
-          "You unleash negative energy toward a creature you can see within range. The target makes a Constitution saving throw, taking 7d8 + 30 Necrotic damage on a failed save or half as much damage on a successful one. A Humanoid killed by this spell rises at the start of your next turn as a Zombie that follows your verbal orders."
+
       , mechanics =
           { family = "activation"
           , level = 7

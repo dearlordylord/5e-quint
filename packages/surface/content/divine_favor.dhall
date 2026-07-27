@@ -19,8 +19,7 @@ let divineFavor =
           { kind = "srd-5.2.1"
           , section = "Spells/Descriptions-A-D#Divine Favor"
           }
-      , description =
-          "Until the spell ends, your attacks with weapons deal an extra 1d4 Radiant damage on a hit."
+
       , mechanics =
           { family = "ongoing_effect"
           , level = 1

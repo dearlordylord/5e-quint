@@ -8,8 +8,7 @@ let mislead =
           { kind = "srd-5.2.1"
           , section = "Spells/Descriptions-M-P#Mislead"
           }
-      , description =
-          "You gain the Invisible condition at the same time that an illusory double appears where you stand. The double lasts for the duration, but the invisibility ends immediately after you make an attack roll, deal damage, or cast a spell. As a Magic action, you can move the double up to twice your Speed and make it gesture, speak, and behave as you choose. It is intangible and invulnerable. You can see through its eyes and hear through its ears as if you were located where it is."
+
       , mechanics =
           { family = "activation"
           , level = 5

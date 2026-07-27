@@ -1,7 +1,6 @@
 {
   "acquiredAtLevel": 10,
   "className": "wizard",
-  "description": "Whenever you cast a Wizard spell from the Evocation school, you can add your Intelligence modifier to one damage roll of that spell.",
   "id": "wizard_empowered_evocation",
   "kind": "class_feature",
   "mechanics": {

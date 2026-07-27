@@ -19,8 +19,7 @@ let defaultPredicate : Predicate =
 let unarmoredMovement =
       { acquiredAtLevel = 2
       , className = "monk"
-      , description =
-          "Your Speed increases by 10 feet while you aren't wearing armor or wielding a Shield."
+
       , id = "monk_unarmored_movement"
       , kind = "class_feature"
       , mechanics =

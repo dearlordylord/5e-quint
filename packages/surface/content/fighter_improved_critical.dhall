@@ -24,10 +24,9 @@ let improvedCritical =
       , acquiredAtLevel = 3
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Classes/Fighter/Champion#ImprovedCritical"
+          , section = "Classes/Fighter.md#Level 3: Improved Critical"
           }
-      , description =
-          "Your attack rolls with weapons and Unarmed Strikes can score a Critical Hit on a roll of 19 or 20 on the d20."
+
       , mechanics =
           { family = "passive"
           , grants =

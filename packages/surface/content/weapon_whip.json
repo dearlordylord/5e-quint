@@ -7,7 +7,6 @@
     "dieSize": 4,
     "kind": "dice"
   },
-  "description": "Whip — weapons table.",
   "id": "weapon_whip",
   "kind": "weapon",
   "mastery": "slow",

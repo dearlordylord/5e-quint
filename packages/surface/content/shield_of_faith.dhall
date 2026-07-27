@@ -18,8 +18,7 @@ let shieldOfFaith =
           { kind = "srd-5.2.1"
           , section = "Spells/Descriptions-S-Z#Shield of Faith"
           }
-      , description =
-          "A shimmering field surrounds a creature of your choice within range, granting it a +2 bonus to AC for the duration."
+
       , mechanics =
           { family = "activation"
           , level = 1

@@ -6,8 +6,7 @@
 let rogueCunningAction =
       { acquiredAtLevel = 2
       , className = "rogue"
-      , description =
-          "On your turn, you can take the Dash, Disengage, or Hide action as a Bonus Action."
+
       , id = "rogue_cunning_action"
       , kind = "class_feature"
       , mechanics =

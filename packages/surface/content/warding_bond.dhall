@@ -92,8 +92,7 @@ let wardingBond =
           { kind = "srd-5.2.1"
           , section = "Spells/Descriptions-S-Z#Warding Bond"
           }
-      , description =
-          "You touch another willing creature and create a mystic connection until the spell ends. While the target is within 60 feet of you, it gains a +1 bonus to AC and saving throws and has Resistance to all damage. Each time it takes damage, you take the same amount of damage. The spell ends if you drop to 0 Hit Points or if you and the target become separated by more than 60 feet. It also ends if the spell is cast again on either connected creature."
+
       , mechanics =
           { family = "ongoing_effect"
           , level = 2

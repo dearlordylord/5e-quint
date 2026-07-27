@@ -1,5 +1,4 @@
 {
-  "description": "You gain a +1 bonus to AC and saving throws while you wear this ring.",
   "destruction": {
     "kind": "none"
   },
@@ -34,7 +33,7 @@
   "name": "Ring of Protection",
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "MagicItems#RingOfProtection"
+    "section": "Magic-Items/Items-Q-Z.md#Ring of Protection"
   },
   "rarity": "rare",
   "requiresAttunement": true

@@ -18,8 +18,7 @@ let trueStrike =
           { kind = "srd-5.2.1"
           , section = "Spells/Descriptions-S-Z#True Strike"
           }
-      , description =
-          "Guided by a flash of magical insight, you make one attack with the weapon used in the spell's casting. The attack uses your spellcasting ability for the attack and damage rolls instead of using Strength or Dexterity. If the attack deals damage, it can be Radiant damage or the weapon's normal damage type, your choice. Cantrip Upgrade: the attack deals extra Radiant damage when you reach levels 5, 11, and 17."
+
       , mechanics =
           { family = "activation"
           , level = 0

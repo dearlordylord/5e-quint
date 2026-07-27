@@ -26,7 +26,7 @@ let weapon =
       , attachedWeaponAttackOverrideEligibility =
         { kind = "clubOrQuarterstaff" }
       , provenance = { kind = "srd-5.2.1", section = "Equipment#Weapons" }
-      , description = "Quarterstaff — weapons table."
+
       , damage =
         { kind = "dice"
         , dice = Some 1

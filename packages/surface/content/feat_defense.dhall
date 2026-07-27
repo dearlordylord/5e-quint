@@ -14,8 +14,7 @@ let defense =
           { kind = "srd-5.2.1"
           , section = "Feats#Defense"
           }
-      , description =
-          "While you're wearing Light, Medium, or Heavy armor, you gain a +1 bonus to Armor Class."
+
       , mechanics =
           { family = "passive"
           , condition =

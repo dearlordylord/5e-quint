@@ -1,7 +1,6 @@
 let thief =
       { className = "rogue"
-      , description =
-          "The Thief subclass is detailed after this class's description."
+
       , featureGrants =
           [ { level = 3, unitId = "rogue_fast_hands" }
           , { level = 3, unitId = "rogue_second_story_work" }

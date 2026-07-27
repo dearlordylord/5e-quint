@@ -38,8 +38,7 @@ let summonDragon =
           { kind = "srd-5.2.1"
           , section = "Spells/Descriptions-S-Z#Summon Dragon"
           }
-      , description =
-          "You call forth a Dragon spirit. It manifests in an unoccupied space that you can see within range and uses the Draconic Spirit stat block. The creature disappears when it drops to 0 Hit Points or when the spell ends. The creature is an ally to you and your allies. In combat, it shares your Initiative count but takes its turn immediately after yours; obeys your verbal commands (no action required)."
+
       , mechanics =
           { family = "spawned_creature"
           , level = 5

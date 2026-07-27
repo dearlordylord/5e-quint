@@ -1,7 +1,6 @@
 {
   "acquiredAtLevel": 3,
   "className": "rogue",
-  "description": "You gain a Climb Speed equal to your Speed. You can determine your jump distance using your Dexterity rather than your Strength.",
   "id": "rogue_second_story_work",
   "kind": "class_feature",
   "mechanics": {

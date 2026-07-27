@@ -35,8 +35,7 @@ let draconicResilience =
           { kind = "srd-5.2.1"
           , section = "Classes/Sorcerer#Draconic Resilience"
           }
-      , description =
-          "Your Hit Point maximum increases by 3, and it increases by 1 whenever you gain another Sorcerer level. While you aren't wearing armor, your base Armor Class equals 10 plus your Dexterity and Charisma modifiers."
+
       , mechanics =
           { family = "composite"
           , parts =

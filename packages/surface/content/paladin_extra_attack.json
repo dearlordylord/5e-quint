@@ -1,7 +1,6 @@
 {
   "acquiredAtLevel": 5,
   "className": "paladin",
-  "description": "You can attack twice instead of once whenever you take the Attack action on your turn.",
   "id": "paladin_extra_attack",
   "kind": "class_feature",
   "mechanics": {

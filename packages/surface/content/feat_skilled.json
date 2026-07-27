@@ -1,6 +1,5 @@
 {
   "category": "origin",
-  "description": "You gain proficiency in any combination of three skills or tools of your choice.",
   "id": "feat_skilled",
   "kind": "feat",
   "mechanics": {

@@ -17,8 +17,7 @@ let sleep =
           { kind = "srd-5.2.1"
           , section = "Spells/Descriptions-S-Z#Sleep"
           }
-      , description =
-          "Each creature of your choice in a 5-foot-radius Sphere centered on a point within range must succeed on a Wisdom saving throw or have the Incapacitated condition until the end of its next turn, at which point it must repeat the save. If the target fails the second save, the target has the Unconscious condition for the duration. The spell ends on a target if it takes damage or someone within 5 feet of it takes an action to shake it out."
+
       , mechanics =
           { family = "activation"
           , level = 1

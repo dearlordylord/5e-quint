@@ -1,7 +1,6 @@
 {
   "acquiredAtLevel": 19,
   "className": "fighter",
-  "description": "You gain an Epic Boon feat (see \"Feats\") or another feat of your choice for which you qualify. Boon of Combat Prowess is recommended.",
   "id": "fighter_epic_boon",
   "kind": "class_feature",
   "mechanics": {

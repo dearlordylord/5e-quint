@@ -1,6 +1,6 @@
 let halfling =
       { creatureType = "humanoid"
-      , description = "As a Halfling, you have these special traits."
+
       , id = "species_halfling"
       , kind = "species"
       , name = "Halfling"

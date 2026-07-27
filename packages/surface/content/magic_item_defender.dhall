@@ -54,9 +54,8 @@ let defender =
       , template = "any_weapon_magic"
       , id = "magic_item_defender"
       , name = "Defender"
-      , provenance = { kind = "srd-5.2.1", section = "MagicItems#Defender" }
-      , description =
-          "You gain a +3 bonus to attack rolls and damage rolls made with this magic weapon. The first time you attack with it on each of your turns, you can transfer some or all of the bonus to your Armor Class. The adjusted bonuses remain in effect until the start of your next turn, although you must hold the weapon to gain the Armor Class bonus."
+      , provenance = { kind = "srd-5.2.1", section = "Magic-Items/Items-A-H.md#Defender" }
+
       , weaponApplicability.kind = "any_melee_weapon"
       , variants =
         [ { id = "magic_item_defender"

@@ -16,10 +16,9 @@ let gauntlets =
       , requiresAttunement = True
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "MagicItems#GauntletsOfOgrePower"
+          , section = "Magic-Items/Items-A-H.md#Gauntlets of Ogre Power"
           }
-      , description =
-          "Your Strength is 19 while you wear these gauntlets. They have no effect on you if your Strength is 19 or higher without them."
+
       , mechanics =
           { family = "passive"
           , condition = { kind = "wearing_item" }

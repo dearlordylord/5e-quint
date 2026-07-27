@@ -15,9 +15,7 @@ let savingThrowAdvantage
       }
 
 let gnomishCunning =
-      { description =
-          "You have Advantage on Intelligence, Wisdom, and Charisma saving throws."
-      , id = "species_gnome_gnomish_cunning"
+      {  id = "species_gnome_gnomish_cunning"
       , kind = "species_trait"
       , mechanics =
         { family = "passive"
@@ -26,7 +24,7 @@ let gnomishCunning =
       , name = "Gnomish Cunning"
       , provenance =
         { kind = "srd-5.2.1"
-        , section = "Character-Origins/Gnome#Gnomish Cunning"
+        , section = "Character-Origins.md:1,67,97,177,187-188"
         }
       , species = "gnome"
       }

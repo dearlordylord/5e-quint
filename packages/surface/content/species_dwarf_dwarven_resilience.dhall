@@ -46,10 +46,9 @@ let dwarvenResilience =
       , species = "dwarf"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Character-Origins/Dwarf#Dwarven Resilience"
+          , section = "Character-Origins.md:1,67,97,129,139-140"
           }
-      , description =
-          "You have Resistance to Poison damage. You also have Advantage on saving throws you make to avoid or end the Poisoned condition."
+
       , mechanics =
           { family = "passive"
           , grants = [ poisonResistance, poisonedSaveAdvantage ]

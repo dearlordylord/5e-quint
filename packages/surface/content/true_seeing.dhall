@@ -24,8 +24,7 @@ let trueSeeing =
           { kind = "srd-5.2.1"
           , section = "Spells/Descriptions-S-Z#True Seeing"
           }
-      , description =
-          "For the duration, the willing creature you touch has Truesight with a range of 120 feet."
+
       , mechanics =
           { family = "activation"
           , level = 6

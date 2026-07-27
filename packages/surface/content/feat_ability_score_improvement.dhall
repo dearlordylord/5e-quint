@@ -32,8 +32,7 @@ let abilityScoreImprovement =
               ] : List AbilityScoreIncreaseMethod
           }
       , category = "general"
-      , description =
-          "Increase one ability score of your choice by 2, or increase two ability scores of your choice by 1. This feat can't increase an ability score above 20."
+
       , id = "feat_ability_score_improvement"
       , kind = "feat"
       , mechanics = { family = "passive", grants = [] : List {} }

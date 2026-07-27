@@ -17,8 +17,7 @@ let darkvision =
           { kind = "srd-5.2.1"
           , section = "Spells/Descriptions-A-D#Darkvision"
           }
-      , description =
-          "For the duration, a willing creature you touch has Darkvision with a range of 150 feet."
+
       , mechanics =
           { family = "activation"
           , level = 2

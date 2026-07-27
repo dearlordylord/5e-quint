@@ -1,7 +1,6 @@
 {
   "acquiredAtLevel": 2,
   "className": "barbarian",
-  "description": "Attack recklessly to have Advantage on Strength attack rolls. Attack rolls against you have Advantage until the start of your next turn.",
   "id": "barbarian_reckless_attack",
   "kind": "class_feature",
   "mechanics": {

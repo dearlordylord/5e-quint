@@ -39,8 +39,7 @@ let locateAnimalsOrPlants =
           { kind = "srd-5.2.1"
           , section = "Spells/Descriptions-E-L#Locate Animals or Plants"
           }
-      , description =
-          "Describe or name a specific kind of Beast, Plant creature, or nonmagical plant. You learn the direction and distance to the closest creature or plant of that kind within 5 miles, if any are present."
+
       , mechanics =
           { family = "activation"
           , level = 2

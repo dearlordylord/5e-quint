@@ -15,8 +15,7 @@ let frenzy =
       , name = "Frenzy"
       , className = "barbarian"
       , acquiredAtLevel = 3
-      , description =
-          "If you use Reckless Attack while your Rage is active, deal extra damage to the first target you hit on your turn with a Strength-based attack."
+
       , provenance =
           { kind = "srd-5.2.1", section = "Classes/Barbarian#Frenzy" }
       , mechanics =

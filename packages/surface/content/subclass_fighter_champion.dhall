@@ -1,7 +1,6 @@
 let champion =
       { className = "fighter"
-      , description =
-          "The Champion subclass is detailed after this class's description."
+
       , featureGrants =
         [ { level = 3, unitId = "fighter_improved_critical" }
         , { level = 3, unitId = "fighter_remarkable_athlete" }

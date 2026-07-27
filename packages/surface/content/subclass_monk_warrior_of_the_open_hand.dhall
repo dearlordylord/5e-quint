@@ -1,7 +1,6 @@
 let warriorOfTheOpenHand =
       { className = "monk"
-      , description =
-          "The Warrior of the Open Hand subclass is detailed after this class's description."
+
       , featureGrants =
           [ { level = 3, unitId = "monk_open_hand_technique" } ]
       , id = "subclass_monk_warrior_of_the_open_hand"

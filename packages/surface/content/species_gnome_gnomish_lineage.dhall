@@ -136,9 +136,7 @@ let rockGnome
       }
 
 let gnomishLineage =
-      { description =
-          "Choose a lineage: Forest Gnome; Rock Gnome. Choose Intelligence, Wisdom, or Charisma as the spellcasting ability for spells from this trait."
-      , id = "species_gnome_gnomish_lineage"
+      {  id = "species_gnome_gnomish_lineage"
       , kind = "species_trait"
       , mechanics =
         { family = "species_lineage_choice"
@@ -153,7 +151,7 @@ let gnomishLineage =
       , name = "Gnomish Lineage"
       , provenance =
         { kind = "srd-5.2.1"
-        , section = "Character-Origins/Gnome#Gnomish Lineage"
+        , section = "Character-Origins.md:1,67,97,177,189-193"
         }
       , species = "gnome"
       }

@@ -14,10 +14,9 @@ let darkvision =
       , species = "dragonborn"
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "Character-Origins/Dragonborn#Darkvision"
+          , section = "Character-Origins.md:1,67,97,99,109,125-126"
           }
-      , description =
-          "You have Darkvision with a range of 60 feet."
+
       , mechanics =
           { family = "passive"
           , grants =

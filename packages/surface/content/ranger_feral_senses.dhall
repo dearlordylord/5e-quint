@@ -8,8 +8,7 @@ let feralSenses =
           { kind = "srd-5.2.1"
           , section = "Classes/Ranger#Feral Senses"
           }
-      , description =
-          "Your connection to the forces of nature grants you Blindsight with a range of 30 feet."
+
       , mechanics =
           { family = "passive"
           , grants =

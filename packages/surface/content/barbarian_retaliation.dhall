@@ -6,8 +6,7 @@ let retaliation =
       , acquiredAtLevel = 10
       , provenance =
           { kind = "srd-5.2.1", section = "Classes/Barbarian.md:186-188" }
-      , description =
-          "When you take damage from a creature within 5 feet of you, you can take a Reaction to make one melee attack against that creature, using a weapon or an Unarmed Strike."
+
       , mechanics =
           { family = "activation"
           , activationCost =

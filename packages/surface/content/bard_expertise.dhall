@@ -14,8 +14,7 @@ let expertise =
       , className = "bard"
       , acquiredAtLevel = 2
       , provenance = { kind = "srd-5.2.1", section = "Classes/Bard#Expertise" }
-      , description =
-          "Gain Expertise in two skill proficiencies of your choice. At Bard level 9, gain Expertise in two more skill proficiencies of your choice."
+
       , mechanics =
           { family = "passive"
           , grants =

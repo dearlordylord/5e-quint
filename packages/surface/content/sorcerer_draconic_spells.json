@@ -1,7 +1,6 @@
 {
   "acquiredAtLevel": 3,
   "className": "sorcerer",
-  "description": "When you reach a Sorcerer level specified in the Draconic Spells table, you thereafter always have the listed spells prepared.",
   "id": "sorcerer_draconic_spells",
   "kind": "class_feature",
   "mechanics": {

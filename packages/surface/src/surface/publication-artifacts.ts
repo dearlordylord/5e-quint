@@ -1,7 +1,4 @@
-import { Schema } from "effect";
-
-import { SrdSurfaceJsonSchema, SrdSurfaceSchema } from "./schema.ts";
-import { srdSurface } from "./surface-catalog.ts";
+import { SrdSurfaceJsonSchema } from "./schema.ts";
 
 export const SURFACE_PUBLICATION_MEMBERS = ["aggregate", "schema"] as const;
 export type SurfacePublicationMember =
@@ -15,20 +12,7 @@ export const SRD_SURFACE_PUBLICATION_FILE_NAMES = {
   schema: "srd-surface.schema.json",
 } as const satisfies Readonly<Record<SurfacePublicationMember, string>>;
 
-export const SRD_SURFACE_PUBLICATION_ARTIFACTS = {
-  aggregate: Schema.encodeSync(SrdSurfaceSchema)(srdSurface),
-  schema: SrdSurfaceJsonSchema,
-} as const satisfies Readonly<Record<SurfacePublicationMember, unknown>>;
-
-export const SRD_SURFACE_PUBLICATION_ARTIFACT_BYTES: SurfacePublicationArtifacts =
-  {
-    aggregate: serializeSurfacePublicationArtifact(
-      SRD_SURFACE_PUBLICATION_ARTIFACTS.aggregate,
-    ),
-    schema: serializeSurfacePublicationArtifact(
-      SRD_SURFACE_PUBLICATION_ARTIFACTS.schema,
-    ),
-  };
+export const SRD_SURFACE_PUBLICATION_SCHEMA_ARTIFACT = SrdSurfaceJsonSchema;
 
 export const SURFACE_SCHEMA_BOUND_MEASURES = ["definitions", "bytes"] as const;
 export type SurfaceSchemaBoundMeasure =
@@ -40,8 +24,11 @@ export const SRD_SURFACE_SCHEMA_BOUNDS = {
 } as const satisfies Readonly<Record<SurfaceSchemaBoundMeasure, number>>;
 
 export const SRD_SURFACE_SCHEMA_SIZE = {
-  definitions: Object.keys(SrdSurfaceJsonSchema.$defs ?? {}).length,
-  bytes: SRD_SURFACE_PUBLICATION_ARTIFACT_BYTES.schema.byteLength,
+  definitions: Object.keys(SRD_SURFACE_PUBLICATION_SCHEMA_ARTIFACT.$defs ?? {})
+    .length,
+  bytes: serializeSurfacePublicationArtifact(
+    SRD_SURFACE_PUBLICATION_SCHEMA_ARTIFACT,
+  ).byteLength,
 } as const satisfies Readonly<Record<SurfaceSchemaBoundMeasure, number>>;
 
 export function serializeSurfacePublicationArtifact(value: unknown): Buffer {

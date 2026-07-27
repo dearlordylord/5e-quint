@@ -25,8 +25,7 @@ let lifeDomainSpells =
           { kind = "srd-5.2.1"
           , section = "Classes/Cleric#Life Domain Spells"
           }
-      , description =
-          "Your connection to this divine domain ensures you always have certain spells ready. When you reach a Cleric level specified in the Life Domain Spells table, you thereafter always have the listed spells prepared."
+
       , mechanics =
           { family = "passive"
           , grants =

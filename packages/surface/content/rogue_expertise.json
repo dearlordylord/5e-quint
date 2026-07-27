@@ -1,7 +1,6 @@
 {
   "acquiredAtLevel": 1,
   "className": "rogue",
-  "description": "Gain Expertise in two skill proficiencies of your choice. At Rogue level 6, gain Expertise in two more skill proficiencies of your choice.",
   "id": "rogue_expertise",
   "kind": "class_feature",
   "mechanics": {

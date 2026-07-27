@@ -1,7 +1,6 @@
 {
   "acquiredAtLevel": 10,
   "className": "barbarian",
-  "description": "When you take damage from a creature within 5 feet of you, you can take a Reaction to make one melee attack against that creature, using a weapon or an Unarmed Strike.",
   "id": "barbarian_retaliation",
   "kind": "class_feature",
   "mechanics": {

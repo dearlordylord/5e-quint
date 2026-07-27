@@ -16,9 +16,8 @@ let armor =
       , id = "magic_item_adamantine_armor"
       , name = "Adamantine Armor"
       , provenance =
-        { kind = "srd-5.2.1", section = "MagicItems#AdamantineArmor" }
-      , description =
-          "This suit of armor is reinforced with adamantine. While you're wearing it, any Critical Hit against you becomes a normal hit."
+        { kind = "srd-5.2.1", section = "Magic-Items/Items-A-H.md#Adamantine Armor" }
+
       , armorApplicability =
         { kind = "any_armor"
         , categories = [ "medium", "heavy" ]

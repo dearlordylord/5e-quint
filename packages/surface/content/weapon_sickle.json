@@ -7,7 +7,6 @@
     "dieSize": 4,
     "kind": "dice"
   },
-  "description": "Sickle — weapons table.",
   "id": "weapon_sickle",
   "kind": "weapon",
   "mastery": "nick",

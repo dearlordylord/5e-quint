@@ -16,8 +16,7 @@ let counterspell =
           { kind = "srd-5.2.1"
           , section = "Spells/Descriptions-A-D#Counterspell"
           }
-      , description =
-          "You attempt to interrupt a creature in the process of casting a spell. The creature makes a Constitution saving throw. On a failed save, the spell dissipates with no effect, and the action, Bonus Action, or Reaction used to cast it is wasted; if a slot was used, the slot isn't expended."
+
       , mechanics =
           { family = "triggered_reaction"
           , level = 3

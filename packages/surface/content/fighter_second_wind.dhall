@@ -13,8 +13,7 @@ let secondWind =
           { kind = "srd-5.2.1"
           , section = "Classes/Fighter#Second Wind"
           }
-      , description =
-          "You have a limited well of physical and mental stamina that you can draw on. As a Bonus Action, you can use it to regain Hit Points equal to 1d10 plus your Fighter level."
+
       , mechanics =
           { family = "activation"
           , activationCost = { kind = "bonus_action" }

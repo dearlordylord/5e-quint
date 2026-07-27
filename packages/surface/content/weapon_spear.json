@@ -7,7 +7,6 @@
     "dieSize": 6,
     "kind": "dice"
   },
-  "description": "Spear — weapons table.",
   "id": "weapon_spear",
   "kind": "weapon",
   "mastery": "sap",

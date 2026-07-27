@@ -1,7 +1,6 @@
 let pathOfTheBerserker =
       { className = "barbarian"
-      , description =
-          "The Path of the Berserker subclass is detailed after this class's description."
+
       , featureGrants =
           [ { level = 3, unitId = "barbarian_frenzy" }
           , { level = 10, unitId = "barbarian_retaliation" }

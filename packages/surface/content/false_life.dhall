@@ -17,8 +17,7 @@ let falseLife =
           { kind = "srd-5.2.1"
           , section = "Spells/Descriptions-E-L#False Life"
           }
-      , description =
-          "You gain 2d4 + 4 Temporary Hit Points. Using a Higher-Level Spell Slot. You gain 5 additional Temporary Hit Points for each spell slot level above 1."
+
       , mechanics =
           { family = "activation"
           , level = 1

@@ -27,8 +27,7 @@ let colorSpray =
           { kind = "srd-5.2.1"
           , section = "Spells/Descriptions-A-D#Color Spray"
           }
-      , description =
-          "You launch a dazzling array of flashing, colorful light. Each creature in a 15-foot Cone originating from you must succeed on a Constitution saving throw or have the Blinded condition until the end of your next turn."
+
       , mechanics =
           { family = "activation"
           , level = 1

@@ -70,6 +70,20 @@ describe("SRD Surface publication schema", () => {
     expect(Either.isLeft(recordResult)).toBe(true);
   });
 
+  test("keeps top-level presentation prose out of canonical Unit records", () => {
+    const firstUnit = srdSurface.units[0];
+
+    expect("description" in firstUnit).toBe(false);
+    expect(
+      Either.isLeft(
+        decodeUnitRecordEither({
+          ...firstUnit,
+          description: "Handwritten presentation prose.",
+        }),
+      ),
+    ).toBe(true);
+  });
+
   test("rejects empty or whitespace-only Unit ids", () => {
     const firstUnit = srdSurface.units[0];
     expect(
@@ -128,10 +142,10 @@ describe("SRD Surface publication schema", () => {
       "stat blocks property",
     );
     expect(requireRecord(units.items, "units items").$ref).toBe(
-      "#/$defs/SrdUnitPublicationEncoded",
+      "#/$defs/PublishedSrdUnitPublicationEncoded",
     );
     expect(requireRecord(statBlocks.items, "stat blocks items").$ref).toBe(
-      "#/$defs/SrdStatBlockPublicationEncoded",
+      "#/$defs/PublishedSrdStatBlockPublicationEncoded",
     );
     expect(
       JSON.stringify(SrdSurfaceJsonSchema.$defs).includes('"srd-5.2.1"'),

@@ -1,4 +1,5 @@
 import { execFileSync } from "node:child_process";
+import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 import { describe, expect, test } from "vitest";
@@ -6,6 +7,25 @@ import { describe, expect, test } from "vitest";
 import { SRD_SURFACE_PUBLICATION_FILE_NAMES } from "./publication-artifacts.ts";
 
 describe("committed SRD Surface publication", () => {
+  test("publishes generated rules excerpts without canonical descriptions", () => {
+    const aggregatePath = fileURLToPath(
+      new URL(
+        `../../publication/${SRD_SURFACE_PUBLICATION_FILE_NAMES.aggregate}`,
+        import.meta.url,
+      ),
+    );
+    const aggregate = JSON.parse(readFileSync(aggregatePath, "utf8")) as {
+      readonly units: ReadonlyArray<Record<string, unknown>>;
+      readonly statBlocks: ReadonlyArray<Record<string, unknown>>;
+    };
+
+    for (const record of [...aggregate.units, ...aggregate.statBlocks]) {
+      expect(record).not.toHaveProperty("description");
+      expect(record.rulesExcerpt).toEqual(expect.any(String));
+      expect((record.rulesExcerpt as string).trim().length).toBeGreaterThan(0);
+    }
+  });
+
   test("compiles and validates with an independent Draft 2020-12 validator", () => {
     const schemaPath = fileURLToPath(
       new URL(

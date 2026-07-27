@@ -153,8 +153,7 @@ let spiritualWeapon =
           { kind = "srd-5.2.1"
           , section = "Spells/Descriptions-S-Z#Spiritual Weapon"
           }
-      , description =
-          "You create a floating, spectral force within range and can immediately make one melee spell attack against one creature within 5 feet of the force. On a hit, the target takes Force damage equal to 1d8 plus your spellcasting ability modifier. On later turns, you can take a Bonus Action to move the force up to 20 feet and repeat the attack. Using a Higher-Level Spell Slot. The damage increases by 1d8 for every slot level above 2."
+
       , mechanics =
           { family = "ongoing_effect"
           , level = 2

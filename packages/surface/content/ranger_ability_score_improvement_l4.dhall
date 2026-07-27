@@ -8,8 +8,7 @@ let rangerAbilityScoreImprovementL4 =
           { kind = "srd-5.2.1"
           , section = "Classes/Ranger#Ability Score Improvement"
           }
-      , description =
-          "You gain the Ability Score Improvement feat (see \"Feats\") or another feat of your choice for which you qualify. You gain this feature again at Ranger levels 8, 12, and 16."
+
       , mechanics =
           { family = "passive"
           , grants =

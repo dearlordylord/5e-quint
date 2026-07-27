@@ -14,9 +14,8 @@ let shield =
       , id = "magic_item_sentinel_shield"
       , name = "Sentinel Shield"
       , provenance =
-        { kind = "srd-5.2.1", section = "MagicItems#SentinelShield" }
-      , description =
-          "While holding this Shield, you have Advantage on Initiative rolls and Wisdom (Perception) checks."
+        { kind = "srd-5.2.1", section = "Magic-Items/Items-Q-Z.md#Sentinel Shield" }
+
       , armorClassProjection =
         { kind = "trained_shield_bonus"
         , handUse = "shield"

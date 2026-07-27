@@ -14,10 +14,9 @@ let cloak =
       , requiresAttunement = True
       , provenance =
           { kind = "srd-5.2.1"
-          , section = "MagicItems#Cloak of Protection"
+          , section = "Magic-Items/Items-A-H.md#Cloak of Protection"
           }
-      , description =
-          "You gain a +1 bonus to Armor Class and saving throws while you wear this cloak."
+
       , mechanics =
           { family = "passive"
           , grants =

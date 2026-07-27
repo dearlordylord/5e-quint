@@ -42,8 +42,7 @@ let clairvoyance =
           { kind = "srd-5.2.1"
           , section = "Spells/Descriptions-A-D#Clairvoyance"
           }
-      , description =
-          "You create an Invisible sensor within range in a location familiar to you or in an obvious location that is unfamiliar to you. The intangible, invulnerable sensor remains in place for the duration. When you cast the spell, choose seeing or hearing. You can use the chosen sense through the sensor as if you were in its space. As a Bonus Action, you can switch between seeing and hearing."
+
       , mechanics =
           { family = "activation"
           , level = 3

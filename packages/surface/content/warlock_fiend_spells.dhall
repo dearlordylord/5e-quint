@@ -29,8 +29,7 @@ let fiendSpells =
           { kind = "srd-5.2.1"
           , section = "Classes/Warlock#Fiend Spells"
           }
-      , description =
-          "The magic of your patron ensures you always have certain spells ready; when you reach a Warlock level specified in the Fiend Spells table, you thereafter always have the listed spells prepared."
+
       , mechanics =
           { family = "passive"
           , grants =

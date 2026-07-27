@@ -1,7 +1,5 @@
 let adrenalineRush =
-      { description =
-          "When you take the Dash action, you gain Temporary Hit Points equal to your Proficiency Bonus. You can use this trait a number of times equal to your Proficiency Bonus, and you regain all expended uses when you finish a Short or Long Rest."
-      , id = "orc_adrenaline_rush"
+      {  id = "orc_adrenaline_rush"
       , kind = "species_trait"
       , mechanics =
         { activationCost = { action = "dash", kind = "bonus_action" }
