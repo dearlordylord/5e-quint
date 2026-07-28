@@ -820,6 +820,7 @@ export function characterSpellcasting(input: {
 
   const bookOfShadowsSpellAccesses = bookOfShadowsSpellAccess({
     build,
+    spellcastingSources: spellcasting.sources,
     unitLibrary,
     featurePreparedSpells: featurePreparedSpells.right,
     ...(input.bookOfShadowsPresence === undefined
@@ -885,6 +886,9 @@ function spellbookRitualSpellAccess(input: {
 
 function bookOfShadowsSpellAccess(input: {
   readonly build: CharacterBuild;
+  readonly spellcastingSources: NonNullable<
+    CharacterBuild["spellcasting"]
+  >["sources"];
   readonly unitLibrary: UnitCatalog;
   readonly featurePreparedSpells: readonly CharacterBattleFeaturePreparedSpellInit[];
   readonly bookOfShadowsPresence?: CharacterBattleBookOfShadowsPresence;
@@ -892,11 +896,10 @@ function bookOfShadowsSpellAccess(input: {
   readonly CharacterBattleBookOfShadowsSpellAccessInit[],
   BattleCreatureInitIssue
 > {
-  const accesses =
-    input.build.spellcasting?.sources.flatMap((source) => {
-      const access = source.bookOfShadows;
-      return access === undefined ? [] : [{ source, access }];
-    }) ?? [];
+  const accesses = input.spellcastingSources.flatMap((source) => {
+    const access = source.bookOfShadows;
+    return access === undefined ? [] : [{ source, access }];
+  });
   if (accesses.length === 0) {
     return Either.right([]);
   }

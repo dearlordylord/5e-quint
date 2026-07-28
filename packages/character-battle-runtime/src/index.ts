@@ -130,8 +130,9 @@ export {
   type BattleCreatureInitIssue,
 } from "./battle-character-build-projection.ts";
 export {
+  characterBattleSupportProjection,
   characterBattleWeaponMasterySelections,
-  characterUnitRefsWithBattleSupportProfiles,
+  type CharacterBattleSupportProjection,
   type BattleSupportProfileIssue,
 } from "./battle-support-profiles.ts";
 export type { CharacterSheetBattleHandoffIssue } from "./battle-handoff-issue.ts";

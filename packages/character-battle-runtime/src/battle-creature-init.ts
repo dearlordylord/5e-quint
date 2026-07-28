@@ -65,7 +65,7 @@ import type {
 } from "@dnd/surface/surface/types";
 import { supportedClassFeatureSpellFreeCastGrantsForUnit } from "@dnd/surface/surface/types";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
-import { Either, Option } from "effect";
+import { Either } from "effect";
 import {
   battleCreatureInitIssue,
   characterArmorClassState,
@@ -81,9 +81,9 @@ import {
   type BattleCreatureInitIssue,
 } from "./battle-character-build-projection.ts";
 import {
-  battleSupportProfileSourceFactsForBuild,
+  characterBattleSupportProjection,
   characterBattleWeaponMasterySelections,
-  characterUnitRefsWithBattleSupportProfiles,
+  type CharacterBattleSupportProjection,
 } from "./battle-support-profiles.ts";
 
 // KERNEL-COVERAGE: runtime-owner CHARACTER.BATTLE.HANDOFF.INIT_PROJECTION
@@ -154,23 +154,24 @@ export function characterBattleInitiativeScore(input: {
   if (Either.isLeft(classLevels)) {
     return battleCreatureInitIssue(classLevels.left.message);
   }
-  const characterUnitRefs = characterUnitRefsWithBattleSupportProfiles(
+  const supportProjection = characterBattleSupportProjection(
     input.build,
     input.unitLibrary,
     undefined,
     classLevels.right,
   );
-  if (Either.isLeft(characterUnitRefs)) {
+  if (Either.isLeft(supportProjection)) {
     return battleCreatureInitIssue(
-      characterUnitRefs.left.map((issue) => issue.message).join("; "),
+      supportProjection.left.map((issue) => issue.message).join("; "),
     );
   }
-  const hasInitiativeProficiency = characterUnitRefs.right.some((unitRef) =>
-    unitRef.supportProfiles.some(
-      (profile) =>
-        typeof profile !== "string" &&
-        profile.kind === INITIATIVE_PROFICIENCY_AND_SWAP_SUPPORT_PROFILE,
-    ),
+  const hasInitiativeProficiency = supportProjection.right.unitRefs.some(
+    (unitRef) =>
+      unitRef.supportProfiles.some(
+        (profile) =>
+          typeof profile !== "string" &&
+          profile.kind === INITIATIVE_PROFICIENCY_AND_SWAP_SUPPORT_PROFILE,
+      ),
   );
   if (!hasInitiativeProficiency) {
     return battleCreatureInitIssue(
@@ -311,15 +312,15 @@ export function battleCreatureInitFromCharacterBuild(
         parsedClassLevels.left.messages.join("; "),
       );
     }
-    const characterUnitRefs = characterUnitRefsWithBattleSupportProfiles(
+    const supportProjection = characterBattleSupportProjection(
       input.build,
       input.unitLibrary,
       weaponMasteries.right,
       classLevels,
     );
-    if (Either.isLeft(characterUnitRefs)) {
+    if (Either.isLeft(supportProjection)) {
       return yield* battleCreatureInitIssue(
-        characterUnitRefs.left.map((issue) => issue.message).join("; "),
+        supportProjection.left.map((issue) => issue.message).join("; "),
       );
     }
     const pactBladeBondedWeaponItemId =
@@ -341,26 +342,30 @@ export function battleCreatureInitFromCharacterBuild(
       pactBladeBondedWeaponItemId,
     );
     const selectedLoadout = characterBattleLoadoutFromBuild(input.build);
-    const supportProfileSourceFacts = battleSupportProfileSourceFactsForBuild(
-      input.build,
-      input.unitLibrary,
-    );
-    if (Either.isLeft(supportProfileSourceFacts)) {
-      return yield* battleCreatureInitIssue(
-        supportProfileSourceFacts.left.message,
-      );
-    }
     const unitFeatures = yield* characterBattleFeatures(
       input.build,
       input.unitLibrary,
+      supportProjection.right.unitRefs,
       parsedClassLevels.right,
-      supportProfileSourceFacts.right,
+      supportProjection.right.sourceFacts,
     );
-    const resources = yield* characterBattleResourceInitsFromBuild(
+    const resourceProjectionFacts = characterBattleResourceProjectionFacts(
+      input.build,
+      input.unitLibrary,
+      supportProjection.right,
+    );
+    if (Either.isLeft(resourceProjectionFacts)) {
+      return yield* Either.left(resourceProjectionFacts.left);
+    }
+    const { admittedSupportProjection, druidWildShapeFacts } =
+      resourceProjectionFacts.right;
+    const resources = yield* characterBattleResourceInits(
       input.build,
       input.unitLibrary,
       input.resourceExpenditures ?? [],
       parsedClassLevels.right,
+      druidWildShapeFacts,
+      admittedSupportProjection.unitRefs.map(({ unit }) => unit),
     );
     const metamagic = yield* characterBattleMetamagicFromBuild(
       input.build,
@@ -393,13 +398,6 @@ export function battleCreatureInitFromCharacterBuild(
       input.unitLibrary,
       classLevels,
     );
-    const druidWildShapeFacts = characterBuildDruidWildShapeFacts({
-      build: input.build,
-      unitLibrary: input.unitLibrary,
-    });
-    if (Either.isLeft(druidWildShapeFacts)) {
-      return yield* battleCreatureInitIssue(druidWildShapeFacts.left.message);
-    }
     const druidWildShapeProfile = yield* singleDruidWildShapeProfile(
       resources,
       parsedClassLevels.right,
@@ -407,7 +405,7 @@ export function battleCreatureInitFromCharacterBuild(
     const druidWildShapeAvailableForms =
       yield* battleDruidWildShapeAvailableFormsFromInput(
         input.druidWildShapeAvailableForms,
-        druidWildShapeFacts.right,
+        druidWildShapeFacts,
         druidWildShapeProfile,
       );
 
@@ -418,7 +416,7 @@ export function battleCreatureInitFromCharacterBuild(
       creatureInit: {
         kind: "character",
         characterId: input.characterId,
-        characterUnitRefs: characterUnitRefs.right,
+        characterUnitRefs: admittedSupportProjection.unitRefs,
         classLevels,
         knownLanguages: characterBattleKnownLanguages(input.build),
         d20Statistics: {
@@ -624,6 +622,32 @@ function characterBattleMetamagicFromBuild(
   });
 }
 
+type CharacterBattleResourceProjectionFacts = {
+  readonly admittedSupportProjection: CharacterBattleSupportProjection;
+  readonly druidWildShapeFacts: CharacterBuildDruidWildShapeFacts | undefined;
+};
+
+function characterBattleResourceProjectionFacts(
+  build: CharacterBuild,
+  unitLibrary: UnitCatalog,
+  admittedSupportProjection: CharacterBattleSupportProjection,
+): Either.Either<
+  CharacterBattleResourceProjectionFacts,
+  BattleCreatureInitIssue
+> {
+  const druidWildShapeFacts = characterBuildDruidWildShapeFacts({
+    build,
+    unitLibrary,
+  });
+  if (Either.isLeft(druidWildShapeFacts)) {
+    return battleCreatureInitIssue(druidWildShapeFacts.left.message);
+  }
+  return Either.right({
+    admittedSupportProjection,
+    druidWildShapeFacts: druidWildShapeFacts.right,
+  });
+}
+
 export function characterBattleResourceInitsFromBuild(
   build: CharacterBuild,
   unitLibrary: UnitCatalog,
@@ -645,31 +669,78 @@ export function characterBattleResourceInitsFromBuild(
   if (Either.isLeft(parsedLevelsResult)) {
     return battleCreatureInitIssue(parsedLevelsResult.left.messages.join("; "));
   }
+  const supportProjection = characterBattleSupportProjection(
+    build,
+    unitLibrary,
+    undefined,
+    classLevels.right,
+  );
+  if (Either.isLeft(supportProjection)) {
+    return battleCreatureInitIssue(
+      supportProjection.left.map(({ message }) => message).join("; "),
+    );
+  }
+  const resourceProjectionFacts = characterBattleResourceProjectionFacts(
+    build,
+    unitLibrary,
+    supportProjection.right,
+  );
+  if (Either.isLeft(resourceProjectionFacts)) {
+    return Either.left(resourceProjectionFacts.left);
+  }
+  const { admittedSupportProjection, druidWildShapeFacts } =
+    resourceProjectionFacts.right;
+  return characterBattleResourceInits(
+    build,
+    unitLibrary,
+    resourceExpenditures,
+    parsedLevelsResult.right,
+    druidWildShapeFacts,
+    admittedSupportProjection.unitRefs.map(({ unit }) => unit),
+  );
+}
+
+function characterBattleResourceInits(
+  build: CharacterBuild,
+  unitLibrary: UnitCatalog,
+  resourceExpenditures: readonly CharacterSheetResourceExpenditure[],
+  classLevels: CharacterBattleClassLevels,
+  druidWildShapeFacts: CharacterBuildDruidWildShapeFacts | undefined,
+  admittedUnits: readonly UnitRecord[],
+): Either.Either<
+  readonly CharacterBattleResourceInit[],
+  BattleCreatureInitIssue
+> {
   const resources: CharacterBattleResourceInit[] = [];
-  for (const unitRef of characterBuildUnitRefs(build, unitLibrary)) {
-    const unit = unitLibrary.getUnit(unitRef.unitId);
-    if (Option.isNone(unit)) {
+  const issues: string[] = [];
+  const buildUnitIds = new Set(
+    characterBuildUnitRefs(build, unitLibrary).map(({ unitId }) => unitId),
+  );
+  for (const unit of admittedUnits) {
+    if (!buildUnitIds.has(unit.id)) continue;
+    if (unit.kind !== "class_feature" && unit.kind !== "species_trait") {
       continue;
     }
-    if (
-      unit.value.kind !== "class_feature" &&
-      unit.value.kind !== "species_trait"
-    ) {
-      continue;
-    }
-    if (!characterBattleResourceSupportedForUnit(unit.value)) {
+    if (!characterBattleResourceSupportedForUnit(unit)) {
       continue;
     }
 
     const init = characterBattleResourceInit(
       build,
-      unit.value,
+      unit,
       unitLibrary,
       resourceExpenditures,
-      parsedLevelsResult.right,
+      classLevels,
+      druidWildShapeFacts,
     );
-    if (Either.isLeft(init)) return Either.left(init.left);
-    resources.push(init.right);
+    if (Either.isLeft(init)) {
+      issues.push(init.left.message);
+    } else {
+      resources.push(init.right);
+    }
+  }
+  if (issues.length > 0) {
+    return battleCreatureInitIssue(issues.join("; "));
   }
   return Either.right(resources);
 }
@@ -683,6 +754,7 @@ function characterBattleResourceInit(
   unitLibrary: UnitCatalog,
   resourceExpenditures: readonly CharacterSheetResourceExpenditure[],
   classLevels: CharacterBattleClassLevels,
+  druidWildShapeFacts: CharacterBuildDruidWildShapeFacts | undefined,
 ): Either.Either<CharacterBattleResourceInit, BattleCreatureInitIssue> {
   const battleResource = characterBattleResourceForUnit(unit);
   if (battleResource.kind === "point_pool") {
@@ -706,9 +778,9 @@ function characterBattleResourceInit(
   const persistedUsesRemaining = characterBattlePersistedUsesRemaining(
     build,
     unit,
-    unitLibrary,
     resourceExpenditures,
     classLevels,
+    druidWildShapeFacts,
   );
   if (Either.isLeft(persistedUsesRemaining)) {
     return Either.left(persistedUsesRemaining.left);
@@ -775,29 +847,27 @@ function characterBattlePersistedUsesRemaining(
     UnitRecord,
     { readonly kind: "class_feature" | "species_trait" }
   >,
-  unitLibrary: UnitCatalog,
   resourceExpenditures: readonly CharacterSheetResourceExpenditure[],
   classLevels: CharacterBattleClassLevels,
+  druidWildShapeFacts: CharacterBuildDruidWildShapeFacts | undefined,
 ): Either.Either<number | undefined, BattleCreatureInitIssue> {
-  const facts = characterBuildDruidWildShapeFacts({ build, unitLibrary });
-  if (Either.isLeft(facts)) {
-    return battleCreatureInitIssue(facts.left.message);
-  }
-  const wildShapeFacts = facts.right;
-  if (wildShapeFacts !== undefined && unit.id === wildShapeFacts.unitId) {
+  if (
+    druidWildShapeFacts !== undefined &&
+    unit.id === druidWildShapeFacts.unitId
+  ) {
     const expended =
       resourceExpenditures.find(
         (expenditure) =>
           expenditure.tag === "useCountResource" &&
-          expenditure.unitId === wildShapeFacts.unitId,
+          expenditure.unitId === druidWildShapeFacts.unitId,
       )?.expended ?? resourceCount(0);
-    if (expended > wildShapeFacts.useCount.maximum) {
+    if (expended > druidWildShapeFacts.useCount.maximum) {
       return battleCreatureInitIssue(
         "Druid Wild Shape expenditure exceeds its character resource cap.",
       );
     }
     return Either.right(
-      Number(wildShapeFacts.useCount.maximum) - Number(expended),
+      Number(druidWildShapeFacts.useCount.maximum) - Number(expended),
     );
   }
 
@@ -853,6 +923,7 @@ function characterBattlePersistedUsesRemaining(
 function characterBattleFeatures(
   build: CharacterBuild,
   unitLibrary: UnitCatalog,
+  admittedUnitRefs: CharacterBattleSupportProjection["unitRefs"],
   classLevels: Parameters<typeof parseSupportedUnitFeatureProfile>[1],
   sourceFacts: Parameters<typeof parseSupportedUnitFeatureProfile>[2],
 ): Either.Either<
@@ -860,22 +931,16 @@ function characterBattleFeatures(
   BattleCreatureInitIssue
 > {
   const features: CharacterBattleFeatureInit[] = [];
-  for (const featureUnitId of characterBuildFeatureUnitIds(
-    build,
-    unitLibrary,
-  )) {
-    const unit = getRequiredUnit(unitLibrary, featureUnitId);
-    if (Either.isLeft(unit)) {
-      return battleCreatureInitIssue(unit.left.message);
-    }
-    if (
-      unit.right.kind !== "class_feature" &&
-      unit.right.kind !== "species_trait"
-    ) {
+  const featureUnitIds = new Set(
+    characterBuildFeatureUnitIds(build, unitLibrary),
+  );
+  for (const { unit } of admittedUnitRefs) {
+    if (!featureUnitIds.has(unit.id)) continue;
+    if (unit.kind !== "class_feature" && unit.kind !== "species_trait") {
       continue;
     }
     const profile = parseSupportedUnitFeatureProfile(
-      unit.right,
+      unit,
       classLevels,
       sourceFacts,
     );

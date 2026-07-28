@@ -134,7 +134,7 @@ import {
   battleCreatureInitFromCharacterBuildWithRoute,
   characterAttackActionOption,
   characterBaseUnarmedStrikeActionOption,
-  characterUnitRefsWithBattleSupportProfiles,
+  characterBattleSupportProjection,
   characterSheetBattleInit,
   characterSheetBattleInitWithRoute,
   characterArmorClassState,
@@ -394,15 +394,11 @@ describe("Character Sheet battle handoff", () => {
   });
 
   test("ignores invalid and unsupported supplied mastery weapon refs", () => {
-    const refs = characterUnitRefsWithBattleSupportProfiles(
-      build,
-      unitLibrary,
-      [
-        { weaponUnitId: authoredUnitId("synthetic:missing-weapon") },
-        { weaponUnitId: authoredUnitId("class_fighter") },
-        { weaponUnitId: authoredUnitId("weapon_dagger") },
-      ],
-    );
+    const refs = characterBattleSupportProjection(build, unitLibrary, [
+      { weaponUnitId: authoredUnitId("synthetic:missing-weapon") },
+      { weaponUnitId: authoredUnitId("class_fighter") },
+      { weaponUnitId: authoredUnitId("weapon_dagger") },
+    ]);
 
     expect(refs).toMatchObject({ _tag: "Right" });
   });
@@ -430,10 +426,7 @@ describe("Character Sheet battle handoff", () => {
       ],
     } satisfies CharacterBuild;
     expect(
-      characterUnitRefsWithBattleSupportProfiles(
-        malformedMasteryBuild,
-        unitLibrary,
-      ),
+      characterBattleSupportProjection(malformedMasteryBuild, unitLibrary),
     ).toMatchObject({ _tag: "Left" });
     expect(initBuild(malformedMasteryBuild)).toMatchObject({ _tag: "Left" });
     expect(
@@ -457,38 +450,80 @@ describe("Character Sheet battle handoff", () => {
       },
     } satisfies CharacterBuild;
     expect(
-      characterUnitRefsWithBattleSupportProfiles(
-        invalidAncestryBuild,
-        unitLibrary,
-        [],
-      ),
+      characterBattleSupportProjection(invalidAncestryBuild, unitLibrary, []),
     ).toMatchObject({ _tag: "Left" });
     expect(initBuild(invalidAncestryBuild)).toMatchObject({ _tag: "Left" });
 
+    const missingBuildRefIds = [
+      authoredUnitId("synthetic:missing-build-ref"),
+      authoredUnitId("synthetic:missing-build-ref-two"),
+    ] as const;
     const missingBuildRefCatalog: UnitCatalog = {
       getUnit: (id) =>
-        id === authoredUnitId("synthetic:missing-build-ref")
+        missingBuildRefIds.some((missingId) => missingId === id)
           ? Option.none()
           : unitLibrary.getUnit(id),
       listUnits: () => unitLibrary.listUnits(),
       requireUnit: (id) => unitLibrary.requireUnit(id),
     };
-    expect(
-      characterUnitRefsWithBattleSupportProfiles(
+    const missingBuildRefBuild = {
+      ...build,
+      features: [
         {
-          ...build,
-          features: [
-            {
-              kind: "selectedClassChoice",
-              selectedFromUnitId: authoredUnitId("fighter_fighting_style"),
-              unitId: authoredUnitId("synthetic:missing-build-ref"),
-            },
-          ],
+          kind: "selectedClassChoice" as const,
+          selectedFromUnitId: authoredUnitId("fighter_fighting_style"),
+          unitId: authoredUnitId("synthetic:missing-build-ref"),
         },
+        {
+          kind: "selectedClassChoice" as const,
+          selectedFromUnitId: authoredUnitId("fighter_fighting_style"),
+          unitId: authoredUnitId("synthetic:missing-build-ref-two"),
+        },
+      ],
+    };
+    expect(
+      characterBattleSupportProjection(
+        missingBuildRefBuild,
         missingBuildRefCatalog,
         [],
       ),
     ).toMatchObject({ _tag: "Left" });
+    expect(
+      characterBattleResourceInitsFromBuild(
+        missingBuildRefBuild,
+        missingBuildRefCatalog,
+        [],
+      ),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Unknown Character Build Unit for battle initialization: synthetic:missing-build-ref.; Unknown Character Build Unit for battle initialization: synthetic:missing-build-ref-two.",
+      },
+    });
+    const missingRefsAndInvalidWildShapeBuild = {
+      ...missingBuildRefBuild,
+      features: [
+        ...missingBuildRefBuild.features,
+        {
+          kind: "selectedClassChoice" as const,
+          selectedFromUnitId: authoredUnitId("class_fighter"),
+          unitId: authoredUnitId("druid_wild_shape"),
+        },
+      ],
+    };
+    const resourceProjection = characterBattleResourceInitsFromBuild(
+      missingRefsAndInvalidWildShapeBuild,
+      missingBuildRefCatalog,
+      [],
+    );
+    expect(resourceProjection).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Unknown Character Build Unit for battle initialization: synthetic:missing-build-ref.; Unknown Character Build Unit for battle initialization: synthetic:missing-build-ref-two.",
+      },
+    });
 
     const missingMasteryProfileCatalog: UnitCatalog = {
       getUnit: (id) =>
@@ -499,11 +534,9 @@ describe("Character Sheet battle handoff", () => {
       requireUnit: (id) => unitLibrary.requireUnit(id),
     };
     expect(
-      characterUnitRefsWithBattleSupportProfiles(
-        build,
-        missingMasteryProfileCatalog,
-        [{ weaponUnitId: authoredUnitId("weapon_longsword") }],
-      ),
+      characterBattleSupportProjection(build, missingMasteryProfileCatalog, [
+        { weaponUnitId: authoredUnitId("weapon_longsword") },
+      ]),
     ).toMatchObject({ _tag: "Left" });
     expect(
       initBuild(
@@ -2985,8 +3018,8 @@ describe("Character Sheet battle handoff", () => {
   });
 
   test("projects Wild Shape Unit-ref support at Beast Spells levels", () => {
-    const refs = expectRight(
-      characterUnitRefsWithBattleSupportProfiles(
+    const { unitRefs: refs } = expectRight(
+      characterBattleSupportProjection(
         druidWildShapeBuildAtLevel(18),
         unitLibrary,
         undefined,
@@ -3006,8 +3039,8 @@ describe("Character Sheet battle handoff", () => {
   });
 
   test("projects retained Hunter's Prey selected option into semantic battle support", () => {
-    const refs = expectRight(
-      characterUnitRefsWithBattleSupportProfiles(
+    const { unitRefs: refs } = expectRight(
+      characterBattleSupportProjection(
         hunterRangerHordeBreakerBuild(),
         unitLibrary,
         undefined,
@@ -3036,7 +3069,7 @@ describe("Character Sheet battle handoff", () => {
   });
 
   test("rejects Dragonborn Breath Weapon support without selected Draconic Ancestry", () => {
-    const refs = characterUnitRefsWithBattleSupportProfiles(
+    const refs = characterBattleSupportProjection(
       dragonbornFighterBuild({ draconicAncestry: false }),
       unitLibrary,
       undefined,
@@ -3060,8 +3093,8 @@ describe("Character Sheet battle handoff", () => {
   });
 
   test("projects Dragonborn Breath Weapon support from selected Draconic Ancestry", () => {
-    const refs = expectRight(
-      characterUnitRefsWithBattleSupportProfiles(
+    const { unitRefs: refs } = expectRight(
+      characterBattleSupportProjection(
         dragonbornFighterBuild(),
         unitLibrary,
         undefined,
@@ -3217,8 +3250,8 @@ describe("Character Sheet battle handoff", () => {
   });
 
   test("projects Dwarven Resilience Poison Resistance and Poisoned save Advantage support into battle Unit refs", () => {
-    const refs = expectRight(
-      characterUnitRefsWithBattleSupportProfiles(
+    const { unitRefs: refs } = expectRight(
+      characterBattleSupportProjection(
         dwarfFighterBuild(),
         unitLibrary,
         undefined,
@@ -3257,8 +3290,8 @@ describe("Character Sheet battle handoff", () => {
   });
 
   test("projects Halfling Brave Frightened save Advantage support into battle Unit refs", () => {
-    const refs = expectRight(
-      characterUnitRefsWithBattleSupportProfiles(
+    const { unitRefs: refs } = expectRight(
+      characterBattleSupportProjection(
         halflingFighterBuild(),
         unitLibrary,
         undefined,
@@ -6585,6 +6618,72 @@ describe("Character Build battle projection", () => {
     });
   });
 
+  test("rejects multiclass projection when distinct Class records claim the same class identity", () => {
+    const fighter = unitLibrary.requireUnit("class_fighter");
+    if (fighter.kind !== "class") {
+      throw new Error("Expected the SRD Fighter fixture to be a Class.");
+    }
+    const duplicateClassUnitId = classUnitId(
+      authoredUnitId("synthetic:duplicate-fighter-class"),
+    );
+    const duplicateClassIdentity = {
+      ...fighter,
+      id: duplicateClassUnitId,
+      name: "Synthetic Duplicate Fighter Class",
+    } satisfies UnitRecord;
+    const duplicateClassIdentityLibrary: UnitCatalog = {
+      getUnit: (id) =>
+        id === duplicateClassIdentity.id
+          ? Option.some(duplicateClassIdentity)
+          : unitLibrary.getUnit(id),
+      listUnits: () => [...unitLibrary.listUnits(), duplicateClassIdentity],
+      requireUnit: (id) =>
+        id === duplicateClassIdentity.id
+          ? duplicateClassIdentity
+          : unitLibrary.requireUnit(id),
+    };
+    const duplicateClassBuild = {
+      ...build,
+      progression: {
+        startingClass: classUnitId(authoredUnitId("class_fighter")),
+        advancements: [
+          {
+            classUnitId: duplicateClassUnitId,
+            hitPointRule: { tag: "fixedHigherLevelGain" as const },
+          },
+        ],
+      },
+    } satisfies CharacterBuild;
+
+    expect(
+      battleCreatureInitFromCharacterBuild({
+        combatantId: combatantId("duplicate-class-identity"),
+        characterId: characterId("character:duplicate-class-identity"),
+        displayName: "Duplicate Class Identity",
+        build: duplicateClassBuild,
+        initiative: initiativeScore(10),
+        unitLibrary: duplicateClassIdentityLibrary,
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message: "Character class levels duplicate fighter.",
+      },
+    });
+    expect(
+      characterBattleResourceInitsFromBuild(
+        duplicateClassBuild,
+        duplicateClassIdentityLibrary,
+        [],
+      ),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message: "Character class levels duplicate fighter.",
+      },
+    });
+  });
+
   test("does not project sheet-owned charge-pool resources into battle init", () => {
     const init = expectRight(
       battleCreatureInitFromCharacterBuild({
@@ -6728,6 +6827,52 @@ describe("Character Build battle projection", () => {
         message: expect.stringContaining("point-pool expenditure exceeds"),
       },
     });
+
+    const druidMonkBuild = {
+      ...druidWildShapeBuild(),
+      progression: {
+        startingClass: classUnitId(authoredUnitId("class_druid")),
+        advancements: [
+          {
+            classUnitId: classUnitId(authoredUnitId("class_druid")),
+            hitPointRule: { tag: "fixedHigherLevelGain" as const },
+          },
+          {
+            classUnitId: classUnitId(authoredUnitId("class_monk")),
+            hitPointRule: { tag: "fixedHigherLevelGain" as const },
+          },
+          {
+            classUnitId: classUnitId(authoredUnitId("class_monk")),
+            hitPointRule: { tag: "fixedHigherLevelGain" as const },
+          },
+        ],
+      },
+    } satisfies CharacterBuild;
+    const multiplyInvalidResources = characterBattleResourceInitsFromBuild(
+      druidMonkBuild,
+      unitLibrary,
+      [
+        {
+          tag: "useCountResource",
+          unitId: authoredUnitId("druid_wild_shape"),
+          expended: resourceCount(99),
+        },
+        {
+          tag: "useCountResource",
+          unitId: authoredUnitId("monk_monks_focus"),
+          expended: resourceCount(99),
+        },
+      ],
+    );
+    expect(multiplyInvalidResources).toMatchObject({ _tag: "Left" });
+    if (Either.isLeft(multiplyInvalidResources)) {
+      expect(multiplyInvalidResources.left.message).toContain(
+        "Druid Wild Shape expenditure exceeds",
+      );
+      expect(multiplyInvalidResources.left.message).toContain(
+        "use-count expenditure exceeds",
+      );
+    }
 
     const barbarian = {
       ...defenseBuild({ wearingArmor: false }),
@@ -7537,8 +7682,8 @@ describe("Character Build battle projection", () => {
   });
 
   test("projects Tactical Master replacement and replacement mastery refs into battle support", () => {
-    const refs = expectRight(
-      characterUnitRefsWithBattleSupportProfiles(
+    const { unitRefs: refs } = expectRight(
+      characterBattleSupportProjection(
         weaponMasteryLongswordLevel9FighterBuild(),
         unitLibrary,
         undefined,
@@ -8215,6 +8360,36 @@ describe("Character Build battle projection", () => {
         }),
       ),
     ).toBe(true);
+
+    const invalidPactBuild = pactBladeInvocationBuild(
+      authoredUnitId("weapon_longsword"),
+    );
+    const invalidPactAndWildShape = battleCreatureInitFromCharacterBuild({
+      combatantId: combatantId("pact-blade-before-wild-shape"),
+      characterId: characterId("character:pact-blade-before-wild-shape"),
+      displayName: "Invalid Bond and Wild Shape Character",
+      build: {
+        ...invalidPactBuild,
+        features: [
+          ...invalidPactBuild.features,
+          {
+            kind: "selectedClassChoice",
+            selectedFromUnitId: authoredUnitId("class_fighter"),
+            unitId: authoredUnitId("druid_wild_shape"),
+          },
+        ],
+      },
+      initiative: initiativeScore(10),
+      unitLibrary,
+      pactBladeBondedWeaponItemId: arbitraryItemId,
+    });
+    expect(invalidPactAndWildShape).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Pact of the Blade bond must reference a wielded loadout weapon.",
+      },
+    });
 
     const validBuild = pactBladeInvocationBuild(
       authoredUnitId("weapon_longsword"),

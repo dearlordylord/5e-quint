@@ -27,6 +27,10 @@ type CharacterBattleWeaponMasterySelection = NonNullable<
   CharacterBattleCreatureInit["weaponMasteries"]
 >[number];
 
+type AuthoredBattleUnitRef = Omit<BattleUnitRef, "unit"> & {
+  readonly unit: UnitRecord;
+};
+
 const BATTLE_SUPPORTED_MASTERY_UNIT_IDS: Partial<
   Record<WeaponMasteryName, UnitRecord["id"]>
 > = {
@@ -43,13 +47,18 @@ const TACTICAL_MASTER_REPLACEMENT_SUPPORT_PROFILE_MASTERY_UNIT_IDS = [
   authoredUnitId("mastery_slow"),
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
 
-export function characterUnitRefsWithBattleSupportProfiles(
+export type CharacterBattleSupportProjection = {
+  readonly unitRefs: readonly AuthoredBattleUnitRef[];
+  readonly sourceFacts: BattleUnitSupportProfileSourceFacts | undefined;
+};
+
+export function characterBattleSupportProjection(
   build: CharacterBuild,
   unitLibrary: UnitCatalog,
   weaponMasteries?: readonly CharacterBattleWeaponMasterySelection[],
   classLevels?: CharacterBattleCreatureInit["classLevels"],
 ): Either.Either<
-  readonly BattleUnitRef[],
+  CharacterBattleSupportProjection,
   ReadonlyNonEmptyArray<BattleSupportProfileIssue>
 > {
   const selectedWeaponMasteries =
@@ -79,7 +88,7 @@ export function characterUnitRefsWithBattleSupportProfiles(
       ),
   );
   if (Either.isLeft(buildUnitRefs)) {
-    return buildUnitRefs;
+    return Either.left(buildUnitRefs.left);
   }
 
   const replacementMasteryUnitIds = buildUnitRefs.right.some(
@@ -104,15 +113,16 @@ export function characterUnitRefsWithBattleSupportProfiles(
       ),
   );
   if (Either.isLeft(battleMasteryUnitRefs)) {
-    return battleMasteryUnitRefs;
+    return Either.left(battleMasteryUnitRefs.left);
   }
 
-  return Either.right(
-    uniqueBattleUnitRefs([
+  return Either.right({
+    unitRefs: uniqueBattleUnitRefs([
       ...buildUnitRefs.right,
       ...battleMasteryUnitRefs.right,
     ]),
-  );
+    sourceFacts: sourceFacts.right,
+  });
 }
 
 export type BattleSupportProfileIssue = {
@@ -131,7 +141,7 @@ function withBattleSupportProfiles(
   unitLibrary: UnitCatalog,
   classLevels: CharacterBattleCreatureInit["classLevels"] | undefined,
   sourceFacts: BattleUnitSupportProfileSourceFacts | undefined,
-): Either.Either<BattleUnitRef, BattleSupportProfileIssue> {
+): Either.Either<AuthoredBattleUnitRef, BattleSupportProfileIssue> {
   const unitOption = unitLibrary.getUnit(unitRef.unitId);
   if (Option.isNone(unitOption)) {
     return battleSupportProfileIssue(
@@ -146,7 +156,10 @@ function withBattleSupportProfiles(
   });
   return Either.isLeft(battleUnitRef)
     ? battleSupportProfileIssue(battleUnitRef.left.message)
-    : Either.right(battleUnitRef.right);
+    : Either.right({
+        ...battleUnitRef.right,
+        unit: unitOption.value,
+      });
 }
 
 export function battleSupportProfileSourceFactsForBuild(
@@ -265,9 +278,9 @@ function battleSupportedMasteryUnitIdsForSelectedWeapons(
 }
 
 function uniqueBattleUnitRefs(
-  refs: readonly BattleUnitRef[],
-): readonly BattleUnitRef[] {
-  return refs.reduce<BattleUnitRef[]>((uniqueRefs, ref) => {
+  refs: readonly AuthoredBattleUnitRef[],
+): readonly AuthoredBattleUnitRef[] {
+  return refs.reduce<AuthoredBattleUnitRef[]>((uniqueRefs, ref) => {
     const existingIndex = uniqueRefs.findIndex(
       (candidate) => candidate.unit.id === ref.unit.id,
     );

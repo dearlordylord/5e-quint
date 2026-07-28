@@ -61,8 +61,8 @@ import {
 import type { BattleToolResult } from "./battle-tools.ts";
 import type { CharacterToolResult } from "./character-tools.ts";
 import {
+  characterBattleSupportProjection,
   characterBattleRuntimeIssueMessage,
-  characterUnitRefsWithBattleSupportProfiles,
 } from "@dnd/character-battle-runtime";
 import {
   availableCharacterSession,
@@ -892,7 +892,7 @@ describe("MCP server route", () => {
   test("reports every missing Character Build Unit ref at the battle support boundary", () => {
     const root = createMcpCompositionRoot();
     const build = fighterCharacterBuild(root.unitLibrary);
-    const result = characterUnitRefsWithBattleSupportProfiles(
+    const result = characterBattleSupportProjection(
       {
         ...build,
         features: [
