@@ -384,6 +384,45 @@ function finalizedSorcererMetamagicBuild(draftId: string): CharacterBuild {
   return result.build;
 }
 
+function finalizedPaladinFightingStyleCantripBuild(
+  draftId: string,
+): CharacterBuild {
+  const result = finalizeCharacterDraft({
+    draft: completeSupportedProgressionDraft({
+      draftId,
+      progression: testProgression(authoredUnitId("class_paladin"), 2),
+      preferredOptionIdsBySource: {
+        [testUnitChoiceSourceKey(
+          "paladin_fighting_style",
+          PALADIN_FIGHTING_STYLE_CHOICE_KEY,
+        )]: [creationChoiceOptionId("blessed_warrior")],
+        [testUnitChoiceSourceKey(
+          "paladin_fighting_style",
+          CLASS_CANTRIP_CHOICE_KEY,
+        )]: [
+          creationChoiceOptionId("guidance"),
+          creationChoiceOptionId("sacred_flame"),
+        ],
+        [testUnitChoiceSourceKey(
+          "class_paladin",
+          CLASS_PREPARED_SPELL_CHOICE_KEY,
+        )]: [
+          creationChoiceOptionId("heroism"),
+          creationChoiceOptionId("searing_smite"),
+          creationChoiceOptionId("bless"),
+        ],
+      },
+    }),
+    unitLibrary,
+  });
+  if (result.tag !== "ready") {
+    throw new Error(
+      `Expected Paladin Fighting Style finalization to be ready, received ${result.tag}.`,
+    );
+  }
+  return result.build;
+}
+
 function warlockSpellcastingSourceWithKnownCantrips(
   cantripIds: readonly UnitRecord["id"][],
 ): NonNullable<CharacterBuild["spellcasting"]>["sources"][number] {
@@ -6392,6 +6431,189 @@ describe("character creation finalization", () => {
     ]);
   });
 
+  test("rejects incoherent Fighter Weapon Mastery advancement selections", () => {
+    const fighterClassUnitId = testClassUnitId(authoredUnitId("class_fighter"));
+    const build = finalizedCompleteManifestBuild();
+    const fixedHigherLevelGain = { tag: "fixedHigherLevelGain" } as const;
+    const selectedWeaponUnitIds = [
+      authoredUnitId("weapon_longsword"),
+      authoredUnitId("weapon_spear"),
+      authoredUnitId("weapon_flail"),
+    ] as const;
+
+    const mismatchedFeatureGain = expectRight(
+      weaponMasteryLevelGain({
+        unitLibrary,
+        classUnitId: fighterClassUnitId,
+        hitPointRule: fixedHigherLevelGain,
+        featureUnitId: authoredUnitId("barbarian_weapon_mastery"),
+        selectedWeaponUnitIds,
+      }),
+    );
+    expect(
+      advanceCharacterBuildClassLevel({
+        build,
+        unitLibrary,
+        levelGain: mismatchedFeatureGain,
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        code: "weaponMasteryFeatureClassMismatch",
+        classUnitId: "class_fighter",
+        featureUnitId: "barbarian_weapon_mastery",
+      },
+    });
+
+    const validFeatureUnitId = authoredUnitId("fighter_weapon_mastery");
+    const missingCurrentSelectionBuild = {
+      ...build,
+      features: build.features.filter(
+        (feature) =>
+          feature.kind !== "selectedClassChoice" ||
+          feature.unitId !== "weapon_flail" ||
+          feature.selectedFromUnitId !== validFeatureUnitId,
+      ),
+    };
+    const validLevelGain = expectRight(
+      weaponMasteryLevelGain({
+        unitLibrary,
+        classUnitId: fighterClassUnitId,
+        hitPointRule: fixedHigherLevelGain,
+        featureUnitId: validFeatureUnitId,
+        selectedWeaponUnitIds,
+      }),
+    );
+    expect(
+      advanceCharacterBuildClassLevel({
+        build: missingCurrentSelectionBuild,
+        unitLibrary,
+        levelGain: validLevelGain,
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        code: "invalidWeaponMasterySelectionCount",
+        classLevel: 1,
+        expectedCount: 3,
+        actualCount: 2,
+      },
+    });
+
+    const duplicateCurrentSelectionBuild = {
+      ...build,
+      features: build.features.map((feature) =>
+        feature.kind === "selectedClassChoice" &&
+        feature.unitId === "weapon_flail" &&
+        feature.selectedFromUnitId === validFeatureUnitId
+          ? { ...feature, unitId: authoredUnitId("weapon_longsword") }
+          : feature,
+      ),
+    };
+    for (const levelGain of [
+      validLevelGain,
+      {
+        tag: "classLevelGain",
+        classUnitId: fighterClassUnitId,
+        hitPointRule: fixedHigherLevelGain,
+      },
+    ] as const satisfies ReadonlyArray<CharacterBuildClassLevelGain>) {
+      expect(
+        advanceCharacterBuildClassLevel({
+          build: duplicateCurrentSelectionBuild,
+          unitLibrary,
+          levelGain,
+        }),
+      ).toMatchObject({
+        _tag: "Left",
+        left: {
+          code: "duplicateWeaponMasterySelection",
+          featureUnitId: "fighter_weapon_mastery",
+          weaponUnitId: "weapon_longsword",
+        },
+      });
+    }
+
+    const tooFewSelectionsGain = expectRight(
+      weaponMasteryLevelGain({
+        unitLibrary,
+        classUnitId: fighterClassUnitId,
+        hitPointRule: fixedHigherLevelGain,
+        featureUnitId: validFeatureUnitId,
+        selectedWeaponUnitIds: selectedWeaponUnitIds.slice(0, 2),
+      }),
+    );
+    expect(
+      advanceCharacterBuildClassLevel({
+        build,
+        unitLibrary,
+        levelGain: tooFewSelectionsGain,
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        code: "invalidWeaponMasterySelectionCount",
+        classLevel: 2,
+        expectedCount: 3,
+        actualCount: 2,
+      },
+    });
+
+    const duplicateSelectionGain = expectRight(
+      weaponMasteryLevelGain({
+        unitLibrary,
+        classUnitId: fighterClassUnitId,
+        hitPointRule: fixedHigherLevelGain,
+        featureUnitId: validFeatureUnitId,
+        selectedWeaponUnitIds: [
+          authoredUnitId("weapon_longsword"),
+          authoredUnitId("weapon_longsword"),
+          authoredUnitId("weapon_flail"),
+        ],
+      }),
+    );
+    expect(
+      advanceCharacterBuildClassLevel({
+        build,
+        unitLibrary,
+        levelGain: duplicateSelectionGain,
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        code: "duplicateWeaponMasterySelection",
+        weaponUnitId: "weapon_longsword",
+      },
+    });
+
+    const replacementSelectionGain = expectRight(
+      weaponMasteryLevelGain({
+        unitLibrary,
+        classUnitId: fighterClassUnitId,
+        hitPointRule: fixedHigherLevelGain,
+        featureUnitId: validFeatureUnitId,
+        selectedWeaponUnitIds: [
+          authoredUnitId("weapon_shortsword"),
+          authoredUnitId("weapon_spear"),
+          authoredUnitId("weapon_flail"),
+        ],
+      }),
+    );
+    expect(
+      advanceCharacterBuildClassLevel({
+        build,
+        unitLibrary,
+        levelGain: replacementSelectionGain,
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        code: "missingExistingWeaponMasterySelection",
+        weaponUnitId: "weapon_longsword",
+      },
+    });
+  });
+
   test("combines Fighter level-4 Weapon Mastery growth with Fighting Style replacement", () => {
     const fighterClassUnitId = expectRight(
       classUnitIdFromUnitId({
@@ -6623,34 +6845,9 @@ describe("character creation finalization", () => {
   });
 
   test("advances a Paladin level and replaces one Fighting Style cantrip", () => {
-    const draft = completeSupportedProgressionDraft({
-      draftId: "draft:paladin-blessed-warrior-replacement",
-      progression: testProgression(authoredUnitId("class_paladin"), 2),
-      preferredOptionIdsBySource: {
-        [testUnitChoiceSourceKey(
-          "paladin_fighting_style",
-          PALADIN_FIGHTING_STYLE_CHOICE_KEY,
-        )]: [creationChoiceOptionId("blessed_warrior")],
-        [testUnitChoiceSourceKey(
-          "paladin_fighting_style",
-          CLASS_CANTRIP_CHOICE_KEY,
-        )]: [
-          creationChoiceOptionId("guidance"),
-          creationChoiceOptionId("sacred_flame"),
-        ],
-        [testUnitChoiceSourceKey(
-          "class_paladin",
-          CLASS_PREPARED_SPELL_CHOICE_KEY,
-        )]: [
-          creationChoiceOptionId("heroism"),
-          creationChoiceOptionId("searing_smite"),
-          creationChoiceOptionId("bless"),
-        ],
-      },
-    });
-    const finalized = finalizeCharacterDraft({ draft, unitLibrary });
-    expect(finalized.tag).toBe("ready");
-    if (finalized.tag !== "ready") return;
+    const build = finalizedPaladinFightingStyleCantripBuild(
+      "draft:paladin-blessed-warrior-replacement",
+    );
     const classUnitId = testClassUnitId(authoredUnitId("class_paladin"));
     const levelGain = expectRight(
       classLevelGainWithFightingStyleCantripReplacement({
@@ -6667,7 +6864,7 @@ describe("character creation finalization", () => {
 
     const result = expectRight(
       advanceCharacterBuildClassLevel({
-        build: finalized.build,
+        build,
         unitLibrary,
         levelGain,
       }),
@@ -6685,6 +6882,143 @@ describe("character creation finalization", () => {
     expect(result.spellcasting?.slotPools.spellcasting?.slots).toEqual([
       { count: 3, spellLevel: 1 },
     ]);
+  });
+
+  test("rejects incoherent Fighting Style cantrip replacement state", () => {
+    const build = finalizedPaladinFightingStyleCantripBuild(
+      "draft:paladin-fighting-style-cantrip-errors",
+    );
+    const classUnitId = testClassUnitId(authoredUnitId("class_paladin"));
+    const levelGain = (
+      replaceCantripId: UnitRecord["id"],
+      selectedCantripId: UnitRecord["id"],
+    ) =>
+      expectRight(
+        classLevelGainWithFightingStyleCantripReplacement({
+          unitLibrary,
+          classUnitId,
+          hitPointRule: { tag: "fixedHigherLevelGain" },
+          replaceCantripId,
+          selectedCantripId,
+          preparedSpellcasting: {
+            gainedPreparedSpells: [authoredUnitId("command")],
+          },
+        }),
+      );
+    const buildWithCantrips = (
+      cantrips: readonly UnitRecord["id"][],
+    ): CharacterBuild => {
+      const spellcasting = build.spellcasting;
+      if (spellcasting === undefined) {
+        throw new Error(
+          "Expected the Paladin Fighting Style fixture to retain spellcasting.",
+        );
+      }
+      const withCantrips = (
+        source: (typeof spellcasting.sources)[number],
+      ): (typeof spellcasting.sources)[number] =>
+        source.sourceUnitId === classUnitId ? { ...source, cantrips } : source;
+      const [firstSource, ...remainingSources] = spellcasting.sources;
+      return {
+        ...build,
+        spellcasting: {
+          ...spellcasting,
+          sources: [
+            withCantrips(firstSource),
+            ...remainingSources.map(withCantrips),
+          ],
+        },
+      };
+    };
+
+    expect(
+      advanceCharacterBuildClassLevel({
+        build: buildWithCantrips([authoredUnitId("guidance")]),
+        unitLibrary,
+        levelGain: levelGain(
+          authoredUnitId("guidance"),
+          authoredUnitId("thaumaturgy"),
+        ),
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        code: "invalidFightingStyleCantripSelectionCount",
+        expectedCount: 2,
+        actualCount: 1,
+      },
+    });
+
+    expect(
+      advanceCharacterBuildClassLevel({
+        build: buildWithCantrips([
+          authoredUnitId("guidance"),
+          authoredUnitId("fire_bolt"),
+        ]),
+        unitLibrary,
+        levelGain: levelGain(
+          authoredUnitId("guidance"),
+          authoredUnitId("thaumaturgy"),
+        ),
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        code: "invalidFightingStyleCantripReplacement",
+        cantripId: "fire_bolt",
+      },
+    });
+
+    expect(
+      advanceCharacterBuildClassLevel({
+        build,
+        unitLibrary,
+        levelGain: levelGain(
+          authoredUnitId("guidance"),
+          authoredUnitId("guidance"),
+        ),
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        code: "sameFightingStyleCantripReplacement",
+        cantripId: "guidance",
+      },
+    });
+
+    expect(
+      advanceCharacterBuildClassLevel({
+        build,
+        unitLibrary,
+        levelGain: levelGain(
+          authoredUnitId("resistance"),
+          authoredUnitId("thaumaturgy"),
+        ),
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        code: "missingFightingStyleCantripReplacement",
+        cantripId: "resistance",
+      },
+    });
+
+    expect(
+      advanceCharacterBuildClassLevel({
+        build,
+        unitLibrary,
+        levelGain: levelGain(
+          authoredUnitId("guidance"),
+          authoredUnitId("sacred_flame"),
+        ),
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        code: "duplicateFightingStyleCantripSelection",
+        cantripId: "sacred_flame",
+      },
+    });
   });
 
   test("advances a Ranger level and replaces one Fighting Style cantrip", () => {
@@ -7882,6 +8216,285 @@ describe("character creation finalization", () => {
     ).toMatchObject({
       _tag: "Left",
       left: { code: "invalidWarlockPactMagicPreparedSpellGainCount" },
+    });
+  });
+
+  test("rejects incoherent Warlock Pact Magic advancement state", () => {
+    const build = finalizedWarlockBuild(
+      "draft:warlock-pact-magic-advancement-errors",
+    );
+    const warlockClassUnitId = testClassUnitId(authoredUnitId("class_warlock"));
+    const levelGain = (
+      pactMagic: CharacterBuildWarlockPactMagicLevelGain,
+    ): CharacterBuildClassLevelGain =>
+      expectRight(
+        warlockLevelGain({
+          unitLibrary,
+          classUnitId: warlockClassUnitId,
+          hitPointRule: { tag: "fixedHigherLevelGain" },
+          pactMagic,
+          gainedInvocations: [
+            nonRepeatableEldritchInvocation("pact_of_the_blade"),
+            nonRepeatableEldritchInvocation("devils_sight"),
+          ],
+        }),
+      );
+    const buildWithPactMagicState = (input: {
+      readonly cantrips?: readonly UnitRecord["id"][];
+      readonly preparedSpells?: readonly UnitRecord["id"][];
+      readonly pactMagicSlotPool?: NonNullable<
+        NonNullable<CharacterBuild["spellcasting"]>["slotPools"]["pactMagic"]
+      >;
+    }): CharacterBuild => {
+      const spellcasting = build.spellcasting;
+      if (spellcasting === undefined) {
+        throw new Error(
+          "Expected the finalized Warlock fixture to retain Pact Magic.",
+        );
+      }
+      const withState = (
+        source: (typeof spellcasting.sources)[number],
+      ): (typeof spellcasting.sources)[number] =>
+        source.sourceUnitId === warlockClassUnitId
+          ? {
+              ...source,
+              ...(input.cantrips === undefined
+                ? {}
+                : { cantrips: input.cantrips }),
+              ...(input.preparedSpells === undefined
+                ? {}
+                : { preparedSpells: input.preparedSpells }),
+            }
+          : source;
+      const [firstSource, ...remainingSources] = spellcasting.sources;
+      return {
+        ...build,
+        spellcasting: {
+          ...spellcasting,
+          sources: [withState(firstSource), ...remainingSources.map(withState)],
+          slotPools: {
+            ...spellcasting.slotPools,
+            ...(input.pactMagicSlotPool === undefined
+              ? {}
+              : { pactMagic: input.pactMagicSlotPool }),
+          },
+        },
+      };
+    };
+    const gainedPreparedSpell = [authoredUnitId("hex")] as const;
+
+    expect(
+      advanceCharacterBuildClassLevel({
+        build: buildWithPactMagicState({
+          cantrips: [authoredUnitId("chill_touch")],
+        }),
+        unitLibrary,
+        levelGain: levelGain(
+          warlockPactMagicLevelGain({
+            gainedPreparedSpells: gainedPreparedSpell,
+          }),
+        ),
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        code: "invalidWarlockPactMagicCantripSelectionCount",
+        expectedCount: 2,
+        actualCount: 1,
+      },
+    });
+
+    expect(
+      advanceCharacterBuildClassLevel({
+        build,
+        unitLibrary,
+        levelGain: levelGain(
+          warlockPactMagicLevelGain({
+            gainedCantrips: [authoredUnitId("prestidigitation")],
+            gainedPreparedSpells: gainedPreparedSpell,
+          }),
+        ),
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        code: "invalidWarlockPactMagicCantripGainCount",
+        expectedGains: 0,
+        actualGains: 1,
+      },
+    });
+
+    for (const cantripCase of [
+      {
+        pactMagic: warlockPactMagicLevelGain({
+          cantripReplacement: {
+            replaceCantripId: authoredUnitId("chill_touch"),
+            selectedCantripId: authoredUnitId("chill_touch"),
+          },
+          gainedPreparedSpells: gainedPreparedSpell,
+        }),
+        issue: {
+          code: "sameWarlockPactMagicCantripReplacement",
+          cantripId: "chill_touch",
+        },
+      },
+      {
+        pactMagic: warlockPactMagicLevelGain({
+          cantripReplacement: {
+            replaceCantripId: authoredUnitId("prestidigitation"),
+            selectedCantripId: authoredUnitId("true_strike"),
+          },
+          gainedPreparedSpells: gainedPreparedSpell,
+        }),
+        issue: {
+          code: "missingWarlockPactMagicCantripReplacement",
+          cantripId: "prestidigitation",
+        },
+      },
+      {
+        pactMagic: warlockPactMagicLevelGain({
+          cantripReplacement: {
+            replaceCantripId: authoredUnitId("chill_touch"),
+            selectedCantripId: authoredUnitId("fire_bolt"),
+          },
+          gainedPreparedSpells: gainedPreparedSpell,
+        }),
+        issue: {
+          code: "invalidWarlockPactMagicCantripChoice",
+          cantripId: "fire_bolt",
+        },
+      },
+      {
+        pactMagic: warlockPactMagicLevelGain({
+          cantripReplacement: {
+            replaceCantripId: authoredUnitId("chill_touch"),
+            selectedCantripId: authoredUnitId("eldritch_blast"),
+          },
+          gainedPreparedSpells: gainedPreparedSpell,
+        }),
+        issue: {
+          code: "duplicateWarlockPactMagicCantrip",
+          cantripId: "eldritch_blast",
+        },
+      },
+    ] as const) {
+      expect(
+        advanceCharacterBuildClassLevel({
+          build,
+          unitLibrary,
+          levelGain: levelGain(cantripCase.pactMagic),
+        }),
+      ).toMatchObject({
+        _tag: "Left",
+        left: cantripCase.issue,
+      });
+    }
+
+    expect(
+      advanceCharacterBuildClassLevel({
+        build: buildWithPactMagicState({
+          preparedSpells: [authoredUnitId("charm_person")],
+        }),
+        unitLibrary,
+        levelGain: levelGain(
+          warlockPactMagicLevelGain({
+            gainedPreparedSpells: gainedPreparedSpell,
+          }),
+        ),
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        code: "invalidWarlockPactMagicPreparedSpellSelectionCount",
+        expectedCount: 2,
+        actualCount: 1,
+      },
+    });
+
+    for (const preparedSpellCase of [
+      {
+        pactMagic: warlockPactMagicLevelGain({
+          gainedPreparedSpells: gainedPreparedSpell,
+          preparedSpellReplacement: {
+            replaceSpellId: authoredUnitId("charm_person"),
+            selectedSpellId: authoredUnitId("charm_person"),
+          },
+        }),
+        issue: {
+          code: "sameWarlockPactMagicPreparedSpellReplacement",
+          spellId: "charm_person",
+        },
+      },
+      {
+        pactMagic: warlockPactMagicLevelGain({
+          gainedPreparedSpells: gainedPreparedSpell,
+          preparedSpellReplacement: {
+            replaceSpellId: authoredUnitId("bane"),
+            selectedSpellId: authoredUnitId("protection_from_evil_and_good"),
+          },
+        }),
+        issue: {
+          code: "missingWarlockPactMagicPreparedSpellReplacement",
+          spellId: "bane",
+        },
+      },
+      {
+        pactMagic: warlockPactMagicLevelGain({
+          gainedPreparedSpells: [authoredUnitId("fireball")],
+        }),
+        issue: {
+          code: "invalidWarlockPactMagicPreparedSpellChoice",
+          spellId: "fireball",
+        },
+      },
+      {
+        pactMagic: warlockPactMagicLevelGain({
+          gainedPreparedSpells: [authoredUnitId("charm_person")],
+        }),
+        issue: {
+          code: "duplicateWarlockPactMagicPreparedSpell",
+          spellId: "charm_person",
+        },
+      },
+    ] as const) {
+      expect(
+        advanceCharacterBuildClassLevel({
+          build,
+          unitLibrary,
+          levelGain: levelGain(preparedSpellCase.pactMagic),
+        }),
+      ).toMatchObject({
+        _tag: "Left",
+        left: preparedSpellCase.issue,
+      });
+    }
+
+    expect(
+      advanceCharacterBuildClassLevel({
+        build: buildWithPactMagicState({
+          pactMagicSlotPool: {
+            kind: "pactMagic",
+            slotLevel: 2,
+            count: 1,
+          },
+        }),
+        unitLibrary,
+        levelGain: levelGain(
+          warlockPactMagicLevelGain({
+            gainedPreparedSpells: gainedPreparedSpell,
+          }),
+        ),
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        code: "invalidWarlockPactMagicSlotProjection",
+        warlockLevel: 1,
+        expectedCount: 1,
+        actualCount: 1,
+        expectedSlotLevel: 1,
+        actualSlotLevel: 2,
+      },
     });
   });
 

@@ -436,14 +436,6 @@ export type CharacterBuildAdvancementIssue =
       readonly message: string;
     }
   | {
-      readonly code: "invalidWeaponMasteryGainCount";
-      readonly classLevel: number;
-      readonly featureUnitId: UnitRecord["id"];
-      readonly expectedGains: number;
-      readonly actualGains: number;
-      readonly message: string;
-    }
-  | {
       readonly code: "duplicateWeaponMasterySelection";
       readonly featureUnitId: UnitRecord["id"];
       readonly weaponUnitId: UnitRecord["id"];
@@ -1901,20 +1893,27 @@ function weaponMasterySelectionsCanRemainUnchanged(input: {
   }
   const { currentProfile, nextProfile } = levelProfiles;
 
-  const selectedCount = selectedWeaponMasteryFeaturesForFeature(
+  const selectedWeaponUnitIds = selectedWeaponMasteryFeaturesForFeature(
     input.build.features,
     feature.right.id,
-  ).length;
-  if (selectedCount !== currentProfile.choiceCount) {
+  ).map((selectedFeature) => selectedFeature.unitId);
+  if (selectedWeaponUnitIds.length !== currentProfile.choiceCount) {
     return Either.left({
       code: "invalidWeaponMasterySelectionCount",
       classLevel: currentClassLevel,
       featureUnitId: feature.right.id,
       expectedCount: currentProfile.choiceCount,
-      actualCount: selectedCount,
+      actualCount: selectedWeaponUnitIds.length,
       message:
         "Cannot advance from a build whose current Weapon Mastery choices do not match its class level.",
     });
+  }
+  const duplicateSelection = duplicateWeaponMasterySelectionIssue(
+    feature.right.id,
+    selectedWeaponUnitIds,
+  );
+  if (duplicateSelection !== undefined) {
+    return Either.left(duplicateSelection);
   }
 
   return currentProfile.choiceCount === nextProfile.choiceCount
@@ -1924,7 +1923,7 @@ function weaponMasterySelectionsCanRemainUnchanged(input: {
         classLevel: currentClassLevel + 1,
         featureUnitId: feature.right.id,
         expectedCount: nextProfile.choiceCount,
-        actualCount: selectedCount,
+        actualCount: selectedWeaponUnitIds.length,
         message:
           "A plain class level gain would leave the build with the wrong number of Weapon Mastery choices.",
       });
@@ -2030,6 +2029,13 @@ function updateWeaponMasterySelectedFeatures(input: {
         "Cannot advance from a build whose current Weapon Mastery choices do not match its class level.",
     });
   }
+  const duplicateCurrentSelection = duplicateWeaponMasterySelectionIssue(
+    feature.right.id,
+    currentWeaponUnitIds,
+  );
+  if (duplicateCurrentSelection !== undefined) {
+    return Either.left(duplicateCurrentSelection);
+  }
 
   const selectedWeaponUnitIds =
     input.levelGain.weaponMastery.selectedWeaponUnitIds;
@@ -2045,18 +2051,14 @@ function updateWeaponMasterySelectedFeatures(input: {
     });
   }
 
-  const selectedSet = new Set<UnitRecord["id"]>();
-  for (const weaponUnitId of selectedWeaponUnitIds) {
-    if (selectedSet.has(weaponUnitId)) {
-      return Either.left({
-        code: "duplicateWeaponMasterySelection",
-        featureUnitId: feature.right.id,
-        weaponUnitId,
-        message: "Weapon Mastery choices must not duplicate weapon Units.",
-      });
-    }
-    selectedSet.add(weaponUnitId);
+  const duplicateSelectedWeapon = duplicateWeaponMasterySelectionIssue(
+    feature.right.id,
+    selectedWeaponUnitIds,
+  );
+  if (duplicateSelectedWeapon !== undefined) {
+    return Either.left(duplicateSelectedWeapon);
   }
+  const selectedSet = new Set<UnitRecord["id"]>(selectedWeaponUnitIds);
 
   const eligibleWeaponUnitIds = new Set(
     nextProfile.eligibleWeapons.map((weapon) => weapon.id),
@@ -2073,7 +2075,6 @@ function updateWeaponMasterySelectedFeatures(input: {
     }
   }
 
-  const currentSet = new Set(currentWeaponUnitIds);
   for (const weaponUnitId of currentWeaponUnitIds) {
     if (!selectedSet.has(weaponUnitId)) {
       return Either.left({
@@ -2084,22 +2085,6 @@ function updateWeaponMasterySelectedFeatures(input: {
           "Weapon Mastery level gain can add the new table choices but cannot replace existing mastered weapons.",
       });
     }
-  }
-
-  const actualGains = selectedWeaponUnitIds.filter(
-    (weaponUnitId) => !currentSet.has(weaponUnitId),
-  ).length;
-  const expectedGains = nextProfile.choiceCount - currentProfile.choiceCount;
-  if (actualGains !== expectedGains) {
-    return Either.left({
-      code: "invalidWeaponMasteryGainCount",
-      classLevel: currentClassLevel + 1,
-      featureUnitId: feature.right.id,
-      expectedGains,
-      actualGains,
-      message:
-        "Weapon Mastery level gain must add exactly the new table choices.",
-    });
   }
 
   const weaponMasteryFeatures =
@@ -2223,6 +2208,26 @@ function selectedWeaponMasteryFeaturesForFeature(
       feature.kind === "selectedClassChoice" &&
       feature.selectedFromUnitId === featureUnitId,
   );
+}
+
+function duplicateWeaponMasterySelectionIssue(
+  featureUnitId: UnitRecord["id"],
+  weaponUnitIds: readonly UnitRecord["id"][],
+):
+  | Extract<
+      CharacterBuildAdvancementIssue,
+      { readonly code: "duplicateWeaponMasterySelection" }
+    >
+  | undefined {
+  const duplicateWeaponUnitId = duplicateValue(weaponUnitIds);
+  return duplicateWeaponUnitId === undefined
+    ? undefined
+    : {
+        code: "duplicateWeaponMasterySelection",
+        featureUnitId,
+        weaponUnitId: duplicateWeaponUnitId,
+        message: "Weapon Mastery choices must not duplicate weapon Units.",
+      };
 }
 
 function replaceFightingStyleSelectedFeature(input: {
