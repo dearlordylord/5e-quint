@@ -12,7 +12,7 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 
 | Metric                                  | Value |
 | --------------------------------------- | ----: |
-| Level 1-4 cumulative frontier units     |    64 |
+| Level 1-4 cumulative frontier units     |    66 |
 | Level 1-5 mined rows                    |   791 |
 | Level 1-4 row-grained inventory rows    |   635 |
 | Level 5 completion rows                 |   156 |
@@ -139,10 +139,10 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 
 | Report               | Bands                                                                           | Strict denominator | Non-supported frontier | Strict target closure | Product readiness | Source                                                 |
 | -------------------- | ------------------------------------------------------------------------------- | -----------------: | ---------------------: | --------------------- | ----------------- | ------------------------------------------------------ |
-| Character Level 1    | level-1, spell-level-0, spell-level-1                                           |                 94 |                     14 | 94/94 (100%)          | 367/367 (100%)    | plans/unit-profile-coverage/level1-full-support.json   |
-| Character Levels 1-2 | level-1, level-2, spell-level-0, spell-level-1                                  |                115 |                     19 | 115/115 (100%)        | 400/400 (100%)    | plans/unit-profile-coverage/level1-2-full-support.json |
-| Character Levels 1-3 | level-1, level-2, level-3, spell-level-0, spell-level-1, spell-level-2          |                198 |                     52 | 198/198 (100%)        | 610/610 (100%)    | plans/unit-profile-coverage/level1-3-full-support.json |
-| Character Levels 1-4 | level-1, level-2, level-3, level-4, spell-level-0, spell-level-1, spell-level-2 |                211 |                     64 | 211/211 (100%)        | 635/635 (100%)    | plans/unit-profile-coverage/level1-4-full-support.json |
+| Character Level 1    | level-1, spell-level-0, spell-level-1                                           |                 96 |                     16 | 96/96 (100%)          | 367/367 (100%)    | plans/unit-profile-coverage/level1-full-support.json   |
+| Character Levels 1-2 | level-1, level-2, spell-level-0, spell-level-1                                  |                117 |                     21 | 117/117 (100%)        | 400/400 (100%)    | plans/unit-profile-coverage/level1-2-full-support.json |
+| Character Levels 1-3 | level-1, level-2, level-3, spell-level-0, spell-level-1, spell-level-2          |                200 |                     54 | 200/200 (100%)        | 610/610 (100%)    | plans/unit-profile-coverage/level1-3-full-support.json |
+| Character Levels 1-4 | level-1, level-2, level-3, level-4, spell-level-0, spell-level-1, spell-level-2 |                213 |                     66 | 213/213 (100%)        | 635/635 (100%)    | plans/unit-profile-coverage/level1-4-full-support.json |
 
 ## Existing SDK Seed Scenario Rows
 
