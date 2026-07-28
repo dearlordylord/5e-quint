@@ -5795,28 +5795,25 @@ const MinorMagicEffectMenuSchema = strictStruct({
   }),
 });
 
-export const UtilityMechanicsSchema = Schema.Union(
-  Schema.extend(
-    SpellMechanicsHeaderSchema,
-    strictStruct({
-      family: Schema.Literal("utility"),
-      utilityKind: Schema.Literal("object_repair"),
-      target: strictStruct({
-        kind: Schema.Literal("object"),
-        count: Schema.Literal(1),
-      }),
-      effect: ObjectRepairUtilityEffectSchema,
+export const ObjectRepairMechanicsSchema = Schema.extend(
+  SpellMechanicsHeaderSchema,
+  strictStruct({
+    family: Schema.Literal("object_repair"),
+    target: strictStruct({
+      kind: Schema.Literal("object"),
+      count: Schema.Literal(1),
     }),
-  ),
-  Schema.extend(
-    SpellMechanicsHeaderSchema,
-    strictStruct({
-      family: Schema.Literal("utility"),
-      utilityKind: Schema.Literal("minor_magic_effect_menu"),
-      effects: MinorMagicEffectMenuSchema,
-      nonInstantaneousEffectLimit: Schema.Literal(3),
-    }),
-  ),
+    effect: ObjectRepairUtilityEffectSchema,
+  }),
+);
+
+export const MinorMagicEffectMenuMechanicsSchema = Schema.extend(
+  SpellMechanicsHeaderSchema,
+  strictStruct({
+    family: Schema.Literal("minor_magic_effect_menu"),
+    effects: MinorMagicEffectMenuSchema,
+    nonInstantaneousEffectLimit: Schema.Literal(3),
+  }),
 );
 
 export const SpellMechanicsSchema = Schema.Union(
@@ -5832,7 +5829,8 @@ export const SpellMechanicsSchema = Schema.Union(
   SpawnedCreatureMechanicsSchema,
   ReanimatedCreatureMechanicsSchema,
   TemplatedMultiSpawnMechanicsSchema,
-  UtilityMechanicsSchema,
+  ObjectRepairMechanicsSchema,
+  MinorMagicEffectMenuMechanicsSchema,
 );
 
 export const SpellRecordSchema = Schema.Struct({

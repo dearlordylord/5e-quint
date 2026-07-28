@@ -1,9 +1,11 @@
 const fs = require("node:fs");
 const path = require("node:path");
+const { isDeepStrictEqual } = require("node:util");
 require("tsx/cjs");
 const { Either, Schema } = require("effect");
 const { DAMAGE_TYPES } = require("../packages/shared/src/types.ts");
 const {
+  PublishedSrdSurfaceSchema,
   StatBlockRecordSchema,
   UnitRecordSchema,
 } = require("../packages/surface/src/surface/schema.ts");
@@ -2599,12 +2601,12 @@ function recordIdentityKey(record) {
   return `${family}:${record.id}`;
 }
 
-function publishedSurfaceMembership(workspaceRoot, records, publication) {
-  const issues = [];
-  let value = publication;
-  if (value === undefined) {
-    try {
-      value = JSON.parse(
+function loadPublishedSurface(workspaceRoot, publication) {
+  if (publication !== undefined) return { tag: "loaded", value: publication };
+  try {
+    return {
+      tag: "loaded",
+      value: JSON.parse(
         fs.readFileSync(
           path.join(
             workspaceRoot,
@@ -2612,51 +2614,57 @@ function publishedSurfaceMembership(workspaceRoot, records, publication) {
           ),
           "utf8",
         ),
-      );
-    } catch (error) {
-      issues.push({
-        code: "published-surface-unreadable",
-        contentPath: "packages/surface/publication/srd-surface.json",
-        message: error instanceof Error ? error.message : String(error),
-      });
-    }
+      ),
+    };
+  } catch (error) {
+    return {
+      tag: "unreadable",
+      message: error instanceof Error ? error.message : String(error),
+    };
   }
+}
 
+function canonicalProjectionOfPublishedRecord(record) {
+  return Object.fromEntries(
+    Object.entries(record).filter(([key]) => key !== "rulesExcerpt"),
+  );
+}
+
+function publishedSurfaceMembership(workspaceRoot, records, publication) {
+  const issues = [];
+  const loaded = loadPublishedSurface(workspaceRoot, publication);
   const unitIds = new Set();
   const statBlockIds = new Set();
-  if (
-    value === null ||
-    typeof value !== "object" ||
-    value.kind !== "srd-5.2.1-surface-catalog" ||
-    !Array.isArray(value.units) ||
-    !Array.isArray(value.statBlocks)
-  ) {
+  if (loaded.tag === "unreadable") {
     issues.push({
-      code: "published-surface-invalid",
+      code: "published-surface-unreadable",
       contentPath: "packages/surface/publication/srd-surface.json",
-      message:
-        "Published Surface membership must be an SRD Unit/Stat Block catalog",
+      message: loaded.message,
     });
     return { unitIds, statBlockIds, issues };
   }
 
+  const decoded = Schema.decodeUnknownEither(PublishedSrdSurfaceSchema, {
+    onExcessProperty: "error",
+  })(loaded.value);
+  if (Either.isLeft(decoded)) {
+    issues.push({
+      code: "published-surface-invalid",
+      contentPath: "packages/surface/publication/srd-surface.json",
+      message: String(decoded.left),
+    });
+    return { unitIds, statBlockIds, issues };
+  }
+
+  const value = decoded.right;
+  const canonicalRecords = new Map(
+    records.map((record) => [recordIdentityKey(record), record.value]),
+  );
   for (const [family, entries, target] of [
     ["unit", value.units, unitIds],
     ["statBlock", value.statBlocks, statBlockIds],
   ]) {
     for (const entry of entries) {
-      if (
-        entry === null ||
-        typeof entry !== "object" ||
-        typeof entry.id !== "string"
-      ) {
-        issues.push({
-          code: "published-surface-invalid-record",
-          contentPath: "packages/surface/publication/srd-surface.json",
-          message: `Published ${family} entries must carry string ids`,
-        });
-        continue;
-      }
       if (target.has(entry.id)) {
         issues.push({
           code: "duplicate-published-authored-identity",
@@ -2666,6 +2674,21 @@ function publishedSurfaceMembership(workspaceRoot, records, publication) {
         });
       }
       target.add(entry.id);
+      const canonical = canonicalRecords.get(`${family}:${entry.id}`);
+      if (
+        canonical !== undefined &&
+        !isDeepStrictEqual(
+          canonicalProjectionOfPublishedRecord(entry),
+          canonical,
+        )
+      ) {
+        issues.push({
+          code: "published-record-differs-from-corpus",
+          contentPath: "packages/surface/publication/srd-surface.json",
+          recordId: entry.id,
+          message: `Published ${family} ${entry.id} differs from its canonical Surface record`,
+        });
+      }
     }
   }
 
@@ -2767,23 +2790,22 @@ function createAuditContext(options = {}) {
       );
     }
   }
-  const publication =
+  const publishedMembership =
     options.records !== undefined && options.publication === undefined
       ? {
-          kind: "srd-5.2.1-surface-catalog",
-          units: records
-            .filter((record) => record.kind !== "statBlock")
-            .map((record) => ({ id: record.id })),
-          statBlocks: records
-            .filter((record) => record.kind === "statBlock")
-            .map((record) => ({ id: record.id })),
+          unitIds: new Set(
+            records
+              .filter((record) => record.kind !== "statBlock")
+              .map((record) => record.id),
+          ),
+          statBlockIds: new Set(
+            records
+              .filter((record) => record.kind === "statBlock")
+              .map((record) => record.id),
+          ),
+          issues: [],
         }
-      : options.publication;
-  const publishedMembership = publishedSurfaceMembership(
-    workspaceRoot,
-    records,
-    publication,
-  );
+      : publishedSurfaceMembership(workspaceRoot, records, options.publication);
   contextIssues.push(...publishedMembership.issues);
   const token = Object.freeze({
     kind: "srd521-surface-corpus-audit-context",

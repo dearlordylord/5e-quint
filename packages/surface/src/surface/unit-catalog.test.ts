@@ -9563,7 +9563,7 @@ describe("SRD Unit catalog boundary", () => {
     }
   });
 
-  test("installs the utility spell dependencies required by Gnomish Lineage", () => {
+  test("installs the spell dependencies required by Gnomish Lineage", () => {
     const result = buildUnitCatalog({ collections: [srdUnitCollection] });
 
     expect(result.tag).toBe("ok");
@@ -9576,7 +9576,7 @@ describe("SRD Unit catalog boundary", () => {
     expect(mending).toMatchObject({
       kind: "spell",
       mechanics: {
-        family: "utility",
+        family: "object_repair",
         effect: {
           kind: "repair_object_break_or_tear",
           leavesNoTrace: true,
@@ -9588,16 +9588,15 @@ describe("SRD Unit catalog boundary", () => {
     expect(prestidigitation).toMatchObject({
       kind: "spell",
       mechanics: {
-        family: "utility",
+        family: "minor_magic_effect_menu",
         nonInstantaneousEffectLimit: 3,
       },
     });
     if (
       prestidigitation.kind !== "spell" ||
-      prestidigitation.mechanics.family !== "utility" ||
-      prestidigitation.mechanics.utilityKind !== "minor_magic_effect_menu"
+      prestidigitation.mechanics.family !== "minor_magic_effect_menu"
     ) {
-      throw new Error("Expected Prestidigitation utility mechanics.");
+      throw new Error("Expected Prestidigitation minor magic effect menu.");
     }
     expect(Object.keys(prestidigitation.mechanics.effects)).toHaveLength(6);
     expect(speakWithAnimals).toMatchObject({

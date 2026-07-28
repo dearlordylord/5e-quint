@@ -14,7 +14,7 @@ let mending =
           , section = "Spells/Descriptions-M-P.md#Mending"
           }
       , mechanics =
-          { family = "utility"
+          { family = "object_repair"
           , level = 0
           , school = "transmutation"
           , castingTime = { kind = "minutes", amount = 1, ritual = False }
@@ -25,7 +25,6 @@ let mending =
               , m = Some "two lodestones"
               }
           , duration = { kind = "instantaneous" }
-          , utilityKind = "object_repair"
           , target = { kind = "object", count = 1 }
           , effect =
               { kind = "repair_object_break_or_tear"

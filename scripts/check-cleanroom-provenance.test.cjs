@@ -339,6 +339,15 @@ test("missing fixed-spell and creature-menu dependencies fail closed", () => {
   const reanimationMenu = structuredClone(
     records.find((candidate) => candidate.id === "animate_dead"),
   );
+  const animateDeadExcerpt = auditModule.rulesExcerptForSection(
+    reanimationMenu.value.provenance.section,
+    auditModule.buildReferenceIndex(),
+  );
+  assert.equal(animateDeadExcerpt.tag, "ok");
+  const publishedAnimateDead = {
+    ...reanimationMenu.value,
+    rulesExcerpt: animateDeadExcerpt.rulesExcerpt,
+  };
   const cases = [
     {
       record: fixedSpellGrant,
@@ -355,7 +364,7 @@ test("missing fixed-spell and creature-menu dependencies fail closed", () => {
       expectedCode: "missing-authored-dependency",
       publication: {
         ...publishedSurface,
-        units: [...publishedSurface.units, { id: "animate_dead" }],
+        units: [...publishedSurface.units, publishedAnimateDead],
       },
     },
   ];
@@ -373,6 +382,66 @@ test("missing fixed-spell and creature-menu dependencies fail closed", () => {
           issue.code === expectedCode &&
           issue.targetRecordId === targetRecordId,
       ),
+      JSON.stringify(result.issues, null, 2),
+    );
+  }
+
+  const legacyCreatureIdentity = structuredClone(reanimationMenu);
+  legacyCreatureIdentity.value.mechanics.menu[0].options[0].monsterId =
+    "skeleton";
+  const legacyResult = auditModule.auditRecordDelta(
+    auditModule.createAuditContext({
+      records,
+      publication: {
+        ...publishedSurface,
+        units: [...publishedSurface.units, publishedAnimateDead],
+      },
+    }),
+    legacyCreatureIdentity,
+  );
+  assert.ok(
+    legacyResult.issues.some(
+      (issue) =>
+        issue.code === "missing-authored-dependency" &&
+        issue.targetRecordId === "skeleton",
+    ),
+    JSON.stringify(legacyResult.issues, null, 2),
+  );
+  assert.ok(
+    legacyResult.issues.every(
+      (issue) => issue.targetRecordId !== "stat_block_skeleton",
+    ),
+    JSON.stringify(legacyResult.issues, null, 2),
+  );
+});
+
+test("publication membership rejects malformed or divergent records", () => {
+  const publishedSurface = JSON.parse(
+    fs.readFileSync(
+      path.resolve(
+        __dirname,
+        "../packages/surface/publication/srd-surface.json",
+      ),
+      "utf8",
+    ),
+  );
+  const malformed = {
+    ...publishedSurface,
+    units: [{ id: "mending" }, ...publishedSurface.units.slice(1)],
+  };
+  const divergent = structuredClone(publishedSurface);
+  divergent.units[0].name = "Divergent synthetic name";
+
+  for (const [publication, expectedCode] of [
+    [malformed, "published-surface-invalid"],
+    [divergent, "published-record-differs-from-corpus"],
+  ]) {
+    const result = auditModule.auditCorpus(
+      auditModule.createAuditContext({ records, publication }),
+    );
+    assert.equal(result.status, "rejected");
+    assert.ok(
+      result.issues.some((issue) => issue.code === expectedCode),
       JSON.stringify(result.issues, null, 2),
     );
   }

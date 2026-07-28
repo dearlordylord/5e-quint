@@ -22,7 +22,7 @@
       "maxDimensionFeet": 1,
       "restoresMagic": false
     },
-    "family": "utility",
+    "family": "object_repair",
     "level": 0,
     "range": {
       "kind": "touch"
@@ -31,8 +31,7 @@
     "target": {
       "count": 1,
       "kind": "object"
-    },
-    "utilityKind": "object_repair"
+    }
   },
   "name": "Mending",
   "provenance": {

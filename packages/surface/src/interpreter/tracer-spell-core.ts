@@ -136,33 +136,39 @@ export function traceSpellMechanics(
     byFamily("templated_multi_spawn", (mechanics) =>
       traceTemplatedMultiSpawn(mechanics, ctx, nodes, edges, ids),
     ),
-    byFamily("utility", (mechanics) => {
-      const effects = Match.value(mechanics).pipe(
-        Match.when({ utilityKind: "object_repair" }, ({ effect }) => [effect]),
-        Match.when({ utilityKind: "minor_magic_effect_menu" }, ({ effects }) =>
-          Object.values(effects),
-        ),
-        Match.exhaustive,
-      );
-      for (const effect of effects) {
-        const effectId = ids("utl");
-        nodes.push({
-          id: effectId,
-          category: "effect",
-          atomKind: effect.kind,
-          label: effect.kind.replaceAll("_", " "),
-        });
-        edges.push({
-          from: ctx.procId,
-          to: effectId,
-          relation: "produces",
-        });
-      }
-    }),
+    byFamily("object_repair", ({ effect }) =>
+      traceUtilityEffects([effect], ctx, nodes, edges, ids),
+    ),
+    byFamily("minor_magic_effect_menu", ({ effects }) =>
+      traceUtilityEffects(Object.values(effects), ctx, nodes, edges, ids),
+    ),
     Match.exhaustive,
   );
 
   return procId;
+}
+
+function traceUtilityEffects(
+  effects: ReadonlyArray<{ readonly kind: string }>,
+  ctx: SpellCtx,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): void {
+  for (const effect of effects) {
+    const effectId = ids("utl");
+    nodes.push({
+      id: effectId,
+      category: "effect",
+      atomKind: effect.kind,
+      label: effect.kind.replaceAll("_", " "),
+    });
+    edges.push({
+      from: ctx.procId,
+      to: effectId,
+      relation: "produces",
+    });
+  }
 }
 
 function traceModalActivation(

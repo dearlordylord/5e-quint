@@ -13,7 +13,7 @@ let prestidigitation =
           , section = "Spells/Descriptions-M-P.md#Prestidigitation"
           }
       , mechanics =
-          { family = "utility"
+          { family = "minor_magic_effect_menu"
           , level = 0
           , school = "transmutation"
           , castingTime = { kind = "action" }
@@ -24,7 +24,6 @@ let prestidigitation =
               , value = { unit = "hour", amount = 1 }
               }
           , nonInstantaneousEffectLimit = 3
-          , utilityKind = "minor_magic_effect_menu"
           , effects =
               { sensory =
                   { kind = "harmless_sensory_effect"

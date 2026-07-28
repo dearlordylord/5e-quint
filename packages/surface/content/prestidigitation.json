@@ -66,15 +66,14 @@
         "kind": "harmless_sensory_effect"
       }
     },
-    "family": "utility",
+    "family": "minor_magic_effect_menu",
     "level": 0,
     "nonInstantaneousEffectLimit": 3,
     "range": {
       "feet": 10,
       "kind": "point"
     },
-    "school": "transmutation",
-    "utilityKind": "minor_magic_effect_menu"
+    "school": "transmutation"
   },
   "name": "Prestidigitation",
   "provenance": {
