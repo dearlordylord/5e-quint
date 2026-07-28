@@ -251,255 +251,220 @@ export function battleCreatureInitFromCharacterBuild(
     );
   }
 
-  const species = getRequiredUnit(input.unitLibrary, input.build.species);
-  if (Either.isLeft(species)) {
-    return battleCreatureInitIssue(species.left.message);
-  }
-  if (species.right.kind !== "species") {
-    return battleCreatureInitIssue(
-      `Expected species Unit: ${input.build.species}`,
+  return Either.gen(function* () {
+    const species = yield* getRequiredUnit(
+      input.unitLibrary,
+      input.build.species,
     );
-  }
-  const characterSize = characterBattleSpeciesSize(input.build, species.right);
-  if (Either.isLeft(characterSize)) {
-    return battleCreatureInitIssue(characterSize.left.message);
-  }
+    if (species.kind !== "species") {
+      return yield* battleCreatureInitIssue(
+        `Expected species Unit: ${input.build.species}`,
+      );
+    }
+    const characterSize = yield* characterBattleSpeciesSize(
+      input.build,
+      species,
+    );
 
-  const currentLoadoutUsesShield =
-    input.build.equipment.loadout.shield !== undefined;
-  const currentArmorClassBaseChoice =
-    input.armorClassBaseChoices?.kind === "currentEquipment"
-      ? input.armorClassBaseChoices.choice
-      : input.armorClassBaseChoices?.kind === "byShieldUse"
-        ? currentLoadoutUsesShield
-          ? input.armorClassBaseChoices.shielded
-          : input.armorClassBaseChoices.unshielded
-        : undefined;
-  const armorClass = characterArmorClassState({
-    build: input.build,
-    unitLibrary: input.unitLibrary,
-    ...(currentArmorClassBaseChoice === undefined
-      ? {}
-      : { baseChoice: currentArmorClassBaseChoice }),
-  });
-  if (Either.isLeft(armorClass)) {
-    return battleCreatureInitIssue(armorClass.left.message);
-  }
-  const shieldedBaseChoice =
-    input.armorClassBaseChoices?.kind === "byShieldUse"
-      ? input.armorClassBaseChoices.shielded
-      : currentLoadoutUsesShield
-        ? currentArmorClassBaseChoice
-        : undefined;
-  const unshieldedBaseChoice =
-    input.armorClassBaseChoices?.kind === "byShieldUse"
-      ? input.armorClassBaseChoices.unshielded
-      : currentLoadoutUsesShield
+    const currentLoadoutUsesShield =
+      input.build.equipment.loadout.shield !== undefined;
+    const currentArmorClassBaseChoice =
+      input.armorClassBaseChoices?.kind === "currentEquipment"
+        ? input.armorClassBaseChoices.choice
+        : input.armorClassBaseChoices?.kind === "byShieldUse"
+          ? currentLoadoutUsesShield
+            ? input.armorClassBaseChoices.shielded
+            : input.armorClassBaseChoices.unshielded
+          : undefined;
+    const armorClass = yield* characterArmorClassState({
+      build: input.build,
+      unitLibrary: input.unitLibrary,
+      ...(currentArmorClassBaseChoice === undefined
+        ? {}
+        : { baseChoice: currentArmorClassBaseChoice }),
+    });
+    const shieldedBaseChoice =
+      input.armorClassBaseChoices?.kind === "byShieldUse"
+        ? input.armorClassBaseChoices.shielded
+        : currentLoadoutUsesShield
+          ? currentArmorClassBaseChoice
+          : undefined;
+    const unshieldedBaseChoice =
+      input.armorClassBaseChoices?.kind === "byShieldUse"
+        ? input.armorClassBaseChoices.unshielded
+        : currentLoadoutUsesShield
+          ? undefined
+          : currentArmorClassBaseChoice;
+    const unarmoredArmorClassBases = yield* characterUnarmoredArmorClassBases({
+      build: input.build,
+      unitLibrary: input.unitLibrary,
+      ...(shieldedBaseChoice === undefined ? {} : { shieldedBaseChoice }),
+      ...(unshieldedBaseChoice === undefined ? {} : { unshieldedBaseChoice }),
+    });
+    const classLevels = yield* characterBattleClassLevels(
+      input.build,
+      input.unitLibrary,
+    );
+    const parsedClassLevels = parseCharacterBattleClassLevels(classLevels);
+    if (Either.isLeft(parsedClassLevels)) {
+      return yield* battleCreatureInitIssue(
+        parsedClassLevels.left.messages.join("; "),
+      );
+    }
+    const characterUnitRefs = characterUnitRefsWithBattleSupportProfiles(
+      input.build,
+      input.unitLibrary,
+      weaponMasteries.right,
+      classLevels,
+    );
+    if (Either.isLeft(characterUnitRefs)) {
+      return yield* battleCreatureInitIssue(
+        characterUnitRefs.left.map((issue) => issue.message).join("; "),
+      );
+    }
+    const pactBladeBondedWeaponItemId =
+      yield* characterPactBladeBondedWeaponItemId({
+        build: input.build,
+        unitLibrary: input.unitLibrary,
+        itemId: input.pactBladeBondedWeaponItemId,
+      });
+    const attack = yield* characterAttackActionOption(
+      input.build,
+      input.unitLibrary,
+      classLevels,
+      pactBladeBondedWeaponItemId,
+    );
+    const offHandAttack = yield* characterOffHandAttackActionOption(
+      input.build,
+      input.unitLibrary,
+      classLevels,
+      pactBladeBondedWeaponItemId,
+    );
+    const selectedLoadout = characterBattleLoadoutFromBuild(input.build);
+    const supportProfileSourceFacts = battleSupportProfileSourceFactsForBuild(
+      input.build,
+      input.unitLibrary,
+    );
+    if (Either.isLeft(supportProfileSourceFacts)) {
+      return yield* battleCreatureInitIssue(
+        supportProfileSourceFacts.left.message,
+      );
+    }
+    const unitFeatures = yield* characterBattleFeatures(
+      input.build,
+      input.unitLibrary,
+      parsedClassLevels.right,
+      supportProfileSourceFacts.right,
+    );
+    const resources = yield* characterBattleResourceInitsFromBuild(
+      input.build,
+      input.unitLibrary,
+      input.resourceExpenditures ?? [],
+      parsedClassLevels.right,
+    );
+    const metamagic = yield* characterBattleMetamagicFromBuild(
+      input.build,
+      input.unitLibrary,
+    );
+    const proficiencies = characterBuildProficiencies(
+      input.build,
+      input.unitLibrary,
+    );
+    if (Either.isLeft(proficiencies)) {
+      return yield* battleCreatureInitIssue(
+        proficiencies.left.map(characterCreationIssueMessage).join("; "),
+      );
+    }
+    const spellcasting =
+      input.build.spellcasting === undefined
         ? undefined
-        : currentArmorClassBaseChoice;
-  const unarmoredArmorClassBases = characterUnarmoredArmorClassBases({
-    build: input.build,
-    unitLibrary: input.unitLibrary,
-    ...(shieldedBaseChoice === undefined ? {} : { shieldedBaseChoice }),
-    ...(unshieldedBaseChoice === undefined ? {} : { unshieldedBaseChoice }),
-  });
-  if (Either.isLeft(unarmoredArmorClassBases)) {
-    return battleCreatureInitIssue(unarmoredArmorClassBases.left.message);
-  }
-  const classLevels = characterBattleClassLevels(
-    input.build,
-    input.unitLibrary,
-  );
-  if (Either.isLeft(classLevels)) {
-    return battleCreatureInitIssue(classLevels.left.message);
-  }
-  const parsedClassLevels = parseCharacterBattleClassLevels(classLevels.right);
-  if (Either.isLeft(parsedClassLevels)) {
-    return battleCreatureInitIssue(parsedClassLevels.left.messages.join("; "));
-  }
-  const characterUnitRefs = characterUnitRefsWithBattleSupportProfiles(
-    input.build,
-    input.unitLibrary,
-    weaponMasteries.right,
-    classLevels.right,
-  );
-  if (Either.isLeft(characterUnitRefs)) {
-    return battleCreatureInitIssue(
-      characterUnitRefs.left.map((issue) => issue.message).join("; "),
+        : yield* characterSpellcasting({
+            build: input.build,
+            unitLibrary: input.unitLibrary,
+            ...(input.bookOfShadowsPresence === undefined
+              ? {}
+              : { bookOfShadowsPresence: input.bookOfShadowsPresence }),
+            ...(input.spellSlots === undefined
+              ? {}
+              : { spellSlots: input.spellSlots }),
+          });
+    const unarmedStrike = yield* characterBaseUnarmedStrikeActionOption(
+      input.build,
+      input.unitLibrary,
+      classLevels,
     );
-  }
-  const pactBladeBondedWeaponItemId = characterPactBladeBondedWeaponItemId({
-    build: input.build,
-    unitLibrary: input.unitLibrary,
-    itemId: input.pactBladeBondedWeaponItemId,
-  });
-  if (Either.isLeft(pactBladeBondedWeaponItemId)) {
-    return battleCreatureInitIssue(pactBladeBondedWeaponItemId.left.message);
-  }
-  const attack = characterAttackActionOption(
-    input.build,
-    input.unitLibrary,
-    classLevels.right,
-    pactBladeBondedWeaponItemId.right,
-  );
-  if (Either.isLeft(attack))
-    return battleCreatureInitIssue(attack.left.message);
-  const offHandAttack = characterOffHandAttackActionOption(
-    input.build,
-    input.unitLibrary,
-    classLevels.right,
-    pactBladeBondedWeaponItemId.right,
-  );
-  if (Either.isLeft(offHandAttack)) {
-    return battleCreatureInitIssue(offHandAttack.left.message);
-  }
-  const selectedLoadout = characterBattleLoadoutFromBuild(input.build);
-  const supportProfileSourceFacts = battleSupportProfileSourceFactsForBuild(
-    input.build,
-    input.unitLibrary,
-  );
-  if (Either.isLeft(supportProfileSourceFacts)) {
-    return battleCreatureInitIssue(supportProfileSourceFacts.left.message);
-  }
-  const unitFeatures = characterBattleFeatures(
-    input.build,
-    input.unitLibrary,
-    parsedClassLevels.right,
-    supportProfileSourceFacts.right,
-  );
-  if (Either.isLeft(unitFeatures)) {
-    return battleCreatureInitIssue(unitFeatures.left.message);
-  }
-  const resources = characterBattleResourceInitsFromBuild(
-    input.build,
-    input.unitLibrary,
-    input.resourceExpenditures ?? [],
-    parsedClassLevels.right,
-  );
-  if (Either.isLeft(resources)) {
-    return battleCreatureInitIssue(resources.left.message);
-  }
-  const metamagic = characterBattleMetamagicFromBuild(
-    input.build,
-    input.unitLibrary,
-  );
-  if (Either.isLeft(metamagic)) {
-    return battleCreatureInitIssue(metamagic.left.message);
-  }
-  const proficiencies = characterBuildProficiencies(
-    input.build,
-    input.unitLibrary,
-  );
-  if (Either.isLeft(proficiencies)) {
-    return battleCreatureInitIssue(
-      proficiencies.left.map(characterCreationIssueMessage).join("; "),
+    const druidWildShapeFacts = characterBuildDruidWildShapeFacts({
+      build: input.build,
+      unitLibrary: input.unitLibrary,
+    });
+    if (Either.isLeft(druidWildShapeFacts)) {
+      return yield* battleCreatureInitIssue(druidWildShapeFacts.left.message);
+    }
+    const druidWildShapeProfile = yield* singleDruidWildShapeProfile(
+      resources,
+      parsedClassLevels.right,
     );
-  }
-  const spellcasting =
-    input.build.spellcasting === undefined
-      ? undefined
-      : characterSpellcasting({
-          build: input.build,
-          unitLibrary: input.unitLibrary,
-          ...(input.bookOfShadowsPresence === undefined
-            ? {}
-            : { bookOfShadowsPresence: input.bookOfShadowsPresence }),
-          ...(input.spellSlots === undefined
-            ? {}
-            : { spellSlots: input.spellSlots }),
-        });
-  if (spellcasting !== undefined && Either.isLeft(spellcasting)) {
-    return battleCreatureInitIssue(spellcasting.left.message);
-  }
-  const unarmedStrike = characterBaseUnarmedStrikeActionOption(
-    input.build,
-    input.unitLibrary,
-    classLevels.right,
-  );
-  if (Either.isLeft(unarmedStrike)) {
-    return battleCreatureInitIssue(unarmedStrike.left.message);
-  }
-  const druidWildShapeFacts = characterBuildDruidWildShapeFacts({
-    build: input.build,
-    unitLibrary: input.unitLibrary,
-  });
-  if (Either.isLeft(druidWildShapeFacts)) {
-    return battleCreatureInitIssue(druidWildShapeFacts.left.message);
-  }
-  const druidWildShapeProfile = singleDruidWildShapeProfile(
-    resources.right,
-    parsedClassLevels.right,
-  );
-  if (Either.isLeft(druidWildShapeProfile)) {
-    return Either.left(druidWildShapeProfile.left);
-  }
-  const druidWildShapeAvailableForms =
-    battleDruidWildShapeAvailableFormsFromInput(
-      input.druidWildShapeAvailableForms,
-      druidWildShapeFacts.right,
-      druidWildShapeProfile.right,
-    );
-  if (Either.isLeft(druidWildShapeAvailableForms)) {
-    return Either.left(druidWildShapeAvailableForms.left);
-  }
+    const druidWildShapeAvailableForms =
+      yield* battleDruidWildShapeAvailableFormsFromInput(
+        input.druidWildShapeAvailableForms,
+        druidWildShapeFacts.right,
+        druidWildShapeProfile,
+      );
 
-  return Either.right({
-    combatantId: input.combatantId,
-    displayName: input.displayName,
-    initiative: input.initiative,
-    creatureInit: {
-      kind: "character",
-      characterId: input.characterId,
-      characterUnitRefs: characterUnitRefs.right,
-      classLevels: classLevels.right,
-      knownLanguages: characterBattleKnownLanguages(input.build),
-      d20Statistics: {
-        abilityScores: input.build.abilityScores,
-        savingThrowProficiencies: proficiencies.right.savingThrows,
-        skillProficiencies: proficiencies.right.skills,
-        skillExpertise: proficiencies.right.expertise,
+    return {
+      combatantId: input.combatantId,
+      displayName: input.displayName,
+      initiative: input.initiative,
+      creatureInit: {
+        kind: "character",
+        characterId: input.characterId,
+        characterUnitRefs: characterUnitRefs.right,
+        classLevels,
+        knownLanguages: characterBattleKnownLanguages(input.build),
+        d20Statistics: {
+          abilityScores: input.build.abilityScores,
+          savingThrowProficiencies: proficiencies.right.savingThrows,
+          skillProficiencies: proficiencies.right.skills,
+          skillExpertise: proficiencies.right.expertise,
+        },
+        weaponProficiencies: [
+          ...proficiencies.right.weapon.map((category) => ({
+            kind: "weapon_category" as const,
+            category,
+          })),
+          ...proficiencies.right.weaponPropertyFilters,
+        ],
+        armorClass,
+        unarmoredArmorClassBases,
+        size: characterSize,
+        speed: { walkFeet: movementFeet(species.speed.walkFeet) },
+        currentHp,
+        maxHp,
+        tempHp: input.tempHp ?? Hp(0),
+        ...(input.conditions === undefined
+          ? {}
+          : { conditions: input.conditions }),
+        ...(input.positiveHpUnconscious === undefined
+          ? {}
+          : { positiveHpUnconscious: input.positiveHpUnconscious }),
+        ...(input.zeroHpLifecycle === undefined
+          ? {}
+          : { zeroHpLifecycle: input.zeroHpLifecycle }),
+        selectedLoadout,
+        weaponMasteries: weaponMasteries.right,
+        invocationFeatures: characterInvocationFeatures(input.build),
+        attack,
+        unarmedStrike,
+        ...(offHandAttack === undefined ? {} : { offHandAttack }),
+        unitFeatures,
+        resources,
+        ...(metamagic === undefined ? {} : { metamagic }),
+        ...(spellcasting === undefined ? {} : { spellcasting }),
+        ...(druidWildShapeAvailableForms === undefined
+          ? {}
+          : { druidWildShapeAvailableForms }),
       },
-      weaponProficiencies: [
-        ...proficiencies.right.weapon.map((category) => ({
-          kind: "weapon_category" as const,
-          category,
-        })),
-        ...proficiencies.right.weaponPropertyFilters,
-      ],
-      armorClass: armorClass.right,
-      unarmoredArmorClassBases: unarmoredArmorClassBases.right,
-      size: characterSize.right,
-      speed: { walkFeet: movementFeet(species.right.speed.walkFeet) },
-      currentHp,
-      maxHp,
-      tempHp: input.tempHp ?? Hp(0),
-      ...(input.conditions === undefined
-        ? {}
-        : { conditions: input.conditions }),
-      ...(input.positiveHpUnconscious === undefined
-        ? {}
-        : { positiveHpUnconscious: input.positiveHpUnconscious }),
-      ...(input.zeroHpLifecycle === undefined
-        ? {}
-        : { zeroHpLifecycle: input.zeroHpLifecycle }),
-      selectedLoadout,
-      weaponMasteries: weaponMasteries.right,
-      invocationFeatures: characterInvocationFeatures(input.build),
-      attack: attack.right,
-      unarmedStrike: unarmedStrike.right,
-      ...(offHandAttack.right === undefined
-        ? {}
-        : { offHandAttack: offHandAttack.right }),
-      unitFeatures: unitFeatures.right,
-      resources: resources.right,
-      ...(metamagic.right === undefined ? {} : { metamagic: metamagic.right }),
-      ...(spellcasting === undefined
-        ? {}
-        : { spellcasting: spellcasting.right }),
-      ...(druidWildShapeAvailableForms.right === undefined
-        ? {}
-        : { druidWildShapeAvailableForms: druidWildShapeAvailableForms.right }),
-    },
+    };
   });
 }
 

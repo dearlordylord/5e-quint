@@ -924,9 +924,10 @@ function characterResourceExpendituresFromBattle(input: {
   const nextPointPoolExpenditures: CharacterSheetResourceExpenditure[] = [];
   const druidWildShapeExpenditure = druidWildShapeResourceExpenditureFromBattle(
     {
-      ...input,
+      combatant: input.combatant,
       sheetResources: sheetResources.right,
       battleResources,
+      wildShapeUnitId: wildShapeUnitId.right,
     },
   );
   if (Either.isLeft(druidWildShapeExpenditure)) {
@@ -1229,11 +1230,10 @@ function battleDruidWildShapeAvailableFormsFromSheet(input: {
 }
 
 function druidWildShapeResourceExpenditureFromBattle(input: {
-  readonly sheet: CharacterSheet;
   readonly combatant: CharacterBattleCreatureState;
-  readonly unitLibrary: UnitCatalog;
   readonly sheetResources: readonly CharacterSheetResourceState[];
   readonly battleResources: readonly OwnedCharacterBattleResource[];
+  readonly wildShapeUnitId: CharacterSheetUseCountResourceUnitId | undefined;
 }): Either.Either<
   CharacterSheetResourceExpenditure | undefined,
   CharacterSheetBattleHandoffIssue
@@ -1255,14 +1255,7 @@ function druidWildShapeResourceExpenditureFromBattle(input: {
   if (resource === undefined) {
     return Either.right(undefined);
   }
-  const facts = characterBuildDruidWildShapeFacts({
-    build: input.sheet.build,
-    unitLibrary: input.unitLibrary,
-  });
-  if (Either.isLeft(facts)) {
-    return characterSheetBattleHandoffIssue(facts.left.message);
-  }
-  if (facts.right === undefined) {
+  if (input.wildShapeUnitId === undefined) {
     return characterSheetBattleHandoffIssue(
       "Battle handoff Druid Wild Shape resource requires the Druid Wild Shape feature.",
     );
@@ -1276,14 +1269,9 @@ function druidWildShapeResourceExpenditureFromBattle(input: {
     unit: resource.ownership.unit,
     classLevels: input.combatant.origin.classLevels,
   });
-  if (!isCharacterSheetUseCountResourceUnitId(facts.right.unitId)) {
-    return characterSheetBattleHandoffIssue(
-      "Druid Wild Shape must use a Character Sheet use-count resource during battle handoff.",
-    );
-  }
   const sheetCount = sheetUseCountResourceCapacity({
     sheetResources: input.sheetResources,
-    unitId: facts.right.unitId,
+    unitId: input.wildShapeUnitId,
   });
   if (Either.isLeft(sheetCount)) return Either.left(sheetCount.left);
   if (maxUses === undefined || maxUses !== sheetCount.right) {
@@ -1302,7 +1290,7 @@ function druidWildShapeResourceExpenditureFromBattle(input: {
       ? undefined
       : {
           tag: "useCountResource",
-          unitId: facts.right.unitId,
+          unitId: input.wildShapeUnitId,
           expended: resourceCount(expended),
         },
   );
