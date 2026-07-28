@@ -19,12 +19,12 @@ import {
   type BattleRuntimeSession,
   type CharacterBattleResourceOwnership,
   type CharacterBattleResourceState,
+  type CharacterBattleClassLevels,
   type CharacterBattleRuntimeContext,
   type CharacterZeroHpLifecycleInit,
   type StatBlockBattleInitInput,
   battleStateInitIssueMessage,
 } from "@dnd/battle-runtime";
-import { characterBuildDruidWildShapeFacts } from "@dnd/character-creation-runtime";
 import {
   CHARACTER_SHEET_KNOCKED_OUT_UNCONSCIOUS,
   characterSheetCurrentHp,
@@ -271,6 +271,17 @@ export function characterSheetBattleInitWithRoute(
       routeEvents: rejectMixedSpellAndPactSlotBattleInitRoute(),
     });
   }
+  const selectedReference =
+    characterBattleOriginFeatSelectedReferenceProjection({
+      build: sheet.build,
+      unitLibrary,
+    });
+  if (Either.isLeft(selectedReference)) {
+    return Either.left({
+      issue: selectedReference.left,
+      routeEvents: rejectCharacterBattleInitProjectionRoute(),
+    });
+  }
   const druidWildShapeAvailableForms =
     battleDruidWildShapeAvailableFormsFromSheet({
       sheet,
@@ -309,10 +320,7 @@ export function characterSheetBattleInitWithRoute(
       })
     : Either.right({
         init: init.right,
-        routeEvents: acceptedCharacterSheetBattleInitRoute({
-          sheet,
-          unitLibrary,
-        }),
+        routeEvents: acceptedCharacterSheetBattleInitRoute({ sheet }),
       });
 }
 
@@ -396,41 +404,12 @@ export function startBattleFromCharacterSheetAndStatBlock(input: {
   return Either.right({
     session: session.right,
     initProjectionRouteEvents: characterInit.right.routeEvents,
-    encounterCompositionRouteEvents:
-      characterBattleEncounterCompositionRouteEvents({
-        state: session.right.state,
-        characterCombatantId: characterInit.right.init.combatantId,
-        statBlockCombatantId: input.statBlockBattleInput.combatantId,
-      }),
+    encounterCompositionRouteEvents: characterBattleEncounterCompositionRoute(),
   });
-}
-
-function characterBattleEncounterCompositionRouteEvents(input: {
-  readonly state: BattleState;
-  readonly characterCombatantId: BattleCreatureInit["combatantId"];
-  readonly statBlockCombatantId: StatBlockBattleInitInput["combatantId"];
-}): readonly CharacterBattleRouteEvent[] {
-  const characterCombatant = input.state.combatants.get(
-    input.characterCombatantId,
-  );
-  const statBlockCombatant = input.state.combatants.get(
-    input.statBlockCombatantId,
-  );
-  const currentActorId = input.state.initiative.stillToAct[0]?.creature;
-  if (
-    characterCombatant?.origin.kind !== "character" ||
-    statBlockCombatant === undefined ||
-    statBlockCombatant.origin.kind === "character" ||
-    currentActorId === undefined
-  ) {
-    return [];
-  }
-  return characterBattleEncounterCompositionRoute();
 }
 
 function acceptedCharacterSheetBattleInitRoute(input: {
   readonly sheet: CharacterSheet;
-  readonly unitLibrary: UnitCatalog;
 }): readonly CharacterBattleRouteEvent[] {
   const baseRoute = hasPurePactSlotState(input.sheet)
     ? [
@@ -467,20 +446,10 @@ function acceptedCharacterSheetBattleInitRoute(input: {
           owner: "characterBattleInitProjection",
         }),
       ];
-  return [...baseRoute, ...selectedReferenceBattleInitRouteEvents(input)];
+  return [...baseRoute, ...selectedReferenceBattleInitRouteEvents()];
 }
 
-function selectedReferenceBattleInitRouteEvents(input: {
-  readonly sheet: CharacterSheet;
-  readonly unitLibrary: UnitCatalog;
-}): readonly CharacterBattleRouteEvent[] {
-  const selectedReference =
-    characterBattleOriginFeatSelectedReferenceProjection({
-      build: input.sheet.build,
-      unitLibrary: input.unitLibrary,
-    });
-  if (Either.isLeft(selectedReference)) return [];
-
+function selectedReferenceBattleInitRouteEvents(): readonly CharacterBattleRouteEvent[] {
   return [
     projectCharacterSheetToBattleRoute({
       subject: "handoffSelectedReference",
@@ -823,15 +792,14 @@ function spellSlotSourceSpendForBattleDelta(input: {
   const createdExpended = createdSlot?.expended ?? resourceCount(0);
   const ordinaryAvailable = ordinaryCount - ordinaryExpended;
   const createdAvailable = createdCount - createdExpended;
-  if (input.delta > ordinaryAvailable + createdAvailable) {
+  const minimumCreatedSpend = Math.max(0, input.delta - ordinaryAvailable);
+  const maximumCreatedSpend = Math.min(input.delta, createdAvailable);
+  if (minimumCreatedSpend > maximumCreatedSpend) {
     return characterSheetBattleHandoffIssue(
       "Battle handoff Spell Slot expenditure exceeds available Character Sheet Spell Slots.",
     );
   }
-
-  const minimumCreatedSpend = Math.max(0, input.delta - ordinaryAvailable);
-  const maximumCreatedSpend = Math.min(input.delta, createdAvailable);
-  if (minimumCreatedSpend !== maximumCreatedSpend) {
+  if (minimumCreatedSpend < maximumCreatedSpend) {
     return characterSheetBattleHandoffIssue(
       `Battle handoff Spell Slot expenditure is source-ambiguous for level ${input.spellLevel}.`,
     );
@@ -878,10 +846,6 @@ function characterResourceExpendituresFromBattle(input: {
     return characterSheetBattleHandoffIssue(sheetResources.left.message);
   }
   const origin = input.combatant.origin;
-  const wildShapeUnitId = characterSheetDruidWildShapeResourceUnitId(input);
-  if (Either.isLeft(wildShapeUnitId)) {
-    return Either.left(wildShapeUnitId.left);
-  }
   const ownedBattleResources = characterBattleResourcesWithOwnership({
     resources: origin.resources,
     ownership: input.runtimeContext.resourceOwnership,
@@ -890,6 +854,13 @@ function characterResourceExpendituresFromBattle(input: {
     return Either.left(ownedBattleResources.left);
   }
   const battleResources = ownedBattleResources.right;
+  const wildShapeResource = druidWildShapeBattleResourceProjection(
+    battleResources,
+    origin.classLevels,
+  );
+  if (Either.isLeft(wildShapeResource)) {
+    return Either.left(wildShapeResource.left);
+  }
   const battleUseCountResourceUnitIds =
     new Set<CharacterSheetUseCountResourceUnitId>();
   const battlePointPoolResourceUnitIds =
@@ -907,8 +878,8 @@ function characterResourceExpendituresFromBattle(input: {
       battlePointPoolResourceUnitIds.add(pointPoolUnitId);
     }
   }
-  if (wildShapeUnitId.right !== undefined) {
-    battleUseCountResourceUnitIds.add(wildShapeUnitId.right);
+  if (wildShapeResource.right.tag === "present") {
+    battleUseCountResourceUnitIds.add(wildShapeResource.right.unitId);
   }
   const nextExpenditures = input.sheet.resourceExpenditures.filter(
     (expenditure) =>
@@ -927,14 +898,24 @@ function characterResourceExpendituresFromBattle(input: {
     {
       combatant: input.combatant,
       sheetResources: sheetResources.right,
-      battleResources,
-      wildShapeUnitId: wildShapeUnitId.right,
+      wildShapeResource: wildShapeResource.right,
     },
   );
   if (Either.isLeft(druidWildShapeExpenditure)) {
     return Either.left(druidWildShapeExpenditure.left);
   }
   for (const resource of battleResources) {
+    const resourceUnit = resource.ownership.unit;
+    if (
+      resourceUnit.kind === "class_feature" &&
+      !origin.classLevels.some(
+        (classLevel) => classLevel.className === resourceUnit.className,
+      )
+    ) {
+      return characterSheetBattleHandoffIssue(
+        "Class feature battle resources require a matching class level during battle handoff.",
+      );
+    }
     const pointPoolUnitId =
       characterSheetPointPoolResourceUnitIdForBattleResource(resource);
     if (
@@ -942,7 +923,7 @@ function characterResourceExpendituresFromBattle(input: {
       characterBattleResourceIsPointPool(resource.state)
     ) {
       const maxPoints = characterBattleResourceMaxPoints({
-        unit: resource.ownership.unit,
+        unit: resourceUnit,
         classLevels: input.combatant.origin.classLevels,
       });
       if (maxPoints === undefined) {
@@ -983,16 +964,12 @@ function characterResourceExpendituresFromBattle(input: {
       profile !== null &&
       !characterBattleResourceIsPointPool(resource.state)
     ) {
-      if (resource.state.resource.cap.kind !== "fixed") {
+      if (!isFixedUseCountBattleResourceState(resource.state)) {
         return characterSheetBattleHandoffIssue(
           "Class feature spell free casts must use a fixed battle resource cap during battle handoff.",
         );
       }
-      if (resource.state.usesRemaining === undefined) {
-        return characterSheetBattleHandoffIssue(
-          "Class feature spell free casts must carry remaining uses during battle handoff.",
-        );
-      }
+      const fixedUses = resource.state.resource.cap.uses;
       const sheetCount = sheetFreeCastResourceCapacity({
         sheetResources: sheetResources.right,
         tag: profile.resourceTag,
@@ -1003,8 +980,7 @@ function characterResourceExpendituresFromBattle(input: {
           "Class feature spell free-cast battle capacity must match Character Sheet resource capacity.",
         );
       }
-      const expended =
-        resource.state.resource.cap.uses - resource.state.usesRemaining;
+      const expended = fixedUses - resource.state.usesRemaining;
       if (expended < 0) {
         return characterSheetBattleHandoffIssue(
           "Class feature spell free-cast remaining uses exceed the battle resource cap during battle handoff.",
@@ -1033,7 +1009,7 @@ function characterResourceExpendituresFromBattle(input: {
       !characterBattleResourceIsPointPool(resource.state)
     ) {
       const maxUses = characterBattleResourceMaxUses({
-        unit: resource.ownership.unit,
+        unit: resourceUnit,
         classLevels: input.combatant.origin.classLevels,
       });
       if (maxUses === undefined || resource.state.usesRemaining === undefined) {
@@ -1081,6 +1057,24 @@ type OwnedCharacterBattleResource = {
   readonly state: CharacterBattleResourceState;
   readonly ownership: CharacterBattleResourceOwnership;
 };
+
+type FixedUseCountBattleResourceState = CharacterBattleResourceState & {
+  readonly resource: {
+    readonly kind: "use_count";
+    readonly cap: { readonly kind: "fixed"; readonly uses: ResourceCount };
+  };
+  readonly usesRemaining: ResourceCount;
+};
+
+function isFixedUseCountBattleResourceState(
+  state: CharacterBattleResourceState,
+): state is FixedUseCountBattleResourceState {
+  return (
+    state.resource.kind === "use_count" &&
+    state.resource.cap.kind === "fixed" &&
+    "usesRemaining" in state
+  );
+}
 
 function characterBattleResourcesWithOwnership(input: {
   readonly resources: readonly CharacterBattleResourceState[];
@@ -1188,30 +1182,40 @@ function sheetFreeCastResourceCapacity(input: {
     : Either.right(resource.count);
 }
 
-function characterSheetDruidWildShapeResourceUnitId(input: {
-  readonly sheet: CharacterSheet;
-  readonly unitLibrary: UnitCatalog;
-}): Either.Either<
-  CharacterSheetUseCountResourceUnitId | undefined,
+type DruidWildShapeBattleResourceProjection =
+  | { readonly tag: "absent" }
+  | {
+      readonly tag: "present";
+      readonly resource: OwnedCharacterBattleResource;
+      readonly unitId: CharacterSheetUseCountResourceUnitId;
+    };
+
+function druidWildShapeBattleResourceProjection(
+  battleResources: readonly OwnedCharacterBattleResource[],
+  classLevels: CharacterBattleClassLevels,
+): Either.Either<
+  DruidWildShapeBattleResourceProjection,
   CharacterSheetBattleHandoffIssue
 > {
-  const facts = characterBuildDruidWildShapeFacts({
-    build: input.sheet.build,
-    unitLibrary: input.unitLibrary,
-  });
-  if (Either.isLeft(facts)) {
-    return characterSheetBattleHandoffIssue(facts.left.message);
+  const resources = battleResources.filter(
+    (resource) =>
+      parseSupportedUnitFeatureProfile(resource.ownership.unit, classLevels)
+        ?.kind === "druidWildShapeKnownForm",
+  );
+  if (resources.length > 1) {
+    return characterSheetBattleHandoffIssue(
+      "Battle handoff supports exactly one Druid Wild Shape resource.",
+    );
   }
-  const unitId = facts.right?.unitId;
-  if (unitId === undefined) {
-    return Either.right(undefined);
-  }
+  const resource = resources[0];
+  if (resource === undefined) return Either.right({ tag: "absent" });
+  const unitId = resource.ownership.unit.id;
   if (!isCharacterSheetUseCountResourceUnitId(unitId)) {
     return characterSheetBattleHandoffIssue(
       "Druid Wild Shape must use a Character Sheet use-count resource during battle handoff.",
     );
   }
-  return Either.right(unitId);
+  return Either.right({ tag: "present", resource, unitId });
 }
 
 function battleDruidWildShapeAvailableFormsFromSheet(input: {
@@ -1233,34 +1237,13 @@ function battleDruidWildShapeAvailableFormsFromSheet(input: {
 function druidWildShapeResourceExpenditureFromBattle(input: {
   readonly combatant: CharacterBattleCreatureState;
   readonly sheetResources: readonly CharacterSheetResourceState[];
-  readonly battleResources: readonly OwnedCharacterBattleResource[];
-  readonly wildShapeUnitId: CharacterSheetUseCountResourceUnitId | undefined;
+  readonly wildShapeResource: DruidWildShapeBattleResourceProjection;
 }): Either.Either<
   CharacterSheetResourceExpenditure | undefined,
   CharacterSheetBattleHandoffIssue
 > {
-  const origin = input.combatant.origin;
-  const resources = input.battleResources.filter(
-    (candidate) =>
-      parseSupportedUnitFeatureProfile(
-        candidate.ownership.unit,
-        origin.classLevels,
-      )?.kind === "druidWildShapeKnownForm",
-  );
-  if (resources.length > 1) {
-    return characterSheetBattleHandoffIssue(
-      "Battle handoff supports exactly one Druid Wild Shape resource.",
-    );
-  }
-  const resource = resources[0];
-  if (resource === undefined) {
-    return Either.right(undefined);
-  }
-  if (input.wildShapeUnitId === undefined) {
-    return characterSheetBattleHandoffIssue(
-      "Battle handoff Druid Wild Shape resource requires the Druid Wild Shape feature.",
-    );
-  }
+  if (input.wildShapeResource.tag === "absent") return Either.right(undefined);
+  const { resource, unitId } = input.wildShapeResource;
   if (!("usesRemaining" in resource.state)) {
     return characterSheetBattleHandoffIssue(
       "Druid Wild Shape must carry remaining uses during battle handoff.",
@@ -1272,7 +1255,7 @@ function druidWildShapeResourceExpenditureFromBattle(input: {
   });
   const sheetCount = sheetUseCountResourceCapacity({
     sheetResources: input.sheetResources,
-    unitId: input.wildShapeUnitId,
+    unitId,
   });
   if (Either.isLeft(sheetCount)) return Either.left(sheetCount.left);
   if (maxUses === undefined || maxUses !== sheetCount.right) {
@@ -1291,7 +1274,7 @@ function druidWildShapeResourceExpenditureFromBattle(input: {
       ? undefined
       : {
           tag: "useCountResource",
-          unitId: input.wildShapeUnitId,
+          unitId,
           expended: resourceCount(expended),
         },
   );
@@ -1299,7 +1282,7 @@ function druidWildShapeResourceExpenditureFromBattle(input: {
 
 function characterSheetInitialConditions(
   sheet: CharacterSheet,
-): CharacterBuildCreatureInput["conditions"] {
+): NonNullable<CharacterBuildCreatureInput["conditions"]> {
   return [
     ...sheet.conditions,
     ...(sheet.hitPoints.tag === "knockedOut" ? (["unconscious"] as const) : []),
@@ -1344,7 +1327,7 @@ function withDefinedCharacterBattleSheetState(
   const zeroHpLifecycle = characterSheetZeroHpLifecycle(sheet);
   const spellSlots = characterSheetBattleSpellSlots(sheet);
   return {
-    ...(conditions === undefined ? {} : { conditions }),
+    conditions,
     ...(positiveHpUnconscious === undefined ? {} : { positiveHpUnconscious }),
     ...(zeroHpLifecycle === undefined ? {} : { zeroHpLifecycle }),
     ...(spellSlots === undefined ? {} : { spellSlots }),
@@ -1405,9 +1388,6 @@ function characterSheetPactSlotExpenditureFromBattle(
   CharacterPactSlotExpenditure,
   CharacterSheetBattleHandoffIssue
 > {
-  if (hasMixedSpellAndPactSlotState(input.sheet)) {
-    return characterSheetBattleHandoffIssue(mixedSpellAndPactSlotStateMessage);
-  }
   const battleSpellcasting = input.combatant.origin.spellcasting;
   if (battleSpellcasting === undefined) {
     return Either.right({ expended: pactSlots.expended });

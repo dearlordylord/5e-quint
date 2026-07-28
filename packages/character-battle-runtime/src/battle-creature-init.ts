@@ -398,15 +398,15 @@ export function battleCreatureInitFromCharacterBuild(
       input.unitLibrary,
       classLevels,
     );
-    const druidWildShapeProfile = yield* singleDruidWildShapeProfile(
-      resources,
-      parsedClassLevels.right,
-    );
+    const druidWildShapeProjection =
+      yield* characterBattleDruidWildShapeProjection(
+        resources,
+        parsedClassLevels.right,
+      );
     const druidWildShapeAvailableForms =
       yield* battleDruidWildShapeAvailableFormsFromInput(
         input.druidWildShapeAvailableForms,
-        druidWildShapeFacts,
-        druidWildShapeProfile,
+        druidWildShapeProjection,
       );
 
     return {
@@ -487,11 +487,18 @@ type SupportedDruidWildShapeProfile = Extract<
   { readonly kind: "druidWildShapeKnownForm" }
 >;
 
-function singleDruidWildShapeProfile(
+export type CharacterBattleDruidWildShapeProjection =
+  | { readonly tag: "absent" }
+  | {
+      readonly tag: "present";
+      readonly profile: SupportedDruidWildShapeProfile;
+    };
+
+export function characterBattleDruidWildShapeProjection(
   resources: readonly CharacterBattleResourceInit[],
   classLevels: Parameters<typeof parseSupportedUnitFeatureProfile>[1],
 ): Either.Either<
-  SupportedDruidWildShapeProfile | undefined,
+  CharacterBattleDruidWildShapeProjection,
   BattleCreatureInitIssue
 > {
   const profiles = resources.flatMap((resource) => {
@@ -506,28 +513,25 @@ function singleDruidWildShapeProfile(
       "Druid Wild Shape battle initialization supports exactly one Druid Wild Shape resource.",
     );
   }
-  return Either.right(profiles[0]);
+  const profile = profiles[0];
+  return Either.right(
+    profile === undefined ? { tag: "absent" } : { tag: "present", profile },
+  );
 }
 
 function battleDruidWildShapeAvailableFormsFromInput(
   forms: readonly StatBlockRecord[] | undefined,
-  facts: CharacterBuildDruidWildShapeFacts | undefined,
-  profile: SupportedDruidWildShapeProfile | undefined,
+  projection: CharacterBattleDruidWildShapeProjection,
 ): Either.Either<
   readonly BattleDruidWildShapeKnownForm[] | undefined,
   BattleCreatureInitIssue
 > {
-  if (facts === undefined) {
+  if (projection.tag === "absent") {
     return forms === undefined
       ? Either.right(undefined)
       : battleCreatureInitIssue(
           "Druid Wild Shape available forms require the Druid Wild Shape feature.",
         );
-  }
-  if (profile === undefined) {
-    return battleCreatureInitIssue(
-      "Druid Wild Shape available forms require a supported Wild Shape battle profile.",
-    );
   }
   if (forms === undefined) {
     return battleCreatureInitIssue(
@@ -536,7 +540,7 @@ function battleDruidWildShapeAvailableFormsFromInput(
   }
   const availableForms = battleAvailableDruidWildShapeKnownForms({
     forms,
-    profile,
+    profile: projection.profile,
   });
   if (Either.isLeft(availableForms)) {
     return battleCreatureInitIssue(availableForms.left.message);

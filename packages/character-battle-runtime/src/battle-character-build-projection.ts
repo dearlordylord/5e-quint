@@ -217,9 +217,14 @@ export function characterOffHandAttackActionOption(
     classLevels,
     pactBladeBondedWeaponItemId,
   );
-  return Either.isLeft(option)
-    ? battleCreatureInitIssue(option.left.message)
-    : Either.right(option.right ?? undefined);
+  if (Either.isLeft(option)) {
+    return battleCreatureInitIssue(option.left.message);
+  }
+  return option.right === null
+    ? battleCreatureInitIssue(
+        "Off-hand weapon loadout must reference a Weapon Unit.",
+      )
+    : Either.right(option.right);
 }
 
 export function characterBattleLoadoutFromBuild(
