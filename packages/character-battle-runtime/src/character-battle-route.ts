@@ -264,7 +264,7 @@ export function initialCharacterBattleInitProjectionRoute(): readonly CharacterB
 export function characterBattleInitProjectionRouteAfter(
   action: CharacterBattleInitProjectionRouteAction,
 ): readonly CharacterBattleRouteEvent[] {
-  return routeAfterAction(
+  return routeThroughAction(
     CHARACTER_BATTLE_INIT_PROJECTION_ROUTE_ACTIONS,
     characterBattleInitProjectionRouteStep,
     action,
@@ -303,7 +303,7 @@ export function initialCharacterBattleEncounterCompositionRoute(): readonly Char
 }
 
 export function characterBattleEncounterCompositionRoute(): readonly CharacterBattleRouteEvent[] {
-  return routeAfterAction(
+  return routeThroughAction(
     CHARACTER_BATTLE_ENCOUNTER_COMPOSITION_ROUTE_ACTIONS,
     characterBattleEncounterCompositionRouteStep,
     "doEnterComposedBattleRuntime",
@@ -459,20 +459,17 @@ export function characterBattleSettlementRouteStep(
   );
 }
 
-function routeAfterAction<Action extends string>(
-  actions: readonly Action[],
+function routeThroughAction<const Actions extends readonly string[]>(
+  actions: Actions,
   step: (
     route: readonly CharacterBattleRouteEvent[],
-    action: Action,
+    action: Actions[number],
   ) => readonly CharacterBattleRouteEvent[],
-  target: Action,
+  target: Actions[number],
 ): readonly CharacterBattleRouteEvent[] {
-  let route: readonly CharacterBattleRouteEvent[] = [];
-  for (const action of actions) {
-    route = step(route, action);
-    if (action === target) return route;
-  }
-  return route;
+  return actions
+    .slice(0, actions.indexOf(target) + 1)
+    .reduce<readonly CharacterBattleRouteEvent[]>(step, []);
 }
 
 function sheetHitPointsArmorClassConditionsAndProfilesRoute(

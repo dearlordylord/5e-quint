@@ -1498,6 +1498,47 @@ describe("Character Sheet battle handoff", () => {
         state: admitted,
       }),
     ).toMatchObject({ _tag: "Left" });
+
+    const ordinaryRetained = retainedOrdinaryCompanionSheet({
+      characterIdValue: "character:ordinary-protocol-special-form",
+      companionIdValue: "companion:ordinary-protocol-special-form",
+      selectedForm: { tag: "normalNamedForm", formId: "cat" },
+      currentHp: Hp(2),
+      tempHp: Hp(0),
+    });
+    const ordinaryCompanion = characterSheetCompanion(ordinaryRetained);
+    const pactCompanion = characterSheetCompanion(retained);
+    if (
+      ordinaryCompanion.tag !== "retainedOneAtATime" ||
+      pactCompanion.tag !== "retainedOneAtATime"
+    ) {
+      throw new Error("Expected retained companion fixtures.");
+    }
+    const incompatibleProtocolAndSelection = expectRight(
+      replaceCharacterSheetCompanion({
+        sheet: ordinaryRetained,
+        companion: {
+          tag: "retainedOneAtATime",
+          companion: {
+            ...ordinaryCompanion.companion,
+            manifestation: pactCompanion.companion.manifestation,
+          },
+        },
+      }),
+    );
+    expect(
+      admitCharacterSheetCompanionToBattle({
+        ...admissionBase,
+        sheet: incompatibleProtocolAndSelection,
+        state: started.state,
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Special retained companion forms require an attack-exception protocol.",
+      },
+    });
   });
 
   test("reports retained companion settlement identity and manifestation conflicts", () => {
@@ -3531,6 +3572,43 @@ describe("Character Sheet battle handoff", () => {
     });
 
     expect(Either.isLeft(handoff)).toBe(true);
+  });
+
+  test("rejects a character handoff carrying the Stat Block zero-HP policy", () => {
+    const sheet = expectRight(
+      rebuildCharacterSheetFixture({
+        characterId: characterSheetId("character:invalid-zero-hp-policy"),
+        build,
+        currentHp: Hp(0),
+        tempHp: Hp(0),
+        unitLibrary,
+        zeroHpLifecycle: {
+          tag: "unstable",
+          deathSaves: { successes: 0, failures: 0 },
+        },
+      }),
+    );
+
+    expect(
+      settleHandoffBranchToCharacterSheet({
+        sheet,
+        unitLibrary,
+        combatant: handoffBranchCombatant({
+          origin: {
+            kind: "character",
+            characterId: characterId("character:invalid-zero-hp-policy"),
+          },
+          hp: Hp(0),
+          maxHp: sheetMaximumHp(sheet),
+          tempHp: Hp(0),
+          positiveHpUnconscious: null,
+          zeroHpLifecycle: { policy: "diesAtZeroHp" },
+        }),
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: { message: "Battle character has unsupported zero-HP lifecycle." },
+    });
   });
 
   test.each([
@@ -5569,6 +5647,15 @@ describe("Character Build battle projection", () => {
       ),
     ).toMatchObject({ _tag: "Right" });
     expect(
+      characterBaseUnarmedStrikeActionOption(missingEquipmentBuild),
+    ).toMatchObject({
+      _tag: "Right",
+      right: {
+        kind: "unarmedStrike",
+        attackAbility: "str",
+      },
+    });
+    expect(
       characterOffHandAttackActionOption(missingEquipmentBuild, unitLibrary),
     ).toMatchObject({
       _tag: "Left",
@@ -6015,6 +6102,45 @@ describe("Character Build battle projection", () => {
         source: "unarmored_defense",
         sourceUnitId: "monk_unarmored_defense",
       },
+    });
+  });
+
+  test("rejects a class progression whose catalog record is not a Class", () => {
+    const orc = unitLibrary.requireUnit("species_orc");
+    if (orc.kind !== "species") {
+      throw new Error("Expected the SRD Orc fixture to be a Species.");
+    }
+    const classKindMismatch = {
+      ...orc,
+      id: authoredUnitId("class_fighter"),
+      name: "Synthetic Class-Kind Mismatch",
+    } satisfies UnitRecord;
+    const classKindMismatchLibrary: UnitCatalog = {
+      getUnit: (id) =>
+        id === classKindMismatch.id
+          ? Option.some(classKindMismatch)
+          : unitLibrary.getUnit(id),
+      listUnits: () =>
+        unitLibrary
+          .listUnits()
+          .map((unit) =>
+            unit.id === classKindMismatch.id ? classKindMismatch : unit,
+          ),
+      requireUnit: (id) =>
+        id === classKindMismatch.id
+          ? classKindMismatch
+          : unitLibrary.requireUnit(id),
+    };
+
+    expect(
+      characterBattleResourceInitsFromBuild(
+        build,
+        classKindMismatchLibrary,
+        [],
+      ),
+    ).toMatchObject({
+      _tag: "Left",
+      left: { message: "Expected class Unit: class_fighter" },
     });
   });
 

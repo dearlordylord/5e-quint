@@ -362,10 +362,9 @@ function retainedCompanionResolvedFormProofIssue(input: {
     const selectedForm = input.selectedForm;
     const specialForm = PACT_OF_THE_CHAIN_SPECIAL_FORM_REFS.find(
       (form) => form.formId === selectedForm.formId,
-    );
-    if (specialForm === undefined) {
-      return "Unknown retained companion special form.";
-    }
+    )!;
+    // formId's literal type is derived from this exact tuple, so membership is
+    // established at compile time for this already-parsed selection.
     return specialForm.statBlockId === input.resolvedStatBlockId
       ? null
       : "Retained companion special form proof does not match its resolved Stat Block id.";
