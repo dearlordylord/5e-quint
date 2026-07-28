@@ -1,9 +1,15 @@
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
+import {
+  buildUnitCatalog,
+  srdUnitCollection,
+} from "@dnd/surface/surface/unit-catalog";
 import { Either } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
   abilityScoreAssignment,
+  characterBuildClassFeatureFactsProjectionWithRoute,
+  characterBuildProjectionWithRoute,
   characterBuildSelectedReferenceCount,
   characterBuildSelectedReferencesWithRoute,
   classUnitId,
@@ -13,6 +19,12 @@ import {
   type CharacterBuildFeature,
   type CharacterBuildProficiencyChoiceSubject,
 } from "./index.ts";
+
+const catalogResult = buildUnitCatalog({ collections: [srdUnitCollection] });
+if (catalogResult.tag !== "ok") {
+  throw new Error("The SRD Unit catalog route fixture must compose.");
+}
+const unitLibrary = catalogResult.catalog;
 
 const selectedReferenceFeatureCases = [
   {
@@ -50,6 +62,57 @@ const selectedReferenceFeatureCases = [
 }>;
 
 describe("characterBuildSelectedReferencesWithRoute", () => {
+  test("routes class-feature projection facts from build inputs", () => {
+    const build = testBuild({});
+
+    expect(
+      characterBuildProjectionWithRoute({ build, route: ["seed"] }),
+    ).toEqual({
+      build,
+      route: [
+        "seed",
+        {
+          kind: "projectCharacterBuildFacts",
+          subject: "buildProjection",
+          owner: "characterBuild",
+        },
+      ],
+    });
+    expect(
+      characterBuildClassFeatureFactsProjectionWithRoute({
+        build,
+        unitLibrary,
+        route: ["seed"],
+      }),
+    ).toMatchObject({
+      _tag: "Right",
+      right: {
+        build,
+        facts: {
+          resources: [{ unitId: "fighter_second_wind" }],
+          monksFocus: undefined,
+          monkUncannyMetabolism: undefined,
+          sorcererFontOfMagic: undefined,
+          sorcererMetamagic: undefined,
+        },
+        route: [
+          "seed",
+          {
+            kind: "projectCharacterBuildFacts",
+            subject: "buildProjection",
+            owner: "characterBuild",
+          },
+          {
+            kind: "recordCreationFacts",
+            subject: "buildProjection",
+            facts: ["buildProjectionInput"],
+            owner: "characterBuild",
+          },
+        ],
+      },
+    });
+  });
+
   test.each(selectedReferenceFeatureCases)(
     "routes $name as a retained selected reference",
     ({ feature }) => {

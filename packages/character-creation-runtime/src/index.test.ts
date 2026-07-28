@@ -65,6 +65,8 @@ import {
   UNIT_CHOICE_KEYS,
   abilityScoreAssignment,
   advanceCharacterBuildClassLevel,
+  advanceCharacterBuildFightingStyleReplacementWithRoute,
+  applyCharacterBuildWarlockLevelGainWithRoute,
   isListPreparedSpellcastingCreation,
   isPactMagicSpellcastingCreation,
   isWizardSpellcastingCreation,
@@ -6214,6 +6216,40 @@ describe("character creation finalization", () => {
     expect(unitRefIds).not.toContain("defense");
   });
 
+  test("routes an accepted Fighter Fighting Style replacement", () => {
+    const levelGain = expectRight(
+      fighterLevelGainWithFightingStyleReplacement({
+        unitLibrary,
+        classUnitId: testClassUnitId(authoredUnitId("class_fighter")),
+        hitPointRule: { tag: "fixedHigherLevelGain" },
+        selectedFeatUnitId: authoredUnitId("feat_archery"),
+      }),
+    );
+
+    expect(
+      advanceCharacterBuildFightingStyleReplacementWithRoute({
+        build: finalizedCompleteManifestBuild(),
+        unitLibrary,
+        levelGain,
+        route: ["seed"],
+      }),
+    ).toMatchObject({
+      _tag: "Right",
+      right: {
+        route: [
+          "seed",
+          {
+            kind: "applyCreationFillBatch",
+            subject: "selectedReference",
+            fills: ["choiceSet"],
+            holes: [],
+            owner: "characterBuild",
+          },
+        ],
+      },
+    });
+  });
+
   test("advances a finalized Fighter build without duplicating Fighting Style state", () => {
     const build = finalizedCompleteManifestBuild();
     const fighterClassUnitId = expectRight(
@@ -7703,6 +7739,117 @@ describe("character creation finalization", () => {
     expect(characterBuildFeatureUnitIds(result, unitLibrary)).toEqual(
       expect.arrayContaining(["warlock_magical_cunning"]),
     );
+  });
+
+  test("routes accepted and support-profile-rejected Warlock level gains", () => {
+    const build = finalizedWarlockBuild("draft:warlock-level-gain-route");
+    const acceptedLevelGain = expectRight(
+      warlockLevelGain({
+        unitLibrary,
+        classUnitId: testClassUnitId(authoredUnitId("class_warlock")),
+        hitPointRule: { tag: "fixedHigherLevelGain" },
+        pactMagic: warlockPactMagicLevelGain({
+          gainedPreparedSpells: [authoredUnitId("hex")],
+        }),
+        gainedInvocations: [
+          nonRepeatableEldritchInvocation("pact_of_the_blade"),
+          nonRepeatableEldritchInvocation("devils_sight"),
+        ],
+      }),
+    );
+
+    expect(
+      applyCharacterBuildWarlockLevelGainWithRoute({
+        build,
+        unitLibrary,
+        levelGain: acceptedLevelGain,
+        route: ["seed"],
+      }),
+    ).toMatchObject({
+      _tag: "Right",
+      right: {
+        tag: "accepted",
+        route: [
+          "seed",
+          {
+            kind: "applyCreationFillBatch",
+            subject: "selectedReference",
+            fills: ["choiceSet"],
+            holes: [],
+            owner: "characterBuild",
+          },
+        ],
+      },
+    });
+
+    const rejectedLevelGain = expectRight(
+      warlockLevelGain({
+        unitLibrary,
+        classUnitId: testClassUnitId(authoredUnitId("class_warlock")),
+        hitPointRule: { tag: "fixedHigherLevelGain" },
+        pactMagic: warlockPactMagicLevelGain({
+          gainedPreparedSpells: [authoredUnitId("hex")],
+        }),
+        gainedInvocations: [
+          nonRepeatableEldritchInvocation("armor_of_shadows"),
+          nonRepeatableEldritchInvocation("devils_sight"),
+        ],
+      }),
+    );
+
+    expect(
+      applyCharacterBuildWarlockLevelGainWithRoute({
+        build,
+        unitLibrary,
+        levelGain: rejectedLevelGain,
+        route: ["seed"],
+      }),
+    ).toMatchObject({
+      _tag: "Right",
+      right: {
+        tag: "rejected",
+        issue: { code: "duplicateEldritchInvocationSelection" },
+        route: [
+          "seed",
+          {
+            kind: "applyCreationFillBatch",
+            subject: "selectedReference",
+            fills: ["choiceSet"],
+            holes: ["unitChoice"],
+            owner: "creationSupportProfileAdmission",
+          },
+        ],
+      },
+    });
+  });
+
+  test("keeps non-route Warlock advancement failures typed", () => {
+    const build = finalizedWarlockBuild(
+      "draft:warlock-level-gain-route-typed-failure",
+    );
+    const levelGain = expectRight(
+      warlockLevelGain({
+        unitLibrary,
+        classUnitId: testClassUnitId(authoredUnitId("class_warlock")),
+        hitPointRule: { tag: "fixedHigherLevelGain" },
+        gainedInvocations: [
+          nonRepeatableEldritchInvocation("pact_of_the_blade"),
+          nonRepeatableEldritchInvocation("devils_sight"),
+        ],
+      }),
+    );
+
+    expect(
+      applyCharacterBuildWarlockLevelGainWithRoute({
+        build,
+        unitLibrary,
+        levelGain,
+        route: [],
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: { code: "invalidWarlockPactMagicPreparedSpellGainCount" },
+    });
   });
 
   test("uses Warlock class-list levels for Pact Magic prepared-spell advancement without requiring spell Unit admission", () => {
