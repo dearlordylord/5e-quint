@@ -142,12 +142,7 @@ function completeSupportedDruidTwoDraft(): CharacterDraft {
   return completeSupportedSingleClassDraft({
     draftId: createStoredDraftId("app:test:druid-wild-shape"),
     classId: classUnitId(unitId("class_druid")),
-    advancements: [
-      {
-        classUnitId: classUnitId(unitId("class_druid")),
-        hitPointRule: { tag: "fixedHigherLevelGain" }
-      }
-    ],
+    higherLevelHitPointRules: [{ tag: "fixedHigherLevelGain" }],
     abilityScores: {
       str: 8,
       dex: 14,
@@ -163,7 +158,7 @@ function completeSupportedWarlockOneDraft(): CharacterDraft {
   return completeSupportedSingleClassDraft({
     draftId: createStoredDraftId("app:test:warlock-pact-slots"),
     classId: classUnitId(unitId("class_warlock")),
-    advancements: [],
+    higherLevelHitPointRules: [],
     abilityScores: {
       str: 8,
       dex: 14,
@@ -178,13 +173,18 @@ function completeSupportedWarlockOneDraft(): CharacterDraft {
 function completeSupportedSingleClassDraft(input: {
   readonly draftId: ReturnType<typeof createStoredDraftId>
   readonly classId: ReturnType<typeof classUnitId>
-  readonly advancements: Parameters<typeof progressionOptionId>[0]["advancements"]
+  readonly higherLevelHitPointRules: ReadonlyArray<
+    Parameters<typeof progressionOptionId>[0]["advancements"][number]["hitPointRule"]
+  >
   readonly abilityScores: Parameters<typeof abilityScoresFill>[0]["scores"]
 }): CharacterDraft {
   let draft = createCharacterDraft({ draftId: input.draftId })
   const progressionOption = progressionOptionId({
     startingClass: input.classId,
-    advancements: input.advancements
+    advancements: input.higherLevelHitPointRules.map((hitPointRule) => ({
+      classUnitId: input.classId,
+      hitPointRule
+    }))
   })
 
   for (let remainingPasses = 0; remainingPasses < 12; remainingPasses += 1) {
