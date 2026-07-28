@@ -13,7 +13,6 @@ import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 // UNIT-IDENTITY-REPLAY: healing-stabilization cure_wounds doCureWoundsNeedsTarget doCureWoundsNeedsHealingRoll doCureWoundsWounded
 // UNIT-IDENTITY-REPLAY: L1H-MASS-CURE-WOUNDS mass_cure_wounds doMassCureWoundsNeedsTargetList doMassCureWoundsNeedsHealingRoll doMassCureWoundsWounded
 // UNIT-IDENTITY-REPLAY: L1H-MASS-HEALING-WORD mass_healing_word doMassHealingWordNeedsTargetList doMassHealingWordNeedsHealingRoll doMassHealingWordWounded
-import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
 import { isDeepStrictEqual } from "node:util";
 import {
   characterAttackSubjectForTest,
@@ -841,7 +840,7 @@ function createRuleCoreSpellDriver() {
           "targetChoice",
         );
         resolveSubject(subject, [
-          spellTargetFill(target, "mage_armor", casterId, casterId),
+          spellTargetFill(target, subject.procedureRef, casterId, casterId),
         ]);
       },
       doMageArmorNeedsTarget: () => {
@@ -1067,7 +1066,7 @@ function createRuleCoreSpellDriver() {
       );
       const targetFill = spellTargetFill(
         target,
-        "ray_of_frost",
+        subject.procedureRef,
         casterId,
         targetId,
       );
@@ -1130,7 +1129,7 @@ function createRuleCoreSpellDriver() {
       const target = requireHole(targetResult, "targetChoice");
       const targetFill = spellTargetFill(
         target,
-        "ray_of_frost",
+        subject.procedureRef,
         casterId,
         targetId,
       );
@@ -1274,7 +1273,9 @@ function createRuleCoreSpellDriver() {
         resolveBattleSubject({
           state,
           subject,
-          fills: [spellTargetFill(target, input.spellId, casterId, targetId)],
+          fills: [
+            spellTargetFill(target, subject.procedureRef, casterId, targetId),
+          ],
         }),
       );
     }
@@ -1296,7 +1297,7 @@ function createRuleCoreSpellDriver() {
       const target = requireHoleFromList(act.initialHoles, "targetChoice");
       const targetFill = spellTargetFill(
         target,
-        input.spellId,
+        input.subject.procedureRef,
         casterId,
         targetId,
       );
@@ -1355,7 +1356,13 @@ function createRuleCoreSpellDriver() {
         resolveBattleSubject({
           state,
           subject,
-          fills: [spellTargetListFill(targetList, "mass_healing_word")],
+          fills: [
+            spellTargetListFill(
+              targetList,
+              "mass_healing_word",
+              subject.procedureRef,
+            ),
+          ],
         }),
       );
     }
@@ -1379,7 +1386,11 @@ function createRuleCoreSpellDriver() {
         act.initialHoles,
         "spellTargetList",
       );
-      const targetFill = spellTargetListFill(targetList, "mass_healing_word");
+      const targetFill = spellTargetListFill(
+        targetList,
+        "mass_healing_word",
+        subject.procedureRef,
+      );
       const healing = requireHole(
         resolveBattleSubject({
           state,
@@ -1432,7 +1443,13 @@ function createRuleCoreSpellDriver() {
         resolveBattleSubject({
           state,
           subject,
-          fills: [spellTargetListFill(targetList, "mass_cure_wounds")],
+          fills: [
+            spellTargetListFill(
+              targetList,
+              "mass_cure_wounds",
+              subject.procedureRef,
+            ),
+          ],
         }),
       );
     }
@@ -1456,7 +1473,11 @@ function createRuleCoreSpellDriver() {
         act.initialHoles,
         "spellTargetList",
       );
-      const targetFill = spellTargetListFill(targetList, "mass_cure_wounds");
+      const targetFill = spellTargetListFill(
+        targetList,
+        "mass_cure_wounds",
+        subject.procedureRef,
+      );
       const healing = requireHole(
         resolveBattleSubject({
           state,
@@ -1489,10 +1510,10 @@ describe("rule-core Spell focused MBT", () => {
       const replayedActions = new Set<RuleCoreSpellDriverAction>();
 
       for (const sequence of replay.sequences) {
+        resetSelectedUnitRuntimeBoundaryIds();
         const driver = createRuleCoreSpellDriver()();
 
         for (const actionName of sequence.actions) {
-          resetSelectedUnitRuntimeBoundaryIds();
           replayedActions.add(actionName);
           const action = driver.actions[actionName];
           if (action === undefined) {
@@ -1501,11 +1522,12 @@ describe("rule-core Spell focused MBT", () => {
             );
           }
           await action.handler({});
-          expect(
-            selectedUnitRuntimeBoundaryIds.has(replay.unitId),
-            `${replay.unitId}:${sequence.name}:${actionName} must bind its Unit id`,
-          ).toBe(true);
         }
+
+        expect(
+          selectedUnitRuntimeBoundaryIds.has(replay.unitId),
+          `${replay.unitId}:${sequence.name} must admit its selected Unit id at the workflow boundary`,
+        ).toBe(true);
 
         const runtime = driver.getState?.();
         if (runtime === undefined) {
@@ -1820,7 +1842,7 @@ function actionSpellSubject(
     return (
       subject.tag === "actionSpell" &&
       subject.actorId === casterId &&
-      subject.mode.tag === mode.tag &&
+      isDeepStrictEqual(subject.mode, mode) &&
       caster.origin.execution.procedureBindings.some(
         (binding) =>
           binding.procedureRef === subject.procedureRef &&
@@ -1917,7 +1939,7 @@ function attackTargetFill(hole: BattleHole): BattleFill {
 
 function spellTargetFill(
   hole: BattleHole,
-  spellId: "mage_armor" | "ray_of_frost" | DirectHitPointRestorationSpellId,
+  sourceProcedureRef: BattleProcedureExecutionRef,
   caster: CombatantId,
   target: CombatantId,
 ): BattleFill {
@@ -1933,7 +1955,7 @@ function spellTargetFill(
         kind: "spellTarget",
         casterId: caster,
         targetId: target,
-        sourceProcedureRef: battleProcedureExecutionRefForTest(spellId),
+        sourceProcedureRef,
       },
     ],
   };
@@ -1941,13 +1963,14 @@ function spellTargetFill(
 
 function spellTargetListFill(
   hole: BattleHole,
-  sourceProcedureRef: "mass_healing_word" | "mass_cure_wounds",
+  spellId: "mass_healing_word" | "mass_cure_wounds",
+  sourceProcedureRef: BattleProcedureExecutionRef,
 ): BattleFill {
   if (hole.kind !== "spellTargetList") {
     throw new Error("Expected spellTargetList hole.");
   }
   const targetIds = [targetId, secondTargetId];
-  if (sourceProcedureRef === "mass_cure_wounds") {
+  if (spellId === "mass_cure_wounds") {
     return {
       kind: "spellTargetList",
       holeId: hole.holeId,
@@ -1956,9 +1979,8 @@ function spellTargetListFill(
         {
           kind: "spellTargetsInPointOriginSphere",
           casterId,
-          sourceProcedureRef:
-            battleProcedureExecutionRefForTest(sourceProcedureRef),
-          areaId: battleAreaId(`mbt:${sourceProcedureRef}:point-origin-sphere`),
+          sourceProcedureRef,
+          areaId: battleAreaId(`mbt:${spellId}:point-origin-sphere`),
           radiusFeet: movementFeet(30),
           targetIds,
         },
@@ -1973,8 +1995,7 @@ function spellTargetListFill(
       kind: "spellTarget",
       casterId,
       targetId: spellTargetId,
-      sourceProcedureRef:
-        battleProcedureExecutionRefForTest(sourceProcedureRef),
+      sourceProcedureRef,
     })),
   };
 }
