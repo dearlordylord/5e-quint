@@ -1,4 +1,9 @@
 import { Match, Option } from "effect";
+import {
+  CHARACTER_CLASS_LEVELS,
+  characterClassLevel,
+  type CharacterClassLevel,
+} from "@dnd/shared/game-facts";
 import type {
   ClassFeatureRecord,
   ClassRecord,
@@ -8,6 +13,10 @@ import type {
   WeaponRecord,
 } from "@dnd/surface/surface/types";
 import { classLevelChoiceCountAtLevel } from "./class-level-scaling.ts";
+import {
+  classLevelForUnit,
+  type CharacterProgression,
+} from "./character-progression-types.ts";
 import type { UnitCatalog } from "./types.ts";
 
 const byKind = Match.discriminator("kind");
@@ -29,10 +38,17 @@ export type WeaponMasteryChoiceProfile = {
   readonly eligibleWeapons: readonly WeaponRecord[];
 };
 
+export type WeaponMasteryChoiceProfileAtClassLevel = Omit<
+  WeaponMasteryChoiceProfile,
+  "choiceCount"
+> & {
+  readonly classLevel: CharacterClassLevel;
+  readonly choiceCount: number;
+};
+
 export function weaponMasteryChoiceProfileForFeature(input: {
   readonly featureUnitId: UnitRecord["id"];
   readonly unitLibrary: UnitCatalog;
-  readonly classLevel?: number;
 }): WeaponMasteryChoiceProfile | undefined {
   const featureUnit = input.unitLibrary.getUnit(input.featureUnitId);
   if (Option.isNone(featureUnit)) return undefined;
@@ -46,7 +62,7 @@ export function weaponMasteryChoiceProfileForFeature(input: {
     classRecord,
     choiceCount: weaponMasteryChoiceCountAtClassLevel(
       feature.mechanics.choose,
-      input.classLevel ?? feature.acquiredAtLevel,
+      feature.acquiredAtLevel,
     ),
     longRestChangeCount:
       feature.mechanics.changeOn.kind === "long_rest"
@@ -58,6 +74,45 @@ export function weaponMasteryChoiceProfileForFeature(input: {
       unitLibrary: input.unitLibrary,
     }),
   };
+}
+
+export function weaponMasteryChoiceProfileAtClassLevel(
+  profile: WeaponMasteryChoiceProfile,
+  classLevel: CharacterClassLevel,
+): WeaponMasteryChoiceProfileAtClassLevel {
+  return {
+    ...profile,
+    classLevel,
+    choiceCount: weaponMasteryChoiceCountAtClassLevel(
+      profile.feature.mechanics.choose,
+      classLevel,
+    ),
+  };
+}
+
+export function weaponMasteryChoiceProfileForProgression(
+  profile: WeaponMasteryChoiceProfile,
+  progression: CharacterProgression,
+): Option.Option<WeaponMasteryChoiceProfileAtClassLevel> {
+  const classLevel = classLevelForUnit(progression, profile.classRecord.id);
+  return weaponMasteryChoiceProfileForClassLevel(profile, classLevel);
+}
+
+export function weaponMasteryChoiceProfileForClassLevel(
+  profile: WeaponMasteryChoiceProfile,
+  classLevel: number,
+): Option.Option<WeaponMasteryChoiceProfileAtClassLevel> {
+  const supportedClassLevel = CHARACTER_CLASS_LEVELS.find(
+    (level) => level === classLevel,
+  );
+  return supportedClassLevel === undefined
+    ? Option.none()
+    : Option.some(
+        weaponMasteryChoiceProfileAtClassLevel(
+          profile,
+          characterClassLevel(supportedClassLevel),
+        ),
+      );
 }
 
 export function weaponMasteryChoiceCountAtClassLevel(

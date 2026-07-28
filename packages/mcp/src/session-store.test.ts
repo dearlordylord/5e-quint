@@ -62,6 +62,7 @@ describe("MCP character sessions", () => {
       tempHp: Hp(0),
       hitPointMaximumReduction: Hp(0),
       conditions: [],
+      companion: { tag: "none" },
       unitLibrary,
     });
     expect(missingKnownForms).toMatchObject({
@@ -80,6 +81,7 @@ describe("MCP character sessions", () => {
       tempHp: Hp(0),
       hitPointMaximumReduction: Hp(0),
       conditions: [],
+      companion: { tag: "none" },
       unitLibrary,
       druidWildShapeKnownFormStatBlockIds: DRUID_WILD_SHAPE_KNOWN_FORM_IDS,
     });

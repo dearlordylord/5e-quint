@@ -2639,6 +2639,7 @@ describe("level 5 SDK tracer bullets", () => {
         currentHp: Hp(32),
         tempHp: Hp(0),
         conditions: [],
+        companion: { tag: "none" },
         unitLibrary,
         resourceExpenditures: [
           {

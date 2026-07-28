@@ -154,6 +154,7 @@ export type {
   CharacterSheetHeroicInspiration,
   CharacterSheetId,
   CharacterSheetInput,
+  CharacterSheetRebuildInput,
   CharacterSheetIssue,
   CharacterSheetJumpDistanceAbility,
   CharacterSheetJumpDistanceAbilityInput,

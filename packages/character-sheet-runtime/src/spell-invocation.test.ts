@@ -11,7 +11,7 @@ import {
   ritualAdeptRejectsPreparedOnlySpellTestName,
   spellbookRitualSheet,
   unitLibrary,
-} from "./test-support.ts";
+} from "./test-support.test-support.ts";
 
 describe("Character Sheet runtime / spell invocation", () => {
   test(ritualAdeptAdmitsSpellbookRitualTestName, () => {

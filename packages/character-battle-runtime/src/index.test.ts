@@ -99,7 +99,7 @@ import {
   useMonkUncannyMetabolismWhenRollingInitiative,
   type CharacterSheet,
   type CharacterSheetCompanionFormSelection,
-  type CharacterSheetInput,
+  type CharacterSheetRebuildInput,
   type CharacterSheetRetainedCompanionManifestation,
 } from "@dnd/character-sheet-runtime";
 import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
@@ -185,18 +185,25 @@ const DRUID_WILD_SHAPE_KNOWN_FORM_IDS = [
 ] as const;
 
 type CharacterSheetTestInput = Omit<
-  CharacterSheetInput,
-  "conditions" | "hitPointMaximumReduction" | "spellSlotExpenditures"
+  CharacterSheetRebuildInput,
+  | "companion"
+  | "conditions"
+  | "hitPointMaximumReduction"
+  | "spellSlotExpenditures"
 > &
   Partial<
     Pick<
-      CharacterSheetInput,
-      "conditions" | "hitPointMaximumReduction" | "spellSlotExpenditures"
+      CharacterSheetRebuildInput,
+      | "companion"
+      | "conditions"
+      | "hitPointMaximumReduction"
+      | "spellSlotExpenditures"
     >
   >;
 
 function rebuildCharacterSheetFixture(input: CharacterSheetTestInput) {
   return rebuildCharacterSheetCore({
+    companion: { tag: "none" },
     conditions: [],
     hitPointMaximumReduction: Hp(0),
     ...input,

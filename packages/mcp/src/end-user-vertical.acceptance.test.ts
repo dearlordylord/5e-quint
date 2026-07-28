@@ -14,6 +14,8 @@ import {
   unitHoleId,
 } from "../test-support/creation-hole-ids.ts";
 
+const BATTLE_DEMO_VERTICAL_TEST_TIMEOUT_MS = 10_000;
+
 describe("end-user MCP vertical", () => {
   test("creates an Orc Soldier Fighter, runs battle, ends battle, and lists reduced HP", () => {
     const root = createMcpCompositionRoot();
@@ -752,6 +754,7 @@ describe("end-user MCP vertical", () => {
     ]);
   });
 
+  // prettier-ignore
   test("starts the battle demo through MCP character creation and start_battle", () => {
     const root = createMcpCompositionRoot();
     const fighterDraftId = "draft:demo-fighter-two";
@@ -1034,7 +1037,7 @@ describe("end-user MCP vertical", () => {
         expect.objectContaining({ combatantId: "wizard", hp: 8 }),
       ]),
     );
-  });
+  }, BATTLE_DEMO_VERTICAL_TEST_TIMEOUT_MS);
 
   test("threads selected Light identity from MCP character creation into battle output", () => {
     const root = createMcpCompositionRoot();

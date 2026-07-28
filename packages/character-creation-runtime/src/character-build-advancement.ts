@@ -71,8 +71,11 @@ import {
 } from "./class-spellcasting.ts";
 import {
   isWeaponMasteryChoiceFeature,
+  weaponMasteryChoiceProfileForClassLevel,
   weaponMasteryChoiceProfileForFeature,
   type WeaponMasteryChoiceFeature,
+  type WeaponMasteryChoiceProfile,
+  type WeaponMasteryChoiceProfileAtClassLevel,
 } from "./weapon-mastery.ts";
 
 const FIGHTER_CLASS_NAME = "fighter" as const satisfies ClassName;
@@ -1921,23 +1924,22 @@ function weaponMasterySelectionsCanRemainUnchanged(input: {
     input.build.progression,
     input.classUnitId,
   );
-  const currentProfile = weaponMasteryChoiceProfileForFeature({
+  const profile = weaponMasteryChoiceProfileForFeature({
     featureUnitId: feature.right.id,
     unitLibrary: input.unitLibrary,
-    classLevel: currentClassLevel,
   });
-  const nextProfile = weaponMasteryChoiceProfileForFeature({
-    featureUnitId: feature.right.id,
-    unitLibrary: input.unitLibrary,
-    classLevel: currentClassLevel + 1,
-  });
-  if (currentProfile === undefined || nextProfile === undefined) {
+  const levelProfiles =
+    profile === undefined
+      ? undefined
+      : weaponMasteryChoiceProfilesForLevelGain(profile, currentClassLevel);
+  if (levelProfiles === undefined) {
     return Either.left({
       code: "missingWeaponMasteryFeatureChoice",
       classUnitId: input.classUnitId,
       message: "Cannot find the class Weapon Mastery choice feature.",
     });
   }
+  const { currentProfile, nextProfile } = levelProfiles;
 
   const selectedCount = selectedWeaponMasteryFeaturesForFeature(
     input.build.features,
@@ -1966,6 +1968,31 @@ function weaponMasterySelectionsCanRemainUnchanged(input: {
         message:
           "A plain class level gain would leave the build with the wrong number of Weapon Mastery choices.",
       });
+}
+
+function weaponMasteryChoiceProfilesForLevelGain(
+  profile: WeaponMasteryChoiceProfile,
+  currentClassLevel: number,
+):
+  | {
+      readonly currentProfile: WeaponMasteryChoiceProfileAtClassLevel;
+      readonly nextProfile: WeaponMasteryChoiceProfileAtClassLevel;
+    }
+  | undefined {
+  const currentProfile = weaponMasteryChoiceProfileForClassLevel(
+    profile,
+    currentClassLevel,
+  );
+  const nextProfile = weaponMasteryChoiceProfileForClassLevel(
+    profile,
+    currentClassLevel + 1,
+  );
+  return Option.isNone(currentProfile) || Option.isNone(nextProfile)
+    ? undefined
+    : {
+        currentProfile: currentProfile.value,
+        nextProfile: nextProfile.value,
+      };
 }
 
 function updateWeaponMasterySelectedFeatures(input: {
@@ -2011,23 +2038,22 @@ function updateWeaponMasterySelectedFeatures(input: {
     input.build.progression,
     input.levelGain.classUnitId,
   );
-  const currentProfile = weaponMasteryChoiceProfileForFeature({
+  const profile = weaponMasteryChoiceProfileForFeature({
     featureUnitId: feature.right.id,
     unitLibrary: input.unitLibrary,
-    classLevel: currentClassLevel,
   });
-  const nextProfile = weaponMasteryChoiceProfileForFeature({
-    featureUnitId: feature.right.id,
-    unitLibrary: input.unitLibrary,
-    classLevel: currentClassLevel + 1,
-  });
-  if (currentProfile === undefined || nextProfile === undefined) {
+  const levelProfiles =
+    profile === undefined
+      ? undefined
+      : weaponMasteryChoiceProfilesForLevelGain(profile, currentClassLevel);
+  if (levelProfiles === undefined) {
     return Either.left({
       code: "missingWeaponMasteryFeatureChoice",
       classUnitId: input.levelGain.classUnitId,
       message: "Cannot find the class Weapon Mastery choice feature.",
     });
   }
+  const { currentProfile, nextProfile } = levelProfiles;
 
   const currentWeaponUnitIds = selectedWeaponMasteryFeaturesForFeature(
     input.build.features,

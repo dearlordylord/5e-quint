@@ -92,6 +92,7 @@ import {
   useMonkUncannyMetabolismWhenRollingInitiative,
   type CharacterSheet,
   type CharacterSheetInput,
+  type CharacterSheetRebuildInput,
   type CharacterSheetLongRestInput,
   type CharacterSheetLongRestInterruption,
   type CharacterSheetLongRestStartTiming,
@@ -318,6 +319,7 @@ export type {
   UnitRecord,
   CharacterSheet,
   CharacterSheetInput,
+  CharacterSheetRebuildInput,
   CharacterSheetLongRestInput,
   CharacterSheetLongRestInterruption,
   CharacterSheetLongRestStartTiming,
@@ -436,18 +438,25 @@ export const druidWildShapeFixtureKnownFormStatBlockIds = [
 ] as const;
 
 type CharacterSheetTestInput = Omit<
-  CharacterSheetInput,
-  "conditions" | "hitPointMaximumReduction" | "spellSlotExpenditures"
+  CharacterSheetRebuildInput,
+  | "companion"
+  | "conditions"
+  | "hitPointMaximumReduction"
+  | "spellSlotExpenditures"
 > &
   Partial<
     Pick<
-      CharacterSheetInput,
-      "conditions" | "hitPointMaximumReduction" | "spellSlotExpenditures"
+      CharacterSheetRebuildInput,
+      | "companion"
+      | "conditions"
+      | "hitPointMaximumReduction"
+      | "spellSlotExpenditures"
     >
   >;
 
 export function rebuildCharacterSheetFixture(input: CharacterSheetTestInput) {
   return rebuildCharacterSheetCore({
+    companion: { tag: "none" },
     conditions: [],
     hitPointMaximumReduction: Hp(0),
     ...input,
@@ -695,6 +704,7 @@ export function storedAvailableSheetInput(input: {
     spentHitDice: [],
     resourceExpenditures: [],
     heroicInspiration: CHARACTER_SHEET_NO_HEROIC_INSPIRATION,
+    companion: { tag: "none" as const },
   };
 }
 

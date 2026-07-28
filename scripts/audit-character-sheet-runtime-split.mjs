@@ -104,6 +104,7 @@ const EXPECTED_EXPORTS = [
   "CharacterSheetRetainedCompanionProtocolTag",
   "CharacterSheetRetainedCompanionResolvedFormProof",
   "CharacterSheetRetainedCompanionState",
+  "CharacterSheetRebuildInput",
   "CharacterSheetResourceExpenditure",
   "CharacterSheetResourceState",
   "CharacterSheetRouteEvent",
@@ -238,6 +239,11 @@ const EXPECTED_MOVED_FUNCTIONS = [
   },
 ];
 const EXPECTED_EXPORT_RECONCILIATION_REASONS = [
+  {
+    name: "CharacterSheetRebuildInput",
+    reason:
+      "Character Sheet owns durable mutable-state reconstruction; exporting its input type requires callers to provide one explicit companion-state variant instead of treating omitted fresh-construction input as durable empty state.",
+  },
   {
     name: "parseCharacterSheetRetainedCompanionCurrentHitPoints",
     reason:

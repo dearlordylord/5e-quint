@@ -144,6 +144,7 @@ import {
 } from "./character-progression-types.ts";
 import {
   isWeaponMasteryChoiceFeature,
+  weaponMasteryChoiceProfileForClassLevel,
   weaponMasteryChoiceProfileForFeature,
   type WeaponMasteryChoiceFeature,
 } from "./weapon-mastery.ts";
@@ -2689,18 +2690,22 @@ function weaponMasteryFeatureHoleSource(
   const profile = weaponMasteryChoiceProfileForFeature({
     featureUnitId: feature.id,
     unitLibrary,
-    ...(input.classLevel === undefined ? {} : { classLevel: input.classLevel }),
   });
   if (profile === undefined) {
     return undefined;
   }
 
-  const options = profile.eligibleWeapons.map(unitOption);
+  const projectedProfile =
+    input.classLevel === undefined
+      ? Option.some(profile)
+      : weaponMasteryChoiceProfileForClassLevel(profile, input.classLevel);
+  if (Option.isNone(projectedProfile)) return undefined;
+  const options = projectedProfile.value.eligibleWeapons.map(unitOption);
 
   return requireChoiceCreationHole(
     choiceHole({
       source: unitSource(feature.id, WEAPON_MASTERY_OPTIONS_CHOICE_KEY),
-      cardinality: exactChoiceCardinality(profile.choiceCount),
+      cardinality: exactChoiceCardinality(projectedProfile.value.choiceCount),
       options,
     }),
   );

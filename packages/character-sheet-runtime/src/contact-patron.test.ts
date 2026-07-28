@@ -21,7 +21,7 @@ import {
   rebuildCharacterSheetFixture,
   requireRight,
   unitLibrary,
-} from "./test-support.ts";
+} from "./test-support.test-support.ts";
 
 type ContactPatronSelectedIdentityDriverAction =
   | "doCastWarlockContactPatron"

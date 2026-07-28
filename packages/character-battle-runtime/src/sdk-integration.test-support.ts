@@ -229,6 +229,7 @@ export function characterSheet(input: {
           : { currentHp: Hp(input.currentHp) }),
         tempHp: Hp(0),
         conditions: [],
+        companion: { tag: "none" },
         unitLibrary,
         ...(input.druidWildShapeKnownFormStatBlockIds === undefined
           ? {}

@@ -17,7 +17,7 @@ import {
   requireRight,
   spellSlotLevel,
   unitLibrary,
-} from "./test-support.ts";
+} from "./test-support.test-support.ts";
 import { type CharacterSheetTelekinesisTarget } from "./sheet-types.ts";
 
 type TelekinesisSelectedIdentityDriverAction = "doCastTelekinesis";

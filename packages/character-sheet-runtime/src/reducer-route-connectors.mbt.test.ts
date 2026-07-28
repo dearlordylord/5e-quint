@@ -56,7 +56,7 @@ import {
   type CharacterSheetWeaponMasteryReselection,
   type CharacterSheetWeaponMasterySelectedReferenceProjection,
 } from "./index.ts";
-import { authoredNonEmptyUnitIds } from "./test-support.ts";
+import { authoredNonEmptyUnitIds } from "./test-support.test-support.ts";
 
 const MBT_TEST_TIMEOUT_MS = 120_000;
 

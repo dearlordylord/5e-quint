@@ -23,7 +23,7 @@ import {
   secondStoryWorkProjectionTestName,
   skillProficiencyOverridesJackOfAllTradesTestName,
   unitLibrary,
-} from "./test-support.ts";
+} from "./test-support.test-support.ts";
 
 function expectSecondStoryWorkProjection() {
   const baseRogueBuild = armorClassBuild({

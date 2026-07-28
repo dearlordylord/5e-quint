@@ -15,7 +15,7 @@ import {
   requireRight,
   unitLibrary,
   useHeroicWarriorAtCombatTurnStart,
-} from "./test-support.ts";
+} from "./test-support.test-support.ts";
 
 export const fighterHeroicWarriorCombatTurnStartTestName =
   "Heroic Warrior grants Heroic Inspiration at combat turn start when absent";

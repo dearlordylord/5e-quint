@@ -10,7 +10,7 @@ import {
   resourceCount,
   unitLibrary,
   wizardBuild,
-} from "./test-support.ts";
+} from "./test-support.test-support.ts";
 import {
   FreshCharacterSheetProjectionSchema,
   CharacterSheetConstructionIssuesSchema,

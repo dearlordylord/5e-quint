@@ -224,12 +224,22 @@ function testCharacterEquipmentItemId<
 }
 
 function availableCharacterSessionRight(
-  input: Omit<Parameters<typeof availableCharacterSession>[0], "conditions"> &
+  input: Omit<
+    Parameters<typeof availableCharacterSession>[0],
+    "companion" | "conditions"
+  > &
     Partial<
-      Pick<Parameters<typeof availableCharacterSession>[0], "conditions">
+      Pick<
+        Parameters<typeof availableCharacterSession>[0],
+        "companion" | "conditions"
+      >
     >,
 ) {
-  const result = availableCharacterSession({ conditions: [], ...input });
+  const result = availableCharacterSession({
+    companion: { tag: "none" },
+    conditions: [],
+    ...input,
+  });
   if (Either.isLeft(result)) {
     throw new Error(result.left.message);
   }
@@ -4970,6 +4980,7 @@ describe("MCP server route", () => {
         tempHp: Hp(0),
         hitPointMaximumReduction: Hp(0),
         conditions: [],
+        companion: { tag: "none" },
         unitLibrary: root.unitLibrary,
         positiveHpUnconscious: KNOCKED_OUT_UNCONSCIOUS,
       }),

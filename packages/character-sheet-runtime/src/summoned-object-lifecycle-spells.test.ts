@@ -30,7 +30,7 @@ import {
   requireRight,
   spellSlotLevel,
   unitLibrary,
-} from "./test-support.ts";
+} from "./test-support.test-support.ts";
 import {
   type CharacterSheetAnimateObjectsTarget,
   type CharacterSheetConjureElementalSpirit,

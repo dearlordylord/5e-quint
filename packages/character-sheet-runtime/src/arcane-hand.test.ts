@@ -18,7 +18,7 @@ import {
   requireRight,
   spellSlotLevel,
   unitLibrary,
-} from "./test-support.ts";
+} from "./test-support.test-support.ts";
 import type { CharacterSheet } from "./index.ts";
 import { type CharacterSheetArcaneHandSpace } from "./sheet-types.ts";
 

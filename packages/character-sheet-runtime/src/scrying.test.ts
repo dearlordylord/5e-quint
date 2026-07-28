@@ -20,7 +20,7 @@ import {
   scryingSavingThrowModifier,
   spellSlotLevel,
   unitLibrary,
-} from "./test-support.ts";
+} from "./test-support.test-support.ts";
 import {
   type CharacterSheetScryingCreatureTarget,
   type CharacterSheetScryingLocationTarget,

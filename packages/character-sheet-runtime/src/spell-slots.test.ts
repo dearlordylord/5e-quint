@@ -26,7 +26,7 @@ import {
   unitLibrary,
   warlockMagicalCunningBuild,
   wizardBuild,
-} from "./test-support.ts";
+} from "./test-support.test-support.ts";
 
 describe("Character Sheet runtime / spell slots", () => {
   test("projects absent ordinary Spell Slot expenditure as zero against build capacity", () => {

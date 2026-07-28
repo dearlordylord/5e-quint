@@ -19,7 +19,7 @@ import {
   unitLibrary,
   weaponMasteryBuild,
   type CharacterSheet,
-} from "./test-support.ts";
+} from "./test-support.test-support.ts";
 
 type WeaponMasteryClassLevelReselectionResult =
   | "init"

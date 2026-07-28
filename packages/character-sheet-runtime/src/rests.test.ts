@@ -52,11 +52,11 @@ import {
   weaponMasteryLongRestReselectionTestName,
   wizardBuild,
   wizardWarlockBuild,
-} from "./test-support.ts";
+} from "./test-support.test-support.ts";
 import type {
   CharacterBuild,
   CharacterSheetWeaponMasteryReselection,
-} from "./test-support.ts";
+} from "./test-support.test-support.ts";
 
 const magicalCunningPactSlotRecoveryTestName =
   "Magical Cunning completed 1-minute rite recovers half rounded up expended Pact Slots once per Long Rest and resets on Long Rest";

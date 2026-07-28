@@ -17,7 +17,7 @@ import {
   resourceCount,
   unitLibrary,
   useRangerTirelessTemporaryHitPoints,
-} from "./test-support.ts";
+} from "./test-support.test-support.ts";
 
 export const rangerTirelessTemporaryHitPointsTestName =
   "Tireless spends a Wisdom-based use to grant minimum-one Temporary Hit Points";

@@ -17,7 +17,7 @@ import {
   rebuildCharacterSheet,
   type CharacterSheet,
   type CharacterSheetHitPoints,
-  type CharacterSheetInput,
+  type CharacterSheetRebuildInput,
   type CharacterSheetPositiveHpUnconscious,
   type CharacterSheetZeroHpLifecycle,
   type CharacterSheetZeroHpLifecycleInput,
@@ -31,7 +31,7 @@ import { Either, Option } from "effect";
 
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-use-count-resource
 export type AvailableCharacterSession = CharacterSheet;
-export type AvailableCharacterSessionInput = CharacterSheetInput;
+export type AvailableCharacterSessionInput = CharacterSheetRebuildInput;
 export type CharacterSessionIssue = {
   readonly tag: "characterSessionIssue";
   readonly message: string;

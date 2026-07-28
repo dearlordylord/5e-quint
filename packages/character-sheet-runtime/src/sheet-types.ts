@@ -749,7 +749,6 @@ export const CHARACTER_SHEET_CONSTRUCTION_ISSUE_NO_DETAIL_CODES = [
   "restFeatureUsesNotEmpty",
   "resourceExpendituresNotEmpty",
   "heroicInspirationNotEmpty",
-  "companionNotEmpty",
   "spellSlotStateUnexpected",
   "spellSlotStateInvalid",
   "pactSlotStateUnexpected",
@@ -1278,7 +1277,7 @@ export type CharacterSheetSpellRestBenefitResult = {
   readonly recipients: readonly CharacterSheet[];
 };
 
-export type CharacterSheetInput = {
+type CharacterSheetInputFacts = {
   readonly characterId: CharacterSheetId;
   readonly build: CharacterBuild;
   readonly currentHp?: HpType;
@@ -1296,11 +1295,16 @@ export type CharacterSheetInput = {
   readonly restFeatureUses?: readonly CharacterSheetRestFeatureUse[];
   readonly resourceExpenditures?: readonly CharacterSheetResourceExpenditure[];
   readonly heroicInspiration?: CharacterSheetHeroicInspiration;
-  readonly companion?: CharacterSheetCompanion;
   readonly druidWildShapeKnownFormStatBlockIds?: readonly StatBlockId[];
   readonly druidCircleLand?: CharacterSheetDruidCircleLand;
   readonly fiendishResilience?: CharacterSheetFiendishResilience;
   readonly statBlockCatalog?: StatBlockCatalog;
+};
+
+export type CharacterSheetInput = CharacterSheetInputFacts;
+
+export type CharacterSheetRebuildInput = CharacterSheetInputFacts & {
+  readonly companion: CharacterSheetCompanion;
 };
 
 export type CharacterSheetPositiveHpUnconscious = {

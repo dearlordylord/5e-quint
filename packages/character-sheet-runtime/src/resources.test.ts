@@ -13,7 +13,7 @@ import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { statBlockId as authoredStatBlockId } from "@dnd/shared/game-facts";
 import { describe, expect, test } from "vitest";
 import type { CharacterSheetResourceExpenditure } from "./index.ts";
-import type { CharacterBuild } from "./test-support.ts";
+import type { CharacterBuild } from "./test-support.test-support.ts";
 import {
   DieRollResult,
   DRUID_WILD_SHAPE_UNIT_ID,
@@ -50,7 +50,7 @@ import {
   useMonkUncannyMetabolismWhenRollingInitiative,
   warlockMagicalCunningBuild,
   wizardBuild,
-} from "./test-support.ts";
+} from "./test-support.test-support.ts";
 
 const monksFocusShortRestRecoveryTestName =
   "Short Rest restores the Monk Focus Point use pool";

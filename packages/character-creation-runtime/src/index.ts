@@ -39,6 +39,7 @@ export {
   exactChoiceCardinality,
   hitDieSize,
   hitDieTotal,
+  isCharacterBuildToolProficiencyId,
   loadoutEquipmentUnitId,
   loadoutSourceHoleIdText,
   loadoutSourceKey,
@@ -47,6 +48,7 @@ export {
   parseLoadoutSourceKey,
   parseUnitChoiceSourceKey,
   sorcererMetamagicOptionId,
+  toolProficiencyId,
   unitChoiceKey,
   unitChoiceSourceHoleIdText,
   unitChoiceSourceKey,
@@ -155,6 +157,8 @@ export {
   type SorcererMetamagicOptionIdIssue,
   type StandardLanguage,
   type SupportedAbilityScoreMethod,
+  type ToolProficiencyId,
+  type ToolProficiencyIdText,
   type TwoAndOneBackgroundAbilityScoreIncreaseSelection,
   type UnitChoiceKey,
   type UnitChoiceSourceKey,
@@ -274,6 +278,7 @@ export {
 export {
   isWeaponMasteryChoiceFeature,
   weaponMasteryChoiceProfileForFeature,
+  weaponMasteryChoiceProfileForProgression,
   type WeaponMasteryChoiceFeature,
   type WeaponMasteryChoiceProfile,
 } from "./weapon-mastery.ts";

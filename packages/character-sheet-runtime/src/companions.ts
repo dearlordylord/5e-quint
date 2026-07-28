@@ -190,13 +190,10 @@ export function createRetainedFamiliarLikeCompanion(
 }
 
 export function companionFromInput(
-  companion: CharacterSheetCompanion | undefined,
+  companion: CharacterSheetCompanion,
 ): Either.Either<CharacterSheetCompanion, CharacterSheetIssue> {
-  if (companion === undefined || companion.tag === "none") {
+  if (companion.tag === "none") {
     return Either.right({ tag: "none" });
-  }
-  if (companion.tag !== "retainedOneAtATime") {
-    return characterSheetIssue("Character Sheet companion state is invalid.");
   }
   const hitPointsIssue = retainedCompanionHitPointsIssue(
     companion.companion.manifestation,
@@ -210,8 +207,6 @@ export function companionFromInput(
 export function parseStoredCharacterSheetCompanion(
   value: unknown,
 ): Either.Either<CharacterSheetCompanion, CharacterSheetIssue> {
-  if (value === undefined || value === null)
-    return Either.right({ tag: "none" });
   if (!isRecord(value)) {
     return characterSheetIssue("Expected Character Sheet companion state.");
   }

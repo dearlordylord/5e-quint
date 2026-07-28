@@ -18,7 +18,7 @@ import {
   requireRight,
   spellSlotLevel,
   unitLibrary,
-} from "./test-support.ts";
+} from "./test-support.test-support.ts";
 import { type CharacterSheetAwakenTarget } from "./sheet-types.ts";
 
 type AwakenSelectedIdentityDriverAction = "doCastAwaken";

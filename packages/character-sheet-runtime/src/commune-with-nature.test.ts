@@ -18,7 +18,7 @@ import {
   spellSlotLevel,
   storedAvailableSheetInput,
   unitLibrary,
-} from "./test-support.ts";
+} from "./test-support.test-support.ts";
 
 type CommuneWithNatureSelectedIdentityDriverAction = "doCastCommuneWithNature";
 

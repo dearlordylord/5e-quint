@@ -28,7 +28,7 @@ import {
   unitLibrary,
   warlockMagicalCunningBuild,
   type CharacterBuild,
-} from "./test-support.ts";
+} from "./test-support.test-support.ts";
 import { characterSheetPassiveDefenseProjection } from "./passive-defenses.ts";
 
 const statBlockCatalogResult = buildStatBlockCatalog({

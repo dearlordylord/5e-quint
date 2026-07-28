@@ -38,7 +38,7 @@ import {
   storedAvailableSheetInput,
   unitLibrary,
   wizardWarlockBuild,
-} from "./test-support.ts";
+} from "./test-support.test-support.ts";
 describe("Character Sheet runtime / healing and rest benefit spells", () => {
   test(layOnHandsSpendsHealingPoolTestName, () => {
     const source = requireRight(

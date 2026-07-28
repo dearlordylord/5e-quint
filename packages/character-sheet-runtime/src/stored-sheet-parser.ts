@@ -14,11 +14,13 @@ import {
   eldritchInvocationId,
   eldritchInvocationOptionForInvocationId,
   eldritchInvocationRepeatableChoiceSatisfiesRule,
+  isCharacterBuildToolProficiencyId,
   languageFromSurfaceLanguageId,
   parseCharacterEquipmentItemId,
   progressionClassUnitIds,
   sorcererMetamagicOptionId,
   STANDARD_LANGUAGES,
+  toolProficiencyId,
   type CharacterBuild,
   type CharacterBuildBookOfShadowsSpellAccess,
   type CharacterBuildEldritchInvocationRepeatableChoice,
@@ -1307,43 +1309,74 @@ function parseStoredProficiencyChoices(
   if (!Array.isArray(value)) {
     return characterSheetIssue("Character Build requires proficiency choices.");
   }
-  const choices = [];
+  const choices: CharacterBuildProficiencyChoiceSubject[] = [];
   for (const choice of value) {
     if (!isRecord(choice) || typeof choice.kind !== "string") {
       return characterSheetIssue(
         "Character Build proficiency choice is invalid.",
       );
     }
-    if (
-      choice.kind === "skill" &&
-      SKILLS.some((skill) => skill === choice.skill)
-    ) {
+    if (choice.kind === "skill" && isCharacterBuildSkill(choice.skill)) {
       choices.push({ kind: "skill", skill: choice.skill });
     } else if (
+      choice.kind === "skill_expertise" &&
+      isCharacterBuildSkill(choice.skill)
+    ) {
+      choices.push({ kind: "skill_expertise", skill: choice.skill });
+    } else if (
       choice.kind === "weapon_category" &&
-      WEAPON_PROFICIENCY_CATEGORY_VALUES.some(
-        (category) => category === choice.category,
-      )
+      isWeaponProficiencyCategory(choice.category)
     ) {
       choices.push({ kind: "weapon_category", category: choice.category });
     } else if (
       choice.kind === "armor_category" &&
-      ARMOR_TRAINING_CATEGORY_VALUES.some(
-        (category) => category === choice.category,
-      )
+      isArmorTrainingCategory(choice.category)
     ) {
       choices.push({ kind: "armor_category", category: choice.category });
-    } else if (choice.kind === "tool" && typeof choice.toolId === "string") {
-      choices.push({ kind: "tool", toolId: choice.toolId });
+    } else if (
+      choice.kind === "tool" &&
+      typeof choice.toolId === "string" &&
+      isCharacterBuildToolProficiencyId(choice.toolId)
+    ) {
+      choices.push({ kind: "tool", toolId: toolProficiencyId(choice.toolId) });
     } else {
       return characterSheetIssue(
         "Character Build proficiency choice is invalid.",
       );
     }
   }
-  return Either.right(
-    choices as readonly CharacterBuildProficiencyChoiceSubject[],
+  return Either.right(choices);
+}
+
+type CharacterBuildSkill = Extract<
+  CharacterBuildProficiencyChoiceSubject,
+  { readonly kind: "skill" | "skill_expertise" }
+>["skill"];
+type WeaponProficiencyCategory = Extract<
+  CharacterBuildProficiencyChoiceSubject,
+  { readonly kind: "weapon_category" }
+>["category"];
+type ArmorTrainingCategory = Extract<
+  CharacterBuildProficiencyChoiceSubject,
+  { readonly kind: "armor_category" }
+>["category"];
+
+function isCharacterBuildSkill(value: unknown): value is CharacterBuildSkill {
+  return SKILLS.some((skill) => skill === value);
+}
+
+function isWeaponProficiencyCategory(
+  value: unknown,
+): value is WeaponProficiencyCategory {
+  return WEAPON_PROFICIENCY_CATEGORY_VALUES.some(
+    (category) => category === value,
   );
+}
+
+function isArmorTrainingCategory(
+  value: unknown,
+): value is ArmorTrainingCategory {
+  return ARMOR_TRAINING_CATEGORY_VALUES.some((category) => category === value);
 }
 
 function parseStoredFeatures(

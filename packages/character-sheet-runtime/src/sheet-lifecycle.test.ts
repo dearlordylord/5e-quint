@@ -25,7 +25,7 @@ import {
   storedAvailableSheetInput,
   unitLibrary,
   warlockSpellcastingWithCantrips,
-} from "./test-support.ts";
+} from "./test-support.test-support.ts";
 import { parseStoredHitPoints } from "./stored-sheet-parser.ts";
 
 export const sorcererMetamagicKnownOptionsSheetParsingRuntimeTestName =
@@ -941,6 +941,7 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
         spentHitDice: [],
         resourceExpenditures: [],
         heroicInspiration: CHARACTER_SHEET_NO_HEROIC_INSPIRATION,
+        companion: { tag: "none" },
         spellSlotExpenditures: [],
         pactSlotExpenditure: { expended: 0 },
       },

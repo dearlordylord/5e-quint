@@ -70,6 +70,7 @@ import {
   type CharacterSheetExhaustionLevel,
   type CharacterSheetHeroicInspiration,
   type CharacterSheetInput,
+  type CharacterSheetRebuildInput,
   type CharacterSheetHitPoints,
   type CharacterSheetIssue,
   type CharacterSheetRestFeatureUse,
@@ -138,10 +139,6 @@ export function createFreshCharacterSheet(
   ) {
     issues.push({ code: "heroicInspirationNotEmpty" });
   }
-  if (input.companion !== undefined && input.companion.tag !== "none") {
-    issues.push({ code: "companionNotEmpty" });
-  }
-
   const bookOfShadowsPresence = bookOfShadowsPresenceFromInput(input);
   if (Either.isLeft(bookOfShadowsPresence)) {
     issues.push({ code: "bookOfShadowsPresenceInvalid" });
@@ -326,7 +323,7 @@ function requireFreshConstructionFact<Value, Error>(
 }
 
 export function rebuildCharacterSheet(
-  input: CharacterSheetInput,
+  input: CharacterSheetRebuildInput,
   storedSpellSlotState?: CharacterSheetSpellSlotSourceState,
 ): Either.Either<CharacterSheet, CharacterSheetIssue> {
   const hitPointCapacity = characterSheetHitPointCapacity(input);
@@ -466,7 +463,7 @@ type AvailableSheetCommonState = Pick<
 };
 
 function availableSheetCommonState(
-  input: CharacterSheetInput,
+  input: CharacterSheetInput | CharacterSheetRebuildInput,
   state: AvailableSheetCommonState,
 ) {
   return {
@@ -494,7 +491,7 @@ function availableSheetCommonState(
 }
 
 function bookOfShadowsPresenceFromInput(
-  input: CharacterSheetInput,
+  input: CharacterSheetInput | CharacterSheetRebuildInput,
 ): Either.Either<
   CharacterSheetBookOfShadowsPresence | undefined,
   CharacterSheetIssue

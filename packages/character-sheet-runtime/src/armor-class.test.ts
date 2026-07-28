@@ -14,7 +14,7 @@ import {
   expectRight,
   requireRight,
   unitLibrary,
-} from "./test-support.ts";
+} from "./test-support.test-support.ts";
 
 describe("Character Sheet runtime / armor class", () => {
   test("derives default unarmored Armor Class from Dexterity", () => {

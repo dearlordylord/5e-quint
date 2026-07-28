@@ -1,11 +1,11 @@
 // KERNEL-COVERAGE: runtime-owner SHEET.WEAPON_MASTERY.RESELECTION
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.weapon-mastery-reselection
 import {
-  classLevelForUnit,
   weaponMasteryChoiceProfileForFeature,
+  weaponMasteryChoiceProfileForProgression,
   type UnitCatalog,
 } from "@dnd/character-creation-runtime";
-import { Either } from "effect";
+import { Either, Option } from "effect";
 import type { UnitRecord } from "@dnd/surface/surface/types";
 
 import {
@@ -46,30 +46,25 @@ export function characterSheetWeaponMasterySelectedReferenceProjection(input: {
       "Weapon Mastery selected-reference projection requires a Weapon Mastery class-feature Unit.",
     );
   }
-  const classLevel = classLevelForUnit(
+  const levelProfile = weaponMasteryChoiceProfileForProgression(
+    profile,
     input.sheet.build.progression,
-    profile.classRecord.id,
   );
-  const levelProfile = weaponMasteryChoiceProfileForFeature({
-    featureUnitId: input.featureUnitId,
-    unitLibrary: input.unitLibrary,
-    classLevel,
-  });
-  if (levelProfile === undefined) {
+  if (Option.isNone(levelProfile)) {
     return characterSheetIssue(
-      "Weapon Mastery selected-reference projection requires a Weapon Mastery class-feature Unit.",
+      "Weapon Mastery selected-reference projection requires the Character Build to own the feature class.",
     );
   }
   return Either.right({
-    featureUnitId: levelProfile.feature.id,
-    classUnitId: levelProfile.classRecord.id,
+    featureUnitId: levelProfile.value.feature.id,
+    classUnitId: levelProfile.value.classRecord.id,
     selectedWeaponUnitIds: weaponMasterySelectedWeaponUnitIds(
       input.sheet,
-      levelProfile.feature.id,
+      levelProfile.value.feature.id,
     ),
-    choiceCount: levelProfile.choiceCount,
-    longRestChangeCount: levelProfile.longRestChangeCount,
-    eligibleWeaponUnitIds: levelProfile.eligibleWeapons.map(
+    choiceCount: levelProfile.value.choiceCount,
+    longRestChangeCount: levelProfile.value.longRestChangeCount,
+    eligibleWeaponUnitIds: levelProfile.value.eligibleWeapons.map(
       (weapon) => weapon.id,
     ),
     qRoute: CHARACTER_SHEET_WEAPON_MASTERY_SELECTED_REFERENCE_ROUTE,

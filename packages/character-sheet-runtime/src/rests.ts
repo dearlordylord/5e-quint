@@ -15,6 +15,7 @@ import {
   classLevelForUnit,
   progressionClassUnitIds,
   weaponMasteryChoiceProfileForFeature,
+  weaponMasteryChoiceProfileForProgression,
   type CharacterBuild,
   type CharacterBuildFeature,
   type UnitCatalog,
@@ -921,18 +922,13 @@ function selectedWeaponMasteryUnitIdsForLongRest(input: {
       "Weapon Mastery Long Rest reselection requires a Weapon Mastery class-feature Unit.",
     );
   }
-  const classLevel = classLevelForUnit(
+  const levelProfile = weaponMasteryChoiceProfileForProgression(
+    profile,
     input.build.progression,
-    profile.classRecord.id,
   );
-  const levelProfile = weaponMasteryChoiceProfileForFeature({
-    featureUnitId: input.reselection.featureUnitId,
-    unitLibrary: input.unitLibrary,
-    classLevel,
-  });
-  if (levelProfile === undefined) {
+  if (Option.isNone(levelProfile)) {
     return characterSheetIssue(
-      "Weapon Mastery Long Rest reselection requires a Weapon Mastery class-feature Unit.",
+      "Weapon Mastery Long Rest reselection requires the Character Build to own the feature class.",
     );
   }
   if (profile.longRestChangeCount < 1) {
@@ -946,7 +942,7 @@ function selectedWeaponMasteryUnitIdsForLongRest(input: {
     input.reselection.featureUnitId,
   );
   if (
-    currentWeaponUnitIds.length !== levelProfile.choiceCount ||
+    currentWeaponUnitIds.length !== levelProfile.value.choiceCount ||
     new Set(currentWeaponUnitIds).size !== currentWeaponUnitIds.length
   ) {
     return characterSheetIssue(
@@ -955,7 +951,7 @@ function selectedWeaponMasteryUnitIdsForLongRest(input: {
   }
 
   const selectedWeaponUnitIds = input.reselection.selectedWeaponUnitIds;
-  if (selectedWeaponUnitIds.length !== levelProfile.choiceCount) {
+  if (selectedWeaponUnitIds.length !== levelProfile.value.choiceCount) {
     return characterSheetIssue(
       "Weapon Mastery Long Rest reselection must match the feature choice count.",
     );
@@ -967,7 +963,7 @@ function selectedWeaponMasteryUnitIdsForLongRest(input: {
   }
 
   const eligibleWeaponUnitIds = new Set(
-    levelProfile.eligibleWeapons.map((weapon) => weapon.id),
+    levelProfile.value.eligibleWeapons.map((weapon) => weapon.id),
   );
   if (
     selectedWeaponUnitIds.some((unitId) => !eligibleWeaponUnitIds.has(unitId))

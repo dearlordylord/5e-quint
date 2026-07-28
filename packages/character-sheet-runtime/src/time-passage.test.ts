@@ -5,7 +5,7 @@ import {
   stableSheet,
   timePassed,
   timeSpanDuration,
-} from "./test-support.ts";
+} from "./test-support.test-support.ts";
 
 describe("Character Sheet runtime / time passage", () => {
   test("timePassed accumulates Stable recovery time before one hour can pass", () => {

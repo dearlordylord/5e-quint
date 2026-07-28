@@ -10,7 +10,7 @@ import {
   subclassPreparedSpellAccessBlocksBookOfShadowsDuplicateTestName,
   subclassPreparedSpellAccessProgressionTestName,
   unitLibrary,
-} from "./test-support.ts";
+} from "./test-support.test-support.ts";
 
 describe("Character Sheet runtime / class feature prepared spells", () => {
   test(subclassPreparedSpellAccessBlocksBookOfShadowsDuplicateTestName, () => {

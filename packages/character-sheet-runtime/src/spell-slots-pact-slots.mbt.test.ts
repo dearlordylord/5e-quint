@@ -503,6 +503,7 @@ function wizardWarlockSpentSheet(characterIdText: string): CharacterSheet {
       tempHp: Hp(0),
       hitPointMaximumReduction: Hp(0),
       conditions: [],
+      companion: { tag: "none" },
       unitLibrary,
       spellSlotExpenditures: [
         {
@@ -528,6 +529,7 @@ function arcaneRecoveryPactSheet(input: {
       tempHp: Hp(0),
       hitPointMaximumReduction: Hp(0),
       conditions: [],
+      companion: { tag: "none" },
       unitLibrary,
       spellSlotExpenditures: [
         {
@@ -553,6 +555,7 @@ function sorcererWarlockLongRestSheet(): CharacterSheet {
       tempHp: Hp(0),
       hitPointMaximumReduction: Hp(0),
       conditions: [],
+      companion: { tag: "none" },
       unitLibrary,
       spellSlotExpenditures: [
         {
@@ -580,6 +583,7 @@ function warlockMagicalCunningSheet(input: {
       tempHp: Hp(0),
       hitPointMaximumReduction: Hp(0),
       conditions: [],
+      companion: { tag: "none" },
       unitLibrary,
       pactSlots: { expended: resourceCount(input.pactExpended) },
     }),
