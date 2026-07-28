@@ -261,12 +261,16 @@ type SelectedUnitIdentityReplay = {
   readonly actions: readonly RuleCoreFeatureDriverAction[];
   readonly sequences: readonly SelectedUnitIdentityReplaySequence[];
 };
-type EvasionUnitId = UnitId & ("rogue_evasion" | "monk_evasion");
-const selectedUnitRuntimeBoundaryIds = new Set<UnitId>();
-
 function selectedUnitId<const Id extends string>(value: Id): UnitId & Id {
+  // Brands are erased at runtime; parsing establishes UnitId, and Id preserves
+  // the caller's already-known string literal for exact witness narrowing.
   return parseSharedUnitId(value) as UnitId & Id;
 }
+
+const rogueEvasionUnitId = selectedUnitId("rogue_evasion");
+const monkEvasionUnitId = selectedUnitId("monk_evasion");
+type EvasionUnitId = typeof rogueEvasionUnitId | typeof monkEvasionUnitId;
+const selectedUnitRuntimeBoundaryIds = new Set<UnitId>();
 
 const selectedUnitIdentityReplays = [
   {
@@ -430,7 +434,7 @@ const selectedUnitIdentityReplays = [
   },
   {
     taskId: "QMBT9",
-    unitId: selectedUnitId("rogue_evasion"),
+    unitId: rogueEvasionUnitId,
     actions: ["doEvasionSuccess", "doEvasionFailure"],
     sequences: [
       {
@@ -455,7 +459,7 @@ const selectedUnitIdentityReplays = [
   },
   {
     taskId: "QMBT9",
-    unitId: selectedUnitId("monk_evasion"),
+    unitId: monkEvasionUnitId,
     actions: ["doEvasionSuccess", "doEvasionFailure"],
     sequences: [
       {
@@ -746,9 +750,8 @@ function recordSelectedUnitRuntimeBoundaryId<Id extends UnitId>(
 }
 
 function evasionUnitIdForReplay(unitId: UnitId): EvasionUnitId | undefined {
-  if (unitId === "rogue_evasion" || unitId === "monk_evasion") {
-    return unitId as EvasionUnitId;
-  }
+  if (unitId === rogueEvasionUnitId) return rogueEvasionUnitId;
+  if (unitId === monkEvasionUnitId) return monkEvasionUnitId;
   return undefined;
 }
 
@@ -2058,7 +2061,7 @@ function relentlessEnduranceBattle(): BattleState {
 }
 
 function evasionBattle(
-  unitId: EvasionUnitId = selectedUnitId("rogue_evasion"),
+  unitId: EvasionUnitId = rogueEvasionUnitId,
 ): BattleState {
   const unit = unitLibrary.requireUnit(
     recordSelectedUnitRuntimeBoundaryId(unitId),
