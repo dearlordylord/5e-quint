@@ -47,6 +47,18 @@ import { traceTargetCountScaling } from "./tracer-scaling.ts";
 
 const byFamily = Match.discriminator("family");
 
+type ObjectRepairEffect = Extract<
+  SpellMechanics,
+  { readonly family: "object_repair" }
+>["effect"];
+type MinorMagicEffectMenu = Extract<
+  SpellMechanics,
+  { readonly family: "minor_magic_effect_menu" }
+>["effects"];
+type NamedSpellEffect =
+  | ObjectRepairEffect
+  | MinorMagicEffectMenu[keyof MinorMagicEffectMenu];
+
 export function traceSpellUnit(spell: SpellRecord): Trace {
   const { rootId, nodes, edges, ids } = traceRoot(
     "spell_root",
@@ -137,10 +149,10 @@ export function traceSpellMechanics(
       traceTemplatedMultiSpawn(mechanics, ctx, nodes, edges, ids),
     ),
     byFamily("object_repair", ({ effect }) =>
-      traceUtilityEffects([effect], ctx, nodes, edges, ids),
+      traceNamedSpellEffects([effect], ctx, nodes, edges, ids),
     ),
     byFamily("minor_magic_effect_menu", ({ effects }) =>
-      traceUtilityEffects(Object.values(effects), ctx, nodes, edges, ids),
+      traceNamedSpellEffects(Object.values(effects), ctx, nodes, edges, ids),
     ),
     Match.exhaustive,
   );
@@ -148,8 +160,8 @@ export function traceSpellMechanics(
   return procId;
 }
 
-function traceUtilityEffects(
-  effects: ReadonlyArray<{ readonly kind: string }>,
+function traceNamedSpellEffects(
+  effects: ReadonlyArray<NamedSpellEffect>,
   ctx: SpellCtx,
   nodes: TraceNode[],
   edges: TraceEdge[],
