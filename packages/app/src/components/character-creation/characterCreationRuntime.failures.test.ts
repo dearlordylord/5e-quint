@@ -1,6 +1,5 @@
 import type * as CharacterCreationRuntime from "@dnd/character-creation-runtime"
 import type * as CharacterSheetRuntime from "@dnd/character-sheet-runtime"
-import { resourceCount, spellSlotLevel } from "@dnd/shared/types"
 import { Either } from "effect"
 import { describe, expect, it, vi } from "vitest"
 
@@ -15,7 +14,6 @@ const summaryFailures = vi.hoisted(() => ({
   freshSheet: false,
   hitDice: false,
   maximumHp: false,
-  pactSlots: false,
   resources: false,
   wildShapeFacts: false
 }))
@@ -47,15 +45,6 @@ vi.mock("@dnd/character-sheet-runtime", async (importOriginal) => {
     ),
     characterSheetHitPointMaximum: vi.fn((input: Parameters<typeof actual.characterSheetHitPointMaximum>[0]) =>
       summaryFailures.maximumHp ? Either.left(issue) : actual.characterSheetHitPointMaximum(input)
-    ),
-    characterSheetPactSlots: vi.fn((sheet: Parameters<typeof actual.characterSheetPactSlots>[0]) =>
-      summaryFailures.pactSlots
-        ? {
-            slotLevel: spellSlotLevel(1),
-            count: resourceCount(1),
-            expended: resourceCount(0)
-          }
-        : actual.characterSheetPactSlots(sheet)
     ),
     characterSheetResources: vi.fn(
       (
@@ -100,28 +89,6 @@ describe("character creation app failure projections", () => {
     if (Either.isLeft(sheet)) return
 
     expect(appendStoredCharacterSheet([sheet.right], sheet.right)).toEqual([sheet.right])
-  })
-
-  it("includes Pact Slot capacity in the Character Sheet summary", () => {
-    const sheet = createCharacterSheetFromDraft(FIGHTER_EXAMPLE_DRAFT)
-    expect(Either.isRight(sheet)).toBe(true)
-    if (Either.isLeft(sheet)) return
-
-    summaryFailures.pactSlots = true
-    try {
-      expect(characterSheetSummary(sheet.right)).toMatchObject({
-        _tag: "Right",
-        right: {
-          pactSlots: {
-            slotLevel: 1,
-            count: 1,
-            expended: 0
-          }
-        }
-      })
-    } finally {
-      summaryFailures.pactSlots = false
-    }
   })
 
   it("preserves fresh Character Sheet construction failures", () => {

@@ -100,6 +100,23 @@ describe("character creation runtime", () => {
     ])
   })
 
+  test("includes Pact Slot capacity in a Warlock Character Sheet summary", () => {
+    const sheet = createCharacterSheetFromDraft(completeSupportedWarlockOneDraft())
+    expect(Either.isRight(sheet)).toBe(true)
+    if (Either.isLeft(sheet)) return
+
+    expect(characterSheetSummary(sheet.right)).toMatchObject({
+      _tag: "Right",
+      right: {
+        pactSlots: {
+          slotLevel: 1,
+          count: 1,
+          expended: 0
+        }
+      }
+    })
+  })
+
   test("returns a typed issue for an invalid ability-score assignment", () => {
     expect(
       abilityScoresFill({
@@ -122,17 +139,52 @@ describe("character creation runtime", () => {
 })
 
 function completeSupportedDruidTwoDraft(): CharacterDraft {
-  let draft = createCharacterDraft({
-    draftId: createStoredDraftId("app:test:druid-wild-shape")
-  })
-  const progressionOption = progressionOptionId({
-    startingClass: classUnitId(unitId("class_druid")),
+  return completeSupportedSingleClassDraft({
+    draftId: createStoredDraftId("app:test:druid-wild-shape"),
+    classId: classUnitId(unitId("class_druid")),
     advancements: [
       {
         classUnitId: classUnitId(unitId("class_druid")),
         hitPointRule: { tag: "fixedHigherLevelGain" }
       }
-    ]
+    ],
+    abilityScores: {
+      str: 8,
+      dex: 14,
+      con: 13,
+      int: 10,
+      wis: 15,
+      cha: 12
+    }
+  })
+}
+
+function completeSupportedWarlockOneDraft(): CharacterDraft {
+  return completeSupportedSingleClassDraft({
+    draftId: createStoredDraftId("app:test:warlock-pact-slots"),
+    classId: classUnitId(unitId("class_warlock")),
+    advancements: [],
+    abilityScores: {
+      str: 8,
+      dex: 14,
+      con: 13,
+      int: 10,
+      wis: 12,
+      cha: 15
+    }
+  })
+}
+
+function completeSupportedSingleClassDraft(input: {
+  readonly draftId: ReturnType<typeof createStoredDraftId>
+  readonly classId: ReturnType<typeof classUnitId>
+  readonly advancements: Parameters<typeof progressionOptionId>[0]["advancements"]
+  readonly abilityScores: Parameters<typeof abilityScoresFill>[0]["scores"]
+}): CharacterDraft {
+  let draft = createCharacterDraft({ draftId: input.draftId })
+  const progressionOption = progressionOptionId({
+    startingClass: input.classId,
+    advancements: input.advancements
   })
 
   for (let remainingPasses = 0; remainingPasses < 12; remainingPasses += 1) {
@@ -147,14 +199,7 @@ function completeSupportedDruidTwoDraft(): CharacterDraft {
           const fill = abilityScoresFill({
             holeId: hole.holeId,
             method: "standardArray",
-            scores: {
-              str: 8,
-              dex: 14,
-              con: 13,
-              int: 10,
-              wis: 15,
-              cha: 12
-            }
+            scores: input.abilityScores
           })
           if (Either.isLeft(fill)) {
             throw new Error(fill.left.message)
@@ -165,20 +210,20 @@ function completeSupportedDruidTwoDraft(): CharacterDraft {
         return {
           kind: "choice",
           holeId: hole.holeId,
-          optionIds: druidTestChoiceOptionIds(hole, progressionOption)
+          optionIds: testChoiceOptionIds(hole, progressionOption)
         }
       })
     })
     if (result.tag !== "accepted") {
-      throw new Error(`Druid test draft fill failed: ${JSON.stringify(result.issues)}`)
+      throw new Error(`Test draft fill failed: ${JSON.stringify(result.issues)}`)
     }
     draft = result.draft
   }
 
-  throw new Error("Druid test draft did not converge.")
+  throw new Error("Test draft did not converge.")
 }
 
-function druidTestChoiceOptionIds(
+function testChoiceOptionIds(
   hole: Extract<ReturnType<typeof assessCharacterDraft>["holes"][number], { readonly kind: "choice" }>,
   progressionOption: ReturnType<typeof progressionOptionId>
 ) {
