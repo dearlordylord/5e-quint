@@ -2,13 +2,11 @@ import {
   buildStatBlockCatalog,
   srdStatBlockCollection,
   type StatBlockCatalog,
-  type StatBlockCatalogBuildIssue,
 } from "@dnd/surface/surface/stat-block-catalog";
 import {
   buildUnitCatalog,
   srdUnitCollection,
   type UnitCatalog,
-  type UnitCatalogBuildIssue,
 } from "@dnd/surface/surface/unit-catalog";
 import {
   CHARACTER_CREATION_SUPPORT_PROFILE,
@@ -48,7 +46,7 @@ export function createMcpCompositionRoot(
   });
   if (unitCatalog.tag === "invalid") {
     throw new Error(
-      `Invalid SRD Unit catalog for MCP root: ${formatBuildIssues(
+      `Invalid SRD Unit catalog for MCP root: ${JSON.stringify(
         unitCatalog.issues,
       )}`,
     );
@@ -59,7 +57,7 @@ export function createMcpCompositionRoot(
   });
   if (statBlockCatalog.tag === "invalid") {
     throw new Error(
-      `Invalid SRD Stat Block catalog for MCP root: ${formatBuildIssues(
+      `Invalid SRD Stat Block catalog for MCP root: ${JSON.stringify(
         statBlockCatalog.issues,
       )}`,
     );
@@ -95,10 +93,4 @@ function createAdminMirrorPublicationFromEnv(): AdminMirrorPublication {
   } catch {
     return disabledAdminMirrorPublication();
   }
-}
-
-function formatBuildIssues(
-  issues: readonly (UnitCatalogBuildIssue | StatBlockCatalogBuildIssue)[],
-) {
-  return JSON.stringify(issues);
 }

@@ -110,15 +110,17 @@ function prunePublisherCapacity(
   publishers: Map<AdminMirrorPublisherInstanceId, PublisherFreshness>,
 ): void {
   while (publishers.size > MAX_PUBLISHERS_PER_SESSION) {
-    let oldestPublisherId: AdminMirrorPublisherInstanceId | null = null;
-    let oldestReceivedAtEpochMs = Number.POSITIVE_INFINITY;
-    for (const [publisherInstanceId, freshness] of publishers.entries()) {
+    const entries = publishers.entries();
+    // The loop guard establishes that this iterator is non-empty.
+    const [firstPublisherId, firstFreshness] = entries.next().value!;
+    let oldestPublisherId = firstPublisherId;
+    let oldestReceivedAtEpochMs = firstFreshness.lastReceivedAtEpochMs;
+    for (const [publisherInstanceId, freshness] of entries) {
       if (freshness.lastReceivedAtEpochMs < oldestReceivedAtEpochMs) {
         oldestReceivedAtEpochMs = freshness.lastReceivedAtEpochMs;
         oldestPublisherId = publisherInstanceId;
       }
     }
-    if (oldestPublisherId === null) return;
     publishers.delete(oldestPublisherId);
   }
 }
@@ -135,15 +137,17 @@ function pruneSessionCapacity(
   >,
 ): void {
   while (latestBySession.size > MAX_MIRROR_SESSIONS) {
-    let oldestSessionId: string | null = null;
-    let oldestReceivedAtEpochMs = Number.POSITIVE_INFINITY;
-    for (const [mirrorSessionId, session] of latestBySession.entries()) {
+    const entries = latestBySession.entries();
+    // The loop guard establishes that this iterator is non-empty.
+    const [firstSessionId, firstSession] = entries.next().value!;
+    let oldestSessionId = firstSessionId;
+    let oldestReceivedAtEpochMs = firstSession.receivedAtEpochMs;
+    for (const [mirrorSessionId, session] of entries) {
       if (session.receivedAtEpochMs < oldestReceivedAtEpochMs) {
         oldestReceivedAtEpochMs = session.receivedAtEpochMs;
         oldestSessionId = mirrorSessionId;
       }
     }
-    if (oldestSessionId === null) return;
     latestBySession.delete(oldestSessionId);
     publishersBySession.delete(oldestSessionId);
     presentationTimelineBySession.delete(oldestSessionId);

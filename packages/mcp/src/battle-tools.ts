@@ -282,15 +282,13 @@ function battleResolutionContent(
   root: McpCompositionRoot,
   result: BattleRuntimeResolutionResult,
 ): BattleToolResult {
-  const session = root.sessionStore.battleSession;
-  if (session === null) return noStoredBattleContent();
-  const payload = battleResolutionPayload(root, result, session);
+  const payload = battleResolutionPayload(root, result, result.session);
   return Either.isLeft(payload)
     ? battleSnapshotPresentationIssueContent(payload.left)
     : schemaJsonContent(BattleResolutionOutputSchema, payload.right);
 }
 
-function storeBattleResolution(
+export function storeBattleResolution(
   root: McpCompositionRoot,
   result: BattleRuntimeResolutionResult,
   pendingTransaction: PendingBattleFillSession | null,

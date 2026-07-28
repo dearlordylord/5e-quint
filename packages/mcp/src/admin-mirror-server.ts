@@ -21,11 +21,24 @@ import {
 
 const DEFAULT_PORT = 8787;
 const DEFAULT_HOST = "127.0.0.1";
-const serverPort = Number(process.env.DND_ADMIN_MIRROR_PORT ?? DEFAULT_PORT);
-const serverHost = process.env.DND_ADMIN_MIRROR_HOST ?? DEFAULT_HOST;
+export function adminMirrorServerConfig(env: {
+  readonly DND_ADMIN_MIRROR_PORT?: string;
+  readonly DND_ADMIN_MIRROR_HOST?: string;
+}) {
+  return {
+    port: Number(env.DND_ADMIN_MIRROR_PORT ?? DEFAULT_PORT),
+    host: env.DND_ADMIN_MIRROR_HOST ?? DEFAULT_HOST,
+  };
+}
+const { port: serverPort, host: serverHost } = adminMirrorServerConfig(
+  process.env,
+);
 const store = createAdminMirrorStore();
 
-const server = createServer((request, response) => {
+export function handleAdminMirrorRequest(
+  request: IncomingMessage,
+  response: ServerResponse,
+): void {
   const url = requestUrl(request);
   if (url === null) {
     writeJson(response, 400, { error: "Invalid request URL." });
@@ -95,9 +108,11 @@ const server = createServer((request, response) => {
   }
 
   writeJson(response, 404, { error: "Not found." });
-});
+}
 
-server.listen(serverPort, serverHost, () => {
+export const adminMirrorServer = createServer(handleAdminMirrorRequest);
+
+adminMirrorServer.listen(serverPort, serverHost, () => {
   console.error(
     `Admin Session Mirror listening on http://${serverHost}:${serverPort}`,
   );

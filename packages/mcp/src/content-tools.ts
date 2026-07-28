@@ -285,7 +285,7 @@ function groupUnitsByKind(units: readonly UnitRecord[]) {
   );
 }
 
-function statBlockSummary(record: StatBlockRecord) {
+export function statBlockSummary(record: StatBlockRecord) {
   const statBlock = record.statBlock;
   return {
     statBlockId: record.id,

@@ -1,3 +1,4 @@
+import { CharacterSheetRetainedCompanionId } from "@dnd/character-sheet-runtime";
 import { StatBlockId, UnitId } from "@dnd/shared/game-facts";
 import { Schema } from "effect";
 
@@ -58,7 +59,7 @@ const RetainedCompanionSourceArgsSchema = Schema.Union(
 );
 const RetainOneAtATimeCompanionOperationArgsSchema = Schema.Struct({
   kind: Schema.Literal("retainOneAtATimeCompanion"),
-  companionId: Schema.NonEmptyTrimmedString,
+  companionId: CharacterSheetRetainedCompanionId,
   source: RetainedCompanionSourceArgsSchema,
   selectedForm: RetainedCompanionFormSelectionArgsSchema,
   creatureTypeOverrideChoiceId: Schema.optionalWith(

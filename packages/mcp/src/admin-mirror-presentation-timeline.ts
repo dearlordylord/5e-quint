@@ -51,12 +51,10 @@ function eventDebug(
         fills: currentPending.fills,
         subject: currentPending.subject,
       },
-      derivedOutcome: {
-        actionDetail: action?.detail ?? null,
-        actionSummary: action?.summary ?? null,
+      derivedOutcome: eventDerivedOutcome(action, {
         pendingFillCount: currentPending.fills.length,
         resultTag: "needsHoles",
-      },
+      }),
       eventKind: "pendingBattleFills",
       nextBattle: battleSummary(projection),
       previousBattle: battleSummary(previousProjection),
@@ -74,12 +72,10 @@ function eventDebug(
         fills: previousPending.fills,
         subject: previousPending.subject,
       },
-      derivedOutcome: {
-        actionDetail: action?.detail ?? null,
-        actionSummary: action?.summary ?? null,
+      derivedOutcome: eventDerivedOutcome(action, {
         hpChanges: changes,
         resultTag: "resolved",
-      },
+      }),
       eventKind: "resolvedBattleFills",
       nextBattle: battleSummary(projection),
       previousBattle: battleSummary(previousProjection),
@@ -89,11 +85,9 @@ function eventDebug(
   if (previousProjection?.battle === null && projection.battle !== null) {
     return {
       derivedInput: {},
-      derivedOutcome: {
-        actionDetail: action?.detail ?? null,
-        actionSummary: action?.summary ?? null,
+      derivedOutcome: eventDerivedOutcome(action, {
         resultTag: "resolved",
-      },
+      }),
       eventKind: "battleStarted",
       nextBattle: battleSummary(projection),
       previousBattle: null,
@@ -117,11 +111,9 @@ function eventDebug(
           tag: "runtimeCommand",
         },
       },
-      derivedOutcome: {
-        actionDetail: action?.detail ?? null,
-        actionSummary: action?.summary ?? null,
+      derivedOutcome: eventDerivedOutcome(action, {
         resultTag: "resolved",
-      },
+      }),
       eventKind: "turnAdvanced",
       nextBattle: battleSummary(projection),
       previousBattle: battleSummary(previousProjection),
@@ -130,15 +122,24 @@ function eventDebug(
 
   return {
     derivedInput: {},
-    derivedOutcome: {
-      actionDetail: action?.detail ?? null,
-      actionSummary: action?.summary ?? null,
+    derivedOutcome: eventDerivedOutcome(action, {
       hpChanges: changes,
       resultTag: "projection",
-    },
+    }),
     eventKind: "projectionUpdated",
     nextBattle: battleSummary(projection),
     previousBattle: battleSummary(previousProjection),
+  };
+}
+
+function eventDerivedOutcome(
+  action: EventAction | null,
+  outcome: Record<string, unknown>,
+): Record<string, unknown> {
+  return {
+    actionDetail: action?.detail ?? null,
+    actionSummary: action?.summary ?? null,
+    ...outcome,
   };
 }
 

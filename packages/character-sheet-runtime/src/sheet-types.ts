@@ -80,7 +80,7 @@ import {
   type UseCountResource,
 } from "@dnd/surface/surface/types";
 import { type SupportedClassFeatureSpellFreeCastResourceTag } from "@dnd/surface/surface/types";
-import { Brand, Either, Option } from "effect";
+import { Brand, Either, Option, Schema } from "effect";
 
 export const WEAPON_PROFICIENCY_CATEGORY_VALUES = [
   "simple",
@@ -211,17 +211,23 @@ export function characterSheetId(value: string): CharacterSheetId {
   return CharacterSheetId(value);
 }
 
-export type CharacterSheetRetainedCompanionId = string &
-  Brand.Brand<"CharacterSheetRetainedCompanionId">;
-const CharacterSheetRetainedCompanionId =
-  Brand.nominal<CharacterSheetRetainedCompanionId>();
+export const CharacterSheetRetainedCompanionId =
+  Schema.NonEmptyTrimmedString.pipe(
+    Schema.brand("CharacterSheetRetainedCompanionId"),
+  );
+export type CharacterSheetRetainedCompanionId =
+  typeof CharacterSheetRetainedCompanionId.Type;
 
 export function parseCharacterSheetRetainedCompanionId(
   value: string,
 ): Either.Either<CharacterSheetRetainedCompanionId, CharacterSheetIssue> {
-  return value.length === 0
-    ? characterSheetIssue("Retained companion requires companion id.")
-    : Either.right(CharacterSheetRetainedCompanionId(value));
+  return Either.mapLeft(
+    Schema.decodeUnknownEither(CharacterSheetRetainedCompanionId)(value),
+    () => ({
+      tag: "characterSheetIssue",
+      message: "Retained companion id must be non-empty and trimmed.",
+    }),
+  );
 }
 
 export type CharacterSheetTelepathicBondTargetId = string &

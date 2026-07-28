@@ -6,7 +6,7 @@ export function jsonContent(payload: unknown) {
         type: "text" as const,
         text: JSON.stringify(serializablePayload, null, 2),
       },
-    ],
+    ] as const,
   };
 }
 
@@ -22,4 +22,15 @@ export function errorContent(message: string, details?: unknown) {
     ),
     isError: true as const,
   };
+}
+
+export function jsonContentPayload(content: {
+  readonly content: readonly [{ readonly text: string }];
+}): unknown {
+  const text = content.content[0].text;
+  try {
+    return JSON.parse(text);
+  } catch {
+    return text;
+  }
 }

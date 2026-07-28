@@ -6,11 +6,11 @@ import {
   discoverBattleActs,
   type BattleRuntimeResolutionResult,
   type BattleRuntimeSession,
+  type BattleInterruptProcedureChoice,
   type BattlePresentedSnapshot,
   type BattleSnapshotPresentationIssues,
-  type BattleSubject,
 } from "@dnd/battle-runtime";
-import { Either, Match } from "effect";
+import { Either } from "effect";
 
 import type { McpCompositionRoot } from "./composition-root.ts";
 import type { BattleFillSession } from "./session-store.ts";
@@ -113,7 +113,8 @@ function battlePresentationProjection(
     admittedSpellPresentations: battleAdmittedSpellPresentations(session),
     presentedInterruptChoices: presentedInterruptChoices(
       session,
-      battleSnapshotProjection(session.state).snapshot,
+      battleSnapshotProjection(session.state).snapshot.pendingInterrupt
+        ?.choices ?? [],
     ),
   }));
 }
@@ -127,30 +128,18 @@ export function battleSnapshotPresentationIssueContent(
   });
 }
 
-function presentedInterruptChoices(
+export function presentedInterruptChoices(
   session: BattleRuntimeSession,
-  snapshot: ReturnType<typeof battleSnapshotProjection>["snapshot"],
+  choices: readonly BattleInterruptProcedureChoice[],
 ) {
-  return (snapshot.pendingInterrupt?.choices ?? []).flatMap((choice) => {
-    const present = (subject: BattleSubject) => {
-      const presentation = battleSubjectPresentation(session, subject);
-      return presentation === undefined ? [] : [{ choice, presentation }];
-    };
-    return Match.value(choice).pipe(
-      Match.discriminatorsExhaustive("kind")({
-        releaseReadiedSpell: (value) => present(value.subject),
-        releaseReadiedMovement: (value) => present(value.subject),
-        castTriggeredReactionSpell: (value) => present(value.subject),
-        castAttackHitBonusActionSpell: (value) => present(value.subject),
-        opportunityAttack: (value) => present(value.subject),
-        retaliationAttack: (value) => present(value.subject),
-        reactionRollOrDamageReduction: () => [],
-      }),
-    );
+  return choices.flatMap((choice) => {
+    if (choice.kind === "reactionRollOrDamageReduction") return [];
+    const presentation = battleSubjectPresentation(session, choice.subject);
+    return presentation === undefined ? [] : [{ choice, presentation }];
   });
 }
 
-function battleResolutionResultPayload(
+export function battleResolutionResultPayload(
   result: BattleRuntimeResolutionResult,
   snapshot: BattlePresentedSnapshot,
 ) {

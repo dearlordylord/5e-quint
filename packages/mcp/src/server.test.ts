@@ -20,7 +20,10 @@ import {
   type BattleRuntimeSession,
   type BattleState,
 } from "@dnd/battle-runtime";
-import { battleRuntimeSessionForTest } from "@dnd/battle-runtime/test-support";
+import {
+  battleRuntimeContextForTest,
+  battleRuntimeSessionForTest,
+} from "@dnd/battle-runtime/test-support";
 import {
   characterDraftId,
   characterBuildHitPoints,
@@ -28,6 +31,7 @@ import {
   characterClassLevel,
   characterEquipmentItemId,
   characterEquipmentItemUnitId,
+  classUnitId,
   classUnitIdFromClassUnit,
   createCharacterDraft,
   creationChoiceOptionId,
@@ -68,6 +72,7 @@ import {
   availableCharacterSession,
   characterIdFromDraftId,
 } from "./session-store.ts";
+import { characterBuildDisplayName } from "./character-display.ts";
 import {
   parseCharacterSheet,
   parseCharacterSheetRetainedCompanionId,
@@ -92,6 +97,12 @@ import {
   defineSrdStatBlockCollection,
 } from "@dnd/surface/surface/stat-block-catalog";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
+import { PACT_OF_THE_CHAIN_SPECIAL_FORM_REFS } from "@dnd/surface/surface/find-familiar-forms";
+import {
+  buildUnitCatalog,
+  defineSrdUnitCollection,
+} from "@dnd/surface/surface/unit-catalog";
+import { adminProjection } from "./admin-mirror.ts";
 
 function testAbilityScoreAssignment(scores: RawAbilityScoreAssignment) {
   const parsed = abilityScoreAssignment(scores);
@@ -277,6 +288,136 @@ const fighterId = combatantId("fighter");
 const goblinId = combatantId("goblin");
 
 describe("MCP server route", () => {
+  test("falls back to canonical ids when optional authored display records are absent", () => {
+    const root = createMcpCompositionRoot();
+    const build = fighterCharacterBuild(root.unitLibrary);
+    const syntheticClassId = classUnitId(unitId("class_synthetic_missing"));
+    const displayName = characterBuildDisplayName(root.unitLibrary, {
+      ...build,
+      background: unitId("background_synthetic_missing"),
+      species: unitId("species_synthetic_missing"),
+      progression: {
+        startingClass: syntheticClassId,
+        advancements: build.progression.advancements.map((advancement) => ({
+          ...advancement,
+          classUnitId: syntheticClassId,
+        })),
+      },
+    });
+
+    expect(displayName).toContain("species_synthetic_missing");
+    expect(displayName).toContain("background_synthetic_missing");
+    expect(displayName).toContain("class_synthetic_missing");
+  });
+
+  test("lists projected resource rows and in-battle character ownership", () => {
+    const root = createMcpCompositionRoot();
+    const draftId = "draft:list-resource-and-battle-status";
+    const druid = root.unitLibrary.requireUnit("class_druid");
+    if (druid.kind !== "class") {
+      throw new Error("Expected the Druid class Unit.");
+    }
+    const build = characterBuildForClassProgression({
+      base: fighterCharacterBuild(root.unitLibrary),
+      classUnit: druid,
+      keepClassChoices: false,
+      level: 2,
+    });
+    const characterId = testCharacterId(draftId);
+    root.sessionStore.characters.set(
+      availableCharacterSessionRight({
+        build,
+        characterId,
+        currentHp: Hp(characterBuildMaximumHp(build, root.unitLibrary)),
+        hitPointMaximumReduction: Hp(0),
+        tempHp: Hp(0),
+        unitLibrary: root.unitLibrary,
+        druidWildShapeKnownFormStatBlockIds: [
+          statBlockId("stat_block_rat"),
+          statBlockId("stat_block_riding_horse"),
+          statBlockId("stat_block_spider"),
+          statBlockId("stat_block_wolf"),
+        ],
+      }),
+    );
+
+    const available = readPayload(handleToolCall(root, "list_characters", {}));
+    expect(available.characters).toEqual([
+      expect.objectContaining({
+        characterId,
+        status: "available",
+        resources: expect.arrayContaining([
+          expect.objectContaining({ tag: "useCountResource" }),
+        ]),
+      }),
+    ]);
+
+    readPayload(
+      handleToolCall(root, "start_battle", {
+        battleId: "battle:list-in-battle",
+        initialCombatants: [
+          {
+            kind: "characterSession",
+            characterId,
+            combatantId: "fighter",
+            initiative: 10,
+          },
+        ],
+      }),
+    );
+    const inBattle = readPayload(handleToolCall(root, "list_characters", {}));
+    expect(inBattle.characters).toEqual([
+      expect.objectContaining({
+        battleId: "battle:list-in-battle",
+        characterId,
+        status: "inBattle",
+      }),
+    ]);
+  });
+
+  test("reports character-list projection failures from the supplied catalog boundary", () => {
+    const root = createMcpCompositionRoot();
+    const draftId = "draft:list-invalid-catalog";
+    createFinalizedFighterSheet(root, draftId);
+    const emptyCatalog = buildUnitCatalog({
+      collections: [defineSrdUnitCollection({ units: [] })],
+    });
+    if (emptyCatalog.tag !== "ok") {
+      throw new Error("Expected the empty SRD test catalog to build.");
+    }
+    const invalidCatalogRoot = {
+      ...root,
+      unitLibrary: emptyCatalog.catalog,
+    };
+
+    expect(Either.isLeft(adminProjection(invalidCatalogRoot))).toBe(true);
+    expect(
+      readPayload(handleToolCall(invalidCatalogRoot, "list_characters", {})),
+    ).toMatchObject({
+      details: { code: "CHARACTER_LIST_INVALID" },
+    });
+    expect(
+      readPayload(
+        handleToolCall(invalidCatalogRoot, "start_battle", {
+          battleId: "battle:invalid-character-catalog",
+          initialCombatants: [
+            {
+              kind: "characterSession",
+              characterId: testCharacterId(draftId),
+              combatantId: "fighter",
+              initiative: 10,
+            },
+          ],
+        }),
+      ),
+    ).toMatchObject({
+      details: {
+        code: "INVALID_BATTLE_COMBATANTS",
+        issues: [{ details: { code: "CHARACTER_BATTLE_INIT_INVALID" } }],
+      },
+    });
+  });
+
   test("builds SRD catalogs and keeps selected Stat Block state identity-only", () => {
     const root = createMcpCompositionRoot();
     const selected = root.sessionStore.selectStatBlock(
@@ -1216,6 +1357,102 @@ describe("MCP server route", () => {
           ]),
         }),
       ]),
+    });
+  });
+
+  test("routes typed decode failures and no-battle operation failures", () => {
+    const root = createMcpCompositionRoot();
+
+    expect(
+      readPayload(handleToolCall(root, "list_stat_blocks", null)),
+    ).toMatchObject({ details: { code: "INVALID_ARGUMENTS" } });
+    expect(
+      readPayload(handleToolCall(root, "synthetic_unknown_tool", {})),
+    ).toEqual({ error: "Unknown MCP tool: synthetic_unknown_tool" });
+    expect(readPayload(handleToolCall(root, "start_battle", {}))).toMatchObject(
+      {
+        details: { code: "INVALID_ARGUMENTS" },
+      },
+    );
+
+    for (const [name, args] of [
+      [
+        "resolve_battle_act",
+        {
+          subject: {
+            tag: "runtimeCommand",
+            actorId: "missing",
+            command: "endTurn",
+          },
+        },
+      ],
+      ["end_turn", { actorId: "missing" }],
+      ["end_battle", {}],
+    ] as const) {
+      expect(readPayload(handleToolCall(root, name, args))).toMatchObject({
+        details: { code: "NO_BATTLE_SESSION" },
+      });
+    }
+
+    for (const name of ["read_battle_state", "discover_battle_acts"] as const) {
+      expect(readPayload(handleToolCall(root, name, {}))).toMatchObject({
+        snapshot: null,
+        availableActs: [],
+      });
+    }
+
+    expect(
+      readPayload(
+        handleToolCall(root, "fill_battle_hole", {
+          subject: {
+            tag: "runtimeCommand",
+            actorId: "missing",
+            command: "endTurn",
+          },
+          fill: {
+            kind: "targetChoice",
+            holeId: "battle:missing",
+            value: "missing",
+          },
+        }),
+      ),
+    ).toMatchObject({ details: { code: "NO_BATTLE_SESSION" } });
+  });
+
+  test("returns typed errors when an active Stat Block loses presentation context", () => {
+    const root = createMcpCompositionRoot();
+    readPayload(
+      handleToolCall(root, "start_battle", {
+        battleId: "battle:missing-presentation-context",
+        initialCombatants: [
+          {
+            kind: "statBlock",
+            statBlockId: "stat_block_goblin_warrior",
+            combatantId: "goblin",
+            initiative: 10,
+            admissionSource: { kind: "encounterParticipant" },
+          },
+        ],
+      }),
+    );
+    const session = root.sessionStore.battleSession;
+    if (session === null) {
+      throw new Error("Expected an active test battle.");
+    }
+    root.sessionStore.battleSession = battleRuntimeSessionForTest({
+      state: session.state,
+      context: battleRuntimeContextForTest(session.context.characters),
+    });
+
+    expect(
+      readPayload(handleToolCall(root, "read_battle_state", {})),
+    ).toMatchObject({
+      details: { code: "BATTLE_SNAPSHOT_PRESENTATION_INCOMPLETE" },
+    });
+    expect(
+      readPayload(handleToolCall(root, "end_turn", { actorId: "goblin" })),
+    ).toMatchObject({
+      details: { code: "BATTLE_SNAPSHOT_PRESENTATION_INCOMPLETE" },
     });
   });
 
@@ -2641,6 +2878,356 @@ describe("MCP server route", () => {
     ]);
   });
 
+  test("end_battle preserves the active battle when character handoff ownership is invalid", () => {
+    const startCharacterBattle = (draftId: string) => {
+      const root = createMcpCompositionRoot();
+      createFinalizedFighterSheet(root, draftId);
+      const characterId = testCharacterId(draftId);
+      const available = root.sessionStore.characters.get(characterId);
+      if (available?.tag !== "available") {
+        throw new Error("Expected an available test character session.");
+      }
+      readPayload(
+        handleToolCall(root, "start_battle", {
+          battleId: `battle:${draftId}`,
+          initialCombatants: [
+            {
+              kind: "characterSession",
+              characterId,
+              combatantId: `combatant:${draftId}`,
+              initiative: 10,
+            },
+          ],
+        }),
+      );
+      return { available, characterId, root };
+    };
+
+    const missing = startCharacterBattle("draft:handoff-missing-session");
+    const missingRoot: typeof missing.root = {
+      ...missing.root,
+      sessionStore: {
+        ...missing.root.sessionStore,
+        characters: {
+          size: 0,
+          entries: function* () {},
+          get: () => undefined,
+          has: () => false,
+          keys: function* () {},
+          set: () => {},
+        },
+      },
+    };
+    expect(
+      readPayload(handleToolCall(missingRoot, "end_battle", {})),
+    ).toMatchObject({
+      details: { code: "UNKNOWN_BATTLE_CHARACTER_SESSION" },
+    });
+    expect(missingRoot.sessionStore.battleSession).not.toBeNull();
+
+    const available = startCharacterBattle("draft:handoff-available-session");
+    available.root.sessionStore.characters.set(available.available);
+    expect(
+      readPayload(handleToolCall(available.root, "end_battle", {})),
+    ).toMatchObject({
+      details: { code: "CHARACTER_SESSION_NOT_IN_BATTLE" },
+    });
+    expect(available.root.sessionStore.battleSession).not.toBeNull();
+
+    const invalid = startCharacterBattle("draft:handoff-invalid-catalog");
+    const emptyCatalog = buildUnitCatalog({
+      collections: [defineSrdUnitCollection({ units: [] })],
+    });
+    if (emptyCatalog.tag !== "ok") {
+      throw new Error("Expected the empty SRD test catalog to build.");
+    }
+    const invalidRoot = {
+      ...invalid.root,
+      unitLibrary: emptyCatalog.catalog,
+    };
+    expect(
+      readPayload(handleToolCall(invalidRoot, "end_battle", {})),
+    ).toMatchObject({
+      details: { code: "CHARACTER_SESSION_HANDOFF_INVALID" },
+    });
+    expect(invalidRoot.sessionStore.battleSession).not.toBeNull();
+  });
+
+  test("start_battle reports duplicate companion owners and unavailable roster sources", () => {
+    const duplicateOwnerRoot = createMcpCompositionRoot();
+    expect(
+      readPayload(
+        handleToolCall(duplicateOwnerRoot, "start_battle", {
+          battleId: "battle:duplicate-companion-owner",
+          initialCombatants: [
+            {
+              kind: "statBlock",
+              statBlockId: "stat_block_goblin_warrior",
+              combatantId: "goblin",
+              initiative: 10,
+              admissionSource: { kind: "encounterParticipant" },
+            },
+          ],
+          companionAdmissions: [
+            {
+              ownerCharacterId: "character:owner",
+              companionCombatantId: "companion:a",
+            },
+            {
+              ownerCharacterId: "character:owner",
+              companionCombatantId: "companion:b",
+            },
+          ],
+        }),
+      ),
+    ).toMatchObject({
+      details: { code: "DUPLICATE_BATTLE_COMPANION_OWNER" },
+    });
+
+    const unknownStatBlockRoot = createMcpCompositionRoot();
+    expect(
+      readPayload(
+        handleToolCall(unknownStatBlockRoot, "start_battle", {
+          battleId: "battle:unknown-stat-block",
+          initialCombatants: [
+            {
+              kind: "statBlock",
+              statBlockId: "stat_block_synthetic_missing",
+              combatantId: "missing",
+              initiative: 10,
+              admissionSource: { kind: "encounterParticipant" },
+            },
+          ],
+        }),
+      ),
+    ).toMatchObject({
+      details: {
+        code: "INVALID_BATTLE_COMBATANTS",
+        issues: [{ details: { code: "UNKNOWN_STAT_BLOCK_COMBATANT" } }],
+      },
+    });
+
+    const inBattleRoot = createMcpCompositionRoot();
+    const draftId = "draft:start-already-in-battle";
+    createFinalizedFighterSheet(inBattleRoot, draftId);
+    const id = testCharacterId(draftId);
+    const session = inBattleRoot.sessionStore.characters.get(id);
+    if (session?.tag !== "available") {
+      throw new Error("Expected an available test character session.");
+    }
+    inBattleRoot.sessionStore.characters.set({
+      tag: "inBattle",
+      battleId: battleId("battle:existing"),
+      sheet: session,
+    });
+    expect(
+      readPayload(
+        handleToolCall(inBattleRoot, "start_battle", {
+          battleId: "battle:new",
+          initialCombatants: [
+            {
+              kind: "characterSession",
+              characterId: id,
+              combatantId: "fighter",
+              initiative: 10,
+            },
+          ],
+        }),
+      ),
+    ).toMatchObject({
+      details: {
+        code: "INVALID_BATTLE_COMBATANTS",
+        issues: [{ details: { code: "CHARACTER_ALREADY_IN_BATTLE" } }],
+      },
+    });
+  });
+
+  test("start_battle delegates companion admission and Stat Block HP initialization", () => {
+    const companionRoot = createMcpCompositionRoot();
+    const draftId = "draft:start-without-retained-companion";
+    createFinalizedWizardWithFindFamiliar(companionRoot, draftId);
+    expect(
+      readPayload(
+        handleToolCall(companionRoot, "start_battle", {
+          battleId: "battle:missing-retained-companion",
+          initialCombatants: [
+            {
+              kind: "characterSession",
+              characterId: testCharacterId(draftId),
+              combatantId: "wizard",
+              initiative: 10,
+            },
+          ],
+          companionAdmissions: [
+            {
+              ownerCharacterId: testCharacterId(draftId),
+              companionCombatantId: "missing-retained-companion",
+              positionId: "table-position:synthetic",
+            },
+          ],
+        }),
+      ),
+    ).toMatchObject({
+      details: { code: "COMPANION_ADMISSION_FAILED" },
+    });
+
+    const defaultCompanionIdRoot = createMcpCompositionRoot();
+    createFinalizedWizardWithFindFamiliar(
+      defaultCompanionIdRoot,
+      "draft:start-without-retained-companion-default-id",
+    );
+    expect(
+      readPayload(
+        handleToolCall(defaultCompanionIdRoot, "start_battle", {
+          battleId: "battle:missing-retained-companion-default-id",
+          initialCombatants: [
+            {
+              kind: "characterSession",
+              characterId: testCharacterId(
+                "draft:start-without-retained-companion-default-id",
+              ),
+              combatantId: "wizard",
+              initiative: 10,
+            },
+          ],
+          companionAdmissions: [
+            {
+              ownerCharacterId: testCharacterId(
+                "draft:start-without-retained-companion-default-id",
+              ),
+              positionId: "table-position:synthetic",
+            },
+          ],
+        }),
+      ),
+    ).toMatchObject({
+      details: {
+        code: "COMPANION_ADMISSION_FAILED",
+        characterId: testCharacterId(
+          "draft:start-without-retained-companion-default-id",
+        ),
+      },
+    });
+
+    const hpRoot = createMcpCompositionRoot();
+    const started = readPayload(
+      handleToolCall(hpRoot, "start_battle", {
+        battleId: "battle:stat-block-temp-hp",
+        initialCombatants: [
+          {
+            kind: "statBlock",
+            statBlockId: "stat_block_goblin_warrior",
+            combatantId: "goblin",
+            initiative: 10,
+            currentHp: 3,
+            tempHp: 4,
+            admissionSource: { kind: "encounterParticipant" },
+          },
+        ],
+      }),
+    );
+    expect(started.snapshot.combatants).toEqual([
+      expect.objectContaining({ combatantId: "goblin", hp: 3, tempHp: 4 }),
+    ]);
+
+    const invalidHpRoot = createMcpCompositionRoot();
+    expect(
+      readPayload(
+        handleToolCall(invalidHpRoot, "start_battle", {
+          battleId: "battle:stat-block-invalid-hp",
+          initialCombatants: [
+            {
+              kind: "statBlock",
+              statBlockId: "stat_block_goblin_warrior",
+              combatantId: "goblin",
+              initiative: 10,
+              currentHp: 999,
+              admissionSource: { kind: "encounterParticipant" },
+            },
+          ],
+        }),
+      ),
+    ).toMatchObject({
+      details: {
+        code: "BATTLE_START_FAILED",
+      },
+    });
+
+    const base = invalidHpRoot.statBlockCatalog.requireStatBlock(
+      "stat_block_goblin_warrior",
+    );
+    const invalidMechanicsRecord = {
+      ...base,
+      id: statBlockId("stat_block_synthetic_invalid_mechanics"),
+      name: "Synthetic Invalid Mechanics",
+      statBlock: {
+        ...base.statBlock,
+        displayName: "Synthetic Invalid Mechanics",
+        hp: { kind: "literal", value: -1 },
+      },
+    } satisfies StatBlockRecord;
+    const invalidMechanicsRoot = {
+      ...createMcpCompositionRoot(),
+      statBlockCatalog: {
+        ...invalidHpRoot.statBlockCatalog,
+        getStatBlock: () => Option.some(invalidMechanicsRecord),
+      },
+    };
+    expect(
+      readPayload(
+        handleToolCall(invalidMechanicsRoot, "start_battle", {
+          battleId: "battle:stat-block-invalid-mechanics",
+          initialCombatants: [
+            {
+              kind: "statBlock",
+              statBlockId: invalidMechanicsRecord.id,
+              combatantId: "synthetic-invalid",
+              initiative: 10,
+              admissionSource: { kind: "encounterParticipant" },
+            },
+          ],
+        }),
+      ),
+    ).toMatchObject({
+      details: {
+        code: "INVALID_BATTLE_COMBATANTS",
+        issues: [{ details: { code: "STAT_BLOCK_BATTLE_INIT_INVALID" } }],
+      },
+    });
+
+    const invalidDisplayRecord = {
+      ...base,
+      id: statBlockId("stat_block_synthetic_invalid_display"),
+      name: "Synthetic Invalid Display",
+      statBlock: { ...base.statBlock, displayName: "" },
+    } satisfies StatBlockRecord;
+    const invalidDisplayRoot = {
+      ...createMcpCompositionRoot(),
+      statBlockCatalog: {
+        ...invalidHpRoot.statBlockCatalog,
+        getStatBlock: () => Option.some(invalidDisplayRecord),
+      },
+    };
+    expect(
+      readPayload(
+        handleToolCall(invalidDisplayRoot, "start_battle", {
+          battleId: "battle:stat-block-invalid-display",
+          initialCombatants: [
+            {
+              kind: "statBlock",
+              statBlockId: invalidDisplayRecord.id,
+              combatantId: "synthetic-invalid-display",
+              initiative: 10,
+              admissionSource: { kind: "encounterParticipant" },
+            },
+          ],
+        }),
+      ),
+    ).toMatchObject({
+      details: { code: "BATTLE_SNAPSHOT_PRESENTATION_INCOMPLETE" },
+    });
+  });
+
   test("fills familiar touch spell delivery holes one at a time through MCP", () => {
     const root = createMcpCompositionRoot();
     const draftId = "draft:mcp-find-familiar-touch-delivery-fills";
@@ -2894,6 +3481,16 @@ describe("MCP server route", () => {
         },
       }),
     );
+    const firstCharacterId = testCharacterId(firstDraftId);
+    const firstSession = root.sessionStore.characters.get(firstCharacterId);
+    if (firstSession?.tag !== "available") {
+      throw new Error("Expected the first retained-companion session.");
+    }
+    root.sessionStore.characters.set({
+      tag: "inBattle",
+      battleId: battleId("battle:retained-companion-id-owner"),
+      sheet: firstSession,
+    });
 
     const rejected = readPayload(
       handleToolCall(root, "apply_character_session_operation", {
@@ -2946,6 +3543,153 @@ describe("MCP server route", () => {
     expect(root.sessionStore.characters.get(testCharacterId(draftId))).toEqual(
       expect.objectContaining({ companion: { tag: "none" } }),
     );
+  });
+
+  test("apply_character_session_operation rejects unknown and in-battle character sessions", () => {
+    const root = createMcpCompositionRoot();
+    const operation = {
+      kind: "retainOneAtATimeCompanion",
+      companionId: "unavailable-familiar",
+      source: { tag: "ritualSpell", spellId: "find_familiar" },
+      selectedForm: { tag: "normalNamedForm", formId: "cat" },
+    };
+
+    expect(
+      readPayload(
+        handleToolCall(root, "apply_character_session_operation", {
+          characterId: "character:missing",
+          operation,
+        }),
+      ),
+    ).toMatchObject({ details: { code: "UNKNOWN_CHARACTER_SESSION" } });
+
+    const draftId = "draft:mcp-in-battle-operation";
+    createFinalizedWizardWithFindFamiliar(root, draftId);
+    const id = testCharacterId(draftId);
+    const session = root.sessionStore.characters.get(id);
+    if (session?.tag !== "available") {
+      throw new Error("Expected an available test character session.");
+    }
+    root.sessionStore.characters.set({
+      tag: "inBattle",
+      battleId: battleId("battle:operation"),
+      sheet: session,
+    });
+
+    expect(
+      readPayload(
+        handleToolCall(root, "apply_character_session_operation", {
+          characterId: id,
+          operation,
+        }),
+      ),
+    ).toMatchObject({ details: { code: "CHARACTER_SESSION_IN_BATTLE" } });
+  });
+
+  test("apply_character_session_operation rejects an unknown special form", () => {
+    const root = createMcpCompositionRoot();
+    const draftId = "draft:mcp-unknown-special-form";
+    createFinalizedWizardWithFindFamiliar(root, draftId);
+
+    expect(
+      readPayload(
+        handleToolCall(root, "apply_character_session_operation", {
+          characterId: testCharacterId(draftId),
+          operation: {
+            kind: "retainOneAtATimeCompanion",
+            companionId: "unknown-special-form-familiar",
+            source: { tag: "ritualSpell", spellId: "find_familiar" },
+            selectedForm: {
+              tag: "pactOfTheChainSpecialForm",
+              formId: "synthetic-unknown-special-form",
+            },
+          },
+        }),
+      ),
+    ).toMatchObject({
+      details: {
+        code: "CHARACTER_SESSION_OPERATION_INVALID",
+        message: "Unknown retained companion special form.",
+      },
+    });
+  });
+
+  test("delegates a catalogued special-form selection to runtime admission", () => {
+    const root = createMcpCompositionRoot();
+    const draftId = "draft:mcp-catalogued-special-form";
+    createFinalizedWizardWithFindFamiliar(root, draftId);
+    const specialForm = PACT_OF_THE_CHAIN_SPECIAL_FORM_REFS[0];
+    if (specialForm === undefined) {
+      throw new Error("Expected a catalogued special-form fixture.");
+    }
+
+    expect(
+      readPayload(
+        handleToolCall(root, "apply_character_session_operation", {
+          characterId: testCharacterId(draftId),
+          operation: {
+            kind: "retainOneAtATimeCompanion",
+            companionId: "catalogued-special-form-familiar",
+            source: { tag: "ritualSpell", spellId: "find_familiar" },
+            selectedForm: {
+              tag: "pactOfTheChainSpecialForm",
+              formId: specialForm.formId,
+            },
+          },
+        }),
+      ),
+    ).toMatchObject({
+      details: { code: "CHARACTER_SESSION_OPERATION_INVALID" },
+    });
+  });
+
+  test.each([
+    {
+      label: "invocation spell access",
+      source: {
+        tag: "invocationSpellAccess",
+        spellId: "find_familiar",
+      },
+    },
+    {
+      label: "class feature Spell Slot spending",
+      source: {
+        tag: "classFeatureSpellCast",
+        featureUnitId: "feature_synthetic_companion",
+        spend: { tag: "spellSlot", spellLevel: 1 },
+      },
+    },
+    {
+      label: "class feature use-count spending",
+      source: {
+        tag: "classFeatureSpellCast",
+        featureUnitId: "feature_synthetic_companion",
+        spend: {
+          tag: "useCountResource",
+          resourceUnitId: "resource_synthetic_companion",
+        },
+      },
+    },
+  ])("delegates $label companion-source admission", ({ source }) => {
+    const root = createMcpCompositionRoot();
+    const draftId = `draft:mcp-source-${source.tag}`;
+    createFinalizedWizardWithFindFamiliar(root, draftId);
+
+    expect(
+      readPayload(
+        handleToolCall(root, "apply_character_session_operation", {
+          characterId: testCharacterId(draftId),
+          operation: {
+            kind: "retainOneAtATimeCompanion",
+            companionId: `familiar-${source.tag}`,
+            source,
+            selectedForm: { tag: "normalNamedForm", formId: "cat" },
+          },
+        }),
+      ),
+    ).toMatchObject({
+      details: { code: "CHARACTER_SESSION_OPERATION_INVALID" },
+    });
   });
 
   test("start_battle orders retained companion ties after the initial owner roster", () => {
@@ -3123,6 +3867,30 @@ describe("MCP server route", () => {
       },
     });
     expect(root.sessionStore.battleSession).toBeNull();
+
+    const withoutExplicitCompanionId = createMcpCompositionRoot();
+    expect(
+      readPayload(
+        handleToolCall(withoutExplicitCompanionId, "start_battle", {
+          battleId: "battle:mcp-find-familiar-missing-owner-default-id",
+          initialCombatants: [
+            {
+              kind: "statBlock",
+              statBlockId: "stat_block_goblin_warrior",
+              combatantId: "goblin",
+              initiative: 18,
+              admissionSource: { kind: "encounterParticipant" },
+            },
+          ],
+          companionAdmissions: [{ ownerCharacterId: "missing-wizard" }],
+        }),
+      ),
+    ).toMatchObject({
+      details: {
+        code: "COMPANION_OWNER_NOT_IN_ROSTER",
+        characterId: "missing-wizard",
+      },
+    });
   });
 
   test("Character Sheet rejects invalid retained companion HP before MCP admission", () => {
@@ -3221,6 +3989,59 @@ describe("MCP server route", () => {
         code: "BATTLE_ACT_REQUIRES_HOLES",
       },
     });
+
+    const unavailableSubject = {
+      tag: "runtimeCommand",
+      actorId: "goblin",
+      command: "endTurn",
+    } as const;
+    expect(
+      readPayload(
+        handleToolCall(root, "resolve_battle_act", {
+          subject: unavailableSubject,
+        }),
+      ),
+    ).toMatchObject({ details: { code: "BATTLE_ACT_NOT_AVAILABLE" } });
+    expect(
+      readPayload(
+        handleToolCall(root, "fill_battle_hole", {
+          subject: unavailableSubject,
+          fill: {
+            kind: "targetChoice",
+            holeId: "battle:synthetic-unavailable-target",
+            value: "fighter",
+          },
+        }),
+      ),
+    ).toMatchObject({ details: { code: "BATTLE_ACT_NOT_AVAILABLE" } });
+
+    const pending = fillBattleHoleThroughTool(
+      root,
+      "fighter",
+      "Longsword",
+      {
+        kind: "targetChoice",
+        holeId: "battle:attack:target",
+        value: "goblin",
+      },
+      validAttackSubject,
+    );
+    expect(pending.result.tag).toBe("needsHoles");
+    expect(readPayload(handleToolCall(root, "end_battle", {}))).toMatchObject({
+      details: { code: "BATTLE_FILLS_PENDING" },
+    });
+    expect(
+      readPayload(
+        handleToolCall(root, "fill_battle_hole", {
+          subject: unavailableSubject,
+          fill: {
+            kind: "targetChoice",
+            holeId: "battle:synthetic-mismatched-target",
+            value: "fighter",
+          },
+        }),
+      ),
+    ).toMatchObject({ details: { code: "BATTLE_FILL_SUBJECT_MISMATCH" } });
   });
 
   test("start_battle rejects duplicate character and combatant ids", () => {
@@ -4444,6 +5265,21 @@ describe("MCP server route", () => {
     );
   });
 
+  test("character draft operations report unknown durable draft ids", () => {
+    const root = createMcpCompositionRoot();
+    const draftId = "draft:mcp-missing-draft";
+
+    for (const [name, args] of [
+      ["discover_creation_holes", { draftId }],
+      ["fill_creation_holes", { draftId, expectedRevision: 0, fills: [] }],
+      ["finalize_character", { draftId }],
+    ] as const) {
+      expect(readPayload(handleToolCall(root, name, args))).toMatchObject({
+        details: { code: "UNKNOWN_CHARACTER_DRAFT", draftId },
+      });
+    }
+  });
+
   test("rejected creation fill leaves the stored draft unchanged", () => {
     const root = createMcpCompositionRoot();
     const draftId = "draft:mcp-tool-rejected-fill";
@@ -4558,6 +5394,24 @@ describe("MCP server route", () => {
     expect(root.sessionStore.characters.has(testCharacterId(draftId))).toBe(
       false,
     );
+  });
+
+  test("finalization reports Character Sheet construction failures", () => {
+    const root = createMcpCompositionRoot();
+    const draft = completeManifestDraft(root.unitLibrary);
+    root.sessionStore.drafts.set(draft.draftId, draft);
+
+    expect(
+      readPayload(
+        handleToolCall(root, "finalize_character", {
+          draftId: draft.draftId,
+          druidWildShapeKnownFormStatBlockIds: ["stat_block_rat"],
+        }),
+      ),
+    ).toMatchObject({
+      details: { code: "CHARACTER_SESSION_INVALID" },
+    });
+    expect(root.sessionStore.drafts.has(draft.draftId)).toBe(true);
   });
 
   test("rejects reused draft ids for active drafts and finalized character sessions", () => {

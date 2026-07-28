@@ -76,7 +76,7 @@ describe("Admin Mirror store", () => {
     vi.useFakeTimers();
     const store = createAdminMirrorStore();
 
-    for (let index = 0; index < 33; index += 1) {
+    for (let index = 0; index < 32; index += 1) {
       vi.setSystemTime(index + 1);
       store.publish(
         envelope({
@@ -85,13 +85,22 @@ describe("Admin Mirror store", () => {
         }),
       );
     }
+    vi.setSystemTime(33);
+    store.publish(envelope({ mirrorSessionId: "session-0", sequence: 1 }));
+    vi.setSystemTime(34);
+    store.publish(envelope({ mirrorSessionId: "session-32", sequence: 0 }));
 
     expect(store.latest()).toHaveLength(32);
     expect(
       store
         .latest()
-        .some((session) => session.envelope.mirrorSessionId === "session-0"),
+        .some((session) => session.envelope.mirrorSessionId === "session-1"),
     ).toBe(false);
+    expect(
+      store
+        .latest()
+        .some((session) => session.envelope.mirrorSessionId === "session-0"),
+    ).toBe(true);
   });
 
   test("keeps a newest-first bounded presentation timeline per session", () => {
@@ -113,7 +122,7 @@ describe("Admin Mirror store", () => {
     vi.useFakeTimers();
     const store = createAdminMirrorStore();
 
-    for (let index = 0; index < 9; index += 1) {
+    for (let index = 0; index < 8; index += 1) {
       vi.setSystemTime(index + 1);
       expect(
         store.publish(
@@ -124,10 +133,21 @@ describe("Admin Mirror store", () => {
         ),
       ).toBe(true);
     }
+    vi.setSystemTime(9);
+    expect(
+      store.publish(envelope({ publisher: "publisher-0", sequence: 1 })),
+    ).toBe(true);
+    vi.setSystemTime(10);
+    expect(
+      store.publish(envelope({ publisher: "publisher-8", sequence: 0 })),
+    ).toBe(true);
 
     expect(
-      store.publish(envelope({ publisher: "publisher-0", sequence: 0 })),
+      store.publish(envelope({ publisher: "publisher-1", sequence: 0 })),
     ).toBe(true);
+    expect(
+      store.publish(envelope({ publisher: "publisher-0", sequence: 1 })),
+    ).toBe(false);
   });
 });
 

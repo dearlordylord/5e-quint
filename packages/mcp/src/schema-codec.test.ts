@@ -1,7 +1,7 @@
 import { Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
-import { mcpOutputJsonSchema } from "./schema-codec.ts";
+import { mcpObjectJsonSchema, mcpOutputJsonSchema } from "./schema-codec.ts";
 
 describe("MCP output JSON Schema identity", () => {
   test("reuses one generated schema per Effect Schema codec", () => {
@@ -24,5 +24,19 @@ describe("MCP output JSON Schema identity", () => {
     );
     expect(equivalent.$id).toBe(first.$id);
     expect(different.$id).not.toBe(first.$id);
+  });
+
+  test("extracts an object branch and rejects schemas with no object input", () => {
+    expect(
+      mcpObjectJsonSchema(
+        Schema.Union(Schema.String, Schema.Struct({ value: Schema.String })),
+      ),
+    ).toMatchObject({
+      type: "object",
+      properties: { value: expect.anything() },
+    });
+    expect(() => mcpObjectJsonSchema(Schema.String)).toThrow(
+      "Effect JSON schema must generate an MCP object input schema.",
+    );
   });
 });

@@ -110,9 +110,6 @@ export function handleCharacterToolCall(
       if (root.sessionStore.drafts.has(draft.draftId)) {
         return duplicateDraftIdContent(draft.draftId, "activeDraft");
       }
-      if (draftCharacterIdAlreadyReserved(root, draft.draftId)) {
-        return duplicateDraftIdContent(draft.draftId, "activeDraft");
-      }
       if (
         root.sessionStore.characters.has(characterIdFromDraftId(draft.draftId))
       ) {
@@ -157,8 +154,7 @@ export function handleCharacterToolCall(
 
       return schemaJsonContent(FillCreationHolesOutputSchema, {
         result,
-        storedDraft:
-          root.sessionStore.drafts.get(input.draftId) ?? result.draft,
+        storedDraft: result.tag === "accepted" ? result.draft : draft,
         session: mcpSessionSummary(root.sessionStore.snapshot()),
       });
     }),
@@ -243,17 +239,6 @@ function duplicateDraftIdContent(
     draftId,
     existingOwner,
   });
-}
-
-function draftCharacterIdAlreadyReserved(
-  root: McpCompositionRoot,
-  draftId: CharacterDraftId,
-): boolean {
-  const candidateCharacterId = characterIdFromDraftId(draftId);
-  return Array.from(root.sessionStore.drafts.keys()).some(
-    (activeDraftId) =>
-      characterIdFromDraftId(activeDraftId) === candidateCharacterId,
-  );
 }
 
 function creationDraftPayload(root: McpCompositionRoot, draft: CharacterDraft) {

@@ -229,14 +229,17 @@ describe("Character Sheet runtime / companions", () => {
     });
   });
 
-  test("rejects retained companions with an empty durable id", () => {
-    expect(parseCharacterSheetRetainedCompanionId("")).toMatchObject({
-      _tag: "Left",
-      left: {
-        message: "Retained companion requires companion id.",
-      },
-    });
-  });
+  test.each(["", "   ", " companion "])(
+    "rejects retained companions with an empty or untrimmed durable id",
+    (value) => {
+      expect(parseCharacterSheetRetainedCompanionId(value)).toMatchObject({
+        _tag: "Left",
+        left: {
+          message: "Retained companion id must be non-empty and trimmed.",
+        },
+      });
+    },
+  );
 
   test("rejects a stored retained companion protocol with an unknown tag", () => {
     const sheet = requireRight(

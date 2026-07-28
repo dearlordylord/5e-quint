@@ -79,22 +79,13 @@ export function schemaJsonContent<A, I>(
 function jsonSchemaFromCodec<A, I>(
   schema: Schema.Schema<A, I, never>,
 ): McpOutputSchema {
-  return parseMcpOutputSchema(
-    stripSchemaIds(JSONSchema.make(schema)),
-    "Effect JSON schema",
-  );
-}
-
-function parseMcpOutputSchema(value: unknown, label: string): McpOutputSchema {
-  if (isJsonObject(value)) return value;
-  throw new Error(`${label} must generate a JSON object schema.`);
+  return stripSchemaIds(JSONSchema.make(schema));
 }
 
 function parseMcpObjectInputSchema(
-  value: unknown,
+  schema: McpOutputSchema,
   label: string,
 ): McpObjectInputSchema {
-  const schema = parseMcpOutputSchema(value, label);
   if (schema.type === "object") return { ...schema, type: "object" };
   const objectSchema = objectSchemaBranch(schema);
   if (objectSchema !== undefined) {
@@ -121,6 +112,8 @@ function objectSchemaBranch(
   );
 }
 
+function stripSchemaIds(value: object): McpOutputSchema;
+function stripSchemaIds(value: unknown): unknown;
 function stripSchemaIds(value: unknown): unknown {
   if (Array.isArray(value)) {
     return value.map((entry) => stripSchemaIds(entry));

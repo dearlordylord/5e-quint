@@ -84,17 +84,14 @@ export function createHttpAdminMirrorPublisher(input: {
 
   return {
     publish: (envelope) =>
-      Effect.tryPromise({
-        catch: () => undefined,
-        try: async () => {
-          if (active) {
-            pending = envelope;
-            return;
-          }
-          active = true;
-          await drain(envelope);
-        },
-      }).pipe(Effect.catchAll(() => Effect.void)),
+      Effect.promise(async () => {
+        if (active) {
+          pending = envelope;
+          return;
+        }
+        active = true;
+        await drain(envelope);
+      }),
   };
 }
 
@@ -109,7 +106,7 @@ export function enabledAdminMirrorPublication(input: {
   readonly mirrorSessionId: AdminMirrorSessionId;
   readonly publisherInstanceId: AdminMirrorPublisherInstanceId;
   readonly publisher: AdminMirrorPublisher;
-}): AdminMirrorPublication {
+}): Extract<AdminMirrorPublication, { readonly tag: "enabled" }> {
   let sequence = 0;
   return {
     tag: "enabled",
@@ -120,7 +117,7 @@ export function enabledAdminMirrorPublication(input: {
   };
 }
 
-function adminProjection(
+export function adminProjection(
   root: McpCompositionRoot,
 ): Either.Either<
   AdminSessionProjection,

@@ -13,7 +13,7 @@ import {
 import { traverseValidation } from "@dnd/shared-algebras/validation-algebra";
 import { Either, Schema } from "effect";
 
-import { errorContent } from "./tool-content.ts";
+import { errorContent, jsonContentPayload } from "./tool-content.ts";
 import {
   decodeToolArgs,
   type ToolError,
@@ -136,13 +136,7 @@ function decodeCreationFill(
   if (value.kind === "choice") {
     return decodeChoiceFill(value, value.holeId, index, toolName);
   }
-  if (value.kind === "abilityScores") {
-    return decodeAbilityScoreFill(value, value.holeId, index, toolName);
-  }
-
-  return Either.left(
-    invalidFieldContent(toolName, `fills[${index}].kind`, "fill kind"),
-  );
+  return decodeAbilityScoreFill(value, value.holeId, index, toolName);
 }
 
 function decodeChoiceFill(
@@ -166,23 +160,22 @@ function decodeAbilityScoreFill(
   toolName: string,
 ): ToolInputResult<CreationFill> {
   const holeId = decodeCreationHoleId(holeIdText, index, toolName);
-  const scores = abilityScoreAssignment(value.value);
-  if (Either.isLeft(scores)) {
-    return Either.left(
-      invalidFieldContent(
-        toolName,
-        `fills[${index}].value`,
-        "ability score assignment",
-      ),
-    );
-  }
-
-  return Either.map(holeId, (decodedHoleId) => ({
-    kind: "abilityScores",
-    holeId: decodedHoleId,
-    method: value.method,
-    value: scores.right,
-  }));
+  const scores = Either.mapLeft(abilityScoreAssignment(value.value), () =>
+    invalidFieldContent(
+      toolName,
+      `fills[${index}].value`,
+      "ability score assignment",
+    ),
+  );
+  return Either.map(
+    Either.all({ holeId, scores }),
+    ({ holeId: decodedHoleId, scores: decodedScores }) => ({
+      kind: "abilityScores",
+      holeId: decodedHoleId,
+      method: value.method,
+      value: decodedScores,
+    }),
+  );
 }
 
 function decodeCreationHoleId(
@@ -218,16 +211,6 @@ function invalidFieldContent(
 function invalidFillsContent(toolName: string, issues: readonly ToolError[]) {
   return errorContent(`Invalid ${toolName} input`, {
     code: "INVALID_FILLS",
-    issues: issues.map(toolErrorPayload),
+    issues: issues.map(jsonContentPayload),
   });
-}
-
-function toolErrorPayload(error: ToolError): unknown {
-  const text = error.content[0]?.text;
-  if (text === undefined) return error;
-  try {
-    return JSON.parse(text);
-  } catch {
-    return text;
-  }
 }

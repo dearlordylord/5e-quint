@@ -18,7 +18,6 @@ import { Either, Schema } from "effect";
 import {
   decodeToolArgs,
   mcpObjectJsonSchema,
-  type McpObjectInputSchema,
   type ToolInputResult,
 } from "./schema-codec.ts";
 
@@ -101,18 +100,28 @@ const CompanionAdmissionArgsSchema = Schema.Struct({
   }),
 });
 const StartBattleToolArgsSchema = Schema.Struct({
-  battleId: BattleIdSchema,
-  initialCombatants: Schema.NonEmptyArray(InitialBattleCombatantArgsSchema),
+  battleId: BattleIdSchema.annotations({
+    description: "Caller-chosen durable battle id.",
+  }),
+  initialCombatants: Schema.NonEmptyArray(
+    InitialBattleCombatantArgsSchema,
+  ).annotations({
+    description:
+      "Non-empty initial combatant roster. Each combatant comes from a finalized character session or an ordinary SRD Stat Block.",
+  }),
   companionAdmissions: Schema.optionalWith(
     Schema.Array(CompanionAdmissionArgsSchema),
     { exact: true },
   ),
+}).annotations({
+  description:
+    "Start a battle session from an initial combatant roster. Provide caller-supplied Initiative for every combatant.",
 });
 
 type StartBattleToolArgs = Schema.Schema.Type<typeof StartBattleToolArgsSchema>;
 
-export const startBattleInputSchema = describeStartBattleInputSchema(
-  mcpObjectJsonSchema(StartBattleToolArgsSchema),
+export const startBattleInputSchema = mcpObjectJsonSchema(
+  StartBattleToolArgsSchema,
 );
 
 export type StartBattleToolInput = {
@@ -190,7 +199,9 @@ export function decodeStartBattleArgs(
 function decodeInitialCombatants(
   value: StartBattleToolArgs["initialCombatants"],
 ): StartBattleToolInput["initialCombatants"] {
-  const decoded = value.map((combatant): InitialBattleCombatantToolInput => {
+  const decodeCombatant = (
+    combatant: StartBattleToolArgs["initialCombatants"][number],
+  ): InitialBattleCombatantToolInput => {
     if (combatant.kind === "characterSession") {
       return {
         kind: "characterSession",
@@ -213,39 +224,7 @@ function decodeInitialCombatants(
         ? {}
         : { tempHp: Hp(statBlockCombatant.tempHp) }),
     };
-  });
-  const [first, ...rest] = decoded;
-  if (first === undefined) {
-    throw new Error("Start battle combatant codec returned an empty array.");
-  }
-  return [first, ...rest];
-}
-
-function describeStartBattleInputSchema(
-  schema: McpObjectInputSchema,
-): McpObjectInputSchema {
-  const properties = (schema.properties ?? {}) as Record<string, unknown>;
-  return {
-    ...schema,
-    description:
-      "Start a battle session from an initial combatant roster. Provide caller-supplied Initiative for every combatant.",
-    properties: {
-      ...properties,
-      battleId: {
-        ...objectProperty(properties.battleId),
-        description: "Caller-chosen durable battle id.",
-      },
-      initialCombatants: {
-        ...objectProperty(properties.initialCombatants),
-        description:
-          "Non-empty initial combatant roster. Each combatant comes from a finalized character session or an ordinary SRD Stat Block.",
-      },
-    },
   };
-}
-
-function objectProperty(value: unknown): Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value)
-    ? (value as Record<string, unknown>)
-    : {};
+  const [first, ...rest] = value;
+  return [decodeCombatant(first), ...rest.map(decodeCombatant)];
 }

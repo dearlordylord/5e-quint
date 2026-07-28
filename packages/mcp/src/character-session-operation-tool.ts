@@ -2,7 +2,6 @@ import { characterId, type CharacterId } from "@dnd/battle-runtime";
 import {
   characterSheetCompanion,
   createRetainedFamiliarLikeCompanion,
-  parseCharacterSheetRetainedCompanionId,
   type CharacterSheetCompanionFormSelection,
   type CharacterSheetRetainedCompanionCreationSource,
   type CharacterSheetRetainedCompanionId,
@@ -74,20 +73,11 @@ function applyRetainOneAtATimeCompanionOperation(
       message: selectedForm.left,
     });
   }
-  const companionId = parseCharacterSheetRetainedCompanionId(
-    input.operation.companionId,
-  );
-  if (Either.isLeft(companionId)) {
-    return errorContent("Character session operation failed.", {
-      code: "CHARACTER_SESSION_OPERATION_INVALID",
-      characterId: input.characterId,
-      message: companionId.left.message,
-    });
-  }
+  const companionId = input.operation.companionId;
   if (
     retainedCompanionIdUsedByAnotherCharacter(root, {
       characterId: characterId(input.characterId),
-      companionId: companionId.right,
+      companionId,
     })
   ) {
     return errorContent("Character session operation failed.", {
@@ -101,7 +91,7 @@ function applyRetainOneAtATimeCompanionOperation(
     sheet: input.session,
     unitLibrary: root.unitLibrary,
     statBlockCatalog: root.statBlockCatalog,
-    companionId: companionId.right,
+    companionId,
     source: retainedCompanionSourceFromTool(input.operation.source),
     selectedForm: selectedForm.right,
     ...(input.operation.creatureTypeOverrideChoiceId === undefined

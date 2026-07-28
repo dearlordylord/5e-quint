@@ -13,10 +13,14 @@ import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
-import { Either } from "effect";
+import { Either, Option } from "effect";
 import { describe, expect, test } from "vitest";
 
-import { availableCharacterSession } from "./session-store.ts";
+import {
+  availableCharacterSession,
+  createMcpSessionStore,
+} from "./session-store.ts";
+import { createMcpCompositionRoot } from "./composition-root.ts";
 
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.class-feature-use-count-resource
 const unitCatalogResult = buildUnitCatalog({
@@ -34,6 +38,22 @@ const DRUID_WILD_SHAPE_KNOWN_FORM_IDS = [
 ] as const;
 
 describe("MCP character sessions", () => {
+  test("drops a selected Stat Block projection after catalog drift", () => {
+    const root = createMcpCompositionRoot();
+    const selected = root.statBlockCatalog.requireStatBlock(
+      "stat_block_goblin_warrior",
+    );
+    let retained = true;
+    const store = createMcpSessionStore({
+      ...root.statBlockCatalog,
+      getStatBlock: () => (retained ? Option.some(selected) : Option.none()),
+    });
+
+    expect(store.selectStatBlock(selected.id)).toMatchObject({ _tag: "Right" });
+    retained = false;
+    expect(store.getSelectedStatBlock()).toBeNull();
+  });
+
   test("requires and stores explicit Wild Shape known forms", () => {
     const missingKnownForms = availableCharacterSession({
       characterId: characterSheetId("character:mcp-druid-wild-shape-missing"),

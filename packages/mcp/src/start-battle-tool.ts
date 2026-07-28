@@ -30,7 +30,7 @@ import {
 import { StartBattleOutputSchema } from "./battle-tool-output.ts";
 import { schemaJsonContent, type ToolError } from "./schema-codec.ts";
 import { mcpSessionSummary } from "./session-snapshot-output.ts";
-import { errorContent } from "./tool-content.ts";
+import { errorContent, jsonContentPayload } from "./tool-content.ts";
 import { battleSnapshotPresentationIssueContent } from "./battle-tool-payloads.ts";
 
 type StartableCharacterSessionCombatant = {
@@ -182,12 +182,7 @@ function startableBattleCombatants(input: {
   }
 
   return Either.right({
-    creatureInits: combatants.right.flatMap((combatant) =>
-      combatant.tag === "characterSession" ||
-      combatant.tag === "encounterCombatant"
-        ? [combatant.creatureInit]
-        : [],
-    ),
+    creatureInits: combatants.right.map((combatant) => combatant.creatureInit),
     characterSessions: combatants.right.flatMap((combatant) =>
       combatant.tag === "characterSession" ? [combatant.characterSession] : [],
     ),
@@ -361,18 +356,8 @@ function initialCombatantOrderForStartInput(
 function invalidBattleCombatantsContent(issues: readonly ToolError[]) {
   return errorContent("Invalid battle start combatants.", {
     code: "INVALID_BATTLE_COMBATANTS",
-    issues: issues.map(toolErrorPayload),
+    issues: issues.map(jsonContentPayload),
   });
-}
-
-function toolErrorPayload(error: ToolError): unknown {
-  const text = error.content[0]?.text;
-  if (text === undefined) return error;
-  try {
-    return JSON.parse(text);
-  } catch {
-    return text;
-  }
 }
 
 function isCharacterSessionCombatant(

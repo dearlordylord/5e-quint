@@ -4,9 +4,11 @@ import { describe, expect, test } from "vitest";
 import { enabledAdminMirrorPublication } from "./admin-mirror.ts";
 import {
   adminMirrorPublisherInstanceId,
+  adminMirrorSequence,
   adminMirrorSessionId,
   type AdminMirrorProjectionEnvelope,
 } from "./admin-mirror-contract.ts";
+import { createAdminMirrorPresentationTimelineEntry } from "./admin-mirror-presentation-timeline.ts";
 import { createMcpCompositionRoot } from "./composition-root.ts";
 import { handleToolCall } from "./server.ts";
 
@@ -94,6 +96,74 @@ describe("Admin Mirror MCP tool publishing", () => {
     expect(published[0]?.projection.battle?.battleId).toBe(
       "battle:mirror-publish",
     );
+
+    const startedEnvelope = published[0];
+    if (startedEnvelope?.projection.battle === null) {
+      throw new Error("Expected the accepted start to publish a battle.");
+    }
+    if (startedEnvelope === undefined) {
+      throw new Error("Expected the accepted start to publish a projection.");
+    }
+    const battle = startedEnvelope.projection.battle;
+    if (battle === null) {
+      throw new Error("Expected the accepted start to publish a battle.");
+    }
+    const beforeStart: AdminMirrorProjectionEnvelope = {
+      ...startedEnvelope,
+      projection: { ...startedEnvelope.projection, battle: null },
+      sequence: adminMirrorSequence(0),
+    };
+    const startedEntry = createAdminMirrorPresentationTimelineEntry(
+      startedEnvelope,
+      1,
+      beforeStart,
+    );
+    expect(startedEntry).toMatchObject({
+      actionSummary: "Battle started: Goblin Warrior's turn",
+      currentActorDisplayName: "Goblin Warrior",
+      debug: { eventKind: "battleStarted", previousBattle: null },
+    });
+
+    const nextActorId = battle.turnOrder[1];
+    const damagedCombatant = battle.combatants[0];
+    if (nextActorId === undefined || damagedCombatant === undefined) {
+      throw new Error("Expected the test battle to contain two combatants.");
+    }
+    const advancedEnvelope: AdminMirrorProjectionEnvelope = {
+      ...startedEnvelope,
+      projection: {
+        ...startedEnvelope.projection,
+        battle: {
+          ...battle,
+          combatants: battle.combatants.map((combatant) =>
+            combatant.combatantId === damagedCombatant.combatantId
+              ? { ...combatant, hp: 1 }
+              : combatant,
+          ),
+          currentActorId: nextActorId,
+        },
+      },
+      sequence: adminMirrorSequence(1),
+    };
+    const advancedEntry = createAdminMirrorPresentationTimelineEntry(
+      advancedEnvelope,
+      2,
+      startedEnvelope,
+    );
+    expect(advancedEntry).toMatchObject({
+      actionSummary: "Round 1: Skeleton's turn",
+      debug: {
+        derivedInput: { command: "endTurn" },
+        eventKind: "turnAdvanced",
+      },
+      hpChanges: [
+        {
+          combatantId: damagedCombatant.combatantId,
+          nextHp: 1,
+          previousHp: damagedCombatant.hp,
+        },
+      ],
+    });
   });
 });
 

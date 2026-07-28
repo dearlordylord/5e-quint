@@ -68,7 +68,7 @@ const PACKAGE_POLICIES = {
     duplicationCeiling: 2,
   },
   mcp: {
-    coverage: { lines: 84, statements: 84, functions: 89, branches: 79 },
+    coverage: { lines: 99, statements: 99, functions: 100, branches: 99 },
     circularBaseline: 0,
     duplicationCeiling: 2,
   },
