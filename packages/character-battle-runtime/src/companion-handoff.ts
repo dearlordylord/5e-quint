@@ -572,15 +572,10 @@ function companionManifestationFromBattle(input: {
     if (typeof storedForm === "string") {
       return characterSheetBattleHandoffIssue(storedForm);
     }
-    const proof = sheetCompanionResolvedFormProofFromBattle({
+    const proof = sheetCompanionResolvedFormProofForBattleCompanion(
+      input,
       storedForm,
-      creatureTypeOverride: input.companion.creatureTypeOverride,
-      selectedForm: input.selectedForm,
-      unitLibrary: input.unitLibrary,
-      ...(input.statBlockCatalog === undefined
-        ? {}
-        : { statBlockCatalog: input.statBlockCatalog }),
-    });
+    );
     if (Either.isLeft(proof)) {
       return characterSheetBattleHandoffIssue(proof.left.message);
     }
@@ -596,15 +591,10 @@ function companionManifestationFromBattle(input: {
       },
     });
   }
-  const proof = sheetCompanionResolvedFormProofFromBattle({
-    storedForm: input.companion,
-    creatureTypeOverride: input.companion.creatureTypeOverride,
-    selectedForm: input.selectedForm,
-    unitLibrary: input.unitLibrary,
-    ...(input.statBlockCatalog === undefined
-      ? {}
-      : { statBlockCatalog: input.statBlockCatalog }),
-  });
+  const proof = sheetCompanionResolvedFormProofForBattleCompanion(
+    input,
+    input.companion,
+  );
   if (Either.isLeft(proof)) {
     return characterSheetBattleHandoffIssue(proof.left.message);
   }
@@ -618,6 +608,27 @@ function companionManifestationFromBattle(input: {
   return Either.right({
     tag: "disappearedAtZeroHitPoints",
     ...proof.right,
+  });
+}
+
+function sheetCompanionResolvedFormProofForBattleCompanion(
+  input: Pick<
+    Parameters<typeof companionManifestationFromBattle>[0],
+    "companion" | "selectedForm" | "unitLibrary" | "statBlockCatalog"
+  >,
+  storedForm: BattleCompanionStoredForm,
+): Either.Either<
+  CharacterSheetRetainedCompanionResolvedFormProof,
+  CharacterSheetBattleHandoffIssue
+> {
+  return sheetCompanionResolvedFormProofFromBattle({
+    storedForm,
+    creatureTypeOverride: input.companion.creatureTypeOverride,
+    selectedForm: input.selectedForm,
+    unitLibrary: input.unitLibrary,
+    ...(input.statBlockCatalog === undefined
+      ? {}
+      : { statBlockCatalog: input.statBlockCatalog }),
   });
 }
 

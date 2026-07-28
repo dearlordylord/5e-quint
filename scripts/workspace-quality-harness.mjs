@@ -55,8 +55,7 @@ const PACKAGE_POLICIES = {
   "character-battle-runtime": {
     coverage: { lines: 96, statements: 96, functions: 100, branches: 93 },
     circularBaseline: 0,
-    // Temporary non-regression remedy; issue #228 still requires <= 2%.
-    duplicationCeiling: 2.39,
+    duplicationCeiling: 2,
   },
   "character-creation-runtime": {
     coverage: { lines: 79, statements: 79, functions: 86, branches: 78 },
