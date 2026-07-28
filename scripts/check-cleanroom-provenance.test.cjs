@@ -39,7 +39,7 @@ test("one accumulated result drives deterministic reports and rejection", () => 
   assert.doesNotMatch(firstJson, /generatedAt|timestamp|digest/i);
   assert.match(firstMarkdown, /Status: accepted/);
   assert.equal(result.metrics.warningCounts["noncanonical-provenance"] ?? 0, 0);
-  assert.equal(result.metrics.warningCounts["source-visible-reference"], 84);
+  assert.equal(result.metrics.warningCounts["source-visible-reference"], 39);
   assert.ok(
     records
       .filter((record) => record.kind !== "statBlock")
@@ -297,6 +297,85 @@ test("authored selection references require their owning record's evidence", () 
     ),
     JSON.stringify(result.issues, null, 2),
   );
+});
+
+test("source-evidenced class spell-list selections remain nonblocking", () => {
+  const record = structuredClone(
+    records.find((candidate) => candidate.id === "class_bard"),
+  );
+
+  const result = auditModule.auditRecordDelta(context, record);
+  assert.equal(
+    result.status,
+    "accepted",
+    JSON.stringify(result.issues, null, 2),
+  );
+  assert.ok(
+    result.warnings.some(
+      (warning) =>
+        warning.code === "source-visible-reference" &&
+        warning.relation === "spell-list" &&
+        warning.targetRecordId === "mage_hand",
+    ),
+    JSON.stringify(result.warnings, null, 2),
+  );
+});
+
+test("missing fixed-spell and creature-menu dependencies fail closed", () => {
+  const publishedSurface = JSON.parse(
+    fs.readFileSync(
+      path.resolve(
+        __dirname,
+        "../packages/surface/publication/srd-surface.json",
+      ),
+      "utf8",
+    ),
+  );
+  const fixedSpellGrant = structuredClone(
+    records.find(
+      (candidate) => candidate.id === "species_gnome_gnomish_lineage",
+    ),
+  );
+  const reanimationMenu = structuredClone(
+    records.find((candidate) => candidate.id === "animate_dead"),
+  );
+  const cases = [
+    {
+      record: fixedSpellGrant,
+      targetRecordId: "mending",
+      expectedCode: "unadmitted-authored-dependency",
+      publication: {
+        ...publishedSurface,
+        units: publishedSurface.units.filter((unit) => unit.id !== "mending"),
+      },
+    },
+    {
+      record: reanimationMenu,
+      targetRecordId: "zombie",
+      expectedCode: "missing-authored-dependency",
+      publication: {
+        ...publishedSurface,
+        units: [...publishedSurface.units, { id: "animate_dead" }],
+      },
+    },
+  ];
+
+  for (const { expectedCode, publication, record, targetRecordId } of cases) {
+    const isolatedContext = auditModule.createAuditContext({
+      records,
+      publication,
+    });
+    const result = auditModule.auditRecordDelta(isolatedContext, record);
+    assert.equal(result.status, "rejected");
+    assert.ok(
+      result.issues.some(
+        (issue) =>
+          issue.code === expectedCode &&
+          issue.targetRecordId === targetRecordId,
+      ),
+      JSON.stringify(result.issues, null, 2),
+    );
+  }
 });
 
 test("delta records cannot supply their own source resolutions", () => {

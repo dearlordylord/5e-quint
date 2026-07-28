@@ -94,6 +94,15 @@ collection/provenance boundary, not by a runtime-facing record subtype.
 Runtime packages may narrow catalog records through package-private support
 gates, but authored content remains provenance-bearing Surface data.
 
+Schema string roles distinguish nondependency Authored References from Authored
+Dependencies at the field that owns the relation. Spell-list, presentation, and
+predicate references may name records outside a bounded published slice and
+remain exact-source diagnostics. A dependency names mechanics that the referring
+record needs; when that record is present in `srdSurface`, the target must also
+be present in the same Unit/Stat Block collection. The corpus audit reads the
+generated publication membership and rejects a published dependency graph that
+is missing either the target record or its admission.
+
 ## Character-Creation Records
 
 Class, Background, and Species aggregates are authored `UnitRecord` variants

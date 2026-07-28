@@ -196,6 +196,7 @@ import magicMissileInput from "../../content/magic_missile.json";
 import magicMouthInput from "../../content/magic_mouth.json";
 import magicWeaponInput from "../../content/magic_weapon.json";
 import meldIntoStoneInput from "../../content/meld_into_stone.json";
+import mendingInput from "../../content/mending.json";
 import mindSpikeInput from "../../content/mind_spike.json";
 import massCureWoundsInput from "../../content/mass_cure_wounds.json";
 import massHealingWordInput from "../../content/mass_healing_word.json";
@@ -248,6 +249,7 @@ import plantGrowthInput from "../../content/plant_growth.json";
 import planarBindingInput from "../../content/planar_binding.json";
 import poisonSprayInput from "../../content/poison_spray.json";
 import prayerOfHealingInput from "../../content/prayer_of_healing.json";
+import prestidigitationInput from "../../content/prestidigitation.json";
 import protectionFromEnergyInput from "../../content/protection_from_energy.json";
 import protectionFromEvilAndGoodInput from "../../content/protection_from_evil_and_good.json";
 import protectionFromPoisonInput from "../../content/protection_from_poison.json";
@@ -271,6 +273,7 @@ import removeCurseInput from "../../content/remove_curse.json";
 import revivifyInput from "../../content/revivify.json";
 import ropeTrickInput from "../../content/rope_trick.json";
 import sendingInput from "../../content/sending.json";
+import speakWithAnimalsInput from "../../content/speak_with_animals.json";
 import speakWithDeadInput from "../../content/speak_with_dead.json";
 import speakWithPlantsInput from "../../content/speak_with_plants.json";
 import speciesDragonbornInput from "../../content/species_dragonborn.json";
@@ -910,6 +913,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     locateObjectInput,
     lightInput,
     longstriderInput,
+    mendingInput,
     mistyStepInput,
     misleadInput,
     modifyMemoryInput,
@@ -923,6 +927,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     planarBindingInput,
     poisonSprayInput,
     prayerOfHealingInput,
+    prestidigitationInput,
     protectionFromEnergyInput,
     protectionFromEvilAndGoodInput,
     protectionFromPoisonInput,
@@ -937,6 +942,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     revivifyInput,
     ropeTrickInput,
     sendingInput,
+    speakWithAnimalsInput,
     speakWithDeadInput,
     speakWithPlantsInput,
     sacredFlameInput,

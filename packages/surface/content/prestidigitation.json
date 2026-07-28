@@ -1,0 +1,84 @@
+{
+  "id": "prestidigitation",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": false,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "timed",
+      "value": {
+        "amount": 1,
+        "unit": "hour"
+      }
+    },
+    "effects": {
+      "cleanOrSoil": {
+        "duration": "instantaneous",
+        "kind": "clean_or_soil_object",
+        "maxVolumeCubicFeet": 1
+      },
+      "firePlay": {
+        "duration": "instantaneous",
+        "kind": "light_or_snuff_small_fire",
+        "sources": [
+          "candle",
+          "torch",
+          "small_campfire"
+        ]
+      },
+      "magicMark": {
+        "duration": "spell_duration",
+        "kind": "mark_object_or_surface",
+        "marks": [
+          "color",
+          "small_mark",
+          "symbol"
+        ]
+      },
+      "minorCreation": {
+        "canDealDamage": false,
+        "creations": [
+          "nonmagical_trinket",
+          "illusory_image"
+        ],
+        "duration": "end_of_caster_next_turn",
+        "hasMonetaryWorth": false,
+        "kind": "create_hand_sized_trinket_or_illusion"
+      },
+      "minorSensation": {
+        "duration": "spell_duration",
+        "kind": "alter_nonliving_material_sensation",
+        "maxVolumeCubicFeet": 1,
+        "sensations": [
+          "chill",
+          "warm",
+          "flavor"
+        ]
+      },
+      "sensory": {
+        "duration": "instantaneous",
+        "kind": "harmless_sensory_effect"
+      }
+    },
+    "family": "utility",
+    "level": 0,
+    "nonInstantaneousEffectLimit": 3,
+    "range": {
+      "feet": 10,
+      "kind": "point"
+    },
+    "school": "transmutation",
+    "utilityKind": "minor_magic_effect_menu"
+  },
+  "name": "Prestidigitation",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-M-P.md#Prestidigitation"
+  }
+}

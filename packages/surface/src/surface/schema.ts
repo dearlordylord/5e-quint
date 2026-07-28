@@ -457,7 +457,9 @@ export {
   SURFACE_PROTOCOL_KINDS,
   SURFACE_PROJECTION_KINDS,
   SURFACE_SCHEMA_ROLE_ANNOTATION,
+  SURFACE_STAT_BLOCK_DEPENDENCY_RELATIONS,
   SURFACE_STAT_BLOCK_REFERENCE_RELATIONS,
+  SURFACE_UNIT_DEPENDENCY_RELATIONS,
   SURFACE_UNIT_REFERENCE_RELATIONS,
   isSurfaceSchemaRole,
   readSurfaceSchemaRole,
@@ -469,7 +471,9 @@ export type {
   SurfaceIdentityKind,
   SurfaceProjectionKind,
   SurfaceProtocolKind,
+  SurfaceStatBlockDependencyRelation,
   SurfaceStatBlockReferenceRelation,
+  SurfaceUnitDependencyRelation,
   SurfaceUnitReferenceRelation,
 } from "./schema-base.ts";
 

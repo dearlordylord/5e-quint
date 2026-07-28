@@ -1,0 +1,42 @@
+{
+  "id": "mending",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "amount": 1,
+      "kind": "minutes",
+      "ritual": false
+    },
+    "components": {
+      "m": "two lodestones",
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "instantaneous"
+    },
+    "effect": {
+      "duration": "instantaneous",
+      "kind": "repair_object_break_or_tear",
+      "leavesNoTrace": true,
+      "maxDimensionFeet": 1,
+      "restoresMagic": false
+    },
+    "family": "utility",
+    "level": 0,
+    "range": {
+      "kind": "touch"
+    },
+    "school": "transmutation",
+    "target": {
+      "count": 1,
+      "kind": "object"
+    },
+    "utilityKind": "object_repair"
+  },
+  "name": "Mending",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-M-P.md#Mending"
+  }
+}

@@ -9562,4 +9562,47 @@ describe("SRD Unit catalog boundary", () => {
       ).toBe(false);
     }
   });
+
+  test("installs the utility spell dependencies required by Gnomish Lineage", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+
+    const mending = result.catalog.requireUnit("mending");
+    const prestidigitation = result.catalog.requireUnit("prestidigitation");
+    const speakWithAnimals = result.catalog.requireUnit("speak_with_animals");
+
+    expect(mending).toMatchObject({
+      kind: "spell",
+      mechanics: {
+        family: "utility",
+        effect: {
+          kind: "repair_object_break_or_tear",
+          leavesNoTrace: true,
+          maxDimensionFeet: 1,
+          restoresMagic: false,
+        },
+      },
+    });
+    expect(prestidigitation).toMatchObject({
+      kind: "spell",
+      mechanics: {
+        family: "utility",
+        nonInstantaneousEffectLimit: 3,
+      },
+    });
+    if (
+      prestidigitation.kind !== "spell" ||
+      prestidigitation.mechanics.family !== "utility" ||
+      prestidigitation.mechanics.utilityKind !== "minor_magic_effect_menu"
+    ) {
+      throw new Error("Expected Prestidigitation utility mechanics.");
+    }
+    expect(Object.keys(prestidigitation.mechanics.effects)).toHaveLength(6);
+    expect(speakWithAnimals).toMatchObject({
+      kind: "spell",
+      mechanics: { family: "activation" },
+    });
+  });
 });

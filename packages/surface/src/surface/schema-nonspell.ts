@@ -36,6 +36,7 @@ import {
   type SurfaceIdentityKind,
   type SurfaceProjectionKind,
   type SurfaceProtocolKind,
+  type SurfaceUnitDependencyRelation,
   type SurfaceUnitReferenceRelation,
   ToolProficiencyGrantSchema,
   WeaponProficiencySchema,
@@ -93,6 +94,16 @@ const surfaceReference = <A, I, R>(
 ) =>
   surfaceSchemaRole(Schema.typeSchema(schema.pipe(Schema.compose(UnitId))), {
     category: "reference",
+    relation,
+    targetKind: "unit",
+  });
+
+const surfaceDependency = <A, I, R>(
+  schema: Schema.Schema<A & string, I, R>,
+  relation: SurfaceUnitDependencyRelation,
+) =>
+  surfaceSchemaRole(Schema.typeSchema(schema.pipe(Schema.compose(UnitId))), {
+    category: "dependency",
     relation,
     targetKind: "unit",
   });
@@ -916,7 +927,7 @@ export const SorcererMetamagicMechanicsSchema = Schema.Struct({
   }),
   spends: Schema.Struct({
     kind: Schema.Literal("class_feature_point_pool"),
-    resourceUnitId: surfaceReference(
+    resourceUnitId: surfaceDependency(
       Schema.Literal("sorcerer_font_of_magic"),
       "resource-link",
     ),
@@ -937,7 +948,7 @@ const DruidWildCompanionSpendOptionSchema = Schema.Union(
   Schema.Struct({ kind: Schema.Literal("spell_slot") }),
   Schema.Struct({
     kind: Schema.Literal("one_class_feature_use"),
-    resourceUnitId: surfaceReference(
+    resourceUnitId: surfaceDependency(
       Schema.Literal("druid_wild_shape"),
       "resource-link",
     ),
@@ -972,7 +983,10 @@ export const DruidWildCompanionSpellCastMechanicsSchema = Schema.Struct({
     kind: Schema.Literal("standard_action"),
     action: Schema.Literal("magic"),
   }),
-  spellId: surfaceReference(Schema.Literal("find_familiar"), "spell-reference"),
+  spellId: surfaceDependency(
+    Schema.Literal("find_familiar"),
+    "spell-reference",
+  ),
   spendOptions: DruidWildCompanionSpendOptionsSchema,
   componentOverride: Schema.Struct({
     material: Schema.Literal("not_required"),
@@ -1047,7 +1061,7 @@ export const SorcererSorcerousRestorationMechanicsSchema = Schema.Struct({
   recoveryTrigger: Schema.Literal("short_rest"),
   resource: Schema.Struct({
     kind: Schema.Literal("point_pool"),
-    resourceUnitId: surfaceReference(
+    resourceUnitId: surfaceDependency(
       Schema.Literal("sorcerer_font_of_magic"),
       "resource-link",
     ),
@@ -1102,7 +1116,7 @@ export const FailedAbilityCheckResourceBoostMechanicsSchema = Schema.Struct({
   family: Schema.Literal("failed_ability_check_resource_boost"),
   trigger: Schema.Struct({ kind: Schema.Literal("failed_ability_check") }),
   spends: Schema.Struct({
-    resourceUnitId: surfaceReference(NonEmptyStringSchema, "resource-link"),
+    resourceUnitId: surfaceDependency(NonEmptyStringSchema, "resource-link"),
   }),
   bonus: Schema.Struct({
     kind: Schema.Literal("dice"),
@@ -1116,7 +1130,7 @@ export const FailedAbilityCheckResourceBoostMechanicsSchema = Schema.Struct({
 
 const MonkUncannyMetabolismHealingAmountSchema = Schema.Struct({
   kind: Schema.Literal("monk_martial_arts_die_plus_monk_level"),
-  martialArtsUnitId: surfaceReference(
+  martialArtsUnitId: surfaceDependency(
     Schema.Literal("monk_martial_arts"),
     "resource-link",
   ),
@@ -1128,7 +1142,7 @@ export const MonkInitiativeFocusRecoveryMechanicsSchema = Schema.Struct({
   optional: Schema.Literal(true),
   recovery: Schema.Struct({
     kind: Schema.Literal("recover_all_expended_uses"),
-    resourceUnitId: surfaceReference(
+    resourceUnitId: surfaceDependency(
       Schema.Literal("monk_monks_focus"),
       "resource-link",
     ),
@@ -1142,7 +1156,7 @@ export const MonkInitiativeFocusRecoveryMechanicsSchema = Schema.Struct({
 });
 
 const ReferencedResourceSpendSchema = strictStruct({
-  resourceUnitId: surfaceReference(NonEmptyStringSchema, "resource-link"),
+  resourceUnitId: surfaceDependency(NonEmptyStringSchema, "resource-link"),
   amount: PositiveIntegerSchema,
 });
 
@@ -1343,7 +1357,7 @@ export const StunningStrikeMechanicsSchema = strictStruct({
   }),
   optional: Schema.Literal(true),
   spends: strictStruct({
-    resourceUnitId: surfaceReference(
+    resourceUnitId: surfaceDependency(
       Schema.Literal("monk_monks_focus"),
       "resource-link",
     ),
@@ -1391,7 +1405,7 @@ export const CunningStrikeMechanicsSchema = strictStruct({
   family: Schema.Literal("cunning_strike"),
   trigger: strictStruct({
     kind: Schema.Literal("deal_sneak_attack_damage"),
-    sourceUnitId: surfaceReference(
+    sourceUnitId: surfaceDependency(
       Schema.Literal("rogue_sneak_attack"),
       "unit-reference",
     ),
@@ -1476,7 +1490,7 @@ export const BrutalStrikeMechanicsSchema = strictStruct({
   family: Schema.Literal("brutal_strike"),
   trigger: strictStruct({
     kind: Schema.Literal("reckless_attack_strength_attack_hit"),
-    prerequisiteUnitId: surfaceReference(
+    prerequisiteUnitId: surfaceDependency(
       Schema.Literal("barbarian_reckless_attack"),
       "unit-reference",
     ),
@@ -1630,7 +1644,7 @@ export const AcrobaticMovementMechanicsSchema = strictStruct({
 
 export const SupremeSneakMechanicsSchema = strictStruct({
   family: Schema.Literal("cunning_strike_option_grant"),
-  sourceUnitId: surfaceReference(
+  sourceUnitId: surfaceDependency(
     Schema.Literal("rogue_cunning_strike"),
     "unit-reference",
   ),
@@ -2137,7 +2151,7 @@ const ClassLevelMultiplierReductionSchema = strictStruct({
 
 const AttackDamageReductionZeroDamageRedirectSchema = strictStruct({
   spends: strictStruct({
-    resourceUnitId: surfaceReference(NonEmptyStringSchema, "resource-link"),
+    resourceUnitId: surfaceDependency(NonEmptyStringSchema, "resource-link"),
     amount: Schema.Literal(1),
   }),
   save: strictStruct({
@@ -2509,7 +2523,7 @@ export const BackgroundAbilityScoreIncreaseSchema = Schema.Struct({
 export const StartingEquipmentItemRefSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("unit_ref"),
-    unitId: surfaceReference(NonEmptyStringSchema, "item-reference"),
+    unitId: surfaceDependency(NonEmptyStringSchema, "item-reference"),
     quantity: exactOptional(PositiveIntegerSchema),
   }),
   Schema.Struct({
@@ -2537,7 +2551,7 @@ export const StartingEquipmentChoiceSchema = Schema.Union(
 );
 
 export const ClassFeatureGrantSchema = Schema.Struct({
-  unitId: surfaceReference(NonEmptyStringSchema, "unit-reference"),
+  unitId: surfaceDependency(NonEmptyStringSchema, "unit-reference"),
   level: PositiveIntegerSchema,
 });
 
@@ -3648,7 +3662,7 @@ const GnomishLineageForestMechanicsSchema = strictStruct({
   grants: Schema.Tuple(
     strictStruct({
       kind: Schema.Literal("grant_spell_access"),
-      spellId: surfaceReference(
+      spellId: surfaceDependency(
         Schema.Literal("minor_illusion"),
         "spell-reference",
       ),
@@ -3656,7 +3670,7 @@ const GnomishLineageForestMechanicsSchema = strictStruct({
     }),
     strictStruct({
       kind: Schema.Literal("grant_spell_access"),
-      spellId: surfaceReference(
+      spellId: surfaceDependency(
         Schema.Literal("speak_with_animals"),
         "spell-reference",
       ),
@@ -3664,7 +3678,7 @@ const GnomishLineageForestMechanicsSchema = strictStruct({
     }),
     strictStruct({
       kind: Schema.Literal("grant_spell_free_casts"),
-      spellId: surfaceReference(
+      spellId: surfaceDependency(
         Schema.Literal("speak_with_animals"),
         "spell-reference",
       ),
@@ -3681,12 +3695,12 @@ const GnomishLineageRockMechanicsSchema = strictStruct({
   grants: Schema.Tuple(
     strictStruct({
       kind: Schema.Literal("grant_spell_access"),
-      spellId: surfaceReference(Schema.Literal("mending"), "spell-reference"),
+      spellId: surfaceDependency(Schema.Literal("mending"), "spell-reference"),
       mode: Schema.Literal("known"),
     }),
     strictStruct({
       kind: Schema.Literal("grant_spell_access"),
-      spellId: surfaceReference(
+      spellId: surfaceDependency(
         Schema.Literal("prestidigitation"),
         "spell-reference",
       ),
@@ -3844,7 +3858,10 @@ export const BackgroundRecordSchema = Schema.Struct({
   ...UnitMetadataSchema.fields,
   kind: BackgroundRecordKindSchema,
   abilityScoreIncrease: BackgroundAbilityScoreIncreaseSchema,
-  originFeatId: surfaceReference(NonEmptyStringSchema, "origin-feat-reference"),
+  originFeatId: surfaceDependency(
+    NonEmptyStringSchema,
+    "origin-feat-reference",
+  ),
   skillProficiencies: Schema.NonEmptyArray(SkillSchema),
   toolProficiency: BackgroundToolProficiencySchema,
   startingEquipment: Schema.NonEmptyArray(StartingEquipmentChoiceSchema),

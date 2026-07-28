@@ -36,43 +36,43 @@ let animateDead =
           , menu =
               [ { slotLevel = 3
                 , options =
-                    [ { monsterId = "skeleton", count = 1 }
+                    [ { monsterId = "stat_block_skeleton", count = 1 }
                     , { monsterId = "zombie", count = 1 }
                     ]
                 }
               , { slotLevel = 4
                 , options =
-                    [ { monsterId = "skeleton", count = 3 }
+                    [ { monsterId = "stat_block_skeleton", count = 3 }
                     , { monsterId = "zombie", count = 3 }
                     ]
                 }
               , { slotLevel = 5
                 , options =
-                    [ { monsterId = "skeleton", count = 5 }
+                    [ { monsterId = "stat_block_skeleton", count = 5 }
                     , { monsterId = "zombie", count = 5 }
                     ]
                 }
               , { slotLevel = 6
                 , options =
-                    [ { monsterId = "skeleton", count = 7 }
+                    [ { monsterId = "stat_block_skeleton", count = 7 }
                     , { monsterId = "zombie", count = 7 }
                     ]
                 }
               , { slotLevel = 7
                 , options =
-                    [ { monsterId = "skeleton", count = 9 }
+                    [ { monsterId = "stat_block_skeleton", count = 9 }
                     , { monsterId = "zombie", count = 9 }
                     ]
                 }
               , { slotLevel = 8
                 , options =
-                    [ { monsterId = "skeleton", count = 11 }
+                    [ { monsterId = "stat_block_skeleton", count = 11 }
                     , { monsterId = "zombie", count = 11 }
                     ]
                 }
               , { slotLevel = 9
                 , options =
-                    [ { monsterId = "skeleton", count = 13 }
+                    [ { monsterId = "stat_block_skeleton", count = 13 }
                     , { monsterId = "zombie", count = 13 }
                     ]
                 }

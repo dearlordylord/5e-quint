@@ -72,6 +72,7 @@ export function procedureForFamily(
     Match.when("spawned_creature", () => "activate" as const),
     Match.when("reanimated_creature", () => "activate" as const),
     Match.when("templated_multi_spawn", () => "activate" as const),
+    Match.when("utility", () => "activate" as const),
     Match.exhaustive,
   );
 }

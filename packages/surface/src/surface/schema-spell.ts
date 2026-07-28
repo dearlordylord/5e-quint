@@ -31,7 +31,9 @@ import {
   type SurfaceIdentityKind,
   type SurfaceProjectionKind,
   type SurfaceProtocolKind,
+  type SurfaceStatBlockDependencyRelation,
   type SurfaceStatBlockReferenceRelation,
+  type SurfaceUnitDependencyRelation,
   type SurfaceUnitReferenceRelation,
   UsageLimitSchema,
   WeaponFilterSchema,
@@ -67,6 +69,16 @@ const surfaceReference = <A, I, R>(
     targetKind: "unit",
   });
 
+const surfaceDependency = <A, I, R>(
+  schema: Schema.Schema<A & string, I, R>,
+  relation: SurfaceUnitDependencyRelation,
+) =>
+  surfaceSchemaRole(Schema.typeSchema(schema.pipe(Schema.compose(UnitId))), {
+    category: "dependency",
+    relation,
+    targetKind: "unit",
+  });
+
 const surfaceStatBlockReference = <A, I, R>(
   schema: Schema.Schema<A & string, I, R>,
   relation: SurfaceStatBlockReferenceRelation,
@@ -75,6 +87,19 @@ const surfaceStatBlockReference = <A, I, R>(
     Schema.typeSchema(schema.pipe(Schema.compose(StatBlockId))),
     {
       category: "reference",
+      relation,
+      targetKind: "statBlock",
+    },
+  );
+
+const surfaceStatBlockDependency = <A, I, R>(
+  schema: Schema.Schema<A & string, I, R>,
+  relation: SurfaceStatBlockDependencyRelation,
+) =>
+  surfaceSchemaRole(
+    Schema.typeSchema(schema.pipe(Schema.compose(StatBlockId))),
+    {
+      category: "dependency",
       relation,
       targetKind: "statBlock",
     },
@@ -3802,7 +3827,7 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
       }),
       strictStruct({
         kind: Schema.Literal("grant_spell_access"),
-        spellId: surfaceReference(Schema.String, "spell-reference"),
+        spellId: surfaceDependency(Schema.String, "spell-reference"),
         mode: SpellAccessModeSchema,
         dcOverride: optionalExact(DcSourceSchema),
         areaOverride: optionalExact(AreaShapeSpecSchema),
@@ -3876,7 +3901,7 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
       }),
       Schema.Struct({
         kind: Schema.Literal("grant_spell_free_casts"),
-        spellId: surfaceReference(
+        spellId: surfaceDependency(
           Schema.NonEmptyTrimmedString,
           "spell-reference",
         ),
@@ -5631,7 +5656,7 @@ export const ReanimationTargetKindSchema = Schema.Literal(
 );
 
 export const ReanimationSlotOptionSchema = Schema.Struct({
-  monsterId: surfaceStatBlockReference(Schema.String, "monster-reference"),
+  monsterId: surfaceStatBlockDependency(Schema.String, "monster-reference"),
   count: Schema.Number,
 });
 
@@ -5669,7 +5694,7 @@ export const SpawnedCreatureStatBlockSchema = Schema.Union(
   }),
   Schema.Struct({
     kind: Schema.Literal("catalog_ref"),
-    monsterId: surfaceStatBlockReference(Schema.String, "monster-reference"),
+    monsterId: surfaceStatBlockDependency(Schema.String, "monster-reference"),
     displayName: surfaceIdentity(Schema.String, "displayName"),
     overrides: optionalExact(CreatureStatBlockOverridesSchema),
   }),
@@ -5678,7 +5703,7 @@ export const SpawnedCreatureStatBlockSchema = Schema.Union(
     normalForms: nonEmpty(
       Schema.Struct({
         formId: surfaceIdentity(Schema.NonEmptyTrimmedString, "reference"),
-        statBlockId: surfaceStatBlockReference(
+        statBlockId: surfaceStatBlockDependency(
           Schema.NonEmptyTrimmedString,
           "stat-block-reference",
         ),
@@ -5712,6 +5737,88 @@ export const SpawnedCreatureMechanicsSchema = Schema.extend(
   ),
 );
 
+const ObjectRepairUtilityEffectSchema = strictStruct({
+  kind: Schema.Literal("repair_object_break_or_tear"),
+  maxDimensionFeet: Schema.Literal(1),
+  leavesNoTrace: Schema.Literal(true),
+  restoresMagic: Schema.Literal(false),
+  duration: Schema.Literal("instantaneous"),
+});
+
+const MinorMagicEffectMenuSchema = strictStruct({
+  sensory: strictStruct({
+    kind: Schema.Literal("harmless_sensory_effect"),
+    duration: Schema.Literal("instantaneous"),
+  }),
+  firePlay: strictStruct({
+    kind: Schema.Literal("light_or_snuff_small_fire"),
+    sources: Schema.Tuple(
+      Schema.Literal("candle"),
+      Schema.Literal("torch"),
+      Schema.Literal("small_campfire"),
+    ),
+    duration: Schema.Literal("instantaneous"),
+  }),
+  cleanOrSoil: strictStruct({
+    kind: Schema.Literal("clean_or_soil_object"),
+    maxVolumeCubicFeet: Schema.Literal(1),
+    duration: Schema.Literal("instantaneous"),
+  }),
+  minorSensation: strictStruct({
+    kind: Schema.Literal("alter_nonliving_material_sensation"),
+    maxVolumeCubicFeet: Schema.Literal(1),
+    sensations: Schema.Tuple(
+      Schema.Literal("chill"),
+      Schema.Literal("warm"),
+      Schema.Literal("flavor"),
+    ),
+    duration: Schema.Literal("spell_duration"),
+  }),
+  magicMark: strictStruct({
+    kind: Schema.Literal("mark_object_or_surface"),
+    marks: Schema.Tuple(
+      Schema.Literal("color"),
+      Schema.Literal("small_mark"),
+      Schema.Literal("symbol"),
+    ),
+    duration: Schema.Literal("spell_duration"),
+  }),
+  minorCreation: strictStruct({
+    kind: Schema.Literal("create_hand_sized_trinket_or_illusion"),
+    creations: Schema.Tuple(
+      Schema.Literal("nonmagical_trinket"),
+      Schema.Literal("illusory_image"),
+    ),
+    canDealDamage: Schema.Literal(false),
+    hasMonetaryWorth: Schema.Literal(false),
+    duration: Schema.Literal("end_of_caster_next_turn"),
+  }),
+});
+
+export const UtilityMechanicsSchema = Schema.Union(
+  Schema.extend(
+    SpellMechanicsHeaderSchema,
+    strictStruct({
+      family: Schema.Literal("utility"),
+      utilityKind: Schema.Literal("object_repair"),
+      target: strictStruct({
+        kind: Schema.Literal("object"),
+        count: Schema.Literal(1),
+      }),
+      effect: ObjectRepairUtilityEffectSchema,
+    }),
+  ),
+  Schema.extend(
+    SpellMechanicsHeaderSchema,
+    strictStruct({
+      family: Schema.Literal("utility"),
+      utilityKind: Schema.Literal("minor_magic_effect_menu"),
+      effects: MinorMagicEffectMenuSchema,
+      nonInstantaneousEffectLimit: Schema.Literal(3),
+    }),
+  ),
+);
+
 export const SpellMechanicsSchema = Schema.Union(
   OngoingEffectMechanicsSchema,
   ActivationMechanicsSchema,
@@ -5725,6 +5832,7 @@ export const SpellMechanicsSchema = Schema.Union(
   SpawnedCreatureMechanicsSchema,
   ReanimatedCreatureMechanicsSchema,
   TemplatedMultiSpawnMechanicsSchema,
+  UtilityMechanicsSchema,
 );
 
 export const SpellRecordSchema = Schema.Struct({

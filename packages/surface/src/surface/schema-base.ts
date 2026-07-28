@@ -42,9 +42,6 @@ export const SURFACE_PROJECTION_KINDS = [
 export const SURFACE_UNIT_REFERENCE_RELATIONS = [
   "excluded-armor-reference",
   "item-reference",
-  "linked-spell-reference",
-  "origin-feat-reference",
-  "resource-link",
   "spell-reference",
   "subclass-choice",
   "unit-reference",
@@ -52,16 +49,32 @@ export const SURFACE_UNIT_REFERENCE_RELATIONS = [
   "weapon-reference",
 ] as const;
 
+export const SURFACE_UNIT_DEPENDENCY_RELATIONS = [
+  "item-reference",
+  "linked-spell-reference",
+  "origin-feat-reference",
+  "resource-link",
+  "spell-reference",
+  "unit-reference",
+] as const;
+
 export const SURFACE_STAT_BLOCK_REFERENCE_RELATIONS = [
+  "recommended-stat-block-reference",
+] as const;
+
+export const SURFACE_STAT_BLOCK_DEPENDENCY_RELATIONS = [
   "monster-reference",
   "stat-block-reference",
-  "recommended-stat-block-reference",
 ] as const;
 
 export type SurfaceUnitReferenceRelation =
   (typeof SURFACE_UNIT_REFERENCE_RELATIONS)[number];
+export type SurfaceUnitDependencyRelation =
+  (typeof SURFACE_UNIT_DEPENDENCY_RELATIONS)[number];
 export type SurfaceStatBlockReferenceRelation =
   (typeof SURFACE_STAT_BLOCK_REFERENCE_RELATIONS)[number];
+export type SurfaceStatBlockDependencyRelation =
+  (typeof SURFACE_STAT_BLOCK_DEPENDENCY_RELATIONS)[number];
 export type SurfaceIdentityKind = (typeof SURFACE_IDENTITY_KINDS)[number];
 export type SurfaceProtocolKind = (typeof SURFACE_PROTOCOL_KINDS)[number];
 export type SurfaceProseEvidencePolicy =
@@ -90,12 +103,22 @@ export type SurfaceSchemaFieldRole =
     }
   | {
       readonly category: "reference";
-      readonly relation: (typeof SURFACE_UNIT_REFERENCE_RELATIONS)[number];
+      readonly relation: SurfaceUnitReferenceRelation;
       readonly targetKind: "unit";
     }
   | {
       readonly category: "reference";
-      readonly relation: (typeof SURFACE_STAT_BLOCK_REFERENCE_RELATIONS)[number];
+      readonly relation: SurfaceStatBlockReferenceRelation;
+      readonly targetKind: "statBlock";
+    }
+  | {
+      readonly category: "dependency";
+      readonly relation: SurfaceUnitDependencyRelation;
+      readonly targetKind: "unit";
+    }
+  | {
+      readonly category: "dependency";
+      readonly relation: SurfaceStatBlockDependencyRelation;
       readonly targetKind: "statBlock";
     }
   | {
@@ -164,19 +187,23 @@ export function isSurfaceSchemaRole(
       SURFACE_PROJECTION_KINDS.some((kind) => kind === role.kind)
     );
   }
-  if (role.category === "reference") {
+  if (role.category === "reference" || role.category === "dependency") {
+    const unitRelations =
+      role.category === "reference"
+        ? SURFACE_UNIT_REFERENCE_RELATIONS
+        : SURFACE_UNIT_DEPENDENCY_RELATIONS;
+    const statBlockRelations =
+      role.category === "reference"
+        ? SURFACE_STAT_BLOCK_REFERENCE_RELATIONS
+        : SURFACE_STAT_BLOCK_DEPENDENCY_RELATIONS;
     return (
       exactRoleKeys(role, ["category", "relation", "targetKind"]) &&
       typeof role.relation === "string" &&
       typeof role.targetKind === "string" &&
       ((role.targetKind === "unit" &&
-        SURFACE_UNIT_REFERENCE_RELATIONS.some(
-          (relation) => relation === role.relation,
-        )) ||
+        unitRelations.some((relation) => relation === role.relation)) ||
         (role.targetKind === "statBlock" &&
-          SURFACE_STAT_BLOCK_REFERENCE_RELATIONS.some(
-            (relation) => relation === role.relation,
-          )))
+          statBlockRelations.some((relation) => relation === role.relation)))
     );
   }
   return false;
@@ -187,8 +214,8 @@ function surfaceSchemaRoleKey(value: unknown): string | undefined {
   if (value.category === "identity" || value.category === "protocol") {
     return `${value.category}:${value.kind}`;
   }
-  if (value.category === "reference") {
-    return `reference:${value.targetKind}:${value.relation}`;
+  if (value.category === "reference" || value.category === "dependency") {
+    return `${value.category}:${value.targetKind}:${value.relation}`;
   }
   if (value.category === "projection") return `projection:${value.kind}`;
   if (value.category === "prose") return `prose:${value.evidence}`;
@@ -909,7 +936,7 @@ export const GrantedSpellDurationOverrideSchema = Schema.Struct({
   removeConcentration: exactOptional(Schema.Literal(true)),
   endsWhenGrantedSpellEnds: exactOptional(
     surfaceSchemaRole(Schema.String, {
-      category: "reference",
+      category: "dependency",
       relation: "linked-spell-reference",
       targetKind: "unit",
     }),

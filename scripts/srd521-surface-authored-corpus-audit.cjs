@@ -1165,7 +1165,7 @@ function statusSeverity(status) {
   return "failure";
 }
 
-function collectUnitReferences(records) {
+function collectAuthoredRelations(records) {
   const refs = [];
 
   function add(record, fieldPath, targetRecordId, role) {
@@ -1176,6 +1176,7 @@ function collectUnitReferences(records) {
       name: record.name,
       fieldPath,
       targetRecordId,
+      relationKind: role.category,
       relation: role.relation,
       targetKind: role.targetKind,
     });
@@ -1183,7 +1184,12 @@ function collectUnitReferences(records) {
 
   for (const record of records) {
     walkDecodedSurfaceRecord(record, (fieldPath, value, role) => {
-      if (role.category !== "reference" || typeof value !== "string") return;
+      if (
+        (role.category !== "reference" && role.category !== "dependency") ||
+        typeof value !== "string"
+      ) {
+        return;
+      }
       add(record, fieldPath.replace(/^value\./, ""), value, role);
     });
   }
@@ -2593,6 +2599,96 @@ function recordIdentityKey(record) {
   return `${family}:${record.id}`;
 }
 
+function publishedSurfaceMembership(workspaceRoot, records, publication) {
+  const issues = [];
+  let value = publication;
+  if (value === undefined) {
+    try {
+      value = JSON.parse(
+        fs.readFileSync(
+          path.join(
+            workspaceRoot,
+            "packages/surface/publication/srd-surface.json",
+          ),
+          "utf8",
+        ),
+      );
+    } catch (error) {
+      issues.push({
+        code: "published-surface-unreadable",
+        contentPath: "packages/surface/publication/srd-surface.json",
+        message: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
+
+  const unitIds = new Set();
+  const statBlockIds = new Set();
+  if (
+    value === null ||
+    typeof value !== "object" ||
+    value.kind !== "srd-5.2.1-surface-catalog" ||
+    !Array.isArray(value.units) ||
+    !Array.isArray(value.statBlocks)
+  ) {
+    issues.push({
+      code: "published-surface-invalid",
+      contentPath: "packages/surface/publication/srd-surface.json",
+      message:
+        "Published Surface membership must be an SRD Unit/Stat Block catalog",
+    });
+    return { unitIds, statBlockIds, issues };
+  }
+
+  for (const [family, entries, target] of [
+    ["unit", value.units, unitIds],
+    ["statBlock", value.statBlocks, statBlockIds],
+  ]) {
+    for (const entry of entries) {
+      if (
+        entry === null ||
+        typeof entry !== "object" ||
+        typeof entry.id !== "string"
+      ) {
+        issues.push({
+          code: "published-surface-invalid-record",
+          contentPath: "packages/surface/publication/srd-surface.json",
+          message: `Published ${family} entries must carry string ids`,
+        });
+        continue;
+      }
+      if (target.has(entry.id)) {
+        issues.push({
+          code: "duplicate-published-authored-identity",
+          contentPath: "packages/surface/publication/srd-surface.json",
+          recordId: entry.id,
+          message: `Published ${family} identity ${entry.id} is duplicated`,
+        });
+      }
+      target.add(entry.id);
+    }
+  }
+
+  const corpusKeys = new Set(records.map(recordIdentityKey));
+  for (const [family, ids] of [
+    ["unit", unitIds],
+    ["statBlock", statBlockIds],
+  ]) {
+    for (const id of ids) {
+      if (!corpusKeys.has(`${family}:${id}`)) {
+        issues.push({
+          code: "published-record-missing-from-corpus",
+          contentPath: "packages/surface/publication/srd-surface.json",
+          recordId: id,
+          message: `Published ${family} ${id} has no canonical Surface record`,
+        });
+      }
+    }
+  }
+
+  return { unitIds, statBlockIds, issues };
+}
+
 function createAuditContext(options = {}) {
   const workspaceRoot = options.root ?? root;
   const contextIssues = [];
@@ -2671,6 +2767,24 @@ function createAuditContext(options = {}) {
       );
     }
   }
+  const publication =
+    options.records !== undefined && options.publication === undefined
+      ? {
+          kind: "srd-5.2.1-surface-catalog",
+          units: records
+            .filter((record) => record.kind !== "statBlock")
+            .map((record) => ({ id: record.id })),
+          statBlocks: records
+            .filter((record) => record.kind === "statBlock")
+            .map((record) => ({ id: record.id })),
+        }
+      : options.publication;
+  const publishedMembership = publishedSurfaceMembership(
+    workspaceRoot,
+    records,
+    publication,
+  );
+  contextIssues.push(...publishedMembership.issues);
   const token = Object.freeze({
     kind: "srd521-surface-corpus-audit-context",
   });
@@ -2681,6 +2795,8 @@ function createAuditContext(options = {}) {
     observationsByRecord,
     unitIds,
     statBlockIds,
+    admittedUnitIds: publishedMembership.unitIds,
+    admittedStatBlockIds: publishedMembership.statBlockIds,
     sourceResolutionsByIdentity,
     provenanceSectionByIdentity,
     contextIssues,
@@ -2759,7 +2875,12 @@ function sourceEvidenceForRecord(state, record, observations) {
     ) {
       continue;
     }
-    if (observation.role.category === "reference") continue;
+    if (
+      observation.role.category === "reference" ||
+      observation.role.category === "dependency"
+    ) {
+      continue;
+    }
     if (observation.role.category === "protocol") {
       continue;
     }
@@ -2824,18 +2945,54 @@ function sourceEvidenceForRecord(state, record, observations) {
   return { issues, warnings, source };
 }
 
-function referenceIssuesForRecord(state, record, observations, source) {
+function authoredRelationIssuesForRecord(state, record, observations, source) {
   const issues = [];
   const warnings = [];
   for (const observation of observations) {
-    if (observation.role.category !== "reference") continue;
+    if (
+      observation.role.category !== "reference" &&
+      observation.role.category !== "dependency"
+    ) {
+      continue;
+    }
     const targetIds =
       observation.role.targetKind === "statBlock"
         ? state.statBlockIds
         : state.unitIds;
+    const admittedTargetIds =
+      observation.role.targetKind === "statBlock"
+        ? state.admittedStatBlockIds
+        : state.admittedUnitIds;
+    const referringRecordAdmitted = (
+      record.kind === "statBlock"
+        ? state.admittedStatBlockIds
+        : state.admittedUnitIds
+    ).has(record.id);
     const locallyVisible = sourceContainsIdentity(observation.value, source);
-    if (targetIds.has(observation.value) && locallyVisible) continue;
     if (
+      observation.role.category === "dependency" &&
+      !referringRecordAdmitted &&
+      (locallyVisible ||
+        sourceContainsCanonicalReference(observation.value, source))
+    ) {
+      continue;
+    }
+    if (
+      locallyVisible &&
+      (observation.role.category === "reference"
+        ? targetIds.has(observation.value)
+        : admittedTargetIds.has(observation.value))
+    ) {
+      continue;
+    }
+    const details = {
+      fieldPath: observation.fieldPath,
+      relation: observation.role.relation,
+      targetKind: observation.role.targetKind,
+      targetRecordId: observation.value,
+    };
+    if (
+      observation.role.category === "reference" &&
       !targetIds.has(observation.value) &&
       sourceContainsCanonicalReference(observation.value, source)
     ) {
@@ -2843,27 +3000,33 @@ function referenceIssuesForRecord(state, record, observations, source) {
         code: "source-visible-reference",
         contentPath: record.contentPath,
         recordId: record.id,
-        fieldPath: observation.fieldPath,
-        targetKind: observation.role.targetKind,
-        targetRecordId: observation.value,
+        ...details,
         message: `${observation.value} has SRD evidence but no authored Surface record`,
       });
     } else {
       const targetExists = targetIds.has(observation.value);
+      const relationKind =
+        observation.role.category === "dependency"
+          ? "authored-dependency"
+          : "authored-reference";
+      const targetIsOutsidePublishedSlice =
+        targetExists && !admittedTargetIds.has(observation.value);
       issues.push(
         issueForRecord(
-          targetExists
-            ? "authored-reference-evidence-missing"
-            : "missing-authored-reference",
+          targetIsOutsidePublishedSlice &&
+            observation.role.category === "dependency"
+            ? "unadmitted-authored-dependency"
+            : targetExists
+              ? `${relationKind}-evidence-missing`
+              : `missing-${relationKind}`,
           record,
-          targetExists
-            ? `${observation.fieldPath} reference has no exact local SRD evidence`
-            : `${observation.fieldPath} references missing ${observation.role.targetKind} ${observation.value}`,
-          {
-            fieldPath: observation.fieldPath,
-            targetKind: observation.role.targetKind,
-            targetRecordId: observation.value,
-          },
+          targetIsOutsidePublishedSlice &&
+            observation.role.category === "dependency"
+            ? `${observation.fieldPath} ${observation.role.relation} requires ${observation.role.targetKind} ${observation.value} outside the published Surface slice`
+            : targetExists
+              ? `${observation.fieldPath} ${relationKind} has no exact local SRD evidence`
+              : `${observation.fieldPath} ${observation.role.relation} requires missing ${observation.role.targetKind} ${observation.value}`,
+          details,
         ),
       );
     }
@@ -2900,14 +3063,14 @@ function auditRecordAgainstState(state, record, observations) {
     );
   }
   const sourceEvidence = sourceEvidenceForRecord(state, record, observations);
-  const references = referenceIssuesForRecord(
+  const authoredRelations = authoredRelationIssuesForRecord(
     state,
     record,
     observations,
     sourceEvidence.source,
   );
-  issues.push(...sourceEvidence.issues, ...references.issues);
-  warnings.push(...sourceEvidence.warnings, ...references.warnings);
+  issues.push(...sourceEvidence.issues, ...authoredRelations.issues);
+  warnings.push(...sourceEvidence.warnings, ...authoredRelations.warnings);
   return { issues, warnings };
 }
 
@@ -3204,7 +3367,7 @@ module.exports = {
   buildAudit,
   buildReferenceIndex,
   collectDecodedStringPaths,
-  collectUnitReferences,
+  collectAuthoredRelations,
   createAuditContext,
   decodeSurfaceRecord,
   readSurfaceRecords,

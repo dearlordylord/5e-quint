@@ -5,147 +5,22 @@
     "description": "Complete generated SRD 5.2.1 Surface Unit and Stat Block corpus"
   },
   "metrics": {
-    "recordsAudited": 620,
+    "recordsAudited": 622,
     "issues": 0,
-    "warnings": 84,
+    "warnings": 39,
     "issueCounts": {},
     "warningCounts": {
-      "source-visible-reference": 84
+      "source-visible-reference": 39
     }
   },
   "issues": [],
   "warnings": [
     {
       "code": "source-visible-reference",
-      "contentPath": "packages/surface/content/animate_dead.json",
-      "recordId": "animate_dead",
-      "fieldPath": "mechanics.menu[0].options[0].monsterId",
-      "targetKind": "statBlock",
-      "targetRecordId": "skeleton",
-      "message": "skeleton has SRD evidence but no authored Surface record"
-    },
-    {
-      "code": "source-visible-reference",
-      "contentPath": "packages/surface/content/animate_dead.json",
-      "recordId": "animate_dead",
-      "fieldPath": "mechanics.menu[0].options[1].monsterId",
-      "targetKind": "statBlock",
-      "targetRecordId": "zombie",
-      "message": "zombie has SRD evidence but no authored Surface record"
-    },
-    {
-      "code": "source-visible-reference",
-      "contentPath": "packages/surface/content/animate_dead.json",
-      "recordId": "animate_dead",
-      "fieldPath": "mechanics.menu[1].options[0].monsterId",
-      "targetKind": "statBlock",
-      "targetRecordId": "skeleton",
-      "message": "skeleton has SRD evidence but no authored Surface record"
-    },
-    {
-      "code": "source-visible-reference",
-      "contentPath": "packages/surface/content/animate_dead.json",
-      "recordId": "animate_dead",
-      "fieldPath": "mechanics.menu[1].options[1].monsterId",
-      "targetKind": "statBlock",
-      "targetRecordId": "zombie",
-      "message": "zombie has SRD evidence but no authored Surface record"
-    },
-    {
-      "code": "source-visible-reference",
-      "contentPath": "packages/surface/content/animate_dead.json",
-      "recordId": "animate_dead",
-      "fieldPath": "mechanics.menu[2].options[0].monsterId",
-      "targetKind": "statBlock",
-      "targetRecordId": "skeleton",
-      "message": "skeleton has SRD evidence but no authored Surface record"
-    },
-    {
-      "code": "source-visible-reference",
-      "contentPath": "packages/surface/content/animate_dead.json",
-      "recordId": "animate_dead",
-      "fieldPath": "mechanics.menu[2].options[1].monsterId",
-      "targetKind": "statBlock",
-      "targetRecordId": "zombie",
-      "message": "zombie has SRD evidence but no authored Surface record"
-    },
-    {
-      "code": "source-visible-reference",
-      "contentPath": "packages/surface/content/animate_dead.json",
-      "recordId": "animate_dead",
-      "fieldPath": "mechanics.menu[3].options[0].monsterId",
-      "targetKind": "statBlock",
-      "targetRecordId": "skeleton",
-      "message": "skeleton has SRD evidence but no authored Surface record"
-    },
-    {
-      "code": "source-visible-reference",
-      "contentPath": "packages/surface/content/animate_dead.json",
-      "recordId": "animate_dead",
-      "fieldPath": "mechanics.menu[3].options[1].monsterId",
-      "targetKind": "statBlock",
-      "targetRecordId": "zombie",
-      "message": "zombie has SRD evidence but no authored Surface record"
-    },
-    {
-      "code": "source-visible-reference",
-      "contentPath": "packages/surface/content/animate_dead.json",
-      "recordId": "animate_dead",
-      "fieldPath": "mechanics.menu[4].options[0].monsterId",
-      "targetKind": "statBlock",
-      "targetRecordId": "skeleton",
-      "message": "skeleton has SRD evidence but no authored Surface record"
-    },
-    {
-      "code": "source-visible-reference",
-      "contentPath": "packages/surface/content/animate_dead.json",
-      "recordId": "animate_dead",
-      "fieldPath": "mechanics.menu[4].options[1].monsterId",
-      "targetKind": "statBlock",
-      "targetRecordId": "zombie",
-      "message": "zombie has SRD evidence but no authored Surface record"
-    },
-    {
-      "code": "source-visible-reference",
-      "contentPath": "packages/surface/content/animate_dead.json",
-      "recordId": "animate_dead",
-      "fieldPath": "mechanics.menu[5].options[0].monsterId",
-      "targetKind": "statBlock",
-      "targetRecordId": "skeleton",
-      "message": "skeleton has SRD evidence but no authored Surface record"
-    },
-    {
-      "code": "source-visible-reference",
-      "contentPath": "packages/surface/content/animate_dead.json",
-      "recordId": "animate_dead",
-      "fieldPath": "mechanics.menu[5].options[1].monsterId",
-      "targetKind": "statBlock",
-      "targetRecordId": "zombie",
-      "message": "zombie has SRD evidence but no authored Surface record"
-    },
-    {
-      "code": "source-visible-reference",
-      "contentPath": "packages/surface/content/animate_dead.json",
-      "recordId": "animate_dead",
-      "fieldPath": "mechanics.menu[6].options[0].monsterId",
-      "targetKind": "statBlock",
-      "targetRecordId": "skeleton",
-      "message": "skeleton has SRD evidence but no authored Surface record"
-    },
-    {
-      "code": "source-visible-reference",
-      "contentPath": "packages/surface/content/animate_dead.json",
-      "recordId": "animate_dead",
-      "fieldPath": "mechanics.menu[6].options[1].monsterId",
-      "targetKind": "statBlock",
-      "targetRecordId": "zombie",
-      "message": "zombie has SRD evidence but no authored Surface record"
-    },
-    {
-      "code": "source-visible-reference",
       "contentPath": "packages/surface/content/class_bard.json",
       "recordId": "class_bard",
       "fieldPath": "spellcasting.cantripAccess.spellIds[2]",
+      "relation": "spell-list",
       "targetKind": "unit",
       "targetRecordId": "mage_hand",
       "message": "mage_hand has SRD evidence but no authored Surface record"
@@ -154,16 +29,8 @@
       "code": "source-visible-reference",
       "contentPath": "packages/surface/content/class_bard.json",
       "recordId": "class_bard",
-      "fieldPath": "spellcasting.cantripAccess.spellIds[3]",
-      "targetKind": "unit",
-      "targetRecordId": "mending",
-      "message": "mending has SRD evidence but no authored Surface record"
-    },
-    {
-      "code": "source-visible-reference",
-      "contentPath": "packages/surface/content/class_bard.json",
-      "recordId": "class_bard",
       "fieldPath": "spellcasting.cantripAccess.spellIds[4]",
+      "relation": "spell-list",
       "targetKind": "unit",
       "targetRecordId": "message",
       "message": "message has SRD evidence but no authored Surface record"
@@ -172,16 +39,8 @@
       "code": "source-visible-reference",
       "contentPath": "packages/surface/content/class_bard.json",
       "recordId": "class_bard",
-      "fieldPath": "spellcasting.cantripAccess.spellIds[6]",
-      "targetKind": "unit",
-      "targetRecordId": "prestidigitation",
-      "message": "prestidigitation has SRD evidence but no authored Surface record"
-    },
-    {
-      "code": "source-visible-reference",
-      "contentPath": "packages/surface/content/class_bard.json",
-      "recordId": "class_bard",
       "fieldPath": "spellcasting.preparedAccess.spells[16].spellId",
+      "relation": "spell-reference",
       "targetKind": "unit",
       "targetRecordId": "illusory_script",
       "message": "illusory_script has SRD evidence but no authored Surface record"
@@ -191,6 +50,7 @@
       "contentPath": "packages/surface/content/class_bard.json",
       "recordId": "class_bard",
       "fieldPath": "spellcasting.preparedAccess.spells[22].spellId",
+      "relation": "spell-reference",
       "targetKind": "unit",
       "targetRecordId": "unseen_servant",
       "message": "unseen_servant has SRD evidence but no authored Surface record"
@@ -200,6 +60,7 @@
       "contentPath": "packages/surface/content/class_bard.json",
       "recordId": "class_bard",
       "fieldPath": "spellcasting.preparedAccess.spells[8].spellId",
+      "relation": "spell-reference",
       "targetKind": "unit",
       "targetRecordId": "disguise_self",
       "message": "disguise_self has SRD evidence but no authored Surface record"
@@ -208,16 +69,8 @@
       "code": "source-visible-reference",
       "contentPath": "packages/surface/content/class_cleric.json",
       "recordId": "class_cleric",
-      "fieldPath": "spellcasting.cantripAccess.spellIds[2]",
-      "targetKind": "unit",
-      "targetRecordId": "mending",
-      "message": "mending has SRD evidence but no authored Surface record"
-    },
-    {
-      "code": "source-visible-reference",
-      "contentPath": "packages/surface/content/class_cleric.json",
-      "recordId": "class_cleric",
       "fieldPath": "spellcasting.preparedAccess.spells[12].spellId",
+      "relation": "spell-reference",
       "targetKind": "unit",
       "targetRecordId": "purify_food_and_drink",
       "message": "purify_food_and_drink has SRD evidence but no authored Surface record"
@@ -227,6 +80,7 @@
       "contentPath": "packages/surface/content/class_cleric.json",
       "recordId": "class_cleric",
       "fieldPath": "spellcasting.preparedAccess.spells[3].spellId",
+      "relation": "spell-reference",
       "targetKind": "unit",
       "targetRecordId": "create_or_destroy_water",
       "message": "create_or_destroy_water has SRD evidence but no authored Surface record"
@@ -236,6 +90,7 @@
       "contentPath": "packages/surface/content/class_cleric.json",
       "recordId": "class_cleric",
       "fieldPath": "spellcasting.preparedAccess.spells[53].spellId",
+      "relation": "spell-reference",
       "targetKind": "unit",
       "targetRecordId": "control_water",
       "message": "control_water has SRD evidence but no authored Surface record"
@@ -245,6 +100,7 @@
       "contentPath": "packages/surface/content/class_cleric.json",
       "recordId": "class_cleric",
       "fieldPath": "spellcasting.preparedAccess.spells[55].spellId",
+      "relation": "spell-reference",
       "targetKind": "unit",
       "targetRecordId": "divination",
       "message": "divination has SRD evidence but no authored Surface record"
@@ -254,6 +110,7 @@
       "contentPath": "packages/surface/content/class_cleric.json",
       "recordId": "class_cleric",
       "fieldPath": "spellcasting.preparedAccess.spells[57].spellId",
+      "relation": "spell-reference",
       "targetKind": "unit",
       "targetRecordId": "guardian_of_faith",
       "message": "guardian_of_faith has SRD evidence but no authored Surface record"
@@ -263,6 +120,7 @@
       "contentPath": "packages/surface/content/class_cleric.json",
       "recordId": "class_cleric",
       "fieldPath": "spellcasting.preparedAccess.spells[58].spellId",
+      "relation": "spell-reference",
       "targetKind": "unit",
       "targetRecordId": "locate_creature",
       "message": "locate_creature has SRD evidence but no authored Surface record"
@@ -272,6 +130,7 @@
       "contentPath": "packages/surface/content/class_cleric.json",
       "recordId": "class_cleric",
       "fieldPath": "spellcasting.preparedAccess.spells[59].spellId",
+      "relation": "spell-reference",
       "targetKind": "unit",
       "targetRecordId": "stone_shape",
       "message": "stone_shape has SRD evidence but no authored Surface record"
@@ -281,6 +140,7 @@
       "contentPath": "packages/surface/content/class_druid.json",
       "recordId": "class_druid",
       "fieldPath": "spellcasting.cantripAccess.spellIds[0]",
+      "relation": "spell-list",
       "targetKind": "unit",
       "targetRecordId": "druidcraft",
       "message": "druidcraft has SRD evidence but no authored Surface record"
@@ -290,6 +150,7 @@
       "contentPath": "packages/surface/content/class_druid.json",
       "recordId": "class_druid",
       "fieldPath": "spellcasting.cantripAccess.spellIds[1]",
+      "relation": "spell-list",
       "targetKind": "unit",
       "targetRecordId": "elementalism",
       "message": "elementalism has SRD evidence but no authored Surface record"
@@ -298,16 +159,8 @@
       "code": "source-visible-reference",
       "contentPath": "packages/surface/content/class_druid.json",
       "recordId": "class_druid",
-      "fieldPath": "spellcasting.cantripAccess.spellIds[3]",
-      "targetKind": "unit",
-      "targetRecordId": "mending",
-      "message": "mending has SRD evidence but no authored Surface record"
-    },
-    {
-      "code": "source-visible-reference",
-      "contentPath": "packages/surface/content/class_druid.json",
-      "recordId": "class_druid",
       "fieldPath": "spellcasting.cantripAccess.spellIds[4]",
+      "relation": "spell-list",
       "targetKind": "unit",
       "targetRecordId": "message",
       "message": "message has SRD evidence but no authored Surface record"
@@ -317,6 +170,7 @@
       "contentPath": "packages/surface/content/class_druid.json",
       "recordId": "class_druid",
       "fieldPath": "spellcasting.preparedAccess.spells[15].spellId",
+      "relation": "spell-reference",
       "targetKind": "unit",
       "targetRecordId": "purify_food_and_drink",
       "message": "purify_food_and_drink has SRD evidence but no authored Surface record"
@@ -326,6 +180,7 @@
       "contentPath": "packages/surface/content/class_druid.json",
       "recordId": "class_druid",
       "fieldPath": "spellcasting.preparedAccess.spells[2].spellId",
+      "relation": "spell-reference",
       "targetKind": "unit",
       "targetRecordId": "create_or_destroy_water",
       "message": "create_or_destroy_water has SRD evidence but no authored Surface record"
@@ -335,6 +190,7 @@
       "contentPath": "packages/surface/content/class_druid.json",
       "recordId": "class_druid",
       "fieldPath": "spellcasting.preparedAccess.spells[9].spellId",
+      "relation": "spell-reference",
       "targetKind": "unit",
       "targetRecordId": "goodberry",
       "message": "goodberry has SRD evidence but no authored Surface record"
@@ -344,6 +200,7 @@
       "contentPath": "packages/surface/content/class_paladin.json",
       "recordId": "class_paladin",
       "fieldPath": "spellcasting.preparedAccess.spells[10].spellId",
+      "relation": "spell-reference",
       "targetKind": "unit",
       "targetRecordId": "purify_food_and_drink",
       "message": "purify_food_and_drink has SRD evidence but no authored Surface record"
@@ -353,6 +210,7 @@
       "contentPath": "packages/surface/content/class_ranger.json",
       "recordId": "class_ranger",
       "fieldPath": "spellcasting.preparedAccess.spells[8].spellId",
+      "relation": "spell-reference",
       "targetKind": "unit",
       "targetRecordId": "goodberry",
       "message": "goodberry has SRD evidence but no authored Surface record"
@@ -361,16 +219,8 @@
       "code": "source-visible-reference",
       "contentPath": "packages/surface/content/class_sorcerer.json",
       "recordId": "class_sorcerer",
-      "fieldPath": "spellcasting.cantripAccess.spellIds[11]",
-      "targetKind": "unit",
-      "targetRecordId": "prestidigitation",
-      "message": "prestidigitation has SRD evidence but no authored Surface record"
-    },
-    {
-      "code": "source-visible-reference",
-      "contentPath": "packages/surface/content/class_sorcerer.json",
-      "recordId": "class_sorcerer",
       "fieldPath": "spellcasting.cantripAccess.spellIds[3]",
+      "relation": "spell-list",
       "targetKind": "unit",
       "targetRecordId": "elementalism",
       "message": "elementalism has SRD evidence but no authored Surface record"
@@ -380,6 +230,7 @@
       "contentPath": "packages/surface/content/class_sorcerer.json",
       "recordId": "class_sorcerer",
       "fieldPath": "spellcasting.cantripAccess.spellIds[6]",
+      "relation": "spell-list",
       "targetKind": "unit",
       "targetRecordId": "mage_hand",
       "message": "mage_hand has SRD evidence but no authored Surface record"
@@ -388,16 +239,8 @@
       "code": "source-visible-reference",
       "contentPath": "packages/surface/content/class_sorcerer.json",
       "recordId": "class_sorcerer",
-      "fieldPath": "spellcasting.cantripAccess.spellIds[7]",
-      "targetKind": "unit",
-      "targetRecordId": "mending",
-      "message": "mending has SRD evidence but no authored Surface record"
-    },
-    {
-      "code": "source-visible-reference",
-      "contentPath": "packages/surface/content/class_sorcerer.json",
-      "recordId": "class_sorcerer",
       "fieldPath": "spellcasting.cantripAccess.spellIds[8]",
+      "relation": "spell-list",
       "targetKind": "unit",
       "targetRecordId": "message",
       "message": "message has SRD evidence but no authored Surface record"
@@ -407,6 +250,7 @@
       "contentPath": "packages/surface/content/class_sorcerer.json",
       "recordId": "class_sorcerer",
       "fieldPath": "spellcasting.preparedAccess.spells[6].spellId",
+      "relation": "spell-reference",
       "targetKind": "unit",
       "targetRecordId": "disguise_self",
       "message": "disguise_self has SRD evidence but no authored Surface record"
@@ -416,6 +260,7 @@
       "contentPath": "packages/surface/content/class_warlock.json",
       "recordId": "class_warlock",
       "fieldPath": "spellcasting.cantripAccess.spellIds[2]",
+      "relation": "spell-list",
       "targetKind": "unit",
       "targetRecordId": "mage_hand",
       "message": "mage_hand has SRD evidence but no authored Surface record"
@@ -424,16 +269,8 @@
       "code": "source-visible-reference",
       "contentPath": "packages/surface/content/class_warlock.json",
       "recordId": "class_warlock",
-      "fieldPath": "spellcasting.cantripAccess.spellIds[5]",
-      "targetKind": "unit",
-      "targetRecordId": "prestidigitation",
-      "message": "prestidigitation has SRD evidence but no authored Surface record"
-    },
-    {
-      "code": "source-visible-reference",
-      "contentPath": "packages/surface/content/class_warlock.json",
-      "recordId": "class_warlock",
       "fieldPath": "spellcasting.preparedAccess.spells[11].spellId",
+      "relation": "spell-reference",
       "targetKind": "unit",
       "targetRecordId": "unseen_servant",
       "message": "unseen_servant has SRD evidence but no authored Surface record"
@@ -443,6 +280,7 @@
       "contentPath": "packages/surface/content/class_warlock.json",
       "recordId": "class_warlock",
       "fieldPath": "spellcasting.preparedAccess.spells[8].spellId",
+      "relation": "spell-reference",
       "targetKind": "unit",
       "targetRecordId": "illusory_script",
       "message": "illusory_script has SRD evidence but no authored Surface record"
@@ -451,16 +289,8 @@
       "code": "source-visible-reference",
       "contentPath": "packages/surface/content/class_wizard.json",
       "recordId": "class_wizard",
-      "fieldPath": "spellcasting.cantripAccess.spellIds[11]",
-      "targetKind": "unit",
-      "targetRecordId": "prestidigitation",
-      "message": "prestidigitation has SRD evidence but no authored Surface record"
-    },
-    {
-      "code": "source-visible-reference",
-      "contentPath": "packages/surface/content/class_wizard.json",
-      "recordId": "class_wizard",
       "fieldPath": "spellcasting.cantripAccess.spellIds[3]",
+      "relation": "spell-list",
       "targetKind": "unit",
       "targetRecordId": "elementalism",
       "message": "elementalism has SRD evidence but no authored Surface record"
@@ -470,6 +300,7 @@
       "contentPath": "packages/surface/content/class_wizard.json",
       "recordId": "class_wizard",
       "fieldPath": "spellcasting.cantripAccess.spellIds[6]",
+      "relation": "spell-list",
       "targetKind": "unit",
       "targetRecordId": "mage_hand",
       "message": "mage_hand has SRD evidence but no authored Surface record"
@@ -478,16 +309,8 @@
       "code": "source-visible-reference",
       "contentPath": "packages/surface/content/class_wizard.json",
       "recordId": "class_wizard",
-      "fieldPath": "spellcasting.cantripAccess.spellIds[7]",
-      "targetKind": "unit",
-      "targetRecordId": "mending",
-      "message": "mending has SRD evidence but no authored Surface record"
-    },
-    {
-      "code": "source-visible-reference",
-      "contentPath": "packages/surface/content/class_wizard.json",
-      "recordId": "class_wizard",
       "fieldPath": "spellcasting.cantripAccess.spellIds[8]",
+      "relation": "spell-list",
       "targetKind": "unit",
       "targetRecordId": "message",
       "message": "message has SRD evidence but no authored Surface record"
@@ -497,6 +320,7 @@
       "contentPath": "packages/surface/content/class_wizard.json",
       "recordId": "class_wizard",
       "fieldPath": "spellcasting.preparedAccess.spellIds[12]",
+      "relation": "spell-list",
       "targetKind": "unit",
       "targetRecordId": "floating_disk",
       "message": "floating_disk has SRD evidence but no authored Surface record"
@@ -506,6 +330,7 @@
       "contentPath": "packages/surface/content/class_wizard.json",
       "recordId": "class_wizard",
       "fieldPath": "spellcasting.preparedAccess.spellIds[18]",
+      "relation": "spell-list",
       "targetKind": "unit",
       "targetRecordId": "illusory_script",
       "message": "illusory_script has SRD evidence but no authored Surface record"
@@ -515,6 +340,7 @@
       "contentPath": "packages/surface/content/class_wizard.json",
       "recordId": "class_wizard",
       "fieldPath": "spellcasting.preparedAccess.spellIds[29]",
+      "relation": "spell-list",
       "targetKind": "unit",
       "targetRecordId": "unseen_servant",
       "message": "unseen_servant has SRD evidence but no authored Surface record"
@@ -524,6 +350,7 @@
       "contentPath": "packages/surface/content/class_wizard.json",
       "recordId": "class_wizard",
       "fieldPath": "spellcasting.preparedAccess.spellIds[7]",
+      "relation": "spell-list",
       "targetKind": "unit",
       "targetRecordId": "disguise_self",
       "message": "disguise_self has SRD evidence but no authored Surface record"
@@ -533,6 +360,7 @@
       "contentPath": "packages/surface/content/class_wizard.json",
       "recordId": "class_wizard",
       "fieldPath": "spellcasting.spellbookAccess.spells[12].spellId",
+      "relation": "spell-reference",
       "targetKind": "unit",
       "targetRecordId": "floating_disk",
       "message": "floating_disk has SRD evidence but no authored Surface record"
@@ -542,6 +370,7 @@
       "contentPath": "packages/surface/content/class_wizard.json",
       "recordId": "class_wizard",
       "fieldPath": "spellcasting.spellbookAccess.spells[18].spellId",
+      "relation": "spell-reference",
       "targetKind": "unit",
       "targetRecordId": "illusory_script",
       "message": "illusory_script has SRD evidence but no authored Surface record"
@@ -551,6 +380,7 @@
       "contentPath": "packages/surface/content/class_wizard.json",
       "recordId": "class_wizard",
       "fieldPath": "spellcasting.spellbookAccess.spells[29].spellId",
+      "relation": "spell-reference",
       "targetKind": "unit",
       "targetRecordId": "unseen_servant",
       "message": "unseen_servant has SRD evidence but no authored Surface record"
@@ -560,216 +390,20 @@
       "contentPath": "packages/surface/content/class_wizard.json",
       "recordId": "class_wizard",
       "fieldPath": "spellcasting.spellbookAccess.spells[7].spellId",
+      "relation": "spell-reference",
       "targetKind": "unit",
       "targetRecordId": "disguise_self",
       "message": "disguise_self has SRD evidence but no authored Surface record"
-    },
-    {
-      "code": "source-visible-reference",
-      "contentPath": "packages/surface/content/create_undead.json",
-      "recordId": "create_undead",
-      "fieldPath": "mechanics.menu[0].options[0].monsterId",
-      "targetKind": "statBlock",
-      "targetRecordId": "ghoul",
-      "message": "ghoul has SRD evidence but no authored Surface record"
-    },
-    {
-      "code": "source-visible-reference",
-      "contentPath": "packages/surface/content/create_undead.json",
-      "recordId": "create_undead",
-      "fieldPath": "mechanics.menu[1].options[0].monsterId",
-      "targetKind": "statBlock",
-      "targetRecordId": "ghoul",
-      "message": "ghoul has SRD evidence but no authored Surface record"
-    },
-    {
-      "code": "source-visible-reference",
-      "contentPath": "packages/surface/content/create_undead.json",
-      "recordId": "create_undead",
-      "fieldPath": "mechanics.menu[2].options[0].monsterId",
-      "targetKind": "statBlock",
-      "targetRecordId": "ghoul",
-      "message": "ghoul has SRD evidence but no authored Surface record"
-    },
-    {
-      "code": "source-visible-reference",
-      "contentPath": "packages/surface/content/create_undead.json",
-      "recordId": "create_undead",
-      "fieldPath": "mechanics.menu[2].options[1].monsterId",
-      "targetKind": "statBlock",
-      "targetRecordId": "ghast",
-      "message": "ghast has SRD evidence but no authored Surface record"
-    },
-    {
-      "code": "source-visible-reference",
-      "contentPath": "packages/surface/content/create_undead.json",
-      "recordId": "create_undead",
-      "fieldPath": "mechanics.menu[2].options[2].monsterId",
-      "targetKind": "statBlock",
-      "targetRecordId": "wight",
-      "message": "wight has SRD evidence but no authored Surface record"
-    },
-    {
-      "code": "source-visible-reference",
-      "contentPath": "packages/surface/content/create_undead.json",
-      "recordId": "create_undead",
-      "fieldPath": "mechanics.menu[3].options[0].monsterId",
-      "targetKind": "statBlock",
-      "targetRecordId": "ghoul",
-      "message": "ghoul has SRD evidence but no authored Surface record"
-    },
-    {
-      "code": "source-visible-reference",
-      "contentPath": "packages/surface/content/create_undead.json",
-      "recordId": "create_undead",
-      "fieldPath": "mechanics.menu[3].options[1].monsterId",
-      "targetKind": "statBlock",
-      "targetRecordId": "ghast",
-      "message": "ghast has SRD evidence but no authored Surface record"
-    },
-    {
-      "code": "source-visible-reference",
-      "contentPath": "packages/surface/content/create_undead.json",
-      "recordId": "create_undead",
-      "fieldPath": "mechanics.menu[3].options[2].monsterId",
-      "targetKind": "statBlock",
-      "targetRecordId": "wight",
-      "message": "wight has SRD evidence but no authored Surface record"
-    },
-    {
-      "code": "source-visible-reference",
-      "contentPath": "packages/surface/content/create_undead.json",
-      "recordId": "create_undead",
-      "fieldPath": "mechanics.menu[3].options[3].monsterId",
-      "targetKind": "statBlock",
-      "targetRecordId": "mummy",
-      "message": "mummy has SRD evidence but no authored Surface record"
-    },
-    {
-      "code": "source-visible-reference",
-      "contentPath": "packages/surface/content/magic_item_brazier_of_commanding_fire_elementals.json",
-      "recordId": "magic_item_brazier_of_commanding_fire_elementals",
-      "fieldPath": "mechanics.creature.monsterId",
-      "targetKind": "statBlock",
-      "targetRecordId": "fire_elemental",
-      "message": "fire_elemental has SRD evidence but no authored Surface record"
-    },
-    {
-      "code": "source-visible-reference",
-      "contentPath": "packages/surface/content/magic_item_censer_of_controlling_air_elementals.json",
-      "recordId": "magic_item_censer_of_controlling_air_elementals",
-      "fieldPath": "mechanics.creature.monsterId",
-      "targetKind": "statBlock",
-      "targetRecordId": "air_elemental",
-      "message": "air_elemental has SRD evidence but no authored Surface record"
-    },
-    {
-      "code": "source-visible-reference",
-      "contentPath": "packages/surface/content/magic_item_cube_of_force.json",
-      "recordId": "magic_item_cube_of_force",
-      "fieldPath": "mechanics.phases[0].effects[3].spellId",
-      "targetKind": "unit",
-      "targetRecordId": "private_sanctum",
-      "message": "private_sanctum has SRD evidence but no authored Surface record"
-    },
-    {
-      "code": "source-visible-reference",
-      "contentPath": "packages/surface/content/magic_item_cube_of_force.json",
-      "recordId": "magic_item_cube_of_force",
-      "fieldPath": "mechanics.phases[0].effects[4].spellId",
-      "targetKind": "unit",
-      "targetRecordId": "resilient_sphere",
-      "message": "resilient_sphere has SRD evidence but no authored Surface record"
-    },
-    {
-      "code": "source-visible-reference",
-      "contentPath": "packages/surface/content/magic_item_hat_of_disguise.json",
-      "recordId": "magic_item_hat_of_disguise",
-      "fieldPath": "mechanics.grants[0].spellId",
-      "targetKind": "unit",
-      "targetRecordId": "disguise_self",
-      "message": "disguise_self has SRD evidence but no authored Surface record"
-    },
-    {
-      "code": "source-visible-reference",
-      "contentPath": "packages/surface/content/magic_item_helm_of_teleportation.json",
-      "recordId": "magic_item_helm_of_teleportation",
-      "fieldPath": "mechanics.phases[0].effects[0].spellId",
-      "targetKind": "unit",
-      "targetRecordId": "teleport",
-      "message": "teleport has SRD evidence but no authored Surface record"
-    },
-    {
-      "code": "source-visible-reference",
-      "contentPath": "packages/surface/content/magic_item_ring_of_three_wishes.json",
-      "recordId": "ring_of_three_wishes",
-      "fieldPath": "mechanics.phases[0].effects[0].spellId",
-      "targetKind": "unit",
-      "targetRecordId": "wish",
-      "message": "wish has SRD evidence but no authored Surface record"
-    },
-    {
-      "code": "source-visible-reference",
-      "contentPath": "packages/surface/content/magic_item_rod_of_resurrection.json",
-      "recordId": "magic_item_rod_of_resurrection",
-      "fieldPath": "mechanics.phases[0].effects[1].spellId",
-      "targetKind": "unit",
-      "targetRecordId": "resurrection",
-      "message": "resurrection has SRD evidence but no authored Surface record"
-    },
-    {
-      "code": "source-visible-reference",
-      "contentPath": "packages/surface/content/magic_item_staff_of_power.json",
-      "recordId": "magic_item_staff_of_power",
-      "fieldPath": "mechanics.parts[1].phases[0].effects[2].spellId",
-      "targetKind": "unit",
-      "targetRecordId": "globe_of_invulnerability",
-      "message": "globe_of_invulnerability has SRD evidence but no authored Surface record"
-    },
-    {
-      "code": "source-visible-reference",
-      "contentPath": "packages/surface/content/magic_item_stone_of_controlling_earth_elementals.json",
-      "recordId": "magic_item_stone_of_controlling_earth_elementals",
-      "fieldPath": "mechanics.creature.monsterId",
-      "targetKind": "statBlock",
-      "targetRecordId": "earth_elemental",
-      "message": "earth_elemental has SRD evidence but no authored Surface record"
     },
     {
       "code": "source-visible-reference",
       "contentPath": "packages/surface/content/paladin_oath_of_devotion_spells.json",
       "recordId": "paladin_oath_of_devotion_spells",
       "fieldPath": "mechanics.grants[0].tiers[3].spellIds[1]",
+      "relation": "spell-list",
       "targetKind": "unit",
       "targetRecordId": "guardian_of_faith",
       "message": "guardian_of_faith has SRD evidence but no authored Surface record"
-    },
-    {
-      "code": "source-visible-reference",
-      "contentPath": "packages/surface/content/species_gnome_gnomish_lineage.json",
-      "recordId": "species_gnome_gnomish_lineage",
-      "fieldPath": "mechanics.options[1].clockworkDevice.creation.trigger.spellId",
-      "targetKind": "unit",
-      "targetRecordId": "prestidigitation",
-      "message": "prestidigitation has SRD evidence but no authored Surface record"
-    },
-    {
-      "code": "source-visible-reference",
-      "contentPath": "packages/surface/content/species_gnome_gnomish_lineage.json",
-      "recordId": "species_gnome_gnomish_lineage",
-      "fieldPath": "mechanics.options[1].mechanics.grants[0].spellId",
-      "targetKind": "unit",
-      "targetRecordId": "mending",
-      "message": "mending has SRD evidence but no authored Surface record"
-    },
-    {
-      "code": "source-visible-reference",
-      "contentPath": "packages/surface/content/species_gnome_gnomish_lineage.json",
-      "recordId": "species_gnome_gnomish_lineage",
-      "fieldPath": "mechanics.options[1].mechanics.grants[1].spellId",
-      "targetKind": "unit",
-      "targetRecordId": "prestidigitation",
-      "message": "prestidigitation has SRD evidence but no authored Surface record"
     }
   ]
 }

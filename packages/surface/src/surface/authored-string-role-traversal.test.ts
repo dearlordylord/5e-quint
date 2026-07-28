@@ -2,6 +2,7 @@ import { createRequire } from "node:module";
 import * as AST from "effect/SchemaAST";
 import type { SurfaceSchemaFieldRole } from "./schema-base.ts";
 import { Schema } from "effect";
+import fc from "fast-check";
 import { describe, expect, it } from "vitest";
 
 const require = createRequire(import.meta.url);
@@ -18,6 +19,7 @@ const {
 } = require("./schema-spell.ts");
 const {
   SURFACE_SCHEMA_ROLE_ANNOTATION,
+  isSurfaceSchemaRole,
   readSurfaceSchemaRole,
   surfaceSchemaRole,
 } = require("./schema-base.ts");
@@ -66,7 +68,7 @@ const unionFieldSchema = (schema: { readonly ast: AST.AST }, name: string) => {
 describe("Surface authored string role traversal", () => {
   it("preserves schema-owned role validation and idempotence", () => {
     const reference = surfaceSchemaRole(Schema.String, {
-      category: "reference",
+      category: "dependency",
       relation: "spell-reference",
       targetKind: "unit",
     });
@@ -77,13 +79,70 @@ describe("Surface authored string role traversal", () => {
       surfaceSchemaRole(reference, {
         targetKind: "unit",
         relation: "spell-reference",
-        category: "reference",
+        category: "dependency",
       }).ast.annotations[SURFACE_SCHEMA_ROLE_ANNOTATION],
     ).toEqual({
-      category: "reference",
+      category: "dependency",
       relation: "spell-reference",
       targetKind: "unit",
     });
+  });
+
+  it("accepts only closed, category-consistent authored relation roles", () => {
+    const validRoles = [
+      {
+        category: "reference",
+        relation: "spell-list",
+        targetKind: "unit",
+      },
+      {
+        category: "dependency",
+        relation: "spell-reference",
+        targetKind: "unit",
+      },
+      {
+        category: "reference",
+        relation: "recommended-stat-block-reference",
+        targetKind: "statBlock",
+      },
+      {
+        category: "dependency",
+        relation: "monster-reference",
+        targetKind: "statBlock",
+      },
+    ] as const satisfies ReadonlyArray<SurfaceSchemaFieldRole>;
+
+    fc.assert(
+      fc.property(
+        fc.constantFrom(...validRoles),
+        fc.string(),
+        (role, extra) => {
+          expect(isSurfaceSchemaRole(role)).toBe(true);
+          expect(
+            isSurfaceSchemaRole({
+              ...role,
+              [extra === "" || extra in role ? "contradiction" : extra]: true,
+            }),
+          ).toBe(false);
+        },
+      ),
+      { numRuns: 25 },
+    );
+
+    expect(
+      isSurfaceSchemaRole({
+        category: "dependency",
+        relation: "spell-list",
+        targetKind: "unit",
+      }),
+    ).toBe(false);
+    expect(
+      isSurfaceSchemaRole({
+        category: "reference",
+        relation: "monster-reference",
+        targetKind: "statBlock",
+      }),
+    ).toBe(false);
   });
 
   it("preserves representative identity, prose evidence, protocol, and projection roles", () => {
@@ -143,7 +202,7 @@ describe("Surface authored string role traversal", () => {
   });
 
   it("traverses primitive reference-array members", () => {
-    const references = traversal.collectUnitReferences(
+    const references = traversal.collectAuthoredRelations(
       traversal.readSurfaceRecords(),
     );
     expect(
@@ -227,7 +286,9 @@ describe("Surface authored string role traversal", () => {
     const audit = traversal.buildAudit();
     const records = traversal.readSurfaceRecords();
     expect(audit.metrics.recordsAudited).toBe(records.length);
-    expect(traversal.collectUnitReferences(records).length).toBeGreaterThan(0);
+    expect(traversal.collectAuthoredRelations(records).length).toBeGreaterThan(
+      0,
+    );
   }, 15_000);
 
   it("does not traverse an incompatible tagged branch", () => {
