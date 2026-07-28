@@ -6003,6 +6003,39 @@ describe("character creation finalization", () => {
     });
   });
 
+  test("rejects a plain Sorcerer gain when current Metamagic ownership is incomplete", () => {
+    const build = finalizedSorcererMetamagicBuild(
+      "draft:sorcerer-incomplete-metamagic",
+    );
+    const incompleteBuild = {
+      ...build,
+      features: build.features.filter(
+        (feature) =>
+          feature.kind !== "selectedSorcererMetamagicOption" ||
+          feature.optionId !== "sorcerer_heightened_spell",
+      ),
+    };
+
+    expect(
+      advanceCharacterBuildClassLevel({
+        build: incompleteBuild,
+        unitLibrary,
+        levelGain: {
+          tag: "classLevelGain",
+          classUnitId: testClassUnitId(authoredUnitId("class_sorcerer")),
+          hitPointRule: { tag: "fixedHigherLevelGain" },
+        },
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        code: "invalidSorcererMetamagicSelectionCount",
+        expectedCount: 2,
+        actualCount: 1,
+      },
+    });
+  });
+
   test("advances Sorcerer level 10 and 17 Metamagic option gains from Surface thresholds", () => {
     const levelNineBuild = {
       ...finalizedSorcererMetamagicBuild("draft:sorcerer-metamagic-level-ten"),

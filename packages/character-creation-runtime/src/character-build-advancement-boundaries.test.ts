@@ -238,7 +238,10 @@ describe("Character Build advancement typed boundaries", () => {
       }),
     ).toMatchObject({
       _tag: "Left",
-      left: { code: "unknownEldritchInvocation" },
+      left: {
+        code: "unknownEldritchInvocation",
+        invocationId: "synthetic_unknown",
+      },
     });
     expect(
       sorcererLevelGain({
@@ -265,6 +268,191 @@ describe("Character Build advancement typed boundaries", () => {
     ).toMatchObject({
       _tag: "Left",
       left: { code: "sameSorcererMetamagicReplacement" },
+    });
+  });
+
+  test("parses Eldritch Invocation repeatability and replacement identity", () => {
+    expect(
+      warlockLevelGain({
+        unitLibrary,
+        classUnitId: warlockUnitId,
+        hitPointRule: fixedHitPoints,
+        gainedInvocations: [
+          {
+            kind: "repeatable",
+            invocationId: eldritchInvocationId("armor_of_shadows"),
+            repeatableChoice: {
+              kind: "knownWarlockCantrip",
+              cantripId: authoredUnitId("eldritch_blast"),
+            },
+          },
+        ],
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        code: "invalidRepeatableEldritchInvocationChoice",
+        invocationId: "armor_of_shadows",
+      },
+    });
+
+    expect(
+      warlockLevelGain({
+        unitLibrary,
+        classUnitId: warlockUnitId,
+        hitPointRule: fixedHitPoints,
+        gainedInvocations: [
+          {
+            kind: "nonRepeatable",
+            invocationId: eldritchInvocationId("agonizing_blast"),
+          },
+        ],
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        code: "missingRepeatableEldritchInvocationChoice",
+        invocationId: "agonizing_blast",
+      },
+    });
+
+    expect(
+      warlockLevelGain({
+        unitLibrary,
+        classUnitId: warlockUnitId,
+        hitPointRule: fixedHitPoints,
+        gainedInvocations: [
+          {
+            kind: "repeatable",
+            invocationId: eldritchInvocationId("lessons_of_the_first_ones"),
+            repeatableChoice: {
+              kind: "knownWarlockCantrip",
+              cantripId: authoredUnitId("eldritch_blast"),
+            },
+          },
+        ],
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        code: "invalidRepeatableEldritchInvocationChoice",
+        invocationId: "lessons_of_the_first_ones",
+      },
+    });
+
+    expect(
+      warlockLevelGain({
+        unitLibrary,
+        classUnitId: warlockUnitId,
+        hitPointRule: fixedHitPoints,
+        gainedInvocations: [],
+        replacement: {
+          replaceInvocation: {
+            kind: "nonRepeatable",
+            invocationId: eldritchInvocationId("armor_of_shadows"),
+          },
+          selectedInvocation: {
+            kind: "nonRepeatable",
+            invocationId: eldritchInvocationId("armor_of_shadows"),
+          },
+        },
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        code: "sameEldritchInvocationReplacement",
+        invocationId: "armor_of_shadows",
+      },
+    });
+  });
+
+  test("propagates replacement identity parsing failures", () => {
+    expect(
+      warlockLevelGain({
+        unitLibrary,
+        classUnitId: warlockUnitId,
+        hitPointRule: fixedHitPoints,
+        gainedInvocations: [],
+        replacement: {
+          replaceInvocation: {
+            kind: "nonRepeatable",
+            invocationId: eldritchInvocationId("synthetic_unknown"),
+          },
+          selectedInvocation: {
+            kind: "nonRepeatable",
+            invocationId: eldritchInvocationId("armor_of_shadows"),
+          },
+        },
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        code: "unknownEldritchInvocation",
+        invocationId: "synthetic_unknown",
+      },
+    });
+
+    expect(
+      warlockLevelGain({
+        unitLibrary,
+        classUnitId: warlockUnitId,
+        hitPointRule: fixedHitPoints,
+        gainedInvocations: [],
+        replacement: {
+          replaceInvocation: {
+            kind: "nonRepeatable",
+            invocationId: eldritchInvocationId("armor_of_shadows"),
+          },
+          selectedInvocation: {
+            kind: "nonRepeatable",
+            invocationId: eldritchInvocationId("synthetic_unknown"),
+          },
+        },
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        code: "unknownEldritchInvocation",
+        invocationId: "synthetic_unknown",
+      },
+    });
+
+    expect(
+      sorcererLevelGain({
+        unitLibrary,
+        classUnitId: sorcererUnitId,
+        hitPointRule: fixedHitPoints,
+        gainedOptions: [],
+        replacement: {
+          replaceOptionId: "synthetic_unknown",
+          selectedOptionId: "sorcerer_empowered_spell",
+        },
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        code: "unknownSorcererMetamagicOption",
+        optionId: "synthetic_unknown",
+      },
+    });
+
+    expect(
+      sorcererLevelGain({
+        unitLibrary,
+        classUnitId: sorcererUnitId,
+        hitPointRule: fixedHitPoints,
+        gainedOptions: [],
+        replacement: {
+          replaceOptionId: "sorcerer_empowered_spell",
+          selectedOptionId: "synthetic_unknown",
+        },
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        code: "unknownSorcererMetamagicOption",
+        optionId: "synthetic_unknown",
+      },
     });
   });
 });

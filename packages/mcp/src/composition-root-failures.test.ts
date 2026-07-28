@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
-const CATALOG_COMPOSITION_TEST_TIMEOUT_MS = 30_000;
+const CATALOG_COMPOSITION_TEST_TIMEOUT_MS = 15_000;
 
 beforeEach(() => {
   vi.resetModules();

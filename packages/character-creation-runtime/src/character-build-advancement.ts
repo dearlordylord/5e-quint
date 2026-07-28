@@ -6,7 +6,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner character-creation.bard-magical-secrets-spell-access
 import { Brand, Either, Match, Option } from "effect";
 import type { ClassName } from "@dnd/shared/game-facts";
-import { readClassCreationFacts } from "@dnd/surface/surface/character-creation-readers";
+import { classCreationFacts } from "@dnd/surface/surface/character-creation-readers";
 import {
   allCantripsFromClassSpellList,
   classSpellListForClassName,
@@ -257,11 +257,6 @@ export type CharacterBuildAdvancementIssue =
       readonly code: "nonClassUnit";
       readonly unitId: UnitRecord["id"];
       readonly unitKind: UnitRecord["kind"];
-      readonly message: string;
-    }
-  | {
-      readonly code: "unreadableClassUnit";
-      readonly classUnitId: UnitRecord["id"];
       readonly message: string;
     }
   | {
@@ -735,20 +730,12 @@ export function fighterClassUnitId(input: {
   const classUnit = classUnitRecord(input);
   if (Either.isLeft(classUnit)) return Either.left(classUnit.left);
 
-  const facts = readClassCreationFacts(classUnit.right);
-  if (facts.tag !== "readable") {
-    return Either.left({
-      code: "unreadableClassUnit",
-      classUnitId: input.classUnitId,
-      message: `Cannot read class creation facts for ${input.classUnitId}.`,
-    });
-  }
-
-  if (facts.value.className !== FIGHTER_CLASS_NAME) {
+  const facts = classCreationFacts(classUnit.right);
+  if (facts.className !== FIGHTER_CLASS_NAME) {
     return Either.left({
       code: "nonFighterClassLevelGain",
       classUnitId: input.classUnitId,
-      className: facts.value.className,
+      className: facts.className,
       message:
         "Fighting Style replacement is only legal when gaining a Fighter level.",
     });
@@ -764,20 +751,12 @@ export function warlockClassUnitId(input: {
   const classUnit = classUnitRecord(input);
   if (Either.isLeft(classUnit)) return Either.left(classUnit.left);
 
-  const facts = readClassCreationFacts(classUnit.right);
-  if (facts.tag !== "readable") {
-    return Either.left({
-      code: "unreadableClassUnit",
-      classUnitId: input.classUnitId,
-      message: `Cannot read class creation facts for ${input.classUnitId}.`,
-    });
-  }
-
-  if (facts.value.className !== WARLOCK_CLASS_NAME) {
+  const facts = classCreationFacts(classUnit.right);
+  if (facts.className !== WARLOCK_CLASS_NAME) {
     return Either.left({
       code: "nonWarlockClassLevelGain",
       classUnitId: input.classUnitId,
-      className: facts.value.className,
+      className: facts.className,
       message:
         "Eldritch Invocation lifecycle choices are only legal when gaining a Warlock level.",
     });
@@ -793,20 +772,12 @@ export function sorcererClassUnitId(input: {
   const classUnit = classUnitRecord(input);
   if (Either.isLeft(classUnit)) return Either.left(classUnit.left);
 
-  const facts = readClassCreationFacts(classUnit.right);
-  if (facts.tag !== "readable") {
-    return Either.left({
-      code: "unreadableClassUnit",
-      classUnitId: input.classUnitId,
-      message: `Cannot read class creation facts for ${input.classUnitId}.`,
-    });
-  }
-
-  if (facts.value.className !== SORCERER_CLASS_NAME) {
+  const facts = classCreationFacts(classUnit.right);
+  if (facts.className !== SORCERER_CLASS_NAME) {
     return Either.left({
       code: "nonSorcererClassLevelGain",
       classUnitId: input.classUnitId,
-      className: facts.value.className,
+      className: facts.className,
       message:
         "Metamagic lifecycle choices are only legal when gaining a Sorcerer level.",
     });
@@ -1500,11 +1471,8 @@ function updateSpellcastingForClassLevelGain(input: {
   });
   if (Either.isLeft(classUnit)) return Either.left(classUnit.left);
 
-  const facts = readClassCreationFacts(classUnit.right);
-  if (
-    facts.tag !== "readable" ||
-    facts.value.className !== WARLOCK_CLASS_NAME
-  ) {
+  const facts = classCreationFacts(classUnit.right);
+  if (facts.className !== WARLOCK_CLASS_NAME) {
     return Either.right(input.build.spellcasting);
   }
 
@@ -1513,7 +1481,7 @@ function updateSpellcastingForClassLevelGain(input: {
     input.levelGain.classUnitId,
   );
   const warlockSpellcasting =
-    "spellcasting" in facts.value ? facts.value.spellcasting : undefined;
+    "spellcasting" in facts ? facts.spellcasting : undefined;
   const unchanged = warlockPactMagicCanRemainUnchanged({
     build: input.build,
     classUnitId: WarlockClassUnitId(input.levelGain.classUnitId),
@@ -1840,16 +1808,8 @@ function plainClassLevelGainFeatures(input: {
   });
   if (Either.isLeft(classUnit)) return Either.left(classUnit.left);
 
-  const facts = readClassCreationFacts(classUnit.right);
-  if (facts.tag !== "readable") {
-    return Either.left({
-      code: "unreadableClassUnit",
-      classUnitId: input.levelGain.classUnitId,
-      message: `Cannot read class creation facts for ${input.levelGain.classUnitId}.`,
-    });
-  }
-
-  if (facts.value.className === SORCERER_CLASS_NAME) {
+  const facts = classCreationFacts(classUnit.right);
+  if (facts.className === SORCERER_CLASS_NAME) {
     const sorcererClassUnitId = SorcererClassUnitId(
       input.levelGain.classUnitId,
     );
@@ -1869,7 +1829,7 @@ function plainClassLevelGainFeatures(input: {
     return Either.right(input.build.features);
   }
 
-  if (facts.value.className !== WARLOCK_CLASS_NAME) {
+  if (facts.className !== WARLOCK_CLASS_NAME) {
     return weaponMasterySelectionsCanRemainUnchanged({
       build: input.build,
       unitLibrary: input.unitLibrary,
@@ -2534,8 +2494,8 @@ function applyListPreparedSpellcastingLevelGain(input: {
   const classUnit = classUnitRecord(input);
   if (Either.isLeft(classUnit)) return Either.left(classUnit.left);
 
-  const facts = readClassCreationFacts(classUnit.right);
-  if (facts.tag !== "readable" || !("spellcasting" in facts.value)) {
+  const facts = classCreationFacts(classUnit.right);
+  if (!("spellcasting" in facts)) {
     return Either.left({
       code: "missingListPreparedSpellcasting",
       classUnitId: input.classUnitId,
@@ -2549,11 +2509,11 @@ function applyListPreparedSpellcastingLevelGain(input: {
     input.classUnitId,
   );
   const currentSpellcasting = classSpellcastingCreationAtLevel(
-    facts.value.spellcasting,
+    facts.spellcasting,
     currentClassLevel,
   );
   const nextSpellcasting = classSpellcastingCreationAtLevel(
-    facts.value.spellcasting,
+    facts.spellcasting,
     currentClassLevel + 1,
   );
   if (
@@ -2561,7 +2521,7 @@ function applyListPreparedSpellcastingLevelGain(input: {
     nextSpellcasting === undefined ||
     !isListPreparedSpellcastingCreation(currentSpellcasting) ||
     !isListPreparedSpellcastingCreation(nextSpellcasting) ||
-    !isClassSpellListName(input.unitLibrary, facts.value.className)
+    !isClassSpellListName(input.unitLibrary, facts.className)
   ) {
     return Either.left({
       code: "missingListPreparedSpellcasting",
@@ -2575,7 +2535,7 @@ function applyListPreparedSpellcastingLevelGain(input: {
     eligibleSpellLists: listPreparedSpellEligibleSpellLists({
       build: input.build,
       unitLibrary: input.unitLibrary,
-      className: facts.value.className,
+      className: facts.className,
       classUnitId: input.classUnitId,
       nextClassLevel: currentClassLevel + 1,
     }),
@@ -3616,16 +3576,8 @@ function fightingStyleFeatureChoiceHoleForFighterClass(input: {
   const classUnit = classUnitRecord(input);
   if (Either.isLeft(classUnit)) return Either.left(classUnit.left);
 
-  const facts = readClassCreationFacts(classUnit.right);
-  if (facts.tag !== "readable") {
-    return Either.left({
-      code: "unreadableClassUnit",
-      classUnitId: input.classUnitId,
-      message: `Cannot read class creation facts for ${input.classUnitId}.`,
-    });
-  }
-
-  const holes = facts.value.featureGrants.flatMap((grant) => {
+  const facts = classCreationFacts(classUnit.right);
+  const holes = facts.featureGrants.flatMap((grant) => {
     const feature = input.unitLibrary.getUnit(grant.unitId);
     if (
       Option.isNone(feature) ||
@@ -3690,21 +3642,13 @@ function fightingStyleCantripFeatureChoiceForClass(input: {
   const classUnit = classUnitRecord(input);
   if (Either.isLeft(classUnit)) return Either.left(classUnit.left);
 
-  const facts = readClassCreationFacts(classUnit.right);
-  if (facts.tag !== "readable") {
-    return Either.left({
-      code: "unreadableClassUnit",
-      classUnitId: input.classUnitId,
-      message: `Cannot read class creation facts for ${input.classUnitId}.`,
-    });
-  }
-
-  const choices = facts.value.featureGrants.flatMap((grant) => {
+  const facts = classCreationFacts(classUnit.right);
+  const choices = facts.featureGrants.flatMap((grant) => {
     const feature = input.unitLibrary.getUnit(grant.unitId);
     if (
       Option.isNone(feature) ||
       feature.value.kind !== "class_feature" ||
-      feature.value.className !== facts.value.className ||
+      feature.value.className !== facts.className ||
       feature.value.mechanics.family !== "class_feature_acquisition_choice"
     ) {
       return [];
@@ -3793,16 +3737,8 @@ function eldritchInvocationFeatureForWarlockClass(input: {
   const classUnit = classUnitRecord(input);
   if (Either.isLeft(classUnit)) return Either.left(classUnit.left);
 
-  const facts = readClassCreationFacts(classUnit.right);
-  if (facts.tag !== "readable") {
-    return Either.left({
-      code: "unreadableClassUnit",
-      classUnitId: input.classUnitId,
-      message: `Cannot read class creation facts for ${input.classUnitId}.`,
-    });
-  }
-
-  const featureChoices = facts.value.featureGrants.flatMap((grant) => {
+  const facts = classCreationFacts(classUnit.right);
+  const featureChoices = facts.featureGrants.flatMap((grant) => {
     const feature = input.unitLibrary.getUnit(grant.unitId);
     if (
       Option.isNone(feature) ||
@@ -3861,16 +3797,8 @@ function sorcererMetamagicFeatureForSorcererClass(input: {
   const classUnit = classUnitRecord(input);
   if (Either.isLeft(classUnit)) return Either.left(classUnit.left);
 
-  const facts = readClassCreationFacts(classUnit.right);
-  if (facts.tag !== "readable") {
-    return Either.left({
-      code: "unreadableClassUnit",
-      classUnitId: input.classUnitId,
-      message: `Cannot read class creation facts for ${input.classUnitId}.`,
-    });
-  }
-
-  const featureChoices = facts.value.featureGrants.flatMap((grant) => {
+  const facts = classCreationFacts(classUnit.right);
+  const featureChoices = facts.featureGrants.flatMap((grant) => {
     const feature = input.unitLibrary.getUnit(grant.unitId);
     if (
       Option.isNone(feature) ||
@@ -4310,16 +4238,8 @@ function warlockPactMagicSpellcastingForClass(input: {
   const classUnit = classUnitRecord(input);
   if (Either.isLeft(classUnit)) return Either.left(classUnit.left);
 
-  const facts = readClassCreationFacts(classUnit.right);
-  if (facts.tag !== "readable") {
-    return Either.left({
-      code: "unreadableClassUnit",
-      classUnitId: input.classUnitId,
-      message: `Cannot read class creation facts for ${input.classUnitId}.`,
-    });
-  }
-
-  if (facts.value.spellcasting?.kind !== "pact_magic_spellcasting_creation") {
+  const facts = classCreationFacts(classUnit.right);
+  if (facts.spellcasting?.kind !== "pact_magic_spellcasting_creation") {
     return Either.left({
       code: "missingWarlockPactMagicSpellcasting",
       classUnitId: input.classUnitId,
@@ -4327,7 +4247,7 @@ function warlockPactMagicSpellcastingForClass(input: {
     });
   }
 
-  return Either.right(facts.value.spellcasting);
+  return Either.right(facts.spellcasting);
 }
 
 function pactMagicProgressionAtLevel(
