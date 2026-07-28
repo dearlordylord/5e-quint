@@ -23,7 +23,6 @@ import {
   retainedCompanionProtocolFacts,
   type CharacterSheet,
   type CharacterSheetCompanion,
-  type CharacterSheetCompanionCreatureTypeOverride,
   type CharacterSheetCompanionFormSelection,
   type CharacterSheetRetainedCompanionHitPoints,
   type CharacterSheetRetainedCompanionManifestation,
@@ -621,34 +620,13 @@ function sheetCompanionResolvedFormProofForBattleCompanion(
   CharacterSheetRetainedCompanionResolvedFormProof,
   CharacterSheetBattleHandoffIssue
 > {
-  return sheetCompanionResolvedFormProofFromBattle({
-    storedForm,
-    creatureTypeOverride: input.companion.creatureTypeOverride,
-    selectedForm: input.selectedForm,
-    unitLibrary: input.unitLibrary,
-    ...(input.statBlockCatalog === undefined
-      ? {}
-      : { statBlockCatalog: input.statBlockCatalog }),
-  });
-}
-
-function sheetCompanionResolvedFormProofFromBattle(input: {
-  readonly storedForm: BattleCompanionStoredForm;
-  readonly creatureTypeOverride: CharacterSheetCompanionCreatureTypeOverride;
-  readonly selectedForm: CharacterSheetCompanionFormSelection;
-  readonly unitLibrary: UnitCatalog;
-  readonly statBlockCatalog?: StatBlockCatalog;
-}): Either.Either<
-  CharacterSheetRetainedCompanionResolvedFormProof,
-  CharacterSheetBattleHandoffIssue
-> {
   const retainedSelectionIssue = retainedCompanionResolvedFormProofIssue({
     unitLibrary: input.unitLibrary,
     ...(input.statBlockCatalog === undefined
       ? {}
       : { statBlockCatalog: input.statBlockCatalog }),
     selectedForm: input.selectedForm,
-    resolvedStatBlockId: input.storedForm.resolvedStatBlockId,
+    resolvedStatBlockId: storedForm.resolvedStatBlockId,
   });
   if (retainedSelectionIssue !== null) {
     return characterSheetBattleHandoffIssue(
@@ -657,7 +635,7 @@ function sheetCompanionResolvedFormProofFromBattle(input: {
   }
   return Either.right({
     selectedForm: input.selectedForm,
-    creatureTypeOverride: input.creatureTypeOverride,
-    resolvedStatBlockId: input.storedForm.resolvedStatBlockId,
+    creatureTypeOverride: input.companion.creatureTypeOverride,
+    resolvedStatBlockId: storedForm.resolvedStatBlockId,
   });
 }
