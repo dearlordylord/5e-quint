@@ -35,9 +35,10 @@ const COMMON_DUPLICATION_EXCLUDES = [
 ];
 
 // Every production package must appear here. Coverage floors are temporary
-// non-regression ratchets measured on 2026-07-26 and rounded down to whole
-// percentages; issue #227's real target remains 99% for every metric in every
-// package. Duplication ceilings remain at issue #228's real 2% target except
+// non-regression ratchets, initially measured on 2026-07-26, incrementally
+// remeasured as coverage lands, and rounded down to whole percentages; issue
+// #227's real target remains 99% for every metric in every package.
+// Duplication ceilings remain at issue #228's real 2% target except
 // for an explicitly identified temporary ratchet. Libraries are consumed as
 // TypeScript source by their owning applications; the root Turbo build
 // discovers the packages that own build scripts.
@@ -58,7 +59,7 @@ const PACKAGE_POLICIES = {
     duplicationCeiling: 2,
   },
   "character-creation-runtime": {
-    coverage: { lines: 79, statements: 79, functions: 86, branches: 78 },
+    coverage: { lines: 87, statements: 87, functions: 91, branches: 82 },
     circularBaseline: 0,
     duplicationCeiling: 2,
   },

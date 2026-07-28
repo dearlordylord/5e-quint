@@ -484,7 +484,7 @@ function parseUnitChoiceSelectionSource(
   }
   const unitId = stringAt(source.right, "unitId", `${path}.unitId`);
   if (Either.isLeft(unitId)) return failIssue(unitId.left);
-  const parsedUnitId = unitChoiceSourceUnitId(authoredUnitId(unitId.right));
+  const parsedUnitId = unitChoiceSourceUnitId(unitId.right);
   if (Either.isLeft(parsedUnitId)) {
     return invalid(`${path}.unitId`, "Expected a non-empty Unit id.");
   }
@@ -519,9 +519,7 @@ function parseLoadoutSelectionSource(
     `${path}.equipmentUnitId`,
   );
   if (Either.isLeft(equipmentUnitId)) return failIssue(equipmentUnitId.left);
-  const parsedEquipmentUnitId = loadoutEquipmentUnitId(
-    authoredUnitId(equipmentUnitId.right),
-  );
+  const parsedEquipmentUnitId = loadoutEquipmentUnitId(equipmentUnitId.right);
   if (Either.isLeft(parsedEquipmentUnitId)) {
     return invalid(
       `${path}.equipmentUnitId`,

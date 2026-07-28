@@ -9,10 +9,13 @@ import {
 } from "@dnd/shared/types";
 
 import {
+  boundedChoiceCardinality,
   characterBuildFact,
   classUnitId,
   characterDraftId,
+  characterDraconicAncestrySelection,
   characterCreationBatchFact,
+  characterCreationIssueMessage,
   characterEquipmentItemId,
   characterEquipmentItemUnitId,
   creationChoiceOptionId,
@@ -20,17 +23,29 @@ import {
   creationFillIndex,
   creationFinalizationFact,
   creationFrontierFact,
+  creationHoleFact,
   creationHoleId,
   decodeCharacterBuildFact,
   decodeCharacterCreationBatchFact,
   decodeCreationFillFact,
   decodeCreationFinalizationRejectionFact,
   decodeCreationFrontierFact,
+  decodeCreationHoleFact,
   draftRevision,
+  eldritchInvocationId,
   exactChoiceCardinality,
+  loadoutEquipmentUnitId,
+  sorcererMetamagicOptionId,
+  toolProficiencyId,
+  unitChoiceKey,
+  unitChoiceSourceUnitId,
   type CharacterBuild,
+  type CharacterBuildProjectionCause,
   type CharacterCreationBatchFact,
   type CreationBatchFillResult,
+  type CreationChoiceOptionDecodeCause,
+  type CreationFinalizationIllegalCause,
+  type CreationFinalizationUnsupportedCause,
   type CreationHole,
 } from "./index.ts";
 
@@ -42,6 +57,105 @@ function projectedBatchFact(
     throw new Error("Expected the synthetic owner result to project.");
   }
   return projection.right;
+}
+
+type ExpandProperty<Value, Key extends PropertyKey> =
+  Value extends Record<Key, infer Member>
+    ? Member extends unknown
+      ? Omit<Value, Key> & { readonly [Property in Key]: Member }
+      : never
+    : never;
+
+type ExpandStructuredCause<Cause> = Cause extends {
+  readonly tag: "invalidAbilityScoreIncreaseValue";
+}
+  ? ExpandProperty<Cause, "reason">
+  : Cause extends { readonly tag: "missingStartingClassFacts" }
+    ? ExpandProperty<Cause, "projection">
+    : Cause extends {
+          readonly tag: "classFeatureLanguageChoiceCountMismatch";
+        }
+      ? ExpandProperty<Cause, "mismatch">
+      : Cause extends {
+            readonly tag: "invalidChoiceOption";
+            readonly reason: infer Reason;
+          }
+        ? Omit<Cause, "reason"> & {
+            readonly reason: ExpandStructuredCause<Reason>;
+          }
+        : Cause extends {
+              readonly tag:
+                | "unsupportedToolProficiency"
+                | "unreadableUnit"
+                | "unknownUnit";
+            }
+          ? Cause extends { readonly source: string }
+            ? ExpandProperty<Cause, "source">
+            : ExpandProperty<Cause, "role">
+          : Cause;
+
+type StructuredCauseKey<Cause> = Cause extends {
+  readonly tag: "invalidAbilityScoreIncreaseValue";
+  readonly field: infer Field extends string;
+  readonly reason: infer Reason extends string;
+}
+  ? `invalidAbilityScoreIncreaseValue:${Field}:${Reason}`
+  : Cause extends {
+        readonly tag: "missingStartingClassFacts";
+        readonly projection: infer Projection extends string;
+      }
+    ? `missingStartingClassFacts:${Projection}`
+    : Cause extends {
+          readonly tag: "classFeatureLanguageChoiceCountMismatch";
+          readonly mismatch: {
+            readonly tag: infer Mismatch extends string;
+          };
+        }
+      ? `classFeatureLanguageChoiceCountMismatch:${Mismatch}`
+      : Cause extends {
+            readonly tag: "abilityScoreCapExceeded";
+            readonly source: infer Source extends string;
+          }
+        ? `abilityScoreCapExceeded:${Source}`
+        : Cause extends {
+              readonly tag: "invalidChoiceOption";
+              readonly reason: infer Reason;
+            }
+          ? `invalidChoiceOption:${StructuredCauseKey<Reason>}`
+          : Cause extends {
+                readonly tag: "unsupportedToolProficiency";
+                readonly source: infer Source extends string;
+              }
+            ? `unsupportedToolProficiency:${Source}`
+            : Cause extends {
+                  readonly tag: "unreadableUnit";
+                  readonly role: infer Role extends string;
+                  readonly issues: readonly {
+                    readonly code: infer Code extends string;
+                  }[];
+                }
+              ? `unreadableUnit:${Role}:${Code}`
+              : Cause extends {
+                    readonly tag: "unknownUnit";
+                    readonly role: infer Role extends string;
+                  }
+                ? `unknownUnit:${Role}`
+                : Cause extends { readonly tag: infer Tag extends string }
+                  ? Tag
+                  : never;
+
+function exhaustiveStructuredCauseCases<
+  Cause extends { readonly tag: string },
+>() {
+  type ExpandedCause = ExpandStructuredCause<Cause>;
+  return <const Cases extends readonly ExpandedCause[]>(
+    cases: Cases &
+      ([StructuredCauseKey<ExpandedCause>] extends [
+        StructuredCauseKey<Cases[number]>,
+      ]
+        ? unknown
+        : never),
+  ): Cases => cases;
 }
 
 function syntheticChoiceHole(): Extract<CreationHole, { kind: "choice" }> {
@@ -104,6 +218,359 @@ describe("Character Creation owner facts", () => {
       ],
     });
     expect(decodeCreationFrontierFact(fact)._tag).toBe("Right");
+  });
+
+  test("projects every durable Character Build fact shape", () => {
+    const parsedEquipmentUnitIds = {
+      armor: characterEquipmentItemUnitId("synthetic_armor"),
+      shield: characterEquipmentItemUnitId("synthetic_shield"),
+      main: characterEquipmentItemUnitId("synthetic_main_weapon"),
+      off: characterEquipmentItemUnitId("synthetic_off_hand_weapon"),
+    };
+    const parsedMetamagicOptionId = sorcererMetamagicOptionId(
+      "sorcerer_empowered_spell",
+    );
+    for (const parsedUnitId of Object.values(parsedEquipmentUnitIds)) {
+      expect(Either.isRight(parsedUnitId)).toBe(true);
+    }
+    expect(Either.isRight(parsedMetamagicOptionId)).toBe(true);
+    if (
+      Either.isLeft(parsedEquipmentUnitIds.armor) ||
+      Either.isLeft(parsedEquipmentUnitIds.shield) ||
+      Either.isLeft(parsedEquipmentUnitIds.main) ||
+      Either.isLeft(parsedEquipmentUnitIds.off) ||
+      Either.isLeft(parsedMetamagicOptionId)
+    ) {
+      expect.fail("Expected synthetic Character Build ids to parse.");
+    }
+
+    const armorItemId = characterEquipmentItemId({
+      slot: "armor",
+      unitId: parsedEquipmentUnitIds.armor.right,
+    });
+    const shieldItemId = characterEquipmentItemId({
+      slot: "shield",
+      unitId: parsedEquipmentUnitIds.shield.right,
+    });
+    const mainWeaponItemId = characterEquipmentItemId({
+      slot: "main",
+      unitId: parsedEquipmentUnitIds.main.right,
+    });
+    const offHandWeaponItemId = characterEquipmentItemId({
+      slot: "off",
+      unitId: parsedEquipmentUnitIds.off.right,
+    });
+    const syntheticUnitId = authoredUnitId("synthetic_unit");
+    const build = {
+      ...syntheticBuild(),
+      progression: {
+        startingClass: classUnitId(authoredUnitId("class_synthetic")),
+        advancements: [
+          {
+            classUnitId: classUnitId(authoredUnitId("class_synthetic")),
+            hitPointRule: { tag: "fixedHigherLevelGain" },
+          },
+        ],
+      },
+      speciesSize: "small",
+      speciesChoiceFacts: {
+        draconicAncestry: {
+          kind: "draconicAncestry",
+          ancestorId: characterDraconicAncestrySelection("synthetic_ancestor"),
+        },
+      },
+      classFeatureLanguages: [
+        {
+          kind: "classFeatureLanguageGrant",
+          sourceUnitId: syntheticUnitId,
+          language: "Giant",
+        },
+        {
+          kind: "classFeatureLanguageChoice",
+          sourceUnitId: syntheticUnitId,
+          language: "Gnomish",
+        },
+      ],
+      proficiencyChoices: [
+        { kind: "skill", skill: "arcana" },
+        { kind: "skill_expertise", skill: "history" },
+        { kind: "weapon_category", category: "simple" },
+        { kind: "armor_category", category: "light" },
+        { kind: "tool", toolId: toolProficiencyId("thieves_tools") },
+      ],
+      features: [
+        {
+          kind: "selectedClassChoice",
+          selectedFromUnitId: syntheticUnitId,
+          unitId: authoredUnitId("synthetic_choice_without_option"),
+        },
+        {
+          kind: "selectedClassChoice",
+          selectedFromUnitId: syntheticUnitId,
+          unitId: authoredUnitId("synthetic_choice_with_option"),
+          selectedOption: {
+            kind: "huntersPrey",
+            selection: "nearbyDifferentTargetSameWeaponAttack",
+          },
+        },
+        {
+          kind: "selectedEldritchInvocation",
+          selectedFromUnitId: syntheticUnitId,
+          selection: {
+            kind: "nonRepeatable",
+            invocationId: eldritchInvocationId("synthetic_non_repeatable"),
+          },
+        },
+        {
+          kind: "selectedEldritchInvocation",
+          selectedFromUnitId: syntheticUnitId,
+          selection: {
+            kind: "repeatable",
+            invocationId: eldritchInvocationId("synthetic_known_cantrip"),
+            repeatableChoice: {
+              kind: "knownWarlockCantrip",
+              cantripId: authoredUnitId("synthetic_cantrip"),
+            },
+          },
+        },
+        {
+          kind: "selectedEldritchInvocation",
+          selectedFromUnitId: syntheticUnitId,
+          selection: {
+            kind: "repeatable",
+            invocationId: eldritchInvocationId("synthetic_origin_feat"),
+            repeatableChoice: {
+              kind: "originFeat",
+              featUnitId: authoredUnitId("synthetic_feat"),
+            },
+          },
+        },
+        {
+          kind: "selectedSorcererMetamagicOption",
+          selectedFromUnitId: syntheticUnitId,
+          optionId: parsedMetamagicOptionId.right,
+        },
+        {
+          kind: "abilityCheckBonus",
+          selectedFromUnitId: syntheticUnitId,
+          ability: "int",
+          skills: ["arcana", "history"],
+          bonus: {
+            kind: "abilityModifier",
+            ability: "int",
+            minimum: 1,
+          },
+        },
+      ],
+      spellcasting: {
+        sources: [
+          {
+            sourceUnitId: syntheticUnitId,
+            spellcastingAbility: "int",
+            cantrips: [authoredUnitId("synthetic_cantrip")],
+            spellbook: [authoredUnitId("synthetic_spellbook_spell")],
+            preparedSpells: [authoredUnitId("synthetic_prepared_spell")],
+            spellcastingFocuses: [],
+          },
+          {
+            sourceUnitId: authoredUnitId("synthetic_book_source"),
+            spellcastingAbility: "cha",
+            cantrips: [],
+            spellbook: [],
+            preparedSpells: [],
+            spellcastingFocuses: ["book_of_shadows"],
+            bookOfShadows: {
+              tag: "bookOfShadows",
+              cantrips: [
+                authoredUnitId("synthetic_book_cantrip_a"),
+                authoredUnitId("synthetic_book_cantrip_b"),
+                authoredUnitId("synthetic_book_cantrip_c"),
+              ],
+              ritualSpells: [
+                authoredUnitId("synthetic_book_ritual_a"),
+                authoredUnitId("synthetic_book_ritual_b"),
+              ],
+              spellcastingFocus: "book_of_shadows",
+            },
+          },
+        ],
+        slotPools: {
+          spellcasting: {
+            kind: "spellcasting",
+            slots: [{ spellLevel: 1, count: 2 }],
+          },
+          pactMagic: {
+            kind: "pactMagic",
+            slotLevel: 1,
+            count: 1,
+          },
+        },
+      },
+      equipment: {
+        owned: [
+          {
+            itemId: armorItemId,
+            unitId: parsedEquipmentUnitIds.armor.right,
+          },
+          {
+            itemId: shieldItemId,
+            unitId: parsedEquipmentUnitIds.shield.right,
+          },
+          {
+            itemId: mainWeaponItemId,
+            unitId: parsedEquipmentUnitIds.main.right,
+          },
+          {
+            itemId: offHandWeaponItemId,
+            unitId: parsedEquipmentUnitIds.off.right,
+          },
+        ],
+        loadout: {
+          armor: armorItemId,
+          shield: shieldItemId,
+          weapon: { itemId: mainWeaponItemId, grip: "one_handed" },
+        },
+      },
+    } as const satisfies CharacterBuild;
+
+    const fact = characterBuildFact(build);
+    expect(decodeCharacterBuildFact(fact)).toHaveProperty("_tag", "Right");
+    expect(fact).not.toHaveProperty("equipment.owned.0.unitId");
+    expect(fact.speciesChoiceFacts).toEqual({
+      draconicAncestry: {
+        kind: "draconicAncestry",
+        ancestorId: "synthetic_ancestor",
+      },
+    });
+
+    const offHandWeaponFact = characterBuildFact({
+      ...build,
+      equipment: {
+        ...build.equipment,
+        loadout: {
+          armor: armorItemId,
+          weapon: { itemId: mainWeaponItemId, grip: "one_handed" },
+          offHandWeapon: { itemId: offHandWeaponItemId },
+        },
+      },
+    });
+    expect(offHandWeaponFact.equipment.loadout).toHaveProperty(
+      "offHandWeapon.itemId",
+      offHandWeaponItemId,
+    );
+
+    const gnomishFact = characterBuildFact({
+      ...build,
+      speciesChoiceFacts: {
+        gnomishLineage: {
+          kind: "gnomishLineage",
+          lineageId: "rock_gnome",
+          spellcastingAbility: "int",
+        },
+      },
+    });
+    expect(gnomishFact.speciesChoiceFacts).toEqual({
+      gnomishLineage: {
+        kind: "gnomishLineage",
+        lineageId: "rock_gnome",
+        spellcastingAbility: "int",
+      },
+    });
+  });
+
+  test("projects every Hole source, cardinality, option, and Fill shape", () => {
+    const unitId = unitChoiceSourceUnitId("synthetic_feature");
+    const choiceKey = unitChoiceKey("class_feature_feat_choice");
+    const equipmentUnitId = loadoutEquipmentUnitId("synthetic_equipment");
+    const between = boundedChoiceCardinality({ min: 1, max: 2 });
+    const exact = exactChoiceCardinality(1);
+    expect(Either.isRight(unitId)).toBe(true);
+    expect(Either.isRight(choiceKey)).toBe(true);
+    expect(Either.isRight(equipmentUnitId)).toBe(true);
+    expect(between).toBeDefined();
+    expect(exact).toBeDefined();
+    if (
+      Either.isLeft(unitId) ||
+      Either.isLeft(choiceKey) ||
+      Either.isLeft(equipmentUnitId) ||
+      between === undefined ||
+      exact === undefined
+    ) {
+      expect.fail("Expected synthetic Hole source facts to parse.");
+    }
+
+    const unitChoiceHole = {
+      kind: "choice",
+      holeId: creationHoleId("cc:draft:draft.background"),
+      source: {
+        tag: "unitChoice",
+        unitId: unitId.right,
+        choiceKey: choiceKey.right,
+      },
+      cardinality: between,
+      options: [
+        {
+          optionId: creationChoiceOptionId("synthetic_without_ref"),
+          label: "Synthetic without ref",
+        },
+        {
+          optionId: creationChoiceOptionId("synthetic_with_ref"),
+          label: "Synthetic with ref",
+          unitRef: { unitId: authoredUnitId("synthetic_ref") },
+        },
+        {
+          optionId: creationChoiceOptionId("synthetic_with_selected_option"),
+          label: "Synthetic with selected option",
+          unitRef: {
+            unitId: authoredUnitId("synthetic_selected_ref"),
+            selectedOption: {
+              kind: "huntersPrey",
+              selection: "nearbyDifferentTargetSameWeaponAttack",
+            },
+          },
+        },
+      ],
+    } as const satisfies CreationHole;
+    const loadoutHole = {
+      kind: "choice",
+      holeId: creationHoleId("cc:draft:draft.background"),
+      source: {
+        tag: "loadout",
+        equipmentUnitId: equipmentUnitId.right,
+        slot: "weapon",
+      },
+      cardinality: exact,
+      options: [
+        {
+          optionId: creationChoiceOptionId("synthetic_loadout"),
+          label: "Synthetic loadout",
+        },
+      ],
+    } as const satisfies CreationHole;
+    const abilityScoresHole = {
+      kind: "abilityScores",
+      holeId: creationHoleId("cc:draft:draft.background"),
+      source: { tag: "draft", path: "draft.abilityScoreGeneration" },
+      methods: ["standardArray", "pointBuy"],
+    } as const satisfies CreationHole;
+
+    for (const hole of [unitChoiceHole, loadoutHole, abilityScoresHole]) {
+      const fact = creationHoleFact(hole);
+      expect(decodeCreationHoleFact(fact)).toHaveProperty("_tag", "Right");
+    }
+    expect(
+      creationFillFact({
+        kind: "abilityScores",
+        holeId: abilityScoresHole.holeId,
+        method: "standardArray",
+        value: syntheticBuild().abilityScores,
+      }),
+    ).toEqual({
+      kind: "abilityScores",
+      holeId: abilityScoresHole.holeId,
+      method: "standardArray",
+      value: syntheticBuild().abilityScores,
+    });
   });
 
   test("derives canonical Hole identity from the owner source", () => {
@@ -345,6 +812,276 @@ describe("Character Creation owner facts", () => {
         },
       ],
     });
+  });
+
+  test("projects and explains every structured finalization cause", () => {
+    const syntheticUnitId = authoredUnitId("synthetic_unit");
+    const syntheticFeatureUnitId = authoredUnitId("synthetic_feature");
+    const syntheticOptionId = creationChoiceOptionId("synthetic_option");
+    const illegalCauses =
+      exhaustiveStructuredCauseCases<CreationFinalizationIllegalCause>()([
+        { tag: "draftIncomplete" },
+        {
+          tag: "conflictingSpeciesChoiceSources",
+          speciesUnitId: syntheticUnitId,
+        },
+        {
+          tag: "missingDraconicAncestrySource",
+          speciesUnitId: syntheticUnitId,
+        },
+        {
+          tag: "invalidDraconicAncestrySelection",
+          speciesUnitId: syntheticUnitId,
+        },
+        {
+          tag: "multipleSpeciesLineageSources",
+          speciesUnitId: syntheticUnitId,
+        },
+        {
+          tag: "invalidGnomishLineageSelection",
+          traitUnitId: syntheticUnitId,
+        },
+        { tag: "multipleSpellcastingSlotPools" },
+        { tag: "multiplePactMagicSlotPools" },
+      ]);
+    const unsupportedCauses =
+      exhaustiveStructuredCauseCases<CreationFinalizationUnsupportedCause>()([
+        { tag: "unsupportedBackground" },
+        { tag: "unsupportedSpecies" },
+        { tag: "speciesSizeMismatch" },
+        { tag: "draconicAncestryMismatch" },
+        { tag: "unsupportedProgression" },
+        { tag: "unsupportedAbilityScoreGeneration" },
+        { tag: "unsupportedBackgroundAbilityScoreIncrease" },
+        { tag: "manifestLanguagesMismatch" },
+        { tag: "manifestAlignmentMismatch" },
+        { tag: "unsupportedChoices" },
+        { tag: "selectedFeatPrerequisitesNotMet" },
+        { tag: "missingSpellcastingFacts" },
+        { tag: "preparedSpellSelectionMismatch" },
+        { tag: "duplicateWizardSpellbookSelection" },
+        { tag: "unsupportedEquipmentSelection" },
+      ]);
+    const choiceOptionDecodeCauses =
+      exhaustiveStructuredCauseCases<CreationChoiceOptionDecodeCause>()([
+        { tag: "unsupportedAbility" },
+        { tag: "duplicateAbilities" },
+        {
+          tag: "invalidAbilityScoreIncreaseValue",
+          field: "increase",
+          reason: "nonPositive",
+        },
+        {
+          tag: "invalidAbilityScoreIncreaseValue",
+          field: "increase",
+          reason: "unsafeInteger",
+        },
+        {
+          tag: "invalidAbilityScoreIncreaseValue",
+          field: "maximum",
+          reason: "nonPositive",
+        },
+        {
+          tag: "invalidAbilityScoreIncreaseValue",
+          field: "maximum",
+          reason: "unsafeInteger",
+        },
+        {
+          tag: "invalidAbilityScoreIncreaseValue",
+          field: "maximum",
+          reason: "maximumOutOfRange",
+        },
+        { tag: "invalidAbilityScoreIncreaseEncoding" },
+        { tag: "unsupportedWeaponCategory" },
+        { tag: "unsupportedArmorCategory" },
+        { tag: "unsupportedToolProficiencyId" },
+        { tag: "invalidProficiencyEncoding" },
+        { tag: "unsupportedCharacterBuildToolProficiencyId" },
+      ]);
+    const projectionCauses =
+      exhaustiveStructuredCauseCases<CharacterBuildProjectionCause>()([
+        {
+          tag: "missingStartingClassFacts",
+          projection: "characterBuild",
+          classUnitId: syntheticUnitId,
+        },
+        {
+          tag: "missingStartingClassFacts",
+          projection: "hitPoints",
+          classUnitId: syntheticUnitId,
+        },
+        {
+          tag: "missingStartingClassFacts",
+          projection: "proficiencies",
+          classUnitId: syntheticUnitId,
+        },
+        {
+          tag: "missingStartingClassFacts",
+          projection: "armorTraining",
+          classUnitId: syntheticUnitId,
+        },
+        {
+          tag: "missingHitPointMaximumBonusFeatureUnit",
+          featureUnitId: syntheticFeatureUnitId,
+        },
+        {
+          tag: "nonDeterministicHitPointMaximumBonus",
+          featureUnitId: syntheticFeatureUnitId,
+        },
+        {
+          tag: "unsupportedClassFeatureLanguage",
+          featureUnitId: syntheticFeatureUnitId,
+          languageId: "Synthetic",
+        },
+        {
+          tag: "duplicateClassFeatureLanguage",
+          featureUnitId: syntheticFeatureUnitId,
+          language: "Common",
+        },
+        {
+          tag: "missingClassFeatureLanguageChoice",
+          featureUnitId: syntheticFeatureUnitId,
+        },
+        {
+          tag: "classFeatureLanguageChoiceCountMismatch",
+          featureUnitId: syntheticFeatureUnitId,
+          mismatch: {
+            tag: "missing",
+            receivedCount: NonNegativeInteger(1),
+            missingCount: PositiveInteger(2),
+          },
+        },
+        {
+          tag: "classFeatureLanguageChoiceCountMismatch",
+          featureUnitId: syntheticFeatureUnitId,
+          mismatch: {
+            tag: "extra",
+            expectedCount: PositiveInteger(1),
+            extraCount: PositiveInteger(2),
+          },
+        },
+        {
+          tag: "unsupportedClassFeatureLanguageChoice",
+          featureUnitId: syntheticFeatureUnitId,
+          optionId: syntheticOptionId,
+        },
+        {
+          tag: "duplicateClassFeatureLanguageChoice",
+          featureUnitId: syntheticFeatureUnitId,
+          language: "Common",
+        },
+        {
+          tag: "unprojectableAbilityCheckBonus",
+          featureUnitId: syntheticFeatureUnitId,
+          optionId: syntheticOptionId,
+        },
+        {
+          tag: "unsupportedEquipmentUnitId",
+          equipmentUnitId: syntheticUnitId,
+        },
+        {
+          tag: "unreadableUnit",
+          role: "class",
+          unitId: syntheticUnitId,
+          issues: [{ code: "unsupportedUnitKind" }],
+        },
+        {
+          tag: "unreadableUnit",
+          role: "background",
+          unitId: syntheticUnitId,
+          issues: [{ code: "unsupportedUnitKind" }],
+        },
+        {
+          tag: "unreadableUnit",
+          role: "species",
+          unitId: syntheticUnitId,
+          issues: [{ code: "unsupportedUnitKind" }],
+        },
+        {
+          tag: "unknownUnit",
+          role: "class",
+          unitId: syntheticUnitId,
+        },
+        {
+          tag: "unknownUnit",
+          role: "background",
+          unitId: syntheticUnitId,
+        },
+        {
+          tag: "unknownUnit",
+          role: "species",
+          unitId: syntheticUnitId,
+        },
+        {
+          tag: "unknownUnit",
+          role: "feat",
+          unitId: syntheticUnitId,
+        },
+        {
+          tag: "abilityScoreCapExceeded",
+          source: "background",
+          ability: "str",
+          excess: PositiveInteger(1),
+        },
+        {
+          tag: "abilityScoreCapExceeded",
+          source: "classFeature",
+          ability: "str",
+          maximum: abilityScore(20),
+          excess: PositiveInteger(1),
+        },
+        {
+          tag: "unsupportedToolProficiency",
+          source: "background",
+          toolId: "synthetic_tool",
+        },
+        {
+          tag: "unsupportedToolProficiency",
+          source: "surfaceGrant",
+          toolId: "synthetic_tool",
+        },
+        ...choiceOptionDecodeCauses.map(
+          (reason) =>
+            ({
+              tag: "invalidChoiceOption",
+              optionId: syntheticOptionId,
+              reason,
+            }) satisfies CharacterBuildProjectionCause,
+        ),
+      ]);
+
+    const issues = [
+      ...illegalCauses.map((cause) => ({
+        tag: "illegalFinalization" as const,
+        cause,
+      })),
+      ...unsupportedCauses.map((cause) => ({
+        tag: "unsupportedFinalization" as const,
+        cause,
+      })),
+      ...projectionCauses.map((cause) => ({
+        tag: "characterBuildProjection" as const,
+        cause,
+      })),
+    ];
+
+    for (const issue of issues) {
+      expect(characterCreationIssueMessage(issue)).not.toHaveLength(0);
+      const projection = creationFinalizationFact({
+        tag: "invalid",
+        issues: [issue],
+      });
+      expect(projection).toEqual({
+        tag: "invalid",
+        issues: [issue],
+      });
+      if (projection.tag !== "invalid") {
+        expect.fail("Expected an invalid finalization fact.");
+      }
+      expect(
+        decodeCreationFinalizationRejectionFact(projection.issues[0]),
+      ).toHaveProperty("_tag", "Right");
+    }
   });
 
   test("rejects presentation prose and excess fields inside structured causes", () => {
