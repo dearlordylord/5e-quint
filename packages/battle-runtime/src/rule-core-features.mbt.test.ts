@@ -118,6 +118,7 @@ import {
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import type { CharacterBattleResourceState } from "./character-battle-resources.ts";
 import { parseSupportedUnitFeatureProfile } from "./unit-feature-support.ts";
+import { unitSupportProfileKind } from "./character-execution-queries.ts";
 import { mechanicsOnlyMyceliumStepUnit } from "./classic-non-srd-mechanics-fixtures.test-support.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 
@@ -762,10 +763,18 @@ function createRuleCoreFeatureDriver(
     let actorArmorClass = featureMbtBaselineArmorClass;
     let featureUsesRemaining = 1;
     let targetHpFallback = 12;
+    let actionSurgeSubject:
+      | Extract<BattleSubject, { readonly tag: "unitFeature" }>
+      | undefined;
+    let secondWindSubject:
+      | Extract<BattleSubject, { readonly tag: "unitFeature" }>
+      | undefined;
 
     function reset(): void {
       state = featureBattle();
       resetProjection();
+      actionSurgeSubject = undefined;
+      secondWindSubject = undefined;
     }
 
     function resetProjection(): void {
@@ -920,7 +929,8 @@ function createRuleCoreFeatureDriver(
       doActionSurgeActivate: () => {
         state = actionSurgeBattle();
         resetProjection();
-        resolveSubject(unitFeatureSubject(state));
+        actionSurgeSubject = unitFeatureSubject(state);
+        resolveSubject(actionSurgeSubject);
         featureUsesRemaining = resourceUsesRemaining(state);
       },
       doActionSurgeSpendAttack: () => {
@@ -929,9 +939,14 @@ function createRuleCoreFeatureDriver(
         lastDamageAmount = 7;
       },
       doActionSurgeRejectTwice: () => {
+        if (actionSurgeSubject === undefined) {
+          throw new Error(
+            "Action Surge replay requires its previously activated typed subject.",
+          );
+        }
         const result = resolveBattleSubject({
           state,
-          subject: unitFeatureSubject(state),
+          subject: actionSurgeSubject,
           fills: [],
         });
         recordResult(result);
@@ -940,7 +955,8 @@ function createRuleCoreFeatureDriver(
       doDiscoverSecondWind: () => {
         state = secondWindBattle();
         resetProjection();
-        const act = findAct(state, unitFeatureSubject(state));
+        secondWindSubject = unitFeatureSubject(state);
+        const act = findAct(state, secondWindSubject);
         holes = act.initialHoles;
         lastResult = "needsHoles";
         lastInvalidReason = "none";
@@ -1025,7 +1041,7 @@ function createRuleCoreFeatureDriver(
           damageRoll: 4,
           rollMode: "advantage",
           selectedAttackDamageRiderProcedureRefs: [
-            requireUnitFeatureProcedureRef(state, actorId, "attackDamageRider"),
+            requireUnitProcedureRef(state, actorId, "attackDamageRider"),
           ],
         });
         lastDamageAmount = 1;
@@ -1070,7 +1086,7 @@ function createRuleCoreFeatureDriver(
           state,
           damageRoll: 8,
           weaponDamageDiceRollChoice: {
-            procedureRef: requireUnitFeatureProcedureRef(
+            procedureRef: requireUnitProcedureRef(
               state,
               actorId,
               "weaponDamageDiceRollChoice",
@@ -1129,7 +1145,7 @@ function createRuleCoreFeatureDriver(
               damageFill,
               attackDamageDispositionFill(disposition, {
                 kind: "zeroHitPointReplacement",
-                procedureRef: requireUnitFeatureProcedureRef(
+                procedureRef: requireUnitProcedureRef(
                   state,
                   targetId,
                   "zeroHitPointReplacement",
@@ -1170,6 +1186,7 @@ function createRuleCoreFeatureDriver(
           level: 3,
           supportProfile:
             ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SUPPORT_PROFILE,
+          resources: [unitResource("monk_monks_focus")],
         });
         resetProjection();
         resolveReactionDamageReduction({
@@ -1301,11 +1318,20 @@ function createRuleCoreFeatureDriver(
     };
 
     function resolveSecondWind(roll: number): void {
+      if (secondWindSubject === undefined) {
+        throw new Error(
+          "Second Wind resolution requires its previously discovered typed subject.",
+        );
+      }
+      expect(
+        unitFeatureSubject(state),
+        "Second Wind must retain its discovered Unit procedure binding through resolution.",
+      ).toEqual(secondWindSubject);
       const hole = requireHoleFromList(holes, "rolledDice");
       recordResult(
         resolveBattleSubject({
           state,
-          subject: unitFeatureSubject(state),
+          subject: secondWindSubject,
           fills: [damageRollFillWithGroups(hole, [[roll]])],
         }),
       );
@@ -1322,7 +1348,7 @@ function createRuleCoreFeatureDriver(
       resetProjection();
       const result = resolveFailedAbilityCheckResourceBoost({
         state,
-        procedureRef: requireUnitFeatureProcedureRef(
+        procedureRef: requireUnitProcedureRef(
           state,
           actorId,
           "failedAbilityCheckResourceBoost",
@@ -1540,6 +1566,7 @@ describe("rule-core Feature focused MBT", () => {
       const replayedActions = new Set<RuleCoreFeatureDriverAction>();
 
       for (const sequence of replay.sequences) {
+        resetSelectedUnitRuntimeBoundaryIds();
         const replayEvasionUnitId = evasionUnitIdForReplay(replay.unitId);
         const driver = createRuleCoreFeatureDriver(
           replayEvasionUnitId === undefined
@@ -1548,7 +1575,6 @@ describe("rule-core Feature focused MBT", () => {
         )();
 
         for (const actionName of sequence.actions) {
-          resetSelectedUnitRuntimeBoundaryIds();
           replayedActions.add(actionName);
           const action = driver.actions[actionName];
           if (action === undefined) {
@@ -1557,11 +1583,12 @@ describe("rule-core Feature focused MBT", () => {
             );
           }
           await action.handler({});
-          expect(
-            selectedUnitRuntimeBoundaryIds.has(replay.unitId),
-            `${replay.unitId}:${sequence.name}:${actionName} must bind its Unit id`,
-          ).toBe(true);
         }
+
+        expect(
+          selectedUnitRuntimeBoundaryIds.has(replay.unitId),
+          `${replay.unitId}:${sequence.name} must admit its selected Unit id at the workflow boundary`,
+        ).toBe(true);
 
         const runtime = driver.getState?.();
         if (runtime === undefined) {
@@ -1735,7 +1762,7 @@ function tacticalMindBattle(
   unit: Extract<UnitRecord, { readonly kind: "class_feature" }>,
 ): BattleState {
   const unitRef = battleUnitRefWithSupportProfiles({
-    unitRef: { unitId: unit.id },
+    unitRef: { unitId: recordSelectedUnitRuntimeBoundaryId(unit.id) },
     unit,
   });
   if (Either.isLeft(unitRef)) {
@@ -1982,7 +2009,9 @@ function combatProwessBattle(): BattleState {
 }
 
 function relentlessEnduranceBattle(): BattleState {
-  const unit = unitLibrary.requireUnit("orc_relentless_endurance");
+  const unit = unitLibrary.requireUnit(
+    recordSelectedUnitRuntimeBoundaryId("orc_relentless_endurance"),
+  );
   return startBattleRight({
     battleId: battleId("rule-core-relentless-endurance"),
     combatants: [
@@ -1997,7 +2026,7 @@ function relentlessEnduranceBattle(): BattleState {
           resources: [{ unit, usesRemaining: 1 }],
           characterUnitRefs: [
             {
-              unit: unitLibrary.requireUnit("orc_relentless_endurance"),
+              unit,
               supportProfiles: [ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE],
             },
           ],
@@ -2322,7 +2351,7 @@ function requireDiscoveredSubject(
   return subject;
 }
 
-function requireUnitFeatureProcedureRef(
+function requireUnitProcedureRef(
   state: BattleState,
   ownerId: CombatantId,
   executionKind:
@@ -2336,17 +2365,21 @@ function requireUnitFeatureProcedureRef(
   if (actor?.origin.kind !== "character") {
     throw new Error(`Expected character combatant ${ownerId}.`);
   }
-  const procedureRef = actor.origin.execution.procedureBindings.find(
+  const procedureRefs = actor.origin.execution.procedureBindings.flatMap(
     (binding) =>
-      binding.procedure.kind === "unitFeature" &&
-      binding.procedure.execution.kind === executionKind,
-  )?.procedureRef;
-  if (procedureRef === undefined) {
+      (binding.procedure.kind === "unitFeature" &&
+        binding.procedure.execution.kind === executionKind) ||
+      (binding.procedure.kind === "unitSupportProfile" &&
+        unitSupportProfileKind(binding.procedure.execution) === executionKind)
+        ? [binding.procedureRef]
+        : [],
+  );
+  if (procedureRefs.length !== 1) {
     throw new Error(
-      `Expected ${executionKind} Unit feature procedure for ${ownerId}.`,
+      `Expected exactly one ${executionKind} Unit procedure for ${ownerId}, got ${procedureRefs.length}.`,
     );
   }
-  return procedureRef;
+  return procedureRefs[0];
 }
 
 function unitFeatureSubject(
@@ -2815,6 +2848,15 @@ function incomingAttackAdvantage(state: BattleState): boolean {
       ?.activeOngoingFeatureOccurrences.has(recklessProcedureRef) === true
   ) {
     return true;
+  }
+  const potentialAttacker = state.combatants.get(targetId);
+  if (potentialAttacker === undefined) {
+    return false;
+  }
+  if (potentialAttacker.origin.kind !== "character") {
+    throw new Error(
+      "Rule-core Feature incoming-attack projection requires a character attacker.",
+    );
   }
   const subject = actorAttackSubject(state, "Shortsword", targetId);
   const target = resolveBattleSubject({ state, subject, fills: [] });
