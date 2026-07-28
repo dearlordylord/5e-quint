@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 511,
-      "numerator": 345,
-      "percent": "67.5%"
+      "denominator": 513,
+      "numerator": 348,
+      "percent": "67.8%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 599,
-      "numerator": 395,
-      "percent": "65.9%"
+      "denominator": 601,
+      "numerator": 398,
+      "percent": "66.2%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 396
+      "value": 399
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 215,
@@ -67,8 +67,8 @@
       "percent": "97.7%"
     },
     "profileClassificationCoverage": {
-      "denominator": 396,
-      "numerator": 396,
+      "denominator": 399,
+      "numerator": 399,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -112,9 +112,9 @@
       "percent": "99.5%"
     },
     "supportedProfileCoverage": {
-      "denominator": 346,
+      "denominator": 349,
       "numerator": 215,
-      "percent": "62.1%"
+      "percent": "61.6%"
     }
   },
   "metricSemantics": [
@@ -20242,8 +20242,8 @@
         "unsupportedOrOtherUnits": 4
       },
       {
-        "executableUnitDenominator": 188,
-        "installedUnitDenominator": 188,
+        "executableUnitDenominator": 191,
+        "installedUnitDenominator": 191,
         "kind": "spell",
         "label": "Spell Units",
         "profileFactDenominator": 209,
@@ -20253,7 +20253,7 @@
         "selectedIdentityReplayGapUnits": 0,
         "selectedIdentityReplayWitnessUnits": 148,
         "supportedProfileUnits": 98,
-        "unsupportedOrOtherUnits": 36
+        "unsupportedOrOtherUnits": 39
       },
       {
         "executableUnitDenominator": 118,
@@ -39855,6 +39855,29 @@
       },
       "claim": {
         "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "future equipment and exploration object-state owner",
+          "reason": "A future owner must apply the authored repair facts to table-owned object damage state without adding duplicate equipment state to battle runtime or dispatching on the spell's authored identity."
+        },
+        "reason": "Mending is installed as an authored SRD Surface dependency, but object repair without restoring magic is equipment and exploration state outside promoted runtime owners.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/mending.json",
+      "unitId": "mending"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
           "kind": "table-spatial-derivation",
           "owner": "table/spatial owner",
           "reason": "Automatic destination visibility, occupancy, blocked-destination fallback, and map-position derivation remain caller-supplied table/spatial facts outside the Misty Step runtime profile."
@@ -40943,6 +40966,29 @@
         "status": "installed"
       },
       "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "future table and exploration utility-effect owner",
+          "reason": "A future owner must apply the authored utility facts to table-owned environment and object state without adding duplicate battle state or dispatching on the spell's authored identity."
+        },
+        "reason": "Prestidigitation is installed as an authored SRD Surface dependency, but its minor sensory, cleaning, flavoring, marking, and trinket effects are noncombat utility effects outside promoted runtime owners.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/prestidigitation.json",
+      "unitId": "prestidigitation"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
         "deferredMechanics": [],
         "profileIds": [
           "spell.invocation-chosen-damage-resistance"
@@ -41965,6 +42011,29 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/sending.json",
       "unitId": "sending"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "runtime-detached communication/social owner",
+          "reason": "Speak with Animals produces table-owned communication facts; promoted battle runtime does not model conversation content or social outcomes."
+        },
+        "reason": "Beast communication, information exchange, and table-mediated social outcomes are runtime-detached exploration/social adjudication outside promoted battle Unit profiles.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/speak_with_animals.json",
+      "unitId": "speak_with_animals"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -50547,34 +50616,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/silent_image.json",
       "unitId": "silent_image"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "claim": {
-        "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
-          "owner": "runtime-detached communication/social owner",
-          "reason": "Speak with Animals produces table-owned communication facts; promoted battle runtime does not model conversation content or social outcomes."
-        },
-        "reason": "Beast communication, information exchange, and table-mediated social outcomes are runtime-detached exploration/social adjudication outside promoted battle Unit profiles.",
-        "tag": "unsupported-profile"
-      },
-      "collectionId": "srd-5.2.1",
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/speak_with_animals.json",
-      "unitId": "speak_with_animals"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

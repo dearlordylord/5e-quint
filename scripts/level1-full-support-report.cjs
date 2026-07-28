@@ -146,9 +146,7 @@ const adoptedNoMatrixSrdPressureDecisionUnitIds = new Set([
   "goodberry",
   "illusory_script",
   "mage_hand",
-  "mending",
   "message",
-  "prestidigitation",
   "purify_food_and_drink",
   "unseen_servant",
 ]);

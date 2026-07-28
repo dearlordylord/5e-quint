@@ -771,27 +771,11 @@ const spellUnitMissingClassifications = new Map([
     },
   ],
   [
-    "mending",
-    {
-      kind: "catalog-only-closure",
-      reason:
-        "Object repair without restoring magic is equipment/exploration state outside promoted runtime owners.",
-    },
-  ],
-  [
     "message",
     {
       kind: "catalog-only-closure",
       reason:
         "Private communication and barrier/silence blocking are exploration communication effects outside promoted runtime owners.",
-    },
-  ],
-  [
-    "prestidigitation",
-    {
-      kind: "catalog-only-closure",
-      reason:
-        "Minor sensory, cleaning, flavoring, marking, and trinket effects are noncombat utility effects outside promoted runtime owners.",
     },
   ],
   [

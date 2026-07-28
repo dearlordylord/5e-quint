@@ -5896,6 +5896,112 @@
     },
     {
       "catalogStatus": "installed",
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "outside-runtime-presentation-exploration"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "spell",
+      "reason": "A future owner must apply the authored repair facts to table-owned object damage state without adding duplicate equipment state to battle runtime or dispatching on the spell's authored identity.",
+      "selectedIdentity": {
+        "reason": "Selected identity replay evidence is only required for supported profile claims.",
+        "status": "not-required"
+      },
+      "sourceRecordPath": "packages/surface/content/mending.json",
+      "sourceRows": [
+        {
+          "battleReadinessStatus": "accepted-no-battle-effect",
+          "catalogAdmissionState": "installed",
+          "category": "spell Unit pressure",
+          "concept": "Bard spell list Mending",
+          "finalDisposition": "catalog-only/dead-for-now",
+          "id": "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_mending",
+          "levelBand": "spell-level-0",
+          "nextAction": "A future owner must apply the authored repair facts to table-owned object damage state without adding duplicate equipment state to battle runtime or dispatching on the spell's authored identity.",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 150,
+            "lineStart": 150,
+            "path": ".references/srd-5.2.1/Classes/Bard.md"
+          },
+          "unitProfileDisposition": "unsupported-profile"
+        },
+        {
+          "battleReadinessStatus": "accepted-no-battle-effect",
+          "catalogAdmissionState": "installed",
+          "category": "spell Unit pressure",
+          "concept": "Cleric spell list Mending",
+          "finalDisposition": "catalog-only/dead-for-now",
+          "id": "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_mending",
+          "levelBand": "spell-level-0",
+          "nextAction": "A future owner must apply the authored repair facts to table-owned object damage state without adding duplicate equipment state to battle runtime or dispatching on the spell's authored identity.",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 152,
+            "lineStart": 152,
+            "path": ".references/srd-5.2.1/Classes/Cleric.md"
+          },
+          "unitProfileDisposition": "unsupported-profile"
+        },
+        {
+          "battleReadinessStatus": "accepted-no-battle-effect",
+          "catalogAdmissionState": "installed",
+          "category": "spell Unit pressure",
+          "concept": "Druid spell list Mending",
+          "finalDisposition": "catalog-only/dead-for-now",
+          "id": "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_mending",
+          "levelBand": "spell-level-0",
+          "nextAction": "A future owner must apply the authored repair facts to table-owned object damage state without adding duplicate equipment state to battle runtime or dispatching on the spell's authored identity.",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 191,
+            "lineStart": 191,
+            "path": ".references/srd-5.2.1/Classes/Druid.md"
+          },
+          "unitProfileDisposition": "unsupported-profile"
+        },
+        {
+          "battleReadinessStatus": "accepted-no-battle-effect",
+          "catalogAdmissionState": "installed",
+          "category": "spell Unit pressure",
+          "concept": "Sorcerer spell list Mending",
+          "finalDisposition": "catalog-only/dead-for-now",
+          "id": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_mending",
+          "levelBand": "spell-level-0",
+          "nextAction": "A future owner must apply the authored repair facts to table-owned object damage state without adding duplicate equipment state to battle runtime or dispatching on the spell's authored identity.",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 230,
+            "lineStart": 230,
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+          },
+          "unitProfileDisposition": "unsupported-profile"
+        },
+        {
+          "battleReadinessStatus": "accepted-no-battle-effect",
+          "catalogAdmissionState": "installed",
+          "category": "spell Unit pressure",
+          "concept": "Wizard spell list Mending",
+          "finalDisposition": "catalog-only/dead-for-now",
+          "id": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_mending",
+          "levelBand": "spell-level-0",
+          "nextAction": "A future owner must apply the authored repair facts to table-owned object damage state without adding duplicate equipment state to battle runtime or dispatching on the spell's authored identity.",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 149,
+            "lineStart": 149,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          },
+          "unitProfileDisposition": "unsupported-profile"
+        }
+      ],
+      "status": "closed-runtime-detached-table-adjudication",
+      "strictTargetClosed": true,
+      "unitId": "mending"
+    },
+    {
+      "catalogStatus": "installed",
       "claimTag": "profile-subset-supported",
       "closureKinds": [
         "outside-runtime-presentation-exploration"
@@ -6963,6 +7069,95 @@
       "status": "closed-outside-battle-runtime-boundary",
       "strictTargetClosed": true,
       "unitId": "prayer_of_healing"
+    },
+    {
+      "catalogStatus": "installed",
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "outside-runtime-presentation-exploration"
+      ],
+      "collectionId": "srd-5.2.1",
+      "executableMechanics": true,
+      "kind": "spell",
+      "reason": "A future owner must apply the authored utility facts to table-owned environment and object state without adding duplicate battle state or dispatching on the spell's authored identity.",
+      "selectedIdentity": {
+        "reason": "Selected identity replay evidence is only required for supported profile claims.",
+        "status": "not-required"
+      },
+      "sourceRecordPath": "packages/surface/content/prestidigitation.json",
+      "sourceRows": [
+        {
+          "battleReadinessStatus": "accepted-no-battle-effect",
+          "catalogAdmissionState": "installed",
+          "category": "spell Unit pressure",
+          "concept": "Bard spell list Prestidigitation",
+          "finalDisposition": "catalog-only/dead-for-now",
+          "id": "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_prestidigitation",
+          "levelBand": "spell-level-0",
+          "nextAction": "A future owner must apply the authored utility facts to table-owned environment and object state without adding duplicate battle state or dispatching on the spell's authored identity.",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 153,
+            "lineStart": 153,
+            "path": ".references/srd-5.2.1/Classes/Bard.md"
+          },
+          "unitProfileDisposition": "unsupported-profile"
+        },
+        {
+          "battleReadinessStatus": "accepted-no-battle-effect",
+          "catalogAdmissionState": "installed",
+          "category": "spell Unit pressure",
+          "concept": "Sorcerer spell list Prestidigitation",
+          "finalDisposition": "catalog-only/dead-for-now",
+          "id": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_prestidigitation",
+          "levelBand": "spell-level-0",
+          "nextAction": "A future owner must apply the authored utility facts to table-owned environment and object state without adding duplicate battle state or dispatching on the spell's authored identity.",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 234,
+            "lineStart": 234,
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+          },
+          "unitProfileDisposition": "unsupported-profile"
+        },
+        {
+          "battleReadinessStatus": "accepted-no-battle-effect",
+          "catalogAdmissionState": "installed",
+          "category": "spell Unit pressure",
+          "concept": "Warlock spell list Prestidigitation",
+          "finalDisposition": "catalog-only/dead-for-now",
+          "id": "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_prestidigitation",
+          "levelBand": "spell-level-0",
+          "nextAction": "A future owner must apply the authored utility facts to table-owned environment and object state without adding duplicate battle state or dispatching on the spell's authored identity.",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 341,
+            "lineStart": 341,
+            "path": ".references/srd-5.2.1/Classes/Warlock.md"
+          },
+          "unitProfileDisposition": "unsupported-profile"
+        },
+        {
+          "battleReadinessStatus": "accepted-no-battle-effect",
+          "catalogAdmissionState": "installed",
+          "category": "spell Unit pressure",
+          "concept": "Wizard spell list Prestidigitation",
+          "finalDisposition": "catalog-only/dead-for-now",
+          "id": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_prestidigitation",
+          "levelBand": "spell-level-0",
+          "nextAction": "A future owner must apply the authored utility facts to table-owned environment and object state without adding duplicate battle state or dispatching on the spell's authored identity.",
+          "rowKind": "spell-unit-pressure",
+          "source": {
+            "lineEnd": 153,
+            "lineStart": 153,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          },
+          "unitProfileDisposition": "unsupported-profile"
+        }
+      ],
+      "status": "closed-runtime-detached-table-adjudication",
+      "strictTargetClosed": true,
+      "unitId": "prestidigitation"
     },
     {
       "catalogStatus": "installed",
@@ -8052,12 +8247,7 @@
       "unitId": "sorcerer_metamagic"
     },
     {
-      "catalogDisposition": {
-        "category": "srd-candidate",
-        "planningLane": "QMBT14-QMBT16",
-        "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-      },
-      "catalogStatus": "not-in-unit-catalog",
+      "catalogStatus": "installed",
       "claimTag": "unsupported-profile",
       "closureKinds": [
         "outside-runtime-presentation-exploration"
@@ -8074,7 +8264,7 @@
       "sourceRows": [
         {
           "battleReadinessStatus": "accepted-no-battle-effect",
-          "catalogAdmissionState": "not-installed",
+          "catalogAdmissionState": "installed",
           "category": "spell Unit pressure",
           "concept": "Bard spell list Speak with Animals",
           "finalDisposition": "catalog-only/dead-for-now",
@@ -8091,7 +8281,7 @@
         },
         {
           "battleReadinessStatus": "accepted-no-battle-effect",
-          "catalogAdmissionState": "not-installed",
+          "catalogAdmissionState": "installed",
           "category": "spell Unit pressure",
           "concept": "Druid spell list Speak with Animals",
           "finalDisposition": "catalog-only/dead-for-now",
@@ -8108,7 +8298,7 @@
         },
         {
           "battleReadinessStatus": "accepted-no-battle-effect",
-          "catalogAdmissionState": "not-installed",
+          "catalogAdmissionState": "installed",
           "category": "spell Unit pressure",
           "concept": "Ranger spell list Speak with Animals",
           "finalDisposition": "catalog-only/dead-for-now",
@@ -8125,7 +8315,7 @@
         },
         {
           "battleReadinessStatus": "accepted-no-battle-effect",
-          "catalogAdmissionState": "not-installed",
+          "catalogAdmissionState": "installed",
           "category": "spell Unit pressure",
           "concept": "Warlock spell list Speak with Animals",
           "finalDisposition": "catalog-only/dead-for-now",
@@ -9994,7 +10184,7 @@
       ]
     },
     {
-      "count": 75,
+      "count": 77,
       "description": "The Unit claim records a runtime-detached presentation, exploration, table/perception, or durable social/knowledge closure.",
       "status": "closed-runtime-detached-table-adjudication",
       "unitIds": [
@@ -10040,6 +10230,7 @@
         "locate_object",
         "magic_mouth",
         "major_image",
+        "mending",
         "mind_spike",
         "minor_illusion",
         "mislead",
@@ -10050,6 +10241,7 @@
         "pass_without_trace",
         "passwall",
         "plant_growth",
+        "prestidigitation",
         "rope_trick",
         "scrying",
         "seeming",
@@ -10220,13 +10412,13 @@
       "percent": "100%"
     },
     "strictRuntimeProfileSupport": {
-      "denominator": 332,
+      "denominator": 334,
       "numerator": 179,
-      "percent": "53.9%"
+      "percent": "53.6%"
     },
     "strictTargetClosure": {
-      "denominator": 332,
-      "numerator": 332,
+      "denominator": 334,
+      "numerator": 334,
       "percent": "100%"
     }
   },
@@ -12603,165 +12795,6 @@
         "unitId": "mage_hand"
       },
       {
-        "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/mending.md",
-        "inventoryAccounting": [
-          {
-            "battleReadinessClosure": {
-              "state": "not-recorded"
-            },
-            "battleReadinessStatus": "accepted-no-battle-effect",
-            "catalogAdmissionState": "not-installed",
-            "concept": "Bard spell list Mending",
-            "finalDisposition": "catalog-only/dead-for-now",
-            "levelBand": "spell-level-0",
-            "nextAction": "Object repair without restoring magic is equipment/exploration state outside promoted runtime owners.",
-            "rowId": "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_mending",
-            "rowKind": "spell-unit-pressure",
-            "unitProfileDisposition": "not-recorded"
-          },
-          {
-            "battleReadinessClosure": {
-              "state": "not-recorded"
-            },
-            "battleReadinessStatus": "accepted-no-battle-effect",
-            "catalogAdmissionState": "not-installed",
-            "concept": "Cleric spell list Mending",
-            "finalDisposition": "catalog-only/dead-for-now",
-            "levelBand": "spell-level-0",
-            "nextAction": "Object repair without restoring magic is equipment/exploration state outside promoted runtime owners.",
-            "rowId": "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_mending",
-            "rowKind": "spell-unit-pressure",
-            "unitProfileDisposition": "not-recorded"
-          },
-          {
-            "battleReadinessClosure": {
-              "state": "not-recorded"
-            },
-            "battleReadinessStatus": "accepted-no-battle-effect",
-            "catalogAdmissionState": "not-installed",
-            "concept": "Druid spell list Mending",
-            "finalDisposition": "catalog-only/dead-for-now",
-            "levelBand": "spell-level-0",
-            "nextAction": "Object repair without restoring magic is equipment/exploration state outside promoted runtime owners.",
-            "rowId": "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_mending",
-            "rowKind": "spell-unit-pressure",
-            "unitProfileDisposition": "not-recorded"
-          },
-          {
-            "battleReadinessClosure": {
-              "state": "not-recorded"
-            },
-            "battleReadinessStatus": "accepted-no-battle-effect",
-            "catalogAdmissionState": "not-installed",
-            "concept": "Sorcerer spell list Mending",
-            "finalDisposition": "catalog-only/dead-for-now",
-            "levelBand": "spell-level-0",
-            "nextAction": "Object repair without restoring magic is equipment/exploration state outside promoted runtime owners.",
-            "rowId": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_mending",
-            "rowKind": "spell-unit-pressure",
-            "unitProfileDisposition": "not-recorded"
-          },
-          {
-            "battleReadinessClosure": {
-              "state": "not-recorded"
-            },
-            "battleReadinessStatus": "accepted-no-battle-effect",
-            "catalogAdmissionState": "not-installed",
-            "concept": "Wizard spell list Mending",
-            "finalDisposition": "catalog-only/dead-for-now",
-            "levelBand": "spell-level-0",
-            "nextAction": "Object repair without restoring magic is equipment/exploration state outside promoted runtime owners.",
-            "rowId": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_mending",
-            "rowKind": "spell-unit-pressure",
-            "unitProfileDisposition": "not-recorded"
-          }
-        ],
-        "reason": "The SRD row has spell-level-0 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
-        "sourceRows": [
-          {
-            "battleReadinessStatus": "accepted-no-battle-effect",
-            "catalogAdmissionState": "not-installed",
-            "category": "spell Unit pressure",
-            "concept": "Bard spell list Mending",
-            "finalDisposition": "catalog-only/dead-for-now",
-            "id": "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_mending",
-            "levelBand": "spell-level-0",
-            "nextAction": "Object repair without restoring magic is equipment/exploration state outside promoted runtime owners.",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 150,
-              "lineStart": 150,
-              "path": ".references/srd-5.2.1/Classes/Bard.md"
-            }
-          },
-          {
-            "battleReadinessStatus": "accepted-no-battle-effect",
-            "catalogAdmissionState": "not-installed",
-            "category": "spell Unit pressure",
-            "concept": "Cleric spell list Mending",
-            "finalDisposition": "catalog-only/dead-for-now",
-            "id": "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_mending",
-            "levelBand": "spell-level-0",
-            "nextAction": "Object repair without restoring magic is equipment/exploration state outside promoted runtime owners.",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 152,
-              "lineStart": 152,
-              "path": ".references/srd-5.2.1/Classes/Cleric.md"
-            }
-          },
-          {
-            "battleReadinessStatus": "accepted-no-battle-effect",
-            "catalogAdmissionState": "not-installed",
-            "category": "spell Unit pressure",
-            "concept": "Druid spell list Mending",
-            "finalDisposition": "catalog-only/dead-for-now",
-            "id": "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_mending",
-            "levelBand": "spell-level-0",
-            "nextAction": "Object repair without restoring magic is equipment/exploration state outside promoted runtime owners.",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 191,
-              "lineStart": 191,
-              "path": ".references/srd-5.2.1/Classes/Druid.md"
-            }
-          },
-          {
-            "battleReadinessStatus": "accepted-no-battle-effect",
-            "catalogAdmissionState": "not-installed",
-            "category": "spell Unit pressure",
-            "concept": "Sorcerer spell list Mending",
-            "finalDisposition": "catalog-only/dead-for-now",
-            "id": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_mending",
-            "levelBand": "spell-level-0",
-            "nextAction": "Object repair without restoring magic is equipment/exploration state outside promoted runtime owners.",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 230,
-              "lineStart": 230,
-              "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-            }
-          },
-          {
-            "battleReadinessStatus": "accepted-no-battle-effect",
-            "catalogAdmissionState": "not-installed",
-            "category": "spell Unit pressure",
-            "concept": "Wizard spell list Mending",
-            "finalDisposition": "catalog-only/dead-for-now",
-            "id": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_mending",
-            "levelBand": "spell-level-0",
-            "nextAction": "Object repair without restoring magic is equipment/exploration state outside promoted runtime owners.",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 149,
-              "lineStart": 149,
-              "path": ".references/srd-5.2.1/Classes/Wizard.md"
-            }
-          }
-        ],
-        "unitId": "mending"
-      },
-      {
         "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/message.md",
         "inventoryAccounting": [
           {
@@ -13268,135 +13301,6 @@
           }
         ],
         "unitId": "phantasmal_killer"
-      },
-      {
-        "decisionArtifact": "plans/unit-profile-coverage/frontier-decisions/prestidigitation.md",
-        "inventoryAccounting": [
-          {
-            "battleReadinessClosure": {
-              "state": "not-recorded"
-            },
-            "battleReadinessStatus": "accepted-no-battle-effect",
-            "catalogAdmissionState": "not-installed",
-            "concept": "Bard spell list Prestidigitation",
-            "finalDisposition": "catalog-only/dead-for-now",
-            "levelBand": "spell-level-0",
-            "nextAction": "Minor sensory, cleaning, flavoring, marking, and trinket effects are noncombat utility effects outside promoted runtime owners.",
-            "rowId": "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_prestidigitation",
-            "rowKind": "spell-unit-pressure",
-            "unitProfileDisposition": "not-recorded"
-          },
-          {
-            "battleReadinessClosure": {
-              "state": "not-recorded"
-            },
-            "battleReadinessStatus": "accepted-no-battle-effect",
-            "catalogAdmissionState": "not-installed",
-            "concept": "Sorcerer spell list Prestidigitation",
-            "finalDisposition": "catalog-only/dead-for-now",
-            "levelBand": "spell-level-0",
-            "nextAction": "Minor sensory, cleaning, flavoring, marking, and trinket effects are noncombat utility effects outside promoted runtime owners.",
-            "rowId": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_prestidigitation",
-            "rowKind": "spell-unit-pressure",
-            "unitProfileDisposition": "not-recorded"
-          },
-          {
-            "battleReadinessClosure": {
-              "state": "not-recorded"
-            },
-            "battleReadinessStatus": "accepted-no-battle-effect",
-            "catalogAdmissionState": "not-installed",
-            "concept": "Warlock spell list Prestidigitation",
-            "finalDisposition": "catalog-only/dead-for-now",
-            "levelBand": "spell-level-0",
-            "nextAction": "Minor sensory, cleaning, flavoring, marking, and trinket effects are noncombat utility effects outside promoted runtime owners.",
-            "rowId": "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_prestidigitation",
-            "rowKind": "spell-unit-pressure",
-            "unitProfileDisposition": "not-recorded"
-          },
-          {
-            "battleReadinessClosure": {
-              "state": "not-recorded"
-            },
-            "battleReadinessStatus": "accepted-no-battle-effect",
-            "catalogAdmissionState": "not-installed",
-            "concept": "Wizard spell list Prestidigitation",
-            "finalDisposition": "catalog-only/dead-for-now",
-            "levelBand": "spell-level-0",
-            "nextAction": "Minor sensory, cleaning, flavoring, marking, and trinket effects are noncombat utility effects outside promoted runtime owners.",
-            "rowId": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_prestidigitation",
-            "rowKind": "spell-unit-pressure",
-            "unitProfileDisposition": "not-recorded"
-          }
-        ],
-        "reason": "The SRD row has spell-level-0 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
-        "sourceRows": [
-          {
-            "battleReadinessStatus": "accepted-no-battle-effect",
-            "catalogAdmissionState": "not-installed",
-            "category": "spell Unit pressure",
-            "concept": "Bard spell list Prestidigitation",
-            "finalDisposition": "catalog-only/dead-for-now",
-            "id": "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_prestidigitation",
-            "levelBand": "spell-level-0",
-            "nextAction": "Minor sensory, cleaning, flavoring, marking, and trinket effects are noncombat utility effects outside promoted runtime owners.",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 153,
-              "lineStart": 153,
-              "path": ".references/srd-5.2.1/Classes/Bard.md"
-            }
-          },
-          {
-            "battleReadinessStatus": "accepted-no-battle-effect",
-            "catalogAdmissionState": "not-installed",
-            "category": "spell Unit pressure",
-            "concept": "Sorcerer spell list Prestidigitation",
-            "finalDisposition": "catalog-only/dead-for-now",
-            "id": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_prestidigitation",
-            "levelBand": "spell-level-0",
-            "nextAction": "Minor sensory, cleaning, flavoring, marking, and trinket effects are noncombat utility effects outside promoted runtime owners.",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 234,
-              "lineStart": 234,
-              "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-            }
-          },
-          {
-            "battleReadinessStatus": "accepted-no-battle-effect",
-            "catalogAdmissionState": "not-installed",
-            "category": "spell Unit pressure",
-            "concept": "Warlock spell list Prestidigitation",
-            "finalDisposition": "catalog-only/dead-for-now",
-            "id": "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_prestidigitation",
-            "levelBand": "spell-level-0",
-            "nextAction": "Minor sensory, cleaning, flavoring, marking, and trinket effects are noncombat utility effects outside promoted runtime owners.",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 341,
-              "lineStart": 341,
-              "path": ".references/srd-5.2.1/Classes/Warlock.md"
-            }
-          },
-          {
-            "battleReadinessStatus": "accepted-no-battle-effect",
-            "catalogAdmissionState": "not-installed",
-            "category": "spell Unit pressure",
-            "concept": "Wizard spell list Prestidigitation",
-            "finalDisposition": "catalog-only/dead-for-now",
-            "id": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_prestidigitation",
-            "levelBand": "spell-level-0",
-            "nextAction": "Minor sensory, cleaning, flavoring, marking, and trinket effects are noncombat utility effects outside promoted runtime owners.",
-            "rowKind": "spell-unit-pressure",
-            "source": {
-              "lineEnd": 153,
-              "lineStart": 153,
-              "path": ".references/srd-5.2.1/Classes/Wizard.md"
-            }
-          }
-        ],
-        "unitId": "prestidigitation"
       },
       {
         "inventoryAccounting": [
@@ -23513,7 +23417,7 @@
     },
     "rowsByStatus": {
       "not-applicable": 15,
-      "not-required": 91,
+      "not-required": 93,
       "witness-present": 226
     }
   },
@@ -24842,18 +24746,18 @@
     "groupsByClaimTag": {
       "profile-subset-supported": 62,
       "supported-profile": 179,
-      "unsupported-profile": 91
+      "unsupported-profile": 93
     },
     "groupsByStatus": {
       "blocked-follow-up-split": 10,
       "closed-character-fact-and-runtime-detached-split": 4,
       "closed-companion-control-boundary": 7,
       "closed-outside-battle-runtime-boundary": 45,
-      "closed-runtime-detached-table-adjudication": 75,
+      "closed-runtime-detached-table-adjudication": 77,
       "closed-selection-grant-container": 12,
       "supported-profile": 179
     },
-    "nonSupportedFrontier": 153,
-    "strictDenominator": 332
+    "nonSupportedFrontier": 155,
+    "strictDenominator": 334
   }
 }

@@ -873,11 +873,13 @@
       "title": "Classify Installed Cantrip and Level-1 Spell Units",
       "suggestedStatus": "blocked-on-SRDINV1",
       "intent": "Classify installed SRD cantrip and level-1 Spell Unit owner evidence separately from missing and catalog-only spell rows.",
-      "rowCount": 158,
+      "rowCount": 171,
       "rowIds": [
         "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_dancing_lights",
         "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_light",
+        "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_mending",
         "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_minor_illusion",
+        "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_prestidigitation",
         "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_starry_wisp",
         "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_true_strike",
         "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_vicious_mockery",
@@ -896,9 +898,11 @@
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_hideous_laughter",
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_longstrider",
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_sleep",
+        "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_speak_with_animals",
         "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_thunderwave",
         "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_guidance",
         "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_light",
+        "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_mending",
         "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_resistance",
         "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_sacred_flame",
         "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_spare_the_dying",
@@ -917,6 +921,7 @@
         "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_sanctuary",
         "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_shield_of_faith",
         "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_guidance",
+        "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_mending",
         "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_poison_spray",
         "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_produce_flame",
         "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_resistance",
@@ -936,6 +941,7 @@
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_jump",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_longstrider",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_protection_from_evil_and_good",
+        "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_speak_with_animals",
         "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_thunderwave",
         "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_bless",
         "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_command",
@@ -959,13 +965,16 @@
         "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_hunters_mark",
         "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_jump",
         "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_longstrider",
+        "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_speak_with_animals",
         "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_acid_splash",
         "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_chill_touch",
         "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_dancing_lights",
         "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_fire_bolt",
         "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_light",
+        "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_mending",
         "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_minor_illusion",
         "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_poison_spray",
+        "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_prestidigitation",
         "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_ray_of_frost",
         "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_shocking_grasp",
         "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_sorcerous_burst",
@@ -992,6 +1001,7 @@
         "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_eldritch_blast",
         "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_minor_illusion",
         "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_poison_spray",
+        "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_prestidigitation",
         "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_true_strike",
         "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_bane",
         "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_charm_person",
@@ -1001,13 +1011,16 @@
         "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_hex",
         "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_hideous_laughter",
         "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_protection_from_evil_and_good",
+        "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_speak_with_animals",
         "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_acid_splash",
         "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_chill_touch",
         "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_dancing_lights",
         "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_fire_bolt",
         "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_light",
+        "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_mending",
         "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_minor_illusion",
         "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_poison_spray",
+        "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_prestidigitation",
         "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_ray_of_frost",
         "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_shocking_grasp",
         "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_true_strike",
@@ -7348,15 +7361,35 @@
         "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "mending",
+        "sourceRecordPath": "packages/surface/content/mending.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "mending"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-only/dead-for-now",
-      "ownerEvidence": [],
-      "nextAction": "Object repair without restoring magic is equipment/exploration state outside promoted runtime owners.",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "future equipment and exploration object-state owner",
+        "reason": "A future owner must apply the authored repair facts to table-owned object damage state without adding duplicate equipment state to battle runtime or dispatching on the spell's authored identity."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit mending is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "future equipment and exploration object-state owner",
+          "evidence": "A future owner must apply the authored repair facts to table-owned object damage state without adding duplicate equipment state to battle runtime or dispatching on the spell's authored identity.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
+      "nextAction": "A future owner must apply the authored repair facts to table-owned object damage state without adding duplicate equipment state to battle runtime or dispatching on the spell's authored identity.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
@@ -7455,15 +7488,35 @@
         "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "prestidigitation",
+        "sourceRecordPath": "packages/surface/content/prestidigitation.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "prestidigitation"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-only/dead-for-now",
-      "ownerEvidence": [],
-      "nextAction": "Minor sensory, cleaning, flavoring, marking, and trinket effects are noncombat utility effects outside promoted runtime owners.",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "future table and exploration utility-effect owner",
+        "reason": "A future owner must apply the authored utility facts to table-owned environment and object state without adding duplicate battle state or dispatching on the spell's authored identity."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit prestidigitation is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "future table and exploration utility-effect owner",
+          "evidence": "A future owner must apply the authored utility facts to table-owned environment and object state without adding duplicate battle state or dispatching on the spell's authored identity.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
+      "nextAction": "A future owner must apply the authored utility facts to table-owned environment and object state without adding duplicate battle state or dispatching on the spell's authored identity.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
@@ -8447,7 +8500,7 @@
         "sourceRecordPath": "packages/surface/content/speak_with_animals.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "speak_with_animals"
       },
       "unitProfileDisposition": "unsupported-profile",
@@ -8458,7 +8511,18 @@
         "owner": "runtime-detached communication/social owner",
         "reason": "Speak with Animals produces table-owned communication facts; promoted battle runtime does not model conversation content or social outcomes."
       },
-      "ownerEvidence": [],
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit speak_with_animals is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "runtime-detached communication/social owner",
+          "evidence": "Speak with Animals produces table-owned communication facts; promoted battle runtime does not model conversation content or social outcomes.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
       "nextAction": "Speak with Animals produces table-owned communication facts; promoted battle runtime does not model conversation content or social outcomes.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
@@ -13583,15 +13647,35 @@
         "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "mending",
+        "sourceRecordPath": "packages/surface/content/mending.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "mending"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-only/dead-for-now",
-      "ownerEvidence": [],
-      "nextAction": "Object repair without restoring magic is equipment/exploration state outside promoted runtime owners.",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "future equipment and exploration object-state owner",
+        "reason": "A future owner must apply the authored repair facts to table-owned object damage state without adding duplicate equipment state to battle runtime or dispatching on the spell's authored identity."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit mending is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "future equipment and exploration object-state owner",
+          "evidence": "A future owner must apply the authored repair facts to table-owned object damage state without adding duplicate equipment state to battle runtime or dispatching on the spell's authored identity.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
+      "nextAction": "A future owner must apply the authored repair facts to table-owned object damage state without adding duplicate equipment state to battle runtime or dispatching on the spell's authored identity.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
@@ -19313,15 +19397,35 @@
         "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "mending",
+        "sourceRecordPath": "packages/surface/content/mending.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "mending"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-only/dead-for-now",
-      "ownerEvidence": [],
-      "nextAction": "Object repair without restoring magic is equipment/exploration state outside promoted runtime owners.",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "future equipment and exploration object-state owner",
+        "reason": "A future owner must apply the authored repair facts to table-owned object damage state without adding duplicate equipment state to battle runtime or dispatching on the spell's authored identity."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit mending is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "future equipment and exploration object-state owner",
+          "evidence": "A future owner must apply the authored repair facts to table-owned object damage state without adding duplicate equipment state to battle runtime or dispatching on the spell's authored identity.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
+      "nextAction": "A future owner must apply the authored repair facts to table-owned object damage state without adding duplicate equipment state to battle runtime or dispatching on the spell's authored identity.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
@@ -20304,7 +20408,7 @@
         "sourceRecordPath": "packages/surface/content/speak_with_animals.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "speak_with_animals"
       },
       "unitProfileDisposition": "unsupported-profile",
@@ -20315,7 +20419,18 @@
         "owner": "runtime-detached communication/social owner",
         "reason": "Speak with Animals produces table-owned communication facts; promoted battle runtime does not model conversation content or social outcomes."
       },
-      "ownerEvidence": [],
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit speak_with_animals is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "runtime-detached communication/social owner",
+          "evidence": "Speak with Animals produces table-owned communication facts; promoted battle runtime does not model conversation content or social outcomes.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
       "nextAction": "Speak with Animals produces table-owned communication facts; promoted battle runtime does not model conversation content or social outcomes.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
@@ -32981,7 +33096,7 @@
         "sourceRecordPath": "packages/surface/content/speak_with_animals.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "speak_with_animals"
       },
       "unitProfileDisposition": "unsupported-profile",
@@ -32992,7 +33107,18 @@
         "owner": "runtime-detached communication/social owner",
         "reason": "Speak with Animals produces table-owned communication facts; promoted battle runtime does not model conversation content or social outcomes."
       },
-      "ownerEvidence": [],
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit speak_with_animals is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "runtime-detached communication/social owner",
+          "evidence": "Speak with Animals produces table-owned communication facts; promoted battle runtime does not model conversation content or social outcomes.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
       "nextAction": "Speak with Animals produces table-owned communication facts; promoted battle runtime does not model conversation content or social outcomes.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
@@ -38294,15 +38420,35 @@
         "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "mending",
+        "sourceRecordPath": "packages/surface/content/mending.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "mending"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-only/dead-for-now",
-      "ownerEvidence": [],
-      "nextAction": "Object repair without restoring magic is equipment/exploration state outside promoted runtime owners.",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "future equipment and exploration object-state owner",
+        "reason": "A future owner must apply the authored repair facts to table-owned object damage state without adding duplicate equipment state to battle runtime or dispatching on the spell's authored identity."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit mending is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "future equipment and exploration object-state owner",
+          "evidence": "A future owner must apply the authored repair facts to table-owned object damage state without adding duplicate equipment state to battle runtime or dispatching on the spell's authored identity.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
+      "nextAction": "A future owner must apply the authored repair facts to table-owned object damage state without adding duplicate equipment state to battle runtime or dispatching on the spell's authored identity.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
@@ -38444,15 +38590,35 @@
         "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "prestidigitation",
+        "sourceRecordPath": "packages/surface/content/prestidigitation.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "prestidigitation"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-only/dead-for-now",
-      "ownerEvidence": [],
-      "nextAction": "Minor sensory, cleaning, flavoring, marking, and trinket effects are noncombat utility effects outside promoted runtime owners.",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "future table and exploration utility-effect owner",
+        "reason": "A future owner must apply the authored utility facts to table-owned environment and object state without adding duplicate battle state or dispatching on the spell's authored identity."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit prestidigitation is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "future table and exploration utility-effect owner",
+          "evidence": "A future owner must apply the authored utility facts to table-owned environment and object state without adding duplicate battle state or dispatching on the spell's authored identity.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
+      "nextAction": "A future owner must apply the authored utility facts to table-owned environment and object state without adding duplicate battle state or dispatching on the spell's authored identity.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
@@ -44923,15 +45089,35 @@
         "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "prestidigitation",
+        "sourceRecordPath": "packages/surface/content/prestidigitation.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "prestidigitation"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-only/dead-for-now",
-      "ownerEvidence": [],
-      "nextAction": "Minor sensory, cleaning, flavoring, marking, and trinket effects are noncombat utility effects outside promoted runtime owners.",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "future table and exploration utility-effect owner",
+        "reason": "A future owner must apply the authored utility facts to table-owned environment and object state without adding duplicate battle state or dispatching on the spell's authored identity."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit prestidigitation is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "future table and exploration utility-effect owner",
+          "evidence": "A future owner must apply the authored utility facts to table-owned environment and object state without adding duplicate battle state or dispatching on the spell's authored identity.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
+      "nextAction": "A future owner must apply the authored utility facts to table-owned environment and object state without adding duplicate battle state or dispatching on the spell's authored identity.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
@@ -45423,7 +45609,7 @@
         "sourceRecordPath": "packages/surface/content/speak_with_animals.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "speak_with_animals"
       },
       "unitProfileDisposition": "unsupported-profile",
@@ -45434,7 +45620,18 @@
         "owner": "runtime-detached communication/social owner",
         "reason": "Speak with Animals produces table-owned communication facts; promoted battle runtime does not model conversation content or social outcomes."
       },
-      "ownerEvidence": [],
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit speak_with_animals is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "runtime-detached communication/social owner",
+          "evidence": "Speak with Animals produces table-owned communication facts; promoted battle runtime does not model conversation content or social outcomes.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
       "nextAction": "Speak with Animals produces table-owned communication facts; promoted battle runtime does not model conversation content or social outcomes.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
@@ -48916,15 +49113,35 @@
         "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "mending",
+        "sourceRecordPath": "packages/surface/content/mending.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "mending"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-only/dead-for-now",
-      "ownerEvidence": [],
-      "nextAction": "Object repair without restoring magic is equipment/exploration state outside promoted runtime owners.",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "future equipment and exploration object-state owner",
+        "reason": "A future owner must apply the authored repair facts to table-owned object damage state without adding duplicate equipment state to battle runtime or dispatching on the spell's authored identity."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit mending is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "future equipment and exploration object-state owner",
+          "evidence": "A future owner must apply the authored repair facts to table-owned object damage state without adding duplicate equipment state to battle runtime or dispatching on the spell's authored identity.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
+      "nextAction": "A future owner must apply the authored repair facts to table-owned object damage state without adding duplicate equipment state to battle runtime or dispatching on the spell's authored identity.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
@@ -49066,15 +49283,35 @@
         "state": "outside-surface-runtime-mechanics"
       },
       "authoredContent": {
-        "state": "missing-authored-record"
+        "state": "authored-record-present",
+        "unitId": "prestidigitation",
+        "sourceRecordPath": "packages/surface/content/prestidigitation.json"
       },
       "catalogAdmission": {
-        "state": "not-installed",
+        "state": "installed",
         "unitId": "prestidigitation"
       },
+      "unitProfileDisposition": "unsupported-profile",
       "finalDisposition": "catalog-only/dead-for-now",
-      "ownerEvidence": [],
-      "nextAction": "Minor sensory, cleaning, flavoring, marking, and trinket effects are noncombat utility effects outside promoted runtime owners.",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-runtime-presentation-exploration",
+        "owner": "future table and exploration utility-effect owner",
+        "reason": "A future owner must apply the authored utility facts to table-owned environment and object state without adding duplicate battle state or dispatching on the spell's authored identity."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit prestidigitation is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "future table and exploration utility-effect owner",
+          "evidence": "A future owner must apply the authored utility facts to table-owned environment and object state without adding duplicate battle state or dispatching on the spell's authored identity.",
+          "status": "catalog-only/dead-for-now closure"
+        }
+      ],
+      "nextAction": "A future owner must apply the authored utility facts to table-owned environment and object state without adding duplicate battle state or dispatching on the spell's authored identity.",
       "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
