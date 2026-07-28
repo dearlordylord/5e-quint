@@ -14,8 +14,7 @@ export default defineConfig({
       thresholds: {
         lines: 99,
         functions: 99,
-        // Temporary measured non-regression floor; issue #227's target remains 99%.
-        branches: 98,
+        branches: 99,
         statements: 99
       }
     }
