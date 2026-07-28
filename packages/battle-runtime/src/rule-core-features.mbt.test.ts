@@ -1,4 +1,7 @@
-import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
+import {
+  unitId as parseSharedUnitId,
+  type UnitId,
+} from "@dnd/shared/game-facts";
 import {
   battleProcedureExecutionRefForTest,
   characterBattleFeatureInitForTest,
@@ -254,17 +257,21 @@ type SelectedUnitIdentityReplay = {
     | "L1H-BOON-COMBAT-PROWESS"
     | "L1H-MYCELIUM-STEP"
     | "L3-FOLLOWUP-BARBARIAN-FRENZY";
-  readonly unitId: string;
+  readonly unitId: UnitId;
   readonly actions: readonly RuleCoreFeatureDriverAction[];
   readonly sequences: readonly SelectedUnitIdentityReplaySequence[];
 };
-type EvasionUnitId = "rogue_evasion" | "monk_evasion";
-const selectedUnitRuntimeBoundaryIds = new Set<string>();
+type EvasionUnitId = UnitId & ("rogue_evasion" | "monk_evasion");
+const selectedUnitRuntimeBoundaryIds = new Set<UnitId>();
+
+function selectedUnitId<const Id extends string>(value: Id): UnitId & Id {
+  return parseSharedUnitId(value) as UnitId & Id;
+}
 
 const selectedUnitIdentityReplays = [
   {
     taskId: "QMBT7",
-    unitId: "fighter_second_wind",
+    unitId: selectedUnitId("fighter_second_wind"),
     actions: [
       "doDiscoverSecondWind",
       "doResolveSecondWindLow",
@@ -306,7 +313,7 @@ const selectedUnitIdentityReplays = [
   },
   {
     taskId: "QMBT9",
-    unitId: "fighter_action_surge",
+    unitId: selectedUnitId("fighter_action_surge"),
     actions: ["doActionSurgeActivate", "doActionSurgeRejectTwice"],
     sequences: [
       {
@@ -332,7 +339,7 @@ const selectedUnitIdentityReplays = [
   },
   {
     taskId: "QMBT9",
-    unitId: "fighter_improved_critical",
+    unitId: selectedUnitId("fighter_improved_critical"),
     actions: ["doImprovedCritical"],
     sequences: [
       {
@@ -350,7 +357,7 @@ const selectedUnitIdentityReplays = [
   },
   {
     taskId: "QMBT9",
-    unitId: "barbarian_rage",
+    unitId: selectedUnitId("barbarian_rage"),
     actions: ["doRageActivateAndDamage"],
     sequences: [
       {
@@ -370,7 +377,7 @@ const selectedUnitIdentityReplays = [
   },
   {
     taskId: "QMBT9",
-    unitId: "barbarian_reckless_attack",
+    unitId: selectedUnitId("barbarian_reckless_attack"),
     actions: ["doRecklessAttack"],
     sequences: [
       {
@@ -389,7 +396,7 @@ const selectedUnitIdentityReplays = [
   },
   {
     taskId: "QMBT9",
-    unitId: "rogue_cunning_action",
+    unitId: selectedUnitId("rogue_cunning_action"),
     actions: ["doCunningDash", "doCunningDisengage", "doCunningHide"],
     sequences: [
       {
@@ -423,7 +430,7 @@ const selectedUnitIdentityReplays = [
   },
   {
     taskId: "QMBT9",
-    unitId: "rogue_evasion",
+    unitId: selectedUnitId("rogue_evasion"),
     actions: ["doEvasionSuccess", "doEvasionFailure"],
     sequences: [
       {
@@ -448,7 +455,7 @@ const selectedUnitIdentityReplays = [
   },
   {
     taskId: "QMBT9",
-    unitId: "monk_evasion",
+    unitId: selectedUnitId("monk_evasion"),
     actions: ["doEvasionSuccess", "doEvasionFailure"],
     sequences: [
       {
@@ -473,7 +480,7 @@ const selectedUnitIdentityReplays = [
   },
   {
     taskId: "QMBT9",
-    unitId: "rogue_uncanny_dodge",
+    unitId: selectedUnitId("rogue_uncanny_dodge"),
     actions: ["doUncannyDodge"],
     sequences: [
       {
@@ -491,7 +498,7 @@ const selectedUnitIdentityReplays = [
   },
   {
     taskId: "QMBT9",
-    unitId: "rogue_sneak_attack",
+    unitId: selectedUnitId("rogue_sneak_attack"),
     actions: ["doSneakAttack"],
     sequences: [
       {
@@ -509,7 +516,7 @@ const selectedUnitIdentityReplays = [
   },
   {
     taskId: "L3-FOLLOWUP-BARBARIAN-FRENZY",
-    unitId: "barbarian_frenzy",
+    unitId: selectedUnitId("barbarian_frenzy"),
     actions: ["doFrenzy"],
     sequences: [
       {
@@ -531,7 +538,7 @@ const selectedUnitIdentityReplays = [
   },
   {
     taskId: "QMBT31",
-    unitId: "feat_savage_attacker",
+    unitId: selectedUnitId("feat_savage_attacker"),
     actions: ["doSavageAttackerDamage"],
     sequences: [
       {
@@ -548,7 +555,7 @@ const selectedUnitIdentityReplays = [
   },
   {
     taskId: "L1H-FIGHTER-TACTICAL-MIND",
-    unitId: "fighter_tactical_mind",
+    unitId: selectedUnitId("fighter_tactical_mind"),
     actions: ["doTacticalMindConvertedSuccess", "doTacticalMindStillFailed"],
     sequences: [
       {
@@ -575,7 +582,7 @@ const selectedUnitIdentityReplays = [
   },
   {
     taskId: "L1H-BOON-COMBAT-PROWESS",
-    unitId: "feat_boon_of_combat_prowess",
+    unitId: selectedUnitId("feat_boon_of_combat_prowess"),
     actions: ["doCombatProwessMissToHit"],
     sequences: [
       {
@@ -593,7 +600,7 @@ const selectedUnitIdentityReplays = [
   },
   {
     taskId: "L1H-MYCELIUM-STEP",
-    unitId: "mycelium_step",
+    unitId: selectedUnitId("mycelium_step"),
     actions: ["doMyceliumStepDash"],
     sequences: [
       {
@@ -609,7 +616,7 @@ const selectedUnitIdentityReplays = [
   },
   {
     taskId: "reaction-interruption",
-    unitId: "bard_cutting_words",
+    unitId: selectedUnitId("bard_cutting_words"),
     actions: ["doCuttingWordsDamage"],
     sequences: [
       {
@@ -628,7 +635,7 @@ const selectedUnitIdentityReplays = [
   },
   {
     taskId: "reaction-interruption",
-    unitId: "monk_deflect_attacks",
+    unitId: selectedUnitId("monk_deflect_attacks"),
     actions: ["doDeflectAttacksDamageReduction"],
     sequences: [
       {
@@ -646,7 +653,7 @@ const selectedUnitIdentityReplays = [
   },
   {
     taskId: "passive-and-zero-hp-features",
-    unitId: "defense",
+    unitId: selectedUnitId("defense"),
     actions: ["doDefenseArmorClass"],
     sequences: [
       {
@@ -661,7 +668,7 @@ const selectedUnitIdentityReplays = [
   },
   {
     taskId: "passive-and-zero-hp-features",
-    unitId: "feat_archery",
+    unitId: selectedUnitId("feat_archery"),
     actions: ["doArcheryAttackRollBonus"],
     sequences: [
       {
@@ -678,7 +685,7 @@ const selectedUnitIdentityReplays = [
   },
   {
     taskId: "passive-and-zero-hp-features",
-    unitId: "orc_relentless_endurance",
+    unitId: selectedUnitId("orc_relentless_endurance"),
     actions: ["doZeroHitPointReplacement"],
     sequences: [
       {
@@ -731,16 +738,16 @@ function resetSelectedUnitRuntimeBoundaryIds(): void {
   selectedUnitRuntimeBoundaryIds.clear();
 }
 
-function recordSelectedUnitRuntimeBoundaryId<UnitId extends string>(
-  unitId: UnitId,
-): UnitId {
+function recordSelectedUnitRuntimeBoundaryId<Id extends UnitId>(
+  unitId: Id,
+): Id {
   selectedUnitRuntimeBoundaryIds.add(unitId);
   return unitId;
 }
 
-function evasionUnitIdForReplay(unitId: string): EvasionUnitId | undefined {
+function evasionUnitIdForReplay(unitId: UnitId): EvasionUnitId | undefined {
   if (unitId === "rogue_evasion" || unitId === "monk_evasion") {
-    return unitId;
+    return unitId as EvasionUnitId;
   }
   return undefined;
 }
@@ -1219,7 +1226,7 @@ function createRuleCoreFeatureDriver(
         resetProjection();
         const profile = parseSupportedUnitFeatureProfile(
           unitLibrary.requireUnit(
-            recordSelectedUnitRuntimeBoundaryId("defense"),
+            recordSelectedUnitRuntimeBoundaryId(selectedUnitId("defense")),
           ),
           [],
         );
@@ -1232,7 +1239,7 @@ function createRuleCoreFeatureDriver(
       },
       doArcheryAttackRollBonus: () => {
         const unit = unitLibrary.requireUnit(
-          recordSelectedUnitRuntimeBoundaryId("feat_archery"),
+          recordSelectedUnitRuntimeBoundaryId(selectedUnitId("feat_archery")),
         );
         const unitRef = battleUnitRefWithSupportProfiles({
           unitRef: { unitId: unit.id },
@@ -1796,7 +1803,9 @@ function cunningActionBattle(): BattleState {
         characterUnitRefs: [
           {
             unit: unitLibrary.requireUnit(
-              recordSelectedUnitRuntimeBoundaryId("rogue_cunning_action"),
+              recordSelectedUnitRuntimeBoundaryId(
+                selectedUnitId("rogue_cunning_action"),
+              ),
             ),
             supportProfiles: [cunningActionSupportProfile],
           },
@@ -1850,7 +1859,7 @@ function rageBattle(): BattleState {
 
 function recklessBattle(): BattleState {
   const recklessUnitId = recordSelectedUnitRuntimeBoundaryId(
-    "barbarian_reckless_attack",
+    selectedUnitId("barbarian_reckless_attack"),
   );
   return startBattleRight({
     battleId: battleId("rule-core-reckless"),
@@ -1886,7 +1895,9 @@ function sneakAttackBattle(): BattleState {
         unitFeatures: [
           characterBattleFeatureInitForTest(
             unitLibrary.requireUnit(
-              recordSelectedUnitRuntimeBoundaryId("rogue_sneak_attack"),
+              recordSelectedUnitRuntimeBoundaryId(
+                selectedUnitId("rogue_sneak_attack"),
+              ),
             ),
             [{ className: "rogue", level: classLevel(1) }],
           ),
@@ -1894,7 +1905,9 @@ function sneakAttackBattle(): BattleState {
         characterUnitRefs: [
           {
             unit: unitLibrary.requireUnit(
-              recordSelectedUnitRuntimeBoundaryId("rogue_sneak_attack"),
+              recordSelectedUnitRuntimeBoundaryId(
+                selectedUnitId("rogue_sneak_attack"),
+              ),
             ),
             supportProfiles: [ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE],
           },
@@ -1906,9 +1919,11 @@ function sneakAttackBattle(): BattleState {
 }
 
 function frenzyBattle(): BattleState {
-  const frenzyUnitId = recordSelectedUnitRuntimeBoundaryId("barbarian_frenzy");
+  const frenzyUnitId = recordSelectedUnitRuntimeBoundaryId(
+    selectedUnitId("barbarian_frenzy"),
+  );
   const recklessUnitId = recordSelectedUnitRuntimeBoundaryId(
-    "barbarian_reckless_attack",
+    selectedUnitId("barbarian_reckless_attack"),
   );
   const classLevels = [
     { className: "barbarian", level: classLevel(3) },
@@ -1949,7 +1964,9 @@ function improvedCriticalBattle(): BattleState {
         characterUnitRefs: [
           {
             unit: unitLibrary.requireUnit(
-              recordSelectedUnitRuntimeBoundaryId("fighter_improved_critical"),
+              recordSelectedUnitRuntimeBoundaryId(
+                selectedUnitId("fighter_improved_critical"),
+              ),
             ),
             supportProfiles: [
               WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
@@ -1964,7 +1981,7 @@ function improvedCriticalBattle(): BattleState {
 
 function savageAttackerBattle(): BattleState {
   const unit = unitLibrary.requireUnit(
-    recordSelectedUnitRuntimeBoundaryId("feat_savage_attacker"),
+    recordSelectedUnitRuntimeBoundaryId(selectedUnitId("feat_savage_attacker")),
   );
   const unitRef = battleUnitRefWithSupportProfiles({
     unitRef: { unitId: unit.id },
@@ -1987,7 +2004,9 @@ function savageAttackerBattle(): BattleState {
 
 function combatProwessBattle(): BattleState {
   const unit = unitLibrary.requireUnit(
-    recordSelectedUnitRuntimeBoundaryId("feat_boon_of_combat_prowess"),
+    recordSelectedUnitRuntimeBoundaryId(
+      selectedUnitId("feat_boon_of_combat_prowess"),
+    ),
   );
   const unitRef = battleUnitRefWithSupportProfiles({
     unitRef: { unitId: unit.id },
@@ -2010,7 +2029,9 @@ function combatProwessBattle(): BattleState {
 
 function relentlessEnduranceBattle(): BattleState {
   const unit = unitLibrary.requireUnit(
-    recordSelectedUnitRuntimeBoundaryId("orc_relentless_endurance"),
+    recordSelectedUnitRuntimeBoundaryId(
+      selectedUnitId("orc_relentless_endurance"),
+    ),
   );
   return startBattleRight({
     battleId: battleId("rule-core-relentless-endurance"),
@@ -2036,7 +2057,9 @@ function relentlessEnduranceBattle(): BattleState {
   });
 }
 
-function evasionBattle(unitId: EvasionUnitId = "rogue_evasion"): BattleState {
+function evasionBattle(
+  unitId: EvasionUnitId = selectedUnitId("rogue_evasion"),
+): BattleState {
   const unit = unitLibrary.requireUnit(
     recordSelectedUnitRuntimeBoundaryId(unitId),
   );
@@ -2102,7 +2125,9 @@ function reactionModifierBattle(input: {
     { readonly kind: "character" }
   >["resources"];
 }): BattleState {
-  const unitId = recordSelectedUnitRuntimeBoundaryId(input.unitId);
+  const unitId = recordSelectedUnitRuntimeBoundaryId(
+    parseSharedUnitId(input.unitId),
+  );
   return startBattleRight({
     battleId: battleId(`rule-core-${unitId}`),
     combatants: [
@@ -2301,7 +2326,7 @@ function unitResource(
   >["resources"]
 >[number] {
   const unit = unitLibrary.requireUnit(
-    recordSelectedUnitRuntimeBoundaryId(unitId),
+    recordSelectedUnitRuntimeBoundaryId(parseSharedUnitId(unitId)),
   );
   if (unit.kind !== "class_feature" || !("resource" in unit.mechanics)) {
     throw new Error(`Expected ${unitId} resource Unit.`);
